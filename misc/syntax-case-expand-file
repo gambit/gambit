@@ -1,0 +1,33 @@
+#! ../gsi/gsi -:=..
+
+;;; File: "syntax-case-expand-file", Time-stamp: <2007-05-27 23:09:04 feeley>
+
+;;; Copyright (c) 2007 by Marc Feeley, All Rights Reserved.
+
+;;;============================================================================
+
+(define expand-file
+  (lambda (filename-in filename-out)
+    (let* ((exprs
+            (cons 'begin
+                  (with-input-from-file
+                      filename-in
+                    (lambda ()
+                      (let loop ((rev-lst '()))
+                        (let ((x (read)))
+                          (if (eof-object? x)
+                              (reverse rev-lst)
+                              (loop (cons x rev-lst)))))))))
+           (expanded
+            (sc-expand exprs)))
+      (with-output-to-file
+          filename-out
+        (lambda ()
+          (pretty-print
+           (sc#annotation-stripped expanded)))))))
+
+(eval `(##include ,(cadr (command-line))))
+
+(apply expand-file (cddr (command-line)))
+
+;;;============================================================================

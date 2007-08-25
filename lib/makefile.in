@@ -1,0 +1,237 @@
+# makefile for Gambit-C library, Time-stamp: <2007-08-07 14:23:29 feeley>
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot = lib
+rootfromhere = ..
+SUBDIRS = guide
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
+
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+srcdirpfx = @srcdirpfx@
+
+C_COMPILER = @C_COMPILER@
+C_PREPROC = @C_PREPROC@
+FLAGS_OBJ = @FLAGS_OBJ@
+FLAGS_DYN = @FLAGS_DYN@
+FLAGS_LIB = @FLAGS_LIB@
+FLAGS_EXE = @FLAGS_EXE@
+DEFS = @DEFS@
+LIBS = @LIBS@
+
+GAMBCLIB = @GAMBCLIB@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LIB = @INSTALL_LIB@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+LN_S = @LN_S@
+RANLIB = @RANLIB@
+HG = @HG@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = $(prefix)$(PACKAGE_SUBDIR)/include
+libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
+bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
+docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
+infodir = $(prefix)$(PACKAGE_SUBDIR)/info
+emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+
+.SUFFIXES:
+.SUFFIXES: .scm .c @obj@
+
+.c@obj@:
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -D___PRIMAL -D___LIBRARY -D___GAMBCDIR="\"$(prefix)$(PACKAGE_SUBDIR)\"" -c $(srcdirpfx)$*.c
+
+.scm.c:
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -c -check $(srcdirpfx)$*.scm
+
+INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir)
+
+NORMAL_C = main.c setup.c mem.c os.c os_base.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c
+NORMAL_CPP =
+NORMAL_H = setup.h mem.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h
+NORMAL_O = main@obj@ setup@obj@ mem@obj@ c_intf@obj@ os@obj@ os_base@obj@ os_time@obj@ os_shell@obj@ os_files@obj@ os_dyn@obj@ os_tty@obj@ os_io@obj@
+NORMAL_O_PLUS = +main@obj@ +setup@obj@ +mem@obj@ +c_intf@obj@ +os@obj@ +os_base@obj@ +os_time@obj@ +os_shell@obj@ +os_files@obj@ +os_dyn@obj@ +os_tty@obj@ +os_io@obj@
+NORMAL_O_COMMA = main@obj@,setup@obj@,mem@obj@,c_intf@obj@,os@obj@,os_base@obj@,os_time@obj@,os_shell@obj@,os_files@obj@,os_dyn@obj@,os_tty@obj@,os_io@obj@
+NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
+
+HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
+"_eval\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" "_repl\#.scm"
+MODULES = _kernel _system _num _std \
+_eval _io _nonstd _thread _repl
+MODULES_SCM = _kernel.scm _system.scm _num.scm _std.scm \
+_eval.scm _io.scm _nonstd.scm _thread.scm _repl.scm
+MODULES_C = _kernel.c _system.c _num.c _std.c \
+_eval.c _io.c _nonstd.c _thread.c _repl.c
+MODULES_O = _kernel@obj@ _system@obj@ _num@obj@ _std@obj@ \
+_eval@obj@ _io@obj@ _nonstd@obj@ _thread@obj@ _repl@obj@
+MODULES_O_PLUS = +_kernel@obj@ +_system@obj@ +_num@obj@ +_std@obj@ \
++_eval@obj@ +_io@obj@ +_nonstd@obj@ +_thread@obj@ +_repl@obj@
+MODULES_O_COMMA = _kernel@obj@,_system@obj@,_num@obj@,_std@obj@,\
++_eval@obj@,_io@obj@,_nonstd@obj@,_thread@obj@,_repl@obj@
+NORMAL_O_IN_COMPILE_ORDER = main@obj@ os_tty@obj@ c_intf@obj@ \
+os_io@obj@ setup@obj@ mem@obj@ os_files@obj@ os@obj@ os_base@obj@ \
+os_time@obj@ os_shell@obj@ os_dyn@obj@ 
+MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
+_kernel@obj@ _nonstd@obj@ _repl@obj@ _eval@obj@ _thread@obj@ _system@obj@ 
+
+LIBRARIES_SCM = "gambit\#.scm" "r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" digest.scm
+
+OBJECTS = $(NORMAL_O) $(MODULES_O) _gambc@obj@
+OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +_gambc@obj@
+OBJECTS_COMMA = $(NORMAL_O_COMMA),$(MODULES_O_COMMA),_gambc@obj@
+OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) \
+$(NORMAL_O_IN_COMPILE_ORDER) _gambc@obj@
+
+RCFILES = makefile.in header.scm $(MODULES_SCM) sys.scm \
+$(HEADERS_SCM) $(LIBRARIES_SCM) $(NORMAL_SOURCES) 
+
+GENDISTFILES = $(MODULES_C) _gambc.c
+
+DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+all: all-pre all-recursive all-post
+
+all-pre:
+
+all-post: $(GAMBCLIB) _gambc.c
+
+$(GAMBCLIB): $(OBJECTS_IN_COMPILE_ORDER)
+	rm -f $(GAMBCLIB)
+	@MAKE_GAMBCLIB@
+
+_gambc.c: $(MODULES_C)
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -link -flat -o _gambc.c $(MODULES_C)
+
+main@obj@: main.c $(srcdirpfx)$(rootfromhere)/include/gambit.h
+
+setup@obj@: setup.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h mem.h c_intf.h
+
+mem@obj@: mem.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h mem.h c_intf.h
+
+c_intf@obj@: c_intf.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h mem.h c_intf.h
+
+os@obj@: os.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+
+os_base@obj@: os_base.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_base.h
+
+os_time@obj@: os_time.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_time.h
+
+os_shell@obj@: os_shell.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_shell.h
+
+os_files@obj@: os_files.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_files.h
+
+os_dyn@obj@: os_dyn.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_dyn.h
+
+os_tty@obj@: os_tty.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_tty.h
+
+os_io@obj@: os_io.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_io.h
+
+$(MODULES_C): $(srcdirpfx)$(rootfromhere)/lib/header.scm
+
+install-pre:
+
+install-post: all
+	$(srcdirpfx)$(rootfromhere)/mkidirs $(libdir)
+	$(INSTALL_DATA) $(srcdirpfx)_gambc.c $(libdir)/_gambc.c
+	$(INSTALL_LIB) $(GAMBCLIB) $(libdir)/$(GAMBCLIB)
+	@FIXLIB@ $(libdir)/$(GAMBCLIB)
+	for library in $(LIBRARIES_SCM); do \
+	  $(INSTALL_DATA) $$library $(libdir)/$$library; \
+	done
+
+uninstall-pre:
+
+uninstall-post:
+	rm -f $(libdir)/_gambc.c
+	rm -f $(libdir)/$(GAMBCLIB)
+	@for library in $(LIBRARIES_SCM); do \
+	  rm -f $(libdir)/$$library; \
+	done
+
+mostlyclean-pre:
+
+mostlyclean-post:
+	rm -f $(OBJECTS)
+
+clean-pre: mostlyclean-pre
+
+clean-post: mostlyclean-post
+	rm -f $(MODULES_C) $(GAMBCLIB) $(GAMBCLIB_SH) _gambc.c *.da *.bb *.bbg *.gcov
+
+distclean-pre: clean-pre
+
+distclean-post: clean-post
+	rm -f makefile
+
+realclean-pre: distclean-pre
+
+realclean-post: distclean-post
+
+hg-setup-pre:
+	$(HG) add $(RCFILES)
+
+hg-setup-post:
+
+all-recursive:
+	@if test -n "@RTLIBSUBSYS@"; then \
+	  for subdir in ""@RTLIBSUBSYS@; do \
+	    (cd $$subdir && $(MAKE) all) || exit 1; \
+	  done \
+	fi
+
+install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    target=`echo $@ | sed 's/-recursive//'`; \
+	    echo making $$target in $$subdir; \
+	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+	  done \
+	fi
+
+install: install-pre install-recursive install-post
+
+uninstall: uninstall-pre uninstall-recursive uninstall-post
+
+mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
+
+clean: clean-pre clean-recursive clean-post
+
+distclean: distclean-pre distclean-recursive distclean-post
+
+realclean: realclean-pre realclean-recursive realclean-post
+
+hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+
+dist:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    echo making $@ in $$subdir; \
+	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
+	  done \
+	fi
+	@echo "Copying distribution files"
+	@for file in $(DISTFILES); do \
+	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	done
+
+makefile: makefile.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

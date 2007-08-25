@@ -1,0 +1,79 @@
+#! /bin/sh
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot="prebuilt/windows"
+rootfromhere="../.."
+
+PACKAGE_SHORTNAME="@PACKAGE_SHORTNAME@"
+PACKAGE_NAME="@PACKAGE_NAME@"
+PACKAGE_VERSION="@PACKAGE_VERSION@"
+PACKAGE_STRING="@PACKAGE_STRING@"
+PACKAGE_BUGREPORT="@PACKAGE_BUGREPORT@"
+PACKAGE_TARNAME="@PACKAGE_TARNAME@"
+PACKAGE_SUBDIR="@PACKAGE_SUBDIR@"
+
+MAKENSIS="/c/Program Files/NSIS/makensis.exe"
+
+VARIANT="$1"
+
+SOURCE_DIR="$INSTALL_PREFIX"
+DOS_SOURCE_DIR="$DOS_INSTALL_PREFIX"
+VERSION="`echo $PACKAGE_VERSION | sed -e s/^v//g`"
+EXE_FILE="$PACKAGE_TARNAME-windows-$VARIANT.exe"
+ICON_FILE="gambc.ico"
+UNICON_FILE="gambc.ico"
+NSI_FILE="gambc.nsi"
+
+instantiate_file() # input, output
+{
+  sed -e "s|@SOURCE_DIR@|$SOURCE_DIR|g" -e "s|@DOS_SOURCE_DIR@|$DOS_SOURCE_DIR|g" -e "s|@VERSION@|$VERSION|g" -e "s|@EXE_FILE@|$EXE_FILE|g" -e "s|@ICON_FILE@|$ICON_FILE|g" -e "s|@UNICON_FILE@|$UNICON_FILE|g" -e "s|@NAME@|$PACKAGE_NAME|g" -e "s|@TARNAME@|$PACKAGE_TARNAME|g" -e "s|@VARIANT@|$VARIANT|g" "$1" > "$2"
+}
+
+cleanup()
+{
+  rm -rf "$NSI_FILE" "$SOURCE_DIR/$PACKAGE_VERSION"
+}
+
+install_gambc()
+{
+  cd "$rootfromhere"
+  make mostlyclean
+  make
+  if ( make check | fgrep -e "============ ALL TESTS SUCCESSFUL" ) ; then
+    make install
+    (cd "$SOURCE_DIR/$PACKAGE_VERSION" && bin/gsc syntax-case)
+  else
+    echo "============ TESTS FAILED"
+    cleanup
+    exit 1
+  fi
+  cd "$herefromroot"
+}
+
+uninstall_gambc()
+{
+  "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+}
+
+create_nsi()
+{
+  for file in "$NSI_FILE" ; do
+    instantiate_file "$file.in" "$file"
+  done
+}
+
+create_exe()
+{
+  "$MAKENSIS" "$NSI_FILE"
+}
+
+cd "`dirname $0`"
+
+cleanup
+rm -f "$EXE_FILE"
+install_gambc
+create_nsi
+create_exe
+mv "$EXE_FILE" "$rootfromhere"
+cleanup

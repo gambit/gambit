@@ -1,0 +1,15 @@
+MAKEFILES="makefile lib/makefile gsi/makefile gsc/makefile check/makefile doc/makefile misc/makefile"
+
+rm -f configur
+echo > configur
+rm -f config.status
+echo > config.status
+
+for mf in $MAKEFILES
+do
+  if [ -n "${CPLUSPLUS-}" ]; then
+    sed -f misc/conf_dpp.sed $mf.in > $mf
+  else
+    sed -f misc/conf_dj.sed $mf.in > $mf
+  fi
+done

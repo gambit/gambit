@@ -1,0 +1,256 @@
+# makefile for regression tests, Time-stamp: <2007-07-25 19:54:22 feeley>
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot = tests
+rootfromhere = ..
+SUBDIRS =
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
+
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+srcdirpfx = @srcdirpfx@
+
+C_COMPILER = @C_COMPILER@
+C_PREPROC = @C_PREPROC@
+FLAGS_OBJ = @FLAGS_OBJ@
+FLAGS_DYN = @FLAGS_DYN@
+FLAGS_LIB = @FLAGS_LIB@
+FLAGS_EXE = @FLAGS_EXE@
+DEFS = @DEFS@
+LIBS = @LIBS@
+
+GAMBCLIB = @GAMBCLIB@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LIB = @INSTALL_LIB@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+LN_S = @LN_S@
+RANLIB = @RANLIB@
+HG = @HG@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = $(prefix)$(PACKAGE_SUBDIR)/include
+libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
+bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
+docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
+infodir = $(prefix)$(PACKAGE_SUBDIR)/info
+emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+
+INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir)
+
+.SUFFIXES:
+
+RCFILES = makefile.in \
+debug.scm error.scm r4rstest.scm mix.scm mem.scm client.c server.scm server.h \
+test1.ok test2.ok test3.ok test4.ok test5.ok test6.ok test7.ok \
+test8.ok test9.ok input
+
+GENDISTFILES =
+
+DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+all: all-pre all-recursive all-post
+
+all-pre:
+
+all-post:
+	@if [ ! -f debug.scm ]; then \
+	  cp $(srcdirpfx)debug.scm .; \
+	  touch debug.rm; \
+	  cp $(srcdirpfx)error.scm .; \
+	  touch error.rm; \
+	  cp $(srcdirpfx)r4rstest.scm .; \
+	  touch r4rstest.rm; \
+	  cp $(srcdirpfx)mix.scm .; \
+	  touch mix.rm; \
+	  cp $(srcdirpfx)mem.scm .; \
+	  touch mem.rm; \
+	  cp $(srcdirpfx)server.scm .; \
+	  touch server.rm; \
+	fi
+
+check: all test1 test2 test3 test4 test5 test6 test7 test8 test9
+	@echo "============ ALL TESTS SUCCESSFUL"
+	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
+	  mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@ \
+	  server.c server_.c server@obj@ server_@obj@ client@obj@ \
+	  client@exe@ so_locations *.out tmp*
+
+test1:
+	@echo "------------ TEST 1 (debugging support)"
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -f debug.scm > test1.out
+	diff $(srcdirpfx)test1.ok test1.out && rm -f test1.out
+
+test2:
+	@echo "------------ TEST 2 (error handling)"
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:h4000 -f error.scm < error.scm > test2.out
+	diff $(srcdirpfx)test2.ok test2.out && rm -f test2.out
+
+test3:
+	@echo "------------ TEST 3 (interpreter and library functions)"
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:s -f -e '(begin (load "r4rstest.scm") (test-cont) (test-sc4) (test-delay) (exit))' > test3.out
+	diff $(srcdirpfx)test3.ok test3.out && rm -f test3.out tmp*
+
+test4:
+	@echo "------------ TEST 4 (interpreter running an application)"
+	rm -f mix@obj@
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -f mix.scm > test4.out
+	diff $(srcdirpfx)test4.ok test4.out && rm -f test4.out
+
+test5:
+	@echo "------------ TEST 5 (compiler generating C code)"
+	rm -f mix.c
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) -f -c mix.scm
+	diff $(srcdirpfx)test5.ok mix.c
+
+test6:
+	@echo "------------ TEST 6 (link and execute the code generated)"
+	rm -f mix_.c mix@obj@ mix_@obj@ mix@exe@
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) -f -link mix.c
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mix.c
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mix_.c
+	$(MAKE) link EXECUTABLE="mix@exe@" \
+	  OBJECTS="mix@obj@ mix_@obj@" \
+	  OBJECTS_PLUS="+mix@obj@ +mix_@obj@" \
+	  OBJECTS_COMMA="mix@obj@,mix_@obj@"
+	@SETDLPATH@ ./mix@exe@ -:m4000 > test6.out
+	diff $(srcdirpfx)test6.ok test6.out && \
+	  rm -f test6.out mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@
+
+test7:
+	@echo "------------ TEST 7 (memory management and C-interface)"
+	rm -f mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) -f -link mem.scm
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mem.c
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mem_.c
+	$(MAKE) link EXECUTABLE="mem@exe@" \
+	  OBJECTS="mem@obj@ mem_@obj@" \
+	  OBJECTS_PLUS="+mem@obj@ +mem_@obj@" \
+	  OBJECTS_COMMA="mem@obj@,mem_@obj@"
+	@SETDLPATH@ ./mem@exe@ -:h4000 > test7.out
+	diff $(srcdirpfx)test7.ok test7.out && \
+	  rm -f test7.out mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
+
+test8:
+	@echo "------------ TEST 8 (use C-interface to implement a Scheme server)"
+	rm -f server.c server_.c server@obj@ server_@obj@ \
+	  client@obj@ client@exe@
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) -f -link server.scm
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c client.c
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -D___LIBRARY -c server.c
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -D___LIBRARY -c server_.c
+	$(MAKE) link EXECUTABLE="client@exe@" \
+	  OBJECTS="client@obj@ server@obj@ server_@obj@" \
+	  OBJECTS_PLUS="+client@obj@ +server@obj@ +server_@obj@" \
+	  OBJECTS_COMMA="client@obj@,server@obj@,server_@obj@"
+	@SETDLPATH@ ./client@exe@ > test8.out
+	diff -w $(srcdirpfx)test8.ok test8.out && \
+	  rm -f test8.out server.c server_.c server@obj@ server_@obj@ \
+	    client@obj@ client@exe@
+
+test9:
+	@echo "------------ TEST 9 (dynamic compilation and loading of a module)"
+	rm -f mem@obj@ mem.o*
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) -f mem.scm
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:h4000 -f mem.o1 > test9.out
+	diff $(srcdirpfx)test9.ok test9.out && rm -f test9.out mem@obj@ mem.o1
+
+link:
+	@LINK@
+
+install-pre:
+
+install-post: all
+
+uninstall-pre:
+
+uninstall-post:
+
+mostlyclean-pre:
+
+mostlyclean-post:
+	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem mem.exe \
+	  mix.c mix_.c mix@obj@ mix_@obj@ mix mix.exe \
+	  server.c server_.c server@obj@ server_@obj@ client@obj@ client \
+	  client.exe gambit.h so_locations *.out tmp*
+
+clean-pre: mostlyclean-pre
+
+clean-post: mostlyclean-post
+	test ! -f debug.rm || rm -f debug.rm debug.scm
+	test ! -f error.rm || rm -f error.rm error.scm
+	test ! -f r4rstest.rm || rm -f r4rstest.rm r4rstest.scm
+	test ! -f mix.rm || rm -f mix.rm mix.scm
+	test ! -f mem.rm || rm -f mem.rm mem.scm
+	test ! -f server.rm || rm -f server.rm server.scm
+	rm -f *.da *.bb *.bbg *.gcov
+
+distclean-pre: clean-pre
+
+distclean-post: clean-post
+	rm -f makefile
+
+realclean-pre: distclean-pre
+
+realclean-post: distclean-post
+
+hg-setup-pre:
+	$(HG) add $(RCFILES)
+
+hg-setup-post:
+
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    target=`echo $@ | sed 's/-recursive//'`; \
+	    echo making $$target in $$subdir; \
+	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+	  done \
+	fi
+
+install: install-pre install-recursive install-post
+
+uninstall: uninstall-pre uninstall-recursive uninstall-post
+
+mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
+
+clean: clean-pre clean-recursive clean-post
+
+distclean: distclean-pre distclean-recursive distclean-post
+
+realclean: realclean-pre realclean-recursive realclean-post
+
+hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+
+dist:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    echo making $@ in $$subdir; \
+	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
+	  done \
+	fi
+	@echo "Copying distribution files"
+	@for file in $(DISTFILES); do \
+	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	done
+
+makefile: makefile.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

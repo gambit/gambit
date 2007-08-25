@@ -1,0 +1,197 @@
+/* File: "config.h.in", Time-stamp: <2007-08-07 14:13:22 feeley> */
+
+/*
+ * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+ */
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+/*---------------------------------------------------------------------------*/
+
+/*
+ * These definitions are used by the "gambit.h" header file.
+ */
+
+/* Define as 1 if you want to compile for debugging.  */
+#undef ___DEBUG
+
+/* Define as 1 if you want to compile with profiling.  */
+#undef ___PROFILE
+
+/* Define as 1 if you want to compile each Scheme file into one C function.  */
+#undef ___SINGLE_HOST
+
+/* Define as 1 if you want to compile as a shared library.  */
+#undef ___SHARED
+
+/*---------------------------------------------------------------------------*/
+
+/* Determine which header files are available. */
+
+#undef HAVE_ERRNO_H
+#undef HAVE_UNISTD_H
+#undef HAVE_PWD_H
+#undef HAVE_DIRENT_H
+#undef HAVE_DLFCN_H
+#undef HAVE_DL_H
+#undef HAVE_SYS_DXE_H
+#undef HAVE_MACH_O_DYLD_H
+#undef HAVE_SYS_TYPES_H
+#undef HAVE_SYS_TIME_H
+#undef HAVE_SYS_TIMES_H
+#undef HAVE_SYS_TIMEB_H
+#undef HAVE_SYS_TIMERS_H
+#undef HAVE_TIME_H
+#undef HAVE_SYS_RESOURCE_H
+#undef HAVE_SYS_STAT_H
+#undef HAVE_SYS_WAIT_H
+#undef HAVE_STAT_H
+#undef HAVE_SIGNAL_H
+#undef HAVE_NETDB_H
+#undef HAVE_GRP_H
+#undef HAVE_WINDOWS_H
+#undef HAVE_IO_H
+#undef HAVE_TCHAR_H
+#undef HAVE_FLOAT_H
+#undef HAVE_FPU_CONTROL_H
+#undef HAVE_OS2_H
+#undef HAVE_DOS_H
+#undef HAVE_DIRECT_H
+#undef HAVE_RETRACE_H
+#undef HAVE_FILES_H
+#undef HAVE_FINDER_H
+#undef HAVE_ERRORS_H
+#undef HAVE_FOLDERS_H
+#undef HAVE_OSUTILS_H
+#undef HAVE_POWER_H
+#undef HAVE_CODEFRAGMENTS_H
+#undef HAVE_SIOUX_H
+#undef HAVE_MAC_GUI_H
+#undef HAVE_UNIX_H
+#undef HAVE_WDEFWIN_H
+#undef HAVE_TFORK_H
+#undef HAVE_CURSES_H
+#undef HAVE_NCURSES_H
+#undef HAVE_NETINET_IN_H
+#undef HAVE_ARPA_INET_H
+#undef HAVE_TERMIOS_H
+#undef HAVE_TERM_H
+#undef HAVE_PTY_H
+#undef HAVE_LIBUTIL_H
+#undef HAVE_UTIL_H
+#undef HAVE_SYS_FPU_H
+#undef HAVE_FENV_H
+#undef HAVE_FCNTL_H
+#undef HAVE_SYS_IOCTL_H
+#undef HAVE_SYS_SOCKET_H
+#undef HAVE_STDIO_H
+#undef HAVE_STDLIB_H
+#undef HAVE_STRING_H
+#undef HAVE_STRINGS_H
+#undef HAVE_MEMORY_H
+#undef HAVE_SYS_SYSCTL_H
+
+/*---------------------------------------------------------------------------*/
+
+/* Determine which library functions are available. */
+
+#undef HAVE_PIPE
+#undef HAVE_SOCKETPAIR
+#undef HAVE_CHDIR
+#undef HAVE_EXECVP
+#undef HAVE_GETGRNAM
+#undef HAVE_GETPID
+#undef HAVE_GETPPID
+#undef HAVE_GETPWNAM
+#undef HAVE_IOCTL
+#undef HAVE_LINK
+#undef HAVE_MKDIR
+#undef HAVE_MKFIFO
+#undef HAVE_OPENDIR
+#undef HAVE_RENAME
+#undef HAVE_RMDIR
+#undef HAVE_SOCKET
+#undef HAVE_STAT
+#undef HAVE_STRERROR
+#undef HAVE_SYMLINK
+#undef HAVE_SYSCONF
+#undef HAVE_SYSCTL
+#undef HAVE_TCGETATTR
+#undef HAVE_UNLINK
+#undef HAVE_WAITPID
+
+#undef HAVE_CLOCK_GETTIME
+#undef HAVE_GETCLOCK
+#undef HAVE_GETSYSTEMTIME
+#undef HAVE_GETTIMEOFDAY
+#undef HAVE_FTIME
+#undef HAVE_TIME
+
+#undef HAVE_NANOSLEEP
+#undef HAVE_Sleep
+#undef HAVE_SLEEP
+
+#undef HAVE_GETPROCESSTIMES
+#undef HAVE_GETRUSAGE
+#undef HAVE_TIMES
+#undef HAVE_CLOCK
+#undef HAVE_DOSQUERYSYSINFO
+
+#undef HAVE_SETITIMER
+#undef HAVE_DOS_SETVECT
+#undef HAVE_DOSSTARTTIMER
+#undef HAVE_VINSTALL
+#undef HAVE_CREATETHREAD
+
+#undef HAVE_SIGACTION
+#undef HAVE_SIGEMPTYSET
+#undef HAVE_SIGADDSET
+#undef HAVE_SIGPROCMASK
+#undef HAVE_SIGNAL
+
+#undef HAVE_SHL_LOAD
+#undef HAVE_LOADLIBRARY
+#undef HAVE_DOSLOADMODULE
+#undef HAVE_DXE_LOAD
+#undef HAVE_GETDISKFRAGMENT
+#undef HAVE_NSLINKMODULE
+#undef HAVE_DLOPEN
+
+#undef HAVE_GETHOSTNAME
+#undef HAVE_INET_PTON
+#undef HAVE_GETHOSTBYNAME
+#undef HAVE_GETHOSTBYADDR
+#undef HAVE_GETSERVBYNAME
+#undef HAVE_GETSERVBYPORT
+#undef HAVE_GETPROTOBYNAME
+#undef HAVE_GETPROTOBYNUMBER
+#undef HAVE_GETNETBYNAME
+
+#undef HAVE_SELECT
+#undef HAVE_MSGWAITFORMULTIPLEOBJECTS
+
+#undef HAVE_TGETSTR
+#undef HAVE_TIGETSTR
+
+#undef HAVE_OPENPTY
+#undef HAVE_GETPT
+#undef HAVE_PTSNAME
+
+#undef HAVE_HSTRERROR
+
+#undef HAVE_GET_FPC_CSR
+
+/* Define appropriately if sys/types.h does not define socklen_t.  */
+#undef socklen_t
+
+/*
+ * Define appropriately as the prefix and suffix added to function
+ * names by the C compiler.
+ */
+#undef ___IMPORTED_ID_PREFIX
+#undef ___IMPORTED_ID_SUFFIX
+
+/*---------------------------------------------------------------------------*/
+
+#endif

@@ -1,0 +1,2 @@
+A foreign function interface example that shows how a threaded C program
+can call Scheme code.

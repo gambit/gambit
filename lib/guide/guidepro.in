@@ -1,0 +1,72 @@
+# project file for GUIDE library, Time-stamp: <2007-04-04 11:34:29 feeley>
+
+# Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
+
+TEMPLATE = lib
+
+TARGET = guide
+
+LANGUAGE = C++
+
+CONFIG += qt staticlib exceptions warn_on release
+
+INCPATH += ../../include
+
+HEADERS += \
+	guideuicodeformat.h \
+	guideuirepl.h \
+	guideuitableitem.h \
+	guideuihighlighter.h \
+	guideuihighlighterscheme.h \
+	guideuischeme.h \
+	guideuiconsoleinfo.h \
+	guideuitextedit.h \
+	guideuicont.h \
+	guideuienv.h \
+	guideuiinspector.h \
+	_guide.h \
+	guide.h
+
+SOURCES += \
+	guideuicodeformat.cpp \
+	guideuirepl.cpp \
+	guideuihighlighter.cpp \
+	guideuihighlighterscheme.cpp \
+	guideuischeme.cpp \
+	guideuiconsoleinfo.cpp \
+	guideuitextedit.cpp \
+	guideuicont.cpp \
+	guideuienv.cpp \
+	guideuiinspector.cpp \
+        guide.cpp
+
+FORMS = \
+	guideuimainwindow.ui \
+	guideuifileeditor.ui \
+	guideuiformatchooser.ui \
+	guideuisearchdialog.ui \
+	guideuiabout.ui
+
+IMAGES = \
+	images/filenew.png \
+	images/fileopen.png \
+	images/filesave.png \
+	images/print.png \
+	images/undo.png \
+	images/redo.png \
+	images/editcut.png \
+	images/editcopy.png \
+	images/editpaste.png \
+	images/cont.png \
+	images/leap.png \
+	images/step.png
+
+OBJECTS += _guide@obj@

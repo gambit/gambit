@@ -1,0 +1,10 @@
+This directory contains the following examples:
+
+  pi          bignums -- compute digits of pi
+  ring        threads and FIFOs -- create a ring of threads sending messages
+  distr-comp  threads and sockets -- thread migration in distributed system
+  web-server  threads and sockets -- small web server to browse the filesystem
+  web-repl    threads and sockets -- an applet implementing a remote REPL
+  tcltk       Tcl/Tk interface -- GUI with a bunch of buttons
+  Xlib-simple threads and FFI -- display 2 windows that bounce balls
+  pthread     posix threads and FFI -- calling Scheme from threaded C program

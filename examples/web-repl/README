@@ -1,0 +1,16 @@
+This example is a Java application that provides a user-interface to
+the Gambit interpreter's read-eval-print loop.  The application is
+composed of two programs: web-repl.scm and Repl.java.  To try out this
+example you must start the execution of web-repl.scm.  For instance
+
+  % gsi web-repl &
+
+This starts a ``REPL server'' on port 7000.  The program Repl.java is
+a client that connects to this server to start a new REPL. Repl.java
+can be run standalone, for instance
+
+  % javac Repl.java
+  % java Repl
+
+or as an applet (just visit the file index.html with a Java enabled
+browser).

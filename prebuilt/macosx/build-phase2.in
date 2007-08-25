@@ -1,0 +1,127 @@
+#! /bin/sh
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot="prebuilt/macosx"
+rootfromhere="../.."
+
+PACKAGE_SHORTNAME="@PACKAGE_SHORTNAME@"
+PACKAGE_NAME="@PACKAGE_NAME@"
+PACKAGE_VERSION="@PACKAGE_VERSION@"
+PACKAGE_STRING="@PACKAGE_STRING@"
+PACKAGE_BUGREPORT="@PACKAGE_BUGREPORT@"
+PACKAGE_TARNAME="@PACKAGE_TARNAME@"
+PACKAGE_SUBDIR="@PACKAGE_SUBDIR@"
+
+PKGM="/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker"
+
+VARIANT="$1"
+
+SOURCE_DIR="$INSTALL_PREFIX"
+INSTALL_DIR="$INSTALL_PREFIX"
+BIN_DIR="/usr/bin"
+TITLE="$PACKAGE_STRING"
+VERSION="`echo $PACKAGE_VERSION | sed -e s/^v//g`"
+PKG_FILE="`pwd`/$PACKAGE_TARNAME-macosx-$VARIANT.pkg"
+DMG_FILE="`pwd`/$PACKAGE_TARNAME-macosx-$VARIANT.dmg"
+BACKGROUND_FILE="`pwd`/gambc.tif"
+PMPROJ_FILE="`pwd`/gambc.pmproj"
+WELCOME_FILE="`pwd`/welcome.html"
+README_FILE="`pwd`/readme.html"
+EXTRAS_DIR="`pwd`/extras"
+DESCRIPTION="This is the $TITLE installer"
+PROGRAMS="gsc gsc-cc-o gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script uninstall-gambc"
+
+instantiate_file() # input, output
+{
+  sed -e "s|@BIN_DIR@|$BIN_DIR|g" -e "s|@SOURCE_DIR@|$SOURCE_DIR|g" -e "s|@INSTALL_DIR@|$INSTALL_DIR|g" -e "s|@VERSION@|$VERSION|g" -e "s|@TITLE@|$TITLE|g" -e "s|@DESCRIPTION@|$DESCRIPTION|g" -e "s|@PROGRAMS@|$PROGRAMS|g" -e "s|@BACKGROUND_FILE@|$BACKGROUND_FILE|g" -e "s|@WELCOME_FILE@|$WELCOME_FILE|g" -e "s|@README_FILE@|$README_FILE|g" -e "s|@EXTRAS_DIR@|$EXTRAS_DIR|g" -e "s|@NAME@|$PACKAGE_NAME|g" -e "s|@VARIANT@|$VARIANT|g" "$1" > "$2"
+}
+
+cleanup()
+{
+  rm -rf "$PMPROJ_FILE" "$WELCOME_FILE" "$README_FILE" "$PKG_FILE" "$SOURCE_DIR/current" "$SOURCE_DIR/$PACKAGE_VERSION" "$EXTRAS_DIR"
+}
+
+install_gambc()
+{
+  cd "$rootfromhere"
+  make mostlyclean
+  make
+  if ( make check | fgrep -e "============ ALL TESTS SUCCESSFUL" ) ; then
+    make install
+    (cd "$SOURCE_DIR/$PACKAGE_VERSION" && bin/gsc syntax-case)
+  else
+    echo "============ TESTS FAILED"
+    cleanup
+    exit 1
+  fi
+  cd "$herefromroot"
+}
+
+uninstall_gambc()
+{
+  "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+}
+
+create_uninstaller()
+{
+  rm -f "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+
+  instantiate_file "uninstall-gambc.in" "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+
+  chmod 755 "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+}
+
+create_extras()
+{
+  mkdir "$EXTRAS_DIR"
+
+  touch "$EXTRAS_DIR/InstallationCheck.strings"
+
+  i=0
+
+  for prog in $PROGRAMS ; do
+
+    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $BIN_DIR/$prog exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
+
+    i=`expr $i + 1`
+
+  done
+
+  for file in InstallationCheck postflight ; do
+    instantiate_file "$file.in" "$EXTRAS_DIR/$file"
+    chmod 755 "$EXTRAS_DIR/$file"
+  done
+}
+
+create_pmproj()
+{
+  for file in "$PMPROJ_FILE" "$WELCOME_FILE" "$README_FILE" ; do
+    instantiate_file "$file.in" "$file"
+  done
+
+  plutil -convert binary1 "$PMPROJ_FILE"
+}
+
+create_pkg()
+{
+  $PKGM -build -proj "$PMPROJ_FILE" -p "$PKG_FILE"
+}
+
+create_dmg()
+{
+  hdiutil create -srcfolder "$PKG_FILE" -volname "$PACKAGE_STRING" -fs HFS+ "$DMG_FILE"
+}
+
+cd "`dirname $0`"
+
+cleanup
+rm -f "$DMG_FILE"
+install_gambc
+create_uninstaller
+create_extras
+create_pmproj
+create_pkg
+create_dmg
+mv "$DMG_FILE" "$rootfromhere"
+cleanup

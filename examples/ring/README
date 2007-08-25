@@ -1,0 +1,6 @@
+A simple example of threads that exchange messages.  A ring of N
+threads is created and then a message is sent from one thread to the
+next in the ring so that it goes around the ring several times.  To
+create 1000 threads do:
+
+                      gsi ring 1000

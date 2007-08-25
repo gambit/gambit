@@ -1,0 +1,82 @@
+                      README file for Gambit-C
+                      ========================
+
+              [Time-stamp: <2007-08-25 13:44:19 feeley>]
+
+This directory contains a release of the Gambit-C Scheme programming
+system (see the file configure.ac for the version number).  Gambit-C
+includes a Scheme interpreter and a Scheme compiler which can be used
+to build standalone executables.  Because the compiler generates
+portable C code it is fairly easy to port to any platform with a
+decent C compiler.
+
+The Gambit-C system conforms to the R4RS, R5RS and IEEE Scheme standards.
+The full numeric tower is implemented, including: infinite precision
+integers (bignums), rationals, inexact reals (floating point numbers),
+and complex numbers.  Gambit-C supports a number of extensions to the
+standards including:
+
+ - an optimizing compiler
+   - with several powerful transformations (automatic function inlining,
+     partial evaluation, etc)
+   - that generates properly tail-recursive portable C code
+ - a scalable thread system that can handle millions of concurrent threads
+ - an I/O system fully integrated with the thread system that supports
+   - regular files
+   - ttys (terminals and serial ports)
+   - sockets (client and server, with TCP or UDP)
+   - directories
+   - processes
+   - pipes
+ - an infix syntax extension (SIX) that allows mixing code in the
+   standard prefix syntax with code in a C-like syntax
+ - the following SRFIs:
+    - SRFI 0 (Feature-based conditional expansion construct)
+    - SRFI 4 (Homogeneous numeric vector datatypes)
+    - SRFI 6 (Basic String Ports)
+    - SRFI 8 (RECEIVE: Binding to multiple values)
+    - SRFI 9 (Defining Record Types)
+    - SRFI 18 (Multithreading support)
+    - SRFI 21 (Real-time multithreading support)
+    - SRFI 22 (Running Scheme Scripts on Unix)
+    - SRFI 23 (Error reporting mechanism)
+    - SRFI 27 (Sources of Random Bits)
+    - SRFI 39 (Parameter objects)
+ - a REPL/debugger with
+    - a continuation inspection facility (i.e. "backtrace")
+    - a single-stepping mode
+    - error messages with location of error (file, line, and column number)
+    - emacs compatible line-editing with history
+ - very efficient bignum implementation
+ - a foreign function interface for C
+ - a memory management system that grows and shrinks the heap based on
+   the program's needs
+ - a linker that builds standalone executables and shared libraries
+ - dynamic loading of compiled modules and libraries (supported on many
+   platforms)
+ - Unicode support for characters, strings, I/O and source code
+ - object finalization
+ - pretty printing
+ - keyword objects
+ - optional and keyword parameters (with the syntax and semantics of DSSSL)
+ - configurable reader with control over case sensitivity
+ - write/read invariance of symbols, e.g. (string->symbol "B;123") => |B;123|
+ - write/read invariance of floating point numbers
+ - unhygienic macros
+ - and many other things!
+
+The user manual for the Gambit-C system is available in PDF format
+(the file "doc/gambit-c.pdf"), in HTML format (the file
+"doc/gambit-c.html"), in text format (the file "doc/gambit-c.txt") and
+in "info" format (the files "doc/gambit-c.info*").
+
+Installation instructions are given in the file "INSTALL.txt".
+
+If you have any questions concerning Gambit-C please address them to:
+
+  gambit@iro.umontreal.ca
+
+The latest official release of the system and other helpful documents
+related to Gambit can be obtained from the Gambit web page at:
+
+  http://www.iro.umontreal.ca/~gambit

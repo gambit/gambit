@@ -1,0 +1,60 @@
+#! /bin/sh
+
+# Time-stamp: <2006-04-07 13:05:52 feeley>
+
+# Utility to change the version of Gambit attached to a source file.
+#
+# Usage: changev 40062 40063 file1 file2
+
+OLDVERSION=$1
+NEWVERSION=$2
+TEMPFILE=/tmp/changev.$$
+
+OLDMAJORVERSION=`eval expr $OLDVERSION / 100000`
+OLDMINORVERSION=`eval expr $OLDVERSION % 100000 / 1000`
+if [ `eval expr $OLDVERSION % 1000` -eq 0 ]
+then
+  OLDREVISIONVERSION=""
+else
+  OLDREVISIONVERSION=".`eval expr $OLDVERSION % 1000`"
+fi
+OLDVERSIONSTRING=$OLDMAJORVERSION.$OLDMINORVERSION$OLDREVISIONVERSION
+OLDDISTVERSION="gambc$OLDVERSION"
+
+NEWMAJORVERSION=`eval expr $NEWVERSION / 100000`
+NEWMINORVERSION=`eval expr $NEWVERSION % 100000 / 1000`
+if [ `eval expr $NEWVERSION % 1000` -eq 0 ]
+then
+  NEWREVISIONVERSION=""
+else
+  NEWREVISIONVERSION=".`eval expr $NEWVERSION % 1000`"
+fi
+NEWVERSIONSTRING=$NEWMAJORVERSION.$NEWMINORVERSION$NEWREVISIONVERSION
+NEWDISTVERSION="gambc$NEWVERSION"
+
+while [ -n "$3" ]
+do
+
+  FILE=$3
+
+  sed -e "s/#define ___VERSION $OLDVERSION/#define ___VERSION $NEWVERSION/g" -e "s/Gambit-C $OLDVERSIONSTRING/Gambit-C $NEWVERSIONSTRING/g" -e "s/Gambit Version $OLDVERSIONSTRING/Gambit Version $NEWVERSIONSTRING/g" -e "s/Gambit-C,$OLDVERSION/Gambit-C,$NEWVERSION/g" -e "s/$OLDDISTVERSION/$NEWDISTVERSION/g" -e "s/(define (system-version) $OLDVERSION)/(define (system-version) $NEWVERSION)/g" -e "s/PACKAGE_VERSION=\'$OLDVERSION\'/PACKAGE_VERSION=\'$NEWVERSION\'/g" -e "s/PACKAGE_STRING=\'Gambit-C $OLDVERSION\'/PACKAGE_STRING=\'Gambit-C $NEWVERSION\'/g" -e "s/Gambit-C $OLDVERSION/Gambit-C $NEWVERSION/g" -e "s/Gambit-C configure $OLDVERSION/Gambit-C configure $NEWVERSION/g" -e "s/Gambit-C \$as_me $OLDVERSION/Gambit-C \$as_me $NEWVERSION/g" -e "s/Gambit-C config.status $OLDVERSION/Gambit-C config.status $NEWVERSION/g" $FILE > $TEMPFILE
+
+  diff -q $FILE $TEMPFILE > /dev/null
+
+  if [ $? -eq 1 ]
+  then
+    echo =================================================== $FILE
+    diff $FILE $TEMPFILE
+    if [ -x $FILE ]
+    then
+      chmod +x $TEMPFILE
+    fi
+    mv $TEMPFILE $FILE
+    #rm -f $TEMPFILE
+  else
+    rm -f $TEMPFILE
+  fi
+
+  shift
+
+done

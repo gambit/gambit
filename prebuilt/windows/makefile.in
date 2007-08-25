@@ -1,0 +1,139 @@
+# makefile for Gambit-C build on Windows.
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot = prebuilt/windows
+rootfromhere = ../..
+SUBDIRS =
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
+
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+srcdirpfx = @srcdirpfx@
+
+C_COMPILER = @C_COMPILER@
+C_PREPROC = @C_PREPROC@
+FLAGS_OBJ = @FLAGS_OBJ@
+FLAGS_DYN = @FLAGS_DYN@
+FLAGS_LIB = @FLAGS_LIB@
+FLAGS_EXE = @FLAGS_EXE@
+DEFS = @DEFS@
+LIBS = @LIBS@
+
+GAMBCLIB = @GAMBCLIB@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LIB = @INSTALL_LIB@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+LN_S = @LN_S@
+RANLIB = @RANLIB@
+HG = @HG@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = $(prefix)$(PACKAGE_SUBDIR)/include
+libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
+bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
+docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
+infodir = $(prefix)$(PACKAGE_SUBDIR)/info
+emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+
+.SUFFIXES:
+
+RCFILES = makefile.in build build-phase2.in remote-shell blank-floppy.fdd \
+binpatch.c binpatch.exe gambc.ai gambc.ico gambc.nsi.in \
+AddToPath.nsh
+
+GENDISTFILES =
+
+DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+all: all-pre all-recursive all-post
+
+all-pre:
+
+all-post:
+
+install-pre:
+
+install-post: all
+
+uninstall-pre:
+
+uninstall-post:
+
+mostlyclean-pre:
+
+mostlyclean-post:
+
+clean-pre: mostlyclean-pre
+
+clean-post: mostlyclean-post
+
+distclean-pre: clean-pre
+
+distclean-post: clean-post
+	rm -f makefile build-phase2.out
+
+realclean-pre: distclean-pre
+
+realclean-post: distclean-post
+
+hg-setup-pre:
+	$(HG) add $(RCFILES)
+
+hg-setup-post:
+
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    target=`echo $@ | sed 's/-recursive//'`; \
+	    echo making $$target in $$subdir; \
+	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+	  done \
+	fi
+
+install: install-pre install-recursive install-post
+
+uninstall: uninstall-pre uninstall-recursive uninstall-post
+
+mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
+
+clean: clean-pre clean-recursive clean-post
+
+distclean: distclean-pre distclean-recursive distclean-post
+
+realclean: realclean-pre realclean-recursive realclean-post
+
+hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+
+dist:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    echo making $@ in $$subdir; \
+	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
+	  done \
+	fi
+	@echo "Copying distribution files"
+	@for file in $(DISTFILES); do \
+	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	done
+
+makefile: makefile.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

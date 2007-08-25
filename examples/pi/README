@@ -1,0 +1,4 @@
+Computes the digits of pi.  This is a good test of the speed of bignum
+arithmetic.  To compute 1000 digits do:
+
+                      gsi pi 1000

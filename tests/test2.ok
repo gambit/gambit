@@ -1,0 +1,1220 @@
+(not #f) => #t
+(not #t) => #f
+(not '()) => #f
+(not "foo") => #f
+(boolean? #f) => #t
+(boolean? #t) => #t
+(boolean? '()) => #f
+(boolean? "foo") => #f
+(eqv? #f "foo") => #f
+(eqv? #f #f) => #t
+(eqv? 'foo 'foo) => #t
+(eqv? 12345678901234567890 12345678901234567890) => #t
+(eqv? '(1 2) '(1 2)) => #f
+(eq? #f "foo") => #f
+(eq? #f #f) => #t
+(eq? 'foo 'foo) => #t
+(eq? 12345678901234567890 12345678901234567890) => #f
+(eq? '(1 2) '(1 2)) => #f
+(equal? #f "foo") => #f
+(equal? #f #f) => #t
+(equal? 'foo 'foo) => #t
+(equal? 12345678901234567890 12345678901234567890) => #t
+(equal? '(1 2) '(1 2)) => #t
+(pair? '(1 . 2)) => #t
+(pair? '()) => #f
+(pair? "foo") => #f
+(pair? #f) => #f
+(cons 1 "foo") => (1 . "foo")
+(car '(a . b)) => a
+;;; (Argument 1) PAIR expected: (car 'a)
+;;; (Argument 1) PAIR expected: (car "foo")
+;;; (Argument 1) PAIR expected: (car '#(a b))
+(cdr '(a . b)) => b
+;;; (Argument 1) PAIR expected: (cdr 'a)
+;;; (Argument 1) PAIR expected: (cdr "foo")
+;;; (Argument 1) PAIR expected: (cdr '#(a b))
+(set-car! '(a . b) 123) => (123 . b)
+;;; (Argument 1) PAIR expected: (set-car! 'a 123)
+;;; (Argument 1) PAIR expected: (set-car! "foo" 123)
+;;; (Argument 1) PAIR expected: (set-car! '#(a b) 123)
+(set-cdr! '(a . b) 123) => (a . 123)
+;;; (Argument 1) PAIR expected: (set-cdr! 'a 123)
+;;; (Argument 1) PAIR expected: (set-cdr! "foo" 123)
+;;; (Argument 1) PAIR expected: (set-cdr! '#(a b) 123)
+(caar '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => ((a . b) c . d)
+(caar '(((a . b) c . d) (e . f) g . h)) => (a . b)
+(caar '((a . b) c . d)) => a
+;;; (Argument 1) PAIR expected: (caar '(a . b))
+;;; (Argument 1) PAIR expected: (caar 'a)
+(cadr '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => ((i . j) k . l)
+(cadr '(((a . b) c . d) (e . f) g . h)) => (e . f)
+(cadr '((a . b) c . d)) => c
+;;; (Argument 1) PAIR expected: (cadr '(a . b))
+;;; (Argument 1) PAIR expected: (cadr 'a)
+(cdar '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => ((e . f) g . h)
+(cdar '(((a . b) c . d) (e . f) g . h)) => (c . d)
+(cdar '((a . b) c . d)) => b
+;;; (Argument 1) PAIR expected: (cdar '(a . b))
+;;; (Argument 1) PAIR expected: (cdar 'a)
+(cddr '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => ((m . n) o . p)
+(cddr '(((a . b) c . d) (e . f) g . h)) => (g . h)
+(cddr '((a . b) c . d)) => d
+;;; (Argument 1) PAIR expected: (cddr '(a . b))
+;;; (Argument 1) PAIR expected: (cddr 'a)
+(caaar '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => (a . b)
+(caaar '(((a . b) c . d) (e . f) g . h)) => a
+;;; (Argument 1) PAIR expected: (caaar '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (caaar '(a . b))
+;;; (Argument 1) PAIR expected: (caaar 'a)
+(caadr '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => (i . j)
+(caadr '(((a . b) c . d) (e . f) g . h)) => e
+;;; (Argument 1) PAIR expected: (caadr '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (caadr '(a . b))
+;;; (Argument 1) PAIR expected: (caadr 'a)
+(cddar '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => (g . h)
+(cddar '(((a . b) c . d) (e . f) g . h)) => d
+;;; (Argument 1) PAIR expected: (cddar '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (cddar '(a . b))
+;;; (Argument 1) PAIR expected: (cddar 'a)
+(cdddr '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => (o . p)
+(cdddr '(((a . b) c . d) (e . f) g . h)) => h
+;;; (Argument 1) PAIR expected: (cdddr '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (cdddr '(a . b))
+;;; (Argument 1) PAIR expected: (cdddr 'a)
+(caaaar '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => a
+;;; (Argument 1) PAIR expected: (caaaar '(((a . b) c . d) (e . f) g . h))
+;;; (Argument 1) PAIR expected: (caaaar '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (caaaar '(a . b))
+;;; (Argument 1) PAIR expected: (caaaar 'a)
+(caaadr '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => i
+;;; (Argument 1) PAIR expected: (caaadr '(((a . b) c . d) (e . f) g . h))
+;;; (Argument 1) PAIR expected: (caaadr '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (caaadr '(a . b))
+;;; (Argument 1) PAIR expected: (caaadr 'a)
+(caddar '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => g
+;;; (Argument 1) PAIR expected: (caddar '(((a . b) c . d) (e . f) g . h))
+;;; (Argument 1) PAIR expected: (caddar '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (caddar '(a . b))
+;;; (Argument 1) PAIR expected: (caddar 'a)
+(cadddr '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => o
+;;; (Argument 1) PAIR expected: (cadddr '(((a . b) c . d) (e . f) g . h))
+;;; (Argument 1) PAIR expected: (cadddr '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (cadddr '(a . b))
+;;; (Argument 1) PAIR expected: (cadddr 'a)
+(cdaaar '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => b
+;;; (Argument 1) PAIR expected: (cdaaar '(((a . b) c . d) (e . f) g . h))
+;;; (Argument 1) PAIR expected: (cdaaar '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (cdaaar '(a . b))
+;;; (Argument 1) PAIR expected: (cdaaar 'a)
+(cdaadr '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => j
+;;; (Argument 1) PAIR expected: (cdaadr '(((a . b) c . d) (e . f) g . h))
+;;; (Argument 1) PAIR expected: (cdaadr '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (cdaadr '(a . b))
+;;; (Argument 1) PAIR expected: (cdaadr 'a)
+(cdddar '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => h
+;;; (Argument 1) PAIR expected: (cdddar '(((a . b) c . d) (e . f) g . h))
+;;; (Argument 1) PAIR expected: (cdddar '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (cdddar '(a . b))
+;;; (Argument 1) PAIR expected: (cdddar 'a)
+(cddddr '((((a . b) c . d) (e . f) g . h) ((i . j) k . l) (m . n) o . p)) => p
+;;; (Argument 1) PAIR expected: (cddddr '(((a . b) c . d) (e . f) g . h))
+;;; (Argument 1) PAIR expected: (cddddr '((a . b) c . d))
+;;; (Argument 1) PAIR expected: (cddddr '(a . b))
+;;; (Argument 1) PAIR expected: (cddddr 'a)
+(null? '()) => #t
+(null? '(1 . 2)) => #f
+(null? "foo") => #f
+(null? #f) => #f
+(list? '()) => #t
+(list? '(1 . 2)) => #f
+(list? '(1 2)) => #t
+(list? "foo") => #f
+(list? #f) => #f
+(list) => ()
+(list 1) => (1)
+(list 1 2) => (1 2)
+(length '()) => 0
+(length '(1 2 3)) => 3
+;;; (Argument 1) LIST expected: (length '(1 2 . 3))
+;;; (Argument 1) LIST expected: (length "foo")
+(append) => ()
+(append #f) => #f
+(append '() #f) => #f
+(append '(1 2) #f) => (1 2 . #f)
+;;; (Argument 1) LIST expected: (append '(1 2 . "foo") #f)
+(append '() '() #f) => #f
+(append '() '(1 2) #f) => (1 2 . #f)
+;;; (Argument 2) LIST expected: (append '() '(1 2 . "foo") #f)
+(append '(1 2) '() #f) => (1 2 . #f)
+;;; (Argument 1) LIST expected: (append '(1 2 . "foo") '() #f)
+(append '(1 2) '(3 4) #f) => (1 2 3 4 . #f)
+(append '() '() '() #f) => #f
+(append '(1 2) '(3 4) '(5 6) #f) => (1 2 3 4 5 6 . #f)
+(reverse '()) => ()
+(reverse '(1 2 3)) => (3 2 1)
+;;; (Argument 1) LIST expected: (reverse '(1 2 . 3))
+;;; (Argument 1) LIST expected: (reverse "foo")
+(list-tail '() 0) => ()
+(list-tail '(1 2 . 3) 1) => (2 . 3)
+;;; (Argument 1) PAIR expected: (list-tail '(1 2) 3)
+;;; (Argument 1) PAIR expected: (list-tail "foo" 1)
+;;; (Argument 1) PAIR expected: (list-ref '() 0)
+(list-ref '(1 2 . 3) 1) => 2
+;;; (Argument 1) PAIR expected: (list-ref '(1 2) 3)
+;;; (Argument 1) PAIR expected: (list-ref "foo" 1)
+(memq 123 '(a b c)) => #f
+(memq #f '(a #f b)) => (#f b)
+(memq 'foo '(a foo b)) => (foo b)
+(memq 12345678901234567890 '(a 12345678901234567890 b)) => #f
+(memq '(1 2) '(a (1 2) b)) => #f
+(memq 123 '()) => #f
+;;; (Argument 2) LIST expected: (memq 123 "foo")
+;;; (Argument 2) LIST expected: (memq 123 '(a b . "foo"))
+(memv 123 '(a b c)) => #f
+(memv #f '(a #f b)) => (#f b)
+(memv 'foo '(a foo b)) => (foo b)
+(memv 12345678901234567890 '(a 12345678901234567890 b)) => (12345678901234567890 b)
+(memv '(1 2) '(a (1 2) b)) => #f
+(memv 123 '()) => #f
+;;; (Argument 2) LIST expected: (memv 123 "foo")
+;;; (Argument 2) LIST expected: (memv 123 '(a b . "foo"))
+(member 123 '(a b c)) => #f
+(member #f '(a #f b)) => (#f b)
+(member 'foo '(a foo b)) => (foo b)
+(member 12345678901234567890 '(a 12345678901234567890 b)) => (12345678901234567890 b)
+(member '(1 2) '(a (1 2) b)) => ((1 2) b)
+(member 123 '()) => #f
+;;; (Argument 2) LIST expected: (member 123 "foo")
+;;; (Argument 2) LIST expected: (member 123 '(a b . "foo"))
+(assq 123 '((a . 1) (b . 2) (c . 3))) => #f
+(assq #f '((a . 1) (#f . 2) (b . 3))) => (#f . 2)
+(assq 'foo '((a . 1) (foo . 2) (b . 3))) => (foo . 2)
+(assq 12345678901234567890 '((a . 1) (12345678901234567890 . 2) (b . 3))) => #f
+(assq '(1 2) '((a . 1) ((1 2) . 2) (b . 3))) => #f
+(assq 123 '()) => #f
+;;; (Argument 2) LIST expected: (assq 123 "foo")
+;;; (Argument 2) LIST expected: (assq 123 '((a . 1) (b . 2) . "foo"))
+;;; (Argument 2) PAIR LIST expected: (assq 123 '((a . 1) b (c . 3)))
+(assv 123 '((a . 1) (b . 2) (c . 3))) => #f
+(assv #f '((a . 1) (#f . 2) (b . 3))) => (#f . 2)
+(assv 'foo '((a . 1) (foo . 2) (b . 3))) => (foo . 2)
+(assv 12345678901234567890 '((a . 1) (12345678901234567890 . 2) (b . 3))) => (12345678901234567890 . 2)
+(assv '(1 2) '((a . 1) ((1 2) . 2) (b . 3))) => #f
+(assv 123 '()) => #f
+;;; (Argument 2) LIST expected: (assv 123 "foo")
+;;; (Argument 2) LIST expected: (assv 123 '((a . 1) (b . 2) . "foo"))
+;;; (Argument 2) PAIR LIST expected: (assv 123 '((a . 1) b (c . 3)))
+(assoc 123 '((a . 1) (b . 2) (c . 3))) => #f
+(assoc #f '((a . 1) (#f . 2) (b . 3))) => (#f . 2)
+(assoc 'foo '((a . 1) (foo . 2) (b . 3))) => (foo . 2)
+(assoc 12345678901234567890 '((a . 1) (12345678901234567890 . 2) (b . 3))) => (12345678901234567890 . 2)
+(assoc '(1 2) '((a . 1) ((1 2) . 2) (b . 3))) => ((1 2) . 2)
+(assoc 123 '()) => #f
+;;; (Argument 2) LIST expected: (assoc 123 "foo")
+;;; (Argument 2) LIST expected: (assoc 123 '((a . 1) (b . 2) . "foo"))
+;;; (Argument 2) PAIR LIST expected: (assoc 123 '((a . 1) b (c . 3)))
+(symbol? 'foo) => #t
+(symbol? #f) => #f
+(symbol? '()) => #f
+(symbol? "foo") => #f
+(symbol->string 'foo) => "foo"
+;;; (Argument 1) SYMBOL expected: (symbol->string "foo")
+(string->symbol "foo") => foo
+;;; (Argument 1) STRING expected: (string->symbol 'foo)
+(number? 1) => #t
+(number? 1/2) => #t
+(number? 1.5) => #t
+(number? +i) => #t
+(number? #f) => #f
+(complex? 1) => #t
+(complex? 1/2) => #t
+(complex? 1.5) => #t
+(complex? +i) => #t
+(complex? #f) => #f
+(real? 1) => #t
+(real? 1/2) => #t
+(real? 1.5) => #t
+(real? +i) => #f
+(real? #f) => #f
+(rational? 1) => #t
+(rational? 1/2) => #t
+(rational? 1.5) => #t
+(rational? +i) => #f
+(rational? #f) => #f
+(integer? 1) => #t
+(integer? 1/2) => #f
+(integer? 1.5) => #f
+(integer? +i) => #f
+(integer? #f) => #f
+(exact? 1/2) => #t
+(exact? 1.5) => #f
+(exact? +i) => #t
+;;; (Argument 1) NUMBER expected: (exact? #f)
+(inexact? 1/2) => #f
+(inexact? 1.5) => #t
+(inexact? +i) => #f
+;;; (Argument 1) NUMBER expected: (inexact? #f)
+(=) => #t
+(= 1) => #t
+;;; (Argument 1) NUMBER expected: (= 'a)
+(= 1 1) => #t
+(= 1 2) => #f
+(= 2 1) => #f
+(= 1 +i) => #f
+;;; (Argument 1) NUMBER expected: (= 'a 2)
+;;; (Argument 2) NUMBER expected: (= 1 'b)
+(= 1 2 3) => #f
+;;; (Argument 3) NUMBER expected: (= 1 2 'c)
+(= 2 2 2 2) => #t
+(= 1 2 3 4) => #f
+(= 4 3 2 1) => #f
+(= 1 2 4 4) => #f
+(= 4 4 2 1) => #f
+(<) => #t
+(< 1) => #t
+;;; (Argument 1) REAL expected: (< 'a)
+(< 1 1) => #f
+(< 1 2) => #t
+(< 2 1) => #f
+;;; (Argument 2) REAL expected: (< 1 +i)
+;;; (Argument 1) REAL expected: (< 'a 2)
+;;; (Argument 2) REAL expected: (< 1 'b)
+(< 1 2 3) => #t
+;;; (Argument 3) REAL expected: (< 1 2 'c)
+(< 2 2 2 2) => #f
+(< 1 2 3 4) => #t
+(< 4 3 2 1) => #f
+(< 1 2 4 4) => #f
+(< 4 4 2 1) => #f
+(>) => #t
+(> 1) => #t
+;;; (Argument 1) REAL expected: (> 'a)
+(> 1 1) => #f
+(> 1 2) => #f
+(> 2 1) => #t
+;;; (Argument 1) REAL expected: (> 1 +i)
+;;; (Argument 2) REAL expected: (> 'a 2)
+;;; (Argument 1) REAL expected: (> 1 'b)
+(> 1 2 3) => #f
+;;; (Argument 2) REAL expected: (> 1 2 'c)
+(> 2 2 2 2) => #f
+(> 1 2 3 4) => #f
+(> 4 3 2 1) => #t
+(> 1 2 4 4) => #f
+(> 4 4 2 1) => #f
+(<=) => #t
+(<= 1) => #t
+;;; (Argument 1) REAL expected: (<= 'a)
+(<= 1 1) => #t
+(<= 1 2) => #t
+(<= 2 1) => #f
+;;; (Argument 1) REAL expected: (<= 1 +i)
+;;; (Argument 2) REAL expected: (<= 'a 2)
+;;; (Argument 1) REAL expected: (<= 1 'b)
+(<= 1 2 3) => #t
+;;; (Argument 2) REAL expected: (<= 1 2 'c)
+(<= 2 2 2 2) => #t
+(<= 1 2 3 4) => #t
+(<= 4 3 2 1) => #f
+(<= 1 2 4 4) => #t
+(<= 4 4 2 1) => #f
+(>=) => #t
+(>= 1) => #t
+;;; (Argument 1) REAL expected: (>= 'a)
+(>= 1 1) => #t
+(>= 1 2) => #f
+(>= 2 1) => #t
+;;; (Argument 2) REAL expected: (>= 1 +i)
+;;; (Argument 1) REAL expected: (>= 'a 2)
+;;; (Argument 2) REAL expected: (>= 1 'b)
+(>= 1 2 3) => #f
+;;; (Argument 3) REAL expected: (>= 1 2 'c)
+(>= 2 2 2 2) => #t
+(>= 1 2 3 4) => #f
+(>= 4 3 2 1) => #t
+(>= 1 2 4 4) => #f
+(>= 4 4 2 1) => #t
+(zero? 1) => #f
+(zero? 2.) => #f
+(zero? 3.4) => #f
+(zero? +i) => #f
+;;; (Argument 1) NUMBER expected: (zero? 'foo)
+(positive? 1) => #t
+(positive? 2.) => #t
+(positive? 3.4) => #t
+;;; (Argument 1) REAL expected: (positive? +i)
+;;; (Argument 1) REAL expected: (positive? 'foo)
+(negative? 1) => #f
+(negative? 2.) => #f
+(negative? 3.4) => #f
+;;; (Argument 1) REAL expected: (negative? +i)
+;;; (Argument 1) REAL expected: (negative? 'foo)
+(odd? 1) => #t
+(odd? 2.) => #f
+;;; (Argument 1) INTEGER expected: (odd? 3.4)
+;;; (Argument 1) INTEGER expected: (odd? +i)
+;;; (Argument 1) INTEGER expected: (odd? 'foo)
+(even? 1) => #f
+(even? 2.) => #t
+;;; (Argument 1) INTEGER expected: (even? 3.4)
+;;; (Argument 1) INTEGER expected: (even? +i)
+;;; (Argument 1) INTEGER expected: (even? 'foo)
+(max 3) => 3
+;;; (Argument 1) REAL expected: (max 'a)
+(max 3 4) => 4
+(max 3 4.) => 4.
+;;; (Argument 1) REAL expected: (max 'a 4.)
+;;; (Argument 2) REAL expected: (max 3 'b)
+(max 1 2 3) => 3
+;;; (Argument 3) REAL expected: (max 1 2 'c)
+;;; (Argument 1) REAL expected: (max 1+0.i 2+0.i)
+(min 3) => 3
+;;; (Argument 1) REAL expected: (min 'a)
+(min 3 4) => 3
+(min 3 4.) => 3.
+;;; (Argument 1) REAL expected: (min 'a 4.)
+;;; (Argument 2) REAL expected: (min 3 'b)
+(min 1 2 3) => 1
+;;; (Argument 3) REAL expected: (min 1 2 'c)
+;;; (Argument 1) REAL expected: (min 1+0.i 2+0.i)
+(+) => 0
+(+ 2) => 2
+;;; (Argument 1) NUMBER expected: (+ 'a)
+(+ 2 3) => 5
+(+ 2 +i) => 2+i
+;;; (Argument 1) NUMBER expected: (+ 'a 2)
+;;; (Argument 2) NUMBER expected: (+ 1 'b)
+(+ 1 2 3) => 6
+;;; (Argument 3) NUMBER expected: (+ 1 2 'c)
+(+ 2 2 2 2) => 8
+(+ 1 2 3 4) => 10
+(+ 4 3 2 1) => 10
+(+ 1 2 4 4) => 11
+(+ 4 4 2 1) => 11
+(*) => 1
+(* 2) => 2
+;;; (Argument 1) NUMBER expected: (* 'a)
+(* 2 3) => 6
+(* 2 +i) => +2i
+;;; (Argument 1) NUMBER expected: (* 'a 2)
+;;; (Argument 2) NUMBER expected: (* 1 'b)
+(* 1 2 3) => 6
+;;; (Argument 3) NUMBER expected: (* 1 2 'c)
+(* 2 2 2 2) => 16
+(* 1 2 3 4) => 24
+(* 4 3 2 1) => 24
+(* 1 2 4 4) => 32
+(* 4 4 2 1) => 32
+(- 2) => -2
+;;; (Argument 1) NUMBER expected: (- 'a)
+(- 2 3) => -1
+(- 2 +i) => 2-i
+;;; (Argument 1) NUMBER expected: (- 'a 2)
+;;; (Argument 2) NUMBER expected: (- 1 'b)
+(- 1 2 3) => -4
+;;; (Argument 3) NUMBER expected: (- 1 2 'c)
+(- 2 2 2 2) => -4
+(- 1 2 3 4) => -8
+(- 4 3 2 1) => -2
+(- 1 2 4 4) => -9
+(- 4 4 2 1) => -3
+(/ 2) => 1/2
+;;; Divide by zero: (/ 0)
+;;; (Argument 1) NUMBER expected: (/ 'a)
+(/ 2 3) => 2/3
+(/ 2 +i) => -2i
+;;; Divide by zero: (/ 2 0)
+;;; (Argument 1) NUMBER expected: (/ 'a 2)
+;;; (Argument 2) NUMBER expected: (/ 1 'b)
+(/ 1 2 3) => 1/6
+;;; Divide by zero: (/ 1 2 0)
+;;; (Argument 3) NUMBER expected: (/ 1 2 'c)
+(/ 2 2 2 2) => 1/4
+(/ 1 2 3 4) => 1/24
+(/ 4 3 2 1) => 2/3
+(/ 1 2 4 4) => 1/32
+(/ 4 4 2 1) => 1/2
+(abs -7) => 7
+;;; (Argument 1) REAL expected: (abs +i)
+;;; (Argument 1) REAL expected: (abs 'a)
+(quotient 9 4) => 2
+(quotient 295147905149568077200 34359738366) => 8589934591
+(quotient 696898287454081973170944403677937368733396 1180591620717411303422) => 590295810358705651711
+(quotient 9. -4.) => -2.
+;;; (Argument 2) INTEGER expected: (quotient 9. 3/2)
+;;; Divide by zero: (quotient 9 0)
+;;; (Argument 1) INTEGER expected: (quotient 'a 4)
+;;; (Argument 2) INTEGER expected: (quotient 9 'b)
+(remainder 9 4) => 1
+(remainder 295147905149568077200 34359738366) => 21754858894
+(remainder 696898287454081973170944403677937368733396 1180591620717411303422) => 314390899110894278354
+(remainder 9. -4.) => 1.
+;;; (Argument 2) INTEGER expected: (remainder 9. 3/2)
+;;; Divide by zero: (remainder 9 0)
+;;; (Argument 1) INTEGER expected: (remainder 'a 4)
+;;; (Argument 2) INTEGER expected: (remainder 9 'b)
+(modulo 9 4) => 1
+(modulo 295147905149568077200 34359738366) => 21754858894
+(modulo 696898287454081973170944403677937368733396 1180591620717411303422) => 314390899110894278354
+(modulo 9. -4.) => -3.
+;;; (Argument 2) INTEGER expected: (modulo 9. 3/2)
+;;; Divide by zero: (modulo 9 0)
+;;; (Argument 1) INTEGER expected: (modulo 'a 4)
+;;; (Argument 2) INTEGER expected: (modulo 9 'b)
+(gcd) => 0
+(gcd 10) => 10
+;;; (Argument 1) INTEGER expected: (gcd 3/2)
+;;; (Argument 1) INTEGER expected: (gcd 'a)
+(gcd 9 4) => 1
+(gcd 9. -4.) => 1.
+;;; (Argument 2) INTEGER expected: (gcd 9. 3/2)
+;;; (Argument 1) INTEGER expected: (gcd 'a 4)
+;;; (Argument 2) INTEGER expected: (gcd 9 'b)
+(gcd 12 8 10) => 2
+;;; (Argument 3) INTEGER expected: (gcd 12 8 'c)
+(lcm) => 1
+(lcm 10) => 10
+;;; (Argument 1) INTEGER expected: (lcm 3/2)
+;;; (Argument 1) INTEGER expected: (lcm 'a)
+(lcm 9 4) => 36
+(lcm 9. -4.) => 36.
+;;; (Argument 2) INTEGER expected: (lcm 9. 3/2)
+;;; (Argument 1) INTEGER expected: (lcm 'a 4)
+;;; (Argument 2) INTEGER expected: (lcm 9 'b)
+(lcm 12 8 10) => 120
+;;; (Argument 3) INTEGER expected: (lcm 12 8 'c)
+(numerator 3/2) => 3
+(numerator 1.5) => 3.
+;;; (Argument 1) RATIONAL expected: (numerator +i)
+;;; (Argument 1) RATIONAL expected: (numerator 'a)
+(denominator 3/2) => 2
+(denominator 1.5) => 2.
+;;; (Argument 1) RATIONAL expected: (denominator +i)
+;;; (Argument 1) RATIONAL expected: (denominator 'a)
+(floor 2/3) => 0
+(floor 1.2) => 1.
+;;; (Argument 1) Finite REAL expected: (floor +i)
+;;; (Argument 1) Finite REAL expected: (floor 'a)
+(ceiling 2/3) => 1
+(ceiling 1.2) => 2.
+;;; (Argument 1) Finite REAL expected: (ceiling +i)
+;;; (Argument 1) Finite REAL expected: (ceiling 'a)
+(truncate 2/3) => 0
+(truncate 1.2) => 1.
+;;; (Argument 1) Finite REAL expected: (truncate +i)
+;;; (Argument 1) Finite REAL expected: (truncate 'a)
+(round 2/3) => 1
+(round 1.2) => 1.
+;;; (Argument 1) Finite REAL expected: (round +i)
+;;; (Argument 1) Finite REAL expected: (round 'a)
+(rationalize -3/2 1/2) => -1
+(rationalize -1.5 .5) => -1.
+;;; (Argument 2) Out of range: (rationalize -1.5 -.5)
+;;; (Argument 1) Finite REAL expected: (rationalize +i 2)
+;;; (Argument 2) REAL expected: (rationalize 1 +i)
+;;; (Argument 1) Finite REAL expected: (rationalize 'a 2)
+;;; (Argument 2) REAL expected: (rationalize 1 'b)
+(exp 1/2) => 1.648721
+(exp -1.5) => .22313
+(exp +i) => .540302+.841471i
+;;; (Argument 1) NUMBER expected: (exp 'a)
+(log 1/2) => -.693147
+(log -1.5) => .405465+3.141593i
+(log +i) => +1.570796i
+;;; (Argument 1) NUMBER expected: (log 'a)
+(sin 1/2) => .479426
+(sin -1.5) => -.997495
+(sin +i) => +1.175201i
+;;; (Argument 1) NUMBER expected: (sin 'a)
+(cos 1/2) => .877583
+(cos -1.5) => .070737
+(cos +i) => 1.543081
+;;; (Argument 1) NUMBER expected: (cos 'a)
+(tan 1/2) => .546302
+(tan -1.5) => -14.10142
+(tan +i) => +.761594i
+;;; (Argument 1) NUMBER expected: (tan 'a)
+(asin 1/2) => .523599
+(asin -1.5) => -1.570796+.962424i
+(asin +i) => +.881374i
+;;; (Argument 1) NUMBER expected: (asin 'a)
+(acos 1/2) => 1.047198
+(acos -1.5) => 3.141593-.962424i
+(acos +i) => 1.570796-.881374i
+;;; (Argument 1) NUMBER expected: (acos 'a)
+(atan 1/2) => .463648
+(atan -1.5) => -.982794
+;;; (Argument 1) Out of range: (atan +i)
+;;; (Argument 1) NUMBER expected: (atan 'a)
+(atan -1.5 2.5) => -.54042
+;;; (Argument 2) REAL expected: (atan 1 +i)
+;;; (Argument 1) REAL expected: (atan +i 2)
+;;; (Argument 2) REAL expected: (atan 1 'b)
+;;; (Argument 1) REAL expected: (atan 'a 2)
+(sqrt 1/4) => 1/2
+(sqrt -1.5) => +1.224745i
+(sqrt +i) => .707107+.707107i
+;;; (Argument 1) NUMBER expected: (sqrt 'a)
+(expt 1/4 -1.5) => 8.
+(expt 2 +i) => .769239+.638961i
+(expt +i 2) => -1
+;;; (Argument 1) NUMBER expected: (expt 'a +i)
+;;; (Argument 2) NUMBER expected: (expt +i 'b)
+(make-rectangular 1/2 -1.5) => 1/2-1.5i
+;;; (Argument 2) REAL expected: (make-rectangular 1/2 +i)
+;;; (Argument 1) REAL expected: (make-rectangular +i -1.5)
+;;; (Argument 1) REAL expected: (make-rectangular 'a 2)
+;;; (Argument 2) REAL expected: (make-rectangular 1 'b)
+(make-polar 1/2 -1.5) => .035369-.498747i
+;;; (Argument 2) REAL expected: (make-polar 1/2 +i)
+;;; (Argument 1) REAL expected: (make-polar +i -1.5)
+;;; (Argument 1) REAL expected: (make-polar 'a 2)
+;;; (Argument 2) REAL expected: (make-polar 1 'b)
+(real-part 1/2) => 1/2
+(real-part -1.5) => -1.5
+(real-part +i) => 0
+;;; (Argument 1) NUMBER expected: (real-part 'a)
+(imag-part 1/2) => 0
+(imag-part -1.5) => 0
+(imag-part +i) => 1
+;;; (Argument 1) NUMBER expected: (imag-part 'a)
+(magnitude 1/2) => 1/2
+(magnitude -1.5) => 1.5
+(magnitude +i) => 1
+;;; (Argument 1) NUMBER expected: (magnitude 'a)
+(angle 1/2) => 0
+(angle -1.5) => 3.141593
+(angle +i) => 1.570796
+;;; (Argument 1) NUMBER expected: (angle 'a)
+(exact->inexact 1/2) => .5
+(exact->inexact -1.5) => -1.5
+(exact->inexact +i) => 0.+1.i
+;;; (Argument 1) NUMBER expected: (exact->inexact 'a)
+(inexact->exact 1/2) => 1/2
+(inexact->exact -1.5) => -3/2
+(inexact->exact +i) => +i
+;;; (Argument 1) NUMBER expected: (inexact->exact 'a)
+(number->string 1/2) => "1/2"
+(number->string -1.5) => "-1.5"
+(number->string +i) => "+i"
+;;; (Argument 1) NUMBER expected: (number->string 'a)
+(number->string 123 2) => "1111011"
+;;; (Argument 2) Out of range: (number->string 123 3)
+;;; (Argument 2) Exact INTEGER expected: (number->string 123 2.)
+;;; (Argument 2) Exact INTEGER expected: (number->string 123 +i)
+;;; (Argument 2) Exact INTEGER expected: (number->string 123 'a)
+(string->number "1/2") => 1/2
+(string->number "-1.5") => -1.5
+(string->number "+i") => +i
+(string->number "foo") => #f
+;;; (Argument 1) STRING expected: (string->number 'a)
+(string->number "123" 2) => #f
+;;; (Argument 2) Out of range: (string->number "123" 3)
+;;; (Argument 2) Exact INTEGER expected: (string->number "123" 2.)
+;;; (Argument 2) Exact INTEGER expected: (string->number "123" +i)
+;;; (Argument 2) Exact INTEGER expected: (string->number "123" 'a)
+(char? #\A) => #t
+(char? #f) => #f
+(char? '()) => #f
+(char? "foo") => #f
+(char=?) => #t
+(char=? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char=? 123)
+(char=? #\A #\A) => #t
+(char=? #\A #\B) => #f
+(char=? #\B #\A) => #f
+;;; (Argument 2) CHARACTER expected: (char=? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char=? 123 #\A)
+(char=? #\A #\B #\C) => #f
+(char=? #\A #\B #\B) => #f
+(char=? #\B #\B #\B) => #t
+(char=? #\B #\B #\A) => #f
+(char=? #\C #\B #\A) => #f
+;;; (Argument 3) CHARACTER expected: (char=? #\A #\B 123)
+(char<?) => #t
+(char<? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char<? 123)
+(char<? #\A #\A) => #f
+(char<? #\A #\B) => #t
+(char<? #\B #\A) => #f
+;;; (Argument 2) CHARACTER expected: (char<? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char<? 123 #\A)
+(char<? #\A #\B #\C) => #t
+(char<? #\A #\B #\B) => #f
+(char<? #\B #\B #\B) => #f
+(char<? #\B #\B #\A) => #f
+(char<? #\C #\B #\A) => #f
+;;; (Argument 3) CHARACTER expected: (char<? #\A #\B 123)
+(char>?) => #t
+(char>? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char>? 123)
+(char>? #\A #\A) => #f
+(char>? #\A #\B) => #f
+(char>? #\B #\A) => #t
+;;; (Argument 2) CHARACTER expected: (char>? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char>? 123 #\A)
+(char>? #\A #\B #\C) => #f
+(char>? #\A #\B #\B) => #f
+(char>? #\B #\B #\B) => #f
+(char>? #\B #\B #\A) => #f
+(char>? #\C #\B #\A) => #t
+;;; (Argument 3) CHARACTER expected: (char>? #\A #\B 123)
+(char<=?) => #t
+(char<=? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char<=? 123)
+(char<=? #\A #\A) => #t
+(char<=? #\A #\B) => #t
+(char<=? #\B #\A) => #f
+;;; (Argument 2) CHARACTER expected: (char<=? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char<=? 123 #\A)
+(char<=? #\A #\B #\C) => #t
+(char<=? #\A #\B #\B) => #t
+(char<=? #\B #\B #\B) => #t
+(char<=? #\B #\B #\A) => #f
+(char<=? #\C #\B #\A) => #f
+;;; (Argument 3) CHARACTER expected: (char<=? #\A #\B 123)
+(char>=?) => #t
+(char>=? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char>=? 123)
+(char>=? #\A #\A) => #t
+(char>=? #\A #\B) => #f
+(char>=? #\B #\A) => #t
+;;; (Argument 2) CHARACTER expected: (char>=? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char>=? 123 #\A)
+(char>=? #\A #\B #\C) => #f
+(char>=? #\A #\B #\B) => #f
+(char>=? #\B #\B #\B) => #t
+(char>=? #\B #\B #\A) => #t
+(char>=? #\C #\B #\A) => #t
+;;; (Argument 3) CHARACTER expected: (char>=? #\A #\B 123)
+(char-ci=?) => #t
+(char-ci=? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char-ci=? 123)
+(char-ci=? #\A #\a) => #t
+(char-ci=? #\A #\b) => #f
+(char-ci=? #\B #\a) => #f
+;;; (Argument 2) CHARACTER expected: (char-ci=? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char-ci=? 123 #\A)
+(char-ci=? #\A #\b #\C) => #f
+(char-ci=? #\A #\b #\B) => #f
+(char-ci=? #\B #\b #\B) => #t
+(char-ci=? #\B #\b #\A) => #f
+(char-ci=? #\C #\b #\A) => #f
+;;; (Argument 3) CHARACTER expected: (char-ci=? #\A #\b 123)
+(char-ci<?) => #t
+(char-ci<? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char-ci<? 123)
+(char-ci<? #\A #\a) => #f
+(char-ci<? #\A #\b) => #t
+(char-ci<? #\B #\a) => #f
+;;; (Argument 2) CHARACTER expected: (char-ci<? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char-ci<? 123 #\A)
+(char-ci<? #\A #\b #\C) => #t
+(char-ci<? #\A #\b #\B) => #f
+(char-ci<? #\B #\b #\B) => #f
+(char-ci<? #\B #\b #\A) => #f
+(char-ci<? #\C #\b #\A) => #f
+;;; (Argument 3) CHARACTER expected: (char-ci<? #\A #\b 123)
+(char-ci>?) => #t
+(char-ci>? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char-ci>? 123)
+(char-ci>? #\A #\a) => #f
+(char-ci>? #\A #\b) => #f
+(char-ci>? #\B #\a) => #t
+;;; (Argument 2) CHARACTER expected: (char-ci>? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char-ci>? 123 #\A)
+(char-ci>? #\A #\b #\C) => #f
+(char-ci>? #\A #\b #\B) => #f
+(char-ci>? #\B #\b #\B) => #f
+(char-ci>? #\B #\b #\A) => #f
+(char-ci>? #\C #\b #\A) => #t
+;;; (Argument 3) CHARACTER expected: (char-ci>? #\A #\b 123)
+(char-ci<=?) => #t
+(char-ci<=? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char-ci<=? 123)
+(char-ci<=? #\A #\a) => #t
+(char-ci<=? #\A #\b) => #t
+(char-ci<=? #\B #\a) => #f
+;;; (Argument 2) CHARACTER expected: (char-ci<=? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char-ci<=? 123 #\A)
+(char-ci<=? #\A #\b #\C) => #t
+(char-ci<=? #\A #\b #\B) => #t
+(char-ci<=? #\B #\b #\B) => #t
+(char-ci<=? #\B #\b #\A) => #f
+(char-ci<=? #\C #\b #\A) => #f
+;;; (Argument 3) CHARACTER expected: (char-ci<=? #\A #\b 123)
+(char-ci>=?) => #t
+(char-ci>=? #\A) => #t
+;;; (Argument 1) CHARACTER expected: (char-ci>=? 123)
+(char-ci>=? #\A #\a) => #t
+(char-ci>=? #\A #\b) => #f
+(char-ci>=? #\B #\a) => #t
+;;; (Argument 2) CHARACTER expected: (char-ci>=? #\A 123)
+;;; (Argument 1) CHARACTER expected: (char-ci>=? 123 #\A)
+(char-ci>=? #\A #\b #\C) => #f
+(char-ci>=? #\A #\b #\B) => #f
+(char-ci>=? #\B #\b #\B) => #t
+(char-ci>=? #\B #\b #\A) => #t
+(char-ci>=? #\C #\b #\A) => #t
+;;; (Argument 3) CHARACTER expected: (char-ci>=? #\A #\b 123)
+(char-alphabetic? #\a) => #t
+(char-alphabetic? #\A) => #t
+(char-alphabetic? #\0) => #f
+(char-alphabetic? #\newline) => #f
+;;; (Argument 1) CHARACTER expected: (char-alphabetic? 123)
+(char-numeric? #\a) => #f
+(char-numeric? #\A) => #f
+(char-numeric? #\0) => #t
+(char-numeric? #\newline) => #f
+;;; (Argument 1) CHARACTER expected: (char-numeric? 123)
+(char-whitespace? #\a) => #f
+(char-whitespace? #\A) => #f
+(char-whitespace? #\0) => #f
+(char-whitespace? #\newline) => #t
+;;; (Argument 1) CHARACTER expected: (char-whitespace? 123)
+(char-upper-case? #\a) => #f
+(char-upper-case? #\A) => #t
+(char-upper-case? #\0) => #f
+(char-upper-case? #\newline) => #f
+;;; (Argument 1) CHARACTER expected: (char-upper-case? 123)
+(char-lower-case? #\a) => #t
+(char-lower-case? #\A) => #f
+(char-lower-case? #\0) => #f
+(char-lower-case? #\newline) => #f
+;;; (Argument 1) CHARACTER expected: (char-lower-case? 123)
+(char->integer #\A) => 65
+;;; (Argument 1) CHARACTER expected: (char->integer 123)
+(integer->char 123) => #\{
+;;; (Argument 1) Out of range: (integer->char -1)
+;;; (Argument 1) Out of range: (integer->char 1114112)
+;;; (Argument 1) Out of range: (integer->char 55296)
+;;; (Argument 1) Exact INTEGER expected: (integer->char 123.)
+;;; (Argument 1) Exact INTEGER expected: (integer->char #\A)
+(char-upcase #\a) => #\A
+(char-upcase #\A) => #\A
+(char-upcase #\@) => #\@
+;;; (Argument 1) CHARACTER expected: (char-upcase 123)
+;;; (Argument 1) CHARACTER expected: (char-upcase 'a)
+;;; (Argument 1) CHARACTER expected: (char-upcase "a")
+(char-downcase #\a) => #\a
+(char-downcase #\A) => #\a
+(char-downcase #\@) => #\@
+;;; (Argument 1) CHARACTER expected: (char-downcase 123)
+;;; (Argument 1) CHARACTER expected: (char-downcase 'a)
+;;; (Argument 1) CHARACTER expected: (char-downcase "a")
+(make-string 0) => ""
+(make-string 3) => "\0\0\0"
+;;; CALL EXPRESSION ("???") IS WRONG: (make-string 536870911)
+;;; (Argument 1) Out of range: (make-string 12345678901234567890)
+;;; (Argument 1) Out of range: (make-string -1)
+;;; (Argument 1) Exact INTEGER expected: (make-string 1.5)
+(make-string 5 #\6) => "66666"
+;;; (Argument 2) CHARACTER expected: (make-string 1 'a)
+(string) => ""
+(string #\5) => "5"
+(string #\5 #\6) => "56"
+;;; (Argument 2) CHARACTER expected: (string #\5 'b #\7)
+(string-length "5678") => 4
+;;; (Argument 1) STRING expected: (string-length 12345678901234567890)
+(string-ref "5678" 3) => #\8
+;;; (Argument 2) Out of range: (string-ref "56" -1)
+;;; (Argument 2) Out of range: (string-ref "56" 2)
+;;; (Argument 2) Out of range: (string-ref "56" 12345678901234567890)
+;;; (Argument 1) STRING expected: (string-ref 12345678901234567890 0)
+(string-set! "56" 1 #\3) => "53"
+;;; (Argument 2) Out of range: (string-set! "56" -1 #\3)
+;;; (Argument 2) Out of range: (string-set! "56" 2 #\3)
+;;; (Argument 2) Out of range: (string-set! "56" 12345678901234567890 #\3)
+;;; (Argument 3) CHARACTER expected: (string-set! "56" 1 'a)
+;;; (Argument 1) STRING expected: (string-set! 12345678901234567890 0 #\3)
+(string=?) => #t
+(string=? "A") => #t
+;;; (Argument 1) STRING expected: (string=? 123)
+(string=? "A" "A") => #t
+(string=? "A" "B") => #f
+(string=? "A" "A ") => #f
+(string=? "B" "A") => #f
+(string=? "A " "A") => #f
+;;; (Argument 2) STRING expected: (string=? "A" 123)
+;;; (Argument 1) STRING expected: (string=? 123 "A")
+;;; (Argument 2) STRING expected: (string=? "A" 123)
+(string=? "A" "B" "C") => #f
+(string=? "A" "B" "B") => #f
+(string=? "B" "B" "B") => #t
+(string=? "B" "B" "A") => #f
+(string=? "C" "B" "A") => #f
+;;; (Argument 3) STRING expected: (string=? "A" "B" 123)
+(string<?) => #t
+(string<? "A") => #t
+;;; (Argument 1) STRING expected: (string<? 123)
+(string<? "A" "A") => #f
+(string<? "A" "B") => #t
+(string<? "A" "A ") => #t
+(string<? "B" "A") => #f
+(string<? "A " "A") => #f
+;;; (Argument 2) STRING expected: (string<? "A" 123)
+;;; (Argument 1) STRING expected: (string<? 123 "A")
+;;; (Argument 2) STRING expected: (string<? "A" 123)
+(string<? "A" "B" "C") => #t
+(string<? "A" "B" "B") => #f
+(string<? "B" "B" "B") => #f
+(string<? "B" "B" "A") => #f
+(string<? "C" "B" "A") => #f
+;;; (Argument 3) STRING expected: (string<? "A" "B" 123)
+(string>?) => #t
+(string>? "A") => #t
+;;; (Argument 1) STRING expected: (string>? 123)
+(string>? "A" "A") => #f
+(string>? "A" "B") => #f
+(string>? "A" "A ") => #f
+(string>? "B" "A") => #t
+(string>? "A " "A") => #t
+;;; (Argument 2) STRING expected: (string>? "A" 123)
+;;; (Argument 1) STRING expected: (string>? 123 "A")
+;;; (Argument 2) STRING expected: (string>? "A" 123)
+(string>? "A" "B" "C") => #f
+(string>? "A" "B" "B") => #f
+(string>? "B" "B" "B") => #f
+(string>? "B" "B" "A") => #f
+(string>? "C" "B" "A") => #t
+;;; (Argument 3) STRING expected: (string>? "A" "B" 123)
+(string<=?) => #t
+(string<=? "A") => #t
+;;; (Argument 1) STRING expected: (string<=? 123)
+(string<=? "A" "A") => #t
+(string<=? "A" "B") => #t
+(string<=? "A" "A ") => #t
+(string<=? "B" "A") => #f
+(string<=? "A " "A") => #f
+;;; (Argument 2) STRING expected: (string<=? "A" 123)
+;;; (Argument 1) STRING expected: (string<=? 123 "A")
+;;; (Argument 2) STRING expected: (string<=? "A" 123)
+(string<=? "A" "B" "C") => #t
+(string<=? "A" "B" "B") => #t
+(string<=? "B" "B" "B") => #t
+(string<=? "B" "B" "A") => #f
+(string<=? "C" "B" "A") => #f
+;;; (Argument 3) STRING expected: (string<=? "A" "B" 123)
+(string>=?) => #t
+(string>=? "A") => #t
+;;; (Argument 1) STRING expected: (string>=? 123)
+(string>=? "A" "A") => #t
+(string>=? "A" "B") => #f
+(string>=? "A" "A ") => #f
+(string>=? "B" "A") => #t
+(string>=? "A " "A") => #t
+;;; (Argument 2) STRING expected: (string>=? "A" 123)
+;;; (Argument 1) STRING expected: (string>=? 123 "A")
+;;; (Argument 2) STRING expected: (string>=? "A" 123)
+(string>=? "A" "B" "C") => #f
+(string>=? "A" "B" "B") => #f
+(string>=? "B" "B" "B") => #t
+(string>=? "B" "B" "A") => #t
+(string>=? "C" "B" "A") => #t
+;;; (Argument 3) STRING expected: (string>=? "A" "B" 123)
+(string-ci=?) => #t
+(string-ci=? "A") => #t
+;;; (Argument 1) STRING expected: (string-ci=? 123)
+(string-ci=? "A" "a") => #t
+(string-ci=? "A" "b") => #f
+(string-ci=? "A" "a ") => #f
+(string-ci=? "B" "a") => #f
+(string-ci=? "A " "a") => #f
+;;; (Argument 2) STRING expected: (string-ci=? "A" 123)
+;;; (Argument 1) STRING expected: (string-ci=? 123 "A")
+;;; (Argument 2) STRING expected: (string-ci=? "A" 123)
+(string-ci=? "A" "b" "C") => #f
+(string-ci=? "A" "b" "B") => #f
+(string-ci=? "B" "b" "B") => #t
+(string-ci=? "B" "b" "A") => #f
+(string-ci=? "C" "b" "A") => #f
+;;; (Argument 3) STRING expected: (string-ci=? "A" "b" 123)
+(string-ci<?) => #t
+(string-ci<? "A") => #t
+;;; (Argument 1) STRING expected: (string-ci<? 123)
+(string-ci<? "A" "a") => #f
+(string-ci<? "A" "b") => #t
+(string-ci<? "A" "a ") => #t
+(string-ci<? "B" "a") => #f
+(string-ci<? "A " "a") => #f
+;;; (Argument 2) STRING expected: (string-ci<? "A" 123)
+;;; (Argument 1) STRING expected: (string-ci<? 123 "A")
+;;; (Argument 2) STRING expected: (string-ci<? "A" 123)
+(string-ci<? "A" "b" "C") => #t
+(string-ci<? "A" "b" "B") => #f
+(string-ci<? "B" "b" "B") => #f
+(string-ci<? "B" "b" "A") => #f
+(string-ci<? "C" "b" "A") => #f
+;;; (Argument 3) STRING expected: (string-ci<? "A" "b" 123)
+(string-ci>?) => #t
+(string-ci>? "A") => #t
+;;; (Argument 1) STRING expected: (string-ci>? 123)
+(string-ci>? "A" "a") => #f
+(string-ci>? "A" "b") => #f
+(string-ci>? "A" "a ") => #f
+(string-ci>? "B" "a") => #t
+(string-ci>? "A " "a") => #t
+;;; (Argument 2) STRING expected: (string-ci>? "A" 123)
+;;; (Argument 1) STRING expected: (string-ci>? 123 "A")
+;;; (Argument 2) STRING expected: (string-ci>? "A" 123)
+(string-ci>? "A" "b" "C") => #f
+(string-ci>? "A" "b" "B") => #f
+(string-ci>? "B" "b" "B") => #f
+(string-ci>? "B" "b" "A") => #f
+(string-ci>? "C" "b" "A") => #t
+;;; (Argument 3) STRING expected: (string-ci>? "A" "b" 123)
+(string-ci<=?) => #t
+(string-ci<=? "A") => #t
+;;; (Argument 1) STRING expected: (string-ci<=? 123)
+(string-ci<=? "A" "a") => #t
+(string-ci<=? "A" "b") => #t
+(string-ci<=? "A" "a ") => #t
+(string-ci<=? "B" "a") => #f
+(string-ci<=? "A " "a") => #f
+;;; (Argument 2) STRING expected: (string-ci<=? "A" 123)
+;;; (Argument 1) STRING expected: (string-ci<=? 123 "A")
+;;; (Argument 2) STRING expected: (string-ci<=? "A" 123)
+(string-ci<=? "A" "b" "C") => #t
+(string-ci<=? "A" "b" "B") => #t
+(string-ci<=? "B" "b" "B") => #t
+(string-ci<=? "B" "b" "A") => #f
+(string-ci<=? "C" "b" "A") => #f
+;;; (Argument 3) STRING expected: (string-ci<=? "A" "b" 123)
+(string-ci>=?) => #t
+(string-ci>=? "A") => #t
+;;; (Argument 1) STRING expected: (string-ci>=? 123)
+(string-ci>=? "A" "a") => #t
+(string-ci>=? "A" "b") => #f
+(string-ci>=? "A" "a ") => #f
+(string-ci>=? "B" "a") => #t
+(string-ci>=? "A " "a") => #t
+;;; (Argument 2) STRING expected: (string-ci>=? "A" 123)
+;;; (Argument 1) STRING expected: (string-ci>=? 123 "A")
+;;; (Argument 2) STRING expected: (string-ci>=? "A" 123)
+(string-ci>=? "A" "b" "C") => #f
+(string-ci>=? "A" "b" "B") => #f
+(string-ci>=? "B" "b" "B") => #t
+(string-ci>=? "B" "b" "A") => #t
+(string-ci>=? "C" "b" "A") => #t
+;;; (Argument 3) STRING expected: (string-ci>=? "A" "b" 123)
+(substring "abcdef" 0 2) => "ab"
+(substring "abcdef" 2 2) => ""
+(substring "abcdef" 2 5) => "cde"
+(substring "abcdef" 2 6) => "cdef"
+;;; (Argument 3) Out of range: (substring "abcdef" 2 7)
+;;; (Argument 2) Out of range: (substring "abcdef" -1 5)
+;;; (Argument 3) Out of range: (substring "abcdef" 2 1)
+;;; (Argument 3) Out of range: (substring "abcdef" 2 12345678901234567890)
+;;; (Argument 2) Out of range: (substring "abcdef" 12345678901234567890 2)
+;;; (Argument 2) Exact INTEGER expected: (substring "abcdef" #\a 5)
+;;; (Argument 3) Exact INTEGER expected: (substring "abcdef" 2 #\a)
+;;; (Argument 1) STRING expected: (substring 12345678901234567890 0 2)
+(string-append) => ""
+(string-append "ab") => "ab"
+;;; (Argument 1) STRING expected: (string-append 12345678901234567890)
+(string-append "ab" "cd") => "abcd"
+;;; (Argument 2) STRING expected: (string-append "ab" 12345678901234567890)
+;;; (Argument 1) STRING expected: (string-append 12345678901234567890 "cd")
+(string-append "ab" "cd" "ef") => "abcdef"
+;;; (Argument 3) STRING expected: (string-append "ab" "cd" 12345678901234567890)
+(string->list "56") => (#\5 #\6)
+;;; (Argument 1) STRING expected: (string->list 12345678901234567890)
+(list->string '(#\5 #\6)) => "56"
+;;; (Argument 1) CHARACTER LIST expected: (list->string '(#\5 b))
+;;; (Argument 1) LIST expected: (list->string 12345678901234567890)
+(string-copy "ab") => "ab"
+;;; (Argument 1) STRING expected: (string-copy 12345678901234567890)
+(string-fill! "56" #\a) => "aa"
+;;; (Argument 2) CHARACTER expected: (string-fill! "56" 'a)
+;;; (Argument 1) STRING expected: (string-fill! 12345678901234567890 #\a)
+(make-vector 0) => #()
+(make-vector 3) => #(0 0 0)
+;;; CALL EXPRESSION ("???") IS WRONG: (make-vector 536870911)
+;;; (Argument 1) Out of range: (make-vector 12345678901234567890)
+;;; (Argument 1) Out of range: (make-vector -1)
+;;; (Argument 1) Exact INTEGER expected: (make-vector 1.5)
+(make-vector 5 'a) => #(a a a a a)
+(vector) => #()
+(vector 5) => #(5)
+(vector 5 'b) => #(5 b)
+(vector 5 'b 7) => #(5 b 7)
+(vector-length '#(5 6 7 8)) => 4
+;;; (Argument 1) VECTOR expected: (vector-length 12345678901234567890)
+(vector-ref '#(5 6 7 8) 3) => 8
+;;; (Argument 2) Out of range: (vector-ref '#(5 6) -1)
+;;; (Argument 2) Out of range: (vector-ref '#(5 6) 2)
+;;; (Argument 2) Out of range: (vector-ref '#(5 6) 12345678901234567890)
+;;; (Argument 1) VECTOR expected: (vector-ref 12345678901234567890 0)
+(vector-set! '#(5 6) 1 3) => #(5 3)
+;;; (Argument 2) Out of range: (vector-set! '#(5 6) -1 3)
+;;; (Argument 2) Out of range: (vector-set! '#(5 6) 2 3)
+;;; (Argument 2) Out of range: (vector-set! '#(5 6) 12345678901234567890 3)
+(vector-set! '#(5 6) 1 'a) => #(5 a)
+;;; (Argument 1) VECTOR expected: (vector-set! 12345678901234567890 0 3)
+(vector->list '#(5 6)) => (5 6)
+;;; (Argument 1) VECTOR expected: (vector->list 12345678901234567890)
+(list->vector '(5 b)) => #(5 b)
+;;; (Argument 1) LIST expected: (list->vector 12345678901234567890)
+(vector-fill! '#(5 6) 'a) => #(a a)
+;;; (Argument 1) VECTOR expected: (vector-fill! 12345678901234567890 'a)
+(procedure? '#<procedure #2 append>) => #t
+(procedure? '()) => #f
+(procedure? "foo") => #f
+(procedure? #f) => #f
+(apply '#<procedure #3 +> '()) => 0
+(apply '#<procedure #3 +> '(2 3)) => 5
+(apply '#<procedure #3 +> 2 '(3)) => 5
+(apply '#<procedure #3 +> 2 3 '()) => 5
+;;; (Argument 2) LIST expected: (apply '#<procedure #3 +> '(2 . #f))
+;;; (Argument 2) LIST expected: (apply '#<procedure #3 +> #f)
+;;; (Argument 1) PROCEDURE expected: (apply #f '(2 3))
+(map '#<procedure #4 sqrt> '()) => ()
+(map '#<procedure #4 sqrt> '(1 4 9)) => (1 2 3)
+;;; (Argument 2) LIST expected: (map '#<procedure #4 sqrt> #f)
+;;; (Argument 2) LIST expected: (map '#<procedure #4 sqrt> '(1 . #f))
+;;; (Argument 1) PROCEDURE expected: (map #f '(1 4 9))
+(map '#<procedure #3 +> '() '()) => ()
+(map '#<procedure #3 +> '(1 2 3) '(0 2 6)) => (1 4 9)
+;;; (Argument 3) List is not of proper length: (map '#<procedure #3 +> '(1 2 3) '(0 2))
+;;; (Argument 3) List is not of proper length: (map '#<procedure #3 +> '(1 2) '(0 2 6))
+;;; (Argument 2) LIST expected: (map '#<procedure #3 +> #f '())
+;;; (Argument 3) LIST expected: (map '#<procedure #3 +> '() #f)
+;;; (Argument 2) LIST expected: (map '#<procedure #3 +> '(1 . #f) '(0 . #f))
+;;; (Argument 1) PROCEDURE expected: (map #f '(1 2 3) '(0 2 6))
+(map '#<procedure #3 +> '() '() '()) => ()
+(map '#<procedure #3 +> '(1 2 3) '(0 2 6) '(10 100 1000)) => (11 104 1009)
+;;; (Argument 3) List is not of proper length: (map '#<procedure #3 +> '(1 2 3) '(0 2) '(10 100 1000))
+;;; (Argument 3) List is not of proper length: (map '#<procedure #3 +> '(1 2) '(0 2 6) '(10 100 1000))
+;;; (Argument 2) LIST expected: (map '#<procedure #3 +> #f '() '())
+;;; (Argument 3) LIST expected: (map '#<procedure #3 +> '() #f '())
+;;; (Argument 4) LIST expected: (map '#<procedure #3 +> '() '() #f)
+;;; (Argument 2) LIST expected: (map '#<procedure #3 +> '(1 . #f) '(0 . #f) '(10 . #f))
+;;; (Argument 1) PROCEDURE expected: (map #f '(1 2 3) '(0 2 6) '(10 100 1000))
+(for-each '#<procedure #4 sqrt> '()) => #!void
+(for-each '#<procedure #4 sqrt> '(1 4 9)) => #!void
+;;; (Argument 2) LIST expected: (for-each '#<procedure #4 sqrt> #f)
+;;; (Argument 2) LIST expected: (for-each '#<procedure #4 sqrt> '(1 . #f))
+;;; (Argument 1) PROCEDURE expected: (for-each #f '(1 4 9))
+(for-each '#<procedure #3 +> '() '()) => #!void
+(for-each '#<procedure #3 +> '(1 2 3) '(0 2 6)) => 9
+;;; (Argument 3) List is not of proper length: (for-each '#<procedure #3 +> '(1 2 3) '(0 2))
+;;; (Argument 3) List is not of proper length: (for-each '#<procedure #3 +> '(1 2) '(0 2 6))
+;;; (Argument 2) LIST expected: (for-each '#<procedure #3 +> #f '())
+;;; (Argument 3) LIST expected: (for-each '#<procedure #3 +> '() #f)
+;;; (Argument 2) LIST expected: (for-each '#<procedure #3 +> '(1 . #f) '(0 . #f))
+;;; (Argument 1) PROCEDURE expected: (for-each #f '(1 2 3) '(0 2 6))
+(for-each '#<procedure #3 +> '() '() '()) => #!void
+(for-each '#<procedure #3 +> '(1 2 3) '(0 2 6) '(10 100 1000)) => 1009
+;;; (Argument 3) List is not of proper length: (for-each '#<procedure #3 +> '(1 2 3) '(0 2) '(10 100 1000))
+;;; (Argument 3) List is not of proper length: (for-each '#<procedure #3 +> '(1 2 3) '(0 2) '(10 100 1000))
+;;; (Argument 3) List is not of proper length: (for-each '#<procedure #3 +> '(1 2) '(0 2 6) '(10 100 1000))
+;;; (Argument 2) LIST expected: (for-each '#<procedure #3 +> #f '() '())
+;;; (Argument 3) LIST expected: (for-each '#<procedure #3 +> '() #f '())
+;;; (Argument 4) LIST expected: (for-each '#<procedure #3 +> '() '() #f)
+;;; (Argument 2) LIST expected: (for-each '#<procedure #3 +> '(1 . #f) '(0 . #f) '(10 . #f))
+;;; (Argument 1) PROCEDURE expected: (for-each #f '(1 2 3) '(0 2 6) '(10 100 1000))
+(force 123) => 123
+;;; CALL EXPRESSION (call/cc #f) IS WRONG: (call-with-current-continuation #f)
+;;; (Argument 1) STRING or port settings expected: (call-with-input-file #f '#<procedure #5 list>)
+;;; (Argument 2) PROCEDURE expected: (call-with-input-file "tmp" #f)
+;;; No such file or directory: (call-with-input-file "notexist" '#<procedure #5 list>)
+;;; (Argument 1) STRING or port settings expected: (call-with-output-file #f '#<procedure #5 list>)
+;;; (Argument 2) PROCEDURE expected: (call-with-output-file "tmp" #f)
+(input-port? '#<input-port #6 (stdin)>) => #t
+(input-port? '#<output-port #7 (stdout)>) => #f
+(input-port? #f) => #f
+(output-port? '#<output-port #7 (stdout)>) => #t
+(output-port? '#<input-port #6 (stdin)>) => #f
+(output-port? #f) => #f
+(current-input-port) => #<input-port #6 (stdin)>
+(current-output-port) => #<output-port #7 (stdout)>
+;;; (Argument 1) STRING or port settings expected: (with-input-from-file #f '#<procedure #5 list>)
+;;; (Argument 2) PROCEDURE expected: (with-input-from-file "tmp" #f)
+;;; No such file or directory: (with-input-from-file "noexist" '#<procedure #5 list>)
+;;; (Argument 1) STRING or port settings expected: (with-output-to-file #f '#<procedure #5 list>)
+;;; (Argument 2) PROCEDURE expected: (with-output-to-file "tmp" #f)
+;;; (Argument 1) STRING or port settings expected: (open-input-file #f)
+;;; No such file or directory: (open-input-file "noexist")
+;;; (Argument 1) STRING or port settings expected: (open-output-file #f)
+;;; (Argument 1) INPUT PORT expected: (close-input-port '#<output-port #7 (stdout)>)
+;;; (Argument 1) INPUT PORT expected: (close-input-port #f)
+;;; (Argument 1) OUTPUT PORT expected: (close-output-port '#<input-port #6 (stdin)>)
+;;; (Argument 1) OUTPUT PORT expected: (close-output-port #f)
+(read) => 1
+;;; (Argument 1) INPUT PORT expected: (read '#<output-port #7 (stdout)>)
+;;; (Argument 1) INPUT PORT expected: (read #f)
+(read-char) => #\space
+;;; (Argument 1) Character INPUT PORT expected: (read-char '#<output-port #7 (stdout)>)
+;;; (Argument 1) Character INPUT PORT expected: (read-char #f)
+(peek-char) => #\2
+;;; (Argument 1) Character INPUT PORT expected: (peek-char '#<output-port #7 (stdout)>)
+;;; (Argument 1) Character INPUT PORT expected: (peek-char #f)
+(eof-object? #f) => #f
+(eof-object? "abc") => #f
+(char-ready?) => #t
+(char-ready? '#<input-port #6 (stdin)>) => #t
+;;; (Argument 1) Character INPUT PORT expected: (char-ready? '#<output-port #7 (stdout)>)
+;;; (Argument 1) Character INPUT PORT expected: (char-ready? #f)
+"abc"(write "abc") => #!void
+"abc"(write "abc" '#<output-port #7 (stdout)>) => #!void
+;;; (Argument 2) OUTPUT PORT expected: (write "abc" '#<input-port #6 (stdin)>)
+;;; (Argument 2) OUTPUT PORT expected: (write "abc" #f)
+abc(display "abc") => #!void
+abc(display "abc" '#<output-port #7 (stdout)>) => #!void
+;;; (Argument 2) OUTPUT PORT expected: (display "abc" '#<input-port #6 (stdin)>)
+;;; (Argument 2) OUTPUT PORT expected: (display "abc" #f)
+
+(newline) => #!void
+
+(newline '#<output-port #7 (stdout)>) => #!void
+;;; (Argument 1) OUTPUT PORT expected: (newline '#<input-port #6 (stdin)>)
+;;; (Argument 1) OUTPUT PORT expected: (newline #f)
+A(write-char #\A) => #!void
+;;; (Argument 1) CHARACTER expected: (write-char 123)
+A(write-char #\A '#<output-port #7 (stdout)>) => #!void
+;;; (Argument 1) CHARACTER expected: (write-char 123 '#<output-port #7 (stdout)>)
+;;; (Argument 2) Character OUTPUT PORT expected: (write-char #\A '#<input-port #6 (stdin)>)
+;;; (Argument 2) Character OUTPUT PORT expected: (write-char #\A #f)
+;;; No such file or directory: (load "noexist")
+;;; (Argument 1) STRING expected: (load #f)
+;;; (Argument 1) STRING expected: (transcript-on #f)
+(transcript-off) => #!void
+(setenv "UNKNOWNVAR1") => #!void
+(setenv "UNKNOWNVAR2" "NOW-DEFINED") => #!void
+;;; Unbound OS environment variable: (getenv "UNKNOWNVAR1")
+(getenv "UNKNOWNVAR2") => "NOW-DEFINED"
+(getenv "UNKNOWNVAR1" 999) => 999
+(getenv "UNKNOWNVAR2" 999) => "NOW-DEFINED"
+(cdr-command-line) => ("-f" "error.scm")
+(shell-command "echo hello > newfile1") => 0
+(create-directory "newdir1") => #!void
+;;; #<os-exception #8>: (create-directory "newdir1")
+;;; #<os-exception #9>: (create-directory "newfile1")
+(rename-file "newdir1" "newdir2") => #!void
+;;; No such file or directory: (rename-file "newdir1" "newdir2")
+(rename-file "newfile1" "newdir2/aaa") => #!void
+;;; No such file or directory: (rename-file "newfile1" "newdir2/aaa")
+(copy-file "error.scm" "newdir2/bbb") => #!void
+;;; No such file or directory: (copy-file "notexist" "newdir2/ccc")
+(sort-directory-files) => ("aaa" "bbb")
+(file-exists? ".") => #t
+(file-exists? "error.scm") => #t
+(file-exists? "newdir2") => #t
+(file-exists? "newdir2/bbb") => #t
+(file-exists? "notexist") => #f
+(file-type ".") => directory
+(file-type "error.scm") => regular
+(file-type "newdir2") => directory
+(file-type "newdir2/bbb") => regular
+;;; No such file or directory: (file-type "notexist")
+(file-size "error.scm") => 65882
+(file-size "newdir2/bbb") => 65882
+;;; No such file or directory: (file-size "notexist")
+;;; #<os-exception #10>: (delete-directory "newdir2")
+(delete-file "newdir2/aaa") => #!void
+(delete-file "newdir2/bbb") => #!void
+;;; No such file or directory: (delete-file "newdir2/ccc")
+(delete-directory "newdir2") => #!void
+(open-process '(path: "sort" arguments: ("input") eol-encoding: cr-lf)) => #<input-output-port #11 (process "sort" "input")>
+(read-all-open-process) => (brown dog fox jumps lazy over quick the the)

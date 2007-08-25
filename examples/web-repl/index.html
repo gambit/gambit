@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>Web-repl example</title>
+</head>
+
+<hr>
+
+<h1>Web-repl example</h1>
+
+The web-repl example is part of the Gambit-C distribution.  It is a
+Java application that provides a user-interface to the Gambit
+interpreter's read-eval-print loop.  The application is composed of
+two programs: <code>web-repl.scm</code> and <code>Repl.java</code>.
+To try out this example you must start the execution of
+<code>web-repl.scm</code>.  For instance
+
+<pre>
+  % gsi web-repl &
+</pre>
+
+This starts a ``REPL server'' on port 7000.  The program
+<code>Repl.java</code> is a client that connects to this server to
+start a new REPL. <code>Repl.java</code> can be run standalone, for
+instance
+
+<pre>
+  % javac Repl.java
+  % java Repl
+</pre>
+
+or as an applet, as shown below.  The applet window below is
+created using this HTML code:
+
+<pre>
+  &lt;applet code="Repl.class" width=100% height=30%&gt;
+  &lt;param name=hostname value="localhost"&gt;
+  &lt;param name=port value="7000"&gt;
+  &lt;/applet&gt;
+</pre>
+
+<applet code="Repl.class" width=100% height=30%>
+<param name=hostname value="localhost">
+<param name=port value="7000">
+</applet>
+
+</html>

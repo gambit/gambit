@@ -1,0 +1,27 @@
+This example implements a minimal web server which makes it possible
+to access the web server's filesystem from a browser and calculate
+the sum of numbers entered by the user.
+
+In the filesystem browser, directories are presented as a numbered list
+of files.  Regular files ending in ".htm" and ".html" are send back to
+the browser as-is, otherwise HTML is dynamically generated to display
+the file's content verbatim.
+
+The calculator is an example of web-continuations.  The web server
+interacts with the user to obtain a set of numbers to add.  At each
+step the sum of the numbers entered up to now is displayed.  Within
+each HTML page generated is a form to enter the next number.  This
+form has a hidden field which contains a serialized continuation
+indicating the continuation within the web server where the number
+entered must be returned.  When a thread is created by the web server
+to reply to the form submitted, that thread will invoke the
+continuation to return to the point where the (now dead) thread
+generated the form to obtain the next number.
+
+After starting the server with
+
+                      gsi base64 html http web-server 8000
+
+with your favorite browser visit the URL
+
+                      http://localhost:8000/

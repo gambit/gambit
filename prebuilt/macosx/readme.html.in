@@ -1,0 +1,46 @@
+<html>
+
+<p>
+This installer will guide you through the installation of
+@NAME@ v@VERSION@ (@VARIANT@ variant).
+</p>
+
+<p>
+Files will be copied to the <code>@INSTALL_DIR@</code> and
+<code>@BIN_DIR@</code> directories.  The <em>Gambit installation
+directory</em> <code>@INSTALL_DIR@/v@VERSION@</code> will be created
+and <code>@INSTALL_DIR@/current</code> will be a link to that
+directory.  The programs added to the <code>@BIN_DIR@</code> directory
+are symbolic links to programs in the
+<code>@INSTALL_DIR@/current/bin</code> directory.  For example,
+<code>@BIN_DIR@/gsi</code> is a link to
+<code>@INSTALL_DIR@/current/bin/gsi</code>.  After the installation is
+finished you can start the Gambit interpreter from a shell simply
+by executing the command
+</p>
+
+<p>
+<code>&nbsp;&nbsp;gsi</code>
+</p>
+
+<p>
+The installer has checked that it is safe to write into the
+<code>@BIN_DIR@</code> directory (no files will be clobbered).  Gambit
+can be uninstalled by executing as root the shell command
+</p>
+
+<p>
+<code>&nbsp;&nbsp;uninstall-gambc <var>&lt;version&gt;</var></code>
+</p>
+
+<p>
+If <code><var>&lt;version&gt;</var></code> is omitted the current
+version will be uninstalled.  For example the following command will
+undo the effects of this installer:
+</p>
+
+<p>
+<code>&nbsp;&nbsp;sudo uninstall-gambc v@VERSION@</code>
+</p>
+
+</html>

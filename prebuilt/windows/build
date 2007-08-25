@@ -1,0 +1,50 @@
+#! /bin/sh
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot="prebuilt/windows"
+rootfromhere="../.."
+
+if [ "`id -un`" != "Administrator" ] ; then
+  echo "You must execute this script as Administrator!"
+  exit 1
+fi
+
+export INSTALL_PREFIX="/c/Gambit-C/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././."
+export DOS_INSTALL_PREFIX="`echo \"$INSTALL_PREFIX\" | sed -e \"s|^/c|C:|g\"`"
+
+cd "`dirname $0`"
+
+for VARIANT in mingw visualc; do
+
+  cd "$rootfromhere"
+
+  case "$VARIANT" in
+      mingw) CONFIG_CC="gcc";;
+    visualc) CONFIG_CC="cl";;
+  esac
+
+  cmd /c "C:\PROGRA~1\MICROS~2\VC\VCVARS~1.BAT && C:\PROGRA~1\MICROS~4\SETENV.CMD /RETAIL && sh -c \"CC=\\\"$CONFIG_CC\\\" ./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-single-host # --enable-gcc-opts\""
+
+  cd "$herefromroot"
+
+  chmod +x build-phase2
+
+  cmd /c "C:\PROGRA~1\MICROS~2\VC\VCVARS~1.BAT && C:\PROGRA~1\MICROS~4\SETENV.CMD /RETAIL && sh -c \"./build-phase2 \\\"$VARIANT\\\"\"" > build-phase2.out
+
+  cat build-phase2.out
+
+  if fgrep "============ ALL TESTS SUCCESSFUL" build-phase2.out > /dev/null; then
+    rm -f build-phase2.out
+    echo "============ $VARIANT BUILD SUCCESSFUL"
+  else
+    rm -f build-phase2.out
+    echo "============ $VARIANT BUILD FAILED"
+    exit 1
+  fi
+
+  rm -f build-phase2.out
+
+done
+
+echo "============ BUILD SUCCESSFUL"

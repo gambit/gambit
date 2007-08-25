@@ -1,0 +1,45 @@
+This directory contains a few examples of the Gambit interface to
+Tcl/Tk.  The examples are mostly translations of the figures in John
+Ousterhout's book "Tcl and the Tk Toolkit" from Addison-Wesley, 1994.
+
+To run an example you must first compile "tcltk.scm" to get "tcltk.o1".
+Then type "gsi <example>" or "./<example>", for instance:
+
+  % gsi fig16-1
+
+When writing a Scheme program interfacing to Tcl/Tk these rules must
+be followed.  The file "tcltk.o1" must first be loaded.  The Tcl/Tk
+application window will appear when the Scheme program attempts to
+exit (normally or not).  Tcl/Tk commands such as
+
+  button .b -text OK -command {puts "OK was pressed"}
+
+get translated to a Scheme call of this form:
+
+  (button ".b" text: "OK" command: (lambda () (write "OK was pressed")))
+
+Note the use of keywords for option names, and also that Scheme
+functions can be passed to commands.  Numbers, booleans, and symbols
+can also be passed to commands.  The result of the Scheme function
+call is the string that the Tcl/Tk command returns.
+
+In certain situations it is necessary to use a widget name as a
+command.  For example:
+
+  . configure -background green
+
+In this case the Scheme procedure "tcl" must be used:
+
+  (tcl "." 'configure background: "green")
+
+To access Tcl/Tk variables, these procedures can be used:
+
+  (get-variable "n")
+  (set-variable! "n" "123")
+
+To interrupt a Scheme program you cannot send Ctrl-C to the Gambit
+interpreter.  Instead you should type the function key F10 in one of
+the Tcl/Tk application windows.
+
+For a more detailed description of Tcl/Tk commands, check the quick
+reference guide "tkref.pdf"

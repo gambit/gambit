@@ -1,0 +1,296 @@
+# makefile for Gambit-C bin directory.
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot = bin
+rootfromhere = ..
+SUBDIRS =
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
+
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+srcdirpfx = @srcdirpfx@
+
+C_COMPILER = @C_COMPILER@
+C_PREPROC = @C_PREPROC@
+FLAGS_OBJ = @FLAGS_OBJ@
+FLAGS_DYN = @FLAGS_DYN@
+FLAGS_LIB = @FLAGS_LIB@
+FLAGS_EXE = @FLAGS_EXE@
+DEFS = @DEFS@
+LIBS = @LIBS@
+
+GAMBCLIB = @GAMBCLIB@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LIB = @INSTALL_LIB@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+LN_S = @LN_S@
+RANLIB = @RANLIB@
+HG = @HG@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = $(prefix)$(PACKAGE_SUBDIR)/include
+libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
+bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
+docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
+infodir = $(prefix)$(PACKAGE_SUBDIR)/info
+emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+
+.SUFFIXES:
+
+RCFILES = makefile.in
+
+GENDISTFILES =
+
+DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+all: all-pre all-recursive all-post
+
+all-pre:
+
+all-post: gsc-cc-o@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+
+gsc-cc-o@bat@: makefile
+	rm -f gsc-cc-o@bat@
+	if test "@bat@" = ""; then \
+	  echo "#! /bin/sh" > gsc-cc-o@bat@; \
+	  echo "GSC_CC_O_ARG1=\"\$$1\"" >> gsc-cc-o@bat@; \
+	  echo "shift" >> gsc-cc-o@bat@; \
+	  echo "GSC_CC_O_ARG2=\"\$$1\"" >> gsc-cc-o@bat@; \
+	  echo "shift" >> gsc-cc-o@bat@; \
+	  echo "GSC_CC_O_ARG3=\"\$$1\"" >> gsc-cc-o@bat@; \
+	  echo "shift" >> gsc-cc-o@bat@; \
+	  echo "@GSC_CC_O@" >> gsc-cc-o@bat@; \
+	  chmod +x gsc-cc-o@bat@; \
+	else \
+	  echo "@echo off" > gsc-cc-o@bat@; \
+	  echo "" >> gsc-cc-o@bat@; \
+	  echo "set GSC_CC_O_ARG1=%~1" >> gsc-cc-o@bat@; \
+	  echo "shift" >> gsc-cc-o@bat@; \
+	  echo "set GSC_CC_O_ARG2=%~1" >> gsc-cc-o@bat@; \
+	  echo "shift" >> gsc-cc-o@bat@; \
+	  echo "set GSC_CC_O_ARG3=%~1" >> gsc-cc-o@bat@; \
+	  echo "shift" >> gsc-cc-o@bat@; \
+	  echo "set GSC_CC_O_REST=%1 %2 %3 %4 %5 %6 %7 %8 %9" >> gsc-cc-o@bat@; \
+	  echo "" >> gsc-cc-o@bat@; \
+	  if test "$(C_COMPILER)" = "gcc"; then \
+	    echo "for %%f in (gcc.exe cl.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o@bat@; \
+	  else \
+	    echo "for %%f in (cl.exe gcc.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o@bat@; \
+	  fi; \
+	  echo "" >> gsc-cc-o@bat@; \
+	  echo "echo gcc.exe and cl.exe were not found in the PATH.  Make sure MinGW or Visual C++ Express is installed." >> gsc-cc-o@bat@; \
+	  echo "exit 1" >> gsc-cc-o@bat@; \
+	  echo "" >> gsc-cc-o@bat@; \
+	  echo ":use_gcc.exe" >> gsc-cc-o@bat@; \
+	  echo "gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I%GSC_CC_O_ARG1%include -D___DYNAMIC -D___SINGLE_HOST -o %GSC_CC_O_ARG2% %GSC_CC_O_REST% %GSC_CC_O_ARG3%" >> gsc-cc-o@bat@; \
+	  echo "goto end" >> gsc-cc-o@bat@; \
+	  echo "" >> gsc-cc-o@bat@; \
+	  echo ":use_cl.exe" >> gsc-cc-o@bat@; \
+	  echo "cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I%GSC_CC_O_ARG1%include -D___DYNAMIC -D___SINGLE_HOST -Fe%GSC_CC_O_ARG2% %GSC_CC_O_REST% %GSC_CC_O_ARG3%" >> gsc-cc-o@bat@; \
+	  echo "goto end" >> gsc-cc-o@bat@; \
+	  echo "" >> gsc-cc-o@bat@; \
+	  echo ":use_build_time_c_compiler" >> gsc-cc-o@bat@; \
+	  echo "@GSC_CC_O@" >> gsc-cc-o@bat@; \
+	  echo "goto end" >> gsc-cc-o@bat@; \
+	  echo "" >> gsc-cc-o@bat@; \
+	  echo ":end" >> gsc-cc-o@bat@; \
+	fi
+
+six@exe@: makefile
+	rm -f six@exe@ six@exe@.lnk
+	if test "@bat@" = ""; then \
+	  $(LN_S) $(rootfromhere)/gsi/gsi@exe@ six@exe@; \
+	else \
+	  cp $(rootfromhere)/gsi/gsi@exe@ six@exe@; \
+	fi
+
+gsi-script@bat@: makefile
+	rm -f gsi-script@bat@ gsi-script@bat@.lnk
+	if test "@bat@" = ""; then \
+	  $(LN_S) $(rootfromhere)/gsi/gsi@exe@ gsi-script@bat@; \
+	else \
+	  echo "@gsi %*" > gsi-script@bat@; \
+	fi
+
+gsc-script@bat@: makefile
+	rm -f gsc-script@bat@ gsc-script@bat@.lnk
+	if test "@bat@" = ""; then \
+	  $(LN_S) $(rootfromhere)/gsc/gsc@exe@ gsc-script@bat@; \
+	else \
+	  echo "@gsc %*" > gsc-script@bat@; \
+	fi
+
+six-script@bat@: makefile
+	rm -f six-script@bat@ six-script@bat@.lnk
+	if test "@bat@" = ""; then \
+	  $(LN_S) $(rootfromhere)/gsi/gsi@exe@ six-script@bat@; \
+	else \
+	  echo "@gsi %*" > six-script@bat@; \
+	fi
+
+scheme-srfi-0@bat@: makefile
+	rm -f scheme-srfi-0@bat@ scheme-srfi-0@bat@.lnk
+	if test "@bat@" = ""; then \
+	  $(LN_S) $(rootfromhere)/gsi/gsi@exe@ scheme-srfi-0@bat@; \
+	else \
+	  echo "@gsi %*" > scheme-srfi-0@bat@; \
+	fi
+
+scheme-r5rs@bat@: makefile
+	rm -f scheme-r5rs@bat@ scheme-r5rs@bat@.lnk
+	if test "@bat@" = ""; then \
+	  $(LN_S) $(rootfromhere)/gsi/gsi@exe@ scheme-r5rs@bat@; \
+	else \
+	  echo "@gsi %*" > scheme-r5rs@bat@; \
+	fi
+
+scheme-r4rs@bat@: makefile
+	rm -f scheme-r4rs@bat@ scheme-r4rs@bat@.lnk
+	if test "@bat@" = ""; then \
+	  $(LN_S) $(rootfromhere)/gsi/gsi@exe@ scheme-r4rs@bat@; \
+	else \
+	  echo "@gsi %*" > scheme-r4rs@bat@; \
+	fi
+
+scheme-ieee-1178-1990@bat@: makefile
+	rm -f scheme-ieee-1178-1990@bat@ scheme-ieee-1178-1990@bat@.lnk
+	if test "@bat@" = ""; then \
+	  $(LN_S) $(rootfromhere)/gsi/gsi@exe@ scheme-ieee-1178-1990@bat@; \
+	else \
+	  echo "@gsi %*" > scheme-ieee-1178-1990@bat@; \
+	fi
+
+install-pre:
+
+install-post: all
+	$(srcdirpfx)$(rootfromhere)/mkidirs $(bindir)
+	rm -f $(bindir)/gsc-cc-o@bat@ \
+	  $(bindir)/six@exe@ $(bindir)/six@exe@.lnk \
+	  $(bindir)/gsi-script@bat@ $(bindir)/gsi-script@bat@.lnk \
+	  $(bindir)/gsc-script@bat@ $(bindir)/gsc-script@bat@.lnk \
+	  $(bindir)/six-script@bat@ $(bindir)/six-script@bat@.lnk \
+	  $(bindir)/scheme-srfi-0@bat@ $(bindir)/scheme-srfi-0@bat@.lnk \
+	  $(bindir)/scheme-r5rs@bat@ $(bindir)/scheme-r5rs@bat@.lnk \
+	  $(bindir)/scheme-r4rs@bat@ $(bindir)/scheme-r4rs@bat@.lnk \
+	  $(bindir)/scheme-ieee-1178-1990@bat@ $(bindir)/scheme-ieee-1178-1990@bat@.lnk
+	$(INSTALL_PROGRAM) gsc-cc-o@bat@ $(bindir)/gsc-cc-o@bat@
+	if test "@bat@" = ""; then \
+	  (cd $(bindir) && $(LN_S) gsi@exe@ six@exe@); \
+	  (cd $(bindir) && $(LN_S) gsi@exe@ gsi-script@bat@); \
+	  (cd $(bindir) && $(LN_S) gsi@exe@ gsc-script@bat@); \
+	  (cd $(bindir) && $(LN_S) gsi@exe@ six-script@bat@); \
+	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-srfi-0@bat@); \
+	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-r5rs@bat@); \
+	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-r4rs@bat@); \
+	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-ieee-1178-1990@bat@); \
+	else \
+	  $(INSTALL_PROGRAM) six@exe@ $(bindir)/six@exe@; \
+	  $(INSTALL_PROGRAM) gsi-script@bat@ $(bindir)/gsi-script@bat@; \
+	  $(INSTALL_PROGRAM) gsc-script@bat@ $(bindir)/gsc-script@bat@; \
+	  $(INSTALL_PROGRAM) six-script@bat@ $(bindir)/six-script@bat@; \
+	  $(INSTALL_PROGRAM) scheme-srfi-0@bat@ $(bindir)/scheme-srfi-0@bat@; \
+	  $(INSTALL_PROGRAM) scheme-r5rs@bat@ $(bindir)/scheme-r5rs@bat@; \
+	  $(INSTALL_PROGRAM) scheme-r4rs@bat@ $(bindir)/scheme-r4rs@bat@; \
+	  $(INSTALL_PROGRAM) scheme-ieee-1178-1990@bat@ $(bindir)/scheme-ieee-1178-1990@bat@; \
+	fi
+
+uninstall-pre:
+
+uninstall-post:
+	rm -f $(bindir)/gsc-cc-o@bat@ \
+	  $(bindir)/six@exe@ $(bindir)/six@exe@.lnk \
+	  $(bindir)/gsi-script@bat@ $(bindir)/gsi-script@bat@.lnk \
+	  $(bindir)/gsc-script@bat@ $(bindir)/gsc-script@bat@.lnk \
+	  $(bindir)/six-script@bat@ $(bindir)/six-script@bat@.lnk \
+	  $(bindir)/scheme-srfi-0@bat@ $(bindir)/scheme-srfi-0@bat@.lnk \
+	  $(bindir)/scheme-r5rs@bat@ $(bindir)/scheme-r5rs@bat@.lnk \
+	  $(bindir)/scheme-r4rs@bat@ $(bindir)/scheme-r4rs@bat@.lnk \
+	  $(bindir)/scheme-ieee-1178-1990@bat@ $(bindir)/scheme-ieee-1178-1990@bat@.lnk
+
+mostlyclean-pre:
+
+mostlyclean-post:
+	rm -f gsc-cc-o@bat@ \
+	  six@exe@ six@exe@.lnk \
+	  gsi-script@bat@ gsi-script@bat@.lnk \
+	  gsc-script@bat@ gsc-script@bat@.lnk \
+	  six-script@bat@ six-script@bat@.lnk \
+	  scheme-srfi-0@bat@ scheme-srfi-0@bat@.lnk \
+	  scheme-r5rs@bat@ scheme-r5rs@bat@.lnk \
+	  scheme-r4rs@bat@ scheme-r4rs@bat@.lnk \
+	  scheme-ieee-1178-1990@bat@ scheme-ieee-1178-1990@bat@.lnk
+
+clean-pre: mostlyclean-pre
+
+clean-post: mostlyclean-post
+
+distclean-pre: clean-pre
+
+distclean-post: clean-post
+	rm -f makefile
+
+realclean-pre: distclean-pre
+
+realclean-post: distclean-post
+
+hg-setup-pre:
+	$(HG) add $(RCFILES)
+
+hg-setup-post:
+
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    target=`echo $@ | sed 's/-recursive//'`; \
+	    echo making $$target in $$subdir; \
+	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+	  done \
+	fi
+
+install: install-pre install-recursive install-post
+
+uninstall: uninstall-pre uninstall-recursive uninstall-post
+
+mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
+
+clean: clean-pre clean-recursive clean-post
+
+distclean: distclean-pre distclean-recursive distclean-post
+
+realclean: realclean-pre realclean-recursive realclean-post
+
+hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+
+dist:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    echo making $@ in $$subdir; \
+	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
+	  done \
+	fi
+	@echo "Copying distribution files"
+	@for file in $(DISTFILES); do \
+	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	done
+
+makefile: makefile.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

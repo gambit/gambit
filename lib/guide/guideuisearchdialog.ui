@@ -1,0 +1,235 @@
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
+<class>GuideUiSearchDialog</class>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>GuideUiSearchDialog</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>351</width>
+            <height>196</height>
+        </rect>
+    </property>
+    <property name="sizePolicy">
+        <sizepolicy>
+            <hsizetype>5</hsizetype>
+            <vsizetype>5</vsizetype>
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+        </sizepolicy>
+    </property>
+    <property name="font">
+        <font>
+            <family>Aharoni</family>
+            <pointsize>12</pointsize>
+        </font>
+    </property>
+    <property name="caption">
+        <string>Find...</string>
+    </property>
+    <vbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout23</cstring>
+            </property>
+            <grid>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QLabel" row="0" column="0">
+                    <property name="name">
+                        <cstring>textLabel1</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>5</hsizetype>
+                            <vsizetype>5</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="text">
+                        <string>Find :</string>
+                    </property>
+                </widget>
+                <widget class="QLabel" row="1" column="0">
+                    <property name="name">
+                        <cstring>lblReplace</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>5</hsizetype>
+                            <vsizetype>5</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="text">
+                        <string>Replace :</string>
+                    </property>
+                </widget>
+                <widget class="QLineEdit" row="0" column="1">
+                    <property name="name">
+                        <cstring>txtFind</cstring>
+                    </property>
+                    <property name="text">
+                        <string></string>
+                    </property>
+                </widget>
+                <widget class="QLineEdit" row="1" column="1">
+                    <property name="name">
+                        <cstring>txtReplace</cstring>
+                    </property>
+                </widget>
+            </grid>
+        </widget>
+        <widget class="QButtonGroup">
+            <property name="name">
+                <cstring>buttonGroup2</cstring>
+            </property>
+            <property name="frameShadow">
+                <enum>Sunken</enum>
+            </property>
+            <property name="title">
+                <string>Options</string>
+            </property>
+            <grid>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QCheckBox" row="0" column="0">
+                    <property name="name">
+                        <cstring>chkReplace</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Replace</string>
+                    </property>
+                </widget>
+                <widget class="QRadioButton" row="0" column="1">
+                    <property name="name">
+                        <cstring>radForward</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Forward</string>
+                    </property>
+                    <property name="checked">
+                        <bool>true</bool>
+                    </property>
+                </widget>
+                <widget class="QRadioButton" row="1" column="1">
+                    <property name="name">
+                        <cstring>radBackward</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Backward</string>
+                    </property>
+                </widget>
+                <widget class="QCheckBox" row="1" column="0">
+                    <property name="name">
+                        <cstring>chkCaseSensitive</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Case Sensitive</string>
+                    </property>
+                </widget>
+            </grid>
+        </widget>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout11</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>btnOne</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Find</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>btnAll</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Find all</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>btnCancel</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Cancel</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </vbox>
+</widget>
+<connections>
+    <connection>
+        <sender>btnOne</sender>
+        <signal>clicked()</signal>
+        <receiver>GuideUiSearchDialog</receiver>
+        <slot>btnOne_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>btnAll</sender>
+        <signal>clicked()</signal>
+        <receiver>GuideUiSearchDialog</receiver>
+        <slot>btnAll_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>btnCancel</sender>
+        <signal>clicked()</signal>
+        <receiver>GuideUiSearchDialog</receiver>
+        <slot>btnCancel_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>chkReplace</sender>
+        <signal>clicked()</signal>
+        <receiver>GuideUiSearchDialog</receiver>
+        <slot>chkReplace_clicked()</slot>
+    </connection>
+</connections>
+<tabstops>
+    <tabstop>txtFind</tabstop>
+    <tabstop>txtReplace</tabstop>
+    <tabstop>chkReplace</tabstop>
+    <tabstop>chkCaseSensitive</tabstop>
+    <tabstop>radBackward</tabstop>
+    <tabstop>btnOne</tabstop>
+    <tabstop>btnAll</tabstop>
+    <tabstop>btnCancel</tabstop>
+</tabstops>
+<includes>
+    <include location="local" impldecl="in implementation">guideuisearchdialog.ui.h</include>
+</includes>
+<forwards>
+    <forward>class QTextEdit;</forward>
+</forwards>
+<variables>
+    <variable access="private">QTextEdit *editor;</variable>
+</variables>
+<slots>
+    <slot>chkReplace_clicked()</slot>
+    <slot>btnOne_clicked()</slot>
+    <slot>btnAll_clicked()</slot>
+    <slot>btnCancel_clicked()</slot>
+    <slot>setEditor( QTextEdit * editor )</slot>
+</slots>
+<functions>
+    <function access="private" specifier="non virtual">init()</function>
+</functions>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>

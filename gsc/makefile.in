@@ -1,0 +1,192 @@
+# makefile for Gambit-C compiler.
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot = gsc
+rootfromhere = ..
+escrootfromhere = ".."
+SUBDIRS =
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
+
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+srcdirpfx = @srcdirpfx@
+
+C_COMPILER = @C_COMPILER@
+C_PREPROC = @C_PREPROC@
+FLAGS_OBJ = @FLAGS_OBJ@
+FLAGS_DYN = @FLAGS_DYN@
+FLAGS_LIB = @FLAGS_LIB@
+FLAGS_EXE = @FLAGS_EXE@
+DEFS = @DEFS@
+LIBS = @LIBS@
+
+GAMBCLIB = @GAMBCLIB@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LIB = @INSTALL_LIB@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+LN_S = @LN_S@
+RANLIB = @RANLIB@
+HG = @HG@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = $(prefix)$(PACKAGE_SUBDIR)/include
+libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
+bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
+docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
+infodir = $(prefix)$(PACKAGE_SUBDIR)/info
+emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+
+.SUFFIXES:
+.SUFFIXES: .scm .c @obj@
+
+.c@obj@:
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -c $(srcdirpfx)$*.c
+
+.scm.c:
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(escrootfromhere) -f -c -check $(srcdirpfx)$*.scm
+
+INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include
+
+MODULES = _host _utils _source _parms \
+_env _ptree1 _ptree2 _gvm _back _front _prims \
+_t-c-1 _t-c-2 _t-c-3 _gsc
+MODULES_SCM = _host.scm _utils.scm _source.scm _parms.scm \
+_env.scm _ptree1.scm _ptree2.scm _gvm.scm _back.scm _front.scm \
+_prims.scm _t-c-1.scm _t-c-2.scm _t-c-3.scm _gsc.scm
+MODULES_C = _host.c _utils.c _source.c _parms.c \
+_env.c _ptree1.c _ptree2.c _gvm.c _back.c _front.c \
+_prims.c _t-c-1.c _t-c-2.c _t-c-3.c _gsc.c
+MODULES_O = _host@obj@ _utils@obj@ _source@obj@ _parms@obj@ \
+_env@obj@ _ptree1@obj@ _ptree2@obj@ _gvm@obj@ _back@obj@ _front@obj@ \
+_prims@obj@ _t-c-1@obj@ _t-c-2@obj@ _t-c-3@obj@ _gsc@obj@
+MODULES_O_PLUS = +_host@obj@ +_utils@obj@ +_source@obj@ +_parms@obj@ \
++_env@obj@ +_ptree1@obj@ +_ptree2@obj@ +_gvm@obj@ +_back@obj@ +_front@obj@ \
++_prims@obj@ +_t-c-1@obj@ +_t-c-2@obj@ +_t-c-3@obj@ +_gsc@obj@
+MODULES_O_COMMA = _host@obj@,_utils@obj@,_source@obj@,_parms@obj@,\
+_env@obj@,_ptree1@obj@,_ptree2@obj@,_gvm@obj@,_back@obj@,_front@obj@,\
+_prims@obj@,_t-c-1@obj@,_t-c-2@obj@,_t-c-3@obj@,_gsc@obj@
+MODULES_O_IN_COMPILE_ORDER = _t-c-2@obj@ _ptree1@obj@ _ptree2@obj@ \
+_front@obj@ _t-c-1@obj@ _gvm@obj@ _source@obj@ _t-c-3@obj@ _utils@obj@ \
+_parms@obj@ _host@obj@ _env@obj@ _prims@obj@ _back@obj@ _gsc@obj@
+
+EXECUTABLE = gsc@exe@
+OBJECTS = $(MODULES_O) _gsc_@obj@
+OBJECTS_PLUS = $(MODULES_O_PLUS) +_gsc_@obj@
+OBJECTS_COMMA = $(MODULES_O_COMMA),_gsc_@obj@
+OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) _gsc_@obj@
+
+RCFILES = makefile.in fixnum.scm generic.scm igsc.scm $(MODULES_SCM) \
+_envadt.scm _gvmadt.scm _ptreeadt.scm _sourceadt.scm
+
+GENDISTFILES = $(MODULES_C) _gsc_.c
+
+DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+all: all-pre all-recursive all-post
+
+all-pre:
+
+all-post: gsc@exe@
+
+gsc@exe@: $(OBJECTS_IN_COMPILE_ORDER) $(srcdirpfx)$(rootfromhere)/lib/$(GAMBCLIB)
+	@LINK@
+
+_gsc_.c: $(MODULES_C) $(srcdirpfx)$(rootfromhere)/lib/_gambc.c
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(escrootfromhere) -f -link $(MODULES_C)
+
+$(MODULES_C): $(srcdirpfx)fixnum.scm $(srcdirpfx)generic.scm \
+$(srcdirpfx)$(rootfromhere)/lib/header.scm
+
+install-pre:
+
+install-post: all
+	$(srcdirpfx)$(rootfromhere)/mkidirs $(bindir)
+	@LINK_FOR_INSTALL@
+	$(INSTALL_PROGRAM) gsc@exe@ $(bindir)/gsc@exe@
+
+uninstall-pre:
+
+uninstall-post:
+	rm -f $(bindir)/gsc@exe@
+
+mostlyclean-pre:
+
+mostlyclean-post:
+	rm -f $(OBJECTS)
+
+clean-pre: mostlyclean-pre
+
+clean-post: mostlyclean-post
+	rm -f $(MODULES_C) _gsc_.c *.da *.bb *.bbg *.gcov
+
+distclean-pre: clean-pre
+
+distclean-post: clean-post
+	rm -f makefile
+
+realclean-pre: distclean-pre
+
+realclean-post: distclean-post
+	rm -f gsc@exe@
+
+hg-setup-pre:
+	$(HG) add $(RCFILES)
+
+hg-setup-post:
+
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    target=`echo $@ | sed 's/-recursive//'`; \
+	    echo making $$target in $$subdir; \
+	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+	  done \
+	fi
+
+install: install-pre install-recursive install-post
+
+uninstall: uninstall-pre uninstall-recursive uninstall-post
+
+mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
+
+clean: clean-pre clean-recursive clean-post
+
+distclean: distclean-pre distclean-recursive distclean-post
+
+realclean: realclean-pre realclean-recursive realclean-post
+
+hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+
+dist:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    echo making $@ in $$subdir; \
+	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
+	  done \
+	fi
+	@echo "Copying distribution files"
+	@for file in $(DISTFILES); do \
+	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	done
+
+makefile: makefile.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

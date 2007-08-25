@@ -1,0 +1,85 @@
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
+<class>GuideUiFileEditor</class>
+<widget class="QWidget">
+    <property name="name">
+        <cstring>GuideUiFileEditor</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>400</width>
+            <height>265</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>File Editor</string>
+    </property>
+    <grid>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="GuideUiTextEdit" row="0" column="0">
+            <property name="name">
+                <cstring>editor</cstring>
+            </property>
+        </widget>
+    </grid>
+</widget>
+<customwidgets>
+    <customwidget>
+        <class>GuideUiTextEdit</class>
+        <header location="local">guideuitextedit.h</header>
+        <sizehint>
+            <width>-1</width>
+            <height>-1</height>
+        </sizehint>
+        <container>0</container>
+        <sizepolicy>
+            <hordata>5</hordata>
+            <verdata>5</verdata>
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+        </sizepolicy>
+        <pixmap>image0</pixmap>
+    </customwidget>
+</customwidgets>
+<images>
+    <image name="image0">
+        <data format="XBM.GZ" length="79">789c534e494dcbcc4b554829cdcdad8c2fcf4c29c95030e0524611cd48cd4ccf28010a1797249664262b2467241641a592324b8aa363156c15aab914146aadb90067111b1f</data>
+    </image>
+</images>
+<includes>
+    <include location="local" impldecl="in declaration">guideuitextedit.h</include>
+    <include location="local" impldecl="in implementation">guideuifileeditor.ui.h</include>
+</includes>
+<forwards>
+    <forward>class GuideUiHighlighter</forward>
+</forwards>
+<variables>
+    <variable access="private">QString fileName;</variable>
+    <variable access="private">GuideUiHighlighter *highlighter;</variable>
+</variables>
+<slots>
+    <slot>setText( QString text )</slot>
+    <slot>setFileName( QString fileName )</slot>
+    <slot>setModified( bool modified )</slot>
+    <slot>editor_cursorPositionChanged( int para, int col )</slot>
+    <slot>editor_returnPressed()</slot>
+    <slot>highlightToken( int para, int index )</slot>
+    <slot>setWordWrap( int wordWrap )</slot>
+</slots>
+<functions>
+    <function access="private" specifier="non virtual">init()</function>
+    <function returnType="QString">getText()</function>
+    <function returnType="QString">getFileName()</function>
+    <function returnType="bool">isModified()</function>
+    <function returnType="GuideUiHighlighter *">getHighlighter()</function>
+    <function returnType="GuideUiTextEdit *">getEditor()</function>
+</functions>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="0"/>
+<includehints>
+    <includehint>guideuitextedit.h</includehint>
+</includehints>
+</UI>

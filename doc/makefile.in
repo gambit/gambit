@@ -1,0 +1,207 @@
+# makefile for Gambit-C documentation.
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+herefromroot = doc
+rootfromhere = ..
+SUBDIRS =
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
+
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+srcdirpfx = @srcdirpfx@
+
+C_COMPILER = @C_COMPILER@
+C_PREPROC = @C_PREPROC@
+FLAGS_OBJ = @FLAGS_OBJ@
+FLAGS_DYN = @FLAGS_DYN@
+FLAGS_LIB = @FLAGS_LIB@
+FLAGS_EXE = @FLAGS_EXE@
+DEFS = @DEFS@
+LIBS = @LIBS@
+
+GAMBCLIB = @GAMBCLIB@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LIB = @INSTALL_LIB@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+LN_S = @LN_S@
+RANLIB = @RANLIB@
+HG = @HG@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = $(prefix)$(PACKAGE_SUBDIR)/include
+libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
+bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
+docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
+infodir = $(prefix)$(PACKAGE_SUBDIR)/info
+emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+
+MAKEINFO = makeinfo
+TEXI2DVI = texi2dvi
+TEXI2HTML = texi2html
+
+.SUFFIXES:
+
+RCFILES = makefile.in \
+gambit-c.txi texinfo.tex texi2html \
+checkdoc.scm gambcini.scm square.scm bench.scm \
+m1.c m2.scm m3.scm m4.scm m5.scm m6.scm m7.scm x.c x.h h.scm w.six \
+test1.scm test2.scm test3.scm
+
+GENDISTFILES = stamp.vti version.txi \
+gambit-c.pdf gambit-c.html gambit-c.txt \
+gambit-c.info gambit-c.info-1 gambit-c.info-2 gambit-c.info-3
+
+DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+all: all-pre all-recursive all-post
+
+all-pre:
+
+all-post:
+
+doc: info pdf html txt
+
+checkdoc:
+	rm -f *.o[0123456789]* fifo
+	rm -rf newdir
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi checkdoc.scm
+	diff gambit-c.txi gambit-c.txi-correct
+
+info: gambit-c.info
+
+gambit-c.info: gambit-c.txi version.txi
+	cd $(srcdir) && $(MAKEINFO) gambit-c.txi
+
+pdf: gambit-c.pdf
+
+ps: gambit-c.pdf
+	pdf2ps gambit-c.pdf
+
+gambit-c.pdf: gambit-c.txi version.txi
+	cd $(srcdir) && $(TEXI2DVI) -p gambit-c.txi
+
+html: gambit-c.html
+
+gambit-c.html: gambit-c.txi
+	cd $(srcdir) && $(TEXI2HTML) gambit-c.txi
+
+txt: gambit-c.txt
+
+gambit-c.txt: gambit-c.txi
+	cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit-c.txt gambit-c.txi
+
+version.txi: stamp.vti
+
+stamp.vti: gambit-c.txi $(rootfromhere)/configure.ac
+	# we need this mess because "date" and "stat"
+	# don't behave the same on Linux and BSD
+	st_mtime="`stat -s gambit-c.txi | sed -e 's/.*st_mtime=//g' -e 's/ .*//g'`"; \
+	if [ "$$st_mtime" = "" ]; then \
+	  mtime="`date -r gambit-c.txi '+%B %d, %Y'`"; \
+	else \
+	  mtime="`date -r $$st_mtime '+%B %d, %Y'`"; \
+	fi; \
+	echo "@set EDITION $(PACKAGE_VERSION)" > version.tmp; \
+	echo "@set UPDATED $$mtime" >> version.tmp; \
+	echo "@set VERSION $(PACKAGE_VERSION)" >> version.tmp
+	if cmp -s version.tmp $(srcdirpfx)version.txi; then rm -f version.tmp; \
+	else mv version.tmp $(srcdirpfx)version.txi; fi
+	date > $(srcdirpfx)stamp.vti
+
+install-pre:
+
+install-post: all doc
+	$(srcdirpfx)$(rootfromhere)/mkidirs $(docdir) $(infodir)
+	$(INSTALL_DATA) gambit-c.pdf $(docdir)/gambit-c.pdf
+	$(INSTALL_DATA) gambit-c.txt $(docdir)/gambit-c.txt
+	$(INSTALL_DATA) gambit-c.html $(docdir)/gambit-c.html
+	cd $(srcdir) && for file in gambit-c.info*; do \
+	  $(INSTALL_DATA) $$file $(infodir)/$$file; \
+	done
+
+uninstall-pre:
+
+uninstall-post:
+	rm -f $(infodir)/gambit-c.info*
+
+mostlyclean-pre:
+
+mostlyclean-post:
+	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.log *.pg *.toc *.tp *.vr
+	rm -f *.tmp
+
+clean-pre: mostlyclean-pre
+
+clean-post: mostlyclean-post
+
+distclean-pre: clean-pre
+
+distclean-post: clean-post
+	rm -f makefile
+
+realclean-pre: distclean-pre
+
+realclean-post: distclean-post
+	rm -f stamp.vti version.txi gambit-c.info* gambit-c.pdf gambit-c.txt gambit-c.txt
+
+hg-setup-pre:
+	$(HG) add $(RCFILES)
+
+hg-setup-post:
+
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    target=`echo $@ | sed 's/-recursive//'`; \
+	    echo making $$target in $$subdir; \
+	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+	  done \
+	fi
+
+install: install-pre install-recursive install-post
+
+uninstall: uninstall-pre uninstall-recursive uninstall-post
+
+mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
+
+clean: clean-pre clean-recursive clean-post
+
+distclean: distclean-pre distclean-recursive distclean-post
+
+realclean: realclean-pre realclean-recursive realclean-post
+
+hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+
+dist:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    echo making $@ in $$subdir; \
+	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
+	  done \
+	fi
+	@echo "Copying distribution files"
+	@for file in $(DISTFILES); do \
+	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	done
+
+makefile: makefile.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

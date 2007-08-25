@@ -1,0 +1,2 @@
+A simple foreign function interface example that opens two X-windows
+and bounces colored balls in them.

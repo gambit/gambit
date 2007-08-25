@@ -1,0 +1,69 @@
+(#f #f #f #f #t #f #f #f #f #f)
+caught exception #<heap-overflow-exception #2>
+(#f #f #f #f #t #f #f #f #f #f)
+(#t #f #t #f #t #f #t #f #t #f)
+caught exception #<stack-overflow-exception #3>
+(#t #f #t #f #t #f #t #f #t #f)
+(hop "was called from Scheme")
+(hop "was called from C")
+"another string"
+(#(.5 .5 .5 .5 .5) . "hello world!")
+(final-gc)
+768180
+768180
+--------------------------------------- GC
+--------------------------------------- GC
+(will-testator will1) = (obj1)
+(will-testator will2) = (obj2)
+(will-testator will3) = (obj3)
+(will-testator will4) = (obj4 #<will #4>)
+(will-testator will5) = (obj5 #<will #5>)
+(will-testator will6) = (obj6 #<will #6>)
+(will-testator will7) = (obj7 #<will #7>)
+(will-testator will8) = (obj8 #<will #8>)
+--------------------------------------- GC
+(will-testator will1) = (obj1)
+(will-testator will2) = (obj2)
+(will-testator will3) = (obj3)
+(will-testator will4) = (obj4 #<will #4>)
+(will-testator will5) = (obj5 #<will #5>)
+(will-testator will6) = (obj6 #<will #6>)
+(will-testator will7) = (obj7 #<will #7>)
+(will-testator will8) = (obj8 #<will #8>)
+--------------------------------------- GC
+(will-testator will1) = #f
+(will-testator will2) = (obj2)
+(will-testator will3) = (obj3)
+(will-testator will4) = (obj4 #<will #4>)
+(will-testator will5) = (obj5 #<will #5>)
+(will-testator will6) = (obj6 #<will #6>)
+(will-testator will7) = (obj7 #<will #7>)
+(will-testator will8) = (obj8 #<will #8>)
+--------------------------------------- GC
+===> calling the action procedure for object obj6 = (obj6 #<will #6>)
+===> calling the action procedure for object obj4 = (obj4 #<will #4>)
+===> calling the action procedure for object obj2 = (obj2)
+(will-testator will1) = #f
+(will-testator will2) = #f
+(will-testator will3) = #f
+(will-testator will4) = #f
+(will-testator will5) = #f
+(will-testator will6) = #f
+(will-testator will7) = #f
+(will-testator will8) = (obj8 #<will #8>)
+123
+--------------------------------------- GC
+===> calling the action procedure for object obj9 = #(1 2 3 4 5)
+===> calling the action procedure for object obj8 = (obj8 #<will #8>)
+(will-testator will1) = #f
+(will-testator will2) = #f
+(will-testator will3) = #f
+(will-testator will4) = #f
+(will-testator will5) = #f
+(will-testator will6) = #f
+(will-testator will7) = #f
+(will-testator will8) = #f
+#(1 2 3 4 5)
+--------------------------------------- GC
+--------------------------------------- GC
+all-tests-done

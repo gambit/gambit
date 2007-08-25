@@ -1,0 +1,205 @@
+# makefile for Gambit-C system.
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
+
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+srcdirpfx = @srcdirpfx@
+
+C_COMPILER = @C_COMPILER@
+C_PREPROC = @C_PREPROC@
+FLAGS_OBJ = @FLAGS_OBJ@
+FLAGS_DYN = @FLAGS_DYN@
+FLAGS_LIB = @FLAGS_LIB@
+FLAGS_EXE = @FLAGS_EXE@
+DEFS = @DEFS@
+LIBS = @LIBS@
+
+GAMBCLIB = @GAMBCLIB@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LIB = @INSTALL_LIB@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+LN_S = @LN_S@
+RANLIB = @RANLIB@
+HG = @HG@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = $(prefix)$(PACKAGE_SUBDIR)/include
+libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
+bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
+docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
+infodir = $(prefix)$(PACKAGE_SUBDIR)/info
+emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this makefile.
+# To change the values of `make' variables: instead of editing makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+
+MDEFINES = prefix=$(prefix) exec_prefix=$(exec_prefix) \
+includedir=$(includedir) libdir=$(libdir) \
+bindir=$(bindir) docdir=$(docdir) \
+infodir=$(infodir) emacsdir=$(emacsdir)
+
+SUBDIRS = include lib gsi gsc bin misc doc tests examples prebuilt
+
+RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
+makefile.in configure.ac config.guess config.sub install-sh mkidirs \
+.hgignore .hgtags
+
+GENDISTFILES = configure
+
+DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+.SUFFIXES:
+
+all: all-pre all-recursive all-post
+
+all-pre:
+
+all-post:
+
+fake_target:
+
+doc info pdf html txt: fake_target
+	cd doc && $(MAKE) $(MDEFINES) $@
+
+bootstrap: fake_target all
+	cp gsc/gsc gsc-comp
+
+check: fake_target all
+	cd tests && $(MAKE) $(MDEFINES) $@
+
+examples: fake_target all
+	cd examples && $(MAKE) $(MDEFINES) $@
+
+prebuilt: fake_target dist
+	cd prebuilt && $(MAKE) $(MDEFINES) $@
+
+release: fake_target
+	$(MAKE) $(MDEFINES) bootstrap
+	$(MAKE) $(MDEFINES) mostlyclean
+	$(MAKE) $(MDEFINES) all
+	$(MAKE) $(MDEFINES) check
+	$(MAKE) $(MDEFINES) doc
+	$(HG) tag $(PACKAGE_VERSION)
+	rm -f $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
+	$(MAKE) $(MDEFINES) prebuilt
+
+publish-release: fake_target
+	misc/publish-release $(PACKAGE_VERSION) $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
+
+install-pre:
+
+install-post: all
+	rm -f $(prefix)/current $(prefix)/current.lnk
+	if test "@bat@" = ""; then \
+	  (cd $(prefix) && $(LN_S) .$(PACKAGE_SUBDIR) current); \
+	fi
+
+uninstall-pre:
+
+uninstall-post:
+	rm -f $(prefix)/current $(prefix)/current.lnk
+
+mostlyclean-pre:
+
+mostlyclean-post:
+
+clean-pre: mostlyclean-pre
+
+clean-post: mostlyclean-post
+
+distclean-pre: clean-pre
+
+distclean-post: clean-post
+	rm -f makefile config.cache config.h config.log config.status
+
+realclean-pre: distclean-pre
+
+realclean-post: distclean-post
+
+hg-setup-pre:
+	$(HG) init
+	$(HG) add $(RCFILES)
+	rm -f .hg/hgrc
+	echo "[paths]" > .hg/hgrc
+	echo "default-push = ssh://gambit@trex.iro.umontreal.ca/HTML/repo/gambit" >> .hg/hgrc
+	echo "default = http://www.iro.umontreal.ca/~gambit/repo/gambit/" >> .hg/hgrc
+
+hg-setup-post:
+	$(HG) commit --message "Initial commit of $(PACKAGE_STRING)"
+
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive:
+	@for subdir in $(SUBDIRS); do \
+	  target=`echo $@ | sed 's/-recursive//'`; \
+	  echo making $$target in $$subdir; \
+	  (cd $$subdir && $(MAKE) $$target) || exit 1; \
+	done
+
+install: install-pre install-recursive install-post
+
+uninstall: uninstall-pre uninstall-recursive uninstall-post
+
+mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
+
+clean: clean-pre clean-recursive clean-post
+
+distclean: distclean-pre distclean-recursive distclean-post
+
+realclean: realclean-pre realclean-recursive realclean-post
+
+hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+
+dist: fake_target
+	rm -rf $(PACKAGE_TARNAME)
+	mkdir $(PACKAGE_TARNAME)
+	chmod 777 $(PACKAGE_TARNAME)
+	@for subdir in $(SUBDIRS); do \
+	  echo making $@ in $$subdir; \
+	  mkdir $(PACKAGE_TARNAME)/$$subdir; \
+	  chmod 777 $(PACKAGE_TARNAME)/$$subdir; \
+	  (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
+	done
+	@echo "Copying distribution files"
+	@for file in $(DISTFILES); do \
+	  ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
+	done
+	ln $(srcdirpfx).hg $(PACKAGE_TARNAME) 2> /dev/null \
+	  || cp -p -R $(srcdirpfx).hg $(PACKAGE_TARNAME); \
+	chmod -R a+r $(PACKAGE_TARNAME)
+	tar chof $(PACKAGE_TARNAME).tar $(PACKAGE_TARNAME)
+	gzip -9 $(PACKAGE_TARNAME).tar
+	mv $(PACKAGE_TARNAME).tar.gz $(PACKAGE_TARNAME).tgz
+	rm -rf $(PACKAGE_TARNAME)
+
+# For an explanation of the following makefile rules, see node
+# `Automatic Remaking' in GNU Autoconf documentation.
+
+makefile: makefile.in config.status
+	CONFIG_FILES=$@ CONFIG_HEADERS= ./config.status
+
+config.status: configure
+	./config.status --recheck
+
+configure: configure.ac
+	cd $(srcdir) && autoconf configure.ac > configure
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

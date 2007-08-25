@@ -1,0 +1,37 @@
+This example is a distributed application composed of two nodes
+(running in the same Scheme process).  A thread is started on the
+first node.  The thread performs a loop.  At each iteration of the
+loop it prints the name of the node it is running on, then the thread
+migrates to the other node.  This example can easily be changed so
+that each node is running on a different machine.  Say the machines
+are "foo.com" and "bar.com".  The machine "foo.com" should run
+
+(define (main)
+  (become-tcp-node
+   9000 ; TCP port-number for this node
+   'foo ; name of the first node
+   (lambda () 'no-op)))
+
+An the machine "bar.com" should run
+
+(define (main)
+  (become-tcp-node
+   9000 ; TCP port-number for this node
+   'bar ; name of the second node
+   (lambda ()
+     ; start a thread on bar.com
+     (spawn
+      (let ((n1 (current-node))
+            (n2 (make-tcp-node "foo.com" 9000 'foo)))
+        (let loop ((i 0) (a n1) (b n2))
+          (if (= i 100)
+              (exit)
+              (begin
+                (if #t
+                    (begin
+                      (pp (list i 'from (current-node-name))
+                          (current-output-port))
+                      (force-output (current-output-port))
+                      (thread-sleep! .1)))
+                (goto b)
+                (loop (+ i 1) b a)))))))))

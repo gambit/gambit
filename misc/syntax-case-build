@@ -1,0 +1,56 @@
+#! /bin/sh
+
+# File: "syntax-case-build", Time-stamp: <2007-04-03 20:32:05 feeley>
+
+# Copyright (c) 2007 by Marc Feeley, All Rights Reserved.
+
+PSYNTAX=psyntax73
+
+add_prelude()
+{
+  cat syntax-case-prelude.scm $1 > $2
+}
+
+create_final()
+{
+  cat syntax-case-prelude.scm $1 syntax-case-postlude.scm | sed -e "s/^ *//g" > $2
+}
+
+modify_for_load_time()
+{
+  tr '\n' '' < $1 | sed "s/'(e)\( *\)'(e)/'(l)\1'(l)/" | sed "s/'(E)\( *\)'(E)/'(L)\1'(L)/" | tr '' '\n' > $2
+}
+
+rm -f psyntax1.scm psyntax2.scm psyntax3.scm psyntax0-at-load.pp psyntax1-at-load.pp psyntax2-at-load.pp psyntax0-at-load.scm psyntax1-at-load.scm psyntax2-at-load.scm syntax-case.scm
+
+echo "-> copying $PSYNTAX.pp to psyntax0-at-load.scm with rtem/ctem set to '(l)"
+
+modify_for_load_time $PSYNTAX.pp psyntax0-at-load.pp
+add_prelude psyntax0-at-load.pp psyntax0-at-load.scm
+
+echo "-> using psyntax0-at-load.scm to expand $PSYNTAX.ss to psyntax1-at-load.scm"
+
+./syntax-case-expand-file psyntax0-at-load.scm $PSYNTAX.ss psyntax1.scm
+modify_for_load_time psyntax1.scm psyntax1-at-load.pp
+add_prelude psyntax1-at-load.pp psyntax1-at-load.scm
+
+echo "-> using psyntax1-at-load.scm to expand $PSYNTAX.ss to psyntax2-at-load.scm"
+
+./syntax-case-expand-file psyntax1-at-load.scm $PSYNTAX.ss psyntax2.scm
+modify_for_load_time psyntax2.scm psyntax2-at-load.pp
+add_prelude psyntax2-at-load.pp psyntax2-at-load.scm
+
+echo "-> using psyntax2-at-load.scm to expand $PSYNTAX.ss to syntax-case.scm"
+
+./syntax-case-expand-file psyntax2-at-load.scm $PSYNTAX.ss psyntax3.scm
+create_final psyntax3.scm syntax-case.scm
+
+echo "-> comparing last two expansions (there should be no differences)"
+
+echo ============================================
+
+diff psyntax2.scm psyntax3.scm
+
+echo ============================================
+
+rm -f psyntax1.scm psyntax2.scm psyntax3.scm psyntax0-at-load.pp psyntax1-at-load.pp psyntax2-at-load.pp psyntax0-at-load.scm psyntax1-at-load.scm psyntax2-at-load.scm

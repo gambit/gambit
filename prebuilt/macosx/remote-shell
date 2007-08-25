@@ -1,0 +1,30 @@
+#! /bin/sh
+
+# Copyright (c) 2007 by Marc Feeley, All Rights Reserved.
+
+# ***WARNING***
+#
+# This shell program is very platform specific.  It will be hard to
+# get working on another development machine.  The shell program's
+# argument is a script which is transferred to a MacOS X workstation
+# and executed there. The output from this shell is then transferred
+# back.  All transfers are done with scp, which is setup to not
+# require a password.
+
+rm -f /tmp/_macosx-rsh*
+cp "$1" /tmp/_macosx-rsh-script
+
+ORIGINATOR_HN="`hostname`"
+ORIGINATOR_IP="`dig +tries=2 +time=2 +short $ORIGINATOR_HN`"
+if [ "$?" != "0" -o "$ORIGINATOR_IP" == "" ] ; then
+  ORIGINATOR_IP="192.168.0.5" # Usual static IP address of development machine
+fi
+ORIGINATOR="`id -nu`@$ORIGINATOR_IP"
+
+ssh localhost "/bin/sh --login -c \"export ORIGINATOR=$ORIGINATOR;rm -rf /tmp/macosx-rsh*;scp $ORIGINATOR:/tmp/_macosx-rsh-script /tmp/macosx-rsh-script;chmod +x /tmp/macosx-rsh-script;/tmp/macosx-rsh-script < /dev/null > /tmp/macosx-rsh-script.out 2>&1;scp /tmp/macosx-rsh-script.out $ORIGINATOR:/tmp/_macosx-rsh-script.out;rm -rf /tmp/macosx-rsh*\""
+
+if [ -e /tmp/_macosx-rsh-script.out ] ; then
+  cat /tmp/_macosx-rsh-script.out
+fi
+
+rm -f /tmp/_macosx-rsh*

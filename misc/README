@@ -1,0 +1,79 @@
+This directory contains miscellaneous files related to Gambit-C.
+
+SHELL SCRIPTS
+-------------
+
+The following shell scripts are provided to configure the system for
+compiling with various C compilers under Windows-NT/95 and MSDOS:
+
+  "conf_msc" for the Microsoft Visual C++ 4.0 compiler
+  "conf_bor" for the Borland C++ 5.0 compiler
+  "conf_wat" for the Watcom C/C++ 11.0 compiler
+  "conf_dj" for the DJGPP system v2.0 (a port of gcc for MSDOS)
+
+For all these scripts it is assumed that the MKS toolkit 5.1 is
+installed (the scripts and makefiles may need to be modified for other
+toolkits).  Scripts must be called from the main distribution
+directory, such as "misc/conf_msc".  A "make -r" (or "make -r
+FORCE_STATIC_LINK=yes") after that will build the system.  Because of
+a bug in MKS the "-r" flag is required when you invoke "make"
+
+The following files will be built: the interpreter in "gsi/gsi.exe",
+the compiler in "gsc/gsc.exe" and the runtime library in
+
+  - for DJGPP: "lib/libgambc.a" 
+  - for others when statically linked: "lib/libgambc.lib" 
+  - for others when dynamically linked: "lib/gambc.dll"
+    ("lib/gambc.lib" is the corresponding import library)
+
+By default, the executables created by these scripts are console
+applications.  Windowed applications for Windows-NT/95 can be created
+with the Watcom C/C++ compiler by calling up the script with
+"WINDOWED=yes misc/conf_wat".
+
+Normally the sources are compiled as C source code.  If you want to
+force a C++ compilation, prefix the configuration command with
+CPLUSPLUS=yes as in "CPLUSPLUS=yes misc/conf_msc".
+
+IDE PROJECTS
+------------
+
+To build the Gambit-C system using an IDE (Integrated Development
+Environment) you can use the following files which contain projects
+for building the interpreter and the compiler as statically linked
+applications.
+
+  "proj_msc.zip" for the Microsoft Visual C++ 4.0 compiler
+  "proj_bor.zip" for the Borland C++ 5.0 compiler
+  "proj_wat.zip" for the Watcom C/C++ 11.0 compiler
+  "proj_cw.hqx" for the Macintosh CodeWarrior C/C++ compiler
+                version 11, Pro 1, Pro 2 or Pro 3
+
+After decompressing these files, move the appropriate project file to
+the main distribution directory, load the appropriate project file in
+the IDE and build the project.
+
+On the Macintosh the distribution file should be decompressed with the
+following Macintosh utilities: MacGzip 1.0 and suntar 2.1.
+
+The interpreter and compiler can be compiled as 68k native or PowerPC
+native applications on the Macintosh.  The PowerPC version of the
+compiler can dynamically compile Scheme files (using the
+"compile-file" procedure) and load the resulting object file (using
+the "load" procedure).  This is done by sending AppleEvents to the
+CodeWarrior IDE (version 1.7.4, 2.0, 2.1 or 3.0), which must be currently
+running when "compile-file" is called.  Moreover the project files
+"compile-file.*" and the "gambit.h" header file must be installed in
+the "Gambit installation directory" (the folder "gambc" in the folder
+"Gambit-C" in the "Preferences" folder).  In order to compile some of
+the larger C files the memory setting of the CodeWarrior IDE should be
+increased by at least 3MB and virtual memory should be turned on.
+The compiler and interpreter now contain a friendly user interface with
+online help system and an integrated editor.
+
+BENCHMARKS
+----------
+
+"bench.tgz" is a compressed (gzip) "tar" archive containing many
+Scheme benchmarks and a shell script to test these benchmarks on
+several different Scheme implementations.

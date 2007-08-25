@@ -1,0 +1,182 @@
+#! /bin/sh
+
+# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+
+PROGRAMS="@PROGRAMS@"
+BIN_DIR="@BIN_DIR@"
+INSTALL_DIR="@INSTALL_DIR@"
+GAMBC_BIN_DIR="$INSTALL_DIR/current/bin"
+PACKAGE_NAME="@PACKAGE_NAME@"
+
+if [ "`id -un`" != "root" ] ; then
+  echo "You must execute this script as root!"
+  echo "Try executing the command:"
+  echo "  sudo $0"
+  exit 1
+fi
+
+split_version() # version, sets `$ver1', `$ver2', and `$ver3'
+{
+  ver1="`echo \"$1\" | sed -e 's&^v\([0-9][0-9]*\).\([0-9][0-9]*\).\([0-9][0-9]*\)$&\1&g'`"
+  ver2="`echo \"$1\" | sed -e 's&^v\([0-9][0-9]*\).\([0-9][0-9]*\).\([0-9][0-9]*\)$&\2&g'`"
+  ver3="`echo \"$1\" | sed -e 's&^v\([0-9][0-9]*\).\([0-9][0-9]*\).\([0-9][0-9]*\)$&\3&g'`"
+}
+
+compare_versions() # version_a, version_b, sets `$result' to -1, 0, or 1
+{
+  split_version "$2"
+  b_ver1="$ver1"
+  b_ver2="$ver2"
+  b_ver3="$ver3"
+
+  split_version "$1"
+
+  if [ "$ver1" -lt "$b_ver1" ] ; then
+    result=-1
+  else
+    if [ "$ver1" -gt "$b_ver1" ] ; then
+      result=1
+    else
+      if [ "$ver2" -lt "$b_ver2" ] ; then
+        result=-1
+      else
+        if [ "$ver2" -gt "$b_ver2" ] ; then
+          result=1
+        else
+          if [ "$ver3" -lt "$b_ver3" ] ; then
+            result=-1
+          else
+            if [ "$ver3" -gt "$b_ver3" ] ; then
+              result=1
+            else
+              result=0
+            fi
+          fi
+        fi
+      fi
+    fi
+  fi
+}
+
+max_version() # versions, sets $max_vers
+{
+  max_vers=""
+  for vers in $1 ; do
+    if [ "$max_vers" == "" ] ; then
+      max_vers="$vers"
+    else
+      compare_versions "$vers" "$max_vers"
+      if [ "$result" == "1" ] ; then
+        max_vers="$vers"
+      fi
+    fi
+  done
+}
+
+get_versions() # dir
+{
+  versions="`ls -a "$1" | read_versions`"
+}
+
+read_versions()
+{
+  versions=""
+  while read file ; do
+    split_version "$file"
+    if [ "$ver1" != "$file" ] ; then
+      versions="$versions $file"
+    fi
+  done
+  echo "$versions"
+}
+
+remove_all()
+{
+  echo "Removing directory $INSTALL_DIR and all Gambit programs in $BIN_DIR"
+  rm -rf "$INSTALL_DIR"
+
+  for prog in $PROGRAMS ; do
+    rm -f "$BIN_DIR/$prog"
+  done
+}
+
+if [ ! -d "$INSTALL_DIR" ] ; then
+
+  echo "$PACKAGE_NAME is not installed on this computer ($INSTALL_DIR does not exist)"
+
+else
+
+  get_versions "$INSTALL_DIR"
+
+  if [ "$versions" == "" ] ; then
+
+    echo "No version of $PACKAGE_NAME are installed"
+
+    remove_all
+
+  else
+
+    if [ -L "$INSTALL_DIR/current" ] ; then
+      current=`readlink "$INSTALL_DIR/current"`
+      current_version="`basename \"$current\"`"
+    else
+      current_version=""
+    fi
+
+    version_to_remove="$1"
+
+    if [ "$version_to_remove" == "" ] ; then
+      if [ "$current_version" != "" -a -d "$INSTALL_DIR/$current_version" ] ; then
+        version_to_remove="$current_version"
+      else
+        max_version "$versions"
+        version_to_remove="$max_vers"
+      fi
+    fi
+
+    if [ ! -d "$INSTALL_DIR/$version_to_remove" ] ; then
+
+      echo "$PACKAGE_NAME $version_to_remove is not installed!"
+
+      echo "The following versions of $PACKAGE_NAME can be uninstalled:"
+
+      for version in $versions ; do
+        if [ "$version" == "$current_version" ] ; then
+          echo "  $version (current version)"
+        else
+          echo "  $version"
+        fi
+      done
+
+    else
+
+      versions_remaining=""
+
+      for version in $versions ; do
+        if [ "$version" != "$version_to_remove" ] ; then
+          versions_remaining="$versions_remaining $version"
+        fi
+      done
+
+      if [ "$versions_remaining" == "" ] ; then
+
+        remove_all
+
+      else
+
+        echo "Removing $INSTALL_DIR/$version_to_remove"
+        rm -rf "$INSTALL_DIR/$version_to_remove"
+
+        if [ "$current_version" == "$version_to_remove" ] ; then
+
+          max_version "$versions_remaining"
+
+          echo "$PACKAGE_NAME $max_vers is now the current version"
+          rm -f "$INSTALL_DIR/current"
+          ln -s "$INSTALL_DIR/$max_vers" "$INSTALL_DIR/current"
+
+        fi
+      fi
+    fi
+  fi
+fi

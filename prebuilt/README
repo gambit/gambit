@@ -1,0 +1,7 @@
+To build Gambit-C on MacOS X and Windows, from the root directory
+enter the command:
+
+  make prebuilt
+
+This will create gambc-<version>-macosx.dmg and
+gambc-<version>-windows.exe in the root directory.
