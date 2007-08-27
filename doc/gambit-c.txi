@@ -1415,10 +1415,13 @@ must be a string.  A flat link file is generated for the modules
 specified in @var{module-list}.  By default the link file generated is
 named @samp{@var{last}_.c}, where @var{last} is the name of the last
 module.  However, when @var{output} is supplied the link file is named
-@samp{@var{output}}.
+@samp{@var{output}}.  If a dynamically loadable object file is produced
+from the link file @samp{@var{output}}, then the name of
+the dynamically loadable object file must be @samp{@var{output}} stripped
+of its file extension.
 
-The following example shows how to build the dynamically loadable Scheme
-library @samp{lib.o1} which contains the two Scheme modules
+The following example shows how to build the dynamically loadable object
+file @samp{lib.o1} which contains the two Scheme modules
 @samp{m6.scm} and @samp{m7.scm}.
 
 @smallexample
