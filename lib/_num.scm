@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2007-08-20 19:12:17 feeley>
+;;; File: "_num.scm", Time-stamp: <2007-08-27 18:04:30 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2007 by Brad Lucier, All Rights Reserved.
@@ -206,9 +206,9 @@
       #f
       #f
       (if (##flonum.<-fixnum-exact? x)
-        (##flonum.= (##flonum.<-fixnum x) y)
-        (and (##flonum.finite? y)
-             (##ratnum.= (##ratnum.<-exact-int x) (##flonum.->ratnum y))))
+          (##flonum.= (##flonum.<-fixnum x) y)
+          (and (##flonum.finite? y)
+               (##ratnum.= (##ratnum.<-exact-int x) (##flonum.->ratnum y))))
       (##cpxnum.= (##cpxnum.<-noncpxnum x) y))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
@@ -229,9 +229,9 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (if (##flonum.<-fixnum-exact? y)
-        (##flonum.= x (##flonum.<-fixnum y))
-        (and (##flonum.finite? x)
-             (##ratnum.= (##flonum.->ratnum x) (##ratnum.<-exact-int y))))
+          (##flonum.= x (##flonum.<-fixnum y))
+          (and (##flonum.finite? x)
+               (##ratnum.= (##flonum.->ratnum x) (##ratnum.<-exact-int y))))
       (and (##flonum.finite? x)
            (##ratnum.= (##flonum.->ratnum x) (##ratnum.<-exact-int y)))
       (and (##flonum.finite? x)
@@ -267,15 +267,15 @@
       (##ratnum.< (##ratnum.<-exact-int x) y)
       (cond ((##flonum.finite? y)
              (if (##flonum.<-fixnum-exact? x)
-               (##flonum.< (##flonum.<-fixnum x) y)
-               (##ratnum.< (##ratnum.<-exact-int x) (##flonum.->ratnum y))))
+                 (##flonum.< (##flonum.<-fixnum x) y)
+                 (##ratnum.< (##ratnum.<-exact-int x) (##flonum.->ratnum y))))
             ((##flonum.nan? y)
              nan-result)
             (else
              (##flonum.positive? y)))
       (if (macro-cpxnum-real? y)
-        (##< x (macro-cpxnum-real y) nan-result)
-        (type-error-on-y)))
+          (##< x (macro-cpxnum-real y) nan-result)
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (##bignum.negative? x)
@@ -288,8 +288,8 @@
             (else
              (##flonum.positive? y)))
       (if (macro-cpxnum-real? y)
-        (##< x (macro-cpxnum-real y) nan-result)
-        (type-error-on-y)))
+          (##< x (macro-cpxnum-real y) nan-result)
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (##ratnum.< x (##ratnum.<-exact-int y))
@@ -302,14 +302,14 @@
             (else
              (##flonum.positive? y)))
       (if (macro-cpxnum-real? y)
-        (##< x (macro-cpxnum-real y) nan-result)
-        (type-error-on-y)))
+          (##< x (macro-cpxnum-real y) nan-result)
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (cond ((##flonum.finite? x)
              (if (##flonum.<-fixnum-exact? y)
-               (##flonum.< x (##flonum.<-fixnum y))
-               (##ratnum.< (##flonum.->ratnum x) (##ratnum.<-exact-int y))))
+                 (##flonum.< x (##flonum.<-fixnum y))
+                 (##ratnum.< (##flonum.->ratnum x) (##ratnum.<-exact-int y))))
             ((##flonum.nan? x)
              nan-result)
             (else
@@ -327,22 +327,22 @@
             (else
              (##flonum.negative? x)))
       (if (or (##flonum.nan? x) (##flonum.nan? y))
-        nan-result
-        (##flonum.< x y))
+          nan-result
+          (##flonum.< x y))
       (if (macro-cpxnum-real? y)
-        (##< x (macro-cpxnum-real y) nan-result)
-        (type-error-on-y)))
+          (##< x (macro-cpxnum-real y) nan-result)
+          (type-error-on-y)))
 
     (if (macro-cpxnum-real? x) ;; x = cpxnum
-      (macro-number-dispatch y (type-error-on-y)
-        (##< (macro-cpxnum-real x) y nan-result)
-        (##< (macro-cpxnum-real x) y nan-result)
-        (##< (macro-cpxnum-real x) y nan-result)
-        (##< (macro-cpxnum-real x) y nan-result)
-        (if (macro-cpxnum-real? y)
-          (##< (macro-cpxnum-real x) (macro-cpxnum-real y) nan-result)
-          (type-error-on-y)))
-      (type-error-on-x))))
+        (macro-number-dispatch y (type-error-on-y)
+          (##< (macro-cpxnum-real x) y nan-result)
+          (##< (macro-cpxnum-real x) y nan-result)
+          (##< (macro-cpxnum-real x) y nan-result)
+          (##< (macro-cpxnum-real x) y nan-result)
+          (if (macro-cpxnum-real? y)
+              (##< (macro-cpxnum-real x) (macro-cpxnum-real y) nan-result)
+              (type-error-on-y)))
+        (type-error-on-x))))
 
 (define-prim-nary-bool (< x y)
   #t
@@ -394,8 +394,8 @@
            (and (##flonum? imag) (##flonum.zero? imag)))
          (let ((real (macro-cpxnum-real x)))
            (if (##fixnum? real)
-             (##fixnum.zero? real)
-             (and (##flonum? real) (##flonum.zero? real)))))))
+               (##fixnum.zero? real)
+               (and (##flonum? real) (##flonum.zero? real)))))))
 
 (define-prim (zero? x)
   (macro-force-vars (x)
@@ -412,8 +412,8 @@
     (##positive? (macro-ratnum-numerator x))
     (##flonum.positive? x)
     (if (macro-cpxnum-real? x)
-      (##positive? (macro-cpxnum-real x))
-      (type-error))))
+        (##positive? (macro-cpxnum-real x))
+        (type-error))))
 
 (define-prim (positive? x)
   (macro-force-vars (x)
@@ -430,8 +430,8 @@
     (##negative? (macro-ratnum-numerator x))
     (##flonum.negative? x)
     (if (macro-cpxnum-real? x)
-      (##negative? (macro-cpxnum-real x))
-      (type-error))))
+        (##negative? (macro-cpxnum-real x))
+        (type-error))))
 
 (define-prim (negative? x)
   (macro-force-vars (x)
@@ -447,11 +447,11 @@
     (macro-bignum-odd? x)
     (type-error)
     (if (macro-flonum-int? x)
-      (##odd? (##flonum.->exact-int x))
-      (type-error))
+        (##odd? (##flonum.->exact-int x))
+        (type-error))
     (if (macro-cpxnum-int? x)
-      (##odd? (##inexact->exact (macro-cpxnum-real x)))
-      (type-error))))
+        (##odd? (##inexact->exact (macro-cpxnum-real x)))
+        (type-error))))
 
 (define-prim (odd? x)
   (macro-force-vars (x)
@@ -467,11 +467,11 @@
     (##not (macro-bignum-odd? x))
     (type-error)
     (if (macro-flonum-int? x)
-      (##even? (##flonum.->exact-int x))
-      (type-error))
+        (##even? (##flonum.->exact-int x))
+        (type-error))
     (if (macro-cpxnum-int? x)
-      (##even? (##inexact->exact (macro-cpxnum-real x)))
-      (type-error))))
+        (##even? (##inexact->exact (macro-cpxnum-real x)))
+        (type-error))))
 
 (define-prim (even? x)
   (macro-force-vars (x)
@@ -488,10 +488,10 @@
     #t
     (##flfinite? x)
     (if (macro-cpxnum-real? x)
-      (let ((real (macro-cpxnum-real x)))
-        (or (##not (##flonum? real))
-            (##flfinite? real)))
-      (type-error))))
+        (let ((real (macro-cpxnum-real x)))
+          (or (##not (##flonum? real))
+              (##flfinite? real)))
+        (type-error))))
 
 (define-prim (finite? x)
   (macro-force-vars (x)
@@ -508,10 +508,10 @@
     #f
     (##flinfinite? x)
     (if (macro-cpxnum-real? x)
-      (let ((real (macro-cpxnum-real x)))
-        (and (##flonum? real)
-             (##flinfinite? real)))
-      (type-error))))
+        (let ((real (macro-cpxnum-real x)))
+          (and (##flonum? real)
+               (##flinfinite? real)))
+        (type-error))))
 
 (define-prim (infinite? x)
   (macro-force-vars (x)
@@ -528,10 +528,10 @@
     #f
     (##flnan? x)
     (if (macro-cpxnum-real? x)
-      (let ((real (macro-cpxnum-real x)))
-        (and (##flonum? real)
-             (##flnan? real)))
-      (type-error))))
+        (let ((real (macro-cpxnum-real x)))
+          (and (##flonum? real)
+               (##flnan? real)))
+        (type-error))))
 
 (define-prim (nan? x)
   (macro-force-vars (x)
@@ -554,8 +554,8 @@
       (if (##< x y) y x)
       (##flonum.max (##flonum.<-fixnum x) y)
       (if (macro-cpxnum-real? y)
-        (##max x (macro-cpxnum-real y))
-        (type-error-on-y)))
+          (##max x (macro-cpxnum-real y))
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (if (##< x y) y x)
@@ -563,8 +563,8 @@
       (if (##< x y) y x)
       (##flonum.max (##flonum.<-exact-int x) y)
       (if (macro-cpxnum-real? y)
-        (##max x (macro-cpxnum-real y))
-        (type-error-on-y)))
+          (##max x (macro-cpxnum-real y))
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (if (##< x y) y x)
@@ -572,8 +572,8 @@
       (if (##< x y) y x)
       (##flonum.max (##flonum.<-ratnum x) y)
       (if (macro-cpxnum-real? y)
-        (##max x (macro-cpxnum-real y))
-        (type-error-on-y)))
+          (##max x (macro-cpxnum-real y))
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (##flonum.max x (##flonum.<-fixnum y))
@@ -581,19 +581,19 @@
       (##flonum.max x (##flonum.<-ratnum y))
       (##flonum.max x y)
       (if (macro-cpxnum-real? y)
-        (##max x (macro-cpxnum-real y))
-        (type-error-on-y)))
+          (##max x (macro-cpxnum-real y))
+          (type-error-on-y)))
 
     (if (macro-cpxnum-real? x) ;; x = cpxnum
-      (macro-number-dispatch y (type-error-on-y)
-        (##max (macro-cpxnum-real x) y)
-        (##max (macro-cpxnum-real x) y)
-        (##max (macro-cpxnum-real x) y)
-        (##max (macro-cpxnum-real x) y)
-        (if (macro-cpxnum-real? y)
-          (##max (macro-cpxnum-real x) (macro-cpxnum-real y))
-          (type-error-on-y)))
-      (type-error-on-x))))
+        (macro-number-dispatch y (type-error-on-y)
+          (##max (macro-cpxnum-real x) y)
+          (##max (macro-cpxnum-real x) y)
+          (##max (macro-cpxnum-real x) y)
+          (##max (macro-cpxnum-real x) y)
+          (if (macro-cpxnum-real? y)
+              (##max (macro-cpxnum-real x) (macro-cpxnum-real y))
+              (type-error-on-y)))
+        (type-error-on-x))))
 
 (define-prim-nary (max x y)
   ()
@@ -616,8 +616,8 @@
       (if (##< x y) x y)
       (##flonum.min (##flonum.<-fixnum x) y)
       (if (macro-cpxnum-real? y)
-        (##min x (macro-cpxnum-real y))
-        (type-error-on-y)))
+          (##min x (macro-cpxnum-real y))
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (if (##< x y) x y)
@@ -625,8 +625,8 @@
       (if (##< x y) x y)
       (##flonum.min (##flonum.<-exact-int x) y)
       (if (macro-cpxnum-real? y)
-        (##min x (macro-cpxnum-real y))
-        (type-error-on-y)))
+          (##min x (macro-cpxnum-real y))
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (if (##< x y) x y)
@@ -634,8 +634,8 @@
       (if (##< x y) x y)
       (##flonum.min (##flonum.<-ratnum x) y)
       (if (macro-cpxnum-real? y)
-        (##min x (macro-cpxnum-real y))
-        (type-error-on-y)))
+          (##min x (macro-cpxnum-real y))
+          (type-error-on-y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (##flonum.min x (##flonum.<-fixnum y))
@@ -643,19 +643,19 @@
       (##flonum.min x (##flonum.<-ratnum y))
       (##flonum.min x y)
       (if (macro-cpxnum-real? y)
-        (##min x (macro-cpxnum-real y))
-        (type-error-on-y)))
+          (##min x (macro-cpxnum-real y))
+          (type-error-on-y)))
 
     (if (macro-cpxnum-real? x) ;; x = cpxnum
-      (macro-number-dispatch y (type-error-on-y)
-        (##min (macro-cpxnum-real x) y)
-        (##min (macro-cpxnum-real x) y)
-        (##min (macro-cpxnum-real x) y)
-        (##min (macro-cpxnum-real x) y)
-        (if (macro-cpxnum-real? y)
-          (##min (macro-cpxnum-real x) (macro-cpxnum-real y))
-          (type-error-on-y)))
-      (type-error-on-x))))
+        (macro-number-dispatch y (type-error-on-y)
+          (##min (macro-cpxnum-real x) y)
+          (##min (macro-cpxnum-real x) y)
+          (##min (macro-cpxnum-real x) y)
+          (##min (macro-cpxnum-real x) y)
+          (if (macro-cpxnum-real? y)
+              (##min (macro-cpxnum-real x) (macro-cpxnum-real y))
+              (type-error-on-y)))
+        (type-error-on-x))))
 
 (define-prim-nary (min x y)
   ()
@@ -680,20 +680,20 @@
       (or (##fixnum.+? x y)
           (##bignum.+ (##bignum.<-fixnum x) (##bignum.<-fixnum y)))
       (if (##fixnum.zero? x)
-        y
-        (##bignum.+ (##bignum.<-fixnum x) y))
+          y
+          (##bignum.+ (##bignum.<-fixnum x) y))
       (if (##fixnum.zero? x)
-        y
-        (##ratnum.+ (##ratnum.<-exact-int x) y))
+          y
+          (##ratnum.+ (##ratnum.<-exact-int x) y))
       (if (and (macro-special-case-exact-zero?) (##fixnum.zero? x))
-        y
-        (##flonum.+ (##flonum.<-fixnum x) y))
+          y
+          (##flonum.+ (##flonum.<-fixnum x) y))
       (##cpxnum.+ (##cpxnum.<-noncpxnum x) y))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (if (##fixnum.zero? y)
-        x
-        (##bignum.+ x (##bignum.<-fixnum y)))
+          x
+          (##bignum.+ x (##bignum.<-fixnum y)))
       (##bignum.+ x y)
       (##ratnum.+ (##ratnum.<-exact-int x) y)
       (##flonum.+ (##flonum.<-exact-int x) y)
@@ -701,8 +701,8 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (if (##fixnum.zero? y)
-        x
-        (##ratnum.+ x (##ratnum.<-exact-int y)))
+          x
+          (##ratnum.+ x (##ratnum.<-exact-int y)))
       (##ratnum.+ x (##ratnum.<-exact-int y))
       (##ratnum.+ x y)
       (##flonum.+ (##flonum.<-ratnum x) y)
@@ -710,8 +710,8 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (if (and (macro-special-case-exact-zero?) (##fixnum.zero? y))
-        x
-        (##flonum.+ x (##flonum.<-fixnum y)))
+          x
+          (##flonum.+ x (##flonum.<-fixnum y)))
       (##flonum.+ x (##flonum.<-exact-int y))
       (##flonum.+ x (##flonum.<-ratnum y))
       (##flonum.+ x y)
@@ -743,8 +743,8 @@
       (cond ((##fixnum.= y 0)
              0)
             ((if (##fixnum.= y -1)
-               (##fixnum.-? x)
-               (##fixnum.*? x y))
+                 (##fixnum.-? x)
+                 (##fixnum.*? x y))
              => (lambda (result) result))
             (else
              (##bignum.* (##bignum.<-fixnum x) (##bignum.<-fixnum y))))
@@ -865,17 +865,17 @@
           (##bignum.- (##bignum.<-fixnum x) (##bignum.<-fixnum y)))
       (##bignum.- (##bignum.<-fixnum x) y)
       (if (##fixnum.zero? x)
-        (##negate y)
-        (##ratnum.- (##ratnum.<-exact-int x) y))
+          (##negate y)
+          (##ratnum.- (##ratnum.<-exact-int x) y))
       (if (and (macro-special-case-exact-zero?) (##fixnum.zero? x))
-        (##flonum.- y)
-        (##flonum.- (##flonum.<-fixnum x) y))
+          (##flonum.- y)
+          (##flonum.- (##flonum.<-fixnum x) y))
       (##cpxnum.- (##cpxnum.<-noncpxnum x) y))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (if (##fixnum.zero? y)
-        x
-        (##bignum.- x (##bignum.<-fixnum y)))
+          x
+          (##bignum.- x (##bignum.<-fixnum y)))
       (##bignum.- x y)
       (##ratnum.- (##ratnum.<-exact-int x) y)
       (##flonum.- (##flonum.<-exact-int x) y)
@@ -883,8 +883,8 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (if (##fixnum.zero? y)
-        x
-        (##ratnum.- x (##ratnum.<-exact-int y)))
+          x
+          (##ratnum.- x (##ratnum.<-exact-int y)))
       (##ratnum.- x (##ratnum.<-exact-int y))
       (##ratnum.- x y)
       (##flonum.- (##flonum.<-ratnum x) y)
@@ -892,8 +892,8 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (if (and (macro-special-case-exact-zero?) (##fixnum.zero? y))
-        x
-        (##flonum.- x (##flonum.<-fixnum y)))
+          x
+          (##flonum.- x (##flonum.<-fixnum y)))
       (##flonum.- x (##flonum.<-exact-int y))
       (##flonum.- x (##flonum.<-ratnum y))
       (##flonum.- x y)
@@ -922,17 +922,17 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      (divide-by-zero-error)
-      (if (##fixnum.negative? x)
-        (if (##fixnum.= x -1)
-          x
-          (macro-ratnum-make -1 (##negate x)))
-        (if (##fixnum.= x 1)
-          x
-          (macro-ratnum-make 1 x))))
+        (divide-by-zero-error)
+        (if (##fixnum.negative? x)
+            (if (##fixnum.= x -1)
+                x
+                (macro-ratnum-make -1 (##negate x)))
+            (if (##fixnum.= x 1)
+                x
+                (macro-ratnum-make 1 x))))
     (if (##bignum.negative? x)
-      (macro-ratnum-make -1 (##negate x))
-      (macro-ratnum-make 1 x))
+        (macro-ratnum-make -1 (##negate x))
+        (macro-ratnum-make 1 x))
     (let ((num (macro-ratnum-numerator x))
           (den (macro-ratnum-denominator x)))
       (cond ((##eq? num 1)
@@ -941,8 +941,8 @@
              (##negate den))
             (else
              (if (##negative? num)
-               (macro-ratnum-make (##negate den) (##negate num))
-               (macro-ratnum-make den num)))))
+                 (macro-ratnum-make (##negate den) (##negate num))
+                 (macro-ratnum-make den num)))))
     (##flonum./ (macro-inexact-+1) x)
     (##cpxnum./ (##cpxnum.<-noncpxnum 1) x)))
 
@@ -976,7 +976,7 @@
              (##negate x))
             (else
              (##ratnum./ (##ratnum.<-exact-int x) (##ratnum.<-exact-int y))))
-       (cond ((##fixnum.zero? y)
+      (cond ((##fixnum.zero? y)
              (divide-by-zero-error))
             ((##fixnum.= y 1)
              x)
@@ -985,11 +985,11 @@
             (else
              (##ratnum./ x (##ratnum.<-exact-int y))))
       (if (##fixnum.zero? y)
-        (divide-by-zero-error)
-        (##flonum./ x (##flonum.<-fixnum y)))
+          (divide-by-zero-error)
+          (##flonum./ x (##flonum.<-fixnum y)))
       (if (##fixnum.zero? y)
-        (divide-by-zero-error)
-        (##cpxnum./ x (##cpxnum.<-noncpxnum y))))
+          (divide-by-zero-error)
+          (##cpxnum./ x (##cpxnum.<-noncpxnum y))))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = bignum
       (cond ((##fixnum.zero? x)
@@ -1017,8 +1017,8 @@
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum, no error possible
       (if (and (macro-special-case-exact-zero?) (##fixnum.zero? x))
-        x
-        (##flonum./ (##flonum.<-fixnum x) y))
+          x
+          (##flonum./ (##flonum.<-fixnum x) y))
       (##flonum./ (##flonum.<-exact-int x) y)
       (##flonum./ (##flonum.<-ratnum x) y)
       (##flonum./ x y)
@@ -1056,9 +1056,9 @@
                        (macro-ratnum-denominator x))
     (##flonum.abs x)
     (if (macro-cpxnum-real? x)
-      (##make-rectangular (##abs (macro-cpxnum-real x))
-                          (##abs (macro-cpxnum-imag x)))
-      (type-error))))
+        (##make-rectangular (##abs (macro-cpxnum-real x))
+                            (##abs (macro-cpxnum-imag x)))
+        (type-error))))
 
 (define-prim (abs x)
   (macro-force-vars (x)
@@ -1085,9 +1085,9 @@
   (define (inexact-quotient x y)
     (let ((exact-y (##inexact->exact y)))
       (if (##eq? exact-y 0)
-        (divide-by-zero-error)
-        (##exact->inexact
-         (##quotient (##inexact->exact x) exact-y)))))
+          (divide-by-zero-error)
+          (##exact->inexact
+           (##quotient (##inexact->exact x) exact-y)))))
 
   (macro-number-dispatch y (type-error-on-y)
 
@@ -1104,56 +1104,56 @@
              (exact-quotient x y)))
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (inexact-quotient x y)
-        (type-error-on-x))
+          (inexact-quotient x y)
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (inexact-quotient x y)
-        (type-error-on-x)))
+          (inexact-quotient x y)
+          (type-error-on-x)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = bignum
       (exact-quotient x y)
       (exact-quotient x y)
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (inexact-quotient x y)
-        (type-error-on-x))
+          (inexact-quotient x y)
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (inexact-quotient x y)
-        (type-error-on-x)))
+          (inexact-quotient x y)
+          (type-error-on-x)))
 
     (type-error-on-y) ;; y = ratnum
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum
       (if (macro-flonum-int? y)
-        (inexact-quotient x y)
-        (type-error-on-y))
+          (inexact-quotient x y)
+          (type-error-on-y))
       (if (macro-flonum-int? y)
-        (inexact-quotient x y)
-        (type-error-on-y))
+          (inexact-quotient x y)
+          (type-error-on-y))
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (if (macro-flonum-int? y)
-          (inexact-quotient x y)
-          (type-error-on-y))
-        (type-error-on-x))
+          (if (macro-flonum-int? y)
+              (inexact-quotient x y)
+              (type-error-on-y))
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (if (macro-flonum-int? y)
-          (inexact-quotient x y)
-          (type-error-on-y))
-        (type-error-on-x)))
+          (if (macro-flonum-int? y)
+              (inexact-quotient x y)
+              (type-error-on-y))
+          (type-error-on-x)))
 
     (if (macro-cpxnum-int? y) ;; y = cpxnum
-      (macro-number-dispatch x (type-error-on-x)
-        (inexact-quotient x y)
-        (inexact-quotient x y)
-        (type-error-on-x)
-        (if (macro-flonum-int? x)
+        (macro-number-dispatch x (type-error-on-x)
           (inexact-quotient x y)
-          (type-error-on-x))
-        (if (macro-cpxnum-int? x)
           (inexact-quotient x y)
-          (type-error-on-x)))
-      (type-error-on-y))))
+          (type-error-on-x)
+          (if (macro-flonum-int? x)
+              (inexact-quotient x y)
+              (type-error-on-x))
+          (if (macro-cpxnum-int? x)
+              (inexact-quotient x y)
+              (type-error-on-x)))
+        (type-error-on-y))))
 
 (define-prim (quotient x y)
   (macro-force-vars (x y)
@@ -1176,9 +1176,9 @@
   (define (inexact-remainder x y)
     (let ((exact-y (##inexact->exact y)))
       (if (##eq? exact-y 0)
-        (divide-by-zero-error)
-        (##exact->inexact
-         (##remainder (##inexact->exact x) exact-y)))))
+          (divide-by-zero-error)
+          (##exact->inexact
+           (##remainder (##inexact->exact x) exact-y)))))
 
   (macro-number-dispatch y (type-error-on-y)
 
@@ -1193,56 +1193,56 @@
              (exact-remainder x y)))
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (inexact-remainder x y)
-        (type-error-on-x))
+          (inexact-remainder x y)
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (inexact-remainder x y)
-        (type-error-on-x)))
+          (inexact-remainder x y)
+          (type-error-on-x)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = bignum
       (exact-remainder x y)
       (exact-remainder x y)
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (inexact-remainder x y)
-        (type-error-on-x))
+          (inexact-remainder x y)
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (inexact-remainder x y)
-        (type-error-on-x)))
+          (inexact-remainder x y)
+          (type-error-on-x)))
 
     (type-error-on-y) ;; y = ratnum
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum
       (if (macro-flonum-int? y)
-        (inexact-remainder x y)
-        (type-error-on-y))
+          (inexact-remainder x y)
+          (type-error-on-y))
       (if (macro-flonum-int? y)
-        (inexact-remainder x y)
-        (type-error-on-y))
+          (inexact-remainder x y)
+          (type-error-on-y))
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (if (macro-flonum-int? y)
-          (inexact-remainder x y)
-          (type-error-on-y))
-        (type-error-on-x))
+          (if (macro-flonum-int? y)
+              (inexact-remainder x y)
+              (type-error-on-y))
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (if (macro-flonum-int? y)
-          (inexact-remainder x y)
-          (type-error-on-y))
-        (type-error-on-x)))
+          (if (macro-flonum-int? y)
+              (inexact-remainder x y)
+              (type-error-on-y))
+          (type-error-on-x)))
 
     (if (macro-cpxnum-int? y) ;; y = cpxnum
-      (macro-number-dispatch x (type-error-on-x)
-        (inexact-remainder x y)
-        (inexact-remainder x y)
-        (type-error-on-x)
-        (if (macro-flonum-int? x)
+        (macro-number-dispatch x (type-error-on-x)
           (inexact-remainder x y)
-          (type-error-on-x))
-        (if (macro-cpxnum-int? x)
           (inexact-remainder x y)
-          (type-error-on-x)))
-      (type-error-on-y))))
+          (type-error-on-x)
+          (if (macro-flonum-int? x)
+              (inexact-remainder x y)
+              (type-error-on-x))
+          (if (macro-cpxnum-int? x)
+              (inexact-remainder x y)
+              (type-error-on-x)))
+        (type-error-on-y))))
 
 (define-prim (remainder x y)
   (macro-force-vars (x y)
@@ -1262,17 +1262,17 @@
   (define (exact-modulo x y)
     (let ((r (##cdr (##exact-int.div x y))))
       (if (##eq? r 0)
-        0
-        (if (##eq? (##negative? x) (##negative? y))
-          r
-          (##+ r y)))))
+          0
+          (if (##eq? (##negative? x) (##negative? y))
+              r
+              (##+ r y)))))
 
   (define (inexact-modulo x y)
     (let ((exact-y (##inexact->exact y)))
       (if (##eq? exact-y 0)
-        (divide-by-zero-error)
-        (##exact->inexact
-         (##modulo (##inexact->exact x) exact-y)))))
+          (divide-by-zero-error)
+          (##exact->inexact
+           (##modulo (##inexact->exact x) exact-y)))))
 
   (macro-number-dispatch y (type-error-on-y)
 
@@ -1287,56 +1287,56 @@
              (exact-modulo x y)))
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (inexact-modulo x y)
-        (type-error-on-x))
+          (inexact-modulo x y)
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (inexact-modulo x y)
-        (type-error-on-x)))
+          (inexact-modulo x y)
+          (type-error-on-x)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = bignum
       (exact-modulo x y)
       (exact-modulo x y)
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (inexact-modulo x y)
-        (type-error-on-x))
+          (inexact-modulo x y)
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (inexact-modulo x y)
-        (type-error-on-x)))
+          (inexact-modulo x y)
+          (type-error-on-x)))
 
     (type-error-on-y) ;; y = ratnum
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum
       (if (macro-flonum-int? y)
-        (inexact-modulo x y)
-        (type-error-on-y))
+          (inexact-modulo x y)
+          (type-error-on-y))
       (if (macro-flonum-int? y)
-        (inexact-modulo x y)
-        (type-error-on-y))
+          (inexact-modulo x y)
+          (type-error-on-y))
       (type-error-on-x)
       (if (macro-flonum-int? x)
-        (if (macro-flonum-int? y)
-          (inexact-modulo x y)
-          (type-error-on-y))
-        (type-error-on-x))
+          (if (macro-flonum-int? y)
+              (inexact-modulo x y)
+              (type-error-on-y))
+          (type-error-on-x))
       (if (macro-cpxnum-int? x)
-        (if (macro-flonum-int? y)
-          (inexact-modulo x y)
-          (type-error-on-y))
-        (type-error-on-x)))
+          (if (macro-flonum-int? y)
+              (inexact-modulo x y)
+              (type-error-on-y))
+          (type-error-on-x)))
 
     (if (macro-cpxnum-int? y) ;; y = cpxnum
-      (macro-number-dispatch x (type-error-on-x)
-        (inexact-modulo x y)
-        (inexact-modulo x y)
-        (type-error-on-x)
-        (if (macro-flonum-int? x)
+        (macro-number-dispatch x (type-error-on-x)
           (inexact-modulo x y)
-          (type-error-on-x))
-        (if (macro-cpxnum-int? x)
           (inexact-modulo x y)
-          (type-error-on-x)))
-      (type-error-on-y))))
+          (type-error-on-x)
+          (if (macro-flonum-int? x)
+              (inexact-modulo x y)
+              (type-error-on-x))
+          (if (macro-cpxnum-int? x)
+              (inexact-modulo x y)
+              (type-error-on-x)))
+        (type-error-on-y))))
 
 (define-prim (modulo x y)
   (macro-force-vars (x y)
@@ -1396,7 +1396,7 @@
       (##vector-ref v 1))
 
     (define gcd-matrix-identity '#(1 0
-                                   0 1))
+                                     0 1))
 
     (define (gcd-matrix-multiply A B)
       (cond ((##eq? A gcd-matrix-identity)
@@ -1741,8 +1741,8 @@
          (##abs x))
         (else
          (if (and (##exact? x) (##exact? y))
-           (exact-gcd x y)
-           (inexact-gcd x y)))))
+             (exact-gcd x y)
+             (inexact-gcd x y)))))
 
 (define-prim-nary (gcd x y)
   0
@@ -1759,9 +1759,9 @@
 
   (define (exact-lcm x y)
     (if (or (##eq? x 0) (##eq? y 0))
-      0
-      (##abs (##* (##quotient x (##gcd x y))
-                  y))))
+        0
+        (##abs (##* (##quotient x (##gcd x y))
+                    y))))
 
   (define (inexact-lcm x y)
     (##exact->inexact
@@ -1774,8 +1774,8 @@
          (type-error-on-y))
         (else
          (if (and (##exact? x) (##exact? y))
-           (exact-lcm x y)
-           (inexact-lcm x y)))))
+             (exact-lcm x y)
+             (inexact-lcm x y)))))
 
 (define-prim-nary (lcm x y)
   1
@@ -1805,8 +1805,8 @@
           (else
            (type-error)))
     (if (macro-cpxnum-rational? x)
-      (##numerator (macro-cpxnum-real x))
-      (type-error))))
+        (##numerator (macro-cpxnum-real x))
+        (type-error))))
 
 (define-prim (numerator x)
   (macro-force-vars (x)
@@ -1822,11 +1822,11 @@
     1
     (macro-ratnum-denominator x)
     (if (macro-flonum-rational? x)
-      (##exact->inexact (##denominator (##flonum.inexact->exact x)))
-      (type-error))
+        (##exact->inexact (##denominator (##flonum.inexact->exact x)))
+        (type-error))
     (if (macro-cpxnum-rational? x)
-      (##denominator (macro-cpxnum-real x))
-      (type-error))))
+        (##denominator (macro-cpxnum-real x))
+        (type-error))))
 
 (define-prim (denominator x)
   (macro-force-vars (x)
@@ -1847,14 +1847,14 @@
     (let ((num (macro-ratnum-numerator x))
           (den (macro-ratnum-denominator x)))
       (if (##negative? num)
-        (##quotient (##- num (##- den 1)) den)
-        (##quotient num den)))
+          (##quotient (##- num (##- den 1)) den)
+          (##quotient num den)))
     (if (##flonum.finite? x)
-      (##flonum.floor x)
-      (type-error))
+        (##flonum.floor x)
+        (type-error))
     (if (macro-cpxnum-real? x)
-      (##floor (macro-cpxnum-real x))
-      (type-error))))
+        (##floor (macro-cpxnum-real x))
+        (type-error))))
 
 (define-prim (floor x)
   (macro-force-vars (x)
@@ -1871,14 +1871,14 @@
     (let ((num (macro-ratnum-numerator x))
           (den (macro-ratnum-denominator x)))
       (if (##negative? num)
-        (##quotient num den)
-        (##quotient (##+ num (##- den 1)) den)))
+          (##quotient num den)
+          (##quotient (##+ num (##- den 1)) den)))
     (if (##flonum.finite? x)
-      (##flonum.ceiling x)
-      (type-error))
+        (##flonum.ceiling x)
+        (type-error))
     (if (macro-cpxnum-real? x)
-      (##ceiling (macro-cpxnum-real x))
-      (type-error))))
+        (##ceiling (macro-cpxnum-real x))
+        (type-error))))
 
 (define-prim (ceiling x)
   (macro-force-vars (x)
@@ -1895,11 +1895,11 @@
     (##quotient (macro-ratnum-numerator x)
                 (macro-ratnum-denominator x))
     (if (##flonum.finite? x)
-      (##flonum.truncate x)
-      (type-error))
+        (##flonum.truncate x)
+        (type-error))
     (if (macro-cpxnum-real? x)
-      (##truncate (macro-cpxnum-real x))
-      (type-error))))
+        (##truncate (macro-cpxnum-real x))
+        (type-error))))
 
 (define-prim (truncate x)
   (macro-force-vars (x)
@@ -1916,17 +1916,17 @@
     (let ((num (macro-ratnum-numerator x))
           (den (macro-ratnum-denominator x)))
       (if (##eq? den 2)
-        (##arithmetic-shift (##arithmetic-shift (##+ num 1) -2) 1)
-        (##floor
-         (##ratnum.normalize
-          (##+ (##arithmetic-shift num 1) den)
-          (##arithmetic-shift den 1)))))
+          (##arithmetic-shift (##arithmetic-shift (##+ num 1) -2) 1)
+          (##floor
+           (##ratnum.normalize
+            (##+ (##arithmetic-shift num 1) den)
+            (##arithmetic-shift den 1)))))
     (if (##flonum.finite? x)
-      (##flonum.round x)
-      (type-error))
+        (##flonum.round x)
+        (type-error))
     (if (macro-cpxnum-real? x)
-      (##round (macro-cpxnum-real x))
-      (type-error))))
+        (##round (macro-cpxnum-real x))
+        (type-error))))
 
 (define-prim (round x)
   (macro-force-vars (x)
@@ -1940,8 +1940,8 @@
 
   (define (simplest-rational1 x y)
     (if (##< y x)
-      (simplest-rational2 y x)
-      (simplest-rational2 x y)))
+        (simplest-rational2 y x)
+        (simplest-rational2 x y)))
 
   (define (simplest-rational2 x y)
     (cond ((##not (##< x y))
@@ -2000,8 +2000,8 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      1
-      (##flonum.exp (##flonum.<-fixnum x)))
+        1
+        (##flonum.exp (##flonum.<-fixnum x)))
     (##flonum.exp (##flonum.<-exact-int x))
     (##flonum.exp (##flonum.<-ratnum x))
     (##flonum.exp x)
@@ -2025,23 +2025,23 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      (range-error)
-      (if (##fixnum.negative? x)
-        (negative-log x)
-        (if (##eq? x 1)
-          0
-          (##flonum.log (##flonum.<-fixnum x)))))
+        (range-error)
+        (if (##fixnum.negative? x)
+            (negative-log x)
+            (if (##eq? x 1)
+                0
+                (##flonum.log (##flonum.<-fixnum x)))))
     (if (##bignum.negative? x)
-      (negative-log x)
-      (##flonum.log (##flonum.<-exact-int x)))
+        (negative-log x)
+        (##flonum.log (##flonum.<-exact-int x)))
     (if (##negative? (macro-ratnum-numerator x))
-      (negative-log x)
-      (##flonum.log (##flonum.<-ratnum x)))
+        (negative-log x)
+        (##flonum.log (##flonum.<-ratnum x)))
     (if (or (##flonum.nan? x)
             (##not (##flonum.negative?
                     (##flonum.copysign (macro-inexact-+1) x))))
-      (##flonum.log x)
-      (negative-log x))
+        (##flonum.log x)
+        (negative-log x))
     (##make-rectangular (##log (##magnitude x)) (##angle x))))
 
 (define-prim (log x)
@@ -2055,8 +2055,8 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      0
-      (##flonum.sin (##flonum.<-fixnum x)))
+        0
+        (##flonum.sin (##flonum.<-fixnum x)))
     (##flonum.sin (##flonum.<-exact-int x))
     (##flonum.sin (##flonum.<-ratnum x))
     (##flonum.sin x)
@@ -2079,8 +2079,8 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      1
-      (##flonum.cos (##flonum.<-fixnum x)))
+        1
+        (##flonum.cos (##flonum.<-fixnum x)))
     (##flonum.cos (##flonum.<-exact-int x))
     (##flonum.cos (##flonum.<-ratnum x))
     (##flonum.cos x)
@@ -2103,8 +2103,8 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      0
-      (##flonum.tan (##flonum.<-fixnum x)))
+        0
+        (##flonum.tan (##flonum.<-fixnum x)))
     (##flonum.tan (##flonum.<-exact-int x))
     (##flonum.tan (##flonum.<-ratnum x))
     (##flonum.tan x)
@@ -2144,8 +2144,8 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      0
-      (real-case x))
+        0
+        (real-case x))
     (real-case x)
     (real-case x)
     (real-case x)
@@ -2154,8 +2154,8 @@
               (and (##flonum? imag)
                    (##flonum.zero? imag)
                    (##negative? (macro-cpxnum-real x))))
-        (unsafe-case x)
-        (safe-case x)))))
+          (unsafe-case x)
+          (safe-case x)))))
 
 (define-prim (asin x)
   (macro-force-vars (x)
@@ -2173,13 +2173,13 @@
 
   (define (real-case x)
     (if (or (##< x -1) (##< 1 x))
-      (complex-case x)
-      (##flonum.acos (##exact->inexact x))))
+        (complex-case x)
+        (##flonum.acos (##exact->inexact x))))
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      (macro-inexact-+pi/2)
-      (real-case x))
+        (macro-inexact-+pi/2)
+        (real-case x))
     (real-case x)
     (real-case x)
     (real-case x)
@@ -2199,18 +2199,18 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
-      0
-      (##flonum.atan (##flonum.<-fixnum x)))
+        0
+        (##flonum.atan (##flonum.<-fixnum x)))
     (##flonum.atan (##flonum.<-exact-int x))
     (##flonum.atan (##flonum.<-ratnum x))
     (##flonum.atan x)
     (let ((real (macro-cpxnum-real x))
           (imag (macro-cpxnum-imag x)))
       (if (and (##eq? real 0) (##eq? imag 1))
-        (range-error)
-        (let ((a (##make-rectangular (##negate imag) real)))
-          (##/ (##- (##log (##+ a 1)) (##log (##- 1 a)))
-               (macro-cpxnum-+2i)))))))
+          (range-error)
+          (let ((a (##make-rectangular (##negate imag) real)))
+            (##/ (##- (##log (##+ a 1)) (##log (##- 1 a)))
+                 (macro-cpxnum-+2i)))))))
 
 (define-prim (##atan2 y x)
   (cond ((##not (##real? y))
@@ -2224,9 +2224,9 @@
 (define-prim (atan x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x)
     (if (##eq? y (macro-absent-obj))
-      (##atan x)
-      (macro-force-vars (y)
-        (##atan2 x y)))))
+        (##atan x)
+        (macro-force-vars (y)
+          (##atan2 x y)))))
 
 (define-prim (##sqrt x)
 
@@ -2241,8 +2241,8 @@
           (else
            (let ((y (##exact-int.sqrt x)))
              (if (##eq? (##cdr y) 0)
-               (##car y)
-               (##flonum.sqrt (##flonum.<-exact-int x)))))))
+                 (##car y)
+                 (##flonum.sqrt (##flonum.<-exact-int x)))))))
 
   (macro-number-dispatch x (type-error)
     (exact-int-sqrt x)
@@ -2250,35 +2250,35 @@
     (##/ (exact-int-sqrt (macro-ratnum-numerator x))
          (exact-int-sqrt (macro-ratnum-denominator x)))
     (if (##flonum.negative? x)
-      (##make-rectangular 0 (##flonum.sqrt (##flonum.- x)))
-      (##flonum.sqrt x))
+        (##make-rectangular 0 (##flonum.sqrt (##flonum.- x)))
+        (##flonum.sqrt x))
     (let ((real (##real-part x))
           (imag (##imag-part x)))
       (if (and (##flonum? imag)
                (##flonum.zero? imag))
-        (if (##flonum.positive? (##flonum.copysign (macro-inexact-+1) imag))
-          (cond ((##negative? real)
-                 (##make-rectangular (macro-inexact-+0)
-                                     (##exact->inexact
-                                      (##sqrt (##negate real)))))
-                ((and (##flonum? real)
-                      (##flonum.nan? real))
-                 (##make-rectangular real real))
-                (else
-                 (##make-rectangular (##exact->inexact (##sqrt real))
-                                     (macro-inexact-+0))))
-          (cond ((##negative? real)
-                 (##make-rectangular (macro-inexact-+0)
-                                     (##exact->inexact
-                                      (##negate (##sqrt (##negate real))))))
-                ((and (##flonum? real)
-                      (##flonum.nan? real))
-                 (##make-rectangular real real))
-                (else
-                 (##make-rectangular (##exact->inexact (##sqrt real))
-                                     (macro-inexact--0)))))
-        (##make-polar (##sqrt (##magnitude x))
-                      (##/ (##angle x) 2))))))
+          (if (##flonum.positive? (##flonum.copysign (macro-inexact-+1) imag))
+              (cond ((##negative? real)
+                     (##make-rectangular (macro-inexact-+0)
+                                         (##exact->inexact
+                                          (##sqrt (##negate real)))))
+                    ((and (##flonum? real)
+                          (##flonum.nan? real))
+                     (##make-rectangular real real))
+                    (else
+                     (##make-rectangular (##exact->inexact (##sqrt real))
+                                         (macro-inexact-+0))))
+              (cond ((##negative? real)
+                     (##make-rectangular (macro-inexact-+0)
+                                         (##exact->inexact
+                                          (##negate (##sqrt (##negate real))))))
+                    ((and (##flonum? real)
+                          (##flonum.nan? real))
+                     (##make-rectangular real real))
+                    (else
+                     (##make-rectangular (##exact->inexact (##sqrt real))
+                                         (macro-inexact--0)))))
+          (##make-polar (##sqrt (##magnitude x))
+                        (##/ (##angle x) 2))))))
 
 (define-prim (sqrt x)
   (macro-force-vars (x)
@@ -2300,11 +2300,11 @@
         ;; x is an exact integer (not 0 or 1) and y is a nonzero exact integer
 
         (if (##eq? y 1)
-          x
-          (let ((temp (square (expt-aux x (##arithmetic-shift y -1)))))
-            (if (##even? y)
-              temp
-              (##* x temp)))))
+            x
+            (let ((temp (square (expt-aux x (##arithmetic-shift y -1)))))
+              (if (##even? y)
+                  temp
+                  (##* x temp)))))
 
       (cond ((or (##eq? x 0)
                  (##eq? x 1))
@@ -2320,12 +2320,12 @@
       ;; z is exact
       (let ((result (##inverse z)))
         (if (##not result)
-          (##raise-range-exception 1 expt x y)
-          result)))
+            (##raise-range-exception 1 expt x y)
+            result)))
 
     (if (##negative? y)
-      (invert (positive-int-expt x (##negate y)))
-      (positive-int-expt x y)))
+        (invert (positive-int-expt x (##negate y)))
+        (positive-int-expt x y)))
 
   (define (complex-expt x y)
     (##exp (##* (##log x) y)))
@@ -2334,8 +2334,8 @@
     ;; x is exact-int or ratnum
     (cond ((##eq? x 0)
            (if (##negative? y)
-             (##raise-range-exception 1 expt x y)
-             0))
+               (##raise-range-exception 1 expt x y)
+               0))
           ((##eq? x 1)
            1)
           ((##negative? x)
@@ -2378,8 +2378,8 @@
            (let* ((y-den (macro-ratnum-denominator y))
                   (temp (##exact-int.nth-root x y-den)))
              (if (##= x (exact-int-expt temp y-den))
-               (exact-int-expt temp (macro-ratnum-numerator y))
-               (##flonum.expt (##flonum.<-exact-int x) (##flonum.<-ratnum y)))))
+                 (exact-int-expt temp (macro-ratnum-numerator y))
+                 (##flonum.expt (##flonum.<-exact-int x) (##flonum.<-ratnum y)))))
           (else
            ;; x is a ratnum
            (let ((x-num (macro-ratnum-numerator   x))
@@ -2388,143 +2388,143 @@
                  (y-den (macro-ratnum-denominator y)))
              (let ((temp-num (##exact-int.nth-root x-num y-den)))
                (if (##= (exact-int-expt temp-num y-den) x-num)
-                 (let ((temp-den (##exact-int.nth-root x-den y-den)))
-                   (if (##= (exact-int-expt temp-den y-den) x-den)
-                     (exact-int-expt (macro-ratnum-make temp-num temp-den)
-                                     y-num)
-                     (##flonum.expt (##flonum.<-ratnum x)
-                                    (##flonum.<-ratnum y))))
-                 (##flonum.expt (##flonum.<-ratnum x)
-                                (##flonum.<-ratnum y))))))))
+                   (let ((temp-den (##exact-int.nth-root x-den y-den)))
+                     (if (##= (exact-int-expt temp-den y-den) x-den)
+                         (exact-int-expt (macro-ratnum-make temp-num temp-den)
+                                         y-num)
+                         (##flonum.expt (##flonum.<-ratnum x)
+                                        (##flonum.<-ratnum y))))
+                   (##flonum.expt (##flonum.<-ratnum x)
+                                  (##flonum.<-ratnum y))))))))
 
   (macro-number-dispatch y (##fail-check-number 2 expt x y)
 
-     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a fixnum
-        (if (##eq? y 0)
+    (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a fixnum
+      (if (##eq? y 0)
           1
           (exact-int-expt x y))
-        (if (##eq? y 0)
+      (if (##eq? y 0)
           1
           (exact-int-expt x y))
-        (if (##eq? y 0)
+      (if (##eq? y 0)
           1
           (exact-int-expt x y))
-        (cond ((##eq? y 0)
-               1)
-              ((##flonum.nan? x)
-               x)
-              ((##flonum.negative? x)
-               ;; we do this because (##flonum.<-fixnum y) is always
-               ;; even for large enough y on 64-bit machines
-               (let ((abs-result
-                      (##flonum.expt (##flonum.- x) (##flonum.<-fixnum y))))
-                 (if (##fixnum.odd? y)
+      (cond ((##eq? y 0)
+             1)
+            ((##flonum.nan? x)
+             x)
+            ((##flonum.negative? x)
+             ;; we do this because (##flonum.<-fixnum y) is always
+             ;; even for large enough y on 64-bit machines
+             (let ((abs-result
+                    (##flonum.expt (##flonum.- x) (##flonum.<-fixnum y))))
+               (if (##fixnum.odd? y)
                    (##flonum.- abs-result)
                    abs-result)))
-              (else
-               (##flonum.expt x (##flonum.<-fixnum y))))
-        (cond ((##eq? y 0)
-               1)
-              ((##eq? y 1)
-               x)
-              ((##exact? x)
-               (exact-int-expt x y))
-              (else
-                (complex-expt x y))))
+            (else
+             (##flonum.expt x (##flonum.<-fixnum y))))
+      (cond ((##eq? y 0)
+             1)
+            ((##eq? y 1)
+             x)
+            ((##exact? x)
+             (exact-int-expt x y))
+            (else
+             (complex-expt x y))))
 
-     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a bignum
-       (exact-int-expt x y)
-       (exact-int-expt x y)
-       (exact-int-expt x y)
-       (cond ((##flonum.nan? x)
-              x)
-             ((##flonum.negative? x)
-              ;; we do this because (##flonum.<-exact-int y) is always
-              ;; even for large enough y
-              (let ((abs-result
-                     (##flonum.expt (##flonum.- x) (##flonum.<-exact-int y))))
-                (if (##odd? y)
-                  (##flonum.- abs-result)
-                  abs-result)))
-             (else
-              (##flonum.expt x (##flonum.<-exact-int y))))
-       (if (##exact? x)
-         (exact-int-expt x y)
-         (complex-expt x y)))
+    (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a bignum
+      (exact-int-expt x y)
+      (exact-int-expt x y)
+      (exact-int-expt x y)
+      (cond ((##flonum.nan? x)
+             x)
+            ((##flonum.negative? x)
+             ;; we do this because (##flonum.<-exact-int y) is always
+             ;; even for large enough y
+             (let ((abs-result
+                    (##flonum.expt (##flonum.- x) (##flonum.<-exact-int y))))
+               (if (##odd? y)
+                   (##flonum.- abs-result)
+                   abs-result)))
+            (else
+             (##flonum.expt x (##flonum.<-exact-int y))))
+      (if (##exact? x)
+          (exact-int-expt x y)
+          (complex-expt x y)))
 
-     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a ratnum
-       (ratnum-expt x y)
-       (ratnum-expt x y)
-       (ratnum-expt x y)
-       (cond ((##flonum.nan? x)
-              x)
-             ((##flonum.negative? x)
-              (if (##eq? 2 (macro-ratnum-denominator y))
-                (let ((magnitude (##flonum.expt (##flonum.- x) (##flonum.<-ratnum y))))
-                  (if (##eq? 1 (##modulo (macro-ratnum-numerator y) 4))
-                    ;; multiple of i
-                    (macro-cpxnum-make 0 magnitude)
-                    ;; multiple of -i
-                    (macro-cpxnum-make 0 (##flonum.- magnitude))))
-                (complex-expt x y)))
-             (else
-              (##flonum.expt x (##flonum.<-ratnum y))))
-       (complex-expt x y))
+    (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a ratnum
+      (ratnum-expt x y)
+      (ratnum-expt x y)
+      (ratnum-expt x y)
+      (cond ((##flonum.nan? x)
+             x)
+            ((##flonum.negative? x)
+             (if (##eq? 2 (macro-ratnum-denominator y))
+                 (let ((magnitude (##flonum.expt (##flonum.- x) (##flonum.<-ratnum y))))
+                   (if (##eq? 1 (##modulo (macro-ratnum-numerator y) 4))
+                       ;; multiple of i
+                       (macro-cpxnum-make 0 magnitude)
+                       ;; multiple of -i
+                       (macro-cpxnum-make 0 (##flonum.- magnitude))))
+                 (complex-expt x y)))
+            (else
+             (##flonum.expt x (##flonum.<-ratnum y))))
+      (complex-expt x y))
 
-     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a flonum
-       (cond ((##flonum.nan? y)
-              y)
-             ((##eq? x 0)
-              (if (##flonum.negative? y)
-                (##raise-range-exception 1 expt x y)
-                0))
-             ((or (##fixnum.positive? x)
-                  (macro-flonum-int? y))
-              (##flonum.expt (##flonum.<-fixnum x) y))
-             (else
-              (complex-expt x y)))
-       (cond ((##flonum.nan? y)
-              y)
-             ((or (##positive? x)
-                  (macro-flonum-int? y))
-              (##flonum.expt (##flonum.<-exact-int x) y))
-             (else
-              (complex-expt x y)))
-       (cond ((##flonum.nan? y)
-              y)
-             ((or (##positive? x)
-                  (macro-flonum-int? y))
-              (##flonum.expt (##flonum.<-ratnum x) y))
-             (else
-              (complex-expt x y)))
-       (cond ((##flonum.nan? x)
-              x)
-             ((##flonum.nan? y)
-              y)
-             ((or (##flonum.positive? x)
-                  (macro-flonum-int? y))
-              (##flonum.expt x y))
-             (else
-              (complex-expt x y)))
-       (cond ((##flonum.nan? y)
-              y)
-             (else
-              (complex-expt x y))))
+    (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a flonum
+      (cond ((##flonum.nan? y)
+             y)
+            ((##eq? x 0)
+             (if (##flonum.negative? y)
+                 (##raise-range-exception 1 expt x y)
+                 0))
+            ((or (##fixnum.positive? x)
+                 (macro-flonum-int? y))
+             (##flonum.expt (##flonum.<-fixnum x) y))
+            (else
+             (complex-expt x y)))
+      (cond ((##flonum.nan? y)
+             y)
+            ((or (##positive? x)
+                 (macro-flonum-int? y))
+             (##flonum.expt (##flonum.<-exact-int x) y))
+            (else
+             (complex-expt x y)))
+      (cond ((##flonum.nan? y)
+             y)
+            ((or (##positive? x)
+                 (macro-flonum-int? y))
+             (##flonum.expt (##flonum.<-ratnum x) y))
+            (else
+             (complex-expt x y)))
+      (cond ((##flonum.nan? x)
+             x)
+            ((##flonum.nan? y)
+             y)
+            ((or (##flonum.positive? x)
+                 (macro-flonum-int? y))
+             (##flonum.expt x y))
+            (else
+             (complex-expt x y)))
+      (cond ((##flonum.nan? y)
+             y)
+            (else
+             (complex-expt x y))))
 
-     (macro-number-dispatch x (##fail-check-number 1 expt x y)  ;; y a cpxnum
-       (if (##eq? x 0)
-         (let ((real (##real-part y)))
-           (if (##positive? real)
-             0
-             ;; If we call (complex-expt 0 y),
-             ;; we'll try to take (##log 0) in complex-expt,
-             ;; so we raise the exception here.
-             (##raise-range-exception 1 expt x y)))
-         (complex-expt x y))
-       (complex-expt x y)
-       (complex-expt x y)
-       (complex-expt x y)
-       (complex-expt x y))))
+    (macro-number-dispatch x (##fail-check-number 1 expt x y)  ;; y a cpxnum
+      (if (##eq? x 0)
+          (let ((real (##real-part y)))
+            (if (##positive? real)
+                0
+                ;; If we call (complex-expt 0 y),
+                ;; we'll try to take (##log 0) in complex-expt,
+                ;; so we raise the exception here.
+                (##raise-range-exception 1 expt x y)))
+          (complex-expt x y))
+      (complex-expt x y)
+      (complex-expt x y)
+      (complex-expt x y)
+      (complex-expt x y))))
 
 (define-prim (expt x y)
   (macro-force-vars (x y)
@@ -2539,8 +2539,8 @@
          (let ((real (##real-part x))
                (imag (##real-part y)))
            (if (##eq? imag 0)
-             real
-             (macro-cpxnum-make real imag))))))
+               real
+               (macro-cpxnum-make real imag))))))
 
 (define-prim (make-rectangular x y)
   (macro-force-vars (x y)
@@ -2570,8 +2570,8 @@
     x x x x (macro-cpxnum-real x)))
 
 (define-prim (real-part x)
-   (macro-force-vars (x)
-     (##real-part x)))
+  (macro-force-vars (x)
+    (##real-part x)))
 
 (define-prim (##imag-part x)
 
@@ -2619,8 +2619,8 @@
              abs-i)
             (else
              (if (##< abs-r abs-i)
-               (complex-magn abs-r abs-i)
-               (complex-magn abs-i abs-r)))))))
+                 (complex-magn abs-r abs-i)
+                 (complex-magn abs-i abs-r)))))))
 
 (define-prim (magnitude x)
   (macro-force-vars (x)
@@ -2633,17 +2633,17 @@
 
   (macro-number-dispatch x (type-error)
     (if (##fixnum.negative? x)
-      (macro-inexact-+pi)
-      0)
+        (macro-inexact-+pi)
+        0)
     (if (##bignum.negative? x)
-      (macro-inexact-+pi)
-      0)
+        (macro-inexact-+pi)
+        0)
     (if (##negative? (macro-ratnum-numerator x))
-      (macro-inexact-+pi)
-      0)
+        (macro-inexact-+pi)
+        0)
     (if (##flonum.negative? (##flonum.copysign (macro-inexact-+1) x))
-      (macro-inexact-+pi)
-      (macro-inexact-+0))
+        (macro-inexact-+pi)
+        (macro-inexact-+0))
     (##atan2 (macro-cpxnum-imag x) (macro-cpxnum-real x))))
 
 (define-prim (angle x)
@@ -2684,15 +2684,15 @@
     x
     x
     (if (macro-flonum-rational? x)
-      (##flonum.inexact->exact x)
-      (range-error))
+        (##flonum.inexact->exact x)
+        (range-error))
     (let ((real (macro-cpxnum-real x))
           (imag (macro-cpxnum-imag x)))
       (if (and (macro-noncpxnum-rational? real)
                (macro-noncpxnum-rational? imag))
-        (##make-rectangular (##inexact->exact real)
-                            (##inexact->exact imag))
-        (range-error)))))
+          (##make-rectangular (##inexact->exact real)
+                              (##inexact->exact imag))
+          (range-error)))))
 
 (define-prim (inexact->exact x)
   (macro-force-vars (x)
@@ -2714,14 +2714,14 @@
         (let loop ((i 0) (rad^i 1))
           (let ((new-rad^i (* rad^i rad)))
             (if (<= new-rad^i max-fixnum)
-              (loop (+ i 1) new-rad^i)
-              i))))
+                (loop (+ i 1) new-rad^i)
+                i))))
 
       (let loop ((i max-rad))
         (if (< 1 i)
-          (begin
-            (vector-set! t i (block-size-for i))
-            (loop (- i 1)))))
+            (begin
+              (vector-set! t i (block-size-for i))
+              (loop (- i 1)))))
 
       `',t))
 
@@ -2737,14 +2737,14 @@
         (let loop ((i 0) (rad^i 1))
           (let ((new-rad^i (* rad^i rad)))
             (if (<= new-rad^i max-fixnum)
-              (loop (+ i 1) new-rad^i)
-              rad^i))))
+                (loop (+ i 1) new-rad^i)
+                rad^i))))
 
       (let loop ((i max-rad))
         (if (< 1 i)
-          (begin
-            (vector-set! t i (rad^block-size-for i))
-            (loop (- i 1)))))
+            (begin
+              (vector-set! t i (rad^block-size-for i))
+              (loop (- i 1)))))
 
       `',t))
 
@@ -2753,52 +2753,52 @@
   (define (make-string-from-last-fixnum rad x len pos)
     (let loop ((x x) (len len) (pos pos))
       (if (##fixnum.= x 0)
-        (##make-string len)
-        (let* ((new-pos
-                (##fixnum.+ pos 1))
-               (s
-                (loop (##fixnum.quotient x rad)
-                      (##fixnum.+ len 1)
-                      new-pos)))
-          (##string-set!
-           s
-           (##fixnum.- (##string-length s) new-pos)
-           (##string-ref ##digit-to-char-table
-                         (##fixnum.- (##fixnum.remainder x rad))))
-          s))))
+          (##make-string len)
+          (let* ((new-pos
+                  (##fixnum.+ pos 1))
+                 (s
+                  (loop (##fixnum.quotient x rad)
+                        (##fixnum.+ len 1)
+                        new-pos)))
+            (##string-set!
+             s
+             (##fixnum.- (##string-length s) new-pos)
+             (##string-ref ##digit-to-char-table
+                           (##fixnum.- (##fixnum.remainder x rad))))
+            s))))
 
   (define (convert-non-last-fixnum s rad x pos)
     (let loop ((x x)
                (size (##vector-ref block-size rad))
                (i (##fixnum.- (##string-length s) pos)))
       (if (##fixnum.< 0 size)
-        (let ((new-i (##fixnum.- i 1)))
-          (##string-set!
-           s
-           new-i
-           (##string-ref ##digit-to-char-table
-                         (##fixnum.remainder x rad)))
-          (loop (##fixnum.quotient x rad)
-                (##fixnum.- size 1)
-                new-i)))))
+          (let ((new-i (##fixnum.- i 1)))
+            (##string-set!
+             s
+             new-i
+             (##string-ref ##digit-to-char-table
+                           (##fixnum.remainder x rad)))
+            (loop (##fixnum.quotient x rad)
+                  (##fixnum.- size 1)
+                  new-i)))))
 
   (define (make-string-from-fixnums rad lst len pos)
     (let loop ((lst lst) (pos pos))
       (let ((new-lst (##cdr lst)))
         (if (##null? new-lst)
-          (make-string-from-last-fixnum
-           rad
-           (##fixnum.- (##car lst))
-           (##fixnum.+ len pos)
-           pos)
-          (let* ((size
-                  (##vector-ref block-size rad))
-                 (new-pos
-                  (##fixnum.+ pos size))
-                 (s
-                  (loop new-lst new-pos)))
-            (convert-non-last-fixnum s rad (##car lst) pos)
-            s)))))
+            (make-string-from-last-fixnum
+             rad
+             (##fixnum.- (##car lst))
+             (##fixnum.+ len pos)
+             pos)
+            (let* ((size
+                    (##vector-ref block-size rad))
+                   (new-pos
+                    (##fixnum.+ pos size))
+                   (s
+                    (loop new-lst new-pos)))
+              (convert-non-last-fixnum s rad (##car lst) pos)
+              s)))))
 
   (define (uinteger->fixnums level sqs x lst)
     (cond ((and (##null? lst) (##eq? x 0))
@@ -2835,44 +2835,44 @@
                            (##fixnum.-
                             (##fixnum.* (##integer-length rad^size^2^level) 2)
                             1))
-             (uinteger->fixnums new-level new-sqs x '())
-             (let ((new-rad^size^2^level
-                    (##exact-int.square rad^size^2^level)))
-               (if (##< x new-rad^size^2^level)
-                 (uinteger->fixnums new-level new-sqs x '())
-                 (loop new-level
-                       new-sqs
-                       new-rad^size^2^level)))))))
+               (uinteger->fixnums new-level new-sqs x '())
+               (let ((new-rad^size^2^level
+                      (##exact-int.square rad^size^2^level)))
+                 (if (##< x new-rad^size^2^level)
+                     (uinteger->fixnums new-level new-sqs x '())
+                     (loop new-level
+                           new-sqs
+                           new-rad^size^2^level)))))))
      len
      0))
 
   (if (##fixnum? x)
 
-    (cond ((##fixnum.negative? x)
-           (let ((s (make-string-from-last-fixnum rad x 1 0)))
-             (##string-set! s 0 #\-)
-             s))
-          ((##fixnum.zero? x)
-           (if force-sign?
-             (##string #\+ #\0)
-             (##string #\0)))
-          (else
-           (if force-sign?
-             (let ((s (make-string-from-last-fixnum rad (##fixnum.- x) 1 0)))
-               (##string-set! s 0 #\+)
-               s)
-             (make-string-from-last-fixnum rad (##fixnum.- x) 0 0))))
+      (cond ((##fixnum.negative? x)
+             (let ((s (make-string-from-last-fixnum rad x 1 0)))
+               (##string-set! s 0 #\-)
+               s))
+            ((##fixnum.zero? x)
+             (if force-sign?
+                 (##string #\+ #\0)
+                 (##string #\0)))
+            (else
+             (if force-sign?
+                 (let ((s (make-string-from-last-fixnum rad (##fixnum.- x) 1 0)))
+                   (##string-set! s 0 #\+)
+                   s)
+                 (make-string-from-last-fixnum rad (##fixnum.- x) 0 0))))
 
-    (cond ((##bignum.negative? x)
-           (let ((s (uinteger->string (##negate x) rad 1)))
-             (##string-set! s 0 #\-)
-             s))
-          (else
-           (if force-sign?
-             (let ((s (uinteger->string x rad 1)))
-               (##string-set! s 0 #\+)
-               s)
-             (uinteger->string x rad 0))))))
+      (cond ((##bignum.negative? x)
+             (let ((s (uinteger->string (##negate x) rad 1)))
+               (##string-set! s 0 #\-)
+               s))
+            (else
+             (if force-sign?
+                 (let ((s (uinteger->string x rad 1)))
+                   (##string-set! s 0 #\+)
+                   s)
+                 (uinteger->string x rad 0))))))
 
 (define ##digit-to-char-table "0123456789abcdefghijklmnopqrstuvwxyz")
 
@@ -2890,15 +2890,15 @@
   (let ((v (make-vector n)))
     (let loop ((i 0) (x 1))
       (if (< i n)
-        (begin
-          (vector-set! v i x)
-          (loop (+ i 1) (* x 10)))))
+          (begin
+            (vector-set! v i x)
+            (loop (+ i 1) (* x 10)))))
     `',v))
 
 (define ##10^-constants
   (if (use-fast-bignum-algorithms)
-    (macro-make-10^constants)
-    #f))
+      (macro-make-10^constants)
+      #f))
 
 (define-prim (##flonum.printout v sign-prefix)
 
@@ -2935,78 +2935,84 @@
            (##flonum->fixnum
             (##flonum.ceiling (##flonum.- (base-10-log v) (epsilon))))))
       (if (##fixnum.negative? est)
-        (let ((factor (10^ (##fixnum.- est))))
-          (fixup (##* r factor)
-                 s
-                 (##* m+ factor)
-                 (##* m- factor)
-                 est
-                 round?))
-        (let ((factor (10^ est)))
-          (fixup r
-                 (##* s factor)
-                 m+
-                 m-
-                 est
-                 round?)))))
+          (let ((factor (10^ (##fixnum.- est))))
+            (fixup (##* r factor)
+                   s
+                   (##* m+ factor)
+                   (##* m- factor)
+                   est
+                   round?))
+          (let ((factor (10^ est)))
+            (fixup r
+                   (##* s factor)
+                   m+
+                   m-
+                   est
+                   round?)))))
 
   (define (fixup r s m+ m- k round?)
     (if (if round?
-          (##not (##< (##+ r m+) s))
-          (##< s (##+ r m+)))
-      (##cons (##fixnum.+ k 1)
-              (generate r
-                        s
-                        m+
-                        m-
-                        round?
-                        0))
-      (##cons k
-              (generate (##* r 10)
-                        s
-                        (##* m+ 10)
-                        (##* m- 10)
-                        round?
-                        0))))
+            (##not (##< (##+ r m+) s))
+            (##< s (##+ r m+)))
+        (##cons (##fixnum.+ k 1)
+                (generate r
+                          s
+                          m+
+                          m-
+                          round?
+                          0))
+        (##cons k
+                (generate (##* r 10)
+                          s
+                          (##* m+ 10)
+                          (##* m- 10)
+                          round?
+                          0))))
 
   (define (generate r s m+ m- round? n)
     (let* ((dr (##exact-int.div r s))
            (d (##car dr))
            (r (##cdr dr))
            (tc (if round?
-                 (##not (##< (##+ r m+) s))
-                 (##< s (##+ r m+)))))
+                   (##not (##< (##+ r m+) s))
+                   (##< s (##+ r m+)))))
       (if (if round? (##not (##< m- r)) (##< r m-))
-        (let* ((last-digit
-                (if tc
-                  (let ((r*2 (##arithmetic-shift r 1)))
-                    (if (or (and (##fixnum.even? d)
-                                 (##= r*2 s)) ;; tie, round d to even
-                            (##< r*2 s))
-                      d
-                      (##fixnum.+ d 1)))
-                  d))
-               (str
-                (##make-string (##fixnum.+ n 1))))
-          (##string-set! str n
-            (##string-ref ##digit-to-char-table last-digit))
-          str)
-        (if tc
-          (let ((str
-                 (##make-string (##fixnum.+ n 1))))
-            (##string-set! str n
-              (##string-ref ##digit-to-char-table (##fixnum.+ d 1)))
+          (let* ((last-digit
+                  (if tc
+                      (let ((r*2 (##arithmetic-shift r 1)))
+                        (if (or (and (##fixnum.even? d)
+                                     (##= r*2 s)) ;; tie, round d to even
+                                (##< r*2 s))
+                            d
+                            (##fixnum.+ d 1)))
+                      d))
+                 (str
+                  (##make-string (##fixnum.+ n 1))))
+            (##string-set!
+             str
+             n
+             (##string-ref ##digit-to-char-table last-digit))
             str)
-          (let ((str
-                 (generate (##* r 10)
-                           s
-                           (##* m+ 10)
-                           (##* m- 10)
-                           round?
-                           (##fixnum.+ n 1))))
-            (##string-set! str n
-              (##string-ref ##digit-to-char-table d))
-            str)))))
+          (if tc
+              (let ((str
+                     (##make-string (##fixnum.+ n 1))))
+                (##string-set!
+                 str
+                 n
+                 (##string-ref ##digit-to-char-table (##fixnum.+ d 1)))
+                str)
+              (let ((str
+                     (generate (##* r 10)
+                               s
+                               (##* m+ 10)
+                               (##* m- 10)
+                               round?
+                               (##fixnum.+ n 1))))
+                (##string-set!
+                 str
+                 n
+                 (##string-ref ##digit-to-char-table d))
+                str)))))
 
   (define (flonum->exponent-and-digits v)
     (let* ((x (##flonum.->exact-exponential-format v))
@@ -3014,34 +3020,34 @@
            (e (##vector-ref x 1))
            (round? (##not (##odd? f))))
       (if (##fixnum.negative? e)
-        (if (and (##not (##fixnum.= e (macro-flonum-e-min)))
-                 (##= f (macro-flonum-+m-min)))
-          (scale (##arithmetic-shift f 2)
-                 (##arithmetic-shift 1 (##fixnum.- 2 e))
-                 2
-                 1
-                 round?
-                 v)
-          (scale (##arithmetic-shift f 1)
-                 (##arithmetic-shift 1 (##fixnum.- 1 e))
-                 1
-                 1
-                 round?
-                 v))
-        (let ((2^e (##arithmetic-shift 1 e)))
-          (if (##= f (macro-flonum-+m-min))
-            (scale (##arithmetic-shift f (##fixnum.+ e 2))
-                   4
-                   (##arithmetic-shift 1 (##fixnum.+ e 1))
-                   2^e
-                   round?
-                   v)
-            (scale (##arithmetic-shift f (##fixnum.+ e 1))
-                   2
-                   2^e
-                   2^e
-                   round?
-                   v))))))
+          (if (and (##not (##fixnum.= e (macro-flonum-e-min)))
+                   (##= f (macro-flonum-+m-min)))
+              (scale (##arithmetic-shift f 2)
+                     (##arithmetic-shift 1 (##fixnum.- 2 e))
+                     2
+                     1
+                     round?
+                     v)
+              (scale (##arithmetic-shift f 1)
+                     (##arithmetic-shift 1 (##fixnum.- 1 e))
+                     1
+                     1
+                     round?
+                     v))
+          (let ((2^e (##arithmetic-shift 1 e)))
+            (if (##= f (macro-flonum-+m-min))
+                (scale (##arithmetic-shift f (##fixnum.+ e 2))
+                       4
+                       (##arithmetic-shift 1 (##fixnum.+ e 1))
+                       2^e
+                       round?
+                       v)
+                (scale (##arithmetic-shift f (##fixnum.+ e 1))
+                       2
+                       2^e
+                       2^e
+                       round?
+                       v))))))
 
   (let* ((x (flonum->exponent-and-digits v))
          (e (##car x))
@@ -3114,29 +3120,29 @@
 
   (define (non-neg-num->str x rad sign-prefix)
     (if (##flonum.zero? x)
-      (##string-append sign-prefix (if (macro-chez-fp-syntax) "0.0" "0."))
-      (##flonum.printout x sign-prefix)))
+        (##string-append sign-prefix (if (macro-chez-fp-syntax) "0.0" "0."))
+        (##flonum.printout x sign-prefix)))
 
   (cond ((##flonum.nan? x)
          (##string-copy (if (or (macro-r6rs-fp-syntax)
                                 (macro-chez-fp-syntax))
-                          "+nan.0"
-                          "+nan.")))
+                            "+nan.0"
+                            "+nan.")))
         ((##flonum.negative? (##flonum.copysign (macro-inexact-+1) x))
          (let ((abs-x (##flonum.copysign x (macro-inexact-+1))))
            (cond ((##flonum.= abs-x (macro-inexact-+inf))
                   (##string-copy (if (or (macro-r6rs-fp-syntax)
                                          (macro-chez-fp-syntax))
-                                   "-inf.0"
-                                   "-inf.")))
+                                     "-inf.0"
+                                     "-inf.")))
                  (else
                   (non-neg-num->str abs-x rad "-")))))
         (else
          (cond ((##flonum.= x (macro-inexact-+inf))
                 (##string-copy (if (or (macro-r6rs-fp-syntax)
                                        (macro-chez-fp-syntax))
-                                 "+inf.0"
-                                 "+inf.")))
+                                   "+inf.0"
+                                   "+inf.")))
                (force-sign?
                 (non-neg-num->str x rad "+"))
                (else
@@ -3169,31 +3175,31 @@
   (macro-force-vars (n r)
     (let ((rad (if (##eq? r (macro-absent-obj)) 10 r)))
       (if (macro-exact-int? rad)
-        (if (or (##eq? rad 2)
-                (##eq? rad 8)
-                (##eq? rad 10)
-                (##eq? rad 16))
-          (let ((result (##number->string n rad #f)))
-            (if (##null? result)
-              (##fail-check-number 1 number->string n r)
-              result))
-          (##raise-range-exception 2 number->string n r))
-        (##fail-check-exact-integer 2 number->string n r)))))
+          (if (or (##eq? rad 2)
+                  (##eq? rad 8)
+                  (##eq? rad 10)
+                  (##eq? rad 16))
+              (let ((result (##number->string n rad #f)))
+                (if (##null? result)
+                    (##fail-check-number 1 number->string n r)
+                    result))
+              (##raise-range-exception 2 number->string n r))
+          (##fail-check-exact-integer 2 number->string n r)))))
 
 (##define-macro (macro-make-char-to-digit-table)
   (let ((t (make-vector 128 99)))
     (vector-set! t (char->integer #\#) 0) ;; #\# counts as 0
     (let loop1 ((i 9))
       (if (not (< i 0))
-        (begin
-          (vector-set! t (+ (char->integer #\0) i) i)
-          (loop1 (- i 1)))))
+          (begin
+            (vector-set! t (+ (char->integer #\0) i) i)
+            (loop1 (- i 1)))))
     (let loop2 ((i 25))
       (if (not (< i 0))
-        (begin
-          (vector-set! t (+ (char->integer #\A) i) (+ i 10))
-          (vector-set! t (+ (char->integer #\a) i) (+ i 10))
-          (loop2 (- i 1)))))
+          (begin
+            (vector-set! t (+ (char->integer #\A) i) (+ i 10))
+            (vector-set! t (+ (char->integer #\a) i) (+ i 10))
+            (loop2 (- i 1)))))
     `',(list->u8vector (vector->list t))))
 
 (define ##char-to-digit-table (macro-make-char-to-digit-table))
@@ -3262,9 +3268,9 @@
 
       (let loop ((i max-exact-power-of-10))
         (if (not (< i 0))
-          (begin
-            (vector-set! t i (exact->inexact (expt 10 i)))
-            (loop (- i 1)))))
+            (begin
+              (vector-set! t i (exact->inexact (expt 10 i)))
+              (loop (- i 1)))))
 
       `',(list->f64vector (vector->list t))))
 
@@ -3280,14 +3286,14 @@
         (let loop ((i 0) (rad^i 1))
           (let ((new-rad^i (* rad^i rad)))
             (if (<= new-rad^i max-fixnum)
-              (loop (+ i 1) new-rad^i)
-              i))))
+                (loop (+ i 1) new-rad^i)
+                i))))
 
       (let loop ((i max-rad))
         (if (< 1 i)
-          (begin
-            (vector-set! t i (block-size-for i))
-            (loop (- i 1)))))
+            (begin
+              (vector-set! t i (block-size-for i))
+              (loop (- i 1)))))
 
       `',t))
 
@@ -3303,14 +3309,14 @@
         (let loop ((i 0) (rad^i 1))
           (let ((new-rad^i (* rad^i rad)))
             (if (<= new-rad^i max-fixnum)
-              (loop (+ i 1) new-rad^i)
-              rad^i))))
+                (loop (+ i 1) new-rad^i)
+                rad^i))))
 
       (let loop ((i max-rad))
         (if (< 1 i)
-          (begin
-            (vector-set! t i (rad^block-size-for i))
-            (loop (- i 1)))))
+            (begin
+              (vector-set! t i (rad^block-size-for i))
+              (loop (- i 1)))))
 
       `',t))
 
@@ -3322,14 +3328,14 @@
 
     (let loop ((i i) (n 0))
       (if (##fixnum.< i j)
-        (let ((c (##string-ref str i)))
-          (if (##char<? c 128)
-            (loop (##fixnum.+ i 1)
-                  (##fixnum.+ (##fixnum.* n rad)
-                              (##u8vector-ref ##char-to-digit-table c)))
-            (loop (##fixnum.+ i 1)
-                  (##fixnum.* n rad))))
-        n)))
+          (let ((c (##string-ref str i)))
+            (if (##char<? c 128)
+                (loop (##fixnum.+ i 1)
+                      (##fixnum.+ (##fixnum.* n rad)
+                                  (##u8vector-ref ##char-to-digit-table c)))
+                (loop (##fixnum.+ i 1)
+                      (##fixnum.* n rad))))
+          n)))
 
   (define (substring->uinteger-aux sqs width str rad i j)
 
@@ -3337,23 +3343,23 @@
     ;; multiplication is fast).
 
     (if (##null? sqs)
-      (substring->uinteger-fixnum str rad i j)
-      (let* ((new-sqs (##cdr sqs))
-             (new-width (##fixnum.quotient width 2))
-             (mid (##fixnum.- j new-width)))
-        (if (##fixnum.< i mid)
-          (let* ((a (substring->uinteger-aux new-sqs new-width str rad i mid))
-                 (b (substring->uinteger-aux new-sqs new-width str rad mid j)))
-            (##+ (##* a (##car sqs)) b))
-          (substring->uinteger-aux new-sqs new-width str rad i j)))))
+        (substring->uinteger-fixnum str rad i j)
+        (let* ((new-sqs (##cdr sqs))
+               (new-width (##fixnum.quotient width 2))
+               (mid (##fixnum.- j new-width)))
+          (if (##fixnum.< i mid)
+              (let* ((a (substring->uinteger-aux new-sqs new-width str rad i mid))
+                     (b (substring->uinteger-aux new-sqs new-width str rad mid j)))
+                (##+ (##* a (##car sqs)) b))
+              (substring->uinteger-aux new-sqs new-width str rad i j)))))
 
   (define (squares rad n)
     (let loop ((rad rad) (n n) (lst '()))
       (if (##fixnum.= n 1)
-        (##cons rad lst)
-        (loop (##exact-int.square rad)
-              (##fixnum.- n 1)
-              (##cons rad lst)))))
+          (##cons rad lst)
+          (loop (##exact-int.square rad)
+                (##fixnum.- n 1)
+                (##cons rad lst)))))
 
   (define (substring->uinteger str rad i j)
 
@@ -3363,16 +3369,16 @@
     (let ((len (##fixnum.- j i))
           (size (##vector-ref block-size rad)))
       (if (##fixnum.< size len)
-        (let ((levels
-               (##integer-length (##fixnum.quotient (##fixnum.- len 1) size))))
-          (substring->uinteger-aux
-           (squares (##vector-ref rad^block-size rad) levels)
-           (##fixnum.arithmetic-shift-left size levels)
-           str
-           rad
-           i
-           j))
-        (substring->uinteger-fixnum str rad i j))))
+          (let ((levels
+                 (##integer-length (##fixnum.quotient (##fixnum.- len 1) size))))
+            (substring->uinteger-aux
+             (squares (##vector-ref rad^block-size rad) levels)
+             (##fixnum.arithmetic-shift-left size levels)
+             str
+             rad
+             i
+             j))
+          (substring->uinteger-fixnum str rad i j))))
 
   (define (float-substring->uinteger str i j)
 
@@ -3381,30 +3387,30 @@
 
     (let loop1 ((i i) (n 0))
       (if (##not (##fixnum.< i j))
-        n
-        (let ((c (##string-ref str i)))
-          (if (##char=? c #\.)
-            (loop1 (##fixnum.+ i 1) n)
-            (let ((new-n
-                   (##fixnum.+ (##fixnum.* n 10)
-                               (if (##char<? c 128)
-                                 (##u8vector-ref ##char-to-digit-table c)
-                                 0))))
-              (if (##fixnum.< new-n (macro-max-fixnum32-div-10))
-                (loop1 (##fixnum.+ i 1) new-n)
-                (let loop2 ((i i) (n n))
-                  (if (##not (##fixnum.< i j))
-                    n
-                    (let ((c (##string-ref str i)))
-                      (if (##char=? c #\.)
-                        (loop2 (##fixnum.+ i 1) n)
-                        (let ((new-n
-                               (##+
-                                (##* n 10)
-                                (if (##char<? c 128)
-                                  (##u8vector-ref ##char-to-digit-table c)
-                                  0))))
-                          (loop2 (##fixnum.+ i 1) new-n)))))))))))))
+          n
+          (let ((c (##string-ref str i)))
+            (if (##char=? c #\.)
+                (loop1 (##fixnum.+ i 1) n)
+                (let ((new-n
+                       (##fixnum.+ (##fixnum.* n 10)
+                                   (if (##char<? c 128)
+                                       (##u8vector-ref ##char-to-digit-table c)
+                                       0))))
+                  (if (##fixnum.< new-n (macro-max-fixnum32-div-10))
+                      (loop1 (##fixnum.+ i 1) new-n)
+                      (let loop2 ((i i) (n n))
+                        (if (##not (##fixnum.< i j))
+                            n
+                            (let ((c (##string-ref str i)))
+                              (if (##char=? c #\.)
+                                  (loop2 (##fixnum.+ i 1) n)
+                                  (let ((new-n
+                                         (##+
+                                          (##* n 10)
+                                          (if (##char<? c 128)
+                                              (##u8vector-ref ##char-to-digit-table c)
+                                              0))))
+                                    (loop2 (##fixnum.+ i 1) new-n)))))))))))))
 
   (define (uinteger str rad i)
     (and (##fixnum.< i (##string-length str))
@@ -3417,128 +3423,128 @@
   (define (digits-and-sharps str rad i)
     (let loop ((i i))
       (if (##fixnum.< i (##string-length str))
-        (let ((c (##string-ref str i)))
-          (if (##char<? c 128)
-            (if (##char=? c #\#)
-              (sharps str (##fixnum.+ i 1))
-              (if (##fixnum.< (##u8vector-ref ##char-to-digit-table c) rad)
-                (loop (##fixnum.+ i 1))
+          (let ((c (##string-ref str i)))
+            (if (##char<? c 128)
+                (if (##char=? c #\#)
+                    (sharps str (##fixnum.+ i 1))
+                    (if (##fixnum.< (##u8vector-ref ##char-to-digit-table c) rad)
+                        (loop (##fixnum.+ i 1))
+                        i))
                 i))
-            i))
-        i)))
+          i)))
 
   (define (sharps str i)
     (let loop ((i i))
       (if (##fixnum.< i (##string-length str))
-        (if (##char=? (##string-ref str i) #\#)
-          (loop (##fixnum.+ i 1))
-          i)
-        i)))
+          (if (##char=? (##string-ref str i) #\#)
+              (loop (##fixnum.+ i 1))
+              i)
+          i)))
 
   (define (suffix str i1)
     (if (##fixnum.< (##fixnum.+ i1 1) (##string-length str))
-      (let ((c1 (##string-ref str i1)))
-        (if (or (##char=? c1 #\e) (##char=? c1 #\E)
-                (##char=? c1 #\s) (##char=? c1 #\S)
-                (##char=? c1 #\f) (##char=? c1 #\F)
-                (##char=? c1 #\d) (##char=? c1 #\D)
-                (##char=? c1 #\l) (##char=? c1 #\L))
-          (let ((c2 (##string-ref str (##fixnum.+ i1 1))))
-            (let ((i2
-                   (if (or (##char=? c2 #\+) (##char=? c2 #\-))
-                     (uinteger str 10 (##fixnum.+ i1 2))
-                     (uinteger str 10 (##fixnum.+ i1 1)))))
-              (if (and i2
-                       (##not (##char=? (##string-ref str (##fixnum.- i2 1))
-                                        #\#)))
-                i2
-                i1)))
-          i1))
-      i1))
+        (let ((c1 (##string-ref str i1)))
+          (if (or (##char=? c1 #\e) (##char=? c1 #\E)
+                  (##char=? c1 #\s) (##char=? c1 #\S)
+                  (##char=? c1 #\f) (##char=? c1 #\F)
+                  (##char=? c1 #\d) (##char=? c1 #\D)
+                  (##char=? c1 #\l) (##char=? c1 #\L))
+              (let ((c2 (##string-ref str (##fixnum.+ i1 1))))
+                (let ((i2
+                       (if (or (##char=? c2 #\+) (##char=? c2 #\-))
+                           (uinteger str 10 (##fixnum.+ i1 2))
+                           (uinteger str 10 (##fixnum.+ i1 1)))))
+                  (if (and i2
+                           (##not (##char=? (##string-ref str (##fixnum.- i2 1))
+                                            #\#)))
+                      i2
+                      i1)))
+              i1))
+        i1))
 
   (define (ureal str rad e i1)
     (let ((i2 (uinteger str rad i1)))
       (if i2
-        (if (##fixnum.< i2 (##string-length str))
-          (let ((c (##string-ref str i2)))
-            (cond ((##char=? c #\/)
-                   (let ((i3 (uinteger str rad (##fixnum.+ i2 1))))
-                     (and i3
-                          (let ((inexact-num?
-                                 (or (##eq? e 'i)
-                                     (and (##not e)
-                                          (or (##char=? (##string-ref
-                                                         str
-                                                         (##fixnum.- i2 1))
-                                                        #\#)
-                                              (##char=? (##string-ref
-                                                         str
-                                                         (##fixnum.- i3 1))
-                                                        #\#))))))
-                            (if (and (##not inexact-num?)
-                                     (##eq? (substring->uinteger
-                                             str
-                                             rad
-                                             (##fixnum.+ i2 1)
-                                             i3)
-                                            0))
-                              #f
-                              (##vector i3 i2))))))
-                  ((##fixnum.= rad 10)
-                   (if (##char=? c #\.)
-                     (let ((i3
-                            (if (##char=? (##string-ref str (##fixnum.- i2 1))
-                                          #\#)
-                              (sharps str (##fixnum.+ i2 1))
-                              (digits-and-sharps str 10 (##fixnum.+ i2 1)))))
-                       (and i3
-                            (let ((i4 (suffix str i3)))
-                              (##vector i4 i3 i2))))
-                     (let ((i3 (suffix str i2)))
-                       (if (##fixnum.= i2 i3)
-                         i2
-                         (##vector i3 i2 i2)))))
-                  (else
-                   i2)))
-          i2)
-        (and (##fixnum.= rad 10)
-             (##fixnum.< i1 (##string-length str))
-             (##char=? (##string-ref str i1) #\.)
-             (let ((i3 (uinteger str rad (##fixnum.+ i1 1))))
-               (and i3
-                    (let ((i4 (suffix str i3)))
-                      (##vector i4 i3 i1))))))))
+          (if (##fixnum.< i2 (##string-length str))
+              (let ((c (##string-ref str i2)))
+                (cond ((##char=? c #\/)
+                       (let ((i3 (uinteger str rad (##fixnum.+ i2 1))))
+                         (and i3
+                              (let ((inexact-num?
+                                     (or (##eq? e 'i)
+                                         (and (##not e)
+                                              (or (##char=? (##string-ref
+                                                             str
+                                                             (##fixnum.- i2 1))
+                                                            #\#)
+                                                  (##char=? (##string-ref
+                                                             str
+                                                             (##fixnum.- i3 1))
+                                                            #\#))))))
+                                (if (and (##not inexact-num?)
+                                         (##eq? (substring->uinteger
+                                                 str
+                                                 rad
+                                                 (##fixnum.+ i2 1)
+                                                 i3)
+                                                0))
+                                    #f
+                                    (##vector i3 i2))))))
+                      ((##fixnum.= rad 10)
+                       (if (##char=? c #\.)
+                           (let ((i3
+                                  (if (##char=? (##string-ref str (##fixnum.- i2 1))
+                                                #\#)
+                                      (sharps str (##fixnum.+ i2 1))
+                                      (digits-and-sharps str 10 (##fixnum.+ i2 1)))))
+                             (and i3
+                                  (let ((i4 (suffix str i3)))
+                                    (##vector i4 i3 i2))))
+                           (let ((i3 (suffix str i2)))
+                             (if (##fixnum.= i2 i3)
+                                 i2
+                                 (##vector i3 i2 i2)))))
+                      (else
+                       i2)))
+              i2)
+          (and (##fixnum.= rad 10)
+               (##fixnum.< i1 (##string-length str))
+               (##char=? (##string-ref str i1) #\.)
+               (let ((i3 (uinteger str rad (##fixnum.+ i1 1))))
+                 (and i3
+                      (let ((i4 (suffix str i3)))
+                        (##vector i4 i3 i1))))))))
 
   (define (inf-nan str sign i e)
     (and (##not (##eq? e 'e))
          (if (##fixnum.< (##fixnum.+ i (if (or (macro-r6rs-fp-syntax)
                                                (macro-chez-fp-syntax))
-                                         4
-                                         3))
+                                           4
+                                           3))
                          (##string-length str))
-           (and (##char=? (##string-ref str (##fixnum.+ i 3)) #\.)
-                (if (or (macro-r6rs-fp-syntax)
-                        (macro-chez-fp-syntax))
-                  (##char=? (##string-ref str (##fixnum.+ i 4)) #\0)
-                  #t)
-                (or (and (let ((c (##string-ref str i)))
-                           (or (##char=? c #\i) (##char=? c #\I)))
-                         (let ((c (##string-ref str (##fixnum.+ i 1))))
-                           (or (##char=? c #\n) (##char=? c #\N)))
-                         (let ((c (##string-ref str (##fixnum.+ i 2))))
-                           (or (##char=? c #\f) (##char=? c #\F))))
-                    (and (##not (##char=? sign #\-))
-                         (let ((c (##string-ref str i)))
-                           (or (##char=? c #\n) (##char=? c #\N)))
-                         (let ((c (##string-ref str (##fixnum.+ i 1))))
-                           (or (##char=? c #\a) (##char=? c #\A)))
-                         (let ((c (##string-ref str (##fixnum.+ i 2))))
-                           (or (##char=? c #\n) (##char=? c #\N)))))
-                (##vector (##fixnum.+ i (if (or (macro-r6rs-fp-syntax)
-                                                (macro-chez-fp-syntax))
-                                          5
-                                          4))))
-           #f)))
+             (and (##char=? (##string-ref str (##fixnum.+ i 3)) #\.)
+                  (if (or (macro-r6rs-fp-syntax)
+                          (macro-chez-fp-syntax))
+                      (##char=? (##string-ref str (##fixnum.+ i 4)) #\0)
+                      #t)
+                  (or (and (let ((c (##string-ref str i)))
+                             (or (##char=? c #\i) (##char=? c #\I)))
+                           (let ((c (##string-ref str (##fixnum.+ i 1))))
+                             (or (##char=? c #\n) (##char=? c #\N)))
+                           (let ((c (##string-ref str (##fixnum.+ i 2))))
+                             (or (##char=? c #\f) (##char=? c #\F))))
+                      (and (##not (##char=? sign #\-))
+                           (let ((c (##string-ref str i)))
+                             (or (##char=? c #\n) (##char=? c #\N)))
+                           (let ((c (##string-ref str (##fixnum.+ i 1))))
+                             (or (##char=? c #\a) (##char=? c #\A)))
+                           (let ((c (##string-ref str (##fixnum.+ i 2))))
+                             (or (##char=? c #\n) (##char=? c #\N)))))
+                  (##vector (##fixnum.+ i (if (or (macro-r6rs-fp-syntax)
+                                                  (macro-chez-fp-syntax))
+                                              5
+                                              4))))
+             #f)))
 
   (define (make-rec x y)
     (##make-rectangular x y))
@@ -3546,8 +3552,8 @@
   (define (make-pol x y e)
     (let ((n (##make-polar x y)))
       (if (##eq? e 'e)
-        (##inexact->exact n)
-        n)))
+          (##inexact->exact n)
+          n)))
 
   (define (make-inexact-real sign uinteger exponent)
     (let ((n
@@ -3558,140 +3564,140 @@
                                 (##f64vector-length exact-10^n-table))
                     (##fixnum.< exponent
                                 (##f64vector-length exact-10^n-table)))
-             (if (##fixnum.< exponent 0)
-               (##flonum./ (##flonum.<-fixnum uinteger)
-                           (##f64vector-ref exact-10^n-table
-                                            (##fixnum.- exponent)))
-               (##flonum.* (##flonum.<-fixnum uinteger)
-                           (##f64vector-ref exact-10^n-table
-                                            exponent)))
-             (##exact->inexact
-              (##* uinteger (##expt 10 exponent))))))
+               (if (##fixnum.< exponent 0)
+                   (##flonum./ (##flonum.<-fixnum uinteger)
+                               (##f64vector-ref exact-10^n-table
+                                                (##fixnum.- exponent)))
+                   (##flonum.* (##flonum.<-fixnum uinteger)
+                               (##f64vector-ref exact-10^n-table
+                                                exponent)))
+               (##exact->inexact
+                (##* uinteger (##expt 10 exponent))))))
       (if (##char=? sign #\-)
-        (##flonum.copysign n (macro-inexact--1))
-        n)))
+          (##flonum.copysign n (macro-inexact--1))
+          n)))
 
   (define (get-zero e)
     (if (##eq? e 'i)
-      (macro-inexact-+0)
-      0))
+        (macro-inexact-+0)
+        0))
 
   (define (get-one sign e)
     (if (##eq? e 'i)
-      (if (##char=? sign #\-) (macro-inexact--1) (macro-inexact-+1))
-      (if (##char=? sign #\-) -1 1)))
+        (if (##char=? sign #\-) (macro-inexact--1) (macro-inexact-+1))
+        (if (##char=? sign #\-) -1 1)))
 
   (define (get-real start sign str rad e i)
     (if (##fixnum? i)
-      (let* ((abs-n
-              (substring->uinteger str rad start i))
-             (n
-              (if (##char=? sign #\-)
-                (##negate abs-n)
-                abs-n)))
-        (if (or (##eq? e 'i)
-                (and (##not e)
-                     (##char=? (##string-ref str (##fixnum.- i 1)) #\#)))
-          (##exact->inexact n)
-          n))
-      (let ((j (##vector-ref i 0))
-            (len (##vector-length i)))
-        (cond ((##fixnum.= len 3) ;; xxx.yyyEzzz
-               (let* ((after-frac-part
-                       (##vector-ref i 1))
-                      (unadjusted-exponent
-                       (if (##fixnum.= after-frac-part j) ;; no exponent part?
-                         0
-                         (let* ((c
-                                 (##string-ref
-                                  str
-                                  (##fixnum.+ after-frac-part 1)))
-                                (n
-                                 (substring->uinteger
-                                  str
-                                  10
-                                  (if (or (##char=? c #\+) (##char=? c #\-))
-                                    (##fixnum.+ after-frac-part 2)
-                                    (##fixnum.+ after-frac-part 1))
-                                  j)))
-                           (if (##char=? c #\-)
-                             (##negate n)
-                             n))))
-                      (c
-                       (##string-ref str start))
-                      (uinteger
-                       (float-substring->uinteger str start after-frac-part))
-                      (decimals-after-point
-                       (##fixnum.-
-                        (##fixnum.- after-frac-part (##vector-ref i 2))
-                        1))
-                      (exponent
-                       (if (##fixnum.< 0 decimals-after-point)
-                         (if (and (##fixnum? unadjusted-exponent)
-                                  (##fixnum.< (##fixnum.- unadjusted-exponent
-                                                          decimals-after-point)
-                                              unadjusted-exponent))
-                           (##fixnum.- unadjusted-exponent
-                                       decimals-after-point)
-                           (##- unadjusted-exponent
-                                decimals-after-point))
-                         unadjusted-exponent)))
-                 (if (##eq? e 'e)
-                   (##*
-                    (if (##char=? sign #\-)
-                      (##negate uinteger)
-                      uinteger)
-                    (##expt 10 exponent))
-                   (make-inexact-real sign uinteger exponent))))
-              ((##fixnum.= len 2) ;; xxx/yyy
-               (let* ((after-num
-                       (##vector-ref i 1))
-                      (inexact-num?
-                       (or (##eq? e 'i)
-                           (and (##not e)
-                                (or (##char=? (##string-ref
-                                               str
-                                               (##fixnum.- after-num 1))
-                                              #\#)
-                                    (##char=? (##string-ref
-                                               str
-                                               (##fixnum.- j 1))
-                                              #\#)))))
-                      (abs-num
-                       (substring->uinteger str rad start after-num))
-                      (den
-                       (substring->uinteger str
-                                            rad
-                                            (##fixnum.+ after-num 1)
-                                            j)))
+        (let* ((abs-n
+                (substring->uinteger str rad start i))
+               (n
+                (if (##char=? sign #\-)
+                    (##negate abs-n)
+                    abs-n)))
+          (if (or (##eq? e 'i)
+                  (and (##not e)
+                       (##char=? (##string-ref str (##fixnum.- i 1)) #\#)))
+              (##exact->inexact n)
+              n))
+        (let ((j (##vector-ref i 0))
+              (len (##vector-length i)))
+          (cond ((##fixnum.= len 3) ;; xxx.yyyEzzz
+                 (let* ((after-frac-part
+                         (##vector-ref i 1))
+                        (unadjusted-exponent
+                         (if (##fixnum.= after-frac-part j) ;; no exponent part?
+                             0
+                             (let* ((c
+                                     (##string-ref
+                                      str
+                                      (##fixnum.+ after-frac-part 1)))
+                                    (n
+                                     (substring->uinteger
+                                      str
+                                      10
+                                      (if (or (##char=? c #\+) (##char=? c #\-))
+                                          (##fixnum.+ after-frac-part 2)
+                                          (##fixnum.+ after-frac-part 1))
+                                      j)))
+                               (if (##char=? c #\-)
+                                   (##negate n)
+                                   n))))
+                        (c
+                         (##string-ref str start))
+                        (uinteger
+                         (float-substring->uinteger str start after-frac-part))
+                        (decimals-after-point
+                         (##fixnum.-
+                          (##fixnum.- after-frac-part (##vector-ref i 2))
+                          1))
+                        (exponent
+                         (if (##fixnum.< 0 decimals-after-point)
+                             (if (and (##fixnum? unadjusted-exponent)
+                                      (##fixnum.< (##fixnum.- unadjusted-exponent
+                                                              decimals-after-point)
+                                                  unadjusted-exponent))
+                                 (##fixnum.- unadjusted-exponent
+                                             decimals-after-point)
+                                 (##- unadjusted-exponent
+                                      decimals-after-point))
+                             unadjusted-exponent)))
+                   (if (##eq? e 'e)
+                       (##*
+                        (if (##char=? sign #\-)
+                            (##negate uinteger)
+                            uinteger)
+                        (##expt 10 exponent))
+                       (make-inexact-real sign uinteger exponent))))
+                ((##fixnum.= len 2) ;; xxx/yyy
+                 (let* ((after-num
+                         (##vector-ref i 1))
+                        (inexact-num?
+                         (or (##eq? e 'i)
+                             (and (##not e)
+                                  (or (##char=? (##string-ref
+                                                 str
+                                                 (##fixnum.- after-num 1))
+                                                #\#)
+                                      (##char=? (##string-ref
+                                                 str
+                                                 (##fixnum.- j 1))
+                                                #\#)))))
+                        (abs-num
+                         (substring->uinteger str rad start after-num))
+                        (den
+                         (substring->uinteger str
+                                              rad
+                                              (##fixnum.+ after-num 1)
+                                              j)))
 
-                 (define (num-div-den)
-                   (##/ (if (##char=? sign #\-)
-                          (##negate abs-num)
-                          abs-num)
-                        den))
+                   (define (num-div-den)
+                     (##/ (if (##char=? sign #\-)
+                              (##negate abs-num)
+                              abs-num)
+                          den))
 
-                 (if inexact-num?
-                   (if (##eq? den 0)
-                     (let ((n
-                            (if (##eq? abs-num 0)
-                              (macro-inexact-+nan)
-                              (macro-inexact-+inf))))
-                       (if (##char=? sign #\-)
-                         (##flonum.copysign n (macro-inexact--1))
-                         n))
-                     (##inexact->exact (num-div-den)))
-                   (num-div-den))))
-              (else ;; (##fixnum.= len 1) ;; inf or nan
-               (let* ((c
-                       (##string-ref str start))
-                      (n
-                       (if (or (##char=? c #\i) (##char=? c #\I))
-                         (macro-inexact-+inf)
-                         (macro-inexact-+nan))))
-                 (if (##char=? sign #\-)
-                   (##flonum.copysign n (macro-inexact--1))
-                   n)))))))
+                   (if inexact-num?
+                       (if (##eq? den 0)
+                           (let ((n
+                                  (if (##eq? abs-num 0)
+                                      (macro-inexact-+nan)
+                                      (macro-inexact-+inf))))
+                             (if (##char=? sign #\-)
+                                 (##flonum.copysign n (macro-inexact--1))
+                                 n))
+                           (##inexact->exact (num-div-den)))
+                       (num-div-den))))
+                (else ;; (##fixnum.= len 1) ;; inf or nan
+                 (let* ((c
+                         (##string-ref str start))
+                        (n
+                         (if (or (##char=? c #\i) (##char=? c #\I))
+                             (macro-inexact-+inf)
+                             (macro-inexact-+nan))))
+                   (if (##char=? sign #\-)
+                       (##flonum.copysign n (macro-inexact--1))
+                       n)))))))
 
   (define (i-end str i)
     (and (##fixnum.= (##fixnum.+ i 1) (##string-length str))
@@ -3704,25 +3710,25 @@
         (cond ((##char=? c #\@)
                (let ((j+1 (##fixnum.+ j 1)))
                  (if (##fixnum.< j+1 (##string-length str))
-                   (let* ((sign2
-                           (##string-ref str j+1))
-                          (start2
-                           (if (or (##char=? sign2 #\+) (##char=? sign2 #\-))
-                             (##fixnum.+ j+1 1)
-                             j+1))
-                          (k
-                           (or (ureal str rad e start2)
-                               (and (##fixnum.< j+1 start2)
-                                    (inf-nan str sign2 start2 e)))))
-                     (and k
-                          (let ((l (if (##fixnum? k) k (##vector-ref k 0))))
-                            (and (##fixnum.= l (##string-length str))
-                                 (or check-only?
-                                     (make-pol
-                                      (get-real start sign str rad e i)
-                                      (get-real start2 sign2 str rad e k)
-                                      e))))))
-                   #f)))
+                     (let* ((sign2
+                             (##string-ref str j+1))
+                            (start2
+                             (if (or (##char=? sign2 #\+) (##char=? sign2 #\-))
+                                 (##fixnum.+ j+1 1)
+                                 j+1))
+                            (k
+                             (or (ureal str rad e start2)
+                                 (and (##fixnum.< j+1 start2)
+                                      (inf-nan str sign2 start2 e)))))
+                       (and k
+                            (let ((l (if (##fixnum? k) k (##vector-ref k 0))))
+                              (and (##fixnum.= l (##string-length str))
+                                   (or check-only?
+                                       (make-pol
+                                        (get-real start sign str rad e i)
+                                        (get-real start2 sign2 str rad e k)
+                                        e))))))
+                     #f)))
               ((or (##char=? c #\+) (##char=? c #\-))
                (let* ((start2
                        (##fixnum.+ j 1))
@@ -3730,18 +3736,18 @@
                        (or (ureal str rad e start2)
                            (inf-nan str c start2 e))))
                  (if (##not k)
-                   (if (i-end str start2)
-                     (or check-only?
-                         (make-rec
-                          (get-real start sign str rad e i)
-                          (get-one c e)))
-                     #f)
-                   (let ((l (if (##fixnum? k) k (##vector-ref k 0))))
-                     (and (i-end str l)
-                          (or check-only?
-                              (make-rec
-                               (get-real start sign str rad e i)
-                               (get-real start2 c str rad e k))))))))
+                     (if (i-end str start2)
+                         (or check-only?
+                             (make-rec
+                              (get-real start sign str rad e i)
+                              (get-one c e)))
+                         #f)
+                     (let ((l (if (##fixnum? k) k (##vector-ref k 0))))
+                       (and (i-end str l)
+                            (or check-only?
+                                (make-rec
+                                 (get-real start sign str rad e i)
+                                 (get-real start2 c str rad e k))))))))
               (else
                #f)))))
 
@@ -3751,35 +3757,35 @@
 
     (let ((c (##string-ref str start)))
       (if (or (##char=? c #\+) (##char=? c #\-))
-        (let ((i (or (ureal str rad e (##fixnum.+ start 1))
-                     (inf-nan str c (##fixnum.+ start 1) e))))
-          (if (##not i)
-            (if (i-end str (##fixnum.+ start 1))
-              (or check-only?
-                  (make-rec
-                   (get-zero e)
-                   (get-one c e)))
-              #f)
-            (let ((j (if (##fixnum? i) i (##vector-ref i 0))))
-              (cond ((##fixnum.= j (##string-length str))
-                     (or check-only?
-                         (get-real (##fixnum.+ start 1) c str rad e i)))
-                    ((i-end str j)
-                     (or check-only?
-                         (make-rec
-                          (get-zero e)
-                          (get-real (##fixnum.+ start 1) c str rad e i))))
-                    (else
-                     (complex (##fixnum.+ start 1) c str rad e i))))))
-        (let ((i (ureal str rad e start)))
-          (if (##not i)
-            #f
-            (let ((j (if (##fixnum? i) i (##vector-ref i 0))))
-              (cond ((##fixnum.= j (##string-length str))
-                     (or check-only?
-                         (get-real start #\+ str rad e i)))
-                    (else
-                     (complex start #\+ str rad e i)))))))))
+          (let ((i (or (ureal str rad e (##fixnum.+ start 1))
+                       (inf-nan str c (##fixnum.+ start 1) e))))
+            (if (##not i)
+                (if (i-end str (##fixnum.+ start 1))
+                    (or check-only?
+                        (make-rec
+                         (get-zero e)
+                         (get-one c e)))
+                    #f)
+                (let ((j (if (##fixnum? i) i (##vector-ref i 0))))
+                  (cond ((##fixnum.= j (##string-length str))
+                         (or check-only?
+                             (get-real (##fixnum.+ start 1) c str rad e i)))
+                        ((i-end str j)
+                         (or check-only?
+                             (make-rec
+                              (get-zero e)
+                              (get-real (##fixnum.+ start 1) c str rad e i))))
+                        (else
+                         (complex (##fixnum.+ start 1) c str rad e i))))))
+          (let ((i (ureal str rad e start)))
+            (if (##not i)
+                #f
+                (let ((j (if (##fixnum? i) i (##vector-ref i 0))))
+                  (cond ((##fixnum.= j (##string-length str))
+                         (or check-only?
+                             (get-real start #\+ str rad e i)))
+                        (else
+                         (complex start #\+ str rad e i)))))))))
 
   (define (radix-prefix c)
     (cond ((or (##char=? c #\b) (##char=? c #\B))  2)
@@ -3795,26 +3801,26 @@
 
   (cond ((##fixnum.< 2 (##string-length str)) ;; >= 3 chars
          (if (##char=? (##string-ref str 0) #\#)
-           (let ((rad1 (radix-prefix (##string-ref str 1))))
-             (if rad1
-               (if (and (##fixnum.< 4 (##string-length str)) ;; >= 5 chars
-                        (##char=? (##string-ref str 2) #\#))
-                 (let ((e1 (exactness-prefix (##string-ref str 3))))
-                   (if e1
-                     (after-prefix 4 str rad1 e1)
-                     #f))
-                 (after-prefix 2 str rad1 #f))
-               (let ((e2 (exactness-prefix (##string-ref str 1))))
-                 (if e2
+             (let ((rad1 (radix-prefix (##string-ref str 1))))
+               (if rad1
                    (if (and (##fixnum.< 4 (##string-length str)) ;; >= 5 chars
                             (##char=? (##string-ref str 2) #\#))
-                     (let ((rad2 (radix-prefix (##string-ref str 3))))
-                       (if rad2
-                         (after-prefix 4 str rad2 e2)
-                         #f))
-                     (after-prefix 2 str rad e2))
-                   #f))))
-           (after-prefix 0 str rad #f)))
+                       (let ((e1 (exactness-prefix (##string-ref str 3))))
+                         (if e1
+                             (after-prefix 4 str rad1 e1)
+                             #f))
+                       (after-prefix 2 str rad1 #f))
+                   (let ((e2 (exactness-prefix (##string-ref str 1))))
+                     (if e2
+                         (if (and (##fixnum.< 4 (##string-length str)) ;; >= 5 chars
+                                  (##char=? (##string-ref str 2) #\#))
+                             (let ((rad2 (radix-prefix (##string-ref str 3))))
+                               (if rad2
+                                   (after-prefix 4 str rad2 e2)
+                                   #f))
+                             (after-prefix 2 str rad e2))
+                         #f))))
+             (after-prefix 0 str rad #f)))
         ((##fixnum.< 0 (##string-length str)) ;; >= 1 char
          (after-prefix 0 str rad #f))
         (else
@@ -3825,13 +3831,13 @@
     (macro-check-string str 1 (string->number str r)
       (let ((rad (if (##eq? r (macro-absent-obj)) 10 r)))
         (if (macro-exact-int? rad)
-          (if (or (##eq? rad 2)
-                  (##eq? rad 8)
-                  (##eq? rad 10)
-                  (##eq? rad 16))
-            (##string->number str rad #f)
-            (##raise-range-exception 2 string->number str r))
-          (##fail-check-exact-integer 2 string->number str r))))))
+            (if (or (##eq? rad 2)
+                    (##eq? rad 8)
+                    (##eq? rad 10)
+                    (##eq? rad 16))
+                (##string->number str rad #f)
+                (##raise-range-exception 2 string->number str r))
+            (##fail-check-exact-integer 2 string->number str r))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3844,22 +3850,22 @@
 
   (define (bignum-bitwise-ior x x-length y y-length)
     (if (##bignum.negative? x)
-      (let ((result (##bignum.make x-length x #f)))
-        (##declare (not interrupts-enabled))
-        (let loop1 ((i 0))
-          (if (##fixnum.< i x-length)
-            (begin
-              (##bignum.adigit-bitwise-ior! result i y i)
-              (loop1 (##fixnum.+ i 1)))
-            (##bignum.normalize! result))))
-      (let ((result (##bignum.make y-length y #f)))
-        (##declare (not interrupts-enabled))
-        (let loop2 ((i 0))
-          (if (##fixnum.< i x-length)
-            (begin
-              (##bignum.adigit-bitwise-ior! result i x i)
-              (loop2 (##fixnum.+ i 1)))
-            (##bignum.normalize! result))))))
+        (let ((result (##bignum.make x-length x #f)))
+          (##declare (not interrupts-enabled))
+          (let loop1 ((i 0))
+            (if (##fixnum.< i x-length)
+                (begin
+                  (##bignum.adigit-bitwise-ior! result i y i)
+                  (loop1 (##fixnum.+ i 1)))
+                (##bignum.normalize! result))))
+        (let ((result (##bignum.make y-length y #f)))
+          (##declare (not interrupts-enabled))
+          (let loop2 ((i 0))
+            (if (##fixnum.< i x-length)
+                (begin
+                  (##bignum.adigit-bitwise-ior! result i x i)
+                  (loop2 (##fixnum.+ i 1)))
+                (##bignum.normalize! result))))))
 
   (cond ((##fixnum? x)
          (cond ((##fixnum? y)
@@ -3880,8 +3886,8 @@
                  ((##bignum? y)
                   (let ((y-length (##bignum.adigit-length y)))
                     (if (##fixnum.< x-length y-length)
-                      (bignum-bitwise-ior x x-length y y-length)
-                      (bignum-bitwise-ior y y-length x x-length))))
+                        (bignum-bitwise-ior x x-length y y-length)
+                        (bignum-bitwise-ior y y-length x x-length))))
                  (else
                   (type-error-on-y)))))
         (else
@@ -3905,17 +3911,17 @@
       (##declare (not interrupts-enabled))
       (let loop1 ((i 0))
         (if (##fixnum.< i x-length)
-          (begin
-            (##bignum.adigit-bitwise-xor! result i x i)
-            (loop1 (##fixnum.+ i 1)))
-          (if (##bignum.negative? x)
-            (let loop2 ((i i))
-              (if (##fixnum.< i y-length)
-                (begin
-                  (##bignum.adigit-bitwise-not! result i)
-                  (loop2 (##fixnum.+ i 1)))
-                (##bignum.normalize! result)))
-            (##bignum.normalize! result))))))
+            (begin
+              (##bignum.adigit-bitwise-xor! result i x i)
+              (loop1 (##fixnum.+ i 1)))
+            (if (##bignum.negative? x)
+                (let loop2 ((i i))
+                  (if (##fixnum.< i y-length)
+                      (begin
+                        (##bignum.adigit-bitwise-not! result i)
+                        (loop2 (##fixnum.+ i 1)))
+                      (##bignum.normalize! result)))
+                (##bignum.normalize! result))))))
 
   (cond ((##fixnum? x)
          (cond ((##fixnum? y)
@@ -3936,8 +3942,8 @@
                  ((##bignum? y)
                   (let ((y-length (##bignum.adigit-length y)))
                     (if (##fixnum.< x-length y-length)
-                      (bignum-bitwise-xor x x-length y y-length)
-                      (bignum-bitwise-xor y y-length x x-length))))
+                        (bignum-bitwise-xor x x-length y y-length)
+                        (bignum-bitwise-xor y y-length x x-length))))
                  (else
                   (type-error-on-y)))))
         (else
@@ -3958,22 +3964,22 @@
 
   (define (bignum-bitwise-and x x-length y y-length)
     (if (##bignum.negative? x)
-      (let ((result (##bignum.make y-length y #f)))
-        (##declare (not interrupts-enabled))
-        (let loop1 ((i 0))
-          (if (##fixnum.< i x-length)
-            (begin
-              (##bignum.adigit-bitwise-and! result i x i)
-              (loop1 (##fixnum.+ i 1)))
-            (##bignum.normalize! result))))
-      (let ((result (##bignum.make x-length x #f)))
-        (##declare (not interrupts-enabled))
-        (let loop2 ((i 0))
-          (if (##fixnum.< i x-length)
-            (begin
-              (##bignum.adigit-bitwise-and! result i y i)
-              (loop2 (##fixnum.+ i 1)))
-            (##bignum.normalize! result))))))
+        (let ((result (##bignum.make y-length y #f)))
+          (##declare (not interrupts-enabled))
+          (let loop1 ((i 0))
+            (if (##fixnum.< i x-length)
+                (begin
+                  (##bignum.adigit-bitwise-and! result i x i)
+                  (loop1 (##fixnum.+ i 1)))
+                (##bignum.normalize! result))))
+        (let ((result (##bignum.make x-length x #f)))
+          (##declare (not interrupts-enabled))
+          (let loop2 ((i 0))
+            (if (##fixnum.< i x-length)
+                (begin
+                  (##bignum.adigit-bitwise-and! result i y i)
+                  (loop2 (##fixnum.+ i 1)))
+                (##bignum.normalize! result))))))
 
   (cond ((##fixnum? x)
          (cond ((##fixnum? y)
@@ -3994,8 +4000,8 @@
                  ((##bignum? y)
                   (let ((y-length (##bignum.adigit-length y)))
                     (if (##fixnum.< x-length y-length)
-                      (bignum-bitwise-and x x-length y y-length)
-                      (bignum-bitwise-and y y-length x x-length))))
+                        (bignum-bitwise-and x x-length y y-length)
+                        (bignum-bitwise-and y y-length x x-length))))
                  (else
                   (type-error-on-y)))))
         (else
@@ -4052,20 +4058,20 @@
                                0)))
                       (else ;; left shift
                        (if (##fixnum.< y ##fixnum-width)
-                         (let ((result (##fixnum.arithmetic-shift-left x y)))
-                           (if (##fixnum.=
-                                (##fixnum.arithmetic-shift-right result y)
-                                x)
-                             result
-                             (general-fixnum-fixnum-case)))
-                         (general-fixnum-fixnum-case)))))
+                           (let ((result (##fixnum.arithmetic-shift-left x y)))
+                             (if (##fixnum.=
+                                  (##fixnum.arithmetic-shift-right result y)
+                                  x)
+                                 result
+                                 (general-fixnum-fixnum-case)))
+                           (general-fixnum-fixnum-case)))))
                ((##bignum? y)
                 (cond ((##fixnum.zero? x)
                        0)
                       ((##bignum.negative? y)
                        (if (##fixnum.negative? x)
-                         -1
-                         0))
+                           -1
+                           0))
                       (else
                        (overflow))))
                (else
@@ -4078,8 +4084,8 @@
                ((##bignum? y)
                 (cond ((##bignum.negative? y)
                        (if (##bignum.negative? x)
-                         -1
-                         0))
+                           -1
+                           0))
                       (else
                        (overflow))))
                (else
@@ -4103,11 +4109,11 @@
            (let loop ((i (##fixnum.- x-length 1))
                       (n 0))
              (if (##fixnum.< i 0)
-               (if (##bignum.negative? x)
-                 (##fixnum.- (##fixnum.* x-length ##bignum.mdigit-width) n)
-                 n)
-               (loop (##fixnum.- i 1)
-                     (##fixnum.+ n (##fxbit-count (##bignum.mdigit-ref x i))))))))
+                 (if (##bignum.negative? x)
+                     (##fixnum.- (##fixnum.* x-length ##bignum.mdigit-width) n)
+                     n)
+                 (loop (##fixnum.- i 1)
+                       (##fixnum.+ n (##fxbit-count (##bignum.mdigit-ref x i))))))))
         (else
          (type-error))))
 
@@ -4125,20 +4131,20 @@
         ((##bignum? x)
          (let ((x-length (##bignum.mdigit-length x)))
            (if (##bignum.negative? x)
-             (let loop1 ((i (##fixnum.- x-length 1)))
-               (let ((mdigit (##bignum.mdigit-ref x i)))
-                 (if (##fixnum.= mdigit ##bignum.mdigit-base-minus-1)
-                   (loop1 (##fixnum.- i 1))
-                   (##fixnum.+
-                    (##fxlength (##fixnum.- ##bignum.mdigit-base-minus-1 mdigit))
-                    (##fixnum.* i ##bignum.mdigit-width)))))
-             (let loop2 ((i (##fixnum.- x-length 1)))
-               (let ((mdigit (##bignum.mdigit-ref x i)))
-                 (if (##fixnum.= mdigit 0)
-                   (loop2 (##fixnum.- i 1))
-                   (##fixnum.+
-                    (##fxlength mdigit)
-                    (##fixnum.* i ##bignum.mdigit-width))))))))
+               (let loop1 ((i (##fixnum.- x-length 1)))
+                 (let ((mdigit (##bignum.mdigit-ref x i)))
+                   (if (##fixnum.= mdigit ##bignum.mdigit-base-minus-1)
+                       (loop1 (##fixnum.- i 1))
+                       (##fixnum.+
+                        (##fxlength (##fixnum.- ##bignum.mdigit-base-minus-1 mdigit))
+                        (##fixnum.* i ##bignum.mdigit-width)))))
+               (let loop2 ((i (##fixnum.- x-length 1)))
+                 (let ((mdigit (##bignum.mdigit-ref x i)))
+                   (if (##fixnum.= mdigit 0)
+                       (loop2 (##fixnum.- i 1))
+                       (##fixnum.+
+                        (##fxlength mdigit)
+                        (##fixnum.* i ##bignum.mdigit-width))))))))
         (else
          (type-error))))
 
@@ -4175,31 +4181,31 @@
   (cond ((##fixnum? x)
          (cond ((##fixnum? y)
                 (if (##fixnum.negative? x)
-                  (range-error)
-                  (if (##fixnum.< x ##fixnum-width)
-                    (##fixnum.odd? (##fixnum.arithmetic-shift-right y x))
-                    (##fixnum.negative? y))))
+                    (range-error)
+                    (if (##fixnum.< x ##fixnum-width)
+                        (##fixnum.odd? (##fixnum.arithmetic-shift-right y x))
+                        (##fixnum.negative? y))))
                ((##bignum? y)
                 (if (##fixnum.negative? x)
-                  (range-error)
-                  (let ((i (##fixnum.quotient x ##bignum.mdigit-width)))
-                    (if (##fixnum.< i (##bignum.mdigit-length y))
-                      (##fixnum.odd?
-                       (##fixnum.arithmetic-shift-right
-                        (##bignum.mdigit-ref y i)
-                        (##fixnum.modulo x ##bignum.mdigit-width)))
-                      (##bignum.negative? y)))))
+                    (range-error)
+                    (let ((i (##fixnum.quotient x ##bignum.mdigit-width)))
+                      (if (##fixnum.< i (##bignum.mdigit-length y))
+                          (##fixnum.odd?
+                           (##fixnum.arithmetic-shift-right
+                            (##bignum.mdigit-ref y i)
+                            (##fixnum.modulo x ##bignum.mdigit-width)))
+                          (##bignum.negative? y)))))
                (else
                 (type-error-on-y))))
         ((##bignum? x)
          (cond ((##fixnum? y)
                 (if (##bignum.negative? x)
-                  (range-error)
-                  (##fixnum.negative? y)))
+                    (range-error)
+                    (##fixnum.negative? y)))
                ((##bignum? y)
                 (if (##bignum.negative? x)
-                  (range-error)
-                  (##bignum.negative? y)))
+                    (range-error)
+                    (##bignum.negative? y)))
                (else
                 (type-error-on-y))))
         (else
@@ -4245,10 +4251,10 @@
            (let loop ((i 0))
              (let ((mdigit (##bignum.mdigit-ref x i)))
                (if (##fixnum.= mdigit 0)
-                 (loop (##fixnum.+ i 1))
-                 (##fixnum.+
-                  (##fxfirst-bit-set mdigit)
-                  (##fixnum.* i ##bignum.mdigit-width)))))))
+                   (loop (##fixnum.+ i 1))
+                   (##fixnum.+
+                    (##fxfirst-bit-set mdigit)
+                    (##fixnum.* i ##bignum.mdigit-width)))))))
         (else
          (type-error))))
 
@@ -4374,14 +4380,14 @@
 (define-prim (extract-bit-field size position n)
   (macro-force-vars (size position n)
     (cond ((##not (macro-exact-int? size))
-         (##fail-check-exact-integer 1 extract-bit-field size position n))
-        ((##not (macro-exact-int? position))
-         (##fail-check-exact-integer 2 extract-bit-field size position n))
-        ((##not (macro-exact-int? n))
-         (##fail-check-exact-integer 3 extract-bit-field size position n))
+           (##fail-check-exact-integer 1 extract-bit-field size position n))
+          ((##not (macro-exact-int? position))
+           (##fail-check-exact-integer 2 extract-bit-field size position n))
+          ((##not (macro-exact-int? n))
+           (##fail-check-exact-integer 3 extract-bit-field size position n))
         ;;;;;;;;;;;;;;;;;;;;; should check that size and position are nonnegative
-        (else
-         (##extract-bit-field size position n)))))
+          (else
+           (##extract-bit-field size position n)))))
 
 (define-prim (##test-bit-field? size position n)
   (##not (##eq? (##extract-bit-field size position n)
@@ -4390,14 +4396,14 @@
 (define-prim (test-bit-field? size position n)
   (macro-force-vars (size position n)
     (cond ((##not (macro-exact-int? size))
-         (##fail-check-exact-integer 1 test-bit-field? size position n))
-        ((##not (macro-exact-int? position))
-         (##fail-check-exact-integer 2 test-bit-field? size position n))
-        ((##not (macro-exact-int? n))
-         (##fail-check-exact-integer 3 test-bit-field? size position n))
+           (##fail-check-exact-integer 1 test-bit-field? size position n))
+          ((##not (macro-exact-int? position))
+           (##fail-check-exact-integer 2 test-bit-field? size position n))
+          ((##not (macro-exact-int? n))
+           (##fail-check-exact-integer 3 test-bit-field? size position n))
         ;;;;;;;;;;;;;;;;;;;;; should check that size and position are nonnegative
-        (else
-         (##test-bit-field? size position n)))))
+          (else
+           (##test-bit-field? size position n)))))
 
 (define-prim (##clear-bit-field size position n)
   (cond ((##not (macro-exact-int? size))
@@ -4467,10 +4473,10 @@
              `(define-prim ,form
                 (macro-force-vars (,name-param1)
                   (macro-check-fixnum
-                   ,name-param1
-                   1
-                   ,form
-                   ,body)))))
+                    ,name-param1
+                    1
+                    ,form
+                    ,body)))))
           ((= 2 (length (cdr form)))
            (let* ((name-fn (car form))
                   (name-param1 (cadr form))
@@ -4478,14 +4484,14 @@
              `(define-prim ,form
                 (macro-force-vars (,name-param1 ,name-param2)
                   (macro-check-fixnum
-                   ,name-param1
-                   1
-                   ,form
-                   (macro-check-fixnum
-                    ,name-param2
-                    2
+                    ,name-param1
+                    1
                     ,form
-                    ,body))))))
+                    (macro-check-fixnum
+                      ,name-param2
+                      2
+                      ,form
+                      ,body))))))
           (else
            (error "define-prim-fixnum supports only 1 or 2 parameter procedures")))))
 
@@ -4716,39 +4722,39 @@
 
 (define-prim (##fx-? x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
-    (##fx-? x)
-    (##fx-? x y)))
+      (##fx-? x)
+      (##fx-? x y)))
 
 (define-prim (##fxwrapquotient x y))
 
 (define-prim-fixnum (fxwrapquotient x y)
   (if (##eq? y 0)
-    (##raise-divide-by-zero-exception fxwrapquotient x y)
-    (##fxwrapquotient x y)))
+      (##raise-divide-by-zero-exception fxwrapquotient x y)
+      (##fxwrapquotient x y)))
 
 (define-prim (##fxquotient x y))
 
 (define-prim-fixnum (fxquotient x y)
   (if (##eq? y 0)
-    (##raise-divide-by-zero-exception fxquotient x y)
-    (if (##eq? y -1)
-      (or (##fx-? x)
-          (##raise-fixnum-overflow-exception fxquotient x y))
-      (##fxquotient x y))))
+      (##raise-divide-by-zero-exception fxquotient x y)
+      (if (##eq? y -1)
+          (or (##fx-? x)
+              (##raise-fixnum-overflow-exception fxquotient x y))
+          (##fxquotient x y))))
 
 (define-prim (##fxremainder x y))
 
 (define-prim-fixnum (fxremainder x y)
   (if (##eq? y 0)
-    (##raise-divide-by-zero-exception fxremainder x y)
-    (##fxremainder x y)))
+      (##raise-divide-by-zero-exception fxremainder x y)
+      (##fxremainder x y)))
 
 (define-prim (##fxmodulo x y))
 
 (define-prim-fixnum (fxmodulo x y)
   (if (##eq? y 0)
-    (##raise-divide-by-zero-exception fxmodulo x y)
-    (##fxmodulo x y)))
+      (##raise-divide-by-zero-exception fxmodulo x y)
+      (##fxmodulo x y)))
 
 (define-prim (##fxnot x)
   (##fx- -1 x))
@@ -4803,80 +4809,80 @@
 (define-prim (fxif x y z)
   (macro-force-vars (x y z)
     (macro-check-fixnum
-     x
-     1
-     (fxif x y z)
-     (macro-check-fixnum
-      y
-      2
+      x
+      1
       (fxif x y z)
       (macro-check-fixnum
-       z
-       3
-       (fxif x y z)
-       (##fxif x y z))))))
+        y
+        2
+        (fxif x y z)
+        (macro-check-fixnum
+          z
+          3
+          (fxif x y z)
+          (##fxif x y z))))))
 
 (define-prim (##fxbit-count x))
 
 (define-prim (fxbit-count x)
   (macro-force-vars (x)
     (macro-check-fixnum
-     x
-     1
-     (fxbit-count x)
-     (##fxbit-count x))))
+      x
+      1
+      (fxbit-count x)
+      (##fxbit-count x))))
 
 (define-prim (##fxlength x))
 
 (define-prim (fxlength x)
   (macro-force-vars (x)
     (macro-check-fixnum
-     x
-     1
-     (fxlength x)
-     (##fxlength x))))
+      x
+      1
+      (fxlength x)
+      (##fxlength x))))
 
 (define-prim (##fxfirst-bit-set x))
 
 (define-prim (fxfirst-bit-set x)
   (macro-force-vars (x)
     (macro-check-fixnum
-     x
-     1
-     (fxfirst-bit-set x)
-     (##fxfirst-bit-set x))))
+      x
+      1
+      (fxfirst-bit-set x)
+      (##fxfirst-bit-set x))))
 
 (define-prim (##fxbit-set? x y))
 
 (define-prim (fxbit-set? x y)
   (macro-force-vars (x y)
     (macro-check-fixnum
-     x
-     1
-     (fxbit-set? x y)
-     (macro-check-fixnum-range-incl
-      y
-      2
-      0
-      ##fixnum-width
+      x
+      1
       (fxbit-set? x y)
-      (##fxbit-set? x y)))))
+      (macro-check-fixnum-range-incl
+        y
+        2
+        0
+        ##fixnum-width
+        (fxbit-set? x y)
+        (##fxbit-set? x y)))))
 
 (define-prim (##fxwraparithmetic-shift x y))
 
 (define-prim (fxwraparithmetic-shift x y)
   (macro-force-vars (x y)
     (macro-check-fixnum
-     x
-     1
-     (fxwraparithmetic-shift x y)
-     (macro-check-fixnum-range-incl
-      y
-      2
-      ##fixnum-width-neg
-      ##fixnum-width
+      x
+      1
       (fxwraparithmetic-shift x y)
-      (##fxwraparithmetic-shift x y)))))
+      (macro-check-fixnum-range-incl
+        y
+        2
+        ##fixnum-width-neg
+        ##fixnum-width
+        (fxwraparithmetic-shift x y)
+        (##fxwraparithmetic-shift x y)))))
 
 (define-prim (##fxarithmetic-shift x y))
 
@@ -4891,24 +4897,24 @@
 (define-prim (fxwraparithmetic-shift-left x y)
   (macro-force-vars (x y)
     (macro-check-fixnum
-     x
-     1
-     (fxwraparithmetic-shift-left x y)
-     (macro-check-fixnum-range-incl
-      y
-      2
-      0
-      ##fixnum-width
+      x
+      1
       (fxwraparithmetic-shift-left x y)
-      (##fxwraparithmetic-shift-left x y)))))
+      (macro-check-fixnum-range-incl
+        y
+        2
+        0
+        ##fixnum-width
+        (fxwraparithmetic-shift-left x y)
+        (##fxwraparithmetic-shift-left x y)))))
 
 (define-prim (##fxarithmetic-shift-left x y))
 
 (define-prim-fixnum (fxarithmetic-shift-left x y)
   (or (##fxarithmetic-shift-left? x y)
       (if (##fx< y 0)
-        (##raise-range-exception 2 fxarithmetic-shift-left x y)
-        (##raise-fixnum-overflow-exception fxarithmetic-shift-left x y))))
+          (##raise-range-exception 2 fxarithmetic-shift-left x y)
+          (##raise-fixnum-overflow-exception fxarithmetic-shift-left x y))))
 
 (define-prim (##fxarithmetic-shift-left? x y))
 
@@ -5046,8 +5052,8 @@
 
 (define-prim (##fixnum.-? x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
-    (##fixnum.-? x)
-    (##fixnum.-? x y)))
+      (##fixnum.-? x)
+      (##fixnum.-? x y)))
 
 (define-prim (##fixnum.wrapquotient x y))
 
@@ -5186,8 +5192,8 @@
 
 (define ##bignum.2*min-fixnum
   (if (##fixnum? -1073741824)
-    -4611686018427387904 ;; (- (expt 2 62))
-    -1073741824))        ;; (- (expt 2 30))
+      -4611686018427387904 ;; (- (expt 2 62))
+      -1073741824))        ;; (- (expt 2 30))
 
 ;;; The following global variables control when each of the three
 ;;; multiplication algorithms are used.
@@ -5200,8 +5206,8 @@
 
 (define ##bignum.fft-mul-max-width
   (if (##fixnum? -1073741824) ;; to avoid creating f64vectors that are too long
-    536870912
-    4194304))
+      536870912
+      4194304))
 (set! ##bignum.fft-mul-max-width ##bignum.fft-mul-max-width)
 
 
@@ -5351,10 +5357,10 @@ if (!___FIXNUMP(result))
 ___RESULT = result;
 " k x complement?)))
     (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##bignum.make k x complement?))
-      v)))
+        (begin
+          (##raise-heap-overflow-exception)
+          (##bignum.make k x complement?))
+        v)))
 
 ;;; Bignum comparison.
 
@@ -5384,20 +5390,20 @@ ___RESULT = result;
                   (loop (##fixnum.- i 1))))))
 
   (if (##bignum.negative? x)
-    (if (##bignum.negative? y)
-      (let ((x-length (##bignum.adigit-length x))
-            (y-length (##bignum.adigit-length y)))
-        (or (##fixnum.< y-length x-length)
-            (and (##fixnum.= x-length y-length)
-                 (loop (##fixnum.- x-length 1)))))
-      #t)
-    (if (##bignum.negative? y)
-      #f
-      (let ((x-length (##bignum.adigit-length x))
-            (y-length (##bignum.adigit-length y)))
-        (or (##fixnum.< x-length y-length)
-            (and (##fixnum.= x-length y-length)
-                 (loop (##fixnum.- x-length 1))))))))
+      (if (##bignum.negative? y)
+          (let ((x-length (##bignum.adigit-length x))
+                (y-length (##bignum.adigit-length y)))
+            (or (##fixnum.< y-length x-length)
+                (and (##fixnum.= x-length y-length)
+                     (loop (##fixnum.- x-length 1)))))
+          #t)
+      (if (##bignum.negative? y)
+          #f
+          (let ((x-length (##bignum.adigit-length x))
+                (y-length (##bignum.adigit-length y)))
+            (or (##fixnum.< x-length y-length)
+                (and (##fixnum.= x-length y-length)
+                     (loop (##fixnum.- x-length 1))))))))
 
 ;;; Bignum addition and subtraction.
 
@@ -5410,8 +5416,8 @@ ___RESULT = result;
             (##fixnum.+ y-length
                         (if (##eq? (##bignum.negative? x)
                                    (##bignum.negative? y))
-                          1
-                          0)))
+                            1
+                            0)))
            (result
             (##bignum.make result-length y #f)))
 
@@ -5420,20 +5426,20 @@ ___RESULT = result;
       (let loop ((i 0)
                  (carry 0))
         (if (##fixnum.< i x-length)
-          (loop (##fixnum.+ i 1)
-                (##bignum.adigit-add! result i x i carry))
-          (##bignum.propagate-carry-and-normalize!
-           result
-           result-length
-           x-length
-           (##bignum.negative? x)
-           (##fixnum.zero? carry))))))
+            (loop (##fixnum.+ i 1)
+                  (##bignum.adigit-add! result i x i carry))
+            (##bignum.propagate-carry-and-normalize!
+             result
+             result-length
+             x-length
+             (##bignum.negative? x)
+             (##fixnum.zero? carry))))))
 
   (let ((x-length (##bignum.adigit-length x))
         (y-length (##bignum.adigit-length y)))
     (if (##fixnum.< x-length y-length)
-      (add x x-length y y-length)
-      (add y y-length x x-length))))
+        (add x x-length y y-length)
+        (add y y-length x x-length))))
 
 (define-prim (##bignum.- x y)
 
@@ -5443,51 +5449,51 @@ ___RESULT = result;
         (y-length (##bignum.adigit-length y)))
     (if (##fixnum.< x-length y-length)
 
-      (let* ((result-length
-              (##fixnum.+ y-length
-                          (if (##eq? (##bignum.negative? x)
-                                     (##bignum.negative? y))
-                            0
-                            1)))
-             (result
-              (##bignum.make result-length y #t)))
+        (let* ((result-length
+                (##fixnum.+ y-length
+                            (if (##eq? (##bignum.negative? x)
+                                       (##bignum.negative? y))
+                                0
+                                1)))
+               (result
+                (##bignum.make result-length y #t)))
 
-        (##declare (not interrupts-enabled))
+          (##declare (not interrupts-enabled))
 
-        (let loop1 ((i 0)
-                    (carry 1))
-          (if (##fixnum.< i x-length)
-            (loop1 (##fixnum.+ i 1)
-                   (##bignum.adigit-add! result i x i carry))
-            (##bignum.propagate-carry-and-normalize!
-             result
-             result-length
-             x-length
-             (##bignum.negative? x)
-             (##fixnum.zero? carry)))))
+          (let loop1 ((i 0)
+                      (carry 1))
+            (if (##fixnum.< i x-length)
+                (loop1 (##fixnum.+ i 1)
+                       (##bignum.adigit-add! result i x i carry))
+                (##bignum.propagate-carry-and-normalize!
+                 result
+                 result-length
+                 x-length
+                 (##bignum.negative? x)
+                 (##fixnum.zero? carry)))))
 
-      (let* ((result-length
-              (##fixnum.+ x-length
-                          (if (##eq? (##bignum.negative? x)
-                                     (##bignum.negative? y))
-                            0
-                            1)))
-             (result
-              (##bignum.make result-length x #f)))
+        (let* ((result-length
+                (##fixnum.+ x-length
+                            (if (##eq? (##bignum.negative? x)
+                                       (##bignum.negative? y))
+                                0
+                                1)))
+               (result
+                (##bignum.make result-length x #f)))
 
-        (##declare (not interrupts-enabled))
+          (##declare (not interrupts-enabled))
 
-        (let loop2 ((i 0)
-                    (borrow 0))
-          (if (##fixnum.< i y-length)
-            (loop2 (##fixnum.+ i 1)
-                   (##bignum.adigit-sub! result i y i borrow))
-            (##bignum.propagate-carry-and-normalize!
-             result
-             result-length
-             y-length
-             (##not (##bignum.negative? y))
-             (##not (##fixnum.zero? borrow)))))))))
+          (let loop2 ((i 0)
+                      (borrow 0))
+            (if (##fixnum.< i y-length)
+                (loop2 (##fixnum.+ i 1)
+                       (##bignum.adigit-sub! result i y i borrow))
+                (##bignum.propagate-carry-and-normalize!
+                 result
+                 result-length
+                 y-length
+                 (##not (##bignum.negative? y))
+                 (##not (##fixnum.zero? borrow)))))))))
 
 (define-prim (##bignum.propagate-carry-and-normalize!
               result
@@ -5499,25 +5505,25 @@ ___RESULT = result;
   (##declare (not interrupts-enabled))
 
   (if (##eq? borrow? propagate?)
-    (if borrow?
+      (if borrow?
 
-      (let loop1 ((i i)
-                  (borrow 1))
-        (if (and (##not (##fixnum.zero? borrow))
-                 (##fixnum.< i result-length))
-          (loop1 (##fixnum.+ i 1)
-                 (##bignum.adigit-dec! result i))
-          (##bignum.normalize! result)))
+          (let loop1 ((i i)
+                      (borrow 1))
+            (if (and (##not (##fixnum.zero? borrow))
+                     (##fixnum.< i result-length))
+                (loop1 (##fixnum.+ i 1)
+                       (##bignum.adigit-dec! result i))
+                (##bignum.normalize! result)))
 
-      (let loop2 ((i i)
-                  (carry 1))
-        (if (and (##not (##fixnum.zero? carry))
-                 (##fixnum.< i result-length))
-          (loop2 (##fixnum.+ i 1)
-                 (##bignum.adigit-inc! result i))
-          (##bignum.normalize! result))))
+          (let loop2 ((i i)
+                      (carry 1))
+            (if (and (##not (##fixnum.zero? carry))
+                     (##fixnum.< i result-length))
+                (loop2 (##fixnum.+ i 1)
+                       (##bignum.adigit-inc! result i))
+                (##bignum.normalize! result))))
 
-    (##bignum.normalize! result)))
+      (##bignum.normalize! result)))
 
 (define-prim (##bignum.normalize! result)
 
@@ -8702,10 +8708,10 @@ ___RESULT = result;
 (define-prim (##bignum.arithmetic-shift x shift)
   (let* ((digit-shift
           (if (##fixnum.< shift 0)
-            (##fixnum.- (##fixnum.quotient (##fixnum.+ shift 1)
-                                           ##bignum.adigit-width)
-                        1)
-            (##fixnum.quotient shift ##bignum.adigit-width)))
+              (##fixnum.- (##fixnum.quotient (##fixnum.+ shift 1)
+                                             ##bignum.adigit-width)
+                          1)
+              (##fixnum.quotient shift ##bignum.adigit-width)))
          (bit-shift
           (##fixnum.modulo shift ##bignum.adigit-width))
          (x-length
@@ -8715,55 +8721,55 @@ ___RESULT = result;
                       (if (##fixnum.zero? bit-shift) 0 1))))
     (if (##fixnum.< 0 result-length)
 
-      (let ((result (##bignum.make result-length #f #f)))
+        (let ((result (##bignum.make result-length #f #f)))
 
-        (##declare (not interrupts-enabled))
+          (##declare (not interrupts-enabled))
 
-        (if (##fixnum.zero? bit-shift)
-          (let ((smallest-i (##fixnum.max 0 digit-shift)))
-            (let loop1 ((i (##fixnum.- result-length 1))
-                        (j (##fixnum.- x-length 1)))
-              (if (##fixnum.< i smallest-i)
-                (##bignum.normalize! result)
-                (begin
-                  (##bignum.adigit-copy! result i x j)
-                  (loop1 (##fixnum.- i 1)
-                         (##fixnum.- j 1))))))
-          (let ((left-fill (if (##bignum.negative? x)
-                             ##bignum.adigit-ones
-                             ##bignum.adigit-zeros))
-                (i (##fixnum.- result-length 1))
-                (j (##fixnum.- x-length 1))
-                (divider bit-shift)
-                (smallest-i (##fixnum.max 0 (##fixnum.+ digit-shift 1))))
-            (##bignum.adigit-cat! result i left-fill 0 x j divider)
-            (let loop2 ((i (##fixnum.- i 1))
-                        (j (##fixnum.- j 1)))
-              (if (##fixnum.< i smallest-i)
-                (begin
-                  (if (##not (##fixnum.< i 0))
-                    (##bignum.adigit-cat! result
-                                          i
-                                          x
-                                          (##fixnum.+ j 1)
-                                          ##bignum.adigit-zeros
-                                          0
-                                          divider))
-                  (##bignum.normalize! result))
-                (begin
-                  (##bignum.adigit-cat! result
-                                        i
-                                        x
-                                        (##fixnum.+ j 1)
-                                        x
-                                        j
-                                        divider)
-                  (loop2 (##fixnum.- i 1)
-                         (##fixnum.- j 1))))))))
+          (if (##fixnum.zero? bit-shift)
+              (let ((smallest-i (##fixnum.max 0 digit-shift)))
+                (let loop1 ((i (##fixnum.- result-length 1))
+                            (j (##fixnum.- x-length 1)))
+                  (if (##fixnum.< i smallest-i)
+                      (##bignum.normalize! result)
+                      (begin
+                        (##bignum.adigit-copy! result i x j)
+                        (loop1 (##fixnum.- i 1)
+                               (##fixnum.- j 1))))))
+              (let ((left-fill (if (##bignum.negative? x)
+                                   ##bignum.adigit-ones
+                                   ##bignum.adigit-zeros))
+                    (i (##fixnum.- result-length 1))
+                    (j (##fixnum.- x-length 1))
+                    (divider bit-shift)
+                    (smallest-i (##fixnum.max 0 (##fixnum.+ digit-shift 1))))
+                (##bignum.adigit-cat! result i left-fill 0 x j divider)
+                (let loop2 ((i (##fixnum.- i 1))
+                            (j (##fixnum.- j 1)))
+                  (if (##fixnum.< i smallest-i)
+                      (begin
+                        (if (##not (##fixnum.< i 0))
+                            (##bignum.adigit-cat! result
+                                                  i
+                                                  x
+                                                  (##fixnum.+ j 1)
+                                                  ##bignum.adigit-zeros
+                                                  0
+                                                  divider))
+                        (##bignum.normalize! result))
+                      (begin
+                        (##bignum.adigit-cat! result
+                                              i
+                                              x
+                                              (##fixnum.+ j 1)
+                                              x
+                                              j
+                                              divider)
+                        (loop2 (##fixnum.- i 1)
+                               (##fixnum.- j 1))))))))
 
-      (if (##bignum.negative? x)
-        -1
-        0))))
+        (if (##bignum.negative? x)
+            -1
+            0))))
 
 ;;; Bignum division.
 
@@ -8851,8 +8857,8 @@ ___RESULT = result;
     (let ((n
            (let loop1 ((i (##fixnum.- (##bignum.mdigit-length v) 1)))
              (if (##fixnum.< 0 (##bignum.mdigit-ref v i))
-               (##fixnum.+ i 1)
-               (loop1 (##fixnum.- i 1))))))
+                 (##fixnum.+ i 1)
+                 (loop1 (##fixnum.- i 1))))))
       (let ((normalizing-bit-shift
              (##fixnum.- ##bignum.mdigit-width
                          (##integer-length
@@ -8873,115 +8879,115 @@ ___RESULT = result;
                    (let loop2 ((i (##fixnum.- (##bignum.mdigit-length u) 1)))
                      (let ((u_i (##bignum.mdigit-ref u i)))
                        (if (##fixnum.< 0 u_i)
-                         (if (##not (##fixnum.< u_i v_n-1))
-                           (##fixnum.- (##fixnum.+ i 1) n)
-                           (##fixnum.- i n))
-                         (loop2 (##fixnum.- i 1)))))))
+                           (if (##not (##fixnum.< u_i v_n-1))
+                               (##fixnum.- (##fixnum.+ i 1) n)
+                               (##fixnum.- i n))
+                           (loop2 (##fixnum.- i 1)))))))
               (let loop3 ((j m))
                 (if (##not (##fixnum.< j 0))
-                  (let ((q-hat
-                         (let ((q-hat
-                                (##bignum.mdigit-quotient
-                                 u
-                                 (##fixnum.+ j n)
-                                 v_n-1))
-                               (u_n+j-2
-                                (##bignum.mdigit-ref
-                                 u
-                                 (##fixnum.+ (##fixnum.- j 2) n)
-                                 )))
-                           (let ((r-hat
-                                  (##bignum.mdigit-remainder
+                    (let ((q-hat
+                           (let ((q-hat
+                                  (##bignum.mdigit-quotient
                                    u
                                    (##fixnum.+ j n)
-                                   v_n-1
-                                   q-hat)))
-                             (if (or (##fixnum.= q-hat ##bignum.mdigit-base)
-                                     (##bignum.mdigit-test?
-                                      q-hat
-                                      v_n-2
-                                      r-hat
-                                      u_n+j-2))
-                               (let ((q-hat (##fixnum.- q-hat 1))
-                                     (r-hat (##fixnum.+ r-hat v_n-1)))
-                                 (if (and (##fixnum.< r-hat
-                                                      ##bignum.mdigit-base)
-                                          (or (##fixnum.= q-hat
+                                   v_n-1))
+                                 (u_n+j-2
+                                  (##bignum.mdigit-ref
+                                   u
+                                   (##fixnum.+ (##fixnum.- j 2) n)
+                                   )))
+                             (let ((r-hat
+                                    (##bignum.mdigit-remainder
+                                     u
+                                     (##fixnum.+ j n)
+                                     v_n-1
+                                     q-hat)))
+                               (if (or (##fixnum.= q-hat ##bignum.mdigit-base)
+                                       (##bignum.mdigit-test?
+                                        q-hat
+                                        v_n-2
+                                        r-hat
+                                        u_n+j-2))
+                                   (let ((q-hat (##fixnum.- q-hat 1))
+                                         (r-hat (##fixnum.+ r-hat v_n-1)))
+                                     (if (and (##fixnum.< r-hat
                                                           ##bignum.mdigit-base)
-                                              (##bignum.mdigit-test?
-                                               q-hat
-                                               v_n-2
-                                               r-hat
-                                               u_n+j-2)))
-                                   (##fixnum.- q-hat 1)
-                                   q-hat))
-                               q-hat)))))
+                                              (or (##fixnum.= q-hat
+                                                              ##bignum.mdigit-base)
+                                                  (##bignum.mdigit-test?
+                                                   q-hat
+                                                   v_n-2
+                                                   r-hat
+                                                   u_n+j-2)))
+                                         (##fixnum.- q-hat 1)
+                                         q-hat))
+                                   q-hat)))))
 
-                    (##declare (not interrupts-enabled))
+                      (##declare (not interrupts-enabled))
 
-                    (let loop4 ((i j)
-                                (k 0)
-                                (borrow 0))
-                      (if (##fixnum.< k n)
-                        (loop4 (##fixnum.+ i 2)
-                               (##fixnum.+ k 2)
-                               (##bignum.mdigit-div!
-                                u
-                                (##fixnum.+ i 1)
-                                v
-                                (##fixnum.+ k 1)
-                                q-hat
-                                (##bignum.mdigit-div!
-                                 u
-                                 i
-                                 v
-                                 k
-                                 q-hat
-                                 borrow)))
-                        (let ((borrow
-                               (if (##fixnum.< n k)
-                                 borrow
-                                 (##bignum.mdigit-div!
-                                  u
-                                  i
-                                  v
-                                  k
-                                  q-hat
-                                  borrow))))
-                          (if (##fixnum.< borrow 0)
-                            (let loop5 ((i j)
-                                        (l 0)
-                                        (carry 0))
-                              (if (##fixnum.< n l)
-                                (begin
-                                  (##bignum.mdigit-set!
-                                   q
-                                   j
-                                   (##fixnum.- q-hat 1))
-                                  (loop3 (##fixnum.- j 1)))
-                                (loop5 (##fixnum.+ i 1)
-                                       (##fixnum.+ l 1)
-                                       (##bignum.mdigit-mul!
+                      (let loop4 ((i j)
+                                  (k 0)
+                                  (borrow 0))
+                        (if (##fixnum.< k n)
+                            (loop4 (##fixnum.+ i 2)
+                                   (##fixnum.+ k 2)
+                                   (##bignum.mdigit-div!
+                                    u
+                                    (##fixnum.+ i 1)
+                                    v
+                                    (##fixnum.+ k 1)
+                                    q-hat
+                                    (##bignum.mdigit-div!
+                                     u
+                                     i
+                                     v
+                                     k
+                                     q-hat
+                                     borrow)))
+                            (let ((borrow
+                                   (if (##fixnum.< n k)
+                                       borrow
+                                       (##bignum.mdigit-div!
                                         u
                                         i
                                         v
-                                        l
-                                        1
-                                        carry))))
-                            (begin
-                              (##bignum.mdigit-set! q j q-hat)
-                              (loop3 (##fixnum.- j 1))))))))
-                  (##cons (##bignum.normalize! q)
-                          (##arithmetic-shift
-                           (##bignum.normalize! u)
-                           (##fixnum.- normalizing-bit-shift)))))))))))
+                                        k
+                                        q-hat
+                                        borrow))))
+                              (if (##fixnum.< borrow 0)
+                                  (let loop5 ((i j)
+                                              (l 0)
+                                              (carry 0))
+                                    (if (##fixnum.< n l)
+                                        (begin
+                                          (##bignum.mdigit-set!
+                                           q
+                                           j
+                                           (##fixnum.- q-hat 1))
+                                          (loop3 (##fixnum.- j 1)))
+                                        (loop5 (##fixnum.+ i 1)
+                                               (##fixnum.+ l 1)
+                                               (##bignum.mdigit-mul!
+                                                u
+                                                i
+                                                v
+                                                l
+                                                1
+                                                carry))))
+                                  (begin
+                                    (##bignum.mdigit-set! q j q-hat)
+                                    (loop3 (##fixnum.- j 1))))))))
+                    (##cons (##bignum.normalize! q)
+                            (##arithmetic-shift
+                             (##bignum.normalize! u)
+                             (##fixnum.- normalizing-bit-shift)))))))))))
 
   (define (div-one u v)
     (let ((m
            (let loop6 ((i (##fixnum.- (##bignum.mdigit-length u) 1)))
              (if (##fixnum.< 0 (##bignum.mdigit-ref u i))
-               (##fixnum.+ i 1)
-               (loop6 (##fixnum.- i 1))))))
+                 (##fixnum.+ i 1)
+                 (loop6 (##fixnum.- i 1))))))
       (let ((work-u (##bignum.make 1 #f #f))
             (q (##bignum.make (##bignum.adigit-length u) #f #f)))
 
@@ -9001,12 +9007,12 @@ ___RESULT = result;
             (let ((r-hat (##bignum.mdigit-remainder work-u 1 v q-hat)))
               (##bignum.mdigit-set! q (##fixnum.- i 1) q-hat)
               (if (##fixnum.< 1 i)
-                (loop7 (##fixnum.- i 1)
-                       r-hat)
-                (let ()
-                  (##declare (interrupts-enabled))
-                  (##cons (##bignum.normalize! q)
-                          r-hat)))))))))
+                  (loop7 (##fixnum.- i 1)
+                         r-hat)
+                  (let ()
+                    (##declare (interrupts-enabled))
+                    (##cons (##bignum.normalize! q)
+                            r-hat)))))))))
 
   (define (small-quotient-or-divisor-divide u v)
     ;; Here we do a quick check to catch most cases where the quotient will
@@ -9018,13 +9024,13 @@ ___RESULT = result;
                (let loop ((i (##fixnum.- u-mlength 1)))
                  (let ((udigit (##bignum.mdigit-ref u i)))
                    (if (##eq? udigit 0)
-                     (loop (##fixnum.- i 1))
-                     (##fixnum.< udigit
-                                 (##fixnum.arithmetic-shift-left
-                                  (##bignum.mdigit-ref v i)
-                                  1))))))
-        (##cons 1 (##- u v))
-        (naive-div u v))))
+                       (loop (##fixnum.- i 1))
+                       (##fixnum.< udigit
+                                   (##fixnum.arithmetic-shift-left
+                                    (##bignum.mdigit-ref v i)
+                                    1))))))
+          (##cons 1 (##- u v))
+          (naive-div u v))))
 
   (define (big-divide u v)
 
@@ -9036,75 +9042,75 @@ ___RESULT = result;
       ;; low-order zero bits of v
       (if (##fixnum.>= v-first-bit-set
                        (##fixnum.arithmetic-shift-right v-length 1))
-        (let ((reduced-quotient
-               (##exact-int.div
-                (##bignum.arithmetic-shift u (##fixnum.- v-first-bit-set))
-                (##bignum.arithmetic-shift v (##fixnum.- v-first-bit-set))))
-              (extra-remainder
-               (##extract-bit-field v-first-bit-set 0 u)))
+          (let ((reduced-quotient
+                 (##exact-int.div
+                  (##bignum.arithmetic-shift u (##fixnum.- v-first-bit-set))
+                  (##bignum.arithmetic-shift v (##fixnum.- v-first-bit-set))))
+                (extra-remainder
+                 (##extract-bit-field v-first-bit-set 0 u)))
             (##cons (##car reduced-quotient)
                     (##+ (##arithmetic-shift (##cdr reduced-quotient)
                                              v-first-bit-set)
                          extra-remainder)))
-        (if (##fixnum.< v-length ##bignum.fft-mul-min-width)
-          (small-quotient-or-divisor-divide u v)
-          (let* ((u-length (##integer-length u))
-                 (length-difference (##fixnum.- u-length v-length)))
-            (if (##fixnum.< length-difference ##bignum.fft-mul-min-width)
+          (if (##fixnum.< v-length ##bignum.fft-mul-min-width)
               (small-quotient-or-divisor-divide u v)
-              (let* ((z-bits (##exact-int.reciprocal v length-difference))
-                     (z (##car z-bits))
-                     (bits (##cdr z-bits)))
-                (let ((test-quotient
-                       (##bignum.arithmetic-shift
-                        (##* (##bignum.arithmetic-shift
-                              u
-                              (##fixnum.- length-difference
-                                          (##fixnum.- u-length 2)))
+              (let* ((u-length (##integer-length u))
+                     (length-difference (##fixnum.- u-length v-length)))
+                (if (##fixnum.< length-difference ##bignum.fft-mul-min-width)
+                    (small-quotient-or-divisor-divide u v)
+                    (let* ((z-bits (##exact-int.reciprocal v length-difference))
+                           (z (##car z-bits))
+                           (bits (##cdr z-bits)))
+                      (let ((test-quotient
                              (##bignum.arithmetic-shift
-                              z
-                              (##fixnum.- length-difference bits)))
-                        (##fixnum.- -3 length-difference))))
-                  (let ((rem (##- u (##* test-quotient v))))
-                    ;; I believe, and I haven't found any counterexamples in my tests
-                    ;; to disprove it, that test-quotient can be off by at most +-1.
-                    ;; I can't prove this, however, so we put in the following loops.
+                              (##* (##bignum.arithmetic-shift
+                                    u
+                                    (##fixnum.- length-difference
+                                                (##fixnum.- u-length 2)))
+                                   (##bignum.arithmetic-shift
+                                    z
+                                    (##fixnum.- length-difference bits)))
+                              (##fixnum.- -3 length-difference))))
+                        (let ((rem (##- u (##* test-quotient v))))
+                          ;; I believe, and I haven't found any counterexamples in my tests
+                          ;; to disprove it, that test-quotient can be off by at most +-1.
+                          ;; I can't prove this, however, so we put in the following loops.
 
-                    ;; Especially note that our reciprocal does not satisfy the
-                    ;; error bounds in Knuth's volume 2 in perhaps a vain effort to
-                    ;; save some computations. perhaps this should be fixed.  blah.
+                          ;; Especially note that our reciprocal does not satisfy the
+                          ;; error bounds in Knuth's volume 2 in perhaps a vain effort to
+                          ;; save some computations. perhaps this should be fixed.  blah.
 
-                    (cond ((##negative? rem)
-                           (let loop ((test-quotient test-quotient)
-                                      (rem rem))
-                             (let ((test-quotient (##- test-quotient 1))
-                                   (rem (##+ rem v)))
-                               (if (##negative? rem)
-                                   (loop test-quotient rem)
-                                   (##cons test-quotient rem)))))
-                          ((##< rem v)
-                           (##cons test-quotient
-                                   rem))
-                          (else
-                           (let loop ((test-quotient test-quotient)
-                                      (rem rem))
-                             (let ((test-quotient (##+ test-quotient 1))
-                                   (rem (##- rem v)))
-                               (if (##< rem v)
-                                   (##cons test-quotient rem)
-                                   (loop test-quotient rem)))))))))))))))
+                          (cond ((##negative? rem)
+                                 (let loop ((test-quotient test-quotient)
+                                            (rem rem))
+                                   (let ((test-quotient (##- test-quotient 1))
+                                         (rem (##+ rem v)))
+                                     (if (##negative? rem)
+                                         (loop test-quotient rem)
+                                         (##cons test-quotient rem)))))
+                                ((##< rem v)
+                                 (##cons test-quotient
+                                         rem))
+                                (else
+                                 (let loop ((test-quotient test-quotient)
+                                            (rem rem))
+                                   (let ((test-quotient (##+ test-quotient 1))
+                                         (rem (##- rem v)))
+                                     (if (##< rem v)
+                                         (##cons test-quotient rem)
+                                         (loop test-quotient rem)))))))))))))))
 
   (if (##fixnum? v)
-    (if (##fixnum.< v ##bignum.mdigit-base)
-      (div-one u v)
-      (begin
-        ;; here it's probably not worth the extra cycles to check whether
-        ;; a subtraction would be sufficient, i.e., we don't call
-        ;; short-divisor-or-quotient-divide
-        (naive-div u (##bignum.<-fixnum v))))
-    (if (use-fast-bignum-algorithms)
-        (big-divide u v)
-        (naive-div u v))))
+      (if (##fixnum.< v ##bignum.mdigit-base)
+          (div-one u v)
+          (begin
+            ;; here it's probably not worth the extra cycles to check whether
+            ;; a subtraction would be sufficient, i.e., we don't call
+            ;; short-divisor-or-quotient-divide
+            (naive-div u (##bignum.<-fixnum v))))
+      (if (use-fast-bignum-algorithms)
+          (big-divide u v)
+          (naive-div u v))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -9113,8 +9119,8 @@ ___RESULT = result;
 
 (define-prim (##exact-int.*-expt2 x y)
   (if (##fixnum.negative? y)
-    (##ratnum.normalize x (##arithmetic-shift 1 (##fixnum.- y)))
-    (##arithmetic-shift x y)))
+      (##ratnum.normalize x (##arithmetic-shift 1 (##fixnum.- y)))
+      (##arithmetic-shift x y)))
 
 (define-prim (##exact-int.div x y)
 
@@ -9184,8 +9190,8 @@ ___RESULT = result;
                  ((##fixnum.<= length (##fixnum.* 2 y))
                   ;; result is < 4
                   (if (##< x (##expt 3 y))
-                    2
-                    3))
+                      2
+                      3))
                  ((##fixnum.even? y)
                   (##exact-int.nth-root
                    (##car (##exact-int.sqrt x))
@@ -9222,8 +9228,8 @@ ___RESULT = result;
                                    ;; efficient to just decrement until g^y <= x
                                    (let loop ((g d))
                                      (if (##not (##< x (##expt g y)))
-                                       g
-                                       (loop (##- g 1)))))))))))))))))
+                                         g
+                                         (loop (##- g 1)))))))))))))))))
 
 (define-prim (##integer-nth-root x y)
 
@@ -9240,15 +9246,15 @@ ___RESULT = result;
     (##raise-range-exception 2 integer-nth-root x y))
 
   (if (macro-exact-int? x)
-    (if (macro-exact-int? y)
-      (cond ((##negative? x)
-             (range-error-on-x))
-            ((##positive? y)
-             (##exact-int.nth-root x y))
-            (else
-             (range-error-on-y)))
-      (type-error-on-y))
-    (type-error-on-x)))
+      (if (macro-exact-int? y)
+          (cond ((##negative? x)
+                 (range-error-on-x))
+                ((##positive? y)
+                 (##exact-int.nth-root x y))
+                (else
+                 (range-error-on-y)))
+          (type-error-on-y))
+      (type-error-on-x)))
 
 (define-prim (integer-nth-root x y)
   (macro-force-vars (x y)
@@ -9304,11 +9310,11 @@ ___RESULT = result;
                              (##extract-bit-field length/4 0 x))
                         (##* q q))))
               (if (##negative? r)
-                (##cons (##- s 1)
-                        (##+ r
-                             (##- (##arithmetic-shift s 1) 1)))
-                (##cons s
-                        r))))))))
+                  (##cons (##- s 1)
+                          (##+ r
+                               (##- (##arithmetic-shift s 1) 1)))
+                  (##cons s
+                          r))))))))
 
 (define-prim (##integer-sqrt x)
 
@@ -9319,10 +9325,10 @@ ___RESULT = result;
     (##raise-range-exception 1 integer-sqrt x))
 
   (if (macro-exact-int? x)
-    (if (##negative? x)
-      (range-error)
-      (##car (##exact-int.sqrt x)))
-    (type-error)))
+      (if (##negative? x)
+          (range-error)
+          (##car (##exact-int.sqrt x)))
+      (type-error)))
 
 (define-prim (integer-sqrt x)
   (macro-force-vars (x)
@@ -9355,19 +9361,19 @@ ___RESULT = result;
         (s (macro-ratnum-denominator y)))
     (let ((d1 (##gcd q s)))
       (if (##eq? d1 1)
-        (macro-ratnum-make (##+ (##* p s)
-                                (##* r q))
-                           (##* q s))
-        (let* ((s-prime (##quotient s d1))
-               (t (##+ (##* p s-prime)
-                       (##* r (##quotient q d1))))
-               (d2 (##gcd d1 t))
-               (num (##quotient t d2))
-               (den (##* (##quotient q d2)
-                         s-prime)))
-          (if (##eq? den 1)
-            num
-            (macro-ratnum-make num den)))))))
+          (macro-ratnum-make (##+ (##* p s)
+                                  (##* r q))
+                             (##* q s))
+          (let* ((s-prime (##quotient s d1))
+                 (t (##+ (##* p s-prime)
+                         (##* r (##quotient q d1))))
+                 (d2 (##gcd d1 t))
+                 (num (##quotient t d2))
+                 (den (##* (##quotient q d2)
+                           s-prime)))
+            (if (##eq? den 1)
+                num
+                (macro-ratnum-make num den)))))))
 
 (define-prim (##ratnum.- x y)
   (let ((p (macro-ratnum-numerator x))
@@ -9376,19 +9382,19 @@ ___RESULT = result;
         (s (macro-ratnum-denominator y)))
     (let ((d1 (##gcd q s)))
       (if (##eq? d1 1)
-        (macro-ratnum-make (##- (##* p s)
-                                (##* r q))
-                           (##* q s))
-        (let* ((s-prime (##quotient s d1))
-               (t (##- (##* p s-prime)
-                       (##* r (##quotient q d1))))
-               (d2 (##gcd d1 t))
-               (num (##quotient t d2))
-               (den (##* (##quotient q d2)
-                         s-prime)))
-          (if (##eq? den 1)
-            num
-            (macro-ratnum-make num den)))))))
+          (macro-ratnum-make (##- (##* p s)
+                                  (##* r q))
+                             (##* q s))
+          (let* ((s-prime (##quotient s d1))
+                 (t (##- (##* p s-prime)
+                         (##* r (##quotient q d1))))
+                 (d2 (##gcd d1 t))
+                 (num (##quotient t d2))
+                 (den (##* (##quotient q d2)
+                           s-prime)))
+            (if (##eq? den 1)
+                num
+                (macro-ratnum-make num den)))))))
 
 (define-prim (##ratnum.* x y)
   (let ((p (macro-ratnum-numerator x))
@@ -9396,14 +9402,14 @@ ___RESULT = result;
         (r (macro-ratnum-numerator y))
         (s (macro-ratnum-denominator y)))
     (if (##eq? x y)
-      (macro-ratnum-make (##* p p) (##* q q))     ;; already in lowest form
-      (let* ((gcd-ps (##gcd p s))
-             (gcd-rq (##gcd r q))
-             (num (##* (##quotient p gcd-ps) (##quotient r gcd-rq)))
-             (den (##* (##quotient q gcd-rq) (##quotient s gcd-ps))))
-        (if (##eq? den 1)
-          num
-          (macro-ratnum-make num den))))))
+        (macro-ratnum-make (##* p p) (##* q q))     ;; already in lowest form
+        (let* ((gcd-ps (##gcd p s))
+               (gcd-rq (##gcd r q))
+               (num (##* (##quotient p gcd-ps) (##quotient r gcd-rq)))
+               (den (##* (##quotient q gcd-rq) (##quotient s gcd-ps))))
+          (if (##eq? den 1)
+              num
+              (macro-ratnum-make num den))))))
 
 (define-prim (##ratnum./ x y)
   (let ((p (macro-ratnum-numerator x))
@@ -9411,18 +9417,18 @@ ___RESULT = result;
         (r (macro-ratnum-denominator y))
         (s (macro-ratnum-numerator y)))
     (if (##eq? x y)
-      1
-      (let* ((gcd-ps (##gcd p s))
-             (gcd-rq (##gcd r q))
-             (num (##* (##quotient p gcd-ps) (##quotient r gcd-rq)))
-             (den (##* (##quotient q gcd-rq) (##quotient s gcd-ps))))
-        (if (##negative? den)
-          (if (##eq? den -1)
-            (##negate num)
-            (macro-ratnum-make (##negate num) (##negate den)))
-          (if (##eq? den 1)
-            num
-            (macro-ratnum-make num den)))))))
+        1
+        (let* ((gcd-ps (##gcd p s))
+               (gcd-rq (##gcd r q))
+               (num (##* (##quotient p gcd-ps) (##quotient r gcd-rq)))
+               (den (##* (##quotient q gcd-rq) (##quotient s gcd-ps))))
+          (if (##negative? den)
+              (if (##eq? den -1)
+                  (##negate num)
+                  (macro-ratnum-make (##negate num) (##negate den)))
+              (if (##eq? den 1)
+                  num
+                  (macro-ratnum-make num den)))))))
 
 (define-prim (##ratnum.normalize num den)
   (let* ((x (##gcd num den))
@@ -9430,8 +9436,8 @@ ___RESULT = result;
          (num (##quotient num y))
          (den (##quotient den y)))
     (if (##eq? den 1)
-      num
-      (macro-ratnum-make num den))))
+        num
+        (macro-ratnum-make num den))))
 
 (define-prim (##ratnum.<-exact-int x)
   (macro-ratnum-make x 1))
@@ -9449,10 +9455,10 @@ ___RESULT = result;
              `(define-prim ,form
                 (macro-force-vars (,name-param1)
                   (macro-check-flonum
-                   ,name-param1
-                   1
-                   ,form
-                   ,body)))))
+                    ,name-param1
+                    1
+                    ,form
+                    ,body)))))
           ((= 2 (length (cdr form)))
            (let* ((name-fn (car form))
                   (name-param1 (cadr form))
@@ -9460,14 +9466,14 @@ ___RESULT = result;
              `(define-prim ,form
                 (macro-force-vars (,name-param1 ,name-param2)
                   (macro-check-flonum
-                   ,name-param1
-                   1
-                   ,form
-                   (macro-check-flonum
-                    ,name-param2
-                    2
+                    ,name-param1
+                    1
                     ,form
-                    ,body))))))
+                    (macro-check-flonum
+                      ,name-param2
+                      2
+                      ,form
+                      ,body))))))
           (else
            (error "define-prim-flonum supports only 1 or 2 parameter procedures")))))
 
@@ -9688,36 +9694,36 @@ ___RESULT = result;
 
 (define-prim-flonum (fldenominator x)
   (if (macro-flonum-rational? x)
-    (##exact->inexact (##denominator (##flonum.inexact->exact x)))
-    (##fail-check-rational 1 fldenominator x)))
+      (##exact->inexact (##denominator (##flonum.inexact->exact x)))
+      (##fail-check-rational 1 fldenominator x)))
 
 (define-prim (##flfloor x))
 
 (define-prim-flonum (flfloor x)
   (if (##flfinite? x)
-    (##flfloor x)
-    (##fail-check-finite-real 1 flfloor x)))
+      (##flfloor x)
+      (##fail-check-finite-real 1 flfloor x)))
 
 (define-prim (##flceiling x))
 
 (define-prim-flonum (flceiling x)
   (if (##flfinite? x)
-    (##flceiling x)
-    (##fail-check-finite-real 1 flceiling x)))
+      (##flceiling x)
+      (##fail-check-finite-real 1 flceiling x)))
 
 (define-prim (##fltruncate x))
 
 (define-prim-flonum (fltruncate x)
   (if (##flfinite? x)
-    (##fltruncate x)
-    (##fail-check-finite-real 1 fltruncate x)))
+      (##fltruncate x)
+      (##fail-check-finite-real 1 fltruncate x)))
 
 (define-prim (##flround x))
 
 (define-prim-flonum (flround x)
   (if (##flfinite? x)
-    (##flround x)
-    (##fail-check-finite-real 1 flround x)))
+      (##flround x)
+      (##fail-check-finite-real 1 flround x)))
 
 (define-prim (##flexp x))
 
@@ -9730,8 +9736,8 @@ ___RESULT = result;
   (if (or (##flnan? x)
           (##not (##flnegative?
                   (##flcopysign (macro-inexact-+1) x))))
-    (##fllog x)
-    (##raise-range-exception 1 fllog x)))
+      (##fllog x)
+      (##raise-range-exception 1 fllog x)))
 
 (define-prim (##flsin x))
 
@@ -9753,45 +9759,45 @@ ___RESULT = result;
 (define-prim-flonum (flasin x)
   (if (and (##not (##fl< (macro-inexact-+1) x))
            (##not (##fl< x (macro-inexact--1))))
-    (##flasin x)
-    (##raise-range-exception 1 flasin x)))
+      (##flasin x)
+      (##raise-range-exception 1 flasin x)))
 
 (define-prim (##flacos x))
 
 (define-prim-flonum (flacos x)
   (if (and (##not (##fl< (macro-inexact-+1) x))
            (##not (##fl< x (macro-inexact--1))))
-    (##flacos x)
-    (##raise-range-exception 1 flacos x)))
+      (##flacos x)
+      (##raise-range-exception 1 flacos x)))
 
 (define-prim (##flatan x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
-    (##flatan x)
-    (macro-check-flonum y 2 (##flatan x y)
-      (##flatan x y))))
+      (##flatan x)
+      (macro-check-flonum y 2 (##flatan x y)
+        (##flatan x y))))
 
 (define-prim (flatan x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x y)
     (macro-check-flonum x 1 (flatan x y)
       (if (##eq? y (macro-absent-obj))
-        (##flatan x)
-        (macro-check-flonum y 2 (flatan x y)
-          (##flatan x y))))))
+          (##flatan x)
+          (macro-check-flonum y 2 (flatan x y)
+            (##flatan x y))))))
 
 (define-prim (##flexpt x y))
 
 (define-prim-flonum (flexpt x y)
   (if (or (##not (##flnegative? x))
           (macro-flonum-int? y))
-    (##flexpt x y)
-    (##raise-range-exception 2 flexpt x y)))
+      (##flexpt x y)
+      (##raise-range-exception 2 flexpt x y)))
 
 (define-prim (##flsqrt x))
 
 (define-prim-flonum (flsqrt x)
   (if (##not (##flnegative? x))
-    (##flsqrt x)
-    (##raise-range-exception 1 flsqrt x)))
+      (##flsqrt x)
+      (##raise-range-exception 1 flsqrt x)))
 
 (define-prim-fixnum (fixnum->flonum x)
   (##fixnum->flonum x))
@@ -9932,9 +9938,9 @@ ___RESULT = result;
 
 (define-prim (##flonum.atan x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
-    (##flonum.atan x)
-    (macro-check-flonum y 2 (##flonum.atan x y)
-      (##flonum.atan x y))))
+      (##flonum.atan x)
+      (macro-check-flonum y 2 (##flonum.atan x y)
+        (##flonum.atan x y))))
 
 (define-prim (##flonum.expt x y))
 
@@ -9959,8 +9965,8 @@ ___RESULT = result;
 
     (define (f1 sn sd)
       (if (##< sn sd) ;; n/(d*2^p) < 1 ?
-        (f2 (##arithmetic-shift sn 1) sd (##fixnum.- p 1))
-        (f2 sn sd p)))
+          (f2 (##arithmetic-shift sn 1) sd (##fixnum.- p 1))
+          (f2 sn sd p)))
 
     (define (f2 a b p)
       ;; 1 <= a/b < 2  and  n/d = (2^p*a)/b  and  n/d < 2^(p+1)
@@ -9976,15 +9982,15 @@ ___RESULT = result;
                   b)))
                (##flonum.expt2 (##fixnum.- p shift)))))
         (if (##negative? num)
-          (##flonum.copysign abs-result (macro-inexact--1))
-          abs-result)))
+            (##flonum.copysign abs-result (macro-inexact--1))
+            abs-result)))
 
     ;; 2^(p-1) <= n/d < 2^(p+1)
     ;; 1/2 <= n/(d*2^p) < 2  or equivalently  1/2 <= (n*2^-p)/d < 2
 
     (if (##fixnum.negative? p)
-      (f1 (##arithmetic-shift n (##fixnum.- p)) d)
-      (f1 n (##arithmetic-shift d p)))))
+        (f1 (##arithmetic-shift n (##fixnum.- p)) d)
+        (f1 n (##arithmetic-shift d p)))))
 
 (define-prim (##flonum.<-exact-int x)
 
@@ -9994,40 +10000,40 @@ ___RESULT = result;
            (p ;; 2^52 <= x/2^p < 2^53
             (##fixnum.- w (macro-flonum-m-bits-plus-1))))
       (if (##fixnum.< p 1)
-        (f2 x)
-        (let* ((2^p (##arithmetic-shift 1 p))
-               (qr (##exact-int.div x 2^p))
-               (q (##car qr))
-               (r (##cdr qr))
-               (r*2 (##arithmetic-shift r 1)))
-          (##flonum.*
-           (##flonum.expt2 p)
-           (f2 (if (or (and (##not (##odd? q))
-                            (##= r*2 2^p))
-                       (##< r*2 2^p))
-                 q
-                 (##+ q 1))))))))
+          (f2 x)
+          (let* ((2^p (##arithmetic-shift 1 p))
+                 (qr (##exact-int.div x 2^p))
+                 (q (##car qr))
+                 (r (##cdr qr))
+                 (r*2 (##arithmetic-shift r 1)))
+            (##flonum.*
+             (##flonum.expt2 p)
+             (f2 (if (or (and (##not (##odd? q))
+                              (##= r*2 2^p))
+                         (##< r*2 2^p))
+                     q
+                     (##+ q 1))))))))
 
   (define (f2 x) ;; 0 <= x < 2^53
     (if (##fixnum? x)
-      (##flonum.<-fixnum x)
-      (let* ((x (if (##fixnum? x) (##bignum.<-fixnum x) x))
-             (n (##bignum.mdigit-length x)))
-        (let loop ((i (##fixnum.- n 1))
-                   (result (macro-inexact-+0)))
-          (if (##fixnum.< i 0)
-            result
-            (let ((mdigit (##bignum.mdigit-ref x i)))
-              (loop (##fixnum.- i 1)
-                    (##flonum.+ (##flonum.* result
-                                            ##bignum.inexact-mdigit-base)
-                                (##flonum.<-fixnum mdigit)))))))))
+        (##flonum.<-fixnum x)
+        (let* ((x (if (##fixnum? x) (##bignum.<-fixnum x) x))
+               (n (##bignum.mdigit-length x)))
+          (let loop ((i (##fixnum.- n 1))
+                     (result (macro-inexact-+0)))
+            (if (##fixnum.< i 0)
+                result
+                (let ((mdigit (##bignum.mdigit-ref x i)))
+                  (loop (##fixnum.- i 1)
+                        (##flonum.+ (##flonum.* result
+                                                ##bignum.inexact-mdigit-base)
+                                    (##flonum.<-fixnum mdigit)))))))))
 
   (if (##fixnum? x)
-    (##flonum.<-fixnum x)
-    (if (##negative? x)
-      (##flonum.copysign (f1 (##negate x)) (macro-inexact--1))
-      (f1 x))))
+      (##flonum.<-fixnum x)
+      (if (##negative? x)
+          (##flonum.copysign (f1 (##negate x)) (macro-inexact--1))
+          (f1 x))))
 
 (define-prim (##flonum.expt2 n)
   (cond ((##fixnum.zero? n)
@@ -10041,26 +10047,26 @@ ___RESULT = result;
   (let loop1 ((z (##flonum.abs x))
               (n 1))
     (if (##flonum.< ##bignum.inexact-mdigit-base z)
-      (loop1 (##flonum./ z ##bignum.inexact-mdigit-base)
-             (##fixnum.+ n 1))
-      (let loop2 ((result 0)
-                  (z z)
-                  (i n))
-        (if (##fixnum.< 0 i)
-          (let* ((inexact-floor-z
-                  (##flonum.floor z))
-                 (floor-z
-                  (##flonum->fixnum inexact-floor-z))
-                 (new-z
-                  (##flonum.* (##flonum.- z inexact-floor-z)
-                              ##bignum.inexact-mdigit-base)))
-            (loop2 (##+ floor-z
-                        (##arithmetic-shift result ##bignum.mdigit-width))
-                   new-z
-                   (##fixnum.- i 1)))
-          (if (##flonum.negative? x)
-            (##negate result)
-            result))))))
+        (loop1 (##flonum./ z ##bignum.inexact-mdigit-base)
+               (##fixnum.+ n 1))
+        (let loop2 ((result 0)
+                    (z z)
+                    (i n))
+          (if (##fixnum.< 0 i)
+              (let* ((inexact-floor-z
+                      (##flonum.floor z))
+                     (floor-z
+                      (##flonum->fixnum inexact-floor-z))
+                     (new-z
+                      (##flonum.* (##flonum.- z inexact-floor-z)
+                                  ##bignum.inexact-mdigit-base)))
+                (loop2 (##+ floor-z
+                            (##arithmetic-shift result ##bignum.mdigit-width))
+                       new-z
+                       (##fixnum.- i 1)))
+              (if (##flonum.negative? x)
+                  (##negate result)
+                  result))))))
 
 (define-prim (##flonum.->inexact-exponential-format x)
 
@@ -10068,58 +10074,58 @@ ___RESULT = result;
     (let ((i*2 (##fixnum.+ i i)))
       (let ((z (if (and (##not (##fixnum.< (macro-flonum-e-bias) i*2))
                         (##not (##flonum.< x y)))
-                 (exp-form-pos x (##flonum.* y y) i*2)
-                 (##vector x 0 1))))
+                   (exp-form-pos x (##flonum.* y y) i*2)
+                   (##vector x 0 1))))
         (let ((a (##vector-ref z 0)) (b (##vector-ref z 1)))
           (let ((i+b (##fixnum.+ i b)))
             (if (and (##not (##fixnum.< (macro-flonum-e-bias) i+b))
                      (##not (##flonum.< a y)))
-              (begin
-                (##vector-set! z 0 (##flonum./ a y))
-                (##vector-set! z 1 i+b)))
+                (begin
+                  (##vector-set! z 0 (##flonum./ a y))
+                  (##vector-set! z 1 i+b)))
             z)))))
 
   (define (exp-form-neg x y i)
     (let ((i*2 (##fixnum.+ i i)))
       (let ((z (if (and (##fixnum.< i*2 (macro-flonum-e-bias-minus-1))
                         (##flonum.< x y))
-                 (exp-form-neg x (##flonum.* y y) i*2)
-                 (##vector x 0 1))))
+                   (exp-form-neg x (##flonum.* y y) i*2)
+                   (##vector x 0 1))))
         (let ((a (##vector-ref z 0)) (b (##vector-ref z 1)))
           (let ((i+b (##fixnum.+ i b)))
             (if (and (##fixnum.< i+b (macro-flonum-e-bias-minus-1))
                      (##flonum.< a y))
-              (begin
-                (##vector-set! z 0 (##flonum./ a y))
-                (##vector-set! z 1 i+b)))
+                (begin
+                  (##vector-set! z 0 (##flonum./ a y))
+                  (##vector-set! z 1 i+b)))
             z)))))
 
   (define (exp-form x)
     (if (##flonum.< x (macro-inexact-+1))
-      (let ((z (exp-form-neg x (macro-inexact-+1/2) 1)))
-        (##vector-set! z 0 (##flonum.* (macro-inexact-+2) (##vector-ref z 0)))
-        (##vector-set! z 1 (##fixnum.- -1 (##vector-ref z 1)))
-        z)
-      (exp-form-pos x (macro-inexact-+2) 1)))
+        (let ((z (exp-form-neg x (macro-inexact-+1/2) 1)))
+          (##vector-set! z 0 (##flonum.* (macro-inexact-+2) (##vector-ref z 0)))
+          (##vector-set! z 1 (##fixnum.- -1 (##vector-ref z 1)))
+          z)
+        (exp-form-pos x (macro-inexact-+2) 1)))
 
   (if (##flonum.negative? (##flonum.copysign (macro-inexact-+1) x))
-    (let ((z (exp-form (##flonum.copysign x (macro-inexact-+1)))))
-      (##vector-set! z 2 -1)
-      z)
-    (exp-form x)))
+      (let ((z (exp-form (##flonum.copysign x (macro-inexact-+1)))))
+        (##vector-set! z 2 -1)
+        z)
+      (exp-form x)))
 
 (define-prim (##flonum.->exact-exponential-format x)
   (let ((z (##flonum.->inexact-exponential-format x)))
     (let ((y (##vector-ref z 0)))
       (if (##not (##flonum.< y (macro-inexact-+2))) ;; +inf.0 or +nan.0?
-        (begin
-          (if (##flonum.< (macro-inexact-+0) y)
-            (##vector-set! z 0 (macro-flonum-+m-min))  ;; +inf.0
-            (##vector-set! z 0 (macro-flonum-+m-max))) ;; +nan.0
-          (##vector-set! z 1 (macro-flonum-e-bias-plus-1)))
-        (##vector-set! z 0
-          (##flonum.->exact-int
-           (##flonum.* (##vector-ref z 0) (macro-flonum-m-min)))))
+          (begin
+            (if (##flonum.< (macro-inexact-+0) y)
+                (##vector-set! z 0 (macro-flonum-+m-min))  ;; +inf.0
+                (##vector-set! z 0 (macro-flonum-+m-max))) ;; +nan.0
+            (##vector-set! z 1 (macro-flonum-e-bias-plus-1)))
+          (##vector-set! z 0
+                         (##flonum.->exact-int
+                          (##flonum.* (##vector-ref z 0) (macro-flonum-m-min)))))
       (##vector-set! z 1 (##fixnum.- (##vector-ref z 1) (macro-flonum-m-bits)))
       z)))
 
@@ -10127,15 +10133,15 @@ ___RESULT = result;
   (let ((y (##flonum.->exact-exponential-format x)))
     (##exact-int.*-expt2
      (if (##fixnum.negative? (##vector-ref y 2))
-       (##negate (##vector-ref y 0))
-       (##vector-ref y 0))
+         (##negate (##vector-ref y 0))
+         (##vector-ref y 0))
      (##vector-ref y 1))))
 
 (define-prim (##flonum.->ratnum x)
   (let ((y (##flonum.inexact->exact x)))
     (if (macro-exact-int? y)
-      (##ratnum.<-exact-int y)
-      y)))
+        (##ratnum.<-exact-int y)
+        y)))
 
 (define-prim (##flonum.->ieee754-32 x)
   (##u32vector-ref (##f32vector x) 0))
@@ -10201,115 +10207,115 @@ ___RESULT = result;
                  (inexact-d (##exact->inexact d)))
              (if (and (##flonum.finite? inexact-c)
                       (##flonum.finite? inexact-d))
-               (let ((q
-                      (##flonum.+ (##flonum.* inexact-c inexact-c)
-                                  (##flonum.* inexact-d inexact-d))))
-                 (cond ((##not (##flonum.finite? q))
-                        (let ((a
-                               (if (##flonum? a)
-                                 (##flonum.* a (macro-inexact-scale-down))
-                                 (##* a (macro-scale-down))))
-                              (b
-                               (if (##flonum? b)
-                                 (##flonum.* b (macro-inexact-scale-down))
-                                 (##* b (macro-scale-down))))
-                              (inexact-c
-                               (##flonum.* inexact-c
-                                           (macro-inexact-scale-down)))
-                              (inexact-d
-                               (##flonum.* inexact-d
-                                           (macro-inexact-scale-down))))
-                          (basic/ a
-                                  b
-                                  inexact-c
-                                  inexact-d
-                                  (##flonum.+
-                                   (##flonum.* inexact-c inexact-c)
-                                   (##flonum.* inexact-d inexact-d)))))
-                       ((##flonum.< q (macro-flonum-min-normal))
-                        (let ((a
-                               (if (##flonum? a)
-                                 (##flonum.* a (macro-inexact-scale-up))
-                                 (##* a (macro-scale-up))))
-                              (b
-                               (if (##flonum? b)
-                                 (##flonum.* b (macro-inexact-scale-up))
-                                 (##* b (macro-scale-up))))
-                              (inexact-c
-                               (##flonum.* inexact-c
-                                           (macro-inexact-scale-up)))
-                              (inexact-d
-                               (##flonum.* inexact-d
-                                           (macro-inexact-scale-up))))
-                          (basic/ a
-                                  b
-                                  inexact-c
-                                  inexact-d
-                                  (##flonum.+
-                                   (##flonum.* inexact-c inexact-c)
-                                   (##flonum.* inexact-d inexact-d)))))
+                 (let ((q
+                        (##flonum.+ (##flonum.* inexact-c inexact-c)
+                                    (##flonum.* inexact-d inexact-d))))
+                   (cond ((##not (##flonum.finite? q))
+                          (let ((a
+                                 (if (##flonum? a)
+                                     (##flonum.* a (macro-inexact-scale-down))
+                                     (##* a (macro-scale-down))))
+                                (b
+                                 (if (##flonum? b)
+                                     (##flonum.* b (macro-inexact-scale-down))
+                                     (##* b (macro-scale-down))))
+                                (inexact-c
+                                 (##flonum.* inexact-c
+                                             (macro-inexact-scale-down)))
+                                (inexact-d
+                                 (##flonum.* inexact-d
+                                             (macro-inexact-scale-down))))
+                            (basic/ a
+                                    b
+                                    inexact-c
+                                    inexact-d
+                                    (##flonum.+
+                                     (##flonum.* inexact-c inexact-c)
+                                     (##flonum.* inexact-d inexact-d)))))
+                         ((##flonum.< q (macro-flonum-min-normal))
+                          (let ((a
+                                 (if (##flonum? a)
+                                     (##flonum.* a (macro-inexact-scale-up))
+                                     (##* a (macro-scale-up))))
+                                (b
+                                 (if (##flonum? b)
+                                     (##flonum.* b (macro-inexact-scale-up))
+                                     (##* b (macro-scale-up))))
+                                (inexact-c
+                                 (##flonum.* inexact-c
+                                             (macro-inexact-scale-up)))
+                                (inexact-d
+                                 (##flonum.* inexact-d
+                                             (macro-inexact-scale-up))))
+                            (basic/ a
+                                    b
+                                    inexact-c
+                                    inexact-d
+                                    (##flonum.+
+                                     (##flonum.* inexact-c inexact-c)
+                                     (##flonum.* inexact-d inexact-d)))))
+                         (else
+                          (basic/ a b inexact-c inexact-d q))))
+                 (cond ((##flonum.= inexact-c (macro-inexact-+inf))
+                        (basic/ a
+                                b
+                                (macro-inexact-+0)
+                                (if (##flonum.nan? inexact-d)
+                                    inexact-d
+                                    (##flonum.copysign (macro-inexact-+0)
+                                                       inexact-d))
+                                (macro-inexact-+1)))
+                       ((##flonum.= inexact-c (macro-inexact--inf))
+                        (basic/ a
+                                b
+                                (macro-inexact--0)
+                                (if (##flonum.nan? inexact-d)
+                                    inexact-d
+                                    (##flonum.copysign (macro-inexact-+0)
+                                                       inexact-d))
+                                (macro-inexact-+1)))
+                       ((##flonum.nan? inexact-c)
+                        (cond ((##flonum.= inexact-d (macro-inexact-+inf))
+                               (basic/ a
+                                       b
+                                       inexact-c
+                                       (macro-inexact-+0)
+                                       (macro-inexact-+1)))
+                              ((##flonum.= inexact-d (macro-inexact--inf))
+                               (basic/ a
+                                       b
+                                       inexact-c
+                                       (macro-inexact--0)
+                                       (macro-inexact-+1)))
+                              ((##flonum.nan? inexact-d)
+                               (basic/ a
+                                       b
+                                       inexact-c
+                                       inexact-d
+                                       (macro-inexact-+1)))
+                              (else
+                               (basic/ a
+                                       b
+                                       inexact-c
+                                       (macro-inexact-+nan)
+                                       (macro-inexact-+1)))))
                        (else
-                        (basic/ a b inexact-c inexact-d q))))
-               (cond ((##flonum.= inexact-c (macro-inexact-+inf))
-                      (basic/ a
-                              b
-                              (macro-inexact-+0)
-                              (if (##flonum.nan? inexact-d)
-                                inexact-d
-                                (##flonum.copysign (macro-inexact-+0)
-                                                   inexact-d))
-                              (macro-inexact-+1)))
-                     ((##flonum.= inexact-c (macro-inexact--inf))
-                      (basic/ a
-                              b
-                              (macro-inexact--0)
-                              (if (##flonum.nan? inexact-d)
-                                inexact-d
-                                (##flonum.copysign (macro-inexact-+0)
-                                                   inexact-d))
-                              (macro-inexact-+1)))
-                     ((##flonum.nan? inexact-c)
-                      (cond ((##flonum.= inexact-d (macro-inexact-+inf))
-                             (basic/ a
-                                     b
-                                     inexact-c
-                                     (macro-inexact-+0)
-                                     (macro-inexact-+1)))
-                            ((##flonum.= inexact-d (macro-inexact--inf))
-                             (basic/ a
-                                     b
-                                     inexact-c
-                                     (macro-inexact--0)
-                                     (macro-inexact-+1)))
-                            ((##flonum.nan? inexact-d)
-                             (basic/ a
-                                     b
-                                     inexact-c
-                                     inexact-d
-                                     (macro-inexact-+1)))
-                            (else
-                             (basic/ a
-                                     b
-                                     inexact-c
-                                     (macro-inexact-+nan)
-                                     (macro-inexact-+1)))))
-                     (else
-                      ;; finite inexact-c
-                      (cond ((##flonum.nan? inexact-d)
-                             (basic/ a
-                                     b
-                                     (macro-inexact-+nan)
-                                     inexact-d
-                                     (macro-inexact-+1)))
-                            (else
-                             ;; inexact-d is +inf.0 or -inf.0
-                             (basic/ a
-                                     b
-                                     (##flonum.copysign (macro-inexact-+0)
-                                                        inexact-c)
-                                     (##flonum.copysign (macro-inexact-+0)
-                                                        inexact-d)
-                                     (macro-inexact-+1))))))))))))
+                        ;; finite inexact-c
+                        (cond ((##flonum.nan? inexact-d)
+                               (basic/ a
+                                       b
+                                       (macro-inexact-+nan)
+                                       inexact-d
+                                       (macro-inexact-+1)))
+                              (else
+                               ;; inexact-d is +inf.0 or -inf.0
+                               (basic/ a
+                                       b
+                                       (##flonum.copysign (macro-inexact-+0)
+                                                          inexact-c)
+                                       (##flonum.copysign (macro-inexact-+0)
+                                                          inexact-d)
+                                       (macro-inexact-+1))))))))))))
 
 (define-prim (##cpxnum.<-noncpxnum x)
   (macro-cpxnum-make x 0))
@@ -10335,7 +10341,7 @@ ___RESULT = result;
   (pseudo-randomize! unprintable: read-only:)
   (make-integers     unprintable: read-only:)
   (make-reals        unprintable: read-only:)
-)
+  )
 
 (define-check-type random-source
   (macro-type-random-source)
@@ -10426,7 +10432,7 @@ ___RESULT = result;
          (pack-state
           1062452522
           2961816100
-           342112271
+          342112271
           2854655037
           3321940838
           3542344109)))
@@ -10459,7 +10465,7 @@ ___RESULT = result;
                       (not (and (eqv? d 0) (eqv? e 0) (eqv? f 0)))
                       (begin
                         (set! state
-                          (pack-state a b c d e f))
+                              (pack-state a b c d e f))
                         (void)))))
           (##raise-type-exception
            2
@@ -10483,39 +10489,39 @@ ___RESULT = result;
       (define (simple-random16)
         (let ((r (bitwise-and seed16 65535)))
           (set! seed16
-            (+ (* 30903 r)
-               (arithmetic-shift seed16 -16)))
+                (+ (* 30903 r)
+                   (arithmetic-shift seed16 -16)))
           r))
 
       (define (simple-random32)
         (+ (arithmetic-shift (simple-random16) 16)
-             (simple-random16)))
+           (simple-random16)))
 
       ;; perturb the state randomly
 
       (let ((s (unpack-state state)))
         (set! state
-          (pack-state
-           (+ 1
-              (modulo (+ (vector-ref s 0)
-                         (simple-random32))
-                      (macro-m1-minus-1)))
-           (modulo (+ (vector-ref s 1)
-                      (simple-random32))
-                   (macro-m1))
-           (modulo (+ (vector-ref s 2)
-                      (simple-random32))
-                   (macro-m1))
-           (+ 1
-              (modulo (+ (vector-ref s 3)
-                         (simple-random32))
-                      (macro-m2-minus-1)))
-           (modulo (+ (vector-ref s 4)
-                      (simple-random32))
-                   (macro-m2))
-           (modulo (+ (vector-ref s 5)
-                      (simple-random32))
-                   (macro-m2))))
+              (pack-state
+               (+ 1
+                  (modulo (+ (vector-ref s 0)
+                             (simple-random32))
+                          (macro-m1-minus-1)))
+               (modulo (+ (vector-ref s 1)
+                          (simple-random32))
+                       (macro-m1))
+               (modulo (+ (vector-ref s 2)
+                          (simple-random32))
+                       (macro-m1))
+               (+ 1
+                  (modulo (+ (vector-ref s 3)
+                             (simple-random32))
+                          (macro-m2-minus-1)))
+               (modulo (+ (vector-ref s 4)
+                          (simple-random32))
+                       (macro-m2))
+               (modulo (+ (vector-ref s 5)
+                          (simple-random32))
+                       (macro-m2))))
         (void)))
 
     (define (pseudo-randomize! i j)
@@ -10563,56 +10569,56 @@ ___RESULT = result;
 
       (define identity
         '#(         1           0           0
-                    0           1           0
-                    0           0           1
-                    1           0           0
-                    0           1           0
-                    0           0           1))
+                                0           1           0
+                                0           0           1
+                                1           0           0
+                                0           1           0
+                                0           0           1))
 
       (define A ;; primary MRG32k3a equations
         '#(         0     1403580  4294156359
-                    1           0           0
-                    0           1           0
-               527612           0  4293573854
-                    1           0           0
-                    0           1           0))
+                          1           0           0
+                          0           1           0
+                          527612           0  4293573854
+                          1           0           0
+                          0           1           0))
 
       (define A^2^127 ;; A^(2^127)
         '#(1230515664   986791581  1988835001
-           3580155704  1230515664   226153695
-            949770784  3580155704  2427906178
-           2093834863    32183930  2824425944
-           1022607788  1464411153    32183930
-           1610723613   277697599  1464411153))
+                        3580155704  1230515664   226153695
+                        949770784  3580155704  2427906178
+                        2093834863    32183930  2824425944
+                        1022607788  1464411153    32183930
+                        1610723613   277697599  1464411153))
 
       (define A^2^76 ;; A^(2^76)
         '#(  69195019  3528743235  3672091415
-           1871391091    69195019  3672831523
-           4127413238  1871391091    82758667
-           3708466080  4292754251  3859662829
-           3889917532  1511326704  4292754251
-           1610795712  3759209742  1511326704))
+                       1871391091    69195019  3672831523
+                       4127413238  1871391091    82758667
+                       3708466080  4292754251  3859662829
+                       3889917532  1511326704  4292754251
+                       1610795712  3759209742  1511326704))
 
       (define A^2^4 ;; A^(2^4)
         '#(1062452522   340793741  2955879160
-           2961816100  1062452522   387300998
-            342112271  2961816100   736416029
-           2854655037  1817134745  3493477402
-           3321940838   818368950  1817134745
-           3542344109  3790774567   818368950))
+                        2961816100  1062452522   387300998
+                        342112271  2961816100   736416029
+                        2854655037  1817134745  3493477402
+                        3321940838   818368950  1817134745
+                        3542344109  3790774567   818368950))
 
       (let ((M ;; M = A^(2^4 + i*2^127 + j*2^76)
              (mult A^2^4
                    (mult (power A^2^127 i)
                          (power A^2^76 j)))))
         (set! state
-          (pack-state
-           (vector-ref M 0)
-           (vector-ref M 3)
-           (vector-ref M 6)
-           (vector-ref M 9)
-           (vector-ref M 12)
-           (vector-ref M 15)))
+              (pack-state
+               (vector-ref M 0)
+               (vector-ref M 3)
+               (vector-ref M 6)
+               (vector-ref M 9)
+               (vector-ref M 12)
+               (vector-ref M 15)))
         (void)))
 
     (define (advance-state!)
@@ -10658,14 +10664,14 @@ ___RESULT = result;
         (macro-force-vars (range)
           (cond ((fixnum? range)
                  (if (fxpositive? range)
-                   (if (fx< (macro-max-fixnum32) range)
-                     (rand-integer range)
-                     (rand-fixnum32 range))
-                   (range-error)))
+                     (if (fx< (macro-max-fixnum32) range)
+                         (rand-integer range)
+                         (rand-fixnum32 range))
+                     (range-error)))
                 ((##bignum? range)
                  (if (##bignum.negative? range)
-                   (range-error)
-                   (rand-integer range)))
+                     (range-error)
+                     (rand-integer range)))
                 (else
                  (type-error)))))
 
@@ -10681,19 +10687,19 @@ ___RESULT = result;
       (let ((len (integer-length range)))
         (if (fx= (fx- len 1) ;; check if range is a power of 2
                  (first-bit-set range))
-          (rand-integer-2^ (fx- len 1))
-          (let* ((inv
-                  (fxquotient
-                   2^2*size
-                   (fx+ 1
-                        (extract-bit-field size (fx- len size) range))))
-                 (range2
-                  (* range inv)))
-            (let loop ()
-              (let ((r (rand-integer-2^ (fx+ len size))))
-                (if (< r range2)
-                  (quotient r inv)
-                  (loop))))))))
+            (rand-integer-2^ (fx- len 1))
+            (let* ((inv
+                    (fxquotient
+                     2^2*size
+                     (fx+ 1
+                          (extract-bit-field size (fx- len size) range))))
+                   (range2
+                    (* range inv)))
+              (let loop ()
+                (let ((r (rand-integer-2^ (fx+ len size))))
+                  (if (< r range2)
+                      (quotient r inv)
+                      (loop))))))))
 
     (define (rand-integer-2^ w)
 
@@ -10706,15 +10712,15 @@ ___RESULT = result;
               (else
                (let ((s/2 (fxarithmetic-shift-right s 1)))
                  (if (fx< s w)
-                   (+ (rand s s/2)
-                      (arithmetic-shift (rand (fx- w s) s/2) s))
-                   (rand w s/2))))))
+                     (+ (rand s s/2)
+                        (arithmetic-shift (rand (fx- w s) s/2) s))
+                     (rand w s/2))))))
 
       (define (split w s)
         (let ((s*2 (fx* 2 s)))
           (if (fx< s*2 w)
-            (split w s*2)
-            s)))
+              (split w s*2)
+              s)))
 
       (rand w (split w (macro-k))))
 
@@ -10724,10 +10730,10 @@ ___RESULT = result;
         (advance-state!)
         (if (fl< (f64vector-ref state 6)
                  (macro-m1-div-2^k-times-2^k-inexact))
-          (##flonum->fixnum
-           (fl/ (f64vector-ref state 6)
-                (macro-m1-div-2^k-inexact)))
-          (loop))))
+            (##flonum->fixnum
+             (fl/ (f64vector-ref state 6)
+                  (macro-m1-div-2^k-inexact)))
+            (loop))))
 
     (define (rand-fixnum32 range) ;; range is a fixnum32
       (##declare (not interrupts-enabled))
@@ -10739,26 +10745,26 @@ ___RESULT = result;
         (advance-state!)
         (if (fl< (f64vector-ref state 6)
                  (f64vector-ref state 8))
-          (##flonum->fixnum
-           (fl/ (f64vector-ref state 6)
-                (f64vector-ref state 7)))
-          (loop))))
+            (##flonum->fixnum
+             (fl/ (f64vector-ref state 6)
+                  (f64vector-ref state 7)))
+            (loop))))
 
     (define (make-reals precision)
       (if (fl< precision (macro-inv-m1-plus-1-inexact))
-        (lambda ()
-          (let loop ((r (fixnum->flonum (rand-fixnum32-2^k)))
-                     (d (macro-inv-2^k-inexact)))
-            (if (fl< r (macro-flonum-+m-max-inexact))
-              (loop (fl+ (fl* r (macro-2^k-inexact))
-                                (fixnum->flonum (rand-fixnum32-2^k)))
-                    (fl* d (macro-inv-2^k-inexact)))
-              (fl* r d))))
-        (lambda ()
-          (##declare (not interrupts-enabled))
-          (advance-state!)
-          (fl/ (fl+ (macro-inexact-+1) (f64vector-ref state 6))
-               (macro-m1-plus-1-inexact)))))
+          (lambda ()
+            (let loop ((r (fixnum->flonum (rand-fixnum32-2^k)))
+                       (d (macro-inv-2^k-inexact)))
+              (if (fl< r (macro-flonum-+m-max-inexact))
+                  (loop (fl+ (fl* r (macro-2^k-inexact))
+                             (fixnum->flonum (rand-fixnum32-2^k)))
+                        (fl* d (macro-inv-2^k-inexact)))
+                  (fl* r d))))
+          (lambda ()
+            (##declare (not interrupts-enabled))
+            (advance-state!)
+            (fl/ (fl+ (macro-inexact-+1) (f64vector-ref state 6))
+                 (macro-m1-plus-1-inexact)))))
 
     (macro-make-random-source
      state-ref
@@ -10806,14 +10812,14 @@ ___RESULT = result;
   (macro-force-vars (rs i j)
     (macro-check-random-source rs 1 (random-source-pseudo-randomize! rs i j)
       (if (not (macro-exact-int? i))
-        (##fail-check-exact-integer 2 random-source-pseudo-randomize! rs i j)
-        (if (not (macro-exact-int? j))
-          (##fail-check-exact-integer 3 random-source-pseudo-randomize! rs i j)
-          (if (negative? i)
-            (##raise-range-exception 2 random-source-pseudo-randomize! rs i j)
-            (if (negative? j)
-              (##raise-range-exception 3 random-source-pseudo-randomize! rs i j)
-              (##random-source-pseudo-randomize! rs i j))))))))
+          (##fail-check-exact-integer 2 random-source-pseudo-randomize! rs i j)
+          (if (not (macro-exact-int? j))
+              (##fail-check-exact-integer 3 random-source-pseudo-randomize! rs i j)
+              (if (negative? i)
+                  (##raise-range-exception 2 random-source-pseudo-randomize! rs i j)
+                  (if (negative? j)
+                      (##raise-range-exception 3 random-source-pseudo-randomize! rs i j)
+                      (##random-source-pseudo-randomize! rs i j))))))))
 
 (define-prim (##random-source-make-integers rs)
   ((macro-random-source-make-integers rs)))
@@ -10826,21 +10832,21 @@ ___RESULT = result;
 (define-prim (##random-source-make-reals rs #!optional (p (macro-absent-obj)))
   ((macro-random-source-make-reals rs)
    (if (eq? p (macro-absent-obj))
-     (macro-inexact-+1)
-     p)))
+       (macro-inexact-+1)
+       p)))
 
 (define-prim (random-source-make-reals rs #!optional (p (macro-absent-obj)))
   (macro-force-vars (rs p)
     (macro-check-random-source rs 1 (random-source-make-reals rs p)
       (if (eq? p (macro-absent-obj))
-        (##random-source-make-reals rs)
-        (if (rational? p)
-          (let ((precision (macro-real->inexact p)))
-            (if (and (fl< (macro-inexact-+0) precision)
-                     (fl< precision (macro-inexact-+1)))
-              (##random-source-make-reals rs precision)
-              (##raise-range-exception 2 random-source-make-reals rs p)))
-          (##fail-check-finite-real 2 random-source-make-reals rs p))))))
+          (##random-source-make-reals rs)
+          (if (rational? p)
+              (let ((precision (macro-real->inexact p)))
+                (if (and (fl< (macro-inexact-+0) precision)
+                         (fl< precision (macro-inexact-+1)))
+                    (##random-source-make-reals rs precision)
+                    (##raise-range-exception 2 random-source-make-reals rs p)))
+              (##fail-check-finite-real 2 random-source-make-reals rs p))))))
 
 (define default-random-source #f)
 (set! default-random-source (##make-random-source-mrg32k3a))
