@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsc.scm", Time-stamp: <2007-06-27 23:13:48 feeley>
+;;; File: "_gsc.scm", Time-stamp: <2007-09-06 13:09:18 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -198,6 +198,9 @@
                                 mods
                                 output
                                 #f))))))))))
+
+(define-prim (##c-code . args) ;; avoid errors when using -expansion
+  (error "##c-code is not callable dynamically"))
 
 ;;;----------------------------------------------------------------------------
 
