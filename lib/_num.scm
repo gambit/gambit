@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2007-08-27 18:04:30 feeley>
+;;; File: "_num.scm", Time-stamp: <2007-09-07 11:42:21 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2007 by Brad Lucier, All Rights Reserved.
@@ -89,7 +89,7 @@
 
 ;;; Numerical type predicates.
 
-(define-prim (##number?)
+(define-prim (##number? x)
   (##complex? x))
 
 (define-prim (##complex? x)
