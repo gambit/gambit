@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2007-08-06 20:10:40 feeley>
+;;; File: "_io.scm", Time-stamp: <2007-09-07 13:29:21 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -9235,22 +9235,21 @@
                  (let ((name (##build-delimited-string re c 1)))
 
                    (define (read-hex nb-digits)
-                     (if (and nb-digits
-                              (not (= (- (string-length name) 1) nb-digits)))
-                       (invalid-character-name-error)
-                       (let loop ((i 1)
-                                  (n 0))
-                         (cond ((= i (string-length name))
-                                (UCS-4 n))
-                               ((##char-hexadecimal? (string-ref name i))
-                                =>
-                                (lambda (next-digit)
-                                  (loop (+ i 1)
-                                        (if (< n ##max-char)
-                                          (+ (* n 16) next-digit)
-                                          n))))
-                               (else
-                                (invalid-character-name-error))))))
+                     (and (or (not nb-digits)
+                              (= (- (string-length name) 1) nb-digits))
+                          (let loop ((i 1)
+                                     (n 0))
+                            (cond ((= i (string-length name))
+                                   (UCS-4 n))
+                                  ((##char-hexadecimal? (string-ref name i))
+                                   =>
+                                   (lambda (next-digit)
+                                     (loop (+ i 1)
+                                           (if (< n ##max-char)
+                                               (+ (* n 16) next-digit)
+                                               n))))
+                                  (else
+                                   #f)))))
 
                    (define (UCS-4 n)
                      (if (not (in-char-range? n))
@@ -9270,30 +9269,30 @@
                      (macro-readenv-filepos-set! re old-pos) ;; restore pos
                      (##read-datum-or-label-or-none-or-dot re)) ;; skip error
 
-                   (cond ((char=? c #\x)
-                          (read-hex #f))
-                         ((char=? c #\u)
-                          (read-hex 4))
-                         ((char=? c #\U)
-                          (read-hex 8))
-                         #; ;; disable old #\#x1234 character syntax
-                         ((char=? c #\#)
-                          (let ((n (string->number name 10)))
-                            (if (or (not n)
-                                    (not (integer? n))
-                                    (not (exact? n)))
-                              (invalid-character-name-error)
-                              (UCS-4 n))))
-                         (else
-                          (let ((x
-                                 (##read-assoc-string=?
-                                  re
-                                  name
-                                  (macro-readtable-named-char-table
-                                   (macro-readenv-readtable re)))))
-                            (if x
-                              (macro-readenv-wrap re (cdr x))
-                              (invalid-character-name-error)))))))))))))
+                   (or (cond ((char=? c #\x)
+                              (read-hex #f))
+                             ((char=? c #\u)
+                              (read-hex 4))
+                             ((char=? c #\U)
+                              (read-hex 8))
+                             #; ;; disable old #\#x1234 character syntax
+                             ((char=? c #\#)
+                              (let ((n (string->number name 10)))
+                                (and n
+                                     (integer? n)
+                                     (exact? n)
+                                     (UCS-4 n))))
+                             (else
+                              #f))
+                       (let ((x
+                              (##read-assoc-string=?
+                               re
+                               name
+                               (macro-readtable-named-char-table
+                                (macro-readenv-readtable re)))))
+                         (if x
+                             (macro-readenv-wrap re (cdr x))
+                             (invalid-character-name-error))))))))))))
 
 (define (##read-sharp-comment re next start-pos)
   (let ((old-pos (macro-readenv-filepos re)))
