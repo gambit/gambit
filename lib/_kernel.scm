@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2007-05-27 22:26:57 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2007-09-07 11:32:49 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -3410,6 +3410,28 @@ end-of-code
         (##raise-heap-overflow-exception)
         (##make-interned-symkey name symbol?))
       result)))
+
+(define-prim (##find-interned-symbol name)
+  (##find-interned-symkey name #t))
+
+(define-prim (##find-interned-keyword name)
+  (##find-interned-symkey name #f))
+
+(define-prim (##find-interned-symkey name symbol?)
+  ((c-lambda (scheme-object
+              scheme-object)
+             scheme-object
+     #<<end-of-code
+
+     unsigned int subtype = (___arg2 != ___FAL)
+                            ? ___sSYMBOL
+                            : ___sKEYWORD;
+     ___result = ___find_symkey_from_scheme_string (___arg1, subtype);
+
+end-of-code
+)
+   name
+   symbol?))
 
 ;;;----------------------------------------------------------------------------
 
