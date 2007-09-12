@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2007-06-04 14:50:33 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2007-09-11 14:12:46 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -3778,26 +3778,26 @@
            (targ-wr-reg (+ targ-nb-arg-regs 1))
            #t))))
 
-(targ-jump-inline "##continuation-graft"
+(targ-jump-inline "##continuation-graft-no-winding"
   (lambda (nb-args poll? safe?)
     (and (< 1 nb-args)
          (< nb-args 6)
          (let ((fs (frame-size targ-proc-exit-frame)))
            (targ-end-of-block-checks poll? fs)
            (targ-emit (targ-adjust-stack fs))
-           (targ-emit-jump-inline "CONTINUATION_GRAFT" safe? nb-args)
+           (targ-emit-jump-inline "CONTINUATION_GRAFT_NO_WINDING" safe? nb-args)
            (targ-wr-fp)
            (targ-wr-reg 0)
            (targ-wr-reg (+ targ-nb-arg-regs 1))
            #t))))
 
-(targ-jump-inline "##continuation-return"
+(targ-jump-inline "##continuation-return-no-winding"
   (lambda (nb-args poll? safe?)
     (and (= nb-args 2)
          (let ((fs (frame-size targ-proc-exit-frame)))
            (targ-end-of-block-checks poll? fs)
            (targ-emit (targ-adjust-stack fs))
-           (targ-emit-jump-inline "CONTINUATION_RETURN" safe? nb-args)
+           (targ-emit-jump-inline "CONTINUATION_RETURN_NO_WINDING" safe? nb-args)
            (targ-wr-fp)
            (targ-wr-reg 0)
            #t))))

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_prims.scm", Time-stamp: <2007-04-04 11:36:43 feeley>
+;;; File: "_prims.scm", Time-stamp: <2007-09-11 14:18:53 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -869,7 +869,9 @@
 
 ("##continuation-capture"             1     #t ()    1113 (#f)    extended)
 ("##continuation-graft"               2     #t ()    2203 #f      extended)
+("##continuation-graft-no-winding"    2     #t ()    2203 #f      extended)
 ("##continuation-return"              (2)   #t ()    0    #f      extended)
+("##continuation-return-no-winding"   (2)   #t ()    0    #f      extended)
 
 ("##apply"                            (2)   #t ()    0    (#f)    extended)
 ("##call-with-current-continuation"   1     #t ()    1112 (#f)    extended)
