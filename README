@@ -1,7 +1,9 @@
                       README file for Gambit-C
                       ========================
 
-              [Time-stamp: <2007-08-25 13:44:19 feeley>]
+              [Time-stamp: <2007-09-12 11:45:00 feeley>]
+
+TEST!!!
 
 This directory contains a release of the Gambit-C Scheme programming
 system (see the file configure.ac for the version number).  Gambit-C
