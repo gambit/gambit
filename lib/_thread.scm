@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2007-05-27 22:47:46 feeley>
+;;; File: "_thread.scm", Time-stamp: <2007-09-11 18:53:35 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -113,6 +113,7 @@
 
 ;;; Define type checking procedures.
 
+(implement-check-type-continuation)
 (implement-check-type-time)
 (implement-check-type-absrel-time)
 (implement-check-type-absrel-time-or-false)
@@ -2342,7 +2343,7 @@
    (lambda (cont)
      (macro-dynamic-bind exception-handler
       (lambda (exc)
-        (##continuation-graft-with-winding cont catcher exc))
+        (##continuation-graft cont catcher exc))
       thunk))))
 
 (define-prim (with-exception-catcher catcher thunk)
@@ -2381,24 +2382,7 @@
              (val3 (macro-absent-obj))
              #!rest
              others)
-      (##continuation-return-with-winding
-       cont
-       (cond ((##eq? val1 (macro-absent-obj))
-              (##values))
-             ((##eq? val2 (macro-absent-obj))
-              val1)
-             ((##eq? val3 (macro-absent-obj))
-              (##values val1 val2))
-             ((##null? others)
-              (##values val1 val2 val3))
-             (else
-              (##subtype-set!
-               (##list->vector
-                (##cons val1
-                        (##cons val2
-                                (##cons val3
-                                        others))))
-               (macro-subtype-boxvalues)))))))
+      (##continuation-return-aux cont val1 val2 val3 others)))
 
   (cond ((##eq? lift1 (macro-absent-obj))
          (##continuation-capture
@@ -2577,35 +2561,48 @@
      (##declare (not interrupts-enabled))
      (##thread-restore! thread (lambda () (##apply proc args))))))
 
-(define-prim ##continuation-capture
-  (##first-argument
-   (lambda (receiver
-            #!optional
-            (lift1 (macro-absent-obj))
-            (lift2 (macro-absent-obj))
-            (lift3 (macro-absent-obj))
-            #!rest
-            others)
-     (##declare (not interrupts-enabled))
-     (cond ((##eq? lift1 (macro-absent-obj))
-            (##continuation-capture receiver))
-           ((##eq? lift2 (macro-absent-obj))
-            (##continuation-capture receiver lift1))
-           ((##eq? lift3 (macro-absent-obj))
-            (##continuation-capture receiver lift1 lift2))
-           ((##null? others)
-            (##continuation-capture receiver lift1 lift2 lift3))
-           (else
-            (let ((lifts
-                   (##cons lift1
-                           (##cons lift2
-                                   (##cons lift3
-                                           others)))))
-              (##continuation-capture
-               (lambda (cont)
-                 (##apply receiver (##cons cont lifts))))))))))
+(define-prim (##continuation-capture-aux receiver lift1 lift2 lift3 others)
+  (##declare (not interrupts-enabled))
+  (cond ((##eq? lift1 (macro-absent-obj))
+         (##continuation-capture receiver))
+        ((##eq? lift2 (macro-absent-obj))
+         (##continuation-capture receiver lift1))
+        ((##eq? lift3 (macro-absent-obj))
+         (##continuation-capture receiver lift1 lift2))
+        ((##null? others)
+         (##continuation-capture receiver lift1 lift2 lift3))
+        (else
+         (let ((lifts
+                (##cons lift1
+                        (##cons lift2
+                                (##cons lift3
+                                        others)))))
+           (##continuation-capture
+            (lambda (cont)
+              (##apply receiver (##cons cont lifts))))))))
 
-(define-prim ##continuation-graft
+(define-prim (##continuation-capture
+              receiver
+              #!optional
+              (lift1 (macro-absent-obj))
+              (lift2 (macro-absent-obj))
+              (lift3 (macro-absent-obj))
+              #!rest
+              others)
+  (##continuation-capture-aux receiver lift1 lift2 lift3 others))
+
+(define-prim (continuation-capture
+              receiver
+              #!optional
+              (lift1 (macro-absent-obj))
+              (lift2 (macro-absent-obj))
+              (lift3 (macro-absent-obj))
+              #!rest
+              others)
+  (macro-check-procedure receiver 1 (continuation-capture receiver lift1 lift2 lift3 . others)
+    (##continuation-capture-aux receiver lift1 lift2 lift3 others)))
+
+(define-prim ##continuation-graft-no-winding
   (##first-argument
    (lambda (cont
             proc
@@ -2617,31 +2614,31 @@
             others)
      (##declare (not interrupts-enabled))
      (cond ((##eq? arg1 (macro-absent-obj))
-            (##continuation-graft cont proc))
+            (##continuation-graft-no-winding cont proc))
            ((##eq? arg2 (macro-absent-obj))
-            (##continuation-graft cont proc arg1))
+            (##continuation-graft-no-winding cont proc arg1))
            ((##eq? arg3 (macro-absent-obj))
-            (##continuation-graft cont proc arg1 arg2))
+            (##continuation-graft-no-winding cont proc arg1 arg2))
            ((##null? others)
-            (##continuation-graft cont proc arg1 arg2 arg3))
+            (##continuation-graft-no-winding cont proc arg1 arg2 arg3))
            (else
             (let ((args
                    (##cons arg1
                            (##cons arg2
                                    (##cons arg3
                                            others)))))
-              (##continuation-graft cont ##apply proc args)))))))
+              (##continuation-graft-no-winding cont ##apply proc args)))))))
 
-(define-prim ##continuation-return
+(define-prim ##continuation-return-no-winding
   (##first-argument
    (lambda (cont results)
      (##declare (not interrupts-enabled))
-     (##continuation-return cont results))))
+     (##continuation-return-no-winding cont results))))
 
 (define-prim (##continuation-unwind-wind src dst continue)
 
   (define (unwind-src src dst continue) ;; src level > dst level
-    (##continuation-graft
+    (##continuation-graft-no-winding
      (macro-dynwind-cont src)
      (lambda ()
        ((macro-dynwind-after src))
@@ -2663,7 +2660,7 @@
              (macro-continuation-denv (macro-dynwind-cont dst))))
            (new-continue
             (lambda ()
-              (##continuation-graft
+              (##continuation-graft-no-winding
                (macro-dynwind-cont dst)
                (lambda ()
                  ((macro-dynwind-before dst))
@@ -2678,7 +2675,7 @@
              (new-continue)))))
 
   (define (unwind-src-wind-dst src dst continue) ;; src level = dst level
-    (##continuation-graft
+    (##continuation-graft-no-winding
      (macro-dynwind-cont src)
      (lambda ()
        ((macro-dynwind-after src))
@@ -2690,7 +2687,7 @@
                 (macro-continuation-denv (macro-dynwind-cont dst))))
               (new-continue
                (lambda ()
-                 (##continuation-graft
+                 (##continuation-graft-no-winding
                   (macro-dynwind-cont dst)
                   (lambda ()
                     ((macro-dynwind-before dst))
@@ -2714,7 +2711,40 @@
           (else
            (unwind-src-wind-dst src dst continue)))))
 
-(define-prim (##continuation-graft-with-winding
+(define-prim (##continuation-graft-aux cont proc arg1 arg2 arg3 others)
+
+  (##declare (not interrupts-enabled))
+
+  (define (continue)
+    (cond ((##eq? arg1 (macro-absent-obj))
+           (##continuation-graft-no-winding cont proc))
+          ((##eq? arg2 (macro-absent-obj))
+           (##continuation-graft-no-winding cont proc arg1))
+          ((##eq? arg3 (macro-absent-obj))
+           (##continuation-graft-no-winding cont proc arg1 arg2))
+          ((##null? others)
+           (##continuation-graft-no-winding cont proc arg1 arg2 arg3))
+          (else
+           (let ((args
+                  (##cons arg1
+                          (##cons arg2
+                                  (##cons arg3
+                                          others)))))
+             (##continuation-graft-no-winding cont ##apply proc args)))))
+
+  (let* ((src
+          (macro-denv-dynwind
+           (macro-thread-denv (macro-current-thread))))
+         (dst
+          (macro-denv-dynwind
+           (macro-continuation-denv cont))))
+    (if (or (##eq? src dst) ;; check common case (same dynamic-wind context)
+            (and (##fixnum.= (macro-dynwind-level src) 0)
+                 (##fixnum.= (macro-dynwind-level dst) 0)))
+        (continue)
+        (##continuation-unwind-wind src dst (lambda () (continue))))))
+
+(define-prim (##continuation-graft
               cont
               proc
               #!optional
@@ -2723,25 +2753,44 @@
               (arg3 (macro-absent-obj))
               #!rest
               others)
+  (##continuation-graft-aux cont proc arg1 arg2 arg3 others))
+
+(define-prim (continuation-graft
+              cont
+              proc
+              #!optional
+              (arg1 (macro-absent-obj))
+              (arg2 (macro-absent-obj))
+              (arg3 (macro-absent-obj))
+              #!rest
+              others)
+  (macro-check-continuation cont 1 (continuation-graft cont proc arg1 arg2 arg3 . others)
+    (macro-check-procedure proc 2 (continuation-graft cont proc arg1 arg2 arg3 . others)
+      (##continuation-graft-aux cont proc arg1 arg2 arg3 others))))
+
+(define-prim (##continuation-return-aux cont val1 val2 val3 others)
 
   (##declare (not interrupts-enabled))
 
   (define (continue)
-    (cond ((##eq? arg1 (macro-absent-obj))
-           (##continuation-graft cont proc))
-          ((##eq? arg2 (macro-absent-obj))
-           (##continuation-graft cont proc arg1))
-          ((##eq? arg3 (macro-absent-obj))
-           (##continuation-graft cont proc arg1 arg2))
-          ((##null? others)
-           (##continuation-graft cont proc arg1 arg2 arg3))
-          (else
-           (let ((args
-                  (##cons arg1
-                          (##cons arg2
-                                  (##cons arg3
-                                          others)))))
-             (##continuation-graft cont ##apply proc args)))))
+    (##continuation-return-no-winding
+     cont
+     (cond ((##eq? val1 (macro-absent-obj))
+            (##values))
+           ((##eq? val2 (macro-absent-obj))
+            val1)
+           ((##eq? val3 (macro-absent-obj))
+            (##values val1 val2))
+           ((##null? others)
+            (##values val1 val2 val3))
+           (else
+            (##subtype-set!
+             (##list->vector
+              (##cons val1
+                      (##cons val2
+                              (##cons val3
+                                      others))))
+             (macro-subtype-boxvalues))))))
 
   (let* ((src
           (macro-denv-dynwind
@@ -2752,27 +2801,29 @@
     (if (or (##eq? src dst) ;; check common case (same dynamic-wind context)
             (and (##fixnum.= (macro-dynwind-level src) 0)
                  (##fixnum.= (macro-dynwind-level dst) 0)))
-      (continue)
-      (##continuation-unwind-wind src dst (lambda () (continue))))))
+        (continue)
+        (##continuation-unwind-wind src dst (lambda () (continue))))))
 
-(define-prim (##continuation-return-with-winding cont results)
+(define-prim (##continuation-return
+              cont
+              #!optional
+              (val1 (macro-absent-obj))
+              (val2 (macro-absent-obj))
+              (val3 (macro-absent-obj))
+              #!rest
+              others)
+  (##continuation-return-aux cont val1 val2 val3 others))
 
-  (##declare (not interrupts-enabled))
-
-  (define (continue)
-    (##continuation-return cont results))
-
-  (let* ((src
-          (macro-denv-dynwind
-           (macro-thread-denv (macro-current-thread))))
-         (dst
-          (macro-denv-dynwind
-           (macro-continuation-denv cont))))
-    (if (or (##eq? src dst) ;; check common case (same dynamic-wind context)
-            (and (##fixnum.= (macro-dynwind-level src) 0)
-                 (##fixnum.= (macro-dynwind-level dst) 0)))
-      (continue)
-      (##continuation-unwind-wind src dst (lambda () (continue))))))
+(define-prim (continuation-return
+              cont
+              #!optional
+              (val1 (macro-absent-obj))
+              (val2 (macro-absent-obj))
+              (val3 (macro-absent-obj))
+              #!rest
+              others)
+  (macro-check-continuation cont 1 (continuation-return cont val1 val2 val3 . others)
+    (##continuation-return-aux cont val1 val2 val3 others)))
 
 ;;;----------------------------------------------------------------------------
 

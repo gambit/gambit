@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2007-07-25 19:16:13 feeley>
+;;; File: "_repl.scm", Time-stamp: <2007-09-11 18:56:18 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1782,7 +1782,7 @@
   (define (with-clean-exception-handling repl-context thunk)
     (##with-exception-catcher
      (lambda (exc)
-       (##continuation-graft-with-winding ;; get rid of any useless continuation frames
+       (##continuation-graft ;; get rid of any useless continuation frames
         (macro-repl-context-cont repl-context)
         (lambda ()
           (release-ownership!)
@@ -1828,7 +1828,7 @@
          (display-continuation repl-context)))))
 
   (define (restart-exec repl-context thunk)
-    (##continuation-graft-with-winding ;; get rid of any useless continuation frames
+    (##continuation-graft ;; get rid of any useless continuation frames
      (macro-repl-context-cont repl-context)
      (lambda ()
        (with-clean-exception-handling
@@ -1906,14 +1906,14 @@
 
     (define (quit)
       (release-ownership!)
-      (##continuation-graft-with-winding
+      (##continuation-graft
        (macro-repl-context-cont repl-context)
        (lambda ()
          (##thread-terminate! (macro-current-thread)))))
 
     (define (return results)
       (release-ownership!)
-      (##continuation-return-with-winding
+      (##continuation-return
        (macro-repl-context-cont repl-context)
        results))
 
@@ -1956,7 +1956,7 @@
                  results)
                (lambda results
                  (write-results results)
-                 (##continuation-return-with-winding return #f)))))))
+                 (##continuation-return return #f)))))))
         (acquire-ownership!))
 
       (cond ((##eof-object? src)
@@ -2095,7 +2095,7 @@
 (define-prim (##eval-within src cont repl-context receiver)
 
   (define (run c rte)
-    (##continuation-graft-with-winding
+    (##continuation-graft
      cont
      (lambda ()
        (macro-dynamic-bind repl-context
@@ -2616,6 +2616,7 @@
     (hash-algorithm               . "HASH ALGORITHM")
 
     ;; from "_thread.scm":
+    (continuation                 . "CONTINUATION")
     (time                         . "TIME object")
     (absrel-time                  . "REAL or TIME object")
     (absrel-time-or-false         . "#f or REAL or TIME object")

@@ -1,4 +1,4 @@
-/* File: "c_intf.c", Time-stamp: <2007-06-08 08:07:49 feeley> */
+/* File: "c_intf.c", Time-stamp: <2007-09-11 23:50:40 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_C_INTF
-#define ___VERSION 400000
+#define ___VERSION 400001
 #include "gambit.h"
 
 #include "os_base.h"

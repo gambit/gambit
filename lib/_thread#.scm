@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread#.scm", Time-stamp: <2007-05-27 22:43:36 feeley>
+;;; File: "_thread#.scm", Time-stamp: <2007-09-11 18:05:51 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -130,6 +130,9 @@
 ;;;----------------------------------------------------------------------------
 
 ;;; Define type checking macros.
+
+(define-check-type continuation 'continuation
+  ##continuation?)
 
 (define-check-type time (macro-type-time)
   macro-time?)

@@ -3126,6 +3126,11 @@ violating the R5RS Scheme semantics, are: @code{(standard-bindings)},
 
 The procedures in this section are not yet documented.
 
+@deffn procedure continuation-capture @var{receiver}
+@deffnx procedure continuation-graft @var{cont} @var{proc} @var{obj}@dots{}
+@deffnx procedure continuation-return @var{cont} @var{obj}@dots{}
+@end deffn
+
 @deffn procedure print @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}
 @deffnx procedure println @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}
 @end deffn

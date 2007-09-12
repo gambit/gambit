@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2007-04-04 11:32:12 feeley> */
+/* File: "setup.c", Time-stamp: <2007-09-11 23:51:56 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_SETUP
-#define ___VERSION 400000
+#define ___VERSION 400001
 #include "gambit.h"
 
 #include "os_base.h"

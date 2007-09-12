@@ -1,4 +1,4 @@
-/* File: "_guide.h", Time-stamp: <2007-04-04 11:33:11 feeley> */
+/* File: "_guide.h", Time-stamp: <2007-09-12 00:15:35 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -7,7 +7,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-#define ___VERSION 40000
+#define ___VERSION 400001
 #include "gambit.h"
 
 #include <qstring.h>

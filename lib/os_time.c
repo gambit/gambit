@@ -1,4 +1,4 @@
-/* File: "os_time.c", Time-stamp: <2007-04-05 09:22:39 feeley> */
+/* File: "os_time.c", Time-stamp: <2007-09-11 23:51:43 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_TIME
-#define ___VERSION 400000
+#define ___VERSION 400001
 #include "gambit.h"
 
 #include "os_base.h"

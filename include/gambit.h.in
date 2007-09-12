@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2007-08-07 14:13:24 feeley> */
+/* File: "gambit.h", Time-stamp: <2007-09-11 23:28:00 feeley> */
 
 /*
  * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
@@ -15,8 +15,8 @@
 @error "___VERSION has not been set by includer"
 #endif
 
-#if ___VERSION != 400000
-#include "gambit-not400000.h"
+#if ___VERSION != 400001
+#include "gambit-not400001.h"
 #else
 
 /*---------------------------------------------------------------------------*/
@@ -3185,7 +3185,7 @@ ___ps->stack_break = ___fp;
   jump(___SET_NARGS(4),proc) \
 }
 
-#define ___CONTINUATION_GRAFT \
+#define ___CONTINUATION_GRAFT_NO_WINDING \
 ___fp = ___ps->stack_break; \
 ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
 temp = ___FIELD(cont,___CONTINUATION_DENV); \
@@ -3197,29 +3197,29 @@ ___FIELD(thread,___THREAD_DENV_CACHE2) = temp; \
 ___FIELD(thread,___THREAD_DENV_CACHE3) = temp; \
 ___SET_R0(___GSTATE->handler_break)
 
-#define ___JUMP_CONTINUATION_GRAFT2(jump) \
+#define ___JUMP_CONTINUATION_GRAFT_NO_WINDING2(jump) \
 { ___SCMOBJ cont; \
   ___SCMOBJ proc; \
   ___SCMOBJ temp; \
   ___SCMOBJ thread; \
   ___POP_ARGS2(cont,proc) \
-  ___CONTINUATION_GRAFT \
+  ___CONTINUATION_GRAFT_NO_WINDING \
   jump(___SET_NARGS(0),proc) \
 }
 
-#define ___JUMP_CONTINUATION_GRAFT3(jump) \
+#define ___JUMP_CONTINUATION_GRAFT_NO_WINDING3(jump) \
 { ___SCMOBJ cont; \
   ___SCMOBJ proc; \
   ___SCMOBJ arg1; \
   ___SCMOBJ temp; \
   ___SCMOBJ thread; \
   ___POP_ARGS3(cont,proc,arg1) \
-  ___CONTINUATION_GRAFT \
+  ___CONTINUATION_GRAFT_NO_WINDING \
   ___PUSH_ARGS1(arg1) \
   jump(___SET_NARGS(1),proc) \
 }
 
-#define ___JUMP_CONTINUATION_GRAFT4(jump) \
+#define ___JUMP_CONTINUATION_GRAFT_NO_WINDING4(jump) \
 { ___SCMOBJ cont; \
   ___SCMOBJ proc; \
   ___SCMOBJ arg1; \
@@ -3227,12 +3227,12 @@ ___SET_R0(___GSTATE->handler_break)
   ___SCMOBJ temp; \
   ___SCMOBJ thread; \
   ___POP_ARGS4(cont,proc,arg1,arg2) \
-  ___CONTINUATION_GRAFT \
+  ___CONTINUATION_GRAFT_NO_WINDING \
   ___PUSH_ARGS2(arg1,arg2) \
   jump(___SET_NARGS(2),proc) \
 }
 
-#define ___JUMP_CONTINUATION_GRAFT5(jump) \
+#define ___JUMP_CONTINUATION_GRAFT_NO_WINDING5(jump) \
 { ___SCMOBJ cont; \
   ___SCMOBJ proc; \
   ___SCMOBJ arg1; \
@@ -3241,12 +3241,12 @@ ___SET_R0(___GSTATE->handler_break)
   ___SCMOBJ temp; \
   ___SCMOBJ thread; \
   ___POP_ARGS5(cont,proc,arg1,arg2,arg3) \
-  ___CONTINUATION_GRAFT \
+  ___CONTINUATION_GRAFT_NO_WINDING \
   ___PUSH_ARGS3(arg1,arg2,arg3) \
   jump(___SET_NARGS(3),proc) \
 }
 
-#define ___JUMP_CONTINUATION_RETURN2(jump) \
+#define ___JUMP_CONTINUATION_RETURN_NO_WINDING2(jump) \
 { ___SCMOBJ cont; \
   ___SCMOBJ result; \
   ___SCMOBJ temp; \

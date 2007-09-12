@@ -1,11 +1,11 @@
-/* File: "main.c", Time-stamp: <2007-04-23 22:00:14 feeley> */
+/* File: "main.c", Time-stamp: <2007-09-11 23:50:53 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit-C system */
 
 #define ___INCLUDED_FROM_MAIN
-#define ___VERSION 400000
+#define ___VERSION 400001
 #include "gambit.h"
 
 #include "os_base.h"
