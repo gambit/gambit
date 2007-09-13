@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2007-09-11 23:28:00 feeley> */
+/* File: "gambit.h", Time-stamp: <2007-09-13 14:42:24 feeley> */
 
 /*
  * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
@@ -2499,7 +2499,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___TYPE(x)___FIX(___TYP(x))
 #define ___TYPECAST(x,y)(((x)&~___TMASK)+___INT(y))
-#define ___SUBTYPE(x)((___HEADER(x)&___SMASK)>>(___HTB-___TB))
+#define ___SUBTYPE(x)((*___UNTAG(x)&___SMASK)>>(___HTB-___TB))
 #define ___SUBTYPESET(x,y)___temp=(x);___HEADER(___temp)=(___HEADER(___temp)&~___SMASK)+((y)<<(___HTB-___TB));
 
 /* IFJUMP-able operations */
