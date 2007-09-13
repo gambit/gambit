@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2007-08-19 22:39:04 feeley>
+;;; File: "_eval.scm", Time-stamp: <2007-09-13 13:17:43 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -69,6 +69,60 @@
               x
               (##vector-ref src 2)
               (##vector-ref src 3))))
+
+(define (##sourcify-deep x src)
+
+  (define (sourcify-deep-list lst src)
+    (cond ((##pair? lst)
+           (let* ((a (##car lst))
+                  (d (##cdr lst))
+                  (sa (sourcify-deep a src))
+                  (sd (sourcify-deep-list d src)))
+             (if (and (##eq? a sa) (##eq? d sd))
+                 lst
+                 (##cons sa sd))))
+          ((##null? lst)
+           '())
+          (else
+           (sourcify-deep lst src))))
+
+  (define (sourcify-deep-vector vect src)
+    (let* ((len (##vector-length vect))
+           (x (##make-vector len 0))
+           (same? #t))
+      (let loop ((i (##fixnum.- len 1)))
+        (if (##fixnum.< i 0)
+            (if same? vect x)
+            (let ((s (sourcify-deep (##vector-ref vect i) src)))
+              (if (##not (##eq? s (##vector-ref vect i)))
+                  (set! same? #f))
+              (##vector-set! x i s)
+              (loop (##fixnum.- i 1)))))))
+
+  (define (sourcify-deep-box b src)
+    (let ((val (sourcify-deep (##unbox b) src)))
+      (if (##eq? val (##unbox b))
+          b
+          (##box val))))
+
+  (define (sourcify-deep-aux x src)
+    (cond ((##pair? x)
+           (sourcify-deep-list x src))
+          ((##vector? x)
+           (sourcify-deep-vector x src))
+          ((##box? x)
+           (sourcify-deep-box x src))
+          (else
+           x)))
+
+  (define (sourcify-deep x src)
+    (if (##source? x)
+        (let* ((code (##source-code x))
+               (code2 (sourcify-deep-aux code x)))
+          (if (##eq? code code2) x (##sourcify code2 x)))
+        (##sourcify (sourcify-deep-aux x src) src)))
+
+  (sourcify-deep x src))
 
 (define (##source? x)
   (and (##vector? x)

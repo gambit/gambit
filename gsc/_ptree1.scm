@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2007-04-04 11:36:50 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2007-09-13 13:34:00 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -840,7 +840,7 @@
   (let ((code (source-code source)))
     (let ((descr (env-lookup-macro env (source-code (car code)))))
       (if (##macro-descr-def-syntax? descr)
-        (##sourcify
+        (##sourcify-deep
          ((##macro-descr-expander descr) source)
          source)
         (expression->source
@@ -2249,40 +2249,51 @@
 ;; --------------
 
 (define (add-macro source env)
+  (let ((def-syntax? (**define-syntax-expr? source env)))
 
-  (define (form-size parms)
-    (let loop ((lst parms) (n 1))
-      (cond ((pair? lst)
-             (let ((parm (source-code (car lst))))
-               (if (or (optional-object? parm)
-                       (key-object? parm)
-                       (rest-object? parm))
-                 (- n)
-                 (loop (cdr lst)
-                       (+ n 1)))))
-            ((null? lst)
-             n)
-            (else
-             (- n)))))
+    (define (form-size parms)
+      (let loop ((lst parms) (n 1))
+        (cond ((pair? lst)
+               (let ((parm (source-code (car lst))))
+                 (if (or (optional-object? parm)
+                         (key-object? parm)
+                         (rest-object? parm))
+                     (- n)
+                     (loop (cdr lst)
+                           (+ n 1)))))
+              ((null? lst)
+               n)
+              (else
+               (- n)))))
 
-  (define (error-proc . msgs)
-    (apply compiler-user-error
-           (cons (source-locat source)
-                 (cons "(in macro body)" msgs))))
+    (define (error-proc . msgs)
+      (apply compiler-user-error
+             (cons (source-locat source)
+                   (cons "(in macro body)" msgs))))
 
-  (let ((var (definition-name source env))
-        (proc (definition-value source)))
-    (if (or (**lambda-expr? proc env)
-            (lambda-expr? proc env))
-      (env-macro env
-                 (source-code var)
-                 (##make-macro-descr
-                  #f;;;;;;;;;;;;;;;
-                  (form-size (source->parms (cadr (source-code proc))))
-                  (scheme-global-eval (source->expression proc)
-                                      error-proc)
-                  proc))
-      (pt-syntax-error proc "Macro value must be a lambda expression"))))
+    (define (make-descr var proc size)
+      (let ((expander
+             (scheme-global-eval (source->expression proc)
+                                 error-proc)))
+        (if (not (procedure? expander))
+            (pt-syntax-error proc "Macro expander must be a procedure")
+            (env-macro env
+                       (source-code var)
+                       (##make-macro-descr def-syntax? size expander proc)))))
+
+    (let* ((var (definition-name source env))
+           (proc (definition-value source)))
+      (if def-syntax?
+          (make-descr var
+                      proc
+                      -1)
+          (if (or (**lambda-expr? proc env)
+                  (lambda-expr? proc env))
+              (make-descr var
+                          proc
+                          (form-size
+                           (source->parms (cadr (source-code proc)))))
+              (pt-syntax-error proc "Macro value must be a lambda expression"))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
