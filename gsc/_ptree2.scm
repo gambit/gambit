@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2007-04-04 11:36:58 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2007-09-27 13:58:22 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -701,15 +701,14 @@
                           (delete-ptree pre)
                           alt)
                         (begin
-                          ; (and X #f) => (let ((dummy X)) #f)
+                          ; (and X #f) => (begin X #f)
                           ; this transform should be generalized
                           (new-seq (node-source ptree) (node-env ptree)
                             pre
                             alt))))
                      ((and (cst? alt)
                            (not (false-object? (cst-val alt)))
-                           (or (boolean-value? pre)
-                               (eq? reason 'pred)))
+                           (eq? reason 'pred))
                       ; (if (and X non-#f) ...) => (if X ...)
                       (delete-ptree alt)
                       pre)
