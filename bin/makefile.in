@@ -189,7 +189,7 @@ install-post: all
 	if test "@bat@" = ""; then \
 	  (cd $(bindir) && $(LN_S) gsi@exe@ six@exe@); \
 	  (cd $(bindir) && $(LN_S) gsi@exe@ gsi-script@bat@); \
-	  (cd $(bindir) && $(LN_S) gsi@exe@ gsc-script@bat@); \
+	  (cd $(bindir) && $(LN_S) gsc@exe@ gsc-script@bat@); \
 	  (cd $(bindir) && $(LN_S) gsi@exe@ six-script@bat@); \
 	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-srfi-0@bat@); \
 	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-r5rs@bat@); \
