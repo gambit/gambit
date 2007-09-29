@@ -1,4 +1,4 @@
-/* File: "setup.h", Time-stamp: <2007-04-04 11:32:18 feeley> */
+/* File: "setup.h", Time-stamp: <2007-09-28 09:57:58 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -27,6 +27,12 @@ extern ___SCMOBJ ___find_symkey_from_scheme_string
 extern ___SCMOBJ ___new_symkey
    ___P((___SCMOBJ name,
          unsigned int subtype),
+        ());
+
+extern void ___for_each_symkey
+   ___P((unsigned int subtype,
+         void (*visit) (___SCMOBJ symkey, void *data),
+         void *data),
         ());
 
 #ifdef ___DEBUG

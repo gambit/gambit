@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2007-09-11 23:51:48 feeley> */
+/* File: "os_tty.c", Time-stamp: <2007-09-29 05:51:13 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -179,25 +179,25 @@ int pos;
 int len;
 extensible_string_char *chars;)
 {
-  ___SCMOBJ e;
+  ___SCMOBJ e = ___FIX(___NO_ERR);
   int i;
 
-  if (pos < 0)
-    pos = 0;
-  else if (pos > str->length)
-    pos = str->length;
-
-  if (len < 0)
-    len = 0;
-
-  if ((e = extensible_string_set_length (str, str->length+len, -1))
-      == ___FIX(___NO_ERR))
+  if (len > 0)
     {
-      for (i=str->length-len-1; i>=pos; i--)
-        str->buffer[i+len] = str->buffer[i];
+      if (pos < 0)
+        pos = 0;
+      else if (pos > str->length)
+        pos = str->length;
 
-      for (i=len-1; i>=0; i--)
-        str->buffer[i+pos] = chars[i];
+      if ((e = extensible_string_set_length (str, str->length+len, -1))
+          == ___FIX(___NO_ERR))
+        {
+          for (i=str->length-len-1; i>=pos; i--)
+            str->buffer[i+len] = str->buffer[i];
+
+          for (i=len-1; i>=0; i--)
+            str->buffer[i+pos] = chars[i];
+        }
     }
 
   return e;
@@ -4649,6 +4649,7 @@ int plain;)
   d->hist_last = NULL;
 
   d->current.edit_point = 0;
+  d->current.completion_point = 0;
   d->current.mark_point = 0;
   d->current.line_start = 0;
   d->current.paren_balance_trigger = 0;
@@ -5097,6 +5098,7 @@ int pos;)
     return e;
 
   d->current.edit_point = pos;
+  d->current.completion_point = pos;
 
   return ___FIX(___NO_ERR);
 }
@@ -5509,6 +5511,105 @@ int *final_pos;)
 }
 
 
+___HIDDEN ___SCMOBJ lineeditor_delete_then_insert_chars
+   ___P((___device_tty *self,
+         int pos,
+         ___BOOL copy_to_clipboard,
+         ___C *buf,
+         int len),
+        (self,
+         pos,
+         copy_to_clipboard,
+         buf,
+         len)
+___device_tty *self;
+int pos;
+___BOOL copy_to_clipboard;
+___C *buf;
+int len;)
+{
+  ___device_tty *d = self;
+  ___SCMOBJ e;
+  extensible_string *edited = &d->current.hist->edited;
+  int edit_point;
+  int end;
+  int n;
+  int open_paren_point;
+  ___C c;
+
+  if (pos < 0 ||
+      pos > edited->length ||
+      len < 0)
+    return ___FIX(___INVALID_OP_ERR);
+
+  if (pos < d->current.edit_point)
+    {
+      edit_point = pos;
+      end = d->current.edit_point;
+    }
+  else
+    {
+      edit_point = d->current.edit_point;
+      end = pos;
+    }
+
+  n = end - edit_point; /* number of characters to delete */
+
+  if (n > 0)
+    {
+      if (copy_to_clipboard &&
+          ((e = lineeditor_copy_to_clipboard
+                  (d,
+                   &edited->buffer[edit_point],
+                   n))
+           != ___FIX(___NO_ERR)))
+        return e;
+
+      extensible_string_delete (edited, edit_point, n);
+    }
+
+  if ((e = extensible_string_insert (edited, edit_point, len, buf))
+      != ___FIX(___NO_ERR))
+    return e;
+
+  if (d->current.mark_point >= end)
+    d->current.mark_point += len - n;
+  else if (d->current.mark_point >= edit_point+len)
+    d->current.mark_point = edit_point+len;
+
+  if ((e = lineeditor_update_region
+             (d,
+              edit_point,
+              (len > n) ? edited->length : edited->length - len + n))
+      != ___FIX(___NO_ERR))
+    return e;
+
+  edit_point += len;
+
+  if (len > 0 &&
+      d->paren_balance_duration_nsecs > 0 &&
+      !lineeditor_read_ready (d) &&
+      (c = buf[len-1], CLOSE_PAREN(c)) &&
+      lineeditor_word_boundary (d, 1, edit_point, &open_paren_point) &&
+      (c = edited->buffer[open_paren_point], OPEN_PAREN(c)))
+    {
+      if ((e = lineeditor_move_edit_point (d, open_paren_point))
+          == ___FIX(___NO_ERR))
+        {
+          lineeditor_output_drain (d); /* ignore error */
+
+          d->current.edit_point = edit_point;
+          d->current.completion_point = edit_point;
+          d->current.paren_balance_trigger = 1;
+        }
+    }
+  else
+    e = lineeditor_move_edit_point (d, edit_point);
+
+  return e;
+}
+
+
 ___HIDDEN ___SCMOBJ lineeditor_insert_chars
    ___P((___device_tty *self,
          ___C *buf,
@@ -5521,6 +5622,21 @@ ___C *buf;
 int len;)
 {
   ___device_tty *d = self;
+
+#if 1
+
+  if (len > 0)
+    return lineeditor_delete_then_insert_chars
+             (d,
+              d->current.edit_point,
+              0,
+              buf,
+              len);
+
+  return ___FIX(___NO_ERR);
+
+#else
+
   ___SCMOBJ e;
   extensible_string *edited = &d->current.hist->edited;
   int edit_point = d->current.edit_point;
@@ -5556,12 +5672,14 @@ int len;)
       lineeditor_output_drain (d); /* ignore error */
 
       d->current.edit_point = edit_point;
+      d->current.completion_point = edit_point;
       d->current.paren_balance_trigger = 1;
 
       return ___FIX(___NO_ERR);
     }
 
   return lineeditor_move_edit_point (d, edit_point);
+#endif
 }
 
 
@@ -5577,6 +5695,18 @@ int pos;
 ___BOOL copy_to_clipboard;)
 {
   ___device_tty *d = self;
+
+#if 1
+
+  return lineeditor_delete_then_insert_chars
+           (d,
+            pos,
+            copy_to_clipboard,
+            NULL,
+            0);
+
+#else
+
   ___SCMOBJ e;
   extensible_string *edited = &d->current.hist->edited;
   int start;
@@ -5623,6 +5753,7 @@ ___BOOL copy_to_clipboard;)
     return e;
 
   return lineeditor_move_edit_point (d, start);
+#endif
 }
 
 
@@ -5712,6 +5843,210 @@ int end2;)
     return e;
 
   return lineeditor_move_edit_point (d, end2);
+}
+
+
+typedef struct
+  {
+    extensible_string *buf;
+    int word_start;
+    int completion_point;
+    int word_end;
+    ___SCMOBJ next;
+  } visit_symbol_data;
+
+
+___HIDDEN void visit_symbol
+   ___P((___SCMOBJ sym,
+         void *data),
+        (sym,
+         data)
+___SCMOBJ sym;
+void *data;)
+{
+  visit_symbol_data *dat = ___CAST(visit_symbol_data*,data);
+  ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
+  int n = ___INT(___STRINGLENGTH(name));
+  int word_start = dat->word_start;
+  int prefix = dat->completion_point - word_start;
+  int len = dat->word_end - word_start;
+  int i = 0;
+
+  if (n <= prefix)
+    return;
+
+  for (i=0; i<prefix; i++)
+    {
+      ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
+      ___C c2 = dat->buf->buffer[word_start+i];
+      if (c1 != c2)
+        return;
+    }
+
+  while (i < n)
+    {
+      if (i < len)
+        {
+          ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
+          ___C c2 = dat->buf->buffer[word_start+i];
+          if (c1 < c2)
+            return;
+          if (c1 > c2)
+            goto found;
+        }
+      else
+        goto found;
+      i++;
+    }
+
+  return;
+
+ found:
+
+  if (dat->next == ___FAL)
+    dat->next = sym;
+  else
+    {
+      ___SCMOBJ name2 = ___FIELD(dat->next,___SYMKEY_NAME);
+      int n2 = ___INT(___STRINGLENGTH(name2));
+      i = 0;
+      while (i < n)
+        {
+          if (i < n2)
+            {
+              ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
+              ___C c2 = ___INT(___STRINGREF(name2,___FIX(i)));
+              if (c1 < c2)
+                goto found2;
+              if (c1 > c2)
+                return;
+            }
+          else
+            return;
+          i++;
+        }
+    found2:
+      dat->next = sym;
+    }
+}
+
+
+___HIDDEN int complete_word
+   ___P((extensible_string *buf,
+         int word_start,
+         int completion_point,
+         int word_end,
+         extensible_string *completion),
+        (buf,
+         word_start,
+         completion_point,
+         word_end,
+         completion)
+extensible_string *buf;
+int word_start;
+int completion_point;
+int word_end;
+extensible_string *completion;)
+{
+#define FOUND_COMPLETION 0
+#define NO_COMPLETION    1
+#define CANNOT_COMPLETE  2
+
+  visit_symbol_data dat;
+
+  dat.buf = buf;
+  dat.word_start = word_start;
+  dat.completion_point = completion_point;
+  dat.word_end = word_end;
+  dat.next = ___FAL;
+
+  ___for_each_symkey (___sSYMBOL, visit_symbol, ___CAST(void*,&dat));
+
+  if (dat.next != ___FAL)
+    {
+      ___SCMOBJ name = ___FIELD(dat.next,___SYMKEY_NAME);
+      int n = ___INT(___STRINGLENGTH(name));
+      int i;
+
+      if (extensible_string_setup (completion, n) != ___FIX(___NO_ERR))
+        return CANNOT_COMPLETE;
+
+      for (i=0; i<n; i++)
+        {
+          ___C c = ___INT(___STRINGREF(name,___FIX(i)));
+          if (extensible_string_insert (completion, completion->length, 1, &c)
+              != ___FIX(___NO_ERR))
+            {
+              extensible_string_cleanup (completion);
+              return CANNOT_COMPLETE;
+            }
+        }
+      return FOUND_COMPLETION;
+    }
+
+  return NO_COMPLETION;
+}
+
+
+___HIDDEN ___SCMOBJ lineeditor_word_completion
+   ___P((___device_tty *self),
+        (self)
+___device_tty *self;)
+{
+  /*
+   * Complete current word.
+   */
+
+  ___device_tty *d = self;
+  ___SCMOBJ e = ___FIX(___NO_ERR);
+  int word_start;
+  int completion_point;
+  extensible_string completion;
+
+  completion_point = d->current.completion_point;
+
+  if (!lineeditor_word_boundary (d, 1, completion_point, &word_start))
+    word_start = completion_point;
+
+  switch (complete_word (&d->current.hist->edited,
+                         word_start,
+                         completion_point,
+                         d->current.edit_point,
+                         &completion))
+    {
+    case FOUND_COMPLETION:
+      e = lineeditor_delete_then_insert_chars
+            (d,
+             word_start,
+             0,
+             completion.buffer,
+             completion.length);
+      extensible_string_cleanup (&completion);
+      break;
+
+    case NO_COMPLETION:
+      if ((e = lineeditor_delete_then_insert_chars
+                 (d,
+                  completion_point,
+                  0,
+                  NULL,
+                  0))
+          == ___FIX(___NO_ERR))
+        e = lineeditor_output_char_repetition
+              (d,
+               ___UNICODE_BELL,
+               1,
+               d->output_attrs);
+      break;
+
+    case CANNOT_COMPLETE:
+    default:
+      return ___FIX(___INVALID_OP_ERR);
+    }
+
+  d->current.completion_point = completion_point;
+
+  return e;
 }
 
 
@@ -5972,7 +6307,7 @@ lineeditor_event *ev;)
       }
 
     case LINEEDITOR_EV_TAB:
-      return ___FIX(___INVALID_OP_ERR);
+      return lineeditor_word_completion (d);
 
     case LINEEDITOR_EV_MARK:
       d->current.mark_point = d->current.edit_point;
@@ -6292,6 +6627,7 @@ ___device_tty *self;)
     {
       d->editing_line = 1;
       d->current.edit_point = 0;
+      d->current.completion_point = 0;
       d->current.mark_point = 0;
       d->current.hist = d->hist_last;
       d->current.line_start = d->terminal_row * d->terminal_nb_cols + d->terminal_col;

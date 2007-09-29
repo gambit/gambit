@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2007-09-11 23:51:56 feeley> */
+/* File: "setup.c", Time-stamp: <2007-09-28 18:05:18 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -513,6 +513,33 @@ ___glo_struct **glo;)
   *glo = p;
 
   return ___FIX(___NO_ERR);
+}
+
+
+void ___for_each_symkey
+   ___P((unsigned int subtype,
+         void (*visit) (___SCMOBJ symkey, void *data),
+         void *data),
+        (subtype,
+         visit,
+         data)
+unsigned int subtype;
+void (*visit) ();
+void *data;)
+{
+  ___SCMOBJ tbl = symkey_table (subtype);
+  int i;
+
+  for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
+    {
+      ___SCMOBJ probe = ___FIELD(tbl, i);
+      
+      while (probe != ___NUL)
+        {
+          visit (probe, data);
+          probe = ___FIELD(probe,___SYMKEY_NEXT);
+        }
+    }
 }
 
 

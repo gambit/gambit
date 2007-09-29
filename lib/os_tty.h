@@ -1,4 +1,4 @@
-/* File: "os_tty.h", Time-stamp: <2007-04-04 11:31:54 feeley> */
+/* File: "os_tty.h", Time-stamp: <2007-09-27 17:53:51 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -244,9 +244,10 @@ typedef struct lineeditor_input_decoder_struct
 struct lineeditor_state_undo_struct
   {
     lineeditor_history *hist;
-    int edit_point;     /* position in buffer where edit ops take place */
-    int mark_point;     /* position in buffer of mark */
-    int line_start;     /* position in screen where edited line starts */
+    int edit_point;        /* position in buffer where edit ops take place */
+    int completion_point;  /* position in buffer where completion started */
+    int mark_point;        /* position in buffer of mark */
+    int line_start;        /* position in screen where edited line starts */
     ___BOOL paren_balance_trigger;
     ___BOOL paren_balance_in_progress;
     ___time paren_balance_end;
