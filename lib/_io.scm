@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2007-09-07 13:29:21 feeley>
+;;; File: "_io.scm", Time-stamp: <2007-09-30 18:52:20 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -8418,7 +8418,8 @@
   ("vtab"      . #\x0B)
   ("page"      . #\x0C)
   ("return"    . #\x0D)
-  ("rubout"    . #\x7F)
+  ("esc"       . #\x1A)
+  ("delete"    . #\x7F)
 ))
 
 (define ##standard-sharp-bang-table '(

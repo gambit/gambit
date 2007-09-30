@@ -11682,9 +11682,11 @@ Unicode character 11
 Unicode character 12
 @item #\return
 Unicode character 13
+@item #\esc
+Unicode character 26
 @item #\space
 Unicode character 32 (space character)
-@item #\rubout
+@item #\delete
 Unicode character 127
 @item #\x@var{hh}
 character encoded in hexadecimal (>= 1 hexadecimal digit)
