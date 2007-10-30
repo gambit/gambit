@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread#.scm", Time-stamp: <2007-09-11 18:05:51 feeley>
+;;; File: "_thread#.scm", Time-stamp: <2007-10-30 03:33:09 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -778,6 +778,9 @@
 
 (##define-macro (macro-thread-primordial-priority-boost)
   (exact->inexact (expt 10 -6)))
+
+(##define-macro (macro-default-heartbeat-interval)
+  (exact->inexact 1/100))
 
 ;;;----------------------------------------------------------------------------
 

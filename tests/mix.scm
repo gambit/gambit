@@ -1,4 +1,4 @@
-; File: "mix.scm", Time-stamp: <2007-04-27 14:07:28 feeley>
+; File: "mix.scm", Time-stamp: <2007-10-30 03:29:13 feeley>
 
 ; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1817,6 +1817,10 @@
 
 (define heartbeat-interval
   (##thread-heartbeat-interval-set! 0.0)) ; set and get smallest interval
+
+(if (< heartbeat-interval 0.001)
+    (set! heartbeat-interval
+          (##thread-heartbeat-interval-set! 0.001)))
 
 (define intrs 0.0)
 

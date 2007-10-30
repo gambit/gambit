@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2007-09-11 18:53:35 feeley>
+;;; File: "_thread.scm", Time-stamp: <2007-10-30 03:33:34 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -2908,7 +2908,7 @@
 
 (##thread-startup!)
 
-(##thread-heartbeat-interval-set! (macro-inexact-+0))
+(##thread-heartbeat-interval-set! (macro-default-heartbeat-interval))
 
 ;;;============================================================================
 ;;(##include "termite/termite.scm")
