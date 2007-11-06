@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2007-09-30 18:52:20 feeley>
+;;; File: "_io.scm", Time-stamp: <2007-11-06 10:17:18 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -7240,20 +7240,18 @@
         (wr-list-using-format
          we
          obj
-         #\(
-         #\)
+         (##reader->open-close we ##read-list '("(" . ")"))
          (if (##eq? (macro-writeenv-style we) 'pretty-print)
            (if plain-pretty-print?
              plain-format
              (get-format we head tail))
            space-format)))
 
-      (define (parenthesized-read-macro open close)
+      (define (parenthesized-read-macro open-close)
         (wr-list-using-format
          we
          tail
-         open
-         close
+         open-close
          (if (##eq? (macro-writeenv-style we) 'pretty-print)
            plain-format
            space-format)))
@@ -7261,22 +7259,10 @@
       (if (and head
                (or (##null? tail)
                    (##pair? tail)))
-        (cond ((##eq? head
-                      (macro-readtable-paren-keyword
-                       (macro-writeenv-readtable we)))
-               (parenthesized-read-macro #\( #\)))
-              ((##eq? head
-                      (macro-readtable-bracket-keyword
-                       (macro-writeenv-readtable we)))
-               (parenthesized-read-macro #\[ #\]))
-              ((##eq? head
-                      (macro-readtable-brace-keyword
-                       (macro-writeenv-readtable we)))
-               (parenthesized-read-macro #\{ #\}))
-              ((##eq? head
-                      (macro-readtable-angle-keyword
-                       (macro-writeenv-readtable we)))
-               (parenthesized-read-macro #\< #\>))
+        (cond ((##head->open-close we head #f)
+               =>
+               (lambda (open-close)
+                 (parenthesized-read-macro '("(" . ")"))))
               (else
                (let ((prefix
                       (read-macro-prefix we head tail)))
@@ -7312,9 +7298,9 @@
                plain-format)))
       plain-format))
 
-  (define (wr-list-using-format we obj open close format)
+  (define (wr-list-using-format we obj open-close format)
 
-    (##wr-ch we open)
+    (##wr-str we (##car open-close))
 
     (let ((level
            (macro-writeenv-level we)))
@@ -7416,7 +7402,7 @@
           (macro-writeenv-level-set! we level)
           (macro-writeenv-close-parens-set! we close-parens))))
 
-    (##wr-ch we close))
+    (##wr-str we (##cdr open-close)))
 
   (define (wr-list we obj plain-pretty-print?)
     (if (##wr-stamp we obj)
@@ -7624,10 +7610,33 @@
         (##wr-substr we s i j)
         (##wr-ch we special-escape)))))
 
-(define-prim (##wr-vector we obj)
-  (##wr-vector-aux1 we obj (##vector-length obj) ##vector-ref "#("))
+(define-prim (##reader->open-close we reader default)
+  (let ((rt (macro-writeenv-readtable we)))
+    (cond ((##eq? (##readtable-char-handler rt #\() reader) '("(" . ")"))
+          ((##eq? (##readtable-char-handler rt #\[) reader) '("[" . "]"))
+          ((##eq? (##readtable-char-handler rt #\{) reader) '("{" . "}"))
+          ((##eq? (##readtable-char-handler rt #\<) reader) '("<" . ">"))
+          (else                                             default))))
 
-(define-prim (##wr-vector-aux1 we obj len vect-ref prefix)
+(define-prim (##head->open-close we head default)
+  (let ((rt (macro-writeenv-readtable we)))
+    (cond ((##eq? head (macro-readtable-paren-keyword rt))   '("(" . ")"))
+          ((##eq? head (macro-readtable-bracket-keyword rt)) '("[" . "]"))
+          ((##eq? head (macro-readtable-brace-keyword rt))   '("{" . "}"))
+          ((##eq? head (macro-readtable-angle-keyword rt))   '("<" . ">"))
+          (else                                              default))))
+
+(define-prim (##wr-vector we obj)
+  (let* ((std-open-close
+          '("#(" . ")"))
+         (open-close
+          (if (macro-readtable-r6rs-compatible-write?
+               (macro-writeenv-readtable we))
+              std-open-close
+             (##reader->open-close we ##read-vector-or-list std-open-close))))
+    (##wr-vector-aux1 we obj (##vector-length obj) ##vector-ref open-close)))
+
+(define-prim (##wr-vector-aux1 we obj len vect-ref open-close)
   (case (macro-writeenv-style we)
     ((mark)
      (if (##wr-mark we obj)
@@ -7636,7 +7645,7 @@
      (##wr-vector-aux2 we obj len vect-ref))
     (else
      (if (##wr-stamp we obj)
-       (##wr-vector-aux3 we obj len vect-ref prefix)))))
+       (##wr-vector-aux3 we obj len vect-ref open-close)))))
 
 (define-prim (##wr-vector-aux2 we obj len vect-ref)
   (let ((level
@@ -7656,11 +7665,11 @@
                 (loop (##fixnum.+ i 1))))))
         (macro-writeenv-level-set! we level)))))
 
-(define-prim (##wr-vector-aux3 we obj len vect-ref prefix)
+(define-prim (##wr-vector-aux3 we obj len vect-ref open-close)
 
-  (define (wr-vect we obj len vect-ref prefix)
+  (define (wr-vect we obj len vect-ref open-close)
 
-    (##wr-str we prefix)
+    (##wr-str we (##car open-close))
 
     (let ((level
            (macro-writeenv-level we)))
@@ -7701,15 +7710,15 @@
           (macro-writeenv-level-set! we level)
           (macro-writeenv-close-parens-set! we close-parens))))
 
-    (##wr-ch we #\)))
+    (##wr-str we (##cdr open-close)))
 
   (if (or (##not (##eq? (macro-writeenv-style we) 'pretty-print))
           (##not (##wr-one-line-pretty-print
                   we
                   obj
                   (lambda (we obj)
-                    (wr-vect we obj len vect-ref prefix)))))
-    (wr-vect we obj len vect-ref prefix)))
+                    (wr-vect we obj len vect-ref open-close)))))
+    (wr-vect we obj len vect-ref open-close)))
 
 (define-prim (##wr-foreign we obj)
   (case (macro-writeenv-style we)
@@ -7881,14 +7890,14 @@
       x
       #f)))
 
-(define-prim (##wr-opaque we obj explode prefix type name)
+(define-prim (##wr-opaque we obj explode open-close type name)
   (if (##eq? (macro-readtable-sharing-allowed?
               (macro-writeenv-readtable we))
              'serialize)
-    (##wr-serialize we obj explode prefix)
+    (##wr-serialize we obj explode open-close)
     (##wr-sn we obj type name)))
 
-(define-prim (##wr-serialize we obj explode prefix)
+(define-prim (##wr-serialize we obj explode open-close)
   (case (macro-writeenv-style we)
     ((mark)
      (if (##wr-mark we obj)
@@ -7906,37 +7915,37 @@
           vect
           (##vector-length vect)
           ##vector-ref
-          prefix))))))
+          open-close))))))
 
 (define-prim (##wr-s8vector we obj)
-  (##wr-vector-aux1 we obj (##s8vector-length obj) ##s8vector-ref "#s8("))
+  (##wr-vector-aux1 we obj (##s8vector-length obj) ##s8vector-ref '("#s8(" . ")")))
 
 (define-prim (##wr-u8vector we obj)
-  (##wr-vector-aux1 we obj (##u8vector-length obj) ##u8vector-ref "#u8("))
+  (##wr-vector-aux1 we obj (##u8vector-length obj) ##u8vector-ref '("#u8(" . ")")))
 
 (define-prim (##wr-s16vector we obj)
-  (##wr-vector-aux1 we obj (##s16vector-length obj) ##s16vector-ref "#s16("))
+  (##wr-vector-aux1 we obj (##s16vector-length obj) ##s16vector-ref '("#s16(" . ")")))
 
 (define-prim (##wr-u16vector we obj)
-  (##wr-vector-aux1 we obj (##u16vector-length obj) ##u16vector-ref "#u16("))
+  (##wr-vector-aux1 we obj (##u16vector-length obj) ##u16vector-ref '("#u16(" . ")")))
 
 (define-prim (##wr-s32vector we obj)
-  (##wr-vector-aux1 we obj (##s32vector-length obj) ##s32vector-ref "#s32("))
+  (##wr-vector-aux1 we obj (##s32vector-length obj) ##s32vector-ref '("#s32(" . ")")))
 
 (define-prim (##wr-u32vector we obj)
-  (##wr-vector-aux1 we obj (##u32vector-length obj) ##u32vector-ref "#u32("))
+  (##wr-vector-aux1 we obj (##u32vector-length obj) ##u32vector-ref '("#u32(" . ")")))
 
 (define-prim (##wr-s64vector we obj)
-  (##wr-vector-aux1 we obj (##s64vector-length obj) ##s64vector-ref "#s64("))
+  (##wr-vector-aux1 we obj (##s64vector-length obj) ##s64vector-ref '("#s64(" . ")")))
 
 (define-prim (##wr-u64vector we obj)
-  (##wr-vector-aux1 we obj (##u64vector-length obj) ##u64vector-ref "#u64("))
+  (##wr-vector-aux1 we obj (##u64vector-length obj) ##u64vector-ref '("#u64(" . ")")))
 
 (define-prim (##wr-f32vector we obj)
-  (##wr-vector-aux1 we obj (##f32vector-length obj) ##f32vector-ref "#f32("))
+  (##wr-vector-aux1 we obj (##f32vector-length obj) ##f32vector-ref '("#f32(" . ")")))
 
 (define-prim (##wr-f64vector we obj)
-  (##wr-vector-aux1 we obj (##f64vector-length obj) ##f64vector-ref "#f64("))
+  (##wr-vector-aux1 we obj (##f64vector-length obj) ##f64vector-ref '("#f64(" . ")")))
 
 (define-prim (##wr-structure we obj)
 
@@ -8074,7 +8083,7 @@
   (cond ((##eq? (macro-readtable-sharing-allowed?
                  (macro-writeenv-readtable we))
                 'serialize)
-         (##wr-serialize we obj ##explode-structure "#structure("))
+         (##wr-serialize we obj ##explode-structure '("#structure(" . ")")))
         ((macro-port? obj)
          (##wr-sn
           we
@@ -8145,7 +8154,7 @@
   (if (##eq? (macro-readtable-sharing-allowed?
               (macro-writeenv-readtable we))
              'serialize)
-    (##wr-serialize we obj ##explode-frame "#frame(")
+    (##wr-serialize we obj ##explode-frame '("#frame(" . ")"))
     (##wr-sn
      we
      obj
@@ -8156,7 +8165,7 @@
   (if (##eq? (macro-readtable-sharing-allowed?
               (macro-writeenv-readtable we))
              'serialize)
-    (##wr-serialize we obj ##explode-continuation "#continuation(")
+    (##wr-serialize we obj ##explode-continuation '("#continuation(" . ")"))
     (##wr-sn
      we
      obj
@@ -8183,7 +8192,7 @@
   (if (##eq? (macro-readtable-sharing-allowed?
               (macro-writeenv-readtable we))
              'serialize)
-    (##wr-serialize we obj ##explode-procedure "#procedure(")
+    (##wr-serialize we obj ##explode-procedure '("#procedure(" . ")"))
     (##wr-sn
      we
      obj
@@ -8195,7 +8204,7 @@
    we
    obj
    ##explode-return
-   "#return("
+   '("#return(" . ")")
    'return
    (##void)))
 
@@ -9630,43 +9639,62 @@
                    (macro-readenv-readtable re))))))
       (##build-read-macro re start-pos old-pos keyword))))
 
+(define (##closing-parenthesis-for c)
+  (cond ((char=? c #\[) #\])
+        ((char=? c #\{) #\})
+        ((char=? c #\<) #\>)
+        (else           #\))))
+
+(define (##read-vector-or-list re c)
+  (if (macro-readtable-r6rs-compatible-read?
+       (macro-readenv-readtable re))
+      (##read-list re c)
+      (##read-vector re c)))
+
 (define (##read-list re c)
   (let ((start-pos (##readenv-current-filepos re)))
     (macro-read-next-char-or-eof re) ;; skip #\( or #\[ or #\{ or #\<
     (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
-    (let ((close
-           (cond ((char=? c #\[) #\])
-                 ((char=? c #\{) #\})
-                 ((char=? c #\<) #\>)
-                 (else           #\)))))
-      (let ((lst (##build-list re #t start-pos close)))
+    (let* ((close (##closing-parenthesis-for c))
+           (lst (##build-list re #t start-pos close)))
 
-        (define (prefix keyword)
-          (macro-readenv-wrap
-           re
-           (cons (macro-readenv-wrap re keyword) lst)))
+      (define (prefix keyword)
+        (macro-readenv-wrap
+         re
+         (cons (macro-readenv-wrap re keyword) lst)))
 
-        (cond ((and (char=? c #\[)
-                    (macro-readtable-bracket-keyword
-                     (macro-readenv-readtable re)))
-               =>
-               prefix)
-              ((and (char=? c #\{)
-                    (macro-readtable-brace-keyword
-                     (macro-readenv-readtable re)))
-               =>
-               prefix)
-              ((and (char=? c #\<)
-                    (macro-readtable-angle-keyword
-                     (macro-readenv-readtable re)))
-               =>
-               prefix)
-              ((macro-readtable-paren-keyword
-                (macro-readenv-readtable re))
-               =>
-               prefix)
-              (else
-               (macro-readenv-wrap re lst)))))))
+      (cond ((and (char=? c #\[)
+                  (macro-readtable-bracket-keyword
+                   (macro-readenv-readtable re)))
+             =>
+             prefix)
+            ((and (char=? c #\{)
+                  (macro-readtable-brace-keyword
+                   (macro-readenv-readtable re)))
+             =>
+             prefix)
+            ((and (char=? c #\<)
+                  (macro-readtable-angle-keyword
+                   (macro-readenv-readtable re)))
+             =>
+             prefix)
+            ((macro-readtable-paren-keyword
+              (macro-readenv-readtable re))
+             =>
+             prefix)
+            (else
+             (macro-readenv-wrap re lst))))))
+
+(define (##read-vector re c)
+  (let ((start-pos (##readenv-current-filepos re)))
+    (macro-read-next-char-or-eof re) ;; skip #\( or #\[ or #\{ or #\<
+    (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
+    (let* ((close (##closing-parenthesis-for c))
+           (v (##build-vector re 'vector start-pos close)))
+      (macro-readenv-wrap re v))))
+
+(define (##read-other re c)
+  (##read-list re c))
 
 (define (##read-none re c)
   (##none-marker))
@@ -11230,7 +11258,9 @@
           #f                 ;; brace-keyword
           #f                 ;; angle-keyword
           #f                 ;; start-syntax
-          ##six-type?
+          ##six-type?        ;; six-type?
+          #t                 ;; r6rs-compatible-read?
+          #t                 ;; r6rs-compatible-write?
           )))
 
     (##readtable-setup-for-standard-level! rt)
@@ -11269,10 +11299,10 @@
     (##readtable-char-class-set! rt #\( #t ##read-list)
     (##readtable-char-class-set! rt #\) #t ##read-none)
 
-    (##readtable-char-class-set! rt #\[ #t ##read-list)
+    (##readtable-char-class-set! rt #\[ #t ##read-vector-or-list)
     (##readtable-char-class-set! rt #\] #t ##read-none)
 
-    (##readtable-char-class-set! rt #\{ #t ##read-list)
+    (##readtable-char-class-set! rt #\{ #t ##read-other)
     (##readtable-char-class-set! rt #\} #t ##read-none)
 
     (##readtable-char-class-set! rt #\\ #t ##read-six)

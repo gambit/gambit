@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2007-05-27 22:23:28 feeley>
+;;; File: "_io#.scm", Time-stamp: <2007-11-06 09:54:04 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1069,6 +1069,8 @@
   (angle-keyword                  unprintable: read-write:)
   (start-syntax                   unprintable: read-write:)
   (six-type?                      unprintable: read-write:)
+  (r6rs-compatible-read?          unprintable: read-write:)
+  (r6rs-compatible-write?         unprintable: read-write:)
 )
 
 (define-check-type readtable (macro-type-readtable)
