@@ -26,7 +26,7 @@ for VARIANT in intel powerpc universal; do
     universal) CONFIG_ARCH="-arch i386 -arch ppc";;
   esac
 
-  CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CONFIG_ARCH" LDFLAGS="$CONFIG_ARCH" ./configure --prefix="$INSTALL_PREFIX" --enable-single-host # --enable-gcc-opts
+  CFLAGS="$CONFIG_ARCH" LDFLAGS="$CONFIG_ARCH" ./configure --prefix="$INSTALL_PREFIX" --enable-single-host # --enable-gcc-opts
 
   cd "$herefromroot"
 
