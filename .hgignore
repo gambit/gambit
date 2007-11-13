@@ -168,3 +168,11 @@ gambc-v.*\.tgz
 .*~
 \.DS_Store
 .*/\.DS_Store
+.*\.obj
+.*\.manifest
+.*\.res
+.*\.exe
+.*\.ilk
+.*\.pdb
+.*\.dep
+.*\.idb
