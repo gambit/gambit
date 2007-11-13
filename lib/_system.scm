@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2007-11-13 10:14:17 feeley>
+;;; File: "_system.scm", Time-stamp: <2007-11-13 10:31:17 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -70,6 +70,10 @@
 (define-prim (##meroon? obj)
   (and (##subtyped? obj)
        (##eq? (##subtype obj) (macro-subtype-meroon))))
+
+(define-prim (##jazz? obj)
+  (and (##subtyped? obj)
+       (##eq? (##subtype obj) (macro-subtype-jazz))))
 
 (define-prim (##frame? obj)
   (and (##subtyped? obj)
@@ -1609,6 +1613,7 @@
 (##define-macro (macro-subtype-structure)    4)
 (##define-macro (macro-subtype-boxvalues)    5)
 (##define-macro (macro-subtype-meroon)       6)
+(##define-macro (macro-subtype-jazz)         7)
 
 (##define-macro (macro-subtype-symbol)       8)
 (##define-macro (macro-subtype-keyword)      9)
@@ -1737,6 +1742,7 @@
 (##define-macro (frame-tag)          #x6b)
 (##define-macro (gchashtable-tag)    #x6c)
 (##define-macro (meroon-tag)         #x6d)
+(##define-macro (jazz-tag)           #x6f) ;; note: tag is not consecutive
 (##define-macro (homvector-tag)      #x6e)
 
 (##define-macro (false-tag)          #x70)
@@ -3806,6 +3812,10 @@
                    ((= x (meroon-tag))
                     (deserialize-vector-like-long!
                      (macro-subtype-meroon)))
+
+                   ((= x (jazz-tag))
+                    (deserialize-vector-like-long!
+                     (macro-subtype-jazz)))
 
                    ((= x (homvector-tag))
                     (let* ((len/type

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2007-11-06 10:17:18 feeley>
+;;; File: "_io.scm", Time-stamp: <2007-11-13 10:31:39 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -6951,6 +6951,8 @@
              (##wr-return we obj))
             ((##meroon? obj)
              (##wr-meroon we obj))
+            ((##jazz? obj)
+             (##wr-jazz we obj))
             ((##box? obj)
              (##wr-box we obj))
             (else
@@ -8148,6 +8150,13 @@
    we
    obj
    'meroon
+   (##void)))
+
+(define-prim (##wr-jazz we obj)
+  (##wr-sn
+   we
+   obj
+   'jazz
    (##void)))
 
 (define-prim (##wr-frame we obj)

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2007-09-11 14:12:46 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2007-11-13 10:28:44 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -3207,6 +3207,7 @@
 (targ-op "##box?"             (targ-ifjump-simp-s #f "BOXP"))
 (targ-op "##values?"          (targ-ifjump-simp-s #f "VALUESP"))
 (targ-op "##meroon?"          (targ-ifjump-simp-s #f "MEROONP"))
+(targ-op "##jazz?"            (targ-ifjump-simp-s #f "JAZZP"))
 (targ-op "##symbol?"          (targ-ifjump-simp-s #f "SYMBOLP"))
 (targ-op "##keyword?"         (targ-ifjump-simp-s #f "KEYWORDP"))
 (targ-op "##frame?"           (targ-ifjump-simp-s #f "FRAMEP"))

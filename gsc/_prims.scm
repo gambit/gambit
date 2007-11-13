@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_prims.scm", Time-stamp: <2007-09-11 14:18:53 feeley>
+;;; File: "_prims.scm", Time-stamp: <2007-11-13 10:28:43 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -463,6 +463,7 @@
 ("##box?"                             (1)   #f ()    0    boolean extended)
 ("##values?"                          (1)   #f ()    0    boolean extended)
 ("##meroon?"                          (1)   #f ()    0    boolean extended)
+("##jazz?"                            (1)   #f ()    0    boolean extended)
 ("##symbol?"                          (1)   #f ()    0    boolean extended)
 ("##keyword?"                         (1)   #f ()    0    boolean extended)
 ("##frame?"                           (1)   #f ()    0    boolean extended)

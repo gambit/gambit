@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "header.scm", Time-stamp: <2007-06-05 23:10:42 feeley>
+;;; File: "header.scm", Time-stamp: <2007-11-13 10:31:09 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -38,6 +38,7 @@
 (##define-macro (macro-subtype-structure)    4)
 (##define-macro (macro-subtype-boxvalues)    5)
 (##define-macro (macro-subtype-meroon)       6)
+(##define-macro (macro-subtype-jazz)         7)
 
 (##define-macro (macro-subtype-symbol)       8)
 (##define-macro (macro-subtype-keyword)      9)
