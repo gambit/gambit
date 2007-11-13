@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2007-04-04 11:37:24 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2007-11-06 16:07:24 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1040,7 +1040,7 @@
   (targ-code* '("LINKER_INFO"))
 
   (targ-display "; File: ")
-  (targ-display-c-string filename)
+  (targ-display-c-string (path-strip-directory filename))
   (targ-display ", produced by Gambit-C ")
   (targ-display (compiler-version-string))
   (targ-line)
