@@ -1231,16 +1231,16 @@ if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  GSC_CC_O="$C_COMPILER $FLAGS_DYN -I%GSC_CC_O_ARG1%include $GSC_CC_O_DEFS -Fe%GSC_CC_O_ARG2% %GSC_CC_O_REST% %GSC_CC_O_ARG3%"
+  GSC_CC_O="$C_COMPILER $FLAGS_DYN -I%GSC_CC_O_ARG2%include $GSC_CC_O_DEFS -Fe%GSC_CC_O_ARG3% %GSC_CC_O_REST%"
 
 else
 
   case "$target_os" in
 
-     mingw*) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I%GSC_CC_O_ARG1%include $GSC_CC_O_DEFS -o %GSC_CC_O_ARG2% %GSC_CC_O_REST% %GSC_CC_O_ARG3%"
+     mingw*) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I%GSC_CC_O_ARG2%include $GSC_CC_O_DEFS -o %GSC_CC_O_ARG3% %GSC_CC_O_REST%"
              ;;
 
-          *) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\$\${GSC_CC_O_ARG1}include $GSC_CC_O_DEFS -o \\\$\${GSC_CC_O_ARG2} \\\$\$* \\\$\${GSC_CC_O_ARG3}"
+          *) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\$\${GSC_CC_O_ARG2}include $GSC_CC_O_DEFS -o \\\$\${GSC_CC_O_ARG3} \\\$\$*"
              ;;
   esac
 

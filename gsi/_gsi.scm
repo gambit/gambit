@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsi.scm", Time-stamp: <2007-06-27 23:14:20 feeley>
+;;; File: "_gsi.scm", Time-stamp: <2007-11-13 11:23:24 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -165,10 +165,13 @@
                     (let ((x (##assoc "o" options)))
                       (cond ((##not x)
                              #f)
-                            (gen-dynamic?
-                             (warn-dynamic-object-file-and-o-option)
-                             #f)
-                            ((and (##not link?) (##fixnum.< 1 nb-scheme-files))
+                            ((and (##not link?)
+                                  (##fixnum.< 1 nb-scheme-files)
+                                  (let ((outdir (##path-normalize (##cdr x))))
+                                    (##equal?
+                                     outdir
+                                     (##path-strip-trailing-directory-separator
+                                      outdir))))
                              (warn-multiple-output-files-and-o-option)
                              #f)
                             (else
@@ -179,6 +182,11 @@
                     (##assoc "postlude" options))
                    (cc-options
                     (let ((x (##assoc "cc-options" options)))
+                      (if x
+                        (##cdr x)
+                        "")))
+                   (ld-options-prelude
+                    (let ((x (##assoc "ld-options-prelude" options)))
                       (if x
                         (##cdr x)
                         "")))
@@ -261,17 +269,28 @@
                                  #t)))
                             (if (##not
                                  (if gen-dynamic?
-                                   (compile-file
-                                    file
-                                    sym-opts
-                                    cc-options
-                                    ld-options)
-                                   (let ((out (or (and (##not link?) output)
-                                                  (macro-absent-obj))))
-                                     (compile-file-to-c
-                                      file
-                                      sym-opts
-                                      out))))
+                                     (if output
+                                         (compile-file
+                                          file
+                                          options: sym-opts
+                                          output: output
+                                          cc-options: cc-options
+                                          ld-options-prelude: ld-options-prelude
+                                          ld-options: ld-options)
+                                         (compile-file
+                                          file
+                                          options: sym-opts
+                                          cc-options: cc-options
+                                          ld-options-prelude: ld-options-prelude
+                                          ld-options: ld-options))
+                                   (if (and output (##not link?))
+                                       (compile-file-to-c
+                                        file
+                                        options: sym-opts
+                                        output: output)
+                                       (compile-file-to-c
+                                        file
+                                        options: sym-opts))))
                                 (##exit-abnormally))
                             (loop2 rest
                                    (##cons (##path-strip-directory root)
@@ -290,18 +309,31 @@
                                    (##cdr x))))))
 
                     (if link?
-                      (if (##not (##null? rev-roots))
-                        (let ((roots (##reverse rev-roots)))
-                          (if flat?
-                            (link-flat
-                             roots
-                             (or output (macro-absent-obj)))
-                            (link-incremental
-                             roots
-                             (or output (macro-absent-obj))
-                             (or base (macro-absent-obj))))))
-                      (if flat?
-                        (warn-flat-and-not-link)))
+
+                        (if (##not (##null? rev-roots))
+                            (let ((roots (##reverse rev-roots)))
+                              (if flat?
+                                  (if output
+                                      (link-flat roots output: output)
+                                      (link-flat roots))
+                                  (if output
+                                      (if base
+                                          (link-incremental
+                                           roots
+                                           output: output
+                                           base: base)
+                                          (link-incremental
+                                           roots
+                                           output: output))
+                                      (if base
+                                          (link-incremental
+                                           roots
+                                           base: base)
+                                          (link-incremental
+                                           roots))))))
+
+                        (if flat?
+                            (warn-flat-and-not-link)))
 
                     (##exit))))))))))
 
@@ -325,19 +357,11 @@
        (##newline output-port)
        #t)))
 
-  (define (warn-dynamic-object-file-and-o-option)
-    (##repl
-     (lambda (first output-port)
-       (##write-string
-        "*** WARNING -- Dynamic object file: \"o\" option ignored\n"
-        output-port)
-       #t)))
-
   (define (warn-multiple-output-files-and-o-option)
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- Multiple output files: \"o\" option ignored\n"
+        "*** WARNING -- Multiple output files: non-directory \"o\" option ignored\n"
         output-port)
        #t)))
 
@@ -438,7 +462,8 @@
                   "check" "force" "debug" "track-scheme" "keep-c"))
               (if (interpreter-or force-interpreter?)
                 '()
-                '("o" "l" "prelude" "postlude" "cc-options" "ld-options"))
+                '("o" "l" "prelude" "postlude"
+                  "cc-options" "ld-options-prelude" "ld-options"))
               (lambda (known-options arguments)
 
                 (if (##not skip-initialization-file?)
