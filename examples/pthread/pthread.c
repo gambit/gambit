@@ -1,4 +1,4 @@
-/* File: "pthread.c", Time-stamp: <2007-09-12 10:42:02 feeley> */
+/* File: "pthread.c", Time-stamp: <2007-11-13 17:49:37 feeley> */
 
 /* Copyright (c) 2006-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -9,7 +9,7 @@
  * ___VERSION must match the version number of the Gambit header file.
  */
 
-#define ___VERSION 400001
+#define ___VERSION 401000
 #include "gambit.h"
 
 /*

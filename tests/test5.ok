@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "/Users/feeley/gambit-cartier3/gambc-v4_0_1/tests/mix.c", produced by Gambit-C v4.0.1
+; File: "mix.c", produced by Gambit-C v4.1.0
 (
-400001
+401000
 " mix"
 (" mix")
 (
@@ -397,7 +397,7 @@
  #f
 )
 #else
-#define ___VERSION 400001
+#define ___VERSION 401000
 #define ___MODULE_NAME " mix"
 #define ___LINKER_ID ____20_mix
 #define ___MH_PROC ___H__20_mix

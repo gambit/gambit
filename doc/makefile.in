@@ -82,7 +82,7 @@ checkdoc:
 info: gambit-c.info
 
 gambit-c.info: gambit-c.txi version.txi
-	cd $(srcdir) && $(MAKEINFO) gambit-c.txi
+	(cd $(srcdir) && $(MAKEINFO) gambit-c.txi) || cp gambit-c.txi gambit-c.info
 
 pdf: gambit-c.pdf
 
@@ -100,7 +100,7 @@ gambit-c.html: gambit-c.txi
 txt: gambit-c.txt
 
 gambit-c.txt: gambit-c.txi
-	cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit-c.txt gambit-c.txi
+	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit-c.txt gambit-c.txi) || cp gambit-c.txi gambit-c.txt
 
 version.txi: stamp.vti
 

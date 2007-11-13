@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2007-09-13 14:42:24 feeley> */
+/* File: "gambit.h", Time-stamp: <2007-11-13 11:48:54 feeley> */
 
 /*
  * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
@@ -15,8 +15,8 @@
 @error "___VERSION has not been set by includer"
 #endif
 
-#if ___VERSION != 400001
-#include "gambit-not400001.h"
+#if ___VERSION != 401000
+#include "gambit-not401000.h"
 #else
 
 /*---------------------------------------------------------------------------*/
