@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2007-06-05 23:51:24 feeley>
+;;; File: "_system.scm", Time-stamp: <2007-11-13 10:14:17 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1414,6 +1414,63 @@
   (macro-force-vars (table)
     (macro-check-table table 1 (table-copy table)
       (##table-copy table))))
+
+(define-prim (##table-merge! table1 table2 table2-takes-precedence?)
+  (if table2-takes-precedence?
+      (##table-for-each
+       (lambda (k v)
+         (##table-set! table1 k v))
+       table2)
+      (##table-for-each
+       (lambda (k v)
+         (if (##eq? (##table-ref table1 k (macro-unused-obj))
+                    (macro-unused-obj))
+             (##table-set! table1 k v)))
+       table2))
+  table1)
+
+(define-prim (table-merge! table1
+                           table2
+                           #!optional
+                           (table2-takes-precedence? (macro-absent-obj)))
+  (macro-force-vars (table1 table2 table2-takes-precedence?)
+    (macro-check-table
+      table1
+      1
+      (table-merge! table1 table2 table2-takes-precedence?)
+      (macro-check-table
+        table2
+        2
+        (table-merge! table1 table2 table2-takes-precedence?)
+        (let ((t2-takes-precedence?
+               (if (##eq? table2-takes-precedence? (macro-absent-obj))
+                   #f
+                   table2-takes-precedence?)))
+          (##table-merge! table1 table2 t2-takes-precedence?))))))
+
+(define-prim (##table-merge table1 table2 table2-takes-precedence?)
+  (##table-merge! (##table-copy table1)
+                  table2
+                  table2-takes-precedence?))
+
+(define-prim (table-merge table1
+                          table2
+                          #!optional
+                          (table2-takes-precedence? (macro-absent-obj)))
+  (macro-force-vars (table1 table2 table2-takes-precedence?)
+    (macro-check-table
+      table1
+      1
+      (table-merge table1 table2 table2-takes-precedence?)
+      (macro-check-table
+        table2
+        2
+        (table-merge table1 table2 table2-takes-precedence?)
+        (let ((t2-takes-precedence?
+               (if (##eq? table2-takes-precedence? (macro-absent-obj))
+                   #f
+                   table2-takes-precedence?)))
+          (##table-merge table1 table2 t2-takes-precedence?))))))
 
 (define-prim (##table-equal? table1 table2)
 

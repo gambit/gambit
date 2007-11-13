@@ -5022,7 +5022,8 @@ and may vary from one call of @code{table-search} to the next.  While
 a call to @code{table-search} is being performed on @var{table}, it is
 an error to call any of the following procedures on @var{table}:
 @code{table-ref}, @code{table-set!}, @code{table-search},
-@code{table-for-each}, and @code{table->list}.  It is also an error to
+@code{table-for-each}, @code{table-copy}, @code{table-merge},
+@code{table-merge!}, and @code{table->list}.  It is also an error to
 compare with @code{equal?} (directly or indirectly with @code{member},
 @code{assoc}, @code{table-ref}, etc.) an object that contains
 @var{table}.  All these procedures may cause @var{table} to be
@@ -5169,6 +5170,57 @@ For example:
 ((a . 1) (b . 99) (c . 3))
 > @b{(table->list x)}
 ((a . 1) (b . 2) (c . 3))
+@end smallexample
+
+@end deffn
+
+@deffn procedure table-merge! @var{table1} @var{table2} @r{[}@var{table2-takes-precedence?}@r{]}
+
+The procedure @code{table-merge!} returns @var{table1} after the
+key/value bindings contained in @var{table2} have been added to it.
+When a key exists both in @var{table1} and @var{table2}, then the
+parameter @var{table2-takes-precedence?} indicates which binding will
+be kept (the one in @var{table1} if @var{table2-takes-precedence?}  is
+false, and the one in @var{table2} otherwise).  If
+@var{table2-takes-precedence?} is not specified the binding in
+@var{table1} is kept.
+
+For example:
+
+@smallexample
+> @b{(define t1 (list->table '((a . 1) (b . 2) (c . 3))))}
+> @b{(define t2 (list->table '((a . 4) (b . 5) (z . 6))))}
+> @b{(table->list (table-merge! t1 t2))}
+((a . 1) (b . 2) (c . 3) (z . 6))
+> @b{(define t1 (list->table '((a . 1) (b . 2) (c . 3))))}
+> @b{(define t2 (list->table '((a . 4) (b . 5) (z . 6))))}
+> @b{(table->list (table-merge! t1 t2 #t))}
+((a . 4) (b . 5) (c . 3) (z . 6))
+@end smallexample
+
+@end deffn
+
+@deffn procedure table-merge @var{table1} @var{table2} @r{[}@var{table2-takes-precedence?}@r{]}
+
+The procedure @code{table-merge} returns a copy of @var{table1}
+(created with @code{table-copy}) to which the key/value bindings
+contained in @var{table2} have been added using @code{table-merge!}.
+When a key exists both in @var{table1} and @var{table2}, then the
+parameter @var{table2-takes-precedence?}  indicates which binding will
+be kept (the one in @var{table1} if @var{table2-takes-precedence?}  is
+false, and the one in @var{table2} otherwise).  If
+@var{table2-takes-precedence?} is not specified the binding in
+@var{table1} is kept.
+
+For example:
+
+@smallexample
+> @b{(define t1 (list->table '((a . 1) (b . 2) (c . 3))))}
+> @b{(define t2 (list->table '((a . 4) (b . 5) (z . 6))))}
+> @b{(table->list (table-merge t1 t2))}
+((a . 1) (b . 2) (c . 3) (z . 6))
+> @b{(table->list (table-merge t1 t2 #t))}
+((a . 4) (b . 5) (c . 3) (z . 6))
 @end smallexample
 
 @end deffn
