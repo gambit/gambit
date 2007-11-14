@@ -96,7 +96,7 @@ release: fake_target
 	$(MAKE) $(MDEFINES) all
 	$(MAKE) $(MDEFINES) check
 	$(MAKE) $(MDEFINES) doc
-	$(HG) tag $(PACKAGE_VERSION)
+	# $(HG) tag $(PACKAGE_VERSION)
 	rm -f $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
 	$(MAKE) $(MDEFINES) prebuilt
 

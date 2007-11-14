@@ -48,7 +48,9 @@ install_gambc()
   cd "$rootfromhere"
   make mostlyclean
   make
-  if ( make check | fgrep -e "============ ALL TESTS SUCCESSFUL" ) ; then
+  make check > check.out 2>&1
+  cat check.out
+  if ( fgrep -e "============ ALL TESTS SUCCESSFUL" check.out > /dev/null ) ; then
     make install
     (cd "$SOURCE_DIR/$PACKAGE_VERSION" && bin/gsc syntax-case)
   else
@@ -56,6 +58,7 @@ install_gambc()
     cleanup
     exit 1
   fi
+  rm -f check.out
   cd "$herefromroot"
 }
 
