@@ -5,6 +5,16 @@ You have successfully installed @NAME@ v@VERSION@ (@VARIANT@ variant).
 </p>
 
 <p>
+If you want to use the Gambit Scheme compiler, <code>gsc</code>, to
+compile Scheme files you will need the <code>gcc</code> C compiler.
+The easiest way to get <code>gcc</code> is to install Apple's Xcode
+Developer Tools.  The Xcode installer is distributed on the MacOS
+install DVDs and can also be downloaded from Apple Developper
+Connection
+<a href="http://developer.apple.com/tools/download/">Xcode download page</a>.
+</p>
+
+<p>
 Gambit can be uninstalled by executing the shell command
 </p>
 
