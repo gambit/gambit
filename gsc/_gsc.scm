@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsc.scm", Time-stamp: <2007-11-13 11:23:09 feeley>
+;;; File: "_gsc.scm", Time-stamp: <2007-11-16 14:05:32 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -172,7 +172,9 @@
                   (##string-append
                    gambcdir-bin
                    "gsc-cc-o \""
-                   (##path-directory c-filename)
+                   (parameterize
+                    ((##current-directory (##path-directory c-filename)))
+                    (##current-directory))
                    "\" \""
                    gambcdir
                    "\" \""
