@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2007-11-13 11:48:54 feeley> */
+/* File: "gambit.h", Time-stamp: <2007-11-20 14:10:27 feeley> */
 
 /*
  * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
@@ -811,9 +811,9 @@
 /*
  * Size of pointers.
  *
- * ___VOIDSTAR_WIDTH must be equal to sizeof(void*).  This value
- * can't be computed with the "sizeof" operator because it must be
- * known at macro expansion time.  If in doubt just do
+ * ___VOIDSTAR_WIDTH must be equal to sizeof(void*) * ___CHAR_WIDTH.
+ * This value can't be computed with the "sizeof" operator because it
+ * must be known at macro expansion time.  If in doubt just do
  *
  *  #define ___VOIDSTAR_WIDTH ___LONG_WIDTH
  *
