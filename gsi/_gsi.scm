@@ -1,10 +1,10 @@
 ;;;============================================================================
 
-;;; File: "_gsi.scm", Time-stamp: <2007-11-20 11:02:14 feeley>
+;;; File: "_gsi.scm", Time-stamp: <2007-11-20 11:23:51 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
-(include "../lib/header.scm")
+(include "~~/lib/header.scm")
 
 ;;;----------------------------------------------------------------------------
 

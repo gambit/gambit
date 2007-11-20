@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2007-08-07 14:23:29 feeley>
+# makefile for Gambit-C library, Time-stamp: <2007-11-20 11:45:38 feeley>
 
 # Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -86,7 +86,8 @@ os_time@obj@ os_shell@obj@ os_dyn@obj@
 MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
 _kernel@obj@ _nonstd@obj@ _repl@obj@ _eval@obj@ _thread@obj@ _system@obj@ 
 
-LIBRARIES_SCM = "gambit\#.scm" "r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" digest.scm
+LIBRARIES_SCM = $(HEADERS_SCM) "_gambit\#.scm" "gambit\#.scm" \
+"r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" digest.scm
 
 OBJECTS = $(NORMAL_O) $(MODULES_O) _gambc@obj@
 OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +_gambc@obj@
@@ -95,7 +96,7 @@ OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) \
 $(NORMAL_O_IN_COMPILE_ORDER) _gambc@obj@
 
 RCFILES = makefile.in header.scm $(MODULES_SCM) sys.scm \
-$(HEADERS_SCM) $(LIBRARIES_SCM) $(NORMAL_SOURCES) 
+$(LIBRARIES_SCM) $(NORMAL_SOURCES) 
 
 GENDISTFILES = $(MODULES_C) _gambc.c
 
