@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsi.scm", Time-stamp: <2007-11-13 11:23:24 feeley>
+;;; File: "_gsi.scm", Time-stamp: <2007-11-20 11:02:14 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -25,6 +25,7 @@
       (##string?
        (##load filename
                (lambda (script-line script-path) #f)
+               #f
                #f
                #f)))
 
@@ -103,7 +104,8 @@
               (##load file
                       script-callback
                       #t
-                      #t)
+                      #t
+                      #f)
 
               (if starter
                 (starter)
@@ -426,6 +428,7 @@
   (let ((gambcdir (##path-expand "~~")))
     (##load (##string-append gambcdir (macro-extension-file))
             (lambda (script-line script-path) #f)
+            #f
             #f
             #f))
 

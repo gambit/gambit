@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2007-09-13 13:17:43 feeley>
+;;; File: "_eval.scm", Time-stamp: <2007-11-20 11:04:52 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -3569,6 +3569,7 @@
          script-callback
          clone-cte?
          raise-os-exception?
+         quiet?
          #!optional
          (settings (macro-absent-obj)))
 
@@ -3612,21 +3613,22 @@
              (##raise-os-exception result #f load path settings))
             (else
              (let ((exec-vector (##vector-ref result 0))
-                   (undefined (##vector-ref result 1))
                    (script-line (##vector-ref result 2)))
-               (let loop ((lst (##reverse undefined)))
-                 (if (##pair? lst)
-                   (let ((var-module (##car lst)))
-                     (##repl
-                      (lambda (first output-port)
-                        (##write-string "*** WARNING -- Variable " output-port)
-                        (##write (##car var-module) output-port)
-                        (##write-string " used in module " output-port)
-                        (##write (##cdr var-module) output-port)
-                        (##write-string " is undefined" output-port)
-                        (##newline output-port)
-                        #t))
-                     (loop (##cdr lst)))))
+               (if (##not quiet?)
+                   (let ((undefined (##vector-ref result 1)))
+                     (let loop ((lst (##reverse undefined)))
+                       (if (##pair? lst)
+                           (let ((var-module (##car lst)))
+                             (##repl
+                              (lambda (first output-port)
+                                (##write-string "*** WARNING -- Variable " output-port)
+                                (##write (##car var-module) output-port)
+                                (##write-string " used in module " output-port)
+                                (##write (##cdr var-module) output-port)
+                                (##write-string " is undefined" output-port)
+                                (##newline output-port)
+                                #t))
+                             (loop (##cdr lst)))))))
                (script-callback script-line abs-path)
                (##execute-modules exec-vector 0)
                abs-path)))))
@@ -3691,6 +3693,7 @@
               (lambda (script-line script-path) #f)
               #t
               #t
+              #f
               settings))))
 
 ;;;----------------------------------------------------------------------------
