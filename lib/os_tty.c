@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2007-09-29 05:51:13 feeley> */
+/* File: "os_tty.c", Time-stamp: <2007-11-21 00:46:39 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -5953,6 +5953,9 @@ extensible_string *completion;)
 #define CANNOT_COMPLETE  2
 
   visit_symbol_data dat;
+
+  if (completion_point <= word_start)
+    return NO_COMPLETION;
 
   dat.buf = buf;
   dat.word_start = word_start;
