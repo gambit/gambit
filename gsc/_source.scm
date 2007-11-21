@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_source.scm", Time-stamp: <2007-04-04 11:37:08 feeley>
+;;; File: "_source.scm", Time-stamp: <2007-11-20 22:14:12 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -368,7 +368,7 @@
       (##vector-ref
        (##read-all-as-a-begin-expr-from-port
         (**readenv-port re)
-        ##main-readtable
+        (##current-readtable)
         (lambda (re x)
           (make-source x
                        (##make-locat (##port-name (macro-readenv-port re))
@@ -402,7 +402,7 @@
   (define (read-source-from-path path)
     (##read-all-as-a-begin-expr-from-path
      path
-     ##main-readtable;;;;;;;;;;;;;;;;;;;;
+     (##current-readtable);;;;;;;;;;;;;;;;;;;;
      (lambda (re x)
        (make-source x (##make-locat-from-readenv re)))
      (lambda (re x)
@@ -1588,7 +1588,7 @@
       (##vector-ref
        (##read-all-as-a-begin-expr-from-port
         (**readenv-port re)
-        ##main-readtable
+        (##current-readtable)
         (lambda (re x)
           (make-source x (##make-locat-from-readenv re)))
         (lambda (re x)

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_host.scm", Time-stamp: <2007-04-04 11:36:28 feeley>
+;;; File: "_host.scm", Time-stamp: <2007-11-20 22:14:43 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -862,8 +862,8 @@
 (define float-copysign ##flonum.copysign)
 
 (define (**comply-to-standard-scheme?) #f);;;;;;;;;;;;;;;;;;;;;;
-(define **main-readtable #f);;;;;;;##main-readtable)
-(define read-datum-or-eof #f);;;;;;;;;##read-datum-or-eof)
+(define **main-readtable #f);;;;;;;
+(define read-datum-or-eof #f);;;;;;;;;
 
 (define (**subtype-set! obj subtype)
   (##subtype-set! obj subtype))

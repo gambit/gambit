@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsc.scm", Time-stamp: <2007-11-20 11:04:05 feeley>
+;;; File: "_gsc.scm", Time-stamp: <2007-11-20 22:13:18 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -400,7 +400,7 @@
                             (if language-and-tail
                               (let ((language (##car language-and-tail)))
                                 (##readtable-setup-for-language!
-                                 ##main-readtable
+                                 (##current-readtable)
                                  language)
                                 (##start-main language))
                               ##exit))
@@ -743,7 +743,7 @@
 
     (if language-and-tail
       (let ((language (##car language-and-tail)))
-        (##readtable-setup-for-language! ##main-readtable language)))
+        (##readtable-setup-for-language! (##current-readtable) language)))
 
     (split-command-line
       (##cdr ##processed-command-line)
