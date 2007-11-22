@@ -277,7 +277,7 @@ user to interact with the interpreter.  At each iteration of this loop
 the interpreter displays a prompt, reads a command and executes it.
 The commands can be expressions to evaluate (the typical case)
 or special commands related to debugging, for example @samp{,q} to
-terminate the current thread (for a complete list of commands see
+terminate the process (for a complete list of commands see
 @ref{Debugging}).  Most commands produce some output, such as the
 value or error message resulting from an evaluation.
 
@@ -1783,9 +1783,13 @@ Give a summary of the REPL commands.
 
 @item ,q
 @cmindex ,q
+Terminate the process with exit status 0.  This is equivalent to
+calling @code{(exit 0)}.
+
+@item ,qt
+@cmindex ,qt
 Terminate the current thread (note that terminating the primordial
-thread terminates the program).  To terminate the program from any
-thread, call the @code{exit} procedure.
+thread terminates the process).
 
 @item ,t
 @cmindex ,t
@@ -1896,9 +1900,11 @@ they are compiled with the @samp{-debug} option.
 @item ,e
 @cmindex ,e
 Display the environment which is accessible from the current frame.
-Both the lexical and dynamic environments are displayed.  However,
-only non-global lexical variables are displayed and only if the frame
-was created by interpreted code or code compiled with the
+The lexical environment is displayed, followed by the dynamic
+environment if the parameter object
+@code{repl-display-dynamic-environment?} is not false.
+Global lexical variables are not displayed.  Moreover the frame
+must have been created by interpreted code or code compiled with the
 @samp{-debug} option.  Due to space safety considerations and compiler
 optimizations, some of the lexical variable bindings may be missing.
 Lexical variable bindings are displayed using the format
@@ -1913,6 +1919,30 @@ debugging of higher-order procedures).  A @var{parameter} can be a
 quoted expression or a global variable.  Lexical bindings are
 displayed in inverse binding order (most deeply nested first) and
 shadowed variables are included in the list.
+
+@item ,(e @var{expr})
+@cmindex ,(e @var{expr})
+Display the environment of @var{expr}'s value, @var{X}, which is
+obtained by evaluating @var{expr} in the current frame.  @var{X} must
+be a continuation, a procedure, or a non-negative integer.  When
+@var{X} is a continuation, the environment at that point in the code
+is displayed.  When @var{X} is a procedure, the lexical environment
+where @var{X} was created is combined with the current continuation
+and this combined environment is displayed.  When @var{X} is an
+integer, the environment at frame number @var{X} of the continuation
+is displayed.
+
+@item ,(v @var{expr})
+@cmindex ,(v @var{expr})
+Start a new REPL visiting @var{expr}'s value, @var{X}, which is
+obtained by evaluating @var{expr} in the current frame.  @var{X} must
+be a continuation, a procedure, or a non-negative integer.  When
+@var{X} is a continuation, the new REPL's continuation is @var{X} and
+evaluations are done in the environment at that point in the code.
+When @var{X} is a procedure, the lexical environment where @var{X} was
+created is combined with the current continuation and evaluations are
+done in this combined environment.  When @var{X} is an integer, the
+REPL is started in frame number @var{X} of the continuation.
 
 @end table
 
@@ -1937,10 +1967,6 @@ Gambit @value{VERSION}
 (lambda (x) (/ 1 (expt x 2)))
 1> @b{,e}
 x = 'hello
-(current-exception-handler) = primordial-exception-handler
-(current-input-port) = '#<input-output-port #3 (console)>
-(current-output-port) = '#<input-output-port #3 (console)>
-(current-directory) = "/Users/feeley/gambit/doc/"
 1> @b{,b}
 0  invsqr                    (console)@@1:25          (expt x 2)
 1  #<procedure #4>           (console)@@6:17          (fn (car in))
@@ -1956,10 +1982,10 @@ in = '(hello 9 1)
 mm = (lambda (in) (if (null? in) '() (cons (fn (car in)) (mm (cdr in)))))
 fn = invsqr
 lst = '(5 2 hello 9 1)
-(current-exception-handler) = primordial-exception-handler
-(current-input-port) = '#<input-output-port #3 (console)>
-(current-output-port) = '#<input-output-port #3 (console)>
-(current-directory) = "/Users/feeley/gambit/doc/"
+1\1> @b{,(e mm)}
+mm = (lambda (in) (if (null? in) '() (cons (fn (car in)) (mm (cdr in)))))
+fn = invsqr
+lst = '(5 2 hello 9 1)
 1\1> @b{fn}
 #<procedure #2 invsqr>
 1\1> @b{(pp fn)}
@@ -1971,10 +1997,6 @@ in = '(2 hello 9 1)
 mm = (lambda (in) (if (null? in) '() (cons (fn (car in)) (mm (cdr in)))))
 fn = invsqr
 lst = '(5 2 hello 9 1)
-(current-exception-handler) = primordial-exception-handler
-(current-input-port) = '#<input-output-port #3 (console)>
-(current-output-port) = '#<input-output-port #3 (console)>
-(current-directory) = "/Users/feeley/gambit/doc/"
 1\2> @b{,(c (list 3 4 5))}
 (1/25 1/4 3 4 5)
 > @b{,q}
@@ -2189,10 +2211,6 @@ For example:
 3  (interaction)             (console)@@6:1           (f 5)
 1> @b{,e}
 x = 5
-(current-exception-handler) = primordial-exception-handler
-(current-input-port) = '#<input-output-port #2 (console)>
-(current-output-port) = '#<input-output-port #2 (console)>
-(current-directory) = "/Users/feeley/gambit/doc/"
 1> @b{,c}
 *** STOPPED IN double, (console)@@1.21
 1> @b{,c}
@@ -3154,9 +3172,16 @@ violating the R5RS Scheme semantics, are: @code{(standard-bindings)},
 
 The procedures in this section are not yet documented.
 
-@deffn procedure continuation-capture @var{receiver}
+@deffn procedure continuation-capture @var{proc}
 @deffnx procedure continuation-graft @var{cont} @var{proc} @var{obj}@dots{}
 @deffnx procedure continuation-return @var{cont} @var{obj}@dots{}
+@end deffn
+
+@deffn procedure display-exception @var{exc} @r{[}@var{port}@r{]}
+@deffnx procedure display-exception-in-context @var{exc} @var{cont} @r{[}@var{port}@r{]}
+@deffnx procedure display-procedure-env @var{proc} @r{[}@var{port}@r{]}
+@deffnx procedure display-continuation-env @var{cont} @r{[}@var{port}@r{]}
+@deffnx procedure display-continuation-dynamic-env @var{cont} @r{[}@var{port}@r{]}
 @end deffn
 
 @deffn procedure print @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}

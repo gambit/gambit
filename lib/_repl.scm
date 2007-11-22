@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2007-09-11 18:56:18 feeley>
+;;; File: "_repl.scm", Time-stamp: <2007-11-22 13:26:39 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -485,18 +485,18 @@
 (define-prim (pp
               obj
               #!optional
-              (p (macro-absent-obj)))
-  (macro-force-vars (obj p)
-    (let ((port
-           (if (##eq? p (macro-absent-obj))
-             (##repl-output-port)
-             p)))
-      (macro-check-output-port port 2 (pp obj p)
+              (port (macro-absent-obj)))
+  (macro-force-vars (obj port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (##repl-output-port)
+               port)))
+      (macro-check-output-port p 2 (pp obj p)
         (##pretty-print
          (if (##procedure? obj)
-           (##decompile obj)
-           obj)
-         port)))))
+             (##decompile obj)
+             obj)
+         p)))))
 
 (define-prim (##decomp $code)
   (let ((cprc (macro-code-cprc $code)))
@@ -709,6 +709,7 @@
 (define-prim (##interp-internal-continuation? cont)
   (let ((parent (##continuation-parent cont)))
     (or (##eq? parent ##step-handler)
+        (##eq? parent ##repl-within-proc)
         (##assq parent ##decomp-dispatch-table))))
 
 (define-prim (##interp-continuation? cont)
@@ -741,28 +742,32 @@
       (and (##not (##interp-internal-continuation? cont))
            (##not (##hidden-continuation? cont)))))
 
-(define-prim (##continuation-first-interesting cont)
+(define-prim (##continuation-first-frame cont all-frames?)
   (and cont
-       (if (##hidden-continuation? cont)
-         (##continuation-next-interesting cont)
-         cont)))
+       (if (or all-frames?
+               (##not (##hidden-continuation? cont)))
+           cont
+           (##continuation-next-frame cont all-frames?))))
 
-(define-prim (##continuation-next-interesting cont)
+(define-prim (##continuation-next-frame cont all-frames?)
   (and cont
        (let loop ((cont cont))
          (let ((next (##continuation-next cont)))
            (and next
-                (if (##interesting-continuation? next)
-                  next
-                  (loop next)))))))
+                (if (or all-frames?
+                        (##interesting-continuation? next))
+                    next
+                    (loop next)))))))
 
-(define-prim (##continuation-count-interesting cont)
+(define-prim (##continuation-count-frames cont all-frames?)
   (let loop ((cont cont) (n 0))
     (if cont
-      (if (##interesting-continuation? cont)
-        (loop (##continuation-next cont) (##fixnum.+ n 1))
-        (loop (##continuation-next cont) n))
-      n)))
+        (loop (##continuation-next cont)
+              (if (or all-frames?
+                      (##interesting-continuation? cont))
+                  (##fixnum.+ n 1)
+                  n))
+        n)))
 
 (define-prim (##continuation-locals cont #!optional (var (macro-absent-obj)))
   (##subprocedure-locals (##continuation-ret cont) cont var))
@@ -870,46 +875,131 @@
 
 (define-prim (##cmd-? port)
   (##write-string
-",?                 : Summary of comma commands
-,q                 : Terminate the current thread
-,t                 : Jump to toplevel REPL
-,d                 : Jump to enclosing REPL
-,c and ,(c <expr>) : Continue the computation with stepping off
-,s and ,(s <expr>) : Continue the computation with stepping on (step)
-,l and ,(l <expr>) : Continue the computation with stepping on (leap)
-,<n>               : Move to particular frame (<n> >= 0)
-,+ and ,-          : Move to next or previous frame of continuation
-,y                 : Display one-line summary of current frame
-,b                 : Display summary of continuation (i.e. backtrace)
-,i                 : Display procedure attached to current frame
-,e                 : Display environment accessible from current frame
+",? or ,h      : Summary of comma commands
+,q            : Terminate the process
+,qt           : Terminate the current thread
+,t            : Jump to toplevel REPL
+,d            : Jump to enclosing REPL
+,c and ,(c X) : Continue the computation with stepping off
+,s and ,(s X) : Continue the computation with stepping on (step)
+,l and ,(l X) : Continue the computation with stepping on (leap)
+,<n>          : Move to particular frame (<n> >= 0)
+,+ and ,-     : Move to next or previous frame of continuation
+,y            : Display one-line summary of current frame
+,b            : Display summary of continuation (i.e. backtrace)
+,i            : Display procedure attached to current frame
+,e or ,(e X)  : Display environment of current frame or X (a proc or cont)
+,(v X)        : Start a REPL visiting X (a procedure or continuation)
 " port))
+
+;;;,(p [N M])    : Configure REPL's pretty printer (N=max level, M=max length)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-prim (##cmd-b depth cont port)
+(##define-macro (macro-default-max-head) 10)
+(##define-macro (macro-default-max-tail) 4)
 
-  (define max-head 10)
-  (define max-tail 4)
+(define-prim (##cmd-b cont port depth)
+  (##display-continuation-backtrace
+   cont
+   port
+   #f
+   #f
+   (macro-default-max-head)
+   (macro-default-max-tail)
+   depth))
 
+(define-prim (##display-continuation-backtrace
+              cont
+              port
+              display-env?
+              all-frames?
+              max-head
+              max-tail
+              depth)
   (let loop ((i 0)
-             (j (##fixnum.- (##continuation-count-interesting cont) 1))
-             (cont cont))
+             (j (##fixnum.- (##continuation-count-frames cont all-frames?) 1))
+             (cont (##continuation-first-frame cont all-frames?)))
     (and cont
          (begin
            (cond ((or (##fixnum.< i max-head) (##fixnum.< j max-tail)
                       (and (##fixnum.= i max-head) (##fixnum.= j max-tail)))
-                  (##cmd-y (##fixnum.+ depth i) cont #f port))
+                  (##display-continuation-frame
+                   cont
+                   port
+                   display-env?
+                   #f
+                   (##fixnum.+ depth i)))
                  ((##fixnum.= i max-head)
                   (##write-string "..." port)
                   (##newline port)))
            (loop (##fixnum.+ i 1)
                  (##fixnum.- j 1)
-                 (##continuation-next-interesting cont))))))
+                 (##continuation-next-frame cont all-frames?))))))
+
+(define-prim (display-continuation-backtrace
+              cont
+              #!optional
+              (port (macro-absent-obj))
+              (all-frames? (macro-absent-obj))
+              (display-env? (macro-absent-obj))
+              (max-head (macro-absent-obj))
+              (max-tail (macro-absent-obj))
+              (depth (macro-absent-obj)))
+  (macro-force-vars (cont port all-frames? display-env? max-head max-tail depth)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (##repl-output-port)
+               port))
+          (de
+           (if (##eq? display-env? (macro-absent-obj))
+               #f
+               display-env?))
+          (af
+           (if (##eq? all-frames? (macro-absent-obj))
+               #f
+               all-frames?))
+          (mh
+           (if (##eq? max-head (macro-absent-obj))
+               (macro-default-max-head)
+               max-head))
+          (mt
+           (if (##eq? max-tail (macro-absent-obj))
+               (macro-default-max-tail)
+               max-tail))
+          (d
+           (if (##eq? depth (macro-absent-obj))
+               0
+               depth)))
+      (macro-check-continuation cont 1 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
+        (macro-check-character-output-port p 2 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
+          (macro-check-fixnum mh 5 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
+            (macro-check-fixnum mt 6 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
+              (macro-check-fixnum d 7 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
+                (##display-continuation-backtrace cont p de af mh mt d)))))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-prim (##cmd-y depth cont pinpoint? port)
+(define ##repl-backtrace-display-environment?
+  (##make-parameter #f))
+
+(define repl-backtrace-display-environment?
+  ##repl-backtrace-display-environment?)
+
+(define-prim (##cmd-y cont port pinpoint? depth)
+  (##display-continuation-frame
+   cont
+   port
+   (##repl-backtrace-display-environment?)
+   pinpoint?
+   depth))
+
+(define-prim (##display-continuation-frame
+              cont
+              port
+              display-env?
+              pinpoint?
+              depth)
 
   (define creator-col 4)
   (define locat-col   30)
@@ -952,7 +1042,12 @@
                  (##fixnum.- (##output-port-width port)
                              (##output-port-column port)))
                 port))))
-         (##newline port))))
+         (##newline port)
+         (if display-env?
+             (##display-continuation-environment
+              cont
+              port
+              (##fixnum.+ 4 creator-col))))))
 
 (define-prim (##display-spaces n port)
   (if (##fixnum.< 0 n)
@@ -987,78 +1082,6 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-prim (##cmd-e cont port)
-
-  (define (display-var-val var val cte)
-    (##write var port)
-    (##write-string " = " port)
-    (##write-string
-     (##object->string
-      (if (##cte-top? cte)
-        (##inverse-eval-in-env val cte)
-        (##inverse-eval-in-env val (##cte-parent-cte cte)))
-      (##fixnum.- (##output-port-width port)
-                  (##output-port-column port)))
-     port)
-    (##newline port))
-
-  (define (display-rte cte rte)
-    (let loop1 ((c cte)
-                (r rte))
-      (cond ((##cte-top? c))
-            ((##cte-frame? c)
-             (let loop2 ((vars (##cte-frame-vars c))
-                         (vals (##cdr (##vector->list r))))
-               (if (##pair? vars)
-                 (let ((var (##car vars)))
-                   (if (##not (##hidden-local-var? var))
-                     (display-var-val var (##car vals) c))
-                   (loop2 (##cdr vars)
-                          (##cdr vals)))
-                 (loop1 (##cte-parent-cte c)
-                        (macro-rte-up r)))))
-            (else
-             (loop1 (##cte-parent-cte c)
-                    r)))))
-
-  (define (display-vars lst cte)
-    (let loop ((lst lst))
-      (if (##pair? lst)
-        (let* ((var-val (##car lst))
-               (var (##car var-val))
-               (val (##cdr var-val)))
-          (display-var-val var val cte)
-          (loop (##cdr lst))))))
-
-  (define (display-locals lst cte)
-    (and lst
-         (display-vars lst cte)))
-
-  (define (display-parameters lst cte)
-    (let loop ((lst lst))
-      (if (##pair? lst)
-        (let* ((param-val (##car lst))
-               (param (##car param-val))
-               (val (##cdr param-val)))
-          (if (##not (##hidden-parameter? param))
-            (let ((x
-                   (##inverse-eval-in-env param cte)))
-              (display-var-val (##list x) val cte)))
-          (loop (##cdr lst))))))
-
-  (and cont
-       (display-parameters
-        (##dynamic-env->list (macro-continuation-denv cont))
-        (if (##interp-continuation? cont)
-          (let (($code (##interp-continuation-code cont))
-                (rte (##interp-continuation-rte cont)))
-            (display-rte (macro-code-cte $code) rte)
-            (macro-code-cte $code))
-          (begin
-            (display-locals (##continuation-locals cont)
-                            ##interaction-cte)
-            ##interaction-cte)))))
-
 (define-prim (##inverse-eval-in-env obj cte)
   (if (##procedure? obj)
     (let ((id (##object->global-var->identifier obj)))
@@ -1082,6 +1105,169 @@
   (if (##self-eval? obj)
     obj
     (##list 'quote obj)))
+
+(define (##display-var-val var val cte indent port)
+  (##display-spaces indent port)
+  (##write var port)
+  (##write-string " = " port)
+  (##write-string
+   (##object->string
+    (if (##cte-top? cte)
+        (##inverse-eval-in-env val cte)
+        (##inverse-eval-in-env val (##cte-parent-cte cte)))
+    (##fixnum.- (##output-port-width port)
+                (##output-port-column port)))
+   port)
+  (##newline port))
+
+(define (##display-rte cte rte indent port)
+  (let loop1 ((c cte)
+              (r rte))
+    (cond ((##cte-top? c))
+          ((##cte-frame? c)
+           (let loop2 ((vars (##cte-frame-vars c))
+                       (vals (##cdr (##vector->list r))))
+             (if (##pair? vars)
+                 (let ((var (##car vars)))
+                   (if (##not (##hidden-local-var? var))
+                       (##display-var-val var (##car vals) c indent port))
+                   (loop2 (##cdr vars)
+                          (##cdr vals)))
+                 (loop1 (##cte-parent-cte c)
+                        (macro-rte-up r)))))
+          (else
+           (loop1 (##cte-parent-cte c)
+                  r)))))
+
+(define (##display-vars lst cte indent port)
+  (let loop ((lst lst))
+    (if (##pair? lst)
+        (let* ((var-val (##car lst))
+               (var (##car var-val))
+               (val (##cdr var-val)))
+          (##display-var-val var val cte indent port)
+          (loop (##cdr lst))))))
+
+(define (##display-locals lst cte indent port)
+  (and lst
+       (##display-vars lst cte indent port)))
+
+(define (##display-parameters lst cte indent port)
+  (let loop ((lst lst))
+    (if (##pair? lst)
+        (let* ((param-val (##car lst))
+               (param (##car param-val))
+               (val (##cdr param-val)))
+          (if (##not (##hidden-parameter? param))
+              (let ((x
+                     (##inverse-eval-in-env param cte)))
+                (##display-var-val (##list x) val cte indent port)))
+          (loop (##cdr lst))))))
+
+(define-prim (##display-continuation-environment cont port indent)
+  (if (##interp-continuation? cont)
+      (let (($code (##interp-continuation-code cont))
+            (rte (##interp-continuation-rte cont)))
+        (##display-rte (macro-code-cte $code) rte indent port))
+      (##display-locals (##continuation-locals cont)
+                        ##interaction-cte
+                        indent
+                        port))
+  (##void))
+
+(define-prim (display-continuation-environment
+              cont
+              #!optional
+              (port (macro-absent-obj))
+              (indent (macro-absent-obj)))
+  (macro-force-vars (cont port indent)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (##repl-output-port)
+               port))
+          (i
+           (if (##eq? indent (macro-absent-obj))
+               0
+               indent)))
+      (macro-check-continuation cont 1 (display-continuation-environment cont port indent)
+        (macro-check-character-output-port p 2 (display-continuation-environment cont p indent)
+          (macro-check-fixnum i 3 (display-continuation-environment cont p i)
+            (##display-continuation-environment cont p i)))))))
+
+(define-prim (##display-continuation-dynamic-environment cont port indent)
+  (##display-parameters
+   (##dynamic-env->list (macro-continuation-denv cont))
+   (if (##interp-continuation? cont)
+       (let (($code (##interp-continuation-code cont)))
+         (macro-code-cte $code))
+       ##interaction-cte)
+   indent
+   port)
+  (##void))
+
+(define-prim (display-continuation-dynamic-environment
+              cont
+              #!optional
+              (port (macro-absent-obj))
+              (indent (macro-absent-obj)))
+  (macro-force-vars (cont port indent)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (##repl-output-port)
+               port))
+          (i
+           (if (##eq? indent (macro-absent-obj))
+               0
+               indent)))
+      (macro-check-continuation cont 1 (display-continuation-dynamic-environment cont port indent)
+        (macro-check-character-output-port p 2 (display-continuation-dynamic-environment cont p indent)
+          (macro-check-fixnum i 3 (display-continuation-dynamic-environment cont p i)
+            (##display-continuation-dynamic-environment cont p i)))))))
+
+(define ##repl-display-dynamic-environment?
+  (##make-parameter #f))
+
+(define repl-display-dynamic-environment?
+  ##repl-display-dynamic-environment?)
+
+(define-prim (##cmd-e proc-or-cont port)
+  (and proc-or-cont
+       (if (##continuation? proc-or-cont)
+           (begin
+             (##display-continuation-environment proc-or-cont port 0)
+             (if (##repl-display-dynamic-environment?)
+                 (##display-continuation-dynamic-environment proc-or-cont port 0)))
+           (##display-procedure-environment proc-or-cont port 0))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define-prim (##display-procedure-environment proc port indent)
+  (cond ((##interp-procedure? proc)
+         (let* (($code (##interp-procedure-code proc))
+                (rte (##interp-procedure-rte proc)))
+           (##display-rte (macro-code-cte $code) rte indent port)))
+        ((##closure? proc)
+         (error "Can't access compiled procedure's environment")));;;;;;;;;;;
+  (##void))
+
+(define-prim (display-procedure-environment
+              proc
+              #!optional
+              (port (macro-absent-obj))
+              (indent (macro-absent-obj)))
+  (macro-force-vars (proc port indent)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (##repl-output-port)
+               port))
+          (i
+           (if (##eq? indent (macro-absent-obj))
+               0
+               indent)))
+      (macro-check-procedure proc 1 (display-procedure-environment proc port indent)
+        (macro-check-character-output-port p 2 (display-procedure-environment proc p indent)
+          (macro-check-fixnum i 3 (display-procedure-environment proc p i)
+            (##display-procedure-environment proc p i)))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1802,7 +1988,7 @@
      (macro-repl-context-depth repl-context)))
 
   (define (first-interesting cont)
-    (##continuation-first-interesting cont))
+    (##continuation-first-frame cont #f))
 
   (define (restart repl-context)
     (restart-exec
@@ -1821,10 +2007,10 @@
                   show-frame?)
            (##repl-channel-display-multiline-message
             (lambda (output-port)
-              (##cmd-y (macro-repl-context-depth repl-context)
-                       cont
+              (##cmd-y cont
+                       output-port
                        #t
-                       output-port))))
+                       (macro-repl-context-depth repl-context)))))
          (display-continuation repl-context)))))
 
   (define (restart-exec repl-context thunk)
@@ -1880,31 +2066,41 @@
       (##repl-channel-write-results results))
 
     (define (goto-depth n)
+      (restart-pinpointing-continuation #t (get-context n)))
+
+    (define (get-context n)
       (let loop ((context repl-context))
         (let ((depth (macro-repl-context-depth context)))
           (cond ((##fixnum.< n depth)
                  (let ((prev-depth (macro-repl-context-prev-depth context)))
                    (if prev-depth
-                     (loop prev-depth)
-                     (restart-pinpointing-continuation #t context))))
+                       (loop prev-depth)
+                       context)))
                 ((##fixnum.< depth n)
                  (let* ((cont
                          (first-interesting (macro-repl-context-cont context)))
                         (next
-                         (##continuation-next-interesting cont)))
+                         (##continuation-next-frame cont #f)))
                    (if next
-                     (loop (macro-make-repl-context
-                            (macro-repl-context-level context)
-                            (##fixnum.+ depth 1)
-                            next
-                            (macro-repl-context-initial-cont context)
-                            (macro-repl-context-prev-level context)
-                            context))
-                     (restart-pinpointing-continuation #t context))))
+                       (loop (macro-make-repl-context
+                              (macro-repl-context-level context)
+                              (##fixnum.+ depth 1)
+                              next
+                              (macro-repl-context-initial-cont context)
+                              (macro-repl-context-prev-level context)
+                              context))
+                       context)))
                 (else
-                 (restart-pinpointing-continuation #t context))))))
+                 context)))))
 
     (define (quit)
+      (release-ownership!)
+      (##continuation-graft
+       (macro-repl-context-cont repl-context)
+       (lambda ()
+         (##exit))))
+
+    (define (quit-thread)
       (release-ownership!)
       (##continuation-graft
        (macro-repl-context-cont repl-context)
@@ -1974,7 +2170,7 @@
                  (let* ((cmd-src (##cadr code))
                         (cmd (##source-code cmd-src)))
                    (cond
-                     ((##eq? cmd '?)
+                     ((or (##eq? cmd '?) (##eq? cmd 'h))
                       (##repl-channel-display-multiline-message ##cmd-?)
                       (continue))
                      ((##eq? cmd '-)
@@ -1986,10 +2182,10 @@
                      ((##eq? cmd 'b)
                       (##repl-channel-display-multiline-message
                        (lambda (output-port)
-                         (##cmd-b (macro-repl-context-depth repl-context)
-                                  (first-interesting
+                         (##cmd-b (first-interesting
                                    (macro-repl-context-cont repl-context))
-                                  output-port)))
+                                  output-port
+                                  (macro-repl-context-depth repl-context))))
                       (continue))
                      ((##eq? cmd 'i)
                       (##repl-channel-display-multiline-message
@@ -2001,11 +2197,11 @@
                      ((##eq? cmd 'y)
                       (##repl-channel-display-multiline-message
                        (lambda (output-port)
-                         (##cmd-y (macro-repl-context-depth repl-context)
-                                  (first-interesting
+                         (##cmd-y (first-interesting
                                    (macro-repl-context-cont repl-context))
+                                  output-port
                                   #t
-                                  output-port)))
+                                  (macro-repl-context-depth repl-context))))
                       (continue))
                      ((##eq? cmd 'e)
                       (##repl-channel-display-multiline-message
@@ -2021,6 +2217,8 @@
                       (continue))
                      ((##eq? cmd 'q)
                       (quit))
+                     ((##eq? cmd 'qt)
+                      (quit-thread))
                      ((and (##fixnum? cmd)
                            (##not (##fixnum.< cmd 0)))
                       (goto-depth cmd))
@@ -2030,7 +2228,7 @@
                         (return cmd)
                         (begin
                           (invalid-command
-                           "Continuation expects a result -- use ,(c <expr>) or ,(s <expr>) or ,(l <expr>)")
+                           "Continuation expects a result -- use ,(c X) or ,(s X) or ,(l X)")
                           (continue))))
                      ((and (##pair? cmd)
                            (##pair? (##cdr cmd))
@@ -2049,7 +2247,7 @@
                               (##eval-within
                                src
                                (macro-repl-context-cont repl-context)
-                               #f
+                               repl-context
                                (if (cont-in-step-handler?)
                                  (lambda (results)
                                    (acquire-ownership!)
@@ -2057,6 +2255,48 @@
                                  (lambda (results)
                                    (acquire-ownership!)
                                    (return results)))))))
+                         ((or (##eq? cmd2 'e)
+                              (##eq? cmd2 'v))
+                          (let ((src (##cadr cmd)))
+                            (release-ownership!)
+                            (##eval-within
+                             src
+                             (macro-repl-context-cont repl-context)
+                             repl-context
+                             (lambda (results)
+                               (let ((val results))
+
+                                 (define (handle proc-or-cont)
+                                   (if (##eq? cmd2 'v)
+                                       (if (##continuation? proc-or-cont)
+                                           (##repl-within proc-or-cont #f)
+                                           (##repl-within-proc
+                                            proc-or-cont
+                                            (macro-repl-context-cont
+                                             repl-context)))
+                                       (begin
+                                         (acquire-ownership!)
+                                         (##repl-channel-display-multiline-message
+                                          (lambda (output-port)
+                                            (##cmd-e proc-or-cont output-port)))
+                                         (continue))))
+
+                                 (cond ((and (##fixnum? val)
+                                             (##not (##fixnum.< val 0)))
+                                        (let ((cont
+                                               (first-interesting
+                                                (macro-repl-context-cont
+                                                 (get-context val)))))
+                                          (handle cont)))
+                                       ((##procedure? val)
+                                        (handle val))
+                                       ((##continuation? val)
+                                        (handle val))
+                                       (else
+                                        (acquire-ownership!)
+                                        (invalid-command
+                                         "PROCEDURE or CONTINUATION expected")
+                                        (continue))))))))
                          (else
                           (unknown-command)
                           (continue)))))
@@ -2091,6 +2331,30 @@
                      (write-reason first output-port)))))))
       (release-ownership!)
       (restart-pinpointing-continuation #f repl-context))))
+
+(define-prim (##repl-within-proc proc cont)
+  (cond ((##interp-procedure? proc)
+         (##continuation-capture
+          (lambda (cont2)
+
+            (define (repl)
+              (##continuation-capture
+               (lambda (cont3)
+                 (##continuation-graft
+                  cont2
+                  (lambda ()
+                    (##repl-within cont3 #f))))))
+
+            (##continuation-graft
+             cont
+             (lambda ()
+               (let* (($code (##interp-procedure-code proc))
+                      (rte (##interp-procedure-rte proc)))
+                 (##declare (not interrupts-enabled) (environment-map))
+                 (let ((result (repl)))
+                   (##first-argument result $code rte))))))))
+        (else
+         (error "Can't access compiled procedure's environment"))));;;;;;;;
 
 (define-prim (##eval-within src cont repl-context receiver)
 
@@ -2207,15 +2471,6 @@
         (else
          (##continuation-locat cont))))
 
-(define-prim (##display-exception-in-context exc cont port)
-  (##display-situation
-   (##exception->kind exc)
-   (##exception->procedure exc cont)
-   (##exception->locat exc cont)
-   port)
-  (##write-string " -- " port)
-  (##display-exception exc port))
-
 (define-prim (##display-situation kind proc locat port)
   (##write-string "*** " port)
   (##write-string kind port)
@@ -2228,6 +2483,29 @@
       (if proc
         (##write-string ", " port))
       (##display-locat locat #t port))))
+
+(define-prim (##display-exception-in-context exc cont port)
+  (##display-situation
+   (##exception->kind exc)
+   (##exception->procedure exc cont)
+   (##exception->locat exc cont)
+   port)
+  (##write-string " -- " port)
+  (##display-exception exc port))
+
+(define-prim (display-exception-in-context
+              exc
+              cont
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (exc cont port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (##repl-output-port)
+               port)))
+      (macro-check-continuation cont 2 (display-exception-in-context exc cont port)
+        (macro-check-character-output-port p 3 (display-exception-in-context exc cont p)
+          (##display-exception-in-context exc cont p))))))
 
 (define-prim (##display-exception exc port)
 
@@ -2605,6 +2883,18 @@
            (##newline port))))
 
   (display-exception exc))
+
+(define-prim (display-exception
+              exc
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (exc port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (##repl-output-port)
+               port)))
+      (macro-check-character-output-port p 2 (display-exception exc p)
+        (##display-exception exc p)))))
 
 (define ##type-exception-names #f)
 (set! ##type-exception-names
