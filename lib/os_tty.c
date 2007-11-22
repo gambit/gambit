@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2007-11-21 00:46:39 feeley> */
+/* File: "os_tty.c", Time-stamp: <2007-11-22 11:01:04 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -750,7 +750,28 @@ ___device_tty *self;)
 #endif
                         O_RDWR))
             < 0)
-          return fnf_or_err_code_from_errno ();
+          {
+#ifdef ENXIO
+            if (errno == ENXIO)
+              {
+                /*
+                 * There is no controlling terminal!  This is a fatal
+                 * error, because trying to display an error message
+                 * will just cause the open to be tried again to
+                 * report the problem, and this will lead to an
+                 * infinite loop.
+                 */
+
+                static char *msgs[] =
+                { "No controlling terminal (try using the -:d- runtime option)",
+                  NULL
+                };
+
+                ___fatal_error (msgs);
+              }
+#endif
+            return fnf_or_err_code_from_errno ();
+          }
 
         d->fd = fd;
 
