@@ -1,4 +1,4 @@
-; File: "mix.scm", Time-stamp: <2007-11-07 09:11:36 feeley>
+; File: "mix.scm", Time-stamp: <2007-12-13 13:41:41 feeley>
 
 ; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
 
@@ -662,11 +662,11 @@
         (lambda (return)
           (with-exception-handler
            (lambda (exc)
-             (##continuation-capture
+             (continuation-capture
               (lambda (cont)
-                (##display-exception-in-context
+                (display-exception-in-context
                  exc
-                 (##continuation-first-interesting cont)
+                 (##continuation-first-frame cont #f)
                  (current-output-port))
                 (return 'error))))
            thunk))))
@@ -1760,54 +1760,54 @@
 (define (test5)
   (write (sqrt c1)) (newline)
   (write (round c2)) (newline)
-  (write (##flonum./ c3 c5)) (newline)
-  (write (##flonum./ c4 c5)) (newline)
-  (write (##flonum./ c3 c6)) (newline)
-  (write (##flonum./ c4 c6)) (newline)
+  (write (fl/ c3 c5)) (newline)
+  (write (fl/ c4 c5)) (newline)
+  (write (fl/ c3 c6)) (newline)
+  (write (fl/ c4 c6)) (newline)
   (write c7) (newline)
-  (write (##flonum.+ c9 c8)) (newline)
-  (write (##flonum.< (##flonum.log c5) -1.797693e308)) (newline)
-  (write (##flonum.< 1.797693e308 (##flonum.exp c10))) (newline)
-  (write (##flonum./ c11 c10)) (newline)
-  (if (not (equal? (number->string (##flonum.* c3 -0.)) "-0."))
+  (write (fl+ c9 c8)) (newline)
+  (write (fl< (fllog c5) -1.797693e308)) (newline)
+  (write (fl< 1.797693e308 (flexp c10))) (newline)
+  (write (fl/ c11 c10)) (newline)
+  (if (not (equal? (number->string (fl* c3 -0.)) "-0."))
     (begin
-      (display "*** warning: (##flonum.* 0. -0.) != -0." (current-error-port))
+      (display "*** warning: (fl* 0. -0.) != -0." (current-error-port))
       (newline (current-error-port))))
-  (if (not (equal? (number->string (##flonum.* c4 0.)) "-0."))
+  (if (not (equal? (number->string (fl* c4 0.)) "-0."))
     (begin
-      (display "*** warning: (##flonum.* -0. 0.) != -0." (current-error-port))
+      (display "*** warning: (fl* -0. 0.) != -0." (current-error-port))
       (newline (current-error-port))))
-  (if (##flonum.< c7 c5)
+  (if (fl< c7 c5)
     (begin
-      (display "*** warning: (##flonum.< +nan.0 0.) => #t" (current-error-port))
+      (display "*** warning: (fl< +nan.0 0.) => #t" (current-error-port))
       (newline (current-error-port))))
-  (if (##flonum.< c5 c7)
+  (if (fl< c5 c7)
     (begin
-      (display "*** warning: (##flonum.< 0. +nan.0) => #t" (current-error-port))
+      (display "*** warning: (fl< 0. +nan.0) => #t" (current-error-port))
       (newline (current-error-port))))
-  (if (##flonum.< c7 c8)
+  (if (fl< c7 c8)
     (begin
-      (display "*** warning: (##flonum.< +nan.0 +inf.0) => #t" (current-error-port))
+      (display "*** warning: (fl< +nan.0 +inf.0) => #t" (current-error-port))
       (newline (current-error-port))))
-  (if (##flonum.< c8 c7)
+  (if (fl< c8 c7)
     (begin
-      (display "*** warning: (##flonum.< +inf.0 +nan.0) => #t" (current-error-port))
+      (display "*** warning: (fl< +inf.0 +nan.0) => #t" (current-error-port))
       (newline (current-error-port))))
-  (if (##flonum.< c7 c9)
+  (if (fl< c7 c9)
     (begin
-      (display "*** warning: (##flonum.< +nan.0 -inf.0) => #t" (current-error-port))
+      (display "*** warning: (fl< +nan.0 -inf.0) => #t" (current-error-port))
       (newline (current-error-port))))
-  (if (##flonum.< c9 c7)
+  (if (fl< c9 c7)
     (begin
-      (display "*** warning: (##flonum.< -inf.0 +nan.0) => #t" (current-error-port))
+      (display "*** warning: (fl< -inf.0 +nan.0) => #t" (current-error-port))
       (newline (current-error-port))))
-  (if (##flonum.= c7 c8)
+  (if (fl= c7 c8)
     (begin
-      (display "*** warning: (##flonum.= +nan.0 +inf.0) => #t" (current-error-port))
+      (display "*** warning: (fl= +nan.0 +inf.0) => #t" (current-error-port))
       (newline (current-error-port))))
-  (if (##flonum.= c7 c9)
+  (if (fl= c7 c9)
     (begin
-      (display "*** warning: (##flonum.= +nan.0 -inf.0) => #t" (current-error-port))
+      (display "*** warning: (fl= +nan.0 -inf.0) => #t" (current-error-port))
       (newline (current-error-port))))
 )
 
