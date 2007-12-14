@@ -175,9 +175,9 @@ install-post: all
 	$(INSTALL_DATA) $(srcdirpfx)_gambcgsc.c $(libdir)/_gambcgsc.c
 	$(INSTALL_LIB) $(LIBRARY) $(libdir)/$(LIBRARY)
 	@FIXLIB@ $(libdir)/$(LIBRARY)
-	for library in $(LIBRARIES_SCM); do \
-	  $(INSTALL_DATA) $$library $(libdir)/$$library; \
-	done
+	#for library in $(LIBRARIES_SCM); do \
+	#  $(INSTALL_DATA) $$library $(libdir)/$$library; \
+	#done
 	@LINK_FOR_INSTALL@
 	$(INSTALL_PROGRAM) $(EXECUTABLE) $(bindir)/$(EXECUTABLE)
 

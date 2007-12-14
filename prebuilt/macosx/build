@@ -26,7 +26,14 @@ for VARIANT in intel powerpc universal; do
     universal) CONFIG_ARCH="-arch i386 -arch ppc";;
   esac
 
-  CFLAGS="$CONFIG_ARCH" LDFLAGS="$CONFIG_ARCH" ./configure --prefix="$INSTALL_PREFIX" --enable-single-host # --enable-gcc-opts
+  # In order for the executables to run with MacOS Tiger as well as
+  # Leopard we need to use the MacOSX10.4u SDK.  But to do that with
+  # the current Xcode you need to create this symbolic link first:
+  #   % sudo ln -s /Developer/SDKs/MacOSX10.4u.sdk/usr/lib/crt1.o /Developer/SDKs/MacOSX10.4u.sdk/usr/lib/crt1.10.5.o
+
+  SYSROOT="/Developer/SDKs/MacOSX10.4u.sdk"
+
+  CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure --prefix="$INSTALL_PREFIX" --enable-single-host # --enable-gcc-opts
 
   cd "$herefromroot"
 
