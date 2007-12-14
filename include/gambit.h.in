@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2007-11-20 14:10:27 feeley> */
+/* File: "gambit.h", Time-stamp: <2007-12-14 08:27:40 feeley> */
 
 /*
  * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
@@ -6528,6 +6528,10 @@ int _fltused; /* needed if floating-point used. */
 #endif
 
 #ifdef ___OS_WIN32
+
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0500
+#endif
 
 #ifndef ___DONT_HAVE_WINSOCK2_H
 #include <winsock2.h>
