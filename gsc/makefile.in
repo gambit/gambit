@@ -4,7 +4,6 @@
 
 herefromroot = gsc
 rootfromhere = ..
-escrootfromhere = ".."
 SUBDIRS =
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
@@ -31,6 +30,8 @@ DEFS = @DEFS@
 LIBS = @LIBS@
 
 GAMBCLIB = @GAMBCLIB@
+GAMBCGSCLIB = @GAMBCGSCLIB@
+GAMBCGSILIB = @GAMBCGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -51,46 +52,85 @@ emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
 .SUFFIXES:
 .SUFFIXES: .scm .c @obj@
 
-.c@obj@:
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -c $(srcdirpfx)$*.c
-
-.scm.c:
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(escrootfromhere) -f -c -check $(srcdirpfx)$*.scm
-
 INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include
 
-MODULES = _host _utils _source _parms \
+LIBRARIES_SCM =
+
+LIBRARY = $(GAMBCGSCLIB)
+LIBRARY_NORMAL_C =
+LIBRARY_NORMAL_CPP =
+LIBRARY_NORMAL_H =
+LIBRARY_NORMAL_O =
+LIBRARY_NORMAL_O_PLUS =
+LIBRARY_NORMAL_O_COMMA =
+LIBRARY_NORMAL_SOURCES = $(LIBRARY_NORMAL_C) $(LIBRARY_NORMAL_CPP) \
+$(LIBRARY_NORMAL_H)
+LIBRARY_MODULES = _host _utils _source _parms \
 _env _ptree1 _ptree2 _gvm _back _front _prims \
-_t-c-1 _t-c-2 _t-c-3 _gsc
-MODULES_SCM = _host.scm _utils.scm _source.scm _parms.scm \
-_env.scm _ptree1.scm _ptree2.scm _gvm.scm _back.scm _front.scm \
-_prims.scm _t-c-1.scm _t-c-2.scm _t-c-3.scm _gsc.scm
-MODULES_C = _host.c _utils.c _source.c _parms.c \
+_t-c-1 _t-c-2 _t-c-3 _gsclib
+LIBRARY_MODULES_SCM = _host.scm _utils.scm _source.scm _parms.scm \
+_env.scm _ptree1.scm _ptree2.scm _gvm.scm _back.scm _front.scm _prims.scm \
+_t-c-1.scm _t-c-2.scm _t-c-3.scm _gsclib.scm
+LIBRARY_MODULES_C = _host.c _utils.c _source.c _parms.c \
 _env.c _ptree1.c _ptree2.c _gvm.c _back.c _front.c \
-_prims.c _t-c-1.c _t-c-2.c _t-c-3.c _gsc.c
-MODULES_O = _host@obj@ _utils@obj@ _source@obj@ _parms@obj@ \
+_prims.c _t-c-1.c _t-c-2.c _t-c-3.c _gsclib.c
+LIBRARY_MODULES_O = _host@obj@ _utils@obj@ _source@obj@ _parms@obj@ \
 _env@obj@ _ptree1@obj@ _ptree2@obj@ _gvm@obj@ _back@obj@ _front@obj@ \
-_prims@obj@ _t-c-1@obj@ _t-c-2@obj@ _t-c-3@obj@ _gsc@obj@
-MODULES_O_PLUS = +_host@obj@ +_utils@obj@ +_source@obj@ +_parms@obj@ \
+_prims@obj@ _t-c-1@obj@ _t-c-2@obj@ _t-c-3@obj@ _gsclib@obj@
+LIBRARY_MODULES_O_PLUS = +_host@obj@ +_utils@obj@ +_source@obj@ +_parms@obj@ \
 +_env@obj@ +_ptree1@obj@ +_ptree2@obj@ +_gvm@obj@ +_back@obj@ +_front@obj@ \
-+_prims@obj@ +_t-c-1@obj@ +_t-c-2@obj@ +_t-c-3@obj@ +_gsc@obj@
-MODULES_O_COMMA = _host@obj@,_utils@obj@,_source@obj@,_parms@obj@,\
++_prims@obj@ +_t-c-1@obj@ +_t-c-2@obj@ +_t-c-3@obj@ +_gsclib@obj@
+LIBRARY_MODULES_O_COMMA = _host@obj@,_utils@obj@,_source@obj@,_parms@obj@,\
 _env@obj@,_ptree1@obj@,_ptree2@obj@,_gvm@obj@,_back@obj@,_front@obj@,\
-_prims@obj@,_t-c-1@obj@,_t-c-2@obj@,_t-c-3@obj@,_gsc@obj@
-MODULES_O_IN_COMPILE_ORDER = _t-c-2@obj@ _ptree1@obj@ _ptree2@obj@ \
+_prims@obj@,_t-c-1@obj@,_t-c-2@obj@,_t-c-3@obj@,_gsclib@obj@
+LIBRARY_MODULES_O_IN_COMPILE_ORDER = _t-c-2@obj@ _ptree1@obj@ _ptree2@obj@ \
 _front@obj@ _t-c-1@obj@ _gvm@obj@ _source@obj@ _t-c-3@obj@ _utils@obj@ \
-_parms@obj@ _host@obj@ _env@obj@ _prims@obj@ _back@obj@ _gsc@obj@
+_parms@obj@ _host@obj@ _env@obj@ _prims@obj@ _back@obj@ _gsclib@obj@
+LIBRARY_OBJECTS = $(LIBRARY_NORMAL_O) \
+$(LIBRARY_MODULES_O) _gambcgsc@obj@
+LIBRARY_OBJECTS_PLUS = $(LIBRARY_NORMAL_O_PLUS) \
+$(LIBRARY_MODULES_O_PLUS) +_gambcgsc@obj@
+LIBRARY_OBJECTS_COMMA = $(LIBRARY_NORMAL_O_COMMA),\
+$(LIBRARY_MODULES_O_COMMA),_gambcgsc@obj@
+LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(LIBRARY_MODULES_O_IN_COMPILE_ORDER) \
+$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _gambcgsc@obj@
 
 EXECUTABLE = gsc@exe@
-OBJECTS = $(MODULES_O) _gsc_@obj@
-OBJECTS_PLUS = $(MODULES_O_PLUS) +_gsc_@obj@
-OBJECTS_COMMA = $(MODULES_O_COMMA),_gsc_@obj@
-OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) _gsc_@obj@
+EXECUTABLE_NORMAL_C =
+EXECUTABLE_NORMAL_CPP =
+EXECUTABLE_NORMAL_H =
+EXECUTABLE_NORMAL_O =
+EXECUTABLE_NORMAL_O_PLUS =
+EXECUTABLE_NORMAL_O_COMMA =
+EXECUTABLE_NORMAL_SOURCES = $(EXECUTABLE_NORMAL_C) $(EXECUTABLE_NORMAL_CPP) \
+$(EXECUTABLE_NORMAL_H)
+EXECUTABLE_MODULES = _gsc
+EXECUTABLE_MODULES_SCM = _gsc.scm
+EXECUTABLE_MODULES_C = _gsc.c
+EXECUTABLE_MODULES_O = _gsc@obj@
+EXECUTABLE_MODULES_O_PLUS = +_gsc@obj@
+EXECUTABLE_MODULES_O_COMMA = _gsc@obj@
+EXECUTABLE_MODULES_O_IN_COMPILE_ORDER = _gsc@obj@
+EXECUTABLE_OBJECTS = $(EXECUTABLE_NORMAL_O) \
+$(EXECUTABLE_MODULES_O) _gsc_@obj@
+EXECUTABLE_OBJECTS_PLUS = $(EXECUTABLE_NORMAL_O_PLUS) \
+$(EXECUTABLE_MODULES_O_PLUS) +_gsc_@obj@
+EXECUTABLE_OBJECTS_COMMA = $(EXECUTABLE_NORMAL_O_COMMA),\
+$(EXECUTABLE_MODULES_O_COMMA),_gsc_@obj@
+EXECUTABLE_OBJECTS_IN_COMPILE_ORDER = $(EXECUTABLE_MODULES_O_IN_COMPILE_ORDER) \
+$(EXECUTABLE_NORMAL_O_IN_COMPILE_ORDER) _gsc_@obj@
+
+LINK_LIBS = $(GAMBCGSCLIB) $(rootfromhere)/lib/$(GAMBCLIB)
+LINK_FOR_INSTALL_LIBS = $(libdir)/$(GAMBCGSCLIB) $(libdir)/$(GAMBCLIB)
+
+MODULES_SCM = $(LIBRARY_MODULES_SCM) $(EXECUTABLE_MODULES_SCM)
+MODULES_C = $(LIBRARY_MODULES_C) $(EXECUTABLE_MODULES_C)
+OBJECTS = $(LIBRARY_OBJECTS) $(EXECUTABLE_OBJECTS)
 
 RCFILES = makefile.in fixnum.scm generic.scm igsc.scm $(MODULES_SCM) \
 _envadt.scm _gvmadt.scm _ptreeadt.scm _sourceadt.scm
 
-GENDISTFILES = $(MODULES_C) _gsc_.c
+GENDISTFILES = $(MODULES_C) _gambcgsc.c _gsc_.c
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
@@ -98,13 +138,32 @@ all: all-pre all-recursive all-post
 
 all-pre:
 
-all-post: gsc@exe@
+all-post: $(LIBRARY) $(EXECUTABLE)
 
-gsc@exe@: $(OBJECTS_IN_COMPILE_ORDER) $(srcdirpfx)$(rootfromhere)/lib/$(GAMBCLIB)
+$(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
+	rm -f $(LIBRARY)
+	@MAKE_LIBRARY@
+
+_gambcgsc.c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambc.c
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambc -o $@ $(LIBRARY_MODULES_C)
+
+$(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@LINK@
 
-_gsc_.c: $(MODULES_C) $(srcdirpfx)$(rootfromhere)/lib/_gambc.c
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(escrootfromhere) -f -link $(MODULES_C)
+_gsc_.c: $(EXECUTABLE_MODULES_C) _gambcgsc.c
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -link -l _gambcgsc -o $@ $(EXECUTABLE_MODULES_C)
+
+_gsc@obj@: _gsc.c
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -c $(srcdirpfx)$*.c
+
+_gsc_@obj@: _gsc_.c
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -c $(srcdirpfx)$*.c
+
+.c@obj@:
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -D___LIBRARY -c $(srcdirpfx)$*.c
+
+.scm.c:
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -c -check $(srcdirpfx)$*.scm
 
 $(MODULES_C): $(srcdirpfx)fixnum.scm $(srcdirpfx)generic.scm \
 $(srcdirpfx)$(rootfromhere)/lib/header.scm
@@ -113,23 +172,29 @@ install-pre:
 
 install-post: all
 	$(srcdirpfx)$(rootfromhere)/mkidirs $(bindir)
+	$(INSTALL_DATA) $(srcdirpfx)_gambcgsc.c $(libdir)/_gambcgsc.c
+	$(INSTALL_LIB) $(LIBRARY) $(libdir)/$(LIBRARY)
+	@FIXLIB@ $(libdir)/$(LIBRARY)
+	for library in $(LIBRARIES_SCM); do \
+	  $(INSTALL_DATA) $$library $(libdir)/$$library; \
+	done
 	@LINK_FOR_INSTALL@
-	$(INSTALL_PROGRAM) gsc@exe@ $(bindir)/gsc@exe@
+	$(INSTALL_PROGRAM) $(EXECUTABLE) $(bindir)/$(EXECUTABLE)
 
 uninstall-pre:
 
 uninstall-post:
-	rm -f $(bindir)/gsc@exe@
+	rm -f $(bindir)/$(EXECUTABLE)
 
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f $(OBJECTS)
+	rm -f $(OBJECTS) $(GAMBCGSCLIB)
 
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f $(MODULES_C) _gsc_.c *.da *.bb *.bbg *.gcov
+	rm -f $(MODULES_C) _gambcgsc.c _gsc_.c *.da *.bb *.bbg *.gcov
 
 distclean-pre: clean-pre
 
@@ -139,7 +204,7 @@ distclean-post: clean-post
 realclean-pre: distclean-pre
 
 realclean-post: distclean-post
-	rm -f gsc@exe@
+	rm -f $(EXECUTABLE)
 
 hg-setup-pre:
 	$(HG) add $(RCFILES)

@@ -57,6 +57,7 @@ cd ..
 
 cd gsi
 
+%COMP_LIB% _gsilib.c
 %COMP_APP% _gsi.c
 %COMP_APP% _gsi_.c
 
@@ -66,23 +67,24 @@ cd ..
 
 cd gsc
 
-%COMP_APP% _host.c
-%COMP_APP% _utils.c
-%COMP_APP% _source.c
-%COMP_APP% _parms.c
-%COMP_APP% _env.c
-%COMP_APP% _ptree1.c
-%COMP_APP% _ptree2.c
-%COMP_APP% _gvm.c
-%COMP_APP% _back.c
-%COMP_APP% _front.c
-%COMP_APP% _prims.c
-%COMP_APP% _t-c-1.c
-%COMP_APP% _t-c-2.c
-%COMP_APP% _t-c-3.c
+%COMP_LIB% _host.c
+%COMP_LIB% _utils.c
+%COMP_LIB% _source.c
+%COMP_LIB% _parms.c
+%COMP_LIB% _env.c
+%COMP_LIB% _ptree1.c
+%COMP_LIB% _ptree2.c
+%COMP_LIB% _gvm.c
+%COMP_LIB% _back.c
+%COMP_LIB% _front.c
+%COMP_LIB% _prims.c
+%COMP_LIB% _t-c-1.c
+%COMP_LIB% _t-c-2.c
+%COMP_LIB% _t-c-3.c
+%COMP_LIB% _gsclib.c
 %COMP_APP% _gsc.c
 %COMP_APP% _gsc_.c
 
-wlink option quiet option stack=16384 system nt file ..\lib\main.obj,..\lib\setup.obj,..\lib\mem.obj,..\lib\c_intf.obj,..\lib\os.obj,..\lib\os_base.obj,..\lib\os_time.obj,..\lib\os_shell.obj,..\lib\os_files.obj,..\lib\os_dyn.obj,..\lib\os_tty.obj,..\lib\os_io.obj,..\lib\_kernel.obj,..\lib\_system.obj,..\lib\_num.obj,..\lib\_std.obj,..\lib\_eval.obj,..\lib\_io.obj,..\lib\_nonstd.obj,..\lib\_thread.obj,..\lib\_repl.obj,..\lib\_gambc.obj,_host.obj,_utils.obj,_source.obj,_parms.obj,_env.obj,_ptree1.obj,_ptree2.obj,_gvm.obj,_back.obj,_front.obj,_prims.obj,_t-c-1.obj,_t-c-2.obj,_t-c-3.obj,_gsc.obj,_gsc_.obj library kernel32,user32,gdi32,ws2_32 name gsc.exe
+wlink option quiet option stack=16384 system nt file ..\lib\main.obj,..\lib\setup.obj,..\lib\mem.obj,..\lib\c_intf.obj,..\lib\os.obj,..\lib\os_base.obj,..\lib\os_time.obj,..\lib\os_shell.obj,..\lib\os_files.obj,..\lib\os_dyn.obj,..\lib\os_tty.obj,..\lib\os_io.obj,..\lib\_kernel.obj,..\lib\_system.obj,..\lib\_num.obj,..\lib\_std.obj,..\lib\_eval.obj,..\lib\_io.obj,..\lib\_nonstd.obj,..\lib\_thread.obj,..\lib\_repl.obj,..\lib\_gambc.obj,_host.obj,_utils.obj,_source.obj,_parms.obj,_env.obj,_ptree1.obj,_ptree2.obj,_gvm.obj,_back.obj,_front.obj,_prims.obj,_t-c-1.obj,_t-c-2.obj,_t-c-3.obj,_gsclib.obj,_gsc.obj,_gsc_.obj library kernel32,user32,gdi32,ws2_32 name gsc.exe
 
 cd ..

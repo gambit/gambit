@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2007-11-20 11:45:38 feeley>
+# makefile for Gambit-C library, Time-stamp: <2007-12-13 14:44:12 feeley>
 
 # Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -30,6 +30,7 @@ DEFS = @DEFS@
 LIBS = @LIBS@
 
 GAMBCLIB = @GAMBCLIB@
+GAMBCCOMPLIB = @GAMBCCOMPLIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -89,11 +90,14 @@ _kernel@obj@ _nonstd@obj@ _repl@obj@ _eval@obj@ _thread@obj@ _system@obj@
 LIBRARIES_SCM = $(HEADERS_SCM) "_gambit\#.scm" "gambit\#.scm" \
 "r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" digest.scm
 
-OBJECTS = $(NORMAL_O) $(MODULES_O) _gambc@obj@
-OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +_gambc@obj@
-OBJECTS_COMMA = $(NORMAL_O_COMMA),$(MODULES_O_COMMA),_gambc@obj@
-OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) \
+LIBRARY = $(GAMBCLIB)
+LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) _gambc@obj@
+LIBRARY_OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +_gambc@obj@
+LIBRARY_OBJECTS_COMMA = $(NORMAL_O_COMMA),$(MODULES_O_COMMA),_gambc@obj@
+LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) \
 $(NORMAL_O_IN_COMPILE_ORDER) _gambc@obj@
+
+OBJECTS = $(LIBRARY_OBJECTS)
 
 RCFILES = makefile.in header.scm $(MODULES_SCM) sys.scm \
 $(LIBRARIES_SCM) $(NORMAL_SOURCES) 
@@ -106,11 +110,11 @@ all: all-pre all-recursive all-post
 
 all-pre:
 
-all-post: $(GAMBCLIB) _gambc.c
+all-post: $(LIBRARY) _gambc.c
 
-$(GAMBCLIB): $(OBJECTS_IN_COMPILE_ORDER)
-	rm -f $(GAMBCLIB)
-	@MAKE_GAMBCLIB@
+$(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
+	rm -f $(LIBRARY)
+	@MAKE_LIBRARY@
 
 _gambc.c: $(MODULES_C)
 	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -link -flat -o _gambc.c $(MODULES_C)
@@ -146,8 +150,8 @@ install-pre:
 install-post: all
 	$(srcdirpfx)$(rootfromhere)/mkidirs $(libdir)
 	$(INSTALL_DATA) $(srcdirpfx)_gambc.c $(libdir)/_gambc.c
-	$(INSTALL_LIB) $(GAMBCLIB) $(libdir)/$(GAMBCLIB)
-	@FIXLIB@ $(libdir)/$(GAMBCLIB)
+	$(INSTALL_LIB) $(LIBRARY) $(libdir)/$(LIBRARY)
+	@FIXLIB@ $(libdir)/$(LIBRARY)
 	for library in $(LIBRARIES_SCM); do \
 	  $(INSTALL_DATA) $$library $(libdir)/$$library; \
 	done
@@ -156,7 +160,7 @@ uninstall-pre:
 
 uninstall-post:
 	rm -f $(libdir)/_gambc.c
-	rm -f $(libdir)/$(GAMBCLIB)
+	rm -f $(libdir)/$(LIBRARY)
 	@for library in $(LIBRARIES_SCM); do \
 	  rm -f $(libdir)/$$library; \
 	done
@@ -169,7 +173,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f $(MODULES_C) $(GAMBCLIB) $(GAMBCLIB_SH) _gambc.c *.da *.bb *.bbg *.gcov
+	rm -f $(MODULES_C) $(LIBRARY) _gambc.c *.da *.bb *.bbg *.gcov
 
 distclean-pre: clean-pre
 

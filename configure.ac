@@ -1171,30 +1171,40 @@ if test "$ENABLE_SHARED" = yes; then
   case "$target_os" in
 
      mingw*) GAMBCLIB="libgambc.dll"
+             GAMBCGSCLIB="libgambcgsc.dll"
+             GAMBCGSILIB="libgambcgsi.dll"
              SETDLPATH="PATH=\"\$(rootfromhere)/lib:\${PATH}\""
              ;;
 
     darwin*) GAMBCLIB="libgambc.dylib"
+             GAMBCGSCLIB="libgambcgsc.dylib"
+             GAMBCGSILIB="libgambcgsi.dylib"
              SETDLPATH="DYLD_LIBRARY_PATH=\$(rootfromhere)/lib:\${DYLD_LIBRARY_PATH}"
              ;;
 
       hpux*) GAMBCLIB="libgambc.so"
+             GAMBCGSCLIB="libgambcgsc.so"
+             GAMBCGSILIB="libgambcgsi.so"
              SETDLPATH="SHLIB_PATH=\$(rootfromhere)/lib:\${SHLIB_PATH}"
              ;;
 
        aix*) GAMBCLIB="libgambc.so"
+             GAMBCGSCLIB="libgambcgsc.so"
+             GAMBCGSILIB="libgambcgsi.so"
              SETDLPATH="LIBPATH=\$(rootfromhere)/lib:\${LIBPATH}"
              ;;
 
           *) GAMBCLIB="libgambc.so"
+             GAMBCGSCLIB="libgambcgsc.so"
+             GAMBCGSILIB="libgambcgsi.so"
              SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\${LD_LIBRARY_PATH}"
              ;;
   esac
 
-  MAKE_GAMBCLIB='$(C_COMPILER) $(FLAGS_LIB) -o $(GAMBCLIB) $(OBJECTS) $(LIBS)'
+  MAKE_LIBRARY='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(LIBS)'
   FIXLIB='#'
-  LINK='$(C_COMPILER) $(FLAGS_EXE) $(OBJECTS) -L$(rootfromhere)/lib -lgambc $(LIBS) -o $(EXECUTABLE)'
-  LINK_FOR_INSTALL='$(C_COMPILER) $(FLAGS_EXE) $(OBJECTS) -L$(libdir) -lgambc $(LIBS) -o $(EXECUTABLE)'
+  LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -o $(EXECUTABLE)'
+  LINK_FOR_INSTALL='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_FOR_INSTALL_LIBS) $(LIBS) -o $(EXECUTABLE)'
 
 else
 
@@ -1205,9 +1215,11 @@ else
     ########## Microsoft Visual C++ compiler
 
     GAMBCLIB="libgambc.lib"
-    MAKE_GAMBCLIB='lib -out:$(GAMBCLIB) $(OBJECTS)'
+    GAMBCGSCLIB="libgambcgsc.lib"
+    GAMBCGSILIB="libgambcgsi.lib"
+    MAKE_LIBRARY='lib -out:$(LIBRARY) $(LIBRARY_OBJECTS)'
     FIXLIB=':'
-    LINK='$(C_COMPILER) $(FLAGS_EXE) $(OBJECTS) $(rootfromhere)/lib/$(GAMBCLIB) $(LIBS) -Fe$(EXECUTABLE)'
+    LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -Fe$(EXECUTABLE)'
     LINK_FOR_INSTALL=':'
 
 #  else if test "$C_COMP_WATCOMC" = yes; then
@@ -1218,9 +1230,11 @@ else
     ########## Other C compiler
 
     GAMBCLIB="libgambc.a"
-    MAKE_GAMBCLIB='ar rc $(GAMBCLIB) $(OBJECTS) && $(RANLIB) $(GAMBCLIB)'
+    GAMBCGSCLIB="libgambcgsc.a"
+    GAMBCGSILIB="libgambcgsi.a"
+    MAKE_LIBRARY='ar rc $(LIBRARY) $(LIBRARY_OBJECTS) && $(RANLIB) $(LIBRARY)'
     FIXLIB='$(RANLIB)'
-    LINK='$(C_COMPILER) $(FLAGS_EXE) $(OBJECTS) $(rootfromhere)/lib/$(GAMBCLIB) $(LIBS) -o $(EXECUTABLE)'
+    LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -o $(EXECUTABLE)'
     LINK_FOR_INSTALL=':'
 
   fi
@@ -1323,7 +1337,9 @@ AC_SUBST(bat)
 AC_SUBST(SETDLPATH)
 AC_SUBST(GSC_CC_O)
 AC_SUBST(GAMBCLIB)
-AC_SUBST(MAKE_GAMBCLIB)
+AC_SUBST(GAMBCGSCLIB)
+AC_SUBST(GAMBCGSILIB)
+AC_SUBST(MAKE_LIBRARY)
 AC_SUBST(LINK)
 AC_SUBST(LINK_FOR_INSTALL)
 AC_SUBST(INSTALL)

@@ -60,32 +60,34 @@ cd ..
 
 cd gsi
 
+%COMP_LIB% _gsilib.c
 %COMP_APP% _gsi.c
 %COMP_APP% _gsi_.c
 
-cl -Fegsi.exe ..\lib\libgambc.lib _gsi.obj _gsi_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
+cl -Fegsi.exe ..\lib\libgambc.lib _gsilib.obj _gsi.obj _gsi_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
 
 cd ..
 
 cd gsc
 
-%COMP_APP% _host.c
-%COMP_APP% _utils.c
-%COMP_APP% _source.c
-%COMP_APP% _parms.c
-%COMP_APP% _env.c
-%COMP_APP% _ptree1.c
-%COMP_APP% _ptree2.c
-%COMP_APP% _gvm.c
-%COMP_APP% _back.c
-%COMP_APP% _front.c
-%COMP_APP% _prims.c
-%COMP_APP% _t-c-1.c
-%COMP_APP% _t-c-2.c
-%COMP_APP% _t-c-3.c
+%COMP_LIB% _host.c
+%COMP_LIB% _utils.c
+%COMP_LIB% _source.c
+%COMP_LIB% _parms.c
+%COMP_LIB% _env.c
+%COMP_LIB% _ptree1.c
+%COMP_LIB% _ptree2.c
+%COMP_LIB% _gvm.c
+%COMP_LIB% _back.c
+%COMP_LIB% _front.c
+%COMP_LIB% _prims.c
+%COMP_LIB% _t-c-1.c
+%COMP_LIB% _t-c-2.c
+%COMP_LIB% _t-c-3.c
+%COMP_LIB% _gsclib.c
 %COMP_APP% _gsc.c
 %COMP_APP% _gsc_.c
 
-cl -Fegsc.exe ..\lib\libgambc.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsc.obj _gsc_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
+cl -Fegsc.exe ..\lib\libgambc.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsclib.obj _gsc.obj _gsc_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
 
 cd ..

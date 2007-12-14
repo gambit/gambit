@@ -1,4 +1,4 @@
-# makefile for regression tests, Time-stamp: <2007-07-25 19:54:22 feeley>
+# makefile for regression tests, Time-stamp: <2007-12-13 23:16:03 feeley>
 
 # Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -30,6 +30,7 @@ DEFS = @DEFS@
 LIBS = @LIBS@
 
 GAMBCLIB = @GAMBCLIB@
+GAMBCCOMPLIB = @GAMBCCOMPLIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -121,9 +122,10 @@ test6:
 	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mix.c
 	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mix_.c
 	$(MAKE) link EXECUTABLE="mix@exe@" \
-	  OBJECTS="mix@obj@ mix_@obj@" \
-	  OBJECTS_PLUS="+mix@obj@ +mix_@obj@" \
-	  OBJECTS_COMMA="mix@obj@,mix_@obj@"
+	  LINK_LIBS="$(rootfromhere)/lib/$(GAMBCLIB)" \
+	  EXECUTABLE_OBJECTS="mix@obj@ mix_@obj@" \
+	  EXECUTABLE_OBJECTS_PLUS="+mix@obj@ +mix_@obj@" \
+	  EXECUTABLE_OBJECTS_COMMA="mix@obj@,mix_@obj@"
 	@SETDLPATH@ ./mix@exe@ -:m4000 > test6.out
 	diff $(srcdirpfx)test6.ok test6.out && \
 	  rm -f test6.out mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@
@@ -135,9 +137,10 @@ test7:
 	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mem.c
 	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mem_.c
 	$(MAKE) link EXECUTABLE="mem@exe@" \
-	  OBJECTS="mem@obj@ mem_@obj@" \
-	  OBJECTS_PLUS="+mem@obj@ +mem_@obj@" \
-	  OBJECTS_COMMA="mem@obj@,mem_@obj@"
+	  LINK_LIBS="$(rootfromhere)/lib/$(GAMBCLIB)" \
+	  EXECUTABLE_OBJECTS="mem@obj@ mem_@obj@" \
+	  EXECUTABLE_OBJECTS_PLUS="+mem@obj@ +mem_@obj@" \
+	  EXECUTABLE_OBJECTS_COMMA="mem@obj@,mem_@obj@"
 	@SETDLPATH@ ./mem@exe@ -:h4000 > test7.out
 	diff $(srcdirpfx)test7.ok test7.out && \
 	  rm -f test7.out mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
@@ -151,9 +154,10 @@ test8:
 	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -D___LIBRARY -c server.c
 	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -D___LIBRARY -c server_.c
 	$(MAKE) link EXECUTABLE="client@exe@" \
-	  OBJECTS="client@obj@ server@obj@ server_@obj@" \
-	  OBJECTS_PLUS="+client@obj@ +server@obj@ +server_@obj@" \
-	  OBJECTS_COMMA="client@obj@,server@obj@,server_@obj@"
+	  LINK_LIBS="$(rootfromhere)/lib/$(GAMBCLIB)" \
+	  EXECUTABLE_OBJECTS="client@obj@ server@obj@ server_@obj@" \
+	  EXECUTABLE_OBJECTS_PLUS="+client@obj@ +server@obj@ +server_@obj@" \
+	  EXECUTABLE_OBJECTS_COMMA="client@obj@,server@obj@,server_@obj@"
 	@SETDLPATH@ ./client@exe@ > test8.out
 	diff -w $(srcdirpfx)test8.ok test8.out && \
 	  rm -f test8.out server.c server_.c server@obj@ server_@obj@ \
