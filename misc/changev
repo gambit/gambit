@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Time-stamp: <2006-04-07 13:06:08 feeley>
+# Time-stamp: <2007-12-15 09:11:20 feeley>
 
 # Utility to change the version of Gambit attached to all the source files.
 
@@ -17,6 +17,8 @@ then
     misc/changev1 $OLDVERSION $NEWVERSION tests/*.ok tests/client.c
     misc/changev1 $OLDVERSION $NEWVERSION doc/gambit-c.txi
     misc/changev1 $OLDVERSION $NEWVERSION configure.ac configure
+    misc/changev1 $OLDVERSION $NEWVERSION examples/pthread/pthread.c
+    misc/changev1 $OLDVERSION $NEWVERSION include/gambit.h.in
 
   fi
 fi

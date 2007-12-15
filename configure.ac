@@ -4,7 +4,7 @@
 
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(Gambit-C,v4.1.0,gambit@iro.umontreal.ca,gambc-v4_1_0)
+AC_INIT(Gambit-C,v4.1.1,gambit@iro.umontreal.ca,gambc-v4_1_1)
 
 AC_CONFIG_HEADERS(include/config.h)
 
