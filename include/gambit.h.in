@@ -1301,6 +1301,14 @@
 #endif
 
 #ifdef _MSC_VER
+#define ___USE_DECLSPEC
+#endif
+
+#ifdef __WATCOMC__
+#define ___USE_DECLSPEC
+#endif
+
+#ifdef ___USE_DECLSPEC
 #define ___EXPORT_FUNC(type,name)__declspec(dllexport) type name
 #define ___EXPORT_DATA(type,name)__declspec(dllexport) type name
 #define ___IMPORT_FUNC(type,name)__declspec(dllimport) type name

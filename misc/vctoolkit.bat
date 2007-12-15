@@ -20,39 +20,54 @@ SET GAMBCDIR="C:/Gambit-C/./././././././././././././././././././././././././././
 SET GAMBCDIR="%1%"
 )
 
-@rem We can't use -D___SINGLE_HOST because the C compiler runs out of memory
-@rem while compiling _num.c
+@rem We can't use -D___SINGLE_HOST for all Gambit generated C files
+@rem because the C compiler runs out of memory while compiling _num.c
+@rem and _io.c .
 
-set COMP_GEN=cl -nologo -Oityb1 -G5s -MT -c -I..\include
-set COMP_LIB=%COMP_GEN% -D___PRIMAL -D___LIBRARY -D___GAMBCDIR=\"%GAMBCDIR%\"
-set COMP_APP=%COMP_GEN%
+set COMP_GEN=cl -nologo -Oityb1 -G5s -MT -c -I..\include -D___GAMBCDIR=\"%GAMBCDIR%\"
+set COMP_LIB_MH=%COMP_GEN% -D___LIBRARY
+set COMP_LIB_PR_MH=%COMP_LIB_MH% -D___PRIMAL
+set COMP_LIB=%COMP_LIB_MH% -D___SINGLE_HOST
+set COMP_LIB_PR=%COMP_LIB_PR_MH% -D___SINGLE_HOST
+set COMP_APP=%COMP_GEN% -D___SINGLE_HOST
+
+@rem We can't rely on sed being available so we generate gambit.h
+@rem from gambit.h.in by prefixing it with the needed declarations.
+
+echo #ifndef ___VOIDSTAR_WIDTH                > include\gambit.h
+echo #define ___VOIDSTAR_WIDTH ___LONG_WIDTH >> include\gambit.h
+echo #endif                                  >> include\gambit.h
+echo #ifndef ___MAX_CHR                      >> include\gambit.h
+echo #define ___MAX_CHR 0x10ffff             >> include\gambit.h
+echo #endif                                  >> include\gambit.h
+type include\gambit.h.in                     >> include\gambit.h
 
 cd lib
 
-%COMP_LIB% main.c
-%COMP_LIB% setup.c
-%COMP_LIB% mem.c
-%COMP_LIB% os.c
-%COMP_LIB% os_base.c
-%COMP_LIB% os_time.c
-%COMP_LIB% os_shell.c
-%COMP_LIB% os_files.c
-%COMP_LIB% os_dyn.c
-%COMP_LIB% os_tty.c
-%COMP_LIB% os_io.c
-%COMP_LIB% c_intf.c
+%COMP_LIB_PR% main.c
+%COMP_LIB_PR% setup.c
+%COMP_LIB_PR% mem.c
+%COMP_LIB_PR% os.c
+%COMP_LIB_PR% os_base.c
+%COMP_LIB_PR% os_time.c
+%COMP_LIB_PR% os_shell.c
+%COMP_LIB_PR% os_files.c
+%COMP_LIB_PR% os_dyn.c
+%COMP_LIB_PR% os_tty.c
+%COMP_LIB_PR% os_io.c
+%COMP_LIB_PR% c_intf.c
 
-%COMP_LIB% _kernel.c
-%COMP_LIB% _system.c
-%COMP_LIB% _num.c
-%COMP_LIB% _std.c
-%COMP_LIB% _eval.c
-%COMP_LIB% _io.c
-%COMP_LIB% _nonstd.c
-%COMP_LIB% _thread.c
-%COMP_LIB% _repl.c
+%COMP_LIB_PR% _kernel.c
+%COMP_LIB_PR% _system.c
+%COMP_LIB_PR_MH% _num.c
+%COMP_LIB_PR% _std.c
+%COMP_LIB_PR% _eval.c
+%COMP_LIB_PR_MH% _io.c
+%COMP_LIB_PR% _nonstd.c
+%COMP_LIB_PR% _thread.c
+%COMP_LIB_PR% _repl.c
 
-%COMP_LIB% _gambc.c
+%COMP_LIB_PR% _gambc.c
 
 lib -out:libgambc.lib main.obj setup.obj mem.obj os.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj c_intf.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _nonstd.obj _thread.obj _repl.obj _gambc.obj
 
@@ -61,10 +76,11 @@ cd ..
 cd gsi
 
 %COMP_LIB% _gsilib.c
+%COMP_LIB% _gambcgsi.c
 %COMP_APP% _gsi.c
 %COMP_APP% _gsi_.c
 
-cl -Fegsi.exe ..\lib\libgambc.lib _gsilib.obj _gsi.obj _gsi_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
+cl -Fegsi.exe ..\lib\libgambc.lib _gsilib.obj _gambcgsi.obj _gsi.obj _gsi_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
 
 cd ..
 
@@ -85,9 +101,50 @@ cd gsc
 %COMP_LIB% _t-c-2.c
 %COMP_LIB% _t-c-3.c
 %COMP_LIB% _gsclib.c
+%COMP_LIB% _gambcgsc.c
 %COMP_APP% _gsc.c
 %COMP_APP% _gsc_.c
 
-cl -Fegsc.exe ..\lib\libgambc.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsclib.obj _gsc.obj _gsc_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
+cl -Fegsc.exe ..\lib\libgambc.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsclib.obj _gambcgsc.obj _gsc.obj _gsc_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
+
+cd ..
+
+cd bin
+
+echo @echo off> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo set GSC_CC_O_ARG1=%%~1>> gsc-cc-o.bat
+echo shift>> gsc-cc-o.bat
+echo set GSC_CC_O_ARG2=%%~1>> gsc-cc-o.bat
+echo shift>> gsc-cc-o.bat
+echo set GSC_CC_O_ARG3=%%~1>> gsc-cc-o.bat
+echo shift>> gsc-cc-o.bat
+echo set GSC_CC_O_REST=%%1 %%2 %%3 %%4 %%5 %%6 %%7 %%8 %%9>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo for %%%%f in (cl.exe gcc.exe wcl386.exe) do if not "%%%%~$PATH:f" == "" goto use_%%%%%%f>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo echo gcc.exe, wcl386.exe and cl.exe were not found in the PATH.  Make sure MinGW, OpenWatcom or Visual C++ Express is installed.>> gsc-cc-o.bat
+echo exit 1 >> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo :use_gcc.exe>> gsc-cc-o.bat
+echo cd %%GSC_CC_O_ARG1%%>> gsc-cc-o.bat
+echo gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I%%GSC_CC_O_ARG2%%include -D___DYNAMIC -D___SINGLE_HOST -o %%GSC_CC_O_ARG3%% %%GSC_CC_O_REST%%>> gsc-cc-o.bat
+echo goto end>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo :use_wcl386.exe>> gsc-cc-o.bat
+echo cd %%GSC_CC_O_ARG1%%>> gsc-cc-o.bat
+echo wcl386.exe -w0 -zp4 -zq -obetir -bm -3r -bt=nt -mf -bd -I%%GSC_CC_O_ARG2%%include -D___DYNAMIC -D___SINGLE_HOST -l=nt_dll -fe=%%GSC_CC_O_ARG3%% %%GSC_CC_O_REST%%>> gsc-cc-o.bat
+echo goto end>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo :use_cl.exe>> gsc-cc-o.bat
+echo cd %%GSC_CC_O_ARG1%%>> gsc-cc-o.bat
+echo cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I%%GSC_CC_O_ARG2%%include -D___DYNAMIC -D___SINGLE_HOST -Fe%%GSC_CC_O_ARG3%% %%GSC_CC_O_REST%%>> gsc-cc-o.bat
+echo goto end>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo :use_build_time_c_compiler>> gsc-cc-o.bat
+echo gcc  -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I%%GSC_CC_O_ARG2%%include -D___DYNAMIC -D___SINGLE_HOST -o %%GSC_CC_O_ARG3%% %%GSC_CC_O_REST%%>> gsc-cc-o.bat
+echo goto end>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo :end>> gsc-cc-o.bat
 
 cd ..
