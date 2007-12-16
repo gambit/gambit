@@ -1173,31 +1173,31 @@ if test "$ENABLE_SHARED" = yes; then
      mingw*) GAMBCLIB="libgambc.dll"
              GAMBCGSCLIB="libgambcgsc.dll"
              GAMBCGSILIB="libgambcgsi.dll"
-             SETDLPATH="PATH=\"\$(rootfromhere)/lib:\${PATH}\""
+             SETDLPATH="PATH=\"\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${PATH}\""
              ;;
 
     darwin*) GAMBCLIB="libgambc.dylib"
              GAMBCGSCLIB="libgambcgsc.dylib"
              GAMBCGSILIB="libgambcgsi.dylib"
-             SETDLPATH="DYLD_LIBRARY_PATH=\$(rootfromhere)/lib:\${DYLD_LIBRARY_PATH}"
+             SETDLPATH="DYLD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${DYLD_LIBRARY_PATH}"
              ;;
 
       hpux*) GAMBCLIB="libgambc.so"
              GAMBCGSCLIB="libgambcgsc.so"
              GAMBCGSILIB="libgambcgsi.so"
-             SETDLPATH="SHLIB_PATH=\$(rootfromhere)/lib:\${SHLIB_PATH}"
+             SETDLPATH="SHLIB_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${SHLIB_PATH}"
              ;;
 
        aix*) GAMBCLIB="libgambc.so"
              GAMBCGSCLIB="libgambcgsc.so"
              GAMBCGSILIB="libgambcgsi.so"
-             SETDLPATH="LIBPATH=\$(rootfromhere)/lib:\${LIBPATH}"
+             SETDLPATH="LIBPATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LIBPATH}"
              ;;
 
           *) GAMBCLIB="libgambc.so"
              GAMBCGSCLIB="libgambcgsc.so"
              GAMBCGSILIB="libgambcgsi.so"
-             SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\${LD_LIBRARY_PATH}"
+             SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LD_LIBRARY_PATH}"
              ;;
   esac
 
