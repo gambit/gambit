@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2007-11-22 11:01:04 feeley> */
+/* File: "os_tty.c", Time-stamp: <2007-12-16 19:02:45 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -1710,6 +1710,14 @@ ___HIDDEN lineeditor_dkey lineeditor_dkey_table[] =
 ,DKEY("k2","kf2",  "\033OQ",  LINEEDITOR_EV_F2,      LINEEDITOR_EV_META_F2    )
 ,DKEY("k3","kf3",  "\033OR",  LINEEDITOR_EV_F3,      LINEEDITOR_EV_META_F3    )
 ,DKEY("k4","kf4",  "\033OS",  LINEEDITOR_EV_F4,      LINEEDITOR_EV_META_F4    )
+#ifdef LINEEDITOR_SUPPORT_ALTERNATE_ESCAPES
+,DKEY("kh","khome","\033OH",  LINEEDITOR_EV_HOME,    LINEEDITOR_EV_HOME_DOC   )
+,DKEY("@7","kend", "\033OF",  LINEEDITOR_EV_END,     LINEEDITOR_EV_END_DOC    )
+,DKEY("k1","kf1",  "\033[11~",LINEEDITOR_EV_F1,      LINEEDITOR_EV_META_F1    )
+,DKEY("k2","kf2",  "\033[12~",LINEEDITOR_EV_F2,      LINEEDITOR_EV_META_F2    )
+,DKEY("k3","kf3",  "\033[13~",LINEEDITOR_EV_F3,      LINEEDITOR_EV_META_F3    )
+,DKEY("k4","kf4",  "\033[14~",LINEEDITOR_EV_F4,      LINEEDITOR_EV_META_F4    )
+#endif
 #ifdef LINEEDITOR_SUPPORT_F5_TO_F12
 ,DKEY("k5","kf5",  "\033[15~",LINEEDITOR_EV_F5,      LINEEDITOR_EV_META_F5    )
 ,DKEY("k6","kf6",  "\033[17~",LINEEDITOR_EV_F6,      LINEEDITOR_EV_META_F6    )

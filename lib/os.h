@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2007-06-14 14:11:54 feeley> */
+/* File: "os.h", Time-stamp: <2007-12-16 19:03:34 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -22,6 +22,7 @@
 #define USE_LINEEDITOR
 #define LINEEDITOR_WITH_NONBLOCKING_IO
 #define LINEEDITOR_SUPPORT_F5_TO_F12
+#define LINEEDITOR_SUPPORT_ALTERNATE_ESCAPES
 #define LINEEDITOR_WITH_LOCAL_CLIPBOARD
 #define LINEEDITOR_REPORT_CHAR_ENCODING_ERRORS
 
