@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2007-12-14 08:27:40 feeley> */
+/* File: "gambit.h", Time-stamp: <2007-12-17 00:42:33 feeley> */
 
 /*
  * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
@@ -1351,7 +1351,9 @@
 #endif
 #endif
 
+#ifndef ___OS_WIN32
 #define ___CAN_IMPORT_EXPORTED
+#endif
 
 #ifndef ___CAN_IMPORT_EXPORTED
 #ifdef ___SHARED

@@ -24,7 +24,7 @@ SET GAMBCDIR="%1%"
 @rem because the C compiler runs out of memory while compiling _num.c
 @rem and _io.c .
 
-set COMP_GEN=cl -nologo -Oityb1 -G5s -MT -c -I..\include -D___GAMBCDIR=\"%GAMBCDIR%\"
+set COMP_GEN=cl -nologo -Oityb1 -G5s -MT -c -I..\include -D___GAMBCDIR=\"%GAMBCDIR%\" -D___SYS_TYPE_CPU=\"i686\" -D___SYS_TYPE_VENDOR=\"pc\" -D___SYS_TYPE_OS=\"visualc\"
 set COMP_LIB_MH=%COMP_GEN% -D___LIBRARY
 set COMP_LIB_PR_MH=%COMP_LIB_MH% -D___PRIMAL
 set COMP_LIB=%COMP_LIB_MH% -D___SINGLE_HOST

@@ -3179,9 +3179,9 @@ The procedures in this section are not yet documented.
 
 @deffn procedure display-exception @var{exc} @r{[}@var{port}@r{]}
 @deffnx procedure display-exception-in-context @var{exc} @var{cont} @r{[}@var{port}@r{]}
-@deffnx procedure display-procedure-env @var{proc} @r{[}@var{port}@r{]}
-@deffnx procedure display-continuation-env @var{cont} @r{[}@var{port}@r{]}
-@deffnx procedure display-continuation-dynamic-env @var{cont} @r{[}@var{port}@r{]}
+@deffnx procedure display-procedure-environment @var{proc} @r{[}@var{port}@r{]}
+@deffnx procedure display-continuation-environment @var{cont} @r{[}@var{port}@r{]}
+@deffnx procedure display-continuation-dynamic-environment @var{cont} @r{[}@var{port}@r{]}
 @end deffn
 
 @deffn procedure print @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}
@@ -3312,6 +3312,10 @@ The procedures in this section are not yet documented.
 
 @deffn procedure system-version
 @deffnx procedure system-version-string
+@end deffn
+
+@deffn procedure system-type
+@deffnx procedure system-type-string
 @end deffn
 
 @deffn procedure touch @var{obj}

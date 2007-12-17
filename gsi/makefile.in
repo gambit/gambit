@@ -81,6 +81,9 @@ $(LIBRARY_MODULES_O_COMMA),_gambcgsi@obj@
 LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(LIBRARY_MODULES_O_IN_COMPILE_ORDER) \
 $(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _gambcgsi@obj@
 
+MAKE_LIBRARY_LIBS = $(rootfromhere)/lib/$(GAMBCLIB)
+MAKE_LIBRARY_FOR_INSTALL_LIBS = $(libdir)/$(GAMBCLIB)
+
 EXECUTABLE = gsi@exe@
 EXECUTABLE_NORMAL_C =
 EXECUTABLE_NORMAL_CPP =
@@ -157,6 +160,7 @@ install-pre:
 install-post: all
 	$(srcdirpfx)$(rootfromhere)/mkidirs $(bindir)
 	$(INSTALL_DATA) $(srcdirpfx)_gambcgsi.c $(libdir)/_gambcgsi.c
+	@MAKE_LIBRARY_FOR_INSTALL@
 	$(INSTALL_LIB) $(LIBRARY) $(libdir)/$(LIBRARY)
 	@FIXLIB@ $(libdir)/$(LIBRARY)
 	#for library in $(LIBRARIES_SCM); do \

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2007-11-21 00:31:49 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2007-12-16 22:12:05 feeley>
 
 ;;; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
 
@@ -869,6 +869,8 @@ symbol-hash
 symbol?
 system-version
 system-version-string
+system-type
+system-type-string
 table->list
 table-copy
 table-for-each

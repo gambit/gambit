@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2007-09-07 11:32:49 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2007-12-16 22:09:33 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -3604,6 +3604,23 @@ end-of-code
 
 (define-prim (system-version-string)
   (##system-version-string))
+
+(define ##os-system-type-saved
+  (##map ##string->symbol
+         ((c-lambda ()
+                    nonnull-char-string-list
+           "___os_system_type"))))
+
+(define-prim (system-type)
+  ##os-system-type-saved)
+
+(define ##os-system-type-string-saved
+  ((c-lambda ()
+             nonnull-char-string
+    "___os_system_type_string")))
+
+(define-prim (system-type-string)
+  ##os-system-type-string-saved)
 
 ;;;----------------------------------------------------------------------------
 

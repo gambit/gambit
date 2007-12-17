@@ -23,7 +23,7 @@ SET GAMBCDIR="%1%"
 @rem because the C compiler runs out of memory while compiling _num.c
 @rem and _io.c .
 
-set COMP_GEN=wcc386 -w0 -zp4 -zq -obetir -bm -3r -bt=nt -mf -I..\include -D___GAMBCDIR=%GAMBCDIR% -D___IMPORTED_ID_SUFFIX="_"
+set COMP_GEN=wcc386 -w0 -zp4 -zq -obetir -bm -3r -bt=nt -mf -I..\include -D___GAMBCDIR=%GAMBCDIR% -D___SYS_TYPE_CPU="i686" -D___SYS_TYPE_VENDOR="pc" -D___SYS_TYPE_OS="openwatcom" -D___IMPORTED_ID_SUFFIX="_"
 set COMP_LIB_MH=%COMP_GEN% -D___LIBRARY
 set COMP_LIB_PR_MH=%COMP_LIB_MH% -D___PRIMAL
 set COMP_LIB=%COMP_LIB_MH% -D___SINGLE_HOST

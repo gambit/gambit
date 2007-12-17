@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2007-12-16 19:03:34 feeley> */
+/* File: "os.h", Time-stamp: <2007-12-16 20:38:07 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -1317,6 +1317,12 @@ extern char *___format_filepos
          long filepos,
          ___BOOL pinpoint),
         ());
+
+
+/* System type information. */
+
+extern char **___os_system_type ___PVOID;
+extern char *___os_system_type_string ___PVOID;
 
 
 /* OS initialization/finalization. */

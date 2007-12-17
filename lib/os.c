@@ -1,4 +1,4 @@
-/* File: "os.c", Time-stamp: <2007-09-11 23:51:06 feeley> */
+/* File: "os.c", Time-stamp: <2007-12-16 21:15:13 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -1629,6 +1629,44 @@ ___SCMOBJ ___os_getppid ___PVOID
   return ___FIX(getppid());
 
 #endif
+}
+
+
+/*---------------------------------------------------------------------------*/
+
+/* System type information. */
+
+
+#ifndef ___SYS_TYPE_CPU
+#define ___SYS_TYPE_CPU "unknown"
+#endif
+
+#ifndef ___SYS_TYPE_VENDOR
+#define ___SYS_TYPE_VENDOR "unknown"
+#endif
+
+#ifndef ___SYS_TYPE_OS
+#define ___SYS_TYPE_OS "unknown"
+#endif
+
+
+___HIDDEN char *os_sys_type[] =
+{ ___SYS_TYPE_CPU, ___SYS_TYPE_VENDOR, ___SYS_TYPE_OS, NULL };
+
+
+___HIDDEN char *os_sys_type_string =
+___SYS_TYPE_CPU "-" ___SYS_TYPE_VENDOR "-" ___SYS_TYPE_OS;
+
+
+char **___os_system_type ___PVOID
+{
+  return os_sys_type;
+}
+
+
+char *___os_system_type_string ___PVOID
+{
+  return os_sys_type_string;
 }
 
 

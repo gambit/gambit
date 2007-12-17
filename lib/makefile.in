@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2007-12-13 14:44:12 feeley>
+# makefile for Gambit-C library, Time-stamp: <2007-12-17 00:40:42 feeley>
 
 # Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -52,7 +52,7 @@ emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
 .SUFFIXES: .scm .c @obj@
 
 .c@obj@:
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -D___PRIMAL -D___LIBRARY -D___GAMBCDIR="\"$(prefix)$(PACKAGE_SUBDIR)\"" -c $(srcdirpfx)$*.c
+	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -D___PRIMAL -D___LIBRARY -D___GAMBCDIR="\"$(prefix)$(PACKAGE_SUBDIR)\"" -D___SYS_TYPE_CPU="\"@target_cpu@\"" -D___SYS_TYPE_VENDOR="\"@target_vendor@\"" -D___SYS_TYPE_OS="\"@target_os@\"" -c $(srcdirpfx)$*.c
 
 .scm.c:
 	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -c -check $(srcdirpfx)$*.scm
@@ -96,6 +96,8 @@ LIBRARY_OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +_gambc@obj@
 LIBRARY_OBJECTS_COMMA = $(NORMAL_O_COMMA),$(MODULES_O_COMMA),_gambc@obj@
 LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) \
 $(NORMAL_O_IN_COMPILE_ORDER) _gambc@obj@
+
+LIBRARY_LIBS =
 
 OBJECTS = $(LIBRARY_OBJECTS)
 

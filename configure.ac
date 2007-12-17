@@ -1170,7 +1170,9 @@ if test "$ENABLE_SHARED" = yes; then
 
   case "$target_os" in
 
-     mingw*) GAMBCLIB="libgambc.dll"
+     
+     mingw* | cygwin*)
+             GAMBCLIB="libgambc.dll"
              GAMBCGSCLIB="libgambcgsc.dll"
              GAMBCGSILIB="libgambcgsi.dll"
              SETDLPATH="PATH=\"\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${PATH}\""
@@ -1201,7 +1203,8 @@ if test "$ENABLE_SHARED" = yes; then
              ;;
   esac
 
-  MAKE_LIBRARY='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(LIBS)'
+  MAKE_LIBRARY='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_LIBS) $(LIBS)'
+  MAKE_LIBRARY_FOR_INSTALL='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_FOR_INSTALL_LIBS) $(LIBS)'
   FIXLIB='#'
   LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -o $(EXECUTABLE)'
   LINK_FOR_INSTALL='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_FOR_INSTALL_LIBS) $(LIBS) -o $(EXECUTABLE)'
@@ -1218,6 +1221,7 @@ else
     GAMBCGSCLIB="libgambcgsc.lib"
     GAMBCGSILIB="libgambcgsi.lib"
     MAKE_LIBRARY='lib -out:$(LIBRARY) $(LIBRARY_OBJECTS)'
+    MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB=':'
     LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -Fe$(EXECUTABLE)'
     LINK_FOR_INSTALL=':'
@@ -1233,6 +1237,7 @@ else
     GAMBCGSCLIB="libgambcgsc.a"
     GAMBCGSILIB="libgambcgsi.a"
     MAKE_LIBRARY='ar rc $(LIBRARY) $(LIBRARY_OBJECTS) && $(RANLIB) $(LIBRARY)'
+    MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB='$(RANLIB)'
     LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -o $(EXECUTABLE)'
     LINK_FOR_INSTALL=':'
@@ -1340,6 +1345,7 @@ AC_SUBST(GAMBCLIB)
 AC_SUBST(GAMBCGSCLIB)
 AC_SUBST(GAMBCGSILIB)
 AC_SUBST(MAKE_LIBRARY)
+AC_SUBST(MAKE_LIBRARY_FOR_INSTALL)
 AC_SUBST(LINK)
 AC_SUBST(LINK_FOR_INSTALL)
 AC_SUBST(INSTALL)
@@ -1353,6 +1359,10 @@ AC_SUBST(FIXLIB)
 
 AC_SUBST(X_FLAGS)
 AC_SUBST(X_LIBS)
+
+AC_SUBST(target_cpu)
+AC_SUBST(target_vendor)
+AC_SUBST(target_os)
 
 AC_PROG_MAKE_SET
 
