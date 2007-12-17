@@ -393,7 +393,7 @@ Extensions which are meant to apply to a single user or to a specific
 working directory are best placed in the @dfn{initialization file},
 which is a file containing Scheme code.  In all modes, the interpreter
 first tries to locate the initialization file by searching the following
-locations: @file{gambcini} and @file{~/gambcini} (with no extension, a
+locations: @file{.gambcini} and @file{~/.gambcini} (with no extension, a
 @samp{.scm} extension, and a @samp{.six} extension in that order).  The
 first file that is found is examined as though the expression
 @code{(include @var{initialization-file})} had been entered at the

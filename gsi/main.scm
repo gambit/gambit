@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2007-12-14 00:13:50 feeley>
+;;; File: "main.scm", Time-stamp: <2007-12-17 03:09:54 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -10,7 +10,7 @@
   "gambcext")
 
 (##define-macro (macro-initialization-file)
-  "gambcini")
+  ".gambcini")
 
 (define-prim (##main-gsi/gsc)
 
