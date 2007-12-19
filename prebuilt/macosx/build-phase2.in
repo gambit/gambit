@@ -35,12 +35,12 @@ PROGRAMS="gsc gsc-cc-o gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4
 
 instantiate_file() # input, output
 {
-  sed -e "s|@BIN_DIR@|$BIN_DIR|g" -e "s|@SOURCE_DIR@|$SOURCE_DIR|g" -e "s|@INSTALL_DIR@|$INSTALL_DIR|g" -e "s|@VERSION@|$VERSION|g" -e "s|@TITLE@|$TITLE|g" -e "s|@DESCRIPTION@|$DESCRIPTION|g" -e "s|@PROGRAMS@|$PROGRAMS|g" -e "s|@BACKGROUND_FILE@|$BACKGROUND_FILE|g" -e "s|@WELCOME_FILE@|$WELCOME_FILE|g" -e "s|@README_FILE@|$README_FILE|g" -e "s|@CONCLUSION_FILE@|$CONCLUSION_FILE|g" -e "s|@EXTRAS_DIR@|$EXTRAS_DIR|g" -e "s|@NAME@|$PACKAGE_NAME|g" -e "s|@VARIANT@|$VARIANT|g" "$1" > "$2"
+  sed -e "s|@BIN_DIR@|$BIN_DIR|g" -e "s|@SOURCE_DIR@|$SOURCE_DIR|g" -e "s|@INSTALL_DIR@|$INSTALL_DIR|g" -e "s|@VERSION@|$VERSION|g" -e "s|@PACKAGE_VERSION@|$PACKAGE_VERSION|g" -e "s|@TITLE@|$TITLE|g" -e "s|@DESCRIPTION@|$DESCRIPTION|g" -e "s|@PROGRAMS@|$PROGRAMS|g" -e "s|@BACKGROUND_FILE@|$BACKGROUND_FILE|g" -e "s|@WELCOME_FILE@|$WELCOME_FILE|g" -e "s|@README_FILE@|$README_FILE|g" -e "s|@CONCLUSION_FILE@|$CONCLUSION_FILE|g" -e "s|@EXTRAS_DIR@|$EXTRAS_DIR|g" -e "s|@NAME@|$PACKAGE_NAME|g" -e "s|@VARIANT@|$VARIANT|g" "$1" > "$2"
 }
 
 cleanup()
 {
-  rm -rf "$PMPROJ_FILE" "$WELCOME_FILE" "$README_FILE" "$CONCLUSION_FILE" "$PKG_FILE" "$SOURCE_DIR/current" "$SOURCE_DIR/$PACKAGE_VERSION" "$EXTRAS_DIR"
+  rm -rf "$PMPROJ_FILE" "$WELCOME_FILE" "$README_FILE" "$CONCLUSION_FILE" "$PKG_FILE" "$SOURCE_DIR" "$EXTRAS_DIR"
 }
 
 install_gambc()
