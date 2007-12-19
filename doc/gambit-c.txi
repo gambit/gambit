@@ -10802,11 +10802,32 @@ When @var{dir} is @code{#f}, the process uses the value of
 @code{#f}.
 
 @item
+@code{stdin-redirection:} ( @code{#f} | @code{#t} )
+
+This setting indicates how the standard input of the process is
+redirected.  A setting of @code{#t} will redirect the standard input
+from the process-port (i.e. what is written to the process-port will
+be available on the standard input).  A setting of @code{#f} will
+leave the standard input as-is, which typically results in input
+coming from the console.  The default value of this setting is
+@code{#t}.
+
+@item
+@code{stdout-redirection:} ( @code{#f} | @code{#t} )
+
+This setting indicates how the standard output of the process is
+redirected.  A setting of @code{#t} will redirect the standard output
+to the process-port (i.e. all output to standard output can be read
+from the process-port).  A setting of @code{#f} will leave the
+standard output as-is, which typically results in the output going to
+the console.  The default value of this setting is @code{#t}.
+
+@item
 @code{stderr-redirection:} ( @code{#f} | @code{#t} )
 
 This setting indicates how the standard error of the process is
 redirected.  A setting of @code{#t} will redirect the standard error
-to the standard output (i.e. all output to standard error can be read
+to the process-port (i.e. all output to standard error can be read
 from the process-port).  A setting of @code{#f} will leave the
 standard error as-is, which typically results in error messages being
 output to the console.  The default value of this setting is

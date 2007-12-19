@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2007-12-16 22:09:33 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2007-12-19 11:16:56 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -3842,7 +3842,8 @@ end-of-code
    "___os_environ"))
 
 (define-prim ##os-shell-command
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_shell_command"))
 

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2007-11-13 10:31:39 feeley>
+;;; File: "_io.scm", Time-stamp: <2007-12-19 09:44:38 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -171,6 +171,8 @@
           (macro-default-truncate)
           (macro-default-permissions)
           (macro-default-output-width)
+          (macro-default-stdin-redir)
+          (macro-default-stdout-redir)
           (macro-default-stderr-redir)
           (macro-default-pseudo-term)
           (macro-default-server-address)
@@ -348,9 +350,25 @@
           (else
            #f)))
 
+  (define (stdin-redir value)
+    (cond ((##eq? value #t)
+           (macro-stdin-from-port))
+          ((##eq? value #f)
+           (macro-stdin-unchanged))
+          (else
+           #f)))
+
+  (define (stdout-redir value)
+    (cond ((##eq? value #t)
+           (macro-stdout-to-port))
+          ((##eq? value #f)
+           (macro-stdout-unchanged))
+          (else
+           #f)))
+
   (define (stderr-redir value)
     (cond ((##eq? value #t)
-           (macro-stderr-to-stdout))
+           (macro-stderr-to-port))
           ((##eq? value #f)
            (macro-stderr-unchanged))
           (else
@@ -733,6 +751,26 @@
                                 (if x
                                   (begin
                                     (macro-psettings-output-width-set!
+                                     psettings
+                                     x)
+                                    (loop rest2))
+                                  (error name))))
+
+                             ((##eq? name 'stdin-redirection:)
+                              (let ((x (stdin-redir value)))
+                                (if x
+                                  (begin
+                                    (macro-psettings-stdin-redir-set!
+                                     psettings
+                                     x)
+                                    (loop rest2))
+                                  (error name))))
+
+                             ((##eq? name 'stdout-redirection:)
+                              (let ((x (stdout-redir value)))
+                                (if x
+                                  (begin
+                                    (macro-psettings-stdout-redir-set!
                                      psettings
                                      x)
                                     (loop rest2))
@@ -5195,6 +5233,8 @@
      arguments:
      environment:
      directory:
+     stdin-redirection:
+     stdout-redirection:
      stderr-redirection:
      pseudo-terminal:
      output-width:
@@ -5221,13 +5261,21 @@
               path-or-settings)
 
   (define (psettings->options psettings)
-    (let ((stderr-redir
+    (let ((stdin-redir
+           (macro-psettings-stdin-redir psettings))
+          (stdout-redir
+           (macro-psettings-stdout-redir psettings))
+          (stderr-redir
            (macro-psettings-stderr-redir psettings))
           (pseudo-term
            (macro-psettings-pseudo-term psettings)))
       (##fixnum.+
-       (##fixnum.* 2 pseudo-term)
-       stderr-redir)))
+       stdin-redir
+       (##fixnum.+
+        (##fixnum.* 2 stdout-redir)
+        (##fixnum.+
+         (##fixnum.* 4 stderr-redir)
+         (##fixnum.* 8 pseudo-term))))))
 
   (define (fail)
     (##fail-check-string-or-settings 1 prim path-or-settings))

@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2007-09-11 23:51:31 feeley> */
+/* File: "os_io.c", Time-stamp: <2007-12-19 11:03:19 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -2394,12 +2394,13 @@ int direction;)
       d->base.base.read_stage = ___STAGE_CLOSED;
 
 #ifdef USE_POSIX
-      if (close (d->fd_stdout) < 0)
+      if (d->fd_stdout >= 0 &&
+          close (d->fd_stdout) < 0)
         return err_code_from_errno ();
 #endif
 
 #ifdef USE_WIN32
-      if (!CloseHandle (d->hstdout))
+      if (d->hstdout != NULL && !CloseHandle (d->hstdout))
         return err_code_from_GetLastError ();
 #endif
     }
@@ -2411,12 +2412,13 @@ int direction;)
       d->base.base.write_stage = ___STAGE_CLOSED;
 
 #ifdef USE_POSIX
-      if (close (d->fd_stdin) < 0)
+      if (d->fd_stdin >= 0 &&
+          close (d->fd_stdin) < 0)
         return err_code_from_errno ();
 #endif
 
 #ifdef USE_WIN32
-      if (!CloseHandle (d->hstdin))
+      if (d->hstdin != NULL && !CloseHandle (d->hstdin))
         return err_code_from_GetLastError ();
 #endif
     }
@@ -2460,17 +2462,29 @@ ___device_select_state *state;)
       else
         {
 #ifdef USE_POSIX
-          ___device_select_add_fd
-            (state,
-             for_writing ? d->fd_stdin : d->fd_stdout,
-             for_writing);
+          if (for_writing)
+            {
+              if (d->fd_stdin >= 0)
+                ___device_select_add_fd (state, d->fd_stdin, 1);
+            }
+          else
+            {
+              if (d->fd_stdout >= 0)
+                ___device_select_add_fd (state, d->fd_stdout, 0);
+            }
 #endif
 
 #ifdef USE_WIN32
-          ___device_select_add_wait_obj
-            (state,
-             i,
-             for_writing ? d->hstdin : d->hstdout);
+          if (for_writing)
+            {
+              if (d->hstdin != NULL)
+                ___device_select_add_wait_obj (state, i, d->hstdin);
+            }
+          else
+            {
+              if (d->hstdout != NULL)
+                ___device_select_add_wait_obj (state, i, d->hstdout);
+            }
 #endif
         }
       return ___FIX(___SELECT_SETUP_DONE);
@@ -2484,10 +2498,16 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (for_writing
-           ? FD_ISSET(d->fd_stdin, &state->writefds)
-           : FD_ISSET(d->fd_stdout, &state->readfds))
-        state->devs[i] = NULL;
+      if (for_writing)
+        {
+          if (d->fd_stdin < 0 || FD_ISSET(d->fd_stdin, &state->writefds))
+            state->devs[i] = NULL;
+        }
+      else
+        {
+          if (d->fd_stdout < 0 || FD_ISSET(d->fd_stdout, &state->readfds))
+            state->devs[i] = NULL;
+        }
 
 #endif
 
@@ -2520,7 +2540,7 @@ ___device_stream *self;)
   if (d->base.base.write_stage == ___STAGE_OPEN)
     {
 #if 0
-      if (fsync (d->fd_stdin) < 0)/************only works on disk files!!!!!!!*/
+      if (d->fd_stdin >= 0 && fsync (d->fd_stdin) < 0)/************only works on disk files!!!!!!!*/
         return err_code_from_errno ();
 #endif
     }
@@ -2563,44 +2583,50 @@ ___stream_index *len_done;)
 
 #ifdef USE_POSIX
 
-  {
-    int n;
-    if ((n = read (d->fd_stdout, buf, len)) < 0)
-      {
+  if (d->fd_stdout < 0)
+    *len_done = 0;
+  else
+    {
+      int n;
+      if ((n = read (d->fd_stdout, buf, len)) < 0)
+        {
 #ifdef ___DEBUG
 
-        ___printf ("process read returned errno=%d\n", errno);
+          ___printf ("process read returned errno=%d\n", errno);
 
 #endif
 
-        if (errno == EIO) errno = EAGAIN;
-        return err_code_from_errno ();
-      }
+          if (errno == EIO) errno = EAGAIN;
+          return err_code_from_errno ();
+        }
 
-    *len_done = n;
-  }
+      *len_done = n;
+    }
 
 #endif
 
 #ifdef USE_WIN32
 
-  {
-    DWORD n;
+  if (d->hstdout == NULL)
+    *len_done = 0;
+  else
+    {
+      DWORD n;
 
-    if (!ReadFile (d->hstdout, buf, len, &n, NULL))
-      {
+      if (!ReadFile (d->hstdout, buf, len, &n, NULL))
+        {
 #ifdef ___DEBUG
 
-        ___printf ("process read returned GetLastError()=%d\n", GetLastError ());
+          ___printf ("process read returned GetLastError()=%d\n", GetLastError ());
 
 #endif
 
-        if (GetLastError() != ERROR_BROKEN_PIPE) /* handle like end-of-file */
-          return err_code_from_GetLastError ();
-      }
+          if (GetLastError() != ERROR_BROKEN_PIPE) /* handle like end-of-file */
+            return err_code_from_GetLastError ();
+        }
 
-    *len_done = n;
-  }
+      *len_done = n;
+    }
 
 #endif
 
@@ -2628,35 +2654,41 @@ ___stream_index *len_done;)
 
 #ifdef USE_POSIX
 
-  {
-    int n;
+  if (d->fd_stdin < 0)
+    *len_done = len;
+  else
+    {
+      int n;
 
-    if ((n = write (d->fd_stdin, buf, len)) < 0)
-      {
+      if ((n = write (d->fd_stdin, buf, len)) < 0)
+        {
 #ifdef ___DEBUG
 
-        ___printf ("process write returned errno=%d\n", errno);
+          ___printf ("process write returned errno=%d\n", errno);
 
 #endif
 
-        return err_code_from_errno ();
-      }
+          return err_code_from_errno ();
+        }
 
-    *len_done = n;
-  }
+      *len_done = n;
+    }
 
 #endif
 
 #ifdef USE_WIN32
 
-  {
-    DWORD n;
+  if (d->hstdin == NULL)
+    *len_done = len;
+  else
+    {
+      DWORD n;
 
-    if (!WriteFile (d->hstdin, buf, len, &n, NULL))
-      return err_code_from_GetLastError ();
+      if (!WriteFile (d->hstdin, buf, len, &n, NULL))
+        return err_code_from_GetLastError ();
 
-    *len_done = n;
-  }
+      *len_done = n;
+    }
 
 #endif
 
@@ -2758,9 +2790,11 @@ int direction;)
    * Setup file descriptors to perform nonblocking I/O.
    */
 
-  if (((direction & ___DIRECTION_RD) &&
+  if ((fd_stdout >= 0 &&
+       (direction & ___DIRECTION_RD) &&
        (fcntl (fd_stdout, F_SETFL, O_NONBLOCK) < 0)) ||
-      ((direction & ___DIRECTION_WR) &&
+      (fd_stdin >= 0 &&
+       (direction & ___DIRECTION_WR) &&
        (fcntl (fd_stdin, F_SETFL, O_NONBLOCK) < 0))) /* set nonblocking mode */
     {
       ___SCMOBJ e = err_code_from_errno ();
@@ -5938,6 +5972,11 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env;
 ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) dir;
 int options;)
 {
+#define STDIN_REDIR  1
+#define STDOUT_REDIR 2
+#define STDERR_REDIR 4
+#define PSEUDO_TERM  8
+
 #ifdef USE_execvp
 
   ___SCMOBJ e = ___FIX(___NO_ERR);
@@ -5971,11 +6010,15 @@ int options;)
 
 #endif
 
+  fdp.input.writing_fd = -1;
+  fdp.output.reading_fd = -1;
+
   if (open_half_duplex_pipe (&hdp_errno) < 0)
     e = err_code_from_errno ();
   else
     {
-      if (open_full_duplex_pipe1 (&fdp, options & 2) < 0)
+      if ((options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR)) &&
+          open_full_duplex_pipe1 (&fdp, options & PSEUDO_TERM) < 0)
         e = err_code_from_errno ();
       else
         {
@@ -5984,8 +6027,11 @@ int options;)
           if ((pid = fork ()) < 0)
             {
               e = err_code_from_errno ();
-              close_half_duplex_pipe (&fdp.input, 2);
-              close_half_duplex_pipe (&fdp.output, 2);
+              if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+                {
+                  close_half_duplex_pipe (&fdp.input, 2);
+                  close_half_duplex_pipe (&fdp.output, 2);
+                }
             }
 
           if (pid > 0)
@@ -6004,42 +6050,48 @@ int options;)
 
           ___set_heartbeat_interval (-1.0);
 
-          if (open_full_duplex_pipe2 (&fdp, options & 2) >= 0 &&
-              dup2 (fdp.input.reading_fd, STDIN_FILENO) >= 0 &&
-              dup2 (fdp.output.writing_fd, STDOUT_FILENO) >= 0 &&
-              ((options & 3) == 0 ||
-               dup2 (fdp.output.writing_fd, STDERR_FILENO) >= 0) &&
-              fcntl (hdp_errno.writing_fd, F_SETFD, FD_CLOEXEC) >= 0)
+          if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
             {
+              if (open_full_duplex_pipe2 (&fdp, options & PSEUDO_TERM) < 0 ||
+                  ((options & STDIN_REDIR) &&
+                   dup2 (fdp.input.reading_fd, STDIN_FILENO) < 0) ||
+                  ((options & STDOUT_REDIR) &&
+                   dup2 (fdp.output.writing_fd, STDOUT_FILENO) < 0) ||
+                  ((options & (STDERR_REDIR | PSEUDO_TERM)) &&
+                   dup2 (fdp.output.writing_fd, STDERR_FILENO) < 0) ||
+                  fcntl (hdp_errno.writing_fd, F_SETFD, FD_CLOEXEC) < 0)
+                goto return_errno;
+
               close_half_duplex_pipe (&fdp.input, 1);
               close_half_duplex_pipe (&fdp.output, 0);
               close_half_duplex_pipe (&hdp_errno, 0);
+            }
 
+          {
+            /* Close all file descriptors that aren't used. */
+
+            int fd = sysconf (_SC_OPEN_MAX) - 1;
+
+            while (fd >= 0)
               {
-                /* Close all file descriptors that aren't used. */
-
-                int fd = sysconf (_SC_OPEN_MAX) - 1;
-
-                while (fd >= 0)
-                  {
-                    if (fd != STDIN_FILENO &&
-                        fd != STDOUT_FILENO &&
-                        fd != STDERR_FILENO &&
-                        fd != hdp_errno.writing_fd)
-                      close (fd); /* ignore error */
-                    fd--;
-                  }
+                if (fd != STDIN_FILENO &&
+                    fd != STDOUT_FILENO &&
+                    fd != STDERR_FILENO &&
+                    fd != hdp_errno.writing_fd)
+                  close (fd); /* ignore error */
+                fd--;
               }
+          }
 
-              if (dir == NULL || chdir (dir) == 0)
-                {
-                  if (env != NULL)
-                    environ = env;
-                  execvp (argv[0], argv);
-                }
-
+          if (dir == NULL || chdir (dir) == 0)
+            {
+              if (env != NULL)
+                environ = env;
+              execvp (argv[0], argv);
               /* the exec failed, errno will be returned to parent */
             }
+
+        return_errno:
 
           /* return the errno to the parent process */
 
@@ -6056,8 +6108,12 @@ int options;)
 
       /* parent process */
 
-      close_half_duplex_pipe (&fdp.input, 0);
-      close_half_duplex_pipe (&fdp.output, 1);
+      if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+        {
+          close_half_duplex_pipe (&fdp.input, 0);
+          close_half_duplex_pipe (&fdp.output, 1);
+        }
+
       close_half_duplex_pipe (&hdp_errno, 1);
 
       n = read (hdp_errno.reading_fd, &execvp_errno, sizeof (execvp_errno));
@@ -6087,10 +6143,11 @@ int options;)
         }
 
       if (e != ___FIX(___NO_ERR))
-        {
-          close_half_duplex_pipe (&fdp.input, 1);
-          close_half_duplex_pipe (&fdp.output, 0);
-        }
+        if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+          {
+            close_half_duplex_pipe (&fdp.input, 1);
+            close_half_duplex_pipe (&fdp.output, 0);
+          }
 
       close_half_duplex_pipe (&hdp_errno, 0);
     }
@@ -6136,24 +6193,42 @@ int options;)
   if ((ccmd = argv_to_ccmd (argv)) == NULL ||
       (env != NULL && (cenv = env_to_cenv (env)) == NULL))
     e = ___FIX(___HEAP_OVERFLOW_ERR);
-  else if (!CreatePipe (&hstdin_rd, &hstdin_wr, &sa, 0) ||
-           !CreatePipe (&hstdout_rd, &hstdout_wr, &sa, 0))
-    e = err_code_from_GetLastError ();
   else
     {
-      SetHandleInformation (hstdin_wr,  HANDLE_FLAG_INHERIT, 0);
-      SetHandleInformation (hstdout_rd, HANDLE_FLAG_INHERIT, 0);
-
       ZeroMemory (&pi, sizeof (pi));
 
       ZeroMemory (&si, sizeof (si));
       si.cb = sizeof (si);
-      si.hStdInput = hstdin_rd;
-      si.hStdOutput = hstdout_wr;
-      if (options & 1)
-        si.hStdError = GetStdHandle (STD_ERROR_HANDLE);
-      else
-        si.hStdError = hstdout_wr;
+
+      si.hStdInput  = GetStdHandle (STD_INPUT_HANDLE);
+      si.hStdOutput = GetStdHandle (STD_OUTPUT_HANDLE);
+      si.hStdError  = GetStdHandle (STD_ERROR_HANDLE);
+
+      if (options & STDIN_REDIR)
+        {
+          if (!CreatePipe (&hstdin_rd, &hstdin_wr, &sa, 0))
+            e = err_code_from_GetLastError ();
+          else
+            {
+              SetHandleInformation (hstdin_wr, HANDLE_FLAG_INHERIT, 0);
+              si.hStdInput = hstdin_rd;
+            }
+        }
+
+      if (options & (STDOUT_REDIR | STDERR_REDIR))
+        {
+          if (!CreatePipe (&hstdout_rd, &hstdout_wr, &sa, 0))
+            e = err_code_from_GetLastError ();
+          else
+            {
+              SetHandleInformation (hstdout_rd, HANDLE_FLAG_INHERIT, 0);
+              if (options & STDOUT_REDIR)
+                si.hStdOutput = hstdout_wr;
+              if (options & STDERR_REDIR)
+                si.hStdError = hstdout_wr;
+            }
+        }
+
       si.dwFlags |= STARTF_USESTDHANDLES;
 
       if (si.hStdError == INVALID_HANDLE_VALUE ||

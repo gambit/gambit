@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2007-12-17 00:40:42 feeley>
+# makefile for Gambit-C library, Time-stamp: <2007-12-19 13:37:38 feeley>
 
 # Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -135,7 +135,7 @@ os_base@obj@: os_base.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_base.h
 
 os_time@obj@: os_time.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_time.h
 
-os_shell@obj@: os_shell.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_shell.h
+os_shell@obj@: os_shell.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_shell.h os_files.h
 
 os_files@obj@: os_files.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_files.h
 

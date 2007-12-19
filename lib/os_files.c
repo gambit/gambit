@@ -1,4 +1,4 @@
-/* File: "os_files.c", Time-stamp: <2007-09-11 23:51:26 feeley> */
+/* File: "os_files.c", Time-stamp: <2007-12-19 13:38:55 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -421,19 +421,6 @@ FSSpec dst_spec;)
 /*---------------------------------------------------------------------------*/
 
 /* Filesystem path expansion. */
-
-
-#ifdef USE_WIN32
-#ifdef _UNICODE
-#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-#endif
-
-#ifndef ___PATH_CE_SELECT
-#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
 
 
 ___SCMOBJ ___os_path_homedir ___PVOID

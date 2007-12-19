@@ -1,4 +1,4 @@
-/* File: "os_files.h", Time-stamp: <2007-04-04 11:31:00 feeley> */
+/* File: "os_files.h", Time-stamp: <2007-12-19 13:38:46 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -29,6 +29,19 @@ extern ___files_module ___files_mod;
 /* Max length of a path, not including null. */
 
 #define ___PATH_MAX_LENGTH 1024
+
+
+#ifdef USE_WIN32
+#ifdef _UNICODE
+#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#else
+#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#endif
+#endif
+
+#ifndef ___PATH_CE_SELECT
+#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#endif
 
 
 extern ___SCMOBJ ___os_path_homedir ___PVOID;

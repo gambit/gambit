@@ -1,4 +1,4 @@
-/* File: "os_shell.c", Time-stamp: <2007-09-11 23:51:38 feeley> */
+/* File: "os_shell.c", Time-stamp: <2007-12-19 13:51:53 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -13,6 +13,7 @@
 
 #include "os_base.h"
 #include "os_shell.h"
+#include "os_files.h"
 
 
 /*---------------------------------------------------------------------------*/
@@ -801,9 +802,12 @@ ___SCMOBJ ___os_environ ___PVOID
 
 
 ___SCMOBJ ___os_shell_command
-   ___P((___SCMOBJ cmd),
-        (cmd)
-___SCMOBJ cmd;)
+   ___P((___SCMOBJ cmd,
+         ___SCMOBJ dir),
+        (cmd,
+         dir)
+___SCMOBJ cmd;
+___SCMOBJ dir;)
 {
   ___SCMOBJ e;
 
@@ -825,18 +829,45 @@ ___SCMOBJ cmd;)
               1))
       == ___FIX(___NO_ERR))
     {
-      int code;
+      void *cdir;
 
-      ___disable_os_interrupts ();
+      if ((e = ___SCMOBJ_to_NONNULLSTRING
+                 (dir,
+                  &cdir,
+                  2,
+                  ___CE(___PATH_CE_SELECT),
+                  0))
+          == ___FIX(___NO_ERR))
+        {
+          int code;
 
-      code = system (ccmd);
+          ___CHAR_TYPE(___PATH_CE_SELECT) old_dir[___PATH_MAX_LENGTH+1];
 
-      if (code == -1)
-        e = err_code_from_errno ();
-      else
-        e = ___FIX(code & ___MAX_FIX);
+          if (getcwd (old_dir, ___PATH_MAX_LENGTH) == 0)
+            e = err_code_from_errno ();
+          else
+            {
+              if (chdir (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cdir)) < 0)
+                e = err_code_from_errno ();
+              else
+                {
+                  ___disable_os_interrupts ();
 
-      ___enable_os_interrupts ();
+                  code = system (ccmd);
+
+                  if (code == -1)
+                    e = err_code_from_errno ();
+                  else
+                    e = ___FIX(code & ___MAX_FIX);
+
+                  ___enable_os_interrupts ();
+
+                  chdir (old_dir); /* ignore error */
+                }
+            }
+
+          ___release_string (cdir);
+        }
 
       ___release_string (ccmd);
     }
@@ -861,63 +892,96 @@ ___SCMOBJ cmd;)
               0))
       == ___FIX(___NO_ERR))
     {
-#ifdef ___DO_NOT_USE_system
+      void *cdir;
 
-      /*
-       * This code does not really cause the shell to run the command.
-       * This means that the shell builtin commands (such as "DIR"
-       * cannot be executed.  It is better to use "system" and
-       * "_wsystem".
-       */
-
-      DWORD code;
-      STARTUPINFO si;
-      PROCESS_INFORMATION pi;
-
-      ZeroMemory (&si, sizeof (si));
-      si.cb = sizeof (si);
-      ZeroMemory (&pi, sizeof (pi));
-
-      if (!CreateProcess
-             (NULL,  /* module name                              */
-              ___CAST(___STRING_TYPE(___SHELL_COMMAND_CE_SELECT),ccmd),
-              NULL,  /* process handle not inheritable           */
-              NULL,  /* thread handle not inheritable            */
-              FALSE, /* set handle inheritance to FALSE          */
-              0,     /* no creation flags                        */
-              NULL,  /* use parent's environment block           */
-              NULL,  /* use parent's starting directory          */
-              &si,   /* pointer to STARTUPINFO structure         */
-              &pi))  /* pointer to PROCESS_INFORMATION structure */
-        e = err_code_from_GetLastError ();
-      else
+      if ((e = ___SCMOBJ_to_STRING
+                 (dir,
+                  &cdir,
+                  2,
+                  ___CE(___PATH_CE_SELECT),
+                  0))
+          == ___FIX(___NO_ERR))
         {
-          if (WaitForSingleObject (pi.hProcess, INFINITE) == WAIT_FAILED ||
-              !GetExitCodeProcess (pi.hProcess, &code))
+          DWORD n;
+
+          ___CHAR_TYPE(___PATH_CE_SELECT) old_dir[___PATH_MAX_LENGTH+1];
+
+          n = GetCurrentDirectory (___PATH_MAX_LENGTH+1,
+                                   old_dir);
+
+          if (n < 1 || n > ___PATH_MAX_LENGTH)
             e = err_code_from_GetLastError ();
           else
-            e = ___FIX(code & ___MAX_FIX);
+            {
+              if (!SetCurrentDirectory (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cdir)))
+                e = err_code_from_GetLastError ();
+              else
+                {
 
-          CloseHandle (pi.hProcess); /* ignore error */
-          CloseHandle (pi.hThread); /* ignore error */
-        }
+#ifdef ___DO_NOT_USE_system
+
+                  /*
+                   * This code does not really cause the shell to run
+                   * the command.  This means that the shell builtin
+                   * commands (such as "DIR" cannot be executed.  It
+                   * is better to use "system" and "_wsystem".
+                   */
+
+                  DWORD code;
+                  STARTUPINFO si;
+                  PROCESS_INFORMATION pi;
+
+                  ZeroMemory (&si, sizeof (si));
+                  si.cb = sizeof (si);
+                  ZeroMemory (&pi, sizeof (pi));
+
+                  if (!CreateProcess
+                         (NULL,  /* module name                              */
+                          ___CAST(___STRING_TYPE(___SHELL_COMMAND_CE_SELECT),ccmd),
+                          NULL,  /* process handle not inheritable           */
+                          NULL,  /* thread handle not inheritable            */
+                          FALSE, /* set handle inheritance to FALSE          */
+                          0,     /* no creation flags                        */
+                          NULL,  /* use parent's environment block           */
+                          NULL,  /* use parent's starting directory          */
+                          &si,   /* pointer to STARTUPINFO structure         */
+                          &pi))  /* pointer to PROCESS_INFORMATION structure */
+                    e = err_code_from_GetLastError ();
+                  else
+                    {
+                      if (WaitForSingleObject (pi.hProcess, INFINITE) == WAIT_FAILED ||
+                          !GetExitCodeProcess (pi.hProcess, &code))
+                        e = err_code_from_GetLastError ();
+                      else
+                        e = ___FIX(code & ___MAX_FIX);
+
+                      CloseHandle (pi.hProcess); /* ignore error */
+                      CloseHandle (pi.hThread); /* ignore error */
+                    }
 
 #else
 
-      int code;
+                  int code;
 
 #ifdef _UNICODE
-      code = _wsystem (___CAST(___STRING_TYPE(___SHELL_COMMAND_CE_SELECT),ccmd));
+                  code = _wsystem (___CAST(___STRING_TYPE(___SHELL_COMMAND_CE_SELECT),ccmd));
 #else
-      code = system (___CAST(___STRING_TYPE(___SHELL_COMMAND_CE_SELECT),ccmd));
+                  code = system (___CAST(___STRING_TYPE(___SHELL_COMMAND_CE_SELECT),ccmd));
 #endif
 
-      if (code == -1)
-        e = err_code_from_errno ();
-      else
-        e = ___FIX(code & ___MAX_FIX);
+                  if (code == -1)
+                    e = err_code_from_errno ();
+                  else
+                    e = ___FIX(code & ___MAX_FIX);
 
 #endif
+
+                  SetCurrentDirectory (old_dir); /* ignore error */
+                }
+            }
+
+          ___release_string (cdir);
+        }
 
       ___release_string (ccmd);
     }

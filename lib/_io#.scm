@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2007-11-06 09:54:04 feeley>
+;;; File: "_io#.scm", Time-stamp: <2007-12-19 09:39:44 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -664,6 +664,8 @@
   truncate
   permissions
   output-width
+  stdin-redir
+  stdout-redir
   stderr-redir
   pseudo-term
   server-address
@@ -801,7 +803,15 @@
 (##define-macro (macro-no-permanent-close) 0)
 (##define-macro (macro-default-permanent-close) `(macro-permanent-close))
 
-(##define-macro (macro-stderr-to-stdout) 1)
+(##define-macro (macro-stdin-from-port) 1)
+(##define-macro (macro-stdin-unchanged) 0)
+(##define-macro (macro-default-stdin-redir) `(macro-stdin-from-port))
+
+(##define-macro (macro-stdout-to-port) 1)
+(##define-macro (macro-stdout-unchanged) 0)
+(##define-macro (macro-default-stdout-redir) `(macro-stdout-to-port))
+
+(##define-macro (macro-stderr-to-port) 1)
 (##define-macro (macro-stderr-unchanged) 0)
 (##define-macro (macro-default-stderr-redir) `(macro-stderr-unchanged))
 

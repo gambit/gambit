@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2007-06-06 15:40:59 feeley>
+;;; File: "_nonstd.scm", Time-stamp: <2007-12-19 11:17:54 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1256,7 +1256,7 @@
   ##processed-command-line)
 
 (define-prim (##shell-command cmd)
-  (let ((code (##os-shell-command cmd)))
+  (let ((code (##os-shell-command cmd (##current-directory))))
     (if (##fixnum.< code 0)
       (##raise-os-exception #f code shell-command cmd)
       code)))
