@@ -1,9 +1,9 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2007-09-07 11:42:21 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-01-05 10:09:18 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2007 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2242,7 +2242,10 @@
            (let ((y (##exact-int.sqrt x)))
              (if (##eq? (##cdr y) 0)
                  (##car y)
-                 (##flonum.sqrt (##flonum.<-exact-int x)))))))
+                 (let ((inexact-x (##flonum.<-exact-int x)))
+                   (if (##flonum.= inexact-x (macro-inexact-+inf))
+                       (##flonum.<-exact-int (##car y))
+                       (##flonum.sqrt inexact-x))))))))
 
   (macro-number-dispatch x (type-error)
     (exact-int-sqrt x)
