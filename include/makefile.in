@@ -60,7 +60,7 @@ all: all-pre all-recursive all-post
 
 all-pre:
 
-all-post:
+all-post: gambit.h
 
 install-pre:
 
