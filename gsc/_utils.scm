@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_utils.scm", Time-stamp: <2007-04-04 11:38:34 feeley>
+;;; File: "_utils.scm", Time-stamp: <2008-01-10 15:50:42 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -35,6 +35,12 @@
     (cond ((not (pair? l)) #f)
           ((eq? (car l) x) i)
           (else            (loop (cdr l) (+ i 1))))))
+
+(define (object-pos-in-list x l)
+  (let loop ((l l) (i 0))
+    (cond ((not    (pair? l)) #f)
+          ((equal? (car l) x) i)
+          (else               (loop (cdr l) (+ i 1))))))
 
 (define (string-pos-in-list x l)
   (let loop ((l l) (i 0))
@@ -628,6 +634,12 @@
     (cond ((not (pair? l)) #f)
           ((eq? (car l) x) i)
           (else            (loop (cdr l) (+ i 1))))))
+
+(define (object-pos-in-list x l)
+  (let loop ((l l) (i 0))
+    (cond ((not    (pair? l)) #f)
+          ((equal? (car l) x) i)
+          (else               (loop (cdr l) (+ i 1))))))
 
 (define (string-pos-in-list x l)
   (let loop ((l l) (i 0))

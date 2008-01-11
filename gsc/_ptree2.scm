@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2007-09-27 13:58:22 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2008-01-10 16:52:16 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1815,7 +1815,14 @@
                             (or (< len 2)
                                 (let ((tag (source-code (caddr typ))))
                                   (or (false-object? tag)
-                                      (symbol-object? tag))))
+                                      (symbol-object? tag)
+                                      (and (pair? tag)
+                                           (proper-length tag)
+                                           (every?
+                                            (lambda (x)
+                                              (symbol-object?
+                                               (source-code x)))
+                                            tag)))))
                             (or (< len 3)
                                 (let ((id (source-code (cadddr typ))))
                                   (or (false-object? id)
@@ -1997,10 +2004,11 @@
     (compiler-internal-error "c-type-converter, unknown C type"))
 
   (define (convert kind name tag id)
-    (let ((tag
+    (let ((tag-str
            (if (false-object? tag)
              (string-append c-id-prefix "FAL")
-             (let ((x (pos-in-list tag c-interface-objs)))
+             (let* ((tag-list (if (symbol-object? tag) (list tag) tag))
+                    (x (object-pos-in-list tag-list c-interface-objs)))
                (string-append
                 c-id-prefix
                 "C_OBJ_"
@@ -2008,7 +2016,7 @@
                  (if x
                    (- (- c-interface-obj-count x) 1)
                    (let ((n c-interface-obj-count))
-                     (add-c-obj tag)
+                     (add-c-obj tag-list)
                      n))))))))
       (if to-scmobj?
 
@@ -2027,7 +2035,7 @@
                         "TYPE_TO_SCMOBJ("))
                  name
                  ",")))
-         from "_voidstar," tag ","
+         from "_voidstar," tag-str ","
          (if (false-object? id)
            (if (or (eq? kind pointer-sym)
                    (eq? kind nonnull-pointer-sym))
@@ -2084,7 +2092,7 @@
                         "SCMOBJ_TO_TYPE("))
                  name
                  ",")))
-         from "," to "_voidstar," tag))))
+         from "," to "_voidstar," tag-str))))
 
   (let ((t (source-code typ)))
     (cond ((pair? t)
@@ -2099,7 +2107,7 @@
                      head
                      (source-code (cadr t))
                      (if (>= len 2)
-                       (source-code (caddr t))
+                       (source->expression (caddr t))
                        (string->symbol (c-type-decl typ "")))
                      (if (>= len 3)
                        (source-code (cadddr t))

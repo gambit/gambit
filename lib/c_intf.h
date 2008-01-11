@@ -1,6 +1,6 @@
-/* File: "c_intf.h", Time-stamp: <2007-04-04 11:27:42 feeley> */
+/* File: "c_intf.h", Time-stamp: <2008-01-10 17:25:37 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___C_INTF_H
 #define ___C_INTF_H

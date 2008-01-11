@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_kernel#.scm", Time-stamp: <2007-05-27 22:24:59 feeley>
+;;; File: "_kernel#.scm", Time-stamp: <2008-01-10 16:41:04 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2007-12-19 11:16:56 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-01-10 17:26:54 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3536,9 +3536,27 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
-;;; Foreign pointers.
+;;; Foreign objects.
 
 (implement-check-type-foreign)
+
+(define-prim (foreign? obj)
+  (##foreign? obj))
+
+(define-prim (##foreign-tags f)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   ___RESULT = ___FIELD(___ARG1,___FOREIGN_TAGS);
+
+end-of-code
+
+   f))
+
+(define-prim (foreign-tags f)
+  (macro-force-vars (f)
+    (macro-check-foreign f 1 (foreign-tags f)
+      (##foreign-tags f))))
 
 (define-prim (##foreign-released? f)
   (##declare (not interrupts-enabled))

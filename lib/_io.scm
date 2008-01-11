@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2007-12-19 09:44:38 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-01-10 17:41:14 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -7775,11 +7775,11 @@
     ((mark)
      (##wr-mark we obj))
     (else
-     (let ((typ (##vector-ref obj 0)))
+     (let ((tags (##foreign-tags obj)))
        (##wr-str we "#<")
-       (if typ
-         (##wr-no-display we typ)
-         (##wr-str we "foreign"))
+       (if (##pair? tags)
+           (##wr-no-display we (##car tags))
+           (##wr-str we "foreign"))
        (##wr-str we " #")
        (##wr-str we (##number->string (##object->serial-number obj) 10))
        (##wr-str we " 0x")

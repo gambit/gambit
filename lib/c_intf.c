@@ -1,6 +1,6 @@
-/* File: "c_intf.c", Time-stamp: <2007-09-11 23:50:40 feeley> */
+/* File: "c_intf.c", Time-stamp: <2008-01-10 17:49:12 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -2278,18 +2278,47 @@ int arg_num;)
 
 /* Convert a Scheme foreign object to a C pointer. */
 
+___HIDDEN int can_convert_foreign_type
+   ___P((___SCMOBJ src_tags,
+         ___SCMOBJ dest_tags),
+        (src_tags,
+         dest_tags)
+___SCMOBJ src_tags;
+___SCMOBJ dest_tags;)
+{
+  ___SCMOBJ tag;
+  ___SCMOBJ probe;
+
+  if (src_tags == ___FAL || /* source type == void* */
+      dest_tags == ___FAL) /* destination type == void* */
+    return 1;
+
+  tag = ___CAR(src_tags);
+  probe = dest_tags;
+
+  while (probe != ___NUL)
+    {
+      if (___EQP(tag,___CAR(probe)))
+        return 1;
+      probe = ___CDR(probe);
+    }
+
+  return 0;
+}
+
+         
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_POINTER)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         (obj,
          x,
-         tag,
+         tags,
          arg_num)
 ___SCMOBJ obj;
 void **x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 int arg_num;)
 {
   if (___FALSEP(obj)) /* #f counts as NULL */
@@ -2298,13 +2327,8 @@ int arg_num;)
       return ___FIX(___NO_ERR);
     }
 
-  if (!___TESTSUBTYPE(obj,___sFOREIGN))
-    return ___FIX(___STOC_POINTER_ERR+arg_num);
-
-  /*******************************fix type rules*/
-  if ((tag != ___FAL && /* destination type != void* */
-       ___FIELD(obj,___FOREIGN_TAG) != ___FAL && /* source type != void* */
-       !___EQP(___FIELD(obj,___FOREIGN_TAG),tag))) /* pointer types != */
+  if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
+      !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
     return ___FIX(___STOC_POINTER_ERR+arg_num);
 
   *x = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
@@ -2317,18 +2341,18 @@ int arg_num;)
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLPOINTER)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         (obj,
          x,
-         tag,
+         tags,
          arg_num)
 ___SCMOBJ obj;
 void **x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 int arg_num;)
 {
-  if (___SCMOBJ_to_POINTER (obj, x, tag, arg_num) != ___FIX(___NO_ERR) ||
+  if (___SCMOBJ_to_POINTER (obj, x, tags, arg_num) != ___FIX(___NO_ERR) ||
       *x == 0)
     return ___FIX(___STOC_NONNULLPOINTER_ERR+arg_num);
   return ___FIX(___NO_ERR);
@@ -2434,19 +2458,19 @@ int arg_num;)
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_STRUCT)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         (obj,
          x,
-         tag,
+         tags,
          arg_num)
 ___SCMOBJ obj;
 void **x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 int arg_num;)
 {
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
-      !___EQP(___FIELD(obj,___FOREIGN_TAG),tag))
+      !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
     return ___FIX(___STOC_STRUCT_ERR+arg_num);
 
   *x = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
@@ -2459,19 +2483,19 @@ int arg_num;)
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UNION)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         (obj,
          x,
-         tag,
+         tags,
          arg_num)
 ___SCMOBJ obj;
 void **x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 int arg_num;)
 {
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
-      !___EQP(___FIELD(obj,___FOREIGN_TAG),tag))
+      !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
     return ___FIX(___STOC_UNION_ERR+arg_num);
 
   *x = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
@@ -2484,19 +2508,19 @@ int arg_num;)
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_TYPE)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         (obj,
          x,
-         tag,
+         tags,
          arg_num)
 ___SCMOBJ obj;
 void **x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 int arg_num;)
 {
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
-      !___EQP(___FIELD(obj,___FOREIGN_TAG),tag))
+      !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
     return ___FIX(___STOC_TYPE_ERR+arg_num);
 
   *x = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
@@ -4154,17 +4178,17 @@ int arg_num;)
 
 ___EXP_FUNC(___SCMOBJ,___POINTER_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         (x,
-         tag,
+         tags,
          release_fn,
          obj,
          arg_num)
 void *x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4182,7 +4206,7 @@ int arg_num;)
           *obj = ___FAL;
           return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
         }
-      ___FIELD(r,___FOREIGN_TAG) = tag;
+      ___FIELD(r,___FOREIGN_TAGS) = tags;
       ___FIELD(r,___FOREIGN_RELEASE_FN) = ___CAST(___SCMOBJ,release_fn);
       ___FIELD(r,___FOREIGN_PTR) = ___CAST(___SCMOBJ,x);
       *obj = r;
@@ -4195,17 +4219,17 @@ int arg_num;)
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLPOINTER_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         (x,
-         tag,
+         tags,
          release_fn,
          obj,
          arg_num)
 void *x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4215,7 +4239,7 @@ int arg_num;)
       *obj = ___FAL;
       return ___FIX(___CTOS_NONNULLPOINTER_ERR+arg_num);
     }
-  return ___POINTER_to_SCMOBJ (x, tag, release_fn, obj, arg_num);
+  return ___POINTER_to_SCMOBJ (x, tags, release_fn, obj, arg_num);
 }
 
 
@@ -4272,17 +4296,17 @@ int arg_num;)
 
 ___EXP_FUNC(___SCMOBJ,___STRUCT_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         (x,
-         tag,
+         tags,
          release_fn,
          obj,
          arg_num)
 void *x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4293,7 +4317,7 @@ int arg_num;)
       *obj = ___FAL;
       e = ___FIX(___CTOS_STRUCT_ERR+arg_num);
     }
-  else if ((e = ___POINTER_to_SCMOBJ (x, tag, release_fn, obj, arg_num))
+  else if ((e = ___POINTER_to_SCMOBJ (x, tags, release_fn, obj, arg_num))
            != ___FIX(___NO_ERR))
     release_fn (x);
   return e;
@@ -4304,17 +4328,17 @@ int arg_num;)
 
 ___EXP_FUNC(___SCMOBJ,___UNION_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         (x,
-         tag,
+         tags,
          release_fn,
          obj,
          arg_num)
 void *x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4325,7 +4349,7 @@ int arg_num;)
       *obj = ___FAL;
       e = ___FIX(___CTOS_UNION_ERR+arg_num);
     }
-  else if ((e = ___POINTER_to_SCMOBJ (x, tag, release_fn, obj, arg_num))
+  else if ((e = ___POINTER_to_SCMOBJ (x, tags, release_fn, obj, arg_num))
            != ___FIX(___NO_ERR))
     release_fn (x);
   return e;
@@ -4336,17 +4360,17 @@ int arg_num;)
 
 ___EXP_FUNC(___SCMOBJ,___TYPE_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         (x,
-         tag,
+         tags,
          release_fn,
          obj,
          arg_num)
 void *x;
-___SCMOBJ tag;
+___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4357,7 +4381,7 @@ int arg_num;)
       *obj = ___FAL;
       e = ___FIX(___CTOS_TYPE_ERR+arg_num);
     }
-  else if ((e = ___POINTER_to_SCMOBJ (x, tag, release_fn, obj, arg_num))
+  else if ((e = ___POINTER_to_SCMOBJ (x, tags, release_fn, obj, arg_num))
            != ___FIX(___NO_ERR))
     release_fn (x);
   return e;

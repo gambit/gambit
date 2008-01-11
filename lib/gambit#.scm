@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2007-12-16 22:12:05 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-01-10 16:48:34 feeley>
 
-;;; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -322,7 +322,12 @@ delete-file
 denominator
 directory-files
 display
+display-continuation-dynamic-environment
+display-continuation-environment
 display-environment-set!
+display-exception
+display-exception-in-context
+display-procedure-environment
 divide-by-zero-exception-arguments
 divide-by-zero-exception-procedure
 divide-by-zero-exception?
@@ -450,6 +455,8 @@ force-output
 foreign-address
 foreign-release!
 foreign-released?
+foreign-tags
+foreign?
 fx*
 fx+
 fx-

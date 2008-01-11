@@ -3265,7 +3265,9 @@ The procedures in this section are not yet documented.
 @deffn procedure err-code->string @var{code}
 @end deffn
 
-@deffn procedure foreign-address @var{foreign}
+@deffn procedure foreign? @var{obj}
+@deffnx procedure foreign-tags @var{foreign}
+@deffnx procedure foreign-address @var{foreign}
 @deffnx procedure foreign-release! @var{foreign}
 @deffnx procedure foreign-released? @var{foreign}
 @end deffn
@@ -12768,21 +12770,21 @@ C type
 @code{float32}
 @item float64
 @code{float64}
-@item (struct "@var{c-struct-id}" @r{[}@var{tag} @r{[}@var{release-function}@r{]}@r{]})
+@item (struct "@var{c-struct-id}" @r{[}@var{tags} @r{[}@var{release-function}@r{]}@r{]})
 @code{struct @var{c-struct-id}}  (where @var{c-struct-id} is the name of a
-C structure; see below for the meaning of @var{tag} and @var{release-function})
-@item (union "@var{c-union-id}" @r{[}@var{tag} @r{[}@var{release-function}@r{]}@r{]})
+C structure; see below for the meaning of @var{tags} and @var{release-function})
+@item (union "@var{c-union-id}" @r{[}@var{tags} @r{[}@var{release-function}@r{]}@r{]})
 @code{union @var{c-union-id}}  (where @var{c-union-id} is the name of a
-C union; see below for the meaning of @var{tag} and @var{release-function})
-@item (type "@var{c-type-id}" @r{[}@var{tag} @r{[}@var{release-function}@r{]}@r{]})
+C union; see below for the meaning of @var{tags} and @var{release-function})
+@item (type "@var{c-type-id}" @r{[}@var{tags} @r{[}@var{release-function}@r{]}@r{]})
 @code{@var{c-type-id}}  (where @var{c-type-id} is an identifier naming a
-C type; see below for the meaning of @var{tag} and @var{release-function})
-@item (pointer @var{type} @r{[}@var{tag} @r{[}@var{release-function}@r{]}@r{]})
+C type; see below for the meaning of @var{tags} and @var{release-function})
+@item (pointer @var{type} @r{[}@var{tags} @r{[}@var{release-function}@r{]}@r{]})
 @code{@var{T}*}  (where @var{T} is the C equivalent of @var{type}
 which must be the Scheme notation of a C type; see below for the meaning
-of @var{tag} and @var{release-function})
-@item (nonnull-pointer @var{type} @r{[}@var{tag} @r{[}@var{release-function}@r{]}@r{]})
-same as @code{(pointer @var{type} @r{[}@var{tag} @r{[}@var{release-function}@r{]}@r{]})}
+of @var{tags} and @var{release-function})
+@item (nonnull-pointer @var{type} @r{[}@var{tags} @r{[}@var{release-function}@r{]}@r{]})
+same as @code{(pointer @var{type} @r{[}@var{tags} @r{[}@var{release-function}@r{]}@r{]})}
 except the @code{NULL} pointer is not allowed
 @item (function (@var{type1}@dots{}) @var{result-type})
 function with the given argument types and result type
@@ -12857,21 +12859,44 @@ dereferences the internal pointer (no allocation from the C heap is
 performed).  Deallocation of the copy on the C heap is under the control
 of the release function attached to the foreign object (see below).
 
-For type checking on the Scheme side, a @var{tag} can be specified
-within a foreign type specification.  The @var{tag} must be @code{#f} or
-a symbol.  When it is not specified the @var{tag} defaults to a symbol
-whose name, as returned by @code{symbol->string}, is the C type
-declaration for that type.  For example the default tag for the type
-@samp{(pointer (pointer char))} is the symbol @samp{char**}.  Two
-foreign types are compatible (i.e. can be converted from one to the
-other) if they have identical tags or if at least one of the tags is
-@code{#f}.  For the safest code the @code{#f} tag should be used
+The optional @var{tags} field of foreign type specifications is used
+for type checking on the Scheme side.  The @var{tags} field must be
+@code{#f}, a symbol or a non-empty list of symbols.  When it is not
+specified the @var{tags} field defaults to a symbol whose name, as
+returned by @code{symbol->string}, is the C type declaration for that
+type.  For example the symbol @samp{char**} is the default for the
+type @samp{(pointer (pointer char))}.  A @var{tags} field that is a
+single symbol is equivalent to a list containing only that symbol.
+The first symbol in the list of tags is the primary tag.  For example
+the primary tag of the type @samp{(pointer char)} is @samp{char*} and
+the primary tag of the type @samp{(pointer char (foo bar))} is
+@samp{foo}.
+
+Type compatibility between two foreign types depends on their tags.
+An instance of a foreign type @var{T} can be used where a foreign type
+@var{E} is expected if and only if
+
+@itemize @bullet{}
+
+@item
+@var{T}'s @var{tags} field is @code{#f}, or
+
+@item
+@var{E}'s @var{tags} field is @code{#f}, or
+
+@item
+@var{T}'s primary tag is a member of @var{E}'s tags.
+
+@end itemize
+
+For the safest code a @var{tags} field of @code{#f} should be used
 sparingly, as it completely bypasses type checking.  The external
 representation of Scheme foreign objects (used by the @code{write}
-procedure) contains the tag if it is not @code{#f}, and the hexadecimal
-address denoted by the internal pointer, for example @samp{#<char** #2
-0x2AAC535C>}.  Note that the hexadecimal address is in C notation, which
-can be easily transferred to a C debugger with a ``cut-and-paste''.
+procedure) contains the primary tag (if the @var{tags} field is not
+@code{#f}), and the hexadecimal address denoted by the internal
+pointer, for example @samp{#<char** #2 0x2AAC535C>}.  Note that the
+hexadecimal address is in C notation, which can be easily transferred
+to a C debugger with a ``cut-and-paste''.
 
 A @var{release-function} can also be specified within a foreign type
 specification.  The @var{release-function} must be @code{#f} or a string
@@ -12907,9 +12932,12 @@ invokes the @var{release-function} if the foreign object is not yet
 released, and does nothing otherwise.  The call
 @code{(foreign-released? @var{obj})} returns a boolean indicating
 whether the foreign object @var{obj} has been released yet or not.
-Finally, the call @code{(foreign-address @var{obj})} returns the
-address denoted by the internal pointer of foreign object @var{obj}
-or 0 if it has been released.
+The call @code{(foreign-address @var{obj})} returns the address
+denoted by the internal pointer of foreign object @var{obj} or 0 if it
+has been released.  The call @code{(foreign? @var{obj})} tests that
+@var{obj} is a foreign object.  Finally the call @code{(foreign-tags
+@var{obj})} returns the list of tags of foreign object @var{obj}, or
+@code{#f}.
 
 The following table gives the C types to which each Scheme type
 can be converted:
@@ -12954,7 +12982,7 @@ Allowed target C types
 @code{wchar_t-string};
 @code{nonnull-wchar_t-string}
 @item foreign object
-@code{scheme-object}; @code{bool}; @code{struct}/@code{union}/@code{type}/@code{pointer}/@code{nonnull-pointer} with the appropriate tag
+@code{scheme-object}; @code{bool}; @code{struct}/@code{union}/@code{type}/@code{pointer}/@code{nonnull-pointer} with the appropriate tags
 @item vector
 @code{scheme-object}; @code{bool}
 @item symbol
@@ -12988,7 +13016,7 @@ string or @code{#f} if it is equal to @samp{NULL}
 @item @code{nonnull-char-string}; @code{nonnull-ISO-8859-1-string}; @code{nonnull-UTF-8-string}; @code{nonnull-UCS-2-string}; @code{nonnull-UCS-4-string}; @code{nonnull-wchar_t-string}
 string
 @item @code{struct}/@code{union}/@code{type}/@code{pointer}/@code{nonnull-pointer}
-foreign object with the appropriate tag
+foreign object with the appropriate tags
 or @code{#f} in the case of a @code{pointer} equal to @samp{NULL}
 @item @code{function}
 procedure or @code{#f} if it is equal to @samp{NULL}
@@ -13053,14 +13081,14 @@ fresh Scheme string containing a copy of the C string (unless the C
 string is equal to @code{NULL}, in which case it is converted to
 @code{#f}).
 
-A foreign type passed to the Scheme environment causes the creation and
-initialization of a Scheme foreign object with the appropriate tag
-(except for the case of a @code{pointer} equal to @code{NULL} which is
-converted to @code{#f}).  A Scheme foreign object can be passed where a
-foreign type is expected, on the condition that the tags are appropriate
-(identical or one is @code{#f}) and the Scheme foreign object is not yet
-released.  The value @code{#f} is also acceptable for a @code{pointer}
-type, and is converted to @code{NULL}.
+A foreign type passed to the Scheme environment causes the creation
+and initialization of a Scheme foreign object with the appropriate
+tags (except for the case of a @code{pointer} equal to @code{NULL}
+which is converted to @code{#f}).  A Scheme foreign object can be
+passed where a foreign type is expected, on the condition that the
+tags are compatible and the Scheme foreign object is not yet released.
+The value @code{#f} is also acceptable for a @code{pointer} type, and
+is converted to @code{NULL}.
 
 Scheme procedures defined with the @code{c-define} special form can be
 passed where the @code{function} and @code{nonnull-function} types are

@@ -1,7 +1,7 @@
-/* File: "gambit.h", Time-stamp: <2007-12-17 00:42:33 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-01-10 17:08:46 feeley> */
 
 /*
- * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -2002,7 +2002,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___THREAD_SIZE 26
 #define ___BOX_SIZE 1
 #define ___FOREIGN_SIZE 3
-#define ___FOREIGN_TAG 0
+#define ___FOREIGN_TAGS 0
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
 
@@ -7194,31 +7194,31 @@ typedef struct ___global_state_struct
     ___SCMOBJ (*___SCMOBJ_to_STRUCT)
        ___P((___SCMOBJ obj,
              void **x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UNION)
        ___P((___SCMOBJ obj,
              void **x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_TYPE)
        ___P((___SCMOBJ obj,
              void **x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_POINTER)
        ___P((___SCMOBJ obj,
              void **x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLPOINTER)
        ___P((___SCMOBJ obj,
              void **x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_FUNCTION)
@@ -7520,35 +7520,35 @@ typedef struct ___global_state_struct
             ());
     ___SCMOBJ (*___STRUCT_to_SCMOBJ)
        ___P((void *x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UNION_to_SCMOBJ)
        ___P((void *x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___TYPE_to_SCMOBJ)
        ___P((void *x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___POINTER_to_SCMOBJ)
        ___P((void *x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLPOINTER_to_SCMOBJ)
        ___P((void *x,
-             ___SCMOBJ tag,
+             ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
@@ -8126,31 +8126,31 @@ ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_DOUBLE)
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_STRUCT)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UNION)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_TYPE)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_POINTER)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLPOINTER)
    ___P((___SCMOBJ obj,
          void **x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_FUNCTION)
@@ -8452,35 +8452,35 @@ ___IMP_FUNC(___SCMOBJ,___DOUBLE_to_SCMOBJ)
         ());
 ___IMP_FUNC(___SCMOBJ,___STRUCT_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UNION_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___TYPE_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___POINTER_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLPOINTER_to_SCMOBJ)
    ___P((void *x,
-         ___SCMOBJ tag,
+         ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
