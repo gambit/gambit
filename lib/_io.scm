@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-01-10 17:41:14 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-01-10 20:44:27 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -8484,7 +8484,7 @@
   ("vtab"      . #\x0B)
   ("page"      . #\x0C)
   ("return"    . #\x0D)
-  ("esc"       . #\x1A)
+  ("esc"       . #\x1B)
   ("delete"    . #\x7F)
 ))
 

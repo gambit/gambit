@@ -11815,7 +11815,7 @@ Unicode character 12
 @item #\return
 Unicode character 13
 @item #\esc
-Unicode character 26
+Unicode character 27
 @item #\space
 Unicode character 32 (space character)
 @item #\delete
