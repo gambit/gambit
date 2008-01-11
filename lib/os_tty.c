@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2007-12-16 19:02:45 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-01-11 14:09:18 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -651,10 +651,10 @@ ___device_tty *self;)
 {
   ___device_tty *d = self;
 
-#ifdef USE_POSIX
-
   if (d->size_needs_update)
     {
+#ifdef USE_POSIX
+
 #ifdef USE_ioctl
 #ifdef TIOCGWINSZ
 
@@ -672,17 +672,23 @@ ___device_tty *self;)
 #endif
 #endif
 
-      d->terminal_size = d->terminal_nb_rows * d->terminal_nb_cols;
-      d->size_needs_update = 0;
-    }
-
 #endif
 
 #ifdef USE_WIN32
 
-  /************** TODO */
+      CONSOLE_SCREEN_BUFFER_INFO info;
+
+      if (!GetConsoleScreenBufferInfo (self->hout, &info))
+        return err_code_from_GetLastError ();
+
+      d->terminal_nb_cols = info.dwSize.X;
+      d->terminal_nb_rows = info.dwSize.Y;
 
 #endif
+
+      d->terminal_size = d->terminal_nb_rows * d->terminal_nb_cols;
+      d->size_needs_update = 0;
+    }
 
   return ___FIX(___NO_ERR);
 }
@@ -721,6 +727,12 @@ ___HIDDEN BOOL WINAPI console_event_handler
         ());
 
 #endif
+
+
+/* forward declaration */
+
+___HIDDEN ___SCMOBJ lineeditor_refresh
+   ___P((___device_tty *self),());
 
 
 ___HIDDEN ___SCMOBJ ___device_tty_force_open
@@ -860,12 +872,21 @@ ___device_tty *self;)
             != ___FIX(___NO_ERR))
           return e;
 
-        if ((e = ___device_tty_update_size (d))
-            != ___FIX(___NO_ERR))
-          return e;
-
         d->stage = TTY_STAGE_INIT_DONE;
       }
+    }
+
+  if (d->size_needs_update)
+    {
+      ___SCMOBJ e;
+      int nb_cols = d->terminal_nb_cols;
+
+      if ((e = ___device_tty_update_size (d)) != ___FIX(___NO_ERR))
+        return e;
+
+      if (d->editing_line && nb_cols != d->terminal_nb_cols)
+        if ((e = lineeditor_refresh (d)) != ___FIX(___NO_ERR))
+          return e;
     }
 
   return ___FIX(___NO_ERR);
@@ -1161,14 +1182,15 @@ ___stream_index *len_done;)
             CONSOLE_SCREEN_BUFFER_INFO info;
             COORD pos;
 
-            ___printf ("m.X=%d m.Y=%d\n",c.X,c.Y);
+            printf ("m.X=%d m.Y=%d\n",c.X,c.Y);
             if (GetConsoleScreenBufferInfo (d->hout, &info))
               {
-                ___printf ("  dwSize.X=%d dwSize.Y=%d\n",info.dwSize.X,info.dwSize.Y);
-                ___printf ("  dwCursorPosition.X=%d dwCursorPosition.Y=%d\n",info.dwCursorPosition.X,info.dwCursorPosition.Y);
-                ___printf ("  dwMaximumWindowSize.X=%d dwMaximumWindowSize.Y=%d\n",info.dwMaximumWindowSize.X,info.dwMaximumWindowSize.Y);
-                ___printf ("  srWindow.Left=%d srWindow.Top=%d\n",info.srWindow.Left,info.srWindow.Top);
-                ___printf ("  srWindow.Right=%d srWindow.Bottom=%d\n",info.srWindow.Right,info.srWindow.Bottom);
+                printf ("  dwSize.X=%d dwSize.Y=%d\n",info.dwSize.X,info.dwSize.Y);
+                printf ("  dwCursorPosition.X=%d dwCursorPosition.Y=%d\n",info.dwCursorPosition.X,info.dwCursorPosition.Y);
+                printf ("  dwMaximumWindowSize.X=%d dwMaximumWindowSize.Y=%d\n",info.dwMaximumWindowSize.X,info.dwMaximumWindowSize.Y);
+                printf ("  srWindow.Left=%d srWindow.Top=%d\n",info.srWindow.Left,info.srWindow.Top);
+                printf ("  srWindow.Right=%d srWindow.Bottom=%d\n",info.srWindow.Right,info.srWindow.Bottom);
+                fflush(stdout);
               }
 
             ___WORD e;
@@ -1194,9 +1216,10 @@ ___stream_index *len_done;)
 
         case WINDOW_BUFFER_SIZE_EVENT:
           {
-            COORD c = d->ir.Event.WindowBufferSizeEvent.dwSize;
+            d->size_needs_update = 1;
 #if 0
-            ___printf ("c.X=%d c.Y=%d\n", c.X, c.Y);/********************/
+            COORD c = d->ir.Event.WindowBufferSizeEvent.dwSize;
+            printf ("c.X=%d c.Y=%d\n", c.X, c.Y);fflush(stdout);/********************/
 #endif
             goto next_event;
           }
@@ -7754,7 +7777,17 @@ void tty_signal_handler (int sig)
       break;
 
     case SIGWINCH:
-      break;
+      {
+        ___device_tty *probe = ___tty_mod.mode_save_stack;
+
+        while (probe != NULL)
+          {
+            probe->size_needs_update = 1;
+            probe = probe->mode_save_stack_next;
+          }
+
+        break;
+      }
 
     case SIGCONT:
       ___device_tty_mode_restore (0, 0); /***************/
