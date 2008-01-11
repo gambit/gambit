@@ -685,9 +685,9 @@ Synopsis:
     @r{[}-prelude @var{expressions}@r{]} @r{[}-postlude @var{expressions}@r{]}
     @r{[}-dynamic@r{]} @r{[}-cc-options @var{options}@r{]}
     @r{[}-ld-options-prelude @var{options}@r{]} @r{[}-ld-options @var{options}@r{]}
-    @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]}
-    @r{[}-gvm@r{]} @r{[}-debug@r{]} @r{[}-track-scheme@r{]} @r{[}-keep-c@r{]}
-    @r{[}-o @var{output}@r{]} @r{[}-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @var{base}@r{]}
+    @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]}
+    @r{[}-debug@r{]} @r{[}-debug-source@r{]} @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
+    @r{[}-o @var{output}@r{]} @r{[}-c@r{]} @r{[}-keep-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @var{base}@r{]}
     @r{[}@r{[}-@r{]} @r{[}-e @var{expressions}@r{]} @r{[}@var{file}@r{]}@r{]}@dots{}
 @end example
 
@@ -787,7 +787,11 @@ Display the source code after expansion.
 @item -gvm
 Generate a listing of the GVM code.
 @item -debug
-Include debugging information in the code generated.
+Include all debugging information in the code generated.
+@item -debug-source
+Include source code debugging information in the code generated.
+@item -debug-environments
+Include environment debugging information in the code generated.
 @item -track-scheme
 Generate @samp{#line} directives referring back to the Scheme code.
 @item -o @var{output}
@@ -893,16 +897,31 @@ for the ``Gambit Virtual Machine'' (GVM) of each Scheme file on
 
 @opindex -debug
 The @samp{-debug} option causes debugging information to be saved in
-the code generated.  With this option run time error messages indicate
-the source code and its location, the backtraces are more precise, and
-the @code{pp} procedure will display the source code of compiled
-procedures.  The debugging information is large (the size of the
-object file is typically 2 to 4 times bigger).
+the code generated.  It is equivalent to the combination of the
+@samp{-debug-source} option and the @samp{-debug-environments} option.
+Note that the debugging information will substantially increase the
+size of the generated code (the size of the object file is typically 2
+to 4 times bigger).
+
+@opindex -debug-source
+The @samp{-debug-source} option causes source code debugging
+information to be saved in the code generated.  With this option run
+time error messages indicate the source code and its location, the
+backtraces are more precise, and the @code{pp} procedure will display
+the source code of compiled procedures.
+
+@opindex -debug-environments
+The @samp{-debug-environments} option causes environment debugging
+information to be saved in the code generated.  With this option the
+debugger will have access to the environments of the continuations.
+In other words the local variables defined in compiled procedures (and
+not optimized away by the compiler) will be shown by the @samp{,e}
+REPL command.
 
 @opindex -track-scheme
 The @samp{-track-scheme} options causes the generation of @samp{#line}
-directives that refer back to the Scheme source code.  This allows the use of
-a C debugger to debug Scheme code.
+directives that refer back to the Scheme source code.  This allows the
+use of a C debugger or profiler to debug Scheme code.
 
 @opindex -o @var{output}
 The @samp{-o} option sets the filename of the output file, or the
@@ -1878,7 +1897,8 @@ fit on the line.  The last two fields may be missing if that
 information is not available.  In particular, the third field is missing
 when the frame was created by a user call to the @samp{eval} procedure,
 and the last two fields are missing when the frame was created by a
-compiled procedure not compiled with the @samp{-debug} option.
+compiled procedure not compiled with the @samp{-debug} or
+@samp{-debug-source} options.
 
 @item ,b
 @cmindex ,b
@@ -1895,22 +1915,23 @@ will be omitted.
 Pretty print the procedure that created the current frame or
 @samp{(interaction)} if the frame was created by an expression entered
 at the REPL.  Compiled procedures will only be pretty printed when
-they are compiled with the @samp{-debug} option.
+they are compiled with the @samp{-debug} or @samp{-debug-source}
+options.
 
 @item ,e
 @cmindex ,e
 Display the environment which is accessible from the current frame.
 The lexical environment is displayed, followed by the dynamic
 environment if the parameter object
-@code{repl-display-dynamic-environment?} is not false.
-Global lexical variables are not displayed.  Moreover the frame
-must have been created by interpreted code or code compiled with the
-@samp{-debug} option.  Due to space safety considerations and compiler
-optimizations, some of the lexical variable bindings may be missing.
-Lexical variable bindings are displayed using the format
-@samp{@var{variable} = @var{expression}} and dynamically-bound
-parameter bindings are displayed using the format
-@samp{(@var{parameter}) = @var{expression}}.  Note that
+@code{repl-display-dynamic-environment?} is not false.  Global lexical
+variables are not displayed.  Moreover the frame must have been
+created by interpreted code or code compiled with the @samp{-debug} or
+@samp{-debug-environments} options.  Due to space safety
+considerations and compiler optimizations, some of the lexical
+variable bindings may be missing.  Lexical variable bindings are
+displayed using the format @samp{@var{variable} = @var{expression}}
+and dynamically-bound parameter bindings are displayed using the
+format @samp{(@var{parameter}) = @var{expression}}.  Note that
 @var{expression} can be a self-evaluating expression (number, string,
 boolean, character, ...), a quoted expression, a lambda expression or
 a global variable (the last two cases, which are only used when the
@@ -2299,10 +2320,10 @@ For example:
 
 This procedure pretty-prints @var{obj} on the port @var{port}.  When
 @var{obj} is a procedure created by the interpreter or a procedure
-created by code compiled with the @samp{-debug} option, the
-procedure's source code is displayed.  If it is not specified,
-@var{port} defaults to the interaction channel (i.e. the output will
-appear at the REPL).
+created by code compiled with the @samp{-debug} or
+@samp{-debug-source} options, the procedure's source code is
+displayed.  If it is not specified, @var{port} defaults to the
+interaction channel (i.e. the output will appear at the REPL).
 
 For example:
 

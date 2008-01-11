@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2007-12-17 03:09:54 feeley>
+;;; File: "main.scm", Time-stamp: <2008-01-11 11:28:32 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -457,7 +457,9 @@
                 '()
                 '("c" "dynamic" "link" "flat"
                   "warnings" "verbose" "report" "expansion" "gvm"
-                  "check" "force" "debug" "track-scheme" "keep-c"))
+                  "check" "force"
+                  "debug" "debug-source" "debug-environments"
+                  "track-scheme" "keep-c"))
               (if (interpreter-or force-interpreter?)
                 '()
                 '("o" "l" "prelude" "postlude"

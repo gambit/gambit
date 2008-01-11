@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2007-11-06 16:07:24 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2008-01-11 11:16:15 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -285,8 +285,13 @@
     (c-intf-inits-set! c-intf '())
     (c-intf-objs-set! c-intf '())
 
-    (set! targ-debug-option? (memq 'debug options))
     (set! targ-track-scheme-option? (memq 'track-scheme options))
+    (set! targ-debug-source-option? (memq 'debug-source options))
+    (set! targ-debug-environments-option? (memq 'debug-environments options))
+    (if (memq 'debug options)
+        (begin
+          (set! targ-debug-source-option? #t)
+          (set! targ-debug-environments-option? #t)))
 
     (targ-heap-begin!)
 
@@ -321,11 +326,13 @@
 
     (targ-heap-end!)
 
-    (set! targ-debug-option? #f)
-    (set! targ-track-scheme-option? #f)))
+    (set! targ-track-scheme-option? #f)
+    (set! targ-debug-source-option? #f)
+    (set! targ-debug-environments-option? #f)))
 
-(define targ-debug-option? #f)
 (define targ-track-scheme-option? #f)
+(define targ-debug-source-option? #f)
+(define targ-debug-environments-option? #f)
 
 ;;;----------------------------------------------------------------------------
 ;;

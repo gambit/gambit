@@ -1,6 +1,6 @@
 # makefile for Gambit-C compiler.
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsc
 rootfromhere = ..
@@ -168,8 +168,12 @@ _gsc_@obj@: _gsc_.c
 .scm.c:
 	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -c -check $(srcdirpfx)$*.scm
 
-$(MODULES_C): $(srcdirpfx)fixnum.scm $(srcdirpfx)generic.scm \
-$(srcdirpfx)$(rootfromhere)/lib/header.scm
+_gsc.c: $(srcdirpfx)$(rootfromhere)/gsi/main.scm
+
+$(MODULES_C): $(srcdirpfx)$(rootfromhere)/lib/header.scm \
+$(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
+$(srcdirpfx)fixnum.scm $(srcdirpfx)generic.scm
 
 install-pre:
 

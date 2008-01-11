@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2007-11-13 10:28:44 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2008-01-11 11:50:22 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -612,11 +612,13 @@
 
   (let ((label-descr
          (cons (if (and node
-                        targ-debug-option?)
-                 (node-source node)
-                 #f)
+                        targ-debug-source-option?)
+                   (begin
+                     (set! targ-debug-info? #t)
+                     (node-source node))
+                   #f)
                (if (and node
-                        (or targ-debug-option?
+                        (or targ-debug-environments-option?
                             (environment-map? (node-env node))))
                  (begin
                    (set! targ-debug-info? #t)
