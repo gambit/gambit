@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-01-11 14:09:18 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-01-11 23:57:39 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -653,6 +653,9 @@ ___device_tty *self;)
 
   if (d->size_needs_update)
     {
+      int prev_line_start_col = d->current.line_start % d->terminal_nb_cols;
+      int prev_line_start_row = d->current.line_start / d->terminal_nb_cols;
+
 #ifdef USE_POSIX
 
 #ifdef USE_ioctl
@@ -686,7 +689,17 @@ ___device_tty *self;)
 
 #endif
 
-      d->terminal_size = d->terminal_nb_rows * d->terminal_nb_cols;
+      d->terminal_size =
+        d->terminal_nb_rows * d->terminal_nb_cols;
+
+      d->terminal_cursor =
+        d->terminal_row * d->terminal_nb_cols + d->terminal_col;
+
+      d->current.line_start =
+        prev_line_start_row * d->terminal_nb_cols + prev_line_start_col;
+
+      d->terminal_delayed_wrap = 0;
+
       d->size_needs_update = 0;
     }
 
@@ -731,8 +744,9 @@ ___HIDDEN BOOL WINAPI console_event_handler
 
 /* forward declaration */
 
-___HIDDEN ___SCMOBJ lineeditor_refresh
-   ___P((___device_tty *self),());
+___HIDDEN ___SCMOBJ lineeditor_redraw
+   ___P((___device_tty *self),
+        ());
 
 
 ___HIDDEN ___SCMOBJ ___device_tty_force_open
@@ -879,13 +893,13 @@ ___device_tty *self;)
   if (d->size_needs_update)
     {
       ___SCMOBJ e;
-      int nb_cols = d->terminal_nb_cols;
+      int prev_nb_cols = d->terminal_nb_cols;
 
       if ((e = ___device_tty_update_size (d)) != ___FIX(___NO_ERR))
         return e;
 
-      if (d->editing_line && nb_cols != d->terminal_nb_cols)
-        if ((e = lineeditor_refresh (d)) != ___FIX(___NO_ERR))
+      if (d->editing_line && prev_nb_cols != d->terminal_nb_cols)
+        if ((e = lineeditor_redraw (d)) != ___FIX(___NO_ERR))
           return e;
     }
 
@@ -5190,6 +5204,48 @@ ___device_tty *self;)
               == ___FIX(___NO_ERR))
             e = lineeditor_move_edit_point (d, d->current.edit_point);
         }
+    }
+
+  return e;
+}
+
+
+___HIDDEN ___SCMOBJ lineeditor_redraw
+   ___P((___device_tty *self),
+        (self)
+___device_tty *self;)
+{
+  ___device_tty *d = self;
+  ___SCMOBJ e;
+  extensible_string *edited = &d->current.hist->edited;
+  int prompt_start = d->current.line_start - d->prompt_length;
+
+  if (prompt_start < 0)
+    prompt_start = 0;
+
+  if ((e = lineeditor_output_set_attrs
+             (d,
+              lineeditor_erase_attrs (d)))
+      == ___FIX(___NO_ERR))
+    {
+      if ((e = lineeditor_move_cursor (d, prompt_start)) != ___FIX(___NO_ERR))
+        return e;
+
+#ifdef USE_CURSES
+
+      if (lineeditor_cap (d, LINEEDITOR_CAP_ED) != NULL)
+        e = lineeditor_output_cap (d, LINEEDITOR_CAP_ED, -1, -1, 1);
+
+#endif
+
+      if ((e = lineeditor_output_prompt (d)) != ___FIX(___NO_ERR))
+        return e;
+
+      d->current.line_start = d->terminal_cursor;
+
+      if ((e = lineeditor_update_region (d, 0, edited->length))
+          == ___FIX(___NO_ERR))
+        e = lineeditor_move_edit_point (d, d->current.edit_point);
     }
 
   return e;

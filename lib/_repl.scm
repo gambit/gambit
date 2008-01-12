@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2007-11-22 13:26:39 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-01-12 00:36:55 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1001,53 +1001,71 @@
               pinpoint?
               depth)
 
-  (define creator-col 4)
-  (define locat-col   30)
-  (define call-col    54)
-
   (define (tab col)
     (let* ((current (##output-port-column port))
            (n (##fixnum.- col current)))
       (##display-spaces (##fixnum.max n 1) port)))
 
   (and cont
-       (begin
-         (##write depth port)
-         (let ((creator (##continuation-creator cont)))
-           (tab creator-col)
-           (if creator
-             (##write (##procedure-name creator) port)
-             (##write-string "(interaction)" port)))
-         (let ((locat (##continuation-locat cont)))
-           (tab locat-col)
-           (##display-locat locat pinpoint? port))
-         (let ((call
-                (if (##interp-continuation? cont)
-                  (let* (($code (##interp-continuation-code cont))
-                         (cprc (macro-code-cprc $code)))
-                    (if (##eq? cprc ##interp-procedure-wrapper)
-                      #f
-                      (##decomp $code)))
-                  (let* ((ret (##continuation-ret cont))
-                         (call (##decompile ret)))
-                    (if (##eq? call ret)
-                      #f
-                      call)))))
-           (if call
-             (begin
-               (tab call-col)
-               (##write-string
-                (##object->string
-                 call
-                 (##fixnum.- (##output-port-width port)
-                             (##output-port-column port)))
-                port))))
-         (##newline port)
-         (if display-env?
-             (##display-continuation-environment
-              cont
-              port
-              (##fixnum.+ 4 creator-col))))))
+       (let ((port-width (##output-port-width port)))
+
+         (define depth-width    4)
+         (define creator-width 24)
+         (define locat-width   24)
+         (define call-width    27)
+
+         (let ((extra
+                (##fixnum.max
+                 0
+                 (##fixnum.quotient
+                  (##fixnum.- port-width
+                              (##fixnum.+ 
+                               depth-width
+                               creator-width
+                               locat-width
+                               call-width))
+                  3))))
+           (##write depth port)
+           (tab depth-width)
+           (let ((creator (##continuation-creator cont)))
+             (if creator
+                 (##write (##procedure-name creator) port)
+                 (##write-string "(interaction)" port)))
+           (tab (##fixnum.+ (##fixnum.+ depth-width
+                                        creator-width)
+                            extra))
+           (let ((locat (##continuation-locat cont)))
+             (##display-locat locat pinpoint? port))
+           (let ((call
+                  (if (##interp-continuation? cont)
+                      (let* (($code (##interp-continuation-code cont))
+                             (cprc (macro-code-cprc $code)))
+                        (if (##eq? cprc ##interp-procedure-wrapper)
+                            #f
+                            (##decomp $code)))
+                      (let* ((ret (##continuation-ret cont))
+                             (call (##decompile ret)))
+                        (if (##eq? call ret)
+                            #f
+                            call)))))
+             (if call
+                 (begin
+                   (tab (##fixnum.+ depth-width
+                                    creator-width
+                                    locat-width
+                                    (##fixnum.* 2 extra)))
+                   (##write-string
+                    (##object->string
+                     call
+                     (##fixnum.- port-width
+                                 (##output-port-column port)))
+                    port))))
+           (##newline port)
+           (if display-env?
+               (##display-continuation-environment
+                cont
+                port
+                (##fixnum.+ 4 depth-width)))))))
 
 (define-prim (##display-spaces n port)
   (if (##fixnum.< 0 n)
