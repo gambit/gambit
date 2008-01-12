@@ -13278,11 +13278,14 @@ For example:
 (let ((f (fopen "datafile" "r")))
   (if f (write (fgetc f))))
 
-(define char-code (c-lambda (char) int "___result = ___arg1;"))
+(define char-code
+  (c-lambda (char) int "___result = ___arg1;"))
 
-(define host ((c-lambda () nonnull-char-string "___result = host;")))
+(define host
+  ((c-lambda () nonnull-char-string "___result = host;")))
 
-(define stdin ((c-lambda () (pointer "FILE") "___result = stdin;")))
+(define stdin
+  ((c-lambda () (pointer "FILE") "___result_voidstar = stdin;")))
 
 ((c-lambda () void
 #<<c-lambda-end
