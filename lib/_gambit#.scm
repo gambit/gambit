@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gambit#.scm", Time-stamp: <2007-11-20 11:27:32 feeley>
+;;; File: "_gambit#.scm", Time-stamp: <2008-01-17 21:46:02 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -432,6 +432,7 @@
 (##define-macro (macro-gc-hash-table-flag-key-moved)      4)
 (##define-macro (macro-gc-hash-table-flag-entry-deleted)  8)
 (##define-macro (macro-gc-hash-table-flag-mem-alloc-keys) 16)
+(##define-macro (macro-gc-hash-table-flag-need-rehash)    32)
 
 (##define-macro (macro-gc-hash-table-key-ref ht i*2)
   `(##vector-ref ,ht (##fixnum.+ ,i*2 (macro-gc-hash-table-key0))))

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2007-11-13 10:31:17 feeley>
+;;; File: "_system.scm", Time-stamp: <2008-01-17 21:44:18 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1063,24 +1063,34 @@
       (if (##not (##fixnum? h))
         (loop1 (##raise-invalid-hash-number-exception f key))
         (let* ((gcht
-                (let ((gcht (##table-get-gcht table)))
-                  (if (##fixnum.= 0
+                (let* ((gcht (##table-get-gcht table))
+                       (flags (macro-gc-hash-table-flags gcht)))
+                  (if (or (##not
+                           (##fixnum.=
+                            0
+                            (##fixnum.bitwise-and
+                             flags
+                             (macro-gc-hash-table-flag-need-rehash))))
+                          (and (##not
+                                (##fixnum.=
+                                 0
+                                 (##fixnum.bitwise-and
+                                  flags
+                                  (macro-gc-hash-table-flag-entry-deleted))))
+                               (begin
+                                 (macro-gc-hash-table-flags-set!
+                                  gcht
                                   (##fixnum.bitwise-and
                                    (macro-gc-hash-table-flags gcht)
-                                   (macro-gc-hash-table-flag-entry-deleted)))
-                    gcht
-                    (let ((count (macro-gc-hash-table-count gcht)))
-                      (macro-gc-hash-table-flags-set!
-                       gcht
-                       (##fixnum.bitwise-and
-                        (macro-gc-hash-table-flags gcht)
-                        (##fixnum.bitwise-not
-                         (macro-gc-hash-table-flag-entry-deleted))))
-                      (if (##fixnum.< count (macro-gc-hash-table-min-count gcht))
-                        (begin
-                          (##table-resize! table)
-                          (macro-table-gcht table))
-                        gcht)))))
+                                   (##fixnum.bitwise-not
+                                    (macro-gc-hash-table-flag-entry-deleted))))
+                                 (##fixnum.<
+                                  (macro-gc-hash-table-count gcht)
+                                  (macro-gc-hash-table-min-count gcht)))))
+                      (begin
+                        (##table-resize! table)
+                        (macro-table-gcht table))
+                      gcht)))
                (size
                 (macro-gc-hash-table-nb-entries gcht))
                (probe2
@@ -3790,7 +3800,8 @@
                              obj
                              (bitwise-ior ;; force rehash at next access!
                               flags
-                              (macro-gc-hash-table-flag-key-moved)))
+                              (+ (macro-gc-hash-table-flag-key-moved)
+                                 (macro-gc-hash-table-flag-need-rehash))))
                             (macro-gc-hash-table-count-set! obj count)
                             (macro-gc-hash-table-min-count-set! obj min-count)
                             (macro-gc-hash-table-free-set! obj free)
