@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2007-12-19 11:03:19 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-01-24 17:37:22 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -5952,6 +5952,60 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env;)
 
 #endif
 
+#ifdef USE_execvp
+
+#ifdef USE_sigaction
+typedef sigset_t sigset_type;
+#else
+typedef int sigset_type;
+#endif
+
+___HIDDEN sigset_type block_signal
+   ___P((int signum),
+        (signum)
+int signum;)
+{
+  sigset_type oldmask = 0;
+
+#ifdef USE_sigaction
+
+  sigset_type toblock;
+
+  sigemptyset (&toblock);
+  sigaddset (&toblock, signum);
+  sigprocmask (SIG_BLOCK, &toblock, &oldmask);
+
+#endif
+
+#ifdef USE_signal
+
+  oldmask = sigblock (sigmask (signum));
+
+#endif
+
+  return oldmask;
+}
+
+___HIDDEN void restore_sigmask
+   ___P((sigset_type oldmask),
+        (oldmask)
+sigset_type oldmask;)
+{
+#ifdef USE_sigaction
+
+  sigprocmask (SIG_SETMASK, &oldmask, 0);
+
+#endif
+
+#ifdef USE_signal
+
+  sigsetmask (oldmask);
+
+#endif
+}
+
+#endif
+
 ___SCMOBJ ___device_stream_setup_from_process
    ___P((___device_stream **dev,
          ___device_group *dgroup,
@@ -5993,22 +6047,7 @@ int options;)
    * sigchld_signal_handler will find it in the device group.
    */
 
-#ifdef USE_sigaction
-
-  sigset_t oldmask;
-  sigset_t toblock;
-
-  sigemptyset (&toblock);
-  sigaddset (&toblock, SIGCHLD);
-  sigprocmask (SIG_BLOCK, &toblock, &oldmask);
-
-#endif
-
-#ifdef USE_signal
-
-  int oldmask = sigblock (sigmask (SIGCHLD));
-
-#endif
+  sigset_type oldmask = block_signal (SIGCHLD);
 
   fdp.input.writing_fd = -1;
   fdp.output.reading_fd = -1;
@@ -6049,6 +6088,8 @@ int options;)
           /* child process */
 
           ___set_heartbeat_interval (-1.0);
+
+          restore_sigmask (oldmask);
 
           if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
             {
@@ -6152,17 +6193,7 @@ int options;)
       close_half_duplex_pipe (&hdp_errno, 0);
     }
 
-#ifdef USE_sigaction
-
-  sigprocmask (SIG_SETMASK, &oldmask, 0);
-
-#endif
-
-#ifdef USE_signal
-
-  sigsetmask (oldmask);
-
-#endif
+  restore_sigmask (oldmask);
 
   return e;
 
@@ -7112,6 +7143,8 @@ ___HIDDEN void sigchld_signal_handler (int sig)
   {
     int status;
     pid_t pid = waitpid (-1, &status, WNOHANG);
+
+    printf("GOT SIGCHLD pid=%d status=%d\n", pid, status);fflush(stdout);
 
     if (pid > 0)
       {
