@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2007-06-29 00:37:43 feeley>
+;;; File: "_front.scm", Time-stamp: <2008-01-24 15:27:43 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -53,24 +53,102 @@
 
 (set! cf
   (lambda (input target-name opts output mod-name)
-    (let* ((output-root
-            (if output #f (path-strip-directory (path-strip-extension input))))
-           (info-port
-            (if (memq 'verbose opts) (current-output-port) #f))
-           (result
-            (compile-program
-              input
-              (or target-name (default-target))
-              opts
-              output
-              output-root
-              mod-name
-              info-port)))
+    (let ((remaining-opts
+           (handle-options opts)))
 
-      (if (and info-port (not (eq? info-port (current-output-port))))
-        (close-output-port info-port))
+      (set! warnings-requested? compiler-option-warnings)
 
-      result)))
+      (let* ((output-root
+              (if output
+                  #f
+                  (path-strip-directory
+                   (path-strip-extension input))))
+             (info-port
+              (if compiler-option-verbose
+                  (current-output-port)
+                  #f))
+             (successful
+              (with-exception-handling
+               (lambda ()
+                 (if (not (null? remaining-opts))
+                     (compiler-error
+                      "Unhandled compiler options:" remaining-opts))
+                 (compile-program
+                  input
+                  (or target-name (default-target))
+                  opts
+                  remaining-opts
+                  output
+                  output-root
+                  mod-name
+                  info-port)))))
+
+        (if info-port
+            (begin
+              (if successful
+                  (begin
+                    (display "Compilation finished." info-port)
+                    (newline info-port))
+                  (begin
+                    (display "Compilation terminated abnormally." info-port)
+                    (newline info-port)))
+              (if (not (eq? info-port (current-output-port)))
+                  (close-output-port info-port))))
+
+        successful))))
+
+(define (handle-options opts)
+  (reset-options)
+  (let ((rev-remaining-opts '()))
+    (for-each
+     (lambda (opt)
+       (case opt
+         ((warnings)
+          (set! compiler-option-warnings           #t))
+         ((verbose)
+          (set! compiler-option-verbose            #t))
+         ((report)
+          (set! compiler-option-report             #t))
+         ((expansion)
+          (set! compiler-option-expansion          #t))
+         ((gvm)
+          (set! compiler-option-gvm                #t))
+         ((debug)
+          (set! compiler-option-debug              #t))
+         ((debug-source)
+          (set! compiler-option-debug-source       #t))
+         ((debug-environments)
+          (set! compiler-option-debug-environments #t))
+         ((track-scheme)
+          (set! compiler-option-track-scheme       #t))
+         ((c dynamic link flat check force keep-c)
+          #f) ;; these options are innocuous
+         (else
+          (set! rev-remaining-opts
+                (cons opt rev-remaining-opts)))))
+     opts)
+    (reverse rev-remaining-opts)))
+
+(define (reset-options)
+  (set! compiler-option-warnings           #f)
+  (set! compiler-option-verbose            #f)
+  (set! compiler-option-report             #f)
+  (set! compiler-option-expansion          #f)
+  (set! compiler-option-gvm                #f)
+  (set! compiler-option-debug              #f)
+  (set! compiler-option-debug-source       #f)
+  (set! compiler-option-debug-environments #f)
+  (set! compiler-option-track-scheme       #f))
+
+(define compiler-option-warnings           #f)
+(define compiler-option-verbose            #f)
+(define compiler-option-report             #f)
+(define compiler-option-expansion          #f)
+(define compiler-option-gvm                #f)
+(define compiler-option-debug              #f)
+(define compiler-option-debug-source       #f)
+(define compiler-option-debug-environments #f)
+(define compiler-option-track-scheme       #f)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -90,6 +168,7 @@
          input
          target-name
          opts
+         remaining-opts
          output
          output-root
          mod-name
@@ -126,7 +205,7 @@
              (lambda (lst env c-intf)
                (let ((parsed-program (normalize-program lst)))
 
-                 (if (memq 'expansion opts)
+                 (if compiler-option-expansion
                    (let ((port (current-output-port)))
                      (display "Expansion:" port)
                      (newline port)
@@ -145,10 +224,10 @@
                                                 c-intf
                                                 info-port)))
 
-                   (if (memq 'report opts)
+                   (if compiler-option-report
                      (generate-report env))
 
-                   (if (memq 'gvm opts)
+                   (if compiler-option-gvm
                      (let ((gvm-port
                             (open-output-file (string-append root ".gvm"))))
                        (virtual.dump module-procs gvm-port)
@@ -171,7 +250,7 @@
 
           #t))))
 
-  (set! warnings-requested? (if (memq 'warnings opts) #t #f))
+  (set! warnings-requested? compiler-option-warnings)
 
   (let ((successful (with-exception-handling compiler-body)))
 

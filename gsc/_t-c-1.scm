@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2008-01-11 11:16:15 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2008-01-24 14:58:21 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -285,10 +285,10 @@
     (c-intf-inits-set! c-intf '())
     (c-intf-objs-set! c-intf '())
 
-    (set! targ-track-scheme-option? (memq 'track-scheme options))
-    (set! targ-debug-source-option? (memq 'debug-source options))
-    (set! targ-debug-environments-option? (memq 'debug-environments options))
-    (if (memq 'debug options)
+    (set! targ-track-scheme-option? compiler-option-track-scheme)
+    (set! targ-debug-source-option? compiler-option-debug-source)
+    (set! targ-debug-environments-option? compiler-option-debug-environments)
+    (if compiler-option-debug
         (begin
           (set! targ-debug-source-option? #t)
           (set! targ-debug-environments-option? #t)))
