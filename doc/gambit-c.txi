@@ -3341,6 +3341,9 @@ The procedures in this section are not yet documented.
 @deffnx procedure system-type-string
 @end deffn
 
+@deffn procedure system-stamp
+@end deffn
+
 @deffn procedure touch @var{obj}
 @end deffn
 

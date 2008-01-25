@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-01-10 17:08:46 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-01-24 22:29:35 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -18,6 +18,12 @@
 #if ___VERSION != 401002
 #include "gambit-not401002.h"
 #else
+
+/*
+ * Time stamp of last source code repository commit.
+ */
+
+#define ___STAMP 1201234213
 
 /*---------------------------------------------------------------------------*/
 

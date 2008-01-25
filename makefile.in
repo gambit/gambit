@@ -91,6 +91,12 @@ examples: fake_target all
 prebuilt: fake_target dist
 	cd prebuilt && $(MAKE) $(MDEFINES) $@
 
+stamp: fake_target
+	cd include && $(MAKE) $(MDEFINES) $@
+
+commit: fake_target stamp
+	hg commit
+
 release: fake_target
 	$(MAKE) $(MDEFINES) bootstrap
 	$(MAKE) $(MDEFINES) mostlyclean

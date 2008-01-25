@@ -133,6 +133,11 @@ dist:
 	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
 	done
 
+stamp:
+	rm -f gambit2.h.in
+	sed -e "s/#define ___STAMP [0-9][0-9]*/#define ___STAMP `date +%s`/" gambit.h.in > gambit2.h.in
+	mv gambit2.h.in gambit.h.in
+
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 

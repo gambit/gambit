@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-01-24 17:37:22 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-01-24 23:07:22 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -7143,8 +7143,6 @@ ___HIDDEN void sigchld_signal_handler (int sig)
   {
     int status;
     pid_t pid = waitpid (-1, &status, WNOHANG);
-
-    printf("GOT SIGCHLD pid=%d status=%d\n", pid, status);fflush(stdout);
 
     if (pid > 0)
       {
