@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2008-01-24 15:27:43 feeley>
+;;; File: "_front.scm", Time-stamp: <2008-01-24 23:12:55 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -121,7 +121,9 @@
           (set! compiler-option-debug-environments #t))
          ((track-scheme)
           (set! compiler-option-track-scheme       #t))
-         ((c dynamic link flat check force keep-c)
+         ((c dynamic link flat check force keep-c
+           o l prelude postlude
+           cc-options ld-options-prelude ld-options)
           #f) ;; these options are innocuous
          (else
           (set! rev-remaining-opts
