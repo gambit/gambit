@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-01-24 23:07:22 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-01-26 15:22:57 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -5965,7 +5965,7 @@ ___HIDDEN sigset_type block_signal
         (signum)
 int signum;)
 {
-  sigset_type oldmask = 0;
+  sigset_type oldmask;
 
 #ifdef USE_sigaction
 
