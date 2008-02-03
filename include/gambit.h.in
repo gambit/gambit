@@ -15,15 +15,15 @@
 @error "___VERSION has not been set by includer"
 #endif
 
-#if ___VERSION != 401002
-#include "gambit-not401002.h"
+#if ___VERSION != 402000
+#include "gambit-not402000.h"
 #else
 
 /*
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1202069792
+#define ___STAMP 1202070517
 
 /*---------------------------------------------------------------------------*/
 
