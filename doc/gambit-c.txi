@@ -38,7 +38,7 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents Gambit-C, a portable implementation of Scheme.
 
-Copyright (C) 1994-2007 Marc Feeley.
+Copyright (C) 1994-2008 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -70,7 +70,7 @@ by the copyright holder.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994-2007 Marc Feeley.
+Copyright @copyright{} 1994-2008 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -13922,7 +13922,7 @@ the @code{apply} procedure is 8192.
 @chapter Copyright and license
 
 The Gambit-C system release @value{VERSION} is Copyright @copyright{}
-1994-2007 by Marc Feeley, all rights reserved.  The Gambit-C system
+1994-2008 by Marc Feeley, all rights reserved.  The Gambit-C system
 release @value{VERSION} is licensed under two licenses: the Apache
 License, Version 2.0, and the GNU LESSER GENERAL PUBLIC LICENSE,
 Version 2.1.  You have the option to choose which of these two
