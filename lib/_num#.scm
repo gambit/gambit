@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_num#.scm", Time-stamp: <2007-05-27 22:32:20 feeley>
+;;; File: "_num#.scm", Time-stamp: <2008-02-03 09:58:33 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -361,6 +361,9 @@
 (##define-macro (macro-flonum-m-bits-plus-1)
   53)
 
+(##define-macro (macro-flonum-m-bits-plus-1*2)
+  106)
+
 (##define-macro (macro-flonum-e-bits)
   11)
 
@@ -373,11 +376,17 @@
 (##define-macro (macro-flonum-+m-min) ;; (expt 2 (macro-flonum-m-bits))
   4503599627370496)
 
-(##define-macro (macro-flonum-+m-max) ;; (- (* macro-flonum-+m-min 2) 1)
+(##define-macro (macro-flonum-+m-max-plus-1) ;; (expt 2 (macro-flonum-m-bits-plus-1))
+  9007199254740992)
+
+(##define-macro (macro-flonum-+m-max) ;; (- (macro-flonum-+m-max-plus-1) 1)
   9007199254740991)
 
-(##define-macro (macro-flonum-+m-max-inexact); (exact->inexact (macro-flonum-+m-max))
+(##define-macro (macro-flonum-+m-max-plus-1-inexact);; (exact->inexact (macro-flonum-+m-max-plus-1))
   9007199254740992.0)
+
+(##define-macro (macro-flonum-inverse-+m-max-plus-1-inexact);; (/ (macro-flonum-+m-max-plus-1-inexact))
+  (/ 9007199254740992.0))
 
 (##define-macro (macro-flonum--m-min) ;; (- (macro-flonum-+m-min))
   -4503599627370496)
@@ -412,7 +421,8 @@
 (##define-macro (macro-inexact-scale-up) ;; (expt 2.0 (+ (quotient (macro-flonum-e-bias-plus-1) 2) (macro-flonum-m-bits-plus-1)))
   (expt 2.0 565))
 
-(##define-macro (macro-inexact-radix) 16384.0) ;; (exact->inexact (macro-radix))
+(##define-macro (macro-inexact-radix) ;; (exact->inexact (macro-radix))
+  16384.0)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

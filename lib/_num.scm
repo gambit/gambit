@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-01-05 10:09:18 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-02-03 10:13:11 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
@@ -1913,14 +1913,7 @@
   (macro-number-dispatch x (type-error)
     x
     x
-    (let ((num (macro-ratnum-numerator x))
-          (den (macro-ratnum-denominator x)))
-      (if (##eq? den 2)
-          (##arithmetic-shift (##arithmetic-shift (##+ num 1) -2) 1)
-          (##floor
-           (##ratnum.normalize
-            (##+ (##arithmetic-shift num 1) den)
-            (##arithmetic-shift den 1)))))
+    (##ratnum.round x)
     (if (##flonum.finite? x)
         (##flonum.round x)
         (type-error))
@@ -2234,24 +2227,100 @@
     (##fail-check-number 1 sqrt x))
 
   (define (exact-int-sqrt x)
-    (cond ((##eq? x 0)
-           0)
-          ((##negative? x)
-           (##make-rectangular 0 (exact-int-sqrt (##negate x))))
-          (else
-           (let ((y (##exact-int.sqrt x)))
-             (if (##eq? (##cdr y) 0)
-                 (##car y)
-                 (let ((inexact-x (##flonum.<-exact-int x)))
-                   (if (##flonum.= inexact-x (macro-inexact-+inf))
-                       (##flonum.<-exact-int (##car y))
-                       (##flonum.sqrt inexact-x))))))))
+    (if (##negative? x)
+        (##make-rectangular 0 (exact-int-sqrt (##negate x)))
+        (let ((y (##exact-int.sqrt x)))
+          (cond ((##eq? (##cdr y) 0)
+                 (##car y))
+                ((if (##fixnum? x)
+                     (or (##not (##fixnum? (macro-flonum-+m-max-plus-1)))
+                         (##fixnum.<= x (macro-flonum-+m-max-plus-1)))
+                     (and (##not (##fixnum? (macro-flonum-+m-max-plus-1)))
+                          (##not (##bignum.< (macro-flonum-+m-max-plus-1) x))))
+                 ;; 0 <= x <= (macro-flonum-+m-max-plus-1), can be
+                 ;; converted to flonum exactly so avoids double
+                 ;; rounding in next expression this has a relatively
+                 ;; fast path for small integers.
+                 (##flonum.sqrt
+                  (if (##fixnum? x)
+                      (##flonum.<-fixnum x)
+                      (##flonum.<-exact-int x))))
+                ((##not (##< (##car y) (macro-flonum-+m-max-plus-1)))
+                 ;; ##flonum.<-exact-int uses second argument correctly
+                 (##flonum.<-exact-int (##car y) #t))
+                (else
+                 ;; The integer part of y does not have enough bits accuracy
+                 ;; to round it correctly to a flonum, so to
+                 ;; make sure (##car y) is big enough in the next call we
+                 ;; multiply by (expt 2 (macro-flonum-m-bits-plus-1*2)),
+                 ;; which is somewhat extravagant;
+                 ;; (expt 2 (+ 1 (macro-flonum-m-bits-plus-1))) should
+                 ;; work fine.
+                 (##flonum.* (macro-flonum-inverse-+m-max-plus-1-inexact)
+                             (exact-int-sqrt
+                              (##arithmetic-shift
+                               x
+                               (macro-flonum-m-bits-plus-1*2)))))))))
 
+  (define (ratnum-sqrt x)
+    (if (##negative? x)
+        (##make-rectangular 0 (ratnum-sqrt (##negate x)))
+        (let ((p (macro-ratnum-numerator x))
+              (q (macro-ratnum-denominator x)))
+          (let ((sqrt-p (##exact-int.sqrt p))
+                (sqrt-q (##exact-int.sqrt q)))
+            (if (and (##zero? (##cdr sqrt-p))
+                     (##zero? (##cdr sqrt-q)))
+                ;; both (abs p) and q are perfect squares and
+                ;; their square roots do not have any common factors
+                (macro-ratnum-make (##car sqrt-p)
+                                   (##car sqrt-q))
+                (let ((wp (##integer-length p))
+                      (wq (##integer-length q)))
+
+                  ;; for IEEE 754 double precision, we need at least
+                  ;; 53 or 54 (I can't seem to work it out) of the
+                  ;; leading bits of (sqrt (/ p q)).  Here we get
+                  ;; about 64 leading bits.  We just shift p (either
+                  ;; right or left) until it is about 128 bits longer
+                  ;; than q (shift must be even), then take the
+                  ;; integer square root of the result.
+
+                  (let* ((shift
+                          (##fixnum.arithmetic-shift-left
+                           (##fixnum.arithmetic-shift-right
+                            (##fixnum.- 128 (##fixnum.- wp wq))
+                            1)
+                           1))
+                         (leading-bits
+                          (##car
+                           (##exact-int.sqrt
+                            (##quotient 
+                             (##arithmetic-shift p shift)
+                             q))))
+                         (pre-rounded-result
+                          (if (##fixnum.negative? shift)
+                              (##arithmetic-shift
+                               leading-bits
+                               (##fixnum.-
+                                (##fixnum.arithmetic-shift-right
+                                 shift
+                                 1)))
+                              (##ratnum.normalize
+                               leading-bits
+                               (##arithmetic-shift
+                                1
+                                (##fixnum.arithmetic-shift-right
+                                 shift
+                                 1))))))
+                    (if (##ratnum? pre-rounded-result)
+                        (##flonum.<-ratnum pre-rounded-result #t)
+                        (##flonum.<-exact-int  pre-rounded-result #t)))))))))
+  
   (macro-number-dispatch x (type-error)
     (exact-int-sqrt x)
     (exact-int-sqrt x)
-    (##/ (exact-int-sqrt (macro-ratnum-numerator x))
-         (exact-int-sqrt (macro-ratnum-denominator x)))
+    (ratnum-sqrt x)
     (if (##flonum.negative? x)
         (##make-rectangular 0 (##flonum.sqrt (##flonum.- x)))
         (##flonum.sqrt x))
@@ -2382,7 +2451,8 @@
                   (temp (##exact-int.nth-root x y-den)))
              (if (##= x (exact-int-expt temp y-den))
                  (exact-int-expt temp (macro-ratnum-numerator y))
-                 (##flonum.expt (##flonum.<-exact-int x) (##flonum.<-ratnum y)))))
+                 (##flonum.expt (##flonum.<-exact-int x)
+                                (##flonum.<-ratnum y)))))
           (else
            ;; x is a ratnum
            (let ((x-num (macro-ratnum-numerator   x))
@@ -9445,6 +9515,19 @@ ___RESULT = result;
 (define-prim (##ratnum.<-exact-int x)
   (macro-ratnum-make x 1))
 
+(define-prim (##ratnum.round x #!optional (round-half-away-from-zero? #f))
+  (let ((num (macro-ratnum-numerator x))
+        (den (macro-ratnum-denominator x)))
+    (if (##eq? den 2)
+        (if round-half-away-from-zero?
+            (##arithmetic-shift (##+ num (if (##positive? num) 1 -1)) -1)
+            (##arithmetic-shift (##arithmetic-shift (##+ num 1) -2) 1))
+        ;; here the ratnum cannot have fractional part = 1/2
+        (##floor
+         (##ratnum.normalize
+          (##+ (##arithmetic-shift num 1) den)
+          (##arithmetic-shift den 1))))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Flonum operations
@@ -9955,10 +10038,7 @@ ___RESULT = result;
 
 (define-prim (##flonum.copysign x y))
 
-
-
-
-(define-prim (##flonum.<-ratnum x)
+(define-prim (##flonum.<-ratnum x #!optional (nonzero-fractional-part? #f))
   (let* ((num (macro-ratnum-numerator x))
          (n (##abs num))
          (d (macro-ratnum-denominator x))
@@ -9976,13 +10056,18 @@ ___RESULT = result;
       (let* ((shift
               (##fixnum.min (macro-flonum-m-bits)
                             (##fixnum.- p (macro-flonum-e-min))))
+             (normalized-result
+              (##ratnum.normalize
+                  (##arithmetic-shift a shift)
+                  b))
              (abs-result
               (##flonum.*
                (##flonum.<-exact-int
-                (##round
-                 (##ratnum.normalize
-                  (##arithmetic-shift a shift)
-                  b)))
+                (if (##ratnum? normalized-result)
+                    (##ratnum.round
+                     normalized-result
+                     nonzero-fractional-part?)
+                    normalized-result))
                (##flonum.expt2 (##fixnum.- p shift)))))
         (if (##negative? num)
             (##flonum.copysign abs-result (macro-inexact--1))
@@ -9995,7 +10080,7 @@ ___RESULT = result;
         (f1 (##arithmetic-shift n (##fixnum.- p)) d)
         (f1 n (##arithmetic-shift d p)))))
 
-(define-prim (##flonum.<-exact-int x)
+(define-prim (##flonum.<-exact-int x #!optional (nonzero-fractional-part? #f))
 
   (define (f1 x)
     (let* ((w ;; 2^(w-1) <= x < 2^w
@@ -10003,19 +10088,21 @@ ___RESULT = result;
            (p ;; 2^52 <= x/2^p < 2^53
             (##fixnum.- w (macro-flonum-m-bits-plus-1))))
       (if (##fixnum.< p 1)
+          ;; it really should be an error here if
+          ;; positive-fractional-part? is true because we can't
+          ;; determine the value of the first discarded bit
           (f2 x)
-          (let* ((2^p (##arithmetic-shift 1 p))
-                 (qr (##exact-int.div x 2^p))
-                 (q (##car qr))
-                 (r (##cdr qr))
-                 (r*2 (##arithmetic-shift r 1)))
+          (let* ((q (##arithmetic-shift x (##fixnum.- p)))
+                 (next-bit-index (##fixnum.- p 1)))
             (##flonum.*
              (##flonum.expt2 p)
-             (f2 (if (or (and (##not (##odd? q))
-                              (##= r*2 2^p))
-                         (##< r*2 2^p))
-                     q
-                     (##+ q 1))))))))
+             (f2 (if (and (##bit-set? next-bit-index x)
+                          (or nonzero-fractional-part?
+                              (##odd? q)
+                              (##fixnum.< (##first-bit-set x)
+                                          next-bit-index)))
+                     (##+ q 1)
+                     q)))))))
 
   (define (f2 x) ;; 0 <= x < 2^53
     (if (##fixnum? x)
@@ -10758,7 +10845,7 @@ ___RESULT = result;
           (lambda ()
             (let loop ((r (fixnum->flonum (rand-fixnum32-2^k)))
                        (d (macro-inv-2^k-inexact)))
-              (if (fl< r (macro-flonum-+m-max-inexact))
+              (if (fl< r (macro-flonum-+m-max-plus-1-inexact))
                   (loop (fl+ (fl* r (macro-2^k-inexact))
                              (fixnum->flonum (rand-fixnum32-2^k)))
                         (fl* d (macro-inv-2^k-inexact)))
