@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -16,14 +16,29 @@ export INSTALL_PREFIX="/Library/Gambit-C"
 
 cd "`dirname $0`"
 
-for VARIANT in intel powerpc universal; do
+for VARIANT in intel32 intel64 G3 G4 G5 universal; do
 
   cd "$rootfromhere"
 
   case "$VARIANT" in
-        intel) CONFIG_ARCH="-arch i386";;
-      powerpc) CONFIG_ARCH="-arch ppc";;
-    universal) CONFIG_ARCH="-arch i386 -arch ppc";;
+      intel32) CONFIG_ARCH="-arch i686"
+               CONFIG_HOST="--host=i386-apple-darwin9"
+               ;;
+      intel64) CONFIG_ARCH="-arch x86_64"
+               CONFIG_HOST="--host=i386-apple-darwin9"
+               ;;
+           G3) CONFIG_ARCH="-arch ppc750"
+               CONFIG_HOST="--host=powerpc-apple-darwin9"
+               ;;
+           G4) CONFIG_ARCH="-arch ppc7400"
+               CONFIG_HOST="--host=powerpc-apple-darwin9"
+               ;;
+           G5) CONFIG_ARCH="-arch ppc970"
+               CONFIG_HOST="--host=powerpc-apple-darwin9"
+               ;;
+    universal) CONFIG_ARCH="-arch i686 -arch ppc750"
+               CONFIG_HOST=""
+               ;;
   esac
 
   # In order for the executables to run with MacOS Tiger as well as
@@ -33,7 +48,7 @@ for VARIANT in intel powerpc universal; do
 
   SYSROOT="/Developer/SDKs/MacOSX10.4u.sdk"
 
-  CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure --prefix="$INSTALL_PREFIX" --enable-single-host # --enable-gcc-opts
+  CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_HOST" --prefix="$INSTALL_PREFIX" --enable-single-host # --enable-gcc-opts
 
   cd "$herefromroot"
 
