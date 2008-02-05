@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-01-11 23:57:39 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-02-05 17:50:39 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -1728,6 +1728,9 @@ ___HIDDEN lineeditor_dcap lineeditor_dcap_table[LINEEDITOR_CAP_LAST+1] =
 ,DCAP("cd","ed",   "\033[J"             ) /* erase to end of screen       */
 ,DCAP("ce","el",   "\033[K"             ) /* erase to end of line         */
 ,DCAP("cb","el1",  "\033[1K"            ) /* erase to beginning of line   */
+,DCAP(" 0","  0",  "\033[%p1%dt"        ) /* window operation with no arg */
+,DCAP(" 1","  1",  "\033[%p1%d;%p2%dt"  ) /* window operation with 1 arg  */
+,DCAP(" 2","  2",  "\033[%p1%d;%p2%d;%p3%dt") /* window operation with 2 args */
 };
 
 
@@ -2371,27 +2374,30 @@ int cap;)
 }
 
 
-___HIDDEN ___SCMOBJ lineeditor_output_cap
+___HIDDEN ___SCMOBJ lineeditor_output_cap3
    ___P((___device_tty *self,
          int cap,
          int arg1,
          int arg2,
+         int arg3,
          int rep),
         (self,
          cap,
          arg1,
          arg2,
+         arg3,
          rep)
 ___device_tty *self;
 int cap;
 int arg1;
 int arg2;
+int arg3;
 int rep;)
 {
   /*
    * This routine outputs the character sequence for the terminal
-   * capability "cap" with integer parameters "arg1" and "arg2" (-1
-   * means no parameter).  This is repeated "rep" times.
+   * capability "cap" with integer parameters "arg1", "arg2" and "arg3"
+   * (-1 means no parameter).  This is repeated "rep" times.
    */
 
   ___device_tty *d = self;
@@ -2421,7 +2427,7 @@ int rep;)
         {
           p = str;
 
-          if (arg1 >= 0)
+          if (arg1 >= 0 && arg3 < 0)
             {
 #ifdef USE_TERMCAP
               p = tgoto (p, arg2, arg1);
@@ -2443,12 +2449,13 @@ int rep;)
 #endif
 
         {
-          int params[2];
+          int params[3];
           int stack[10];
           int sp = 0;
 
           params[0] = arg1;
           params[1] = arg2;
+          params[2] = arg3;
 
           p = str;
 
@@ -2467,7 +2474,7 @@ int rep;)
 
                     case 'p':
                       if (sp < ___CAST(int,___NBELEMS(stack)))
-                        stack[sp++] = params[*p++ == '2'];
+                        stack[sp++] = params[*p++ - '1'];
                       break;
 
                     case 'd':
@@ -2507,6 +2514,56 @@ int rep;)
   return lineeditor_output_curses_drain (cs->output_lo);
 }
 
+___HIDDEN ___SCMOBJ lineeditor_output_cap0
+   ___P((___device_tty *self,
+         int cap,
+         int rep),
+        (self,
+         cap,
+         rep)
+___device_tty *self;
+int cap;
+int rep;)
+{
+  return lineeditor_output_cap3 (self, cap, -1, -1, -1, rep);
+}
+
+___HIDDEN ___SCMOBJ lineeditor_output_cap1
+   ___P((___device_tty *self,
+         int cap,
+         int arg1,
+         int rep),
+        (self,
+         cap,
+         arg1,
+         rep)
+___device_tty *self;
+int cap;
+int arg1;
+int rep;)
+{
+  return lineeditor_output_cap3 (self, cap, arg1, -1, -1, rep);
+}
+
+___HIDDEN ___SCMOBJ lineeditor_output_cap2
+   ___P((___device_tty *self,
+         int cap,
+         int arg1,
+         int arg2,
+         int rep),
+        (self,
+         cap,
+         arg1,
+         arg2,
+         rep)
+___device_tty *self;
+int cap;
+int arg1;
+int arg2;
+int rep;)
+{
+  return lineeditor_output_cap3 (self, cap, arg1, arg2, -1, rep);
+}
 
 ___HIDDEN ___SCMOBJ lineeditor_output_set_attrs
    ___P((___device_tty *self,
@@ -2553,7 +2610,7 @@ tty_text_attrs attrs;)
       (GET_BACKGROUND_COLOR(attrs) >= DEFAULT_TEXT_COLOR &&
        GET_BACKGROUND_COLOR(current_attrs) < DEFAULT_TEXT_COLOR))
     {
-      if ((e = lineeditor_output_cap (d, LINEEDITOR_CAP_SGR0, -1, -1, 1))
+      if ((e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_SGR0, 1))
           != ___FIX(___NO_ERR))
         return e;
       current_attrs = MAKE_TEXT_ATTRS(0,DEFAULT_TEXT_COLOR,DEFAULT_TEXT_COLOR);
@@ -2562,38 +2619,36 @@ tty_text_attrs attrs;)
     turn_on = (~GET_STYLE(current_attrs) & turn_on);
 
   if (turn_on & TEXT_STYLE_BOLD)
-    if ((e = lineeditor_output_cap (d, LINEEDITOR_CAP_BOLD, -1, -1, 1))
+    if ((e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_BOLD, 1))
         != ___FIX(___NO_ERR))
       return e;
 
   if (turn_on & TEXT_STYLE_UNDERLINE)
-    if ((e = lineeditor_output_cap (d, LINEEDITOR_CAP_SMUL, -1, -1, 1))
+    if ((e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_SMUL, 1))
         != ___FIX(___NO_ERR))
       return e;
 
   if (turn_on & TEXT_STYLE_REVERSE)
-    if ((e = lineeditor_output_cap (d, LINEEDITOR_CAP_REV, -1, -1, 1))
+    if ((e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_REV, 1))
         != ___FIX(___NO_ERR))
       return e;
 
   if (GET_FOREGROUND_COLOR(attrs) < DEFAULT_TEXT_COLOR &&
       GET_FOREGROUND_COLOR(attrs) != GET_FOREGROUND_COLOR(current_attrs))
-    if ((e = lineeditor_output_cap
+    if ((e = lineeditor_output_cap1
                (d,
                 LINEEDITOR_CAP_SETAF,
                 GET_FOREGROUND_COLOR(attrs),
-                -1,
                 1))
         != ___FIX(___NO_ERR))
       return e;
 
   if (GET_BACKGROUND_COLOR(attrs) < DEFAULT_TEXT_COLOR &&
       GET_BACKGROUND_COLOR(attrs) != GET_BACKGROUND_COLOR(current_attrs))
-    if ((e = lineeditor_output_cap
+    if ((e = lineeditor_output_cap1
                (d,
                 LINEEDITOR_CAP_SETAB,
                 GET_BACKGROUND_COLOR(attrs),
-                -1,
                 1))
         != ___FIX(___NO_ERR))
       return e;
@@ -2714,9 +2769,9 @@ int dist;)
       d->terminal_delayed_wrap = 0;
 
       if (dist > 0)
-        return lineeditor_output_cap (d, LINEEDITOR_CAP_CUF, dist, -1, 1);
+        return lineeditor_output_cap1 (d, LINEEDITOR_CAP_CUF, dist, 1);
       else
-        return lineeditor_output_cap (d, LINEEDITOR_CAP_CUB, -dist, -1, 1);
+        return lineeditor_output_cap1 (d, LINEEDITOR_CAP_CUB, -dist, 1);
     }
 
   return ___FIX(___NO_ERR);
@@ -2769,17 +2824,17 @@ int dist;)
         {
           if ((dist == 1 || lineeditor_cap (d, LINEEDITOR_CAP_CUD) == NULL) &&
               lineeditor_cap (d, LINEEDITOR_CAP_CUD1) != NULL)
-            return lineeditor_output_cap (d, LINEEDITOR_CAP_CUD1, -1, -1, dist);
+            return lineeditor_output_cap0 (d, LINEEDITOR_CAP_CUD1, dist);
           else
-            return lineeditor_output_cap (d, LINEEDITOR_CAP_CUD, dist, -1, 1);
+            return lineeditor_output_cap1 (d, LINEEDITOR_CAP_CUD, dist, 1);
         }
       else
         {
           if ((dist == -1 || lineeditor_cap (d, LINEEDITOR_CAP_CUU) == NULL) &&
               lineeditor_cap (d, LINEEDITOR_CAP_CUU1) != NULL)
-            return lineeditor_output_cap (d, LINEEDITOR_CAP_CUU1, -1, -1, -dist);
+            return lineeditor_output_cap0 (d, LINEEDITOR_CAP_CUU1, -dist);
           else
-            return lineeditor_output_cap (d, LINEEDITOR_CAP_CUU, -dist, -1, 1);
+            return lineeditor_output_cap1 (d, LINEEDITOR_CAP_CUU, -dist, 1);
         }
     }
 
@@ -2843,7 +2898,7 @@ int dest_row;)
       d->terminal_cursor = 0;
       d->terminal_delayed_wrap = 0;
 
-      return lineeditor_output_cap (d, LINEEDITOR_CAP_HOME, -1, -1, 1);
+      return lineeditor_output_cap0 (d, LINEEDITOR_CAP_HOME, 1);
     }
 
   if (lineeditor_cap (d, LINEEDITOR_CAP_CUP) != NULL)
@@ -2853,7 +2908,7 @@ int dest_row;)
       d->terminal_cursor = dest_row * d->terminal_nb_cols + dest_col;
       d->terminal_delayed_wrap = 0;
 
-      return lineeditor_output_cap
+      return lineeditor_output_cap2
                (d,
                 LINEEDITOR_CAP_CUP,
                 dest_row,
@@ -2882,7 +2937,7 @@ int dest_row;)
 #define TERMINAL_SET_ATTRS  -4
 #define TERMINAL_NOOP       -5
 #define TERMINAL_CTRL       -6
-
+#define TERMINAL_WINDOW_OP  -7
 
 ___HIDDEN ___SCMOBJ lineeditor_output_terminal_op
    ___P((___device_tty *self,
@@ -3229,6 +3284,70 @@ int arg;)
         break;
       }
 
+    case TERMINAL_WINDOW_OP:
+      {
+        int window_op = arg & ((1<<8)-1);
+        int arg1 = (arg >> 8) & ((1<<12)-1);
+        int arg2 = (arg >> 20) & ((1<<12)-1);
+        HWND cons_wind = GetConsoleWindow ();
+
+        if (cons_wind != NULL)
+          {
+            switch (window_op)
+              {
+              case 1: /* De-iconify window */
+              case 2: /* Iconify window */
+                ShowWindow (cons_wind,
+                            (window_op == 1) ? SW_RESTORE : SW_MINIMIZE);
+                break;
+
+              case 3: /* Move window to [arg1, arg2] */
+                SetWindowPos (cons_wind,
+                              cons_wind,
+                              arg1,
+                              arg2,
+                              0,
+                              0,
+                              SWP_NOZORDER | SWP_NOSIZE);
+                break;
+
+              case 4: /* Resize window to height=arg1 and width=arg2 in pixels */
+                SetWindowPos (cons_wind,
+                              cons_wind,
+                              0,
+                              0,
+                              arg2,
+                              arg1,
+                              SWP_NOZORDER | SWP_NOMOVE);
+                break;
+
+              case 5: /* Raise the window to the front of the stacking order */
+              case 6: /* Lower the window to the bottom of the stacking order */
+                SetWindowPos (cons_wind,
+                              (window_op == 5) ? HWND_TOP : HWND_BOTTOM,
+                              0,
+                              0,
+                              0,
+                              0,
+                              SWP_NOSIZE | SWP_NOMOVE);
+                break;
+
+              case 7: /* Refresh the window */
+                break;
+
+              case 8: /* Resize window to height=arg1 and width=arg2 in chars */
+                break;
+
+              case 9: /* Maximize or un-maximize window (arg1=0 or arg1=1) */
+                ShowWindow (cons_wind,
+                            (arg1 == 0) ? SW_MAXIMIZE : SW_RESTORE);
+                break;
+              }
+          }
+
+        break;
+      }
+
 #else
 
     case TERMINAL_ERASE_DISP:
@@ -3241,7 +3360,7 @@ int arg;)
             if (d->terminal_col != 0 || d->terminal_row != 0)
               break;
           case 0: /* erase to end of screen */
-            e = lineeditor_output_cap (d, LINEEDITOR_CAP_ED, -1, -1, 1);
+            e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_ED, 1);
             break;
           }
         break;
@@ -3252,15 +3371,60 @@ int arg;)
         switch (arg)
           {
           case 1: /* erase from beginning of line */
-            e = lineeditor_output_cap (d, LINEEDITOR_CAP_EL1, -1, -1, 1);
+            e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_EL1, 1);
             break;
           case 2: /* erase all line */
             if (d->terminal_col != 0)
               break;
           case 0: /* erase to end of line */
-            e = lineeditor_output_cap (d, LINEEDITOR_CAP_EL, -1, -1, 1);
+            e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_EL, 1);
             break;
           }
+        break;
+      }
+
+    case TERMINAL_WINDOW_OP:
+      {
+        int window_op = arg & ((1<<8)-1);
+        int arg1 = (arg >> 8) & ((1<<12)-1);
+        int arg2 = (arg >> 20) & ((1<<12)-1);
+
+        switch (window_op)
+          {
+          case 1: /* De-iconify window */
+          case 2: /* Iconify window */
+          case 5: /* Raise the window to the front of the stacking order */
+          case 6: /* Lower the window to the bottom of the stacking order */
+          case 7: /* Refresh the window */
+            e = lineeditor_output_cap1
+                  (d,
+                   LINEEDITOR_CAP_WINDOW_OP0,
+                   window_op,
+                   1);
+            break;
+
+          case 9: /* Maximize or un-maximize window (arg1=0 or arg1=1) */
+            e = lineeditor_output_cap2
+                  (d,
+                   LINEEDITOR_CAP_WINDOW_OP1,
+                   window_op,
+                   arg1,
+                   1);
+            break;
+
+          case 3: /* Move window to [arg1, arg2] */
+          case 4: /* Resize window to height=arg1 and width=arg2 in pixels */
+          case 8: /* Resize window to height=arg1 and width=arg2 in chars */
+            e = lineeditor_output_cap3
+                  (d,
+                   LINEEDITOR_CAP_WINDOW_OP2,
+                   window_op,
+                   arg1,
+                   arg2,
+                   1);
+            break;
+          }
+
         break;
       }
 
@@ -3547,6 +3711,45 @@ int len;)
                           bg = x-40;
                       }
                     arg = MAKE_TEXT_ATTRS(style,fg,bg);
+                  }
+                else if (c == 't')
+                  {
+                    switch (d->terminal_param[0])
+                      {
+                      case 3:
+                      case 4:
+                      case 8:
+                        if (pn == 2 &&
+                            d->terminal_param[1] <= 4095 &&
+                            d->terminal_param[2] <= 4095)
+                          {
+                            arg = (d->terminal_param[2] << 20) +
+                                  (d->terminal_param[1] << 8) +
+                                  d->terminal_param[0];
+                            op = TERMINAL_WINDOW_OP;
+                          }
+                        break;
+
+                      case 9:
+                        if (pn == 1 &&
+                            d->terminal_param[1] <= 4095)
+                          {
+                            arg = (d->terminal_param[1] << 8) +
+                                  d->terminal_param[0];
+                            op = TERMINAL_WINDOW_OP;
+                          }
+                        break;
+
+                      default:
+                        if (pn == 0 &&
+                            d->terminal_param[0] >= 1 &&
+                            d->terminal_param[0] <= 9)
+                          {
+                            arg = d->terminal_param[0];
+                            op = TERMINAL_WINDOW_OP;
+                          }
+                        break;
+                      }
                   }
 
                 pn = -2;
@@ -3901,11 +4104,10 @@ int screen_pos;)
                           : LINEEDITOR_CAP_CUB)
           != NULL)
         {
-          if ((e = lineeditor_output_cap
+          if ((e = lineeditor_output_cap1
                      (d,
                       (col_dist > 0) ? LINEEDITOR_CAP_CUF : LINEEDITOR_CAP_CUB,
                       (col_dist > 0) ? col_dist : -col_dist,
-                      -1,
                       1))
               != ___FIX(___NO_ERR))
             return e;
@@ -3934,18 +4136,15 @@ int screen_pos;)
           : (lineeditor_cap (d, LINEEDITOR_CAP_CUU) == NULL ||
              (lineeditor_cap (d, LINEEDITOR_CAP_CUU1) != NULL &&
               row_dist == -1)))
-        e = lineeditor_output_cap
+        e = lineeditor_output_cap0
               (d,
                (row_dist > 0) ? LINEEDITOR_CAP_CUD1 : LINEEDITOR_CAP_CUU1,
-               -1,
-               -1,
                (row_dist > 0) ? row_dist : -row_dist);
       else
-        e = lineeditor_output_cap
+        e = lineeditor_output_cap1
               (d,
                (row_dist > 0) ? LINEEDITOR_CAP_CUD : LINEEDITOR_CAP_CUU,
                (row_dist > 0) ? row_dist : -row_dist,
-               -1,
                1);
 
       if (e != ___FIX(___NO_ERR))
@@ -4103,22 +4302,63 @@ int len;)
    */
 
   ___device_tty *d = self;
+  ___SCMOBJ e = ___FIX(___NO_ERR);
 
 #ifdef LINEEDITOR_WITH_LOCAL_CLIPBOARD
 
-  ___SCMOBJ e;
   extensible_string str;
 
-  if ((e = extensible_string_copy (buf, len, &str, 0)) != ___FIX(___NO_ERR))
-    return e;
+  if ((e = extensible_string_copy (buf, len, &str, 0)) == ___FIX(___NO_ERR))
+    {
+      extensible_string_cleanup (&d->clipboard);
+      d->clipboard = str;
+    }
 
-  extensible_string_cleanup (&d->clipboard);
+#else
 
-  d->clipboard = str;
+#ifdef USE_WIN32
+
+  HWND cons_wind = GetConsoleWindow ();
+
+  if (cons_wind != NULL)
+    {
+      if (OpenClipboard (cons_wind))
+        {
+          HGLOBAL global_copy = GlobalAlloc (GMEM_MOVEABLE,
+                                             (len+1) * sizeof(___U16));
+
+          if (global_copy != NULL)
+            {
+              ___U16 *locked_copy = GlobalLock (global_copy);
+
+              if (locked_copy == NULL)
+                GlobalFree (global_copy);
+              else
+                {
+                  int i;
+
+                  for (i=0; i<len; i++)
+                    locked_copy[i] = buf[i];
+                  locked_copy[len] = 0;
+
+                  GlobalUnlock (global_copy);
+  
+                  EmptyClipboard ();
+
+                  if (!SetClipboardData (CF_UNICODETEXT, global_copy))
+                    GlobalFree (global_copy);
+                }
+            }
+
+          CloseClipboard ();
+        }
+    }
 
 #endif
 
-  return ___FIX(___NO_ERR);
+#endif
+
+  return e;
 }
 
 
@@ -4134,6 +4374,7 @@ ___device_tty *self;)
    */
 
   ___device_tty *d = self;
+  ___SCMOBJ e = ___FIX(___NO_ERR);
 
 #ifdef LINEEDITOR_WITH_LOCAL_CLIPBOARD
 
@@ -4144,21 +4385,77 @@ ___device_tty *self;)
                 ___alloc_mem ((len+1) * sizeof (___C)));
 
   if (str == NULL)
-    return ___FIX(___HEAP_OVERFLOW_ERR);
+    e = ___FIX(___HEAP_OVERFLOW_ERR);
+  else
+    {
+      str[len] = 0;
+      while (len-- > 0)
+        str[len] = d->clipboard.buffer[len];
 
-  str[len] = 0;
-  while (len-- > 0)
-    str[len] = d->clipboard.buffer[len];
+      if (d->paste_text != NULL)
+        ___free_mem (d->paste_text);
 
-  if (d->paste_text != NULL)
-    ___free_mem (d->paste_text);
+      d->paste_index = 0;
+      d->paste_text = str;
+    }
 
-  d->paste_index = 0;
-  d->paste_text = str;
+#else
+
+#ifdef USE_WIN32
+
+  HWND cons_wind = GetConsoleWindow ();
+
+  if (cons_wind != NULL)
+    {
+      if (IsClipboardFormatAvailable (CF_UNICODETEXT) &&
+          OpenClipboard (cons_wind))
+        {
+          HGLOBAL global_copy = GetClipboardData (CF_UNICODETEXT);
+
+          if (global_copy != NULL)
+            {
+              ___U16 *locked_copy = GlobalLock (global_copy);
+
+              if (locked_copy != NULL)
+                {
+                  int i;
+                  ___C *str;
+                  int len = 0;
+
+                  while (locked_copy[len] != 0)
+                    len++;
+
+                  str = ___CAST(___C*,
+                                ___alloc_mem ((len+1) * sizeof (___C)));
+
+                  if (str == NULL)
+                    e = ___FIX(___HEAP_OVERFLOW_ERR);
+                  else
+                    {
+                      str[len] = 0;
+                      while (len-- > 0)
+                        str[len] = locked_copy[len];
+
+                      if (d->paste_text != NULL)
+                        ___free_mem (d->paste_text);
+
+                      d->paste_index = 0;
+                      d->paste_text = str;
+                    }
+
+                  GlobalUnlock (locked_copy);
+                }
+            }
+
+          CloseClipboard ();
+        }
+    }
 
 #endif
 
-  return ___FIX(___NO_ERR);
+#endif
+
+  return e;
 }
 
 
@@ -4555,15 +4852,18 @@ ___BOOL emacs_bindings;)
 
   /*
    * Initialize input decoder so that it recognizes special keys.  Map
-   * rubout key to backspace if terminal driver is setup to erase when
-   * a rubout is typed.
+   * rubout key to backspace if not on WIN32.
    */
 
   d->input_decoder_state = 0;
 
   if ((e = lineeditor_input_decoder_init
              (&d->input_decoder,
+#ifdef USE_WIN32
+              0,
+#else
               1,
+#endif
               emacs_bindings,
               terminal_type == NULL))
       != ___FIX(___NO_ERR))
@@ -5187,7 +5487,7 @@ ___device_tty *self;)
 #ifdef USE_CURSES
 
       if (lineeditor_cap (d, LINEEDITOR_CAP_CLEAR) != NULL)
-        e = lineeditor_output_cap (d, LINEEDITOR_CAP_CLEAR, -1, -1, 1);
+        e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_CLEAR, 1);
       else
 
 #endif
@@ -5234,7 +5534,7 @@ ___device_tty *self;)
 #ifdef USE_CURSES
 
       if (lineeditor_cap (d, LINEEDITOR_CAP_ED) != NULL)
-        e = lineeditor_output_cap (d, LINEEDITOR_CAP_ED, -1, -1, 1);
+        e = lineeditor_output_cap0 (d, LINEEDITOR_CAP_ED, 1);
 
 #endif
 

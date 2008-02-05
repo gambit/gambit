@@ -1,4 +1,4 @@
-/* File: "os_tty.h", Time-stamp: <2007-09-27 17:53:51 feeley> */
+/* File: "os_tty.h", Time-stamp: <2008-02-05 14:04:13 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -164,7 +164,10 @@ MAKE_TEXT_ATTRS(TEXT_STYLE_NORMAL,DEFAULT_TEXT_COLOR,DEFAULT_TEXT_COLOR)
 #define LINEEDITOR_CAP_ED    15
 #define LINEEDITOR_CAP_EL    16
 #define LINEEDITOR_CAP_EL1   17
-#define LINEEDITOR_CAP_LAST  LINEEDITOR_CAP_EL1
+#define LINEEDITOR_CAP_WINDOW_OP0 18
+#define LINEEDITOR_CAP_WINDOW_OP1 19
+#define LINEEDITOR_CAP_WINDOW_OP2 20
+#define LINEEDITOR_CAP_LAST  LINEEDITOR_CAP_WINDOW_OP2
 
 
 typedef struct lineeditor_event_struct

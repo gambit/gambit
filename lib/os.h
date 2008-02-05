@@ -204,6 +204,8 @@
 
 #define USE_PUMPS
 
+#undef LINEEDITOR_WITH_LOCAL_CLIPBOARD
+
 #define USE_errno
 #define USE_malloc
 #define USE_memmove
