@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-01-12 00:36:55 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-02-06 13:52:01 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1831,25 +1831,67 @@
    input-port
    output-port
 
-   (lambda (channel level depth) ;; read-command
+   (let ((init-read-done? #f))
+     (lambda (channel level depth) ;; read-command
 
-     (define prompt "> ")
+       (define prompt "> ")
 
-     (let ((output-port (macro-repl-channel-output-port channel)))
-       (if (##fixnum.< 0 level)
-         (##write level output-port))
-       (if (##fixnum.< 0 depth)
-         (begin
-           (##write-string "\\" output-port)
-           (##write depth output-port)))
-       (##write-string prompt output-port)
-       (##force-output output-port))
+       (if (##not init-read-done?)
+           (let ()
 
-     (let ((input-port (macro-repl-channel-input-port channel))
-           (output-port (macro-repl-channel-output-port channel)))
-       (let ((result (##read-expr-from-port input-port)))
-         (##output-port-column-set! output-port 1)
-         result)))
+             (define (in-homedir filename)
+               (let ((homedir (##path-expand "~")))
+                 (##string-append homedir filename)))
+
+             (set! init-read-done? #t)
+
+             (if (##tty? input-port)
+                 (let ((path-or-settings
+                        (##list path:
+                                (in-homedir ".gambc_history")
+                                char-encoding:
+                                'UTF-8)))
+
+                   (##open-file-generic
+                    (macro-direction-in)
+                    #f
+                    (lambda (port)
+                      (if (##port? port)
+                          (let ((history (##read-line port #f #f #f)))
+                            (##close-port port)
+                            (if (##string? history)
+                                (##tty-history-set! input-port history)))))
+                    open-input-file
+                    (##cons eol-encoding: (##cons 'cr-lf path-or-settings)))
+
+                   (##add-exit-job!
+                    (lambda ()
+                      (##open-file-generic
+                       (macro-direction-out)
+                       #f
+                       (lambda (port)
+                         (if (##port? port)
+                             (let ((history (##tty-history input-port)))
+                               (##display history port)
+                               (##close-port port))))
+                       open-output-file
+                       path-or-settings)))))))
+
+       (let ((output-port (macro-repl-channel-output-port channel)))
+         (if (##fixnum.< 0 level)
+             (##write level output-port))
+         (if (##fixnum.< 0 depth)
+             (begin
+               (##write-string "\\" output-port)
+               (##write depth output-port)))
+         (##write-string prompt output-port)
+         (##force-output output-port))
+
+       (let ((input-port (macro-repl-channel-input-port channel))
+             (output-port (macro-repl-channel-output-port channel)))
+         (let ((result (##read-expr-from-port input-port)))
+           (##output-port-column-set! output-port 1)
+           result))))
 
    (lambda (channel results) ;; write-results
      (let ((output-port (macro-repl-channel-output-port channel)))

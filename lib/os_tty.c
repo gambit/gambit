@@ -1,6 +1,6 @@
-/* File: "os_tty.c", Time-stamp: <2008-02-05 17:50:39 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-02-06 13:40:54 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -201,6 +201,21 @@ extensible_string_char *chars;)
     }
 
   return e;
+}
+
+
+___HIDDEN ___SCMOBJ extensible_string_insert_at_end
+   ___P((extensible_string *str,
+         int len,
+         extensible_string_char *chars),
+        (str,
+         len,
+         chars)
+extensible_string *str;
+int len;
+extensible_string_char *chars;)
+{
+  return extensible_string_insert (str, str->length, len, chars);
 }
 
 
@@ -2055,6 +2070,26 @@ lineeditor_history *item;)
 }
 
 
+___HIDDEN void lineeditor_history_trim_to
+   ___P((___device_tty *self,
+         int max_length),
+        (self,
+         max_length)
+___device_tty *self;
+int max_length;)
+{
+  ___device_tty *d = self;
+
+  while (d->history_length > max_length)
+    {
+      lineeditor_history *first = d->hist_last->next;
+      lineeditor_history_remove (d, first);
+      lineeditor_history_cleanup (d, first); /* ignore error */
+      d->history_length--;
+    }
+}
+
+
 ___HIDDEN void lineeditor_history_trim
    ___P((___device_tty *self),
         (self)
@@ -2062,13 +2097,7 @@ ___device_tty *self;)
 {
   ___device_tty *d = self;
 
-  while (d->history_length > d->max_history_length)
-    {
-      lineeditor_history *first = d->hist_last->next;
-      lineeditor_history_remove (d, first);
-      lineeditor_history_cleanup (d, first); /* ignore error */
-      d->history_length--;
-    }
+  lineeditor_history_trim_to (d, d->max_history_length);
 }
 
 
@@ -2090,16 +2119,18 @@ int max_history_length;)
 }
 
 
-___HIDDEN void lineeditor_history_add
+___HIDDEN void lineeditor_history_add_after
    ___P((___device_tty *self,
-         lineeditor_history *item),
+         lineeditor_history *item,
+         lineeditor_history *dest),
         (self,
-         item)
+         item,
+         dest)
 ___device_tty *self;
-lineeditor_history *item;)
+lineeditor_history *item;
+lineeditor_history *dest;)
 {
   ___device_tty *d = self;
-  lineeditor_history *dest = d->hist_last;
 
   if (dest == NULL)
     {
@@ -2115,8 +2146,50 @@ lineeditor_history *item;)
       after_dest->prev = item;
     }
 
-  d->hist_last = item;
   d->history_length++;
+}
+
+
+___HIDDEN void lineeditor_history_add_last
+   ___P((___device_tty *self,
+         lineeditor_history *item),
+        (self,
+         item)
+___device_tty *self;
+lineeditor_history *item;)
+{
+  ___device_tty *d = self;
+
+  lineeditor_history_add_after (d, item, d->hist_last);
+  d->hist_last = item;
+}
+
+
+___HIDDEN ___SCMOBJ lineeditor_history_add_line_before_last
+   ___P((___device_tty *self,
+         int len,
+         extensible_string_char *chars),
+        (self,
+         len,
+         chars)
+___device_tty *self;
+int len;
+extensible_string_char *chars;)
+{
+  ___SCMOBJ e;
+  lineeditor_history *line;
+
+  if ((e = lineeditor_history_setup (self, &line))
+      == ___FIX(___NO_ERR))
+    {
+      if ((e = extensible_string_insert_at_end (&line->actual, len, chars))
+          == ___FIX(___NO_ERR))
+        lineeditor_history_add_after (self, line, self->hist_last->prev);
+      else
+        lineeditor_history_cleanup (self, line); /* ignore error */
+    }
+
+  return e;
 }
 
 
@@ -5057,7 +5130,7 @@ int plain;)
               if ((e = lineeditor_history_setup (d, &h))
                   == ___FIX(___NO_ERR))
                 {
-                  lineeditor_history_add (d, h);
+                  lineeditor_history_add_last (d, h);
                   d->current.hist = h;
                   if ((e = lineeditor_history_begin_edit (d, h))
                       == ___FIX(___NO_ERR))
@@ -6385,7 +6458,7 @@ extensible_string *completion;)
       for (i=0; i<n; i++)
         {
           ___C c = ___INT(___STRINGREF(name,___FIX(i)));
-          if (extensible_string_insert (completion, completion->length, 1, &c)
+          if (extensible_string_insert_at_end (completion, 1, &c)
               != ___FIX(___NO_ERR))
             {
               extensible_string_cleanup (completion);
@@ -6621,7 +6694,7 @@ ___BOOL end_of_file;)
                 {
                   extensible_string_cleanup (&d->hist_last->actual);
                   d->hist_last->actual = actual;
-                  lineeditor_history_add (d, next_line);
+                  lineeditor_history_add_last (d, next_line);
                   lineeditor_history_trim (d);
                 }
               else
@@ -7926,7 +7999,7 @@ ___SCMOBJ dev;
 ___SCMOBJ term_type;
 ___SCMOBJ emacs_bindings;)
 {
-  return ___VOID;/**********************************/
+  return ___FIX(___UNIMPL_ERR);
 }
 
 
@@ -7956,7 +8029,56 @@ ___SCMOBJ ___os_device_tty_history
         (dev)
 ___SCMOBJ dev;)
 {
-  return ___VOID;/*****************************/
+  ___device_tty *d =
+    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+  ___SCMOBJ e;
+  ___SCMOBJ result;
+  extensible_string hist;
+
+  if ((e = extensible_string_setup (&hist, 0))
+      != ___FIX(___NO_ERR))
+    result = e;
+  else
+    {
+      ___C nul = ___UNICODE_NUL;
+      ___C lf = ___UNICODE_LINEFEED;
+      lineeditor_history *probe = d->hist_last->next;
+
+      while (probe != d->hist_last)
+        {
+          if ((e = extensible_string_insert_at_end
+                     (&hist,
+                      probe->actual.length,
+                      probe->actual.buffer))
+              != ___FIX(___NO_ERR) ||
+              (e = extensible_string_insert_at_end
+                     (&hist,
+                      1,
+                      &lf))
+              != ___FIX(___NO_ERR))
+            break;
+
+          probe = probe->next;
+        }
+
+      if (e != ___FIX(___NO_ERR) ||
+          (e = extensible_string_insert_at_end
+                 (&hist,
+                  1,
+                  &nul))
+          != ___FIX(___NO_ERR) ||
+          (e = ___NONNULLSTRING_to_SCMOBJ
+                 (hist.buffer,
+                  &result,
+                  ___RETURN_POS,
+                  ___CE(___C_CE_SELECT)))
+          != ___FIX(___NO_ERR))
+        result = e;
+
+      extensible_string_cleanup (&hist);
+    }
+
+  return result;
 }
 
 
@@ -7968,7 +8090,48 @@ ___SCMOBJ ___os_device_tty_history_set
 ___SCMOBJ dev;
 ___SCMOBJ history;)
 {
-  return ___VOID;/*******************************/
+  ___device_tty *d =
+    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+  ___SCMOBJ e;
+  void *hist;
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRING
+             (history,
+              &hist,
+              1,
+              ___CE(___C_CE_SELECT),
+              0))
+      == ___FIX(___NO_ERR))
+    {
+      ___C *h = ___CAST(___C*,hist);
+
+      lineeditor_history_trim_to (d, 0);
+
+      while (*h != ___UNICODE_NUL)
+        {
+          ___C *start = h;
+
+          while (*h != ___UNICODE_NUL && *h != ___UNICODE_LINEFEED)
+            h++;
+
+          if (h != start)
+            if ((e = lineeditor_history_add_line_before_last
+                       (d,
+                        h-start,
+                        start))
+                != ___FIX(___NO_ERR))
+              break;
+
+          if (*h == ___UNICODE_LINEFEED)
+            h++;
+        }
+
+      lineeditor_history_trim (d);
+
+      ___release_string (hist);
+    }
+
+  return e;
 }
 
 
@@ -8033,85 +8196,17 @@ ___SCMOBJ speed;)
     ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
 
-  if ((e = ___device_tty_force_open (d)) != ___FIX(___NO_ERR))
-    return e;/******************************/
+  if ((e = ___device_tty_force_open (d)) == ___FIX(___NO_ERR))
+    e = ___device_tty_mode_set
+          (d,
+           !___FALSEP(input_allow_special),
+           !___FALSEP(input_echo),
+           !___FALSEP(input_raw),
+           !___FALSEP(output_raw),
+           ___INT(speed));
 
-  ___device_tty_mode_set
-    (d,
-     !___FALSEP(input_allow_special),
-     !___FALSEP(input_echo),
-     !___FALSEP(input_raw),
-     !___FALSEP(output_raw),
-     ___INT(speed)); /* ignore error */
-
-  return ___VOID;
+  return e;
 }
-
-
-#ifdef USE_POSIX
-#define ___TTY_INPUT_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
-#ifdef USE_WIN32
-#ifdef _UNICODE
-#define ___TTY_INPUT_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___TTY_INPUT_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-#endif
-
-___SCMOBJ ___os_device_tty_input_set
-   ___P((___SCMOBJ dev,
-         ___SCMOBJ input),
-        (dev,
-         input)
-___SCMOBJ dev;
-___SCMOBJ input;)
-{
-#ifndef ___TTY_INPUT_CE_SELECT
-
-  return ___FIX(___UNIMPL_ERR);
-
-#else
-
-  ___SCMOBJ e;
-  ___SCMOBJ result;
-  void *cinput;
-
-  if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (input,
-              &cinput,
-              2,
-              ___CE(___TTY_INPUT_CE_SELECT),
-              0))
-      != ___FIX(___NO_ERR))
-    result = e;
-  else
-    {
-      ___STRING_TYPE(___TTY_INPUT_CE_SELECT) in =
-        ___CAST(___STRING_TYPE(___TTY_INPUT_CE_SELECT),cinput);
-
-#if 0
-      /*******************************/
-      if (tty_input != 0)
-        ___release_string (tty_input);
-
-      tty_input = in;
-      tty_input_ptr = in;
-#endif
-
-      /************** ___release_string (cinput); */
-
-      result = ___VOID;
-    }
-
-  return result;
-
-#endif
-}
-
-
-
 
 
 #ifdef USE_POSIX

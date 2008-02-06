@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-01-24 22:50:18 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-02-06 13:37:01 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4056,12 +4056,6 @@ end-of-code
              scheme-object)
             scheme-object
    "___os_device_tty_mode_set"))
-
-(define-prim ##os-device-tty-input-set!
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
-   "___os_device_tty_input_set"))
 
 (define-prim (##os-condvar-select! run-queue timeout)
   (##declare (not interrupts-enabled))

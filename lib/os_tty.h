@@ -1,6 +1,6 @@
-/* File: "os_tty.h", Time-stamp: <2008-02-05 14:04:13 feeley> */
+/* File: "os_tty.h", Time-stamp: <2008-02-06 13:40:17 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TTY_H
 #define ___OS_TTY_H
@@ -27,6 +27,10 @@
 #endif
 
 #define TTY_CHAR TTY_CHAR_SELECT(___U8,___U16)
+
+
+#define ___C_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___CS_SELECT(latin1,ucs2,ucs4)
 
 
 /*---------------------------------------------------------------------------*/

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2008-01-11 11:28:32 feeley>
+;;; File: "main.scm", Time-stamp: <2008-02-06 11:55:20 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -14,6 +14,10 @@
 
 (define-prim (##main-gsi/gsc)
 
+  (define (in-homedir filename)
+    (let ((homedir (##path-expand "~")))
+      (##string-append homedir filename)))
+
   (define (process-initialization-file)
 
     (define (try filename)
@@ -25,8 +29,7 @@
                #f)))
 
     (or (try (macro-initialization-file))
-        (let ((homedir (##path-expand "~")))
-          (try (##string-append homedir (macro-initialization-file))))))
+        (try (in-homedir (macro-initialization-file)))))
 
   (define (read-source-from-string str name)
     (let ((port

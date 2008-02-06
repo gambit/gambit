@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-01-10 20:44:27 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-02-06 13:39:45 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -5073,7 +5073,14 @@
     (##tty? port)))
 
 (define-prim (##tty-type-set! port term-type emacs-bindings)
-  (##os-device-tty-type-set! (##port-device port) term-type emacs-bindings))
+  (let ((code
+         (##os-device-tty-type-set!
+          (##port-device port)
+          term-type
+          emacs-bindings)))
+    (if (##fixnum.< code 0)
+        (##raise-os-exception #f code tty-type-set! port term-type emacs-bindings)
+        (##void))))
 
 (define-prim (tty-type-set! port term-type emacs-bindings)
   (macro-force-vars (port term-type emacs-bindings)
@@ -5111,7 +5118,10 @@
        (##tty-text-attributes-set! port input output))))))
 
 (define-prim (##tty-history port)
-  (##os-device-tty-history (##port-device port)))
+  (let ((result (##os-device-tty-history (##port-device port))))
+    (if (##fixnum? result)
+        (##raise-os-exception #f result tty-history port)
+        result)))
 
 (define-prim (tty-history port)
   (macro-force-vars (port)
@@ -5122,7 +5132,10 @@
      (##tty-history port))))
 
 (define-prim (##tty-history-set! port history)
-  (##os-device-tty-history-set! (##port-device port) history))
+  (let ((code (##os-device-tty-history-set! (##port-device port) history)))
+    (if (##fixnum.< code 0)
+        (##raise-os-exception #f code tty-history-set! port history)
+        (##void))))
 
 (define-prim (tty-history-set! port history)
   (macro-force-vars (port history)
@@ -5175,13 +5188,26 @@
               input-raw
               output-raw
               speed)
-  (##os-device-tty-mode-set!
-   (##port-device port)
-   input-allow-special
-   input-echo
-   input-raw
-   output-raw
-   speed))
+  (let ((code
+         (##os-device-tty-mode-set!
+          (##port-device port)
+          input-allow-special
+          input-echo
+          input-raw
+          output-raw
+          speed)))
+    (if (##fixnum.< code 0)
+        (##raise-os-exception
+         #f
+         code
+         tty-mode-set!
+         port
+         input-allow-special
+         input-echo
+         input-raw
+         output-raw
+         speed)
+        (##void))))
 
 (define-prim (tty-mode-set!
               port
