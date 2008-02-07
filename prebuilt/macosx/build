@@ -24,7 +24,7 @@ for VARIANT in intel32 intel64 G3 G4 G5 universal; do
       intel32) CONFIG_ARCH="-arch i686"
                CONFIG_HOST="--host=i386-apple-darwin9"
                ;;
-      intel64) CONFIG_ARCH="-arch x86_64"
+      intel64) CONFIG_ARCH="-arch x86_64 -m64"
                CONFIG_HOST="--host=i386-apple-darwin9"
                ;;
            G3) CONFIG_ARCH="-arch ppc750"
@@ -33,7 +33,7 @@ for VARIANT in intel32 intel64 G3 G4 G5 universal; do
            G4) CONFIG_ARCH="-arch ppc7400"
                CONFIG_HOST="--host=powerpc-apple-darwin9"
                ;;
-           G5) CONFIG_ARCH="-arch ppc970"
+           G5) CONFIG_ARCH="-arch ppc970 -m64"
                CONFIG_HOST="--host=powerpc-apple-darwin9"
                ;;
     universal) CONFIG_ARCH="-arch i686 -arch ppc750"
