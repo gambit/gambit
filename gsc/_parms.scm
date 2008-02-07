@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_parms.scm", Time-stamp: <2008-02-03 15:13:54 feeley>
+;;; File: "_parms.scm", Time-stamp: <2008-02-06 22:06:04 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -513,7 +513,7 @@
 
 ;; Gambit system version numbers.
 
-(define (compiler-version) 402000) ;; 100000*major + 1000*minor + revision
+(define (compiler-version) 402001) ;; 100000*major + 1000*minor + revision
 
 (define compiler-version-string-prefix "v")
 (define compiler-version-string-suffix "")
