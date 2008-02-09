@@ -1,4 +1,4 @@
-# makefile for pthread example, Time-stamp: <2007-07-25 19:51:36 feeley>
+# makefile for pthread example, Time-stamp: <2008-02-08 23:03:12 feeley>
 
 # Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -80,9 +80,10 @@ pthread@obj@: pthread.c mylib.h $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
 pthread@exe@: mylib@obj@ mylib_@obj@ pthread@obj@
 	$(MAKE) link EXECUTABLE="pthread@exe@" \
-	  OBJECTS="mylib@obj@ mylib_@obj@ pthread@obj@" \
-	  OBJECTS_PLUS="+mylib@obj@ +mylib_@obj@ +pthread@obj@" \
-	  OBJECTS_COMMA="mylib@obj@,mylib_@obj@,pthread@obj@"
+	  LINK_LIBS="$(rootfromhere)/lib/$(GAMBCLIB)" \
+	  EXECUTABLE_OBJECTS="mylib@obj@ mylib_@obj@ pthread@obj@" \
+	  EXECUTABLE_OBJECTS_PLUS="+mylib@obj@ +mylib_@obj@ +pthread@obj@" \
+	  EXECUTABLE_OBJECTS_COMMA="mylib@obj@,mylib_@obj@,pthread@obj@"
 
 INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir)
 
