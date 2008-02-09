@@ -1712,6 +1712,7 @@ $ @b{gsi -:d1 -e '(pretty-print (path-expand "~~")) (/ 1 0)'}
 @menu
 * Debugging model::                 Debugging model
 * Debugging commands::              Debugging commands
+* Debugging example::               Debugging example
 * Procedures related to debugging:: Procedures related to debugging
 * Console line-editing::            Console line-editing
 * Emacs interface::                 Emacs interface
@@ -1789,7 +1790,7 @@ or to change its value with @code{set!}.  Note that some special forms
 (@code{define} in particular) can only be evaluated in the global
 interaction environment.
 
-@node Debugging commands, Procedures related to debugging, Debugging model, Debugging
+@node Debugging commands, Debugging example, Debugging model, Debugging
 @section Debugging commands
 
 In addition to expressions, the REPL accepts the following special
@@ -1967,6 +1968,9 @@ REPL is started in frame number @var{X} of the continuation.
 
 @end table
 
+@node Debugging example, Procedures related to debugging, Debugging commands, Debugging
+@section Debugging example
+
 Here is a sample interaction with @code{gsi}:
 
 @smallexample
@@ -2023,8 +2027,56 @@ lst = '(5 2 hello 9 1)
 > @b{,q}
 @end smallexample
 
-@node Procedures related to debugging, Console line-editing, Debugging commands, Debugging
+@node Procedures related to debugging, Console line-editing, Debugging example, Debugging
 @section Procedures related to debugging
+
+@deffn procedure repl-result-history-ref @var{i}
+@deffnx procedure repl-result-history-max-length-set! @var{n}
+
+@cindex #
+@cindex ##
+The REPL keeps a history of the last few results printed by the
+REPL. The call @code{(repl-result-history-ref @var{i})} returns the
+@var{i}th previous result (the last for @var{i}=0, the next to last
+for @var{i}=1, etc).  By default the REPL result history remembers up
+to 3 results.  The maximal length of the history can be set to @var{n}
+between 0 and 10 by a call to
+@code{(repl-result-history-max-length-set! @var{n})}.
+
+For convenience the reader defines an abbreviation for calling
+@code{repl-result-history-ref}.  Tokens formed by a sequence of one or
+more hash signs, such as @samp{@code{#}}, @samp{@code{##}}, etc, are
+expanded by the reader into the list @code{(repl-result-history-ref
+@var{i})}, where @var{i} is the number of hash signs minus 1.  In
+other words, @samp{@code{#}} will return the last result printed by
+the REPL, @samp{@code{##}} will return the next to last, etc.
+
+For example:
+
+@smallexample
+> @b{(map (lambda (x) (* x x)) '(1 2 3))}
+(1 4 9)
+> @b{(reverse #)}
+(9 4 1)
+> @b{(append # ##)}
+(9 4 1 1 4 9)
+> @b{1}
+1
+> @b{1}
+1
+> @b{(+ # ##)}
+2
+> @b{(+ # ##)}
+3
+> @b{(+ # ##)}
+5
+> @b{####}
+*** ERROR IN (console)@@9.1 -- (Argument 1) Out of range
+(repl-result-history-ref 3)
+1> 
+@end smallexample
+
+@end deffn
 
 @deffn procedure trace @var{proc}@dots{}
 @deffnx procedure untrace @var{proc}@dots{}
@@ -2359,6 +2411,9 @@ user-interface that is enabled by default.  It offers parentheses
 balancing, a history of previous commands, and several
 emacs-compatible keyboard commands.  The user's input is displayed in
 a bold font and the output produced by the system is in a plain font.
+The history of previous commands is saved in the file
+@file{~/.gambc_history}.  It is restored when a REPL is started.
+
 Here are the keyboard commands available (where the @samp{@code{M-}}
 prefix means the escape key is typed and the @samp{@code{C-}} prefix
 means the control key is pressed):
@@ -2407,14 +2462,14 @@ Set the mark to the cursor.
 
 @item C-w
 Delete the text between the cursor and the mark and keep a copy
-of this text on the internal clipboard.
+of this text on the clipboard.
 
 @item C-k
 Delete the text from the cursor to the end of the line and keep a copy
-of this text on the internal clipboard.
+of this text on the clipboard.
 
 @item C-y
-Paste the text that is on the internal clipboard.
+Paste the text that is on the clipboard.
 
 @item F8
 Same as typing @samp{#||#,c;} (REPL command to continue the computation).
@@ -2433,9 +2488,14 @@ Same as typing @samp{#||#,l;} (REPL command to leap the computation).
 
 @end table
 
-Note that on Mac OS X, depending on your configuration, you may have
-to press the @code{fn} key to access the function key @code{F12} and
-the @code{option} key to access the other function keys.
+On Mac OS X, depending on your configuration, you may have to press
+the @code{fn} key to access the function key @code{F12} and the
+@code{option} key to access the other function keys.
+
+On Microsoft Windows the clipboard is the system clipboard.  This
+allows text to be copied and pasted between the program and other
+applications.  On other operating systems the clipboard is internal to
+the program (it not integrated with the operating system).
 
 @node Emacs interface, GUIDE, Console line-editing, Debugging
 @section Emacs interface
@@ -3350,7 +3410,7 @@ The procedures in this section are not yet documented.
 @deffn procedure tty? @var{obj}
 @deffnx procedure tty-history @var{tty}
 @deffnx procedure tty-history-set! @var{tty} @var{history}
-@deffnx procedure tty-max-history-length-set! @var{tty} @var{n}
+@deffnx procedure tty-history-max-length-set! @var{tty} @var{n}
 @deffnx procedure tty-paren-balance-duration-set! @var{tty} @var{duration}
 @deffnx procedure tty-text-attributes-set! @var{tty} @var{attributes}
 @deffnx procedure tty-mode-set! @var{tty} @var{mode}

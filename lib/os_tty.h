@@ -1,4 +1,4 @@
-/* File: "os_tty.h", Time-stamp: <2008-02-06 13:40:17 feeley> */
+/* File: "os_tty.h", Time-stamp: <2008-02-08 18:50:59 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -356,7 +356,7 @@ typedef struct ___device_tty_struct
     int paste_index;
     ___C *paste_text;
 
-    int max_history_length;
+    int history_max_length;
     int history_length; /* number of history lines, not counting last */
     lineeditor_history *hist_last;
 
@@ -464,7 +464,7 @@ extern ___SCMOBJ ___os_device_tty_history_set
          ___SCMOBJ history),
         ());
 
-extern ___SCMOBJ ___os_device_tty_max_history_length_set
+extern ___SCMOBJ ___os_device_tty_history_max_length_set
    ___P((___SCMOBJ dev,
          ___SCMOBJ max_length),
         ());

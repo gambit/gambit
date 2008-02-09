@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-02-06 13:52:01 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-02-08 20:18:00 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1821,6 +1821,88 @@
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
     ((macro-repl-channel-newline channel) channel)))
 
+(##define-macro (macro-repl-result-history-max-max-length)
+  10)
+
+(##define-macro (macro-repl-result-history-default-max-length)
+  3)
+
+(define-prim (##make-empty-repl-result-history)
+  (##vector (macro-repl-result-history-default-max-length)))
+
+(##define-macro (macro-repl-result-history-length result-history)
+  `(##fixnum.- (##vector-length ,result-history) 1))
+
+(##define-macro (macro-repl-result-history-max-length result-history)
+  `(##vector-ref ,result-history 0))
+
+(##define-macro (macro-repl-result-history-ref result-history i)
+  `(##vector-ref ,result-history (##fixnum.+ ,i 1)))
+
+(define-prim (##repl-channel-result-history-add channel result)
+  (let loop ()
+    (let* ((result-history (macro-repl-channel-result-history channel))
+           (len (macro-repl-result-history-length result-history))
+           (max-len (macro-repl-result-history-max-length result-history))
+           (new-len (##fixnum.min (##fixnum.+ len 1) max-len)))
+      (if (##fixnum.< 0 new-len)
+          (let ((v (##make-vector (##fixnum.+ new-len 1) max-len)))
+            (##subvector-move! result-history 1 new-len v 2)
+            (##vector-set! v 1 result)
+            (let ()
+              (##declare (not interrupts-enabled))
+              (if (##not (##eq? (macro-repl-channel-result-history channel)
+                                result-history))
+                  (loop) ;; some other thread changed it before us... try again
+                  (begin
+                    (macro-repl-channel-result-history-set! channel v)
+                    (##void)))))
+          (##void)))))
+
+(define-prim (##repl-channel-result-history-max-length-set! channel max-len)
+  (let loop ()
+    (let* ((result-history (macro-repl-channel-result-history channel))
+           (len (macro-repl-result-history-length result-history))
+           (new-len (##fixnum.min len max-len))
+           (v (##make-vector (##fixnum.+ new-len 1) max-len)))
+      (##subvector-move! result-history 1 (##fixnum.+ new-len 1) v 1)
+      (let ()
+        (##declare (not interrupts-enabled))
+        (if (##not (##eq? (macro-repl-channel-result-history channel)
+                          result-history))
+            (loop) ;; some other thread changed it before us... try again
+            (begin
+              (macro-repl-channel-result-history-set! channel v)
+              (##void)))))))
+
+(define-prim (##repl-result-history-ref index)
+  (let* ((channel (##thread-repl-channel-get! (macro-current-thread)))
+         (result-history (macro-repl-channel-result-history channel)))
+    (macro-check-fixnum-range
+     index
+     1
+     0
+     (macro-repl-result-history-length result-history)
+     (repl-result-history-ref index)
+     (macro-repl-result-history-ref result-history index))))
+
+(define-prim (repl-result-history-ref index)
+  (##repl-result-history-ref index))
+
+(define-prim (##repl-result-history-max-length-set! max-len)
+  (let* ((channel (##thread-repl-channel-get! (macro-current-thread)))
+         (result-history (macro-repl-channel-result-history channel)))
+    (macro-check-fixnum-range-incl
+     max-len
+     1
+     0
+     (macro-repl-result-history-max-max-length)
+     (repl-result-history-max-length-set! max-len)
+     (##repl-channel-result-history-max-length-set! channel max-len))))
+
+(define-prim (repl-result-history-max-length-set! max-len)
+  (##repl-result-history-max-length-set! max-len))
+
 (implement-type-repl-channel-ports)
 
 (define-prim (##make-repl-channel-ports input-port output-port)
@@ -1830,75 +1912,77 @@
    (macro-current-thread)
    input-port
    output-port
+   (##make-empty-repl-result-history)
 
-   (let ((init-read-done? #f))
-     (lambda (channel level depth) ;; read-command
+   (lambda (channel level depth) ;; read-command
 
-       (define prompt "> ")
+     (define prompt "> ")
 
-       (if (##not init-read-done?)
-           (let ()
+     (if (##not (macro-repl-channel-ports-init-read-done? channel))
+         (let ()
 
-             (define (in-homedir filename)
-               (let ((homedir (##path-expand "~")))
-                 (##string-append homedir filename)))
+           (define (in-homedir filename)
+             (let ((homedir (##path-expand "~")))
+               (##string-append homedir filename)))
 
-             (set! init-read-done? #t)
+           (macro-repl-channel-ports-init-read-done?-set! channel #t)
 
-             (if (##tty? input-port)
-                 (let ((path-or-settings
-                        (##list path:
-                                (in-homedir ".gambc_history")
-                                char-encoding:
-                                'UTF-8)))
+           (if (##tty? input-port)
+               (let ((path-or-settings
+                      (##list path:
+                              (in-homedir ".gambc_history")
+                              char-encoding:
+                              'UTF-8)))
 
-                   (##open-file-generic
-                    (macro-direction-in)
-                    #f
-                    (lambda (port)
-                      (if (##port? port)
-                          (let ((history (##read-line port #f #f #f)))
-                            (##close-port port)
-                            (if (##string? history)
-                                (##tty-history-set! input-port history)))))
-                    open-input-file
-                    (##cons eol-encoding: (##cons 'cr-lf path-or-settings)))
+                 (##open-file-generic
+                  (macro-direction-in)
+                  #f
+                  (lambda (port)
+                    (if (##port? port)
+                        (let ((history (##read-line port #f #f #f)))
+                          (##close-port port)
+                          (if (##string? history)
+                              (##tty-history-set! input-port history)))))
+                  open-input-file
+                  (##cons eol-encoding: (##cons 'cr-lf path-or-settings)))
 
-                   (##add-exit-job!
-                    (lambda ()
-                      (##open-file-generic
-                       (macro-direction-out)
-                       #f
-                       (lambda (port)
-                         (if (##port? port)
-                             (let ((history (##tty-history input-port)))
-                               (##display history port)
-                               (##close-port port))))
-                       open-output-file
-                       path-or-settings)))))))
+                 (##add-exit-job!
+                  (lambda ()
+                    (##open-file-generic
+                     (macro-direction-out)
+                     #f
+                     (lambda (port)
+                       (if (##port? port)
+                           (let ((history (##tty-history input-port)))
+                             (##display history port)
+                             (##close-port port))))
+                     open-output-file
+                     path-or-settings)))))))
 
-       (let ((output-port (macro-repl-channel-output-port channel)))
-         (if (##fixnum.< 0 level)
-             (##write level output-port))
-         (if (##fixnum.< 0 depth)
-             (begin
-               (##write-string "\\" output-port)
-               (##write depth output-port)))
-         (##write-string prompt output-port)
-         (##force-output output-port))
+     (let ((output-port (macro-repl-channel-output-port channel)))
+       (if (##fixnum.< 0 level)
+           (##write level output-port))
+       (if (##fixnum.< 0 depth)
+           (begin
+             (##write-string "\\" output-port)
+             (##write depth output-port)))
+       (##write-string prompt output-port)
+       (##force-output output-port))
 
-       (let ((input-port (macro-repl-channel-input-port channel))
-             (output-port (macro-repl-channel-output-port channel)))
-         (let ((result (##read-expr-from-port input-port)))
-           (##output-port-column-set! output-port 1)
-           result))))
+     (let ((input-port (macro-repl-channel-input-port channel))
+           (output-port (macro-repl-channel-output-port channel)))
+       (let ((result (##read-expr-from-port input-port)))
+         (##output-port-column-set! output-port 1)
+         result)))
 
    (lambda (channel results) ;; write-results
      (let ((output-port (macro-repl-channel-output-port channel)))
        (##for-each
         (lambda (obj)
           (if (##not (##eq? obj (##void)))
-            (##pretty-print obj output-port)))
+              (begin
+                (##repl-channel-result-history-add channel obj)
+                (##pretty-print obj output-port))))
         results)))
 
    (lambda (channel writer) ;; display-monoline-message
@@ -1929,7 +2013,9 @@
 
    (lambda (channel) ;; newline
      (let ((output-port (macro-repl-channel-output-port channel)))
-       (##newline output-port)))))
+       (##newline output-port)))
+
+   #f)) ;; init-read-done?
 
 ;;;============================================================================
 

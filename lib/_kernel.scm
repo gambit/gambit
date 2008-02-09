@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-02-06 13:37:01 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-02-08 18:50:18 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4035,11 +4035,11 @@ end-of-code
             scheme-object
    "___os_device_tty_history_set"))
 
-(define-prim ##os-device-tty-max-history-length-set!
+(define-prim ##os-device-tty-history-max-length-set!
   (c-lambda (scheme-object
              scheme-object)
             scheme-object
-   "___os_device_tty_max_history_length_set"))
+   "___os_device_tty_history_max_length_set"))
 
 (define-prim ##os-device-tty-paren-balance-duration-set!
   (c-lambda (scheme-object

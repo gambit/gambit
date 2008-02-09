@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-02-06 13:39:45 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-02-08 18:55:24 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -5149,20 +5149,20 @@
       (tty-history-set! port history)
       (##tty-history-set! port history)))))
 
-(define-prim (##tty-max-history-length-set! port max-length)
-  (##os-device-tty-max-history-length-set! (##port-device port) max-length))
+(define-prim (##tty-history-max-length-set! port max-length)
+  (##os-device-tty-history-max-length-set! (##port-device port) max-length))
 
-(define-prim (tty-max-history-length-set! port max-length)
+(define-prim (tty-history-max-length-set! port max-length)
   (macro-force-vars (port max-length)
     (macro-check-tty-port
      port
      1
-     (tty-max-history-length-set! port max-length)
+     (tty-history-max-length-set! port max-length)
      (macro-check-index
       max-length
       2
-      (tty-max-history-length-set! port max-length)
-      (##tty-max-history-length-set! port max-length)))))
+      (tty-history-max-length-set! port max-length)
+      (##tty-history-max-length-set! port max-length)))))
 
 (define-prim (##tty-paren-balance-duration-set! port duration)
   (##os-device-tty-paren-balance-duration-set! (##port-device port) duration))
@@ -9062,19 +9062,29 @@
                 (##build-escaped-string-up-to re #\|)))
            (string->key str)))
         (else
-         (let ((str
-                (##build-delimited-string re c 1)))
-           (or (and intern? (string->number str 10))
-               (begin
-                 (##readtable-string-convert-case!
-                  (macro-readenv-readtable re)
-                  str)
-                 (or (##readtable-parse-keyword
-                      (macro-readenv-readtable re)
-                      str
-                      intern?
-                      #t)
-                     (string->sym str))))))))
+         (##string->number/keyword/symbol
+          re
+          (##build-delimited-string re c 1)
+          intern?))))
+
+(define (##string->number/keyword/symbol re str intern?)
+
+  (define (string->sym str)
+    (if intern?
+      (string->symbol-object str)
+      (string->uninterned-symbol-object str)))
+
+  (or (and intern? (string->number str 10))
+      (begin
+        (##readtable-string-convert-case!
+         (macro-readenv-readtable re)
+         str)
+        (or (##readtable-parse-keyword
+             (macro-readenv-readtable re)
+             str
+             intern?
+             #t)
+            (string->sym str)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -9282,23 +9292,21 @@
 ;;; Procedure to read datums starting with '#'.
 
 (define (##read-sharp re c)
-  (let* ((old-pos (macro-readenv-filepos re))
-         (start-pos (##readenv-current-filepos re)))
+  (let ((start-pos (##readenv-current-filepos re)))
     (macro-read-next-char-or-eof re) ;; skip #\#
-    (##read-sharp-aux re old-pos start-pos)))
+    (##read-sharp-aux re start-pos)))
 
-(define (##read-sharp-aux re old-pos start-pos)
+(define (##read-sharp-aux re start-pos)
   (let ((next (macro-peek-next-char-or-eof re)))
     (if (char? next)
-      ((##readtable-char-sharp-handler (macro-readenv-readtable re) next)
-       re
-       next
-       start-pos)
-      (begin
-        (macro-readenv-filepos-set! re start-pos) ;; set pos to error
-        (##raise-datum-parsing-exception 'incomplete-form-eof-reached re)
-        (macro-readenv-filepos-set! re old-pos) ;; restore pos
-        (##read-datum-or-label-or-none-or-dot re))))) ;; skip error
+        ((##readtable-char-sharp-handler (macro-readenv-readtable re) next)
+         re
+         next
+         start-pos)
+        (##read-sharp-other
+         re
+         next
+         start-pos))))
 
 (define (##read-sharp-vector re next start-pos)
   (macro-read-next-char-or-eof re) ;; skip char after #\#
@@ -9418,8 +9426,20 @@
 
 (define (##read-sharp-keyword/symbol re next start-pos)
   (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
-  (let ((obj (##build-delimited-number/keyword/symbol re #\# #t)))
-    (macro-readenv-wrap re obj)))
+  (let ((str (##build-delimited-string re #\# 1)))
+    (let ((n (string-length str)))
+      (let loop ((i (- n 1)))
+        (cond ((< i 0)
+               (##wrap-op1 re
+                           start-pos
+                           (macro-readtable-sharp-seq-keyword
+                            (macro-readenv-readtable re))
+                           (- n 1)))
+              ((char=? #\# (string-ref str i))
+               (loop (- i 1)))
+              (else
+               (let ((obj (##string->number/keyword/symbol re str #t)))
+                 (macro-readenv-wrap re obj))))))))
 
 (define (##read-sharp-colon re next start-pos)
   (let ((old-pos (macro-readenv-filepos re)))
@@ -9552,7 +9572,8 @@
                          (macro-readenv-readtable re))))
                (##wrap-op1 re
                            start-pos
-                           'serial-number->object
+                           (macro-readtable-sharp-num-keyword
+                            (macro-readenv-readtable re))
                            n))
               ((eq? c #\#)
                (macro-read-next-char-or-eof re) ;; skip #\#
@@ -9677,6 +9698,12 @@
                  (deserialize re ##implode-procedure))
                 ((##read-string=? re s "#return")
                  (deserialize re ##implode-return))
+                ((##read-string=? re s "#")
+                 (##wrap-op1 re
+                             start-pos
+                             (macro-readtable-sharp-seq-keyword
+                              (macro-readenv-readtable re))
+                             0))
                 (else
                  (##raise-datum-parsing-exception 'invalid-token re)
                  (macro-readenv-filepos-set! re old-pos) ;; restore pos
@@ -10815,7 +10842,7 @@
                         (macro-readenv-readtable re))))))
 
   (define (read-sharp re start-pos cont)
-    (let ((x (##read-sharp-aux re start-pos start-pos)))
+    (let ((x (##read-sharp-aux re start-pos)))
       (cont re
             #f
             (##wrap-op1 re
@@ -11336,6 +11363,8 @@
           'quasisyntax       ;; sharp-quasiquote-keyword
           'unsyntax          ;; sharp-unquote-keyword
           'unsyntax-splicing ;; sharp-unquote-splicing-keyword
+          'serial-number->object ;; sharp-num-keyword
+          'repl-result-history-ref ;; sharp-seq-keyword
           #f                 ;; paren-keyword
           #f                 ;; bracket-keyword
           #f                 ;; brace-keyword

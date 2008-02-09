@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2008-01-10 17:41:22 feeley>
+;;; File: "_io#.scm", Time-stamp: <2008-02-07 13:55:10 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1073,6 +1073,8 @@
   (sharp-quasiquote-keyword       unprintable: read-write:)
   (sharp-unquote-keyword          unprintable: read-write:)
   (sharp-unquote-splicing-keyword unprintable: read-write:)
+  (sharp-num-keyword              unprintable: read-write:)
+  (sharp-seq-keyword              unprintable: read-write:)
   (paren-keyword                  unprintable: read-write:)
   (bracket-keyword                unprintable: read-write:)
   (brace-keyword                  unprintable: read-write:)

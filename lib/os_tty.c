@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-02-06 13:40:54 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-02-08 18:51:40 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -2097,23 +2097,23 @@ ___device_tty *self;)
 {
   ___device_tty *d = self;
 
-  lineeditor_history_trim_to (d, d->max_history_length);
+  lineeditor_history_trim_to (d, d->history_max_length);
 }
 
 
-___HIDDEN void lineeditor_set_max_history_length
+___HIDDEN void lineeditor_set_history_max_length
    ___P((___device_tty *self,
-         int max_history_length),
+         int history_max_length),
         (self,
-         max_history_length)
+         history_max_length)
 ___device_tty *self;
-int max_history_length;)
+int history_max_length;)
 {
   ___device_tty *d = self;
 
-  if (max_history_length >= 0)
+  if (history_max_length >= 0)
     {
-      d->max_history_length = max_history_length;
+      d->history_max_length = history_max_length;
       lineeditor_history_trim (d);
     }
 }
@@ -5083,7 +5083,7 @@ int plain;)
   d->paste_index = 0;
   d->paste_text = NULL;
 
-  d->max_history_length = 1000000000; /* set a very high limit */
+  d->history_max_length = 1000000000; /* set a very high limit */
   d->history_length = -1;
   d->hist_last = NULL;
 
@@ -5144,7 +5144,7 @@ int plain;)
                           return ___FIX(___NO_ERR);
                         }
                     }
-                  d->max_history_length = -1;
+                  d->history_max_length = -1;
                   lineeditor_history_trim (d);
                 }
               lineeditor_input_decoder_cleanup (&d->input_decoder);
@@ -5180,7 +5180,7 @@ ___device_tty *self;)
   }
 #endif
 
-  d->max_history_length = -1;
+  d->history_max_length = -1;
   lineeditor_history_trim (d);
 
   lineeditor_input_decoder_cleanup (&d->input_decoder);
@@ -8135,7 +8135,7 @@ ___SCMOBJ history;)
 }
 
 
-___SCMOBJ ___os_device_tty_max_history_length_set
+___SCMOBJ ___os_device_tty_history_max_length_set
    ___P((___SCMOBJ dev,
          ___SCMOBJ max_length),
         (dev,
@@ -8146,7 +8146,7 @@ ___SCMOBJ max_length;)
   ___device_tty *d =
     ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
 
-  lineeditor_set_max_history_length (d, ___INT(max_length));
+  lineeditor_set_history_max_length (d, ___INT(max_length));
 
   return ___VOID;
 }

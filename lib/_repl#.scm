@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_repl#.scm", Time-stamp: <2007-05-27 22:34:06 feeley>
+;;; File: "_repl#.scm", Time-stamp: <2008-02-08 18:30:54 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -37,6 +37,7 @@
   last-owner   ;; thread that last owned this repl-channel
   input-port
   output-port
+  result-history
 
   read-command
   write-results
@@ -57,6 +58,8 @@
   prefix: macro-
   opaque:
   unprintable:
+
+  init-read-done?
 )
 
 ;;;============================================================================
