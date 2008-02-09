@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_std.scm", Time-stamp: <2007-04-04 11:26:46 feeley>
+;;; File: "_std.scm", Time-stamp: <2008-02-08 22:44:05 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -37,29 +37,32 @@
                  macro-check-elem-list)
 
   (define (sym . lst)
-    (string->symbol (apply string-append (map symbol->string lst))))
+    (string->symbol
+     (apply string-append
+            (map (lambda (s) (if (symbol? s) (symbol->string s) s))
+                 lst))))
 
   (let ()
 
     (define macro-check-vect (sym 'macro-check- name))
     (define vect-list        (sym name '-list))
 
-    (define ##vect?          (sym '## name '?))
+    (define ##vect?          (sym "##" name '?))
     (define ##make-vect      (sym '##make- name))
-    (define ##vect           (sym '## name))
-    (define ##vect-length    (sym '## name '-length))
-    (define ##vect-ref       (sym '## name '-ref))
-    (define ##vect-set!      (sym '## name '-set!))
-    (define ##vect->list     (sym '## name '->list))
+    (define ##vect           (sym "##" name))
+    (define ##vect-length    (sym "##" name '-length))
+    (define ##vect-ref       (sym "##" name '-ref))
+    (define ##vect-set!      (sym "##" name '-set!))
+    (define ##vect->list     (sym "##" name '->list))
     (define ##list->vect     (sym '##list-> name))
-    (define ##vect-copy      (sym '## name '-copy))
-    (define ##vect-fill!     (sym '## name '-fill!))
+    (define ##vect-copy      (sym "##" name '-copy))
+    (define ##vect-fill!     (sym "##" name '-fill!))
     (define ##subvect        (sym '##sub name))
     (define ##append-vects   (sym '##append- name 's))
-    (define ##vect-append    (sym '## name '-append))
+    (define ##vect-append    (sym "##" name '-append))
     (define ##subvect-move!  (sym '##sub name '-move!))
     (define ##subvect-fill!  (sym '##sub name '-fill!))
-    (define ##vect-shrink!   (sym '## name '-shrink!))
+    (define ##vect-shrink!   (sym "##" name '-shrink!))
 
     (define vect?            (sym name '?))
     (define make-vect        (sym 'make- name))

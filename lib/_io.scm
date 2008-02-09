@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-02-08 18:55:24 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-02-08 22:26:45 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1933,7 +1933,10 @@
                   allowed-settings)
 
   (define (sym . lst)
-    (string->symbol (apply string-append (map symbol->string lst))))
+    (string->symbol
+     (apply string-append
+            (map (lambda (s) (if (symbol? s) (symbol->string s) s))
+                 lst))))
 
   (let ((vector/character/byte
          (cond ((eq? name 'u8vector) 'byte)
@@ -1957,11 +1960,11 @@
 
     (define ##fail-check-vect         (sym '##fail-check- name))
     (define ##make-vect               (sym '##make- name))
-    (define ##vect?                   (sym '## name '?))
-    (define ##vect-ref                (sym '## name '-ref))
-    (define ##vect-set!               (sym '## name '-set!))
-    (define ##vect-length             (sym '## name '-length))
-    (define ##vect-shrink!            (sym '## name '-shrink!))
+    (define ##vect?                   (sym "##" name '?))
+    (define ##vect-ref                (sym "##" name '-ref))
+    (define ##vect-set!               (sym "##" name '-set!))
+    (define ##vect-length             (sym "##" name '-length))
+    (define ##vect-shrink!            (sym "##" name '-shrink!))
     (define ##subvect                 (sym '##sub name))
     (define ##subvect-move!           (sym '##sub name '-move!))
     (define ##subvect->fifo           (sym '##sub name '->fifo))
