@@ -1,6 +1,6 @@
 # Configure template for Gambit-C system.
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -20,7 +20,7 @@ AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 AC_SUBST(PACKAGE_SUBDIR)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 

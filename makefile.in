@@ -1,6 +1,6 @@
 # makefile for Gambit-C system.
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -205,7 +205,7 @@ config.status: configure
 	./config.status --recheck
 
 configure: configure.ac
-	cd $(srcdir) && autoconf configure.ac > configure
+	cd $(srcdir) && autoconf configure.ac > configure && chmod 755 configure
 
 # Tell versions [3.59,3.63) of GNU make not to export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
