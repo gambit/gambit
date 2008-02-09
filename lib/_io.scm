@@ -2082,7 +2082,7 @@
 
               (let loop ()
 
-                (if (##u8vector? (,',macro-vect-port-rbuf port))
+                #;(if (##u8vector? (,',macro-vect-port-rbuf port))
                     (pp (##list (,',macro-vect-port-rlo port)
                                 (,',macro-vect-port-rhi port)
                                 (,',macro-vect-port-wlo port)
@@ -3298,7 +3298,7 @@
      (let ((fill u8vector-rbuf-fill)
            (drain u8vector-wbuf-drain))
 
-       (define (u8vector-rbuf-fill port want block?)
+       #;(define (u8vector-rbuf-fill port want block?)
          (pp (list 'u8vector-rbuf-fill port want block?))
          (##repl)
          (fill port want block?))
@@ -4551,8 +4551,8 @@
            (macro-port-mutex-unlock! port)
            result)
          (begin
-           (macro-byte-port-rlo-set! port 0)
-           (macro-byte-port-rhi-set! port 0)
+;           (macro-byte-port-rlo-set! port 0)
+;           (macro-byte-port-rhi-set! port 0)
            (let ((code ((macro-byte-port-rbuf-fill port)
                         port
                         1
