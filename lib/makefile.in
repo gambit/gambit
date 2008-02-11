@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2008-01-11 11:38:44 feeley>
+# makefile for Gambit-C library, Time-stamp: <2008-02-11 10:45:38 feeley>
 
 # Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -147,7 +147,18 @@ os_io@obj@: os_io.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_io.h
 
 $(MODULES_C): $(srcdirpfx)$(rootfromhere)/lib/header.scm \
 $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm
+$(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_kernel\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_system\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_num\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_std\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_eval\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_io\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_nonstd\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm
 
 install-pre:
 
