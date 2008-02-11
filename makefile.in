@@ -95,7 +95,63 @@ stamp: fake_target
 	cd include && $(MAKE) $(MDEFINES) $@
 
 commit: fake_target stamp
-	hg commit
+	$(HG) commit
+
+update: fake_target
+	next_version=`hg tags | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
+	next_version=`hg tags | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | grep -e 'v.*-bootstrap' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
+	if test "$$next_version" = ""; then \
+	  $(HG) update; \
+	else \
+	  $(HG) update -r $$next_version-bootstrap; \
+	  $(MAKE) bootstrap; \
+	  $(HG) update -r $$next_version; \
+	  $(MAKE) clean bootstrap update; \
+	fi
+
+new-major: fake_target
+	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
+	next_major=`eval expr 1 + $$major`; \
+	next_version=v$$next_major.0.0; \
+	$(MAKE) $(MDEFINES) NEW_VERSION=$$next_version change-version
+
+new-minor: fake_target
+	minor=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
+	next_minor=`eval expr 1 + $$minor`; \
+	next_version=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&v\1.$$next_minor.0&"`; \
+	$(MAKE) $(MDEFINES) NEW_VERSION=$$next_version change-version
+
+new-revision: fake_target
+	revision=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
+	next_revision=`eval expr 1 + $$revision`; \
+	next_version=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&v\1.\2.$$next_revision&"`; \
+	$(MAKE) $(MDEFINES) NEW_VERSION=$$next_version change-version
+
+change-version: fake_target
+	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
+	minor=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
+	revision=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
+	next_major=`echo $(NEW_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
+	next_minor=`echo $(NEW_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
+	next_revision=`echo $(NEW_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
+	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
+	new_version_num=`eval expr "\( 100000 \\* $$next_major \) + \( 1000 \\* $$next_minor \) + $$next_revision"`; \
+	sed -e "/(define (compiler-version) $$version_num)/s/$$version_num/$$new_version_num/" gsc/_parms.scm > gsc/_parms.scm-new; \
+	if ! diff gsc/_parms.scm gsc/_parms.scm-new > /dev/null; then \
+	  mv gsc/_parms.scm-new gsc/_parms.scm; \
+	  $(HG) commit -m "[COMPILER CHANGES NEEDED FOR $(NEW_VERSION)] Changed version in compiler"; \
+	  $(HG) tag $(NEW_VERSION)-bootstrap; \
+	  if $(MAKE) $(MDEFINES) bootstrap; then \
+	    misc/changev $$version_num $$new_version_num; \
+	    cd tests; ../gsc/gsc -:=.. -f -c mix.scm; mv mix.c test5.ok; cd ..; \
+	    if $(MAKE) $(MDEFINES) clean && $(MAKE) $(MDEFINES) -j 2 && $(MAKE) $(MDEFINES) check && $(MAKE) $(MDEFINES) doc; then \
+	      $(HG) commit -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
+	      $(HG) tag $(NEW_VERSION); \
+	    fi; \
+	  fi; \
+	else \
+	  echo Compiler version in gsc/_parms.scm is inconsistent with PACKAGE_VERSION; \
+	fi
 
 release: fake_target
 	$(MAKE) $(MDEFINES) bootstrap
