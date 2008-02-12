@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2007-09-13 13:34:00 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2008-02-12 15:59:18 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -908,36 +908,86 @@
          (pt-quasiquotation l level env))))
 
 (define (append-form source ptree1 ptree2 env)
+
+  (define (call oper-sym args)
+    (new-call* source (add-not-safe env)
+      (new-ref-extended-bindings source oper-sym env)
+      args))
+
   (cond ((and (cst? ptree1) (cst? ptree2))
          (new-cst source env
            (append (cst-val ptree1) (cst-val ptree2))))
         ((and (cst? ptree2) (null? (cst-val ptree2)))
          ptree1)
         (else
-         (new-call* source (add-not-safe env)
-           (new-ref-extended-bindings source **quasi-append-sym env)
-           (list ptree1 ptree2)))))
+         (call **quasi-append-sym (list ptree1 ptree2)))))
 
 (define (cons-form source ptree1 ptree2 env)
+
+  (define (call oper-sym args)
+    (new-call* source (add-not-safe env)
+      (new-ref-extended-bindings source oper-sym env)
+      args))
+
   (cond ((and (cst? ptree1) (cst? ptree2))
          (new-cst source env
            (cons (cst-val ptree1) (cst-val ptree2))))
         ((and (cst? ptree2) (null? (cst-val ptree2)))
-         (new-call* source (add-not-safe env)
-           (new-ref-extended-bindings source **quasi-list-sym env)
-           (list ptree1)))
+         (call **quasi-list-sym (list ptree1)))
+        ((and (app? ptree2)
+              (app->specialized-proc ptree2))
+         =>
+         (lambda (proc)
+           (if (eq? proc **quasi-list-proc-obj)
+               (call **quasi-list-sym (cons ptree1 (app-args ptree2)))
+               (call **quasi-cons-sym (list ptree1 ptree2)))))
         (else
-         (new-call* source (add-not-safe env)
-           (new-ref-extended-bindings source **quasi-cons-sym env)
-           (list ptree1 ptree2)))))
+         (call **quasi-cons-sym (list ptree1 ptree2)))))
 
 (define (vector-form source ptree env)
-  (if (cst? ptree)
-    (new-cst source env
-      (list->vect (cst-val ptree)))
+
+  (define (call oper-sym args)
     (new-call* source (add-not-safe env)
-      (new-ref-extended-bindings source **quasi-list->vector-sym env)
-      (list ptree))))
+      (new-ref-extended-bindings source oper-sym env)
+      args))
+
+  (cond ((cst? ptree)
+         (new-cst source env
+           (list->vect (cst-val ptree))))
+        ((list-construction? source ptree env)
+         =>
+         (lambda (elems)
+           (call **quasi-vector-sym elems)))
+        (else
+         (call **quasi-list->vector-sym (list ptree)))))
+
+(define (list-construction? source ptree env)
+  (cond ((cst? ptree)
+         (let ((val (cst-val ptree)))
+           (if (proper-length val)
+               (map (lambda (elem-val)
+                      (new-cst source env
+                        elem-val))
+                    val)
+               #f)))
+        ((and (app? ptree)
+              (app->specialized-proc ptree))
+         =>
+         (lambda (proc)
+           (cond ((eq? proc **quasi-cons-proc-obj)
+                  (let ((args (app-args ptree)))
+                    (and (eqv? 2 (proper-length args))
+                         (let* ((arg1 (car args))
+                                (arg2 (cadr args))
+                                (x (list-construction? source arg2 env)))
+                           (and x
+                                (cons arg1 x))))))
+                 ((eq? proc **quasi-list-proc-obj)
+                  (app-args ptree))
+                 (else
+                  #f))))
+        (else
+         #f)))
 
 (define (pt-var source env use)
   (if (eq? use 'none)

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2008-01-17 21:44:18 feeley>
+;;; File: "_system.scm", Time-stamp: <2008-02-12 14:56:37 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -157,6 +157,9 @@
                   (##vector-set! vect i (##car x))
                   (loop2 (##cdr x) (##fixnum.+ i 1)))
                 vect))))))))
+
+(define-prim (##quasi-vector . lst)
+  (##quasi-list->vector lst))
 
 (define-prim (##case-memv obj lst)
   (macro-force-vars (obj)

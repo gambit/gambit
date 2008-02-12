@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_back.scm", Time-stamp: <2007-06-28 18:49:14 feeley>
+;;; File: "_back.scm", Time-stamp: <2008-02-12 14:50:55 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -196,15 +196,42 @@
   (set! target.task-return       (target-task-return target))
   (set! target.switch-testable?  (target-switch-testable?  target))
 
-  (set! **not-proc-obj (target.prim-info **not-sym))
-  (set! **eq?-proc-obj (target.prim-info **eq?-sym))
+  (set! **not-proc-obj
+        (target.prim-info **not-sym))
+
+  (set! **eq?-proc-obj
+        (target.prim-info **eq?-sym))
+
+  (set! **quasi-append-proc-obj
+        (target.prim-info **quasi-append-sym))
+
+  (set! **quasi-list-proc-obj
+        (target.prim-info **quasi-list-sym))
+
+  (set! **quasi-cons-proc-obj
+        (target.prim-info **quasi-cons-sym))
+
+  (set! **quasi-list->vector-proc-obj
+        (target.prim-info **quasi-list->vector-sym))
+
+  (set! **quasi-vector-proc-obj
+        (target.prim-info **quasi-vector-sym))
+
+  (set! **case-memv-proc-obj
+        (target.prim-info **case-memv-sym))
 
   #f)
 
 (define (target-unselect!)
 
-  (set! **not-proc-obj #f)
-  (set! **eq?-proc-obj #f)
+  (set! **not-proc-obj                #f)
+  (set! **eq?-proc-obj                #f)
+  (set! **quasi-append-proc-obj       #f)
+  (set! **quasi-list-proc-obj         #f)
+  (set! **quasi-cons-proc-obj         #f)
+  (set! **quasi-list->vector-proc-obj #f)
+  (set! **quasi-vector-proc-obj       #f)
+  (set! **case-memv-proc-obj          #f)
 
   ((target-end! target))
 
@@ -221,8 +248,16 @@
 (define target.task-return       #f)
 (define target.switch-testable?  #f)
 
-(define **not-proc-obj #f)   ; the procedure ##not (from the back-end)
-(define **eq?-proc-obj #f)   ; the procedure ##eq? (from the back-end)
+;; procedures defined in back-end:
+
+(define **not-proc-obj                #f)  ;; ##not
+(define **eq?-proc-obj                #f)  ;; ##eq?
+(define **quasi-append-proc-obj       #f)  ;; ##quasi-append
+(define **quasi-list-proc-obj         #f)  ;; ##quasi-list
+(define **quasi-cons-proc-obj         #f)  ;; ##quasi-cons
+(define **quasi-list->vector-proc-obj #f)  ;; ##quasi-list->vector
+(define **quasi-vector-proc-obj       #f)  ;; ##quasi-vector
+(define **case-memv-proc-obj          #f)  ;; ##case-memv
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

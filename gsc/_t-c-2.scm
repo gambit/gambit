@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2008-01-11 11:50:22 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2008-02-12 16:02:37 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3488,6 +3488,12 @@
 (targ-op "##cddddr"           (targ-ifjump-apply-u "CDDDDR"))
 
 (targ-op "##list"             (targ-apply-list))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(targ-op "##quasi-list"       (targ-apply-list))
+(targ-op "##quasi-cons"       (targ-apply-cons))
+(targ-op "##quasi-vector"     (targ-apply-vector-s 'vector))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

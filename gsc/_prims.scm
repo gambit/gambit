@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_prims.scm", Time-stamp: <2007-11-13 10:28:43 feeley>
+;;; File: "_prims.scm", Time-stamp: <2008-02-12 14:52:01 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -891,6 +891,7 @@
 ("##quasi-list"                       0     #f ()    0    list    extended)
 ("##quasi-cons"                       (2)   #f ()    0    pair    extended)
 ("##quasi-list->vector"               (1)   #f 0     0    vector  extended)
+("##quasi-vector"                     0     #f ()    0    vector  extended)
 ("##case-memv"                        (2)   #f 0     0    list    extended)
 
 ("##bignum.negative?"                 (1)   #f ()    0    boolean extended)

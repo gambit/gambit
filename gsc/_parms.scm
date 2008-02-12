@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_parms.scm", Time-stamp: <2008-02-06 22:06:04 feeley>
+;;; File: "_parms.scm", Time-stamp: <2008-02-12 15:07:59 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -73,6 +73,8 @@
 (define **quasi-list-sym       (string->canonical-symbol "##quasi-list"))
 (define **quasi-cons-sym       (string->canonical-symbol "##quasi-cons"))
 (define **quasi-list->vector-sym (string->canonical-symbol "##quasi-list->vector"))
+(define **quasi-vector-sym     (string->canonical-symbol "##quasi-vector"))
+(define **case-memv-sym        (string->canonical-symbol "##case-memv"))
 (define **box-sym              (string->canonical-symbol "##box"))
 (define **unbox-sym            (string->canonical-symbol "##unbox"))
 (define **set-box!-sym         (string->canonical-symbol "##set-box!"))

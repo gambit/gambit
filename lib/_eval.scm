@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2007-11-20 11:04:52 feeley>
+;;; File: "_eval.scm", Time-stamp: <2008-02-12 17:19:28 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2439,9 +2439,11 @@
    (let* ((val1
            (macro-code-run (^ 0)))
           (val2
-           (macro-code-run (^ 1))))
-     (##first-argument $code rte) ;; keep $code and rte in environment-map
-     (##quasi-cons val1 val2))))
+           (macro-code-run (^ 1)))
+          (result
+           (##quasi-cons val1 val2)))
+     (##check-heap-limit)
+     (##first-argument result $code rte)))) ;; keep $code and rte in environment-map
 
 (define ##gen-quasi-cons
   (macro-make-gen (val1 val2)

@@ -92,6 +92,7 @@
 #return(##cprc-quasi-cons 1) : ($code rte)
 #return(##cprc-quasi-cons 2) : ($code rte)
 #return(##cprc-quasi-cons 3) : ($code rte val1)
+#return(##cprc-quasi-cons 4) : ($code rte)
 
 #procedure(##cprc-cond-if)
 #return(##cprc-cond-if 1) : ($code rte)
