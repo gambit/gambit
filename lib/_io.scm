@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-02-08 22:26:45 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-02-12 11:28:26 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -233,6 +233,8 @@
            (macro-char-encoding-UTF-16LE))
           ((##eq? value 'UTF-16BE)
            (macro-char-encoding-UTF-16BE))
+          ((##eq? value 'UTF)
+           (macro-char-encoding-UTF))
           ((##eq? value 'UCS-2)
            (macro-char-encoding-UCS-2))
           ((##eq? value 'UCS-2LE)

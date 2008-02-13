@@ -1,4 +1,4 @@
-/* File: "c_intf.c", Time-stamp: <2008-01-10 17:49:12 feeley> */
+/* File: "c_intf.c", Time-stamp: <2008-02-13 15:33:31 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -452,7 +452,7 @@ ___UTF_8STRING *ptr;)
 #define max_UTF_8        0x7f
 
 #define bytes_per_UTF_16 2 /* optimization for 2 byte case */
-#define max_UTF_16       0x7f
+#define max_UTF_16       0x10ffff
 
 #define bytes_per_UCS_2  2
 #define max_UCS_2        0xffff
@@ -825,26 +825,13 @@ int *decoding_state;)
             break;
           }
 
-#if 0
         case ___CHAR_ENCODING_UTF_16BE:
           {
             decode_next_UTF_16BE:
             blo += bytes_per_UTF_16;
             if (blo <= bhi)
               {
-                c = get_UTF_16(-1);
-                if (c > 0xd7ff && c <= 0xdfff)
-                  {
-                    if (c > 0xdbff)
-                      c = ___MAX_CHR+1; /* force illegal char */
-                    else
-                      {
-                        blo += bytes_per_UTF_16;
-                        if (blo+bytes_per_UTF_16 <= bhi)
-                          {
-                            
-                          }
-
+                c = get_UTF_16BE(-1);
                 if (c <= 0xd7ff)
                   {
                     if (c <= ___MAX_CHR)
@@ -853,10 +840,10 @@ int *decoding_state;)
                       }
                     else
                       {
-                        if (orig_blo-bytes_per_UTF_16 == byte_buf)
+                        if (blo-bytes_per_UTF_16 == byte_buf)
                           result = ___ILLEGAL_CHAR;
                         else
-                          blo = orig_blo-bytes_per_UTF_16;
+                          blo = blo-bytes_per_UTF_16;
                       }
                   }
                 else if (c > 0xdfff)
@@ -871,88 +858,206 @@ int *decoding_state;)
                       }
                     else
                       {
-                        if (orig_blo-bytes_per_UTF_16 == byte_buf)
+                        if (blo-bytes_per_UTF_16 == byte_buf)
                           result = ___ILLEGAL_CHAR;
                         else
-                          blo = orig_blo-bytes_per_UTF_16;
+                          blo = blo-bytes_per_UTF_16;
                       }
-
-                    ...
                   }
-                else if (c <= 0xbf || c > 0xfd)
+                else if (c > 0xdbff)
                   {
-                    if (blo - bytes_per_UTF_16 == byte_buf)
+                    if (blo-bytes_per_UTF_16 == byte_buf)
                       result = ___ILLEGAL_CHAR;
                     else
-                      blo -= bytes_per_UTF_16;
+                      blo = blo-bytes_per_UTF_16;
                   }
                 else
                   {
-                    ___U8* orig_blo = blo;
-                    ___U8 b0 = c;
-                    int bits = 6;
-                    while (b0 & 0x40)
+                    blo += bytes_per_UTF_16;
+                    if (blo <= bhi)
                       {
-                        ___U8 next = *blo++;
-                        if (blo > bhi)
+                        ___UCS_4 x = get_UTF_16BE(-1);
+                        if (x > 0xdbff &&
+                            x <= 0xdfff &&
+                            (c = (c << 10) + x -
+                                 ((0xd800 << 10) + 0xdc00 - 0x10000))
+                            <= ___MAX_CHR)
                           {
-                            blo = orig_blo-bytes_per_UTF_16;
-                            if (blo == byte_buf)
-                              result = ___INCOMPLETE_CHAR;
-                            goto end_UTF_16;
+                            state =
+                              ___DECODE_STATE_MASK(state)+___DECODE_STATE_NONE;
+                            *clo++ = c;
+                            if (clo < chi)
+                              goto decode_next_UTF_16BE;
                           }
-                        if (next <= 0x7f || next > 0xbf)
+                        else
                           {
-                            if (orig_blo-bytes_per_UTF_16 == byte_buf)
+                            if (blo-2*bytes_per_UTF_16 == byte_buf)
                               result = ___ILLEGAL_CHAR;
                             else
-                              blo = orig_blo-bytes_per_UTF_16;
-                            goto end_UTF_16;
+                              blo = blo-2*bytes_per_UTF_16;
                           }
-                        c = (c << 6) + (next & 0x3f);
-                        b0 <<= 1;
-                        bits += 5;
-                      }
-                    c &= (___CAST(___UCS_4,1)<<bits)-1;
-                    if (c >= 0x80 &&
-                        c >= (___CAST(___UCS_4,1)<<(bits-5)) &&
-                        c <= ___MAX_CHR)
-                      {
-                        state =
-                          ___DECODE_STATE_MASK(state)+___DECODE_STATE_NONE;
-                        *clo++ = c;
-                        if (clo < chi)
-                          goto decode_next_UTF_16BE;
                       }
                     else
                       {
-                        if (orig_blo-bytes_per_UTF_16 == byte_buf)
+                        if (blo-2*bytes_per_UTF_16 == byte_buf)
                           result = ___ILLEGAL_CHAR;
                         else
-                          blo = orig_blo-bytes_per_UTF_16;
+                          blo = blo-2*bytes_per_UTF_16;
                       }
-                    end_UTF_16:;
                   }
               }
             else
               blo -= bytes_per_UTF_16;
             break;
           }
-#endif
-
-        /*****************************************/
-
-        case ___CHAR_ENCODING_UTF_16BE:
-          DECODE_CHARS_LOOP(decode_next_UTF_16BE,
-                            bytes_per_UTF_16,
-                            0xffff,
-                            get_UTF_16BE);
 
         case ___CHAR_ENCODING_UTF_16LE:
-          DECODE_CHARS_LOOP(decode_next_UTF_16LE,
-                            bytes_per_UTF_16,
-                            0xffff,
-                            get_UTF_16LE);
+          {
+            decode_next_UTF_16LE:
+            blo += bytes_per_UTF_16;
+            if (blo <= bhi)
+              {
+                c = get_UTF_16LE(-1);
+                if (c <= 0xd7ff)
+                  {
+                    if (c <= ___MAX_CHR)
+                      {
+                        DECODE_EOL(decode_next_UTF_16LE);
+                      }
+                    else
+                      {
+                        if (blo-bytes_per_UTF_16 == byte_buf)
+                          result = ___ILLEGAL_CHAR;
+                        else
+                          blo = blo-bytes_per_UTF_16;
+                      }
+                  }
+                else if (c > 0xdfff)
+                  {
+                    if (c <= ___MAX_CHR)
+                      {
+                        state =
+                          ___DECODE_STATE_MASK(state)+___DECODE_STATE_NONE;
+                        *clo++ = c;
+                        if (clo < chi)
+                          goto decode_next_UTF_16LE;
+                      }
+                    else
+                      {
+                        if (blo-bytes_per_UTF_16 == byte_buf)
+                          result = ___ILLEGAL_CHAR;
+                        else
+                          blo = blo-bytes_per_UTF_16;
+                      }
+                  }
+                else if (c > 0xdbff)
+                  {
+                    if (blo-bytes_per_UTF_16 == byte_buf)
+                      result = ___ILLEGAL_CHAR;
+                    else
+                      blo = blo-bytes_per_UTF_16;
+                  }
+                else
+                  {
+                    blo += bytes_per_UTF_16;
+                    if (blo <= bhi)
+                      {
+                        ___UCS_4 x = get_UTF_16LE(-1);
+                        if (x > 0xdbff &&
+                            x <= 0xdfff &&
+                            (c = (c << 10) + x -
+                                 ((0xd800 << 10) + 0xdc00 - 0x10000))
+                            <= ___MAX_CHR)
+                          {
+                            state =
+                              ___DECODE_STATE_MASK(state)+___DECODE_STATE_NONE;
+                            *clo++ = c;
+                            if (clo < chi)
+                              goto decode_next_UTF_16LE;
+                          }
+                        else
+                          {
+                            if (blo-2*bytes_per_UTF_16 == byte_buf)
+                              result = ___ILLEGAL_CHAR;
+                            else
+                              blo = blo-2*bytes_per_UTF_16;
+                          }
+                      }
+                    else
+                      {
+                        if (blo-2*bytes_per_UTF_16 == byte_buf)
+                          result = ___ILLEGAL_CHAR;
+                        else
+                          blo = blo-2*bytes_per_UTF_16;
+                      }
+                  }
+              }
+            else
+              blo -= bytes_per_UTF_16;
+            break;
+          }
+
+        case ___CHAR_ENCODING_UTF:
+          {
+            if (blo < bhi)
+              {
+                ___U8 b0 = blo[0];
+                if (b0 >= 0xfe)
+                  {
+                    /* start of UTF-16BE or UTF-16LE BOM */
+                    if (blo+1 < bhi)
+                      {
+                        if (blo[1] == (b0 ^ 1))
+                          {
+                            /* complete BOM */
+                            blo += 2; /* skip BOM */
+                            if (b0 == 0xfe)
+                              {
+                                state += ___CHAR_ENCODING_UTF_16BE -
+                                         ___CHAR_ENCODING_UTF;
+                                goto decode_next_UTF_16BE;
+                              }
+                            else
+                              {
+                                state += ___CHAR_ENCODING_UTF_16LE -
+                                         ___CHAR_ENCODING_UTF;
+                                goto decode_next_UTF_16LE;
+                              }
+                          }
+                        else
+                          {
+                            /* not a UTF-16BE BOM, so use UTF-8 */
+                            state += ___CHAR_ENCODING_UTF_8 -
+                                     ___CHAR_ENCODING_UTF;
+                            goto decode_next_UTF_8;
+                          }
+                      }
+                  }
+                else
+                  {
+                    /* check start of UTF-8 BOM */
+                    if ((b0 != 0xef) ||
+                        (blo+1 < bhi && blo[1] != 0xbb) ||
+                        (blo+2 < bhi && blo[2] != 0xbf))
+                      {
+                        /* not a UTF-8 BOM, so use UTF-8 */
+                        state += ___CHAR_ENCODING_UTF_8 -
+                                 ___CHAR_ENCODING_UTF;
+                        goto decode_next_UTF_8;
+                      }
+                    else if (blo+2 < bhi)
+                      {
+                        /* complete UTF-8 BOM */
+                        blo += 3; /* skip BOM */
+                        state += ___CHAR_ENCODING_UTF_8 -
+                                 ___CHAR_ENCODING_UTF;
+                        goto decode_next_UTF_8;
+                      }
+                  }
+              }
+            result = ___INCOMPLETE_CHAR;
+            break;
+          }
 
         case ___CHAR_ENCODING_UCS_2:
           {
@@ -1214,18 +1319,160 @@ int *encoding_state;)
           goto encode_next_UTF_16LE;
 #endif
 
-        /******************************/
         case ___CHAR_ENCODING_UTF_16BE:
-          ENCODE_CHARS_LOOP(encode_next_UTF_16BE,
-                            bytes_per_UTF_16,
-                            max_UTF_16,
-                            put_UTF_16BE);
+          {
+            encode_next_UTF_16BE:
+            c = *clo++;
+            if (c <= 0xdbff)
+              {
+                blo += bytes_per_UTF_16;
+                if (blo <= bhi)
+                  {
+                    if (c != char_EOL)
+                      {
+                        put_UTF_16BE(-1,c);
+                        if (clo < chi)
+                          goto encode_next_UTF_16BE;
+                      }
+                    else
+                      {
+                        ENCODE_EOL(encode_next_UTF_16BE,bytes_per_UTF_16,put_UTF_16BE);
+                      }
+                  }
+                else
+                  {
+                    blo -= bytes_per_UTF_16;
+                    clo--;
+                    goto encode_chars_end;
+                  }
+              }
+            else if (c > 0xffff)
+              {
+                blo += 2*bytes_per_UTF_16;
+                if (blo <= bhi)
+                  {
+                    c -= 0x10000;
+                    put_UTF_16BE(-2,0xd800+((c>>10)&0x3ff));
+                    put_UTF_16BE(-1,0xdc00+(c&0x3ff));
+                    if (clo < chi)
+                      goto encode_next_UTF_16BE;
+                  }
+                else
+                  {
+                    blo -= 2*bytes_per_UTF_16;
+                    clo--;
+                    goto encode_chars_end;
+                  }
+              }
+            else if (c > 0xdfff)
+              {
+                blo += bytes_per_UTF_16;
+                if (blo <= bhi)
+                  {
+                    put_UTF_16BE(-1,c);
+                    if (clo < chi)
+                      goto encode_next_UTF_16BE;
+                  }
+                else
+                  {
+                    blo -= bytes_per_UTF_16;
+                    clo--;
+                    goto encode_chars_end;
+                  }
+              }
+            else
+              {
+                clo--;
+                if (clo == char_buf)
+                  result = ___ILLEGAL_CHAR;
+                goto encode_chars_end;
+              }
+            break;
+          }
 
         case ___CHAR_ENCODING_UTF_16LE:
-          ENCODE_CHARS_LOOP(encode_next_UTF_16LE,
-                            bytes_per_UTF_16,
-                            max_UTF_16,
-                            put_UTF_16LE);
+          {
+            encode_next_UTF_16LE:
+            c = *clo++;
+            if (c <= 0xdbff)
+              {
+                blo += bytes_per_UTF_16;
+                if (blo <= bhi)
+                  {
+                    if (c != char_EOL)
+                      {
+                        put_UTF_16LE(-1,c);
+                        if (clo < chi)
+                          goto encode_next_UTF_16LE;
+                      }
+                    else
+                      {
+                        ENCODE_EOL(encode_next_UTF_16LE,bytes_per_UTF_16,put_UTF_16LE);
+                      }
+                  }
+                else
+                  {
+                    blo -= bytes_per_UTF_16;
+                    clo--;
+                    goto encode_chars_end;
+                  }
+              }
+            else if (c > 0xffff)
+              {
+                blo += 2*bytes_per_UTF_16;
+                if (blo <= bhi)
+                  {
+                    c -= 0x10000;
+                    put_UTF_16LE(-2,0xd800+((c>>10)&0x3ff));
+                    put_UTF_16LE(-1,0xdc00+(c&0x3ff));
+                    if (clo < chi)
+                      goto encode_next_UTF_16LE;
+                  }
+                else
+                  {
+                    blo -= 2*bytes_per_UTF_16;
+                    clo--;
+                    goto encode_chars_end;
+                  }
+              }
+            else if (c > 0xdfff)
+              {
+                blo += bytes_per_UTF_16;
+                if (blo <= bhi)
+                  {
+                    put_UTF_16LE(-1,c);
+                    if (clo < chi)
+                      goto encode_next_UTF_16LE;
+                  }
+                else
+                  {
+                    blo -= bytes_per_UTF_16;
+                    clo--;
+                    goto encode_chars_end;
+                  }
+              }
+            else
+              {
+                clo--;
+                if (clo == char_buf)
+                  result = ___ILLEGAL_CHAR;
+                goto encode_chars_end;
+              }
+            break;
+          }
+
+        case ___CHAR_ENCODING_UTF:
+          blo += 3;
+          if (blo > bhi)
+            {
+              blo -= 3;
+              goto encode_chars_end;
+            }
+          put_UTF_8(-3,0xef); /* UTF-8 BOM */
+          put_UTF_8(-2,0xbb);
+          put_UTF_8(-1,0xbf);
+          state += ___CHAR_ENCODING_UTF_8-___CHAR_ENCODING_UTF;
+          goto encode_next_UTF_8;
 
         case ___CHAR_ENCODING_UCS_2:
           blo += bytes_per_UCS_2;
@@ -1333,6 +1580,9 @@ int *encoding_state;)
  *    ___SCMOBJ_to_UTF_8STRING
  *    ___SCMOBJ_to_NONNULLUTF_8STRING
  *    ___SCMOBJ_to_NONNULLUTF_8STRINGLIST
+ *    ___SCMOBJ_to_UTF_16STRING
+ *    ___SCMOBJ_to_NONNULLUTF_16STRING
+ *    ___SCMOBJ_to_NONNULLUTF_16STRINGLIST
  *    ___SCMOBJ_to_UCS_2STRING
  *    ___SCMOBJ_to_NONNULLUCS_2STRING
  *    ___SCMOBJ_to_NONNULLUCS_2STRINGLIST
@@ -2574,6 +2824,19 @@ int arg_num;)
         t = tbl;
         break;
       }
+    case ___CHAR_ENCODING_UTF_16:
+      {
+        static ___SCMOBJ tbl[6] =
+          { ___FIX(___STOC_UTF_16STRING_ERR),
+            ___FIX(___STOC_NONNULLUTF_16STRING_ERR),
+            ___FIX(___STOC_NONNULLUTF_16STRINGLIST_ERR),
+            ___FIX(___CTOS_UTF_16STRING_ERR),
+            ___FIX(___CTOS_NONNULLUTF_16STRING_ERR),
+            ___FIX(___CTOS_NONNULLUTF_16STRINGLIST_ERR)
+          };
+        t = tbl;
+        break;
+      }
     case ___CHAR_ENCODING_UCS_2:
       {
         static ___SCMOBJ tbl[6] =
@@ -2715,6 +2978,54 @@ int fudge;)
 
         for (i=0; i<n; i++)
           ___UTF_8_put (&p, ___INT(___STRINGREF(obj,___FIX(i))));
+
+        *p = 0;
+
+        *x = ___CAST(void*,r);
+
+        break;
+      }
+
+    case ___CHAR_ENCODING_UTF_16:
+      {
+        unsigned long i, bytes, n;
+        ___UTF_16STRING r;
+        ___UTF_16STRING p;
+
+        bytes = 0;
+        n = ___INT(___STRINGLENGTH(obj));
+
+        for (i=0; i<n; i++)
+          {
+            ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+            if (c > 0xffff)
+              bytes += 4;
+            else if ((c > 0 && c <= 0xd7ff) || c > 0xdbff)
+              bytes += 2;
+            else
+              return ___FIX(___STOC_UTF_16STRING_ERR+arg_num);
+          }
+
+        r = ___CAST(___UTF_16STRING,
+                    ___alloc_rc (bytes + 2 + fudge));
+
+        if (r == 0)
+          return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
+
+        p = r;
+
+        for (i=0; i<n; i++)
+          {
+            ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+            if (c > 0xffff)
+              {
+                c -= 0x10000;
+                *p++ = 0xd800 + ((c>>10)&0x3ff);
+                *p++ = 0xdc00 + (c&0x3ff);
+              }
+            else
+              *p++ = c;
+          }
 
         *p = 0;
 
@@ -3237,6 +3548,92 @@ int arg_num;)
               ___CHAR_ENCODING_UTF_8))
       == ___FIX(___NO_ERR))
     *x = ___CAST(___UTF_8STRING*,result);
+
+  return e;
+}
+
+
+/* Convert a Scheme string to a C UTF-16 encoded character string. */
+
+___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UTF_16STRING)
+   ___P((___SCMOBJ obj,
+         ___UTF_16STRING *x,
+         int arg_num),
+        (obj,
+         x,
+         arg_num)
+___SCMOBJ obj;
+___UTF_16STRING *x;
+int arg_num;)
+{
+  void *result;
+  ___SCMOBJ e;
+
+  if ((e = ___SCMOBJ_to_STRING
+             (obj,
+              &result,
+              arg_num,
+              ___CHAR_ENCODING_UTF_16,
+              0))
+      == ___FIX(___NO_ERR))
+    *x = ___CAST(___UTF_16STRING,result);
+
+  return e;
+}
+
+
+/* Convert a Scheme string to a nonnull C UTF-16 encoded character string. */
+
+___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_16STRING)
+   ___P((___SCMOBJ obj,
+         ___UTF_16STRING *x,
+         int arg_num),
+        (obj,
+         x,
+         arg_num)
+___SCMOBJ obj;
+___UTF_16STRING *x;
+int arg_num;)
+{
+  void *result;
+  ___SCMOBJ e;
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRING
+             (obj,
+              &result,
+              arg_num,
+              ___CHAR_ENCODING_UTF_16,
+              0))
+      == ___FIX(___NO_ERR))
+    *x = ___CAST(___UTF_16STRING,result);
+
+  return e;
+}
+
+
+/* Convert a Scheme list of strings to a nonnull C UTF-16 encoded character string list. */
+
+___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_16STRINGLIST)
+   ___P((___SCMOBJ obj,
+         ___UTF_16STRING **x,
+         int arg_num),
+        (obj,
+         x,
+         arg_num)
+___SCMOBJ obj;
+___UTF_16STRING **x;
+int arg_num;)
+{
+  void *result;
+  ___SCMOBJ e;
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
+             (obj,
+              &result,
+              arg_num,
+              ___CHAR_ENCODING_UTF_16))
+      == ___FIX(___NO_ERR))
+    *x = ___CAST(___UTF_16STRING*,result);
 
   return e;
 }
@@ -4481,7 +4878,55 @@ int char_encoding;)
                   {
                     ___release_scmobj (result);
                     *obj = ___FAL;
-                    return ___FIX(___CTOS_UTF_8STRING_ERR+arg_num);
+                    return ___FIX(___CTOS_NONNULLUTF_8STRING_ERR+arg_num);
+                  }
+                ___STRINGSET(result,___FIX(i),___CHR(c))
+              }
+          }
+
+        break;
+      }
+
+    case ___CHAR_ENCODING_UTF_16:
+      {
+        ___UTF_16STRING str = ___CAST(___UTF_16STRING,x);
+        ___UTF_16STRING p = str;
+
+        for (;;)
+          {
+            ___UCS_4 c = *p++;
+            if (c == 0)
+              break;
+            if (c > 0xd7ff && c <= 0xdfff)
+              {
+                if (c > 0xdbff)
+                  return ___FIX(___CTOS_NONNULLUTF_16STRING_ERR+arg_num);
+                c = *p++;
+                if (c <= 0xdbff || c > 0xdfff)
+                  return ___FIX(___CTOS_NONNULLUTF_16STRING_ERR+arg_num);
+              }
+            n++;
+          }
+
+        result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+
+        if (___FIXNUMP(result))
+          result = ___FAL;
+        else
+          {
+            p = str;
+
+            for (i=0; i<n; i++)
+              {
+                ___UCS_4 c = *p++;
+                if (c > 0xd7ff && c <= 0xdfff)
+                  c = (c << 10) + *p++ -
+                      ((0xd800 << 10) + 0xdc00 - 0x10000);
+                if (c > ___MAX_CHR)
+                  {
+                    ___release_scmobj (result);
+                    *obj = ___FAL;
+                    return ___FIX(___CTOS_NONNULLUTF_16STRING_ERR+arg_num);
                   }
                 ___STRINGSET(result,___FIX(i),___CHR(c))
               }
@@ -4510,7 +4955,7 @@ int char_encoding;)
                   {
                     ___release_scmobj (result);
                     *obj = ___FAL;
-                    return ___FIX(___CTOS_UCS_2STRING_ERR+arg_num);
+                    return ___FIX(___CTOS_NONNULLUCS_2STRING_ERR+arg_num);
                   }
                 ___STRINGSET(result,___FIX(i),___CHR(c))
               }
@@ -4539,7 +4984,7 @@ int char_encoding;)
                   {
                     ___release_scmobj (result);
                     *obj = ___FAL;
-                    return ___FIX(___CTOS_UCS_4STRING_ERR+arg_num);
+                    return ___FIX(___CTOS_NONNULLUCS_4STRING_ERR+arg_num);
                   }
                 ___STRINGSET(result,___FIX(i),___CHR(c))
               }
@@ -4582,7 +5027,7 @@ int char_encoding;)
                   {
                     ___release_scmobj (result);
                     *obj = ___FAL;
-                    return ___FIX(___CTOS_WCHARSTRING_ERR+arg_num);
+                    return ___FIX(___CTOS_NONNULLWCHARSTRING_ERR+arg_num);
                   }
 #endif
 
@@ -4613,7 +5058,7 @@ int char_encoding;)
                   {
                     ___release_scmobj (result);
                     *obj = ___FAL;
-                    return ___FIX(___CTOS_CHARSTRING_ERR+arg_num);
+                    return ___FIX(___CTOS_NONNULLCHARSTRING_ERR+arg_num);
                   }
                 ___STRINGSET(result,___FIX(i),___CHR(c))
               }
@@ -4930,6 +5375,69 @@ int arg_num;)
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_8);
+}
+
+
+/* Convert a C UTF-16 encoded character string to a Scheme string. */
+
+___EXP_FUNC(___SCMOBJ,___UTF_16STRING_to_SCMOBJ)
+   ___P((___UTF_16STRING x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        (x,
+         obj,
+         arg_num)
+___UTF_16STRING x;
+___SCMOBJ *obj;
+int arg_num;)
+{
+  return ___STRING_to_SCMOBJ
+           (x,
+            obj,
+            arg_num,
+            ___CHAR_ENCODING_UTF_16);
+}
+
+
+/* Convert a nonnull C UTF-16 encoded character string to a Scheme string. */
+
+___EXP_FUNC(___SCMOBJ,___NONNULLUTF_16STRING_to_SCMOBJ)
+   ___P((___UTF_16STRING x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        (x,
+         obj,
+         arg_num)
+___UTF_16STRING x;
+___SCMOBJ *obj;
+int arg_num;)
+{
+  return ___NONNULLSTRING_to_SCMOBJ
+           (x,
+            obj,
+            arg_num,
+            ___CHAR_ENCODING_UTF_16);
+}
+
+
+/* Convert a nonnull C UTF-16 encoded character string list to a Scheme list of strings. */
+
+___EXP_FUNC(___SCMOBJ,___NONNULLUTF_16STRINGLIST_to_SCMOBJ)
+   ___P((___UTF_16STRING *x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        (x,
+         obj,
+         arg_num)
+___UTF_16STRING *x;
+___SCMOBJ *obj;
+int arg_num;)
+{
+  return ___NONNULLSTRINGLIST_to_SCMOBJ
+           (___CAST(void*,x),
+            obj,
+            arg_num,
+            ___CHAR_ENCODING_UTF_16);
 }
 
 

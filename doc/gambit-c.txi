@@ -150,10 +150,9 @@ the compiler run roughly as fast as equivalent C programs.
 
 For the most up to date information on Gambit and add-on packages
 please check the Gambit web page at
-@uref{http://www.iro.umontreal.ca/~gambit} or the mailing list at
-@uref{http://mailman.iro.umontreal.ca/mailman/listinfo/gambit-list}.
-Bug reports and inquiries should be sent to
-@code{gambit@@iro.umontreal.ca}.
+@uref{http://gambit.iro.umontreal.ca}.  The web page has links to the
+Gambit mailing list, the bug reporting system, and the source code
+repository.
 
 @menu
 * Accessing the system files::      Accessing the system files
@@ -170,7 +169,7 @@ where @code{@r{@i{version}}} is the system version number
 @code{/Library/Gambit-C} under Mac OS X and @code{C:/Program
 Files/Gambit-C} under Microsoft Windows.  The prefix can be overridden
 when the system is built with the command @samp{configure
---prefix=/my/own/Gambit-C}.  Moreover, under UNIX and MacOS X,
+--prefix=/my/own/Gambit-C}.  Moreover, under UNIX and Mac OS X,
 @code{@r{@i{prefix}}/current} is a symbolic link which points to the
 installation directory.
 
@@ -178,7 +177,7 @@ Executable programs such as the interpreter @code{gsi} and compiler
 @code{gsc} can be found in the @code{bin} subdirectory of the
 installation directory.  Adding this directory to the @code{PATH}
 environment variable allows these programs to be started by simply
-entering their name.  This is done automatically by the MacOS X and
+entering their name.  This is done automatically by the Mac OS X and
 Microsoft Windows installers.
 
 The runtime library is located in the @code{lib} subdirectory.  When
@@ -1678,7 +1677,7 @@ End-of-line is encoded as CR-LF.
 @item u
 Unbuffered I/O.
 @item n
-Line buffered I/O (@samp{n} for ``newline'').
+Line buffered I/O (@samp{n} for ``at newline'').
 @item f
 Fully buffered I/O.
 @item e
@@ -3439,15 +3438,15 @@ TO DO!
 @node Characters and strings, Numbers, Namespaces, Top
 @chapter Characters and strings
 
-Gambit supports the Unicode character encoding standard
-(ISO/IEC-10646-1).  Scheme characters can be any of the characters in
-the 16 bit subset of Unicode known as UCS-2.  Scheme strings can
-contain any character in UCS-2.  Source code can also contain any
-character in UCS-2.  However, to read such source code properly
-@code{gsi} and @code{gsc} must be told which character encoding to use
-for reading the source code (i.e. UTF-8, UCS-2, or UCS-4).  This can
-be done by specifying the runtime option @samp{-:f} when @code{gsi}
-and @code{gsc} are started.
+Gambit supports the Unicode character encoding standard.  Scheme
+characters can be any of the characters whose Unicode encoding is in
+the range 0 to #x10ffff (inclusive) but not in the range #xd800 to
+#xdfff.  Source code can also contain any Unicode character, however
+to read such source code properly @code{gsi} and @code{gsc} must be
+told which character encoding to use for reading the source code
+(i.e. ASCII, ISO-8859-1, UTF-8, etc).  This can be done by specifying
+the runtime option @samp{-:f} when @code{gsi} and @code{gsc} are
+started.
 
 @menu
 * Extensions to character procedures:: Extensions to character procedures
@@ -3475,6 +3474,9 @@ For example:
 #\A
 > @b{(integer->char (char->integer #\u1234))}
 #\u1234
+> @b{(integer->char #xd800)}
+*** ERROR IN (console)@@4.1 -- (Argument 1) Out of range
+(integer->char 55296)
 @end smallexample
 
 @end deffn
@@ -12763,6 +12765,14 @@ denotes nonnull UTF-8 encoded strings
 (null terminated string of @code{char}, i.e. @code{char*})
 @item nonnull-UTF-8-string-list
 denotes an array of nonnull UTF-8 encoded strings terminated with a null pointer
+@item UTF-16-string
+denotes UTF-16 encoded strings
+(null terminated string of @code{char}, i.e. @code{char*})
+@item nonnull-UTF-16-string
+denotes nonnull UTF-16 encoded strings
+(null terminated string of @code{char}, i.e. @code{char*})
+@item nonnull-UTF-16-string-list
+denotes an array of nonnull UTF-16 encoded strings terminated with a null pointer
 @item UCS-2-string
 denotes UCS-2 encoded strings
 (null terminated string of 16 bit unsigned integers, i.e. @code{___UCS_2*})
@@ -12893,6 +12903,12 @@ except the @code{NULL} pointer is not allowed
 @code{nonnull-UTF-8-string}
 @item nonnull-UTF-8-string-list
 @code{nonnull-UTF-8-string-list}
+@item UTF-16-string
+@code{UTF-16-string}
+@item nonnull-UTF-16-string
+@code{nonnull-UTF-16-string}
+@item nonnull-UTF-16-string-list
+@code{nonnull-UTF-16-string-list}
 @item UCS-2-string
 @code{UCS-2-string}
 @item nonnull-UCS-2-string
@@ -13036,6 +13052,7 @@ Allowed target C types
 @code{char-string};
 @code{ISO-8859-1-string};
 @code{UTF-8-string};
+@code{UTF-16-string};
 @code{UCS-2-string};
 @code{UCS-4-string};
 @code{wchar_t-string}
@@ -13059,6 +13076,8 @@ Allowed target C types
 @code{nonnull-ISO-8859-1-string};
 @code{UTF-8-string};
 @code{nonnull-UTF-8-string};
+@code{UTF-16-string};
+@code{nonnull-UTF-16-string};
 @code{UCS-2-string};
 @code{nonnull-UCS-2-string};
 @code{UCS-4-string};
@@ -13095,9 +13114,9 @@ character
 exact integer
 @item @code{float}; @code{double}; @code{float32}; @code{float64}
 inexact real
-@item @code{char-string}; @code{ISO-8859-1-string}; @code{UTF-8-string}; @code{UCS-2-string}; @code{UCS-4-string}; @code{wchar_t-string}
+@item @code{char-string}; @code{ISO-8859-1-string}; @code{UTF-8-string}; @code{UTF-16-string}; @code{UCS-2-string}; @code{UCS-4-string}; @code{wchar_t-string}
 string or @code{#f} if it is equal to @samp{NULL}
-@item @code{nonnull-char-string}; @code{nonnull-ISO-8859-1-string}; @code{nonnull-UTF-8-string}; @code{nonnull-UCS-2-string}; @code{nonnull-UCS-4-string}; @code{nonnull-wchar_t-string}
+@item @code{nonnull-char-string}; @code{nonnull-ISO-8859-1-string}; @code{nonnull-UTF-8-string}; @code{nonnull-UTF-16-string}; @code{nonnull-UCS-2-string}; @code{nonnull-UCS-4-string}; @code{nonnull-wchar_t-string}
 string
 @item @code{struct}/@code{union}/@code{type}/@code{pointer}/@code{nonnull-pointer}
 foreign object with the appropriate tags
@@ -13119,14 +13138,15 @@ representation from C (with the help of the macros in the
 an extended Scheme boolean can be passed (@code{#f} is converted to 0
 and all other values are converted to 1).
 
-The Scheme boolean @code{#f} can be passed to the C environment where a
-@code{char-string}, @code{ISO-8859-1-string}, @code{UTF-8-string},
-@code{UCS-2-string}, @code{UCS-4-string}, @code{wchar_t-string}, @code{pointer} or
-@code{function} type is expected.  In this case, @code{#f} is converted
-to the @samp{NULL} pointer.  C @code{bool}s are extended booleans so any
-value different from 0 represents true.  Thus, a C @code{bool} passed to
-the Scheme environment is mapped as follows: 0 to @code{#f} and all
-other values to @code{#t}.
+The Scheme boolean @code{#f} can be passed to the C environment where
+a @code{char-string}, @code{ISO-8859-1-string}, @code{UTF-8-string},
+@code{UTF-16-string}, @code{UCS-2-string}, @code{UCS-4-string},
+@code{wchar_t-string}, @code{pointer} or @code{function} type is
+expected.  In this case, @code{#f} is converted to the @samp{NULL}
+pointer.  C @code{bool}s are extended booleans so any value different
+from 0 represents true.  Thus, a C @code{bool} passed to the Scheme
+environment is mapped as follows: 0 to @code{#f} and all other values
+to @code{#t}.
 
 A Scheme character passed to the C environment where any C character
 type is expected is converted to the corresponding character in the C

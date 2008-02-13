@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2007-09-28 18:05:18 feeley> */
+/* File: "setup.c", Time-stamp: <2008-02-13 00:17:13 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -2406,6 +2406,15 @@ ___setup_params_struct *setup_params;)
   ___gstate.___SCMOBJ_to_NONNULLUTF_8STRINGLIST
     = ___SCMOBJ_to_NONNULLUTF_8STRINGLIST;
 
+  ___gstate.___SCMOBJ_to_UTF_16STRING
+    = ___SCMOBJ_to_UTF_16STRING;
+
+  ___gstate.___SCMOBJ_to_NONNULLUTF_16STRING
+    = ___SCMOBJ_to_NONNULLUTF_16STRING;
+
+  ___gstate.___SCMOBJ_to_NONNULLUTF_16STRINGLIST
+    = ___SCMOBJ_to_NONNULLUTF_16STRINGLIST;
+
   ___gstate.___SCMOBJ_to_UCS_2STRING
     = ___SCMOBJ_to_UCS_2STRING;
 
@@ -2606,6 +2615,15 @@ ___setup_params_struct *setup_params;)
 
   ___gstate.___NONNULLUTF_8STRINGLIST_to_SCMOBJ
     = ___NONNULLUTF_8STRINGLIST_to_SCMOBJ;
+
+  ___gstate.___UTF_16STRING_to_SCMOBJ
+    = ___UTF_16STRING_to_SCMOBJ;
+
+  ___gstate.___NONNULLUTF_16STRING_to_SCMOBJ
+    = ___NONNULLUTF_16STRING_to_SCMOBJ;
+
+  ___gstate.___NONNULLUTF_16STRINGLIST_to_SCMOBJ
+    = ___NONNULLUTF_16STRINGLIST_to_SCMOBJ;
 
   ___gstate.___UCS_2STRING_to_SCMOBJ
     = ___UCS_2STRING_to_SCMOBJ;

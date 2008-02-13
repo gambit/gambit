@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2008-02-07 13:55:10 feeley>
+;;; File: "_io#.scm", Time-stamp: <2008-02-11 18:45:19 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -707,14 +707,15 @@
 (##define-macro (macro-char-encoding-UTF-16)     4)
 (##define-macro (macro-char-encoding-UTF-16LE)   5)
 (##define-macro (macro-char-encoding-UTF-16BE)   6)
-(##define-macro (macro-char-encoding-UCS-2)      7)
-(##define-macro (macro-char-encoding-UCS-2LE)    8)
-(##define-macro (macro-char-encoding-UCS-2BE)    9)
-(##define-macro (macro-char-encoding-UCS-4)      10)
-(##define-macro (macro-char-encoding-UCS-4LE)    11)
-(##define-macro (macro-char-encoding-UCS-4BE)    12)
-(##define-macro (macro-char-encoding-wchar)      13)
-(##define-macro (macro-char-encoding-native)     14)
+(##define-macro (macro-char-encoding-UTF)        7)
+(##define-macro (macro-char-encoding-UCS-2)      8)
+(##define-macro (macro-char-encoding-UCS-2LE)    9)
+(##define-macro (macro-char-encoding-UCS-2BE)    10)
+(##define-macro (macro-char-encoding-UCS-4)      11)
+(##define-macro (macro-char-encoding-UCS-4LE)    12)
+(##define-macro (macro-char-encoding-UCS-4BE)    13)
+(##define-macro (macro-char-encoding-wchar)      14)
+(##define-macro (macro-char-encoding-native)     15)
 
 (##define-macro (macro-eol-encoding-shift)   16)
 (##define-macro (macro-eol-encoding-range)   8)

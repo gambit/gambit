@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-01-24 22:29:35 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-02-13 00:14:35 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,7 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1202855253
+#define ___STAMP 1202938069
 
 /*---------------------------------------------------------------------------*/
 
@@ -6130,6 +6130,12 @@ void *___x;) \
 #define ___END_SFUN_SCMOBJ_TO_NONNULLUTF_8STRING(s,c)
 #define ___BEGIN_SFUN_SCMOBJ_TO_NONNULLUTF_8STRINGLIST(s,c)___STOC3(___SCMOBJ_to_NONNULLUTF_8STRINGLIST,s,&c,___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_TO_NONNULLUTF_8STRINGLIST(s,c)
+#define ___BEGIN_SFUN_SCMOBJ_TO_UTF_16STRING(s,c)___STOC3(___SCMOBJ_to_UTF_16STRING,s,&c,___RETURN_POS);
+#define ___END_SFUN_SCMOBJ_TO_UTF_16STRING(s,c)
+#define ___BEGIN_SFUN_SCMOBJ_TO_NONNULLUTF_16STRING(s,c)___STOC3(___SCMOBJ_to_NONNULLUTF_16STRING,s,&c,___RETURN_POS);
+#define ___END_SFUN_SCMOBJ_TO_NONNULLUTF_16STRING(s,c)
+#define ___BEGIN_SFUN_SCMOBJ_TO_NONNULLUTF_16STRINGLIST(s,c)___STOC3(___SCMOBJ_to_NONNULLUTF_16STRINGLIST,s,&c,___RETURN_POS);
+#define ___END_SFUN_SCMOBJ_TO_NONNULLUTF_16STRINGLIST(s,c)
 #define ___BEGIN_SFUN_SCMOBJ_TO_UCS_2STRING(s,c)___STOC3(___SCMOBJ_to_UCS_2STRING,s,&c,___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_TO_UCS_2STRING(s,c)
 #define ___BEGIN_SFUN_SCMOBJ_TO_NONNULLUCS_2STRING(s,c)___STOC3(___SCMOBJ_to_NONNULLUCS_2STRING,s,&c,___RETURN_POS);
@@ -6235,6 +6241,12 @@ void *___x;) \
 #define ___END_SFUN_NONNULLUTF_8STRING_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_NONNULLUTF_8STRINGLIST_TO_SCMOBJ(c,s,i)___IF_CTOS3(___NONNULLUTF_8STRINGLIST_to_SCMOBJ,c,&s,i){
 #define ___END_SFUN_NONNULLUTF_8STRINGLIST_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_SFUN_UTF_16STRING_TO_SCMOBJ(c,s,i)___IF_CTOS3(___UTF_16STRING_to_SCMOBJ,c,&s,i){
+#define ___END_SFUN_UTF_16STRING_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_SFUN_NONNULLUTF_16STRING_TO_SCMOBJ(c,s,i)___IF_CTOS3(___NONNULLUTF_16STRING_to_SCMOBJ,c,&s,i){
+#define ___END_SFUN_NONNULLUTF_16STRING_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_SFUN_NONNULLUTF_16STRINGLIST_TO_SCMOBJ(c,s,i)___IF_CTOS3(___NONNULLUTF_16STRINGLIST_to_SCMOBJ,c,&s,i){
+#define ___END_SFUN_NONNULLUTF_16STRINGLIST_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_UCS_2STRING_TO_SCMOBJ(c,s,i)___IF_CTOS3(___UCS_2STRING_to_SCMOBJ,c,&s,i){
 #define ___END_SFUN_UCS_2STRING_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_NONNULLUCS_2STRING_TO_SCMOBJ(c,s,i)___IF_CTOS3(___NONNULLUCS_2STRING_to_SCMOBJ,c,&s,i){
@@ -6394,6 +6406,12 @@ void *___x;) \
 #define ___END_CFUN_SCMOBJ_TO_NONNULLUTF_8STRING(s,c,i)___EXT(___release_string)(c);}
 #define ___BEGIN_CFUN_SCMOBJ_TO_NONNULLUTF_8STRINGLIST(s,c,i)___IF_STOC3(___SCMOBJ_to_NONNULLUTF_8STRINGLIST,s,&c,i){
 #define ___END_CFUN_SCMOBJ_TO_NONNULLUTF_8STRINGLIST(s,c,i)___EXT(___release_string_list)(c);}
+#define ___BEGIN_CFUN_SCMOBJ_TO_UTF_16STRING(s,c,i)___IF_STOC3(___SCMOBJ_to_UTF_16STRING,s,&c,i){
+#define ___END_CFUN_SCMOBJ_TO_UTF_16STRING(s,c,i)___EXT(___release_string)(c);}
+#define ___BEGIN_CFUN_SCMOBJ_TO_NONNULLUTF_16STRING(s,c,i)___IF_STOC3(___SCMOBJ_to_NONNULLUTF_16STRING,s,&c,i){
+#define ___END_CFUN_SCMOBJ_TO_NONNULLUTF_16STRING(s,c,i)___EXT(___release_string)(c);}
+#define ___BEGIN_CFUN_SCMOBJ_TO_NONNULLUTF_16STRINGLIST(s,c,i)___IF_STOC3(___SCMOBJ_to_NONNULLUTF_16STRINGLIST,s,&c,i){
+#define ___END_CFUN_SCMOBJ_TO_NONNULLUTF_16STRINGLIST(s,c,i)___EXT(___release_string_list)(c);}
 #define ___BEGIN_CFUN_SCMOBJ_TO_UCS_2STRING(s,c,i)___IF_STOC3(___SCMOBJ_to_UCS_2STRING,s,&c,i){
 #define ___END_CFUN_SCMOBJ_TO_UCS_2STRING(s,c,i)___EXT(___release_string)(c);}
 #define ___BEGIN_CFUN_SCMOBJ_TO_NONNULLUCS_2STRING(s,c,i)___IF_STOC3(___SCMOBJ_to_NONNULLUCS_2STRING,s,&c,i){
@@ -6499,6 +6517,12 @@ void *___x;) \
 #define ___END_CFUN_NONNULLUTF_8STRING_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_NONNULLUTF_8STRINGLIST_TO_SCMOBJ(c,s)___IF_CTOS3(___NONNULLUTF_8STRINGLIST_to_SCMOBJ,c,&s,___RETURN_POS){
 #define ___END_CFUN_NONNULLUTF_8STRINGLIST_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_CFUN_UTF_16STRING_TO_SCMOBJ(c,s)___IF_CTOS3(___UTF_16STRING_to_SCMOBJ,c,&s,___RETURN_POS){
+#define ___END_CFUN_UTF_16STRING_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_CFUN_NONNULLUTF_16STRING_TO_SCMOBJ(c,s)___IF_CTOS3(___NONNULLUTF_16STRING_to_SCMOBJ,c,&s,___RETURN_POS){
+#define ___END_CFUN_NONNULLUTF_16STRING_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_CFUN_NONNULLUTF_16STRINGLIST_TO_SCMOBJ(c,s)___IF_CTOS3(___NONNULLUTF_16STRINGLIST_to_SCMOBJ,c,&s,___RETURN_POS){
+#define ___END_CFUN_NONNULLUTF_16STRINGLIST_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_UCS_2STRING_TO_SCMOBJ(c,s)___IF_CTOS3(___UCS_2STRING_to_SCMOBJ,c,&s,___RETURN_POS){
 #define ___END_CFUN_UCS_2STRING_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_NONNULLUCS_2STRING_TO_SCMOBJ(c,s)___IF_CTOS3(___NONNULLUCS_2STRING_to_SCMOBJ,c,&s,___RETURN_POS){
@@ -7309,6 +7333,21 @@ typedef struct ___global_state_struct
              ___UTF_8STRING **x,
              int arg_num),
             ());
+    ___SCMOBJ (*___SCMOBJ_to_UTF_16STRING)
+       ___P((___SCMOBJ obj,
+             ___UTF_16STRING *x,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___SCMOBJ_to_NONNULLUTF_16STRING)
+       ___P((___SCMOBJ obj,
+             ___UTF_16STRING *x,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___SCMOBJ_to_NONNULLUTF_16STRINGLIST)
+       ___P((___SCMOBJ obj,
+             ___UTF_16STRING **x,
+             int arg_num),
+            ());
     ___SCMOBJ (*___SCMOBJ_to_UCS_2STRING)
        ___P((___SCMOBJ obj,
              ___UCS_2STRING *x,
@@ -7637,6 +7676,21 @@ typedef struct ___global_state_struct
              ___SCMOBJ *obj,
              int arg_num),
             ());
+    ___SCMOBJ (*___UTF_16STRING_to_SCMOBJ)
+       ___P((___UTF_16STRING x,
+             ___SCMOBJ *obj,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___NONNULLUTF_16STRING_to_SCMOBJ)
+       ___P((___UTF_16STRING x,
+             ___SCMOBJ *obj,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___NONNULLUTF_16STRINGLIST_to_SCMOBJ)
+       ___P((___UTF_16STRING *x,
+             ___SCMOBJ *obj,
+             int arg_num),
+            ());
     ___SCMOBJ (*___UCS_2STRING_to_SCMOBJ)
        ___P((___UCS_2STRING x,
              ___SCMOBJ *obj,
@@ -7918,14 +7972,15 @@ typedef struct ___setup_params_struct
 #define ___CHAR_ENCODING_UTF_16     (4<<0)
 #define ___CHAR_ENCODING_UTF_16BE   (5<<0)
 #define ___CHAR_ENCODING_UTF_16LE   (6<<0)
-#define ___CHAR_ENCODING_UCS_2      (7<<0)
-#define ___CHAR_ENCODING_UCS_2BE    (8<<0)
-#define ___CHAR_ENCODING_UCS_2LE    (9<<0)
-#define ___CHAR_ENCODING_UCS_4      (10<<0)
-#define ___CHAR_ENCODING_UCS_4BE    (11<<0)
-#define ___CHAR_ENCODING_UCS_4LE    (12<<0)
-#define ___CHAR_ENCODING_WCHAR      (13<<0)
-#define ___CHAR_ENCODING_NATIVE     (14<<0)
+#define ___CHAR_ENCODING_UTF        (7<<0)
+#define ___CHAR_ENCODING_UCS_2      (8<<0)
+#define ___CHAR_ENCODING_UCS_2BE    (9<<0)
+#define ___CHAR_ENCODING_UCS_2LE    (10<<0)
+#define ___CHAR_ENCODING_UCS_4      (11<<0)
+#define ___CHAR_ENCODING_UCS_4BE    (12<<0)
+#define ___CHAR_ENCODING_UCS_4LE    (13<<0)
+#define ___CHAR_ENCODING_WCHAR      (14<<0)
+#define ___CHAR_ENCODING_NATIVE     (15<<0)
 
 #ifdef ___BIG_ENDIAN
 #define ___CHAR_ENCODING_U8  ___CHAR_ENCODING_ISO_8859_1
@@ -8239,6 +8294,21 @@ ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_8STRING)
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_8STRINGLIST)
    ___P((___SCMOBJ obj,
          ___UTF_8STRING **x,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UTF_16STRING)
+   ___P((___SCMOBJ obj,
+         ___UTF_16STRING *x,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_16STRING)
+   ___P((___SCMOBJ obj,
+         ___UTF_16STRING *x,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_16STRINGLIST)
+   ___P((___SCMOBJ obj,
+         ___UTF_16STRING **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_2STRING)
@@ -8566,6 +8636,21 @@ ___IMP_FUNC(___SCMOBJ,___NONNULLUTF_8STRING_to_SCMOBJ)
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUTF_8STRINGLIST_to_SCMOBJ)
    ___P((___UTF_8STRING *x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___UTF_16STRING_to_SCMOBJ)
+   ___P((___UTF_16STRING x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___NONNULLUTF_16STRING_to_SCMOBJ)
+   ___P((___UTF_16STRING x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___NONNULLUTF_16STRINGLIST_to_SCMOBJ)
+   ___P((___UTF_16STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
