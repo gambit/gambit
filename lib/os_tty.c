@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-02-15 09:44:32 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-02-15 13:56:54 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -373,7 +373,11 @@ ___BOOL current;)
 #if 0
             new_termios.c_cc[VSTART]   = _POSIX_VDISABLE;
             new_termios.c_cc[VSTOP]    = _POSIX_VDISABLE;
+#endif
+#ifdef VLNEXT
             new_termios.c_cc[VLNEXT]   = _POSIX_VDISABLE;
+#endif
+#if 0
             new_termios.c_cc[VDISCARD] = _POSIX_VDISABLE;
             new_termios.c_cc[VMIN]     = _POSIX_VDISABLE;
             new_termios.c_cc[VTIME]    = _POSIX_VDISABLE;
