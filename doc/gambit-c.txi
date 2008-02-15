@@ -1609,6 +1609,21 @@ Moreover the program starts in single-stepping mode.
 When an ``error'' occurs the program will terminate with a nonzero
 exit status.
 
+@item R
+@opindex -:dR
+When a user interrupt occurs a new REPL will be started.  User
+interrupts are typically obtained by typing @key{^C}.
+
+@item D
+@opindex -:dD
+When a user interrupt occurs it will be deferred until the parameter
+@code{current-user-interrupt-handler} is bound.
+
+@item Q
+@opindex -:dQ
+When a user interrupt occurs the program will terminate with a nonzero
+exit status.
+
 @item i
 @opindex -:di
 The REPL interaction channel will be the IDE REPL window (if the IDE
@@ -1630,12 +1645,14 @@ and warnings.
 
 @end table
 
-The default debugging options are equivalent to @code{-:dpqi1} (i.e. an
-uncaught exception in the primordial thread terminates the program after
-displaying an error message).  When the letter @samp{d} is not followed by
-suboptions, it is equivalent to @code{-:dpri1} (i.e. a new REPL is
-started only when an uncaught exception occurs in the primordial
-thread).
+The default debugging options are equivalent to @code{-:dpqQi1}
+(i.e. an uncaught exception in the primordial thread terminates the
+program after displaying an error message).  When the letter @samp{d}
+is not followed by suboptions, it is equivalent to @code{-:dprRi1}
+(i.e. a new REPL is started only when an uncaught exception occurs in
+the primordial thread).  When @code{gsi} is running the main REPL, the
+debugging options are changed to cause errors in the primordial thread
+and user interrupts to start a nested REPL.
 
 @opindex -:=
 The @samp{=} option overrides the setting of the Gambit installation
@@ -1668,6 +1685,8 @@ UCS-4 character encoding.
 UTF-16 character encoding.
 @item 8
 UTF-8 character encoding.
+@item U
+UTF character encoding.
 @item c
 End-of-line is encoded as CR (carriage-return).
 @item l
@@ -2407,11 +2426,20 @@ occupied by movable and nonmovable objects.
 
 The console implements a simple Scheme-friendly line-editing
 user-interface that is enabled by default.  It offers parentheses
-balancing, a history of previous commands, and several
-emacs-compatible keyboard commands.  The user's input is displayed in
-a bold font and the output produced by the system is in a plain font.
-The history of previous commands is saved in the file
+balancing, a history of previous commands, symbol completion, and
+several emacs-compatible keyboard commands.  The user's input is
+displayed in a bold font and the output produced by the system is in a
+plain font.  The history of previous commands is saved in the file
 @file{~/.gambc_history}.  It is restored when a REPL is started.
+
+Symbol completion is triggered with the tab key.  When the cursor is
+after a sequence of characters that can form a symbol, typing the tab
+key will search the symbol table for the first symbol (in alphabetical
+order) that begins with that sequence and insert that symbol.  Typing
+the tab key in succession will cycle through all symbols with that
+prefix.  When all possible symbols have been shown or there are no
+possible completions, the text reverts to the uncompleted symbol and
+the bell is rung.
 
 Here are the keyboard commands available (where the @samp{@code{M-}}
 prefix means the escape key is typed and the @samp{@code{C-}} prefix
@@ -2494,7 +2522,7 @@ the @code{fn} key to access the function key @code{F12} and the
 On Microsoft Windows the clipboard is the system clipboard.  This
 allows text to be copied and pasted between the program and other
 applications.  On other operating systems the clipboard is internal to
-the program (it not integrated with the operating system).
+the program (it is not integrated with the operating system).
 
 @node Emacs interface, GUIDE, Console line-editing, Debugging
 @section Emacs interface
@@ -3116,8 +3144,11 @@ declarations are accepted by the compiler:
 @item (@var{dialect})
 @opindex ieee-scheme
 @opindex r4rs-scheme
+@opindex r5rs-scheme
+@opindex gambit-scheme
 Use the given dialect's semantics.  @var{dialect} can be:
-@samp{ieee-scheme} or @samp{r4rs-scheme}.
+@samp{ieee-scheme}, @samp{r4rs-scheme}, @samp{r5rs-scheme}
+or @samp{gambit-scheme}.
 
 @item (@var{strategy})
 @opindex block
@@ -3223,7 +3254,7 @@ The default declarations used by the compiler are equivalent to:
 
 @smallexample
 @b{}(declare
-  (ieee-scheme)
+  (gambit-scheme)
   (separate)
   (inline)
   (inline-primitives)
@@ -3240,10 +3271,12 @@ The default declarations used by the compiler are equivalent to:
 )
 @end smallexample
 
-These declarations are compatible with the semantics of R5RS Scheme.
-Typically used declarations that enhance performance, at the cost of
-violating the R5RS Scheme semantics, are: @code{(standard-bindings)},
-@code{(block)}, @code{(not safe)} and @code{(fixnum)}.
+These declarations are compatible with the semantics of R5RS Scheme
+and includes a few procedures from R6RS (mainly fixnum specific and
+flonum specific procedures).  Typically used declarations that enhance
+performance, at the cost of violating the R5RS Scheme semantics, are:
+@code{(standard-bindings)}, @code{(block)}, @code{(not safe)} and
+@code{(fixnum)}.
 
 @end deffn
 

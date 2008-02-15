@@ -1,4 +1,4 @@
-/* File: "main.c", Time-stamp: <2008-02-14 23:15:44 feeley> */
+/* File: "main.c", Time-stamp: <2008-02-15 10:19:46 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -50,6 +50,8 @@ int debug_settings;)
         "                           (primordial-thread only|all threads)\n"
         "                 r|s|q     error handling (create a new REPL|start in\n"
         "                           single-step mode|quit with error status)\n"
+        "                 R|D|Q     user interrupt handling (create a new REPL|defer\n"
+        "                           handling|quit with error status)\n"
         "                 i|c|-     select REPL interaction channel\n"
         "                           (ide|console|standard input and output)\n"
         "                 0..9      verbosity level\n"
@@ -341,6 +343,24 @@ ___mod_or_lnk (*linker)();)
                                        & ~___DEBUG_SETTINGS_ERROR_MASK)
                                       | (___DEBUG_SETTINGS_ERROR_QUIT
                                          << ___DEBUG_SETTINGS_ERROR_SHIFT);
+                                    break;
+                          case 'R': debug_settings =
+                                      (debug_settings
+                                       & ~___DEBUG_SETTINGS_USER_INTR_MASK)
+                                      | (___DEBUG_SETTINGS_USER_INTR_REPL
+                                         << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
+                                    break;
+                          case 'D': debug_settings =
+                                      (debug_settings
+                                       & ~___DEBUG_SETTINGS_USER_INTR_MASK)
+                                      | (___DEBUG_SETTINGS_USER_INTR_DEFER
+                                         << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
+                                    break;
+                          case 'Q': debug_settings =
+                                      (debug_settings
+                                       & ~___DEBUG_SETTINGS_USER_INTR_MASK)
+                                      | (___DEBUG_SETTINGS_USER_INTR_QUIT
+                                         << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
                                     break;
                           case 'i': debug_settings =
                                       (debug_settings

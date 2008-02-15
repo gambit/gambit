@@ -1,4 +1,4 @@
-/* File: "c_intf.c", Time-stamp: <2008-02-14 11:16:24 feeley> */
+/* File: "c_intf.c", Time-stamp: <2008-02-15 09:44:06 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -1543,7 +1543,7 @@ int *encoding_state;)
    * adjusted to indicate how many characters were processed and how
    * many bytes were added to the byte buffer.  The conversion ends
    * when the byte buffer is filled or the character buffer is emptied
-   * or at the first character that is illegal.  Errors are only
+   * or past the first character that is illegal.  Errors are only
    * reported when they are at the head of the character buffer.  When
    * the first character is an illegal character, result ==
    * ___ILLEGAL_CHAR and char_buf_avail and byte_buf_avail will not

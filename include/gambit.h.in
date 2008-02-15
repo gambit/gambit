@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-02-13 00:14:35 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-02-15 10:47:43 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,7 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1203052329
+#define ___STAMP 1203092842
 
 /*---------------------------------------------------------------------------*/
 
@@ -7929,6 +7929,11 @@ typedef struct ___setup_params_struct
 #define ___DEBUG_SETTINGS_REPL_CONSOLE        1
 #define ___DEBUG_SETTINGS_REPL_STDIO          2
 #define ___DEBUG_SETTINGS_REPL_SHIFT          7
+#define ___DEBUG_SETTINGS_USER_INTR_MASK      (3<<9)
+#define ___DEBUG_SETTINGS_USER_INTR_REPL      0
+#define ___DEBUG_SETTINGS_USER_INTR_DEFER     1
+#define ___DEBUG_SETTINGS_USER_INTR_QUIT      2
+#define ___DEBUG_SETTINGS_USER_INTR_SHIFT     9
 
 #define ___DEBUG_SETTINGS_LEVEL(settings) \
 (((settings) & ___DEBUG_SETTINGS_LEVEL_MASK) \
@@ -7946,6 +7951,10 @@ typedef struct ___setup_params_struct
 (((settings) & ___DEBUG_SETTINGS_REPL_MASK) \
  >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
 
+#define ___DEBUG_SETTINGS_USER_INTR(settings) \
+(((settings) & ___DEBUG_SETTINGS_USER_INTR_MASK) \
+ >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
+
 #define ___DEBUG_SETTINGS_INITIAL \
 ((1 << ___DEBUG_SETTINGS_LEVEL_SHIFT) | \
  (___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL \
@@ -7953,7 +7962,9 @@ typedef struct ___setup_params_struct
  (___DEBUG_SETTINGS_ERROR_QUIT \
   << ___DEBUG_SETTINGS_ERROR_SHIFT) | \
  (___DEBUG_SETTINGS_REPL_IDE \
-  << ___DEBUG_SETTINGS_REPL_SHIFT))
+  << ___DEBUG_SETTINGS_REPL_SHIFT) | \
+ (___DEBUG_SETTINGS_USER_INTR_QUIT \
+  << ___DEBUG_SETTINGS_USER_INTR_SHIFT))
 
 #define ___DEBUG_SETTINGS_DEFAULT \
 ((1 << ___DEBUG_SETTINGS_LEVEL_SHIFT) | \
@@ -7962,7 +7973,9 @@ typedef struct ___setup_params_struct
  (___DEBUG_SETTINGS_ERROR_REPL \
   << ___DEBUG_SETTINGS_ERROR_SHIFT) | \
  (___DEBUG_SETTINGS_REPL_IDE \
-  << ___DEBUG_SETTINGS_REPL_SHIFT))
+  << ___DEBUG_SETTINGS_REPL_SHIFT) | \
+ (___DEBUG_SETTINGS_USER_INTR_REPL \
+  << ___DEBUG_SETTINGS_USER_INTR_SHIFT))
 
 #define ___CHAR_ENCODING(x)         ((x)&(15<<0))
 #define ___CHAR_ENCODING_MASK(x)    ((x)&~(15<<0))

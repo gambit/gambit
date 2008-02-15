@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2007-10-30 03:33:34 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-02-15 10:29:22 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2884,12 +2884,26 @@
 
 ;; (##current-user-interrupt-handler) is called on each user interrupt.
 
+(define ##deferred-user-interrupt? #f)
+
+(define (defer-user-interrupts)
+   (##declare (not interrupts-enabled))
+   (set! ##deferred-user-interrupt? #t)
+   (##void))
+     
 (define ##current-user-interrupt-handler
   (##make-parameter
-   ##exit-abnormally
+   defer-user-interrupts
    (lambda (val)
      (macro-check-procedure val 1 (##current-user-interrupt-handler val)
-       val))))
+       (let ()
+         (##declare (not interrupts-enabled))
+         (##declare (not safe)) ;; avoid procedure check on the call
+         (let ((int? ##deferred-user-interrupt?))
+           (set! ##deferred-user-interrupt? #f)
+           (if int?
+               (val)))
+         val)))))
 
 (define current-user-interrupt-handler
   ##current-user-interrupt-handler)
@@ -2903,8 +2917,6 @@
        (let ()
          (##declare (not safe)) ;; avoid procedure check on the call
          (handler))))))
-
-(##enable-interrupts!)
 
 (##thread-startup!)
 

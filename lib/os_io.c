@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-02-14 23:13:03 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-02-15 09:41:07 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -7854,7 +7854,10 @@ ___SCMOBJ port;)
 
   if (cbuf_avail == chi - clo)
     if (code == ___ILLEGAL_CHAR)
-      e = err_code_from_char_encoding (___CHAR_ENCODING(options), 0, 0, 0);
+      {
+        cbuf_avail--; /* skip over the illegal character */
+        e = err_code_from_char_encoding (___CHAR_ENCODING(options), 0, 0, 0);
+      }
 
   ___FIELD(port,___PORT_CHAR_WLO) = ___FIX(chi - cbuf_avail);
   ___FIELD(port,___PORT_BYTE_WHI) = ___FIX(bend - bbuf_avail);

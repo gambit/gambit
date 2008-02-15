@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel#.scm", Time-stamp: <2008-01-10 16:41:04 feeley>
+;;; File: "_kernel#.scm", Time-stamp: <2008-02-15 00:38:47 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -164,6 +164,12 @@
 (##define-macro (macro-debug-settings-repl-stdio)          2)
 (##define-macro (macro-debug-settings-repl-shift)          7)
 
+(##define-macro (macro-debug-settings-user-intr-mask)      1536)
+(##define-macro (macro-debug-settings-user-intr-repl)      0)
+(##define-macro (macro-debug-settings-user-intr-defer)     1)
+(##define-macro (macro-debug-settings-user-intr-quit)      2)
+(##define-macro (macro-debug-settings-user-intr-shift)     9)
+
 (##define-macro (macro-debug-settings-level settings)
   `(##fixnum.arithmetic-shift-right
     (##fixnum.bitwise-and ,settings
@@ -187,6 +193,12 @@
     (##fixnum.bitwise-and ,settings
                           (macro-debug-settings-repl-mask))
     (macro-debug-settings-repl-shift)))
+
+(##define-macro (macro-debug-settings-user-intr settings)
+  `(##fixnum.arithmetic-shift-right
+    (##fixnum.bitwise-and ,settings
+                          (macro-debug-settings-user-intr-mask))
+    (macro-debug-settings-user-intr-shift)))
 
 ;;;----------------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-02-08 20:18:00 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-02-15 10:50:15 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1019,7 +1019,7 @@
                  0
                  (##fixnum.quotient
                   (##fixnum.- port-width
-                              (##fixnum.+ 
+                              (##fixnum.+
                                depth-width
                                creator-width
                                locat-width
@@ -2045,8 +2045,10 @@
 (define-prim (##repl-debug #!optional (write-reason #f) (no-result? #f))
   (let* ((old-setting
           (##set-debug-settings!
-           (macro-debug-settings-error-mask)
-           (macro-debug-settings-error-repl)))
+           (##fixnum.+ (macro-debug-settings-error-mask)
+                       (macro-debug-settings-user-intr-mask))
+           (##fixnum.+ (macro-debug-settings-error-repl)
+                       (macro-debug-settings-user-intr-repl))))
          (results
           (if no-result?
             (##with-no-result-expected (lambda () (##repl write-reason)))
@@ -2168,8 +2170,7 @@
         (lambda ()
           (##parameterize
            ##current-user-interrupt-handler
-           (lambda ()
-             #f) ;; ignore user interrupts
+           ##void ;; ignore user interrupts
            (lambda ()
              (macro-dynamic-bind repl-context
               repl-context
@@ -2549,26 +2550,30 @@
                  #f)))))))))
 
 (define-prim (##default-user-interrupt-handler)
-  (##with-no-result-expected
-   (lambda ()
-     (##repl
-      (lambda (first output-port)
-        (let* ((settings (##set-debug-settings! 0 0))
-               (quit? (##fixnum.= (macro-debug-settings-error settings)
-                                  (macro-debug-settings-error-quit))))
+  (let* ((settings (##set-debug-settings! 0 0))
+         (settings-user-intr (macro-debug-settings-user-intr settings))
+         (defer? (##fixnum.= settings-user-intr
+                             (macro-debug-settings-user-intr-defer))))
+    (if defer?
+        (set! ##deferred-user-interrupt? #t)
+        (let ((quit? (##fixnum.= settings-user-intr
+                                 (macro-debug-settings-user-intr-quit))))
           (if (and quit?
                    (##fixnum.= (macro-debug-settings-level settings) 0))
-            (##exit-abnormally)
-            (begin
-              (##display-situation
-               "INTERRUPTED"
-               (##continuation-creator first)
-               (##continuation-locat first)
-               output-port)
-              (##newline output-port)
-              (if quit?
-                (##exit-abnormally)
-                #f)))))))))
+              (##exit-abnormally)
+              (##with-no-result-expected
+               (lambda ()
+                 (##repl
+                  (lambda (first output-port)
+                    (##display-situation
+                     "INTERRUPTED"
+                     (##continuation-creator first)
+                     (##continuation-locat first)
+                     output-port)
+                    (##newline output-port)
+                    (if quit?
+                        (##exit-abnormally)
+                        #f))))))))))
 
 (set! ##primordial-exception-handler-hook ##repl-exception-handler-hook)
 
@@ -3372,5 +3377,12 @@
              #t)))
 
         result))))
+
+;;;----------------------------------------------------------------------------
+
+;; enable processing of heartbeat interrupts, user interrupts, GC
+;; interrupts, etc.
+
+(##enable-interrupts!)
 
 ;;;============================================================================

@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-02-08 18:51:40 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-02-15 09:44:32 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -7418,7 +7418,7 @@ ___stream_index *len_done;)
                                &byte_avail,
                                &d->input_encoding_state)
                == ___ILLEGAL_CHAR)
-          char_avail--; /* skip over illegal characters */
+          char_avail--; /* skip over the illegal characters */
 
         d->input_line_lo = d->input_line.length - char_avail;
 
