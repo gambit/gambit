@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2008-02-12 15:59:18 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2008-02-14 13:56:23 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -351,6 +351,7 @@
 ;; (ieee-scheme)     use IEEE Scheme
 ;; (r4rs-scheme)     use R4RS Scheme
 ;; (r5rs-scheme)     use R5RS Scheme
+;; (gambit-scheme)   use Gambit Scheme
 ;; (multilisp)       use Multilisp
 ;;
 ;; Partial-evaluation declarations:
@@ -419,10 +420,11 @@
 ;; (environment-map)                   generate environment maps
 ;; (not environment-map)               don't generate environment maps
 
-(define-flag-decl ieee-scheme-sym 'dialect)
-(define-flag-decl r4rs-scheme-sym 'dialect)
-(define-flag-decl r5rs-scheme-sym 'dialect)
-(define-flag-decl multilisp-sym   'dialect)
+(define-flag-decl ieee-scheme-sym   'dialect)
+(define-flag-decl r4rs-scheme-sym   'dialect)
+(define-flag-decl r5rs-scheme-sym   'dialect)
+(define-flag-decl gambit-scheme-sym 'dialect)
+(define-flag-decl multilisp-sym     'dialect)
 
 (define-boolean-decl constant-fold-sym)
 
@@ -450,7 +452,7 @@
 (define-boolean-decl environment-map-sym)
 
 (define (scheme-dialect env) ; returns dialect in effect
-  (declaration-value 'dialect #f r5rs-scheme-sym env))
+  (declaration-value 'dialect #f gambit-scheme-sym env))
 
 (define (constant-fold? env) ; true iff should constant-fold primitives
   (declaration-value constant-fold-sym #f #t env))

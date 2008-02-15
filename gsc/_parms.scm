@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_parms.scm", Time-stamp: <2008-02-12 15:07:59 feeley>
+;;; File: "_parms.scm", Time-stamp: <2008-02-14 13:54:34 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -83,6 +83,7 @@
 (define ieee-scheme-sym        (string->canonical-symbol "ieee-scheme"))
 (define r4rs-scheme-sym        (string->canonical-symbol "r4rs-scheme"))
 (define r5rs-scheme-sym        (string->canonical-symbol "r5rs-scheme"))
+(define gambit-scheme-sym      (string->canonical-symbol "gambit-scheme"))
 (define multilisp-sym          (string->canonical-symbol "multilisp"))
 
 (define constant-fold-sym      (string->canonical-symbol "constant-fold"))
