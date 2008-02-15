@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-02-12 11:28:26 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-02-14 22:52:13 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1669,17 +1669,33 @@
 
   (let loop ()
 
+    ;; keep track of number of characters read
+
+    (macro-character-port-rchars-set!
+     port
+     (##fixnum.+ (macro-character-port-rchars port)
+                 (macro-character-port-rhi port)))
+
+    (macro-character-port-rlo-set! port 0)
+    (macro-character-port-rhi-set! port 0)
+
     ;; convert bytes from the byte buffer into characters in the char buffer
 
-    (let ((code1 (##os-port-decode-chars! port #f))) ;;;;;;; TODO: propagate want
+    (let* ((want
+            (if (macro-unbuffered? (macro-port-roptions port))
+                want
+                #f))
+           (code1
+            (##os-port-decode-chars! port want #f)))
 
-      (cond ((##fixnum? code1)
+      (cond ((##not (##fixnum.= code1 0))
 
              ;; an error occurred, return the error code to caller
 
              code1)
 
-            (code1
+            ((##fixnum.< (macro-character-port-rlo port)
+                         (macro-character-port-rhi port))
 
              ;; characters were added to char buffer
 
@@ -1719,7 +1735,10 @@
                       ;; to indicate that the remaining bytes can't
                       ;; form a character, otherwise #f is returned.
 
-                      (##os-port-decode-chars! port #t)))))))))
+                      (let ((code3 (##os-port-decode-chars! port want #t)))
+                        (if (##fixnum.= code3 0)
+                            #f
+                            code3))))))))))
 
 (define-prim (##byte-rbuf-fill port want block?)
 
@@ -1741,6 +1760,16 @@
   (##declare (not interrupts-enabled))
 
   (let loop ()
+
+    ;; shift bytes between rlo and rhi to beginning of buffer
+
+    (let ((byte-rlo (macro-byte-port-rlo port))
+          (byte-rhi (macro-byte-port-rhi port)))
+      (if (##fixnum.< byte-rlo byte-rhi)
+          (let ((byte-rbuf (macro-byte-port-rbuf port)))
+            (##subu8vector-move! byte-rbuf byte-rlo byte-rhi byte-rbuf 0)))
+      (macro-byte-port-rlo-set! port 0)
+      (macro-byte-port-rhi-set! port (##fixnum.- byte-rhi byte-rlo)))
 
     ;; read into byte buffer at rhi
 
@@ -1800,13 +1829,13 @@
               (##fixnum.+ (macro-byte-port-rhi port) n))
             #t))))))
 
-(define-prim (##char-wbuf-drain port)
+(define-prim (##char-wbuf-drain-no-reset port)
 
   ;; This procedure returns #f when the char buffer was successfully
-  ;; drained or it returns an error code (fixnum).  In particular, only
-  ;; if there was a write timeout and the timeout thunk returned #f,
-  ;; ##err-code-EAGAIN is returned to indicate that no char could be
-  ;; written at this time.
+  ;; drained or it returns an error code (fixnum).  In particular,
+  ;; only if there was a write timeout and the timeout thunk returned
+  ;; #f, ##err-code-EAGAIN is returned to indicate that some chars
+  ;; could not be written at this time.
 
   ;; It is assumed that the thread has exclusive access to the port.
 
@@ -1818,13 +1847,14 @@
 
     (let ((code1 (##os-port-encode-chars! port)))
 
-      (cond ((##fixnum? code1)
+      (cond ((##not (##fixnum.= code1 0))
 
              ;; an error occurred, return the error code to caller
 
              code1)
 
-            (code1
+            ((##fixnum.< (macro-character-port-wlo port)
+                         (macro-character-port-whi port))
 
              ;; the byte buffer is full, so drain it and continue
              ;; draining char buffer
@@ -1844,18 +1874,28 @@
 
             (else
 
-             ;; the byte buffer is not full and the char buffer is
-             ;; empty
+             ;; the char buffer has been emptied
 
              #f)))))
 
-(define-prim (##byte-wbuf-drain port)
+(define-prim (##char-wbuf-drain port)
+  (or (##char-wbuf-drain-no-reset port)
+      (begin
+        (macro-character-port-wchars-set!
+         port
+         (##fixnum.+ (macro-character-port-wchars port)
+                     (macro-character-port-whi port)))
+        (macro-character-port-wlo-set! port 0)
+        (macro-character-port-whi-set! port 0)
+        #f)))
+
+(define-prim (##byte-wbuf-drain-no-reset port)
 
   ;; This procedure returns #f when the byte buffer was successfully
-  ;; drained or it returns an error code (fixnum).  In particular, only
-  ;; if there was a write timeout and the timeout thunk returned #f,
-  ;; ##err-code-EAGAIN is returned to indicate that no byte could be
-  ;; written at this time.
+  ;; drained or it returns an error code (fixnum).  In particular,
+  ;; only if there was a write timeout and the timeout thunk returned
+  ;; #f, ##err-code-EAGAIN is returned to indicate that no byte could
+  ;; be written at this time.
 
   ;; It is assumed that the thread has exclusive access to the port.
 
@@ -1916,12 +1956,17 @@
                 (##fixnum.+ (macro-byte-port-wlo port) n))
               (loop))))
 
-        ;; the byte buffer is empty, reset wlo and whi
+        ;; the byte buffer is empty
 
-        (begin
-          (macro-byte-port-wlo-set! port 0)
-          (macro-byte-port-whi-set! port 0)
-          #f)))))
+        #f))))
+
+(define-prim (##byte-wbuf-drain port)
+  (or (##byte-wbuf-drain-no-reset port)
+      (begin
+        ;; the byte buffer is empty, reset wlo and whi
+        (macro-byte-port-wlo-set! port 0)
+        (macro-byte-port-whi-set! port 0)
+        #f)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2602,7 +2647,7 @@
              (,macro-vect-port-rhi-set! peer 0)
 
              (,macro-vect-port-wbuf-set! port new-vect-buf)
-             (,macro-vect-port-wlo-set! peer 0)
+             (,macro-vect-port-wlo-set! peer 0) ;;;;;;;;;;;; peer or port ?
              (,macro-vect-port-whi-set! port 0)
 
              (macro-port-mutex-unlock! port)
@@ -4555,20 +4600,17 @@
            (macro-byte-port-rlo-set! port (##fixnum.+ byte-rlo 1))
            (macro-port-mutex-unlock! port)
            result)
-         (begin
-;           (macro-byte-port-rlo-set! port 0)
-;           (macro-byte-port-rhi-set! port 0)
-           (let ((code ((macro-byte-port-rbuf-fill port)
-                        port
-                        1
-                        #t)))
-             (cond ((##fixnum? code)
+         (let ((code ((macro-byte-port-rbuf-fill port)
+                      port
+                      1
+                      #t)))
+           (cond ((##fixnum? code)
 
-                    ;; an error occurred
+                  ;; an error occurred
 
-                    (macro-port-mutex-unlock! port)
+                  (macro-port-mutex-unlock! port)
 
-                    (if (##fixnum.= code ##err-code-EAGAIN)
+                  (if (##fixnum.= code ##err-code-EAGAIN)
                       #!eof ;; the read timeout thunk returned #f
                       (##raise-os-exception
                        #f
@@ -4576,20 +4618,20 @@
                        read-u8
                        port)))
 
-                   (code
+                 (code
 
-                    ;; bytes were added to byte buffer, so try again
-                    ;; to transfer bytes from the byte buffer
+                  ;; bytes were added to byte buffer, so try again
+                  ;; to transfer bytes from the byte buffer
 
-                    (loop))
+                  (loop))
 
-                   (else
+                 (else
 
-                    ;; no bytes were added to byte buffer
-                    ;; (end-of-file was reached)
+                  ;; no bytes were added to byte buffer
+                  ;; (end-of-file was reached)
 
-                    (macro-port-mutex-unlock! port)
-                    #!eof)))))))))
+                  (macro-port-mutex-unlock! port)
+                  #!eof))))))))
 
 (define-prim (read-u8
               #!optional
@@ -4640,24 +4682,21 @@
                      (loop2 (##fixnum.+ i 1)
                             (##fixnum.+ j 1)))))
                (loop1 (##fixnum.+ n to-transfer)))
-             (begin
-               (macro-byte-port-rlo-set! port 0)
-               (macro-byte-port-rhi-set! port 0)
-               (let ((code ((macro-byte-port-rbuf-fill port)
-                            port
-                            remaining
-                            #t)))
-                 (cond ((##fixnum? code)
+             (let ((code ((macro-byte-port-rbuf-fill port)
+                          port
+                          remaining
+                          #t)))
+               (cond ((##fixnum? code)
 
-                        ;; an error occurred, signal an error if no
-                        ;; bytes were previously transfered from byte
-                        ;; buffer and (in the case of a read timeout)
-                        ;; the timeout thunk returned #f
+                      ;; an error occurred, signal an error if no
+                      ;; bytes were previously transferred from byte
+                      ;; buffer and (in the case of a read timeout)
+                      ;; the timeout thunk returned #f
 
-                        (macro-port-mutex-unlock! port)
+                      (macro-port-mutex-unlock! port)
 
-                        (if (or (##fixnum.< 0 n)
-                                (##fixnum.= code ##err-code-EAGAIN))
+                      (if (or (##fixnum.< 0 n)
+                              (##fixnum.= code ##err-code-EAGAIN))
                           n
                           (##raise-os-exception
                            #f
@@ -4668,20 +4707,20 @@
                            end
                            port)))
 
-                       (code
+                     (code
 
-                        ;; bytes were added to byte buffer, so try again
-                        ;; to transfer bytes from the byte buffer
+                      ;; bytes were added to byte buffer, so try again
+                      ;; to transfer bytes from the byte buffer
 
-                        (loop1 n))
+                      (loop1 n))
 
-                       (else
+                     (else
 
-                        ;; no bytes were added to byte buffer
-                        ;; (end-of-file was reached)
+                      ;; no bytes were added to byte buffer
+                      ;; (end-of-file was reached)
 
-                        (macro-port-mutex-unlock! port)
-                        n)))))))))))
+                      (macro-port-mutex-unlock! port)
+                      n))))))))))
 
 (define-prim (read-subu8vector
               u8vect
@@ -4868,7 +4907,7 @@
                     (begin
 
                       ;; an error occurred, signal an error if no bytes
-                      ;; were previously transfered from byte buffer
+                      ;; were previously transferred from byte buffer
                       ;; and (in the case of a write timeout) the
                       ;; timeout thunk returned #f
 

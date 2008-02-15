@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-02-08 18:50:18 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-02-14 17:46:22 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4066,6 +4066,7 @@ end-of-code
 
 (define-prim ##os-port-decode-chars!
   (c-lambda (scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_port_decode_chars"))

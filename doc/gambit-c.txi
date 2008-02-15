@@ -10480,6 +10480,23 @@ then it must be explicitly written.
 UTF-16 character encoding with big-endian endianness.  It is like
 @code{UTF-16LE} except the endianness is set to big-endian.
 
+@item UTF
+This encoding combines the UTF-8 and UTF-16 encodings.  When
+@code{UTF} is used for an output port, characters will be encoded
+using the UTF-8 encoding.  The first character, if there is one, is
+prefixed with a UTF-8 BOM (the three byte sequence EF BB BF in
+hexadecimal).  When @code{UTF} is used for an input port, the
+character encoding depends on the first few bytes.  If the first bytes
+of the stream are a UTF-16LE BOM (FF FE in hexadecimal), or a UTF-16BE
+BOM (FE FF in hexadecimal), or a UTF-8 BOM (EF BB BF in hexadecimal),
+then the BOM is discarded and the remaining bytes of the stream are
+decoded using the corresponding character encoding.  If a BOM is not
+present, then the stream is decoded using the UTF-8 encoding.  Note
+that this character encoding for input will correctly handle streams
+produced using the encodings @code{UTF}, @code{UTF-8}, @code{UTF-16},
+@code{ASCII}, and if an explicit BOM is output, the encodings
+@code{UTF-16LE}, and @code{UTF-16BE}.
+
 @item UCS-2
 UCS-2 character encoding.  Each character is encoded by a 16 bit
 integer (2 bytes).  The 16 bit integers may be encoded using
@@ -10553,7 +10570,7 @@ end-of-line encoding.
 
 @item cr
 For an output-port, writing a @code{#\newline} character outputs a
-@code{#\return} character to the stream (Unicode character code 10).
+@code{#\return} character to the stream (Unicode character code 13).
 For an input-port, a @code{#\newline} character is read when a
 @code{#\linefeed} character or a @code{#\return} character is
 encountered on the stream.  Text files created by Classic Mac OS

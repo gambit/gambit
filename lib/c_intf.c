@@ -1,4 +1,4 @@
-/* File: "c_intf.c", Time-stamp: <2008-02-13 15:33:31 feeley> */
+/* File: "c_intf.c", Time-stamp: <2008-02-14 11:16:24 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -2778,9 +2778,9 @@ int arg_num;)
 }
 
 
-/* Utility function. */
+/* Error code generation. */
 
-___LOCAL ___SCMOBJ err_code_from_char_encoding
+___SCMOBJ err_code_from_char_encoding
    ___P((int char_encoding,
          ___BOOL ctos,
          int type,

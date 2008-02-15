@@ -1,6 +1,6 @@
-/* File: "os_io.h", Time-stamp: <2007-04-04 11:31:13 feeley> */
+/* File: "os_io.h", Time-stamp: <2008-02-14 17:47:20 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -763,6 +763,7 @@ extern ___SCMOBJ ___os_condvar_select
 
 extern ___SCMOBJ ___os_port_decode_chars
    ___P((___SCMOBJ port,
+         ___SCMOBJ want,
          ___SCMOBJ eof),
         ());
 

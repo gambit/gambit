@@ -1,6 +1,6 @@
-/* File: "os_io.c", Time-stamp: <2008-01-26 15:22:57 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-02-14 23:13:03 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -7686,220 +7686,11 @@ ___SCMOBJ timeout;)
  * of bytes.
  */
 
-/**************** replace with code in c_intf.c */
+/*
+ * The following definitions must match the structure of ports defined
+ * in _io#.scm .
+ */
 
-#define unicode_LF 10
-#define unicode_CR 13
-#define unicode_BOM 0xfeff
-
-#define bytes_per_ISO_8859_1 1
-#define max_ISO_8859_1       0xff
-
-#define bytes_per_UTF_8 1 /* optimization for single byte case */
-#define max_UTF_8       0x7f
-
-#define bytes_per_UCS_2 2
-#define max_UCS_2       0xffff
-
-#define bytes_per_UCS_4 4
-#define max_UCS_4       0x7fffffff
-
-#define DECODE_EOL(loop_label) \
-if (c != unicode_LF) \
-  { \
-    if (c != unicode_CR) \
-      { \
-        options += ___DECODE_STATE_NONE-___DECODE_STATE(options); \
-        *chi++ = c; \
-        if (chi < end) \
-          goto loop_label; \
-      } \
-    else \
-      { \
-        int eol = ___EOL_ENCODING(options); \
-        if (eol != ___EOL_ENCODING_LF) \
-          { \
-            if (eol != ___EOL_ENCODING_CR) \
-              { \
-                int rs = ___DECODE_STATE(options); \
-                if (rs == ___DECODE_STATE_LF) \
-                  { \
-                    options += \
-                      ___DECODE_STATE_NONE-___DECODE_STATE_LF; \
-                    goto loop_label; \
-                  } \
-                options += ___DECODE_STATE_CR-rs; \
-              } \
-            c = char_EOL; \
-          } \
-        *chi++ = c; \
-        if (chi < end) \
-          goto loop_label; \
-      } \
-  } \
-else \
-  { \
-    int eol = ___EOL_ENCODING(options); \
-    if (eol != ___EOL_ENCODING_CR) \
-      { \
-        if (eol != ___EOL_ENCODING_LF) \
-          { \
-            int rs = ___DECODE_STATE(options); \
-            if (rs == ___DECODE_STATE_CR) \
-              { \
-                options += \
-                  ___DECODE_STATE_NONE-___DECODE_STATE_CR; \
-                goto loop_label; \
-              } \
-            options += ___DECODE_STATE_LF-rs; \
-          } \
-        c = char_EOL; \
-      } \
-    *chi++ = c; \
-    if (chi < end) \
-      goto loop_label; \
-  }
-
-#define DECODE_CHARS_LOOP(loop_label,bytes_per_char,max_char,err_code,get_char) \
-\
-loop_label: \
-blo += bytes_per_char; \
-if (blo <= bhi) \
-  { \
-    c = get_char(-1); \
-    if (max_char <= ___MAX_CHR || \
-        c <= ___MAX_CHR) \
-      { \
-        DECODE_EOL(loop_label) \
-      } \
-    else \
-      { \
-        blo -= bytes_per_char; \
-        e = err_code; \
-      } \
-  } \
-else \
-  { \
-    blo -= bytes_per_char; \
-    if (bytes_per_char > 1 && \
-        blo < bhi &&   /* at least one byte left in buffer? */ \
-        eof != ___FAL) /* end-of-file was reached? */ \
-      e = err_code; /* trailing partial! */ \
-  } \
-break;
-
-#define ENCODE_EOL(loop_label,bytes_per_char,put_char) \
-switch (___EOL_ENCODING(options)) \
-  { \
-  case ___EOL_ENCODING_CR: \
-    put_char(-1,unicode_CR); \
-    break; \
-  case ___EOL_ENCODING_CRLF: \
-    bhi += bytes_per_char; \
-    if (bhi > end) \
-      { \
-        bhi -= 2*bytes_per_char; \
-        clo--; \
-        goto encode_chars_end; \
-      } \
-    put_char(-2,unicode_CR); \
-  default: \
-    put_char(-1,unicode_LF); \
-    break; \
-  } \
-if (___LINE_BUFFERED(options)) \
-  goto encode_chars_end; /* must empty byte buffer */ \
-else if (clo < chi) \
-  goto loop_label;
-
-#define ENCODE_CHARS_LOOP(loop_label,bytes_per_char,max_char,err_code,put_char) \
-\
-loop_label: \
-c = *clo++; \
-if (___MAX_CHR <= max_char || \
-    c <= max_char) \
-  { \
-    bhi += bytes_per_char; \
-    if (bhi <= end) \
-      { \
-        if (c != char_EOL) \
-          { \
-            put_char(-1,c); \
-            if (clo < chi) \
-              goto loop_label; \
-          } \
-        else \
-          { \
-            ENCODE_EOL(loop_label,bytes_per_char,put_char); \
-          } \
-      } \
-    else \
-      { \
-        bhi -= bytes_per_char; \
-        clo--; \
-        goto encode_chars_end; \
-      } \
-  } \
-else \
-  { \
-    e = err_code; \
-    goto encode_chars_end; \
-  } \
-break;
-
-#define get_ISO_8859_1(i) \
-blo[(i)*bytes_per_ISO_8859_1]
-
-#define get_UTF_8(i) \
-blo[(i)*bytes_per_UTF_8]
-
-#define get_UCS_2BE(i) \
-(___CAST(___UCS_2,blo[(i)*bytes_per_UCS_2+0]) << 8) + \
-___CAST(___UCS_2,blo[(i)*bytes_per_UCS_2+1])
-
-#define get_UCS_2LE(i) \
-(___CAST(___UCS_2,blo[(i)*bytes_per_UCS_2+1]) << 8) + \
-___CAST(___UCS_2,blo[(i)*bytes_per_UCS_2+0])
-
-#define get_UCS_4BE(i) \
-(((((___CAST(___UCS_4,blo[(i)*bytes_per_UCS_4+0]) << 8) + \
-    ___CAST(___UCS_4,blo[(i)*bytes_per_UCS_4+1])) << 8) + \
-  ___CAST(___UCS_4,blo[(i)*bytes_per_UCS_4+2])) << 8) + \
-___CAST(___UCS_4,blo[(i)*bytes_per_UCS_4+3])
-
-#define get_UCS_4LE(i) \
-(((((___CAST(___UCS_4,blo[(i)*bytes_per_UCS_4+3]) << 8) + \
-    ___CAST(___UCS_4,blo[(i)*bytes_per_UCS_4+2])) << 8) + \
-  ___CAST(___UCS_4,blo[(i)*bytes_per_UCS_4+1])) << 8) + \
-___CAST(___UCS_4,blo[(i)*bytes_per_UCS_4+0])
-
-#define put_ISO_8859_1(i,c) \
-bhi[(i)*bytes_per_ISO_8859_1] = (c);
-
-#define put_UTF_8(i,c) \
-bhi[(i)*bytes_per_UTF_8] = (c);
-
-#define put_UCS_2BE(i,c) \
-bhi[(i)*bytes_per_UCS_2+1] = (c) & 0xff; \
-bhi[(i)*bytes_per_UCS_2+0] = ((c)>>8) & 0xff;
-
-#define put_UCS_2LE(i,c) \
-bhi[(i)*bytes_per_UCS_2+0] = (c) & 0xff; \
-bhi[(i)*bytes_per_UCS_2+1] = ((c)>>8) & 0xff;
-
-#define put_UCS_4BE(i,c) \
-bhi[(i)*bytes_per_UCS_4+3] = (c) & 0xff; \
-bhi[(i)*bytes_per_UCS_4+2] = ((c)>>8) & 0xff; \
-bhi[(i)*bytes_per_UCS_4+1] = ((c)>>16) & 0xff; \
-bhi[(i)*bytes_per_UCS_4+0] = ((c)>>24) & 0xff;
-
-#define put_UCS_4LE(i,c) \
-bhi[(i)*bytes_per_UCS_4+0] = (c) & 0xff; \
-bhi[(i)*bytes_per_UCS_4+1] = ((c)>>8) & 0xff; \
-bhi[(i)*bytes_per_UCS_4+2] = ((c)>>16) & 0xff; \
-bhi[(i)*bytes_per_UCS_4+3] = ((c)>>24) & 0xff;
-
-/****************/
 #define ___PORT_MUTEX                1
 #define ___PORT_RKIND                2
 #define ___PORT_WKIND                3
@@ -7971,300 +7762,60 @@ bhi[(i)*bytes_per_UCS_4+3] = ((c)>>24) & 0xff;
 
 ___SCMOBJ ___os_port_decode_chars
    ___P((___SCMOBJ port,
+         ___SCMOBJ want,
          ___SCMOBJ eof),
         (port,
+         want,
          eof)
 ___SCMOBJ port;
+___SCMOBJ want;
 ___SCMOBJ eof;)
 {
-  ___SCMOBJ e;
-  ___SCMOBJ result;
-  ___C *char_rbuf =
-     ___CAST(___C*,___BODY_AS(___FIELD(port,___PORT_CHAR_RBUF),___tSUBTYPED));
-  ___C *chi =
-     char_rbuf + ___INT(___FIELD(port,___PORT_CHAR_RHI));
-  ___C *end =
-     char_rbuf + ___INT(___STRINGLENGTH(___FIELD(port,___PORT_CHAR_RBUF)));
-  ___U8 *byte_rbuf =
-     ___CAST(___U8*,___BODY_AS(___FIELD(port,___PORT_BYTE_RBUF),___tSUBTYPED));
-  ___U8 *blo =
-     byte_rbuf + ___INT(___FIELD(port,___PORT_BYTE_RLO));
-  ___U8 *bhi =
-     byte_rbuf + ___INT(___FIELD(port,___PORT_BYTE_RHI));
-  ___UCS_4 c;
+  ___SCMOBJ e = ___FIX(___NO_ERR);
+  ___SCMOBJ cbuf = ___FIELD(port,___PORT_CHAR_RBUF);
+  int chi = ___INT(___FIELD(port,___PORT_CHAR_RHI));
+  int cend = ___INT(___STRINGLENGTH(cbuf));
+  ___SCMOBJ bbuf = ___FIELD(port,___PORT_BYTE_RBUF);
+  int blo = ___INT(___FIELD(port,___PORT_BYTE_RLO));
+  int bhi = ___INT(___FIELD(port,___PORT_BYTE_RHI));
   int options = ___INT(___FIELD(port,___PORT_ROPTIONS));
+  int cbuf_avail;
+  int bbuf_avail;
+  int code;
 
-#if 0
-  if ((___INT(___FIELD(port,___PORT_RKIND)) & ___TTY_DEVICE_KIND) ==
-      ___TTY_DEVICE_KIND)
+  if (want != ___FAL)
     {
-      /**************** this special handling should be removed */
-      /*
-       * Characters read from tty stream devices are represented as 8,
-       * 16 or 32 bit unsigned integers of the machine's endianness.
-       * It is the tty stream device driver that decodes the bytes
-       * received from the device using the encoding specified in the
-       * ___PORT_ROPTIONS field.
-       */
-
-      options = (options - ___CHAR_ENCODING(options)) +
-                ___CS_SELECT(___CHAR_ENCODING_U8,
-                             ___CHAR_ENCODING_U16,
-                             ___CHAR_ENCODING_U32);
+      int w = ___INT(want);
+      if (chi+w < cend)
+        cend = chi+w;
     }
-#endif
 
-  e = ___FIX(___NO_ERR);
+  cbuf_avail = cend - chi;
+  bbuf_avail = bhi - blo;
 
-  ___FIELD(port,___PORT_CHAR_RCHARS) =
-    ___FIELD(port,___PORT_CHAR_RCHARS) + ___FIX(chi-char_rbuf);
-
-  chi = char_rbuf;
-
-  /* fill character buffer as much as possible */
-
-  if (chi < end)
-    {
-      switch (___CHAR_ENCODING(options))
-        {
-        default:
-        case ___CHAR_ENCODING_ASCII:
-        case ___CHAR_ENCODING_ISO_8859_1:
-          DECODE_CHARS_LOOP(decode_next_ISO_8859_1,
-                            bytes_per_ISO_8859_1,
-                            0xff,
-                            ___FIX(___CTOS_ISO_8859_1STRING_ERR),
-                            get_ISO_8859_1);
-
-        case ___CHAR_ENCODING_UTF_8:
-          {
-            decode_next_UTF_8:
-            blo += bytes_per_UTF_8;
-            if (blo <= bhi)
-              {
-                c = get_UTF_8(-1);
-                if (c <= 0x7f)
-                  {
-                    DECODE_EOL(decode_next_UTF_8);
-                  }
-                else if (c <= 0xbf || c > 0xfd)
-                  {
-                    blo -= bytes_per_UTF_8;
-                    e = ___FIX(___CTOS_UTF_8STRING_ERR);
-                  }
-                else
-                  {
-                    ___U8* orig_blo = blo;
-                    ___U8 b0 = c;
-                    int bits = 6;
-                    while (b0 & 0x40)
-                      {
-                        ___U8 next = *blo++;
-                        if (blo > bhi)
-                          {
-                            blo = orig_blo-bytes_per_UTF_8;
-                            if (eof != ___FAL) /* end-of-file reached? */
-                              e = ___FIX(___CTOS_UTF_8STRING_ERR);
-                            goto end_UTF_8;
-                          }
-                        if (next <= 0x7f || next > 0xbf)
-                          {
-                            blo = orig_blo-bytes_per_UTF_8;
-                            e = ___FIX(___CTOS_UTF_8STRING_ERR);
-                            goto end_UTF_8;
-                          }
-                        c = (c << 6) + (next & 0x3f);
-                        b0 <<= 1;
-                        bits += 5;
-                      }
-                    c &= (___CAST(___UCS_4,1)<<bits)-1;
-                    if (c >= 0x80 &&
-                        c >= (___CAST(___UCS_4,1)<<(bits-5)) &&
-                        c <= ___MAX_CHR)
-                      {
-                        options +=
-                          ___DECODE_STATE_NONE-___DECODE_STATE(options);
-                        *chi++ = c;
-                        if (chi < end)
-                          goto decode_next_UTF_8;
-                      }
-                    else
-                      {
-                        blo = orig_blo-bytes_per_UTF_8;
-                        e = ___FIX(___CTOS_UTF_8STRING_ERR);
-                      }
-                    end_UTF_8:;
-                  }
-              }
-            else
-              {
-                blo -= bytes_per_UTF_8;
-                if (blo < bhi &&   /* at least one byte left in buffer? */
-                    eof != ___FAL) /* end-of-file was reached? */
-                  e = ___FIX(___CTOS_UTF_8STRING_ERR);
-              }
-            break;
-          }
-
-        case ___CHAR_ENCODING_UCS_2:
-          {
-            blo += bytes_per_UCS_2;
-            if (blo <= bhi)
-              {
-                ___UCS_4 cle;
-                c = get_UCS_2BE(-1);
-                if (c == unicode_BOM)
-                  {
-                    options += ___CHAR_ENCODING_UCS_2BE-___CHAR_ENCODING_UCS_2;
-                    goto decode_next_UCS_2BE;
-                  }
-                cle = ((c&0xff) << 8) +
-                      ((c>>8)&0xff);
-                if (cle == unicode_BOM)
-                  {
-                    options += ___CHAR_ENCODING_UCS_2LE-___CHAR_ENCODING_UCS_2;
-                    goto decode_next_UCS_2LE;
-                  }
-                blo -= bytes_per_UCS_2;
-#ifdef ___DEFAULT_CHAR_ENCODING_TO_BIG_ENDIAN
-                options += ___CHAR_ENCODING_UCS_2BE-___CHAR_ENCODING_UCS_2;
-                goto decode_next_UCS_2BE;
-#else
-                options += ___CHAR_ENCODING_UCS_2LE-___CHAR_ENCODING_UCS_2;
-                goto decode_next_UCS_2LE;
-#endif
-              }
-            else
-              {
-                blo -= bytes_per_UCS_2;
-                if (bytes_per_UCS_2 > 1 &&
-                    blo < bhi &&   /* at least one byte left in buffer? */
-                    eof != ___FAL) /* end-of-file was reached? */
-                  e = ___FIX(___CTOS_UCS_2STRING_ERR); /* trailing partial! */
-              }
-            break;
-          }
-
-        case ___CHAR_ENCODING_UCS_2BE:
-          DECODE_CHARS_LOOP(decode_next_UCS_2BE,
-                            bytes_per_UCS_2,
-                            0xffff,
-                            ___FIX(___CTOS_UCS_2STRING_ERR),
-                            get_UCS_2BE);
-
-        case ___CHAR_ENCODING_UCS_2LE:
-          DECODE_CHARS_LOOP(decode_next_UCS_2LE,
-                            bytes_per_UCS_2,
-                            0xffff,
-                            ___FIX(___CTOS_UCS_2STRING_ERR),
-                            get_UCS_2LE);
-
-        case ___CHAR_ENCODING_UCS_4:
-          {
-            blo += bytes_per_UCS_4;
-            if (blo <= bhi)
-              {
-                ___UCS_4 cle;
-                c = get_UCS_4BE(-1);
-                if (c == unicode_BOM)
-                  {
-                    options += ___CHAR_ENCODING_UCS_4BE-___CHAR_ENCODING_UCS_4;
-                    goto decode_next_UCS_4BE;
-                  }
-                cle = ((((((c&0xff) << 8) +
-                          ((c>>8)&0xff)) << 8) +
-                        ((c>>16)&0xff)) << 8) +
-                      ((c>>24)&0xff);
-                if (cle == unicode_BOM)
-                  {
-                    options += ___CHAR_ENCODING_UCS_4LE-___CHAR_ENCODING_UCS_4;
-                    goto decode_next_UCS_4LE;
-                  }
-                blo -= bytes_per_UCS_4;
-#ifdef ___DEFAULT_CHAR_ENCODING_TO_BIG_ENDIAN
-                options += ___CHAR_ENCODING_UCS_4BE-___CHAR_ENCODING_UCS_4;
-                goto decode_next_UCS_4BE;
-#else
-                options += ___CHAR_ENCODING_UCS_4LE-___CHAR_ENCODING_UCS_4;
-                goto decode_next_UCS_4LE;
-#endif
-              }
-            else
-              {
-                blo -= bytes_per_UCS_4;
-                if (bytes_per_UCS_4 > 1 &&
-                    blo < bhi &&   /* at least one byte left in buffer? */
-                    eof != ___FAL) /* end-of-file was reached? */
-                  e = ___FIX(___CTOS_UCS_4STRING_ERR); /* trailing partial! */
-              }
-            break;
-          }
-
-        case ___CHAR_ENCODING_UCS_4BE:
-          DECODE_CHARS_LOOP(decode_next_UCS_4BE,
-                            bytes_per_UCS_4,
-                            0xffffffff,
-                            ___FIX(___CTOS_UCS_4STRING_ERR),
-                            get_UCS_4BE);
-
-        case ___CHAR_ENCODING_UCS_4LE:
-          DECODE_CHARS_LOOP(decode_next_UCS_4LE,
-                            bytes_per_UCS_4,
-                            0xffffffff,
-                            ___FIX(___CTOS_UCS_4STRING_ERR),
-                            get_UCS_4LE);
-        }
-    }
+  code = chars_from_bytes (___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED)) + chi,
+                           &cbuf_avail,
+                           ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED)) + blo,
+                           &bbuf_avail,
+                           &options);
 
   /*
-   * either the character buffer is full (chi == end) or no more
+   * either the character buffer is full (cbuf_avail == 0) or no more
    * characters can be extracted from the byte buffer either because
-   * the remaining bytes are not long enough to form a character (e ==
-   * ___FIX(___NO_ERR)) or don't form a valid character (e !=
-   * ___FIX(___NO_ERR)).
+   * the remaining bytes are not long enough to form a character or
+   * don't form a valid character.
    */
 
-  if (chi == char_rbuf)
-    {
-      /* could not extract a single character from the byte buffer */
+  if (cbuf_avail == cend - chi)
+    if (code == ___ILLEGAL_CHAR ||
+        (code == ___INCOMPLETE_CHAR && eof != ___FAL))
+      e = err_code_from_char_encoding (___CHAR_ENCODING(options), 1, 0, 0);
 
-      if (e == ___FIX(___NO_ERR))
-        {
-          /*
-           * the remaining bytes in the buffer (possibly zero bytes)
-           * are not long enough to form a character so make some room
-           * at the end of the byte buffer to be filled with new bytes.
-           */
-
-          ___U8 *p = byte_rbuf;
-
-          if (p != blo)
-            {
-              while (blo < bhi)
-                *p++ = *blo++;
-              blo = byte_rbuf;
-              bhi = p;
-            }
-        }
-
-      result = ___FAL; /* need to fill byte buffer */
-    }
-  else
-    {
-      e = ___FIX(___NO_ERR); /* only report errors at head of char buffer */
-      result = ___TRU; /* no need to fill byte buffer */
-    }
-
-  ___FIELD(port,___PORT_CHAR_RLO) = ___FIX(0);
-  ___FIELD(port,___PORT_CHAR_RHI) = ___FIX(chi-char_rbuf);
-  ___FIELD(port,___PORT_BYTE_RLO) = ___FIX(blo-byte_rbuf);
-  ___FIELD(port,___PORT_BYTE_RHI) = ___FIX(bhi-byte_rbuf);
+  ___FIELD(port,___PORT_CHAR_RHI) = ___FIX(cend - cbuf_avail);
+  ___FIELD(port,___PORT_BYTE_RLO) = ___FIX(bhi - bbuf_avail);
   ___FIELD(port,___PORT_ROPTIONS) = ___FIX(options);
 
-  if (e != ___FIX(___NO_ERR))
-    return e;
-
-  return result;
+  return e;
 }
 
 
@@ -8273,219 +7824,43 @@ ___SCMOBJ ___os_port_encode_chars
         (port)
 ___SCMOBJ port;)
 {
-  ___SCMOBJ e;
-  ___SCMOBJ result;
-  ___C *char_wbuf =
-     ___CAST(___C*,___BODY_AS(___FIELD(port,___PORT_CHAR_WBUF),___tSUBTYPED));
-  ___C *clo =
-     char_wbuf + ___INT(___FIELD(port,___PORT_CHAR_WLO));
-  ___C *chi =
-     char_wbuf + ___INT(___FIELD(port,___PORT_CHAR_WHI));
-  ___U8 *byte_wbuf =
-     ___CAST(___U8*,___BODY_AS(___FIELD(port,___PORT_BYTE_WBUF),___tSUBTYPED));
-  ___U8 *bhi =
-     byte_wbuf + ___INT(___FIELD(port,___PORT_BYTE_WHI));
-  ___U8 *end =
-     byte_wbuf + ___HD_BYTES(___HEADER(___FIELD(port,___PORT_BYTE_WBUF)));
-  ___UCS_4 c;
+  ___SCMOBJ e = ___FIX(___NO_ERR);
+  ___SCMOBJ cbuf = ___FIELD(port,___PORT_CHAR_WBUF);
+  int clo = ___INT(___FIELD(port,___PORT_CHAR_WLO));
+  int chi = ___INT(___FIELD(port,___PORT_CHAR_WHI));
+  ___SCMOBJ bbuf = ___FIELD(port,___PORT_BYTE_WBUF);
+  int bhi = ___INT(___FIELD(port,___PORT_BYTE_WHI));
+  int bend = ___INT(___U8VECTORLENGTH(bbuf));
   int options = ___INT(___FIELD(port,___PORT_WOPTIONS));
+  int cbuf_avail;
+  int bbuf_avail;
+  int code;
 
-#if 0
-  if ((___INT(___FIELD(port,___PORT_WKIND)) & ___TTY_DEVICE_KIND) ==
-      ___TTY_DEVICE_KIND)
-    {
-      /**************** this special handling should be removed */
-      /*
-       * Characters written to tty stream devices are represented as
-       * 8, 16 or 32 bit unsigned integers of the machine's
-       * endianness.  When the tty stream device driver transfers the
-       * characters to the device, the characters will be encoded
-       * using the encoding specified in the ___PORT_WOPTIONS field.
-       */
+  cbuf_avail = chi - clo;
+  bbuf_avail = bend - bhi;
 
-      options = (options - ___CHAR_ENCODING(options)) +
-                ___CS_SELECT(___CHAR_ENCODING_U8,
-                             ___CHAR_ENCODING_U16,
-                             ___CHAR_ENCODING_U32);
-    }
-#endif
+  code = chars_to_bytes (___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED)) + clo,
+                         &cbuf_avail,
+                         ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED)) + bhi,
+                         &bbuf_avail,
+                         &options);
 
-  e = ___FIX(___NO_ERR);
+  /*
+   * either the character buffer is empty (cbuf_avail == 0) or there
+   * is not enough space left in the byte buffer for encoding the next
+   * character, or the next character is illegal for the given
+   * encoding.
+   */
 
-  result = ___TRU; /* default is to empty byte buffer */
+  if (cbuf_avail == chi - clo)
+    if (code == ___ILLEGAL_CHAR)
+      e = err_code_from_char_encoding (___CHAR_ENCODING(options), 0, 0, 0);
 
-  /* empty character buffer as much as possible */
+  ___FIELD(port,___PORT_CHAR_WLO) = ___FIX(chi - cbuf_avail);
+  ___FIELD(port,___PORT_BYTE_WHI) = ___FIX(bend - bbuf_avail);
+  ___FIELD(port,___PORT_WOPTIONS) = ___FIX(options);
 
-  if (clo < chi)
-    {
-      switch (___CHAR_ENCODING(options))
-        {
-        default:
-        case ___CHAR_ENCODING_ASCII:
-        case ___CHAR_ENCODING_ISO_8859_1:
-          ENCODE_CHARS_LOOP(encode_next_ISO_8859_1,
-                            bytes_per_ISO_8859_1,
-                            max_ISO_8859_1,
-                            ___FIX(___CTOS_ISO_8859_1STRING_ERR),
-                            put_ISO_8859_1);
-
-        case ___CHAR_ENCODING_UTF_8:
-          {
-            encode_next_UTF_8:
-            c = *clo++;
-            if (___MAX_CHR <= max_UTF_8 ||
-                c <= max_UTF_8)
-              {
-                bhi += bytes_per_UTF_8;
-                if (bhi <= end)
-                  {
-                    if (c != char_EOL)
-                      {
-                        put_UTF_8(-1,c);
-                        if (clo < chi)
-                          goto encode_next_UTF_8;
-                      }
-                    else
-                      {
-                        ENCODE_EOL(encode_next_UTF_8,bytes_per_UTF_8,put_UTF_8);
-                      }
-                  }
-                else
-                  {
-                    bhi -= bytes_per_UTF_8;
-                    clo--;
-                    goto encode_chars_end;
-                  }
-              }
-            else
-              {
-                ___U8 *p;
-                int bytes;
-                if      (c <= 0x7ff)      bytes = 2;
-                else if (c <= 0xffff)     bytes = 3;
-                else if (c <= 0x1fffff)   bytes = 4;
-                else if (c <= 0x3ffffff)  bytes = 5;
-                else if (c <= 0x7fffffff) bytes = 6;
-                else
-                  {
-                    e = ___FIX(___STOC_UTF_8STRING_ERR);
-                    goto encode_chars_end;
-                  }
-                p = bhi + bytes;
-                if (p <= end)
-                  {
-                    bhi = p;
-                    switch (bytes)
-                      {
-                      case 6:  *--p = 0x80+(c&0x3f); c >>= 6;
-                      case 5:  *--p = 0x80+(c&0x3f); c >>= 6;
-                      case 4:  *--p = 0x80+(c&0x3f); c >>= 6;
-                      case 3:  *--p = 0x80+(c&0x3f); c >>= 6;
-                      default: *--p = 0x80+(c&0x3f); c >>= 6;
-                      }
-                    *--p = 0xff - (0xff>>bytes) + c;
-                    if (clo < chi)
-                      goto encode_next_UTF_8;
-                  }
-                else
-                  {
-                    clo--;
-                    goto encode_chars_end;
-                  }
-              }
-            break;
-          }
-
-        case ___CHAR_ENCODING_UCS_2:
-          bhi += bytes_per_UCS_2;
-          if (bhi > end)
-            {
-              bhi -= bytes_per_UCS_2;
-              goto encode_chars_end;
-            }
-#ifdef ___DEFAULT_CHAR_ENCODING_TO_BIG_ENDIAN
-          put_UCS_2BE(-1,unicode_BOM);
-          options += ___CHAR_ENCODING_UCS_2BE-___CHAR_ENCODING_UCS_2;
-          ___FIELD(port,___PORT_WOPTIONS) = ___FIX(options);
-          goto encode_next_UCS_2BE;
-#else
-          put_UCS_2LE(-1,unicode_BOM);
-          options += ___CHAR_ENCODING_UCS_2LE-___CHAR_ENCODING_UCS_2;
-          ___FIELD(port,___PORT_WOPTIONS) = ___FIX(options);
-          goto encode_next_UCS_2LE;
-#endif
-
-        case ___CHAR_ENCODING_UCS_2BE:
-          ENCODE_CHARS_LOOP(encode_next_UCS_2BE,
-                            bytes_per_UCS_2,
-                            max_UCS_2,
-                            ___FIX(___CTOS_UCS_2STRING_ERR),
-                            put_UCS_2BE);
-
-        case ___CHAR_ENCODING_UCS_2LE:
-          ENCODE_CHARS_LOOP(encode_next_UCS_2LE,
-                            bytes_per_UCS_2,
-                            max_UCS_2,
-                            ___FIX(___CTOS_UCS_2STRING_ERR),
-                            put_UCS_2LE);
-
-        case ___CHAR_ENCODING_UCS_4:
-          bhi += bytes_per_UCS_4;
-          if (bhi > end)
-            {
-              bhi -= bytes_per_UCS_4;
-              goto encode_chars_end;
-            }
-#ifdef ___DEFAULT_CHAR_ENCODING_TO_BIG_ENDIAN
-          put_UCS_4BE(-1,unicode_BOM);
-          options += ___CHAR_ENCODING_UCS_4BE-___CHAR_ENCODING_UCS_4;
-          ___FIELD(port,___PORT_WOPTIONS) = ___FIX(options);
-          goto encode_next_UCS_4BE;
-#else
-          put_UCS_4LE(-1,unicode_BOM);
-          options += ___CHAR_ENCODING_UCS_4LE-___CHAR_ENCODING_UCS_4;
-          ___FIELD(port,___PORT_WOPTIONS) = ___FIX(options);
-          goto encode_next_UCS_4LE;
-#endif
-
-        case ___CHAR_ENCODING_UCS_4BE:
-          ENCODE_CHARS_LOOP(encode_next_UCS_4BE,
-                            bytes_per_UCS_4,
-                            max_UCS_4,
-                            ___FIX(___CTOS_UCS_4STRING_ERR),
-                            put_UCS_4BE);
-
-        case ___CHAR_ENCODING_UCS_4LE:
-          ENCODE_CHARS_LOOP(encode_next_UCS_4LE,
-                            bytes_per_UCS_4,
-                            max_UCS_4,
-                            ___FIX(___CTOS_UCS_4STRING_ERR),
-                            put_UCS_4LE);
-        }
-    }
-
-  /* character buffer has been fully emptied */
-
-  ___FIELD(port,___PORT_CHAR_WCHARS) =
-    ___FIELD(port,___PORT_CHAR_WCHARS) + ___FIX(chi-char_wbuf);
-
-  clo = char_wbuf;
-  chi = char_wbuf;
-
-  result = ___FAL; /* do not empty byte buffer */
-
-  encode_chars_end:
-
-  ___FIELD(port,___PORT_CHAR_WLO) = ___FIX(clo-char_wbuf);
-  ___FIELD(port,___PORT_CHAR_WHI) = ___FIX(chi-char_wbuf);
-  ___FIELD(port,___PORT_BYTE_WHI) = ___FIX(bhi-byte_wbuf);
-
-  /*****************  ___printf ("clo=%d chi=%d blo=%d bhi=%d\n", clo-char_wbuf, chi-char_wbuf, ___INT(___FIELD(port,___PORT_BYTE_WLO)), bhi-byte_wbuf); */
-
-  if (e != ___FIX(___NO_ERR))
-    return e;
-
-  return result;
+  return e;
 }
 
 

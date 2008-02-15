@@ -1,4 +1,4 @@
-/* File: "main.c", Time-stamp: <2007-09-11 23:50:53 feeley> */
+/* File: "main.c", Time-stamp: <2008-02-14 23:15:44 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -44,14 +44,14 @@ int debug_settings;)
         "  mHEAPSIZE    set minimum heap size in kilobytes\n"
         "  hHEAPSIZE    set maximum heap size in kilobytes\n"
         "  lLIVEPERCENT set heap live ratio after GC in percent\n"
-        "  s/S          set standard Scheme mode (on/off)\n"
+        "  s|S          set standard Scheme mode (on|off)\n"
         "  d[OPT...]    set debugging options; OPT is one of:\n"
-        "                 p/a       treat uncaught exceptions as errors\n"
-        "                           (primordial-thread only/all threads)\n"
-        "                 r/s/q     error handling (create a new REPL/start in\n"
-        "                           single-step mode/quit with error status)\n"
-        "                 i/c/-     select REPL interaction channel\n"
-        "                           (ide/console/standard input and output)\n"
+        "                 p|a       treat uncaught exceptions as errors\n"
+        "                           (primordial-thread only|all threads)\n"
+        "                 r|s|q     error handling (create a new REPL|start in\n"
+        "                           single-step mode|quit with error status)\n"
+        "                 i|c|-     select REPL interaction channel\n"
+        "                           (ide|console|standard input and output)\n"
         "                 0..9      verbosity level\n"
         "  =DIRECTORY   override Gambit installation directory\n"
         "  +ARGUMENT    add ARGUMENT to the command line before other arguments\n"
@@ -59,10 +59,10 @@ int debug_settings;)
         "  t[OPT...]    set terminal options; see below for OPT\n"
         "  -[OPT...]    set standard input and output options; see below for OPT\n"
         "where OPT is one of:\n"
-        "  A/1/2/4/6/8  character encoding (ASCII/ISO-8859-1/UCS-2/UCS-4/UTF-16/UTF-8)\n"
-        "  l/c/cl       end-of-line encoding (LF/CR/CR-LF)\n"
-        "  u/n/f        buffering (unbuffered/newline buffered/fully buffered)\n"
-        "  e/E          [for terminals only] enable line-editing (on/off)\n";
+        "  A|1|2|4|6|8|U  character encoding (ASCII|ISO-8859-1|UCS-2/4|UTF-16/8|UTF)\n"
+        "  l|c|cl         end-of-line encoding (LF|CR|CR-LF)\n"
+        "  u|n|f          buffering (unbuffered|newline buffered|fully buffered)\n"
+        "  e|E            [for terminals only] enable line-editing (on|off)\n";
       msgs[1] = 0;
       ___display_error (msgs);
     }
@@ -447,6 +447,9 @@ ___mod_or_lnk (*linker)();)
                                 break;
                       case '8': settings = ___CHAR_ENCODING_MASK(settings)
                                            |___CHAR_ENCODING_UTF_8;
+                                break;
+                      case 'U': settings = ___CHAR_ENCODING_MASK(settings)
+                                           |___CHAR_ENCODING_UTF;
                                 break;
                       case 'l': settings = ___EOL_ENCODING_MASK(settings)
                                            |((___EOL_ENCODING(settings)

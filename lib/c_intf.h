@@ -1,4 +1,4 @@
-/* File: "c_intf.h", Time-stamp: <2008-01-10 17:25:37 feeley> */
+/* File: "c_intf.h", Time-stamp: <2008-02-14 11:20:52 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -61,6 +61,13 @@ extern int chars_to_bytes
          ___U8 *byte_buf,
          int *byte_buf_avail,
          int *encoding_state),
+        ());
+
+extern ___SCMOBJ err_code_from_char_encoding
+   ___P((int char_encoding,
+         ___BOOL ctos,
+         int type,
+         int arg_num),
         ());
 
 
