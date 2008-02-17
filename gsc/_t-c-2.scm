@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2008-02-12 16:02:37 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2008-02-17 11:54:31 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3939,8 +3939,24 @@
 
 (targ-spec "fxxor" (targ-u "##fxxor"))
 
-(targ-spec "fxarithmetic-shift" (targ-u "##fxarithmetic-shift"))
-(targ-spec "arithmetic-shift"   (targ-arith "fxarithmetic-shift" #f))
+(targ-spec "fxif" (targ-u "##fxif"))
+
+(targ-spec "fxbit-count" (targ-u "##fxbit-count"))
+
+(targ-spec "fxlength" (targ-u "##fxlength"))
+
+(targ-spec "fxfirst-bit-set" (targ-u "##fxfirst-bit-set"))
+
+(targ-spec "fxbit-set?" (targ-u "##fxbit-set?"))
+
+(targ-spec "fxwraparithmetic-shift" (targ-u "##fxwraparithmetic-shift"))
+(targ-spec "fxarithmetic-shift"     (targ-u "##fxarithmetic-shift"))
+(targ-spec "arithmetic-shift"       (targ-arith "fxarithmetic-shift" #f))
+
+(targ-spec "fxwraparithmetic-shift-left" (targ-u "##fxwraparithmetic-shift-left"))
+(targ-spec "fxarithmetic-shift-left"   (targ-u "##fxarithmetic-shift-left"))
+(targ-spec "fxarithmetic-shift-right"  (targ-u "##fxarithmetic-shift-right"))
+(targ-spec "fxwraplogical-shift-right" (targ-u "##fxwraplogical-shift-right"))
 
 (targ-spec "flabs" (targ-u "##flabs"))
 (targ-spec "abs"   (targ-arith #f "flabs"))
