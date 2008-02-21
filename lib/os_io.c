@@ -735,13 +735,11 @@ ___time timeout;)
 
   {
     DWORD delta_msecs;
+    int first_iteration = TRUE;
 
     ___absolute_time_to_nonnegative_msecs (delta, &delta_msecs);
 
     state.timeout_reached = 0;
-
-    if (delta_msecs == 0)
-      goto timed_out; /* don't even call MsgWaitForMultipleObjects */
 
     while (state.nb_wait_objs > 0 || state.message_queue_mask != 0)
       {
@@ -771,11 +769,9 @@ ___time timeout;)
              * the appropriate device "ready".
              */
 
-            if (delta_msecs != 0)
+            if (first_iteration)
               {
                 /* first call to MsgWaitForMultipleObjects */
-
-                timed_out:
 
                 state.timeout_reached = 1;
               }
@@ -845,6 +841,7 @@ ___time timeout;)
               state.wait_obj_to_dev_pos[state.nb_wait_objs];
           }
 
+        first_iteration = FALSE;
         delta_msecs = 0; /* next MsgWaitForMultipleObjects will only poll */
       }
   }
@@ -4191,7 +4188,10 @@ typedef struct ___device_event_queue_struct
 
     int index;
 
-#if 0
+#ifdef USE_WIN32
+
+    DWORD event_mask;
+
 #endif
   } ___device_event_queue;
 
@@ -4224,9 +4224,6 @@ int direction;)
   if (direction & ___DIRECTION_RD)
     {
       d->base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
-
-#if 0
-#endif
     }
 
   return ___FIX(___NO_ERR);
@@ -4249,15 +4246,41 @@ int i;
 int pass;
 ___device_select_state *state;)
 {
+  ___device_event_queue *d = ___CAST(___device_event_queue*,self);
+  int stage = (for_writing
+               ? d->base.write_stage
+               : d->base.read_stage);
+
   if (pass == ___SELECT_PASS_1)
     {
-      state->timeout = ___time_mod.time_neg_infinity;
+      if (stage != ___STAGE_OPEN)
+        state->timeout = ___time_mod.time_neg_infinity;
+      else
+        {
+#ifdef USE_WIN32
+
+          state->message_queue_mask = d->event_mask;
+          state->message_queue_dev_pos = i;
+
+#endif
+        }
+
       return ___FIX(___SELECT_SETUP_DONE);
     }
 
   /* pass == ___SELECT_PASS_CHECK */
 
-  state->devs[i] = NULL;
+  if (stage != ___STAGE_OPEN)
+    state->devs[i] = NULL;
+  else
+    {
+#ifdef USE_WIN32
+
+      if (state->devs_next[i] != -1)
+        state->devs[i] = NULL;
+
+#endif
+    }
 
   return ___FIX(___NO_ERR);
 }
@@ -4293,13 +4316,13 @@ ___HIDDEN ___device_event_queue_vtbl ___device_event_queue_table =
 ___SCMOBJ ___device_event_queue_setup
    ___P((___device_event_queue **dev,
          ___device_group *dgroup,
-         int index),
+         ___SCMOBJ selector),
         (dev,
          dgroup,
-         index)
+         selector)
 ___device_event_queue **dev;
 ___device_group *dgroup;
-int index;)
+___SCMOBJ selector;)
 {
   ___device_event_queue *d;
 
@@ -4315,9 +4338,10 @@ int index;)
   d->base.read_stage = ___STAGE_OPEN;
   d->base.write_stage = ___STAGE_CLOSED;
 
-  d->index = index;
+#ifdef USE_WIN32
 
-#if 0
+  d->event_mask = ___INT(selector);
+
 #endif
 
   *dev = d;
@@ -4327,6 +4351,17 @@ int index;)
   return ___FIX(___NO_ERR);
 }
 
+
+___HIDDEN ___SCMOBJ ___release_event
+   ___P((void *x),
+        (x)
+void *x;)
+{
+  ___release_rc (x);
+  return ___FIX(___NO_ERR);
+}
+
+
 ___SCMOBJ ___device_event_queue_read
    ___P((___device_event_queue *dev,
          ___SCMOBJ *event),
@@ -4335,24 +4370,36 @@ ___SCMOBJ ___device_event_queue_read
 ___device_event_queue *dev;
 ___SCMOBJ *event;)
 {
-  void *ev = NULL;
-  ___SCMOBJ result;
-
   if (dev->base.read_stage != ___STAGE_OPEN)
     return ___FIX(___CLOSED_DEVICE_ERR);
 
-  if (ev == NULL)
-    {
-      *event = ___EOF;
-      return ___FIX(___NO_ERR);
-    }
+#ifdef USE_WIN32
 
-  return ___NONNULLPOINTER_to_SCMOBJ
-           (ev,
-            ___FAL,
-            ___release_pointer,
-            event,
-            ___RETURN_POS);
+  {
+    MSG *msg = ___CAST(MSG*, ___alloc_rc (sizeof (MSG)));
+
+    if (msg == 0)
+      return ___FIX(___STOC_HEAP_OVERFLOW_ERR+___RETURN_POS);
+
+    if (GetQueueStatus (dev->event_mask) != 0 &&
+        PeekMessage (msg,
+                     NULL,        /* retrieve messages for window and thread */
+                     0,           /* no constraint on the message type */
+                     0,
+                     PM_REMOVE))  /* remove message */
+      return ___NONNULLPOINTER_to_SCMOBJ
+              (___CAST(void*,msg),
+               ___FAL,
+               ___release_event,
+               event,
+               ___RETURN_POS);
+
+    ___release_rc (msg);
+  }
+
+#endif
+
+  return ___ERR_CODE_EAGAIN;
 }
 
 
@@ -7510,9 +7557,9 @@ ___SCMOBJ dev;)
 /* Opening an event-queue. */
 
 ___SCMOBJ ___os_device_event_queue_open
-   ___P((___SCMOBJ index),
-        (index)
-___SCMOBJ index;)
+   ___P((___SCMOBJ selector),
+        (selector)
+___SCMOBJ selector;)
 {
   ___SCMOBJ e;
   ___SCMOBJ result;
@@ -7521,7 +7568,7 @@ ___SCMOBJ index;)
   if ((e = ___device_event_queue_setup
              (&dev,
               io_mod.dgroup,
-              ___FIX(index)))
+              selector))
       != ___FIX(___NO_ERR))
     result = e;
   else
