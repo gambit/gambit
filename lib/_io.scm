@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-02-14 22:52:13 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-02-21 17:54:35 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4749,7 +4749,7 @@
          start
          (##u8vector-length u8vect)
          (read-subu8vector u8vect start end port)
-         (macro-check-character-input-port
+         (macro-check-byte-input-port
           p
           4
           (read-subu8vector u8vect start end p)
