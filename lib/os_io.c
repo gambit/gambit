@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-02-15 09:41:07 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-02-26 10:07:21 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -23,6 +23,7 @@
 
 ___io_module ___io_mod =
 {
+  0,
   0
 
 #ifdef ___IO_MODULE_INIT
@@ -68,6 +69,64 @@ ___device_group *dgroup;)
       break;
 
   ___free_mem (dgroup);
+}
+
+
+void ___device_add_to_group
+   ___P((___device_group *dgroup,
+         ___device *dev),
+        (dgroup,
+         dev)
+___device_group *dgroup;
+___device *dev;)
+{
+  ___device *head = dgroup->list;
+
+  dev->group = dgroup;
+
+  if (head == NULL)
+    {
+      dev->next = dev;
+      dev->prev = dev;
+      dgroup->list = dev;
+    }
+  else
+    {
+      ___device *tail = head->prev;
+      dev->next = head;
+      dev->prev = tail;
+      tail->next = dev;
+      head->prev = dev;
+    }
+}
+
+void ___device_remove_from_group
+   ___P((___device *dev),
+        (dev)
+___device *dev;)
+{
+  ___device_group *dgroup = dev->group;
+  ___device *prev = dev->prev;
+  ___device *next = dev->next;
+
+  if (prev == dev)
+    dgroup->list = NULL;
+  else
+    {
+      if (dgroup->list == dev)
+        dgroup->list = next;
+      prev->next = next;
+      next->prev = prev;
+      dev->next = dev;
+      dev->prev = dev;
+    }
+
+  dev->group = NULL;
+}
+
+___device_group *___global_device_group ___PVOID
+{
+  return ___io_mod.dgroup;
 }
 
 
@@ -969,58 +1028,6 @@ int direction;)
   return ___device_close_virt (self, direction);
 }
 
-___HIDDEN void device_add_to_group
-   ___P((___device_group *dgroup,
-         ___device *dev),
-        (dgroup,
-         dev)
-___device_group *dgroup;
-___device *dev;)
-{
-  ___device *head = dgroup->list;
-
-  dev->group = dgroup;
-
-  if (head == NULL)
-    {
-      dev->next = dev;
-      dev->prev = dev;
-      dgroup->list = dev;
-    }
-  else
-    {
-      ___device *tail = head->prev;
-      dev->next = head;
-      dev->prev = tail;
-      tail->next = dev;
-      head->prev = dev;
-    }
-}
-
-___HIDDEN void device_remove_from_group
-   ___P((___device *dev),
-        (dev)
-___device *dev;)
-{
-  ___device_group *dgroup = dev->group;
-  ___device *prev = dev->prev;
-  ___device *next = dev->next;
-
-  if (prev == dev)
-    dgroup->list = NULL;
-  else
-    {
-      if (dgroup->list == dev)
-        dgroup->list = next;
-      prev->next = next;
-      next->prev = prev;
-      dev->next = dev;
-      dev->prev = dev;
-    }
-
-  dev->group = NULL;
-}
-
 ___HIDDEN void device_add_ref
    ___P((___device *self),
         (self)
@@ -1066,7 +1073,7 @@ ___device *self;)
   if (self->group == NULL)
     return ___FIX(___UNKNOWN_ERR);
 
-  device_remove_from_group (self);
+  ___device_remove_from_group (self);
 
   for (;;)
     {
@@ -1098,6 +1105,21 @@ ___device *self;)
 
   return ___device_release (self);
 }
+
+
+/*
+ * Procedure called by the Scheme runtime when a device is no longer
+ * reachable.
+ */
+
+___SCMOBJ ___device_cleanup_from_ptr
+   ___P((void *ptr),
+        (ptr)
+void *ptr;)
+{
+  return ___device_cleanup (___CAST(___device*,ptr));
+}
+
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
@@ -1217,7 +1239,7 @@ ___device_group *dgroup;)
 
   *dev = d;
 
-  device_add_to_group (dgroup, &d->base);
+  ___device_add_to_group (dgroup, &d->base);
 
   return ___FIX(___NO_ERR);
 }
@@ -1845,7 +1867,7 @@ int pumps_on;)
   dev->write_pump = NULL;
 #endif
 
-  device_add_to_group (dgroup, &dev->base);
+  ___device_add_to_group (dgroup, &dev->base);
 
   if (direction & ___DIRECTION_RD)
     {
@@ -3813,7 +3835,7 @@ int options;)
 
   *dev = d;
 
-  device_add_to_group (dgroup, &d->base);
+  ___device_add_to_group (dgroup, &d->base);
 
   return ___FIX(___NO_ERR);
 }
@@ -4073,7 +4095,7 @@ int ignore_hidden;)
 
   *dev = d;
 
-  device_add_to_group (dgroup, &d->base);
+  ___device_add_to_group (dgroup, &d->base);
 
   return ___FIX(___NO_ERR);
 }
@@ -4346,7 +4368,7 @@ ___SCMOBJ selector;)
 
   *dev = d;
 
-  device_add_to_group (dgroup, &d->base);
+  ___device_add_to_group (dgroup, &d->base);
 
   return ___FIX(___NO_ERR);
 }
@@ -6559,18 +6581,6 @@ int mode;)
 
 /*---------------------------------------------------------------------------*/
 
-/* I/O module. */
-
-typedef struct io_module_struct
-  {
-    ___device_group *dgroup;
-  } io_module;
-
-___HIDDEN io_module io_mod;
-
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
 /* Device operations. */
 
 ___SCMOBJ ___os_device_kind
@@ -6744,22 +6754,6 @@ ___SCMOBJ options;)
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
-/*
- * Procedure called by the Scheme runtime when a device is no longer
- * reachable.
- */
-
-___HIDDEN ___SCMOBJ device_cleanup_from_ptr
-   ___P((void *ptr),
-        (ptr)
-void *ptr;)
-{
-  return ___device_cleanup (___CAST(___device*,ptr));
-}
-
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
 /* Opening a predefined device (stdin, stdout, stderr, console, etc). */
 
 ___SCMOBJ ___os_device_stream_open_predefined
@@ -6794,7 +6788,7 @@ ___SCMOBJ flags;)
 
         if ((e = ___device_tty_setup_console
                    (&d,
-                    io_mod.dgroup,
+                    ___global_device_group (),
                     direction))
             != ___FIX(___NO_ERR))
           return e;
@@ -6828,7 +6822,7 @@ ___SCMOBJ flags;)
 
         if ((e = ___device_stream_setup_from_stream
                    (&dev,
-                    io_mod.dgroup,
+                    ___global_device_group (),
                     stream,
                     ___NONE_KIND,
                     direction))
@@ -6860,7 +6854,7 @@ ___SCMOBJ flags;)
 
         if ((e = ___device_tty_setup_console
                    (&d,
-                    io_mod.dgroup,
+                    ___global_device_group (),
                     direction))
             != ___FIX(___NO_ERR))
           return e;
@@ -6902,7 +6896,7 @@ ___SCMOBJ flags;)
 
         if ((e = ___device_stream_setup_from_fd
                    (&dev,
-                    io_mod.dgroup,
+                    ___global_device_group (),
                     fd,
                     ___NONE_KIND,
                     direction))
@@ -6940,7 +6934,7 @@ ___SCMOBJ flags;)
 
         if ((e = ___device_tty_setup_console
                    (&d,
-                    io_mod.dgroup,
+                    ___global_device_group (),
                     direction))
             != ___FIX(___NO_ERR))
           return e;
@@ -6978,7 +6972,7 @@ ___SCMOBJ flags;)
 
         if ((e = ___device_stream_setup_from_handle
                    (&dev,
-                    io_mod.dgroup,
+                    ___global_device_group (),
                     h,
                     0,
 #if 1
@@ -7002,7 +6996,7 @@ ___SCMOBJ flags;)
   e = ___NONNULLPOINTER_to_SCMOBJ
         (dev,
          ___FAL,
-         device_cleanup_from_ptr,
+         ___device_cleanup_from_ptr,
          &result,
          ___RETURN_POS);
 
@@ -7059,7 +7053,7 @@ ___SCMOBJ mode;)
 
       if ((e = ___device_stream_setup_from_path
                  (&dev,
-                  io_mod.dgroup,
+                  ___global_device_group (),
                   p,
                   ___INT(flags),
                   ___INT(mode)))
@@ -7070,7 +7064,7 @@ ___SCMOBJ mode;)
           if ((e = ___NONNULLPOINTER_to_SCMOBJ
                      (dev,
                       ___FAL,
-                      device_cleanup_from_ptr,
+                      ___device_cleanup_from_ptr,
                       &result,
                       ___RETURN_POS))
               != ___FIX(___NO_ERR))
@@ -7145,7 +7139,7 @@ ___SCMOBJ options;)
        != ___FIX(___NO_ERR)) ||
       (e = ___device_stream_setup_from_process
              (&dev,
-              io_mod.dgroup,
+              ___global_device_group (),
               ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT)*,argv),
               ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT)*,env),
               ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT),dir),
@@ -7157,7 +7151,7 @@ ___SCMOBJ options;)
       if ((e = ___NONNULLPOINTER_to_SCMOBJ
                  (dev,
                   ___FAL,
-                  device_cleanup_from_ptr,
+                  ___device_cleanup_from_ptr,
                   &result,
                   ___RETURN_POS))
           == ___FIX(___NO_ERR))
@@ -7199,7 +7193,7 @@ ___HIDDEN void sigchld_signal_handler (int sig)
          * to "terminated".
          */
 
-        ___device *head = io_mod.dgroup->list;
+        ___device *head = ___global_device_group ()->list;
 
         if (head != NULL)
           {
@@ -7262,7 +7256,7 @@ ___SCMOBJ options;)
 
   e = ___device_tcp_client_setup_from_sockaddr
         (&dev,
-         io_mod.dgroup,
+         ___global_device_group (),
          &sa,
          salen,
          ___INT(options),
@@ -7274,7 +7268,7 @@ ___SCMOBJ options;)
   e = ___NONNULLPOINTER_to_SCMOBJ
         (dev,
          ___FAL,
-         device_cleanup_from_ptr,
+         ___device_cleanup_from_ptr,
          &result,
          ___RETURN_POS);
 
@@ -7376,7 +7370,7 @@ ___SCMOBJ options;)
 
   e = ___device_tcp_server_setup
         (&dev,
-         io_mod.dgroup,
+         ___global_device_group (),
          &sa,
          salen,
          ___INT(backlog),
@@ -7388,7 +7382,7 @@ ___SCMOBJ options;)
   e = ___NONNULLPOINTER_to_SCMOBJ
         (dev,
          ___FAL,
-         device_cleanup_from_ptr,
+         ___device_cleanup_from_ptr,
          &result,
          ___RETURN_POS);
 
@@ -7423,14 +7417,14 @@ ___SCMOBJ dev;)
   ___device_tcp_client *client;
   ___SCMOBJ result;
 
-  if ((e = ___device_tcp_server_read (d, io_mod.dgroup, &client))
+  if ((e = ___device_tcp_server_read (d, ___global_device_group (), &client))
       != ___FIX(___NO_ERR))
     return e;
 
   e = ___NONNULLPOINTER_to_SCMOBJ
         (client,
          ___FAL,
-         device_cleanup_from_ptr,
+         ___device_cleanup_from_ptr,
          &result,
          ___RETURN_POS);
 
@@ -7486,7 +7480,7 @@ ___SCMOBJ ignore_hidden;)
 
       if ((e = ___device_directory_setup
                  (&dev,
-                  io_mod.dgroup,
+                  ___global_device_group (),
                   p,
                   ___INT(ignore_hidden)))
           != ___FIX(___NO_ERR))
@@ -7496,7 +7490,7 @@ ___SCMOBJ ignore_hidden;)
           if ((e = ___NONNULLPOINTER_to_SCMOBJ
                      (dev,
                       ___FAL,
-                      device_cleanup_from_ptr,
+                      ___device_cleanup_from_ptr,
                       &result,
                       ___RETURN_POS))
               != ___FIX(___NO_ERR))
@@ -7567,7 +7561,7 @@ ___SCMOBJ selector;)
 
   if ((e = ___device_event_queue_setup
              (&dev,
-              io_mod.dgroup,
+              ___global_device_group (),
               selector))
       != ___FIX(___NO_ERR))
     result = e;
@@ -7576,7 +7570,7 @@ ___SCMOBJ selector;)
       if ((e = ___NONNULLPOINTER_to_SCMOBJ
                  (dev,
                   ___FAL,
-                  device_cleanup_from_ptr,
+                  ___device_cleanup_from_ptr,
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -7925,7 +7919,7 @@ ___HIDDEN ___SCMOBJ io_module_setup ___PVOID
 
   /**************** ___printf ("io_module_setup\n"); */
 
-  if ((e = ___device_group_setup (&io_mod.dgroup)) == ___FIX(___NO_ERR))
+  if ((e = ___device_group_setup (&___io_mod.dgroup)) == ___FIX(___NO_ERR))
     {
 #ifdef USE_POSIX
 
@@ -7950,7 +7944,7 @@ ___HIDDEN ___SCMOBJ io_module_setup ___PVOID
 
       e = ___FIX(___UNKNOWN_ERR);
 
-      ___device_group_cleanup (io_mod.dgroup);
+      ___device_group_cleanup (___io_mod.dgroup);
 
 #endif
     }
@@ -7976,7 +7970,7 @@ ___HIDDEN void io_module_cleanup ___PVOID
 #endif
 
   /******************* tty_module_cleanup (); */
-  ___device_group_cleanup (io_mod.dgroup);
+  ___device_group_cleanup (___io_mod.dgroup);
 }
 
 

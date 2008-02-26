@@ -1,4 +1,4 @@
-/* File: "os_io.h", Time-stamp: <2008-02-14 17:47:20 feeley> */
+/* File: "os_io.h", Time-stamp: <2008-02-26 10:05:01 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -196,6 +196,8 @@ typedef struct ___io_module_struct
   {
     ___BOOL setup;
 
+    ___device_group *dgroup;
+
 #ifdef USE_POSIX
 
 #define ___IO_MODULE_INIT
@@ -228,6 +230,17 @@ extern ___SCMOBJ ___device_group_setup
 extern void ___device_group_cleanup
    ___P((___device_group *dgroup),
         ());
+
+extern void ___device_add_to_group
+   ___P((___device_group *dgroup,
+         ___device *dev),
+        ());
+
+extern void ___device_remove_from_group
+   ___P((___device *dev),
+        ());
+
+extern ___device_group *___global_device_group ___PVOID;
 
 
 /*---------------------------------------------------------------------------*/
@@ -595,7 +608,9 @@ extern ___SCMOBJ ___device_cleanup
    ___P((___device *self),
         ());
 
-
+extern ___SCMOBJ ___device_cleanup_from_ptr
+   ___P((void *ptr),
+        ());
 
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
