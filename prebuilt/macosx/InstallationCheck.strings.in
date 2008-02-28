@@ -1,5 +1,5 @@
 "16" = "The install process must be aborted because the file @BIN_DIR@/gsc exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.";
-"17" = "The install process must be aborted because the file @BIN_DIR@/gsc-cc-o exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.";
+"17" = "The install process must be aborted because the file @BIN_DIR@/gsc-cc-o.bat exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.";
 "18" = "The install process must be aborted because the file @BIN_DIR@/gsc-script exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.";
 "19" = "The install process must be aborted because the file @BIN_DIR@/gsi exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.";
 "20" = "The install process must be aborted because the file @BIN_DIR@/gsi-script exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.";

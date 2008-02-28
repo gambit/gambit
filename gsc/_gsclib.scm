@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2007-12-13 18:22:37 feeley>
+;;; File: "_gsclib.scm", Time-stamp: <2008-02-28 17:17:26 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -143,6 +143,48 @@
             (loop (##fixnum.+ version 1))
             root-with-ext))))
 
+  (define (gsc-cc-o c-filename obj-filename)
+
+    (define (arg name val)
+      (##string-append "GSC_CC_O_" name "=" val))
+
+    (let* ((gambcdir
+            (##path-expand "~~"))
+           (gambcdir-bin
+            (parameterize
+             ((##current-directory
+               (##path-expand "bin" gambcdir)))
+             (##current-directory)))
+           (c-filename-dir
+            (parameterize
+             ((##current-directory (##path-directory c-filename)))
+             (##current-directory)))
+           (c-filename-base
+            (##path-strip-directory c-filename)))
+      (##open-process
+       #t
+       (lambda (port)
+         (##process-status port))
+       open-process
+       (##list path:
+               (##string-append gambcdir-bin "gsc-cc-o.bat")
+               arguments:
+               '()
+               environment:
+               (##append
+                (let ((env (##os-environ)))
+                  (if (##fixnum? env) '() env))
+                (##list (arg "GAMBCDIR" gambcdir)
+                        (arg "OBJ_FILENAME" obj-filename)
+                        (arg "C_FILENAME_DIR" c-filename-dir)
+                        (arg "C_FILENAME_BASE" c-filename-base)
+                        (arg "CC_OPTIONS" cc-options)
+                        (arg "LD_OPTIONS_PRELUDE" ld-options-prelude)
+                        (arg "LD_OPTIONS" ld-options)))
+               stdin-redirection: #f
+               stdout-redirection: #f
+               stderr-redirection: #f))))
+
   (let* ((expanded-output
           (##path-normalize output))
          (obj-filename
@@ -160,33 +202,7 @@
          (obj-filename-no-dir
           (##path-strip-directory obj-filename)))
     (and (c#cf filename #f options c-filename obj-filename-no-dir)
-         (let* ((gambcdir
-                 (##path-expand "~~"))
-                (gambcdir-bin
-                 (parameterize
-                  ((##current-directory
-                    (##path-expand "bin" gambcdir)))
-                  (##current-directory)))
-                (exit-status
-                 (##shell-command
-                  (##string-append
-                   gambcdir-bin
-                   "gsc-cc-o \""
-                   (parameterize
-                    ((##current-directory (##path-directory c-filename)))
-                    (##current-directory))
-                   "\" \""
-                   gambcdir
-                   "\" \""
-                   obj-filename
-                   "\" "
-                   cc-options
-                   " "
-                   ld-options-prelude
-                   " \""
-                   (##path-strip-directory c-filename)
-                   "\" "
-                   ld-options))))
+         (let ((exit-status (gsc-cc-o c-filename obj-filename)))
            (if (##not (##memq 'keep-c options))
                (##delete-file c-filename))
            (if (##fixnum.= exit-status 0)

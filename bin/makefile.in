@@ -60,56 +60,63 @@ all: all-pre all-recursive all-post
 
 all-pre:
 
-all-post: gsc-cc-o@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gsc-cc-o.bat six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 
-gsc-cc-o@bat@: makefile
-	rm -f gsc-cc-o@bat@
+gsc-cc-o.bat: makefile
+	rm -f gsc-cc-o.bat
 	if test "@bat@" = ""; then \
-	  echo "#! /bin/sh" > gsc-cc-o@bat@; \
-	  echo "GSC_CC_O_ARG1=\"\$$1\"" >> gsc-cc-o@bat@; \
-	  echo "shift" >> gsc-cc-o@bat@; \
-	  echo "GSC_CC_O_ARG2=\"\$$1\"" >> gsc-cc-o@bat@; \
-	  echo "shift" >> gsc-cc-o@bat@; \
-	  echo "GSC_CC_O_ARG3=\"\$$1\"" >> gsc-cc-o@bat@; \
-	  echo "shift" >> gsc-cc-o@bat@; \
-	  echo "cd \"\$${GSC_CC_O_ARG1}\"" >> gsc-cc-o@bat@; \
-	  echo "@GSC_CC_O@" >> gsc-cc-o@bat@; \
-	  chmod +x gsc-cc-o@bat@; \
+	  echo "#! /bin/sh" > gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo "# Script parameters are passed in the following environment variables:" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_GAMBCDIR" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_OBJ_FILENAME" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_C_FILENAME_DIR" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_C_FILENAME_BASE" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_CC_OPTIONS" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_LD_OPTIONS_PRELUDE" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_LD_OPTIONS" >> gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo "cd \"\$${GSC_CC_O_C_FILENAME_DIR}\"" >> gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo "@GSC_CC_O@" >> gsc-cc-o.bat; \
+	  chmod +x gsc-cc-o.bat; \
 	else \
-	  echo "@echo off" > gsc-cc-o@bat@; \
-	  echo "" >> gsc-cc-o@bat@; \
-	  echo "set GSC_CC_O_ARG1=%~1" >> gsc-cc-o@bat@; \
-	  echo "shift" >> gsc-cc-o@bat@; \
-	  echo "set GSC_CC_O_ARG2=%~1" >> gsc-cc-o@bat@; \
-	  echo "shift" >> gsc-cc-o@bat@; \
-	  echo "set GSC_CC_O_ARG3=%~1" >> gsc-cc-o@bat@; \
-	  echo "shift" >> gsc-cc-o@bat@; \
-	  echo "set GSC_CC_O_REST=%1 %2 %3 %4 %5 %6 %7 %8 %9" >> gsc-cc-o@bat@; \
-	  echo "" >> gsc-cc-o@bat@; \
+	  echo "@echo off" > gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo "rem Script parameters are passed in the following environment variables:" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_GAMBCDIR" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_OBJ_FILENAME" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_C_FILENAME_DIR" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_C_FILENAME_BASE" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_CC_OPTIONS" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_LD_OPTIONS_PRELUDE" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_LD_OPTIONS" >> gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
 	  if test "$(C_COMPILER)" = "gcc"; then \
-	    echo "for %%f in (gcc.exe cl.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o@bat@; \
+	    echo "for %%f in (gcc.exe cl.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o.bat; \
 	  else \
-	    echo "for %%f in (cl.exe gcc.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o@bat@; \
+	    echo "for %%f in (cl.exe gcc.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o.bat; \
 	  fi; \
-	  echo "" >> gsc-cc-o@bat@; \
-	  echo "echo gcc.exe and cl.exe were not found in the PATH.  Make sure MinGW or Visual C++ Express is installed." >> gsc-cc-o@bat@; \
-	  echo "exit 1" >> gsc-cc-o@bat@; \
-	  echo "" >> gsc-cc-o@bat@; \
-	  echo ":use_gcc.exe" >> gsc-cc-o@bat@; \
-	  echo "cd %GSC_CC_O_ARG1%" >> gsc-cc-o@bat@; \
-	  echo "gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I%GSC_CC_O_ARG2%include -D___DYNAMIC -D___SINGLE_HOST -o %GSC_CC_O_ARG3% %GSC_CC_O_REST%" >> gsc-cc-o@bat@; \
-	  echo "goto end" >> gsc-cc-o@bat@; \
-	  echo "" >> gsc-cc-o@bat@; \
-	  echo ":use_cl.exe" >> gsc-cc-o@bat@; \
-	  echo "cd %GSC_CC_O_ARG1%" >> gsc-cc-o@bat@; \
-	  echo "cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I%GSC_CC_O_ARG2%include -D___DYNAMIC -D___SINGLE_HOST -Fe%GSC_CC_O_ARG3% %GSC_CC_O_REST%" >> gsc-cc-o@bat@; \
-	  echo "goto end" >> gsc-cc-o@bat@; \
-	  echo "" >> gsc-cc-o@bat@; \
-	  echo ":use_build_time_c_compiler" >> gsc-cc-o@bat@; \
-	  echo "@GSC_CC_O@" >> gsc-cc-o@bat@; \
-	  echo "goto end" >> gsc-cc-o@bat@; \
-	  echo "" >> gsc-cc-o@bat@; \
-	  echo ":end" >> gsc-cc-o@bat@; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo "echo gcc.exe and cl.exe were not found in the PATH.  Make sure MinGW or Visual C++ Express is installed." >> gsc-cc-o.bat; \
+	  echo "exit 1" >> gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo ":use_gcc.exe" >> gsc-cc-o.bat; \
+	  echo "cd %GSC_CC_O_C_FILENAME_DIR%" >> gsc-cc-o.bat; \
+	  echo "gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I%GSC_CC_O_GAMBCDIR%include -D___DYNAMIC -D___SINGLE_HOST -o %GSC_CC_O_OBJ_FILENAME% %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% %GSC_CC_O_C_FILENAME_BASE% %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
+	  echo "goto end" >> gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo ":use_cl.exe" >> gsc-cc-o.bat; \
+	  echo "cd %GSC_CC_O_C_FILENAME_DIR%" >> gsc-cc-o.bat; \
+	  echo "cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I%GSC_CC_O_GAMBCDIR%include -D___DYNAMIC -D___SINGLE_HOST -Fe%GSC_CC_O_OBJ_FILENAME% %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% %GSC_CC_O_C_FILENAME_BASE% %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
+	  echo "goto end" >> gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo ":use_build_time_c_compiler" >> gsc-cc-o.bat; \
+	  echo "cd %GSC_CC_O_C_FILENAME_DIR%" >> gsc-cc-o.bat; \
+	  echo "@GSC_CC_O@" >> gsc-cc-o.bat; \
+	  echo "goto end" >> gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo ":end" >> gsc-cc-o.bat; \
 	fi
 
 six@exe@: makefile
@@ -180,7 +187,7 @@ install-pre:
 
 install-post: all
 	$(srcdirpfx)$(rootfromhere)/mkidirs $(bindir)
-	rm -f $(bindir)/gsc-cc-o@bat@ \
+	rm -f $(bindir)/gsc-cc-o.bat \
 	  $(bindir)/six@exe@ $(bindir)/six@exe@.lnk \
 	  $(bindir)/gsi-script@bat@ $(bindir)/gsi-script@bat@.lnk \
 	  $(bindir)/gsc-script@bat@ $(bindir)/gsc-script@bat@.lnk \
@@ -189,7 +196,7 @@ install-post: all
 	  $(bindir)/scheme-r5rs@bat@ $(bindir)/scheme-r5rs@bat@.lnk \
 	  $(bindir)/scheme-r4rs@bat@ $(bindir)/scheme-r4rs@bat@.lnk \
 	  $(bindir)/scheme-ieee-1178-1990@bat@ $(bindir)/scheme-ieee-1178-1990@bat@.lnk
-	$(INSTALL_PROGRAM) gsc-cc-o@bat@ $(bindir)/gsc-cc-o@bat@
+	$(INSTALL_PROGRAM) gsc-cc-o.bat $(bindir)/gsc-cc-o.bat
 	if test "@bat@" = ""; then \
 	  (cd $(bindir) && $(LN_S) gsi@exe@ six@exe@); \
 	  (cd $(bindir) && $(LN_S) gsi@exe@ gsi-script@bat@); \
@@ -213,7 +220,7 @@ install-post: all
 uninstall-pre:
 
 uninstall-post:
-	rm -f $(bindir)/gsc-cc-o@bat@ \
+	rm -f $(bindir)/gsc-cc-o.bat \
 	  $(bindir)/six@exe@ $(bindir)/six@exe@.lnk \
 	  $(bindir)/gsi-script@bat@ $(bindir)/gsi-script@bat@.lnk \
 	  $(bindir)/gsc-script@bat@ $(bindir)/gsc-script@bat@.lnk \
@@ -226,7 +233,7 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f gsc-cc-o@bat@ \
+	rm -f gsc-cc-o.bat \
 	  six@exe@ six@exe@.lnk \
 	  gsi-script@bat@ gsi-script@bat@.lnk \
 	  gsc-script@bat@ gsc-script@bat@.lnk \

@@ -31,7 +31,7 @@ README_FILE="`pwd`/readme.html"
 CONCLUSION_FILE="`pwd`/conclusion.html"
 EXTRAS_DIR="`pwd`/extras"
 DESCRIPTION="This is the $TITLE installer"
-PROGRAMS="gsc gsc-cc-o gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script uninstall-gambc"
+PROGRAMS="gsc gsc-cc-o.bat gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script uninstall-gambc"
 
 instantiate_file() # input, output
 {
