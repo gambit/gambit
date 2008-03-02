@@ -15,8 +15,8 @@
 @error "___VERSION has not been set by includer"
 #endif
 
-#if ___VERSION != 402002
-#include "gambit-not402002.h"
+#if ___VERSION != 402003
+#include "gambit-not402003.h"
 #else
 
 /*
