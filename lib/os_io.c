@@ -2419,8 +2419,8 @@ int direction;)
 #endif
 
 #ifdef USE_WIN32
-      if (d->hstdout != NULL && !CloseHandle (d->hstdout))
-        return err_code_from_GetLastError ();
+      if (d->hstdout != NULL)
+	CloseHandle (d->hstdout); /* ignore error */
 #endif
     }
 
@@ -2437,8 +2437,8 @@ int direction;)
 #endif
 
 #ifdef USE_WIN32
-      if (d->hstdin != NULL && !CloseHandle (d->hstdin))
-        return err_code_from_GetLastError ();
+      if (d->hstdin != NULL)
+	CloseHandle (d->hstdin); /* ignore error */
 #endif
     }
 

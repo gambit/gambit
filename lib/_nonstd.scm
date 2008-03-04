@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2007-12-19 11:17:54 feeley>
+;;; File: "_nonstd.scm", Time-stamp: <2008-03-04 09:10:21 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1255,11 +1255,73 @@
 (define-prim (command-line)
   ##processed-command-line)
 
-(define-prim (##shell-command cmd)
+(define-prim (##shell-command-blocking cmd)
   (let ((code (##os-shell-command cmd (##current-directory))))
     (if (##fixnum.< code 0)
-      (##raise-os-exception #f code shell-command cmd)
+      (##raise-os-exception #f code shell-command-blocking cmd)
       code)))
+
+(define-prim (shell-command-blocking cmd)
+  (macro-force-vars (cmd)
+    (macro-check-string cmd 1 (shell-command-blocking cmd)
+      (##shell-command-blocking cmd))))
+
+(define-prim (##shell-command cmd)
+  (let* ((shell
+          (##getenv "COMSPEC" "sh"))
+         (path-or-settings
+          (##list path: shell
+                  arguments:
+                  (##list
+                   (if (##string-ci=? (##path-strip-directory shell) "CMD.EXE")
+                       "/C"
+                       "-c")
+                   cmd)
+                  stdin-redirection: #f
+                  stdout-redirection: #f
+                  stderr-redirection: #f)))
+    (##open-process
+     #t
+     (lambda (port)
+       (let ((status (##process-status port)))
+         (##close-port port)
+         status))
+     open-process
+     path-or-settings)))
+
+#;
+(define-prim (##escape-string str escape-char to-escape)
+  (let* ((len
+          (##string-length str))
+         (nb-escapes
+          (let loop1 ((i (##fixnum.- len 1))
+                      (n 0))
+            (if (##fixnum.< i 0)
+                n
+                (let ((c (##string-ref str i)))
+                  (loop1 (##fixnum.- i 1)
+                         (if (##memq c to-escape)
+                             (##fixnum.+ n 1)
+                             n))))))
+         (escaped-len
+          (##fixnum.+ len nb-escapes))
+         (escaped-str
+          (##make-string escaped-len 0)))
+    (let loop2 ((i (##fixnum.- len 1))
+                (j (##fixnum.- escaped-len 1)))
+      (if (and (##not (##fixnum.< i 0)) (##not (##fixnum.< j 0)))
+          (let ((c (##string-ref str i)))
+            (##string-set! escaped-str j c)
+            (loop2 (##fixnum.- i 1)
+                   (if (and (##fixnum.< 0 j)
+                            (##memq c to-escape))
+                       (let ()
+                         (##string-set! escaped-str
+                                        (##fixnum.- j 1)
+                                        escape-char)
+                         (##fixnum.- j 2))
+                       (##fixnum.- j 1))))
+          escaped-str))))
 
 (define-prim (shell-command cmd)
   (macro-force-vars (cmd)
