@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-02-26 10:07:21 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-03-04 07:56:37 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -5926,16 +5926,24 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
       ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c;
       while ((c = arg[j++]) != ___UNICODE_NUL)
         {
-          if (c == ___UNICODE_BACKSLASH)
-            nb_preceding_backslashes++;
-          else
+#ifndef ___DOUBLE_QUOTE_PROGRAM_ARGS
+          if (i == 0) /* only double quote program name */
+#endif
             {
-              if (c == ___UNICODE_DOUBLEQUOTE)
-                esc += nb_preceding_backslashes + 1;
-              nb_preceding_backslashes = 0;
+              if (c == ___UNICODE_BACKSLASH)
+                nb_preceding_backslashes++;
+              else
+                {
+                  if (c == ___UNICODE_DOUBLEQUOTE)
+                    esc += nb_preceding_backslashes + 1;
+                  nb_preceding_backslashes = 0;
+                }
             }
         }
-      esc += nb_preceding_backslashes + 2; /* add begin/end quotes */
+#ifndef ___DOUBLE_QUOTE_PROGRAM_ARGS
+      if (i == 0) /* only double quote program name */
+#endif
+        esc += nb_preceding_backslashes + 2; /* add begin/end quotes */
       ccmd_len += j + esc; /* account for escapes */
     }
 
@@ -5952,23 +5960,36 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
           int nb_preceding_backslashes = 0;
           int j = 0;
           ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c;
-          *p++ = ___UNICODE_DOUBLEQUOTE;
+#ifndef ___DOUBLE_QUOTE_PROGRAM_ARGS
+          if (i == 0) /* only double quote program name */
+#endif
+            *p++ = ___UNICODE_DOUBLEQUOTE;
           while ((c = arg[j++]) != ___UNICODE_NUL)
             {
-              if (c == ___UNICODE_BACKSLASH)
-                nb_preceding_backslashes++;
-              else
+#ifndef ___DOUBLE_QUOTE_PROGRAM_ARGS
+              if (i == 0) /* only double quote program name */
+#endif
                 {
-                  if (c == ___UNICODE_DOUBLEQUOTE)
-                    while (nb_preceding_backslashes-- >= 0)
-                      *p++ = ___UNICODE_BACKSLASH;
-                  nb_preceding_backslashes = 0;
+                  if (c == ___UNICODE_BACKSLASH)
+                    nb_preceding_backslashes++;
+                  else
+                    {
+                      if (c == ___UNICODE_DOUBLEQUOTE)
+                        while (nb_preceding_backslashes-- >= 0)
+                          *p++ = ___UNICODE_BACKSLASH;
+                      nb_preceding_backslashes = 0;
+                    }
                 }
               *p++ = c;
             }
-          while (nb_preceding_backslashes-- > 0)
-            *p++ = ___UNICODE_BACKSLASH;
-          *p++ = ___UNICODE_DOUBLEQUOTE;
+#ifndef ___DOUBLE_QUOTE_PROGRAM_ARGS
+          if (i == 0) /* only double quote program name */
+#endif
+            {
+              while (nb_preceding_backslashes-- > 0)
+                *p++ = ___UNICODE_BACKSLASH;
+              *p++ = ___UNICODE_DOUBLEQUOTE;
+            }
           *p++ = ___UNICODE_SPACE;
         }
 
