@@ -113,29 +113,46 @@ cd bin
 
 echo @echo off> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
+echo rem Script parameters are passed in the following environment variables:>> gsc-cc-o.bat
+echo rem   GSC_CC_O_GAMBCDIR>> gsc-cc-o.bat
+echo rem   GSC_CC_O_OBJ_FILENAME>> gsc-cc-o.bat
+echo rem   GSC_CC_O_C_FILENAME_DIR>> gsc-cc-o.bat
+echo rem   GSC_CC_O_C_FILENAME_BASE>> gsc-cc-o.bat
+echo rem   GSC_CC_O_CC_OPTIONS>> gsc-cc-o.bat
+echo rem   GSC_CC_O_LD_OPTIONS_PRELUDE>> gsc-cc-o.bat
+echo rem   GSC_CC_O_LD_OPTIONS>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_GAMBCDIR = %%GSC_CC_O_GAMBCDIR%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_OBJ_FILENAME = %%GSC_CC_O_OBJ_FILENAME%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_C_FILENAME_DIR = %%GSC_CC_O_C_FILENAME_DIR%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_C_FILENAME_BASE = %%GSC_CC_O_C_FILENAME_BASE%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_CC_OPTIONS = %%GSC_CC_O_CC_OPTIONS%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_LD_OPTIONS_PRELUDE = %%GSC_CC_O_LD_OPTIONS_PRELUDE%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_LD_OPTIONS = %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
 echo for %%%%f in (cl.exe gcc.exe wcl386.exe) do if not "%%%%~$PATH:f" == "" goto use_%%%%%%f>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo echo gcc.exe, wcl386.exe and cl.exe were not found in the PATH.  Make sure MinGW, OpenWatcom or Visual C++ Express is installed.>> gsc-cc-o.bat
 echo exit 1 >> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_gcc.exe>> gsc-cc-o.bat
-echo cd %GSC_CC_O_C_FILENAME_DIR%>> gsc-cc-o.bat
-echo gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I%%GSC_CC_O_GAMBCDIR%%include -D___DYNAMIC -D___SINGLE_HOST -o %%GSC_CC_O_OBJ_FILENAME%% %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% %%GSC_CC_O_C_FILENAME_BASE%% %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo cd "%GSC_CC_O_C_FILENAME_DIR%">> gsc-cc-o.bat
+echo gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I"%%GSC_CC_O_GAMBCDIR%%include" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_wcl386.exe>> gsc-cc-o.bat
-echo cd %GSC_CC_O_C_FILENAME_DIR%>> gsc-cc-o.bat
-echo wcl386.exe -w0 -zp4 -zq -obetir -bm -3r -bt=nt -mf -bd -I%%GSC_CC_O_GAMBCDIR%%include -D___DYNAMIC -D___SINGLE_HOST -l=nt_dll -fe=%%GSC_CC_O_OBJ_FILENAME%% %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% %%GSC_CC_O_C_FILENAME_BASE%% %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo cd "%GSC_CC_O_C_FILENAME_DIR%">> gsc-cc-o.bat
+echo wcl386.exe -w0 -zp4 -zq -obetir -bm -3r -bt=nt -mf -bd -I"%%GSC_CC_O_GAMBCDIR%%include" -D___DYNAMIC -D___SINGLE_HOST -l=nt_dll -fe="%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_cl.exe>> gsc-cc-o.bat
-echo cd %GSC_CC_O_C_FILENAME_DIR%>> gsc-cc-o.bat
-echo cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I%%GSC_CC_O_GAMBCDIR%%include -D___DYNAMIC -D___SINGLE_HOST -Fe%%GSC_CC_O_OBJ_FILENAME%% %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% %%GSC_CC_O_C_FILENAME_BASE%% %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo cd "%GSC_CC_O_C_FILENAME_DIR%">> gsc-cc-o.bat
+echo cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I"%%GSC_CC_O_GAMBCDIR%%include" -D___DYNAMIC -D___SINGLE_HOST -Fe"%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_build_time_c_compiler>> gsc-cc-o.bat
-echo cd %GSC_CC_O_C_FILENAME_DIR%>> gsc-cc-o.bat
-echo gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I%%GSC_CC_O_GAMBCDIR%%include -D___DYNAMIC -D___SINGLE_HOST -o %%GSC_CC_O_OBJ_FILENAME%% %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% %%GSC_CC_O_C_FILENAME_BASE%% %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo cd "%GSC_CC_O_C_FILENAME_DIR%">> gsc-cc-o.bat
+echo gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I"%%GSC_CC_O_GAMBCDIR%%include" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :end>> gsc-cc-o.bat
