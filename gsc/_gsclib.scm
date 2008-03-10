@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2008-02-28 17:17:26 feeley>
+;;; File: "_gsclib.scm", Time-stamp: <2008-03-10 12:22:50 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -164,7 +164,9 @@
       (##open-process
        #t
        (lambda (port)
-         (##process-status port))
+         (let ((status (##process-status port)))
+           (##close-port port)
+           status))
        open-process
        (##list path:
                (##string-append gambcdir-bin "gsc-cc-o.bat")
@@ -205,12 +207,10 @@
          (let ((exit-status (gsc-cc-o c-filename obj-filename)))
            (if (##not (##memq 'keep-c options))
                (##delete-file c-filename))
-           (if (##fixnum.= exit-status 0)
-               #t
-               '(##runtime-error;;;;;;;;;;;;;;;;;;
-                 msg
-                 'compile-file
-                 (##list filename)))))))
+           (or (##fixnum.= exit-status 0)
+               (##raise-error-exception
+                "C compilation or link failed while compiling"
+                (##list filename)))))))
 
 (define (link-incremental
          modules
