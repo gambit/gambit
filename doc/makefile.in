@@ -51,6 +51,7 @@ emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
 MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
 TEXI2HTML = texi2html
+PDF2PS = pdf2ps
 
 .SUFFIXES:
 
@@ -74,34 +75,30 @@ all-post:
 
 doc: info pdf html txt
 
-checkdoc:
-	rm -f *.o[0123456789]* fifo
-	rm -rf newdir
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi checkdoc.scm
-	diff gambit-c.txi gambit-c.txi-correct
-
 info: gambit-c.info
-
-gambit-c.info: gambit-c.txi version.txi
-	(cd $(srcdir) && $(MAKEINFO) gambit-c.txi) || cp gambit-c.txi gambit-c.info
 
 pdf: gambit-c.pdf
 
-ps: gambit-c.pdf
-	pdf2ps gambit-c.pdf
-
-gambit-c.pdf: gambit-c.txi version.txi
-	cd $(srcdir) && $(TEXI2DVI) -p gambit-c.txi
+ps: gambit-c.ps
 
 html: gambit-c.html
 
-gambit-c.html: gambit-c.txi
-	cd $(srcdir) && $(TEXI2HTML) gambit-c.txi
-
 txt: gambit-c.txt
 
+gambit-c.info: gambit-c.txi version.txi
+	(cd $(srcdir) && $(MAKEINFO) gambit-c.txi) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")
+
+gambit-c.ps: gambit-c.pdf
+	(cd $(srcdir) && $(PDF2PS) gambit-c.pdf) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")
+
+gambit-c.pdf: gambit-c.txi version.txi
+	(cd $(srcdir) && cd $(srcdir) && $(TEXI2DVI) -p gambit-c.txi) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")
+
+gambit-c.html: gambit-c.txi
+	(cd $(srcdir) && $(TEXI2HTML) gambit-c.txi) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")
+
 gambit-c.txt: gambit-c.txi
-	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit-c.txt gambit-c.txi) || cp gambit-c.txi gambit-c.txt
+	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit-c.txt gambit-c.txi) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")
 
 version.txi: stamp.vti
 
@@ -120,6 +117,12 @@ stamp.vti: gambit-c.txi $(rootfromhere)/configure.ac
 	if cmp -s version.tmp $(srcdirpfx)version.txi; then rm -f version.tmp; \
 	else mv version.tmp $(srcdirpfx)version.txi; fi
 	date > $(srcdirpfx)stamp.vti
+
+checkdoc:
+	rm -f *.o[0123456789]* fifo
+	rm -rf newdir
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi checkdoc.scm
+	diff gambit-c.txi gambit-c.txi-correct
 
 install-pre:
 
