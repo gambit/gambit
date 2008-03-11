@@ -1,4 +1,4 @@
-/* File: "os_tty.h", Time-stamp: <2008-02-08 18:50:59 feeley> */
+/* File: "os_tty.h", Time-stamp: <2008-03-10 15:20:15 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -171,7 +171,8 @@ MAKE_TEXT_ATTRS(TEXT_STYLE_NORMAL,DEFAULT_TEXT_COLOR,DEFAULT_TEXT_COLOR)
 #define LINEEDITOR_CAP_WINDOW_OP0 18
 #define LINEEDITOR_CAP_WINDOW_OP1 19
 #define LINEEDITOR_CAP_WINDOW_OP2 20
-#define LINEEDITOR_CAP_LAST  LINEEDITOR_CAP_WINDOW_OP2
+#define LINEEDITOR_CAP_WINDOW_OP3 21
+#define LINEEDITOR_CAP_LAST  LINEEDITOR_CAP_WINDOW_OP3
 
 
 typedef struct lineeditor_event_struct
@@ -303,8 +304,10 @@ typedef struct ___device_tty_struct
     int terminal_cursor;
     ___BOOL terminal_delayed_wrap;  /* cursor wrap to next line is delayed? */
 
-    int terminal_param_num;  /* state of detection of escape sequences */
+    int terminal_op_type;    /* state of detection of escape sequences */
+    int terminal_param_num;
     int terminal_param[10];
+    ___U8 terminal_param_text[80];
 
     tty_text_attrs terminal_attrs;  /* attributes of text sent to terminal */
 

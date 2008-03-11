@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-02-15 13:56:54 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-03-10 15:26:47 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -1750,6 +1750,7 @@ ___HIDDEN lineeditor_dcap lineeditor_dcap_table[LINEEDITOR_CAP_LAST+1] =
 ,DCAP(" 0","  0",  "\033[%p1%dt"        ) /* window operation with no arg */
 ,DCAP(" 1","  1",  "\033[%p1%d;%p2%dt"  ) /* window operation with 1 arg  */
 ,DCAP(" 2","  2",  "\033[%p1%d;%p2%d;%p3%dt") /* window operation with 2 args */
+,DCAP(" 3","  3",  "\033]%p1%d;"        ) /* window operation with text arg */
 };
 
 
@@ -3019,13 +3020,16 @@ int dest_row;)
 ___HIDDEN ___SCMOBJ lineeditor_output_terminal_op
    ___P((___device_tty *self,
          int op,
-         int arg),
+         int arg,
+         ___U8 *text_arg),
         (self,
          op,
-         arg)
+         arg,
+         text_arg)
 ___device_tty *self;
 int op;
-int arg;)
+int arg;
+___U8 *text_arg;)
 {
   /*
    * This routine performs an operation of the emulated terminal and
@@ -3370,55 +3374,62 @@ int arg;)
 
         if (cons_wind != NULL)
           {
-            switch (window_op)
+            if (text_arg != NULL)
               {
-              case 1: /* De-iconify window */
-              case 2: /* Iconify window */
-                ShowWindow (cons_wind,
-                            (window_op == 1) ? SW_RESTORE : SW_MINIMIZE);
-                break;
+                SetWindowTextA (cons_wind, text_arg); /* ignore error */
+              }
+            else
+              {
+                switch (window_op)
+                  {
+                  case 1: /* De-iconify window */
+                  case 2: /* Iconify window */
+                    ShowWindow (cons_wind,
+                                (window_op == 1) ? SW_RESTORE : SW_MINIMIZE);
+                    break;
 
-              case 3: /* Move window to [arg1, arg2] */
-                SetWindowPos (cons_wind,
-                              cons_wind,
-                              arg1,
-                              arg2,
-                              0,
-                              0,
-                              SWP_NOZORDER | SWP_NOSIZE);
-                break;
+                  case 3: /* Move window to [arg1, arg2] */
+                    SetWindowPos (cons_wind,
+                                  cons_wind,
+                                  arg1,
+                                  arg2,
+                                  0,
+                                  0,
+                                  SWP_NOZORDER | SWP_NOSIZE);
+                    break;
 
-              case 4: /* Resize window to height=arg1 and width=arg2 in pixels */
-                SetWindowPos (cons_wind,
-                              cons_wind,
-                              0,
-                              0,
-                              arg2,
-                              arg1,
-                              SWP_NOZORDER | SWP_NOMOVE);
-                break;
+                  case 4: /* Resize window to height=arg1 and width=arg2 in pixels */
+                    SetWindowPos (cons_wind,
+                                  cons_wind,
+                                  0,
+                                  0,
+                                  arg2,
+                                  arg1,
+                                  SWP_NOZORDER | SWP_NOMOVE);
+                    break;
 
-              case 5: /* Raise the window to the front of the stacking order */
-              case 6: /* Lower the window to the bottom of the stacking order */
-                SetWindowPos (cons_wind,
-                              (window_op == 5) ? HWND_TOP : HWND_BOTTOM,
-                              0,
-                              0,
-                              0,
-                              0,
-                              SWP_NOSIZE | SWP_NOMOVE);
-                break;
+                  case 5: /* Raise the window to the front of the stacking order */
+                  case 6: /* Lower the window to the bottom of the stacking order */
+                    SetWindowPos (cons_wind,
+                                  (window_op == 5) ? HWND_TOP : HWND_BOTTOM,
+                                  0,
+                                  0,
+                                  0,
+                                  0,
+                                  SWP_NOSIZE | SWP_NOMOVE);
+                    break;
 
-              case 7: /* Refresh the window */
-                break;
+                  case 7: /* Refresh the window */
+                    break;
 
-              case 8: /* Resize window to height=arg1 and width=arg2 in chars */
-                break;
+                  case 8: /* Resize window to height=arg1 and width=arg2 in chars */
+                    break;
 
-              case 9: /* Maximize or un-maximize window (arg1=0 or arg1=1) */
-                ShowWindow (cons_wind,
-                            (arg1 == 0) ? SW_MAXIMIZE : SW_RESTORE);
-                break;
+                  case 9: /* Maximize or un-maximize window (arg1=0 or arg1=1) */
+                    ShowWindow (cons_wind,
+                                (arg1 == 0) ? SW_MAXIMIZE : SW_RESTORE);
+                    break;
+                  }
               }
           }
 
@@ -3466,40 +3477,66 @@ int arg;)
         int arg1 = (arg >> 8) & ((1<<12)-1);
         int arg2 = (arg >> 20) & ((1<<12)-1);
 
-        switch (window_op)
+        if (text_arg != NULL)
           {
-          case 1: /* De-iconify window */
-          case 2: /* Iconify window */
-          case 5: /* Raise the window to the front of the stacking order */
-          case 6: /* Lower the window to the bottom of the stacking order */
-          case 7: /* Refresh the window */
+            ___C c;
+
             e = lineeditor_output_cap1
                   (d,
-                   LINEEDITOR_CAP_WINDOW_OP0,
+                   LINEEDITOR_CAP_WINDOW_OP3,
                    window_op,
                    1);
-            break;
 
-          case 9: /* Maximize or un-maximize window (arg1=0 or arg1=1) */
-            e = lineeditor_output_cap2
-                  (d,
-                   LINEEDITOR_CAP_WINDOW_OP1,
-                   window_op,
-                   arg1,
-                   1);
-            break;
+            while (e == ___FIX(___NO_ERR) &&
+                   *text_arg != ___UNICODE_NUL)
+              {
+                c = *text_arg++;
+                e = lineeditor_output (d, &c, 1);
+              }
 
-          case 3: /* Move window to [arg1, arg2] */
-          case 4: /* Resize window to height=arg1 and width=arg2 in pixels */
-          case 8: /* Resize window to height=arg1 and width=arg2 in chars */
-            e = lineeditor_output_cap3
-                  (d,
-                   LINEEDITOR_CAP_WINDOW_OP2,
-                   window_op,
-                   arg1,
-                   arg2,
-                   1);
-            break;
+            if (e == ___FIX(___NO_ERR))
+              {
+                c = ___UNICODE_BELL;
+                e = lineeditor_output (d, &c, 1);
+              }
+          }
+        else
+          {
+            switch (window_op)
+              {
+              case 1: /* De-iconify window */
+              case 2: /* Iconify window */
+              case 5: /* Raise the window to the front of the stacking order */
+              case 6: /* Lower the window to the bottom of the stacking order */
+              case 7: /* Refresh the window */
+                e = lineeditor_output_cap1
+                      (d,
+                       LINEEDITOR_CAP_WINDOW_OP0,
+                       window_op,
+                       1);
+                break;
+
+              case 9: /* Maximize or un-maximize window (arg1=0 or arg1=1) */
+                e = lineeditor_output_cap2
+                      (d,
+                       LINEEDITOR_CAP_WINDOW_OP1,
+                       window_op,
+                       arg1,
+                       1);
+                break;
+
+              case 3: /* Move window to [arg1, arg2] */
+              case 4: /* Resize window to height=arg1 and width=arg2 in pixels */
+              case 8: /* Resize window to height=arg1 and width=arg2 in chars */
+                e = lineeditor_output_cap3
+                      (d,
+                       LINEEDITOR_CAP_WINDOW_OP2,
+                       window_op,
+                       arg1,
+                       arg2,
+                       1);
+                break;
+              }
           }
 
         break;
@@ -3646,7 +3683,8 @@ int len;)
                     if ((e = lineeditor_output_terminal_op
                                (d,
                                 TERMINAL_CTRL - c,
-                                0))
+                                0,
+                                NULL))
                         != ___FIX(___NO_ERR))
                       {
                         d->terminal_param_num = pn;
@@ -3658,7 +3696,8 @@ int len;)
                     if ((e = lineeditor_output_terminal_op
                                (d,
                                 TERMINAL_CTRL - c,
-                                0))
+                                0,
+                                NULL))
                         != ___FIX(___NO_ERR))
                       {
                         d->terminal_param_num = pn;
@@ -3678,6 +3717,13 @@ int len;)
 
             if (c == '[')
               {
+                d->terminal_op_type = 0;
+                pn = 0;
+                d->terminal_param[0] = 0;
+              }
+            else if (c == ']')
+              {
+                d->terminal_op_type = 1;
                 pn = 0;
                 d->terminal_param[0] = 0;
               }
@@ -3691,7 +3737,31 @@ int len;)
           {
             /* accumulating parameters after an ESC '[' */
 
-            if (c >= '0' && c <= '9')
+            if (d->terminal_op_type == 1 && pn == 1)
+              {
+                if (c == ___UNICODE_BELL)
+                  {
+                    pn = -2;
+
+                    if ((e = lineeditor_output_terminal_op
+                               (d,
+                                TERMINAL_WINDOW_OP,
+                                d->terminal_param[0],
+                                d->terminal_param_text))
+                        != ___FIX(___NO_ERR))
+                      {
+                        d->terminal_param_num = pn;
+                        return e;
+                      }
+                  }
+                else
+                  {
+                    if (d->terminal_param[1] <
+                        ___CAST(int,___NBELEMS(d->terminal_param_text))-1)
+                      d->terminal_param_text[d->terminal_param[1]++] = c;
+                  }
+              }
+            else if (c >= '0' && c <= '9')
               {
                 int x = c - '0';
                 int p = d->terminal_param[pn];
@@ -3831,7 +3901,7 @@ int len;)
 
                 pn = -2;
 
-                if ((e = lineeditor_output_terminal_op (d, op, arg))
+                if ((e = lineeditor_output_terminal_op (d, op, arg, NULL))
                     != ___FIX(___NO_ERR))
                   {
                     d->terminal_param_num = pn;
