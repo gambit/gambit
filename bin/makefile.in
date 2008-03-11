@@ -133,6 +133,8 @@ gsc-cc-o.bat: makefile
 	  echo "goto end" >> gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
 	  echo ":end" >> gsc-cc-o.bat; \
+	  echo "" >> gsc-cc-o.bat; \
+	  echo "exit" >> gsc-cc-o.bat; \
 	fi
 
 six@exe@: makefile

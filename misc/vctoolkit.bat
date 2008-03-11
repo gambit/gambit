@@ -156,5 +156,7 @@ echo gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-tra
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :end>> gsc-cc-o.bat
+echo.>> gsc-cc-o.bat
+echo exit>> gsc-cc-o.bat
 
 cd ..
