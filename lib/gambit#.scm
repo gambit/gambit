@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-01-10 16:48:34 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-03-11 18:56:44 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -317,11 +317,13 @@ datum-parsing-exception-parameters
 datum-parsing-exception-readenv
 datum-parsing-exception?
 deadlock-exception?
+defer-user-interrupts
 delete-directory
 delete-file
 denominator
 directory-files
 display
+display-continuation-backtrace
 display-continuation-dynamic-environment
 display-continuation-environment
 display-environment-set!
@@ -761,8 +763,12 @@ real-time
 real?
 remainder
 rename-file
+repl-backtrace-display-environment?
+repl-display-dynamic-environment?
 repl-input-port
 repl-output-port
+repl-result-history-max-length-set!
+repl-result-history-ref
 replace-bit-field
 reverse
 round
@@ -823,7 +829,9 @@ sfun-conversion-exception-message
 sfun-conversion-exception-procedure
 sfun-conversion-exception?
 shell-command
+shell-command-blocking
 sin
+six.make-array
 socket-info-address
 socket-info-family
 socket-info-port-number
@@ -874,10 +882,11 @@ subvector
 symbol->string
 symbol-hash
 symbol?
-system-version
-system-version-string
+system-stamp
 system-type
 system-type-string
+system-version
+system-version-string
 table->list
 table-copy
 table-for-each
@@ -934,8 +943,8 @@ transcript-off
 transcript-on
 truncate
 tty-history
+tty-history-max-length-set!
 tty-history-set!
-tty-max-history-length-set!
 tty-mode-set!
 tty-paren-balance-duration-set!
 tty-text-attributes-set!
