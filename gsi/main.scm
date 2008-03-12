@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2008-02-06 11:55:20 feeley>
+;;; File: "main.scm", Time-stamp: <2008-03-12 17:38:24 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -197,7 +197,7 @@
                         ""))))
 
               (if (or pre post)
-                (set! wrap-program
+                (set! c#wrap-program
                   (lambda (program)
                     (let ((file
                            (##container->file
