@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2007-12-16 20:38:07 feeley> */
+/* File: "os.h", Time-stamp: <2008-03-13 17:00:15 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -634,6 +634,11 @@ ___END_C_LINKAGE
 #endif
 
 #ifdef USE_gettimeofday
+#undef INCLUDE_sys_time_h
+#define INCLUDE_sys_time_h
+#endif
+
+#ifdef USE_setitimer
 #undef INCLUDE_sys_time_h
 #define INCLUDE_sys_time_h
 #endif
