@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -16,6 +16,7 @@ PACKAGE_SUBDIR="@PACKAGE_SUBDIR@"
 MAKENSIS="/c/Program Files/NSIS/makensis.exe"
 
 VARIANT="$1"
+RUN_TESTS="$2"
 
 SOURCE_DIR="$INSTALL_PREFIX"
 DOS_SOURCE_DIR="$DOS_INSTALL_PREFIX"
@@ -40,14 +41,35 @@ install_gambc()
   cd "$rootfromhere"
   make mostlyclean
   make
-  if ( make check | fgrep -e "============ ALL TESTS SUCCESSFUL" ) ; then
-    make install
-    (cd "$SOURCE_DIR/$PACKAGE_VERSION" && bin/gsc syntax-case)
+
+  if [ "$RUN_TESTS" == "0" ] ; then
+    echo "************ TESTS SKIPPED ($VARIANT variant)"
   else
-    echo "============ TESTS FAILED"
-    cleanup
-    exit 1
+
+    TESTS_SUCCESS=0
+
+    make check > build-phase2-tests.out
+
+    cat build-phase2-tests.out
+
+    if fgrep "============ ALL TESTS SUCCESSFUL" build-phase2-tests.out > /dev/null; then
+      TESTS_SUCCESS=1
+    fi
+
+    rm -f build-phase2-tests.out
+
+    if [ "$TESTS_SUCCESS" == "1" ] ; then
+      echo "************ TESTS SUCCESSFUL ($VARIANT variant)"
+    else
+      echo "************ TESTS FAILED ($VARIANT variant)"
+      cleanup
+      exit 1
+    fi
+
   fi
+
+  make install
+  (cd "$SOURCE_DIR/$PACKAGE_VERSION" && bin/gsc syntax-case)
   cd "$herefromroot"
 }
 

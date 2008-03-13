@@ -23,21 +23,27 @@ for VARIANT in intel32 intel64 G3 G4 G5 universal; do
   case "$VARIANT" in
       intel32) CONFIG_ARCH="-arch i686"
                CONFIG_HOST="--host=i386-apple-darwin9"
+               RUN_TESTS=1
                ;;
       intel64) CONFIG_ARCH="-arch x86_64 -m64"
                CONFIG_HOST="--host=i386-apple-darwin9"
+               RUN_TESTS=0
                ;;
            G3) CONFIG_ARCH="-arch ppc750"
                CONFIG_HOST="--host=powerpc-apple-darwin9"
+               RUN_TESTS=1
                ;;
            G4) CONFIG_ARCH="-arch ppc7400"
                CONFIG_HOST="--host=powerpc-apple-darwin9"
+               RUN_TESTS=0
                ;;
            G5) CONFIG_ARCH="-arch ppc970 -m64"
                CONFIG_HOST="--host=powerpc-apple-darwin9"
+               RUN_TESTS=0
                ;;
     universal) CONFIG_ARCH="-arch i686 -arch ppc750"
                CONFIG_HOST=""
+               RUN_TESTS=1
                ;;
   esac
 
@@ -54,19 +60,29 @@ for VARIANT in intel32 intel64 G3 G4 G5 universal; do
 
   chmod +x build-phase2
 
-  ./build-phase2 "$VARIANT" > build-phase2.out
+  ./build-phase2 "$VARIANT" "$RUN_TESTS" > build-phase2.out
 
   cat build-phase2.out
 
-  if fgrep "============ ALL TESTS SUCCESSFUL" build-phase2.out > /dev/null; then
-    rm -f build-phase2.out
-    echo "============ $VARIANT BUILD SUCCESSFUL"
+  SUCCESS=0
+
+  if fgrep "************ TESTS SUCCESSFUL" build-phase2.out > /dev/null; then
+    SUCCESS=1
   else
-    rm -f build-phase2.out
-    echo "============ $VARIANT BUILD FAILED"
+    if fgrep "************ TESTS SKIPPED" build-phase2.out > /dev/null; then
+      SUCCESS=1
+    fi
+  fi
+
+  rm -f build-phase2.out
+
+  if [ "$SUCCESS" == "1" ] ; then
+    echo "************ BUILD SUCCESSFUL ($VARIANT variant)"
+  else
+    echo "************ BUILD FAILED ($VARIANT variant)"
     exit 1
   fi
 
 done
 
-echo "============ BUILD SUCCESSFUL"
+echo "************ macosx BUILD SUCCESSFUL"

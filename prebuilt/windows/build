@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -20,8 +20,12 @@ for VARIANT in mingw visualc; do
   cd "$rootfromhere"
 
   case "$VARIANT" in
-      mingw) CONFIG_CC="gcc";;
-    visualc) CONFIG_CC="cl";;
+      mingw) CONFIG_CC="gcc"
+             RUN_TESTS=1
+             ;;
+    visualc) CONFIG_CC="cl.exe"
+             RUN_TESTS=0
+             ;;
   esac
 
   cmd /c "C:\PROGRA~1\MICROS~2\VC\VCVARS~1.BAT && C:\PROGRA~1\MICROS~4\SETENV.CMD /RETAIL && sh -c \"CC=\\\"$CONFIG_CC\\\" ./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-single-host # --enable-gcc-opts\""
@@ -30,21 +34,29 @@ for VARIANT in mingw visualc; do
 
   chmod +x build-phase2
 
-  cmd /c "C:\PROGRA~1\MICROS~2\VC\VCVARS~1.BAT && C:\PROGRA~1\MICROS~4\SETENV.CMD /RETAIL && sh -c \"./build-phase2 \\\"$VARIANT\\\"\"" > build-phase2.out
+  cmd /c "C:\PROGRA~1\MICROS~2\VC\VCVARS~1.BAT && C:\PROGRA~1\MICROS~4\SETENV.CMD /RETAIL && sh -c \"./build-phase2 \\\"$VARIANT\\\" \\\"$RUN_TESTS\\\"\"" > build-phase2.out
 
   cat build-phase2.out
 
-  if fgrep "============ ALL TESTS SUCCESSFUL" build-phase2.out > /dev/null; then
-    rm -f build-phase2.out
-    echo "============ $VARIANT BUILD SUCCESSFUL"
+  SUCCESS=0
+
+  if fgrep "************ TESTS SUCCESSFUL" build-phase2.out > /dev/null; then
+    SUCCESS=1
   else
-    rm -f build-phase2.out
-    echo "============ $VARIANT BUILD FAILED"
-    exit 1
+    if fgrep "************ TESTS SKIPPED" build-phase2.out > /dev/null; then
+      SUCCESS=1
+    fi
   fi
 
   rm -f build-phase2.out
 
+  if [ "$SUCCESS" == "1" ] ; then
+    echo "************ BUILD SUCCESSFUL ($VARIANT variant)"
+  else
+    echo "************ BUILD FAILED ($VARIANT variant)"
+    exit 1
+  fi
+
 done
 
-echo "============ BUILD SUCCESSFUL"
+echo "************ windows BUILD SUCCESSFUL"
