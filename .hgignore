@@ -10,7 +10,6 @@ bin/six
 bin/six-script
 config\.log
 config\.status
-configure
 doc/gambit-c\.aux
 doc/gambit-c\.cp
 doc/gambit-c\.cps
