@@ -98,10 +98,12 @@ commit: fake_target stamp
 	$(HG) commit
 
 update: fake_target
+	$(HG) pull
 	next_version=`hg tags | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
 	next_version=`hg tags | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | grep -e 'v.*-bootstrap' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
 	if test "$$next_version" = ""; then \
 	  $(HG) update; \
+	  $(MAKE); \
 	else \
 	  $(HG) update -r $$next_version-bootstrap; \
 	  $(MAKE) bootstrap; \
