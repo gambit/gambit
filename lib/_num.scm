@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-02-03 10:13:11 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-03-18 12:14:04 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
@@ -5188,8 +5188,8 @@
 ;; Bignum operations
 ;; -----------------
 
-;; The bignum operations were mostly implemented by the "Über numerical
-;; analyst" Brad Lucier (http://www.math.purdue.edu/~lucier) with some
+;; The bignum operations were mostly implemented by the "Uber numerical
+;; analyst Brad Lucier (http://www.math.purdue.edu/~lucier) with some
 ;; coding guidance from Marc Feeley.
 
 ;; Bignums are represented with 'adigit' vectors.  Each element is an
