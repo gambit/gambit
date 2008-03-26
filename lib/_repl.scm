@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-02-15 10:50:15 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-03-26 14:43:13 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1081,7 +1081,8 @@
       (if file
         (##write (##path-normalize file
                                    ##repl-location-relative
-                                   ##repl-location-origin)
+                                   ##repl-location-origin
+                                   #f)
                  port)
         (##write-string (##container->id container) port))
       (let* ((filepos (##position->filepos (##locat-position locat)))

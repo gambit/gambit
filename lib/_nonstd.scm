@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2008-03-04 09:10:21 feeley>
+;;; File: "_nonstd.scm", Time-stamp: <2008-03-26 14:41:31 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1767,7 +1767,8 @@
               path
               #!optional
               (allow-relative? (macro-absent-obj))
-              (origin (macro-absent-obj)))
+              (origin (macro-absent-obj))
+              (raise-os-exception? (macro-absent-obj)))
 
   (define (normalize path)
     (let ((dir
@@ -1791,7 +1792,16 @@
          (p
           (normalize (##path-expand path dir))))
     (if (##fixnum? p)
-      (##raise-os-exception #f p path-normalize path allow-relative? origin)
+        (if raise-os-exception?
+            (##raise-os-exception
+             #f
+             p
+             path-normalize
+             path
+             allow-relative?
+             origin
+             raise-os-exception?)
+            path)
       (if (or (##eq? allow-relative? (macro-absent-obj))
               (##not allow-relative?))
         p
@@ -1878,15 +1888,18 @@
               path
               #!optional
               (allow-relative? (macro-absent-obj))
-              (origin (macro-absent-obj)))
-  (macro-force-vars (path allow-relative?)
+              (origin (macro-absent-obj))
+              (raise-os-exception? (macro-absent-obj)))
+  (macro-force-vars (path allow-relative? origin raise-os-exception?)
     (macro-check-string path 1 (path-normalize path allow-relative? origin)
       (if (##eq? allow-relative? (macro-absent-obj))
         (##path-normalize path)
         (if (##eq? origin (macro-absent-obj))
           (##path-normalize path allow-relative?)
           (macro-check-string origin 2 (path-normalize path allow-relative? origin)
-            (##path-normalize path allow-relative? origin)))))))
+            (if (##eq? raise-os-exception? (macro-absent-obj))
+                (##path-normalize path allow-relative? origin)
+                (##path-normalize path allow-relative? origin raise-os-exception?))))))))
 
 (define-prim (##path-extension-start path)
   (let* ((cd
