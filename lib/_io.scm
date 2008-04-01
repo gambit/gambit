@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-02-21 17:54:35 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-04-01 12:39:57 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -8324,7 +8324,7 @@
      we
      obj
      'procedure
-     (or (##object->global-var->identifier obj) (##void)))))
+     (or (##procedure-name obj) (##void)))))
 
 (define-prim (##wr-return we obj)
   (##wr-opaque

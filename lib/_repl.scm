@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-03-26 14:43:13 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-04-01 12:37:34 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -616,10 +616,41 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##procedure-name p)
-  (or (and (##procedure? p)
-           (##object->global-var->identifier p))
+(define-prim (##procedure-friendly-name p)
+  (or (##procedure-name p)
       p))
+
+(define-prim (##procedure-name p)
+  (and (##procedure? p)
+       (or (and (##interp-procedure? p)
+                (let* (($code (##interp-procedure-code p))
+                       (rte (##interp-procedure-rte p)))
+                  (##object->lexical-var->identifier
+                   (macro-code-cte $code)
+                   rte
+                   p)))
+           (##object->global-var->identifier p))))
+
+(define-prim (##object->lexical-var->identifier cte rte obj)
+  (let loop1 ((c cte)
+              (r rte))
+    (cond ((##cte-top? c)
+           #f)
+          ((##cte-frame? c)
+           (let loop2 ((vars (##cte-frame-vars c))
+                       (i 1))
+             (if (##pair? vars)
+                 (let ((var (##car vars)))
+                   (if (and (##not (##hidden-local-var? var))
+                            (##eq? (##vector-ref r i) obj))
+                       var
+                       (loop2 (##cdr vars)
+                              (##fixnum.+ i 1))))
+                 (loop1 (##cte-parent-cte c)
+                        (macro-rte-up r)))))
+          (else
+           (loop1 (##cte-parent-cte c)
+                  r)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1029,7 +1060,7 @@
            (tab depth-width)
            (let ((creator (##continuation-creator cont)))
              (if creator
-                 (##write (##procedure-name creator) port)
+                 (##write (##procedure-friendly-name creator) port)
                  (##write-string "(interaction)" port)))
            (tab (##fixnum.+ (##fixnum.+ depth-width
                                         creator-width)
@@ -1351,7 +1382,7 @@
                 (inverse-eval-args (##fixnum.+ i 1) (##cdr lst))))
       '()))
 
-  (##cons (##procedure-name proc)
+  (##cons (##procedure-friendly-name proc)
           (inverse-eval-args 1 args)))
 
 (define ##trace-depth (##make-parameter 0))
@@ -2629,7 +2660,7 @@
   (if (or proc locat)
     (##write-string " IN " port))
   (if proc
-    (##write (##procedure-name proc) port))
+    (##write (##procedure-friendly-name proc) port))
   (if locat
     (begin
       (if proc

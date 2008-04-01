@@ -1,4 +1,4 @@
-; File: "error.scm", Time-stamp: <2007-07-25 00:44:02 feeley>
+; File: "error.scm", Time-stamp: <2008-04-01 12:44:06 feeley>
 
 ; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
 
@@ -124,7 +124,7 @@
                              (write exc)
                              (##display-exception exc (current-output-port)))))
                      read-line)
-                   (##procedure-name oper)
+                   (##procedure-friendly-name oper)
                    args)))
 
           (cond ((abandoned-mutex-exception? exc)
