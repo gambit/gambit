@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gambit#.scm", Time-stamp: <2008-01-17 21:46:02 feeley>
+;;; File: "_gambit#.scm", Time-stamp: <2008-04-06 16:05:14 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -107,6 +107,7 @@
 ##fixnum.arithmetic-shift-right?
 ##fixnum.wraplogical-shift-right
 ##fixnum.wraplogical-shift-right?
+##fixnum.wrapabs ##fixnum.abs ##fixnum.abs?
 ##fixnum.zero? ##fixnum.positive? ##fixnum.negative?
 ##fixnum.odd? ##fixnum.even?
 ;;; ##fixnum.= ##fixnum.< ##fixnum.> ##fixnum.<= ##fixnum.>=
@@ -153,6 +154,7 @@
 ##fxarithmetic-shift-right?
 ##fxwraplogical-shift-right
 ##fxwraplogical-shift-right?
+##fxwrapabs ##fxabs ##fxabs?
 ##fxzero? ##fxpositive? ##fxnegative?
 ##fxodd? ##fxeven?
 ;;; ##fx= ##fx< ##fx> ##fx<= ##fx>=

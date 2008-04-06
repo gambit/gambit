@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2008-01-24 14:58:21 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2008-04-06 18:56:24 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -566,8 +566,6 @@
 (define (targ-use-obj obj)
   (let ((type (targ-obj-type obj)))
     (case type
-      ((procedure)
-       (targ-use-prc obj #f))
       ((pair)
        (let ((x (ordered-table-lookup targ-cns-objs obj)))
          (or x
@@ -609,6 +607,8 @@
                    y))))
 
          (case subtype
+           ((procedure)
+            (targ-use-prc obj #f))
            ((symbol)
             (list "SYM"
                   (targ-use-sym obj)

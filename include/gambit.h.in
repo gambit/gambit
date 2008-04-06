@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-02-15 10:47:43 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-04-06 15:37:13 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,7 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1207068312
+#define ___STAMP 1207523383
 
 /*---------------------------------------------------------------------------*/
 
@@ -2603,6 +2603,8 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXIOR(x,y)((___WORD)((x)|(y)))
 #define ___FIXXOR(x,y)((___WORD)((x)^(y)))
 #define ___FIXIF(x,y,z)((___WORD)(((x)&(y))|(~(x)&(z))))
+#define ___FIXABS(x)((x)<0?___FIXNEG(x):(x))
+#define ___FIXABSP(x)((x)<0?((___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x))):(x))
 
 #if ___SCMOBJ_WIDTH == 32
 #define ___SCMOBJ_MASK(x,y)y

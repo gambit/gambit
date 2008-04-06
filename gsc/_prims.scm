@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_prims.scm", Time-stamp: <2008-02-14 14:00:20 feeley>
+;;; File: "_prims.scm", Time-stamp: <2008-04-06 15:52:04 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -267,6 +267,8 @@
 ("fxarithmetic-shift-left"            (2)   #f 0     0    fixnum  r6rs)
 ("fxarithmetic-shift-right"           (2)   #f 0     0    fixnum  r6rs)
 ("fxwraplogical-shift-right"          (2)   #f 0     0    fixnum  r6rs)
+("fxwrapabs"                          (1)   #f 0     0    fixnum  gambit)
+("fxabs"                              (1)   #f 0     0    fixnum  gambit)
 
 ("flonum?"                            (1)   #f 0     0    boolean r6rs)
 ("fl="                                0     #f 0     0    boolean r6rs)
@@ -526,6 +528,9 @@
 ("##fixnum.arithmetic-shift-right?"   (2)   #f ()    0    #f extended)
 ("##fixnum.wraplogical-shift-right"   (2)   #f ()    0    fixnum  extended)
 ("##fixnum.wraplogical-shift-right?"  (2)   #f ()    0    #f      extended)
+("##fixnum.wrapabs"                   (1)   #f ()    0    fixnum  extended)
+("##fixnum.abs"                       (1)   #f ()    0    fixnum  extended)
+("##fixnum.abs?"                      (1)   #f ()    0    #f      extended)
 ("##fixnum.zero?"                     (1)   #f ()    0    boolean extended)
 ("##fixnum.positive?"                 (1)   #f ()    0    boolean extended)
 ("##fixnum.negative?"                 (1)   #f ()    0    boolean extended)
@@ -613,9 +618,12 @@
 ("##fxarithmetic-shift-left"     (2)   #f ()    0    fixnum  extended)
 ("##fxarithmetic-shift-left?"    (2)   #f ()    0    #f      extended)
 ("##fxarithmetic-shift-right"    (2)   #f ()    0    fixnum  extended)
-("##fxarithmetic-shift-right?"   (2)   #f ()    0    #f extended)
+("##fxarithmetic-shift-right?"   (2)   #f ()    0    #f      extended)
 ("##fxwraplogical-shift-right"   (2)   #f ()    0    fixnum  extended)
 ("##fxwraplogical-shift-right?"  (2)   #f ()    0    #f      extended)
+("##fxwrapabs"                   (1)   #f ()    0    fixnum  extended)
+("##fxabs"                       (1)   #f ()    0    fixnum  extended)
+("##fxabs?"                      (1)   #f ()    0    #f      extended)
 ("##fxzero?"                     (1)   #f ()    0    boolean extended)
 ("##fxpositive?"                 (1)   #f ()    0    boolean extended)
 ("##fxnegative?"                 (1)   #f ()    0    boolean extended)

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-3.scm", Time-stamp: <2007-04-04 11:38:25 feeley>
+;;; File: "_t-c-3.scm", Time-stamp: <2008-04-06 18:57:16 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -324,7 +324,7 @@
         ((box-object? obj)
          'subtyped)
         ((proc-obj? obj)
-         'procedure)
+         'subtyped)
         ((pair? obj)
          'pair)
         ((number? obj)
@@ -338,7 +338,9 @@
          'subtyped)))
 
 (define (targ-obj-subtype obj)
-  (cond ((symbol-object? obj)
+  (cond ((proc-obj? obj)
+         'procedure)
+        ((symbol-object? obj)
          'symbol)
         ((keyword-object? obj)
          'keyword)

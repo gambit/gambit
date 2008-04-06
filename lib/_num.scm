@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-03-18 12:14:04 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-04-06 15:59:23 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
@@ -5007,6 +5007,19 @@
 
 (define-prim (##fxwraplogical-shift-right? x y))
 
+(define-prim (##fxwrapabs x))
+
+(define-prim-fixnum (fxwrapabs x)
+  (##fxwrapabs x))
+
+(define-prim (##fxabs x))
+
+(define-prim-fixnum (fxabs x)
+  (or (##fxabs? x)
+      (##raise-fixnum-overflow-exception fxabs x)))
+
+(define-prim (##fxabs? x))
+
 (define-prim (##fx->char x))
 (define-prim (##fx<-char x))
 
@@ -5179,6 +5192,12 @@
 (define-prim (##fixnum.wraplogical-shift-right x y))
 
 (define-prim (##fixnum.wraplogical-shift-right? x y))
+
+(define-prim (##fixnum.wrapabs x))
+
+(define-prim (##fixnum.abs x))
+
+(define-prim (##fixnum.abs? x))
 
 (define-prim (##fixnum.->char x))
 (define-prim (##fixnum.<-char x))

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2008-02-17 11:54:31 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2008-04-06 19:01:00 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3270,6 +3270,9 @@
 (targ-op "##fixnum.arithmetic-shift-right?"  (targ-apply-simp-u #f #f "FIXASHRP"))
 (targ-op "##fixnum.wraplogical-shift-right"  (targ-apply-simp-u #f #f "FIXLSHR"))
 (targ-op "##fixnum.wraplogical-shift-right?" (targ-apply-simp-u #f #f "FIXLSHRP"))
+(targ-op "##fixnum.wrapabs"    (targ-apply-simp-u #f #f "FIXABS"))
+(targ-op "##fixnum.abs"        (targ-apply-simp-u #f #f "FIXABS"))
+(targ-op "##fixnum.abs?"       (targ-apply-simp-u #f #f "FIXABSP"))
 
 (targ-op "##fixnum.zero?"     (targ-ifjump-simp-u #f "FIXZEROP"))
 (targ-op "##fixnum.positive?" (targ-ifjump-simp-u #f "FIXPOSITIVEP"))
@@ -3367,6 +3370,9 @@
 (targ-op "##fxarithmetic-shift-right?"  (targ-apply-simp-u #f #f "FIXASHRP"))
 (targ-op "##fxwraplogical-shift-right"  (targ-apply-simp-u #f #f "FIXLSHR"))
 (targ-op "##fxwraplogical-shift-right?" (targ-apply-simp-u #f #f "FIXLSHRP"))
+(targ-op "##fxwrapabs"      (targ-apply-simp-u #f #f "FIXABS"))
+(targ-op "##fxabs"          (targ-apply-simp-u #f #f "FIXABS"))
+(targ-op "##fxabs?"         (targ-apply-simp-u #f #f "FIXABSP"))
 
 (targ-op "##fxzero?"     (targ-ifjump-simp-u #f "FIXZEROP"))
 (targ-op "##fxpositive?" (targ-ifjump-simp-u #f "FIXPOSITIVEP"))
@@ -3958,8 +3964,10 @@
 (targ-spec "fxarithmetic-shift-right"  (targ-u "##fxarithmetic-shift-right"))
 (targ-spec "fxwraplogical-shift-right" (targ-u "##fxwraplogical-shift-right"))
 
-(targ-spec "flabs" (targ-u "##flabs"))
-(targ-spec "abs"   (targ-arith #f "flabs"))
+(targ-spec "fxwrapabs" (targ-u "##fxwrapabs"))
+(targ-spec "fxabs"     (targ-u "##fxabs"))
+(targ-spec "flabs"     (targ-u "##flabs"))
+(targ-spec "abs"       (targ-arith "fxabs" "flabs"))
 
 (targ-spec "flfloor" (targ-u "##flfloor"))
 (targ-spec "floor"   (targ-arith #f "flfloor"))
@@ -4307,6 +4315,9 @@
 (targ-simp "##eqv?"           (targ-constant-folder eqv?           ))
 (targ-simp "##eq?"            (targ-constant-folder eq?            ))
 (targ-simp "equal?"           (targ-constant-folder equal?         ))
+(targ-simp "##subtyped?"      (targ-constant-folder (lambda (obj)
+                                                      (eq? (targ-obj-type obj)
+                                                           'subtyped))))
 (targ-simp "##pair?"          (targ-constant-folder pair?          ))
 ;(targ-simp "##cons"           (targ-constant-folder cons           ))
 (targ-simp "car"              (targ-constant-folder car            pair?))
@@ -4810,6 +4821,19 @@
   (let ((proc (targ-get-prim-info name)))
     (proc-obj-expandable?-set! proc (lambda (env) #t))
     (proc-obj-expand-set! proc expander)))
+
+(define (gen-check-run-time-binding
+         check-run-time-binding
+         source
+         env
+         succeed
+         fail)
+  (if check-run-time-binding
+      (new-tst source env
+        (check-run-time-binding)
+        (succeed)
+        (fail))
+      (succeed)))
 
 (define (gen-type-checks
          source
@@ -5318,6 +5342,10 @@
   (define **fxremainder-sym (string->canonical-symbol "##fxremainder"))
   (define **fxmodulo-sym (string->canonical-symbol "##fxmodulo"))
 
+  (define **fxwrapabs-sym (string->canonical-symbol "##fxwrapabs"))
+  (define **fxabs-sym (string->canonical-symbol "##fxabs"))
+  (define **fxabs?-sym (string->canonical-symbol "##fxabs?"))
+
   (define **fxnot-sym (string->canonical-symbol "##fxnot"))
   (define **fxand-sym (string->canonical-symbol "##fxand"))
   (define **fxior-sym (string->canonical-symbol "##fxior"))
@@ -5381,6 +5409,8 @@
   (define **char-ci>?-sym (string->canonical-symbol "##char-ci>?"))
   (define **char-ci<=?-sym (string->canonical-symbol "##char-ci<=?"))
   (define **char-ci>=?-sym (string->canonical-symbol "##char-ci>=?"))
+
+  (define **subtyped?-sym (string->canonical-symbol "##subtyped?"))
 
   (define (gen-fixnum-case gen)
     (lambda (source
@@ -5947,6 +5977,26 @@
       (gen-fixnum-division-case
        (make-prim-generator **fxmodulo-sym)))
 
+    (define case-fxwrapabs
+      (gen-simple-case **fixnum?-sym **fxwrapabs-sym))
+
+    (define case-fxabs
+      (gen-fixnum-case
+       (lambda (source env vars invalid)
+         (let ((var (car (gen-temp-vars source '(#f)))))
+           (new-call source env
+             (gen-prc source env
+               (list var)
+               (new-tst source env
+                 (new-ref source env
+                   var)
+                 (new-ref source env
+                   var)
+                 (invalid)))
+             (list (gen-call-prim-vars source env
+                    **fxabs?-sym
+                      vars)))))))
+
     (define case-fxnot
       (gen-simple-case **fixnum?-sym **fxnot-sym))
 
@@ -6145,6 +6195,40 @@
     (define case-char>=?
       (gen-simple-case **char?-sym **char>=?-sym))
 
+    (define case-eqv?
+      (lambda (source
+               env
+               vars
+               check-run-time-binding
+               invalid
+               fail)
+        (gen-check-run-time-binding
+         check-run-time-binding
+         source
+         env
+         (lambda ()
+           (let ((var1 (car vars))
+                 (var2 (cadr vars)))
+             (new-disj source env
+               (gen-call-prim source env
+                 **eq?-sym
+                 (list (new-ref source env
+                         var1)
+                       (new-ref source env
+                         var2)))
+               (new-conj source env
+                 (gen-call-prim source env
+                   **subtyped?-sym
+                   (list (new-ref source env
+                           var1)))
+                   (new-conj source env
+                     (gen-call-prim source env
+                       **subtyped?-sym
+                       (list (new-ref source env
+                               var2)))
+                     (invalid))))))
+         fail)))
+
     (targ-exp "fx=" (make-simple-expander case-fx=))
     (targ-exp "fl=" (make-simple-expander case-fl=))
     (targ-exp "="   (make-fixflo-expander case-fx= case-fl=))
@@ -6263,8 +6347,10 @@
 ;;  (targ-exp "fxarithmetic-shift-right" (make-simple-expander case-fxarithmetic-shift-right))
 ;;  (targ-exp "fxwraplogical-shift-right" (make-simple-expander case-fxwraplogical-shift-right))
 
+    (targ-exp "fxwrapabs" (make-simple-expander case-fxwrapabs))
+    (targ-exp "fxabs" (make-simple-expander case-fxabs))
     (targ-exp "flabs" (make-simple-expander case-flabs))
-    (targ-exp "abs"   (make-fixflo-expander no-case case-flabs))
+    (targ-exp "abs"   (make-fixflo-expander case-fxabs case-flabs))
 
     (targ-exp "flfloor" (make-simple-expander case-flfloor))
     (targ-exp "floor"   (make-fixflo-expander no-case case-flfloor))
@@ -6327,6 +6413,8 @@
     (targ-exp "char>?" (make-simple-expander case-char>?))
     (targ-exp "char<=?" (make-simple-expander case-char<=?))
     (targ-exp "char>=?" (make-simple-expander case-char>=?))
+
+    (targ-exp "eqv?" (make-simple-expander case-eqv?))
 ))
 
 (define (setup-vector-primitives)
