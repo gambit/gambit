@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2008-04-06 19:01:00 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2008-04-12 09:53:42 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4302,6 +4302,12 @@
 (define (not-bigfix? obj)
   (not (and (targ-fixnum64? obj) (not (targ-fixnum32? obj)))))
 
+(define (mem-alloc? obj)
+  (let ((type (targ-obj-type obj)))
+    (or (eq? type 'pair)
+        (and (eq? type 'subtyped)
+             (not-bigfix? obj)))))
+
 (define (any obj) #t)
 
 (define (alist? obj) (and (list? obj) (every? pair? obj)))
@@ -4315,9 +4321,18 @@
 (targ-simp "##eqv?"           (targ-constant-folder eqv?           ))
 (targ-simp "##eq?"            (targ-constant-folder eq?            ))
 (targ-simp "equal?"           (targ-constant-folder equal?         ))
+(targ-simp "##mem-allocated?" (targ-constant-folder (lambda (obj)
+                                                      (case (targ-obj-type obj)
+                                                        ((subtyped pair) #t)
+                                                        (else            #f)))
+                                                    not-bigfix?))
 (targ-simp "##subtyped?"      (targ-constant-folder (lambda (obj)
-                                                      (eq? (targ-obj-type obj)
-                                                           'subtyped))))
+                                                      (case (targ-obj-type obj)
+                                                        ((subtyped) #t)
+                                                        (else       #f)))
+                                                    not-bigfix?))
+(targ-simp "##subtype"        (targ-constant-folder targ-obj-subtype-integer
+                                                    mem-alloc?))
 (targ-simp "##pair?"          (targ-constant-folder pair?          ))
 ;(targ-simp "##cons"           (targ-constant-folder cons           ))
 (targ-simp "car"              (targ-constant-folder car            pair?))
@@ -5410,7 +5425,9 @@
   (define **char-ci<=?-sym (string->canonical-symbol "##char-ci<=?"))
   (define **char-ci>=?-sym (string->canonical-symbol "##char-ci>=?"))
 
+  (define **mem-allocated?-sym (string->canonical-symbol "##mem-allocated?"))
   (define **subtyped?-sym (string->canonical-symbol "##subtyped?"))
+  (define **subtype-sym (string->canonical-symbol "##subtype"))
 
   (define (gen-fixnum-case gen)
     (lambda (source
@@ -6195,7 +6212,7 @@
     (define case-char>=?
       (gen-simple-case **char?-sym **char>=?-sym))
 
-    (define case-eqv?
+    (define (case-eqv?-or-equal? prim)
       (lambda (source
                env
                vars
@@ -6218,15 +6235,26 @@
                          var2)))
                (new-conj source env
                  (gen-call-prim source env
-                   **subtyped?-sym
+                   prim
                    (list (new-ref source env
                            var1)))
+                 (new-conj source env
+                   (gen-call-prim source env
+                     prim
+                     (list (new-ref source env
+                             var2)))
                    (new-conj source env
                      (gen-call-prim source env
-                       **subtyped?-sym
-                       (list (new-ref source env
-                               var2)))
-                     (invalid))))))
+                       **fx=-sym
+                       (list (gen-call-prim source env
+                               **subtype-sym
+                               (list (new-ref source env
+                                       var1)))
+                             (gen-call-prim source env
+                               **subtype-sym
+                               (list (new-ref source env
+                                       var2)))))
+                     (invalid)))))))
          fail)))
 
     (targ-exp "fx=" (make-simple-expander case-fx=))
@@ -6414,7 +6442,13 @@
     (targ-exp "char<=?" (make-simple-expander case-char<=?))
     (targ-exp "char>=?" (make-simple-expander case-char>=?))
 
-    (targ-exp "eqv?" (make-simple-expander case-eqv?))
+    (targ-exp
+     "eqv?"
+     (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
+
+    (targ-exp
+     "equal?"
+     (make-simple-expander (case-eqv?-or-equal? **mem-allocated?-sym)))
 ))
 
 (define (setup-vector-primitives)

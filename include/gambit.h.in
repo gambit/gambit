@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-04-06 15:37:13 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-04-12 10:05:16 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,7 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1207523383
+#define ___STAMP 1208010321
 
 /*---------------------------------------------------------------------------*/
 
@@ -1709,7 +1709,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 /*
  * For a complete description of the object representation, read the
  * file "lib/mem.c".  These definitions must agree with those in the
- * file "lib/header.scm".
+ * files "lib/_gambit#.scm" and "gsc/_t-c-3.scm".
  */
 
 /*

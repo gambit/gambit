@@ -1,12 +1,16 @@
 ;;;============================================================================
 
-;;; File: "_gambit#.scm", Time-stamp: <2008-04-06 16:05:14 feeley>
+;;; File: "_gambit#.scm", Time-stamp: <2008-04-12 10:05:31 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;; General object representation.
+
+;; IMPORTANT: These definitions need to be consistent with the
+;; definitions in the files "lib/gambit.h.in" (macros ___t... and
+;; ___s...) and "gsc/_t-c-3.scm" (procedure targ-obj-subtype-integer).
 
 ;; Type tags.
 

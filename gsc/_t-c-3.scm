@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-3.scm", Time-stamp: <2008-04-06 18:57:16 feeley>
+;;; File: "_t-c-3.scm", Time-stamp: <2008-04-12 10:08:26 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -388,6 +388,42 @@
         (else
          (compiler-internal-error
            "targ-obj-subtype, unknown object 'obj'" obj))))
+
+(define (targ-obj-subtype-integer obj)
+
+  (define (err)
+    (compiler-internal-error
+     "targ-obj-subtype-integer, unknown subtyped object 'obj'" obj))
+
+  (case (targ-obj-type obj)
+    ((pair)
+     1)
+    ((subtyped)
+     (case (targ-obj-subtype obj)
+       ((vector)     0)
+       ((ratnum)     2)
+       ((cpxnum)     3)
+       ((structure)  4)
+       ((box)        5)
+       ((symbol)     8)
+       ((keyword)    9)
+       ((procedure) 14)
+       ((string)    19)
+       ((s8vector)  20)
+       ((u8vector)  21)
+       ((s16vector) 22)
+       ((u16vector) 23)
+       ((s32vector) 24)
+       ((u32vector) 25)
+       ((s64vector) 26)
+       ((u64vector) 27)
+       ((f32vector) 28)
+       ((f64vector) 29)
+       ((flonum)    30)
+       ((bignum)    31)
+       (else        (err))))
+    (else
+     (err))))
 
 ;; Note: The following hashing function must return the same value as the
 ;; functions "hash_UTF_8_string" and "hash_scheme_string" in "lib/setup.c".
