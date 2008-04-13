@@ -1,6 +1,6 @@
 # makefile for Gambit-C bin directory.
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 herefromroot = bin
 rootfromhere = ..
@@ -108,10 +108,10 @@ gsc-cc-o.bat: makefile
 	  echo "rem echo GSC_CC_O_LD_OPTIONS_PRELUDE = %GSC_CC_O_LD_OPTIONS_PRELUDE%" >> gsc-cc-o.bat; \
 	  echo "rem echo GSC_CC_O_LD_OPTIONS = %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
-	  if test "$(C_COMPILER)" = "gcc"; then \
-	    echo "for %%f in (gcc.exe cl.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o.bat; \
-	  else \
+	  if test "$(C_COMPILER)" = "cl" -o "$(C_COMPILER)" = "cl.exe"; then \
 	    echo "for %%f in (cl.exe gcc.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o.bat; \
+	  else \
+	    echo "for %%f in (gcc.exe cl.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o.bat; \
 	  fi; \
 	  echo "" >> gsc-cc-o.bat; \
 	  echo "echo gcc.exe and cl.exe were not found in the PATH.  Make sure MinGW or Visual C++ Express is installed." >> gsc-cc-o.bat; \

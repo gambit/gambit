@@ -20,7 +20,7 @@ for VARIANT in mingw visualc; do
   cd "$rootfromhere"
 
   case "$VARIANT" in
-      mingw) CONFIG_CC="gcc"
+      mingw) CONFIG_CC="gcc -mno-cygwin"
              RUN_TESTS=1
              ;;
     visualc) CONFIG_CC="cl.exe"
