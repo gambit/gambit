@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-04-01 12:37:34 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-04-13 00:56:21 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1723,8 +1723,7 @@
 
 (define-prim (##make-interp-procedure proc)
   (let* ((cte
-          (##cte-frame (##make-top-cte)
-                       (##cons (macro-self-var) '(arguments))))
+          (##make-top-cte))
          (src
           #f)
          (stepper
