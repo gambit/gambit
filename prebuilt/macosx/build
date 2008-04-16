@@ -31,7 +31,7 @@ for VARIANT in intel32 intel64 G3 G4 G5 universal; do
                ;;
            G3) CONFIG_ARCH="-arch ppc750"
                CONFIG_HOST="--host=powerpc-apple-darwin9"
-               RUN_TESTS=1
+               RUN_TESTS=0
                ;;
            G4) CONFIG_ARCH="-arch ppc7400"
                CONFIG_HOST="--host=powerpc-apple-darwin9"
