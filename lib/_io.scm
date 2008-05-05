@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-05-05 15:25:36 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-05-05 15:38:08 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4341,7 +4341,10 @@
           start-syntax
           #t))))
    open-input-file
-   path))
+   (##list path:
+           path
+           input-eol-encoding:
+           'cr-lf)))
 
 (define-prim (##read-all-as-a-begin-expr-from-port
               port
