@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-04-01 12:39:57 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-05-05 15:25:36 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -9474,11 +9474,11 @@
     (let ((n (string-length str)))
       (let loop ((i (- n 1)))
         (cond ((< i 0)
-               (##wrap-op1 re
-                           start-pos
-                           (macro-readtable-sharp-seq-keyword
-                            (macro-readenv-readtable re))
-                           (- n 1)))
+               (##wrap-op1* re
+                            start-pos
+                            (macro-readtable-sharp-seq-keyword
+                             (macro-readenv-readtable re))
+                            (- n 1)))
               ((char=? #\# (string-ref str i))
                (loop (- i 1)))
               (else
@@ -9614,11 +9614,11 @@
                         (not (eq? c #\=)))
                    (not (macro-readtable-sharing-allowed?
                          (macro-readenv-readtable re))))
-               (##wrap-op1 re
-                           start-pos
-                           (macro-readtable-sharp-num-keyword
-                            (macro-readenv-readtable re))
-                           n))
+               (##wrap-op1* re
+                            start-pos
+                            (macro-readtable-sharp-num-keyword
+                             (macro-readenv-readtable re))
+                            n))
               ((eq? c #\#)
                (macro-read-next-char-or-eof re) ;; skip #\#
                (##label-marker-reference re n))
@@ -9651,6 +9651,9 @@
 
 (define (##wrap-op1 re pos op arg1)
   (##wrap-op re pos op (list arg1)))
+
+(define (##wrap-op1* re pos op arg1)
+  (##wrap-op re pos op (list (##wrap re pos arg1))))
 
 (define (##wrap-op2 re pos op arg1 arg2)
   (##wrap-op re pos op (list arg1 arg2)))
@@ -9743,11 +9746,11 @@
                 ((##read-string=? re s "#return")
                  (deserialize re ##implode-return))
                 ((##read-string=? re s "#")
-                 (##wrap-op1 re
-                             start-pos
-                             (macro-readtable-sharp-seq-keyword
-                              (macro-readenv-readtable re))
-                             0))
+                 (##wrap-op1* re
+                              start-pos
+                              (macro-readtable-sharp-seq-keyword
+                               (macro-readenv-readtable re))
+                              0))
                 (else
                  (##raise-datum-parsing-exception 'invalid-token re)
                  (macro-readenv-filepos-set! re old-pos) ;; restore pos
@@ -10839,10 +10842,10 @@
              (invalid-infix-syntax re)
              (cont re
                    tok
-                   (##wrap-op1 re
-                               start-pos
-                               'six.prefix
-                               (##wrap re start-pos 'error))))
+                   (##wrap-op1* re
+                                start-pos
+                                'six.prefix
+                                'error)))
             (else
              (let ((identifier (macro-readenv-wrap re tok)))
                (cont re
