@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-05-05 15:32:56 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-05-06 14:25:40 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1963,9 +1963,7 @@
                       (##list path:
                               (in-homedir ".gambc_history")
                               char-encoding:
-                              'UTF-8
-                              input-eol-encoding:
-                              'cr-lf)))
+                              'UTF-8)))
 
                  (##open-file-generic
                   (macro-direction-in)
