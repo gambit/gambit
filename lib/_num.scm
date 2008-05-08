@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-04-06 15:59:23 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-05-08 13:19:30 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
@@ -1364,7 +1364,7 @@
     ;; multiplication and fast division with Newton's method for
     ;; finding inverses.
 
-    ;; Niels Möller has written two papers about an improved version
+    ;; Niels Mo"ller has written two papers about an improved version
     ;; of this algorithm.
 
     ;; assumes u and v are nonnegative exact ints
@@ -5701,7 +5701,7 @@ ___RESULT = result;
     ;; After years of fiddling around, I finally understook the
     ;; weighted FT transform and the so-called right-angle
     ;; convolution.  See section 8.3.2 the book "Algorithms for
-    ;; Programmers" by Jörg Arndt, currently available at
+    ;; Programmers" by Jo"rg Arndt, currently available at
     ;; www.jjj.de/fxt/fxtbook.pdf for a description of the right-angle
     ;; transform.  It's also covered in "Prime Numbers" by Crandall
     ;; and Pomerance, and was originally introduced in 1994 by
