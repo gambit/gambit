@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-05-08 16:47:06 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-05-12 11:24:27 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,7 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1210601268
+#define ___STAMP 1210606068
 
 /*---------------------------------------------------------------------------*/
 
@@ -1373,7 +1373,9 @@
 /*---------------------------------------------------------------------------*/
 
 #ifdef __GNUC__
+#if __GNUC__ >= 3
 #define ___USE_builtin_expect
+#endif
 #endif
 
 #ifdef ___USE_builtin_expect
