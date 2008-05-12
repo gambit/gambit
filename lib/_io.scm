@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-05-05 15:38:08 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-05-09 00:46:21 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -152,11 +152,13 @@
           (macro-make-psettings-options
            (macro-default-readtable)
            (macro-default-char-encoding)
+           (macro-default-char-encoding-errors)
            (macro-default-eol-encoding)
            (macro-default-buffering)
            (macro-default-permanent-close))
           (macro-make-psettings-options
            (macro-default-readtable)
+           (macro-default-char-encoding-errors)
            (macro-default-char-encoding)
            (macro-default-eol-encoding)
            (macro-default-buffering)
@@ -251,6 +253,14 @@
 ;;           (macro-char-encoding-wchar))
 ;;          ((##eq? value 'native)
 ;;           (macro-char-encoding-native))
+          (else
+           #f)))
+
+  (define (char-encoding-errors value)
+    (cond ((##eq? value #t)
+           (macro-char-encoding-errors-on))
+          ((##eq? value #f)
+           (macro-char-encoding-errors-off))
           (else
            #f)))
 
@@ -561,6 +571,47 @@
                                      (macro-psettings-roptions psettings)
                                      x)
                                     (macro-psettings-options-char-encoding-set!
+                                     (macro-psettings-woptions psettings)
+                                     x)
+                                    (loop rest2))
+                                  (error name))))
+
+                             ((and (##eq? name 'input-char-encoding-errors:)
+                                   (##not
+                                    (##eq?
+                                     (macro-psettings-direction psettings)
+                                     (macro-direction-out))))
+                              (let ((x (char-encoding-errors value)))
+                                (if x
+                                  (begin
+                                    (macro-psettings-options-char-encoding-errors-set!
+                                     (macro-psettings-roptions psettings)
+                                     x)
+                                    (loop rest2))
+                                  (error name))))
+
+                             ((and (##eq? name 'output-char-encoding-errors:)
+                                   (##not
+                                    (##eq?
+                                     (macro-psettings-direction psettings)
+                                     (macro-direction-in))))
+                              (let ((x (char-encoding-errors value)))
+                                (if x
+                                  (begin
+                                    (macro-psettings-options-char-encoding-errors-set!
+                                     (macro-psettings-woptions psettings)
+                                     x)
+                                    (loop rest2))
+                                  (error name))))
+
+                             ((##eq? name 'char-encoding-errors:)
+                              (let ((x (char-encoding-errors value)))
+                                (if x
+                                  (begin
+                                    (macro-psettings-options-char-encoding-errors-set!
+                                     (macro-psettings-roptions psettings)
+                                     x)
+                                    (macro-psettings-options-char-encoding-errors-set!
                                      (macro-psettings-woptions psettings)
                                      x)
                                     (loop rest2))
@@ -927,39 +978,50 @@
         (eol-encoding
          (macro-psettings-options-eol-encoding options))
         (char-encoding
-         (macro-psettings-options-char-encoding options)))
+         (macro-psettings-options-char-encoding options))
+        (char-encoding-errors
+         (macro-psettings-options-char-encoding-errors options)))
     (##fixnum.+
-     (##fixnum.* (macro-char-encoding-shift)
-                 (if (##fixnum.= char-encoding (macro-default-char-encoding))
-                   (##fixnum.modulo
-                    (##fixnum.quotient default-options
-                                       (macro-char-encoding-shift))
-                    (macro-char-encoding-range))
-                   char-encoding))
      (##fixnum.+
-      (##fixnum.* (macro-eol-encoding-shift)
-                  (if (##fixnum.= eol-encoding (macro-default-eol-encoding))
-                    (##fixnum.modulo
-                     (##fixnum.quotient default-options
-                                        (macro-eol-encoding-shift))
-                     (macro-eol-encoding-range))
-                    eol-encoding))
-      (##fixnum.+
-       (##fixnum.* (macro-open-state-shift)
-                   (##fixnum.modulo
-                    (##fixnum.quotient default-options
-                                       (macro-open-state-shift))
-                    (macro-open-state-range)))
-       (##fixnum.+
-        (##fixnum.* (macro-permanent-close-shift)
-                    permanent-close)
-        (##fixnum.* (macro-buffering-shift)
-                    (if (##fixnum.= buffering (macro-default-buffering))
+      (##fixnum.* (macro-char-encoding-shift)
+                  (if (##fixnum.= char-encoding (macro-default-char-encoding))
                       (##fixnum.modulo
                        (##fixnum.quotient default-options
-                                          (macro-buffering-shift))
-                       (macro-buffering-range))
-                      buffering))))))))
+                                          (macro-char-encoding-shift))
+                       (macro-char-encoding-range))
+                      char-encoding))
+      (##fixnum.* (macro-char-encoding-errors-shift)
+                  (if (##fixnum.= char-encoding-errors (macro-default-char-encoding-errors))
+                      (##fixnum.modulo
+                       (##fixnum.quotient default-options
+                                          (macro-char-encoding-errors-shift))
+                       (macro-char-encoding-errors-range))
+                      char-encoding-errors))
+      (##fixnum.+
+       (##fixnum.+
+        (##fixnum.* (macro-eol-encoding-shift)
+                    (if (##fixnum.= eol-encoding (macro-default-eol-encoding))
+                        (##fixnum.modulo
+                         (##fixnum.quotient default-options
+                                            (macro-eol-encoding-shift))
+                         (macro-eol-encoding-range))
+                        eol-encoding))
+        (##fixnum.+
+         (##fixnum.* (macro-open-state-shift)
+                     (##fixnum.modulo
+                      (##fixnum.quotient default-options
+                                         (macro-open-state-shift))
+                      (macro-open-state-range)))
+         (##fixnum.+
+          (##fixnum.* (macro-permanent-close-shift)
+                      permanent-close)
+          (##fixnum.* (macro-buffering-shift)
+                      (if (##fixnum.= buffering (macro-default-buffering))
+                          (##fixnum.modulo
+                           (##fixnum.quotient default-options
+                                              (macro-buffering-shift))
+                           (macro-buffering-range))
+                          buffering))))))))))
 
 (define-prim (##psettings->device-flags psettings)
   (let ((direction
@@ -3169,6 +3231,9 @@
   (input-char-encoding:
    output-char-encoding:
    char-encoding:
+   input-char-encoding-errors:
+   output-char-encoding-errors:
+   char-encoding-errors:
    input-eol-encoding:
    output-eol-encoding:
    eol-encoding:
@@ -5010,6 +5075,9 @@
     '(input-char-encoding:
       output-char-encoding:
       char-encoding:
+      input-char-encoding-errors:
+      output-char-encoding-errors:
+      char-encoding-errors:
       input-eol-encoding:
       output-eol-encoding:
       eol-encoding:
@@ -5314,6 +5382,9 @@
      input-char-encoding:
      output-char-encoding:
      char-encoding:
+     input-char-encoding-errors:
+     output-char-encoding-errors:
+     char-encoding-errors:
      input-eol-encoding:
      output-eol-encoding:
      eol-encoding:
@@ -5622,6 +5693,9 @@
       input-char-encoding:
       output-char-encoding:
       char-encoding:
+      input-char-encoding-errors:
+      output-char-encoding-errors:
+      char-encoding-errors:
       input-eol-encoding:
       output-eol-encoding:
       eol-encoding:
@@ -5644,6 +5718,9 @@
       input-char-encoding:
       output-char-encoding:
       char-encoding:
+      input-char-encoding-errors:
+      output-char-encoding-errors:
+      char-encoding-errors:
       input-eol-encoding:
       output-eol-encoding:
       eol-encoding:
@@ -6450,6 +6527,9 @@
      input-char-encoding:
      output-char-encoding:
      char-encoding:
+     input-char-encoding-errors:
+     output-char-encoding-errors:
+     char-encoding-errors:
      input-eol-encoding:
      output-eol-encoding:
      eol-encoding:

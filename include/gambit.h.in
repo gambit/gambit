@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-04-16 14:17:26 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-05-08 16:47:06 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,7 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1210267613
+#define ___STAMP 1210601268
 
 /*---------------------------------------------------------------------------*/
 
@@ -7997,6 +7997,10 @@ typedef struct ___setup_params_struct
 #define ___CHAR_ENCODING_WCHAR      (14<<0)
 #define ___CHAR_ENCODING_NATIVE     (15<<0)
 
+#define ___CHAR_ENCODING_SUPPORTS_BMP(x) \
+((x) >= ___CHAR_ENCODING_UTF_8 || \
+ (x) <= ___CHAR_ENCODING_UCS_4LE)
+
 #ifdef ___BIG_ENDIAN
 #define ___CHAR_ENCODING_U8  ___CHAR_ENCODING_ISO_8859_1
 #define ___CHAR_ENCODING_U16 ___CHAR_ENCODING_UCS_2BE
@@ -8007,23 +8011,28 @@ typedef struct ___setup_params_struct
 #define ___CHAR_ENCODING_U32 ___CHAR_ENCODING_UCS_4LE
 #endif
 
-#define ___EOL_ENCODING(x)      ((x)&(7<<4))
-#define ___EOL_ENCODING_MASK(x) ((x)&~(7<<4))
-#define ___EOL_ENCODING_LF      (1<<4)
-#define ___EOL_ENCODING_CR      (2<<4)
-#define ___EOL_ENCODING_CRLF    (3<<4)
+#define ___CHAR_ENCODING_ERRORS(x)      ((x)&(3<<4))
+#define ___CHAR_ENCODING_ERRORS_MASK(x) ((x)&~(3<<4))
+#define ___CHAR_ENCODING_ERRORS_ON      (1<<4)
+#define ___CHAR_ENCODING_ERRORS_OFF     (2<<4)
 
-#define ___BUFFERING(x)      ((x)&(3<<12))
-#define ___BUFFERING_MASK(x) ((x)&~(3<<12))
-#define ___NO_BUFFERING      (1<<12)
-#define ___LINE_BUFFERING    (2<<12)
-#define ___FULL_BUFFERING    (3<<12)
-#define ___LINE_BUFFERED(x)  ((x)<___FULL_BUFFERING)
+#define ___EOL_ENCODING(x)      ((x)&(3<<6))
+#define ___EOL_ENCODING_MASK(x) ((x)&~(3<<6))
+#define ___EOL_ENCODING_LF      (1<<6)
+#define ___EOL_ENCODING_CR      (2<<6)
+#define ___EOL_ENCODING_CRLF    (3<<6)
 
-#define ___TERMINAL_LINE_EDITING(x)      ((x)&(3<<14))
-#define ___TERMINAL_LINE_EDITING_MASK(x) ((x)&~(3<<14))
-#define ___TERMINAL_LINE_EDITING_ON      (1<<14)
-#define ___TERMINAL_LINE_EDITING_OFF     (2<<14)
+#define ___BUFFERING(x)      ((x)&(3<<8))
+#define ___BUFFERING_MASK(x) ((x)&~(3<<8))
+#define ___NO_BUFFERING      (1<<8)
+#define ___LINE_BUFFERING    (2<<8)
+#define ___FULL_BUFFERING    (3<<8)
+#define ___FULLY_BUFFERED(x)  (___BUFFERING(x)>=___FULL_BUFFERING)
+
+#define ___TERMINAL_LINE_EDITING(x)      ((x)&(3<<16))
+#define ___TERMINAL_LINE_EDITING_MASK(x) ((x)&~(3<<16))
+#define ___TERMINAL_LINE_EDITING_ON      (1<<16)
+#define ___TERMINAL_LINE_EDITING_OFF     (2<<16)
 
 #define ___FILE_SETTINGS_INITIAL 0
 #define ___TERMINAL_SETTINGS_INITIAL 0

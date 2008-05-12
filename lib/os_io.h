@@ -1,4 +1,4 @@
-/* File: "os_io.h", Time-stamp: <2008-02-26 10:05:01 feeley> */
+/* File: "os_io.h", Time-stamp: <2008-05-08 15:01:44 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -36,10 +36,10 @@ typedef struct ___device_group_struct
 #define ___STRING_KIND            (___CHARACTER_KIND+16384)
 #define ___U8VECTOR_KIND          (___BYTE_KIND+32768)
 
-#define ___OPEN_STATE(x)      ((x)&(1<<9))
-#define ___OPEN_STATE_MASK(x) ((x)&~(1<<9))
-#define ___OPEN_STATE_OPEN    (0<<9)
-#define ___OPEN_STATE_CLOSED  (1<<9)
+#define ___OPEN_STATE(x)      ((x)&(1<<12))
+#define ___OPEN_STATE_MASK(x) ((x)&~(1<<12))
+#define ___OPEN_STATE_OPEN    (0<<12)
+#define ___OPEN_STATE_CLOSED  (1<<12)
 
 #define ___DIRECTION_RD 1
 #define ___DIRECTION_WR 2
@@ -54,8 +54,8 @@ typedef struct ___device_group_struct
 #define ___SELECT_PASS_2     2
 #define ___SELECT_PASS_3     3
 
-#define ___STREAM_OPTIONS(ice,iee,ib,oce,oee,ob) \
-(ice+iee+ib)+((oce+oee+ob)<<14)
+#define ___STREAM_OPTIONS(icee,ice,iee,ib,ocee,oce,oee,ob)      \
+(icee+ice+iee+ib)+((ocee+oce+oee+ob)<<14)
 #define ___STREAM_OPTIONS_INPUT(options) ((options)&((1<<14)-1))
 #define ___STREAM_OPTIONS_OUTPUT(options) (((options)>>14)&((1<<14)-1))
 

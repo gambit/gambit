@@ -1699,6 +1699,11 @@ Unbuffered I/O.
 Line buffered I/O (@samp{n} for ``at newline'').
 @item f
 Fully buffered I/O.
+@item r
+Illegal character encoding is treated as an error (exception raised).
+@item R
+Silently replace illegal character encodings with Unicode character #xfffd
+(replacement character).
 @item e
 Enable line-editing (applies to terminals only).
 @item E
@@ -10575,6 +10580,17 @@ UCS-4 character encoding with big-endian endianness.  It is like
 @code{UCS-4LE} except the endianness is set to big-endian.
 
 @end table
+
+@item
+@code{char-encoding-errors:} ( @code{#f} | @code{#t} )
+
+This setting controls whether illegal character encodings are silently
+replaced with the Unicode character #xfffd (replacement character) or
+raise an error.  To set each direction separately the keywords
+@code{input-char-encoding-errors:} and
+@code{output-char-encoding-errors:} must be used instead of
+@code{char-encoding-errors:}.  The default value of this setting is
+@code{#t}.
 
 @item
 @code{eol-encoding:} @var{encoding}

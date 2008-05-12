@@ -1,4 +1,4 @@
-/* File: "c_intf.h", Time-stamp: <2008-02-14 11:20:52 feeley> */
+/* File: "c_intf.h", Time-stamp: <2008-05-08 16:48:58 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -101,6 +101,7 @@ extern ___SCMOBJ err_code_from_char_encoding
 #define ___UNICODE_8           56
 #define ___UNICODE_9           57
 #define ___UNICODE_SEMICOLON   59
+#define ___UNICODE_QUESTION    63
 #define ___UNICODE_AT          64
 #define ___UNICODE_UPPER_A     65
 #define ___UNICODE_LOWER_A     97

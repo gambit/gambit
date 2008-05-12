@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-03-10 15:26:47 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-05-08 14:49:01 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -7671,9 +7671,13 @@ ___HIDDEN ___SCMOBJ ___device_tty_default_options_virt
 ___device_stream *self;)
 {
   int settings = ___setup_params.terminal_settings;
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
   int char_encoding = ___CHAR_ENCODING(settings);
   int eol_encoding = ___EOL_ENCODING(settings);
   int buffering = ___BUFFERING(settings);
+
+  if (char_encoding_errors == 0)
+    char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
 
   switch (char_encoding)
     {
@@ -7724,9 +7728,11 @@ ___device_stream *self;)
 
 #endif
 
-  return ___FIX(___STREAM_OPTIONS(char_encoding,
+  return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
+                                  char_encoding,
                                   eol_encoding,
                                   buffering,
+                                  char_encoding_errors,
                                   char_encoding,
                                   eol_encoding,
                                   buffering));

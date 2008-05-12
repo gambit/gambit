@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2008-02-11 18:45:19 feeley>
+;;; File: "_io#.scm", Time-stamp: <2008-05-08 16:59:39 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -691,6 +691,7 @@
 
   readtable
   char-encoding
+  char-encoding-errors
   eol-encoding
   buffering
   permanent-close
@@ -717,42 +718,20 @@
 (##define-macro (macro-char-encoding-wchar)      14)
 (##define-macro (macro-char-encoding-native)     15)
 
-(##define-macro (macro-eol-encoding-shift)   16)
-(##define-macro (macro-eol-encoding-range)   8)
+(##define-macro (macro-char-encoding-errors-shift)   16)
+(##define-macro (macro-char-encoding-errors-range)   4)
+(##define-macro (macro-default-char-encoding-errors) 0)
+(##define-macro (macro-char-encoding-errors-on)      1)
+(##define-macro (macro-char-encoding-errors-off)     2)
+
+(##define-macro (macro-eol-encoding-shift)   64)
+(##define-macro (macro-eol-encoding-range)   4)
 (##define-macro (macro-default-eol-encoding) 0)
 (##define-macro (macro-eol-encoding-lf)      1)
 (##define-macro (macro-eol-encoding-cr)      2)
 (##define-macro (macro-eol-encoding-crlf)    3)
 
-(##define-macro (macro-decode-state-shift)  128)
-(##define-macro (macro-decode-state-range)  3)
-(##define-macro (macro-decode-state-none)   0)
-(##define-macro (macro-decode-state-lf)     1)
-(##define-macro (macro-decode-state-cr)     2)
-
-(##define-macro (macro-open-state-shift)  512)
-(##define-macro (macro-open-state-range)  2)
-(##define-macro (macro-open-state-open)   0)
-(##define-macro (macro-open-state-closed) 1)
-
-(##define-macro (macro-closed? options)
-  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 512) 0)))
-
-(##define-macro (macro-close! options)
-  `(##fixnum.bitwise-ior ,options 512))
-
-(##define-macro (macro-unclose! options)
-  `(##fixnum.bitwise-and ,options -513))
-
-(##define-macro (macro-permanent-close-shift)  1024)
-(##define-macro (macro-permanent-close-range)  2)
-(##define-macro (macro-permanent-close-no)     0)
-(##define-macro (macro-permanent-close-yes)    1)
-
-(##define-macro (macro-perm-close? options)
-  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 1024) 0)))
-
-(##define-macro (macro-buffering-shift)   4096)
+(##define-macro (macro-buffering-shift)   256)
 (##define-macro (macro-buffering-range)   4)
 (##define-macro (macro-default-buffering) 0)
 (##define-macro (macro-no-buffering)      1)
@@ -760,10 +739,38 @@
 (##define-macro (macro-full-buffering)    3)
 
 (##define-macro (macro-unbuffered? options)
-  `(##fixnum.< ,options 8192))
+  `(##fixnum.< (##fixnum.bitwise-and ,options 1023) 512))
 
 (##define-macro (macro-fully-buffered? options)
-  `(##not (##fixnum.< ,options 12288)))
+  `(##not (##fixnum.< (##fixnum.bitwise-and ,options 1023) 768)))
+
+(##define-macro (macro-decode-state-shift)  1024)
+(##define-macro (macro-decode-state-range)  4)
+(##define-macro (macro-decode-state-none)   0)
+(##define-macro (macro-decode-state-lf)     1)
+(##define-macro (macro-decode-state-cr)     2)
+
+(##define-macro (macro-open-state-shift)  4096)
+(##define-macro (macro-open-state-range)  2)
+(##define-macro (macro-open-state-open)   0)
+(##define-macro (macro-open-state-closed) 1)
+
+(##define-macro (macro-closed? options)
+  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 4096) 0)))
+
+(##define-macro (macro-close! options)
+  `(##fixnum.bitwise-ior ,options 4096))
+
+(##define-macro (macro-unclose! options)
+  `(##fixnum.bitwise-and ,options -4097))
+
+(##define-macro (macro-permanent-close-shift)  8192)
+(##define-macro (macro-permanent-close-range)  2)
+(##define-macro (macro-permanent-close-no)     0)
+(##define-macro (macro-permanent-close-yes)    1)
+
+(##define-macro (macro-perm-close? options)
+  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 8192) 0)))
 
 (##define-macro (macro-direction-shift) 16)
 (##define-macro (macro-direction-in)    1)

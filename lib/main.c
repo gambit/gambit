@@ -1,6 +1,6 @@
-/* File: "main.c", Time-stamp: <2008-02-15 10:19:46 feeley> */
+/* File: "main.c", Time-stamp: <2008-05-09 00:21:43 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit-C system */
 
@@ -64,6 +64,7 @@ int debug_settings;)
         "  A|1|2|4|6|8|U  character encoding (ASCII|ISO-8859-1|UCS-2/4|UTF-16/8|UTF)\n"
         "  l|c|cl         end-of-line encoding (LF|CR|CR-LF)\n"
         "  u|n|f          buffering (unbuffered|newline buffered|fully buffered)\n"
+        "  r|R            enable character encoding errors (on|off)\n"
         "  e|E            [for terminals only] enable line-editing (on|off)\n";
       msgs[1] = 0;
       ___display_error (msgs);
@@ -488,6 +489,12 @@ ___mod_or_lnk (*linker)();)
                                 break;
                       case 'f': settings = ___BUFFERING_MASK(settings)
                                            |___FULL_BUFFERING;
+                                break;
+                      case 'r': settings = ___CHAR_ENCODING_ERRORS_MASK(settings)
+                                           |___CHAR_ENCODING_ERRORS_ON;
+                                break;
+                      case 'R': settings = ___CHAR_ENCODING_ERRORS_MASK(settings)
+                                           |___CHAR_ENCODING_ERRORS_OFF;
                                 break;
                       case 'e':
                       case 'E': if (*s != 't')

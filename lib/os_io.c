@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-03-04 07:56:37 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-05-09 00:29:23 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -2153,13 +2153,16 @@ ___HIDDEN ___SCMOBJ ___device_serial_default_options_virt
         (self)
 ___device_stream *self;)
 {
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
   int char_encoding = ___CHAR_ENCODING_ISO_8859_1;
   int eol_encoding = ___EOL_ENCODING_LF;
   int buffering = ___FULL_BUFFERING;
 
-  return ___FIX(___STREAM_OPTIONS(char_encoding,
+  return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
+                                  char_encoding,
                                   eol_encoding,
                                   buffering,
+                                  char_encoding_errors,
                                   char_encoding,
                                   eol_encoding,
                                   buffering));
@@ -2727,13 +2730,16 @@ ___HIDDEN ___SCMOBJ ___device_process_default_options_virt
         (self)
 ___device_stream *self;)
 {
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
   int char_encoding = ___CHAR_ENCODING_ISO_8859_1;
   int eol_encoding = ___EOL_ENCODING_LF;
   int buffering = ___FULL_BUFFERING;
 
-  return ___FIX(___STREAM_OPTIONS(char_encoding,
+  return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
+                                  char_encoding,
                                   eol_encoding,
                                   buffering,
+                                  char_encoding_errors,
                                   char_encoding,
                                   eol_encoding,
                                   buffering));
@@ -3328,13 +3334,16 @@ ___HIDDEN ___SCMOBJ ___device_tcp_client_default_options_virt
         (self)
 ___device_stream *self;)
 {
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
   int char_encoding = ___CHAR_ENCODING_ISO_8859_1;
   int eol_encoding = ___EOL_ENCODING_LF;
   int buffering = ___FULL_BUFFERING;
 
-  return ___FIX(___STREAM_OPTIONS(char_encoding,
+  return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
+                                  char_encoding,
                                   eol_encoding,
                                   buffering,
+                                  char_encoding_errors,
                                   char_encoding,
                                   eol_encoding,
                                   buffering));
@@ -4879,12 +4888,19 @@ ___HIDDEN ___SCMOBJ ___device_file_default_options_virt
 ___device_stream *self;)
 {
   int settings = ___setup_params.file_settings;
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
   int char_encoding = ___CHAR_ENCODING(settings);
   int eol_encoding = ___EOL_ENCODING(settings);
   int buffering = ___BUFFERING(settings);
 
-  if (char_encoding == 0) char_encoding = ___CHAR_ENCODING_ISO_8859_1;
-  if (eol_encoding == 0) eol_encoding = ___EOL_ENCODING_LF;
+  if (char_encoding_errors == 0)
+    char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
+
+  if (char_encoding == 0)
+    char_encoding = ___CHAR_ENCODING_ISO_8859_1;
+
+  if (eol_encoding == 0)
+    eol_encoding = ___EOL_ENCODING_LF;
 
 #ifdef USE_WIN32
 
@@ -4900,22 +4916,26 @@ ___device_stream *self;)
 
 #else
 
-  if (buffering == 0) buffering = ___FULL_BUFFERING;
+  if (buffering == 0)
+    buffering = ___FULL_BUFFERING;
 
 #endif
 
 #ifdef ___DEBUG
 
-  ___printf ("file char_encoding=%d   eol_encoding=%d   buffering=%d\n",
+  ___printf ("file char_encoding_errors=%d   char_encoding=%d   eol_encoding=%d   buffering=%d\n",
+             char_encoding_errors,
              char_encoding,
              eol_encoding,
              buffering);
 
 #endif
 
-  return ___FIX(___STREAM_OPTIONS(char_encoding,
+  return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
+                                  char_encoding,
                                   eol_encoding,
                                   buffering,
+                                  char_encoding_errors,
                                   char_encoding,
                                   eol_encoding,
                                   buffering));
