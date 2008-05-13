@@ -1,4 +1,4 @@
-/* File: "c_intf.h", Time-stamp: <2008-05-08 16:48:58 feeley> */
+/* File: "c_intf.h", Time-stamp: <2008-05-13 15:25:14 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -37,11 +37,11 @@ extern ___UCS_4 ___UTF_8_get
 #define ___INCOMPLETE_CHAR 1
 #define ___ILLEGAL_CHAR    2
 
-#define ___DECODE_STATE(x)      ((x)&(3<<7))
-#define ___DECODE_STATE_MASK(x) ((x)&~(3<<7))
-#define ___DECODE_STATE_NONE    (0<<7)
-#define ___DECODE_STATE_LF      (1<<7)
-#define ___DECODE_STATE_CR      (2<<7)
+#define ___DECODE_STATE(x)      ((x)&(3<<10))
+#define ___DECODE_STATE_MASK(x) ((x)&~(3<<10))
+#define ___DECODE_STATE_NONE    (0<<10)
+#define ___DECODE_STATE_LF      (1<<10)
+#define ___DECODE_STATE_CR      (2<<10)
 
 
 #define char_EOL ___UNICODE_LINEFEED
