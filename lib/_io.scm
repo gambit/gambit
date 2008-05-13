@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-05-09 00:46:21 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-05-13 08:46:36 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -7028,6 +7028,16 @@
            (##eval '(##apply main (##cdr ##processed-command-line)))
            (##exit)))))
 
+(##define-macro (macro-ctrl-char? n)
+  `(or (##fixnum.< ,n 32) (##fixnum.= ,n 127)))
+
+(##define-macro (macro-gt-max-unescaped-char? rt n)
+  `(##fixnum.< (macro-readtable-max-unescaped-char ,rt) ,n))
+
+(##define-macro (macro-must-escape-char? rt n)
+  `(or (macro-ctrl-char? ,n)
+       (macro-gt-max-unescaped-char? ,rt ,n)))
+
 ;;;----------------------------------------------------------------------------
 
 (begin
@@ -7302,11 +7312,11 @@
     (let loop ((i (##fixnum.- n 1)))
       (if (##fixnum.< i 0)
         #f
-        (let ((c (##string-ref str i)))
-          (or (##readtable-char-delimiter? (macro-writeenv-readtable we) c)
-              (##not (##char=? c (##readtable-convert-case
-                                  (macro-writeenv-readtable we)
-                                  c)))
+        (let ((c (##string-ref str i))
+              (rt (macro-writeenv-readtable we)))
+          (or (macro-must-escape-char? rt (##fixnum.<-char c))
+              (##readtable-char-delimiter? rt c)
+              (##not (##char=? c (##readtable-convert-case rt c)))
               (loop (##fixnum.- i 1))))))))
 
 (define-prim (##wr-keyword we obj)
@@ -7704,11 +7714,9 @@
        (if x
          (##wr-str we (##car x))
          (let ((n (##fixnum.<-char obj)))
-           (cond ((and (##not (##fixnum.< n 32))
-                       (##not (##fixnum.= n 127))
-                       (##not (##fixnum.< (macro-readtable-max-unescaped-char
-                                           (macro-writeenv-readtable we))
-                                          n)))
+           (cond ((##not (macro-must-escape-char?
+                          (macro-writeenv-readtable we)
+                          n))
                   (##wr-ch we obj))
                  ((##fixnum.< #xffff n)
                   (##wr-ch we #\U)
@@ -7778,9 +7786,7 @@
               (macro-readtable-escape-ctrl-chars?
                (macro-writeenv-readtable we))
               (or x
-                  (##fixnum.< (macro-readtable-max-unescaped-char
-                               (macro-writeenv-readtable we))
-                              n)
+                  (macro-gt-max-unescaped-char? (macro-writeenv-readtable we) n)
                   (and escape-digit-limit
                        (##fixnum.< n 128)
                        (##not (##char=? c #\#)) ;; avoid treating "#" like "0"
