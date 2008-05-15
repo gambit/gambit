@@ -1,4 +1,4 @@
-/* File: "c_intf.c", Time-stamp: <2008-05-08 17:11:04 feeley> */
+/* File: "c_intf.c", Time-stamp: <2008-05-15 10:45:45 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -702,7 +702,7 @@ int *decoding_state;)
 
   /* fill character buffer as much as possible */
 
-  while (clo < chi && blo < bhi)
+  if (clo < chi && blo < bhi)
     {
       /* there is still some space in the character buffer and byte buffer */
 
@@ -1161,21 +1161,6 @@ int *decoding_state;)
                             0xffffffff,
                             get_UCS_4LE);
         }
-
-      if (result == ___ILLEGAL_CHAR &&
-          ___CHAR_ENCODING_ERRORS(state) == ___CHAR_ENCODING_ERRORS_OFF)
-        {
-#ifdef ___CHAR_ENCODING_ERROR_FORCE_REPLACEMENT_IN_NORMAL_RANGE
-          if (!___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(state)))
-            *clo++ = ___UNICODE_QUESTION;
-          else
-#else
-            *clo++ = ___UNICODE_REPLACEMENT;
-#endif
-          result = ___CONVERSION_DONE;
-        }
-      else
-        break;
     }
 
   /*

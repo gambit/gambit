@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-05-12 11:24:27 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-05-15 11:35:26 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,7 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1210706839
+#define ___STAMP 1210866443
 
 /*---------------------------------------------------------------------------*/
 
@@ -8000,7 +8000,7 @@ typedef struct ___setup_params_struct
 #define ___CHAR_ENCODING_NATIVE     (15<<0)
 
 #define ___CHAR_ENCODING_SUPPORTS_BMP(x) \
-((x) >= ___CHAR_ENCODING_UTF_8 || \
+((x) >= ___CHAR_ENCODING_UTF_8 && \
  (x) <= ___CHAR_ENCODING_UCS_4LE)
 
 #ifdef ___BIG_ENDIAN

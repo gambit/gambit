@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-05-09 00:29:23 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-05-15 11:44:45 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -2423,7 +2423,7 @@ int direction;)
 
 #ifdef USE_WIN32
       if (d->hstdout != NULL)
-	CloseHandle (d->hstdout); /* ignore error */
+        CloseHandle (d->hstdout); /* ignore error */
 #endif
     }
 
@@ -2441,7 +2441,7 @@ int direction;)
 
 #ifdef USE_WIN32
       if (d->hstdin != NULL)
-	CloseHandle (d->hstdin); /* ignore error */
+        CloseHandle (d->hstdin); /* ignore error */
 #endif
     }
 
@@ -7861,6 +7861,8 @@ ___SCMOBJ eof;)
   int blo = ___INT(___FIELD(port,___PORT_BYTE_RLO));
   int bhi = ___INT(___FIELD(port,___PORT_BYTE_RHI));
   int options = ___INT(___FIELD(port,___PORT_ROPTIONS));
+  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED));
+  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED));
   int cbuf_avail;
   int bbuf_avail;
   int code;
@@ -7875,9 +7877,9 @@ ___SCMOBJ eof;)
   cbuf_avail = cend - chi;
   bbuf_avail = bhi - blo;
 
-  code = chars_from_bytes (___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED)) + chi,
+  code = chars_from_bytes (cbuf_ptr + chi,
                            &cbuf_avail,
-                           ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED)) + blo,
+                           bbuf_ptr + blo,
                            &bbuf_avail,
                            &options);
 
@@ -7889,9 +7891,28 @@ ___SCMOBJ eof;)
    */
 
   if (cbuf_avail == cend - chi)
-    if (code == ___ILLEGAL_CHAR ||
-        (code == ___INCOMPLETE_CHAR && eof != ___FAL))
-      e = err_code_from_char_encoding (___CHAR_ENCODING(options), 1, 0, 0);
+    {
+      if (code == ___INCOMPLETE_CHAR && eof != ___FAL)
+        {
+          bbuf_avail = 0; /* skip bytes up to end-of-file */
+          code = ___ILLEGAL_CHAR;
+        }
+
+      if (code == ___ILLEGAL_CHAR)
+        {
+          if (___CHAR_ENCODING_ERRORS(options) != ___CHAR_ENCODING_ERRORS_OFF)
+            e = err_code_from_char_encoding (___CHAR_ENCODING(options), 1, 0, 0);
+          else
+            {
+              if (___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(options)))
+                cbuf_ptr[chi] = ___UNICODE_REPLACEMENT;
+              else
+                cbuf_ptr[chi] = ___UNICODE_QUESTION;
+
+              cbuf_avail--;
+            }
+        }
+    }
 
   ___FIELD(port,___PORT_CHAR_RHI) = ___FIX(cend - cbuf_avail);
   ___FIELD(port,___PORT_BYTE_RLO) = ___FIX(bhi - bbuf_avail);
@@ -7914,6 +7935,8 @@ ___SCMOBJ port;)
   int bhi = ___INT(___FIELD(port,___PORT_BYTE_WHI));
   int bend = ___INT(___U8VECTORLENGTH(bbuf));
   int options = ___INT(___FIELD(port,___PORT_WOPTIONS));
+  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED));
+  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED));
   int cbuf_avail;
   int bbuf_avail;
   int code;
@@ -7921,9 +7944,9 @@ ___SCMOBJ port;)
   cbuf_avail = chi - clo;
   bbuf_avail = bend - bhi;
 
-  code = chars_to_bytes (___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED)) + clo,
+  code = chars_to_bytes (cbuf_ptr + clo,
                          &cbuf_avail,
-                         ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED)) + bhi,
+                         bbuf_ptr + bhi,
                          &bbuf_avail,
                          &options);
 
@@ -7937,8 +7960,31 @@ ___SCMOBJ port;)
   if (cbuf_avail == chi - clo)
     if (code == ___ILLEGAL_CHAR)
       {
-        cbuf_avail--; /* skip over the illegal character */
-        e = err_code_from_char_encoding (___CHAR_ENCODING(options), 0, 0, 0);
+        if (___CHAR_ENCODING_ERRORS(options) != ___CHAR_ENCODING_ERRORS_OFF)
+          e = err_code_from_char_encoding (___CHAR_ENCODING(options), 0, 0, 0);
+        else
+            {
+              ___C replacement_cbuf[1];
+              int replacement_cbuf_avail = 1;
+
+              if (___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(options)))
+                replacement_cbuf[0] = ___UNICODE_REPLACEMENT;
+              else
+                replacement_cbuf[0] = ___UNICODE_QUESTION;
+
+              code = chars_to_bytes (replacement_cbuf,
+                                     &replacement_cbuf_avail,
+                                     bbuf_ptr + bend - bbuf_avail,
+                                     &bbuf_avail,
+                                     &options);
+
+              /*
+               * skip over the illegal character if the replacement
+               * character was encoded
+               */
+
+              cbuf_avail = cbuf_avail - 1 + replacement_cbuf_avail;
+            }
       }
 
   ___FIELD(port,___PORT_CHAR_WLO) = ___FIX(chi - cbuf_avail);
