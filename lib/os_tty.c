@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-05-15 16:20:35 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-05-17 08:38:54 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -8039,6 +8039,7 @@ int direction;)
 ___tty_module ___tty_mod =
 {
   0,
+  NULL,
   NULL,
   NULL,
   NULL,

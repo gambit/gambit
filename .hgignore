@@ -125,6 +125,7 @@ gsi/gsi
 gsi/makefile
 include/config\.h
 include/gambit\.h
+include/gambit-not*\.h
 include/makefile
 lib/_eval\.c
 lib/_eval\.o

@@ -59,10 +59,10 @@ infodir=$(infodir) emacsdir=$(emacsdir)
 SUBDIRS = include lib gsi gsc bin misc doc tests examples prebuilt
 
 RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
-makefile.in configure.ac config.guess config.sub install-sh mkidirs \
+makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
 .hgignore .hgtags
 
-GENDISTFILES = configure
+GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
