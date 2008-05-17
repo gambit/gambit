@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2008-02-11 10:45:38 feeley>
+# makefile for Gambit-C library, Time-stamp: <2008-05-17 08:26:42 feeley>
 
 # Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -102,7 +102,7 @@ LIBRARY_LIBS =
 OBJECTS = $(LIBRARY_OBJECTS)
 
 RCFILES = makefile.in header.scm $(MODULES_SCM) sys.scm \
-$(LIBRARIES_SCM) $(NORMAL_SOURCES) 
+$(LIBRARIES_SCM) $(NORMAL_SOURCES) check___P check___P.st
 
 GENDISTFILES = $(MODULES_C) _gambc.c
 

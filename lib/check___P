@@ -1,0 +1,6 @@
+#! /bin/sh
+
+for f in *.c; do
+  echo ------------------ checking $f
+  states -f check___P.st $f
+done

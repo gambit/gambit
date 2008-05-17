@@ -1,6 +1,6 @@
-/* File: "os_files.c", Time-stamp: <2007-12-19 13:38:55 feeley> */
+/* File: "os_files.c", Time-stamp: <2008-05-17 08:19:31 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -225,7 +225,7 @@ ___HIDDEN ___SCMOBJ path_expand_to_absolute
 char *path;
 char *directory;
 char *new_path;
-long max_length)
+long max_length;)
 {
   ___BOOL result = 0;
   FSSpec spec;

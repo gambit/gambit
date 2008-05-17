@@ -1,6 +1,6 @@
-/* File: "os_base.c", Time-stamp: <2007-09-11 23:51:12 feeley> */
+/* File: "os_base.c", Time-stamp: <2008-05-17 08:22:56 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.
@@ -118,8 +118,9 @@ int ___printf
    ___P((const char *format,
          ...),
         (format,
-         ...)
-const char *format;)
+         va_alist)
+const char *format;
+va_dcl)
 {
   va_list ap;
   int result;
@@ -947,7 +948,7 @@ int code;)
 ___SCMOBJ ___err_code_from_OSErr_debug
    ___P((OSErr e,
          char *file,
-         int lineno)
+         int lineno),
         (e,
          lineno,
          file)

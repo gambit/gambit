@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-05-17 08:38:54 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-05-17 08:53:40 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -8267,6 +8267,7 @@ ___SCMOBJ ___os_device_tty_mode_set
          input_raw,
          output_raw,
          speed)
+___SCMOBJ dev;
 ___SCMOBJ input_allow_special;
 ___SCMOBJ input_echo;
 ___SCMOBJ input_raw;
