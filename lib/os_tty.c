@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-05-08 14:49:01 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-05-15 16:20:35 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -8304,7 +8304,8 @@ void tty_signal_handler (int sig)
       ___tty_mod.user_interrupt_handler ();
       break;
 
-    case SIGQUIT:
+    case SIGTERM:
+      ___tty_mod.terminate_interrupt_handler ();
       break;
 
     case SIGWINCH:
@@ -8340,14 +8341,18 @@ DWORD dwCtrlType;)
 {
   switch (dwCtrlType)
     {
-    case CTRL_C_EVENT:
-    case CTRL_BREAK_EVENT:
     case CTRL_CLOSE_EVENT:
     case CTRL_LOGOFF_EVENT:
     case CTRL_SHUTDOWN_EVENT:
+      ___tty_mod.terminate_interrupt_handler ();
+      break;
+    case CTRL_C_EVENT:
+    case CTRL_BREAK_EVENT:
       ___tty_mod.user_interrupt_handler ();
-      SetEvent (___io_mod.abort_select); /* ignore error */
+      break;
     }
+
+  SetEvent (___io_mod.abort_select); /* ignore error */
 
   return TRUE;
 
@@ -8389,9 +8394,12 @@ DWORD dwCtrlType;)
 
 
 ___SCMOBJ ___setup_tty_module
-   ___P((void (*user_interrupt_handler) ___PVOID),
-        (user_interrupt_handler)
-void (*user_interrupt_handler) ___PVOID;)
+   ___P((void (*user_interrupt_handler) ___PVOID,
+         void (*terminate_interrupt_handler) ___PVOID),
+        (user_interrupt_handler,
+         terminate_interrupt_handler)
+void (*user_interrupt_handler) ___PVOID;
+void (*terminate_interrupt_handler) ___PVOID;)
 {
   if (___tty_mod.refcount == 0)
     {
@@ -8399,10 +8407,12 @@ void (*user_interrupt_handler) ___PVOID;)
 
       ___tty_mod.user_interrupt_handler = user_interrupt_handler;
 
+      ___tty_mod.terminate_interrupt_handler = terminate_interrupt_handler;
+
 #ifdef USE_POSIX
 
       ___set_signal_handler (SIGINT, tty_signal_handler);
-      ___set_signal_handler (SIGQUIT, tty_signal_handler);
+      ___set_signal_handler (SIGTERM, tty_signal_handler);
       ___set_signal_handler (SIGWINCH, tty_signal_handler);
       ___set_signal_handler (SIGCONT, tty_signal_handler);
 

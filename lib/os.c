@@ -1,6 +1,6 @@
-/* File: "os.c", Time-stamp: <2007-12-16 21:15:13 feeley> */
+/* File: "os.c", Time-stamp: <2008-05-15 16:21:30 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1687,6 +1687,13 @@ ___HIDDEN void user_intr ___PVOID
 }
 
 
+___HIDDEN void terminate_intr ___PVOID
+{
+  /**** belongs elsewhere */
+  ___raise_interrupt (___INTR_TERMINATE);
+}
+
+
 ___SCMOBJ ___setup_os ___PVOID
 {
   ___SCMOBJ e;
@@ -1710,7 +1717,7 @@ ___SCMOBJ ___setup_os ___PVOID
                 {
                   if ((e = ___setup_dyn_module ()) == ___FIX(___NO_ERR))
                     {
-                      if ((e = ___setup_tty_module (user_intr)) == ___FIX(___NO_ERR))
+                      if ((e = ___setup_tty_module (user_intr, terminate_intr)) == ___FIX(___NO_ERR))
                         {
                           if ((e = ___setup_io_module ()) == ___FIX(___NO_ERR))
                             {

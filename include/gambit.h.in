@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-05-15 11:35:26 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-05-15 16:11:56 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,7 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1210866443
+#define ___STAMP 1211026191
 
 /*---------------------------------------------------------------------------*/
 
@@ -4799,7 +4799,7 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 #define ___INTR_USER      0
 #define ___INTR_HEARTBEAT 1
 #define ___INTR_GC        2
-#define ___INTR_3         3
+#define ___INTR_TERMINATE 3
 #define ___INTR_4         4
 #define ___INTR_5         5
 #define ___INTR_6         6

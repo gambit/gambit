@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-02-14 17:46:22 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-05-15 16:08:51 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1720,7 +1720,7 @@ end-of-code
     (macro-fifo-insert-at-head! registry will)
     will))
 
-(##interrupt-vector-set! 2
+(##interrupt-vector-set! 2 ;; ___INTR_GC
   (lambda ()
     (##declare (not interrupts-enabled))
     (##gc-finalize!)
@@ -4235,6 +4235,11 @@ end-of-code
 
 (define-prim (##exit-with-exception exc)
   (##exit-abnormally))
+
+(##interrupt-vector-set! 3 ;; ___INTR_TERMINATE
+  (lambda ()
+    (##declare (not interrupts-enabled))
+    (##exit-abnormally)))
 
 ;;;----------------------------------------------------------------------------
 

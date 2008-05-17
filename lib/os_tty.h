@@ -1,4 +1,4 @@
-/* File: "os_tty.h", Time-stamp: <2008-03-10 15:20:15 feeley> */
+/* File: "os_tty.h", Time-stamp: <2008-05-15 16:19:32 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -519,6 +519,8 @@ typedef struct ___tty_module_struct
 
     void (*user_interrupt_handler) ___PVOID;
 
+    void (*terminate_interrupt_handler) ___PVOID;
+
     struct ___device_tty_struct *curses_tty; /* target of curses operations */
 
 #ifdef TERMINAL_EMULATION_USES_CURSES
@@ -557,7 +559,8 @@ void ___enable_user_interrupt ___PVOID;
 
 
 extern ___SCMOBJ ___setup_tty_module
-   ___P((void (*user_interrupt_handler) ___PVOID),
+   ___P((void (*user_interrupt_handler) ___PVOID,
+         void (*terminate_interrupt_handler) ___PVOID),
         ());
 
 extern void ___cleanup_tty_module ___PVOID;
