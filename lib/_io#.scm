@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2008-05-08 16:59:39 feeley>
+;;; File: "_io#.scm", Time-stamp: <2008-05-22 13:46:15 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -668,6 +668,7 @@
   stdout-redir
   stderr-redir
   pseudo-term
+  show-window
   server-address
   port-number
   socket-type
@@ -826,6 +827,10 @@
 (##define-macro (macro-pseudo-term) 1)
 (##define-macro (macro-no-pseudo-term) 0)
 (##define-macro (macro-default-pseudo-term) `(macro-no-pseudo-term))
+
+(##define-macro (macro-show-window) 1)
+(##define-macro (macro-no-show-window) 0)
+(##define-macro (macro-default-show-window) `(macro-show-window))
 
 (##define-macro (macro-default-server-address) #f)
 

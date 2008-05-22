@@ -10993,14 +10993,21 @@ output to the console.  The default value of this setting is
 @item
 @code{pseudo-terminal:} ( @code{#f} | @code{#t} )
 
-This setting indicates what type of device will be bound to the
-process' standard input and standard output.  A setting of @code{#t}
-will use a pseudo-terminal device (this is a device that behaves like
-a tty device even though there is no real terminal or user directly
-involved).  A setting of @code{#f} will use a pair of pipes.  The
-difference is important for programs which behave differently when
-they are used interactively, for example shells.  The default value of
-this setting is @code{#f}.
+This setting applies to UNIX.  It indicates what type of device will
+be bound to the process' standard input and standard output.  A
+setting of @code{#t} will use a pseudo-terminal device (this is a
+device that behaves like a tty device even though there is no real
+terminal or user directly involved).  A setting of @code{#f} will use
+a pair of pipes.  The difference is important for programs which
+behave differently when they are used interactively, for example
+shells.  The default value of this setting is @code{#f}.
+
+@item
+@code{show-window:} ( @code{#f} | @code{#t} )
+
+This setting applies to Microsoft Windows.  It controls whether the
+process' window will be hidden or visible.  The default value of this
+setting is @code{#t} (visible window).
 
 @end itemize
 

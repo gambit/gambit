@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-05-21 14:06:52 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-05-22 13:46:19 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -177,6 +177,7 @@
           (macro-default-stdout-redir)
           (macro-default-stderr-redir)
           (macro-default-pseudo-term)
+          (macro-default-show-window)
           (macro-default-server-address)
           (macro-default-port-number)
           (macro-default-socket-type)
@@ -391,6 +392,14 @@
            (macro-pseudo-term))
           ((##eq? value #f)
            (macro-no-pseudo-term))
+          (else
+           #f)))
+
+  (define (show-window value)
+    (cond ((##eq? value #t)
+           (macro-show-window))
+          ((##eq? value #f)
+           (macro-no-show-window))
           (else
            #f)))
 
@@ -844,6 +853,16 @@
                                 (if x
                                   (begin
                                     (macro-psettings-pseudo-term-set!
+                                     psettings
+                                     x)
+                                    (loop rest2))
+                                  (error name))))
+
+                             ((##eq? name 'show-window:)
+                              (let ((x (show-window value)))
+                                (if x
+                                  (begin
+                                    (macro-psettings-show-window-set!
                                      psettings
                                      x)
                                     (loop rest2))
@@ -5378,6 +5397,7 @@
      stdout-redirection:
      stderr-redirection:
      pseudo-terminal:
+     show-window:
      output-width:
      input-char-encoding:
      output-char-encoding:
@@ -5412,14 +5432,18 @@
           (stderr-redir
            (macro-psettings-stderr-redir psettings))
           (pseudo-term
-           (macro-psettings-pseudo-term psettings)))
+           (macro-psettings-pseudo-term psettings))
+          (show-window
+           (macro-psettings-show-window psettings)))
       (##fixnum.+
        stdin-redir
        (##fixnum.+
         (##fixnum.* 2 stdout-redir)
         (##fixnum.+
          (##fixnum.* 4 stderr-redir)
-         (##fixnum.* 8 pseudo-term))))))
+         (##fixnum.+
+          (##fixnum.* 8 pseudo-term)
+          (##fixnum.* 16 show-window)))))))
 
   (define (fail)
     (##fail-check-string-or-settings 1 prim path-or-settings))
