@@ -11915,6 +11915,48 @@ For example:
 
 @end deffn
 
+@deffn procedure readtable-max-unescaped-char @var{readtable}
+@deffnx procedure readtable-max-unescaped-char-set @var{readtable} @var{new-value}
+
+The procedure @code{readtable-max-unescaped-char} returns the content
+of the @samp{max-unescaped-char} field of @var{readtable}.  The
+printer will display using an escape sequence any character within
+symbols, strings and character objects greater than
+@samp{max-unescaped-char}
+
+The procedure @code{readtable-max-unescaped-char-set} returns a copy
+of @var{readtable} where only the @samp{max-unescaped-char} field
+has been changed to @var{new-value}, which must be a character.
+
+For example:
+
+@smallexample
+> @b{(define rt (output-port-readtable (repl-output-port)))}
+> @b{(readtable-max-unescaped-char rt)}
+#\delete
+> @b{(string (integer->char 233))}
+"\351"
+> @b{(define (f c)
+    (with-output-to-string
+     (list readtable: (readtable-max-unescaped-char-set rt c))
+     (lambda () (write (string (integer->char 233))))))}
+> @b{(f #\delete)}
+"\"\\351\""
+> @b{(string-length (f #\delete))}
+6
+> @b{(f #\U0010ffff)}
+"\"\351\""
+> @b{(string-length (f #\U0010ffff))}
+3
+> @b{(output-port-readtable-set!
+   (repl-output-port)
+   (readtable-max-unescaped-char-set rt #\U0010ffff))}
+> @b{(string (integer->char 233))}
+"é"
+@end smallexample
+
+@end deffn
+
 @deffn procedure readtable-start-syntax @var{readtable}
 @deffnx procedure readtable-start-syntax-set @var{readtable} @var{new-value}
 

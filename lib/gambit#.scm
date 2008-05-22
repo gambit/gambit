@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-05-21 14:27:45 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-05-22 16:10:16 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -749,6 +749,8 @@ readtable-eval-allowed?
 readtable-eval-allowed?-set
 readtable-keywords-allowed?
 readtable-keywords-allowed?-set
+readtable-max-unescaped-char
+readtable-max-unescaped-char-set
 readtable-max-write-length
 readtable-max-write-length-set
 readtable-max-write-level

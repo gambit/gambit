@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-05-22 13:46:19 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-05-22 16:45:08 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -6923,6 +6923,19 @@
           (macro-readtable-max-write-length-set! new-rt length)
           new-rt)))))
 
+(define-prim (readtable-max-unescaped-char rt)
+  (macro-force-vars (rt)
+    (macro-check-readtable rt 1 (readtable-max-unescaped-char rt)
+      (macro-readtable-max-unescaped-char rt))))
+
+(define-prim (readtable-max-unescaped-char-set rt char)
+  (macro-force-vars (rt char)
+    (macro-check-readtable rt 1 (readtable-max-unescaped-char-set rt char)
+      (macro-check-char char 2 (readtable-max-unescaped-char-set rt char)
+        (let ((new-rt (##readtable-copy rt)))
+          (macro-readtable-max-unescaped-char-set! new-rt char)
+          new-rt)))))
+
 (define-prim (readtable-start-syntax rt)
   (macro-force-vars (rt)
     (macro-check-readtable rt 1 (readtable-start-syntax rt)
@@ -7070,15 +7083,15 @@
            (##eval '(##apply main (##cdr ##processed-command-line)))
            (##exit)))))
 
-(##define-macro (macro-ctrl-char? n)
-  `(or (##fixnum.< ,n 32) (##fixnum.= ,n 127)))
+(##define-macro (macro-ctrl-char? c)
+  `(or (##char<? ,c #\space) (##char=? ,c #\delete)))
 
-(##define-macro (macro-gt-max-unescaped-char? rt n)
-  `(##fixnum.< (macro-readtable-max-unescaped-char ,rt) ,n))
+(##define-macro (macro-gt-max-unescaped-char? rt c)
+  `(##char<? (macro-readtable-max-unescaped-char ,rt) ,c))
 
-(##define-macro (macro-must-escape-char? rt n)
-  `(or (macro-ctrl-char? ,n)
-       (macro-gt-max-unescaped-char? ,rt ,n)))
+(##define-macro (macro-must-escape-char? rt c)
+  `(or (macro-ctrl-char? ,c)
+       (macro-gt-max-unescaped-char? ,rt ,c)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -7356,7 +7369,7 @@
         #f
         (let ((c (##string-ref str i))
               (rt (macro-writeenv-readtable we)))
-          (or (macro-must-escape-char? rt (##fixnum.<-char c))
+          (or (macro-must-escape-char? rt c)
               (##readtable-char-delimiter? rt c)
               (##not (##char=? c (##readtable-convert-case rt c)))
               (loop (##fixnum.- i 1))))))))
@@ -7753,22 +7766,23 @@
                           (macro-readtable-named-char-table
                            (macro-writeenv-readtable we)))))
        (##wr-str we "#\\")
-       (if x
-         (##wr-str we (##car x))
-         (let ((n (##fixnum.<-char obj)))
-           (cond ((##not (macro-must-escape-char?
-                          (macro-writeenv-readtable we)
-                          n))
-                  (##wr-ch we obj))
-                 ((##fixnum.< #xffff n)
-                  (##wr-ch we #\U)
-                  (##wr-hex we n 8))
-                 ((##fixnum.< #xff n)
-                  (##wr-ch we #\u)
-                  (##wr-hex we n 4))
-                 (else
-                  (##wr-ch we #\x)
-                  (##wr-hex we n 2)))))))))
+       (cond (x
+              (##wr-str we (##car x)))
+             ((##not (macro-must-escape-char?
+                      (macro-writeenv-readtable we)
+                      obj))
+              (##wr-ch we obj))
+             (else
+              (let ((n (##fixnum.<-char obj)))
+                (cond ((##fixnum.< #xffff n)
+                       (##wr-ch we #\U)
+                       (##wr-hex we n 8))
+                      ((##fixnum.< #xff n)
+                       (##wr-ch we #\u)
+                       (##wr-hex we n 4))
+                      (else
+                       (##wr-ch we #\x)
+                       (##wr-hex we n 2))))))))))
 
 (define-prim (##wr-hex we n nb-digits)
   (if (if nb-digits
@@ -7809,7 +7823,7 @@
              (n
               (##fixnum.<-char c))
              (ctrl-char?
-              (or (##fixnum.< n 32) (##fixnum.= n 127)))
+              (macro-ctrl-char? c))
              (x
               (cond ((or (##char=? c #\\)
                          (##char=? c special-escape))
@@ -7828,7 +7842,7 @@
               (macro-readtable-escape-ctrl-chars?
                (macro-writeenv-readtable we))
               (or x
-                  (macro-gt-max-unescaped-char? (macro-writeenv-readtable we) n)
+                  (macro-gt-max-unescaped-char? (macro-writeenv-readtable we) c)
                   (and escape-digit-limit
                        (##fixnum.< n 128)
                        (##not (##char=? c #\#)) ;; avoid treating "#" like "0"
@@ -11526,7 +11540,7 @@
           (##make-chartable #f) ;; all chars are non-delimiters
           (##make-chartable ##read-number/keyword/symbol)
           (##make-chartable ##read-sharp-other)
-          127                ;; max-unescaped-char
+          (##fixnum.->char 127) ;; max-unescaped-char
           #t                 ;; escape-ctrl-chars?
           #f                 ;; sharing-allowed?
           #f                 ;; eval-allowed?
