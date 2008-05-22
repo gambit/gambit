@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-05-15 16:08:51 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-05-21 13:45:09 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3988,6 +3988,11 @@ end-of-code
   (c-lambda (scheme-object)
             scheme-object
    "___os_device_tcp_server_read"))
+
+(define-prim ##os-device-tcp-server-socket-info
+  (c-lambda (scheme-object)
+            scheme-object
+   "___os_device_tcp_server_socket_info"))
 
 (define-prim ##os-device-directory-open-path
   (c-lambda (scheme-object

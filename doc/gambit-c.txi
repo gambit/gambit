@@ -3421,6 +3421,9 @@ The procedures in this section are not yet documented.
 @deffnx procedure tcp-client-self-socket-info @var{tcp-client-port}
 @end deffn
 
+@deffn procedure tcp-server-socket-info @var{tcp-server-port}
+@end deffn
+
 @deffn procedure socket-info? @var{obj}
 @deffnx procedure socket-info-address @var{socket-info}
 @deffnx procedure socket-info-family @var{socket-info}
@@ -11149,7 +11152,11 @@ ports'', which are reserved for standard services, have a port-number
 below 1024 and can only be assigned to a socket by a process with
 superuser priviledges (e.g. 80 for the HTTP service, 23 for the telnet
 service).  No special priviledges are needed to assign higher
-port-numbers to a socket.  There is no default value for this setting.
+port-numbers to a socket.  The special value 0 requests that a
+currently unused port number be assigned to the socket (the port
+number assigned can be retrieved using the procedure
+@code{tcp-server-socket-info}).  There is no default value for this
+setting.
 
 @item
 @code{backlog:} @var{positive-exact-integer}

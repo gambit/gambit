@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-05-13 08:46:36 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-05-21 14:06:52 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -5867,7 +5867,7 @@
   (let ((mutex
          (macro-make-port-mutex))
         (rkind
-         (macro-object-kind))
+         (macro-tcp-server-kind))
         (wkind
          (macro-none-kind))
         (roptions
@@ -6115,6 +6115,24 @@
      open-tcp-server
      port-number-or-settings)))
 
+(define-prim (##tcp-server-socket-info port)
+  (let ((result
+         (##os-device-tcp-server-socket-info
+          (macro-condvar-name (macro-tcp-server-port-rdevice-condvar port)))))
+    (if (##fixnum? result)
+
+        (##raise-os-exception #f result tcp-server-socket-info port))
+
+        (begin
+          (##structure-type-set! result (macro-type-socket-info))
+          (##subtype-set! result (macro-subtype-structure))
+          result)))
+
+(define-prim (tcp-server-socket-info port)
+  (macro-force-vars (port)
+    (macro-check-tcp-server-port port 1 (tcp-server-socket-info port)
+      (##tcp-server-socket-info port))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Implementation of directory ports.
@@ -6139,7 +6157,7 @@
   (let ((mutex
          (macro-make-port-mutex))
         (rkind
-         (macro-object-kind))
+         (macro-directory-kind))
         (wkind
          (macro-none-kind))
         (roptions
@@ -6339,7 +6357,7 @@
   (let ((mutex
          (macro-make-port-mutex))
         (rkind
-         (macro-object-kind))
+         (macro-event-queue-kind))
         (wkind
          (macro-none-kind))
         (roptions

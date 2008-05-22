@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-03-11 18:56:44 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-05-21 14:27:45 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -900,6 +900,7 @@ table?
 tan
 tcp-client-peer-socket-info
 tcp-client-self-socket-info
+tcp-server-socket-info
 terminated-thread-exception-arguments
 terminated-thread-exception-procedure
 terminated-thread-exception?

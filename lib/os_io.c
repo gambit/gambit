@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-05-15 11:44:45 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-05-21 13:44:55 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -7478,6 +7478,33 @@ ___SCMOBJ dev;)
   ___release_scmobj (result);
 
   return result;
+
+#endif
+}
+
+
+___SCMOBJ ___os_device_tcp_server_socket_info
+   ___P((___SCMOBJ dev),
+        (dev)
+___SCMOBJ dev;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___device_tcp_server *d =
+    ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
+  struct sockaddr sa;
+  SOCKET_LEN_TYPE salen;
+
+  salen = sizeof (sa);
+
+  if (getsockname (d->s, &sa, &salen) < 0)
+    return ERR_CODE_FROM_SOCKET_CALL;
+
+  return ___sockaddr_to_SCMOBJ (&sa, salen, ___RETURN_POS);
 
 #endif
 }

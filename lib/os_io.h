@@ -1,4 +1,4 @@
-/* File: "os_io.h", Time-stamp: <2008-05-08 15:01:44 feeley> */
+/* File: "os_io.h", Time-stamp: <2008-05-21 13:44:44 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -732,6 +732,10 @@ extern ___SCMOBJ ___os_device_tcp_server_open
         ());
 
 extern ___SCMOBJ ___os_device_tcp_server_read
+   ___P((___SCMOBJ dev),
+        ());
+
+extern ___SCMOBJ ___os_device_tcp_server_socket_info
    ___P((___SCMOBJ dev),
         ());
 

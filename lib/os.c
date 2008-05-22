@@ -1,4 +1,4 @@
-/* File: "os.c", Time-stamp: <2008-05-15 16:21:30 feeley> */
+/* File: "os.c", Time-stamp: <2008-05-22 11:09:47 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -161,12 +161,12 @@ struct in_addr *ia;
 int arg_num;)
 {
   if (addr == ___FAL)
-    ia->s_addr = htonl (INADDR_ANY);
+    ia->s_addr = htonl (INADDR_ANY); /* wildcard address */
   else
     ia->s_addr = htonl ((___INT(___U8VECTORREF(addr,___FIX(0)))<<24) +
-                       (___INT(___U8VECTORREF(addr,___FIX(1)))<<16) +
-                       (___INT(___U8VECTORREF(addr,___FIX(2)))<<8) +
-                       ___INT(___U8VECTORREF(addr,___FIX(3))));
+                        (___INT(___U8VECTORREF(addr,___FIX(1)))<<16) +
+                        (___INT(___U8VECTORREF(addr,___FIX(2)))<<8) +
+                        ___INT(___U8VECTORREF(addr,___FIX(3))));
 
   return ___FIX(___NO_ERR);
 }
@@ -181,17 +181,25 @@ struct in_addr *ia;
 int arg_num;)
 {
   unsigned long a;
-  ___SCMOBJ result = ___alloc_scmobj (___sU8VECTOR, 4, ___STILL);
-
-  if (___FIXNUMP(result))
-    return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
+  ___SCMOBJ result;
 
   a = ntohl (ia->s_addr);
 
-  ___U8VECTORSET(result,___FIX(0),___FIX((a>>24) & 0xff))
-  ___U8VECTORSET(result,___FIX(1),___FIX((a>>16) & 0xff))
-  ___U8VECTORSET(result,___FIX(2),___FIX((a>>8)  & 0xff))
-  ___U8VECTORSET(result,___FIX(3),___FIX(a       & 0xff))
+  if (a == INADDR_ANY)
+    result = ___FAL; /* wildcard address */
+  else
+    {
+      result = ___alloc_scmobj (___sU8VECTOR, 4, ___STILL);
+
+      if (___FIXNUMP(result))
+        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
+
+
+      ___U8VECTORSET(result,___FIX(0),___FIX((a>>24) & 0xff))
+      ___U8VECTORSET(result,___FIX(1),___FIX((a>>16) & 0xff))
+      ___U8VECTORSET(result,___FIX(2),___FIX((a>>8)  & 0xff))
+      ___U8VECTORSET(result,___FIX(3),___FIX(a       & 0xff))
+    }
 
   return result;
 }
@@ -214,6 +222,8 @@ int arg_num;)
 
   if (addr == ___FAL)
     {
+      /* wildcard address */
+
       for (i=0; i<8; i++)
         {
           ia->s6_addr[i<<1] = 0;
@@ -243,16 +253,28 @@ struct in6_addr *ia;
 int arg_num;)
 {
   int i;
-  ___SCMOBJ result = ___alloc_scmobj (___sU16VECTOR, 8<<1, ___STILL);
+  ___SCMOBJ result;
 
-  if (___FIXNUMP(result))
-    return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
+  for (i=0; i<16; i++)
+    if (ia->s6_addr[i] != 0)
+      break;
 
-  for (i=0; i<8; i++)
-    ___U16VECTORSET
-      (result,
-       ___FIX(i),
-       ___FIX((___CAST(___U16,ia->s6_addr[i<<1])<<8) + ia->s6_addr[(i<<1)+1]))
+  if (i == 16)
+    result = ___FAL; /* wildcard address */
+  else
+    {
+      result = ___alloc_scmobj (___sU16VECTOR, 8<<1, ___STILL);
+
+      if (___FIXNUMP(result))
+        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
+
+      for (i=0; i<8; i++)
+        ___U16VECTORSET
+          (result,
+           ___FIX(i),
+           ___FIX((___CAST(___U16,ia->s6_addr[i<<1])<<8) +
+                  ia->s6_addr[(i<<1)+1]))
+    }
 
   return result;
 }
