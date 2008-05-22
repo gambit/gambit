@@ -11003,11 +11003,11 @@ behave differently when they are used interactively, for example
 shells.  The default value of this setting is @code{#f}.
 
 @item
-@code{show-window:} ( @code{#f} | @code{#t} )
+@code{show-console:} ( @code{#f} | @code{#t} )
 
 This setting applies to Microsoft Windows.  It controls whether the
-process' window will be hidden or visible.  The default value of this
-setting is @code{#t} (visible window).
+process' console window will be hidden or visible.  The default value
+of this setting is @code{#t} (i.e. show the console window).
 
 @end itemize
 

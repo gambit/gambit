@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-05-22 13:59:33 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-05-22 17:51:46 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -6140,7 +6140,7 @@ int options;)
 #define STDOUT_REDIR 2
 #define STDERR_REDIR 4
 #define PSEUDO_TERM  8
-#define SHOW_WINDOW  16
+#define SHOW_CONSOLE 16
 
 #ifdef USE_execvp
 
@@ -6373,12 +6373,6 @@ int options;)
 
       si.dwFlags |= STARTF_USESTDHANDLES;
 
-      if ((options & SHOW_WINDOW) == 0)
-        {
-          si.wShowWindow = SW_HIDE;
-          si.dwFlags |= STARTF_USESHOWWINDOW;
-        }
-
       if (si.hStdError == INVALID_HANDLE_VALUE ||
           !CreateProcess
              (NULL, /* module name                              */
@@ -6386,7 +6380,7 @@ int options;)
               NULL, /* process handle not inheritable           */
               NULL, /* thread handle not inheritable            */
               TRUE, /* set handle inheritance to TRUE           */
-              0,    /* no creation flags                        */
+              (options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW, /* creation flags */
               cenv, /* use parent's environment block           */
               dir,  /* use parent's starting directory          */
               &si,  /* pointer to STARTUPINFO structure         */
