@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread#.scm", Time-stamp: <2007-10-30 03:33:09 feeley>
+;;; File: "_thread#.scm", Time-stamp: <2008-05-23 13:59:20 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1052,7 +1052,7 @@
        (macro-thread-denv-cache2-set! thread (macro-make-thread-denv-cache2 p))
        (macro-thread-denv-cache3-set! thread (macro-make-thread-denv-cache3 p))
        (macro-btq-deq-init! thread)
-;;;;;ignore thread groups       (macro-tgroup-threads-deq-insert! tgroup thread)
+       (macro-tgroup-threads-deq-insert! tgroup thread)
        thread)))
 
 (##define-macro (macro-make-thread thunk name tgroup)

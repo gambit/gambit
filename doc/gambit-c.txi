@@ -3313,6 +3313,10 @@ The procedures in this section are not yet documented.
 @deffnx procedure thread-group-resume! @var{thread-group}
 @deffnx procedure thread-group-suspend! @var{thread-group}
 @deffnx procedure thread-group-terminate! @var{thread-group}
+@deffnx procedure thread-group->thread-group-list @var{thread-group}
+@deffnx procedure thread-group->thread-group-vector @var{thread-group}
+@deffnx procedure thread-group->thread-list @var{thread-group}
+@deffnx procedure thread-group->thread-vector @var{thread-group}
 @end deffn
 
 @deffn procedure thread-suspend! @var{thread}

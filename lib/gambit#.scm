@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-05-22 16:10:16 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-05-23 14:47:10 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -909,6 +909,10 @@ terminated-thread-exception?
 test-bit-field?
 thread-base-priority
 thread-base-priority-set!
+thread-group->thread-group-list
+thread-group->thread-group-vector
+thread-group->thread-list
+thread-group->thread-vector
 thread-group-name
 thread-group-parent
 thread-group-resume!

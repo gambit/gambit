@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-02-15 10:29:22 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-05-23 14:49:37 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1270,8 +1270,8 @@
           (##condvar-signal-no-reschedule! end-condvar #t)
           (macro-thread-btq-remove-if-in-btq! thread)
           (macro-thread-toq-remove-if-in-toq! thread)
-;;;;;ignore thread groups        (macro-tgroup-threads-deq-remove! thread)
-;;;;;ignore thread groups        (macro-tgroup-threads-deq-init! thread)
+          (macro-tgroup-threads-deq-remove! thread)
+          (macro-tgroup-threads-deq-init! thread)
           (macro-thread-cont-set! thread #t)
           (macro-thread-denv-set! thread #f)
           (macro-thread-denv-cache1-set! thread #f)
@@ -1876,6 +1876,54 @@
   (##declare (not interrupts-enabled))
   (macro-not-yet-implemented))
 
+(define-prim (##tgroup->tgroup-vector tgroup)
+  (##declare (not interrupts-enabled))
+  (let ((deq (macro-tgroup-tgroups tgroup)))
+    (let loop1 ((probe deq) (n 0))
+      (let ((next (macro-tgroup-tgroups-deq-next probe)))
+        (if (##not (##eq? next deq))
+            (loop1 next (##fixnum.+ n 1))
+            (let ((v (##make-vector n)))
+              (let loop2 ((probe deq) (i 0))
+                (let ((next (macro-tgroup-tgroups-deq-next probe)))
+                  (if (##not (##eq? next deq))
+                      (if (##fixnum.= i n) ;; more elements this time around?
+                          (loop1 next (##fixnum.+ i 1))
+                          (begin
+                            (##vector-set! v i next)
+                            (loop2 next (##fixnum.+ i 1))))
+                      (begin
+                        (##vector-shrink! v i) ;; there may be fewer elements!
+                        v))))))))))
+
+(define-prim (##tgroup->tgroup-list tgroup)
+  (##declare (not interrupts-enabled))
+  (##vector->list (##tgroup->tgroup-vector tgroup)))
+
+(define-prim (##tgroup->thread-vector tgroup)
+  (##declare (not interrupts-enabled))
+  (let ((deq tgroup))
+    (let loop1 ((probe deq) (n 0))
+      (let ((next (macro-tgroup-threads-deq-next probe)))
+        (if (##not (##eq? next deq))
+            (loop1 next (##fixnum.+ n 1))
+            (let ((v (##make-vector n)))
+              (let loop2 ((probe deq) (i 0))
+                (let ((next (macro-tgroup-threads-deq-next probe)))
+                  (if (##not (##eq? next deq))
+                      (if (##fixnum.= i n) ;; more elements this time around?
+                          (loop1 next (##fixnum.+ i 1))
+                          (begin
+                            (##vector-set! v i next)
+                            (loop2 next (##fixnum.+ i 1))))
+                      (begin
+                        (##vector-shrink! v i) ;; there may be fewer elements!
+                        v))))))))))
+
+(define-prim (##tgroup->thread-list tgroup)
+  (##declare (not interrupts-enabled))
+  (##vector->list (##tgroup->thread-vector tgroup)))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; User accessible primitives for time objects.
@@ -2325,6 +2373,26 @@
   (macro-force-vars (tgroup)
     (macro-check-tgroup tgroup 1 (thread-group-terminate! tgroup)
       (##tgroup-terminate! tgroup))))
+
+(define-prim (thread-group->thread-group-vector tgroup)
+  (macro-force-vars (tgroup)
+    (macro-check-tgroup tgroup 1 (thread-group->thread-group-vector tgroup)
+      (##tgroup->tgroup-vector tgroup))))
+
+(define-prim (thread-group->thread-group-list tgroup)
+  (macro-force-vars (tgroup)
+    (macro-check-tgroup tgroup 1 (thread-group->thread-group-list tgroup)
+      (##tgroup->tgroup-list tgroup))))
+
+(define-prim (thread-group->thread-vector tgroup)
+  (macro-force-vars (tgroup)
+    (macro-check-tgroup tgroup 1 (thread-group->thread-vector tgroup)
+      (##tgroup->thread-vector tgroup))))
+
+(define-prim (thread-group->thread-list tgroup)
+  (macro-force-vars (tgroup)
+    (macro-check-tgroup tgroup 1 (thread-group->thread-list tgroup)
+      (##tgroup->thread-list tgroup))))
 
 ;;;----------------------------------------------------------------------------
 
