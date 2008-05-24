@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-05-22 17:51:46 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-05-23 23:51:00 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -7989,30 +7989,33 @@ ___SCMOBJ port;)
     if (code == ___ILLEGAL_CHAR)
       {
         if (___CHAR_ENCODING_ERRORS(options) != ___CHAR_ENCODING_ERRORS_OFF)
-          e = err_code_from_char_encoding (___CHAR_ENCODING(options), 0, 0, 0);
+          {
+            cbuf_avail--; /* skip illegal char */
+            e = err_code_from_char_encoding (___CHAR_ENCODING(options), 0, 0, 0);
+          }
         else
-            {
-              ___C replacement_cbuf[1];
-              int replacement_cbuf_avail = 1;
+          {
+            ___C replacement_cbuf[1];
+            int replacement_cbuf_avail = 1;
 
-              if (___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(options)))
-                replacement_cbuf[0] = ___UNICODE_REPLACEMENT;
-              else
-                replacement_cbuf[0] = ___UNICODE_QUESTION;
+            if (___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(options)))
+              replacement_cbuf[0] = ___UNICODE_REPLACEMENT;
+            else
+              replacement_cbuf[0] = ___UNICODE_QUESTION;
 
-              code = chars_to_bytes (replacement_cbuf,
-                                     &replacement_cbuf_avail,
-                                     bbuf_ptr + bend - bbuf_avail,
-                                     &bbuf_avail,
-                                     &options);
+            code = chars_to_bytes (replacement_cbuf,
+                                   &replacement_cbuf_avail,
+                                   bbuf_ptr + bend - bbuf_avail,
+                                   &bbuf_avail,
+                                   &options);
 
-              /*
-               * skip over the illegal character if the replacement
-               * character was encoded
-               */
+            /*
+             * skip over the illegal character if the replacement
+             * character was encoded
+             */
 
-              cbuf_avail = cbuf_avail - 1 + replacement_cbuf_avail;
-            }
+            cbuf_avail = cbuf_avail - 1 + replacement_cbuf_avail;
+          }
       }
 
   ___FIELD(port,___PORT_CHAR_WLO) = ___FIX(chi - cbuf_avail);
