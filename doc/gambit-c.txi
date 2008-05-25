@@ -6658,7 +6658,8 @@ For example:
             (set! cell #f) ; avoid space leaks
             (set! full? #f)
             (condition-variable-signal! put-condvar)
-            (mutex-unlock! mutex))))
+            (mutex-unlock! mutex)
+            result)))
 
     (lambda (msg)
       (case msg
