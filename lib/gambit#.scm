@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-05-23 14:47:10 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-06-02 00:31:58 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -521,6 +521,9 @@ improper-length-list-exception-arg-num
 improper-length-list-exception-arguments
 improper-length-list-exception-procedure
 improper-length-list-exception?
+inactive-thread-exception?
+inactive-thread-exception-procedure
+inactive-thread-exception-arguments
 inexact->exact
 inexact?
 infinite?
@@ -920,6 +923,7 @@ thread-group-suspend!
 thread-group-terminate!
 thread-group?
 thread-init!
+thread-interrupt!
 thread-join!
 thread-mailbox-extract-and-rewind
 thread-mailbox-next
@@ -936,6 +940,16 @@ thread-sleep!
 thread-specific
 thread-specific-set!
 thread-start!
+thread-state
+thread-state-abnormally-terminated-reason
+thread-state-abnormally-terminated?
+thread-state-active-timeout
+thread-state-active-waiting-for
+thread-state-active?
+thread-state-initialized?
+thread-state-normally-terminated-result
+thread-state-normally-terminated?
+thread-state-uninitialized?
 thread-suspend!
 thread-terminate!
 thread-thread-group
@@ -944,6 +958,7 @@ thread?
 time->seconds
 time?
 timeout->time
+top
 touch
 trace
 transcript-off

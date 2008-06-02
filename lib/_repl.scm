@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-05-06 14:25:40 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-06-02 00:58:47 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -726,7 +726,8 @@
           (##eq? parent ##check-heap)
           (##eq? parent ##nontail-call-for-leap)
           (##eq? parent ##nontail-call-for-step)
-          (##eq? parent ##trace-generate)))))
+          (##eq? parent ##trace-generate)
+          (##eq? parent ##thread-interrupt!)))))
 
 (define-prim (##interp-subproblem-continuation? cont)
   (let ((parent (##continuation-parent cont)))
@@ -906,21 +907,22 @@
 
 (define-prim (##cmd-? port)
   (##write-string
-",? or ,h      : Summary of comma commands
-,q            : Terminate the process
-,qt           : Terminate the current thread
-,t            : Jump to toplevel REPL
-,d            : Jump to enclosing REPL
-,c and ,(c X) : Continue the computation with stepping off
-,s and ,(s X) : Continue the computation with stepping on (step)
-,l and ,(l X) : Continue the computation with stepping on (leap)
-,<n>          : Move to particular frame (<n> >= 0)
-,+ and ,-     : Move to next or previous frame of continuation
-,y            : Display one-line summary of current frame
-,b            : Display summary of continuation (i.e. backtrace)
-,i            : Display procedure attached to current frame
-,e or ,(e X)  : Display environment of current frame or X (a proc or cont)
-,(v X)        : Start a REPL visiting X (a procedure or continuation)
+",? or ,h        : Summary of comma commands
+,q              : Terminate the process
+,qt             : Terminate the current thread
+,t              : Jump to toplevel REPL
+,d              : Jump to enclosing REPL
+,c and ,(c X)   : Continue the computation with stepping off
+,s and ,(s X)   : Continue the computation with stepping on (step)
+,l and ,(l X)   : Continue the computation with stepping on (leap)
+,<n>            : Move to particular frame (<n> >= 0)
+,+ and ,-       : Move to next or previous frame of continuation
+,y              : Display one-line summary of current frame
+,b              : Display summary of continuation (i.e. backtrace)
+,i              : Display procedure attached to current frame
+,e and ,(e X)   : Display environment of current frame or X (a proc or cont)
+,st and ,(st X) : Display current thread group, or X (a thread or thread group)
+,(v X)          : Start a REPL visiting X (a procedure or continuation)
 " port))
 
 ;;;,(p [N M])    : Configure REPL's pretty printer (N=max level, M=max length)
@@ -1336,6 +1338,123 @@
            (begin
              (##write-string "(interaction)" port)
              (##newline port))))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define-prim (##cmd-st thread-or-tgroup port)
+  (if (macro-thread? thread-or-tgroup)
+      (##display-thread-state thread-or-tgroup port)
+      (##display-thread-group-state thread-or-tgroup port))
+  (##void))
+
+(define-prim (##display-thread-state thread port)
+  (let ((now (##current-time-point)))
+    (##display-thread-state-relative thread port now)))
+
+(define-prim (##display-thread-state-relative thread port time-point)
+
+  (define (tab col)
+    (let* ((current (##output-port-column port))
+           (n (##fixnum.- col current)))
+      (##display-spaces (##fixnum.max n 1) port)))
+
+  (define (write-timeout to)
+    (##write-string " " port)
+    (let ((expiry (##flonum.- (macro-time-point to) time-point)))
+      (##write (##flonum./ (##flonum.round (##flonum.* 10.0 expiry)) 10.0)
+               port))
+    (##write-string "s" port))
+
+  (let ((port-width (##output-port-width port)))
+
+    (define thread-width 14)
+
+    (let ((extra
+           (##fixnum.max
+            0
+            (##fixnum.quotient
+             (##fixnum.- port-width thread-width)
+             5))))
+      (##write thread port)
+      (tab (##fixnum.+ thread-width extra))
+      (let ((ts (##thread-state thread)))
+        (cond ((macro-thread-state-uninitialized? ts)
+               (##write-string "UNINITIALIZED" port))
+              ((macro-thread-state-initialized? ts)
+               (##write-string "INITIALIZED" port))
+              ((macro-thread-state-normally-terminated? ts)
+               (##write-string "NORMALLY TERMINATED" port))
+              ((macro-thread-state-abnormally-terminated? ts)
+               (##write-string "ABNORMALLY TERMINATED" port))
+              ((macro-thread-state-active? ts)
+               (let ((wf (macro-thread-state-active-waiting-for ts))
+                     (to (macro-thread-state-active-timeout ts)))
+                 (cond (wf
+                        (##write-string "WAITING " port)
+                        (##write wf port)
+                        (if to
+                            (write-timeout to)))
+                       (to
+                        (##write-string "SLEEPING" port)
+                        (write-timeout to))
+                       (else
+                        (##write-string "RUNNING" port)))))
+              (else
+               (##write ts port))))
+      (##newline port))))
+
+(define-prim (##display-thread-group-state tgroup port)
+  (let* ((threads (##tgroup->thread-vector tgroup))
+         (now (##current-time-point)))
+    (let loop ((i 0))
+      (if (##fixnum.< i (##vector-length threads))
+          (let ((thread (##vector-ref threads i)))
+            (##display-thread-state-relative thread port now)
+            (loop (##fixnum.+ i 1)))
+          i))))
+
+(define-prim (##top tgroup port)
+
+  (define interval 1.0)
+
+  (define (up n)
+    (##write-string "\033[" port)
+    (##write n port)
+    (##write-string "A\033[J" port))
+
+  (let ((start-time-point (##current-time-point)))
+    (let loop ((last start-time-point))
+      (##write-string "*** THREAD LIST:\n"
+		      port)
+      (let* ((n (##fixnum.+ 1 (##display-thread-group-state tgroup port)))
+             (next (##flonum.+ last interval))
+             (now (##current-time-point))
+             (diff (##flonum.- next now)))
+        (if (##flonum.negative? diff)
+            (begin
+              (up n)
+              (loop now))
+            (begin
+              (##thread-sleep! diff)
+              (up n)
+              (loop next)))))))
+
+(define-prim (top
+              #!optional
+              (tgroup (macro-absent-obj))
+              (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((tg
+           (if (##eq? tgroup (macro-absent-obj))
+               (macro-thread-tgroup (macro-current-thread))
+               tgroup))
+          (p
+           (if (##eq? port (macro-absent-obj))
+               (##repl-output-port)
+               port)))
+      (macro-check-tgroup tg 1 (top tgroup port)
+        (macro-check-character-output-port p 2 (top tgroup port)
+          (##top tg p))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1939,7 +2058,7 @@
 (define-prim (##make-repl-channel-ports input-port output-port)
   (macro-make-repl-channel-ports
 
-   (##make-mutex #f)
+   (##make-mutex 'channel-arbiter)
    (macro-current-thread)
    input-port
    output-port
@@ -2388,6 +2507,12 @@
                                    (macro-repl-context-cont repl-context))
                                   output-port)))
                       (continue))
+                     ((##eq? cmd 'st)
+                      (##repl-channel-display-multiline-message
+                       (lambda (output-port)
+                         (##cmd-st (macro-thread-tgroup (macro-current-thread))
+                                   output-port)))
+                      (continue))
                      ((##eq? cmd 't)
                       (cmd-t))
                      ((##eq? cmd 'd)
@@ -2474,6 +2599,33 @@
                                         (acquire-ownership!)
                                         (invalid-command
                                          "PROCEDURE or CONTINUATION expected")
+                                        (continue))))))))
+                         ((##eq? cmd2 'st)
+                          (let ((src (##cadr cmd)))
+                            (release-ownership!)
+                            (##eval-within
+                             src
+                             (macro-repl-context-cont repl-context)
+                             repl-context
+                             (lambda (results)
+                               (let ((val results))
+
+                                 (define (handle thread-or-tgroup)
+                                   (acquire-ownership!)
+                                   (##repl-channel-display-multiline-message
+                                    (lambda (output-port)
+                                      (##cmd-st thread-or-tgroup
+                                                output-port)))
+                                   (continue))
+
+                                 (cond ((macro-tgroup? val)
+                                        (handle val))
+                                       ((macro-thread? val)
+                                        (handle val))
+                                       (else
+                                        (acquire-ownership!)
+                                        (invalid-command
+                                         "THREAD or THREAD-GROUP expected")
                                         (continue))))))))
                          (else
                           (unknown-command)
@@ -2995,6 +3147,13 @@
            (display-call
             (macro-uninitialized-thread-exception-procedure exc)
             (macro-uninitialized-thread-exception-arguments exc)))
+
+          ((macro-inactive-thread-exception? exc)
+           (##write-string "Thread is not active" port)
+           (##newline port)
+           (display-call
+            (macro-inactive-thread-exception-procedure exc)
+            (macro-inactive-thread-exception-arguments exc)))
 
           ((macro-started-thread-exception? exc)
            (##write-string "Thread is started" port)

@@ -1977,6 +1977,19 @@ and this combined environment is displayed.  When @var{X} is an
 integer, the environment at frame number @var{X} of the continuation
 is displayed.
 
+@item ,st
+@cmindex ,st
+Display the state of the threads in the current thread's thread group.
+A thread can be: uninitialized, initialized, active, and
+terminated (normally or abnormally).  Active threads can be
+running, sleeping and waiting on a synchronization object
+(mutex, condition variable or port) possibly with a timeout.
+
+@item ,(st @var{expr})
+@cmindex ,(st @var{expr})
+Display the state of a specific thread or thread group.
+The value of @var{expr} must be a thread or thread group.
+
 @item ,(v @var{expr})
 @cmindex ,(v @var{expr})
 Start a new REPL visiting @var{expr}'s value, @var{X}, which is
@@ -3319,6 +3332,22 @@ The procedures in this section are not yet documented.
 @deffnx procedure thread-group->thread-vector @var{thread-group}
 @end deffn
 
+@deffn procedure thread-state @var{thread}
+@deffnx procedure thread-state-uninitialized? @var{thread-state}
+@deffnx procedure thread-state-initialized? @var{thread-state}
+@deffnx procedure thread-state-active? @var{thread-state}
+@deffnx procedure thread-state-active-waiting-for @var{thread-state}
+@deffnx procedure thread-state-active-timeout @var{thread-state}
+@deffnx procedure thread-state-normally-terminated? @var{thread-state}
+@deffnx procedure thread-state-normally-terminated-result @var{thread-state}
+@deffnx procedure thread-state-abnormally-terminated? @var{thread-state}
+@deffnx procedure thread-state-abnormally-terminated-reason @var{thread-state}
+@deffnx procedure top @r{[}@var{thread-group} @r{[}@var{port}@r{]}@r{]}
+@end deffn
+
+@deffn procedure thread-interrupt! @var{thread} @r{[}@var{thunk}@r{]}
+@end deffn
+
 @deffn procedure thread-suspend! @var{thread}
 @deffnx procedure thread-resume! @var{thread}
 @end deffn
@@ -3340,6 +3369,11 @@ The procedures in this section are not yet documented.
 @deffn procedure uninitialized-thread-exception? @var{obj}
 @deffnx procedure uninitialized-thread-exception-procedure @var{exc}
 @deffnx procedure uninitialized-thread-exception-arguments @var{exc}
+@end deffn
+
+@deffn procedure inactive-thread-exception? @var{obj}
+@deffnx procedure inactive-thread-exception-procedure @var{exc}
+@deffnx procedure inactive-thread-exception-arguments @var{exc}
 @end deffn
 
 @deffn procedure process-pid @var{process-port}

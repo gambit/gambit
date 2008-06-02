@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-05-23 14:49:37 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-06-02 00:24:50 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -43,6 +43,19 @@
    (lambda (procedure arguments dummy1 dummy2 dummy3)
      (macro-raise
       (macro-make-uninitialized-thread-exception procedure arguments)))))
+
+(implement-library-type-inactive-thread-exception)
+
+(define-prim (##raise-inactive-thread-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-inactive-thread-exception procedure arguments)))))
 
 (implement-library-type-started-thread-exception)
 
@@ -129,6 +142,11 @@
 (implement-type-condvar)
 (implement-type-tgroup)
 
+(implement-library-type-thread-state-uninitialized)
+(implement-library-type-thread-state-initialized)
+(implement-library-type-thread-state-normally-terminated)
+(implement-library-type-thread-state-abnormally-terminated)
+(implement-library-type-thread-state-active)
 
 (##declare (not interrupts-enabled));;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1079,8 +1097,9 @@
                              ;; processed the thread will resume
                              ;; sleeping)
 
-                             (##thread-interrupt!
+                             (##thread-int!
                               next-sleeper
+                              #f
                               ##thread-void-action!)
 
                              (let ((next-condvar
@@ -1116,8 +1135,9 @@
             ;; the primordial thread to wakeup (it can't be currently
             ;; runnable) and raise a "deadlock" exception
 
-            (##thread-interrupt!
+            (##thread-int!
              (macro-primordial-thread)
+             #f
              ##thread-deadlock-action!))
 
           ;; check things one more time!
@@ -1128,8 +1148,9 @@
 
   (##declare (not interrupts-enabled))
 
-  (##thread-interrupt!
+  (##thread-int!
    (macro-primordial-thread)
+   #f
    (lambda ()
 
      (macro-raise
@@ -1141,22 +1162,44 @@
 
      (##void))))
 
-(define-prim (##thread-interrupt! thread action)
+(define-prim (##thread-interrupt!
+              thread
+              #!optional
+              (action (macro-absent-obj)))
+  (let ((act
+         (if (##eq? action (macro-absent-obj))
+             ##user-interrupt!
+             action)))
+    (##thread-int! thread action (lambda () (act) (##void)))))
+
+(define-prim (##thread-int! thread action thunk-returning-void)
+
+  ;; Note: the thunk-returning-void procedure must return void in
+  ;; order to restart the interrupted thread properly.
 
   (##declare (not interrupts-enabled))
 
-  ;; Note: the action procedure must return void in order to
-  ;; restart the interrupted thread properly.
+  (cond ((##eq? thread (macro-current-thread))
+         (thunk-returning-void))
 
-  ;; remove the thread from any blocked thread queue and timeout
-  ;; queue it is in
+        ((or (##not (macro-initialized-thread? thread))
+             (macro-terminated-thread-given-initialized? thread)
+             (##not (macro-started-thread-given-initialized? thread)))
+         (##raise-inactive-thread-exception thread-interrupt! thread action))
 
-  (macro-thread-btq-remove-if-in-btq! thread)
-  (macro-thread-toq-remove-if-in-toq! thread)
+        (else
 
-  (macro-thread-result-set! thread action)
+         ;; remove the thread from any blocked thread queue and
+         ;; timeout queue it is in
 
-  (##btq-insert! (macro-run-queue) thread))
+         (macro-thread-btq-remove-if-in-btq! thread)
+         (macro-thread-toq-remove-if-in-toq! thread)
+
+         (macro-thread-result-set! thread thunk-returning-void)
+
+         (##btq-insert! (macro-run-queue) thread)
+
+         (##void))))
 
 (define-prim (##thread-start-action!)
 
@@ -2105,8 +2148,10 @@
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-start! thread)
       (macro-check-initialized-thread thread (thread-start! thread)
-        (macro-check-not-started-thread thread (thread-start! thread)
-          (##thread-start! thread))))))
+        (macro-check-not-started-thread-given-initialized
+         thread
+         (thread-start! thread)
+         (##thread-start! thread))))))
 
 (define-prim (thread-yield!)
   (##thread-yield!))
@@ -2159,6 +2204,54 @@
         thread
         absrel-timeout
         timeout-val)))))
+
+(define-prim (thread-interrupt!
+              thread
+              #!optional
+              (thunk (macro-absent-obj)))
+  (macro-force-vars (thread thunk)
+    (macro-check-thread thread 1 (thread-interrupt! thread thunk)
+      (if (##eq? thunk (macro-absent-obj))
+          (##thread-interrupt! thread)
+          (macro-check-procedure thunk 2 (thread-interrupt! thread thunk)
+            (##thread-interrupt! thread thunk))))))
+
+(define-prim (thread-state thread)
+  (macro-force-vars (thread)
+    (macro-check-thread thread 1 (thread-state thread)
+      (##thread-state thread))))
+
+(define-prim (##thread-state thread)
+  (##declare (not interrupts-enabled))
+  (cond ((##not (macro-initialized-thread? thread))
+         (macro-make-constant-thread-state-uninitialized))
+        ((macro-terminated-thread-given-initialized? thread)
+         (if (macro-thread-exception? thread)
+             (macro-make-thread-state-abnormally-terminated
+              (macro-thread-result thread))
+             (macro-make-thread-state-normally-terminated
+              (macro-thread-result thread))))
+        ((##not (macro-started-thread-given-initialized? thread))
+         (macro-make-constant-thread-state-initialized))
+        (else
+         (let* ((btq
+                 (macro-thread->btq thread))
+                (toq
+                 (macro-thread->toq thread))
+                (timeout
+                 (and toq
+                      (let* ((floats (macro-thread-floats thread))
+                             (timeout (macro-timeout floats)))
+                        (macro-make-time timeout #f #f #f)))))
+           (macro-make-thread-state-active
+            (cond ((##eq? btq (macro-run-queue))
+                   #f)
+                  ((and (macro-condvar? btq)
+                        (##io-condvar? btq))
+                   (##io-condvar-port btq))
+                  (else
+                   btq))
+            timeout)))))
 
 ;;; User accessible primitives for mutexes.
 
@@ -2976,15 +3069,15 @@
 (define current-user-interrupt-handler
   ##current-user-interrupt-handler)
 
-(##interrupt-vector-set!
- 0
- (lambda ()
-   (##declare (not interrupts-enabled))
-   (let ((handler (##current-user-interrupt-handler)))
-     (if (##procedure? handler)
-       (let ()
-         (##declare (not safe)) ;; avoid procedure check on the call
-         (handler))))))
+(define-prim (##user-interrupt!)
+  (##declare (not interrupts-enabled))
+  (let ((handler (##current-user-interrupt-handler)))
+    (if (##procedure? handler)
+        (let ()
+          (##declare (not safe)) ;; avoid procedure check on the call
+          (handler)))))
+
+(##interrupt-vector-set! 0 ##user-interrupt!)
 
 (##thread-startup!)
 

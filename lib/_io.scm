@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-05-22 17:52:12 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-05-30 13:32:30 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1127,6 +1127,27 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; I/O condition variables.
+
+(define-prim (##make-io-condvar name for-writing?)
+  (let ((cv (##make-condvar name)))
+    (macro-btq-owner-set! cv (if for-writing? 2 0))
+    cv))
+
+(define-prim (##io-condvar? cv)
+  (##fixnum? (macro-btq-owner cv)))
+
+(define-prim (##io-condvar-for-writing? cv)
+  (##not (##fixnum.= 0 (##fixnum.bitwise-and 2 (macro-btq-owner cv)))))
+
+(define-prim (##io-condvar-port cv)
+  (macro-condvar-specific cv))
+
+(define-prim (##io-condvar-port-set! cv port)
+  (macro-condvar-specific-set! cv port))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of dummy ports.
 
 (define-prim (##make-dummy-port)
@@ -1499,63 +1520,65 @@
            (##raise-os-exception #f result output-port-width port)
            result)))
 
-     (macro-make-device-port
-      mutex
-      rkind
-      wkind
-      name
-      read-datum
-      write-datum
-      newline
-      force-output
-      close
-      roptions
-      rtimeout
-      rtimeout-thunk
-      set-rtimeout
-      woptions
-      wtimeout
-      wtimeout-thunk
-      set-wtimeout
-      char-rbuf
-      char-rlo
-      char-rhi
-      char-rchars
-      char-rlines
-      char-rcurline
-      char-rbuf-fill
-      char-peek-eof?
-      char-wbuf
-      char-wlo
-      char-whi
-      char-wchars
-      char-wlines
-      char-wcurline
-      char-wbuf-drain
-      input-readtable
-      output-readtable
-      output-width
-      byte-rbuf
-      byte-rlo
-      byte-rhi
-      byte-rbuf-fill
-      byte-wbuf
-      byte-wlo
-      byte-whi
-      byte-wbuf-drain
-      rdevice-condvar
-      wdevice-condvar
-      device-name)))
+     (let ((port
+            (macro-make-device-port
+             mutex
+             rkind
+             wkind
+             name
+             read-datum
+             write-datum
+             newline
+             force-output
+             close
+             roptions
+             rtimeout
+             rtimeout-thunk
+             set-rtimeout
+             woptions
+             wtimeout
+             wtimeout-thunk
+             set-wtimeout
+             char-rbuf
+             char-rlo
+             char-rhi
+             char-rchars
+             char-rlines
+             char-rcurline
+             char-rbuf-fill
+             char-peek-eof?
+             char-wbuf
+             char-wlo
+             char-whi
+             char-wchars
+             char-wlines
+             char-wcurline
+             char-wbuf-drain
+             input-readtable
+             output-readtable
+             output-width
+             byte-rbuf
+             byte-rlo
+             byte-rhi
+             byte-rbuf-fill
+             byte-wbuf
+             byte-wlo
+             byte-whi
+             byte-wbuf-drain
+             rdevice-condvar
+             wdevice-condvar
+             device-name)))
+       (if rdevice-condvar
+           (##io-condvar-port-set! rdevice-condvar port))
+       (if wdevice-condvar
+           (##io-condvar-port-set! wdevice-condvar port))
+       port)))
 
 (define-prim (##make-rdevice-condvar rdevice)
-  (let ((cv (##make-condvar rdevice)))
-    (macro-btq-owner-set! cv 0) ;; mark as read device
-    cv))
+  (##make-io-condvar rdevice #f))
 
 (define-prim (##make-wdevice-condvar wdevice)
-  (let ((cv (##make-condvar wdevice)))
-    (macro-btq-owner-set! cv 2) ;; mark as write device
-    cv))
+  (##make-io-condvar wdevice #t))
 
 (define-prim (##make-device-port-from-single-device
               device-name
@@ -2891,9 +2914,9 @@
          (vector-wlo
           (##fixnum.- len vector-whi))
          (vector-rcondvar
-          (##make-condvar #f))
+          (##make-io-condvar #f #f))
          (vector-wcondvar
-          (##make-condvar #f))
+          (##make-io-condvar #f #t))
          (vector-buffering-limit
           #f))
 
@@ -3055,6 +3078,8 @@
              vector-wcondvar
              vector-buffering-limit)))
        (macro-vector-port-peer-set! port port)
+       (##io-condvar-port-set! vector-rcondvar port)
+       (##io-condvar-port-set! vector-wcondvar port)
        port)))
 
 ;;;----------------------------------------------------------------------------
@@ -3146,9 +3171,9 @@
          (output-readtable
           (##psettings->output-readtable psettings))
          (string-rcondvar
-          (##make-condvar #f))
+          (##make-io-condvar #f #f))
          (string-wcondvar
-          (##make-condvar #f))
+          (##make-io-condvar #f #t))
          (string-width
           (##psettings->output-width psettings))
          (string-buffering-limit
@@ -3236,6 +3261,8 @@
              string-width
              string-buffering-limit)))
        (macro-string-port-peer-set! port port)
+       (##io-condvar-port-set! string-rcondvar port)
+       (##io-condvar-port-set! string-wcondvar port)
        port)))
 
 ;;;----------------------------------------------------------------------------
@@ -3383,9 +3410,9 @@
          (u8vector-wlo
           (##fixnum.- len u8vector-whi))
          (u8vector-rcondvar
-          (##make-condvar #f))
+          (##make-io-condvar #f #f))
          (u8vector-wcondvar
-          (##make-condvar #f))
+          (##make-io-condvar #f #t))
          (u8vector-width
           (##psettings->output-width psettings))
          (u8vector-buffering-limit
@@ -3495,6 +3522,8 @@
              u8vector-width
              u8vector-buffering-limit)))
        (macro-u8vector-port-peer-set! port port)
+       (##io-condvar-port-set! u8vector-rcondvar port)
+       (##io-condvar-port-set! u8vector-wcondvar port)
        port)))
 )
 
@@ -5907,8 +5936,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (and rdevice
-              (##make-rdevice-condvar rdevice))))
+         (##make-rdevice-condvar rdevice)))
 
         (define (server-name port)
 
@@ -6049,26 +6077,29 @@
               (##raise-os-exception #f result prim arg1)
               result)))
 
-        (macro-make-tcp-server-port
-         mutex
-         rkind
-         wkind
-         server-name
-         read-datum
-         write-datum
-         newline
-         force-output
-         close
-         roptions
-         rtimeout
-         rtimeout-thunk
-         set-rtimeout
-         woptions
-         wtimeout
-         wtimeout-thunk
-         set-wtimeout
-         rdevice-condvar
-         client-psettings)))
+        (let ((port
+               (macro-make-tcp-server-port
+                mutex
+                rkind
+                wkind
+                server-name
+                read-datum
+                write-datum
+                newline
+                force-output
+                close
+                roptions
+                rtimeout
+                rtimeout-thunk
+                set-rtimeout
+                woptions
+                wtimeout
+                wtimeout-thunk
+                set-wtimeout
+                rdevice-condvar
+                client-psettings)))
+          (##io-condvar-port-set! rdevice-condvar port)
+          port)))
 
 (define-prim (##open-tcp-server
               raise-os-exception?
@@ -6197,8 +6228,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (and rdevice
-              (##make-rdevice-condvar rdevice))))
+         (##make-rdevice-condvar rdevice)))
 
         (define (name port)
 
@@ -6303,26 +6333,29 @@
               (##raise-os-exception #f result prim arg1)
               result)))
 
-        (macro-make-directory-port
-         mutex
-         rkind
-         wkind
-         name
-         read-datum
-         write-datum
-         newline
-         force-output
-         close
-         roptions
-         rtimeout
-         rtimeout-thunk
-         set-rtimeout
-         woptions
-         wtimeout
-         wtimeout-thunk
-         set-wtimeout
-         rdevice-condvar
-         path)))
+        (let ((port
+               (macro-make-directory-port
+                mutex
+                rkind
+                wkind
+                name
+                read-datum
+                write-datum
+                newline
+                force-output
+                close
+                roptions
+                rtimeout
+                rtimeout-thunk
+                set-rtimeout
+                woptions
+                wtimeout
+                wtimeout-thunk
+                set-wtimeout
+                rdevice-condvar
+                path)))
+          (##io-condvar-port-set! rdevice-condvar port)
+          port)))
 
 (define-prim (##open-directory
               raise-os-exception?
@@ -6397,8 +6430,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (and rdevice
-              (##make-rdevice-condvar rdevice))))
+         (##make-rdevice-condvar rdevice)))
 
         (define (name port)
 
@@ -6503,26 +6535,29 @@
               (##raise-os-exception #f result prim arg1)
               result)))
 
-        (macro-make-event-queue-port
-         mutex
-         rkind
-         wkind
-         name
-         read-datum
-         write-datum
-         newline
-         force-output
-         close
-         roptions
-         rtimeout
-         rtimeout-thunk
-         set-rtimeout
-         woptions
-         wtimeout
-         wtimeout-thunk
-         set-wtimeout
-         rdevice-condvar
-         index)))
+        (let ((port
+               (macro-make-event-queue-port
+                mutex
+                rkind
+                wkind
+                name
+                read-datum
+                write-datum
+                newline
+                force-output
+                close
+                roptions
+                rtimeout
+                rtimeout-thunk
+                set-rtimeout
+                woptions
+                wtimeout
+                wtimeout-thunk
+                set-wtimeout
+                rdevice-condvar
+                index)))
+          (##io-condvar-port-set! rdevice-condvar port)
+          port)))
 
 (define-prim (##open-event-queue
               raise-os-exception?

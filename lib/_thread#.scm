@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_thread#.scm", Time-stamp: <2008-05-23 13:59:20 feeley>
+;;; File: "_thread#.scm", Time-stamp: <2008-06-02 00:28:10 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -56,6 +56,18 @@
 
 (define-library-type-of-exception uninitialized-thread-exception
   id: 71831161-39c1-4a10-bb79-04342e1981c3
+  constructor: #f
+  opaque:
+
+  unprintable:
+  read-only:
+
+  procedure
+  arguments
+)
+
+(define-library-type-of-exception inactive-thread-exception
+  id: 339af4ff-3d44-4bec-a90b-d981fd13834d
   constructor: #f
   opaque:
 
@@ -155,23 +167,32 @@
 (define-check-type tgroup (macro-type-tgroup)
   macro-tgroup?)
 
+(##define-macro (macro-initialized-thread? thread)
+  `(macro-thread-cont ,thread))
+
+(##define-macro (macro-started-thread-given-initialized? thread)
+  `(or (##not (##procedure? (macro-thread-exception? ,thread)))
+       (macro-thread-result ,thread)))
+
+(##define-macro (macro-terminated-thread-given-initialized? thread)
+  `(##not (macro-thread-end-condvar ,thread)))
+
 (##define-macro (macro-check-initialized-thread thread form expr)
-  `(if (##not (macro-thread-cont ,thread))
-     (##raise-uninitialized-thread-exception ,@form)
-     ,expr))
+  `(if (##not (macro-initialized-thread? ,thread))
+       (##raise-uninitialized-thread-exception ,@form)
+       ,expr))
 
 (##define-macro (macro-check-not-initialized-thread thread form expr)
-  `(if (macro-thread-cont ,thread)
-     (##raise-initialized-thread-exception ,@form)
-     ,expr))
+  `(if (macro-initialized-thread? ,thread)
+       (##raise-initialized-thread-exception ,@form)
+       ,expr))
 
-(##define-macro (macro-check-not-started-thread thread form expr)
+(##define-macro (macro-check-not-started-thread-given-initialized thread form expr)
   `(if (let ((thread ,thread))
-         (or (##not (macro-thread-end-condvar thread))
-             (##not (##procedure? (macro-thread-exception? thread)))
-             (macro-thread-result thread)))
-     (##raise-started-thread-exception ,@form)
-     ,expr))
+         (or (macro-terminated-thread-given-initialized? thread)
+             (macro-started-thread-given-initialized? thread)))
+       (##raise-started-thread-exception ,@form)
+       ,expr))
 
 ;;;----------------------------------------------------------------------------
 
@@ -322,7 +343,9 @@
           (##declare (not interrupts-enabled))
 
           (or (,',color node)
-              (,',color (,',parent node)))))
+              (let ((parent-node (,',parent node)))
+                (and parent-node ;; make sure node is in a rbtree
+                     (,',color parent-node))))))
 
      (define-prim (,insert! rbtree node)
 
@@ -1569,5 +1592,44 @@
      (macro-btq-init! run-queue)
      (macro-toq-init! run-queue)
      run-queue))
+
+;;; Representation of thread states.
+
+(define-library-type thread-state-uninitialized
+  id: c63af440-d5ef-4f02-8fe6-40836a312fae
+  constructor: #f
+  opaque:
+)
+
+(define-library-type thread-state-initialized
+  id: 47368926-951d-4451-92b0-dd9b4132eca9
+  constructor: #f
+  opaque:
+)
+
+(define-library-type thread-state-normally-terminated
+  id: c475ff99-c959-4784-a847-b0c52aff8f2a
+  constructor: #f
+  opaque:
+
+  (result printable: read-only:)
+)
+
+(define-library-type thread-state-abnormally-terminated
+  id: 291e311e-93e0-4765-8132-56a719dc84b3
+  constructor: #f
+  opaque:
+
+  (reason printable: read-only:)
+)
+
+(define-library-type thread-state-active
+  id: dc963fdc-4b54-45a2-8af6-01654a6dc6cd
+  constructor: #f
+  opaque:
+
+  (waiting-for printable: read-only:)
+  (timeout    printable: read-only:)
+)
 
 ;;;============================================================================
