@@ -3303,7 +3303,8 @@ performance, at the cost of violating the R5RS Scheme semantics, are:
 
 The procedures in this section are not yet documented.
 
-@deffn procedure continuation-capture @var{proc}
+@deffn procedure continuation? @var{obj}
+@deffnx procedure continuation-capture @var{proc}
 @deffnx procedure continuation-graft @var{cont} @var{proc} @var{obj}@dots{}
 @deffnx procedure continuation-return @var{cont} @var{obj}@dots{}
 @end deffn

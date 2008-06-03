@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-06-02 00:24:50 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-06-02 19:14:11 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -2721,6 +2721,9 @@
    (lambda (thread proc #!rest args)
      (##declare (not interrupts-enabled))
      (##thread-restore! thread (lambda () (##apply proc args))))))
+
+(define-prim (continuation? obj)
+  (##continuation? obj))
 
 (define-prim (##continuation-capture-aux receiver lift1 lift2 lift3 others)
   (##declare (not interrupts-enabled))

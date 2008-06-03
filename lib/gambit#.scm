@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-06-02 00:31:58 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-06-02 22:22:24 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -292,6 +292,7 @@ condition-variable-specific-set!
 condition-variable?
 cons
 console-port
+continuation?
 continuation-capture
 continuation-graft
 continuation-return

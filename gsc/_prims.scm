@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_prims.scm", Time-stamp: <2008-04-06 15:52:04 feeley>
+;;; File: "_prims.scm", Time-stamp: <2008-06-02 22:09:03 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -179,7 +179,7 @@
 ("apply"                              2     #t 0     0    (#f)    ieee)
 ("map"                                2     #t 0     0    list    ieee)
 ("for-each"                           2     #t 0     0    #f      ieee)
-("call-with-current-continuation"     1     #t 0     1112 (#f)    ieee)
+("call-with-current-continuation"     1     #t 0     1113 (#f)    ieee)
 ("call-with-input-file"               (2)   #t 0     0    (#f)    ieee)
 ("call-with-output-file"              (2)   #t 0     0    (#f)    ieee)
 ("input-port?"                        (1)   #f 0     0    boolean ieee)
@@ -432,6 +432,13 @@
 ("bitwise-and"                        0     #f 0     0    integer gambit)
 ("bitwise-not"                        (1)   #f 0     0    integer gambit)
 ("arithmetic-shift"                   (2)   #f 0     0    integer gambit)
+
+("call/cc"                            1     #t 0     1113 (#f)    gambit)
+
+("continuation?"                      (1)   #f 0     0    boolean gambit)
+("continuation-capture"               1     #t 0     1113 (#f)    gambit)
+("continuation-graft"                 2     #t 0     2203 #f      gambit)
+("continuation-return"                (2)   #t 0     0    #f      gambit)
 
 ;; for system interface
 
@@ -883,7 +890,7 @@
 ("##continuation-return-no-winding"   (2)   #t ()    0    #f      extended)
 
 ("##apply"                            (2)   #t ()    0    (#f)    extended)
-("##call-with-current-continuation"   1     #t ()    1112 (#f)    extended)
+("##call-with-current-continuation"   1     #t ()    1113 (#f)    extended)
 ("##make-global-var"                  (1)   #t ()    0    #f      extended)
 ("##global-var-ref"                   (1)   #f ()    0    (#f)    extended)
 ("##global-var-primitive-ref"         (1)   #f ()    0    (#f)    extended)

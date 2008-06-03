@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2008-01-10 16:52:16 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2008-06-02 22:11:46 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1076,28 +1076,27 @@
   (for-each (lambda (child) (ll! child cst-procs env))
             (node-children ptree))
 
-  (let ((oper
-         (app-oper ptree)))
-    (if (ref? oper)
-      (let ((proc
-             (global-proc-obj oper)))
-        (if proc
-          (let* ((lift-pat
-                  (proc-obj-lift-pat proc))
-                 (receiver-arg-pos
-                  (modulo (quotient lift-pat 1000) 10))
-                 (min-nb-args
-                  (modulo (quotient lift-pat 100) 10))
-                 (nb-req-and-opt-parms
-                  (modulo (quotient lift-pat 10) 10))
-                 (max-lifted-vars
-                  (modulo lift-pat 10))
-                 (args
-                  (app-args ptree))
-                 (nb-args
-                  (length args)))
-            (if (and (< 0 receiver-arg-pos)
-                     (<= min-nb-args nb-args))
+  (let* ((oper (app-oper ptree))
+         (proc (cond ((cst? oper) (cst-val oper))
+                     ((ref? oper) (global-proc-obj oper))
+                     (else        #f))))
+    (if (proc-obj? proc)
+        (let* ((lift-pat
+                (proc-obj-lift-pat proc))
+               (receiver-arg-pos
+                (modulo (quotient lift-pat 1000) 10))
+               (min-nb-args
+                (modulo (quotient lift-pat 100) 10))
+               (nb-req-and-opt-parms
+                (modulo (quotient lift-pat 10) 10))
+               (max-lifted-vars
+                (modulo lift-pat 10))
+               (args
+                (app-args ptree))
+               (nb-args
+                (length args)))
+          (if (and (< 0 receiver-arg-pos)
+                   (<= min-nb-args nb-args))
               (let ((receiver
                      (list-ref args (- receiver-arg-pos 1))))
                 (if (and (prc? receiver)
@@ -1108,44 +1107,45 @@
                          (= (- (length (prc-parms receiver))
                                nb-req-and-opt-parms)
                             (- nb-args min-nb-args)))
-                  (let ((vars
-                         (ll-lifted-vars (bound-free-variables receiver)
-                                         cst-procs
-                                         env)))
-                    (if (and (not (null? vars))
-                             (<= (+ (length vars) (- nb-args min-nb-args))
-                                 max-lifted-vars))
-                      (let ((cloned-vars (clone-vars vars)))
+                    (let ((vars
+                           (ll-lifted-vars (bound-free-variables receiver)
+                                           cst-procs
+                                           env)))
+                      (if (and (not (null? vars))
+                               (<= (+ (length vars) (- nb-args min-nb-args))
+                                   max-lifted-vars))
+                          (let ((cloned-vars (clone-vars vars)))
 
-                        ; modify call site
+                            ;; modify call site
 
-                        (define (new-ref* var)
-                          (new-ref (var-source var) (node-env ptree) var))
+                            (define (new-ref* var)
+                              (new-ref (var-source var) (node-env ptree) var))
 
-                        (node-children-set! ptree
-                          (cons oper
-                                (append (take args min-nb-args)
-                                        (map new-ref* vars)
-                                        (drop args min-nb-args))))
+                            (node-children-set!
+                             ptree
+                             (cons oper
+                                   (append (take args min-nb-args)
+                                           (map new-ref* vars)
+                                           (drop args min-nb-args))))
 
-                        ; modify receiver procedure
+                            ;; modify receiver procedure
 
-                        (prc-parms-set!
-                         receiver
-                         (append (take (prc-parms receiver)
-                                       nb-req-and-opt-parms)
-                                 cloned-vars
-                                 (drop (prc-parms receiver)
-                                       nb-req-and-opt-parms)))
-                        (for-each (lambda (x) (var-bound-set! x receiver))
-                                  cloned-vars)
-                        (node-fv-invalidate! receiver)
-                        (for-each (lambda (x y) (var-clone-set! x y))
-                                  vars
-                                  cloned-vars)
-                        (ll-rename! receiver)
-                        (for-each (lambda (x) (var-clone-set! x #f))
-                                  vars)))))))))))))
+                            (prc-parms-set!
+                             receiver
+                             (append (take (prc-parms receiver)
+                                           nb-req-and-opt-parms)
+                                     cloned-vars
+                                     (drop (prc-parms receiver)
+                                           nb-req-and-opt-parms)))
+                            (for-each (lambda (x) (var-bound-set! x receiver))
+                                      cloned-vars)
+                            (node-fv-invalidate! receiver)
+                            (for-each (lambda (x y) (var-clone-set! x y))
+                                      vars
+                                      cloned-vars)
+                            (ll-rename! receiver)
+                            (for-each (lambda (x) (var-clone-set! x #f))
+                                      vars)))))))))))
 
 (define (ll!-let ptree cst-procs env)
   (let* ((proc (app-oper ptree))

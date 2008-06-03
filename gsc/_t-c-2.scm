@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2008-04-12 09:53:42 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2008-06-02 19:32:44 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4184,8 +4184,14 @@
 (targ-spec "equal?"           (targ-s-equal?))
 (targ-spec "##equal?"         (targ-s-equal?))
 
+(targ-spec "call/cc"          (targ-s "##call-with-current-continuation"))
 (targ-spec "call-with-current-continuation"
                               (targ-s "##call-with-current-continuation"))
+
+(targ-spec "continuation?"        (targ-s "##continuation?"))
+(targ-spec "continuation-capture" (targ-s "##continuation-capture"))
+(targ-spec "continuation-graft"   (targ-s "##continuation-graft"))
+(targ-spec "continuation-return"  (targ-s "##continuation-return"))
 
 (targ-spec "current-thread"   (targ-s "##current-thread"))
 )
