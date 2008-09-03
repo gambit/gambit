@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2008-09-03 14:33:19 feeley> */
+/* File: "os.h", Time-stamp: <2008-09-03 16:32:13 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -833,6 +833,11 @@ ___END_C_LINKAGE
 #ifdef USE__FPU_SETCW
 #undef INCLUDE_fpu_control_h
 #define INCLUDE_fpu_control_h
+#endif
+
+#ifdef USE_get_fpc_csr
+#undef INCLUDE_sys_fpu_h
+#define INCLUDE_sys_fpu_h
 #endif
 
 #ifdef USE_t_fork
