@@ -1,4 +1,4 @@
-/* File: "os.c", Time-stamp: <2008-05-22 11:09:47 feeley> */
+/* File: "os.c", Time-stamp: <2008-09-03 14:41:08 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -58,16 +58,35 @@
 /*---------------------------------------------------------------------------*/
 
 
+___SCMOBJ ___setup_os_interrupt_handling ___PVOID
+{
+  ___SCMOBJ e;
+
+  if ((e = ___setup_heartbeat_interrupt_handling ()) == ___FIX(___NO_ERR))
+    {
+      if ((e = ___setup_user_interrupt_handling ()) != ___FIX(___NO_ERR))
+        ___cleanup_heartbeat_interrupt_handling ();
+    }
+
+  return e;
+}
+
+void ___cleanup_os_interrupt_handling ___PVOID
+{
+  ___cleanup_user_interrupt_handling ();
+  ___cleanup_heartbeat_interrupt_handling ();
+}
+
 void ___disable_os_interrupts ___PVOID
 {
-  ___disable_heartbeat_interrupt ();
-  ___disable_user_interrupt ();
+  ___disable_heartbeat_interrupts ();
+  ___disable_user_interrupts ();
 }
 
 void ___enable_os_interrupts ___PVOID
 {
-  ___enable_user_interrupt ();
-  ___enable_heartbeat_interrupt ();
+  ___enable_user_interrupts ();
+  ___enable_heartbeat_interrupts ();
 }
 
 

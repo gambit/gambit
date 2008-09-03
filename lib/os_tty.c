@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-05-17 08:53:40 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-09-03 14:29:59 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -8395,6 +8395,85 @@ DWORD dwCtrlType;)
 #endif
 
 
+___SCMOBJ ___setup_user_interrupt_handling ___PVOID
+{
+#ifdef USE_POSIX
+
+  ___set_signal_handler (SIGINT, tty_signal_handler);
+  ___set_signal_handler (SIGTERM, tty_signal_handler);
+  ___set_signal_handler (SIGWINCH, tty_signal_handler);
+  ___set_signal_handler (SIGCONT, tty_signal_handler);
+
+#endif
+
+#ifdef USE_WIN32
+
+  SetConsoleCtrlHandler (console_event_handler, TRUE); /* ignore error */
+
+#endif
+
+  return ___FIX(___NO_ERR);
+}
+
+
+void ___cleanup_user_interrupt_handling ___PVOID
+{
+#ifdef USE_POSIX
+
+  ___set_signal_handler (SIGINT, SIG_DFL);
+  ___set_signal_handler (SIGTERM, SIG_DFL);
+  ___set_signal_handler (SIGWINCH, SIG_DFL);
+  ___set_signal_handler (SIGCONT, SIG_DFL);
+
+#endif
+
+#ifdef USE_WIN32
+
+  SetConsoleCtrlHandler (console_event_handler, FALSE); /* ignore error */
+
+#endif
+}
+
+
+void ___disable_user_interrupts ___PVOID
+{
+#ifdef USE_POSIX
+#ifdef HAVE_SIGPROCMASK
+
+  sigset_t sigs;
+
+  sigemptyset (&sigs);
+  sigaddset (&sigs, SIGINT);
+  sigaddset (&sigs, SIGTERM);
+  sigaddset (&sigs, SIGWINCH);
+  sigaddset (&sigs, SIGCONT);
+
+  sigprocmask (SIG_BLOCK, &sigs, NULL);
+
+#endif
+#endif
+}
+
+void ___enable_user_interrupts ___PVOID
+{
+#ifdef USE_POSIX
+#ifdef HAVE_SIGPROCMASK
+
+  sigset_t sigs;
+
+  sigemptyset (&sigs);
+  sigaddset (&sigs, SIGINT);
+  sigaddset (&sigs, SIGTERM);
+  sigaddset (&sigs, SIGWINCH);
+  sigaddset (&sigs, SIGCONT);
+
+  sigprocmask (SIG_UNBLOCK, &sigs, NULL);
+
+#endif
+#endif
+}
+
+
 ___SCMOBJ ___setup_tty_module
    ___P((void (*user_interrupt_handler) ___PVOID,
          void (*terminate_interrupt_handler) ___PVOID),
@@ -8405,26 +8484,16 @@ void (*terminate_interrupt_handler) ___PVOID;)
 {
   if (___tty_mod.refcount == 0)
     {
+      ___SCMOBJ e;
+
       ___tty_mod.mode_save_stack = NULL;
 
       ___tty_mod.user_interrupt_handler = user_interrupt_handler;
 
       ___tty_mod.terminate_interrupt_handler = terminate_interrupt_handler;
 
-#ifdef USE_POSIX
-
-      ___set_signal_handler (SIGINT, tty_signal_handler);
-      ___set_signal_handler (SIGTERM, tty_signal_handler);
-      ___set_signal_handler (SIGWINCH, tty_signal_handler);
-      ___set_signal_handler (SIGCONT, tty_signal_handler);
-
-#endif
-
-#ifdef USE_WIN32
-
-      SetConsoleCtrlHandler (console_event_handler, TRUE); /* ignore error */
-
-#endif
+      if ((e = ___setup_user_interrupt_handling ()) != ___FIX(___NO_ERR))
+        return e;
     }
 
   ___tty_mod.refcount++;
@@ -8438,20 +8507,6 @@ void ___cleanup_tty_module ___PVOID
   /********************* on Win32 this should be an InterlockedDecrement */
   if (--___tty_mod.refcount == 0)
     {
-#ifdef USE_WIN32
-
-      SetConsoleCtrlHandler (console_event_handler, FALSE); /* ignore error */
-
-#endif
+      ___cleanup_user_interrupt_handling ();
     }
-}
-
-
-
-void ___disable_user_interrupt ___PVOID
-{
-}
-
-void ___enable_user_interrupt ___PVOID
-{
 }

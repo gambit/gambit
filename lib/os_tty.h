@@ -1,4 +1,4 @@
-/* File: "os_tty.h", Time-stamp: <2008-05-15 16:19:32 feeley> */
+/* File: "os_tty.h", Time-stamp: <2008-09-03 14:29:40 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -548,9 +548,13 @@ extern ___tty_module ___tty_mod;
 /* User interrupt handling. */
 
 
-void ___disable_user_interrupt ___PVOID;
+extern ___SCMOBJ ___setup_user_interrupt_handling ___PVOID;
 
-void ___enable_user_interrupt ___PVOID;
+extern void ___cleanup_user_interrupt_handling ___PVOID;
+
+extern void ___disable_user_interrupts ___PVOID;
+
+extern void ___enable_user_interrupts ___PVOID;
 
 
 /*---------------------------------------------------------------------------*/

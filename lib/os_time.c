@@ -1,6 +1,6 @@
-/* File: "os_time.c", Time-stamp: <2007-09-11 23:51:43 feeley> */
+/* File: "os_time.c", Time-stamp: <2008-09-03 14:33:39 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -755,23 +755,23 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupt ___PVOID
+void ___disable_heartbeat_interrupts ___PVOID
 {
 }
 
 
-void ___enable_heartbeat_interrupt ___PVOID
+void ___enable_heartbeat_interrupts ___PVOID
 {
 }
 
 
-___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
+___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
   return ___FIX(___NO_ERR);
 }
 
 
-___HIDDEN void cleanup_heartbeat_interrupt_handling ___PVOID
+void ___cleanup_heartbeat_interrupt_handling ___PVOID
 {
 }
 
@@ -849,7 +849,7 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupt ___PVOID
+void ___disable_heartbeat_interrupts ___PVOID
 {
   ___F64 save_heartbeat_interval = ___time_mod.current_heartbeat_interval;
   ___set_heartbeat_interval (-1.0);
@@ -860,7 +860,7 @@ void ___disable_heartbeat_interrupt ___PVOID
 }
 
 
-void ___enable_heartbeat_interrupt ___PVOID
+void ___enable_heartbeat_interrupts ___PVOID
 {
   ___set_heartbeat_interval (___time_mod.current_heartbeat_interval);
 #ifdef USE_POSIX
@@ -869,16 +869,16 @@ void ___enable_heartbeat_interrupt ___PVOID
 }
 
 
-___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
+___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
-  ___enable_heartbeat_interrupt ();
+  ___enable_heartbeat_interrupts ();
   return ___FIX(___NO_ERR);
 }
 
 
-___HIDDEN void cleanup_heartbeat_interrupt_handling ___PVOID
+void ___cleanup_heartbeat_interrupt_handling ___PVOID
 {
-  ___disable_heartbeat_interrupt ();
+  ___disable_heartbeat_interrupts ();
 }
 
 
@@ -939,19 +939,19 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupt ___PVOID
+void ___disable_heartbeat_interrupts ___PVOID
 {
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___enable_heartbeat_interrupt ___PVOID
+void ___enable_heartbeat_interrupts ___PVOID
 {
   ___time_mod.heartbeat_enabled = 1;
 }
 
 
-___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
+___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
   prev_vector_1Ch = _dos_getvect (0x1C);
   ___time_mod.heartbeat_enabled = 1;
@@ -960,7 +960,7 @@ ___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
 }
 
 
-___HIDDEN void cleanup_heartbeat_interrupt_handling ___PVOID
+void ___cleanup_heartbeat_interrupt_handling ___PVOID
 {
   ___set_heartbeat_interval (-1.0);
   ___time_mod.heartbeat_enabled = 0;
@@ -1035,19 +1035,19 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupt ___PVOID
+void ___disable_heartbeat_interrupts ___PVOID
 {
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___enable_heartbeat_interrupt ___PVOID
+void ___enable_heartbeat_interrupts ___PVOID
 {
   ___time_mod.heartbeat_enabled = 1;
 }
 
 
-___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
+___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
   ___time_mod.heartbeat_enabled = 0;
   ___time_mod.heartbeat_hev     = 0;
@@ -1071,7 +1071,7 @@ ___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
 }
 
 
-___HIDDEN void cleanup_heartbeat_interrupt_handling ___PVOID
+void ___cleanup_heartbeat_interrupt_handling ___PVOID
 {
   ___time_mod.heartbeat_enabled = 0;
   if (___time_mod.heartbeat_htimer)
@@ -1176,19 +1176,19 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupt ___PVOID
+void ___disable_heartbeat_interrupts ___PVOID
 {
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___enable_heartbeat_interrupt ___PVOID
+void ___enable_heartbeat_interrupts ___PVOID
 {
   ___time_mod.heartbeat_enabled = 1;
 }
 
 
-___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
+___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
   ___time_mod.heartbeat_enabled = 1;
   ___time_mod.heartbeat_task_installed = 0;
@@ -1196,7 +1196,7 @@ ___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
 }
 
 
-___HIDDEN void cleanup_heartbeat_interrupt_handling ___PVOID
+void ___cleanup_heartbeat_interrupt_handling ___PVOID
 {
   ___set_heartbeat_interval (-1.0);
   ___time_mod.heartbeat_enabled = 0;
@@ -1287,19 +1287,19 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupt ___PVOID
+void ___disable_heartbeat_interrupts ___PVOID
 {
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___enable_heartbeat_interrupt ___PVOID
+void ___enable_heartbeat_interrupts ___PVOID
 {
   ___time_mod.heartbeat_enabled = 1;
 }
 
 
-___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
+___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
   ___SCMOBJ e;
   DWORD thread_id;
@@ -1349,7 +1349,7 @@ ___HIDDEN ___SCMOBJ setup_heartbeat_interrupt_handling ___PVOID
 }
 
 
-___HIDDEN void cleanup_heartbeat_interrupt_handling ___PVOID
+void ___cleanup_heartbeat_interrupt_handling ___PVOID
 {
   if (___time_mod.heartbeat_thread != NULL)
     {
@@ -1383,7 +1383,7 @@ void (*heartbeat_interrupt_handler) ___PVOID;)
     {
       ___time_mod.heartbeat_interrupt_handler = heartbeat_interrupt_handler;
       setup_process_times ();
-      if ((e = setup_heartbeat_interrupt_handling ()) != ___FIX(___NO_ERR))
+      if ((e = ___setup_heartbeat_interrupt_handling ()) != ___FIX(___NO_ERR))
         return e;
       ___time_mod.setup = 1;
       return ___FIX(___NO_ERR);
@@ -1397,7 +1397,7 @@ void ___cleanup_time_module ___PVOID
 {
   if (___time_mod.setup)
     {
-      cleanup_heartbeat_interrupt_handling ();
+      ___cleanup_heartbeat_interrupt_handling ();
       cleanup_process_times ();
       ___time_mod.setup = 0;
     }

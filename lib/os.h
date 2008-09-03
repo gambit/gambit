@@ -1,6 +1,6 @@
-/* File: "os.h", Time-stamp: <2008-03-13 17:00:15 feeley> */
+/* File: "os.h", Time-stamp: <2008-09-03 14:33:19 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -1303,7 +1303,12 @@ ce(___CHAR_ENCODING_ISO_8859_1, \
    ___CHAR_ENCODING_NATIVE)
 
 
+extern ___SCMOBJ ___setup_os_interrupt_handling ___PVOID;
+
+extern void ___cleanup_os_interrupt_handling ___PVOID;
+
 extern void ___disable_os_interrupts ___PVOID;
+
 extern void ___enable_os_interrupts ___PVOID;
 
 

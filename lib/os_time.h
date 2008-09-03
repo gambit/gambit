@@ -1,6 +1,6 @@
-/* File: "os_time.h", Time-stamp: <2007-04-05 09:14:31 feeley> */
+/* File: "os_time.h", Time-stamp: <2008-09-03 14:33:47 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TIME_H
 #define ___OS_TIME_H
@@ -241,13 +241,17 @@ extern void ___process_times
 /* Heartbeat interrupt handling. */
 
 
+extern ___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID;
+
+extern void ___cleanup_heartbeat_interrupt_handling ___PVOID;
+
+extern void ___disable_heartbeat_interrupts ___PVOID;
+
+extern void ___enable_heartbeat_interrupts ___PVOID;
+
 extern ___F64 ___set_heartbeat_interval
    ___P((___F64 seconds),
         ());
-
-extern void ___disable_heartbeat_interrupt ___PVOID;
-
-extern void ___enable_heartbeat_interrupt ___PVOID;
 
 
 /*---------------------------------------------------------------------------*/
