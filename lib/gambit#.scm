@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-06-02 22:22:24 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-09-03 16:05:39 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -318,6 +318,7 @@ datum-parsing-exception-parameters
 datum-parsing-exception-readenv
 datum-parsing-exception?
 deadlock-exception?
+default-random-source
 defer-user-interrupts
 delete-directory
 delete-file
