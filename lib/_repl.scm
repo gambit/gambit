@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-06-02 00:58:47 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-09-10 17:02:44 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1872,14 +1872,13 @@
 
 (define-prim (##thread-repl-channel-get! thread)
   (or (macro-thread-repl-channel thread)
-      (let ((repl-channel
-             (##thread-make-repl-channel)))
+      (let ((repl-channel (##thread-make-repl-channel thread)))
         (macro-thread-repl-channel-set! thread repl-channel)
         (macro-thread-repl-channel thread))))
 
 (define ##thread-make-repl-channel #f)
 (set! ##thread-make-repl-channel
-  (lambda ()
+  (lambda (thread)
     ##stdio/console-repl-channel))
 
 (define ##stdio/console-repl-channel
@@ -2064,108 +2063,128 @@
    output-port
    (##make-empty-repl-result-history)
 
-   (lambda (channel level depth) ;; read-command
+   ##repl-channel-ports-read-command
+   ##repl-channel-ports-write-results
+   ##repl-channel-ports-display-monoline-message
+   ##repl-channel-ports-display-multiline-message
+   ##repl-channel-ports-display-continuation
+   ##repl-channel-ports-pinpoint-continuation
+   ##repl-channel-ports-really-exit?
+   ##repl-channel-ports-newline
 
-     (define prompt "> ")
+   (let ((history-initialized? #f))
+     (lambda (channel)
 
-     (if (##not (macro-repl-channel-ports-init-read-done? channel))
-         (let ()
+       (if (##not history-initialized?)
+           (let ((input-port (macro-repl-channel-input-port channel)))
 
-           (define (in-homedir filename)
-             (let ((homedir (##path-expand "~")))
-               (##string-append homedir filename)))
+             (define (in-homedir filename)
+               (let ((homedir (##path-expand "~")))
+                 (##string-append homedir filename)))
 
-           (macro-repl-channel-ports-init-read-done?-set! channel #t)
+             (set! history-initialized? #t)
 
-           (if (##tty? input-port)
-               (let ((path-or-settings
-                      (##list path:
-                              (in-homedir ".gambc_history")
-                              char-encoding:
-                              'UTF-8)))
+             (if (##tty? input-port)
+                 (let ((path-or-settings
+                        (##list path:
+                                (in-homedir ".gambc_history")
+                                char-encoding:
+                                'UTF-8)))
 
-                 (##open-file-generic
-                  (macro-direction-in)
-                  #f
-                  (lambda (port)
-                    (if (##port? port)
-                        (let ((history (##read-line port #f #f #f)))
-                          (##close-port port)
-                          (if (##string? history)
-                              (##tty-history-set! input-port history)))))
-                  open-input-file
-                  (##cons eol-encoding: (##cons 'cr-lf path-or-settings)))
+                   (##open-file-generic
+                    (macro-direction-in)
+                    #f
+                    (lambda (port)
+                      (if (##port? port)
+                          (let ((history (##read-line port #f #f #f)))
+                            (##close-port port)
+                            (if (##string? history)
+                                (##tty-history-set! input-port history)))))
+                    open-input-file
+                    (##cons eol-encoding: (##cons 'cr-lf path-or-settings)))
 
-                 (##add-exit-job!
-                  (lambda ()
-                    (##open-file-generic
-                     (macro-direction-out)
-                     #f
-                     (lambda (port)
-                       (if (##port? port)
-                           (let ((history (##tty-history input-port)))
-                             (##display history port)
-                             (##close-port port))))
-                     open-output-file
-                     path-or-settings)))))))
+                   (##add-exit-job!
+                    (lambda ()
+                      (##open-file-generic
+                       (macro-direction-out)
+                       #f
+                       (lambda (port)
+                         (if (##port? port)
+                             (let ((history (##tty-history input-port)))
+                               (##display history port)
+                               (##close-port port))))
+                       open-output-file
+                       path-or-settings)))))))
 
-     (let ((output-port (macro-repl-channel-output-port channel)))
-       (if (##fixnum.< 0 level)
-           (##write level output-port))
-       (if (##fixnum.< 0 depth)
+       (let ((result
+              (let ((input-port (macro-repl-channel-input-port channel)))
+                (##read-expr-from-port input-port))))
+         (let ((output-port (macro-repl-channel-output-port channel)))
+           (##output-port-column-set! output-port 1))
+         result)))))
+
+(define-prim (##repl-channel-ports-read-command channel level depth)
+
+  (define prompt "> ")
+
+  (let ((output-port (macro-repl-channel-output-port channel)))
+    (if (##fixnum.< 0 level)
+        (##write level output-port))
+    (if (##fixnum.< 0 depth)
+        (begin
+          (##write-string "\\" output-port)
+          (##write depth output-port)))
+    (##write-string prompt output-port)
+    (##force-output output-port))
+
+  ((macro-repl-channel-ports-read-expr channel) channel))
+
+(define-prim (##repl-channel-ports-read-exprwrite-results channel results)
+  (let ((input-port (macro-repl-channel-input-port channel))
+        (output-port (macro-repl-channel-output-port channel)))
+    (let ((result (##read-expr-from-port input-port)))
+      (##output-port-column-set! output-port 1)
+      result)))
+
+(define-prim (##repl-channel-ports-write-results channel results)
+  (let ((output-port (macro-repl-channel-output-port channel)))
+    (##for-each
+     (lambda (obj)
+       (if (##not (##eq? obj (##void)))
            (begin
-             (##write-string "\\" output-port)
-             (##write depth output-port)))
-       (##write-string prompt output-port)
-       (##force-output output-port))
+             (##repl-channel-result-history-add channel obj)
+             (##pretty-print obj output-port))))
+     results)))
 
-     (let ((input-port (macro-repl-channel-input-port channel))
-           (output-port (macro-repl-channel-output-port channel)))
-       (let ((result (##read-expr-from-port input-port)))
-         (##output-port-column-set! output-port 1)
-         result)))
+(define-prim (##repl-channel-ports-display-monoline-message channel writer)
+  (let ((output-port (macro-repl-channel-output-port channel)))
+    (writer output-port)
+    (##newline output-port)))
 
-   (lambda (channel results) ;; write-results
-     (let ((output-port (macro-repl-channel-output-port channel)))
-       (##for-each
-        (lambda (obj)
-          (if (##not (##eq? obj (##void)))
-              (begin
-                (##repl-channel-result-history-add channel obj)
-                (##pretty-print obj output-port))))
-        results)))
+(define-prim (##repl-channel-ports-display-multiline-message channel writer)
+  (let ((output-port (macro-repl-channel-output-port channel)))
+    (writer output-port)))
 
-   (lambda (channel writer) ;; display-monoline-message
-     (let ((output-port (macro-repl-channel-output-port channel)))
-       (writer output-port)
-       (##newline output-port)))
+(define-prim (##repl-channel-ports-display-continuation channel cont depth)
+  (if ##display-environment?
+      (##repl-channel-display-multiline-message
+       (lambda (output-port)
+         (##cmd-e cont output-port)))))
 
-   (lambda (channel writer) ;; display-multiline-message
-     (let ((output-port (macro-repl-channel-output-port channel)))
-       (writer output-port)))
+(define-prim (##repl-channel-ports-pinpoint-continuation channel cont)
+  #f)
 
-   (lambda (channel cont depth) ;; display-continuation
-     (if ##display-environment?
-       (##repl-channel-display-multiline-message
-        (lambda (output-port)
-          (##cmd-e cont output-port)))))
+(define-prim (##repl-channel-ports-really-exit? channel)
+  (let ((input-port (macro-repl-channel-input-port channel))
+        (output-port (macro-repl-channel-output-port channel)))
+    (##write-string "*** EOF again to exit" output-port)
+    (##newline output-port)
+    (##force-output output-port)
+    (##not (##char? (##peek-char input-port)))))
 
-   (lambda (channel cont) ;; pinpoint-continuation
-     #f)
-
-   (lambda (channel) ;; really-exit?
-     (let ((input-port (macro-repl-channel-input-port channel))
-           (output-port (macro-repl-channel-output-port channel)))
-       (##write-string "*** EOF again to exit" output-port)
-       (##newline output-port)
-       (##force-output output-port)
-       (##not (##char? (##peek-char input-port)))))
-
-   (lambda (channel) ;; newline
-     (let ((output-port (macro-repl-channel-output-port channel)))
-       (##newline output-port)))
-
-   #f)) ;; init-read-done?
+(define-prim (##repl-channel-ports-newline channel)
+  (let ((output-port (macro-repl-channel-output-port channel)))
+    (##newline output-port)))
 
 ;;;============================================================================
 
@@ -2187,10 +2206,12 @@
 (define-prim (##make-initial-repl-context)
   (macro-make-repl-context -1 0 #f #f #f #f))
 
-(define-prim (##repl #!optional (write-reason #f))
-  (##continuation-capture
-   (lambda (cont)
-     (##repl-within cont write-reason))))
+(define ##repl #f)
+(set! ##repl
+  (lambda (#!optional (write-reason #f))
+    (##continuation-capture
+     (lambda (cont)
+       (##repl-within cont write-reason)))))
 
 (define-prim (##repl-debug #!optional (write-reason #f) (no-result? #f))
   (let* ((old-setting
