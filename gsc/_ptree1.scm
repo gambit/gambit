@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2008-02-14 13:56:23 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2008-09-12 16:54:15 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -419,6 +419,11 @@
 ;;
 ;; (environment-map)                   generate environment maps
 ;; (not environment-map)               don't generate environment maps
+;;
+;; Proper tail calls declarations:
+;;
+;; (proper-tail-calls)                 generate proper tail calls
+;; (not proper-tail-calls)             don't generate proper tail calls
 
 (define-flag-decl ieee-scheme-sym   'dialect)
 (define-flag-decl r4rs-scheme-sym   'dialect)
@@ -450,6 +455,8 @@
 (define-boolean-decl interrupts-enabled-sym)
 
 (define-boolean-decl environment-map-sym)
+
+(define-boolean-decl proper-tail-calls-sym)
 
 (define (scheme-dialect env) ; returns dialect in effect
   (declaration-value 'dialect #f gambit-scheme-sym env))
@@ -505,6 +512,9 @@
 
 (define (environment-map? env) ; true iff environment map should be generated
   (declaration-value environment-map-sym #f #f env))
+
+(define (proper-tail-calls? env) ; true iff proper tail calls should be generated
+  (declaration-value proper-tail-calls-sym #f #t env))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;

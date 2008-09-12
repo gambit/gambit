@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2008-02-12 17:19:28 feeley>
+;;; File: "_eval.scm", Time-stamp: <2008-09-12 18:19:48 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -325,6 +325,18 @@
 (define (##cte-macro-descr cte)
   (##vector-ref cte 2))
 
+(define (##cte-decl parent-cte name value)
+  (##vector parent-cte name value #f))
+
+(define (##cte-decl? cte)
+  (##fixnum.= (##vector-length cte) 4))
+
+(define (##cte-decl-name cte)
+  (##vector-ref cte 1))
+
+(define (##cte-decl-value cte)
+  (##vector-ref cte 2))
+
 (define (##cte-namespace parent-cte prefix vars)
   (##vector parent-cte prefix vars))
 
@@ -347,6 +359,10 @@
            (##cte-macro new-parent-cte
                         (##cte-macro-name cte)
                         (##cte-macro-descr cte)))
+          ((##cte-decl? cte)
+           (##cte-decl new-parent-cte
+                       (##cte-decl-name cte)
+                       (##cte-decl-value cte)))
           ((##cte-namespace? cte)
            (##cte-namespace new-parent-cte
                             (##cte-namespace-prefix cte)
@@ -375,7 +391,7 @@
              (replace (##cte-parent-cte cte))
              (##cte-namespace (##cte-parent-cte cte) prefix vars)))
           (else
-           #f))) ;; don't go beyond a frame or macro definition
+           #f))) ;; don't go beyond a frame, macro definition or declaration
 
   (if (##pair? vars)
     (##cte-namespace parent-cte prefix vars)
@@ -425,7 +441,28 @@
               src))))))
 
 (define (##cte-process-declare parent-cte src)
-  parent-cte) ;; simply ignore ##declare
+  (let ((decls (##cdr (##desourcify src))))
+    (let loop ((cte parent-cte) (decls decls))
+      (if (##pair? decls)
+        (let ((decl (##car decls)))
+          (if (##pair? decl)
+              (let ((d (##car decl)))
+                (cond ((and (##eq? d 'proper-tail-calls)
+                            (##null? (##cdr decl)))
+                       (loop (##cte-decl cte 'proper-tail-calls #t)
+                             (##cdr decls)))
+                      ((and (##eq? d 'not)
+                            (##pair? (##cdr decl))
+                            (##eq? (##cadr decl) 'proper-tail-calls)
+                            (##null? (##cddr decl)))
+                       (loop (##cte-decl cte 'proper-tail-calls #f)
+                             (##cdr decls)))
+                      (else
+                       (loop cte
+                             (##cdr decls)))))
+              (loop cte
+                    (##cdr decls))))
+        cte))))
 
 (define (##cte-process-namespace parent-cte src)
   (##check-namespace src)
@@ -642,6 +679,21 @@
              n)
             (else
              (##fixnum.- 0 n))))))
+
+(define (##cte-lookup-decl cte name default-value)
+  (##declare (inlining-limit 500)) ;; inline CTE access procedures
+  (let loop ((cte cte))
+    (if (##cte-top? cte)
+      default-value
+      (let ((parent-cte (##cte-parent-cte cte)))
+        (if (and (##cte-decl? cte)
+                 (##eq? name (##cte-decl-name cte)))
+          (##cte-decl-value cte)
+          (loop parent-cte))))))
+
+(define (##tail-call? cte tail?)
+  (and tail?
+       (##cte-lookup-decl cte 'proper-tail-calls #t)))
 
 (define ##interaction-cte
   (##make-top-cte))
@@ -1917,13 +1969,14 @@
         (##shape src src -4)
         (let ((bindings-src (##sourcify (##caddr code) src)))
           (let* ((vars (##bindings->vars src bindings-src #t #f))
-                 (vals (##bindings->vals src bindings-src)))
+                 (vals (##bindings->vals src bindings-src))
+                 (tail? (##tail-call? cte tail?)))
             (macro-gen ##gen-app-no-step src
-              (let ((inner-cte (##cte-frame cte (##list first))))
+              (let ((inner-cte (##cte-frame cte (##list first)))
+                    (tail? #f))
                 (macro-gen ##gen-letrec src
                   (##list first)
-                  (let ((cte inner-cte)
-                        (tail? #f))
+                  (let ((cte inner-cte))
                     (##list (macro-gen ##gen-prc-req-no-step src
                               vars
                               (##comp-body (##cte-frame
@@ -1932,8 +1985,7 @@
                                            src
                                            #t
                                            (##cdddr code)))))
-                  (let ((cte inner-cte)
-                        (tail? #f))
+                  (let ((cte inner-cte))
                     (macro-gen ##gen-loc-ref-no-step src ;; fetch loop variable
                       0
                       1))))
@@ -2066,7 +2118,8 @@
 
 (define (##comp-do cte src tail?)
   (##shape src src -3)
-  (let* ((code (##source-code src))
+  (let* ((outer-cte cte)
+         (code (##source-code src))
          (bindings-src (##sourcify (##cadr code) src))
          (exit-src (##sourcify (##caddr code) src))
          (exit (##source-code exit-src)))
@@ -2087,21 +2140,23 @@
                   (##comp cte (##sourcify (##car exit) src) #f)
                   (##comp-seq cte src tail? (##cdr exit))
                   (let ((call
-                          (macro-gen ##gen-app-no-step src
-                            (let ((tail? #f))
-                              (macro-gen ##gen-loc-ref-no-step src; fetch do-loop-var
-                                1
-                                1))
-                            (##comp-vals cte
-                                         src
-                                         (##bindings->steps src
-                                                            bindings-src)))))
+                         (let ((tail? (##tail-call? outer-cte tail?)))
+                           (macro-gen ##gen-app-no-step src
+                             (let ((tail? #f))
+                               (macro-gen ##gen-loc-ref-no-step src ;; fetch do-loop-var
+                                 1
+                                 1))
+                             (##comp-vals cte
+                                          src
+                                          (##bindings->steps src
+                                                             bindings-src))))))
                     (if (##null? (##cdddr code))
                       call
                       (macro-gen ##gen-seq src
                         (##comp-seq cte src #f (##cdddr code))
                         call))))))))
-        (let ((cte inner-cte))
+        (let ((cte inner-cte)
+              (tail? (##tail-call? outer-cte tail?)))
           (macro-gen ##gen-app-no-step src
             (let ((tail? #f))
               (macro-gen ##gen-loc-ref-no-step src ;; fetch do-loop-var
@@ -2115,9 +2170,10 @@
   (let* ((code (##source-code src))
          (len (##proper-length code)))
     (if len
-      (macro-gen ##gen-app src
-        (##comp cte (##sourcify (##car code) src) #f)
-        (##comp-vals cte src (##cdr code)))
+      (let ((tail? (##tail-call? cte tail?)))
+        (macro-gen ##gen-app src
+          (##comp cte (##sourcify (##car code) src) #f)
+          (##comp-vals cte src (##cdr code))))
       (##raise-expression-parsing-exception
        'ill-formed-call
        src))))

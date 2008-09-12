@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_parms.scm", Time-stamp: <2008-02-14 13:54:34 feeley>
+;;; File: "_parms.scm", Time-stamp: <2008-09-12 12:36:54 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -110,6 +110,8 @@
 (define interrupts-enabled-sym (string->canonical-symbol "interrupts-enabled"))
 
 (define environment-map-sym    (string->canonical-symbol "environment-map"))
+
+(define proper-tail-calls-sym  (string->canonical-symbol "proper-tail-calls"))
 
 (define generic-sym            (string->canonical-symbol "generic"))
 (define fixnum-sym             (string->canonical-symbol "fixnum"))

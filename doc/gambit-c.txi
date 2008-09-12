@@ -2339,6 +2339,11 @@ x = 5
 
 @cindex proper tail-calls
 @cindex tail-calls
+
+[Note: this procedure is DEPRECATED and will be removed
+in a future version of Gambit.  Use the @samp{proper-tail-calls}
+declaration instead.]
+
 The parameter object @code{generate-proper-tail-calls} is bound to a
 boolean value controlling how the interpreter handles tail calls.
 When it is bound to @code{#f} the interpreter will treat tail calls
@@ -3245,6 +3250,21 @@ Generate (or don't generate) interrupt checks.  Interrupt checks are
 used to detect user interrupts and also to check for stack overflows.
 Interrupt checking should not be turned off casually.
 
+@item (@r{[}not@r{]} proper-tail-calls)
+@opindex proper-tail-calls
+@cindex proper tail-calls
+@cindex tail-calls
+Generate (or don't generate) proper tail calls.  When proper tail
+calls are turned off, tail calls are handled like non-tail calls, that
+is a continuation frame will be created for all calls regardless of
+their kind.  This is useful for debugging because the caller of a
+procedure will be visible in the backtrace produced by the REPL's
+@samp{,b} command even when the call is a tail call.  Be advised that
+this does cause stack space to be consumed for tail calls which may
+cause the stack to overflow when performing long iterations with tail
+calls (whether they are expressed with a @code{letrec}, named
+@code{let}, @code{do}, or other form).
+
 @item (@var{number-type} @var{primitive}@dots{})
 @opindex generic
 @opindex fixnum
@@ -3284,6 +3304,7 @@ The default declarations used by the compiler are equivalent to:
   (run-time-bindings)
   (safe)
   (interrupts-enabled)
+  (proper-tail-calls)
   (generic)
   (mostly-fixnum-flonum)
 )

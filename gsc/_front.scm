@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2008-01-24 23:12:55 feeley>
+;;; File: "_front.scm", Time-stamp: <2008-09-12 18:34:55 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2789,7 +2789,12 @@
                            (node->comment node)))
                         (gen-return node live reason loc))))))))
 
-          (let* ((local-proc-info
+          (let* ((reason2
+                  (if (and (reason-tail? reason)
+                           (not (proper-tail-calls? (node-env node))))
+                      (make-reason-need target.proc-result)
+                      reason))
+                 (local-proc-info
                   (and (ref? oper)
                        (let ((opnd (var->opnd (ref-var oper))))
                          (and (lbl? opnd)
@@ -2814,7 +2819,7 @@
                    (if (or local-proc-info proc) #f oper)
                    in-reg))
                  (live-after
-                  (if (reason-tail? reason)
+                  (if (reason-tail? reason2)
                     (varset-remove live ret-var)
                     live))
                  (live-vars-at-each-reg
@@ -2823,12 +2828,12 @@
                    (map car eval-order)
                    (make-reason-tail)))
                  (return-lbl
-                  (if (reason-tail? reason) #f (bbs-new-lbl! *bbs*)))
+                  (if (reason-tail? reason2) #f (bbs-new-lbl! *bbs*)))
                  (live-vars-at-each-slot
                   (compute-live-vars-at-each-expr
                    (car live-vars-at-each-reg)
                    in-stk
-                   reason)))
+                   reason2)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;
@@ -2866,7 +2871,7 @@
             (let* ((top-live-slot
                     (stk-num (highest-live-slot live-after)))
                    (frame-start
-                    (if (reason-tail? reason)
+                    (if (reason-tail? reason2)
                       top-live-slot
                       (let ((frame-reserve
                              (frame-constraints-reserve
@@ -2905,12 +2910,12 @@
                                (cdr live-vars-at-next-slots)
                                (+ i 1))
                         (let ((var (if (and (eq? arg 'return)
-                                            (reason-tail? reason))
+                                            (reason-tail? reason2))
                                      ret-var
                                      (make-temp-var (- frame-start i)))))
 
                           (save-opnd-to-stk (if (eq? arg 'return)
-                                              (if (reason-tail? reason)
+                                              (if (reason-tail? reason2)
                                                 (var->opnd ret-var)
                                                 (make-lbl return-lbl))
                                               (gen-node arg
@@ -2959,11 +2964,11 @@
                                (needed
                                 (varset-union liv (car live-vars-at-next-regs)))
                                (var (if (and (eq? arg 'return)
-                                             (reason-tail? reason))
+                                             (reason-tail? reason2))
                                       ret-var
                                       (make-temp-var pos)))
                                (opnd (if (eq? arg 'return)
-                                       (if (reason-tail? reason)
+                                       (if (reason-tail? reason2)
                                          (var->opnd ret-var)
                                          (make-lbl return-lbl))
                                        (gen-node arg
@@ -3073,7 +3078,7 @@
                                liv
                                (node->comment node))
 
-                              (if (not (reason-tail? reason))
+                              (if (not (reason-tail? reason2))
                                 (let ((frame-reserve
                                        (frame-constraints-reserve
                                         target.frame-constraints)))
@@ -3085,12 +3090,12 @@
                                         (loop4 (- i 1)))))))
 
                               (seal-bb (intrs-enabled? (node-env node))
-                                       (if (reason-tail? reason)
+                                       (if (reason-tail? reason2)
                                          'tail-call
                                          'call))
 
                               (if (and (not (intrs-enabled? (node-env node)))
-                                       (not (reason-tail? reason))
+                                       (not (reason-tail? reason2))
                                        (warnings? (node-env node)))
                                 (compiler-user-warning
                                  (source-locat (node-source node))
@@ -3113,7 +3118,7 @@
                                 (flush-regs)
                                 (put-var target.proc-result result-var)
 
-                                (if (reason-tail? reason)
+                                (if (reason-tail? reason2)
                                   target.proc-result
                                   (begin
                                     (set! poll (return-poll poll))
