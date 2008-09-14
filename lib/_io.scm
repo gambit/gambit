@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-05-30 13:32:30 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-09-14 09:41:48 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -7565,7 +7565,7 @@
         (cond ((##head->open-close we head #f)
                =>
                (lambda (open-close)
-                 (parenthesized-read-macro '("(" . ")"))))
+                 (parenthesized-read-macro open-close)))
               (else
                (let ((prefix
                       (read-macro-prefix we head tail)))
