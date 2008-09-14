@@ -11897,6 +11897,65 @@ For example:
 
 @end deffn
 
+@deffn procedure readtable-write-cdr-read-macros? @var{readtable}
+@deffnx procedure readtable-write-cdr-read-macros?-set @var{readtable} @var{new-value}
+@deffnx procedure readtable-write-extended-read-macros? @var{readtable}
+@deffnx procedure readtable-write-extended-read-macros?-set @var{readtable} @var{new-value}
+
+The procedure @code{readtable-write-cdr-read-macros?} returns the
+content of the @samp{write-cdr-read-macros?} field of @var{readtable}.
+The procedure @code{readtable-write-extended-read-macros?} returns the
+content of the @samp{write-extended-read-macros?} field of
+@var{readtable}.
+
+At all times the printer uses read-macros in its output for datums of
+the form @code{(quote @var{datum})}, @code{(quasiquote @var{datum})},
+@code{(unquote @var{datum})}, and @code{(unquote-splicing
+@var{datum})}.  That is the following read-macro notations will be
+used respectively: @code{'@var{datum}}, @code{`@var{datum}},
+@code{,@var{datum}}, and @code{,@@@var{datum}}.  Moreover, normally
+the read-macros will not be used when the form appears in the cdr of a
+list, for example @code{(foo quote bar)}, @code{(foo . (quote bar))}
+and @code{(foo . 'bar)} will all be printed as @code{(foo quote bar)}.
+
+When the content of the @samp{write-cdr-read-macros?} field is not
+@code{#f}, the printer will use read-macros when the forms appear in
+the cdr of a list.  For example @code{(foo quote bar)} will be printed
+as @code{(foo . 'bar)}.  When the content of the
+@samp{write-extended-read-macros?} field is not @code{#f}, the printer
+will also use extended read-macros, for example @code{#'@var{datum}}
+in place of @code{(syntax @var{datum})}.
+
+The procedure @code{readtable-write-cdr-read-macros?-set} returns a
+copy of @var{readtable} where only the @samp{write-cdr-read-macros?}
+field has been changed to @var{new-value}.  The procedure
+@code{readtable-write-extended-read-macros?-set} returns a copy of
+@var{readtable} where only the @samp{write-extended-read-macros?}
+field has been changed to @var{new-value}.
+
+For example:
+
+@smallexample
+> @b{(output-port-readtable-set!
+    (repl-output-port)
+    (readtable-write-extended-read-macros?-set
+      (output-port-readtable (repl-output-port))
+      #t))}
+> @b{'(foo (syntax bar))}
+(foo #'bar)
+> @b{'(foo syntax bar)}
+(foo syntax bar)
+> @b{(output-port-readtable-set!
+    (repl-output-port)
+    (readtable-write-cdr-read-macros?-set
+      (output-port-readtable (repl-output-port))
+      #t))}
+> @b{'(foo syntax bar)}
+(foo . #'bar)
+@end smallexample
+
+@end deffn
+
 @deffn procedure readtable-max-write-level @var{readtable}
 @deffnx procedure readtable-max-write-level-set @var{readtable} @var{new-value}
 

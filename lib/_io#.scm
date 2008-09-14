@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2008-05-22 17:52:27 feeley>
+;;; File: "_io#.scm", Time-stamp: <2008-09-14 10:54:48 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1075,6 +1075,8 @@
   (escape-ctrl-chars?             unprintable: read-write:)
   (sharing-allowed?               unprintable: read-write:)
   (eval-allowed?                  unprintable: read-write:)
+  (write-extended-read-macros?    unprintable: read-write:)
+  (write-cdr-read-macros?         unprintable: read-write:)
   (max-write-level                unprintable: read-write:)
   (max-write-length               unprintable: read-write:)
   (pretty-print-formats           unprintable: read-write:)

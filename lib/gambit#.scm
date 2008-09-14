@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-09-03 16:05:39 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-09-14 10:58:59 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -764,6 +764,10 @@ readtable-sharing-allowed?
 readtable-sharing-allowed?-set
 readtable-start-syntax
 readtable-start-syntax-set
+readtable-write-cdr-read-macros?
+readtable-write-cdr-read-macros?-set
+readtable-write-extended-read-macros?
+readtable-write-extended-read-macros?-set
 readtable?
 real-part
 real-time

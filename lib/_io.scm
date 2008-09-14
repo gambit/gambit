@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-09-14 09:41:48 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-09-14 11:24:49 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -6932,6 +6932,30 @@
         (macro-readtable-eval-allowed?-set! new-rt allowed?)
         new-rt))))
 
+(define-prim (readtable-write-extended-read-macros? rt)
+  (macro-force-vars (rt)
+    (macro-check-readtable rt 1 (readtable-write-extended-read-macros? rt)
+      (macro-readtable-write-extended-read-macros? rt))))
+
+(define-prim (readtable-write-extended-read-macros?-set rt allowed?)
+  (macro-force-vars (rt allowed?)
+    (macro-check-readtable rt 1 (readtable-write-extended-read-macros?-set rt allowed?)
+      (let ((new-rt (##readtable-copy rt)))
+        (macro-readtable-write-extended-read-macros?-set! new-rt allowed?)
+        new-rt))))
+
+(define-prim (readtable-write-cdr-read-macros? rt)
+  (macro-force-vars (rt)
+    (macro-check-readtable rt 1 (readtable-write-cdr-read-macros? rt)
+      (macro-readtable-write-cdr-read-macros? rt))))
+
+(define-prim (readtable-write-cdr-read-macros?-set rt allowed?)
+  (macro-force-vars (rt allowed?)
+    (macro-check-readtable rt 1 (readtable-write-cdr-read-macros?-set rt allowed?)
+      (let ((new-rt (##readtable-copy rt)))
+        (macro-readtable-write-cdr-read-macros?-set! new-rt allowed?)
+        new-rt))))
+
 (define-prim (readtable-max-write-level rt)
   (macro-force-vars (rt)
     (macro-check-readtable rt 1 (readtable-max-write-level rt)
@@ -7493,7 +7517,8 @@
                 str1)))
           str1)))
 
-    (and (##pair? tail)
+    (and head
+         (##pair? tail)
          (##null? (force-if-required we (##cdr tail)))
          (let ((mt (macro-writeenv-marktable we)))
            (##not (and mt
@@ -7514,24 +7539,27 @@
                        (macro-readtable-unquote-splicing-keyword
                         (macro-writeenv-readtable we)))
                 ",@")
-               ((##eq? head
-                       (macro-readtable-sharp-quote-keyword
-                        (macro-writeenv-readtable we)))
-                "#'")
-               ((##eq? head
-                       (macro-readtable-sharp-quasiquote-keyword
-                        (macro-writeenv-readtable we)))
-                "#`")
-               ((##eq? head
-                       (macro-readtable-sharp-unquote-keyword
-                        (macro-writeenv-readtable we)))
-                (check-for-at-sign "#," "#, "))
-               ((##eq? head
-                       (macro-readtable-sharp-unquote-splicing-keyword
-                        (macro-writeenv-readtable we)))
-                "#,@")
                (else
-                #f))))
+                (and (macro-readtable-write-extended-read-macros?
+                      (macro-writeenv-readtable we))
+                     (cond ((##eq? head
+                                   (macro-readtable-sharp-quote-keyword
+                                    (macro-writeenv-readtable we)))
+                            "#'")
+                           ((##eq? head
+                                   (macro-readtable-sharp-quasiquote-keyword
+                                    (macro-writeenv-readtable we)))
+                            "#`")
+                           ((##eq? head
+                                   (macro-readtable-sharp-unquote-keyword
+                                    (macro-writeenv-readtable we)))
+                            (check-for-at-sign "#," "#, "))
+                           ((##eq? head
+                                   (macro-readtable-sharp-unquote-splicing-keyword
+                                    (macro-writeenv-readtable we)))
+                            "#,@")
+                           (else
+                            #f)))))))
 
   (define (wr-list-possibly-with-read-macro-prefix we obj plain-pretty-print?)
     (let* ((head
@@ -7679,7 +7707,8 @@
                                     (tail
                                      (force-if-required we (##cdr lst)))
                                     (prefix
-                                     (and head
+                                     (and (macro-readtable-write-cdr-read-macros?
+                                           (macro-writeenv-readtable we))
                                           (read-macro-prefix we head tail))))
                                (if prefix
                                  (begin
@@ -11579,6 +11608,8 @@
           #t                 ;; escape-ctrl-chars?
           #f                 ;; sharing-allowed?
           #f                 ;; eval-allowed?
+          #f                 ;; write-extended-read-macros?
+          #f                 ;; write-cdr-read-macros?
           ##max-fixnum       ;; max-write-level
           ##max-fixnum       ;; max-write-length
           ##standard-pretty-print-formats
