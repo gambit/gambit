@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-05-08 13:19:30 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-09-14 15:24:01 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
@@ -213,7 +213,8 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       #f
-      (##bignum.= x y)
+      (or (##eq? x y)
+	  (##bignum.= x y))
       #f
       (and (##flonum.finite? y)
            (##ratnum.= (##ratnum.<-exact-int x) (##flonum.->ratnum y)))
@@ -222,7 +223,8 @@
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       #f
       #f
-      (##ratnum.= x y)
+      (or (##eq? x y)
+	  (##ratnum.= x y))
       (and (##flonum.finite? y)
            (##ratnum.= x (##flonum.->ratnum y)))
       (##cpxnum.= (##cpxnum.<-noncpxnum x) y))
@@ -1746,7 +1748,7 @@
 
 (define-prim-nary (gcd x y)
   0
-  (if (##integer? x) x '(1))
+  (if (##integer? x) (##abs x) '(1))
   (##gcd x y)
   macro-force-vars
   macro-no-check
@@ -1779,7 +1781,7 @@
 
 (define-prim-nary (lcm x y)
   1
-  (if (##integer? x) x '(1))
+  (if (##integer? x) (##abs x) '(1))
   (##lcm x y)
   macro-force-vars
   macro-no-check
@@ -2160,9 +2162,7 @@
     (##fail-check-number 1 acos x))
 
   (define (complex-case x)
-    (##* (macro-cpxnum--i)
-         (##log (##+ x
-                     (##* (macro-cpxnum-+i) (##sqrt (##- 1 (##* x x))))))))
+    (##- (macro-inexact-+pi/2) (##asin x)))
 
   (define (real-case x)
     (if (or (##< x -1) (##< 1 x))
