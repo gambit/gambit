@@ -1,8 +1,8 @@
 #! /usr/local/Gambit-C/bin/gsi-script
 
-; File: "web-repl.scm", Time-stamp: <2007-04-04 14:41:59 feeley>
+; File: "web-repl.scm", Time-stamp: <2008-09-17 12:09:39 feeley>
 
-; Copyright (c) 2004-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2004-2008 by Marc Feeley, All Rights Reserved.
 
 (define primordial-thread (current-thread))
 
@@ -85,7 +85,7 @@
 (define (setup-ide-repl-channel ide-repl-connection)
   (receive (in-port out-port) (make-ide-repl-ports ide-repl-connection)
     (let ((repl-channel (##make-repl-channel-ports in-port out-port)))
-      (set! ##thread-make-repl-channel (lambda () repl-channel)))))
+      (set! ##thread-make-repl-channel (lambda (thread) repl-channel)))))
 
 (define (start-ide-repl)
   (##repl-debug-main))
