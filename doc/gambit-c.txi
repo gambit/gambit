@@ -2136,7 +2136,7 @@ complexity of the program (i.e. tail calls are implemented as required
 by Scheme even when they involve traced procedures).
 
 The @code{untrace} procedure stops tracing calls to the specified
-procedures.  When no arguments is passed to the @code{trace}
+procedures.  When no argument is passed to the @code{trace}
 procedure, the list of procedures currently being traced is returned.
 The void object is returned by the @code{trace} procedure when it is
 passed one or more arguments.  When no argument is passed to the
@@ -11153,9 +11153,10 @@ buffering of the port.
 
 @end itemize
 
-Here is an example of the client-side code that opens a connection to
-an HTTP server on port 8080 on the same computer (for the server-side
-code see the example for the procedure @code{open-tcp-server}):
+Below is an example of the client-side code that opens a connection to
+an HTTP server on port 8080 of the local interface (IP address
+127.0.0.1).  For the server-side code see the example for the
+procedure @code{open-tcp-server}.
 
 @smallexample
 > @b{(define p (open-tcp-client (list server-address: '#u8(127 0 0 1)
@@ -11248,9 +11249,9 @@ The default value of this setting is @code{#t}.
 
 @end itemize
 
-Here is an example of the server-side code that accepts connections on
-port 8080 (for the client-side code see the example for the procedure
-@code{open-tcp-client}):
+Below is an example of the server-side code that accepts connections
+on port 8080 of any network interface.  For the client-side code see
+the example for the procedure @code{open-tcp-client}).
 
 @smallexample
 > @b{(define s (open-tcp-server (list port-number: 8080
@@ -11262,6 +11263,40 @@ port 8080 (for the client-side code see the example for the procedure
 "GET /"
 > @b{(display "<HTML>\n" p)}
 > @b{(force-output p)}
+@end smallexample
+
+@end deffn
+
+@deffn procedure tcp-service-register! @var{port-number-or-settings} @var{thunk} @r{[}@var{thread-group}@r{]}
+@deffnx procedure tcp-service-unregister! @var{port-number-or-settings}
+
+The procedure @code{tcp-service-register!} sets up a socket to accept
+network connection requests from clients and creates a ``service''
+thread which processes the incoming connections.  For each connection
+established the service thread creates a ``handler'' thread which
+executes a call to the procedure @var{thunk} with no argument.  The
+handler thread's current input-port and current output-port are both
+set to the tcp-client-port created for the connection.  There is no
+need for the @var{thunk} to close the tcp-client-port, as this is done
+by the handler thread when the @var{thunk} returns normally.
+
+The procedure @code{tcp-service-unregister!} terminates the service
+thread which was registered by @code{tcp-service-register!} with the
+same @var{port-number-or-settings} (if a service thread is still
+registered).  The procedure @code{tcp-service-register!} implicitly
+calls @code{tcp-service-unregister!} before registering the new
+service thread.
+
+@smallexample
+> @b{(tcp-service-register!
+   8000
+   (lambda () (display "hello\n")))}
+> @b{(define p (open-tcp-client
+             (list port-number: 8000
+                   server-address: "localhost")))}
+> @b{(read-line p)}
+"hello"
+> @b{(tcp-service-unregister! 8000)}
 @end smallexample
 
 @end deffn

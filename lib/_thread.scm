@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-06-02 19:14:11 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-09-23 16:59:00 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1401,7 +1401,12 @@
          timeout-val)
         timeout-val))))
 
-(define-prim (##thread-startup!)
+(define-prim (##make-root-thread
+              thunk
+              name
+              tgroup
+              input-port
+              output-port)
 
   (##declare (not interrupts-enabled))
 
@@ -1409,88 +1414,91 @@
           0)
          (debugging-settings
           0)
+         (local-binding
+          (##cons ##current-directory
+                  (macro-parameter-descr-value
+                   (macro-parameter-descr ##current-directory)))))
+
+    ;; these macros are defined to prevent the normal thread
+    ;; inheritance mechanism when a root thread is created
+
+    (##define-macro (macro-current-thread)
+      `#f)
+
+    (##define-macro (macro-thread-denv thread)
+      `#f)
+
+    (##define-macro (macro-denv-local denv)
+      `(macro-make-env local-binding '() '()))
+
+    (##define-macro (macro-denv-dynwind denv)
+      `##initial-dynwind)
+
+    (##define-macro (macro-denv-interrupt-mask denv)
+      `interrupt-mask)
+
+    (##define-macro (macro-denv-debugging-settings denv)
+      `debugging-settings)
+
+    (##define-macro (macro-denv-input-port denv)
+      `(##cons ##current-input-port input-port))
+
+    (##define-macro (macro-denv-output-port denv)
+      `(##cons ##current-output-port output-port))
+
+    (##define-macro (macro-thread-denv-cache1 thread)
+      `local-binding)
+
+    (##define-macro (macro-thread-denv-cache2 thread)
+      `local-binding)
+
+    (##define-macro (macro-thread-denv-cache3 thread)
+      `local-binding)
+
+    (##define-macro (macro-thread-floats thread)
+      `#f)
+
+    (##define-macro (macro-base-priority floats)
+      `(macro-thread-root-base-priority))
+
+    (##define-macro (macro-quantum floats)
+      `(macro-thread-root-quantum))
+
+    (##define-macro (macro-priority-boost floats)
+      `(macro-thread-root-priority-boost))
+
+    ;; create root thread
+
+    (macro-make-thread thunk name tgroup)))
+
+(define-prim (##thread-startup!)
+
+  (##declare (not interrupts-enabled))
+
+  (let* ((primordial-tgroup
+          (##make-tgroup 'primordial #f))
          (input-port
           (macro-parameter-descr-value
            (macro-parameter-descr ##current-input-port)))
          (output-port
           (macro-parameter-descr-value
            (macro-parameter-descr ##current-output-port)))
-         (local-binding
-          (##cons ##current-directory
-                  (macro-parameter-descr-value
-                   (macro-parameter-descr ##current-directory))))
-         (primordial-tgroup
-          (##make-tgroup 'primordial #f))
          (primordial-thread
-          (let ()
+          (##make-root-thread
+           #f
+           'primordial
+           primordial-tgroup
+           input-port
+           output-port)))
 
-            ;; these macros are defined to prevent the normal
-            ;; thread inheritance mechanism when the primordial
-            ;; thread is created
-
-            (##define-macro (macro-current-thread)
-              `#f)
-
-            (##define-macro (macro-thread-denv thread)
-              `#f)
-
-            (##define-macro (macro-denv-local denv)
-              `(macro-make-env local-binding '() '()))
-
-            (##define-macro (macro-denv-dynwind denv)
-              `##initial-dynwind)
-
-            (##define-macro (macro-denv-interrupt-mask denv)
-              `interrupt-mask)
-
-            (##define-macro (macro-denv-debugging-settings denv)
-              `debugging-settings)
-
-            (##define-macro (macro-denv-input-port denv)
-              `(##cons ##current-input-port input-port))
-
-            (##define-macro (macro-denv-output-port denv)
-              `(##cons ##current-output-port output-port))
-
-            (##define-macro (macro-thread-denv-cache1 thread)
-              `local-binding)
-
-            (##define-macro (macro-thread-denv-cache2 thread)
-              `local-binding)
-
-            (##define-macro (macro-thread-denv-cache3 thread)
-              `local-binding)
-
-            (##define-macro (macro-thread-floats thread)
-              `#f)
-
-            (##define-macro (macro-base-priority floats)
-              `(macro-thread-primordial-base-priority))
-
-            (##define-macro (macro-quantum floats)
-              `(macro-thread-primordial-quantum))
-
-            (##define-macro (macro-priority-boost floats)
-              `(macro-thread-primordial-priority-boost))
-
-            ;; create primordial thread
-
-            (macro-make-thread #f 'primordial primordial-tgroup))))
-
-    (macro-if-gambit-3.0;;;;;;;;;;;;;;;;;;;;;
-
-     (begin
-       (set! ##the-current-thread primordial-thread)
-       (set! ##the-run-queue (macro-make-run-queue)))
-
-     (##c-code
-      "
-      ___ps->current_thread = ___ARG1;
-      ___ps->run_queue = ___ARG2;
-      ___RESULT = ___FAL;
-      "
-      primordial-thread
-      (macro-make-run-queue)))
+    (##c-code
+     "
+     ___ps->current_thread = ___ARG1;
+     ___ps->run_queue = ___ARG2;
+     ___RESULT = ___FAL;
+     "
+     primordial-thread
+     (macro-make-run-queue))
 
     (macro-run-queue-primordial-thread-set!
      (macro-run-queue)
@@ -3043,6 +3051,137 @@
             (macro-fail-check-list lst (apply proc arg1 . other-args))
             (##apply proc lst))
           (##apply proc lst))))))
+
+;;;----------------------------------------------------------------------------
+
+;;; Implementation of TCP service register.
+
+(define ##tcp-service-table (##make-table))
+(define ##tcp-service-mutex (macro-make-mutex 'tcp-service))
+(define ##tcp-service-tgroup (macro-make-tgroup 'tcp-service #f))
+
+(define-prim (##tcp-service-serve server-port thunk tgroup)
+  (let loop ()
+    (let ((connection-port (##read server-port)))
+      (if (##port? connection-port)
+          (let ((t
+                 (##make-root-thread
+                  (lambda ()
+                    (thunk)
+                    (##close-output-port connection-port)
+                    (##read-u8 connection-port) ;; wait for client to close
+                    (##close-port connection-port))
+                  connection-port ;; name of the thread
+                  tgroup
+                  connection-port
+                  connection-port)))
+            (##thread-start! t)
+            (loop))
+          (##close-port server-port)))))
+
+(define-prim (##tcp-service-update! server-address-and-port-number new-value)
+  (macro-mutex-lock! ##tcp-service-mutex #f (macro-current-thread))
+  (let ((old-value
+         (##table-ref ##tcp-service-table
+                      server-address-and-port-number
+                      #f)))
+    (if old-value
+        (let ((server-port (##car old-value))
+              (thread (##cdr old-value)))
+          (##close-port server-port)
+          (##thread-terminate! thread)))
+    (if new-value
+        (##table-set! ##tcp-service-table
+                      server-address-and-port-number
+                      new-value)
+        (##table-set! ##tcp-service-table
+                      server-address-and-port-number))
+    (macro-mutex-unlock! ##tcp-service-mutex)))
+
+(define-prim (##tcp-service-register! port-number-or-settings thunk tg tgroup)
+  (##process-tcp-server-psettings
+   #t
+   (lambda (psettings-and-server-address)
+     (let* ((psettings
+             (##car psettings-and-server-address))
+            (server-address
+             (##cdr psettings-and-server-address))
+            (port-number
+             (macro-psettings-port-number psettings))
+            (server-address-and-port-number
+             (##cons server-address port-number)))
+       (##tcp-service-update! server-address-and-port-number
+                              #f)
+       (##open-tcp-server-aux
+        #t
+        psettings-and-server-address
+        (lambda (server-port)
+          (let ((new-thread
+                 (##make-root-thread
+                  (lambda () (##tcp-service-serve server-port thunk tgroup))
+                  server-address-and-port-number
+                  ##tcp-service-tgroup
+                  ##stdin-port
+                  ##stdout-port)))
+            (##tcp-service-update! server-address-and-port-number
+                                   (##cons server-port new-thread))
+            (##thread-start! new-thread)
+            (##void)))
+        tcp-service-register!
+        port-number-or-settings
+        thunk
+        tg
+        (macro-absent-obj))))
+   tcp-service-register!
+   port-number-or-settings
+   thunk
+   tg
+   (macro-absent-obj)))
+
+(define-prim (tcp-service-register!
+              port-number-or-settings
+              thunk
+              #!optional
+              (tg (macro-absent-obj)))
+  (macro-force-vars (port-number-or-settings thunk tg)
+    (let ((tgroup
+           (if (##eq? tg (macro-absent-obj))
+               (macro-thread-tgroup (macro-current-thread))
+               tg)))
+      (macro-check-procedure
+       thunk
+       2
+       (tcp-service-register! port-number-or-settings thunk tg)
+       (macro-check-tgroup
+        tgroup
+        3
+        (tcp-service-register! port-number-or-settings thunk tg)
+        (##tcp-service-register! port-number-or-settings thunk tg tgroup))))))
+
+(define-prim (##tcp-service-unregister! port-number-or-settings)
+  (##process-tcp-server-psettings
+   #t
+   (lambda (psettings-and-server-address)
+     (let* ((psettings
+             (##car psettings-and-server-address))
+            (server-address
+             (##cdr psettings-and-server-address))
+            (port-number
+             (macro-psettings-port-number psettings))
+            (server-address-and-port-number
+             (##cons server-address port-number)))
+       (##tcp-service-update! server-address-and-port-number #f)
+       (##void)))
+   tcp-service-unregister!
+   port-number-or-settings
+   (macro-absent-obj)
+   (macro-absent-obj)
+   (macro-absent-obj)))
+
+(define-prim (tcp-service-unregister!
+              port-number-or-settings)
+  (macro-force-vars (port-number-or-settings)
+    (##tcp-service-unregister! port-number-or-settings)))
 
 ;;;----------------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-09-14 10:58:59 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-09-23 17:05:42 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -912,6 +912,8 @@ tan
 tcp-client-peer-socket-info
 tcp-client-self-socket-info
 tcp-server-socket-info
+tcp-service-register!
+tcp-service-unregister!
 terminated-thread-exception-arguments
 terminated-thread-exception-procedure
 terminated-thread-exception?

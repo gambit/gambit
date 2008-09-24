@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread#.scm", Time-stamp: <2008-06-02 00:28:10 feeley>
+;;; File: "_thread#.scm", Time-stamp: <2008-09-23 10:54:49 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -791,15 +791,15 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; Primordial thread settings.
+;;; Root thread settings.
 
-(##define-macro (macro-thread-primordial-base-priority)
+(##define-macro (macro-thread-root-base-priority)
   (exact->inexact (- (expt 10 10))))
 
-(##define-macro (macro-thread-primordial-quantum)
+(##define-macro (macro-thread-root-quantum)
   (exact->inexact 2/100))
 
-(##define-macro (macro-thread-primordial-priority-boost)
+(##define-macro (macro-thread-root-priority-boost)
   (exact->inexact (expt 10 -6)))
 
 (##define-macro (macro-default-heartbeat-interval)
