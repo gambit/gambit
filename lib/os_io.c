@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-09-03 14:27:25 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-09-24 08:13:45 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -6198,7 +6198,9 @@ int options;)
         {
           /* child process */
 
-          ___cleanup_os_interrupt_handling (); /* was: restore_sigmask (oldmask); */
+          restore_sigmask (oldmask);
+
+          ___cleanup_os_interrupt_handling ();
 
           if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
             {
