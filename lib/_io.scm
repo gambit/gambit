@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-09-23 15:27:20 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-09-23 21:38:24 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1983,6 +1983,11 @@
              #f)))))
 
 (define-prim (##char-wbuf-drain port)
+
+  ;; It is assumed that the thread has exclusive access to the port.
+
+  (##declare (not interrupts-enabled))
+
   (or (##char-wbuf-drain-no-reset port)
       (begin
         (macro-character-port-wchars-set!
@@ -2065,6 +2070,11 @@
         #f))))
 
 (define-prim (##byte-wbuf-drain port)
+
+  ;; It is assumed that the thread has exclusive access to the port.
+
+  (##declare (not interrupts-enabled))
+
   (or (##byte-wbuf-drain-no-reset port)
       (begin
         ;; the byte buffer is empty, reset wlo and whi
