@@ -163,7 +163,7 @@ repository.
 
 The @dfn{Gambit installation directory} is where all system files are
 installed.  This directory is @code{@r{@i{prefix}}/@r{@i{version}}},
-where @code{@r{@i{version}}} is the system version number
+where @code{@r{@i{version}}} is the system version string
 (e.g. @code{@value{VERSION}} for Gambit @value{VERSION}) and
 @code{@r{@i{prefix}}} is @code{/usr/local/Gambit-C} under UNIX,
 @code{/Library/Gambit-C} under Mac OS X and @code{C:/Program
@@ -256,9 +256,9 @@ the interpreter is executed in @dfn{batch mode}.  The @samp{-i} option
 is ignored by the interpreter.  The initialization file will be
 examined unless the @samp{-f} option is present (@pxref{GSI
 customization}).  The @samp{-v} option prints the system version
-string on standard output and exits (e.g. @code{@value{VERSION}} for
-Gambit @value{VERSION}).  Runtime options are explained in
-@ref{Runtime options}.
+string and time stamp on standard output and exits
+(e.g. @code{@value{VERSION}} for Gambit @value{VERSION}).  Runtime
+options are explained in @ref{Runtime options}.
 
 @menu
 * GSI interactive mode::            Interactive mode
@@ -764,7 +764,8 @@ Force interpreter mode.
 @item -f
 Do not examine the initialization file.
 @item -v
-Print the system version number on standard output and exit.
+Print the system version string and time stamp on standard output and
+exit.
 @item -prelude @var{expressions}
 Add expressions to the top of the source code being compiled.
 @item -postlude @var{expressions}

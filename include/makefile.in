@@ -154,7 +154,8 @@ dist:
 
 stamp:
 	rm -f gambit2.h.in
-	sed -e "s/#define ___STAMP [0-9][0-9]*/#define ___STAMP `date +%s`/" gambit.h.in > gambit2.h.in
+	eval `date -u '+stamp_ymd=%Y%m%d stamp_hms=%H%M%S'`; \
+	sed -e "s/#define ___STAMP_YMD [0-9][0-9]*/#define ___STAMP_YMD $$stamp_ymd/" -e "s/#define ___STAMP_HMS [0-9][0-9]*/#define ___STAMP_HMS $$stamp_hms/" gambit.h.in > gambit2.h.in
 	mv gambit2.h.in gambit.h.in
 
 makefile: makefile.in $(rootfromhere)/config.status

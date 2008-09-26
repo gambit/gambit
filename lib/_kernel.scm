@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-08-28 11:28:33 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-09-26 17:06:11 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3640,10 +3640,18 @@ end-of-code
 (define-prim (system-type-string)
   ##os-system-type-string-saved)
 
-(define-prim (##system-stamp)
+(define-prim ##system-stamp-ymd
   ((c-lambda ()
              unsigned-int32
-    "___result = ___CAST(___U32,___STAMP);")))
+    "___result = ___CAST(___U32,___STAMP_YMD);")))
+
+(define-prim ##system-stamp-hms
+  ((c-lambda ()
+             unsigned-int32
+    "___result = ___CAST(___U32,___STAMP_HMS);")))
+
+(define-prim (##system-stamp)
+  (##+ ##system-stamp-hms (##* 1000000 ##system-stamp-ymd)))
 
 (define-prim (system-stamp)
   (##system-stamp))

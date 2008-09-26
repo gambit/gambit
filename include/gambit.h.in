@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-05-15 16:11:56 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-09-26 16:55:17 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,7 +23,8 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP 1222389688
+#define ___STAMP_YMD 20080926
+#define ___STAMP_HMS 212617
 
 /*---------------------------------------------------------------------------*/
 
