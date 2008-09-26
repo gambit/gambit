@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2008-06-02 22:11:46 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2008-09-25 19:19:41 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1636,7 +1636,7 @@
                     (pt-syntax-error
                       ctos-source
                       "Third argument to 'c-define-type' must be a string"))
-                   ((not (valid-c-id? ctos))
+                   ((not (valid-c-or-c++-function-id? ctos))
                     (pt-syntax-error
                       ctos-source
                       "Ill-formed C function identifier"))
@@ -1644,7 +1644,7 @@
                     (pt-syntax-error
                       stoc-source
                       "Fourth argument to 'c-define-type' must be a string"))
-                   ((not (valid-c-id? stoc))
+                   ((not (valid-c-or-c++-function-id? stoc))
                     (pt-syntax-error
                       stoc-source
                       "Ill-formed C function identifier"))
@@ -1730,7 +1730,7 @@
                        (pt-syntax-error
                          name-source
                          "Fourth argument to 'c-define' must be a string"))
-                      ((not (valid-c-id? name))
+                      ((not (valid-c-or-c++-function-id? name))
                        (pt-syntax-error
                          name-source
                          "Ill-formed C function identifier"))
@@ -1811,7 +1811,7 @@
                                  err-source
                                  #t) ; allow all types
                                 (and (string? x)
-                                     (valid-c-id? x))))
+                                     (valid-c-or-c++-type-id? x))))
                             (or (< len 2)
                                 (let ((tag (source-code (caddr typ))))
                                   (or (false-object? tag)
@@ -1827,7 +1827,7 @@
                                 (let ((id (source-code (cadddr typ))))
                                   (or (false-object? id)
                                       (and (string? id)
-                                           (valid-c-id? id))))))
+                                           (valid-c-or-c++-function-id? id))))))
                        (c-type-pt-syntax-error
                         typ-source
                         err-source
@@ -1866,7 +1866,7 @@
                  err-source
                  "Ill-terminated C type"))))
           ((string? typ)
-           (or (valid-c-id? typ)
+           (or (valid-c-or-c++-type-id? typ)
                (c-type-pt-syntax-error
                 typ-source
                 err-source
@@ -2646,7 +2646,7 @@
         (c-preproc-define-default-empty
           (string-append c-id-prefix "AT_END")
           (string-append
-           (if (valid-c-id? proc-name)
+           (if (valid-c-or-c++-function-id? proc-name)
              (let ((c-id
                     (c-result #f #f))
                    (indirect-access-result
@@ -2745,11 +2745,27 @@
   (let ((n (string-length id)))
     (and (> n 0)
          (c-id-initial? (string-ref id 0))
-         (let loop ((i (- n 1)))
-           (if (> i 0)
-             (if (c-id-subsequent? (string-ref id i))
-               (loop (- i 1))
-               #f)
-             #t)))))
+         (let loop ((i 1) (nb-seps 0))
+           (if (< i n)
+               (let ((c (string-ref id i)))
+                 (cond ((and (< (+ i 2) n)
+                             (char=? #\: c)
+                             (char=? #\: (string-ref id (+ i 1)))
+                             (c-id-initial? (string-ref id (+ i 2))))
+                        (loop (+ i 3) (+ nb-seps 1)))
+                       ((c-id-subsequent? c)
+                        (loop (+ i 1) nb-seps))
+                       (else
+                        #f)))
+               nb-seps)))))
+
+(define (valid-c-or-c++-function-id? id)
+  (let ((x (valid-c-id? id)))
+    (or (eqv? x 0)
+        (eqv? x 1))))
+
+(define (valid-c-or-c++-type-id? id)
+  (let ((x (valid-c-id? id)))
+    (eqv? x 0)))
 
 ;;;============================================================================
