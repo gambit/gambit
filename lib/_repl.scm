@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-09-10 17:02:44 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-09-26 20:24:13 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -2886,12 +2886,13 @@
           (let* ((last?
                   (##null? (##cdr lst)))
                  (w
-                  (if last?
-                    (##fixnum.- width 3)
-                    (##fixnum.- width 2))))
-            (##write-string (##object->string (##car lst) w) port)
+                  (##fixnum.- width 2))
+                 (s
+                  (##object->string (##car lst) w)))
+            (##write-string s port)
             (if last?
               (begin
+                (if (##fixnum.= (##string-length s) w) (##newline port))
                 (##write-string ")" port)
                 (##newline port))
               (begin
