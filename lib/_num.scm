@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-09-14 15:24:01 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-09-26 19:42:58 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
@@ -3759,7 +3759,7 @@
                              (if (##char=? sign #\-)
                                  (##flonum.copysign n (macro-inexact--1))
                                  n))
-                           (##inexact->exact (num-div-den)))
+                           (##exact->inexact (num-div-den)))
                        (num-div-den))))
                 (else ;; (##fixnum.= len 1) ;; inf or nan
                  (let* ((c
