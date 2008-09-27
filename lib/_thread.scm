@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-09-23 16:59:00 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-09-26 20:14:10 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3020,13 +3020,23 @@
 
     (define (check-proper-list lst)
       (macro-if-checks
-        (let loop ((lst2 lst))
-          (cond ((##pair? lst2)
-                 (loop (##cdr lst2)))
-                ((##null? lst2)
-                 lst)
-                (else
-                 i))) ;; error: list expected
+        ;; This procedure may get into an infinite loop if another thread
+        ;; mutates "lst" (if lst1 and lst2 each point to disconnected cycles).
+        (let loop ((lst1 lst) (lst2 lst))
+          (macro-force-vars (lst1)
+            (if (##not (##pair? lst1))
+                (or (##null? lst1) i)
+                (let ((lst1 (##cdr lst1)))
+                  (macro-force-vars (lst1 lst2)
+                    (cond ((##eq? lst1 lst2)
+                           i)
+                          ((##not (##pair? lst2))
+                          ;; this case is possible if other threads mutate the list
+                          (or (##null? lst2) i))
+                          ((##pair? lst1)
+                           (loop (##cdr lst1) (##cdr lst2)))
+                          (else
+                           (or (##null? lst1) i))))))))
         lst))
 
     (if (##pair? other-args)
