@@ -518,7 +518,7 @@
 
 ;; Gambit system version numbers.
 
-(define (compiler-version) 402008) ;; 100000*major + 1000*minor + revision
+(define (compiler-version) 402009) ;; 100000*major + 1000*minor + revision
 
 (define compiler-version-string-prefix "v")
 (define compiler-version-string-suffix "")
