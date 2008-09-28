@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread#.scm", Time-stamp: <2008-09-23 10:54:49 feeley>
+;;; File: "_thread#.scm", Time-stamp: <2008-09-27 22:49:47 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -794,7 +794,7 @@
 ;;; Root thread settings.
 
 (##define-macro (macro-thread-root-base-priority)
-  (exact->inexact (- (expt 10 10))))
+  (exact->inexact 0))
 
 (##define-macro (macro-thread-root-quantum)
   (exact->inexact 2/100))

@@ -5839,38 +5839,53 @@ For example:
 @end deffn
 
 @deffn procedure make-thread @var{thunk} @r{[}@var{name} @r{[}@var{thread-group}@r{]}@r{]}
+@deffnx procedure make-root-thread @var{thunk} @r{[}@var{name} @r{[}@var{thread-group} @r{[}@var{input-port} @r{[}@var{output-port}@r{]}@r{]}@r{]}@r{]}
 
-This procedure creates and returns an initialized thread.  This thread is not
-automatically made runnable (the procedure @code{thread-start!} must
-be used for this).  A thread has the following fields: base priority,
-priority boost, boosted flag, quantum, name, specific, end-result,
-end-exception, and a list of locked/owned mutexes it owns.  The
-thread's execution consists of a call to @var{thunk} with the @dfn{initial
-continuation}.  This continuation causes the (then) current thread to
-store the result in its end-result field, abandon all mutexes it owns,
-and finally terminate.  The @samp{dynamic-wind} stack of the initial
-continuation is empty.  The optional @var{name} is an arbitrary
-Scheme object which identifies the thread (useful for debugging); it
-defaults to an unspecified value.  The specific field is set to an
-unspecified value.  The optional @var{thread-group} indicates
-which thread group this thread belongs to; it defaults to the thread
-group of the current thread.  The base priority, priority boost, and
-quantum of the thread are set to the same value as the current thread
-and the boosted flag is set to false.  The thread's mailbox
-is initially empty.  The thread inherits the dynamic
-environment from the current thread. Moreover, in this dynamic
-environment the exception-handler is bound to the @dfn{initial
-exception-handler} which is a unary procedure which causes the (then)
-current thread to store in its end-exception field an uncaught-exception
-object whose ``reason'' is the argument of the handler,
-abandon all mutexes it owns, and finally terminate.
+The @code{make-thread} procedure creates and returns an initialized
+thread.  This thread is not automatically made runnable (the procedure
+@code{thread-start!} must be used for this).  A thread has the
+following fields: base priority, priority boost, boosted flag,
+quantum, name, specific, end-result, end-exception, and a list of
+locked/owned mutexes it owns.  The thread's execution consists of a
+call to @var{thunk} with the @dfn{initial continuation}.  This
+continuation causes the (then) current thread to store the result in
+its end-result field, abandon all mutexes it owns, and finally
+terminate.  The @samp{dynamic-wind} stack of the initial continuation
+is empty.  The optional @var{name} is an arbitrary Scheme object which
+identifies the thread (useful for debugging); it defaults to an
+unspecified value.  The specific field is set to an unspecified value.
+The optional @var{thread-group} indicates which thread group this
+thread belongs to; it defaults to the thread group of the current
+thread.  The base priority, priority boost, and quantum of the thread
+are set to the same value as the current thread and the boosted flag
+is set to false.  The thread's mailbox is initially empty.  The thread
+inherits the dynamic environment from the current thread. Moreover, in
+this dynamic environment the exception-handler is bound to the
+@dfn{initial exception-handler} which is a unary procedure which
+causes the (then) current thread to store in its end-exception field
+an uncaught-exception object whose ``reason'' is the argument of the
+handler, abandon all mutexes it owns, and finally terminate.
+
+The @code{make-root-thread} procedure behaves like the
+@code{make-thread} procedure except the created thread does not
+inherit the dynamic environment from the current thread and the base
+priority is set to 0, the priority boost is set to 1.0e-6, and the
+quantum is set to 0.02.  The dynamic environment of the thread has the
+global bindings of the parameter objects, except
+@code{current-input-port} which is bound to @var{input-port},
+@code{current-output-port} which is bound to @var{output-port}, and
+@code{current-directory} which is bound to the initial current working
+directory of the current process.  If @var{input-port} is not
+specified it defaults to a port corresponding to the standard input
+(@samp{stdin}).  If @var{output-port} is not specified it defaults to
+a port corresponding to the standard output (@samp{stdout}).
 
 For example:
 
 @smallexample
 > @b{(make-thread (lambda () (write 'hello)))}
 #<thread #2>
-> @b{(make-thread (lambda () (write 'world)) 'a-name)}
+> @b{(make-root-thread (lambda () (write 'world)) 'a-name)}
 #<thread #3 a-name>
 @end smallexample
 

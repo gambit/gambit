@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-09-26 22:12:08 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-09-27 23:18:40 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1470,6 +1470,36 @@
     ;; create root thread
 
     (macro-make-thread thunk name tgroup)))
+
+(define-prim (make-root-thread
+              thunk
+              #!optional
+              (n (macro-absent-obj))
+              (tg (macro-absent-obj))
+              (ip (macro-absent-obj))
+              (op (macro-absent-obj)))
+  (macro-force-vars (thunk n tg ip op)
+    (let* ((name
+            (if (##eq? n (macro-absent-obj))
+              (##void)
+              n))
+           (tgroup
+            (if (##eq? tg (macro-absent-obj))
+              (macro-thread-tgroup (macro-current-thread))
+              tg))
+           (input-port
+            (if (##eq? ip (macro-absent-obj))
+              ##stdin-port
+              ip))
+           (output-port
+            (if (##eq? op (macro-absent-obj))
+              ##stdout-port
+              op)))
+      (macro-check-procedure thunk 1 (make-root-thread thunk n tg ip op)
+        (macro-check-tgroup tgroup 3 (make-root-thread thunk n tg ip op)
+          (macro-check-input-port input-port 4 (make-root-thread thunk n tg ip op)
+            (macro-check-output-port output-port 5 (make-root-thread thunk n tg ip op)
+              (##make-root-thread thunk name tgroup input-port output-port))))))))
 
 (define-prim (##thread-startup!)
 

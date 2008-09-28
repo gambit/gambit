@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-09-23 17:05:42 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-09-27 22:40:33 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -596,6 +596,7 @@ make-parameter
 make-polar
 make-random-source
 make-rectangular
+make-root-thread
 make-s16vector
 make-s32vector
 make-s64vector
