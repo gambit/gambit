@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 2007-2008 by Marc Feeley, All Rights Reserved.
 
 # ***WARNING***
 #
@@ -23,7 +23,7 @@ if [ "$?" != "0" -o "$ORIGINATOR_IP" == "" ] ; then
 fi
 ORIGINATOR="`id -nu`@$ORIGINATOR_IP"
 
-echo "c:/msys/1.0/bin/sh --login -c \"sleep 15;export ORIGINATOR=$ORIGINATOR;rm -rf /tmp/windows-rsh*;scp $ORIGINATOR:/tmp/_windows-rsh-script /tmp/windows-rsh-script;chmod +x /tmp/windows-rsh-script;/tmp/windows-rsh-script < /dev/null > /tmp/windows-rsh-script.out 2>&1;scp /tmp/windows-rsh-script.out $ORIGINATOR:/tmp/_windows-rsh-script.out;rm -rf /tmp/windows-rsh*;shutdown -s -t 0\"" > /tmp/_windows-rsh.tmp
+echo "c:/msys/1.0/bin/sh --login -c \"sleep 15;export ORIGINATOR=$ORIGINATOR;rm -rf /tmp/windows-rsh*;scp $ORIGINATOR:/tmp/_windows-rsh-script /tmp/windows-rsh-script;chmod +x /tmp/windows-rsh-script;/tmp/windows-rsh-script < /dev/null > /tmp/windows-rsh-script.out 2>&1;scp /tmp/windows-rsh-script.out $ORIGINATOR:/tmp/_windows-rsh-script.out;rm -rf /tmp/windows-rsh*;shutdown -s -f -t 0\"" > /tmp/_windows-rsh.tmp
 
 ifloppy="`dirname $0`/blank-floppy.fdd"
 ofloppy="$HOME/Library/Parallels/winxp/winxp-auto.fdd"
