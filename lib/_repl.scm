@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-09-26 20:24:13 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-09-29 15:36:53 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -2138,13 +2138,6 @@
     (##force-output output-port))
 
   ((macro-repl-channel-ports-read-expr channel) channel))
-
-(define-prim (##repl-channel-ports-read-exprwrite-results channel results)
-  (let ((input-port (macro-repl-channel-input-port channel))
-        (output-port (macro-repl-channel-output-port channel)))
-    (let ((result (##read-expr-from-port input-port)))
-      (##output-port-column-set! output-port 1)
-      result)))
 
 (define-prim (##repl-channel-ports-write-results channel results)
   (let ((output-port (macro-repl-channel-output-port channel)))
