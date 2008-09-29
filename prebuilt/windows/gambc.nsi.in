@@ -59,7 +59,7 @@ Section "MainSection" SEC01
 
   GetFullPathName /SHORT $1 "$INSTDIR"
 
-  ExecWait '$1\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$1\v${PRODUCT_VERSION}" "$1\v${PRODUCT_VERSION}\bin\gsi.exe" "$1\v${PRODUCT_VERSION}\bin\gsc.exe" "$1\v${PRODUCT_VERSION}\bin\six.exe"' $0
+  ExecWait '$1\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$1\v${PRODUCT_VERSION}" "$1\v${PRODUCT_VERSION}\lib\libgambc.a" "$1\v${PRODUCT_VERSION}\bin\gsi.exe" "$1\v${PRODUCT_VERSION}\bin\gsc.exe" "$1\v${PRODUCT_VERSION}\bin\six.exe"' $0
 
   Push "$1\v${PRODUCT_VERSION}\bin"
   Call AddToPath
