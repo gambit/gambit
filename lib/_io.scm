@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-09-23 21:38:24 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-09-30 17:18:59 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -712,6 +712,9 @@
                               (let ((x (permanent-close value)))
                                 (if x
                                   (begin
+                                    (macro-psettings-options-permanent-close-set!
+                                     (macro-psettings-roptions psettings)
+                                     x)
                                     (macro-psettings-options-permanent-close-set!
                                      (macro-psettings-woptions psettings)
                                      x)
