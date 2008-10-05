@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-09-26 16:55:17 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-10-04 23:43:22 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -23,8 +23,8 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP_YMD 20080930
-#define ___STAMP_HMS 212729
+#define ___STAMP_YMD 20081005
+#define ___STAMP_HMS 034917
 
 /*---------------------------------------------------------------------------*/
 
@@ -6658,6 +6658,12 @@ ___CAST(___ULONGLONG,val)
 #define ___U64_fits_in_width(val,width) \
 (((val) >> (width)) == 0)
 
+#define ___U64_mul_UM32_UM32(x,y) \
+(___CAST_U64(___CAST_U32(x)) * ___CAST_U32(y))
+
+#define ___U64_add_U64_U64(x,y) \
+(___CAST_U64(x) + ___CAST_U64(y))
+
 #define ___U64_hi32(val)___CAST_U32((val) >> 32)
 #define ___U64_lo32(val)___CAST_U32(val)
 
@@ -6722,6 +6728,12 @@ ___EXT(___U64_to_ULONGLONG_fn) (val)
 
 #define ___U64_fits_in_width(val,width) \
 ___EXT(___U64_fits_in_width_fn) (val,width)
+
+#define ___U64_mul_UM32_UM32(x,y) \
+___EXT(___U64_mul_UM32_UM32_fn) (x,y)
+
+#define ___U64_add_U64_U64(x,y) \
+___EXT(___U64_add_U64_U64_fn) (x,y)
 
 #define ___U64_hi32(val)val.hi32
 #define ___U64_lo32(val)val.lo32
@@ -7090,6 +7102,14 @@ typedef struct ___global_state_struct
     ___BOOL (*___U64_fits_in_width_fn)
        ___P((___U64 val,
              int width),
+            ());
+    ___U64 (*___U64_mul_UM32_UM32_fn)
+       ___P((___UM32 x,
+             ___UM32 y),
+            ());
+    ___U64 (*___U64_add_U64_U64_fn)
+       ___P((___U64 x,
+             ___U64 y),
             ());
     ___SCMOBJ (*___SCMOBJ_to_S8)
        ___P((___SCMOBJ obj,
@@ -8075,6 +8095,14 @@ ___IMP_FUNC(___ULONGLONG,___U64_to_ULONGLONG_fn)
 ___IMP_FUNC(___BOOL,___U64_fits_in_width_fn)
    ___P((___U64 val,
          int width),
+        ());
+___IMP_FUNC(___U64,___U64_mul_UM32_UM32_fn)
+   ___P((___UM32 x,
+         ___UM32 y),
+        ());
+___IMP_FUNC(___U64,___U64_add_U64_U64_fn)
+   ___P((___U64 x,
+         ___U64 y),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_S8)
    ___P((___SCMOBJ obj,

@@ -1,4 +1,4 @@
-/* File: "c_intf.c", Time-stamp: <2008-05-15 10:45:45 feeley> */
+/* File: "c_intf.c", Time-stamp: <2008-10-04 23:42:20 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -140,6 +140,30 @@ ___U64 val;
 int width;)
 {
   return ___U64_fits_in_width (val, width);
+}
+
+
+___EXP_FUNC(___U64,___U64_mul_UM32_UM32_fn)
+   ___P((___UM32 x,
+         ___UM32 y),
+        (x,
+         y)
+___UM32 x;
+___UM32 y;)
+{
+  return ___U64_mul_UM32_UM32 (x, y);
+}
+
+
+___EXP_FUNC(___U64,___U64_add_U64_U64_fn)
+   ___P((___U64 x,
+         ___U64 y),
+        (x,
+         y)
+___U64 x;
+___U64 y;)
+{
+  return ___U64_add_U64_U64 (x, y);
 }
 
 
@@ -293,6 +317,45 @@ int width;)
   if (width >= 32)
     return (val.hi32 >> (width-32)) == 0;
   return val.hi32 == 0 && (val.lo32 >> width) == 0;
+}
+
+
+___EXP_FUNC(___U64,___U64_mul_UM32_UM32_fn)
+   ___P((___UM32 x,
+         ___UM32 y),
+        (x,
+         y)
+___UM32 x;
+___UM32 y;)
+{
+  ___U64 r;
+  ___UM32 xlo = x & 0xffff;
+  ___UM32 xhi = x >> 16;
+  ___UM32 ylo = y & 0xffff;
+  ___UM32 yhi = y >> 16;
+  ___UM32 lo = xlo * ylo; /* 0 .. 0xfffe0001 */
+  ___UM32 m1 = xlo * yhi + (lo >> 16); /* 0 .. 0xfffeffff */
+  ___UM32 m2 = xhi * ylo; /* 0 .. 0xfffe0001 */
+  ___UM32 m3 = (m1 & 0xffff) + (m2 & 0xffff); /* 0 .. 0x1fffe */
+  ___UM32 hi = xhi * yhi + (m1 >> 16) + (m2 >> 16) + (m3 >> 16); /* 0 .. 0xfffffffe */
+  r.lo32 = ((m3 & 0xffff) << 16) + (lo & 0xffff);
+  r.hi32 = hi;
+  return r;
+}
+
+
+___EXP_FUNC(___U64,___U64_add_U64_U64_fn)
+   ___P((___U64 x,
+         ___U64 y),
+        (x,
+         y)
+___U64 x;
+___U64 y;)
+{
+  ___U64 r;
+  r.lo32 = x.lo32 + y.lo32;
+  r.hi32 = x.hi32 + y.hi32 + (r.lo32 < x.lo32);
+  return r;
 }
 
 

@@ -1,6 +1,6 @@
-/* File: "setup.c", Time-stamp: <2008-02-13 00:17:13 feeley> */
+/* File: "setup.c", Time-stamp: <2008-10-04 22:53:19 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /* 
  * This module contains the routines that setup the Scheme program for
@@ -2264,6 +2264,12 @@ ___setup_params_struct *setup_params;)
 
   ___gstate.___U64_fits_in_width_fn
     = ___U64_fits_in_width_fn;
+
+  ___gstate.___U64_mul_UM32_UM32_fn
+    = ___U64_mul_UM32_UM32_fn;
+
+  ___gstate.___U64_add_U64_U64_fn
+    = ___U64_add_U64_U64_fn;
 
   ___gstate.___SCMOBJ_to_S8
     = ___SCMOBJ_to_S8;

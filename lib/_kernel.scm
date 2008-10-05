@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-09-26 17:06:11 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-10-04 23:40:51 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3624,10 +3624,18 @@ end-of-code
   (##system-version-string))
 
 (define ##os-system-type-saved
-  (##map ##string->symbol
-         ((c-lambda ()
-                    nonnull-char-string-list
-           "___os_system_type"))))
+  (let ()
+
+    (define (str-list->sym-list lst)
+      (if (##null? lst)
+          '()
+          (##cons (##make-interned-symbol (##car lst))
+                  (str-list->sym-list (##cdr lst)))))
+
+    (str-list->sym-list
+     ((c-lambda ()
+                nonnull-char-string-list
+       "___os_system_type")))))
 
 (define-prim (system-type)
   ##os-system-type-saved)
@@ -3640,18 +3648,15 @@ end-of-code
 (define-prim (system-type-string)
   ##os-system-type-string-saved)
 
-(define-prim ##system-stamp-ymd
+(define ##system-stamp-saved
   ((c-lambda ()
-             unsigned-int32
-    "___result = ___CAST(___U32,___STAMP_YMD);")))
-
-(define-prim ##system-stamp-hms
-  ((c-lambda ()
-             unsigned-int32
-    "___result = ___CAST(___U32,___STAMP_HMS);")))
+             unsigned-int64
+    "___result = ___U64_add_U64_U64
+                   (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
+                    ___U64_from_UM32 (___STAMP_HMS));")))
 
 (define-prim (##system-stamp)
-  (##+ ##system-stamp-hms (##* 1000000 ##system-stamp-ymd)))
+  ##system-stamp-saved)
 
 (define-prim (system-stamp)
   (##system-stamp))
