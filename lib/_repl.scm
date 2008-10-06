@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-09-29 15:36:53 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-10-06 16:32:39 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -2855,7 +2855,7 @@
         (macro-check-character-output-port p 3 (display-exception-in-context exc cont p)
           (##display-exception-in-context exc cont p))))))
 
-(define-prim (##display-exception exc port)
+(define-prim (##default-display-exception exc port)
 
   (define max-displayed-args 15)
 
@@ -3239,6 +3239,12 @@
            (##newline port))))
 
   (display-exception exc))
+
+(define ##display-exception-hook #f)
+(set! ##display-exception-hook ##default-display-exception)
+
+(define-prim (##display-exception exc port)
+  (##display-exception-hook exc port))
 
 (define-prim (display-exception
               exc
