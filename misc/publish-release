@@ -1,21 +1,24 @@
 #! /bin/sh
 
-# Time-stamp: <2007-08-23 23:51:08 feeley>
+# Time-stamp: <2008-10-06 08:24:45 feeley>
 
-# Usage: publish-release <version> <sources-tgz> <prebuilt>...
+# Usage: publish-release <version> <sources-tgz> <sources-tgz-devel> <prebuilt>...
 
 VERSION="$1"
 shift
 TGZ="$1"
 shift
+TGZ_DEVEL="$1"
+shift
 PREBUILT="$*"
 
 echo "These files will be published for version $VERSION:"
 echo "  ==> $TGZ"
+echo "  ==> $TGZ_DEVEL"
 for file in $PREBUILT; do
   echo "  ==> $file"
 done
 echo "You will have to enter the Gambit web site password to confirm the operation."
 echo ""
 
-tar cf - $TGZ $PREBUILT | ssh -o PreferredAuthentications=keyboard-interactive,password gambit@trex.iro.umontreal.ca "rm -rf release-$VERSION;mkdir release-$VERSION;(cd release-$VERSION && tar xvf -);bin/publish-release $VERSION $TGZ $PREBUILT;rm -rf release-$VERSION"
+tar cf - $TGZ $TGZ_DEVEL $PREBUILT | ssh -o PreferredAuthentications=keyboard-interactive,password gambit@trex.iro.umontreal.ca "rm -rf release-$VERSION;mkdir release-$VERSION;(cd release-$VERSION && tar xvf -);bin/publish-release $VERSION $TGZ $TGZ_DEVEL $PREBUILT;rm -rf release-$VERSION"

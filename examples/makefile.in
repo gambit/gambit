@@ -1,6 +1,6 @@
-# makefile for Gambit-C examples, Time-stamp: <2007-05-28 20:58:05 feeley>
+# makefile for Gambit-C examples, Time-stamp: <2008-10-06 10:45:22 feeley>
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples
 rootfromhere = ..
@@ -103,7 +103,23 @@ hg-setup-pre:
 
 hg-setup-post:
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive examples-recursive hg-setup-recursive:
+dist-pre:
+	mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)
+	chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)
+	@echo "  Copying distribution files:"
+	@for file in $(DISTFILES); do \
+	  echo "    $(herefromroot)/$$file"; \
+	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	done
+
+dist-post:
+
+dist-devel-pre: dist-pre
+
+dist-devel-post: dist-post
+
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive dist-recursive dist-devel-recursive examples-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -126,20 +142,9 @@ realclean: realclean-pre realclean-recursive realclean-post
 
 hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
 
-dist:
-	@if test -n "$(SUBDIRS)"; then \
-	  for subdir in ""$(SUBDIRS); do \
-	    echo making $@ in $$subdir; \
-	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
-	    chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$subdir; \
-	    (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
-	  done \
-	fi
-	@echo "Copying distribution files"
-	@for file in $(DISTFILES); do \
-	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
-	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
-	done
+dist: dist-pre dist-recursive dist-post
+
+dist-devel: dist-devel-pre dist-devel-recursive dist-devel-post
 
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status

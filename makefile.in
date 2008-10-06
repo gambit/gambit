@@ -59,12 +59,15 @@ infodir=$(infodir) emacsdir=$(emacsdir)
 SUBDIRS = include lib gsi gsc bin misc doc tests examples prebuilt
 
 RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
-makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
-.hgignore .hgtags
+makefile.in configure configure.ac config.guess config.sub install-sh mkidirs
+
+HGRCFILES = .hgignore .hgtags
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+HGDISTFILES = $(HGRCFILES)
 
 .SUFFIXES:
 
@@ -88,7 +91,7 @@ check: fake_target all
 examples: fake_target all
 	cd examples && $(MAKE) $(MDEFINES) $@
 
-prebuilt: fake_target dist
+prebuilt: dist dist-devel
 	cd prebuilt && $(MAKE) $(MDEFINES) $@
 
 stamp: fake_target
@@ -104,15 +107,15 @@ update-nopull: fake_target
 	  $(HG) update; \
 	else \
 	  $(HG) update -r $$next_version-bootstrap; \
-	  $(MAKE) bootstrap; \
+	  $(MAKE) $(MDEFINES) bootstrap; \
 	  $(HG) update -r $$next_version; \
-	  $(MAKE) clean bootstrap update; \
+	  $(MAKE) $(MDEFINES) clean bootstrap update; \
 	fi
 
 update: fake_target
 	$(HG) pull
-	$(MAKE) update-nopull
-	$(MAKE)
+	$(MAKE) $(MDEFINES) update-nopull
+	$(MAKE) $(MDEFINES)
 
 new-major: fake_target
 	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
@@ -164,7 +167,6 @@ release: fake_target
 	$(MAKE) $(MDEFINES) all
 	$(MAKE) $(MDEFINES) check
 	$(MAKE) $(MDEFINES) doc
-	# $(HG) tag $(PACKAGE_VERSION)
 	rm -f $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
 	$(MAKE) $(MDEFINES) prebuilt
 
@@ -203,7 +205,7 @@ realclean-post: distclean-post
 
 hg-setup-pre:
 	$(HG) init
-	$(HG) add $(RCFILES)
+	$(HG) add $(RCFILES) $(HGRCFILES)
 	rm -f .hg/hgrc
 	echo "[paths]" > .hg/hgrc
 	echo "default-push = ssh://gambit@trex.iro.umontreal.ca/HTML/repo/gambit" >> .hg/hgrc
@@ -212,7 +214,44 @@ hg-setup-pre:
 hg-setup-post:
 	$(HG) commit --message "Initial commit of $(PACKAGE_STRING)"
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive:
+dist-pre:
+	rm -rf $(PACKAGE_TARNAME)
+	mkdir $(PACKAGE_TARNAME)
+	chmod 777 $(PACKAGE_TARNAME)
+	@echo "  Copying distribution files:"
+	@for file in $(DISTFILES); do \
+	  echo "    $$file"; \
+	  ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
+	done
+
+dist-post:
+	tar chof $(PACKAGE_TARNAME).tar $(PACKAGE_TARNAME)
+	gzip -9 $(PACKAGE_TARNAME).tar
+	mv $(PACKAGE_TARNAME).tar.gz $(PACKAGE_TARNAME).tgz
+	rm -rf $(PACKAGE_TARNAME)
+
+dist-devel-pre:
+	$(MAKE) $(MDEFINES) dist-pre
+	@echo "  Copying distribution files:"
+	@for file in $(HGDISTFILES); do \
+	  echo "    $$file"; \
+	  ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
+	done
+	@echo "    .hg"
+	ln $(srcdirpfx).hg $(PACKAGE_TARNAME) 2> /dev/null \
+	  || cp -p -R $(srcdirpfx).hg $(PACKAGE_TARNAME)
+
+dist-devel-post:
+	rm -rf $(PACKAGE_TARNAME)-devel
+	mv $(PACKAGE_TARNAME) $(PACKAGE_TARNAME)-devel
+	tar chof $(PACKAGE_TARNAME)-devel.tar $(PACKAGE_TARNAME)-devel
+	gzip -9 $(PACKAGE_TARNAME)-devel.tar
+	mv $(PACKAGE_TARNAME)-devel.tar.gz $(PACKAGE_TARNAME)-devel.tgz
+	rm -rf $(PACKAGE_TARNAME)-devel
+
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive dist-recursive dist-devel-recursive:
 	@for subdir in $(SUBDIRS); do \
 	  target=`echo $@ | sed 's/-recursive//'`; \
 	  echo making $$target in $$subdir; \
@@ -233,28 +272,9 @@ realclean: realclean-pre realclean-recursive realclean-post
 
 hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
 
-dist: fake_target
-	rm -rf $(PACKAGE_TARNAME)
-	mkdir $(PACKAGE_TARNAME)
-	chmod 777 $(PACKAGE_TARNAME)
-	@for subdir in $(SUBDIRS); do \
-	  echo making $@ in $$subdir; \
-	  mkdir $(PACKAGE_TARNAME)/$$subdir; \
-	  chmod 777 $(PACKAGE_TARNAME)/$$subdir; \
-	  (cd $$subdir && $(MAKE) $(MDEFINES) $@) || exit 1; \
-	done
-	@echo "Copying distribution files"
-	@for file in $(DISTFILES); do \
-	  ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
-	    || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
-	done
-	ln $(srcdirpfx).hg $(PACKAGE_TARNAME) 2> /dev/null \
-	  || cp -p -R $(srcdirpfx).hg $(PACKAGE_TARNAME); \
-	chmod -R a+r $(PACKAGE_TARNAME)
-	tar chof $(PACKAGE_TARNAME).tar $(PACKAGE_TARNAME)
-	gzip -9 $(PACKAGE_TARNAME).tar
-	mv $(PACKAGE_TARNAME).tar.gz $(PACKAGE_TARNAME).tgz
-	rm -rf $(PACKAGE_TARNAME)
+dist: dist-pre dist-recursive dist-post
+
+dist-devel: dist-devel-pre dist-devel-recursive dist-devel-post
 
 # For an explanation of the following makefile rules, see node
 # `Automatic Remaking' in GNU Autoconf documentation.
