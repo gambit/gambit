@@ -33,6 +33,8 @@ INSTALL_LIB = @INSTALL_LIB@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 LN_S = @LN_S@
 RANLIB = @RANLIB@
+RC = @RC@
+GIT = @GIT@
 HG = @HG@
 
 prefix = @prefix@
@@ -61,12 +63,14 @@ SUBDIRS = include lib gsi gsc bin misc doc tests examples prebuilt
 RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
 makefile.in configure configure.ac config.guess config.sub install-sh mkidirs
 
+GITRCFILES = .gitignore
 HGRCFILES = .hgignore .hgtags
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
+GITDISTFILES = $(GITRCFILES)
 HGDISTFILES = $(HGRCFILES)
 
 .SUFFIXES:
@@ -98,22 +102,40 @@ stamp: fake_target
 	cd include && $(MAKE) $(MDEFINES) $@
 
 commit: fake_target stamp
-	$(HG) commit
+	$(RC) commit
+
+pull: fake_target
+	$(RC) pull
 
 update-nopull: fake_target
-	next_version=`hg tags | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
-	next_version=`hg tags | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | grep -e 'v.*-bootstrap' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
-	if test "$$next_version" = ""; then \
-	  $(HG) update; \
+	@if test "$(RC)" = "$(GIT)"; then \
+	  next_version=`$(GIT) tag | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | grep -e 'v.*-bootstrap' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
 	else \
-	  $(HG) update -r $$next_version-bootstrap; \
+	  next_version=`$(HG) tags | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | grep -e 'v.*-bootstrap' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
+	fi
+	@if test "$$next_version" = ""; then \
+	  if test "$(RC)" = "$(GIT)"; then \
+	    $(GIT) update; \
+	  else \
+	    $(HG) update; \
+	  fi; \
+	else \
+	  if test "$(RC)" = "$(GIT)"; then \
+	    $(GIT) update -r $$next_version-bootstrap; \
+	  else \
+	    $(HG) update -r $$next_version-bootstrap; \
+	  fi; \
 	  $(MAKE) $(MDEFINES) bootstrap; \
-	  $(HG) update -r $$next_version; \
+	  if test "$(RC)" = "$(GIT)"; then \
+	    $(GIT) update -r $$next_version; \
+	  else \
+	    $(HG) update -r $$next_version; \
+	  fi; \
 	  $(MAKE) $(MDEFINES) clean bootstrap update; \
 	fi
 
 update: fake_target
-	$(HG) pull
+	$(MAKE) $(MDEFINES) pull
 	$(MAKE) $(MDEFINES) update-nopull
 	$(MAKE) $(MDEFINES)
 
@@ -147,14 +169,14 @@ change-version: fake_target
 	sed -e "/(define (compiler-version) $$version_num)/s/$$version_num/$$new_version_num/" gsc/_parms.scm > gsc/_parms.scm-new; \
 	if ! diff gsc/_parms.scm gsc/_parms.scm-new > /dev/null; then \
 	  mv gsc/_parms.scm-new gsc/_parms.scm; \
-	  $(HG) commit -m "[COMPILER CHANGES NEEDED FOR $(NEW_VERSION)] Changed version in compiler"; \
-	  $(HG) tag $(NEW_VERSION)-bootstrap; \
+	  $(RC) commit -m "[COMPILER CHANGES NEEDED FOR $(NEW_VERSION)] Changed version in compiler"; \
+	  $(RC) tag $(NEW_VERSION)-bootstrap; \
 	  if $(MAKE) $(MDEFINES) bootstrap; then \
 	    misc/changev $$version_num $$new_version_num; \
 	    cd tests; ../gsc/gsc -:=.. -f -c mix.scm; mv mix.c test5.ok; cd ..; \
 	    if $(MAKE) $(MDEFINES) clean && $(MAKE) $(MDEFINES) -j 2 && $(MAKE) $(MDEFINES) check && $(MAKE) $(MDEFINES) doc; then \
-	      $(HG) commit -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
-	      $(HG) tag $(NEW_VERSION); \
+	      $(RC) commit -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
+	      $(RC) tag $(NEW_VERSION); \
 	    fi; \
 	  fi; \
 	else \
@@ -203,16 +225,22 @@ realclean-pre: distclean-pre
 
 realclean-post: distclean-post
 
-hg-setup-pre:
-	$(HG) init
-	$(HG) add $(RCFILES) $(HGRCFILES)
-	rm -f .hg/hgrc
-	echo "[paths]" > .hg/hgrc
-	echo "default-push = ssh://gambit@trex.iro.umontreal.ca/HTML/repo/gambit" >> .hg/hgrc
-	echo "default = http://www.iro.umontreal.ca/~gambit/repo/gambit/" >> .hg/hgrc
+rc-setup-pre:
+	$(RC) init
+	@if test "$(RC)" = "$(GIT)"; then \
+	  $(GIT) add $(RCFILES) $(GITRCFILES); \
+	  $(GIT) config remote.origin.fetch git://myserver.com/var/git/myapp.git; \
+	  $(GIT) config remote.origin.push ssh://gambit@trex.iro.umontreal.ca/HTML/repo/gambit.git; \
+	else \
+	  $(HG) add $(RCFILES) $(HGRCFILES); \
+	  rm -f .hg/hgrc; \
+	  echo "[paths]" > .hg/hgrc; \
+	  echo "default-push = ssh://gambit@trex.iro.umontreal.ca/HTML/repo/gambit" >> .hg/hgrc; \
+	  echo "default = http://www.iro.umontreal.ca/~gambit/repo/gambit/" >> .hg/hgrc; \
+	fi
 
-hg-setup-post:
-	$(HG) commit --message "Initial commit of $(PACKAGE_STRING)"
+rc-setup-post:
+	$(RC) commit -m "Initial commit of $(PACKAGE_STRING)"; \
 
 dist-pre:
 	rm -rf $(PACKAGE_TARNAME)
@@ -234,14 +262,25 @@ dist-post:
 dist-devel-pre:
 	$(MAKE) $(MDEFINES) dist-pre
 	@echo "  Copying distribution files:"
-	@for file in $(HGDISTFILES); do \
-	  echo "    $$file"; \
-	  ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
-	    || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
-	done
-	@echo "    .hg"
-	ln $(srcdirpfx).hg $(PACKAGE_TARNAME) 2> /dev/null \
-	  || cp -p -R $(srcdirpfx).hg $(PACKAGE_TARNAME)
+	@if test "$(RC)" = "$(GIT)"; then \
+	  for file in $(GITDISTFILES); do \
+	    echo "    $$file"; \
+	    ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
+	      || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
+	  done; \
+	  @echo "    .git"; \
+	  ln $(srcdirpfx).git $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p -R $(srcdirpfx).git $(PACKAGE_TARNAME); \
+	else \
+	  for file in $(HGDISTFILES); do \
+	    echo "    $$file"; \
+	    ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
+	      || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
+	  done; \
+	  @echo "    .hg"; \
+	  ln $(srcdirpfx).hg $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p -R $(srcdirpfx).hg $(PACKAGE_TARNAME); \
+	fi
 
 dist-devel-post:
 	rm -rf $(PACKAGE_TARNAME)-devel
@@ -251,7 +290,7 @@ dist-devel-post:
 	mv $(PACKAGE_TARNAME)-devel.tar.gz $(PACKAGE_TARNAME)-devel.tgz
 	rm -rf $(PACKAGE_TARNAME)-devel
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@for subdir in $(SUBDIRS); do \
 	  target=`echo $@ | sed 's/-recursive//'`; \
 	  echo making $$target in $$subdir; \
@@ -270,7 +309,7 @@ distclean: distclean-pre distclean-recursive distclean-post
 
 realclean: realclean-pre realclean-recursive realclean-post
 
-hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+rc-setup: rc-setup-pre rc-setup-recursive rc-setup-post
 
 dist: dist-pre dist-recursive dist-post
 

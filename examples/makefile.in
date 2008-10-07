@@ -37,6 +37,8 @@ INSTALL_LIB = @INSTALL_LIB@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 LN_S = @LN_S@
 RANLIB = @RANLIB@
+RC = @RC@
+GIT = @GIT@
 HG = @HG@
 
 prefix = @prefix@
@@ -98,10 +100,10 @@ realclean-pre: distclean-pre
 
 realclean-post: distclean-post
 
-hg-setup-pre:
-	$(HG) add $(RCFILES)
+rc-setup-pre:
+	$(RC) add $(RCFILES)
 
-hg-setup-post:
+rc-setup-post:
 
 dist-pre:
 	mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)
@@ -119,7 +121,7 @@ dist-devel-pre: dist-pre
 
 dist-devel-post: dist-post
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive hg-setup-recursive dist-recursive dist-devel-recursive examples-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive examples-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -140,7 +142,7 @@ distclean: distclean-pre distclean-recursive distclean-post
 
 realclean: realclean-pre realclean-recursive realclean-post
 
-hg-setup: hg-setup-pre hg-setup-recursive hg-setup-post
+rc-setup: rc-setup-pre rc-setup-recursive rc-setup-post
 
 dist: dist-pre dist-recursive dist-post
 

@@ -1,4 +1,6 @@
-bin/gsc-cc-o
+.gitignore
+.git
+bin/gsc-cc-o.bat
 bin/gsc-script
 bin/gsi-script
 bin/makefile
@@ -181,7 +183,6 @@ gambc-v.*\.tgz
 .*\.obj
 .*\.manifest
 .*\.res
-.*\.exe
 .*\.ilk
 .*\.pdb
 .*\.dep

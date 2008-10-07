@@ -784,6 +784,8 @@ INSTALL
 INSTALL_DATA
 INSTALL_LIB
 INSTALL_PROGRAM
+RC
+GIT
 HG
 FIXLIB
 X_FLAGS
@@ -24381,6 +24383,8 @@ else
   RANLIB="$ac_cv_prog_RANLIB"
 fi
 
+RC="hg"
+GIT="git"
 HG="hg"
 
 exe="$EXEEXT"
@@ -24563,6 +24567,8 @@ INSTALL='$(rootfromhere)/install-sh -c'
 INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
+
+
 
 
 
