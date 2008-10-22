@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2008-09-03 14:29:59 feeley> */
+/* File: "os_tty.c", Time-stamp: <2008-10-22 15:31:33 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -7063,7 +7063,7 @@ ___device_tty *self;)
    */
 
   if (d->input_line.buffer != NULL)
-    return ___FIX(___NO_ERR);
+    return ___FIX(0);
 
   /*
    * Process events only if no line editing output is pending.
@@ -7109,7 +7109,12 @@ ___device_tty *self;)
 
   e2 = lineeditor_process_single_event (d, &ev);
   if (e1 == ___FIX(___NO_ERR))
-    e1 = e2;
+    {
+      if (ev.event_kind == LINEEDITOR_EV_NONE)
+        e1 = ___FIX(i);
+      else
+        e1 = ___FIX(i+1);
+    }
 
   if (e1 == ___FIX(___INVALID_OP_ERR))
     {
@@ -7167,7 +7172,7 @@ ___device_tty *self;)
     }
 
   e2 = lineeditor_output_drain (d);
-  if (e1 == ___FIX(___NO_ERR))
+  if (e2 != ___FIX(___NO_ERR))
     e1 = e2;
 
   return e1;
@@ -7189,9 +7194,11 @@ ___device_tty *self;)
       d->current.mark_point = 0;
       d->current.hist = d->hist_last;
       d->current.line_start = d->terminal_row * d->terminal_nb_cols + d->terminal_col;
+      if (lineeditor_process_events (d) <= ___FIX(0))
+        d->editing_line = 0;
     }
-
-  lineeditor_process_events (d); /* ignore error */
+  else
+    lineeditor_process_events (d); /* ignore error */
 
   if (d->input_line.buffer == NULL)
     return ___ERR_CODE_EAGAIN;
