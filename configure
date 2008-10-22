@@ -24383,7 +24383,7 @@ else
   RANLIB="$ac_cv_prog_RANLIB"
 fi
 
-RC="hg"
+RC="git"
 GIT="git"
 HG="hg"
 

@@ -102,60 +102,74 @@ stamp: fake_target
 	cd include && $(MAKE) $(MDEFINES) $@
 
 commit: fake_target stamp
-	$(RC) commit
-
-pull: fake_target
-	$(RC) pull
-
-update-nopull: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
-	  next_version=`$(GIT) tag | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | grep -e 'v.*-bootstrap' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
+	  $(GIT) commit -a; \
 	else \
-	  next_version=`$(HG) tags | sed -n -e '/$(PACKAGE_VERSION) /{g;1!p;};h' | grep -e 'v.*-bootstrap' | sed -e 's/\([^ ]*\)-bootstrap.*/\1/'`; \
-	fi
-	@if test "$$next_version" = ""; then \
-	  if test "$(RC)" = "$(GIT)"; then \
-	    $(GIT) update; \
-	  else \
-	    $(HG) update; \
-	  fi; \
-	else \
-	  if test "$(RC)" = "$(GIT)"; then \
-	    $(GIT) update -r $$next_version-bootstrap; \
-	  else \
-	    $(HG) update -r $$next_version-bootstrap; \
-	  fi; \
-	  $(MAKE) $(MDEFINES) bootstrap; \
-	  if test "$(RC)" = "$(GIT)"; then \
-	    $(GIT) update -r $$next_version; \
-	  else \
-	    $(HG) update -r $$next_version; \
-	  fi; \
-	  $(MAKE) $(MDEFINES) clean bootstrap update; \
+	  $(HG) commit; \
 	fi
 
-update: fake_target
-	$(MAKE) $(MDEFINES) pull
-	$(MAKE) $(MDEFINES) update-nopull
-	$(MAKE) $(MDEFINES)
+diff: fake_target
+	@$(RC) diff | cat
+
+log: fake_target
+	@$(RC) log | cat
+
+status: fake_target
+	@$(RC) status || :
+
+push: fake_target
+	@if test "$(RC)" = "$(GIT)"; then \
+	  $(GIT) push ssh://gambit@public-gambit-repo/~/HTML/repo/gambit.git/; \
+	else \
+	  $(HG) push; \
+	fi
+
+fetch: fake_target
+	@if test "$(RC)" = "$(GIT)"; then \
+	  $(GIT) fetch --tags; \
+	else \
+	  $(HG) pull; \
+	fi
+
+update-nofetch: fake_target
+	@if test "$(RC)" = "$(GIT)"; then \
+	  next_version=`$(GIT) tag | fgrep -e '-bootstrap' | sed 's/v\([^ ]*\)-bootstrap.*/\1/' | sort -r -s -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n | sed 's/^/v/g' | sed -n '/^$(PACKAGE_VERSION)/{n;p;}'`; \
+	else \
+	  next_version=`$(HG) tags | fgrep -e '-bootstrap' | sed 's/v\([^ ]*\)-bootstrap.*/\1/' | sort -r -s -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n | sed 's/^/v/g' | sed -n '/^$(PACKAGE_VERSION)/{n;p;}'`; \
+	fi; \
+	if test "$$next_version" = ""; then \
+	  if test "$(RC)" = "$(GIT)"; then \
+	    $(GIT) checkout master; \
+	  else \
+	    $(HG) checkout; \
+	  fi; \
+	else \
+	  $(RC) checkout $$next_version-bootstrap; \
+	  $(MAKE) bootstrap; \
+	  $(RC) checkout $$next_version; \
+	  $(MAKE) clean bootstrap update; \
+	fi
+
+update: fetch update-nofetch
+	$(MAKE)
 
 new-major: fake_target
 	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
 	next_major=`eval expr 1 + $$major`; \
 	next_version=v$$next_major.0.0; \
-	$(MAKE) $(MDEFINES) NEW_VERSION=$$next_version change-version
+	$(MAKE) NEW_VERSION=$$next_version change-version
 
 new-minor: fake_target
 	minor=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
 	next_minor=`eval expr 1 + $$minor`; \
 	next_version=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&v\1.$$next_minor.0&"`; \
-	$(MAKE) $(MDEFINES) NEW_VERSION=$$next_version change-version
+	$(MAKE) NEW_VERSION=$$next_version change-version
 
 new-revision: fake_target
 	revision=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
 	next_revision=`eval expr 1 + $$revision`; \
 	next_version=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&v\1.\2.$$next_revision&"`; \
-	$(MAKE) $(MDEFINES) NEW_VERSION=$$next_version change-version
+	$(MAKE) NEW_VERSION=$$next_version change-version
 
 change-version: fake_target
 	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
@@ -169,13 +183,21 @@ change-version: fake_target
 	sed -e "/(define (compiler-version) $$version_num)/s/$$version_num/$$new_version_num/" gsc/_parms.scm > gsc/_parms.scm-new; \
 	if ! diff gsc/_parms.scm gsc/_parms.scm-new > /dev/null; then \
 	  mv gsc/_parms.scm-new gsc/_parms.scm; \
-	  $(RC) commit -m "[COMPILER CHANGES NEEDED FOR $(NEW_VERSION)] Changed version in compiler"; \
+	  if test "$(RC)" = "$(GIT)"; then \
+	    $(GIT) commit -a -m "[COMPILER CHANGES NEEDED FOR $(NEW_VERSION)] Changed version in compiler"; \
+	  else \
+	    $(HG) commit -m "[COMPILER CHANGES NEEDED FOR $(NEW_VERSION)] Changed version in compiler"; \
+	  fi; \
 	  $(RC) tag $(NEW_VERSION)-bootstrap; \
-	  if $(MAKE) $(MDEFINES) bootstrap; then \
+	  if $(MAKE) bootstrap; then \
 	    misc/changev $$version_num $$new_version_num; \
 	    cd tests; ../gsc/gsc -:=.. -f -c mix.scm; mv mix.c test5.ok; cd ..; \
-	    if $(MAKE) $(MDEFINES) clean && $(MAKE) $(MDEFINES) -j 2 && $(MAKE) $(MDEFINES) check && $(MAKE) $(MDEFINES) doc; then \
-	      $(RC) commit -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
+	    if $(MAKE) clean && $(MAKE) -j 2 && $(MAKE) check && $(MAKE) doc; then \
+	      if test "$(RC)" = "$(GIT)"; then \
+	        $(GIT) commit -a -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
+	      else \
+	        $(HG) commit -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
+	      fi; \
 	      $(RC) tag $(NEW_VERSION); \
 	    fi; \
 	  fi; \
@@ -184,13 +206,13 @@ change-version: fake_target
 	fi
 
 release: fake_target
-	$(MAKE) $(MDEFINES) bootstrap
-	$(MAKE) $(MDEFINES) mostlyclean
-	$(MAKE) $(MDEFINES) all
-	$(MAKE) $(MDEFINES) check
-	$(MAKE) $(MDEFINES) doc
+	$(MAKE) bootstrap
+	$(MAKE) mostlyclean
+	$(MAKE) all
+	$(MAKE) check
+	$(MAKE) doc
 	rm -f $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
-	$(MAKE) $(MDEFINES) prebuilt
+	$(MAKE) prebuilt
 
 publish-release: fake_target
 	misc/publish-release $(PACKAGE_VERSION) $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
@@ -229,18 +251,26 @@ rc-setup-pre:
 	$(RC) init
 	@if test "$(RC)" = "$(GIT)"; then \
 	  $(GIT) add $(RCFILES) $(GITRCFILES); \
-	  $(GIT) config remote.origin.fetch git://myserver.com/var/git/myapp.git; \
-	  $(GIT) config remote.origin.push ssh://gambit@trex.iro.umontreal.ca/HTML/repo/gambit.git; \
+	  echo '[remote "origin"]' >> .git/config; \
+	  echo '	url = http://www.iro.umontreal.ca/~gambit/repo/gambit.git/' >> .git/config; \
+	  echo '	fetch = +refs/heads/*:refs/remotes/origin/*' >> .git/config; \
+	  echo '[branch "master"]' >> .git/config; \
+	  echo '	remote = origin' >> .git/config; \
+	  echo '	merge = refs/heads/master' >> .git/config; \
 	else \
 	  $(HG) add $(RCFILES) $(HGRCFILES); \
 	  rm -f .hg/hgrc; \
 	  echo "[paths]" > .hg/hgrc; \
-	  echo "default-push = ssh://gambit@trex.iro.umontreal.ca/HTML/repo/gambit" >> .hg/hgrc; \
+	  echo "default-push = ssh://gambit@public-gambit-repo/HTML/repo/gambit" >> .hg/hgrc; \
 	  echo "default = http://www.iro.umontreal.ca/~gambit/repo/gambit/" >> .hg/hgrc; \
 	fi
 
 rc-setup-post:
-	$(RC) commit -m "Initial commit of $(PACKAGE_STRING)"; \
+	@if test "$(RC)" = "$(GIT)"; then \
+	  $(GIT) commit -a -m "Initial commit of $(PACKAGE_STRING)"; \
+	else \
+	  $(HG) commit -m "Initial commit of $(PACKAGE_STRING)"; \
+	fi
 
 dist-pre:
 	rm -rf $(PACKAGE_TARNAME)
@@ -268,7 +298,7 @@ dist-devel-pre:
 	    ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
 	      || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
 	  done; \
-	  @echo "    .git"; \
+	  echo "    .git"; \
 	  ln $(srcdirpfx).git $(PACKAGE_TARNAME) 2> /dev/null \
 	    || cp -p -R $(srcdirpfx).git $(PACKAGE_TARNAME); \
 	else \
@@ -277,7 +307,7 @@ dist-devel-pre:
 	    ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
 	      || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
 	  done; \
-	  @echo "    .hg"; \
+	  echo "    .hg"; \
 	  ln $(srcdirpfx).hg $(PACKAGE_TARNAME) 2> /dev/null \
 	    || cp -p -R $(srcdirpfx).hg $(PACKAGE_TARNAME); \
 	fi

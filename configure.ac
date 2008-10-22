@@ -1152,7 +1152,7 @@ AC_PATH_XTRA
 
 AC_PROG_LN_S
 AC_PROG_RANLIB
-RC="hg"
+RC="git"
 GIT="git"
 HG="hg"
 
