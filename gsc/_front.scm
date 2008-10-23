@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2008-09-12 18:34:55 feeley>
+;;; File: "_front.scm", Time-stamp: <2008-10-23 13:03:03 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -82,18 +82,6 @@
                   output-root
                   mod-name
                   info-port)))))
-
-        (if info-port
-            (begin
-              (if successful
-                  (begin
-                    (display "Compilation finished." info-port)
-                    (newline info-port))
-                  (begin
-                    (display "Compilation terminated abnormally." info-port)
-                    (newline info-port)))
-              (if (not (eq? info-port (current-output-port)))
-                  (close-output-port info-port))))
 
         successful))))
 
