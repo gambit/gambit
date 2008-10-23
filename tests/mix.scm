@@ -1,4 +1,4 @@
-; File: "mix.scm", Time-stamp: <2007-12-13 13:41:41 feeley>
+; File: "mix.scm", Time-stamp: <2008-10-23 10:53:18 feeley>
 
 ; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1824,11 +1824,13 @@
  (make-thread
   (lambda ()
     (let loop ()
+      (thread-sleep! 0.0001) ; sleep until next heartbeat interrupt
       (set! intrs (+ intrs 1.0))
-      (thread-sleep! 1e-10) ; sleep until next heartbeat interrupt
       (loop)))))
 
-(thread-base-priority-set! interrupt-thread 0)
+;; The interrupt-thread priority must be above the primordial thread's
+;; priority which is 0.
+(thread-base-priority-set! interrupt-thread 1)
 
 (thread-start! interrupt-thread)
 
