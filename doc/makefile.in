@@ -75,7 +75,7 @@ all-pre:
 
 all-post:
 
-doc: info pdf html txt
+doc: info pdf html txt ps
 
 info: gambit-c.info
 
