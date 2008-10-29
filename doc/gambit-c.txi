@@ -685,7 +685,8 @@ Synopsis:
     @r{[}-dynamic@r{]} @r{[}-cc-options @var{options}@r{]}
     @r{[}-ld-options-prelude @var{options}@r{]} @r{[}-ld-options @var{options}@r{]}
     @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]}
-    @r{[}-debug@r{]} @r{[}-debug-source@r{]} @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
+    @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
+    @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
     @r{[}-o @var{output}@r{]} @r{[}-c@r{]} @r{[}-keep-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @var{base}@r{]}
     @r{[}@r{[}-@r{]} @r{[}-e @var{expressions}@r{]} @r{[}@var{file}@r{]}@r{]}@dots{}
 @end example
@@ -788,8 +789,10 @@ Display the source code after expansion.
 Generate a listing of the GVM code.
 @item -debug
 Include all debugging information in the code generated.
+@item -debug-location
+Include source code location debugging information in the code generated.
 @item -debug-source
-Include source code debugging information in the code generated.
+Include the source code debugging information in the code generated.
 @item -debug-environments
 Include environment debugging information in the code generated.
 @item -track-scheme
@@ -898,17 +901,29 @@ for the ``Gambit Virtual Machine'' (GVM) of each Scheme file on
 @opindex -debug
 The @samp{-debug} option causes debugging information to be saved in
 the code generated.  It is equivalent to the combination of the
-@samp{-debug-source} option and the @samp{-debug-environments} option.
-Note that the debugging information will substantially increase the
-size of the generated code (the size of the object file is typically 2
-to 4 times bigger).
+@samp{-debug-location} option, the @samp{-debug-source} option and the
+@samp{-debug-environments} option.  Note that the debugging
+information will substantially increase the C compilation time and the
+size of the generated code.  When compiling a 3000 line Scheme file it
+was observed that the total compilation time is 500% longer and the
+executable code is 150% bigger.
+
+@opindex -debug-location
+The @samp{-debug-location} option causes source code location
+debugging information to be saved in the code generated.  With this
+option run time error messages indicate the location of the error in
+the source code file.  When compiling a 3000 line Scheme file it was
+observed that the total compilation time is 200% longer and the
+executable code is 60% bigger.
 
 @opindex -debug-source
 The @samp{-debug-source} option causes source code debugging
 information to be saved in the code generated.  With this option run
-time error messages indicate the source code and its location, the
-backtraces are more precise, and the @code{pp} procedure will display
-the source code of compiled procedures.
+time error messages indicate the source code, the backtraces are more
+precise, and the @code{pp} procedure will display the source code of
+compiled procedures.  When compiling a 3000 line Scheme file it was
+observed that the total compilation time is 90% longer and the
+executable code is 90% bigger.
 
 @opindex -debug-environments
 The @samp{-debug-environments} option causes environment debugging
@@ -916,7 +931,9 @@ information to be saved in the code generated.  With this option the
 debugger will have access to the environments of the continuations.
 In other words the local variables defined in compiled procedures (and
 not optimized away by the compiler) will be shown by the @samp{,e}
-REPL command.
+REPL command.  When compiling a 3000 line Scheme file it was observed
+that the total compilation time is 70% longer and the executable code
+is 40% bigger.
 
 @opindex -track-scheme
 The @samp{-track-scheme} options causes the generation of @samp{#line}
@@ -1916,14 +1933,15 @@ second field is the procedure that created the frame or
 @samp{(interaction)} if the frame was created by an expression entered
 at the REPL.  The remaining fields describe the subproblem associated
 with the frame, that is the expression whose value is being computed.
-The third field is the location of the subproblem's source code and the
-fourth field is a reproduction of the source code, possibly truncated to
-fit on the line.  The last two fields may be missing if that
-information is not available.  In particular, the third field is missing
-when the frame was created by a user call to the @samp{eval} procedure,
-and the last two fields are missing when the frame was created by a
-compiled procedure not compiled with the @samp{-debug} or
-@samp{-debug-source} options.
+The third field is the location of the subproblem's source code and
+the fourth field is a reproduction of the source code, possibly
+truncated to fit on the line.  The last two fields may be missing if
+that information is not available.  In particular, the third field is
+missing when the frame was created by a user call to the @samp{eval}
+procedure or by a compiled procedure not compiled with the
+@samp{-debug} or @samp{-debug-location} options, and the last field is
+missing when the frame was created by a compiled procedure not
+compiled with the @samp{-debug} or @samp{-debug-source} options.
 
 @item ,b
 @cmindex ,b

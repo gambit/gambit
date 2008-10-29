@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2008-09-26 17:10:14 feeley>
+;;; File: "main.scm", Time-stamp: <2008-10-29 10:33:49 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -463,7 +463,7 @@
                 '("c" "dynamic" "link" "flat"
                   "warnings" "verbose" "report" "expansion" "gvm"
                   "check" "force"
-                  "debug" "debug-source" "debug-environments"
+                  "debug" "debug-location" "debug-source" "debug-environments"
                   "track-scheme" "keep-c"))
               (if (interpreter-or force-interpreter?)
                 '()

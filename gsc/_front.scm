@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2008-10-23 13:03:03 feeley>
+;;; File: "_front.scm", Time-stamp: <2008-10-29 10:35:07 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -103,6 +103,8 @@
           (set! compiler-option-gvm                #t))
          ((debug)
           (set! compiler-option-debug              #t))
+         ((debug-location)
+          (set! compiler-option-debug-location     #t))
          ((debug-source)
           (set! compiler-option-debug-source       #t))
          ((debug-environments)
@@ -126,6 +128,7 @@
   (set! compiler-option-expansion          #f)
   (set! compiler-option-gvm                #f)
   (set! compiler-option-debug              #f)
+  (set! compiler-option-debug-location     #f)
   (set! compiler-option-debug-source       #f)
   (set! compiler-option-debug-environments #f)
   (set! compiler-option-track-scheme       #f))
@@ -136,6 +139,7 @@
 (define compiler-option-expansion          #f)
 (define compiler-option-gvm                #f)
 (define compiler-option-debug              #f)
+(define compiler-option-debug-location     #f)
 (define compiler-option-debug-source       #f)
 (define compiler-option-debug-environments #f)
 (define compiler-option-track-scheme       #f)

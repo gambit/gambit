@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-10-06 16:32:39 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-10-29 11:22:37 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -508,10 +508,14 @@
 (define-prim (##decompile proc)
 
   (define (decomp p)
-    (let ((src (##subprocedure-source p)))
-      (if src
-        (source->expression src)
-        proc)))
+    (let ((src-info (##subprocedure-source-info p)))
+      (cond ((##source? src-info)
+             (source->expression src-info))
+            ((or (##locat? src-info)
+                 (##not src-info))
+             proc)
+            (else
+             src-info))))
 
   (define (compiler-source-code src)
     (##source-code src))
@@ -557,10 +561,13 @@
 (define-prim (##procedure-locat proc)
 
   (define (locat p)
-    (let ((src (##subprocedure-source p)))
-      (if src
-        (compiler-source-locat src)
-        #f)))
+    (let ((src-info (##subprocedure-source-info p)))
+      (cond ((##source? src-info)
+             (compiler-source-locat src-info))
+            ((##locat? src-info)
+             src-info)
+            (else
+             #f))))
 
   (define (compiler-source-locat src)
     (##source-locat src))
@@ -590,11 +597,11 @@
               (loop (macro-code-link parent))))
           #f)))))
 
-(define-prim (##subprocedure-source proc)
+(define-prim (##subprocedure-source-info proc)
   (let ((info (##subprocedure-info proc)))
     (if info
-      (##vector-ref info 1)
-      #f)))
+        (##vector-ref info 1)
+        #f)))
 
 (define-prim (##subprocedure-info proc)
   (let* ((id (##subprocedure-id proc))
