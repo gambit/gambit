@@ -177,6 +177,8 @@ $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
 $(srcdirpfx)fixnum.scm $(srcdirpfx)generic.scm
 
+$(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
+
 install-pre:
 
 install-post: all

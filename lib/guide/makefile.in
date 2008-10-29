@@ -1,4 +1,4 @@
-# makefile for GUIDE library, Time-stamp: <2007-07-25 19:55:15 feeley>
+# makefile for GUIDE library, Time-stamp: <2008-10-29 13:21:59 feeley>
 
 # Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -98,6 +98,8 @@ all-post: guidemak $(MODULES_O)
 	$(MAKE) -f guidemak $(MDEFINES)
 
 $(MODULES_C): $(srcdirpfx)$(rootfromhere)/lib/header.scm
+
+$(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
 install-pre:
 

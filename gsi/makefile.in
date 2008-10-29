@@ -161,6 +161,8 @@ $(MODULES_C): $(srcdirpfx)$(rootfromhere)/lib/header.scm \
 $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm
 
+$(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
+
 install-pre:
 
 install-post: all
