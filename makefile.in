@@ -126,6 +126,7 @@ push: fake_target
 
 fetch: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
+	  $(GIT) fetch; \
 	  $(GIT) fetch --tags; \
 	else \
 	  $(HG) pull; \
