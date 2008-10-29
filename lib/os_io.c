@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2008-10-29 16:20:53 feeley> */
+/* File: "os_io.c", Time-stamp: <2008-10-29 16:22:42 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -6210,14 +6210,16 @@ int options;)
                   ((options & STDOUT_REDIR) &&
                    dup2 (fdp.output.writing_fd, STDOUT_FILENO) < 0) ||
                   ((options & (STDERR_REDIR | PSEUDO_TERM)) &&
-                   dup2 (fdp.output.writing_fd, STDERR_FILENO) < 0) ||
-                  fcntl (hdp_errno.writing_fd, F_SETFD, FD_CLOEXEC) < 0)
+                   dup2 (fdp.output.writing_fd, STDERR_FILENO) < 0))
                 goto return_errno;
-
-              close_half_duplex_pipe (&fdp.input, 1);
-              close_half_duplex_pipe (&fdp.output, 0);
-              close_half_duplex_pipe (&hdp_errno, 0);
             }
+
+          if (fcntl (hdp_errno.writing_fd, F_SETFD, FD_CLOEXEC) < 0)
+            goto return_errno;
+
+          close_half_duplex_pipe (&fdp.input, 1);
+          close_half_duplex_pipe (&fdp.output, 0);
+          close_half_duplex_pipe (&hdp_errno, 0);
 
           {
             /* Close all file descriptors that aren't used. */
