@@ -252,6 +252,14 @@ rc-setup-pre:
 	$(RC) init
 	@if test "$(RC)" = "$(GIT)"; then \
 	  $(GIT) add $(RCFILES) $(GITRCFILES); \
+	  rm -f .git/config; \
+	  echo '[core]' >> .git/config; \
+	  echo '	repositoryformatversion = 0' >> .git/config; \
+	  echo '	fileMode = false' >> .git/config; \
+	  echo '	bare = false' >> .git/config; \
+	  echo '	logallrefupdates = true' >> .git/config; \
+	  echo '	ignorecase = true' >> .git/config; \
+	  echo '	autocrlf = false' >> .git/config; \
 	  echo '[remote "origin"]' >> .git/config; \
 	  echo '	url = http://www.iro.umontreal.ca/~gambit/repo/gambit.git/' >> .git/config; \
 	  echo '	fetch = +refs/heads/*:refs/remotes/origin/*' >> .git/config; \
