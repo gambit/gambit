@@ -124,15 +124,15 @@ push: fake_target
 	  $(HG) push; \
 	fi
 
-fetch: fake_target
+pull: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
-	  $(GIT) fetch; \
-	  $(GIT) fetch --tags; \
+	  $(GIT) pull; \
+	  $(GIT) pull --tags; \
 	else \
 	  $(HG) pull; \
 	fi
 
-update-nofetch: fake_target
+update-nopull: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
 	  next_version=`$(GIT) tag | fgrep -e '-bootstrap' | sed 's/v\([^ ]*\)-bootstrap.*/\1/' | sort -r -s -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n | sed 's/^/v/g' | sed -n '/^$(PACKAGE_VERSION)/{n;p;}'`; \
 	else \
@@ -151,7 +151,7 @@ update-nofetch: fake_target
 	  $(MAKE) clean bootstrap update; \
 	fi
 
-update: fetch update-nofetch
+update: pull update-nopull
 	$(MAKE)
 
 new-major: fake_target
