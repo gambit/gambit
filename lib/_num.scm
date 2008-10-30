@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-09-26 19:42:58 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-10-30 16:52:52 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
@@ -214,7 +214,7 @@
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       #f
       (or (##eq? x y)
-	  (##bignum.= x y))
+          (##bignum.= x y))
       #f
       (and (##flonum.finite? y)
            (##ratnum.= (##ratnum.<-exact-int x) (##flonum.->ratnum y)))
@@ -224,7 +224,7 @@
       #f
       #f
       (or (##eq? x y)
-	  (##ratnum.= x y))
+          (##ratnum.= x y))
       (and (##flonum.finite? y)
            (##ratnum.= x (##flonum.->ratnum y)))
       (##cpxnum.= (##cpxnum.<-noncpxnum x) y))
@@ -2007,6 +2007,11 @@
   (macro-force-vars (x)
     (##exp x)))
 
+(define-prim (##flonum.full-precision? x)
+  (let ((y (##flonum.abs x)))
+    (and (##fl< y (macro-inexact-+inf))
+         (##fl<= (macro-flonum-min-normal) y))))
+
 (define-prim (##log x)
 
   (define (type-error)
@@ -2018,6 +2023,122 @@
   (define (negative-log x)
     (##make-rectangular (##log (##negate x)) (macro-inexact-+pi)))
 
+  (define (exact-log x)
+
+    ;; x is positive, x is not 1.
+    
+    ;; There are three places where just converting to a flonum and
+    ;; taking the flonum logarithm doesn't work well.
+    ;; 1. Overflow in the conversion
+    ;; 2. Underflow in the conversion (or even loss of precision
+    ;;    because of a denormalized conversion result)
+    ;; 3. When the number is close to 1.
+
+    (let ((float-x (##exact->inexact x)))
+      (cond ((##= x float-x)
+             (##fllog float-x)) ;; first, we trust the builtin flonum log
+
+            ((##not (##flonum.full-precision? float-x))
+             
+             ;; direct conversion to flonum could incur massive relative
+             ;; rounding errors, or would just lead to an infinite result
+             ;; so we tolerate more than one rounding error in the calculation
+             
+             (let* ((wn (##integer-length (##numerator x)))
+                    (wd (##integer-length (##denominator x)))
+                    (p  (##fx- wn wd))
+                    (float-p (##flonum.<-fixnum p))
+                    (partial-result (##fllog 
+                                     (##exact->inexact
+                                      (##* x (##expt 2 (##fx- p)))))))
+               (##fl+ (##fl* float-p
+                             (macro-inexact-log-2))
+                      partial-result)))
+
+            ((or (##fl< (macro-inexact-exp-+1/2) float-x)
+                 (##fl< float-x (macro-inexact-exp--1/2)))
+
+             ;; here the absolute value of the logarithm is at least 0.5,
+             ;; so there is less rounding error in the final result.
+
+             (##flonum.log float-x))
+
+            (else
+
+             ;; for rational numbers near one, we use the taylor
+             ;; series for (log (/ (- x 1) (+ x 1))) by hand.
+             ;; we first approximate (/ (- x 1) (+ x 1)) by a dyadic
+             ;; rational with (macro-flonum-m-bits-plus-1*2) bits accuracy
+
+             (let* ((y (##/ (##- x 1) (##+ x 1)))
+                    (normalizer (##expt 2 (##fx+ (macro-flonum-m-bits-plus-1*2)
+                                                 (##fx- (##integer-length (##denominator y))
+                                                        (##integer-length (##numerator   y))))))    
+                    (dyadic-y (##/ (##round (##* y normalizer))
+                                   normalizer))
+                    (dyadic-y^2 (##* dyadic-y dyadic-y))
+                    (bits-gained-per-loop (##fx- (##integer-length (##denominator dyadic-y^2))
+                                                 (##integer-length (##numerator   dyadic-y^2))
+                                                 1)))
+               (let loop ((k 0)
+                          (y^2k+1 dyadic-y)
+                          (result dyadic-y)
+                          (accuracy bits-gained-per-loop))
+                 (if (##fx< (macro-flonum-m-bits-plus-1*2) accuracy)
+                     (##flonum.<-ratnum (##* 2 result))
+                     (let ((y^2k+1 (##* dyadic-y^2 y^2k+1))
+                           (k (##fx+ k 1)))
+                       (loop k
+                             y^2k+1
+                             (##+ result (##/ y^2k+1 (##fx+ (##fx* 2 k) 1)))
+                             (##fx+ accuracy bits-gained-per-loop))))))))))
+  
+  (define (complex-log-magnitude x)
+
+    (define (log-mag a b)    
+      ;; both are finite, 0 <= a <= b, b is nonzero
+      (let* ((c (##/ a b))
+             (approx-mag (##* b (##sqrt (##+ 1 (##* c c))))))
+        (if (or (##exact? approx-mag)
+                (and (##flonum.full-precision? approx-mag)
+                     (or (##fl< (macro-inexact-exp-+1/2) approx-mag)
+                         (##fl< approx-mag (macro-inexact-exp--1/2)))))
+            ;; log composed with magnitude will compute a relatively accurate answer
+            (##log approx-mag)
+            (let ((a (##inexact->exact a))
+                  (b (##inexact->exact b)))
+              (##* 1/2 (exact-log (##+ (##* a a) (##* b b))))))))
+    
+    (let ((abs-r (##abs (##real-part x)))
+          (abs-i (##abs (##imag-part x))))
+      
+      ;; abs-i is not exact 0
+      (cond ((or (and (##flonum? abs-r)
+                      (##flonum.= abs-r (macro-inexact-+inf)))
+                 (and (##flonum? abs-i)
+                      (##flonum.= abs-i (macro-inexact-+inf))))
+             (macro-inexact-+inf))
+            ;; neither abs-r or abs-i is infinite
+            ((and (##flonum? abs-r)
+                  (##flonum.nan? abs-r))
+             abs-r)
+            ;; abs-r is not a NaN
+            ((and (##flonum? abs-i)
+                  (##flonum.nan? abs-i))
+             abs-i)
+            ;; abs-i is not a NaN
+            ((##eq? abs-r 0)
+             (##log abs-i))
+            ;; abs-r is not exact 0
+            ((and (##zero? abs-r)
+                  (##zero? abs-i))
+             (macro-inexact--inf))
+            ;; abs-i and abs-r are not both zero
+            (else
+             (if (##< abs-r abs-i)
+                 (log-mag abs-r abs-i)
+                 (log-mag abs-i abs-r))))))
+
   (macro-number-dispatch x (type-error)
     (if (##fixnum.zero? x)
         (range-error)
@@ -2025,19 +2146,19 @@
             (negative-log x)
             (if (##eq? x 1)
                 0
-                (##flonum.log (##flonum.<-fixnum x)))))
+                (exact-log x))))
     (if (##bignum.negative? x)
         (negative-log x)
-        (##flonum.log (##flonum.<-exact-int x)))
+        (exact-log x))
     (if (##negative? (macro-ratnum-numerator x))
         (negative-log x)
-        (##flonum.log (##flonum.<-ratnum x)))
+        (exact-log x))
     (if (or (##flonum.nan? x)
             (##not (##flonum.negative?
                     (##flonum.copysign (macro-inexact-+1) x))))
         (##flonum.log x)
         (negative-log x))
-    (##make-rectangular (##log (##magnitude x)) (##angle x))))
+    (##make-rectangular (complex-log-magnitude x) (##angle x))))
 
 (define-prim (log x)
   (macro-force-vars (x)
@@ -2206,20 +2327,67 @@
                  (macro-cpxnum-+2i)))))))
 
 (define-prim (##atan2 y x)
-  (cond ((##not (##real? y))
-         (##fail-check-real 1 atan y x))
-        ((##not (##real? x))
-         (##fail-check-real 2 atan y x))
+
+  (define (flonum-substitute x)
+    (cond ((##flonum? x)
+           x)
+          ((##eq? x 0)
+           0.)
+          ((##positive? x)
+           1.)
+          (else
+           -1.)))
+
+  (define (irregular-flonum? x)
+    (and (##flonum? x)
+         (or (##flonum.zero? x)
+             (##not (##flfinite? x)))))
+
+  (cond ((##eq? 0 y)
+         (if (##exact? x)
+             (if (##negative? x)
+                 (macro-inexact-+pi)
+                 0)
+             (if (##negative? (##flonum.copysign (macro-inexact-+1) x))
+                 (macro-inexact-+pi)
+                 0.)))
+        ((or (irregular-flonum? x)
+             (irregular-flonum? y))
+         (##flonum.atan (flonum-substitute y)
+                        (flonum-substitute x)))
         (else
-         (##flonum.atan (##exact->inexact (##real-part y))
-                        (##exact->inexact (##real-part x))))))
+         (let ((inexact-x (##exact->inexact x))
+               (inexact-y (##exact->inexact y)))
+           (if (and (or (##flonum? x)
+                        (##flonum.full-precision? inexact-x)
+                        (##= x inexact-x))
+                    (or (##flonum? y)
+                        (##flonum.full-precision? inexact-y)
+                        (##= y inexact-y)))
+               (##flonum.atan inexact-y inexact-x)
+               ;; at least one of x or y is nonzero
+               ;; and at least one of them is not a flonum
+               (let* ((exact-x (##inexact->exact x))
+                      (exact-y (##inexact->exact y))
+                      (max-arg (##max (##abs exact-x)
+                                      (##abs exact-y)))
+                      (normalizer (##expt 2 (##- (##integer-length (##denominator max-arg))
+                                                 (##integer-length (##numerator   max-arg))))))
+                 ;; now the largest argument will be about 1.
+                 (##flonum.atan (##exact->inexact (##* normalizer exact-y))
+                                (##exact->inexact (##* normalizer exact-x)))))))))
 
 (define-prim (atan x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x)
     (if (##eq? y (macro-absent-obj))
         (##atan x)
         (macro-force-vars (y)
-          (##atan2 x y)))))
+          (cond ((##not (##real? x))
+                 (##fail-check-real 1 atan x y))
+                ((##not (##real? y))
+                 (##fail-check-real 2 atan x y))
+                (else
+                 (##atan2 x y)))))))
 
 (define-prim (##sqrt x)
 
@@ -2316,7 +2484,48 @@
                     (if (##ratnum? pre-rounded-result)
                         (##flonum.<-ratnum pre-rounded-result #t)
                         (##flonum.<-exact-int  pre-rounded-result #t)))))))))
-  
+
+  (define (complex-sqrt-magnitude x)
+
+    (define (sqrt-mag a b)    
+      ;; both are finite, 0 <= a <= b, b is nonzero
+      (let* ((c (##/ a b))
+             (d (##sqrt (##+ 1 (##* c c)))))
+        ;; the following may return an inexact result when the true
+        ;; result is exact, but we're just feeding it into make-polar
+        ;; with a non-exact-zero angle, anyway.
+        (##* (##sqrt b) (##sqrt d))))
+    
+    (let ((abs-r (##abs (##real-part x)))
+          (abs-i (##abs (##imag-part x))))
+      
+      ;; abs-i is not exact 0
+      (cond ((or (and (##flonum? abs-r)
+                      (##flonum.= abs-r (macro-inexact-+inf)))
+                 (and (##flonum? abs-i)
+                      (##flonum.= abs-i (macro-inexact-+inf))))
+             (macro-inexact-+inf))
+            ;; neither abs-r or abs-i is infinite
+            ((and (##flonum? abs-r)
+                  (##flonum.nan? abs-r))
+             abs-r)
+            ;; abs-r is not a NaN
+            ((and (##flonum? abs-i)
+                  (##flonum.nan? abs-i))
+             abs-i)
+            ;; abs-i is not a NaN
+            ((##eq? abs-r 0)
+             (##sqrt abs-i))
+            ;; abs-r is not exact 0
+            ((and (##zero? abs-r)
+                  (##zero? abs-i))
+             (macro-inexact-+0))
+            ;; abs-i and abs-r are not both zero
+            (else
+             (if (##< abs-r abs-i)
+                 (sqrt-mag abs-r abs-i)
+                 (sqrt-mag abs-i abs-r))))))
+
   (macro-number-dispatch x (type-error)
     (exact-int-sqrt x)
     (exact-int-sqrt x)
@@ -2326,31 +2535,42 @@
         (##flonum.sqrt x))
     (let ((real (##real-part x))
           (imag (##imag-part x)))
-      (if (and (##flonum? imag)
-               (##flonum.zero? imag))
-          (if (##flonum.positive? (##flonum.copysign (macro-inexact-+1) imag))
-              (cond ((##negative? real)
-                     (##make-rectangular (macro-inexact-+0)
-                                         (##exact->inexact
-                                          (##sqrt (##negate real)))))
-                    ((and (##flonum? real)
-                          (##flonum.nan? real))
-                     (##make-rectangular real real))
-                    (else
-                     (##make-rectangular (##exact->inexact (##sqrt real))
-                                         (macro-inexact-+0))))
-              (cond ((##negative? real)
-                     (##make-rectangular (macro-inexact-+0)
-                                         (##exact->inexact
-                                          (##negate (##sqrt (##negate real))))))
-                    ((and (##flonum? real)
-                          (##flonum.nan? real))
-                     (##make-rectangular real real))
-                    (else
-                     (##make-rectangular (##exact->inexact (##sqrt real))
-                                         (macro-inexact--0)))))
-          (##make-polar (##sqrt (##magnitude x))
-                        (##/ (##angle x) 2))))))
+      (cond ((and (##flonum? imag)
+                  (##flonum.zero? imag))
+             (if (##flonum.positive? (##flonum.copysign (macro-inexact-+1) imag))
+                 (cond ((##negative? real)
+                        (##make-rectangular (macro-inexact-+0)
+                                            (##exact->inexact
+                                             (##sqrt (##negate real)))))
+                       ((and (##flonum? real)
+                             (##flonum.nan? real))
+                        (##make-rectangular real real))
+                       (else
+                        (##make-rectangular (##exact->inexact (##sqrt real))
+                                            (macro-inexact-+0))))
+                 (cond ((##negative? real)
+                        (##make-rectangular (macro-inexact-+0)
+                                            (##exact->inexact
+                                             (##negate (##sqrt (##negate real))))))
+                       ((and (##flonum? real)
+                             (##flonum.nan? real))
+                        (##make-rectangular real real))
+                       (else
+                        (##make-rectangular (##exact->inexact (##sqrt real))
+                                            (macro-inexact--0))))))
+            ((and (##exact? real)
+                  (##exact? imag)
+                  (let ((discriminant (##sqrt (##+ (##* real real)
+                                                   (##* imag imag)))))
+                    (and (##exact? discriminant)
+                         (let ((result-real (##sqrt (##/ (##+ real discriminant) 2))))
+                           (and (##exact? result-real)
+                                (##make-rectangular result-real (##/ imag (##* 2 result-real))))))))
+             =>
+             values)
+            (else
+             (##make-polar (complex-sqrt-magnitude x)
+                           (##/ (##angle x) 2)))))))
 
 (define-prim (sqrt x)
   (macro-force-vars (x)

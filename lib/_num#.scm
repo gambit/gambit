@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num#.scm", Time-stamp: <2008-02-03 09:58:33 feeley>
+;;; File: "_num#.scm", Time-stamp: <2008-10-30 16:53:55 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -341,6 +341,10 @@
 
 (##define-macro (macro-cpxnum--sqrt3/2-1/2i)
   (make-rectangular (- (/ (sqrt 3) 2)) -1/2))
+
+(##define-macro (macro-inexact-exp-+1/2) (exp +1/2))
+(##define-macro (macro-inexact-exp--1/2) (exp -1/2))
+(##define-macro (macro-inexact-log-2)    (log 2))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
