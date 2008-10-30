@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-10-04 23:40:51 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-10-29 23:56:35 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -23,6 +23,8 @@
 #include "setup.h"
 #include "mem.h"
 #include "c_intf.h"
+
+#include "stamp.h"
 
 c-declare-end
 )

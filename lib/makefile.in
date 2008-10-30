@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2008-10-29 13:19:48 feeley>
+# makefile for Gambit-C library, Time-stamp: <2008-10-29 23:54:01 feeley>
 
 # Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -163,6 +163,8 @@ $(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm
 
 $(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
+
+_kernel.o: $(srcdirpfx)$(rootfromhere)/include/stamp.h
 
 install-pre:
 
