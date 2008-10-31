@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2008-10-29 10:36:17 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2008-10-31 00:18:13 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -297,9 +297,12 @@
 
     (targ-heap-begin!)
 
-    (targ-use-prc (car procs) #f)
+    (let ((proc (car procs)))
+      (targ-use-prc proc #f)
+      (targ-use-prc proc #t))
 
-    (for-each (lambda (proc) (targ-use-prc proc #t)) procs)
+    (if (not targ-tree-shake?)
+        (for-each (lambda (proc) (targ-use-prc proc #t)) (cdr procs)))
 
     ; scan and convert each procedure
 
@@ -337,6 +340,9 @@
 (define targ-debug-location-option? #f)
 (define targ-debug-source-option? #f)
 (define targ-debug-environments-option? #f)
+
+(define targ-tree-shake? #f)
+(set! targ-tree-shake? #f) ;; no tree shaking
 
 ;;;----------------------------------------------------------------------------
 ;;
