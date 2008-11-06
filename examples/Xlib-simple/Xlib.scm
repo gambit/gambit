@@ -1,8 +1,8 @@
 ;==============================================================================
 
-; File: "Xlib.scm", Time-stamp: <2007-04-04 14:25:11 feeley>
+; File: "Xlib.scm", Time-stamp: <2008-10-31 09:32:18 feeley>
 
-; Copyright (c) 2006-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2006-2008 by Marc Feeley, All Rights Reserved.
 
 ; A simple interface to the X-window Xlib library.
 
@@ -52,6 +52,8 @@ end-of-c-declare
 (c-define-type Bool int)
 (c-define-type Status int)
 (c-define-type GC (pointer (struct "_XGC")))
+(c-define-type Visual "Visual")
+(c-define-type Visual* (pointer Visual))
 (c-define-type Display "Display")
 (c-define-type Display* (pointer Display))
 (c-define-type Screen "Screen")
@@ -97,16 +99,48 @@ end-of-c-declare
             "XDefaultColormapOfScreen"))
 
 (define XClearWindow
-  (c-lambda (Display*       ; display
-             Window)        ; w
+  (c-lambda (Display*      ; display
+             Window)       ; w
             int
             "XClearWindow"))
 
 (define XRootWindow
-  (c-lambda (Display*       ; display
-             int)           ; screen_number
+  (c-lambda (Display*      ; display
+             int)          ; screen_number
             Window
             "XRootWindow"))
+
+(define XDefaultRootWindow
+  (c-lambda (Display*)     ; display
+            Window
+            "XDefaultRootWindow"))
+
+(define XRootWindowOfScreen
+  (c-lambda (Screen*)      ; screen
+            Window
+            "XRootWindowOfScreen"))
+
+(define XDefaultVisual
+  (c-lambda (Display*      ; display
+             int)          ; screen_number
+            Visual*
+            "XDefaultVisual"))
+
+(define XDefaultVisualOfScreen
+  (c-lambda (Screen*)      ; screen
+            Visual*
+            "XDefaultVisualOfScreen"))
+
+(define XDefaultGC
+  (c-lambda (Display*      ; display
+             int)          ; screen_number
+            GC
+            "XDefaultGC"))
+
+(define XDefaultGCOfScreen
+  (c-lambda (Screen*)      ; screen
+            GC
+            "XDefaultGCOfScreen"))
 
 (define XBlackPixel
   (c-lambda (Display*       ; display

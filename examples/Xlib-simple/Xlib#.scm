@@ -1,8 +1,8 @@
 ;==============================================================================
 
-; File: "Xlib#.scm", Time-stamp: <2007-04-04 14:25:02 feeley>
+; File: "Xlib#.scm", Time-stamp: <2008-10-31 09:41:52 feeley>
 
-; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
 ;==============================================================================
 
@@ -101,7 +101,12 @@ XColor-red-set!
 XCreateGC
 XCreateSimpleWindow
 XDefaultColormapOfScreen
+XDefaultGC
+XDefaultGCOfScreen
+XDefaultRootWindow
 XDefaultScreen
+XDefaultVisual
+XDefaultVisualOfScreen
 XDrawString
 XFillArc
 XFillRectangle
@@ -123,6 +128,7 @@ XOpenDisplay
 XParseColor
 XQueryFont
 XRootWindow
+XRootWindowOfScreen
 XScreenOfDisplay
 XSelectInput
 XTextWidth
