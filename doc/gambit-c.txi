@@ -3474,28 +3474,6 @@ The procedures in this section are not yet documented.
 @deffnx procedure invalid-hash-number-exception-arguments @var{exc}
 @end deffn
 
-@deffn procedure network-info @var{network}
-@deffnx procedure network-info? @var{obj}
-@deffnx procedure network-info-name @var{network-info}
-@deffnx procedure network-info-net @var{network-info}
-@deffnx procedure network-info-aliases @var{network-info}
-@end deffn
-
-@deffn procedure protocol-info @var{protocol}
-@deffnx procedure protocol-info? @var{obj}
-@deffnx procedure protocol-info-name @var{protocol-info}
-@deffnx procedure protocol-info-number @var{protocol-info}
-@deffnx procedure protocol-info-aliases @var{protocol-info}
-@end deffn
-
-@deffn procedure service-info @var{service} @r{[}@var{protocol}@r{]}
-@deffnx procedure service-info? @var{obj}
-@deffnx procedure service-info-name @var{service-info}
-@deffnx procedure service-info-port @var{service-info}
-@deffnx procedure service-info-protocol @var{service-info}
-@deffnx procedure service-info-aliases @var{service-info}
-@end deffn
-
 @deffn procedure tcp-client-peer-socket-info @var{tcp-client-port}
 @deffnx procedure tcp-client-self-socket-info @var{tcp-client-port}
 @end deffn
@@ -9694,13 +9672,13 @@ For example:
 #<service-info #2
    name: "http"
    aliases: ("www" "www-http")
-   port: 80
+   port-number: 80
    protocol: "udp">
 > @b{(service-info 80)}
 #<service-info #3
    name: "http"
    aliases: ("www" "www-http")
-   port: 80
+   port-number: 80
    protocol: "udp">
 @end smallexample
 
@@ -9750,16 +9728,30 @@ For example:
 
 @end deffn
 
-@deffn procedure service-info-number @var{service-info}
+@deffn procedure service-info-port-number @var{service-info}
 
-Returns the service number field of the service-information record
-@var{service-info}.
+Returns the service port number field of the service-information
+record @var{service-info}.
 
 For example:
 
 @smallexample
-> @b{(service-info-number (service-info "http"))}
+> @b{(service-info-port-number (service-info "http"))}
 80
+@end smallexample
+
+@end deffn
+
+@deffn procedure service-info-protocol @var{service-info}
+
+Returns the service protocol name field of the service-information
+record @var{service-info}.
+
+For example:
+
+@smallexample
+> @b{(service-info-protocol (service-info "http"))}
+"udp"
 @end smallexample
 
 @end deffn

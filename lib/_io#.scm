@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2008-09-14 10:54:48 feeley>
+;;; File: "_io#.scm", Time-stamp: <2008-11-10 14:00:07 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -455,10 +455,10 @@
   constructor: #f
   opaque:
 
-  (name      printable: read-only:)
-  (aliases   printable: read-only:)
-  (port      printable: read-only:)
-  (protocol  printable: read-only:)
+  (name        printable: read-only:)
+  (aliases     printable: read-only:)
+  (port-number printable: read-only:)
+  (protocol    printable: read-only:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
