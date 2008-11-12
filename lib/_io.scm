@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-09-30 17:18:59 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-11-11 15:33:42 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4486,7 +4486,7 @@
      (macro-raise exc))
    (lambda ()
      (let ((rt
-            (##readtable-copy readtable)))
+            (##readtable-copy-shallow readtable)))
        (macro-readtable-start-syntax-set! rt start-syntax)
        (let* ((re
                (##make-readenv port rt wrap unwrap 'script))
@@ -6941,9 +6941,22 @@
   (macro-force-vars (obj)
     (macro-readtable? obj)))
 
-(define-prim (##readtable-copy rt)
+(define-prim (##readtable-copy-shallow rt)
   (let ((copy (##vector-copy rt)))
     (##subtype-set! copy (macro-subtype-structure))
+    copy))
+
+(define-prim (##readtable-copy rt)
+  (let ((copy (##readtable-copy-shallow rt)))
+    (macro-readtable-char-delimiter?-table-set!
+     rt
+     (##chartable-copy (macro-readtable-char-delimiter?-table rt)))
+    (macro-readtable-char-handler-table-set!
+     rt
+     (##chartable-copy (macro-readtable-char-handler-table rt)))
+    (macro-readtable-char-sharp-handler-table-set!
+     rt
+     (##chartable-copy (macro-readtable-char-sharp-handler-table rt)))
     copy))
 
 (define-prim (readtable-case-conversion? rt)
@@ -6954,7 +6967,7 @@
 (define-prim (readtable-case-conversion?-set rt conversion?)
   (macro-force-vars (rt conversion?)
     (macro-check-readtable rt 1 (readtable-case-conversion?-set rt conversion?)
-      (let ((new-rt (##readtable-copy rt)))
+      (let ((new-rt (##readtable-copy-shallow rt)))
         (macro-readtable-case-conversion?-set! new-rt conversion?)
         new-rt))))
 
@@ -6966,7 +6979,7 @@
 (define-prim (readtable-keywords-allowed?-set rt allowed?)
   (macro-force-vars (rt allowed?)
     (macro-check-readtable rt 1 (readtable-keywords-allowed?-set rt allowed?)
-      (let ((new-rt (##readtable-copy rt)))
+      (let ((new-rt (##readtable-copy-shallow rt)))
         (macro-readtable-keywords-allowed?-set! new-rt allowed?)
         new-rt))))
 
@@ -6978,7 +6991,7 @@
 (define-prim (readtable-sharing-allowed?-set rt allowed?)
   (macro-force-vars (rt allowed?)
     (macro-check-readtable rt 1 (readtable-sharing-allowed?-set rt allowed?)
-      (let ((new-rt (##readtable-copy rt)))
+      (let ((new-rt (##readtable-copy-shallow rt)))
         (macro-readtable-sharing-allowed?-set! new-rt allowed?)
         new-rt))))
 
@@ -6990,7 +7003,7 @@
 (define-prim (readtable-eval-allowed?-set rt allowed?)
   (macro-force-vars (rt allowed?)
     (macro-check-readtable rt 1 (readtable-eval-allowed?-set rt allowed?)
-      (let ((new-rt (##readtable-copy rt)))
+      (let ((new-rt (##readtable-copy-shallow rt)))
         (macro-readtable-eval-allowed?-set! new-rt allowed?)
         new-rt))))
 
@@ -7002,7 +7015,7 @@
 (define-prim (readtable-write-extended-read-macros?-set rt allowed?)
   (macro-force-vars (rt allowed?)
     (macro-check-readtable rt 1 (readtable-write-extended-read-macros?-set rt allowed?)
-      (let ((new-rt (##readtable-copy rt)))
+      (let ((new-rt (##readtable-copy-shallow rt)))
         (macro-readtable-write-extended-read-macros?-set! new-rt allowed?)
         new-rt))))
 
@@ -7014,7 +7027,7 @@
 (define-prim (readtable-write-cdr-read-macros?-set rt allowed?)
   (macro-force-vars (rt allowed?)
     (macro-check-readtable rt 1 (readtable-write-cdr-read-macros?-set rt allowed?)
-      (let ((new-rt (##readtable-copy rt)))
+      (let ((new-rt (##readtable-copy-shallow rt)))
         (macro-readtable-write-cdr-read-macros?-set! new-rt allowed?)
         new-rt))))
 
@@ -7027,7 +7040,7 @@
   (macro-force-vars (rt level)
     (macro-check-readtable rt 1 (readtable-max-write-level-set rt level)
       (macro-check-index level 2 (readtable-max-write-level-set rt level)
-        (let ((new-rt (##readtable-copy rt)))
+        (let ((new-rt (##readtable-copy-shallow rt)))
           (macro-readtable-max-write-level-set! new-rt level)
           new-rt)))))
 
@@ -7040,7 +7053,7 @@
   (macro-force-vars (rt length)
     (macro-check-readtable rt 1 (readtable-max-write-length-set rt length)
       (macro-check-index length 2 (readtable-max-write-length-set rt length)
-        (let ((new-rt (##readtable-copy rt)))
+        (let ((new-rt (##readtable-copy-shallow rt)))
           (macro-readtable-max-write-length-set! new-rt length)
           new-rt)))))
 
@@ -7053,7 +7066,7 @@
   (macro-force-vars (rt char)
     (macro-check-readtable rt 1 (readtable-max-unescaped-char-set rt char)
       (macro-check-char char 2 (readtable-max-unescaped-char-set rt char)
-        (let ((new-rt (##readtable-copy rt)))
+        (let ((new-rt (##readtable-copy-shallow rt)))
           (macro-readtable-max-unescaped-char-set! new-rt char)
           new-rt)))))
 
@@ -7065,7 +7078,7 @@
 (define-prim (readtable-start-syntax-set rt start)
   (macro-force-vars (rt start)
     (macro-check-readtable rt 1 (readtable-start-syntax-set rt start)
-      (let ((new-rt (##readtable-copy rt)))
+      (let ((new-rt (##readtable-copy-shallow rt)))
         (macro-readtable-start-syntax-set! new-rt start)
         new-rt))))
 
@@ -8698,6 +8711,7 @@
 (##define-macro (list . args)             `(##list ,@args))
 (##define-macro (make-string . args)      `(##make-string ,@args))
 (##define-macro (make-vector . args)      `(##make-vector ,@args))
+(##define-macro (map . args)              `(##map ,@args))
 (##define-macro (modulo . args)           `(##modulo ,@args))
 (##define-macro (not . args)              `(##not ,@args))
 (##define-macro (null? . args)            `(##null? ,@args))
@@ -8723,6 +8737,7 @@
 (##define-macro (symbol? . args)          `(##symbol? ,@args))
 (##define-macro (symbol->string . args)   `(##symbol->string ,@args))
 (##define-macro (vector . args)           `(##vector ,@args))
+(##define-macro (vector-copy . args)      `(##vector-copy ,@args))
 (##define-macro (vector-length . args)    `(##vector-length ,@args))
 (##define-macro (vector-ref . args)       `(##vector-ref ,@args))
 (##define-macro (vector-set! . args)      `(##vector-set! ,@args))
@@ -8853,6 +8868,11 @@
 
 (define (##make-chartable default)
   (vector (make-vector 128 default) default '()))
+
+(define (##chartable-copy ct)
+  (vector (vector-copy (vector-ref ct 0))
+          (vector-ref ct 1)
+          (map (lambda (x) (cons (car x) (cdr x))) (vector-ref ct 2))))
 
 (define (##chartable-ref ct c)
   (let ((i (character->UCS-4 c)))
