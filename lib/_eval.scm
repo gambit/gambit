@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2008-09-12 18:19:48 feeley>
+;;; File: "_eval.scm", Time-stamp: <2008-11-12 15:09:25 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3665,10 +3665,23 @@
              (##path-strip-directory abs-path)))
            (result
             (##os-load-object-file abs-path module-name)))
-      (cond ((##fixnum? result)
-             (##raise-os-exception #f result load path settings))
-            ((##string? result)
-             (##raise-os-exception result #f load path settings))
+
+      (define (raise-error code)
+        (if (##fixnum? code)
+             (##raise-os-exception #f code load path settings)
+             (##raise-os-exception code #f load path settings)))
+
+      (cond ((##not (##vector? result))
+             (raise-error result))
+            ((##fixnum.= 2 (##vector-length result))
+             (if (##not quiet?)
+                 (##repl
+                  (lambda (first output-port)
+                    (##write-string "*** WARNING -- Could not find C function: " output-port)
+                    (##write (##vector-ref result 1) output-port)
+                    (##newline output-port)
+                    #t)))
+             (raise-error (##vector-ref result 0)))
             (else
              (let ((exec-vector (##vector-ref result 0))
                    (script-line (##vector-ref result 2)))

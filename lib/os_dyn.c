@@ -1,6 +1,6 @@
-/* File: "os_dyn.c", Time-stamp: <2007-09-11 23:51:19 feeley> */
+/* File: "os_dyn.c", Time-stamp: <2008-11-12 14:59:46 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -369,6 +369,32 @@ void **linker;)
     }
 
 #endif
+
+  if (result != ___FIX(___NO_ERR))
+    {
+      ___SCMOBJ r = ___make_vector (2, ___FAL, ___STILL);
+
+      if (!___FIXNUMP(r))
+        {
+          ___SCMOBJ modname;
+
+          if ((e = ___NONNULLSTRING_to_SCMOBJ
+                     (cmodname,
+                      &modname,
+                      ___RETURN_POS,
+                      ___CE(___DL_MODNAME_CE_SELECT)))
+              != ___FIX(___NO_ERR))
+            ___release_scmobj (r);
+          else
+            {
+              ___VECTORSET(r,___FIX(0),result)
+              ___VECTORSET(r,___FIX(1),modname)
+              ___release_scmobj (result);
+              ___release_scmobj (modname);
+              result = r;
+            }
+        }
+    }
 
   return result;
 }

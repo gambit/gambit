@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2008-10-04 22:53:19 feeley> */
+/* File: "setup.c", Time-stamp: <2008-11-12 14:58:00 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
