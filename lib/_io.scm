@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-11-11 15:33:42 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-11-18 17:08:37 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4275,27 +4275,119 @@
       (macro-check-character-input-port p 1 (read-char p)
         (##read-char p)))))
 
-(define-prim (##read-substring str start end port)
+(define-prim (##read-substring
+              str
+              start
+              end
+              port
+              #!optional
+              (need (macro-absent-obj)))
+
   (##declare (not interrupts-enabled))
-  (let loop ((i start))
-    (if (##fixnum.< i end)
-      (let ((c (macro-read-char port)))
-        (if (##char? c)
-            (begin
-              (##string-set! str i c)
-              (let ()
-                (##declare (interrupts-enabled))
-                (loop (##fixnum.+ i 1))))
-            (##fixnum.- i start)))
-      (##fixnum.- i start))))
+
+  (let loop ((n 0))
+    (let ((remaining (##fixnum.- end (##fixnum.+ start n))))
+      (if (##not (##fixnum.< 0 remaining))
+          (begin
+            (macro-port-mutex-unlock! port)
+            n)
+          (let* ((char-rlo
+                  (macro-character-port-rlo port))
+                 (char-rhi
+                  (macro-character-port-rhi port))
+                 (chars-buffered
+                  (##fixnum.- char-rhi char-rlo)))
+            (if (##fixnum.< 0 chars-buffered)
+
+                (let* ((to-transfer
+                        (##fixnum.min remaining chars-buffered))
+                       (limit
+                        (##fixnum.+ char-rlo to-transfer))
+                       (char-rbuf
+                        (macro-character-port-rbuf port)))
+                  (macro-character-port-rlo-set! port limit)
+                  (##substring-move!
+                   char-rbuf
+                   char-rlo
+                   limit
+                   str
+                   (##fixnum.+ start n))
+                  (let loop2 ((rlo char-rlo))
+                    (if (##fixnum.< rlo limit)
+                        (let ((c (##string-ref char-rbuf rlo))
+                              (rlo+1 (##fixnum.+ rlo 1)))
+
+                          (if (##char=? c #\newline)
+                              (begin
+
+                                ;; keep track of number of characters read
+
+                                (let ((char-rchars
+                                       (macro-character-port-rchars port)))
+                                  (macro-character-port-rcurline-set! port
+                                    (##fixnum.+ char-rchars rlo+1)))
+
+                                ;; keep track of number of lines read
+
+                                (let ((char-rlines
+                                       (macro-character-port-rlines port)))
+                                  (macro-character-port-rlines-set! port
+                                    (##fixnum.+ char-rlines 1)))))
+
+                          (loop2 rlo+1))))
+                  (loop (##fixnum.+ n to-transfer)))
+
+                (let ((code
+                       ((macro-character-port-rbuf-fill port)
+                        port
+                        remaining
+                        (or (##not (##fixnum? need))
+                            (##fixnum.< n need)))))
+                  (cond ((##fixnum? code)
+
+                         ;; an error occurred, signal an error if no
+                         ;; chars were previously transferred from char
+                         ;; buffer and (in the case of a read timeout)
+                         ;; the timeout thunk returned #f
+
+                         (macro-port-mutex-unlock! port)
+
+                         (if (or (##fixnum.< 0 n)
+                                 (##fixnum.= code ##err-code-EAGAIN))
+                             n
+                             (##raise-os-exception
+                              #f
+                              code
+                              read-substring
+                              str
+                              start
+                              end
+                              port
+                              need)))
+
+                        (code
+
+                         ;; chars were added to char buffer, so try again
+                         ;; to transfer chars from the char buffer
+
+                         (loop n))
+
+                        (else
+
+                         ;; no chars were added to char buffer
+                         ;; (end-of-file was reached)
+
+                         (macro-port-mutex-unlock! port)
+                         n)))))))))
 
 (define-prim (read-substring
               str
               start
               end
               #!optional
-              (port (macro-absent-obj)))
-  (macro-force-vars (str start end port)
+              (port (macro-absent-obj))
+              (need (macro-absent-obj)))
+  (macro-force-vars (str start end port need)
     (let ((p
            (if (##eq? port (macro-absent-obj))
              (macro-current-input-port)
@@ -4303,24 +4395,30 @@
       (macro-check-string
        str
        1
-       (read-substring str start end port)
+       (read-substring str start end port need)
        (macro-check-index-range-incl
         start
         2
         0
         (##string-length str)
-        (read-substring str start end port)
+        (read-substring str start end port need)
         (macro-check-index-range-incl
          end
          3
          start
          (##string-length str)
-         (read-substring str start end port)
+         (read-substring str start end port need)
          (macro-check-character-input-port
           p
           4
-          (read-substring str start end p)
-          (##read-substring str start end p))))))))
+          (read-substring str start end port need)
+          (if (##eq? need (macro-absent-obj))
+              (##read-substring str start end p)
+              (macro-check-index
+               need
+               5
+               (read-substring str start end port need)
+               (##read-substring str start end p need))))))))))
 
 (define-prim (##read-line port separator include-separator? escape?)
 
@@ -4722,45 +4820,46 @@
             (byte-rhi
              (macro-byte-port-rhi port)))
        (if (##fixnum.< byte-rlo byte-rhi)
-         (let* ((byte-rbuf
-                 (macro-byte-port-rbuf port))
-                (result
-                 (##u8vector-ref byte-rbuf byte-rlo)))
-           (macro-byte-port-rlo-set! port (##fixnum.+ byte-rlo 1))
-           (macro-port-mutex-unlock! port)
-           result)
-         (let ((code ((macro-byte-port-rbuf-fill port)
-                      port
-                      1
-                      #t)))
-           (cond ((##fixnum? code)
+           (let* ((byte-rbuf
+                   (macro-byte-port-rbuf port))
+                  (result
+                   (##u8vector-ref byte-rbuf byte-rlo)))
+             (macro-byte-port-rlo-set! port (##fixnum.+ byte-rlo 1))
+             (macro-port-mutex-unlock! port)
+             result)
+           (let ((code
+                  ((macro-byte-port-rbuf-fill port)
+                   port
+                   1
+                   #t)))
+             (cond ((##fixnum? code)
 
-                  ;; an error occurred
+                    ;; an error occurred
 
-                  (macro-port-mutex-unlock! port)
+                    (macro-port-mutex-unlock! port)
 
-                  (if (##fixnum.= code ##err-code-EAGAIN)
-                      #!eof ;; the read timeout thunk returned #f
-                      (##raise-os-exception
-                       #f
-                       code
-                       read-u8
-                       port)))
+                    (if (##fixnum.= code ##err-code-EAGAIN)
+                        #!eof ;; the read timeout thunk returned #f
+                        (##raise-os-exception
+                         #f
+                         code
+                         read-u8
+                         port)))
 
-                 (code
+                   (code
 
-                  ;; bytes were added to byte buffer, so try again
-                  ;; to transfer bytes from the byte buffer
+                    ;; bytes were added to byte buffer, so try again
+                    ;; to transfer bytes from the byte buffer
 
-                  (loop))
+                    (loop))
 
-                 (else
+                   (else
 
-                  ;; no bytes were added to byte buffer
-                  ;; (end-of-file was reached)
+                    ;; no bytes were added to byte buffer
+                    ;; (end-of-file was reached)
 
-                  (macro-port-mutex-unlock! port)
-                  #!eof))))))))
+                    (macro-port-mutex-unlock! port)
+                    #!eof))))))))
 
 (define-prim (read-u8
               #!optional
@@ -4776,88 +4875,99 @@
        (read-u8 p)
        (##read-u8 p)))))
 
-(define-prim (##read-subu8vector u8vect start end port)
+(define-prim (##read-subu8vector
+              u8vect
+              start
+              end
+              port
+              #!optional
+              (need (macro-absent-obj)))
 
   (##declare (not interrupts-enabled))
 
   (macro-lock-and-check-input-port-character-buffer-empty
    port
-   (read-subu8vector u8vect start end port)
-   (let loop1 ((n 0))
+   (read-subu8vector u8vect start end port need)
+   (let loop ((n 0))
      (let ((remaining (##fixnum.- end (##fixnum.+ start n))))
        (if (##not (##fixnum.< 0 remaining))
-         (begin
-           (macro-port-mutex-unlock! port)
-           n)
-         (let* ((byte-rlo
-                 (macro-byte-port-rlo port))
-                (byte-rhi
-                 (macro-byte-port-rhi port))
-                (bytes-buffered
-                 (##fixnum.- byte-rhi byte-rlo)))
-           (if (##fixnum.< 0 bytes-buffered)
-             (let* ((to-transfer
-                     (##fixnum.min remaining bytes-buffered))
-                    (limit
-                     (##fixnum.+ byte-rlo to-transfer))
-                    (byte-rbuf
-                     (macro-byte-port-rbuf port)))
-               (macro-byte-port-rlo-set! port limit)
-               (let loop2 ((i (##fixnum.+ start n))
-                           (j byte-rlo))
-                 (if (##fixnum.< j limit)
-                   (begin
-                     (##u8vector-set! u8vect i (##u8vector-ref byte-rbuf j))
-                     (loop2 (##fixnum.+ i 1)
-                            (##fixnum.+ j 1)))))
-               (loop1 (##fixnum.+ n to-transfer)))
-             (let ((code ((macro-byte-port-rbuf-fill port)
-                          port
-                          remaining
-                          #t)))
-               (cond ((##fixnum? code)
+           (begin
+             (macro-port-mutex-unlock! port)
+             n)
+           (let* ((byte-rlo
+                   (macro-byte-port-rlo port))
+                  (byte-rhi
+                   (macro-byte-port-rhi port))
+                  (bytes-buffered
+                   (##fixnum.- byte-rhi byte-rlo)))
+             (if (##fixnum.< 0 bytes-buffered)
 
-                      ;; an error occurred, signal an error if no
-                      ;; bytes were previously transferred from byte
-                      ;; buffer and (in the case of a read timeout)
-                      ;; the timeout thunk returned #f
+                 (let* ((to-transfer
+                         (##fixnum.min remaining bytes-buffered))
+                        (limit
+                         (##fixnum.+ byte-rlo to-transfer))
+                        (byte-rbuf
+                         (macro-byte-port-rbuf port)))
+                   (macro-byte-port-rlo-set! port limit)
+                   (##subu8vector-move!
+                    byte-rbuf
+                    byte-rlo
+                    limit
+                    u8vect
+                    (##fixnum.+ start n))
+                   (loop (##fixnum.+ n to-transfer)))
 
-                      (macro-port-mutex-unlock! port)
+                 (let ((code
+                        ((macro-byte-port-rbuf-fill port)
+                         port
+                         remaining
+                         (or (##not (##fixnum? need))
+                             (##fixnum.< n need)))))
+                   (cond ((##fixnum? code)
 
-                      (if (or (##fixnum.< 0 n)
-                              (##fixnum.= code ##err-code-EAGAIN))
-                          n
-                          (##raise-os-exception
-                           #f
-                           code
-                           read-subu8vector
-                           u8vect
-                           start
-                           end
-                           port)))
+                          ;; an error occurred, signal an error if no
+                          ;; bytes were previously transferred from byte
+                          ;; buffer and (in the case of a read timeout)
+                          ;; the timeout thunk returned #f
 
-                     (code
+                          (macro-port-mutex-unlock! port)
 
-                      ;; bytes were added to byte buffer, so try again
-                      ;; to transfer bytes from the byte buffer
+                          (if (or (##fixnum.< 0 n)
+                                  (##fixnum.= code ##err-code-EAGAIN))
+                              n
+                              (##raise-os-exception
+                               #f
+                               code
+                               read-subu8vector
+                               u8vect
+                               start
+                               end
+                               port
+                               need)))
 
-                      (loop1 n))
+                         (code
 
-                     (else
+                          ;; bytes were added to byte buffer, so try again
+                          ;; to transfer bytes from the byte buffer
 
-                      ;; no bytes were added to byte buffer
-                      ;; (end-of-file was reached)
+                          (loop n))
 
-                      (macro-port-mutex-unlock! port)
-                      n))))))))))
+                         (else
+
+                          ;; no bytes were added to byte buffer
+                          ;; (end-of-file was reached)
+
+                          (macro-port-mutex-unlock! port)
+                          n))))))))))
 
 (define-prim (read-subu8vector
               u8vect
               start
               end
               #!optional
-              (port (macro-absent-obj)))
-  (macro-force-vars (u8vect start end port)
+              (port (macro-absent-obj))
+              (need (macro-absent-obj)))
+  (macro-force-vars (u8vect start end port need)
     (let ((p
            (if (##eq? port (macro-absent-obj))
              (macro-current-input-port)
@@ -4865,24 +4975,30 @@
       (macro-check-u8vector
        u8vect
        1
-       (read-subu8vector u8vect start end port)
+       (read-subu8vector u8vect start end port need)
        (macro-check-index-range-incl
         start
         2
         0
         (##u8vector-length u8vect)
-        (read-subu8vector u8vect start end port)
+        (read-subu8vector u8vect start end port need)
         (macro-check-index-range-incl
          end
          3
          start
          (##u8vector-length u8vect)
-         (read-subu8vector u8vect start end port)
+         (read-subu8vector u8vect start end port need)
          (macro-check-byte-input-port
           p
           4
-          (read-subu8vector u8vect start end p)
-          (##read-subu8vector u8vect start end p))))))))
+          (read-subu8vector u8vect start end port need)
+          (if (##eq? need (macro-absent-obj))
+              (##read-subu8vector u8vect start end p)
+              (macro-check-index
+               need
+               5
+               (read-subu8vector u8vect start end port need)
+               (##read-subu8vector u8vect start end p need))))))))))
 
 (define-prim (##write-u8 b port)
 

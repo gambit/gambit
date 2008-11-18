@@ -1988,7 +1988,7 @@ shadowed variables are included in the list.
 @cmindex ,(e @var{expr})
 Display the environment of @var{expr}'s value, @var{X}, which is
 obtained by evaluating @var{expr} in the current frame.  @var{X} must
-be a continuation, a procedure, or a non-negative integer.  When
+be a continuation, a procedure, or a nonnegative integer.  When
 @var{X} is a continuation, the environment at that point in the code
 is displayed.  When @var{X} is a procedure, the lexical environment
 where @var{X} was created is combined with the current continuation
@@ -2013,7 +2013,7 @@ The value of @var{expr} must be a thread or thread group.
 @cmindex ,(v @var{expr})
 Start a new REPL visiting @var{expr}'s value, @var{X}, which is
 obtained by evaluating @var{expr} in the current frame.  @var{X} must
-be a continuation, a procedure, or a non-negative integer.  When
+be a continuation, a procedure, or a nonnegative integer.  When
 @var{X} is a continuation, the new REPL's continuation is @var{X} and
 evaluations are done in the environment at that point in the code.
 When @var{X} is a procedure, the lexical environment where @var{X} was
@@ -10488,24 +10488,29 @@ For example:
 
 @end deffn
 
-@deffn procedure read-substring @var{string} @var{start} @var{end} @r{[}@var{port}@r{]}
+@deffn procedure read-substring @var{string} @var{start} @var{end} @r{[}@var{port} @r{[}@var{need}@r{]}@r{]}
 @deffnx procedure write-substring @var{string} @var{start} @var{end} @r{[}@var{port}@r{]}
 
 These procedures support bulk character I/O.  The part of the string
 @var{string} starting at index @var{start} and ending just before
 index @var{end} is used as a character buffer that will be the target
 of @code{read-substring} or the source of the @code{write-substring}.
-Up to @var{end}-@var{start} characters will be transferred.  The
-number of characters transferred, possibly zero, is returned by these
-procedures.  Fewer characters will be read by @code{read-substring} if
-an end-of-file is read, or a timeout occurs before all the requested
-characters are transferred and the timeout thunk returns @code{#f}
-(see the procedure @code{input-port-timeout-set!}).  Fewer characters
-will be written by @code{write-substring} if a timeout occurs before
-all the requested characters are transferred and the timeout thunk
-returns @code{#f} (see the procedure @code{output-port-timeout-set!}).
-If it is not specified, @var{port} defaults to the current input-port
-and current output-port respectively.
+The @code{read-substring} also accepts a @var{need} parameter which
+must be a nonnegative fixnum.  Up to @var{end}-@var{start} characters
+will be transferred.  The number of characters transferred, possibly
+zero, is returned by these procedures.  Fewer characters will be read
+by @code{read-substring} if an end-of-file is read, or a timeout
+occurs before all the requested characters are transferred and the
+timeout thunk returns @code{#f} (see the procedure
+@code{input-port-timeout-set!}), or @var{need} is specified and at
+least that many characters have been read (in other words the
+procedure does not block for more characters but may transfer more
+characters if they are immediately available).  Fewer characters will
+be written by @code{write-substring} if a timeout occurs before all
+the requested characters are transferred and the timeout thunk returns
+@code{#f} (see the procedure @code{output-port-timeout-set!}).  If it
+is not specified, @var{port} defaults to the current input-port and
+current output-port respectively.
 
 For example:
 
@@ -10516,6 +10521,10 @@ For example:
 > 456789
 > @b{s}
 "xx123xxxxx"
+> @b{(read-substring s 2 10 (current-input-port) 3)abcd}
+5
+> @b{s}
+"xxabcd\nxxx"
 @end smallexample
 
 @end deffn
@@ -10790,24 +10799,28 @@ For example:
 
 @end deffn
 
-@deffn procedure read-subu8vector @var{u8vector} @var{start} @var{end} @r{[}@var{port}@r{]}
+@deffn procedure read-subu8vector @var{u8vector} @var{start} @var{end} @r{[}@var{port} @r{[}@var{need}@r{]}@r{]}
 @deffnx procedure write-subu8vector @var{u8vector} @var{start} @var{end} @r{[}@var{port}@r{]}
 
 These procedures support bulk byte I/O.  The part of the u8vector
 @var{u8vector} starting at index @var{start} and ending just before
 index @var{end} is used as a byte buffer that will be the target of
 @code{read-subu8vector} or the source of the @code{write-subu8vector}.
-Up to @var{end}-@var{start} bytes will be transferred.  The number of
-bytes transferred, possibly zero, is returned by these procedures.
-Fewer bytes will be read by @code{read-subu8vector} if an end-of-file
-is read, or a timeout occurs before all the requested bytes are
-transferred and the timeout thunk returns @code{#f} (see the procedure
-@code{input-port-timeout-set!}).  Fewer bytes will be written by
-@code{write-subu8vector} if a timeout occurs before all the requested
-bytes are transferred and the timeout thunk returns @code{#f} (see the
-procedure @code{output-port-timeout-set!}).  If it is not specified,
-@var{port} defaults to the current input-port and current output-port
-respectively.
+The @code{read-subu8vector} also accepts a @var{need} parameter which
+must be a nonnegative fixnum.  Up to @var{end}-@var{start} bytes will
+be transferred.  The number of bytes transferred, possibly zero, is
+returned by these procedures.  Fewer bytes will be read by
+@code{read-subu8vector} if an end-of-file is read, or a timeout occurs
+before all the requested bytes are transferred and the timeout thunk
+returns @code{#f} (see the procedure @code{input-port-timeout-set!}),
+or @var{need} is specified and at least that many bytes have been read
+(in other words the procedure does not block for more bytes but may
+transfer more bytes if they are immediately available).  Fewer bytes
+will be written by @code{write-subu8vector} if a timeout occurs before
+all the requested bytes are transferred and the timeout thunk returns
+@code{#f} (see the procedure @code{output-port-timeout-set!}).  If it
+is not specified, @var{port} defaults to the current input-port and
+current output-port respectively.
 
 The procedure @code{read-subu8vector} must be called before any use of
 the port in a character input operation (i.e. a call to the procedures
@@ -10824,6 +10837,10 @@ For example:
 > 456789
 > @b{v}
 #u8(0 0 49 50 51 0 0 0 0 0)
+> @b{(read-subu8vector v 2 10 (current-input-port) 3)abcd}
+5
+> @b{v}
+#u8(0 0 97 98 99 100 10 0 0 0)
 @end smallexample
 
 @end deffn
