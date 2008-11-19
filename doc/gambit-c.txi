@@ -4347,6 +4347,23 @@ For example:
 
 @end deffn
 
+@deffn procedure random-u8vector @var{n}
+
+This procedure returns a u8vector of length @var{n} containing pseudo
+random exact integers in the range 0 to 255.  The random source object
+in the global variable @code{default-random-source} is used to
+generate this number.  The parameter @var{n} must be a nonnegative
+exact integer.
+
+For example:
+
+@smallexample
+> @b{(random-u8vector 10)}
+#u8(200 53 29 202 3 85 208 187 73 219)
+@end smallexample
+
+@end deffn
+
 @deffn procedure make-random-source
 
 This procedure returns a new random source object initialized to a
@@ -4479,6 +4496,27 @@ For example:
 .857402537562821
 > @b{(rr)}
 .2876463473845367
+@end smallexample
+
+@end deffn
+
+@deffn procedure random-source-make-u8vectors @var{random-source}
+
+This procedure returns a procedure for generating pseudo random
+u8vectors using the random source object @var{random-source}.  The
+returned procedure accepts a single parameter @var{n}, a nonnegative
+exact integer, and returns a u8vector of length @var{n} containing
+pseudo random exact integers in the range 0 to 255.
+
+For example:
+
+@smallexample
+> @b{(define rs (make-random-source))}
+> @b{(define rv (random-source-make-u8vectors rs))}
+> @b{(rv 10)}
+#u8(200 53 29 202 3 85 208 187 73 219)
+> @b{(rv 10)}
+#u8(113 8 182 120 138 103 53 192 40 176)
 @end smallexample
 
 @end deffn

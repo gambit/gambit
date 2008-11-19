@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-10-30 16:52:52 feeley>
+;;; File: "_num.scm", Time-stamp: <2008-11-18 23:58:59 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
@@ -10670,6 +10670,7 @@ ___RESULT = result;
   (pseudo-randomize! unprintable: read-only:)
   (make-integers     unprintable: read-only:)
   (make-reals        unprintable: read-only:)
+  (make-u8vectors    unprintable: read-only:)
   )
 
 (define-check-type random-source
@@ -11095,13 +11096,29 @@ ___RESULT = result;
             (fl/ (fl+ (macro-inexact-+1) (f64vector-ref state 6))
                  (macro-m1-plus-1-inexact)))))
 
+    (define (make-u8vectors)
+
+      (define (random-u8vector len)
+        (macro-force-vars (len)
+          (macro-check-index len 1 (random-u8vector len)
+            (let ((u8vect (##make-u8vector len 0)))
+              (let loop ((i (fx- len 1)))
+                (if (fx< i 0)
+                    u8vect
+                    (begin
+                      (##u8vector-set! u8vect i (rand-fixnum32 256))
+                      (loop (fx- i 1)))))))))
+
+      random-u8vector)
+
     (macro-make-random-source
      state-ref
      state-set!
      randomize!
      pseudo-randomize!
      make-integers
-     make-reals)))
+     make-reals
+     make-u8vectors)))
 
 (define-prim (make-random-source)
   (##make-random-source-mrg32k3a))
@@ -11177,6 +11194,14 @@ ___RESULT = result;
                     (##raise-range-exception 2 random-source-make-reals rs p)))
               (##fail-check-finite-real 2 random-source-make-reals rs p))))))
 
+(define-prim (##random-source-make-u8vectors rs)
+  ((macro-random-source-make-u8vectors rs)))
+
+(define-prim (random-source-make-u8vectors rs)
+  (macro-force-vars (rs)
+    (macro-check-random-source rs 1 (random-source-make-u8vectors rs)
+      (##random-source-make-u8vectors rs))))
+
 (define default-random-source #f)
 (set! default-random-source (##make-random-source-mrg32k3a))
 
@@ -11185,5 +11210,8 @@ ___RESULT = result;
 
 (define random-real
   (##random-source-make-reals default-random-source))
+
+(define random-u8vector
+  (##random-source-make-u8vectors default-random-source))
 
 ;;;============================================================================
