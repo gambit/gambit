@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-11-18 17:08:37 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-11-23 02:02:20 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -69,8 +69,8 @@
 (define-fail-check-type settings
   'settings)
 
-(define-fail-check-type exact-integer-or-settings
-  'exact-integer-or-settings)
+(define-fail-check-type exact-integer-or-string-or-settings
+  'exact-integer-or-string-or-settings)
 
 (define-fail-check-type string-or-ip-address
   'string-or-ip-address)
@@ -403,17 +403,9 @@
           (else
            #f)))
 
-  (define (server-address value)
-    (cond ((##string-or-ip-address? value)
-           value)
-          ((##eq? value #f)
-           value)
-          (else
-           #t)))
-
   (define (port-number value)
     (cond ((and (##fixnum? value)
-                (##fixnum.< -1 value)
+                (##fixnum.< 0 value)
                 (##fixnum.< value 65536))
            value)
           (else
@@ -872,14 +864,35 @@
                                   (error name))))
 
                              ((##eq? name 'server-address:)
-                              (let ((x (server-address value)))
-                                (if (##not (##eq? x #t))
-                                  (begin
-                                    (macro-psettings-server-address-set!
-                                     psettings
-                                     x)
-                                    (loop rest2))
-                                  (error name))))
+                              (cond ((##string? value)
+                                     (let ((address-and-port-number
+                                            (##string->address-and-port-number
+                                             value
+                                             (macro-default-server-address)
+                                             #f)))
+                                       (if address-and-port-number
+                                           (let ((address
+                                                  (##car
+                                                   address-and-port-number))
+                                                 (port-number
+                                                  (##cdr
+                                                   address-and-port-number)))
+                                             (macro-psettings-server-address-set!
+                                              psettings
+                                              address)
+                                             (if port-number
+                                                 (macro-psettings-port-number-set!
+                                                  psettings
+                                                  port-number))
+                                             (loop rest2))
+                                           (error name))))
+                                    ((##ip-address? value)
+                                     (macro-psettings-server-address-set!
+                                      psettings
+                                      value)
+                                     (loop rest2))
+                                    (else
+                                     (error name))))
 
                              ((##eq? name 'port-number:)
                               (let ((x (port-number value)))
@@ -5750,8 +5763,11 @@
   (##host-name))
 
 (define-prim (##string-or-ip-address? obj)
-  (cond ((##string? obj))
-        ((##u8vector? obj)
+  (or (##string? obj)
+      (##ip-address? obj)))
+
+(define-prim (##ip-address? obj)
+  (cond ((##u8vector? obj)
          (##fixnum.= (##u8vector-length obj) 4))
         ((##u16vector? obj)
          (##fixnum.= (##u16vector-length obj) 8))
@@ -5932,7 +5948,7 @@
               raise-os-exception?
               cont
               prim
-              settings)
+              port-number-or-address-or-settings)
 
   (define (psettings->options psettings)
     (let ((coalesce
@@ -5944,11 +5960,16 @@
        keep-alive)))
 
   (define (fail)
-    (##fail-check-settings 1 prim settings))
+    (##fail-check-exact-integer-or-string-or-settings 1 prim port-number-or-address-or-settings))
 
   (##make-tcp-psettings
    #t
-   settings
+   (cond ((##fixnum? port-number-or-address-or-settings)
+          (##list 'port-number: port-number-or-address-or-settings))
+         ((##string? port-number-or-address-or-settings)
+          (##list 'server-address: port-number-or-address-or-settings))
+         (else
+          port-number-or-address-or-settings))
    fail
    (lambda (psettings)
      (let ((server-address-or-host
@@ -5957,9 +5978,8 @@
        (define (open server-address)
          (let ((port-number
                 (macro-psettings-port-number psettings)))
-           (if (##not (and (##not (or (##eq? server-address #f)
-                                      (##eq? server-address #t)))
-                           port-number))
+           (if (or (##eq? server-address #f)
+                   (##not port-number))
              (fail)
              (let ((device
                     (##os-device-tcp-client-open
@@ -5968,7 +5988,7 @@
                      (psettings->options psettings))))
                (if (##fixnum? device)
                  (if raise-os-exception?
-                   (##raise-os-exception #f device prim settings)
+                   (##raise-os-exception #f device prim port-number-or-address-or-settings)
                    (cont device))
                  (let ((port
                         (##make-tcp-client-port
@@ -5987,18 +6007,18 @@
          (let ((info (##os-host-info server-address-or-host)))
            (if (##fixnum? info)
              (if raise-os-exception?
-               (##raise-os-exception #f info prim settings)
+               (##raise-os-exception #f info prim port-number-or-address-or-settings)
                (cont info))
              (open (##car (macro-host-info-addresses info)))))
          (open server-address-or-host))))))
 
-(define-prim (open-tcp-client settings)
-  (macro-force-vars (settings)
+(define-prim (open-tcp-client port-number-or-address-or-settings)
+  (macro-force-vars (port-number-or-address-or-settings)
     (##open-tcp-client
      #t
      (lambda (port) port)
      open-tcp-client
-     settings)))
+     port-number-or-address-or-settings)))
 
 (implement-library-type-socket-info)
 
@@ -6234,19 +6254,22 @@
               raise-os-exception?
               cont
               prim
-              port-number-or-settings
+              port-number-or-address-or-settings
               arg2
               arg3
               arg4)
 
   (define (fail)
-    (##fail-check-exact-integer-or-settings 1 prim port-number-or-settings arg2 arg3 arg4))
+    (##fail-check-exact-integer-or-string-or-settings 1 prim port-number-or-address-or-settings arg2 arg3 arg4))
 
   (##make-tcp-psettings
    #f
-   (if (##fixnum? port-number-or-settings)
-       (##list 'port-number: port-number-or-settings)
-       port-number-or-settings)
+   (cond ((##fixnum? port-number-or-address-or-settings)
+          (##list 'port-number: port-number-or-address-or-settings))
+         ((##string? port-number-or-address-or-settings)
+          (##list 'server-address: port-number-or-address-or-settings))
+         (else
+          port-number-or-address-or-settings))
    fail
    (lambda (psettings)
 
@@ -6263,7 +6286,7 @@
                (let ((info (##os-host-info server-address-or-host)))
                  (if (##fixnum? info)
                      (if raise-os-exception?
-                         (##raise-os-exception #f info prim port-number-or-settings arg2 arg3 arg4)
+                         (##raise-os-exception #f info prim port-number-or-address-or-settings arg2 arg3 arg4)
                          (cont info))
                      (continue-with-address
                       (##car (macro-host-info-addresses info)))))
@@ -6275,7 +6298,7 @@
               psettings-and-server-address
               cont
               prim
-              port-number-or-settings
+              port-number-or-address-or-settings
               arg2
               arg3
               arg4)
@@ -6307,7 +6330,7 @@
            (psettings->options psettings))))
     (if (##fixnum? rdevice)
         (if raise-os-exception?
-            (##raise-os-exception #f rdevice prim port-number-or-settings arg2 arg3 arg4)
+            (##raise-os-exception #f rdevice prim port-number-or-address-or-settings arg2 arg3 arg4)
             (cont rdevice))
         (cont (##make-tcp-server-port rdevice psettings)))))
 
@@ -6315,7 +6338,7 @@
               raise-os-exception?
               cont
               prim
-              port-number-or-settings
+              port-number-or-address-or-settings
               arg2
               arg3
               arg4)
@@ -6327,23 +6350,23 @@
       psettings-and-server-address
       cont
       prim
-      port-number-or-settings
+      port-number-or-address-or-settings
       arg2
       arg3
       arg4))
    prim
-   port-number-or-settings
+   port-number-or-address-or-settings
    arg2
    arg3
    arg4))
 
-(define-prim (open-tcp-server port-number-or-settings)
-  (macro-force-vars (port-number-or-settings)
+(define-prim (open-tcp-server port-number-or-address-or-settings)
+  (macro-force-vars (port-number-or-address-or-settings)
     (##open-tcp-server
      #t
      (lambda (port) port)
      open-tcp-server
-     port-number-or-settings
+     port-number-or-address-or-settings
      (macro-absent-obj)
      (macro-absent-obj)
      (macro-absent-obj))))
@@ -6365,6 +6388,50 @@
   (macro-force-vars (port)
     (macro-check-tcp-server-port port 1 (tcp-server-socket-info port)
       (##tcp-server-socket-info port))))
+
+(define-prim (##string->address-and-port-number
+              str
+              default-address
+              default-port-num)
+
+  (define (err)
+    #f)
+
+  (define (addr str)
+    (if (##string=? str "*")
+        #f
+        str))
+
+  (let ((len (if str (##string-length str) 0)))
+    (let loop ((i 0) (colon #f))
+      (if (##fx< i len)
+          (let ((c (##string-ref str i)))
+            (cond ((##not colon)
+                   (loop (##fx+ i 1)
+                         (if (##char=? c #\:) i colon)))
+                  ((and (##char<=? #\0 c) (##char<=? c #\9))
+                   (loop (##fx+ i 1)
+                         colon))
+                  (else
+                   (err))))
+          (if (##not colon)
+              (##cons (if (##fx= len 0)
+                          default-address
+                          (addr str))
+                      default-port-num)
+              (let ((port-num
+                     (##string->number
+                      (##substring str (##fx+ colon 1) len)
+                      10)))
+                (if (and port-num
+                         (##fixnum? port-num)
+                         (##fx< 0 port-num)
+                         (##fx< port-num 65536))
+                    (##cons (if (##fx= colon 0)
+                                default-address
+                                (addr (##substring str 0 colon)))
+                            port-num)
+                    (err))))))))
 
 ;;;----------------------------------------------------------------------------
 

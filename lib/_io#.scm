@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2008-11-10 14:00:07 feeley>
+;;; File: "_io#.scm", Time-stamp: <2008-11-23 00:45:36 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -832,7 +832,7 @@
 (##define-macro (macro-no-show-console) 0)
 (##define-macro (macro-default-show-console) `(macro-show-console))
 
-(##define-macro (macro-default-server-address) #f)
+(##define-macro (macro-default-server-address) `'#u8(127 0 0 1))
 
 (##define-macro (macro-default-port-number) #f)
 

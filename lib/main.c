@@ -1,4 +1,4 @@
-/* File: "main.c", Time-stamp: <2008-05-09 00:21:43 feeley> */
+/* File: "main.c", Time-stamp: <2008-11-23 02:26:41 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -41,25 +41,29 @@ int debug_settings;)
       msgs[0] =
         "Usage: program [-:OPTION,OPTION...] ...\n"
         "where OPTION is one of:\n"
-        "  mHEAPSIZE    set minimum heap size in kilobytes\n"
-        "  hHEAPSIZE    set maximum heap size in kilobytes\n"
-        "  lLIVEPERCENT set heap live ratio after GC in percent\n"
-        "  s|S          set standard Scheme mode (on|off)\n"
-        "  d[OPT...]    set debugging options; OPT is one of:\n"
-        "                 p|a       treat uncaught exceptions as errors\n"
-        "                           (primordial-thread only|all threads)\n"
-        "                 r|s|q     error handling (create a new REPL|start in\n"
-        "                           single-step mode|quit with error status)\n"
-        "                 R|D|Q     user interrupt handling (create a new REPL|defer\n"
-        "                           handling|quit with error status)\n"
-        "                 i|c|-     select REPL interaction channel\n"
-        "                           (ide|console|standard input and output)\n"
-        "                 0..9      verbosity level\n"
-        "  =DIRECTORY   override Gambit installation directory\n"
-        "  +ARGUMENT    add ARGUMENT to the command line before other arguments\n"
-        "  f[OPT...]    set file options; see below for OPT\n"
-        "  t[OPT...]    set terminal options; see below for OPT\n"
-        "  -[OPT...]    set standard input and output options; see below for OPT\n"
+        "  mHEAPSIZE      set minimum heap size in kilobytes\n"
+        "  hHEAPSIZE      set maximum heap size in kilobytes\n"
+        "  lLIVEPERCENT   set heap live ratio after GC in percent\n"
+        "  s|S            set standard Scheme mode (on|off)\n"
+        "  d[OPT...]      set debugging options; OPT is one of:\n"
+        "                   p|a       treat uncaught exceptions as errors\n"
+        "                             (primordial-thread only|all threads)\n"
+        "                   r|s|q     error handling (create a new REPL|start in\n"
+        "                             single-step mode|quit with error status)\n"
+        "                   R|D|Q     user interrupt handling (create a new REPL|\n"
+        "                             defer handling|quit with error status)\n"
+        "                   i|c|-|@[HOST][:PORT]\n"
+        "                             select REPL interaction channel (ide|console|\n"
+        "                             standard input and output|remote debugger\n"
+        "                             (defaults: HOST=127.0.0.1, PORT=44556))\n"
+        "                   0..9      verbosity level\n"
+        "  @[INTF][:PORT] set main RPC server configuration; defaults: INTF=127.0.0.1,\n"
+        "                 PORT=44555; when INTF=* all interfaces accept connections\n"
+        "  =DIRECTORY     override Gambit installation directory\n"
+        "  +ARGUMENT      add ARGUMENT to the command line before other arguments\n"
+        "  f[OPT...]      set file options; see below for OPT\n"
+        "  t[OPT...]      set terminal options; see below for OPT\n"
+        "  -[OPT...]      set standard input and output options; see below for OPT\n"
         "where OPT is one of:\n"
         "  A|1|2|4|6|8|U  character encoding (ASCII|ISO-8859-1|UCS-2/4|UTF-16/8|UTF)\n"
         "  l|c|cl         end-of-line encoding (LF|CR|CR-LF)\n"
@@ -173,6 +177,8 @@ ___mod_or_lnk (*linker)();)
   int options_source;
   ___UCS_2STRING gambcdir;
   ___UCS_2STRING gambcopt;
+  ___UCS_2STRING remote_dbg_addr;
+  ___UCS_2STRING rpc_server_addr;
   unsigned long min_heap_len;
   unsigned long max_heap_len;
   int live_percent;
@@ -189,6 +195,8 @@ ___mod_or_lnk (*linker)();)
   argv = ___program_startup_info.argv;
   gambcdir = 0;
   gambcopt = 0;
+  remote_dbg_addr = 0;
+  rpc_server_addr = 0;
   min_heap_len = 0;
   max_heap_len = 0;
   live_percent = 0;
@@ -309,11 +317,14 @@ ___mod_or_lnk (*linker)();)
                   while (*arg != '\0' && *arg != ' ' && *arg != ',')
                     {
                       if (*arg >= '0' && *arg <= '9')
-                        debug_settings =
-                          (debug_settings & ~___DEBUG_SETTINGS_LEVEL_MASK)
-                          | ((*arg - '0') << ___DEBUG_SETTINGS_LEVEL_SHIFT);
+                        {
+                          debug_settings =
+                            (debug_settings & ~___DEBUG_SETTINGS_LEVEL_MASK)
+                            | ((*arg - '0') << ___DEBUG_SETTINGS_LEVEL_SHIFT);
+                          arg++;
+                        }
                       else
-                        switch (*arg)
+                        switch (*arg++)
                           {
                           case 'p': debug_settings =
                                       (debug_settings
@@ -381,12 +392,39 @@ ___mod_or_lnk (*linker)();)
                                       | (___DEBUG_SETTINGS_REPL_STDIO
                                          << ___DEBUG_SETTINGS_REPL_SHIFT);
                                     break;
+
+                          case '@':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_REPL_MASK)
+                              | (___DEBUG_SETTINGS_REPL_REMOTE
+                                 << ___DEBUG_SETTINGS_REPL_SHIFT);
+                            ___free_UCS_2STRING (remote_dbg_addr);
+                            remote_dbg_addr = extract_string (&arg);
+                            if (remote_dbg_addr == 0)
+                              {
+                                e = ___FIX(___HEAP_OVERFLOW_ERR);
+                                goto after_setup;
+                              }
+                            break;
+
                           default:
                             e = usage_err (debug_settings);
                             goto after_setup;
                           }
-                      arg++;
                     }
+                break;
+              }
+
+            case '@':
+              {
+                ___free_UCS_2STRING (rpc_server_addr);
+                rpc_server_addr = extract_string (&arg);
+                if (rpc_server_addr == 0)
+                  {
+                    e = ___FIX(___HEAP_OVERFLOW_ERR);
+                    goto after_setup;
+                  }
                 break;
               }
 
@@ -577,6 +615,8 @@ ___mod_or_lnk (*linker)();)
   setup_params.terminal_settings = terminal_settings;
   setup_params.stdio_settings    = stdio_settings;
   setup_params.gambcdir          = gambcdir;
+  setup_params.remote_dbg_addr   = remote_dbg_addr;
+  setup_params.rpc_server_addr   = rpc_server_addr;
   setup_params.linker            = linker;
 
   e = ___setup (&setup_params);
@@ -591,6 +631,8 @@ ___mod_or_lnk (*linker)();)
 
   ___free_UCS_2STRING (gambcdir);
   ___free_UCS_2STRING (gambcopt);
+  ___free_UCS_2STRING (remote_dbg_addr);
+  ___free_UCS_2STRING (rpc_server_addr);
 
   if (e == ___FIX(___NO_ERR))
     {

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread#.scm", Time-stamp: <2008-09-27 22:49:47 feeley>
+;;; File: "_thread#.scm", Time-stamp: <2008-11-22 09:00:30 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -137,6 +137,19 @@
 
   procedure
   arguments
+)
+
+(define-library-type-of-exception rpc-remote-error-exception
+  id: 6469e5eb-3117-4c29-89df-c348479dac93
+  constructor: #f
+  opaque:
+
+  unprintable:
+  read-only:
+
+  procedure
+  arguments
+  message
 )
 
 ;;;----------------------------------------------------------------------------

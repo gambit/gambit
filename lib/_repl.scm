@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-10-29 11:22:37 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-11-23 00:12:14 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -989,7 +989,7 @@
   (macro-force-vars (cont port all-frames? display-env? max-head max-tail depth)
     (let ((p
            (if (##eq? port (macro-absent-obj))
-               (##repl-output-port)
+               (macro-current-output-port)
                port))
           (de
            (if (##eq? display-env? (macro-absent-obj))
@@ -1242,7 +1242,7 @@
   (macro-force-vars (cont port indent)
     (let ((p
            (if (##eq? port (macro-absent-obj))
-               (##repl-output-port)
+               (macro-current-output-port)
                port))
           (i
            (if (##eq? indent (macro-absent-obj))
@@ -1272,7 +1272,7 @@
   (macro-force-vars (cont port indent)
     (let ((p
            (if (##eq? port (macro-absent-obj))
-               (##repl-output-port)
+               (macro-current-output-port)
                port))
           (i
            (if (##eq? indent (macro-absent-obj))
@@ -1317,7 +1317,7 @@
   (macro-force-vars (proc port indent)
     (let ((p
            (if (##eq? port (macro-absent-obj))
-               (##repl-output-port)
+               (macro-current-output-port)
                port))
           (i
            (if (##eq? indent (macro-absent-obj))
@@ -1883,10 +1883,11 @@
         (macro-thread-repl-channel-set! thread repl-channel)
         (macro-thread-repl-channel thread))))
 
+(define (##default-thread-make-repl-channel thread)
+    ##stdio/console-repl-channel)
+
 (define ##thread-make-repl-channel #f)
-(set! ##thread-make-repl-channel
-  (lambda (thread)
-    ##stdio/console-repl-channel))
+(set! ##thread-make-repl-channel ##default-thread-make-repl-channel)
 
 (define ##stdio/console-repl-channel
   (let* ((settings
@@ -2856,7 +2857,7 @@
   (macro-force-vars (exc cont port)
     (let ((p
            (if (##eq? port (macro-absent-obj))
-               (##repl-output-port)
+               (macro-current-output-port)
                port)))
       (macro-check-continuation cont 2 (display-exception-in-context exc cont port)
         (macro-check-character-output-port p 3 (display-exception-in-context exc cont p)
@@ -3082,6 +3083,14 @@
             (macro-mailbox-receive-timeout-exception-procedure exc)
             (macro-mailbox-receive-timeout-exception-arguments exc)))
 
+          ((macro-rpc-remote-error-exception? exc)
+           (##write-string "RPC failed; remote error message follows" port)
+           (##newline port)
+           (display-call
+            (macro-rpc-remote-error-exception-procedure exc)
+            (macro-rpc-remote-error-exception-arguments exc))
+           (##write-string (macro-rpc-remote-error-exception-message exc) port))
+
           ((macro-keyword-expected-exception? exc)
            (##write-string
             "Keyword argument expected"
@@ -3260,7 +3269,7 @@
   (macro-force-vars (exc port)
     (let ((p
            (if (##eq? port (macro-absent-obj))
-               (##repl-output-port)
+               (macro-current-output-port)
                port)))
       (macro-check-character-output-port p 2 (display-exception exc p)
         (##display-exception exc p)))))
@@ -3361,7 +3370,7 @@
     (vector-or-settings           . "VECTOR or port settings")
     (string-or-settings           . "STRING or port settings")
     (u8vector-or-settings         . "U8VECTOR or port settings")
-    (exact-integer-or-settings    . "Exact INTEGER or port settings")
+    (exact-integer-or-string-or-settings . "Exact INTEGER or STRING or port settings")
     (port                         . "PORT")
     (input-port                   . "INPUT PORT")
     (output-port                  . "OUTPUT PORT")

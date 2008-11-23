@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-09-27 23:18:40 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-11-23 01:54:01 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -121,6 +121,19 @@
    (lambda (procedure arguments dummy1 dummy2 dummy3)
      (macro-raise
       (macro-make-mailbox-receive-timeout-exception procedure arguments)))))
+
+(implement-library-type-rpc-remote-error-exception)
+
+(define-prim (##raise-rpc-remote-error-exception msg proc args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   msg
+   #f
+   #f
+   (lambda (procedure arguments message dummy2 dummy3)
+     (macro-raise
+      (macro-make-rpc-remote-error-exception procedure arguments message)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -3144,7 +3157,7 @@
                       server-address-and-port-number))
     (macro-mutex-unlock! ##tcp-service-mutex)))
 
-(define-prim (##tcp-service-register! port-number-or-settings thunk tg tgroup)
+(define-prim (##tcp-service-register! port-number-or-address-or-settings thunk tg tgroup)
   (##process-tcp-server-psettings
    #t
    (lambda (psettings-and-server-address)
@@ -3174,22 +3187,22 @@
             (##thread-start! new-thread)
             (##void)))
         tcp-service-register!
-        port-number-or-settings
+        port-number-or-address-or-settings
         thunk
         tg
         (macro-absent-obj))))
    tcp-service-register!
-   port-number-or-settings
+   port-number-or-address-or-settings
    thunk
    tg
    (macro-absent-obj)))
 
 (define-prim (tcp-service-register!
-              port-number-or-settings
+              port-number-or-address-or-settings
               thunk
               #!optional
               (tg (macro-absent-obj)))
-  (macro-force-vars (port-number-or-settings thunk tg)
+  (macro-force-vars (port-number-or-address-or-settings thunk tg)
     (let ((tgroup
            (if (##eq? tg (macro-absent-obj))
                (macro-thread-tgroup (macro-current-thread))
@@ -3197,14 +3210,14 @@
       (macro-check-procedure
        thunk
        2
-       (tcp-service-register! port-number-or-settings thunk tg)
+       (tcp-service-register! port-number-or-address-or-settings thunk tg)
        (macro-check-tgroup
         tgroup
         3
-        (tcp-service-register! port-number-or-settings thunk tg)
-        (##tcp-service-register! port-number-or-settings thunk tg tgroup))))))
+        (tcp-service-register! port-number-or-address-or-settings thunk tg)
+        (##tcp-service-register! port-number-or-address-or-settings thunk tg tgroup))))))
 
-(define-prim (##tcp-service-unregister! port-number-or-settings)
+(define-prim (##tcp-service-unregister! port-number-or-address-or-settings)
   (##process-tcp-server-psettings
    #t
    (lambda (psettings-and-server-address)
@@ -3219,15 +3232,15 @@
        (##tcp-service-update! server-address-and-port-number #f)
        (##void)))
    tcp-service-unregister!
-   port-number-or-settings
+   port-number-or-address-or-settings
    (macro-absent-obj)
    (macro-absent-obj)
    (macro-absent-obj)))
 
 (define-prim (tcp-service-unregister!
-              port-number-or-settings)
-  (macro-force-vars (port-number-or-settings)
-    (##tcp-service-unregister! port-number-or-settings)))
+              port-number-or-address-or-settings)
+  (macro-force-vars (port-number-or-address-or-settings)
+    (##tcp-service-unregister! port-number-or-address-or-settings)))
 
 ;;;----------------------------------------------------------------------------
 

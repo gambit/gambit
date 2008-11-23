@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-10-29 23:56:35 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-11-23 02:27:09 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3838,6 +3838,16 @@ end-of-code
         (if (##fixnum? dir2)
           ""
           dir2)))))
+
+(define-prim ##remote-dbg-addr
+  (c-lambda ()
+            UCS-2-string
+   "___result = ___setup_params.remote_dbg_addr;"))
+
+(define-prim ##rpc-server-addr
+  (c-lambda ()
+            UCS-2-string
+   "___result = ___setup_params.rpc_server_addr;"))
 
 ;;;----------------------------------------------------------------------------
 

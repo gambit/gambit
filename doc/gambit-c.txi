@@ -1362,17 +1362,17 @@ are not available in the Gambit Scheme interpreter.
 @deffn procedure compile-file-to-c @var{file} @r{[}@code{options:} @var{options}@r{]} @r{[}@code{output:} @var{output}@r{]}
 @pindex gsc
 
-The @var{file} argument must be a string naming an existing file
+The @var{file} parameter must be a string naming an existing file
 containing Scheme source code.  The extension can be omitted from
 @var{file} when the Scheme file has a @samp{.scm} or @samp{.six}
 extension.  This procedure compiles the source file into a file
 containing C code.  By default, this file is named after @var{file}
 with the extension replaced with @samp{.c}.  The name of the generated
-file can be specified with the @var{output} argument.  If @var{output}
+file can be specified with the @var{output} parameter.  If @var{output}
 is a string naming a directory then the C file is created in that
 directory.  Otherwise the name of the C file is @var{output}.
 
-Compilation options are specified through the @var{options} argument
+Compilation options are specified through the @var{options} parameter
 which must be a list of symbols.  Any combination of the following
 options can be used: @samp{verbose}, @samp{report}, @samp{expansion},
 @samp{gvm}, and @samp{debug}.
@@ -1384,11 +1384,11 @@ options can be used: @samp{verbose}, @samp{report}, @samp{expansion},
 @findex load
 @cindex object file
 
-The @var{file}, @var{options}, and @var{output} arguments have the
+The @var{file}, @var{options}, and @var{output} parameters have the
 same meaning as for the @code{compile-file-to-c} procedure.  The
-@var{cc-options} argument is a string containing the options to pass
+@var{cc-options} parameter is a string containing the options to pass
 to the C compiler and the @var{ld-options-prelude} and
-@var{ld-options} arguments are strings containing the options to pass
+@var{ld-options} parameters are strings containing the options to pass
 to the C linker (the options in @var{ld-options-prelude} are passed to
 the C linker before the input file and the options in @var{ld-options}
 are passed after).
@@ -1403,7 +1403,7 @@ extension replaced with @samp{.o@var{n}}, where @var{n} is a positive
 integer that acts as a version number.  The next available version
 number is generated automatically by @code{compile-file}.  The name of
 the generated object file can be specified with the @var{output}
-argument.  If @var{output} is a string naming a directory then the
+parameter.  If @var{output} is a string naming a directory then the
 object file is created in that directory.  Otherwise the name of the
 object file is @var{output}.
 
@@ -1423,12 +1423,12 @@ that support dynamic loading.
 @deffn procedure link-incremental @var{module-list} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{base:} @var{base}@r{]}
 @pindex gsc
 
-The first argument must be a non empty list of strings naming Scheme
+The first parameter must be a non empty list of strings naming Scheme
 modules to link (extensions must be omitted).  An incremental link
 file is generated for the modules specified in @var{module-list}.  By
 default the link file generated is named @samp{@var{last}_.c}, where
 @var{last} is the name of the last module.  The name of the generated
-link file can be specified with the @var{output} argument.  If
+link file can be specified with the @var{output} parameter.  If
 @var{output} is a string naming a directory then the link file is
 created in that directory.  Otherwise the name of the link file is
 @var{output}.
@@ -1469,14 +1469,14 @@ world
 @deffn procedure link-flat @var{module-list} @r{[}@code{output:} @var{output}@r{]}
 @pindex gsc
 
-The first argument must be a non empty list of strings naming Scheme
+The first parameter must be a non empty list of strings naming Scheme
 modules to link.  The first string must be the name of a Scheme module
 or the name of a link file and the remaining strings must name Scheme
 modules (in all cases extensions must be omitted).  A flat link file
 is generated for the modules specified in @var{module-list}.  By
 default the link file generated is named @samp{@var{last}_.c}, where
 @var{last} is the name of the last module.  The name of the generated
-link file can be specified with the @var{output} argument.  If
+link file can be specified with the @var{output} parameter.  If
 @var{output} is a string naming a directory then the link file is
 created in that directory.  Otherwise the name of the link file is
 @var{output}.  If a dynamically loadable object file is produced from
@@ -1557,6 +1557,8 @@ Select standard Scheme mode.
 Select Gambit Scheme mode.
 @item d@r{[}@var{OPT}...@r{]}
 Set debugging options.
+@item @@@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}
+Override the configuration of the main RPC server.
 @item =@var{DIRECTORY}
 Override the Gambit installation directory.
 @item +@var{ARGUMENT}
@@ -1642,6 +1644,12 @@ When a user interrupt occurs it will be deferred until the parameter
 When a user interrupt occurs the program will terminate with a nonzero
 exit status.
 
+@item @var{LEVEL}
+@opindex -:d@var{LEVEL}
+The verbosity level is set to @var{LEVEL} (a digit from 0 to 9).
+At level 0 the runtime system will not display error messages
+and warnings.
+
 @item i
 @opindex -:di
 The REPL interaction channel will be the IDE REPL window (if the IDE
@@ -1655,22 +1663,28 @@ The REPL interaction channel will be the console.
 @opindex -:d-
 The REPL interaction channel will be standard input and standard output.
 
-@item @var{LEVEL}
-@opindex -:d@var{LEVEL}
-The verbosity level is set to @var{LEVEL} (a digit from 0 to 9).
-At level 0 the runtime system will not display error messages
-and warnings.
+@item @@@r{[}@var{HOST}@r{]}@r{[}:@var{PORT}@r{]}
+@opindex -:d@@@r{[}@var{HOST}@r{]}@r{[}:@var{PORT}@r{]}
+The REPL interaction channel will be connected to the remote debugger
+at address @var{HOST}:@var{PORT} (if there is a remote debugger at
+that address).  The default @var{HOST} is 127.0.0.1 and the default
+@var{PORT} is 44556.
 
 @end table
 
-The default debugging options are equivalent to @code{-:dpqQi1}
+The default debugging options are equivalent to @code{-:dpqQ1i}
 (i.e. an uncaught exception in the primordial thread terminates the
 program after displaying an error message).  When the letter @samp{d}
-is not followed by suboptions, it is equivalent to @code{-:dprRi1}
+is not followed by suboptions, it is equivalent to @code{-:dprR1i}
 (i.e. a new REPL is started only when an uncaught exception occurs in
-the primordial thread).  When @code{gsi} is running the main REPL, the
-debugging options are changed to cause errors in the primordial thread
-and user interrupts to start a nested REPL.
+the primordial thread).  When @code{gsi} and @code{gsc} are running
+the main REPL, the debugging options are changed to cause errors in
+the primordial thread and user interrupts to start a nested REPL.
+
+@opindex -:@@
+The @samp{@@@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}} option
+overrides the configuration of the main RPC server.  The default
+@var{INTF} is 127.0.0.1 and the default @var{PORT} is 44555.
 
 @opindex -:=
 The @samp{=} option overrides the setting of the Gambit installation
@@ -3063,10 +3077,10 @@ prints nothing when the result is the void object.
 
 @deffn procedure eval @var{expr} @r{[}@var{env}@r{]}
 
-The first argument is a datum representing an expression.  The
+The first parameter is a datum representing an expression.  The
 @code{eval} procedure evaluates this expression in the global
 interaction environment and returns the result.  If present, the
-second argument is ignored (it is provided for compatibility with
+second parameter is ignored (it is provided for compatibility with
 R5RS).
 
 For example:
@@ -3085,7 +3099,7 @@ For example:
 
 @deffn {special form} include @r{@i{file}}
 
-The @i{file} argument must be a string naming an existing file
+The @i{file} parameter must be a string naming an existing file
 containing Scheme source code.  The @code{include} special form
 splices the content of the specified source file.  This form can only
 appear where a @code{define} form is acceptable.
@@ -4305,8 +4319,8 @@ pseudo random number is generated from this random source object.
 @defvr variable default-random-source
 
 The global variable @code{default-random-source} is bound to the
-random source object which is used by the @code{random-integer} and
-@code{random-real} procedures.
+random source object which is used by the @code{random-integer},
+@code{random-real} and @code{random-u8vector} procedures.
 
 @end defvr
 
@@ -4785,7 +4799,7 @@ procedures @code{write}, @code{pretty-print}, etc will call the
 this may cause the serial number to be allocated.
 
 The @code{serial-number->object} procedure takes an exact integer
-argument @var{n} and returns the object whose serial number is
+parameter @var{n} and returns the object whose serial number is
 @var{n}.  If no object currently exists with that serial number,
 @var{default} is returned if it is specified, otherwise an
 unbound-serial-number-exception object is raised.  The reader defines
@@ -5290,10 +5304,10 @@ For example:
 @deffn procedure table-search @var{proc} @var{table}
 
 The procedure @code{table-search} searches the table @var{table} for a
-key/value binding for which the two argument procedure @var{proc}
+key/value binding for which the two parameter procedure @var{proc}
 returns a non false result.  For each key/value binding visited by
 @code{table-search} the procedure @var{proc} is called with the key as
-the first argument and the value as the second argument.  The
+the first parameter and the value as the second parameter.  The
 procedure @code{table-search} returns the first non false value
 returned by @var{proc}, or @code{#f} if @var{proc} returned @code{#f}
 for all key/value bindings in @var{table}.
@@ -5325,10 +5339,10 @@ For example:
 
 @deffn procedure table-for-each @var{proc} @var{table}
 
-The procedure @code{table-for-each} calls the two argument procedure
+The procedure @code{table-for-each} calls the two parameter procedure
 @var{proc} for each key/value binding in the table @var{table}.  The
-procedure @var{proc} is called with the key as the first argument and
-the value as the second argument.  The procedure @code{table-for-each}
+procedure @var{proc} is called with the key as the first parameter and
+the value as the second parameter.  The procedure @code{table-for-each}
 returns an unspecified value.
 
 The order in which the key/value bindings are visited is unspecified
@@ -10248,9 +10262,7 @@ is used.
 For example:
 
 @smallexample
-> @b{(define p (open-tcp-client
-              (list server-address: "www.iro.umontreal.ca"
-                    port-number: 80)))}
+> @b{(define p (open-tcp-client "www.iro.umontreal.ca:80"))}
 > @b{(display "GET /\n" p)}
 > @b{(force-output p)}
 > @b{(read-line p)}
@@ -10281,9 +10293,7 @@ are drained before @var{port} is closed.
 For example:
 
 @smallexample
-> @b{(define p (open-tcp-client
-              (list server-address: "www.iro.umontreal.ca"
-                    port-number: 80)))}
+> @b{(define p (open-tcp-client "www.iro.umontreal.ca:80"))}
 > @b{(display "GET /\n" p)}
 > @b{(close-output-port p)}
 > @b{(read-line p)}
@@ -11175,7 +11185,7 @@ For example:
 @node Network devices, , Process devices, Device-ports
 @subsection Network devices
 
-@deffn procedure open-tcp-client @var{settings}
+@deffn procedure open-tcp-client @var{port-number-or-address-or-settings}
 
 This procedure opens a network connection to a socket server and
 returns a tcp-client-port (a subtype of device-port) that represents
@@ -11188,27 +11198,38 @@ receiving direction can be ``shutdown'' using the
 @code{close-input-port} procedure.  The @code{close-port} procedure
 closes both directions of the connection.
 
-The first argument of this procedure is a list of port settings which
-must contain a @code{server-address:} setting and a
-@code{port-number:} setting.  Here are the settings allowed in
-addition to the generic settings of byte-ports:
+The parameter of this procedure is an IP port number (16-bit positive
+exact integer), a string of the form @code{"@var{HOST}:@var{PORT}"} or
+a list of port settings.  When the parameter is the number @var{PORT}
+it is handled as if it was the setting @code{port-number:} @var{PORT}.
+When the parameter is the string @code{"@var{HOST}:@var{PORT}"} it is
+handled as if it was the setting @code{server-address:}
+@code{"@var{HOST}:@var{PORT}"}.
+
+Here are the settings allowed in addition to the generic settings of
+byte-ports:
 
 @itemize
 
 @item
 @code{server-address:} @var{string-or-ip-address}
 
-This setting indicates the internet address of the server.  It can be
-a string denoting a host name, which will be translated to an IP
-address by the @code{host-info} procedure, or a 4 element u8vector
-which contains the 32-bit IPv4 address or an 8 element u16vector which
-contains the 128-bit IPv6 address.  There is no default value for this
-setting.
+This setting indicates the internet address of the server, and
+possibly the IP port number.  When this parameter is not specified or
+is @code{""}, the connection requests are sent to the loopback
+interface (with IP address 127.0.0.1).  The parameter can be a string
+denoting a host name, which will be translated to an IP address by the
+@code{host-info} procedure, or a 4 element u8vector which contains the
+32-bit IPv4 address or an 8 element u16vector which contains the
+128-bit IPv6 address.  A string of the form
+@code{"@var{HOST}:@var{PORT}"} is handled as if it was the combination
+of settings @code{server-address:} @code{"@var{HOST}"}
+@code{port-number:} @var{PORT}.
 
 @item
 @code{port-number:} @var{16-bit-exact-integer}
 
-This setting indicates the IP port-number of the server to connect
+This setting indicates the IP port number of the server to connect
 to (e.g. 80 for the standard HTTP server, 23 for the standard telnet
 server).  There is no default value for this setting.
 
@@ -11235,13 +11256,12 @@ buffering of the port.
 @end itemize
 
 Below is an example of the client-side code that opens a connection to
-an HTTP server on port 8080 of the local interface (IP address
+an HTTP server on port 8080 of the loopback interface (with IP address
 127.0.0.1).  For the server-side code see the example for the
 procedure @code{open-tcp-server}.
 
 @smallexample
-> @b{(define p (open-tcp-client (list server-address: '#u8(127 0 0 1)
-                                   port-number: 8080
+> @b{(define p (open-tcp-client (list port-number: 8080
                                    eol-encoding: 'cr-lf)))}
 > @b{p}
 #<input-output-port #2 (tcp-client #u8(127 0 0 1) 8080)>
@@ -11253,7 +11273,7 @@ procedure @code{open-tcp-server}.
 
 @end deffn
 
-@deffn procedure open-tcp-server @var{port-number-or-settings}
+@deffn procedure open-tcp-server @var{port-number-or-address-or-settings}
 
 This procedure sets up a socket to accept network connection requests
 from clients and returns a tcp-server-port from which network
@@ -11268,16 +11288,22 @@ tcp-server-port with either the @code{close-input-port} or
 @code{close-port} procedures will cause the network subsystem to stop
 accepting connections on that socket.
 
-The first argument of this procedure is an IP port-number (16-bit
-nonnegative exact integer) or a list of port settings which must
-contain a @code{port-number:} setting.  Below is a list of the
-settings allowed in addition to the settings
+The parameter of this procedure is an IP port number (16-bit positive
+exact integer), a string of the form @code{"@var{INTF}:@var{PORT}"} or
+a list of port settings which must contain a @code{port-number:}
+setting.  When the parameter is the number @var{PORT} it is handled as
+if it was the setting @code{port-number:} @var{PORT}.  When the
+parameter is the string @code{"@var{INTF}:@var{PORT}"} it is handled
+as if it was the setting @code{server-address:}
+@code{"@var{INTF}:@var{PORT}"}.
+
+Below is a list of the settings allowed in addition to the settings
 @code{keep-alive:} and @code{coalesce:} allowed by the
 @code{open-tcp-client} procedure and the generic settings of
 byte-ports.  The settings which are not listed below apply to the
-tcp-client-port that is returned by @code{read} when a connection
-is accepted and have the same meaning as if they were used in a call
-to the @code{open-tcp-client} procedure.
+tcp-client-port that is returned by @code{read} when a connection is
+accepted and have the same meaning as if they were used in a call to
+the @code{open-tcp-client} procedure.
 
 @itemize
 
@@ -11285,24 +11311,30 @@ to the @code{open-tcp-client} procedure.
 @code{server-address:} @var{string-or-ip-address}
 
 This setting indicates the internet address of the network interface
-on which connections requests are accepted.  When this parameter is
-not specified or is @code{#f}, the connection requests are accepted on
-all network interfaces (i.e. address INADDR_ANY).  The parameter can
-be a string denoting a host name, which will be translated to an IP
-address by the @code{host-info} procedure, or a 4 element u8vector
-which contains the 32-bit IPv4 address or an 8 element u16vector which
-contains the 128-bit IPv6 address.
+on which connections requests are accepted, and possibly the IP port
+number.  When this parameter is not specified or is @code{""}, the
+connection requests are accepted only on the loopback interface (with
+IP address 127.0.0.1).  When this parameter is @code{"*"}, the
+connection requests are accepted on all network interfaces
+(i.e. address INADDR_ANY).  The parameter can be a string denoting a
+host name, which will be translated to an IP address by the
+@code{host-info} procedure, or a 4 element u8vector which contains the
+32-bit IPv4 address or an 8 element u16vector which contains the
+128-bit IPv6 address.  A string of the form
+@code{"@var{INTF}:@var{PORT}"} is handled as if it was the combination
+of settings @code{server-address:} @code{"@var{INTF}"}
+@code{port-number:} @var{PORT}.
 
 @item
 @code{port-number:} @var{16-bit-exact-integer}
 
-This setting indicates the IP port-number assigned to the socket which
+This setting indicates the IP port number assigned to the socket which
 accepts connection requests from clients.  So called ``well-known
-ports'', which are reserved for standard services, have a port-number
+ports'', which are reserved for standard services, have a port number
 below 1024 and can only be assigned to a socket by a process with
 superuser priviledges (e.g. 80 for the HTTP service, 23 for the telnet
 service).  No special priviledges are needed to assign higher
-port-numbers to a socket.  The special value 0 requests that a
+port numbers to a socket.  The special value 0 requests that a
 currently unused port number be assigned to the socket (the port
 number assigned can be retrieved using the procedure
 @code{tcp-server-socket-info}).  There is no default value for this
@@ -11319,13 +11351,13 @@ function).  The default value of this setting is 128.
 @item
 @code{reuse-address:} ( @code{#f} | @code{#t} )
 
-This setting controls whether it is possible to assign a port-number
+This setting controls whether it is possible to assign a port number
 that is currently active.  Note that when a server process terminates,
 the socket it was using to accept connection requests does not become
 inactive immediately.  Instead it remains active for a few minutes to
 ensure clean termination of the connections.  A setting of @code{#f}
 will cause an exception to be raised in that case.  A setting of
-@code{#t} will allow a port-number to be used even if it is active.
+@code{#t} will allow a port number to be used even if it is active.
 The default value of this setting is @code{#t}.
 
 @end itemize
@@ -11335,7 +11367,8 @@ on port 8080 of any network interface.  For the client-side code see
 the example for the procedure @code{open-tcp-client}).
 
 @smallexample
-> @b{(define s (open-tcp-server (list port-number: 8080
+> @b{(define s (open-tcp-server (list server-address: "*"
+                                   port-number: 8080
                                    eol-encoding: 'cr-lf)))}
 > @b{(define p (read s))  @r{@i{; blocks until client connects}}}
 > @b{p}
@@ -11348,22 +11381,26 @@ the example for the procedure @code{open-tcp-client}).
 
 @end deffn
 
-@deffn procedure tcp-service-register! @var{port-number-or-settings} @var{thunk} @r{[}@var{thread-group}@r{]}
-@deffnx procedure tcp-service-unregister! @var{port-number-or-settings}
+@deffn procedure tcp-service-register! @var{port-number-or-address-or-settings} @var{thunk} @r{[}@var{thread-group}@r{]}
+@deffnx procedure tcp-service-unregister! @var{port-number-or-address-or-settings}
 
 The procedure @code{tcp-service-register!} sets up a socket to accept
 network connection requests from clients and creates a ``service''
-thread which processes the incoming connections.  For each connection
-established the service thread creates a ``handler'' thread which
-executes a call to the procedure @var{thunk} with no argument.  The
-handler thread's current input-port and current output-port are both
-set to the tcp-client-port created for the connection.  There is no
-need for the @var{thunk} to close the tcp-client-port, as this is done
-by the handler thread when the @var{thunk} returns normally.
+thread which processes the incoming connections.  The parameter
+@var{port-number-or-address-or-settings} has the same meaning as for
+the procedure @code{open-tcp-server}.
+
+For each connection established the service thread creates a
+``handler'' thread which executes a call to the procedure @var{thunk}
+with no argument.  The handler thread's current input-port and current
+output-port are both set to the tcp-client-port created for the
+connection.  There is no need for the @var{thunk} to close the
+tcp-client-port, as this is done by the handler thread when the
+@var{thunk} returns normally.
 
 The procedure @code{tcp-service-unregister!} terminates the service
 thread which was registered by @code{tcp-service-register!} with the
-same @var{port-number-or-settings} (if a service thread is still
+same network interface and port number (if a service thread is still
 registered).  The procedure @code{tcp-service-register!} implicitly
 calls @code{tcp-service-unregister!} before registering the new
 service thread.
@@ -11372,9 +11409,7 @@ service thread.
 > @b{(tcp-service-register!
    8000
    (lambda () (display "hello\n")))}
-> @b{(define p (open-tcp-client
-             (list port-number: 8000
-                   server-address: "localhost")))}
+> @b{(define p (open-tcp-client 8000))}
 > @b{(read-line p)}
 "hello"
 > @b{(tcp-service-unregister! 8000)}
@@ -11402,7 +11437,7 @@ the number of files in the directory is not known in advance and may
 be large.  Note that the order in which the names are returned is
 operating-system dependent.
 
-The first argument of this procedure is either a string denoting a
+The parameter of this procedure is either a string denoting a
 filesystem path to a directory or a list of port settings which must
 contain a @code{path:} setting.  Here are the settings allowed in
 addition to the generic settings of object-ports:
@@ -11494,9 +11529,9 @@ for the duration of a call to the procedure @var{thunk} with no
 argument.  The value(s) of the call to @var{thunk} are returned after
 closing the port.
 
-The first argument of these procedures is either a vector of the
+The first parameter of these procedures is either a vector of the
 elements used to initialize the stream or a list of port settings.  If
-it is not specified, the argument of the @code{open-vector},
+it is not specified, the parameter of the @code{open-vector},
 @code{open-input-vector}, and @code{open-output-vector} procedures
 defaults to an empty list of port settings.  Here are the settings
 allowed in addition to the generic settings of object-ports:
@@ -11594,7 +11629,7 @@ For example:
 @deffn procedure get-output-vector @var{vector-port}
 
 The procedure @code{get-output-vector} takes an output vector-port or
-a bidirectional vector-port as argument and removes all the objects
+a bidirectional vector-port as parameter and removes all the objects
 currently on the output-side, returning them in a vector.  The port
 remains open and subsequent output to the port and calls to the
 procedure @code{get-output-vector} are possible.

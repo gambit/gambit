@@ -1,8 +1,8 @@
 ;==============================================================================
 
-; File: "http.scm", Time-stamp: <2007-04-04 14:42:59 feeley>
+; File: "http.scm", Time-stamp: <2008-11-23 02:42:02 feeley>
 
-; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
 ;==============================================================================
 
@@ -751,10 +751,10 @@
   (lambda (hs)
     (let ((server-port
            (open-tcp-server
-            (list port-number: (server-port-number hs)
+            (list server-address: '#u8(127 0 0 1) ; on localhost interface only
+                  port-number: (server-port-number hs)
                   backlog: 128
                   reuse-address: #t
-;                  server-address: '#u8(127 0 0 1) ; on localhost interface only
                   char-encoding: 'ISO-8859-1))))
       (accept-connections hs server-port))))
 

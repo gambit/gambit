@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel#.scm", Time-stamp: <2008-02-15 00:38:47 feeley>
+;;; File: "_kernel#.scm", Time-stamp: <2008-11-19 08:28:43 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -162,6 +162,7 @@
 (##define-macro (macro-debug-settings-repl-ide)            0)
 (##define-macro (macro-debug-settings-repl-console)        1)
 (##define-macro (macro-debug-settings-repl-stdio)          2)
+(##define-macro (macro-debug-settings-repl-remote)         3)
 (##define-macro (macro-debug-settings-repl-shift)          7)
 
 (##define-macro (macro-debug-settings-user-intr-mask)      1536)

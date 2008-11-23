@@ -1,8 +1,8 @@
 ;==============================================================================
 
-; File: "dc.scm", Time-stamp: <2007-04-04 14:25:59 feeley>
+; File: "dc.scm", Time-stamp: <2008-11-23 02:39:39 feeley>
 
-; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
 ;==============================================================================
 
@@ -667,7 +667,8 @@
                (thread-terminate! (current-thread)))
              (lambda ()
                (open-tcp-server
-                (list port-number: port-num
+                (list server-address: "*"
+                      port-number: port-num
                       backlog: 1024
                       reuse-address: #t))))))
        (let loop ()
