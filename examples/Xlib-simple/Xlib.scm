@@ -1,6 +1,6 @@
 ;==============================================================================
 
-; File: "Xlib.scm", Time-stamp: <2008-10-31 09:32:18 feeley>
+; File: "Xlib.scm", Time-stamp: <2008-11-24 16:18:52 feeley>
 
 ; Copyright (c) 2006-2008 by Marc Feeley, All Rights Reserved.
 
@@ -103,6 +103,11 @@ end-of-c-declare
              Window)       ; w
             int
             "XClearWindow"))
+
+(define XConnectionNumber
+  (c-lambda (Display*)     ; display
+            int
+            "XConnectionNumber"))
 
 (define XRootWindow
   (c-lambda (Display*      ; display

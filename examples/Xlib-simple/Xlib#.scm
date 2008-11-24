@@ -1,6 +1,6 @@
 ;==============================================================================
 
-; File: "Xlib#.scm", Time-stamp: <2008-10-31 09:41:52 feeley>
+; File: "Xlib#.scm", Time-stamp: <2008-11-24 16:19:08 feeley>
 
 ; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -98,6 +98,7 @@ XColor-pixel
 XColor-pixel-set!
 XColor-red
 XColor-red-set!
+XConnectionNumber
 XCreateGC
 XCreateSimpleWindow
 XDefaultColormapOfScreen
