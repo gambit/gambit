@@ -11198,7 +11198,7 @@ receiving direction can be ``shutdown'' using the
 @code{close-input-port} procedure.  The @code{close-port} procedure
 closes both directions of the connection.
 
-The parameter of this procedure is an IP port number (16-bit positive
+The parameter of this procedure is an IP port number (16-bit nonnegative
 exact integer), a string of the form @code{"@var{HOST}:@var{PORT}"} or
 a list of port settings.  When the parameter is the number @var{PORT}
 it is handled as if it was the setting @code{port-number:} @var{PORT}.
@@ -11288,7 +11288,7 @@ tcp-server-port with either the @code{close-input-port} or
 @code{close-port} procedures will cause the network subsystem to stop
 accepting connections on that socket.
 
-The parameter of this procedure is an IP port number (16-bit positive
+The parameter of this procedure is an IP port number (16-bit nonnegative
 exact integer), a string of the form @code{"@var{INTF}:@var{PORT}"} or
 a list of port settings which must contain a @code{port-number:}
 setting.  When the parameter is the number @var{PORT} it is handled as
