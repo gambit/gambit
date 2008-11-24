@@ -10504,12 +10504,16 @@ For example:
 
 @end deffn
 
-@deffn procedure read-line @r{[}@var{port} @r{[}@var{separator} @r{[}@var{include-separator?}@r{]}@r{]}@r{]}
+@deffn procedure read-line @r{[}@var{port} @r{[}@var{separator} @r{[}@var{include-separator?} @r{[}@var{max-length}@r{]}@r{]}@r{]}@r{]}
 
 This procedure reads characters from the character input-port
 @var{port} until a specific @var{separator} or the end-of-file is
 encountered and returns a string containing the sequence of characters
-read.  The @var{separator} is included at the end of the string only
+read.  If it is specified, @var{max-length} must be a nonnegative
+exact integer and it places an upper limit on the number of characters
+that are read.
+
+The @var{separator} is included at the end of the string only
 if it was the last character read and @var{include-separator?} is not
 @code{#f}.  The @var{separator} must be a character or @code{#f} (in
 which case all the characters until the end-of-file are read).  If it
@@ -10532,6 +10536,9 @@ For example:
        (call-with-input-string "1,2,3\n4,5"
                                (lambda (p) (read-all p read-line))))}
 (("1" "2" "3") ("4" "5"))
+> @b{(read-line (current-input-port) #\newline #f 2)1234}
+"12"
+> 34
 @end smallexample
 
 @end deffn

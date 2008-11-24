@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-11-23 22:18:42 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-11-24 12:49:30 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -4433,76 +4433,69 @@
                (read-substring str start end port need)
                (##read-substring str start end p need))))))))))
 
-(define-prim (##read-line port separator include-separator? escape?)
+(define-prim (##read-line port separator include-separator? max-length)
 
   (define max-chunk-length 512)
 
-  (define (read-chunk i)
+  (define (read-chunk i ml)
     (let loop ((i i))
-      (if (##fixnum.< i max-chunk-length)
-        (let ((c (macro-read-char port)))
-          (if (##char? c)
-            (if (##eq? c separator)
-              (if (and escape?
-                       (##eq? separator (macro-peek-char port)))
-                (begin
-                  (macro-read-char port) ;; skip character
-                  (let ((s (loop (##fixnum.+ i 1))))
-                    (##string-set! s i c)
-                    s))
+      (if (##fixnum.< i ml)
+          (let ((c (macro-read-char port)))
+            (if (##char? c)
+                (if (##eq? c separator)
+                    (if include-separator?
+                        (let ((s (##make-string (##fixnum.+ i 1))))
+                          (##string-set! s i c)
+                          s)
+                        (##make-string i))
+                    (let ((s (loop (##fixnum.+ i 1))))
+                      (##string-set! s i c)
+                      s))
+                (##make-string i)))
+          (##make-string i))))
+
+  (if (##fixnum.< 0 max-length)
+      (let ((first (macro-read-char port)))
+
+        (define (start)
+          (let* ((ml max-length)
+                 (m1 (##fixnum.min ml max-chunk-length))
+                 (chunk1 (read-chunk 1 m1)))
+            (##string-set! chunk1 0 first)
+            (if (or (##fixnum.< (##string-length chunk1) m1)
+                    (##eq? (##string-ref chunk1 (##fixnum.- m1 1))
+                           separator)
+                    (##fixnum.= ml m1))
+                chunk1
+                (let loop ((ml (##fixnum.- ml m1))
+                           (chunks (##list chunk1)))
+                  (let* ((m2 (##fixnum.min ml max-chunk-length))
+                         (new-chunk (read-chunk 0 m2))
+                         (new-chunks (##cons new-chunk chunks)))
+                    (if (or (##fixnum.< (##string-length new-chunk) m2)
+                            (##eq? (##string-ref new-chunk (##fixnum.- m2 1))
+                                   separator)
+                            (##fixnum.= ml m2))
+                        (##append-strings (##reverse new-chunks))
+                        (loop (##fixnum.- ml m2)
+                              new-chunks)))))))
+
+        (if (##char? first)
+            (if (##eq? first separator)
                 (if include-separator?
-                  (let ((s (##make-string (##fixnum.+ i 1))))
-                    (##string-set! s i c)
-                    s)
-                  (##make-string i)))
-              (let ((s (loop (##fixnum.+ i 1))))
-                (##string-set! s i c)
-                s))
-            (##make-string i)))
-        (##make-string i))))
-
-  (let ((first (macro-read-char port)))
-
-    (define (start)
-      (let ((chunk1 (read-chunk 1)))
-        (##string-set! chunk1 0 first)
-        (if (or (##fixnum.< (##string-length chunk1)
-                            max-chunk-length)
-                (##eq? (##string-ref
-                        chunk1
-                        (##fixnum.- max-chunk-length 1))
-                       separator))
-          chunk1
-          (let loop ((chunks (##list chunk1)))
-            (let* ((new-chunk (read-chunk 0))
-                   (new-chunks (##cons new-chunk chunks)))
-              (if (or (##fixnum.< (##string-length new-chunk)
-                                  max-chunk-length)
-                      (##eq? (##string-ref
-                              new-chunk
-                              (##fixnum.- max-chunk-length 1))
-                             separator))
-                (##append-strings (##reverse new-chunks))
-                (loop new-chunks)))))))
-
-    (if (##char? first)
-      (if (##eq? first separator)
-        (if (and escape?
-                 (##eq? separator (macro-peek-char port)))
-            (start)
-            (if include-separator?
-              (##string first)
-              (##string)))
-        (start))
-      first)))
+                    (##string first)
+                    (##string))
+                (start))
+            first))
+      (##string)))
 
 (define-prim (read-line
               #!optional
               (port (macro-absent-obj))
               (separator (macro-absent-obj))
               (include-separator? (macro-absent-obj))
-              (escape? (macro-absent-obj)))
-  (macro-force-vars (port separator include-separator? escape?)
+              (max-length (macro-absent-obj)))
+  (macro-force-vars (port separator include-separator? max-length)
     (let ((p
            (if (##eq? port (macro-absent-obj))
              (macro-current-input-port)
@@ -4515,15 +4508,19 @@
            (if (##eq? include-separator? (macro-absent-obj))
              #f
              include-separator?))
-          (esc?
-           (if (##eq? escape? (macro-absent-obj))
-             #f
-             escape?)))
+          (ml
+           (if (##eq? max-length (macro-absent-obj))
+             ##max-fixnum
+             max-length)))
       (macro-check-character-input-port
        p
        1
-       (read-line p separator include-separator? escape?)
-       (##read-line p sep inc-sep? esc?)))))
+       (read-line port separator include-separator? max-length)
+       (macro-check-index
+        ml
+        4
+        (read-line port separator include-separator? max-length)
+        (##read-line p sep inc-sep? ml))))))
 
 (define-prim (##read-all port-or-readenv reader)
   (let ((fifo (macro-make-fifo)))
@@ -4548,8 +4545,8 @@
            (if (##eq? reader (macro-absent-obj))
              ##read
              reader)))
-      (macro-check-input-port p 1 (read-all p reader)
-        (macro-check-procedure r 2 (read-all p r)
+      (macro-check-input-port p 1 (read-all port reader)
+        (macro-check-procedure r 2 (read-all port r)
           (##read-all p r))))))
 
 (define-prim (##read-all-as-a-begin-expr-from-path
@@ -4610,7 +4607,7 @@
                (##read-datum-or-eof re))
               (script-line
                (and (##eq? first (##script-marker))
-                    (##read-line port #\newline #f #f)))
+                    (##read-line port #\newline #f ##max-fixnum)))
               (language-and-tail
                (##extract-language-and-tail script-line)))
          (if language-and-tail
@@ -10048,10 +10045,10 @@
     (if (char? separator)
       (if (eq? separator #\<)
         (let ((tag
-               (##read-line (macro-readenv-port re) #\newline #t #f)))
+               (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
           (let loop ((lines-rev '()))
             (let ((line
-                   (##read-line (macro-readenv-port re) #\newline #t #f)))
+                   (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
               (if (string? line)
                 (if (string=? line tag)
                   (let* ((str
@@ -10064,7 +10061,7 @@
                   (loop (cons line lines-rev)))
                 (eof)))))
         (let ((str
-               (##read-line (macro-readenv-port re) separator #t #f)))
+               (##read-line (macro-readenv-port re) separator #t ##max-fixnum)))
           (if (string? str)
             (let ((len (string-length str)))
               (if (and (< 0 len)
