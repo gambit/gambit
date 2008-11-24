@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-11-23 02:02:20 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-11-23 22:18:42 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -405,8 +405,8 @@
 
   (define (port-number value)
     (cond ((and (##fixnum? value)
-                (##fixnum.< 0 value)
-                (##fixnum.< value 65536))
+                (##fixnum.<= 0 value)
+                (##fixnum.<= value 65535))
            value)
           (else
            #f)))
@@ -6425,8 +6425,8 @@
                       10)))
                 (if (and port-num
                          (##fixnum? port-num)
-                         (##fx< 0 port-num)
-                         (##fx< port-num 65536))
+                         (##fx<= 0 port-num)
+                         (##fx<= port-num 65535))
                     (##cons (if (##fx= colon 0)
                                 default-address
                                 (addr (##substring str 0 colon)))
