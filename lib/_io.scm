@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-11-24 12:49:30 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-11-24 16:05:01 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1765,6 +1765,25 @@
              2
              (output-port-byte-position port position whence)
              (##output-port-byte-position port position whence)))))))
+
+(define-prim (##device-port-wait-for-input! port)
+
+  ;; TODO: generalize this to all other types of ports.
+
+  ;; The thread will wait until there is data available to read on the
+  ;; port's device or the port's timeout is reached.  The value #f is
+  ;; returned when the timeout is reached.  The value #t is returned
+  ;; when there is data available to read on the port's device or the
+  ;; thread was interrupted (for example with thread-interrupt!).
+
+  ;; It is assumed that the thread **does not** have exclusive
+  ;; access to the port.
+
+  (##declare (not interrupts-enabled))
+
+  (##wait-for-io!
+   (macro-device-port-rdevice-condvar port)
+   (macro-port-rtimeout port)))
 
 ;;;----------------------------------------------------------------------------
 
