@@ -29,20 +29,20 @@
         lst
         (loop (- i 1) (cons i lst)))))
 
-(define (create-balls display screen window)
+(define (create-balls x11-display screen window)
   (random-source-randomize! default-random-source)
   (map (lambda (id)
-         (let* ((gc (XCreateGC display window 0 #f))
+         (let* ((gc (XCreateGC x11-display window 0 #f))
                 (v (make-XGCValues-box))
                 (cmap (XDefaultColormapOfScreen screen))
                 (c (make-XColor-box)))
            (XColor-red-set! c (random-integer 20000))
            (XColor-green-set! c (random-integer 20000))
            (XColor-blue-set! c (random-integer 20000))
-           (if (= (XAllocColor display cmap c) 1)
+           (if (= (XAllocColor x11-display cmap c) 1)
                (begin
                  (XGCValues-foreground-set! v (XColor-pixel c))
-                 (XChangeGC display
+                 (XChangeGC x11-display
                             gc
                             GCForeground
                             v)))
@@ -54,7 +54,7 @@
                       gc)))
        (iota nb-balls)))
        
-(define (draw-ball b display window gc-text font)
+(define (draw-ball b x11-display window gc-text font)
   (let ((x (inexact->exact (floor (ball-x b))))
         (y (inexact->exact (floor (ball-y b))))
         (dx (ball-dx b))
@@ -64,7 +64,7 @@
         (descent (XFontStruct-descent font)))
 
     (XFillArc
-     display
+     x11-display
      window
      gc
      x
@@ -78,7 +78,7 @@
            (n (string-length str))
            (w (XTextWidth font str n)))
       (XDrawString
-       display
+       x11-display
        window
        gc-text
        (+ x (quotient (- ball-width w) 2))
@@ -114,19 +114,104 @@
           (ball-dx-set! b dx)
           (ball-dy-set! b dy)))))
 
+(define (make-gate name)
+  (vector #f
+          (make-mutex name)
+          (make-condition-variable name)))
+
+(define (gate-pulse gate)
+  (let ((mut (vector-ref gate 1))
+        (cv (vector-ref gate 2)))
+    (mutex-lock! mut)
+    (vector-set! gate 0 #t)
+    (condition-variable-signal! cv)
+    (mutex-unlock! mut)))
+
+(define (gate-wait gate timeout)
+  (let ((mut (vector-ref gate 1))
+        (cv (vector-ref gate 2)))
+    (let loop ()
+      (if (mutex-lock! mut timeout)
+          (if (vector-ref gate 0) ;; pulsed?
+              (begin
+                (vector-set! gate 0 #f)
+                (mutex-unlock! mut)
+                #t)
+              (if (mutex-unlock! mut cv timeout)
+                  (loop)
+                  #f))
+          #f))))
+
+(define (make-x11-event-queue x11-display)
+  (let* ((x11-display-fd
+          (XConnectionNumber x11-display))
+         (x11-display-port
+          (##open-predefined 1 ;; (macro-direction-in)
+                             '(X11-display)
+                             x11-display-fd))
+         (check-x11-connection-events
+          (make-gate 'check-x11-connection-get))
+         (get-x11-events
+          (make-gate 'get-x11-events))
+         (x11-connection-monitor-thread
+          (make-thread
+           (lambda ()
+             (let loop ()
+
+               ;; wait until we need to check for events from the connection
+               (gate-wait check-x11-connection-events +inf.0)
+
+               ;; wait until an event is available from the X11 connection
+               (##device-port-wait-for-input! x11-display-port)
+
+               ;; tell the event loop it should get events
+               (gate-pulse get-x11-events)
+
+               (loop))))))
+
+    (thread-start! x11-connection-monitor-thread)
+
+    (vector x11-display
+            get-x11-events
+            check-x11-connection-events
+            x11-connection-monitor-thread)))
+
+(define (x11-event-get x11-event-queue absrel-timeout)
+  (let ((x11-display
+         (vector-ref x11-event-queue 0))
+        (get-x11-events
+         (vector-ref x11-event-queue 1))
+        (check-x11-connection-events
+         (vector-ref x11-event-queue 2))
+        (timeout
+         (if (time? absrel-timeout)
+             absrel-timeout
+             (seconds->time
+              (+ absrel-timeout
+                 (time->seconds (current-time)))))))
+    (let loop ()
+      (or (XCheckMaskEvent x11-display -1)
+          (begin
+            (gate-pulse check-x11-connection-events)
+            (if (gate-wait get-x11-events timeout)
+                (loop)
+                #f))))))
+
 (define (main)
-  (let* ((display
+  (let* ((x11-display
           (XOpenDisplay #f))
          (screen-number
-          (XDefaultScreen display))
+          (XDefaultScreen x11-display))
          (screen
-          (XScreenOfDisplay display screen-number))
+          (XScreenOfDisplay x11-display screen-number))
          (root
-          (XRootWindow display screen-number))
+          (XRootWindow x11-display screen-number))
          (black
-          (XBlackPixel display screen-number))
+          (XBlackPixel x11-display screen-number))
          (white
-          (XWhitePixel display screen-number)))
+          (XWhitePixel x11-display screen-number))
+         (x11-event-queue
+          (make-x11-event-queue x11-display)))
 
     (define (create-window)
       (thread-start!
@@ -134,7 +219,7 @@
         (lambda ()
           (let* ((window
                   (XCreateSimpleWindow
-                   display
+                   x11-display
                    root
                    100
                    200
@@ -144,32 +229,32 @@
                    black
                    white))
                  (font
-                  (XLoadQueryFont display
+                  (XLoadQueryFont x11-display
                                   "lucidasans-12"))
                  (gc-text
-                  (XCreateGC display window 0 #f)))
+                  (XCreateGC x11-display window 0 #f)))
 
             (let* ((v (make-XGCValues-box))
                    (cmap (XDefaultColormapOfScreen screen))
                    (c (make-XColor-box))
-                   (x (XParseColor display
+                   (x (XParseColor x11-display
                                    cmap
                                    "yellow"
                                    c)))
-              (if (and (= (XAllocColor display cmap c) 1) (= x 1) font)
+              (if (and (= (XAllocColor x11-display cmap c) 1) (= x 1) font)
                   (begin
                     (XGCValues-foreground-set! v (XColor-pixel c))
                     (XGCValues-font-set! v (XFontStruct-fid font))
-                    (XChangeGC display
+                    (XChangeGC x11-display
                                gc-text
                                (+ GCForeground GCFont)
                                v))))
 
-            (XMapWindow display window)
-            (XFlush display)
+            (XMapWindow x11-display window)
+            (XFlush x11-display)
 
             (XSelectInput
-             display
+             x11-display
              window
              (+ KeyPressMask
                 KeyReleaseMask
@@ -178,30 +263,38 @@
                 PointerMotionMask
                 EnterWindowMask
                 LeaveWindowMask))
+            (XFlush x11-display)
 
-            (let ((balls (create-balls display screen window)))
+            (let ((balls (create-balls x11-display screen window)))
               (let loop ((n 200))
                 (if (> n 0)
                     (begin
-
-                      (let ((ev (XCheckMaskEvent display -1)))
-                        (if ev
-                            (pp (convert-XEvent ev))))
 
                       (for-each
                        (lambda (b) (move-ball b 5))
                        balls)
 
-                      (XClearWindow display window)
+                      (XClearWindow x11-display window)
 
                       (for-each
                        (lambda (b)
-                         (draw-ball b display window gc-text font))
+                         (draw-ball b x11-display window gc-text font))
                        balls)
 
-                      (XFlush display)
+                      (XFlush x11-display)
 
-                      (thread-sleep! 1/30) ; slow down to about 30 frames per second
+                      ;; slow down to about 30 frames per second
+
+                      (let ((timeout
+                             (seconds->time
+                              (+ 1/30
+                                 (time->seconds (current-time))))))
+                        (let event-loop ()
+                          (let ((ev (x11-event-get x11-event-queue timeout)))
+                            (if ev
+                                (begin
+                                  (pp (convert-XEvent ev))
+                                  (event-loop))))))
 
                       (loop (- n 1)))))))))))
 
