@@ -1557,7 +1557,7 @@ Select standard Scheme mode.
 Select Gambit Scheme mode.
 @item d@r{[}@var{OPT}...@r{]}
 Set debugging options.
-@item @@@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}
+@item .@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}
 Override the configuration of the main RPC server.
 @item =@var{DIRECTORY}
 Override the Gambit installation directory.
@@ -1668,7 +1668,8 @@ The REPL interaction channel will be standard input and standard output.
 The REPL interaction channel will be connected to the remote debugger
 at address @var{HOST}:@var{PORT} (if there is a remote debugger at
 that address).  The default @var{HOST} is 127.0.0.1 and the default
-@var{PORT} is 44556.
+@var{PORT} is 44555.
+THIS OPTION IS NOT YET IMPLEMENTED!
 
 @end table
 
@@ -1681,10 +1682,11 @@ the primordial thread).  When @code{gsi} and @code{gsc} are running
 the main REPL, the debugging options are changed to cause errors in
 the primordial thread and user interrupts to start a nested REPL.
 
-@opindex -:@@
-The @samp{@@@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}} option
+@opindex -:.
+The @samp{.@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}} option
 overrides the configuration of the main RPC server.  The default
-@var{INTF} is 127.0.0.1 and the default @var{PORT} is 44555.
+@var{INTF} is 127.0.0.1 and the default @var{PORT} is 44556.
+THIS OPTION IS NOT YET IMPLEMENTED!
 
 @opindex -:=
 The @samp{=} option overrides the setting of the Gambit installation

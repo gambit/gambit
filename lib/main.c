@@ -1,4 +1,4 @@
-/* File: "main.c", Time-stamp: <2008-11-23 02:26:41 feeley> */
+/* File: "main.c", Time-stamp: <2008-11-25 23:34:26 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -55,10 +55,10 @@ int debug_settings;)
         "                   i|c|-|@[HOST][:PORT]\n"
         "                             select REPL interaction channel (ide|console|\n"
         "                             standard input and output|remote debugger\n"
-        "                             (defaults: HOST=127.0.0.1, PORT=44556))\n"
+        "                             (defaults: HOST=127.0.0.1, PORT=44555))\n"
         "                   0..9      verbosity level\n"
-        "  @[INTF][:PORT] set main RPC server configuration; defaults: INTF=127.0.0.1,\n"
-        "                 PORT=44555; when INTF=* all interfaces accept connections\n"
+        "  .[INTF][:PORT] set main RPC server configuration; defaults: INTF=127.0.0.1,\n"
+        "                 PORT=44556; when INTF=* all interfaces accept connections\n"
         "  =DIRECTORY     override Gambit installation directory\n"
         "  +ARGUMENT      add ARGUMENT to the command line before other arguments\n"
         "  f[OPT...]      set file options; see below for OPT\n"
@@ -416,7 +416,7 @@ ___mod_or_lnk (*linker)();)
                 break;
               }
 
-            case '@':
+            case '.':
               {
                 ___free_UCS_2STRING (rpc_server_addr);
                 rpc_server_addr = extract_string (&arg);
