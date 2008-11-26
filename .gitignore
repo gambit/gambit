@@ -185,6 +185,7 @@ misc/makefile
 tests/makefile
 autom4te.cache
 gsc-comp
+gsc-comp.exe
 gambc-v*.dmg
 gambc-v*.exe
 gambc-v*.tgz
