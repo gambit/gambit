@@ -3433,6 +3433,12 @@ The procedures in this section are not yet documented.
 @deffnx procedure inactive-thread-exception-arguments @var{exc}
 @end deffn
 
+@deffn procedure rpc-remote-error-exception? @var{obj}
+@deffnx procedure rpc-remote-error-exception-procedure @var{exc}
+@deffnx procedure rpc-remote-error-exception-arguments @var{exc}
+@deffnx procedure rpc-remote-error-exception-message @var{exc}
+@end deffn
+
 @deffn procedure process-pid @var{process-port}
 @end deffn
 
@@ -4064,6 +4070,9 @@ For example:
 @deffn procedure fx>= @var{n1}@dots{}
 @end deffn
 
+@deffn procedure fxabs @var{n}
+@end deffn
+
 @deffn procedure fxand @var{n1}@dots{}
 @end deffn
 
@@ -4131,6 +4140,9 @@ For example:
 @end deffn
 
 @deffn procedure fxwrap- @var{n1} @var{n2}@dots{}
+@end deffn
+
+@deffn procedure fxwrapabs @var{n}
 @end deffn
 
 @deffn procedure fxwraparithmetic-shift @var{n1} @var{n2}

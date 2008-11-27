@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-09-27 22:40:33 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-11-26 20:33:40 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -24,7 +24,7 @@ c-initialize
 c-lambda
 c-define
 define-macro
-;;define-syntax
+future
 include
 declare
 namespace
@@ -35,169 +35,15 @@ time
 cond-expand
 define-cond-expand-feature
 
-six.!x
-six.&x
-six.*x
-six.++x
-six.+x
-six.--x
-six.-x
-six.arrow
-six.call
-six.compound
-six.cons
-six.define-procedure
-six.define-variable
-six.do-while
-six.dot
-six.for
-six.identifier
-six.if
-six.index
-six.list
-six.literal
-six.new
-six.null
-six.prefix
-six.procedure
-six.procedure-body
-six.while
-six.x!=y
-six.x%=y
-six.x%y
-six.x&&y
-six.x&=y
-six.x&y
-six.x*=y
-six.x*y
-six.x++
-six.x+=y
-six.x+y
-|six.x,y|
-six.x--
-six.x-=y
-six.x-y
-six.x/=y
-six.x/y
-six.x:=y
-six.x:y
-six.x<<=y
-six.x<<y
-six.x<=y
-six.x<y
-six.x==y
-six.x=y
-six.x>=y
-six.x>>=y
-six.x>>y
-six.x>y
-six.x?y:z
-six.x^=y
-six.x^y
-|six.x\|=y|
-|six.x\|\|y|
-|six.x\|y|
-six.~x
+;; global variable
+default-random-source
 
-six.!
-six.break
-six.case
-six.clause
-six.continue
-six.goto
-six.label
-six.return
-six.switch
-six.x:-y
-
-;; procedures (TODO: check consistency with release, remove stuff in r5rs)
-
-;; this code produces the list of procedures
-#;
-(let ()
-
-  (define (keep keep? lst)
-    (cond ((null? lst)       '())
-          ((keep? (car lst)) (cons (car lst) (keep keep? (cdr lst))))
-          (else              (keep keep? (cdr lst)))))
-
-  (define (sort-list lst <?)
-
-    (define (mergesort lst)
-
-      (define (merge lst1 lst2)
-        (cond ((null? lst1) lst2)
-              ((null? lst2) lst1)
-              (else
-               (let ((e1 (car lst1)) (e2 (car lst2)))
-                 (if (<? e1 e2)
-                     (cons e1 (merge (cdr lst1) lst2))
-                     (cons e2 (merge lst1 (cdr lst2))))))))
-
-      (define (split lst)
-        (if (or (null? lst) (null? (cdr lst)))
-            lst
-            (cons (car lst) (split (cddr lst)))))
-
-      (if (or (null? lst) (null? (cdr lst)))
-          lst
-          (let* ((lst1 (mergesort (split lst)))
-                 (lst2 (mergesort (split (cdr lst)))))
-            (merge lst1 lst2))))
-
-    (mergesort lst))
-
-  (define (symbol-table->list st)
-    (apply append
-           (map (lambda (s)
-                  (let loop ((s s) (lst '()))
-                    (if (symbol? s)
-                        (loop (##vector-ref s 2) (cons s lst))
-                        (reverse lst))))
-                (vector->list st))))
-
-  (define (public-procedure? s)
-    (if (let ((str (symbol->string s)))
-          (or (and (>= (string-length str) 2)
-                   (equal? (substring str 0 2) "##"))
-              (and (>= (string-length str) 1)
-                   (equal? (substring str 0 1) " "))))
-              
-        #f
-        (let ((val (##global-var-ref (##make-global-var s))))
-          (procedure? val))))
-
-  (for-each
-   pp
-   (sort-list
-    (keep public-procedure?
-          (symbol-table->list (##symbol-table)))
-    (lambda (x y) (string<? (symbol->string x) (symbol->string y))))))
-
-*
-+
--
-/
-<
-<=
-=
->
->=
+;; procedures
 abandoned-mutex-exception?
 abort
-abs
-acos
 all-bits-set?
-angle
 any-bits-set?
-append
-apply
 arithmetic-shift
-asin
-assoc
-assq
-assv
-atan
 bit-count
 bit-set?
 bitwise-and
@@ -205,100 +51,39 @@ bitwise-ior
 bitwise-merge
 bitwise-not
 bitwise-xor
-boolean?
 box
 box?
 break
-caaaar
-caaadr
-caaar
-caadar
-caaddr
-caadr
-caar
-cadaar
-cadadr
-cadar
-caddar
-cadddr
-caddr
-cadr
-call-with-current-continuation
-call-with-input-file
 call-with-input-string
 call-with-input-u8vector
 call-with-input-vector
-call-with-output-file
 call-with-output-string
 call-with-output-u8vector
 call-with-output-vector
-call-with-values
 call/cc
-car
-cdaaar
-cdaadr
-cdaar
-cdadar
-cdaddr
-cdadr
-cdar
-cddaar
-cddadr
-cddar
-cdddar
-cddddr
-cdddr
-cddr
-cdr
-ceiling
 cfun-conversion-exception-arguments
 cfun-conversion-exception-code
 cfun-conversion-exception-message
 cfun-conversion-exception-procedure
 cfun-conversion-exception?
-char->integer
-char-alphabetic?
-char-ci<=?
-char-ci<?
-char-ci=?
-char-ci>=?
-char-ci>?
-char-downcase
-char-lower-case?
-char-numeric?
-char-ready?
-char-upcase
-char-upper-case?
-char-whitespace?
-char<=?
-char<?
-char=?
-char>=?
-char>?
-char?
 clear-bit-field
-close-input-port
-close-output-port
 close-port
 command-line
 compile-file
 compile-file-to-c
-complex?
 condition-variable-broadcast!
 condition-variable-name
 condition-variable-signal!
 condition-variable-specific
 condition-variable-specific-set!
 condition-variable?
-cons
 console-port
-continuation?
 continuation-capture
 continuation-graft
 continuation-return
+continuation?
 copy-bit-field
 copy-file
-cos
 cpu-time
 create-directory
 create-fifo
@@ -307,8 +92,6 @@ create-symbolic-link
 current-directory
 current-error-port
 current-exception-handler
-current-input-port
-current-output-port
 current-readtable
 current-thread
 current-time
@@ -318,13 +101,10 @@ datum-parsing-exception-parameters
 datum-parsing-exception-readenv
 datum-parsing-exception?
 deadlock-exception?
-default-random-source
 defer-user-interrupts
 delete-directory
 delete-file
-denominator
 directory-files
-display
 display-continuation-backtrace
 display-continuation-dynamic-environment
 display-continuation-environment
@@ -335,30 +115,19 @@ display-procedure-environment
 divide-by-zero-exception-arguments
 divide-by-zero-exception-procedure
 divide-by-zero-exception?
-dynamic-wind
-eof-object?
-eq?
 eq?-hash
-equal?
 equal?-hash
-eqv?
 eqv?-hash
 err-code->string
 error
 error-exception-message
 error-exception-parameters
 error-exception?
-eval
-even?
-exact->inexact
-exact?
 exit
-exp
 expression-parsing-exception-kind
 expression-parsing-exception-parameters
 expression-parsing-exception-source
 expression-parsing-exception?
-expt
 extract-bit-field
 f32vector
 f32vector->list
@@ -445,7 +214,6 @@ flnegative?
 flnumerator
 flodd?
 flonum?
-floor
 flpositive?
 flround
 flsin
@@ -453,8 +221,6 @@ flsqrt
 fltan
 fltruncate
 flzero?
-for-each
-force
 force-output
 foreign-address
 foreign-release!
@@ -469,6 +235,7 @@ fx<=
 fx=
 fx>
 fx>=
+fxabs
 fxand
 fxarithmetic-shift
 fxarithmetic-shift-left
@@ -492,6 +259,7 @@ fxremainder
 fxwrap*
 fxwrap+
 fxwrap-
+fxwrapabs
 fxwraparithmetic-shift
 fxwraparithmetic-shift-left
 fxwraplogical-shift-right
@@ -499,7 +267,6 @@ fxwrapquotient
 fxxor
 fxzero?
 gc-report-set!
-gcd
 generate-proper-tail-calls
 gensym
 get-output-string
@@ -518,16 +285,13 @@ host-info-aliases
 host-info-name
 host-info?
 host-name
-imag-part
 improper-length-list-exception-arg-num
 improper-length-list-exception-arguments
 improper-length-list-exception-procedure
 improper-length-list-exception?
-inactive-thread-exception?
-inactive-thread-exception-procedure
 inactive-thread-exception-arguments
-inexact->exact
-inexact?
+inactive-thread-exception-procedure
+inactive-thread-exception?
 infinite?
 initialized-thread-exception-arguments
 initialized-thread-exception-procedure
@@ -541,13 +305,9 @@ input-port-line
 input-port-readtable
 input-port-readtable-set!
 input-port-timeout-set!
-input-port?
-integer->char
 integer-length
 integer-nth-root
 integer-sqrt
-integer?
-interaction-environment
 invalid-hash-number-exception-arguments
 invalid-hash-number-exception-procedure
 invalid-hash-number-exception?
@@ -560,30 +320,19 @@ keyword-expected-exception-procedure
 keyword-expected-exception?
 keyword-hash
 keyword?
-lcm
-length
 link-flat
 link-incremental
-list
 list->f32vector
 list->f64vector
 list->s16vector
 list->s32vector
 list->s64vector
 list->s8vector
-list->string
 list->table
 list->u16vector
 list->u32vector
 list->u64vector
 list->u8vector
-list->vector
-list-ref
-list-tail
-list?
-load
-log
-magnitude
 mailbox-receive-timeout-exception-arguments
 mailbox-receive-timeout-exception-procedure
 mailbox-receive-timeout-exception?
@@ -593,15 +342,12 @@ make-f32vector
 make-f64vector
 make-mutex
 make-parameter
-make-polar
 make-random-source
-make-rectangular
 make-root-thread
 make-s16vector
 make-s32vector
 make-s64vector
 make-s8vector
-make-string
 make-table
 make-thread
 make-thread-group
@@ -611,15 +357,7 @@ make-u64vector
 make-u8vector
 make-uninterned-keyword
 make-uninterned-symbol
-make-vector
 make-will
-map
-max
-member
-memq
-memv
-min
-modulo
 multiple-c-return-exception?
 mutex-lock!
 mutex-name
@@ -629,13 +367,11 @@ mutex-state
 mutex-unlock!
 mutex?
 nan?
-negative?
 network-info
 network-info-aliases
 network-info-name
 network-info-net
 network-info?
-newline
 no-such-file-or-directory-exception-arguments
 no-such-file-or-directory-exception-procedure
 no-such-file-or-directory-exception?
@@ -649,28 +385,19 @@ nonprocedure-operator-exception-code
 nonprocedure-operator-exception-operator
 nonprocedure-operator-exception-rte
 nonprocedure-operator-exception?
-not
-null-environment
-null?
-number->string
 number-of-arguments-limit-exception-arguments
 number-of-arguments-limit-exception-procedure
 number-of-arguments-limit-exception?
-number?
-numerator
 object->serial-number
 object->string
 object->u8vector
-odd?
 open-directory
 open-dummy
 open-event-queue
 open-file
-open-input-file
 open-input-string
 open-input-u8vector
 open-input-vector
-open-output-file
 open-output-string
 open-output-u8vector
 open-output-vector
@@ -696,8 +423,6 @@ output-port-readtable
 output-port-readtable-set!
 output-port-timeout-set!
 output-port-width
-output-port?
-pair?
 path-directory
 path-expand
 path-extension
@@ -707,16 +432,13 @@ path-strip-extension
 path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
-peek-char
 port-settings-set!
 port?
-positive?
 pp
 pretty-print
 primordial-exception-handler
 print
 println
-procedure?
 process-pid
 process-status
 process-times
@@ -725,26 +447,23 @@ protocol-info-aliases
 protocol-info-name
 protocol-info-number
 protocol-info?
-quotient
 raise
 random-integer
 random-real
 random-source-make-integers
 random-source-make-reals
+random-source-make-u8vectors
 random-source-pseudo-randomize!
 random-source-randomize!
 random-source-state-ref
 random-source-state-set!
 random-source?
+random-u8vector
 range-exception-arg-num
 range-exception-arguments
 range-exception-procedure
 range-exception?
-rational?
-rationalize
-read
 read-all
-read-char
 read-line
 read-substring
 read-subu8vector
@@ -770,10 +489,7 @@ readtable-write-cdr-read-macros?-set
 readtable-write-extended-read-macros?
 readtable-write-extended-read-macros?-set
 readtable?
-real-part
 real-time
-real?
-remainder
 rename-file
 repl-backtrace-display-environment?
 repl-display-dynamic-environment?
@@ -782,8 +498,10 @@ repl-output-port
 repl-result-history-max-length-set!
 repl-result-history-ref
 replace-bit-field
-reverse
-round
+rpc-remote-error-exception-arguments
+rpc-remote-error-exception-message
+rpc-remote-error-exception-procedure
+rpc-remote-error-exception?
 s16vector
 s16vector->list
 s16vector-append
@@ -822,18 +540,15 @@ s8vector-set!
 s8vector?
 scheduler-exception-reason
 scheduler-exception?
-scheme-report-environment
 seconds->time
 serial-number->object
 service-info
 service-info-aliases
 service-info-name
-service-info-port
+service-info-port-number
 service-info-protocol
 service-info?
 set-box!
-set-car!
-set-cdr!
 setenv
 sfun-conversion-exception-arguments
 sfun-conversion-exception-code
@@ -842,58 +557,105 @@ sfun-conversion-exception-procedure
 sfun-conversion-exception?
 shell-command
 shell-command-blocking
-sin
+six.!
+six.!x
+six.&x
+six.*x
+six.++x
+six.+x
+six.--x
+six.-x
+six.arrow
+six.break
+six.call
+six.case
+six.clause
+six.compound
+six.cons
+six.continue
+six.define-procedure
+six.define-variable
+six.do-while
+six.dot
+six.for
+six.goto
+six.identifier
+six.if
+six.index
+six.label
+six.list
+six.literal
 six.make-array
+six.new
+six.null
+six.prefix
+six.procedure
+six.procedure-body
+six.return
+six.switch
+six.while
+six.x!=y
+six.x%=y
+six.x%y
+six.x&&y
+six.x&=y
+six.x&y
+six.x*=y
+six.x*y
+six.x++
+six.x+=y
+six.x+y
+|six.x,y|
+six.x--
+six.x-=y
+six.x-y
+six.x/=y
+six.x/y
+six.x:-y
+six.x:=y
+six.x:y
+six.x<<=y
+six.x<<y
+six.x<=y
+six.x<y
+six.x==y
+six.x=y
+six.x>=y
+six.x>>=y
+six.x>>y
+six.x>y
+six.x?y:z
+six.x^=y
+six.x^y
+|six.x\|=y|
+|six.x\|y|
+|six.x\|\|y|
+six.~x
 socket-info-address
 socket-info-family
 socket-info-port-number
 socket-info?
-sqrt
 stack-overflow-exception?
 started-thread-exception-arguments
 started-thread-exception-procedure
 started-thread-exception?
 step
 step-level-set!
-string
 string->keyword
-string->list
-string->number
-string->symbol
-string-append
-string-ci<=?
-string-ci<?
-string-ci=?
 string-ci=?-hash
-string-ci>=?
-string-ci>?
-string-copy
-string-fill!
-string-length
-string-ref
-string-set!
-string<=?
-string<?
-string=?
 string=?-hash
-string>=?
-string>?
-string?
 subf32vector
 subf64vector
 subs16vector
 subs32vector
 subs64vector
 subs8vector
-substring
 subu16vector
 subu32vector
 subu64vector
 subu8vector
 subvector
-symbol->string
 symbol-hash
-symbol?
 system-stamp
 system-type
 system-type-string
@@ -909,7 +671,6 @@ table-ref
 table-search
 table-set!
 table?
-tan
 tcp-client-peer-socket-info
 tcp-client-self-socket-info
 tcp-server-socket-info
@@ -970,9 +731,6 @@ timeout->time
 top
 touch
 trace
-transcript-off
-transcript-on
-truncate
 tty-history
 tty-history-max-length-set!
 tty-history-set!
@@ -1062,41 +820,28 @@ user-info-shell
 user-info-uid
 user-info?
 user-name
-values
-vector
-vector->list
 vector-append
 vector-copy
-vector-fill!
-vector-length
-vector-ref
-vector-set!
-vector?
 void
 will-execute!
 will-testator
 will?
 with-exception-catcher
 with-exception-handler
-with-input-from-file
 with-input-from-port
 with-input-from-string
 with-input-from-u8vector
 with-input-from-vector
-with-output-to-file
 with-output-to-port
 with-output-to-string
 with-output-to-u8vector
 with-output-to-vector
-write
-write-char
 write-substring
 write-subu8vector
 write-u8
 wrong-number-of-arguments-exception-arguments
 wrong-number-of-arguments-exception-procedure
 wrong-number-of-arguments-exception?
-zero?
 
 ))
 

@@ -1,4 +1,4 @@
-# makefile for regression tests, Time-stamp: <2007-12-13 23:16:03 feeley>
+# makefile for regression tests, Time-stamp: <2008-11-26 20:29:27 feeley>
 
 # Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -83,7 +83,7 @@ all-post:
 	  touch server.rm; \
 	fi
 
-check: all test1 test2 test3 test4 test5 test6 test7 test8 test9
+check: all test1 test2 test3 test4 test5 test6 test7 test8 test9 test10
 	@echo "============ ALL TESTS SUCCESSFUL"
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
 	  mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@ \
@@ -171,6 +171,11 @@ test9:
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) -f mem.scm
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:h4000 -f mem.o1 > test9.out
 	diff $(srcdirpfx)test9.ok test9.out && rm -f test9.out mem@obj@ mem.o1
+
+test10:
+	@echo "------------ TEST 10 (consistency of lib/gambit#.scm)"
+	rm -f mem@obj@ mem.o*
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) -i test10.scm
 
 link:
 	@LINK@
