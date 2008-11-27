@@ -1,4 +1,4 @@
-# makefile for regression tests, Time-stamp: <2008-11-26 20:29:27 feeley>
+# makefile for regression tests, Time-stamp: <2008-11-27 08:09:48 feeley>
 
 # Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -57,7 +57,7 @@ INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir)
 RCFILES = makefile.in \
 debug.scm error.scm r4rstest.scm mix.scm mem.scm client.c server.scm server.h \
 test1.ok test2.ok test3.ok test4.ok test5.ok test6.ok test7.ok \
-test8.ok test9.ok input
+test8.ok test9.ok test10.scm input
 
 GENDISTFILES =
 
