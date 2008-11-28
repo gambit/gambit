@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2008-03-26 14:41:31 feeley>
+;;; File: "_nonstd.scm", Time-stamp: <2008-11-28 14:20:58 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1613,7 +1613,29 @@
         (else
          0)))
 
+(define ##path-expand-hook #f)
+(set! ##path-expand-hook #f)
+
 (define-prim (##path-expand
+              path
+              #!optional
+              (origin (macro-absent-obj)))
+  (let ((pe-hook ##path-expand-hook))
+    (if (##procedure? pe-hook)
+        (let ((result
+               (if (##eq? origin (macro-absent-obj))
+                   (pe-hook path)
+                   (pe-hook path origin))))
+          (if (##string? result)
+              result
+              (##raise-error-exception
+               "STRING result expected but got"
+               (##list result))))
+        (if (##eq? origin (macro-absent-obj))
+            (##default-path-expand path)
+            (##default-path-expand path origin)))))
+
+(define-prim (##default-path-expand
               path
               #!optional
               (origin (macro-absent-obj)))
@@ -1621,136 +1643,145 @@
           (##current-directory))
          (directory-separator
           (if (##fixnum.< 0 (##string-length cd))
-            (##string-ref cd (##fixnum.- (##string-length cd) 1))
-            #\/))
-         (dir
-          (if (or (##not origin) (##eq? origin (macro-absent-obj)))
-            cd
-            (let ((len (##string-length origin)))
-              (if (or (##fixnum.= len 0)
-                      (##char=? (##string-ref origin (##fixnum.- len 1))
-                                directory-separator))
-                origin
-                (##string-append origin (##string directory-separator)))))))
+              (##string-ref cd (##fixnum.- (##string-length cd) 1))
+              #\/)))
 
-    (define (expand p)
+    (define (expand p orig)
 
       (define (relative dir-sep?)
-        (let ((len
-               (if dir-sep?
-                 (if (##char=? #\: directory-separator)
-                   (##fixnum.- (##string-length dir) 1)
-                   (##path-volume-end-using-dir-sep dir directory-separator))
-                 (##string-length dir))))
+        (let* ((dir
+                (if (##not orig)
+                    cd
+                    (let* ((d (expand orig #f))
+                           (len (##string-length d)))
+                      (if (or (##fixnum.= len 0)
+                              (##char=? (##string-ref d
+                                                      (##fixnum.- len 1))
+                                        directory-separator))
+                          d
+                          (##string-append
+                           d
+                           (##string directory-separator))))))
+               (len
+                (if dir-sep?
+                    (if (##char=? #\: directory-separator)
+                        (##fixnum.- (##string-length dir) 1)
+                        (##path-volume-end-using-dir-sep
+                         dir
+                         directory-separator))
+                    (##string-length dir))))
           (if (##fixnum.= len 0)
-            p
-            (let ((result
-                   (##make-string (##fixnum.+ len (##string-length p)))))
-              (##substring-move! dir 0 len result 0)
-              (##substring-move! p 0 (##string-length p) result len)
-              result))))
+              p
+              (let ((result
+                     (##make-string
+                      (##fixnum.+ len (##string-length p)))))
+                (##substring-move! dir 0 len result 0)
+                (##substring-move! p 0 (##string-length p) result len)
+                result))))
 
       (define (absolute vol-end dir-sep?)
         (if dir-sep?
-          p
-          (let ((result (##make-string (##fixnum.+ 1 (##string-length p)))))
-            (##substring-move! p 0 vol-end result 0)
-            (##string-set! result vol-end directory-separator)
-            (##substring-move! p vol-end (##string-length p) result (##fixnum.+ vol-end 1))
-            result)))
+            p
+            (let ((result
+                   (##make-string (##fixnum.+ 1 (##string-length p)))))
+              (##substring-move! p 0 vol-end result 0)
+              (##string-set! result vol-end directory-separator)
+              (##substring-move! p vol-end (##string-length p) result (##fixnum.+ vol-end 1))
+              result)))
 
       (define (tilde-end)
         (if (##fixnum.= 0 (##string-length p))
-          0
-          (if (##char=? #\~ (##string-ref p 0))
-            (if (##fixnum.= 1 (##string-length p))
-              1
-              (let ((c (##string-ref p 1)))
-                (cond ((or (##char=? c directory-separator)
-                           (and (##char=? #\\ directory-separator)
-                                (##char=? #\/ c)))
-                       1)
-                      ((##char=? #\~ c)
-                       (if (##fixnum.= 2 (##string-length p))
-                         2
-                         (let ((c (##string-ref p 2)))
-                           (cond ((or (##char=? c directory-separator)
-                                      (and (##char=? #\\ directory-separator)
-                                           (##char=? #\/ c)))
-                                  2)
-                                 (else
-                                  0)))))
-                      (else
-                       (let loop ((i 2))
-                         (if (##fixnum.< i (##string-length p))
-                           (let ((c (##string-ref p i)))
-                             (cond ((or (##char=? c directory-separator)
-                                        (and (##char=? #\\ directory-separator)
-                                             (##char=? #\/ c)))
-                                    i)
-                                   (else
-                                    (loop (##fixnum.+ i 1)))))
-                           i))))))
-            0)))
+            0
+            (if (##char=? #\~ (##string-ref p 0))
+                (let loop ((i 1))
+                  (if (##fixnum.< i (##string-length p))
+                      (let ((c (##string-ref p i)))
+                        (cond ((or (##char=? c directory-separator)
+                                   (and (##char=? #\\ directory-separator)
+                                        (##char=? #\/ c)))
+                               i)
+                              (else
+                               (loop (##fixnum.+ i 1)))))
+                      i))
+                0)))
 
       (define (prepend-directory dir start)
         (if (##fixnum? dir)
-          (##raise-os-exception #f dir path-expand path origin)
-          (let* ((dir-len
-                  (##string-length dir))
-                 (ends-with-dir-sep?
-                  (and (##fixnum.< 0 dir-len)
-                       (##char=? directory-separator
-                                 (##string-ref dir (##fixnum.- dir-len 1)))))
-                 (dir-end
-                  (if ends-with-dir-sep? (##fixnum.- dir-len 1) dir-len))
-                 (rest-len
-                  (##fixnum.- (##string-length p)
-                              start))
-                 (len
-                  (##fixnum.+ dir-end
-                              1 ;; for directory separator
-                              (if (##fixnum.< 0 rest-len)
-                                (##fixnum.- rest-len 1)
-                                0)))
-                 (result
-                  (##make-string len)))
-            (##substring-move! dir 0 dir-end result 0)
-            (##string-set! result dir-end directory-separator)
-            (##substring-move! p start (##string-length p) result dir-end)
-            (expand result))))
+            (##raise-os-exception #f dir path-expand path origin)
+            (let* ((dir-len
+                    (##string-length dir))
+                   (ends-with-dir-sep?
+                    (and (##fixnum.< 0 dir-len)
+                         (##char=? directory-separator
+                                   (##string-ref dir (##fixnum.- dir-len 1)))))
+                   (dir-end
+                    (if ends-with-dir-sep? (##fixnum.- dir-len 1) dir-len))
+                   (rest-len
+                    (##fixnum.- (##string-length p)
+                                start))
+                   (len
+                    (##fixnum.+ dir-end
+                                1 ;; for directory separator
+                                (if (##fixnum.< 0 rest-len)
+                                    (##fixnum.- rest-len 1)
+                                    0)))
+                   (result
+                    (##make-string len)))
+              (##substring-move! dir 0 dir-end result 0)
+              (##substring-move! p start (##string-length p) result dir-end)
+              (##string-set! result dir-end directory-separator)
+              (expand result orig))))
+
+      (define (get-instdir instdir-name)
+        (if (##fixnum.= 0 (##string-length instdir-name))
+            ##gambcdir
+            (##string-append ##gambcdir
+                             instdir-name
+                             (##string directory-separator))))
 
       (let ((t-end (tilde-end)))
         (if (##fixnum.< 0 t-end)
 
-          (cond ((##fixnum.= 1 t-end)
-                 (let ((homedir
-                        (or (##os-path-homedir)
-                            ##gambcdir)))
-                   (prepend-directory homedir t-end)))
-                ((##char=? #\~ (##string-ref p 1))
-                 (prepend-directory ##gambcdir t-end))
-                (else
-                 (let ((info (##os-user-info (##substring p 1 t-end))))
-                   (prepend-directory
-                    (if (##fixnum? info)
-                      info
-                      (##vector-ref info 4)) ;; home dir
-                    t-end))))
+            (cond ((##fixnum.= 1 t-end)
+                   (let ((homedir
+                          (or (##os-path-homedir)
+                              ##gambcdir)))
+                     (prepend-directory homedir t-end)))
+                  ((##char=? #\~ (##string-ref p 1))
+                   (let* ((len
+                           (##string-length p))
+                          (instdir-name
+                           (##substring p 2 t-end))
+                          (relpath
+                           (##substring p
+                                        (if (##fixnum.= t-end len)
+                                            t-end
+                                            (##fixnum.+ t-end 1))
+                                        len)))
+                     (##string-append
+                      (get-instdir instdir-name)
+                      relpath)))
+                  (else
+                   (let ((info (##os-user-info (##substring p 1 t-end))))
+                     (prepend-directory
+                      (if (##fixnum? info)
+                          info
+                          (##vector-ref info 4)) ;; home dir
+                      t-end))))
 
-          (let* ((vol-end
-                  (##path-volume-end-using-dir-sep p directory-separator))
-                 (dir-sep?
-                  (and (##fixnum.< vol-end (##string-length p))
-                       (let ((c (##string-ref p vol-end)))
-                         (or (##char=? c directory-separator)
-                             (and (##char=? #\\ directory-separator)
-                                  (##char=? #\/ c)))))))
-            (if (##fixnum.= vol-end 0)
-              (relative dir-sep?)
-              (absolute vol-end dir-sep?))))))
+            (let* ((vol-end
+                    (##path-volume-end-using-dir-sep p directory-separator))
+                   (dir-sep?
+                    (and (##fixnum.< vol-end (##string-length p))
+                         (let ((c (##string-ref p vol-end)))
+                           (or (##char=? c directory-separator)
+                               (and (##char=? #\\ directory-separator)
+                                    (##char=? #\/ c)))))))
+              (if (##fixnum.= vol-end 0)
+                  (relative dir-sep?)
+                  (absolute vol-end dir-sep?))))))
 
-    (expand path)))
+    (expand path (if (##eq? origin (macro-absent-obj)) #f origin))))
 
 (define-prim (path-expand
               path
