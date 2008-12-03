@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2008-09-12 16:54:15 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2008-12-03 18:36:51 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -562,7 +562,7 @@
                  lst
                  proc))
 
-              ((**begin-expr? source)
+              ((**begin-cmd-or-expr? source)
                (parse-prog
                  (append (begin-body source) (cdr program))
                  env
@@ -1347,7 +1347,7 @@
                            (cons (macro-expand (car body) env)
                                  (cdr body))
                            env))
-          ((**begin-expr? (car body))
+          ((**begin-cmd-or-expr? (car body))
            (letrec-defines vars
                            vals
                            envs
@@ -1413,11 +1413,15 @@
   (letrec-defines '() '() '() body (env-frame env '())))
 
 (define (pt-sequence source seq env use)
-  (if (length? seq 1)
-    (pt (car seq) env use)
-    (new-seq source env
-      (pt (car seq) env 'none)
-      (pt-sequence source (cdr seq) env use))))
+  (cond ;; ((length? seq 0)
+        ;; ;; treat empty sequence as constant evaluating to the void object
+        ;; (new-cst source env void-object))
+        ((length? seq 1)
+         (pt (car seq) env use))
+        (else
+         (new-seq source env
+           (pt (car seq) env 'none)
+           (pt-sequence source (cdr seq) env use)))))
 
 (define (pt-if source env use)
   (let ((code (source-code source)))
@@ -1912,8 +1916,11 @@
                           (ill-formed-special-form source)))
                     (ill-formed-special-form source))))))))
 
-(define (**begin-expr? source)
+(define (**begin-cmd-or-expr? source)
   (match **begin-sym -1 source))
+
+(define (**begin-expr? source)
+  (match **begin-sym -2 source))
 
 (define (**define-expr? source env)
   (match **define-sym -2 source))
