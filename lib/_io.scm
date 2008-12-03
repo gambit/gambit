@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-11-24 16:05:01 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-12-03 18:14:56 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -2310,6 +2310,19 @@
                                (,',macro-vect-port-rbuf-set!
                                 port
                                 new-vect-rbuf)
+
+                               ,',(if (eq? name 'string)
+                                      `(begin
+
+                                         ;; keep track of number of characters read
+
+                                         (macro-character-port-rchars-set!
+                                          port
+                                          (##fixnum.+ (macro-character-port-rchars port)
+                                                      (macro-character-port-rhi port))))
+
+                                      #f)
+
                                (,',macro-vect-port-rlo-set! port 0)
                                (,',macro-vect-port-rhi-set! port 0)
                                (##condvar-signal-no-reschedule!
