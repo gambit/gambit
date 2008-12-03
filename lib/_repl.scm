@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-11-23 00:12:14 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-12-03 10:16:02 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -2104,7 +2104,7 @@
                     #f
                     (lambda (port)
                       (if (##port? port)
-                          (let ((history (##read-line port #f #f #f)))
+                          (let ((history (##read-line port #f #f ##max-fixnum)))
                             (##close-port port)
                             (if (##string? history)
                                 (##tty-history-set! input-port history)))))
