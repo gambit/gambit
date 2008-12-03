@@ -25,8 +25,10 @@ ORIGINATOR="`id -nu`@$ORIGINATOR_IP"
 
 echo "c:/msys/1.0/bin/sh --login -c \"sleep 15;export ORIGINATOR=$ORIGINATOR;rm -rf /tmp/windows-rsh*;scp $ORIGINATOR:/tmp/_windows-rsh-script /tmp/windows-rsh-script;chmod +x /tmp/windows-rsh-script;/tmp/windows-rsh-script < /dev/null > /tmp/windows-rsh-script.out 2>&1;scp /tmp/windows-rsh-script.out $ORIGINATOR:/tmp/_windows-rsh-script.out;rm -rf /tmp/windows-rsh*;shutdown -s -f -t 0\"" > /tmp/_windows-rsh.tmp
 
+# Updated for Parallels workstation 4.0
+windows_pvm="$HOME/Library/Parallels/winxp.pvm"
 ifloppy="`dirname $0`/blank-floppy.fdd"
-ofloppy="$HOME/Library/Parallels/winxp/winxp-auto.fdd"
+ofloppy="$windows_pvm/winxp-auto.fdd"
 
 rm -f "$ofloppy"
 dd conv=notrunc if="$ifloppy" of="$ofloppy" bs=512 seek=0 count=2880 2> /dev/null
@@ -34,7 +36,7 @@ dd conv=notrunc if=/dev/zero of="$ofloppy" bs=512 seek=33 count=32 2> /dev/null
 dd conv=notrunc if=/dev/zero of="$ofloppy" bs=512 seek=65 count=32 2> /dev/null
 dd conv=notrunc if=/tmp/_windows-rsh.tmp of="$ofloppy" bs=512 seek=33 2> /dev/null
 
-open "$HOME/Library/Parallels/winxp/winxp.pvs"
+open "$windows_pvm/config.pvs"
 
 while [ ! -e /tmp/_windows-rsh-script.out ] ; do
   sleep 1
