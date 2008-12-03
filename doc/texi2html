@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 'di ';
 'ig 00 ';
 #+##############################################################################
@@ -743,7 +743,7 @@ while ($_ = &next_line) {
 	    $type =~ s/^\{(.*)\}$/$1/;
 	    print "# def ($tag): {$type} ", join(', ', @args), "\n"
 		if $debug & $DEBUG_DEF;
-	    $type .= ':'; # it's nicer like this
+#	    $type .= ':'; # it's nicer like this
 	    $name = shift(@args);
 	    $name =~ s/^\{(.*)\}$/$1/;
 	    if ($is_extra) {
@@ -751,19 +751,23 @@ while ($_ = &next_line) {
 	    } else {
 		$_ = &debug("<DL>\n<DT>", __LINE__);
 	    }
-	    if ($tag eq 'deffn' || $tag eq 'defvr' || $tag eq 'deftp') {
-		$_ .= "<U>$type</U> <B>$name</B>";
+	    if ($tag eq 'deffn') {
+		$_ .= "<TABLE HSPACE=0 VSPACE=0 BORDER=0 CELLPADDING=0 CELLSPACING=0><TR><TD ALIGN=left VALIGN=baseline WIDTH=460><TT>($name";
+		$_ .= " <I>@args</I>" if @args;
+		$_ .= ")</TT></TD><TD ALIGN=right VALIGN=baseline WIDTH=80>[$type]</DIV></TD></TR></TABLE>";
+	    } elsif ($tag eq 'deffn' || $tag eq 'defvr' || $tag eq 'deftp') {
+		$_ .= "<U>$type:</U> <B>$name</B>";
 		$_ .= " <I>@args</I>" if @args;
 	    } elsif ($tag eq 'deftypefn' || $tag eq 'deftypevr'
 		     || $tag eq 'defcv' || $tag eq 'defop') {
 		$ftype = $name;
 		$name = shift(@args);
 		$name =~ s/^\{(.*)\}$/$1/;
-		$_ .= "<U>$type</U> $ftype <B>$name</B>";
+		$_ .= "<U>$type:</U> $ftype <B>$name</B>";
 		$_ .= " <I>@args</I>" if @args;
 	    } else {
 		warn "$ERROR Unknown definition type: $tag\n";
-		$_ .= "<U>$type</U> <B>$name</B>";
+		$_ .= "<U>$type:</U> <B>$name</B>";
 		$_ .= " <I>@args</I>" if @args;
 	    }
  	    $_ .= &debug("\n<DD>", __LINE__);

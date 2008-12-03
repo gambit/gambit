@@ -52,7 +52,7 @@ emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
 
 MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
-TEXI2HTML = texi2html
+TEXI2HTML = ./texi2html
 PDF2PS = pdf2ps
 
 .SUFFIXES:
