@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-12-03 10:16:02 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-12-05 17:43:55 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1117,9 +1117,9 @@
 (define-prim (##display-locat locat pinpoint? port)
   (if locat ;; locat is #f if location unknown
     (let* ((container (##locat-container locat))
-           (file (##container->file container)))
-      (if file
-        (##write (##path-normalize file
+           (path (##container->path container)))
+      (if path
+        (##write (##path-normalize path
                                    ##repl-location-relative
                                    ##repl-location-origin
                                    #f)
@@ -2819,7 +2819,7 @@
          (source-loc (macro-expression-parsing-exception-source exc)))
         ((macro-datum-parsing-exception? exc)
          (let ((re (macro-datum-parsing-exception-readenv exc)))
-           (##make-locat-from-readenv re)))
+           (##readenv->locat re)))
         ((and (macro-nonprocedure-operator-exception? exc)
               (macro-nonprocedure-operator-exception-code exc))
          =>

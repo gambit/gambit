@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2008-11-12 15:09:25 feeley>
+;;; File: "_eval.scm", Time-stamp: <2008-12-05 17:43:26 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -189,15 +189,15 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; A "locat" object represents a source code location.  The location is
-;; a pair composed of the container of the source code (a file, a text
-;; editor window, etc) and a position within that container (a
-;; character offset, a line/column index, a text bookmark, an
-;; expression, etc).
+;; A "locat" object represents a source code location.  The location
+;; is a 2 element vector composed of the container of the source code
+;; (a file, a text editor window, etc) and a position within that
+;; container (a character offset, a line/column index, a text
+;; bookmark, an expression, etc).
 ;;
 ;; Source code location containers and positions can be encoded with
 ;; any concrete type, except that positions cannot be pairs.  The
-;; procedure "##container->file" takes a container object and returns
+;; procedure "##container->path" takes a container object and returns
 ;; #f if the container does not denote a file, otherwise it returns the
 ;; absolute path of the file as a string.  The procedure
 ;; "##container->id" takes a container object and returns a string that
@@ -206,10 +206,10 @@
 ;; "##position->filepos" takes a position object and returns a fixnum
 ;; encoding the line and column position (see function ##make-filepos).
 
-(define-prim (##make-locat-from-readenv re)
-  (##make-locat (##make-container-from-port-name
+(define-prim (##readenv->locat re)
+  (##make-locat (##port-name->container
                  (##port-name (macro-readenv-port re)))
-                (##make-position-from-filepos
+                (##filepos->position
                  (macro-readenv-filepos re))))
 
 (define-prim (##make-locat container position)
@@ -230,14 +230,51 @@
       (##locat-position (##source-locat container))
       (##vector-ref locat 1))))
 
-(define-prim (##container->file container)
-  (cond ((##string? container)
-         container)
-        (else
-         #f)))
+(define-prim (##port-name->container port-name)
+  ;; port-name is an arbitrary object and result is an arbitrary object
+  (if (##string? port-name)
+      (##path->container port-name)
+      port-name))
+
+(define ##path->container-hook #f)
+(set! ##path->container-hook #f)
+
+(define-prim (##path->container path)
+  ;; path is a string and result is an arbitrary object
+  (let ((hook ##path->container-hook))
+    (or (and (##procedure? hook)
+             (hook path))
+        path)))
+
+(define ##container->path-hook #f)
+(set! ##container->path-hook #f)
+
+(define-prim (##container->path container)
+  ;; container is an arbitrary object and result must be a string or #f
+  (let ((x
+         (let ((hook ##container->path-hook))
+           (or (and (##procedure? hook)
+                    (hook container))
+               container))))
+    (cond ((##string? x)
+           x)
+          (else
+           #f))))
+
+(define ##container->id-hook #f)
+(set! ##container->id-hook #f)
 
 (define-prim (##container->id container)
-  (##object->string container))
+  ;; container is an arbitrary object and result must be a string
+  (let ((x
+         (let ((hook ##container->id-hook))
+           (or (and (##procedure? hook)
+                    (hook container))
+               container))))
+    (cond ((##string? x)
+           x)
+          (else
+           "UNKNOWN"))))
 
 (define-prim (##position->filepos position)
   (cond ((##fixnum? position)
@@ -245,13 +282,7 @@
         (else
          0)))
 
-(define-prim (##make-container-from-port-name port-name)
-  port-name)
-
-(define-prim (##make-container-from-path path)
-  path)
-
-(define-prim (##make-position-from-filepos filepos)
+(define-prim (##filepos->position filepos)
   filepos)
 
 ;;;============================================================================
@@ -762,7 +793,7 @@
               (##source-locat src))
              (relative-to-path
               (and locat
-                   (##container->file (##locat-container locat)))))
+                   (##container->path (##locat-container locat)))))
         (let* ((path
                 (##path-reference filename relative-to-path))
                (x
@@ -2199,12 +2230,12 @@
 (define (##comp-this-source-file cte src tail?)
   (let* ((locat
           (##source-locat src))
-         (file
+         (path
           (and locat
-               (##container->file (##locat-container locat)))))
-    (if file
+               (##container->path (##locat-container locat)))))
+    (if path
       (macro-gen ##gen-cst src
-        file)
+        path)
       (##raise-expression-parsing-exception
        'unknown-location
        src))))
@@ -3608,7 +3639,7 @@
 ;;;============================================================================
 
 (define (##wrap-datum re x)
-  (##make-source x (##make-locat-from-readenv re)))
+  (##make-source x (##readenv->locat re)))
 
 (define (##unwrap-datum re x)
   (##source-code x))

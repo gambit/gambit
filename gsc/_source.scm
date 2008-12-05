@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_source.scm", Time-stamp: <2007-11-20 22:14:12 feeley>
+;;; File: "_source.scm", Time-stamp: <2008-12-05 17:57:59 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -396,17 +396,21 @@
 
 (define scm-file-exts '(".scm" ".six" "")) ; "" means no extension
 
-
 (define (read-source path relative-to-path try-scheme-file-extensions?)
 
   (define (read-source-from-path path)
-    (##read-all-as-a-begin-expr-from-path
-     path
-     (##current-readtable);;;;;;;;;;;;;;;;;;;;
-     (lambda (re x)
-       (make-source x (##make-locat-from-readenv re)))
-     (lambda (re x)
-       (source-code x))))
+    (let ((container (##path->container path)))
+      (##read-all-as-a-begin-expr-from-path
+       path
+       (##current-readtable);;;;;;;;;;;;;;;;;;;;
+       (lambda (re x)
+         (let ((locat
+                (##make-locat container
+                              (##filepos->position
+                               (macro-readenv-filepos re)))))
+           (make-source x locat)))
+       (lambda (re x)
+         (source-code x)))))
 
   (define (read-source-no-extension)
     (let loop ((lst ##scheme-file-extensions))
@@ -1590,7 +1594,7 @@
         (**readenv-port re)
         (##current-readtable)
         (lambda (re x)
-          (make-source x (##make-locat-from-readenv re)))
+          (make-source x (##readenv->locat re)))
         (lambda (re x)
           (source-code x))
         #f

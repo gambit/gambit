@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2008-10-29 10:33:49 feeley>
+;;; File: "main.scm", Time-stamp: <2008-12-05 17:46:00 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -199,8 +199,8 @@
               (if (or pre post)
                 (set! c#wrap-program
                   (lambda (program)
-                    (let ((file
-                           (##container->file
+                    (let ((path
+                           (##container->path
                             (##locat-container
                              (##source-locat program)))))
                       (##sourcify
@@ -210,9 +210,9 @@
                                   (let ((pre-src
                                          (read-source-from-string
                                           (##cdr pre)
-                                          (and file
+                                          (and path
                                                (##string-append
-                                                file
+                                                path
                                                 ".prelude")))))
                                     (##list pre-src))
                                   '())
@@ -221,9 +221,9 @@
                                           (let ((post-src
                                                  (read-source-from-string
                                                   (##cdr post)
-                                                  (and file
+                                                  (and path
                                                        (##string-append
-                                                        file
+                                                        path
                                                         ".postlude")))))
                                             (##list post-src))
                                           '()))))
