@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2008-11-23 00:45:36 feeley>
+;;; File: "_io#.scm", Time-stamp: <2008-12-05 21:02:00 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -922,6 +922,7 @@
   unwrapper
   allow-script?
   labels
+  container
   filepos
 )
 

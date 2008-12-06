@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2008-12-03 18:14:56 feeley>
+;;; File: "_io.scm", Time-stamp: <2008-12-05 21:06:44 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -117,6 +117,7 @@
    unwrapper
    allow-script?
    '()
+   #f
    0))
 
 (define-prim (##readenv-current-filepos re)

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2008-12-05 17:43:26 feeley>
+;;; File: "_eval.scm", Time-stamp: <2008-12-05 21:04:52 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -207,10 +207,16 @@
 ;; encoding the line and column position (see function ##make-filepos).
 
 (define-prim (##readenv->locat re)
-  (##make-locat (##port-name->container
-                 (##port-name (macro-readenv-port re)))
-                (##filepos->position
-                 (macro-readenv-filepos re))))
+  (let ((container
+         (or (macro-readenv-container re)
+             (let ((c
+                    (##port-name->container
+                     (##port-name (macro-readenv-port re)))))
+               (macro-readenv-container-set! re c)
+               c))))
+    (##make-locat container
+                  (##filepos->position
+                   (macro-readenv-filepos re)))))
 
 (define-prim (##make-locat container position)
   (##vector container position))
