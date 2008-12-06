@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_source.scm", Time-stamp: <2008-12-05 17:57:59 feeley>
+;;; File: "_source.scm", Time-stamp: <2008-12-06 00:12:48 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -195,17 +195,15 @@
 
 (define (locat-filename-and-line loc)
   (if loc
-    (if (string? (vector-ref loc 0)) ; file?
-      (let* ((filename (vector-ref loc 0))
-             (filepos (vector-ref loc 1))
-             (line (+ (**filepos-line filepos) 1)))
-        (cons filename line))
-      (let ((source (vector-ref loc 0))
-            (expr (vector-ref loc 1)))
-       (if source
-         (locat-filename-and-line (source-locat source))
-         (cons "" 1))))
-    (cons "" 1)))
+      (let* ((container (##locat-container loc))
+             (path (##container->path container)))
+        (if path
+            (let* ((position (##locat-position loc))
+                   (filepos (##position->filepos position))
+                   (line (+ (**filepos-line filepos) 1)))
+              (cons path line))
+            (cons "" 1)))
+      (cons "" 1)))
 
 (define (locat-filename loc)
   (car (locat-filename-and-line loc)))
