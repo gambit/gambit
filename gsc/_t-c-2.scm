@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2008-10-29 11:22:53 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2008-12-09 14:15:08 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -480,6 +480,36 @@
       (begin
         (targ-wr-res i)
         (loop (- i 1))))))
+
+(define (targ-pop-pcontext pc)
+  (for-each
+   (lambda (x)
+     (let ((opnd (cdr x)))
+       (cond ((reg? opnd)
+              (let ((n (reg-num opnd)))
+                (targ-rd-reg n)))
+             ((stk? opnd)
+              (targ-rd-fp)
+              (targ-wr-fp))
+             (else
+              (compiler-internal-error
+               "targ-pop-pcontext, unknown 'opnd'" opnd)))))
+   (pcontext-map pc)))
+
+(define (targ-push-pcontext pc)
+  (for-each
+   (lambda (x)
+     (let ((opnd (cdr x)))
+       (cond ((reg? opnd)
+              (let ((n (reg-num opnd)))
+                (targ-wr-reg n)))
+             ((stk? opnd)
+              (targ-rd-fp)
+              (targ-wr-fp))
+             (else
+              (compiler-internal-error
+               "targ-push-pcontext, unknown 'opnd'" opnd)))))
+   (pcontext-map pc)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -3793,9 +3823,8 @@
            (targ-emit-jump-inline "CONTINUATION_CAPTURE" safe? nb-args)
            (targ-rd-fp)
            (targ-wr-fp)
-           (targ-rd-reg 0)
-           (targ-wr-reg 0)
-           (targ-wr-reg (+ targ-nb-arg-regs 1))
+           (targ-pop-pcontext (targ-jump-info nb-args))
+           (targ-push-pcontext (targ-label-info nb-args #t))
            #t))))
 
 (targ-jump-inline "##continuation-graft-no-winding"
@@ -3806,9 +3835,10 @@
            (targ-end-of-block-checks poll? fs)
            (targ-emit (targ-adjust-stack fs))
            (targ-emit-jump-inline "CONTINUATION_GRAFT_NO_WINDING" safe? nb-args)
+           (targ-rd-fp)
            (targ-wr-fp)
-           (targ-wr-reg 0)
-           (targ-wr-reg (+ targ-nb-arg-regs 1))
+           (targ-pop-pcontext (targ-jump-info nb-args))
+           (targ-push-pcontext (targ-label-info (- nb-args 2) #t))
            #t))))
 
 (targ-jump-inline "##continuation-return-no-winding"
@@ -3818,8 +3848,11 @@
            (targ-end-of-block-checks poll? fs)
            (targ-emit (targ-adjust-stack fs))
            (targ-emit-jump-inline "CONTINUATION_RETURN_NO_WINDING" safe? nb-args)
+           (targ-rd-fp)
            (targ-wr-fp)
+           (targ-pop-pcontext (targ-jump-info nb-args))
            (targ-wr-reg 0)
+           (targ-wr-reg 1)
            #t))))
 
 )
