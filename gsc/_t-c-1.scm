@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2008-10-31 00:18:13 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2008-12-09 14:31:56 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -30,7 +30,7 @@
 
 ;; The registers available in the virtual machine are defined by the
 ;; parameters targ-nb-gvm-regs and targ-nb-arg-regs.  The definitions must
-;; agree with the corresponding macros in the file "lib/gambit.h"
+;; agree with the corresponding macros in the file "include/gambit.h.in"
 ;; (i.e. ___NB_GVM_REGS and ___NB_ARG_REGS).
 ;;
 ;; targ-nb-gvm-regs = total number of registers available
@@ -192,7 +192,7 @@
 
 ;; The frame constraints are defined by the parameters
 ;; targ-frame-reserve and targ-frame-alignment.  The definitions must
-;; agree with the corresponding macros in the file "lib/gambit.h"
+;; agree with the corresponding macros in the file "include/gambit.h.in"
 ;; (i.e. ___FRAME_RESERVE and ___FRAME_ALIGNMENT).
 
 (define targ-frame-reserve #f)
