@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-11-23 01:54:01 feeley>
+;;; File: "_thread.scm", Time-stamp: <2008-12-12 14:12:38 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1213,6 +1213,25 @@
          (##btq-insert! (macro-run-queue) thread)
 
          (##void))))
+
+(define-prim (##thread-continuation-capture thread)
+  (##thread-call
+   thread
+   (lambda ()
+     (##continuation-capture (lambda (k) k)))))
+
+(define-prim (##thread-call thread thunk)
+  (let ((result-mutex (macro-make-mutex 'thread-call-result)))
+    (macro-mutex-lock! result-mutex #f thread)
+    (##thread-interrupt!
+     thread
+     (lambda ()
+       (let ((result (thunk)))
+         (macro-mutex-specific-set! result-mutex result)
+         (macro-mutex-unlock! result-mutex)
+         (##void))))
+    (macro-mutex-lock! result-mutex #f (macro-current-thread))
+    (macro-mutex-specific result-mutex)))
 
 (define-prim (##thread-start-action!)
 

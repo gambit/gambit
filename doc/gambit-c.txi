@@ -1965,9 +1965,35 @@ Display a backtrace summarizing each frame in the chain of continuation
 frames starting with the current frame.  For each frame, the same
 information as for the @samp{,y} command is displayed (except that
 location information is displayed in the format
-@samp{@var{stream}@@@var{line}:@var{column}}).  If there are more that 15
+@samp{@var{stream}@@@var{line}:@var{column}}).  If there are more than 15
 frames in the chain of continuation frames, some of the middle frames
 will be omitted.
+
+@item ,be
+@cmindex ,be
+Like the @samp{,b} command but also display the environment.
+
+@item ,bed
+@cmindex ,bed
+Like the @samp{,be} command but also display the dynamic environment.
+
+@item ,(b @var{expr})
+@cmindex ,(b @var{expr})
+Display the backtrace of @var{expr}'s value, @var{X}, which is
+obtained by evaluating @var{expr} in the current frame.  @var{X} must
+be a continuation or a thread.  When @var{X} is a continuation, the
+frames in that continuation are displayed.  When @var{X} is a thread,
+the backtrace of the current continuation of that thread is displayed.
+
+@item ,(be @var{expr})
+@cmindex ,(be @var{expr})
+Like the @samp{,(b @var{expr})} command but also display the
+environment.
+
+@item ,(bed @var{expr})
+@cmindex ,(bed @var{expr})
+Like the @samp{,(be @var{expr})} command but also display the dynamic
+environment.
 
 @item ,i
 @cmindex ,i
@@ -2000,17 +2026,28 @@ quoted expression or a global variable.  Lexical bindings are
 displayed in inverse binding order (most deeply nested first) and
 shadowed variables are included in the list.
 
+@item ,ed
+@cmindex ,ed
+Like the @samp{,e} command but the dynamic environment is always
+displayed.
+
 @item ,(e @var{expr})
 @cmindex ,(e @var{expr})
 Display the environment of @var{expr}'s value, @var{X}, which is
 obtained by evaluating @var{expr} in the current frame.  @var{X} must
-be a continuation, a procedure, or a nonnegative integer.  When
-@var{X} is a continuation, the environment at that point in the code
-is displayed.  When @var{X} is a procedure, the lexical environment
-where @var{X} was created is combined with the current continuation
-and this combined environment is displayed.  When @var{X} is an
-integer, the environment at frame number @var{X} of the continuation
-is displayed.
+be a continuation, a thread, a procedure, or a nonnegative integer.
+When @var{X} is a continuation, the environment at that point in the
+code is displayed.  When @var{X} is a thread, the environment of the
+current continuation of that thread is displayed. When @var{X} is a
+procedure, the lexical environment where @var{X} was created is
+combined with the current continuation and this combined environment
+is displayed.  When @var{X} is an integer, the environment at frame
+number @var{X} of the continuation is displayed.
+
+@item ,(ed @var{expr})
+@cmindex ,(ed @var{expr})
+Like the @samp{,(e @var{expr})} command but the dynamic environment is
+always displayed.
 
 @item ,st
 @cmindex ,st
@@ -2029,10 +2066,12 @@ The value of @var{expr} must be a thread or thread group.
 @cmindex ,(v @var{expr})
 Start a new REPL visiting @var{expr}'s value, @var{X}, which is
 obtained by evaluating @var{expr} in the current frame.  @var{X} must
-be a continuation, a procedure, or a nonnegative integer.  When
-@var{X} is a continuation, the new REPL's continuation is @var{X} and
-evaluations are done in the environment at that point in the code.
-When @var{X} is a procedure, the lexical environment where @var{X} was
+be a continuation, a thread, a procedure, or a nonnegative integer.
+When @var{X} is a continuation, the new REPL's continuation is @var{X}
+and evaluations are done in the environment at that point in the code.
+When @var{X} is a thread, the thread is interrupted and the new REPL's
+continuation is the point where the thread was interrupted.  When
+@var{X} is a procedure, the lexical environment where @var{X} was
 created is combined with the current continuation and evaluations are
 done in this combined environment.  When @var{X} is an integer, the
 REPL is started in frame number @var{X} of the continuation.

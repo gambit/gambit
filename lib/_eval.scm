@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2008-12-05 21:04:52 feeley>
+;;; File: "_eval.scm", Time-stamp: <2008-12-12 14:34:35 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -274,13 +274,12 @@
   ;; container is an arbitrary object and result must be a string
   (let ((x
          (let ((hook ##container->id-hook))
-           (or (and (##procedure? hook)
-                    (hook container))
-               container))))
+           (and (##procedure? hook)
+                (hook container)))))
     (cond ((##string? x)
            x)
           (else
-           "UNKNOWN"))))
+           (##object->string container)))))
 
 (define-prim (##position->filepos position)
   (cond ((##fixnum? position)

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-12-05 17:43:55 feeley>
+;;; File: "_repl.scm", Time-stamp: <2008-12-12 18:02:27 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -734,7 +734,8 @@
           (##eq? parent ##nontail-call-for-leap)
           (##eq? parent ##nontail-call-for-step)
           (##eq? parent ##trace-generate)
-          (##eq? parent ##thread-interrupt!)))))
+          (##eq? parent ##thread-interrupt!)
+          (##eq? parent ##thread-call)))))
 
 (define-prim (##interp-subproblem-continuation? cont)
   (let ((parent (##continuation-parent cont)))
@@ -914,22 +915,25 @@
 
 (define-prim (##cmd-? port)
   (##write-string
-",? or ,h        : Summary of comma commands
+",?   | ,h       : Summary of comma commands
 ,q              : Terminate the process
 ,qt             : Terminate the current thread
 ,t              : Jump to toplevel REPL
 ,d              : Jump to enclosing REPL
-,c and ,(c X)   : Continue the computation with stepping off
-,s and ,(s X)   : Continue the computation with stepping on (step)
-,l and ,(l X)   : Continue the computation with stepping on (leap)
+,c   | ,(c X)   : Continue the computation with stepping off
+,s   | ,(s X)   : Continue the computation with stepping on (step)
+,l   | ,(l X)   : Continue the computation with stepping on (leap)
 ,<n>            : Move to particular frame (<n> >= 0)
-,+ and ,-       : Move to next or previous frame of continuation
+,+   | ,-       : Move to next or previous frame of continuation
 ,y              : Display one-line summary of current frame
-,b              : Display summary of continuation (i.e. backtrace)
 ,i              : Display procedure attached to current frame
-,e and ,(e X)   : Display environment of current frame or X (a proc or cont)
-,st and ,(st X) : Display current thread group, or X (a thread or thread group)
-,(v X)          : Start a REPL visiting X (a procedure or continuation)
+,b   | ,(b X)   : Display backtrace of current continuation or X (cont/thread)
+,be  | ,(be X)  : Like ,b and ,(b X) but also display environment
+,bed | ,(bed X) : Like ,be and ,(be X) but also display dynamic environment
+,e   | ,(e X)   : Display environment of current frame or X (proc/cont/thread)
+,ed  | ,(ed X)  : Like ,e and ,(e X) but also display dynamic environment
+,st  | ,(st X)  : Display current thread group, or X (thread/thread group)
+,(v X)          : Start a REPL visiting X (proc/cont/thread)
 " port))
 
 ;;;,(p [N M])    : Configure REPL's pretty printer (N=max level, M=max length)
@@ -939,11 +943,11 @@
 (##define-macro (macro-default-max-head) 10)
 (##define-macro (macro-default-max-tail) 4)
 
-(define-prim (##cmd-b cont port depth)
+(define-prim (##cmd-b cont port depth display-env?)
   (##display-continuation-backtrace
    cont
    port
-   #f
+   display-env?
    #f
    (macro-default-max-head)
    (macro-default-max-tail)
@@ -1101,11 +1105,11 @@
                                  (##output-port-column port)))
                     port))))
            (##newline port)
-           (if display-env?
-               (##display-continuation-environment
-                cont
-                port
-                (##fixnum.+ 4 depth-width)))))))
+           (##display-continuation-env
+            cont
+            port
+            (##fixnum.+ 4 depth-width)
+            display-env?)))))
 
 (define-prim (##display-spaces n port)
   (if (##fixnum.< 0 n)
@@ -1289,13 +1293,19 @@
 (define repl-display-dynamic-environment?
   ##repl-display-dynamic-environment?)
 
-(define-prim (##cmd-e proc-or-cont port)
+(define-prim (##display-continuation-env cont port indent display-env?)
+  (if display-env?
+      (let ((c (##continuation-first-frame cont #f)))
+        (if c
+            (##display-continuation-environment c port indent))
+        (if (or (##eq? display-env? 'dynamic)
+                (##repl-display-dynamic-environment?))
+            (##display-continuation-dynamic-environment cont port indent)))))
+
+(define-prim (##cmd-e proc-or-cont port display-env?)
   (and proc-or-cont
        (if (##continuation? proc-or-cont)
-           (begin
-             (##display-continuation-environment proc-or-cont port 0)
-             (if (##repl-display-dynamic-environment?)
-                 (##display-continuation-dynamic-environment proc-or-cont port 0)))
+           (##display-continuation-env proc-or-cont port 0 display-env?)
            (##display-procedure-environment proc-or-cont port 0))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2170,7 +2180,7 @@
   (if ##display-environment?
       (##repl-channel-display-multiline-message
        (lambda (output-port)
-         (##cmd-e cont output-port)))))
+         (##cmd-e cont output-port #t)))))
 
 (define-prim (##repl-channel-ports-pinpoint-continuation channel cont)
   #f)
@@ -2303,8 +2313,7 @@
 
   (define (display-continuation repl-context)
     (##repl-channel-display-continuation
-     (first-interesting
-      (macro-repl-context-cont repl-context))
+     (macro-repl-context-cont repl-context)
      (macro-repl-context-depth repl-context)))
 
   (define (first-interesting cont)
@@ -2498,13 +2507,18 @@
                      ((##eq? cmd '+)
                       (goto-depth
                        (##fixnum.+ (macro-repl-context-depth repl-context) 1)))
-                     ((##eq? cmd 'b)
+                     ((or (##eq? cmd 'b)
+                          (##eq? cmd 'be)
+                          (##eq? cmd 'bed))
                       (##repl-channel-display-multiline-message
                        (lambda (output-port)
                          (##cmd-b (first-interesting
                                    (macro-repl-context-cont repl-context))
                                   output-port
-                                  (macro-repl-context-depth repl-context))))
+                                  (macro-repl-context-depth repl-context)
+                                  (if (##eq? cmd 'bed)
+                                      'dynamic
+                                      (##eq? cmd 'be)))))
                       (continue))
                      ((##eq? cmd 'i)
                       (##repl-channel-display-multiline-message
@@ -2522,12 +2536,15 @@
                                   #t
                                   (macro-repl-context-depth repl-context))))
                       (continue))
-                     ((##eq? cmd 'e)
+                     ((or (##eq? cmd 'e)
+                          (##eq? cmd 'ed))
                       (##repl-channel-display-multiline-message
                        (lambda (output-port)
-                         (##cmd-e (first-interesting
-                                   (macro-repl-context-cont repl-context))
-                                  output-port)))
+                         (##cmd-e (macro-repl-context-cont repl-context)
+                                  output-port
+                                  (if (##eq? cmd 'ed)
+                                      'dynamic
+                                      #t))))
                       (continue))
                      ((##eq? cmd 'st)
                       (##repl-channel-display-multiline-message
@@ -2561,7 +2578,9 @@
                       (let* ((cmd2-src (##car cmd))
                              (cmd2 (##source-code cmd2-src)))
                         (cond
-                         ((or (##eq? cmd2 'c) (##eq? cmd2 's) (##eq? cmd2 'l))
+                         ((or (##eq? cmd2 'c)
+                              (##eq? cmd2 's)
+                              (##eq? cmd2 'l))
                           (if (cont-in-with-no-result-expected?)
                             (begin
                               (invalid-command
@@ -2580,7 +2599,11 @@
                                  (lambda (results)
                                    (acquire-ownership!)
                                    (return results)))))))
-                         ((or (##eq? cmd2 'e)
+                         ((or (##eq? cmd2 'b)
+                              (##eq? cmd2 'be)
+                              (##eq? cmd2 'bed)
+                              (##eq? cmd2 'e)
+                              (##eq? cmd2 'ed)
                               (##eq? cmd2 'v))
                           (let ((src (##cadr cmd)))
                             (release-ownership!)
@@ -2591,36 +2614,80 @@
                              (lambda (results)
                                (let ((val results))
 
-                                 (define (handle proc-or-cont)
+                                 (define (handle proc-or-cont depth)
                                    (if (##eq? cmd2 'v)
                                        (if (##continuation? proc-or-cont)
-                                           (##repl-within proc-or-cont #f)
-                                           (##repl-within-proc
-                                            proc-or-cont
-                                            (macro-repl-context-cont
-                                             repl-context)))
+                                           (let ((cont
+                                                  (first-interesting
+                                                   proc-or-cont)))
+                                             (##repl-within cont #f))
+                                           (let ((proc
+                                                  proc-or-cont))
+                                             (##repl-within-proc
+                                              proc
+                                              (macro-repl-context-cont
+                                               repl-context))))
                                        (begin
                                          (acquire-ownership!)
                                          (##repl-channel-display-multiline-message
                                           (lambda (output-port)
-                                            (##cmd-e proc-or-cont output-port)))
+                                            (if (or (##eq? cmd2 'e)
+                                                    (##eq? cmd2 'ed))
+                                                (##cmd-e proc-or-cont
+                                                         output-port
+                                                         (if (##eq? cmd2 'ed)
+                                                             'dynamic
+                                                             #t))
+                                                (let ((cont
+                                                       (first-interesting
+                                                        proc-or-cont)))
+                                                  (##cmd-b cont
+                                                           output-port
+                                                           depth
+                                                           (if (##eq? cmd2 'bed)
+                                                               'dynamic
+                                                               (##eq? cmd2 'be)))))))
                                          (continue))))
 
                                  (cond ((and (##fixnum? val)
                                              (##not (##fixnum.< val 0)))
-                                        (let ((cont
-                                               (first-interesting
-                                                (macro-repl-context-cont
-                                                 (get-context val)))))
-                                          (handle cont)))
-                                       ((##procedure? val)
-                                        (handle val))
+                                        (let* ((rc
+                                                (get-context val))
+                                               (depth
+                                                (macro-repl-context-depth rc))
+                                               (cont
+                                                (macro-repl-context-cont rc)))
+                                          (handle cont depth)))
                                        ((##continuation? val)
-                                        (handle val))
+                                        (handle val 0))
+                                       ((and (##not (or (##eq? cmd2 'b)
+                                                        (##eq? cmd2 'be)
+                                                        (##eq? cmd2 'bed)))
+                                             (##procedure? val))
+                                        (handle val 0))
+                                       ((macro-thread? val)
+                                        (if (##eq? cmd2 'v)
+                                            (begin
+                                              (##thread-interrupt!
+                                               val
+                                               (lambda ()
+                                                 (##handle-interrupt #f)))
+                                              (##thread-yield!)
+                                              (acquire-ownership!)
+                                              (continue))
+                                            (let ((cont
+                                                   (##thread-continuation-capture
+                                                    val)))
+                                              (handle cont 0))))
                                        (else
                                         (acquire-ownership!)
                                         (invalid-command
-                                         "PROCEDURE or CONTINUATION expected")
+                                         (cond ((or (##eq? cmd2 'b)
+                                                    (##eq? cmd2 'be)
+                                                    (##eq? cmd2 'bed))
+                                                "CONTINUATION or THREAD expected")
+                                               (else
+                                                "PROCEDURE, CONTINUATION or THREAD expected")))
                                         (continue))))))))
                          ((##eq? cmd2 'st)
                           (let ((src (##cadr cmd)))
@@ -2766,19 +2833,22 @@
           (if (and quit?
                    (##fixnum.= (macro-debug-settings-level settings) 0))
               (##exit-abnormally)
-              (##with-no-result-expected
-               (lambda ()
-                 (##repl
-                  (lambda (first output-port)
-                    (##display-situation
-                     "INTERRUPTED"
-                     (##continuation-creator first)
-                     (##continuation-locat first)
-                     output-port)
-                    (##newline output-port)
-                    (if quit?
-                        (##exit-abnormally)
-                        #f))))))))))
+              (##handle-interrupt quit?))))))
+
+(define-prim (##handle-interrupt quit?)
+  (##with-no-result-expected
+   (lambda ()
+     (##repl
+      (lambda (first output-port)
+        (##display-situation
+         "INTERRUPTED"
+         (##continuation-creator first)
+         (##continuation-locat first)
+         output-port)
+        (##newline output-port)
+        (if quit?
+            (##exit-abnormally)
+            #f))))))
 
 (set! ##primordial-exception-handler-hook ##repl-exception-handler-hook)
 
