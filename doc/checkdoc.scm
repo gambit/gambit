@@ -1,4 +1,4 @@
-#! /usr/local/bin/Gambit-C/bin/gsi-script
+#!/usr/bin/env gsi-script
 
 (let ()
 

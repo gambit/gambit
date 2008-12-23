@@ -1,9 +1,9 @@
 ;==============================================================================
 
-; File: "html.scm", Time-stamp: <2007-04-04 14:42:44 feeley>
+; File: "html.scm", Time-stamp: <2008-12-15 11:53:45 feeley>
 
-; Copyright (c) 2000-2007 by Brad Lucier, All Rights Reserved.
-; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2000-2008 by Brad Lucier, All Rights Reserved.
+; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
 ; This is an attempt at a complete implementation of HTML 4.0 in
 ; Scheme without any Netscape or Microsoft extensions.
@@ -12,7 +12,7 @@
 
 (##namespace ("html#"))
 
-(##include "~~/lib/gambit#.scm")
+(##include "~~lib/gambit#.scm")
 
 (##include "html#.scm")
 

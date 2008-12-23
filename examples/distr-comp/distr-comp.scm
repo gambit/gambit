@@ -1,6 +1,6 @@
-#! /usr/local/Gambit-C/bin/gsi-script
+#!/usr/bin/env gsi-script
 
-; File: "distr-comp.scm", Time-stamp: <2007-04-04 14:26:23 feeley>
+; File: "distr-comp.scm", Time-stamp: <2008-12-17 13:41:12 feeley>
 
 ; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
 
@@ -8,7 +8,7 @@
 
 ;==============================================================================
 
-(##include "~~/lib/gambit#.scm")
+(##include "~~lib/gambit#.scm")
 (##include "dc#.scm")
 
 (declare

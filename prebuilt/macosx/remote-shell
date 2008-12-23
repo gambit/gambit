@@ -14,11 +14,23 @@
 rm -f /tmp/_macosx-rsh*
 cp "$1" /tmp/_macosx-rsh-script
 
-ORIGINATOR_HN="`hostname`"
-ORIGINATOR_IP="`dig +tries=2 +time=2 +short $ORIGINATOR_HN`"
-if [ "$?" != "0" -o "$ORIGINATOR_IP" == "" ] ; then
-  ORIGINATOR_IP="192.168.0.5" # Usual static IP address of development machine
-fi
+self_id_addr=""
+
+for intf in en1 en0; do #for intf in `ifconfig -l -u`; do
+  intf_ip_addr=`ifconfig $intf | sed -e "s/.*inet [^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p" -e "d"`
+  if test "$intf_ip_addr" != "" -a "$intf_ip_addr" != "127.0.0.1"; then
+    self_ip_addr="$intf_ip_addr"
+  fi
+done
+
+ORIGINATOR_IP="$self_ip_addr"
+
+#ORIGINATOR_HN="`hostname`"
+#ORIGINATOR_IP="`dig +tries=2 +time=2 +short $ORIGINATOR_HN`"
+#if [ "$?" != "0" -o "$ORIGINATOR_IP" == "" ] ; then
+#  ORIGINATOR_IP="192.168.0.5" # Usual static IP address of development machine
+#fi
+
 ORIGINATOR="`id -nu`@$ORIGINATOR_IP"
 
 ssh localhost "/bin/sh --login -c \"export ORIGINATOR=$ORIGINATOR;rm -rf /tmp/macosx-rsh*;scp $ORIGINATOR:/tmp/_macosx-rsh-script /tmp/macosx-rsh-script;chmod +x /tmp/macosx-rsh-script;/tmp/macosx-rsh-script < /dev/null > /tmp/macosx-rsh-script.out 2>&1;scp /tmp/macosx-rsh-script.out $ORIGINATOR:/tmp/_macosx-rsh-script.out;rm -rf /tmp/macosx-rsh*\""

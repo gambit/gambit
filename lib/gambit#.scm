@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-11-26 20:33:40 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2008-12-15 11:24:39 feeley>
 
 ;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -9,7 +9,7 @@
 ;; Identifiers bound to syntactic forms and procedures defined by Gambit
 ;; are mapped to the empty namespace (no prefix).
 
-(##include "~~/lib/r5rs#.scm") ;; most identifier bindings are inherited from R5RS
+(##include "~~lib/r5rs#.scm") ;; most identifier bindings are inherited from R5RS
 
 (##namespace ("" ;; these identifier bindings are specific to Gambit
 

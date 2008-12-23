@@ -12,7 +12,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
 
 @SET_MAKE@
 
@@ -29,6 +28,9 @@ FLAGS_EXE = @FLAGS_EXE@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
+LIBRARY_DEFS = @LIBRARY_DEFS@
+LIB_PREFIX = @LIB_PREFIX@
+LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
 GAMBCGSCLIB = @GAMBCGSCLIB@
 GAMBCGSILIB = @GAMBCGSILIB@
@@ -44,12 +46,21 @@ HG = @HG@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-includedir = $(prefix)$(PACKAGE_SUBDIR)/include
-libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
-bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
-docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
-infodir = $(prefix)$(PACKAGE_SUBDIR)/info
-emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+includedir = @includedir@
+libdir = @libdir@
+bindir = @bindir@
+docdir = @docdir@
+infodir = @infodir@
+emacsdir = @emacsdir@
+libexecdir = @libexecdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+htmldir = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+localedir = @localedir@
+mandir = @mandir@
 
 .SUFFIXES:
 .SUFFIXES: .scm .c @obj@
@@ -58,7 +69,7 @@ INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include
 
 LIBRARIES_SCM =
 
-LIBRARY = $(GAMBCGSILIB)
+LIBRARY = $(LIB_PREFIX)$(GAMBCGSILIB)$(LIB_EXTENSION)
 LIBRARY_NORMAL_C =
 LIBRARY_NORMAL_CPP =
 LIBRARY_NORMAL_H =
@@ -75,16 +86,16 @@ LIBRARY_MODULES_O_PLUS = +_gsilib@obj@
 LIBRARY_MODULES_O_COMMA = _gsilib@obj@
 LIBRARY_MODULES_O_IN_COMPILE_ORDER = _gsilib@obj@
 LIBRARY_OBJECTS = $(LIBRARY_NORMAL_O) \
-$(LIBRARY_MODULES_O) _gambcgsi@obj@
+$(LIBRARY_MODULES_O) _$(GAMBCGSILIB)@obj@
 LIBRARY_OBJECTS_PLUS = $(LIBRARY_NORMAL_O_PLUS) \
-$(LIBRARY_MODULES_O_PLUS) +_gambcgsi@obj@
+$(LIBRARY_MODULES_O_PLUS) +_$(GAMBCGSILIB)@obj@
 LIBRARY_OBJECTS_COMMA = $(LIBRARY_NORMAL_O_COMMA),\
-$(LIBRARY_MODULES_O_COMMA),_gambcgsi@obj@
+$(LIBRARY_MODULES_O_COMMA),_$(GAMBCGSILIB)@obj@
 LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(LIBRARY_MODULES_O_IN_COMPILE_ORDER) \
-$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _gambcgsi@obj@
+$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _$(GAMBCGSILIB)@obj@
 
-MAKE_LIBRARY_LIBS = $(rootfromhere)/lib/$(GAMBCLIB)
-MAKE_LIBRARY_FOR_INSTALL_LIBS = $(libdir)/$(GAMBCLIB)
+MAKE_LIBRARY_LIBS = $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)
+MAKE_LIBRARY_FOR_INSTALL_LIBS = @MAKE_LIBRARY_FOR_INSTALL_LIBS@
 
 EXECUTABLE = gsi@exe@
 EXECUTABLE_NORMAL_C =
@@ -111,8 +122,8 @@ $(EXECUTABLE_MODULES_O_COMMA),_gsi_@obj@
 EXECUTABLE_OBJECTS_IN_COMPILE_ORDER = $(EXECUTABLE_MODULES_O_IN_COMPILE_ORDER) \
 $(EXECUTABLE_NORMAL_O_IN_COMPILE_ORDER) _gsi_@obj@
 
-LINK_LIBS = $(GAMBCGSILIB) $(rootfromhere)/lib/$(GAMBCLIB)
-LINK_FOR_INSTALL_LIBS = $(libdir)/$(GAMBCGSILIB) $(libdir)/$(GAMBCLIB)
+LINK_LIBS = $(LIBRARY) $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)
+LINK_FOR_INSTALL_LIBS = @LINK_FOR_INSTALL_GSI_LIBS@
 
 MODULES_SCM = $(LIBRARY_MODULES_SCM) $(EXECUTABLE_MODULES_SCM)
 MODULES_C = $(LIBRARY_MODULES_C) $(EXECUTABLE_MODULES_C)
@@ -120,7 +131,7 @@ OBJECTS = $(LIBRARY_OBJECTS) $(EXECUTABLE_OBJECTS)
 
 RCFILES = makefile.in main.scm $(MODULES_SCM)
 
-GENDISTFILES = $(MODULES_C) _gambcgsi.c _gsi_.c
+GENDISTFILES = $(MODULES_C) _$(GAMBCGSILIB).c _gsi_.c
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
@@ -134,14 +145,14 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f $(LIBRARY)
 	@MAKE_LIBRARY@
 
-_gambcgsi.c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambc.c
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambc -o $@ $(LIBRARY_MODULES_C)
+_$(GAMBCGSILIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambc.c
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambc -o $@ $(LIBRARY_MODULES_C)
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@LINK@
 
-_gsi_.c: $(EXECUTABLE_MODULES_C) _gambcgsi.c
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -link -l _gambcgsi -o $@ $(EXECUTABLE_MODULES_C)
+_gsi_.c: $(EXECUTABLE_MODULES_C) _$(GAMBCGSILIB).c
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l _$(GAMBCGSILIB) -o $@ $(EXECUTABLE_MODULES_C)
 
 _gsi@obj@: _gsi.c
 	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -c $(srcdirpfx)$*.c
@@ -153,7 +164,7 @@ _gsi_@obj@: _gsi_.c
 	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -D___LIBRARY -c $(srcdirpfx)$*.c
 
 .scm.c:
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -c -check $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
 
 _gsi.c: $(srcdirpfx)$(rootfromhere)/gsi/main.scm
 
@@ -166,31 +177,81 @@ $(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 install-pre:
 
 install-post: all
-	$(srcdirpfx)$(rootfromhere)/mkidirs $(bindir)
-	$(INSTALL_DATA) $(srcdirpfx)_gambcgsi.c $(libdir)/_gambcgsi.c
-	@MAKE_LIBRARY_FOR_INSTALL@
-	$(INSTALL_LIB) $(LIBRARY) $(libdir)/$(LIBRARY)
-	@FIXLIB@ $(libdir)/$(LIBRARY)
-	#for library in $(LIBRARIES_SCM); do \
-	#  $(INSTALL_DATA) $$library $(libdir)/$$library; \
-	#done
-	@LINK_FOR_INSTALL@
-	$(INSTALL_PROGRAM) $(EXECUTABLE) $(bindir)/$(EXECUTABLE)
+	c_bindir=$(DESTDIR)$(prefix)/bin; \
+	i_bindir=$(DESTDIR)$(bindir); \
+	t_bindir=$$i_bindir; \
+	c_libdir=$(DESTDIR)$(prefix)/lib; \
+	i_libdir=$(DESTDIR)$(libdir); \
+	t_libdir=$$i_libdir; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_bindir $$i_libdir; \
+	if test "@ENABLE_SYMLINKS@" = "yes"; then \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_bindir $$c_libdir; \
+	  t_bindir=$$c_bindir; \
+	  t_libdir=$$c_libdir; \
+	fi; \
+	$(INSTALL_DATA) $(srcdirpfx)_$(GAMBCGSILIB).c $$t_libdir/_$(GAMBCGSILIB).c; \
+	@MAKE_LIBRARY_FOR_INSTALL@; \
+	$(INSTALL_LIB) $(LIBRARY) $$t_libdir/$(LIBRARY); \
+	@FIXLIB@ $$t_libdir/$(LIBRARY); \
+	@LINK_FOR_INSTALL@; \
+	$(INSTALL_PROGRAM) $(EXECUTABLE) $$t_bindir/$(EXECUTABLE); \
+	if test "$$t_libdir" != "$$i_libdir"; then \
+	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	  for file in _$(GAMBCGSILIB).c $(LIBRARY); do \
+	    (cd $$i_libdir && $(LN_S) $$r_libdir$$file $$file); \
+	  done; \
+	fi; \
+	if test "$$t_bindir" != "$$i_bindir"; then \
+	  r_bindir=`$(rootfromhere)/relpath "$$t_bindir" "$$i_bindir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	  for file in $(EXECUTABLE); do \
+	    (cd $$i_bindir && $(LN_S) $$r_bindir$$file $$file); \
+	  done; \
+	fi
 
 uninstall-pre:
 
 uninstall-post:
-	rm -f $(bindir)/$(EXECUTABLE)
+	c_bindir=$(DESTDIR)$(prefix)/bin; \
+	i_bindir=$(DESTDIR)$(bindir); \
+	t_bindir=$$i_bindir; \
+	c_libdir=$(DESTDIR)$(prefix)/lib; \
+	i_libdir=$(DESTDIR)$(libdir); \
+	t_libdir=$$i_libdir; \
+	if test "@ENABLE_SYMLINKS@" = "yes"; then \
+	  t_bindir=$$c_bindir; \
+	  t_libdir=$$c_libdir; \
+	fi; \
+	rm -f $$t_libdir/_$(GAMBCGSILIB).c \
+	  $$t_libdir/$(LIBRARY) \
+	  $$t_bindir/$(EXECUTABLE); \
+	if test "$$t_libdir" != "$$i_libdir"; then \
+	  for file in _$(GAMBCGSILIB).c $(LIBRARY); do \
+	    rm -f $$i_libdir/$$file; \
+	  done; \
+	fi; \
+	if test "$$t_bindir" != "$$i_bindir"; then \
+	  for file in $(EXECUTABLE); do \
+	    rm -f $$i_bindir/$$file; \
+	  done; \
+	fi; \
+	rmdir $$t_libdir 2> /dev/null; \
+	if test "$$t_libdir" != "$$i_libdir"; then \
+	  rmdir $$i_libdir 2> /dev/null; \
+	fi; \
+	rmdir $$t_bindir 2> /dev/null; \
+	if test "$$t_bindir" != "$$i_bindir"; then \
+	  rmdir $$i_bindir 2> /dev/null; \
+	fi
 
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f $(OBJECTS) $(GAMBCGSILIB)
+	rm -f $(OBJECTS) $(LIBRARY)
 
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f $(MODULES_C) _gambcgsi.c _gsi_.c *.da *.bb *.bbg *.gcov
+	rm -f $(MODULES_C) _$(GAMBCGSILIB).c _gsi_.c *.da *.bb *.bbg *.gcov
 
 distclean-pre: clean-pre
 

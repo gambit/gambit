@@ -1,8 +1,8 @@
 ;==============================================================================
 
-; File: "tcltk.scm", Time-stamp: <2007-05-25 17:29:06 feeley>
+; File: "tcltk.scm", Time-stamp: <2008-12-15 11:52:55 feeley>
 
-; Copyright (c) 1997-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1997-2008 by Marc Feeley, All Rights Reserved.
 
 ; This is the Gambit interface for Tcl/Tk.
 
@@ -14,7 +14,7 @@
 
 (##namespace ("tcltk#"))
 
-(##include "~~/lib/gambit#.scm")
+(##include "~~lib/gambit#.scm")
 
 (##include "tcltk#.scm")
 

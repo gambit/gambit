@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2008-11-23 02:32:28 feeley> */
+/* File: "setup.c", Time-stamp: <2008-12-17 09:04:13 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -43,7 +43,7 @@ ___HIDDEN ___UCS_2 reset_argv0[] = { 0 };
 ___HIDDEN ___UCS_2STRING reset_argv[] = { reset_argv0, 0 };
 
 ___setup_params_struct ___setup_params =
-{ 0, reset_argv, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+{ 0, reset_argv, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 
 /* 
@@ -1986,6 +1986,7 @@ ___setup_params_struct *setup_params;)
   setup_params->terminal_settings = 0;
   setup_params->stdio_settings    = 0;
   setup_params->gambcdir          = 0;
+  setup_params->gambcdir_map      = 0;
   setup_params->remote_dbg_addr   = 0;
   setup_params->rpc_server_addr   = 0;
   setup_params->linker            = 0;

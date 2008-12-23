@@ -1,6 +1,6 @@
-/* File: "os_files.h", Time-stamp: <2007-12-19 13:38:46 feeley> */
+/* File: "os_files.h", Time-stamp: <2008-12-09 16:15:30 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_FILES_H
 #define ___OS_FILES_H
@@ -47,6 +47,10 @@ extern ___files_module ___files_mod;
 extern ___SCMOBJ ___os_path_homedir ___PVOID;
 
 extern ___SCMOBJ ___os_path_gambcdir ___PVOID;
+
+extern ___SCMOBJ ___os_path_gambcdir_map_lookup
+   ___P((___SCMOBJ dir),
+        ());
 
 extern ___SCMOBJ ___os_path_normalize_directory
    ___P((___SCMOBJ path),

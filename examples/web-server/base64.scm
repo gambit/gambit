@@ -1,14 +1,14 @@
 ;==============================================================================
 
-; File: "base64.scm", Time-stamp: <2007-04-04 14:42:23 feeley>
+; File: "base64.scm", Time-stamp: <2008-12-15 11:54:22 feeley>
 
-; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
 ;==============================================================================
 
 (##namespace ("base64#"))
 
-(##include "~~/lib/gambit#.scm")
+(##include "~~lib/gambit#.scm")
 
 (##include "base64#.scm")
 

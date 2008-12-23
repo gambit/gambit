@@ -1,13 +1,10 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2008-12-05 17:46:00 feeley>
+;;; File: "main.scm", Time-stamp: <2008-12-17 22:17:30 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
-
-(##define-macro (macro-extension-file)
-  "gambcext")
 
 (##define-macro (macro-initialization-file)
   ".gambcini")
@@ -423,12 +420,7 @@
 
         (cont (##reverse rev-options) args))))
 
-  (let ((gambcdir (##path-expand "~~")))
-    (##load (##string-append gambcdir (macro-extension-file))
-            (lambda (script-line script-path) #f)
-            #f
-            #f
-            #f))
+  (##load-support-libraries)
 
   (let ((language-and-tail
          (##extract-language-and-tail (##car ##processed-command-line))))

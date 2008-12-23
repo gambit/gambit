@@ -8,7 +8,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
 
 @SET_MAKE@
 
@@ -25,8 +24,12 @@ FLAGS_EXE = @FLAGS_EXE@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
+LIBRARY_DEFS = @LIBRARY_DEFS@
+LIB_PREFIX = @LIB_PREFIX@
+LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
-GAMBCCOMPLIB = @GAMBCCOMPLIB@
+GAMBCGSCLIB = @GAMBCGSCLIB@
+GAMBCGSILIB = @GAMBCGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -39,12 +42,21 @@ HG = @HG@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-includedir = $(prefix)$(PACKAGE_SUBDIR)/include
-libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
-bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
-docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
-infodir = $(prefix)$(PACKAGE_SUBDIR)/info
-emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+includedir = @includedir@
+libdir = @libdir@
+bindir = @bindir@
+docdir = @docdir@
+infodir = @infodir@
+emacsdir = @emacsdir@
+libexecdir = @libexecdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+htmldir = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+localedir = @localedir@
+mandir = @mandir@
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this makefile.
@@ -61,7 +73,8 @@ infodir=$(infodir) emacsdir=$(emacsdir)
 SUBDIRS = include lib gsi gsc bin misc doc tests examples prebuilt
 
 RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
-makefile.in configure configure.ac config.guess config.sub install-sh mkidirs
+makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
+relpath
 
 GITRCFILES = .gitignore
 HGRCFILES = .hgignore .hgtags
@@ -192,7 +205,8 @@ change-version: fake_target
 	  $(RC) tag $(NEW_VERSION)-bootstrap; \
 	  if $(MAKE) bootstrap; then \
 	    misc/changev $$version_num $$new_version_num; \
-	    cd tests; ../gsc/gsc -:=.. -f -c mix.scm; mv mix.c test5.ok; cd ..; \
+	    touch doc/gambit-c.txi; \
+	    cd tests; @SETDLPATH@ ../gsc/gsc -:~~bin=../bin,~~lib=../lib,~~include=../include -f -c mix.scm; mv mix.c test5.ok; cd ..; \
 	    if $(MAKE) clean && $(MAKE) -j 2 && $(MAKE) check && $(MAKE) doc; then \
 	      if test "$(RC)" = "$(GIT)"; then \
 	        $(GIT) commit -a -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
@@ -219,17 +233,33 @@ publish-release: fake_target
 	misc/publish-release $(PACKAGE_VERSION) $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
 
 install-pre:
+	@if test "@ENABLE_SHARED@" = "yes" -a "@ENABLE_ABSOLUTE_SHARED_LIBS@" = "yes" -a "$(DESTDIR)" != ""; then \
+	  echo "*** The use of --enable-shared and --enable-absolute-shared-libs is"; \
+	  echo "*** incompatible with the use of DESTDIR.  You can either specify an"; \
+	  echo "*** empty DESTDIR or reconfigure with --disable-absolute-shared-libs."; \
+	  exit 1; \
+	fi
 
 install-post: all
-	rm -f $(prefix)/current $(prefix)/current.lnk
-	if test "@bat@" = ""; then \
-	  (cd $(prefix) && $(LN_S) .$(PACKAGE_SUBDIR) current); \
+	if test "@ENABLE_MULTIPLE_VERSIONS@" = "yes"; then \
+	  if test "@bat@" = ""; then \
+	    $(srcdirpfx)./mkidirs $(DESTDIR)$(prefix); \
+	    rm -f $(DESTDIR)$(prefix)/../current \
+	      $(DESTDIR)$(prefix)/../current.lnk; \
+	    (cd $(DESTDIR)$(prefix)/.. && $(LN_S) $(PACKAGE_VERSION) current); \
+	  fi; \
 	fi
 
 uninstall-pre:
 
 uninstall-post:
-	rm -f $(prefix)/current $(prefix)/current.lnk
+	if test "@ENABLE_MULTIPLE_VERSIONS@" = "yes"; then \
+	  if test "@bat@" = ""; then \
+	    (cd $(DESTDIR)$(prefix)/.. && \
+	     rm -f current && \
+	     rmdir $(PACKAGE_VERSION)); \
+	  fi; \
+	fi
 
 mostlyclean-pre:
 

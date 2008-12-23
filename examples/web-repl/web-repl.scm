@@ -1,6 +1,6 @@
-#! /usr/local/Gambit-C/bin/gsi-script
+#!/usr/bin/env gsi-script
 
-; File: "web-repl.scm", Time-stamp: <2008-09-17 12:09:39 feeley>
+; File: "web-repl.scm", Time-stamp: <2008-12-17 13:41:06 feeley>
 
 ; Copyright (c) 2004-2008 by Marc Feeley, All Rights Reserved.
 

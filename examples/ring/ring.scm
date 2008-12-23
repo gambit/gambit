@@ -1,6 +1,6 @@
-#! /usr/local/Gambit-C/bin/gsi-script
+#!/usr/bin/env gsi-script
 
-; File: "ring.scm", Time-stamp: <2007-04-04 14:35:17 feeley>
+; File: "ring.scm", Time-stamp: <2008-12-17 13:41:26 feeley>
 
 (declare (standard-bindings))
 

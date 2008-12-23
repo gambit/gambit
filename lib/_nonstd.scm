@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2008-11-28 14:20:58 feeley>
+;;; File: "_nonstd.scm", Time-stamp: <2008-12-16 23:59:22 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1652,7 +1652,7 @@
         (let* ((dir
                 (if (##not orig)
                     cd
-                    (let* ((d (expand orig #f))
+                    (let* ((d orig) ;; (expand orig #f)
                            (len (##string-length d)))
                       (if (or (##fixnum.= len 0)
                               (##char=? (##string-ref d
@@ -1732,21 +1732,36 @@
               (##string-set! result dir-end directory-separator)
               (expand result orig))))
 
-      (define (get-instdir instdir-name)
-        (if (##fixnum.= 0 (##string-length instdir-name))
-            ##gambcdir
-            (##string-append ##gambcdir
-                             instdir-name
-                             (##string directory-separator))))
+      (define (err code)
+        (##raise-os-exception #f code path-expand path origin))
+
+      (define (expand-in-instdir relpath instdir-name)
+        (let ((dir (##os-path-gambcdir-map-lookup instdir-name)))
+          (cond ((##fixnum? dir)
+                 (err dir))
+                (dir
+                 (expand relpath dir))
+                (else
+                 (let ((dir (##os-path-gambcdir)))
+                   (cond ((##fixnum? dir)
+                          (err dir))
+                         ((##fixnum.= 0 (##string-length instdir-name))
+                          (expand relpath dir))
+                         (else
+                          (expand relpath
+                                  (expand instdir-name dir)))))))))
 
       (let ((t-end (tilde-end)))
         (if (##fixnum.< 0 t-end)
 
             (cond ((##fixnum.= 1 t-end)
-                   (let ((homedir
-                          (or (##os-path-homedir)
-                              ##gambcdir)))
-                     (prepend-directory homedir t-end)))
+                   (let ((homedir (##os-path-homedir)))
+                     (cond ((##fixnum? homedir)
+                            (err homedir))
+                           (homedir
+                            (prepend-directory homedir t-end))
+                           (else
+                            (expand "~~" #f)))))
                   ((##char=? #\~ (##string-ref p 1))
                    (let* ((len
                            (##string-length p))
@@ -1758,9 +1773,9 @@
                                             t-end
                                             (##fixnum.+ t-end 1))
                                         len)))
-                     (##string-append
-                      (get-instdir instdir-name)
-                      relpath)))
+                     (expand-in-instdir
+                      relpath
+                      instdir-name)))
                   (else
                    (let ((info (##os-user-info (##substring p 1 t-end))))
                      (prepend-directory

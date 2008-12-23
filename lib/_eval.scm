@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2008-12-12 14:34:35 feeley>
+;;; File: "_eval.scm", Time-stamp: <2008-12-17 23:22:26 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3802,6 +3802,32 @@
               #t
               #f
               settings))))
+
+;;;----------------------------------------------------------------------------
+
+;; Load support libraries
+
+(define-prim (##load-support-libraries)
+
+  (##define-macro (macro-extension-file)
+    "~~lib/gambcext")
+
+  (##define-macro (macro-syntax-case-file)
+    "~~lib/syntax-case")
+
+  (##load (macro-extension-file)
+          (lambda (script-line script-path) #f)
+          #t
+          #f
+          #f)
+
+  (let ((standard-level (##get-standard-level)))
+    (if (##fixnum.<= 4 standard-level)
+        (##load (macro-syntax-case-file)
+                (lambda (script-line script-path) #f)
+                #t
+                #t
+                #f))))
 
 ;;;----------------------------------------------------------------------------
 

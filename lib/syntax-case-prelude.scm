@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "syntax-case.scm", Time-stamp: <2007-05-27 22:58:21 feeley>
+;;; File: "syntax-case.scm", Time-stamp: <2008-12-15 11:35:18 feeley>
 
-;;; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1998-2008 by Marc Feeley, All Rights Reserved.
 
 ;;; This is version 3.2 .
 
@@ -36,13 +36,13 @@
 ;;
 ;; For faster macro processing it is worthwhile to compile the file
 ;; with the compiler.  You can also rename this file to "gambcext.scm"
-;; and put it in the Gambit installation directory so that it is loaded
-;; every time the interpreter and compiler are started.
+;; and put it in the Gambit "lib" installation directory so that it is
+;; loaded every time the interpreter and compiler are started.
 ;;
 ;; Alternatively, the expander can be loaded from the command line
 ;; like this:
 ;;
-;;   % gsi ~~/syntax-case -
+;;   % gsi ~~lib/syntax-case -
 ;;   > (pp (lambda (x y) (if (< x y) (let ((z (* x x))) z))))
 ;;   (lambda (%%x0 %%y1)
 ;;     (if (< %%x0 %%y1) ((lambda (%%z2) %%z2) (* %%x0 %%x0)) (void)))
@@ -58,7 +58,7 @@
 
 (##namespace ("sc#"))
 
-(##include "~~/lib/gambit#.scm")
+(##include "~~lib/gambit#.scm")
 
 (##namespace (""
 

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-11-23 02:27:09 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2008-12-16 19:51:32 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3825,19 +3825,15 @@ end-of-code
             scheme-object
    "___os_path_gambcdir"))
 
+(define-prim ##os-path-gambcdir-map-lookup
+  (c-lambda (scheme-object)
+            scheme-object
+   "___os_path_gambcdir_map_lookup"))
+
 (define-prim ##os-path-normalize-directory
   (c-lambda (scheme-object)
             scheme-object
    "___os_path_normalize_directory"))
-
-(define ##gambcdir
-  (let ((dir1 (##os-path-gambcdir)))
-    (if (##fixnum? dir1)
-      ""
-      (let ((dir2 (##os-path-normalize-directory dir1)))
-        (if (##fixnum? dir2)
-          ""
-          dir2)))))
 
 (define-prim ##remote-dbg-addr
   (c-lambda ()

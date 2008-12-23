@@ -1,6 +1,6 @@
 ;==============================================================================
 
-; File: "Xlib.scm", Time-stamp: <2008-11-24 16:18:52 feeley>
+; File: "Xlib.scm", Time-stamp: <2008-12-15 11:51:51 feeley>
 
 ; Copyright (c) 2006-2008 by Marc Feeley, All Rights Reserved.
 
@@ -13,7 +13,7 @@
 
 (##namespace ("Xlib#"))
 
-(##include "~~/lib/gambit#.scm")
+(##include "~~lib/gambit#.scm")
 
 (##include "Xlib#.scm")
 

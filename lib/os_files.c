@@ -1,4 +1,4 @@
-/* File: "os_files.c", Time-stamp: <2008-05-17 08:19:31 feeley> */
+/* File: "os_files.c", Time-stamp: <2008-12-17 00:20:01 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -547,6 +547,176 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
         result = e;
       else
         ___release_scmobj (result);
+    }
+
+  return result;
+}
+
+
+#ifndef ___GAMBCDIR_MAP_CE_SELECT
+#define ___GAMBCDIR_MAP_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#endif
+
+#ifndef ___CONFIG_GAMBCDIR_MAP_CE_SELECT
+#define ___CONFIG_GAMBCDIR_MAP_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#endif
+
+
+/* 
+ * TODO: the current implementation of the lookup duplicates the
+ * lookup logic because the configuration map and the map from the
+ * runtime options are not represented with the same string type.  The
+ * proper approach would be to represent OS environment variables
+ * using UTF-8 strings, but this would require substantial changes.
+ */
+
+
+___HIDDEN ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) gambcdir_map_lookup
+   ___P((___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d),
+        (d)
+___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d;)
+{
+  ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) dir;
+  ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) *p = ___setup_params.gambcdir_map;
+
+  if (p == 0)
+    return 0;
+
+  while ((dir = *p++) != 0)
+    {
+      int i = 0;
+      for (;;)
+        {
+          ___UCS_2 c = d[i];
+          if (c == '\0')
+            {
+              if (dir[i] == '=')
+                return dir+i+1;
+              else
+                break;
+            }
+          else if ((dir[i] == '=') || (dir[i] != c))
+            {
+              break;
+            }
+          i++;
+        }
+    }
+
+  return 0;
+}
+
+
+___HIDDEN ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) config_gambcdir_map[] =
+{
+#ifdef ___GAMBCDIR_BIN
+  "bin=" ___GAMBCDIR_BIN,
+#endif
+#ifdef ___GAMBCDIR_DOC
+  "doc=" ___GAMBCDIR_DOC,
+#endif
+#ifdef ___GAMBCDIR_INCLUDE
+  "include=" ___GAMBCDIR_INCLUDE,
+#endif
+#ifdef ___GAMBCDIR_INFO
+  "info=" ___GAMBCDIR_INFO,
+#endif
+#ifdef ___GAMBCDIR_LIB
+  "lib=" ___GAMBCDIR_LIB,
+#endif
+#ifdef ___GAMBCDIR_SHARE
+  "share=" ___GAMBCDIR_SHARE,
+#endif
+  0
+};
+
+
+___HIDDEN ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) config_gambcdir_map_lookup
+   ___P((___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d),
+        (d)
+___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d;)
+{
+  ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) dir;
+  ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) *p = config_gambcdir_map;
+
+  while ((dir = *p++) != 0)
+    {
+      int i = 0;
+      for (;;)
+        {
+          ___UCS_2 c = d[i];
+          if (c == '\0')
+            {
+              if (dir[i] == '=')
+                return dir+i+1;
+              else
+                break;
+            }
+          else if ((dir[i] == '=') || (dir[i] != c))
+            {
+              break;
+            }
+          i++;
+        }
+    }
+
+  return 0;
+}
+
+
+___SCMOBJ ___os_path_gambcdir_map_lookup
+   ___P((___SCMOBJ dir),
+        (dir)
+___SCMOBJ dir;)
+{
+  ___SCMOBJ e;
+  ___SCMOBJ result;
+  void *cdir;
+
+  if ((e = ___SCMOBJ_to_STRING
+             (dir,
+              &cdir,
+              1,
+              ___CE(___GAMBCDIR_MAP_CE_SELECT),
+              0))
+      != ___FIX(___NO_ERR))
+    result = e;
+  else
+    {
+      ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d =
+        ___CAST(___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT),cdir);
+
+      ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) dir1;
+      ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) dir2;
+
+      if ((dir1 = gambcdir_map_lookup (d)) != 0)
+        {
+          if ((e = ___STRING_to_SCMOBJ
+                     (dir1,
+                      &result,
+                      ___RETURN_POS,
+                      ___CE(___GAMBCDIR_MAP_CE_SELECT)))
+              != ___FIX(___NO_ERR))
+            result = e;
+          else
+            ___release_scmobj (result);
+        }
+      else if ((dir2 = config_gambcdir_map_lookup (d)) != 0)
+        {
+          if ((e = ___STRING_to_SCMOBJ
+                     (dir2,
+                      &result,
+                      ___RETURN_POS,
+                      ___CE(___CONFIG_GAMBCDIR_MAP_CE_SELECT)))
+              != ___FIX(___NO_ERR))
+            result = e;
+          else
+            ___release_scmobj (result);
+        }
+      else
+        result = ___FAL;
+
+      ___release_string (cdir);
     }
 
   return result;

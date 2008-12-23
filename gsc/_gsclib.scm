@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2008-03-10 12:22:50 feeley>
+;;; File: "_gsclib.scm", Time-stamp: <2008-12-18 21:26:27 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -148,13 +148,18 @@
     (define (arg name val)
       (##string-append "GSC_CC_O_" name "=" val))
 
-    (let* ((gambcdir
-            (##path-expand "~~"))
-           (gambcdir-bin
-            (parameterize
-             ((##current-directory
-               (##path-expand "bin" gambcdir)))
-             (##current-directory)))
+    (define (install-dir path)
+      (parameterize
+       ((##current-directory
+         (##path-expand path)))
+       (##current-directory)))
+
+    (let* ((gambcdir-bin
+            (install-dir "~~bin"))
+           (gambcdir-include
+            (install-dir "~~include"))
+           (gambcdir-lib
+            (install-dir "~~lib"))
            (c-filename-dir
             (parameterize
              ((##current-directory (##path-directory c-filename)))
@@ -176,9 +181,19 @@
                (##append
                 (let ((env (##os-environ)))
                   (if (##fixnum? env) '() env))
-                (##list (arg "GAMBCDIR" gambcdir)
+                (##list (arg "GAMBCDIR_BIN"
+                             (##path-strip-trailing-directory-separator
+                              gambcdir-bin))
+                        (arg "GAMBCDIR_INCLUDE"
+                             (##path-strip-trailing-directory-separator
+                              gambcdir-include))
+                        (arg "GAMBCDIR_LIB"
+                             (##path-strip-trailing-directory-separator
+                              gambcdir-lib))
                         (arg "OBJ_FILENAME" obj-filename)
-                        (arg "C_FILENAME_DIR" c-filename-dir)
+                        (arg "C_FILENAME_DIR"
+                             (##path-strip-trailing-directory-separator
+                              c-filename-dir))
                         (arg "C_FILENAME_BASE" c-filename-base)
                         (arg "CC_OPTIONS" cc-options)
                         (arg "LD_OPTIONS_PRELUDE" ld-options-prelude)
@@ -244,7 +259,7 @@
                             (let ((gambcdir-lib
                                    (parameterize
                                     ((##current-directory
-                                      (##path-expand "lib" (##path-expand "~~"))))
+                                      (##path-expand "~~lib")))
                                     (##current-directory))))
                               (##string-append gambcdir-lib "_gambc"))
                             (macro-force-vars (base)

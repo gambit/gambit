@@ -1,6 +1,6 @@
 ;==============================================================================
 
-; File: "dc.scm", Time-stamp: <2008-11-23 02:39:39 feeley>
+; File: "dc.scm", Time-stamp: <2008-12-15 11:52:03 feeley>
 
 ; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -8,7 +8,7 @@
 
 (##namespace ("dc#"))
 
-(##include "~~/lib/gambit#.scm")
+(##include "~~lib/gambit#.scm")
 
 (##include "dc#.scm")
 

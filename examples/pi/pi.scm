@@ -1,6 +1,6 @@
-#! /usr/local/Gambit-C/bin/gsi-script
+#!/usr/bin/env gsi-script
 
-; File: "pi.scm", Time-stamp: <2006-01-03 00:01:13 feeley>
+; File: "pi.scm", Time-stamp: <2008-12-17 13:41:08 feeley>
 
 ; Bignum benchmark that computes pi.
 ;

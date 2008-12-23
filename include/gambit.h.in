@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2008-11-23 02:27:38 feeley> */
+/* File: "gambit.h", Time-stamp: <2008-12-09 15:13:04 feeley> */
 
 /*
  * Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
@@ -7919,6 +7919,7 @@ typedef struct ___setup_params_struct
     int terminal_settings;
     int stdio_settings;
     ___UCS_2STRING gambcdir;
+    ___UCS_2STRING *gambcdir_map;
     ___UCS_2STRING remote_dbg_addr;
     ___UCS_2STRING rpc_server_addr;
     ___mod_or_lnk (*linker) ___P((___global_state_struct*),());

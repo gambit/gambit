@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gambit#.scm", Time-stamp: <2008-04-12 10:05:31 feeley>
+;;; File: "_gambit#.scm", Time-stamp: <2008-12-15 11:27:19 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1004,14 +1004,14 @@
 
 ;;;----------------------------------------------------------------------------
 
-(##include "~~/lib/_kernel#.scm")
-(##include "~~/lib/_thread#.scm")
-(##include "~~/lib/_system#.scm")
-(##include "~~/lib/_num#.scm")
-(##include "~~/lib/_io#.scm")
-(##include "~~/lib/_eval#.scm")
-(##include "~~/lib/_repl#.scm")
-(##include "~~/lib/_std#.scm")
-(##include "~~/lib/_nonstd#.scm")
+(##include "_kernel#.scm")
+(##include "_thread#.scm")
+(##include "_system#.scm")
+(##include "_num#.scm")
+(##include "_io#.scm")
+(##include "_eval#.scm")
+(##include "_repl#.scm")
+(##include "_std#.scm")
+(##include "_nonstd#.scm")
 
 ;;;============================================================================

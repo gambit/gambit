@@ -161,60 +161,81 @@ repository.
 @node Accessing the system files, , The Gambit-C system, The Gambit-C system
 @section Accessing the system files
 
-The @dfn{Gambit installation directory} is where all system files are
-installed.  This directory is @code{@r{@i{prefix}}/@r{@i{version}}},
-where @code{@r{@i{version}}} is the system version string
-(e.g. @code{@value{VERSION}} for Gambit @value{VERSION}) and
-@code{@r{@i{prefix}}} is @code{/usr/local/Gambit-C} under UNIX,
+Files related to Gambit, such as executables, libraries and header files,
+are stored in multiple @dfn{Gambit installation directories}.
+Gambit may be installed on a system according to two different
+installation models.
+
+In the first model there is a single directory where all the Gambit
+installation directories are stored.  This @dfn{central installation
+directory} is typically @code{/usr/local/Gambit-C} under UNIX,
 @code{/Library/Gambit-C} under Mac OS X and @code{C:/Program
-Files/Gambit-C} under Microsoft Windows.  The prefix can be overridden
-when the system is built with the command @samp{configure
---prefix=/my/own/Gambit-C}.  Moreover, under UNIX and Mac OS X,
-@code{@r{@i{prefix}}/current} is a symbolic link which points to the
-installation directory.
+Files/Gambit-C} under Microsoft Windows.  This may have been
+overridden when the system was built with the command @samp{configure
+--prefix=/my/Gambit-C}.  If the system was built with the command
+@samp{configure --enable-multiple-versions} then the central
+installation directory is @code{@r{@i{prefix}}/@r{@i{version}}}, where
+@code{@r{@i{version}}} is the system version string
+(e.g. @code{@value{VERSION}} for Gambit @value{VERSION}).  Moreover,
+@code{@r{@i{prefix}}/current} will be a symbolic link which points to
+the central installation directory.  In this model, the Gambit
+installation directory named @var{X} is simply the subdirectory
+@var{X} of the central installation directory.
+
+In the second model some or all of the Gambit installation directories
+are stored in installation specific directories.  The location of
+these directories is assigned when the system is built using the
+command @samp{configure --bindir=/my/bin --includedir=/my/include
+--libdir=/my/lib}.
+
+The advantage of the first model is that it is easy to have multiple
+versions of Gambit coexist and to remove all the files of a given
+version.  However, the second model may be necessary to conform to the
+package installation conventions of some operating systems.
 
 Executable programs such as the interpreter @code{gsi} and compiler
-@code{gsc} can be found in the @code{bin} subdirectory of the
-installation directory.  Adding this directory to the @code{PATH}
-environment variable allows these programs to be started by simply
-entering their name.  This is done automatically by the Mac OS X and
-Microsoft Windows installers.
+@code{gsc} can be found in the @code{bin} installation directory.
+Adding this directory to the @code{PATH} environment variable allows
+these programs to be started by simply entering their name.  This is
+done automatically by the Mac OS X and Microsoft Windows installers.
 
-The runtime library is located in the @code{lib} subdirectory.  When
-the system's runtime library is built as a shared-library (with the
-command @samp{configure --enable-shared}) all programs built with
-Gambit-C, including the interpreter and compiler, need to find this
-library when they are executed and consequently this directory must be
-in the path searched by the system for shared-libraries.  This path is
-normally specified through an environment variable which is
-@code{LD_LIBRARY_PATH} on most versions of UNIX, @code{LIBPATH} on
-AIX, @code{SHLIB_PATH} on HPUX, @code{DYLD_LIBRARY_PATH} on Mac OS X,
-and @code{PATH} on Microsoft Windows.  If the shell is @code{sh}, the
-setting of the path can be made for a single execution by prefixing
-the program name with the environment variable assignment, as in:
+The runtime library is located in the @code{lib} installation
+directory.  When the system's runtime library is built as a
+shared-library (with the command @samp{configure --enable-shared}) all
+programs built with Gambit-C, including the interpreter and compiler,
+need to find this library when they are executed and consequently this
+directory must be in the path searched by the system for
+shared-libraries.  This path is normally specified through an
+environment variable which is @code{LD_LIBRARY_PATH} on most versions
+of UNIX, @code{LIBPATH} on AIX, @code{SHLIB_PATH} on HPUX,
+@code{DYLD_LIBRARY_PATH} on Mac OS X, and @code{PATH} on Microsoft
+Windows.  If the shell is @code{sh}, the setting of the path can be
+made for a single execution by prefixing the program name with the
+environment variable assignment, as in:
 
 @smallexample
-@b{}$ @b{LD_LIBRARY_PATH=/usr/local/Gambit-C/current/lib gsi}
+@b{}$ @b{LD_LIBRARY_PATH=/usr/local/Gambit-C/lib gsi}
 @end smallexample
 
 A similar problem exists with the Gambit header file @code{gambit.h},
-located in the @code{include} subdirectory.  This header file is
-needed for compiling Scheme programs with the Gambit-C compiler.  When
-the C compiler is being called explicitly it may be necessary to
-use a @code{-I@var{<dir>}} command line option to indicate where to
-find header files and a @code{-L@var{<dir>}} command line option to
-indicate where to find libraries.  Access to both of these files can
-be simplified by creating a link to them in the appropriate system
-directories (special privileges may however be required):
+located in the @code{include} installation directory.  This header
+file is needed for compiling Scheme programs with the Gambit-C
+compiler.  When the C compiler is being called explicitly it may be
+necessary to use a @code{-I@var{<dir>}} command line option to
+indicate where to find header files and a @code{-L@var{<dir>}} command
+line option to indicate where to find libraries.  Access to both of
+these files can be simplified by creating a link to them in the
+appropriate system directories (special privileges may however be
+required):
 
 @smallexample
-@b{}$ @b{ln -s /usr/local/Gambit-C/current/lib/libgambc.a /usr/lib} @r{@i{# name may vary}}
-$ @b{ln -s /usr/local/Gambit-C/current/include/gambit.h /usr/include}
+@b{}$ @b{ln -s /usr/local/Gambit-C/lib/libgambc.a /usr/lib} @r{@i{# name may vary}}
+$ @b{ln -s /usr/local/Gambit-C/include/gambit.h /usr/include}
 @end smallexample
 
-This is not done by the installation process.  Alternatively these files
-can also be copied or linked in the directory where the C compiler is
-invoked (this requires no special privileges).
+This may have been done by the installation process.  Alternatively
+these files can be copied or linked in the directory where the C
+compiler is invoked (this requires no special privileges).
 
 @menu
 * GSI::                             The Gambit Scheme interpreter
@@ -382,7 +403,7 @@ hello
 @section Customization
 
 There are two ways to customize the interpreter.  When the interpreter
-starts off it tries to execute a @samp{(load "~~/gambcext")} (for an
+starts off it tries to execute a @samp{(load "~~lib/gambcext")} (for an
 explanation of how file names are interpreted see @ref{Host environment}).
 An error is not signaled when the file does not exist.  Interpreter
 extensions and patches that are meant to apply to all users and all
@@ -584,7 +605,7 @@ setting the execute permission bits (with a @samp{chmod +x
 output the files in the current directory:
 
 @smallexample
-@b{}#!/usr/local/Gambit-C/current/bin/gsi-script
+@b{}#!/usr/local/Gambit-C/bin/gsi-script
 (for-each pretty-print (directory-files))
 @end smallexample
 
@@ -593,7 +614,7 @@ which takes a single integer argument and prints on standard output the
 numbers from 1 to that integer:
 
 @smallexample
-@b{}#!/usr/local/Gambit-C/current/bin/six-script
+@b{}#!/usr/local/Gambit-C/bin/six-script
 
 void main (obj n_str)
 @{
@@ -662,7 +683,7 @@ For example:
 
 @smallexample
 $ @b{cat square.scm}
-#!/usr/local/Gambit-C/current/bin/gsi-script
+#!/usr/local/Gambit-C/bin/gsi-script
 (define (main arg)
   (pretty-print (expt (string->number arg) 2)))
 $ @b{gsi square 30   @r{@i{# will load square.scm}}}
@@ -980,7 +1001,7 @@ command line and the @samp{-flat} option is absent).  The @samp{-l}
 option specifies the link file (without the @samp{.c} extension) of
 the base library to use for the incremental link.  By default the link
 file of the Gambit runtime library is used
-(i.e. @samp{~~/lib/_gambc.c}).
+(i.e. @samp{~~lib/_gambc.c}).
 
 @opindex -
 The @samp{-} option starts a REPL interaction.
@@ -1102,8 +1123,8 @@ At this point there will be 4 C files: @samp{m1.c}, @samp{m2.c},
 files must be compiled with a C compiler and linked with the Gambit-C
 runtime library.  The C compiler options needed will depend on the C
 compiler and the operating system (in particular it may be necessary
-to add the options @samp{-I/usr/local/Gambit-C/current/include
--L/usr/local/Gambit-C/current/lib} to access the @samp{gambit.h} header file
+to add the options @samp{-I/usr/local/Gambit-C/include
+-L/usr/local/Gambit-C/lib} to access the @samp{gambit.h} header file
 and the Gambit-C runtime library).
 
 Here is an example under Mac OS X:
@@ -1325,14 +1346,14 @@ It has been observed that lower levels of optimization (e.g. @samp{-O1})
 often give faster compilation and also generate faster code.  It is
 a good idea to experiment.
 
-@opindex -I/usr/local/Gambit-C/current/include
-@opindex -L/usr/local/Gambit-C/current/lib
+@opindex -I/usr/local/Gambit-C/include
+@opindex -L/usr/local/Gambit-C/lib
 Normally C compilers will not automatically search
-@samp{/usr/local/Gambit-C/current/include} for header files so the flag
-@samp{-I/usr/local/Gambit-C/current/include} should be passed to the C
+@samp{/usr/local/Gambit-C/include} for header files so the flag
+@samp{-I/usr/local/Gambit-C/include} should be passed to the C
 compiler.  Similarly, C compilers/linkers will not automatically
-search @samp{/usr/local/Gambit-C/current/lib} for libraries so the flag
-@samp{-L/usr/local/Gambit-C/current/lib} should be passed to the C
+search @samp{/usr/local/Gambit-C/lib} for libraries so the flag
+@samp{-L/usr/local/Gambit-C/lib} should be passed to the C
 compiler/linker.  Alternatives are given in @ref{Accessing the system
 files}.
 
@@ -1435,7 +1456,7 @@ created in that directory.  Otherwise the name of the link file is
 
 The base link file is specified by the @var{base} parameter, which
 must be a string.  By default the base link file is the Gambit runtime
-library link file @samp{~~/lib/_gambc.c}.  However, when @var{base} is
+library link file @samp{~~lib/_gambc.c}.  However, when @var{base} is
 supplied the base link file is named @samp{@var{base}.c}.
 
 The following example shows how to build the executable program
@@ -1557,10 +1578,12 @@ Select standard Scheme mode.
 Select Gambit Scheme mode.
 @item d@r{[}@var{OPT}...@r{]}
 Set debugging options.
-@item .@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}
+@item @@@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}
 Override the configuration of the main RPC server.
 @item =@var{DIRECTORY}
-Override the Gambit installation directory.
+Override the central installation directory.
+@item ~~@var{DIR}=@var{DIRECTORY}
+Override the @var{DIR} installation directory.
 @item +@var{ARGUMENT}
 Add @var{ARGUMENT} to the command line before other arguments.
 @item f@r{[}@var{OPT}...@r{]}
@@ -1682,15 +1705,19 @@ the primordial thread).  When @code{gsi} and @code{gsc} are running
 the main REPL, the debugging options are changed to cause errors in
 the primordial thread and user interrupts to start a nested REPL.
 
-@opindex -:.
-The @samp{.@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}} option
+@opindex -:@
+The @samp{@@@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}} option
 overrides the configuration of the main RPC server.  The default
 @var{INTF} is 127.0.0.1 and the default @var{PORT} is 44556.
 THIS OPTION IS NOT YET IMPLEMENTED!
 
 @opindex -:=
-The @samp{=} option overrides the setting of the Gambit installation
-directory.
+The @samp{=@var{DIRECTORY}} option overrides the setting of the
+central installation directory.
+
+@opindex -:~~
+The @samp{~~@var{DIR}=@var{DIRECTORY}} option overrides the setting of
+the @var{DIR} installation directory.
 
 @opindex -:+
 The @samp{+} option adds the text that follows to the command line
@@ -2709,7 +2736,7 @@ Here is what a typical @samp{.emacs} file will look like:
 
 @smallexample
 @b{}(setq load-path ; add directory containing gambit.el
-  (cons "/usr/local/Gambit-C/current/share/emacs/site-lisp"
+  (cons "/usr/local/Gambit-C/share/emacs/site-lisp"
         load-path))
 (setq scheme-program-name "/tmp/gsi -:d-") ; if gsi not in executable path
 (setq gambit-highlight-color "gray") ; if you don't like the default
@@ -3200,21 +3227,23 @@ For example:
 @findex define-syntax
 @findex syntax-rules
 @findex syntax-case
+@opindex -:s
 
 Define @i{name} as a macro special form whose expansion is specified
-by @i{expander}.  This form is available only after evaluating
-@code{(load "~~/syntax-case")}, which can be done at the REPL or in
-the initialization file.  This file contains Hieb and Dybvig's
-portable @code{syntax-case} implementation that has been ported to
+by @i{expander}.  This form is available only when the runtime option
+@samp{-:s} is used.  This option causes the loading of the
+@code{~~lib/syntax-case} support library, which is the Hieb and Dybvig
+portable @code{syntax-case} implementation which has been ported to
 the Gambit interpreter and compiler.  Note that this implementation of
-@code{syntax-case} does not correctly track source code location
-information, so the error messages will be much less precise.
+@code{syntax-case} does not support special forms that are specific to
+Gambit.
 
 For example:
 
 @smallexample
-> @b{(load "~~/syntax-case")}
-"/usr/local/Gambit-C/4.0b22/syntax-case.scm"
+$ @b{gsi -:s}
+Gambit @value{VERSION}
+
 > @b{(define-syntax unless
     (syntax-rules ()
       ((unless test body ...)
@@ -3224,7 +3253,7 @@ For example:
 > @b{(pp (lambda () (let ((test 111)) (unless (= 1 2) (list test test)))))}
 (lambda () ((lambda (%%test14) (if (= 1 2) #f (list %%test14 %%test14))) 111))
 > @b{(unless #f (pp xxx))}
-*** ERROR IN (console)@@8.16 -- Unbound variable: xxx
+*** ERROR IN (console)@@7.16 -- Unbound variable: xxx
 @end smallexample
 
 @end deffn
@@ -8540,12 +8569,13 @@ operating systems supported by Gambit (e.g. MSDOS).
 @cindex absolute path
 @cindex relative path
 @cindex home directory
-@cindex Gambit installation directory
+@cindex central installation directory
+@cindex installation directories
 
 Gambit uses a naming convention for files that is compatible with
 the one used by the host environment but extended to allow
 referring to the @dfn{home directory} of the current user or some
-specific user and the @dfn{Gambit installation directory}.
+specific user and the @dfn{installation directories}.
 
 A @dfn{path} is a string that denotes a file, for example
 @code{"src/readme.txt"}.  Each component of a path is separated by a
@@ -8557,30 +8587,30 @@ path which does not contain a path separator is relative to the
 specifier such as @samp{C:} may prefix a file name under MSDOS and
 Microsoft Windows.
 
-The rest of this section uses @samp{/} to represent the path
-separator.
+@cindex ~~
+A path which starts with the characters @samp{~~} denotes a file in an
+installation directory.  If nothing follows the @samp{~~} then the
+directory denoted is the central installation directory.  Otherwise
+what follows the @samp{~~} is the name of the installation directory,
+for example @samp{~~lib} denotes the @samp{lib} installation
+directory.  Note that the location of the installation directories may
+be overridden by using the @samp{-:=@var{DIRECTORY}} and
+@samp{-:~~@var{DIR}=@var{DIRECTORY}} runtime options or by defining
+the @samp{GAMBCOPT} environment variable.
 
-@cindex ~~/
-A path which starts with the characters @samp{~~/} denotes a file in
-the Gambit installation directory.  This directory is normally
-@samp{/usr/local/Gambit-C/@i{version}} under UNIX and Mac OS X and
-@samp{C:/Gambit-C/@i{version}} under MSDOS and Microsoft Windows.  To
-override this binding under UNIX, Mac OS X, MSDOS and Microsoft
-Windows, use the @samp{-:=@var{<dir>}} runtime option or define the
-@samp{GAMBCOPT} environment variable.
+@cindex ~
+A path which starts with the character @samp{~} not followed by
+@samp{~} denotes a file in the user's home directory.  The user's home
+directory is contained in the @samp{HOME} environment variable under
+UNIX, Mac OS X, MSDOS and Microsoft Windows.  Under MSDOS and
+Microsoft Windows, if the @samp{HOME} environment variable is not
+defined, the environment variables @samp{HOMEDRIVE} and
+@samp{HOMEPATH} are concatenated if they are defined.  If this fails
+to yield a home directory, the central installation directory is used
+instead.
 
-@cindex ~/
-A path which starts with the characters @samp{~/} denotes a file in
-the user's home directory.  The user's home directory is contained in
-the @samp{HOME} environment variable under UNIX, Mac OS X, MSDOS and
-Microsoft Windows.  Under MSDOS and Microsoft Windows, if the
-@samp{HOME} environment variable is not defined, the environment
-variables @samp{HOMEDRIVE} and @samp{HOMEPATH} are concatenated if
-they are defined.  If this fails to yield a home directory, the Gambit
-installation directory is used instead.
-
-@cindex ~username/
-A path which starts with the characters @samp{~@var{username}/}
+@cindex ~username
+A path which starts with the characters @samp{~@var{username}}
 denotes a file in the home directory of the given user.  Under UNIX
 and Mac OS X this is found using the password file.  There is no
 equivalent under MSDOS and Microsoft Windows.
@@ -8610,9 +8640,9 @@ For example under UNIX:
 > @b{(current-directory)}
 "/Users/feeley/gambit/"
 > @b{(path-expand "foo" "~~")}
-"/usr/local/Gambit-C/4.0b22/foo"
+"/usr/local/Gambit-C/foo"
 > @b{(parameterize ((current-directory "~~")) (path-expand "foo"))}
-"/usr/local/Gambit-C/4.0b22/foo"
+"/usr/local/Gambit-C/foo"
 @end smallexample
 
 @end deffn
@@ -8636,8 +8666,8 @@ For example under UNIX:
 "/Users/feeley/gambit/doc/foo"
 > @b{(path-expand "~/foo")}
 "/Users/feeley/foo"
-> @b{(path-expand "~~/foo")}
-"/usr/local/Gambit-C/4.0b22/foo"
+> @b{(path-expand "~~lib/foo")}
+"/usr/local/Gambit-C/lib/foo"
 > @b{(path-expand "../foo")}
 "/Users/feeley/gambit/doc/../foo"
 > @b{(path-expand "foo" "")}
@@ -8978,7 +9008,7 @@ For example under UNIX:
 $ @b{gsi -:d -e "(pretty-print (command-line))"}
 ("gsi" "-e" "(pretty-print (command-line))")
 $ @b{cat foo}
-#!/usr/local/Gambit-C/current/bin/gsi-script
+#!/usr/local/Gambit-C/bin/gsi-script
 (pretty-print (command-line))
 $ @b{./foo 1 2 "3 4"}
 ("/u/feeley/./foo" "1" "2" "3 4")

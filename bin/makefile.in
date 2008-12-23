@@ -12,7 +12,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
 
 @SET_MAKE@
 
@@ -29,8 +28,12 @@ FLAGS_EXE = @FLAGS_EXE@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
+LIBRARY_DEFS = @LIBRARY_DEFS@
+LIB_PREFIX = @LIB_PREFIX@
+LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
-GAMBCCOMPLIB = @GAMBCCOMPLIB@
+GAMBCGSCLIB = @GAMBCGSCLIB@
+GAMBCGSILIB = @GAMBCGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -43,12 +46,21 @@ HG = @HG@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-includedir = $(prefix)$(PACKAGE_SUBDIR)/include
-libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
-bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
-docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
-infodir = $(prefix)$(PACKAGE_SUBDIR)/info
-emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+includedir = @includedir@
+libdir = @libdir@
+bindir = @bindir@
+docdir = @docdir@
+infodir = @infodir@
+emacsdir = @emacsdir@
+libexecdir = @libexecdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+htmldir = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+localedir = @localedir@
+mandir = @mandir@
 
 .SUFFIXES:
 
@@ -57,6 +69,13 @@ RCFILES = makefile.in
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+INSTFILES_BIN_PROG = gsc-cc-o.bat
+INSTFILES_BIN_LINK_GSI = six@exe@ gsi-script@bat@ six-script@bat@ \
+scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+INSTFILES_BIN_LINK_GSC = gsc-script@bat@
+INSTFILES_BIN_LINK = $(INSTFILES_BIN_LINK_GSI) $(INSTFILES_BIN_LINK_GSC)
+INSTFILES_BIN = $(INSTFILES_BIN_PROG) $(INSTFILES_BIN_LINK)
 
 all: all-pre all-recursive all-post
 
@@ -70,7 +89,9 @@ gsc-cc-o.bat: makefile
 	  echo "#! /bin/sh" > gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
 	  echo "# Script parameters are passed in the following environment variables:" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_GAMBCDIR" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_GAMBCDIR_BIN" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_GAMBCDIR_INCLUDE" >> gsc-cc-o.bat; \
+	  echo "#   GSC_CC_O_GAMBCDIR_LIB" >> gsc-cc-o.bat; \
 	  echo "#   GSC_CC_O_OBJ_FILENAME" >> gsc-cc-o.bat; \
 	  echo "#   GSC_CC_O_C_FILENAME_DIR" >> gsc-cc-o.bat; \
 	  echo "#   GSC_CC_O_C_FILENAME_BASE" >> gsc-cc-o.bat; \
@@ -78,7 +99,9 @@ gsc-cc-o.bat: makefile
 	  echo "#   GSC_CC_O_LD_OPTIONS_PRELUDE" >> gsc-cc-o.bat; \
 	  echo "#   GSC_CC_O_LD_OPTIONS" >> gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_GAMBCDIR = \"\$${GSC_CC_O_GAMBCDIR}\"" >> gsc-cc-o.bat; \
+	  echo "# echo GSC_CC_O_GAMBCDIR_BIN = \"\$${GSC_CC_O_GAMBCDIR_BIN}\"" >> gsc-cc-o.bat; \
+	  echo "# echo GSC_CC_O_GAMBCDIR_INCLUDE = \"\$${GSC_CC_O_GAMBCDIR_INCLUDE}\"" >> gsc-cc-o.bat; \
+	  echo "# echo GSC_CC_O_GAMBCDIR_LIB = \"\$${GSC_CC_O_GAMBCDIR_LIB}\"" >> gsc-cc-o.bat; \
 	  echo "# echo GSC_CC_O_OBJ_FILENAME = \"\$${GSC_CC_O_OBJ_FILENAME}\"" >> gsc-cc-o.bat; \
 	  echo "# echo GSC_CC_O_C_FILENAME_DIR = \"\$${GSC_CC_O_C_FILENAME_DIR}\"" >> gsc-cc-o.bat; \
 	  echo "# echo GSC_CC_O_C_FILENAME_BASE = \"\$${GSC_CC_O_C_FILENAME_BASE}\"" >> gsc-cc-o.bat; \
@@ -94,7 +117,9 @@ gsc-cc-o.bat: makefile
 	  echo "@echo off" > gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
 	  echo "rem Script parameters are passed in the following environment variables:" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_GAMBCDIR" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_GAMBCDIR_BIN" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_GAMBCDIR_INCLUDE" >> gsc-cc-o.bat; \
+	  echo "rem   GSC_CC_O_GAMBCDIR_LIB" >> gsc-cc-o.bat; \
 	  echo "rem   GSC_CC_O_OBJ_FILENAME" >> gsc-cc-o.bat; \
 	  echo "rem   GSC_CC_O_C_FILENAME_DIR" >> gsc-cc-o.bat; \
 	  echo "rem   GSC_CC_O_C_FILENAME_BASE" >> gsc-cc-o.bat; \
@@ -102,7 +127,9 @@ gsc-cc-o.bat: makefile
 	  echo "rem   GSC_CC_O_LD_OPTIONS_PRELUDE" >> gsc-cc-o.bat; \
 	  echo "rem   GSC_CC_O_LD_OPTIONS" >> gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_GAMBCDIR = %GSC_CC_O_GAMBCDIR%" >> gsc-cc-o.bat; \
+	  echo "rem echo GSC_CC_O_GAMBCDIR_BIN = %GSC_CC_O_GAMBCDIR_BIN%" >> gsc-cc-o.bat; \
+	  echo "rem echo GSC_CC_O_GAMBCDIR_INCLUDE = %GSC_CC_O_GAMBCDIR_INCLUDE%" >> gsc-cc-o.bat; \
+	  echo "rem echo GSC_CC_O_GAMBCDIR_LIB = %GSC_CC_O_GAMBCDIR_LIB%" >> gsc-cc-o.bat; \
 	  echo "rem echo GSC_CC_O_OBJ_FILENAME = %GSC_CC_O_OBJ_FILENAME%" >> gsc-cc-o.bat; \
 	  echo "rem echo GSC_CC_O_C_FILENAME_DIR = %GSC_CC_O_C_FILENAME_DIR%" >> gsc-cc-o.bat; \
 	  echo "rem echo GSC_CC_O_C_FILENAME_BASE = %GSC_CC_O_C_FILENAME_BASE%" >> gsc-cc-o.bat; \
@@ -121,12 +148,12 @@ gsc-cc-o.bat: makefile
 	  echo "" >> gsc-cc-o.bat; \
 	  echo ":use_gcc.exe" >> gsc-cc-o.bat; \
 	  echo "cd \"%GSC_CC_O_C_FILENAME_DIR%\"" >> gsc-cc-o.bat; \
-	  echo "gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I\"%GSC_CC_O_GAMBCDIR%include\" -D___DYNAMIC -D___SINGLE_HOST -o \"%GSC_CC_O_OBJ_FILENAME%\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \"%GSC_CC_O_C_FILENAME_BASE%\" %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
+	  echo "gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I\"%GSC_CC_O_GAMBCDIR_INCLUDE%\" -D___DYNAMIC -D___SINGLE_HOST -o \"%GSC_CC_O_OBJ_FILENAME%\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \"%GSC_CC_O_C_FILENAME_BASE%\" %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
 	  echo "goto end" >> gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
 	  echo ":use_cl.exe" >> gsc-cc-o.bat; \
 	  echo "cd \"%GSC_CC_O_C_FILENAME_DIR%\"" >> gsc-cc-o.bat; \
-	  echo "cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I\"%GSC_CC_O_GAMBCDIR%include\" -D___DYNAMIC -D___SINGLE_HOST -Fe\"%GSC_CC_O_OBJ_FILENAME%\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \"%GSC_CC_O_C_FILENAME_BASE%\" %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
+	  echo "cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I\"%GSC_CC_O_GAMBCDIR_INCLUDE%\" -D___DYNAMIC -D___SINGLE_HOST -Fe\"%GSC_CC_O_OBJ_FILENAME%\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \"%GSC_CC_O_C_FILENAME_BASE%\" %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
 	  echo "goto end" >> gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
 	  echo ":use_build_time_c_compiler" >> gsc-cc-o.bat; \
@@ -206,62 +233,85 @@ scheme-ieee-1178-1990@bat@: makefile
 install-pre:
 
 install-post: all
-	$(srcdirpfx)$(rootfromhere)/mkidirs $(bindir)
-	rm -f $(bindir)/gsc-cc-o.bat \
-	  $(bindir)/six@exe@ $(bindir)/six@exe@.lnk \
-	  $(bindir)/gsi-script@bat@ $(bindir)/gsi-script@bat@.lnk \
-	  $(bindir)/gsc-script@bat@ $(bindir)/gsc-script@bat@.lnk \
-	  $(bindir)/six-script@bat@ $(bindir)/six-script@bat@.lnk \
-	  $(bindir)/scheme-srfi-0@bat@ $(bindir)/scheme-srfi-0@bat@.lnk \
-	  $(bindir)/scheme-r5rs@bat@ $(bindir)/scheme-r5rs@bat@.lnk \
-	  $(bindir)/scheme-r4rs@bat@ $(bindir)/scheme-r4rs@bat@.lnk \
-	  $(bindir)/scheme-ieee-1178-1990@bat@ $(bindir)/scheme-ieee-1178-1990@bat@.lnk
-	$(INSTALL_PROGRAM) gsc-cc-o.bat $(bindir)/gsc-cc-o.bat
-	if test "@bat@" = ""; then \
-	  (cd $(bindir) && $(LN_S) gsi@exe@ six@exe@); \
-	  (cd $(bindir) && $(LN_S) gsi@exe@ gsi-script@bat@); \
-	  (cd $(bindir) && $(LN_S) gsc@exe@ gsc-script@bat@); \
-	  (cd $(bindir) && $(LN_S) gsi@exe@ six-script@bat@); \
-	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-srfi-0@bat@); \
-	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-r5rs@bat@); \
-	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-r4rs@bat@); \
-	  (cd $(bindir) && $(LN_S) gsi@exe@ scheme-ieee-1178-1990@bat@); \
-	else \
-	  $(INSTALL_PROGRAM) six@exe@ $(bindir)/six@exe@; \
-	  $(INSTALL_PROGRAM) gsi-script@bat@ $(bindir)/gsi-script@bat@; \
-	  $(INSTALL_PROGRAM) gsc-script@bat@ $(bindir)/gsc-script@bat@; \
-	  $(INSTALL_PROGRAM) six-script@bat@ $(bindir)/six-script@bat@; \
-	  $(INSTALL_PROGRAM) scheme-srfi-0@bat@ $(bindir)/scheme-srfi-0@bat@; \
-	  $(INSTALL_PROGRAM) scheme-r5rs@bat@ $(bindir)/scheme-r5rs@bat@; \
-	  $(INSTALL_PROGRAM) scheme-r4rs@bat@ $(bindir)/scheme-r4rs@bat@; \
-	  $(INSTALL_PROGRAM) scheme-ieee-1178-1990@bat@ $(bindir)/scheme-ieee-1178-1990@bat@; \
+	c_bindir=$(DESTDIR)$(prefix)/bin; \
+	i_bindir=$(DESTDIR)$(bindir); \
+	t_bindir=$$i_bindir; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_bindir; \
+	if test "@ENABLE_SYMLINKS@" = "yes"; then \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_bindir; \
+	  t_bindir=$$c_bindir; \
+	fi; \
+	for file in $(INSTFILES_BIN_LINK); do \
+	  rm -f $$t_bindir/$$file $$t_bindir/$$file.lnk; \
+	done; \
+	for file in $(INSTFILES_BIN_PROG); do \
+	  $(INSTALL_PROGRAM) $$file $$t_bindir/$$file; \
+	done; \
+	for file in $(INSTFILES_BIN_LINK_GSI); do \
+	  (cd $$t_bindir && $(LN_S) gsi@exe@ $$file); \
+	done; \
+	for file in $(INSTFILES_BIN_LINK_GSC); do \
+	  (cd $$t_bindir && $(LN_S) gsc@exe@ $$file); \
+	done; \
+	if test "$$t_bindir" != "$$i_bindir"; then \
+	  r_bindir=`$(rootfromhere)/relpath "$$t_bindir" "$$i_bindir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	  for file in $(INSTFILES_BIN_LINK); do \
+	    rm -f $$i_bindir/$$file $$i_bindir/$$file.lnk; \
+	  done; \
+	  for file in $(INSTFILES_BIN); do \
+	    (cd $$i_bindir && $(LN_S) $$r_bindir$$file $$file); \
+	  done; \
 	fi
 
 uninstall-pre:
 
 uninstall-post:
-	rm -f $(bindir)/gsc-cc-o.bat \
-	  $(bindir)/six@exe@ $(bindir)/six@exe@.lnk \
-	  $(bindir)/gsi-script@bat@ $(bindir)/gsi-script@bat@.lnk \
-	  $(bindir)/gsc-script@bat@ $(bindir)/gsc-script@bat@.lnk \
-	  $(bindir)/six-script@bat@ $(bindir)/six-script@bat@.lnk \
-	  $(bindir)/scheme-srfi-0@bat@ $(bindir)/scheme-srfi-0@bat@.lnk \
-	  $(bindir)/scheme-r5rs@bat@ $(bindir)/scheme-r5rs@bat@.lnk \
-	  $(bindir)/scheme-r4rs@bat@ $(bindir)/scheme-r4rs@bat@.lnk \
-	  $(bindir)/scheme-ieee-1178-1990@bat@ $(bindir)/scheme-ieee-1178-1990@bat@.lnk
+	c_bindir=$(DESTDIR)$(prefix)/bin; \
+	i_bindir=$(DESTDIR)$(bindir); \
+	t_bindir=$$i_bindir; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_bindir; \
+	if test "@ENABLE_SYMLINKS@" = "yes"; then \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_bindir; \
+	  t_bindir=$$c_bindir; \
+	fi; \
+	for file in $(INSTFILES_BIN_LINK); do \
+	  rm -f $$t_bindir/$$file $$t_bindir/$$file.lnk; \
+	done; \
+	for file in $(INSTFILES_BIN_PROG); do \
+	  rm -f $$t_bindir/$$file; \
+	done; \
+	if test "$$t_bindir" != "$$i_bindir"; then \
+	  for file in $(INSTFILES_BIN_LINK); do \
+	    rm -f $$i_bindir/$$file $$i_bindir/$$file.lnk; \
+	  done; \
+	  for file in $(INSTFILES_BIN_PROG); do \
+	    rm -f $$i_bindir/$$file; \
+	  done; \
+	fi; \
+	rmdir $$t_bindir 2> /dev/null; \
+	if test "$$t_bindir" != "$$i_bindir"; then \
+	  rmdir $$i_bindir 2> /dev/null; \
+	fi
 
 mostlyclean-pre:
 
 mostlyclean-post:
 	rm -f gsc-cc-o.bat \
 	  six@exe@ six@exe@.lnk \
-	  gsi-script@bat@ gsi-script@bat@.lnk \
-	  gsc-script@bat@ gsc-script@bat@.lnk \
-	  six-script@bat@ six-script@bat@.lnk \
-	  scheme-srfi-0@bat@ scheme-srfi-0@bat@.lnk \
-	  scheme-r5rs@bat@ scheme-r5rs@bat@.lnk \
-	  scheme-r4rs@bat@ scheme-r4rs@bat@.lnk \
-	  scheme-ieee-1178-1990@bat@ scheme-ieee-1178-1990@bat@.lnk
+	  gsi-script@bat@ \
+	  gsi-script@bat@.lnk \
+	  gsc-script@bat@ \
+	  gsc-script@bat@.lnk \
+	  six-script@bat@ \
+	  six-script@bat@.lnk \
+	  scheme-srfi-0@bat@ \
+	  scheme-srfi-0@bat@.lnk \
+	  scheme-r5rs@bat@ \
+	  scheme-r5rs@bat@.lnk \
+	  scheme-r4rs@bat@ \
+	  scheme-r4rs@bat@.lnk \
+	  scheme-ieee-1178-1990@bat@ \
+	  scheme-ieee-1178-1990@bat@.lnk
 
 clean-pre: mostlyclean-pre
 

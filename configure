@@ -678,7 +678,6 @@ build_alias
 host_alias
 target_alias
 PACKAGE_SHORTNAME
-PACKAGE_SUBDIR
 build
 build_cpu
 build_vendor
@@ -773,13 +772,19 @@ obj
 bat
 SETDLPATH
 GSC_CC_O
+LIBRARY_DEFS
+LIB_PREFIX
+LIB_EXTENSION
 GAMBCLIB
 GAMBCGSCLIB
 GAMBCGSILIB
 MAKE_LIBRARY
 MAKE_LIBRARY_FOR_INSTALL
+MAKE_LIBRARY_FOR_INSTALL_LIBS
 LINK
 LINK_FOR_INSTALL
+LINK_FOR_INSTALL_GSI_LIBS
+LINK_FOR_INSTALL_GSC_LIBS
 INSTALL
 INSTALL_DATA
 INSTALL_LIB
@@ -789,6 +794,12 @@ GIT
 HG
 FIXLIB
 X_FLAGS
+ENABLE_SYMLINKS
+ENABLE_MULTIPLE_VERSIONS
+ENABLE_SHARED
+ENABLE_ABSOLUTE_SHARED_LIBS
+ENABLE_VERSIONNED_LIBS
+emacsdir
 SET_MAKE
 LIBOBJS
 LTLIBOBJS'
@@ -807,6 +818,9 @@ enable_gcc_opts
 enable_char_size
 enable_shared
 enable_ansi_c
+enable_symlinks
+enable_multiple_versions
+enable_absolute_shared_libs
 with_x
 '
       ac_precious_vars='build_alias
@@ -1465,12 +1479,20 @@ Optional Features:
                           NO)
   --enable-single-host    compile each Scheme module as a single C function
                           (default is NO)
-  --enable-inline-jumps   Generate inline code for jumps (default is NO)
-  --enable-gcc-opts       Use expensive GCC optimizations (default is NO)
+  --enable-inline-jumps   generate inline code for jumps (default is NO)
+  --enable-gcc-opts       use expensive GCC optimizations (default is NO)
   --enable-char-size=N    Scheme character size in bytes (default is 4)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
   --enable-ansi-c         link only with ANSI C libraries (default is NO)
+  --enable-symlinks       use symbolic links for installed files not in the
+                          central installation directory (default is YES)
+  --enable-multiple-versions
+                          multiple installed versions are supported (default
+                          is NO)
+  --enable-absolute-shared-libs
+                          shared libraries should be linked to using an
+                          absolute path (default is YES)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1944,9 +1966,6 @@ ac_config_headers="$ac_config_headers include/config.h"
 
 
 PACKAGE_SHORTNAME="gambc"
-PACKAGE_SUBDIR="/$PACKAGE_VERSION"
-#PACKAGE_SUBDIR=""
-
 
 
 
@@ -2134,6 +2153,7 @@ FLAGS_DYN=""
 FLAGS_LIB=""
 FLAGS_EXE=""
 GSC_CC_O_DEFS="-D___DYNAMIC"
+LIBRARY_DEFS=""
 
 ###############################################################################
 #
@@ -5353,6 +5373,69 @@ fi
 
 ###############################################################################
 #
+# Check if symbolic links should be used for files not in the
+# central installation directory.
+
+# Check whether --enable-symlinks was given.
+if test "${enable_symlinks+set}" = set; then
+  enableval=$enable_symlinks; ENABLE_SYMLINKS=$enableval
+else
+  ENABLE_SYMLINKS=no
+fi
+
+
+###############################################################################
+#
+# Check if multiple installed versions are supported.
+
+# Check whether --enable-multiple-versions was given.
+if test "${enable_multiple_versions+set}" = set; then
+  enableval=$enable_multiple_versions; ENABLE_MULTIPLE_VERSIONS=$enableval
+else
+  ENABLE_MULTIPLE_VERSIONS=no
+fi
+
+
+###############################################################################
+#
+# Check if libraries should contain a version number suffix.
+
+ENABLE_VERSIONNED_LIBS=no
+
+# This option does not currently work.  Some work is needed to make it
+# work properly.  Here is the documentation that should go in INSTALL.txt:
+
+#The option --enable-versionned-libs will add a version number suffix
+#to the libraries.  For example the Gambit v4.3.2 runtime library which
+#is normally libgambc.a will be named libgambc-v4_3_2.a and it must be
+#linked to with the C compiler option -lgambc-v4_3_2 .  If you give
+#this option a value, as in --enable-versionned-libs=<suffix> then
+#<suffix> will be appended to the name of the libraries.
+
+#AC_ARG_ENABLE(versionned-libs,
+#              AC_HELP_STRING([--enable-versionned-libs],
+#                             [libraries should contain a version number suffix (default is NO)]),
+#              ENABLE_VERSIONNED_LIBS=$enableval,
+#              ENABLE_VERSIONNED_LIBS=no)
+
+###############################################################################
+#
+# Check if shared libraries should be linked to using an absolute path.
+
+# Check whether --enable-absolute-shared-libs was given.
+if test "${enable_absolute_shared_libs+set}" = set; then
+  enableval=$enable_absolute_shared_libs; ENABLE_ABSOLUTE_SHARED_LIBS=$enableval
+else
+  ENABLE_ABSOLUTE_SHARED_LIBS=yes
+fi
+
+
+if test "$ENABLE_SHARED" != "yes"; then
+  ENABLE_ABSOLUTE_SHARED_LIBS=no
+fi
+
+###############################################################################
+#
 # Check for C compiler.
 
 
@@ -6483,7 +6566,7 @@ fi
 done
 
 
-if test "$ANSI_C" = no; then
+if test "$ANSI_C" != yes; then
 
 
 for ac_header in unistd.h
@@ -24405,40 +24488,35 @@ if test "$ENABLE_SHARED" = yes; then
 
 
      mingw* | cygwin*)
-             GAMBCLIB="libgambc.dll"
-             GAMBCGSCLIB="libgambcgsc.dll"
-             GAMBCGSILIB="libgambcgsi.dll"
+             LIB_PREFIX="lib"
+             LIB_EXTENSION=".dll"
              SETDLPATH="PATH=\"\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${PATH}\""
              ;;
 
-    darwin*) GAMBCLIB="libgambc.dylib"
-             GAMBCGSCLIB="libgambcgsc.dylib"
-             GAMBCGSILIB="libgambcgsi.dylib"
+    darwin*) LIB_PREFIX="lib"
+             LIB_EXTENSION=".dylib"
              SETDLPATH="DYLD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${DYLD_LIBRARY_PATH}"
              ;;
 
-      hpux*) GAMBCLIB="libgambc.so"
-             GAMBCGSCLIB="libgambcgsc.so"
-             GAMBCGSILIB="libgambcgsi.so"
+      hpux*) LIB_PREFIX="lib"
+             LIB_EXTENSION=".so"
              SETDLPATH="SHLIB_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${SHLIB_PATH}"
              ;;
 
-       aix*) GAMBCLIB="libgambc.so"
-             GAMBCGSCLIB="libgambcgsc.so"
-             GAMBCGSILIB="libgambcgsi.so"
+       aix*) LIB_PREFIX="lib"
+             LIB_EXTENSION=".so"
              SETDLPATH="LIBPATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LIBPATH}"
              ;;
 
-          *) GAMBCLIB="libgambc.so"
-             GAMBCGSCLIB="libgambcgsc.so"
-             GAMBCGSILIB="libgambcgsi.so"
+          *) LIB_PREFIX="lib"
+             LIB_EXTENSION=".so"
              SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LD_LIBRARY_PATH}"
              ;;
   esac
 
   MAKE_LIBRARY='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_LIBS) $(LIBS)'
   MAKE_LIBRARY_FOR_INSTALL='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_FOR_INSTALL_LIBS) $(LIBS)'
-  FIXLIB='#'
+  FIXLIB=':'
   LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -o $(EXECUTABLE)'
   LINK_FOR_INSTALL='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_FOR_INSTALL_LIBS) $(LIBS) -o $(EXECUTABLE)'
 
@@ -24450,9 +24528,8 @@ else
 
     ########## Microsoft Visual C++ compiler
 
-    GAMBCLIB="libgambc.lib"
-    GAMBCGSCLIB="libgambcgsc.lib"
-    GAMBCGSILIB="libgambcgsi.lib"
+    LIB_PREFIX="lib"
+    LIB_EXTENSION=".lib"
     MAKE_LIBRARY='lib -out:$(LIBRARY) $(LIBRARY_OBJECTS)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB=':'
@@ -24466,9 +24543,8 @@ else
 
     ########## Other C compiler
 
-    GAMBCLIB="libgambc.a"
-    GAMBCGSCLIB="libgambcgsc.a"
-    GAMBCGSILIB="libgambcgsi.a"
+    LIB_PREFIX="lib"
+    LIB_EXTENSION=".a"
     MAKE_LIBRARY='ar rc $(LIBRARY) $(LIBRARY_OBJECTS) && $(RANLIB) $(LIBRARY)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB='$(RANLIB)'
@@ -24483,18 +24559,54 @@ if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"%GSC_CC_O_GAMBCDIR%include\\\" $GSC_CC_O_DEFS -Fe\\\"%GSC_CC_O_OBJ_FILENAME%\\\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \\\"%GSC_CC_O_C_FILENAME_BASE%\\\" %GSC_CC_O_LD_OPTIONS%"
+  GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"%GSC_CC_O_GAMBCDIR_INCLUDE%\\\" $GSC_CC_O_DEFS -Fe\\\"%GSC_CC_O_OBJ_FILENAME%\\\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \\\"%GSC_CC_O_C_FILENAME_BASE%\\\" %GSC_CC_O_LD_OPTIONS%"
 
 else
 
   case "$target_os" in
 
-     mingw*) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"%GSC_CC_O_GAMBCDIR%include\\\" $GSC_CC_O_DEFS -o \\\"%GSC_CC_O_OBJ_FILENAME%\\\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \\\"%GSC_CC_O_C_FILENAME_BASE%\\\" %GSC_CC_O_LD_OPTIONS%"
+     mingw*) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"%GSC_CC_O_GAMBCDIR_INCLUDE%\\\" $GSC_CC_O_DEFS -o \\\"%GSC_CC_O_OBJ_FILENAME%\\\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \\\"%GSC_CC_O_C_FILENAME_BASE%\\\" %GSC_CC_O_LD_OPTIONS%"
              ;;
 
-          *) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"\\\$\${GSC_CC_O_GAMBCDIR}include\\\" $GSC_CC_O_DEFS -o \\\"\\\$\${GSC_CC_O_OBJ_FILENAME}\\\" \\\$\${GSC_CC_O_CC_OPTIONS} \\\$\${GSC_CC_O_LD_OPTIONS_PRELUDE} \\\"\\\$\${GSC_CC_O_C_FILENAME_BASE}\\\" \\\$\${GSC_CC_O_LD_OPTIONS}"
+          *) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"\\\$\${GSC_CC_O_GAMBCDIR_INCLUDE}\\\" $GSC_CC_O_DEFS -o \\\"\\\$\${GSC_CC_O_OBJ_FILENAME}\\\" \\\$\${GSC_CC_O_CC_OPTIONS} \\\$\${GSC_CC_O_LD_OPTIONS_PRELUDE} \\\"\\\$\${GSC_CC_O_C_FILENAME_BASE}\\\" \\\$\${GSC_CC_O_LD_OPTIONS}"
              ;;
   esac
+
+fi
+
+if test "$ENABLE_VERSIONNED_LIBS" = "no"; then
+
+  LIB_SUFFIX=""
+
+else
+
+  if test "$ENABLE_VERSIONNED_LIBS" = "yes"; then
+
+    LIB_SUFFIX=`echo -$PACKAGE_VERSION | sed -e 's/\./_/g'`
+
+  else
+
+    LIB_SUFFIX="$ENABLE_VERSIONNED_LIBS"
+
+  fi
+
+fi
+
+GAMBCLIB="gambc$LIB_SUFFIX"
+GAMBCGSCLIB="gambcgsc$LIB_SUFFIX"
+GAMBCGSILIB="gambcgsi$LIB_SUFFIX"
+
+if test "$ENABLE_ABSOLUTE_SHARED_LIBS" = "yes"; then
+
+  MAKE_LIBRARY_FOR_INSTALL_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)'
+  LINK_FOR_INSTALL_GSI_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSILIB)$(LIB_EXTENSION) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)'
+  LINK_FOR_INSTALL_GSC_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSCLIB)$(LIB_EXTENSION) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)'
+
+else
+
+  MAKE_LIBRARY_FOR_INSTALL_LIBS='-L$(rootfromhere)/lib -l$(GAMBCLIB)'
+  LINK_FOR_INSTALL_GSI_LIBS='-L. -L$(rootfromhere)/lib -l$(GAMBCGSILIB) -l$(GAMBCLIB)'
+  LINK_FOR_INSTALL_GSC_LIBS='-L. -L$(rootfromhere)/lib -l$(GAMBCGSCLIB) -l$(GAMBCLIB)'
 
 fi
 
@@ -24556,6 +24668,78 @@ _ACEOF
 esac
 
 ###############################################################################
+#
+# Determine where the installation directories are located.
+
+if test "$prefix" = "NONE"; then
+  prefix="/usr/local/$PACKAGE_NAME"
+fi
+
+if test "$ENABLE_MULTIPLE_VERSIONS" = yes; then
+  prefix="$prefix/$PACKAGE_VERSION"
+fi
+
+if test "$bindir" = "\${exec_prefix}/bin"; then
+  bindir="\${prefix}/bin"
+fi
+
+if test "$includedir" = "\${prefix}/include"; then
+  includedir="\${prefix}/include"
+fi
+
+if test "$libdir" = "\${exec_prefix}/lib"; then
+  libdir="\${prefix}/lib"
+fi
+
+if test "$docdir" = "\${datarootdir}/doc/\${PACKAGE_TARNAME}"; then
+  docdir="\${prefix}/doc"
+fi
+
+if test "$infodir" = "\${datarootdir}/info"; then
+  infodir="\${prefix}/info"
+fi
+
+if test "$datadir" = "\${datarootdir}"; then
+  datadir="\${prefix}/share"
+fi
+
+LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR=\"\\\"\${prefix}\\\"\""
+
+if test "$ENABLE_SYMLINKS" != yes; then
+
+  if test "$bindir" != "\${prefix}/bin"; then
+    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_BIN=\"\\\"\${bindir}\\\"\""
+  fi
+
+  if test "$includedir" != "\${prefix}/include"; then
+    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_INCLUDE=\"\\\"\${includedir}\\\"\""
+  fi
+
+  if test "$libdir" != "\${prefix}/lib"; then
+    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_LIB=\"\\\"\${libdir}\\\"\""
+  fi
+
+  if test "$docdir" != "\${prefix}/doc"; then
+    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_DOC=\"\\\"\${docdir}\\\"\""
+  fi
+
+  if test "$infodir" != "\${prefix}/info"; then
+    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_INFO=\"\\\"\${infodir}\\\"\""
+  fi
+
+  if test "$datadir" != "\${prefix}/share"; then
+    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_SHARE=\"\\\"\${datadir}\\\"\""
+  fi
+
+fi
+
+emacsdir="\${datadir}/emacs/site-lisp"
+
+LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
+LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
+LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\""
+
+###############################################################################
 
 if test "$srcdir" = "."; then
   srcdirpfx=""
@@ -24567,6 +24751,15 @@ INSTALL='$(rootfromhere)/install-sh -c'
 INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
+
+
+
+
+
+
+
+
+
 
 
 
@@ -25915,31 +26108,19 @@ $as_echo "$as_me:
 " >&6;}
 fi
 
-if test "$C_COMP_GNUC" = yes; then
-  if test "$ENABLE_GCC_OPTS" != yes; then
-    { $as_echo "$as_me:$LINENO:
-**************************************************************************
-*** The GCC compiler is being used but the option \"--enable-gcc-opts\"  ***
-*** was not specified to the configure script.  The Gambit-C system    ***
-*** will compile correctly but the code generated by the GCC compiler  ***
-*** will be suboptimal and the executables will run slightly slower    ***
-*** than if \"--enable-gcc-opts\" is specified.  On the other hand the   ***
-*** build process will be faster and require less memory.  If you have ***
-*** lots of RAM memory (>= 2 Gbytes) and you are willing to wait for   ***
-*** the longer build try the configure option \"--enable-gcc-opts\".     ***
-**************************************************************************
-" >&5
-$as_echo "$as_me:
-**************************************************************************
-*** The GCC compiler is being used but the option \"--enable-gcc-opts\"  ***
-*** was not specified to the configure script.  The Gambit-C system    ***
-*** will compile correctly but the code generated by the GCC compiler  ***
-*** will be suboptimal and the executables will run slightly slower    ***
-*** than if \"--enable-gcc-opts\" is specified.  On the other hand the   ***
-*** build process will be faster and require less memory.  If you have ***
-*** lots of RAM memory (>= 2 Gbytes) and you are willing to wait for   ***
-*** the longer build try the configure option \"--enable-gcc-opts\".     ***
-**************************************************************************
-" >&6;}
-  fi
-fi
+#if test "$C_COMP_GNUC" = yes; then
+#  if test "$ENABLE_GCC_OPTS" != yes; then
+#    AC_MSG_NOTICE([
+#**************************************************************************
+#*** The GCC compiler is being used but the option "--enable-gcc-opts"  ***
+#*** was not specified to the configure script.  The Gambit-C system    ***
+#*** will compile correctly but the code generated by the GCC compiler  ***
+#*** will be suboptimal and the executables will run slightly slower    ***
+#*** than if "--enable-gcc-opts" is specified.  On the other hand the   ***
+#*** build process will be faster and require less memory.  If you have ***
+#*** lots of RAM memory (>= 2 Gbytes) and you are willing to wait for   ***
+#*** the longer build try the configure option "--enable-gcc-opts".     ***
+#**************************************************************************
+#])
+#  fi
+#fi

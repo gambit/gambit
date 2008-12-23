@@ -1,4 +1,4 @@
-# makefile for pi example, Time-stamp: <2007-07-25 19:51:09 feeley>
+# makefile for pi example, Time-stamp: <2008-12-17 18:07:19 feeley>
 
 # Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -12,7 +12,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
 
 @SET_MAKE@
 
@@ -29,8 +28,12 @@ FLAGS_EXE = @FLAGS_EXE@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
+LIBRARY_DEFS = @LIBRARY_DEFS@
+LIB_PREFIX = @LIB_PREFIX@
+LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
-GAMBCCOMPLIB = @GAMBCCOMPLIB@
+GAMBCGSCLIB = @GAMBCGSCLIB@
+GAMBCGSILIB = @GAMBCGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -43,12 +46,21 @@ HG = @HG@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-includedir = $(prefix)$(PACKAGE_SUBDIR)/include
-libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
-bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
-docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
-infodir = $(prefix)$(PACKAGE_SUBDIR)/info
-emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+includedir = @includedir@
+libdir = @libdir@
+bindir = @bindir@
+docdir = @docdir@
+infodir = @infodir@
+emacsdir = @emacsdir@
+libexecdir = @libexecdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+htmldir = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+localedir = @localedir@
+mandir = @mandir@
 
 .SUFFIXES: .scm .c @obj@ .o1
 
@@ -68,10 +80,10 @@ examples: pi.o1 run
 
 .scm.o1:
 	rm -f $*.o*
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include $(srcdirpfx)$*.scm
 
 run:
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -e '(load "pi") (main "1000")'
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -e '(load "pi") (main "1000")'
 
 install-pre:
 

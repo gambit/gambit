@@ -1,21 +1,21 @@
-#! /usr/local/Gambit-C/bin/gsi-script
+#!/usr/bin/env gsi-script
 
-; File: "web-server.scm", Time-stamp: <2007-04-04 14:43:14 feeley>
+; File: "web-server.scm", Time-stamp: <2008-12-17 13:41:03 feeley>
 
-; Copyright (c) 2004-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2004-2008 by Marc Feeley, All Rights Reserved.
 
 ; A minimal web server which implements a web-site with a few
 ; interesting examples.
 
 ;==============================================================================
 
-(##include "~~/lib/gambit#.scm") ; import Gambit procedures and variables
-(##include "http#.scm")          ; import HTTP procedures and variables
-(##include "html#.scm")          ; import HTML procedures and variables
-(##include "base64#.scm")        ; import BASE64 procedures and variables
+(##include "~~lib/gambit#.scm") ;; import Gambit procedures and variables
+(##include "http#.scm")         ;; import HTTP procedures and variables
+(##include "html#.scm")         ;; import HTML procedures and variables
+(##include "base64#.scm")       ;; import BASE64 procedures and variables
 
-(declare (block)) ; required for serializing continuations
-                  ; (for the web-continuation example)
+(declare (block)) ;; required for serializing continuations
+                  ;; (for the web-continuation example)
 
 ;==============================================================================
 

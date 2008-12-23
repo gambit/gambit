@@ -1,4 +1,4 @@
-# makefile for Tcl/Tk example, Time-stamp: <2007-07-25 19:52:09 feeley>
+# makefile for Tcl/Tk example, Time-stamp: <2008-12-17 18:08:30 feeley>
 
 # Copyright (c) 1997-2008 by Marc Feeley, All Rights Reserved.
 
@@ -12,7 +12,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
 
 @SET_MAKE@
 
@@ -29,8 +28,12 @@ FLAGS_EXE = @FLAGS_EXE@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
+LIBRARY_DEFS = @LIBRARY_DEFS@
+LIB_PREFIX = @LIB_PREFIX@
+LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
-GAMBCCOMPLIB = @GAMBCCOMPLIB@
+GAMBCGSCLIB = @GAMBCGSCLIB@
+GAMBCGSILIB = @GAMBCGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -43,12 +46,21 @@ HG = @HG@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-includedir = $(prefix)$(PACKAGE_SUBDIR)/include
-libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
-bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
-docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
-infodir = $(prefix)$(PACKAGE_SUBDIR)/info
-emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+includedir = @includedir@
+libdir = @libdir@
+bindir = @bindir@
+docdir = @docdir@
+infodir = @infodir@
+emacsdir = @emacsdir@
+libexecdir = @libexecdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+htmldir = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+localedir = @localedir@
+mandir = @mandir@
 
 .SUFFIXES: .scm .c @obj@ .o1
 
@@ -71,10 +83,10 @@ examples: test.o1 run
 
 .scm.o1:
 	rm -f $*.o*
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:=$(srcdirpfx)$(rootfromhere) -cc-options "@X_CFLAGS@" -ld-options "@X_PRE_LIBS@ @X_LIBS@ @X_EXTRA_LIBS@ -ltcl -ltk -lX11" $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -cc-options "@X_CFLAGS@" -ld-options "@X_PRE_LIBS@ @X_LIBS@ @X_EXTRA_LIBS@ -ltcl -ltk -lX11" $(srcdirpfx)$*.scm
 
 run: tcltk.o1
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi tcltk -e '(load "test") (main)'
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include tcltk -e '(load "test") (main)'
 
 install-pre:
 

@@ -12,7 +12,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
 
 @SET_MAKE@
 
@@ -29,8 +28,12 @@ FLAGS_EXE = @FLAGS_EXE@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
+LIBRARY_DEFS = @LIBRARY_DEFS@
+LIB_PREFIX = @LIB_PREFIX@
+LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
-GAMBCCOMPLIB = @GAMBCCOMPLIB@
+GAMBCGSCLIB = @GAMBCGSCLIB@
+GAMBCGSILIB = @GAMBCGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -43,12 +46,21 @@ HG = @HG@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-includedir = $(prefix)$(PACKAGE_SUBDIR)/include
-libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
-bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
-docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
-infodir = $(prefix)$(PACKAGE_SUBDIR)/info
-emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+includedir = @includedir@
+libdir = @libdir@
+bindir = @bindir@
+docdir = @docdir@
+infodir = @infodir@
+emacsdir = @emacsdir@
+libexecdir = @libexecdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+htmldir = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+localedir = @localedir@
+mandir = @mandir@
 
 .SUFFIXES:
 
@@ -63,14 +75,13 @@ proj_cw.hqx \
 gambit.el \
 changev changev1 \
 set-regs \
-psyntax69c.pp psyntax69c.ss psyntax73.pp psyntax73.ss \
-syntax-case-build syntax-case-expand-file \
-syntax-case-postlude.scm syntax-case-prelude.scm syntax-case.scm \
 publish-release
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+INSTFILES_EMACS = gambit.el
 
 all: all-pre all-recursive all-post
 
@@ -81,15 +92,45 @@ all-post:
 install-pre:
 
 install-post: all
-	$(srcdirpfx)$(rootfromhere)/mkidirs $(emacsdir)
-	$(INSTALL_DATA) gambit.el $(emacsdir)/gambit.el
-	$(INSTALL_DATA) syntax-case.scm $(prefix)$(PACKAGE_SUBDIR)/syntax-case.scm
+	c_emacsdir=$(DESTDIR)$(prefix)/share/emacs/site-lisp; \
+	i_emacsdir=$(DESTDIR)$(emacsdir); \
+	t_emacsdir=$$i_emacsdir; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_emacsdir; \
+	if test "@ENABLE_SYMLINKS@" = "yes"; then \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_emacsdir; \
+	  t_emacsdir=$$c_emacsdir; \
+	fi; \
+	for file in $(INSTFILES_EMACS); do \
+	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_emacsdir/$$file; \
+	done; \
+	if test "$$t_emacsdir" != "$$i_emacsdir"; then \
+	  r_emacsdir=`$(rootfromhere)/relpath "$$t_emacsdir" "$$i_emacsdir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	  for file in $(INSTFILES_EMACS); do \
+	    (cd $$i_emacsdir && $(LN_S) $$r_emacsdir$$file $$file); \
+	  done; \
+	fi
 
 uninstall-pre:
 
 uninstall-post:
-	rm -f $(emacsdir)/gambit.el
-	rm -f $(prefix)$(PACKAGE_SUBDIR)/syntax-case.scm
+	c_emacsdir=$(DESTDIR)$(prefix)/share/emacs/site-lisp; \
+	i_emacsdir=$(DESTDIR)$(emacsdir); \
+	t_emacsdir=$$i_emacsdir; \
+	if test "@ENABLE_SYMLINKS@" = "yes"; then \
+	  t_emacsdir=$$c_emacsdir; \
+	fi; \
+	for file in $(INSTFILES_EMACS); do \
+	  rm -f $$t_emacsdir/$$file; \
+	done; \
+	if test "$$t_emacsdir" != "$$i_emacsdir"; then \
+	  for file in $(INSTFILES_EMACS); do \
+	    rm -f $$i_emacsdir/$$file; \
+	  done; \
+	fi; \
+	rmdir $$t_emacsdir 2> /dev/null; \
+	if test "$$t_emacsdir" != "$$i_emacsdir"; then \
+	  rmdir $$i_emacsdir 2> /dev/null; \
+	fi
 
 mostlyclean-pre:
 

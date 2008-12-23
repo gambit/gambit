@@ -1,14 +1,14 @@
 ;==============================================================================
 
-; File: "digest.scm", Time-stamp: <2007-04-04 11:28:52 feeley>
+; File: "digest.scm", Time-stamp: <2008-12-15 11:28:03 feeley>
 
-; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
 ;==============================================================================
 
 (##namespace ("digest#"))
 
-(##include "~~/lib/gambit#.scm")
+(##include "~~lib/gambit#.scm")
 
 (##include "digest#.scm")
 

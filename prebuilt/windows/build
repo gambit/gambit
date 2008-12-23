@@ -28,7 +28,7 @@ for VARIANT in mingw visualc; do
              ;;
   esac
 
-  cmd /c "C:\PROGRA~1\MICROS~2\VC\VCVARS~1.BAT && C:\PROGRA~1\MICROS~4\SETENV.CMD /RETAIL && sh -c \"CC=\\\"$CONFIG_CC\\\" ./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-single-host # --enable-gcc-opts\""
+  cmd /c "C:\PROGRA~1\MICROS~2\VC\VCVARS~1.BAT && C:\PROGRA~1\MICROS~4\SETENV.CMD /RETAIL && sh -c \"CC=\\\"$CONFIG_CC\\\" ./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-multiple-versions --enable-symlinks --enable-single-host # --enable-gcc-opts\""
 
   cd "$herefromroot"
 

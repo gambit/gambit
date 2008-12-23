@@ -12,7 +12,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
-PACKAGE_SUBDIR = @PACKAGE_SUBDIR@
 
 @SET_MAKE@
 
@@ -29,8 +28,12 @@ FLAGS_EXE = @FLAGS_EXE@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
+LIBRARY_DEFS = @LIBRARY_DEFS@
+LIB_PREFIX = @LIB_PREFIX@
+LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
-GAMBCCOMPLIB = @GAMBCCOMPLIB@
+GAMBCGSCLIB = @GAMBCGSCLIB@
+GAMBCGSILIB = @GAMBCGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -43,12 +46,21 @@ HG = @HG@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-includedir = $(prefix)$(PACKAGE_SUBDIR)/include
-libdir = $(prefix)$(PACKAGE_SUBDIR)/lib
-bindir = $(prefix)$(PACKAGE_SUBDIR)/bin
-docdir = $(prefix)$(PACKAGE_SUBDIR)/doc
-infodir = $(prefix)$(PACKAGE_SUBDIR)/info
-emacsdir = $(prefix)$(PACKAGE_SUBDIR)/share/emacs/site-lisp
+includedir = @includedir@
+libdir = @libdir@
+bindir = @bindir@
+docdir = @docdir@
+infodir = @infodir@
+emacsdir = @emacsdir@
+libexecdir = @libexecdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+htmldir = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+localedir = @localedir@
+mandir = @mandir@
 
 .SUFFIXES:
 
@@ -77,22 +89,53 @@ all-post: gambit.h
 install-pre:
 
 install-post: all
-	$(srcdirpfx)$(rootfromhere)/mkidirs $(includedir)
-	$(INSTALL_DATA) $(srcdirpfx)gambit.h $(includedir)/gambit.h
+	c_includedir=$(DESTDIR)$(prefix)/include; \
+	i_includedir=$(DESTDIR)$(includedir); \
+	t_includedir=$$i_includedir; \
 	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
 	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
-	$(INSTALL_DATA) $(srcdirpfx)gambit-not$$version_num.h $(includedir)/gambit-not$$version_num.h
+	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_includedir; \
+	if test "@ENABLE_SYMLINKS@" = "yes"; then \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_includedir; \
+	  t_includedir=$$c_includedir; \
+	fi; \
+	for file in gambit.h gambit-not$$version_num.h; do \
+	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_includedir/$$file; \
+	done; \
+	if test "$$t_includedir" != "$$i_includedir"; then \
+	  r_includedir=`$(rootfromhere)/relpath "$$t_includedir" "$$i_includedir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	  for file in gambit.h gambit-not$$version_num.h; do \
+	    (cd $$i_includedir && $(LN_S) $$r_includedir$$file $$file); \
+	  done; \
+	fi
 
 uninstall-pre:
 
 uninstall-post:
+	c_includedir=$(DESTDIR)$(prefix)/include; \
+	i_includedir=$(DESTDIR)$(includedir); \
+	t_includedir=$$i_includedir; \
 	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
 	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
-	rm -f $(includedir)/gambit.h $(includedir)/gambit-not$$version_num.h
+	if test "@ENABLE_SYMLINKS@" = "yes"; then \
+	  t_includedir=$$c_includedir; \
+	fi; \
+	for file in gambit.h gambit-not$$version_num.h; do \
+	  rm -f $$t_includedir/$$file; \
+	done; \
+	if test "$$t_includedir" != "$$i_includedir"; then \
+	  for file in gambit.h gambit-not$$version_num.h; do \
+	    rm -f $$i_includedir/$$file; \
+	  done; \
+	fi; \
+	rmdir $$t_includedir 2> /dev/null; \
+	if test "$$t_includedir" != "$$i_includedir"; then \
+	  rmdir $$i_includedir 2> /dev/null; \
+	fi
 
 mostlyclean-pre:
 
