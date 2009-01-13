@@ -1,26 +1,26 @@
 #!/usr/bin/env gsi-script
 
-; File: "bounce.scm"
+;;; File: "bounce.scm"
 
-; Copyright (c) 2005-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
 
-; Create two windows and bounce many colored balls in them.
+;;; Create two windows and bounce many colored balls in them.
 
-(##include "Xlib#.scm") ; import Xlib procedures and variables
+(##include "Xlib#.scm") ;; import Xlib procedures and variables
 
-(define win-width   300)
-(define win-height  201)
+(define win-width   600)
+(define win-height  401)
 (define ball-width  25)
 (define ball-height 25)
-(define nb-balls    20)
+(define nb-balls    100)
 
 (define-type ball
-  id ; identifier
-  x  ; x coordinate
-  y  ; y coordinate
-  dx ; speed on x axis
-  dy ; speed on y axis
-  gc ; graphic context
+  id ;; identifier
+  x  ;; x coordinate
+  y  ;; y coordinate
+  dx ;; speed on x axis
+  dy ;; speed on y axis
+  gc ;; graphic context
 )
 
 (define (iota n)
@@ -268,7 +268,7 @@
             (let ((balls (create-balls x11-display screen window)))
               (let loop ((n 200))
                 (if (> n 0)
-                    (begin
+                    (let ((start (current-time)))
 
                       (for-each
                        (lambda (b) (move-ball b 5))
@@ -288,7 +288,7 @@
                       (let ((timeout
                              (seconds->time
                               (+ 1/30
-                                 (time->seconds (current-time))))))
+                                 (time->seconds start)))))
                         (let event-loop ()
                           (let ((ev (x11-event-get x11-event-queue timeout)))
                             (if ev
@@ -301,4 +301,11 @@
     (for-each
      thread-join!
      (list (create-window)
-           (create-window)))))
+           (create-window))))
+
+  (##gc)
+
+;; For checking memory leaks on Mac OS X:
+;;  (shell-command (string-append "leaks " (number->string (##os-getpid)) " | fgrep :"))
+
+)

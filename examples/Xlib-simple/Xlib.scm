@@ -1,15 +1,15 @@
-;==============================================================================
+;;;============================================================================
 
-; File: "Xlib.scm", Time-stamp: <2008-12-15 11:51:51 feeley>
+;;; File: "Xlib.scm", Time-stamp: <2009-01-13 14:06:51 feeley>
 
-; Copyright (c) 2006-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2006-2009 by Marc Feeley, All Rights Reserved.
 
-; A simple interface to the X-window Xlib library.
+;;; A simple interface to the X Window System Xlib library.
 
-; Note: This interface to Xlib is still in development.  There are
-;       still memory leaks in the interface.
+;; Note: This interface to Xlib is still in development.  There are
+;;       still memory leaks in the interface.
 
-;==============================================================================
+;;;============================================================================
 
 (##namespace ("Xlib#"))
 
@@ -24,7 +24,7 @@
   (not safe)
 )
 
-;==============================================================================
+;;;============================================================================
 
 (c-declare #<<end-of-c-declare
 
@@ -34,8 +34,8 @@
 end-of-c-declare
 )
 
-; Declare a few types so that the function prototypes use the same
-; type names as a C program.
+;; Declare a few types so that the function prototypes use the same
+;; type names as a C program.
 
 (c-define-type Time unsigned-long)
 (c-define-type XID unsigned-long)
@@ -49,289 +49,405 @@ end-of-c-declare
 (c-define-type GContext XID)
 (c-define-type KeySym XID)
 
+(c-declare #<<end-of-c-declare
+
+#define debug_free_not
+#define really_free
+
+#ifdef debug_free
+#include <stdio.h>
+#endif
+
+___SCMOBJ XFree_GC( void* ptr )
+{ GC p = ptr;
+#ifdef debug_free
+  printf( "XFree_GC(%p)\n", p );
+  fflush( stdout );
+#endif
+#ifdef really_free
+  XFree( p );
+#endif
+  return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ XFree_Visual( void* ptr )
+{ Visual* p = ptr;
+#ifdef debug_free
+  printf( "XFree_Visual(%p)\n", p );
+  fflush( stdout );
+#endif
+#ifdef really_free
+  XFree( p );
+#endif
+  return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ XFree_Display( void* ptr )
+{ Display* p = ptr;
+#ifdef debug_free
+  printf( "XFree_Display(%p)\n", p );
+  fflush( stdout );
+#endif
+#ifdef really_free
+  XFree( p );
+#endif
+  return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ XFree_Screen( void* ptr )
+{ Screen* p = ptr;
+#ifdef debug_free
+  printf( "XFree_Screen(%p)\n", p );
+  fflush( stdout );
+#endif
+#ifdef really_free
+  XFree( p );
+#endif
+  return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ release_rc_XGCValues( void* ptr )
+{ XGCValues* p = ptr;
+#ifdef debug_free
+  printf( "release_rc_XGCValues(%p)\n", p );
+  fflush( stdout );
+#endif
+#ifdef really_free
+  ___EXT(___release_rc)( p );
+#endif
+  return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ XFree_XFontStruct( void* ptr )
+{ XFontStruct* p = ptr;
+#ifdef debug_free
+  printf( "XFree_XFontStruct(%p)\n", p );
+  fflush( stdout );
+#endif
+#ifdef really_free
+  XFree( p );
+#endif
+  return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ release_rc_XColor( void* ptr )
+{ XColor* p = ptr;
+#ifdef debug_free
+  printf( "release_rc_XColor(%p)\n", p );
+  fflush( stdout );
+#endif
+#ifdef really_free
+  ___EXT(___release_rc)( p );
+#endif
+  return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ release_rc_XEvent( void* ptr )
+{ XEvent* p = ptr;
+#ifdef debug_free
+  printf( "release_rc_XEvent(%p)\n", p );
+  fflush( stdout );
+#endif
+#ifdef really_free
+  ___EXT(___release_rc)( p );
+#endif
+  return ___FIX(___NO_ERR);
+}
+
+end-of-c-declare
+)
+
 (c-define-type Bool int)
 (c-define-type Status int)
-(c-define-type GC (pointer (struct "_XGC")))
+(c-define-type GC (pointer (struct "_XGC") (GC)))
+(c-define-type GC/XFree (pointer (struct "_XGC") (GC) "XFree_GC"))
 (c-define-type Visual "Visual")
-(c-define-type Visual* (pointer Visual))
+(c-define-type Visual* (pointer Visual (Visual*)))
+(c-define-type Visual*/XFree (pointer Visual (Visual*) "XFree_Visual"))
 (c-define-type Display "Display")
-(c-define-type Display* (pointer Display))
+(c-define-type Display* (pointer Display (Display*)))
+(c-define-type Display*/XFree (pointer Display (Display*) "XFree_Display"))
 (c-define-type Screen "Screen")
-(c-define-type Screen* (pointer Screen))
+(c-define-type Screen* (pointer Screen (Screen*)))
+(c-define-type Screen*/XFree (pointer Screen (Screen*) "XFree_Screen"))
 (c-define-type XGCValues "XGCValues")
-(c-define-type XGCValues* (pointer XGCValues))
+(c-define-type XGCValues* (pointer XGCValues (XGCValues*)))
+(c-define-type XGCValues*/release-rc (pointer XGCValues (XGCValues*) "release_rc_XGCValues"))
 (c-define-type XFontStruct "XFontStruct")
-(c-define-type XFontStruct* (pointer XFontStruct))
+(c-define-type XFontStruct* (pointer XFontStruct (XFontStruct*)))
+(c-define-type XFontStruct*/XFree (pointer XFontStruct (XFontStruct*) "XFree_XFontStruct"))
 (c-define-type XColor "XColor")
-(c-define-type XColor* (pointer XColor))
+(c-define-type XColor* (pointer XColor (XColor*)))
+(c-define-type XColor*/release-rc (pointer XColor (XColor*) "release_rc_XColor"))
 (c-define-type XEvent "XEvent")
-(c-define-type XEvent* (pointer XEvent))
+(c-define-type XEvent* (pointer XEvent (XEvent*)))
+(c-define-type XEvent*/release-rc (pointer XEvent (XEvent*) "release_rc_XEvent"))
 
 (c-define-type char* char-string)
 
-; Function prototypes for a minimal subset of Xlib functions.  The
-; functions have the same name in Scheme and C.
+;; Function prototypes for a minimal subset of Xlib functions.  The
+;; functions have the same name in Scheme and C.
 
 (define XOpenDisplay
-  (c-lambda (char*)        ; display_name
-            Display*
+  (c-lambda (char*)        ;; display_name
+            Display*/XFree
             "XOpenDisplay"))
 
 (define XCloseDisplay
-  (c-lambda (Display*)     ; display
+  (c-lambda (Display*)     ;; display
             int
             "XCloseDisplay"))
 
 (define XDefaultScreen
-  (c-lambda (Display*)     ; display
+  (c-lambda (Display*)     ;; display
             int
             "XDefaultScreen"))
 
 (define XScreenOfDisplay
-  (c-lambda (Display*      ; display
-             int)          ; screen_number
-            Screen*
+  (c-lambda (Display*      ;; display
+             int)          ;; screen_number
+            Screen*/XFree
             "XScreenOfDisplay"))
 
 (define XDefaultColormapOfScreen
-  (c-lambda (Screen*)      ; screen
+  (c-lambda (Screen*)      ;; screen
             Colormap
             "XDefaultColormapOfScreen"))
 
 (define XClearWindow
-  (c-lambda (Display*      ; display
-             Window)       ; w
+  (c-lambda (Display*      ;; display
+             Window)       ;; w
             int
             "XClearWindow"))
 
 (define XConnectionNumber
-  (c-lambda (Display*)     ; display
+  (c-lambda (Display*)     ;; display
             int
             "XConnectionNumber"))
 
 (define XRootWindow
-  (c-lambda (Display*      ; display
-             int)          ; screen_number
+  (c-lambda (Display*      ;; display
+             int)          ;; screen_number
             Window
             "XRootWindow"))
 
 (define XDefaultRootWindow
-  (c-lambda (Display*)     ; display
+  (c-lambda (Display*)     ;; display
             Window
             "XDefaultRootWindow"))
 
 (define XRootWindowOfScreen
-  (c-lambda (Screen*)      ; screen
+  (c-lambda (Screen*)      ;; screen
             Window
             "XRootWindowOfScreen"))
 
 (define XDefaultVisual
-  (c-lambda (Display*      ; display
-             int)          ; screen_number
-            Visual*
+  (c-lambda (Display*      ;; display
+             int)          ;; screen_number
+            Visual*/XFree
             "XDefaultVisual"))
 
 (define XDefaultVisualOfScreen
-  (c-lambda (Screen*)      ; screen
-            Visual*
+  (c-lambda (Screen*)      ;; screen
+            Visual*/XFree
             "XDefaultVisualOfScreen"))
 
 (define XDefaultGC
-  (c-lambda (Display*      ; display
-             int)          ; screen_number
-            GC
+  (c-lambda (Display*      ;; display
+             int)          ;; screen_number
+            GC/XFree
             "XDefaultGC"))
 
 (define XDefaultGCOfScreen
-  (c-lambda (Screen*)      ; screen
-            GC
+  (c-lambda (Screen*)      ;; screen
+            GC/XFree
             "XDefaultGCOfScreen"))
 
 (define XBlackPixel
-  (c-lambda (Display*       ; display
-             int)           ; screen_number
+  (c-lambda (Display*       ;; display
+             int)           ;; screen_number
             unsigned-long
             "XBlackPixel"))
 
 (define XWhitePixel
-  (c-lambda (Display*       ; display
-             int)           ; screen_number
+  (c-lambda (Display*       ;; display
+             int)           ;; screen_number
             unsigned-long
             "XWhitePixel"))
 
 (define XCreateSimpleWindow
-  (c-lambda (Display*       ; display
-             Window         ; parent
-             int            ; x
-             int            ; y
-             unsigned-int   ; width
-             unsigned-int   ; height
-             unsigned-int   ; border_width
-             unsigned-long  ; border
-             unsigned-long) ; backgound
+  (c-lambda (Display*       ;; display
+             Window         ;; parent
+             int            ;; x
+             int            ;; y
+             unsigned-int   ;; width
+             unsigned-int   ;; height
+             unsigned-int   ;; border_width
+             unsigned-long  ;; border
+             unsigned-long) ;; backgound
             Window
             "XCreateSimpleWindow"))
 
 (define XMapWindow
-  (c-lambda (Display*       ; display
-             Window)        ; w
+  (c-lambda (Display*       ;; display
+             Window)        ;; w
             int
             "XMapWindow"))
 
 (define XFlush
-  (c-lambda (Display*)      ; display
+  (c-lambda (Display*)      ;; display
             int
             "XFlush"))
 
 (define XCreateGC
-  (c-lambda (Display*       ; display
-             Drawable       ; d
-             unsigned-long  ; valuemask
-             XGCValues*)    ; values
-            GC
+  (c-lambda (Display*       ;; display
+             Drawable       ;; d
+             unsigned-long  ;; valuemask
+             XGCValues*)    ;; values
+            GC/XFree
             "XCreateGC"))
 
 (define XFillRectangle
-  (c-lambda (Display*      ; display
-             Drawable      ; d
-             GC            ; gc
-             int           ; x
-             int           ; y
-             unsigned-int  ; width
-             unsigned-int) ; height
+  (c-lambda (Display*      ;; display
+             Drawable      ;; d
+             GC            ;; gc
+             int           ;; x
+             int           ;; y
+             unsigned-int  ;; width
+             unsigned-int) ;; height
             int
             "XFillRectangle"))
 
 (define XFillArc
-  (c-lambda (Display*      ; display
-             Drawable      ; d
-             GC            ; gc
-             int           ; x
-             int           ; y
-             unsigned-int  ; width
-             unsigned-int  ; height
-             int           ; angle1
-             int)          ; angle2
+  (c-lambda (Display*      ;; display
+             Drawable      ;; d
+             GC            ;; gc
+             int           ;; x
+             int           ;; y
+             unsigned-int  ;; width
+             unsigned-int  ;; height
+             int           ;; angle1
+             int)          ;; angle2
             int
             "XFillArc"))
 
 (define XDrawString
-  (c-lambda (Display*      ; display
-             Drawable      ; d
-             GC            ; gc
-             int           ; x
-             int           ; y
-             char*         ; string
-             int)          ; length
+  (c-lambda (Display*      ;; display
+             Drawable      ;; d
+             GC            ;; gc
+             int           ;; x
+             int           ;; y
+             char*         ;; string
+             int)          ;; length
             int
             "XDrawString"))
 
 (define XTextWidth
-  (c-lambda (XFontStruct*  ; font_struct
-             char*         ; string
-             int)          ; count
+  (c-lambda (XFontStruct*  ;; font_struct
+             char*         ;; string
+             int)          ;; count
             int
             "XTextWidth"))
 
 (define XParseColor
-  (c-lambda (Display*      ; display
-             Colormap      ; colormap
-             char*         ; spec
-             XColor*)      ; exact_def_return
+  (c-lambda (Display*      ;; display
+             Colormap      ;; colormap
+             char*         ;; spec
+             XColor*)      ;; exact_def_return
             Status
             "XParseColor"))
 
 (define XAllocColor
-  (c-lambda (Display*      ; display
-             Colormap      ; colormap
-             XColor*)      ; screen_in_out
+  (c-lambda (Display*      ;; display
+             Colormap      ;; colormap
+             XColor*)      ;; screen_in_out
             Status
             "XAllocColor"))
 
 (define (make-XColor-box)
   ((c-lambda ()
-             XColor*
-             "___result_voidstar = ___EXT(___alloc_mem) (sizeof (XColor));")))
+             XColor*/release-rc
+             "___result_voidstar = ___EXT(___alloc_rc) (sizeof (XColor));")))
 
 (define XColor-pixel
-  (c-lambda (XColor*)       ; XColor box
+  (c-lambda (XColor*)       ;; XColor box
              unsigned-long
             "___result = ___arg1->pixel;"))
 
 (define XColor-pixel-set!
-  (c-lambda (XColor*        ; XColor box
-             unsigned-long) ; intensity
+  (c-lambda (XColor*        ;; XColor box
+             unsigned-long) ;; intensity
             void
             "___arg1->pixel = ___arg2;"))
 
 (define XColor-red
-  (c-lambda (XColor*)       ; XColor box
+  (c-lambda (XColor*)       ;; XColor box
              unsigned-short
             "___result = ___arg1->red;"))
 
 (define XColor-red-set!
-  (c-lambda (XColor*        ; XColor box
-             unsigned-short); intensity
+  (c-lambda (XColor*        ;; XColor box
+             unsigned-short);; intensity
             void
             "___arg1->red = ___arg2;"))
 
 (define XColor-green
-  (c-lambda (XColor*)       ; XColor box
+  (c-lambda (XColor*)       ;; XColor box
              unsigned-short
             "___result = ___arg1->green;"))
 
 (define XColor-green-set!
-  (c-lambda (XColor*        ; XColor box
-             unsigned-short); intensity
+  (c-lambda (XColor*        ;; XColor box
+             unsigned-short);; intensity
             void
             "___arg1->green = ___arg2;"))
 
 (define XColor-blue
-  (c-lambda (XColor*)       ; XColor box
+  (c-lambda (XColor*)       ;; XColor box
              unsigned-short
             "___result = ___arg1->blue;"))
 
 (define XColor-blue-set!
-  (c-lambda (XColor*        ; XColor box
-             unsigned-short); intensity
+  (c-lambda (XColor*        ;; XColor box
+             unsigned-short);; intensity
             void
             "___arg1->blue = ___arg2;"))
 
 (define (make-XGCValues-box)
   ((c-lambda ()
-             XGCValues*
-             "___result_voidstar = ___EXT(___alloc_mem) (sizeof (XGCValues));")))
+             XGCValues*/release-rc
+             "___result_voidstar = ___EXT(___alloc_rc) (sizeof (XGCValues));")))
 
 (define XGCValues-foreground
-  (c-lambda (XGCValues*)    ; XGCValues box
+  (c-lambda (XGCValues*)    ;; XGCValues box
             unsigned-long
             "return ___arg1->foreground;"))
 
 (define XGCValues-foreground-set!
-  (c-lambda (XGCValues*     ; XGCValues box
-             unsigned-long) ; pixel index
+  (c-lambda (XGCValues*     ;; XGCValues box
+             unsigned-long) ;; pixel index
             void
             "___arg1->foreground = ___arg2;"))
 
 (define XGCValues-background
-  (c-lambda (XGCValues*)    ; XGCValues box
+  (c-lambda (XGCValues*)    ;; XGCValues box
             unsigned-long
             "return ___arg1->background;"))
 
 (define XGCValues-background-set!
-  (c-lambda (XGCValues*     ; XGCValues box
-             unsigned-long) ; pixel index
+  (c-lambda (XGCValues*     ;; XGCValues box
+             unsigned-long) ;; pixel index
             void
             "___arg1->background = ___arg2;"))
 
 (define XGCValues-font
-  (c-lambda (XGCValues*)    ; XGCValues box
+  (c-lambda (XGCValues*)    ;; XGCValues box
             Font
             "return ___arg1->font;"))
 
 (define XGCValues-font-set!
-  (c-lambda (XGCValues*     ; XGCValues box
-             Font)          ; font_ID
+  (c-lambda (XGCValues*     ;; XGCValues box
+             Font)          ;; font_ID
             void
             "___arg1->font = ___arg2;"))
 
@@ -405,51 +521,51 @@ end-of-c-declare
   ((c-lambda () unsigned-long "___result = GCArcMode;")))
 
 (define XChangeGC
-  (c-lambda (Display*       ; display
-             GC             ; gc
-             unsigned-long  ; valuemask
-             XGCValues*)    ; values
+  (c-lambda (Display*       ;; display
+             GC             ;; gc
+             unsigned-long  ;; valuemask
+             XGCValues*)    ;; values
             int
             "XChangeGC"))
 
 (define XGetGCValues
-  (c-lambda (Display*       ; display
-             GC             ; gc
-             unsigned-long  ; valuemask
-             XGCValues*)    ; values_return
+  (c-lambda (Display*       ;; display
+             GC             ;; gc
+             unsigned-long  ;; valuemask
+             XGCValues*)    ;; values_return
             int
             "XGetGCValues"))
 
 (define XQueryFont
-  (c-lambda (Display*       ; display
-             Font)          ; font_ID
-            XFontStruct*
+  (c-lambda (Display*       ;; display
+             Font)          ;; font_ID
+            XFontStruct*/XFree
             "XQueryFont"))
 
 (define XLoadFont
-  (c-lambda (Display*       ; display
-             char*)         ; name
+  (c-lambda (Display*       ;; display
+             char*)         ;; name
             Font
             "XLoadFont"))
 
 (define XLoadQueryFont
-  (c-lambda (Display*       ; display
-             char*)         ; name
-            XFontStruct*
+  (c-lambda (Display*       ;; display
+             char*)         ;; name
+            XFontStruct*/XFree
             "XLoadQueryFont"))
 
 (define XFontStruct-fid
-  (c-lambda (XFontStruct*)  ; font_struct
+  (c-lambda (XFontStruct*)  ;; font_struct
             Font
             "___result = ___arg1->fid;"))
 
 (define XFontStruct-ascent
-  (c-lambda (XFontStruct*)  ; font_struct
+  (c-lambda (XFontStruct*)  ;; font_struct
             int
             "___result = ___arg1->ascent;"))
 
 (define XFontStruct-descent
-  (c-lambda (XFontStruct*)  ; font_struct
+  (c-lambda (XFontStruct*)  ;; font_struct
             int
             "___result = ___arg1->descent;"))
 
@@ -631,278 +747,280 @@ end-of-c-declare
   ((c-lambda () long "___result = MappingNotify;")))
 
 (define XCheckMaskEvent
-  (c-lambda (Display*       ; display
-             long)          ; event_mask
-            XEvent*
-            "
-            XEvent ev;
-            XEvent* pev;
-            if (XCheckMaskEvent (___arg1, ___arg2, &ev))
-              {
-                pev = ___CAST(XEvent*,___EXT(___alloc_mem (sizeof (ev))));
-                *pev = ev;
-              }
-            else
-              pev = 0;
-            ___result_voidstar = pev;
-            "))
+  (c-lambda (Display*       ;; display
+             long)          ;; event_mask
+            XEvent*/release-rc
+#<<end-of-c-lambda
+XEvent ev;
+XEvent* pev;
+if (XCheckMaskEvent (___arg1, ___arg2, &ev))
+  {
+    pev = ___CAST(XEvent*,___EXT(___alloc_rc) (sizeof (ev)));
+    *pev = ev;
+  }
+else
+  pev = 0;
+___result_voidstar = pev;
+end-of-c-lambda
+))
 
 (define XSelectInput
-  (c-lambda (Display*       ; display
-             Window         ; w
-             long)          ; event_mask
+  (c-lambda (Display*       ;; display
+             Window         ;; w
+             long)          ;; event_mask
             int
             "XSelectInput"))
 
 (define XAnyEvent-type
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->type;"))
 
 (define XAnyEvent-serial
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             unsigned-long
             "___result = ___arg1->xany.serial;"))
 
 (define XAnyEvent-send-event
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             bool
             "___result = ___arg1->xany.send_event;"))
 
 (define XAnyEvent-display
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Display*
             "___result_voidstar = ___arg1->xany.display;"))
 
 (define XAnyEvent-window
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xany.window;"))
 
 (define XKeyEvent-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xkey.root;"))
 
 (define XKeyEvent-subwindow
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xkey.subwindow;"))
 
 (define XKeyEvent-time
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Time
             "___result = ___arg1->xkey.time;"))
 
 (define XKeyEvent-x
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xkey.x;"))
 
 (define XKeyEvent-y
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xkey.y;"))
 
 (define XKeyEvent-x-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xkey.x_root;"))
 
 (define XKeyEvent-y-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xkey.y_root;"))
 
 (define XKeyEvent-state
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             unsigned-int
             "___result = ___arg1->xkey.state;"))
 
 (define XKeyEvent-keycode
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             unsigned-int
             "___result = ___arg1->xkey.keycode;"))
 
 (define XKeyEvent-same-screen
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             bool
             "___result = ___arg1->xkey.same_screen;"))
 
 (define XButtonEvent-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xbutton.root;"))
 
 (define XButtonEvent-subwindow
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xbutton.subwindow;"))
 
 (define XButtonEvent-time
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Time
             "___result = ___arg1->xbutton.time;"))
 
 (define XButtonEvent-x
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xbutton.x;"))
 
 (define XButtonEvent-y
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xbutton.y;"))
 
 (define XButtonEvent-x-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xbutton.x_root;"))
 
 (define XButtonEvent-y-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xbutton.y_root;"))
 
 (define XButtonEvent-state
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             unsigned-int
             "___result = ___arg1->xbutton.state;"))
 
 (define XButtonEvent-button
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             unsigned-int
             "___result = ___arg1->xbutton.button;"))
 
 (define XButtonEvent-same-screen
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             bool
             "___result = ___arg1->xbutton.same_screen;"))
 
 (define XMotionEvent-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xmotion.root;"))
 
 (define XMotionEvent-subwindow
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xmotion.subwindow;"))
 
 (define XMotionEvent-time
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Time
             "___result = ___arg1->xmotion.time;"))
 
 (define XMotionEvent-x
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xmotion.x;"))
 
 (define XMotionEvent-y
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xmotion.y;"))
 
 (define XMotionEvent-x-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xmotion.x_root;"))
 
 (define XMotionEvent-y-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xmotion.y_root;"))
 
 (define XMotionEvent-state
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             unsigned-int
             "___result = ___arg1->xmotion.state;"))
 
 (define XMotionEvent-is-hint
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             char
             "___result = ___arg1->xmotion.is_hint;"))
 
 (define XMotionEvent-same-screen
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             bool
             "___result = ___arg1->xmotion.same_screen;"))
 
 (define XCrossingEvent-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xcrossing.root;"))
 
 (define XCrossingEvent-subwindow
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Window
             "___result = ___arg1->xcrossing.subwindow;"))
 
 (define XCrossingEvent-time
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             Time
             "___result = ___arg1->xcrossing.time;"))
 
 (define XCrossingEvent-x
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xcrossing.x;"))
 
 (define XCrossingEvent-y
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xcrossing.y;"))
 
 (define XCrossingEvent-x-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xcrossing.x_root;"))
 
 (define XCrossingEvent-y-root
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xcrossing.y_root;"))
 
 (define XCrossingEvent-mode
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xcrossing.mode;"))
 
 (define XCrossingEvent-detail
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             int
             "___result = ___arg1->xcrossing.detail;"))
 
 (define XCrossingEvent-same-screen
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             bool
             "___result = ___arg1->xcrossing.same_screen;"))
 
 (define XCrossingEvent-focus
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             bool
             "___result = ___arg1->xcrossing.focus;"))
 
 (define XCrossingEvent-state
-  (c-lambda (XEvent*)       ; XEvent box
+  (c-lambda (XEvent*)       ;; XEvent box
             unsigned-int
             "___result = ___arg1->xcrossing.state;"))
 
 (define XLookupString
-  (c-lambda (XEvent*)      ; event_struct (XKeyEvent)
+  (c-lambda (XEvent*)      ;; event_struct (XKeyEvent)
             KeySym
-            "
-            char buf[10];
-            KeySym ks;
-            XComposeStatus cs;
-            int n = XLookupString (___CAST(XKeyEvent*,___arg1),
-                                   buf,
-                                   sizeof (buf),
-                                   &ks,
-                                   &cs);
-            ___result = ks;
-            "))
+#<<end-of-c-lambda
+char buf[10];
+KeySym ks;
+XComposeStatus cs;
+int n = XLookupString (___CAST(XKeyEvent*,___arg1),
+                       buf,
+                       sizeof (buf),
+                       &ks,
+                       &cs);
+___result = ks;
+end-of-c-lambda
+))
 
 (define (convert-XEvent ev)
   (and ev
@@ -956,6 +1074,7 @@ end-of-c-declare
                  type
                  (XAnyEvent-serial ev)
                  (XAnyEvent-send-event ev)
+'
                  (XAnyEvent-display ev)
                  (XAnyEvent-window ev)
                  (XMotionEvent-root ev)
@@ -994,4 +1113,4 @@ end-of-c-declare
                (else
                 #f)))))
 
-;==============================================================================
+;;;============================================================================
