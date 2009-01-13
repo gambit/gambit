@@ -76,12 +76,12 @@ m1.c m2.scm m3.scm m4.scm m5.scm m6.scm m7.scm x.c x.h h.scm w.six \
 test1.scm test2.scm test3.scm
 
 GENDISTFILES = stamp.vti version.txi \
-gambit-c.pdf gambit-c.html gambit-c.txt \
+gambit-c.pdf gambit-c*.html gambit-c.txt \
 gambit-c.info gambit-c.info-1 gambit-c.info-2 gambit-c.info-3
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_DOC = gambit-c.pdf gambit-c.html gambit-c.txt
+INSTFILES_DOC = gambit-c.pdf gambit-c*.html gambit-c.txt
 INSTFILES_INFO = gambit-c.info*
 
 all: all-pre all-recursive all-post
