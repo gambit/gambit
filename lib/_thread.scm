@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2008-12-12 14:12:38 feeley>
+;;; File: "_thread.scm", Time-stamp: <2009-01-15 12:26:10 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1113,7 +1113,7 @@
                              (##thread-int!
                               next-sleeper
                               #f
-                              ##thread-void-action!)
+                              ##thread-check-interrupts!)
 
                              (let ((next-condvar
                                     (macro-btq-deq-next run-queue)))
@@ -1244,6 +1244,11 @@
     (macro-thread-exception?-set! current-thread #f)
     (let ((result (thunk)))
       (##thread-end! (macro-current-thread) #f result))))
+
+(define-prim (##thread-check-interrupts!)
+  (##declare (interrupts-enabled))
+  (##declare (not inline))
+  (##thread-void-action!)) ;; interrupts will be checked here
 
 (define-prim (##thread-void-action!)
   (##declare (not interrupts-enabled))

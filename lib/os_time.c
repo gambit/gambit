@@ -1,4 +1,4 @@
-/* File: "os_time.c", Time-stamp: <2008-09-03 14:33:39 feeley> */
+/* File: "os_time.c", Time-stamp: <2009-01-15 09:09:04 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -447,6 +447,15 @@ ___time tim;)
 #ifdef USE_select
 
 
+#ifdef ___TIMEVAL_NOT_LIMITED
+#define ___TIMEVAL_SEC_LIMIT 2147483647 /* in seconds = 68 years */
+#else
+/* Mac OS X gives an error when the seconds > 100000000 (3.2 years) */
+/* We'll be conservative in case other systems have limits */
+#define ___TIMEVAL_SEC_LIMIT 9999999 /* in seconds = 118 days */
+#endif
+
+
 void ___absolute_time_to_nonnegative_timeval
    ___P((___time tim,
          struct timeval **tv),
@@ -462,9 +471,9 @@ struct timeval **tv;)
       if (___time_positive (tim))
         {
 #ifdef ___FLOAT_TIME_REPRESENTATION
-          if (tim >= 2147483648.0) /* upper bound is 68 years! */
+          if (tim >= (___TIMEVAL_SEC_LIMIT+1.0))
             {
-              t->tv_sec = 2147483647;
+              t->tv_sec = ___TIMEVAL_SEC_LIMIT;
               t->tv_usec = 999999;
             }
           else
@@ -475,8 +484,16 @@ struct timeval **tv;)
 #endif
 
 #ifdef ___INT_TIME_REPRESENTATION
-          t->tv_sec = tim.secs;
-          t->tv_usec = tim.nsecs / 1000;
+          if (tim.secs > ___TIMEVAL_SEC_LIMIT)
+            {
+              t->tv_sec = ___TIMEVAL_SEC_LIMIT;
+              t->tv_usec = 999999;
+            }
+          else
+            {
+              t->tv_sec = tim.secs;
+              t->tv_usec = tim.nsecs / 1000;
+            }
 #endif
         }
       else

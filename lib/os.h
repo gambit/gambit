@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2008-09-03 16:32:13 feeley> */
+/* File: "os.h", Time-stamp: <2009-01-14 12:18:16 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -228,6 +228,7 @@
 #define USE_SetEnvironmentVariable
 #define USE_WSAGetLastError
 #define USE_GetConsoleWindow
+#define USE_GetModuleFileName
 
 #define HAVE_CLOCK 1
 #define HAVE_CREATETHREAD 1

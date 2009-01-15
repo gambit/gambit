@@ -1,23 +1,21 @@
-@rem File: "vcexpress.bat"
+@rem File: "vc2008.cmd"
 @rem
 @rem This is a batch file to compile Gambit with the Microsoft Visual
-@rem C++ 2005 Express Edition which can be obtained at no charge from
-@rem Microsoft at this URL:
-@rem http://msdn.microsoft.com/vstudio/express/downloads/default.aspx .
-@rem You must also install the Microsoft Platform SDK.
+@rem C++ 2008 Professional Edition.  It probably will work with the
+@rem Express Edition as well.
 @rem
 @rem TODO: turn this into a makefile
 
 @rem Setup environment variables
+setlocal
 
-@call "C:\Program Files\Microsoft Visual Studio 8\VC\vcvarsall.bat"
-@call "C:\Program Files\Microsoft Platform SDK for Windows Server 2003 R2\SetEnv.Cmd"
+@call "C:\Program Files\Microsoft Visual Studio 9.0\VC\bin\vcvars32.bat"
 
 @rem We can't use -D___SINGLE_HOST for all Gambit generated C files
 @rem because the C compiler runs out of memory while compiling _num.c
 @rem and _io.c .
 
-set COMP_GEN=cl -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -c -I..\include -D___SYS_TYPE_CPU=\"i686\" -D___SYS_TYPE_VENDOR=\"pc\" -D___SYS_TYPE_OS=\"visualc\"
+set COMP_GEN=cl -nologo -Oityb1 -Zi -GS -RTC1 -MT -D_CRT_SECURE_NO_DEPRECATE -c -I..\include -D___SYS_TYPE_CPU=\"i686\" -D___SYS_TYPE_VENDOR=\"pc\" -D___SYS_TYPE_OS=\"visualc\"
 
 if not "%1%" == "" (
 set COMP_GEN=%COMP_GEN% -D___GAMBCDIR=\"%1%\"

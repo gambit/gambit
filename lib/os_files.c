@@ -1,4 +1,4 @@
-/* File: "os_files.c", Time-stamp: <2008-12-17 00:20:01 feeley> */
+/* File: "os_files.c", Time-stamp: <2009-01-14 12:18:12 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -506,6 +506,55 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
   ___SCMOBJ e;
   ___SCMOBJ result;
 
+#ifdef USE_WIN32
+#ifndef ___GAMBCDIR
+#ifdef USE_GetModuleFileName
+  if (___setup_params.gambcdir == 0)
+    {
+      ___CHAR_TYPE(___PATH_CE_SELECT) temp[___PATH_MAX_LENGTH+1];
+      DWORD n;
+
+      n = GetModuleFileName (NULL, temp, ___PATH_MAX_LENGTH+1);
+      if (n > 0)
+        {
+	  int cch;
+	  ___UCS_2STRING gambcdir = 0;
+	  /* remove filename */
+	  *(_tcsrchr (temp, '\\')) = 0;
+	  /* remove bin subdirectory, if present */
+	  cch = _tcslen (temp);
+	  if (cch > 7) /* e.g. C:\x\bin */
+            {
+	      if (0 == _tcsicmp (temp+cch-4, _T("\\bin")))
+                {
+		  cch -= 4;
+		  *(temp+cch) = '\0';
+                }
+            }
+
+	  gambcdir = ___CAST(___UCS_2STRING,
+			     ___alloc_mem ((cch+1) * sizeof (___UCS_2)));
+
+	  if (gambcdir == 0)
+            {
+	      e = ___FIX(___HEAP_OVERFLOW_ERR);
+	      return e;
+            }
+	  else
+            {
+#ifdef _UNICODE
+	      _tcscpy (gambcdir, temp);
+#else
+	      mbstowcs (gambcdir, temp, cch);
+#endif
+	      ___setup_params.gambcdir = gambcdir;
+            }
+      }
+  }
+#endif
+#endif
+#endif
+
   if (___setup_params.gambcdir != 0)
     {
       if ((e = ___NONNULLUCS_2STRING_to_SCMOBJ
@@ -530,6 +579,7 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 #endif
 
 #ifdef USE_WIN32
+/* Will only be used if GetModuleFileName path fails */
 #define ___GAMBCDIR "c:\\Gambit-C\\" STRINGIFY2(___VERSION)
 #endif
 

@@ -14,17 +14,16 @@
 @call "C:\Program Files\Microsoft Visual C++ Toolkit 2003\vcvars32.bat"
 @call "C:\Program Files\Microsoft Platform SDK\SetEnv.Cmd"
 
-@IF "%1%" == "" (
-SET GAMBCDIR="C:/Gambit-C/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././."
-) ELSE (
-SET GAMBCDIR="%1%"
-)
-
 @rem We can't use -D___SINGLE_HOST for all Gambit generated C files
 @rem because the C compiler runs out of memory while compiling _num.c
 @rem and _io.c .
 
-set COMP_GEN=cl -nologo -Oityb1 -G5s -MT -c -I..\include -D___GAMBCDIR=\"%GAMBCDIR%\" -D___SYS_TYPE_CPU=\"i686\" -D___SYS_TYPE_VENDOR=\"pc\" -D___SYS_TYPE_OS=\"visualc\"
+set COMP_GEN=cl -nologo -Oityb1 -G5s -MT -c -I..\include -D___SYS_TYPE_CPU=\"i686\" -D___SYS_TYPE_VENDOR=\"pc\" -D___SYS_TYPE_OS=\"visualc\"
+
+if not "%1%" == "" (
+set COMP_GEN=%COMP_GEN% -D___GAMBCDIR=\"%1%\"
+)
+
 set COMP_LIB_MH=%COMP_GEN% -D___LIBRARY
 set COMP_LIB_PR_MH=%COMP_LIB_MH% -D___PRIMAL
 set COMP_LIB=%COMP_LIB_MH% -D___SINGLE_HOST
@@ -114,7 +113,9 @@ cd bin
 echo @echo off> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo rem Script parameters are passed in the following environment variables:>> gsc-cc-o.bat
-echo rem   GSC_CC_O_GAMBCDIR>> gsc-cc-o.bat
+echo rem   GSC_CC_O_GAMBCDIR_BIN>> gsc-cc-o.bat
+echo rem   GSC_CC_O_GAMBCDIR_INCLUDE>> gsc-cc-o.bat
+echo rem   GSC_CC_O_GAMBCDIR_LIB>> gsc-cc-o.bat
 echo rem   GSC_CC_O_OBJ_FILENAME>> gsc-cc-o.bat
 echo rem   GSC_CC_O_C_FILENAME_DIR>> gsc-cc-o.bat
 echo rem   GSC_CC_O_C_FILENAME_BASE>> gsc-cc-o.bat
@@ -122,7 +123,9 @@ echo rem   GSC_CC_O_CC_OPTIONS>> gsc-cc-o.bat
 echo rem   GSC_CC_O_LD_OPTIONS_PRELUDE>> gsc-cc-o.bat
 echo rem   GSC_CC_O_LD_OPTIONS>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
-echo rem echo GSC_CC_O_GAMBCDIR = %%GSC_CC_O_GAMBCDIR%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_GAMBCDIR_BIN = %%GSC_CC_O_GAMBCDIR_BIN%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_GAMBCDIR_INCLUDE = %%GSC_CC_O_GAMBCDIR_INCLUDE%%>> gsc-cc-o.bat
+echo rem echo GSC_CC_O_GAMBCDIR_LIB = %%GSC_CC_O_GAMBCDIR_LIB%%>> gsc-cc-o.bat
 echo rem echo GSC_CC_O_OBJ_FILENAME = %%GSC_CC_O_OBJ_FILENAME%%>> gsc-cc-o.bat
 echo rem echo GSC_CC_O_C_FILENAME_DIR = %%GSC_CC_O_C_FILENAME_DIR%%>> gsc-cc-o.bat
 echo rem echo GSC_CC_O_C_FILENAME_BASE = %%GSC_CC_O_C_FILENAME_BASE%%>> gsc-cc-o.bat
@@ -137,22 +140,22 @@ echo exit 1 >> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_gcc.exe>> gsc-cc-o.bat
 echo cd "%GSC_CC_O_C_FILENAME_DIR%">> gsc-cc-o.bat
-echo gcc.exe -mno-cygwin -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I"%%GSC_CC_O_GAMBCDIR%%include" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo gcc.exe -mno-cygwin -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I"%%GSC_CC_O_GAMBCDIR_INCLUDE%%" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_wcl386.exe>> gsc-cc-o.bat
 echo cd "%GSC_CC_O_C_FILENAME_DIR%">> gsc-cc-o.bat
-echo wcl386.exe -w0 -zp4 -zq -obetir -bm -3r -bt=nt -mf -bd -I"%%GSC_CC_O_GAMBCDIR%%include" -D___DYNAMIC -D___SINGLE_HOST -l=nt_dll -fe="%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo wcl386.exe -w0 -zp4 -zq -obetir -bm -3r -bt=nt -mf -bd -I"%%GSC_CC_O_GAMBCDIR_INCLUDE%%" -D___DYNAMIC -D___SINGLE_HOST -l=nt_dll -fe="%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_cl.exe>> gsc-cc-o.bat
 echo cd "%GSC_CC_O_C_FILENAME_DIR%">> gsc-cc-o.bat
-echo cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I"%%GSC_CC_O_GAMBCDIR%%include" -D___DYNAMIC -D___SINGLE_HOST -Fe"%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I"%%GSC_CC_O_GAMBCDIR_INCLUDE%%" -D___DYNAMIC -D___SINGLE_HOST -Fe"%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_build_time_c_compiler>> gsc-cc-o.bat
 echo cd "%GSC_CC_O_C_FILENAME_DIR%">> gsc-cc-o.bat
-echo gcc.exe -mno-cygwin -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I"%%GSC_CC_O_GAMBCDIR%%include" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo gcc.exe -mno-cygwin -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I"%%GSC_CC_O_GAMBCDIR_INCLUDE%%" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :end>> gsc-cc-o.bat
