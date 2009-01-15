@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2008-12-15 11:24:39 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2009-01-15 12:56:45 feeley>
 
-;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -448,8 +448,10 @@ protocol-info-name
 protocol-info-number
 protocol-info?
 raise
+random-f64vector
 random-integer
 random-real
+random-source-make-f64vectors
 random-source-make-integers
 random-source-make-reals
 random-source-make-u8vectors

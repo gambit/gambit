@@ -1,9 +1,9 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2008-11-18 23:58:59 feeley>
+;;; File: "_num.scm", Time-stamp: <2009-01-15 12:56:56 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2008 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2009 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10671,6 +10671,7 @@ ___RESULT = result;
   (make-integers     unprintable: read-only:)
   (make-reals        unprintable: read-only:)
   (make-u8vectors    unprintable: read-only:)
+  (make-f64vectors   unprintable: read-only:)
   )
 
 (define-check-type random-source
@@ -10953,7 +10954,8 @@ ___RESULT = result;
 
     (define (advance-state!)
       (##declare (not interrupts-enabled))
-      (let* ((x10
+      (let* ((state state)
+             (x10
               (fl- (fl* 1403580.0 (f64vector-ref state 1))
                    (fl* 810728.0 (f64vector-ref state 2))))
              (y10
@@ -10966,20 +10968,19 @@ ___RESULT = result;
              (y20
               (fl- x20
                    (fl* (flfloor (fl/ x20 (macro-m2-inexact)))
-                        (macro-m2-inexact))))
-             (dx
-              (fl- y10 y20))
-             (dy
-              (fl- dx
-                   (fl* (flfloor (fl/ dx (macro-m1-inexact)))
-                        (macro-m1-inexact)))))
+                        (macro-m2-inexact)))))
         (f64vector-set! state 5 (f64vector-ref state 4))
         (f64vector-set! state 4 (f64vector-ref state 3))
         (f64vector-set! state 3 y20)
         (f64vector-set! state 2 (f64vector-ref state 1))
         (f64vector-set! state 1 (f64vector-ref state 0))
         (f64vector-set! state 0 y10)
-        (f64vector-set! state 6 dy)))
+        (if (fl< y10 y20)
+            (f64vector-set! state 6 (fl+ (macro-m1-inexact)
+                                         (fl- (f64vector-ref state 0)
+                                              (f64vector-ref state 3))))
+            (f64vector-set! state 6 (fl- (f64vector-ref state 0)
+                                         (f64vector-ref state 3))))))
 
     (define (make-integers)
 
@@ -11093,8 +11094,8 @@ ___RESULT = result;
           (lambda ()
             (##declare (not interrupts-enabled))
             (advance-state!)
-            (fl/ (fl+ (macro-inexact-+1) (f64vector-ref state 6))
-                 (macro-m1-plus-1-inexact)))))
+            (fl* (fl+ (macro-inexact-+1) (f64vector-ref state 6))
+                 (macro-inv-m1-plus-1-inexact)))))
 
     (define (make-u8vectors)
 
@@ -11111,6 +11112,34 @@ ___RESULT = result;
 
       random-u8vector)
 
+    (define (make-f64vectors precision)
+      (if (fl< precision (macro-inv-m1-plus-1-inexact))
+          (let ((make-real (make-reals precision)))
+            (lambda (len)
+              (macro-force-vars (len)
+                (macro-check-index len 1 (random-f64vector len)
+                  (let ((f64vect (##make-f64vector len 0.)))
+                    (let loop ((i (fx- len 1)))
+                      (if (fx< i 0)
+                          f64vect
+                          (begin
+                            (##f64vector-set! f64vect i (make-real))
+                            (loop (fx- i 1))))))))))
+          (lambda (len)
+            (macro-force-vars (len)
+              (macro-check-index len 1 (random-f64vector len)
+                (let ((f64vect (##make-f64vector len 0.)))
+                  (let loop ((i (fx- len 1)))
+                    (if (fx< i 0)
+                        f64vect
+                        (let ()
+                          (##declare (not interrupts-enabled))
+                          (advance-state!)
+                          (##f64vector-set! f64vect i (fl* (fl+ (macro-inexact-+1)
+                                                                (f64vector-ref state 6))
+                                                           (macro-inv-m1-plus-1-inexact)))
+                          (loop (fx- i 1)))))))))))
+
     (macro-make-random-source
      state-ref
      state-set!
@@ -11118,7 +11147,8 @@ ___RESULT = result;
      pseudo-randomize!
      make-integers
      make-reals
-     make-u8vectors)))
+     make-u8vectors
+     make-f64vectors)))
 
 (define-prim (make-random-source)
   (##make-random-source-mrg32k3a))
@@ -11194,6 +11224,25 @@ ___RESULT = result;
                     (##raise-range-exception 2 random-source-make-reals rs p)))
               (##fail-check-finite-real 2 random-source-make-reals rs p))))))
 
+(define-prim (##random-source-make-f64vectors rs #!optional (p (macro-absent-obj)))
+  ((macro-random-source-make-f64vectors rs)
+   (if (eq? p (macro-absent-obj))
+       (macro-inexact-+1)
+       p)))
+
+(define-prim (random-source-make-f64vectors rs #!optional (p (macro-absent-obj)))
+  (macro-force-vars (rs p)
+    (macro-check-random-source rs 1 (random-source-make-f64vectors rs p)
+      (if (eq? p (macro-absent-obj))
+          (##random-source-make-f64vectors rs)
+          (if (rational? p)
+              (let ((precision (macro-real->inexact p)))
+                (if (and (fl< (macro-inexact-+0) precision)
+                         (fl< precision (macro-inexact-+1)))
+                    (##random-source-make-f64vectors rs precision)
+                    (##raise-range-exception 2 random-source-make-f64vectors rs p)))
+              (##fail-check-finite-real 2 random-source-make-f64vectors rs p))))))
+
 (define-prim (##random-source-make-u8vectors rs)
   ((macro-random-source-make-u8vectors rs)))
 
@@ -11213,5 +11262,8 @@ ___RESULT = result;
 
 (define random-u8vector
   (##random-source-make-u8vectors default-random-source))
+
+(define random-f64vector
+  (##random-source-make-f64vectors default-random-source))
 
 ;;;============================================================================

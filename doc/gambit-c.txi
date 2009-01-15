@@ -4402,7 +4402,8 @@ pseudo random number is generated from this random source object.
 
 The global variable @code{default-random-source} is bound to the
 random source object which is used by the @code{random-integer},
-@code{random-real} and @code{random-u8vector} procedures.
+@code{random-real}, @code{random-u8vector} and @code{random-f64vector}
+procedures.
 
 @end defvr
 
@@ -4448,7 +4449,7 @@ For example:
 This procedure returns a u8vector of length @var{n} containing pseudo
 random exact integers in the range 0 to 255.  The random source object
 in the global variable @code{default-random-source} is used to
-generate this number.  The parameter @var{n} must be a nonnegative
+generate these numbers.  The parameter @var{n} must be a nonnegative
 exact integer.
 
 For example:
@@ -4456,6 +4457,23 @@ For example:
 @smallexample
 > @b{(random-u8vector 10)}
 #u8(200 53 29 202 3 85 208 187 73 219)
+@end smallexample
+
+@end deffn
+
+@deffn procedure random-f64vector @var{n}
+
+This procedure returns a f64vector of length @var{n} containing pseudo
+random inexact reals between, but not including, 0 and 1.  The random
+source object in the global variable @code{default-random-source} is
+used to generate these numbers.  The parameter @var{n} must be a nonnegative
+exact integer.
+
+For example:
+
+@smallexample
+> @b{(random-f64vector 3)}
+#f64(.7145854494613069 .47089632669147946 .5400124875182746)
 @end smallexample
 
 @end deffn
@@ -4576,12 +4594,14 @@ For example:
 
 @end deffn
 
-@deffn procedure random-source-make-reals @var{random-source}
+@deffn procedure random-source-make-reals @var{random-source} @r{[}@var{precision}@r{]}
 
 This procedure returns a procedure for generating pseudo random
 inexact reals using the random source object @var{random-source}.  The
 returned procedure accepts no parameters and returns a pseudo random
-inexact real between, but not including, 0 and 1.
+inexact real between, but not including, 0 and 1.  The optional parameter
+@var{precision} specifies an upper bound on the minimum amount by which two
+generated pseudo-random numbers can be separated.
 
 For example:
 
@@ -4613,6 +4633,29 @@ For example:
 #u8(200 53 29 202 3 85 208 187 73 219)
 > @b{(rv 10)}
 #u8(113 8 182 120 138 103 53 192 40 176)
+@end smallexample
+
+@end deffn
+
+@deffn procedure random-source-make-f64vectors @var{random-source} @r{[}@var{precision}@r{]}
+
+This procedure returns a procedure for generating pseudo random
+f64vectors using the random source object @var{random-source}.  The
+returned procedure accepts a single parameter @var{n}, a nonnegative
+exact integer, and returns an f64vector of length @var{n} containing
+pseudo random inexact reals between, but not including, 0 and 1.
+The optional parameter @var{precision} specifies an upper bound on the
+minimum amount by which two generated pseudo-random numbers can be separated.
+
+For example:
+
+@smallexample
+> @b{(define rs (make-random-source))}
+> @b{(define rv (random-source-make-f64vectors rs))}
+> @b{(rv 3)}
+#f64(.7342236104231586 .2876463473845367 .8574025375628211)
+> @b{(rv 3)}
+#f64(.013863292728449427 .33449296573515447 .8162050798467028)
 @end smallexample
 
 @end deffn
