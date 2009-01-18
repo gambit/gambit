@@ -1208,7 +1208,7 @@ Linux 2.6.8-1.521 i686 athlon
 $ @b{gsc -link -flat -o foo.o1.c m2 m3 > /dev/null}
 m2:
 m3:
-$ @b{gcc -shared -D___DYNAMIC m1.c m2.c m3.c foo.o1.c -o foo.o1}
+$ @b{gcc -shared -fPIC -D___DYNAMIC m1.c m2.c m3.c foo.o1.c -o foo.o1}
 $ @b{gsi foo.o1}
 ((2 . 2) (4 . 4) (8 . 8) (16 . 16))
 @end smallexample
@@ -1477,7 +1477,7 @@ Gambit @value{VERSION}
 #t
 > @b{(compile-file-to-c "w")}
 #t
-> @b{(link-incremental '("h" "w") "hello.c")}
+> @b{(link-incremental '("h" "w") output: "hello.c")}
 > @b{,q}
 $ @b{gcc h.c w.c hello.c -lgambc -o hello}
 $ @b{./hello}
@@ -1523,7 +1523,7 @@ Gambit @value{VERSION}
 #t
 > @b{(compile-file-to-c "m7")}
 #t
-> @b{(link-flat '("m6" "m7") "lib.o1.c")}
+> @b{(link-flat '("m6" "m7") output: "lib.o1.c")}
 *** WARNING -- "*" is not defined,
 ***            referenced in: ("m6.c")
 *** WARNING -- "+" is not defined,
