@@ -1,4 +1,4 @@
-/* File: "os_files.c", Time-stamp: <2009-01-14 12:18:12 feeley> */
+/* File: "os_files.c", Time-stamp: <2009-01-18 13:51:27 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -546,6 +546,7 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 	      _tcscpy (gambcdir, temp);
 #else
 	      mbstowcs (gambcdir, temp, cch);
+              gambcdir[cch] = '\0';
 #endif
 	      ___setup_params.gambcdir = gambcdir;
             }
