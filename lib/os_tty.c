@@ -1,6 +1,6 @@
-/* File: "os_tty.c", Time-stamp: <2008-10-22 15:31:33 feeley> */
+/* File: "os_tty.c", Time-stamp: <2009-01-22 15:45:01 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -3176,7 +3176,8 @@ ___U8 *text_arg;)
                   dest.Y = -1;
   
                   fill.Attributes = info.wAttributes;
-                  fill.Char.AsciiChar = ' ';
+                  TTY_CHAR_SELECT(fill.Char.AsciiChar = ' ',
+                                  fill.Char.UnicodeChar = ' ');
  
                   if (!ScrollConsoleScreenBuffer (d->hout,
                                                   &rect,
@@ -7450,7 +7451,7 @@ ___stream_index *len_done;)
   if ((e = ___device_tty_force_open (d)) != ___FIX(___NO_ERR))
     return e;
 
-  len = 1;
+  len = TTY_CHAR_SELECT(1,2);
 
 #ifdef USE_LINEEDITOR
 
