@@ -1,6 +1,6 @@
-/* File: "os_io.c", Time-stamp: <2008-11-24 17:09:42 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-01-22 17:01:55 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -4111,11 +4111,11 @@ int ignore_hidden;)
 
 ___SCMOBJ ___device_directory_read
    ___P((___device_directory *dev,
-         char **name),
+         ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) *name),
         (dev,
          name)
 ___device_directory *dev;
-char **name;)
+___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) *name;)
 {
   ___SCMOBJ e;
 
@@ -4124,7 +4124,7 @@ char **name;)
 
   for (;;)
     {
-      char *temp;
+      ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) temp;
 
 #ifdef USE_opendir
 
@@ -6322,9 +6322,9 @@ int options;)
   ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) cenv = NULL;
 
   HANDLE hstdin_rd = NULL;
-  HANDLE hstdin_wr;
+  HANDLE hstdin_wr = NULL;
   HANDLE hstdout_rd = NULL;
-  HANDLE hstdout_wr;
+  HANDLE hstdout_wr = NULL;
 
   SECURITY_ATTRIBUTES sa;
   PROCESS_INFORMATION pi;
@@ -7596,7 +7596,7 @@ ___SCMOBJ dev;)
   ___device_directory *d =
     ___CAST(___device_directory*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
-  char *name;/******************/
+  ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) name;
   ___SCMOBJ result;
 
   if ((e = ___device_directory_read (d, &name)) != ___FIX(___NO_ERR))
@@ -7605,7 +7605,7 @@ ___SCMOBJ dev;)
   if (name == NULL)
     return ___EOF;
 
-  if ((e = ___CHARSTRING_to_SCMOBJ (name, &result, ___RETURN_POS))
+  if ((e = ___STRING_to_SCMOBJ (name, &result, ___RETURN_POS, ___CE(___DIR_OPEN_PATH_CE_SELECT) ))
       != ___FIX(___NO_ERR))
     return e;
 
