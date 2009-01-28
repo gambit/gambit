@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2009-01-15 12:26:10 feeley>
+;;; File: "_thread.scm", Time-stamp: <2009-01-28 11:24:58 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -1112,7 +1112,6 @@
 
                              (##thread-int!
                               next-sleeper
-                              #f
                               ##thread-check-interrupts!)
 
                              (let ((next-condvar
@@ -1150,7 +1149,6 @@
 
             (##thread-int!
              (macro-primordial-thread)
-             #f
              ##thread-deadlock-action!))
 
           ;; check things one more time!
@@ -1163,7 +1161,6 @@
 
   (##thread-int!
    (macro-primordial-thread)
-   #f
    (lambda ()
 
      (macro-raise
@@ -1179,40 +1176,43 @@
               thread
               #!optional
               (action (macro-absent-obj)))
+
+  (##declare (not interrupts-enabled))
+
   (let ((act
          (if (##eq? action (macro-absent-obj))
              ##user-interrupt!
              action)))
-    (##thread-int! thread action (lambda () (act) (##void)))))
 
-(define-prim (##thread-int! thread action thunk-returning-void)
+    (cond ((##eq? thread (macro-current-thread))
+           (act)
+           (##void))
+
+          ((or (##not (macro-initialized-thread? thread))
+               (macro-terminated-thread-given-initialized? thread)
+               (##not (macro-started-thread-given-initialized? thread)))
+           (##raise-inactive-thread-exception thread-interrupt! thread action))
+
+          (else
+           (##thread-int! thread (lambda () (act) (##void)))
+           (##void)))))
+
+(define-prim (##thread-int! thread thunk-returning-void)
+
+  (##declare (not interrupts-enabled))
 
   ;; Note: the thunk-returning-void procedure must return void in
   ;; order to restart the interrupted thread properly.
 
-  (##declare (not interrupts-enabled))
+  ;; remove the thread from any blocked thread queue and
+  ;; timeout queue it is in
 
-  (cond ((##eq? thread (macro-current-thread))
-         (thunk-returning-void))
+  (macro-thread-btq-remove-if-in-btq! thread)
+  (macro-thread-toq-remove-if-in-toq! thread)
 
-        ((or (##not (macro-initialized-thread? thread))
-             (macro-terminated-thread-given-initialized? thread)
-             (##not (macro-started-thread-given-initialized? thread)))
-         (##raise-inactive-thread-exception thread-interrupt! thread action))
+  (macro-thread-result-set! thread thunk-returning-void)
 
-        (else
-
-         ;; remove the thread from any blocked thread queue and
-         ;; timeout queue it is in
-
-         (macro-thread-btq-remove-if-in-btq! thread)
-         (macro-thread-toq-remove-if-in-toq! thread)
-
-         (macro-thread-result-set! thread thunk-returning-void)
-
-         (##btq-insert! (macro-run-queue) thread)
-
-         (##void))))
+  (##btq-insert! (macro-run-queue) thread))
 
 (define-prim (##thread-continuation-capture thread)
   (##thread-call
