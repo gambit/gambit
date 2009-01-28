@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-01-22 17:01:55 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-01-28 09:45:50 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -771,21 +771,44 @@ ___time timeout;)
   {
     struct timeval delta_tv_struct;
     struct timeval *delta_tv = &delta_tv_struct;
-    int select_result;
+    int result;
 
     ___absolute_time_to_nonnegative_timeval (delta, &delta_tv);
 
-    select_result =
-      select (state.highest_fd_plus_1,
-              &state.readfds,
-              &state.writefds,
-              &state.exceptfds,
-              delta_tv);
+#ifdef USE_nanosleep
 
-    if (select_result < 0)
+    if (delta_tv != NULL &&
+        state.highest_fd_plus_1 == 0)
+      {
+        /*
+         * For better timeout resolution, when select would only be
+         * called for sleeping until a certain timeout or interrupt
+         * occurs, the nanosleep function is used instead if it is
+         * available.
+         */
+
+        struct timespec delta_ts_struct;
+        delta_ts_struct.tv_sec = delta_tv->tv_sec;
+        delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
+        result = nanosleep (&delta_ts_struct, NULL);
+      }
+    else
+
+#endif
+
+      {
+        result =
+          select (state.highest_fd_plus_1,
+                  &state.readfds,
+                  &state.writefds,
+                  &state.exceptfds,
+                  delta_tv);
+      }
+
+    if (result < 0)
       return err_code_from_errno ();
 
-    state.timeout_reached = (select_result == 0);
+    state.timeout_reached = (result == 0);
   }
 
 #endif
