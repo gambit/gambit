@@ -2486,10 +2486,34 @@ For example:
 
 @deffn procedure display-environment-set! @var{display?}
 
+[Note: this procedure is DEPRECATED and will be removed
+in a future version of Gambit.  Use the parameter object
+@code{repl-display-environment?} instead.]
+
 This procedure sets a flag that controls the automatic display of the
 environment by the REPL.  If @var{display?} is true, the environment
 is displayed by the REPL before the prompt.  The default setting is
 not to display the environment.
+
+@end deffn
+
+@deffn procedure repl-display-environment? @var{display?}
+
+The parameter object @code{repl-display-environment?} is bound to a
+boolean value that controls the automatic display of the environment
+by the REPL.  If @var{display?} is true, the environment is displayed
+by the REPL before the prompt.  This is particularly useful in
+single-stepping mode.  The default setting is not to display the
+environment.
+
+@end deffn
+
+@deffn procedure display-dynamic-environment? @var{display?}
+
+The parameter object @code{display-dynamic-environment?} is bound to a
+boolean value that controls wether the dynamic environment is
+displayed when the environment is displayed.  The default setting is
+not to display the dynamic environment.
 
 @end deffn
 
@@ -3438,6 +3462,7 @@ The procedures in this section are not yet documented.
 @deffnx procedure display-procedure-environment @var{proc} @r{[}@var{port}@r{]}
 @deffnx procedure display-continuation-environment @var{cont} @r{[}@var{port}@r{]}
 @deffnx procedure display-continuation-dynamic-environment @var{cont} @r{[}@var{port}@r{]}
+@deffnx procedure display-continuation-backtrace @var{cont} @r{[}@var{port} @r{[}@var{all-frames?} @r{[}@var{display-env?} @r{[}@var{max-head} @r{[}@var{max-tail} @r{[}@var{depth}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}
 @end deffn
 
 @deffn procedure print @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}
@@ -3544,6 +3569,7 @@ The procedures in this section are not yet documented.
 @end deffn
 
 @deffn procedure current-user-interrupt-handler @r{[}@var{handler}@r{]}
+@deffnx procedure defer-user-interrupts
 @end deffn
 
 @deffn procedure primordial-exception-handler @var{exc}
@@ -3577,9 +3603,6 @@ The procedures in this section are not yet documented.
 @deffnx procedure socket-info-port-number @var{socket-info}
 @end deffn
 
-@deffn procedure six.make-array @dots{}
-@end deffn
-
 @deffn procedure system-version
 @deffnx procedure system-version-string
 @end deffn
@@ -3591,7 +3614,8 @@ The procedures in this section are not yet documented.
 @deffn procedure system-stamp
 @end deffn
 
-@deffn procedure touch @var{obj}
+@deffn {special form} future @var{expr}
+@deffnx procedure touch @var{obj}
 @end deffn
 
 @deffn procedure tty? @var{obj}
@@ -3616,6 +3640,106 @@ The procedures in this section are not yet documented.
 @end deffn
 
 @deffn procedure main @dots{}
+@end deffn
+
+@deffn {special form} define-record-type @dots{}
+@deffnx {special form} define-type @dots{}
+@end deffn
+
+@deffn {special form} namespace @dots{}
+@end deffn
+
+@deffn {special form} this-source-file
+@end deffn
+
+@deffn {special form} receive @dots{}
+@end deffn
+
+@deffn {special form} cond-expand @dots{}
+@end deffn
+
+@deffn {special form} define-cond-expand-feature @var{ident}
+@end deffn
+
+@deffn procedure finite? @var{x}
+@deffnx procedure infinite? @var{x}
+@deffnx procedure nan? @var{x}
+@end deffn
+
+@deffn undefined six.!
+@deffnx {special form} six.!x @var{x}
+@deffnx {special form} six.&x @var{x}
+@deffnx {special form} six.*x @var{x}
+@deffnx {special form} six.++x @var{x}
+@deffnx {special form} six.+x @var{x}
+@deffnx {special form} six.--x @var{x}
+@deffnx {special form} six.-x @var{x}
+@deffnx {special form} six.arrow @var{expr} @var{ident}
+@deffnx undefined six.break
+@deffnx {special form} six.call @var{func} @var{arg}@dots{}
+@deffnx undefined six.case
+@deffnx undefined six.clause
+@deffnx {special form} six.compound @var{statement}@dots{}
+@deffnx {special form} six.cons @var{x} @var{y}
+@deffnx undefined six.continue
+@deffnx {special form} six.define-procedure @var{ident} @var{proc}
+@deffnx {special form} six.define-variable @var{ident} @var{type} @var{dims} @var{init}
+@deffnx {special form} six.do-while @var{stat} @var{expr}
+@deffnx {special form} six.dot @var{expr} @var{ident}
+@deffnx {special form} six.for @var{stat1} @var{expr2} @var{expr3} @var{stat2}
+@deffnx undefined six.goto
+@deffnx {special form} six.identifier @var{ident}
+@deffnx {special form} six.if @var{expr} @var{stat1} @r{[}@var{stat2}@r{]}
+@deffnx {special form} six.index @var{expr1} @var{expr2}
+@deffnx undefined six.label
+@deffnx {special form} six.list @var{x} @var{y}
+@deffnx {special form} six.literal @var{value}
+@deffnx procedure six.make-array @var{init} @var{dim}@dots{}
+@deffnx {special form} six.new @var{ident} @var{arg}@dots{}
+@deffnx {special form} six.null
+@deffnx {special form} six.prefix @var{datum}
+@deffnx {special form} six.procedure @var{type} @var{params} @var{stat}
+@deffnx {special form} six.procedure-body @var{stat}@dots{}
+@deffnx undefined six.return
+@deffnx undefined six.switch
+@deffnx {special form} six.while @var{expr} @var{stat}@dots{}
+@deffnx {special form} six.x!=y @var{x} @var{y}
+@deffnx {special form} six.x%=y @var{x} @var{y}
+@deffnx {special form} six.x%y @var{x} @var{y}
+@deffnx {special form} six.x&&y @var{x} @var{y}
+@deffnx {special form} six.x&=y @var{x} @var{y}
+@deffnx {special form} six.x&y @var{x} @var{y}
+@deffnx {special form} six.x*=y @var{x} @var{y}
+@deffnx {special form} six.x*y @var{x} @var{y}
+@deffnx {special form} six.x++ @var{x}
+@deffnx {special form} six.x+=y @var{x} @var{y}
+@deffnx {special form} six.x+y @var{x} @var{y}
+@deffnx {special form} |six.x,y| @var{x} @var{y}
+@deffnx {special form} six.x-- @var{x}
+@deffnx {special form} six.x-=y @var{x} @var{y}
+@deffnx {special form} six.x-y @var{x} @var{y}
+@deffnx {special form} six.x/=y @var{x} @var{y}
+@deffnx {special form} six.x/y @var{x} @var{y}
+@deffnx undefined six.x:-y @var{x} @var{y}
+@deffnx {special form} six.x:=y @var{x} @var{y}
+@deffnx {special form} six.x:y @var{x} @var{y}
+@deffnx {special form} six.x<<=y @var{x} @var{y}
+@deffnx {special form} six.x<<y @var{x} @var{y}
+@deffnx {special form} six.x<=y @var{x} @var{y}
+@deffnx {special form} six.x<y @var{x} @var{y}
+@deffnx {special form} six.x==y @var{x} @var{y}
+@deffnx {special form} six.x=y @var{x} @var{y}
+@deffnx {special form} six.x>=y @var{x} @var{y}
+@deffnx {special form} six.x>>=y @var{x} @var{y}
+@deffnx {special form} six.x>>y @var{x} @var{y}
+@deffnx {special form} six.x>y @var{x} @var{y}
+@deffnx {special form} six.x?y:z @var{x} @var{y} @var{z}
+@deffnx {special form} six.x^=y @var{x} @var{y}
+@deffnx {special form} six.x^y @var{x} @var{y}
+@deffnx {special form} |six.x\|=y| @var{x} @var{y}
+@deffnx {special form} |six.x\|y| @var{x} @var{y}
+@deffnx {special form} |six.x\|\|y| @var{x} @var{y}
+@deffnx {special form} six.~x @var{x}
 @end deffn
 
 @node Namespaces, Characters and strings, Scheme extensions, Top
@@ -13732,11 +13856,7 @@ implemented.
 @section The @code{c-declare} special form
 @findex c-declare
 
-Synopsis:
-
-@example
-@b{}(c-declare @r{@i{c-declaration}})
-@end example
+@deffn {special form} c-declare @r{@i{c-declaration}}
 
 Initially, the C file produced by @code{gsc} contains only an
 @samp{#include} of @samp{gambit.h}.  This header file provides a
@@ -13779,15 +13899,13 @@ c-declare-end
 )
 @end smallexample
 
+@end deffn
+
 @node c-initialize, c-lambda, c-declare, C-interface
 @section The @code{c-initialize} special form
 @findex c-initialize
 
-Synopsis:
-
-@example
-@b{}(c-initialize @r{@i{c-code}})
-@end example
+@deffn {special form} c-initialize @r{@i{c-code}}
 
 Just after the program is loaded and before control is passed to the
 Scheme code, each C file is initialized by calling its associated
@@ -13808,15 +13926,13 @@ For example:
 @b{}(c-initialize "tfile = tmpfile ();")
 @end smallexample
 
+@end deffn
+
 @node c-lambda, c-define, c-initialize, C-interface
 @section The @code{c-lambda} special form
 @findex c-lambda
 
-Synopsis:
-
-@example
-@b{}(c-lambda (@r{@i{type1}}@dots{}) @r{@i{result-type}} @r{@i{c-name-or-code}})
-@end example
+@deffn {special form} c-lambda (@r{@i{type1}}@dots{}) @r{@i{result-type}} @r{@i{c-name-or-code}}
 
 The @code{c-lambda} special form makes it possible to create a Scheme
 procedure that will act as a representative of some C function or C code
@@ -13926,17 +14042,14 @@ c-lambda-end
 ))
 @end smallexample
 
+@end deffn
+
 @node c-define, c-define-type, c-lambda, C-interface
 @section The @code{c-define} special form
 @findex c-define
 
-Synopsis:
-
-@example
-@b{}(c-define (@r{@i{variable}} @r{@i{define-formals}}) (@r{@i{type1}}@dots{}) @r{@i{result-type}} @r{@i{c-name}} @r{@i{scope}}
-  @r{@i{body}})
-@end example
-
+@deffn {special form} c-define (@r{@i{variable}} @r{@i{define-formals}}) (@r{@i{type1}}@dots{}) @r{@i{result-type}} @r{@i{c-name}} @r{@i{scope}} @r{@i{body}}
+  
 The @code{c-define} special form makes it possible to create a C
 function that will act as a representative of some Scheme procedure.  A
 C function named @i{c-name} as well as a Scheme procedure bound to the
@@ -13990,15 +14103,13 @@ function @samp{___cleanup} so that the Scheme part may do final
 cleanup.  A sample application is given in the file
 @samp{tests/server.scm}.
 
+@end deffn
+
 @node c-define-type, continuations, c-define, C-interface
 @section The @code{c-define-type} special form
 @findex c-define-type
 
-Synopsis:
-
-@example
-@b{}(c-define-type @r{@i{name}} @r{@i{type}} @r{[}@r{@i{c-to-scheme}} @r{@i{scheme-to-c}} @r{[}@r{@i{cleanup}}@r{]}@r{]})
-@end example
+@deffn {special form} c-define-type @r{@i{name}} @r{@i{type}} @r{[}@r{@i{c-to-scheme}} @r{@i{scheme-to-c}} @r{[}@r{@i{cleanup}}@r{]}@r{]}
 
 This form associates the type identifier @i{name} to the C type
 @i{type}.  The @i{name} must not clash with predefined types
@@ -14445,6 +14556,8 @@ c-declare-end
 (c-define (read-strings) () char** "read_strings" ""
   (read))
 @end smallexample
+
+@end deffn
 
 @node continuations, , c-define-type, C-interface
 @section Continuations and the C-interface

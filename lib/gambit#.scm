@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2009-01-15 12:56:45 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2009-01-29 15:02:37 feeley>
 
 ;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
 
@@ -108,6 +108,7 @@ directory-files
 display-continuation-backtrace
 display-continuation-dynamic-environment
 display-continuation-environment
+display-dynamic-environment?
 display-environment-set!
 display-exception
 display-exception-in-context
@@ -370,7 +371,7 @@ nan?
 network-info
 network-info-aliases
 network-info-name
-network-info-net
+network-info-number
 network-info?
 no-such-file-or-directory-exception-arguments
 no-such-file-or-directory-exception-procedure
@@ -493,8 +494,7 @@ readtable-write-extended-read-macros?-set
 readtable?
 real-time
 rename-file
-repl-backtrace-display-environment?
-repl-display-dynamic-environment?
+repl-display-environment?
 repl-input-port
 repl-output-port
 repl-result-history-max-length-set!
@@ -558,7 +558,6 @@ sfun-conversion-exception-message
 sfun-conversion-exception-procedure
 sfun-conversion-exception?
 shell-command
-shell-command-blocking
 six.!
 six.!x
 six.&x

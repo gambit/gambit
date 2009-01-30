@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2009-01-12 12:16:33 feeley>
+;;; File: "_io#.scm", Time-stamp: <2009-01-29 14:52:43 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -486,7 +486,7 @@
 
   (name      printable: read-only:)
   (aliases   printable: read-only:)
-  (net       printable: read-only:)
+  (number    printable: read-only:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

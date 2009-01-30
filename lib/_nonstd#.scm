@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_nonstd#.scm", Time-stamp: <2007-05-27 22:27:33 feeley>
+;;; File: "_nonstd#.scm", Time-stamp: <2009-01-29 14:51:49 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 

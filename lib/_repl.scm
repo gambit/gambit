@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2008-12-17 22:32:18 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-01-29 14:51:29 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1024,17 +1024,11 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define ##repl-backtrace-display-environment?
-  (##make-parameter #f))
-
-(define repl-backtrace-display-environment?
-  ##repl-backtrace-display-environment?)
-
 (define-prim (##cmd-y cont port pinpoint? depth)
   (##display-continuation-frame
    cont
    port
-   (##repl-backtrace-display-environment?)
+   #f
    pinpoint?
    depth))
 
@@ -1287,11 +1281,11 @@
           (macro-check-fixnum i 3 (display-continuation-dynamic-environment cont p i)
             (##display-continuation-dynamic-environment cont p i)))))))
 
-(define ##repl-display-dynamic-environment?
+(define ##display-dynamic-environment?
   (##make-parameter #f))
 
-(define repl-display-dynamic-environment?
-  ##repl-display-dynamic-environment?)
+(define display-dynamic-environment?
+  ##display-dynamic-environment?)
 
 (define-prim (##display-continuation-env cont port indent display-env?)
   (if display-env?
@@ -1299,7 +1293,7 @@
         (if c
             (##display-continuation-environment c port indent))
         (if (or (##eq? display-env? 'dynamic)
-                (##repl-display-dynamic-environment?))
+                (##display-dynamic-environment?))
             (##display-continuation-dynamic-environment cont port indent)))))
 
 (define-prim (##cmd-e proc-or-cont port display-env?)
@@ -1755,11 +1749,15 @@
 
 (set! ##main-stepper (macro-make-main-stepper))
 
-(define ##display-environment? #f)
-(set! ##display-environment? #f)
+(define ##repl-display-environment?
+  (##make-parameter #f))
+
+(define repl-display-environment?
+  ##repl-display-environment?)
 
 (define-prim (display-environment-set! display?)
-  (set! ##display-environment? (if display? #t #f))
+  ;; DEPRECATED
+  (##repl-display-environment? (if display? #t #f))
   (##void))
 
 (define-prim (##step-handler leapable? $code rte execute-body . other)
@@ -2177,7 +2175,7 @@
     (writer output-port)))
 
 (define-prim (##repl-channel-ports-display-continuation channel cont depth)
-  (if ##display-environment?
+  (if (##repl-display-environment?)
       (##repl-channel-display-multiline-message
        (lambda (output-port)
          (##cmd-e cont output-port #t)))))

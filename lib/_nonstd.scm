@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2008-12-16 23:59:22 feeley>
+;;; File: "_nonstd.scm", Time-stamp: <2009-01-29 14:57:40 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1256,15 +1256,11 @@
   ##processed-command-line)
 
 (define-prim (##shell-command-blocking cmd)
+  ;; DEPRECATED
   (let ((code (##os-shell-command cmd (##current-directory))))
     (if (##fixnum.< code 0)
-      (##raise-os-exception #f code shell-command-blocking cmd)
+      (##raise-os-exception #f code ##shell-command-blocking cmd)
       code)))
-
-(define-prim (shell-command-blocking cmd)
-  (macro-force-vars (cmd)
-    (macro-check-string cmd 1 (shell-command-blocking cmd)
-      (##shell-command-blocking cmd))))
 
 (define-prim (##shell-command cmd)
   (let* ((shell
