@@ -2617,10 +2617,10 @@ Move cursor right one character.
 @item M-C-f @r{or @code{M-}@i{right-arrow}}
 Move cursor right one S-expression.
 
-@item C-p @r{or @i{up-arrow}}
+@item C-p @r{or @code{M-p} or @i{up-arrow}}
 Move to previous line in history.
 
-@item C-n @r{or @i{down-arrow}}
+@item C-n @r{or @code{M-n} or @i{down-arrow}}
 Move to next line in history.
 
 @item C-t

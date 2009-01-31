@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2009-01-22 15:45:01 feeley> */
+/* File: "os_tty.c", Time-stamp: <2009-01-30 22:59:24 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1471,6 +1471,10 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_emacs[] =
   ,{ "\024",     LINEEDITOR_EV_TRANSPOSE_WORD | WITH_ESC_PREFIX }
   ,{ "t",        LINEEDITOR_EV_TRANSPOSE_WORD | WITH_ESC_PREFIX }
   ,{ "T",        LINEEDITOR_EV_TRANSPOSE_WORD | WITH_ESC_PREFIX }
+  ,{ "p",        LINEEDITOR_EV_UP             | WITH_ESC_PREFIX }
+  ,{ "P",        LINEEDITOR_EV_UP             | WITH_ESC_PREFIX }
+  ,{ "n",        LINEEDITOR_EV_DOWN           | WITH_ESC_PREFIX }
+  ,{ "N",        LINEEDITOR_EV_DOWN           | WITH_ESC_PREFIX }
 
   ,{ "\020",     LINEEDITOR_EV_UP                               }
   ,{ "\016",     LINEEDITOR_EV_DOWN                             }
