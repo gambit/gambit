@@ -2599,6 +2599,18 @@ means the control key is pressed):
 Generate an end-of-file when the line is empty, otherwise delete
 character at cursor.
 
+@item delete @r{or backspace}
+Delete character before cursor.
+
+@item M-C-d
+Delete word forward and keep a copy of this text on the clipboard.
+
+@item M-detete
+Delete word backward and keep a copy of this text on the clipboard.
+
+@item M-backspace
+Delete S-expression backward and keep a copy of this text on the clipboard.
+
 @item C-a
 Move cursor to beginning of line.
 
@@ -2608,11 +2620,17 @@ Move cursor to end of line.
 @item C-b @r{or @i{left-arrow}}
 Move cursor left one character.
 
+@item M-b
+Move cursor left one word.
+
 @item M-C-b @r{or @code{M-}@i{left-arrow}}
 Move cursor left one S-expression.
 
 @item C-f @r{or @i{right-arrow}}
 Move cursor right one character.
+
+@item M-f
+Move cursor right one word.
 
 @item M-C-f @r{or @code{M-}@i{right-arrow}}
 Move cursor right one S-expression.
@@ -2626,8 +2644,11 @@ Move to next line in history.
 @item C-t
 Transpose character at cursor with previous character.
 
+@item M-t
+Transpose word after cursor with previous word.
+
 @item M-C-t
-Transpose S-expression at cursor with previous S-expression.
+Transpose S-expression after cursor with previous S-expression.
 
 @item C-l
 Clear console and redraw line being edited.

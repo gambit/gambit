@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2009-01-30 22:59:24 feeley> */
+/* File: "os_tty.c", Time-stamp: <2009-01-31 00:39:01 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1453,7 +1453,7 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_map_rubout_to_backspace[] =
   /* sequences that map the rubout key to backspace */
 
    { "\177",     LINEEDITOR_EV_BACK                             }
-  ,{ "\177",     LINEEDITOR_EV_BACK_WORD      | WITH_ESC_PREFIX }
+  ,{ "\177",     LINEEDITOR_EV_BACK_SEXPR     | WITH_ESC_PREFIX }
 };
 
 
@@ -1461,36 +1461,38 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_emacs[] =
 {
   /* sequences specific to emacs mode */
 
-   { "\0",       LINEEDITOR_EV_MARK                             }
-  ,{ "\031",     LINEEDITOR_EV_PASTE                            }
-  ,{ "\027",     LINEEDITOR_EV_CUT                              }
-  ,{ "\013",     LINEEDITOR_EV_CUT_RIGHT                        }
-  ,{ "\025",     LINEEDITOR_EV_CUT_LEFT                         }
-  ,{ "\014",     LINEEDITOR_EV_REFRESH                          }
-  ,{ "\024",     LINEEDITOR_EV_TRANSPOSE                        }
-  ,{ "\024",     LINEEDITOR_EV_TRANSPOSE_WORD | WITH_ESC_PREFIX }
-  ,{ "t",        LINEEDITOR_EV_TRANSPOSE_WORD | WITH_ESC_PREFIX }
-  ,{ "T",        LINEEDITOR_EV_TRANSPOSE_WORD | WITH_ESC_PREFIX }
-  ,{ "p",        LINEEDITOR_EV_UP             | WITH_ESC_PREFIX }
-  ,{ "P",        LINEEDITOR_EV_UP             | WITH_ESC_PREFIX }
-  ,{ "n",        LINEEDITOR_EV_DOWN           | WITH_ESC_PREFIX }
-  ,{ "N",        LINEEDITOR_EV_DOWN           | WITH_ESC_PREFIX }
+   { "\0",       LINEEDITOR_EV_MARK                              }
+  ,{ "\031",     LINEEDITOR_EV_PASTE                             }
+  ,{ "\027",     LINEEDITOR_EV_CUT                               }
+  ,{ "\013",     LINEEDITOR_EV_CUT_RIGHT                         }
+  ,{ "\025",     LINEEDITOR_EV_CUT_LEFT                          }
+  ,{ "\014",     LINEEDITOR_EV_REFRESH                           }
+  ,{ "\024",     LINEEDITOR_EV_TRANSPOSE                         }
+  ,{ "\024",     LINEEDITOR_EV_TRANSPOSE_SEXPR | WITH_ESC_PREFIX }
+  ,{ "t",        LINEEDITOR_EV_TRANSPOSE_WORD  | WITH_ESC_PREFIX }
+  ,{ "T",        LINEEDITOR_EV_TRANSPOSE_WORD  | WITH_ESC_PREFIX }
+  ,{ "p",        LINEEDITOR_EV_UP              | WITH_ESC_PREFIX }
+  ,{ "P",        LINEEDITOR_EV_UP              | WITH_ESC_PREFIX }
+  ,{ "n",        LINEEDITOR_EV_DOWN            | WITH_ESC_PREFIX }
+  ,{ "N",        LINEEDITOR_EV_DOWN            | WITH_ESC_PREFIX }
 
-  ,{ "\020",     LINEEDITOR_EV_UP                               }
-  ,{ "\016",     LINEEDITOR_EV_DOWN                             }
-  ,{ "\006",     LINEEDITOR_EV_RIGHT                            }
-  ,{ "\002",     LINEEDITOR_EV_LEFT                             }
-  ,{ "\006",     LINEEDITOR_EV_RIGHT_WORD     | WITH_ESC_PREFIX }
-  ,{ "f",        LINEEDITOR_EV_RIGHT_WORD     | WITH_ESC_PREFIX }
-  ,{ "F",        LINEEDITOR_EV_RIGHT_WORD     | WITH_ESC_PREFIX }
-  ,{ "\002",     LINEEDITOR_EV_LEFT_WORD      | WITH_ESC_PREFIX }
-  ,{ "b",        LINEEDITOR_EV_LEFT_WORD      | WITH_ESC_PREFIX }
-  ,{ "B",        LINEEDITOR_EV_LEFT_WORD      | WITH_ESC_PREFIX }
+  ,{ "\020",     LINEEDITOR_EV_UP                                }
+  ,{ "\016",     LINEEDITOR_EV_DOWN                              }
+  ,{ "\006",     LINEEDITOR_EV_RIGHT                             }
+  ,{ "\002",     LINEEDITOR_EV_LEFT                              }
+  ,{ "\006",     LINEEDITOR_EV_RIGHT_SEXPR     | WITH_ESC_PREFIX }
+  ,{ "f",        LINEEDITOR_EV_RIGHT_WORD      | WITH_ESC_PREFIX }
+  ,{ "F",        LINEEDITOR_EV_RIGHT_WORD      | WITH_ESC_PREFIX }
+  ,{ "\002",     LINEEDITOR_EV_LEFT_SEXPR      | WITH_ESC_PREFIX }
+  ,{ "b",        LINEEDITOR_EV_LEFT_WORD       | WITH_ESC_PREFIX }
+  ,{ "B",        LINEEDITOR_EV_LEFT_WORD       | WITH_ESC_PREFIX }
 
-  ,{ "\001",     LINEEDITOR_EV_HOME                             }
-  ,{ "\004",     LINEEDITOR_EV_DELETE                           }
-  ,{ "\005",     LINEEDITOR_EV_END                              }
-  ,{ "\004",     LINEEDITOR_EV_DELETE_WORD    | WITH_ESC_PREFIX }
+  ,{ "\001",     LINEEDITOR_EV_HOME                              }
+  ,{ "\004",     LINEEDITOR_EV_DELETE                            }
+  ,{ "\005",     LINEEDITOR_EV_END                               }
+  ,{ "\004",     LINEEDITOR_EV_DELETE_SEXPR    | WITH_ESC_PREFIX }
+  ,{ "d",        LINEEDITOR_EV_DELETE_WORD     | WITH_ESC_PREFIX }
+  ,{ "D",        LINEEDITOR_EV_DELETE_WORD     | WITH_ESC_PREFIX }
 };
 
 
@@ -1505,8 +1507,8 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_widespread[] =
 
   ,{ "\033[A",   LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
   ,{ "\033[B",   LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
-  ,{ "\033[C",   LINEEDITOR_EV_RIGHT_WORD     | WITH_ESC_PREFIX }
-  ,{ "\033[D",   LINEEDITOR_EV_LEFT_WORD      | WITH_ESC_PREFIX }
+  ,{ "\033[C",   LINEEDITOR_EV_RIGHT_SEXPR    | WITH_ESC_PREFIX }
+  ,{ "\033[D",   LINEEDITOR_EV_LEFT_SEXPR     | WITH_ESC_PREFIX }
 
   ,{ "OA",       LINEEDITOR_EV_UP             | WITH_ESC_PREFIX }
   ,{ "OB",       LINEEDITOR_EV_DOWN           | WITH_ESC_PREFIX }
@@ -1515,8 +1517,8 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_widespread[] =
 
   ,{ "\033OA",   LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
   ,{ "\033OB",   LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
-  ,{ "\033OC",   LINEEDITOR_EV_RIGHT_WORD     | WITH_ESC_PREFIX }
-  ,{ "\033OD",   LINEEDITOR_EV_LEFT_WORD      | WITH_ESC_PREFIX }
+  ,{ "\033OC",   LINEEDITOR_EV_RIGHT_SEXPR    | WITH_ESC_PREFIX }
+  ,{ "\033OD",   LINEEDITOR_EV_LEFT_SEXPR     | WITH_ESC_PREFIX }
 
   ,{ "A",        LINEEDITOR_EV_UP             | WITH_ESC_PREFIX }
   ,{ "B",        LINEEDITOR_EV_DOWN           | WITH_ESC_PREFIX }
@@ -1525,14 +1527,14 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_widespread[] =
 
   ,{ "\033A",    LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
   ,{ "\033B",    LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
-  ,{ "\033C",    LINEEDITOR_EV_RIGHT_WORD     | WITH_ESC_PREFIX }
-  ,{ "\033D",    LINEEDITOR_EV_LEFT_WORD      | WITH_ESC_PREFIX }
+  ,{ "\033C",    LINEEDITOR_EV_RIGHT_SEXPR    | WITH_ESC_PREFIX }
+  ,{ "\033D",    LINEEDITOR_EV_LEFT_SEXPR     | WITH_ESC_PREFIX }
 
 #ifdef USE_XTERM_CTRL_COMBINATIONS
   ,{ "[5A",      LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
   ,{ "[5B",      LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
-  ,{ "[5C",      LINEEDITOR_EV_RIGHT_WORD     | WITH_ESC_PREFIX }
-  ,{ "[5D",      LINEEDITOR_EV_LEFT_WORD      | WITH_ESC_PREFIX }
+  ,{ "[5C",      LINEEDITOR_EV_RIGHT_SEXPR    | WITH_ESC_PREFIX }
+  ,{ "[5D",      LINEEDITOR_EV_LEFT_SEXPR     | WITH_ESC_PREFIX }
 #endif
 
   ,{ "[1~",      LINEEDITOR_EV_HOME           | WITH_ESC_PREFIX }
@@ -1544,7 +1546,7 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_widespread[] =
 
   ,{ "\033[1~",  LINEEDITOR_EV_HOME_DOC       | WITH_ESC_PREFIX }
   ,{ "\033[2~",  LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
-  ,{ "\033[3~",  LINEEDITOR_EV_DELETE_WORD    | WITH_ESC_PREFIX }
+  ,{ "\033[3~",  LINEEDITOR_EV_DELETE_SEXPR   | WITH_ESC_PREFIX }
   ,{ "\033[4~",  LINEEDITOR_EV_END_DOC        | WITH_ESC_PREFIX }
   ,{ "\033[5~",  LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
   ,{ "\033[6~",  LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
@@ -1554,13 +1556,13 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_widespread[] =
   ,{ "[F",       LINEEDITOR_EV_END            | WITH_ESC_PREFIX }
   ,{ "\177",     LINEEDITOR_EV_DELETE                           }
   ,{ "\033[H",   LINEEDITOR_EV_HOME_DOC       | WITH_ESC_PREFIX }
-  ,{ "\177",     LINEEDITOR_EV_DELETE_WORD    | WITH_ESC_PREFIX }
+  ,{ "\177",     LINEEDITOR_EV_DELETE_SEXPR   | WITH_ESC_PREFIX }
   ,{ "\033[F",   LINEEDITOR_EV_END_DOC        | WITH_ESC_PREFIX }
 
 #ifdef USE_XTERM_CTRL_COMBINATIONS
   ,{ "[1;5~",    LINEEDITOR_EV_HOME_DOC       | WITH_ESC_PREFIX }
   ,{ "[2;5~",    LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
-  ,{ "[3;5~",    LINEEDITOR_EV_DELETE_WORD    | WITH_ESC_PREFIX }
+  ,{ "[3;5~",    LINEEDITOR_EV_DELETE_SEXPR   | WITH_ESC_PREFIX }
   ,{ "[4;5~",    LINEEDITOR_EV_END_DOC        | WITH_ESC_PREFIX }
   ,{ "[5;5~",    LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
   ,{ "[6;5~",    LINEEDITOR_EV_NONE           | WITH_ESC_PREFIX }
@@ -1760,37 +1762,37 @@ ___HIDDEN lineeditor_dcap lineeditor_dcap_table[LINEEDITOR_CAP_LAST+1] =
 
 ___HIDDEN lineeditor_dkey lineeditor_dkey_table[] =
 {
- DKEY("ku","kcuu1","\033OA",  LINEEDITOR_EV_UP,      LINEEDITOR_EV_NONE       )
-,DKEY("kd","kcud1","\033OB",  LINEEDITOR_EV_DOWN,    LINEEDITOR_EV_NONE       )
-,DKEY("kr","kcuf1","\033OC",  LINEEDITOR_EV_RIGHT,   LINEEDITOR_EV_RIGHT_WORD )
-,DKEY("kl","kcub1","\033OD",  LINEEDITOR_EV_LEFT,    LINEEDITOR_EV_LEFT_WORD  )
-,DKEY("kh","khome","\033[1~", LINEEDITOR_EV_HOME,    LINEEDITOR_EV_HOME_DOC   )
-,DKEY("kI","kich1","\033[2~", LINEEDITOR_EV_INSERT,  LINEEDITOR_EV_NONE       )
-,DKEY("kD","kdch1","\033[3~", LINEEDITOR_EV_DELETE,  LINEEDITOR_EV_DELETE_WORD)
-,DKEY("@7","kend", "\033[4~", LINEEDITOR_EV_END,     LINEEDITOR_EV_END_DOC    )
-,DKEY("kP","kpp",  "\033[5~", LINEEDITOR_EV_HOME_DOC,LINEEDITOR_EV_NONE       )
-,DKEY("kN","knp",  "\033[6~", LINEEDITOR_EV_END_DOC, LINEEDITOR_EV_NONE       )
-,DKEY("k1","kf1",  "\033OP",  LINEEDITOR_EV_F1,      LINEEDITOR_EV_META_F1    )
-,DKEY("k2","kf2",  "\033OQ",  LINEEDITOR_EV_F2,      LINEEDITOR_EV_META_F2    )
-,DKEY("k3","kf3",  "\033OR",  LINEEDITOR_EV_F3,      LINEEDITOR_EV_META_F3    )
-,DKEY("k4","kf4",  "\033OS",  LINEEDITOR_EV_F4,      LINEEDITOR_EV_META_F4    )
+ DKEY("ku","kcuu1","\033OA",  LINEEDITOR_EV_UP,      LINEEDITOR_EV_NONE        )
+,DKEY("kd","kcud1","\033OB",  LINEEDITOR_EV_DOWN,    LINEEDITOR_EV_NONE        )
+,DKEY("kr","kcuf1","\033OC",  LINEEDITOR_EV_RIGHT,   LINEEDITOR_EV_RIGHT_SEXPR )
+,DKEY("kl","kcub1","\033OD",  LINEEDITOR_EV_LEFT,    LINEEDITOR_EV_LEFT_SEXPR  )
+,DKEY("kh","khome","\033[1~", LINEEDITOR_EV_HOME,    LINEEDITOR_EV_HOME_DOC    )
+,DKEY("kI","kich1","\033[2~", LINEEDITOR_EV_INSERT,  LINEEDITOR_EV_NONE        )
+,DKEY("kD","kdch1","\033[3~", LINEEDITOR_EV_DELETE,  LINEEDITOR_EV_DELETE_SEXPR)
+,DKEY("@7","kend", "\033[4~", LINEEDITOR_EV_END,     LINEEDITOR_EV_END_DOC     )
+,DKEY("kP","kpp",  "\033[5~", LINEEDITOR_EV_HOME_DOC,LINEEDITOR_EV_NONE        )
+,DKEY("kN","knp",  "\033[6~", LINEEDITOR_EV_END_DOC, LINEEDITOR_EV_NONE        )
+,DKEY("k1","kf1",  "\033OP",  LINEEDITOR_EV_F1,      LINEEDITOR_EV_META_F1     )
+,DKEY("k2","kf2",  "\033OQ",  LINEEDITOR_EV_F2,      LINEEDITOR_EV_META_F2     )
+,DKEY("k3","kf3",  "\033OR",  LINEEDITOR_EV_F3,      LINEEDITOR_EV_META_F3     )
+,DKEY("k4","kf4",  "\033OS",  LINEEDITOR_EV_F4,      LINEEDITOR_EV_META_F4     )
 #ifdef LINEEDITOR_SUPPORT_ALTERNATE_ESCAPES
-,DKEY("kh","khome","\033OH",  LINEEDITOR_EV_HOME,    LINEEDITOR_EV_HOME_DOC   )
-,DKEY("@7","kend", "\033OF",  LINEEDITOR_EV_END,     LINEEDITOR_EV_END_DOC    )
-,DKEY("k1","kf1",  "\033[11~",LINEEDITOR_EV_F1,      LINEEDITOR_EV_META_F1    )
-,DKEY("k2","kf2",  "\033[12~",LINEEDITOR_EV_F2,      LINEEDITOR_EV_META_F2    )
-,DKEY("k3","kf3",  "\033[13~",LINEEDITOR_EV_F3,      LINEEDITOR_EV_META_F3    )
-,DKEY("k4","kf4",  "\033[14~",LINEEDITOR_EV_F4,      LINEEDITOR_EV_META_F4    )
+,DKEY("kh","khome","\033OH",  LINEEDITOR_EV_HOME,    LINEEDITOR_EV_HOME_DOC    )
+,DKEY("@7","kend", "\033OF",  LINEEDITOR_EV_END,     LINEEDITOR_EV_END_DOC     )
+,DKEY("k1","kf1",  "\033[11~",LINEEDITOR_EV_F1,      LINEEDITOR_EV_META_F1     )
+,DKEY("k2","kf2",  "\033[12~",LINEEDITOR_EV_F2,      LINEEDITOR_EV_META_F2     )
+,DKEY("k3","kf3",  "\033[13~",LINEEDITOR_EV_F3,      LINEEDITOR_EV_META_F3     )
+,DKEY("k4","kf4",  "\033[14~",LINEEDITOR_EV_F4,      LINEEDITOR_EV_META_F4     )
 #endif
 #ifdef LINEEDITOR_SUPPORT_F5_TO_F12
-,DKEY("k5","kf5",  "\033[15~",LINEEDITOR_EV_F5,      LINEEDITOR_EV_META_F5    )
-,DKEY("k6","kf6",  "\033[17~",LINEEDITOR_EV_F6,      LINEEDITOR_EV_META_F6    )
-,DKEY("k7","kf7",  "\033[18~",LINEEDITOR_EV_F7,      LINEEDITOR_EV_META_F7    )
-,DKEY("k8","kf8",  "\033[19~",LINEEDITOR_EV_F8,      LINEEDITOR_EV_META_F8    )
-,DKEY("k9","kf9",  "\033[20~",LINEEDITOR_EV_F9,      LINEEDITOR_EV_META_F9    )
-,DKEY("k;","kf10", "\033[21~",LINEEDITOR_EV_F10,     LINEEDITOR_EV_META_F10   )
-,DKEY("F1","kf11", "\033[23~",LINEEDITOR_EV_F11,     LINEEDITOR_EV_META_F11   )
-,DKEY("F2","kf12", "\033[24~",LINEEDITOR_EV_F12,     LINEEDITOR_EV_META_F12   )
+,DKEY("k5","kf5",  "\033[15~",LINEEDITOR_EV_F5,      LINEEDITOR_EV_META_F5     )
+,DKEY("k6","kf6",  "\033[17~",LINEEDITOR_EV_F6,      LINEEDITOR_EV_META_F6     )
+,DKEY("k7","kf7",  "\033[18~",LINEEDITOR_EV_F7,      LINEEDITOR_EV_META_F7     )
+,DKEY("k8","kf8",  "\033[19~",LINEEDITOR_EV_F8,      LINEEDITOR_EV_META_F8     )
+,DKEY("k9","kf9",  "\033[20~",LINEEDITOR_EV_F9,      LINEEDITOR_EV_META_F9     )
+,DKEY("k;","kf10", "\033[21~",LINEEDITOR_EV_F10,     LINEEDITOR_EV_META_F10    )
+,DKEY("F1","kf11", "\033[23~",LINEEDITOR_EV_F11,     LINEEDITOR_EV_META_F11    )
+,DKEY("F2","kf12", "\033[24~",LINEEDITOR_EV_F12,     LINEEDITOR_EV_META_F12    )
 #endif
 };
 
@@ -5704,17 +5706,23 @@ ___device_tty *self;)
 }
 
 
+#define FORW_WORD        0
+#define BACK_WORD        1
+#define FORW_SEXPR       2
+#define BACK_SEXPR       3
+#define BACK_SEXPR_PAREN 4
+
 ___HIDDEN ___BOOL lineeditor_word_boundary
    ___P((___device_tty *self,
-         int back,
+         int dir,
          int pos,
          int *final_pos),
         (self,
-         back,
+         dir,
          pos,
          final_pos)
 ___device_tty *self;
-int back;
+int dir;
 int pos;
 int *final_pos;)
 {
@@ -5725,6 +5733,12 @@ int *final_pos;)
   int depth = 0;
   ___C in_string = ___UNICODE_NUL; /* assume not inside a string */
   ___C c;
+
+#define WORD_CHAR(x) \
+((((x) >= ___UNICODE_0) && ((x) <= ___UNICODE_9)) || \
+ (((x) >= ___UNICODE_LOWER_A) && ((x) <= ___UNICODE_LOWER_Z)) || \
+ (((x) >= ___UNICODE_UPPER_A) && ((x) <= ___UNICODE_UPPER_Z)) || \
+ ((x) > ___UNICODE_RUBOUT))
 
 #define OPEN_PAREN(x) \
 ((x) == ___UNICODE_LPAREN || \
@@ -5746,7 +5760,47 @@ int *final_pos;)
 #define FLOAT_VECTOR(x) \
 ((x) == ___UNICODE_LOWER_F || (x) == ___UNICODE_UPPER_F)
 
-  if (back == 0)
+  if (dir == FORW_WORD)
+    {
+      while (pos < len)
+        {
+          c = buf[pos];
+          if (!WORD_CHAR(c))
+            pos++;
+          else
+            break;
+        }
+
+      while (pos < len)
+        {
+          c = buf[pos];
+          if (WORD_CHAR(c))
+            pos++;
+          else
+            break;
+        }
+    }
+  else if (dir == BACK_WORD)
+    {
+      while (pos > 0)
+        {
+          c = buf[pos-1];
+          if (!WORD_CHAR(c))
+            pos--;
+          else
+            break;
+        }
+
+      while (pos > 0)
+        {
+          c = buf[pos-1];
+          if (WORD_CHAR(c))
+            pos--;
+          else
+            break;
+        }
+    }
+  else if (dir == FORW_SEXPR)
     {
       /* skip whitespace */
 
@@ -6010,7 +6064,7 @@ int *final_pos;)
 
       done_backward:;
 
-      if (back == 2)
+      if (dir == BACK_SEXPR)
         {
           /* handle #(...), #f32(...), etc */
 
@@ -6150,7 +6204,7 @@ int len;)
       d->paren_balance_duration_nsecs > 0 &&
       !lineeditor_read_ready (d) &&
       (c = buf[len-1], CLOSE_PAREN(c)) &&
-      lineeditor_word_boundary (d, 1, edit_point, &open_paren_point) &&
+      lineeditor_word_boundary (d, BACK_SEXPR_PAREN, edit_point, &open_paren_point) &&
       (c = edited->buffer[open_paren_point], OPEN_PAREN(c)))
     {
       if ((e = lineeditor_move_edit_point (d, open_paren_point))
@@ -6222,7 +6276,7 @@ int len;)
   if (d->paren_balance_duration_nsecs > 0 &&
       !lineeditor_read_ready (d) &&
       (c = buf[len-1], CLOSE_PAREN(c)) &&
-      lineeditor_word_boundary (d, 1, edit_point, &open_paren_point) &&
+      lineeditor_word_boundary (d, BACK_SEXPR_PAREN, edit_point, &open_paren_point) &&
       (c = edited->buffer[open_paren_point], OPEN_PAREN(c)))
     {
       if ((e = lineeditor_move_edit_point (d, open_paren_point))
@@ -6568,7 +6622,7 @@ ___device_tty *self;)
 
   completion_point = d->current.completion_point;
 
-  if (!lineeditor_word_boundary (d, 1, completion_point, &word_start))
+  if (!lineeditor_word_boundary (d, BACK_SEXPR_PAREN, completion_point, &word_start))
     word_start = completion_point;
 
   switch (complete_word (&d->current.hist->edited,
@@ -6862,11 +6916,15 @@ lineeditor_event *ev;)
       return lineeditor_delete_chars (d, d->current.edit_point-1, 0);
 
     case LINEEDITOR_EV_BACK_WORD:
+    case LINEEDITOR_EV_BACK_SEXPR:
       {
         int i;
-        if (!lineeditor_word_boundary (d, 2, d->current.edit_point, &i))
+        int dir = (ev->event_kind == LINEEDITOR_EV_BACK_WORD)
+                  ? BACK_WORD
+                  : BACK_SEXPR;
+        if (!lineeditor_word_boundary (d, dir, d->current.edit_point, &i))
           return ___FIX(___INVALID_OP_ERR);
-        return lineeditor_delete_chars (d, i, 0);
+        return lineeditor_delete_chars (d, i, 1);
       }
 
     case LINEEDITOR_EV_TAB:
@@ -6904,19 +6962,19 @@ lineeditor_event *ev;)
       }
 
     case LINEEDITOR_EV_TRANSPOSE_WORD:
+    case LINEEDITOR_EV_TRANSPOSE_SEXPR:
       {
         int start1;
         int end1;
         int start2;
         int end2;
-        if (!lineeditor_word_boundary
-               (d,
-                0,
-                d->current.edit_point,
-                &end2) ||
-            !lineeditor_word_boundary (d, 2, end2, &start2) ||
-            !lineeditor_word_boundary (d, 2, start2, &start1) ||
-            !lineeditor_word_boundary (d, 0, start1, &end1))
+        int dir = (ev->event_kind == LINEEDITOR_EV_TRANSPOSE_WORD)
+                  ? FORW_WORD
+                  : FORW_SEXPR;
+        if (!lineeditor_word_boundary (d, dir, d->current.edit_point, &end2) ||
+            !lineeditor_word_boundary (d, dir+1, end2, &start2) ||
+            !lineeditor_word_boundary (d, dir+1, start2, &start1) ||
+            !lineeditor_word_boundary (d, dir, start1, &end1))
           return ___FIX(___INVALID_OP_ERR);
         return lineeditor_transpose_chars (d, start1, end1, start2, end2);
       }
@@ -6931,9 +6989,13 @@ lineeditor_event *ev;)
       return lineeditor_move_edit_point (d, d->current.edit_point+1);
 
     case LINEEDITOR_EV_RIGHT_WORD:
+    case LINEEDITOR_EV_RIGHT_SEXPR:
       {
         int i;
-        lineeditor_word_boundary (d, 0, d->current.edit_point, &i);
+        int dir = (ev->event_kind == LINEEDITOR_EV_RIGHT_WORD)
+                  ? FORW_WORD
+                  : FORW_SEXPR;
+        lineeditor_word_boundary (d, dir, d->current.edit_point, &i);
         return lineeditor_move_edit_point (d, i);
       }
 
@@ -6941,9 +7003,13 @@ lineeditor_event *ev;)
       return lineeditor_move_edit_point (d, d->current.edit_point-1);
 
     case LINEEDITOR_EV_LEFT_WORD:
+    case LINEEDITOR_EV_LEFT_SEXPR:
       {
         int i;
-        lineeditor_word_boundary (d, 2, d->current.edit_point, &i);
+        int dir = (ev->event_kind == LINEEDITOR_EV_LEFT_WORD)
+                  ? BACK_WORD
+                  : BACK_SEXPR;
+        lineeditor_word_boundary (d, dir, d->current.edit_point, &i);
         return lineeditor_move_edit_point (d, i);
       }
 
@@ -6963,11 +7029,15 @@ lineeditor_event *ev;)
         return lineeditor_delete_chars (d, d->current.edit_point+1, 0);
 
     case LINEEDITOR_EV_DELETE_WORD:
+    case LINEEDITOR_EV_DELETE_SEXPR:
       {
         int i;
-        if (!lineeditor_word_boundary (d, 0, d->current.edit_point, &i))
+        int dir = (ev->event_kind == LINEEDITOR_EV_DELETE_WORD)
+                  ? FORW_WORD
+                  : FORW_SEXPR;
+        if (!lineeditor_word_boundary (d, dir, d->current.edit_point, &i))
           return ___FIX(___INVALID_OP_ERR);
-        return lineeditor_delete_chars (d, i, 0);
+        return lineeditor_delete_chars (d, i, 1);
       }
 
     case LINEEDITOR_EV_END:

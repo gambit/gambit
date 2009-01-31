@@ -1,6 +1,6 @@
-/* File: "os_tty.h", Time-stamp: <2008-09-03 14:29:40 feeley> */
+/* File: "os_tty.h", Time-stamp: <2009-01-31 00:21:36 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TTY_H
 #define ___OS_TTY_H
@@ -91,62 +91,67 @@ MAKE_TEXT_ATTRS(TEXT_STYLE_NORMAL,DEFAULT_TEXT_COLOR,DEFAULT_TEXT_COLOR)
 /* Line editor data structures */
 
 
-#define LINEEDITOR_EV_NONE           0
-#define LINEEDITOR_EV_KEY            1
-#define LINEEDITOR_EV_RETURN         2
-#define LINEEDITOR_EV_BACK           3
-#define LINEEDITOR_EV_BACK_WORD      4
-#define LINEEDITOR_EV_TAB            5
-#define LINEEDITOR_EV_MARK           6
-#define LINEEDITOR_EV_PASTE          7
-#define LINEEDITOR_EV_CUT            8
-#define LINEEDITOR_EV_CUT_RIGHT      9
-#define LINEEDITOR_EV_CUT_LEFT       10
-#define LINEEDITOR_EV_REFRESH        11
-#define LINEEDITOR_EV_TRANSPOSE      12
-#define LINEEDITOR_EV_TRANSPOSE_WORD 13
-#define LINEEDITOR_EV_UP             14
-#define LINEEDITOR_EV_DOWN           15
-#define LINEEDITOR_EV_RIGHT          16
-#define LINEEDITOR_EV_RIGHT_WORD     17
-#define LINEEDITOR_EV_LEFT           18
-#define LINEEDITOR_EV_LEFT_WORD      19
-#define LINEEDITOR_EV_HOME           20
-#define LINEEDITOR_EV_HOME_DOC       21
-#define LINEEDITOR_EV_INSERT         22
-#define LINEEDITOR_EV_DELETE         23
-#define LINEEDITOR_EV_DELETE_WORD    24
-#define LINEEDITOR_EV_END            25
-#define LINEEDITOR_EV_END_DOC        26
-#define LINEEDITOR_EV_F1             27
-#define LINEEDITOR_EV_META_F1        28
-#define LINEEDITOR_EV_F2             29
-#define LINEEDITOR_EV_META_F2        30
-#define LINEEDITOR_EV_F3             31
-#define LINEEDITOR_EV_META_F3        32
-#define LINEEDITOR_EV_F4             33
-#define LINEEDITOR_EV_META_F4        34
+#define LINEEDITOR_EV_NONE            0
+#define LINEEDITOR_EV_KEY             1
+#define LINEEDITOR_EV_RETURN          2
+#define LINEEDITOR_EV_BACK            3
+#define LINEEDITOR_EV_BACK_WORD       4
+#define LINEEDITOR_EV_BACK_SEXPR      5
+#define LINEEDITOR_EV_TAB             6
+#define LINEEDITOR_EV_MARK            7
+#define LINEEDITOR_EV_PASTE           8
+#define LINEEDITOR_EV_CUT             9
+#define LINEEDITOR_EV_CUT_RIGHT       10
+#define LINEEDITOR_EV_CUT_LEFT        11
+#define LINEEDITOR_EV_REFRESH         12
+#define LINEEDITOR_EV_TRANSPOSE       13
+#define LINEEDITOR_EV_TRANSPOSE_WORD  14
+#define LINEEDITOR_EV_TRANSPOSE_SEXPR 15
+#define LINEEDITOR_EV_UP              16
+#define LINEEDITOR_EV_DOWN            17
+#define LINEEDITOR_EV_RIGHT           18
+#define LINEEDITOR_EV_RIGHT_WORD      19
+#define LINEEDITOR_EV_RIGHT_SEXPR     20
+#define LINEEDITOR_EV_LEFT            21
+#define LINEEDITOR_EV_LEFT_WORD       22
+#define LINEEDITOR_EV_LEFT_SEXPR      23
+#define LINEEDITOR_EV_HOME            24
+#define LINEEDITOR_EV_HOME_DOC        25
+#define LINEEDITOR_EV_INSERT          26
+#define LINEEDITOR_EV_DELETE          27
+#define LINEEDITOR_EV_DELETE_WORD     28
+#define LINEEDITOR_EV_DELETE_SEXPR    29
+#define LINEEDITOR_EV_END             30
+#define LINEEDITOR_EV_END_DOC         31
+#define LINEEDITOR_EV_F1              32
+#define LINEEDITOR_EV_META_F1         33
+#define LINEEDITOR_EV_F2              34
+#define LINEEDITOR_EV_META_F2         35
+#define LINEEDITOR_EV_F3              36
+#define LINEEDITOR_EV_META_F3         37
+#define LINEEDITOR_EV_F4              38
+#define LINEEDITOR_EV_META_F4         39
 
 #ifdef LINEEDITOR_SUPPORT_F5_TO_F12
-#define LINEEDITOR_EV_F5             35
-#define LINEEDITOR_EV_META_F5        36
-#define LINEEDITOR_EV_F6             37
-#define LINEEDITOR_EV_META_F6        38
-#define LINEEDITOR_EV_F7             39
-#define LINEEDITOR_EV_META_F7        40
-#define LINEEDITOR_EV_F8             41
-#define LINEEDITOR_EV_META_F8        42
-#define LINEEDITOR_EV_F9             43
-#define LINEEDITOR_EV_META_F9        44
-#define LINEEDITOR_EV_F10            45
-#define LINEEDITOR_EV_META_F10       46
-#define LINEEDITOR_EV_F11            47
-#define LINEEDITOR_EV_META_F11       48
-#define LINEEDITOR_EV_F12            49
-#define LINEEDITOR_EV_META_F12       50
-#define LINEEDITOR_EV_LAST           LINEEDITOR_EV_META_F12
+#define LINEEDITOR_EV_F5              40
+#define LINEEDITOR_EV_META_F5         41
+#define LINEEDITOR_EV_F6              42
+#define LINEEDITOR_EV_META_F6         43
+#define LINEEDITOR_EV_F7              44
+#define LINEEDITOR_EV_META_F7         45
+#define LINEEDITOR_EV_F8              46
+#define LINEEDITOR_EV_META_F8         47
+#define LINEEDITOR_EV_F9              48
+#define LINEEDITOR_EV_META_F9         49
+#define LINEEDITOR_EV_F10             50
+#define LINEEDITOR_EV_META_F10        51
+#define LINEEDITOR_EV_F11             52
+#define LINEEDITOR_EV_META_F11        53
+#define LINEEDITOR_EV_F12             54
+#define LINEEDITOR_EV_META_F12        55
+#define LINEEDITOR_EV_LAST            LINEEDITOR_EV_META_F12
 #else
-#define LINEEDITOR_EV_LAST           LINEEDITOR_EV_META_F4
+#define LINEEDITOR_EV_LAST            LINEEDITOR_EV_META_F4
 #endif
 
 
