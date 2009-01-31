@@ -1,6 +1,6 @@
 # makefile for Gambit-C documentation.
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = doc
 rootfromhere = ..
@@ -112,7 +112,7 @@ gambit-c.pdf: gambit-c.txi version.txi
 	(cd $(srcdir) && cd $(srcdir) && $(TEXI2DVI) -p gambit-c.txi) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")
 
 gambit-c.html: gambit-c.txi
-	(cd $(srcdir) && $(TEXI2HTML) gambit-c.txi) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")
+	(cd $(srcdir) && $(TEXI2HTML) -def-table gambit-c.txi) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")
 
 gambit-c.txt: gambit-c.txi
 	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit-c.txt gambit-c.txi) || (cp gambit-c.txi $@ && echo "*** $@ could not be built")

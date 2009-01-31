@@ -38,7 +38,7 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents Gambit-C, a portable implementation of Scheme.
 
-Copyright (C) 1994-2008 Marc Feeley.
+Copyright (C) 1994-2009 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -70,7 +70,7 @@ by the copyright holder.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994-2008 Marc Feeley.
+Copyright @copyright{} 1994-2009 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -87,7 +87,8 @@ except that this permission notice may be stated in a translation approved
 by the copyright holder.
 @end titlepage
 
-@ifinfo
+@ifnottex
+
 @node Top, , (dir), (dir)
 @top Gambit-C
 @cindex Gambit-C
@@ -98,12 +99,6 @@ This manual documents Gambit-C.  It covers release @value{VERSION}.
 @menu
 * The Gambit-C system::             The Gambit-C system
 * Accessing the system files::      Accessing the system files
-* General index::                   General index
-
- --- The Detailed Node Listing ---
-
-Gambit-C: a portable version of Gambit
-
 * GSI::                             The Gambit Scheme interpreter
 * GSC::                             The Gambit Scheme compiler
 * Runtime options::                 Runtime options
@@ -124,9 +119,10 @@ Gambit-C: a portable version of Gambit
 * C-interface::                     C-interface
 * System limitations::              System limitations
 * Copyright and license::           Copyright and license
+* General index::                   General index
 @end menu
 
-@end ifinfo
+@end ifnottex
 
 @node The Gambit-C system, GSI, Top, Top
 @chapter The Gambit-C system
@@ -237,6 +233,8 @@ This may have been done by the installation process.  Alternatively
 these files can be copied or linked in the directory where the C
 compiler is invoked (this requires no special privileges).
 
+@ifinfo
+
 @menu
 * GSI::                             The Gambit Scheme interpreter
 * GSC::                             The Gambit Scheme compiler
@@ -259,6 +257,8 @@ compiler is invoked (this requires no special privileges).
 * System limitations::              System limitations
 * Copyright and license::           Copyright and license
 @end menu
+
+@end ifinfo
 
 @node GSI, GSC, The Gambit-C system, Top
 @chapter The Gambit Scheme interpreter
@@ -1553,7 +1553,7 @@ library) or explicitly.
 @end deffn
 
 @node Runtime options, Debugging, GSC, Top
-@chapter Runtime options for all programs
+@chapter Runtime options
 @cindex runtime options
 @cindex options, runtime
 
@@ -14641,7 +14641,7 @@ the @code{apply} procedure is 8192.
 @chapter Copyright and license
 
 The Gambit-C system release @value{VERSION} is Copyright @copyright{}
-1994-2008 by Marc Feeley, all rights reserved.  The Gambit-C system
+1994-2009 by Marc Feeley, all rights reserved.  The Gambit-C system
 release @value{VERSION} is licensed under two licenses: the Apache
 License, Version 2.0, and the GNU LESSER GENERAL PUBLIC LICENSE,
 Version 2.1.  You have the option to choose which of these two
