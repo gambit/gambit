@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2009-02-01 08:46:24 feeley> */
+/* File: "os_tty.c", Time-stamp: <2009-02-01 08:58:42 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1443,7 +1443,7 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_common[] =
    { "\012",     LINEEDITOR_EV_RETURN                           }
   ,{ "\015",     LINEEDITOR_EV_RETURN                           }
   ,{ "\010",     LINEEDITOR_EV_BACK                             }
-  ,{ "\010",     LINEEDITOR_EV_BACK_WORD      | WITH_ESC_PREFIX }
+  ,{ "\010",     LINEEDITOR_EV_BACK_SEXPR     | WITH_ESC_PREFIX }
   ,{ "\011",     LINEEDITOR_EV_TAB                              }
 };
 
@@ -1453,7 +1453,7 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_map_rubout_to_backspace[] =
   /* sequences that map the rubout key to backspace */
 
    { "\177",     LINEEDITOR_EV_BACK                             }
-  ,{ "\177",     LINEEDITOR_EV_BACK_SEXPR     | WITH_ESC_PREFIX }
+  ,{ "\177",     LINEEDITOR_EV_BACK_WORD      | WITH_ESC_PREFIX }
 };
 
 
