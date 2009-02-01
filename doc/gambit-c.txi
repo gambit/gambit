@@ -2605,7 +2605,7 @@ Delete character before cursor.
 @item M-C-d
 Delete word forward and keep a copy of this text on the clipboard.
 
-@item M-detete
+@item M-delete
 Delete word backward and keep a copy of this text on the clipboard.
 
 @item M-backspace
