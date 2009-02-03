@@ -7557,19 +7557,23 @@ sub t2h_default_def_line($$$$$$$$$$$$$$$$)
 #   $type_name .= ' <b>' . $name . '</b>' if ($name ne ''); ###GAMBIT### removed
 
    ###GAMBIT### added the following code to assign an anchor to each definition
-   my $anchor_name = escape_url(escape_spaces(ucfirst($category) . ' ' . $name));
-   my $anchor = '<a name="' . $anchor_name . '"></a>';
+   my $anchor1_name = escape_url(escape_spaces('Definition of ' . $name));
+   my $anchor2_name = escape_url(escape_spaces(ucfirst($category) . ' ' . $name));
+   my $anchor1 = '<a name="' . $anchor1_name . '"></a>';
+   my $anchor2 = '<a name="' . $anchor2_name . '"></a>';
+   my $labels = '';
 
    ###GAMBIT### added the following if to have manual refer to the wiki and the wiki refer to the manual
    if ($Texi2HTML::THISDOC{'title_texi'} eq 'wiki documentation')
    {
      #print STDERR "wiki\n";
-     $type_name .= '<code><b><a href="http://www.iro.umontreal.ca/~gambit/doc/gambit-c.html#' . $anchor_name . '">' . $name . '</a></b></code>' if ($name ne '');
+     $type_name .= '<code><b><a href="http://www.iro.umontreal.ca/~gambit/doc/gambit-c.html#' . $anchor1_name . '">' . $name . '</a></b></code>' if ($name ne '');
    }
    else
    {
      #print STDERR "manual\n";
-     $type_name .= '<code><b><a href="http://dynamo.iro.umontreal.ca/~gambit/wiki/index.php?title=Documentation:' . $anchor_name . '">' . $name . '</a></b></code>' if ($name ne '');
+     $type_name .= '<code><b><a href="http://dynamo.iro.umontreal.ca/~gambit/wiki/index.php?title=Documentation:' . $anchor2_name . '">' . $name . '</a></b></code>' if ($name ne '');
+     $labels = $anchor1 . $anchor2 . $index_label;
    }
 
    $type_name .= $arguments;
@@ -7583,7 +7587,7 @@ sub t2h_default_def_line($$$$$$$$$$$$$$$$)
        
 #       return "<tr><td align=\"left\">" . $type_name .  ###GAMBIT### removed
 #       "</td><td align=\"right\">" . $category_prepared . $index_label . "</td></tr>\n"; ###GAMBIT###
-       return $anchor . $index_label . "<tr><td align=\"left\">" . $type_name .  ###GAMBIT### added to move index label to front
+       return $labels . "<tr><td align=\"left\">" . $type_name .  ###GAMBIT### added to move index label to front
        "</td><td align=\"right\">" . $category_prepared . "</td></tr>\n"; ###GAMBIT###
    }
 }

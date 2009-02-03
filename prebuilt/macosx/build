@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -21,7 +21,7 @@ for VARIANT in intel32 intel64 G3 G4 G5 universal; do
   cd "$rootfromhere"
 
   case "$VARIANT" in
-      intel32) CONFIG_ARCH="-arch i686"
+      intel32) CONFIG_ARCH="-arch i386"
                CONFIG_HOST="--host=i386-apple-darwin9"
                RUN_TESTS=1
                ;;
@@ -41,7 +41,7 @@ for VARIANT in intel32 intel64 G3 G4 G5 universal; do
                CONFIG_HOST="--host=powerpc-apple-darwin9"
                RUN_TESTS=0
                ;;
-    universal) CONFIG_ARCH="-arch i686 -arch ppc750"
+    universal) CONFIG_ARCH="-arch i386 -arch ppc750"
                CONFIG_HOST=""
                RUN_TESTS=1
                ;;
