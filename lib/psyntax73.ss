@@ -3,7 +3,7 @@
 ;;; Authors: R. Kent Dybvig, Oscar Waddell, Bob Hieb, Carl Bruggeman
 
 ;;; ***************************************************************************
-;;; *** Modified for Gambit 4.0 by Marc Feeley (April 3, 2007).             ***
+;;; *** Modified for Gambit 4.4.0 by Marc Feeley (February 4, 2009).        ***
 ;;; *** Look for "***" to see what was modified.                            ***
 ;;; ***************************************************************************
 
@@ -4476,3 +4476,35 @@
     (syntax-case x ()
       ((_ body1 ...)
        (syntax (begin body1 ...))))))
+
+(define-syntax future
+  (syntax-rules ()
+    ((_ rest ...) (##future rest ...))))
+
+(define-syntax c-define-type
+  (syntax-rules ()
+    ((_ rest ...) (##c-define-type rest ...))))
+
+(define-syntax c-declare
+  (syntax-rules ()
+    ((_ rest ...) (##c-declare rest ...))))
+
+(define-syntax c-initialize
+  (syntax-rules ()
+    ((_ rest ...) (##c-initialize rest ...))))
+
+(define-syntax c-lambda
+  (syntax-rules ()
+    ((_ rest ...) (##c-lambda rest ...))))
+
+(define-syntax c-define
+  (syntax-rules ()
+    ((_ rest ...) (##c-define rest ...))))
+
+(define-syntax declare
+  (syntax-rules ()
+    ((_ rest ...) (##declare rest ...))))
+
+(define-syntax namespace
+  (syntax-rules ()
+    ((_ rest ...) (##namespace rest ...))))

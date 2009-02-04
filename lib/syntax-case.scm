@@ -60145,6 +60145,202 @@ begin
 (syntax-error %%tmp3220)))
 ($syntax-dispatch %%tmp3220 '(any . each-any))))
 %%x3219))
+'*top*)
+($sc-put-cte
+'#(syntax-object future ((top) #(ribcage #(future) #((top)) #(future))))
+(lambda (%%x3225)
+((lambda (%%tmp3226)
+((lambda (%%tmp3227)
+(if %%tmp3227
+(apply (lambda (%%dummy3228 %%rest3229)
+(cons '#(syntax-object
+##future
+((top)
+#(ribcage
+#(dummy rest)
+#(("m" top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(x) #(("m" top)) #("i"))
+#(top-ribcage *top* #t)))
+%%rest3229))
+%%tmp3227)
+(syntax-error %%tmp3226)))
+($syntax-dispatch %%tmp3226 '(any . each-any))))
+%%x3225))
+'*top*)
+($sc-put-cte
+'#(syntax-object
+c-define-type
+((top) #(ribcage #(c-define-type) #((top)) #(c-define-type))))
+(lambda (%%x3231)
+((lambda (%%tmp3232)
+((lambda (%%tmp3233)
+(if %%tmp3233
+(apply (lambda (%%dummy3234 %%rest3235)
+(cons '#(syntax-object
+##c-define-type
+((top)
+#(ribcage
+#(dummy rest)
+#(("m" top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(x) #(("m" top)) #("i"))
+#(top-ribcage *top* #t)))
+%%rest3235))
+%%tmp3233)
+(syntax-error %%tmp3232)))
+($syntax-dispatch %%tmp3232 '(any . each-any))))
+%%x3231))
+'*top*)
+($sc-put-cte
+'#(syntax-object
+c-declare
+((top) #(ribcage #(c-declare) #((top)) #(c-declare))))
+(lambda (%%x3237)
+((lambda (%%tmp3238)
+((lambda (%%tmp3239)
+(if %%tmp3239
+(apply (lambda (%%dummy3240 %%rest3241)
+(cons '#(syntax-object
+##c-declare
+((top)
+#(ribcage
+#(dummy rest)
+#(("m" top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(x) #(("m" top)) #("i"))
+#(top-ribcage *top* #t)))
+%%rest3241))
+%%tmp3239)
+(syntax-error %%tmp3238)))
+($syntax-dispatch %%tmp3238 '(any . each-any))))
+%%x3237))
+'*top*)
+($sc-put-cte
+'#(syntax-object
+c-initialize
+((top) #(ribcage #(c-initialize) #((top)) #(c-initialize))))
+(lambda (%%x3243)
+((lambda (%%tmp3244)
+((lambda (%%tmp3245)
+(if %%tmp3245
+(apply (lambda (%%dummy3246 %%rest3247)
+(cons '#(syntax-object
+##c-initialize
+((top)
+#(ribcage
+#(dummy rest)
+#(("m" top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(x) #(("m" top)) #("i"))
+#(top-ribcage *top* #t)))
+%%rest3247))
+%%tmp3245)
+(syntax-error %%tmp3244)))
+($syntax-dispatch %%tmp3244 '(any . each-any))))
+%%x3243))
+'*top*)
+($sc-put-cte
+'#(syntax-object
+c-lambda
+((top) #(ribcage #(c-lambda) #((top)) #(c-lambda))))
+(lambda (%%x3249)
+((lambda (%%tmp3250)
+((lambda (%%tmp3251)
+(if %%tmp3251
+(apply (lambda (%%dummy3252 %%rest3253)
+(cons '#(syntax-object
+##c-lambda
+((top)
+#(ribcage
+#(dummy rest)
+#(("m" top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(x) #(("m" top)) #("i"))
+#(top-ribcage *top* #t)))
+%%rest3253))
+%%tmp3251)
+(syntax-error %%tmp3250)))
+($syntax-dispatch %%tmp3250 '(any . each-any))))
+%%x3249))
+'*top*)
+($sc-put-cte
+'#(syntax-object
+c-define
+((top) #(ribcage #(c-define) #((top)) #(c-define))))
+(lambda (%%x3255)
+((lambda (%%tmp3256)
+((lambda (%%tmp3257)
+(if %%tmp3257
+(apply (lambda (%%dummy3258 %%rest3259)
+(cons '#(syntax-object
+##c-define
+((top)
+#(ribcage
+#(dummy rest)
+#(("m" top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(x) #(("m" top)) #("i"))
+#(top-ribcage *top* #t)))
+%%rest3259))
+%%tmp3257)
+(syntax-error %%tmp3256)))
+($syntax-dispatch %%tmp3256 '(any . each-any))))
+%%x3255))
+'*top*)
+($sc-put-cte
+'#(syntax-object declare ((top) #(ribcage #(declare) #((top)) #(declare))))
+(lambda (%%x3261)
+((lambda (%%tmp3262)
+((lambda (%%tmp3263)
+(if %%tmp3263
+(apply (lambda (%%dummy3264 %%rest3265)
+(cons '#(syntax-object
+##declare
+((top)
+#(ribcage
+#(dummy rest)
+#(("m" top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(x) #(("m" top)) #("i"))
+#(top-ribcage *top* #t)))
+%%rest3265))
+%%tmp3263)
+(syntax-error %%tmp3262)))
+($syntax-dispatch %%tmp3262 '(any . each-any))))
+%%x3261))
+'*top*)
+($sc-put-cte
+'#(syntax-object
+namespace
+((top) #(ribcage #(namespace) #((top)) #(namespace))))
+(lambda (%%x3267)
+((lambda (%%tmp3268)
+((lambda (%%tmp3269)
+(if %%tmp3269
+(apply (lambda (%%dummy3270 %%rest3271)
+(cons '#(syntax-object
+##namespace
+((top)
+#(ribcage
+#(dummy rest)
+#(("m" top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(x) #(("m" top)) #("i"))
+#(top-ribcage *top* #t)))
+%%rest3271))
+%%tmp3269)
+(syntax-error %%tmp3268)))
+($syntax-dispatch %%tmp3268 '(any . each-any))))
+%%x3267))
 '*top*))
 ;;;============================================================================
 
