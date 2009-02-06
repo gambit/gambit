@@ -1,6 +1,6 @@
-/* File: "mem.c", Time-stamp: <2007-09-11 23:51:00 feeley> */
+/* File: "mem.c", Time-stamp: <2009-02-06 13:30:20 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 404000
@@ -3980,9 +3980,7 @@ long nonmovable_words_needed;)
 
   free_unmarked_still_objs ();
 
-  target_nb_sections = (adjust_heap (WORDS_AVAILABLE,
-                                     WORDS_OCCUPIED
-                                     + nonmovable_words_needed)
+  target_nb_sections = (adjust_heap (WORDS_AVAILABLE, WORDS_OCCUPIED)
                         - words_nonmovable
                         + normal_overflow_reserve
                         + 2*___MSECTION_FUDGE
