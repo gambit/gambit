@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-01-29 14:51:29 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-02-10 12:57:14 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -118,19 +118,59 @@
 (define-prim ##degen-quasi-list->vector
   (mk-degen ()
     (##list 'quasiquote
-            (##vector (##list 'unquote-splicing (##decomp (^ 0)))))))
+            (##list->vector
+             (##degen-quasi-unquote-splicing-cdr
+              (##decomp (^ 0)))))))
 
 (define-prim ##degen-quasi-append
   (mk-degen ()
-    (##list 'quasiquote
-            (##list (##list 'unquote-splicing (##decomp (^ 0)))
-                    (##list 'unquote-splicing (##decomp (^ 1)))))))
+    (##degen-quasi-append-aux
+     (##degen-quasi-unquote-splicing (##decomp (^ 0)))
+     (##decomp (^ 1)))))
 
 (define-prim ##degen-quasi-cons
   (mk-degen ()
-    (##list 'quasiquote
-            (##list (##list 'unquote (##decomp (^ 0)))
-                    (##list 'unquote-splicing (##decomp (^ 1)))))))
+    (##degen-quasi-append-aux
+     (##degen-quasi-unquote (##decomp (^ 0)))
+     (##decomp (^ 1)))))
+
+(define-prim (##degen-quasi-append-aux a b)
+  (##list 'quasiquote
+          (##cons a
+                  (##degen-quasi-unquote-splicing-cdr b))))
+
+(define-prim (##degen-quasi-unquote expr)
+  (let ((x (##degen-quasi-optimize expr)))
+    (if x
+        (##car x)
+        (##list 'unquote expr))))
+
+(define-prim (##degen-quasi-unquote-splicing-cdr expr)
+  (let ((x (##degen-quasi-optimize expr)))
+    (if x
+        (##car x)
+        (##list (##degen-quasi-unquote-splicing expr)))))
+
+(define-prim (##degen-quasi-unquote-splicing expr)
+  (##list 'unquote-splicing expr))
+
+(define-prim (##degen-quasi-optimize expr)
+  (let ((x (##degen-quasi-extract expr 'quasiquote)))
+    (if x
+        x
+        (let ((y (##degen-quasi-extract expr 'quote)))
+          (if (and y (##not (##pair? (##car y)))) ;; in case of embedded unquotes
+              y
+              #f)))))
+
+(define-prim (##degen-quasi-extract expr tag)
+  (and ;; #f ;; uncomment to disable optimization
+       (##pair? expr)
+       (##eq? (##car expr) tag)
+       (let ((x (##cdr expr)))
+         (and (##pair? x)
+              (##null? (##cdr x))
+              (##list (##car x))))))
 
 (define-prim ##degen-cond-if
   (mk-degen ()
