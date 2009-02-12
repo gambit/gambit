@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2009-01-29 15:02:37 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2009-02-11 11:14:10 feeley>
 
 ;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
 
@@ -280,6 +280,8 @@ group-info-members
 group-info-name
 group-info?
 heap-overflow-exception?
+help
+help-browser
 host-info
 host-info-addresses
 host-info-aliases

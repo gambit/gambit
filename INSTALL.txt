@@ -1,7 +1,7 @@
                 Installation instructions for Gambit-C
                 ======================================
 
-              [Time-stamp: <2008-12-23 09:06:13 feeley>]
+              [Time-stamp: <2009-02-11 11:12:55 feeley>]
 
 
 This directory contains a release of the Gambit-C Scheme programming
@@ -140,6 +140,9 @@ The configure options which are specific to the Gambit-C system are:
   --enable-absolute-shared-libs
                           shared libraries should be linked to using an
                           absolute path
+  --enable-help-browser=BROWSER
+                          use the specified browser to view documentation
+                          requested through the help procedure or REPL
 
 The option --enable-cplusplus should be used when applications
 developped with the Gambit-C compiler are to be linked with code or

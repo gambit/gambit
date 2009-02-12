@@ -1,0 +1,73 @@
+#! /bin/sh
+
+# Script parameters are passed in the following environment variables:
+#   GAMBC_DOC_GAMBCDIR_BIN
+#   GAMBC_DOC_GAMBCDIR_DOC
+#   GAMBC_DOC_ARG1
+#   GAMBC_DOC_ARG2
+#   GAMBC_DOC_ARG3
+#   GAMBC_DOC_ARG4
+#   ...
+
+# echo GAMBC_DOC_GAMBCDIR_BIN = "${GAMBC_DOC_GAMBCDIR_BIN}"
+# echo GAMBC_DOC_GAMBCDIR_DOC = "${GAMBC_DOC_GAMBCDIR_DOC}"
+# echo GAMBC_DOC_ARG1 = "${GAMBC_DOC_ARG1}"
+# echo GAMBC_DOC_ARG2 = "${GAMBC_DOC_ARG2}"
+# echo GAMBC_DOC_ARG3 = "${GAMBC_DOC_ARG3}"
+# echo GAMBC_DOC_ARG4 = "${GAMBC_DOC_ARG4}"
+
+find_in_path() # exe-name, sets `$exe'
+{
+  save_IFS="${IFS}"; IFS=":"
+  for dir in $PATH; do
+    if test -x "$dir/$1" -a ! -d "$dir/$1"; then
+      exe="$dir/$1"; IFS="$save_IFS"; return 0
+    fi
+  done
+  exe=""; IFS="$save_IFS"; return 1
+}
+
+find_browser() # sets `$exe'
+{
+  if [ "@HELP_BROWSER@" != "" ]; then
+    browser_list="@HELP_BROWSER@"
+  else
+    browser_list="lynx firefox mozilla netscape osascript"
+  fi
+
+  browser_list="${GAMBC_DOC_ARG3} $browser_list"
+
+  for b in $browser_list; do
+    if find_in_path $b; then
+      browser=$b
+      return 0
+    fi
+  done
+  return 1
+}
+
+operation_help() # sets `$exe'
+{
+  if find_browser; then
+    url="file://${GAMBC_DOC_GAMBCDIR_DOC}/gambit-c.html#${GAMBC_DOC_ARG4}"
+    case "$browser" in
+      osascript ) $exe <<EOF ;;
+tell application "Safari"
+    open location "$url"
+end tell
+EOF
+              * ) $exe $url ;;
+    esac
+  else
+    echo "*** WARNING -- none of these browsers can be found to view the documentation:"
+    echo "***            $browser_list"
+    exit 1
+  fi
+}
+
+if [ "${GAMBC_DOC_ARG1}" == "help" ]; then
+  operation_help
+else
+  echo "*** WARNING -- unsupported operation: ${GAMBC_DOC_ARG1}"
+  exit 1
+fi

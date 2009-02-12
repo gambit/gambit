@@ -267,7 +267,7 @@ compiler is invoked (this requires no special privileges).
 Synopsis:
 
 @example
-@b{}gsi @r{[}-:@var{runtimeoption},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]} @r{[}@r{[}-@r{]} @r{[}-e @var{expressions}@r{]} @r{[}@var{file}@r{]}@r{]}@dots{}
+@b{}gsi @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]} @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}@r{@var{file}}@r{]}@r{]}@dots{}
 @end example
 
 @pindex gsi
@@ -701,15 +701,15 @@ $ @b{gsi square 30   @r{@i{# will load square.o1}}}
 Synopsis:
 
 @example
-@b{}gsc @r{[}-:@var{runtimeoption},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]}
-    @r{[}-prelude @var{expressions}@r{]} @r{[}-postlude @var{expressions}@r{]}
-    @r{[}-dynamic@r{]} @r{[}-cc-options @var{options}@r{]}
-    @r{[}-ld-options-prelude @var{options}@r{]} @r{[}-ld-options @var{options}@r{]}
+@b{}gsc @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]}
+    @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
+    @r{[}-dynamic@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
+    @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
     @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]}
     @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
     @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
-    @r{[}-o @var{output}@r{]} @r{[}-c@r{]} @r{[}-keep-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @var{base}@r{]}
-    @r{[}@r{[}-@r{]} @r{[}-e @var{expressions}@r{]} @r{[}@var{file}@r{]}@r{]}@dots{}
+    @r{[}-o @r{@var{output}}@r{]} @r{[}-c@r{]} @r{[}-keep-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @r{@var{base}}@r{]}
+    @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}@r{@var{file}}@r{]}@r{]}@dots{}
 @end example
 
 @menu
@@ -786,8 +786,8 @@ Force interpreter mode.
 @item -f
 Do not examine the initialization file.
 @item -v
-Print the system version string and time stamp on standard output and
-exit.
+Print the system version string, system time stamp and operating
+system type on standard output and exit.
 @item -prelude @var{expressions}
 Add expressions to the top of the source code being compiled.
 @item -postlude @var{expressions}
@@ -1885,6 +1885,20 @@ In addition to expressions, the REPL accepts the following special
 @cmindex ,?
 Give a summary of the REPL commands.
 
+@item ,(h @var{subject})
+@cmindex ,(h @var{subject})
+This command will show the section of the Gambit manual with the
+definition of the procedure or special form @var{subject}, which must
+be a symbol.  For example @samp{,(h time)} will show the section
+documenting the @code{time} special form.  Please see the @code{help}
+procedure for additional information.
+
+@item ,h
+@cmindex ,h
+This command will show the section of the Gambit manual with the
+definition of the procedure which raised the exception for which this
+REPL was started.
+
 @item ,q
 @cmindex ,q
 Terminate the process with exit status 0.  This is equivalent to
@@ -2166,6 +2180,46 @@ lst = '(5 2 hello 9 1)
 
 @node Procedures related to debugging, Console line-editing, Debugging example, Debugging
 @section Procedures related to debugging
+
+@deffn procedure help @var{subject}
+@deffnx procedure help-browser @r{[}@var{new-value}@r{]}
+
+The @code{help} procedure displays the section of the Gambit manual
+with the definition of the procedure or special form @var{subject},
+which must be a procedure or symbol.  For example the call @code{(help
+gensym)} will show the section documenting the @code{gensym} procedure
+and the call @code{(help 'time)} will show the section documenting the
+@code{time} special form.  The @code{help} procedure returns the void
+object.
+
+The parameter object @code{help-browser} is bound to a string naming
+the external program that is used by the @code{help} procedure to view
+the documentation.  Initially it is bound to the empty string.  In
+normal circumstances when @code{help-browser} is bound to an empty
+string the @code{help} procedure runs the script
+@code{~~bin/gambc-doc.bat} which searches for a suitable web browser
+to open the documentation in HTML format.  Unless the system was built
+with the command @samp{configure --enable-help-browser=...}, the
+text-only browser @samp{lynx} (see @uref{http://lynx.isc.org/}) will
+be used by default if it is available.  We highly recommend that you
+install this browser if you are interested in viewing the
+documentation within the console in which the REPL is running.  You
+can exit @samp{lynx} conveniently by typing an end of file (usually
+@key{^D}).
+
+For example:
+
+@smallexample
+> @b{(help-browser "firefox")} @r{@i{; use firefox instead of lynx}}
+> @b{(help 'gensym)}
+> @b{(help gensym)} @r{@i{; OK because gensym is a procedure}}
+> @b{(help 'time)}
+> @b{(help time)} @r{@i{; not OK because time is a special form}}
+*** ERROR IN (console)@@5.7 -- Macro name can't be used as a variable: time
+> 
+@end smallexample
+
+@end deffn
 
 @deffn procedure repl-result-history-ref @var{i}
 @deffnx procedure repl-result-history-max-length-set! @var{n}

@@ -9,7 +9,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 #
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 ## --------------------- ##
 ## M4sh Initialization.  ##
 ## --------------------- ##
@@ -800,6 +800,7 @@ ENABLE_SHARED
 ENABLE_ABSOLUTE_SHARED_LIBS
 ENABLE_VERSIONNED_LIBS
 emacsdir
+HELP_BROWSER
 SET_MAKE
 LIBOBJS
 LTLIBOBJS'
@@ -821,6 +822,7 @@ enable_ansi_c
 enable_symlinks
 enable_multiple_versions
 enable_absolute_shared_libs
+enable_help_browser
 with_x
 '
       ac_precious_vars='build_alias
@@ -1493,6 +1495,8 @@ Optional Features:
   --enable-absolute-shared-libs
                           shared libraries should be linked to using an
                           absolute path (default is YES)
+  --enable-help-browser=BROWSER
+                          Browser to use for help (default is to search)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1587,7 +1591,7 @@ Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 _ACEOF
   exit
 fi
@@ -5433,6 +5437,18 @@ fi
 if test "$ENABLE_SHARED" != "yes"; then
   ENABLE_ABSOLUTE_SHARED_LIBS=no
 fi
+
+###############################################################################
+#
+# Determine which browser to use for help.
+
+# Check whether --enable-help-browser was given.
+if test "${enable_help_browser+set}" = set; then
+  enableval=$enable_help_browser; HELP_BROWSER=$enableval
+else
+  HELP_BROWSER=""
+fi
+
 
 ###############################################################################
 #
@@ -24792,6 +24808,7 @@ INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
 
 
 
+
 { $as_echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
 $as_echo_n "checking whether ${MAKE-make} sets \$(MAKE)... " >&6; }
 set x ${MAKE-make}
@@ -24824,7 +24841,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-doc.bat.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -25420,6 +25437,8 @@ do
     "gsi/makefile") CONFIG_FILES="$CONFIG_FILES gsi/makefile" ;;
     "gsc/makefile") CONFIG_FILES="$CONFIG_FILES gsc/makefile" ;;
     "bin/makefile") CONFIG_FILES="$CONFIG_FILES bin/makefile" ;;
+    "bin/gambc-doc.bat.unix") CONFIG_FILES="$CONFIG_FILES bin/gambc-doc.bat.unix" ;;
+    "bin/gambc-doc.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambc-doc.bat.windows" ;;
     "misc/makefile") CONFIG_FILES="$CONFIG_FILES misc/makefile" ;;
     "doc/makefile") CONFIG_FILES="$CONFIG_FILES doc/makefile" ;;
     "tests/makefile") CONFIG_FILES="$CONFIG_FILES tests/makefile" ;;

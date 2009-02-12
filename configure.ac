@@ -1,6 +1,6 @@
 # Configure template for Gambit-C system.
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -17,7 +17,7 @@ AC_SUBST(PACKAGE_STRING)
 AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
@@ -380,6 +380,16 @@ AC_ARG_ENABLE(absolute-shared-libs,
 if test "$ENABLE_SHARED" != "yes"; then
   ENABLE_ABSOLUTE_SHARED_LIBS=no
 fi
+
+###############################################################################
+#
+# Determine which browser to use for help.
+
+AC_ARG_ENABLE(help-browser,
+              AC_HELP_STRING([--enable-help-browser=BROWSER],
+                             [Browser to use for help (default is to search)]),
+              HELP_BROWSER=$enableval,
+              HELP_BROWSER="")
 
 ###############################################################################
 #
@@ -1532,10 +1542,11 @@ AC_SUBST(ENABLE_SHARED)
 AC_SUBST(ENABLE_ABSOLUTE_SHARED_LIBS)
 AC_SUBST(ENABLE_VERSIONNED_LIBS)
 AC_SUBST(emacsdir)
+AC_SUBST(HELP_BROWSER)
 
 AC_PROG_MAKE_SET
 
-AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
+AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-doc.bat.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
 
 if test "$ENABLE_SINGLE_HOST" != yes; then
   AC_MSG_NOTICE([

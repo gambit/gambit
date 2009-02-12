@@ -6182,7 +6182,8 @@ sub t2h_default_def_item($$)
         }
         else
         {
-            return '<tr><td colspan="2">' . $text . '</td></tr>';
+#            return '<tr><td colspan="2">' . $text . '</td></tr>'; ###GAMBIT###
+            return $text;
         }
     }
     return '';
@@ -6247,7 +6248,8 @@ sub t2h_default_def($)
         }
         else
         {
-            return "<table width=\"100%\">\n" . $text . "</table>\n";
+#            return "<table width=\"100%\">\n" . $text . "</table>\n"; ###GAMBIT### move table to each definition
+            return $text . "\n";
         }
     }
     return '';
@@ -7557,8 +7559,11 @@ sub t2h_default_def_line($$$$$$$$$$$$$$$$)
 #   $type_name .= ' <b>' . $name . '</b>' if ($name ne ''); ###GAMBIT### removed
 
    ###GAMBIT### added the following code to assign an anchor to each definition
-   my $anchor1_name = escape_url(escape_spaces('Definition of ' . $name));
-   my $anchor2_name = escape_url(escape_spaces(ucfirst($category) . ' ' . $name));
+   my $name2 = $name;
+   $name2 =~ s/&lt;/</g;
+   $name2 =~ s/&gt;/>/g;
+   my $anchor1_name = escape_url(escape_spaces('Definition of ' . $name2));
+   my $anchor2_name = escape_url(escape_spaces(ucfirst($category) . ' ' . $name2));
    my $anchor1 = '<a name="' . $anchor1_name . '"></a>';
    my $anchor2 = '<a name="' . $anchor2_name . '"></a>';
    my $labels = '';
@@ -7587,8 +7592,8 @@ sub t2h_default_def_line($$$$$$$$$$$$$$$$)
        
 #       return "<tr><td align=\"left\">" . $type_name .  ###GAMBIT### removed
 #       "</td><td align=\"right\">" . $category_prepared . $index_label . "</td></tr>\n"; ###GAMBIT###
-       return $labels . "<tr><td align=\"left\">" . $type_name .  ###GAMBIT### added to move index label to front
-       "</td><td align=\"right\">" . $category_prepared . "</td></tr>\n"; ###GAMBIT###
+       return $labels . "<table width=\"100%\"><tr><td align=\"left\">" . $type_name .  ###GAMBIT### added to move index label to front
+       "</td><td align=\"right\">" . $category_prepared . "</td></tr></table>\n"; ###GAMBIT###
    }
 }
 

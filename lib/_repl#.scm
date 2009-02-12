@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl#.scm", Time-stamp: <2009-01-29 14:51:38 feeley>
+;;; File: "_repl#.scm", Time-stamp: <2009-02-11 21:28:56 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -19,6 +19,7 @@
   depth
   cont
   initial-cont
+  reason
   prev-level
   prev-depth
 )

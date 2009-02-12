@@ -5314,7 +5314,7 @@ width0pt\relax} \fi
   % distinguish it from the body text that may end up on the next line
   % just below it.
   \def\temp{#1}%
-  \setbox0=\hbox{\kern\deflastargmargin \ifx\temp\empty\else [\rm\temp]\fi}
+  \setbox0=\hbox{\kern\deflastargmargin \ifx\temp\empty\else \rm\temp\fi}
   %
   % Figure out line sizes for the paragraph shape.
   % The first line needs space for \box0; but if \rightskip is nonzero,
@@ -5369,7 +5369,7 @@ width0pt\relax} \fi
   %
   % On the other hand, if an argument has two dashes (for instance), we
   % want a way to get ttsl.  Let's try @var for that.
-  \let\var=\ttslanted
+%  \let\var=\ttslanted
   #1%
   \sl\hyphenchar\font=45{\tt#2}
 }

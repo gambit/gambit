@@ -1,6 +1,6 @@
 # makefile for Gambit-C bin directory.
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = bin
 rootfromhere = ..
@@ -64,13 +64,14 @@ mandir = @mandir@
 
 .SUFFIXES:
 
-RCFILES = makefile.in
+RCFILES = makefile.in \
+gambc-doc.bat.unix.in gambc-doc.bat.windows.in
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_BIN_PROG = gsc-cc-o.bat
+INSTFILES_BIN_PROG = gsc-cc-o.bat gambc-doc.bat
 INSTFILES_BIN_LINK_GSI = six@exe@ gsi-script@bat@ six-script@bat@ \
 scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 INSTFILES_BIN_LINK_GSC = gsc-script@bat@
@@ -81,7 +82,7 @@ all: all-pre all-recursive all-post
 
 all-pre:
 
-all-post: gsc-cc-o.bat six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gsc-cc-o.bat gambc-doc.bat six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 
 gsc-cc-o.bat: makefile
 	rm -f gsc-cc-o.bat
@@ -164,6 +165,15 @@ gsc-cc-o.bat: makefile
 	  echo ":end" >> gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
 	  echo "exit" >> gsc-cc-o.bat; \
+	fi
+
+gambc-doc.bat: makefile
+	rm -f gambc-doc.bat
+	if test "@bat@" = ""; then \
+	  cp gambc-doc.bat.unix gambc-doc.bat; \
+	  chmod +x gambc-doc.bat; \
+	else \
+	  cp gambc-doc.bat.windows gambc-doc.bat; \
 	fi
 
 six@exe@: makefile
@@ -297,6 +307,7 @@ mostlyclean-pre:
 
 mostlyclean-post:
 	rm -f gsc-cc-o.bat \
+	  gambc-doc.bat \
 	  six@exe@ six@exe@.lnk \
 	  gsi-script@bat@ \
 	  gsi-script@bat@.lnk \

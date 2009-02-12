@@ -1,0 +1,49 @@
+@echo off
+
+rem Script parameters are passed in the following environment variables:
+rem   GAMBC_DOC_GAMBCDIR_BIN
+rem   GAMBC_DOC_GAMBCDIR_DOC
+rem   GAMBC_DOC_ARG1
+rem   GAMBC_DOC_ARG2
+rem   GAMBC_DOC_ARG3
+rem   GAMBC_DOC_ARG4
+rem   ...
+
+rem echo GAMBC_DOC_GAMBCDIR_BIN = %GAMBC_DOC_GAMBCDIR_BIN%
+rem echo GAMBC_DOC_GAMBCDIR_DOC = %GAMBC_DOC_GAMBCDIR_DOC%
+rem echo GAMBC_DOC_ARG1 = %GAMBC_DOC_ARG1%
+rem echo GAMBC_DOC_ARG2 = %GAMBC_DOC_ARG2%
+rem echo GAMBC_DOC_ARG3 = %GAMBC_DOC_ARG3%
+rem echo GAMBC_DOC_ARG3 = %GAMBC_DOC_ARG4%
+
+if "%GAMBC_DOC_ARG1%" == "help" goto operation_help
+
+echo *** WARNING -- unsupported operation: %GAMBC_DOC_ARG1%
+exit 1
+
+:operation_help
+
+set browser_list=explorer.exe netscape.exe mozilla.exe firefox.exe lynx.exe
+
+rem if "@HELP_BROWSER@" != "" set browser_list=@HELP_BROWSER@
+
+set browser_list=%browser_list% %GAMBC_DOC_ARG3%
+
+set url="file://%GAMBC_DOC_GAMBCDIR_DOC%\gambit-c.html#%GAMBC_DOC_ARG4%"
+
+set browser=
+
+for %%f in (%browser_list%) do if not "%%~$PATH:f" == "" set browser=%%f
+
+if not "%browser%" == "" goto start_browser
+
+echo *** WARNING -- none of these browsers can be found to view the documentation:
+echo ***            %browser_list%
+
+exit 1
+
+:start_browser
+
+%browser% %url%
+
+exit 0
