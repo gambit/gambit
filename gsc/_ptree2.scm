@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2008-09-25 19:19:41 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2009-02-12 16:22:56 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2760,12 +2760,9 @@
                nb-seps)))))
 
 (define (valid-c-or-c++-function-id? id)
-  (let ((x (valid-c-id? id)))
-    (or (eqv? x 0)
-        (eqv? x 1))))
+  (valid-c-id? id))
 
 (define (valid-c-or-c++-type-id? id)
-  (let ((x (valid-c-id? id)))
-    (eqv? x 0)))
+  (valid-c-id? id))
 
 ;;;============================================================================
