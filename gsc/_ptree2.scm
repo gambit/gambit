@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2009-02-12 16:22:56 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2009-02-12 17:28:34 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -2741,28 +2741,41 @@
         (= n 95)
         (and (>= n 48) (<= n 57)))))
 
-(define (valid-c-id? id)
+(define (valid-c-id? id type?)
   (let ((n (string-length id)))
     (and (> n 0)
          (c-id-initial? (string-ref id 0))
-         (let loop ((i 1) (nb-seps 0))
+         (let loop ((i 1) (depth 0))
            (if (< i n)
                (let ((c (string-ref id i)))
                  (cond ((and (< (+ i 2) n)
                              (char=? #\: c)
                              (char=? #\: (string-ref id (+ i 1)))
                              (c-id-initial? (string-ref id (+ i 2))))
-                        (loop (+ i 3) (+ nb-seps 1)))
+                        (loop (+ i 3) depth))
+                       ((and type?
+                             (< (+ i 1) n)
+                             (char=? #\< c)
+                             (c-id-initial? (string-ref id (+ i 1))))
+                        (loop (+ i 2) (+ depth 1)))
+                       ((and (< (+ i 1) n)
+                             (char=? #\, c)
+                             (c-id-initial? (string-ref id (+ i 1)))
+                             (> depth 0))
+                        (loop (+ i 2) depth))
+                       ((and (char=? #\> c)
+                             (> depth 0))
+                        (loop (+ i 1) (- depth 1)))
                        ((c-id-subsequent? c)
-                        (loop (+ i 1) nb-seps))
+                        (loop (+ i 1) depth))
                        (else
                         #f)))
-               nb-seps)))))
+               (= depth 0))))))
 
 (define (valid-c-or-c++-function-id? id)
-  (valid-c-id? id))
+  (valid-c-id? id #f))
 
 (define (valid-c-or-c++-type-id? id)
-  (valid-c-id? id))
+  (valid-c-id? id #t))
 
 ;;;============================================================================
