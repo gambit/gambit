@@ -65,7 +65,7 @@ EOF
   fi
 }
 
-if [ "${GAMBC_DOC_ARG1}" == "help" ]; then
+if [ "${GAMBC_DOC_ARG1}" = "help" ]; then
   operation_help
 else
   echo "*** WARNING -- unsupported operation: ${GAMBC_DOC_ARG1}"
