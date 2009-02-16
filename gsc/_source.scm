@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_source.scm", Time-stamp: <2008-12-06 00:12:48 feeley>
+;;; File: "_source.scm", Time-stamp: <2009-02-16 14:58:03 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -163,33 +163,33 @@
 (define (locat-show prefix loc)
   (if loc
 
-    (if (string? (vector-ref loc 0)) ; file?
-      (let* ((filename (vector-ref loc 0))
-             (filepos (vector-ref loc 1))
-             (str (format-filepos filename filepos #t)))
-        (if str
-          (begin
-            (display prefix)
-            (display str))
-          (let ((line (+ (**filepos-line filepos) 1))
-                (col (+ (**filepos-col filepos) 1))
-                (filename*
-                 (if (string? filename)
-                   (path-expand filename)
-                   filename)))
-            (display prefix)
-            (write filename*)
-            (display "@")
-            (display line)
-            (display ".")
-            (display col))))
-      (let ((source (vector-ref loc 0))
-            (expr (vector-ref loc 1)))
-       (display prefix)
-       (display "EXPRESSION ")
-       (write expr)
-       (if source
-         (locat-show " " (source-locat source)))))
+      (let ((filename (##container->path (##locat-container loc)))
+            (filepos (##locat-position loc)))
+        (if (string? filename) ; file?
+            (let ((str (format-filepos filename filepos #t)))
+              (if str
+                  (begin
+                    (display prefix)
+                    (display str))
+                  (let ((line (+ (**filepos-line filepos) 1))
+                        (col (+ (**filepos-col filepos) 1))
+                        (filename*
+                         (if (string? filename)
+                             (path-expand filename)
+                             filename)))
+                    (display prefix)
+                    (write filename*)
+                    (display "@")
+                    (display line)
+                    (display ".")
+                    (display col))))
+            (let ((source (vector-ref loc 0))
+                  (expr (vector-ref loc 1)))
+              (display prefix)
+              (display "EXPRESSION ")
+              (write expr)
+              (if source
+                  (locat-show " " (source-locat source))))))
 
     (display "UNKNOWN LOCATION")))
 
