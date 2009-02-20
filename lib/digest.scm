@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "digest.scm", Time-stamp: <2009-02-19 16:26:49 feeley>
+;;; File: "digest.scm", Time-stamp: <2009-02-19 23:38:26 feeley>
 
 ;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
 
@@ -14,6 +14,7 @@
 (declare
  (standard-bindings)
  (extended-bindings)
+ (not inline)
  (not safe))
 
 (define-macro (fx+ . args) `(##fx+ ,@args))
