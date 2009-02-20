@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-01-29 14:52:37 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-02-20 15:41:00 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -86,6 +86,7 @@
               marktable
               force?
               width
+              shift
               close-parens
               level
               limit)
@@ -96,6 +97,7 @@
    marktable
    force?
    width
+   shift
    close-parens
    level
    limit))
@@ -3653,10 +3655,10 @@
           (##output-port-width port)))
 
     (if mt
-      (let ((we1 (##make-writeenv 'mark port rt mt force? width 0 0 limit)))
+      (let ((we1 (##make-writeenv 'mark port rt mt force? width 0 0 0 limit)))
         ((macro-port-write-datum port) port obj we1)))
 
-    (let ((we2 (##make-writeenv style port rt mt force? width 0 0 limit)))
+    (let ((we2 (##make-writeenv style port rt mt force? width 0 0 0 limit)))
       ((macro-port-write-datum port) port obj we2)
       (##fixnum.- limit (macro-writeenv-limit we2)))))
 
@@ -4025,6 +4027,7 @@
            (macro-character-port-output-readtable port)
            #f
            (macro-if-forces #t #f)
+           0
            0
            0
            0
@@ -7597,16 +7600,70 @@
         (##write-char c (macro-writeenv-port we))
         (macro-writeenv-limit-set! we (##fixnum.- limit 1))))))
 
-(define-prim (##wr-spaces we n)
-  (let loop ((i n))
-    (if (##fixnum.< 0 i)
-      (let ((x (if (##fixnum.< 40 i) 40 i)))
-        (##wr-substr we "                                        " 0 x)
-        (loop (##fixnum.- i x))))))
+(define-prim (##wr-filler we n str)
+  (let ((len (##string-length str)))
+    (let loop ((i n))
+      (if (##fixnum.< 0 i)
+          (let ((x (if (##fixnum.< len i) len i)))
+            (##wr-substr we str 0 x)
+            (loop (##fixnum.- i x)))))))
 
-(define-prim (##wr-indent we col)
+(define-prim (##wr-spaces we n)
+  (##wr-filler we n "                                        "))
+
+(define ##pretty-print-shifting-allowed? #f)
+(set! ##pretty-print-shifting-allowed? #t)
+
+(define-prim (##wr-indent we shifted-col)
   (##wr-ch we #\newline)
-  (##wr-spaces we (##fixnum.- col 1)))
+  (let ((col
+         (if ##pretty-print-shifting-allowed?
+             (let loop ()
+               (define margin-width 15)
+               (let* ((shift
+                       (macro-writeenv-shift we))
+                      (width
+                       (macro-writeenv-width we))
+                      (width/2
+                       (##fixnum.quotient width 2))
+                      (lo-lim
+                       (##fixnum.min
+                        margin-width
+                        (##fixnum.quotient width 5)))
+                      (hi-lim
+                       (##fixnum.max
+                        (##fixnum.- width margin-width)
+                        (##fixnum.quotient (##fixnum.* width 4) 5)))
+                      (col
+                       (##fixnum.- shifted-col shift)))
+                 (cond ((##fixnum.< col lo-lim)
+                        (if (##fixnum.= shift 0)
+                            col
+                            (let ((s (##fixnum.min shift width/2)))
+                              (macro-writeenv-shift-set!
+                               we
+                               (##fixnum.- shift s))
+                              (##wr-str we ";;")
+                              (##wr-filler we s ">>>>>>>>")
+                              (##wr-ch we #\newline)
+                              (loop))))
+                       ((##fixnum.> col hi-lim)
+                        (let ((s width/2))
+                          (macro-writeenv-shift-set!
+                           we
+                           (##fixnum.+ shift s))
+                          (##wr-str we ";;")
+                          (##wr-filler we s "<<<<<<<<")
+                          (##wr-ch we #\newline)
+                          (loop)))
+                       (else
+                        col))))
+             shifted-col)))
+    (##wr-spaces we (##fixnum.- col 1))))
+
+(define-prim (##shifted-column we)
+  (##fixnum.+ (macro-writeenv-shift we)
+              (##output-port-column (macro-writeenv-port we))))
 
 (define-prim (##wr-sn we obj type name)
   (case (macro-writeenv-style we)
@@ -7793,6 +7850,7 @@
                    mt
                    (macro-writeenv-force? we)
                    (macro-writeenv-width we)
+                   (macro-writeenv-shift we)
                    (macro-writeenv-close-parens we)
                    (macro-writeenv-level we)
                    1)))
@@ -7932,8 +7990,7 @@
                (new-close-parens
                 (##fixnum.+ close-parens 1)))
           (macro-writeenv-level-set! we (##fixnum.+ level 1))
-          (let ((start-col
-                 (##output-port-column (macro-writeenv-port we))))
+          (let ((start-col (##shifted-column we)))
             (let loop ((lst obj)
                        (i 0)
                        (col start-col))
@@ -7948,7 +8005,7 @@
                               col)
                              ((##fixnum.= i (##vector-ref format 0))
                               (##wr-ch we #\space)
-                              (##output-port-column (macro-writeenv-port we)))
+                              (##shifted-column we))
                              ((##fixnum.= i (##vector-ref format 2))
                               (let ((new-col
                                      (##fixnum.+ start-col
@@ -8054,12 +8111,13 @@
 
 (define-prim (##wr-one-line-pretty-print we obj wr-obj)
   (let* ((col
-          (##output-port-column
-           (macro-writeenv-port we)))
+          (##shifted-column we))
          (available-space-for-obj
           (##fixnum.-
            (##fixnum.-
-            (macro-writeenv-width we)
+            (##fixnum.+
+             (macro-writeenv-shift we)
+             (macro-writeenv-width we))
             (macro-writeenv-close-parens we))
            col))
          (str
@@ -8088,6 +8146,7 @@
            mt
            (macro-writeenv-force? we)
            (macro-writeenv-width we)
+           (macro-writeenv-shift we)
            (macro-writeenv-close-parens we)
            (macro-writeenv-level we)
            (##fixnum.+ available-space-for-obj 1))))
@@ -8300,7 +8359,7 @@
                 (##fixnum.+ close-parens 1)))
           (macro-writeenv-level-set! we (##fixnum.+ level 1))
           (let ((start-col
-                 (##output-port-column (macro-writeenv-port we))))
+                 (##shifted-column we)))
             (let loop ((i 0))
               (if (##fixnum.< 0 (macro-writeenv-limit we))
                 (if (##fixnum.< i len)
@@ -8627,7 +8686,7 @@
                               (macro-writeenv-readtable we))))
         (##wr-str we "...")
         (let* ((type-col
-                (##output-port-column (macro-writeenv-port we)))
+                (##shifted-column we))
                (type
                 (##structure-type obj))
                (close-parens
@@ -8638,7 +8697,7 @@
           (##wr-no-display we (##type-name type))
           (##wr-str we " ")
           (let* ((col
-                  (##output-port-column (macro-writeenv-port we)))
+                  (##shifted-column we))
                  (start-col
                   (if (##fixnum.< ##structure-max-head
                                   (##fixnum.- col type-col))
@@ -8657,7 +8716,7 @@
                  (begin
                    (##wr-indent we start-col)
                    (##wr-no-display we field-name)
-                   (let ((col (##output-port-column (macro-writeenv-port we))))
+                   (let ((col (##shifted-column we)))
                      (if (##fixnum.< (##fixnum.- col start-col)
                                      ##structure-max-field)
                        (begin
@@ -8667,7 +8726,9 @@
                                (##fixnum.-
                                 (##fixnum.-
                                  (##fixnum.-
-                                  (macro-writeenv-width we)
+                                  (##fixnum.+
+                                   (macro-writeenv-shift we)
+                                   (macro-writeenv-width we))
                                   (macro-writeenv-close-parens we))
                                  col)
                                 1))

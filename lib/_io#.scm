@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2009-01-29 14:52:43 feeley>
+;;; File: "_io#.scm", Time-stamp: <2009-02-20 13:57:20 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -891,6 +891,7 @@
   marktable
   force?
   width
+  shift
   close-parens
   level
   limit
