@@ -458,6 +458,35 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 ])])
 
+AC_DEFUN(AC_CHECK_C_COMPILER_CPP_EXPR,
+[AC_CACHE_CHECK(how $C_COMPILER's preprocessor evaluates [$1], [$2],
+[AC_SUBST($2)
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+#if $1
+#else
+       choke me
+#endif
+
+  ;
+  return 0;
+}
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  $2="yes"
+else
+  $2=""
+fi
+])])
+
 AC_CHECK_C_COMPILER_DEF(__GNUC__,C_COMP_GNUC)
 AC_CHECK_C_COMPILER_DEF(_MSC_VER,C_COMP_VISUALC)
 #AC_CHECK_C_COMPILER_DEF(__WATCOMC__,C_COMP_WATCOMC)
@@ -707,6 +736,10 @@ if test "$C_COMP_GNUC" = yes; then
 
   ########## Using gcc...
 
+  # Determine which gcc version is being used.
+
+  AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*100+__GNUC_MINOR__)>=402&&(__GNUC__*100+__GNUC_MINOR__)<=403,GCC_42_OR_43)
+
   # preprocessor options:
   AC_CHECK_C_COMPILER_OPT(-no-cpp-precomp,DASH_no_cpp_precomp)
 
@@ -730,6 +763,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fno-strict-aliasing,DASH_fno_strict_aliasing)
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
+  AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
@@ -847,6 +881,11 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
   fi
 
+  if test "$ENABLE_DEBUG" != yes; then
+    FLAGS_OBJ="$FLAGS_OBJ$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
+    FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
+  fi
+
   FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
   FLAGS_DYN="$FLAGS_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
 
@@ -871,6 +910,18 @@ if test "$C_COMP_GNUC" = yes; then
              fi
              ;;
   esac
+
+  ENABLE_GCC_MOVE_LOOP_INVARIANTS=yes
+  if test "$ENABLE_SINGLE_HOST" = yes; then
+    if test "$GCC_42_OR_43" = yes; then
+      ENABLE_GCC_MOVE_LOOP_INVARIANTS=no
+    fi
+  fi
+
+  if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
+    FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_move_loop_invariants"
+    FLAGS_DYN="$FLAGS_DYN$DASH_fno_move_loop_invariants"
+  fi
 
   if test "$ENABLE_FEEDBACK1" = yes; then
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fprofile_arcs"
@@ -1563,7 +1614,27 @@ if test "$ENABLE_SINGLE_HOST" != yes; then
 ])
 fi
 
-#if test "$C_COMP_GNUC" = yes; then
+if test "$C_COMP_GNUC" = yes; then
+
+  if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
+    AC_MSG_NOTICE([
+**************************************************************************
+*** The GCC compiler that is being used has problems compiling Gambit  ***
+*** generated code when the normal set of C compiler optimizations are ***
+*** enabled and the configure flag "--enable-single-host" is           ***
+*** specified.  It can take over 20 GBytes of virtual memory to        ***
+*** compile some files.  For this reason the GCC compiler optimization ***
+*** which performs loop invariant code motion has been disabled by     ***
+*** adding the GCC command line option "-fno-move-loop-invariants".    ***
+*** This greatly reduces compile time space requirements and it has a  ***
+*** small impact on overall run time performance, but for some tight   ***
+*** loops the effect is larger.  If you want to avoid this problem     ***
+*** then upgrade your version of GCC to 4.4 (or above hopefully) or    ***
+*** downgrade to a version prior to 4.2 .                              ***
+**************************************************************************
+])
+  fi
+
 #  if test "$ENABLE_GCC_OPTS" != yes; then
 #    AC_MSG_NOTICE([
 #**************************************************************************
@@ -1578,4 +1649,5 @@ fi
 #**************************************************************************
 #])
 #  fi
-#fi
+
+fi

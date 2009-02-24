@@ -712,6 +712,7 @@ EGREP
 CONF_VOIDSTAR_WIDTH
 C_COMP_GNUC
 C_COMP_VISUALC
+GCC_42_OR_43
 DASH_no_cpp_precomp
 DASH_Wall
 DASH_W
@@ -727,6 +728,7 @@ DASH_fno_trapping_math
 DASH_fno_strict_aliasing
 DASH_fwrapv
 DASH_fomit_frame_pointer
+DASH_fno_move_loop_invariants
 DASH_fmodulo_sched
 DASH_freschedule_modulo_scheduled_loops
 DASH_fPIC
@@ -5453,6 +5455,8 @@ fi
 ###############################################################################
 #
 # Check for C compiler.
+
+
 
 
 
@@ -19943,6 +19947,43 @@ if test "$C_COMP_GNUC" = yes; then
 
   ########## Using gcc...
 
+  # Determine which gcc version is being used.
+
+  { $as_echo "$as_me:$LINENO: checking how $C_COMPILER's preprocessor evaluates (__GNUC__*100+__GNUC_MINOR__)>=402&&(__GNUC__*100+__GNUC_MINOR__)<=403" >&5
+$as_echo_n "checking how $C_COMPILER's preprocessor evaluates (__GNUC__*100+__GNUC_MINOR__)>=402&&(__GNUC__*100+__GNUC_MINOR__)<=403... " >&6; }
+if test "${GCC_42_OR_43+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+#if (__GNUC__*100+__GNUC_MINOR__)>=402&&(__GNUC__*100+__GNUC_MINOR__)<=403
+#else
+       choke me
+#endif
+
+  ;
+  return 0;
+}
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  GCC_42_OR_43="yes"
+else
+  GCC_42_OR_43=""
+fi
+
+fi
+{ $as_echo "$as_me:$LINENO: result: $GCC_42_OR_43" >&5
+$as_echo "$GCC_42_OR_43" >&6; }
+
   # preprocessor options:
   { $as_echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -no-cpp-precomp" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -no-cpp-precomp... " >&6; }
@@ -20551,6 +20592,46 @@ fi
 fi
 { $as_echo "$as_me:$LINENO: result: $DASH_fomit_frame_pointer" >&5
 $as_echo "$DASH_fomit_frame_pointer" >&6; }
+  { $as_echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -fno-move-loop-invariants" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fno-move-loop-invariants... " >&6; }
+if test "${DASH_fno_move_loop_invariants+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fno-move-loop-invariants"
+CXXFLAGS="-fno-move-loop-invariants"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  DASH_fno_move_loop_invariants=" -fno-move-loop-invariants"
+else
+  DASH_fno_move_loop_invariants=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:$LINENO: result: $DASH_fno_move_loop_invariants" >&5
+$as_echo "$DASH_fno_move_loop_invariants" >&6; }
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
@@ -21331,6 +21412,11 @@ $as_echo "$DASH_shared" >&6; }
     FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
   fi
 
+  if test "$ENABLE_DEBUG" != yes; then
+    FLAGS_OBJ="$FLAGS_OBJ$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
+    FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
+  fi
+
   FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
   FLAGS_DYN="$FLAGS_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
 
@@ -21355,6 +21441,18 @@ $as_echo "$DASH_shared" >&6; }
              fi
              ;;
   esac
+
+  ENABLE_GCC_MOVE_LOOP_INVARIANTS=yes
+  if test "$ENABLE_SINGLE_HOST" = yes; then
+    if test "$GCC_42_OR_43" = yes; then
+      ENABLE_GCC_MOVE_LOOP_INVARIANTS=no
+    fi
+  fi
+
+  if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
+    FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_move_loop_invariants"
+    FLAGS_DYN="$FLAGS_DYN$DASH_fno_move_loop_invariants"
+  fi
 
   if test "$ENABLE_FEEDBACK1" = yes; then
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fprofile_arcs"
@@ -26127,7 +26225,43 @@ $as_echo "$as_me:
 " >&6;}
 fi
 
-#if test "$C_COMP_GNUC" = yes; then
+if test "$C_COMP_GNUC" = yes; then
+
+  if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
+    { $as_echo "$as_me:$LINENO:
+**************************************************************************
+*** The GCC compiler that is being used has problems compiling Gambit  ***
+*** generated code when the normal set of C compiler optimizations are ***
+*** enabled and the configure flag \"--enable-single-host\" is           ***
+*** specified.  It can take over 20 GBytes of virtual memory to        ***
+*** compile some files.  For this reason the GCC compiler optimization ***
+*** which performs loop invariant code motion has been disabled by     ***
+*** adding the GCC command line option \"-fno-move-loop-invariants\".    ***
+*** This greatly reduces compile time space requirements and it has a  ***
+*** small impact on overall run time performance, but for some tight   ***
+*** loops the effect is larger.  If you want to avoid this problem     ***
+*** then upgrade your version of GCC to 4.4 (or above hopefully) or    ***
+*** downgrade to a version prior to 4.2 .                              ***
+**************************************************************************
+" >&5
+$as_echo "$as_me:
+**************************************************************************
+*** The GCC compiler that is being used has problems compiling Gambit  ***
+*** generated code when the normal set of C compiler optimizations are ***
+*** enabled and the configure flag \"--enable-single-host\" is           ***
+*** specified.  It can take over 20 GBytes of virtual memory to        ***
+*** compile some files.  For this reason the GCC compiler optimization ***
+*** which performs loop invariant code motion has been disabled by     ***
+*** adding the GCC command line option \"-fno-move-loop-invariants\".    ***
+*** This greatly reduces compile time space requirements and it has a  ***
+*** small impact on overall run time performance, but for some tight   ***
+*** loops the effect is larger.  If you want to avoid this problem     ***
+*** then upgrade your version of GCC to 4.4 (or above hopefully) or    ***
+*** downgrade to a version prior to 4.2 .                              ***
+**************************************************************************
+" >&6;}
+  fi
+
 #  if test "$ENABLE_GCC_OPTS" != yes; then
 #    AC_MSG_NOTICE([
 #**************************************************************************
@@ -26142,4 +26276,5 @@ fi
 #**************************************************************************
 #])
 #  fi
-#fi
+
+fi
