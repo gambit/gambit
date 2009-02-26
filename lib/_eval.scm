@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2008-12-17 23:22:26 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-02-26 13:40:18 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3691,16 +3691,7 @@
           (##vector-ref x 2)))))
 
   (define (load-binary abs-path)
-
-    (##define-macro (module-prefix)
-      c#module-prefix)
-
-    (let* ((module-name
-            (##string-append
-             (module-prefix)
-             (##path-strip-directory abs-path)))
-           (result
-            (##os-load-object-file abs-path module-name)))
+    (let ((result (##load-object-file abs-path quiet?)))
 
       (define (raise-error code)
         (if (##fixnum? code)
@@ -3710,32 +3701,10 @@
       (cond ((##not (##vector? result))
              (raise-error result))
             ((##fixnum.= 2 (##vector-length result))
-             (if (##not quiet?)
-                 (##repl
-                  (lambda (first output-port)
-                    (##write-string "*** WARNING -- Could not find C function: " output-port)
-                    (##write (##vector-ref result 1) output-port)
-                    (##newline output-port)
-                    #t)))
              (raise-error (##vector-ref result 0)))
             (else
              (let ((exec-vector (##vector-ref result 0))
                    (script-line (##vector-ref result 2)))
-               (if (##not quiet?)
-                   (let ((undefined (##vector-ref result 1)))
-                     (let loop ((lst (##reverse undefined)))
-                       (if (##pair? lst)
-                           (let ((var-module (##car lst)))
-                             (##repl
-                              (lambda (first output-port)
-                                (##write-string "*** WARNING -- Variable " output-port)
-                                (##write (##car var-module) output-port)
-                                (##write-string " used in module " output-port)
-                                (##write (##cdr var-module) output-port)
-                                (##write-string " is undefined" output-port)
-                                (##newline output-port)
-                                #t))
-                             (loop (##cdr lst)))))))
                (script-callback script-line abs-path)
                (##execute-modules exec-vector 0)
                abs-path)))))
@@ -3789,6 +3758,48 @@
              (load-binary expanded-path)))
           (else
            (raise-os-exception-if-needed (load-source path))))))
+
+(define-prim (##load-object-file abs-path quiet?)
+
+  (##define-macro (module-prefix)
+    c#module-prefix)
+
+  (let* ((module-name
+          (##string-append
+           (module-prefix)
+           (##path-strip-directory abs-path)))
+         (result
+          (##os-load-object-file abs-path module-name)))
+    (cond ((##not (##vector? result))
+           result)
+          ((##fixnum.= 2 (##vector-length result))
+           (if (##not quiet?)
+               (##repl
+                (lambda (first output-port)
+                  (##write-string "*** WARNING -- Could not find C function: " output-port)
+                  (##write (##vector-ref result 1) output-port)
+                  (##newline output-port)
+                  #t)))
+           result)
+          (else
+           (let ((exec-vector (##vector-ref result 0))
+                 (script-line (##vector-ref result 2)))
+             (if (##not quiet?)
+                 (let ((undefined (##vector-ref result 1)))
+                   (let loop ((lst (##reverse undefined)))
+                     (if (##pair? lst)
+                         (let ((var-module (##car lst)))
+                           (##repl
+                            (lambda (first output-port)
+                              (##write-string "*** WARNING -- Variable " output-port)
+                              (##write (##car var-module) output-port)
+                              (##write-string " used in module " output-port)
+                              (##write (##cdr var-module) output-port)
+                              (##write-string " is undefined" output-port)
+                              (##newline output-port)
+                              #t))
+                           (loop (##cdr lst)))))))
+             result)))))
 
 (define (load
          path
