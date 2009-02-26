@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2008-12-09 14:15:08 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2009-02-25 18:19:19 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -969,34 +969,17 @@
 
   (targ-emit-label-simp lbl)
 
-  (let ((fs (frame-size targ-proc-exit-frame)))
-    (if (= fs 0)
+  (targ-emit (list "TASK_PUSH" 0))
 
-      (begin
-        (targ-rd-fp)
-        (targ-wr-fp)
-        (targ-emit '("PUSH" (r . 0))))
-
-      (begin
-       (targ-emit '("ADJFP" 1))
-        (let loop ((i 0))
-          (if (< i fs)
-            (begin
-              (targ-emit (list "SET_STK" (- i) (list "STK" (- (+ i 1)))))
-              (loop (+ i 1)))
-            (targ-emit (list "SET_STK" (- i) '(r . 0)))))))
-
-    (targ-emit (list "TASK_PUSH" fs))
-
-    (targ-begin-fr)
-;;    (targ-repr-begin-block! 'task-entry lbl)
-))
+  (targ-begin-fr)
+;;  (targ-repr-begin-block! 'task-entry lbl)
+)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (targ-gen-label-task-return lbl sn)
   (let ((lbl2 (targ-new-lbl))
-        (fs (+ (frame-size targ-proc-exit-frame) 1)))
+        (fs (frame-size targ-proc-exit-frame)))
 
     (targ-start-bb fs)
 

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2008-10-29 10:35:07 feeley>
+;;; File: "_front.scm", Time-stamp: <2009-02-25 17:32:08 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -3592,9 +3592,10 @@
                    (frame-constraints-reserve target.frame-constraints))
                   (frame-align
                    (frame-constraints-align target.frame-constraints)))
-              (* (quotient (+ (+ top-live-slot frame-reserve)
-                              (- frame-align 1))
-                           frame-align)
+              (* (+ (quotient (+ (+ top-live-slot frame-reserve)
+                                 (- frame-align 1))
+                              frame-align)
+                    1) ;; reserve space for a break frame
                  frame-align))))
 
       ; move return address to where task expects it
