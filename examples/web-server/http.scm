@@ -1,6 +1,6 @@
 ;==============================================================================
 
-; File: "http.scm", Time-stamp: <2008-12-15 11:54:31 feeley>
+; File: "http.scm", Time-stamp: <2009-03-13 12:05:07 feeley>
 
 ; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
 
@@ -824,7 +824,7 @@
                       thunk))
                     (eol
                      "\r\n"))
-                (display
+                (print
                  (list version " 200 OK" eol
                        "Content-Length: " (u8vector-length message) eol
                        "Content-Type: text/html; charset=ISO-8859-1" eol

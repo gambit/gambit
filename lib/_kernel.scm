@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2008-12-16 19:51:32 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-03-13 10:29:18 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -640,12 +640,38 @@ end-of-code
     * This is the keyword and rest parameter handler.  It is invoked when
     * keyword parameters must be processed and a rest parameter must be
     * constructed.
+    *
+    * After ___PUSH_ARGS_IN_REGS(na) is executed the stack contains
+    * all the arguments of the procedure call:
+    *
+    *              STACK
+    *          |            |
+    *          +------------+
+    *  ___fp ->|   arg_na   |
+    *          |    ...     |
+    *          |   arg_3    |
+    *          |   arg_2    |
+    *          |   arg_1    |
+    *          +------------+
+    *          |    ...     |
+    *
+    * These arguments will be kept in this location during argument
+    * processing.  If the argument processing does not encounter an
+    * exceptional situation, the arguments will be overwritten with
+    * the formal parameters and the body of the procedure will be
+    * jumped to.  If a heap overflow is detected during the
+    * construction of the rest parameter, then the construction of the
+    * rest parameter is completed and all the parameters including the
+    * keyword parameters are copied to a vector and the procedure
+    * ##rest-param-check-heap will be called to trigger a garbage
+    * collection.  Then the procedure will be returned to with the
+    * processed arguments.
     */
 
-   int np;
-   int na;
-   int nb_req_opt;
-   int nb_key;
+   int np;          /* number of formal parameters */
+   int na;          /* number of arguments of the call */
+   int nb_req_opt;  /* number of required or optional parameters */
+   int nb_key;      /* number of keyword parameters */
    int i;
    int j;
    int k;
@@ -768,6 +794,13 @@ end-of-code
 
    j = k - i;
 
+   /*
+    * here,
+    *  i = number of arguments to move to the rest parameter
+    *  j = number of non-required and non-optional arguments
+    *      that are left after the rest parameter is created.
+    */
+
    rest_param_list = ___NUL;
 
    while (i > 0)
@@ -796,27 +829,18 @@ end-of-code
 
                 ___COVER_KEYWORD_REST_PARAM_HANDLER_NEED_TO_GC;
 
+                /* Finish creating the rest parameter. */
+
                 while (i > 0)
                   {
                     rest_param_list = ___CONS(___POP,rest_param_list);
                     i--;
                   }
 
-#if 0
-                fprintf(stderr,"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
-#endif
+                ___ADJFP(-j)
 
                 for (i=0; i<nb_key; i++) /*push value of all keyword params*/
-                  {
-                   ___SCMOBJ default_val = ___FIELD(key_descr,i*2+1);
-                   ___SCMOBJ val = key_vals[i];
-
-                   if (val != default_val)
-                     {
-                       ___PUSH(___FIELD(key_descr,i*2))
-                       ___PUSH(val)
-                       }
-                  }
+                  ___PUSH(key_vals[i])
 
                 ___BEGIN_ALLOC_VECTOR(np)
                 i = np - 1;
@@ -836,8 +860,7 @@ end-of-code
           }
      }
 
-   while (j-- > 0)
-     ___POP;
+   ___ADJFP(-j)
 
    ___COVER_KEYWORD_REST_PARAM_HANDLER_NO_NEED_TO_GC;
 

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-02-20 15:41:00 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-03-13 11:23:25 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3737,6 +3737,19 @@
       (macro-check-output-port p 2 (pretty-print obj p)
         (##pretty-print obj p)))))
 
+(define-prim (##print-fringe obj port #!optional (max-length ##max-fixnum))
+  (if (macro-character-output-port? port)
+    (begin
+      (##write-generic-to-character-port
+       'print
+       port
+       (macro-character-port-output-readtable port)
+       (macro-if-forces #t #f)
+       max-length
+       obj)
+      (##void))
+    ((macro-port-write-datum port) port obj #f)))
+
 (define-prim (print
               #!key (port (macro-absent-obj))
               #!rest body)
@@ -3746,7 +3759,7 @@
              (macro-current-output-port)
              port)))
       (macro-check-output-port p 2 (print port: p . body)
-        (##display body p)))))
+        (##print-fringe body p)))))
 
 (define-prim (println
               #!key (port (macro-absent-obj))
@@ -3758,7 +3771,7 @@
              port)))
       (macro-check-output-port p 2 (println port: p . body)
         (begin
-          (##display body p)
+          (##print-fringe body p)
           (##newline p))))))
 
 (define-prim (##newline port)
@@ -7687,13 +7700,14 @@
          (##wr-ch we #\>))))))
 
 (define-prim (##wr-no-display we obj)
-  (case (macro-writeenv-style we)
-    ((display)
-     (macro-writeenv-style-set! we 'write)
-     (##wr we obj)
-     (macro-writeenv-style-set! we 'display))
-    (else
-     (##wr we obj))))
+  (let ((style (macro-writeenv-style we)))
+    (case style
+      ((display print)
+       (macro-writeenv-style-set! we 'write)
+       (##wr we obj)
+       (macro-writeenv-style-set! we style))
+      (else
+       (##wr we obj)))))
 
 (define-prim (##wr-mark we obj)
   (let ((mt (macro-writeenv-marktable we)))
@@ -7737,8 +7751,9 @@
            (if uninterned?
              (##wr-str we "#:"))
            (let ((str (##symbol->string obj)))
-             (if (or (##eq? (macro-writeenv-style we) 'display)
-                     (##not (##escape-symbol? we str)))
+             (if (case (macro-writeenv-style we)
+                   ((display print) #t)
+                   (else            (##not (##escape-symbol? we str))))
                (##wr-str we str)
                (##wr-escaped-string we str #\|)))))))))
 
@@ -7797,8 +7812,9 @@
                     (macro-writeenv-readtable we))))
              (if (##eq? keywords-allowed? 'prefix)
                (##wr-ch we #\:))
-             (if (or (##eq? (macro-writeenv-style we) 'display)
-                     (##not (##escape-keyword? we str)))
+             (if (case (macro-writeenv-style we)
+                   ((display) #t)
+                   (else      (##not (##escape-keyword? we str))))
                (##wr-str we str)
                (##wr-escaped-string we str #\|))
              (if (##not (##eq? keywords-allowed? 'prefix))
@@ -7918,20 +7934,22 @@
          we
          obj
          (##reader->open-close we ##read-list '("(" . ")"))
-         (if (##eq? (macro-writeenv-style we) 'pretty-print)
-           (if plain-pretty-print?
-             plain-format
-             (get-format we head tail))
-           space-format)))
+         (case (macro-writeenv-style we)
+           ((pretty-print)
+            (if plain-pretty-print?
+                plain-format
+                (get-format we head tail)))
+           (else
+            space-format))))
 
       (define (parenthesized-read-macro open-close)
         (wr-list-using-format
          we
          tail
          open-close
-         (if (##eq? (macro-writeenv-style we) 'pretty-print)
-           plain-format
-           space-format)))
+         (case (macro-writeenv-style we)
+           ((pretty-print) plain-format)
+           (else           space-format))))
 
       (if (and head
                (or (##null? tail)
@@ -8027,7 +8045,7 @@
 
               (define (wr-str str)
                 (let ((style (macro-writeenv-style we)))
-                  (macro-writeenv-style-set! we 'display)
+                  (macro-writeenv-style-set! we 'print)
                   (wr-elem str)
                   (macro-writeenv-style-set! we style)))
 
@@ -8083,19 +8101,22 @@
 
   (define (wr-list we obj plain-pretty-print?)
     (if (##wr-stamp we obj)
-      (if (or (##not (##eq? (macro-writeenv-style we) 'pretty-print))
-              (##not (##wr-one-line-pretty-print
-                      we
-                      obj
-                      (lambda (we obj)
-                        (wr-list-possibly-with-read-macro-prefix
-                         we
-                         obj
-                         plain-pretty-print?)))))
-        (wr-list-possibly-with-read-macro-prefix
-         we
-         obj
-         plain-pretty-print?))))
+        (if (case (macro-writeenv-style we)
+              ((pretty-print)
+               (##not (##wr-one-line-pretty-print
+                       we
+                       obj
+                       (lambda (we obj)
+                         (wr-list-possibly-with-read-macro-prefix
+                          we
+                          obj
+                          plain-pretty-print?)))))
+              (else
+               #t))
+            (wr-list-possibly-with-read-macro-prefix
+             we
+             obj
+             plain-pretty-print?))))
 
   (case (macro-writeenv-style we)
     ((mark)
@@ -8103,7 +8124,7 @@
        (begin;;;;;;;;;;;;;;;;;;;;;;;check level and length?
          (##wr we (##car obj))
          (##wr we (##cdr obj)))))
-    ((display)
+    ((print)
      (##wr we (##car obj))
      (##wr we (##cdr obj)))
     (else
@@ -8170,7 +8191,7 @@
   (case (macro-writeenv-style we)
     ((mark)
      #f)
-    ((display)
+    ((display print)
      (##wr-ch we obj))
     (else
      (let ((x (##assq-cdr obj
@@ -8219,7 +8240,7 @@
   (case (macro-writeenv-style we)
     ((mark)
      (##wr-mark we obj))
-    ((display)
+    ((display print)
      (##wr-str we obj))
     (else
      (if (##wr-stamp we obj)
@@ -8317,7 +8338,7 @@
     ((mark)
      (if (##wr-mark we obj)
        (##wr-vector-aux2 we obj len vect-ref)))
-    ((display)
+    ((print)
      (##wr-vector-aux2 we obj len vect-ref))
     (else
      (if (##wr-stamp we obj)
@@ -8365,9 +8386,9 @@
                 (if (##fixnum.< i len)
                   (let ()
                     (if (##fixnum.< 0 i)
-                      (if (##eq? (macro-writeenv-style we) 'pretty-print)
-                        (##wr-indent we start-col)
-                        (##wr-ch we #\space)))
+                        (case (macro-writeenv-style we)
+                          ((pretty-print) (##wr-indent we start-col))
+                          (else           (##wr-ch we #\space))))
                     (if (##not (##fixnum.< i
                                            (macro-readtable-max-write-length
                                             (macro-writeenv-readtable we))))
@@ -8388,12 +8409,15 @@
 
     (##wr-str we (##cdr open-close)))
 
-  (if (or (##not (##eq? (macro-writeenv-style we) 'pretty-print))
-          (##not (##wr-one-line-pretty-print
-                  we
-                  obj
-                  (lambda (we obj)
-                    (wr-vect we obj len vect-ref open-close)))))
+  (if (case (macro-writeenv-style we)
+        ((pretty-print)
+         (##not (##wr-one-line-pretty-print
+                 we
+                 obj
+                 (lambda (we obj)
+                   (wr-vect we obj len vect-ref open-close)))))
+        (else
+         #t))
     (wr-vect we obj len vect-ref open-close)))
 
 (define-prim (##wr-foreign we obj)
@@ -8712,46 +8736,46 @@
                 (if last?
                   new-close-parens
                   0))
-               (if (##eq? (macro-writeenv-style we) 'pretty-print)
-                 (begin
-                   (##wr-indent we start-col)
-                   (##wr-no-display we field-name)
-                   (let ((col (##shifted-column we)))
-                     (if (##fixnum.< (##fixnum.- col start-col)
-                                     ##structure-max-field)
-                       (begin
-                         (##wr-ch we #\space)
-                         (##wr-no-display we value))
-                       (let* ((available-space-for-obj
-                               (##fixnum.-
+               (case (macro-writeenv-style we)
+                 ((pretty-print)
+                  (##wr-indent we start-col)
+                  (##wr-no-display we field-name)
+                  (let ((col (##shifted-column we)))
+                    (if (##fixnum.< (##fixnum.- col start-col)
+                                    ##structure-max-field)
+                        (begin
+                          (##wr-ch we #\space)
+                          (##wr-no-display we value))
+                        (let* ((available-space-for-obj
                                 (##fixnum.-
                                  (##fixnum.-
-                                  (##fixnum.+
-                                   (macro-writeenv-shift we)
-                                   (macro-writeenv-width we))
-                                  (macro-writeenv-close-parens we))
-                                 col)
-                                1))
-                              (str
-                               (##wr-fits-on-line
-                                we
-                                value
-                                ##wr-no-display
-                                available-space-for-obj)))
-                         (if str
-                           (begin
-                             (##wr-ch we #\space)
-                             (##wr-str we str))
-                           (begin
-                             (##wr-indent
-                              we
-                              (##fixnum.+ start-col ##structure-indent))
-                             (##wr-no-display we value)))))))
-                 (begin
-                   (##wr-ch we #\space)
-                   (##wr-no-display we field-name)
-                   (##wr-ch we #\space)
-                   (##wr-no-display we value))))
+                                  (##fixnum.-
+                                   (##fixnum.+
+                                    (macro-writeenv-shift we)
+                                    (macro-writeenv-width we))
+                                   (macro-writeenv-close-parens we))
+                                  col)
+                                 1))
+                               (str
+                                (##wr-fits-on-line
+                                 we
+                                 value
+                                 ##wr-no-display
+                                 available-space-for-obj)))
+                          (if str
+                              (begin
+                                (##wr-ch we #\space)
+                                (##wr-str we str))
+                              (begin
+                                (##wr-indent
+                                 we
+                                 (##fixnum.+ start-col ##structure-indent))
+                                (##wr-no-display we value)))))))
+                 (else
+                  (##wr-ch we #\space)
+                  (##wr-no-display we field-name)
+                  (##wr-ch we #\space)
+                  (##wr-no-display we value))))
              obj
              type
              #t)
@@ -8813,12 +8837,15 @@
                #t)))
            (else
             (if (##wr-stamp we obj)
-              (if (or (##not (##eq? (macro-writeenv-style we) 'pretty-print))
-                      (##not (##wr-one-line-pretty-print
-                              we
-                              obj
-                              (lambda (we obj)
-                                (wr-structure we obj)))))
+              (if (case (macro-writeenv-style we)
+                    ((pretty-print)
+                     (##not (##wr-one-line-pretty-print
+                             we
+                             obj
+                             (lambda (we obj)
+                               (wr-structure we obj)))))
+                    (else
+                     #t))
                   (wr-structure we obj))))))))
 
 (define-prim (##wr-meroon we obj)
@@ -8899,8 +8926,9 @@
      (if (##wr-mark we obj)
        (##wr we (##unbox obj))))
     (else
-     (if (or (##eq? (macro-writeenv-style we) 'display)
-             (##wr-stamp we obj))
+     (if (case (macro-writeenv-style we)
+           ((print) #t)
+           (else    (##wr-stamp we obj)))
        (begin
          (##wr-str we "#&")
          (##wr we (##unbox obj)))))))
@@ -8915,8 +8943,11 @@
            ((##eq? obj #f)
             (##wr-str we "#f"))
            ((##eq? obj '())
-            (if (##not (##eq? (macro-writeenv-style we) 'display))
-              (##wr-str we "()")))
+            (case (macro-writeenv-style we)
+              ((print)
+               (##void))
+              (else
+               (##wr-str we "()"))))
            ((##eq? obj (macro-absent-obj))
             (##wr-str we "#<absent>"))
            (else

@@ -3540,10 +3540,6 @@ The procedures in this section are not yet documented.
 @deffnx procedure display-continuation-backtrace @var{cont} @r{[}@var{port} @r{[}@var{all-frames?} @r{[}@var{display-env?} @r{[}@var{max-head} @r{[}@var{max-tail} @r{[}@var{depth}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}
 @end deffn
 
-@deffn procedure print @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}
-@deffnx procedure println @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}
-@end deffn
-
 @deffn procedure make-thread-group @r{[}@var{name} @r{[}@var{thread-group}@r{]}@r{]}
 @deffnx procedure thread-group? @var{obj}
 @deffnx procedure thread-group-name @var{thread-group}
@@ -10318,7 +10314,7 @@ For example:
 * Vector-ports::                            Vector-ports
 * String-ports::                            String-ports
 * U8vector-ports::                          U8vector-ports
-* Parameter objects related to I/O::        Parameter objects related to I/O
+* Other procedures related to I/O::         Other procedures related to I/O
 @end menu
 
 @node Unidirectional and bidirectional ports, Port classes, I/O and ports, I/O and ports
@@ -12013,7 +12009,7 @@ to periods.  Note that the current readtable is used.
 
 @end deffn
 
-@node U8vector-ports, Parameter objects related to I/O, String-ports, I/O and ports
+@node U8vector-ports, Other procedures related to I/O, String-ports, I/O and ports
 @section U8vector-ports
 
 @deffn procedure open-u8vector @r{[}@var{u8vector-or-settings}@r{]}
@@ -12032,8 +12028,8 @@ procedures specified in the vector-ports section.
 
 @end deffn
 
-@node Parameter objects related to I/O, , U8vector-ports, I/O and ports
-@section Parameter objects related to I/O
+@node Other procedures related to I/O, , U8vector-ports, I/O and ports
+@section Other procedures related to I/O
 
 @deffn procedure current-input-port @r{[}@var{new-value}@r{]}
 @deffnx procedure current-output-port @r{[}@var{new-value}@r{]}
@@ -12043,6 +12039,38 @@ procedures specified in the vector-ports section.
 These procedures are parameter objects which represent respectively:
 the current input-port, the current output-port, the current
 error-port, and the current readtable.
+
+@end deffn
+
+@deffn procedure print @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}
+@deffnx procedure println @r{[}@code{port:} @var{port}@r{]} @var{obj}@dots{}
+
+The @code{print} procedure writes a representation of each @var{obj},
+from left to right, to @var{port}.  When a compound object is
+encountered (pair, list, vector, box) the elements of that object are
+recursively written without the surrounding tokens (parentheses,
+spaces, dots, etc).  Strings, symbols, keywords and characters are
+written like the @code{display} procedure.  If there are more than one
+@var{obj}, the first @var{obj} must not be a keyword object.  If it is
+not specified, @var{port} defaults to the current output-port.  The
+procedure @code{print} returns an unspecified value.
+
+The @code{println} procedure does the same thing as the @code{print}
+procedure and then writes an end of line to @var{port}.
+
+For example:
+
+@smallexample
+> @b{(println "2*2 is " (* 2 2) " and 2+2 is " (+ 2 2))}
+2*2 is 4 and 2+2 is 4
+> @b{(define x (list "<i>" (list "<tt>" 123 "</tt>") "</i>"))}
+> @b{(println x)}
+<i><tt>123</tt></i>
+> @b{(define p (open-output-string))}
+> @b{(print port: p 1 #\2 "345")}
+> @b{(get-output-string p)}
+"12345"
+@end smallexample
 
 @end deffn
 
@@ -12072,12 +12100,12 @@ objects, that is the encoding of Scheme objects using characters.
 Readtables affect the behavior of the reader (i.e. the @code{read}
 procedure and the parser used by the @code{load} procedure and the
 interpreter and compiler) and the printer (i.e. the procedures
-@code{write}, @code{display}, @code{pretty-print}, and @code{pp}, and
-the procedure used by the REPL to print results).  To preserve
-write/read invariance the printer and reader must be using compatible
-readtables.  For example a symbol which contains upper case letters
-will be printed with special escapes if the readtable indicates that
-the reader is case-insensitive.
+@code{write}, @code{display}, @code{print}, @code{println},
+@code{pretty-print}, and @code{pp}, and the procedure used by the REPL
+to print results).  To preserve write/read invariance the printer and
+reader must be using compatible readtables.  For example a symbol
+which contains upper case letters will be printed with special escapes
+if the readtable indicates that the reader is case-insensitive.
 
 Readtables are immutable records whose fields specify various textual
 representation aspects.  There are accessor procedures to retrieve the
