@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-02-26 13:40:18 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-03-14 15:04:13 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3828,7 +3828,7 @@
 
   (##load (macro-extension-file)
           (lambda (script-line script-path) #f)
-          #t
+          #f ;; must be #f for the macros to be added to the interaction environment
           #f
           #f)
 
