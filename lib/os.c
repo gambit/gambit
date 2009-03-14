@@ -1,6 +1,6 @@
-/* File: "os.c", Time-stamp: <2008-09-03 14:41:08 feeley> */
+/* File: "os.c", Time-stamp: <2009-03-14 12:58:48 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1081,7 +1081,64 @@ ___SCMOBJ chase;)
 #ifndef USE_stat
 #ifndef USE_GetFileAttributesEx
 
-  return ___FIX(___UNIMPL_ERR);
+#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRING
+             (path,
+              &cpath,
+              1,
+              ___CE(___INFO_PATH_CE_SELECT),
+              0))
+      == ___FIX(___NO_ERR))
+    {
+      ___FILE *check_exist = ___fopen (cpath, "r");
+
+      if (check_exist == 0)
+        {
+          e = fnf_or_err_code_from_errno ();
+          ___release_string (cpath);
+          return e;
+        }
+
+      ___fclose (check_exist);
+
+      ___release_string (cpath);
+
+      result = ___make_vector (14, ___FAL, ___STILL);
+
+      if (___FIXNUMP(result))
+        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
+
+      ___FIELD(result,1) = ___FIX(0); /* unknown type */
+      ___FIELD(result,2) = ___FIX(0);
+      ___FIELD(result,3) = ___FIX(0);
+      ___FIELD(result,4) = ___FIX(0);
+      ___FIELD(result,5) = ___FIX(0);
+      ___FIELD(result,6) = ___FIX(0);
+      ___FIELD(result,7) = ___FIX(0);
+      ___FIELD(result,8) = ___FIX(0);
+
+      if ((e = ___F64_to_SCMOBJ (___CAST(___F64,NEG_INFINITY),
+                                 &x,
+                                 ___RETURN_POS))
+          != ___FIX(___NO_ERR))
+        {
+          ___release_scmobj (result);
+          return e;
+        }
+
+      ___FIELD(result,9) = x;
+      ___FIELD(result,10) = x;
+      ___FIELD(result,11) = x;
+      ___FIELD(result,12) = ___FIX(0);
+      ___FIELD(result,13) = x;
+
+      ___release_scmobj (x);
+
+      ___release_scmobj (result);
+
+      return result;
+    }
 
 #endif
 #endif

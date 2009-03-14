@@ -1,6 +1,6 @@
-/* File: "os_shell.h", Time-stamp: <2007-12-19 11:17:57 feeley> */
+/* File: "os_shell.h", Time-stamp: <2009-03-14 09:15:04 feeley> */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SHELL_H
 #define ___OS_SHELL_H
@@ -34,10 +34,6 @@ extern ___shell_module ___shell_mod;
 /* Access to shell environment variables. */
 
 
-#ifdef USE_POSIX
-#define ENV_CHAR_BYTES 1
-#endif
-
 #ifdef USE_WIN32
 #ifdef _UNICODE
 #define ___GETENV_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
@@ -50,6 +46,10 @@ extern ___shell_module ___shell_mod;
 #define ___ENVIRON_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #define ENV_CHAR_BYTES 1
 #endif
+#endif
+
+#ifndef ENV_CHAR_BYTES
+#define ENV_CHAR_BYTES 1
 #endif
 
 

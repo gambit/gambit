@@ -504,7 +504,22 @@ AC_CHECK_HEADERS(stdlib.h)
 AC_CHECK_HEADERS(string.h)
 AC_CHECK_HEADERS(time.h)
 
-if test "$ANSI_C" != yes; then
+if test "$ANSI_C" = yes; then
+
+  # Check if linking to the math library needs some special linker flags.
+
+  AC_SEARCH_LIBS(asin,m)
+
+  # The following functions should be provided by an ANSI-C conforming
+  # compiler, but it is safest to double check.  If they are not
+  # available, the system will still compile but some functionality
+  # will be missing from the Gambit runtime system.
+
+  AC_CHECK_FUNCS(getenv)
+  AC_CHECK_FUNCS(time)
+  AC_CHECK_FUNCS(clock)
+
+else
 
   AC_CHECK_HEADERS(unistd.h)
   AC_CHECK_HEADERS(pwd.h)

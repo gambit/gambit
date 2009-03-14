@@ -1,6 +1,6 @@
-/* File: "os_files.c", Time-stamp: <2009-01-18 13:51:27 feeley> */
+/* File: "os_files.c", Time-stamp: <2009-03-14 11:14:20 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -800,15 +800,45 @@ ___SCMOBJ path;)
 #ifndef USE_POSIX
 #ifndef USE_WIN32
 
-      if ((e = ___NONNULLSTRING_to_SCMOBJ
-                 ("",
-                  &result,
-                  ___RETURN_POS,
-                  ___CHAR_ENCODING_NATIVE))
-          != ___FIX(___NO_ERR))
-        result = e;
+      ___CHAR_TYPE(___PATH_CE_SELECT) normalized_dir[___PATH_MAX_LENGTH+1+1];
+      ___FILE *exist_check;
+
+      dir = normalized_dir;
+
+      if (p == 0)
+        p = ".";
+
+      while (*p != '\0')
+        *dir++ = *p++;
+
+      if (dir == normalized_dir || dir[-1] != '/')
+        *dir++ = '/';
+
+      *dir++ = '\0';
+
+      dir = normalized_dir;
+
+      while (dir[0] == '.' && dir[1] == '/' && dir[2] != '\0')
+        dir += 2;
+
+      exist_check = ___fopen (dir, "r");
+
+      if (exist_check == 0)
+        result = fnf_or_err_code_from_errno ();
       else
-        ___release_scmobj (result);
+        {
+          ___fclose (exist_check);
+
+          if ((e = ___NONNULLSTRING_to_SCMOBJ
+                     (dir,
+                      &result,
+                      ___RETURN_POS,
+                      ___CE(___PATH_CE_SELECT)))
+              != ___FIX(___NO_ERR))
+            result = e;
+          else
+            ___release_scmobj (result);
+        }
 
 #endif
 #endif

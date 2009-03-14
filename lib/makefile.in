@@ -1,6 +1,6 @@
-# makefile for Gambit-C library, Time-stamp: <2008-12-22 16:26:40 feeley>
+# makefile for Gambit-C library, Time-stamp: <2009-03-14 11:00:17 feeley>
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
@@ -152,19 +152,19 @@ c_intf@obj@: c_intf.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h 
 
 os@obj@: os.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
 
-os_base@obj@: os_base.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_base.h
+os_base@obj@: os_base.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_base.h
 
-os_time@obj@: os_time.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_time.h
+os_time@obj@: os_time.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_time.h
 
-os_shell@obj@: os_shell.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_shell.h os_files.h
+os_shell@obj@: os_shell.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_shell.h os_files.h
 
-os_files@obj@: os_files.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_files.h
+os_files@obj@: os_files.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_files.h
 
-os_dyn@obj@: os_dyn.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_dyn.h
+os_dyn@obj@: os_dyn.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_dyn.h
 
-os_tty@obj@: os_tty.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_tty.h
+os_tty@obj@: os_tty.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_tty.h
 
-os_io@obj@: os_io.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os_io.h
+os_io@obj@: os_io.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_io.h
 
 $(MODULES_C): $(srcdirpfx)$(rootfromhere)/lib/header.scm \
 $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \

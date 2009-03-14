@@ -1,7 +1,7 @@
-/* File: "config.h.in", Time-stamp: <2007-08-07 14:13:22 feeley> */
+/* File: "config.h.in", Time-stamp: <2009-03-14 12:28:58 feeley> */
 
 /*
- * Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -100,6 +100,7 @@
 #undef HAVE_SOCKETPAIR
 #undef HAVE_CHDIR
 #undef HAVE_EXECVP
+#undef HAVE_GETENV
 #undef HAVE_GETGRNAM
 #undef HAVE_GETPID
 #undef HAVE_GETPPID

@@ -1,6 +1,6 @@
-/* File: "os.h", Time-stamp: <2009-01-14 12:18:16 feeley> */
+/* File: "os.h", Time-stamp: <2009-03-14 12:33:13 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -57,32 +57,42 @@
 #endif
 #endif
 
-#ifdef USE_GENERIC_OS
+/*---------------------------------------------------------------------------*/
 
-/* Basic features we require */
+/*
+ * We assume that the following basic features are available
+ * regardless of the operating-system... otherwise we are in real
+ * trouble!
+ */
 
 #define USE_errno
 #define USE_malloc
 #define USE_memmove
 
+
+/*
+ * The following basic features are used if they are available.
+ */
+
+#ifdef HAVE_GETENV
+#define USE_getenv
 #endif
+
+#ifdef HAVE_SETENV
+#define USE_setenv
+#endif
+
+#ifdef HAVE_UNSETENV
+#define USE_unsetenv
+#endif
+
+
+/* Operating-system specific features we require */
 
 #ifdef USE_POSIX
 
-/* Basic features we require */
-
-#define USE_errno
-#define USE_malloc
-#define USE_memmove
-#define USE_open
-
-#if 1
 #define USE_environ
-#else
-#define USE_getenv
-#define USE_setenv
-#define USE_unsetenv
-#endif
+#define USE_open
 
 /* Select features based on availability */
 
@@ -206,10 +216,6 @@
 
 #undef LINEEDITOR_WITH_LOCAL_CLIPBOARD
 
-#define USE_errno
-#define USE_malloc
-#define USE_memmove
-
 #define USE_ioctl
 #define USE_CopyFile
 #define USE_CreateDirectory
@@ -316,6 +322,7 @@
 #endif
 #endif
 #endif
+
 
 /* Determine which function for getting process time is most precise.  */
 
