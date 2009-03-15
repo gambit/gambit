@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-02-11 21:47:31 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-03-14 19:58:15 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -2683,7 +2683,6 @@
                                               (macro-repl-context-cont
                                                repl-context))))
                                        (begin
-                                         (acquire-ownership!)
                                          (##repl-channel-display-multiline-message
                                           (lambda (output-port)
                                             (if (or (##eq? cmd2 'e)
@@ -2702,6 +2701,7 @@
                                                            (if (##eq? cmd2 'bed)
                                                                'dynamic
                                                                (##eq? cmd2 'be)))))))
+                                         (acquire-ownership!)
                                          (continue))))
 
                                  (cond ((and (##fixnum? val)
