@@ -9,7 +9,7 @@
  * ___VERSION must match the version number of the Gambit header file.
  */
 
-#define ___VERSION 404001
+#define ___VERSION 404002
 #include "gambit.h"
 
 /*
