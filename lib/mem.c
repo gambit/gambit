@@ -1,4 +1,4 @@
-/* File: "mem.c", Time-stamp: <2009-02-25 18:21:25 feeley> */
+/* File: "mem.c", Time-stamp: <2009-03-18 09:25:03 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.  */
 
@@ -526,12 +526,12 @@ unsigned int modulus;)
   else
     {
       void *ptr = ___CAST(void*,
-                          (((___CAST(long,container) + extra) &
-                            -___CAST(long,multiplier * ___WS)) +
+                          (((___CAST(___WORD,container) + extra) &
+                            -___CAST(___WORD,multiplier * ___WS)) +
                            modulus * ___WS));
       void **cptr = ___CAST(void**,
-                            (___CAST(long,ptr) - ___CAST(long,sizeof (void*))) &
-                            -___CAST(long,sizeof (void*)));
+                            (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
+                            -___CAST(___WORD,sizeof (void*)));
 
       *cptr = container;
       return ptr;
@@ -550,8 +550,8 @@ ___HIDDEN void free_mem_aligned
 void *ptr;)
 {
   void **cptr = ___CAST(void**,
-                        (___CAST(long,ptr) - ___CAST(long,sizeof (void*))) &
-                        -___CAST(long,sizeof (void*)));
+                        (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
+                        -___CAST(___WORD,sizeof (void*)));
   ___free_mem (*cptr);
 }
 
@@ -1038,7 +1038,7 @@ int modulus;)
       ___WORD *new_palloc_ptr;
 
       base = ___CAST(___WORD*,
-                     ___CAST(long,palloc_ptr+multiplier-1-modulus) &
+                     ___CAST(___WORD,palloc_ptr+multiplier-1-modulus) &
                      (multiplier * -___WS)) +
              modulus;
 
@@ -1320,7 +1320,7 @@ long length;
 ___WORD init;
 int kind;)
 {
-  if (length > ___CAST(long,___LMASK >> (___LF+___LWS)))
+  if (length > ___CAST(___WORD,___LMASK >> (___LF+___LWS)))
     return ___FIX(___HEAP_OVERFLOW_ERR);
   else
     {

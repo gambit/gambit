@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-03-13 10:29:18 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-03-18 09:22:38 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -1857,7 +1857,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = n + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+___LWS)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LWS)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -1920,7 +1920,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = ___WORDS((n<<___LCS)) + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+___LCS)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LCS)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -1980,7 +1980,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = ___WORDS(n) + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>___LF))
+if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2040,7 +2040,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = ___WORDS(n) + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>___LF))
+if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2100,7 +2100,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = ___WORDS((n<<1)) + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+1)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2160,7 +2160,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = ___WORDS((n<<1)) + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+1)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2220,7 +2220,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+2)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2280,7 +2280,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+2)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2344,7 +2344,7 @@ long words = ___WORDS((n<<3)) + 2;
 long words = ___WORDS((n<<3)) + 1;
 #endif
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+3)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2413,7 +2413,7 @@ long words = ___WORDS((n<<3)) + 2;
 long words = ___WORDS((n<<3)) + 1;
 #endif
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+3)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2478,7 +2478,7 @@ long i;
 long n = ___INT(___ARG1);
 long words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+2)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -2543,7 +2543,7 @@ long words = ___WORDS((n<<3)) + 2;
 long words = ___WORDS((n<<3)) + 1;
 #endif
 ___SCMOBJ result;
-if (n > (long)(unsigned long)(___LMASK>>(___LF+3)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
@@ -3614,7 +3614,7 @@ end-of-code
   ((c-lambda (scheme-object)
              unsigned-long
     " 
-    ___result = ___CAST(unsigned long,
+    ___result = ___CAST(unsigned ___WORD,
                         ___CAST(void*,___FIELD(___arg1,___FOREIGN_PTR)));
     ")
    f))

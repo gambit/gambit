@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-01-28 09:45:50 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-03-18 09:24:41 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -5679,8 +5679,10 @@ int *direction;)
 #ifdef USE_CreateProcess
 #ifdef _UNICODE
 #define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#define CP_ENV_FLAGS CREATE_UNICODE_ENVIRONMENT
 #else
 #define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define CP_ENV_FLAGS 0
 #endif
 #endif
 
@@ -6405,7 +6407,7 @@ int options;)
               NULL, /* process handle not inheritable           */
               NULL, /* thread handle not inheritable            */
               TRUE, /* set handle inheritance to TRUE           */
-              (options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW, /* creation flags */
+              (CP_ENV_FLAGS | ((options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW)), /* creation flags */
               cenv, /* use parent's environment block           */
               dir,  /* use parent's starting directory          */
               &si,  /* pointer to STARTUPINFO structure         */

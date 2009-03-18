@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2009-02-25 18:15:28 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-03-18 09:26:43 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -133,6 +133,10 @@
 
 #ifdef __x86_64__
 #define ___CPU_x86_64
+#else
+#ifdef _M_AMD64
+#define ___CPU_x86_64
+#endif
 #endif
 
 #endif

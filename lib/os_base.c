@@ -1,4 +1,4 @@
-/* File: "os_base.c", Time-stamp: <2009-02-25 18:21:10 feeley> */
+/* File: "os_base.c", Time-stamp: <2009-03-18 09:25:14 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -117,10 +117,8 @@ ___FILE *stream;)
 int ___printf
    ___P((const char *format,
          ...),
-        (format,
-         va_alist)
-const char *format;
-va_dcl)
+        (format, ...)
+const char *format;)
 {
   va_list ap;
   int result;
@@ -1439,7 +1437,7 @@ ___SCMOBJ ___setup_base_module ___PVOID
 #endif
 
 #ifdef USE_WIN32
-      ___base_mod.debug = ___fopen ("console", "w");
+      ___base_mod.debug = ___fopen ("con:", "w");
 #endif
 
       if (___base_mod.debug == NULL)

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2009-01-15 12:56:56 feeley>
+;;; File: "_num.scm", Time-stamp: <2009-03-18 09:24:18 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2009 by Brad Lucier, All Rights Reserved.
@@ -5546,7 +5546,7 @@ long words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
 #endif
 ___SCMOBJ result;
 
-if (n > (long)(unsigned long)(___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
+if (n > ___CAST(___WORD, ___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else if (words > ___MSECTION_BIGGEST)
   {
