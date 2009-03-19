@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-03-18 09:24:41 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-03-19 17:12:05 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1032,12 +1032,15 @@ HANDLE wait_obj;)
 #endif
 
 
-___SCMOBJ ___device_flush_write
-   ___P((___device *self),
-        (self)
-___device *self;)
+___SCMOBJ ___device_force_output
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
 {
-  return ___device_flush_write_virt (self);
+  return ___device_force_output_virt (self, level);
 }
 
 ___SCMOBJ ___device_close
@@ -1206,10 +1209,13 @@ ___device *self;)
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ device_timer_flush_write_virt
-   ___P((___device *self),
-        (self)
-___device *self;)
+___HIDDEN ___SCMOBJ device_timer_force_output_virt
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
 {
   return ___FIX(___NO_ERR);
 }
@@ -1231,7 +1237,7 @@ ___HIDDEN ___device_timer_vtbl ___device_timer_table =
     device_timer_kind,
     device_timer_select_virt,
     device_timer_release_virt,
-    device_timer_flush_write_virt,
+    device_timer_force_output_virt,
     device_timer_close_virt
   }
 };
@@ -1497,10 +1503,13 @@ ___device *self;)
 }
 
 
-___SCMOBJ ___device_stream_flush_write_virt
-   ___P((___device *self),
-        (self)
-___device *self;)
+___SCMOBJ ___device_stream_force_output_virt
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
 {
   ___device_stream *d = ___CAST(___device_stream*,self);
 
@@ -1513,7 +1522,7 @@ ___device *self;)
       {
         ___nonblocking_pipe_oob_msg oob_msg;
 
-        oob_msg.op = OOB_FLUSH_WRITE;
+        oob_msg.op = OOB_FORCE_OUTPUT0 + level;
 
         return ___nonblocking_pipe_write_oob (&p->pipe, &oob_msg);
       }
@@ -1521,7 +1530,7 @@ ___device *self;)
 
 #endif
 
-  return ___device_stream_flush_write_raw_virt (d);
+  return ___device_stream_force_output_raw_virt (d, level);
 }
 
 
@@ -1810,11 +1819,15 @@ LPVOID param;)
             {
               switch (oob_msg.op)
                 {
-                case OOB_FLUSH_WRITE:
+                case OOB_FORCE_OUTPUT0:
+                case OOB_FORCE_OUTPUT1:
+                case OOB_FORCE_OUTPUT2:
+                case OOB_FORCE_OUTPUT3:
 #ifdef ___DEBUG
-                  ___printf ("***** got OOB_FLUSH_WRITE\n");
+                  ___printf ("***** got OOB_FORCE_OUTPUT%d\n",
+                             oob_msg.op - OOB_FORCE_OUTPUT0);
 #endif
-                  e = ___device_stream_flush_write_raw_virt (dev);
+                  e = ___device_stream_force_output_raw_virt (dev, oob_msg.op - OOB_FORCE_OUTPUT0);
                   break;
                 case OOB_SEEK_ABS:
                 case OOB_SEEK_REL:
@@ -2059,17 +2072,23 @@ ___device_stream *self;)
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_serial_flush_write_raw_virt
-   ___P((___device_stream *self),
-        (self)
-___device_stream *self;)
+___HIDDEN ___SCMOBJ ___device_serial_force_output_raw_virt
+   ___P((___device_stream *self,
+         int level),
+        (self,
+         level)
+___device_stream *self;
+int level;)
 {
   ___device_serial *d = ___CAST(___device_serial*,self);
 
   if (d->base.base.write_stage == ___STAGE_OPEN)
     {
-      if (!FlushFileBuffers (d->h))
-        return err_code_from_GetLastError ();
+      if (level > 0)
+        {
+          if (!FlushFileBuffers (d->h))
+            return err_code_from_GetLastError ();
+        }
     }
 
   return ___FIX(___NO_ERR);
@@ -2211,12 +2230,12 @@ ___HIDDEN ___device_serial_vtbl ___device_serial_table =
       ___device_serial_kind,
       ___device_stream_select_virt,
       ___device_stream_release_virt,
-      ___device_stream_flush_write_virt,
+      ___device_stream_force_output_virt,
       ___device_stream_close_virt
     },
     ___device_serial_select_raw_virt,
     ___device_serial_release_raw_virt,
-    ___device_serial_flush_write_raw_virt,
+    ___device_serial_force_output_raw_virt,
     ___device_serial_close_raw_virt,
     ___device_serial_seek_raw_virt,
     ___device_serial_read_raw_virt,
@@ -2575,10 +2594,13 @@ ___device_stream *self;)
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_process_flush_write_raw_virt
-   ___P((___device_stream *self),
-        (self)
-___device_stream *self;)
+___HIDDEN ___SCMOBJ ___device_process_force_output_raw_virt
+   ___P((___device_stream *self,
+         int level),
+        (self,
+         level)
+___device_stream *self;
+int level;)
 {
   ___device_process *d = ___CAST(___device_process*,self);
 
@@ -2788,12 +2810,12 @@ ___HIDDEN ___device_process_vtbl ___device_process_table =
       ___device_process_kind,
       ___device_stream_select_virt,
       ___device_stream_release_virt,
-      ___device_stream_flush_write_virt,
+      ___device_stream_force_output_virt,
       ___device_stream_close_virt
     },
     ___device_process_select_raw_virt,
     ___device_process_release_raw_virt,
-    ___device_process_flush_write_raw_virt,
+    ___device_process_force_output_raw_virt,
     ___device_process_close_raw_virt,
     ___device_process_seek_raw_virt,
     ___device_process_read_raw_virt,
@@ -3231,10 +3253,13 @@ ___device_stream *self;)
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_tcp_client_flush_write_raw_virt
-   ___P((___device_stream *self),
-        (self)
-___device_stream *self;)
+___HIDDEN ___SCMOBJ ___device_tcp_client_force_output_raw_virt
+   ___P((___device_stream *self,
+         int level),
+        (self,
+         level)
+___device_stream *self;
+int level;)
 {
   return ___FIX(___NO_ERR);
 }
@@ -3392,12 +3417,12 @@ ___HIDDEN ___device_tcp_client_vtbl ___device_tcp_client_table =
       ___device_tcp_client_kind,
       ___device_stream_select_virt,
       ___device_stream_release_virt,
-      ___device_stream_flush_write_virt,
+      ___device_stream_force_output_virt,
       ___device_stream_close_virt
     },
     ___device_tcp_client_select_raw_virt,
     ___device_tcp_client_release_raw_virt,
-    ___device_tcp_client_flush_write_raw_virt,
+    ___device_tcp_client_force_output_raw_virt,
     ___device_tcp_client_close_raw_virt,
     ___device_tcp_client_seek_raw_virt,
     ___device_tcp_client_read_raw_virt,
@@ -3774,10 +3799,13 @@ ___device *self;)
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_tcp_server_flush_write_virt
-   ___P((___device *self),
-        (self)
-___device *self;)
+___HIDDEN ___SCMOBJ ___device_tcp_server_force_output_virt
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
 {
   return ___FIX(___NO_ERR);
 }
@@ -3788,7 +3816,7 @@ ___HIDDEN ___device_tcp_server_vtbl ___device_tcp_server_table =
     ___device_tcp_server_kind,
     ___device_tcp_server_select_virt,
     ___device_tcp_server_release_virt,
-    ___device_tcp_server_flush_write_virt,
+    ___device_tcp_server_force_output_virt,
     ___device_tcp_server_close_virt
   }
 };
@@ -4014,10 +4042,13 @@ ___device *self;)
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_directory_flush_write_virt
-   ___P((___device *self),
-        (self)
-___device *self;)
+___HIDDEN ___SCMOBJ ___device_directory_force_output_virt
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
 {
   return ___FIX(___NO_ERR);
 }
@@ -4028,7 +4059,7 @@ ___HIDDEN ___device_directory_vtbl ___device_directory_table =
     ___device_directory_kind,
     ___device_directory_select_virt,
     ___device_directory_release_virt,
-    ___device_directory_flush_write_virt,
+    ___device_directory_force_output_virt,
     ___device_directory_close_virt
   }
 };
@@ -4347,10 +4378,13 @@ ___device *self;)
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_event_queue_flush_write_virt
-   ___P((___device *self),
-        (self)
-___device *self;)
+___HIDDEN ___SCMOBJ ___device_event_queue_force_output_virt
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
 {
   return ___FIX(___NO_ERR);
 }
@@ -4361,7 +4395,7 @@ ___HIDDEN ___device_event_queue_vtbl ___device_event_queue_table =
     ___device_event_queue_kind,
     ___device_event_queue_select_virt,
     ___device_event_queue_release_virt,
-    ___device_event_queue_flush_write_virt,
+    ___device_event_queue_force_output_virt,
     ___device_event_queue_close_virt
   }
 };
@@ -4636,10 +4670,13 @@ ___device_stream *self;)
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_file_flush_write_raw_virt
-   ___P((___device_stream *self),
-        (self)
-___device_stream *self;)
+___HIDDEN ___SCMOBJ ___device_file_force_output_raw_virt
+   ___P((___device_stream *self,
+         int level),
+        (self,
+         level)
+___device_stream *self;
+int level;)
 {
   ___device_file *d = ___CAST(___device_file*,self);
 
@@ -4648,21 +4685,42 @@ ___device_stream *self;)
 #ifndef USE_POSIX
 #ifndef USE_WIN32
 
-      ___FILE *stream = d->stream;
+      if (level > 0)
+        {
+          ___FILE *stream = d->stream;
 
-      if (stream == 0)
-        stream = ___stdout;
+          if (stream == 0)
+            stream = ___stdout;
 
-      ___fflush (stream); /* ignore error */
+          ___fflush (stream); /* ignore error */
+        }
 
 #endif
 #endif
 
 #ifdef USE_POSIX
-#if 0
-      if (fsync (d->fd) < 0)/************only works on disk files!!!!!!!*/
-        return err_code_from_errno ();
+
+      switch (level)
+        {
+        case 2:
+        case 3:
+
+#ifdef F_FULLFSYNC
+
+          if (fcntl (d->fd, F_FULLFSYNC, 0) < 0)
+            return err_code_from_errno ();
+          break;
+
 #endif
+
+        case 1:
+
+          if (fsync (d->fd) < 0)
+            return err_code_from_errno ();
+          break;
+
+        }
+
 #endif
     }
 
@@ -4984,12 +5042,12 @@ ___HIDDEN ___device_file_vtbl ___device_file_table =
       ___device_file_kind,
       ___device_stream_select_virt,
       ___device_stream_release_virt,
-      ___device_stream_flush_write_virt,
+      ___device_stream_force_output_virt,
       ___device_stream_close_virt
     },
     ___device_file_select_raw_virt,
     ___device_file_release_raw_virt,
-    ___device_file_flush_write_raw_virt,
+    ___device_file_force_output_raw_virt,
     ___device_file_close_raw_virt,
     ___device_file_seek_raw_virt,
     ___device_file_read_raw_virt,
@@ -6664,13 +6722,16 @@ ___SCMOBJ dev;)
 
 
 ___SCMOBJ ___os_device_force_output
-   ___P((___SCMOBJ dev),
-        (dev)
-___SCMOBJ dev;)
+   ___P((___SCMOBJ dev,
+         ___SCMOBJ level),
+        (dev,
+         level)
+___SCMOBJ dev;
+___SCMOBJ level;)
 {
   ___device *d = ___CAST(___device*,___FIELD(dev,___FOREIGN_PTR));
 
-  return ___device_flush_write (d);
+  return ___device_force_output (d, ___INT(level));
 }
 
 

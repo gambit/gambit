@@ -1,6 +1,6 @@
-/* File: "os_io.h", Time-stamp: <2008-05-21 13:44:44 feeley> */
+/* File: "os_io.h", Time-stamp: <2009-03-19 10:48:18 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -172,11 +172,12 @@ ___CAST(___device_vtbl*,(self)->vtbl)->release_virt(self)
        ___P((___device *self),
             ());
 
-#define ___device_flush_write_virt(self) \
-___CAST(___device_vtbl*,(self)->vtbl)->flush_write_virt(self)
+#define ___device_force_output_virt(self,level) \
+___CAST(___device_vtbl*,(self)->vtbl)->force_output_virt(self,level)
 
-    ___SCMOBJ (*flush_write_virt)
-       ___P((___device *self),
+    ___SCMOBJ (*force_output_virt)
+       ___P((___device *self,
+             int level),
             ());
 
 #define ___device_close_virt(self,direction) \
@@ -353,12 +354,15 @@ typedef struct ___nonblocking_pipe_struct
     ___U8 *buffer;    /* the circular buffer */
   } ___nonblocking_pipe;
 
-#define OOB_EOS          0
-#define OOB_FLUSH_WRITE  1
-#define OOB_SEEK_TELL    2
-#define OOB_SEEK_ABS     3
-#define OOB_SEEK_REL     4
-#define OOB_SEEK_REL_END 5
+#define OOB_EOS           0
+#define OOB_SEEK_TELL     1
+#define OOB_SEEK_ABS      2
+#define OOB_SEEK_REL      3
+#define OOB_SEEK_REL_END  4
+#define OOB_FORCE_OUTPUT0 5
+#define OOB_FORCE_OUTPUT1 6
+#define OOB_FORCE_OUTPUT2 7
+#define OOB_FORCE_OUTPUT3 8
 
 typedef struct ___device_stream_pump_struct
   {
@@ -443,11 +447,12 @@ ___CAST(___device_stream_vtbl*,(self)->base.vtbl)->release_raw_virt(self)
        ___P((___device_stream *self),
             ());
 
-#define ___device_stream_flush_write_raw_virt(self) \
-___CAST(___device_stream_vtbl*,(self)->base.vtbl)->flush_write_raw_virt(self)
+#define ___device_stream_force_output_raw_virt(self,level) \
+___CAST(___device_stream_vtbl*,(self)->base.vtbl)->force_output_raw_virt(self,level)
 
-    ___SCMOBJ (*flush_write_raw_virt)
-       ___P((___device_stream *self),
+    ___SCMOBJ (*force_output_raw_virt)
+       ___P((___device_stream *self,
+             int level),
             ());
 
 #define ___device_stream_close_raw_virt(self,direction) \
@@ -522,8 +527,9 @@ extern ___SCMOBJ ___device_stream_release_virt
    ___P((___device *self),
         ());
 
-extern ___SCMOBJ ___device_stream_flush_write_virt
-   ___P((___device *self),
+extern ___SCMOBJ ___device_stream_force_output_virt
+   ___P((___device *self,
+         int level),
         ());
 
 extern ___SCMOBJ ___device_stream_close_virt
@@ -595,8 +601,9 @@ extern ___SCMOBJ ___device_select
          ___time timeout),
         ());
 
-extern ___SCMOBJ ___device_flush_write
-   ___P((___device *self),
+extern ___SCMOBJ ___device_force_output
+   ___P((___device *self,
+         int level),
         ());
 
 extern ___SCMOBJ ___device_close
@@ -622,7 +629,8 @@ extern ___SCMOBJ ___os_device_kind
         ());
 
 extern ___SCMOBJ ___os_device_force_output
-   ___P((___SCMOBJ dev),
+   ___P((___SCMOBJ dev,
+         ___SCMOBJ level),
         ());
 
 extern ___SCMOBJ ___os_device_close

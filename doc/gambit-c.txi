@@ -10573,12 +10573,36 @@ For example:
 
 @end deffn
 
-@deffn procedure force-output @r{[}@var{port}@r{]}
+@deffn procedure force-output @r{[}@var{port} @r{[}@var{level}@r{]}@r{]}
 
-The procedure @code{force-output} causes the output buffers of the
-output-port @var{port} to be drained (i.e. the data is sent to its
-destination).  If @var{port} is not specified, the current output-port
-is used.
+The procedure @code{force-output} causes the data that was written to
+the output-port @var{port} to be moved closer to its destination
+according to @var{level}, an exact integer in the range 0 to 2.  If
+@var{port} is not specified, the current output-port is used.  If
+@var{level} is not specified, it defaults to 0.  Values of @var{level}
+above 0 are equivalent to @var{level} = 0 except for device ports as
+explained below.
+
+When @var{level} is 0, the output buffers of @var{port} which are
+managed in the Scheme process are drained (i.e.  the output operation
+that was delayed due to buffering is actually performed).  In the case
+of a device port the data is passed to the operating system and it
+becomes its responsibility to transmit the data to the device.  The
+operating system may implement its own buffering approach which delays
+the transmission of the data to the device.
+
+When @var{level} is 1, in addition to the operations for @var{level} =
+0 and if the operating system supports the functionality, the
+operating system is requested to transmit the data to the device.  On
+UNIX this corresponds to a @code{fsync} system call.
+
+When @var{level} is 2, in addition to the operations for @var{level} =
+1 and if the operating system supports the functionality, the
+operating system is requested to wait until the device reports that
+the data was saved by the device (e.g. actually written to disk in the
+case of a file).  This operation can take a long time on some
+operating systems.  On Mac OS X this corresponds to a @code{fcntl}
+system call with operation @code{F_FULLFSYNC}.
 
 For example:
 

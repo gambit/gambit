@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-03-18 09:22:38 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-03-19 10:33:44 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3911,7 +3911,8 @@ end-of-code
    "___os_device_kind"))
 
 (define-prim ##os-device-force-output
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_device_force_output"))
 

@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2009-02-01 08:58:42 feeley> */
+/* File: "os_tty.c", Time-stamp: <2009-03-19 10:55:38 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -7470,10 +7470,13 @@ ___device_stream *self;)
 }
 
 
-___HIDDEN ___SCMOBJ ___device_tty_flush_write_raw_virt
-   ___P((___device_stream *self),
-        (self)
-___device_stream *self;)
+___HIDDEN ___SCMOBJ ___device_tty_force_output_raw_virt
+   ___P((___device_stream *self,
+         int level),
+        (self,
+         level)
+___device_stream *self;
+int level;)
 {
   ___device_tty *d = ___CAST(___device_tty*,self);
 
@@ -7854,12 +7857,12 @@ ___HIDDEN ___device_tty_vtbl ___device_tty_table =
       ___device_tty_kind,
       ___device_stream_select_virt,
       ___device_stream_release_virt,
-      ___device_stream_flush_write_virt,
+      ___device_stream_force_output_virt,
       ___device_stream_close_virt
     },
     ___device_tty_select_raw_virt,
     ___device_tty_release_raw_virt,
-    ___device_tty_flush_write_raw_virt,
+    ___device_tty_force_output_raw_virt,
     ___device_tty_close_raw_virt,
     ___device_tty_seek_raw_virt,
     ___device_tty_read_raw_virt,

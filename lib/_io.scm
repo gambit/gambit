@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-03-13 11:23:25 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-03-19 17:25:33 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -1201,7 +1201,7 @@
     (define (newline port)
       (##void))
 
-    (define (force-output port prim arg1 arg2 arg3 arg4)
+    (define (force-output port level prim arg1 arg2 arg3 arg4)
       (##void))
 
     (define (close port prim arg1)
@@ -1375,7 +1375,7 @@
 
        (##write-char #\newline port))
 
-     (define (force-output port prim arg1 arg2 arg3 arg4)
+     (define (force-output port level prim arg1 arg2 arg3 arg4)
 
        ;; It is assumed that the thread **does not** have exclusive
        ;; access to the port.
@@ -1384,13 +1384,13 @@
 
        (macro-port-mutex-lock! port) ;; get exclusive access to port
 
-       (let ((code (force-output-aux port #t)))
+       (let ((code (force-output-aux port level #t)))
          (macro-port-mutex-unlock! port)
          (if (##fixnum.< code 0)
            (##raise-os-exception #f code prim arg1 arg2 arg3 arg4)
            (##void))))
 
-     (define (force-output-aux port block?)
+     (define (force-output-aux port level block?)
 
        ;; It is assumed that the thread has exclusive access to the port.
 
@@ -1401,12 +1401,12 @@
            code1
            (let* ((wdevice-condvar (macro-device-port-wdevice-condvar port))
                   (wdevice (macro-condvar-name wdevice-condvar))
-                  (code2 (##os-device-force-output wdevice)))
+                  (code2 (##os-device-force-output wdevice level)))
              (cond ((##fixnum.= code2 ##err-code-EINTR)
 
                     ;; the force was interrupted, so try again
 
-                    (force-output-aux port block?))
+                    (force-output-aux port level block?))
 
                    ((and block?
                          (##fixnum.= code2 ##err-code-EAGAIN))
@@ -1421,7 +1421,7 @@
                                ((macro-port-wtimeout-thunk port)))))
                       (macro-port-mutex-lock! port) ;; regain access to port
                       (if continue?
-                        (force-output-aux port block?)
+                        (force-output-aux port level block?)
                         code2)))
 
                    (else
@@ -1462,7 +1462,7 @@
        (if (or (##fixnum.= (macro-port-wkind port) (macro-none-kind))
                (##eq? prim close-input-port))
          (close-aux2 port prim)
-         (let ((code (force-output-aux port #f)))
+         (let ((code (force-output-aux port 0 #f)))
            (if (and (##fixnum.< code 0)
                     (##not (##fixnum.= code ##err-code-EAGAIN)))
 
@@ -2429,7 +2429,7 @@
 
               '(,',name))
 
-            (define (force-output port prim arg1 arg2 arg3 arg4)
+            (define (force-output port level prim arg1 arg2 arg3 arg4)
 
               ;; It is assumed that the thread **does not** have exclusive
               ;; access to the port.
@@ -2465,6 +2465,7 @@
 
               ((macro-port-force-output port)
                port
+               0
                prim
                arg1
                (macro-absent-obj)
@@ -2773,6 +2774,7 @@
 
            ((macro-port-force-output peer)
             peer
+            0
             ,get-output-vect
             port
             (macro-absent-obj)
@@ -3075,6 +3077,7 @@
                    (macro-port-mutex-unlock! port)
                    ((macro-port-force-output port)
                     port
+                    0
                     write
                     obj
                     port
@@ -3797,26 +3800,42 @@
     (macro-byte-port-rlo-set! port (macro-byte-port-rhi port)))
   (##void))
 
-(define-prim (##force-output port)
+(define-prim (##force-output
+              port
+              #!optional
+              (level (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   ((macro-port-force-output port)
    port
+   (if (##eq? level (macro-absent-obj)) 0 level)
    force-output
    port
-   (macro-absent-obj)
+   level
    (macro-absent-obj)
    (macro-absent-obj)))
 
 (define-prim (force-output
               #!optional
-              (port (macro-absent-obj)))
-  (macro-force-vars (port)
+              (port (macro-absent-obj))
+              (level (macro-absent-obj)))
+  (macro-force-vars (port level)
     (let ((p
            (if (##eq? port (macro-absent-obj))
              (macro-current-output-port)
              port)))
-      (macro-check-output-port p 1 (force-output p)
-        (##force-output p)))))
+      (macro-check-output-port
+       p
+       1
+       (force-output p level)
+       (if (##eq? level (macro-absent-obj))
+           (##force-output p)
+           (macro-check-index-range-incl
+            level
+            2
+            0
+            2
+            (force-output p level)
+            (##force-output p level)))))))
 
 (define-prim (##close-input-port port)
   (##declare (not interrupts-enabled))
@@ -4711,6 +4730,7 @@
                 (macro-port-mutex-unlock! port)
                 ((macro-port-force-output port)
                  port
+                 0
                  write-char
                  c
                  port
@@ -4744,6 +4764,7 @@
                   (macro-port-mutex-unlock! port)
                   ((macro-port-force-output port)
                    port
+                   0
                    write-char
                    c
                    port
@@ -5099,6 +5120,7 @@
                   (macro-port-mutex-unlock! port)
                   ((macro-port-force-output port)
                    port
+                   0
                    write-u8
                    b
                    port
@@ -5178,6 +5200,7 @@
                   (macro-port-mutex-unlock! port)
                   ((macro-port-force-output port)
                    port
+                   0
                    write-subu8vector
                    u8vect
                    start
