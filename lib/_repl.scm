@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-03-14 19:58:15 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-04-02 16:42:50 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -1587,6 +1587,15 @@
         (bars w output-port))
       w))
 
+  (define (output-to-repl proc)
+    (let ((old (##current-user-interrupt-handler)))
+      (##parameterize
+       ##current-user-interrupt-handler
+       ##defer-user-interrupts
+       (lambda ()
+         (##repl proc)
+         (##current-user-interrupt-handler old)))))
+
   (##continuation-capture
    (lambda (cont)
      (let* ((parent
@@ -1608,7 +1617,7 @@
                  depth
                  (lambda () (wrapper execute)))))
 
-           (##repl
+           (output-to-repl
             (lambda (first output-port)
               (let ((width
                      (##fixnum.+ (indent depth output-port) 1)))
@@ -1623,7 +1632,7 @@
 
            result))
 
-       (##repl
+       (output-to-repl
         (lambda (first output-port)
           (let ((width
                  (##fixnum.+ (indent depth output-port) 3)))

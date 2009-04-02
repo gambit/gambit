@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2009-01-28 11:24:58 feeley>
+;;; File: "_thread.scm", Time-stamp: <2009-04-02 16:41:22 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -3272,14 +3272,16 @@
 
 (define ##deferred-user-interrupt? #f)
 
-(define (defer-user-interrupts)
+(define-prim (##defer-user-interrupts)
    (##declare (not interrupts-enabled))
    (set! ##deferred-user-interrupt? #t)
    (##void))
      
+(define defer-user-interrupts ##defer-user-interrupts)
+     
 (define ##current-user-interrupt-handler
   (##make-parameter
-   defer-user-interrupts
+   ##defer-user-interrupts
    (lambda (val)
      (macro-check-procedure val 1 (##current-user-interrupt-handler val)
        (let ()
