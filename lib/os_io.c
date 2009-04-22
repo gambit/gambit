@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-03-19 17:12:05 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-04-22 12:25:24 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -646,6 +646,22 @@ ___stream_index *len_done;)
 /*---------------------------------------------------------------------------*/
 
 /* Operations on I/O devices. */
+
+/* Miscellaneous utility functions. */
+
+___HIDDEN int set_fd_non_blocking
+   ___P((int fd),
+        (fd)
+int fd;)
+{
+  int fl;
+
+  if ((fl = fcntl (fd, F_GETFL, 0)) >= 0)
+    fl = fcntl (fd, F_SETFL, fl | O_NONBLOCK);
+
+  return fl;
+}
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -2862,10 +2878,10 @@ int direction;)
 
   if ((fd_stdout >= 0 &&
        (direction & ___DIRECTION_RD) &&
-       (fcntl (fd_stdout, F_SETFL, O_NONBLOCK) < 0)) ||
+       (set_fd_non_blocking (fd_stdout) < 0)) ||
       (fd_stdin >= 0 &&
        (direction & ___DIRECTION_WR) &&
-       (fcntl (fd_stdin, F_SETFL, O_NONBLOCK) < 0))) /* set nonblocking mode */
+       (set_fd_non_blocking (fd_stdin) < 0)))
     {
       ___SCMOBJ e = err_code_from_errno ();
       ___free_mem (d);
@@ -3506,12 +3522,7 @@ SOCKET_TYPE s;)
 
 #else
 
-  int fl;
-
-  if ((fl = fcntl (s, F_GETFL, 0)) >= 0)
-    fl = fcntl (s, F_SETFL, fl | O_NONBLOCK);
-
-  return fl;
+  return set_fd_non_blocking (s);
 
 #endif
 }
@@ -5387,6 +5398,17 @@ int direction;)
   ___printf ("fd=%d kind=%d direction=%d\n", fd, kind, direction);
 #endif
 
+  /*
+   * Setup file descriptor to perform nonblocking I/O.
+   */
+
+  if (set_fd_non_blocking (fd) != 0) /* set nonblocking mode */
+    {
+      e = err_code_from_errno ();
+      close (fd); /* ignore error */
+      return e;
+    }
+
   switch (kind)
     {
     case ___TTY_DEVICE_KIND:
@@ -5491,6 +5513,13 @@ int *direction;)
 
   if (flags & 1)
     f |= O_TRUNC;
+
+  /*
+   * The O_NONBLOCK flag is not needed here because the file
+   * descriptor will be set to nonblocking mode later on.  But we do
+   * it anyway so there is no moment in time when it is in blocking
+   * mode.
+   */
 
   f |= O_NONBLOCK;
 
