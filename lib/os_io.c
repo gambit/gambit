@@ -649,6 +649,8 @@ ___stream_index *len_done;)
 
 /* Miscellaneous utility functions. */
 
+#ifdef USE_POSIX
+
 ___HIDDEN int set_fd_non_blocking
    ___P((int fd),
         (fd)
@@ -661,6 +663,8 @@ int fd;)
 
   return fl;
 }
+
+#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -5667,7 +5671,7 @@ int direction;)
                     flags,
                     direction,
                     (kind == ___FILE_DEVICE_KIND)
-                    ? 0
+                    ? 0 /* files should not use pumps */
                     : (___DIRECTION_RD|___DIRECTION_WR)))
             == ___FIX(___NO_ERR))
           *dev = ___CAST(___device_stream*,d);
@@ -7134,14 +7138,7 @@ ___SCMOBJ flags;)
                     ___global_device_group (),
                     h,
                     0,
-#if 1
-                    /* we have to force the kind to "file" so that
-                       when stdin is the console, we don't get
-                       the "line editor" machinery. */
-                    ___FILE_DEVICE_KIND,
-#else
                     ___NONE_KIND,
-#endif
                     direction))
             != ___FIX(___NO_ERR))
           return e;
