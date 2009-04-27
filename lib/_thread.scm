@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2009-04-02 16:41:22 feeley>
+;;; File: "_thread.scm", Time-stamp: <2009-04-27 15:38:48 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -922,19 +922,22 @@
 
   (##declare (not interrupts-enabled))
 
-  (macro-update-current-time!)
-
   (let ((run-queue (macro-run-queue)))
-    (let loop ()
-      (let ((leftmost (macro-toq-leftmost run-queue)))
-        (if (and (##not (##eq? leftmost run-queue))
-                 (##not (macro-thread-sooner? run-queue leftmost)))
-          (begin
-            (macro-thread-result-set! leftmost ##thread-timeout-action!)
-            (macro-thread-btq-remove-if-in-btq! leftmost)
-            (##thread-toq-remove! leftmost)
-            (##btq-insert! run-queue leftmost)
-            (loop)))))))
+    (if (##not (##eq? (macro-toq-leftmost run-queue) run-queue))
+        (begin
+
+          (macro-update-current-time!)
+
+          (let loop ()
+            (let ((leftmost (macro-toq-leftmost run-queue)))
+              (if (and (##not (##eq? leftmost run-queue))
+                       (##not (macro-thread-sooner? run-queue leftmost)))
+                  (begin
+                    (macro-thread-result-set! leftmost ##thread-timeout-action!)
+                    (macro-thread-btq-remove-if-in-btq! leftmost)
+                    (##thread-toq-remove! leftmost)
+                    (##btq-insert! run-queue leftmost)
+                    (loop)))))))))
 
 (define-prim (##thread-check-devices! timeout)
 
@@ -950,11 +953,20 @@
             (##device-condvar-broadcast-no-reschedule! condvar))
           (loop next))))))
 
+(define-prim (##thread-poll-devices!)
+
+  (##declare (not interrupts-enabled))
+
+  (let ((run-queue (macro-run-queue)))
+    (if (##eq? (macro-btq-deq-next run-queue) run-queue) ;; no devices?
+        0
+        (##thread-check-devices! #f))))
+
 (define-prim (##thread-heartbeat!)
 
   (##declare (not interrupts-enabled))
 
-  (let ((code (##thread-check-devices! #f))) ;; poll devices
+  (let ((code (##thread-poll-devices!)))
 
     (##thread-check-timeouts!)
 
