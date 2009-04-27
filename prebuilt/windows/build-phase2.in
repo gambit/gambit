@@ -41,6 +41,7 @@ install_gambc()
   cd "$rootfromhere"
   make mostlyclean
   make
+  make install
 
   if [ "$RUN_TESTS" == "0" ] ; then
     echo "************ TESTS SKIPPED ($VARIANT variant)"
@@ -68,9 +69,6 @@ install_gambc()
 
   fi
 
-  make install
-# the compilation of ~~lib/syntax-case.scm is now done by "make install"
-#  (cd "$SOURCE_DIR/$PACKAGE_VERSION/lib" && ../bin/gsc -:~~bin=../bin,~~lib=../lib,~~include=../include syntax-case)
   cd "$herefromroot"
 }
 

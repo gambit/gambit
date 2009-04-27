@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-04-22 12:25:24 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-04-27 13:12:41 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -795,28 +795,69 @@ ___time timeout;)
 
     ___absolute_time_to_nonnegative_timeval (delta, &delta_tv);
 
-#ifdef USE_nanosleep
-
     if (delta_tv != NULL &&
         state.highest_fd_plus_1 == 0)
       {
         /*
-         * For better timeout resolution, when select would only be
-         * called for sleeping until a certain timeout or interrupt
-         * occurs, the nanosleep function is used instead if it is
-         * available.
+         * ___device_select is only being called for sleeping until a
+         * certain timeout or interrupt occurs.  This is a case that
+         * can be optimized.
          */
 
-        struct timespec delta_ts_struct;
-        delta_ts_struct.tv_sec = delta_tv->tv_sec;
-        delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
-        result = nanosleep (&delta_ts_struct, NULL);
-      }
-    else
+        if (delta_tv->tv_sec < 0 ||
+            (delta_tv->tv_sec == 0 &&
+             delta_tv->tv_usec == 0))
+          {
+            /*
+             * The timeout has already passed, so we don't need to
+             * sleep.  This simple optimization avoids doing a system
+             * call to the select or nanosleep functions (which can be
+             * expensive on some operating systems).
+             */
+
+            result = 0;
+          }
+        else
+          {
+#ifdef USE_nanosleep
+
+            /*
+             * For better timeout resolution, the nanosleep function
+             * is used instead of the select function.  On some
+             * operating systems (e.g. OpenBSD 4.5) the nanosleep
+             * function can be more expensive than a call to select,
+             * but the better timeout resolution outweighs the run
+             * time cost.
+             */
+
+            struct timespec delta_ts_struct;
+            delta_ts_struct.tv_sec = delta_tv->tv_sec;
+            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
+            result = nanosleep (&delta_ts_struct, NULL);
+
+#else
+
+            /*
+             * The select function is only being called to sleep.
+             */
+
+            result =
+              select (state.highest_fd_plus_1,
+                      &state.readfds,
+                      &state.writefds,
+                      &state.exceptfds,
+                      delta_tv);
 
 #endif
-
+          }
+      }
+    else
       {
+        /*
+         * The select function is being called to sleep and/or to
+         * block on a set of file descriptors for I/O.
+         */
+
         result =
           select (state.highest_fd_plus_1,
                   &state.readfds,
