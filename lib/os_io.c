@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-04-27 13:12:41 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-05-09 13:46:32 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -651,15 +651,20 @@ ___stream_index *len_done;)
 
 #ifdef USE_POSIX
 
-___HIDDEN int set_fd_non_blocking
-   ___P((int fd),
-        (fd)
-int fd;)
+___HIDDEN int set_fd_blocking_mode
+   ___P((int fd,
+         ___BOOL blocking),
+        (fd,
+         blocking)
+int fd;
+___BOOL blocking;)
 {
   int fl;
 
   if ((fl = fcntl (fd, F_GETFL, 0)) >= 0)
-    fl = fcntl (fd, F_SETFL, fl | O_NONBLOCK);
+    fl = fcntl (fd,
+                F_SETFL,
+                blocking ? (fl & ~O_NONBLOCK) : (fl | O_NONBLOCK));
 
   return fl;
 }
@@ -2923,10 +2928,10 @@ int direction;)
 
   if ((fd_stdout >= 0 &&
        (direction & ___DIRECTION_RD) &&
-       (set_fd_non_blocking (fd_stdout) < 0)) ||
+       (set_fd_blocking_mode (fd_stdout, 0) < 0)) ||
       (fd_stdin >= 0 &&
        (direction & ___DIRECTION_WR) &&
-       (set_fd_non_blocking (fd_stdin) < 0)))
+       (set_fd_blocking_mode (fd_stdin, 0) < 0)))
     {
       ___SCMOBJ e = err_code_from_errno ();
       ___free_mem (d);
@@ -3567,7 +3572,7 @@ SOCKET_TYPE s;)
 
 #else
 
-  return set_fd_non_blocking (s);
+  return set_fd_blocking_mode (s, 0);
 
 #endif
 }
@@ -4586,6 +4591,24 @@ ___device *self;)
   return ___FILE_DEVICE_KIND;
 }
 
+#if 0
+
+___HIDDEN void ___device_file_restore_initial_mode
+   ___P((___device_file *d),
+        (d)
+___device_file *d;)
+{
+#ifdef USE_POSIX
+
+  /* set blocking mode */
+
+  set_fd_blocking_mode (d->fd, 1); /* ignore error */
+
+#endif
+}
+
+#endif
+
 ___HIDDEN ___SCMOBJ ___device_file_close_raw_virt
    ___P((___device_stream *self,
          int direction),
@@ -4612,6 +4635,10 @@ int direction;)
 
       d->base.base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
       d->base.base.write_stage = ___STAGE_CLOSED;
+
+#if 0
+      ___device_file_restore_initial_mode (d);
+#endif
 
 #ifndef USE_POSIX
 #ifndef USE_WIN32
@@ -4723,6 +4750,16 @@ ___HIDDEN ___SCMOBJ ___device_file_release_raw_virt
         (self)
 ___device_stream *self;)
 {
+#if 0
+
+  ___device_file *d = ___CAST(___device_file*,self);
+
+  if (d->base.base.read_stage != ___STAGE_CLOSED ||
+      d->base.base.write_stage != ___STAGE_CLOSED)
+    ___device_file_restore_initial_mode (d);
+
+#endif
+
   return ___FIX(___NO_ERR);
 }
 
@@ -5443,72 +5480,84 @@ int direction;)
   ___printf ("fd=%d kind=%d direction=%d\n", fd, kind, direction);
 #endif
 
-  /*
-   * Setup file descriptor to perform nonblocking I/O.
-   */
-
-  if (set_fd_non_blocking (fd) != 0) /* set nonblocking mode */
+  if (kind == ___TTY_DEVICE_KIND)
     {
-      e = err_code_from_errno ();
-      close (fd); /* ignore error */
-      return e;
+      /*
+       * No need to setup the file descriptor to perform nonblocking
+       * I/O because that is done by os_tty.c in a way that restores
+       * the blocking mode to its original mode when the process
+       * exits.  Restoring the original mode avoids some issues when
+       * running under a shell in emacs (which gives a "Process
+       * shell finished" error when the program terminates).
+       */
+
+      ___device_tty *d;
+
+      if ((e = ___device_tty_setup_from_fd
+                 (&d,
+                  dgroup,
+                  fd,
+                  direction))
+          == ___FIX(___NO_ERR))
+        *dev = ___CAST(___device_stream*,d);
     }
-
-  switch (kind)
+  else
     {
-    case ___TTY_DEVICE_KIND:
-      {
-        ___device_tty *d;
-        if ((e = ___device_tty_setup_from_fd
-                   (&d,
-                    dgroup,
-                    fd,
-                    direction))
-            == ___FIX(___NO_ERR))
-          *dev = ___CAST(___device_stream*,d);
-        break;
-      }
+      /*
+       * Setup file descriptor to perform nonblocking I/O.
+       */
+
+      if (set_fd_blocking_mode (fd, 0) != 0) /* set nonblocking mode */
+        {
+          e = err_code_from_errno ();
+          close (fd); /* ignore error */
+          return e;
+        }
+
+      switch (kind)
+        {
 
 #ifdef USE_NETWORKING
 
-    case ___TCP_CLIENT_DEVICE_KIND:
-      {
-        ___device_tcp_client *d;
-        struct sockaddr server_addr;
-        if ((e = ___device_tcp_client_setup_from_socket
-                   (&d,
-                    dgroup,
-                    fd,
-                    &server_addr,
-                    0,
-                    0,
-                    direction))
-            == ___FIX(___NO_ERR))
-          *dev = ___CAST(___device_stream*,d);
-        break;
-      }
+        case ___TCP_CLIENT_DEVICE_KIND:
+          {
+            ___device_tcp_client *d;
+            struct sockaddr server_addr;
+            if ((e = ___device_tcp_client_setup_from_socket
+                       (&d,
+                        dgroup,
+                        fd,
+                        &server_addr,
+                        0,
+                        0,
+                        direction))
+                == ___FIX(___NO_ERR))
+              *dev = ___CAST(___device_stream*,d);
+            break;
+          }
 
 #endif
 
-    case ___FILE_DEVICE_KIND:
-      {
-        ___device_file *d;
-        if ((e = ___device_file_setup_from_fd
-                   (&d,
-                    dgroup,
-                    fd,
-                    direction))
-            == ___FIX(___NO_ERR))
-          *dev = ___CAST(___device_stream*,d);
-        break;
-      }
+        case ___FILE_DEVICE_KIND:
+          {
+            ___device_file *d;
+            if ((e = ___device_file_setup_from_fd
+                       (&d,
+                        dgroup,
+                        fd,
+                        direction))
+                == ___FIX(___NO_ERR))
+              *dev = ___CAST(___device_stream*,d);
+            break;
+          }
 
-    default:
-      {
-        close (fd); /* ignore error */
-        e = ___FIX(___UNKNOWN_ERR);
-        break;
-      }
+        default:
+          {
+            close (fd); /* ignore error */
+            e = ___FIX(___UNKNOWN_ERR);
+            break;
+          }
+        }
     }
 
   return e;
