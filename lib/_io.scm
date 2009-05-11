@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-03-19 17:25:33 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-05-11 14:27:54 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -7595,6 +7595,8 @@
              (##wr-f64vector we obj))
             ((##structure? obj)
              (##wr-structure we obj))
+            ((##gc-hash-table? obj)
+             (##wr-gc-hash-table we obj))
             ((##continuation? obj)
              (##wr-continuation we obj))
             ((##frame? obj)
@@ -8871,6 +8873,78 @@
                      #t))
                   (wr-structure we obj))))))))
 
+(define-prim (##wr-gc-hash-table we obj)
+  (if (##eq? (macro-readtable-sharing-allowed?
+              (macro-writeenv-readtable we))
+             'serialize)
+    (##wr-serialize we obj ##explode-gc-hash-table '("#gc-hash-table(" . ")"))
+    (##wr-sn
+     we
+     obj
+     'gc-hash-table
+     (##void))))
+
+(define-prim (##explode-gc-hash-table gcht)
+  (##declare (not interrupts-enabled))
+  (let loop ((i (macro-gc-hash-table-key0))
+             (key-vals '()))
+    (let ((len (##vector-length gcht)))
+      (if (##fixnum.< i len)
+          (let ((key (##vector-ref gcht i)))
+            (if (and (##not (##eq? key (macro-unused-obj)))
+                     (##not (##eq? key (macro-deleted-obj))))
+                (let ((val (##vector-ref gcht (##fixnum.+ i 1))))
+                  (let ((new-key-vals (##cons (##cons key val) key-vals)))
+                    (##declare (interrupts-enabled))
+                    (loop (##fixnum.+ i 2) new-key-vals)))
+                (let ()
+                  (##declare (interrupts-enabled))
+                  (loop (##fixnum.+ i 2) key-vals))))
+          (let ((flags
+                 (macro-gc-hash-table-flags gcht))
+                (count
+                 (macro-gc-hash-table-count gcht))
+                (min-count
+                 (macro-gc-hash-table-min-count gcht))
+                (free
+                 (macro-gc-hash-table-free gcht)))
+            (##declare (interrupts-enabled))
+            (##vector len flags count min-count free key-vals))))))
+
+(define-prim (##implode-gc-hash-table re fields)
+  (let ((len (##vector-ref fields 0))
+        (flags (##vector-ref fields 1))
+        (count (##vector-ref fields 2))
+        (min-count (##vector-ref fields 3))
+        (free (##vector-ref fields 4))
+        (key-vals (##vector-ref fields 5)))
+    (let ((gcht (##make-vector len (macro-unused-obj))))
+      (macro-gc-hash-table-flags-set!
+       gcht
+       (##fixnum.bitwise-ior ;; force rehash at next access!
+        flags
+        (##fixnum.+ (macro-gc-hash-table-flag-key-moved)
+                    (macro-gc-hash-table-flag-need-rehash))))
+      (macro-gc-hash-table-count-set! gcht count)
+      (macro-gc-hash-table-min-count-set! gcht min-count)
+      (macro-gc-hash-table-free-set! gcht free)
+      (let loop ((i (macro-gc-hash-table-key0))
+                 (key-vals key-vals))
+        (if (##pair? key-vals)
+            (if (##fixnum.< i (##vector-length gcht))
+                (let ((key-val (##car key-vals)))
+                  (let ((key (##car key-val))
+                        (val (##cdr key-val)))
+                    (##vector-set! gcht i key)
+                    (##vector-set! gcht (##fixnum.+ i 1) val)
+                    (loop (##fixnum.+ i 2) (##cdr key-vals))))
+                #f)
+            (begin
+              (##subtype-set!
+               gcht
+               (macro-subtype-weak))
+              gcht))))))
+
 (define-prim (##wr-meroon we obj)
   (##wr-sn
    we
@@ -8972,7 +9046,12 @@
               (else
                (##wr-str we "()"))))
            ((##eq? obj (macro-absent-obj))
-            (##wr-str we "#<absent>"))
+            (##wr-str we
+                      (if (##eq? (macro-readtable-sharing-allowed?
+                                  (macro-writeenv-readtable we))
+                                 'serialize)
+                          "#absent"
+                          "#<absent>")))
            (else
             (let ((x
                    (##assq-cdr obj
@@ -10356,6 +10435,8 @@
                  (build-vect re 'f64vector))
                 ((##read-string=? re s "#structure")
                  (deserialize re ##implode-structure))
+                ((##read-string=? re s "#gc-hash-table")
+                 (deserialize re ##implode-gc-hash-table))
                 ((##read-string=? re s "#frame")
                  (deserialize re ##implode-frame))
                 ((##read-string=? re s "#continuation")
@@ -10364,6 +10445,10 @@
                  (deserialize re ##implode-procedure))
                 ((##read-string=? re s "#return")
                  (deserialize re ##implode-return))
+                ((##read-string=? re s "#absent")
+                 (##wrap re
+                         start-pos
+                         (macro-absent-obj)))
                 ((##read-string=? re s "#")
                  (##wrap-op1* re
                               start-pos
