@@ -11716,7 +11716,7 @@ The default value of this setting is @code{#t}.
 
 Below is an example of the server-side code that accepts connections
 on port 8080 of any network interface.  For the client-side code see
-the example for the procedure @code{open-tcp-client}).
+the example for the procedure @code{open-tcp-client}.
 
 @smallexample
 > @b{(define s (open-tcp-server (list server-address: "*"
@@ -11872,14 +11872,18 @@ end-of-file object).
 The procedures @code{open-vector}, @code{open-input-vector} and
 @code{open-output-vector} return the port that is created.  The
 procedures @code{call-with-input-vector} and
-@code{call-with-output-vector} call the procedure @var{proc} with the
-port as single argument, and then return the value(s) of this call
-after closing the port.  The procedures @code{with-input-from-vector}
-and @code{with-output-to-vector} dynamically bind the current
-input-port and current output-port respectively to the port created
-for the duration of a call to the procedure @var{thunk} with no
-argument.  The value(s) of the call to @var{thunk} are returned after
-closing the port.
+@code{call-with-output-vector} create a vector port, call the
+procedure @var{proc} with the port as single argument and then close
+the port.  The procedures @code{with-input-from-vector} and
+@code{with-output-to-vector} create a vector port, dynamically bind
+the current input-port and current output-port respectively to the
+port created for the duration of a call to the procedure @var{thunk}
+with no argument, and then close the port.  The procedures
+@code{call-with-input-vector} and @code{with-input-from-vector} return
+the value returned by the procedures @var{proc} and @var{thunk}
+respectively.  The procedures @code{call-with-output-vector} and
+@code{with-output-to-vector} return the vector accumulated in the port
+(see @code{get-output-vector}).
 
 The first parameter of these procedures is either a vector of the
 elements used to initialize the stream or a list of port settings.  If
@@ -11917,6 +11921,7 @@ For example:
 > @b{(write 1 p)}
 > @b{(write 2 p)}
 > @b{(write 3 p)}
+> @b{(force-output p)}
 > @b{(read p)}
 1
 > @b{(read p)}
@@ -11926,6 +11931,8 @@ For example:
 3
 > @b{(read p)}
 #!eof
+> @b{(with-output-to-vector '() (lambda () (write 1) (write 2)))}
+#(1 2)
 @end smallexample
 
 @end deffn
@@ -12020,6 +12027,27 @@ analog of the procedures specified in the vector-ports section.  Note
 that these procedures are a superset of the procedures specified in
 the ``Basic String Ports SRFI'' (SRFI 6).
 
+For example:
+
+@smallexample
+> @b{(define p (open-string))}
+> @b{(write 1 p)}
+> @b{(write 2 p)}
+> @b{(write 3 p)}
+> @b{(force-output p)}
+> @b{(read-char p)}
+#\1
+> @b{(read-char p)}
+#\2
+> @b{(close-output-port p)}
+> @b{(read-char p)}
+#\3
+> @b{(read-char p)}
+#!eof
+> @b{(with-output-to-string '() (lambda () (write 1) (write 2)))}
+"12"
+@end smallexample
+
 @end deffn
 
 @deffn procedure object->string @var{obj} @r{[}@var{n}@r{]}
@@ -12030,6 +12058,17 @@ specifies the maximal width of the resulting string.  If the external
 representation is wider than @var{n}, the resulting string will be
 truncated to @var{n} characters and the last 3 characters will be set
 to periods.  Note that the current readtable is used.
+
+For example:
+
+@smallexample
+> @b{(object->string (expt 2 100))}
+"1267650600228229401496703205376"
+> @b{(object->string (expt 2 100) 30)}
+"126765060022822940149670320..."
+> @b{(object->string (cons car cdr))}
+"(#<procedure #2 car> . #<procedure #3 cdr>)"
+@end smallexample
 
 @end deffn
 
@@ -12049,6 +12088,27 @@ to periods.  Note that the current readtable is used.
 U8vector-ports represent streams of bytes.  They are a direct subtype
 of byte-ports.  These procedures are the u8vector-port analog of the
 procedures specified in the vector-ports section.
+
+For example:
+
+@smallexample
+> @b{(define p (open-u8vector))}
+> @b{(write 1 p)}
+> @b{(write 2 p)}
+> @b{(write 3 p)}
+> @b{(force-output p)}
+> @b{(read-u8 p)}
+49
+> @b{(read-u8 p)}
+50
+> @b{(close-output-port p)}
+> @b{(read-u8 p)}
+51
+> @b{(read-u8 p)}
+#!eof
+> @b{(with-output-to-u8vector '() (lambda () (write 1) (write 2)))}
+#u8(49 50)
+@end smallexample
 
 @end deffn
 
