@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2009-03-18 09:26:43 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-05-14 12:27:15 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -2959,9 +2959,8 @@ ___ALLOC(___WILL_SIZE+1), \
 ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___WILLTESTATOR(x)___BODY_AS(x,___tSUBTYPED)[1]
 
-#define ___EXEC_WILL     1
-#define ___REACH_WILL    2
-#define ___FLOATING_WILL -1
+#define ___EXECUTABLE_WILL        1
+#define ___UNMARKED_TESTATOR_WILL 2
 
 #define ___GCHASHTABLEREF(x,y)___EXT(___gc_hash_table_ref)(x,y)
 #define ___GCHASHTABLESET(x,y,z)___EXT(___gc_hash_table_set)(x,y,z)

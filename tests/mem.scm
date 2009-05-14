@@ -1,6 +1,6 @@
-; File: "mem.scm", Time-stamp: <2007-04-04 11:40:14 feeley>
+; File: "mem.scm", Time-stamp: <2009-05-14 14:21:50 feeley>
 
-; Copyright (c) 1996-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1996-2009 by Marc Feeley, All Rights Reserved.
 
 ; Test program for Gambit-C's memory management system.
 
@@ -491,7 +491,23 @@ ___SCMOBJ baz ()
       (pretty-print obj9)
 
       (gc)
-      (gc))))
+      (gc)
+
+      (let* ((a (cons 11 22))
+             (b (cons 33 44))
+             (wa (make-will a
+                            (let ((x b))
+                              (lambda (o)
+                                (pretty-print (list 'executing-will 'a x)))))))
+        (make-will b
+                   (lambda (o)
+                     (pretty-print (list 'executing-will 'b))))
+        (set! b #f)
+        (gc)
+        (set! a #f)
+        (gc)
+        (gc)
+        (gc)))))
 
 ;------------------------------------------------------------------------------
 

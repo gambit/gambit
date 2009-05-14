@@ -1,4 +1,4 @@
-/* File: "mem.c", Time-stamp: <2009-03-18 09:25:03 feeley> */
+/* File: "mem.c", Time-stamp: <2009-05-14 14:32:13 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.  */
 
@@ -64,10 +64,10 @@
 
 /*
  * Object representation.
- * 
+ *
  * Memory allocated Scheme objects can be allocated using one of three
  * allocation strategies:
- * 
+ *
  *    Permanently allocated:
  *      These objects, called 'permanent objects' for short, are never
  *      moved or reclaimed, and all pointers to memory allocated
@@ -77,18 +77,18 @@
  *      typically allocated in C global variables and structures that
  *      are set up when the program starts up or when a module is
  *      dynamically loaded.
- * 
+ *
  *    Still dynamically allocated:
  *      These objects, called 'still objects' for short, are allocated
  *      on the C heap.  Still objects are never moved but they can be
  *      reclaimed by the GC.  A mark-and-sweep GC is used to
  *      garbage-collect still objects.
- * 
+ *
  *    Movable dynamically allocated:
  *      These objects, called 'movable objects' for short, are allocated
  *      in an area of memory that is managed by a compacting GC.  The GC
  *      can move and reclaim movable objects.
- * 
+ *
  * Scheme objects are encoded using integers of type ___WORD.  A
  * ___WORD either encodes an immediate value or encodes a pointer
  * when the object is memory allocated.  The two lower bits of a
@@ -98,24 +98,26 @@
  * ___WORD is either 4 or 8 bytes), the two lower bits of pointers
  * are zero and can be used to store the tag without reducing the
  * address space.  The four tags are:
- * 
+ *
  *  immediate:
  *    ___tFIXNUM    object is a small integer (fixnum)
  *    ___tSPECIAL   object is a boolean, character, or other immediate
- * 
+ *
  *  memory allocated:
  *    ___tPAIR      object is a pair
  *    ___tSUBTYPED  object is memory allocated but not a pair
- * 
+ *
  * A special type of object exists to support object finalization:
- * 'will' objects.  Wills contain an object (the will's testator) and
- * may also contain a procedure (the will's action procedure).  An
- * object is finalizable when all paths to the object from the root
- * set pass through a will.  When the GC detects that an object is
- * finalizable the corresponding wills are placed on a list of
- * executable wills (for wills with an action procedure).  Following
- * the GC, this list is traversed to invoke the action procedures.
- * 
+ * 'will' objects.  Wills contain a weak reference to an object, the
+ * testator and a strong reference to a procedure, the action
+ * procedure.  A will becomes executable when its testator object is
+ * not strongly reachable (i.e. the testator object is either
+ * unreachable or only reachable using paths from the roots that
+ * traverse at least one weak reference).  When the GC detects that a
+ * will has become executable it is placed on a list of executable
+ * wills.  Following the GC, this list is traversed to invoke the
+ * action procedures.
+ *
  * All memory allocated objects, including pairs, are composed of at
  * least a head and a body.  The head is a single ___WORD that
  * contains 3 "head" tag bits (the 3 lower bits), a subtype tag (the
@@ -126,7 +128,7 @@
  * (such as when the object is a string) and Scheme objects (such as
  * when the object is a vector).  Memory allocated objects have the
  * following layout:
- * 
+ *
  *      _head_   _____body______
  *     /      \ /               \
  *    +--------+--------+--------+
@@ -136,30 +138,30 @@
  *      |   | |
  * length   | |
  *    subtype head tag
- * 
+ *
  * Of the 8 possible head tags, only 5 are currently used:
- * 
+ *
  *    ___PERM     (P) the object is a permanent object
  *    ___STILL    (S) the object is a still object
  *    ___MOVABLE0 (M) the object is a movable object in generation 0
  *    ___FORW     (F) the object has been moved by the GC (counts as 2 tags)
- * 
+ *
  * Permanent objects have the following layout:
- * 
+ *
  *      _head_   _____body______
  *     /      \ /               \
  *    +--------+--------+--------+
  *    |       P|        |        |
  *    +--------+--------+--------+
- * 
+ *
  * Still objects have the following layout:
- * 
+ *
  *      _link_   _ref__   length   _mark_   _head_   _____body______
  *     /      \ / count\ /      \ /      \ /      \ /               \
  *    +--------+--------+--------+--------+--------+--------+--------+
  *    |        |        |        |        |       S|        |        |
  *    +--------+--------+--------+--------+--------+--------+--------+
- * 
+ *
  * All still objects are linked in a list using the 'link' field.  The
  * 'refcount' field contains a reference count, which counts the
  * number of pointers to this object that are hidden from the GC
@@ -172,26 +174,26 @@
  * start of a GC it is set to -1).  The 'mark' field links all objects
  * that have been marked but have not yet been scanned.  It contains a
  * pointer to the next still object that needs to be scanned.
- * 
+ *
  * Movable objects have the following layout:
- * 
+ *
  *      _head_   _____body______
  *     /      \ /               \
  *    +--------+--------+--------+
  *    |       M|        |        |
  *    +--------+--------+--------+
- * 
+ *
  * When a movable object is moved by the GC, the head is replaced
  * with a pointer to the copy, tagged with ___FORW.
- * 
+ *
  * Layout of body.
- * 
+ *
  *      _head_   __________body__________
  *     /      \ /                        \
  *    +--------+--------+--------+--------+
  *    |        | field_0| field_1|  etc.  |
  *    +--------+--------+--------+--------+
- * 
+ *
  * Some types of objects have bodies that only contain pointers to
  * other Scheme objects.  For example, pairs have two fields (car and
  * cdr) and vectors have one field per element.  Other object types
@@ -199,52 +201,52 @@
  * bignums).  The remaining object types have bodies that contain both
  * pointers to Scheme objects and raw binary data.  Their layout is
  * summarized below.
- * 
+ *
  * Symbols:
  *     subtype = ___sSYMBOL
  *     field_0 = name (a Scheme string)
  *     field_1 = hash code (fixnum)
  *     field_2 = C pointer to global variable (0 if none allocated)
- * 
+ *
  *     Note: interned symbols must be permanently allocated;
  *           uninterned symbols can be permanent, still or movable
- * 
+ *
  * Keywords:
  *     subtype = ___sKEYWORD
  *     field_0 = name (a Scheme string) not including the trailing ':'
  *     field_1 = hash code (fixnum)
- * 
+ *
  * Procedures:
- * 
+ *
  *   nonclosures (toplevel procedures)
  *     subtype = ___sPROCEDURE (length contains parameter descriptor)
  *     field_0 = C pointer to field_0 - ___BODY_OFS
  *     field_1 = C pointer to label (only when using gcc)
  *     field_2 = C pointer to host C procedure
- * 
+ *
  *   closures:
  *     subtype = ___sPROCEDURE
  *     field_0 = C pointer to field_0 of entry procedure - ___BODY_OFS
  *     field_1 = free variable 1
  *     field_2 = free variable 2
  *     ...
- * 
+ *
  *     Note: the entry procedure must be a nonclosure procedure
- * 
+ *
  * Return points:
  *     subtype = ___sPROCEDURE
  *     field_0 = return frame descriptor
  *     field_1 = C pointer to label (only when using gcc)
  *     field_2 = C pointer to host C procedure
- * 
+ *
  * Wills:
  *     subtype = ___sWEAK
  *     field_0 = next will in list with special tag in lower bits
  *     field_1 = testator object
- *     field_2 = action procedure (if this field exists)
- * 
+ *     field_2 = action procedure
+ *
  *     Note: wills must be movable
- * 
+ *
  * GC hash tables:
  *     subtype = ___sWEAK
  *     field_0 = next GC hash table in list with special tag in lower bits
@@ -254,12 +256,12 @@
  *     field_4 = key of entry #0
  *     field_5 = value of entry #0
  *     ...
- * 
+ *
  * Continuations:
  *     subtype = ___sCONTINUATION
  *     field_0 = first frame (C pointer to stack at first and then Scheme obj)
  *     field_1 = dynamic environment (optional)
- * 
+ *
  * Frame:
  *     subtype = ___sFRAME
  *     field_0 = return address
@@ -401,9 +403,6 @@ ___HIDDEN ___WORD *scan_ptr;
 /* indicates if weak references must be traversed */
 ___HIDDEN ___BOOL traverse_weak_refs;
 
-/* wills reached by GC */
-___HIDDEN ___WORD reached_floating_wills;
-
 /* GC hash tables reached by GC */
 ___HIDDEN ___WORD reached_gc_hash_tables;
 
@@ -411,7 +410,7 @@ ___HIDDEN ___WORD reached_gc_hash_tables;
 int ___gc_calls_to_punt = 2000; /* for GC stress test */
 #endif
 
-/* 
+/*
  * A given msection can be used for allocating movable objects, or for
  * allocating continuation frames, or for both.  The position of the
  * various pointers is as follows.
@@ -1143,7 +1142,7 @@ ___WORD obj;)
 
 /*---------------------------------------------------------------------------*/
 
-/* 
+/*
  * '___alloc_scmobj (subtype, bytes, kind)' allocates a permanent or
  * still Scheme object (depending on 'kind') of subtype 'subtype' with
  * a body containing 'bytes' bytes, and returns it as an encoded
@@ -1201,7 +1200,7 @@ int kind;)
         }
     }
 
-  /* 
+  /*
    * Some objects, such as ___sFOREIGN, ___sS64VECTOR, ___sU64VECTOR,
    * ___sF64VECTOR, ___sFLONUM and ___sBIGNUM, must have a body that
    * is aligned on a multiple of 8 on some machines.  Here, we force
@@ -1266,7 +1265,7 @@ ___WORD obj;)
 }
 
 
-/* 
+/*
  * '___make_pair (car, cdr, kind)' creates a Scheme pair having the
  * values 'car' and 'cdr' in its CAR and CDR fields.  The 'car' and
  * 'cdr' arguments must not be movable objects and any still object
@@ -1299,7 +1298,7 @@ int kind;)
 }
 
 
-/* 
+/*
  * '___make_vector (length, init, kind)' creates a Scheme vector of
  * length 'length' and initialized with the value 'init'.  The 'init'
  * argument must not be a movable object and if it is a still object
@@ -2127,7 +2126,7 @@ ___WORD n;)
                   limit = alloc_heap_limit;
                 }
 #if ___WS != 8
-              /* 
+              /*
                * ___sS64VECTOR, ___sU64VECTOR, ___sF64VECTOR,
                * ___sFLONUM and ___sBIGNUM need to be aligned on a
                * multiple of 8.
@@ -2518,27 +2517,34 @@ ___WORD *body;)
     case ___sWEAK:
       if (words == ___WILL_SIZE)
         {
+          /* Object is a will */
+
+          /*
+           * The will contains a weak reference to its testator object
+           * and a strong reference to the action procedure.
+           * Consequently, the action procedure must be marked and,
+           * only if traverse_weak_refs is true, the testator object
+           * is also marked.  The link field is never scanned.
+           */
+
           if (traverse_weak_refs)
-            mark_array (body+1, words-1); /* don't scan link */
+            mark_array (body+1, 2); /* scan action and testator */
           else
             {
-              ___WORD link = body[0];
-              if (link == ___FLOATING_WILL) /* floating will? */
-                {
-                  /*
-                   * Maintain a list of all the wills reached by the GC
-                   * that are not in the executable or nonexecutable will
-                   * lists.
-                   */
-                  body[0] = reached_floating_wills;
-                  reached_floating_wills = ___TAG((body-1),___REACH_WILL);
-                }
-              else
-                body[0] = link | ___REACH_WILL;
+              mark_array (body+2, 1); /* scan action only */
+
+              /*
+               * Remember that this will's testator object remains to
+               * be marked by the process_wills function.
+               */
+
+              body[0] = body[0] | ___UNMARKED_TESTATOR_WILL;
             }
         }
       else
         {
+          /* Object is a GC hash table */
+
           int flags = ___INT(body[___GCHASHTABLE_FLAGS]);
           int i;
 
@@ -2924,11 +2930,11 @@ ___SCMOBJ ___setup_mem ___PVOID
 
   ___ps->stack_break = alloc_stack_ptr;
 
-  /* 
+  /*
    * Setup will lists.
    */
 
-  ___ps->executable_wills = ___TAG(0,___EXEC_WILL); /* tagged empty list */
+  ___ps->executable_wills = ___TAG(0,___EXECUTABLE_WILL); /* tagged empty list */
   ___ps->nonexecutable_wills = ___TAG(0,0); /* tagged empty list */
 
   heap_size = WORDS_AVAILABLE;
@@ -2993,15 +2999,15 @@ ___WORD list;)
 
       testator = will_body[1];
 
-      if (___MEM_ALLOCATED(testator) && 
+      if (___MEM_ALLOCATED(testator) &&
           UNMARKED(testator)) /* testator was not marked? */
         {
           /*
            * All paths to testator object from roots pass through
-           * wills, so mark will as executable.
+           * weak references, so mark will as executable.
            */
 
-          will_body[0] = list | ___EXEC_WILL;
+          will_body[0] = list | ___EXECUTABLE_WILL;
         }
     }
 }
@@ -3019,11 +3025,13 @@ ___HIDDEN void process_wills ___PVOID
 #endif
 
   determine_will_executability (___ps->nonexecutable_wills);
-  determine_will_executability (reached_floating_wills);
 
   /*
-   * Move executable wills to executable will list and also mark all
-   * wills in case they were not reached.
+   * Finish scanning the wills whose testator object remains to be
+   * marked.
+   *
+   * The wills that have become executable are also transferred from
+   * the nonexecutable wills list to the executable wills list.
    */
 
   tail_exec = &___ps->executable_wills;
@@ -3035,11 +3043,11 @@ ___HIDDEN void process_wills ___PVOID
 
       mark_array (&will, 1);
 
-      *tail_exec = ___TAG(___UNTAG(will),___EXEC_WILL);
+      *tail_exec = ___TAG(___UNTAG(will),___EXECUTABLE_WILL);
       tail_exec = &___BODY_AS(will,___tSUBTYPED)[0];
       curr = *tail_exec;
-      if (curr & ___REACH_WILL) /* was will reached? */
-        mark_array (tail_exec+1, ___WILL_SIZE-1);
+      if (curr & ___UNMARKED_TESTATOR_WILL)
+        mark_array (tail_exec+1, 1); /* mark testator object */
     }
 
   tail_nonexec = &___ps->nonexecutable_wills;
@@ -3051,15 +3059,15 @@ ___HIDDEN void process_wills ___PVOID
 
       mark_array (&will, 1);
 
-      if (___BODY_AS(will,___tSUBTYPED)[0] & ___EXEC_WILL)
+      if (___BODY_AS(will,___tSUBTYPED)[0] & ___EXECUTABLE_WILL)
         {
           /* move will to executable will list */
 
-          *tail_exec = ___TAG(___UNTAG(will),___EXEC_WILL);
+          *tail_exec = ___TAG(___UNTAG(will),___EXECUTABLE_WILL);
           tail_exec = &___BODY_AS(will,___tSUBTYPED)[0];
           curr = *tail_exec;
-          if (curr & ___REACH_WILL) /* was will reached? */
-            mark_array (tail_exec+1, ___WILL_SIZE-1);
+          if (curr & ___UNMARKED_TESTATOR_WILL)
+            mark_array (tail_exec+1, 1); /* mark testator object */
         }
       else
         {
@@ -3068,29 +3076,13 @@ ___HIDDEN void process_wills ___PVOID
           *tail_nonexec = ___TAG(___UNTAG(will),0);
           tail_nonexec = &___BODY_AS(will,___tSUBTYPED)[0];
           curr = *tail_nonexec;
-          if (curr & ___REACH_WILL) /* was will reached? */
-            mark_array (tail_nonexec+1, ___WILL_SIZE-1);
+          if (curr & ___UNMARKED_TESTATOR_WILL)
+            mark_array (tail_nonexec+1, 1); /* mark testator object */
         }
     }
 
-  *tail_exec = ___TAG(0,___EXEC_WILL);
+  *tail_exec = ___TAG(0,___EXECUTABLE_WILL);
   *tail_nonexec = ___TAG(0,0);
-
-  curr = reached_floating_wills;
-
-  while (___UNTAG(curr) != 0)
-    {
-      ___WORD* will_body = ___BODY(curr);
-
-      curr = will_body[0];
-
-      if (will_body[0] & ___EXEC_WILL)
-        will_body[1] = ___FAL; /* zap testator */
-
-      mark_array (will_body+1, ___HD_WORDS(will_body[-1])-1);
-
-      will_body[0] = ___FLOATING_WILL;
-    }
 }
 
 
@@ -3887,9 +3879,8 @@ long nonmovable_words_needed;)
   scan_msection = heap_msection;
   scan_ptr = alloc_heap_ptr;
 
-  /* maintain lists of wills and GC hash tables reached by GC */
+  /* maintain list of GC hash tables reached by GC */
 
-  reached_floating_wills = ___TAG(0,___REACH_WILL);
   reached_gc_hash_tables = ___TAG(0,0);
 
   /* trace externally referenced still objects */
@@ -3963,7 +3954,7 @@ long nonmovable_words_needed;)
 
   if (!traverse_weak_refs)
     {
-      /* 
+      /*
        * At this point all of the objects accessible from the roots
        * without having to traverse a weak reference have been scanned
        * by the GC.
