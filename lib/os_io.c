@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-05-09 13:46:32 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-06-02 15:53:42 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -7421,49 +7421,65 @@ ___SCMOBJ options;)
 
 #ifdef USE_POSIX
 
-___HIDDEN void sigchld_signal_handler (int sig)
+___HIDDEN void sigchld_signal_handler
+   ___P((int sig),
+        (sig)
+int sig;)
 {
 #ifdef USE_signal
   ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
 #endif
 
-  {
-    int status;
-    pid_t pid = waitpid (-1, &status, WNOHANG);
+  /*
+   * A SIGCHLD signal indicates that at least one child has changed
+   * status.  There may be more than one because signals are not
+   * queued.  For example during a period when the SIGCHLD signal is
+   * blocked several child processes can terminate and only one call
+   * to the SIGCHLD handler will occur when the SIGCHLD signal is
+   * unblocked.  For this reason we must call waitpid in a loop, until
+   * the last call indicates that no other child process is available.
+   */
 
-    if (pid > 0)
-      {
-        /*
-         * Find the process device structure for the process which
-         * terminated, and save the exit status and change the state
-         * to "terminated".
-         */
+  for (;;)
+    {
+      int status;
+      ___device *head;
+      pid_t pid = waitpid (-1, &status, WNOHANG);
 
-        ___device *head = ___global_device_group ()->list;
+      if (pid <= 0)
+        break;
 
-        if (head != NULL)
-          {
-            ___device *d = head;
+      /*
+       * Find the process device structure for the process which
+       * terminated, and save the exit status and change the state to
+       * "terminated".
+       */
 
-            do
-              {
-                if (___device_kind (d) == ___PROCESS_DEVICE_KIND)
-                  {
-                    ___device_process *dev = ___CAST(___device_process*,d);
-                    if (dev->pid == pid)
-                      {
-                        dev->status = status;
+      head = ___global_device_group ()->list;
 
-                        if (WIFEXITED(status) || WIFSIGNALED(status))
-                          ___device_process_cleanup (dev); /* ignore error */
-                        break;
-                      }
-                  }
-                d = d->next;
-              } while  (d != head);
-          }
-      }
-  }
+      if (head != NULL)
+        {
+          ___device *d = head->prev;
+
+          do
+            {
+              if (___device_kind (d) == ___PROCESS_DEVICE_KIND)
+                {
+                  ___device_process *dev = ___CAST(___device_process*,d);
+
+                  if (dev->pid == pid)
+                    {
+                      dev->status = status;
+
+                      if (WIFEXITED(status) || WIFSIGNALED(status))
+                        ___device_process_cleanup (dev); /* ignore error */
+                      break;
+                    }
+                }
+              d = d->prev;
+            } while  (d != head);
+        }
+    }
 }
 
 #endif
