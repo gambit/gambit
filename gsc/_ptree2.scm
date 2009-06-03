@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2009-02-12 17:28:34 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2009-06-03 14:46:32 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -1766,8 +1766,8 @@
 (define (c-definition-scope source)
   (cadr (cddddr (source-code source))))
 
-(define (c-type-pt-syntax-error source err-source msg)
-  (pt-syntax-error (or err-source source) msg))
+(define (c-type-pt-syntax-error source err-source msg . args)
+  (apply pt-syntax-error (cons (or err-source source) (cons msg args))))
 
 (define (check-c-function-type arg-typs-source res-typ-source err-source)
   (and (check-c-arg-types arg-typs-source err-source)
@@ -1892,7 +1892,8 @@
                  (c-type-pt-syntax-error
                    typ-source
                    err-source
-                   "Undefined C type identifier")))))
+                   "Undefined C type identifier:"
+                   typ)))))
           (else
            (ill-formed-c-type)))))
 
