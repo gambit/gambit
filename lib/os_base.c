@@ -282,10 +282,12 @@ char *file;)
  */
 
 
+/* To keep command line and runtime flag information around: */
+
 ___program_startup_info_struct ___program_startup_info =
 {
-  0,
-  0
+  0, /* argument vector */
+  0  /* runtime flag string */
 
 #ifdef ___OS_WIN32
   ,
