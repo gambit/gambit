@@ -73,7 +73,7 @@ RCFILES = makefile.in \
 gambit-c.txi texinfo.tex texi2html \
 checkdoc.scm gambcini.scm square.scm bench.scm \
 m1.c m2.scm m3.scm m4.scm m5.scm m6.scm m7.scm x.c x.h h.scm w.six \
-test1.scm test2.scm test3.scm
+test1.scm test2.scm test3.scm gsi.1
 
 GENDISTFILES = stamp.vti version.txi \
 gambit-c.pdf gambit-c*.html gambit-c.txt \

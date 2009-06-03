@@ -1,0 +1,144 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH GSI/GSC 1 "June 3, 2009" "4.4.3" "User Commands"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+gsi \- Gambit-C Scheme Interpreter and Compiler
+.SH SYNOPSIS
+.B gsi 
+[
+-\fB:\fP\fIarg\fP,... ] 
+[
+.B \-f
+]
+[
+.B \-v
+] 
+[[\-] 
+[
+.B \-e
+] 
+[
+.I file
+]]...
+.br
+.B gsc 
+.RI [ options ]
+.RI [ files ]
+.br
+.PP
+\fBgsc-script, gsi-script, scheme-ieee-1178-1990, scheme-r4rs, scheme-srfi-0,
+six\fP, and \fBsix-script\fP: currently synonyms for \fBgsi\fP.
+
+\fBscheme-r5rs\fP is registered in the Debian alternatives system and can be
+configured to point at \fBgsi\fP.
+
+.SH DESCRIPTION
+This manual page documents briefly the
+.B gsi
+and
+.B gsc
+commands.
+.PP
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics, 
+.\" respectively.
+The \fBGambit-C\fP programming system is a full implementation of the Scheme
+language which conforms to the R4RS, R5RS, and IEEE Scheme standards.  It
+consists of two main programs: \fBgsi\fP, the Gambit Scheme interpreter, and
+\fBgsc\fP, the Gambit Scheme compiler.  The interpreter provides an
+interactive environment with a debugger, while the compiler can produce
+stand-alone executables or modules which can be linked or loaded at run time.
+Interpreted code and compiled code can be freely mixed.  C modules can be
+linked with Scheme modules.
+.PP
+The interpreter is executed in \fBinteractive mode\fP when no file or `\-' or
+`\-e' option is given on the command line.  When at least one file or `\-' or
+`\-e' option is present the interpreter is executed in \fBbatch mode\fP.
+.PP
+Entering \fB,q\fP or (exit) at the interpreter's command prompt will exit the
+interpreter.
+.PP
+Entering \fB,?\fP at the interpreter's command prompt will display
+a list of special commands.
+.PP
+In \fBbatch mode\fP the command line arguments denote files to be loaded, REPL
+interactions to start (`\-' option), and expressions to be evaluated (`\-e'
+option).  Note that the `\-' and `\-e' options can be interspersed with the
+files on the command line and can occur multiple times.  The interpreter
+processes the command line arguments from left to right, loading files with the
+`load' procedure and evaluating expressions with the `eval' procedure in the
+global interaction environment.  After this processing the interpreter exits.
+.PP
+\fBgsc-cc-o.bat\fP is a script called by \fBgsc\fP to generate object files during
+compilation.  It takes its data from environment variables and is not intended
+for user interaction.
+
+.SH OPTIONS
+A summary of options is included below.
+For a complete description, see the Info files.
+.TP
+.B \-
+Initiate a REPL at this point. (Continue by issuing a \fB,c\fP command at
+the interpreter prompt)
+.TP
+.B \-:
+Comma separated list of run-time options
+.TP
+.B \-e
+Evaluate an expression.
+.TP
+.B \-f
+Skip initialization file.
+.TP
+.B \-v
+Show version of program.
+.SH SEE ALSO
+.br
+
+The documentation for these programs is arguably too extensive to cover with
+man pages.  Only the common command line options are given here.  The programs
+are documented fully in \fBGambit-C\fP, available on-line at the Gambit-C
+Homepage.  Once package gambc-doc is installed, this 200+ page document is
+available via the Info system (info gambit-c), in html via doc-base, or as
+files in /usr/share/doc/gambc (html, pdf, txt).
+
+.br
+
+The Debian package r5rs-doc provides the Revised(5) Report on the Algorithmic
+Language Scheme in several formats.  That document is the defining
+description of the programming language Scheme.
+
+.br
+\fBdhelp(1), gcc(1), update-alternatives(8)\fP
+.SH COPYRIGHT
+.br
+Gambit-C is Copyright (c) 1994-2009 by Marc Feeley, all rights reserved.
+.PP
+Gambit-C is released under a dual LGPL and Apache 2 license.
+.br
+For further information refer to /usr/share/doc/gambc/copyright.
+.PP
+This manual page is
+.br
+Copyright (c) 2006-2009 Marc Feeley and Kurt B. Kaiser <kbk@shore.net>
+.br
+Released under the same license as Gambit-C.
+
+.SH AUTHOR
+Gambit-C was written by Marc Feeley <gambit@iro.umontreal.ca>.
+.PP
+Homepage: http://gambit.iro.umontreal.ca
