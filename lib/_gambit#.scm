@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gambit#.scm", Time-stamp: <2008-12-15 11:27:19 feeley>
+;;; File: "_gambit#.scm", Time-stamp: <2009-06-03 15:19:01 feeley>
 
 ;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
 
@@ -63,17 +63,9 @@
 
 ;; Special objects.
 
-(##define-macro (macro-absent-obj)
-  (##namespace ("c#" absent-object))
-  `',absent-object)
-
-(##define-macro (macro-unused-obj)
-  (##namespace ("c#" unused-object))
-  `',unused-object)
-
-(##define-macro (macro-deleted-obj)
-  (##namespace ("c#" deleted-object))
-  `',deleted-object)
+(##define-macro (macro-absent-obj)  `',(##type-cast -6 2))
+(##define-macro (macro-unused-obj)  `',(##type-cast -14 2))
+(##define-macro (macro-deleted-obj) `',(##type-cast -15 2))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

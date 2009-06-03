@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2009-02-25 17:32:08 feeley>
+;;; File: "_front.scm", Time-stamp: <2009-06-03 15:22:26 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -143,6 +143,8 @@
 (define compiler-option-debug-source       #f)
 (define compiler-option-debug-environments #f)
 (define compiler-option-track-scheme       #f)
+
+(define ##compilation-options '())
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

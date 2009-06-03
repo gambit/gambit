@@ -3,9 +3,9 @@
 
 ;;;============================================================================
 
-;;; File: "igsc.scm", Time-stamp: <2007-04-04 16:53:46 feeley>
+;;; File: "igsc.scm", Time-stamp: <2009-06-03 15:20:56 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
