@@ -186,19 +186,6 @@ unsigned long bytes;)
 
 #endif
 
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-  if (___base_mod.file != 0)
-    ___printf ("%p (%lu bytes) ALLOCATED AT \"%s\"@%d.1\n",
-               ptr,
-               bytes,
-               ___base_mod.file,
-               ___base_mod.lineno);
-  else
-    ___printf ("%p (%lu bytes) ALLOCATED\n", ptr, bytes);
-#endif
-#endif
-
   return ptr;
 }
 
@@ -267,6 +254,15 @@ char *file;)
   ___base_mod.file = file;
 
   ptr = ___alloc_mem (bytes);
+
+  if (file != 0)
+    ___printf ("%p (%lu bytes) ALLOCATED AT \"%s\"@%d.1\n",
+               ptr,
+               bytes,
+               file,
+               lineno);
+  else
+    ___printf ("%p (%lu bytes) ALLOCATED\n", ptr, bytes);
 
   ___base_mod.lineno = 0;
   ___base_mod.file = 0;
