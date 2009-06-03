@@ -274,6 +274,14 @@ char *file;)
 /* Program startup */
 
 
+/*
+ * ___main_char, ___main_UCS_2, and ___winmain are variants of main
+ * entry points which differ in the format of the arguments; the first
+ * two are always compiled in since they could be useful on all
+ * systems for embedding of Gambit.
+ */
+
+
 ___program_startup_info_struct ___program_startup_info =
 {
   0,
