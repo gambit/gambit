@@ -250,9 +250,6 @@ char *file;)
 {
   void *ptr;
 
-  ___base_mod.lineno = lineno;
-  ___base_mod.file = file;
-
   ptr = ___alloc_mem (bytes);
 
   if (file != 0)
@@ -263,9 +260,6 @@ char *file;)
                lineno);
   else
     ___printf ("%p (%lu bytes) ALLOCATED\n", ptr, bytes);
-
-  ___base_mod.lineno = 0;
-  ___base_mod.file = 0;
 
   return ptr;
 }
@@ -1443,13 +1437,6 @@ ___SCMOBJ ___setup_base_module ___PVOID
 
       ___base_mod.alloc_mem_calls = 0;
       ___base_mod.free_mem_calls = 0;
-
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-
-      ___base_mod.lineno = 0;
-      ___base_mod.file = 0;
-
-#endif
 
 #endif
 

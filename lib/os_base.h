@@ -72,13 +72,6 @@ typedef struct ___base_module_struct
     long alloc_mem_calls;
     long free_mem_calls;
 
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-
-    int lineno;
-    char *file;
-
-#endif
-
 #endif
 
 #ifdef USE_CLASSIC_MACOS
