@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2009-03-18 09:24:18 feeley>
+;;; File: "_num.scm", Time-stamp: <2009-06-03 18:13:43 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2009 by Brad Lucier, All Rights Reserved.
@@ -174,6 +174,18 @@
         #f ;; x = flonum
         (and (##not (##flonum? (macro-cpxnum-real x))) ;; x = cpxnum
              (##not (##flonum? (macro-cpxnum-imag x))))))))
+
+(define-prim (##inexact? x)
+
+  (define (type-error) #f)
+
+  (macro-number-dispatch x (type-error)
+    #f ;; x = fixnum
+    #f ;; x = bignum
+    #f ;; x = ratnum
+    #t ;; x = flonum
+    (or (##flonum? (macro-cpxnum-real x)) ;; x = cpxnum
+        (##flonum? (macro-cpxnum-imag x)))))
 
 (define-prim (inexact? x)
   (macro-force-vars (x)

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_prims.scm", Time-stamp: <2008-06-02 22:09:03 feeley>
+;;; File: "_prims.scm", Time-stamp: <2009-06-03 16:07:48 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -448,6 +448,7 @@
 ("##subtype-set!"                     (2)   #t ()    0    #f      extended)
 
 ("##not"                              (1)   #f ()    0    boolean extended)
+("##boolean?"                         (1)   #f ()    0    boolean extended)
 ("##null?"                            (1)   #f ()    0    boolean extended)
 ("##unbound?"                         (1)   #f ()    0    boolean extended)
 ("##eq?"                              (2)   #f ()    0    boolean extended)
@@ -503,6 +504,11 @@
 ("##return-dynamic-env-bind?"         (1)   #f ()    0    boolean extended)
 ("##number?"                          (1)   #f ()    0    boolean extended)
 ("##complex?"                         (1)   #f ()    0    boolean extended)
+("##real?"                            (1)   #f ()    0    boolean extended)
+("##rational?"                        (1)   #f ()    0    boolean extended)
+("##integer?"                         (1)   #f ()    0    boolean extended)
+("##exact?"                           (1)   #f ()    0    boolean extended)
+("##inexact?"                         (1)   #f ()    0    boolean extended)
 
 ;; old fixnum/flonum procedures
 

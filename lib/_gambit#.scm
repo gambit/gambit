@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_gambit#.scm", Time-stamp: <2009-06-03 15:19:01 feeley>
+;;; File: "_gambit#.scm", Time-stamp: <2009-06-03 16:39:31 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -76,7 +76,7 @@
   (define inlinable-procs '(
 
 ##type ##type-cast ##subtype ##subtype-set!
-##not ##null? ##unbound? ##eq? ##eof-object?
+##not ##boolean? ##null? ##unbound? ##eq? ##eof-object?
 ##fixnum? ##flonum? ##special? ##pair? ##pair-mutable? ##subtyped? ##subtyped-mutable?
 ##subtyped.vector? ##subtyped.symbol? ##subtyped.flonum? ##subtyped.bignum?
 ##procedure? ##promise? ##vector? ##symbol? ##keyword? ##ratnum? ##cpxnum?

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_std.scm", Time-stamp: <2008-02-08 22:44:05 feeley>
+;;; File: "_std.scm", Time-stamp: <2009-06-03 16:23:19 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -710,7 +710,10 @@ end-of-code
 
 (define-prim (boolean? obj)
   (macro-force-vars (obj)
-    (or (##eq? obj #t) (##eq? obj #f))))
+    (##boolean? obj)))
+
+(define-prim (##boolean? obj)
+  (or (##eq? obj #t) (##eq? obj #f)))
 
 ;; eqv? is defined in "_num.scm"
 ;; eq? and equal? are defined in "_kernel.scm"

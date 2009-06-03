@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2009-02-25 18:19:19 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2009-06-03 18:03:48 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3203,6 +3203,7 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##not"              (targ-ifjump-simp-s #f "FALSEP"))
+(targ-op "##boolean?"         (targ-ifjump-simp-s #f "BOOLEANP"))
 (targ-op "##null?"            (targ-ifjump-simp-s #f "NULLP"))
 (targ-op "##unbound?"         (targ-ifjump-simp-s #f "UNBOUNDP"))
 (targ-op "##eq?"              (targ-ifjump-simp-s #f "EQP"))
@@ -3255,6 +3256,15 @@
 (targ-op "##char?"            (targ-ifjump-simp-s #f "CHARP"))
 (targ-op "##number?"          (targ-ifjump-simp-s #f "NUMBERP"))
 (targ-op "##complex?"         (targ-ifjump-simp-s #f "COMPLEXP"))
+
+;;the following primitives can't be inlined because they have
+;;non-trivial definitions which depend on some configuration
+;;information provided by lib/_num.scm:
+;;(targ-op "##real?"            (targ-ifjump-simp-s #f "REALP"))
+;;(targ-op "##rational?"        (targ-ifjump-simp-s #f "RATIONALP"))
+;;(targ-op "##integer?"         (targ-ifjump-simp-s #f "INTEGERP"))
+;;(targ-op "##exact?"           (targ-ifjump-simp-s #f "EXACTP"))
+;;(targ-op "##inexact?"         (targ-ifjump-simp-s #f "INEXACTP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3851,6 +3861,7 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-spec "not"         (targ-s "##not"))
+(targ-spec "boolean?"    (targ-s "##boolean?"))
 (targ-spec "null?"       (targ-s "##null?"))
 (targ-spec "eq?"         (targ-s "##eq?"))
 (targ-spec "eof-object?" (targ-s "##eof-object?"))
@@ -3868,6 +3879,13 @@
 
 (targ-spec "number?"     (targ-s "##number?"))
 (targ-spec "complex?"    (targ-s "##complex?"))
+(targ-spec "real?"       (targ-s "##real?"))
+(targ-spec "rational?"   (targ-s "##rational?"))
+(targ-spec "integer?"    (targ-s "##integer?"))
+
+;;the following primitives must check that their parameter is a number:
+;;(targ-spec "exact?"      (targ-s "##exact?"))
+;;(targ-spec "inexact?"    (targ-s "##inexact?"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -5352,6 +5370,14 @@
 
 (define (setup-numeric-primitives)
 
+  (define **real?-sym     (string->canonical-symbol "##real?"))
+  (define **rational?-sym (string->canonical-symbol "##rational?"))
+  (define **integer?-sym  (string->canonical-symbol "##integer?"))
+  (define **exact?-sym    (string->canonical-symbol "##exact?"))
+  (define **inexact?-sym  (string->canonical-symbol "##inexact?"))
+  (define exact?-sym      (string->canonical-symbol "exact?"))
+  (define inexact?-sym    (string->canonical-symbol "inexact?"))
+
   (define **fixnum?-sym (string->canonical-symbol "##fixnum?"))
 
   (define **fx=-sym (string->canonical-symbol "##fx="))
@@ -6039,7 +6065,7 @@
                  (invalid)))
              (list (gen-call-prim-vars source env
                     **fxabs?-sym
-                      vars)))))))
+                    vars)))))))
 
     (define case-fxnot
       (gen-simple-case **fixnum?-sym **fxnot-sym))
@@ -6283,6 +6309,112 @@
                                        var2)))))
                      (invalid)))))))
          fail)))
+
+    (define case-real?
+      (lambda (source
+               env
+               vars
+               check-run-time-binding
+               invalid
+               fail)
+        (gen-check-run-time-binding
+         check-run-time-binding
+         source
+         env
+         (lambda ()
+           (new-disj source env
+             (gen-call-prim-vars source env **fixnum?-sym vars)
+             (new-disj source env
+               (gen-call-prim-vars source env **flonum?-sym vars)
+               (gen-call-prim-vars source env **real?-sym vars))))
+         fail)))
+
+    (define case-rational?
+      (lambda (source
+               env
+               vars
+               check-run-time-binding
+               invalid
+               fail)
+        (gen-check-run-time-binding
+         check-run-time-binding
+         source
+         env
+         (lambda ()
+           (new-disj source env
+             (gen-call-prim-vars source env **fixnum?-sym vars)
+             (new-tst source env
+               (gen-call-prim-vars source env **flonum?-sym vars)
+               (gen-call-prim-vars source env **flfinite?-sym vars)
+               (gen-call-prim-vars source env **rational?-sym vars))))
+         fail)))
+
+    (define case-integer?
+      (lambda (source
+               env
+               vars
+               check-run-time-binding
+               invalid
+               fail)
+        (gen-check-run-time-binding
+         check-run-time-binding
+         source
+         env
+         (lambda ()
+           (new-disj source env
+             (gen-call-prim-vars source env **fixnum?-sym vars)
+             (gen-call-prim-vars source env **integer?-sym vars)))
+         fail)))
+
+    (define (case-exact? fallback)
+      (lambda (source
+               env
+               vars
+               check-run-time-binding
+               invalid
+               fail)
+        (gen-check-run-time-binding
+         check-run-time-binding
+         source
+         env
+         (lambda ()
+           (new-disj source env
+             (gen-call-prim-vars source env **fixnum?-sym vars)
+             (new-conj source env
+               (gen-call-prim source env
+                 **not-sym
+                 (list (gen-call-prim-vars source env **flonum?-sym vars)))
+               (gen-call-prim-vars source env fallback vars))))
+         fail)))
+
+    (define (case-inexact? fallback)
+      (lambda (source
+               env
+               vars
+               check-run-time-binding
+               invalid
+               fail)
+        (gen-check-run-time-binding
+         check-run-time-binding
+         source
+         env
+         (lambda ()
+           (new-conj source env
+             (gen-call-prim source env
+               **not-sym
+               (list (gen-call-prim-vars source env **fixnum?-sym vars)))
+             (new-disj source env
+               (gen-call-prim-vars source env **flonum?-sym vars)
+               (gen-call-prim-vars source env fallback vars))))
+         fail)))
+
+    (targ-exp "##real?"     (make-simple-expander case-real?))
+    (targ-exp "##rational?" (make-simple-expander case-rational?))
+    (targ-exp "##integer?"  (make-simple-expander case-integer?))
+    (targ-exp "##exact?"    (make-simple-expander (case-exact? **exact?-sym)))
+    (targ-exp "##inexact?"  (make-simple-expander (case-inexact? **inexact?-sym)))
+    (targ-exp "exact?"      (make-simple-expander (case-exact? exact?-sym)))
+    (targ-exp "inexact?"    (make-simple-expander (case-inexact? inexact?-sym)))
 
     (targ-exp "fx=" (make-simple-expander case-fx=))
     (targ-exp "fl=" (make-simple-expander case-fl=))

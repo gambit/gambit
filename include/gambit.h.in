@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2009-05-14 12:27:15 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-06-03 16:32:47 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -2521,6 +2521,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 /* IFJUMP-able operations */
 
 #define ___FALSEP(x)((x)==___FAL)
+#define ___BOOLEANP(x)(((x)==___FAL)||((x)==___TRU))
 #define ___NULLP(x)((x)==___NUL)
 #define ___UNBOUNDP(x)(((___temp=(x))==___UNB1)||(___temp==___UNB2))
 #define ___EQP(x,y)((x)==(y))
