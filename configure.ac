@@ -8,6 +8,7 @@ AC_INIT(Gambit-C,v4.4.3,gambit@iro.umontreal.ca,gambc-v4_4_3)
 
 AC_CONFIG_HEADERS(include/config.h)
 
+CONFIGURE_COMMAND="$0 $@"
 PACKAGE_SHORTNAME="gambc"
 
 AC_SUBST(PACKAGE_SHORTNAME)
@@ -1556,6 +1557,7 @@ emacsdir="\${datadir}/emacs/site-lisp"
 LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
 LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
 LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\"" 
+LIBRARY_DEFS="$LIBRARY_DEFS -D___CONFIGURE_COMMAND=\"\\\"$CONFIGURE_COMMAND\\\"\"" 
 
 ###############################################################################
 

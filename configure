@@ -1971,6 +1971,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ac_config_headers="$ac_config_headers include/config.h"
 
 
+CONFIGURE_COMMAND="$0 $@"
 PACKAGE_SHORTNAME="gambc"
 
 
@@ -25251,6 +25252,7 @@ emacsdir="\${datadir}/emacs/site-lisp"
 LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
 LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
 LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\""
+LIBRARY_DEFS="$LIBRARY_DEFS -D___CONFIGURE_COMMAND=\"\\\"$CONFIGURE_COMMAND\\\"\""
 
 ###############################################################################
 

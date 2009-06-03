@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2009-02-11 22:28:43 feeley>
+;;; File: "main.scm", Time-stamp: <2009-06-03 12:33:06 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -448,6 +448,8 @@
               (##write (##system-stamp) ##stdout-port)
               (##write-string " " ##stdout-port)
               (##write-string ##os-system-type-string-saved ##stdout-port)
+              (##write-string " " ##stdout-port)
+              (##write ##os-configure-command-string-saved ##stdout-port)
               (##newline ##stdout-port)
               (##exit))
             (split-command-line

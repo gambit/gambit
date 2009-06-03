@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-03-19 10:33:44 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-06-03 12:26:04 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3672,6 +3672,14 @@ end-of-code
 
 (define-prim (system-type-string)
   ##os-system-type-string-saved)
+
+(define ##os-configure-command-string-saved
+  ((c-lambda ()
+             nonnull-char-string
+    "___os_configure_command_string")))
+
+(define-prim (configure-command-string)
+  ##os-configure-command-string-saved)
 
 (define ##system-stamp-saved
   ((c-lambda ()

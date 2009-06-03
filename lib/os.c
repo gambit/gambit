@@ -1,4 +1,4 @@
-/* File: "os.c", Time-stamp: <2009-03-14 12:58:48 feeley> */
+/* File: "os.c", Time-stamp: <2009-06-03 12:24:41 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1747,6 +1747,10 @@ ___SCMOBJ ___os_getppid ___PVOID
 #define ___SYS_TYPE_OS "unknown"
 #endif
 
+#ifndef ___CONFIGURE_COMMAND
+#define ___CONFIGURE_COMMAND "unknown"
+#endif
+
 
 ___HIDDEN char *os_sys_type[] =
 { ___SYS_TYPE_CPU, ___SYS_TYPE_VENDOR, ___SYS_TYPE_OS, NULL };
@@ -1754,6 +1758,9 @@ ___HIDDEN char *os_sys_type[] =
 
 ___HIDDEN char *os_sys_type_string =
 ___SYS_TYPE_CPU "-" ___SYS_TYPE_VENDOR "-" ___SYS_TYPE_OS;
+
+
+___HIDDEN char *configure_command_string = ___CONFIGURE_COMMAND;
 
 
 char **___os_system_type ___PVOID
@@ -1765,6 +1772,12 @@ char **___os_system_type ___PVOID
 char *___os_system_type_string ___PVOID
 {
   return os_sys_type_string;
+}
+
+
+char *___os_configure_command_string ___PVOID
+{
+  return configure_command_string;
 }
 
 
