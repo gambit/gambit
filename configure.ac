@@ -673,6 +673,7 @@ else
   AC_CHECK_FUNCS(rmdir)
   AC_CHECK_FUNCS(socket)
   AC_CHECK_FUNCS(stat)
+  AC_CHECK_FUNCS(stat64)
   AC_CHECK_FUNCS(strerror)
   AC_CHECK_FUNCS(symlink)
   AC_CHECK_FUNCS(sysconf)

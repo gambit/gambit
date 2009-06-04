@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-06-02 15:53:42 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-06-04 18:56:53 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -5375,9 +5375,9 @@ int fd;)
 #ifdef USE_stat
 
   {
-    struct stat s;
+    struct ___stat s;
 
-    if (fstat (fd, &s) < 0)
+    if (___fstat (fd, &s) < 0)
       return ___NONE_KIND;
 
     if (S_ISREG(s.st_mode))

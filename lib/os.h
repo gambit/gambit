@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2009-06-03 12:24:27 feeley> */
+/* File: "os.h", Time-stamp: <2009-06-04 19:30:18 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -161,8 +161,18 @@
 #define USE_NETWORKING
 #endif
 
+#ifdef HAVE_STAT64
+#define USE_stat
+#define ___stat stat64
+#define ___lstat lstat64
+#define ___fstat fstat64
+#else
 #ifdef HAVE_STAT
 #define USE_stat
+#define ___stat stat
+#define ___lstat lstat
+#define ___fstat fstat
+#endif
 #endif
 
 #ifdef HAVE_STRERROR
@@ -976,6 +986,9 @@ ___END_C_LINKAGE
 
 #ifdef INCLUDE_sys_stat_h
 #ifdef HAVE_SYS_STAT_H
+/* the following defines are useful on Linux to map stat to stat64 */
+#define __USE_LARGEFILE64
+#define __USE_FILE_OFFSET64
 #include <sys/stat.h>
 #endif
 #endif

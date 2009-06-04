@@ -1,4 +1,4 @@
-/* File: "config.h.in", Time-stamp: <2009-03-14 12:28:58 feeley> */
+/* File: "config.h.in", Time-stamp: <2009-06-04 18:47:47 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -114,6 +114,7 @@
 #undef HAVE_RMDIR
 #undef HAVE_SOCKET
 #undef HAVE_STAT
+#undef HAVE_STAT64
 #undef HAVE_STRERROR
 #undef HAVE_SYMLINK
 #undef HAVE_SYSCONF

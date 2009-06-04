@@ -1,4 +1,4 @@
-/* File: "os.c", Time-stamp: <2009-06-03 12:24:41 feeley> */
+/* File: "os.c", Time-stamp: <2009-06-04 18:57:32 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1155,11 +1155,11 @@ ___SCMOBJ chase;)
               0))
       == ___FIX(___NO_ERR))
     {
-      struct stat s;
+      struct ___stat s;
 
       if (((chase == ___FAL)
-           ? lstat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s)
-           : stat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s))
+           ? ___lstat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s)
+           : ___stat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s))
           < 0)
         {
           e = fnf_or_err_code_from_errno ();
