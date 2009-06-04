@@ -83,6 +83,7 @@ DISTFILES = $(RCFILES) $(GENDISTFILES)
 
 INSTFILES_DOC = gambit-c.pdf gambit-c*.html gambit-c.txt
 INSTFILES_INFO = gambit-c.info*
+INSTFILES_MAN = gsi.1
 
 all: all-pre all-recursive all-post
 
@@ -150,17 +151,24 @@ install-post: all doc
 	c_infodir=$(DESTDIR)$(prefix)/info; \
 	i_infodir=$(DESTDIR)$(infodir); \
 	t_infodir=$$i_infodir; \
-	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_docdir $$i_infodir; \
+	c_mandir=$(DESTDIR)$(prefix)/doc/man/man1; \
+	i_mandir=$(DESTDIR)$(mandir)/man1; \
+	t_mandir=$$i_mandir; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_docdir $$i_infodir $$i_mandir; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_docdir $$c_infodir; \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_docdir $$c_infodir $$c_mandir; \
 	  t_docdir=$$c_docdir; \
 	  t_infodir=$$c_infodir; \
+	  t_mandir=$$c_mandir; \
 	fi; \
 	for file in $(INSTFILES_DOC); do \
 	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_docdir/$$file; \
 	done; \
 	for file in $(INSTFILES_INFO); do \
 	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_infodir/$$file; \
+	done; \
+	for file in $(INSTFILES_MAN); do \
+	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_mandir/$$file; \
 	done; \
 	if test "$$t_docdir" != "$$i_docdir"; then \
 	  r_docdir=`$(rootfromhere)/relpath "$$t_docdir" "$$i_docdir" @ENABLE_MULTIPLE_VERSIONS@`; \
@@ -173,6 +181,12 @@ install-post: all doc
 	  for file in $(INSTFILES_INFO); do \
 	    (cd $$i_infodir && $(LN_S) $$r_infodir$$file $$file); \
 	  done; \
+	fi; \
+	if test "$$t_mandir" != "$$i_mandir"; then \
+	  r_mandir=`$(rootfromhere)/relpath "$$t_mandir" "$$i_mandir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	  for file in $(INSTFILES_MAN); do \
+	    (cd $$i_mandir && $(LN_S) $$r_mandir$$file $$file); \
+	  done; \
 	fi
 
 uninstall-pre:
@@ -184,15 +198,22 @@ uninstall-post:
 	c_infodir=$(DESTDIR)$(prefix)/info; \
 	i_infodir=$(DESTDIR)$(infodir); \
 	t_infodir=$$i_infodir; \
+	c_mandir=$(DESTDIR)$(prefix)/doc/man/man1; \
+	i_mandir=$(DESTDIR)$(mandir)/man1; \
+	t_mandir=$$i_mandir; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
 	  t_docdir=$$c_docdir; \
 	  t_infodir=$$c_infodir; \
+	  t_mandir=$$c_mandir; \
 	fi; \
 	for file in $(INSTFILES_DOC); do \
 	  rm -f $$t_docdir/$$file; \
 	done; \
 	for file in $(INSTFILES_INFO); do \
 	  rm -f $$t_infodir/$$file; \
+	done; \
+	for file in $(INSTFILES_MAN); do \
+	  rm -f $$t_mandir/$$file; \
 	done; \
 	if test "$$t_docdir" != "$$i_docdir"; then \
 	  for file in $(INSTFILES_DOC); do \
@@ -204,6 +225,11 @@ uninstall-post:
 	    rm -f $$i_infodir/$$file; \
 	  done; \
 	fi; \
+	if test "$$t_mandir" != "$$i_mandir"; then \
+	  for file in $(INSTFILES_MAN); do \
+	    rm -f $$i_mandir/$$file; \
+	  done; \
+	fi; \
 	rmdir $$t_docdir 2> /dev/null; \
 	if test "$$t_docdir" != "$$i_docdir"; then \
 	  rmdir $$i_docdir 2> /dev/null; \
@@ -211,6 +237,10 @@ uninstall-post:
 	rmdir $$t_infodir 2> /dev/null; \
 	if test "$$t_infodir" != "$$i_infodir"; then \
 	  rmdir $$i_infodir 2> /dev/null; \
+	fi; \
+	rmdir $$t_mandir 2> /dev/null; \
+	if test "$$t_mandir" != "$$i_mandir"; then \
+	  rmdir $$i_mandir 2> /dev/null; \
 	fi
 
 mostlyclean-pre:
