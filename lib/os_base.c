@@ -186,19 +186,6 @@ unsigned long bytes;)
 
 #endif
 
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-  if (___base_mod.file != 0)
-    ___printf ("%p (%lu bytes) ALLOCATED AT \"%s\"@%d.1\n",
-               ptr,
-               bytes,
-               ___base_mod.file,
-               ___base_mod.lineno);
-  else
-    ___printf ("%p (%lu bytes) ALLOCATED\n", ptr, bytes);
-#endif
-#endif
-
   return ptr;
 }
 
@@ -263,13 +250,16 @@ char *file;)
 {
   void *ptr;
 
-  ___base_mod.lineno = lineno;
-  ___base_mod.file = file;
-
   ptr = ___alloc_mem (bytes);
 
-  ___base_mod.lineno = 0;
-  ___base_mod.file = 0;
+  if (file != 0)
+    ___printf ("%p (%lu bytes) ALLOCATED AT \"%s\"@%d.1\n",
+               ptr,
+               bytes,
+               file,
+               lineno);
+  else
+    ___printf ("%p (%lu bytes) ALLOCATED\n", ptr, bytes);
 
   return ptr;
 }
@@ -284,10 +274,20 @@ char *file;)
 /* Program startup */
 
 
+/*
+ * ___main_char, ___main_UCS_2, and ___winmain are variants of main
+ * entry points which differ in the format of the arguments; the first
+ * two are always compiled in since they could be useful on all
+ * systems for embedding of Gambit.
+ */
+
+
+/* To keep command line and runtime flag information around: */
+
 ___program_startup_info_struct ___program_startup_info =
 {
-  0,
-  0
+  0, /* argument vector */
+  0  /* runtime flag string */
 
 #ifdef ___OS_WIN32
   ,
@@ -1447,13 +1447,6 @@ ___SCMOBJ ___setup_base_module ___PVOID
 
       ___base_mod.alloc_mem_calls = 0;
       ___base_mod.free_mem_calls = 0;
-
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-
-      ___base_mod.lineno = 0;
-      ___base_mod.file = 0;
-
-#endif
 
 #endif
 
