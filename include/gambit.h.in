@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2009-06-03 16:32:47 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-06-05 17:26:53 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -2975,6 +2975,7 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___GCHASHTABLE_FLAG_KEY_MOVED      4
 #define ___GCHASHTABLE_FLAG_ENTRY_DELETED  8
 #define ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS 16
+#define ___GCHASHTABLE_FLAG_NEED_REHASH    32
 
 #define ___GCHASHTABLE_NEXT      0
 #define ___GCHASHTABLE_FLAGS     1

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2008-02-12 14:56:37 feeley>
+;;; File: "_system.scm", Time-stamp: <2009-06-05 17:24:20 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -625,7 +625,9 @@
       (##fixnum.bitwise-not
        (##fixnum.bitwise-ior
         (macro-gc-hash-table-flag-key-moved)
-        (macro-gc-hash-table-flag-entry-deleted))))
+        (##fixnum.bitwise-ior
+         (macro-gc-hash-table-flag-entry-deleted)
+         (macro-gc-hash-table-flag-need-rehash)))))
      loads)))
 
 (define-prim (##gc-hash-table-allocate n flags loads)
