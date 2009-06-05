@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2009-06-05 11:13:50 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2009-06-05 17:37:02 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -5096,7 +5096,7 @@
     (setup-set-c...r!-primitive 0)  ; set-car!
     (setup-set-c...r!-primitive 1)) ; set-cdr!
 
-  (define (make-assq-memq-expander assq?)
+  (define (make-assq-memq-expander prim)
     (lambda (ptree oper args generate-call check-run-time-binding)
       (let* ((source
               (node-source ptree))
@@ -5146,13 +5146,15 @@
                           '()
                           #f
                           #f
-                          (if assq?
+                          (if (memq prim '(assq assv))
                             (let ()
 
                               (define (gen-test)
                                 (new-tst source env
                                   (gen-call-prim source env
-                                    **eq?-sym
+                                    (if (eq? prim 'assq)
+                                        **eq?-sym
+                                        **eqv?-sym)
                                     (list (new-ref source env
                                             obj-var)
                                           (gen-call-prim-vars source env
@@ -5177,7 +5179,9 @@
                                 (gen-test)))
                             (new-tst source env
                               (gen-call-prim source env
-                                **eq?-sym
+                                (if (eq? prim 'memq)
+                                    **eq?-sym
+                                    **eqv?-sym)
                                 (list (new-ref source env
                                         obj-var)
                                       (new-ref source env
@@ -5211,7 +5215,7 @@
               (generate-call vars))
             (gen-main-loop))))))
 
-  (define (make-map-for-each-expander map?)
+  (define (make-map-for-each-expander prim)
     (lambda (ptree oper args generate-call check-run-time-binding)
       (let* ((source
               (node-source ptree))
@@ -5290,7 +5294,7 @@
                                               **cdr-sym
                                               (list var)))
                                           lst2-vars))))
-                              (if map?
+                              (if (eq? prim 'map)
                                 (gen-call-prim source env
                                   **cons-sym
                                   (list (new-ref source env
@@ -5306,7 +5310,7 @@
                                               (list var)))
                                           lst2-vars))))
                         (new-cst source env
-                          (if map?
+                          (if (eq? prim 'map)
                             '()
                             void-object))))))))
 
@@ -5388,10 +5392,12 @@
   (setup-c...r-primitives)
   (setup-set-c...r!-primitives)
 
-  (targ-exp "assq" (make-assq-memq-expander #t))
-  (targ-exp "memq" (make-assq-memq-expander #f))
-  (targ-exp "map" (make-map-for-each-expander #t))
-  (targ-exp "for-each" (make-map-for-each-expander #f)))
+  (targ-exp "assq" (make-assq-memq-expander 'assq))
+  (targ-exp "assv" (make-assq-memq-expander 'assv))
+  (targ-exp "memq" (make-assq-memq-expander 'memq))
+  (targ-exp "memv" (make-assq-memq-expander 'memv))
+  (targ-exp "map" (make-map-for-each-expander 'map))
+  (targ-exp "for-each" (make-map-for-each-expander 'for-each)))
 
 (define (setup-numeric-primitives)
 
