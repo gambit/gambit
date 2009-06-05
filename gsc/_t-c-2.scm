@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2009-06-03 18:03:48 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2009-06-05 11:13:50 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -5213,152 +5213,177 @@
 
   (define (make-map-for-each-expander map?)
     (lambda (ptree oper args generate-call check-run-time-binding)
-      (and (= (length args) 2)
-           (let* ((source
-                   (node-source ptree))
-                  (env
-                   (node-env ptree))
-                  (vars
-                   (gen-temp-vars source args))
-                  (f-var
-                   (car vars))
-                  (lst-var
-                   (cadr vars)))
+      (let* ((source
+              (node-source ptree))
+             (env
+              (node-env ptree))
+             (vars
+              (gen-temp-vars source args))
+             (f-var
+              (car vars))
+             (lst-vars
+              (cdr vars)))
 
-             (define (gen-main-loop)
-               (let* ((loop2-var
-                       (new-temp-variable source 'loop2))
-                      (lst2-var
-                       (new-temp-variable source 'lst2))
-                      (x-var
-                       (new-temp-variable source 'x)))
-                 (new-call source env
-                   (new-prc source env
-                     #f
-                     #f
-                     (list loop2-var)
-                     '()
-                     #f
-                     #f
-                     (new-call source env
-                       (new-ref source env
-                         loop2-var)
-                       (list (new-ref source env
-                               lst-var))))
-                   (list (new-prc source env
-                           #f
-                           #f
-                           (list lst2-var)
-                           '()
-                           #f
-                           #f
-                           (new-tst source env
-                             (gen-call-prim-vars source env
-                               **pair?-sym
-                               (list lst2-var))
-                             (new-call source env
-                               (new-prc source env
-                                 #f
-                                 #f
-                                 (list x-var)
-                                 '()
-                                 #f
-                                 #f
-                                 (let ((rec-call
-                                        (new-call source env
-                                          (new-ref source env
-                                            loop2-var)
-                                          (list (gen-call-prim-vars source env
-                                                  **cdr-sym
-                                                  (list lst2-var))))))
-                                   (if map?
-                                     (gen-call-prim source env
-                                       **cons-sym
-                                       (list (new-ref source env
-                                               x-var)
-                                             rec-call))
-                                     rec-call)))
-                               (list (new-call source env
-                                       (new-ref source env
-                                         f-var)
-                                       (list (gen-call-prim-vars source env
-                                               **car-sym
-                                               (list lst2-var))))))
-                             (new-cst source env
-                               (if map?
-                                 '()
-                                 void-object))))))))
-             (define (gen-check)
-               (let* ((loop1-var
-                       (new-temp-variable source 'loop1))
-                      (lst1-var
-                       (new-temp-variable source 'lst1)))
-                 (new-call source env
-                   (new-prc source env
-                     #f
-                     #f
-                     (list loop1-var)
-                     '()
-                     #f
-                     #f
-                     (new-call source env
-                       (new-ref source env
-                         loop1-var)
-                       (list (new-ref source env
-                               lst-var))))
-                   (list (new-prc source env
-                           #f
-                           #f
-                           (list lst1-var)
-                           '()
-                           #f
-                           #f
-                           (new-tst source env
-                             (gen-call-prim-vars source env
-                               **pair?-sym
-                               (list lst1-var))
-                             (new-call source env
-                               (new-ref source env
-                                 loop1-var)
-                               (list (gen-call-prim-vars source env
-                                       **cdr-sym
-                                       (list lst1-var))))
-                             (new-tst source env
-                               (gen-call-prim-vars source env
-                                 **null?-sym
-                                 (list lst1-var))
-                               (gen-main-loop)
-                               (generate-call vars)))))))
-               (gen-main-loop))
+        (define (gen-conj-call-prim-vars source env prim vars)
+          (if (pair? vars)
+              (let ((code
+                     (gen-call-prim-vars source env
+                       prim
+                       (list (car vars)))))
+                (if (null? (cdr vars))
+                    code
+                    (new-conj source env
+                      code
+                      (gen-conj-call-prim-vars source env prim (cdr vars)))))
+              (new-cst source env
+                #t)))
 
-             (gen-prc source env
-               vars
-               (let ((check-proc
-                      (and (safe? env)
-                           (let ((f-arg (car args)))
-                             (and (not (or (prc? f-arg)
-                                           (and (cst? f-arg)
-                                                (proc-obj? (cst-val f-arg)))))
-                                  (gen-call-prim-vars source env
-                                    **procedure?-sym
-                                    (list f-var)))))))
-                 (if (or check-run-time-binding
-                         check-proc)
-                   (new-tst source env
-                     (cond ((and check-run-time-binding
-                                 check-proc)
-                            (new-conj source env
-                              (check-run-time-binding)
-                              check-proc))
-                           (check-run-time-binding
-                            (check-run-time-binding))
-                           (else
-                            check-proc))
-                     (if (safe? env)
-                       (gen-check)
-                       (gen-main-loop))
-                     (generate-call vars))
-                   (gen-main-loop))))))))
+        (define (gen-main-loop)
+          (let* ((loop2-var
+                  (new-temp-variable source 'loop2))
+                 (lst2-vars
+                  (gen-temp-vars source lst-vars))
+                 (x-var
+                  (new-temp-variable source 'x)))
+            (new-call source env
+              (new-prc source env
+                #f
+                #f
+                (list loop2-var)
+                '()
+                #f
+                #f
+                (new-call source env
+                  (new-ref source env
+                    loop2-var)
+                  (map (lambda (var)
+                         (new-ref source env
+                           var))
+                       lst-vars)))
+              (list (new-prc source env
+                      #f
+                      #f
+                      lst2-vars
+                      '()
+                      #f
+                      #f
+                      (new-tst source env
+                        (gen-conj-call-prim-vars source env
+                          **pair?-sym
+                          (if (safe? env) ;; in case lists are truncated by other threads
+                              lst2-vars
+                              (list (car lst2-vars))))
+                        (new-call source env
+                          (new-prc source env
+                            #f
+                            #f
+                            (list x-var)
+                            '()
+                            #f
+                            #f
+                            (let ((rec-call
+                                   (new-call source env
+                                     (new-ref source env
+                                       loop2-var)
+                                     (map (lambda (var)
+                                            (gen-call-prim-vars source env
+                                              **cdr-sym
+                                              (list var)))
+                                          lst2-vars))))
+                              (if map?
+                                (gen-call-prim source env
+                                  **cons-sym
+                                  (list (new-ref source env
+                                          x-var)
+                                        rec-call))
+                                rec-call)))
+                          (list (new-call source env
+                                  (new-ref source env
+                                    f-var)
+                                  (map (lambda (var)
+                                            (gen-call-prim-vars source env
+                                              **car-sym
+                                              (list var)))
+                                          lst2-vars))))
+                        (new-cst source env
+                          (if map?
+                            '()
+                            void-object))))))))
+
+        (define (gen-check)
+          (let* ((loop1-var
+                  (new-temp-variable source 'loop1))
+                 (lst1-vars
+                  (gen-temp-vars source lst-vars)))
+            (new-call source env
+              (new-prc source env
+                #f
+                #f
+                (list loop1-var)
+                '()
+                #f
+                #f
+                (new-call source env
+                  (new-ref source env
+                    loop1-var)
+                  (map (lambda (var)
+                         (new-ref source env
+                           var))
+                       lst-vars)))
+              (list (new-prc source env
+                      #f
+                      #f
+                      lst1-vars
+                      '()
+                      #f
+                      #f
+                      (new-tst source env
+                        (gen-conj-call-prim-vars source env
+                          **pair?-sym
+                          lst1-vars)
+                        (new-call source env
+                          (new-ref source env
+                            loop1-var)
+                          (map (lambda (var)
+                                 (gen-call-prim-vars source env
+                                   **cdr-sym
+                                   (list var)))
+                               lst1-vars))
+                        (new-tst source env
+                          (gen-conj-call-prim-vars source env
+                            **null?-sym
+                            lst1-vars)
+                          (gen-main-loop)
+                          (generate-call vars))))))))
+
+        (gen-prc source env
+          vars
+          (let ((check-proc
+                 (and (safe? env)
+                      (let ((f-arg (car args)))
+                        (and (not (or (prc? f-arg)
+                                      (and (cst? f-arg)
+                                           (proc-obj? (cst-val f-arg)))))
+                             (gen-call-prim-vars source env
+                               **procedure?-sym
+                               (list f-var)))))))
+            (if (or check-run-time-binding
+                    check-proc)
+              (new-tst source env
+                (cond ((and check-run-time-binding
+                            check-proc)
+                       (new-conj source env
+                         (check-run-time-binding)
+                         check-proc))
+                      (check-run-time-binding
+                       (check-run-time-binding))
+                      (else
+                       check-proc))
+                (if (safe? env)
+                  (gen-check)
+                  (gen-main-loop))
+                (generate-call vars))
+              (gen-main-loop)))))))
 
   (setup-c...r-primitives)
   (setup-set-c...r!-primitives)
