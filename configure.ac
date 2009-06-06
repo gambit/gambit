@@ -921,7 +921,7 @@ if test "$C_COMP_GNUC" = yes; then
              ;;
 
           *) # other systems are fine as far as I can tell
-             if test "$ENABLE_DEBUG" != yes -o "$ENABLE_PROFILE" != yes; then
+             if test "$ENABLE_DEBUG" != yes -a "$ENABLE_PROFILE" != yes; then
                FLAGS_OBJ="$FLAGS_OBJ$DASH_fomit_frame_pointer"
                FLAGS_DYN="$FLAGS_DYN$DASH_fomit_frame_pointer"
              fi
