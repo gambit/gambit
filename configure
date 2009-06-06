@@ -720,7 +720,9 @@ DASH_Wno_unused
 DASH_g
 DASH_p
 DASH_pg
+DASH_ftest_coverage
 DASH_fprofile_arcs
+DASH_fbranch_probabilities
 DASH_O1
 DASH_fno_math_errno
 DASH_fschedule_insns2
@@ -20768,7 +20770,46 @@ fi
 fi
 { $as_echo "$as_me:$LINENO: result: $DASH_pg" >&5
 $as_echo "$DASH_pg" >&6; }
-  #AC_CHECK_C_COMPILER_OPT(-ftest-coverage,DASH_ftest_coverage)
+  { $as_echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -ftest-coverage" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftest-coverage... " >&6; }
+if test "${DASH_ftest_coverage+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftest-coverage"
+CXXFLAGS="-ftest-coverage"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  DASH_ftest_coverage=" -ftest-coverage"
+else
+  DASH_ftest_coverage=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:$LINENO: result: $DASH_ftest_coverage" >&5
+$as_echo "$DASH_ftest_coverage" >&6; }
   { $as_echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -fprofile-arcs" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fprofile-arcs... " >&6; }
 if test "${DASH_fprofile_arcs+set}" = set; then
@@ -20809,6 +20850,46 @@ fi
 fi
 { $as_echo "$as_me:$LINENO: result: $DASH_fprofile_arcs" >&5
 $as_echo "$DASH_fprofile_arcs" >&6; }
+  { $as_echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -fbranch-probabilities" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fbranch-probabilities... " >&6; }
+if test "${DASH_fbranch_probabilities+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fbranch-probabilities"
+CXXFLAGS="-fbranch-probabilities"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  DASH_fbranch_probabilities=" -fbranch-probabilities"
+else
+  DASH_fbranch_probabilities=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:$LINENO: result: $DASH_fbranch_probabilities" >&5
+$as_echo "$DASH_fbranch_probabilities" >&6; }
 
   # optimization options:
   { $as_echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -O1" >&5
@@ -21134,7 +21215,6 @@ $as_echo "$DASH_fno_move_loop_invariants" >&6; }
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
-#  AC_CHECK_C_COMPILER_OPT(-fbranch-probabilities,DASH_fbranch_probabilities)
 #  AC_CHECK_C_COMPILER_OPT(-fforce-addr,DASH_fforce_addr)
 #  AC_CHECK_C_COMPILER_OPT(-fpeephole2,DASH_fpeephole2)
 #  AC_CHECK_C_COMPILER_OPT(-falign-jumps,DASH_falign_jumps)
@@ -21911,11 +21991,6 @@ $as_echo "$DASH_shared" >&6; }
     FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
   fi
 
-  if test "$ENABLE_DEBUG" != yes; then
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
-    FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
-  fi
-
   FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
   FLAGS_DYN="$FLAGS_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
 
@@ -21955,12 +22030,16 @@ $as_echo "$DASH_shared" >&6; }
 
   if test "$ENABLE_FEEDBACK1" = yes; then
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fprofile_arcs"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
+    #FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
+    FLAGS_LIB="$FLAGS_LIB$DASH_fprofile_arcs"
+    FLAGS_EXE="$FLAGS_EXE$DASH_fprofile_arcs"
   fi
 
   if test "$ENABLE_FEEDBACK2" = yes; then
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fbranch_probabilities"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
+    #FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
+    FLAGS_LIB="$FLAGS_LIB$DASH_fbranch_probabilities"
+    FLAGS_EXE="$FLAGS_EXE$DASH_fbranch_probabilities"
   fi
 
   if test "x$DASH_fPIC" != x; then

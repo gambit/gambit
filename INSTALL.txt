@@ -1,7 +1,7 @@
                 Installation instructions for Gambit-C
                 ======================================
 
-              [Time-stamp: <2009-02-11 11:12:55 feeley>]
+              [Time-stamp: <2009-06-06 08:45:50 feeley>]
 
 
 This directory contains a release of the Gambit-C Scheme programming
@@ -154,8 +154,23 @@ both to C and C++).
 The option --enable-shared will build a shared library for the
 Gambit-C runtime system.  This is not supported on all platforms.
 
-The option --enable-debug and --enable-profile, --enable-feedback1, and
---enable-feedback2 are useful for debugging the system.
+The options --enable-debug and --enable-profile are useful for
+debugging the system.
+
+The options --enable-feedback1 and --enable-feedback2 are useful for
+building the system such that it is optimized for a particular use
+case.  The system should first be built with --enable-feedback1, then
+one or more sample executions of the system should be performed, and
+then finally the system should be built with --enable-feedback2.  For
+example:
+
+  % ./configure --single-host --enable-feedback1
+  % make
+  % gsc/gsc -:=. my-favorite-program.scm
+  % gsi/gsi -:=. my-favorite-program.o1
+  % make mostlyclean
+  % ./configure --single-host --enable-feedback2
+  % make
 
 The option --enable-symlinks is useful when the --bindir, --libdir,
 ... options are used.  The files will actually be stored in the

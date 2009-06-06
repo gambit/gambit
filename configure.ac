@@ -769,8 +769,9 @@ if test "$C_COMP_GNUC" = yes; then
   # profiling options:
   AC_CHECK_C_COMPILER_OPT(-p,DASH_p)
   AC_CHECK_C_COMPILER_OPT(-pg,DASH_pg)
-  #AC_CHECK_C_COMPILER_OPT(-ftest-coverage,DASH_ftest_coverage)
+  AC_CHECK_C_COMPILER_OPT(-ftest-coverage,DASH_ftest_coverage)
   AC_CHECK_C_COMPILER_OPT(-fprofile-arcs,DASH_fprofile_arcs)
+  AC_CHECK_C_COMPILER_OPT(-fbranch-probabilities,DASH_fbranch_probabilities)
 
   # optimization options:
   AC_CHECK_C_COMPILER_OPT(-O1,DASH_O1)
@@ -784,7 +785,6 @@ if test "$C_COMP_GNUC" = yes; then
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
-#  AC_CHECK_C_COMPILER_OPT(-fbranch-probabilities,DASH_fbranch_probabilities)
 #  AC_CHECK_C_COMPILER_OPT(-fforce-addr,DASH_fforce_addr)
 #  AC_CHECK_C_COMPILER_OPT(-fpeephole2,DASH_fpeephole2)
 #  AC_CHECK_C_COMPILER_OPT(-falign-jumps,DASH_falign_jumps)
@@ -898,11 +898,6 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
   fi
 
-  if test "$ENABLE_DEBUG" != yes; then
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
-    FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
-  fi
-
   FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
   FLAGS_DYN="$FLAGS_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
 
@@ -942,12 +937,16 @@ if test "$C_COMP_GNUC" = yes; then
 
   if test "$ENABLE_FEEDBACK1" = yes; then
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fprofile_arcs"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
+    #FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
+    FLAGS_LIB="$FLAGS_LIB$DASH_fprofile_arcs"
+    FLAGS_EXE="$FLAGS_EXE$DASH_fprofile_arcs"
   fi
 
   if test "$ENABLE_FEEDBACK2" = yes; then
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fbranch_probabilities"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
+    #FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
+    FLAGS_LIB="$FLAGS_LIB$DASH_fbranch_probabilities"
+    FLAGS_EXE="$FLAGS_EXE$DASH_fbranch_probabilities"
   fi
 
   if test "x$DASH_fPIC" != x; then
