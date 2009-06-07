@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2008-12-17 09:04:13 feeley> */
+/* File: "setup.c", Time-stamp: <2009-06-07 19:04:22 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -1494,7 +1494,15 @@ double x;)
 
 #else
 
-  return ((___FETCH_U16(&x,F64_HI16) ^ 0x7ff0) & 0x7fff) >= 0x10;
+  union
+    {
+      ___U16 u16[4];
+      ___F64 f64;
+    } y;
+
+  y.f64 = x;
+
+  return ((y.u16[F64_HI16] ^ 0x7ff0) & 0x7fff) >= 0x10;
 
 #endif
 }
@@ -1511,9 +1519,17 @@ double x;)
 
 #else
 
-  ___UM32 tmp = (___FETCH_U32(&x,F64_HI32) ^ 0x7ff00000) & 0x7fffffff;
+  union
+    {
+      ___U32 u32[2];
+      ___F64 f64;
+    } y;
 
-  return tmp < 0x100000 && (tmp | ___FETCH_U32(&x,F64_LO32)) != 0;
+  y.f64 = x;
+
+  ___UM32 tmp = (y.u32[F64_HI32] ^ 0x7ff00000) & 0x7fffffff;
+
+  return tmp < 0x100000 && (tmp | y.u32[F64_LO32]) != 0;
 
 #endif
 }
