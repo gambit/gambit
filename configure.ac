@@ -40,6 +40,9 @@ FLAGS_OBJ=""
 FLAGS_DYN=""
 FLAGS_LIB=""
 FLAGS_EXE=""
+FLAGS_OBJ_DYN=""
+FLAGS_OBJ_DYN_LIB_EXE=""
+FLAGS_DYN_LIB=""
 GSC_CC_O_DEFS="-D___DYNAMIC"
 LIBRARY_DEFS=""
 
@@ -876,48 +879,35 @@ if test "$C_COMP_GNUC" = yes; then
 
   case "$target_os" in
     darwin*) # avoid the default C preprocessor which is setup for Objective-C
-             FLAGS_OBJ="$FLAGS_OBJ$DASH_no_cpp_precomp"
-             FLAGS_DYN="$FLAGS_DYN$DASH_no_cpp_precomp"
+             FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_no_cpp_precomp"
              ;;
   esac
 
-  FLAGS_OBJ="$FLAGS_OBJ$DASH_Wall$DASH_W$DASH_Wno_unused"
-  FLAGS_DYN="$FLAGS_DYN$DASH_Wall$DASH_W$DASH_Wno_unused"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_unused"
 
   if test "$ENABLE_DEBUG" = yes; then
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_g"
-    FLAGS_DYN="$FLAGS_DYN$DASH_g"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
   fi
 
   if test "$ENABLE_PROFILE" = yes; then
     if test "x$DASH_pg" != x; then
-      FLAGS_OBJ="$FLAGS_OBJ$DASH_pg"
-      FLAGS_DYN="$FLAGS_DYN$DASH_pg"
-      FLAGS_LIB="$FLAGS_LIB$DASH_pg"
-      FLAGS_EXE="$FLAGS_EXE$DASH_pg"
+      FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_pg"
     else
-      FLAGS_OBJ="$FLAGS_OBJ$DASH_p"
-      FLAGS_DYN="$FLAGS_DYN$DASH_p"
-      FLAGS_LIB="$FLAGS_LIB$DASH_p"
-      FLAGS_EXE="$FLAGS_EXE$DASH_p"
+      FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_p"
     fi
   fi
 
   if test "$ENABLE_DEBUG" != yes; then
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
-    FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
   fi
 
-  FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
-  FLAGS_DYN="$FLAGS_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
 
 # It isn't clear these are useful:
-#  FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
-#  FLAGS_DYN="$FLAGS_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
+#  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
 
   if test "$ENABLE_GCC_OPTS" = yes; then
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_fmodulo_sched$DASH_freschedule_modulo_scheduled_loops"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fmodulo_sched$DASH_freschedule_modulo_scheduled_loops"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched$DASH_freschedule_modulo_scheduled_loops"
   fi
 
   case "$target_os" in
@@ -927,8 +917,7 @@ if test "$C_COMP_GNUC" = yes; then
 
           *) # other systems are fine as far as I can tell
              if test "$ENABLE_DEBUG" != yes -a "$ENABLE_PROFILE" != yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_fomit_frame_pointer"
-               FLAGS_DYN="$FLAGS_DYN$DASH_fomit_frame_pointer"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fomit_frame_pointer"
              fi
              ;;
   esac
@@ -941,56 +930,42 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_move_loop_invariants"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fno_move_loop_invariants"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_move_loop_invariants"
   fi
 
   if test "$ENABLE_FEEDBACK1" = yes -o "$ENABLE_COVERAGE" = yes; then
     AC_DEFINE(___DONT_UNLOAD_DYN_CODE)
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_fprofile_arcs"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
-    FLAGS_LIB="$FLAGS_LIB$DASH_fprofile_arcs"
-    FLAGS_EXE="$FLAGS_EXE$DASH_fprofile_arcs"
+    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_fprofile_arcs"
     if test "$ENABLE_COVERAGE" = yes; then
-      FLAGS_OBJ="$FLAGS_OBJ$DASH_ftest_coverage"
-      FLAGS_DYN="$FLAGS_DYN$DASH_ftest_coverage"
-      FLAGS_LIB="$FLAGS_LIB$DASH_ftest_coverage"
-      FLAGS_EXE="$FLAGS_EXE$DASH_ftest_coverage"
+      FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_ftest_coverage"
     fi
   fi
 
   if test "$ENABLE_FEEDBACK2" = yes; then
     AC_DEFINE(___DONT_UNLOAD_DYN_CODE)
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_fbranch_probabilities"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
-    FLAGS_LIB="$FLAGS_LIB$DASH_fbranch_probabilities"
-    FLAGS_EXE="$FLAGS_EXE$DASH_fbranch_probabilities"
+    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_fbranch_probabilities"
   fi
 
   if test "x$DASH_fPIC" != x; then
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_fPIC"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fPIC"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fPIC"
   else
-    FLAGS_OBJ="$FLAGS_OBJ$DASH_fpic"
-    FLAGS_DYN="$FLAGS_DYN$DASH_fpic"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpic"
   fi
 
-  FLAGS_OBJ="$FLAGS_OBJ$DASH_fno_common"
-  FLAGS_DYN="$FLAGS_DYN$DASH_fno_common"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_common"
 
-  FLAGS_OBJ="$FLAGS_OBJ$DASH_mieee$DASH_mieee_with_inexact$DASH_mieee_fp"
-  FLAGS_DYN="$FLAGS_DYN$DASH_mieee$DASH_mieee_with_inexact$DASH_mieee_fp"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee$DASH_mieee_with_inexact$DASH_mieee_fp"
 
   case "$target_os" in
 
     darwin*) # check for special options added by Apple
-             FLAGS_DYN="$FLAGS_DYN$DASH_bundle$DASH_flat_namespace_undefined_suppress"
-             FLAGS_LIB="$FLAGS_LIB$DASH_dynamiclib$DASH_flat_namespace_undefined_suppress"
+             FLAGS_DYN="$FLAGS_DYN$DASH_bundle"
+             FLAGS_LIB="$FLAGS_LIB$DASH_dynamiclib"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_flat_namespace_undefined_suppress"
              ;;
 
           *) # for other systems
-             FLAGS_DYN="$FLAGS_DYN$DASH_rdynamic$DASH_shared"
-             FLAGS_LIB="$FLAGS_LIB$DASH_rdynamic$DASH_shared"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_rdynamic$DASH_shared"
              FLAGS_EXE="$FLAGS_EXE$DASH_rdynamic"
              ;;
   esac
@@ -999,10 +974,8 @@ else if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  FLAGS_OBJ="$FLAGS_OBJ -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE"
-  FLAGS_DYN="$FLAGS_DYN -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD"
-  FLAGS_LIB="$FLAGS_LIB -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE"
-  FLAGS_EXE="$FLAGS_EXE -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE"
+  FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE"
+  FLAGS_DYN="$FLAGS_DYN -LD"
 
 #else if test "$C_COMP_WATCOMC" = yes; then
 #else if test "$C_COMP_BORLANDC" = yes; then
@@ -1033,27 +1006,20 @@ else
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
              if test "$ENABLE_DEBUG" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_g"
-               FLAGS_DYN="$FLAGS_DYN$DASH_g"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
              fi
 
              if test "$ENABLE_PROFILE" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_p"
-               FLAGS_DYN="$FLAGS_DYN$DASH_p"
-               FLAGS_LIB="$FLAGS_LIB$DASH_p"
-               FLAGS_EXE="$FLAGS_EXE$DASH_p"
+               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_p"
              fi
 
              if test "$ENABLE_DEBUG" != yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_xO2"
-               FLAGS_DYN="$FLAGS_DYN$DASH_xO2"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_xO2"
              fi
 
-             FLAGS_OBJ="$FLAGS_OBJ$DASH_KPIC"
-             FLAGS_DYN="$FLAGS_DYN$DASH_KPIC"
+             FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_KPIC"
 
-             FLAGS_DYN="$FLAGS_DYN$DASH_G"
-             FLAGS_LIB="$FLAGS_LIB$DASH_G"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_G"
              ;;
 
        osf*) ########## Probably using the Compaq Tru64 UNIX C/C++ compiler...
@@ -1079,27 +1045,20 @@ else
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
              if test "$ENABLE_DEBUG" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_g"
-               FLAGS_DYN="$FLAGS_DYN$DASH_g"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
              fi
 
              if test "$ENABLE_PROFILE" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_p"
-               FLAGS_DYN="$FLAGS_DYN$DASH_p"
-               FLAGS_LIB="$FLAGS_LIB$DASH_p"
-               FLAGS_EXE="$FLAGS_EXE$DASH_p"
+               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_p"
              fi
 
              if test "$ENABLE_DEBUG" != yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_O2"
-               FLAGS_DYN="$FLAGS_DYN$DASH_O2"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O2"
              fi
 
-             FLAGS_OBJ="$FLAGS_OBJ$DASH_ieee$DASH_call_shared"
-             FLAGS_DYN="$FLAGS_DYN$DASH_ieee$DASH_call_shared"
+             FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_ieee$DASH_call_shared"
 
-             FLAGS_DYN="$FLAGS_DYN$DASH_shared$DASH_expect_unresolved"
-             FLAGS_LIB="$FLAGS_LIB$DASH_shared$DASH_expect_unresolved"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_shared$DASH_expect_unresolved"
              ;;
 
       irix*) ########## Probably using the MIPSpro C/C++ compiler...
@@ -1125,24 +1084,19 @@ else
 
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
-             FLAGS_OBJ="$FLAGS_OBJ$DASH_fullwarn$DASH_woff_1110_1174_1209_1552_3201"
-             FLAGS_DYN="$FLAGS_DYN$DASH_fullwarn$DASH_woff_1110_1174_1209_1552_3201"
+             FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fullwarn$DASH_woff_1110_1174_1209_1552_3201"
 
              if test "$ENABLE_DEBUG" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_g"
-               FLAGS_DYN="$FLAGS_DYN$DASH_g"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
              fi
 
              if test "$ENABLE_DEBUG" != yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_O1$DASH_OPT_Olimit_0"
-               FLAGS_DYN="$FLAGS_DYN$DASH_O1$DASH_OPT_Olimit_0"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1$DASH_OPT_Olimit_0"
              fi
 
-             FLAGS_OBJ="$FLAGS_OBJ$DASH_TENV_large_GOT$DASH_OPT_IEEE_comparisons_ON$DASH_OPT_IEEE_NaN_inf_ON"
-             FLAGS_DYN="$FLAGS_DYN$DASH_TENV_large_GOT$DASH_OPT_IEEE_comparisons_ON$DASH_OPT_IEEE_NaN_inf_ON"
+             FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_TENV_large_GOT$DASH_OPT_IEEE_comparisons_ON$DASH_OPT_IEEE_NaN_inf_ON"
 
-             FLAGS_DYN="$FLAGS_DYN$DASH_shared"
-             FLAGS_LIB="$FLAGS_LIB$DASH_shared"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_shared"
              ;;
 
       hpux*) ########## Probably using the HP-UX compiler...
@@ -1162,24 +1116,18 @@ else
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
              if test "$ENABLE_DEBUG" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_g"
-               FLAGS_DYN="$FLAGS_DYN$DASH_g"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
              fi
 
              if test "$ENABLE_PROFILE" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_p"
-               FLAGS_DYN="$FLAGS_DYN$DASH_p"
-               FLAGS_LIB="$FLAGS_LIB$DASH_p"
-               FLAGS_EXE="$FLAGS_EXE$DASH_p"
+               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_p"
              fi
 
              if test "$ENABLE_DEBUG" != yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_O1"
-               FLAGS_DYN="$FLAGS_DYN$DASH_O1"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1"
              fi
 
-             FLAGS_DYN="$FLAGS_DYN$DASH_b"
-             FLAGS_LIB="$FLAGS_LIB$DASH_b"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_b"
              ;;
 
        aix*) ########## Probably using the AIX xlC compiler...
@@ -1199,24 +1147,18 @@ else
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
              if test "$ENABLE_DEBUG" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_g"
-               FLAGS_DYN="$FLAGS_DYN$DASH_g"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
              fi
 
              if test "$ENABLE_PROFILE" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_p"
-               FLAGS_DYN="$FLAGS_DYN$DASH_p"
-               FLAGS_LIB="$FLAGS_LIB$DASH_p"
-               FLAGS_EXE="$FLAGS_EXE$DASH_p"
+               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_p"
              fi
 
              if test "$ENABLE_DEBUG" != yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_O1"
-               FLAGS_DYN="$FLAGS_DYN$DASH_O1"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1"
              fi
 
-             FLAGS_DYN="$FLAGS_DYN$DASH_G"
-             FLAGS_LIB="$FLAGS_LIB$DASH_G"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_G"
              ;;
 
           *) ########## Unsupported operating system
@@ -1248,24 +1190,18 @@ else
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
              if test "$ENABLE_DEBUG" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_g"
-               FLAGS_DYN="$FLAGS_DYN$DASH_g"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
              fi
 
              if test "$ENABLE_PROFILE" = yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_p"
-               FLAGS_DYN="$FLAGS_DYN$DASH_p"
-               FLAGS_LIB="$FLAGS_LIB$DASH_p"
-               FLAGS_EXE="$FLAGS_EXE$DASH_p"
+               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_p"
              fi
 
              if test "$ENABLE_DEBUG" != yes; then
-               FLAGS_OBJ="$FLAGS_OBJ$DASH_O1"
-               FLAGS_DYN="$FLAGS_DYN$DASH_O1"
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1"
              fi
 
-             FLAGS_DYN="$FLAGS_DYN$DASH_shared"
-             FLAGS_LIB="$FLAGS_LIB$DASH_shared"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_shared"
              ;;
   esac
 
@@ -1278,15 +1214,15 @@ else
   CORCXXFLAGS="$CFLAGS"
 fi
 
-FLAGS_OBJ="$CORCXXFLAGS $FLAGS_OBJ"
-FLAGS_EXE="$LDFLAGS $CORCXXFLAGS $FLAGS_EXE"
-FLAGS_LIB="$LDFLAGS $CORCXXFLAGS $FLAGS_LIB"
-FLAGS_DYN="$LDFLAGS $CORCXXFLAGS $FLAGS_DYN"
+FLAGS_OBJ="$CORCXXFLAGS $FLAGS_OBJ $FLAGS_OBJ_DYN $FLAGS_OBJ_DYN_LIB_EXE"
+FLAGS_DYN="$LDFLAGS $CORCXXFLAGS $FLAGS_DYN $FLAGS_OBJ_DYN $FLAGS_OBJ_DYN_LIB_EXE $FLAGS_DYN_LIB"
+FLAGS_LIB="$LDFLAGS $CORCXXFLAGS $FLAGS_LIB $FLAGS_OBJ_DYN_LIB_EXE $FLAGS_DYN_LIB"
+FLAGS_EXE="$LDFLAGS $CORCXXFLAGS $FLAGS_EXE $FLAGS_OBJ_DYN_LIB_EXE"
 
 AC_SUBST(FLAGS_OBJ)
-AC_SUBST(FLAGS_EXE)
-AC_SUBST(FLAGS_LIB)
 AC_SUBST(FLAGS_DYN)
+AC_SUBST(FLAGS_LIB)
+AC_SUBST(FLAGS_EXE)
 
 ###############################################################################
 
