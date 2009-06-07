@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2009-06-03 12:33:06 feeley>
+;;; File: "main.scm", Time-stamp: <2009-06-07 19:14:45 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -290,7 +290,7 @@
                                         options: sym-opts))))
                                 (##exit-abnormally))
                             (loop2 rest
-                                   (##cons (##path-strip-directory root)
+                                   (##cons root
                                            rev-roots)))))))
 
                   (let* ((flat?
