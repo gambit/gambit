@@ -815,6 +815,7 @@ enable_cplusplus
 enable_guide
 enable_debug
 enable_profile
+enable_coverage
 enable_feedback1
 enable_feedback2
 enable_single_host
@@ -1479,6 +1480,8 @@ Optional Features:
                           NO)
   --enable-profile        build system so that it can be profiled (default is
                           NO)
+  --enable-coverage       build system to accumulate coverage statistics
+                          (default is NO)
   --enable-feedback1      build system to accumulate trial run data (default
                           is NO)
   --enable-feedback2      build system using trial run feedback (default is
@@ -4134,6 +4137,18 @@ _ACEOF
 
   GSC_CC_O_DEFS="$GSC_CC_O_DEFS -D___PROFILE"
 fi
+
+###############################################################################
+#
+# Check if the system is to be compiled to accumulate coverage statistics.
+
+# Check whether --enable-coverage was given.
+if test "${enable_coverage+set}" = set; then
+  enableval=$enable_coverage; ENABLE_COVERAGE=$enableval
+else
+  ENABLE_COVERAGE=no
+fi
+
 
 ###############################################################################
 #
@@ -22028,16 +22043,30 @@ $as_echo "$DASH_shared" >&6; }
     FLAGS_DYN="$FLAGS_DYN$DASH_fno_move_loop_invariants"
   fi
 
-  if test "$ENABLE_FEEDBACK1" = yes; then
+  if test "$ENABLE_FEEDBACK1" = yes -o "$ENABLE_COVERAGE" = yes; then
+    cat >>confdefs.h <<\_ACEOF
+#define ___DONT_UNLOAD_DYN_CODE 1
+_ACEOF
+
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fprofile_arcs"
-    #FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
+    FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
     FLAGS_LIB="$FLAGS_LIB$DASH_fprofile_arcs"
     FLAGS_EXE="$FLAGS_EXE$DASH_fprofile_arcs"
+    if test "$ENABLE_COVERAGE" = yes; then
+      FLAGS_OBJ="$FLAGS_OBJ$DASH_ftest_coverage"
+      FLAGS_DYN="$FLAGS_DYN$DASH_ftest_coverage"
+      FLAGS_LIB="$FLAGS_LIB$DASH_ftest_coverage"
+      FLAGS_EXE="$FLAGS_EXE$DASH_ftest_coverage"
+    fi
   fi
 
   if test "$ENABLE_FEEDBACK2" = yes; then
+    cat >>confdefs.h <<\_ACEOF
+#define ___DONT_UNLOAD_DYN_CODE 1
+_ACEOF
+
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fbranch_probabilities"
-    #FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
+    FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
     FLAGS_LIB="$FLAGS_LIB$DASH_fbranch_probabilities"
     FLAGS_EXE="$FLAGS_EXE$DASH_fbranch_probabilities"
   fi

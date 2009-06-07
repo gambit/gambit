@@ -1,4 +1,4 @@
-/* File: "os_dyn.c", Time-stamp: <2008-11-12 14:59:46 feeley> */
+/* File: "os_dyn.c", Time-stamp: <2009-06-07 10:55:37 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -402,6 +402,14 @@ void **linker;)
 
 ___HIDDEN void cleanup_dynamic_load ___PVOID
 {
+#ifndef ___DONT_UNLOAD_DYN_CODE
+
+/*
+ * When the --fprofile-arcs option of gcc is used, shared libraries
+ * must not be unloaded, otherwise a segmentation fault occurs on
+ * program exit (specifically when gcov_exit is called).
+ */
+
 #ifdef ___DL_DESCR
 
   ___dl_entry *p = ___dyn_mod.dl_list;
@@ -441,6 +449,8 @@ ___HIDDEN void cleanup_dynamic_load ___PVOID
     }
 
   ___dyn_mod.dl_list = 0;
+
+#endif
 
 #endif
 }

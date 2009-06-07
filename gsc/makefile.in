@@ -1,6 +1,6 @@
 # makefile for Gambit-C compiler.
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsc
 rootfromhere = ..
@@ -267,7 +267,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f $(MODULES_C) _$(GAMBCGSCLIB).c _gsc_.c *.da *.bb *.bbg *.gcov
+	rm -f $(MODULES_C) _$(GAMBCGSCLIB).c _gsc_.c *.da *.bb *.bbg *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 

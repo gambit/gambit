@@ -1,7 +1,7 @@
                 Installation instructions for Gambit-C
                 ======================================
 
-              [Time-stamp: <2009-06-06 08:45:50 feeley>]
+              [Time-stamp: <2009-06-07 09:01:42 feeley>]
 
 
 This directory contains a release of the Gambit-C Scheme programming
@@ -128,6 +128,7 @@ The configure options which are specific to the Gambit-C system are:
   --enable-shared         build the Scheme runtime system as a shared library
   --enable-debug          build system so that it can be debugged
   --enable-profile        build system so that it can be profiled
+  --enable-coverage       build system to accumulate coverage statistics
   --enable-feedback1      build system to accumulate trial run data
   --enable-feedback2      build system using trial run feedback
   --enable-inline-jumps   generate inline code for jumps

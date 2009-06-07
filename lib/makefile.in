@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2009-03-14 11:00:17 feeley>
+# makefile for Gambit-C library, Time-stamp: <2009-06-07 10:45:08 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -244,7 +244,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f $(MODULES_C) $(LIBRARY) _$(GAMBCLIB).c *.da *.bb *.bbg *.gcov
+	rm -f $(MODULES_C) $(LIBRARY) _$(GAMBCLIB).c *.da *.bb *.bbg *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 

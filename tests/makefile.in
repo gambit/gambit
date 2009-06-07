@@ -1,6 +1,6 @@
-# makefile for regression tests, Time-stamp: <2009-04-23 17:06:41 feeley>
+# makefile for regression tests, Time-stamp: <2009-06-07 10:46:17 feeley>
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = tests
 rootfromhere = ..
@@ -217,7 +217,7 @@ clean-post: mostlyclean-post
 	test ! -f mix.rm || rm -f mix.rm mix.scm
 	test ! -f mem.rm || rm -f mem.rm mem.scm
 	test ! -f server.rm || rm -f server.rm server.scm
-	rm -f *.da *.bb *.bbg *.gcov
+	rm -f *.da *.bb *.bbg *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 

@@ -1,6 +1,6 @@
-# makefile for Xlib-simple example, Time-stamp: <2008-12-17 18:06:41 feeley>
+# makefile for Xlib-simple example, Time-stamp: <2009-06-07 10:49:24 feeley>
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/Xlib-simple
 rootfromhere = ../..
@@ -101,6 +101,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
+	rm -f *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 

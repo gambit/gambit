@@ -1,4 +1,4 @@
-/* File: "config.h.in", Time-stamp: <2009-06-04 18:47:47 feeley> */
+/* File: "config.h.in", Time-stamp: <2009-06-07 10:55:34 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -24,6 +24,9 @@
 
 /* Define as 1 if you want to compile as a shared library.  */
 #undef ___SHARED
+
+/* Define as 1 if dynamically loaded code should not be unloaded.  */
+#undef ___DONT_UNLOAD_DYN_CODE
 
 /*---------------------------------------------------------------------------*/
 

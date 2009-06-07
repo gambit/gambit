@@ -201,6 +201,16 @@ fi
 
 ###############################################################################
 #
+# Check if the system is to be compiled to accumulate coverage statistics.
+
+AC_ARG_ENABLE(coverage,
+              AC_HELP_STRING([--enable-coverage],
+                             [build system to accumulate coverage statistics (default is NO)]),
+              ENABLE_COVERAGE=$enableval,
+              ENABLE_COVERAGE=no)
+
+###############################################################################
+#
 # Check if the system is to be compiled with trial run feedback.
 
 AC_ARG_ENABLE(feedback1,
@@ -935,16 +945,24 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_DYN="$FLAGS_DYN$DASH_fno_move_loop_invariants"
   fi
 
-  if test "$ENABLE_FEEDBACK1" = yes; then
+  if test "$ENABLE_FEEDBACK1" = yes -o "$ENABLE_COVERAGE" = yes; then
+    AC_DEFINE(___DONT_UNLOAD_DYN_CODE)
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fprofile_arcs"
-    #FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
+    FLAGS_DYN="$FLAGS_DYN$DASH_fprofile_arcs"
     FLAGS_LIB="$FLAGS_LIB$DASH_fprofile_arcs"
     FLAGS_EXE="$FLAGS_EXE$DASH_fprofile_arcs"
+    if test "$ENABLE_COVERAGE" = yes; then
+      FLAGS_OBJ="$FLAGS_OBJ$DASH_ftest_coverage"
+      FLAGS_DYN="$FLAGS_DYN$DASH_ftest_coverage"
+      FLAGS_LIB="$FLAGS_LIB$DASH_ftest_coverage"
+      FLAGS_EXE="$FLAGS_EXE$DASH_ftest_coverage"
+    fi
   fi
 
   if test "$ENABLE_FEEDBACK2" = yes; then
+    AC_DEFINE(___DONT_UNLOAD_DYN_CODE)
     FLAGS_OBJ="$FLAGS_OBJ$DASH_fbranch_probabilities"
-    #FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
+    FLAGS_DYN="$FLAGS_DYN$DASH_fbranch_probabilities"
     FLAGS_LIB="$FLAGS_LIB$DASH_fbranch_probabilities"
     FLAGS_EXE="$FLAGS_EXE$DASH_fbranch_probabilities"
   fi

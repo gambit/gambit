@@ -1,6 +1,6 @@
 # makefile for Gambit-C interpreter.
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsi
 rootfromhere = ..
@@ -251,7 +251,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f $(MODULES_C) _$(GAMBCGSILIB).c _gsi_.c *.da *.bb *.bbg *.gcov
+	rm -f $(MODULES_C) _$(GAMBCGSILIB).c _gsi_.c *.da *.bb *.bbg *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 

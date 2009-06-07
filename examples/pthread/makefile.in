@@ -1,6 +1,6 @@
-# makefile for pthread example, Time-stamp: <2008-12-22 16:20:59 feeley>
+# makefile for pthread example, Time-stamp: <2009-06-07 10:48:33 feeley>
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/pthread
 rootfromhere = ../..
@@ -120,6 +120,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
+	rm -f *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 

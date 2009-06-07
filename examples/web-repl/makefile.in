@@ -1,6 +1,6 @@
-# makefile for web-repl example, Time-stamp: <2008-12-17 18:08:48 feeley>
+# makefile for web-repl example, Time-stamp: <2009-06-07 10:47:29 feeley>
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/web-repl
 rootfromhere = ../..
@@ -103,6 +103,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
+	rm -f *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 

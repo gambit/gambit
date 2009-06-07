@@ -1,6 +1,6 @@
-# makefile for pi example, Time-stamp: <2008-12-17 18:07:19 feeley>
+# makefile for pi example, Time-stamp: <2009-06-07 10:48:46 feeley>
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/pi
 rootfromhere = ../..
@@ -101,6 +101,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
+	rm -f *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 
