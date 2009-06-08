@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2009-06-05 17:37:02 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2009-06-08 06:36:56 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -6357,7 +6357,9 @@
              (gen-call-prim-vars source env **fixnum?-sym vars)
              (new-disj source env
                (gen-call-prim-vars source env **flonum?-sym vars)
-               (gen-call-prim-vars source env **real?-sym vars))))
+               (gen-call-prim-vars source (add-not-inline-primitive? env)
+                 **real?-sym
+                 vars))))
          fail)))
 
     (define case-rational?
@@ -6377,7 +6379,9 @@
              (new-tst source env
                (gen-call-prim-vars source env **flonum?-sym vars)
                (gen-call-prim-vars source env **flfinite?-sym vars)
-               (gen-call-prim-vars source env **rational?-sym vars))))
+               (gen-call-prim-vars source (add-not-inline-primitive? env)
+                 **rational?-sym
+                 vars))))
          fail)))
 
     (define case-integer?
@@ -6394,7 +6398,9 @@
          (lambda ()
            (new-disj source env
              (gen-call-prim-vars source env **fixnum?-sym vars)
-             (gen-call-prim-vars source env **integer?-sym vars)))
+             (gen-call-prim-vars source (add-not-inline-primitive? env)
+               **integer?-sym
+               vars)))
          fail)))
 
     (define (case-exact? fallback)
@@ -6415,7 +6421,9 @@
                (gen-call-prim source env
                  **not-sym
                  (list (gen-call-prim-vars source env **flonum?-sym vars)))
-               (gen-call-prim-vars source env fallback vars))))
+               (gen-call-prim-vars source (add-not-inline-primitive? env)
+                 fallback
+                 vars))))
          fail)))
 
     (define (case-inexact? fallback)
@@ -6436,7 +6444,9 @@
                (list (gen-call-prim-vars source env **fixnum?-sym vars)))
              (new-disj source env
                (gen-call-prim-vars source env **flonum?-sym vars)
-               (gen-call-prim-vars source env fallback vars))))
+               (gen-call-prim-vars source (add-not-inline-primitive? env)
+                 fallback
+                 vars))))
          fail)))
 
     (targ-exp "##real?"     (make-simple-expander case-real?))
@@ -6444,6 +6454,7 @@
     (targ-exp "##integer?"  (make-simple-expander case-integer?))
     (targ-exp "##exact?"    (make-simple-expander (case-exact? **exact?-sym)))
     (targ-exp "##inexact?"  (make-simple-expander (case-inexact? **inexact?-sym)))
+
     (targ-exp "exact?"      (make-simple-expander (case-exact? exact?-sym)))
     (targ-exp "inexact?"    (make-simple-expander (case-inexact? inexact?-sym)))
 
@@ -6634,6 +6645,10 @@
 
     (targ-exp
      "eqv?"
+     (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
+
+    (targ-exp
+     "##eqv?"
      (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
 
     (targ-exp
@@ -6898,24 +6913,12 @@
        (make-length-expander #t))
 
       (targ-exp
-       **vect-length-str
-       (make-length-expander #f))
-
-      (targ-exp
        vect-ref-str
        (make-ref-set!-expander #t #f))
 
       (targ-exp
-       **vect-ref-str
-       (make-ref-set!-expander #f #f))
-
-      (targ-exp
        vect-set!-str
-       (make-ref-set!-expander #t #t))
-          
-      (targ-exp
-       **vect-set!-str
-       (make-ref-set!-expander #f #t))))
+       (make-ref-set!-expander #t #t))))
           
   (make-vector-expanders
    "vector?"

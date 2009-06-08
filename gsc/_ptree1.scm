@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2008-12-03 18:36:51 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2009-06-07 20:28:06 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -472,6 +472,9 @@
 
 (define (inline-primitive? name env) ; true iff name can be inlined
   (declaration-value inline-primitives-sym name #t env))
+
+(define (add-not-inline-primitive? env)
+  (env-declare env (list inline-primitives-sym #f)))
 
 (define (inlining-limit env) ; returns the inlining limit
   (max 0 (min 1000000 (declaration-value inlining-limit-sym #f 350 env))))
