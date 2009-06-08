@@ -98,6 +98,7 @@ MAKE_LIBRARY_LIBS = $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)
 MAKE_LIBRARY_FOR_INSTALL_LIBS = @MAKE_LIBRARY_FOR_INSTALL_LIBS@
 
 EXECUTABLE = gsi@exe@
+EXECUTABLE_INSTALLED = @ENABLE_INTERPRETER_NAME@@exe@
 EXECUTABLE_NORMAL_C =
 EXECUTABLE_NORMAL_CPP =
 EXECUTABLE_NORMAL_H =
@@ -194,7 +195,7 @@ install-post: all
 	$(INSTALL_LIB) $(LIBRARY) $$t_libdir/$(LIBRARY); \
 	@FIXLIB@ $$t_libdir/$(LIBRARY); \
 	@LINK_FOR_INSTALL@; \
-	$(INSTALL_PROGRAM) $(EXECUTABLE) $$t_bindir/$(EXECUTABLE); \
+	$(INSTALL_PROGRAM) $(EXECUTABLE) $$t_bindir/$(EXECUTABLE_INSTALLED); \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in _$(GAMBCGSILIB).c $(LIBRARY); do \
@@ -203,7 +204,7 @@ install-post: all
 	fi; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
 	  r_bindir=`$(rootfromhere)/relpath "$$t_bindir" "$$i_bindir" @ENABLE_MULTIPLE_VERSIONS@`; \
-	  for file in $(EXECUTABLE); do \
+	  for file in $(EXECUTABLE_INSTALLED); do \
 	    (cd $$i_bindir && $(LN_S) $$r_bindir$$file $$file); \
 	  done; \
 	fi
@@ -223,14 +224,14 @@ uninstall-post:
 	fi; \
 	rm -f $$t_libdir/_$(GAMBCGSILIB).c \
 	  $$t_libdir/$(LIBRARY) \
-	  $$t_bindir/$(EXECUTABLE); \
+	  $$t_bindir/$(EXECUTABLE_INSTALLED); \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  for file in _$(GAMBCGSILIB).c $(LIBRARY); do \
 	    rm -f $$i_libdir/$$file; \
 	  done; \
 	fi; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
-	  for file in $(EXECUTABLE); do \
+	  for file in $(EXECUTABLE_INSTALLED); do \
 	    rm -f $$i_bindir/$$file; \
 	  done; \
 	fi; \

@@ -799,6 +799,8 @@ HG
 FIXLIB
 X_FLAGS
 ENABLE_SYMLINKS
+ENABLE_INTERPRETER_NAME
+ENABLE_COMPILER_NAME
 ENABLE_MULTIPLE_VERSIONS
 ENABLE_SHARED
 ENABLE_ABSOLUTE_SHARED_LIBS
@@ -825,6 +827,8 @@ enable_char_size
 enable_shared
 enable_ansi_c
 enable_symlinks
+enable_interpreter_name
+enable_compiler_name
 enable_multiple_versions
 enable_absolute_shared_libs
 enable_help_browser
@@ -1496,6 +1500,10 @@ Optional Features:
   --enable-ansi-c         link only with ANSI C libraries (default is NO)
   --enable-symlinks       use symbolic links for installed files not in the
                           central installation directory (default is YES)
+  --enable-interpreter-name=INTERP
+                          Name to use for Gambit interpreter (default is gsi)
+  --enable-compiler-name=COMP
+                          Name to use for Gambit compiler (default is gsc)
   --enable-multiple-versions
                           multiple installed versions are supported (default
                           is NO)
@@ -5408,6 +5416,26 @@ if test "${enable_symlinks+set}" = set; then
   enableval=$enable_symlinks; ENABLE_SYMLINKS=$enableval
 else
   ENABLE_SYMLINKS=no
+fi
+
+
+###############################################################################
+#
+# Determine the name to use for the Gambit interpreter and compiler.
+
+# Check whether --enable-interpreter-name was given.
+if test "${enable_interpreter_name+set}" = set; then
+  enableval=$enable_interpreter_name; ENABLE_INTERPRETER_NAME=$enableval
+else
+  ENABLE_INTERPRETER_NAME="gsi"
+fi
+
+
+# Check whether --enable-compiler-name was given.
+if test "${enable_compiler_name+set}" = set; then
+  enableval=$enable_compiler_name; ENABLE_COMPILER_NAME=$enableval
+else
+  ENABLE_COMPILER_NAME="gsc"
 fi
 
 
@@ -25410,6 +25438,8 @@ INSTALL='$(rootfromhere)/install-sh -c'
 INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
+
+
 
 
 

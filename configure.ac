@@ -351,6 +351,22 @@ AC_ARG_ENABLE(symlinks,
 
 ###############################################################################
 #
+# Determine the name to use for the Gambit interpreter and compiler.
+
+AC_ARG_ENABLE(interpreter-name,
+              AC_HELP_STRING([--enable-interpreter-name=INTERP],
+                             [Name to use for Gambit interpreter (default is gsi)]),
+              ENABLE_INTERPRETER_NAME=$enableval,
+              ENABLE_INTERPRETER_NAME="gsi")
+
+AC_ARG_ENABLE(compiler-name,
+              AC_HELP_STRING([--enable-compiler-name=COMP],
+                             [Name to use for Gambit compiler (default is gsc)]),
+              ENABLE_COMPILER_NAME=$enableval,
+              ENABLE_COMPILER_NAME="gsc")
+
+###############################################################################
+#
 # Check if multiple installed versions are supported.
 
 AC_ARG_ENABLE(multiple-versions,
@@ -1560,6 +1576,8 @@ AC_SUBST(X_FLAGS)
 AC_SUBST(X_LIBS)
 
 AC_SUBST(ENABLE_SYMLINKS)
+AC_SUBST(ENABLE_INTERPRETER_NAME)
+AC_SUBST(ENABLE_COMPILER_NAME)
 AC_SUBST(ENABLE_MULTIPLE_VERSIONS)
 AC_SUBST(ENABLE_SHARED)
 AC_SUBST(ENABLE_ABSOLUTE_SHARED_LIBS)

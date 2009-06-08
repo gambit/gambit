@@ -1,7 +1,7 @@
                 Installation instructions for Gambit-C
                 ======================================
 
-              [Time-stamp: <2009-06-07 09:01:42 feeley>]
+              [Time-stamp: <2009-06-08 10:30:19 feeley>]
 
 
 This directory contains a release of the Gambit-C Scheme programming
@@ -136,6 +136,10 @@ The configure options which are specific to the Gambit-C system are:
   --enable-ansi-c         link only with ANSI C libraries
   --enable-symlinks       use symbolic links for installed files not in the
                           central installation directory
+  --enable-interpreter-name=INTERP
+                          choose name for Gambit interpreter (default = gsi)
+  --enable-compiler-name=COMP
+                          choose name for Gambit compiler (default = gsc)
   --enable-multiple-versions
                           multiple installed versions are supported
   --enable-absolute-shared-libs
@@ -177,6 +181,15 @@ The option --enable-symlinks is useful when the --bindir, --libdir,
 ... options are used.  The files will actually be stored in the
 central installation directory and symbolic links to those files will
 be stored in the directories specified to --bindir, --libdir, ...
+
+The options --enable-interpreter-name=INTERP and
+--enable-compiler-name=COMP are useful when names different from the
+defaults are needed (i.e. gsi and gsc respectively).  These options
+should be used only when absolutely necessary because users will
+expect the defaults (from reading documentation, talking with users on
+a different OS, etc).  We strongly suggest that the names start with
+gsi and gsc respectively, so that shell tab completion will help the
+user discover the correct name.
 
 The option --enable-multiple-versions allows multiple versions of
 Gambit to be installed.  When it is enabled the path of the central
