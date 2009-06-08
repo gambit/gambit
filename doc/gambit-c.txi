@@ -357,13 +357,16 @@ interpreter exits.
 
 When the file name has no extension the @code{load} procedure first
 attempts to load the file with no extension as a Scheme source file.
-If that file doesn't exist it completes the file name with a
-@samp{.o@var{n}} extension with the highest consecutive version number
-starting with 1, and loads that file as an object file.  If that file
-doesn't exist the file extensions @samp{.scm} and @samp{.six} will be
-tried in that order.  When the file name has an extension, the
-@code{load} procedure will only attempt to load the file with that
-specific name.
+If that file doesn't exist it will search for both a source file and
+an object file.  The object file's name is obtained by adding to the
+file name a @samp{.o@var{n}} extension with the highest consecutive
+version number starting with 1.  The source file's name is obtained by
+adding to the file name the file extensions @samp{.scm} and
+@samp{.six} (the first found is the source file).  If both a source
+file and an object file exist, then the one with the latest
+modification time is loaded.  Otherwise the file that is found is
+loaded.  When the file name has an extension, the @code{load}
+procedure will only attempt to load the file with that specific name.
 
 When the extension of the file loaded is @samp{.scm} the content of
 the file will be parsed using the normal Scheme prefix syntax.  When

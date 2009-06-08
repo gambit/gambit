@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-03-14 15:04:13 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-06-08 18:00:17 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3710,31 +3710,55 @@
                abs-path)))))
 
   (define (load-no-ext)
-    (let* ((source-path (##path-expand path))
-           (result (load-source source-path)))
+    (let* ((src-path (##path-expand path))
+           (result (load-source src-path)))
       (if (##not (##fixnum? result))
-        result
-        (let loop1 ((version 1) (last-expanded-path #f))
-          (let ((expanded-path
-                 (##path-expand
-                  (##string-append path
-                                   ".o"
-                                   (##number->string version 10)))))
-            (if (##file-exists? expanded-path)
-              (loop1 (##fixnum.+ version 1)
-                     expanded-path)
-              (if last-expanded-path
-                (load-binary last-expanded-path)
-                (let loop2 ((lst ##scheme-file-extensions))
-                  (if (##pair? lst)
-                    (let* ((source-path
-                            (##path-expand (##string-append path (##caar lst))))
-                           (x
-                            (load-source source-path)))
-                      (if (##fixnum? x)
-                        (loop2 (##cdr lst))
-                        x))
-                    (raise-os-exception-if-needed result))))))))))
+          result
+          (let loop1 ((version 1)
+                      (last-obj-file-path #f)
+                      (last-obj-file-info #f))
+            (let* ((expanded-path
+                    (##path-expand
+                     (##string-append path
+                                      ".o"
+                                      (##number->string version 10))))
+                   (expanded-info
+                    (##file-info expanded-path))
+                   (expanded-path-exists?
+                    (##not (##fixnum? expanded-info))))
+              (if expanded-path-exists?
+                  (loop1 (##fixnum.+ version 1)
+                         expanded-path
+                         expanded-info)
+                  (let loop2 ((lst ##scheme-file-extensions))
+                    (if (##pair? lst)
+                        (let* ((src-file-path
+                                (##path-expand
+                                 (##string-append path (##caar lst))))
+                               (src-file-info
+                                (if (##string? src-file-path)
+                                    (##file-info src-file-path)
+                                    0))
+                               (src-file-path-exists?
+                                (##not (##fixnum? src-file-info))))
+                          (if (##not src-file-path-exists?)
+                              (loop2 (##cdr lst))
+                              (if (or (##not last-obj-file-path)
+                                      (##flonum.<
+                                       (macro-time-point
+                                        (macro-file-info-last-modification-time
+                                         last-obj-file-info))
+                                       (macro-time-point
+                                        (macro-file-info-last-modification-time
+                                         src-file-info))))
+                                  (let ((x (load-source src-file-path)))
+                                    (if (##fixnum? x)
+                                        (raise-os-exception-if-needed result)
+                                        x))
+                                  (load-binary last-obj-file-path))))
+                        (if last-obj-file-path
+                            (load-binary last-obj-file-path)
+                            (raise-os-exception-if-needed result))))))))))
 
   (define (binary-extension? ext)
     (let ((len (##string-length ext)))
