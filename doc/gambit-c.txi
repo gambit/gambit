@@ -1654,8 +1654,13 @@ exit status.
 
 @item R
 @opindex -:dR
+@kindex ^C
 When a user interrupt occurs a new REPL will be started.  User
-interrupts are typically obtained by typing @key{^C}.
+interrupts are typically obtained by typing @key{^C}.  Note that with
+some system configurations @key{^C} abruptly terminates the process.
+For example, under Microsoft Windows, @key{^C} works fine with the
+standard console but with the MSYS terminal window it terminates the
+process.
 
 @item D
 @opindex -:dD
