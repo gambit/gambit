@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-06-08 18:00:17 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-06-08 21:21:24 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3730,35 +3730,38 @@
                   (loop1 (##fixnum.+ version 1)
                          expanded-path
                          expanded-info)
-                  (let loop2 ((lst ##scheme-file-extensions))
-                    (if (##pair? lst)
-                        (let* ((src-file-path
-                                (##path-expand
-                                 (##string-append path (##caar lst))))
-                               (src-file-info
-                                (if (##string? src-file-path)
-                                    (##file-info src-file-path)
-                                    0))
-                               (src-file-path-exists?
-                                (##not (##fixnum? src-file-info))))
-                          (if (##not src-file-path-exists?)
-                              (loop2 (##cdr lst))
-                              (if (or (##not last-obj-file-path)
-                                      (##flonum.<
-                                       (macro-time-point
-                                        (macro-file-info-last-modification-time
-                                         last-obj-file-info))
-                                       (macro-time-point
-                                        (macro-file-info-last-modification-time
-                                         src-file-info))))
-                                  (let ((x (load-source src-file-path)))
-                                    (if (##fixnum? x)
-                                        (raise-os-exception-if-needed result)
-                                        x))
-                                  (load-binary last-obj-file-path))))
-                        (if last-obj-file-path
-                            (load-binary last-obj-file-path)
-                            (raise-os-exception-if-needed result))))))))))
+                  (if (and last-obj-file-path
+                           (##not ##load-source-if-more-recent))
+                      (load-binary last-obj-file-path)
+                      (let loop2 ((lst ##scheme-file-extensions))
+                        (if (##pair? lst)
+                            (let* ((src-file-path
+                                    (##path-expand
+                                     (##string-append path (##caar lst))))
+                                   (src-file-info
+                                    (if (##string? src-file-path)
+                                        (##file-info src-file-path)
+                                        0))
+                                   (src-file-path-exists?
+                                    (##not (##fixnum? src-file-info))))
+                              (if (##not src-file-path-exists?)
+                                  (loop2 (##cdr lst))
+                                  (if (or (##not last-obj-file-path)
+                                          (##flonum.<
+                                           (macro-time-point
+                                            (macro-file-info-last-modification-time
+                                             last-obj-file-info))
+                                           (macro-time-point
+                                            (macro-file-info-last-modification-time
+                                             src-file-info))))
+                                      (let ((x (load-source src-file-path)))
+                                        (if (##fixnum? x)
+                                            (raise-os-exception-if-needed result)
+                                            x))
+                                      (load-binary last-obj-file-path))))
+                            (if last-obj-file-path
+                                (load-binary last-obj-file-path)
+                                (raise-os-exception-if-needed result)))))))))))
 
   (define (binary-extension? ext)
     (let ((len (##string-length ext)))
@@ -3782,6 +3785,9 @@
              (load-binary expanded-path)))
           (else
            (raise-os-exception-if-needed (load-source path))))))
+
+(define ##load-source-if-more-recent #f)
+(set! ##load-source-if-more-recent #t)
 
 (define-prim (##load-object-file abs-path quiet?)
 
