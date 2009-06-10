@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -39,7 +39,7 @@ cleanup()
 install_gambc()
 {
   cd "$rootfromhere"
-  make mostlyclean
+  make clean
   make
   make install
 

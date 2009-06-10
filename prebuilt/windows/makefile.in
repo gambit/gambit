@@ -89,7 +89,6 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f build-phase2.out
 
 clean-pre: mostlyclean-pre
 
@@ -106,7 +105,7 @@ bootclean-post: distclean-post
 realclean-pre: bootclean-pre
 
 realclean-post: bootclean-post
-	rm -f build-phase2 makefile
+	rm -f build-phase2 build-phase2.out makefile
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
