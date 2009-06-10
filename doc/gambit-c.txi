@@ -492,13 +492,14 @@ which sets the minimum heap size to 4 gigabytes.
 @node Scheme scripts, , GSI exit status, GSI
 @section Scheme scripts
 
-The @code{load} procedure treats specially files that begin with
-the two characters @samp{#!} and @samp{@@;}.  Such files are called
-@dfn{script files}.  In addition to indicating that the file is a
-script, the first line provides information about the source code
-language to be used by the @code{load} procedure.  After the two
-characters @samp{#!} and @samp{@@;} the system will search for the first
-substring matching one of the following language specifying tokens:
+The @code{load} procedure treats specially files that begin with the
+two characters @samp{#!} and @samp{@@;}.  Such files are called
+@dfn{script files} and the first line is called the @dfn{script line}.
+In addition to indicating that the file is a script, the script line
+provides information about the source code language to be used by the
+@code{load} procedure.  After the two characters @samp{#!} and
+@samp{@@;} the system will search for the first substring matching one
+of the following language specifying tokens:
 
 @table @code
 
@@ -544,7 +545,7 @@ If a language specifying token is not found, @code{load} will use the
 same language as a nonscript file (i.e. it uses the file extension and
 runtime system options to determine the language).
 
-After processing the first line, @code{load} will parse the rest of
+After processing the script line, @code{load} will parse the rest of
 the file (using the syntax of the language indicated) and then execute
 it.  When the file is being loaded because it is an argument on the
 interpreter's command line, the interpreter will:
@@ -654,7 +655,7 @@ executable @samp{gsi.exe} and @samp{six.exe} and also the batch files
 the same command line arguments.  A Scheme script need only start with
 the name of the desired Scheme language variant prefixed with
 @samp{@@;}.  A UNIX script can be converted to a Microsoft Windows
-script simply by changing the first line and storing the script in a
+script simply by changing the script line and storing the script in a
 file whose name has a @samp{.bat} or @samp{.cmd} extension:
 
 @smallexample
@@ -665,7 +666,7 @@ file whose name has a @samp{.bat} or @samp{.cmd} extension:
 
 Note that Microsoft Windows always searches executables in the user's
 @samp{PATH}, so there is no need for an indirection such as the UNIX
-@samp{/usr/bin/env}.  However the first line must end with @samp{%~f0
+@samp{/usr/bin/env}.  However the script line must end with @samp{%~f0
 %*} to pass the expanded filename of the script and command line
 arguments to the interpreter.
 
@@ -673,27 +674,36 @@ arguments to the interpreter.
 @subsection Compiling scripts
 
 A script file can be compiled using the Gambit Scheme compiler
-(@pxref{GSC}) into a dynamically loadable object file or into a
-standalone executable.  The first line of the script will provide
-information to the compiler on which language to use.  The first line
-also provides information on which runtime options to use when
-executing the script.  The compiled script will be executed similarly
-to an interpreted script (i.e. the list of command line arguments
-returned by the @code{command-line} procedure and the invocation of
-the @code{main} procedure).
+(@pxref{GSC}) into a standalone executable.  The script line will
+provide information to the compiler on which language to use.  The
+script line also provides information on which runtime options to use
+when executing the compiled script.  This is useful to set the default
+runtime options of an executable program.
+
+The compiled script will be executed similarly to an interpreted
+script (i.e. the list of command line arguments returned by the
+@code{command-line} procedure and the invocation of the @code{main}
+procedure).
 
 For example:
 
 @smallexample
 $ @b{cat square.scm}
-#!/usr/local/Gambit-C/bin/gsi-script
+#!/usr/local/Gambit-C/bin/gsi-script -:d0
 (define (main arg)
   (pretty-print (expt (string->number arg) 2)))
-$ @b{gsi square 30   @r{@i{# will load square.scm}}}
+$ @b{gsi square 30        @r{@i{# gsi will load square.scm}}}
 900
-$ @b{gsc square}
-$ @b{gsi square 30   @r{@i{# will load square.o1}}}
+$ @b{gsc -link square}    @r{@i{# compile the script}}}
+$ @b{gcc -o square square.c square_.c -lgambc}
+$ @b{./square 30}
 900
+$ @b{./square 1 2 3       @r{@i{# too many arguments to main}}}
+$ @b{echo $?}
+70
+$ @b{./square -:d1 1 2 3  @r{@i{# ask for error message}}}
+*** ERROR -- Wrong number of arguments passed to procedure
+(main "1" "2" "3")
 @end smallexample
 
 @node GSC, Runtime options, GSI, Top
@@ -1779,11 +1789,22 @@ Enable line-editing (applies to terminals only).
 Disable line-editing (applies to terminals only).
 @end table
 
+@opindex -::
 @cindex GAMBCOPT, environment variable
-When the environment variable @samp{GAMBCOPT} is defined, the runtime
-system will take its options from that environment variable.  A
-@samp{-:} option can be used to override some or all of the
-runtime system options.  For example:
+When a program's execution starts, the runtime system obtains the
+runtime options by processing in turn four sources of runtime options:
+the defaults, the environment variable @samp{GAMBCOPT}, the script
+line of the source code, and the first command line argument of the
+program.  Any runtime option can be overriden by a subsequent source
+of runtime options.  It is sometimes useful to prevent overriding
+the runtime options of the script line.  This can be achieved by
+starting the script line runtime options with @samp{-::}.  In
+this case the environment variable @samp{GAMBCOPT} is ignored,
+and the first command line argument of the program is
+not used for runtime options (it is treated like a normal
+command line argument).
+
+For example:
 
 @smallexample
 $ @b{GAMBCOPT=d0,=~/my-gambit2}

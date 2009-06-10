@@ -1,6 +1,6 @@
-/* File: "main.c", Time-stamp: <2008-12-09 15:23:56 feeley> */
+/* File: "main.c", Time-stamp: <2009-06-10 15:42:03 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit-C system */
 
@@ -175,9 +175,12 @@ ___mod_or_lnk (*linker)();)
   ___UCS_2STRING *argv;
   ___UCS_2STRING *current_argv;
   ___UCS_2STRING runtime_options;
+  ___UCS_2STRING script_line;
   int extra_arg_pos;
   int contract_argv;
   int options_source;
+  int options_source_min;
+  int options_source_max;
   ___UCS_2STRING gambcdir;
   ___UCS_2STRING *gambcdir_map;
   int gambcdir_map_len;
@@ -217,15 +220,55 @@ ___mod_or_lnk (*linker)();)
       && (runtime_options = argv[1]) != 0
       && runtime_options[0] == '-'
       && runtime_options[1] == ':')
-    runtime_options += 2;
+    {
+      runtime_options += 2;
+      if (runtime_options[0] == ':')
+        runtime_options++;
+    }
   else
     runtime_options = 0;
+
+  if ((script_line = ___program_startup_info.script_line) != 0)
+    {
+      for (;;)
+        {
+          if (*script_line == '\0')
+            {
+              script_line = 0;
+              break;
+            }
+          if (script_line[0] == ' '
+              && script_line[1] == '-'
+              && script_line[2] == ':')
+            {
+              script_line += 3;
+              break;
+            }
+          script_line++;
+        }
+    }
+
+  if (script_line != 0 &&
+      script_line[0] == ':')
+    {
+      script_line++;
+      runtime_options = 0;
+      options_source_min = 1;
+      options_source_max = 1;
+    }
+  else
+    {
+      options_source_min = 0;
+      options_source_max = 2;
+    }
 
   current_argv = argv;
   extra_arg_pos = 1;
   contract_argv = (runtime_options != 0);
 
-  for (options_source=0; options_source<3; options_source++)
+  for (options_source = options_source_min;
+       options_source <= options_source_max;
+       options_source++)
     {
       ___UCS_2STRING arg;
 
@@ -237,29 +280,7 @@ ___mod_or_lnk (*linker)();)
           arg = gambcopt;
         }
       else if (options_source == 1)
-        {
-          arg = ___program_startup_info.script_line;
-
-          if (arg != 0)
-            {
-              for (;;)
-                {
-                  if (*arg == '\0')
-                    {
-                      arg = 0;
-                      break;
-                    }
-                  if (arg[0] == ' '
-                      && arg[1] == '-'
-                      && arg[2] == ':')
-                    {
-                      arg += 3;
-                      break;
-                    }
-                  arg++;
-                }
-            }
-        }
+        arg = script_line;
       else
         arg = runtime_options;
 
