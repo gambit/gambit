@@ -170,6 +170,8 @@ gsc-cc-o.bat: makefile
 	  echo ":end" >> gsc-cc-o.bat; \
 	  echo "" >> gsc-cc-o.bat; \
 	  echo "exit" >> gsc-cc-o.bat; \
+	  perl -pe 's/\r\n|\n|\r/\r\n/g' gsc-cc-o.bat > gsc-cc-o.bat.crlf; \
+	  mv gsc-cc-o.bat.crlf gsc-cc-o.bat; \
 	fi
 
 gambc-doc.bat: makefile
@@ -194,7 +196,7 @@ gsi-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) gsi-script@bat@; \
 	else \
-	  echo "@gsi %*" > gsi-script@bat@; \
+	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > gsi-script@bat@; \
 	fi
 
 gsc-script@bat@: makefile
@@ -202,7 +204,7 @@ gsc-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsc/$(GSC_EXECUTABLE) gsc-script@bat@; \
 	else \
-	  echo "@gsc %*" > gsc-script@bat@; \
+	  echo "@gsc %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > gsc-script@bat@; \
 	fi
 
 six-script@bat@: makefile
@@ -210,7 +212,7 @@ six-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) six-script@bat@; \
 	else \
-	  echo "@gsi %*" > six-script@bat@; \
+	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > six-script@bat@; \
 	fi
 
 scheme-srfi-0@bat@: makefile
@@ -218,7 +220,7 @@ scheme-srfi-0@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-srfi-0@bat@; \
 	else \
-	  echo "@gsi %*" > scheme-srfi-0@bat@; \
+	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > scheme-srfi-0@bat@; \
 	fi
 
 scheme-r5rs@bat@: makefile
@@ -226,7 +228,7 @@ scheme-r5rs@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-r5rs@bat@; \
 	else \
-	  echo "@gsi %*" > scheme-r5rs@bat@; \
+	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > scheme-r5rs@bat@; \
 	fi
 
 scheme-r4rs@bat@: makefile
@@ -234,7 +236,7 @@ scheme-r4rs@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-r4rs@bat@; \
 	else \
-	  echo "@gsi %*" > scheme-r4rs@bat@; \
+	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > scheme-r4rs@bat@; \
 	fi
 
 scheme-ieee-1178-1990@bat@: makefile
@@ -242,7 +244,7 @@ scheme-ieee-1178-1990@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-ieee-1178-1990@bat@; \
 	else \
-	  echo "@gsi %*" > scheme-ieee-1178-1990@bat@; \
+	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > scheme-ieee-1178-1990@bat@; \
 	fi
 
 install-pre:
