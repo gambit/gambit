@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2009-06-07 19:04:22 feeley> */
+/* File: "setup.c", Time-stamp: <2009-06-10 07:25:51 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -1519,6 +1519,8 @@ double x;)
 
 #else
 
+  ___UM32 tmp;
+
   union
     {
       ___U32 u32[2];
@@ -1527,7 +1529,7 @@ double x;)
 
   y.f64 = x;
 
-  ___UM32 tmp = (y.u32[F64_HI32] ^ 0x7ff00000) & 0x7fffffff;
+  tmp = (y.u32[F64_HI32] ^ 0x7ff00000) & 0x7fffffff;
 
   return tmp < 0x100000 && (tmp | y.u32[F64_LO32]) != 0;
 
