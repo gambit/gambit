@@ -1,4 +1,4 @@
-# makefile for pi example, Time-stamp: <2009-06-07 10:48:46 feeley>
+# makefile for pi example, Time-stamp: <2009-06-09 16:43:32 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -106,11 +106,15 @@ clean-post: mostlyclean-post
 distclean-pre: clean-pre
 
 distclean-post: clean-post
+
+bootclean-pre: distclean-pre
+
+bootclean-post: distclean-post
+
+realclean-pre: bootclean-pre
+
+realclean-post: bootclean-post
 	rm -f makefile
-
-realclean-pre: distclean-pre
-
-realclean-post: distclean-post
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
@@ -133,7 +137,7 @@ dist-devel-pre: dist-pre
 
 dist-devel-post: dist-post
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -151,6 +155,8 @@ mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
 clean: clean-pre clean-recursive clean-post
 
 distclean: distclean-pre distclean-recursive distclean-post
+
+bootclean: bootclean-pre bootclean-recursive bootclean-post
 
 realclean: realclean-pre realclean-recursive realclean-post
 

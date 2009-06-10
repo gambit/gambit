@@ -93,6 +93,7 @@ all: all-pre all-recursive all-post
 all-pre:
 
 all-post:
+	test -e "gsc-comp@exe@" || cp gsc/gsc@exe@ gsc-comp@exe@
 
 fake_target:
 
@@ -100,7 +101,7 @@ doc info pdf html txt: fake_target
 	cd doc && $(MAKE) $(MDEFINES) $@
 
 bootstrap: fake_target all
-	cp gsc/gsc gsc-comp
+	cp gsc/gsc@exe@ gsc-comp@exe@
 
 check: fake_target all
 	cd tests && $(MAKE) $(MDEFINES) $@
@@ -161,7 +162,7 @@ update-nopull: fake_target
 	  $(RC) checkout $$next_version-bootstrap; \
 	  $(MAKE) bootstrap; \
 	  $(RC) checkout $$next_version; \
-	  $(MAKE) clean bootstrap update; \
+	  $(MAKE) bootclean bootstrap update; \
 	fi
 
 update: pull update-nopull
@@ -207,7 +208,7 @@ change-version: fake_target
 	    misc/changev $$version_num $$new_version_num; \
 	    touch doc/gambit-c.txi; \
 	    cd tests; @SETDLPATH@ ../gsc/gsc -:~~bin=../bin,~~lib=../lib,~~include=../include -f -c mix.scm; mv mix.c test5.ok; cd ..; \
-	    if $(MAKE) clean && $(MAKE) -j 2 && $(MAKE) check && $(MAKE) doc; then \
+	    if $(MAKE) bootclean && $(MAKE) -j 2 && $(MAKE) check && $(MAKE) doc; then \
 	      if test "$(RC)" = "$(GIT)"; then \
 	        $(GIT) commit -a -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
 	      else \
@@ -222,7 +223,7 @@ change-version: fake_target
 
 release: fake_target
 	$(MAKE) bootstrap
-	$(MAKE) mostlyclean
+	$(MAKE) clean
 	$(MAKE) all
 	$(MAKE) check
 	$(MAKE) doc
@@ -272,11 +273,15 @@ clean-post: mostlyclean-post
 distclean-pre: clean-pre
 
 distclean-post: clean-post
-	rm -f makefile config.cache config.h config.log config.status
 
-realclean-pre: distclean-pre
+bootclean-pre: distclean-pre
 
-realclean-post: distclean-post
+bootclean-post: distclean-post
+
+realclean-pre: bootclean-pre
+
+realclean-post: bootclean-post
+	rm -f config.log config.status makefile
 
 rc-setup-pre:
 	$(RC) init
@@ -359,7 +364,7 @@ dist-devel-post:
 	mv $(PACKAGE_TARNAME)-devel.tar.gz $(PACKAGE_TARNAME)-devel.tgz
 	rm -rf $(PACKAGE_TARNAME)-devel
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@for subdir in $(SUBDIRS); do \
 	  target=`echo $@ | sed 's/-recursive//'`; \
 	  echo making $$target in $$subdir; \
@@ -375,6 +380,8 @@ mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
 clean: clean-pre clean-recursive clean-post
 
 distclean: distclean-pre distclean-recursive distclean-post
+
+bootclean: bootclean-pre bootclean-recursive bootclean-post
 
 realclean: realclean-pre realclean-recursive realclean-post
 

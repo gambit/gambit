@@ -1,6 +1,6 @@
 # makefile for Gambit-C build on MacOS X.
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 herefromroot = prebuilt/macosx
 rootfromhere = ../..
@@ -90,6 +90,7 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
+	rm -f build-phase2.out
 
 clean-pre: mostlyclean-pre
 
@@ -98,11 +99,15 @@ clean-post: mostlyclean-post
 distclean-pre: clean-pre
 
 distclean-post: clean-post
-	rm -f makefile build-phase2.out
 
-realclean-pre: distclean-pre
+bootclean-pre: distclean-pre
 
-realclean-post: distclean-post
+bootclean-post: distclean-post
+
+realclean-pre: bootclean-pre
+
+realclean-post: bootclean-post
+	rm -f build-phase2 makefile
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
@@ -125,7 +130,7 @@ dist-devel-pre: dist-pre
 
 dist-devel-post: dist-post
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -143,6 +148,8 @@ mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
 clean: clean-pre clean-recursive clean-post
 
 distclean: distclean-pre distclean-recursive distclean-post
+
+bootclean: bootclean-pre bootclean-recursive bootclean-post
 
 realclean: realclean-pre realclean-recursive realclean-post
 

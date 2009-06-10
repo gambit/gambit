@@ -311,6 +311,10 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
+
+clean-pre: mostlyclean-pre
+
+clean-post: mostlyclean-post
 	rm -f gsc-cc-o.bat \
 	  gambc-doc.bat \
 	  six@exe@ six@exe@.lnk \
@@ -329,18 +333,18 @@ mostlyclean-post:
 	  scheme-ieee-1178-1990@bat@ \
 	  scheme-ieee-1178-1990@bat@.lnk
 
-clean-pre: mostlyclean-pre
-
-clean-post: mostlyclean-post
-
 distclean-pre: clean-pre
 
 distclean-post: clean-post
-	rm -f makefile
 
-realclean-pre: distclean-pre
+bootclean-pre: distclean-pre
 
-realclean-post: distclean-post
+bootclean-post: distclean-post
+
+realclean-pre: bootclean-pre
+
+realclean-post: bootclean-post
+	rm -f gambc-doc.bat.unix gambc-doc.bat.windows makefile
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
@@ -363,7 +367,7 @@ dist-devel-pre: dist-pre
 
 dist-devel-post: dist-post
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -381,6 +385,8 @@ mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
 clean: clean-pre clean-recursive clean-post
 
 distclean: distclean-pre distclean-recursive distclean-post
+
+bootclean: bootclean-pre bootclean-recursive bootclean-post
 
 realclean: realclean-pre realclean-recursive realclean-post
 

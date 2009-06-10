@@ -263,22 +263,26 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f $(OBJECTS) $(LIBRARY)
+	rm -f $(OBJECTS) $(LIBRARY) $(EXECUTABLE)
 
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f $(MODULES_C) _$(GAMBCGSCLIB).c _gsc_.c *.da *.bb *.bbg *.gcov *.gcno *.gcda
+	rm -f *.da *.bb *.bbg *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 
 distclean-post: clean-post
+
+bootclean-pre: distclean-pre
+
+bootclean-post: distclean-post
+	rm -f $(MODULES_C) _$(GAMBCGSCLIB).c _gsc_.c
+
+realclean-pre: bootclean-pre
+
+realclean-post: bootclean-post
 	rm -f makefile
-
-realclean-pre: distclean-pre
-
-realclean-post: distclean-post
-	rm -f $(EXECUTABLE)
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
@@ -301,7 +305,7 @@ dist-devel-pre: dist-pre
 
 dist-devel-post: dist-post
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -319,6 +323,8 @@ mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
 clean: clean-pre clean-recursive clean-post
 
 distclean: distclean-pre distclean-recursive distclean-post
+
+bootclean: bootclean-pre bootclean-recursive bootclean-post
 
 realclean: realclean-pre realclean-recursive realclean-post
 
