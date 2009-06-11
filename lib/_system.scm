@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2009-06-05 17:24:20 feeley>
+;;; File: "_system.scm", Time-stamp: <2009-06-11 10:06:27 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -1773,6 +1773,9 @@
 (##define-macro (rest-tag)           #x7a)
 (##define-macro (unused-tag)         #x7b)
 (##define-macro (deleted-tag)        #x7c)
+(##define-macro (promise-tag)        #x7d)
+(##define-macro (unassigned1-tag)    #x7e)
+(##define-macro (unassigned2-tag)    #x7f)
 
 (##define-macro (s8vector-tag)       #x00)
 (##define-macro (u8vector-tag)       #x01)
@@ -1869,6 +1872,9 @@
 
 (##define-macro (boxvalues? obj)
   `(##fixnum.= (##subtype ,obj) (macro-subtype-boxvalues)))
+
+(##define-macro (promise? obj)
+  `(##promise? ,obj))
 
 
 (##define-macro (make-string . args)
@@ -2804,6 +2810,12 @@
                      (lambda (v i) (f64vector-ref v i))
                      #f))
 
+                   ((promise? obj)
+                    (or (share obj)
+                        (begin
+                          (alloc! obj)
+                          (serialize-vector-like-long! obj (promise-tag)))))
+
                    (else
                     (cannot-serialize obj))))
 
@@ -3659,6 +3671,10 @@
 
                    ((= x (deleted-tag))
                     (macro-deleted-obj))
+
+                   ((= x (promise-tag))
+                    (deserialize-vector-like-long!
+                     (macro-subtype-promise)))
 
                    (else
                     (err))))

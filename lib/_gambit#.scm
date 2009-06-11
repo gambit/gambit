@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gambit#.scm", Time-stamp: <2009-06-03 16:39:31 feeley>
+;;; File: "_gambit#.scm", Time-stamp: <2009-06-11 09:44:24 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -454,6 +454,22 @@
 (##define-macro (macro-continuation-frame-set! c x) `(macro-slot 0 ,c ,x))
 (##define-macro (macro-continuation-denv c)         `(macro-slot 1 ,c))
 (##define-macro (macro-continuation-denv-set! c x)  `(macro-slot 1 ,c ,x))
+
+;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Promise objects
+
+;; A promise is represented by an object vector of length 2
+;; slot 0 = thunk
+;; slot 1 = result (eq? to promise object itself when not yet determined)
+
+(##define-macro (macro-make-promise thunk)
+  `(##make-promise thunk))
+
+(##define-macro (macro-promise-thunk p)         `(macro-slot 0 ,p))
+(##define-macro (macro-promise-thunk-set! p x)  `(macro-slot 0 ,p ,x))
+(##define-macro (macro-promise-result p)        `(macro-slot 1 ,p))
+(##define-macro (macro-promise-result-set! p x) `(macro-slot 1 ,p ,x))
 
 ;;;----------------------------------------------------------------------------
 

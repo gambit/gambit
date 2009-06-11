@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-05-11 14:27:54 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-06-11 10:14:51 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -8982,13 +8982,23 @@
      (##void))))
 
 (define-prim (##wr-promise we obj)
-  (if (macro-writeenv-force? we)
-    (##wr we (##force obj))
-    (##wr-sn
-     we
-     obj
-     'promise
-     (##void))))
+  (if (##eq? (macro-readtable-sharing-allowed?
+              (macro-writeenv-readtable we))
+             'serialize)
+      (##wr-serialize we obj ##explode-promise '("#promise(" . ")"))
+      (if (macro-writeenv-force? we)
+          (##wr we (##force obj))
+          (##wr-sn
+           we
+           obj
+           'promise
+           (##void)))))
+
+(define-prim (##explode-promise obj)
+  (##explode-object obj))
+
+(define-prim (##implode-promise re fields)
+  (##implode-object re fields (macro-subtype-promise)))
 
 (define-prim (##wr-will we obj)
   (##wr-sn
@@ -10445,6 +10455,8 @@
                  (deserialize re ##implode-procedure))
                 ((##read-string=? re s "#return")
                  (deserialize re ##implode-return))
+                ((##read-string=? re s "#promise")
+                 (deserialize re ##implode-promise))
                 ((##read-string=? re s "#absent")
                  (##wrap re
                          start-pos

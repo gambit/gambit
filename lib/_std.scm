@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_std.scm", Time-stamp: <2009-06-03 16:23:19 feeley>
+;;; File: "_std.scm", Time-stamp: <2009-06-11 09:44:50 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -1741,7 +1741,8 @@ end-of-code
               (loop (##cdr x) (##fixnum.- i 1))))
           x)))))
 
-(define-prim (##make-promise thunk))
+(define-prim (##make-promise thunk)
+  (macro-make-promise thunk))
 
 (define-prim (##force obj))
 
