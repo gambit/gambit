@@ -694,7 +694,7 @@ $ @b{cat square.scm}
   (pretty-print (expt (string->number arg) 2)))
 $ @b{gsi square 30        @r{@i{# gsi will load square.scm}}}
 900
-$ @b{gsc -link square}    @r{@i{# compile the script}}}
+$ @b{gsc -link square     @r{@i{# compile the script}}}
 $ @b{gcc -o square square.c square_.c -lgambc}
 $ @b{./square 30}
 900

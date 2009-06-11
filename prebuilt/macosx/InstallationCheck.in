@@ -1,49 +1,70 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
-
-echo "executing $SCRIPT_NAME"
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 PROGRAMS="@PROGRAMS@"
+LIBRARIES="@LIBRARIES@"
+INCLUDES="@INCLUDES@"
+
 BIN_DIR="@BIN_DIR@"
+LIB_DIR="@LIB_DIR@"
+INCLUDE_DIR="@INCLUDE_DIR@"
+
 INSTALL_DIR="@INSTALL_DIR@"
 GAMBC_BIN_DIR="$INSTALL_DIR/current/bin"
+GAMBC_LIB_DIR="$INSTALL_DIR/current/lib"
+GAMBC_INCLUDE_DIR="$INSTALL_DIR/current/include"
 
-PROGRAMS_EXISTING_CORRECT=""
-PROGRAMS_EXISTING_INCORRECT=""
-PROGRAMS_MISSING=""
 FIRST_EXISTING_INCORRECT=""
 
 i=0
 
-for prog in $PROGRAMS ; do
+check_clobber() # dir, gambc_dir, files
+{
+  DIR="$1"
+  GAMBC_DIR="$2"
+  FILES="$3"
 
-  if [ -e "$BIN_DIR/$prog" ] ; then
-    if [ -L "$BIN_DIR/$prog" -a "`readlink \"$BIN_DIR/$prog\"`" == "$GAMBC_BIN_DIR/$prog" ] ; then
-      PROGRAMS_EXISTING_CORRECT="$PROGRAMS_EXISTING_CORRECT $prog"
-    else
-      PROGRAMS_EXISTING_INCORRECT="$PROGRAMS_EXISTING_INCORRECT $prog"
-      if [ "$FIRST_EXISTING_INCORRECT" == "" ] ; then
-        FIRST_EXISTING_INCORRECT="$i"
+  EXISTING_CORRECT=""
+  EXISTING_INCORRECT=""
+  MISSING=""
+
+  if [ "$FIRST_EXISTING_INCORRECT" == "" ] ; then
+
+    for f in $FILES ; do
+
+      if [ -e "$DIR/$f" ] ; then
+        if [ -L "$DIR/$f" -a "`readlink \"$DIR/$f\"`" == "$GAMBC_DIR/$f" ] ; then
+          EXISTING_CORRECT="$EXISTING_CORRECT $f"
+        else
+          EXISTING_INCORRECT="$EXISTING_INCORRECT $f"
+          if [ "$FIRST_EXISTING_INCORRECT" == "" ] ; then
+            FIRST_EXISTING_INCORRECT="$i"
+          fi
+        fi
+      else
+        MISSING="$MISSING $f"
       fi
+
+      i=`expr $i + 1`
+
+    done
+
+    if [ "$FIRST_EXISTING_INCORRECT" != "" ] ; then
+      for f in $EXISTING_INCORRECT ; do
+        echo "The installation process is being aborted because the file $DIR/$f exists and it was not created by the Gambit-C installer."
+      done
+      exit `expr $FIRST_EXISTING_INCORRECT + 16 + 96`
     fi
-  else
-    PROGRAMS_MISSING="$PROGRAMS_MISSING $prog"
+
+    echo "EXISTING_CORRECT   = $EXISTING_CORRECT"
+    echo "EXISTING_INCORRECT = $EXISTING_INCORRECT"
+    echo "MISSING            = $MISSING"
   fi
+}
 
-  i=`expr $i + 1`
-
-done
-
-if [ "$FIRST_EXISTING_INCORRECT" != "" ] ; then
-  for prog in $PROGRAMS_EXISTING_INCORRECT ; do
-    echo "The installation process is being aborted because the file $BIN_DIR/$prog exists and it was not created by the Gambit-C installer."
-  done
-  exit `expr $FIRST_EXISTING_INCORRECT + 16 + 96`
-fi
-
-echo "EXISTING_CORRECT   = $PROGRAMS_EXISTING_CORRECT"
-echo "EXISTING_INCORRECT = $PROGRAMS_EXISTING_INCORRECT"
-echo "MISSING            = $PROGRAMS_MISSING"
+check_clobber "$BIN_DIR" "$GAMBC_BIN_DIR" "$PROGRAMS"
+check_clobber "$LIB_DIR" "$GAMBC_LIB_DIR" "$LIBRARIES"
+check_clobber "$INCLUDE_DIR" "$GAMBC_INCLUDE_DIR" "$INCLUDES"
 
 exit 0

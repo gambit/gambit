@@ -1,42 +1,59 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
-
-echo "executing $SCRIPT_NAME"
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 PROGRAMS="@PROGRAMS@"
+LIBRARIES="@LIBRARIES@"
+INCLUDES="@INCLUDES@"
+
 BIN_DIR="@BIN_DIR@"
+LIB_DIR="@LIB_DIR@"
+INCLUDE_DIR="@INCLUDE_DIR@"
+
 INSTALL_DIR="@INSTALL_DIR@"
 GAMBC_BIN_DIR="$INSTALL_DIR/current/bin"
+GAMBC_LIB_DIR="$INSTALL_DIR/current/lib"
+GAMBC_INCLUDE_DIR="$INSTALL_DIR/current/include"
 
-PROGRAMS_EXISTING_CORRECT=""
-PROGRAMS_EXISTING_INCORRECT=""
-PROGRAMS_MISSING=""
+install_safely() # dir, gambc_dir, files
+{
+  DIR="$1"
+  GAMBC_DIR="$2"
+  FILES="$3"
 
-for prog in $PROGRAMS ; do
+  EXISTING_CORRECT=""
+  EXISTING_INCORRECT=""
+  MISSING=""
 
-  if [ -e "$BIN_DIR/$prog" ] ; then
-    if [ -L "$BIN_DIR/$prog" -a "`readlink \"$BIN_DIR/$prog\"`" == "$GAMBC_BIN_DIR/$prog" ] ; then
-      PROGRAMS_EXISTING_CORRECT="$PROGRAMS_EXISTING_CORRECT $prog"
+  for f in $FILES ; do
+
+    if [ -e "$DIR/$f" ] ; then
+      if [ -L "$DIR/$f" -a "`readlink \"$DIR/$f\"`" == "$GAMBC_DIR/$f" ] ; then
+        EXISTING_CORRECT="$EXISTING_CORRECT $f"
+      else
+        EXISTING_INCORRECT="$EXISTING_INCORRECT $f"
+      fi
     else
-      PROGRAMS_EXISTING_INCORRECT="$PROGRAMS_EXISTING_INCORRECT $prog"
+      MISSING="$MISSING $f"
     fi
-  else
-    PROGRAMS_MISSING="$PROGRAMS_MISSING $prog"
-  fi
 
-done
+  done
 
-for prog in $PROGRAMS_EXISTING_INCORRECT ; do
+  for f in $EXISTING_INCORRECT ; do
 
-  # This should not happen because the InstallationCheck script aborts
-  # the installation when an existing file would be clobbered.
-  # However for safety we save the file under a different name.
+    # This should not happen because the InstallationCheck script aborts
+    # the installation when an existing file would be clobbered.
+    # However for safety we save the file under a different name.
 
-  mv "$BIN_DIR/$prog" "$BIN_DIR/$prog-orig"
+    mv "$DIR/$f" "$DIR/$f-orig"
 
-done
+  done
 
-for prog in $PROGRAMS_EXISTING_INCORRECT $PROGRAMS_MISSING ; do
-  ln -s "$GAMBC_BIN_DIR/$prog" "$BIN_DIR/$prog"
-done
+  for f in $EXISTING_INCORRECT $MISSING ; do
+    ln -s "$GAMBC_DIR/$f" "$DIR/$f"
+  done
+}
+
+install_safely "$BIN_DIR" "$GAMBC_BIN_DIR" "$PROGRAMS"
+install_safely "$LIB_DIR" "$GAMBC_LIB_DIR" "$LIBRARIES"
+install_safely "$INCLUDE_DIR" "$GAMBC_INCLUDE_DIR" "$INCLUDES"

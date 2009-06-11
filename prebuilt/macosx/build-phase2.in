@@ -11,7 +11,6 @@ PACKAGE_VERSION="@PACKAGE_VERSION@"
 PACKAGE_STRING="@PACKAGE_STRING@"
 PACKAGE_BUGREPORT="@PACKAGE_BUGREPORT@"
 PACKAGE_TARNAME="@PACKAGE_TARNAME@"
-PACKAGE_SUBDIR="@PACKAGE_SUBDIR@"
 
 PKGM="/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker"
 
@@ -21,6 +20,8 @@ RUN_TESTS="$2"
 SOURCE_DIR="$INSTALL_PREFIX"
 INSTALL_DIR="$INSTALL_PREFIX"
 BIN_DIR="/usr/bin"
+LIB_DIR="/usr/lib"
+INCLUDE_DIR="/usr/include"
 TITLE="$PACKAGE_STRING ($VARIANT variant)"
 VERSION="`echo $PACKAGE_VERSION | sed -e s/^v//g`"
 PKG_FILE="`pwd`/$PACKAGE_TARNAME-macosx-$VARIANT.pkg"
@@ -32,11 +33,13 @@ README_FILE="`pwd`/readme.html"
 CONCLUSION_FILE="`pwd`/conclusion.html"
 EXTRAS_DIR="`pwd`/extras"
 DESCRIPTION="This is the $TITLE installer"
-PROGRAMS="gsc gsc-cc-o.bat gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script uninstall-gambc"
+PROGRAMS="gsc gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script uninstall-gambc"
+LIBRARIES="libgambc@LIB_EXTENSION@ libgambcgsi@LIB_EXTENSION@ libgambcgsc@LIB_EXTENSION@"
+INCLUDES="gambit.h"
 
 instantiate_file() # input, output
 {
-  sed -e "s|@BIN_DIR@|$BIN_DIR|g" -e "s|@SOURCE_DIR@|$SOURCE_DIR|g" -e "s|@INSTALL_DIR@|$INSTALL_DIR|g" -e "s|@VERSION@|$VERSION|g" -e "s|@PACKAGE_VERSION@|$PACKAGE_VERSION|g" -e "s|@TITLE@|$TITLE|g" -e "s|@DESCRIPTION@|$DESCRIPTION|g" -e "s|@PROGRAMS@|$PROGRAMS|g" -e "s|@BACKGROUND_FILE@|$BACKGROUND_FILE|g" -e "s|@WELCOME_FILE@|$WELCOME_FILE|g" -e "s|@README_FILE@|$README_FILE|g" -e "s|@CONCLUSION_FILE@|$CONCLUSION_FILE|g" -e "s|@EXTRAS_DIR@|$EXTRAS_DIR|g" -e "s|@NAME@|$PACKAGE_NAME|g" -e "s|@VARIANT@|$VARIANT|g" "$1" > "$2"
+  sed -e "s|@BIN_DIR@|$BIN_DIR|g" -e "s|@LIB_DIR@|$LIB_DIR|g" -e "s|@INCLUDE_DIR@|$INCLUDE_DIR|g" -e "s|@SOURCE_DIR@|$SOURCE_DIR|g" -e "s|@INSTALL_DIR@|$INSTALL_DIR|g" -e "s|@VERSION@|$VERSION|g" -e "s|@PACKAGE_VERSION@|$PACKAGE_VERSION|g" -e "s|@TITLE@|$TITLE|g" -e "s|@DESCRIPTION@|$DESCRIPTION|g" -e "s|@PROGRAMS@|$PROGRAMS|g" -e "s|@LIBRARIES@|$LIBRARIES|g" -e "s|@INCLUDES@|$INCLUDES|g" -e "s|@BACKGROUND_FILE@|$BACKGROUND_FILE|g" -e "s|@WELCOME_FILE@|$WELCOME_FILE|g" -e "s|@README_FILE@|$README_FILE|g" -e "s|@CONCLUSION_FILE@|$CONCLUSION_FILE|g" -e "s|@EXTRAS_DIR@|$EXTRAS_DIR|g" -e "s|@NAME@|$PACKAGE_NAME|g" -e "s|@VARIANT@|$VARIANT|g" "$1" > "$2"
 }
 
 cleanup()
@@ -102,9 +105,25 @@ create_extras()
 
   i=0
 
-  for prog in $PROGRAMS ; do
+  for f in $PROGRAMS ; do
 
-    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $BIN_DIR/$prog exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
+    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $BIN_DIR/$f exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
+
+    i=`expr $i + 1`
+
+  done
+
+  for f in $LIBRARIES ; do
+
+    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $LIB_DIR/$f exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
+
+    i=`expr $i + 1`
+
+  done
+
+  for f in $INCLUDES ; do
+
+    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $INCLUDE_DIR/$f exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
 
     i=`expr $i + 1`
 

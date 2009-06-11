@@ -65,7 +65,7 @@ mandir = @mandir@
 .SUFFIXES:
 
 RCFILES = makefile.in build build-phase2.in remote-shell \
-InstallationCheck.in InstallationCheck.strings.in postflight.in \
+InstallationCheck.in postflight.in \
 gambc.ai gambc.tif gambc.pmproj.in \
 welcome.html.in readme.html.in conclusion.html.in uninstall-gambc.in
 

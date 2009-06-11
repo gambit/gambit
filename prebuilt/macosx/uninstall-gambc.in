@@ -1,11 +1,20 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 PROGRAMS="@PROGRAMS@"
+LIBRARIES="@LIBRARIES@"
+INCLUDES="@INCLUDES@"
+
 BIN_DIR="@BIN_DIR@"
+LIB_DIR="@LIB_DIR@"
+INCLUDE_DIR="@INCLUDE_DIR@"
+
 INSTALL_DIR="@INSTALL_DIR@"
 GAMBC_BIN_DIR="$INSTALL_DIR/current/bin"
+GAMBC_LIB_DIR="$INSTALL_DIR/current/lib"
+GAMBC_INCLUDE_DIR="$INSTALL_DIR/current/include"
+
 PACKAGE_NAME="@PACKAGE_NAME@"
 
 if [ "`id -un`" != "root" ] ; then
@@ -92,11 +101,20 @@ read_versions()
 
 remove_all()
 {
-  echo "Removing directory $INSTALL_DIR and all Gambit programs in $BIN_DIR"
+  echo "Removing directory $INSTALL_DIR and all Gambit programs in $BIN_DIR, $LIB_DIR and $INCLUDE_DIR."
+
   rm -rf "$INSTALL_DIR"
 
-  for prog in $PROGRAMS ; do
-    rm -f "$BIN_DIR/$prog"
+  for f in $PROGRAMS ; do
+    rm -f "$BIN_DIR/$f"
+  done
+
+  for f in $LIBRARIES ; do
+    rm -f "$LIB_DIR/$f"
+  done
+
+  for f in $INCLUDES ; do
+    rm -f "$INCLUDE_DIR/$f"
   done
 }
 
@@ -165,6 +183,7 @@ else
       else
 
         echo "Removing $INSTALL_DIR/$version_to_remove"
+
         rm -rf "$INSTALL_DIR/$version_to_remove"
 
         if [ "$current_version" == "$version_to_remove" ] ; then
