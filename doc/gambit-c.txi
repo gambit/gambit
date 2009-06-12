@@ -219,19 +219,34 @@ file is needed for compiling Scheme programs with the Gambit-C
 compiler.  When the C compiler is being called explicitly it may be
 necessary to use a @code{-I@var{<dir>}} command line option to
 indicate where to find header files and a @code{-L@var{<dir>}} command
-line option to indicate where to find libraries.  Access to both of
-these files can be simplified by creating a link to them in the
-appropriate system directories (special privileges may however be
-required):
+line option to indicate where to find libraries.
+
+Access to both of these files can be simplified by creating a link to
+them in the appropriate system directories (special privileges may
+however be required):
 
 @smallexample
 @b{}$ @b{ln -s /usr/local/Gambit-C/lib/libgambc.a /usr/lib} @r{@i{# name may vary}}
 $ @b{ln -s /usr/local/Gambit-C/include/gambit.h /usr/include}
 @end smallexample
 
-This may have been done by the installation process.  Alternatively
-these files can be copied or linked in the directory where the C
-compiler is invoked (this requires no special privileges).
+Alternatively these files can be copied or linked in the directory
+where the C compiler is invoked (this requires no special privileges).
+
+Another approach is to set some environment variables which
+are used to tell the C compiler where to find header files
+and libraries.  For example, the following settings can be
+used for the @code{gcc} C compiler:
+
+@smallexample
+@b{}$ @b{export LIBRARY_PATH=/usr/local/Gambit-C/lib}
+$ @b{export CPATH=/usr/local/Gambit-C/include}
+@end smallexample
+
+Note that this may have been done by the installation process.  In
+particular, the Mac OS X and Microsoft Windows prebuilt installers set
+up the environment so that the @code{gcc} compiler finds these files
+automatically.
 
 @ifinfo
 
