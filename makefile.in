@@ -1,6 +1,6 @@
 # makefile for Gambit-C system.
 
-# Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -88,7 +88,7 @@ HGDISTFILES = $(HGRCFILES)
 
 .SUFFIXES:
 
-all: all-pre all-recursive all-post
+all:
 
 all-pre:
 
@@ -334,8 +334,15 @@ dist-post:
 	rm -rf $(PACKAGE_TARNAME)
 
 dist-devel-pre:
-	$(MAKE) $(MDEFINES) dist-pre
+	rm -rf $(PACKAGE_TARNAME)
+	mkdir $(PACKAGE_TARNAME)
+	chmod 777 $(PACKAGE_TARNAME)
 	@echo "  Copying distribution files:"
+	@for file in $(DISTFILES); do \
+	  echo "    $$file"; \
+	  ln $(srcdirpfx)$$file $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(PACKAGE_TARNAME); \
+	done
 	@if test "$(RC)" = "$(GIT)"; then \
 	  for file in $(GITDISTFILES); do \
 	    echo "    $$file"; \
@@ -371,25 +378,71 @@ all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-
 	  (cd $$subdir && $(MAKE) $$target) || exit 1; \
 	done
 
-install: install-pre install-recursive install-post
+all: all-post
 
-uninstall: uninstall-pre uninstall-recursive uninstall-post
+all-post: all-recursive
 
-mostlyclean: mostlyclean-pre mostlyclean-recursive mostlyclean-post
+all-recursive: all-pre
 
-clean: clean-pre clean-recursive clean-post
+install: install-post
 
-distclean: distclean-pre distclean-recursive distclean-post
+install-post: install-recursive
 
-bootclean: bootclean-pre bootclean-recursive bootclean-post
+install-recursive: install-pre
 
-realclean: realclean-pre realclean-recursive realclean-post
+uninstall: uninstall-post
 
-rc-setup: rc-setup-pre rc-setup-recursive rc-setup-post
+uninstall-post: uninstall-recursive
 
-dist: dist-pre dist-recursive dist-post
+uninstall-recursive: uninstall-pre
 
-dist-devel: dist-devel-pre dist-devel-recursive dist-devel-post
+mostlyclean: mostlyclean-post
+
+mostlyclean-post: mostlyclean-recursive
+
+mostlyclean-recursive: mostlyclean-pre
+
+clean: clean-post
+
+clean-post: clean-recursive
+
+clean-recursive: clean-pre
+
+distclean: distclean-post
+
+distclean-post: distclean-recursive
+
+distclean-recursive: distclean-pre
+
+bootclean: bootclean-post
+
+bootclean-post: bootclean-recursive
+
+bootclean-recursive: bootclean-pre
+
+realclean: realclean-post
+
+realclean-post: realclean-recursive
+
+realclean-recursive: realclean-pre
+
+rc-setup: rc-setup-post
+
+rc-setup-post: rc-setup-recursive
+
+rc-setup-recursive: rc-setup-pre
+
+dist: dist-post
+
+dist-post: dist-recursive
+
+dist-recursive: dist-pre
+
+dist-devel: dist-devel-post
+
+dist-devel-post: dist-devel-recursive
+
+dist-devel-recursive: dist-devel-pre
 
 # For an explanation of the following makefile rules, see node
 # `Automatic Remaking' in GNU Autoconf documentation.
