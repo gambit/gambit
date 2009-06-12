@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2009-06-09 16:47:38 feeley>
+# makefile for Gambit-C library, Time-stamp: <2009-06-12 07:55:08 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -75,7 +75,7 @@ INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir)
 
 NORMAL_C = main.c setup.c mem.c os.c os_base.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c
 NORMAL_CPP =
-NORMAL_H = setup.h mem.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h
+NORMAL_H = setup.h mem.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h dead.h
 NORMAL_O = main@obj@ setup@obj@ mem@obj@ c_intf@obj@ os@obj@ os_base@obj@ os_time@obj@ os_shell@obj@ os_files@obj@ os_dyn@obj@ os_tty@obj@ os_io@obj@
 NORMAL_O_PLUS = +main@obj@ +setup@obj@ +mem@obj@ +c_intf@obj@ +os@obj@ +os_base@obj@ +os_time@obj@ +os_shell@obj@ +os_files@obj@ +os_dyn@obj@ +os_tty@obj@ +os_io@obj@
 NORMAL_O_COMMA = main@obj@,setup@obj@,mem@obj@,c_intf@obj@,os@obj@,os_base@obj@,os_time@obj@,os_shell@obj@,os_files@obj@,os_dyn@obj@,os_tty@obj@,os_io@obj@
