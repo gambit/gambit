@@ -85,6 +85,9 @@ FunctionEnd
 
 Section "MainSection" SEC01
 
+  Var /GLOBAL instdir_short
+  Var /GLOBAL instdir_short_slash
+
   StrCpy $9 "$INSTDIR"
 
   SetOverwrite try
@@ -96,30 +99,34 @@ Section "MainSection" SEC01
 
   GetFullPathName /SHORT $1 "$INSTDIR"
 
-  ExecWait '$1\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$1\v${PRODUCT_VERSION}" "$1\v${PRODUCT_VERSION}\lib\libgambc.a" "$1\v${PRODUCT_VERSION}\bin\gsi.exe" "$1\v${PRODUCT_VERSION}\bin\gsc.exe" "$1\v${PRODUCT_VERSION}\bin\six.exe"' $0
+  StrCpy $instdir_short "$1"
 
-  Push "$1"
+  ExecWait '$instdir_short\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}\lib\libgambc.a" "$instdir_short\v${PRODUCT_VERSION}\bin\gsi.exe" "$instdir_short\v${PRODUCT_VERSION}\bin\gsc.exe" "$instdir_short\v${PRODUCT_VERSION}\bin\six.exe"' $0
+
+  Push "$instdir_short"
   Push "\"
   Call StrSlash
-  Pop $2
+  Pop $1
 
-  Push "$1\v${PRODUCT_VERSION}\bin"
+  StrCpy $instdir_short_slash "$1"
+
+  Push "$instdir_short\v${PRODUCT_VERSION}\bin"
   Call AddToPath
 
   Push "LIBRARY_PATH"
-  Push "$2/v${PRODUCT_VERSION}/lib"
+  Push "$instdir_short_slash/v${PRODUCT_VERSION}/lib"
   Call AddToEnvVar
 
   Push "CPATH"
-  Push "$2/v${PRODUCT_VERSION}/include"
+  Push "$instdir_short_slash/v${PRODUCT_VERSION}/include"
   Call AddToEnvVar
 
   Push "LIB"
-  Push "$1\v${PRODUCT_VERSION}\lib"
+  Push "$instdir_short\v${PRODUCT_VERSION}\lib"
   Call AddToEnvVar
 
   Push "INCLUDE"
-  Push "$1\v${PRODUCT_VERSION}\include"
+  Push "$instdir_short\v${PRODUCT_VERSION}\include"
   Call AddToEnvVar
 
   Delete '$INSTDIR\v${PRODUCT_VERSION}\bin\binpatch.exe'
@@ -147,24 +154,28 @@ FunctionEnd
 
 Section "Uninstall"
 
+  Var /GLOBAL instdir_short2
+
   ; How come the value of $INSTDIR here is not the same as in the main section?
   GetFullPathName /SHORT $1 "$INSTDIR\..\.."
 
-  IfFileExists "$1\v${PRODUCT_VERSION}\bin\uninstall-gambc.exe" can_be_uninst has_been_uninst
+  StrCpy $instdir_short2 "$1"
+
+  IfFileExists "$instdir_short2\v${PRODUCT_VERSION}\bin\uninstall-gambc.exe" can_be_uninst has_been_uninst
 
   has_been_uninst:
 
-  MessageBox MB_ICONINFORMATION|MB_OK "${PRODUCT_NAME} v${PRODUCT_VERSION} (${PRODUCT_VARIANT} variant) does not seem to be installed! ($1\v${PRODUCT_VERSION}\bin\uninstall-gambc.exe does not exist)"
+  MessageBox MB_ICONINFORMATION|MB_OK "${PRODUCT_NAME} v${PRODUCT_VERSION} (${PRODUCT_VARIANT} variant) does not seem to be installed! ($instdir_short2\v${PRODUCT_VERSION}\bin\uninstall-gambc.exe does not exist)"
   Abort
 
   can_be_uninst:
 
-  RMDir /r "$1\v${PRODUCT_VERSION}"
+  RMDir /r "$instdir_short2\v${PRODUCT_VERSION}"
 
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
 
-  Push "$1\v${PRODUCT_VERSION}\bin"
+  Push "$instdir_short2\v${PRODUCT_VERSION}\bin"
   Call un.RemoveFromPath
 
 SectionEnd
