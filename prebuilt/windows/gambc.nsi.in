@@ -101,7 +101,12 @@ Section "MainSection" SEC01
 
   StrCpy $instdir_short "$1"
 
-  ExecWait '$instdir_short\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}\lib\libgambc.a" "$instdir_short\v${PRODUCT_VERSION}\bin\gsi.exe" "$instdir_short\v${PRODUCT_VERSION}\bin\gsc.exe" "$instdir_short\v${PRODUCT_VERSION}\bin\six.exe"' $0
+  ExecWait '$instdir_short\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}\bin\gsi.exe"' $0
+  ExecWait '$instdir_short\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}\bin\gsc.exe"' $0
+  ExecWait '$instdir_short\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}\bin\six.exe"' $0
+  ExecWait '$instdir_short\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}\lib\libgambc.a"' $0
+  ExecWait '$instdir_short\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}\lib\libgambc.lib"' $0
+  ExecWait '$instdir_short\v${PRODUCT_VERSION}\bin\binpatch.exe "@DOS_SOURCE_DIR@/v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}" "$instdir_short\v${PRODUCT_VERSION}\lib\libgambc.dll"' $0
 
   Push "$instdir_short"
   Push "\"
