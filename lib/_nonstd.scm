@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2009-06-03 15:19:21 feeley>
+;;; File: "_nonstd.scm", Time-stamp: <2009-06-14 21:04:15 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -1276,12 +1276,12 @@
                   stdin-redirection: #f
                   stdout-redirection: #f
                   stderr-redirection: #f)))
-    (##open-process
+    (##open-process-generic
+     (macro-direction-inout)
      #t
      (lambda (port)
-       (let ((status (##process-status port)))
-         (##close-port port)
-         status))
+       (##close-port port)
+       (##process-status port))
      open-process
      path-or-settings)))
 

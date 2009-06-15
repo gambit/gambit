@@ -3647,17 +3647,6 @@ The procedures in this section are not yet documented.
 @deffnx procedure rpc-remote-error-exception-message @var{exc}
 @end deffn
 
-@deffn procedure process-pid @var{process-port}
-@end deffn
-
-@deffn procedure process-status @var{process-port} @r{[}@var{timeout} @r{[}@var{timeout-val}@r{]}@r{]}
-@end deffn
-
-@deffn procedure unterminated-process-exception? @var{obj}
-@deffnx procedure unterminated-process-exception-procedure @var{exc}
-@deffnx procedure unterminated-process-exception-arguments @var{exc}
-@end deffn
-
 @deffn procedure timeout->time @var{timeout}
 @end deffn
 
@@ -11318,9 +11307,11 @@ setting will default to the value @code{input} for the procedures
 @code{with-input-from-file}, to the value @code{output} for the
 procedures @code{open-output-file}, @code{call-with-output-file} and
 @code{with-output-to-file}, and to the value @code{input-output} for
-the procedure @code{open-file}.  The procedures @code{open-file},
-@code{open-input-file} and @code{open-output-file} return the port
-that is created.  The procedures @code{call-with-input-file} and
+the procedure @code{open-file}.
+
+The procedures @code{open-file}, @code{open-input-file} and
+@code{open-output-file} return the port that is created.  The
+procedures @code{call-with-input-file} and
 @code{call-with-output-file} call the procedure @var{proc} with the
 port as single argument, and then return the value(s) of this call
 after closing the port.  The procedures @code{with-input-from-file}
@@ -11461,12 +11452,39 @@ bcd!fghij
 @subsection Process devices
 
 @deffn procedure open-process @var{path-or-settings}
+@deffnx procedure open-input-process @var{path-or-settings}
+@deffnx procedure open-output-process @var{path-or-settings}
+@deffnx procedure call-with-input-process @var{path-or-settings} @var{proc}
+@deffnx procedure call-with-output-process @var{path-or-settings} @var{proc}
+@deffnx procedure with-input-from-process @var{path-or-settings} @var{thunk}
+@deffnx procedure with-output-to-process @var{path-or-settings} @var{thunk}
 
-This procedure starts a new process and returns a port that allows
-communication with that process on its standard input and standard
-output.  The default value of the @code{direction:} setting is
-@code{input-output}, i.e. the Scheme program can write to the process'
-standard input and can read from the process' standard output.
+All of these procedures start a new operating system process and
+create a bidirectional port which allows communication with that
+process on its standard input and standard output.  The
+@code{direction:} setting will default to the value @code{input} for
+the procedures @code{open-input-process},
+@code{call-with-input-process} and @code{with-input-from-process}, to
+the value @code{output} for the procedures @code{open-output-process},
+@code{call-with-output-process} and @code{with-output-to-process}, and
+to the value @code{input-output} for the procedure
+@code{open-process}.  If the @code{direction:} setting is
+@code{input}, the output-port side is closed.  If the
+@code{direction:} setting is @code{output}, the input-port side is
+closed.
+
+The procedures @code{open-process}, @code{open-input-process} and
+@code{open-output-process} return the port that is created.  The
+procedures @code{call-with-input-process} and
+@code{call-with-output-process} call the procedure @var{proc} with the
+port as single argument, and then return the value(s) of this call
+after closing the port and waiting for the process to terminate.  The
+procedures @code{with-input-from-process} and
+@code{with-output-to-process} dynamically bind the current input-port
+and current output-port respectively to the port created for the
+duration of a call to the procedure @var{thunk} with no argument.  The
+value(s) of the call to @var{thunk} are returned after closing the
+port and waiting for the process to terminate.
 
 The first argument of this procedure is either a string denoting a
 filesystem path of an executable program or a list of port settings
@@ -11563,6 +11581,8 @@ of this setting is @code{#t} (i.e. show the console window).
 For example:
 
 @smallexample
+> @b{(with-input-from-process "date" read-line)}
+"Sun Jun 14 15:06:41 EDT 2009"
 > @b{(define p (open-process (list path: "ls"
                                 arguments: '("../examples"))))}
 > @b{(read-line p)}
@@ -11575,6 +11595,85 @@ For example:
 > @b{(force-output p)}
 > @b{(read-line p)}
 "1267650600228229401496703205376"
+@end smallexample
+
+@end deffn
+
+@deffn procedure process-pid @var{process-port}
+
+This procedure returns the PID (Process Identifier) of the process of
+@var{process-port}.  The PID is a small exact integer.
+
+For example:
+
+@smallexample
+> @b{(let ((p (open-process "sort")))
+    (process-pid p))}
+318
+@end smallexample
+
+@end deffn
+
+@deffn procedure process-status @var{process-port} @r{[}@var{timeout} @r{[}@var{timeout-val}@r{]}@r{]}
+
+This procedure causes the current thread to wait until the process of
+@var{process-port} terminates (normally or not) or until the timeout
+is reached if @var{timeout} is supplied.  If the timeout is reached,
+@var{process-status} returns @var{timeout-val} if it is supplied,
+otherwise an unterminated-process-exception object is raised.  The
+procedure returns the process exit status as encoded by the operating
+system.  Typically, if the process exited normally the return value is
+the process exit status multiplied by 256.
+
+For example:
+
+@smallexample
+> @b{(let ((p (open-process "sort")))
+    (for-each (lambda (x) (pretty-print x p))
+              '(22 11 33))
+    (close-output-port p)
+    (let ((r (read-all p)))
+      (close-input-port p)
+      (list (process-status p) r)))}
+(0 (11 22 33))
+@end smallexample
+
+@end deffn
+
+@deffn procedure unterminated-process-exception? @var{obj}
+@deffnx procedure unterminated-process-exception-procedure @var{exc}
+@deffnx procedure unterminated-process-exception-arguments @var{exc}
+
+Unterminated-process-exception objects are raised when a call to the
+@code{process-status} procedure reaches its timeout before the target
+process terminates and a timeout-value parameter is not specified.
+The parameter @var{exc} must be an unterminated-process-exception
+object.
+
+The procedure @code{unterminated-process-exception?} returns
+@code{#t} when @var{obj} is an unterminated-process-exception
+object and @code{#f} otherwise.
+
+The procedure @code{unterminated-process-exception-procedure}
+returns the procedure that raised @var{exc}.
+
+The procedure @code{unterminated-process-exception-arguments}
+returns the list of arguments of the procedure that raised @var{exc}.
+
+For example:
+
+@smallexample
+> @b{(define (handler exc)
+    (if (unterminated-process-exception? exc)
+        (list (unterminated-process-exception-procedure exc)
+              (unterminated-process-exception-arguments exc))
+        'not-unterminated-process-exception))}
+> @b{(with-exception-catcher
+    handler
+    (lambda ()
+      (let ((p (open-process "sort")))
+        (process-status p 1))))}
+(#<procedure #2 process-status> (#<input-output-port #3 (process "sort")>))
 @end smallexample
 
 @end deffn

@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-06-04 18:56:53 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-06-14 21:02:40 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -2423,7 +2423,8 @@ typedef struct ___device_process_struct
 #endif
 
     int status;          /* process status */
-    ___BOOL terminated;  /* has process terminated? */
+    ___BOOL got_status;  /* was the status retrieved? */
+    ___BOOL cleanuped;   /* has process been cleaned-up? */
   } ___device_process;
 
 typedef struct ___device_process_vtbl_struct
@@ -2444,9 +2445,9 @@ ___SCMOBJ ___device_process_cleanup
         (dev)
 ___device_process *dev;)
 {
-  if (!dev->terminated)
+  if (!dev->cleanuped)
     {
-      dev->terminated = 1;
+      dev->cleanuped = 1;
 
 #ifdef USE_POSIX
 #endif
@@ -2463,12 +2464,33 @@ ___device_process *dev;)
 }
 
 
-___SCMOBJ ___device_process_get_status
+___SCMOBJ ___device_process_status_set
+   ___P((___device_process *dev,
+         int status),
+        (dev,
+         status)
+___device_process *dev;
+int status;)
+{
+  ___SCMOBJ e = ___FIX(___NO_ERR);
+
+  if (!dev->got_status)
+    {
+      dev->status = status;
+      dev->got_status = 1;
+      e = ___device_process_cleanup (dev); /* ignore error */
+    }
+
+  return e;
+}
+
+
+___SCMOBJ ___device_process_status_poll
    ___P((___device_process *dev),
         (dev)
 ___device_process *dev;)
 {
-  if (!dev->terminated)
+  if (!dev->got_status)
     {
 #ifdef USE_POSIX
 
@@ -2486,10 +2508,8 @@ ___device_process *dev;)
       if (!GetExitCodeProcess (dev->pi.hProcess, &status))
         return err_code_from_GetLastError ();
 
-      dev->status = status << 8;
-
       if (status != STILL_ACTIVE)
-        ___device_process_cleanup (dev); /* ignore error */
+        ___device_process_status_set (dev, status << 8); /* ignore error */
 
 #endif
     }
@@ -2555,10 +2575,7 @@ int direction;)
 
   if (d->base.base.read_stage == ___STAGE_CLOSED &&
       d->base.base.write_stage == ___STAGE_CLOSED)
-    {
-      ___device_process_get_status (d); /* ignore error */
-      ___device_process_cleanup (d); /* ignore error */
-    }
+    ___device_process_status_poll (d); /* ignore error */
 
   return ___FIX(___NO_ERR);
 }
@@ -2657,7 +2674,8 @@ ___HIDDEN ___SCMOBJ ___device_process_release_raw_virt
         (self)
 ___device_stream *self;)
 {
-  return ___FIX(___NO_ERR);
+  ___device_process *d = ___CAST(___device_process*,self);
+  return ___device_process_cleanup (d);
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_force_output_raw_virt
@@ -2943,7 +2961,8 @@ int direction;)
   d->fd_stdin = fd_stdin;
   d->fd_stdout = fd_stdout;
   d->status = -1;
-  d->terminated = 0;
+  d->got_status = 0;
+  d->cleanuped = 0;
 
   *dev = d;
 
@@ -2991,7 +3010,8 @@ int direction;)
   d->hstdin = hstdin;
   d->hstdout = hstdout;
   d->status = -1;
-  d->terminated = 0;
+  d->got_status = 0;
+  d->cleanuped = 0;
 
   *dev = d;
 
@@ -6678,10 +6698,10 @@ ___SCMOBJ dev;)
     ___CAST(___device_process*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
 
-  if ((e = ___device_process_get_status (d)) != ___FIX(___NO_ERR))
+  if ((e = ___device_process_status_poll (d)) != ___FIX(___NO_ERR))
     return e;
 
-  if (!d->terminated)
+  if (!d->got_status)
     return ___FAL;
 
   return ___FIX(d->status);
@@ -7451,8 +7471,7 @@ int sig;)
 
       /*
        * Find the process device structure for the process which
-       * terminated, and save the exit status and change the state to
-       * "terminated".
+       * terminated, and save the exit status with the process device.
        */
 
       head = ___global_device_group ()->list;
@@ -7469,10 +7488,8 @@ int sig;)
 
                   if (dev->pid == pid)
                     {
-                      dev->status = status;
-
                       if (WIFEXITED(status) || WIFSIGNALED(status))
-                        ___device_process_cleanup (dev); /* ignore error */
+                        ___device_process_status_set (dev, status); /* ignore error */
                       break;
                     }
                 }

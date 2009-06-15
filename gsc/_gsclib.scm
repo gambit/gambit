@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2008-12-18 21:26:27 feeley>
+;;; File: "_gsclib.scm", Time-stamp: <2009-06-14 16:08:18 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -166,7 +166,8 @@
              (##current-directory)))
            (c-filename-base
             (##path-strip-directory c-filename)))
-      (##open-process
+      (##open-process-generic
+       (macro-direction-inout)
        #t
        (lambda (port)
          (let ((status (##process-status port)))

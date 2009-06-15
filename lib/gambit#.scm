@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2009-06-03 12:41:47 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2009-06-14 21:13:22 feeley>
 
 ;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
 
@@ -54,9 +54,11 @@ bitwise-xor
 box
 box?
 break
+call-with-input-process
 call-with-input-string
 call-with-input-u8vector
 call-with-input-vector
+call-with-output-process
 call-with-output-string
 call-with-output-u8vector
 call-with-output-vector
@@ -399,9 +401,11 @@ open-directory
 open-dummy
 open-event-queue
 open-file
+open-input-process
 open-input-string
 open-input-u8vector
 open-input-vector
+open-output-process
 open-output-string
 open-output-u8vector
 open-output-vector
@@ -833,10 +837,12 @@ will?
 with-exception-catcher
 with-exception-handler
 with-input-from-port
+with-input-from-process
 with-input-from-string
 with-input-from-u8vector
 with-input-from-vector
 with-output-to-port
+with-output-to-process
 with-output-to-string
 with-output-to-u8vector
 with-output-to-vector

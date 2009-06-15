@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-04-02 16:42:50 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-06-14 16:07:48 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3742,7 +3742,8 @@
             (install-dir "~~bin"))
            (gambcdir-doc
             (install-dir "~~doc")))
-      (##open-process
+      (##open-process-generic
+       (macro-direction-inout)
        #t
        (lambda (port)
          (let ((status (##process-status port)))

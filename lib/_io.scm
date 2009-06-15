@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-06-11 10:14:51 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-06-14 16:34:09 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -5624,11 +5624,12 @@
 (implement-check-type-process-port)
 
 (define-prim (##make-process-psettings
+              direction
               settings
               fail
               succeed)
   (##make-psettings
-   (macro-direction-inout)
+   direction
    '(path:
      arguments:
      environment:
@@ -5648,6 +5649,7 @@
      input-eol-encoding:
      output-eol-encoding:
      eol-encoding:
+     direction:
      input-buffering:
      output-buffering:
      buffering:
@@ -5658,11 +5660,14 @@
    fail
    succeed))
 
-(define-prim (##open-process
+(define-prim (##open-process-generic
+              direction
               raise-os-exception?
               cont
               prim
-              path-or-settings)
+              path-or-settings
+              #!optional
+              (arg2 (macro-absent-obj)))
 
   (define (psettings->options psettings)
     (let ((stdin-redir
@@ -5686,9 +5691,10 @@
           (##fixnum.* 16 show-console)))))))
 
   (define (fail)
-    (##fail-check-string-or-settings 1 prim path-or-settings))
+    (##fail-check-string-or-settings 1 prim path-or-settings arg2))
 
   (##make-process-psettings
+   direction
    (if (##string? path-or-settings)
      (##list 'path: path-or-settings)
      path-or-settings)
@@ -5709,34 +5715,157 @@
                  (if directory
                    (##path-expand directory)
                    (##current-directory)))
-                (device
-                 (##os-device-stream-open-process
-                  path-and-arguments
-                  environment
-                  expanded-directory
-                  (psettings->options psettings))))
-           (cond ((##fixnum? device)
-                  (if raise-os-exception?
-                    (##raise-os-exception
-                     #f
-                     device
-                     prim
-                     path-or-settings)
-                    (cont device)))
-                 (else
-                  (cont
-                   (##make-device-port-from-single-device
-                    (##cons 'process path-and-arguments)
-                    device
-                    psettings))))))))))
+                (direction
+                 (macro-psettings-direction psettings)))
+
+           ;; force creation of a bidirectional port
+           (macro-psettings-direction-set!
+            psettings
+            (macro-direction-inout))
+
+           (let ((device
+                  (##os-device-stream-open-process
+                   path-and-arguments
+                   environment
+                   expanded-directory
+                   (psettings->options psettings))))
+             (cond ((##fixnum? device)
+                    (if raise-os-exception?
+                        (##raise-os-exception
+                         #f
+                         device
+                         prim
+                         path-or-settings
+                         arg2)
+                        (cont device)))
+                   (else
+                    (let ((port
+                           (##make-device-port-from-single-device
+                            (##cons 'process path-and-arguments)
+                            device
+                            psettings)))
+
+                      ;; close unused direction
+                      (cond ((##fixnum.= direction (macro-direction-in))
+                             (##close-output-port port))
+                            ((##fixnum.= direction (macro-direction-out))
+                             (##close-input-port port)))
+
+                      (cont port)))))))))))
+
+(define-prim (##open-process path-or-settings)
+  (##open-process-generic
+   (macro-direction-inout)
+   #t
+   (lambda (port) port)
+   open-process
+   path-or-settings))
 
 (define-prim (open-process path-or-settings)
   (macro-force-vars (path-or-settings)
-    (##open-process
-     #t
-     (lambda (port) port)
-     open-process
-     path-or-settings)))
+    (##open-process path-or-settings)))
+
+(define-prim (##open-input-process path-or-settings)
+  (##open-process-generic
+   (macro-direction-in)
+   #t
+   (lambda (port) port)
+   open-input-process
+   path-or-settings))
+
+(define-prim (open-input-process path-or-settings)
+  (macro-force-vars (path-or-settings)
+    (##open-input-process path-or-settings)))
+
+(define-prim (##open-output-process path-or-settings)
+  (##open-process-generic
+   (macro-direction-out)
+   #t
+   (lambda (port) port)
+   open-output-process
+   path-or-settings))
+
+(define-prim (open-output-process path-or-settings)
+  (macro-force-vars (path-or-settings)
+    (##open-output-process path-or-settings)))
+
+(define-prim (call-with-input-process path-or-settings proc)
+  (macro-force-vars (path-or-settings proc)
+    (macro-check-procedure
+     proc
+     2
+     (call-with-input-process path-or-settings proc)
+     (##open-process-generic
+      (macro-direction-in)
+      #t
+      (lambda (port)
+        (let ((results ;; may get bound to a multiple-values object
+               (proc port)))
+          (##close-port port)
+          (##process-status port) ;; wait for process to terminate
+          results))
+      call-with-input-process
+      path-or-settings
+      proc))))
+
+(define-prim (call-with-output-process path-or-settings proc)
+  (macro-force-vars (path-or-settings proc)
+    (macro-check-procedure
+     proc
+     2
+     (call-with-output-process path-or-settings proc)
+     (##open-process-generic
+      (macro-direction-out)
+      #t
+      (lambda (port)
+        (let ((results ;; may get bound to a multiple-values object
+               (proc port)))
+          (##force-output port)
+          (##close-port port)
+          (##process-status port) ;; wait for process to terminate
+          results))
+      call-with-output-process
+      path-or-settings
+      proc))))
+
+(define-prim (with-input-from-process path-or-settings thunk)
+  (macro-force-vars (path-or-settings thunk)
+    (macro-check-procedure
+     thunk
+     2
+     (with-input-from-process path-or-settings thunk)
+     (##open-process-generic
+      (macro-direction-in)
+      #t
+      (lambda (port)
+        (let ((results ;; may get bound to a multiple-values object
+               (macro-dynamic-bind input-port port thunk)))
+          (##close-port port)
+          (##process-status port) ;; wait for process to terminate
+          results))
+      with-input-from-process
+      path-or-settings
+      thunk))))
+
+(define-prim (with-output-to-process path-or-settings thunk)
+  (macro-force-vars (path-or-settings thunk)
+    (macro-check-procedure
+     thunk
+     2
+     (with-output-to-process path-or-settings thunk)
+     (##open-process-generic
+      (macro-direction-out)
+      #t
+      (lambda (port)
+        (let ((results ;; may get bound to a multiple-values object
+               (macro-dynamic-bind output-port port thunk)))
+          (##force-output port)
+          (##close-port port)
+          (##process-status port) ;; wait for process to terminate
+          results))
+      with-output-to-process
+      path-or-settings
+      thunk))))
 
 (define-prim (##process-pid port)
   (##os-device-process-pid (##port-device port)))
@@ -7029,7 +7158,7 @@
       (lambda (port)
         (let ((results ;; may get bound to a multiple-values object
                (proc port)))
-          (##close-input-port port)
+          (##close-port port)
           results))
       call-with-input-file
       path-or-settings
@@ -7048,7 +7177,7 @@
         (let ((results ;; may get bound to a multiple-values object
                (proc port)))
           (##force-output port)
-          (##close-output-port port)
+          (##close-port port)
           results))
       call-with-output-file
       path-or-settings
@@ -7066,7 +7195,7 @@
       (lambda (port)
         (let ((results ;; may get bound to a multiple-values object
                (macro-dynamic-bind input-port port thunk)))
-          (##close-input-port port)
+          (##close-port port)
           results))
       with-input-from-file
       path-or-settings
@@ -7085,7 +7214,7 @@
         (let ((results ;; may get bound to a multiple-values object
                (macro-dynamic-bind output-port port thunk)))
           (##force-output port)
-          (##close-output-port port)
+          (##close-port port)
           results))
       with-output-to-file
       path-or-settings
