@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-06-14 21:02:40 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-06-18 13:25:18 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -3095,6 +3095,7 @@ typedef struct ___device_tcp_client_struct
     struct sockaddr server_addr;
     SOCKET_LEN_TYPE server_addrlen;
     int try_connect_again;
+    int connect_done;
 
 #ifdef USE_POSIX
 
@@ -3312,7 +3313,10 @@ ___device_select_state *state;)
           (for_writing
            ? FD_ISSET(d->s, &state->writefds)
            : FD_ISSET(d->s, &state->readfds)))
-        state->devs[i] = NULL;
+        {
+          d->connect_done = 1;
+          state->devs[i] = NULL;
+        }
 
 #endif
 
@@ -3322,7 +3326,10 @@ ___device_select_state *state;)
         {
           state->devs[i] = NULL;
           if (d->try_connect_again != 0)
-            d->try_connect_again = 2;
+            {
+              d->connect_done = 1;
+              d->try_connect_again = 2;
+            }
         }
 
 #endif
@@ -3398,7 +3405,7 @@ ___stream_index *len_done;)
   if (SOCKET_CALL_ERROR(n = recv (d->s, ___CAST(char*,buf), len, 0)))
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
-      if (NOT_CONNECTED(e))
+      if (NOT_CONNECTED(e) && !d->connect_done)
         e = ___ERR_CODE_EAGAIN;
       return e;
     }
@@ -3443,7 +3450,7 @@ ___stream_index *len_done;)
   if (SOCKET_CALL_ERROR(n = send (d->s, ___CAST(char*,buf), len, 0)))
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
-      if (NOT_CONNECTED(e))
+      if (NOT_CONNECTED(e) && !d->connect_done)
         e = ___ERR_CODE_EAGAIN;
       return e;
     }
@@ -3650,6 +3657,7 @@ int direction;)
   d->server_addr = *server_addr;
   d->server_addrlen = server_addrlen;
   d->try_connect_again = try_connect_again;
+  d->connect_done = 0;
 
 #ifdef USE_POSIX
 
@@ -7602,7 +7610,7 @@ ___SCMOBJ peer;)
        : getpeername (d->s, &sa, &salen)) < 0)
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
-      if (NOT_CONNECTED(e))
+      if (NOT_CONNECTED(e) && !d->connect_done)
         e = ___ERR_CODE_EAGAIN;
       return e;
     }
