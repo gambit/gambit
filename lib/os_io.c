@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-06-18 13:25:18 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-06-18 23:01:13 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -650,6 +650,127 @@ ___stream_index *len_done;)
 /* Miscellaneous utility functions. */
 
 #ifdef USE_POSIX
+
+/*
+ * Some system calls can be interrupted by a signal and fail with
+ * errno == EINTR.  The following functions are wrappers for system
+ * calls which may be interrupted.  They simply ignore the EINTR and
+ * retry the operation.
+ *
+ * TODO: add wrappers for all the system calls which can fail
+ * with EINTR.  Also, move these functions to a central place.
+ */
+
+pid_t waitpid_no_EINTR
+   ___P((pid_t pid,
+         int *stat_loc,
+         int options),
+        (pid,
+         stat_loc,
+         options)
+pid_t pid;
+int *stat_loc;
+int options;)
+{
+  pid_t result;
+
+  for (;;)
+    {
+      result = waitpid (pid, stat_loc, options);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+
+ssize_t read_no_EINTR
+   ___P((int fd,
+         void *buf,
+         size_t len),
+        (fd,
+         buf,
+         len)
+int fd;
+void *buf;
+size_t len;)
+{
+  char *p = ___CAST(char*,buf);
+  ssize_t result = 0;
+  int n;
+
+  while (result < len)
+    {
+      n = read (fd, p+result, len-result);
+      if (n > 0)
+        result += n;
+      else if (n == 0)
+        break;
+      else if (errno != EINTR)
+        return n; /* this forgets that some bytes were transferred */
+    }
+
+  return result;
+}
+
+
+int close_no_EINTR
+   ___P((int fd),
+        (fd)
+int fd;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = close (fd);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+
+int dup_no_EINTR
+   ___P((int fd),
+        (fd)
+int fd;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = dup (fd);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+
+int dup2_no_EINTR
+   ___P((int fd,
+         int fd2),
+        (fd,
+         fd2)
+int fd;
+int fd2;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = dup2 (fd, fd2);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
 
 ___HIDDEN int set_fd_blocking_mode
    ___P((int fd,
@@ -2545,7 +2666,7 @@ int direction;)
 
 #ifdef USE_POSIX
       if (d->fd_stdout >= 0 &&
-          close (d->fd_stdout) < 0)
+          close_no_EINTR (d->fd_stdout) < 0)
         return err_code_from_errno ();
 #endif
 
@@ -2563,7 +2684,7 @@ int direction;)
 
 #ifdef USE_POSIX
       if (d->fd_stdin >= 0 &&
-          close (d->fd_stdin) < 0)
+          close_no_EINTR (d->fd_stdin) < 0)
         return err_code_from_errno ();
 #endif
 
@@ -3038,7 +3159,7 @@ int direction;)
 #define CONNECT_IN_PROGRESS (errno == EINPROGRESS)
 #define CONNECT_WOULD_BLOCK (errno == EAGAIN)
 #define NOT_CONNECTED(e) ((e) == ___FIX(___ERRNO_ERR(ENOTCONN)))
-#define CLOSE_SOCKET(s) close (s)
+#define CLOSE_SOCKET(s) close_no_EINTR (s)
 #define ERR_CODE_FROM_SOCKET_CALL err_code_from_errno ()
 #define IOCTL_SOCKET(s,cmd,argp) ioctl (s,cmd,argp)
 #define SOCKET_LEN_TYPE socklen_t
@@ -4679,7 +4800,7 @@ int direction;)
 #endif
 
 #ifdef USE_POSIX
-      if (close (d->fd) < 0)
+      if (close_no_EINTR (d->fd) < 0)
         return err_code_from_errno ();
 #endif
 
@@ -5247,7 +5368,7 @@ int direction;)
 
   if (d == NULL)
     {
-      close (fd); /* ignore error */
+      close_no_EINTR (fd); /* ignore error */
       return ___FIX(___HEAP_OVERFLOW_ERR);
     }
 
@@ -5538,7 +5659,7 @@ int direction;)
       if (set_fd_blocking_mode (fd, 0) != 0) /* set nonblocking mode */
         {
           e = err_code_from_errno ();
-          close (fd); /* ignore error */
+          close_no_EINTR (fd); /* ignore error */
           return e;
         }
 
@@ -5581,7 +5702,7 @@ int direction;)
 
         default:
           {
-            close (fd); /* ignore error */
+            close_no_EINTR (fd); /* ignore error */
             e = ___FIX(___UNKNOWN_ERR);
             break;
           }
@@ -5949,13 +6070,13 @@ int end;)
 {
   if (end != 1 && hdp->reading_fd >= 0)
     {
-      close (hdp->reading_fd); /* ignore error */
+      close_no_EINTR (hdp->reading_fd); /* ignore error */
       hdp->reading_fd = -1;
     }
 
   if (end != 0 && hdp->writing_fd >= 0)
     {
-      close (hdp->writing_fd); /* ignore error */
+      close_no_EINTR (hdp->writing_fd); /* ignore error */
       hdp->writing_fd = -1;
     }
 }
@@ -6067,7 +6188,7 @@ int *slave_fd;)
         }
 
       tmp = errno;
-      close (fd); /* ignore error */
+      close_no_EINTR (fd); /* ignore error */
       errno = tmp;
     }
 
@@ -6098,7 +6219,7 @@ ___BOOL use_pty;)
         {
           int master_fd_dup;
           int tmp;
-          if ((master_fd_dup = dup (master_fd)) >= 0)
+          if ((master_fd_dup = dup_no_EINTR (master_fd)) >= 0)
             {
               fdp->input.writing_fd = master_fd;
               fdp->output.reading_fd = master_fd_dup;
@@ -6106,9 +6227,9 @@ ___BOOL use_pty;)
               return 0;
             }
           tmp = errno;
-          close (master_fd); /* ignore error */
+          close_no_EINTR (master_fd); /* ignore error */
           if (slave_fd >= 0)
-            close (slave_fd); /* ignore error */
+            close_no_EINTR (slave_fd); /* ignore error */
           errno = tmp;
         }
     }
@@ -6145,10 +6266,10 @@ ___BOOL use_pty;)
         {
           int tmp;
           if (setup_terminal_slave (fdp->input.reading_fd) >= 0 &&
-              (fdp->output.writing_fd = dup (fdp->input.reading_fd)) >= 0)
+              (fdp->output.writing_fd = dup_no_EINTR (fdp->input.reading_fd)) >= 0)
             return 0;
           tmp = errno;
-          close (fdp->input.reading_fd); /* ignore error */
+          close_no_EINTR (fdp->input.reading_fd); /* ignore error */
           errno = tmp;
         }
     }
@@ -6440,11 +6561,11 @@ int options;)
             {
               if (open_full_duplex_pipe2 (&fdp, options & PSEUDO_TERM) < 0 ||
                   ((options & STDIN_REDIR) &&
-                   dup2 (fdp.input.reading_fd, STDIN_FILENO) < 0) ||
+                   dup2_no_EINTR (fdp.input.reading_fd, STDIN_FILENO) < 0) ||
                   ((options & STDOUT_REDIR) &&
-                   dup2 (fdp.output.writing_fd, STDOUT_FILENO) < 0) ||
+                   dup2_no_EINTR (fdp.output.writing_fd, STDOUT_FILENO) < 0) ||
                   ((options & (STDERR_REDIR | PSEUDO_TERM)) &&
-                   dup2 (fdp.output.writing_fd, STDERR_FILENO) < 0))
+                   dup2_no_EINTR (fdp.output.writing_fd, STDERR_FILENO) < 0))
                 goto return_errno;
             }
 
@@ -6466,7 +6587,7 @@ int options;)
                     fd != STDOUT_FILENO &&
                     fd != STDERR_FILENO &&
                     fd != hdp_errno.writing_fd)
-                  close (fd); /* ignore error */
+                  close_no_EINTR (fd); /* ignore error */
                 fd--;
               }
           }
@@ -6504,7 +6625,17 @@ int options;)
 
       close_half_duplex_pipe (&hdp_errno, 1);
 
-      n = read (hdp_errno.reading_fd, &execvp_errno, sizeof (execvp_errno));
+      /*
+       * The following call to read has been known to fail with EINTR,
+       * in particular on OpenBSD 4.5.  This is probably because the
+       * child process that is started terminates before the parent
+       * process doing the read has time to wakeup.  So the parent
+       * process receives a SIGCHLD signal which interrupts the read.
+       */
+
+      n = read_no_EINTR (hdp_errno.reading_fd,
+                         &execvp_errno,
+                         sizeof (execvp_errno));
 
       if (n < 0)
         e = err_code_from_errno ();
@@ -7170,7 +7301,7 @@ ___SCMOBJ flags;)
          */
 
         ___printf ("tty fd=%d\n", fd);/*****************************/
-        if ((fd = dup (fd)) < 0)
+        if ((fd = dup_no_EINTR (fd)) < 0)
           return err_code_from_errno ();
         ___printf ("  new tty fd=%d\n", fd);/***********************/
 #endif
@@ -7472,7 +7603,7 @@ int sig;)
     {
       int status;
       ___device *head;
-      pid_t pid = waitpid (-1, &status, WNOHANG);
+      pid_t pid = waitpid_no_EINTR (-1, &status, WNOHANG);
 
       if (pid <= 0)
         break;
