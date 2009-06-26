@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2009-06-03 15:22:26 feeley>
+;;; File: "_front.scm", Time-stamp: <2009-06-26 19:23:47 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3618,33 +3618,36 @@
                 (rest (cdr l)))
             (if (memq var regs)
               (loop1 rest i)
-              (let loop2 ((j (- target.nb-regs 1)))
-                (if (>= j 0)
-                  (if (or (>= j (length regs))
-                          (not (varset-member? (list-ref regs j)
-                                               live-starting-task)))
-                    (let ((reg (make-reg j)))
-                      (put-copy 19 (var->opnd var)
-                                reg
-                                var
-                                live-starting-task
-                                (node->comment node))
-                      (loop1 rest i))
-                    (loop2 (- j 1)))
-                (let ((slot (make-stk (+ frame-start (+ i 1))))
-                      (needed (list->varset rest)))
-                  (if (and (or (> (stk-num slot) nb-slots)
-                               (not (memq (list-ref slots (- nb-slots (stk-num slot))) regs)))
-                           (memq (stk-num slot) (live-slots needed)))
-                    (save-opnd slot
-                               live-starting-task
-                               (node->comment node)))
-                  (put-copy 20 (var->opnd var)
-                            slot
-                            var
-                            live-starting-task
-                            (node->comment node))
-                  (loop1 rest (+ i 1)))))))))
+              (let ((live-v
+                     (varset-union live-starting-task
+                                   (live-vars (list->varset rest)))))
+                (let loop2 ((j (- target.nb-regs 1)))
+                  (if (>= j 0)
+                    (if (or (>= j (length regs))
+                            (not (varset-member? (list-ref regs j)
+                                                 live-v)))
+                      (let ((reg (make-reg j)))
+                        (put-copy 19 (var->opnd var)
+                                  reg
+                                  var
+                                  live-v
+                                  (node->comment node))
+                        (loop1 rest i))
+                      (loop2 (- j 1)))
+                  (let ((slot (make-stk (+ frame-start (+ i 1))))
+                        (needed (list->varset rest)))
+                      (if (and (or (> (stk-num slot) nb-slots)
+                                 (not (memq (list-ref slots (- nb-slots (stk-num slot))) regs)))
+                             (memq (stk-num slot) (live-slots needed)))
+                      (save-opnd slot
+                                 live-v
+                                 (node->comment node)))
+                    (put-copy 20 (var->opnd var)
+                              slot
+                              var
+                              live-v
+                              (node->comment node))
+                    (loop1 rest (+ i 1))))))))))
 
       (let ((frame-reserve
              (frame-constraints-reserve
