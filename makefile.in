@@ -93,7 +93,7 @@ all:
 all-pre:
 
 all-post:
-	test -e "gsc-comp@exe@" || cp gsc/gsc@exe@ gsc-comp@exe@
+	test -f "gsc-comp@exe@" || cp gsc/gsc@exe@ gsc-comp@exe@
 
 fake_target:
 
@@ -148,9 +148,9 @@ pull: fake_target
 
 update-nopull: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
-	  next_version=`$(GIT) tag | fgrep -e '-bootstrap' | sed 's/v\([^ ]*\)-bootstrap.*/\1/' | sort -r -s -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n | sed 's/^/v/g' | sed -n '/^$(PACKAGE_VERSION)/{n;p;}'`; \
+	  next_version=`$(GIT) tag | fgrep -e '-bootstrap' | sed -e 's/v//g' -e 's/-bootstrap.*//g' | sort -r -s -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n | sed 's/^/v/g' | sed -n '/^$(PACKAGE_VERSION)/{n;p;}'`; \
 	else \
-	  next_version=`$(HG) tags | fgrep -e '-bootstrap' | sed 's/v\([^ ]*\)-bootstrap.*/\1/' | sort -r -s -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n | sed 's/^/v/g' | sed -n '/^$(PACKAGE_VERSION)/{n;p;}'`; \
+	  next_version=`$(HG) tags | fgrep -e '-bootstrap' | sed -e 's/v//g' -e 's/-bootstrap.*//g' | sort -r -s -t. -k 1,1n -k 2,2n -k 3,3n -k 4,4n -k 5,5n | sed 's/^/v/g' | sed -n '/^$(PACKAGE_VERSION)/{n;p;}'`; \
 	fi; \
 	if test "$$next_version" = ""; then \
 	  if test "$(RC)" = "$(GIT)"; then \
@@ -169,30 +169,33 @@ update: pull update-nopull
 	$(MAKE)
 
 new-major: fake_target
-	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
+	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
 	next_major=`eval expr 1 + $$major`; \
 	next_version=v$$next_major.0.0; \
 	$(MAKE) NEW_VERSION=$$next_version change-version
 
 new-minor: fake_target
-	minor=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
+	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
 	next_minor=`eval expr 1 + $$minor`; \
-	next_version=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&v\1.$$next_minor.0&"`; \
+	next_version=v$$major.$$next_minor.0; \
 	$(MAKE) NEW_VERSION=$$next_version change-version
 
 new-revision: fake_target
-	revision=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
+	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
+	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
 	next_revision=`eval expr 1 + $$revision`; \
-	next_version=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&v\1.\2.$$next_revision&"`; \
+	next_version=v$$major.$$minor.$$next_revision; \
 	$(MAKE) NEW_VERSION=$$next_version change-version
 
 change-version: fake_target
-	major=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
-	minor=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
-	revision=`echo $(PACKAGE_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
-	next_major=`echo $(NEW_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\1&"`; \
-	next_minor=`echo $(NEW_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\2&"`; \
-	next_revision=`echo $(NEW_VERSION) | sed -e"s&v\([^.]*\)\.\([^.]*\)\.\([^.]*\).*&\3&"`; \
+	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
+	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
+	next_major=`echo $(NEW_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	next_minor=`echo $(NEW_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
+	next_revision=`echo $(NEW_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
 	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
 	new_version_num=`eval expr "\( 100000 \\* $$next_major \) + \( 1000 \\* $$next_minor \) + $$next_revision"`; \
 	sed -e "/(define (compiler-version) $$version_num)/s/$$version_num/$$new_version_num/" gsc/_parms.scm > gsc/_parms.scm-new; \
