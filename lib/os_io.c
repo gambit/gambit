@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2009-06-18 23:01:13 feeley> */
+/* File: "os_io.c", Time-stamp: <2009-07-15 13:36:31 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -2525,22 +2525,558 @@ int direction;)
 
 /*---------------------------------------------------------------------------*/
 
-/* Process stream device */
+/* Pipe stream device */
 
-typedef struct ___device_process_struct
+/*
+ * Pipes may be unidirectional or bidirectional.  Bidirectional pipes
+ * are implemented with 2 OS pipes: a "write" pipe and a "read" pipe.
+ */
+
+typedef struct ___device_pipe_struct
   {
     ___device_stream base;
 
 #ifdef USE_POSIX
-    pid_t pid;     /* pid of the process */
-    int fd_stdin;  /* file descriptor corresponding to process' stdin */
-    int fd_stdout; /* file descriptor corresponding to process' stdout */
+    int fd_wr;  /* file descriptor for "write" pipe (-1 if none) */
+    int fd_rd;  /* file descriptor for "read" pipe (-1 if none) */
 #endif
 
 #ifdef USE_WIN32
-    PROCESS_INFORMATION pi; /* process information */
-    HANDLE hstdin;          /* handle corresponding to process' stdin */
-    HANDLE hstdout;         /* handle corresponding to process' stdout */
+    HANDLE h_wr;  /* handle for "write" pipe (NULL if none) */
+    HANDLE h_rd;  /* handle for "read" pipe (NULL if none) */
+    int poll_interval_nsecs;  /* interval between read attempts */
+#endif
+  } ___device_pipe;
+
+
+typedef struct ___device_pipe_vtbl_struct
+  {
+    ___device_stream_vtbl base;
+  } ___device_pipe_vtbl;
+
+___HIDDEN int ___device_pipe_kind
+   ___P((___device *self),
+        (self)
+___device *self;)
+{
+  return ___PIPE_DEVICE_KIND;
+}
+
+___SCMOBJ ___device_pipe_cleanup
+   ___P((___device_pipe *dev),
+        (dev)
+___device_pipe *dev;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+
+___HIDDEN ___SCMOBJ ___device_pipe_close_raw_virt
+   ___P((___device_stream *self,
+         int direction),
+        (self,
+         direction)
+___device_stream *self;
+int direction;)
+{
+  ___device_pipe *d = ___CAST(___device_pipe*,self);
+  int is_not_closed = 0;
+
+  if (d->base.base.read_stage != ___STAGE_CLOSED)
+    is_not_closed |= ___DIRECTION_RD;
+
+  if (d->base.base.write_stage != ___STAGE_CLOSED)
+    is_not_closed |= ___DIRECTION_WR;
+
+  if (is_not_closed == 0)
+    return ___FIX(___NO_ERR);
+
+  if (is_not_closed & direction & ___DIRECTION_RD)
+    {
+      /* Close "read" pipe */
+
+      d->base.base.read_stage = ___STAGE_CLOSED;
+
+#ifdef USE_POSIX
+      if (d->fd_rd >= 0 &&
+          d->fd_rd != d->fd_wr &&
+          close_no_EINTR (d->fd_rd) < 0)
+        return err_code_from_errno ();
+#endif
+
+#ifdef USE_WIN32
+      if (d->h_rd != NULL && d->h_rd != d->h_wr)
+        CloseHandle (d->h_rd); /* ignore error */
+#endif
+    }
+
+  if (is_not_closed & direction & ___DIRECTION_WR)
+    {
+      /* Close "write" pipe */
+
+      d->base.base.write_stage = ___STAGE_CLOSED;
+
+#ifdef USE_POSIX
+      if (d->fd_wr >= 0 &&
+          close_no_EINTR (d->fd_wr) < 0)
+        return err_code_from_errno ();
+#endif
+
+#ifdef USE_WIN32
+      if (d->h_wr != NULL)
+        CloseHandle (d->h_wr); /* ignore error */
+#endif
+    }
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_pipe_select_raw_virt
+   ___P((___device_stream *self,
+         ___BOOL for_writing,
+         int i,
+         int pass,
+         ___device_select_state *state),
+        (self,
+         for_writing,
+         i,
+         pass,
+         state)
+___device_stream *self;
+___BOOL for_writing;
+int i;
+int pass;
+___device_select_state *state;)
+{
+  ___device_pipe *d = ___CAST(___device_pipe*,self);
+  int stage = (for_writing
+               ? d->base.base.write_stage
+               : d->base.base.read_stage);
+
+  if (pass == ___SELECT_PASS_1)
+    {
+      if (stage != ___STAGE_OPEN)
+        state->timeout = ___time_mod.time_neg_infinity;
+      else
+        {
+#ifdef USE_POSIX
+          if (for_writing)
+            {
+              if (d->fd_wr >= 0)
+                ___device_select_add_fd (state, d->fd_wr, 1);
+            }
+          else
+            {
+              if (d->fd_rd >= 0)
+                ___device_select_add_fd (state, d->fd_rd, 0);
+            }
+#endif
+
+#ifdef USE_WIN32
+          if (for_writing)
+            {
+              if (d->h_wr != NULL)
+                ___device_select_add_wait_obj (state, i, d->h_wr);
+            }
+          else
+            {
+              if (d->h_rd != NULL)
+                {
+                  int interval = d->poll_interval_nsecs * 6 / 5;
+                  if (interval < 1000000)
+                    interval = 1000000; /* min interval = 0.001 secs */
+                  else if (interval > 200000000)
+                    interval = 200000000; /* max interval = 0.2 sec */
+                  d->poll_interval_nsecs = interval;
+                  ___device_select_add_relative_timeout (state, i, interval * 1e-9);
+                }
+            }
+#endif
+        }
+      return ___FIX(___SELECT_SETUP_DONE);
+    }
+
+  /* pass == ___SELECT_PASS_CHECK */
+
+  if (stage != ___STAGE_OPEN)
+    state->devs[i] = NULL;
+  else
+    {
+#ifdef USE_POSIX
+
+      if (for_writing)
+        {
+          if (d->fd_wr < 0 || FD_ISSET(d->fd_wr, &state->writefds))
+            state->devs[i] = NULL;
+        }
+      else
+        {
+          if (d->fd_rd < 0 || FD_ISSET(d->fd_rd, &state->readfds))
+            state->devs[i] = NULL;
+        }
+
+#endif
+
+#ifdef USE_WIN32
+
+      if (for_writing)
+        {
+          if (d->h_wr != NULL && state->devs_next[i] != -1)
+            state->devs[i] = NULL;
+        }
+      else
+        {
+          if (d->h_rd != NULL)
+            state->devs[i] = NULL;
+        }
+
+#endif
+    }
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_pipe_release_raw_virt
+   ___P((___device_stream *self),
+        (self)
+___device_stream *self;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_pipe_force_output_raw_virt
+   ___P((___device_stream *self,
+         int level),
+        (self,
+         level)
+___device_stream *self;
+int level;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_pipe_seek_raw_virt
+   ___P((___device_stream *self,
+         ___stream_index *pos,
+         int whence),
+        (self,
+         pos,
+         whence)
+___device_stream *self;
+___stream_index *pos;
+int whence;)
+{
+  return ___FIX(___INVALID_OP_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_pipe_read_raw_virt
+   ___P((___device_stream *self,
+         ___U8 *buf,
+         ___stream_index len,
+         ___stream_index *len_done),
+        (self,
+         buf,
+         len,
+         len_done)
+___device_stream *self;
+___U8 *buf;
+___stream_index len;
+___stream_index *len_done;)
+{
+  ___device_pipe *d = ___CAST(___device_pipe*,self);
+  ___SCMOBJ e = ___FIX(___NO_ERR);
+
+  if (d->base.base.read_stage != ___STAGE_OPEN)
+    return ___FIX(___CLOSED_DEVICE_ERR);
+
+#ifdef USE_POSIX
+
+  if (d->fd_rd < 0)
+    *len_done = 0;
+  else
+    {
+      int n = 0;
+
+      if ((n = read (d->fd_rd, buf, len)) < 0)
+        {
+          if (errno == EIO) errno = EAGAIN;
+          e = err_code_from_errno ();
+        }
+
+      *len_done = n;
+    }
+
+#endif
+
+#ifdef USE_WIN32
+
+  if (d->h_rd == NULL)
+    *len_done = 0;
+  else
+    {
+      DWORD n = 0;
+
+      if (!PeekNamedPipe (d->h_rd, NULL, 0, NULL, &n, NULL))
+        e = err_code_from_GetLastError ();
+      else if (n == 0)
+        e = ___ERR_CODE_EAGAIN;
+      else
+        {
+          if (len > n)
+            len = n;
+
+          if (!ReadFile (d->h_rd, buf, len, &n, NULL))
+            e = err_code_from_GetLastError ();
+          else
+            d->poll_interval_nsecs = 0;
+        }
+
+      if (e == ___FIX(___WIN32_ERR(ERROR_BROKEN_PIPE)))
+        e = ___FIX(___NO_ERR); /* generate end-of-file on broken pipe */
+
+      *len_done = n;
+    }
+
+#endif
+
+  return e;
+}
+
+___HIDDEN ___SCMOBJ ___device_pipe_write_raw_virt
+   ___P((___device_stream *self,
+         ___U8 *buf,
+         ___stream_index len,
+         ___stream_index *len_done),
+        (self,
+         buf,
+         len,
+         len_done)
+___device_stream *self;
+___U8 *buf;
+___stream_index len;
+___stream_index *len_done;)
+{
+  ___device_pipe *d = ___CAST(___device_pipe*,self);
+
+  if (d->base.base.write_stage != ___STAGE_OPEN)
+    return ___FIX(___CLOSED_DEVICE_ERR);
+
+#ifdef USE_POSIX
+
+  if (d->fd_wr < 0)
+    *len_done = len;
+  else
+    {
+      int n;
+
+      if ((n = write (d->fd_wr, buf, len)) < 0)
+        return err_code_from_errno ();
+
+      *len_done = n;
+    }
+
+#endif
+
+#ifdef USE_WIN32
+
+  if (d->h_wr == NULL)
+    *len_done = len;
+  else
+    {
+      DWORD n;
+
+      if (!WriteFile (d->h_wr, buf, len, &n, NULL))
+        return err_code_from_GetLastError ();
+
+      *len_done = n;
+    }
+
+#endif
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_pipe_width_virt
+   ___P((___device_stream *self),
+        (self)
+___device_stream *self;)
+{
+  return ___FIX(80);
+}
+
+___HIDDEN ___SCMOBJ ___device_pipe_default_options_virt
+   ___P((___device_stream *self),
+        (self)
+___device_stream *self;)
+{
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
+  int char_encoding = ___CHAR_ENCODING_ISO_8859_1;
+  int eol_encoding = ___EOL_ENCODING_LF;
+  int buffering = ___FULL_BUFFERING;
+
+  return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
+                                  char_encoding,
+                                  eol_encoding,
+                                  buffering,
+                                  char_encoding_errors,
+                                  char_encoding,
+                                  eol_encoding,
+                                  buffering));
+}
+
+
+___HIDDEN ___SCMOBJ ___device_pipe_options_set_virt
+   ___P((___device_stream *self,
+         ___SCMOBJ options),
+        (self,
+         options)
+___device_stream *self;
+___SCMOBJ options;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+
+___HIDDEN ___device_pipe_vtbl ___device_pipe_table =
+{
+  {
+    {
+      ___device_pipe_kind,
+      ___device_stream_select_virt,
+      ___device_stream_release_virt,
+      ___device_stream_force_output_virt,
+      ___device_stream_close_virt
+    },
+    ___device_pipe_select_raw_virt,
+    ___device_pipe_release_raw_virt,
+    ___device_pipe_force_output_raw_virt,
+    ___device_pipe_close_raw_virt,
+    ___device_pipe_seek_raw_virt,
+    ___device_pipe_read_raw_virt,
+    ___device_pipe_write_raw_virt,
+    ___device_pipe_width_virt,
+    ___device_pipe_default_options_virt,
+    ___device_pipe_options_set_virt
+  }
+};
+
+
+#ifdef USE_POSIX
+
+___HIDDEN ___SCMOBJ ___device_pipe_setup_from_fd
+   ___P((___device_pipe **dev,
+         ___device_group *dgroup,
+         int fd_rd,
+         int fd_wr,
+         int direction),
+        (dev,
+         dgroup,
+         fd_rd,
+         fd_wr,
+         direction)
+___device_pipe **dev;
+___device_group *dgroup;
+int fd_rd;
+int fd_wr;
+int direction;)
+{
+  ___device_pipe *d;
+
+  d = ___CAST(___device_pipe*,
+              ___alloc_mem (sizeof (___device_pipe)));
+
+  if (d == NULL)
+    {
+      if (fd_rd >= 0 && fd_rd != fd_wr)
+        close_no_EINTR (fd_rd); /* ignore error */
+      if (fd_wr >= 0)
+        close_no_EINTR (fd_wr); /* ignore error */
+      return ___FIX(___HEAP_OVERFLOW_ERR);
+    }
+
+  d->base.base.vtbl = &___device_pipe_table;
+  d->fd_rd = fd_rd;
+  d->fd_wr = fd_wr;
+
+  *dev = d;
+
+  return ___device_stream_setup
+           (&d->base,
+            dgroup,
+            direction,
+            0);
+}
+
+#endif
+
+
+#ifdef USE_WIN32
+
+___HIDDEN ___SCMOBJ ___device_pipe_setup_from_handle
+   ___P((___device_pipe **dev,
+         ___device_group *dgroup,
+         HANDLE h_rd,
+         HANDLE h_wr,
+         int direction,
+         int pumps_on),
+        (dev,
+         dgroup,
+         h_rd,
+         h_wr,
+         direction,
+         pumps_on)
+___device_pipe **dev;
+___device_group *dgroup;
+HANDLE h_rd;
+HANDLE h_wr;
+int direction;
+int pumps_on;)
+{
+  ___device_pipe *d;
+
+  d = ___CAST(___device_pipe*,
+              ___alloc_mem (sizeof (___device_pipe)));
+
+  if (d == NULL)
+    {
+      if (h_rd != NULL && h_rd != h_wr)
+        CloseHandle (h_rd); /* ignore error */
+      if (h_wr != NULL)
+        CloseHandle (h_wr); /* ignore error */
+      return ___FIX(___HEAP_OVERFLOW_ERR);
+    }
+
+  d->base.base.vtbl = &___device_pipe_table;
+  d->h_rd = h_rd;
+  d->h_wr = h_wr;
+  d->poll_interval_nsecs = 0;
+
+  *dev = d;
+
+  return ___device_stream_setup
+           (&d->base,
+            dgroup,
+            direction,
+            pumps_on);
+}
+
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
+/* Process stream device */
+
+typedef struct ___device_process_struct
+  {
+    ___device_pipe base;
+
+#ifdef USE_POSIX
+    pid_t pid;  /* pid of the process */
+#endif
+
+#ifdef USE_WIN32
+    PROCESS_INFORMATION pi;  /* process information */
 #endif
 
     int status;          /* process status */
@@ -2647,58 +3183,16 @@ ___device_stream *self;
 int direction;)
 {
   ___device_process *d = ___CAST(___device_process*,self);
-  int is_not_closed = 0;
+  ___SCMOBJ e = ___device_pipe_close_raw_virt (self, direction);
 
-  if (d->base.base.read_stage != ___STAGE_CLOSED)
-    is_not_closed |= ___DIRECTION_RD;
-
-  if (d->base.base.write_stage != ___STAGE_CLOSED)
-    is_not_closed |= ___DIRECTION_WR;
-
-  if (is_not_closed == 0)
-    return ___FIX(___NO_ERR);
-
-  if (is_not_closed & direction & ___DIRECTION_RD)
+  if (e == ___FIX(___NO_ERR))
     {
-      /* Close process' stdout */
-
-      d->base.base.read_stage = ___STAGE_CLOSED;
-
-#ifdef USE_POSIX
-      if (d->fd_stdout >= 0 &&
-          close_no_EINTR (d->fd_stdout) < 0)
-        return err_code_from_errno ();
-#endif
-
-#ifdef USE_WIN32
-      if (d->hstdout != NULL)
-        CloseHandle (d->hstdout); /* ignore error */
-#endif
+      if (d->base.base.base.read_stage == ___STAGE_CLOSED &&
+          d->base.base.base.write_stage == ___STAGE_CLOSED)
+        ___device_process_status_poll (d); /* ignore error */
     }
 
-  if (is_not_closed & direction & ___DIRECTION_WR)
-    {
-      /* Close process' stdin */
-
-      d->base.base.write_stage = ___STAGE_CLOSED;
-
-#ifdef USE_POSIX
-      if (d->fd_stdin >= 0 &&
-          close_no_EINTR (d->fd_stdin) < 0)
-        return err_code_from_errno ();
-#endif
-
-#ifdef USE_WIN32
-      if (d->hstdin != NULL)
-        CloseHandle (d->hstdin); /* ignore error */
-#endif
-    }
-
-  if (d->base.base.read_stage == ___STAGE_CLOSED &&
-      d->base.base.write_stage == ___STAGE_CLOSED)
-    ___device_process_status_poll (d); /* ignore error */
-
-  return ___FIX(___NO_ERR);
+  return e;
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_select_raw_virt
@@ -2718,76 +3212,7 @@ int i;
 int pass;
 ___device_select_state *state;)
 {
-  ___device_process *d = ___CAST(___device_process*,self);
-  int stage = (for_writing
-               ? d->base.base.write_stage
-               : d->base.base.read_stage);
-
-  if (pass == ___SELECT_PASS_1)
-    {
-      if (stage != ___STAGE_OPEN)
-        state->timeout = ___time_mod.time_neg_infinity;
-      else
-        {
-#ifdef USE_POSIX
-          if (for_writing)
-            {
-              if (d->fd_stdin >= 0)
-                ___device_select_add_fd (state, d->fd_stdin, 1);
-            }
-          else
-            {
-              if (d->fd_stdout >= 0)
-                ___device_select_add_fd (state, d->fd_stdout, 0);
-            }
-#endif
-
-#ifdef USE_WIN32
-          if (for_writing)
-            {
-              if (d->hstdin != NULL)
-                ___device_select_add_wait_obj (state, i, d->hstdin);
-            }
-          else
-            {
-              if (d->hstdout != NULL)
-                ___device_select_add_wait_obj (state, i, d->hstdout);
-            }
-#endif
-        }
-      return ___FIX(___SELECT_SETUP_DONE);
-    }
-
-  /* pass == ___SELECT_PASS_CHECK */
-
-  if (stage != ___STAGE_OPEN)
-    state->devs[i] = NULL;
-  else
-    {
-#ifdef USE_POSIX
-
-      if (for_writing)
-        {
-          if (d->fd_stdin < 0 || FD_ISSET(d->fd_stdin, &state->writefds))
-            state->devs[i] = NULL;
-        }
-      else
-        {
-          if (d->fd_stdout < 0 || FD_ISSET(d->fd_stdout, &state->readfds))
-            state->devs[i] = NULL;
-        }
-
-#endif
-
-#ifdef USE_WIN32
-
-      if (state->devs_next[i] != -1)
-        state->devs[i] = NULL;
-
-#endif
-    }
-
-  return ___FIX(___NO_ERR);
+  return ___device_pipe_select_raw_virt (self, for_writing, i, pass, state);
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_release_raw_virt
@@ -2796,7 +3221,11 @@ ___HIDDEN ___SCMOBJ ___device_process_release_raw_virt
 ___device_stream *self;)
 {
   ___device_process *d = ___CAST(___device_process*,self);
-  return ___device_process_cleanup (d);
+  ___SCMOBJ e1 = ___device_pipe_release_raw_virt (self);
+  ___SCMOBJ e2 = ___device_process_cleanup (d);
+  if (e1 == ___FIX(___NO_ERR))
+    e1 = e2;
+  return e1;
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_force_output_raw_virt
@@ -2807,17 +3236,7 @@ ___HIDDEN ___SCMOBJ ___device_process_force_output_raw_virt
 ___device_stream *self;
 int level;)
 {
-  ___device_process *d = ___CAST(___device_process*,self);
-
-  if (d->base.base.write_stage == ___STAGE_OPEN)
-    {
-#if 0
-      if (d->fd_stdin >= 0 && fsync (d->fd_stdin) < 0)/************only works on disk files!!!!!!!*/
-        return err_code_from_errno ();
-#endif
-    }
-
-  return ___FIX(___NO_ERR);
+  return ___device_pipe_force_output_raw_virt (self, level);
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_seek_raw_virt
@@ -2831,7 +3250,7 @@ ___device_stream *self;
 ___stream_index *pos;
 int whence;)
 {
-  return ___FIX(___INVALID_OP_ERR);
+  return ___device_pipe_seek_raw_virt (self, pos, whence);
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_read_raw_virt
@@ -2848,61 +3267,7 @@ ___U8 *buf;
 ___stream_index len;
 ___stream_index *len_done;)
 {
-  ___device_process *d = ___CAST(___device_process*,self);
-
-  if (d->base.base.read_stage != ___STAGE_OPEN)
-    return ___FIX(___CLOSED_DEVICE_ERR);
-
-#ifdef USE_POSIX
-
-  if (d->fd_stdout < 0)
-    *len_done = 0;
-  else
-    {
-      int n;
-      if ((n = read (d->fd_stdout, buf, len)) < 0)
-        {
-#ifdef ___DEBUG
-
-          ___printf ("process read returned errno=%d\n", errno);
-
-#endif
-
-          if (errno == EIO) errno = EAGAIN;
-          return err_code_from_errno ();
-        }
-
-      *len_done = n;
-    }
-
-#endif
-
-#ifdef USE_WIN32
-
-  if (d->hstdout == NULL)
-    *len_done = 0;
-  else
-    {
-      DWORD n;
-
-      if (!ReadFile (d->hstdout, buf, len, &n, NULL))
-        {
-#ifdef ___DEBUG
-
-          ___printf ("process read returned GetLastError()=%d\n", GetLastError ());
-
-#endif
-
-          if (GetLastError() != ERROR_BROKEN_PIPE) /* handle like end-of-file */
-            return err_code_from_GetLastError ();
-        }
-
-      *len_done = n;
-    }
-
-#endif
-
-  return ___FIX(___NO_ERR);
+  return ___device_pipe_read_raw_virt (self, buf, len, len_done);
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_write_raw_virt
@@ -2919,52 +3284,7 @@ ___U8 *buf;
 ___stream_index len;
 ___stream_index *len_done;)
 {
-  ___device_process *d = ___CAST(___device_process*,self);
-
-  if (d->base.base.write_stage != ___STAGE_OPEN)
-    return ___FIX(___CLOSED_DEVICE_ERR);
-
-#ifdef USE_POSIX
-
-  if (d->fd_stdin < 0)
-    *len_done = len;
-  else
-    {
-      int n;
-
-      if ((n = write (d->fd_stdin, buf, len)) < 0)
-        {
-#ifdef ___DEBUG
-
-          ___printf ("process write returned errno=%d\n", errno);
-
-#endif
-
-          return err_code_from_errno ();
-        }
-
-      *len_done = n;
-    }
-
-#endif
-
-#ifdef USE_WIN32
-
-  if (d->hstdin == NULL)
-    *len_done = len;
-  else
-    {
-      DWORD n;
-
-      if (!WriteFile (d->hstdin, buf, len, &n, NULL))
-        return err_code_from_GetLastError ();
-
-      *len_done = n;
-    }
-
-#endif
-
-  return ___FIX(___NO_ERR);
+  return ___device_pipe_write_raw_virt (self, buf, len, len_done);
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_width_virt
@@ -2980,19 +3300,7 @@ ___HIDDEN ___SCMOBJ ___device_process_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-  int char_encoding = ___CHAR_ENCODING_ISO_8859_1;
-  int eol_encoding = ___EOL_ENCODING_LF;
-  int buffering = ___FULL_BUFFERING;
-
-  return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
-                                  char_encoding,
-                                  eol_encoding,
-                                  buffering,
-                                  char_encoding_errors,
-                                  char_encoding,
-                                  eol_encoding,
-                                  buffering));
+  return ___device_pipe_default_options_virt (self);
 }
 
 
@@ -3004,7 +3312,7 @@ ___HIDDEN ___SCMOBJ ___device_process_options_set_virt
 ___device_stream *self;
 ___SCMOBJ options;)
 {
-  return ___FIX(___NO_ERR);
+  return ___device_pipe_options_set_virt (self, options);
 }
 
 
@@ -3077,10 +3385,10 @@ int direction;)
       return e;
     }
 
-  d->base.base.vtbl = &___device_process_table;
+  d->base.base.base.vtbl = &___device_process_table;
+  d->base.fd_rd = fd_stdout;
+  d->base.fd_wr = fd_stdin;
   d->pid = pid;
-  d->fd_stdin = fd_stdin;
-  d->fd_stdout = fd_stdout;
   d->status = -1;
   d->got_status = 0;
   d->cleanuped = 0;
@@ -3088,7 +3396,7 @@ int direction;)
   *dev = d;
 
   return ___device_stream_setup
-           (&d->base,
+           (&d->base.base,
             dgroup,
             direction,
             0);
@@ -3126,10 +3434,10 @@ int direction;)
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
-  d->base.base.vtbl = &___device_process_table;
+  d->base.base.base.vtbl = &___device_process_table;
+  d->base.h_rd = hstdout;
+  d->base.h_wr = hstdin;
   d->pi = pi;
-  d->hstdin = hstdin;
-  d->hstdout = hstdout;
   d->status = -1;
   d->got_status = 0;
   d->cleanuped = 0;
@@ -3137,10 +3445,10 @@ int direction;)
   *dev = d;
 
   return ___device_stream_setup
-           (&d->base,
+           (&d->base.base,
             dgroup,
             direction,
-            ___DIRECTION_RD|___DIRECTION_WR);
+            0);
 }
 
 #endif
@@ -5900,7 +6208,6 @@ int direction;)
       }
 
     case ___FILE_DEVICE_KIND:
-    case ___PIPE_DEVICE_KIND:
       {
         ___device_file *d;
         if ((e = ___device_file_setup_from_handle
@@ -5909,9 +6216,22 @@ int direction;)
                     h,
                     flags,
                     direction,
-                    (kind == ___FILE_DEVICE_KIND)
-                    ? 0 /* files should not use pumps */
-                    : (___DIRECTION_RD|___DIRECTION_WR)))
+                    0))
+            == ___FIX(___NO_ERR))
+          *dev = ___CAST(___device_stream*,d);
+        break;
+      }
+
+    case ___PIPE_DEVICE_KIND:
+      {
+        ___device_pipe *d;
+        if ((e = ___device_pipe_setup_from_handle
+                   (&d,
+                    dgroup,
+                    h,
+                    h,
+                    direction,
+                    0))
             == ___FIX(___NO_ERR))
           *dev = ___CAST(___device_stream*,d);
         break;
@@ -6740,6 +7060,40 @@ int options;)
 
       si.dwFlags |= STARTF_USESTDHANDLES;
 
+#if 0
+      if (hstdin_wr != NULL)
+        {
+          HANDLE h_wr;
+          if (DuplicateHandle (GetCurrentProcess (),
+                               hstdin_wr,
+                               GetCurrentProcess (),
+                               &h_wr,
+                               0,
+                               FALSE,
+                               DUPLICATE_SAME_ACCESS))
+            {
+              CloseHandle (hstdin_wr);
+              hstdin_wr = h_wr;
+            }
+        }
+
+      if (hstdout_rd != NULL)
+        {
+          HANDLE h_rd;
+          if (DuplicateHandle (GetCurrentProcess (),
+                               hstdout_rd,
+                               GetCurrentProcess (),
+                               &h_rd,
+                               0,
+                               FALSE,
+                               DUPLICATE_SAME_ACCESS))
+            {
+              CloseHandle (hstdout_rd);
+              hstdout_rd = h_rd;
+            }
+        }
+#endif
+
       if (si.hStdError == INVALID_HANDLE_VALUE ||
           !CreateProcess
              (NULL, /* module name                              */
@@ -6748,8 +7102,8 @@ int options;)
               NULL, /* thread handle not inheritable            */
               TRUE, /* set handle inheritance to TRUE           */
               (CP_ENV_FLAGS | ((options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW)), /* creation flags */
-              cenv, /* use parent's environment block           */
-              dir,  /* use parent's starting directory          */
+              cenv, /* child's environment                      */
+              dir,  /* child's starting directory               */
               &si,  /* pointer to STARTUPINFO structure         */
               &pi)) /* pointer to PROCESS_INFORMATION structure */
         e = err_code_from_GetLastError ();

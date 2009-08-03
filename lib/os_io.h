@@ -1,4 +1,4 @@
-/* File: "os_io.h", Time-stamp: <2009-03-19 10:48:18 feeley> */
+/* File: "os_io.h", Time-stamp: <2009-07-15 13:16:07 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -23,8 +23,8 @@ typedef struct ___device_group_struct
 #define ___BYTE_KIND              7
 #define ___DEVICE_KIND            15
 #define ___FILE_DEVICE_KIND       (___DEVICE_KIND+16)
-#define ___PROCESS_DEVICE_KIND    (___DEVICE_KIND+32)
-#define ___PIPE_DEVICE_KIND       ___PROCESS_DEVICE_KIND /******************/
+#define ___PIPE_DEVICE_KIND       (___DEVICE_KIND+32)
+#define ___PROCESS_DEVICE_KIND    (___PIPE_DEVICE_KIND+65536)
 #define ___TTY_DEVICE_KIND        (___DEVICE_KIND+64)
 #define ___SERIAL_DEVICE_KIND     (___DEVICE_KIND+128)
 #define ___TCP_CLIENT_DEVICE_KIND (___DEVICE_KIND+256)
