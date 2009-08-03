@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2009-06-08 06:49:01 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2009-07-04 17:17:17 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -782,6 +782,9 @@
            (prc-rest? ptree)
            (br (prc-body ptree) substs 'need expansion-limit)))
 
+        ((br-let? ptree)
+         (br-let ptree substs reason expansion-limit))
+
         ((app? ptree)
          (let ((oper (app-oper ptree))
                (args (app-args ptree)))
@@ -815,17 +818,55 @@
     (let ((x (assq var substs)))
       (if x (cdr x) #f))))
 
-(define (br-app ptree oper args substs reason expansion-limit)
-  (if (and (prc? oper) ; applying a lambda-expr is like a 'let'
-           (prc-req-and-opt-parms-only? oper)
-           (= (length (prc-parms oper)) (length args)))
-    (br-let ptree oper args substs reason expansion-limit)
-    (new-call (node-source ptree) (node-env ptree)
-      (br oper substs 'need expansion-limit)
-      (map (lambda (arg) (br arg substs 'need expansion-limit)) args))))
+(define (br-let? ptree)
+  (and (app? ptree)
+       (let ((oper (app-oper ptree))
+             (args (app-args ptree)))
+         (and (prc? oper) ; applying a lambda-expr is like a 'let'
+              (prc-req-and-opt-parms-only? oper)
+              (= (length (prc-parms oper)) (length args))))))
 
-(define (br-let ptree proc vals substs reason expansion-limit)
-  (let* ((vars
+(define (br-app ptree oper args substs reason expansion-limit)
+
+  (if (and (br-let? oper)
+           (let ((body (prc-body (app-oper oper))))
+             (or (cst? body)
+                 (and (ref? body)
+                      (or (bound? (ref-var body))
+                          (global-singly-bound? body))))))
+
+      ;; let-floating transformation when the code is of the
+      ;; form:
+      ;;
+      ;; ((let (...) var) E1 E2) -> (let (...) (var E1 E2))
+
+      (let ((proc (app-oper oper)))
+        (br (new-call (node-source oper) (node-env oper)
+              (new-prc (node-source proc) (node-env proc)
+                (prc-name proc)
+                (prc-c-name proc)
+                (prc-parms proc)
+                (prc-opts proc)
+                (prc-keys proc)
+                (prc-rest? proc)
+                (new-call (node-source ptree) (node-env ptree)
+                  (prc-body proc)
+                  args))
+              (app-args oper))
+            substs
+            reason
+            expansion-limit))
+
+      (new-call (node-source ptree) (node-env ptree)
+        (br oper substs 'need expansion-limit)
+        (map (lambda (arg) (br arg substs 'need expansion-limit)) args))))
+
+(define (br-let ptree substs reason expansion-limit)
+  (let* ((proc
+          (app-oper ptree))
+         (vals
+          (app-args ptree))
+         (vars
           (prc-parms proc))
          (vars-varset
           (list->varset vars))
