@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2009-06-04 19:30:18 feeley> */
+/* File: "os.h", Time-stamp: <2009-07-30 12:03:36 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1362,6 +1362,12 @@ extern char *___format_filepos
 extern char **___os_system_type ___PVOID;
 extern char *___os_system_type_string ___PVOID;
 extern char *___os_configure_command_string ___PVOID;
+
+
+/* C compilation environment information. */
+
+extern char *___os_obj_extension_string ___PVOID;
+extern char *___os_exe_extension_string ___PVOID;
 
 
 /* OS initialization/finalization. */

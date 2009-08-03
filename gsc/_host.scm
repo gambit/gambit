@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_host.scm", Time-stamp: <2007-11-20 22:14:43 feeley>
+;;; File: "_host.scm", Time-stamp: <2009-07-31 10:22:27 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -714,7 +714,12 @@
   (##vector->list obj))
 
 (define (open-input-file* path)
-  (##open-input-file path))
+  (##open-file-generic
+   (macro-direction-in)
+   #f
+   (lambda (port) (if (input-port? port) port #f))
+   open-input-file
+   path))
 
 (define open-output-file ##open-output-file)
 

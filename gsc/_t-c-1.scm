@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2008-12-09 14:31:56 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2009-08-03 11:00:29 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -809,6 +809,7 @@
                           (or script-line
                               last-script-line)))
                   last-script-line))))
+
         (targ-link
           extension?
           out
@@ -832,7 +833,9 @@
           sym-rsrc
           key-rsrc
           glo-rsrc
-          script-line)))))
+          script-line)
+
+        out))))
 
 (define (targ-make-mod name mods sym-rsrc key-rsrc glo-rsrc script-line)
   (vector name mods sym-rsrc key-rsrc glo-rsrc script-line))
@@ -855,6 +858,25 @@
 (define (targ-mod-script-line module-info)
   (vector-ref module-info 5))
 
+(define targ-generated-c-file-first-line
+  (string-append "#ifdef " c-id-prefix "LINKER_INFO"))
+
+(define (targ-read-line in)
+  (let loop ((lst '()))
+    (let ((c (read-char in)))
+      (if (or (eof-object? c)
+              (char=? c #\return)
+              (char=? c #\newline))
+          (list->str (reverse lst))
+          (loop (cons c lst))))))
+
+(define (targ-generated-c-file? file)
+  (let ((in (open-input-file* file)))
+    (and in
+         (let ((first-line (targ-read-line in)))
+           (close-input-port in)
+           (string=? targ-generated-c-file-first-line first-line)))))
+
 (define (targ-read-linker-info file)
   (let ((in (open-input-file* file)))
 
@@ -862,18 +884,9 @@
       (if in (close-input-port in))
       (compiler-error (string-append msg " " file)))
 
-    (define (read-line)
-      (let loop ((lst '()))
-        (let ((c (read-char in)))
-          (if (or (eof-object? c)
-                  (char=? c #\return)
-                  (char=? c #\newline))
-            (list->str (reverse lst))
-            (loop (cons c lst))))))
-
     (if in
-      (let ((first-line (read-line)))
-        (if (string=? "#ifdef ___LINKER_INFO" first-line)
+      (let ((first-line (targ-read-line in)))
+        (if (string=? targ-generated-c-file-first-line first-line)
           (let ((linker-info (read in)))
             (if (and (pair? linker-info)
                      (= (length linker-info) 9)
@@ -1053,8 +1066,8 @@
   (set! targ-source-filename #f)
   (set! targ-in-macro-definition? #f)
 
-  (targ-display "#ifdef ")
-  (targ-code* '("LINKER_INFO"))
+  (targ-display targ-generated-c-file-first-line)
+  (targ-line)
 
   (targ-display "; File: ")
   (targ-display-c-string (path-strip-directory filename))

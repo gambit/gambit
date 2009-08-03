@@ -36,15 +36,21 @@ RTLIBSUBSYS=""
 #
 # To accumulate flags and definitions for C compilation.
 
+GAMBCLIB_DEFS=""
+
 FLAGS_OBJ=""
 FLAGS_DYN=""
 FLAGS_LIB=""
 FLAGS_EXE=""
+
+DEFS_OBJ=""
+DEFS_DYN="-D___DYNAMIC"
+DEFS_LIB=""
+DEFS_EXE=""
+
 FLAGS_OBJ_DYN=""
 FLAGS_OBJ_DYN_LIB_EXE=""
 FLAGS_DYN_LIB=""
-GSC_CC_O_DEFS="-D___DYNAMIC"
-LIBRARY_DEFS=""
 
 ###############################################################################
 #
@@ -84,6 +90,15 @@ fi
 
 AC_SUBST(C_COMPILER)
 AC_SUBST(C_PREPROC)
+
+AC_SUBST(C_COMPILER_MF)
+AC_SUBST(C_PREPROC_MF)
+
+AC_SUBST(C_COMPILER_SH)
+AC_SUBST(C_PREPROC_SH)
+
+AC_SUBST(C_COMPILER_BAT)
+AC_SUBST(C_PREPROC_BAT)
 
 ###############################################################################
 #
@@ -184,7 +199,7 @@ AC_ARG_ENABLE(debug,
 
 if test "$ENABLE_DEBUG" = yes; then
   AC_DEFINE(___DEBUG)
-  GSC_CC_O_DEFS="$GSC_CC_O_DEFS -D___DEBUG"
+  DEFS_DYN="$DEFS_DYN -D___DEBUG"
 fi
 
 ###############################################################################
@@ -199,7 +214,7 @@ AC_ARG_ENABLE(profile,
 
 if test "$ENABLE_PROFILE" = yes; then
   AC_DEFINE(___PROFILE)
-  GSC_CC_O_DEFS="$GSC_CC_O_DEFS -D___PROFILE"
+  DEFS_DYN="$DEFS_DYN -D___PROFILE"
 fi
 
 ###############################################################################
@@ -242,7 +257,7 @@ AC_ARG_ENABLE(single-host,
 
 if test "$ENABLE_SINGLE_HOST" = yes; then
   AC_DEFINE(___SINGLE_HOST)
-  GSC_CC_O_DEFS="$GSC_CC_O_DEFS -D___SINGLE_HOST"
+  DEFS_DYN="$DEFS_DYN -D___SINGLE_HOST"
 fi
 
 ###############################################################################
@@ -259,7 +274,7 @@ AC_ARG_ENABLE(inline-jumps,
 
 if test "$ENABLE_INLINE_JUMPS" = yes; then
   AC_DEFINE(___INLINE_JUMPS)
-  GSC_CC_O_DEFS="$GSC_CC_O_DEFS -D___INLINE_JUMPS"
+  DEFS_DYN="$DEFS_DYN -D___INLINE_JUMPS"
 fi
 
 ###############################################################################
@@ -325,7 +340,7 @@ AC_ARG_ENABLE(shared,
 
 if test "$ENABLE_SHARED" = yes; then
   AC_DEFINE(___SHARED)
-  # don't add to GSC_CC_O_DEFS
+  # don't add to DEFS_DYN
 fi
 
 ###############################################################################
@@ -407,7 +422,7 @@ AC_ARG_ENABLE(absolute-shared-libs,
               ENABLE_ABSOLUTE_SHARED_LIBS=$enableval,
               ENABLE_ABSOLUTE_SHARED_LIBS=yes)
 
-if test "$ENABLE_SHARED" != "yes"; then
+if test "$ENABLE_SHARED" != yes; then
   ENABLE_ABSOLUTE_SHARED_LIBS=no
 fi
 
@@ -1233,12 +1248,28 @@ fi
 FLAGS_OBJ="$CORCXXFLAGS $FLAGS_OBJ $FLAGS_OBJ_DYN $FLAGS_OBJ_DYN_LIB_EXE"
 FLAGS_DYN="$LDFLAGS $CORCXXFLAGS $FLAGS_DYN $FLAGS_OBJ_DYN $FLAGS_OBJ_DYN_LIB_EXE $FLAGS_DYN_LIB"
 FLAGS_LIB="$LDFLAGS $CORCXXFLAGS $FLAGS_LIB $FLAGS_OBJ_DYN_LIB_EXE $FLAGS_DYN_LIB"
-FLAGS_EXE="$LDFLAGS $CORCXXFLAGS $FLAGS_EXE $FLAGS_OBJ_DYN_LIB_EXE"
+#FLAGS_EXE="$LDFLAGS $CORCXXFLAGS $FLAGS_EXE $FLAGS_OBJ_DYN_LIB_EXE"
+FLAGS_EXE="$LDFLAGS $FLAGS_OBJ $FLAGS_EXE"
 
 AC_SUBST(FLAGS_OBJ)
 AC_SUBST(FLAGS_DYN)
 AC_SUBST(FLAGS_LIB)
 AC_SUBST(FLAGS_EXE)
+
+AC_SUBST(FLAGS_OBJ_MF)
+AC_SUBST(FLAGS_DYN_MF)
+AC_SUBST(FLAGS_LIB_MF)
+AC_SUBST(FLAGS_EXE_MF)
+
+AC_SUBST(FLAGS_OBJ_SH)
+AC_SUBST(FLAGS_DYN_SH)
+AC_SUBST(FLAGS_LIB_SH)
+AC_SUBST(FLAGS_EXE_SH)
+
+AC_SUBST(FLAGS_OBJ_BAT)
+AC_SUBST(FLAGS_DYN_BAT)
+AC_SUBST(FLAGS_LIB_BAT)
+AC_SUBST(FLAGS_EXE_BAT)
 
 ###############################################################################
 
@@ -1306,7 +1337,6 @@ if test "$ENABLE_SHARED" = yes; then
   MAKE_LIBRARY='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_LIBS) $(LIBS)'
   MAKE_LIBRARY_FOR_INSTALL='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_FOR_INSTALL_LIBS) $(LIBS)'
   FIXLIB=':'
-  LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -o $(EXECUTABLE)'
   LINK_FOR_INSTALL='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_FOR_INSTALL_LIBS) $(LIBS) -o $(EXECUTABLE)'
 
 else
@@ -1322,7 +1352,6 @@ else
     MAKE_LIBRARY='lib -out:$(LIBRARY) $(LIBRARY_OBJECTS)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB=':'
-    LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -Fe$(EXECUTABLE)'
     LINK_FOR_INSTALL=':'
 
 #  else if test "$C_COMP_WATCOMC" = yes; then
@@ -1337,39 +1366,19 @@ else
     MAKE_LIBRARY='ar rc $(LIBRARY) $(LIBRARY_OBJECTS) && $(RANLIB) $(LIBRARY)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB='$(RANLIB)'
-    LINK='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_LIBS) $(LIBS) -o $(EXECUTABLE)'
     LINK_FOR_INSTALL=':'
 
   fi
 
 fi
 
-if test "$C_COMP_VISUALC" = yes; then
-
-  ########## Microsoft Visual C++ compiler
-
-  GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"%GSC_CC_O_GAMBCDIR_INCLUDE%\\\" $GSC_CC_O_DEFS -Fe\\\"%GSC_CC_O_OBJ_FILENAME%\\\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \\\"%GSC_CC_O_C_FILENAME_BASE%\\\" %GSC_CC_O_LD_OPTIONS%"
-
-else
-
-  case "$target_os" in
-
-     mingw*) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"%GSC_CC_O_GAMBCDIR_INCLUDE%\\\" $GSC_CC_O_DEFS -o \\\"%GSC_CC_O_OBJ_FILENAME%\\\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \\\"%GSC_CC_O_C_FILENAME_BASE%\\\" %GSC_CC_O_LD_OPTIONS%"
-             ;;
-
-          *) GSC_CC_O="$C_COMPILER $FLAGS_DYN -I\\\"\\\$\${GSC_CC_O_GAMBCDIR_INCLUDE}\\\" $GSC_CC_O_DEFS -o \\\"\\\$\${GSC_CC_O_OBJ_FILENAME}\\\" \\\$\${GSC_CC_O_CC_OPTIONS} \\\$\${GSC_CC_O_LD_OPTIONS_PRELUDE} \\\"\\\$\${GSC_CC_O_C_FILENAME_BASE}\\\" \\\$\${GSC_CC_O_LD_OPTIONS}"
-             ;;
-  esac
-
-fi
-
-if test "$ENABLE_VERSIONNED_LIBS" = "no"; then
+if test "$ENABLE_VERSIONNED_LIBS" = no; then
 
   LIB_SUFFIX=""
 
 else
 
-  if test "$ENABLE_VERSIONNED_LIBS" = "yes"; then
+  if test "$ENABLE_VERSIONNED_LIBS" = yes; then
 
     LIB_SUFFIX=`echo -$PACKAGE_VERSION | sed -e 's/\./_/g'`
 
@@ -1385,7 +1394,58 @@ GAMBCLIB="gambc$LIB_SUFFIX"
 GAMBCGSCLIB="gambcgsc$LIB_SUFFIX"
 GAMBCGSILIB="gambcgsi$LIB_SUFFIX"
 
-if test "$ENABLE_ABSOLUTE_SHARED_LIBS" = "yes"; then
+if test "yes" = yes; then
+
+  GAMBCLIB_LOC=""
+  GAMBCLIB_LINK="\"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION\""
+
+  GAMBCGSILIB_LOC=""
+  GAMBCGSILIB_LINK="\"\${GAMBCDIR_LIB_GSI}/$LIB_PREFIX$GAMBCGSILIB$LIB_EXTENSION\" \"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION\""
+
+  GAMBCGSCLIB_LOC=""
+  GAMBCGSCLIB_LINK="\"\${GAMBCDIR_LIB_GSC}/$LIB_PREFIX$GAMBCGSCLIB$LIB_EXTENSION\" \"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION\""
+
+else
+
+  GAMBCLIB_LOC="-L\"\${GAMBCDIR_LIB}\""
+  GAMBCLIB_LINK="-l$GAMBCLIB"
+
+  GAMBCGSILIB_LOC="-L\"\${GAMBCDIR_LIB_GSI}\" -L\"\${GAMBCDIR_LIB}\""
+  GAMBCGSILIB_LINK="-l$GAMBCGSILIB -l$GAMBCLIB"
+
+  GAMBCGSCLIB_LOC="-L\"\${GAMBCDIR_LIB_GSC}\" -L\"\${GAMBCDIR_LIB}\""
+  GAMBCGSCLIB_LINK="-l$GAMBCGSCLIB -l$GAMBCLIB"
+
+fi
+
+if test "$C_COMP_VISUALC" = yes; then
+
+  ########## Microsoft Visual C++ compiler
+
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBCDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBCDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+
+  BUILD_LIB="echo BUILD_LIB not yet implemented"
+
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBCDIR_INCLUDE}\" ${GAMBCLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBCLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS}"
+
+else
+
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBCDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBCDIR_INCLUDE}\" -o \"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+
+  BUILD_LIB="echo BUILD_LIB not yet implemented"
+
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBCDIR_INCLUDE}\" ${GAMBCLIB_LOC} -o \"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBCLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS}"
+
+fi
+
+# The following code for making installed libraries may benefit from
+# a rewrite so that it reuses the "BUILD_XXX" command infrastructure.
+
+if test "$ENABLE_ABSOLUTE_SHARED_LIBS" = yes; then
 
   MAKE_LIBRARY_FOR_INSTALL_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)'
   LINK_FOR_INSTALL_GSI_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSILIB)$(LIB_EXTENSION) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)'
@@ -1414,7 +1474,7 @@ case "$target_os" in
 
         *) # for other systems
 
-           ac_link_obj_file='$C_COMPILER $FLAGS_DYN -Iinclude $GSC_CC_O_DEFS -o conftest.o1 conftest.$ac_ext >&5'
+           ac_link_obj_file='$C_COMPILER $FLAGS_DYN $DEFS_DYN -Iinclude -o conftest.o1 conftest.$ac_ext >&5'
 
            rm -f conftest.$ac_ext conftest.o1 conftest1.sed
 
@@ -1460,7 +1520,7 @@ esac
 #
 # Determine where the installation directories are located.
 
-if test "$prefix" = "NONE"; then
+if test "$prefix" = NONE; then
   prefix="/usr/local/$PACKAGE_NAME"
 fi
 
@@ -1492,42 +1552,145 @@ if test "$datadir" = "\${datarootdir}"; then
   datadir="\${prefix}/share"
 fi
 
-LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR=\"\\\"\${prefix}\\\"\""
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR=\"\\\"$prefix\\\"\""
 
 if test "$ENABLE_SYMLINKS" != yes; then
 
   if test "$bindir" != "\${prefix}/bin"; then
-    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_BIN=\"\\\"\${bindir}\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_BIN=\"\\\"$bindir\\\"\""
   fi
 
   if test "$includedir" != "\${prefix}/include"; then
-    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_INCLUDE=\"\\\"\${includedir}\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INCLUDE=\"\\\"$includedir\\\"\""
   fi
 
   if test "$libdir" != "\${prefix}/lib"; then
-    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_LIB=\"\\\"\${libdir}\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_LIB=\"\\\"$libdir\\\"\""
   fi
 
   if test "$docdir" != "\${prefix}/doc"; then
-    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_DOC=\"\\\"\${docdir}\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_DOC=\"\\\"$docdir\\\"\""
   fi
 
   if test "$infodir" != "\${prefix}/info"; then
-    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_INFO=\"\\\"\${infodir}\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INFO=\"\\\"$infodir\\\"\""
   fi
 
   if test "$datadir" != "\${prefix}/share"; then
-    LIBRARY_DEFS="$LIBRARY_DEFS -D___GAMBCDIR_SHARE=\"\\\"\${datadir}\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_SHARE=\"\\\"$datadir\\\"\""
   fi
 
 fi
 
 emacsdir="\${datadir}/emacs/site-lisp"
 
-LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
-LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
-LIBRARY_DEFS="$LIBRARY_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\"" 
-LIBRARY_DEFS="$LIBRARY_DEFS -D___CONFIGURE_COMMAND=\"\\\"$CONFIGURE_COMMAND\\\"\"" 
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\"" 
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___CONFIGURE_COMMAND=\"\\\"$CONFIGURE_COMMAND\\\"\"" 
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___OBJ_EXTENSION=\"\\\"$obj\\\"\"" 
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___EXE_EXTENSION=\"\\\"$exe\\\"\"" 
+
+###############################################################################
+
+# Escape strings before substitution.
+
+ESC_MF="sed -e s/\\\\\\\$/\\\$\\\$/g"
+ESC_SH="sed -e s/\\\\/\\\\\\\\\\\\\\\\/g -e s/\\\"/\\\\\\\"/g -e s/\\\$/\\\\\\\$/g -e s/^/\"/ -e s/$/\"/"
+ESC_ECHO="sed -e s/\\\\/\\\\\\\\\\\\\\\\/g -e s/\\\"/\\\\\\\"/g -e s/^/\"/ -e s/$/\"/"
+ESC_BAT="sed -e s/\${/%%/g -e s/}/%%/g"
+ESC_ECHO_BAT="sed -e s/\${/%/g -e s/}/%/g"
+
+C_COMPILER_MF=`echo "$C_COMPILER" | $ESC_MF`
+C_PREPROC_MF=`echo "$C_PREPROC" | $ESC_MF`
+
+FLAGS_OBJ_MF=`echo "$FLAGS_OBJ" | $ESC_MF`
+FLAGS_DYN_MF=`echo "$FLAGS_DYN" | $ESC_MF`
+FLAGS_LIB_MF=`echo "$FLAGS_LIB" | $ESC_MF`
+FLAGS_EXE_MF=`echo "$FLAGS_EXE" | $ESC_MF`
+
+DEFS_OBJ_MF=`echo "$DEFS_OBJ" | $ESC_MF`
+DEFS_DYN_MF=`echo "$DEFS_DYN" | $ESC_MF`
+DEFS_LIB_MF=`echo "$DEFS_LIB" | $ESC_MF`
+DEFS_EXE_MF=`echo "$DEFS_EXE" | $ESC_MF`
+
+BUILD_OBJ_MF=`echo "$BUILD_OBJ" | $ESC_MF`
+BUILD_DYN_MF=`echo "$BUILD_DYN" | $ESC_MF`
+BUILD_LIB_MF=`echo "$BUILD_LIB" | $ESC_MF`
+BUILD_EXE_MF=`echo "$BUILD_EXE" | $ESC_MF`
+
+DEFS_MF=`echo "$DEFS" | $ESC_MF`
+LIBS_MF=`echo "$LIBS" | $ESC_MF`
+GAMBCLIB_DEFS_MF=`echo "$GAMBCLIB_DEFS" | $ESC_MF`
+GAMBCLIB_MF=`echo "$GAMBCLIB" | $ESC_MF`
+GAMBCGSCLIB_MF=`echo "$GAMBCGSCLIB" | $ESC_MF`
+GAMBCGSILIB_MF=`echo "$GAMBCGSILIB" | $ESC_MF`
+LIB_PREFIX_MF=`echo "$LIB_PREFIX" | $ESC_MF`
+LIB_EXTENSION_MF=`echo "$LIB_EXTENSION" | $ESC_MF`
+
+C_COMPILER_SH=`echo "$C_COMPILER" | $ESC_SH`
+C_PREPROC_SH=`echo "$C_PREPROC" | $ESC_SH`
+
+FLAGS_OBJ_SH=`echo "$FLAGS_OBJ" | $ESC_SH`
+FLAGS_DYN_SH=`echo "$FLAGS_DYN" | $ESC_SH`
+FLAGS_LIB_SH=`echo "$FLAGS_LIB" | $ESC_SH`
+FLAGS_EXE_SH=`echo "$FLAGS_EXE" | $ESC_SH`
+
+DEFS_OBJ_SH=`echo "$DEFS_OBJ" | $ESC_SH`
+DEFS_DYN_SH=`echo "$DEFS_DYN" | $ESC_SH`
+DEFS_LIB_SH=`echo "$DEFS_LIB" | $ESC_SH`
+DEFS_EXE_SH=`echo "$DEFS_EXE" | $ESC_SH`
+
+BUILD_OBJ_SH=`echo "$BUILD_OBJ" | $ESC_SH`
+BUILD_DYN_SH=`echo "$BUILD_DYN" | $ESC_SH`
+BUILD_LIB_SH=`echo "$BUILD_LIB" | $ESC_SH`
+BUILD_EXE_SH=`echo "$BUILD_EXE" | $ESC_SH`
+
+DEFS_SH=`echo "$DEFS" | $ESC_SH`
+LIBS_SH=`echo "$LIBS" | $ESC_SH`
+GAMBCLIB_DEFS_SH=`echo "$GAMBCLIB_DEFS" | $ESC_SH`
+GAMBCLIB_SH=`echo "$GAMBCLIB" | $ESC_SH`
+GAMBCGSCLIB_SH=`echo "$GAMBCGSCLIB" | $ESC_SH`
+GAMBCGSILIB_SH=`echo "$GAMBCGSILIB" | $ESC_SH`
+LIB_PREFIX_SH=`echo "$LIB_PREFIX" | $ESC_SH`
+LIB_EXTENSION_SH=`echo "$LIB_EXTENSION" | $ESC_SH`
+
+C_COMPILER_BAT=`echo "$C_COMPILER" | $ESC_BAT`
+C_PREPROC_BAT=`echo "$C_PREPROC" | $ESC_BAT`
+
+FLAGS_OBJ_BAT=`echo "$FLAGS_OBJ" | $ESC_BAT`
+FLAGS_DYN_BAT=`echo "$FLAGS_DYN" | $ESC_BAT`
+FLAGS_LIB_BAT=`echo "$FLAGS_LIB" | $ESC_BAT`
+FLAGS_EXE_BAT=`echo "$FLAGS_EXE" | $ESC_BAT`
+
+DEFS_OBJ_BAT=`echo "$DEFS_OBJ" | $ESC_BAT`
+DEFS_DYN_BAT=`echo "$DEFS_DYN" | $ESC_BAT`
+DEFS_LIB_BAT=`echo "$DEFS_LIB" | $ESC_BAT`
+DEFS_EXE_BAT=`echo "$DEFS_EXE" | $ESC_BAT`
+
+BUILD_OBJ_BAT=`echo "$BUILD_OBJ" | $ESC_BAT`
+BUILD_DYN_BAT=`echo "$BUILD_DYN" | $ESC_BAT`
+BUILD_LIB_BAT=`echo "$BUILD_LIB" | $ESC_BAT`
+BUILD_EXE_BAT=`echo "$BUILD_EXE" | $ESC_BAT`
+
+DEFS_BAT=`echo "$DEFS" | $ESC_BAT`
+LIBS_BAT=`echo "$LIBS" | $ESC_BAT`
+GAMBCLIB_DEFS_BAT=`echo "$GAMBCLIB_DEFS" | $ESC_BAT`
+GAMBCLIB_BAT=`echo "$GAMBCLIB" | $ESC_BAT`
+GAMBCGSCLIB_BAT=`echo "$GAMBCGSCLIB" | $ESC_BAT`
+GAMBCGSILIB_BAT=`echo "$GAMBCGSILIB" | $ESC_BAT`
+LIB_PREFIX_BAT=`echo "$LIB_PREFIX" | $ESC_BAT`
+LIB_EXTENSION_BAT=`echo "$LIB_EXTENSION" | $ESC_BAT`
+
+BUILD_OBJ_ECHO=`echo "$BUILD_OBJ" | $ESC_ECHO`
+BUILD_DYN_ECHO=`echo "$BUILD_DYN" | $ESC_ECHO`
+BUILD_LIB_ECHO=`echo "$BUILD_LIB" | $ESC_ECHO`
+BUILD_EXE_ECHO=`echo "$BUILD_EXE" | $ESC_ECHO`
+
+BUILD_OBJ_ECHO_BAT=`echo "$BUILD_OBJ" | $ESC_ECHO_BAT`
+BUILD_DYN_ECHO_BAT=`echo "$BUILD_DYN" | $ESC_ECHO_BAT`
+BUILD_LIB_ECHO_BAT=`echo "$BUILD_LIB" | $ESC_ECHO_BAT`
+BUILD_EXE_ECHO_BAT=`echo "$BUILD_EXE" | $ESC_ECHO_BAT`
 
 ###############################################################################
 
@@ -1547,13 +1710,85 @@ AC_SUBST(exe)
 AC_SUBST(obj)
 AC_SUBST(bat)
 AC_SUBST(SETDLPATH)
-AC_SUBST(GSC_CC_O)
-AC_SUBST(LIBRARY_DEFS)
-AC_SUBST(LIB_PREFIX)
-AC_SUBST(LIB_EXTENSION)
+
+AC_SUBST(BUILD_OBJ)
+AC_SUBST(BUILD_DYN)
+AC_SUBST(BUILD_LIB)
+AC_SUBST(BUILD_EXE)
+AC_SUBST(DEFS_OBJ)
+AC_SUBST(DEFS_DYN)
+AC_SUBST(DEFS_LIB)
+AC_SUBST(DEFS_EXE)
+AC_SUBST(DEFS)
+AC_SUBST(LIBS)
+AC_SUBST(GAMBCLIB_DEFS)
 AC_SUBST(GAMBCLIB)
 AC_SUBST(GAMBCGSCLIB)
 AC_SUBST(GAMBCGSILIB)
+AC_SUBST(LIB_PREFIX)
+AC_SUBST(LIB_EXTENSION)
+
+AC_SUBST(BUILD_OBJ_MF)
+AC_SUBST(BUILD_DYN_MF)
+AC_SUBST(BUILD_LIB_MF)
+AC_SUBST(BUILD_EXE_MF)
+AC_SUBST(DEFS_OBJ_MF)
+AC_SUBST(DEFS_DYN_MF)
+AC_SUBST(DEFS_LIB_MF)
+AC_SUBST(DEFS_EXE_MF)
+AC_SUBST(DEFS_MF)
+AC_SUBST(LIBS_MF)
+AC_SUBST(GAMBCLIB_DEFS_MF)
+AC_SUBST(GAMBCLIB_MF)
+AC_SUBST(GAMBCGSCLIB_MF)
+AC_SUBST(GAMBCGSILIB_MF)
+AC_SUBST(LIB_PREFIX_MF)
+AC_SUBST(LIB_EXTENSION_MF)
+
+AC_SUBST(BUILD_OBJ_SH)
+AC_SUBST(BUILD_DYN_SH)
+AC_SUBST(BUILD_LIB_SH)
+AC_SUBST(BUILD_EXE_SH)
+AC_SUBST(DEFS_OBJ_SH)
+AC_SUBST(DEFS_DYN_SH)
+AC_SUBST(DEFS_LIB_SH)
+AC_SUBST(DEFS_EXE_SH)
+AC_SUBST(DEFS_SH)
+AC_SUBST(LIBS_SH)
+AC_SUBST(GAMBCLIB_DEFS_SH)
+AC_SUBST(GAMBCLIB_SH)
+AC_SUBST(GAMBCGSCLIB_SH)
+AC_SUBST(GAMBCGSILIB_SH)
+AC_SUBST(LIB_PREFIX_SH)
+AC_SUBST(LIB_EXTENSION_SH)
+
+AC_SUBST(BUILD_OBJ_BAT)
+AC_SUBST(BUILD_DYN_BAT)
+AC_SUBST(BUILD_LIB_BAT)
+AC_SUBST(BUILD_EXE_BAT)
+AC_SUBST(DEFS_OBJ_BAT)
+AC_SUBST(DEFS_DYN_BAT)
+AC_SUBST(DEFS_LIB_BAT)
+AC_SUBST(DEFS_EXE_BAT)
+AC_SUBST(DEFS_BAT)
+AC_SUBST(LIBS_BAT)
+AC_SUBST(GAMBCLIB_DEFS_BAT)
+AC_SUBST(GAMBCLIB_BAT)
+AC_SUBST(GAMBCGSCLIB_BAT)
+AC_SUBST(GAMBCGSILIB_BAT)
+AC_SUBST(LIB_PREFIX_BAT)
+AC_SUBST(LIB_EXTENSION_BAT)
+
+AC_SUBST(BUILD_OBJ_ECHO)
+AC_SUBST(BUILD_DYN_ECHO)
+AC_SUBST(BUILD_LIB_ECHO)
+AC_SUBST(BUILD_EXE_ECHO)
+
+AC_SUBST(BUILD_OBJ_ECHO_BAT)
+AC_SUBST(BUILD_DYN_ECHO_BAT)
+AC_SUBST(BUILD_LIB_ECHO_BAT)
+AC_SUBST(BUILD_EXE_ECHO_BAT)
+
 AC_SUBST(MAKE_LIBRARY)
 AC_SUBST(MAKE_LIBRARY_FOR_INSTALL)
 AC_SUBST(MAKE_LIBRARY_FOR_INSTALL_LIBS)
@@ -1587,7 +1822,7 @@ AC_SUBST(HELP_BROWSER)
 
 AC_PROG_MAKE_SET
 
-AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-doc.bat.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
+AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.bat.unix bin/gambc-cc.bat.windows bin/gambc-doc.bat.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
 
 if test "$ENABLE_SINGLE_HOST" != yes; then
   AC_MSG_NOTICE([

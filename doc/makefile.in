@@ -19,16 +19,16 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 srcdirpfx = @srcdirpfx@
 
-C_COMPILER = @C_COMPILER@
-C_PREPROC = @C_PREPROC@
-FLAGS_OBJ = @FLAGS_OBJ@
-FLAGS_DYN = @FLAGS_DYN@
-FLAGS_LIB = @FLAGS_LIB@
-FLAGS_EXE = @FLAGS_EXE@
+C_COMPILER = @C_COMPILER_MF@
+C_PREPROC = @C_PREPROC_MF@
+FLAGS_OBJ = @FLAGS_OBJ_MF@
+FLAGS_DYN = @FLAGS_DYN_MF@
+FLAGS_LIB = @FLAGS_LIB_MF@
+FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-LIBRARY_DEFS = @LIBRARY_DEFS@
+GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
@@ -170,23 +170,25 @@ install-post: all doc
 	for file in $(INSTFILES_MAN); do \
 	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_mandir/$$file; \
 	done; \
-	if test "$$t_docdir" != "$$i_docdir"; then \
-	  r_docdir=`$(rootfromhere)/relpath "$$t_docdir" "$$i_docdir" @ENABLE_MULTIPLE_VERSIONS@`; \
-	  for file in $(INSTFILES_DOC); do \
-	    (cd $$i_docdir && $(LN_S) $$r_docdir$$file $$file); \
-	  done; \
-	fi; \
-	if test "$$t_infodir" != "$$i_infodir"; then \
-	  r_infodir=`$(rootfromhere)/relpath "$$t_infodir" "$$i_infodir" @ENABLE_MULTIPLE_VERSIONS@`; \
-	  for file in $(INSTFILES_INFO); do \
-	    (cd $$i_infodir && $(LN_S) $$r_infodir$$file $$file); \
-	  done; \
-	fi; \
-	if test "$$t_mandir" != "$$i_mandir"; then \
-	  r_mandir=`$(rootfromhere)/relpath "$$t_mandir" "$$i_mandir" @ENABLE_MULTIPLE_VERSIONS@`; \
-	  for file in $(INSTFILES_MAN); do \
-	    (cd $$i_mandir && $(LN_S) $$r_mandir$$file $$file); \
-	  done; \
+	if test "@bat@" = ""; then \
+	  if test "$$t_docdir" != "$$i_docdir"; then \
+	    r_docdir=`$(rootfromhere)/relpath "$$t_docdir" "$$i_docdir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	    for file in $(INSTFILES_DOC); do \
+	      (cd $$i_docdir && $(LN_S) $$r_docdir$$file $$file); \
+	    done; \
+	  fi; \
+	  if test "$$t_infodir" != "$$i_infodir"; then \
+	    r_infodir=`$(rootfromhere)/relpath "$$t_infodir" "$$i_infodir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	    for file in $(INSTFILES_INFO); do \
+	      (cd $$i_infodir && $(LN_S) $$r_infodir$$file $$file); \
+	    done; \
+	  fi; \
+	  if test "$$t_mandir" != "$$i_mandir"; then \
+	    r_mandir=`$(rootfromhere)/relpath "$$t_mandir" "$$i_mandir" @ENABLE_MULTIPLE_VERSIONS@`; \
+	    for file in $(INSTFILES_MAN); do \
+	      (cd $$i_mandir && $(LN_S) $$r_mandir$$file $$file); \
+	    done; \
+	  fi; \
 	fi
 
 uninstall-pre:

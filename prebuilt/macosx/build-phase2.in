@@ -33,7 +33,7 @@ README_FILE="`pwd`/readme.html"
 CONCLUSION_FILE="`pwd`/conclusion.html"
 EXTRAS_DIR="`pwd`/extras"
 DESCRIPTION="This is the $TITLE installer"
-PROGRAMS="gsc gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script uninstall-gambc"
+PROGRAMS="gsc gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script gambc-cc.bat gambc-doc.bat uninstall-gambc"
 LIBRARIES="libgambc@LIB_EXTENSION@ libgambcgsi@LIB_EXTENSION@ libgambcgsc@LIB_EXTENSION@"
 INCLUDES="gambit.h"
 

@@ -1,4 +1,4 @@
-/* File: "os.c", Time-stamp: <2009-06-04 18:57:32 feeley> */
+/* File: "os.c", Time-stamp: <2009-07-30 12:06:10 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1778,6 +1778,37 @@ char *___os_system_type_string ___PVOID
 char *___os_configure_command_string ___PVOID
 {
   return configure_command_string;
+}
+
+
+/*---------------------------------------------------------------------------*/
+
+/* C compilation environment information. */
+
+
+#ifndef ___OBJ_EXTENSION
+#define ___OBJ_EXTENSION ".obj"
+#endif
+
+#ifndef ___EXE_EXTENSION
+#define ___EXE_EXTENSION ".exe"
+#endif
+
+
+___HIDDEN char *os_obj_extension_string = ___OBJ_EXTENSION;
+
+___HIDDEN char *os_exe_extension_string = ___EXE_EXTENSION;
+
+
+char *___os_obj_extension_string ___PVOID
+{
+  return os_obj_extension_string;
+}
+
+
+char *___os_exe_extension_string ___PVOID
+{
+  return os_exe_extension_string;
 }
 
 

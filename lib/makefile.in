@@ -1,4 +1,4 @@
-# makefile for Gambit-C library, Time-stamp: <2009-06-12 11:51:16 feeley>
+# makefile for Gambit-C library, Time-stamp: <2009-07-30 11:52:23 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -19,16 +19,16 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 srcdirpfx = @srcdirpfx@
 
-C_COMPILER = @C_COMPILER@
-C_PREPROC = @C_PREPROC@
-FLAGS_OBJ = @FLAGS_OBJ@
-FLAGS_DYN = @FLAGS_DYN@
-FLAGS_LIB = @FLAGS_LIB@
-FLAGS_EXE = @FLAGS_EXE@
+C_COMPILER = @C_COMPILER_MF@
+C_PREPROC = @C_PREPROC_MF@
+FLAGS_OBJ = @FLAGS_OBJ_MF@
+FLAGS_DYN = @FLAGS_DYN_MF@
+FLAGS_LIB = @FLAGS_LIB_MF@
+FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-LIBRARY_DEFS = @LIBRARY_DEFS@
+GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
@@ -64,14 +64,6 @@ mandir = @mandir@
 
 .SUFFIXES:
 .SUFFIXES: .scm .c @obj@
-
-.c@obj@:
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) $(LIBRARY_DEFS) -D___PRIMAL -D___LIBRARY -c $(srcdirpfx)$*.c
-
-.scm.c:
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
-
-INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir)
 
 NORMAL_C = main.c setup.c mem.c os.c os_base.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c
 NORMAL_CPP =
@@ -129,11 +121,26 @@ DISTFILES = $(RCFILES) $(GENDISTFILES)
 
 INSTFILES_LIB_DATA = _$(GAMBCLIB).c $(LIBRARIES_SCM)
 
+GAMBCDIR_INCLUDE = $(rootfromhere)/include
+GAMBCDIR_LIB = $(rootfromhere)/lib
+GAMBCDIR_LIB_GSI = $(rootfromhere)/gsi
+GAMBCDIR_LIB_GSC = $(rootfromhere)/gsc
+
+BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
+BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS) $(GAMBCLIB_DEFS) -D___PRIMAL
+BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
+
 all:
 
 all-pre:
 
 all-post: $(LIBRARY) _$(GAMBCLIB).c
+
+.c@obj@:
+	@BUILD_OBJ@ -D___LIBRARY
+
+.scm.c:
+	@SETDLPATH@ $(rootfromhere)/gsc-comp -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
 
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f $(LIBRARY)

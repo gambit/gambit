@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-06-03 12:26:04 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-07-30 12:29:50 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3693,6 +3693,20 @@ end-of-code
 
 (define-prim (system-stamp)
   (##system-stamp))
+
+;;;----------------------------------------------------------------------------
+
+;;; C compilation environment information.
+
+(define ##os-obj-extension-string-saved
+  ((c-lambda ()
+             nonnull-char-string
+    "___os_obj_extension_string")))
+
+(define ##os-exe-extension-string-saved
+  ((c-lambda ()
+             nonnull-char-string
+    "___os_exe_extension_string")))
 
 ;;;----------------------------------------------------------------------------
 

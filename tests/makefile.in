@@ -1,4 +1,4 @@
-# makefile for regression tests, Time-stamp: <2009-06-12 11:07:24 feeley>
+# makefile for regression tests, Time-stamp: <2009-08-03 12:20:11 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -19,16 +19,16 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 srcdirpfx = @srcdirpfx@
 
-C_COMPILER = @C_COMPILER@
-C_PREPROC = @C_PREPROC@
-FLAGS_OBJ = @FLAGS_OBJ@
-FLAGS_DYN = @FLAGS_DYN@
-FLAGS_LIB = @FLAGS_LIB@
-FLAGS_EXE = @FLAGS_EXE@
+C_COMPILER = @C_COMPILER_MF@
+C_PREPROC = @C_PREPROC_MF@
+FLAGS_OBJ = @FLAGS_OBJ_MF@
+FLAGS_DYN = @FLAGS_DYN_MF@
+FLAGS_LIB = @FLAGS_LIB_MF@
+FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-LIBRARY_DEFS = @LIBRARY_DEFS@
+GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
@@ -62,8 +62,6 @@ psdir = @psdir@
 localedir = @localedir@
 mandir = @mandir@
 
-INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir)
-
 .SUFFIXES:
 
 RCFILES = makefile.in \
@@ -74,6 +72,11 @@ test8.ok test9.ok test10.scm input
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+GAMBCDIR_INCLUDE = $(srcdirpfx)$(rootfromhere)/include
+GAMBCDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
+GAMBCDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
+GAMBCDIR_LIB_GSC = $(srcdirpfx)$(rootfromhere)/gsc
 
 all:
 
@@ -133,13 +136,20 @@ test6: test5
 	@echo "------------ TEST 6 (link and execute the code generated)"
 	rm -f mix_.c mix@obj@ mix_@obj@ mix@exe@
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link mix.c
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mix.c
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mix_.c
-	$(MAKE) link EXECUTABLE="mix@exe@" \
-	  LINK_LIBS="$(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)" \
-	  EXECUTABLE_OBJECTS="mix@obj@ mix_@obj@" \
-	  EXECUTABLE_OBJECTS_PLUS="+mix@obj@ +mix_@obj@" \
-	  EXECUTABLE_OBJECTS_COMMA="mix@obj@,mix_@obj@"
+	$(MAKE) build_obj \
+	  BUILD_OBJ_OUTPUT_FILENAME="mix@obj@" \
+	  BUILD_OBJ_CC_OPTIONS="" \
+	  BUILD_OBJ_INPUT_FILENAMES="mix.c"
+	$(MAKE) build_obj \
+	  BUILD_OBJ_OUTPUT_FILENAME="mix_@obj@" \
+	  BUILD_OBJ_CC_OPTIONS="" \
+	  BUILD_OBJ_INPUT_FILENAMES="mix_.c"
+	$(MAKE) build_exe \
+	  BUILD_EXE_OUTPUT_FILENAME="mix@exe@" \
+	  BUILD_EXE_CC_OPTIONS="" \
+	  BUILD_EXE_LD_OPTIONS_PRELUDE="" \
+	  BUILD_EXE_INPUT_FILENAMES="mix@obj@ mix_@obj@" \
+	  BUILD_EXE_LD_OPTIONS=""
 	@SETDLPATH@ ./mix@exe@ -:m4000 > test6.out
 	diff $(srcdirpfx)test6.ok test6.out && \
 	  rm -f test6.out mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@
@@ -148,13 +158,20 @@ test7:
 	@echo "------------ TEST 7 (memory management and C-interface)"
 	rm -f mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link mem.scm
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mem.c
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c mem_.c
-	$(MAKE) link EXECUTABLE="mem@exe@" \
-	  LINK_LIBS="$(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)" \
-	  EXECUTABLE_OBJECTS="mem@obj@ mem_@obj@" \
-	  EXECUTABLE_OBJECTS_PLUS="+mem@obj@ +mem_@obj@" \
-	  EXECUTABLE_OBJECTS_COMMA="mem@obj@,mem_@obj@"
+	$(MAKE) build_obj \
+	  BUILD_OBJ_OUTPUT_FILENAME="mem@obj@" \
+	  BUILD_OBJ_CC_OPTIONS="" \
+	  BUILD_OBJ_INPUT_FILENAMES="mem.c"
+	$(MAKE) build_obj \
+	  BUILD_OBJ_OUTPUT_FILENAME="mem_@obj@" \
+	  BUILD_OBJ_CC_OPTIONS="" \
+	  BUILD_OBJ_INPUT_FILENAMES="mem_.c"
+	$(MAKE) build_exe \
+	  BUILD_EXE_OUTPUT_FILENAME="mem@exe@" \
+	  BUILD_EXE_CC_OPTIONS="" \
+	  BUILD_EXE_LD_OPTIONS_PRELUDE="" \
+	  BUILD_EXE_INPUT_FILENAMES="mem@obj@ mem_@obj@" \
+	  BUILD_EXE_LD_OPTIONS=""
 	@SETDLPATH@ ./mem@exe@ -:h4000 > test7.out
 	diff $(srcdirpfx)test7.ok test7.out && \
 	  rm -f test7.out mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
@@ -164,14 +181,24 @@ test8:
 	rm -f server.c server_.c server@obj@ server_@obj@ \
 	  client@obj@ client@exe@
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link server.scm
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -c client.c
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -D___LIBRARY -c server.c
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -D___LIBRARY -c server_.c
-	$(MAKE) link EXECUTABLE="client@exe@" \
-	  LINK_LIBS="$(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)" \
-	  EXECUTABLE_OBJECTS="client@obj@ server@obj@ server_@obj@" \
-	  EXECUTABLE_OBJECTS_PLUS="+client@obj@ +server@obj@ +server_@obj@" \
-	  EXECUTABLE_OBJECTS_COMMA="client@obj@,server@obj@,server_@obj@"
+	$(MAKE) build_obj \
+	  BUILD_OBJ_OUTPUT_FILENAME="client@obj@" \
+	  BUILD_OBJ_CC_OPTIONS="" \
+	  BUILD_OBJ_INPUT_FILENAMES="client.c"
+	$(MAKE) build_obj_library \
+	  BUILD_OBJ_OUTPUT_FILENAME="server@obj@" \
+	  BUILD_OBJ_CC_OPTIONS="" \
+	  BUILD_OBJ_INPUT_FILENAMES="server.c"
+	$(MAKE) build_obj_library \
+	  BUILD_OBJ_OUTPUT_FILENAME="server_@obj@" \
+	  BUILD_OBJ_CC_OPTIONS="" \
+	  BUILD_OBJ_INPUT_FILENAMES="server_.c"
+	$(MAKE) build_exe \
+	  BUILD_EXE_OUTPUT_FILENAME="client@exe@" \
+	  BUILD_EXE_CC_OPTIONS="" \
+	  BUILD_EXE_LD_OPTIONS_PRELUDE="" \
+	  BUILD_EXE_INPUT_FILENAMES="client@obj@ server@obj@ server_@obj@" \
+	  BUILD_EXE_LD_OPTIONS=""
 	@SETDLPATH@ ./client@exe@ > test8.out
 	diff -w $(srcdirpfx)test8.ok test8.out && \
 	  rm -f test8.out server.c server_.c server@obj@ server_@obj@ \
@@ -189,8 +216,14 @@ test10:
 	rm -f mem@obj@ mem.o*
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -i test10.scm
 
-link:
-	@LINK@
+build_obj:
+	@BUILD_OBJ@
+
+build_obj_library:
+	@BUILD_OBJ@ -D___LIBRARY
+
+build_exe:
+	@BUILD_EXE@
 
 install-pre:
 

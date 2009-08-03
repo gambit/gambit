@@ -19,16 +19,16 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 srcdirpfx = @srcdirpfx@
 
-C_COMPILER = @C_COMPILER@
-C_PREPROC = @C_PREPROC@
-FLAGS_OBJ = @FLAGS_OBJ@
-FLAGS_DYN = @FLAGS_DYN@
-FLAGS_LIB = @FLAGS_LIB@
-FLAGS_EXE = @FLAGS_EXE@
+C_COMPILER = @C_COMPILER_MF@
+C_PREPROC = @C_PREPROC_MF@
+FLAGS_OBJ = @FLAGS_OBJ_MF@
+FLAGS_DYN = @FLAGS_DYN_MF@
+FLAGS_LIB = @FLAGS_LIB_MF@
+FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-LIBRARY_DEFS = @LIBRARY_DEFS@
+GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
@@ -70,13 +70,14 @@ GSI_EXECUTABLE_INSTALLED = @ENABLE_INTERPRETER_NAME@@exe@
 GSC_EXECUTABLE_INSTALLED = @ENABLE_COMPILER_NAME@@exe@
 
 RCFILES = makefile.in \
+gambc-cc.bat.unix.in gambc-cc.bat.windows.in \
 gambc-doc.bat.unix.in gambc-doc.bat.windows.in
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_BIN_PROG = gsc-cc-o.bat gambc-doc.bat
+INSTFILES_BIN_PROG = gambc-cc.bat gambc-doc.bat
 INSTFILES_BIN_LINK_GSI = six@exe@ gsi-script@bat@ six-script@bat@ \
 scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 INSTFILES_BIN_LINK_GSC = gsc-script@bat@
@@ -87,94 +88,18 @@ all:
 
 all-pre:
 
-all-post: gsc-cc-o.bat gambc-doc.bat six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gambc-cc.bat gambc-doc.bat six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 
-gsc-cc-o.bat: makefile
-	rm -f gsc-cc-o.bat
+gambc-cc.bat: makefile gambc-cc.bat.unix gambc-cc.bat.windows
+	rm -f gambc-cc.bat
 	if test "@bat@" = ""; then \
-	  echo "#! /bin/sh" > gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo "# Script parameters are passed in the following environment variables:" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_GAMBCDIR_BIN" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_GAMBCDIR_INCLUDE" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_GAMBCDIR_LIB" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_OBJ_FILENAME" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_C_FILENAME_DIR" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_C_FILENAME_BASE" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_CC_OPTIONS" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_LD_OPTIONS_PRELUDE" >> gsc-cc-o.bat; \
-	  echo "#   GSC_CC_O_LD_OPTIONS" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_GAMBCDIR_BIN = \"\$${GSC_CC_O_GAMBCDIR_BIN}\"" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_GAMBCDIR_INCLUDE = \"\$${GSC_CC_O_GAMBCDIR_INCLUDE}\"" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_GAMBCDIR_LIB = \"\$${GSC_CC_O_GAMBCDIR_LIB}\"" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_OBJ_FILENAME = \"\$${GSC_CC_O_OBJ_FILENAME}\"" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_C_FILENAME_DIR = \"\$${GSC_CC_O_C_FILENAME_DIR}\"" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_C_FILENAME_BASE = \"\$${GSC_CC_O_C_FILENAME_BASE}\"" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_CC_OPTIONS = \"\$${GSC_CC_O_CC_OPTIONS}\"" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_LD_OPTIONS_PRELUDE = \"\$${GSC_CC_O_LD_OPTIONS_PRELUDE}\"" >> gsc-cc-o.bat; \
-	  echo "# echo GSC_CC_O_LD_OPTIONS = \"\$${GSC_CC_O_LD_OPTIONS}\"" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo "cd \"\$${GSC_CC_O_C_FILENAME_DIR}\"" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo "@GSC_CC_O@" >> gsc-cc-o.bat; \
-	  chmod +x gsc-cc-o.bat; \
+	  cp gambc-cc.bat.unix gambc-cc.bat; \
+	  chmod +x gambc-cc.bat; \
 	else \
-	  echo "@echo off" > gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo "rem Script parameters are passed in the following environment variables:" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_GAMBCDIR_BIN" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_GAMBCDIR_INCLUDE" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_GAMBCDIR_LIB" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_OBJ_FILENAME" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_C_FILENAME_DIR" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_C_FILENAME_BASE" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_CC_OPTIONS" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_LD_OPTIONS_PRELUDE" >> gsc-cc-o.bat; \
-	  echo "rem   GSC_CC_O_LD_OPTIONS" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_GAMBCDIR_BIN = %GSC_CC_O_GAMBCDIR_BIN%" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_GAMBCDIR_INCLUDE = %GSC_CC_O_GAMBCDIR_INCLUDE%" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_GAMBCDIR_LIB = %GSC_CC_O_GAMBCDIR_LIB%" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_OBJ_FILENAME = %GSC_CC_O_OBJ_FILENAME%" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_C_FILENAME_DIR = %GSC_CC_O_C_FILENAME_DIR%" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_C_FILENAME_BASE = %GSC_CC_O_C_FILENAME_BASE%" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_CC_OPTIONS = %GSC_CC_O_CC_OPTIONS%" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_LD_OPTIONS_PRELUDE = %GSC_CC_O_LD_OPTIONS_PRELUDE%" >> gsc-cc-o.bat; \
-	  echo "rem echo GSC_CC_O_LD_OPTIONS = %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  if test "$(C_COMPILER)" = "cl" -o "$(C_COMPILER)" = "cl.exe"; then \
-	    echo "for %%f in (cl.exe gcc.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o.bat; \
-	  else \
-	    echo "for %%f in (gcc.exe cl.exe) do if not \"%%~\$$PATH:f\" == \"\" goto use_%%%f" >> gsc-cc-o.bat; \
-	  fi; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo "echo gcc.exe and cl.exe were not found in the PATH.  Make sure MinGW or Visual C++ Express is installed." >> gsc-cc-o.bat; \
-	  echo "exit 1" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo ":use_gcc.exe" >> gsc-cc-o.bat; \
-	  echo "cd \"%GSC_CC_O_C_FILENAME_DIR%\"" >> gsc-cc-o.bat; \
-	  echo "gcc.exe -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I\"%GSC_CC_O_GAMBCDIR_INCLUDE%\" -D___DYNAMIC -D___SINGLE_HOST -o \"%GSC_CC_O_OBJ_FILENAME%\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \"%GSC_CC_O_C_FILENAME_BASE%\" %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
-	  echo "goto end" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo ":use_cl.exe" >> gsc-cc-o.bat; \
-	  echo "cd \"%GSC_CC_O_C_FILENAME_DIR%\"" >> gsc-cc-o.bat; \
-	  echo "cl.exe -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE -LD -I\"%GSC_CC_O_GAMBCDIR_INCLUDE%\" -D___DYNAMIC -D___SINGLE_HOST -Fe\"%GSC_CC_O_OBJ_FILENAME%\" %GSC_CC_O_CC_OPTIONS% %GSC_CC_O_LD_OPTIONS_PRELUDE% \"%GSC_CC_O_C_FILENAME_BASE%\" %GSC_CC_O_LD_OPTIONS%" >> gsc-cc-o.bat; \
-	  echo "goto end" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo ":use_build_time_c_compiler" >> gsc-cc-o.bat; \
-	  echo "cd \"%GSC_CC_O_C_FILENAME_DIR%\"" >> gsc-cc-o.bat; \
-	  echo "@GSC_CC_O@" >> gsc-cc-o.bat; \
-	  echo "goto end" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo ":end" >> gsc-cc-o.bat; \
-	  echo "" >> gsc-cc-o.bat; \
-	  echo "exit" >> gsc-cc-o.bat; \
-	  perl -pe 's/\r\n|\n|\r/\r\n/g' gsc-cc-o.bat > gsc-cc-o.bat.crlf; \
-	  mv gsc-cc-o.bat.crlf gsc-cc-o.bat; \
+	  cp gambc-cc.bat.windows gambc-cc.bat; \
 	fi
 
-gambc-doc.bat: makefile
+gambc-doc.bat: makefile gambc-doc.bat.unix gambc-doc.bat.windows
 	rm -f gambc-doc.bat
 	if test "@bat@" = ""; then \
 	  cp gambc-doc.bat.unix gambc-doc.bat; \
@@ -196,7 +121,7 @@ gsi-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) gsi-script@bat@; \
 	else \
-	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > gsi-script@bat@; \
+	  echo "@gsi %*" > gsi-script@bat@; \
 	fi
 
 gsc-script@bat@: makefile
@@ -204,7 +129,7 @@ gsc-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsc/$(GSC_EXECUTABLE) gsc-script@bat@; \
 	else \
-	  echo "@gsc %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > gsc-script@bat@; \
+	  echo "@gsc %*" > gsc-script@bat@; \
 	fi
 
 six-script@bat@: makefile
@@ -212,7 +137,7 @@ six-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) six-script@bat@; \
 	else \
-	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > six-script@bat@; \
+	  echo "@gsi %*" > six-script@bat@; \
 	fi
 
 scheme-srfi-0@bat@: makefile
@@ -220,7 +145,7 @@ scheme-srfi-0@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-srfi-0@bat@; \
 	else \
-	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > scheme-srfi-0@bat@; \
+	  echo "@gsi %*" > scheme-srfi-0@bat@; \
 	fi
 
 scheme-r5rs@bat@: makefile
@@ -228,7 +153,7 @@ scheme-r5rs@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-r5rs@bat@; \
 	else \
-	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > scheme-r5rs@bat@; \
+	  echo "@gsi %*" > scheme-r5rs@bat@; \
 	fi
 
 scheme-r4rs@bat@: makefile
@@ -236,7 +161,7 @@ scheme-r4rs@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-r4rs@bat@; \
 	else \
-	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > scheme-r4rs@bat@; \
+	  echo "@gsi %*" > scheme-r4rs@bat@; \
 	fi
 
 scheme-ieee-1178-1990@bat@: makefile
@@ -244,7 +169,7 @@ scheme-ieee-1178-1990@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-ieee-1178-1990@bat@; \
 	else \
-	  echo "@gsi %*" | perl -pe 's/\r\n|\n|\r/\r\n/g' > scheme-ieee-1178-1990@bat@; \
+	  echo "@gsi %*" > scheme-ieee-1178-1990@bat@; \
 	fi
 
 install-pre:
@@ -264,12 +189,18 @@ install-post: all
 	for file in $(INSTFILES_BIN_PROG); do \
 	  $(INSTALL_PROGRAM) $$file $$t_bindir/$$file; \
 	done; \
-	for file in $(INSTFILES_BIN_LINK_GSI); do \
-	  (cd $$t_bindir && $(LN_S) $(GSI_EXECUTABLE_INSTALLED) $$file); \
-	done; \
-	for file in $(INSTFILES_BIN_LINK_GSC); do \
-	  (cd $$t_bindir && $(LN_S) $(GSC_EXECUTABLE_INSTALLED) $$file); \
-	done; \
+	if test "@bat@" = ""; then \
+	  for file in $(INSTFILES_BIN_LINK_GSI); do \
+	    (cd $$t_bindir && $(LN_S) $(GSI_EXECUTABLE_INSTALLED) $$file); \
+	  done; \
+	  for file in $(INSTFILES_BIN_LINK_GSC); do \
+	    (cd $$t_bindir && $(LN_S) $(GSC_EXECUTABLE_INSTALLED) $$file); \
+	  done; \
+	else \
+	  for file in $(INSTFILES_BIN_LINK); do \
+	    $(INSTALL_PROGRAM) $$file $$t_bindir/$$file; \
+	  done; \
+	fi; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
 	  r_bindir=`$(rootfromhere)/relpath "$$t_bindir" "$$i_bindir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(INSTFILES_BIN_LINK); do \
@@ -317,7 +248,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f gsc-cc-o.bat \
+	rm -f gambc-cc.bat \
 	  gambc-doc.bat \
 	  six@exe@ six@exe@.lnk \
 	  gsi-script@bat@ \
@@ -346,7 +277,8 @@ bootclean-post: distclean-post
 realclean-pre: bootclean-pre
 
 realclean-post: bootclean-post
-	rm -f gambc-doc.bat.unix gambc-doc.bat.windows makefile
+	rm -f gambc-cc.bat.unix gambc-cc.bat.windows \
+	  gambc-doc.bat.unix gambc-doc.bat.windows makefile
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
@@ -441,6 +373,18 @@ dist-devel-post: dist-devel-recursive
 dist-devel-recursive: dist-devel-pre
 
 makefile: makefile.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambc-cc.bat.unix: gambc-cc.bat.unix.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambc-cc.bat.windows: gambc-cc.bat.windows.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambc-doc.bat.unix: gambc-doc.bat.unix.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambc-doc.bat.windows: gambc-doc.bat.windows.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 # Tell versions [3.59,3.63) of GNU make not to export all variables.

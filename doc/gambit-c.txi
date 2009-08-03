@@ -709,8 +709,7 @@ $ @b{cat square.scm}
   (pretty-print (expt (string->number arg) 2)))
 $ @b{gsi square 30        @r{@i{# gsi will load square.scm}}}
 900
-$ @b{gsc -link square     @r{@i{# compile the script}}}
-$ @b{gcc -o square square.c square_.c -lgambc}
+$ @b{gsc -exe square      @r{@i{# compile the script to a standalone program}}}
 $ @b{./square 30}
 900
 $ @b{./square 1 2 3       @r{@i{# too many arguments to main}}}
@@ -731,7 +730,7 @@ Synopsis:
 @example
 @b{}gsc @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]}
     @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
-    @r{[}-dynamic@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
+    @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
     @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
     @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]}
     @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
@@ -782,8 +781,8 @@ Scheme file is @samp{.six} the content of the file will be parsed
 using the Scheme infix syntax extension (see @ref{Scheme infix syntax
 extension}). Otherwise, @code{gsc} will parse the Scheme file using the
 normal Scheme prefix syntax.  Files with a @samp{.c} extension must
-have been previously produced by @code{gsc} and are used by
-Gambit's linker.
+have been previously produced by @code{gsc}, with the @samp{-c} option,
+and are used by Gambit's linker.
 
 For each Scheme file a C file @samp{@var{file}.c} will be produced.
 The C file's name is the same as the Scheme file, but the extension is
@@ -798,8 +797,9 @@ contain information to be read by Gambit's linker to generate a
 linking information for a group of modules, such as the set of all
 symbols and global variables used by the modules.
 @opindex -link
-The linker is only invoked when the @samp{-link}
-option appears on the command line.
+@opindex -exe
+The linker is only invoked when the @samp{-link} or @samp{-exe}
+options appear on the command line.
 
 Compiler options must be specified before the first file name and
 after the @samp{-:} runtime option (@pxref{Runtime options}).  If
@@ -851,9 +851,12 @@ Set name of output file or directory where output file(s) are written.
 @item -dynamic
 Compile Scheme source files to dynamically loadable object
 files (this is the default).
+@item -exe
+Compile Scheme source files into an executable program.
+@item -obj
+Compile Scheme source files to object files.
 @item -keep-c
-Keep the intermediate @samp{.c} file that is generated when
-compiling to a dynamically loadable object file.
+Keep any intermediate @samp{.c} files that are generated.
 @item -c
 Compile Scheme source files to C without generating link file.
 @item -link
@@ -996,39 +999,46 @@ written.
 
 @opindex -c
 @opindex -dynamic
+@opindex -exe
+@opindex -obj
 @opindex -link
 @opindex -keep-c
 @flindex @var{last}_.c
-If the @samp{-link} option appears on the command line, the Gambit
-linker is invoked to generate the link file from the set of C files
-specified on the command line or produced by the Gambit compiler.
-By default the link file is @samp{@var{last}_.c}, where @samp{@var{last}.c} is
-the last file in the set of C files.  When the @samp{-c} option is
-specified, the Scheme source files are compiled to C files.  If
-neither the @samp{-link} or @samp{-c} options appear on the command
-line, the Scheme source files are compiled to dynamically loadable
-object files (@samp{.o@var{n}} extension).  When a dynamically
-loadable object file is generated the @samp{-keep-c} option will
-prevent the deletion of the intermediate @samp{.c} file that is
-generated.  Note that in this case the intermediate @samp{.c} file
-will be generated in the same directory as the Scheme source file
-even if the @samp{-o} option is used.
+If the @samp{-link} or @samp{-exe} options appear on the command line,
+the Gambit linker is invoked to generate the link file from the set of
+C files specified on the command line or produced by the Gambit
+compiler.  By default the link file is @samp{@var{last}_.c}, where
+@samp{@var{last}.c} is the last file in the set of C files.  When the
+@samp{-c} option is specified, the Scheme source files are compiled to
+C files.  When the @samp{-exe} option is specified, the generated C
+files and link file are compiled and linked using the C compiler to
+produce an executable program whose name defaults to
+@samp{@var{last}.exe}.  When the @samp{-obj} option is specified, the
+generated C files are compiled using the C compiler to produce object
+files (@samp{.o} or @samp{.obj} extensions).  If neither the
+@samp{-link}, @samp{-c}, @samp{-exe}, @samp{-obj} options appear on
+the command line, the Scheme source files are compiled to dynamically
+loadable object files (@samp{.o@var{n}} extension).  The
+@samp{-keep-c} option will prevent the deletion of any intermediate
+@samp{.c} file that is generated.  Note that in this case the
+intermediate @samp{.c} file will be generated in the same directory as
+the Scheme source file even if the @samp{-o} option is used.
 
 @opindex -flat
 The @samp{-flat} option is only meaningful when a link file is being
-generated (i.e. the @samp{-link} option also appears on the command
-line).  The @samp{-flat} option directs the Gambit linker to generate
-a flat link file.  By default, the linker generates an incremental
-link file (see the next section for a description of the two types of
-link files).
+generated (i.e. the @samp{-link} or @samp{-exe} options also appear on
+the command line).  The @samp{-flat} option directs the Gambit linker
+to generate a flat link file.  By default, the linker generates an
+incremental link file (see the next section for a description of the
+two types of link files).
 
 @opindex -l @var{base}
 The @samp{-l} option is only meaningful when an incremental link file
-is being generated (i.e. the @samp{-link} option appears on the
-command line and the @samp{-flat} option is absent).  The @samp{-l}
-option specifies the link file (without the @samp{.c} extension) of
-the base library to use for the incremental link.  By default the link
-file of the Gambit runtime library is used
+is being generated (i.e. the @samp{-link} or @samp{-exe} options
+appear on the command line and the @samp{-flat} option is absent).
+The @samp{-l} option specifies the link file (without the @samp{.c}
+extension) of the base library to use for the incremental link.  By
+default the link file of the Gambit runtime library is used
 (i.e. @samp{~~lib/_gambc.c}).
 
 @opindex -
@@ -1104,12 +1114,82 @@ functionality of the Gambit runtime library.
 @node Building an executable program, Building a loadable library, Link files, Link files
 @subsection Building an executable program
 
-The simplest way to create an executable program is to call up
-@code{gsc} to compile each Scheme module into a C file and create an
-incremental link file.  The C files and the link file must then be
-compiled with a C compiler and linked (at the object file level) with
-the Gambit runtime library and possibly other libraries (such as the
-math library and the dynamic loading library).
+The simplest way to create an executable program is to invoke
+@code{gsc} with the @samp{-exe} option.  The compiler will
+transparently perform all the steps necessary, including compiling
+Scheme source files to C files, generating the link file, compiling
+the C files generated to object files, and creating the final
+executable file using the C linker.  The following example shows how
+to build the executable program @samp{hello.exe} which contains the
+two Scheme modules @samp{h.scm} and @samp{w.six}.
+
+@smallexample
+$ @b{cat h.scm}
+(display "hello") (newline)
+$ @b{cat w.six}
+display("world"); newline();
+$ @b{gsc -o hello.exe -exe h.scm w.six}
+h.scm:
+/Users/feeley/gambit/doc/h.c:
+w.six:
+/Users/feeley/gambit/doc/w.c:
+/Users/feeley/gambit/doc/w_.c:
+$ @b{./hello.exe}
+hello
+world
+@end smallexample
+
+The detailed steps which are performed can be viewed by setting the
+@samp{GAMBC_CC_VERBOSE} environment variable to a nonnull value.  For
+example:
+
+@smallexample
+$ @b{export GAMBC_CC_VERBOSE=yes}
+$ @b{gsc -o hello.exe -exe h.scm w.six}
+h.scm:
+/Users/feeley/gambit/doc/h.c:
+gcc -no-cpp-precomp -Wno-unused -O1 -fno-math-errno -fschedule-insns2
+ -fno-trapping-math -fno-strict-aliasing -fwrapv -fomit-frame-pointer
+ -fPIC -fno-common -mieee-fp -I"/usr/local/Gambit-C/include" -c -o "h.o" h.c
+w.six:
+/Users/feeley/gambit/doc/w.c:
+gcc -no-cpp-precomp -Wno-unused -O1 -fno-math-errno -fschedule-insns2
+ -fno-trapping-math -fno-strict-aliasing -fwrapv -fomit-frame-pointer
+ -fPIC -fno-common -mieee-fp -I"/usr/local/Gambit-C/include" -c -o "w.o" w.c
+/Users/feeley/gambit/doc/w_.c:
+gcc -no-cpp-precomp -Wno-unused -O1 -fno-math-errno -fschedule-insns2
+ -fno-trapping-math -fno-strict-aliasing -fwrapv -fomit-frame-pointer
+ -fPIC -fno-common -mieee-fp -I"/usr/local/Gambit-C/include" -c -o "w_.o" w_.c
+gcc  -no-cpp-precomp -Wno-unused -O1 -fno-math-errno -fschedule-insns2
+ -fno-trapping-math -fno-strict-aliasing -fwrapv -fomit-frame-pointer
+ -fPIC -fno-common -mieee-fp -I"/usr/local/Gambit-C/include"
+ -o "hello.exe" h.o w.o w_.o "/usr/local/Gambit-C/lib/libgambc.a"
+@end smallexample
+
+Using a single invocation of @code{gsc} with the @samp{-exe} option is
+sometimes inappropriate when the build process is more complex, for
+example when the program is composed of several seperately compiled
+modules.  In such a case it is useful to decompose the build process
+into smaller compilation steps.  The @samp{hello.exe} executable
+program could have been built by seperating the generation of C files
+from the C compilation and linking:
+
+@smallexample
+$ @b{gsc -c h.scm}
+$ @b{gsc -c w.six}
+$ @b{gsc -o hello.exe -exe h.c w.c}
+@end smallexample
+
+When even finer control is desired the build process can be decomposed
+into smaller steps that invoke the C compiler and linker explicitly.
+This is described in the rest of this section.
+
+The @code{gsc} compiler can be invoked to compile each Scheme module
+into a C file and to create an incremental link file.  The C files and
+the link file must then be compiled with a C compiler and linked (at
+the object file level) with the Gambit runtime library and possibly
+other libraries (such as the math library and the dynamic loading
+library).
 
 Here is for example how a program with three modules (one in C and two
 in Scheme) can be built.  The content of the three source files (@samp{m1.c},
@@ -1160,7 +1240,12 @@ Here is an example under Mac OS X:
 @smallexample
 $ @b{uname -srmp}
 Darwin 8.1.0 Power Macintosh powerpc
-$ @b{gcc m1.c m2.c m3.c m3_.c -lgambc}
+$ @b{gsc -obj m1.c m2.c m3.c m3_.c}
+m1.c:
+m2.c:
+m3.c:
+m3_.c:
+$ @b{gcc m1.o m2.o m3.o m3_.o -lgambc}
 $ @b{./a.out}
 ((2 . 2) (4 . 4) (8 . 8) (16 . 16))
 @end smallexample
@@ -1170,7 +1255,12 @@ Here is an example under Linux:
 @smallexample
 $ @b{uname -srmp}
 Linux 2.6.8-1.521 i686 athlon
-$ @b{gcc m1.c m2.c m3.c m3_.c -lgambc -lm -ldl -lutil}
+$ @b{gsc -obj m1.c m2.c m3.c m3_.c}
+m1.c:
+m2.c:
+m3.c:
+m3_.c:
+$ @b{gcc m1.o m2.o m3.o m3_.o -lgambc -lm -ldl -lutil}
 $ @b{./a.out}
 ((2 . 2) (4 . 4) (8 . 8) (16 . 16))
 @end smallexample
@@ -1223,7 +1313,12 @@ Darwin 8.1.0 Power Macintosh powerpc
 $ @b{gsc -link -flat -o foo.o1.c m2 m3 > /dev/null}
 m2:
 m3:
-$ @b{gcc -bundle -D___DYNAMIC m1.c m2.c m3.c foo.o1.c -o foo.o1}
+$ @b{gsc -obj m1.c m2.c m3.c foo.o1.c}
+m1.c:
+m2.c:
+m3.c:
+foo.o1.c:
+$ @b{gcc -bundle m1.o m2.o m3.o foo.o1.o -o foo.o1}
 $ @b{gsi foo.o1}
 ((2 . 2) (4 . 4) (8 . 8) (16 . 16))
 @end smallexample
@@ -1236,7 +1331,12 @@ Linux 2.6.8-1.521 i686 athlon
 $ @b{gsc -link -flat -o foo.o1.c m2 m3 > /dev/null}
 m2:
 m3:
-$ @b{gcc -shared -fPIC -D___DYNAMIC m1.c m2.c m3.c foo.o1.c -o foo.o1}
+$ @b{gsc -obj m1.c m2.c m3.c foo.o1.c}
+m1.c:
+m2.c:
+m3.c:
+foo.o1.c:
+$ @b{gcc -shared m1.o m2.o m3.o foo.o1.o -o foo.o1}
 $ @b{gsi foo.o1}
 ((2 . 2) (4 . 4) (8 . 8) (16 . 16))
 @end smallexample
@@ -1262,7 +1362,11 @@ m5:
 ***            referenced in: ("m5.c" "m4.c")
 *** WARNING -- "write" is not defined,
 ***            referenced in: ("m5.c")
-$ @b{gcc -fPIC -c -D___DYNAMIC mymod.o1.c m4.c m5.c x.c}
+$ @b{gsc -obj m4.c m5.c x.c mymod.o1.c}
+m4.c:
+m5.c:
+x.c:
+mymod.o1.c:
 $ @b{/usr/ccs/bin/ld -G -o mymod.o1 mymod.o1.o m4.o m5.o x.o -lX11 -lsocket}
 $ @b{gsi mymod.o1}
 hello from m4
@@ -1342,7 +1446,11 @@ the previous example can be built this way:
 $ @b{uname -srmp}
 Linux bailey 1.2.13 #2 Wed Aug 28 16:29:41 GMT 1996 i586
 $ @b{gsc -link -o mylib.c m2}
-$ @b{gcc -shared -fPIC -D___LIBRARY -D___SHARED m1.c m2.c mylib.c -o mylib.so}
+$ @b{gsc -obj -cc-options "-D___SHARED" m1.c m2.c mylib.c}
+m1.c:
+m2.c:
+mylib.c:
+$ @b{gcc -shared  m1.o m2.o mylib.o -o mylib.so}
 @end smallexample
 
 Note that this shared-library is built using an incremental link file
@@ -1352,7 +1460,10 @@ an executable program from the third module of the previous example:
 
 @smallexample
 $ @b{gsc -link -l mylib m3}
-$ @b{gcc m3.c m3_.c mylib.so -lgambc}
+$ @b{gsc -obj m3.c m3_.c}
+m3.c:
+m3_.c:
+$ @b{gcc m3.o m3_.o mylib.so -lgambc}
 $ @b{LD_LIBRARY_PATH=.:/usr/local/lib ./a.out}
 ((2 . 2) (4 . 4) (8 . 8) (16 . 16))
 @end smallexample
@@ -1426,6 +1537,19 @@ which must be a list of symbols.  Any combination of the following
 options can be used: @samp{verbose}, @samp{report}, @samp{expansion},
 @samp{gvm}, and @samp{debug}.
 
+When the compilation is successful, @code{compile-file-to-c} returns
+the name of the C file generated.  When there is a compilation error,
+@code{#f} is returned.
+
+@smallexample
+$ @b{cat h.scm}
+(display "hello") (newline)
+$ @b{gsc}
+Gambit @value{VERSION}
+
+> @b{(compile-file-to-c "h")}
+"/Users/feeley/gambit/doc/h.c"
+@end smallexample
 @end deffn
 
 @deffn procedure compile-file @var{file} @r{[}@code{options:} @var{options}@r{]} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{cc-options:} @var{cc-options}@r{]} @r{[}@code{ld-options-prelude:} @var{ld-options-prelude}@r{]} @r{[}@code{ld-options:} @var{ld-options}@r{]}
@@ -1442,30 +1566,73 @@ to the C linker (the options in @var{ld-options-prelude} are passed to
 the C linker before the input file and the options in @var{ld-options}
 are passed after).
 
-The @code{compile-file} procedure compiles the source file into an
-object file by first generating a C file and then compiling it with
-the C compiler.  The C file is always generated in the same directory
-as @var{file}.
+The @code{compile-file} procedure compiles the source file @var{file}
+into an object file, which is either a file dynamically loadable using
+the @code{load} procedure, or a C linkable object file destined to be
+linked with the C linker (for example to create a standalone
+executable program).  The @var{file} may be a Scheme source file or a
+C file possibly generated by the Gambit Scheme compiler (for example
+with the @code{compile-file-to-c} procedure).  The presence of the
+@code{obj} option in @var{options} will cause the creation of a C
+linkable object file and therefore the options
+@var{ld-options-prelude} and @var{ld-options} are ignored, otherwise a
+dynamically loadable file is created.  In both cases, if @var{file} is
+a Scheme source file, the compiler first compiles @var{file} to a C
+file which is created in the same directory as @var{file} regardless
+of the @var{output} parameter.  Then the C file is compiled with the C
+compiler.
 
-By default the object file is named after @var{file} with the
-extension replaced with @samp{.o@var{n}}, where @var{n} is a positive
-integer that acts as a version number.  The next available version
-number is generated automatically by @code{compile-file}.  The name of
-the generated object file can be specified with the @var{output}
+When the compilation is successful, @code{compile-file} returns the
+name of the object file generated.  When there is a compilation error,
+@code{#f} is returned.
+
+The name of the object file can be specified with the @var{output}
 parameter.  If @var{output} is a string naming a directory then the
 object file is created in that directory.  Otherwise the name of the
 object file is @var{output}.
 
-Object files can be loaded dynamically by using the @code{load}
-procedure.  The @samp{.o@var{n}} extension can be specified (to select
-a particular version) or omitted (to load the highest numbered
-version).  When older versions are no longer needed, all versions must
-be deleted and the compilation must be repeated (this is necessary
-because the file name, including the extension, is used to name some
-of the exported symbols of the object file).
+In the case of a dynamically loadable object file, by default the
+object file is named after @var{file} with the extension replaced with
+@samp{.o@var{n}}, where @var{n} is a positive integer that acts as a
+version number.  The next available version number is generated
+automatically by @code{compile-file}.
 
-Note that this procedure is only available on host operating systems
-that support dynamic loading.
+When dynamically loaded object files are loaded using the @code{load}
+procedure, the @samp{.o@var{n}} extension can be specified (to select
+a particular version) or omitted (to load the file with a
+@samp{.o@var{n}} extension with the highest @var{n} consecutively from
+1).  When the @samp{.o@var{n}} extension is not specified and older
+versions are no longer needed, all versions must be deleted and the
+compilation must be repeated (this is necessary because the file name,
+including the extension, is used to name some of the exported symbols
+of the object file).
+
+Note that dynamically loadable object files can only be generated on
+host operating systems that support dynamic loading.
+
+@smallexample
+$ @b{cat h.scm}
+(display "hello") (newline)
+$ @b{gsc}
+Gambit @value{VERSION}
+
+> @b{(compile-file "h")}
+"/Users/feeley/gambit/doc/h.o1"
+> @b{(load "h")}
+hello
+"/Users/feeley/gambit/doc/h.o1"
+> @b{(compile-file-to-c "h" output: "h.o99.c")}
+"/Users/feeley/gambit/doc/h.o99.c"
+> @b{(compile-file "h.o99.c")}
+"/Users/feeley/gambit/doc/h.o99"
+> @b{(load "h.o99")}
+hello
+"/Users/feeley/gambit/doc/h.o99"
+> @b{(compile-file-to-c "h")}
+"/Users/feeley/gambit/doc/h.c"
+> @b{(compile-file "h.c" options: '(obj))}
+"/Users/feeley/gambit/doc/h.o"
+@end smallexample
 
 @end deffn
 
@@ -1502,12 +1669,17 @@ $ @b{gsc}
 Gambit @value{VERSION}
 
 > @b{(compile-file-to-c "h")}
-#t
+"/Users/feeley/gambit/doc/h.c"
 > @b{(compile-file-to-c "w")}
-#t
+"/Users/feeley/gambit/doc/w.c"
 > @b{(link-incremental '("h" "w") output: "hello.c")}
+"/Users/feeley/gambit/doc/hello_.c"
 > @b{,q}
-$ @b{gcc h.c w.c hello.c -lgambc -o hello}
+$ @b{gsc -obj h.c w.c hello.c}
+h.c:
+w.c:
+hello.c:
+$ @b{gcc h.o w.o hello.o -lgambc -o hello}
 $ @b{./hello}
 hello
 world
@@ -1548,9 +1720,9 @@ $ @b{gsc}
 Gambit @value{VERSION}
 
 > @b{(compile-file-to-c "m6")}
-#t
+"/Users/feeley/gambit/doc/m6.c"
 > @b{(compile-file-to-c "m7")}
-#t
+"/Users/feeley/gambit/doc/m7.c"
 > @b{(link-flat '("m6" "m7") output: "lib.o1.c")}
 *** WARNING -- "*" is not defined,
 ***            referenced in: ("m6.c")
@@ -1558,6 +1730,7 @@ Gambit @value{VERSION}
 ***            referenced in: ("m7.c")
 *** WARNING -- "n" is not defined,
 ***            referenced in: ("m7.c")
+"/Users/feeley/gambit/doc/lib.o1.c"
 > @b{,q}
 $ @b{gcc -bundle -D___DYNAMIC m6.c m7.c lib.o1.c -o lib.o1}
 $ @b{gsc}

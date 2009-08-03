@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2009-06-14 16:08:18 feeley>
+;;; File: "_gsclib.scm", Time-stamp: <2009-08-03 12:02:31 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -69,7 +69,8 @@
          (c-filename-no-dir-no-ext
           (##path-strip-directory
            (##path-strip-extension c-filename))))
-    (c#cf filename #f options c-filename c-filename-no-dir-no-ext)))
+    (and (c#cf filename #f options c-filename c-filename-no-dir-no-ext)
+         c-filename)))
 
 (define (compile-file
          filename
@@ -135,6 +136,14 @@
          ld-options-prelude
          ld-options)
 
+  (define type
+    (cond ((##memq 'obj options)
+           'obj)
+          ((##memq 'exe options)
+           'exe)
+          (else
+           'dyn)))
+
   (define (generate-next-version-of-object-file root)
     (let loop ((version 1))
       (let ((root-with-ext
@@ -143,90 +152,181 @@
             (loop (##fixnum.+ version 1))
             root-with-ext))))
 
-  (define (gsc-cc-o c-filename obj-filename)
+  (define (generate-output-filename root input-is-c-file?)
+    (case type
+      ((obj)
+       (##string-append root ##os-obj-extension-string-saved))
+      (else
+       (if input-is-c-file?
+           root
+           (generate-next-version-of-object-file root)))))
 
-    (define (arg name val)
-      (##string-append "GSC_CC_O_" name "=" val))
-
-    (define (install-dir path)
-      (parameterize
-       ((##current-directory
-         (##path-expand path)))
-       (##current-directory)))
-
-    (let* ((gambcdir-bin
-            (install-dir "~~bin"))
-           (gambcdir-include
-            (install-dir "~~include"))
-           (gambcdir-lib
-            (install-dir "~~lib"))
-           (c-filename-dir
-            (parameterize
-             ((##current-directory (##path-directory c-filename)))
-             (##current-directory)))
-           (c-filename-base
-            (##path-strip-directory c-filename)))
-      (##open-process-generic
-       (macro-direction-inout)
-       #t
-       (lambda (port)
-         (let ((status (##process-status port)))
-           (##close-port port)
-           status))
-       open-process
-       (##list path:
-               (##string-append gambcdir-bin "gsc-cc-o.bat")
-               arguments:
-               '()
-               environment:
-               (##append
-                (let ((env (##os-environ)))
-                  (if (##fixnum? env) '() env))
-                (##list (arg "GAMBCDIR_BIN"
-                             (##path-strip-trailing-directory-separator
-                              gambcdir-bin))
-                        (arg "GAMBCDIR_INCLUDE"
-                             (##path-strip-trailing-directory-separator
-                              gambcdir-include))
-                        (arg "GAMBCDIR_LIB"
-                             (##path-strip-trailing-directory-separator
-                              gambcdir-lib))
-                        (arg "OBJ_FILENAME" obj-filename)
-                        (arg "C_FILENAME_DIR"
-                             (##path-strip-trailing-directory-separator
-                              c-filename-dir))
-                        (arg "C_FILENAME_BASE" c-filename-base)
-                        (arg "CC_OPTIONS" cc-options)
-                        (arg "LD_OPTIONS_PRELUDE" ld-options-prelude)
-                        (arg "LD_OPTIONS" ld-options)))
-               stdin-redirection: #f
-               stdout-redirection: #f
-               stderr-redirection: #f))))
-
-  (let* ((expanded-output
+  (let* ((c-filename
+          (##string-append (##path-strip-extension filename) ".c"))
+         (input-is-c-file?
+          (##string=? filename c-filename))
+         (expanded-output
           (##path-normalize output))
-         (obj-filename
+         (output-filename
           (if (##equal? expanded-output
                         (##path-strip-trailing-directory-separator
                          expanded-output))
               expanded-output
-              (generate-next-version-of-object-file
+              (generate-output-filename
                (##path-expand
                 (##path-strip-directory
                  (##path-strip-extension filename))
-                expanded-output))))
-         (c-filename
-          (##string-append (##path-strip-extension filename) ".c"))
-         (obj-filename-no-dir
-          (##path-strip-directory obj-filename)))
-    (and (c#cf filename #f options c-filename obj-filename-no-dir)
-         (let ((exit-status (gsc-cc-o c-filename obj-filename)))
-           (if (##not (##memq 'keep-c options))
+                expanded-output)
+               input-is-c-file?)))
+         (output-dir
+          (##path-directory output-filename))
+         (output-filename-no-dir
+          (##path-strip-directory output-filename)))
+    (and (or input-is-c-file?
+             (c#cf filename
+                   #f
+                   options
+                   c-filename
+                   (if (##eq? type 'dyn)
+                       output-filename-no-dir
+                       (##path-strip-extension output-filename-no-dir))))
+         (let ((exit-status
+                (##gambc-cc
+                 type
+                 output-dir
+                 (##list c-filename)
+                 output-filename-no-dir
+                 cc-options
+                 ld-options-prelude
+                 ld-options
+                 (##memq 'verbose options))))
+           (if (and (##not (##memq 'keep-c options))
+                    (##not (##string=? filename c-filename)))
                (##delete-file c-filename))
-           (or (##fixnum.= exit-status 0)
+           (if (##fixnum.= exit-status 0)
+               output-filename
                (##raise-error-exception
                 "C compilation or link failed while compiling"
                 (##list filename)))))))
+
+(define (##build-executable
+         obj-files
+         options
+         output-filename
+         cc-options
+         ld-options-prelude
+         ld-options)
+  (let* ((output-dir
+          (##path-directory output-filename))
+         (output-filename-no-dir
+          (##path-strip-directory output-filename))
+         (exit-status
+          (##gambc-cc
+           'exe
+           output-dir
+           obj-files
+           output-filename-no-dir
+           cc-options
+           ld-options-prelude
+           ld-options
+           (##memq 'verbose options))))
+    (if (##fixnum.= exit-status 0)
+        output-filename
+        (##raise-error-exception
+         "C link failed while linking"
+         obj-files))))
+
+(define (##gambc-cc
+         op
+         output-dir
+         input-filenames
+         output-filename
+         cc-options
+         ld-options-prelude
+         ld-options
+         verbose?)
+
+  (define arg-prefix
+    (case op
+      ((obj) "BUILD_OBJ_")
+      ((dyn) "BUILD_DYN_")
+      ((exe) "BUILD_EXE_")
+      (else  "BUILD_OTHER_")))
+
+  (define (arg name val)
+    (##string-append name "=" val))
+
+  (define (prefixed-arg name val)
+    (arg (##string-append arg-prefix name) val))
+
+  (define (install-dir path)
+    (parameterize
+     ((##current-directory
+       (##path-expand path)))
+     (##current-directory)))
+
+  (define (relative-to-output-dir filename)
+    (##path-normalize (##path-expand filename) #t output-dir))
+
+  (define (separate lst sep)
+    (if (##pair? lst)
+        (##cons sep (##cons (##car lst) (separate (##cdr lst) sep)))
+        '()))
+
+  (let* ((gambcdir-bin
+          (install-dir "~~bin"))
+         (gambcdir-include
+          (install-dir "~~include"))
+         (gambcdir-lib
+          (install-dir "~~lib"))
+         (input-filenames-relative
+          (##map relative-to-output-dir input-filenames)))
+    (##open-process-generic
+     (macro-direction-inout)
+     #t
+     (lambda (port)
+       (let ((status (##process-status port)))
+         (##close-port port)
+         status))
+     open-process
+     (##list path:
+             (##string-append gambcdir-bin "gambc-cc.bat")
+             arguments:
+             (##list (##symbol->string op))
+             directory:
+             output-dir
+             environment:
+             (##append
+              (##list (arg "GAMBCDIR_BIN"
+                           (##path-strip-trailing-directory-separator
+                            gambcdir-bin))
+                      (arg "GAMBCDIR_INCLUDE"
+                           (##path-strip-trailing-directory-separator
+                            gambcdir-include))
+                      (arg "GAMBCDIR_LIB"
+                           (##path-strip-trailing-directory-separator
+                            gambcdir-lib))
+                      (prefixed-arg "INPUT_FILENAMES"
+                                    (##append-strings
+                                     (##cdr (separate input-filenames-relative
+                                                      " "))))
+                      (prefixed-arg "OUTPUT_FILENAME"
+                                    output-filename)
+                      (prefixed-arg "CC_OPTIONS"
+                                    cc-options)
+                      (prefixed-arg "LD_OPTIONS_PRELUDE"
+                                    ld-options-prelude)
+                      (prefixed-arg "LD_OPTIONS"
+                                    ld-options))
+              (##append
+               (if verbose?
+                   (##list (arg "GAMBC_CC_VERBOSE" "yes"))
+                   '())
+               (let ((env (##os-environ)))
+                 (if (##fixnum? env) '() env))))
+             stdin-redirection: #f
+             stdout-redirection: #f
+             stderr-redirection: #f))))
 
 (define (link-incremental
          modules

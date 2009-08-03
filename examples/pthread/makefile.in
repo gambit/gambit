@@ -1,4 +1,4 @@
-# makefile for pthread example, Time-stamp: <2009-06-09 16:43:43 feeley>
+# makefile for pthread example, Time-stamp: <2009-08-03 12:19:38 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -19,16 +19,16 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 srcdirpfx = @srcdirpfx@
 
-C_COMPILER = @C_COMPILER@
-C_PREPROC = @C_PREPROC@
-FLAGS_OBJ = @FLAGS_OBJ@
-FLAGS_DYN = @FLAGS_DYN@
-FLAGS_LIB = @FLAGS_LIB@
-FLAGS_EXE = @FLAGS_EXE@
+C_COMPILER = @C_COMPILER_MF@
+C_PREPROC = @C_PREPROC_MF@
+FLAGS_OBJ = @FLAGS_OBJ_MF@
+FLAGS_DYN = @FLAGS_DYN_MF@
+FLAGS_LIB = @FLAGS_LIB_MF@
+FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-LIBRARY_DEFS = @LIBRARY_DEFS@
+GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
@@ -70,6 +70,21 @@ GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
+GAMBCDIR_INCLUDE = $(srcdirpfx)$(rootfromhere)/include
+GAMBCDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
+GAMBCDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
+GAMBCDIR_LIB_GSC = $(srcdirpfx)$(rootfromhere)/gsc
+
+BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
+BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS)
+BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
+
+BUILD_EXE_OUTPUT_FILENAME = $(EXECUTABLE)
+BUILD_EXE_CC_OPTIONS =
+BUILD_EXE_LD_OPTIONS_PRELUDE =
+BUILD_EXE_INPUT_FILENAMES = $(EXECUTABLE_OBJECTS)
+BUILD_EXE_LD_OPTIONS =
+
 all:
 
 all-pre:
@@ -82,7 +97,7 @@ run: pthread@exe@
 	@SETDLPATH@ ./pthread@exe@
 
 .c@obj@:
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) -D___LIBRARY -c $(srcdirpfx)$*.c
+	@BUILD_OBJ@ -D___LIBRARY
 
 .scm.c:
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
@@ -93,16 +108,15 @@ mylib_.c: mylib.c
 pthread@obj@: pthread.c mylib.h $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
 pthread@exe@: mylib@obj@ mylib_@obj@ pthread@obj@
-	$(MAKE) link EXECUTABLE="pthread@exe@" \
-	  LINK_LIBS="$(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)" \
-	  EXECUTABLE_OBJECTS="mylib@obj@ mylib_@obj@ pthread@obj@" \
-	  EXECUTABLE_OBJECTS_PLUS="+mylib@obj@ +mylib_@obj@ +pthread@obj@" \
-	  EXECUTABLE_OBJECTS_COMMA="mylib@obj@,mylib_@obj@,pthread@obj@"
+	$(MAKE) build_exe \
+	  BUILD_EXE_OUTPUT_FILENAME="pthread@exe@" \
+	  BUILD_EXE_CC_OPTIONS="" \
+	  BUILD_EXE_LD_OPTIONS_PRELUDE="" \
+	  BUILD_EXE_INPUT_FILENAMES="mylib@obj@ mylib_@obj@ pthread@obj@" \
+	  BUILD_EXE_LD_OPTIONS=""
 
-INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir)
-
-link:
-	@LINK@
+build_exe:
+	@BUILD_EXE@
 
 install-pre:
 

@@ -1,4 +1,4 @@
-# makefile for GUIDE library, Time-stamp: <2009-06-12 13:43:57 feeley>
+# makefile for GUIDE library, Time-stamp: <2009-07-30 11:53:54 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -19,16 +19,16 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 srcdirpfx = @srcdirpfx@
 
-C_COMPILER = @C_COMPILER@
-C_PREPROC = @C_PREPROC@
-FLAGS_OBJ = @FLAGS_OBJ@
-FLAGS_DYN = @FLAGS_DYN@
-FLAGS_LIB = @FLAGS_LIB@
-FLAGS_EXE = @FLAGS_EXE@
+C_COMPILER = @C_COMPILER_MF@
+C_PREPROC = @C_PREPROC_MF@
+FLAGS_OBJ = @FLAGS_OBJ_MF@
+FLAGS_DYN = @FLAGS_DYN_MF@
+FLAGS_LIB = @FLAGS_LIB_MF@
+FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-LIBRARY_DEFS = @LIBRARY_DEFS@
+GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
@@ -62,16 +62,23 @@ psdir = @psdir@
 localedir = @localedir@
 mandir = @mandir@
 
+GAMBCDIR_INCLUDE = $(rootfromhere)/include
+GAMBCDIR_LIB = $(rootfromhere)/lib
+GAMBCDIR_LIB_GSI = $(rootfromhere)/gsi
+GAMBCDIR_LIB_GSC = $(rootfromhere)/gsc
+
+BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
+BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS) $(GAMBCLIB_DEFS) -D___PRIMAL
+BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
+
 .SUFFIXES:
 .SUFFIXES: .scm .c .cpp .in @obj@
 
 .c@obj@:
-	$(C_COMPILER) $(INCLUDES) $(FLAGS_OBJ) $(DEFS) -D___PRIMAL -D___LIBRARY -D___GAMBCDIR=\"$(prefix)\" -c $(srcdirpfx)$*.c
+	@BUILD_OBJ@ -D___LIBRARY
 
 .scm.c:
 	@SETDLPATH@ $(rootfromhere)/gsc-comp -:=$(srcdirpfx)$(rootfromhere) -f -c -check $(srcdirpfx)$*.scm
-
-INCLUDES = -I$(srcdirpfx)$(rootfromhere)/include -I$(srcdir) @QTINCPATH@
 
 NORMAL_C =
 NORMAL_CPP = guideuicodeformat.cpp guideuirepl.cpp guideuihighlighter.cpp guideuihighlighterscheme.cpp guideuischeme.cpp guideuiconsoleinfo.cpp guideuitextedit.cpp guideuicont.cpp guideuienv.cpp guideuiinspector.cpp guide.cpp
