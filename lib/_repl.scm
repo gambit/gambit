@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-06-14 16:07:48 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-08-03 19:20:21 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3412,6 +3412,11 @@
          (##cons
           (macro-keyword-expected-exception-procedure exc)
           (macro-keyword-expected-exception-arguments exc)))
+
+        ((macro-nonprocedure-operator-exception? exc)
+         (##cons
+          (macro-nonprocedure-operator-exception-operator exc)
+          (macro-nonprocedure-operator-exception-arguments exc)))
 
         ((macro-number-of-arguments-limit-exception? exc)
          (##cons
