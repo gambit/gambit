@@ -108,12 +108,14 @@
 #return(##cprc-cond-send-red 3) : ($code rte pred)
 #procedure(##cprc-cond-send-red 4)
 #return(##cprc-cond-send-red 5) : ($code rte oper)
+#return(##cprc-cond-send-red 6) : ($code rte)
 
 #procedure(##cprc-cond-send-sub)
 #return(##cprc-cond-send-sub 1) : ($code rte)
 #return(##cprc-cond-send-sub 2) : ($code rte)
 #return(##cprc-cond-send-sub 3) : ($code rte pred)
 #return(##cprc-cond-send-sub 4) : ($code rte oper)
+#return(##cprc-cond-send-sub 5) : ($code rte)
 
 #procedure(##cprc-or)
 #return(##cprc-or 1) : ($code rte)
@@ -232,6 +234,7 @@
 #return(##cprc-app0-red 1) : ($code rte)
 #return(##cprc-app0-red 2) : ($code rte)
 #procedure(##cprc-app0-red 3)
+#return(##cprc-app0-red 4) : ($code rte)
 
 #procedure(##cprc-app1-red)
 #return(##cprc-app1-red 1) : ($code rte)
@@ -239,6 +242,7 @@
 #return(##cprc-app1-red 3) : ($code rte oper)
 #procedure(##cprc-app1-red 4)
 #return(##cprc-app1-red 5) : ($code rte oper)
+#return(##cprc-app1-red 6) : ($code rte)
 
 #procedure(##cprc-app2-red)
 #return(##cprc-app2-red 1) : ($code rte)
@@ -247,6 +251,7 @@
 #return(##cprc-app2-red 4) : ($code rte oper arg1)
 #procedure(##cprc-app2-red 5)
 #return(##cprc-app2-red 6) : ($code rte oper)
+#return(##cprc-app2-red 7) : ($code rte)
 
 #procedure(##cprc-app3-red)
 #return(##cprc-app3-red 1) : ($code rte)
@@ -256,6 +261,7 @@
 #return(##cprc-app3-red 5) : ($code rte oper arg1 arg2)
 #procedure(##cprc-app3-red 6)
 #return(##cprc-app3-red 7) : ($code rte oper)
+#return(##cprc-app3-red 8) : ($code rte)
 
 #procedure(##cprc-app4-red)
 #return(##cprc-app4-red 1) : ($code rte)
@@ -266,6 +272,7 @@
 #return(##cprc-app4-red 6) : ($code rte oper arg1 arg2 arg3)
 #procedure(##cprc-app4-red 7)
 #return(##cprc-app4-red 8) : ($code rte oper)
+#return(##cprc-app4-red 9) : ($code rte)
 
 #procedure(##cprc-app-red)
 #return(##cprc-app-red 1) : ($code rte)
@@ -274,16 +281,19 @@
 #return(##cprc-app-red 4) : ($code rte oper i)
 #return(##cprc-app-red 5) : ($code rte oper)
 #procedure(##cprc-app-red 6)
+#return(##cprc-app-red 7) : ($code rte)
 
 #procedure(##cprc-app0-sub)
 #return(##cprc-app0-sub 1) : ($code rte)
 #return(##cprc-app0-sub 2) : ($code rte)
+#return(##cprc-app0-sub 3) : ($code rte)
 
 #procedure(##cprc-app1-sub)
 #return(##cprc-app1-sub 1) : ($code rte)
 #return(##cprc-app1-sub 2) : ($code rte)
 #return(##cprc-app1-sub 3) : ($code rte oper)
 #return(##cprc-app1-sub 4) : ($code rte oper)
+#return(##cprc-app1-sub 5) : ($code rte)
 
 #procedure(##cprc-app2-sub)
 #return(##cprc-app2-sub 1) : ($code rte)
@@ -291,6 +301,7 @@
 #return(##cprc-app2-sub 3) : ($code rte oper)
 #return(##cprc-app2-sub 4) : ($code rte oper arg1)
 #return(##cprc-app2-sub 5) : ($code rte oper)
+#return(##cprc-app2-sub 6) : ($code rte)
 
 #procedure(##cprc-app3-sub)
 #return(##cprc-app3-sub 1) : ($code rte)
@@ -299,6 +310,7 @@
 #return(##cprc-app3-sub 4) : ($code rte oper arg1)
 #return(##cprc-app3-sub 5) : ($code rte oper arg1 arg2)
 #return(##cprc-app3-sub 6) : ($code rte oper)
+#return(##cprc-app3-sub 7) : ($code rte)
 
 #procedure(##cprc-app4-sub)
 #return(##cprc-app4-sub 1) : ($code rte)
@@ -308,6 +320,7 @@
 #return(##cprc-app4-sub 5) : ($code rte oper arg1 arg2)
 #return(##cprc-app4-sub 6) : ($code rte oper arg1 arg2 arg3)
 #return(##cprc-app4-sub 7) : ($code rte oper)
+#return(##cprc-app4-sub 8) : ($code rte)
 
 #procedure(##cprc-app-sub)
 #return(##cprc-app-sub 1) : ($code rte)
@@ -316,6 +329,7 @@
 #return(##cprc-app-sub 4) : ($code rte oper i)
 #return(##cprc-app-sub 5) : ($code rte oper)
 #procedure(##cprc-app-sub 6)
+#return(##cprc-app-sub 7) : ($code rte)
 
 #procedure(##cprc-delay)
 #return(##cprc-delay 1) : ($code rte)

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-06-08 21:21:24 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-08-04 10:17:43 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -2580,7 +2580,10 @@
              (if (##not (##procedure? oper))
                (let ((args (##list pred)))
                  (##check-heap-limit)
-                 (##raise-nonprocedure-operator-exception oper args $code rte))
+                 (##first-argument ;; keep $code and rte in environment-map
+                  (##raise-nonprocedure-operator-exception oper args $code rte)
+                  $code
+                  rte))
                (macro-call-step! (oper pred)
                  (oper pred)))))
          (macro-code-run (^ 2)))))))
@@ -2595,7 +2598,10 @@
              (if (##not (##procedure? oper))
                (let ((args (##list pred)))
                  (##check-heap-limit)
-                 (##raise-nonprocedure-operator-exception oper args $code rte))
+                 (##first-argument ;; keep $code and rte in environment-map
+                  (##raise-nonprocedure-operator-exception oper args $code rte)
+                  $code
+                  rte))
                (##subproblem-apply1 $code rte oper pred))))
          (macro-code-run (^ 2)))))))
 
@@ -3254,7 +3260,10 @@
    (let ((oper (macro-code-run (^ 0))))
      (macro-force-vars (oper)
        (if (##not (##procedure? oper))
-         (##raise-nonprocedure-operator-exception oper '() $code rte)
+         (##first-argument ;; keep $code and rte in environment-map
+          (##raise-nonprocedure-operator-exception oper '() $code rte)
+          $code
+          rte)
          (macro-call-step! (oper)
            (oper)))))))
 
@@ -3266,7 +3275,10 @@
        (if (##not (##procedure? oper))
          (let ((args (##list arg1)))
            (##check-heap-limit)
-           (##raise-nonprocedure-operator-exception oper args $code rte))
+           (##first-argument ;; keep $code and rte in environment-map
+            (##raise-nonprocedure-operator-exception oper args $code rte)
+            $code
+            rte))
          (macro-call-step! (oper arg1)
            (oper arg1)))))))
 
@@ -3279,7 +3291,10 @@
        (if (##not (##procedure? oper))
          (let ((args (##list arg1 arg2)))
            (##check-heap-limit)
-           (##raise-nonprocedure-operator-exception oper args $code rte))
+           (##first-argument ;; keep $code and rte in environment-map
+            (##raise-nonprocedure-operator-exception oper args $code rte)
+            $code
+            rte))
          (macro-call-step! (oper arg1 arg2)
            (oper arg1 arg2)))))))
 
@@ -3293,7 +3308,10 @@
        (if (##not (##procedure? oper))
          (let ((args (##list arg1 arg2 arg3)))
            (##check-heap-limit)
-           (##raise-nonprocedure-operator-exception oper args $code rte))
+           (##first-argument ;; keep $code and rte in environment-map
+            (##raise-nonprocedure-operator-exception oper args $code rte)
+            $code
+            rte))
          (macro-call-step! (oper arg1 arg2 arg3)
            (oper arg1 arg2 arg3)))))))
 
@@ -3308,7 +3326,10 @@
        (if (##not (##procedure? oper))
          (let ((args (##list arg1 arg2 arg3 arg4)))
            (##check-heap-limit)
-           (##raise-nonprocedure-operator-exception oper args $code rte))
+           (##first-argument ;; keep $code and rte in environment-map
+            (##raise-nonprocedure-operator-exception oper args $code rte)
+            $code
+            rte))
          (macro-call-step! (oper arg1 arg2 arg3 arg4)
            (oper arg1 arg2 arg3 arg4)))))))
 
@@ -3324,7 +3345,10 @@
          (let ((args (##reverse rev-args)))
            (macro-force-vars (oper)
              (if (##not (##procedure? oper))
-               (##raise-nonprocedure-operator-exception oper args $code rte)
+               (##first-argument ;; keep $code and rte in environment-map
+                (##raise-nonprocedure-operator-exception oper args $code rte)
+                $code
+                rte)
                (macro-call-step! (oper args)
                  (begin
                    (##first-argument $code rte);;;;;;;;;obsolete?
@@ -3335,7 +3359,10 @@
    (let ((oper (macro-code-run (^ 0))))
      (macro-force-vars (oper)
        (if (##not (##procedure? oper))
-         (##raise-nonprocedure-operator-exception oper '() $code rte)
+         (##first-argument ;; keep $code and rte in environment-map
+          (##raise-nonprocedure-operator-exception oper '() $code rte)
+          $code
+          rte)
          (##subproblem-apply0 $code rte oper))))))
 
 (define ##cprc-app1-sub
@@ -3346,7 +3373,10 @@
        (if (##not (##procedure? oper))
          (let ((args (##list arg1)))
            (##check-heap-limit)
-           (##raise-nonprocedure-operator-exception oper args $code rte))
+           (##first-argument ;; keep $code and rte in environment-map
+            (##raise-nonprocedure-operator-exception oper args $code rte)
+            $code
+            rte))
          (##subproblem-apply1 $code rte oper arg1))))))
 
 (define ##cprc-app2-sub
@@ -3358,7 +3388,10 @@
        (if (##not (##procedure? oper))
          (let ((args (##list arg1 arg2)))
            (##check-heap-limit)
-           (##raise-nonprocedure-operator-exception oper args $code rte))
+           (##first-argument ;; keep $code and rte in environment-map
+            (##raise-nonprocedure-operator-exception oper args $code rte)
+            $code
+            rte))
          (##subproblem-apply2 $code rte oper arg1 arg2))))))
 
 (define ##cprc-app3-sub
@@ -3371,7 +3404,10 @@
        (if (##not (##procedure? oper))
          (let ((args (##list arg1 arg2 arg3)))
            (##check-heap-limit)
-           (##raise-nonprocedure-operator-exception oper args $code rte))
+           (##first-argument ;; keep $code and rte in environment-map
+            (##raise-nonprocedure-operator-exception oper args $code rte)
+            $code
+            rte))
          (##subproblem-apply3 $code rte oper arg1 arg2 arg3))))))
 
 (define ##cprc-app4-sub
@@ -3385,7 +3421,10 @@
        (if (##not (##procedure? oper))
          (let ((args (##list arg1 arg2 arg3 arg4)))
            (##check-heap-limit)
-           (##raise-nonprocedure-operator-exception oper args $code rte))
+           (##first-argument ;; keep $code and rte in environment-map
+            (##raise-nonprocedure-operator-exception oper args $code rte)
+            $code
+            rte))
          (##subproblem-apply4 $code rte oper arg1 arg2 arg3 arg4))))))
 
 (define ##cprc-app-sub
@@ -3400,7 +3439,10 @@
          (let ((args (##reverse rev-args)))
            (macro-force-vars (oper)
              (if (##not (##procedure? oper))
-               (##raise-nonprocedure-operator-exception oper args $code rte)
+               (##first-argument ;; keep $code and rte in environment-map
+                (##raise-nonprocedure-operator-exception oper args $code rte)
+                $code
+                rte)
                (macro-call-step! (oper args)
                  (##subproblem-apply $code rte oper args))))))))))
 
