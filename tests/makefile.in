@@ -1,4 +1,4 @@
-# makefile for regression tests, Time-stamp: <2009-08-03 12:20:11 feeley>
+# makefile for regression tests, Time-stamp: <2009-08-05 00:19:04 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -135,21 +135,7 @@ test5:
 test6: test5
 	@echo "------------ TEST 6 (link and execute the code generated)"
 	rm -f mix_.c mix@obj@ mix_@obj@ mix@exe@
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link mix.c
-	$(MAKE) build_obj \
-	  BUILD_OBJ_OUTPUT_FILENAME="mix@obj@" \
-	  BUILD_OBJ_CC_OPTIONS="" \
-	  BUILD_OBJ_INPUT_FILENAMES="mix.c"
-	$(MAKE) build_obj \
-	  BUILD_OBJ_OUTPUT_FILENAME="mix_@obj@" \
-	  BUILD_OBJ_CC_OPTIONS="" \
-	  BUILD_OBJ_INPUT_FILENAMES="mix_.c"
-	$(MAKE) build_exe \
-	  BUILD_EXE_OUTPUT_FILENAME="mix@exe@" \
-	  BUILD_EXE_CC_OPTIONS="" \
-	  BUILD_EXE_LD_OPTIONS_PRELUDE="" \
-	  BUILD_EXE_INPUT_FILENAMES="mix@obj@ mix_@obj@" \
-	  BUILD_EXE_LD_OPTIONS=""
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -o mix@exe@ -exe mix.c
 	@SETDLPATH@ ./mix@exe@ -:m4000 > test6.out
 	diff $(srcdirpfx)test6.ok test6.out && \
 	  rm -f test6.out mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@
@@ -157,21 +143,7 @@ test6: test5
 test7:
 	@echo "------------ TEST 7 (memory management and C-interface)"
 	rm -f mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link mem.scm
-	$(MAKE) build_obj \
-	  BUILD_OBJ_OUTPUT_FILENAME="mem@obj@" \
-	  BUILD_OBJ_CC_OPTIONS="" \
-	  BUILD_OBJ_INPUT_FILENAMES="mem.c"
-	$(MAKE) build_obj \
-	  BUILD_OBJ_OUTPUT_FILENAME="mem_@obj@" \
-	  BUILD_OBJ_CC_OPTIONS="" \
-	  BUILD_OBJ_INPUT_FILENAMES="mem_.c"
-	$(MAKE) build_exe \
-	  BUILD_EXE_OUTPUT_FILENAME="mem@exe@" \
-	  BUILD_EXE_CC_OPTIONS="" \
-	  BUILD_EXE_LD_OPTIONS_PRELUDE="" \
-	  BUILD_EXE_INPUT_FILENAMES="mem@obj@ mem_@obj@" \
-	  BUILD_EXE_LD_OPTIONS=""
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -o mem@exe@ -exe mem.scm
 	@SETDLPATH@ ./mem@exe@ -:h4000 > test7.out
 	diff $(srcdirpfx)test7.ok test7.out && \
 	  rm -f test7.out mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
