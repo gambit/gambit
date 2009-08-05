@@ -1,6 +1,6 @@
-/* File: "c_intf.c", Time-stamp: <2008-10-04 23:42:20 feeley> */
+/* File: "c_intf.c", Time-stamp: <2009-08-04 12:03:35 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -769,6 +769,8 @@ int *decoding_state;)
     {
       /* there is still some space in the character buffer and byte buffer */
 
+      dispatch_on_char_encoding:
+
       switch (___CHAR_ENCODING(state))
         {
         default:
@@ -1060,7 +1062,12 @@ int *decoding_state;)
             break;
           }
 
-        case ___CHAR_ENCODING_UTF:
+        case ___CHAR_ENCODING_UTF_FALLBACK_ASCII:
+        case ___CHAR_ENCODING_UTF_FALLBACK_ISO_8859_1:
+        case ___CHAR_ENCODING_UTF_FALLBACK_UTF_8:
+        case ___CHAR_ENCODING_UTF_FALLBACK_UTF_16:
+        case ___CHAR_ENCODING_UTF_FALLBACK_UTF_16BE:
+        case ___CHAR_ENCODING_UTF_FALLBACK_UTF_16LE:
           {
             if (blo < bhi)
               {
@@ -1089,10 +1096,10 @@ int *decoding_state;)
                           }
                         else
                           {
-                            /* not a UTF-16BE BOM, so use UTF-8 */
-                            state += ___CHAR_ENCODING_UTF_8 -
-                                     ___CHAR_ENCODING_UTF;
-                            goto decode_next_UTF_8;
+                            /* not a UTF-16BE BOM, so use fallback encoding */
+                            state += ___CHAR_ENCODING_ASCII -
+                                     ___CHAR_ENCODING_UTF_FALLBACK_ASCII;
+                            goto dispatch_on_char_encoding;
                           }
                       }
                   }
@@ -1103,10 +1110,10 @@ int *decoding_state;)
                         (blo+1 < bhi && blo[1] != 0xbb) ||
                         (blo+2 < bhi && blo[2] != 0xbf))
                       {
-                        /* not a UTF-8 BOM, so use UTF-8 */
-                        state += ___CHAR_ENCODING_UTF_8 -
-                                 ___CHAR_ENCODING_UTF;
-                        goto decode_next_UTF_8;
+                        /* not a UTF-8 BOM, so use fallback encoding */
+                        state += ___CHAR_ENCODING_ASCII -
+                                 ___CHAR_ENCODING_UTF_FALLBACK_ASCII;
+                        goto dispatch_on_char_encoding;
                       }
                     else if (blo+2 < bhi)
                       {
@@ -1524,7 +1531,12 @@ int *encoding_state;)
             break;
           }
 
-        case ___CHAR_ENCODING_UTF:
+        case ___CHAR_ENCODING_UTF_FALLBACK_ASCII:
+        case ___CHAR_ENCODING_UTF_FALLBACK_ISO_8859_1:
+        case ___CHAR_ENCODING_UTF_FALLBACK_UTF_8:
+        case ___CHAR_ENCODING_UTF_FALLBACK_UTF_16:
+        case ___CHAR_ENCODING_UTF_FALLBACK_UTF_16BE:
+        case ___CHAR_ENCODING_UTF_FALLBACK_UTF_16LE:
           blo += 3;
           if (blo > bhi)
             {
@@ -1534,7 +1546,7 @@ int *encoding_state;)
           put_UTF_8(-3,0xef); /* UTF-8 BOM */
           put_UTF_8(-2,0xbb);
           put_UTF_8(-1,0xbf);
-          state += ___CHAR_ENCODING_UTF_8-___CHAR_ENCODING_UTF;
+          state += ___CHAR_ENCODING_UTF_8 - ___CHAR_ENCODING(state);
           goto encode_next_UTF_8;
 
         case ___CHAR_ENCODING_UCS_2:

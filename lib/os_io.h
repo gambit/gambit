@@ -1,4 +1,4 @@
-/* File: "os_io.h", Time-stamp: <2009-07-15 13:16:07 feeley> */
+/* File: "os_io.h", Time-stamp: <2009-08-04 13:14:49 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -55,9 +55,9 @@ typedef struct ___device_group_struct
 #define ___SELECT_PASS_3     3
 
 #define ___STREAM_OPTIONS(icee,ice,iee,ib,ocee,oce,oee,ob)      \
-(icee+ice+iee+ib)+((ocee+oce+oee+ob)<<14)
-#define ___STREAM_OPTIONS_INPUT(options) ((options)&((1<<14)-1))
-#define ___STREAM_OPTIONS_OUTPUT(options) (((options)>>14)&((1<<14)-1))
+(icee+ice+iee+ib)+((ocee+oce+oee+ob)<<15)
+#define ___STREAM_OPTIONS_INPUT(options) ((options)&((1<<15)-1))
+#define ___STREAM_OPTIONS_OUTPUT(options) (((options)>>15)&((1<<15)-1))
 
 
 typedef struct ___device_struct

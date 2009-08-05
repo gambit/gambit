@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2009-06-05 17:26:53 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-08-04 11:53:58 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -8004,23 +8004,30 @@ typedef struct ___setup_params_struct
  (___DEBUG_SETTINGS_USER_INTR_REPL \
   << ___DEBUG_SETTINGS_USER_INTR_SHIFT))
 
-#define ___CHAR_ENCODING(x)         ((x)&(15<<0))
-#define ___CHAR_ENCODING_MASK(x)    ((x)&~(15<<0))
-#define ___CHAR_ENCODING_ASCII      (1<<0)
-#define ___CHAR_ENCODING_ISO_8859_1 (2<<0)
-#define ___CHAR_ENCODING_UTF_8      (3<<0)
-#define ___CHAR_ENCODING_UTF_16     (4<<0)
-#define ___CHAR_ENCODING_UTF_16BE   (5<<0)
-#define ___CHAR_ENCODING_UTF_16LE   (6<<0)
-#define ___CHAR_ENCODING_UTF        (7<<0)
-#define ___CHAR_ENCODING_UCS_2      (8<<0)
-#define ___CHAR_ENCODING_UCS_2BE    (9<<0)
-#define ___CHAR_ENCODING_UCS_2LE    (10<<0)
-#define ___CHAR_ENCODING_UCS_4      (11<<0)
-#define ___CHAR_ENCODING_UCS_4BE    (12<<0)
-#define ___CHAR_ENCODING_UCS_4LE    (13<<0)
-#define ___CHAR_ENCODING_WCHAR      (14<<0)
-#define ___CHAR_ENCODING_NATIVE     (15<<0)
+#define ___CHAR_ENCODING(x)                       ((x)&(31<<0))
+#define ___CHAR_ENCODING_MASK(x)                  ((x)&~(31<<0))
+#define ___CHAR_ENCODING_ASCII                    (1<<0)
+#define ___CHAR_ENCODING_ISO_8859_1               (2<<0)
+#define ___CHAR_ENCODING_UTF_8                    (3<<0)
+#define ___CHAR_ENCODING_UTF_16                   (4<<0)
+#define ___CHAR_ENCODING_UTF_16BE                 (5<<0)
+#define ___CHAR_ENCODING_UTF_16LE                 (6<<0)
+#define ___CHAR_ENCODING_UTF_FALLBACK_ASCII       (7<<0)
+#define ___CHAR_ENCODING_UTF_FALLBACK_ISO_8859_1  (8<<0)
+#define ___CHAR_ENCODING_UTF_FALLBACK_UTF_8       (9<<0)
+#define ___CHAR_ENCODING_UTF_FALLBACK_UTF_16      (10<<0)
+#define ___CHAR_ENCODING_UTF_FALLBACK_UTF_16BE    (11<<0)
+#define ___CHAR_ENCODING_UTF_FALLBACK_UTF_16LE    (12<<0)
+#define ___CHAR_ENCODING_UCS_2                    (13<<0)
+#define ___CHAR_ENCODING_UCS_2BE                  (14<<0)
+#define ___CHAR_ENCODING_UCS_2LE                  (15<<0)
+#define ___CHAR_ENCODING_UCS_4                    (16<<0)
+#define ___CHAR_ENCODING_UCS_4BE                  (17<<0)
+#define ___CHAR_ENCODING_UCS_4LE                  (18<<0)
+#define ___CHAR_ENCODING_WCHAR                    (19<<0)
+#define ___CHAR_ENCODING_NATIVE                   (20<<0)
+
+#define ___CHAR_ENCODING_UTF ___CHAR_ENCODING_UTF_FALLBACK_UTF_8
 
 #define ___CHAR_ENCODING_SUPPORTS_BMP(x) \
 ((x) >= ___CHAR_ENCODING_UTF_8 && \
@@ -8036,22 +8043,22 @@ typedef struct ___setup_params_struct
 #define ___CHAR_ENCODING_U32 ___CHAR_ENCODING_UCS_4LE
 #endif
 
-#define ___CHAR_ENCODING_ERRORS(x)      ((x)&(3<<4))
-#define ___CHAR_ENCODING_ERRORS_MASK(x) ((x)&~(3<<4))
-#define ___CHAR_ENCODING_ERRORS_ON      (1<<4)
-#define ___CHAR_ENCODING_ERRORS_OFF     (2<<4)
+#define ___CHAR_ENCODING_ERRORS(x)      ((x)&(3<<5))
+#define ___CHAR_ENCODING_ERRORS_MASK(x) ((x)&~(3<<5))
+#define ___CHAR_ENCODING_ERRORS_ON      (1<<5)
+#define ___CHAR_ENCODING_ERRORS_OFF     (2<<5)
 
-#define ___EOL_ENCODING(x)      ((x)&(3<<6))
-#define ___EOL_ENCODING_MASK(x) ((x)&~(3<<6))
-#define ___EOL_ENCODING_LF      (1<<6)
-#define ___EOL_ENCODING_CR      (2<<6)
-#define ___EOL_ENCODING_CRLF    (3<<6)
+#define ___EOL_ENCODING(x)      ((x)&(3<<7))
+#define ___EOL_ENCODING_MASK(x) ((x)&~(3<<7))
+#define ___EOL_ENCODING_LF      (1<<7)
+#define ___EOL_ENCODING_CR      (2<<7)
+#define ___EOL_ENCODING_CRLF    (3<<7)
 
-#define ___BUFFERING(x)      ((x)&(3<<8))
-#define ___BUFFERING_MASK(x) ((x)&~(3<<8))
-#define ___NO_BUFFERING      (1<<8)
-#define ___LINE_BUFFERING    (2<<8)
-#define ___FULL_BUFFERING    (3<<8)
+#define ___BUFFERING(x)      ((x)&(3<<9))
+#define ___BUFFERING_MASK(x) ((x)&~(3<<9))
+#define ___NO_BUFFERING      (1<<9)
+#define ___LINE_BUFFERING    (2<<9)
+#define ___FULL_BUFFERING    (3<<9)
 #define ___FULLY_BUFFERED(x)  (___BUFFERING(x)>=___FULL_BUFFERING)
 
 #define ___TERMINAL_LINE_EDITING(x)      ((x)&(3<<16))

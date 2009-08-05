@@ -1,4 +1,4 @@
-/* File: "main.c", Time-stamp: <2009-06-10 15:42:03 feeley> */
+/* File: "main.c", Time-stamp: <2009-08-04 13:10:04 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -573,8 +573,30 @@ ___mod_or_lnk (*linker)();)
                       case '8': settings = ___CHAR_ENCODING_MASK(settings)
                                            |___CHAR_ENCODING_UTF_8;
                                 break;
-                      case 'U': settings = ___CHAR_ENCODING_MASK(settings)
-                                           |___CHAR_ENCODING_UTF;
+                      case 'U': switch (*arg++)
+                                  {
+                                  case 'A':
+                                    settings = ___CHAR_ENCODING_MASK(settings)
+                                               |___CHAR_ENCODING_UTF_FALLBACK_ASCII;
+                                    break;
+                                  case '1':
+                                    settings = ___CHAR_ENCODING_MASK(settings)
+                                               |___CHAR_ENCODING_UTF_FALLBACK_ISO_8859_1;
+                                    break;
+                                  case '6':
+                                    settings = ___CHAR_ENCODING_MASK(settings)
+                                               |___CHAR_ENCODING_UTF_FALLBACK_UTF_16;
+                                    break;
+                                  case '8':
+                                    settings = ___CHAR_ENCODING_MASK(settings)
+                                               |___CHAR_ENCODING_UTF_FALLBACK_UTF_8;
+                                    break;
+                                  default:
+                                    arg--;
+                                    settings = ___CHAR_ENCODING_MASK(settings)
+                                               |___CHAR_ENCODING_UTF;
+                                    break;
+                                  }
                                 break;
                       case 'l': settings = ___EOL_ENCODING_MASK(settings)
                                            |((___EOL_ENCODING(settings)

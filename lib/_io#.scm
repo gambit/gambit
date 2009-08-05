@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2009-02-20 13:57:20 feeley>
+;;; File: "_io#.scm", Time-stamp: <2009-08-04 12:50:41 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -700,39 +700,47 @@
 
 (##define-macro (macro-default-readtable) #f)
 
-(##define-macro (macro-char-encoding-shift)      1)
-(##define-macro (macro-char-encoding-range)      16)
-(##define-macro (macro-default-char-encoding)    0)
-(##define-macro (macro-char-encoding-ASCII)      1)
-(##define-macro (macro-char-encoding-ISO-8859-1) 2)
-(##define-macro (macro-char-encoding-UTF-8)      3)
-(##define-macro (macro-char-encoding-UTF-16)     4)
-(##define-macro (macro-char-encoding-UTF-16BE)   5)
-(##define-macro (macro-char-encoding-UTF-16LE)   6)
-(##define-macro (macro-char-encoding-UTF)        7)
-(##define-macro (macro-char-encoding-UCS-2)      8)
-(##define-macro (macro-char-encoding-UCS-2BE)    9)
-(##define-macro (macro-char-encoding-UCS-2LE)    10)
-(##define-macro (macro-char-encoding-UCS-4)      11)
-(##define-macro (macro-char-encoding-UCS-4BE)    12)
-(##define-macro (macro-char-encoding-UCS-4LE)    13)
-(##define-macro (macro-char-encoding-wchar)      14)
-(##define-macro (macro-char-encoding-native)     15)
+(##define-macro (macro-char-encoding-shift)                     1)
+(##define-macro (macro-char-encoding-range)                     32)
+(##define-macro (macro-default-char-encoding)                   0)
+(##define-macro (macro-char-encoding-ASCII)                     1)
+(##define-macro (macro-char-encoding-ISO-8859-1)                2)
+(##define-macro (macro-char-encoding-UTF-8)                     3)
+(##define-macro (macro-char-encoding-UTF-16)                    4)
+(##define-macro (macro-char-encoding-UTF-16BE)                  5)
+(##define-macro (macro-char-encoding-UTF-16LE)                  6)
+(##define-macro (macro-char-encoding-UTF-fallback-ASCII)        7)
+(##define-macro (macro-char-encoding-UTF-fallback-ISO-8859-1)   8)
+(##define-macro (macro-char-encoding-UTF-fallback-UTF-8)        9)
+(##define-macro (macro-char-encoding-UTF-fallback-UTF-16)       10)
+(##define-macro (macro-char-encoding-UTF-fallback-UTF-16BE)     11)
+(##define-macro (macro-char-encoding-UTF-fallback-UTF-16LE)     12)
+(##define-macro (macro-char-encoding-UCS-2)                     13)
+(##define-macro (macro-char-encoding-UCS-2BE)                   14)
+(##define-macro (macro-char-encoding-UCS-2LE)                   15)
+(##define-macro (macro-char-encoding-UCS-4)                     16)
+(##define-macro (macro-char-encoding-UCS-4BE)                   17)
+(##define-macro (macro-char-encoding-UCS-4LE)                   18)
+(##define-macro (macro-char-encoding-wchar)                     19)
+(##define-macro (macro-char-encoding-native)                    20)
 
-(##define-macro (macro-char-encoding-errors-shift)   16)
+(##define-macro (macro-char-encoding-UTF)
+  `(macro-char-encoding-UTF-fallback-UTF-8))
+
+(##define-macro (macro-char-encoding-errors-shift)   32)
 (##define-macro (macro-char-encoding-errors-range)   4)
 (##define-macro (macro-default-char-encoding-errors) 0)
 (##define-macro (macro-char-encoding-errors-on)      1)
 (##define-macro (macro-char-encoding-errors-off)     2)
 
-(##define-macro (macro-eol-encoding-shift)   64)
+(##define-macro (macro-eol-encoding-shift)   128)
 (##define-macro (macro-eol-encoding-range)   4)
 (##define-macro (macro-default-eol-encoding) 0)
 (##define-macro (macro-eol-encoding-lf)      1)
 (##define-macro (macro-eol-encoding-cr)      2)
 (##define-macro (macro-eol-encoding-crlf)    3)
 
-(##define-macro (macro-buffering-shift)   256)
+(##define-macro (macro-buffering-shift)   512)
 (##define-macro (macro-buffering-range)   4)
 (##define-macro (macro-default-buffering) 0)
 (##define-macro (macro-no-buffering)      1)
@@ -740,38 +748,38 @@
 (##define-macro (macro-full-buffering)    3)
 
 (##define-macro (macro-unbuffered? options)
-  `(##fixnum.< (##fixnum.bitwise-and ,options 1023) 512))
+  `(##fixnum.< (##fixnum.bitwise-and ,options 2047) 1024))
 
 (##define-macro (macro-fully-buffered? options)
-  `(##not (##fixnum.< (##fixnum.bitwise-and ,options 1023) 768)))
+  `(##not (##fixnum.< (##fixnum.bitwise-and ,options 2047) 1536)))
 
-(##define-macro (macro-decode-state-shift)  1024)
+(##define-macro (macro-decode-state-shift)  2048)
 (##define-macro (macro-decode-state-range)  4)
 (##define-macro (macro-decode-state-none)   0)
 (##define-macro (macro-decode-state-lf)     1)
 (##define-macro (macro-decode-state-cr)     2)
 
-(##define-macro (macro-open-state-shift)  4096)
+(##define-macro (macro-open-state-shift)  8192)
 (##define-macro (macro-open-state-range)  2)
 (##define-macro (macro-open-state-open)   0)
 (##define-macro (macro-open-state-closed) 1)
 
 (##define-macro (macro-closed? options)
-  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 4096) 0)))
+  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 8192) 0)))
 
 (##define-macro (macro-close! options)
-  `(##fixnum.bitwise-ior ,options 4096))
+  `(##fixnum.bitwise-ior ,options 8192))
 
 (##define-macro (macro-unclose! options)
-  `(##fixnum.bitwise-and ,options -4097))
+  `(##fixnum.bitwise-and ,options -8193))
 
-(##define-macro (macro-permanent-close-shift)  8192)
+(##define-macro (macro-permanent-close-shift)  16384)
 (##define-macro (macro-permanent-close-range)  2)
 (##define-macro (macro-permanent-close-no)     0)
 (##define-macro (macro-permanent-close-yes)    1)
 
 (##define-macro (macro-perm-close? options)
-  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 8192) 0)))
+  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 16384) 0)))
 
 (##define-macro (macro-direction-shift) 16)
 (##define-macro (macro-direction-in)    1)

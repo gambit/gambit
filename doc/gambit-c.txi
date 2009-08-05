@@ -1953,7 +1953,15 @@ UTF-16 character encoding.
 @item 8
 UTF-8 character encoding.
 @item U
-UTF character encoding.
+UTF character encoding with fallback to UTF-8 on input if no BOM is present.
+@item UA
+UTF character encoding with fallback to ASCII on input if no BOM is present.
+@item U1
+UTF character encoding with fallback to ISO-8859-1 on input if no BOM is present.
+@item U6
+UTF character encoding with fallback to UTF-16 on input if no BOM is present.
+@item U8
+UTF character encoding with fallback to UTF-8 on input if no BOM is present.
 @item c
 End-of-line is encoded as CR (carriage-return).
 @item l
@@ -11224,22 +11232,24 @@ then it must be explicitly written.
 UTF-16 character encoding with big-endian endianness.  It is like
 @code{UTF-16LE} except the endianness is set to big-endian.
 
-@item UTF
-This encoding combines the UTF-8 and UTF-16 encodings.  When
-@code{UTF} is used for an output port, characters will be encoded
-using the UTF-8 encoding.  The first character, if there is one, is
-prefixed with a UTF-8 BOM (the three byte sequence EF BB BF in
-hexadecimal).  When @code{UTF} is used for an input port, the
-character encoding depends on the first few bytes.  If the first bytes
-of the stream are a UTF-16LE BOM (FF FE in hexadecimal), or a UTF-16BE
-BOM (FE FF in hexadecimal), or a UTF-8 BOM (EF BB BF in hexadecimal),
-then the BOM is discarded and the remaining bytes of the stream are
-decoded using the corresponding character encoding.  If a BOM is not
-present, then the stream is decoded using the UTF-8 encoding.  Note
-that this character encoding for input will correctly handle streams
-produced using the encodings @code{UTF}, @code{UTF-8}, @code{UTF-16},
-@code{ASCII}, and if an explicit BOM is output, the encodings
-@code{UTF-16LE}, and @code{UTF-16BE}.
+@item UTF / UTF-fallback-ASCII / UTF-fallback-ISO-8859-1 / UTF-fallback-UTF-16 / UTF-fallback-UTF-16LE / UTF-fallback-UTF-16BE
+These encodings combine the UTF-8 and UTF-16 encodings.  When one of
+these character encodings is used for an output port, characters will
+be encoded using the UTF-8 encoding.  The first character, if there is
+one, is prefixed with a UTF-8 BOM (the three byte sequence EF BB BF in
+hexadecimal).  When one of these character encodings is used for an
+input port, the character encoding depends on the first few bytes.  If
+the first bytes of the stream are a UTF-16LE BOM (FF FE in
+hexadecimal), or a UTF-16BE BOM (FE FF in hexadecimal), or a UTF-8 BOM
+(EF BB BF in hexadecimal), then the BOM is discarded and the remaining
+bytes of the stream are decoded using the corresponding character
+encoding.  If a BOM is not present, then the stream is decoded using
+the fallback encoding specified.  The encoding @code{UTF} is a synonym
+for @code{UTF-fallback-UTF-8}.  Note that the @code{UTF} character
+encoding for input will correctly handle streams produced using the
+encodings @code{UTF}, @code{UTF-8}, @code{UTF-16}, @code{ASCII}, and
+if an explicit BOM is output, the encodings @code{UTF-16LE}, and
+@code{UTF-16BE}.
 
 @item UCS-2
 UCS-2 character encoding.  Each character is encoded by a 16 bit

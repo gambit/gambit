@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-06-14 16:34:09 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-08-04 13:17:37 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -241,6 +241,18 @@
            (macro-char-encoding-UTF-16BE))
           ((##eq? value 'UTF)
            (macro-char-encoding-UTF))
+          ((##eq? value 'UTF-fallback-ASCII)
+           (macro-char-encoding-UTF-fallback-ASCII))
+          ((##eq? value 'UTF-fallback-ISO-8859-1)
+           (macro-char-encoding-UTF-fallback-ISO-8859-1))
+          ((##eq? value 'UTF-fallback-UTF-8)
+           (macro-char-encoding-UTF-fallback-UTF-8))
+          ((##eq? value 'UTF-fallback-UTF-16)
+           (macro-char-encoding-UTF-fallback-UTF-16))
+          ((##eq? value 'UTF-fallback-UTF-16LE)
+           (macro-char-encoding-UTF-fallback-UTF-16LE))
+          ((##eq? value 'UTF-fallback-UTF-16BE)
+           (macro-char-encoding-UTF-fallback-UTF-16BE))
           ((##eq? value 'UCS-2)
            (macro-char-encoding-UCS-2))
           ((##eq? value 'UCS-2LE)
@@ -988,15 +1000,17 @@
             (else
              (error-improper-list))))))
 
+(##define-macro (macro-stream-options-output-shift) 32768)
+
 (define-prim (##psettings->roptions psettings default-options)
   (##psettings-options->options
    (macro-psettings-roptions psettings)
-   (##fixnum.modulo default-options 16384)))
+   (##fixnum.modulo default-options (macro-stream-options-output-shift))))
 
 (define-prim (##psettings->woptions psettings default-options)
   (##psettings-options->options
    (macro-psettings-woptions psettings)
-   (##fixnum.quotient default-options 16384)))
+   (##fixnum.quotient default-options (macro-stream-options-output-shift))))
 
 (define-prim (##psettings->input-readtable psettings)
   (or (macro-psettings-options-readtable
@@ -5355,7 +5369,8 @@
               (macro-port-woptions port))
              (woptions
               (##psettings->woptions psettings
-                                     (##fixnum.* old-woptions 16384))))
+                                     (##fixnum.* old-woptions
+                                                 (macro-stream-options-output-shift)))))
         (let ((code
                (and (macro-output-port? port)
                     (##not (##fixnum.= woptions old-woptions))
@@ -5376,7 +5391,9 @@
             (let ((result
                    (##options-set!
                     port
-                    (##fixnum.+ roptions (##fixnum.* woptions 16384)))))
+                    (##fixnum.+ roptions
+                                (##fixnum.* woptions
+                                            (macro-stream-options-output-shift))))))
               (if (##fixnum? result)
                 (begin
                   (macro-port-mutex-unlock! port)
