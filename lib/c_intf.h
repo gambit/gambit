@@ -1,6 +1,6 @@
-/* File: "c_intf.h", Time-stamp: <2008-05-13 15:25:14 feeley> */
+/* File: "c_intf.h", Time-stamp: <2009-08-06 19:07:29 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___C_INTF_H
 #define ___C_INTF_H
@@ -36,13 +36,6 @@ extern ___UCS_4 ___UTF_8_get
 #define ___CONVERSION_DONE 0
 #define ___INCOMPLETE_CHAR 1
 #define ___ILLEGAL_CHAR    2
-
-#define ___DECODE_STATE(x)      ((x)&(3<<10))
-#define ___DECODE_STATE_MASK(x) ((x)&~(3<<10))
-#define ___DECODE_STATE_NONE    (0<<10)
-#define ___DECODE_STATE_LF      (1<<10)
-#define ___DECODE_STATE_CR      (2<<10)
-
 
 #define char_EOL ___UNICODE_LINEFEED
 

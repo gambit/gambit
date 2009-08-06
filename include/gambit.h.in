@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2009-08-04 11:53:58 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-08-06 19:08:02 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -8060,6 +8060,12 @@ typedef struct ___setup_params_struct
 #define ___LINE_BUFFERING    (2<<9)
 #define ___FULL_BUFFERING    (3<<9)
 #define ___FULLY_BUFFERED(x)  (___BUFFERING(x)>=___FULL_BUFFERING)
+
+#define ___DECODE_STATE(x)      ((x)&(3<<11))
+#define ___DECODE_STATE_MASK(x) ((x)&~(3<<11))
+#define ___DECODE_STATE_NONE    (0<<11)
+#define ___DECODE_STATE_LF      (1<<11)
+#define ___DECODE_STATE_CR      (2<<11)
 
 #define ___TERMINAL_LINE_EDITING(x)      ((x)&(3<<16))
 #define ___TERMINAL_LINE_EDITING_MASK(x) ((x)&~(3<<16))
