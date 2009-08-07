@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-08-04 13:17:37 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-08-06 13:41:26 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -10422,39 +10422,54 @@
   (define (eof)
     (##raise-datum-parsing-exception 'incomplete-form-eof-reached re))
 
+  (define (invalid-token)
+    (##raise-datum-parsing-exception 'invalid-token re))
+
   (macro-read-next-char-or-eof re) ;; skip char after #\#
   (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
-  (let ((separator (macro-read-next-char-or-eof re)))
-    (if (char? separator)
-      (if (eq? separator #\<)
-        (let ((tag
-               (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
-          (let loop ((lines-rev '()))
-            (let ((line
-                   (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
-              (if (string? line)
-                (if (string=? line tag)
-                  (let* ((str
-                          (##append-strings (##reverse lines-rev)))
-                         (len
-                          (string-length str)))
-                    (if (< 0 len)
-                      (##string-shrink! str (- len 1)))
-                    (macro-readenv-wrap re str))
-                  (loop (cons line lines-rev)))
-                (eof)))))
-        (let ((str
-               (##read-line (macro-readenv-port re) separator #t ##max-fixnum)))
-          (if (string? str)
-            (let ((len (string-length str)))
-              (if (and (< 0 len)
-                       (eq? (string-ref str (- len 1)) separator))
-                (begin
-                  (##string-shrink! str (- len 1))
-                  (macro-readenv-wrap re str))
-                (eof)))
-            (eof))))
-      (eof))))
+  (if (macro-readtable-here-strings-allowed?
+       (macro-readenv-readtable re))
+      (let ((separator (macro-read-next-char-or-eof re)))
+        (cond ((not (char? separator))
+               (eof))
+              ((eq? separator #\<)
+               ;; Multiline SCSH here string of the form
+               ;; #<<END
+               ;; hello world
+               ;; END
+               (let ((tag
+                      (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
+                 (let loop ((lines-rev '()))
+                   (let ((line
+                          (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
+                     (if (string? line)
+                         (if (string=? line tag)
+                             (let* ((str
+                                     (##append-strings (##reverse lines-rev)))
+                                    (len
+                                     (string-length str)))
+                               (if (< 0 len)
+                                   (##string-shrink! str (- len 1)))
+                               (macro-readenv-wrap re str))
+                             (loop (cons line lines-rev)))
+                         (eof))))))
+              ((eq? (macro-readtable-here-strings-allowed?
+                     (macro-readenv-readtable re))
+                    #t)
+               ;; Delimited here string of the form #<|foo|
+               (let ((str
+                      (##read-line (macro-readenv-port re) separator #t ##max-fixnum)))
+                 (if (string? str)
+                     (let ((len (string-length str)))
+                       (if (and (< 0 len)
+                                (eq? (string-ref str (- len 1)) separator))
+                           (begin
+                             (##string-shrink! str (- len 1))
+                             (macro-readenv-wrap re str))
+                           (eof)))
+                     (eof))))
+              ((invalid-token))))
+      (invalid-token)))
 
 (define (##read-sharp-digit re next start-pos)
   (let ((old-pos (macro-readenv-filepos re)))
@@ -12284,6 +12299,7 @@
           ##six-type?        ;; six-type?
           #t                 ;; r6rs-compatible-read?
           #t                 ;; r6rs-compatible-write?
+          'multiline         ;; here-strings-allowed?
           )))
 
     (##readtable-setup-for-standard-level! rt)
