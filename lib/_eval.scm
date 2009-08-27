@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-08-04 10:17:43 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-08-19 12:26:02 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -865,7 +865,10 @@
    #f
    (lambda (cte src tail?)
      (macro-gen ##gen-top src
-       (##comp (##cte-frame cte (##list (macro-self-var))) src tail?)))))
+       (##comp-inner
+        (##cte-frame cte (##list (macro-self-var)))
+        src
+        tail?)))))
 
 (define (##convert-source-to-locat! code)
 
@@ -1037,7 +1040,7 @@
            (val (##definition-value src)))
       (macro-gen ##gen-glo-def src
         ind
-        (##comp cte val #f)))))
+        (##comp-subexpr cte val #f)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1111,21 +1114,25 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (##comp cte src tail?)
+(define (##comp-inner cte src tail?)
+  (##comp-expr cte src tail? #f))
+
+(define (##comp-subexpr cte src tail?)
+  (##comp-expr cte src tail? #t))
+
+(define (##comp-expr cte src tail? subexpr?)
   (let ((code (##source-code src)))
     (if (##pair? code)
       (let* ((first-src (##sourcify (##car code) src))
              (first (##source-code first-src))
              (descr (##macro-lookup cte first)))
         (if descr
-          (##comp cte (##macro-expand cte src descr) tail?)
+          (##comp-expr cte (##macro-expand cte src descr) tail? subexpr?)
           (case first
             ((##begin)
-             (##comp-begin cte src tail?))
+             (##comp-begin cte src tail? subexpr?))
             ((##define)
-             (##raise-expression-parsing-exception
-              'ill-placed-define
-              src))
+             (##comp-define cte src tail? subexpr?))
             ((##define-macro)
              (##raise-expression-parsing-exception
               'ill-placed-define-macro
@@ -1175,26 +1182,53 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define (##comp-begin cte src tail?)
+(define (##comp-define cte src tail? subexpr?)
+  (if (or subexpr?
+          (##not ##allow-inner-global-define?))
+      (##raise-expression-parsing-exception
+       'ill-placed-define
+       src)
+      (let ((name (##definition-name src)))
+        (##variable name)
+        (if (##not (##eq? ##allow-inner-global-define? #t))
+            (##repl
+             (lambda (first output-port)
+               (##write-string "*** WARNING -- defining global variable: " output-port)
+               (##write (##source-code name) output-port)
+               (##newline output-port)
+               #t)))
+        (let* ((top-cte (##cte-top-cte cte))
+               (ind (##var-lookup top-cte name))
+               (val (##definition-value src)))
+          (macro-gen ##gen-glo-def src
+            ind
+            (##comp-subexpr cte val #f))))))
+
+(define ##allow-inner-global-define? #f)
+(set! ##allow-inner-global-define? 'warn)
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define (##comp-begin cte src tail? subexpr?)
   (##shape src src -2)
   (let ((code (##source-code src)))
-    (##comp-seq cte src tail? (##cdr code))))
+    (##comp-seq cte src tail? subexpr? (##cdr code))))
 
-(define (##comp-seq cte src tail? seq)
+(define (##comp-seq cte src tail? subexpr? seq)
   (if (##pair? seq)
-    (##comp-seq-aux cte src tail? seq)
+    (##comp-seq-aux cte src tail? subexpr? seq)
     (macro-gen ##gen-cst-no-step src
       (##void))))
 
-(define (##comp-seq-aux cte src tail? seq)
+(define (##comp-seq-aux cte src tail? subexpr? seq)
   (let ((first-src (##sourcify (##car seq) src))
         (rest (##cdr seq)))
     (if (##pair? rest)
       (let ((code (##source-code first-src)))
         (macro-gen ##gen-seq first-src
-          (##comp cte first-src #f)
-          (##comp-seq-aux cte src tail? rest)))
-      (##comp cte first-src tail?))))
+          (##comp-expr cte first-src #f subexpr?)
+          (##comp-seq-aux cte src tail? subexpr? rest)))
+      (##comp-expr cte first-src tail? subexpr?))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1327,9 +1361,9 @@
                (if (##eq? depth 1)
                  (let ((second-src (##sourcify (##cadr first) src)))
                    (if (##null? (##cdr lst))
-                     (##comp cte second-src tail?)
+                     (##comp-subexpr cte second-src tail?)
                      (macro-gen ##gen-quasi-append src
-                       (##comp cte second-src #f)
+                       (##comp-subexpr cte second-src #f)
                        (##comp-list-template cte
                                              src
                                              #f
@@ -1372,7 +1406,7 @@
                                         (##fixnum.+ depth 1))))
                ((unquote)
                 (if (##eq? depth 1)
-                  (##comp cte (##sourcify (##cadr lst) first-src) tail?)
+                  (##comp-subexpr cte (##sourcify (##cadr lst) first-src) tail?)
                   (macro-gen ##gen-quasi-cons src
                     (macro-gen ##gen-cst-no-step first-src
                       first)
@@ -1411,10 +1445,10 @@
           (macro-gen ##gen-loc-set src
             up
             over
-            (##comp cte val-src #f)))
+            (##comp-subexpr cte val-src #f)))
         (macro-gen ##gen-glo-set src
           x
-          (##comp cte val-src #f))))))
+          (##comp-subexpr cte val-src #f))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1446,7 +1480,7 @@
               (new-cte (##cte-frame cte (##cons (macro-self-var) frame))))
           (loop1 (##append frame (##list (##car x)))
                  (##cdr lst)
-                 (##cons (##comp new-cte (##cdr x) #f)
+                 (##cons (##comp-subexpr new-cte (##cdr x) #f)
                          rev-inits)))
         (let loop2 ((frame (if (and rest-parameter dsssl-style-rest?)
                              (##append frame (##list rest-parameter))
@@ -1459,7 +1493,7 @@
                   (new-cte (##cte-frame cte (##cons (macro-self-var) frame))))
               (loop2 (##append frame (##list (##car x)))
                      (##cdr lst)
-                     (##cons (##comp new-cte (##cdr x) #f)
+                     (##cons (##comp-subexpr new-cte (##cdr x) #f)
                              rev-inits)
                      (##cons (##string->keyword (##symbol->string (##car x)))
                              rev-keys)))
@@ -1783,7 +1817,7 @@
 
   (define (letrec-defines* cte rev-vars rev-vals body)
     (if (##null? rev-vars)
-      (##comp-seq cte src tail? body)
+      (##comp-seq cte src tail? #t body)
       (##comp-letrec-aux cte
                          src
                          tail?
@@ -1859,14 +1893,14 @@
       (let ((alt-src (##sourcify (##cadddr code) src)))
         (##shape src src 4)
         (macro-gen ##gen-if3 src
-          (##comp cte pre-src #f)
-          (##comp cte con-src tail?)
-          (##comp cte alt-src tail?)))
+          (##comp-subexpr cte pre-src #f)
+          (##comp-subexpr cte con-src tail?)
+          (##comp-subexpr cte alt-src tail?)))
       (begin
         (##shape src src 3)
         (macro-gen ##gen-if2 src
-          (##comp cte pre-src #f)
-          (##comp cte con-src tail?))))))
+          (##comp-subexpr cte pre-src #f)
+          (##comp-subexpr cte con-src tail?))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1889,10 +1923,10 @@
                  (##raise-expression-parsing-exception
                   'else-clause-not-last
                   clause-src))
-               (##comp-seq cte src tail? (##cdr clause)))
+               (##comp-seq cte src tail? #t (##cdr clause)))
               ((##not (##pair? (##cdr clause)))
                (macro-gen ##gen-cond-or src
-                 (##comp cte first-src #f)
+                 (##comp-subexpr cte first-src #f)
                  (##comp-cond-aux cte src tail? (##cdr clauses))))
               (else
                (let* ((second-src (##sourcify (##cadr clause) clause-src))
@@ -1903,12 +1937,12 @@
                      (let ((third-src
                             (##sourcify (##caddr clause) clause-src)))
                        (macro-gen ##gen-cond-send src
-                         (##comp cte first-src #f)
-                         (##comp cte third-src #f)
+                         (##comp-subexpr cte first-src #f)
+                         (##comp-subexpr cte third-src #f)
                          (##comp-cond-aux cte src tail? (##cdr clauses)))))
                    (macro-gen ##gen-cond-if src
-                     (##comp cte first-src #f)
-                     (##comp-seq cte src tail? (##cdr clause))
+                     (##comp-subexpr cte first-src #f)
+                     (##comp-seq cte src tail? #t (##cdr clause))
                      (##comp-cond-aux cte src tail? (##cdr clauses)))))))))
     (macro-gen ##gen-cst-no-step src
       (##void))))
@@ -1929,9 +1963,9 @@
         (rest (##cdr lst)))
     (if (##pair? rest)
       (macro-gen ##gen-and first-src
-        (##comp cte first-src #f)
+        (##comp-subexpr cte first-src #f)
         (##comp-and-aux cte src tail? rest))
-      (##comp cte first-src tail?))))
+      (##comp-subexpr cte first-src tail?))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1949,9 +1983,9 @@
         (rest (##cdr lst)))
     (if (##pair? rest)
       (macro-gen ##gen-or first-src
-        (##comp cte first-src #f)
+        (##comp-subexpr cte first-src #f)
         (##comp-or-aux cte src tail? rest))
-      (##comp cte first-src tail?))))
+      (##comp-subexpr cte first-src tail?))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1961,7 +1995,7 @@
          (first-src (##sourcify (##cadr code) src))
          (clauses (##cddr code)))
     (macro-gen ##gen-case first-src
-      (##comp cte first-src #f)
+      (##comp-subexpr cte first-src #f)
       (let ((cte (##cte-frame cte (##list (macro-selector-var)))))
         (##comp-case-aux cte src tail? clauses)))))
 
@@ -1979,7 +2013,7 @@
                'else-clause-not-last
                clause-src))
             (macro-gen ##gen-case-else clause-src
-              (##comp-seq cte src tail? (##cdr clause))))
+              (##comp-seq cte src tail? #t (##cdr clause))))
           (let ((n (##proper-length first)))
             (if (##not n)
               (##raise-expression-parsing-exception
@@ -1987,7 +2021,7 @@
                first-src))
             (macro-gen ##gen-case-clause clause-src
               (##desourcify first-src)
-              (##comp-seq cte src tail? (##cdr clause))
+              (##comp-seq cte src tail? #t (##cdr clause))
               (##comp-case-aux cte src tail? (##cdr clauses)))))))
     (macro-gen ##gen-case-else src
       (macro-gen ##gen-cst-no-step src
@@ -2043,7 +2077,7 @@
 
 (define (##comp-vals cte src lst)
   (if (##pair? lst)
-    (##cons (##comp cte (##sourcify (##car lst) src) #f)
+    (##cons (##comp-subexpr cte (##sourcify (##car lst) src) #f)
             (##comp-vals cte src (##cdr lst)))
     '()))
 
@@ -2122,7 +2156,7 @@
       (let ((inner-cte (##cte-frame cte frame)))
         (macro-gen ##gen-let src
           frame
-          (##list (##comp cte (##car vals) #f))
+          (##list (##comp-subexpr cte (##car vals) #f))
           (##comp-let*-aux inner-cte
                            src
                            tail?
@@ -2173,8 +2207,8 @@
               (let ((cte (##cte-frame cte (##cons (macro-self-var) vars)))
                     (tail? #t))
                 (macro-gen ##gen-if3 src
-                  (##comp cte (##sourcify (##car exit) src) #f)
-                  (##comp-seq cte src tail? (##cdr exit))
+                  (##comp-subexpr cte (##sourcify (##car exit) src) #f)
+                  (##comp-seq cte src tail? #t (##cdr exit))
                   (let ((call
                          (let ((tail? (##tail-call? outer-cte tail?)))
                            (macro-gen ##gen-app-no-step src
@@ -2189,7 +2223,7 @@
                     (if (##null? (##cdddr code))
                       call
                       (macro-gen ##gen-seq src
-                        (##comp-seq cte src #f (##cdddr code))
+                        (##comp-seq cte src #f #t (##cdddr code))
                         call))))))))
         (let ((cte inner-cte)
               (tail? (##tail-call? outer-cte tail?)))
@@ -2208,7 +2242,7 @@
     (if len
       (let ((tail? (##tail-call? cte tail?)))
         (macro-gen ##gen-app src
-          (##comp cte (##sourcify (##car code) src) #f)
+          (##comp-subexpr cte (##sourcify (##car code) src) #f)
           (##comp-vals cte src (##cdr code))))
       (##raise-expression-parsing-exception
        'ill-formed-call
@@ -2220,7 +2254,7 @@
   (##shape src src 2)
   (let ((code (##source-code src)))
     (macro-gen ##gen-delay src
-      (##comp cte (##sourcify (##cadr code) src) #t))))
+      (##comp-subexpr cte (##sourcify (##cadr code) src) #t))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2228,7 +2262,7 @@
   (##shape src src 2)
   (let ((code (##source-code src)))
     (macro-gen ##gen-future src
-      (##comp cte (##sourcify (##cadr code) src) #t))))
+      (##comp-subexpr cte (##sourcify (##cadr code) src) #t))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2444,9 +2478,9 @@
 
 (define ##cprc-glo-def
   (macro-make-cprc
-   (let ((rte (##first-argument #f))) ;; avoid constant propagation of #f
-     (let ((val (macro-code-run (^ 0))))
-       (macro-define-step! (val)
+   (let ((val (macro-code-run (^ 0))))
+     (macro-define-step! (val)
+       (begin
          (##global-var-set! (^ 1) val)
          (##void))))))
 
