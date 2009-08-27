@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2009-06-14 21:04:15 feeley>
+;;; File: "_nonstd.scm", Time-stamp: <2009-08-27 16:39:26 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -54,26 +54,86 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define-prim (##deconstruct-call src size proc)
+  (let* ((code (##source-strip src))
+         (n (##proper-length code)))
+    (if (or (##not n)
+            (if (##fx< 0 size)
+                (##not (##fx= n size))
+                (##fx< n (##fx- 0 size))))
+      (##raise-expression-parsing-exception
+       'ill-formed-special-form
+       src
+       (##source-strip (##car code)))
+      (##apply proc (##cdr code)))))
+
+(define-prim (##expand-source-template src template)
+  (let ((locat (##source-locat src)))
+
+    (define (expand template)
+      (cond ((##source? template)
+             template)
+            ((##pair? template)
+             (##make-source
+              (expand-list template)
+              locat))
+            ((##vector? template)
+             (##make-source
+              (##list->vector (expand-list (##vector->list template)))
+              locat))
+            (else
+             (##make-source
+              template
+              locat))))
+
+    (define (expand-list template)
+      (cond ((or (##source? template)
+                 (##null? template))
+             template)
+            ((##pair? template)
+             (##cons (expand (##car template))
+                     (expand-list (##cdr template))))
+            (else
+             (##make-source
+              template
+              locat))))
+
+    (expand template)))
+
+(define-prim (##source-strip x)
+  (if (##source? x)
+      (##source-code x)
+      x))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define-prim (error message . parameters)
   (##raise-error-exception message parameters))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-macro (parameterize bindings body . rest)
-  (##parameterize-build
-   (##cons 'parameterize (##cons bindings (##cons body rest)))))
+(define-runtime-syntax parameterize
+  (lambda (src)
+    (##deconstruct-call
+     src
+     -2
+     (lambda (bindings . body)
+       (##expand-source-template
+        src
+        (##parameterize-build
+         src
+         bindings
+         body))))))
 
-(define-prim (##parameterize-build src)
+(define-prim (##parameterize-build src bindings body)
 
-  (define (build src bindings body rev-params-vals)
+  (define (build bindings rev-params-vals)
     (cond ((##pair? bindings)
-           (let ((binding (##car bindings)))
+           (let ((binding (##source-strip (##car bindings))))
              (##shape src (##sourcify binding src) 2)
-             (let* ((param (##car binding))
-                    (val (##cadr binding)))
-               (build src
-                      (##cdr bindings)
-                      body
+             (let* ((param (##source-strip (##car binding)))
+                    (val (##source-strip (##cadr binding))))
+               (build (##cdr bindings)
                       (##cons (##cons (##cons (##gensym) param)
                                       (##cons (##gensym) val))
                               rev-params-vals)))))
@@ -114,35 +174,41 @@
             'ill-formed-binding-list
             src))))
 
-  (build (##sourcify src (##make-source #f #f))
-         (##cadr src)
-         (##cddr src)
+  (build (##source-strip bindings)
          '()))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-macro (cond-expand first-clause . other-clauses)
-  (##cond-expand-build
-   (##cons 'cond-expand (##cons first-clause other-clauses))))
+(define-runtime-syntax cond-expand
+  (lambda (src)
+    (##deconstruct-call
+     src
+     -1
+     (lambda clauses
+       (##expand-source-template
+        src
+        (##cond-expand-build
+         src
+         clauses))))))
 
-(define-prim (##cond-expand-build src)
+(define-prim (##cond-expand-build src clauses)
 
-  (define (satisfied? src feature-requirement)
+  (define (satisfied? feature-requirement)
     (cond ((##symbol? feature-requirement)
            (if (##member feature-requirement ##cond-expand-features)
              #t
              #f))
           ((##pair? feature-requirement)
-           (let ((first (##car feature-requirement)))
+           (let ((first (##source-strip (##car feature-requirement))))
              (cond ((##eq? first 'not)
                     (##shape src (##sourcify feature-requirement src) 2)
-                    (##not (satisfied? src (##cadr feature-requirement))))
+                    (##not (satisfied? (##source-strip (##cadr feature-requirement)))))
                    ((or (##eq? first 'and) (##eq? first 'or))
                     (##shape src (##sourcify feature-requirement src) -1)
                     (let loop ((lst (##cdr feature-requirement)))
                       (if (##pair? lst)
-                        (let ((x (##car lst)))
-                          (if (##eq? (satisfied? src x) (##eq? first 'and))
+                        (let ((x (##source-strip (##car lst))))
+                          (if (##eq? (satisfied? x) (##eq? first 'and))
                             (loop (##cdr lst))
                             (##not (##eq? first 'and))))
                         (##eq? first 'and))))
@@ -159,24 +225,23 @@
              src
              '())))))
 
-  (define (build src clauses)
+  (define (build clauses)
     (if (##pair? clauses)
-      (let ((clause (##car clauses)))
+      (let ((clause (##source-strip (##car clauses))))
         (##shape src (##sourcify clause src) -1)
-        (let ((feature-requirement (##car clause)))
+        (let ((feature-requirement (##source-strip (##car clause))))
           (if (or (and (##eq? feature-requirement 'else)
                        (##null? (##cdr clauses)))
-                  (satisfied? src feature-requirement))
+                  (satisfied? feature-requirement))
             (##cons 'begin (##cdr clause))
-            (build src (##cdr clauses)))))
+            (build (##cdr clauses)))))
       (macro-raise
        (macro-make-expression-parsing-exception
         'unfulfilled-cond-expand
         src
         '()))))
 
-  (build (##sourcify src (##make-source #f #f))
-         (##cdr src)))
+  (build clauses))
 
 (##define-macro (generate-cond-expand-features)
 
@@ -211,10 +276,17 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-macro (receive formals expression first-body . other-body)
-  `(##call-with-values
-    (lambda () ,expression)
-    (lambda ,formals ,first-body ,@other-body)))
+(define-runtime-syntax receive
+  (lambda (src)
+    (##deconstruct-call
+     src
+     -4
+     (lambda (formals expression . body)
+       (##expand-source-template
+        src
+        `(##call-with-values
+          (lambda () ,expression)
+          (lambda ,formals ,@body)))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
