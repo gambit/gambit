@@ -1,10 +1,12 @@
 .hgignore
 .hgtags
 .hg
+bin/gambc-cc.bat
+bin/gambc-cc.bat.unix
+bin/gambc-cc.bat.windows
 bin/gambc-doc.bat
 bin/gambc-doc.bat.unix
 bin/gambc-doc.bat.windows
-bin/gsc-cc-o.bat
 bin/gsc-script
 bin/gsc-script.bat
 bin/gsi-script
