@@ -3692,6 +3692,20 @@ cause the stack to overflow when performing long iterations with tail
 calls (whether they are expressed with a @code{letrec}, named
 @code{let}, @code{do}, or other form).
 
+@item (@r{[}not@r{]} optimize-dead-local-variables)
+@opindex optimize-dead-local-variables
+Remove (or preserve) the dead local variables in the environment.
+Preserving the dead local variables is useful for debugging because
+continuations will contain the dead variables.  Thus, if the code is
+also compiled with the @samp{-debug} or @samp{-debug-environments}
+options the @samp{,e}, @samp{,ed}, @samp{,be}, and @samp{,bed} REPL
+commands will display the dead variables.  On the other hand,
+preserving the dead local variables may change the space complexity of
+the program (i.e. some of the data that would normally be reclaimed by
+the garbage collector will not be).  Note that due to other compiler
+optimizations some dead local variables may be removed regardless of
+this declaration.
+
 @item (@var{number-type} @var{primitive}@dots{})
 @opindex generic
 @opindex fixnum
@@ -3732,6 +3746,7 @@ The default declarations used by the compiler are equivalent to:
   (safe)
   (interrupts-enabled)
   (proper-tail-calls)
+  (optimize-dead-local-variables)
   (generic)
   (mostly-fixnum-flonum)
 )

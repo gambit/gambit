@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2009-07-31 10:57:48 feeley>
+;;; File: "_front.scm", Time-stamp: <2009-08-25 18:58:26 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -1172,13 +1172,19 @@
         (write (string->canonical-symbol (prc-name proc)) info-port)
         (write "unknown" info-port)))
     (set! *bb* (proc-info-bb proc-info))
-    (let ((lbl (bb-lbl-num *bb*))
-          (live (varset-union (bound-free-variables (prc-body proc))
-                              ret-var-set)))
+    (let ((lbl (bb-lbl-num *bb*)))
       (restore-context (proc-info-context proc-info))
       (gen-node (prc-body proc)
-                ret-var-set
+                (varset-union (proc-body-live-varset proc)
+                              ret-var-set)
                 (make-reason-tail)))))
+
+(define (proc-body-live-varset proc)
+  (let* ((body (prc-body proc))
+         (env (node-env body)))
+    (if (optimize-dead-local-variables? env)
+        (varset-empty)
+        (list->varset (prc-parms proc)))))
 
 (define (schedule-gen-proc proc closed-list)
   (let* ((lbl1 (bbs-new-lbl! *bbs*)) ; arg check entry point
@@ -1188,7 +1194,8 @@
          (frame-lbl1 (context->frame
                       context-lbl1
                       (varset-union (bound-free-variables (prc-body proc))
-                                    ret-var-set)))
+                                    (varset-union (proc-body-live-varset proc)
+                                                  ret-var-set))))
          (frame-lbl2 frame-lbl1)
          (bb1 (make-bb
                 (make-label-entry
@@ -1305,22 +1312,25 @@
 
 (define (gen-node node live reason)
 
-  ;;  (display "------------------ gen-node: ")
-  ;;  (pp (parse-tree->expression node))
-  ;;  (display "live: ")
-  ;;  (pp (map var-name (varset->list live)))
-  ;;  (display "regs  : ")
-  ;;  (pp (map (lambda (x) (if (var? x) (var-name x) x)) regs))
-  ;;  (display "slots : ")
-  ;;  (pp (map (lambda (x) (if (var? x) (var-name x) x)) slots))
-  ;;  (display "closed: ")
-  ;;  (pp (map (lambda (x) (if (var? x) (var-name x) x)) closed))
-  ;;  (display "reason: ")
-  ;;  (pp (cond ((reason-tail? reason) 'tail)
-  ;;            ((reason-need? reason) 'need)
-  ;;            ((reason-side? reason) 'side)
-  ;;            ((reason-pred? reason) 'pred)
-  ;;            (else '???)))
+  #;
+  (begin
+    (display "------------------ gen-node: ")
+    (newline)
+    (pp (parse-tree->expression node))
+    (display "live: ")
+    (pp (map var-name (varset->list live)))
+    (display "regs  : ")
+    (pp (map (lambda (x) (if (var? x) (var-name x) x)) regs))
+    (display "slots : ")
+    (pp (map (lambda (x) (if (var? x) (var-name x) x)) slots))
+    (display "closed: ")
+    (pp (map (lambda (x) (if (var? x) (var-name x) x)) closed))
+    (display "reason: ")
+    (pp (cond ((reason-tail? reason) 'tail)
+              ((reason-need? reason) 'need)
+              ((reason-side? reason) 'side)
+              ((reason-pred? reason) 'pred)
+              (else '???))))
 
   (cond ((cst? node)
          (gen-return node live reason (make-obj (cst-val node))))
@@ -2691,7 +2701,7 @@
              (prc-req-and-opt-parms-only? oper)
              (= (length (prc-parms oper)) nb-args))
 
-      (gen-let (prc-parms oper) args (prc-body oper) live reason)
+      (gen-let oper args live reason)
 
       (let ((proc (app->specialized-proc node)))
         (if (and proc
@@ -2815,7 +2825,7 @@
                    in-reg))
                  (live-after
                   (if (reason-tail? reason2)
-                    (varset-remove live ret-var)
+                    (varset-empty)
                     live))
                  (live-vars-at-each-reg
                   (compute-live-vars-at-each-expr
@@ -3397,11 +3407,14 @@
 ;;
 ;; generate code for a 'let' or 'letrec'
 
-(define (gen-let vars vals node live reason)
-  (let ((var-val-map (pair-up vars vals))
-        (var-set (list->varset vars))
-        (all-live
-         (varset-union-multi
+(define (gen-let proc vals live reason)
+  (let* ((live (varset-union live (proc-body-live-varset proc)))
+         (vars (prc-parms proc))
+         (node (prc-body proc))
+         (var-val-map (pair-up vars vals))
+         (var-set (list->varset vars))
+         (all-live
+          (varset-union-multi
            (cons live
                  (cons (bound-free-variables node)
                        (map bound-free-variables vals))))))

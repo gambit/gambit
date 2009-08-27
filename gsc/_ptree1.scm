@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2009-06-07 20:28:06 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2009-08-14 15:23:09 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -424,6 +424,11 @@
 ;;
 ;; (proper-tail-calls)                 generate proper tail calls
 ;; (not proper-tail-calls)             don't generate proper tail calls
+;;
+;; Optimizing dead local variables declarations:
+;;
+;; (optimize-dead-local-variables)     optimize dead local variables
+;; (not optimize-dead-local-variables) don't optimize dead local variables
 
 (define-flag-decl ieee-scheme-sym   'dialect)
 (define-flag-decl r4rs-scheme-sym   'dialect)
@@ -457,6 +462,8 @@
 (define-boolean-decl environment-map-sym)
 
 (define-boolean-decl proper-tail-calls-sym)
+
+(define-boolean-decl optimize-dead-local-variables-sym)
 
 (define (scheme-dialect env) ; returns dialect in effect
   (declaration-value 'dialect #f gambit-scheme-sym env))
@@ -518,6 +525,9 @@
 
 (define (proper-tail-calls? env) ; true iff proper tail calls should be generated
   (declaration-value proper-tail-calls-sym #f #t env))
+
+(define (optimize-dead-local-variables? env) ; true iff dead local variables should be optimized
+  (declaration-value optimize-dead-local-variables-sym #f #t env))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_parms.scm", Time-stamp: <2008-09-12 12:36:54 feeley>
+;;; File: "_parms.scm", Time-stamp: <2009-08-14 15:20:28 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -112,6 +112,8 @@
 (define environment-map-sym    (string->canonical-symbol "environment-map"))
 
 (define proper-tail-calls-sym  (string->canonical-symbol "proper-tail-calls"))
+
+(define optimize-dead-local-variables-sym (string->canonical-symbol "optimize-dead-local-variables"))
 
 (define generic-sym            (string->canonical-symbol "generic"))
 (define fixnum-sym             (string->canonical-symbol "fixnum"))
