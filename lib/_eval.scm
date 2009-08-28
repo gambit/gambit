@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-08-19 12:26:02 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-08-28 15:04:39 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3735,24 +3735,24 @@
     (##read-datum-or-eof re)))
 
 (define (##load
-         path
+         path-or-settings
          script-callback
          clone-cte?
          raise-os-exception?
-         quiet?
-         #!optional
-         (settings (macro-absent-obj)))
+         quiet?)
 
   (define (raise-os-exception-if-needed x)
     (if (and (##fixnum? x)
              raise-os-exception?)
-      (##raise-os-exception #f x load path settings)
+      (##raise-os-exception #f x load path-or-settings)
       x))
 
-  (define (load-source source-path)
+  (define (load-source psettings source-path)
+    (macro-psettings-path-set! psettings source-path)
     (let ((x
-           (##read-all-as-a-begin-expr-from-path
-            source-path
+           (##read-all-as-a-begin-expr-from-psettings
+            psettings
+            path-or-settings
             (##current-readtable)
             ##wrap-datum
             ##unwrap-datum)))
@@ -3771,8 +3771,8 @@
 
       (define (raise-error code)
         (if (##fixnum? code)
-             (##raise-os-exception #f code load path settings)
-             (##raise-os-exception code #f load path settings)))
+            (##raise-os-exception #f code load path-or-settings)
+            (##raise-os-exception code #f load path-or-settings)))
 
       (cond ((##not (##vector? result))
              (raise-error result))
@@ -3785,9 +3785,9 @@
                (##execute-modules exec-vector 0)
                abs-path)))))
 
-  (define (load-no-ext)
+  (define (load-no-ext psettings path)
     (let* ((src-path (##path-expand path))
-           (result (load-source src-path)))
+           (result (load-source psettings src-path)))
       (if (##not (##fixnum? result))
           result
           (let loop1 ((version 1)
@@ -3830,7 +3830,7 @@
                                            (macro-time-point
                                             (macro-file-info-last-modification-time
                                              src-file-info))))
-                                      (let ((x (load-source src-file-path)))
+                                      (let ((x (load-source psettings src-file-path)))
                                         (if (##fixnum? x)
                                             (raise-os-exception-if-needed result)
                                             x))
@@ -3853,14 +3853,27 @@
                         (and (##char>=? c #\0) (##char<=? c #\9)
                              (loop (##fixnum.- i 1)))))))))))
 
-  (let ((ext (##path-extension path)))
-    (cond ((##string=? ext "")
-           (load-no-ext))
-          ((binary-extension? ext)
-           (let ((expanded-path (##path-expand path)))
-             (load-binary expanded-path)))
-          (else
-           (raise-os-exception-if-needed (load-source path))))))
+  (define (fail)
+    (##fail-check-string-or-settings 1 load path-or-settings))
+
+  (##make-input-path-psettings
+   (if (##string? path-or-settings)
+       (##list 'path: path-or-settings)
+       path-or-settings)
+   fail
+   (lambda (psettings)
+     (let ((path (macro-psettings-path psettings)))
+       (if (##not path)
+           (fail)
+           (let ((ext (##path-extension path)))
+             (cond ((##string=? ext "")
+                    (load-no-ext psettings path))
+                   ((binary-extension? ext)
+                    (let ((expanded-path (##path-expand path)))
+                      (load-binary expanded-path)))
+                   (else
+                    (raise-os-exception-if-needed
+                     (load-source psettings path))))))))))
 
 (define ##load-source-if-more-recent #f)
 (set! ##load-source-if-more-recent #t)
@@ -3907,18 +3920,13 @@
                            (loop (##cdr lst)))))))
              result)))))
 
-(define (load
-         path
-         #!optional
-         (settings (macro-absent-obj)))
-  (macro-force-vars (path settings)
-    (macro-check-string path 1 (load path settings)
-      (##load path
-              (lambda (script-line script-path) #f)
-              #t
-              #t
-              #f
-              settings))))
+(define (load path-or-settings)
+  (macro-force-vars (path-or-settings)
+    (##load path-or-settings
+            (lambda (script-line script-path) #f)
+            #t
+            #t
+            #f)))
 
 ;;;----------------------------------------------------------------------------
 

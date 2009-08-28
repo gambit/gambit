@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-08-06 13:41:26 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-08-28 15:02:43 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -4636,31 +4636,59 @@
               readtable
               wrap
               unwrap)
-  (##open-file-generic
-   (macro-direction-in)
-   #f
-   (lambda (port)
-     (if (##fixnum? port)
-       port
-       (let* ((extension
-               (##path-extension path))
-              (start-syntax
-               (let ((x (##assoc extension ##scheme-file-extensions)))
-                 (if x
-                   (##cdr x)
-                   (macro-readtable-start-syntax readtable)))))
-         (##read-all-as-a-begin-expr-from-port
-          port
-          readtable
-          wrap
-          unwrap
-          start-syntax
-          #t))))
-   open-input-file
-   (##list path:
-           path
-           input-eol-encoding:
-           'cr-lf)))
+
+  (define (fail)
+    (##fail-check-string 1 open-input-file path))
+
+  (##make-input-path-psettings
+   (##list 'path: path)
+   fail
+   (lambda (psettings)
+     (let ((path (macro-psettings-path psettings)))
+       (if (##not path)
+           (fail)
+           (##read-all-as-a-begin-expr-from-psettings
+            psettings
+            path
+            readtable
+            wrap
+            unwrap))))))
+
+(define-prim (##read-all-as-a-begin-expr-from-psettings
+              psettings
+              path-or-settings
+              readtable
+              wrap
+              unwrap)
+
+  (define (fail)
+    (##fail-check-string-or-settings 1 open-input-file path-or-settings))
+
+  (let ((path (macro-psettings-path psettings)))
+    (if (##not path)
+        (fail)
+        (##open-file-generic-from-psettings
+         psettings
+         #f
+         (lambda (port)
+           (if (##fixnum? port)
+               port
+               (let* ((extension
+                       (##path-extension path))
+                      (start-syntax
+                       (let ((x (##assoc extension ##scheme-file-extensions)))
+                         (if x
+                             (##cdr x)
+                             (macro-readtable-start-syntax readtable)))))
+                 (##read-all-as-a-begin-expr-from-port
+                  port
+                  readtable
+                  wrap
+                  unwrap
+                  start-syntax
+                  #t))))
+         open-input-file
+         path-or-settings))))
 
 (define-prim (##read-all-as-a-begin-expr-from-port
               port
@@ -7081,6 +7109,27 @@
    fail
    succeed))
 
+(define-prim (##make-input-path-psettings
+              settings
+              fail
+              succeed)
+  (##make-psettings
+   (macro-direction-in)
+   '(path:
+     input-char-encoding:
+     char-encoding:
+     input-char-encoding-errors:
+     char-encoding-errors:
+     input-eol-encoding:
+     eol-encoding:
+     input-buffering:
+     buffering:
+     input-readtable:
+     readtable:)
+   settings
+   fail
+   succeed))
+
 (define-prim (##open-file-generic
               direction
               raise-os-exception?
@@ -7102,23 +7151,41 @@
    (lambda (psettings)
      (let ((path (macro-psettings-path psettings)))
        (if (##not (##string? path))
-         (fail)
-         (let* ((expanded-path
-                 (##path-expand path))
-                (device
-                 (##os-device-stream-open-path
-                  expanded-path
-                  (##psettings->device-flags psettings)
-                  (##psettings->permissions psettings #o666))))
-           (if (##fixnum? device)
-             (if raise-os-exception?
-               (##raise-os-exception #f device prim path-or-settings arg2)
-               (cont device))
-             (cont
-              (##make-device-port-from-single-device
-               expanded-path
-               device
-               psettings)))))))))
+           (fail)
+           (##open-file-generic-from-psettings
+            psettings
+            raise-os-exception?
+            cont
+            prim
+            path-or-settings
+            arg2))))))
+
+(define-prim (##open-file-generic-from-psettings
+              psettings
+              raise-os-exception?
+              cont
+              prim
+              path-or-settings
+              #!optional
+              (arg2 (macro-absent-obj)))
+  (let* ((path
+          (macro-psettings-path psettings))
+         (expanded-path
+          (##path-expand path))
+         (device
+          (##os-device-stream-open-path
+           expanded-path
+           (##psettings->device-flags psettings)
+           (##psettings->permissions psettings #o666))))
+    (if (##fixnum? device)
+        (if raise-os-exception?
+            (##raise-os-exception #f device prim path-or-settings arg2)
+            (cont device))
+        (cont
+         (##make-device-port-from-single-device
+          expanded-path
+          device
+          psettings)))))
 
 (define-prim (##path-reference path relative-to-path)
   (##path-expand

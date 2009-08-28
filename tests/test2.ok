@@ -1177,7 +1177,7 @@ A(write-char #\A '#<output-port #7 (stdout)>) => #!void
 ;;; (Argument 2) Character OUTPUT PORT expected: (write-char #\A '#<input-port #6 (stdin)>)
 ;;; (Argument 2) Character OUTPUT PORT expected: (write-char #\A #f)
 ;;; No such file or directory: (load "noexist")
-;;; (Argument 1) STRING expected: (load #f)
+;;; (Argument 1) STRING or port settings expected: (load #f)
 ;;; (Argument 1) STRING expected: (transcript-on #f)
 (transcript-off) => #!void
 (setenv "UNKNOWNVAR1") => #!void
