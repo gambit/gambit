@@ -46,6 +46,10 @@
 #return(##cprc-loc-ref 1) : ($code rte)
 #procedure(##cprc-loc-ref 2)
 
+#procedure(##cprc-loc-ref-box)
+#return(##cprc-loc-ref-box 1) : ($code rte)
+#procedure(##cprc-loc-ref-box 2)
+
 #procedure(##cprc-glo-ref)
 #return(##cprc-glo-ref 1) : ($code rte)
 #procedure(##cprc-glo-ref 2)
@@ -55,6 +59,11 @@
 #return(##cprc-loc-set 1) : ($code rte)
 #return(##cprc-loc-set 2) : ($code rte)
 #procedure(##cprc-loc-set 3)
+
+#procedure(##cprc-loc-set-box)
+#return(##cprc-loc-set-box 1) : ($code rte)
+#return(##cprc-loc-set-box 2) : ($code rte)
+#procedure(##cprc-loc-set-box 3)
 
 #procedure(##cprc-glo-set)
 #return(##cprc-glo-set 1) : ($code rte)

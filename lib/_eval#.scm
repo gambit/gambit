@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_eval#.scm", Time-stamp: <2007-05-27 22:22:01 feeley>
+;;; File: "_eval#.scm", Time-stamp: <2009-09-03 16:40:20 feeley>
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -187,6 +187,9 @@
 
 (##define-macro (macro-make-rte rte . lst)
   `(##vector ,rte ,@lst))
+
+(##define-macro (macro-make-rte-from-list rte lst)
+  `(##list->vector (##cons ,rte ,lst)))
 
 (##define-macro (macro-make-rte* rte ns)
   `(let (($rte (##make-vector (##fixnum.+ ,ns 1) '#!unbound)))

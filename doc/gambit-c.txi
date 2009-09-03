@@ -2281,6 +2281,9 @@ created by interpreted code or code compiled with the @samp{-debug} or
 considerations and compiler optimizations, some of the lexical
 variable bindings may be missing.  Lexical variable bindings are
 displayed using the format @samp{@var{variable} = @var{expression}}
+(when @var{variable} is mutable) or @samp{@var{variable} == @var{expression}}
+(when @var{variable} is immutable, which may happen in compiled code
+due to compiler optimization)
 and dynamically-bound parameter bindings are displayed using the
 format @samp{(@var{parameter}) = @var{expression}}.  Note that
 @var{expression} can be a self-evaluating expression (number, string,
@@ -8520,6 +8523,7 @@ the possible return values:
 @item @code{ill-formed-namespace-prefix}      @tab Ill-formed namespace prefix
 @item @code{namespace-prefix-must-be-string}  @tab Namespace prefix must be a string
 @item @code{macro-used-as-variable}           @tab Macro name can't be used as a variable
+@item @code{variable-is-immutable}            @tab Variable is immutable
 @item @code{ill-formed-macro-transformer}     @tab Macro transformer must be a lambda expression
 @item @code{reserved-used-as-variable}        @tab Reserved identifier can't be used as a variable
 @item @code{ill-formed-special-form}          @tab Ill-formed special form

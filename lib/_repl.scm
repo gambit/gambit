@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-08-03 19:20:21 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-09-03 15:17:22 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -28,9 +28,12 @@
            #f)
           ((##cte-frame? c)
            (let ((vars (##cte-frame-vars c)))
-             (if (and (##pair? vars) (##eq? (##car vars) (macro-self-var)))
-               (macro-rte-ref r 1)
-               (loop (##cte-parent-cte c) (macro-rte-up r)))))
+             (if (and (##pair? vars)
+                      (let ((var (##car vars)))
+                        (and (##var-i? var)
+                             (##eq? (##var-i-name var) (macro-self-var)))))
+                 (macro-rte-ref r 1)
+                 (loop (##cte-parent-cte c) (macro-rte-up r)))))
           (else
            (loop (##cte-parent-cte c) r)))))
 
@@ -65,11 +68,14 @@
     (let loop1 ((c (macro-code-cte $code)) (up up))
       (cond ((##cte-frame? c)
              (if (##fixnum.= up 0)
-               (let loop2 ((vars (##cte-frame-vars c)) (i over))
-                 (if (##fixnum.< i 2)
-                   (##car vars)
-                   (loop2 (##cdr vars) (##fixnum.- i 1))))
-               (loop1 (##cte-parent-cte c) (##fixnum.- up 1))))
+                 (let loop2 ((vars (##cte-frame-vars c)) (i over))
+                   (if (##fixnum.< i 2)
+                       (let ((var (##car vars)))
+                         (if (##var-i? var)
+                             (##var-i-name var)
+                             (##var-c-name var)))
+                       (loop2 (##cdr vars) (##fixnum.- i 1))))
+                 (loop1 (##cte-parent-cte c) (##fixnum.- up 1))))
             (else
              (loop1 (##cte-parent-cte c) up))))))
 
@@ -462,9 +468,11 @@
       (##cons ##cprc-loc-ref-2-2 (mk-degen () (degen ##degen-loc-ref-x-y 2 2)))
       (##cons ##cprc-loc-ref-2-3 (mk-degen () (degen ##degen-loc-ref-x-y 2 3)))
       (##cons ##cprc-loc-ref     ##degen-loc-ref)
+      (##cons ##cprc-loc-ref-box ##degen-loc-ref)
       (##cons ##cprc-glo-ref     ##degen-glo-ref)
 
       (##cons ##cprc-loc-set     ##degen-loc-set)
+      (##cons ##cprc-loc-set-box ##degen-loc-set)
       (##cons ##cprc-glo-set     ##degen-glo-set)
       (##cons ##cprc-glo-def     ##degen-glo-def)
 
@@ -689,7 +697,12 @@
              (if (##pair? vars)
                  (let ((var (##car vars)))
                    (if (and (##not (##hidden-local-var? var))
-                            (##eq? (##vector-ref r i) obj))
+                            (let ((val-or-box (##vector-ref r i)))
+                              (##eq? obj
+                                     (if (and (##var-c? var)
+                                              (##var-c-boxed? var))
+                                         (##unbox val-or-box)
+                                         val-or-box))))
                        var
                        (loop2 (##cdr vars)
                               (##fixnum.+ i 1))))
@@ -704,9 +717,10 @@
 ;; Internal variables and parameters are uninteresting for the user.
 
 (define-prim (##hidden-local-var? var)
-  (or (##eq? var (macro-self-var))
-      (##eq? var (macro-selector-var))
-      (##eq? var (macro-do-loop-var))))
+  (and ;; (##var-i? var) test is redundant
+       (or (##eq? var (macro-self-var))
+           (##eq? var (macro-selector-var))
+           (##eq? var (macro-do-loop-var)))))
 
 (define-prim (##hidden-parameter? param)
   (or (##eq? param ##trace-depth)
@@ -770,6 +784,7 @@
           (##eq? parent ##repl-within)
           (##eq? parent ##eval-within)
           (##eq? parent ##with-no-result-expected)
+          (##eq? parent ##with-no-result-expected-toplevel)
           (##eq? parent ##check-heap)
           (##eq? parent ##nontail-call-for-leap)
           (##eq? parent ##nontail-call-for-step)
@@ -811,10 +826,17 @@
          (##procedure-locat (##continuation-ret cont)))))
 
 (define-prim (##interp-continuation-code cont)
-  (##cdr (##continuation-locals cont '$code)))
+  (##local->value (##continuation-locals cont '$code)))
 
 (define-prim (##interp-continuation-rte cont)
-  (##cdr (##continuation-locals cont 'rte)))
+  (##local->value (##continuation-locals cont 'rte)))
+
+(define-prim (##local->value x)
+  (let ((var-c (##car x))
+        (val-or-box (##cdr x)))
+    (if (##var-c-boxed? var-c)
+        (##unbox val-or-box)
+        val-or-box)))
 
 (define-prim (##interesting-continuation? cont)
   (or ##show-all-continuations?
@@ -860,96 +882,85 @@
   (let* ((parent-info (##subprocedure-parent-info proc))
          (info (##subprocedure-info proc)))
     (if (and parent-info info)
-      (let ((var-descrs (##vector-ref parent-info 1)))
-        (let loop1 ((j 2) (result '()))
-          (if (##fixnum.< j (##vector-length info))
-            (let* ((descr
-                    (##vector-ref info j))
-                   (slot-index
-                    (##fixnum.quotient descr 32768))
-                   (var-descr-index
-                    (##fixnum.quotient (##fixnum.modulo descr 32768) 2))
-                   (var-descr
-                    (##vector-ref var-descrs var-descr-index))
-                   (val1
-                    (if (##eq? cont (macro-absent-obj))
-                      #f
-                      (let ((val (##continuation-ref cont slot-index)))
-                        (if (##fixnum.= (##fixnum.modulo descr 2) 0)
-                          val
-                          (##unbox val))))))
-              (if (##pair? var-descr)
-                (let loop2 ((lst var-descr) (result result))
-                  (if (##pair? lst)
-                    (let* ((descr
-                            (##car lst))
-                           (slot-index
-                            (##fixnum.quotient descr 32768))
-                           (var-descr-index
-                            (##fixnum.quotient (##fixnum.modulo descr 32768) 2))
-                           (var-descr
-                            (##vector-ref var-descrs var-descr-index))
-                           (val2
-                            (if (##eq? cont (macro-absent-obj))
-                              #f
-                              (let ((val (##closure-ref val1 slot-index)))
-                                (if (##fixnum.= (##fixnum.modulo descr 2) 0)
-                                  val
-                                  (##unbox val))))))
-                      (if (##eq? cont (macro-absent-obj))
-                        (loop2 (##cdr lst)
-                               (##cons var-descr result))
-                        (if (##eq? var (macro-absent-obj))
-                          (loop2 (##cdr lst)
-                                 (##cons (##cons var-descr val2) result))
-                          (if (##eq? var var-descr)
-                            (##cons var-descr val2)
-                            (loop2 (##cdr lst)
-                                   result)))))
-                    (loop1 (##fixnum.+ j 1)
-                           result)))
-                (if (##eq? cont (macro-absent-obj))
-                  (loop1 (##fixnum.+ j 1)
-                         (##cons var-descr result))
-                  (if (##eq? var (macro-absent-obj))
-                    (loop1 (##fixnum.+ j 1)
-                           (##cons (##cons var-descr val1) result))
-                    (if (##eq? var var-descr)
-                      (##cons var-descr val1)
-                      (loop1 (##fixnum.+ j 1)
-                             result))))))
-            result)))
-      #f)))
+        (let ((var-descrs (##vector-ref parent-info 1)))
+          (let loop1 ((j 2) (result '()))
+            (if (##fixnum.< j (##vector-length info))
+                (let* ((descr
+                        (##vector-ref info j))
+                       (slot-index
+                        (##fixnum.quotient descr 32768))
+                       (var-descr-index
+                        (##fixnum.quotient
+                         (##fixnum.modulo descr 32768)
+                         2))
+                       (var-descr
+                        (##vector-ref var-descrs var-descr-index))
+                       (val-or-box1
+                        (if (##eq? cont (macro-absent-obj))
+                            #f
+                            (##continuation-ref cont slot-index))))
 
-;;;----------------------------------------------------------------------------
+                  (define (get-var1)
+                    (##cons (##var-c var-descr
+                                     (##fixnum.=
+                                      (##fixnum.modulo descr 2)
+                                      1))
+                            val-or-box1))
 
-;;; Access to run time environments
+                  (if (##pair? var-descr)
 
-(define-prim (##rte-shape $code)
+                      (let loop2 ((lst var-descr) (result result))
+                        (if (##pair? lst)
+                            (let* ((descr
+                                    (##car lst))
+                                   (slot-index
+                                    (##fixnum.quotient descr 32768))
+                                   (var-descr-index
+                                    (##fixnum.quotient
+                                     (##fixnum.modulo descr 32768)
+                                     2))
+                                   (var-descr
+                                    (##vector-ref var-descrs var-descr-index)))
 
-  (define (get-shape cte)
-    (cond ((##cte-top? cte)
-           #f)
-          ((##cte-frame? cte)
-           (##list->vector
-             (##cons (get-shape (##cte-parent-cte cte))
-                     (##cte-frame-vars cte))))
-          (else
-           (get-shape (##cte-parent-cte cte)))))
+                              (define (get-var2)
+                                (##cons (##var-c var-descr
+                                                 (##fixnum.=
+                                                  (##fixnum.modulo descr 2)
+                                                  1))
+                                        (##closure-ref val-or-box1
+                                                       slot-index)))
 
-  (get-shape (macro-code-cte $code)))
+                              (cond ((##eq? cont (macro-absent-obj))
+                                     (loop2 (##cdr lst)
+                                            (##cons var-descr
+                                                    result)))
+                                    ((##eq? var (macro-absent-obj))
+                                     (loop2 (##cdr lst)
+                                            (##cons (get-var2)
+                                                    result)))
+                                    (else
+                                     (if (##eq? var var-descr)
+                                         (get-var2)
+                                         (loop2 (##cdr lst)
+                                                result)))))
+                            (loop1 (##fixnum.+ j 1)
+                                   result)))
 
-(define-prim (##rte-var-ref rte up over)
-  (let loop ((r rte) (i up))
-    (if (##fixnum.< 0 i)
-      (loop (macro-rte-up r) (##fixnum.- i 1))
-      (##vector-ref r over))))
-
-(define-prim (##rte-var-set! rte up over val)
-  (let loop ((r rte) (i up))
-    (if (##fixnum.< 0 i)
-      (loop (macro-rte-up r) (##fixnum.- i 1))
-      (##vector-set! r over val))))
+                      (cond ((##eq? cont (macro-absent-obj))
+                             (loop1 (##fixnum.+ j 1)
+                                    (##cons var-descr
+                                            result)))
+                            ((##eq? var (macro-absent-obj))
+                             (loop1 (##fixnum.+ j 1)
+                                    (##cons (get-var1)
+                                            result)))
+                            (else
+                             (if (##eq? var var-descr)
+                                 (get-var1)
+                                 (loop1 (##fixnum.+ j 1)
+                                        result))))))
+                result)))
+        #f)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1204,10 +1215,33 @@
     obj
     (##list 'quote obj)))
 
-(define (##display-var-val var val cte indent port)
+(define (##display-var-val var val-or-box cte indent port)
+  (cond ((##var-i? var)
+         (##display-var-val-aux (##var-i-name var)
+                                val-or-box
+                                #t
+                                cte
+                                indent
+                                port))
+        ((##var-c-boxed? var)
+         (##display-var-val-aux (##var-c-name var)
+                                (##unbox val-or-box)
+                                #t
+                                cte
+                                indent
+                                port))
+        (else
+         (##display-var-val-aux (##var-c-name var)
+                                val-or-box
+                                #f
+                                cte
+                                indent
+                                port))))
+
+(define (##display-var-val-aux var val mutable? cte indent port)
   (##display-spaces indent port)
   (##write var port)
-  (##write-string " = " port)
+  (##write-string (if mutable? " = " " == ") port)
   (##write-string
    (##object->string
     (if (##cte-top? cte)
@@ -1228,7 +1262,8 @@
              (if (##pair? vars)
                  (let ((var (##car vars)))
                    (if (##not (##hidden-local-var? var))
-                       (##display-var-val var (##car vals) c indent port))
+                       (let ((val-or-box (##car vals)))
+                         (##display-var-val var val-or-box c indent port)))
                    (loop2 (##cdr vars)
                           (##cdr vals)))
                  (loop1 (##cte-parent-cte c)
@@ -1240,9 +1275,9 @@
 (define (##display-vars lst cte indent port)
   (let loop ((lst lst))
     (if (##pair? lst)
-        (let* ((var-val (##car lst))
-               (var (##car var-val))
-               (val (##cdr var-val)))
+        (let* ((loc (##car lst))
+               (var (##car loc))
+               (val (##cdr loc)))
           (##display-var-val var val cte indent port)
           (loop (##cdr lst))))))
 
@@ -1257,9 +1292,8 @@
                (param (##car param-val))
                (val (##cdr param-val)))
           (if (##not (##hidden-parameter? param))
-              (let ((x
-                     (##inverse-eval-in-env param cte)))
-                (##display-var-val (##list x) val cte indent port)))
+              (let ((x (##inverse-eval-in-env param cte)))
+                (##display-var-val-aux (##list x) val #t cte indent port)))
           (loop (##cdr lst))))))
 
 (define-prim (##display-continuation-environment cont port indent)
@@ -1821,6 +1855,15 @@
    execute-body
    other))
 
+(define-prim (##step-handler-continuation? cont)
+  (##eq? (##continuation-parent cont) ##step-handler))
+
+(define-prim (##with-no-result-expected-continuation? cont)
+  (##eq? (##continuation-parent cont) ##with-no-result-expected))
+
+(define-prim (##with-no-result-expected-toplevel-continuation? cont)
+  (##eq? (##continuation-parent cont) ##with-no-result-expected-toplevel))
+
 (define-prim (##step-handler-get-command $code rte)
   (##repl
    (lambda (first output-port)
@@ -2267,12 +2310,18 @@
 
 (define ##repl #f)
 (set! ##repl
-  (lambda (#!optional (write-reason #f) (reason #f))
-    (##continuation-capture
-     (lambda (cont)
-       (##repl-within cont write-reason reason)))))
+  (lambda (#!optional (write-reason #f) (reason #f) (toplevel? #f))
 
-(define-prim (##repl-debug #!optional (write-reason #f) (no-result? #f))
+    (define (repl)
+      (##continuation-capture
+       (lambda (cont)
+         (##repl-within cont write-reason reason))))
+
+    (if toplevel?
+        (##with-no-result-expected-toplevel (lambda () (repl)))
+        (repl))))
+
+(define-prim (##repl-debug #!optional (write-reason #f) (toplevel? #f))
   (let* ((old-setting
           (##set-debug-settings!
            (##fixnum.+ (macro-debug-settings-error-mask)
@@ -2280,9 +2329,7 @@
            (##fixnum.+ (macro-debug-settings-error-repl)
                        (macro-debug-settings-user-intr-repl))))
          (results
-          (if no-result?
-            (##with-no-result-expected (lambda () (##repl write-reason)))
-            (##repl write-reason))))
+          (##repl write-reason #f toplevel?)))
     (##set-debug-settings!
      (macro-debug-settings-error-mask)
      old-setting)
@@ -2410,12 +2457,13 @@
   (define (prompt repl-context)
 
     (define (cont-in-step-handler?)
-      (##eq? (##continuation-parent (macro-repl-context-cont repl-context))
-             ##step-handler))
+      (let ((cont (macro-repl-context-cont repl-context)))
+        (##step-handler-continuation? cont)))
 
     (define (cont-in-with-no-result-expected?)
-      (##eq? (##continuation-parent (macro-repl-context-cont repl-context))
-             ##with-no-result-expected))
+      (let ((cont (macro-repl-context-cont repl-context)))
+        (or (##with-no-result-expected-continuation? cont)
+            (##with-no-result-expected-toplevel-continuation? cont))))
 
     (define (continue)
       (prompt repl-context))
@@ -2853,16 +2901,20 @@
            (let ((rte rte))
              (macro-code-run c))))))))
 
-  (if (##interp-continuation? cont)
-    (let* (($code (##interp-continuation-code cont))
-           (cte (macro-code-cte $code))
-           (rte (##interp-continuation-rte cont)))
-      (run (##compile-inner cte
-                            (##sourcify src (##make-source #f #f)))
-           rte))
-    (run (##compile-top ##interaction-cte
-                        (##sourcify src (##make-source #f #f)))
-         #f)))
+  (let ((src2 (##sourcify src (##make-source #f #f))))
+    (cond ((##interp-continuation? cont)
+           (let* (($code (##interp-continuation-code cont))
+                  (cte (macro-code-cte $code))
+                  (rte (##interp-continuation-rte cont)))
+             (run (##compile-inner cte src2) rte)))
+          ((##with-no-result-expected-toplevel-continuation? cont)
+           (run (##compile-top ##interaction-cte src2) #f))
+          (else
+           (let* ((locals (##continuation-locals cont))
+                  (cte (##cte-frame (##cte-top-cte ##interaction-cte)
+                                    (##map ##car locals)))
+                  (rte (macro-make-rte-from-list #f (##map ##cdr locals))))
+             (run (##compile-inner cte src2) rte))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -3682,6 +3734,7 @@
     (ill-formed-namespace-prefix      . "Ill-formed namespace prefix")
     (namespace-prefix-must-be-string  . "Namespace prefix must be a string")
     (macro-used-as-variable           . "Macro name can't be used as a variable:")
+    (variable-is-immutable            . "Variable is immutable:")
     (ill-formed-macro-transformer     . "Macro transformer must be a lambda expression")
     (reserved-used-as-variable        . "Reserved identifier can't be used as a variable:")
     (ill-formed-special-form          . "Ill-formed special form:")

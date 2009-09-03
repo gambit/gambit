@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-08-28 15:04:39 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-09-03 15:47:07 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -302,16 +302,17 @@
 
 ;;; Representation of local variables (up and over) and global variables.
 
-(##define-macro (mk-loc-access up over) `(##cons ,up ,over))
-(##define-macro (loc-access? x) `(##pair? ,x))
-(##define-macro (loc-access-up x) `(##car ,x))
-(##define-macro (loc-access-over x) `(##cdr ,x))
+(##define-macro (mk-loc-access src var up over) `(##vector ,var ,up ,over))
+(##define-macro (loc-access? x) `(##vector? ,x))
+(##define-macro (loc-access-var x) `(##vector-ref ,x 0))
+(##define-macro (loc-access-up x) `(##vector-ref ,x 1))
+(##define-macro (loc-access-over x) `(##vector-ref ,x 2))
 
 (##define-macro (mk-glo-access src id)
   `(##make-global-var ,id))
 
 (##define-macro (glo-access? x)
-  `(##not (##pair? ,x)))
+  `(##not (##vector? ,x)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -347,6 +348,31 @@
 
 (define (##cte-frame-vars cte)
   (##vector-ref cte 1))
+
+(define (##cte-frame-i parent-cte vars)
+  (##cte-frame parent-cte
+               vars)) ;; equivalent to: (map ##var-i vars)
+
+(define (##var-i name)
+  name)
+
+(define (##var-i? x)
+  (##not (##pair? x)))
+
+(define (##var-i-name x)
+  x)
+
+(define (##var-c name boxed?)
+  (##cons name boxed?))
+
+(define (##var-c? x)
+  (##pair? x))
+
+(define (##var-c-name x)
+  (##car x))
+
+(define (##var-c-boxed? x)
+  (##cdr x))
 
 (define (##cte-macro parent-cte name descr)
   (##vector parent-cte name descr))
@@ -553,34 +579,36 @@
 
 (define (##cte-lookup cte name)
   (##declare (inlining-limit 500)) ;; inline CTE access procedures
-  (let loop ((name name) (full? (##full-name? name)) (cte cte) (up 0))
+  (let loop1 ((name name) (full? (##full-name? name)) (cte cte) (up 0))
     (if (##cte-top? cte)
       (##vector 'not-found name)
       (let ((parent-cte (##cte-parent-cte cte)))
         (cond ((##cte-frame? cte)
-               (let* ((vars (##cte-frame-vars cte))
-                      (x (##memq name vars)))
-                 (if x
-                   (##vector
-                     'var
-                     name
-                     up
-                     (##fixnum.+ (##fixnum.- (##length vars) (##length x)) 1))
-                   (loop name full? parent-cte (##fixnum.+ up 1)))))
+               (let loop2 ((vars (##cte-frame-vars cte))
+                           (over 1))
+                 (if (##pair? vars)
+                     (let ((var (##car vars)))
+                       (if (##eq? name (if (##var-i? var)
+                                           (##var-i-name var)
+                                           (##var-c-name var)))
+                           (##vector 'var var up over)
+                           (loop2 (##cdr vars)
+                                  (##fixnum.+ over 1))))
+                     (loop1 name full? parent-cte (##fixnum.+ up 1)))))
               ((##cte-macro? cte)
                (if (##eq? name (##cte-macro-name cte))
                  (##vector 'macro name (##cte-macro-descr cte))
-                 (loop name full? parent-cte up)))
+                 (loop1 name full? parent-cte up)))
               ((and (##not full?) (##cte-namespace? cte))
                (let ((vars (##cte-namespace-vars cte)))
                  (if (or (##not (##pair? vars)) (##memq name vars))
-                   (loop (##make-full-name (##cte-namespace-prefix cte) name)
+                   (loop1 (##make-full-name (##cte-namespace-prefix cte) name)
                          #t
                          parent-cte
                          up)
-                   (loop name full? parent-cte up))))
+                   (loop1 name full? parent-cte up))))
               (else
-               (loop name full? parent-cte up)))))))
+               (loop1 name full? parent-cte up)))))))
 
 (define (##cte-global-macro-name cte name)
   (if (##full-name? name)
@@ -630,9 +658,13 @@
          (ind (##cte-lookup cte name)))
     (case (##vector-ref ind 0)
       ((not-found)
-       (mk-glo-access src (##vector-ref ind 1)))
+       (let ((var (##vector-ref ind 1)))
+         (mk-glo-access src var)))
       ((var)
-       (mk-loc-access (##vector-ref ind 2) (##vector-ref ind 3)))
+       (let ((var (##vector-ref ind 1))
+             (up (##vector-ref ind 2))
+             (over (##vector-ref ind 3)))
+         (mk-loc-access src var up over)))
       (else
        (##raise-expression-parsing-exception
         'macro-used-as-variable
@@ -866,7 +898,7 @@
    (lambda (cte src tail?)
      (macro-gen ##gen-top src
        (##comp-inner
-        (##cte-frame cte (##list (macro-self-var)))
+        (##cte-frame-i cte (##list (macro-self-var)))
         src
         tail?)))))
 
@@ -1292,9 +1324,11 @@
   (##variable src)
   (let ((x (##var-lookup cte src)))
     (if (loc-access? x)
-      (let ((up (loc-access-up x))
+      (let ((var (loc-access-var x))
+            (up (loc-access-up x))
             (over (loc-access-over x)))
         (macro-gen ##gen-loc-ref src
+          var
           up
           over))
       (macro-gen ##gen-glo-ref src
@@ -1440,12 +1474,21 @@
     (##variable var-src)
     (let ((x (##var-lookup cte var-src)))
       (if (loc-access? x)
-        (let ((up (loc-access-up x))
-              (over (loc-access-over x)))
-          (macro-gen ##gen-loc-set src
-            up
-            over
-            (##comp-subexpr cte val-src #f)))
+        (let ((var (loc-access-var x)))
+          (if (and (##var-c? var)
+                   (##not (##var-c-boxed? var)))
+              (##raise-expression-parsing-exception
+               'variable-is-immutable
+               src
+               (##var-c-name var))
+              (let ((val (##comp-subexpr cte val-src #f)))
+                (let ((up (loc-access-up x))
+                      (over (loc-access-over x)))
+                  (macro-gen ##gen-loc-set src
+                    var
+                    up
+                    over
+                    val)))))
         (macro-gen ##gen-glo-set src
           x
           (##comp-subexpr cte val-src #f))))))
@@ -1477,7 +1520,7 @@
                 (rev-inits '()))
       (if (##pair? lst)
         (let ((x (##car lst))
-              (new-cte (##cte-frame cte (##cons (macro-self-var) frame))))
+              (new-cte (##cte-frame-i cte (##cons (macro-self-var) frame))))
           (loop1 (##append frame (##list (##car x)))
                  (##cdr lst)
                  (##cons (##comp-subexpr new-cte (##cdr x) #f)
@@ -1490,7 +1533,7 @@
                     (rev-keys '()))
           (if (##pair? lst)
             (let ((x (##car lst))
-                  (new-cte (##cte-frame cte (##cons (macro-self-var) frame))))
+                  (new-cte (##cte-frame-i cte (##cons (macro-self-var) frame))))
               (loop2 (##append frame (##list (##car x)))
                      (##cdr lst)
                      (##cons (##comp-subexpr new-cte (##cdr x) #f)
@@ -1500,7 +1543,7 @@
             (let* ((frame (if (and rest-parameter (not dsssl-style-rest?))
                             (##append frame (##list rest-parameter))
                             frame))
-                   (new-cte (##cte-frame cte (##cons (macro-self-var) frame)))
+                   (new-cte (##cte-frame-i cte (##cons (macro-self-var) frame)))
                    (c (##comp-body new-cte src #t body)))
               (cond ((or optional-parameters key-parameters)
                      (macro-gen ##gen-prc src
@@ -1996,7 +2039,7 @@
          (clauses (##cddr code)))
     (macro-gen ##gen-case first-src
       (##comp-subexpr cte first-src #f)
-      (let ((cte (##cte-frame cte (##list (macro-selector-var)))))
+      (let ((cte (##cte-frame-i cte (##list (macro-selector-var)))))
         (##comp-case-aux cte src tail? clauses)))))
 
 (define (##comp-case-aux cte src tail? clauses)
@@ -2042,14 +2085,14 @@
                  (vals (##bindings->vals src bindings-src))
                  (tail? (##tail-call? cte tail?)))
             (macro-gen ##gen-app-no-step src
-              (let ((inner-cte (##cte-frame cte (##list first)))
+              (let ((inner-cte (##cte-frame-i cte (##list first)))
                     (tail? #f))
                 (macro-gen ##gen-letrec src
                   (##list first)
                   (let ((cte inner-cte))
                     (##list (macro-gen ##gen-prc-req-no-step src
                               vars
-                              (##comp-body (##cte-frame
+                              (##comp-body (##cte-frame-i
                                              cte
                                              (##cons (macro-self-var) vars))
                                            src
@@ -2066,7 +2109,7 @@
           (##comp-body cte src tail? (##cddr code))
           (let ((c
                  (##comp-body
-                   (##cte-frame cte vars)
+                   (##cte-frame-i cte vars)
                    src
                    tail?
                    (##cddr code))))
@@ -2153,7 +2196,7 @@
 (define (##comp-let*-aux cte src tail? vars vals body)
   (if (##pair? vars)
     (let ((frame (##list (##car vars))))
-      (let ((inner-cte (##cte-frame cte frame)))
+      (let ((inner-cte (##cte-frame-i cte frame)))
         (macro-gen ##gen-let src
           frame
           (##list (##comp-subexpr cte (##car vals) #f))
@@ -2177,7 +2220,7 @@
 
 (define (##comp-letrec-aux cte src tail? vars vals body)
   (if (##pair? vars)
-    (let ((inner-cte (##cte-frame cte vars)))
+    (let ((inner-cte (##cte-frame-i cte vars)))
       (macro-gen ##gen-letrec src
         vars
         (##comp-vals inner-cte src vals)
@@ -2196,7 +2239,7 @@
     (##shape src exit-src -1)
     (let* ((vars (##bindings->vars src bindings-src #t #t))
            (do-loop-vars (##list (macro-do-loop-var)))
-           (inner-cte (##cte-frame cte do-loop-vars)))
+           (inner-cte (##cte-frame-i cte do-loop-vars)))
       (macro-gen ##gen-letrec src
         do-loop-vars
         (##list
@@ -2204,7 +2247,7 @@
                 (tail? #f))
             (macro-gen ##gen-prc-req-no-step src
               vars
-              (let ((cte (##cte-frame cte (##cons (macro-self-var) vars)))
+              (let ((cte (##cte-frame-i cte (##cons (macro-self-var) vars)))
                     (tail? #t))
                 (macro-gen ##gen-if3 src
                   (##comp-subexpr cte (##sourcify (##car exit) src) #f)
@@ -2405,10 +2448,27 @@
         up
         over)))))
 
+(define ##cprc-loc-ref-box
+  (macro-make-cprc
+   (macro-reference-step! ()
+    (let ((up (^ 0)))
+      (let loop ((e rte) (i up))
+        (if (##fixnum.< 0 i)
+          (loop (macro-rte-up e) (##fixnum.- i 1))
+          (##unbox (macro-rte-ref e (^ 1)))))))))
+
+(define ##gen-loc-ref-box
+  (macro-make-gen (stepper up over)
+    (macro-make-code ##cprc-loc-ref-box cte src stepper ()
+      up
+      over)))
+
 (define ##gen-loc-ref
-  (macro-make-gen (up over)
+  (macro-make-gen (var up over)
     (let ((stepper (##current-stepper)))
-      (macro-gen ##gen-loc-ref-aux src stepper up over))))
+      (if (and (##var-c? var) (##var-c-boxed? var))
+          (macro-gen ##gen-loc-ref-box src stepper up over)
+          (macro-gen ##gen-loc-ref-aux src stepper up over)))))
 
 (define ##gen-loc-ref-no-step
   (macro-make-gen (up over)
@@ -2448,12 +2508,28 @@
               (macro-rte-set! e (^ 2) val)
               (##void)))))))))
 
+(define ##cprc-loc-set-box
+  (macro-make-cprc
+   (let ((val (macro-code-run (^ 0))))
+     (macro-set!-step! (val)
+      (let ((up (^ 1)))
+        (let loop ((e rte) (i up))
+          (if (##fixnum.< 0 i)
+            (loop (macro-rte-up e) (##fixnum.- i 1))
+            (begin
+              (##set-box! (macro-rte-ref e (^ 2)) val)
+              (##void)))))))))
+
 (define ##gen-loc-set
-  (macro-make-gen (up over val)
+  (macro-make-gen (var up over val)
     (let ((stepper (##current-stepper)))
-      (macro-make-code ##cprc-loc-set cte src stepper (val)
-        up
-        over))))
+      (if (and (##var-c? var) (##var-c-boxed? var))
+          (macro-make-code ##cprc-loc-set-box cte src stepper (val)
+            up
+            over)
+          (macro-make-code ##cprc-loc-set cte src stepper (val)
+            up
+            over)))))
 
 (define ##cprc-glo-set
   (macro-make-cprc
@@ -2478,11 +2554,12 @@
 
 (define ##cprc-glo-def
   (macro-make-cprc
-   (let ((val (macro-code-run (^ 0))))
-     (macro-define-step! (val)
-       (begin
-         (##global-var-set! (^ 1) val)
-         (##void))))))
+   (let ((rte (##first-argument #f))) ;; avoid constant propagation of #f
+     (let ((val (macro-code-run (^ 0))))
+       (macro-define-step! (val)
+         (begin
+           (##global-var-set! (^ 1) val)
+           (##void)))))))
 
 (define ##gen-glo-def
   (macro-make-gen (ind val)

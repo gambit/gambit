@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-08-28 15:02:43 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-09-03 15:40:51 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -2298,7 +2298,8 @@
 
               (let loop ()
 
-                #;(if (##u8vector? (,',macro-vect-port-rbuf port))
+                #;
+                (if (##u8vector? (,',macro-vect-port-rbuf port))
                     (pp (##list (,',macro-vect-port-rlo port)
                                 (,',macro-vect-port-rhi port)
                                 (,',macro-vect-port-wlo port)
@@ -3537,7 +3538,8 @@
      (let ((fill u8vector-rbuf-fill)
            (drain u8vector-wbuf-drain))
 
-       #;(define (u8vector-rbuf-fill port want block?)
+       #;
+       (define (u8vector-rbuf-fill port want block?)
          (pp (list 'u8vector-rbuf-fill port want block?))
          (##repl)
          (fill port want block?))

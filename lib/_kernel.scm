@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-07-30 12:29:50 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-09-03 14:27:38 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3750,6 +3750,10 @@ end-of-code
   arg1)
 
 (define-prim (##with-no-result-expected thunk)
+  (##declare (not interrupts-enabled))
+  (##first-argument (thunk))) ; force nontail-call to thunk
+
+(define-prim (##with-no-result-expected-toplevel thunk)
   (##declare (not interrupts-enabled))
   (##first-argument (thunk))) ; force nontail-call to thunk
 
