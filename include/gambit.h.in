@@ -1,11 +1,11 @@
-/* File: "gambit.h", Time-stamp: <2009-08-06 19:08:02 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-09-04 00:06:51 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___VERSION
-@error "___VERSION has not been set by includer"
+#error "___VERSION has not been set by includer"
 #endif
 
 #if ___VERSION != 405001
@@ -870,31 +870,31 @@
  */
 
 #ifndef ___CHAR_WIDTH
-@error "The definition for ___CHAR_WIDTH is missing"
+#error "The definition for ___CHAR_WIDTH is missing"
 #endif
 
 #ifndef ___SHORT_WIDTH
-@error "The definition for ___SHORT_WIDTH is missing"
+#error "The definition for ___SHORT_WIDTH is missing"
 #endif
 
 #ifndef ___INT_WIDTH
-@error "The definition for ___INT_WIDTH is missing"
+#error "The definition for ___INT_WIDTH is missing"
 #endif
 
 #ifndef ___LONG_WIDTH
-@error "The definition for ___LONG_WIDTH is missing"
+#error "The definition for ___LONG_WIDTH is missing"
 #endif
 
 #ifndef ___LONGLONG_WIDTH
-@error "The definition for ___LONGLONG_WIDTH is missing"
+#error "The definition for ___LONGLONG_WIDTH is missing"
 #endif
 
 #ifndef ___FLOAT_WIDTH
-@error "The definition for ___FLOAT_WIDTH is missing"
+#error "The definition for ___FLOAT_WIDTH is missing"
 #endif
 
 #ifndef ___DOUBLE_WIDTH
-@error "The definition for ___DOUBLE_WIDTH is missing"
+#error "The definition for ___DOUBLE_WIDTH is missing"
 #endif
 
 #if ___INT_WIDTH == 8
@@ -1053,11 +1053,11 @@
 
 #ifdef ___BIG_ENDIAN
 #ifdef ___LITTLE_ENDIAN
-@error "Define either ___BIG_ENDIAN or ___LITTLE_ENDIAN"
+#error "Define either ___BIG_ENDIAN or ___LITTLE_ENDIAN"
 #endif
 #else
 #ifndef ___LITTLE_ENDIAN
-@error "Define either ___BIG_ENDIAN or ___LITTLE_ENDIAN"
+#error "Define either ___BIG_ENDIAN or ___LITTLE_ENDIAN"
 #endif
 #endif
 
@@ -1068,7 +1068,7 @@
 
 #ifdef ___SINGLE_HOST
 #ifdef ___MULTIPLE_HOSTS
-@error "Define either ___SINGLE_HOST or ___MULTIPLE_HOSTS"
+#error "Define either ___SINGLE_HOST or ___MULTIPLE_HOSTS"
 #endif
 #else
 #ifndef ___MULTIPLE_HOSTS
@@ -1082,7 +1082,7 @@
 
 #ifdef ___DYNAMIC
 #ifdef ___NONDYNAMIC
-@error "Define either ___DYNAMIC or ___NONDYNAMIC"
+#error "Define either ___DYNAMIC or ___NONDYNAMIC"
 #endif
 #else
 #ifndef ___NONDYNAMIC
@@ -1112,7 +1112,7 @@
 
 #ifdef ___LIBRARY
 #ifdef ___APPLICATION
-@error "Define either ___LIBRARY or ___APPLICATION"
+#error "Define either ___LIBRARY or ___APPLICATION"
 #endif
 #else
 #ifndef ___APPLICATION
@@ -1134,7 +1134,7 @@
 
 #ifdef ___SHARED
 #ifdef ___NONSHARED
-@error "Define either ___SHARED or ___NONSHARED"
+#error "Define either ___SHARED or ___NONSHARED"
 #endif
 #else
 #ifndef ___NONSHARED
@@ -1151,7 +1151,7 @@
 
 #ifdef ___BIND_LATE
 #ifdef ___BIND_EARLY
-@error "Define either ___BIND_LATE or ___BIND_EARLY"
+#error "Define either ___BIND_LATE or ___BIND_EARLY"
 #endif
 #else
 #ifndef ___BIND_EARLY
@@ -1203,7 +1203,7 @@
 
 #ifdef ___USE_LABEL_VALUES
 #ifdef ___NOT_USE_LABEL_VALUES
-@error "Define either ___USE_LABEL_VALUES or ___NOT_USE_LABEL_VALUES"
+#error "Define either ___USE_LABEL_VALUES or ___NOT_USE_LABEL_VALUES"
 #endif
 #else
 #ifndef ___NOT_USE_LABEL_VALUES
