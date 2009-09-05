@@ -406,18 +406,18 @@ values
                      (deffn
                        (cdr d)))
                  (if (not (string=? (cadr head) "procedure"))
-                     (display (list "*** WARNING: " sym " is not defined as a procedure\n")))
+                     (print "*** WARNING: " sym " is not defined as a procedure\n"))
                  #t)))))
 
     (define (check-documented sym)
       (if (not (memq sym r5rs-standard-procedures))
           (if (not (procedure-documented? sym))
               (let ((name (symbol->string sym)))
-                (display
-                 (list "\n"
-                       "@deffn procedure " name "\n"
-                       "@end deffn\n")
-                 out)))))
+                (print
+                 port: out
+                 "\n"
+                 "@deffn procedure " name "\n"
+                 "@end deffn\n")))))
 
     (define (check-that-exported-procedures-are-documented)
       (for-each check-documented exported-procedures))

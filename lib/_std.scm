@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_std.scm", Time-stamp: <2009-06-11 09:44:50 feeley>
+;;; File: "_std.scm", Time-stamp: <2009-09-05 10:12:12 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -46,6 +46,8 @@
 
     (define macro-check-vect (sym 'macro-check- name))
     (define vect-list        (sym name '-list))
+    (define ##fail-check-vect (sym '##fail-check- name))
+    (define ##fail-check-vect-list (sym '##fail-check- name '-list))
 
     (define ##vect?          (sym "##" name '?))
     (define ##make-vect      (sym '##make- name))
@@ -75,7 +77,11 @@
     (define vect-copy        (sym name '-copy))
     (define vect-fill!       (sym name '-fill!))
     (define subvect          (sym 'sub name))
+    (define append-vects     (sym 'append- name 's))
     (define vect-append      (sym name '-append))
+    (define subvect-move!    (sym 'sub name '-move!))
+    (define subvect-fill!    (sym 'sub name '-fill!))
+    (define vect-shrink!     (sym name '-shrink!))
 
     `(begin
 
@@ -255,8 +261,9 @@
          (macro-force-vars (vect)
            (,macro-force-elem (fill)
              (,macro-check-vect vect 1 (,vect-fill! vect fill)
-               (,macro-check-elem fill 2 (,vect-fill! vect fill)
-                 (,##vect-fill! vect fill))))))
+               (macro-check-subtyped-mutable vect 1 (,vect-fill! vect fill)
+                 (,macro-check-elem fill 2 (,vect-fill! vect fill)
+                   (,##vect-fill! vect fill)))))))
 
        (define-prim (,##vect-copy vect)
          (let ((len (,##vect-length vect)))
@@ -292,35 +299,44 @@
                (,subvect vect start end)
                (,##subvect vect start end))))))
 
-       (define-prim (,##append-vects lst)
+       (define-prim (,##append-vects lst #!optional (vect-append? #f))
          (let loop1 ((n 0)
                      (lst1 lst)
                      (lst2 '())
                      (arg-num 1))
-           (if (##pair? lst1)
-             (let ((vect (##car lst1)))
-               (macro-force-vars (vect)
-                 (,macro-check-vect vect arg-num (,vect-append . lst)
-                   (loop1 (##fixnum.+ n (,##vect-length vect))
-                          (##cdr lst1)
-                          (##cons vect lst2)
-                          (##fixnum.+ arg-num 1)))))
-             (let ((result (,##make-vect n)))
-               (let loop2 ((n n)
-                           (lst2 lst2))
-                 (if (##pair? lst2)
-                   (let* ((vect (##car lst2))
-                          (len (,##vect-length vect))
-                          (new-n (##fixnum.- n len)))
-                     (,##subvect-move! vect 0 len result new-n)
-                     (loop2 new-n (##cdr lst2)))
-                   result))))))
+           (cond ((##pair? lst1)
+                  (let ((vect (##car lst1)))
+                    (macro-force-vars (vect)
+                      (if (##not (,##vect? vect))
+                          (if vect-append?
+                              (,##fail-check-vect arg-num '() ,vect-append lst)
+                              (,##fail-check-vect-list 1 ,append-vects lst))
+                          (loop1 (##fixnum.+ n (,##vect-length vect))
+                                 (##cdr lst1)
+                                 (##cons vect lst2)
+                                 (##fixnum.+ arg-num 1))))))
+                 ((##null? lst1)
+                  (let ((result (,##make-vect n)))
+                    (let loop2 ((n n)
+                                (lst2 lst2))
+                      (if (##pair? lst2)
+                          (let* ((vect (##car lst2))
+                                 (len (,##vect-length vect))
+                                 (new-n (##fixnum.- n len)))
+                            (,##subvect-move! vect 0 len result new-n)
+                            (loop2 new-n (##cdr lst2)))
+                          result))))
+                 (else
+                  (,##fail-check-vect-list 1 ,append-vects lst)))))
+
+       (define-prim (,append-vects lst)
+         (,##append-vects lst #f))
 
        (define-prim (,##vect-append . lst)
-         (,##append-vects lst))
+         (,##append-vects lst #t))
 
        (define-prim (,vect-append . lst)
-         (,##append-vects lst))
+         (,##append-vects lst #t))
 
 #;
        (define-prim (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
@@ -347,6 +363,43 @@
                         (##fixnum.+ j 1)))
                dst-vect))))
 
+       (define-prim (,subvect-move! src-vect src-start src-end dst-vect dst-start)
+         (macro-force-vars (src-vect src-start src-end dst-vect dst-start)
+           (,macro-check-vect
+            src-vect
+            1
+            (,subvect-move! src-vect src-start src-end dst-vect dst-start)
+            (macro-check-index-range-incl
+             src-start
+             2
+             0
+             (,##vect-length src-vect)
+             (,subvect-move! src-vect src-start src-end dst-vect dst-start)
+             (macro-check-index-range-incl
+              src-end
+              3
+              src-start
+              (,##vect-length src-vect)
+              (,subvect-move! src-vect src-start src-end dst-vect dst-start)
+              (,macro-check-vect
+               dst-vect
+               4
+               (,subvect-move! src-vect src-start src-end dst-vect dst-start)
+               (macro-check-subtyped-mutable
+                dst-vect
+                4
+                (,subvect-move! src-vect src-start src-end dst-vect dst-start)
+                (macro-check-index-range-incl
+                 dst-start
+                 5
+                 0
+                 (##fixnum.- (,##vect-length dst-vect)
+                             (##fixnum.- src-end src-start))
+                 (,subvect-move! src-vect src-start src-end dst-vect dst-start)
+                 (begin
+                   (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
+                   (##void))))))))))
+
        (define-prim (,##subvect-fill! vect start end fill)
          (let loop ((i (##fixnum.- end 1)))
            (if (##fixnum.< i start)
@@ -355,7 +408,44 @@
                (,##vect-set! vect i fill)
                (loop (##fixnum.- i 1))))))
 
-       (define-prim (,##vect-shrink! vect k)))))
+       (define-prim (,subvect-fill! vect start end fill)
+         (macro-force-vars (vect start end)
+           (,macro-force-elem (fill)
+             (,macro-check-vect vect 1 (,subvect-fill! vect start end fill)
+               (macro-check-subtyped-mutable vect 1 (,subvect-fill! vect start end fill)
+                 (macro-check-index-range-incl
+                  start
+                  2
+                  0
+                  (,##vect-length vect)
+                  (,subvect-fill! vect start end fill)
+                  (macro-check-index-range-incl
+                   end
+                   3
+                   start
+                   (,##vect-length vect)
+                   (,subvect-fill! vect start end fill)
+                   (,macro-check-elem
+                    fill
+                    4
+                    (,subvect-fill! vect start end fill)
+                    (,##subvect-fill! vect start end fill)))))))))
+
+       (define-prim (,##vect-shrink! vect k))
+
+       (define-prim (,vect-shrink! vect k)
+         (macro-force-vars (vect k)
+           (,macro-check-vect vect 1 (,vect-shrink! vect k)
+             (macro-check-subtyped-mutable vect 1 (,vect-shrink! vect k)
+               (macro-check-index-range-incl
+                k
+                2
+                0
+                (,##vect-length vect)
+                (,vect-shrink! vect k)
+                (begin
+                  (,##vect-shrink! vect k)
+                  (##void))))))))))
 
 (define-prim-vector-procedures
   string

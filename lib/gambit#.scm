@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2009-06-14 21:13:22 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2009-09-05 10:26:15 feeley>
 
 ;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
 
@@ -43,6 +43,18 @@ abandoned-mutex-exception?
 abort
 all-bits-set?
 any-bits-set?
+append-f32vectors
+append-f64vectors
+append-s16vectors
+append-s32vectors
+append-s64vectors
+append-s8vectors
+append-strings
+append-u16vectors
+append-u32vectors
+append-u64vectors
+append-u8vectors
+append-vectors
 arithmetic-shift
 bit-count
 bit-set?
@@ -141,6 +153,7 @@ f32vector-fill!
 f32vector-length
 f32vector-ref
 f32vector-set!
+f32vector-shrink!
 f32vector?
 f64vector
 f64vector->list
@@ -150,6 +163,7 @@ f64vector-fill!
 f64vector-length
 f64vector-ref
 f64vector-set!
+f64vector-shrink!
 f64vector?
 file-attributes
 file-creation-time
@@ -519,6 +533,7 @@ s16vector-fill!
 s16vector-length
 s16vector-ref
 s16vector-set!
+s16vector-shrink!
 s16vector?
 s32vector
 s32vector->list
@@ -528,6 +543,7 @@ s32vector-fill!
 s32vector-length
 s32vector-ref
 s32vector-set!
+s32vector-shrink!
 s32vector?
 s64vector
 s64vector->list
@@ -537,6 +553,7 @@ s64vector-fill!
 s64vector-length
 s64vector-ref
 s64vector-set!
+s64vector-shrink!
 s64vector?
 s8vector
 s8vector->list
@@ -546,6 +563,7 @@ s8vector-fill!
 s8vector-length
 s8vector-ref
 s8vector-set!
+s8vector-shrink!
 s8vector?
 scheduler-exception-reason
 scheduler-exception?
@@ -651,18 +669,43 @@ step
 step-level-set!
 string->keyword
 string-ci=?-hash
+string-shrink!
 string=?-hash
 subf32vector
+subf32vector-fill!
+subf32vector-move!
 subf64vector
+subf64vector-fill!
+subf64vector-move!
 subs16vector
+subs16vector-fill!
+subs16vector-move!
 subs32vector
+subs32vector-fill!
+subs32vector-move!
 subs64vector
+subs64vector-fill!
+subs64vector-move!
 subs8vector
+subs8vector-fill!
+subs8vector-move!
+substring-fill!
+substring-move!
 subu16vector
+subu16vector-fill!
+subu16vector-move!
 subu32vector
+subu32vector-fill!
+subu32vector-move!
 subu64vector
+subu64vector-fill!
+subu64vector-move!
 subu8vector
+subu8vector-fill!
+subu8vector-move!
 subvector
+subvector-fill!
+subvector-move!
 symbol-hash
 system-stamp
 system-type
@@ -760,6 +803,7 @@ u16vector-fill!
 u16vector-length
 u16vector-ref
 u16vector-set!
+u16vector-shrink!
 u16vector?
 u32vector
 u32vector->list
@@ -769,6 +813,7 @@ u32vector-fill!
 u32vector-length
 u32vector-ref
 u32vector-set!
+u32vector-shrink!
 u32vector?
 u64vector
 u64vector->list
@@ -778,6 +823,7 @@ u64vector-fill!
 u64vector-length
 u64vector-ref
 u64vector-set!
+u64vector-shrink!
 u64vector?
 u8vector
 u8vector->list
@@ -788,6 +834,7 @@ u8vector-fill!
 u8vector-length
 u8vector-ref
 u8vector-set!
+u8vector-shrink!
 u8vector?
 unbound-global-exception-code
 unbound-global-exception-rte
@@ -830,6 +877,7 @@ user-info?
 user-name
 vector-append
 vector-copy
+vector-shrink!
 void
 will-execute!
 will-testator

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-09-03 15:17:22 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-09-05 10:08:24 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3599,16 +3599,27 @@
     (symbol                       . "SYMBOL")
     (keyword                      . "KEYWORD")
     (vector                       . "VECTOR")
+    (vector-list                  . "VECTOR LIST")
     (s8vector                     . "S8VECTOR")
+    (s8vector-list                . "S8VECTOR LIST")
     (u8vector                     . "U8VECTOR")
+    (u8vector-list                . "U8VECTOR LIST")
     (s16vector                    . "S16VECTOR")
+    (s16vector-list               . "S16VECTOR LIST")
     (u16vector                    . "U16VECTOR")
+    (u16vector-list               . "U16VECTOR LIST")
     (s32vector                    . "S32VECTOR")
+    (s32vector-list               . "S32VECTOR LIST")
     (u32vector                    . "U32VECTOR")
+    (u32vector-list               . "U32VECTOR LIST")
     (s64vector                    . "S64VECTOR")
+    (s64vector-list               . "S64VECTOR LIST")
     (u64vector                    . "U64VECTOR")
+    (u64vector-list               . "U64VECTOR LIST")
     (f32vector                    . "F32VECTOR")
+    (f32vector-list               . "F32VECTOR LIST")
     (f64vector                    . "F64VECTOR")
+    (f64vector-list               . "F64VECTOR LIST")
     (procedure                    . "PROCEDURE")
 
     ;; from "_num.scm":

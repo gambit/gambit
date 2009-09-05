@@ -3306,13 +3306,16 @@ This procedure returns a newly allocated vector with the same content
 as the vector @var{vector}.  Note that the elements are not
 recursively copied.
 
-@end deffn
+For example:
 
-@deffn procedure vector-append @var{vector}@dots{}
-
-This procedure is the vector analog of the @code{string-append}
-procedure.  It returns a newly allocated vector whose elements
-form the concatenation of the given vectors.
+@smallexample
+> @b{(define v1 '#(1 2 3))}
+> @b{(define v2 (vector-copy v1))}
+> @b{v2}
+#(1 2 3)
+> @b{(eq? v1 v2)}
+#f
+@end smallexample
 
 @end deffn
 
@@ -3322,6 +3325,177 @@ This procedure is the vector analog of the @code{substring}
 procedure.  It returns a newly allocated vector formed from the
 elements of the vector @var{vector} beginning with index @var{start}
 (inclusive) and ending with index @var{end} (exclusive).
+
+For example:
+
+@smallexample
+> @b{(subvector '#(a b c d e f) 3 5)}
+#(d e)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-append @var{vector}@dots{}
+
+This procedure is the vector analog of the @code{string-append}
+procedure.  It returns a newly allocated vector whose elements
+form the concatenation of the given vectors.
+
+For example:
+
+@smallexample
+> @b{(define v '#(1 2 3))}
+> @b{(vector-append v v v)}
+#(1 2 3 1 2 3 1 2 3)
+@end smallexample
+
+@end deffn
+
+@deffn procedure append-vectors @var{lst}
+
+This procedure returns a newly allocated vector whose elements form
+the concatenation of all the vectors in the list @var{lst}. It is
+equivalent to @code{(apply vector-append @r{@var{lst}})}.
+
+For example:
+
+@smallexample
+> @b{(define v '#(1 2 3))}
+> @b{(append-vectors (list v v v))}
+#(1 2 3 1 2 3 1 2 3)
+@end smallexample
+
+@end deffn
+
+@deffn procedure subvector-fill! @var{vector} @var{start} @var{end} @var{fill}
+
+This procedure is like @code{vector-fill!}, but fills a selected part
+of the given vector. It sets the elements of the vector @var{vector},
+beginning with index @var{start} (inclusive) and ending with index
+@var{end} (exclusive) to @var{fill}.  The value returned is
+unspecified.
+
+For example:
+
+@smallexample
+> @b{(define v (vector 'a 'b 'c 'd 'e 'f))}
+> @b{(subvector-fill! v 3 5 'x)}
+> @b{v}
+#(a b c x x f)
+@end smallexample
+
+@end deffn
+
+@deffn procedure subvector-move! @var{src-vector} @var{src-start} @var{src-end} @var{dst-vector} @var{dst-start}
+
+This procedure replaces part of the contents of vector
+@var{dst-vector} with part of the contents of vector
+@var{src-vector}. It copies elements from @var{src-vector}, beginning
+with index @var{src-start} (inclusive) and ending with index
+@var{src-end} (exclusive) to @var{dst-vector} beginning with index
+@var{dst-start} (inclusive).  The value returned is unspecified.
+
+For example:
+
+@smallexample
+> @b{(define v1 '#(1 2 3 4 5 6))}
+> @b{(define v2 (vector 'a 'b 'c 'd 'e 'f))}
+> @b{(subvector-move! v1 3 5 v2 1)}
+> @b{v2}
+#(a 4 5 d e f)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-shrink! @var{vector} @var{k}
+
+This procedure shortens the vector @var{vector} so that its new size
+is @var{k}.  The value returned is unspecified.
+
+For example:
+
+@smallexample
+> @b{(define v (vector 'a 'b 'c 'd 'e 'f))}
+> @b{v}
+#(a b c d e f)
+> @b{(vector-shrink! v 3)}
+> @b{v}
+#(a b c)
+@end smallexample
+
+@end deffn
+
+@deffn procedure append-strings @var{lst}
+
+This procedure returns a newly allocated string whose elements form
+the concatenation of all the strings in the list @var{lst}. It is
+equivalent to @code{(apply string-append @r{@var{lst}})}.
+
+For example:
+
+@smallexample
+> @b{(define s "abc")}
+> @b{(append-strings (list s s s))}
+"abcabcabc"
+@end smallexample
+
+@end deffn
+
+@deffn procedure substring-fill! @var{string} @var{start} @var{end} @var{fill}
+
+This procedure is like @code{string-fill!}, but fills a selected part
+of the given string. It sets the elements of the string @var{string},
+beginning with index @var{start} (inclusive) and ending with index
+@var{end} (exclusive) to @var{fill}.  The value returned is
+unspecified.
+
+For example:
+
+@smallexample
+> @b{(define s (string #\a #\b #\c #\d #\e #\f))}
+> @b{(substring-fill! s 3 5 #\x)}
+> @b{s}
+"abcxxf"
+@end smallexample
+
+@end deffn
+
+@deffn procedure substring-move! @var{src-string} @var{src-start} @var{src-end} @var{dst-string} @var{dst-start}
+
+This procedure replaces part of the contents of string
+@var{dst-string} with part of the contents of string
+@var{src-string}. It copies elements from @var{src-string}, beginning
+with index @var{src-start} (inclusive) and ending with index
+@var{src-end} (exclusive) to @var{dst-string} beginning with index
+@var{dst-start} (inclusive).  The value returned is unspecified.
+
+For example:
+
+@smallexample
+> @b{(define s1 "123456")}
+> @b{(define s2 (string #\a #\b #\c #\d #\e #\f))}
+> @b{(substring-move! s1 3 5 s2 1)}
+> @b{s2}
+"a45def"
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-shrink! @var{string} @var{k}
+
+This procedure shortens the string @var{string} so that its new size
+is @var{k}.  The value returned is unspecified.
+
+For example:
+
+@smallexample
+> @b{(define s (string #\a #\b #\c #\d #\e #\f))}
+> @b{s}
+"abcdef"
+> @b{(string-shrink! s 3)}
+> @b{s}
+"abc"
+@end smallexample
 
 @end deffn
 
@@ -3341,7 +3515,7 @@ initialized to @var{obj}.  The procedure @code{box?} returns @code{#t}
 if @var{obj} is a box, and otherwise returns @code{#f}.  The procedure
 @code{unbox} returns the content of the box @var{box}.  The procedure
 @code{set-box!} changes the content of the box @var{box} to @var{obj}.
-The procedure @code{set-box!}  returns an unspecified value.
+The procedure @code{set-box!} returns an unspecified value.
 
 For example:
 
@@ -5122,9 +5296,13 @@ homogeneous vector types.
 @deffnx procedure s8vector->list @var{s8vector}
 @deffnx procedure list->s8vector @var{list-of-exact-int8}
 @deffnx procedure s8vector-fill! @var{s8vector} @var{fill}
+@deffnx procedure subs8vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-s8vectors @var{lst}
 @deffnx procedure s8vector-copy @var{s8vector}
 @deffnx procedure s8vector-append @var{s8vector}@dots{}
 @deffnx procedure subs8vector @var{s8vector} @var{start} @var{end}
+@deffnx procedure subs8vector-move! @var{src-s8vector} @var{src-start} @var{src-end} @var{dst-s8vector} @var{dst-start}
+@deffnx procedure s8vector-shrink! @var{s8vector} @var{k}
 @end deffn
 
 @deffn procedure u8vector? @var{obj}
@@ -5136,9 +5314,13 @@ homogeneous vector types.
 @deffnx procedure u8vector->list @var{u8vector}
 @deffnx procedure list->u8vector @var{list-of-exact-int8}
 @deffnx procedure u8vector-fill! @var{u8vector} @var{fill}
+@deffnx procedure subu8vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-u8vectors @var{lst}
 @deffnx procedure u8vector-copy @var{u8vector}
 @deffnx procedure u8vector-append @var{u8vector}@dots{}
 @deffnx procedure subu8vector @var{u8vector} @var{start} @var{end}
+@deffnx procedure subu8vector-move! @var{src-u8vector} @var{src-start} @var{src-end} @var{dst-u8vector} @var{dst-start}
+@deffnx procedure u8vector-shrink! @var{u8vector} @var{k}
 @end deffn
 
 @deffn procedure s16vector? @var{obj}
@@ -5150,9 +5332,13 @@ homogeneous vector types.
 @deffnx procedure s16vector->list @var{s16vector}
 @deffnx procedure list->s16vector @var{list-of-exact-int16}
 @deffnx procedure s16vector-fill! @var{s16vector} @var{fill}
+@deffnx procedure subs16vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-s16vectors @var{lst}
 @deffnx procedure s16vector-copy @var{s16vector}
 @deffnx procedure s16vector-append @var{s16vector}@dots{}
 @deffnx procedure subs16vector @var{s16vector} @var{start} @var{end}
+@deffnx procedure subs16vector-move! @var{src-s16vector} @var{src-start} @var{src-end} @var{dst-s16vector} @var{dst-start}
+@deffnx procedure s16vector-shrink! @var{s16vector} @var{k}
 @end deffn
 
 @deffn procedure u16vector? @var{obj}
@@ -5164,9 +5350,13 @@ homogeneous vector types.
 @deffnx procedure u16vector->list @var{u16vector}
 @deffnx procedure list->u16vector @var{list-of-exact-int16}
 @deffnx procedure u16vector-fill! @var{u16vector} @var{fill}
+@deffnx procedure subu16vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-u16vectors @var{lst}
 @deffnx procedure u16vector-copy @var{u16vector}
 @deffnx procedure u16vector-append @var{u16vector}@dots{}
 @deffnx procedure subu16vector @var{u16vector} @var{start} @var{end}
+@deffnx procedure subu16vector-move! @var{src-u16vector} @var{src-start} @var{src-end} @var{dst-u16vector} @var{dst-start}
+@deffnx procedure u16vector-shrink! @var{u16vector} @var{k}
 @end deffn
 
 @deffn procedure s32vector? @var{obj}
@@ -5178,9 +5368,13 @@ homogeneous vector types.
 @deffnx procedure s32vector->list @var{s32vector}
 @deffnx procedure list->s32vector @var{list-of-exact-int32}
 @deffnx procedure s32vector-fill! @var{s32vector} @var{fill}
+@deffnx procedure subs32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-s32vectors @var{lst}
 @deffnx procedure s32vector-copy @var{s32vector}
 @deffnx procedure s32vector-append @var{s32vector}@dots{}
 @deffnx procedure subs32vector @var{s32vector} @var{start} @var{end}
+@deffnx procedure subs32vector-move! @var{src-s32vector} @var{src-start} @var{src-end} @var{dst-s32vector} @var{dst-start}
+@deffnx procedure s32vector-shrink! @var{s32vector} @var{k}
 @end deffn
 
 @deffn procedure u32vector? @var{obj}
@@ -5192,9 +5386,13 @@ homogeneous vector types.
 @deffnx procedure u32vector->list @var{u32vector}
 @deffnx procedure list->u32vector @var{list-of-exact-int32}
 @deffnx procedure u32vector-fill! @var{u32vector} @var{fill}
+@deffnx procedure subu32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-u32vectors @var{lst}
 @deffnx procedure u32vector-copy @var{u32vector}
 @deffnx procedure u32vector-append @var{u32vector}@dots{}
 @deffnx procedure subu32vector @var{u32vector} @var{start} @var{end}
+@deffnx procedure subu32vector-move! @var{src-u32vector} @var{src-start} @var{src-end} @var{dst-u32vector} @var{dst-start}
+@deffnx procedure u32vector-shrink! @var{u32vector} @var{k}
 @end deffn
 
 @deffn procedure s64vector? @var{obj}
@@ -5206,9 +5404,13 @@ homogeneous vector types.
 @deffnx procedure s64vector->list @var{s64vector}
 @deffnx procedure list->s64vector @var{list-of-exact-int64}
 @deffnx procedure s64vector-fill! @var{s64vector} @var{fill}
+@deffnx procedure subs64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-s64vectors @var{lst}
 @deffnx procedure s64vector-copy @var{s64vector}
 @deffnx procedure s64vector-append @var{s64vector}@dots{}
 @deffnx procedure subs64vector @var{s64vector} @var{start} @var{end}
+@deffnx procedure subs64vector-move! @var{src-s64vector} @var{src-start} @var{src-end} @var{dst-s64vector} @var{dst-start}
+@deffnx procedure s64vector-shrink! @var{s64vector} @var{k}
 @end deffn
 
 @deffn procedure u64vector? @var{obj}
@@ -5220,9 +5422,13 @@ homogeneous vector types.
 @deffnx procedure u64vector->list @var{u64vector}
 @deffnx procedure list->u64vector @var{list-of-exact-int64}
 @deffnx procedure u64vector-fill! @var{u64vector} @var{fill}
+@deffnx procedure subu64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-u64vectors @var{lst}
 @deffnx procedure u64vector-copy @var{u64vector}
 @deffnx procedure u64vector-append @var{u64vector}@dots{}
 @deffnx procedure subu64vector @var{u64vector} @var{start} @var{end}
+@deffnx procedure subu64vector-move! @var{src-u64vector} @var{src-start} @var{src-end} @var{dst-u64vector} @var{dst-start}
+@deffnx procedure u64vector-shrink! @var{u64vector} @var{k}
 @end deffn
 
 @deffn procedure f32vector? @var{obj}
@@ -5234,9 +5440,13 @@ homogeneous vector types.
 @deffnx procedure f32vector->list @var{f32vector}
 @deffnx procedure list->f32vector @var{list-of-inexact-real}
 @deffnx procedure f32vector-fill! @var{f32vector} @var{fill}
+@deffnx procedure subf32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-f32vectors @var{lst}
 @deffnx procedure f32vector-copy @var{f32vector}
 @deffnx procedure f32vector-append @var{f32vector}@dots{}
 @deffnx procedure subf32vector @var{f32vector} @var{start} @var{end}
+@deffnx procedure subf32vector-move! @var{src-f32vector} @var{src-start} @var{src-end} @var{dst-f32vector} @var{dst-start}
+@deffnx procedure f32vector-shrink! @var{f32vector} @var{k}
 @end deffn
 
 @deffn procedure f64vector? @var{obj}
@@ -5248,9 +5458,13 @@ homogeneous vector types.
 @deffnx procedure f64vector->list @var{f64vector}
 @deffnx procedure list->f64vector @var{list-of-inexact-real}
 @deffnx procedure f64vector-fill! @var{f64vector} @var{fill}
+@deffnx procedure subf64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
+@deffnx procedure append-f64vectors @var{lst}
 @deffnx procedure f64vector-copy @var{f64vector}
 @deffnx procedure f64vector-append @var{f64vector}@dots{}
 @deffnx procedure subf64vector @var{f64vector} @var{start} @var{end}
+@deffnx procedure subf64vector-move! @var{src-f64vector} @var{src-start} @var{src-end} @var{dst-f64vector} @var{dst-start}
+@deffnx procedure f64vector-shrink! @var{f64vector} @var{k}
 @end deffn
 
 For example:
@@ -5264,6 +5478,9 @@ For example:
 255
 > @b{(u8vector->list v)}
 (10 255 99)
+> @b{(u8vector-shrink! v 2)}
+> @b{(v)}
+#u8(10 255)
 @end smallexample
 
 @deffn procedure object->u8vector @var{obj} @r{[}@var{encoder}@r{]}
