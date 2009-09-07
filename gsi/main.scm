@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2009-08-03 13:04:49 feeley>
+;;; File: "main.scm", Time-stamp: <2009-09-07 13:20:02 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -342,8 +342,8 @@
                                                       (do-compile-file
                                                        file
                                                        (##cons 'obj sym-opts)
-                                                       (and output
-                                                            (##eq? type 'obj)))))
+                                                       (and (##eq? type 'obj)
+                                                            output))))
                                                  (add-obj-file obj-file)
                                                  (if (##eq? type 'exe)
                                                      (add-tmp-file obj-file))))
