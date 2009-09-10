@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2009-09-10 16:47:11 feeley>
+;;; File: "_num.scm", Time-stamp: <2009-09-10 16:58:34 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2009 by Brad Lucier, All Rights Reserved.
@@ -4719,14 +4719,17 @@
 
 (define-prim (clear-bit-field size position n)
   (macro-force-vars (size position n)
-    (cond ((##not (macro-exact-int? size))
-	   (##fail-check-exact-integer 1 clear-bit-field size position n))
-	  ((##not (macro-exact-int? position))
-	   (##fail-check-exact-integer 2 clear-bit-field size position n))
-	  ((##not (macro-exact-int? n))
-	   (##fail-check-exact-integer 3 clear-bit-field size position n))
-	  (else
-	   (##clear-bit-field size position n)))))
+    (macro-check-index
+     size
+     1
+     (clear-bit-field size position n)
+     (macro-check-index
+      position
+      2
+      (clear-bit-field size position n)
+      (if (##not (macro-exact-int? n))
+	   (##fail-check-exact-integer 3 clear-bit-field size position n)
+	   (##clear-bit-field size position n))))))
 
 (define-prim (##replace-bit-field size position newfield n)
   (let ((m (##bit-mask size)))
@@ -4736,16 +4739,20 @@
 
 (define-prim (replace-bit-field size position newfield n)
   (macro-force-vars (size position newfield n)
-    (cond ((##not (macro-exact-int? size))
-	   (##fail-check-exact-integer 1 replace-bit-field size position newfield n))
-	  ((##not (macro-exact-int? position))
-	   (##fail-check-exact-integer 2 replace-bit-field size position newfield n))
-	  ((##not (macro-exact-int? newfield))
-	   (##fail-check-exact-integer 3 replace-bit-field size position newfield n))
-	  ((##not (macro-exact-int? n))
-	   (##fail-check-exact-integer 4 replace-bit-field size position newfield n))
-	  (else
-	   (##replace-bit-field size position newfield n)))))
+    (macro-check-index
+     size
+     1
+     (replace-bit-field size position newfield n)
+     (macro-check-index
+      position
+      2
+      (replace-bit-field size position newfield n)
+      (cond ((##not (macro-exact-int? newfield))
+             (##fail-check-exact-integer 3 replace-bit-field size position newfield n))
+            ((##not (macro-exact-int? n))
+             (##fail-check-exact-integer 4 replace-bit-field size position newfield n))
+            (else
+             (##replace-bit-field size position newfield n)))))))
 
 (define-prim (##copy-bit-field size position from to)
   (##bitwise-merge
@@ -4755,16 +4762,20 @@
 
 (define-prim (copy-bit-field size position from to)
   (macro-force-vars (size position from to)
-    (cond ((##not (macro-exact-int? size))
-	   (##fail-check-exact-integer 1 copy-bit-field size position from to))
-	  ((##not (macro-exact-int? position))
-	   (##fail-check-exact-integer 2 copy-bit-field size position from to))
-	  ((##not (macro-exact-int? from))
-	   (##fail-check-exact-integer 3 copy-bit-field size position from to))
-	  ((##not (macro-exact-int? to))
-	   (##fail-check-exact-integer 4 copy-bit-field size position from to))
-	  (else
-	   (##copy-bit-field size position from to)))))
+    (macro-check-index
+     size
+     1
+     (copy-bit-field size position from to)
+     (macro-check-index
+      position
+      2
+      (copy-bit-field size position from to)
+      (cond ((##not (macro-exact-int? from))
+             (##fail-check-exact-integer 3 copy-bit-field size position from to))
+            ((##not (macro-exact-int? to))
+             (##fail-check-exact-integer 4 copy-bit-field size position from to))
+            (else
+             (##copy-bit-field size position from to)))))))
 
 (define-prim (##bit-mask size)
   (##bitwise-not (##arithmetic-shift -1 size)))
