@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2009-09-07 13:20:02 feeley>
+;;; File: "main.scm", Time-stamp: <2009-09-16 09:26:17 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -375,8 +375,8 @@
                                                      (do-compile-file-to-c
                                                       file
                                                       sym-opts
-                                                      (and output
-                                                           (##eq? type 'c)))))
+                                                      (and (##eq? type 'c)
+                                                           output))))
                                                 (add-gen-c-file gen-c-file)
                                                 (if (##eq? type 'exe)
                                                     (let ((obj-file
