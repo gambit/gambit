@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2009-08-14 15:23:09 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2009-09-17 12:42:02 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -863,15 +863,13 @@
 
 (define (macro-expand source env)
   (let ((code (source-code source)))
-    (let ((descr (env-lookup-macro env (source-code (car code)))))
-      (if (##macro-descr-def-syntax? descr)
-        (##sourcify-deep
-         ((##macro-descr-expander descr) source)
-         source)
-        (expression->source
-         (apply (##macro-descr-expander descr)
-                (cdr (source->expression source)))
-         source)))))
+    (let* ((descr (env-lookup-macro env (source-code (car code))))
+           (expander (##macro-descr-expander descr)))
+      (##sourcify-deep
+       (if (##macro-descr-def-syntax? descr)
+           (expander source)
+           (apply expander (cdr (source->expression source))))
+       source))))
 
 (define (pt-self-eval source env use)
   (let ((val (source->expression source)))
