@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-09-03 14:27:38 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-09-27 09:09:14 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3162,100 +3162,118 @@ end-of-code
    cont
    i))
 
-(define-prim (##continuation-next cont)
+(define-prim (##continuation-copy cont)
   (##declare (not interrupts-enabled))
-  (let ((next
+  (let ((cont-copy
          (##c-code #<<end-of-code
 
-#define DYNAMIC_ENV_BIND_DENV 2
+          ___SCMOBJ cont = ___ARG1;
+          ___SCMOBJ frame = ___FIELD(cont,___CONTINUATION_FRAME);
+          ___SCMOBJ denv  = ___FIELD(cont,___CONTINUATION_DENV);
 
-          ___SCMOBJ f = ___ARG1;
-          ___SCMOBJ frame = ___FIELD(f,___CONTINUATION_FRAME);
-          ___SCMOBJ denv  = ___FIELD(f,___CONTINUATION_DENV);
-          ___SCMOBJ ra;
-          ___SCMOBJ *fp, frame_ra, next_frame;
-          int fs;
-          int link;
-
-          if (___TYP(frame)==___tSUBTYPED)
-            {
-              /* continuation frame is in the heap */
-
-              ra = ___FIELD(frame,0);
-
-              fp = ___BODY_AS(frame,___tSUBTYPED);
-
-              if (ra == ___GSTATE->internal_return)
-                ___RETI_GET_FS_LINK(fp[___FRAME_RETI_RA],fs,link)
-              else
-                ___RETN_GET_FS_LINK(ra,fs,link)
-
-              fp += fs+1;
-
-              if (ra == ___GSTATE->dynamic_env_bind_return)
-                denv = fp[-DYNAMIC_ENV_BIND_DENV];
-
-              next_frame = fp[-link-1];
-
-              if (next_frame == 0)
-                ___RESULT = ___FAL;
-              else
-                {
-                  ___hp[0]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION);
-                  ___ADD_VECTOR_ELEM(0,next_frame)
-                  ___ADD_VECTOR_ELEM(1,denv)
-                  ___hp+=___CONTINUATION_SIZE+1;
-                  ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
-                }
-            }
-          else
-            {
-              /* continuation frame is in the stack */
-
-              ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
-
-              if (ra == ___GSTATE->internal_return)
-                ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
-              else
-                ___RETN_GET_FS_LINK(ra,fs,link)
-
-              fp = ___CAST(___SCMOBJ*,frame)+___FRAME_SPACE(fs);
-              frame_ra = fp[-link-1];
-
-              if (ra == ___GSTATE->dynamic_env_bind_return)
-                denv = fp[-DYNAMIC_ENV_BIND_DENV];
-
-              if (frame_ra == ___GSTATE->handler_break)
-                {
-                  /* first frame of that section */
-
-                  next_frame = fp[___BREAK_FRAME_NEXT];
-                }
-              else
-                {
-                  /* not the first frame of that section */
-
-                  *fp = frame_ra;
-                  next_frame = ___CAST(___SCMOBJ,fp);
-                }
-
-              if (next_frame == 0)
-                ___RESULT = ___FAL;
-              else
-                {
-                  ___hp[0]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION);
-                  ___ADD_VECTOR_ELEM(0,next_frame)
-                  ___ADD_VECTOR_ELEM(1,denv)
-                  ___hp+=___CONTINUATION_SIZE+1;
-                  ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
-                }
-            }
+          ___hp[0]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION);
+          ___ADD_VECTOR_ELEM(0,frame);
+          ___ADD_VECTOR_ELEM(1,denv);
+          ___hp+=___CONTINUATION_SIZE+1;
+          ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
        
 end-of-code
 
           cont)))
-        (##check-heap)
-        next))
+    (##check-heap)
+    cont-copy))
+
+(define-prim (##continuation-next! cont)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+#define DYNAMIC_ENV_BIND_DENV 2
+
+   ___SCMOBJ cont = ___ARG1;
+   ___SCMOBJ frame = ___FIELD(cont,___CONTINUATION_FRAME);
+   ___SCMOBJ denv  = ___FIELD(cont,___CONTINUATION_DENV);
+   ___SCMOBJ ra;
+   ___SCMOBJ *fp, frame_ra, next_frame;
+   int fs;
+   int link;
+
+   if (___TYP(frame)==___tSUBTYPED)
+     {
+       /* continuation frame is in the heap */
+
+       ra = ___FIELD(frame,0);
+
+       fp = ___BODY_AS(frame,___tSUBTYPED);
+
+       if (ra == ___GSTATE->internal_return)
+         ___RETI_GET_FS_LINK(fp[___FRAME_RETI_RA],fs,link)
+       else
+         ___RETN_GET_FS_LINK(ra,fs,link)
+
+       fp += fs+1;
+
+       if (ra == ___GSTATE->dynamic_env_bind_return)
+         denv = fp[-DYNAMIC_ENV_BIND_DENV];
+
+       next_frame = fp[-link-1];
+
+       if (next_frame == 0)
+         ___RESULT = ___FAL;
+       else
+         {
+           ___FIELD(cont,___CONTINUATION_FRAME) = next_frame;
+           ___FIELD(cont,___CONTINUATION_DENV) = denv;
+           ___RESULT = cont;
+         }
+     }
+   else
+     {
+       /* continuation frame is in the stack */
+
+       ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
+
+       if (ra == ___GSTATE->internal_return)
+         ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
+       else
+         ___RETN_GET_FS_LINK(ra,fs,link)
+
+       fp = ___CAST(___SCMOBJ*,frame)+___FRAME_SPACE(fs);
+       frame_ra = fp[-link-1];
+
+       if (ra == ___GSTATE->dynamic_env_bind_return)
+         denv = fp[-DYNAMIC_ENV_BIND_DENV];
+
+       if (frame_ra == ___GSTATE->handler_break)
+         {
+           /* first frame of that section */
+
+           next_frame = fp[___BREAK_FRAME_NEXT];
+         }
+       else
+         {
+           /* not the first frame of that section */
+
+           *fp = frame_ra;
+           next_frame = ___CAST(___SCMOBJ,fp);
+         }
+
+       if (next_frame == 0)
+         ___RESULT = ___FAL;
+       else
+         {
+           ___FIELD(cont,___CONTINUATION_FRAME) = next_frame;
+           ___FIELD(cont,___CONTINUATION_DENV) = denv;
+           ___RESULT = cont;
+         }
+     }
+       
+end-of-code
+
+   cont))
+
+(define-prim (##continuation-next cont)
+  (##declare (not interrupts-enabled))
+  (##continuation-next! (##continuation-copy cont)))
 
 ;;;----------------------------------------------------------------------------
 

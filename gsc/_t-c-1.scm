@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2009-08-03 11:00:29 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2009-10-28 23:15:04 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -196,10 +196,14 @@
 ;; (i.e. ___FRAME_RESERVE and ___FRAME_ALIGNMENT).
 
 (define targ-frame-reserve #f)
-(set! targ-frame-reserve 1) ; no slots reserved for linking
+(set! targ-frame-reserve 1) ;; when the stack frame is transformed to a
+                            ;; heap frame, 3 extra slots are needed to
+                            ;; store the subtype object header, the link
+                            ;; to the next frame and the return address.
+                            ;; ***currently we use 1 because of a bug***
 
 (define targ-frame-alignment #f)
-(set! targ-frame-alignment 4) ; no alignment constraint
+(set! targ-frame-alignment 4) ;; align frame to multiple of 4 slots
 
 ;;;----------------------------------------------------------------------------
 ;;

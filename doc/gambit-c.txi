@@ -3947,6 +3947,84 @@ The procedures in this section are not yet documented.
 @deffnx procedure continuation-capture @var{proc}
 @deffnx procedure continuation-graft @var{cont} @var{proc} @var{obj}@dots{}
 @deffnx procedure continuation-return @var{cont} @var{obj}@dots{}
+
+These procedures provide access to internal first-class continuations
+which are represented using continuation objects distinct from procedures.
+
+The procedure @code{continuation?} returns @code{#t} when @var{obj} is
+a continuation object and @code{#f} otherwise.
+
+The procedure @code{continuation-capture} is similar to the
+@code{call/cc} procedure but it represents the continuation with a
+continuation object.  The @var{proc} parameter must be a procedure
+accepting a single argument.  The procedure
+@code{continuation-capture} reifies its continuation and calls
+@var{proc} with the corresponding continuation object as its sole
+argument.  Like for @code{call/cc}, the implicit continuation of the
+call to @var{proc} is the implicit continuation of the call to
+@code{continuation-capture}.
+
+The procedure @code{continuation-graft} performs a procedure call to
+the procedure @var{proc} with arguments @var{obj}@dots{} and the
+implicit continuation corresponding to the continuation object
+@var{cont}.  The current continuation of the call to procedure
+@code{continuation-graft} is ignored.
+
+The procedure @code{continuation-return} invokes the implicit
+continuation corresponding to the continuation object @var{cont} with
+the result(s) @var{obj}@dots{}.  This procedure can be easily
+defined in terms of @code{continuation-graft}:
+
+@smallexample
+(define (continuation-return cont . objs)
+  (continuation-graft (lambda () (apply values objs))))
+@end smallexample
+
+For example:
+
+@smallexample
+> @b{(define x #f)}
+> @b{(define p (make-parameter 11))}
+> @b{(pp (parameterize ((p 22))
+        (cons 33 (continuation-capture
+                  (lambda (c) (set! x c) 44)))))}
+(33 . 44)
+> @b{x}
+#<continuation #2>
+> @b{(continuation-return x 55)}
+(33 . 55)
+> @b{(continuation-graft x (lambda () (expt 2 10)))}
+(33 . 1024)
+> @b{(continuation-graft x expt 2 10)}
+(33 . 1024)
+> @b{(continuation-graft x (lambda () (p)))}
+(33 . 22)
+> @b{(define (map-sqrt1 lst)
+    (call/cc
+     (lambda (k)
+       (map (lambda (x)
+              (if (< x 0)
+                  (k 'error)
+                  (sqrt x)))
+            lst))))}
+> @b{(map-sqrt1 '(1 4 9))}
+(1 2 3)
+> @b{(map-sqrt1 '(1 -1 9))}
+error
+> @b{(define (map-sqrt2 lst)
+    (continuation-capture
+     (lambda (c)
+       (map (lambda (x)
+              (if (< x 0)
+                  (continuation-return c 'error)
+                  (sqrt x)))
+            lst))))}
+> @b{(map-sqrt2 '(1 4 9))}
+(1 2 3)
+> @b{(map-sqrt2 '(1 -1 9))}
+error
+@end smallexample
+
 @end deffn
 
 @deffn procedure display-exception @var{exc} @r{[}@var{port}@r{]}
@@ -3954,7 +4032,90 @@ The procedures in this section are not yet documented.
 @deffnx procedure display-procedure-environment @var{proc} @r{[}@var{port}@r{]}
 @deffnx procedure display-continuation-environment @var{cont} @r{[}@var{port}@r{]}
 @deffnx procedure display-continuation-dynamic-environment @var{cont} @r{[}@var{port}@r{]}
-@deffnx procedure display-continuation-backtrace @var{cont} @r{[}@var{port} @r{[}@var{all-frames?} @r{[}@var{display-env?} @r{[}@var{max-head} @r{[}@var{max-tail} @r{[}@var{depth}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}
+@end deffn
+
+@deffn procedure display-continuation-backtrace @var{cont} @r{[}@var{port} @r{[}@var{all-frames?} @r{[}@var{display-env?} @r{[}@var{max-head} @r{[}@var{max-tail} @r{[}@var{depth}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}
+
+The procedure @code{display-continuation-backtrace} displays the
+frames of the continuation corresponding to the continuation object
+@var{cont} on the port @var{port}.  If it is not specified, @var{port}
+defaults to the current output-port.  The frames are displayed in the
+same format as the REPL's @samp{,b} command.
+
+The parameter @var{all-frames?}, which defaults to @code{#f}, controls
+which frames are displayed.  Some frames of ancillary importance, such
+as internal frames created by the interpreter, are not displayed when
+@var{all-frames?} is @code{#f}.  Otherwise all frames are displayed.
+
+The parameter @var{display-env?}, which defaults to @code{#f}, controls
+if the frames are displayed with its environment (the variables
+accessible and their bindings).
+
+The parameters @var{max-head} and @var{max-tail}, which default to 10
+and 4 respectively, control how many frames are displayed at the head
+and tail of the continuation.
+
+The parameter @var{depth}, which defaults to 0, causes the frame numbers
+to be offset by that value.
+
+For example:
+
+@smallexample
+> @b{(define x #f)}
+> @b{(define (fib n)
+    (if (< n 2)
+        (continuation-capture
+         (lambda (c) (set! x c) 1))
+        (+ (fib (- n 1))
+           (fib (- n 2)))))}
+> @b{(fib 10)}
+89
+> @b{(display-continuation-backtrace x)}
+0  fib             (console)@@7:12     (fib (- n 2))
+1  fib             (console)@@7:12     (fib (- n 2))
+2  fib             (console)@@7:12     (fib (- n 2))
+3  fib             (console)@@7:12     (fib (- n 2))
+4  fib             (console)@@7:12     (fib (- n 2))
+5  (interaction)   (console)@@8:1      (fib 10)
+#f
+> @b{(display-continuation-backtrace x (current-output-port) #t)}
+0  fib             (console)@@7:12     (fib (- n 2))
+1  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
+2  fib             (console)@@7:12     (fib (- n 2))
+3  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
+4  fib             (console)@@7:12     (fib (- n 2))
+5  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
+6  fib             (console)@@7:12     (fib (- n 2))
+7  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
+8  fib             (console)@@7:12     (fib (- n 2))
+9  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
+...
+13 ##with-no-result-expected-toplevel 
+14 ##repl-debug            
+15 ##repl-debug-main       
+16 ##kernel-handlers       
+#f
+> @b{(display-continuation-backtrace x (current-output-port) #f #t)}
+0  fib             (console)@@7:12     (fib (- n 2))
+        n = 2
+1  fib             (console)@@7:12     (fib (- n 2))
+        n = 4
+2  fib             (console)@@7:12     (fib (- n 2))
+        n = 6
+3  fib             (console)@@7:12     (fib (- n 2))
+        n = 8
+4  fib             (console)@@7:12     (fib (- n 2))
+        n = 10
+5  (interaction)   (console)@@8:1      (fib 10)
+#f
+> @b{(display-continuation-backtrace x (current-output-port) #f #f 2 1 100)}
+100 fib            (console)@@7:12     (fib (- n 2))
+101 fib            (console)@@7:12     (fib (- n 2))
+...
+105 (interaction)  (console)@@8:1      (fib 10)
+#f
+@end smallexample
+
 @end deffn
 
 @deffn procedure make-thread-group @r{[}@var{name} @r{[}@var{thread-group}@r{]}@r{]}

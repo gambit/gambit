@@ -1,4 +1,4 @@
-/* File: "mem.c", Time-stamp: <2009-05-14 14:32:13 feeley> */
+/* File: "mem.c", Time-stamp: <2009-10-29 00:03:16 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.  */
 
@@ -260,7 +260,7 @@
  * Continuations:
  *     subtype = ___sCONTINUATION
  *     field_0 = first frame (C pointer to stack at first and then Scheme obj)
- *     field_1 = dynamic environment (optional)
+ *     field_1 = dynamic environment (#f when continuation is delimited)
  *
  * Frame:
  *     subtype = ___sFRAME
@@ -2205,9 +2205,14 @@ ___WORD *orig_ptr;)
 
   cf = *ptr;
 
+#if 0
+  printf("-------------\n");;;;;;;;;;;;;;;;;;;;;;;;;;
+  fflush(stdout);
+#endif
+
   if (___TYP(cf) == ___tFIXNUM && cf != ___FIX(0))
     {
-      /* continuation's frame is in the stack */
+      /* continuation frame is in the stack */
 
       ___WORD *alloc = alloc_heap_ptr;
       ___WORD *limit = alloc_heap_limit;
@@ -2230,6 +2235,28 @@ ___WORD *orig_ptr;)
           ___COVER_MARK_CAPTURED_CONTINUATION_RETN;
         }
 
+#if 0
+      printf("fp=0x%08lx ra1=0x%08lx fs=%d link=%d\n", fp, ra1, fs, link);;;;;;;;;;;;;;;;;;;;;;;;;;
+      fflush(stdout);
+#endif
+
+      /* with reserve=1
+bash-3.2$ gsi/gsi
+-------------
+Gambit v4.5.2
+
+> -------------
+fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
+fp=0x1006fff88 ra1=0x1002efc21 fs=7 link=0
+fp=0x1006fffc8 ra1=0x1002efda1 fs=3 link=0
+fp=0x1006fffe8 ra1=0x1001f4e01 fs=3 link=0
+-------------
+-------------
+fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
+-------------
+fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
+      */
+
       ___FP_ADJFP(fp,-___FRAME_SPACE(fs)); /* get base of frame */
 
       ra2 = ___FP_STK(fp,link+1);
@@ -2238,7 +2265,6 @@ ___WORD *orig_ptr;)
         {
           ___COVER_MARK_CAPTURED_CONTINUATION_ALREADY_COPIED;
           *ptr = ra2; /* already copied, replace by forwarding pointer */
-
         }
       else
         {
@@ -2259,12 +2285,12 @@ ___WORD *orig_ptr;)
 
           *alloc++ = ___MAKE_HD_WORDS(words, ___sFRAME);
 #if ___SUBTYPED_OVERHEAD != 1
-          @error "___SUBTYPED_OVERHEAD != 1"
+          #error "___SUBTYPED_OVERHEAD != 1"
 #endif
           forw = ___TAG((alloc - ___BODY_OFS), ___tFIXNUM);
           *alloc++ = ra1;
 #if ___FRAME_EXTRA_SLOTS != 1
-          @error "___FRAME_EXTRA_SLOTS != 1"
+          #error "___FRAME_EXTRA_SLOTS != 1"
 #endif
 
           for (i=fs; i>0; i--)
