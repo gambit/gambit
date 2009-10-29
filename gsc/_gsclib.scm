@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2009-08-03 12:02:31 feeley>
+;;; File: "_gsclib.scm", Time-stamp: <2009-10-29 17:00:49 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -28,7 +28,8 @@
          #!rest other;;;;;;;;;;
          #!key
          (options (macro-absent-obj))
-         (output (macro-absent-obj)))
+         (output (macro-absent-obj))
+         (module-name (macro-absent-obj)))
   (macro-force-vars (filename)
     (macro-check-string filename 1 (compile-file-to-c filename . other);;;;;;
       (let* ((opts
@@ -41,18 +42,26 @@
                   (##path-directory
                    (##path-normalize filename))
                   (macro-force-vars (output)
-                    output))))
+                    output)))
+             (mod-name
+              (if (##eq? module-name (macro-absent-obj))
+                  #f
+                  (macro-force-vars (module-name)
+                    module-name))))
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
                (error "list expected for options: parameter"));;;;;;;
               ((##not (##string? out))
                (error "string expected for output: parameter"));;;;;;;;;;
+              ((##not (or (##not mod-name) (##string? mod-name)))
+               (error "string or #f expected for module-name: parameter"));;;;;;;;;;
               (else
                (##compile-file-to-c filename
                                     opts
-                                    out)))))))
+                                    out
+                                    mod-name)))))))
 
-(define (##compile-file-to-c filename options output)
+(define (##compile-file-to-c filename options output mod-name)
   (let* ((expanded-output
           (##path-normalize output))
          (c-filename
@@ -69,7 +78,12 @@
          (c-filename-no-dir-no-ext
           (##path-strip-directory
            (##path-strip-extension c-filename))))
-    (and (c#cf filename #f options c-filename c-filename-no-dir-no-ext)
+    (and (c#cf filename
+               #f
+               options
+               c-filename
+               (or mod-name
+                   c-filename-no-dir-no-ext))
          c-filename)))
 
 (define (compile-file

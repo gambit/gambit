@@ -1519,7 +1519,7 @@ which flag you need.
 The Gambit Scheme compiler features the following procedures that
 are not available in the Gambit Scheme interpreter.
 
-@deffn procedure compile-file-to-c @var{file} @r{[}@code{options:} @var{options}@r{]} @r{[}@code{output:} @var{output}@r{]}
+@deffn procedure compile-file-to-c @var{file} @r{[}@code{options:} @var{options}@r{]} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{module-name:} @var{module-name}@r{]}
 @pindex gsc
 
 The @var{file} parameter must be a string naming an existing file
@@ -1528,9 +1528,13 @@ containing Scheme source code.  The extension can be omitted from
 extension.  This procedure compiles the source file into a file
 containing C code.  By default, this file is named after @var{file}
 with the extension replaced with @samp{.c}.  The name of the generated
-file can be specified with the @var{output} parameter.  If @var{output}
-is a string naming a directory then the C file is created in that
-directory.  Otherwise the name of the C file is @var{output}.
+file can be specified with the @var{output} parameter.  If
+@var{output} is a string naming a directory then the C file is created
+in that directory.  Otherwise the name of the C file is @var{output}.
+The name of the generated module can be specified with the
+@var{module-name} parameter.  If @var{module-name} is @code{#f} or is
+not specified, then the name of the module is derived from the name of
+the C file generated, without the extension.
 
 Compilation options are specified through the @var{options} parameter
 which must be a list of symbols.  Any combination of the following

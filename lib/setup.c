@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2009-06-10 07:25:51 feeley> */
+/* File: "setup.c", Time-stamp: <2009-10-29 17:33:54 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -995,10 +995,36 @@ ___module_struct *module;)
 {
   if (module->lbl_count > 0)
     {
-      ___FIELD(___FIELD(module_descr,0),module_count) =
-        *module->lp+___LS*___WS;
+      ___SCMOBJ err;
+      ___SCMOBJ mod_name;
+      ___SCMOBJ descr = ___make_vector (2, ___FAL, ___STILL);
+
+      if (___FIXNUMP(descr))
+        return descr;
+
+      if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
+                   (module->name+1,
+                    &mod_name,
+                    0))
+          != ___FIX(___NO_ERR))
+        {
+          ___release_scmobj (descr);
+          return err;
+        }
+
+      ___FIELD(descr,0) = mod_name;
+
+      ___release_scmobj (mod_name);
+
+      ___FIELD(descr,1) = *module->lp+___LS*___WS;
+
+      ___FIELD(___FIELD(module_descr,0),module_count) = descr;
+
+      ___release_scmobj (descr);
+
       module_count++;
     }
+
   return module->init_proc ();
 }
 
@@ -2982,7 +3008,7 @@ ___setup_params_struct *setup_params;)
 
   if ((___err = ___make_sfun_stack_marker
                   (&marker,
-                   ___FIELD(___FIELD(___GSTATE->program_descr,0),0)))
+                   ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1)))
       == ___FIX(___NO_ERR))
     {
       ___err = ___call (0, ___FIELD(marker,0), marker);

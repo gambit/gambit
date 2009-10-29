@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-09-27 09:09:14 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-10-29 17:17:47 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -4344,11 +4344,14 @@ end-of-code
 (define-prim (##execute-modules exec-vector i)
   (let loop ((i i))
     (let ((len (##vector-length exec-vector)))
-      (cond ((##fixnum.= i (##fixnum.- len 1))
-             ((##vector-ref exec-vector i))) ; tail-call last module
-            ((##fixnum.< i len)
-             ((##vector-ref exec-vector i))
-             (loop (##fixnum.+ i 1)))))))
+      (if (##fixnum.< i len)
+          (let* ((descr (##vector-ref exec-vector i))
+                 (init-mod (##vector-ref descr 1)))
+            (if (##fixnum.= i (##fixnum.- len 1))
+                (init-mod) ;; tail-call last module
+                (begin
+                  (init-mod)
+                  (loop (##fixnum.+ i 1)))))))))
 
 (define-prim (##execute-program)
   (let ((exec-vector (##vector-ref ##program-descr 0)))
