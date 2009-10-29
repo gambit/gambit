@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-09-03 15:40:51 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-10-29 11:02:58 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -4522,21 +4522,26 @@
   (define max-chunk-length 512)
 
   (define (read-chunk i ml)
-    (let loop ((i i))
-      (if (##fixnum.< i ml)
-          (let ((c (macro-read-char port)))
-            (if (##char? c)
-                (if (##eq? c separator)
-                    (if include-separator?
-                        (let ((s (##make-string (##fixnum.+ i 1))))
+    (if (##char? separator)
+        (let loop ((i i))
+          (if (##fixnum.< i ml)
+              (let ((c (macro-read-char port)))
+                (if (##char? c)
+                    (if (##eq? c separator)
+                        (if include-separator?
+                            (let ((s (##make-string (##fixnum.+ i 1))))
+                              (##string-set! s i c)
+                              s)
+                            (##make-string i))
+                        (let ((s (loop (##fixnum.+ i 1))))
                           (##string-set! s i c)
-                          s)
-                        (##make-string i))
-                    (let ((s (loop (##fixnum.+ i 1))))
-                      (##string-set! s i c)
-                      s))
-                (##make-string i)))
-          (##make-string i))))
+                          s))
+                    (##make-string i)))
+              (##make-string i)))
+        (let ((s (##make-string ml)))
+          (let ((n (##read-substring s i ml port 1)))
+            (##string-shrink! s (##fixnum.+ i n))
+            s))))
 
   (if (##fixnum.< 0 max-length)
       (let ((first (macro-read-char port)))
