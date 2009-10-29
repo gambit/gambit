@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-09-03 15:47:07 feeley>
+;;; File: "_eval.scm", Time-stamp: <2009-10-29 10:40:27 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -2554,12 +2554,11 @@
 
 (define ##cprc-glo-def
   (macro-make-cprc
-   (let ((rte (##first-argument #f))) ;; avoid constant propagation of #f
-     (let ((val (macro-code-run (^ 0))))
-       (macro-define-step! (val)
-         (begin
-           (##global-var-set! (^ 1) val)
-           (##void)))))))
+   (let ((val (macro-code-run (^ 0))))
+     (macro-define-step! (val)
+       (begin
+         (##global-var-set! (^ 1) val)
+         (##void))))))
 
 (define ##gen-glo-def
   (macro-make-gen (ind val)
