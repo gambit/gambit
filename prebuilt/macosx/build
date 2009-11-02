@@ -47,9 +47,9 @@ for VARIANT in intel32 intel64 G3 G4 G5 universal; do
                ;;
   esac
 
-  SYSROOT="/Developer/SDKs/MacOSX10.4u.sdk"
+  SYSROOT="/Developer/SDKs/MacOSX10.5.sdk"
 
-  CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-mmacosx-version-min=10.4 -Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_HOST" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host # --enable-gcc-opts
+  CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-mmacosx-version-min=10.5 -Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_HOST" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host # --enable-gcc-opts
 
   cd "$herefromroot"
 

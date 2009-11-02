@@ -136,6 +136,14 @@ Section "MainSection" SEC01
 
   Delete '$INSTDIR\v${PRODUCT_VERSION}\bin\binpatch.exe'
 
+  ; Create shortcuts
+
+  CreateDirectory "$SMPROGRAMS\Gambit-C"
+  CreateShortCut "$SMPROGRAMS\Gambit-C\Interpreter.lnk" "$INSTDIR\v${PRODUCT_VERSION}\bin\gsi.exe"
+  CreateShortCut "$SMPROGRAMS\Gambit-C\Compiler.lnk" "$INSTDIR\v${PRODUCT_VERSION}\bin\gsc.exe"
+  CreateShortCut "$SMPROGRAMS\Gambit-C\Documentation.lnk" "$INSTDIR\v${PRODUCT_VERSION}\doc\gambit-c.html"
+  CreateShortCut "$SMPROGRAMS\Gambit-C\Uninstall.lnk" "$INSTDIR\v${PRODUCT_VERSION}\bin\uninstall-gambc.exe"
+
 SectionEnd
 
 Section -Post
@@ -183,4 +191,10 @@ Section "Uninstall"
   Push "$instdir_short2\v${PRODUCT_VERSION}\bin"
   Call un.RemoveFromPath
 
+  Delete "$SMPROGRAMS\Gambit-C\Interpreter.lnk"
+  Delete "$SMPROGRAMS\Gambit-C\Compiler.lnk"
+  Delete "$SMPROGRAMS\Gambit-C\Documentation.lnk"
+  Delete "$SMPROGRAMS\Gambit-C\Uninstall.lnk"
+  RMDir "$SMPROGRAMS\Gambit-C"
+ 
 SectionEnd
