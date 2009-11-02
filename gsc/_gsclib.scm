@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2009-10-29 17:00:49 feeley>
+;;; File: "_gsclib.scm", Time-stamp: <2009-11-01 21:29:25 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -347,7 +347,8 @@
          #!rest other;;;;;;;;;;
          #!key
          (output (macro-absent-obj))
-         (base (macro-absent-obj)))
+         (base (macro-absent-obj))
+         (warnings? (macro-absent-obj)))
   (macro-force-vars (modules)
     (if (##not (##pair? modules))
         (macro-check-string-list modules 1 (link-incremental modules . other);;;;;;;;;;;;
@@ -378,15 +379,23 @@
                                     (##current-directory))))
                               (##string-append gambcdir-lib "_gambc"))
                             (macro-force-vars (base)
-                              base))))
+                              base)))
+                       (warn?
+                        (if (##eq? warnings? (macro-absent-obj))
+                            #t
+                            (macro-force-vars (warnings?)
+                              warnings?))))
                   (cond ((##not (##string? out))
                          (error "string expected for output: parameter"));;;;;;;;;;
                         ((##not (##string? baselib))
                          (error "string expected for base: parameter"));;;;;;;;;;
                         (else
-                         (##link-incremental rev-mods out baselib))))))))))
+                         (##link-incremental rev-mods
+                                             out
+                                             baselib
+                                             warn?))))))))))
 
-(define (##link-incremental rev-mods output base)
+(define (##link-incremental rev-mods output base warnings?)
   (let* ((expanded-output
           (##path-normalize output))
          (c-filename
@@ -403,13 +412,15 @@
     (c#targ-linker #t
                    base-and-mods
                    c-filename
-                   #f)))
+                   #f
+                   warnings?)))
 
 (define (link-flat
          modules
          #!rest other;;;;;;;;;;
          #!key
-         (output (macro-absent-obj)))
+         (output (macro-absent-obj))
+         (warnings? (macro-absent-obj)))
   (macro-force-vars (modules)
     (if (##not (##pair? modules))
         (macro-check-string-list modules 1 (link-flat modules . other);;;;;;;;;;;;
@@ -424,19 +435,26 @@
                       1
                       (link-flat modules . other);;;;;;;;;;;;
                       (loop (##cdr lst) (##cons s rev-mods)))))
-                (let ((out
-                       (if (##eq? output (macro-absent-obj))
-                           (##path-directory
-                            (##path-normalize
-                             (##string-append (##car rev-mods) ".c")))
-                           (macro-force-vars (output)
-                             output))))
+                (let* ((out
+                        (if (##eq? output (macro-absent-obj))
+                            (##path-directory
+                             (##path-normalize
+                              (##string-append (##car rev-mods) ".c")))
+                            (macro-force-vars (output)
+                              output)))
+                        (warn?
+                         (if (##eq? warnings? (macro-absent-obj))
+                             #t
+                             (macro-force-vars (warnings?)
+                               warnings?))))
                   (cond ((##not (##string? out))
                          (error "string expected for output: parameter"));;;;;;;;;;
                         (else
-                         (##link-flat rev-mods out))))))))))
+                         (##link-flat rev-mods
+                                      out
+                                      warn?))))))))))
 
-(define (##link-flat rev-mods output)
+(define (##link-flat rev-mods output warnings?)
   (let* ((expanded-output
           (##path-normalize output))
          (c-filename
@@ -453,7 +471,8 @@
     (c#targ-linker #f
                    mods
                    c-filename
-                   #f)))
+                   #f
+                   warnings?)))
 
 (define-prim (##c-code . args) ;; avoid errors when using -expansion
   (error "##c-code is not callable dynamically"))

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2009-10-28 23:15:04 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2009-11-01 21:31:22 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -777,7 +777,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (targ-linker extension? inputs output output-root)
+(define (targ-linker extension? inputs output output-root warnings?)
   (with-exception-handling
     (lambda ()
       (let* ((root
@@ -837,7 +837,8 @@
           sym-rsrc
           key-rsrc
           glo-rsrc
-          script-line)
+          script-line
+          warnings?)
 
         out))))
 
@@ -1003,9 +1004,11 @@
           sym-rsrc
           key-rsrc
           glo-rsrc
-          script-line)
+          script-line
+          warnings?)
 
-  (targ-validate-rsrc glo-rsrc)
+  (if warnings?
+      (targ-validate-rsrc glo-rsrc))
 
   (let* ((old-sym-glo-rsrc
           (targ-union-rsrc old-sym-rsrc old-glo-rsrc))

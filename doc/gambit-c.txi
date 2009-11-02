@@ -1640,7 +1640,7 @@ hello
 
 @end deffn
 
-@deffn procedure link-incremental @var{module-list} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{base:} @var{base}@r{]}
+@deffn procedure link-incremental @var{module-list} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{base:} @var{base}@r{]} @r{[}@code{warnings?:} @var{warnings?}@r{]}
 @pindex gsc
 
 The first parameter must be a non empty list of strings naming Scheme
@@ -1657,6 +1657,9 @@ The base link file is specified by the @var{base} parameter, which
 must be a string.  By default the base link file is the Gambit runtime
 library link file @samp{~~lib/_gambc.c}.  However, when @var{base} is
 supplied the base link file is named @samp{@var{base}.c}.
+
+The @var{warnings?} parameter controls whether warnings are
+generated for undefined references.
 
 The following example shows how to build the executable program
 @samp{hello} which contains the two Scheme modules @samp{h.scm} and
@@ -1691,7 +1694,7 @@ world
 
 @end deffn
 
-@deffn procedure link-flat @var{module-list} @r{[}@code{output:} @var{output}@r{]}
+@deffn procedure link-flat @var{module-list} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{warnings?:} @var{warnings?}@r{]}
 @pindex gsc
 
 The first parameter must be a non empty list of strings naming Scheme
@@ -1708,6 +1711,9 @@ created in that directory.  Otherwise the name of the link file is
 the link file @samp{@var{output}}, then the name of the dynamically
 loadable object file must be @samp{@var{output}} stripped of its file
 extension.
+
+The @var{warnings?} parameter controls whether warnings are
+generated for undefined references.
 
 The following example shows how to build the dynamically loadable object
 file @samp{lib.o1} which contains the two Scheme modules
