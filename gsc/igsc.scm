@@ -3,7 +3,7 @@
 
 ;;;============================================================================
 
-;;; File: "igsc.scm", Time-stamp: <2009-06-03 15:20:56 feeley>
+;;; File: "igsc.scm", Time-stamp: <2009-11-04 13:14:42 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -32,15 +32,18 @@
 "_front"
 "_prims"
 "_t-c-1"
-"_t-c-2"
 "_t-c-3"
+"_t-c-2"
+"_gsclib"
 "_gsc"
 ))
 
 (define (load-from-gsc file)
   (##namespace ("" load))
-  (display (list "loading " file "\n"))
-  (load (string-append root "../gsc/" file ".scm")))
+  (display "loading ")
+  (write file)
+  (load (string-append root "../gsc/" file ".scm"))
+  (newline))
 
 (eval '(##define-macro (include file)
         `(##include ,(string-append "../gsc/" file))))
