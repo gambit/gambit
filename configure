@@ -638,10 +638,6 @@ GAMBCLIB_BAT
 GAMBCLIB_DEFS_BAT
 LIBS_BAT
 DEFS_BAT
-DEFS_EXE_BAT
-DEFS_LIB_BAT
-DEFS_DYN_BAT
-DEFS_OBJ_BAT
 BUILD_EXE_BAT
 BUILD_LIB_BAT
 BUILD_DYN_BAT
@@ -654,10 +650,6 @@ GAMBCLIB_SH
 GAMBCLIB_DEFS_SH
 LIBS_SH
 DEFS_SH
-DEFS_EXE_SH
-DEFS_LIB_SH
-DEFS_DYN_SH
-DEFS_OBJ_SH
 BUILD_EXE_SH
 BUILD_LIB_SH
 BUILD_DYN_SH
@@ -670,10 +662,6 @@ GAMBCLIB_MF
 GAMBCLIB_DEFS_MF
 LIBS_MF
 DEFS_MF
-DEFS_EXE_MF
-DEFS_LIB_MF
-DEFS_DYN_MF
-DEFS_OBJ_MF
 BUILD_EXE_MF
 BUILD_LIB_MF
 BUILD_DYN_MF
@@ -684,10 +672,6 @@ GAMBCGSILIB
 GAMBCGSCLIB
 GAMBCLIB
 GAMBCLIB_DEFS
-DEFS_EXE
-DEFS_LIB
-DEFS_DYN
-DEFS_OBJ
 BUILD_EXE
 BUILD_LIB
 BUILD_DYN
@@ -705,18 +689,34 @@ X_PRE_LIBS
 X_CFLAGS
 XMKMF
 RTLIBSUBSYS
+DEFS_EXE_BAT
+DEFS_LIB_BAT
+DEFS_DYN_BAT
+DEFS_OBJ_BAT
 FLAGS_EXE_BAT
 FLAGS_LIB_BAT
 FLAGS_DYN_BAT
 FLAGS_OBJ_BAT
+DEFS_EXE_SH
+DEFS_LIB_SH
+DEFS_DYN_SH
+DEFS_OBJ_SH
 FLAGS_EXE_SH
 FLAGS_LIB_SH
 FLAGS_DYN_SH
 FLAGS_OBJ_SH
+DEFS_EXE_MF
+DEFS_LIB_MF
+DEFS_DYN_MF
+DEFS_OBJ_MF
 FLAGS_EXE_MF
 FLAGS_LIB_MF
 FLAGS_DYN_MF
 FLAGS_OBJ_MF
+DEFS_EXE
+DEFS_LIB
+DEFS_DYN
+DEFS_OBJ
 FLAGS_EXE
 FLAGS_LIB
 FLAGS_DYN
@@ -2768,14 +2768,16 @@ FLAGS_DYN=""
 FLAGS_LIB=""
 FLAGS_EXE=""
 
+FLAGS_OBJ_DYN=""
+FLAGS_OBJ_DYN_LIB_EXE=""
+FLAGS_DYN_LIB=""
+
 DEFS_OBJ=""
 DEFS_DYN="-D___DYNAMIC"
 DEFS_LIB=""
 DEFS_EXE=""
 
-FLAGS_OBJ_DYN=""
-FLAGS_OBJ_DYN_LIB_EXE=""
-FLAGS_DYN_LIB=""
+DEFS_OBJ_DYN_LIB_EXE=""
 
 ###############################################################################
 #
@@ -4253,7 +4255,7 @@ fi
 if test "$ENABLE_DEBUG" = yes; then
   $as_echo "#define ___DEBUG 1" >>confdefs.h
 
-  DEFS_DYN="$DEFS_DYN -D___DEBUG"
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG"
 fi
 
 ###############################################################################
@@ -4271,7 +4273,7 @@ fi
 if test "$ENABLE_PROFILE" = yes; then
   $as_echo "#define ___PROFILE 1" >>confdefs.h
 
-  DEFS_DYN="$DEFS_DYN -D___PROFILE"
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___PROFILE"
 fi
 
 ###############################################################################
@@ -4323,7 +4325,7 @@ fi
 if test "$ENABLE_SINGLE_HOST" = yes; then
   $as_echo "#define ___SINGLE_HOST 1" >>confdefs.h
 
-  DEFS_DYN="$DEFS_DYN -D___SINGLE_HOST"
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___SINGLE_HOST"
 fi
 
 ###############################################################################
@@ -4343,7 +4345,7 @@ fi
 if test "$ENABLE_INLINE_JUMPS" = yes; then
   $as_echo "#define ___INLINE_JUMPS 1" >>confdefs.h
 
-  DEFS_DYN="$DEFS_DYN -D___INLINE_JUMPS"
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___INLINE_JUMPS"
 fi
 
 ###############################################################################
@@ -4744,7 +4746,7 @@ fi
 if test "$ENABLE_SHARED" = yes; then
   $as_echo "#define ___SHARED 1" >>confdefs.h
 
-  # don't add to DEFS_DYN
+  # don't add to DEFS_OBJ_DYN_LIB_EXE
 fi
 
 ###############################################################################
@@ -10066,6 +10068,27 @@ FLAGS_LIB="$LDFLAGS $CORCXXFLAGS $FLAGS_LIB $FLAGS_OBJ_DYN_LIB_EXE $FLAGS_DYN_LI
 #FLAGS_EXE="$LDFLAGS $CORCXXFLAGS $FLAGS_EXE $FLAGS_OBJ_DYN_LIB_EXE"
 FLAGS_EXE="$LDFLAGS $FLAGS_OBJ $FLAGS_EXE"
 
+DEFS_OBJ="$DEFS_OBJ_DYN_LIB_EXE $DEFS_OBJ"
+DEFS_DYN="$DEFS_OBJ_DYN_LIB_EXE $DEFS_DYN"
+DEFS_LIB="$DEFS_OBJ_DYN_LIB_EXE $DEFS_LIB"
+DEFS_EXE="$DEFS_OBJ_DYN_LIB_EXE $DEFS_EXE"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -11302,22 +11325,6 @@ INSTALL='$(rootfromhere)/install-sh -c'
 INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
