@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-11-26 15:02:39 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-11-26 15:31:02 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -998,6 +998,12 @@
 (define ##backtrace-default-max-tail #f)
 (set! ##backtrace-default-max-tail 4)
 
+(define ##frame-locat-display? #f)
+(set! ##frame-locat-display? #t)
+
+(define ##frame-call-display? #f)
+(set! ##frame-call-display? #t)
+
 (define-prim (##cmd-b cont port depth display-env?)
   (##display-continuation-backtrace
    cont
@@ -1107,52 +1113,62 @@
          (define locat-width   24)
          (define call-width    27)
 
-         (let ((extra
-                (##fixnum.max
-                 0
-                 (##fixnum.quotient
-                  (##fixnum.- port-width
-                              (##fixnum.+
-                               depth-width
-                               creator-width
-                               locat-width
-                               call-width))
-                  3))))
+         (let* ((extra
+                 (##fixnum.max
+                  0
+                  (##fixnum.quotient
+                   (##fixnum.- port-width
+                               (##fixnum.+
+                                depth-width
+                                creator-width
+                                locat-width
+                                call-width))
+                   3)))
+                (col3
+                 (##fixnum.+ depth-width
+                             creator-width
+                             extra))
+                (col4
+                 (##fixnum.+ col3
+                             locat-width
+                             extra))
+                (locat-display?
+                 ##frame-locat-display?)
+                (call-display?
+                 ##frame-call-display?))
            (##write depth port)
            (tab depth-width)
            (let ((creator (##continuation-creator cont)))
              (if creator
                  (##write (##procedure-friendly-name creator) port)
                  (##write-string "(interaction)" port)))
-           (tab (##fixnum.+ (##fixnum.+ depth-width
-                                        creator-width)
-                            extra))
-           (let ((locat (##continuation-locat cont)))
-             (##display-locat locat pinpoint? port))
-           (let ((call
-                  (if (##interp-continuation? cont)
-                      (let* (($code (##interp-continuation-code cont))
-                             (cprc (macro-code-cprc $code)))
-                        (if (##eq? cprc ##interp-procedure-wrapper)
-                            #f
-                            (##decomp $code)))
-                      (let* ((ret (##continuation-ret cont))
-                             (call (##decompile ret)))
-                        (if (##eq? call ret)
-                            #f
-                            call)))))
-             (if call
-                 (begin
-                   (tab (##fixnum.+ depth-width
-                                    creator-width
-                                    locat-width
-                                    (##fixnum.* 2 extra)))
-                   (##write-string
-                    (##object->string
-                     call
-                     (##fixnum.- port-width
-                                 (##output-port-column port)))
-                    port))))
+           (if locat-display?
+               (begin
+                 (tab col3)
+                 (let ((locat (##continuation-locat cont)))
+                   (##display-locat locat pinpoint? port))))
+           (if call-display?
+               (let ((call
+                      (if (##interp-continuation? cont)
+                          (let* (($code (##interp-continuation-code cont))
+                                 (cprc (macro-code-cprc $code)))
+                            (if (##eq? cprc ##interp-procedure-wrapper)
+                                #f
+                                (##decomp $code)))
+                          (let* ((ret (##continuation-ret cont))
+                                 (call (##decompile ret)))
+                            (if (##eq? call ret)
+                                #f
+                                call)))))
+                 (if call
+                     (begin
+                       (tab (if locat-display? col4 col3))
+                       (##write-string
+                        (##object->string
+                         call
+                         (##fixnum.- port-width
+                                     (##output-port-column port)))
+                        port)))))
            (##newline port)
            (##display-continuation-env
             cont
