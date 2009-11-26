@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2009-03-19 10:55:38 feeley> */
+/* File: "os_tty.c", Time-stamp: <2009-11-26 14:22:01 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -1145,7 +1145,15 @@ ___stream_index *len_done;)
 
             seq = NULL;
 
-            if (!ctrl && !alt && !shift && c == 0)
+            if (!ctrl && alt && !shift && c>='a' && c<='z')
+              {
+                static char alt_seq[3];
+                alt_seq[0] = ___UNICODE_ESCAPE;
+                alt_seq[1] = c;
+                alt_seq[2] = '\0';
+                seq = alt_seq;
+              }
+            else if (!ctrl && !alt && !shift && c == 0)
               switch (d->ir.Event.KeyEvent.wVirtualKeyCode)
                 {
                 case VK_BACK:   seq = "\010";     break;
