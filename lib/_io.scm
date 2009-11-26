@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-10-29 11:02:58 feeley>
+;;; File: "_io.scm", Time-stamp: <2009-11-24 19:11:12 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -6272,6 +6272,12 @@
 
 (implement-library-type-socket-info)
 
+(define-prim (##socket-info-setup! si)
+  (##vector-set! si 1 (##net-family-decode (##vector-ref si 1)))
+  (##structure-type-set! si (macro-type-socket-info))
+  (##subtype-set! si (macro-subtype-structure))
+  si)
+
 (define-prim (##tcp-client-socket-info port prim)
   (let loop ()
     (let ((result
@@ -6288,10 +6294,7 @@
           (loop)
           (##raise-os-exception #f result prim port))
 
-        (begin
-          (##structure-type-set! result (macro-type-socket-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result)))))
+        (##socket-info-setup! result)))))
 
 (define-prim (##tcp-client-self-socket-info port)
   (##tcp-client-socket-info port tcp-client-self-socket-info))
@@ -6308,6 +6311,205 @@
   (macro-force-vars (port)
     (macro-check-tcp-client-port port 1 (tcp-client-peer-socket-info port)
       (##tcp-client-peer-socket-info port))))
+
+(implement-library-type-address-info)
+
+(define-prim (##net-family-encode x)
+  (case x
+    ((INET)  -1)
+    ((INET6) -2)
+    (else    x)))
+
+(define-prim (##net-family-decode x)
+  (case x
+    ((-1) 'INET)
+    ((-2) 'INET6)
+    (else x)))
+
+(define-prim (##net-socket-type-encode x)
+  (case x
+    ((STREAM) -1)
+    ((DGRAM)  -2)
+    ((RAW)    -3)
+    (else     x)))
+
+(define-prim (##net-socket-type-decode x)
+  (case x
+    ((-1) 'STREAM)
+    ((-2) 'DGRAM)
+    ((-3) 'RAW)
+    (else x)))
+
+(define-prim (##net-protocol-encode x)
+  (case x
+    ((UDP) -1)
+    ((TCP) -2)
+    (else  x)))
+
+(define-prim (##net-protocol-decode x)
+  (case x
+    ((-1) 'UDP)
+    ((-2) 'TCP)
+    (else x)))
+
+(define-prim (##address-info-setup! ai)
+  (##vector-set! ai 1 (##net-family-decode      (##vector-ref ai 1)))
+  (##vector-set! ai 2 (##net-socket-type-decode (##vector-ref ai 2)))
+  (##vector-set! ai 3 (##net-protocol-decode    (##vector-ref ai 3)))
+  (let ((si (##vector-ref ai 4)))
+    (##socket-info-setup! si))
+  (##structure-type-set! ai (macro-type-address-info))
+  (##subtype-set! ai (macro-subtype-structure))
+  ai)
+
+(define-prim (##address-infos
+              #!key
+              (host (macro-absent-obj))
+              (service (macro-absent-obj))
+              ;;(flags (macro-absent-obj))
+              (family (macro-absent-obj))
+              (socket-type (macro-absent-obj))
+              (protocol (macro-absent-obj)))
+  (macro-force-vars (host service flags family socket-type protocol)
+    (let ((flags (macro-absent-obj)))
+
+      (define (check-host arg-num)
+        (if (##eq? host (macro-absent-obj))
+            (check-service arg-num "")
+            (let ((arg-num (##fixnum.+ arg-num 2)))
+              (macro-check-string
+                host
+                arg-num
+                (address-infos host: host
+                               service: service
+                               flags: flags
+                               family: family
+                               socket-type: socket-type
+                               protocol: protocol)
+                (check-service arg-num host)))))
+
+      (define (check-service arg-num h)
+        (if (##eq? service (macro-absent-obj))
+            (check-flags arg-num h "")
+            (let ((arg-num (##fixnum.+ arg-num 2)))
+              (macro-check-string
+                service
+                arg-num
+                (address-infos host: host
+                               service: service
+                               flags: flags
+                               family: family
+                               socket-type: socket-type
+                               protocol: protocol)
+                (check-flags arg-num h service)))))
+
+      (define (check-flags arg-num h s)
+        (if (##eq? flags (macro-absent-obj))
+            (check-family arg-num h s 0)
+            (let ((arg-num (##fixnum.+ arg-num 2)))
+              (macro-check-fixnum-range-incl
+                flags
+                arg-num
+                0
+                65535
+                (address-infos host: host
+                               service: service
+                               flags: flags
+                               family: family
+                               socket-type: socket-type
+                               protocol: protocol)
+                (check-family arg-num h s flags)))))
+
+      (define (check-family arg-num h s f)
+        (if (##eq? family (macro-absent-obj))
+            (check-socket-type arg-num h s f 0)
+            (let ((arg-num (##fixnum.+ arg-num 2)))
+              (let ((x (##net-family-encode family)))
+                (if (##eq? x family)
+                    (##raise-type-exception
+                     arg-num
+                     'network-family
+                     (##list address-infos
+                             host: host
+                             service: service
+                             flags: flags
+                             family: family
+                             socket-type: socket-type
+                             protocol: protocol)
+                     '())
+                    (check-socket-type arg-num h s f x))))))
+
+      (define (check-socket-type arg-num h s f fam)
+        (if (##eq? socket-type (macro-absent-obj))
+            (check-protocol arg-num h s f fam 0)
+            (let ((arg-num (##fixnum.+ arg-num 2)))
+              (let ((x (##net-socket-type-encode socket-type)))
+                (if (##eq? x socket-type)
+                    (##raise-type-exception
+                     arg-num
+                     'network-socket-type
+                     (##list address-infos
+                             host: host
+                             service: service
+                             flags: flags
+                             family: family
+                             socket-type: socket-type
+                             protocol: protocol)
+                     '())
+                    (check-protocol arg-num h s f fam x))))))
+
+      (define (check-protocol arg-num h s f fam st)
+        (if (##eq? protocol (macro-absent-obj))
+            (checks-done h s f fam st 0)
+            (let ((arg-num (##fixnum.+ arg-num 2)))
+              (let ((x (##net-protocol-encode protocol)))
+                (if (##eq? x protocol)
+                    (##raise-type-exception
+                     arg-num
+                     'network-protocol
+                     (##list address-infos
+                             host: host
+                             service: service
+                             flags: flags
+                             family: family
+                             socket-type: socket-type
+                             protocol: protocol)
+                     '())
+                    (checks-done h s f fam st x))))))
+
+      (define (checks-done h s f fam st p)
+        (let ((result (##os-address-infos h s f fam st p)))
+          (if (##fixnum? result)
+              (##raise-os-exception
+               #f
+               result
+               (##list address-infos
+                       host: host
+                       service: service
+                       flags: flags
+                       family: family
+                       socket-type: socket-type
+                       protocol: protocol))
+              (begin
+                (##for-each ##address-info-setup! result)
+                result))))
+
+      (check-host 0))))
+
+(define-prim (address-infos
+              #!key
+              (host (macro-absent-obj))
+              (service (macro-absent-obj))
+              ;;(flags (macro-absent-obj))
+              (family (macro-absent-obj))
+              (socket-type (macro-absent-obj))
+              (protocol (macro-absent-obj)))
+  (##address-infos host: host
+                   service: service
+                   ;;flags: flags
+                   family: family
+                   socket-type: socket-type
+                   protocol: protocol))
 
 ;;;----------------------------------------------------------------------------
 
@@ -6629,10 +6831,7 @@
 
         (##raise-os-exception #f result tcp-server-socket-info port))
 
-        (begin
-          (##structure-type-set! result (macro-type-socket-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result)))
+        (##socket-info-setup! result)))
 
 (define-prim (tcp-server-socket-info port)
   (macro-force-vars (port)

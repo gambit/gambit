@@ -1,4 +1,4 @@
-/* File: "os_base.h", Time-stamp: <2007-04-04 11:30:33 feeley> */
+/* File: "os_base.h", Time-stamp: <2009-11-24 18:10:12 feeley> */
 
 /* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
 
@@ -212,6 +212,7 @@ extern void ___display_error
 /**********************************/
 #define err_code_from_errno() ___err_code_from_errno()
 #define err_code_from_h_errno() ___err_code_from_h_errno()
+#define err_code_from_gai_code(code) ___err_code_from_gai_code(code)
 #define err_code_from_GetLastError() ___err_code_from_GetLastError()
 #define err_code_from_WSAGetLastError() ___err_code_from_WSAGetLastError()
 #define fnf_or_err_code_from_errno() ___fnf_or_err_code_from_errno()
@@ -260,6 +261,30 @@ ___err_code_from_h_errno_debug(__LINE__,__FILE__)
 #else
 
 extern ___SCMOBJ ___err_code_from_h_errno ___PVOID;
+
+#endif
+
+#endif
+
+
+#ifdef USE_getaddrinfo
+
+#ifdef ___DEBUG
+
+extern ___SCMOBJ ___err_code_from_gai_code_debug
+   ___P((int code,
+         int lineno,
+         char *file),
+        ());
+
+#define ___err_code_from_gai_code(code) \
+___err_code_from_gai_code_debug(code,__LINE__,__FILE__)
+
+#else
+
+extern ___SCMOBJ ___err_code_from_gai_code
+   ___P((int code),
+        ());
 
 #endif
 

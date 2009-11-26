@@ -6754,6 +6754,17 @@ _ACEOF
 fi
 done
 
+  for ac_func in getaddrinfo
+do :
+  ac_fn_cxx_check_func "$LINENO" "getaddrinfo" "ac_cv_func_getaddrinfo"
+if test "x$ac_cv_func_getaddrinfo" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GETADDRINFO 1
+_ACEOF
+
+fi
+done
+
   for ac_func in gethostbyname
 do :
   ac_fn_cxx_check_func "$LINENO" "gethostbyname" "ac_cv_func_gethostbyname"

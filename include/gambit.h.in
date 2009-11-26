@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2009-10-28 23:15:23 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-11-25 00:41:47 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -5610,33 +5610,35 @@ ___P((___global_state_struct *___gs),()); ___END_C_LINKAGE
 
 /*---------------------------------------------------------------------------*/
 
-/* 
+/*
  * ___ERR_CODE is a type which represents the union of error codes
- * from various subsystems.  Currently 5 types of error codes are
+ * from various subsystems.  Currently 6 types of error codes are
  * supported: Windows HRESULT, MACOS errors, ANSI-C errno, netdb
- * h_errno, and system specific error codes.  A Windows HRESULT error
- * code is a 32 bit signed integer value composed of (starting with
- * the low bits) a 16 bit status code, a 11 bit facility code, a 4 bit
- * reserved facility code and a 1 bit severity code (negative means
- * error).  It seems that only the 4 lower bits of the facility code
- * are really used, the remaining 7 bits are zero.  This allows us to
- * compact this 32 bit integer value to a 30 bit integer value (which
- * fits in a fixnum) by dropping the top 2 bits of the facility code.
- * Of the 512 possible facility codes, the codes 448 to 511 are
- * assigned to Gambit specific error codes, the codes 384 to 447 are
- * assigned to MACOS errors, the codes 320 to 382 are assigned to
- * ANSI-C errno error codes, and the code 319 is assigned to netdb
- * h_errno error codes.  The ``no error'' error code of each subsystem
- * is always mapped to ___NO_ERR which is equal to 0, all other error
- * codes are thus negative values.
+ * h_errno, getaddrinfo error codes, and system specific error codes.
+ * A Windows HRESULT error code is a 32 bit signed integer value
+ * composed of (starting with the low bits) a 16 bit status code, a 11
+ * bit facility code, a 4 bit reserved facility code and a 1 bit
+ * severity code (negative means error).  It seems that only the 4
+ * lower bits of the facility code are really used, the remaining 7
+ * bits are zero.  This allows us to compact this 32 bit integer value
+ * to a 30 bit integer value (which fits in a fixnum) by dropping the
+ * top 2 bits of the facility code.  Of the 512 possible facility
+ * codes, the codes 448 to 511 are assigned to Gambit specific error
+ * codes, the codes 384 to 447 are assigned to MACOS errors, the codes
+ * 320 to 382 are assigned to ANSI-C errno error codes, the code 319
+ * is assigned to netdb h_errno error codes, and the code 318 is
+ * assigned to getaddrinfo error codes.  The ``no error'' error code
+ * of each subsystem is always mapped to ___NO_ERR which is equal to
+ * 0, all other error codes are thus negative values.
  */
 
 #define ___ERR_CODE int
 
-#define ___ERR_CODE_FACILITY_SYSTEM  448
-#define ___ERR_CODE_FACILITY_MACOS   384
-#define ___ERR_CODE_FACILITY_ERRNO   320
-#define ___ERR_CODE_FACILITY_H_ERRNO 319
+#define ___ERR_CODE_FACILITY_SYSTEM   448
+#define ___ERR_CODE_FACILITY_MACOS    384
+#define ___ERR_CODE_FACILITY_ERRNO    320
+#define ___ERR_CODE_FACILITY_H_ERRNO  319
+#define ___ERR_CODE_FACILITY_GAI_CODE 318
 
 #define ___ERR_CODE_BUILD(facility,code) \
 ((___CAST(___ERR_CODE,-1)<<29)+(___CAST(___ERR_CODE,facility)<<16)+(code))
@@ -5674,6 +5676,12 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 
 #define ___H_ERRNO_FROM_ERR_CODE(err) \
 ((err)==___NO_ERR?0:((err)-___ERR_CODE_BUILD(___ERR_CODE_FACILITY_H_ERRNO,0)))
+
+#define ___GAI_CODE_ERR(gai_code) \
+((gai_code)==0?___NO_ERR:___ERR_CODE_BUILD(___ERR_CODE_FACILITY_GAI_CODE,(gai_code)))
+
+#define ___GAI_CODE_FROM_ERR_CODE(err) \
+((err)==___NO_ERR?0:((err)-___ERR_CODE_BUILD(___ERR_CODE_FACILITY_GAI_CODE,0)))
 
 #define ___ERR_BASE ___ERR_CODE_BUILD(___ERR_CODE_FACILITY_SYSTEM,0)
 
@@ -6573,7 +6581,7 @@ int _fltused; /* needed if floating-point used. */
 #ifdef ___OS_WIN32
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500
+#define _WIN32_WINNT 0x0501
 #endif
 
 #ifndef ___DONT_HAVE_WINSOCK2_H

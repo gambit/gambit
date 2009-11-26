@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-10-29 17:17:47 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2009-11-24 19:11:45 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -4174,6 +4174,16 @@ end-of-code
   (c-lambda (scheme-object)
             scheme-object
    "___os_group_info"))
+
+(define-prim ##os-address-infos
+  (c-lambda (scheme-object
+             scheme-object
+             scheme-object
+             scheme-object
+             scheme-object
+             scheme-object)
+            scheme-object
+   "___os_address_infos"))
 
 (define-prim ##os-host-info
   (c-lambda (scheme-object)

@@ -1,4 +1,4 @@
-/* File: "os_base.c", Time-stamp: <2009-03-18 09:25:14 feeley> */
+/* File: "os_base.c", Time-stamp: <2009-11-24 18:16:40 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -836,6 +836,61 @@ ___SCMOBJ ___err_code_from_h_errno ___PVOID
 #endif
 
 
+#ifdef USE_getaddrinfo
+
+
+___HIDDEN const char *gai_code_to_string
+   ___P((int code),
+        (code)
+int code;)
+{
+  return gai_strerror (code);
+}
+
+
+#ifdef ___DEBUG
+___SCMOBJ ___err_code_from_gai_code_debug
+   ___P((int code,
+         int lineno,
+         char *file),
+        (code,
+         lineno,
+         file)
+int code;
+int lineno;
+char *file;)
+#else
+___SCMOBJ ___err_code_from_gai_code
+   ___P((int code),
+        (code)
+int code;)
+#endif
+{
+  ___ERR_CODE e;
+
+#ifdef EAI_SYSTEM
+  if (code == EAI_SYSTEM)
+    e = err_code_from_errno ();
+  else
+#endif
+
+    e = ___GAI_CODE_ERR(code);
+
+#ifdef ___DEBUG
+  ___printf ("*** OS ERROR AT \"%s\"@%d.1 -- gai_code=%d (%s)\n",
+             file,
+             lineno,
+             code,
+             gai_code_to_string (code));
+#endif
+
+  return ___FIX(e);
+}
+
+
+#endif
+
+
 #ifdef USE_GetLastError
 
 
@@ -1203,6 +1258,21 @@ ___SCMOBJ err;)
 #ifdef USE_h_errno
 
       const char *msg = h_errno_to_string (___H_ERRNO_FROM_ERR_CODE(err_code));
+
+      if (msg == NULL)
+        msg = "Unknown error";
+
+      append_charstring (buf, &pos, msg);
+
+#endif
+    }
+  else if (facility >= ___ERR_CODE_FACILITY_GAI_CODE)
+    {
+      /* getaddressinfo error code */
+
+#ifdef USE_getaddrinfo
+
+      const char *msg = gai_code_to_string (___GAI_CODE_FROM_ERR_CODE(err_code));
 
       if (msg == NULL)
         msg = "Unknown error";

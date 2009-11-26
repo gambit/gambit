@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-09-05 10:08:24 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-11-24 15:57:32 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3691,6 +3691,9 @@
     (readtable                    . "READTABLE")
     (hostent                      . "HOSTENT")
     (datum-parsing-exception      . "DATUM PARSING EXCEPTION object")
+    (network-family               . "NETWORK FAMILY")
+    (network-socket-type          . "NETWORK SOCKET-TYPE")
+    (network-protocol             . "NETWORK PROTOCOL")
 
     ;; from "_eval.scm":
     (expression-parsing-exception . "EXPRESSION PARSING EXCEPTION object")

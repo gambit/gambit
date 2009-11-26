@@ -10646,6 +10646,168 @@ For example:
 
 @end deffn
 
+@deffn procedure address-infos @r{[}@code{host:} @var{host}@r{]} @r{[}@code{service:} @var{service}@r{]} @r{[}@code{family:} @var{family}@r{]} @r{[}@code{socket-type:} @var{socket-type}@r{]} @r{[}@code{protocol:} @var{protocol}@r{]}
+
+This procedure is an interface to the @code{getaddrinfo} system call.
+It accesses the internet host database to get information about the
+machine whose name is denoted by the string @var{host} and service is
+denoted by the string @var{service} and network address family is
+@var{family} (@code{INET} or @code{INET6}) and network socket-type is
+@var{socket-type} (@code{STREAM} or @code{DGRAM} or @code{RAW}) and
+network protocol is @var{socket-type} (@code{TCP} or @code{UDP}).  A
+list of address-information records is returned.
+
+For example:
+
+@smallexample
+> @b{(address-infos host: "ftp.at.debian.org")}
+(#<address-info #2
+    family: INET6
+    socket-type: DGRAM
+    protocol: UDP
+    socket-info:
+     #<socket-info #3
+        family: INET6
+        port-number: 0
+        address: #u16(8193 2136 2 1 0 0 0 16)>>
+ #<address-info #4
+    family: INET6
+    socket-type: STREAM
+    protocol: TCP
+    socket-info:
+     #<socket-info #5
+        family: INET6
+        port-number: 0
+        address: #u16(8193 2136 2 1 0 0 0 16)>>
+ #<address-info #6
+    family: INET
+    socket-type: DGRAM
+    protocol: UDP
+    socket-info:
+     #<socket-info #7
+        family: INET
+        port-number: 0
+        address: #u8(213 129 232 18)>>
+ #<address-info #8
+    family: INET
+    socket-type: STREAM
+    protocol: TCP
+    socket-info:
+     #<socket-info #9
+        family: INET
+        port-number: 0
+        address: #u8(213 129 232 18)>>)
+> @b{(address-infos host: "ftp.at.debian.org"
+                 family: 'INET
+                 protocol: 'TCP)}
+(#<address-info #10
+    family: INET
+    socket-type: STREAM
+    protocol: TCP
+    socket-info:
+     #<socket-info #11
+        family: INET
+        port-number: 0
+        address: #u8(213 129 232 18)>>)
+> @b{(address-infos host: "unknown.domain")}
+*** ERROR IN (console)@@5.1 -- nodename nor servname provided, or not known
+(address-infos host: "unknown.domain")
+@end smallexample
+
+@end deffn
+
+@deffn procedure address-info? @var{obj}
+
+This procedure returns @code{#t} when @var{obj} is an address-information
+record and @code{#f} otherwise.
+
+For example:
+
+@smallexample
+> @b{(map address-info?
+       (address-infos host: "ftp.at.debian.org"))}
+(#t #t #t #t)
+> @b{(address-info? 123)}
+#f
+@end smallexample
+
+@end deffn
+
+@deffn procedure address-info-family @var{address-info}
+
+Returns the family field of the address-information record
+@var{address-info}.
+
+For example:
+
+@smallexample
+> @b{(map address-info-family
+       (address-infos host: "ftp.at.debian.org"))}
+(INET6 INET6 INET INET)
+@end smallexample
+
+@end deffn
+
+@deffn procedure address-info-socket-type @var{address-info}
+
+Returns the socket-type field of the address-information record
+@var{address-info}.
+
+For example:
+
+@smallexample
+> @b{(map address-info-socket-type
+       (address-infos host: "ftp.at.debian.org"))}
+(DGRAM STREAM DGRAM STREAM)
+@end smallexample
+
+@end deffn
+
+@deffn procedure address-info-protocol @var{address-info}
+
+Returns the protocol field of the address-information record
+@var{address-info}.
+
+For example:
+
+@smallexample
+> @b{(map address-info-protocol
+       (address-infos host: "ftp.at.debian.org"))}
+(UDP TCP UDP TCP)
+@end smallexample
+
+@end deffn
+
+@deffn procedure address-info-socket-info @var{address-info}
+
+Returns the socket-info field of the address-information record
+@var{address-info}.
+
+For example:
+
+@smallexample
+> @b{(map address-info-socket-info
+       (address-infos host: "ftp.at.debian.org"))}
+(#<socket-info #2
+    family: INET6
+    port-number: 0
+    address: #u16(8193 2136 2 1 0 0 0 16)>
+ #<socket-info #3
+    family: INET6
+    port-number: 0
+    address: #u16(8193 2136 2 1 0 0 0 16)>
+ #<socket-info #4
+    family: INET
+    port-number: 0
+    address: #u8(213 129 232 18)>
+ #<socket-info #5
+    family: INET
+    port-number: 0
+    address: #u8(213 129 232 18)>)
+@end smallexample
+
+@end deffn
+
 @node Service information, Protocol information, Host information, Host environment
 @section Service information
 

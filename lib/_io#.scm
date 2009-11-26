@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2009-08-06 13:31:28 feeley>
+;;; File: "_io#.scm", Time-stamp: <2009-11-24 19:11:32 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -501,6 +501,21 @@
   (family      printable: read-only:)
   (port-number printable: read-only:)
   (address     printable: read-only:)
+)
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;;; Representation of address-info objects.
+
+(define-library-type address-info
+  id: f165f359-8685-48da-bc99-f38827ad8af9
+  constructor: #f
+  opaque:
+
+  (family       printable: read-only:)
+  (socket-type  printable: read-only:)
+  (protocol     printable: read-only:)
+  (socket-info  printable: read-only:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

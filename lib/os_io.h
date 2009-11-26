@@ -1,4 +1,4 @@
-/* File: "os_io.h", Time-stamp: <2009-08-04 13:14:49 feeley> */
+/* File: "os_io.h", Time-stamp: <2009-11-24 19:13:02 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -828,6 +828,15 @@ extern ___SCMOBJ ___os_group_info
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Access to host information. */
+
+extern ___SCMOBJ ___os_address_infos
+   ___P((___SCMOBJ host,
+         ___SCMOBJ serv,
+         ___SCMOBJ flags,
+         ___SCMOBJ family,
+         ___SCMOBJ socktype,
+         ___SCMOBJ protocol),
+        ());
 
 extern ___SCMOBJ ___os_host_info
    ___P((___SCMOBJ host),

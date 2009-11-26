@@ -1,4 +1,4 @@
-/* File: "os.c", Time-stamp: <2009-07-30 12:06:10 feeley> */
+/* File: "os.c", Time-stamp: <2009-11-24 19:12:42 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -167,6 +167,149 @@ ___BOOL pinpoint;)
 #ifdef AF_INET6
 #define USE_IPV6
 #endif
+
+
+___HIDDEN int network_family_decode
+   ___P((int family),
+        (family)
+int family;)
+{
+  switch (family)
+    {
+#ifdef PF_INET
+    case -1:
+      return PF_INET;
+#endif
+
+#ifdef PF_INET6
+    case -2:
+      return PF_INET6;
+#endif
+    }
+
+  return 0;
+}
+
+
+___HIDDEN ___SCMOBJ network_family_encode
+   ___P((int family),
+        (family)
+int family;)
+{
+  switch (family)
+    {
+#ifdef PF_INET
+    case PF_INET:
+      return ___FIX(-1);
+#endif
+
+#ifdef PF_INET6
+    case PF_INET6:
+      return ___FIX(-2);
+#endif
+    }
+
+  return ___FIX(family);
+}
+
+
+___HIDDEN int network_socktype_decode
+   ___P((int socktype),
+        (socktype)
+int socktype;)
+{
+  switch (socktype)
+    {
+#ifdef SOCK_STREAM
+    case -1:
+      return SOCK_STREAM;
+#endif
+
+#ifdef SOCK_DGRAM
+    case -2:
+      return SOCK_DGRAM;
+#endif
+
+#ifdef SOCK_RAW
+    case -3:
+      return SOCK_RAW;
+#endif
+    }
+
+  return 0;
+}
+
+
+___HIDDEN ___SCMOBJ network_socktype_encode
+   ___P((int socktype),
+        (socktype)
+int socktype;)
+{
+  switch (socktype)
+    {
+#ifdef SOCK_STREAM
+    case SOCK_STREAM:
+      return ___FIX(-1);
+#endif
+
+#ifdef SOCK_DGRAM
+    case SOCK_DGRAM:
+      return ___FIX(-2);
+#endif
+
+#ifdef SOCK_RAW
+    case SOCK_RAW:
+      return ___FIX(-3);
+#endif
+    }
+
+  return ___FIX(socktype);
+}
+
+
+___HIDDEN int network_protocol_decode
+   ___P((int protocol),
+        (protocol)
+int protocol;)
+{
+  switch (protocol)
+    {
+#ifdef IPPROTO_UDP
+    case -1:
+      return IPPROTO_UDP;
+#endif
+
+#ifdef IPPROTO_TCP
+    case -2:
+      return IPPROTO_TCP;
+#endif
+    }
+
+  return 0;
+}
+
+
+___HIDDEN ___SCMOBJ network_protocol_encode
+   ___P((int protocol),
+        (protocol)
+int protocol;)
+{
+  switch (protocol)
+    {
+#ifdef IPPROTO_UDP
+    case IPPROTO_UDP:
+      return ___FIX(-1);
+#endif
+
+#ifdef IPPROTO_TCP
+    case IPPROTO_TCP:
+      return ___FIX(-2);
+#endif
+    }
+
+  return ___FIX(protocol);
+}
+
 
 ___SCMOBJ ___SCMOBJ_to_in_addr
    ___P((___SCMOBJ addr,
@@ -377,7 +520,7 @@ int arg_num;)
           return addr;
         }
 
-      ___FIELD(result,1) = ___FIX(sa_in->sin_family);
+      ___FIELD(result,1) = network_family_encode (sa_in->sin_family);
       ___FIELD(result,2) = ___FIX(ntohs (sa_in->sin_port));
       ___FIELD(result,3) = addr;
       ___release_scmobj (addr);
@@ -394,7 +537,7 @@ int arg_num;)
           return addr;
         }
 
-      ___FIELD(result,1) = ___FIX(sa_in6->sin6_family);
+      ___FIELD(result,1) = network_family_encode (sa_in6->sin6_family);
       ___FIELD(result,2) = ___FIX(ntohs (sa_in6->sin6_port));
       ___FIELD(result,3) = addr;
       ___release_scmobj (addr);
@@ -471,6 +614,193 @@ int arg_num;)
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Access to host information. */
+
+#ifdef USE_getaddrinfo
+
+___HIDDEN int ai_flags_decode
+   ___P((int flags),
+        (flags)
+int flags;)
+{
+  int ai_flags = 0;
+
+#ifdef AI_PASSIVE
+  if (flags & 1)
+    ai_flags |= AI_PASSIVE;
+#endif
+
+#ifdef AI_CANONNAME
+  if (flags & 2)
+    ai_flags |= AI_CANONNAME;
+#endif
+
+#ifdef AI_NUMERICHOST
+  if (flags & 4)
+    ai_flags |= AI_NUMERICHOST;
+#endif
+
+#ifdef AI_NUMERICSERV
+  if (flags & 8)
+    ai_flags |= AI_NUMERICSERV;
+#endif
+
+#ifdef AI_ALL
+  if (flags & 16)
+    ai_flags |= AI_ALL;
+#endif
+
+#ifdef AI_ADDRCONFIG
+  if (flags & 32)
+    ai_flags |= AI_ADDRCONFIG;
+#endif
+
+#ifdef AI_V4MAPPED
+  if (flags & 64)
+    ai_flags |= AI_V4MAPPED;
+#endif
+
+  return ai_flags;
+}
+
+#endif
+
+
+___SCMOBJ ___os_address_infos
+   ___P((___SCMOBJ host,
+         ___SCMOBJ serv,
+         ___SCMOBJ flags,
+         ___SCMOBJ family,
+         ___SCMOBJ socktype,
+         ___SCMOBJ protocol),
+        (host,
+         serv,
+         flags,
+         family,
+         socktype,
+         protocol)
+___SCMOBJ host;
+___SCMOBJ serv;
+___SCMOBJ flags;
+___SCMOBJ family;
+___SCMOBJ socktype;
+___SCMOBJ protocol;)
+{
+#ifndef USE_getaddrinfo
+
+  return ___FIX(___UNIMPL_ERR);
+
+#endif
+
+#ifdef USE_getaddrinfo
+
+  ___SCMOBJ e;
+  ___SCMOBJ vect;
+  ___SCMOBJ lst;
+  ___SCMOBJ tail;
+  ___SCMOBJ x;
+  ___SCMOBJ p;
+  int i;
+  char *chost = 0;
+  char *cserv = 0;
+
+  struct addrinfo hints, *res, *res0;
+  int code;
+
+  if ((e = ___SCMOBJ_to_CHARSTRING (host, &chost, 1))
+      != ___FIX(___NO_ERR))
+    return e;
+
+  if ((e = ___SCMOBJ_to_CHARSTRING (serv, &cserv, 2))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_string (chost);
+      return e;
+    }
+
+  memset (&hints, 0, sizeof (hints));
+
+  hints.ai_flags    = ai_flags_decode (___INT(flags));
+  hints.ai_family   = network_family_decode (___INT(family));
+  hints.ai_socktype = network_socktype_decode (___INT(socktype));
+  hints.ai_protocol = network_protocol_decode (___INT(protocol));
+
+  code = getaddrinfo (chost, cserv, &hints, &res0);
+
+  if (code != 0)
+    {
+      e = err_code_from_gai_code (code);
+      ___release_string (chost);
+      ___release_string (cserv);
+      return e;
+    }
+
+  lst = ___NUL;
+  tail = ___FAL;
+
+  for (res = res0; res != NULL; res = res->ai_next)
+    {
+      x = ___sockaddr_to_SCMOBJ (res->ai_addr,
+                                 res->ai_addrlen,
+                                 ___RETURN_POS);
+
+      if (___FIXNUMP(x))
+        {
+          ___release_scmobj (lst);
+          freeaddrinfo (res0);
+          return x;
+        }
+
+      if (x != ___FAL)
+        {
+          vect = ___make_vector (5, ___FAL, ___STILL);
+
+          if (___FIXNUMP(vect))
+            {
+              ___release_scmobj (x);
+              ___release_scmobj (lst);
+              freeaddrinfo (res0);
+              return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+            }
+
+          ___FIELD(vect,1) = network_family_encode (res->ai_family);
+          ___FIELD(vect,2) = network_socktype_encode (res->ai_socktype);
+          ___FIELD(vect,3) = network_protocol_encode (res->ai_protocol);
+          ___FIELD(vect,4) = x;
+
+          ___release_scmobj (x);
+
+          p = ___make_pair (vect, ___NUL, ___STILL);
+
+          ___release_scmobj (vect);
+
+          if (___FIXNUMP(p))
+            {
+              ___release_scmobj (lst);
+              freeaddrinfo (res0);
+              return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+            }
+
+          if (lst == ___NUL)
+            lst = p;
+          else
+            ___SETCDR(tail,p);
+
+          tail = p;
+        }
+    }
+
+  ___release_scmobj (lst);
+
+  freeaddrinfo (res0);
+
+  ___release_string (chost);
+  ___release_string (cserv);
+
+  return lst;
+
+#endif
+}
+
 
 ___SCMOBJ ___os_host_info
    ___P((___SCMOBJ host),

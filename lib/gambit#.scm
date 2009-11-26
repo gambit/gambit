@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2009-09-05 10:26:15 feeley>
+;;; File: "gambit#.scm", Time-stamp: <2009-11-24 20:23:13 feeley>
 
 ;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
 
@@ -41,6 +41,12 @@ default-random-source
 ;; procedures
 abandoned-mutex-exception?
 abort
+address-info-family
+address-info-protocol
+address-info-socket-info
+address-info-socket-type
+address-info?
+address-infos
 all-bits-set?
 any-bits-set?
 append-f32vectors

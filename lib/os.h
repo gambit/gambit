@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2009-07-30 12:03:36 feeley> */
+/* File: "os.h", Time-stamp: <2009-11-24 23:42:25 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -258,6 +258,7 @@
 #define HAVE_GETPEERNAME 1
 #define HAVE_GETSOCKNAME 1
 #undef HAVE_INET_PTON
+#define HAVE_GETADDRINFO 1
 #define HAVE_GETHOSTBYNAME 1
 #define HAVE_GETHOSTBYADDR 1
 #define HAVE_GETSERVBYNAME 1
@@ -449,6 +450,10 @@
 
 #ifdef HAVE_INET_PTON
 #define USE_inet_pton
+#endif
+
+#ifdef HAVE_GETADDRINFO
+#define USE_getaddrinfo
 #endif
 
 #ifdef HAVE_GETHOSTBYNAME
@@ -768,6 +773,15 @@ ___END_C_LINKAGE
 #define INCLUDE_netinet_in_h
 #undef INCLUDE_arpa_inet_h
 #define INCLUDE_arpa_inet_h
+#endif
+
+#ifdef USE_getaddrinfo
+#undef INCLUDE_sys_types_h
+#define INCLUDE_sys_types_h
+#undef INCLUDE_sys_socket_h
+#define INCLUDE_sys_socket_h
+#undef INCLUDE_netdb_h
+#define INCLUDE_netdb_h
 #endif
 
 #ifdef USE_gethostbyname

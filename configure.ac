@@ -767,6 +767,7 @@ else
 
   AC_CHECK_FUNCS(gethostname)
   AC_CHECK_FUNCS(inet_pton)
+  AC_CHECK_FUNCS(getaddrinfo)
   AC_CHECK_FUNCS(gethostbyname)
   AC_CHECK_FUNCS(gethostbyaddr)
   AC_CHECK_FUNCS(getservbyname)

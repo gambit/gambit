@@ -1,4 +1,4 @@
-/* File: "config.h.in", Time-stamp: <2009-06-07 10:55:34 feeley> */
+/* File: "config.h.in", Time-stamp: <2009-11-15 13:11:09 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -165,6 +165,7 @@
 
 #undef HAVE_GETHOSTNAME
 #undef HAVE_INET_PTON
+#undef HAVE_GETADDRINFO
 #undef HAVE_GETHOSTBYNAME
 #undef HAVE_GETHOSTBYADDR
 #undef HAVE_GETSERVBYNAME
