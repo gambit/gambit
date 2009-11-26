@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-11-24 15:57:32 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-11-26 15:02:39 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -992,8 +992,11 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(##define-macro (macro-default-max-head) 10)
-(##define-macro (macro-default-max-tail) 4)
+(define ##backtrace-default-max-head #f)
+(set! ##backtrace-default-max-head 10)
+
+(define ##backtrace-default-max-tail #f)
+(set! ##backtrace-default-max-tail 4)
 
 (define-prim (##cmd-b cont port depth display-env?)
   (##display-continuation-backtrace
@@ -1001,8 +1004,8 @@
    port
    display-env?
    #f
-   (macro-default-max-head)
-   (macro-default-max-tail)
+   ##backtrace-default-max-head
+   ##backtrace-default-max-tail
    depth))
 
 (define-prim (##display-continuation-backtrace
@@ -1057,11 +1060,11 @@
                all-frames?))
           (mh
            (if (##eq? max-head (macro-absent-obj))
-               (macro-default-max-head)
+               ##backtrace-default-max-head
                max-head))
           (mt
            (if (##eq? max-tail (macro-absent-obj))
-               (macro-default-max-tail)
+               ##backtrace-default-max-tail
                max-tail))
           (d
            (if (##eq? depth (macro-absent-obj))
