@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2009-11-25 00:41:47 feeley> */
+/* File: "gambit.h", Time-stamp: <2009-11-26 16:22:25 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -2671,7 +2671,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #endif
 #define ___FIXBITCOUNT(x) \
 ((((___temp=___INT(x))<0)&&(___temp=~___temp)),___BITCOUNT_TEMP())
-#define ___FIXBITSETP(x,y)((x)&(___CAST(___SCMOBJ,1)<<(___INT(y)+___TB)))
+#define ___FIXBITSETP(x,y)((y)&(___CAST(___SCMOBJ,1)<<(___INT(x)+___TB)))
 
 #define ___FIXASH(x,y)((y)<0?___FIXASHR(x,(y)>=___FIX(-___FIX_WIDTH)?-(y):___FIX(___FIX_WIDTH)):___FIXASHL(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)))
 #define ___FIXASHP(x,y)((y)<0?___FIXASHR(x,(y)>=___FIX(-___FIX_WIDTH)?-(y):___FIX(___FIX_WIDTH)):___FIXASHLP2(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)))

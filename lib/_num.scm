@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2009-09-10 16:58:34 feeley>
+;;; File: "_num.scm", Time-stamp: <2009-11-26 16:15:21 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2009 by Brad Lucier, All Rights Reserved.
@@ -4459,18 +4459,18 @@
 
 (define-prim (##bitwise-merge x y z)
   (##bitwise-ior (##bitwise-and (##bitwise-not x) y)
-		 (##bitwise-and x z)))
+                 (##bitwise-and x z)))
 
 (define-prim (bitwise-merge x y z)
   (macro-force-vars (x y z)
     (cond ((##not (macro-exact-int? x))
-	   (##fail-check-exact-integer 1 bitwise-merge x y z))
-	  ((##not (macro-exact-int? y))
-	   (##fail-check-exact-integer 2 bitwise-merge x y z))
-	  ((##not (macro-exact-int? z))
-	   (##fail-check-exact-integer 3 bitwise-merge x y z))
-	  (else
-	   (##bitwise-merge x y z)))))
+           (##fail-check-exact-integer 1 bitwise-merge x y z))
+          ((##not (macro-exact-int? y))
+           (##fail-check-exact-integer 2 bitwise-merge x y z))
+          ((##not (macro-exact-int? z))
+           (##fail-check-exact-integer 3 bitwise-merge x y z))
+          (else
+           (##bitwise-merge x y z)))))
 
 (define-prim (##bit-set? x y)
 
@@ -4526,11 +4526,11 @@
 (define-prim (any-bits-set? x y)
   (macro-force-vars (x y)
     (cond ((##not (macro-exact-int? x))
-	   (##fail-check-exact-integer 1 any-bits-set? x y))
-	  ((##not (macro-exact-int? y))
-	   (##fail-check-exact-integer 2 any-bits-set? x y))
-	  (else
-	   (##any-bits-set? x y)))))
+           (##fail-check-exact-integer 1 any-bits-set? x y))
+          ((##not (macro-exact-int? y))
+           (##fail-check-exact-integer 2 any-bits-set? x y))
+          (else
+           (##any-bits-set? x y)))))
 
 (define-prim (##all-bits-set? x y)
   (##= x (##bitwise-and x y)))
@@ -4538,11 +4538,11 @@
 (define-prim (all-bits-set? x y)
   (macro-force-vars (x y)
     (cond ((##not (macro-exact-int? x))
-	   (##fail-check-exact-integer 1 all-bits-set? x y))
-	  ((##not (macro-exact-int? y))
-	   (##fail-check-exact-integer 2 all-bits-set? x y))
-	  (else
-	   (##all-bits-set? x y)))))
+           (##fail-check-exact-integer 1 all-bits-set? x y))
+          ((##not (macro-exact-int? y))
+           (##fail-check-exact-integer 2 all-bits-set? x y))
+          (else
+           (##all-bits-set? x y)))))
 
 (define-prim (##first-bit-set x)
 
@@ -4728,8 +4728,8 @@
       2
       (clear-bit-field size position n)
       (if (##not (macro-exact-int? n))
-	   (##fail-check-exact-integer 3 clear-bit-field size position n)
-	   (##clear-bit-field size position n))))))
+           (##fail-check-exact-integer 3 clear-bit-field size position n)
+           (##clear-bit-field size position n))))))
 
 (define-prim (##replace-bit-field size position newfield n)
   (let ((m (##bit-mask size)))
@@ -5176,15 +5176,15 @@
 
 (define-prim (fxbit-set? x y)
   (macro-force-vars (x y)
-    (macro-check-fixnum
+    (macro-check-fixnum-range-incl
       x
       1
+      0
+      ##fixnum-width
       (fxbit-set? x y)
-      (macro-check-fixnum-range-incl
+      (macro-check-fixnum
         y
         2
-        0
-        ##fixnum-width
         (fxbit-set? x y)
         (##fxbit-set? x y)))))
 
