@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-11-26 15:31:02 feeley>
+;;; File: "_repl.scm", Time-stamp: <2009-11-27 22:00:44 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -975,8 +975,10 @@
 ,c   | ,(c X)   : Continue the computation with stepping off
 ,s   | ,(s X)   : Continue the computation with stepping on (step)
 ,l   | ,(l X)   : Continue the computation with stepping on (leap)
-,<n>            : Move to particular frame (<n> >= 0)
-,+   | ,-       : Move to next or previous frame of continuation
+,N              : Move to specific continuation frame (N>=0)
+,N+  | ,N-      : Move forward/backward by N continuation frames (N>=0)
+,+   | ,-       : Like ,1+ and ,1-
+,++  | ,--      : Like ,N+ and ,N- with N = nb. of frames at head of backtrace
 ,y              : Display one-line summary of current frame
 ,i              : Display procedure attached to current frame
 ,b   | ,(b X)   : Display backtrace of current continuation or X (cont/thread)
@@ -2629,12 +2631,6 @@
                         (if proc
                             (##help proc)))
                       (continue))
-                     ((##eq? cmd '-)
-                      (goto-depth
-                       (##fixnum.- (macro-repl-context-depth repl-context) 1)))
-                     ((##eq? cmd '+)
-                      (goto-depth
-                       (##fixnum.+ (macro-repl-context-depth repl-context) 1)))
                      ((or (##eq? cmd 'b)
                           (##eq? cmd 'be)
                           (##eq? cmd 'bed))
@@ -2850,6 +2846,42 @@
                          (else
                           (unknown-command)
                           (continue)))))
+                     ((##symbol? cmd)
+                      (let* ((s (##symbol->string cmd))
+                             (len (##string-length s))
+                             (c (and (##fixnum.< 0 len)
+                                     (##string-ref s (##fixnum.- len 1)))))
+
+                        (define (move-frame n)
+                          (goto-depth
+                           (##fixnum.+
+                            (macro-repl-context-depth repl-context)
+                            (if (##char=? c #\+)
+                                n
+                                (##fixnum.- 0 n)))))
+                          
+                        (if (or (##char=? c #\+)
+                                (##char=? c #\-))
+                            (cond ((##fixnum.= len 1)
+                                   (move-frame 1))
+                                  ((and (##fixnum.= len 2)
+                                        (##char=? c (##string-ref s 0)))
+                                   (move-frame ##backtrace-default-max-head))
+                                  (else
+                                   (let ((n (##string->number
+                                             (##substring s
+                                                          0
+                                                          (##fixnum.- len 1))
+                                             10)))
+                                     (if (and (##fixnum? n)
+                                              (##not (##fixnum.< n 0)))
+                                         (move-frame n)
+                                         (begin
+                                           (unknown-command)
+                                           (continue))))))
+                            (begin
+                              (unknown-command)
+                              (continue)))))
                      (else
                       (unknown-command)
                       (continue))))

@@ -2084,20 +2084,20 @@ level, and so on.  An end of file (usually @key{^D}) will cause the
 current REPL to be terminated and the enclosing REPL (one nesting level
 less) to be resumed.
 
-At any time the user can examine the frames in the REPL's continuation,
-which is useful to determine which chain of procedure calls lead to an
-error.  A backtrace that lists the chain of active continuation frames
-in the REPL's continuation can be obtained with the @samp{,b} command.
-The frames are numbered from 0, that is frame 0 is the most recent frame
-of the continuation where execution stopped, frame 1 is the parent frame
-of frame 0, and so on.  It is also possible to move the REPL to a
-specific parent continuation (i.e. a specific frame of the continuation
-where execution stopped) with the @samp{,+}, @samp{,-} and
-@samp{,@var{n}} commands (where @var{n} is the frame number).
-When the frame number of the frame being examined is not zero, it
-is shown in the prompt after the nesting level, for example
-@samp{1\5>} is the prompt when the REPL nesting level is 1 and
-the frame number is 5.
+At any time the user can examine the frames in the REPL's
+continuation, which is useful to determine which chain of procedure
+calls lead to an error.  A backtrace that lists the chain of active
+continuation frames in the REPL's continuation can be obtained with
+the @samp{,b} command.  The frames are numbered from 0, that is frame
+0 is the most recent frame of the continuation where execution
+stopped, frame 1 is the parent frame of frame 0, and so on.  It is
+also possible to move the REPL to a specific parent continuation
+(i.e. a specific frame of the continuation where execution stopped)
+with the @samp{,@var{N}}, @samp{,@var{N}+}, @samp{,@var{N}-},
+@samp{,+}, @samp{,-}, @samp{,++}, and @samp{,--} commands.  When the
+frame number of the frame being examined is not zero, it is shown in
+the prompt after the nesting level, for example @samp{1\5>} is the
+prompt when the REPL nesting level is 1 and the frame number is 5.
 
 Expressions entered at a nested REPL are evaluated in the environment
 (both lexical and dynamic) of the continuation frame currently being
@@ -2197,25 +2197,43 @@ procedure calls, that is procedure calls are treated like a single step.
 Single-stepping mode will resume when the procedure call returns, or if
 and when the execution of the called procedure encounters a breakpoint.
 
-@item ,@var{n}
-@cmindex ,@var{n}
-Move to frame number @var{n} of the continuation.  After changing the
+@item ,@var{N}
+@cmindex ,@var{N}
+Move to frame number @var{N} of the continuation.  After changing the
+current frame, a one-line summary of the frame is displayed as if the
+@samp{,y} command was entered.
+
+@item ,@var{N}+
+@cmindex ,@var{N}+
+Move forward by @var{N} frames in the chain of continuation frames
+(i.e.  towards older continuation frames).  After changing the current
+frame, a one-line summary of the frame is displayed as if the
+@samp{,y} command was entered.
+
+@item ,@var{N}-
+@cmindex ,@var{N}-
+Move backward by @var{N} frames in the chain of continuation frames
+(i.e.  towards more recent continuation frames).  After changing the
 current frame, a one-line summary of the frame is displayed as if the
 @samp{,y} command was entered.
 
 @item ,+
 @cmindex ,+
-Move to the next frame in the chain of continuation frames (i.e.
-towards older continuation frames).  After changing the current frame, a
-one-line summary of the frame is displayed as if the @samp{,y} command
-was entered.
+Equivalent to @samp{,1+}.
 
 @item ,-
 @cmindex ,-
-Move to the previous frame in the chain of continuation frames (i.e.
-towards more recently created continuation frames).  After changing the
-current frame, a one-line summary of the frame is displayed as if the
-@samp{,y} command was entered.
+Equivalent to @samp{,1-}.
+
+@item ,++
+@cmindex ,++
+Equivalent to @samp{,@var{N}+} where @var{N} is the number of
+continuation frames displayed at the head of a backtrace.
+
+@item ,--
+@cmindex ,--
+Equivalent to @samp{,@var{N}-} where @var{N} is the number of
+continuation frames displayed at the head of a backtrace.
 
 @item ,y
 @cmindex ,y
