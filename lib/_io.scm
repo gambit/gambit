@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2009-11-24 19:11:12 feeley>
+;;; File: "_io.scm", Time-stamp: <2010-01-07 12:06:38 feeley>
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4539,7 +4539,7 @@
                     (##make-string i)))
               (##make-string i)))
         (let ((s (##make-string ml)))
-          (let ((n (##read-substring s i ml port 1)))
+          (let ((n (##read-substring s i ml port #f)))
             (##string-shrink! s (##fixnum.+ i n))
             s))))
 
