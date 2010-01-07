@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2009-11-24 19:11:45 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2010-01-07 08:49:37 feeley>
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -970,7 +970,7 @@ end-of-code
      (let () (##declare (not warnings)) (0))) ; create a return point with a
                                               ; frame having the same format as
                                               ; the one created by ___call
-    stack-marker)
+    (##first-argument stack-marker))
 
   (##c-code #<<end-of-code
 
