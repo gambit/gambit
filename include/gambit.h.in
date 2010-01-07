@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2010-01-07 08:44:52 feeley> */
+/* File: "gambit.h", Time-stamp: <2010-01-07 14:59:45 feeley> */
 
 /*
  * Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
@@ -8,8 +8,8 @@
 #error "___VERSION has not been set by includer"
 #endif
 
-#if ___VERSION != 405003
-#include "gambit-not405003.h"
+#if ___VERSION != 406000
+#include "gambit-not406000.h"
 #else
 
 #ifndef ___GAMBIT_H
@@ -5273,7 +5273,7 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 #define ___BREAK_FRAME_SPACE ___ROUND_TO_MULT(1,___FRAME_ALIGN)
 
 #define ___FRAME_SPACE(n)___ROUND_TO_MULT((n)+___FRAME_RESERVE,___FRAME_ALIGN)
-#define ___FRAME_RESERVE 1
+#define ___FRAME_RESERVE 3
 #define ___FRAME_ALIGN 4
 
 #define ___BEGIN_LBL \
