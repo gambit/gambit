@@ -1,7 +1,7 @@
-/* File: "gambit.h", Time-stamp: <2009-11-26 16:22:25 feeley> */
+/* File: "gambit.h", Time-stamp: <2010-01-07 08:44:52 feeley> */
 
 /*
- * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___VERSION
@@ -141,7 +141,7 @@
 
 #endif
 
-#ifndef CPU_ppc
+#ifndef ___CPU_ppc
 
 #ifdef PPC
 #define ___CPU_ppc
@@ -317,7 +317,7 @@
 
 #endif
 
-#ifndef CPU_arm
+#ifndef ___CPU_arm
 
 #ifdef arm
 #define ___CPU_arm
@@ -333,7 +333,7 @@
 
 #endif
 
-#ifndef CPU_vax
+#ifndef ___CPU_vax
 
 #ifdef vax
 #define ___CPU_vax
@@ -409,6 +409,9 @@
 #define ___LITTLE_ENDIAN
 #endif
 #ifdef __LITTLE_ENDIAN_DATA__
+#define ___LITTLE_ENDIAN
+#endif
+#ifdef __ARMEL__
 #define ___LITTLE_ENDIAN
 #endif
 #endif
