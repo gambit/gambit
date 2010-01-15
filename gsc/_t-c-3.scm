@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-3.scm", Time-stamp: <2008-04-12 10:08:26 feeley>
+;;; File: "_t-c-3.scm", Time-stamp: <2010-01-14 19:40:19 feeley>
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -476,13 +476,21 @@
 
 (define (targ-actual-fs kind fs)
   (if (eq? kind 'internal)
-    (+ (targ-align-frame fs) (+ targ-nb-gvm-regs 1))
-    fs))
+      (targ-internal-fs fs)
+      fs))
+
+(define (targ-internal-fs fs)
+  (+ (targ-align-frame fs)
+     (targ-align-frame-without-reserve (+ targ-nb-gvm-regs 1))))
 
 (define (targ-align-frame fs)
   (* (quotient (+ fs (- targ-frame-alignment 1))
                targ-frame-alignment)
      targ-frame-alignment))
+
+(define (targ-align-frame-without-reserve fs)
+  (- (targ-align-frame (+ fs targ-frame-reserve))
+     targ-frame-reserve))
 
 (define targ-min-word-size-in-bits
   (* targ-min-word-size targ-bits-per-byte))

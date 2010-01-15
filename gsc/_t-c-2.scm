@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2009-06-08 06:36:56 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2010-01-14 19:40:12 feeley>
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -937,11 +937,9 @@
                                                (length regs))))
                       (list return-var)
                       (extend-vars '()
-                                   (- (- (targ-align-frame
-                                          (+ (+ targ-nb-gvm-regs 1)
-                                             targ-frame-reserve))
-                                         targ-frame-reserve)
-                                      (+ targ-nb-gvm-regs 1)))))
+                                   (let ((n (+ targ-nb-gvm-regs 1)))
+                                     (- (targ-align-frame-without-reserve n)
+                                        n)))))
              (gc-map
               (targ-build-gc-map
                vars
