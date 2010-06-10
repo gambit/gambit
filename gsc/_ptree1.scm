@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2009-09-17 12:42:02 feeley>
+;;; File: "_ptree1.scm", Time-stamp: <2010-06-10 15:31:40 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -459,7 +459,12 @@
 
 (define-boolean-decl interrupts-enabled-sym)
 
-(define-boolean-decl environment-map-sym)
+(define-boolean-decl debug-sym)
+(define-boolean-decl debug-location-sym)
+(define-boolean-decl debug-source-sym)
+(define-boolean-decl debug-environments-sym)
+
+(define-boolean-decl environment-map-sym) ;; deprecated: use debug-environments
 
 (define-boolean-decl proper-tail-calls-sym)
 
@@ -519,6 +524,18 @@
 
 (define (add-not-interrupts-enabled env)
   (env-declare env (list interrupts-enabled-sym #f)))
+
+(define (debug? env) ; true iff debugging information should be generated
+  (declaration-value debug-sym #f compiler-option-debug env))
+
+(define (debug-location? env) ; true iff source code location debugging information should be generated
+  (declaration-value debug-location-sym #f compiler-option-debug-location env))
+
+(define (debug-source? env) ; true iff source code debugging information should be generated
+  (declaration-value debug-source-sym #f compiler-option-debug-source env))
+
+(define (debug-environments? env) ; true iff environment debugging information should be generated
+  (declaration-value debug-environments-sym #f compiler-option-debug-environments env))
 
 (define (environment-map? env) ; true iff environment map should be generated
   (declaration-value environment-map-sym #f #f env))

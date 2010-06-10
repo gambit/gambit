@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2010-01-14 19:40:12 feeley>
+;;; File: "_t-c-2.scm", Time-stamp: <2010-06-10 15:28:28 feeley>
 
 ;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
@@ -640,25 +640,29 @@
             (cons (cons x closure-env-index)
                   accessible-stack-slots))))))
 
-  (let ((label-descr
-         (cons (if (and node
-                        (or targ-debug-location-option?
-                            targ-debug-source-option?))
-                   (let ((src (node-source node)))
-                     (set! targ-debug-info? #t)
-                     (if targ-debug-location-option?
-                         (if targ-debug-source-option?
-                             src
-                             (source-locat src))
-                         (source->expression src)))
-                   #f)
-               (if (and node
-                        (or targ-debug-environments-option?
-                            (environment-map? (node-env node))))
-                 (begin
-                   (set! targ-debug-info? #t)
-                   (map encode (accessible-slots)))
-                 '()))))
+  (let* ((env
+          (and node (node-env node)))
+         (label-descr
+          (cons (if (and env
+                         (debug? env)
+                         (or (debug-location? env)
+                             (debug-source? env)))
+                    (let ((src (node-source node)))
+                      (set! targ-debug-info? #t)
+                      (if (debug-location? env)
+                          (if (debug-source? env)
+                              src
+                              (source-locat src))
+                          (source->expression src)))
+                    #f)
+                (if (and env
+                         (or (and (debug? env)
+                                  (debug-environments? env))
+                             (environment-map? env)))
+                    (begin
+                      (set! targ-debug-info? #t)
+                      (map encode (accessible-slots)))
+                    '()))))
     (queue-put! targ-first-class-label-queue label-descr)
     label-descr))
 

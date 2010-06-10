@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2009-08-25 18:58:26 feeley>
+;;; File: "_front.scm", Time-stamp: <2010-06-10 16:34:45 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -88,6 +88,7 @@
 (define (handle-options opts)
   (reset-options)
   (let ((rev-remaining-opts '()))
+
     (for-each
      (lambda (opt)
        (case opt
@@ -120,6 +121,16 @@
           (set! rev-remaining-opts
                 (cons opt rev-remaining-opts)))))
      opts)
+
+    (if (or compiler-option-debug-location
+            compiler-option-debug-source
+            compiler-option-debug-environments)
+        (set! compiler-option-debug #t)
+        (begin
+          (set! compiler-option-debug-location     #t)
+          (set! compiler-option-debug-source       #t)
+          (set! compiler-option-debug-environments #t)))
+
     (reverse rev-remaining-opts)))
 
 (define (reset-options)

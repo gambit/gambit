@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2010-01-07 14:56:18 feeley>
+;;; File: "_t-c-1.scm", Time-stamp: <2010-06-10 15:24:05 feeley>
 
 ;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
@@ -289,14 +289,6 @@
     (c-intf-objs-set! c-intf '())
 
     (set! targ-track-scheme-option? compiler-option-track-scheme)
-    (set! targ-debug-location-option? compiler-option-debug-location)
-    (set! targ-debug-source-option? compiler-option-debug-source)
-    (set! targ-debug-environments-option? compiler-option-debug-environments)
-    (if compiler-option-debug
-        (begin
-          (set! targ-debug-location-option? #t)
-          (set! targ-debug-source-option? #t)
-          (set! targ-debug-environments-option? #t)))
 
     (targ-heap-begin!)
 
@@ -334,15 +326,9 @@
 
     (targ-heap-end!)
 
-    (set! targ-track-scheme-option? #f)
-    (set! targ-debug-location-option? #f)
-    (set! targ-debug-source-option? #f)
-    (set! targ-debug-environments-option? #f)))
+    (set! targ-track-scheme-option? #f)))
 
 (define targ-track-scheme-option? #f)
-(define targ-debug-location-option? #f)
-(define targ-debug-source-option? #f)
-(define targ-debug-environments-option? #f)
 
 (define targ-tree-shake? #f)
 (set! targ-tree-shake? #f) ;; no tree shaking

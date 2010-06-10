@@ -951,41 +951,28 @@ for the ``Gambit Virtual Machine'' (GVM) of each Scheme file on
 @samp{@var{file}.gvm}.
 
 @opindex -debug
-The @samp{-debug} option causes debugging information to be saved in
-the code generated.  It is equivalent to the combination of the
-@samp{-debug-location} option, the @samp{-debug-source} option and the
-@samp{-debug-environments} option.  Note that the debugging
-information will substantially increase the C compilation time and the
-size of the generated code.  When compiling a 3000 line Scheme file it
-was observed that the total compilation time is 500% longer and the
-executable code is 150% bigger.
+@opindex debug
+The @samp{-debug} option causes all kinds of debugging information to
+be saved in the code generated.  See the documentation of the
+@samp{debug} declaration for details.
 
 @opindex -debug-location
+@opindex debug-location
 The @samp{-debug-location} option causes source code location
-debugging information to be saved in the code generated.  With this
-option run time error messages indicate the location of the error in
-the source code file.  When compiling a 3000 line Scheme file it was
-observed that the total compilation time is 200% longer and the
-executable code is 60% bigger.
+debugging information to be saved in the code generated.  See the
+documentation of the @samp{debug-location} declaration for details.
 
 @opindex -debug-source
+@opindex debug-source
 The @samp{-debug-source} option causes source code debugging
-information to be saved in the code generated.  With this option run
-time error messages indicate the source code, the backtraces are more
-precise, and the @code{pp} procedure will display the source code of
-compiled procedures.  When compiling a 3000 line Scheme file it was
-observed that the total compilation time is 90% longer and the
-executable code is 90% bigger.
+information to be saved in the code generated.  See the documentation
+of the @samp{debug-source} declaration for details.
 
 @opindex -debug-environments
+@opindex debug-environments
 The @samp{-debug-environments} option causes environment debugging
-information to be saved in the code generated.  With this option the
-debugger will have access to the environments of the continuations.
-In other words the local variables defined in compiled procedures (and
-not optimized away by the compiler) will be shown by the @samp{,e}
-REPL command.  When compiling a 3000 line Scheme file it was observed
-that the total compilation time is 70% longer and the executable code
-is 40% bigger.
+information to be saved in the code generated.  See the documentation
+of the @samp{debug-environments} declaration for details.
 
 @opindex -track-scheme
 The @samp{-track-scheme} options causes the generation of @samp{#line}
@@ -2248,10 +2235,10 @@ the fourth field is a reproduction of the source code, possibly
 truncated to fit on the line.  The last two fields may be missing if
 that information is not available.  In particular, the third field is
 missing when the frame was created by a user call to the @samp{eval}
-procedure or by a compiled procedure not compiled with the
-@samp{-debug} or @samp{-debug-location} options, and the last field is
-missing when the frame was created by a compiled procedure not
-compiled with the @samp{-debug} or @samp{-debug-source} options.
+procedure or by a compiled procedure not compiled with the declaration
+@samp{debug-location}, and the last field is missing when the frame
+was created by a compiled procedure not compiled with the declaration
+@samp{debug-source}.
 
 @item ,b
 @cmindex ,b
@@ -2294,8 +2281,7 @@ environment.
 Pretty print the procedure that created the current frame or
 @samp{(interaction)} if the frame was created by an expression entered
 at the REPL.  Compiled procedures will only be pretty printed when
-they are compiled with the @samp{-debug} or @samp{-debug-source}
-options.
+they are compiled with the declaration @samp{debug-source}.
 
 @item ,e
 @cmindex ,e
@@ -2304,8 +2290,8 @@ The lexical environment is displayed, followed by the dynamic
 environment if the parameter object
 @code{repl-display-dynamic-environment?} is not false.  Global lexical
 variables are not displayed.  Moreover the frame must have been
-created by interpreted code or code compiled with the @samp{-debug} or
-@samp{-debug-environments} options.  Due to space safety
+created by interpreted code or code compiled with the declaration
+@samp{debug-environments}.  Due to space safety
 considerations and compiler optimizations, some of the lexical
 variable bindings may be missing.  Lexical variable bindings are
 displayed using the format @samp{@var{variable} = @var{expression}}
@@ -2848,8 +2834,8 @@ For example:
 
 This procedure pretty-prints @var{obj} on the port @var{port}.  When
 @var{obj} is a procedure created by the interpreter or a procedure
-created by code compiled with the @samp{-debug} or
-@samp{-debug-source} options, the procedure's source code is
+created by code compiled with the declaration
+@samp{debug-source}, the procedure's source code is
 displayed.  If it is not specified, @var{port} defaults to the
 interaction channel (i.e. the output will appear at the REPL).
 
@@ -3882,6 +3868,64 @@ Generate (or don't generate) interrupt checks.  Interrupt checks are
 used to detect user interrupts and also to check for stack overflows.
 Interrupt checking should not be turned off casually.
 
+@item (@r{[}not@r{]} debug)
+@opindex debug
+@opindex -debug
+Enable (or disable) the generation of debugging information.  The kind
+of debugging information that is generated depends on the declarations
+@samp{debug-location}, @samp{debug-source}, and
+@samp{debug-environments}.  If any of the command line options
+@samp{-debug}, @samp{-debug-location}, @samp{-debug-source} and
+@samp{-debug-environments} are present, the @samp{debug} declaration
+is initially enabled, otherwise it is initially disabled.  When all
+kinds of debugging information are generated there is a substantial
+increase in the C compilation time and the size of the generated code.
+When compiling a 3000 line Scheme file it was observed that the total
+compilation time is 500% longer and the executable code is 150%
+bigger.
+
+@item (@r{[}not@r{]} debug-location)
+@opindex debug-location
+@opindex -debug-location
+Select (or deselect) source code location debugging information.  When
+this declaration and the @samp{debug} declaration are in effect, run
+time error messages indicate the location of the error in the source
+code file.  If any of the command line options @samp{-debug-source}
+and @samp{-debug-environments} are present and @samp{-debug-location}
+is absent, the @samp{debug-location} declaration is initially
+disabled, otherwise it is initially enabled.  When compiling a 3000
+line Scheme file it was observed that the total compilation time is
+200% longer and the executable code is 60% bigger.
+
+@item (@r{[}not@r{]} debug-source)
+@opindex debug-source
+@opindex -debug-source
+Select (or deselect) source code debugging information.  When this
+declaration and the @samp{debug} declaration are in effect, run time
+error messages indicate the source code, the backtraces are more
+precise, and the @code{pp} procedure will display the source code of
+compiled procedures.  If any of the command line options
+@samp{-debug-location} and @samp{-debug-environments} are present and
+@samp{-debug-source} is absent, the @samp{debug-source} declaration is
+initially disabled, otherwise it is initially enabled.  When compiling
+a 3000 line Scheme file it was observed that the total compilation
+time is 90% longer and the executable code is 90% bigger.
+
+@item (@r{[}not@r{]} debug-environments)
+@opindex debug-environments
+@opindex -debug-environments
+Select (or deselect) environment debugging information.  When this
+declaration and the @samp{debug} declaration are in effect, the
+debugger will have access to the environments of the continuations.
+In other words the local variables defined in compiled procedures (and
+not optimized away by the compiler) will be shown by the @samp{,e}
+REPL command.  If any of the command line options
+@samp{-debug-location} and @samp{-debug-source} are present and
+@samp{-debug-environments} is absent, the @samp{debug-environments}
+declaration is initially disabled, otherwise it is initially enabled.
+When compiling a 3000 line Scheme file it was observed that the total
+compilation time is 70% longer and the executable code is 40% bigger.
+
 @item (@r{[}not@r{]} proper-tail-calls)
 @opindex proper-tail-calls
 @cindex proper tail-calls
@@ -3902,8 +3946,8 @@ calls (whether they are expressed with a @code{letrec}, named
 Remove (or preserve) the dead local variables in the environment.
 Preserving the dead local variables is useful for debugging because
 continuations will contain the dead variables.  Thus, if the code is
-also compiled with the @samp{-debug} or @samp{-debug-environments}
-options the @samp{,e}, @samp{,ed}, @samp{,be}, and @samp{,bed} REPL
+also compiled with the declaration @samp{debug-environments}
+the @samp{,e}, @samp{,ed}, @samp{,be}, and @samp{,bed} REPL
 commands will display the dead variables.  On the other hand,
 preserving the dead local variables may change the space complexity of
 the program (i.e. some of the data that would normally be reclaimed by
@@ -3950,6 +3994,10 @@ The default declarations used by the compiler are equivalent to:
   (run-time-bindings)
   (safe)
   (interrupts-enabled)
+  (not debug)           ;; depends on debugging command line options
+  (debug-location)      ;; depends on debugging command line options
+  (debug-source)        ;; depends on debugging command line options
+  (debug-environments)  ;; depends on debugging command line options
   (proper-tail-calls)
   (optimize-dead-local-variables)
   (generic)

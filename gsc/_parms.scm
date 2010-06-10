@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_parms.scm", Time-stamp: <2010-01-07 14:55:58 feeley>
+;;; File: "_parms.scm", Time-stamp: <2010-06-10 13:53:05 feeley>
 
 ;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
@@ -109,7 +109,12 @@
 
 (define interrupts-enabled-sym (string->canonical-symbol "interrupts-enabled"))
 
-(define environment-map-sym    (string->canonical-symbol "environment-map"))
+(define debug-sym              (string->canonical-symbol "debug"))
+(define debug-location-sym     (string->canonical-symbol "debug-location"))
+(define debug-source-sym       (string->canonical-symbol "debug-source"))
+(define debug-environments-sym (string->canonical-symbol "debug-environments"))
+
+(define environment-map-sym    (string->canonical-symbol "environment-map")) ;; deprecated: use debug-environments
 
 (define proper-tail-calls-sym  (string->canonical-symbol "proper-tail-calls"))
 

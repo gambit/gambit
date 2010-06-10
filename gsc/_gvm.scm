@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gvm.scm", Time-stamp: <2007-04-04 11:36:18 feeley>
+;;; File: "_gvm.scm", Time-stamp: <2010-06-10 16:31:50 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -987,10 +987,21 @@
                           (closure-parms-opnds p1)
                           (closure-parms-opnds p2))))
 
+        (define (has-debug-info? instr)
+          (let ((node (comment-get (gvm-instr-comment instr) 'node)))
+            (and node
+                 (let ((env (node-env node)))
+                   (and (debug? env)
+                        (or (debug-location? env)
+                            (debug-source? env)
+                            (debug-environments? env)))))))
+
         (let ((type1 (gvm-instr-type instr1))
               (type2 (gvm-instr-type instr2)))
           (and (eq? type1 type2)
                (frame-eq? (gvm-instr-frame instr1) (gvm-instr-frame instr2))
+               (not (has-debug-info? instr1))
+               (not (has-debug-info? instr2))
                (case type1
 
                  ((label)
