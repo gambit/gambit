@@ -1,6 +1,6 @@
 #!/usr/bin/env gsi-script
 
-; File: "web-repl.scm", Time-stamp: <2010-06-11 00:21:06 feeley>
+; File: "web-repl.scm", Time-stamp: <2010-06-11 00:55:02 feeley>
 
 ; Copyright (c) 2004-2010 by Marc Feeley, All Rights Reserved.
 
@@ -66,8 +66,9 @@
               (mutex-unlock! m)
               (loop))))))
 
-  (thread-start! (make-thread process-input))
-  (thread-start! (make-thread process-output)))
+  (let ((tgroup (make-thread-group 'repl-pump #f)))
+    (thread-start! (make-thread process-input #f tgroup))
+    (thread-start! (make-thread process-output #f tgroup))))
 
 (define (make-ide-repl-ports ide-repl-connection tgroup)
   (receive (in-rd-port in-wr-port) (open-string-pipe '(direction: input permanent-close: #f))
