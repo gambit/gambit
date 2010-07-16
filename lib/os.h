@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2009-11-24 23:42:25 feeley> */
+/* File: "os.h", Time-stamp: <2010-07-16 08:49:05 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -161,7 +161,7 @@
 #define USE_NETWORKING
 #endif
 
-#ifdef HAVE_STAT64
+#if defined(HAVE_STAT64) && defined(HAVE_STRUCT_STAT64)
 #define USE_stat
 #define ___stat stat64
 #define ___lstat lstat64

@@ -1,4 +1,4 @@
-/* File: "config.h.in", Time-stamp: <2009-11-15 13:11:09 feeley> */
+/* File: "config.h.in", Time-stamp: <2010-07-16 08:49:09 feeley> */
 
 /*
  * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
@@ -187,6 +187,10 @@
 #undef HAVE_HSTRERROR
 
 #undef HAVE_GET_FPC_CSR
+
+/* Determine which types are available */
+
+#undef HAVE_STRUCT_STAT64
 
 /* Define appropriately if sys/types.h does not define socklen_t.  */
 #undef socklen_t

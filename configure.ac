@@ -792,6 +792,11 @@ else
 
 fi
 
+AC_CHECK_TYPE([struct stat64],
+              [AC_DEFINE(HAVE_STRUCT_STAT64, 1, [])],
+              [],
+              [#include <sys/stat.h>])
+
 ###############################################################################
 #
 # Check which command line options are supported by $C_COMPILER.
