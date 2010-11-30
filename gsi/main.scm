@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2009-09-16 09:26:17 feeley>
+;;; File: "main.scm", Time-stamp: <2010-11-30 17:01:58 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -404,61 +404,67 @@
 
                               (if (##memq type '(link exe))
 
-                                  (if (##pair? rev-gen-c-files)
-                                      (let* ((roots
-                                              (##map ##path-strip-extension
-                                                     (##reverse rev-gen-c-files)))
-                                             (link-file
-                                              (if flat?
-                                                  (if (and output
-                                                           (##eq? type 'link))
-                                                      (link-flat roots
-                                                                 output: output)
-                                                      (link-flat roots))
-                                                  (if (and output
-                                                           (##eq? type 'link))
-                                                      (if base
-                                                          (link-incremental
-                                                           roots
-                                                           output: output
-                                                           base: base)
-                                                          (link-incremental
-                                                           roots
-                                                           output: output))
-                                                      (if base
-                                                          (link-incremental
-                                                           roots
-                                                           base: base)
-                                                          (link-incremental
-                                                           roots))))))
-                                        (add-gen-c-file link-file)
-                                        (if (##eq? type 'exe)
-                                            (let ((obj-link-file
-                                                   (do-compile-file
-                                                    link-file
-                                                    (##cons 'obj sym-opts)
-                                                    #f)))
-                                              (add-obj-file obj-link-file)
-                                              (add-tmp-file obj-link-file)
-                                              (if (##not (##memq 'keep-c options))
-                                                  (add-tmp-file link-file))
-                                              (let* ((obj-files
-                                                      (##reverse rev-obj-files))
-                                                     (executable-file
-                                                      (do-build-executable
-                                                       obj-files
-                                                       (let ((expanded-output
-                                                              (and output
-                                                                   (##path-normalize output))))
-                                                         (if (and expanded-output
-                                                                  (##equal? expanded-output
-                                                                            (##path-strip-trailing-directory-separator
-                                                                             expanded-output)))
-                                                             expanded-output
-                                                             (##string-append
-                                                              (##car (##reverse roots))
-                                                              ##os-exe-extension-string-saved))))))
-                                                executable-file)))))
+                                  (let ((roots
+                                         (and (##pair? rev-gen-c-files)
+                                              (let* ((roots
+                                                      (##map ##path-strip-extension
+                                                             (##reverse rev-gen-c-files)))
+                                                     (link-file
+                                                      (if flat?
+                                                          (if (and output
+                                                                   (##eq? type 'link))
+                                                              (link-flat roots
+                                                                         output: output)
+                                                              (link-flat roots))
+                                                          (if (and output
+                                                                   (##eq? type 'link))
+                                                              (if base
+                                                                  (link-incremental
+                                                                   roots
+                                                                   output: output
+                                                                   base: base)
+                                                                  (link-incremental
+                                                                   roots
+                                                                   output: output))
+                                                              (if base
+                                                                  (link-incremental
+                                                                   roots
+                                                                   base: base)
+                                                                  (link-incremental
+                                                                   roots))))))
+                                                (add-gen-c-file link-file)
+                                                (if (##eq? type 'exe)
+                                                    (let ((obj-link-file
+                                                           (do-compile-file
+                                                            link-file
+                                                            (##cons 'obj sym-opts)
+                                                            #f)))
+                                                      (add-obj-file obj-link-file)
+                                                      (add-tmp-file obj-link-file)
+                                                      (if (##not (##memq 'keep-c options))
+                                                          (add-tmp-file link-file))))
+                                                roots))))
+
+                                    (if (##eq? type 'exe)
+                                        (and (##pair? rev-obj-files)
+                                             (let ((obj-files
+                                                    (##reverse rev-obj-files)))
+                                               (do-build-executable
+                                                obj-files
+                                                (let ((expanded-output
+                                                       (and output
+                                                            (##path-normalize output))))
+                                                  (if (and expanded-output
+                                                           (##equal? expanded-output
+                                                                     (##path-strip-trailing-directory-separator
+                                                                      expanded-output)))
+                                                      expanded-output
+                                                      (##string-append
+                                                       (if roots
+                                                           (##car (##reverse roots))
+                                                           (##path-strip-extension
+                                                            (##car rev-obj-files)))
+                                                       ##os-exe-extension-string-saved))))))))
 
                                   (if flat?
                                       (warn-flat-and-not-link-or-exe)))
