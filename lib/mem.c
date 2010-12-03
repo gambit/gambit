@@ -1,4 +1,4 @@
-/* File: "mem.c", Time-stamp: <2009-10-29 00:03:16 feeley> */
+/* File: "mem.c", Time-stamp: <2010-12-03 16:45:18 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.  */
 
@@ -345,7 +345,7 @@ ___HIDDEN long words_prev_msections;
 
 /* words usable in msections */
 #define WORDS_MOVABLE_USABLE \
-(2*the_msections->nb_sections*((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1))
+(2*the_msections->nb_sections*(long)((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1))
 
 /* words available in heap */
 #define WORDS_AVAILABLE \
