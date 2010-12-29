@@ -5687,6 +5687,18 @@ fi
 
 done
 
+  for ac_header in crt_externs.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "crt_externs.h" "ac_cv_header_crt_externs_h" "$ac_includes_default"
+if test "x$ac_cv_header_crt_externs_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_CRT_EXTERNS_H 1
+_ACEOF
+
+fi
+
+done
+
 
   if test "$C_COMP_VISUALC" != yes; then
 
@@ -7145,6 +7157,18 @@ do :
 if test "x$ac_cv_func_get_fpc_csr" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GET_FPC_CSR 1
+_ACEOF
+
+fi
+done
+
+
+  for ac_func in _NSGetEnviron
+do :
+  ac_fn_cxx_check_func "$LINENO" "_NSGetEnviron" "ac_cv_func__NSGetEnviron"
+if test "x$ac_cv_func__NSGetEnviron" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE__NSGETENVIRON 1
 _ACEOF
 
 fi

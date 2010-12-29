@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2010-12-29 11:40:07 feeley> */
+/* File: "os.h", Time-stamp: <2010-12-29 12:24:01 feeley> */
 
 /* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
@@ -560,9 +560,15 @@
 #endif
 
 #ifdef USE_environ
+#ifdef HAVE__NSGETENVIRON
+#define environ (*_NSGetEnviron())
+#undef INCLUDE_crt_externs_h
+#define INCLUDE_crt_externs_h
+#else
 ___BEGIN_C_LINKAGE
 extern char **environ;
 ___END_C_LINKAGE
+#endif
 #endif
 
 #ifdef USE_getenv
@@ -1345,6 +1351,11 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #endif
 #endif
 
+#ifdef INCLUDE_crt_externs_h
+#ifdef HAVE_CRT_EXTERNS_H
+#include <crt_externs.h>
+#endif
+#endif
 
 /*---------------------------------------------------------------------------*/
 

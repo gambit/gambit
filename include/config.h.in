@@ -1,4 +1,4 @@
-/* File: "config.h.in", Time-stamp: <2010-12-29 11:51:06 feeley> */
+/* File: "config.h.in", Time-stamp: <2010-12-29 12:21:27 feeley> */
 
 /*
  * Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
@@ -95,6 +95,7 @@
 #undef HAVE_STRINGS_H
 #undef HAVE_MEMORY_H
 #undef HAVE_SYS_SYSCTL_H
+#undef HAVE_CRT_EXTERNS_H
 
 /*---------------------------------------------------------------------------*/
 
@@ -191,6 +192,8 @@
 #undef HAVE_HSTRERROR
 
 #undef HAVE_GET_FPC_CSR
+
+#undef HAVE__NSGETENVIRON
 
 /* Determine which types are available */
 

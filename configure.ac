@@ -624,6 +624,7 @@ else
   AC_CHECK_HEADERS(strings.h)
   AC_CHECK_HEADERS(memory.h)
   AC_CHECK_HEADERS(sys/sysctl.h)
+  AC_CHECK_HEADERS(crt_externs.h)
 
   if test "$C_COMP_VISUALC" != yes; then
 
@@ -892,6 +893,8 @@ else
   AC_CHECK_FUNCS(hstrerror)
 
   AC_CHECK_FUNCS(get_fpc_csr)
+
+  AC_CHECK_FUNCS(_NSGetEnviron)
 
 fi
 
