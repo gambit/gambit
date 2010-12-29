@@ -1,6 +1,6 @@
-/* File: "os_tty.c", Time-stamp: <2009-11-26 14:22:01 feeley> */
+/* File: "os_tty.c", Time-stamp: <2010-12-29 11:40:46 feeley> */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -782,9 +782,13 @@ ___device_tty *self;)
 #ifdef USE_POSIX
 
         int fd;
-        char term_name[L_ctermid];
 
+#ifndef HAVE_ctermid
+        char* term_name = "/dev/tty";
+#else
+        char term_name[L_ctermid];
         ctermid (term_name); /* get controlling terminal's name */
+#endif
 
         if ((fd = open (term_name,
 #ifdef LINEEDITOR_WITH_NONBLOCKING_IO

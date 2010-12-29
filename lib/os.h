@@ -1,6 +1,6 @@
-/* File: "os.h", Time-stamp: <2010-07-16 08:49:05 feeley> */
+/* File: "os.h", Time-stamp: <2010-12-29 11:40:07 feeley> */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -886,6 +886,20 @@ ___END_C_LINKAGE
 #define INCLUDE_util_h
 #endif
 
+#ifdef USE_getpt
+#undef INCLUDE_stdlib_h
+#define INCLUDE_stdlib_h
+#undef INCLUDE_stropts_h
+#define INCLUDE_stropts_h
+#endif
+
+#ifdef USE_ptsname
+#undef INCLUDE_stdlib_h
+#define INCLUDE_stdlib_h
+#undef INCLUDE_stropts_h
+#define INCLUDE_stropts_h
+#endif
+
 #ifdef USE_tcgetattr
 #undef INCLUDE_termios_h
 #define INCLUDE_termios_h
@@ -1250,6 +1264,12 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #ifdef INCLUDE_pty_h
 #ifdef HAVE_PTY_H
 #include <pty.h>
+#endif
+#endif
+
+#ifdef INCLUDE_stropts_h
+#ifdef HAVE_STROPTS_H
+#include <stropts.h>
 #endif
 #endif
 

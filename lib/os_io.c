@@ -1,6 +1,6 @@
-/* File: "os_io.c", Time-stamp: <2009-08-04 13:55:03 feeley> */
+/* File: "os_io.c", Time-stamp: <2010-12-29 11:40:20 feeley> */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -6324,6 +6324,11 @@ int *direction;)
 
 #ifdef USE_execvp
 #define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#ifndef USE_openpty
+#ifndef USE_ptsname
+#undef ___STREAM_OPEN_PROCESS_CE_SELECT
+#endif
+#endif
 #endif
 
 #ifdef USE_CreateProcess
@@ -6422,13 +6427,14 @@ int *slave_fd_ptr;)
 #else
 
   *slave_fd_ptr = -1;
-  return *master_fd_ptr = open ("/dev/ptmx", O_RDWR);
+  return *master_fd_ptr = open ("/dev/ptmx", O_RDWR | O_NOCTTY);
 
 #endif
 #endif
 }
 
 
+#if 0
 #ifndef USE_openpty
 /***************************/
 #define __USE_XOPEN
@@ -6436,6 +6442,7 @@ int *slave_fd_ptr;)
 #include <stdlib.h>
 #include <stropts.h>
 extern char *ptsname (int __fd);
+#endif
 #endif
 
 ___HIDDEN int setup_terminal_slave
@@ -6499,9 +6506,17 @@ int *slave_fd;)
     {
       int tmp;
 
-      if (!isastream (fd) ||
-          (ioctl (fd, I_PUSH, "ptem") >= 0 &&
-           ioctl (fd, I_PUSH, "ldterm") >= 0))
+      if (
+#ifndef HAVE_isastream
+          1
+#else
+          !isastream (fd)
+#ifdef I_PUSH
+          || (ioctl (fd, I_PUSH, "ptem") >= 0 &&
+              ioctl (fd, I_PUSH, "ldterm") >= 0)
+#endif
+#endif
+         )
         {
           *slave_fd = fd;
           return 0;

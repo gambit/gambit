@@ -1,7 +1,7 @@
-/* File: "config.h.in", Time-stamp: <2010-07-16 08:49:09 feeley> */
+/* File: "config.h.in", Time-stamp: <2010-12-29 11:51:06 feeley> */
 
 /*
- * Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -81,6 +81,7 @@
 #undef HAVE_TERMIOS_H
 #undef HAVE_TERM_H
 #undef HAVE_PTY_H
+#undef HAVE_STROPTS_H
 #undef HAVE_LIBUTIL_H
 #undef HAVE_UTIL_H
 #undef HAVE_SYS_FPU_H
@@ -122,9 +123,16 @@
 #undef HAVE_SYMLINK
 #undef HAVE_SYSCONF
 #undef HAVE_SYSCTL
-#undef HAVE_TCGETATTR
 #undef HAVE_UNLINK
 #undef HAVE_WAITPID
+
+#undef HAVE_TCGETATTR
+
+#undef HAVE_SIGACTION
+#undef HAVE_SIGEMPTYSET
+#undef HAVE_SIGADDSET
+#undef HAVE_SIGPROCMASK
+#undef HAVE_SIGNAL
 
 #undef HAVE_CLOCK_GETTIME
 #undef HAVE_GETCLOCK
@@ -148,12 +156,6 @@
 #undef HAVE_DOSSTARTTIMER
 #undef HAVE_VINSTALL
 #undef HAVE_CREATETHREAD
-
-#undef HAVE_SIGACTION
-#undef HAVE_SIGEMPTYSET
-#undef HAVE_SIGADDSET
-#undef HAVE_SIGPROCMASK
-#undef HAVE_SIGNAL
 
 #undef HAVE_SHL_LOAD
 #undef HAVE_LOADLIBRARY
@@ -183,6 +185,8 @@
 #undef HAVE_OPENPTY
 #undef HAVE_GETPT
 #undef HAVE_PTSNAME
+#undef HAVE_CTERMID
+#undef HAVE_ISASTREAM
 
 #undef HAVE_HSTRERROR
 

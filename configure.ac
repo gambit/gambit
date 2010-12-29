@@ -1,6 +1,6 @@
 # Configure template for Gambit-C system.
 
-# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -18,7 +18,7 @@ AC_SUBST(PACKAGE_STRING)
 AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
@@ -613,6 +613,7 @@ else
   AC_CHECK_HEADERS(termios.h)
   #AC_CHECK_HEADERS(term.h)
   AC_CHECK_HEADERS(pty.h)
+  AC_CHECK_HEADERS(stropts.h)
   AC_CHECK_HEADERS(libutil.h)
   AC_CHECK_HEADERS(util.h)
   AC_CHECK_HEADERS(sys/fpu.h)
@@ -724,9 +725,115 @@ else
   AC_CHECK_FUNCS(symlink)
   AC_CHECK_FUNCS(sysconf)
   AC_CHECK_FUNCS(sysctl)
-  AC_CHECK_FUNCS(tcgetattr)
   AC_CHECK_FUNCS(unlink)
   AC_CHECK_FUNCS(waitpid)
+
+  # The following checks for library functions have been written
+  # specially to catch the case where they are declared as inline
+  # functions.  This was done when porting to the Android platform,
+  # but it may be useful for other platforms as well.
+
+  # used to be: AC_CHECK_FUNCS(tcgetattr)
+
+  AC_DEFUN([AC_CHECK_FUNC_TCGETATTR],
+  [AC_CACHE_CHECK([for tcgetattr], ac_cv_func_tcgetattr,
+  [
+    AC_TRY_COMPILE([
+      #ifdef HAVE_TERMIOS_H
+      #include <termios.h>
+      #endif
+      ],[int fd = 1; struct termios tios; tcgetattr (fd, &tios);],
+    ac_cv_func_tcgetattr=yes,
+    ac_cv_func_tcgetattr=no)
+  ])
+    if test $ac_cv_func_tcgetattr = yes; then
+      AC_DEFINE(HAVE_TCGETATTR)
+    fi
+  ])
+
+  AC_CHECK_FUNC_TCGETATTR
+
+  # used to be: AC_CHECK_FUNCS(sigaction)
+
+  AC_DEFUN([AC_CHECK_FUNC_SIGACTION],
+  [AC_CACHE_CHECK([for sigaction], ac_cv_func_sigaction,
+  [
+    AC_TRY_COMPILE([
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+      ],[struct sigaction sa1, sa2; sigaction (1, &sa1, &sa2);],
+    ac_cv_func_sigaction=yes,
+    ac_cv_func_sigaction=no)
+  ])
+    if test $ac_cv_func_sigaction = yes; then
+      AC_DEFINE(HAVE_SIGACTION)
+    fi
+  ])
+
+  AC_CHECK_FUNC_SIGACTION
+
+  # used to be: AC_CHECK_FUNCS(sigemptyset)
+  #             AC_CHECK_FUNCS(sigaddset)
+
+  AC_DEFUN([AC_CHECK_FUNC_SIGSET],
+  [AC_CACHE_CHECK([for sigemptyset/sigaddset], ac_cv_func_sigset,
+  [
+    AC_TRY_COMPILE([
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+      ],[sigset_t ss; sigemptyset (&ss); sigaddset (&ss, 1);],
+    ac_cv_func_sigset=yes,
+    ac_cv_func_sigset=no)
+  ])
+    if test $ac_cv_func_sigset = yes; then
+      AC_DEFINE(HAVE_SIGEMPTYSET)
+      AC_DEFINE(HAVE_SIGADDSET)
+    fi
+  ])
+
+  AC_CHECK_FUNC_SIGSET
+
+  # used to be: AC_CHECK_FUNCS(sigprocmask)
+
+  AC_DEFUN([AC_CHECK_FUNC_SIGPROCMASK],
+  [AC_CACHE_CHECK([for sigprocmask], ac_cv_func_sigprocmask,
+  [
+    AC_TRY_COMPILE([
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+      ],[sigset_t ss1, ss2; sigemptyset (&ss1); sigaddset (&ss1, 1); sigprocmask (SIG_BLOCK, &ss1, &ss2);],
+    ac_cv_func_sigprocmask=yes,
+    ac_cv_func_sigprocmask=no)
+  ])
+    if test $ac_cv_func_sigprocmask = yes; then
+      AC_DEFINE(HAVE_SIGPROCMASK)
+    fi
+  ])
+
+  AC_CHECK_FUNC_SIGPROCMASK
+
+  # used to be: AC_CHECK_FUNCS(signal)
+
+  AC_DEFUN([AC_CHECK_FUNC_SIGNAL],
+  [AC_CACHE_CHECK([for signal], ac_cv_func_signal,
+  [
+    AC_TRY_COMPILE([
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+      ],[signal (1, SIG_DFL);],
+    ac_cv_func_signal=yes,
+    ac_cv_func_signal=no)
+  ])
+    if test $ac_cv_func_signal = yes; then
+      AC_DEFINE(HAVE_SIGNAL)
+    fi
+  ])
+
+  AC_CHECK_FUNC_SIGNAL
 
   AC_CHECK_FUNCS(clock_gettime)
   AC_CHECK_FUNCS(getclock)
@@ -750,12 +857,6 @@ else
   AC_CHECK_FUNCS(DosStartTimer)
   AC_CHECK_FUNCS(VInstall)
   #AC_CHECK_FUNCS(CreateThread)
-
-  AC_CHECK_FUNCS(sigaction)
-  AC_CHECK_FUNCS(sigemptyset)
-  AC_CHECK_FUNCS(sigaddset)
-  AC_CHECK_FUNCS(sigprocmask)
-  AC_CHECK_FUNCS(signal)
 
   AC_CHECK_FUNCS(shl_load)
   #AC_CHECK_FUNCS(LoadLibrary)
@@ -785,6 +886,8 @@ else
   AC_CHECK_FUNCS(openpty)
   AC_CHECK_FUNCS(getpt)
   AC_CHECK_FUNCS(ptsname)
+  AC_CHECK_FUNCS(ctermid)
+  AC_CHECK_FUNCS(isastream)
 
   AC_CHECK_FUNCS(hstrerror)
 

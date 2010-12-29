@@ -11,7 +11,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 #
-# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -1630,7 +1630,7 @@ Copyright (C) 2009 Free Software Foundation, Inc.
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 _ACEOF
   exit
 fi
@@ -5555,6 +5555,18 @@ fi
 
 done
 
+  for ac_header in stropts.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "stropts.h" "ac_cv_header_stropts_h" "$ac_includes_default"
+if test "x$ac_cv_header_stropts_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_STROPTS_H 1
+_ACEOF
+
+fi
+
+done
+
   for ac_header in libutil.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "libutil.h" "ac_cv_header_libutil_h" "$ac_includes_default"
@@ -6455,17 +6467,6 @@ _ACEOF
 fi
 done
 
-  for ac_func in tcgetattr
-do :
-  ac_fn_cxx_check_func "$LINENO" "tcgetattr" "ac_cv_func_tcgetattr"
-if test "x$ac_cv_func_tcgetattr" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_TCGETATTR 1
-_ACEOF
-
-fi
-done
-
   for ac_func in unlink
 do :
   ac_fn_cxx_check_func "$LINENO" "unlink" "ac_cv_func_unlink"
@@ -6487,6 +6488,219 @@ _ACEOF
 
 fi
 done
+
+
+  # The following checks for library functions have been written
+  # specially to catch the case where they are declared as inline
+  # functions.  This was done when porting to the Android platform,
+  # but it may be useful for other platforms as well.
+
+  # used to be: AC_CHECK_FUNCS(tcgetattr)
+
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for tcgetattr" >&5
+$as_echo_n "checking for tcgetattr... " >&6; }
+if test "${ac_cv_func_tcgetattr+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #ifdef HAVE_TERMIOS_H
+      #include <termios.h>
+      #endif
+
+int
+main ()
+{
+int fd = 1; struct termios tios; tcgetattr (fd, &tios);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  ac_cv_func_tcgetattr=yes
+else
+  ac_cv_func_tcgetattr=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_tcgetattr" >&5
+$as_echo "$ac_cv_func_tcgetattr" >&6; }
+    if test $ac_cv_func_tcgetattr = yes; then
+      $as_echo "#define HAVE_TCGETATTR 1" >>confdefs.h
+
+    fi
+
+
+  # used to be: AC_CHECK_FUNCS(sigaction)
+
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sigaction" >&5
+$as_echo_n "checking for sigaction... " >&6; }
+if test "${ac_cv_func_sigaction+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+
+int
+main ()
+{
+struct sigaction sa1, sa2; sigaction (1, &sa1, &sa2);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  ac_cv_func_sigaction=yes
+else
+  ac_cv_func_sigaction=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_sigaction" >&5
+$as_echo "$ac_cv_func_sigaction" >&6; }
+    if test $ac_cv_func_sigaction = yes; then
+      $as_echo "#define HAVE_SIGACTION 1" >>confdefs.h
+
+    fi
+
+
+  # used to be: AC_CHECK_FUNCS(sigemptyset)
+  #             AC_CHECK_FUNCS(sigaddset)
+
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sigemptyset/sigaddset" >&5
+$as_echo_n "checking for sigemptyset/sigaddset... " >&6; }
+if test "${ac_cv_func_sigset+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+
+int
+main ()
+{
+sigset_t ss; sigemptyset (&ss); sigaddset (&ss, 1);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  ac_cv_func_sigset=yes
+else
+  ac_cv_func_sigset=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_sigset" >&5
+$as_echo "$ac_cv_func_sigset" >&6; }
+    if test $ac_cv_func_sigset = yes; then
+      $as_echo "#define HAVE_SIGEMPTYSET 1" >>confdefs.h
+
+      $as_echo "#define HAVE_SIGADDSET 1" >>confdefs.h
+
+    fi
+
+
+  # used to be: AC_CHECK_FUNCS(sigprocmask)
+
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sigprocmask" >&5
+$as_echo_n "checking for sigprocmask... " >&6; }
+if test "${ac_cv_func_sigprocmask+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+
+int
+main ()
+{
+sigset_t ss1, ss2; sigemptyset (&ss1); sigaddset (&ss1, 1); sigprocmask (SIG_BLOCK, &ss1, &ss2);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  ac_cv_func_sigprocmask=yes
+else
+  ac_cv_func_sigprocmask=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_sigprocmask" >&5
+$as_echo "$ac_cv_func_sigprocmask" >&6; }
+    if test $ac_cv_func_sigprocmask = yes; then
+      $as_echo "#define HAVE_SIGPROCMASK 1" >>confdefs.h
+
+    fi
+
+
+  # used to be: AC_CHECK_FUNCS(signal)
+
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for signal" >&5
+$as_echo_n "checking for signal... " >&6; }
+if test "${ac_cv_func_signal+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+
+int
+main ()
+{
+signal (1, SIG_DFL);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  ac_cv_func_signal=yes
+else
+  ac_cv_func_signal=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_signal" >&5
+$as_echo "$ac_cv_func_signal" >&6; }
+    if test $ac_cv_func_signal = yes; then
+      $as_echo "#define HAVE_SIGNAL 1" >>confdefs.h
+
+    fi
 
 
   for ac_func in clock_gettime
@@ -6661,62 +6875,6 @@ fi
 done
 
   #AC_CHECK_FUNCS(CreateThread)
-
-  for ac_func in sigaction
-do :
-  ac_fn_cxx_check_func "$LINENO" "sigaction" "ac_cv_func_sigaction"
-if test "x$ac_cv_func_sigaction" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SIGACTION 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in sigemptyset
-do :
-  ac_fn_cxx_check_func "$LINENO" "sigemptyset" "ac_cv_func_sigemptyset"
-if test "x$ac_cv_func_sigemptyset" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SIGEMPTYSET 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in sigaddset
-do :
-  ac_fn_cxx_check_func "$LINENO" "sigaddset" "ac_cv_func_sigaddset"
-if test "x$ac_cv_func_sigaddset" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SIGADDSET 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in sigprocmask
-do :
-  ac_fn_cxx_check_func "$LINENO" "sigprocmask" "ac_cv_func_sigprocmask"
-if test "x$ac_cv_func_sigprocmask" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SIGPROCMASK 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in signal
-do :
-  ac_fn_cxx_check_func "$LINENO" "signal" "ac_cv_func_signal"
-if test "x$ac_cv_func_signal" = x""yes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SIGNAL 1
-_ACEOF
-
-fi
-done
-
 
   for ac_func in shl_load
 do :
@@ -6941,6 +7099,28 @@ do :
 if test "x$ac_cv_func_ptsname" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_PTSNAME 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in ctermid
+do :
+  ac_fn_cxx_check_func "$LINENO" "ctermid" "ac_cv_func_ctermid"
+if test "x$ac_cv_func_ctermid" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_CTERMID 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in isastream
+do :
+  ac_fn_cxx_check_func "$LINENO" "isastream" "ac_cv_func_isastream"
+if test "x$ac_cv_func_isastream" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_ISASTREAM 1
 _ACEOF
 
 fi
