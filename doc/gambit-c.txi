@@ -1318,7 +1318,7 @@ Linux 2.6.8-1.521 i686 athlon
 $ @b{gsc -link -flat -o foo.o1.c m2 m3 > /dev/null}
 m2:
 m3:
-$ @b{gsc -obj m1.c m2.c m3.c foo.o1.c}
+$ @b{gsc -cc-options "-D___DYNAMIC" -obj m1.c m2.c m3.c foo.o1.c}
 m1.c:
 m2.c:
 m3.c:
@@ -1349,7 +1349,7 @@ m5:
 ***            referenced in: ("m5.c" "m4.c")
 *** WARNING -- "write" is not defined,
 ***            referenced in: ("m5.c")
-$ @b{gsc -obj m4.c m5.c x.c mymod.o1.c}
+$ @b{gsc -cc-options "-D___DYNAMIC" -obj m4.c m5.c x.c mymod.o1.c}
 m4.c:
 m5.c:
 x.c:
