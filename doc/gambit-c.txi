@@ -1296,11 +1296,11 @@ Here is an example under Mac OS X:
 
 @smallexample
 $ @b{uname -srmp}
-Darwin 8.1.0 Power Macintosh powerpc
+Darwin 10.5.0 i386 i386
 $ @b{gsc -link -flat -o foo.o1.c m2 m3 > /dev/null}
 m2:
 m3:
-$ @b{gsc -obj m1.c m2.c m3.c foo.o1.c}
+$ @b{gsc -cc-options "-D___DYNAMIC" -obj m1.c m2.c m3.c foo.o1.c}
 m1.c:
 m2.c:
 m3.c:
