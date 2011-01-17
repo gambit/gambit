@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "Xlib.scm", Time-stamp: <2009-01-13 14:06:51 feeley>
+;;; File: "Xlib.scm", Time-stamp: <2011-01-17 15:19:20 feeley>
 
-;;; Copyright (c) 2006-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2006-2011 by Marc Feeley, All Rights Reserved.
 
 ;;; A simple interface to the X Window System Xlib library.
 
@@ -58,54 +58,6 @@ end-of-c-declare
 #include <stdio.h>
 #endif
 
-___SCMOBJ XFree_GC( void* ptr )
-{ GC p = ptr;
-#ifdef debug_free
-  printf( "XFree_GC(%p)\n", p );
-  fflush( stdout );
-#endif
-#ifdef really_free
-  XFree( p );
-#endif
-  return ___FIX(___NO_ERR);
-}
-
-___SCMOBJ XFree_Visual( void* ptr )
-{ Visual* p = ptr;
-#ifdef debug_free
-  printf( "XFree_Visual(%p)\n", p );
-  fflush( stdout );
-#endif
-#ifdef really_free
-  XFree( p );
-#endif
-  return ___FIX(___NO_ERR);
-}
-
-___SCMOBJ XFree_Display( void* ptr )
-{ Display* p = ptr;
-#ifdef debug_free
-  printf( "XFree_Display(%p)\n", p );
-  fflush( stdout );
-#endif
-#ifdef really_free
-  XFree( p );
-#endif
-  return ___FIX(___NO_ERR);
-}
-
-___SCMOBJ XFree_Screen( void* ptr )
-{ Screen* p = ptr;
-#ifdef debug_free
-  printf( "XFree_Screen(%p)\n", p );
-  fflush( stdout );
-#endif
-#ifdef really_free
-  XFree( p );
-#endif
-  return ___FIX(___NO_ERR);
-}
-
 ___SCMOBJ release_rc_XGCValues( void* ptr )
 { XGCValues* p = ptr;
 #ifdef debug_free
@@ -118,14 +70,14 @@ ___SCMOBJ release_rc_XGCValues( void* ptr )
   return ___FIX(___NO_ERR);
 }
 
-___SCMOBJ XFree_XFontStruct( void* ptr )
+___SCMOBJ XFreeFontInfo_XFontStruct( void* ptr )
 { XFontStruct* p = ptr;
 #ifdef debug_free
-  printf( "XFree_XFontStruct(%p)\n", p );
+  printf( "XFreeFontInfo_XFontStruct(%p)\n", p );
   fflush( stdout );
 #endif
 #ifdef really_free
-  XFree( p );
+  XFreeFontInfo( NULL, p, 1 );
 #endif
   return ___FIX(___NO_ERR);
 }
@@ -160,22 +112,18 @@ end-of-c-declare
 (c-define-type Bool int)
 (c-define-type Status int)
 (c-define-type GC (pointer (struct "_XGC") (GC)))
-(c-define-type GC/XFree (pointer (struct "_XGC") (GC) "XFree_GC"))
 (c-define-type Visual "Visual")
 (c-define-type Visual* (pointer Visual (Visual*)))
-(c-define-type Visual*/XFree (pointer Visual (Visual*) "XFree_Visual"))
 (c-define-type Display "Display")
 (c-define-type Display* (pointer Display (Display*)))
-(c-define-type Display*/XFree (pointer Display (Display*) "XFree_Display"))
 (c-define-type Screen "Screen")
 (c-define-type Screen* (pointer Screen (Screen*)))
-(c-define-type Screen*/XFree (pointer Screen (Screen*) "XFree_Screen"))
 (c-define-type XGCValues "XGCValues")
 (c-define-type XGCValues* (pointer XGCValues (XGCValues*)))
 (c-define-type XGCValues*/release-rc (pointer XGCValues (XGCValues*) "release_rc_XGCValues"))
 (c-define-type XFontStruct "XFontStruct")
 (c-define-type XFontStruct* (pointer XFontStruct (XFontStruct*)))
-(c-define-type XFontStruct*/XFree (pointer XFontStruct (XFontStruct*) "XFree_XFontStruct"))
+(c-define-type XFontStruct*/XFreeFontInfo (pointer XFontStruct (XFontStruct*) "XFreeFontInfo_XFontStruct"))
 (c-define-type XColor "XColor")
 (c-define-type XColor* (pointer XColor (XColor*)))
 (c-define-type XColor*/release-rc (pointer XColor (XColor*) "release_rc_XColor"))
@@ -190,7 +138,7 @@ end-of-c-declare
 
 (define XOpenDisplay
   (c-lambda (char*)        ;; display_name
-            Display*/XFree
+            Display*
             "XOpenDisplay"))
 
 (define XCloseDisplay
@@ -206,7 +154,7 @@ end-of-c-declare
 (define XScreenOfDisplay
   (c-lambda (Display*      ;; display
              int)          ;; screen_number
-            Screen*/XFree
+            Screen*
             "XScreenOfDisplay"))
 
 (define XDefaultColormapOfScreen
@@ -244,23 +192,23 @@ end-of-c-declare
 (define XDefaultVisual
   (c-lambda (Display*      ;; display
              int)          ;; screen_number
-            Visual*/XFree
+            Visual*
             "XDefaultVisual"))
 
 (define XDefaultVisualOfScreen
   (c-lambda (Screen*)      ;; screen
-            Visual*/XFree
+            Visual*
             "XDefaultVisualOfScreen"))
 
 (define XDefaultGC
   (c-lambda (Display*      ;; display
              int)          ;; screen_number
-            GC/XFree
+            GC
             "XDefaultGC"))
 
 (define XDefaultGCOfScreen
   (c-lambda (Screen*)      ;; screen
-            GC/XFree
+            GC
             "XDefaultGCOfScreen"))
 
 (define XBlackPixel
@@ -304,8 +252,14 @@ end-of-c-declare
              Drawable       ;; d
              unsigned-long  ;; valuemask
              XGCValues*)    ;; values
-            GC/XFree
+            GC
             "XCreateGC"))
+
+(define XFreeGC
+  (c-lambda (Display*       ;; display
+             GC)            ;; gc
+            int
+            "XFreeGC"))
 
 (define XFillRectangle
   (c-lambda (Display*      ;; display
@@ -539,8 +493,15 @@ end-of-c-declare
 (define XQueryFont
   (c-lambda (Display*       ;; display
              Font)          ;; font_ID
-            XFontStruct*/XFree
+            XFontStruct*/XFreeFontInfo
             "XQueryFont"))
+
+(define XFreeFontInfo
+  (c-lambda (nonnull-char-string-list ;; names
+             XFontStruct*             ;; free_info
+             int)                     ;; actual_count
+            int
+            "XFreeFontInfo"))
 
 (define XLoadFont
   (c-lambda (Display*       ;; display
@@ -548,11 +509,23 @@ end-of-c-declare
             Font
             "XLoadFont"))
 
+(define XUnloadFont
+  (c-lambda (Display*       ;; display
+             Font)          ;; font
+            int
+            "XUnloadFont"))
+
 (define XLoadQueryFont
   (c-lambda (Display*       ;; display
              char*)         ;; name
-            XFontStruct*/XFree
+            XFontStruct*/XFreeFontInfo
             "XLoadQueryFont"))
+
+(define XFreeFont
+  (c-lambda (Display*       ;; display
+             XFontStruct*)  ;; font_struct
+            int
+            "XFreeFont"))
 
 (define XFontStruct-fid
   (c-lambda (XFontStruct*)  ;; font_struct

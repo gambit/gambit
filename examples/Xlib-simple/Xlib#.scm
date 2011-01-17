@@ -1,10 +1,10 @@
-;==============================================================================
+;;;============================================================================
 
-; File: "Xlib#.scm", Time-stamp: <2008-11-24 16:19:08 feeley>
+;;; File: "Xlib#.scm", Time-stamp: <2011-01-17 15:19:38 feeley>
 
-; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2011 by Marc Feeley, All Rights Reserved.
 
-;==============================================================================
+;;;============================================================================
 
 (##namespace ("Xlib#"
 
@@ -115,6 +115,9 @@ XFlush
 XFontStruct-ascent
 XFontStruct-descent
 XFontStruct-fid
+XFreeGC
+XFreeFont
+XFreeFontInfo
 XGCValues-background
 XGCValues-background-set!
 XGCValues-font
@@ -133,6 +136,7 @@ XRootWindowOfScreen
 XScreenOfDisplay
 XSelectInput
 XTextWidth
+XUnloadFont
 XWhitePixel
 convert-XEvent
 make-XColor-box

@@ -2,7 +2,7 @@
 
 ;;; File: "bounce.scm"
 
-;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2011 by Marc Feeley, All Rights Reserved.
 
 ;;; Create two windows and bounce many colored balls in them.
 
@@ -266,6 +266,7 @@
             (XFlush x11-display)
 
             (let ((balls (create-balls x11-display screen window)))
+
               (let loop ((n 200))
                 (if (> n 0)
                     (let ((start (current-time)))
@@ -296,16 +297,31 @@
                                   (pp (convert-XEvent ev))
                                   (event-loop))))))
 
-                      (loop (- n 1)))))))))))
+                      (loop (- n 1)))))
+
+              (for-each
+               (lambda (b) (XFreeGC x11-display (ball-gc b)))
+               balls)
+
+              (XFreeGC x11-display gc-text)))))))
 
     (for-each
      thread-join!
      (list (create-window)
-           (create-window))))
+           (create-window)))
+
+    ;; Can't close display because closing the connection
+    ;; causes the (##device-port-wait-for-input! x11-display-port)
+    ;; to raise an os-exception (closed file descriptor).
+    ;;
+    ;; (XCloseDisplay x11-display)
+    )
 
   (##gc)
 
-;; For checking memory leaks on Mac OS X:
-;;  (shell-command (string-append "leaks " (number->string (##os-getpid)) " | fgrep :"))
-
+  ;; For checking memory leaks on Mac OS X:
+  #;
+  (begin
+    (shell-command (string-append "leaks " (number->string (##os-getpid))))
+    (thread-sleep! 3))
 )
