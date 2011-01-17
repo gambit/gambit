@@ -1,4 +1,4 @@
-/* File: "os_tty.c", Time-stamp: <2010-12-29 11:40:46 feeley> */
+/* File: "os_tty.c", Time-stamp: <2011-01-17 14:25:21 feeley> */
 
 /* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
@@ -7929,17 +7929,21 @@ ___device_tty *self;)
             return e;
         }
 
+      if ((d->base.base.close_direction & d->base.base.direction)
+          == d->base.base.direction)
+        {
 #ifdef USE_POSIX
-      if (close (d->fd) < 0)
-        return err_code_from_errno ();
+          if (close_no_EINTR (d->fd) < 0)
+            return err_code_from_errno ();
 #endif
 
 #ifdef USE_WIN32
-      if (!CloseHandle (d->hin))
-        return err_code_from_GetLastError ();
-      if (!CloseHandle (d->hout))
-        return err_code_from_GetLastError ();
+          if (!CloseHandle (d->hin))
+            return err_code_from_GetLastError ();
+          if (!CloseHandle (d->hout))
+            return err_code_from_GetLastError ();
 #endif
+        }
     }
 
   return ___FIX(___NO_ERR);
@@ -8009,15 +8013,9 @@ ___SCMOBJ ___device_tty_setup_from_fd
 ___device_tty **dev;
 ___device_group *dgroup;
 int fd;
-int direction;)
+int direction;
+int close_direction;)
 {
-  /*
-   * If this function returns ___NO_ERR then the closing of the file
-   * descriptor "fd" becomes the responsibility of the runtime system.
-   * If an error is returned, the caller is reponsible for closing
-   * "fd".
-   */
-
   ___device_tty *d;
   ___SCMOBJ e;
   int plain = (fd == STDIN_FILENO) ||
@@ -8114,20 +8112,27 @@ int direction;)
 #ifndef USE_POSIX
 #ifndef USE_WIN32
 
-  return ___device_tty_setup_from_stdio (dev, dgroup, direction);
+  return ___device_tty_setup_from_stdio (dev,
+                                         dgroup,
+                                         direction);
 
 #endif
 #endif
 
 #ifdef USE_POSIX
 
-  return ___device_tty_setup_from_fd (dev, dgroup, -1, direction);
+  return ___device_tty_setup_from_fd (dev,
+                                      dgroup,
+                                      -1,
+                                      direction);
 
 #endif
 
 #ifdef USE_WIN32
 
-  return ___device_tty_setup_from_console (dev, dgroup, direction);
+  return ___device_tty_setup_from_console (dev,
+                                           dgroup,
+                                           direction);
 
 #endif
 }

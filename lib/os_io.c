@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2010-12-29 11:40:20 feeley> */
+/* File: "os_io.c", Time-stamp: <2011-01-17 14:24:25 feeley> */
 
 /* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
@@ -772,7 +772,7 @@ int fd2;)
 }
 
 
-___HIDDEN int set_fd_blocking_mode
+int set_fd_blocking_mode
    ___P((int fd,
          ___BOOL blocking),
         (fd,
@@ -1241,6 +1241,18 @@ int direction;)
   return ___device_close_virt (self, direction);
 }
 
+___HIDDEN void device_transfer_close_responsibility
+   ___P((___device *self),
+        (self)
+___device *self;)
+{
+  /*
+   * Transfer responsibility for closing device to the runtime system.
+   */
+
+  self->close_direction = self->direction;
+}
+
 ___HIDDEN void device_add_ref
    ___P((___device *self),
         (self)
@@ -1448,6 +1460,7 @@ ___device_group *dgroup;)
   d->base.vtbl = &___device_timer_table;
   d->base.refcount = 1;
   d->base.direction = ___DIRECTION_RD | ___DIRECTION_WR;
+  d->base.close_direction = 0; /* prevent closing on errors */
   d->base.read_stage = ___STAGE_OPEN;
   d->base.write_stage = ___STAGE_OPEN;
 
@@ -2082,6 +2095,7 @@ int pumps_on;)
 {
   dev->base.refcount = 1;
   dev->base.direction = direction;
+  dev->base.close_direction = 0; /* prevent closing on errors */
   dev->base.read_stage = ___STAGE_CLOSED;
   dev->base.write_stage = ___STAGE_CLOSED;
 
@@ -2202,8 +2216,12 @@ int direction;)
       d->base.base.read_stage = ___STAGE_CLOSED;
       d->base.base.write_stage = ___STAGE_CLOSED;
 
-      if (!CloseHandle (d->h))
-        return err_code_from_GetLastError ();
+      if ((d->base.base.close_direction & (___DIRECTION_RD|___DIRECTION_WR))
+          == (___DIRECTION_RD|___DIRECTION_WR))
+        {
+          if (!CloseHandle (d->h))
+            return err_code_from_GetLastError ();
+        }
     }
 
   return ___FIX(___NO_ERR);
@@ -2597,17 +2615,22 @@ int direction;)
 
       d->base.base.read_stage = ___STAGE_CLOSED;
 
+      if ((d->base.base.close_direction & ___DIRECTION_RD)
+          == ___DIRECTION_RD)
+        {
 #ifdef USE_POSIX
-      if (d->fd_rd >= 0 &&
-          d->fd_rd != d->fd_wr &&
-          close_no_EINTR (d->fd_rd) < 0)
-        return err_code_from_errno ();
+          if (d->fd_rd >= 0 &&
+              d->fd_rd != d->fd_wr &&
+              close_no_EINTR (d->fd_rd) < 0)
+            return err_code_from_errno ();
 #endif
 
 #ifdef USE_WIN32
-      if (d->h_rd != NULL && d->h_rd != d->h_wr)
-        CloseHandle (d->h_rd); /* ignore error */
+          if (d->h_rd != NULL &&
+              d->h_rd != d->h_wr)
+            CloseHandle (d->h_rd); /* ignore error */
 #endif
+        }
     }
 
   if (is_not_closed & direction & ___DIRECTION_WR)
@@ -2616,16 +2639,20 @@ int direction;)
 
       d->base.base.write_stage = ___STAGE_CLOSED;
 
+      if ((d->base.base.close_direction & ___DIRECTION_WR)
+          == ___DIRECTION_WR)
+        {
 #ifdef USE_POSIX
-      if (d->fd_wr >= 0 &&
-          close_no_EINTR (d->fd_wr) < 0)
-        return err_code_from_errno ();
+          if (d->fd_wr >= 0 &&
+              close_no_EINTR (d->fd_wr) < 0)
+            return err_code_from_errno ();
 #endif
 
 #ifdef USE_WIN32
-      if (d->h_wr != NULL)
-        CloseHandle (d->h_wr); /* ignore error */
+          if (d->h_wr != NULL)
+            CloseHandle (d->h_wr); /* ignore error */
 #endif
+        }
     }
 
   return ___FIX(___NO_ERR);
@@ -2986,13 +3013,7 @@ int direction;)
               ___alloc_mem (sizeof (___device_pipe)));
 
   if (d == NULL)
-    {
-      if (fd_rd >= 0 && fd_rd != fd_wr)
-        close_no_EINTR (fd_rd); /* ignore error */
-      if (fd_wr >= 0)
-        close_no_EINTR (fd_wr); /* ignore error */
-      return ___FIX(___HEAP_OVERFLOW_ERR);
-    }
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d->base.base.vtbl = &___device_pipe_table;
   d->fd_rd = fd_rd;
@@ -3038,13 +3059,7 @@ int pumps_on;)
               ___alloc_mem (sizeof (___device_pipe)));
 
   if (d == NULL)
-    {
-      if (h_rd != NULL && h_rd != h_wr)
-        CloseHandle (h_rd); /* ignore error */
-      if (h_wr != NULL)
-        CloseHandle (h_wr); /* ignore error */
-      return ___FIX(___HEAP_OVERFLOW_ERR);
-    }
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d->base.base.vtbl = &___device_pipe_table;
   d->h_rd = h_rd;
@@ -3611,18 +3626,26 @@ int direction;)
 
 #endif
 
-      if (CLOSE_SOCKET(d->s) != 0)
-        return ERR_CODE_FROM_SOCKET_CALL;
+      if ((d->base.base.close_direction & (___DIRECTION_RD|___DIRECTION_WR))
+          == (___DIRECTION_RD|___DIRECTION_WR))
+        {
+          if (CLOSE_SOCKET(d->s) != 0)
+            return ERR_CODE_FROM_SOCKET_CALL;
+        }
     }
   else if (is_not_closed & direction & ___DIRECTION_RD)
     {
       /* Shutdown receiving side. */
 
-      if (shutdown (d->s, SHUTDOWN_RD) != 0)
+      if ((d->base.base.close_direction & ___DIRECTION_RD)
+          == ___DIRECTION_RD)
         {
-          ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
-          if (!NOT_CONNECTED(e))
-            return e;
+          if (shutdown (d->s, SHUTDOWN_RD) != 0)
+            {
+              ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
+              if (!NOT_CONNECTED(e))
+                return e;
+            }
         }
 
       d->base.base.read_stage = ___STAGE_CLOSED;
@@ -3631,11 +3654,15 @@ int direction;)
     {
       /* Shutdown sending side. */
 
-      if (shutdown (d->s, SHUTDOWN_WR) != 0)
+      if ((d->base.base.close_direction & ___DIRECTION_WR)
+          == ___DIRECTION_WR)
         {
-          ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
-          if (!NOT_CONNECTED(e))
-            return e;
+          if (shutdown (d->s, SHUTDOWN_WR) != 0)
+            {
+              ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
+              if (!NOT_CONNECTED(e))
+                return e;
+            }
         }
 
       d->base.base.write_stage = ___STAGE_CLOSED;
@@ -4064,10 +4091,7 @@ int direction;)
               ___alloc_mem (sizeof (___device_tcp_client)));
 
   if (d == NULL)
-    {
-      CLOSE_SOCKET(s); /* ignore error */
-      return ___FIX(___HEAP_OVERFLOW_ERR);
-    }
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   /*
    * Setup socket to perform nonblocking I/O.
@@ -4076,7 +4100,6 @@ int direction;)
   if (set_socket_non_blocking (s) != 0) /* set nonblocking mode */
     {
       e = ERR_CODE_FROM_SOCKET_CALL;
-      CLOSE_SOCKET(s); /* ignore error */
       ___free_mem (d);
       return e;
     }
@@ -4105,7 +4128,6 @@ int direction;)
   if (d->io_event == NULL)
     {
       e = err_code_from_GetLastError ();
-      CLOSE_SOCKET(s); /* ignore error */
       ___free_mem (d);
       return e;
     }
@@ -4158,7 +4180,12 @@ int direction;)
               1,
               direction))
       != ___FIX(___NO_ERR))
-    return e;
+    {
+      CLOSE_SOCKET(s); /* ignore error */
+      return e;
+    }
+
+  device_transfer_close_responsibility (___CAST(___device*,d));
 
   *dev = d;
 
@@ -4230,8 +4257,12 @@ int direction;)
 
 #endif
 
-      if (CLOSE_SOCKET(d->s) != 0)
-        return ERR_CODE_FROM_SOCKET_CALL;
+      if ((d->base.close_direction & ___DIRECTION_RD)
+          == ___DIRECTION_RD)
+        {
+          if (CLOSE_SOCKET(d->s) != 0)
+            return ERR_CODE_FROM_SOCKET_CALL;
+        }
     }
 
   return ___FIX(___NO_ERR);
@@ -4388,6 +4419,7 @@ int options;)
   d->base.vtbl = &___device_tcp_server_table;
   d->base.refcount = 1;
   d->base.direction = ___DIRECTION_RD;
+  d->base.close_direction = 0; /* prevent closing on errors */
   d->base.read_stage = ___STAGE_OPEN;
   d->base.write_stage = ___STAGE_CLOSED;
 
@@ -4411,6 +4443,8 @@ int options;)
 
   d->s = s;
 
+  device_transfer_close_responsibility (___CAST(___device*,d));
+
   *dev = d;
 
   ___device_add_to_group (dgroup, &d->base);
@@ -4430,6 +4464,7 @@ ___device_tcp_server *dev;
 ___device_group *dgroup;
 ___device_tcp_client **client;)
 {
+  ___SCMOBJ e;
   struct sockaddr_in addr;
   SOCKET_LEN_TYPE addrlen;
   SOCKET_TYPE s;
@@ -4444,14 +4479,23 @@ ___device_tcp_client **client;)
                                      &addrlen)))
     return ERR_CODE_FROM_SOCKET_CALL;
 
-  return ___device_tcp_client_setup_from_socket
-           (client,
-            dgroup,
-            s,
-            ___CAST(struct sockaddr*,&addr),
-            addrlen,
-            0,
-            ___DIRECTION_RD|___DIRECTION_WR);
+  if ((e = ___device_tcp_client_setup_from_socket
+             (client,
+              dgroup,
+              s,
+              ___CAST(struct sockaddr*,&addr),
+              addrlen,
+              0,
+              ___DIRECTION_RD|___DIRECTION_WR))
+      != ___FIX(___NO_ERR))
+    {
+      CLOSE_SOCKET(s); /* ignore error */
+      return e;
+    }
+
+  device_transfer_close_responsibility (___CAST(___device*,*client));
+
+  return ___FIX(___NO_ERR);
 }
 
 #endif
@@ -4508,15 +4552,20 @@ int direction;)
     {
       d->base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
 
+      if ((d->base.close_direction & ___DIRECTION_RD)
+          == ___DIRECTION_RD)
+        {
+
 #ifdef USE_opendir
-      if (closedir (d->dir) < 0)
-        return err_code_from_errno ();
+          if (closedir (d->dir) < 0)
+            return err_code_from_errno ();
 #endif
 
 #ifdef USE_FindFirstFile
-      if (!FindClose (d->h))
-        return err_code_from_GetLastError ();
+          if (!FindClose (d->h))
+            return err_code_from_GetLastError ();
 #endif
+        }
     }
 
   return ___FIX(___NO_ERR);
@@ -4623,6 +4672,7 @@ int ignore_hidden;)
   d->base.vtbl = &___device_directory_table;
   d->base.refcount = 1;
   d->base.direction = ___DIRECTION_RD;
+  d->base.close_direction = 0; /* prevent closing on errors */
   d->base.read_stage = ___STAGE_OPEN;
   d->base.write_stage = ___STAGE_CLOSED;
 
@@ -4673,6 +4723,8 @@ int ignore_hidden;)
   }
 
 #endif
+
+  device_transfer_close_responsibility (___CAST(___device*,d));
 
   *dev = d;
 
@@ -4941,6 +4993,7 @@ ___SCMOBJ selector;)
   d->base.vtbl = &___device_event_queue_table;
   d->base.refcount = 1;
   d->base.direction = ___DIRECTION_RD;
+  d->base.close_direction = 0; /* prevent closing on errors */
   d->base.read_stage = ___STAGE_OPEN;
   d->base.write_stage = ___STAGE_CLOSED;
 
@@ -5093,29 +5146,33 @@ int direction;)
       d->base.base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
       d->base.base.write_stage = ___STAGE_CLOSED;
 
+      if ((d->base.base.close_direction & d->base.base.direction)
+          == d->base.base.direction)
+        {
 #if 0
-      ___device_file_restore_initial_mode (d);
+          ___device_file_restore_initial_mode (d);
 #endif
 
 #ifndef USE_POSIX
 #ifndef USE_WIN32
 
-      if (d->stream != 0)
-        if (___fclose (d->stream) != 0)
-          return err_code_from_errno ();
+          if (d->stream != 0)
+            if (___fclose (d->stream) != 0)
+              return err_code_from_errno ();
 
 #endif
 #endif
 
 #ifdef USE_POSIX
-      if (close_no_EINTR (d->fd) < 0)
-        return err_code_from_errno ();
+          if (close_no_EINTR (d->fd) < 0)
+            return err_code_from_errno ();
 #endif
 
 #ifdef USE_WIN32
-      if (!CloseHandle (d->h))
-        return err_code_from_GetLastError ();
+          if (!CloseHandle (d->h))
+            return err_code_from_GetLastError ();
 #endif
+        }
     }
   else if (is_not_closed & direction & ___DIRECTION_RD)
     d->base.base.read_stage = ___STAGE_CLOSED;
@@ -5632,10 +5689,7 @@ int direction;)
               ___alloc_mem (sizeof (___device_file)));
 
   if (d == NULL)
-    {
-      ___fclose (stream); /* ignore error */
-      return ___FIX(___HEAP_OVERFLOW_ERR);
-    }
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d->base.base.vtbl = &___device_file_table;
   d->stream = stream;
@@ -5675,10 +5729,7 @@ int direction;)
               ___alloc_mem (sizeof (___device_file)));
 
   if (d == NULL)
-    {
-      close_no_EINTR (fd); /* ignore error */
-      return ___FIX(___HEAP_OVERFLOW_ERR);
-    }
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d->base.base.vtbl = &___device_file_table;
   d->fd = fd;
@@ -5723,10 +5774,7 @@ int pumps_on;)
               ___alloc_mem (sizeof (___device_file)));
 
   if (d == NULL)
-    {
-      CloseHandle (h); /* ignore error */
-      return ___FIX(___HEAP_OVERFLOW_ERR);
-    }
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d->base.base.vtbl = &___device_file_table;
   d->h = h;
@@ -5965,11 +6013,7 @@ int direction;)
        */
 
       if (set_fd_blocking_mode (fd, 0) != 0) /* set nonblocking mode */
-        {
-          e = err_code_from_errno ();
-          close_no_EINTR (fd); /* ignore error */
-          return e;
-        }
+        return err_code_from_errno ();
 
       switch (kind)
         {
@@ -6010,7 +6054,6 @@ int direction;)
 
         default:
           {
-            close_no_EINTR (fd); /* ignore error */
             e = ___FIX(___UNKNOWN_ERR);
             break;
           }
@@ -6239,11 +6282,13 @@ int direction;)
 
     default:
       {
-        CloseHandle (h); /* ignore error */
         e = ___FIX(___UNKNOWN_ERR);
         break;
       }
     }
+
+  if (e == ___FIX(___NO_ERR))
+    device_transfer_close_responsibility (___CAST(___device*,*dev));
 
   return e;
 }
@@ -7256,6 +7301,8 @@ ___STRING_TYPE(___STREAM_OPEN_PATH_CE_SELECT) path;
 int flags;
 int mode;)
 {
+  ___SCMOBJ e;
+
 #ifndef USE_POSIX
 #ifndef USE_WIN32
 
@@ -7274,12 +7321,14 @@ int mode;)
   if ((stream = ___fopen (path, mod)) == 0)
     return fnf_or_err_code_from_errno ();
 
-  return ___device_stream_setup_from_stream
-           (dev,
-            dgroup,
-            stream,
-            ___NONE_KIND,
-            direction);
+  if ((e = ___device_stream_setup_from_stream
+             (dev,
+              dgroup,
+              stream,
+              ___NONE_KIND,
+              direction))
+      != ___FIX(___NO_ERR))
+    ___fclose (stream); /* ignore error */
 
 #endif
 #endif
@@ -7307,12 +7356,14 @@ int mode;)
       < 0)
     return fnf_or_err_code_from_errno ();
 
-  return ___device_stream_setup_from_fd
-           (dev,
-            dgroup,
-            fd,
-            ___NONE_KIND,
-            direction);
+  if ((e = ___device_stream_setup_from_fd
+             (dev,
+              dgroup,
+              fd,
+              ___NONE_KIND,
+              direction))
+      != ___FIX(___NO_ERR))
+    close_no_EINTR (fd); /* ignore error */
 
 #endif
 
@@ -7343,15 +7394,22 @@ int mode;)
   if (h == INVALID_HANDLE_VALUE)
     return fnf_or_err_code_from_GetLastError ();
 
-  return ___device_stream_setup_from_handle
-           (dev,
-            dgroup,
-            h,
-            flags,
-            ___NONE_KIND,
-            direction);
+  if ((e = ___device_stream_setup_from_handle
+             (dev,
+              dgroup,
+              h,
+              flags,
+              ___NONE_KIND,
+              direction))
+      != ___FIX(___NO_ERR))
+    CloseHandle (h); /* ignore error */
 
 #endif
+
+  if (e == ___FIX(___NO_ERR))
+    device_transfer_close_responsibility (___CAST(___device*,*dev));
+
+  return e;
 }
 
 #endif
@@ -7545,6 +7603,15 @@ ___SCMOBJ ___os_device_stream_open_predefined
 ___SCMOBJ index;
 ___SCMOBJ flags;)
 {
+  /*
+   * The parameter "index" identifies the stream which is to be
+   * associated with the returned device.  The stream must be
+   * currently open.  The responsibility for closing the stream is not
+   * transferred to the runtime system because the client may have to
+   * do I/O on the stream after the runtime system terminates (for
+   * example output on stdout).
+   */
+
   ___SCMOBJ e;
   ___device_stream *dev;
   ___SCMOBJ result;
@@ -7562,24 +7629,6 @@ ___SCMOBJ flags;)
 
   switch (___INT(index))
     {
-#if 0
-    case -4:
-      {
-        ___device_tty *d;
-
-        if ((e = ___device_tty_setup_console
-                   (&d,
-                    ___global_device_group (),
-                    direction))
-            != ___FIX(___NO_ERR))
-          return e;
-
-        dev = ___CAST(___device_stream*,d);
-
-        break;
-      }
-#endif
-
     default:
       {
         switch (___INT(index))
@@ -7663,18 +7712,6 @@ ___SCMOBJ flags;)
             break;
           }
 
-#if 0
-        /*
-         * The file descriptor must be dup'ed so that the standard
-         * stdin/stdout/stderr are not closed.
-         */
-
-        ___printf ("tty fd=%d\n", fd);/*****************************/
-        if ((fd = dup_no_EINTR (fd)) < 0)
-          return err_code_from_errno ();
-        ___printf ("  new tty fd=%d\n", fd);/***********************/
-#endif
-
         if ((e = ___device_stream_setup_from_fd
                    (&dev,
                     ___global_device_group (),
@@ -7746,10 +7783,6 @@ ___SCMOBJ flags;)
 
         if (GetFileType (h) == FILE_TYPE_UNKNOWN)
           goto open_console;
-
-        /*********** duplicate the handle? */
-
-        /******** ___printf ("index=%d\n", ___INT(index)); */
 
         if ((e = ___device_stream_setup_from_handle
                    (&dev,
@@ -8041,25 +8074,23 @@ ___SCMOBJ options;)
       != ___FIX(___NO_ERR))
     return e;
 
-  e = ___device_tcp_client_setup_from_sockaddr
-        (&dev,
-         ___global_device_group (),
-         &sa,
-         salen,
-         ___INT(options),
-         ___DIRECTION_RD|___DIRECTION_WR);
-
-  if (e != ___FIX(___NO_ERR))
+  if ((e = ___device_tcp_client_setup_from_sockaddr
+             (&dev,
+              ___global_device_group (),
+              &sa,
+              salen,
+              ___INT(options),
+              ___DIRECTION_RD|___DIRECTION_WR))
+      != ___FIX(___NO_ERR))
     return e;
 
-  e = ___NONNULLPOINTER_to_SCMOBJ
-        (dev,
-         ___FAL,
-         ___device_cleanup_from_ptr,
-         &result,
-         ___RETURN_POS);
-
-  if (e != ___FIX(___NO_ERR))
+  if ((e = ___NONNULLPOINTER_to_SCMOBJ
+             (dev,
+              ___FAL,
+              ___device_cleanup_from_ptr,
+              &result,
+              ___RETURN_POS))
+      != ___FIX(___NO_ERR))
     {
       ___device_cleanup (___CAST(___device*,dev)); /* ignore error */
       return e;
@@ -8780,8 +8811,6 @@ ___HIDDEN ___SCMOBJ io_module_setup ___PVOID
 {
   ___SCMOBJ e;
 
-  /**************** ___printf ("io_module_setup\n"); */
-
   if ((e = ___device_group_setup (&___io_mod.dgroup)) == ___FIX(___NO_ERR))
     {
 #ifdef USE_POSIX
@@ -8818,8 +8847,6 @@ ___HIDDEN ___SCMOBJ io_module_setup ___PVOID
 
 ___HIDDEN void io_module_cleanup ___PVOID
 {
-  /********** ___printf ("io_module_cleanup\n"); */
-
 #ifdef USE_POSIX
 
   ___set_signal_handler (SIGCHLD, SIG_DFL);
@@ -8832,7 +8859,6 @@ ___HIDDEN void io_module_cleanup ___PVOID
 
 #endif
 
-  /******************* tty_module_cleanup (); */
   ___device_group_cleanup (___io_mod.dgroup);
 }
 

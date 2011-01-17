@@ -1,4 +1,4 @@
-/* File: "os_io.h", Time-stamp: <2009-11-24 19:13:02 feeley> */
+/* File: "os_io.h", Time-stamp: <2011-01-17 13:54:53 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -74,6 +74,7 @@ typedef struct ___device_struct
     struct ___device_struct *prev; /* bidirectional list pointer to previous */
     struct ___device_struct *next; /* bidirectional list pointer to next */
     int direction;                 /* ___DIRECTION_RD and/or ___DIRECTION_WR */
+    int close_direction;           /* ___DIRECTION_RD and/or ___DIRECTION_WR */
     int read_stage;                /* ___STAGE_OPEN ... ___STAGE_CLOSED */
     int write_stage;               /* ___STAGE_OPEN ... ___STAGE_CLOSED */
   } ___device;
@@ -381,6 +382,45 @@ typedef struct ___device_stream_pump_struct
  */
 
 #define PUMP_PRIORITY THREAD_PRIORITY_ABOVE_NORMAL
+
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
+/* Miscellaneous utility functions. */
+
+#ifdef USE_POSIX
+
+extern pid_t waitpid_no_EINTR
+   ___P((pid_t pid,
+         int *stat_loc,
+         int options),
+        ());
+
+extern ssize_t read_no_EINTR
+   ___P((int fd,
+         void *buf,
+         size_t len),
+        ());
+
+extern int close_no_EINTR
+   ___P((int fd),
+        ());
+
+extern int dup_no_EINTR
+   ___P((int fd),
+        ());
+
+extern int dup2_no_EINTR
+   ___P((int fd,
+         int fd2),
+        ());
+
+extern int set_fd_blocking_mode
+   ___P((int fd,
+         ___BOOL blocking),
+        ());
 
 #endif
 
