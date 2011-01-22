@@ -1,6 +1,6 @@
-/* File: "setup.c", Time-stamp: <2009-10-29 17:33:54 feeley> */
+/* File: "setup.c", Time-stamp: <2011-01-22 00:09:48 feeley> */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
 /* 
  * This module contains the routines that setup the Scheme program for
@@ -1855,9 +1855,7 @@ ___SCMOBJ stack_marker;)
 
   for (;;)
     {
-#define CALL_STEP \
-___pc = ___CAST_FAKEHOST_TO_HOST(___CAST(___label_struct*,___pc-___tSUBTYPED) \
-                                 ->host)(___ps)
+#define CALL_STEP ___pc = ___LABEL_HOST(___pc)(___ps)
       CALL_STEP;
       CALL_STEP;
       CALL_STEP;

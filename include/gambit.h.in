@@ -1,7 +1,7 @@
-/* File: "gambit.h", Time-stamp: <2010-01-07 14:59:45 feeley> */
+/* File: "gambit.h", Time-stamp: <2011-01-22 00:04:14 feeley> */
 
 /*
- * Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___VERSION
@@ -3377,7 +3377,7 @@ ___EXT(___register_host_entry) (___start, ___MODULE_NAME);
 #define ___BEGIN_SW \
 ___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
 ___REGISTER_HOST_ENTRY \
-goto *___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(((___label_struct*)(___pc-___tSUBTYPED))->host_label);
+goto *___LABEL_HOST_LABEL(___pc);
 
 #define ___DEF_SW(n)
 
@@ -3387,21 +3387,17 @@ goto *___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(((___label_struct*)(___pc-___tSUBTYPED))-
 ___jumpext:
 
 #define ___JUMP(dest) \
-{void *___host_label; ___pc=dest; \
- ___host_label=___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(((___label_struct*)(___pc-___tSUBTYPED))->host_label); \
- if (___EXPECT_TRUE(___CAST_FAKEHOST_TO_HOST(((___label_struct*)(___pc-___tSUBTYPED))->host) \
-     == ___HOST_PROC)) \
-   goto *___host_label; \
+{___pc=dest; \
+ if (___EXPECT_TRUE(___LABEL_HOST(___pc) == ___HOST_PROC)) \
+   goto *___LABEL_HOST_LABEL(___pc); \
  goto ___jumpext;}
 
 #else
 
 #define ___END_SW \
 ___jump: \
-{void *___host_label=___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(((___label_struct*)(___pc-___tSUBTYPED))->host_label); \
- if (___EXPECT_TRUE(___CAST_FAKEHOST_TO_HOST(((___label_struct*)(___pc-___tSUBTYPED))->host) \
-     == ___HOST_PROC)) \
-   goto *___host_label;} \
+if (___EXPECT_TRUE(___LABEL_HOST(___pc) == ___HOST_PROC)) \
+  goto *___LABEL_HOST_LABEL(___pc); \
 ___jumpext:
 
 #define ___JUMP(dest){___pc=dest;goto ___jump;}
@@ -4533,12 +4529,12 @@ switch (na) \
 #define ___JUMPEXTPRM(nargs,val){nargs ___JUMPEXT(val)}
 #define ___JUMPEXTNOTSAFE(nargs,val) \
 {nargs ___SELF=val; \
-___JUMPEXT(((___label_struct*)(___SELF-___tSUBTYPED))->entry_or_descr)}
+___JUMPEXT(___LABEL_ENTRY_OR_DESCR(___SELF))}
 #define ___JUMPPRM(nargs,val){nargs ___JUMP(val)}
 
 #define ___JUMPNOTSAFE(nargs,val) \
 {nargs ___SELF=val; \
-___JUMP(((___label_struct*)(___SELF-___tSUBTYPED))->entry_or_descr)}
+___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF))}
 
 #define ___JUMPSAFE(nargs,val) ___JUMPNOTSAFE(nargs,val) /***************/
 
@@ -4547,12 +4543,12 @@ ___JUMP(((___label_struct*)(___SELF-___tSUBTYPED))->entry_or_descr)}
 #define ___JUMPGENSAFE(nargs,val) \
 {nargs ___SELF=val; \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
-  ___JUMP(((___label_struct*)(___SELF-___tSUBTYPED))->entry_or_descr) \
+  ___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF)) \
 ___ps->temp1=___SELF;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_not_proc)}
 #define ___JUMPGLOSAFE(nargs,i,glo) \
 {nargs ___SELF=___GLO(i,glo); \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
-  ___JUMP(((___label_struct*)(___SELF-___tSUBTYPED))->entry_or_descr) \
+  ___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF)) \
 ___ps->temp4=(___WORD)&___GLOSTRUCT(i,glo);___JUMPEXTPRM(___NOTHING,___GSTATE->handler_not_proc_glo)}
 
 #ifdef ___NOT_SAFE_CALLS
@@ -5329,28 +5325,28 @@ ___MAKE_HD((nbclosed<<12)+nbparms,___sPROCEDURE,___PERM)
 ___ROUND_TO_MULT(fs,___FRAME_ALIGN)+___FRAME_SPACE(___NB_GVM_REGS+1)-___FRAME_RESERVE
 
 #define ___RETI_GET_CFS(ra,fs) \
-{ ___WORD descr = ((___label_struct*)((ra)-___tSUBTYPED))->entry_or_descr; \
+{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
 if (___IS_IFD(descr)) \
 fs = ___IFD_FS(descr); \
 else \
 fs = ___OFD_FS(*(___WORD*)descr); }
 
 #define ___RETI_GET_FS(ra,fs) \
-{ ___WORD descr = ((___label_struct*)((ra)-___tSUBTYPED))->entry_or_descr; \
+{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
 if (___IS_IFD(descr)) \
 fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); \
 else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(*(___WORD*)descr)); }
 
 #define ___RETN_GET_FS(ra,fs) \
-{ ___WORD descr = ((___label_struct*)((ra)-___tSUBTYPED))->entry_or_descr; \
+{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
 if (___IS_IFD(descr)) \
 fs = ___IFD_FS(descr); \
 else \
 fs = ___OFD_FS(*(___WORD*)descr); }
 
 #define ___RETI_GET_FS_LINK(ra,fs,link) \
-{ ___WORD descr = ((___label_struct*)((ra)-___tSUBTYPED))->entry_or_descr; \
+{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); link = ___IFD_LINK(descr); } \
 else \
@@ -5358,7 +5354,7 @@ else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 
 #define ___RETN_GET_FS_LINK(ra,fs,link) \
-{ ___WORD descr = ((___label_struct*)((ra)-___tSUBTYPED))->entry_or_descr; \
+{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___IFD_FS(descr); link = ___IFD_LINK(descr); } \
 else \
@@ -5366,7 +5362,7 @@ else \
 fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 
 #define ___RETI_GET_FS_LINK_GCMAP(ra,fs,link,firstgcmap,nextgcmap) \
-{ ___WORD descr = ((___label_struct*)((ra)-___tSUBTYPED))->entry_or_descr; \
+{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); link = ___IFD_LINK(descr); \
 firstgcmap = ___IFD_GCMAP(descr); } \
@@ -5375,7 +5371,7 @@ else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 
 #define ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,firstgcmap,nextgcmap) \
-{ ___WORD descr = ((___label_struct*)((ra)-___tSUBTYPED))->entry_or_descr; \
+{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
 if (___IS_IFD(descr)) \
 { firstgcmap = ___IFD_GCMAP(descr); \
 fs = ___IFD_FS(descr); link = ___IFD_LINK(descr); } \
@@ -6830,6 +6826,20 @@ typedef struct ___label_struct
     ___FAKEVOIDSTAR host_label;
     ___FAKEHOST host;
   } ___label_struct;
+
+#ifdef ___LABEL_ACCESS_OLD
+
+#define ___LABEL_ENTRY_OR_DESCR(lbl)(___CAST(___label_struct*,(lbl)-___tSUBTYPED)->entry_or_descr)
+#define ___LABEL_HOST_LABEL(lbl)___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(___CAST(___label_struct*,(lbl)-___tSUBTYPED)->host_label)
+#define ___LABEL_HOST(lbl)___CAST_FAKEHOST_TO_HOST(___CAST(___label_struct*,(lbl)-___tSUBTYPED)->host)
+
+#else
+
+#define ___LABEL_ENTRY_OR_DESCR(lbl)(*___CAST(___WORD*,(lbl)+((1<<___LWS)-___tSUBTYPED)))
+#define ___LABEL_HOST_LABEL(lbl)(*___CAST(___FAKEVOIDSTAR*,(lbl)+((2<<___LWS)-___tSUBTYPED)))
+#define ___LABEL_HOST(lbl)(*___CAST(___FAKEHOST*,(lbl)+((3<<___LWS)-___tSUBTYPED)))
+
+#endif
 
 /* Module structure */
 
