@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2010-11-30 17:01:58 feeley>
+;;; File: "main.scm", Time-stamp: <2011-01-24 11:54:13 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -386,7 +386,8 @@
                                                             #f)))
                                                       (add-obj-file obj-file)
                                                       (add-tmp-file obj-file)
-                                                      (add-tmp-file gen-c-file))))))
+                                                      (if (##not (##memq 'keep-c sym-opts))
+                                                          (add-tmp-file gen-c-file)))))))
                                            (loop2 rest))))))
 
                             (let* ((flat?
@@ -441,7 +442,7 @@
                                                             #f)))
                                                       (add-obj-file obj-link-file)
                                                       (add-tmp-file obj-link-file)
-                                                      (if (##not (##memq 'keep-c options))
+                                                      (if (##not (##memq 'keep-c sym-opts))
                                                           (add-tmp-file link-file))))
                                                 roots))))
 
