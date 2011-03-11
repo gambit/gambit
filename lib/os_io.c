@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2011-01-17 14:24:25 feeley> */
+/* File: "os_io.c", Time-stamp: <2011-03-10 15:55:49 feeley> */
 
 /* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
@@ -6974,8 +6974,10 @@ int options;)
 
           if (dir == NULL || chdir (dir) == 0)
             {
+#ifdef USE_environ
               if (env != NULL)
                 environ = env;
+#endif
               execvp (argv[0], argv);
               /* the exec failed, errno will be returned to parent */
             }

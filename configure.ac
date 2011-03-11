@@ -836,6 +836,46 @@ else
 
   AC_CHECK_FUNC_SIGNAL
 
+  AC_DEFUN([AC_CHECK_ENVIRON],
+  [AC_CACHE_CHECK([for environ], ac_cv_environ,
+  [
+    AC_TRY_COMPILE([
+      #ifdef __cplusplus
+      extern "C" {
+      #endif
+      extern char **environ;
+      #ifdef __cplusplus
+      }
+      #endif
+      ],[char *arg0 = *environ;],
+    ac_cv_environ=yes,
+    ac_cv_environ=no)
+  ])
+    if test $ac_cv_environ = yes; then
+      AC_DEFINE(HAVE_ENVIRON)
+    fi
+  ])
+
+  AC_CHECK_ENVIRON
+
+  AC_DEFUN([AC_CHECK__NSGETENVIRON],
+  [AC_CACHE_CHECK([for _NSGetEnviron], ac_cv__NSGetEnviron,
+  [
+    AC_TRY_COMPILE([
+      #ifdef HAVE_CRT_EXTERNS_H
+      #include <crt_externs.h>
+      #endif
+      ],[char *arg0 = *(*_NSGetEnviron());],
+    ac_cv__NSGetEnviron=yes,
+    ac_cv__NSGetEnviron=no)
+  ])
+    if test $ac_cv__NSGetEnviron = yes; then
+      AC_DEFINE(HAVE__NSGETENVIRON)
+    fi
+  ])
+
+  AC_CHECK__NSGETENVIRON
+
   AC_CHECK_FUNCS(clock_gettime)
   AC_CHECK_FUNCS(getclock)
   #AC_CHECK_FUNCS(GetSystemTime)
@@ -893,8 +933,6 @@ else
   AC_CHECK_FUNCS(hstrerror)
 
   AC_CHECK_FUNCS(get_fpc_csr)
-
-  AC_CHECK_FUNCS(_NSGetEnviron)
 
 fi
 

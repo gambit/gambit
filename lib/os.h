@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2010-12-29 12:24:01 feeley> */
+/* File: "os.h", Time-stamp: <2011-03-10 15:52:08 feeley> */
 
 /* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
@@ -91,10 +91,17 @@
 
 #ifdef USE_POSIX
 
-#define USE_environ
 #define USE_open
 
 /* Select features based on availability */
+
+#ifdef HAVE_ENVIRON
+#define USE_environ
+#else
+#ifdef HAVE__NSGETENVIRON
+#define USE_environ
+#endif
+#endif
 
 #ifdef HAVE_PIPE
 #define USE_pipe
@@ -560,14 +567,16 @@
 #endif
 
 #ifdef USE_environ
+#ifdef HAVE_ENVIRON
+___BEGIN_C_LINKAGE
+extern char **environ;
+___END_C_LINKAGE
+#else
 #ifdef HAVE__NSGETENVIRON
 #define environ (*_NSGetEnviron())
 #undef INCLUDE_crt_externs_h
 #define INCLUDE_crt_externs_h
-#else
-___BEGIN_C_LINKAGE
-extern char **environ;
-___END_C_LINKAGE
+#endif
 #endif
 #endif
 

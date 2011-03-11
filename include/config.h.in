@@ -1,4 +1,4 @@
-/* File: "config.h.in", Time-stamp: <2010-12-29 12:21:27 feeley> */
+/* File: "config.h.in", Time-stamp: <2011-03-10 15:48:57 feeley> */
 
 /*
  * Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
@@ -193,6 +193,7 @@
 
 #undef HAVE_GET_FPC_CSR
 
+#undef HAVE_ENVIRON
 #undef HAVE__NSGETENVIRON
 
 /* Determine which types are available */
