@@ -1,0 +1,7 @@
+This program implements the "Gambit REPL" application for iOS devices.
+It is a simple development environment for Scheme.  The user can
+interact with a REPL, and edit/save/run small scripts.
+
+This example was tested with iOS 4.3 and XCode 4.0 .  If you do not have
+these versions, some adjustments will be needed at the top of the
+build-gambit-iOS shell script, and possibly other places.

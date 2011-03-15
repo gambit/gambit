@@ -1,0 +1,15 @@
+#! /bin/sh
+
+scale_icon()
+{
+  pngtopnm Icon-unscaled.png | pamscale -xsize=$1 -ysize=$1 | pnmtopng > $2
+}
+
+tifftopnm Icon-unscaled.tiff | pnmtopng > Icon-unscaled.png
+
+scale_icon 57  Icon.png
+scale_icon 114 Icon@2x.png
+scale_icon 72  Icon-72.png
+scale_icon 29  Icon-Small.png
+scale_icon 58  Icon-Small@2x.png
+scale_icon 50  Icon-Small-50.png

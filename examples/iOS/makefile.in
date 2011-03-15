@@ -1,10 +1,10 @@
-# makefile for Gambit-C examples, Time-stamp: <2011-03-15 00:44:58 feeley>
+# makefile for iOS example, Time-stamp: <2011-03-15 02:06:11 feeley>
 
 # Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
-herefromroot = examples
-rootfromhere = ..
-SUBDIRS = distr-comp pi ring web-repl web-server tcltk Xlib-simple pthread misc iOS
+herefromroot = examples/iOS
+rootfromhere = ../..
+SUBDIRS =
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -62,18 +62,20 @@ psdir = @psdir@
 localedir = @localedir@
 mandir = @mandir@
 
-.SUFFIXES:
+.SUFFIXES: .scm .c @obj@
 
-RCFILES = makefile.in README
+RCFILES = makefile.in README build-gambit-iOS GambitREPL.xcodeproj.tgz \
+program.scm program.h \
+Prefix.pch main.m \
+AppDelegate.m AppDelegate.h ViewController.m ViewController.h \
+AccessoryView.xib MainWindow.xib ViewController.xib \
+Icon-72.png Icon-Small-50.png Icon-Small.png Icon-Small@2x.png \
+Icon.png Icon@2x.png Icon-unscaled.key Icon-unscaled.tiff make-scaled-icons \
+Info.plist 
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
-
-MDEFINES = prefix=$(prefix) exec_prefix=$(exec_prefix) \
-includedir=$(includedir) libdir=$(libdir) \
-bindir=$(bindir) docdir=$(docdir) \
-infodir=$(infodir) emacsdir=$(emacsdir)
 
 all:
 
@@ -81,9 +83,38 @@ all-pre:
 
 all-post:
 
-examples-pre:
+examples: prepare-for-xcode
 
-examples-post:
+prepare-for-xcode: program.m program_.c GambitREPL.xcodeproj
+	@echo "***********************************************************"
+	@echo "*                                                         *"
+	@echo "* To complete the iOS example the following steps must be *"
+	@echo "* completed manually:                                     *"
+	@echo "*                                                         *"
+	@echo "*  1) at the shell execute: ./build-gambit-iOS            *"
+	@echo "*     => this builds the Gambit runtime library for       *"
+	@echo "*        the iPhone/iPad/iTouch devices and simulators    *"
+	@echo "*                                                         *"
+	@echo "*  2) open GambitREPL.xcodeproj in XCode 4.0              *"
+	@echo "*                                                         *"
+	@echo "*  3) select the appropriate target (simulator or device) *"
+	@echo "*                                                         *"
+	@echo "*  4) select menu "Product" -> "Run"                      *"
+	@echo "*                                                         *"
+	@echo "***********************************************************"
+
+.scm.c:
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
+
+.c.m:
+	cp $*.c $*.m
+
+program_.c: program.c
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -o program_.c program.c
+
+GambitREPL.xcodeproj: GambitREPL.xcodeproj.tgz
+	rm -rf GambitREPL.xcodeproj
+	tar zxf GambitREPL.xcodeproj.tgz
 
 install-pre:
 
@@ -96,10 +127,12 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
+	rm -f Prefix.pch program.m program.c program_.c
 
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
+	rm -f *.gcov *.gcno *.gcda
 
 distclean-pre: clean-pre
 
@@ -131,7 +164,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive examples-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -205,12 +238,6 @@ dist-devel: dist-devel-post
 dist-devel-post: dist-devel-recursive
 
 dist-devel-recursive: dist-devel-pre
-
-examples: examples-post
-
-examples-post: examples-recursive
-
-examples-recursive: examples-pre
 
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status

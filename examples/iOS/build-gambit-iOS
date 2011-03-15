@@ -1,0 +1,193 @@
+#!/bin/sh
+
+### File: "build-gambit-iOS", Time-stamp: <2011-03-12 10:58:49 feeley>
+
+### Copyright (c) 2010-2011 by Marc Feeley, All Rights Reserved.
+
+# The following definitions should be adjusted to your context.
+
+# Which iOS kind and version are to be used.
+ios_kind="iPhone"
+ios_version="4.3"
+
+# Which ./configure options are to be used.
+#config_options="--enable-single-host --enable-debug"
+config_options="--enable-single-host"
+prefix_subdir="current"
+
+# The following two settings are only relevant when this script is used
+# outside of the Gambit distribution tree (the distribution is downloaded).
+gambit_dist_if_downloaded="gambc-v4_6_0-devel"
+update_with_latest_changes_if_downloaded="yes"
+
+select_macosx()
+{
+  gambit_dir="`pwd`/gambit-macosx"
+  gambit_prefix="$gambit_dir/$prefix_subdir"
+
+  echo "*** Selecting Mac OS X."
+
+  config_options_extras=
+
+  export CC="gcc"
+  export CXX="g++"
+  export CFLAGS="-I$gambit_prefix/include -L$gambit_prefix/lib"
+  export CXXFLAGS="$CFLAGS"
+  export LD="ld"
+  export LDFLAGS=""
+}
+
+select_ios()
+{
+  kind="$1"
+  platform_type="$2"
+  sdk_version="$3"
+
+  gambit_dir="`pwd`/gambit-$kind$platform_type"
+  gambit_prefix="$gambit_dir/$prefix_subdir"
+
+  ios_platform="$kind$platform_type.platform"
+  ios_sdk="$kind$platform_type$sdk_version.sdk"
+
+  platforms_dir="/Developer/Platforms"
+  ios_platform_dir="$platforms_dir/$ios_platform"
+  ios_sdks="$ios_platform_dir/Developer/SDKs"
+  ios_sdk_dir="$ios_sdks/$ios_sdk"
+
+  echo "*** Selecting platform \"$ios_platform\" and SDK \"$ios_sdk\"."
+
+  if [ ! -d "$ios_platform_dir" ]; then
+    echo "*** ERROR!  The platform \"$ios_platform\" is not available."
+    echo "*** The available platforms are:"
+    (cd "$platforms_dir" ; ls -d $kind* | sed -e "s/^/***   /g")
+    echo "*** You need to edit the top of the build-gambit-iOS script"
+    exit 1
+  fi
+
+  if [ ! -d "$ios_sdk_dir" ]; then
+    echo "*** ERROR!  The SDK \"$ios_sdk\" is not available."
+    echo "*** The available SDKs are:"
+    (cd "$ios_sdks" ; ls | sed -e "s/^/***   /g")
+    echo "*** You need to edit the top of the build-gambit-iOS script"
+    exit 1
+  fi
+
+  case "$kind$platform_type" in
+
+           iPhoneOS) config_options_extras=--host=arm-apple-darwin
+                     export CC="$ios_platform_dir/Developer/usr/bin/gcc -isysroot $ios_sdk_dir -arch armv6"
+                     export CXX="$ios_platform_dir/Developer/usr/bin/g++ -isysroot $ios_sdk_dir -arch armv6"
+                     export CFLAGS="-Wno-trigraphs -Wreturn-type -Wunused-variable -I$gambit_prefix/include -L$gambit_prefix/lib"
+                     export CXXFLAGS="$CFLAGS"
+                     export LD="$ios_platform_dir/Developer/usr/bin/ld -arch armv6"
+                     export LDFLAGS=""
+                     ;;
+
+    iPhoneSimulator) config_options_extras=
+                     export CC="$ios_platform_dir/Developer/usr/bin/gcc -isysroot $ios_sdk_dir -arch i386"
+                     export CXX="$ios_platform_dir/Developer/usr/bin/g++ -isysroot $ios_sdk_dir -arch i386"
+                     export CFLAGS="-Wno-trigraphs -Wreturn-type -Wunused-variable -I$gambit_prefix/include -L$gambit_prefix/lib"
+                     export CXXFLAGS="$CFLAGS"
+                     export LD="$ios_platform_dir/Developer/usr/bin/ld -arch i386"
+                     export LDFLAGS=""
+                     ;;
+
+  esac
+}
+
+download_gambit_dist_tgz()
+{
+  gambit_dist="$gambit_dist_if_downloaded"
+  update_with_latest_changes="$update_with_latest_changes_if_downloaded"
+
+  major_minor="`echo \"$gambit_dist\" | sed -e \"s/gambc-\\([^_]*_[^_]*\\)\\(.*\\)/\\1/g\" -e \"s/_/./g\"`"
+
+  curl "http://www.iro.umontreal.ca/~gambit/download/gambit/$major_minor/source/$gambit_dist.tgz" > "$gambit_dist.tgz"
+}
+
+get_gambit_dist_tgz()
+{
+  rootfromhere="`grep \"^rootfromhere = *\" makefile 2> /dev/null | sed -e \"s/rootfromhere = //\"`"
+  gambit_dist="`grep \"^PACKAGE_TARNAME = *\" makefile 2> /dev/null | sed -e \"s/PACKAGE_TARNAME = *//\"`"
+
+  if [ "$gambit_dist" == "" ]; then
+
+    download_gambit_dist_tgz
+
+    downloaded="yes"
+
+  else
+
+    (cd "$rootfromhere" ; make dist)
+    mv "$rootfromhere/$gambit_dist.tgz" .
+
+    update_with_latest_changes="no"
+    downloaded="no"
+
+  fi
+}
+
+unpack_gambit()
+{
+  dir="$1"
+  rm -rf "$dir"
+  tar zxf "$gambit_dist.tgz"
+  mv "$gambit_dist" "$dir"
+}  
+
+configure_gambit()
+{
+  dir="$1"
+  unpack_gambit "$dir"
+  cd "$dir"
+  ./configure --prefix="$gambit_prefix" $config_options_extras $config_options
+  cd ..
+}
+
+make_gambit()
+{
+  dir="$1"
+  cd "$dir"
+  make clean
+  make -j 2
+  if [ "$update_with_latest_changes" == "yes" ]; then
+    make update
+    make -j 2
+  fi
+  make install
+  cd ..
+}
+
+build_macosx()
+{
+  select_macosx
+
+  configure_gambit "$gambit_dir"
+
+  make_gambit "$gambit_dir"
+}
+
+build_ios()
+{
+  kind="$1"
+  platform_type="$2"
+  sdk_version="$3"
+
+  select_ios "$kind" "$platform_type" "$sdk_version"
+
+  configure_gambit "$gambit_dir"
+
+  make_gambit "$gambit_dir"
+}
+
+# Build Gambit for various platforms.
+
+get_gambit_dist_tgz
+
+build_ios "$ios_kind" OS "$ios_version"
+build_ios "$ios_kind" Simulator "$ios_version"
+
+# If you also want to build the Mac OS X version, then uncomment the
+# following line:
+
+#build_macosx

@@ -1979,7 +1979,7 @@ AC_SUBST(HELP_BROWSER)
 
 AC_PROG_MAKE_SET
 
-AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.bat.unix bin/gambc-cc.bat.windows bin/gambc-doc.bat.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
+AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.bat.unix bin/gambc-cc.bat.windows bin/gambc-doc.bat.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile examples/iOS/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
 
 if test "$ENABLE_SINGLE_HOST" != yes; then
   AC_MSG_NOTICE([
