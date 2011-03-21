@@ -1334,16 +1334,27 @@
       (##raise-os-exception #f code ##shell-command-blocking cmd)
       code)))
 
+(define-prim (##shell-program)
+
+  (define unix-shell-program    '("/bin/sh" . "-c"))
+  (define windows-shell-program '("CMD.EXE" . "/C"))
+  (define default-shell-program '("sh"      . "-c"))
+
+  (cond ((##file-exists? (##car unix-shell-program))
+         unix-shell-program)
+        ((##equal? (##getenv "COMSPEC" #f) (##car windows-shell-program))
+         windows-shell-program)
+        (else
+         default-shell-program)))
+
 (define-prim (##shell-command cmd)
-  (let* ((shell
-          (##getenv "COMSPEC" "sh"))
+  (let* ((shell-prog
+          (##shell-program))
          (path-or-settings
-          (##list path: shell
+          (##list path: (##car shell-prog)
                   arguments:
                   (##list
-                   (if (##string-ci=? (##path-strip-directory shell) "CMD.EXE")
-                       "/C"
-                       "-c")
+                   (##cdr shell-prog)
                    cmd)
                   stdin-redirection: #f
                   stdout-redirection: #f
