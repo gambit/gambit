@@ -3803,7 +3803,7 @@ end-of-code
      ___F64VECTORSET(aligned_v,___FIX(6),___GSTATE->nb_gcs)
      ___F64VECTORSET(aligned_v,___FIX(7),___bytes_allocated ())
      ___F64VECTORSET(aligned_v,___FIX(8),(2*(1+2)<<___LWS))
-     n = 8 + 20 * sizeof (___F64) + (5<<___LWS);
+     n = (1<<___LWS) + 8 + 20 * sizeof (___F64); /* space for u8vector */
      ___F64VECTORSET(aligned_v,___FIX(9),(2*n))
      ___F64VECTORSET(aligned_v,___FIX(10),minflt)
      ___F64VECTORSET(aligned_v,___FIX(11),majflt)
