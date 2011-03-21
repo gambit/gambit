@@ -1,4 +1,4 @@
-# makefile for iOS example, Time-stamp: <2011-03-15 02:06:11 feeley>
+# makefile for iOS example, Time-stamp: <2011-03-20 20:23:45 feeley>
 
 # Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
@@ -86,6 +86,7 @@ all-post:
 examples: prepare-for-xcode
 
 prepare-for-xcode: program.m program_.c GambitREPL.xcodeproj
+	chmod +x build-gambit-iOS
 	@echo "***********************************************************"
 	@echo "*                                                         *"
 	@echo "* To complete the iOS example the following steps must be *"
@@ -95,11 +96,11 @@ prepare-for-xcode: program.m program_.c GambitREPL.xcodeproj
 	@echo "*     => this builds the Gambit runtime library for       *"
 	@echo "*        the iPhone/iPad/iTouch devices and simulators    *"
 	@echo "*                                                         *"
-	@echo "*  2) open GambitREPL.xcodeproj in XCode 4.0              *"
+	@echo "*  2) open GambitREPL.xcodeproj in XCode 4.0 (or later)   *"
 	@echo "*                                                         *"
 	@echo "*  3) select the appropriate target (simulator or device) *"
 	@echo "*                                                         *"
-	@echo "*  4) select menu "Product" -> "Run"                      *"
+	@echo "*  4) select menu Product -> Run                          *"
 	@echo "*                                                         *"
 	@echo "***********************************************************"
 

@@ -15,6 +15,7 @@
 
 (##namespace (""
               splash
+              repl
               edit
               reset-scripts
               start-repl-server
@@ -32,6 +33,7 @@
 (declare
  (standard-bindings)
  (extended-bindings)
+ (block)
  (fixnum)
  ;;(not safe)
 )
@@ -251,19 +253,6 @@ c-declare-end
   (set! repl-port o)
 
   (input-port-timeout-set! o -inf.0))
-
-;; Start the main REPL in the primordial thread, and create a second
-;; thread which executes the rest of the program and also takes care
-;; of the interaction with the ViewController.
-
-(continuation-capture
- (lambda (cont)
-   (thread-start!
-    (make-thread
-     (lambda ()
-       (continuation-return cont #f))))
-   (##repl-debug-main)
-   (exit)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -811,7 +800,7 @@ common-html-header-end
 
 ;; Splash page.
 
-(define splash-page-content #<<splash-page-content-end
+(define splash-page-content-head #<<splash-page-content-head-end
 
 <body>
 <p>
@@ -845,32 +834,67 @@ After the "<strong><code>&gt;</code></strong>" prompt enter your command then RE
 </strong>
 
 <center>
+
+splash-page-content-head-end
+)
+
+(define splash-page-content-button1 #<<splash-page-content-button1-end
+
 <div class="button" onClick="window.location='event:start-repl';">Start REPL</div>
+
+splash-page-content-button1-end
+)
+
+(define splash-page-content-button2 #<<splash-page-content-button2-end
+
 <div class="button" onClick="window.location='event:edit-scripts';">Edit Scripts</div>
+
+splash-page-content-button2-end
+)
+
+(define splash-page-content-tail #<<splash-page-content-tail-end
+
 </center>
 </body>
 </html>
 
-splash-page-content-end
+splash-page-content-tail-end
 )
 
-(define (splash)
+(define (splash #!optional (enable-edit-scripts? #f))
   (set-page
-   (string-append common-html-header splash-page-content)
+   (string-append common-html-header
+                  splash-page-content-head
+                  splash-page-content-button1
+                  (if enable-edit-scripts?
+                      splash-page-content-button2
+                      "")
+                  splash-page-content-tail)
    (lambda (event)
      (cond ((equal? event "event:start-repl")
-            (show-textView))
+            (repl))
            ((equal? event "event:edit-scripts")
             (edit))
            ((equal? event "event:visit-wiki")
-            (show-textView)
+            (repl)
             (open-URL "http://gambit.iro.umontreal.ca/"))))))
+
+(define (repl)
+  (show-textView))
 
 ;;;----------------------------------------------------------------------------
 
 ;; Script editing.
 
 (define predefined-scripts '(
+
+#<<EOF
+;; Main script.
+;;
+;; Start with splash screen.
+
+(splash)
+EOF
 
 #<<EOF
 ;; Show "Hello!" for a few seconds.
@@ -890,7 +914,7 @@ EOF
       1
       (* n (fact (- n 1)))))
 
-(show-textView) ;; show the REPL
+(repl) ;; show the REPL
 (pp (fact 100))
 EOF
 
@@ -902,7 +926,7 @@ EOF
       n
       (+ (fib (- n 1)) (fib (- n 2)))))
 
-(show-textView) ;; show the REPL
+(repl) ;; show the REPL
 (pp (time (fib 25)))
 EOF
 
@@ -918,7 +942,7 @@ EOF
                (map tree lst))))
       p))
 
-(show-textView) ;; show the REPL
+(repl) ;; show the REPL
 (pp (tree "~~"))
 EOF
 
@@ -934,7 +958,7 @@ EOF
     (thread-sleep! 10)
     (edit)))
 
-(metar "cyul") ;; Montreal airport
+(metar "cymx") ;; Mirabel airport
 EOF
 
 #<<EOF
@@ -958,7 +982,7 @@ EOF
 (define (get-script-db)
   (if (not script-db)
       (set! script-db
-            (let ((x (get-pref "SCRIPTS")))
+            (let ((x (get-pref "script-db")))
               (if x
                   (with-input-from-string x read)
                   predefined-scripts))))
@@ -966,7 +990,7 @@ EOF
 
 (define (save-script-db)
   (if script-db
-      (set-pref "SCRIPTS"
+      (set-pref "script-db"
                 (with-output-to-string "" (lambda () (write script-db))))))
 
 (define edit-page-content-head #<<edit-page-content-head-end
@@ -987,16 +1011,20 @@ edit-page-content-head-end
 edit-page-content-tail-end
 )
 
-(define (html-for-scripts scripts)
+(define (html-for-scripts scripts enable-edit-main-script?)
 
   (define (html script index)
-    (list "<br>\n"
-          "<textarea class=\"script\" id=\"script" index "\" rows=9>" (html-escape script) "</textarea>\n"
-          "<center>\n"
-          "<div class=\"button\" onClick=\"window.location='event:save:" index " '+encodeURIComponent(document.getElementById('script" index "').value);\">Save</div>\n"
-          "<div class=\"button\" onClick=\"window.location='event:run:" index " '+encodeURIComponent(document.getElementById('script" index "').value);\">Run</div>\n"
-          "<div class=\"button\" onClick=\"if (confirm('Are you sure you want to delete this script?')) window.location='event:delete:" index "';\">Delete</div>\n"
-          "</center>\n"))
+    (if (and (= index 0) (not enable-edit-main-script?))
+        ""
+        (list "<br>\n"
+              "<textarea class=\"script\" id=\"script" index "\" rows=9>" (html-escape script) "</textarea>\n"
+              "<center>\n"
+              "<div class=\"button\" onClick=\"window.location='event:save:" index " '+encodeURIComponent(document.getElementById('script" index "').value);\">Save</div>\n"
+              "<div class=\"button\" onClick=\"window.location='event:run:" index " '+encodeURIComponent(document.getElementById('script" index "').value);\">Run</div>\n"
+              (if (= index 0)
+                  ""
+                  (list "<div class=\"button\" onClick=\"if (confirm('Are you sure you want to delete this script?')) window.location='event:delete:" index "';\">Delete</div>\n"))
+              "</center>\n")))
 
   (let loop ((scripts scripts) (i 0) (accum '("<body>\n")))
     (if (pair? scripts)
@@ -1007,7 +1035,7 @@ edit-page-content-tail-end
           (lambda ()
             (print (reverse accum)))))))
 
-(define (edit)
+(define (edit #!optional (enable-edit-main-script? #f))
 
   (define (get-parameters rest)
     (call-with-input-string
@@ -1020,7 +1048,7 @@ edit-page-content-tail-end
   (set-page
    (string-append common-html-header
                   edit-page-content-head
-                  (html-for-scripts (get-script-db))
+                  (html-for-scripts (get-script-db) enable-edit-main-script?)
                   edit-page-content-tail)
    (lambda (event)
      (cond ((has-prefix? event "event:save:") =>
@@ -1044,7 +1072,7 @@ edit-page-content-tail-end
             (edit))
 
            ((equal? event "event:show-repl")
-            (show-textView))))))
+            (repl))))))
 
 (define (save-script-at-index index script)
   (let loop ((scripts (get-script-db)) (i 0) (accum '()))
@@ -1053,6 +1081,8 @@ edit-page-content-tail-end
             (set! script-db (append (reverse accum)
                                     (cons script (cdr scripts))))
             (loop (cdr scripts) (+ i 1) (cons (car scripts) accum)))))
+  (if (= index 0)
+      (set-pref "run-main-script" "yes"))
   (save-script-db))
 
 (define (run-script-at-index index script)
@@ -1080,8 +1110,33 @@ edit-page-content-tail-end
 
 ;;;----------------------------------------------------------------------------
 
-;; Install the splash page.
+;; Start the main REPL in the primordial thread, and create a second
+;; thread which executes the rest of the program (returning back from
+;; the C call to ___setup) and later takes care of the interaction
+;; with the ViewController.
 
-(splash)
+(continuation-capture
+ (lambda (cont)
+
+   (thread-start!
+    (make-thread
+     (lambda ()
+       (continuation-return cont #f))))
+
+   ;; the primordial thread is running this...
+
+   (if (get-pref "run-main-script")
+
+       (begin
+         (set-pref "run-main-script" #f)
+         (let ((script (list-ref (get-script-db) 0)))
+           (eval (cons 'begin (with-input-from-string script read-all))))
+         (set-pref "run-main-script" "yes"))
+
+       (splash)) ;; show splash screen if main script did not work last time
+
+   (##repl-debug-main)
+
+   (exit)))
 
 ;;;----------------------------------------------------------------------------
