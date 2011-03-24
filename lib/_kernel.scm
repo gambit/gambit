@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_kernel.scm", Time-stamp: <2010-01-07 08:49:37 feeley>
+;;; File: "_kernel.scm", Time-stamp: <2011-03-20 21:10:21 feeley>
 
 ;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
@@ -3725,6 +3725,11 @@ end-of-code
   ((c-lambda ()
              nonnull-char-string
     "___os_exe_extension_string")))
+
+(define ##os-bat-extension-string-saved
+  ((c-lambda ()
+             nonnull-char-string
+    "___os_bat_extension_string")))
 
 ;;;----------------------------------------------------------------------------
 

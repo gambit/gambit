@@ -1,4 +1,4 @@
-/* File: "os_io.c", Time-stamp: <2011-03-10 15:55:49 feeley> */
+/* File: "os_io.c", Time-stamp: <2011-03-22 15:01:36 feeley> */
 
 /* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
@@ -651,6 +651,60 @@ ___stream_index *len_done;)
 
 #ifdef USE_POSIX
 
+
+#ifdef USE_sigaction
+typedef sigset_t sigset_type;
+#else
+typedef int sigset_type;
+#endif
+
+
+___HIDDEN sigset_type block_signal
+   ___P((int signum),
+        (signum)
+int signum;)
+{
+  sigset_type oldmask;
+
+#ifdef USE_sigaction
+
+  sigset_type toblock;
+
+  sigemptyset (&toblock);
+  sigaddset (&toblock, signum);
+  sigprocmask (SIG_BLOCK, &toblock, &oldmask);
+
+#endif
+
+#ifdef USE_signal
+
+  oldmask = sigblock (sigmask (signum));
+
+#endif
+
+  return oldmask;
+}
+
+
+___HIDDEN void restore_sigmask
+   ___P((sigset_type oldmask),
+        (oldmask)
+sigset_type oldmask;)
+{
+#ifdef USE_sigaction
+
+  sigprocmask (SIG_SETMASK, &oldmask, 0);
+
+#endif
+
+#ifdef USE_signal
+
+  sigsetmask (oldmask);
+
+#endif
+}
+
+
 /*
  * Some system calls can be interrupted by a signal and fail with
  * errno == EINTR.  The following functions are wrappers for system
@@ -942,10 +996,12 @@ ___time timeout;)
              */
 
             result = 0;
+
+            goto select_done;
           }
+#ifdef USE_nanosleep
         else
           {
-#ifdef USE_nanosleep
 
             /*
              * For better timeout resolution, the nanosleep function
@@ -961,36 +1017,38 @@ ___time timeout;)
             delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
             result = nanosleep (&delta_ts_struct, NULL);
 
-#else
+            goto select_done;
+          }
+#endif
+      }
 
-            /*
-             * The select function is only being called to sleep.
-             */
+    {
+#ifdef __CYGWIN__
 
-            result =
-              select (state.highest_fd_plus_1,
-                      &state.readfds,
-                      &state.writefds,
-                      &state.exceptfds,
-                      delta_tv);
+      /*
+       * Cygwin's select can be interrupted by the timer and in some
+       * cases the error "No child processes" will be returned by
+       * select.  Consequently the timer signal is blocked from
+       * interrupting select.
+       */
+
+      sigset_type old = block_signal (HEARTBEAT_SIG);
 
 #endif
-          }
-      }
-    else
-      {
-        /*
-         * The select function is being called to sleep and/or to
-         * block on a set of file descriptors for I/O.
-         */
 
-        result =
-          select (state.highest_fd_plus_1,
-                  &state.readfds,
-                  &state.writefds,
-                  &state.exceptfds,
-                  delta_tv);
-      }
+      result =
+        select (state.highest_fd_plus_1,
+                &state.readfds,
+                &state.writefds,
+                &state.exceptfds,
+                delta_tv);
+
+#ifdef __CYGWIN__
+      restore_sigmask (old);
+#endif
+    }
+
+  select_done:
 
     if (result < 0)
       return err_code_from_errno ();
@@ -6797,59 +6855,6 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env;)
 
 #endif
 
-#ifdef USE_execvp
-
-#ifdef USE_sigaction
-typedef sigset_t sigset_type;
-#else
-typedef int sigset_type;
-#endif
-
-___HIDDEN sigset_type block_signal
-   ___P((int signum),
-        (signum)
-int signum;)
-{
-  sigset_type oldmask;
-
-#ifdef USE_sigaction
-
-  sigset_type toblock;
-
-  sigemptyset (&toblock);
-  sigaddset (&toblock, signum);
-  sigprocmask (SIG_BLOCK, &toblock, &oldmask);
-
-#endif
-
-#ifdef USE_signal
-
-  oldmask = sigblock (sigmask (signum));
-
-#endif
-
-  return oldmask;
-}
-
-___HIDDEN void restore_sigmask
-   ___P((sigset_type oldmask),
-        (oldmask)
-sigset_type oldmask;)
-{
-#ifdef USE_sigaction
-
-  sigprocmask (SIG_SETMASK, &oldmask, 0);
-
-#endif
-
-#ifdef USE_signal
-
-  sigsetmask (oldmask);
-
-#endif
-}
-
-#endif
 
 ___SCMOBJ ___device_stream_setup_from_process
    ___P((___device_stream **dev,

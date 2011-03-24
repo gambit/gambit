@@ -11274,7 +11274,6 @@ if test "$ENABLE_SHARED" = yes; then
 
   case "$target_os" in
 
-
      mingw* | cygwin*)
              LIB_PREFIX="lib"
              LIB_EXTENSION=".dll"
@@ -11558,6 +11557,7 @@ GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\""
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___CONFIGURE_COMMAND=\"\\\"$CONFIGURE_COMMAND\\\"\""
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___OBJ_EXTENSION=\"\\\"$obj\\\"\""
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___EXE_EXTENSION=\"\\\"$exe\\\"\""
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___BAT_EXTENSION=\"\\\"$bat\\\"\""
 
 ###############################################################################
 
@@ -11804,7 +11804,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.bat.unix bin/gambc-cc.bat.windows bin/gambc-doc.bat.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile examples/iOS/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.unix bin/gambc-cc.bat.windows bin/gambc-doc.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile examples/iOS/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -12495,9 +12495,9 @@ do
     "gsi/makefile") CONFIG_FILES="$CONFIG_FILES gsi/makefile" ;;
     "gsc/makefile") CONFIG_FILES="$CONFIG_FILES gsc/makefile" ;;
     "bin/makefile") CONFIG_FILES="$CONFIG_FILES bin/makefile" ;;
-    "bin/gambc-cc.bat.unix") CONFIG_FILES="$CONFIG_FILES bin/gambc-cc.bat.unix" ;;
+    "bin/gambc-cc.unix") CONFIG_FILES="$CONFIG_FILES bin/gambc-cc.unix" ;;
     "bin/gambc-cc.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambc-cc.bat.windows" ;;
-    "bin/gambc-doc.bat.unix") CONFIG_FILES="$CONFIG_FILES bin/gambc-doc.bat.unix" ;;
+    "bin/gambc-doc.unix") CONFIG_FILES="$CONFIG_FILES bin/gambc-doc.unix" ;;
     "bin/gambc-doc.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambc-doc.bat.windows" ;;
     "misc/makefile") CONFIG_FILES="$CONFIG_FILES misc/makefile" ;;
     "doc/makefile") CONFIG_FILES="$CONFIG_FILES doc/makefile" ;;

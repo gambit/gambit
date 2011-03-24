@@ -1,4 +1,4 @@
-/* File: "os_time.c", Time-stamp: <2009-01-15 09:09:04 feeley> */
+/* File: "os_time.c", Time-stamp: <2011-03-22 14:38:49 feeley> */
 
 /* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
 
@@ -728,31 +728,6 @@ ___HIDDEN void cleanup_process_times ___PVOID
 /*---------------------------------------------------------------------------*/
 
 /* Heartbeat interrupt handling. */
-
-
-/*
- * Use the process-time timer unless only the real-time timer is
- * available (e.g. DJGPP).  Note that on some systems (e.g. MkLinux)
- * ITIMER_VIRTUAL is an enum type, not a macro.
- */
-
-#ifdef __CYGWIN__
-/* ITIMER_VIRTUAL is broken under cygwin... use ITIMER_REAL */
-#undef ITIMER_VIRTUAL
-#endif
-
-#ifdef ITIMER_VIRTUAL
-#define HEARTBEAT_ITIMER ITIMER_VIRTUAL
-#define HEARTBEAT_SIG SIGVTALRM
-#else
-#ifdef ITIMER_REAL
-#define HEARTBEAT_ITIMER ITIMER_REAL
-#define HEARTBEAT_SIG SIGALRM
-#else
-#define HEARTBEAT_ITIMER ITIMER_VIRTUAL
-#define HEARTBEAT_SIG SIGVTALRM
-#endif
-#endif
 
 
 #ifndef USE_setitimer

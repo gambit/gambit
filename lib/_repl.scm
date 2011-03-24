@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2009-11-27 22:00:44 feeley>
+;;; File: "_repl.scm", Time-stamp: <2011-03-20 21:17:00 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -3874,7 +3874,9 @@
            status))
        open-process
        (##list path:
-               (##string-append gambcdir-bin "gambc-doc.bat")
+               (##string-append gambcdir-bin
+                                "gambc-doc"
+                                ##os-bat-extension-string-saved)
                arguments:
                '()
                environment:

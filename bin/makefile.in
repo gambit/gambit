@@ -70,14 +70,14 @@ GSI_EXECUTABLE_INSTALLED = @ENABLE_INTERPRETER_NAME@@exe@
 GSC_EXECUTABLE_INSTALLED = @ENABLE_COMPILER_NAME@@exe@
 
 RCFILES = makefile.in \
-gambc-cc.bat.unix.in gambc-cc.bat.windows.in \
-gambc-doc.bat.unix.in gambc-doc.bat.windows.in
+gambc-cc.unix.in gambc-cc.bat.windows.in \
+gambc-doc.unix.in gambc-doc.bat.windows.in
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_BIN_PROG = gambc-cc.bat gambc-doc.bat
+INSTFILES_BIN_PROG = gambc-cc@bat@ gambc-doc@bat@
 INSTFILES_BIN_LINK_GSI = six@exe@ gsi-script@bat@ six-script@bat@ \
 scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 INSTFILES_BIN_LINK_GSC = gsc-script@bat@
@@ -88,24 +88,24 @@ all:
 
 all-pre:
 
-all-post: gambc-cc.bat gambc-doc.bat six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gambc-cc@bat@ gambc-doc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 
-gambc-cc.bat: makefile gambc-cc.bat.unix gambc-cc.bat.windows
-	rm -f gambc-cc.bat
+gambc-cc@bat@: makefile gambc-cc.unix gambc-cc.bat.windows
+	rm -f gambc-cc@bat@
 	if test "@bat@" = ""; then \
-	  cp gambc-cc.bat.unix gambc-cc.bat; \
-	  chmod +x gambc-cc.bat; \
+	  cp gambc-cc.unix gambc-cc@bat@; \
+	  chmod +x gambc-cc@bat@; \
 	else \
-	  cp gambc-cc.bat.windows gambc-cc.bat; \
+	  cp gambc-cc.bat.windows gambc-cc@bat@; \
 	fi
 
-gambc-doc.bat: makefile gambc-doc.bat.unix gambc-doc.bat.windows
-	rm -f gambc-doc.bat
+gambc-doc@bat@: makefile gambc-doc.unix gambc-doc.bat.windows
+	rm -f gambc-doc@bat@
 	if test "@bat@" = ""; then \
-	  cp gambc-doc.bat.unix gambc-doc.bat; \
-	  chmod +x gambc-doc.bat; \
+	  cp gambc-doc.unix gambc-doc@bat@; \
+	  chmod +x gambc-doc@bat@; \
 	else \
-	  cp gambc-doc.bat.windows gambc-doc.bat; \
+	  cp gambc-doc.bat.windows gambc-doc@bat@; \
 	fi
 
 six@exe@: makefile
@@ -248,8 +248,8 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f gambc-cc.bat \
-	  gambc-doc.bat \
+	rm -f gambc-cc@bat@ \
+	  gambc-doc@bat@ \
 	  six@exe@ six@exe@.lnk \
 	  gsi-script@bat@ \
 	  gsi-script@bat@.lnk \
@@ -277,8 +277,8 @@ bootclean-post: distclean-post
 realclean-pre: bootclean-pre
 
 realclean-post: bootclean-post
-	rm -f gambc-cc.bat.unix gambc-cc.bat.windows \
-	  gambc-doc.bat.unix gambc-doc.bat.windows makefile
+	rm -f gambc-cc.unix gambc-cc.bat.windows \
+	  gambc-doc.unix gambc-doc.bat.windows makefile
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
@@ -375,13 +375,13 @@ dist-devel-recursive: dist-devel-pre
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
-gambc-cc.bat.unix: gambc-cc.bat.unix.in $(rootfromhere)/config.status
+gambc-cc.unix: gambc-cc.unix.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 gambc-cc.bat.windows: gambc-cc.bat.windows.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
-gambc-doc.bat.unix: gambc-doc.bat.unix.in $(rootfromhere)/config.status
+gambc-doc.unix: gambc-doc.unix.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 gambc-doc.bat.windows: gambc-doc.bat.windows.in $(rootfromhere)/config.status

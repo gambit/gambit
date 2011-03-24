@@ -1,4 +1,4 @@
-/* File: "os.h", Time-stamp: <2011-03-10 15:52:08 feeley> */
+/* File: "os.h", Time-stamp: <2011-03-22 14:38:44 feeley> */
 
 /* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
 
@@ -206,6 +206,14 @@
 #define USE_waitpid
 #endif
 
+#if 0
+
+/*
+ * This code is now commented out as it seems to be causing trouble on
+ * CYGWIN and the problem it was trying to solve no longer seems to
+ * exist (perhaps the bug in CYGWIN has since been repaired).
+ */
+
 #ifdef __CYGWIN__
 /* 
  * Cygwin's timer implementation does not support ITIMER_VIRTUAL and
@@ -217,6 +225,8 @@
 #define USE_GetLastError
 #define HAVE_WINDOWS_H 1
 #define INCLUDE_windows_h
+#endif
+
 #endif
 
 #endif
@@ -1366,6 +1376,32 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #endif
 #endif
 
+
+/*
+ * Use the process-time timer unless only the real-time timer is
+ * available (e.g. DJGPP).  Note that on some systems (e.g. MkLinux)
+ * ITIMER_VIRTUAL is an enum type, not a macro.
+ */
+
+#ifdef __CYGWIN__
+/* ITIMER_VIRTUAL is broken under cygwin... use ITIMER_REAL */
+#undef ITIMER_VIRTUAL
+#endif
+
+#ifdef ITIMER_VIRTUAL
+#define HEARTBEAT_ITIMER ITIMER_VIRTUAL
+#define HEARTBEAT_SIG SIGVTALRM
+#else
+#ifdef ITIMER_REAL
+#define HEARTBEAT_ITIMER ITIMER_REAL
+#define HEARTBEAT_SIG SIGALRM
+#else
+#define HEARTBEAT_ITIMER ITIMER_VIRTUAL
+#define HEARTBEAT_SIG SIGVTALRM
+#endif
+#endif
+
+
 /*---------------------------------------------------------------------------*/
 
 #define ___CHAR_TYPE(ce) \
@@ -1422,6 +1458,7 @@ extern char *___os_configure_command_string ___PVOID;
 
 extern char *___os_obj_extension_string ___PVOID;
 extern char *___os_exe_extension_string ___PVOID;
+extern char *___os_bat_extension_string ___PVOID;
 
 
 /* OS initialization/finalization. */

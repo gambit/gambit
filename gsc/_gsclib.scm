@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2009-11-01 21:29:25 feeley>
+;;; File: "_gsclib.scm", Time-stamp: <2011-03-20 21:15:32 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -304,7 +304,9 @@
          status))
      open-process
      (##list path:
-             (##string-append gambcdir-bin "gambc-cc.bat")
+             (##string-append gambcdir-bin
+                              "gambc-cc"
+                              ##os-bat-extension-string-saved)
              arguments:
              (##list (##symbol->string op))
              directory:

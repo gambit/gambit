@@ -1,4 +1,4 @@
-/* File: "os.c", Time-stamp: <2009-11-24 19:12:42 feeley> */
+/* File: "os.c", Time-stamp: <2011-03-20 21:09:44 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -2124,10 +2124,16 @@ char *___os_configure_command_string ___PVOID
 #define ___EXE_EXTENSION ".exe"
 #endif
 
+#ifndef ___BAT_EXTENSION
+#define ___BAT_EXTENSION ".bat"
+#endif
+
 
 ___HIDDEN char *os_obj_extension_string = ___OBJ_EXTENSION;
 
 ___HIDDEN char *os_exe_extension_string = ___EXE_EXTENSION;
+
+___HIDDEN char *os_bat_extension_string = ___BAT_EXTENSION;
 
 
 char *___os_obj_extension_string ___PVOID
@@ -2139,6 +2145,12 @@ char *___os_obj_extension_string ___PVOID
 char *___os_exe_extension_string ___PVOID
 {
   return os_exe_extension_string;
+}
+
+
+char *___os_bat_extension_string ___PVOID
+{
+  return os_bat_extension_string;
 }
 
 
