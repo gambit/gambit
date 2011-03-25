@@ -1,4 +1,4 @@
-# makefile for iOS example, Time-stamp: <2011-03-20 20:23:45 feeley>
+# makefile for iOS example, Time-stamp: <2011-03-25 08:30:36 feeley>
 
 # Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
@@ -128,7 +128,7 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f Prefix.pch program.m program.c program_.c
+	rm -f program.m program.c program_.c
 
 clean-pre: mostlyclean-pre
 
