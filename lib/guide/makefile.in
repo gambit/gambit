@@ -1,4 +1,4 @@
-# makefile for GUIDE library, Time-stamp: <2009-07-30 11:53:54 feeley>
+# makefile for GUIDE library, Time-stamp: <2011-03-25 08:45:02 feeley>
 
 # Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -144,7 +144,7 @@ distclean-post: clean-post
 bootclean-pre: distclean-pre
 
 bootclean-post: distclean-post
-	rm -f $(MODULES_C)
+	# rm -f $(MODULES_C)
 
 realclean-pre: bootclean-pre
 
