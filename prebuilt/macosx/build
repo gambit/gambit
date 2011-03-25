@@ -16,40 +16,40 @@ export INSTALL_PREFIX="/Library/Gambit-C"
 
 cd "`dirname $0`"
 
-for VARIANT in intel32 intel64 G3 G4 G5 universal; do
+for VARIANT in intel32 intel64; do
 
   cd "$rootfromhere"
 
   case "$VARIANT" in
       intel32) CONFIG_ARCH="-arch i386"
-               CONFIG_HOST="--host=i386-apple-darwin9"
+               CONFIG_BUILD="--build=i386-apple-darwin9"
                RUN_TESTS=1
                ;;
       intel64) CONFIG_ARCH="-arch x86_64 -m64"
-               CONFIG_HOST="--host=i386-apple-darwin9"
+               CONFIG_BUILD="--build=i386-apple-darwin9"
                RUN_TESTS=0
                ;;
            G3) CONFIG_ARCH="-arch ppc750"
-               CONFIG_HOST="--host=powerpc-apple-darwin9"
+               CONFIG_BUILD="--build=powerpc-apple-darwin9"
                RUN_TESTS=0
                ;;
            G4) CONFIG_ARCH="-arch ppc7400"
-               CONFIG_HOST="--host=powerpc-apple-darwin9"
+               CONFIG_BUILD="--build=powerpc-apple-darwin9"
                RUN_TESTS=0
                ;;
            G5) CONFIG_ARCH="-arch ppc970 -m64"
-               CONFIG_HOST="--host=powerpc-apple-darwin9"
+               CONFIG_BUILD="--build=powerpc-apple-darwin9"
                RUN_TESTS=0
                ;;
     universal) CONFIG_ARCH="-arch i386 -arch ppc750"
-               CONFIG_HOST=""
+               CONFIG_BUILD=""
                RUN_TESTS=1
                ;;
   esac
 
-  SYSROOT="/Developer/SDKs/MacOSX10.5.sdk"
+  SYSROOT="/Developer/SDKs/MacOSX10.6.sdk"
 
-  CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-mmacosx-version-min=10.5 -Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_HOST" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host # --enable-gcc-opts
+  CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-mmacosx-version-min=10.5 -Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host # --enable-gcc-opts
 
   cd "$herefromroot"
 
