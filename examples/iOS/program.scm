@@ -28,7 +28,37 @@
               set-webView-content
               open-URL
               set-pref
-              get-pref))
+              get-pref
+
+              string->Class
+              Class->string
+              string->SEL
+              SEL->string
+              send0
+              send1
+              send2
+              id->string
+              string->id
+              id->bool
+              bool->id
+              id->int
+              int->id
+              id->float
+              float->id
+              id->double
+              double->id
+
+              date
+
+              device-status
+              UDID
+
+              AudioServicesPlayAlertSound
+              AudioServicesPlaySystemSound
+              kSystemSoundID_FlashScreen
+              kSystemSoundID_Vibrate
+              kSystemSoundID_UserPreferredAlert
+             ))
 
 (declare
  (standard-bindings)
@@ -40,11 +70,135 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; Make "~~" path equal to the program's .app directory.
+;; Make the current-directory and the "~~" path equal to the program's
+;; .app directory.
 
 (define app-dir (path-directory (car (command-line))))
 
 (set! ##os-path-gambcdir (lambda () app-dir))
+
+(current-directory app-dir)
+
+;;;----------------------------------------------------------------------------
+
+;; Interface with Objective-C.
+
+(c-declare #<<c-declare-end
+
+#include <objc/objc.h>
+
+const char *class_getName(Class cls);
+id objc_getClass(const char *name);
+id objc_msgSend(id self, SEL op, ...);
+
+id retain_id(id x)
+{
+  if (x != nil)
+    [x retain];
+  return x;
+}
+
+___SCMOBJ release_id(void *ptr)
+{
+  id x = ___CAST(id,ptr);
+  if (x != nil)
+    [x release];
+  return ___FIX(___NO_ERR);
+}
+
+Class retain_Class(Class x)
+{
+  if (x != nil)
+    [x retain];
+  return x;
+}
+
+___SCMOBJ release_Class(void *ptr)
+{
+  Class x = ___CAST(Class,ptr);
+  if (x != nil)
+    [x release];
+  return ___FIX(___NO_ERR);
+}
+
+c-declare-end
+)
+
+(c-define-type id (pointer (struct "objc_object") (id Class) "release_id"))
+(c-define-type Class (pointer (struct "objc_class") (Class id) "release_Class"))
+(c-define-type SEL (pointer (struct "objc_selector") (SEL)))
+
+(define string->Class
+  (c-lambda (nonnull-char-string) Class
+    "___result = retain_Class(objc_getClass(___arg1));"))
+
+(define Class->string
+  (c-lambda (Class) nonnull-char-string
+    "___result = ___CAST(char*,class_getName(___arg1));")) ;;;TODO: remove cast
+
+(define string->SEL
+  (c-lambda (nonnull-UTF-8-string) SEL
+    "___result = sel_registerName(___arg1);"))
+
+(define SEL->string
+  (c-lambda (SEL) nonnull-UTF-8-string
+    "___result = ___CAST(char*,sel_getName(___arg1));")) ;;;TODO: remove cast
+
+;; Message sending (with 0, 1 and 2 parameters).
+
+(define send0
+  (c-lambda (id SEL) id
+    "___result = retain_id(___CAST(id (*)(id, SEL),objc_msgSend)(___arg1, ___arg2));"))
+
+(define send1
+  (c-lambda (id SEL id) id
+    "___result = retain_id(___CAST(id (*)(id, SEL, id),objc_msgSend)(___arg1, ___arg2, ___arg3));"))
+
+(define send2
+  (c-lambda (id SEL id id) id
+    "___result = retain_id(___CAST(id (*)(id, SEL, id, id),objc_msgSend)(___arg1, ___arg2, ___arg3, ___arg4));"))
+
+;; Type conversions.
+
+(define id->string
+  (c-lambda (id) nonnull-UTF-8-string
+    "___result = ___CAST(char*,[___CAST(NSString*,___arg1) UTF8String]);")) ;;;TODO: remove cast
+
+(define string->id
+  (c-lambda (nonnull-UTF-8-string) id
+    "___result = retain_id([NSString stringWithUTF8String: ___arg1]);"))
+
+(define id->bool
+  (c-lambda (id) bool
+    "___result = [___CAST(NSNumber*,___arg1) boolValue];"))
+
+(define bool->id
+  (c-lambda (bool) id
+    "___result = retain_id([NSNumber numberWithBool:___arg1]);"))
+
+(define id->int
+  (c-lambda (id) int
+    "___result = [___CAST(NSNumber*,___arg1) intValue];"))
+
+(define int->id
+  (c-lambda (int) id
+    "___result = retain_id([NSNumber numberWithInt:___arg1]);"))
+
+(define id->float
+  (c-lambda (id) float
+    "___result = [___CAST(NSNumber*,___arg1) floatValue];"))
+
+(define float->id
+  (c-lambda (float) id
+    "___result = retain_id([NSNumber numberWithFloat:___arg1]);"))
+
+(define id->double
+  (c-lambda (id) double
+    "___result = [___CAST(NSNumber*,___arg1) doubleValue];"))
+
+(define double->id
+  (c-lambda (double) id
+    "___result = retain_id([NSNumber numberWithDouble:___arg1]);"))
 
 ;;;----------------------------------------------------------------------------
 
@@ -82,7 +236,7 @@ ___SCMOBJ SCMOBJ_to_NSStringSTAR(___SCMOBJ src, NSString **dst, int arg_num)
           buf[i] = c;
         }
 
-      result = [NSString stringWithCharacters:buf length:len];
+      result = retain_id([NSString stringWithCharacters:buf length:len]);
 
       ___free_mem(buf);
     }
@@ -103,7 +257,7 @@ ___SCMOBJ NSStringSTAR_to_SCMOBJ(NSString *src, ___SCMOBJ *dst, int arg_num)
       int i;
       int len = [src length];
 
-      result = ___alloc_scmobj (___sSTRING, len<<___LCS, ___STILL);
+      result = ___alloc_scmobj(___sSTRING, len<<___LCS, ___STILL);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -145,6 +299,95 @@ c-declare-end
   "NSStringSTAR_to_SCMOBJ"
   "SCMOBJ_to_NSStringSTAR"
   #t)
+
+;;;----------------------------------------------------------------------------
+
+;; Interface with NSDate Class.
+
+(define NSDate      (string->Class "NSDate"))
+(define alloc       (string->SEL "alloc"))
+(define init        (string->SEL "init"))
+(define description (string->SEL "description"))
+
+(define (date)
+  (id->string (send0 (send0 (send0 NSDate alloc) init) description)))
+
+;;;----------------------------------------------------------------------------
+
+;; Interface with UIDevice Class.
+
+(define currentDevice-batteryLevel
+  (c-lambda () float
+    "___result = [[UIDevice currentDevice] batteryLevel];"))
+
+(define currentDevice-batteryMonitoringEnabled
+  (c-lambda () bool
+    "___result = [UIDevice currentDevice].batteryMonitoringEnabled;"))
+
+(define currentDevice-batteryMonitoringEnabled-set!
+  (c-lambda (bool) void
+    "[UIDevice currentDevice].batteryMonitoringEnabled = ___arg1;"))
+
+(define currentDevice-multitaskingSupported
+  (c-lambda () bool
+    "___result = [UIDevice currentDevice].multitaskingSupported;"))
+
+(define currentDevice-model
+  (c-lambda () NSString*
+    "___result = [[UIDevice currentDevice] model];"))
+
+(define currentDevice-name
+  (c-lambda () NSString*
+    "___result = [[UIDevice currentDevice] name];"))
+
+(define currentDevice-systemName
+  (c-lambda () NSString*
+    "___result = [[UIDevice currentDevice] systemName];"))
+
+(define currentDevice-systemVersion
+  (c-lambda () NSString*
+    "___result = [[UIDevice currentDevice] systemVersion];"))
+
+(define currentDevice-uniqueIdentifier
+  (c-lambda () NSString*
+    "___result = [[UIDevice currentDevice] uniqueIdentifier];"))
+
+(define (device-status)
+  (currentDevice-batteryMonitoringEnabled-set! #t)
+  (list (currentDevice-batteryLevel)
+        (currentDevice-batteryMonitoringEnabled)
+        (currentDevice-multitaskingSupported)
+        (currentDevice-model)
+        (currentDevice-name)
+        (currentDevice-systemName)
+        (currentDevice-systemVersion)
+        (currentDevice-uniqueIdentifier)))
+
+(define (UDID)
+  (currentDevice-uniqueIdentifier))
+
+;;;----------------------------------------------------------------------------
+
+;; Interface with AudioToolbox.
+
+(c-declare #<<c-declare-end
+
+#import <AudioToolbox/AudioToolbox.h>
+
+c-declare-end
+)
+
+(c-define-type SystemSoundID unsigned-int32)
+
+(define AudioServicesPlayAlertSound
+  (c-lambda (SystemSoundID) void "AudioServicesPlayAlertSound"))
+
+(define AudioServicesPlaySystemSound
+  (c-lambda (SystemSoundID) void "AudioServicesPlaySystemSound"))
+
+(define kSystemSoundID_FlashScreen        #x00000FFE)
+(define kSystemSoundID_Vibrate            #x00000FFF)
+(define kSystemSoundID_UserPreferredAlert #x00001000)
 
 ;;;----------------------------------------------------------------------------
 
@@ -208,14 +451,54 @@ c-declare-end
 (c-define (heartbeat) () double "heartbeat" "extern"
 
   ;; make sure other threads get to run
-  (thread-yield!)
+  (##thread-heartbeat!)
 
   ;; check if there has been any REPL output
   (let ((output (read-line repl-port #f)))
     (if (string? output)
         (add-output-to-textView output)))
 
-  0.1) ;; return interval until next heartbeat
+  ;; return interval until next heartbeat
+  (next-heartbeat-interval))
+
+(define (next-heartbeat-interval)
+
+  (##declare (not interrupts-enabled))
+
+  (let* ((run-queue
+          (macro-run-queue))
+         (runnable-threads?
+          (##not
+           (let ((root (macro-btq-left run-queue)))
+             (and (##not (##eq? root run-queue))
+                  (##eq? (macro-btq-left root) run-queue)
+                  (##eq? (macro-btq-right root) run-queue))))))
+    (if runnable-threads?
+
+        (begin
+          ;; There are other threads that can run, so request
+          ;; to call "heartbeat" real soon to run those threads.
+          0.0001)
+
+        (let* ((next-sleeper
+                (macro-toq-leftmost run-queue))
+               (sleep-interval
+                (if (##eq? next-sleeper run-queue)
+                    +inf.0
+                    (begin
+                      ;; There is a sleeping thread, so figure out in
+                      ;; how much time it needs to wake up.
+                      (##flonum.max
+                       (##flonum.- (macro-thread-timeout next-sleeper)
+                                   (##current-time-point))
+                       0.0))))
+               (next-condvar
+                (macro-btq-deq-next run-queue))
+               (io-interval
+                (if (##eq? next-condvar run-queue)
+                    1.0     ;; I/O is not pending, just relax
+                    0.02))) ;; I/O is pending, so come back soon
+          (##flonum.min sleep-interval io-interval)))))
 
 (c-define (eval-string str) (NSString*) NSString* "eval_string" "extern"
   (let ()
@@ -768,6 +1051,12 @@ c-declare-end
 <head>
 <style TYPE="text/css">
 <!--
+body.splash {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#fffb8b), to(#fffef0));
+}
+body.editor {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#a0a0a0), to(#f0f0f0));
+}
 div.button {
     display: inline-block;
     color: white;
@@ -788,7 +1077,6 @@ textarea.script {
     width: 100%;
     margin: 5px;
 }
-}
 -->
 </style>
 </head>
@@ -802,7 +1090,7 @@ common-html-header-end
 
 (define splash-page-content-head #<<splash-page-content-head-end
 
-<body>
+<body class="splash">
 <p>
 Welcome to <strong>Gambit REPL</strong>, a Scheme development environment built with the <a href="event:visit-wiki">Gambit Scheme programming system</a>.
 </p>
@@ -825,10 +1113,10 @@ After the "<strong><code>&gt;</code></strong>" prompt enter your command then RE
 1267650600228229401496703205376<br>
 &gt; (reverse (string-&gt;list "hello"))<br>
 (#\o #\l #\l #\e #\h)<br>
-&gt; \ for (int i=1;i<=3;i++) pp(i);<br>
+&gt; \for (int i=1;i<=3;i++) pp(i*i);<br>
 1<br>
-2<br>
-3<br>
+4<br>
+9<br>
 &gt; (exit)<br>
 </code>
 </strong>
@@ -899,10 +1187,11 @@ EOF
 #<<EOF
 ;; Show "Hello!" for a few seconds.
 
-(set-webView-content "<h1>Hello!</h1>")
-
+(set-webView-content #<<END
+<h1>Hello!</h1>
+END
+)
 (thread-sleep! 5) ;; wait 5 seconds
-
 (edit) ;; return to this page
 EOF
 
@@ -928,6 +1217,44 @@ EOF
 
 (repl) ;; show the REPL
 (pp (time (fib 25)))
+EOF
+
+#<<EOF
+;; Show date for a few seconds.
+
+(set-webView-content (date))
+
+(thread-sleep! 5) ;; wait 5 seconds
+(edit) ;; return to this page
+EOF
+
+#<<EOF
+;; Show status for a few seconds.
+
+(set-webView-content
+  (string-append
+   "<pre>\n"
+   (with-output-to-string
+     ""
+     (lambda ()
+       (pretty-print
+        (device-status))))
+   "</pre>\n"))
+
+(thread-sleep! 5) ;; wait 5 seconds
+(edit) ;; return to this page
+EOF
+
+#<<EOF
+;; Metronome.
+(let* ((t (current-time))
+       (s (time->seconds t)))
+  (let loop ((i 0))
+    (let ((x (+ s (* 0.4 i))))
+      (thread-sleep! (seconds->time x)))
+    (AudioServicesPlaySystemSound
+     (if (= 0 (modulo i 4)) 1057 1104))
+    (if (< i 10) (loop (+ i 1)))))
 EOF
 
 #<<EOF
@@ -979,6 +1306,8 @@ EOF
   (set! script-db predefined-scripts)
   (save-script-db))
 
+(reset-scripts);;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (get-script-db)
   (if (not script-db)
       (set! script-db
@@ -1026,7 +1355,7 @@ edit-page-content-tail-end
                   (list "<div class=\"button\" onClick=\"if (confirm('Are you sure you want to delete this script?')) window.location='event:delete:" index "';\">Delete</div>\n"))
               "</center>\n")))
 
-  (let loop ((scripts scripts) (i 0) (accum '("<body>\n")))
+  (let loop ((scripts scripts) (i 0) (accum '("<body class=\"editor\">\n")))
     (if (pair? scripts)
         (let ((s (car scripts)))
           (loop (cdr scripts) (+ i 1) (cons (html s i) accum)))

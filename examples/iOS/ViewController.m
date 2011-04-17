@@ -450,6 +450,7 @@ NSString *get_pref(NSString *key) {
           CFPreferencesGetAppBooleanValue(CFSTR("keyboard"),
                                           CFSTR("/var/mobile/Library/Preferences/com.apple.preferences.sounds"),
                                           NULL);
+
       if (keyboardSounds != 0)
         AudioServicesPlaySystemSound(1104); // keyboard "tock" sound
     }

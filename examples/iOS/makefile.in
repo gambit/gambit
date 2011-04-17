@@ -1,4 +1,4 @@
-# makefile for iOS example, Time-stamp: <2011-03-25 08:30:36 feeley>
+# makefile for iOS example, Time-stamp: <2011-04-01 22:04:46 feeley>
 
 # Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
@@ -69,8 +69,9 @@ program.scm program.h \
 Prefix.pch main.m \
 AppDelegate.m AppDelegate.h ViewController.m ViewController.h \
 AccessoryView.xib MainWindow.xib ViewController.xib \
-Icon-72.png Icon-Small-50.png Icon-Small.png Icon-Small@2x.png \
-Icon.png Icon@2x.png Icon-unscaled.key Icon-unscaled.tiff make-scaled-icons \
+Icon-72.png Icon-Small-50.png Icon-Small.png Icon-Small@2x.png Icon-512.png \
+Icon.png Icon@2x.png Icon-unscaled.key Icon-unscaled.tiff \
+Icon-unscaled-alpha.tiff make-scaled-icons \
 Info.plist 
 
 GENDISTFILES =
