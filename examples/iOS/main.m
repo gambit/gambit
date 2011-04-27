@@ -2,7 +2,7 @@
 //  main.m
 //
 //  Created by Marc Feeley on 11-03-06.
-//  Copyright 2011 Universit√© de Montr√©al. All rights reserved.
+//  Copyright 2011 Université de Montréal. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

@@ -1,6 +1,6 @@
-/* File: "os_io.c", Time-stamp: <2011-03-22 15:01:36 feeley> */
+/* File: "os_io.c", Time-stamp: <2011-04-27 14:10:19 feeley> */
 
-/* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1022,31 +1022,30 @@ ___time timeout;)
 #endif
       }
 
-    {
-#ifdef __CYGWIN__
+    /*
+     * Heartbeat interrupts must be disabled in case they are based on the
+     * real-time timer.  This is needed to bypass issues in two buggy
+     * operating systems:
+     *
+     * - On MacOS X, the virtual-time timer does not fire at the correct
+     *   rate (apparently this happens only on machines with more than
+     *   one core).
+     *
+     * - On CYGWIN, the select system call can be interrupted by the
+     *   timer and in some cases the error "No child processes" will
+     *   be returned by select.
+     */
 
-      /*
-       * Cygwin's select can be interrupted by the timer and in some
-       * cases the error "No child processes" will be returned by
-       * select.  Consequently the timer signal is blocked from
-       * interrupting select.
-       */
+    ___disable_heartbeat_interrupts ();
 
-      sigset_type old = block_signal (HEARTBEAT_SIG);
+    result =
+      select (state.highest_fd_plus_1,
+              &state.readfds,
+              &state.writefds,
+              &state.exceptfds,
+              delta_tv);
 
-#endif
-
-      result =
-        select (state.highest_fd_plus_1,
-                &state.readfds,
-                &state.writefds,
-                &state.exceptfds,
-                delta_tv);
-
-#ifdef __CYGWIN__
-      restore_sigmask (old);
-#endif
-    }
+    ___enable_heartbeat_interrupts ();
 
   select_done:
 

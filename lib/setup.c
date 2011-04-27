@@ -1,4 +1,4 @@
-/* File: "setup.c", Time-stamp: <2011-01-22 00:09:48 feeley> */
+/* File: "setup.c", Time-stamp: <2011-04-26 09:20:53 feeley> */
 
 /* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
@@ -2836,6 +2836,12 @@ ___setup_params_struct *setup_params;)
 
   ___gstate.___free_mem
     = ___free_mem;
+
+  ___gstate.___disable_heartbeat_interrupts
+    = ___disable_heartbeat_interrupts;
+
+  ___gstate.___enable_heartbeat_interrupts
+    = ___enable_heartbeat_interrupts;
 
 #endif
 

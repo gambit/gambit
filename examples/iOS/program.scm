@@ -16,6 +16,7 @@
 (##namespace (""
               splash
               repl
+              repl-eval
               edit
               reset-scripts
               start-repl-server
@@ -25,6 +26,7 @@
               set-textView-content
               get-textView-content
               add-output-to-textView
+              add-input-to-textView
               set-webView-content
               open-URL
               set-pref
@@ -310,7 +312,25 @@ c-declare-end
 (define description (string->SEL "description"))
 
 (define (date)
-  (id->string (send0 (send0 (send0 NSDate alloc) init) description)))
+  (id->string
+   (send0 (send0 (send0 NSDate alloc) init) description)))
+
+;;;----------------------------------------------------------------------------
+
+;; Interface with NSBundle Class.
+
+(define NSBundle    (string->Class "NSBundle"))
+(define mainBundle  (string->SEL "mainBundle"))
+(define objectForInfoDictionaryKey (string->SEL "objectForInfoDictionaryKey:"))
+
+(define (mainBundle-info key)
+  (let ((info
+         (send1 (send0 NSBundle mainBundle)
+                objectForInfoDictionaryKey (string->id key))))
+    (and info
+         (id->string info))))
+
+(define CFBundleDisplayName (mainBundle-info "CFBundleDisplayName"))
 
 ;;;----------------------------------------------------------------------------
 
@@ -420,6 +440,9 @@ c-declare-end
 (define add-output-to-textView
   (c-lambda (NSString*) void "add_output_to_textView"))
 
+(define add-input-to-textView
+  (c-lambda (NSString*) void "add_input_to_textView"))
+
 (define set-webView-content
   (c-lambda (NSString*) void "set_webView_content"))
 
@@ -447,6 +470,27 @@ c-declare-end
   (force-output event-port)
 
   (heartbeat))
+
+(c-define (send-key str) (NSString*) double "send_key" "extern"
+
+  (handle-key str)
+
+  (heartbeat))
+
+(define handle-key #f)
+
+(set! handle-key
+  (lambda (str)
+    (if (char=? #\F (string-ref str 0))
+        (let* ((scripts (get-script-db))
+               (x (assoc str scripts)))
+          (cond (x
+                 (run-script (cdr x)))
+                ((equal? str "F13")
+                 (##thread-interrupt! (macro-primordial-thread)))
+                (else
+                 (add-input-to-textView (string-append "<" str ">")))))
+        (add-input-to-textView str))))
 
 (c-define (heartbeat) () double "heartbeat" "extern"
 
@@ -478,7 +522,7 @@ c-declare-end
         (begin
           ;; There are other threads that can run, so request
           ;; to call "heartbeat" real soon to run those threads.
-          0.0001)
+          interval-runnable)
 
         (let* ((next-sleeper
                 (macro-toq-leftmost run-queue))
@@ -491,14 +535,26 @@ c-declare-end
                       (##flonum.max
                        (##flonum.- (macro-thread-timeout next-sleeper)
                                    (##current-time-point))
-                       0.0))))
+                       interval-min-wait))))
                (next-condvar
                 (macro-btq-deq-next run-queue))
                (io-interval
                 (if (##eq? next-condvar run-queue)
-                    1.0     ;; I/O is not pending, just relax
-                    0.02))) ;; I/O is pending, so come back soon
+                    interval-no-io-pending ;; I/O is not pending, just relax
+                    interval-io-pending))) ;; I/O is pending, so come back soon
           (##flonum.min sleep-interval io-interval)))))
+
+(define interval-runnable 0.0)
+(set! interval-runnable 0.0001)
+
+(define interval-io-pending 0.0)
+(set! interval-io-pending 0.02)
+
+(define interval-no-io-pending 0.0)
+(set! interval-no-io-pending 1.0)
+
+(define interval-min-wait 0.0)
+(set! interval-min-wait 0.0001)
 
 (c-define (eval-string str) (NSString*) NSString* "eval_string" "extern"
   (let ()
@@ -1070,11 +1126,29 @@ div.button {
     opacity: 1.0;
     margin: 5px;
 }
+div.smallbutton {
+    display: inline-block;
+    color: black;
+    font: bold 14px Arial;
+    text-align: center;
+    padding: 7px 0px;
+    width: 50px;
+    border: 1px solid black;
+    -webkit-border-radius: 5px;
+    opacity: 1.0;
+    margin: 5px;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#b0b0b0));
+}
 textarea.script {
     display: block;
     color: black;
     font: bold 12px Courier;
     width: 100%;
+    margin: 5px;
+}
+select.scriptname {
+    font: bold 14px Arial;
+    padding: 7px 0px;
     margin: 5px;
 }
 -->
@@ -1088,11 +1162,16 @@ common-html-header-end
 
 ;; Splash page.
 
-(define splash-page-content-head #<<splash-page-content-head-end
+(define splash-page-content-head1 #<<splash-page-content-head1-end
 
 <body class="splash">
 <p>
-Welcome to <strong>Gambit REPL</strong>, a Scheme development environment built with the <a href="event:visit-wiki">Gambit Scheme programming system</a>.
+Welcome to <strong>
+splash-page-content-head1-end
+)
+
+(define splash-page-content-head2 #<<splash-page-content-head2-end
+</strong>, a Scheme development environment built with the <a href="event:visit-wiki">Gambit Scheme programming system</a>.
 </p>
 
 <ul>
@@ -1102,7 +1181,7 @@ Welcome to <strong>Gambit REPL</strong>, a Scheme development environment built 
 </ul>
 
 <p>
-After the "<strong><code>&gt;</code></strong>" prompt enter your command then RETURN and Gambit REPL will display the result. Here is a sample interaction:
+After the "<strong><code>&gt;</code></strong>" prompt enter your command then RETURN and the REPL will display the result. Here is a sample interaction:
 </p>
 
 <strong>
@@ -1123,7 +1202,7 @@ After the "<strong><code>&gt;</code></strong>" prompt enter your command then RE
 
 <center>
 
-splash-page-content-head-end
+splash-page-content-head2-end
 )
 
 (define splash-page-content-button1 #<<splash-page-content-button1-end
@@ -1140,6 +1219,13 @@ splash-page-content-button1-end
 splash-page-content-button2-end
 )
 
+(define splash-page-content-button3 #<<splash-page-content-button3-end
+
+<div class="button" onClick="if (confirm('Are you sure you want to start the REPL server?')) window.location='event:start-server';">Start Server</div>
+
+splash-page-content-button3-end
+)
+
 (define splash-page-content-tail #<<splash-page-content-tail-end
 
 </center>
@@ -1149,13 +1235,23 @@ splash-page-content-button2-end
 splash-page-content-tail-end
 )
 
-(define (splash #!optional (enable-edit-scripts? #f))
+(define (splash
+         #!optional
+         (enable-edit-scripts?
+          (not (equal? CFBundleDisplayName "Gambit REPL Free")))
+         (enable-start-server?
+          (equal? CFBundleDisplayName "Gambit REPL Pro")))
   (set-page
    (string-append common-html-header
-                  splash-page-content-head
+                  splash-page-content-head1
+                  CFBundleDisplayName
+                  splash-page-content-head2
                   splash-page-content-button1
                   (if enable-edit-scripts?
                       splash-page-content-button2
+                      "")
+                  (if enable-start-server?
+                      splash-page-content-button3
                       "")
                   splash-page-content-tail)
    (lambda (event)
@@ -1163,6 +1259,9 @@ splash-page-content-tail-end
             (repl))
            ((equal? event "event:edit-scripts")
             (edit))
+           ((equal? event "event:start-server")
+            (repl)
+            (start-repl-server))
            ((equal? event "event:visit-wiki")
             (repl)
             (open-URL "http://gambit.iro.umontreal.ca/"))))))
@@ -1170,20 +1269,23 @@ splash-page-content-tail-end
 (define (repl)
   (show-textView))
 
+(define (repl-eval str)
+  (if (string? str)
+      (begin
+        (add-output-to-textView str)
+        (send-input str)
+        (repl))))
+
+(define (eval-from-string str)
+  (eval (cons 'begin (with-input-from-string str read-all))))
+
 ;;;----------------------------------------------------------------------------
 
 ;; Script editing.
 
 (define predefined-scripts '(
 
-#<<EOF
-;; Main script.
-;;
-;; Start with splash screen.
-
-(splash)
-EOF
-
+("" .
 #<<EOF
 ;; Show "Hello!" for a few seconds.
 
@@ -1194,7 +1296,9 @@ END
 (thread-sleep! 5) ;; wait 5 seconds
 (edit) ;; return to this page
 EOF
+)
 
+("" .
 #<<EOF
 ;; Compute factorial of 100.
 
@@ -1203,10 +1307,11 @@ EOF
       1
       (* n (fact (- n 1)))))
 
-(repl) ;; show the REPL
-(pp (fact 100))
+(repl-eval "(fact 100)\n")
 EOF
+)
 
+("" .
 #<<EOF
 ;; Compute fibonacci of 25.
 
@@ -1215,36 +1320,19 @@ EOF
       n
       (+ (fib (- n 1)) (fib (- n 2)))))
 
-(repl) ;; show the REPL
-(pp (time (fib 25)))
+(repl-eval "(time (fib 25))\n")
 EOF
+)
 
+("" .
 #<<EOF
-;; Show date for a few seconds.
+;; Play funny sound.
 
-(set-webView-content (date))
-
-(thread-sleep! 5) ;; wait 5 seconds
-(edit) ;; return to this page
+(AudioServicesPlaySystemSound 1010)
 EOF
+)
 
-#<<EOF
-;; Show status for a few seconds.
-
-(set-webView-content
-  (string-append
-   "<pre>\n"
-   (with-output-to-string
-     ""
-     (lambda ()
-       (pretty-print
-        (device-status))))
-   "</pre>\n"))
-
-(thread-sleep! 5) ;; wait 5 seconds
-(edit) ;; return to this page
-EOF
-
+("" .
 #<<EOF
 ;; Metronome.
 (let* ((t (current-time))
@@ -1256,7 +1344,9 @@ EOF
      (if (= 0 (modulo i 4)) 1057 1104))
     (if (< i 10) (loop (+ i 1)))))
 EOF
+)
 
+("" .
 #<<EOF
 ;; List app directory content.
 
@@ -1269,58 +1359,102 @@ EOF
                (map tree lst))))
       p))
 
-(repl) ;; show the REPL
-(pp (tree "~~"))
+(repl-eval "(tree \"~~\")\n")
 EOF
+)
 
+("" .
 #<<EOF
 ;; Get METAR aviation weather report.
 
 (define (metar station)
-  (let ((p (open-tcp-client "aviationweather.gov:80")))
-    (display (string-append "GET /adds/metars/index.php?station_ids=" station "\r\n\r\n") p)
-    (force-output p)
-    (set-webView-content (read-line p #f))
-    (close-port p)
-    (thread-sleep! 10)
-    (edit)))
+  (open-URL
+   (string-append "http://aviationweather.gov/adds/metars/index.php?station_ids=" station)))
 
 (metar "cymx") ;; Mirabel airport
 EOF
+)
 
+("F10" .
 #<<EOF
-;; Start REPL server.
-;;
-;; To connect to a REPL remotely:
-;;
-;;   % telnet <iphone's-IP> 7000
+;; Show date for a few seconds.
 
-(start-repl-server)
+(set-webView-content (date))
+(show-webView)
+
+(thread-sleep! 5) ;; wait 5 seconds
+(edit) ;; return to this page
 EOF
+)
+
+("F11" .
+#<<EOF
+;; Show status for a few seconds.
+
+(set-webView-content
+  (string-append
+   "<pre>\n"
+   (with-output-to-string
+     ""
+     (lambda ()
+       (pretty-print
+        (device-status))))
+   "</pre>\n"))
+(show-webView)
+
+(thread-sleep! 5) ;; wait 5 seconds
+(edit) ;; return to this page
+EOF
+)
+
+("F12" .
+#<<EOF
+;; Start script editor.
+
+(edit)
+EOF
+)
+
+("main" .
+#<<EOF
+;; Main script.
+;;
+;; Start with splash screen.
+
+(splash)
+EOF
+)
 
 ))
 
 (define script-db #f)
+(define script-db-version "1.0")
 
 (define (reset-scripts)
   (set! script-db predefined-scripts)
   (save-script-db))
 
-(reset-scripts);;;;;;;;;;;;;;;;;;;;;;;;
+;;(reset-scripts)
 
 (define (get-script-db)
   (if (not script-db)
       (set! script-db
             (let ((x (get-pref "script-db")))
               (if x
-                  (with-input-from-string x read)
+                  (let ((lst (with-input-from-string x read)))
+                    (if (equal? (car lst) script-db-version)
+                        (cdr lst)
+                        predefined-scripts))
                   predefined-scripts))))
   script-db)
 
 (define (save-script-db)
   (if script-db
       (set-pref "script-db"
-                (with-output-to-string "" (lambda () (write script-db))))))
+                (with-output-to-string
+                  ""
+                  (lambda ()
+                    (write (cons script-db-version script-db)))))))
 
 (define edit-page-content-head #<<edit-page-content-head-end
 
@@ -1340,31 +1474,46 @@ edit-page-content-head-end
 edit-page-content-tail-end
 )
 
-(define (html-for-scripts scripts enable-edit-main-script?)
+(define (html-for-scripts scripts)
 
-  (define (html script index)
-    (if (and (= index 0) (not enable-edit-main-script?))
-        ""
-        (list "<br>\n"
-              "<textarea class=\"script\" id=\"script" index "\" rows=9>" (html-escape script) "</textarea>\n"
-              "<center>\n"
-              "<div class=\"button\" onClick=\"window.location='event:save:" index " '+encodeURIComponent(document.getElementById('script" index "').value);\">Save</div>\n"
-              "<div class=\"button\" onClick=\"window.location='event:run:" index " '+encodeURIComponent(document.getElementById('script" index "').value);\">Run</div>\n"
-              (if (= index 0)
-                  ""
-                  (list "<div class=\"button\" onClick=\"if (confirm('Are you sure you want to delete this script?')) window.location='event:delete:" index "';\">Delete</div>\n"))
-              "</center>\n")))
+  (define (options selected lst)
+    (if (pair? lst)
+        (let ((s (car lst)))
+          (list "<option"
+                (if (equal? selected s)
+                    " selected=\"yes\""
+                    "")
+                ">"
+                s
+                "</option>"
+                (options selected (cdr lst))))
+        '()))
+
+  (define (html script name index)
+    (list "<br>\n"
+          "<textarea class=\"script\" id=\"script" index "\" rows=9>" (html-escape script) "</textarea>\n"
+          "<center>\n"
+          "<select class=\"scriptname\" id=\"scriptname" index "\">"
+          (options name
+                   '("noname" "F1" "F2" "F3" "F4" "F5" "F6" "F7" "F8" "F9" "F10" "F11" "F12" "F13" "main"))
+          "</select>\n"
+          "<div class=\"smallbutton\" onClick=\"window.location='event:run:" index " '+encodeURIComponent(document.getElementById('scriptname" index "').value)+' '+encodeURIComponent(document.getElementById('script" index "').value);\">Run</div>\n"
+          "<div class=\"smallbutton\" onClick=\"window.location='event:save:" index " '+encodeURIComponent(document.getElementById('scriptname" index "').value)+' '+encodeURIComponent(document.getElementById('script" index "').value);\">Save</div>\n"
+          "<div class=\"smallbutton\" onClick=\"if (confirm('Are you sure you want to delete this script?')) window.location='event:delete:" index "';\">Delete</div>\n"
+          "</center>\n"))
 
   (let loop ((scripts scripts) (i 0) (accum '("<body class=\"editor\">\n")))
     (if (pair? scripts)
-        (let ((s (car scripts)))
-          (loop (cdr scripts) (+ i 1) (cons (html s i) accum)))
+        (let* ((x (car scripts))
+               (n (car x))
+               (s (cdr x)))
+          (loop (cdr scripts) (+ i 1) (cons (html s n i) accum)))
         (with-output-to-string
           ""
           (lambda ()
             (print (reverse accum)))))))
 
-(define (edit #!optional (enable-edit-main-script? #f))
+(define (edit)
 
   (define (get-parameters rest)
     (call-with-input-string
@@ -1372,24 +1521,24 @@ edit-page-content-tail-end
       (lambda (port)
         (let ((index (read port)))
           (read-char port)
-          (cons index (read-line port #f))))))
+          (let ((name (read-line port #\space)))
+            (list index name (read-line port #f)))))))
 
   (set-page
    (string-append common-html-header
                   edit-page-content-head
-                  (html-for-scripts (get-script-db) enable-edit-main-script?)
+                  (html-for-scripts (get-script-db))
                   edit-page-content-tail)
    (lambda (event)
      (cond ((has-prefix? event "event:save:") =>
             (lambda (rest)
-
-              (let ((p (get-parameters rest)))
-                (save-script-at-index (car p) (cdr p)))))
+              (apply save-script-at-index
+                     (get-parameters rest))))
 
            ((has-prefix? event "event:run:") =>
             (lambda (rest)
-              (let ((p (get-parameters rest)))
-                (run-script-at-index (car p) (cdr p)))))
+              (apply run-script-at-index
+                     (get-parameters rest))))
 
            ((has-prefix? event "event:delete:") =>
             (lambda (rest)
@@ -1403,26 +1552,29 @@ edit-page-content-tail-end
            ((equal? event "event:show-repl")
             (repl))))))
 
-(define (save-script-at-index index script)
+(define (save-script-at-index index name script)
   (let loop ((scripts (get-script-db)) (i 0) (accum '()))
     (if (pair? scripts)
         (if (= i index)
             (set! script-db (append (reverse accum)
-                                    (cons script (cdr scripts))))
+                                    (cons (cons name script)
+                                          (cdr scripts))))
             (loop (cdr scripts) (+ i 1) (cons (car scripts) accum)))))
-  (if (= index 0)
+  (if (equal? name "main")
       (set-pref "run-main-script" "yes"))
   (save-script-db))
 
-(define (run-script-at-index index script)
-  (save-script-at-index index script)
-  (let ((script (list-ref (get-script-db) index)))
-    (##thread-interrupt!
-     (macro-primordial-thread)
-     (lambda ()
-       (##repl-channel-release-ownership!) ;; to prevent deadlock...
-       (eval (cons 'begin (with-input-from-string script read-all)))
-       (##void)))))
+(define (run-script-at-index index name script)
+  (save-script-at-index index name script)
+  (run-script script))
+
+(define (run-script script)
+  (##thread-interrupt!
+   (macro-primordial-thread)
+   (lambda ()
+     (##repl-channel-release-ownership!) ;; to prevent deadlock...
+     (eval-from-string script)
+     (##void))))
 
 (define (delete-script-at-index index)
   (let loop ((scripts (get-script-db)) (i 0) (accum '()))
@@ -1434,7 +1586,7 @@ edit-page-content-tail-end
   (save-script-db))
 
 (define (add-script)
-  (set! script-db (append (get-script-db) '("")))
+  (set! script-db (append (get-script-db) '(("" . ""))))
   (save-script-db))
 
 ;;;----------------------------------------------------------------------------
@@ -1458,9 +1610,12 @@ edit-page-content-tail-end
 
        (begin
          (set-pref "run-main-script" #f)
-         (let ((script (list-ref (get-script-db) 0)))
-           (eval (cons 'begin (with-input-from-string script read-all))))
-         (set-pref "run-main-script" "yes"))
+         (let ((x (assoc "main" (get-script-db))))
+           (if x
+               (let ((script (cdr x)))
+                 (eval (cons 'begin (with-input-from-string script read-all)))
+                 (set-pref "run-main-script" "yes"))
+               (splash))))
 
        (splash)) ;; show splash screen if main script did not work last time
 

@@ -1,6 +1,6 @@
-/* File: "os.h", Time-stamp: <2011-03-22 14:38:44 feeley> */
+/* File: "os.h", Time-stamp: <2011-04-27 14:10:52 feeley> */
 
-/* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -1383,8 +1383,8 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
  * ITIMER_VIRTUAL is an enum type, not a macro.
  */
 
-#ifdef __CYGWIN__
-/* ITIMER_VIRTUAL is broken under cygwin... use ITIMER_REAL */
+#if defined(__CYGWIN__) || defined(__MACOSX__) || (defined(__APPLE__) && defined(__MACH__))
+/* ITIMER_VIRTUAL is broken under CYGWIN and MacOS X... use ITIMER_REAL */
 #undef ITIMER_VIRTUAL
 #endif
 

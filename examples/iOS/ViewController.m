@@ -15,7 +15,7 @@
 
 @implementation ViewController
 
-@synthesize textView, accessoryView, webView, keyboardSounds;
+@synthesize textView, accessoryView, webView, keyboardSounds, timer;
 
 //-----------------------------------------------------------------------------
 
@@ -87,6 +87,8 @@ void gambit_setup()
   setup_params.debug_settings = debug_settings;
 
   ___setup (&setup_params);
+
+  ___disable_heartbeat_interrupts ();
 }
 
 
@@ -111,6 +113,8 @@ static ViewController *theViewController = nil;
 
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+
+  timer = nil;
 
   gambit_setup();
 
@@ -234,12 +238,12 @@ static ViewController *theViewController = nil;
   NSValue *animationDurationValue = [userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
   NSTimeInterval animationDuration;
   [animationDurationValue getValue:&animationDuration];
-    
+
   [UIView beginAnimations:nil context:NULL];
   [UIView setAnimationDuration:animationDuration];
-    
+
   textView.frame = self.view.bounds;
-    
+
   [UIView commitAnimations];
 }
 
@@ -247,7 +251,24 @@ static ViewController *theViewController = nil;
 #include "program.h"
 
 
+- (void)up_key:(NSString*)name {
+
+  ___enable_heartbeat_interrupts ();
+
+  ___ON_THROW(
+    {
+      [self schedule_next_heartbeat_tick:send_key(name)];
+    },
+    exit(0);
+  );
+
+  ___disable_heartbeat_interrupts ();
+}
+
+
 - (void)heartbeat_tick {
+
+  ___enable_heartbeat_interrupts ();
 
   ___ON_THROW(
     {
@@ -255,6 +276,8 @@ static ViewController *theViewController = nil;
     },
     exit(0);
   );
+
+  ___disable_heartbeat_interrupts ();
 }
 
 
@@ -262,7 +285,13 @@ static ViewController *theViewController = nil;
 
   if (interval > 0)
     {
-      [NSTimer scheduledTimerWithTimeInterval:interval target:self selector:@selector(heartbeat_tick) userInfo:nil repeats:NO];
+      if (timer != nil)
+        {
+          [timer invalidate];
+          [timer release];
+        }
+
+      timer = [[NSTimer scheduledTimerWithTimeInterval:interval target:self selector:@selector(heartbeat_tick) userInfo:nil repeats:NO] retain];
     }
 }
 
@@ -272,6 +301,7 @@ void show_textView() {
   ViewController *vc = theViewController;
   if (vc != nil)
     {
+      [vc.webView resignFirstResponder];
       vc.textView.hidden = NO;
       vc.webView.hidden = YES;
       [vc.textView becomeFirstResponder];
@@ -284,6 +314,7 @@ void show_webView() {
   ViewController *vc = theViewController;
   if (vc != nil)
     {
+      [vc.textView resignFirstResponder];
       vc.webView.hidden = NO;
       vc.textView.hidden = YES;
       [vc.webView becomeFirstResponder];
@@ -342,6 +373,22 @@ void add_output_to_textView(NSString *str) {
 }
 
 
+void add_input_to_textView(NSString *str) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      NSMutableString *new_text = [vc.textView.text mutableCopy];
+      NSRange selectedRange = vc.textView.selectedRange;
+
+      [new_text replaceCharactersInRange:selectedRange withString:str];
+
+      vc.textView.text = new_text;
+      [new_text release];
+    }
+}
+
+
 void set_webView_content(NSString *str) {
 
   ViewController *vc = theViewController;
@@ -350,11 +397,6 @@ void set_webView_content(NSString *str) {
       [vc.webView
           loadHTMLString:str
           baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]]
-
-          //          baseURL:[NSURL URLWithString:@"/Users"]
-          //          baseURL:[NSURL URLWithString:[[NSBundle mainBundle] bundlePath]]
-          //          baseURL:[[NSBundle mainBundle] bundlePath]
-          //          baseURL:n
       ];
     }
 }
@@ -383,7 +425,7 @@ NSString *get_pref(NSString *key) {
 
 - (BOOL)textView:(UITextView *)textView2 shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
 
-  if ([text isEqualToString:@"\n"])
+  if ([text hasSuffix:@"\n"])
     {
       unichar c;
       int end = [textView.text length];
@@ -405,20 +447,24 @@ NSString *get_pref(NSString *key) {
 
       if (line_end == end)
         {
-          add_to_textView(@"\n");
+          add_to_textView(text);
+
+          ___enable_heartbeat_interrupts ();
 
           ___ON_THROW(
             {
-              [self schedule_next_heartbeat_tick:send_input([line stringByAppendingString:@"\n"])];
+              [self schedule_next_heartbeat_tick:send_input([line stringByAppendingString:text])];
             },
             exit(0);
           );
+
+          ___disable_heartbeat_interrupts ();
 
           [textView resignFirstResponder];
         }
       else
         add_to_textView(line);
-        
+
       return NO;
     }
 
@@ -428,13 +474,7 @@ NSString *get_pref(NSString *key) {
 
 - (IBAction)touch_up_Char:(id)sender withString:(NSString *)aString {
 
-  NSMutableString *text = [textView.text mutableCopy];
-  NSRange selectedRange = textView.selectedRange;
-    
-  [text replaceCharactersInRange:selectedRange withString:aString];
-
-  textView.text = text;
-  [text release];
+  add_input_to_textView(aString);
 }
 
 
@@ -460,8 +500,112 @@ NSString *get_pref(NSString *key) {
 #pragma mark -
 #pragma mark Accessory view action
 
+- (IBAction)touch_up_F1:(id)sender {
+  [self up_key:@"F1"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F2:(id)sender {
+  [self up_key:@"F2"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F3:(id)sender {
+  [self up_key:@"F3"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F4:(id)sender {
+  [self up_key:@"F4"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F5:(id)sender {
+  [self up_key:@"F5"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F6:(id)sender {
+  [self up_key:@"F6"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F7:(id)sender {
+  [self up_key:@"F7"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F8:(id)sender {
+  [self up_key:@"F8"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F9:(id)sender {
+  [self up_key:@"F9"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F10:(id)sender {
+  [self up_key:@"F10"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F11:(id)sender {
+  [self up_key:@"F11"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F12:(id)sender {
+  [self up_key:@"F12"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
+- (IBAction)touch_up_F13:(id)sender {
+  [self up_key:@"F13"];
+}
+
+
+#pragma mark -
+#pragma mark Accessory view action
+
 - (IBAction)touch_up_SHARP:(id)sender {
-  [self touch_up_Char:sender withString:@"#"];
+  [self up_key:@"#"];
 }
 
 
@@ -469,7 +613,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_DQUOTE:(id)sender {
-  [self touch_up_Char:sender withString:@"\""];
+  [self up_key:@"\""];
 }
 
 
@@ -477,7 +621,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_QUOTE:(id)sender {
-  [self touch_up_Char:sender withString:@"'"];
+  [self up_key:@"'"];
 }
 
 
@@ -485,7 +629,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_COMMA:(id)sender {
-  [self touch_up_Char:sender withString:@","];
+  [self up_key:@","];
 }
 
 
@@ -493,7 +637,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_PLUS:(id)sender {
-  [self touch_up_Char:sender withString:@"+"];
+  [self up_key:@"+"];
 }
 
 
@@ -501,7 +645,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_MINUS:(id)sender {
-  [self touch_up_Char:sender withString:@"-"];
+  [self up_key:@"-"];
 }
 
 
@@ -509,7 +653,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_STAR:(id)sender {
-  [self touch_up_Char:sender withString:@"*"];
+  [self up_key:@"*"];
 }
 
 
@@ -517,7 +661,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_SLASH:(id)sender {
-  [self touch_up_Char:sender withString:@"/"];
+  [self up_key:@"/"];
 }
 
 
@@ -525,7 +669,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_LPAREN:(id)sender {
-  [self touch_up_Char:sender withString:@"("];
+  [self up_key:@"("];
 }
 
 
@@ -533,58 +677,18 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_RPAREN:(id)sender {
-  [self touch_up_Char:sender withString:@")"];
+  [self up_key:@")"];
 }
 
 
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
 
-  //NSString *url = [[request URL] absoluteString];
   NSString *url = [[request URL] relativeString];
 
   if ([url hasPrefix:@"event:"])
     {
-#if 0
-      NSString *path = [[request URL] path];
-      NSString *fragment = [[request URL] fragment];
-      NSString *host = [[request URL] host];
-      NSString *param = [[request URL] parameterString];
-      NSString *query = [[request URL] query];
-      //  NSString *foo = [[request URL] foo];
+      ___enable_heartbeat_interrupts ();
 
-      url = [url stringByAppendingString:@"|"];
-
-      if (path != nil)
-        url = [url stringByAppendingString:path];
-
-      url = [url stringByAppendingString:@"|"];
-
-      if (fragment != nil)
-        url = [url stringByAppendingString:fragment];
-
-      url = [url stringByAppendingString:@"|"];
-
-      if (host != nil)
-        url = [url stringByAppendingString:host];
-
-      url = [url stringByAppendingString:@"|"];
-
-      if (param != nil)
-        url = [url stringByAppendingString:param];
-
-      url = [url stringByAppendingString:@"|"];
-
-      if (query != nil)
-        url = [url stringByAppendingString:query];
-
-      url = [url stringByAppendingString:@"|"];
-
-      //  if (foo != nil)
-      //    url = [url stringByAppendingString:foo];
-
-#endif
-
-#if 1
       ___ON_THROW(
         {
           [self schedule_next_heartbeat_tick:send_event([url stringByAppendingString:@"\n"])];
@@ -592,10 +696,10 @@ NSString *get_pref(NSString *key) {
         exit(0);
       );
 
+      ___disable_heartbeat_interrupts ();
+
       return NO;
     }
-
-#endif
 
   return YES;
 }
