@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_repl.scm", Time-stamp: <2011-03-20 21:17:00 feeley>
+;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1531,8 +1531,7 @@
 
   (let ((start-time-point (##current-time-point)))
     (let loop ((last start-time-point))
-      (##write-string "*** THREAD LIST:\n"
-		      port)
+      (##write-string "*** THREAD LIST:\n" port)
       (let* ((n (##fixnum.+ 1 (##display-thread-group-state tgroup port)))
              (next (##flonum.+ last interval))
              (now (##current-time-point))
@@ -2409,486 +2408,12 @@
 
   (##exit))
 
+(define-prim (##repl-context-display-continuation repl-context)
+  (##repl-channel-display-continuation
+   (macro-repl-context-cont repl-context)
+   (macro-repl-context-depth repl-context)))
+
 (define-prim (##repl-within cont write-reason reason)
-
-  (define (with-clean-exception-handling repl-context thunk)
-    (##with-exception-catcher
-     (lambda (exc)
-       (##continuation-graft ;; get rid of any useless continuation frames
-        (macro-repl-context-cont repl-context)
-        (lambda ()
-          (release-ownership!)
-          (macro-raise exc))))
-     thunk))
-
-  (define (acquire-ownership!)
-    (##repl-channel-acquire-ownership!))
-
-  (define (release-ownership!)
-    (##repl-channel-release-ownership!))
-
-  (define (display-continuation repl-context)
-    (##repl-channel-display-continuation
-     (macro-repl-context-cont repl-context)
-     (macro-repl-context-depth repl-context)))
-
-  (define (first-interesting cont)
-    (##continuation-first-frame cont #f))
-
-  (define (restart repl-context)
-    (restart-exec
-     repl-context
-     (lambda ()
-       (display-continuation repl-context))))
-
-  (define (restart-pinpointing-continuation show-frame? repl-context)
-    (restart-exec
-     repl-context
-     (lambda ()
-       (let ((cont
-              (first-interesting
-               (macro-repl-context-cont repl-context))))
-         (if (and (##not (##repl-channel-pinpoint-continuation cont))
-                  show-frame?)
-           (##repl-channel-display-multiline-message
-            (lambda (output-port)
-              (##cmd-y cont
-                       output-port
-                       #t
-                       (macro-repl-context-depth repl-context)))))
-         (display-continuation repl-context)))))
-
-  (define (restart-exec repl-context thunk)
-    (##continuation-graft ;; get rid of any useless continuation frames
-     (macro-repl-context-cont repl-context)
-     (lambda ()
-       (with-clean-exception-handling
-        repl-context
-        (lambda ()
-          (##parameterize
-           ##current-user-interrupt-handler
-           ##void ;; ignore user interrupts
-           (lambda ()
-             (macro-dynamic-bind repl-context
-              repl-context
-              (lambda ()
-                (thunk)
-                (prompt repl-context))))))))))
-
-  (define (prompt repl-context)
-
-    (define (cont-in-step-handler?)
-      (let ((cont (macro-repl-context-cont repl-context)))
-        (##step-handler-continuation? cont)))
-
-    (define (cont-in-with-no-result-expected?)
-      (let ((cont (macro-repl-context-cont repl-context)))
-        (or (##with-no-result-expected-continuation? cont)
-            (##with-no-result-expected-toplevel-continuation? cont))))
-
-    (define (continue)
-      (prompt repl-context))
-
-    (define (read-command)
-      (let ((src
-             (##repl-channel-read-command
-              (macro-repl-context-level repl-context)
-              (macro-repl-context-depth repl-context))))
-        (cond ((##eof-object? src)
-               src)
-              (else
-               (let ((code (##source-code src)))
-                 (if (and (##pair? code)
-                          (##eq? (##source-code (##car code)) 'six.prefix))
-                   (let ((rest (##cdr code)))
-                     (if (and (##pair? rest)
-                              (##null? (##cdr rest)))
-                       (##car rest)
-                       src))
-                   src))))))
-
-    (define (write-results results)
-      (##repl-channel-write-results results))
-
-    (define (goto-depth n)
-      (restart-pinpointing-continuation #t (get-context n)))
-
-    (define (get-context n)
-      (let loop ((context repl-context))
-        (let ((depth (macro-repl-context-depth context)))
-          (cond ((##fixnum.< n depth)
-                 (let ((prev-depth (macro-repl-context-prev-depth context)))
-                   (if prev-depth
-                       (loop prev-depth)
-                       context)))
-                ((##fixnum.< depth n)
-                 (let* ((cont
-                         (first-interesting (macro-repl-context-cont context)))
-                        (next
-                         (##continuation-next-frame cont #f)))
-                   (if next
-                       (loop (macro-make-repl-context
-                              (macro-repl-context-level context)
-                              (##fixnum.+ depth 1)
-                              next
-                              (macro-repl-context-initial-cont context)
-                              (macro-repl-context-reason context)
-                              (macro-repl-context-prev-level context)
-                              context))
-                       context)))
-                (else
-                 context)))))
-
-    (define (quit)
-      (release-ownership!)
-      (##continuation-graft
-       (macro-repl-context-cont repl-context)
-       (lambda ()
-         (##exit))))
-
-    (define (quit-thread)
-      (release-ownership!)
-      (##continuation-graft
-       (macro-repl-context-cont repl-context)
-       (lambda ()
-         (##thread-terminate! (macro-current-thread)))))
-
-    (define (return results)
-      (release-ownership!)
-      (##continuation-return
-       (macro-repl-context-cont repl-context)
-       results))
-
-    (define (cmd-d)
-      (if (##fixnum.< 0 (macro-repl-context-level repl-context))
-        (restart (macro-repl-context-prev-level repl-context))))
-
-    (define (cmd-t)
-      (let loop ((context repl-context))
-        (if (##fixnum.< 0 (macro-repl-context-level context))
-          (loop (macro-repl-context-prev-level context))
-          (restart context))))
-
-    (##step-off) ;; turn off single-stepping
-
-    (let ((src (read-command)))
-
-      (define (unknown-command)
-        (##repl-channel-display-monoline-message
-         (lambda (output-port)
-           (##write (##desourcify src) output-port)
-           (##write-string " is an unknown command" output-port))))
-
-      (define (invalid-command message)
-        (##repl-channel-display-monoline-message
-         (lambda (output-port)
-           (##write-string message output-port))))
-
-      (define (eval-print src)
-        (release-ownership!)
-        (##continuation-capture
-         (lambda (return)
-           (##eval-within
-            src
-            (macro-repl-context-cont repl-context)
-            repl-context
-            (lambda (results)
-              (##call-with-values
-               (lambda ()
-                 results)
-               (lambda results
-                 (write-results results)
-                 (##continuation-return return #f)))))))
-        (acquire-ownership!))
-
-      (cond ((##eof-object? src)
-             (##repl-channel-newline)
-             (cmd-d)
-             (if (##repl-channel-really-exit?)
-               (quit))
-             (continue))
-            (else
-             (let ((code (##source-code src)))
-               (if (and (##pair? code)
-                        (##eq? (##source-code (##car code)) 'unquote)
-                        (##pair? (##cdr code))
-                        (##null? (##cddr code)))
-                 (let* ((cmd-src (##cadr code))
-                        (cmd (##source-code cmd-src)))
-                   (cond
-                     ((##eq? cmd '?)
-                      (##repl-channel-display-multiline-message ##cmd-?)
-                      (continue))
-                     ((##eq? cmd 'h)
-                      (let* ((reason
-                              (macro-repl-context-reason repl-context))
-                             (proc-and-args
-                              (and reason
-                                   (##exception-procedure-and-arguments reason)))
-                             (proc
-                              (and proc-and-args
-                                   (##car proc-and-args))))
-                        (if proc
-                            (##help proc)))
-                      (continue))
-                     ((or (##eq? cmd 'b)
-                          (##eq? cmd 'be)
-                          (##eq? cmd 'bed))
-                      (##repl-channel-display-multiline-message
-                       (lambda (output-port)
-                         (##cmd-b (first-interesting
-                                   (macro-repl-context-cont repl-context))
-                                  output-port
-                                  (macro-repl-context-depth repl-context)
-                                  (if (##eq? cmd 'bed)
-                                      'dynamic
-                                      (##eq? cmd 'be)))))
-                      (continue))
-                     ((##eq? cmd 'i)
-                      (##repl-channel-display-multiline-message
-                       (lambda (output-port)
-                         (##cmd-i (first-interesting
-                                   (macro-repl-context-cont repl-context))
-                                  output-port)))
-                      (continue))
-                     ((##eq? cmd 'y)
-                      (##repl-channel-display-multiline-message
-                       (lambda (output-port)
-                         (##cmd-y (first-interesting
-                                   (macro-repl-context-cont repl-context))
-                                  output-port
-                                  #t
-                                  (macro-repl-context-depth repl-context))))
-                      (continue))
-                     ((or (##eq? cmd 'e)
-                          (##eq? cmd 'ed))
-                      (##repl-channel-display-multiline-message
-                       (lambda (output-port)
-                         (##cmd-e (macro-repl-context-cont repl-context)
-                                  output-port
-                                  (if (##eq? cmd 'ed)
-                                      'dynamic
-                                      #t))))
-                      (continue))
-                     ((##eq? cmd 'st)
-                      (##repl-channel-display-multiline-message
-                       (lambda (output-port)
-                         (##cmd-st (macro-thread-tgroup (macro-current-thread))
-                                   output-port)))
-                      (continue))
-                     ((##eq? cmd 't)
-                      (cmd-t))
-                     ((##eq? cmd 'd)
-                      (cmd-d)
-                      (continue))
-                     ((##eq? cmd 'q)
-                      (quit))
-                     ((##eq? cmd 'qt)
-                      (quit-thread))
-                     ((and (##fixnum? cmd)
-                           (##not (##fixnum.< cmd 0)))
-                      (goto-depth cmd))
-                     ((or (##eq? cmd 'c) (##eq? cmd 's) (##eq? cmd 'l))
-                      (if (or (cont-in-step-handler?)
-                              (cont-in-with-no-result-expected?))
-                        (return cmd)
-                        (begin
-                          (invalid-command
-                           "Continuation expects a result -- use ,(c X) or ,(s X) or ,(l X)")
-                          (continue))))
-                     ((and (##pair? cmd)
-                           (##pair? (##cdr cmd))
-                           (##null? (##cddr cmd)))
-                      (let* ((cmd2-src (##car cmd))
-                             (cmd2 (##source-code cmd2-src)))
-                        (cond
-                         ((##eq? cmd2 'h)
-                          (##help (##source-code (##cadr cmd)))
-                          (continue))
-                         ((or (##eq? cmd2 'c)
-                              (##eq? cmd2 's)
-                              (##eq? cmd2 'l))
-                          (if (cont-in-with-no-result-expected?)
-                            (begin
-                              (invalid-command
-                               "Continuation expects no result -- use ,c or ,s or ,l")
-                              (continue))
-                            (let ((src (##cadr cmd)))
-                              (release-ownership!)
-                              (##eval-within
-                               src
-                               (macro-repl-context-cont repl-context)
-                               repl-context
-                               (if (cont-in-step-handler?)
-                                 (lambda (results)
-                                   (acquire-ownership!)
-                                   (return (##vector results)))
-                                 (lambda (results)
-                                   (acquire-ownership!)
-                                   (return results)))))))
-                         ((or (##eq? cmd2 'b)
-                              (##eq? cmd2 'be)
-                              (##eq? cmd2 'bed)
-                              (##eq? cmd2 'e)
-                              (##eq? cmd2 'ed)
-                              (##eq? cmd2 'v))
-                          (let ((src (##cadr cmd)))
-                            (release-ownership!)
-                            (##eval-within
-                             src
-                             (macro-repl-context-cont repl-context)
-                             repl-context
-                             (lambda (results)
-                               (let ((val results))
-
-                                 (define (handle proc-or-cont depth)
-                                   (if (##eq? cmd2 'v)
-                                       (if (##continuation? proc-or-cont)
-                                           (let ((cont
-                                                  (first-interesting
-                                                   proc-or-cont)))
-                                             (##repl-within cont #f #f))
-                                           (let ((proc
-                                                  proc-or-cont))
-                                             (##repl-within-proc
-                                              proc
-                                              (macro-repl-context-cont
-                                               repl-context))))
-                                       (begin
-                                         (##repl-channel-display-multiline-message
-                                          (lambda (output-port)
-                                            (if (or (##eq? cmd2 'e)
-                                                    (##eq? cmd2 'ed))
-                                                (##cmd-e proc-or-cont
-                                                         output-port
-                                                         (if (##eq? cmd2 'ed)
-                                                             'dynamic
-                                                             #t))
-                                                (let ((cont
-                                                       (first-interesting
-                                                        proc-or-cont)))
-                                                  (##cmd-b cont
-                                                           output-port
-                                                           depth
-                                                           (if (##eq? cmd2 'bed)
-                                                               'dynamic
-                                                               (##eq? cmd2 'be)))))))
-                                         (acquire-ownership!)
-                                         (continue))))
-
-                                 (cond ((and (##fixnum? val)
-                                             (##not (##fixnum.< val 0)))
-                                        (let* ((rc
-                                                (get-context val))
-                                               (depth
-                                                (macro-repl-context-depth rc))
-                                               (cont
-                                                (macro-repl-context-cont rc)))
-                                          (handle cont depth)))
-                                       ((##continuation? val)
-                                        (handle val 0))
-                                       ((and (##not (or (##eq? cmd2 'b)
-                                                        (##eq? cmd2 'be)
-                                                        (##eq? cmd2 'bed)))
-                                             (##procedure? val))
-                                        (handle val 0))
-                                       ((macro-thread? val)
-                                        (if (##eq? cmd2 'v)
-                                            (begin
-                                              (##thread-interrupt!
-                                               val
-                                               (lambda ()
-                                                 (##handle-interrupt #f)))
-                                              (##thread-yield!)
-                                              (acquire-ownership!)
-                                              (continue))
-                                            (let ((cont
-                                                   (##thread-continuation-capture
-                                                    val)))
-                                              (handle cont 0))))
-                                       (else
-                                        (acquire-ownership!)
-                                        (invalid-command
-                                         (cond ((or (##eq? cmd2 'b)
-                                                    (##eq? cmd2 'be)
-                                                    (##eq? cmd2 'bed))
-                                                "CONTINUATION or THREAD expected")
-                                               (else
-                                                "PROCEDURE, CONTINUATION or THREAD expected")))
-                                        (continue))))))))
-                         ((##eq? cmd2 'st)
-                          (let ((src (##cadr cmd)))
-                            (release-ownership!)
-                            (##eval-within
-                             src
-                             (macro-repl-context-cont repl-context)
-                             repl-context
-                             (lambda (results)
-                               (let ((val results))
-
-                                 (define (handle thread-or-tgroup)
-                                   (acquire-ownership!)
-                                   (##repl-channel-display-multiline-message
-                                    (lambda (output-port)
-                                      (##cmd-st thread-or-tgroup
-                                                output-port)))
-                                   (continue))
-
-                                 (cond ((macro-tgroup? val)
-                                        (handle val))
-                                       ((macro-thread? val)
-                                        (handle val))
-                                       (else
-                                        (acquire-ownership!)
-                                        (invalid-command
-                                         "THREAD or THREAD-GROUP expected")
-                                        (continue))))))))
-                         (else
-                          (unknown-command)
-                          (continue)))))
-                     ((##symbol? cmd)
-                      (let* ((s (##symbol->string cmd))
-                             (len (##string-length s))
-                             (c (and (##fixnum.< 0 len)
-                                     (##string-ref s (##fixnum.- len 1)))))
-
-                        (define (move-frame n)
-                          (goto-depth
-                           (##fixnum.+
-                            (macro-repl-context-depth repl-context)
-                            (if (##char=? c #\+)
-                                n
-                                (##fixnum.- 0 n)))))
-                          
-                        (if (or (##char=? c #\+)
-                                (##char=? c #\-))
-                            (cond ((##fixnum.= len 1)
-                                   (move-frame 1))
-                                  ((and (##fixnum.= len 2)
-                                        (##char=? c (##string-ref s 0)))
-                                   (move-frame ##backtrace-default-max-head))
-                                  (else
-                                   (let ((n (##string->number
-                                             (##substring s
-                                                          0
-                                                          (##fixnum.- len 1))
-                                             10)))
-                                     (if (and (##fixnum? n)
-                                              (##not (##fixnum.< n 0)))
-                                         (move-frame n)
-                                         (begin
-                                           (unknown-command)
-                                           (continue))))))
-                            (begin
-                              (unknown-command)
-                              (continue)))))
-                     (else
-                      (unknown-command)
-                      (continue))))
-                 (begin
-                   (eval-print src)
-                   (continue))))))))
-
   (let* ((prev-repl-context
           (##thread-repl-context-get!))
          (repl-context
@@ -2901,19 +2426,583 @@
            prev-repl-context
            #f)))
 
-    (acquire-ownership!)
+    (##repl-channel-acquire-ownership!)
+
     (if (and (##procedure? write-reason)
-             (with-clean-exception-handling
+             (##repl-context-with-clean-exception-handling
               repl-context
               (lambda ()
                 (##repl-channel-display-multiline-message
                  (lambda (output-port)
-                   (let ((first (first-interesting cont)))
+                   (let ((first (##repl-first-interesting cont)))
                      (##declare (not safe)) ;; avoid procedure check on the call
                      ;; write-reason returns #f if REPL is to be started
                      (write-reason first output-port)))))))
-      (release-ownership!)
-      (restart-pinpointing-continuation #f repl-context))))
+
+      (##repl-channel-release-ownership!)
+
+      (##repl-context-restart-pinpointing-continuation repl-context #f))))
+
+(define-prim (##repl-context-restart-pinpointing-continuation
+              repl-context
+              show-frame?)
+  (##repl-context-restart-exec
+   repl-context
+   (lambda ()
+     (let ((cont
+            (##repl-first-interesting
+             (macro-repl-context-cont repl-context))))
+       (if (and (##not (##repl-channel-pinpoint-continuation cont))
+                show-frame?)
+           (##repl-channel-display-multiline-message
+            (lambda (output-port)
+              (##cmd-y cont
+                       output-port
+                       #t
+                       (macro-repl-context-depth repl-context)))))
+       (##repl-context-display-continuation repl-context)))))
+
+(define-prim (##repl-context-restart repl-context)
+  (##repl-context-restart-exec
+   repl-context
+   (lambda ()
+     (##repl-context-display-continuation repl-context))))
+
+(define-prim (##repl-context-restart-exec repl-context thunk)
+  (##continuation-graft ;; get rid of any useless continuation frames
+   (macro-repl-context-cont repl-context)
+   (lambda ()
+     (##repl-context-with-clean-exception-handling
+      repl-context
+      (lambda ()
+        (##parameterize
+         ##current-user-interrupt-handler
+         ##void ;; ignore user interrupts
+         (lambda ()
+           (macro-dynamic-bind repl-context
+             repl-context
+             (lambda ()
+               (thunk)
+               (##repl-context-prompt repl-context))))))))))
+
+(define-prim (##default-repl-context-prompt repl-context)
+
+  (define (read-command)
+    (let ((src
+           (##repl-channel-read-command
+            (macro-repl-context-level repl-context)
+            (macro-repl-context-depth repl-context))))
+      (cond ((##eof-object? src)
+             src)
+            (else
+             (let ((code (##source-code src)))
+               (if (and (##pair? code)
+                        (##eq? (##source-code (##car code)) 'six.prefix))
+                   (let ((rest (##cdr code)))
+                     (if (and (##pair? rest)
+                              (##null? (##cdr rest)))
+                         (##car rest)
+                         src))
+                   src))))))
+
+  (##step-off) ;; turn off single-stepping
+
+  (##repl-context-command repl-context (read-command)))
+
+(define ##repl-context-prompt #f)
+(set! ##repl-context-prompt ##default-repl-context-prompt)
+
+(define-prim (##default-repl-context-command repl-context src)
+  (cond ((##eof-object? src)
+         (##repl-channel-newline)
+         (if (##fixnum.< 0 (macro-repl-context-level repl-context))
+             (##repl-cmd-d repl-context))
+         (if (##repl-channel-really-exit?)
+             (##repl-cmd-q repl-context))
+         (##repl-context-prompt repl-context))
+        (else
+         (let ((code (##source-code src)))
+           (if (and (##pair? code)
+                    (##eq? (##source-code (##car code)) 'unquote)
+                    (##pair? (##cdr code))
+                    (##null? (##cddr code)))
+               (let* ((cmd-src (##cadr code))
+                      (cmd (##source-code cmd-src))
+                      (x (##assq cmd ##repl-commands-no-args))
+                      (handler (and x (##cdr x))))
+                 (cond
+                  (handler
+                   (handler repl-context))
+                  ((and (##fixnum? cmd)
+                        (##not (##fixnum.< cmd 0)))
+                   (##repl-context-goto-depth repl-context cmd))
+                  ((and (##pair? cmd)
+                        (##pair? (##cdr cmd))
+                        (##null? (##cddr cmd)))
+                   (let* ((cmd2-src (##car cmd))
+                          (cmd2 (##source-code cmd2-src))
+                          (x (##assq cmd2 ##repl-commands-with-1-arg))
+                          (handler (and x (##cdr x))))
+                     (cond
+                      (handler
+                       (handler (##cadr cmd) repl-context))
+                      (else
+                       (##repl-cmd-unknown src repl-context)))))
+                  ((##symbol? cmd)
+                   (let* ((s (##symbol->string cmd))
+                          (len (##string-length s))
+                          (c (and (##fixnum.< 0 len)
+                                  (##string-ref s (##fixnum.- len 1)))))
+
+                     (define (move-frame n)
+                       (##repl-context-goto-depth
+                        repl-context
+                        (##fixnum.+
+                         (macro-repl-context-depth repl-context)
+                         (if (##char=? c #\+)
+                             n
+                             (##fixnum.- 0 n)))))
+
+                     (if (or (##char=? c #\+)
+                             (##char=? c #\-))
+                         (cond ((##fixnum.= len 1)
+                                (move-frame 1))
+                               ((and (##fixnum.= len 2)
+                                     (##char=? c (##string-ref s 0)))
+                                (move-frame ##backtrace-default-max-head))
+                               (else
+                                (let ((n (##string->number
+                                          (##substring s
+                                                       0
+                                                       (##fixnum.- len 1))
+                                          10)))
+                                  (if (and (##fixnum? n)
+                                           (##not (##fixnum.< n 0)))
+                                      (move-frame n)
+                                      (##repl-cmd-unknown src repl-context)))))
+                         (##repl-cmd-unknown src repl-context))))
+                  (else
+                   (##repl-cmd-unknown src repl-context))))
+               (##repl-cmd-eval-print src repl-context))))))
+
+(define ##repl-context-command #f)
+(set! ##repl-context-command ##default-repl-context-command)
+
+(define-prim (##repl-context-goto-depth repl-context n)
+  (##repl-context-restart-pinpointing-continuation
+   (##repl-context-get-context repl-context n)
+   #t))
+
+(define-prim (##repl-context-get-context repl-context n)
+  (let loop ((context repl-context))
+    (let ((depth (macro-repl-context-depth context)))
+      (cond ((##fixnum.< n depth)
+             (let ((prev-depth (macro-repl-context-prev-depth context)))
+               (if prev-depth
+                   (loop prev-depth)
+                   context)))
+            ((##fixnum.< depth n)
+             (let* ((cont
+                     (##repl-first-interesting
+                      (macro-repl-context-cont context)))
+                    (next
+                     (##continuation-next-frame cont #f)))
+               (if next
+                   (loop (macro-make-repl-context
+                          (macro-repl-context-level context)
+                          (##fixnum.+ depth 1)
+                          next
+                          (macro-repl-context-initial-cont context)
+                          (macro-repl-context-reason context)
+                          (macro-repl-context-prev-level context)
+                          context))
+                   context)))
+            (else
+             context)))))
+
+(define-prim (##repl-context-cont-in-step-handler? repl-context)
+  (let ((cont (macro-repl-context-cont repl-context)))
+    (##step-handler-continuation? cont)))
+
+(define-prim (##repl-context-cont-in-with-no-result-expected? repl-context)
+  (let ((cont (macro-repl-context-cont repl-context)))
+    (or (##with-no-result-expected-continuation? cont)
+        (##with-no-result-expected-toplevel-continuation? cont))))
+
+(define-prim (##repl-context-with-clean-exception-handling repl-context thunk)
+  (##with-exception-catcher
+   (lambda (exc)
+     (##continuation-graft ;; get rid of any useless continuation frames
+      (macro-repl-context-cont repl-context)
+      (lambda ()
+        (##repl-channel-release-ownership!)
+        (macro-raise exc))))
+   thunk))
+
+(define-prim (##repl-context-return repl-context results)
+  (##repl-channel-release-ownership!)
+  (##continuation-return
+   (macro-repl-context-cont repl-context)
+   results))
+
+(define-prim (##repl-first-interesting cont)
+  (##continuation-first-frame cont #f))
+
+(define-prim (##repl-cmd-eval-print src repl-context)
+
+  (##repl-channel-release-ownership!)
+
+  (##continuation-capture
+   (lambda (return)
+     (##eval-within
+      src
+      (macro-repl-context-cont repl-context)
+      repl-context
+      (lambda (results)
+        (##call-with-values
+         (lambda ()
+           results)
+         (lambda results
+           (##repl-channel-write-results results)
+           (##continuation-return return #f)))))))
+
+  (##repl-channel-acquire-ownership!)
+
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-unknown src repl-context)
+  (##repl-channel-display-monoline-message
+   (lambda (output-port)
+     (##write (##desourcify src) output-port)
+     (##write-string " is an unknown command" output-port)))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-invalid msg repl-context)
+  (##repl-channel-display-monoline-message
+   (lambda (output-port)
+     (##write-string msg output-port)))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-? repl-context)
+  (##repl-channel-display-multiline-message ##cmd-?)
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-h repl-context)
+  (let* ((reason
+          (macro-repl-context-reason repl-context))
+         (proc-and-args
+          (and reason
+               (##exception-procedure-and-arguments reason)))
+         (proc
+          (and proc-and-args
+               (##car proc-and-args))))
+    (if proc
+        (##help proc)))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-d repl-context)
+  (if (##fixnum.< 0 (macro-repl-context-level repl-context))
+      (##repl-context-restart (macro-repl-context-prev-level repl-context))
+      (##repl-context-prompt repl-context)))
+
+(define-prim (##repl-cmd-t repl-context)
+  (let loop ((context repl-context))
+    (if (##fixnum.< 0 (macro-repl-context-level context))
+        (loop (macro-repl-context-prev-level context))
+        (##repl-context-restart context))))
+
+(define-prim (##repl-cmd-q repl-context)
+  (##repl-channel-release-ownership!)
+  (##continuation-graft
+   (macro-repl-context-cont repl-context)
+   (lambda ()
+     (##exit))))
+
+(define-prim (##repl-cmd-qt repl-context)
+  (##repl-channel-release-ownership!)
+  (##continuation-graft
+   (macro-repl-context-cont repl-context)
+   (lambda ()
+     (##thread-terminate! (macro-current-thread)))))
+
+(define-prim (##repl-cmd-st repl-context)
+  (##repl-channel-display-multiline-message
+   (lambda (output-port)
+     (##cmd-st (macro-thread-tgroup (macro-current-thread))
+               output-port)))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-b repl-context)
+  (##repl-cmd-b-be-bed #f repl-context))
+
+(define-prim (##repl-cmd-be repl-context)
+  (##repl-cmd-b-be-bed #t repl-context))
+
+(define-prim (##repl-cmd-bed repl-context)
+  (##repl-cmd-b-be-bed 'dynamic repl-context))
+
+(define-prim (##repl-cmd-b-be-bed display-env? repl-context)
+  (##repl-channel-display-multiline-message
+   (lambda (output-port)
+     (##cmd-b (##repl-first-interesting
+               (macro-repl-context-cont repl-context))
+              output-port
+              (macro-repl-context-depth repl-context)
+              display-env?)))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-i repl-context)
+  (##repl-channel-display-multiline-message
+   (lambda (output-port)
+     (##cmd-i (##repl-first-interesting
+               (macro-repl-context-cont repl-context))
+              output-port)))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-y repl-context)
+  (##repl-channel-display-multiline-message
+   (lambda (output-port)
+     (##cmd-y (##repl-first-interesting
+               (macro-repl-context-cont repl-context))
+              output-port
+              #t
+              (macro-repl-context-depth repl-context))))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-e repl-context)
+  (##repl-cmd-e-ed #t repl-context))
+
+(define-prim (##repl-cmd-ed repl-context)
+  (##repl-cmd-e-ed 'dynamic repl-context))
+
+(define-prim (##repl-cmd-e-ed display-env? repl-context)
+  (##repl-channel-display-multiline-message
+   (lambda (output-port)
+     (##cmd-e (macro-repl-context-cont repl-context)
+              output-port
+              display-env?)))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-c repl-context)
+  (##repl-cmd-c-s-l 'c repl-context))
+
+(define-prim (##repl-cmd-s repl-context)
+  (##repl-cmd-c-s-l 's repl-context))
+
+(define-prim (##repl-cmd-l repl-context)
+  (##repl-cmd-c-s-l 'l repl-context))
+
+(define-prim (##repl-cmd-c-s-l cmd repl-context)
+  (if (or (##repl-context-cont-in-step-handler? repl-context)
+          (##repl-context-cont-in-with-no-result-expected? repl-context))
+      (##repl-context-return repl-context cmd)
+      (##repl-cmd-invalid
+       "Continuation expects a result -- use ,(c X) or ,(s X) or ,(l X)"
+       repl-context)))
+
+(define ##repl-commands-no-args #f)
+(set! ##repl-commands-no-args
+  (##list (##cons '?   ##repl-cmd-?)
+          (##cons 'h   ##repl-cmd-h)
+          (##cons 'd   ##repl-cmd-d)
+          (##cons 't   ##repl-cmd-t)
+          (##cons 'q   ##repl-cmd-q)
+          (##cons 'qt  ##repl-cmd-qt)
+          (##cons 'st  ##repl-cmd-st)
+          (##cons 'b   ##repl-cmd-b)
+          (##cons 'be  ##repl-cmd-be)
+          (##cons 'bed ##repl-cmd-bed)
+          (##cons 'i   ##repl-cmd-i)
+          (##cons 'y   ##repl-cmd-y)
+          (##cons 'e   ##repl-cmd-e)
+          (##cons 'ed  ##repl-cmd-ed)
+          (##cons 'c   ##repl-cmd-c)
+          (##cons 's   ##repl-cmd-s)
+          (##cons 'l   ##repl-cmd-l)
+          ))
+
+(define-prim (##repl-cmd-h-with-1-arg arg repl-context)
+  (##help (##source-code arg))
+  (##repl-context-prompt repl-context))
+
+(define-prim (##repl-cmd-c-with-1-arg arg repl-context)
+  (##repl-cmd-c-s-l-with-1-arg 'c arg repl-context))
+
+(define-prim (##repl-cmd-s-with-1-arg arg repl-context)
+  (##repl-cmd-c-s-l-with-1-arg 's arg repl-context))
+
+(define-prim (##repl-cmd-l-with-1-arg arg repl-context)
+  (##repl-cmd-c-s-l-with-1-arg 'l arg repl-context))
+
+(define-prim (##repl-cmd-c-s-l-with-1-arg cmd arg repl-context)
+  (if (##repl-context-cont-in-with-no-result-expected? repl-context)
+      (##repl-cmd-invalid
+       "Continuation expects no result -- use ,c or ,s or ,l"
+       repl-context)
+      (begin
+        (##repl-channel-release-ownership!)
+        (##eval-within
+         arg
+         (macro-repl-context-cont repl-context)
+         repl-context
+         (if (##repl-context-cont-in-step-handler? repl-context)
+             (lambda (results)
+               (##repl-channel-acquire-ownership!)
+               (##repl-context-return
+                repl-context
+                (##vector results)))
+             (lambda (results)
+               (##repl-channel-acquire-ownership!)
+               (##repl-context-return
+                repl-context
+                results)))))))
+
+(define-prim (##repl-cmd-b-with-1-arg arg repl-context)
+  (##repl-cmd-b-be-bed-e-ed-v-with-1-arg 'b arg repl-context))
+
+(define-prim (##repl-cmd-be-with-1-arg arg repl-context)
+  (##repl-cmd-b-be-bed-e-ed-v-with-1-arg 'be arg repl-context))
+
+(define-prim (##repl-cmd-bed-with-1-arg arg repl-context)
+  (##repl-cmd-b-be-bed-e-ed-v-with-1-arg 'bed arg repl-context))
+
+(define-prim (##repl-cmd-e-with-1-arg arg repl-context)
+  (##repl-cmd-b-be-bed-e-ed-v-with-1-arg 'e arg repl-context))
+
+(define-prim (##repl-cmd-ed-with-1-arg arg repl-context)
+  (##repl-cmd-b-be-bed-e-ed-v-with-1-arg 'ed arg repl-context))
+
+(define-prim (##repl-cmd-v-with-1-arg arg repl-context)
+  (##repl-cmd-b-be-bed-e-ed-v-with-1-arg 'v arg repl-context))
+
+(define-prim (##repl-cmd-b-be-bed-e-ed-v-with-1-arg cmd arg repl-context)
+  (##repl-channel-release-ownership!)
+  (##eval-within
+   arg
+   (macro-repl-context-cont repl-context)
+   repl-context
+   (lambda (results)
+     (let ((val results))
+
+       (define (handle proc-or-cont depth)
+         (if (##eq? cmd 'v)
+             (if (##continuation? proc-or-cont)
+                 (let ((cont
+                        (##repl-first-interesting
+                         proc-or-cont)))
+                   (##repl-within cont #f #f))
+                 (let ((proc
+                        proc-or-cont))
+                   (##repl-within-proc
+                    proc
+                    (macro-repl-context-cont
+                     repl-context))))
+             (begin
+               (##repl-channel-display-multiline-message
+                (lambda (output-port)
+                  (if (or (##eq? cmd 'e)
+                          (##eq? cmd 'ed))
+                      (##cmd-e proc-or-cont
+                               output-port
+                               (if (##eq? cmd 'ed)
+                                   'dynamic
+                                   #t))
+                      (let ((cont
+                             (##repl-first-interesting
+                              proc-or-cont)))
+                        (##cmd-b cont
+                                 output-port
+                                 depth
+                                 (if (##eq? cmd 'bed)
+                                     'dynamic
+                                     (##eq? cmd 'be)))))))
+               (##repl-channel-acquire-ownership!)
+               (##repl-context-prompt repl-context))))
+
+       (cond ((and (##fixnum? val)
+                   (##not (##fixnum.< val 0)))
+              (let* ((rc
+                      (##repl-context-get-context
+                       repl-context
+                       val))
+                     (depth
+                      (macro-repl-context-depth rc))
+                     (cont
+                      (macro-repl-context-cont rc)))
+                (handle cont depth)))
+             ((##continuation? val)
+              (handle val 0))
+             ((and (##not (or (##eq? cmd 'b)
+                              (##eq? cmd 'be)
+                              (##eq? cmd 'bed)))
+                   (##procedure? val))
+              (handle val 0))
+             ((macro-thread? val)
+              (if (##eq? cmd 'v)
+                  (begin
+                    (##thread-interrupt!
+                     val
+                     (lambda ()
+                       (##handle-interrupt #f)))
+                    (##thread-yield!)
+                    (##repl-channel-acquire-ownership!)
+                    (##repl-context-prompt repl-context))
+                  (let ((cont
+                         (##thread-continuation-capture
+                          val)))
+                    (handle cont 0))))
+             (else
+              (##repl-channel-acquire-ownership!)
+              (##repl-cmd-invalid
+               (cond ((or (##eq? cmd 'b)
+                          (##eq? cmd 'be)
+                          (##eq? cmd 'bed))
+                      "CONTINUATION or THREAD expected")
+                     (else
+                      "PROCEDURE, CONTINUATION or THREAD expected"))
+               repl-context)))))))
+
+(define-prim (##repl-cmd-st-with-1-arg arg repl-context)
+  (##repl-channel-release-ownership!)
+  (##eval-within
+   arg
+   (macro-repl-context-cont repl-context)
+   repl-context
+   (lambda (results)
+     (let ((val results))
+
+       (define (handle thread-or-tgroup)
+         (##repl-channel-acquire-ownership!)
+         (##repl-channel-display-multiline-message
+          (lambda (output-port)
+            (##cmd-st thread-or-tgroup
+                      output-port)))
+         (##repl-context-prompt repl-context))
+
+       (cond ((macro-tgroup? val)
+              (handle val))
+             ((macro-thread? val)
+              (handle val))
+             (else
+              (##repl-channel-acquire-ownership!)
+              (##repl-cmd-invalid
+               "THREAD or THREAD-GROUP expected"
+               repl-context)))))))
+
+(define ##repl-commands-with-1-arg #f)
+(set! ##repl-commands-with-1-arg
+  (##list (##cons 'h   ##repl-cmd-h-with-1-arg)
+          (##cons 'c   ##repl-cmd-c-with-1-arg)
+          (##cons 's   ##repl-cmd-s-with-1-arg)
+          (##cons 'l   ##repl-cmd-l-with-1-arg)
+          (##cons 'b   ##repl-cmd-b-with-1-arg)
+          (##cons 'be  ##repl-cmd-be-with-1-arg)
+          (##cons 'bed ##repl-cmd-bed-with-1-arg)
+          (##cons 'e   ##repl-cmd-e-with-1-arg)
+          (##cons 'ed  ##repl-cmd-ed-with-1-arg)
+          (##cons 'v   ##repl-cmd-v-with-1-arg)
+          (##cons 'st  ##repl-cmd-st-with-1-arg)
+          ))
 
 (define-prim (##repl-within-proc proc cont)
   (cond ((##interp-procedure? proc)
