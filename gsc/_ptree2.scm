@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2009-07-04 17:17:17 feeley>
+;;; File: "_ptree2.scm", Time-stamp: <2011-05-19 09:42:02 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 
@@ -2494,20 +2494,20 @@
                     (string-append "return " c-id ";" nl-str)
                     ""))))
            (if indirect-access-result
+
              (c-preproc-define
               c-id
               (string-append
                c-id-prefix
-               (if (vector-ref indirect-access-result 1)
-                 (string-append
-                  (if sfun? "SFUN_CAST_AND_DEREF(" "CFUN_CAST_AND_DEREF(")
-                  (c-type-decl result-typ "*"))
-                 (string-append
-                  (if sfun? "SFUN_CAST(" "CFUN_CAST(")
-                  (c-type-decl result-typ "")))
+               (if sfun? "SFUN_CAST_AND_DEREF(" "CFUN_CAST_AND_DEREF(")
+               (c-type-decl result-typ "*")
                ","
+               (if (vector-ref indirect-access-result 1)
+                   ""
+                   "&")
                c-id "_voidstar)")
               body)
+
              body))))))
 
 (define (comma-separated strs)
