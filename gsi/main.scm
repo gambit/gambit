@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "main.scm", Time-stamp: <2011-01-24 11:54:13 feeley>
+;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -113,7 +113,7 @@
   (define (compiler-batch-mode options arguments)
 
     (define (c-file? file)
-      (##string=? (##path-extension file) ".c"))
+      (##assoc (##path-extension file) c#targ-c-file-extensions))
 
     (define (obj-file? file)
       (##string=? (##path-extension file) ##os-obj-extension-string-saved))

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-1.scm", Time-stamp: <2010-06-10 15:24:05 feeley>
+;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -317,7 +317,7 @@
 
     (targ-heap-dump
       (or output
-          (string-append output-root ".c"))
+          (string-append output-root (targ-preferred-c-file-extension)))
       (proc-obj-name (car procs))
       c-decls
       c-inits
@@ -770,12 +770,12 @@
                    (path-strip-extension output)))
              (out
                (or output
-                   (string-append root ".c")))
+                   (string-append root (targ-preferred-c-file-extension))))
              (name
                (string-append module-prefix
                               (path-strip-directory root)))
              (input-files
-               (map (lambda (x) (string-append x ".c")) inputs))
+               (map (lambda (x) (string-append x (targ-preferred-c-file-extension))) inputs))
              (input-infos
                (map targ-read-linker-info input-files))
              (input-mods
@@ -2214,5 +2214,22 @@
 
 (define (targ-name->c-id s)
   (scheme-id->c-id s))
+
+(define targ-c-file-extensions #f)
+(set! targ-c-file-extensions
+  '((".c"    . C)
+    (".C"    . C++)
+    (".cc"   . C++)
+    (".cp"   . C++)
+    (".cpp"  . C++)
+    (".CPP"  . C++)
+    (".cxx"  . C++)
+    (".c++"  . C++)
+    (".m"    . Objective-C)
+    (".M"    . Objective-C++)
+    (".mm"   . Objective-C++)))
+
+(define (targ-preferred-c-file-extension)
+  (caar targ-c-file-extensions))
 
 ;;;----------------------------------------------------------------------------

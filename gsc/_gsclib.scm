@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_gsclib.scm", Time-stamp: <2011-03-20 21:15:32 feeley>
+;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -74,7 +74,7 @@
                 (##path-strip-directory
                  (##path-strip-extension filename))
                 expanded-output)
-               ".c")))
+               (c#targ-preferred-c-file-extension))))
          (c-filename-no-dir-no-ext
           (##path-strip-directory
            (##path-strip-extension c-filename))))
@@ -175,10 +175,13 @@
            root
            (generate-next-version-of-object-file root)))))
 
-  (let* ((c-filename
-          (##string-append (##path-strip-extension filename) ".c"))
-         (input-is-c-file?
-          (##string=? filename c-filename))
+  (let* ((input-is-c-file?
+          (##assoc (##path-extension filename) c#targ-c-file-extensions))
+         (c-filename
+          (if input-is-c-file?
+              filename
+              (##string-append (##path-strip-extension filename)
+                               (c#targ-preferred-c-file-extension))))
          (expanded-output
           (##path-normalize output))
          (output-filename
@@ -369,7 +372,8 @@
                         (if (##eq? output (macro-absent-obj))
                             (##path-directory
                              (##path-normalize
-                              (##string-append (##car rev-mods) ".c")))
+                              (##string-append (##car rev-mods)
+                                               (c#targ-preferred-c-file-extension))))
                             (macro-force-vars (output)
                               output)))
                        (baselib
@@ -441,7 +445,8 @@
                         (if (##eq? output (macro-absent-obj))
                             (##path-directory
                              (##path-normalize
-                              (##string-append (##car rev-mods) ".c")))
+                              (##string-append (##car rev-mods)
+                                               (c#targ-preferred-c-file-extension))))
                             (macro-force-vars (output)
                               output)))
                         (warn?

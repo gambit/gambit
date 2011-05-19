@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_host.scm", Time-stamp: <2009-07-31 10:22:27 feeley>
+;;; File: "_host.scm"
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -313,6 +313,10 @@
             (begin
               (string-set! result (- j i) (string-ref path j))
               (loop2 (- j 1)))))))))
+
+(define scheme-file-extensions
+  '((".scm" . #f)
+    (".six" . six)))
 
 ;; Bytevector data types.
 
@@ -790,6 +794,8 @@
 
 (define (path-strip-directory path)
   (##path-strip-directory path))
+
+(define scheme-file-extensions ##scheme-file-extensions)
 
 (define (make-s8vect n)      (##make-s8vector n 0))
 (define s8vect?              ##s8vector?)

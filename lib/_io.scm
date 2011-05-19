@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_io.scm", Time-stamp: <2010-01-07 12:06:38 feeley>
+;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 

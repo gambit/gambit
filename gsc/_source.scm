@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_source.scm", Time-stamp: <2009-02-16 14:58:03 feeley>
+;;; File: "_source.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -321,7 +321,7 @@
       (if expanded-filename
         (if (equal? (path-extension expanded-filename) "")
 
-          (let loop ((exts scm-file-exts))
+          (let loop ((exts (append (map car scheme-file-extensions) '(""))))
             (if (pair? exts)
               (let* ((ext (car exts))
                      (full-name (string-append expanded-filename ext))
@@ -389,10 +389,6 @@
       (**readenv-close re)
 
       sources)))
-
-;; Filename extensions to try in order to find source files from module name.
-
-(define scm-file-exts '(".scm" ".six" "")) ; "" means no extension
 
 (define (read-source path relative-to-path try-scheme-file-extensions?)
 
@@ -1545,7 +1541,7 @@
       (if expanded-filename
         (if (equal? (path-extension expanded-filename) "")
 
-          (let loop ((exts scm-file-exts))
+          (let loop ((exts (append (map car scheme-file-extensions) '(""))))
             (if (pair? exts)
               (let* ((ext (car exts))
                      (full-name (string-append expanded-filename ext))
