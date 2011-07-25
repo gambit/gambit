@@ -1,24 +1,39 @@
-;; File: "program.scm"
+;;;============================================================================
 
-;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; File: "program.scm"
+
+;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
 
 ;; This program implements the "Gambit REPL" application for iOS
 ;; devices.  It is a simple development environment for Scheme.  The
-;; user can interact with a REPL, and edit/save/run small scripts.
+;; user can interact with a REPL, edit small scripts, run them and
+;; share them on a public script repository.
 
-;;;----------------------------------------------------------------------------
+;;;============================================================================
 
 (##namespace ("gr#"))
 
 (##include "~~lib/gambit#.scm")
 (##include "~~lib/_gambit#.scm")
 
+(##include "wiki#.scm")
+(##include "html#.scm")
+(##include "url#.scm")
+(##include "json#.scm")
+
 (##namespace (""
               splash
               repl
               repl-eval
               edit
+              login
+              repo
               reset-scripts
+              upload-script
+              download-script
+              delete-script
+              view-script
+              obtain-script
               start-repl-server
               show-textView
               show-webView
@@ -31,6 +46,10 @@
               open-URL
               set-pref
               get-pref
+              set-page
+              set-page-content
+              has-prefix?
+              get-event-parameters
 
               string->Class
               Class->string
@@ -443,8 +462,8 @@ c-declare-end
 (define add-input-to-textView
   (c-lambda (NSString*) void "add_input_to_textView"))
 
-(define set-webView-content
-  (c-lambda (NSString*) void "set_webView_content"))
+(define (set-webView-content str #!optional (enable-scaling #f) (mime-type "text/html"))
+  ((c-lambda (NSString* bool NSString*) void "set_webView_content") str enable-scaling mime-type))
 
 (define open-URL
   (c-lambda (NSString*) void "open_URL"))
@@ -482,10 +501,9 @@ c-declare-end
 (set! handle-key
   (lambda (str)
     (if (char=? #\F (string-ref str 0))
-        (let* ((scripts (get-script-db))
-               (x (assoc str scripts)))
-          (cond (x
-                 (run-script (cdr x)))
+        (let ((script (get-script-by-name str)))
+          (cond (script
+                 (run-script str script))
                 ((equal? str "F13")
                  (##thread-interrupt! (macro-primordial-thread)))
                 (else
@@ -614,17 +632,32 @@ c-declare-end
                 (event-handler event)
                 (loop)))))))))
 
-(define (set-page content handler)
+(define (set-page content handler #!optional (enable-scaling #f) (mime-type "text/html"))
   (set! event-handler handler)
-  (set-webView-content content)
+  (set-page-content content enable-scaling mime-type))
+
+(define (set-page-content content #!optional (enable-scaling #f) (mime-type "text/html"))
+  (set-webView-content
+   (with-output-to-string "" (lambda () (print content)))
+   enable-scaling
+   mime-type)
   (show-webView))
 
 (define (has-prefix? str prefix)
-  (let ((len-str (string-length str))
-        (len-prefix (string-length prefix)))
-    (and (>= len-str len-prefix)
-         (string=? (substring str 0 len-prefix) prefix)
-         (substring str len-prefix len-str))))
+  (and (string? str)
+       (string? prefix)
+       (let ((len-str (string-length str))
+             (len-prefix (string-length prefix)))
+         (and (>= len-str len-prefix)
+              (string=? (substring str 0 len-prefix) prefix)
+              (substring str len-prefix len-str)))))
+
+(define (get-event-parameters rest)
+  (call-with-input-string
+   rest
+   (lambda (port)
+     (map url-decode
+          (read-all port (lambda (p) (read-line p #\:)))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -752,356 +785,11 @@ c-declare-end
 
 ;;;----------------------------------------------------------------------------
 
-;; Encoding/decoding of HTML and URIs.
-
-(define (hex-digit str i)
-  (let ((n (char->integer (string-ref str i))))
-    (cond ((and (>= n 48) (<= n 57))
-           (- n 48))
-          ((and (>= n 65) (<= n 70))
-           (- n 55))
-          ((and (>= n 97) (<= n 102))
-           (- n 87))
-          (else
-           #f))))
-
-(define (hex-octet str i)
-  (let ((n1 (hex-digit str i)))
-    (and n1
-         (let ((n2 (hex-digit str (+ i 1))))
-           (and n2
-                (+ (* n1 16) n2))))))
-
-(define (extract-escaped str start end)
-
-  (define (extract i j)
-      (if (< i end)
-          (let ((c (string-ref str i)))
-            (if (char=? c #\%)
-                (let ((n (and (< (+ i 2) end)
-                              (hex-octet str (+ i 1)))))
-                  (and n
-                       (let ((result (extract (+ i 3) (+ j 1))))
-                         (string-set! result j (integer->char n))
-                         result)))
-                (let ((result (extract (+ i 1) (+ j 1))))
-                  (string-set! result j (if (char=? c #\+) #\space c))
-                  result)))
-          (make-string j)))
-
-  (extract start 0))
-
-(define (uri-unescape str)
-  (extract-escaped str 0 (string-length str)))
-
-(define (html-escape str)
-
-  (declare (fixnum))
-
-  ;; This table has a non-#f entry for every character that is valid
-  ;; in a standard HTML document.  The entry is what should be
-  ;; displayed when this character occurs.
-
-  (define character-entity-table
-    '#(#\nul
-       #f; #\x01
-       #f; #\x02
-       #f; #\x03
-       #f; #\x04
-       #f; #\x05
-       #f; #\x06
-       #f; #\alarm
-       #f; #\backspace
-       #\tab
-       #\newline
-       #f; #\vtab
-       #f; #\page
-       #\return
-       #f; #\x0E
-       #f; #\x0F
-       #f; #\x10
-       #f; #\x11
-       #f; #\x12
-       #f; #\x13
-       #f; #\x14
-       #f; #\x15
-       #f; #\x16
-       #f; #\x17
-       #f; #\x18
-       #f; #\x19
-       #f; #\x1A
-       #f; #\x1B
-       #f; #\x1C
-       #f; #\x1D
-       #f; #\x1E
-       #f; #\x1F
-       #\space
-       #\!
-       "&quot;"
-       #\#
-       #\$
-       #\%
-       "&amp;"
-       #\'
-       #\(
-       #\)
-       #\*
-       #\+
-       #\,
-       #\-
-       #\.
-       #\/
-       #\0
-       #\1
-       #\2
-       #\3
-       #\4
-       #\5
-       #\6
-       #\7
-       #\8
-       #\9
-       #\:
-       #\;
-       "&lt;"
-       #\=
-       "&gt;"
-       #\?
-       #\@
-       #\A
-       #\B
-       #\C
-       #\D
-       #\E
-       #\F
-       #\G
-       #\H
-       #\I
-       #\J
-       #\K
-       #\L
-       #\M
-       #\N
-       #\O
-       #\P
-       #\Q
-       #\R
-       #\S
-       #\T
-       #\U
-       #\V
-       #\W
-       #\X
-       #\Y
-       #\Z
-       #\[
-       #\\
-       #\]
-       #\^
-       #\_
-       #\`
-       #\a
-       #\b
-       #\c
-       #\d
-       #\e
-       #\f
-       #\g
-       #\h
-       #\i
-       #\j
-       #\k
-       #\l
-       #\m
-       #\n
-       #\o
-       #\p
-       #\q
-       #\r
-       #\s
-       #\t
-       #\u
-       #\v
-       #\w
-       #\x
-       #\y
-       #\z
-       #\{
-       #\|
-       #\}
-       #\~
-       #f; #\rubout
-       #f; "&#128;"
-       #f; "&#129;"
-       "&#130;"
-       "&#131;"
-       "&#132;"
-       "&#133;"
-       "&#134;"
-       "&#135;"
-       "&#136;"
-       "&#137;"
-       "&#138;"
-       "&#139;"
-       "&#140;"
-       #f; "&#141;"
-       "&#142;"
-       #f; "&#143;"
-       #f; "&#144;"
-       "&#145;"
-       "&#146;"
-       "&#147;"
-       "&#148;"
-       "&#149;"
-       "&#150;"
-       "&#151;"
-       "&#152;"
-       "&#153;"
-       "&#154;"
-       "&#155;"
-       "&#156;"
-       #f; "&#157;"
-       "&#158;"
-       "&#159;"
-       "&#160;"
-       "&#161;"
-       "&#162;"
-       "&#163;"
-       "&#164;"
-       "&#165;"
-       "&#166;"
-       "&#167;"
-       "&#168;"
-       "&#169;"
-       "&#170;"
-       "&#171;"
-       "&#172;"
-       "&#173;"
-       "&#174;"
-       "&#175;"
-       "&#176;"
-       "&#177;"
-       "&#178;"
-       "&#179;"
-       "&#180;"
-       "&#181;"
-       "&#182;"
-       "&#183;"
-       "&#184;"
-       "&#185;"
-       "&#186;"
-       "&#187;"
-       "&#188;"
-       "&#189;"
-       "&#190;"
-       "&#191;"
-       "&#192;"
-       "&#193;"
-       "&#194;"
-       "&#195;"
-       "&#196;"
-       "&#197;"
-       "&#198;"
-       "&#199;"
-       "&#200;"
-       "&#201;"
-       "&#202;"
-       "&#203;"
-       "&#204;"
-       "&#205;"
-       "&#206;"
-       "&#207;"
-       "&#208;"
-       "&#209;"
-       "&#210;"
-       "&#211;"
-       "&#212;"
-       "&#213;"
-       "&#214;"
-       "&#215;"
-       "&#216;"
-       "&#217;"
-       "&#218;"
-       "&#219;"
-       "&#220;"
-       "&#221;"
-       "&#222;"
-       "&#223;"
-       "&#224;"
-       "&#225;"
-       "&#226;"
-       "&#227;"
-       "&#228;"
-       "&#229;"
-       "&#230;"
-       "&#231;"
-       "&#232;"
-       "&#233;"
-       "&#234;"
-       "&#235;"
-       "&#236;"
-       "&#237;"
-       "&#238;"
-       "&#239;"
-       "&#240;"
-       "&#241;"
-       "&#242;"
-       "&#243;"
-       "&#244;"
-       "&#245;"
-       "&#246;"
-       "&#247;"
-       "&#248;"
-       "&#249;"
-       "&#250;"
-       "&#251;"
-       "&#252;"
-       "&#253;"
-       "&#254;"
-       "&#255;"
-       ))
-
-  (call-with-output-string
-   ""
-   (lambda (port)
-     (let ((n (string-length str)))
-       (let loop ((start 0) (end 0))
-         (if (= end n)
-             (write-substring str start end port)
-             (let* ((ch (string-ref str end))
-                    (index (char->integer ch)))
-               (cond ((and (< index 256)
-                           (vector-ref character-entity-table index))
-                      =>
-                      (lambda (character-value)
-                        (if (char? character-value)
-                            (loop start (+ end 1))
-                            (begin ;; it's a string
-                              (write-substring
-                               str
-                               start
-                               end
-                               port)
-                              (write-substring
-                               character-value
-                               0
-                               (string-length character-value)
-                               port)
-                              (loop (+ end 1) (+ end 1))))))
-                     (else
-                      (display
-                       (string-append
-                        "Warning: Character (integer->char "
-                        (number->string index)
-                        ") is not a valid HTML 4.0 character entity\n")
-                       (current-error-port))
-                      (loop start (+ end 1)))))))))))
-
-;;;----------------------------------------------------------------------------
-
 ;; Common HTML header.
 
 (define common-html-header #<<common-html-header-end
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <html>
 <head>
@@ -1113,7 +801,53 @@ body.splash {
 body.editor {
     background-image: -webkit-gradient(linear, left top, left bottom, from(#a0a0a0), to(#f0f0f0));
 }
-div.button {
+body.repo {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#a0a0a0), to(#f0f0f0));
+}
+body.login {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#a0a0a0), to(#f0f0f0));
+}
+.button0 {
+    display: inline-block;
+    color: black;
+    font: bold 14px Arial;
+    text-align: center;
+    padding: 2px 0px;
+    width: 25px;
+    border: 1px solid black;
+    -webkit-border-radius: 5px;
+    opacity: 1.0;
+    margin: 5px;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#fffef0), to(#fffb8b));
+
+}
+.button1 {
+    display: inline-block;
+    color: white;
+    font: bold 14px Arial;
+    text-align: center;
+    padding: 2px 0px;
+    width: 35px;
+    border: 1px solid black;
+    -webkit-border-radius: 5px;
+    opacity: 1.0;
+    margin: 5px;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#7f7fff), to(#2020b0));
+}
+.button2 {
+    display: inline-block;
+    color: white;
+    font: bold 14px Arial;
+    text-align: center;
+    padding: 2px 0px;
+    width: 50px;
+    border: 1px solid black;
+    -webkit-border-radius: 5px;
+    opacity: 1.0;
+    margin: 5px;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#7f7fff), to(#2020b0));
+}
+.bigbutton {
     display: inline-block;
     color: white;
     font: bold 14px Arial;
@@ -1122,17 +856,18 @@ div.button {
     width: 85px;
     border: 1px solid black;
     -webkit-border-radius: 5px;
-    background-color: #486a9a;
+    background-color: ;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#688aba), to(#385a8a));
     opacity: 1.0;
     margin: 5px;
 }
-div.smallbutton {
+.widebutton {
     display: inline-block;
     color: black;
     font: bold 14px Arial;
     text-align: center;
     padding: 7px 0px;
-    width: 50px;
+    width: 140px;
     border: 1px solid black;
     -webkit-border-radius: 5px;
     opacity: 1.0;
@@ -1146,13 +881,88 @@ textarea.script {
     width: 100%;
     margin: 5px;
 }
-select.scriptname {
-    font: bold 14px Arial;
-    padding: 7px 0px;
+input.scriptname {
+    font: 14px Arial;
+    padding: 2px 2px;
+    width: 100%;
     margin: 5px;
+}
+input.login {
+    font: bold 18px Arial;
+    width: 200px;
+}
+td.label {
+    font: 18px Arial;
+    text-align: right;
+}
+div.statuserror {
+    color: red;
+    font: bold 18px Arial;
+}
+div.statussuccess {
+    color: green;
+    font: bold 18px Arial;
+}
+div.statusbox {
+    height: 70px;
+}
+div.spinner {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    display: inline-block;
+}
+div.spinner div {
+    width: 12%;
+    height: 26%;
+    background: #000;
+    position: absolute;
+    left: 44.5%;
+    top: 37%;
+    opacity: 0;
+    -webkit-animation: fade 1s linear infinite;
+    -webkit-border-radius: 50px;
+    -webkit-box-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+div.spinner div.bar1 {-webkit-transform:rotate(0deg) translate(0, -142%); -webkit-animation-delay: 0s;}    
+div.spinner div.bar2 {-webkit-transform:rotate(30deg) translate(0, -142%); -webkit-animation-delay: -0.9167s;}
+div.spinner div.bar3 {-webkit-transform:rotate(60deg) translate(0, -142%); -webkit-animation-delay: -0.833s;}
+div.spinner div.bar4 {-webkit-transform:rotate(90deg) translate(0, -142%); -webkit-animation-delay: -0.75s;}
+div.spinner div.bar5 {-webkit-transform:rotate(120deg) translate(0, -142%); -webkit-animation-delay: -0.667s;}
+div.spinner div.bar6 {-webkit-transform:rotate(150deg) translate(0, -142%); -webkit-animation-delay: -0.5833s;}
+div.spinner div.bar7 {-webkit-transform:rotate(180deg) translate(0, -142%); -webkit-animation-delay: -0.5s;}
+div.spinner div.bar8 {-webkit-transform:rotate(210deg) translate(0, -142%); -webkit-animation-delay: -0.41667s;}
+div.spinner div.bar9 {-webkit-transform:rotate(240deg) translate(0, -142%); -webkit-animation-delay: -0.333s;}
+div.spinner div.bar10 {-webkit-transform:rotate(270deg) translate(0, -142%); -webkit-animation-delay: -0.25s;}
+div.spinner div.bar11 {-webkit-transform:rotate(300deg) translate(0, -142%); -webkit-animation-delay: -0.1667s;}
+div.spinner div.bar12 {-webkit-transform:rotate(330deg) translate(0, -142%); -webkit-animation-delay: -0.0833s;}
+@-webkit-keyframes fade {
+    from {opacity: 1;}
+    to {opacity: 0.25;}
+}
+td.repoget {
+    width: 38px;
+}
+td.repoentry {
+    font: 14px Arial;
+    word-break: break-all;
 }
 -->
 </style>
+<script>
+
+function gestureStart() {
+  var metas = document.getElementsByTagName('meta');
+  for (var i=0; i<metas.length; i++) {
+    if (metas[i].name == "viewport") {
+      metas[i].content = "width=device-width, minimum-scale=0.25, maximum-scale=1.6";
+    }
+  }
+}
+
+document.addEventListener("gesturestart", gestureStart, false);
+
+</script>
 </head>
 
 common-html-header-end
@@ -1162,22 +972,22 @@ common-html-header-end
 
 ;; Splash page.
 
-(define splash-page-content-head1 #<<splash-page-content-head1-end
+(define splash-page-content-part1 #<<splash-page-content-part1-end
 
 <body class="splash">
 <p>
 Welcome to <strong>
-splash-page-content-head1-end
+splash-page-content-part1-end
 )
 
-(define splash-page-content-head2 #<<splash-page-content-head2-end
-</strong>, a Scheme development environment built with the <a href="event:visit-wiki">Gambit Scheme programming system</a>.
+(define splash-page-content-part2 #<<splash-page-content-part2-end
+</strong>, a Scheme development environment built with the <a href="event:wiki">Gambit Scheme programming system</a>.
 </p>
 
 <ul>
-<li> learn the Scheme language,
-<li> debug Scheme code on the go,
-<li> number crunch exactly!
+<li/> learn the Scheme language,
+<li/> debug Scheme code on the go,
+<li/> number crunch exactly!
 </ul>
 
 <p>
@@ -1186,85 +996,59 @@ After the "<strong><code>&gt;</code></strong>" prompt enter your command then RE
 
 <strong>
 <code>
-&gt; (+ 1 (/ (* 2 2) (sqrt 9)))<br>
-7/3<br>
-&gt; (expt 2 100)<br>
-1267650600228229401496703205376<br>
-&gt; (reverse (string-&gt;list "hello"))<br>
-(#\o #\l #\l #\e #\h)<br>
-&gt; \for (int i=1;i<=3;i++) pp(i*i);<br>
-1<br>
-4<br>
-9<br>
-&gt; (exit)<br>
+&gt; (+ 1 (/ (* 2 2) (sqrt 9)))<br/>
+7/3<br/>
+&gt; (expt 2 100)<br/>
+1267650600228229401496703205376<br/>
+&gt; (reverse (string-&gt;list "hello"))<br/>
+(#\o #\l #\l #\e #\h)<br/>
+&gt; \for (int i=1;i&lt;=3;i++) pp(i*i);<br/>
+1<br/>
+4<br/>
+9<br/>
+&gt; (exit)<br/>
 </code>
 </strong>
 
 <center>
 
-splash-page-content-head2-end
-)
-
-(define splash-page-content-button1 #<<splash-page-content-button1-end
-
-<div class="button" onClick="window.location='event:start-repl';">Start REPL</div>
-
-splash-page-content-button1-end
-)
-
-(define splash-page-content-button2 #<<splash-page-content-button2-end
-
-<div class="button" onClick="window.location='event:edit-scripts';">Edit Scripts</div>
-
-splash-page-content-button2-end
-)
-
-(define splash-page-content-button3 #<<splash-page-content-button3-end
-
-<div class="button" onClick="if (confirm('Are you sure you want to start the REPL server?')) window.location='event:start-server';">Start Server</div>
-
-splash-page-content-button3-end
-)
-
-(define splash-page-content-tail #<<splash-page-content-tail-end
+<div class="bigbutton" onClick="window.location='event:edit';">Edit Scripts</div>
+<div class="bigbutton" onClick="if (confirm('Are you sure you want to start the REPL server?  It allows starting a REPL remotely, with no authentication, by telneting to port 7000 of your device.')) window.location='event:server';">Start Server</div>
+<div class="bigbutton" onClick="window.location='event:repl';">Start REPL</div>
 
 </center>
 </body>
 </html>
 
-splash-page-content-tail-end
+splash-page-content-part2-end
 )
 
-(define (splash
-         #!optional
-         (enable-edit-scripts?
-          (not (equal? CFBundleDisplayName "Gambit REPL Free")))
-         (enable-start-server?
-          (equal? CFBundleDisplayName "Gambit REPL Pro")))
+(define (splash)
   (set-page
-   (string-append common-html-header
-                  splash-page-content-head1
-                  CFBundleDisplayName
-                  splash-page-content-head2
-                  splash-page-content-button1
-                  (if enable-edit-scripts?
-                      splash-page-content-button2
-                      "")
-                  (if enable-start-server?
-                      splash-page-content-button3
-                      "")
-                  splash-page-content-tail)
+   (list common-html-header
+         splash-page-content-part1
+         CFBundleDisplayName
+         splash-page-content-part2)
    (lambda (event)
-     (cond ((equal? event "event:start-repl")
+     (cond ((equal? event "event:repl")
             (repl))
-           ((equal? event "event:edit-scripts")
+
+           ((equal? event "event:edit")
             (edit))
-           ((equal? event "event:start-server")
+
+           ((equal? event "event:server")
             (repl)
             (start-repl-server))
-           ((equal? event "event:visit-wiki")
+
+           ((equal? event "event:wiki")
             (repl)
-            (open-URL "http://gambit.iro.umontreal.ca/"))))))
+            (open-URL
+             (string-append
+              "http://"
+              wiki-server-address
+              wiki-root
+              "/index.php")))))
+   #t))
 
 (define (repl)
   (show-textView))
@@ -1276,8 +1060,28 @@ splash-page-content-tail-end
         (send-input str)
         (repl))))
 
-(define (eval-from-string str)
-  (eval (cons 'begin (with-input-from-string str read-all))))
+(set! ##primordial-exception-handler-hook
+      (lambda (exc other-handler)
+        (repl) ;; switch to REPL view on errors
+        (##repl-exception-handler-hook exc other-handler)))
+
+(define (load-script name script)
+  (let ((port (open-input-string script)))
+
+    (if (not (equal? name ""))
+        ;; Hack... set the names of the port to match the name
+        (##vector-set! port 4 (lambda (port) name)))
+
+    (let ((x
+           (##read-all-as-a-begin-expr-from-port
+            port
+            (##current-readtable)
+            ##wrap-datum
+            ##unwrap-datum
+            #f ;; Scheme syntax
+            #t)))
+      (if (not (##fixnum? x))
+          (##eval-module (##vector-ref x 1) ##interaction-cte)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1285,7 +1089,7 @@ splash-page-content-tail-end
 
 (define predefined-scripts '(
 
-("" .
+("hello" .
 #<<EOF
 ;; Show "Hello!" for a few seconds.
 
@@ -1298,7 +1102,7 @@ END
 EOF
 )
 
-("" .
+("fact100" .
 #<<EOF
 ;; Compute factorial of 100.
 
@@ -1311,7 +1115,7 @@ EOF
 EOF
 )
 
-("" .
+("fib25" .
 #<<EOF
 ;; Compute fibonacci of 25.
 
@@ -1324,54 +1128,11 @@ EOF
 EOF
 )
 
-("" .
+("play-funny-sound" .
 #<<EOF
 ;; Play funny sound.
 
 (AudioServicesPlaySystemSound 1010)
-EOF
-)
-
-("" .
-#<<EOF
-;; Metronome.
-(let* ((t (current-time))
-       (s (time->seconds t)))
-  (let loop ((i 0))
-    (let ((x (+ s (* 0.4 i))))
-      (thread-sleep! (seconds->time x)))
-    (AudioServicesPlaySystemSound
-     (if (= 0 (modulo i 4)) 1057 1104))
-    (if (< i 10) (loop (+ i 1)))))
-EOF
-)
-
-("" .
-#<<EOF
-;; List app directory content.
-
-(define (tree p)
-  (if (eq? (file-type p) 'directory)
-      (let ((lst (directory-files p)))
-        (cons p
-              (parameterize
-               ((current-directory p))
-               (map tree lst))))
-      p))
-
-(repl-eval "(tree \"~~\")\n")
-EOF
-)
-
-("" .
-#<<EOF
-;; Get METAR aviation weather report.
-
-(define (metar station)
-  (open-URL
-   (string-append "http://aviationweather.gov/adds/metars/index.php?station_ids=" station)))
-
-(metar "cymx") ;; Mirabel airport
 EOF
 )
 
@@ -1436,14 +1197,41 @@ EOF
 
 ;;(reset-scripts)
 
+(define (get-script-by-name name)
+  (let* ((scripts (get-script-db))
+         (x (assoc name scripts)))
+    (and x (cdr x))))
+
+(define (get-script-index-by-name name)
+  (let loop ((scripts (get-script-db)) (i 0))
+    (if (pair? scripts)
+        (let ((x (car scripts)))
+          (if (equal? (car x) name)
+              i
+              (loop (cdr scripts) (+ i 1))))
+        #f)))
+
+(define (get-script-at-index index)
+  (let loop ((scripts (get-script-db)) (i 0))
+    (if (pair? scripts)
+        (if (= i index)
+            (car scripts)
+            (loop (cdr scripts) (+ i 1)))
+        #f)))
+
 (define (get-script-db)
   (if (not script-db)
       (set! script-db
             (let ((x (get-pref "script-db")))
               (if x
                   (let ((lst (with-input-from-string x read)))
-                    (if (equal? (car lst) script-db-version)
-                        (cdr lst)
+                    (if (pair? lst)
+                        (let ((version (car lst))
+                              (db (cdr lst)))
+                          (cond ((equal? version script-db-version)
+                                 db)
+                                (else
+                                 predefined-scripts)))
                         predefined-scripts))
                   predefined-scripts))))
   script-db)
@@ -1456,127 +1244,290 @@ EOF
                   (lambda ()
                     (write (cons script-db-version script-db)))))))
 
-(define edit-page-content-head #<<edit-page-content-head-end
+;;;----------------------------------------------------------------------------
 
-<center>
-<div class="button" onClick="window.location='event:add-script';">Add Script</div>
-<div class="button" onClick="window.location='event:show-repl';">Show REPL</div>
-</center>
+;; Login info.
 
-edit-page-content-head-end
+(define predefined-login-info '("" "" #t))
+
+(define login-info #f)
+(define login-info-version "1.0")
+
+(define (reset-login-info)
+  (let ((info (get-login-info)))
+    (set! login-info
+          (list "" "" (caddr info)))
+    (save-login-info)))
+
+(define (get-login-info)
+  (if (not login-info)
+      (set! login-info
+            (let ((x (get-pref "login-info")))
+              (if x
+                  (let ((lst (with-input-from-string x read)))
+                    (if (pair? lst)
+                        (let ((version (car lst))
+                              (info (cdr lst)))
+                          (cond ((equal? version login-info-version)
+                                 info)
+                                (else
+                                 predefined-login-info)))
+                        predefined-login-info))
+                  predefined-login-info))))
+  login-info)
+
+(define (save-login-info)
+  (if login-info
+      (set-pref "login-info"
+                (with-output-to-string
+                  ""
+                  (lambda ()
+                    (write (cons login-info-version login-info)))))))
+
+;;;----------------------------------------------------------------------------
+
+;; Script editor.
+
+(define edit-page-content-part1 #<<edit-page-content-part1-end
+
+<script language="JavaScript">
+
+var nb_scripts = 
+edit-page-content-part1-end
 )
 
-(define edit-page-content-tail #<<edit-page-content-tail-end
+(define edit-page-content-part2 #<<edit-page-content-part2-end
+;
+
+function send_event(e)
+{ window.location = "event:" + e; }
+
+function send_event_with_scripts(e,index)
+{
+  var strings = ["event:"+e,index];
+  for (var i = 0; i<nb_scripts; i++)
+  {
+    strings.push(encodeURIComponent(document.getElementById("scriptname"+i).value));
+    strings.push(encodeURIComponent(document.getElementById("script"+i).value));
+  }
+  strings.push("");
+  window.location = strings.join(":");
+}
+
+function click_run(index)
+{ send_event_with_scripts("run",index); }
+
+function click_share(index)
+{ var name = document.getElementById("scriptname"+index).value;
+  var script = document.getElementById("script"+index).value;
+  if (valid_repo_script_name(name))
+  {
+    if (confirm((script=="")?('Are you sure you want to delete the script '+name+' from the public script repository?'):('Are you sure you want to upload the script '+name+' to the public script repository? It will replace the current script by that name if it exists (note that older versions are kept in the Gambit wiki page history).')))
+      send_event_with_scripts("share",index);
+  }
+}
+
+function click_delete(index)
+{ if (confirm('Are you sure you want to delete this script?'))
+    send_event_with_scripts("delete",index);
+}
+
+function click_repo()
+{ send_event_with_scripts("repo",0); }
+
+function click_repl()
+{ send_event_with_scripts("repl",0); }
+
+function click_new()
+{ send_event_with_scripts("new",0); }
+
+function valid_repo_script_name(name)
+{ if (/[A-Z][-\. A-Za-z0-9]*:[-\. A-Za-z0-9:]*\.scm/.exec(name))
+    return true;
+  alert("The script name is not valid for the public script repository. Here is a sample valid name:\n\nMath:pi.scm\n\nSpecifically, the name must start with an upper case letter, it must end in '.scm', it must contain at least one ':', and only letters, digits, ' ', '.', and '-'. The part before the first ':' is the section name.  It helps classify the scripts according to the script's purpose. It can be a new section name or an existing one, such as 'Games', 'Math', etc. Subsection names can be used for further classification within a section. Personal files should be put in the section\n\nUsers:<wiki-username>:...");
+  return false;
+}
+
+</script>
+
+<body class="editor">
+
+<center>
+<div class="bigbutton" onClick="click_repo();">Script Repo</div>
+<div class="bigbutton" onClick="click_new();">New Script</div>
+<div class="bigbutton" onClick="click_repl();">Show REPL</div>
+</center>
+
+edit-page-content-part2-end
+)
+
+(define edit-page-content-part3 #<<edit-page-content-part3-end
 
 </body>
 </html>
 
-edit-page-content-tail-end
+edit-page-content-part3-end
 )
 
-(define (html-for-scripts scripts)
-
-  (define (options selected lst)
-    (if (pair? lst)
-        (let ((s (car lst)))
-          (list "<option"
-                (if (equal? selected s)
-                    " selected=\"yes\""
-                    "")
-                ">"
-                s
-                "</option>"
-                (options selected (cdr lst))))
-        '()))
+(define (html-for-local-scripts scripts)
 
   (define (html script name index)
-    (list "<br>\n"
-          "<textarea class=\"script\" id=\"script" index "\" rows=9>" (html-escape script) "</textarea>\n"
+    (list "<br/>\n"
+          "<textarea class=\"script\" id=\"script" index "\" rows=9>"
+          (html-escape script)
+          "</textarea>\n"
+          "<input type=\"text\" class=\"scriptname\" id=\"scriptname" index "\" value=\""
+          (html-escape name)
+          "\"/><br/>"
           "<center>\n"
-          "<select class=\"scriptname\" id=\"scriptname" index "\">"
-          (options name
-                   '("noname" "F1" "F2" "F3" "F4" "F5" "F6" "F7" "F8" "F9" "F10" "F11" "F12" "F13" "main"))
-          "</select>\n"
-          "<div class=\"smallbutton\" onClick=\"window.location='event:run:" index " '+encodeURIComponent(document.getElementById('scriptname" index "').value)+' '+encodeURIComponent(document.getElementById('script" index "').value);\">Run</div>\n"
-          "<div class=\"smallbutton\" onClick=\"window.location='event:save:" index " '+encodeURIComponent(document.getElementById('scriptname" index "').value)+' '+encodeURIComponent(document.getElementById('script" index "').value);\">Save</div>\n"
-          "<div class=\"smallbutton\" onClick=\"if (confirm('Are you sure you want to delete this script?')) window.location='event:delete:" index "';\">Delete</div>\n"
+          "<div class=\"button2\" onClick=\"click_run(" index ");\">Run</div>\n"
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+          "<div class=\"button2\" onClick=\"click_share(" index ");\">Share</div>\n"
+          "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+          "<div class=\"button2\" onClick=\"click_delete(" index ");\">Delete</div>\n"
           "</center>\n"))
 
-  (let loop ((scripts scripts) (i 0) (accum '("<body class=\"editor\">\n")))
+  (let loop ((scripts scripts) (i 0) (accum '()))
     (if (pair? scripts)
         (let* ((x (car scripts))
-               (n (car x))
-               (s (cdr x)))
-          (loop (cdr scripts) (+ i 1) (cons (html s n i) accum)))
-        (with-output-to-string
-          ""
-          (lambda ()
-            (print (reverse accum)))))))
+               (name (car x))
+               (script (cdr x)))
+          (loop (cdr scripts) (+ i 1) (cons (html script name i) accum)))
+        (reverse accum))))
 
 (define (edit)
 
-  (define (get-parameters rest)
-    (call-with-input-string
-        (uri-unescape rest)
-      (lambda (port)
-        (let ((index (read port)))
-          (read-char port)
-          (let ((name (read-line port #\space)))
-            (list index name (read-line port #f)))))))
+  (define (get-index-and-update-script-db rest)
+    (let ((x (get-event-parameters rest)))
+      (if (pair? x)
+          (let ((index (string->number (car x))))
+            (let loop ((lst (cdr x)) (rev-scripts '()))
+              (if (and (pair? lst)
+                       (pair? (cdr lst)))
+                  (let ((name (car lst))
+                        (script (cadr lst)))
+                    (loop (cddr lst)
+                          (cons (cons name script) rev-scripts)))
+                  (let ((new-script-db (reverse rev-scripts)))
+
+                    (set-pref "run-main-script" "yes")
+
+                    (set! script-db new-script-db)
+                    (save-script-db)
+                    index))))
+          #f)))
 
   (set-page
-   (string-append common-html-header
-                  edit-page-content-head
-                  (html-for-scripts (get-script-db))
-                  edit-page-content-tail)
+   (let ((scripts (get-script-db)))
+     (list common-html-header
+           edit-page-content-part1
+           (length scripts)
+           edit-page-content-part2
+           (html-for-local-scripts scripts)
+           edit-page-content-part3))
    (lambda (event)
-     (cond ((has-prefix? event "event:save:") =>
+     (cond ((has-prefix? event "event:run:") =>
             (lambda (rest)
-              (apply save-script-at-index
-                     (get-parameters rest))))
+              (run-script-event
+               (get-index-and-update-script-db rest))))
 
-           ((has-prefix? event "event:run:") =>
+           ((has-prefix? event "event:share:") =>
             (lambda (rest)
-              (apply run-script-at-index
-                     (get-parameters rest))))
+              (share-script-event
+               (get-index-and-update-script-db rest))))
 
            ((has-prefix? event "event:delete:") =>
             (lambda (rest)
-              (delete-script-at-index (car (get-parameters rest)))
+              (delete-script-event
+               (get-index-and-update-script-db rest))
               (edit)))
 
-           ((equal? event "event:add-script")
-            (add-script)
-            (edit))
+           ((has-prefix? event "event:repo:") =>
+            (lambda (rest)
+              (get-index-and-update-script-db rest)
+              (repo edit)))
 
-           ((equal? event "event:show-repl")
-            (repl))))))
+           ((has-prefix? event "event:repl:") =>
+            (lambda (rest)
+              (get-index-and-update-script-db rest)
+              (repl)))
 
-(define (save-script-at-index index name script)
-  (let loop ((scripts (get-script-db)) (i 0) (accum '()))
-    (if (pair? scripts)
-        (if (= i index)
-            (set! script-db (append (reverse accum)
-                                    (cons (cons name script)
-                                          (cdr scripts))))
-            (loop (cdr scripts) (+ i 1) (cons (car scripts) accum)))))
-  (if (equal? name "main")
-      (set-pref "run-main-script" "yes"))
-  (save-script-db))
+           ((has-prefix? event "event:new:") =>
+            (lambda (rest)
+              (get-index-and-update-script-db rest)
+              (new-script)
+              (edit)))))
+   #t))
 
-(define (run-script-at-index index name script)
-  (save-script-at-index index name script)
-  (run-script script))
+(define run-script-event #f)
+(set! run-script-event
+      (lambda (index)
+        (let ((name-script (get-script-at-index index)))
+          (and name-script
+               (let ((name (car name-script))
+                     (script (cdr name-script)))
+                 (run-script name script))))))
 
-(define (run-script script)
+(define (run-script name script)
   (##thread-interrupt!
    (macro-primordial-thread)
    (lambda ()
      (##repl-channel-release-ownership!) ;; to prevent deadlock...
-     (eval-from-string script)
+     (with-exception-handler
+      ##primordial-exception-handler
+      (lambda ()
+        (load-script name script)))
      (##void))))
 
-(define (delete-script-at-index index)
+(define share-script-event #f)
+(set! share-script-event
+      (lambda (index)
+        (let ((name-script (get-script-at-index index)))
+          (and name-script
+               (let ((name (car name-script))
+                     (script (cdr name-script)))
+                 (if (equal? script "")
+                     (delete-script name edit)
+                     (upload-script name script edit)))))))
+
+(define (upload-script name script #!optional (back repl))
+  (repo-transaction
+   (lambda ()
+     (wiki-script-name-verify name)
+     (wiki-script-store name script)
+     (back))
+   ""
+   (list "<h3>Uploading script</h3>" (html-escape name) "<br/>")
+   "The script has been uploaded to the repository"
+   "Upload failed!"
+   back))
+
+(define (download-script name #!optional (back repl))
+  (repo-transaction
+   (lambda ()
+     (wiki-script-name-verify name)
+     (let ((script (wiki-script-fetch name)))
+       (add-script name script)
+       (back)))
+   ""
+   (list "<h3>Downloading script</h3>" (html-escape name) "<br/>")
+   "The script has been downloaded from the repository"
+   "Download failed!"
+   back))
+
+(define (delete-script name #!optional (back repl))
+  (repo-transaction
+   (lambda ()
+     (wiki-script-name-verify name)
+     (wiki-script-delete name)
+     (back))
+   ""
+   (list "<h3>Deleting script</h3>" (html-escape name) "<br/>")
+   "The script has been deleted from the repository"
+   "Delete failed!"
+   back))
+
+(define (delete-script-event index)
   (let loop ((scripts (get-script-db)) (i 0) (accum '()))
     (if (pair? scripts)
         (if (= i index)
@@ -1585,9 +1536,528 @@ edit-page-content-tail-end
             (loop (cdr scripts) (+ i 1) (cons (car scripts) accum)))))
   (save-script-db))
 
-(define (add-script)
-  (set! script-db (append (get-script-db) '(("" . ""))))
+(define (new-script)
+  (add-script "untitled" ""))
+
+(define (add-script name script)
+  (set! script-db (cons (cons name script) (get-script-db)))
   (save-script-db))
+
+;;;----------------------------------------------------------------------------
+
+;; Repository browser.
+
+(define repo-page-content-part1 #<<repo-page-content-part1-end
+
+<body class="repo">
+
+
+repo-page-content-part1-end
+)
+
+(define repo-page-content-part2 #<<repo-page-content-part2-end
+
+<center>
+<div class="bigbutton" onClick="window.location='event:back';">Back</div>
+<div class="bigbutton" onClick="window.location='event:edit';">Edit Scripts</div>
+<div class="bigbutton" onClick="window.location='event:repl';">Show REPL</div>
+</center>
+
+
+repo-page-content-part2-end
+)
+
+(define repo-page-content-part3 #<<repo-page-content-part3-end
+
+<form>
+<table>
+
+
+repo-page-content-part3-end
+)
+
+(define repo-page-content-part4 #<<repo-page-content-part4-end
+
+</table>
+</form>
+</body>
+</html>
+
+repo-page-content-part4-end
+)
+
+(define (html-for-script-tree tree)
+
+  (define (html branch)
+    (let ((name (car branch))
+          (subtree (cdr branch)))
+      (list "<tr>"
+            (if (pair? subtree)
+                (list "<td class=\"repoget\"></td>\n"
+                      "<td><div class=\"button1\" onClick=\"window.location='event:view:"
+                      (url-encode name)
+                      "';\">=&gt;</div></td>\n")
+                (list "<td class=\"repoget\"><div class=\"button0\" onClick=\"window.location='event:get:"
+                      (url-encode name)
+                      "';\">Get</div></td>\n"
+                      "<td><div class=\"button1\" onClick=\"window.location='event:view:"
+                      (url-encode name)
+                      "';\">View</div></td>\n"))
+            "<td class=\"repoentry\">"
+            (html-escape name)
+            "</td>\n"
+            "</tr>\n")))
+
+  (let loop ((tree tree) (accum '()))
+    (if (pair? tree)
+        (let ((branch (car tree)))
+          (loop (cdr tree) (cons (html branch) accum)))
+        (reverse accum))))
+
+(define (repo #!optional (back repl))
+  (auto-login
+   (lambda ()
+     (repo-transaction
+      (lambda ()
+        (let ((scripts (wiki-script-list)))
+          (repo-browse back (script-list->tree scripts))))
+      repo-page-content-part2
+      ""
+      #f
+      "Could not get list of scripts!"
+      back))
+   back))
+
+(define (script-list->tree scripts)
+
+  (define (cvt scripts prefix)
+    (if (not (pair? scripts))
+        '()
+        (let ((script1 (car scripts)))
+          (let loop1 ((i 0))
+            (if (< i (string-length script1))
+                (if (not (char=? (string-ref script1 i) #\:))
+                    (loop1 (+ i 1))
+                    (let ((p (substring script1 0 (+ i 1))))
+                      (let loop2 ((lst scripts) (rev-subtrees '()))
+
+                        (define (end)
+                          (let ((new-prefix (string-append prefix p)))
+                            (cons (cons new-prefix
+                                        (cvt (reverse rev-subtrees) new-prefix))
+                                  (cvt lst prefix))))
+
+                        (if (pair? lst)
+                            (let ((s (car lst)))
+                              (if (and (<= i (string-length s))
+                                       (string=? (substring s 0 (+ i 1)) p))
+                                  (loop2 (cdr lst)
+                                         (cons (substring s (+ i 1) (string-length s))
+                                               rev-subtrees))
+                                  (end)))
+                            (end)))))
+                (cons (cons (string-append prefix script1) '())
+                      (cvt (cdr scripts) prefix)))))))
+
+  (cvt scripts ""))
+
+(define (repo-browse back tree)
+  (set-page
+   (list common-html-header
+         repo-page-content-part1
+         repo-page-content-part2
+         repo-page-content-part3
+         (html-for-script-tree tree)
+         repo-page-content-part4)
+   (lambda (event)
+     (cond ((has-prefix? event "event:view:") =>
+            (lambda (rest)
+              (let* ((params (get-event-parameters rest))
+                     (name (car params))
+                     (branch (assoc name tree)))
+                (if branch
+                    (let ((subtree (cdr branch)))
+                      (if (pair? subtree)
+                          (repo-browse (lambda () (repo-browse back tree))
+                                       subtree)
+                          (view-script name)))
+                    (back))))) ;; this should never happen
+
+           ((has-prefix? event "event:get:") =>
+            (lambda (rest)
+              (let* ((params (get-event-parameters rest))
+                     (name (car params)))
+                (get-repo-script-event name edit))))
+
+           ((equal? event "event:back")
+            (back))
+
+           ((equal? event "event:repl")
+            (repl))
+
+           ((equal? event "event:edit")
+            (edit))))
+   #t))
+
+(define (view-script name)
+  (open-URL
+   (string-append
+    "http://"
+    wiki-server-address
+    wiki-root
+    "/index.php/"
+    (url-encode
+     (string-append wiki-script-prefix name)))))
+
+(define obtain-script #f)
+(set! obtain-script view-script)
+
+(define get-repo-script-event #f)
+(set! get-repo-script-event
+      (lambda (name #!optional (back repl))
+        (let ((script
+               (string-append
+                obtain-script-prefix
+                name
+                obtain-script-suffix)))
+          (add-script name script)
+          (back))))
+
+(define obtain-script-prefix #<<obtain-script-prefix-end
+;; Apple forbids downloads, so you must
+;; copy/paste the script from the wiki.
+;; Tap on "Run" to visit the wiki. Then
+;; double-tap-drag on the script to
+;; select and copy it.  Then return to
+;; Gambit REPL, select this text and
+;; paste the script.
+
+(obtain-script "
+obtain-script-prefix-end
+)
+
+(define obtain-script-suffix #<<obtain-script-suffix-end
+")
+
+obtain-script-suffix-end
+)
+
+;;;----------------------------------------------------------------------------
+
+;; Repository transaction page.
+
+(define repo-transaction-page-content-part1 #<<repo-transaction-page-content-part1-end
+
+<center>
+
+repo-transaction-page-content-part1-end
+)
+
+(define repo-transaction-page-content-part2 #<<repo-transaction-page-content-part2-end
+
+</center>
+
+<br/>
+
+<center><div class="statusbox">
+
+repo-transaction-page-content-part2-end
+)
+
+(define repo-transaction-page-content-part3 #<<repo-transaction-page-content-part3-end
+</div></center>
+
+</body>
+</html>
+
+repo-transaction-page-content-part3-end
+)
+
+(define (make-repo-transaction-page header msg status)
+  (list common-html-header
+        repo-page-content-part1
+        header
+        repo-transaction-page-content-part1
+        msg
+        repo-transaction-page-content-part2
+        status
+        repo-transaction-page-content-part3))
+
+(define (repo-transaction thunk header msg success-msg failure-msg back)
+
+  (define (exec)
+
+    (set-page-content
+     (make-repo-transaction-page header msg spinner-html)
+     #t)
+
+    (guard-repo-transaction
+     (lambda ()
+
+       (thunk)
+
+       (if success-msg
+           (begin
+
+             (set-page-content
+              (make-repo-transaction-page
+               header
+               msg
+               (list "<div class=\"statussuccess\">"
+                     success-msg
+                     "</div>"))
+              #t)
+
+             (thread-sleep! 2) ;; display success message for 2 seconds
+
+             (back))))
+     header
+     msg
+     failure-msg
+     back))
+
+  (auto-login
+   exec
+   back))
+
+(define (guard-repo-transaction thunk header msg failure-msg back)
+  (with-exception-catcher
+   (lambda (e)
+
+     (set-page-content
+      (make-repo-transaction-page
+       header
+       msg
+       (list "<div class=\"statuserror\">"
+             failure-msg
+             "<br/><br/>"
+             (exception->error-msg e)
+             "</div>"))
+      #t)
+
+     (thread-sleep! 4) ;; display error message for 4 seconds
+
+     (back))
+   thunk))
+
+(define spinner-html
+  "<div class=\"spinner\"><div class=\"bar1\"></div><div class=\"bar2\"></div><div class=\"bar3\"></div><div class=\"bar4\"></div><div class=\"bar5\"></div><div class=\"bar6\"></div><div class=\"bar7\"></div><div class=\"bar8\"></div><div class=\"bar9\"></div><div class=\"bar10\"></div><div class=\"bar11\"></div><div class=\"bar12\"></div></div>")
+
+(define (exception->error-msg e)
+  (cond ((equal? e "NotExists")
+         "Username does not exist")
+        ((or (equal? e "NoName")
+             (equal? e "Illegal"))
+         "Illegal username")
+        ((or (equal? e "EmptyPass")
+             (equal? e "WrongPass")
+             (equal? e "WrongPluginPass"))
+         "Wrong password")
+        ((or (equal? e "Blocked")
+             (equal? e "CreateBlocked"))
+         "This user is blocked")
+        ((equal? e "Throttled")
+         "Too many logins... try again later")
+        ((equal? e "failed to connect")
+         "Could not connect to Gambit wiki")
+        ((equal? e "script not found")
+         "Script not found")
+        ((equal? e "malformed script")
+         "Script is not properly formatted")
+        ((equal? e "you must first login to the Gambit wiki")
+         "Not logged in to the Gambit wiki")
+        ((or (equal? e "script name must be a string")
+             (equal? e "script name must end with \".scm\"")
+             (equal? e "script name must start with an upper case letter")
+             (equal? e "script name must contain at least one colon")
+             (equal? e "illegal character in script name"))
+         "Invalid script name")
+        ((equal? e "unknown")
+         "Unknown error")
+        (else
+         (with-output-to-string "" (lambda () (display-exception e))))))
+
+;;;----------------------------------------------------------------------------
+
+;; Repository login.
+
+(define login-page-content-part1 #<<login-page-content-part1-end
+
+<body class="login">
+
+<center>
+<h1>Log in to Gambit wiki</h1>
+
+<form onSubmit="window.location='event:login:'+encodeURIComponent(document.getElementById('username').value)+':'+encodeURIComponent(document.getElementById('password').value)+':'+encodeURIComponent(document.getElementById('rememberpass').value)+':'; return false;">
+
+<table>
+<tr>
+  <td class="label">Username:</td>
+  <td class="login"><input class="login" id="username" type="text" value="
+login-page-content-part1-end
+)
+
+(define login-page-content-part2 #<<login-page-content-part2-end
+" /></td>
+</tr><tr>
+  <td class="label">Password:</td>
+  <td class="login"><input class="login" id="password" type="password" value="
+login-page-content-part2-end
+)
+
+(define login-page-content-part3 #<<login-page-content-part3-end
+" /></td>
+<tr>
+  <td></td>
+  <td><input type="checkbox" id="rememberpass" 
+login-page-content-part3-end
+)
+
+(define login-page-content-part4 #<<login-page-content-part4-end
+/>Remember my password</td>
+</tr>
+</table>
+
+<br/>
+
+<input type="submit" class="bigbutton" value="Log in" />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="button" class="bigbutton" value="Cancel" onClick="window.location='event:cancel';" />
+
+</form>
+
+</center>
+
+<center><div class="statusbox">
+
+login-page-content-part4-end
+)
+
+(define login-page-content-part5 #<<login-page-content-part5-end
+</div></center>
+
+<center>
+If you don't have an account, you should<br/>
+<div class="widebutton" onClick="window.location='event:create';">Create an account</div><br/>
+It's free!
+</center>
+
+</body>
+</html>
+
+login-page-content-part5-end
+)
+
+(define (make-login-page username password remember-pass? msg)
+  (list common-html-header
+        login-page-content-part1
+        (html-escape username)
+        login-page-content-part2
+        (html-escape password)
+        login-page-content-part3
+        (if remember-pass? "checked " "")
+        login-page-content-part4
+        msg
+        login-page-content-part5))
+
+(define (make-initial-login-page)
+  (let ((info (get-login-info)))
+    (make-login-page
+     (car info)
+     (cadr info)
+     (caddr info)
+     "")))
+
+(define (auto-login success fail)
+  (if (wiki-logged-in?)
+      (success)
+      (login success fail)))
+
+(define (login #!optional (success repl) (fail repl))
+  (login-with-page (make-initial-login-page) success fail))
+
+(define (login-with-page page success fail)
+  (set-page
+   page
+   (lambda (event)
+     (cond ((has-prefix? event "event:login:") =>
+            (lambda (rest)
+              (let* ((params (get-event-parameters rest))
+                     (username (car params))
+                     (password (cadr params))
+                     (remember-pass? (equal? (caddr params) "on")))
+                (attempt-login success
+                               fail
+                               username
+                               password
+                               remember-pass?))))
+
+           ((equal? event "event:cancel")
+            (fail))
+
+           ((equal? event "event:create")
+            (open-URL
+             (string-append
+              "http://"
+              wiki-server-address
+              wiki-root
+              "/index.php/Special:RequestAccount")))))
+   #t))
+
+(define (attempt-login success fail username password remember-pass?)
+
+  (set! login-info
+        (list username
+              (if remember-pass? password "")
+              remember-pass?))
+
+  (save-login-info)
+
+  (set-page
+   (make-login-page
+    username
+    password
+    remember-pass?
+    spinner-html)
+   (lambda (event)
+     #f)
+   #t)
+
+  ((with-exception-catcher
+
+    (lambda (e)
+      (let ((msg
+             (list "<div class=\"statuserror\">"
+                   (exception->error-msg e)
+                   "</div>")))
+        (lambda ()
+          (login-with-page
+           (make-login-page
+            username
+            password
+            remember-pass?
+            msg)
+           success
+           fail))))
+
+    (lambda ()
+
+      (wiki-logout)
+      (wiki-login username password #t)
+
+      (set-page
+       (make-login-page
+        username
+        password
+        remember-pass?
+        "<div class=\"statussuccess\">You are now logged in!</div>")
+       (lambda (event)
+         #f)
+       #t)
+
+      (thread-sleep! 2) ;; display success message for 2 seconds
+
+      success))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1610,10 +2080,11 @@ edit-page-content-tail-end
 
        (begin
          (set-pref "run-main-script" #f)
-         (let ((x (assoc "main" (get-script-db))))
-           (if x
-               (let ((script (cdr x)))
-                 (eval (cons 'begin (with-input-from-string script read-all)))
+         (let* ((main-script-name "main")
+                (main-script (get-script-by-name main-script-name)))
+           (if main-script
+               (begin
+                 (load-script main-script-name main-script)
                  (set-pref "run-main-script" "yes"))
                (splash))))
 
@@ -1623,4 +2094,4 @@ edit-page-content-tail-end
 
    (exit)))
 
-;;;----------------------------------------------------------------------------
+;;;============================================================================

@@ -1,0 +1,40 @@
+#! /bin/sh
+
+# This script creates the .png images for the App Store
+# from the screen shots in the "screenshots" directory.
+#
+# The ImageMagick program "convert" must be installed.
+
+# To rotate a screen shot use:
+# convert screenshots/IMG_0020.PNG -rotate 90 screenshots/IMG_0020_new.PNG 
+
+rm -rf appstore-screenshots
+mkdir appstore-screenshots
+
+cd screenshots
+
+for f in IMG_[0-9][0-9][0-9][0-9].PNG ; do
+
+  res=`identify $f | cut "-d " -f3`
+
+  case "$res" in
+
+     320x480) geom="320x460+0+20"
+              ;;
+
+     480x320) geom="480x300+0+20"
+              ;;
+
+    768x1024) geom="768x1004+0+20"
+              ;;
+
+    1024x768) geom="1024x748+0+20"
+              ;;
+
+  esac
+
+  convert "$f" -crop "$geom" ../appstore-screenshots/"$f"
+
+done
+
+cd ..

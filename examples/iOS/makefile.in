@@ -1,4 +1,4 @@
-# makefile for iOS example, Time-stamp: <2011-04-01 22:04:46 feeley>
+# makefile for iOS example
 
 # Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
@@ -62,16 +62,30 @@ psdir = @psdir@
 localedir = @localedir@
 mandir = @mandir@
 
-.SUFFIXES: .scm .c @obj@
+.SUFFIXES: .scm .m @obj@
 
 RCFILES = makefile.in README build-gambit-iOS GambitREPL.xcodeproj.tgz \
-program.scm program.h \
+json.scm "json\#.scm" url.scm "url\#.scm" html.scm "html\#.scm" \
+wiki.scm "wiki\#.scm" program.scm program.h \
 Prefix.pch main.m \
 AppDelegate.m AppDelegate.h ViewController.m ViewController.h \
 AccessoryView.xib MainWindow.xib ViewController.xib \
 Icon-72.png Icon-Small-50.png Icon-Small.png Icon-Small@2x.png Icon-512.png \
 Icon.png Icon@2x.png Icon-unscaled.key Icon-unscaled.tiff \
-Icon-unscaled-alpha.tiff make-scaled-icons \
+Icon-unscaled-alpha.tiff \
+8ball.png edit.png f1.png f10.png f11.png f12.png f2.png f3.png \
+f4.png f5.png f6.png f7.png f8.png f9.png heart.png note.png rocket.png \
+stop.png user.png \
+key-8ball-46x42.png key-comma-46x42.png key-doublequote-46x42.png \
+key-edit-46x42.png key-empty-46x42.png key-f1-46x42.png \
+key-f10-46x42.png key-f11-46x42.png key-f12-46x42.png key-f2-46x42.png \
+key-f3-46x42.png key-f4-46x42.png key-f5-46x42.png key-f6-46x42.png \
+key-f7-46x42.png key-f8-46x42.png key-f9-46x42.png key-heart-46x42.png \
+key-lambda-46x42.png key-lparen-46x42.png key-minus-46x42.png \
+key-note-46x42.png key-plus-46x42.png key-quote-46x42.png \
+key-rocket-46x42.png key-rparen-46x42.png key-sharp-46x42.png \
+key-star-46x42.png key-stop-46x42.png key-user-46x42.png \
+make-appstore-screenshots make-keys make-scaled-icons \
 Info.plist 
 
 GENDISTFILES =
@@ -86,37 +100,40 @@ all-post:
 
 examples: prepare-for-xcode
 
-prepare-for-xcode: program.m program_.c GambitREPL.xcodeproj
+prepare-for-xcode: json.m url.m html.m wiki.m program.m program_.m GambitREPL.xcodeproj
 	chmod +x build-gambit-iOS
-	@echo "***********************************************************"
-	@echo "*                                                         *"
-	@echo "* To complete the iOS example the following steps must be *"
-	@echo "* completed manually:                                     *"
-	@echo "*                                                         *"
-	@echo "*  1) at the shell execute: ./build-gambit-iOS            *"
-	@echo "*     => this builds the Gambit runtime library for       *"
-	@echo "*        the iPhone/iPad/iTouch devices and simulators    *"
-	@echo "*                                                         *"
-	@echo "*  2) open GambitREPL.xcodeproj in XCode 4.0 (or later)   *"
-	@echo "*                                                         *"
-	@echo "*  3) select the appropriate target (simulator or device) *"
-	@echo "*                                                         *"
-	@echo "*  4) select menu Product -> Run                          *"
-	@echo "*                                                         *"
-	@echo "***********************************************************"
+	@echo "*************************************************************"
+	@echo "*                                                           *"
+	@echo "* To complete the iOS example the following steps must be   *"
+	@echo "* completed manually:                                       *"
+	@echo "*                                                           *"
+	@echo "*  1) at the shell execute: ./build-gambit-iOS              *"
+	@echo "*     => this builds the Gambit runtime library for         *"
+	@echo "*        the iPhone/iPad/iPod Touch devices and simulators  *"
+	@echo "*                                                           *"
+	@echo "*  2) open GambitREPL.xcodeproj in XCode 4.0 (or later)     *"
+	@echo "*                                                           *"
+	@echo "*  3) select the appropriate target (simulator or device)   *"
+	@echo "*                                                           *"
+	@echo "*  4) select menu Product -> Run                            *"
+	@echo "*                                                           *"
+	@echo "*************************************************************"
 
-.scm.c:
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
+.scm.m:
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check -debug -o $*.m $(srcdirpfx)$*.scm
+	cp $*.m $*.c
 
-.c.m:
-	cp $*.c $*.m
-
-program_.c: program.c
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -o program_.c program.c
+program_.m: json.m url.m html.m wiki.m program.m
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -o $@ $^
 
 GambitREPL.xcodeproj: GambitREPL.xcodeproj.tgz
 	rm -rf GambitREPL.xcodeproj
 	tar zxf GambitREPL.xcodeproj.tgz
+
+xcodeproj:
+	tar cf GambitREPL.xcodeproj.tar GambitREPL.xcodeproj/project.pbxproj
+	gzip -9 GambitREPL.xcodeproj.tar
+	mv GambitREPL.xcodeproj.tar.gz GambitREPL.xcodeproj.tgz
 
 install-pre:
 
@@ -129,7 +146,7 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f program.m program.c program_.c
+	rm -f json.m url.m html.m wiki.m program.m program_.m
 
 clean-pre: mostlyclean-pre
 

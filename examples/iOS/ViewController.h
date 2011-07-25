@@ -17,7 +17,7 @@ void set_textView_font(NSString *name, int size);
 void set_textView_content(NSString *str);
 void add_output_to_textView(NSString *str);
 void add_input_to_textView(NSString *str);
-void set_webView_content(NSString *str);
+void set_webView_content(NSString *str, BOOL enable_scaling, NSString *mime_type);
 void open_URL(NSString *url);
 void set_pref(NSString *key, NSString *value);
 NSString *get_pref(NSString *key);

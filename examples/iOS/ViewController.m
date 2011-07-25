@@ -389,15 +389,18 @@ void add_input_to_textView(NSString *str) {
 }
 
 
-void set_webView_content(NSString *str) {
+void set_webView_content(NSString *str, BOOL enable_scaling, NSString *mime_type) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
       [vc.webView
-          loadHTMLString:str
+          loadData:[str dataUsingEncoding:NSUnicodeStringEncoding]
+          MIMEType:mime_type
+          textEncodingName:@"UTF-8" 
           baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]]
       ];
+      vc.webView.scalesPageToFit = enable_scaling;
     }
 }
 
@@ -460,7 +463,9 @@ NSString *get_pref(NSString *key) {
 
           ___disable_heartbeat_interrupts ();
 
-          [textView resignFirstResponder];
+#if 0
+          [textView resignFirstResponder]; // Hide the keyboard after "return" key is pressed
+#endif
         }
       else
         add_to_textView(line);
@@ -486,10 +491,15 @@ NSString *get_pref(NSString *key) {
   if (keyboardSounds != 0)
     {
       if (keyboardSounds == -1) // delayed check of user preferences?
-        keyboardSounds =
-          CFPreferencesGetAppBooleanValue(CFSTR("keyboard"),
-                                          CFSTR("/var/mobile/Library/Preferences/com.apple.preferences.sounds"),
-                                          NULL);
+        {
+          Boolean exists_and_valid;
+          keyboardSounds =
+            CFPreferencesGetAppBooleanValue(CFSTR("keyboard"),
+                                            CFSTR("/var/mobile/Library/Preferences/com.apple.preferences.sounds"),
+                                            &exists_and_valid);
+          if (!exists_and_valid)
+            keyboardSounds = true; // by default turn on keyboard clicks
+        }
 
       if (keyboardSounds != 0)
         AudioServicesPlaySystemSound(1104); // keyboard "tock" sound

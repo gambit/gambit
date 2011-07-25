@@ -1,0 +1,139 @@
+#! /bin/sh
+
+# This script creates the .png images for the AccessoryView keys.
+#
+# The ImageMagick program "convert" must be installed.
+
+STYLE=iphone
+
+FONT="Courier-New-Bold" # type "convert -list font" for a list
+
+KEY_WIDTH=46 # iPhone sizes
+KEY_HEIGHT=42
+
+#KEY_WIDTH=76 # iPad sizes
+#KEY_HEIGHT=76
+
+BORDER_L=2
+BORDER_R=2
+BORDER_T=1
+BORDER_B=3
+
+make_key_with_wh()
+{
+  WIDTH="$1"
+  HEIGHT="$2"
+  TEXT="$3"
+  IMAGE="$4"
+  ADJUST_X="$5"
+  ADJUST_Y="$6"
+  NAME="$7"
+
+  NAME_WH="${NAME}-${WIDTH}x${HEIGHT}"
+
+  FONT_SIZE=`expr \( ${KEY_HEIGHT} \* 1000 \) / 1625`
+
+  if [ "${IMAGE}" == "" ]; then
+
+    DRAW_IMAGE=""
+
+  else
+
+    SCALE_IMAGE="`expr ${HEIGHT} / 36`"
+    SCALE_IMAGE2="1"
+    WIDTH_IMAGE="29"
+    HEIGHT_IMAGE="29"
+    DRAW_IMAGE="translate `expr \( ${WIDTH} - \( ${WIDTH_IMAGE} \* ${SCALE_IMAGE} \) \) / 2 + ${ADJUST_X} \* ${SCALE_IMAGE}`,`expr \( ${HEIGHT} - \( ${HEIGHT_IMAGE} \* ${SCALE_IMAGE} \) \) / 2 + ${ADJUST_Y} \* ${SCALE_IMAGE}` scale ${SCALE_IMAGE},${SCALE_IMAGE} image over 0,0 0,0 '${IMAGE}'"
+
+  fi
+
+  case "${STYLE}" in
+
+    iphone) convert -size ${WIDTH}x${HEIGHT} gradient:#d4d4d4-#bcbcbc \
+              ${NAME_WH}-temp1.png
+            convert -size ${WIDTH}x${HEIGHT} xc:none \
+              -draw "fill #848484 roundrectangle `expr ${BORDER_L} - 1`,`expr ${BORDER_T} - 1` `expr ${WIDTH} - ${BORDER_R} + 1 - 1`,`expr ${HEIGHT} - ${BORDER_B} + 3 - 1` 6,6" \
+              -draw "fill #606060 roundrectangle `expr ${BORDER_L} - 0`,`expr ${BORDER_T} - 0` `expr ${WIDTH} - ${BORDER_R} - 1`,`expr ${HEIGHT} - ${BORDER_B} + 2 - 1` 6,6" \
+              -draw "fill #303030 roundrectangle `expr ${BORDER_L} - 0`,`expr ${BORDER_T} - 0` `expr ${WIDTH} - ${BORDER_R} - 1`,`expr ${HEIGHT} - ${BORDER_B} + 1 - 1` 6,6" \
+              ${NAME_WH}-temp2.png
+            DRAW_BORDER=""
+            DRAW_FRAME=""
+            DRAW_SHADOW=""
+            ;;
+
+      ipad) convert -size ${WIDTH}x${HEIGHT} gradient:#efeff1-#d3d3d8 \
+              ${NAME_WH}-temp1.png
+            DRAW_BORDER="fill transparent stroke white stroke-width 2 roundrectangle 0,1 `expr ${WIDTH} - 1`,`expr ${HEIGHT} - 1` 6,6"
+            DRAW_FRAME="fill transparent stroke black stroke-width 1 roundrectangle 0,0 `expr ${WIDTH} - 1`,`expr ${HEIGHT} - 1` 5,5" \"
+            DRAW_SHADOW=""
+            ;;
+
+         *) convert -size ${WIDTH}x${HEIGHT} gradient:#ffffff-#ffffff \
+              ${NAME_WH}-temp1.png
+            DRAW_BORDER=""
+            DRAW_FRAME=""
+            DRAW_SHADOW=""
+            ;;
+
+  esac
+
+  convert -size ${WIDTH}x${HEIGHT} xc:none \
+          -draw "fill white roundrectangle ${BORDER_L},${BORDER_T} `expr ${WIDTH} - ${BORDER_R} - 1`,`expr ${HEIGHT} - ${BORDER_B} - 1` 5,5" ${NAME_WH}-temp1.png -compose SrcIn -composite \
+          ${NAME_WH}-temp2.png -compose Blend -composite \
+          -draw "${DRAW_BORDER}" \
+          -draw "${DRAW_FRAME}" \
+          -draw "fill black gravity Center font '${FONT}' font-size ${FONT_SIZE} translate `expr ${ADJUST_X} \* ${FONT_SIZE} / 24`,`expr ${ADJUST_Y} \* ${FONT_SIZE} / 24` text 0,0 '${TEXT}'" \
+          -draw "${DRAW_IMAGE}" \
+          ${NAME_WH}.png
+
+  rm -f ${NAME_WH}-temp1.png ${NAME_WH}-temp2.png
+}
+
+make_key()
+{
+  TEXT="$1"
+  IMAGE="$2"
+  ADJUST_X="$3"
+  ADJUST_Y="$4"
+  NAME="$5"
+
+  make_key_with_wh "${KEY_WIDTH}" "${KEY_HEIGHT}" "${TEXT}" "${IMAGE}" "${ADJUST_X}" "${ADJUST_Y}" "${NAME}"
+}
+
+make_keys()
+{
+  make_key ""   ""           "0"  "0"  "key-empty"
+  make_key "λ" ""           "0"  "0"  "key-lambda"
+  make_key ","  ""           "-1" "0"  "key-comma"
+  make_key "\'" ""           "-1" "0"  "key-quote"
+  make_key "\"" ""           "-1" "0"  "key-doublequote"
+  make_key "#"  ""           "-1" "0"  "key-sharp"
+  make_key "*"  ""           "-1" "0"  "key-star"
+  make_key "-"  ""           "-1" "0"  "key-minus"
+  make_key "+"  ""           "-1" "0"  "key-plus"
+  make_key "("  ""           "-4" "-1" "key-lparen"
+  make_key ")"  ""           "3"  "-1" "key-rparen"
+  make_key ""   "f1.png"     "0"  "0"  "key-f1"
+  make_key ""   "f2.png"     "0"  "0"  "key-f2"
+  make_key ""   "f3.png"     "0"  "0"  "key-f3"
+  make_key ""   "f4.png"     "0"  "0"  "key-f4"
+  make_key ""   "f5.png"     "0"  "0"  "key-f5"
+  make_key ""   "f6.png"     "0"  "0"  "key-f6"
+  make_key ""   "f7.png"     "0"  "0"  "key-f7"
+  make_key ""   "f8.png"     "0"  "0"  "key-f8"
+  make_key ""   "f9.png"     "0"  "0"  "key-f9"
+  make_key ""   "f10.png"    "0"  "0"  "key-f10"
+  make_key ""   "f11.png"    "0"  "0"  "key-f11"
+  make_key ""   "f12.png"    "0"  "0"  "key-f12"
+  make_key ""   "edit.png"   "2"  "0"  "key-edit"
+  make_key ""   "stop.png"   "0"  "0"  "key-stop"
+  make_key ""   "rocket.png" "0"  "0"  "key-rocket"
+  make_key ""   "8ball.png"  "0"  "0"  "key-8ball"
+  make_key ""   "heart.png"  "0"  "0"  "key-heart"
+  make_key ""   "note.png"   "0"  "0"  "key-note"
+  make_key ""   "user.png"   "0"  "0"  "key-user"
+}
+
+make_keys
+
+open key-empty-${KEY_WIDTH}x${KEY_HEIGHT}.png key-lambda-${KEY_WIDTH}x${KEY_HEIGHT}.png key-comma-${KEY_WIDTH}x${KEY_HEIGHT}.png key-quote-${KEY_WIDTH}x${KEY_HEIGHT}.png key-doublequote-${KEY_WIDTH}x${KEY_HEIGHT}.png key-sharp-${KEY_WIDTH}x${KEY_HEIGHT}.png key-star-${KEY_WIDTH}x${KEY_HEIGHT}.png key-minus-${KEY_WIDTH}x${KEY_HEIGHT}.png key-plus-${KEY_WIDTH}x${KEY_HEIGHT}.png key-lparen-${KEY_WIDTH}x${KEY_HEIGHT}.png key-rparen-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f1-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f2-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f3-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f4-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f5-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f6-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f7-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f8-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f9-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f10-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f11-${KEY_WIDTH}x${KEY_HEIGHT}.png key-f12-${KEY_WIDTH}x${KEY_HEIGHT}.png key-edit-${KEY_WIDTH}x${KEY_HEIGHT}.png key-stop-${KEY_WIDTH}x${KEY_HEIGHT}.png key-rocket-${KEY_WIDTH}x${KEY_HEIGHT}.png key-8ball-${KEY_WIDTH}x${KEY_HEIGHT}.png key-heart-${KEY_WIDTH}x${KEY_HEIGHT}.png key-note-${KEY_WIDTH}x${KEY_HEIGHT}.png key-user-${KEY_WIDTH}x${KEY_HEIGHT}.png
