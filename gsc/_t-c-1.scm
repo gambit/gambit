@@ -775,7 +775,11 @@
                (string-append module-prefix
                               (path-strip-directory root)))
              (input-files
-               (map (lambda (x) (string-append x (targ-preferred-c-file-extension))) inputs))
+               (map (lambda (x)
+                      (if (string=? (path-extension x) "")
+                          (string-append x (targ-preferred-c-file-extension))
+                          x))
+                    inputs))
              (input-infos
                (map targ-read-linker-info input-files))
              (input-mods

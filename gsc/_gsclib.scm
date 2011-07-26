@@ -74,16 +74,14 @@
                 (##path-strip-directory
                  (##path-strip-extension filename))
                 expanded-output)
-               (c#targ-preferred-c-file-extension))))
-         (c-filename-no-dir-no-ext
-          (##path-strip-directory
-           (##path-strip-extension c-filename))))
+               (c#targ-preferred-c-file-extension)))))
     (and (c#cf filename
                #f
                options
                c-filename
                (or mod-name
-                   c-filename-no-dir-no-ext))
+                   (##path-strip-directory
+                    (##path-strip-extension c-filename))))
          c-filename)))
 
 (define (compile-file
@@ -371,9 +369,7 @@
                 (let* ((out
                         (if (##eq? output (macro-absent-obj))
                             (##path-directory
-                             (##path-normalize
-                              (##string-append (##car rev-mods)
-                                               (c#targ-preferred-c-file-extension))))
+                             (##path-normalize (##car rev-mods)))
                             (macro-force-vars (output)
                               output)))
                        (baselib
@@ -411,7 +407,10 @@
               expanded-output
               (##path-expand
                (##path-strip-directory
-                (##string-append (##car rev-mods) "_.c"))
+                (##string-append
+                 (##path-strip-extension (##car rev-mods))
+                 "_"
+                 (c#targ-preferred-c-file-extension)))
                expanded-output)))
          (base-and-mods
           (##cons base (##reverse rev-mods))))
@@ -444,9 +443,7 @@
                 (let* ((out
                         (if (##eq? output (macro-absent-obj))
                             (##path-directory
-                             (##path-normalize
-                              (##string-append (##car rev-mods)
-                                               (c#targ-preferred-c-file-extension))))
+                             (##path-normalize (##car rev-mods)))
                             (macro-force-vars (output)
                               output)))
                         (warn?
@@ -471,7 +468,10 @@
               expanded-output
               (##path-expand
                (##path-strip-directory
-                (##string-append (##car rev-mods) "_.c"))
+                (##string-append
+                 (##path-strip-extension (##car rev-mods))
+                 "_"
+                 (c#targ-preferred-c-file-extension)))
                expanded-output)))
          (mods
           (##reverse rev-mods)))

@@ -405,46 +405,44 @@
 
                               (if (##memq type '(link exe))
 
-                                  (let ((roots
-                                         (and (##pair? rev-gen-c-files)
-                                              (let* ((roots
-                                                      (##map ##path-strip-extension
-                                                             (##reverse rev-gen-c-files)))
-                                                     (link-file
-                                                      (if flat?
-                                                          (if (and output
-                                                                   (##eq? type 'link))
-                                                              (link-flat roots
-                                                                         output: output)
-                                                              (link-flat roots))
-                                                          (if (and output
-                                                                   (##eq? type 'link))
-                                                              (if base
-                                                                  (link-incremental
-                                                                   roots
-                                                                   output: output
-                                                                   base: base)
-                                                                  (link-incremental
-                                                                   roots
-                                                                   output: output))
-                                                              (if base
-                                                                  (link-incremental
-                                                                   roots
-                                                                   base: base)
-                                                                  (link-incremental
-                                                                   roots))))))
-                                                (add-gen-c-file link-file)
-                                                (if (##eq? type 'exe)
-                                                    (let ((obj-link-file
-                                                           (do-compile-file
-                                                            link-file
-                                                            (##cons 'obj sym-opts)
-                                                            #f)))
-                                                      (add-obj-file obj-link-file)
-                                                      (add-tmp-file obj-link-file)
-                                                      (if (##not (##memq 'keep-c sym-opts))
-                                                          (add-tmp-file link-file))))
-                                                roots))))
+                                  (let ((gen-c-files
+                                         (##reverse rev-gen-c-files)))
+
+                                    (if (##pair? gen-c-files)
+                                        (let* ((link-file
+                                                (if flat?
+                                                    (if (and output
+                                                             (##eq? type 'link))
+                                                        (link-flat gen-c-files
+                                                                   output: output)
+                                                        (link-flat gen-c-files))
+                                                    (if (and output
+                                                             (##eq? type 'link))
+                                                        (if base
+                                                            (link-incremental
+                                                             gen-c-files
+                                                             output: output
+                                                             base: base)
+                                                            (link-incremental
+                                                             gen-c-files
+                                                             output: output))
+                                                        (if base
+                                                            (link-incremental
+                                                             gen-c-files
+                                                             base: base)
+                                                            (link-incremental
+                                                             gen-c-files))))))
+                                          (add-gen-c-file link-file)
+                                          (if (##eq? type 'exe)
+                                              (let ((obj-link-file
+                                                     (do-compile-file
+                                                      link-file
+                                                      (##cons 'obj sym-opts)
+                                                      #f)))
+                                                (add-obj-file obj-link-file)
+                                                (add-tmp-file obj-link-file)
+                                                (if (##not (##memq 'keep-c sym-opts))
+                                                    (add-tmp-file link-file))))))
 
                                     (if (##eq? type 'exe)
                                         (and (##pair? rev-obj-files)
@@ -461,10 +459,11 @@
                                                                       expanded-output)))
                                                       expanded-output
                                                       (##string-append
-                                                       (if roots
-                                                           (##car (##reverse roots))
-                                                           (##path-strip-extension
-                                                            (##car rev-obj-files)))
+                                                       (##path-strip-extension
+                                                        (##car
+                                                         (if (##pair? gen-c-files)
+                                                             (##reverse gen-c-files)
+                                                             rev-obj-files)))
                                                        ##os-exe-extension-string-saved))))))))
 
                                   (if flat?
