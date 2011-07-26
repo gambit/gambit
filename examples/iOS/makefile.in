@@ -121,7 +121,6 @@ prepare-for-xcode: json.m url.m html.m wiki.m program.m program_.m GambitREPL.xc
 
 .scm.m:
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check -debug -o $*.m $(srcdirpfx)$*.scm
-	cp $*.m $*.c
 
 program_.m: json.m url.m html.m wiki.m program.m
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -o $@ $^
