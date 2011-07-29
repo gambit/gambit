@@ -77,14 +77,14 @@ if test "${LDFLAGS+set}" != set; then
 fi
 
 AC_LANG(C)
-AC_PROG_CC
+AC_PROG_CC([i686-apple-darwin11-gcc-4.2.1 gcc cc]) # Try to avoid LLVM gcc
 AC_PROG_CPP
 C_COMPILER=$CC
 C_PREPROC=$CPP
 
 if test "$ENABLE_CPLUSPLUS" = yes; then
   AC_LANG(C++)
-  AC_PROG_CXX
+  AC_PROG_CXX([i686-apple-darwin11-g++-4.2.1 g++]) # Try to avoid LLVM gcc
   AC_PROG_CXXCPP
   C_COMPILER=$CXX
   C_PREPROC=$CXXCPP
