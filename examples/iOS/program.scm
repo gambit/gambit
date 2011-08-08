@@ -91,12 +91,30 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; Make it impossible to access files outside of Gambit REPL.  This is
+;; needed to respect clause 2.6 of the App Store Review Guidelines:
+;; "Apps that read or write data outside its designated container area
+;; will be rejected".
+
+(define (contained-path-resolve path)
+  (let loop ()
+    (let ((str (##path-expand path)))
+      (if (has-prefix? (##path-normalize str) app-dir)
+          str ;; only allow files in app directory
+          (begin
+            (error "App container violation")
+            (loop))))))
+
+(set! ##path-resolve-hook contained-path-resolve)
+
 ;; Make the current-directory and the "~~" path equal to the program's
 ;; .app directory.
 
-(define app-dir (path-directory (car (command-line))))
+(define app-dir
+  (##path-normalize (path-directory (car (command-line)))))
 
-(set! ##os-path-gambcdir (lambda () app-dir))
+(set! ##os-path-gambcdir
+      (lambda () app-dir))
 
 (current-directory app-dir)
 
@@ -1125,14 +1143,6 @@ EOF
       (+ (fib (- n 1)) (fib (- n 2)))))
 
 (repl-eval "(time (fib 25))\n")
-EOF
-)
-
-("play-funny-sound" .
-#<<EOF
-;; Play funny sound.
-
-(AudioServicesPlaySystemSound 1010)
 EOF
 )
 

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_nonstd.scm", Time-stamp: <2009-08-27 16:39:26 feeley>
+;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1417,11 +1417,13 @@
               path
               #!optional
               (chase? (macro-absent-obj)))
-  (let ((result
-         (##os-file-info (##path-expand path)
-                         (if (##eq? chase? (macro-absent-obj))
-                           #t
-                           chase?))))
+  (let* ((resolved-path
+          (##path-resolve path))
+         (result
+          (##os-file-info resolved-path
+                          (if (##eq? chase? (macro-absent-obj))
+                              #t
+                              chase?))))
     (if (##fixnum? result)
       result
       (begin
@@ -1569,11 +1571,13 @@
               path
               #!optional
               (chase? (macro-absent-obj)))
-  (let ((result
-         (##os-file-info (##path-expand path)
-                         (if (##eq? chase? (macro-absent-obj))
-                           #t
-                           chase?))))
+  (let* ((resolved-path
+          (##path-resolve path))
+         (result
+          (##os-file-info resolved-path
+                          (if (##eq? chase? (macro-absent-obj))
+                              #t
+                              chase?))))
     (##not (##fixnum? result))))
 
 (define-prim (file-exists?
@@ -1691,6 +1695,24 @@
                     0)))))
         (else
          0)))
+
+(define ##path-resolve-hook #f)
+(set! ##path-resolve-hook #f)
+
+(define-prim (##path-resolve path)
+  (let ((pr-hook ##path-resolve-hook))
+    (if (##procedure? pr-hook)
+        (let ((result
+               (pr-hook path)))
+          (if (##string? result)
+              result
+              (##raise-error-exception
+               "STRING result expected but got"
+               (##list result))))
+        (##default-path-resolve path))))
+
+(define-prim (##default-path-resolve path)
+  (##path-expand path))
 
 (define ##path-expand-hook #f)
 (set! ##path-expand-hook #f)
@@ -2164,8 +2186,8 @@
             (macro-psettings-path psettings)))
        (if (##not (##string? path))
          (fail)
-         (let* ((expanded-path
-                 (##path-expand path))
+         (let* ((resolved-path
+                 (##path-resolve path))
                 (permissions
                  (##psettings->permissions
                   psettings
@@ -2174,8 +2196,8 @@
                     #o666)))
                 (code
                  (if (##eq? prim create-directory)
-                   (##os-create-directory expanded-path permissions)
-                   (##os-create-fifo expanded-path permissions))))
+                   (##os-create-directory resolved-path permissions)
+                   (##os-create-fifo resolved-path permissions))))
            (if (##fixnum.< code 0)
              (##raise-os-exception #f code prim path-or-settings)
              (##void))))))))
@@ -2189,12 +2211,12 @@
     (##create-directory-or-fifo create-fifo path-or-settings)))
 
 (define-prim (##create-link old-path new-path)
-  (let* ((expanded-old-path
-          (##path-expand old-path))
-         (expanded-new-path
-          (##path-expand new-path))
+  (let* ((resolved-old-path
+          (##path-resolve old-path))
+         (resolved-new-path
+          (##path-resolve new-path))
          (code
-          (##os-create-link expanded-old-path expanded-new-path)))
+          (##os-create-link resolved-old-path resolved-new-path)))
     (if (##fixnum.< code 0)
       (##raise-os-exception #f code create-link old-path new-path)
       (##void))))
@@ -2206,12 +2228,12 @@
         (##create-link old-path new-path)))))
 
 (define-prim (##create-symbolic-link old-path new-path)
-  (let* ((expanded-old-path
-          (##path-expand old-path))
-         (expanded-new-path
-          (##path-expand new-path))
+  (let* ((resolved-old-path
+          (##path-resolve old-path))
+         (resolved-new-path
+          (##path-resolve new-path))
          (code
-          (##os-create-symbolic-link expanded-old-path expanded-new-path)))
+          (##os-create-symbolic-link resolved-old-path resolved-new-path)))
     (if (##fixnum.< code 0)
       (##raise-os-exception #f code create-symbolic-link old-path new-path)
       (##void))))
@@ -2223,10 +2245,10 @@
         (##create-symbolic-link old-path new-path)))))
 
 (define-prim (##delete-directory path)
-  (let* ((expanded-path
-          (##path-expand path))
+  (let* ((resolved-path
+          (##path-resolve path))
          (code
-          (##os-delete-directory expanded-path)))
+          (##os-delete-directory resolved-path)))
     (if (##fixnum.< code 0)
       (##raise-os-exception
        #f
@@ -2241,14 +2263,14 @@
       (##delete-directory path))))
 
 (define-prim (##rename-file old-path new-path)
-  (let* ((expanded-old-path
-          (##path-expand old-path))
-         (expanded-new-path
-          (##path-expand new-path))
+  (let* ((resolved-old-path
+          (##path-resolve old-path))
+         (resolved-new-path
+          (##path-resolve new-path))
          (code
           (##os-rename-file
-           expanded-old-path
-           expanded-new-path)))
+           resolved-old-path
+           resolved-new-path)))
     (if (##fixnum.< code 0)
       (##raise-os-exception
        #f
@@ -2265,14 +2287,14 @@
         (##rename-file old-path new-path)))))
 
 (define-prim (##copy-file old-path new-path)
-  (let* ((expanded-old-path
-          (##path-expand old-path))
-         (expanded-new-path
-          (##path-expand new-path))
+  (let* ((resolved-old-path
+          (##path-resolve old-path))
+         (resolved-new-path
+          (##path-resolve new-path))
          (code
           (##os-copy-file
-           expanded-old-path
-           expanded-new-path)))
+           resolved-old-path
+           resolved-new-path)))
     (if (##fixnum.< code 0)
       (##raise-os-exception
        #f
@@ -2289,10 +2311,10 @@
         (##copy-file old-path new-path)))))
 
 (define-prim (##delete-file path)
-  (let* ((expanded-path
-          (##path-expand path))
+  (let* ((resolved-path
+          (##path-resolve path))
          (code
-          (##os-delete-file expanded-path)))
+          (##os-delete-file resolved-path)))
     (if (##fixnum.< code 0)
       (##raise-os-exception
        #f

@@ -1,6 +1,6 @@
-/* File: "os_base.h", Time-stamp: <2009-11-24 18:10:12 feeley> */
+/* File: "os_base.h" */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_BASE_H
 #define ___OS_BASE_H

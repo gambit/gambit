@@ -1,6 +1,6 @@
-/* File: "os_files.c", Time-stamp: <2009-03-14 11:14:20 feeley> */
+/* File: "os_files.c" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines

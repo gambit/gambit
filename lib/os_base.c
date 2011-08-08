@@ -1,6 +1,6 @@
-/* File: "os_base.c", Time-stamp: <2009-11-24 18:16:40 feeley> */
+/* File: "os_base.c" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.

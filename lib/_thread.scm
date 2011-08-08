@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_thread.scm", Time-stamp: <2009-04-27 15:38:48 feeley>
+;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 

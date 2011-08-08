@@ -5763,9 +5763,9 @@
                          (macro-psettings-arguments psettings)))
                 (environment
                  (macro-psettings-environment psettings))
-                (expanded-directory
+                (resolved-directory
                  (if directory
-                   (##path-expand directory)
+                   (##path-resolve directory)
                    (##current-directory)))
                 (direction
                  (macro-psettings-direction psettings)))
@@ -5779,7 +5779,7 @@
                   (##os-device-stream-open-process
                    path-and-arguments
                    environment
-                   expanded-directory
+                   resolved-directory
                    (psettings->options psettings))))
              (cond ((##fixnum? device)
                     (if raise-os-exception?
@@ -7076,11 +7076,11 @@
                 (##current-directory))))
        (if (##not (##string? path))
          (fail)
-         (let* ((expanded-path
-                 (##path-expand path))
+         (let* ((resolved-path
+                 (##path-resolve path))
                 (rdevice
                  (##os-device-directory-open-path
-                  expanded-path
+                  resolved-path
                   (macro-psettings-ignore-hidden psettings))))
            (if (##fixnum? rdevice)
              (if raise-os-exception?
@@ -7376,11 +7376,11 @@
               (arg2 (macro-absent-obj)))
   (let* ((path
           (macro-psettings-path psettings))
-         (expanded-path
-          (##path-expand path))
+         (resolved-path
+          (##path-resolve path))
          (device
           (##os-device-stream-open-path
-           expanded-path
+           resolved-path
            (##psettings->device-flags psettings)
            (##psettings->permissions psettings #o666))))
     (if (##fixnum? device)
@@ -7389,7 +7389,7 @@
             (cont device))
         (cont
          (##make-device-port-from-single-device
-          expanded-path
+          resolved-path
           device
           psettings)))))
 

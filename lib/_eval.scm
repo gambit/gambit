@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_eval.scm", Time-stamp: <2009-10-29 10:40:27 feeley>
+;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3862,33 +3862,33 @@
                abs-path)))))
 
   (define (load-no-ext psettings path)
-    (let* ((src-path (##path-expand path))
+    (let* ((src-path (##path-resolve path))
            (result (load-source psettings src-path)))
       (if (##not (##fixnum? result))
           result
           (let loop1 ((version 1)
                       (last-obj-file-path #f)
                       (last-obj-file-info #f))
-            (let* ((expanded-path
-                    (##path-expand
+            (let* ((resolved-path
+                    (##path-resolve
                      (##string-append path
                                       ".o"
                                       (##number->string version 10))))
-                   (expanded-info
-                    (##file-info expanded-path))
-                   (expanded-path-exists?
-                    (##not (##fixnum? expanded-info))))
-              (if expanded-path-exists?
+                   (resolved-info
+                    (##file-info resolved-path))
+                   (resolved-path-exists?
+                    (##not (##fixnum? resolved-info))))
+              (if resolved-path-exists?
                   (loop1 (##fixnum.+ version 1)
-                         expanded-path
-                         expanded-info)
+                         resolved-path
+                         resolved-info)
                   (if (and last-obj-file-path
                            (##not ##load-source-if-more-recent))
                       (load-binary last-obj-file-path)
                       (let loop2 ((lst ##scheme-file-extensions))
                         (if (##pair? lst)
                             (let* ((src-file-path
-                                    (##path-expand
+                                    (##path-resolve
                                      (##string-append path (##caar lst))))
                                    (src-file-info
                                     (if (##string? src-file-path)
@@ -3945,8 +3945,8 @@
              (cond ((##string=? ext "")
                     (load-no-ext psettings path))
                    ((binary-extension? ext)
-                    (let ((expanded-path (##path-expand path)))
-                      (load-binary expanded-path)))
+                    (let ((resolved-path (##path-resolve path)))
+                      (load-binary resolved-path)))
                    (else
                     (raise-os-exception-if-needed
                      (load-source psettings path))))))))))

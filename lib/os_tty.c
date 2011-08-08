@@ -1,6 +1,6 @@
-/* File: "os_tty.c", Time-stamp: <2011-01-17 14:25:21 feeley> */
+/* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -797,7 +797,8 @@ ___device_tty *self;)
 #ifdef O_BINARY
                         O_BINARY |
 #endif
-                        O_RDWR))
+                        O_RDWR,
+                        0))
             < 0)
           {
 #ifdef ENXIO

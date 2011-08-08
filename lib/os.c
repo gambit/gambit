@@ -1,6 +1,6 @@
-/* File: "os.c", Time-stamp: <2011-03-20 21:09:44 feeley> */
+/* File: "os.c" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1485,7 +1485,7 @@ ___SCMOBJ chase;)
               0))
       == ___FIX(___NO_ERR))
     {
-      struct ___stat s;
+      ___struct_stat s;
 
       if (((chase == ___FAL)
            ? ___lstat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s)
