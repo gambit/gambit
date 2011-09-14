@@ -7045,6 +7045,9 @@ int options;)
                  direction);
 
           *dev = ___CAST(___device_stream*,d);
+
+          if (e == ___FIX(___NO_ERR))
+            device_transfer_close_responsibility (___CAST(___device*,d));
         }
 
       if (e != ___FIX(___NO_ERR))
@@ -7186,6 +7189,9 @@ int options;)
                  direction);
 
           *dev = ___CAST(___device_stream*,d);
+
+          if (e == ___FIX(___NO_ERR))
+            device_transfer_close_responsibility (___CAST(___device*,d));
         }
     }
 
