@@ -6,8 +6,7 @@
 
 ;; This program implements the "Gambit REPL" application for iOS
 ;; devices.  It is a simple development environment for Scheme.  The
-;; user can interact with a REPL, edit small scripts, run them and
-;; share them on a public script repository.
+;; user can interact with a REPL, and edit small scripts.
 
 ;;;============================================================================
 
@@ -16,69 +15,31 @@
 (##include "~~lib/gambit#.scm")
 (##include "~~lib/_gambit#.scm")
 
+(##namespace ("gr#" help)) ;; don't import help
+
 (##include "wiki#.scm")
 (##include "html#.scm")
 (##include "url#.scm")
 (##include "json#.scm")
+(##include "repl-server#.scm")
+(##include "intf#.scm")
+(##include "script#.scm")
+(##include "repo#.scm")
+(##include "help#.scm")
 
 (##namespace (""
               splash
               repl
               repl-eval
+              repl-server
+              wiki
+              help
               edit
-              login
-              repo
               reset-scripts
-              upload-script
-              download-script
-              delete-script
+              remove-script
+              store-script
+              fetch-script
               view-script
-              obtain-script
-              start-repl-server
-              show-textView
-              show-webView
-              set-textView-font
-              set-textView-content
-              get-textView-content
-              add-output-to-textView
-              add-input-to-textView
-              set-webView-content
-              open-URL
-              set-pref
-              get-pref
-              set-page
-              set-page-content
-              has-prefix?
-              get-event-parameters
-
-              string->Class
-              Class->string
-              string->SEL
-              SEL->string
-              send0
-              send1
-              send2
-              id->string
-              string->id
-              id->bool
-              bool->id
-              id->int
-              int->id
-              id->float
-              float->id
-              id->double
-              double->id
-
-              date
-
-              device-status
-              UDID
-
-              AudioServicesPlayAlertSound
-              AudioServicesPlaySystemSound
-              kSystemSoundID_FlashScreen
-              kSystemSoundID_Vibrate
-              kSystemSoundID_UserPreferredAlert
              ))
 
 (declare
@@ -91,715 +52,13 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; Make it impossible to access files outside of Gambit REPL.  This is
-;; needed to respect clause 2.6 of the App Store Review Guidelines:
-;; "Apps that read or write data outside its designated container area
-;; will be rejected".
-
-(define (contained-path-resolve path)
-  (let loop ()
-    (let ((str (##path-expand path)))
-      (if (has-prefix? (##path-normalize str) app-dir)
-          str ;; only allow files in app directory
-          (begin
-            (error "App container violation")
-            (loop))))))
-
-(set! ##path-resolve-hook contained-path-resolve)
-
-;; Make the current-directory and the "~~" path equal to the program's
-;; .app directory.
-
-(define app-dir
-  (##path-normalize (path-directory (car (command-line)))))
-
-(set! ##os-path-gambcdir
-      (lambda () app-dir))
-
-(current-directory app-dir)
-
-;;;----------------------------------------------------------------------------
-
-;; Interface with Objective-C.
-
-(c-declare #<<c-declare-end
-
-#include <objc/objc.h>
-
-const char *class_getName(Class cls);
-id objc_getClass(const char *name);
-id objc_msgSend(id self, SEL op, ...);
-
-id retain_id(id x)
-{
-  if (x != nil)
-    [x retain];
-  return x;
-}
-
-___SCMOBJ release_id(void *ptr)
-{
-  id x = ___CAST(id,ptr);
-  if (x != nil)
-    [x release];
-  return ___FIX(___NO_ERR);
-}
-
-Class retain_Class(Class x)
-{
-  if (x != nil)
-    [x retain];
-  return x;
-}
-
-___SCMOBJ release_Class(void *ptr)
-{
-  Class x = ___CAST(Class,ptr);
-  if (x != nil)
-    [x release];
-  return ___FIX(___NO_ERR);
-}
-
-c-declare-end
-)
-
-(c-define-type id (pointer (struct "objc_object") (id Class) "release_id"))
-(c-define-type Class (pointer (struct "objc_class") (Class id) "release_Class"))
-(c-define-type SEL (pointer (struct "objc_selector") (SEL)))
-
-(define string->Class
-  (c-lambda (nonnull-char-string) Class
-    "___result = retain_Class(objc_getClass(___arg1));"))
-
-(define Class->string
-  (c-lambda (Class) nonnull-char-string
-    "___result = ___CAST(char*,class_getName(___arg1));")) ;;;TODO: remove cast
-
-(define string->SEL
-  (c-lambda (nonnull-UTF-8-string) SEL
-    "___result = sel_registerName(___arg1);"))
-
-(define SEL->string
-  (c-lambda (SEL) nonnull-UTF-8-string
-    "___result = ___CAST(char*,sel_getName(___arg1));")) ;;;TODO: remove cast
-
-;; Message sending (with 0, 1 and 2 parameters).
-
-(define send0
-  (c-lambda (id SEL) id
-    "___result = retain_id(___CAST(id (*)(id, SEL),objc_msgSend)(___arg1, ___arg2));"))
-
-(define send1
-  (c-lambda (id SEL id) id
-    "___result = retain_id(___CAST(id (*)(id, SEL, id),objc_msgSend)(___arg1, ___arg2, ___arg3));"))
-
-(define send2
-  (c-lambda (id SEL id id) id
-    "___result = retain_id(___CAST(id (*)(id, SEL, id, id),objc_msgSend)(___arg1, ___arg2, ___arg3, ___arg4));"))
-
-;; Type conversions.
-
-(define id->string
-  (c-lambda (id) nonnull-UTF-8-string
-    "___result = ___CAST(char*,[___CAST(NSString*,___arg1) UTF8String]);")) ;;;TODO: remove cast
-
-(define string->id
-  (c-lambda (nonnull-UTF-8-string) id
-    "___result = retain_id([NSString stringWithUTF8String: ___arg1]);"))
-
-(define id->bool
-  (c-lambda (id) bool
-    "___result = [___CAST(NSNumber*,___arg1) boolValue];"))
-
-(define bool->id
-  (c-lambda (bool) id
-    "___result = retain_id([NSNumber numberWithBool:___arg1]);"))
-
-(define id->int
-  (c-lambda (id) int
-    "___result = [___CAST(NSNumber*,___arg1) intValue];"))
-
-(define int->id
-  (c-lambda (int) id
-    "___result = retain_id([NSNumber numberWithInt:___arg1]);"))
-
-(define id->float
-  (c-lambda (id) float
-    "___result = [___CAST(NSNumber*,___arg1) floatValue];"))
-
-(define float->id
-  (c-lambda (float) id
-    "___result = retain_id([NSNumber numberWithFloat:___arg1]);"))
-
-(define id->double
-  (c-lambda (id) double
-    "___result = [___CAST(NSNumber*,___arg1) doubleValue];"))
-
-(define double->id
-  (c-lambda (double) id
-    "___result = retain_id([NSNumber numberWithDouble:___arg1]);"))
-
-;;;----------------------------------------------------------------------------
-
-;; Implement conversions between NSString* and Scheme strings.
-
-(c-declare #<<c-declare-end
-
-#include <Foundation/NSString.h>
-
-___SCMOBJ SCMOBJ_to_NSStringSTAR(___SCMOBJ src, NSString **dst, int arg_num)
-{
-  /*
-   * Convert a Scheme string to NSString* .
-   */
-
-  NSString *result;
-  ___SCMOBJ ___temp;
-
-  if (src == ___FAL)
-    result = nil;
-  else if (!___STRINGP(src))
-    return ___FIX(___STOC_WCHARSTRING_ERR+arg_num);
-  else
-    {
-      int i;
-      int len = ___INT(___STRINGLENGTH(src));
-      unichar *buf = ___alloc_mem(sizeof(unichar)*len);
-
-      if (buf == 0)
-        return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
-
-      for (i=0; i<len; i++)
-        {
-          ___UCS_4 c = ___INT(___STRINGREF(src,___FIX(i)));
-          buf[i] = c;
-        }
-
-      result = retain_id([NSString stringWithCharacters:buf length:len]);
-
-      ___free_mem(buf);
-    }
-
-  *dst = result;
-
-  return ___FIX(___NO_ERR);
-}
-
-___SCMOBJ NSStringSTAR_to_SCMOBJ(NSString *src, ___SCMOBJ *dst, int arg_num)
-{
-  ___SCMOBJ result;
-
-  if (src == nil)
-    result = ___FAL;
-  else
-    {
-      int i;
-      int len = [src length];
-
-      result = ___alloc_scmobj(___sSTRING, len<<___LCS, ___STILL);
-
-      if (___FIXNUMP(result))
-        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
-
-      for (i=0; i<len; i++)
-        {
-          ___UCS_4 c = [src characterAtIndex:i];
-          ___STRINGSET(result,___FIX(i),___CHR(c))
-        }
-    }
-
-  *dst = result;
-
-  return ___FIX(___NO_ERR);
-}
-
-#define ___BEGIN_CFUN_SCMOBJ_to_NSStringSTAR(src,dst,i) \
-if ((___err = SCMOBJ_to_NSStringSTAR(src, &dst, i)) == ___FIX(___NO_ERR)) {
-#define ___END_CFUN_SCMOBJ_to_NSStringSTAR(src,dst,i) }
-
-#define ___BEGIN_CFUN_NSStringSTAR_to_SCMOBJ(src,dst) \
-if ((___err = NSStringSTAR_to_SCMOBJ(src, &dst, ___RETURN_POS)) == ___FIX(___NO_ERR)) {
-#define ___END_CFUN_NSStringSTAR_to_SCMOBJ(src,dst) \
-___EXT(___release_scmobj)(dst); }
-
-#define ___BEGIN_SFUN_NSStringSTAR_to_SCMOBJ(src,dst,i) \
-if ((___err = NSStringSTAR_to_SCMOBJ(src, &dst, i)) == ___FIX(___NO_ERR)) {
-#define ___END_SFUN_NSStringSTAR_to_SCMOBJ(src,dst,i) \
-___EXT(___release_scmobj)(dst); }
-
-#define ___BEGIN_SFUN_SCMOBJ_to_NSStringSTAR(src,dst) \
-{ ___err = SCMOBJ_to_NSStringSTAR(src, &dst, ___RETURN_POS);
-#define ___END_SFUN_SCMOBJ_to_NSStringSTAR(src,dst) }
-
-c-declare-end
-)
-
-(c-define-type NSString* "NSString*"
-  "NSStringSTAR_to_SCMOBJ"
-  "SCMOBJ_to_NSStringSTAR"
-  #t)
-
-;;;----------------------------------------------------------------------------
-
-;; Interface with NSDate Class.
-
-(define NSDate      (string->Class "NSDate"))
-(define alloc       (string->SEL "alloc"))
-(define init        (string->SEL "init"))
-(define description (string->SEL "description"))
-
-(define (date)
-  (id->string
-   (send0 (send0 (send0 NSDate alloc) init) description)))
-
-;;;----------------------------------------------------------------------------
-
-;; Interface with NSBundle Class.
-
-(define NSBundle    (string->Class "NSBundle"))
-(define mainBundle  (string->SEL "mainBundle"))
-(define objectForInfoDictionaryKey (string->SEL "objectForInfoDictionaryKey:"))
-
-(define (mainBundle-info key)
-  (let ((info
-         (send1 (send0 NSBundle mainBundle)
-                objectForInfoDictionaryKey (string->id key))))
-    (and info
-         (id->string info))))
-
-(define CFBundleDisplayName (mainBundle-info "CFBundleDisplayName"))
-
-;;;----------------------------------------------------------------------------
-
-;; Interface with UIDevice Class.
-
-(define currentDevice-batteryLevel
-  (c-lambda () float
-    "___result = [[UIDevice currentDevice] batteryLevel];"))
-
-(define currentDevice-batteryMonitoringEnabled
-  (c-lambda () bool
-    "___result = [UIDevice currentDevice].batteryMonitoringEnabled;"))
-
-(define currentDevice-batteryMonitoringEnabled-set!
-  (c-lambda (bool) void
-    "[UIDevice currentDevice].batteryMonitoringEnabled = ___arg1;"))
-
-(define currentDevice-multitaskingSupported
-  (c-lambda () bool
-    "___result = [UIDevice currentDevice].multitaskingSupported;"))
-
-(define currentDevice-model
-  (c-lambda () NSString*
-    "___result = [[UIDevice currentDevice] model];"))
-
-(define currentDevice-name
-  (c-lambda () NSString*
-    "___result = [[UIDevice currentDevice] name];"))
-
-(define currentDevice-systemName
-  (c-lambda () NSString*
-    "___result = [[UIDevice currentDevice] systemName];"))
-
-(define currentDevice-systemVersion
-  (c-lambda () NSString*
-    "___result = [[UIDevice currentDevice] systemVersion];"))
-
-(define currentDevice-uniqueIdentifier
-  (c-lambda () NSString*
-    "___result = [[UIDevice currentDevice] uniqueIdentifier];"))
-
-(define (device-status)
-  (currentDevice-batteryMonitoringEnabled-set! #t)
-  (list (currentDevice-batteryLevel)
-        (currentDevice-batteryMonitoringEnabled)
-        (currentDevice-multitaskingSupported)
-        (currentDevice-model)
-        (currentDevice-name)
-        (currentDevice-systemName)
-        (currentDevice-systemVersion)
-        (currentDevice-uniqueIdentifier)))
-
-(define (UDID)
-  (currentDevice-uniqueIdentifier))
-
-;;;----------------------------------------------------------------------------
-
-;; Interface with AudioToolbox.
-
-(c-declare #<<c-declare-end
-
-#import <AudioToolbox/AudioToolbox.h>
-
-c-declare-end
-)
-
-(c-define-type SystemSoundID unsigned-int32)
-
-(define AudioServicesPlayAlertSound
-  (c-lambda (SystemSoundID) void "AudioServicesPlayAlertSound"))
-
-(define AudioServicesPlaySystemSound
-  (c-lambda (SystemSoundID) void "AudioServicesPlaySystemSound"))
-
-(define kSystemSoundID_FlashScreen        #x00000FFE)
-(define kSystemSoundID_Vibrate            #x00000FFF)
-(define kSystemSoundID_UserPreferredAlert #x00001000)
-
-;;;----------------------------------------------------------------------------
-
-;; Interface with ViewController.
-
-(c-declare #<<c-declare-end
-
-#include "ViewController.h"
-
-c-declare-end
-)
-
-;; C functions callable from Scheme.
-
-(define show-textView
-  (c-lambda () void "show_textView"))
-
-(define show-webView
-  (c-lambda () void "show_webView"))
-
-(define set-textView-font
-  (c-lambda (NSString* int) void "set_textView_font"))
-
-(define set-textView-content
-  (c-lambda (NSString*) void "set_textView_content"))
-
-(define get-textView-content
-  (c-lambda () NSString* "get_textView_content"))
-
-(define add-output-to-textView
-  (c-lambda (NSString*) void "add_output_to_textView"))
-
-(define add-input-to-textView
-  (c-lambda (NSString*) void "add_input_to_textView"))
-
-(define (set-webView-content str #!optional (enable-scaling #f) (mime-type "text/html"))
-  ((c-lambda (NSString* bool NSString*) void "set_webView_content") str enable-scaling mime-type))
-
-(define open-URL
-  (c-lambda (NSString*) void "open_URL"))
-
-(define set-pref
-  (c-lambda (NSString* NSString*) void "set_pref"))
-
-(define get-pref
-  (c-lambda (NSString*) NSString* "get_pref"))
-
-;; Scheme functions callable from C.
-
-(c-define (send-input str) (NSString*) double "send_input" "extern"
-
-  (display str repl-port)
-  (force-output repl-port)
-
-  (heartbeat))
-
-(c-define (send-event str) (NSString*) double "send_event" "extern"
-
-  (display str event-port)
-  (force-output event-port)
-
-  (heartbeat))
-
-(c-define (send-key str) (NSString*) double "send_key" "extern"
-
-  (handle-key str)
-
-  (heartbeat))
-
-(define handle-key #f)
-
-(set! handle-key
-  (lambda (str)
-    (if (char=? #\F (string-ref str 0))
-        (let ((script (get-script-by-name str)))
-          (cond (script
-                 (run-script str script))
-                ((equal? str "F13")
-                 (##thread-interrupt! (macro-primordial-thread)))
-                (else
-                 (add-input-to-textView (string-append "<" str ">")))))
-        (add-input-to-textView str))))
-
-(c-define (heartbeat) () double "heartbeat" "extern"
-
-  ;; make sure other threads get to run
-  (##thread-heartbeat!)
-
-  ;; check if there has been any REPL output
-  (let ((output (read-line repl-port #f)))
-    (if (string? output)
-        (add-output-to-textView output)))
-
-  ;; return interval until next heartbeat
-  (next-heartbeat-interval))
-
-(define (next-heartbeat-interval)
-
-  (##declare (not interrupts-enabled))
-
-  (let* ((run-queue
-          (macro-run-queue))
-         (runnable-threads?
-          (##not
-           (let ((root (macro-btq-left run-queue)))
-             (and (##not (##eq? root run-queue))
-                  (##eq? (macro-btq-left root) run-queue)
-                  (##eq? (macro-btq-right root) run-queue))))))
-    (if runnable-threads?
-
-        (begin
-          ;; There are other threads that can run, so request
-          ;; to call "heartbeat" real soon to run those threads.
-          interval-runnable)
-
-        (let* ((next-sleeper
-                (macro-toq-leftmost run-queue))
-               (sleep-interval
-                (if (##eq? next-sleeper run-queue)
-                    +inf.0
-                    (begin
-                      ;; There is a sleeping thread, so figure out in
-                      ;; how much time it needs to wake up.
-                      (##flonum.max
-                       (##flonum.- (macro-thread-timeout next-sleeper)
-                                   (##current-time-point))
-                       interval-min-wait))))
-               (next-condvar
-                (macro-btq-deq-next run-queue))
-               (io-interval
-                (if (##eq? next-condvar run-queue)
-                    interval-no-io-pending ;; I/O is not pending, just relax
-                    interval-io-pending))) ;; I/O is pending, so come back soon
-          (##flonum.min sleep-interval io-interval)))))
-
-(define interval-runnable 0.0)
-(set! interval-runnable 0.0001)
-
-(define interval-io-pending 0.0)
-(set! interval-io-pending 0.02)
-
-(define interval-no-io-pending 0.0)
-(set! interval-no-io-pending 1.0)
-
-(define interval-min-wait 0.0)
-(set! interval-min-wait 0.0001)
-
-(c-define (eval-string str) (NSString*) NSString* "eval_string" "extern"
-  (let ()
-
-    (define (catch-all-errors thunk)
-      (with-exception-catcher
-       (lambda (exc)
-         (write-to-string exc))
-       thunk))
-
-    (define (write-to-string obj)
-      (with-output-to-string
-        ""
-        (lambda () (write obj))))
-
-    (define (read-from-string str)
-      (with-input-from-string str read))
-
-    (catch-all-errors
-     (lambda () (write-to-string (eval (read-from-string str)))))))
-
-;;;----------------------------------------------------------------------------
-
-;; Setup pipe to do I/O on the REPL being run by the primordial thread.
-
-(define repl-port #f)
-
-(receive (i o) (open-string-pipe)
-
-  ;; Hack... set the names of the port.
-  (##vector-set! i 4 (lambda (port) '(console)))
-
-  (set! ##stdio/console-repl-channel (##make-repl-channel-ports i i))
-
-  (set! repl-port o)
-
-  (input-port-timeout-set! o -inf.0))
-
-;;;----------------------------------------------------------------------------
-
-;; Handling of events from the webView.
-
-(define event-port #f)
-(define event-handler #f)
-
-(receive (i o) (open-string-pipe '(direction: input))
-
-  (set! event-port o)
-
-  (thread-start!
-   (make-thread
-    (lambda ()
-      (let loop ()
-        (let ((event (read-line i)))
-          (if (not (eof-object? event))
-              (begin
-                (event-handler event)
-                (loop)))))))))
-
-(define (set-page content handler #!optional (enable-scaling #f) (mime-type "text/html"))
-  (set! event-handler handler)
-  (set-page-content content enable-scaling mime-type))
-
-(define (set-page-content content #!optional (enable-scaling #f) (mime-type "text/html"))
-  (set-webView-content
-   (with-output-to-string "" (lambda () (print content)))
-   enable-scaling
-   mime-type)
-  (show-webView))
-
-(define (has-prefix? str prefix)
-  (and (string? str)
-       (string? prefix)
-       (let ((len-str (string-length str))
-             (len-prefix (string-length prefix)))
-         (and (>= len-str len-prefix)
-              (string=? (substring str 0 len-prefix) prefix)
-              (substring str len-prefix len-str)))))
-
-(define (get-event-parameters rest)
-  (call-with-input-string
-   rest
-   (lambda (port)
-     (map url-decode
-          (read-all port (lambda (p) (read-line p #\:)))))))
-
-;;;----------------------------------------------------------------------------
-
-;; REPL server which can be contacted via telnet on port 7000.
-
-(define (ide-repl-pump ide-repl-connection in-port out-port tgroup)
-
-  (define m (make-mutex))
-
-  (define (process-input)
-    (let loop ((state 'normal))
-      (let ((c (read-char ide-repl-connection)))
-        (if (not (eof-object? c))
-            (case state
-              ((normal)
-               (if (char=? c #\xff) ;; telnet IAC (interpret as command) code?
-                   (loop c)
-                   (begin
-                     (mutex-lock! m)
-                     (if (char=? c #\x04) ;; ctrl-d ?
-                         (close-output-port out-port)
-                         (begin
-                           (write-char c out-port)
-                           (force-output out-port)))
-                     (mutex-unlock! m)
-                     (loop state))))
-              ((#\xfb) ;; after WILL command?
-               (loop 'normal))
-              ((#\xfc) ;; after WONT command?
-               (loop 'normal))
-              ((#\xfd) ;; after DO command?
-               (if (char=? c #\x06) ;; timing-mark option?
-                   (begin ;; send back WILL timing-mark
-                     (mutex-lock! m)
-                     (write-char #\xff ide-repl-connection)
-                     (write-char #\xfb ide-repl-connection)
-                     (write-char #\x06 ide-repl-connection)
-                     (force-output ide-repl-connection)
-                     (mutex-unlock! m)))
-               (loop 'normal))
-              ((#\xfe) ;; after DONT command?
-               (loop 'normal))
-              ((#\xff) ;; after IAC command?
-               (case c
-                 ((#\xf4) ;; telnet IP (interrupt process) command?
-                  (for-each
-                   ##thread-interrupt!
-                   (thread-group->thread-list tgroup))
-                  (loop 'normal))
-                 ((#\xfb #\xfc #\xfd #\xfe) ;; telnet WILL/WONT/DO/DONT command?
-                  (loop c))
-                 (else
-                  (loop 'normal))))
-              (else
-               (loop 'normal)))))))
-
-  (define (process-output)
-    (let loop ()
-      (let ((c (read-char in-port)))
-        (if (not (eof-object? c))
-            (begin
-              (mutex-lock! m)
-              (write-char c ide-repl-connection)
-              (force-output ide-repl-connection)
-              (mutex-unlock! m)
-              (loop))))))
-
-  (let ((tgroup (make-thread-group 'repl-pump #f)))
-    (thread-start! (make-thread process-input #f tgroup))
-    (thread-start! (make-thread process-output #f tgroup))))
-
-(define (make-ide-repl-ports ide-repl-connection tgroup)
-  (receive (in-rd-port in-wr-port) (open-string-pipe '(direction: input permanent-close: #f))
-    (receive (out-wr-port out-rd-port) (open-string-pipe '(direction: output))
-      (begin
-
-        ;; Hack... set the names of the ports for usage with gambit.el
-        (##vector-set! in-rd-port 4 (lambda (port) '(stdin)))
-        (##vector-set! out-wr-port 4 (lambda (port) '(stdout)))
-
-        (ide-repl-pump ide-repl-connection out-rd-port in-wr-port tgroup)
-        (values in-rd-port out-wr-port)))))
-
-(define repl-channel-table (make-table test: eq?))
-
-(set! ##thread-make-repl-channel
-      (lambda (thread)
-        (let ((tgroup (thread-thread-group thread)))
-          (or (table-ref repl-channel-table tgroup #f)
-              (##default-thread-make-repl-channel thread)))))
-
-(define (setup-ide-repl-channel ide-repl-connection tgroup)
-  (receive (in-port out-port) (make-ide-repl-ports ide-repl-connection tgroup)
-    (let ((repl-channel (##make-repl-channel-ports in-port out-port)))
-      (table-set! repl-channel-table tgroup repl-channel))))
-
-(define (start-ide-repl)
-  (##repl-debug-main))
-
-(define repl-server-address "*:7000")
-
-(define (repl-server)
-  (let ((server
-         (open-tcp-server
-          (list server-address: repl-server-address
-                reuse-address: #t))))
-    (let loop ()
-      (let* ((ide-repl-connection
-              (read server))
-             (tgroup
-              (make-thread-group 'repl-service #f))
-             (thread
-              (make-thread
-               (lambda ()
-                 (setup-ide-repl-channel ide-repl-connection tgroup)
-                 (start-ide-repl))
-               'repl
-               tgroup)))
-        (thread-start! thread)
-        (loop)))))
-
-(define (start-repl-server)
-  (thread-start! (make-thread repl-server))
-  (void))
+;; Add cond-expand features to identify Gambit-REPL.
+
+(set! ##cond-expand-features
+      (cons 'Gambit-REPL
+            (cons 'Gambit-REPL-iOS
+                  (cons 'Gambit-REPL-v4.0
+                        ##cond-expand-features))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -807,23 +66,49 @@ c-declare-end
 
 (define common-html-header #<<common-html-header-end
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <html>
 <head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=1.6">
+
+<script>
+
+function gestureStart() {
+  var metas = document.getElementsByTagName('meta');
+  for (var i=0; i<metas.length; i++) {
+    if (metas[i].name === "viewport") {
+      metas[i].content = "width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=1.6";
+    }
+  }
+}
+
+document.addEventListener("gesturestart", gestureStart, false);
+
+</script>
+
 <style TYPE="text/css">
 <!--
 body.splash {
     background-image: -webkit-gradient(linear, left top, left bottom, from(#fffb8b), to(#fffef0));
 }
 body.editor {
-    background-image: -webkit-gradient(linear, left top, left bottom, from(#a0a0a0), to(#f0f0f0));
+    background-color: #a0a0a0;
 }
 body.repo {
     background-image: -webkit-gradient(linear, left top, left bottom, from(#a0a0a0), to(#f0f0f0));
 }
 body.login {
     background-image: -webkit-gradient(linear, left top, left bottom, from(#a0a0a0), to(#f0f0f0));
+}
+body.help {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#fffb8b), to(#fffef0));
+}
+.editorhead {
+    float: right;
+    height: 35px;
+}
+.repohead {
+    height: 35px;
 }
 .button0 {
     display: inline-block;
@@ -846,6 +131,7 @@ body.login {
     text-align: center;
     padding: 2px 0px;
     width: 35px;
+    height: 20px;
     border: 1px solid black;
     -webkit-border-radius: 5px;
     opacity: 1.0;
@@ -865,6 +151,20 @@ body.login {
     margin: 5px;
     background-image: -webkit-gradient(linear, left top, left bottom, from(#7f7fff), to(#2020b0));
 }
+.button3 {
+    display: inline-block;
+    color: white;
+    font: bold 24px Arial;
+    text-align: center;
+    padding: 0px 0px;
+    width: 35px;
+    height: 28px;
+    border: 1px solid black;
+    -webkit-border-radius: 5px;
+    opacity: 1.0;
+    margin: 0px;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#94a6be), to(#506070));
+}
 .bigbutton {
     display: inline-block;
     color: white;
@@ -874,7 +174,6 @@ body.login {
     width: 85px;
     border: 1px solid black;
     -webkit-border-radius: 5px;
-    background-color: ;
     background-image: -webkit-gradient(linear, left top, left bottom, from(#688aba), to(#385a8a));
     opacity: 1.0;
     margin: 5px;
@@ -897,13 +196,6 @@ textarea.script {
     color: black;
     font: bold 12px Courier;
     width: 100%;
-    margin: 5px;
-}
-input.scriptname {
-    font: 14px Arial;
-    padding: 2px 2px;
-    width: 100%;
-    margin: 5px;
 }
 input.login {
     font: bold 18px Arial;
@@ -967,20 +259,6 @@ td.repoentry {
 }
 -->
 </style>
-<script>
-
-function gestureStart() {
-  var metas = document.getElementsByTagName('meta');
-  for (var i=0; i<metas.length; i++) {
-    if (metas[i].name == "viewport") {
-      metas[i].content = "width=device-width, minimum-scale=0.25, maximum-scale=1.6";
-    }
-  }
-}
-
-document.addEventListener("gesturestart", gestureStart, false);
-
-</script>
 </head>
 
 common-html-header-end
@@ -993,13 +271,14 @@ common-html-header-end
 (define splash-page-content-part1 #<<splash-page-content-part1-end
 
 <body class="splash">
+
 <p>
 Welcome to <strong>
 splash-page-content-part1-end
 )
 
 (define splash-page-content-part2 #<<splash-page-content-part2-end
-</strong>, a Scheme development environment built with the <a href="event:wiki">Gambit Scheme programming system</a>.
+</strong>, a Scheme development environment based on the <a href="event:wiki">Gambit Scheme programming system</a>.
 </p>
 
 <ul>
@@ -1009,11 +288,10 @@ splash-page-content-part1-end
 </ul>
 
 <p>
-After the "<strong><code>&gt;</code></strong>" prompt enter your command then RETURN and the REPL will display the result. Here is a sample interaction:
-</p>
-
+In the REPL view, enter your command after the <strong><code>&gt;</code></strong> prompt, then tap <strong>return</strong> to display the result. Here is a sample interaction:<br/>
 <strong>
 <code>
+<br/>
 &gt; (+ 1 (/ (* 2 2) (sqrt 9)))<br/>
 7/3<br/>
 &gt; (expt 2 100)<br/>
@@ -1024,275 +302,120 @@ After the "<strong><code>&gt;</code></strong>" prompt enter your command then RE
 1<br/>
 4<br/>
 9<br/>
-&gt; (exit)<br/>
 </code>
 </strong>
+</p>
 
-<center>
-
-<div class="bigbutton" onClick="window.location='event:edit';">Edit Scripts</div>
-<div class="bigbutton" onClick="if (confirm('Are you sure you want to start the REPL server?  It allows starting a REPL remotely, with no authentication, by telneting to port 7000 of your device.')) window.location='event:server';">Start Server</div>
-<div class="bigbutton" onClick="window.location='event:repl';">Start REPL</div>
-
-</center>
 </body>
 </html>
 
 splash-page-content-part2-end
 )
 
-(define (splash)
-  (set-page
+(define (set-splash-view)
+  (set-view-content
+   0
    (list common-html-header
          splash-page-content-part1
          CFBundleDisplayName
          splash-page-content-part2)
-   (lambda (event)
-     (cond ((equal? event "event:repl")
-            (repl))
-
-           ((equal? event "event:edit")
-            (edit))
-
-           ((equal? event "event:server")
-            (repl)
-            (start-repl-server))
-
-           ((equal? event "event:wiki")
-            (repl)
-            (open-URL
-             (string-append
-              "http://"
-              wiki-server-address
-              wiki-root
-              "/index.php")))))
    #t))
 
+(define (splash)
+  (set-navigation -1)
+  (set-event-handler
+   (lambda (old-event-handler)
+     generic-event-handler))
+  (show-view 0))
+
+
+;;;----------------------------------------------------------------------------
+
+;; Help page.
+
+(define current-help-document #f)
+
+(define (help #!optional (subject (macro-absent-obj)))
+  (if (eq? subject (macro-absent-obj))
+      (show-help-document (or current-help-document main-help-document) #f)
+      (##help subject)))
+
+(define (show-help-document docu anchor)
+  (let ((load-docu? (not (equal? docu current-help-document))))
+
+    (define (goto-anchor)
+      (if anchor
+          (eval-js-in-webView
+           2
+           (string-append "window.location='#" anchor "'"))))
+
+    (set-event-handler
+     (lambda (old-event-handler)
+       (lambda (event)
+         (cond ((and load-docu? (equal? event "event:loaded"))
+                (if (not (equal? docu main-help-document))
+                    (show-cancelButton))
+                (goto-anchor))
+
+               ((equal? event "event:r5rs")
+                (show-help-document r5rs-help-document #f))
+
+               ((equal? event "event:gambit-c")
+                (show-help-document gambit-c-help-document #f))
+
+               ((equal? event "cancel")
+                (hide-cancelButton)
+                (show-help-document main-help-document #f))
+
+               ((wiki-event-handler event))
+
+               ((handle-create-account-event event))
+
+               (else
+                (handle-navigation-event
+                 event
+                 (lambda ()
+                   (hide-cancelButton))))))))
+
+    (if load-docu?
+        (begin
+          (set! current-help-document docu)
+          (set-webView-content-from-file 2 docu #t))
+        (goto-anchor))
+
+    (set-navigation 2)
+    (show-view 2)
+
+    (if (not (equal? docu main-help-document))
+        (show-cancelButton))))
+
+
+;;;----------------------------------------------------------------------------
+
+;; REPL page.
+
 (define (repl)
-  (show-textView))
+  (set-navigation 0)
+  (set-event-handler
+   (lambda (old-event-handler)
+     generic-event-handler))
+  (show-textView 0))
 
 (define (repl-eval str)
   (if (string? str)
       (begin
-        (add-output-to-textView str)
+        (add-output-to-textView 0 str)
         (send-input str)
         (repl))))
+
+(define (repl-server password)
+  (repl-server-start password))
 
 (set! ##primordial-exception-handler-hook
       (lambda (exc other-handler)
         (repl) ;; switch to REPL view on errors
         (##repl-exception-handler-hook exc other-handler)))
 
-(define (load-script name script)
-  (let ((port (open-input-string script)))
-
-    (if (not (equal? name ""))
-        ;; Hack... set the names of the port to match the name
-        (##vector-set! port 4 (lambda (port) name)))
-
-    (let ((x
-           (##read-all-as-a-begin-expr-from-port
-            port
-            (##current-readtable)
-            ##wrap-datum
-            ##unwrap-datum
-            #f ;; Scheme syntax
-            #t)))
-      (if (not (##fixnum? x))
-          (##eval-module (##vector-ref x 1) ##interaction-cte)))))
-
-;;;----------------------------------------------------------------------------
-
-;; Script editing.
-
-(define predefined-scripts '(
-
-("hello" .
-#<<EOF
-;; Show "Hello!" for a few seconds.
-
-(set-webView-content #<<END
-<h1>Hello!</h1>
-END
-)
-(thread-sleep! 5) ;; wait 5 seconds
-(edit) ;; return to this page
-EOF
-)
-
-("fact100" .
-#<<EOF
-;; Compute factorial of 100.
-
-(define (fact n)
-  (if (< n 2)
-      1
-      (* n (fact (- n 1)))))
-
-(repl-eval "(fact 100)\n")
-EOF
-)
-
-("fib25" .
-#<<EOF
-;; Compute fibonacci of 25.
-
-(define (fib n)
-  (if (< n 2)
-      n
-      (+ (fib (- n 1)) (fib (- n 2)))))
-
-(repl-eval "(time (fib 25))\n")
-EOF
-)
-
-("F10" .
-#<<EOF
-;; Show date for a few seconds.
-
-(set-webView-content (date))
-(show-webView)
-
-(thread-sleep! 5) ;; wait 5 seconds
-(edit) ;; return to this page
-EOF
-)
-
-("F11" .
-#<<EOF
-;; Show status for a few seconds.
-
-(set-webView-content
-  (string-append
-   "<pre>\n"
-   (with-output-to-string
-     ""
-     (lambda ()
-       (pretty-print
-        (device-status))))
-   "</pre>\n"))
-(show-webView)
-
-(thread-sleep! 5) ;; wait 5 seconds
-(edit) ;; return to this page
-EOF
-)
-
-("F12" .
-#<<EOF
-;; Start script editor.
-
-(edit)
-EOF
-)
-
-("main" .
-#<<EOF
-;; Main script.
-;;
-;; Start with splash screen.
-
-(splash)
-EOF
-)
-
-))
-
-(define script-db #f)
-(define script-db-version "1.0")
-
-(define (reset-scripts)
-  (set! script-db predefined-scripts)
-  (save-script-db))
-
-;;(reset-scripts)
-
-(define (get-script-by-name name)
-  (let* ((scripts (get-script-db))
-         (x (assoc name scripts)))
-    (and x (cdr x))))
-
-(define (get-script-index-by-name name)
-  (let loop ((scripts (get-script-db)) (i 0))
-    (if (pair? scripts)
-        (let ((x (car scripts)))
-          (if (equal? (car x) name)
-              i
-              (loop (cdr scripts) (+ i 1))))
-        #f)))
-
-(define (get-script-at-index index)
-  (let loop ((scripts (get-script-db)) (i 0))
-    (if (pair? scripts)
-        (if (= i index)
-            (car scripts)
-            (loop (cdr scripts) (+ i 1)))
-        #f)))
-
-(define (get-script-db)
-  (if (not script-db)
-      (set! script-db
-            (let ((x (get-pref "script-db")))
-              (if x
-                  (let ((lst (with-input-from-string x read)))
-                    (if (pair? lst)
-                        (let ((version (car lst))
-                              (db (cdr lst)))
-                          (cond ((equal? version script-db-version)
-                                 db)
-                                (else
-                                 predefined-scripts)))
-                        predefined-scripts))
-                  predefined-scripts))))
-  script-db)
-
-(define (save-script-db)
-  (if script-db
-      (set-pref "script-db"
-                (with-output-to-string
-                  ""
-                  (lambda ()
-                    (write (cons script-db-version script-db)))))))
-
-;;;----------------------------------------------------------------------------
-
-;; Login info.
-
-(define predefined-login-info '("" "" #t))
-
-(define login-info #f)
-(define login-info-version "1.0")
-
-(define (reset-login-info)
-  (let ((info (get-login-info)))
-    (set! login-info
-          (list "" "" (caddr info)))
-    (save-login-info)))
-
-(define (get-login-info)
-  (if (not login-info)
-      (set! login-info
-            (let ((x (get-pref "login-info")))
-              (if x
-                  (let ((lst (with-input-from-string x read)))
-                    (if (pair? lst)
-                        (let ((version (car lst))
-                              (info (cdr lst)))
-                          (cond ((equal? version login-info-version)
-                                 info)
-                                (else
-                                 predefined-login-info)))
-                        predefined-login-info))
-                  predefined-login-info))))
-  login-info)
-
-(define (save-login-info)
-  (if login-info
-      (set-pref "login-info"
-                (with-output-to-string
-                  ""
-                  (lambda ()
-                    (write (cons login-info-version login-info)))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1302,97 +425,114 @@ EOF
 
 <script language="JavaScript">
 
-var nb_scripts = 
 edit-page-content-part1-end
 )
 
 (define edit-page-content-part2 #<<edit-page-content-part2-end
-;
 
 function send_event(e)
 { window.location = "event:" + e; }
 
 function send_event_with_scripts(e,index)
+{ window.location = event_with_scripts(e,index); }
+
+function event_with_scripts(e,index)
 {
   var strings = ["event:"+e,index];
   for (var i = 0; i<nb_scripts; i++)
   {
-    strings.push(encodeURIComponent(document.getElementById("scriptname"+i).value));
     strings.push(encodeURIComponent(document.getElementById("script"+i).value));
   }
   strings.push("");
-  window.location = strings.join(":");
+  return strings.join(":");
 }
-
-function click_run(index)
-{ send_event_with_scripts("run",index); }
-
-function click_share(index)
-{ var name = document.getElementById("scriptname"+index).value;
-  var script = document.getElementById("script"+index).value;
-  if (valid_repo_script_name(name))
-  {
-    if (confirm((script=="")?('Are you sure you want to delete the script '+name+' from the public script repository?'):('Are you sure you want to upload the script '+name+' to the public script repository? It will replace the current script by that name if it exists (note that older versions are kept in the Gambit wiki page history).')))
-      send_event_with_scripts("share",index);
-  }
-}
-
-function click_delete(index)
-{ if (confirm('Are you sure you want to delete this script?'))
-    send_event_with_scripts("delete",index);
-}
-
-function click_repo()
-{ send_event_with_scripts("repo",0); }
-
-function click_repl()
-{ send_event_with_scripts("repl",0); }
 
 function click_new()
 { send_event_with_scripts("new",0); }
 
-function valid_repo_script_name(name)
-{ if (/[A-Z][-\. A-Za-z0-9]*:[-\. A-Za-z0-9:]*\.scm/.exec(name))
-    return true;
-  alert("The script name is not valid for the public script repository. Here is a sample valid name:\n\nMath:pi.scm\n\nSpecifically, the name must start with an upper case letter, it must end in '.scm', it must contain at least one ':', and only letters, digits, ' ', '.', and '-'. The part before the first ':' is the section name.  It helps classify the scripts according to the script's purpose. It can be a new section name or an existing one, such as 'Games', 'Math', etc. Subsection names can be used for further classification within a section. Personal files should be put in the section\n\nUsers:<wiki-username>:...");
-  return false;
-}
+function click_run(index)
+{ send_event_with_scripts("run",index); }
 
-</script>
-
-<body class="editor">
-
-<center>
-<div class="bigbutton" onClick="click_repo();">Script Repo</div>
-<div class="bigbutton" onClick="click_new();">New Script</div>
-<div class="bigbutton" onClick="click_repl();">Show REPL</div>
-</center>
+function click_save(index)
+{ var script = document.getElementById("script"+index).value;
+  var lines = script.split(/\n/);
+  var line1 = lines[0];
+  var name = line1.replace(/^;;; /,"");
+  var event = (/^[^\n]*\s*$/.exec(script)) ? "remove" : "save";
+  if (name.length < line1.length && /^[A-Za-z][-\.A-Za-z0-9]*\.scm$/.exec(name))
+  {
+    if (confirm((event==="remove")?('Are you sure you want to remove\n\n'+name+'\n\nfrom the Documents folder?'):('Are you sure you want to save\n\n'+name+'\n\nto the Documents folder?')))
+      send_event_with_scripts(event,index);
+  }
 
 edit-page-content-part2-end
 )
 
 (define edit-page-content-part3 #<<edit-page-content-part3-end
+  else if (name.length < line1.length && /^[A-Z][-\. A-Za-z0-9]*:[-\. A-Za-z0-9:]*\.scm$/.exec(name))
+  {
+    if (confirm((event==="remove")?('Are you sure you want to remove\n\n'+name+'\n\nfrom the Gambit wiki?'):('Are you sure you want to save\n\n'+name+'\n\nto the Gambit wiki? It will replace the current script by that name if it exists. Note that previous versions of the script will still be available in the Gambit wiki page history.')))
+      send_event_with_scripts(event,index);
+  }
+
+edit-page-content-part3-end
+)
+
+(define edit-page-content-part4 #<<edit-page-content-part4-end
+  else
+  {
+    alert("The script cannot be saved because it is improperly named.  The first line must be the name of the script preceded by three semicolons and a space, for example:\n\n;;; test.scm\n\nMoreover, the name must start with a letter, and end in '.scm', and contain only letters, digits, '.', and '-'.");
+  }
+}
+
+function click_delete(index)
+{ if (confirm('Are you sure you want to delete this script from the Edit view?'))
+    send_event_with_scripts("delete",index);
+}
+
+function lose_focus()
+{ return event_with_scripts("exit",0); }
+
+</script>
+
+<body class="editor">
+
+<span class="editorhead">
+<div class="button3" onClick="click_new();">+</div>
+</span>
+
+edit-page-content-part4-end
+)
+
+(define edit-page-content-part5 #<<edit-page-content-part5-end
 
 </body>
 </html>
 
-edit-page-content-part3-end
+edit-page-content-part5-end
 )
+
+(define edit-page-script-rows-iPad    20)
+(define edit-page-script-rows-default 10)
+
+(define edit-page-script-rows
+  (case (device-model)
+    ((iPad) edit-page-script-rows-iPad)
+    (else   edit-page-script-rows-default)))
 
 (define (html-for-local-scripts scripts)
 
   (define (html script name index)
     (list "<br/>\n"
-          "<textarea class=\"script\" id=\"script" index "\" rows=9>"
+          "<textarea class=\"script\" id=\"script" index "\" rows="
+          edit-page-script-rows
+          ">"
           (html-escape script)
           "</textarea>\n"
-          "<input type=\"text\" class=\"scriptname\" id=\"scriptname" index "\" value=\""
-          (html-escape name)
-          "\"/><br/>"
           "<center>\n"
           "<div class=\"button2\" onClick=\"click_run(" index ");\">Run</div>\n"
           "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-          "<div class=\"button2\" onClick=\"click_share(" index ");\">Share</div>\n"
+          "<div class=\"button2\" onClick=\"click_save(" index ");\">Save</div>\n"
           "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
           "<div class=\"button2\" onClick=\"click_delete(" index ");\">Delete</div>\n"
           "</center>\n"))
@@ -1402,72 +542,210 @@ edit-page-content-part3-end
         (let* ((x (car scripts))
                (name (car x))
                (script (cdr x)))
-          (loop (cdr scripts) (+ i 1) (cons (html script name i) accum)))
+          (loop (cdr scripts)
+                (+ i 1)
+                (cons (html (add-script-name-if-needed name script) name i)
+                      accum)))
         (reverse accum))))
 
-(define (edit)
+(define (add-script-name-if-needed name script)
+  (if (not (wiki-script-name-type name))
+      script
+      (let ((name-in-script (extract-script-name script)))
+        (if (equal? name name-in-script)
+            script
+            (string-append
+             script-name-prefix
+             name
+             "\n\n"
+             script)))))
 
-  (define (get-index-and-update-script-db rest)
-    (let ((x (get-event-parameters rest)))
-      (if (pair? x)
-          (let ((index (string->number (car x))))
-            (let loop ((lst (cdr x)) (rev-scripts '()))
-              (if (and (pair? lst)
-                       (pair? (cdr lst)))
-                  (let ((name (car lst))
-                        (script (cadr lst)))
-                    (loop (cddr lst)
-                          (cons (cons name script) rev-scripts)))
-                  (let ((new-script-db (reverse rev-scripts)))
-
-                    (set-pref "run-main-script" "yes")
-
-                    (set! script-db new-script-db)
-                    (save-script-db)
-                    index))))
-          #f)))
-
-  (set-page
+(define (set-edit-view)
+  (set-view-content
+   3
    (let ((scripts (get-script-db)))
      (list common-html-header
            edit-page-content-part1
-           (length scripts)
+           "var nb_scripts = " (length scripts) ";\n"
            edit-page-content-part2
+           (if repo-enabled?
+               edit-page-content-part3
+               "")
+           edit-page-content-part4
            (html-for-local-scripts scripts)
-           edit-page-content-part3))
-   (lambda (event)
-     (cond ((has-prefix? event "event:run:") =>
-            (lambda (rest)
-              (run-script-event
-               (get-index-and-update-script-db rest))))
-
-           ((has-prefix? event "event:share:") =>
-            (lambda (rest)
-              (share-script-event
-               (get-index-and-update-script-db rest))))
-
-           ((has-prefix? event "event:delete:") =>
-            (lambda (rest)
-              (delete-script-event
-               (get-index-and-update-script-db rest))
-              (edit)))
-
-           ((has-prefix? event "event:repo:") =>
-            (lambda (rest)
-              (get-index-and-update-script-db rest)
-              (repo edit)))
-
-           ((has-prefix? event "event:repl:") =>
-            (lambda (rest)
-              (get-index-and-update-script-db rest)
-              (repl)))
-
-           ((has-prefix? event "event:new:") =>
-            (lambda (rest)
-              (get-index-and-update-script-db rest)
-              (new-script)
-              (edit)))))
+           edit-page-content-part5))
    #t))
+
+(define (edit)
+  (set-navigation 3)
+  (set-event-handler
+   (lambda (old-event-handler)
+     (lambda (event)
+       (handle-edit-event
+        event
+        (lambda ()
+          (handle-navigation-event
+           event
+           (lambda ()
+             (let ((new-event (eval-js-in-webView 3 "lose_focus()")))
+               (and (string? new-event)
+                    (handle-edit-event
+                     new-event
+                     (lambda ()
+                       #f)))))))))))
+  (show-view 3))
+
+(define (get-index-and-update-script-db rest)
+  (let ((x (get-event-parameters rest)))
+    (if (pair? x)
+        (let ((index (string->number (car x))))
+          (let loop ((lst (cdr x)) (rev-scripts '()))
+            (if (pair? lst)
+                (let ((script (car lst)))
+                  (loop (cdr lst)
+                        (cons (cons (extract-script-name script) script)
+                              rev-scripts)))
+                (let ((new-script-db (reverse rev-scripts)))
+
+                  (set-pref "run-main-script" "yes")
+
+                  (set! script-db new-script-db)
+                  (save-script-db)
+                  index))))
+        #f)))
+
+(define (handle-edit-event event otherwise)
+  (cond ((has-prefix? event "event:new:") =>
+         (lambda (rest)
+           (get-index-and-update-script-db rest)
+           (new-script)
+           (set-edit-view)))
+
+        ((has-prefix? event "event:run:") =>
+         (lambda (rest)
+           (run-script-event
+            (get-index-and-update-script-db rest))))
+
+        ((has-prefix? event "event:save:") =>
+         (lambda (rest)
+           (save-script-event
+            (get-index-and-update-script-db rest))))
+
+        ((has-prefix? event "event:remove:") =>
+         (lambda (rest)
+           (remove-script-event
+            (get-index-and-update-script-db rest))))
+
+        ((has-prefix? event "event:delete:") =>
+         (lambda (rest)
+           (delete-script-event
+            (get-index-and-update-script-db rest))
+           (set-edit-view)))
+
+        ((has-prefix? event "event:exit:") =>
+         (lambda (rest)
+           (get-index-and-update-script-db rest)))
+
+        (else
+         (otherwise))))
+
+(define (handle-navigation-event event lose-focus-handler)
+  (let ((nav (has-prefix? event "NAV")))
+    (if nav
+        (let ((n (string->number nav)))
+          (lose-focus-handler)
+          (case n
+            ((1)
+             (wiki))
+
+            ((2)
+             (help))
+
+            ((3)
+             (edit))
+
+            (else
+             (repl)))))))
+
+(define (wiki-event-handler event)
+  (or (and (equal? event "event:wiki")
+           (begin
+             (visit-wiki)
+             #t))
+      (and (equal? event "event:wiki-Gambit-REPL")
+           (begin
+             (visit-wiki-Gambit-REPL)
+             #t))))
+
+(define (visit-wiki)
+  (open-URL
+   (string-append
+    "http://"
+    wiki-server-address
+    wiki-root
+    "/index.php")))
+
+(define (visit-wiki-Gambit-REPL)
+  (open-URL
+   (string-append
+    "http://"
+    wiki-server-address
+    wiki-root
+    "/index.php/Gambit_REPL")))
+
+(define latest-pasteboard #f)
+
+(define (handle-app-become-active-event event)
+  (and (equal? event "app-become-active")
+       (let* ((script (get-pasteboard))
+              (name (and script
+                         (not (equal? script latest-pasteboard))
+                         (extract-script-name script))))
+         (set! latest-pasteboard script)
+         (if name
+             (set-event-handler
+              (lambda (old-event-handler)
+                (popup-alert (string-append CFBundleName ".app")
+                             (string-append
+                              "Create the script\n\n"
+                              name
+                              "\n\nin the Edit view from the content of the pasteboard?")
+                             "No"
+                             "Yes")
+                (lambda (event)
+
+                  (define (done accept?)
+                    (set-event-handler
+                     (lambda (new-event-handler)
+                       old-event-handler))
+                    (if accept?
+                        (begin
+                          (add-script name script)
+                          (set-edit-view)
+                          (edit))))
+
+                  (cond ((equal? event "popup-alert-cancel")
+                         (done #f))
+                        ((equal? event "popup-alert-accept")
+                         (done #t)))))))
+         #t)))
+
+(define (handle-create-account-event event)
+  (and (equal? event "event:create-account")
+       (begin
+         (open-URL
+          (string-append
+           "http://"
+           wiki-server-address
+           wiki-root
+           "/index.php/Special:RequestAccount"))
+         #t)))
+
+(define (generic-event-handler event)
+  (or (wiki-event-handler event)
+      (handle-app-become-active-event event)
+      (handle-create-account-event event)
+      (handle-navigation-event event (lambda () #f))))
 
 (define run-script-event #f)
 (set! run-script-event
@@ -1478,64 +756,108 @@ edit-page-content-part3-end
                      (script (cdr name-script)))
                  (run-script name script))))))
 
-(define (run-script name script)
-  (##thread-interrupt!
-   (macro-primordial-thread)
-   (lambda ()
-     (##repl-channel-release-ownership!) ;; to prevent deadlock...
-     (with-exception-handler
-      ##primordial-exception-handler
-      (lambda ()
-        (load-script name script)))
-     (##void))))
-
-(define share-script-event #f)
-(set! share-script-event
+(define save-script-event #f)
+(set! save-script-event
       (lambda (index)
         (let ((name-script (get-script-at-index index)))
           (and name-script
                (let ((name (car name-script))
                      (script (cdr name-script)))
-                 (if (equal? script "")
-                     (delete-script name edit)
-                     (upload-script name script edit)))))))
+                 (store-script name script edit))))))
 
-(define (upload-script name script #!optional (back repl))
-  (repo-transaction
-   (lambda ()
-     (wiki-script-name-verify name)
-     (wiki-script-store name script)
-     (back))
-   ""
-   (list "<h3>Uploading script</h3>" (html-escape name) "<br/>")
-   "The script has been uploaded to the repository"
-   "Upload failed!"
-   back))
+(define remove-script-event #f)
+(set! remove-script-event
+      (lambda (index)
+        (let ((name-script (get-script-at-index index)))
+          (and name-script
+               (let ((name (car name-script))
+                     (script (cdr name-script)))
+                 (remove-script name edit))))))
 
-(define (download-script name #!optional (back repl))
-  (repo-transaction
-   (lambda ()
-     (wiki-script-name-verify name)
-     (let ((script (wiki-script-fetch name)))
-       (add-script name script)
-       (back)))
-   ""
-   (list "<h3>Downloading script</h3>" (html-escape name) "<br/>")
-   "The script has been downloaded from the repository"
-   "Download failed!"
-   back))
+(define (reset-scripts)
+  (script#reset-scripts)
+  (set-edit-view))
 
-(define (delete-script name #!optional (back repl))
-  (repo-transaction
-   (lambda ()
-     (wiki-script-name-verify name)
-     (wiki-script-delete name)
-     (back))
-   ""
-   (list "<h3>Deleting script</h3>" (html-escape name) "<br/>")
-   "The script has been deleted from the repository"
-   "Delete failed!"
-   back))
+(define (remove-script name #!optional (back repl))
+  (case (wiki-script-name-type name)
+    ((wiki)
+     (repo-transaction
+      (lambda ()
+        (wiki-script-name-verify name)
+        (wiki-script-remove name)
+        (back))
+      ""
+      (list "<h3>Removing script</h3>" (html-escape name) "<br/>")
+      "The script has been removed from the Gambit wiki"
+      "Could not remove script!"
+      back))
+
+    ((file)
+     (with-exception-catcher
+      (lambda (e)
+        (display-exception e (repl-output-port))
+        (repl))
+      (lambda ()
+        (delete-file (##path-expand name "~"))))
+     (back))))
+
+(define (store-script name script #!optional (back repl))
+  (case (wiki-script-name-type name)
+    ((wiki)
+     (repo-transaction
+      (lambda ()
+        (wiki-script-name-verify name)
+        (wiki-script-store name script)
+        (back))
+      ""
+      (list "<h3>Storing script</h3>" (html-escape name) "<br/>")
+      "The script has been stored on the Gambit wiki"
+      "Could not store script!"
+      back))
+
+    ((file)
+     (with-exception-catcher
+      (lambda (e)
+        (display-exception e (repl-output-port))
+        (repl))
+      (lambda ()
+        (call-with-output-file
+            (##path-expand name "~")
+          (lambda (port)
+            (display script port)))))
+     (back))))
+
+(define (fetch-script name #!optional (back repl))
+  (case (wiki-script-name-type name)
+    ((wiki)
+     (repo-transaction
+      (lambda ()
+        (wiki-script-name-verify name)
+        (let ((script (wiki-script-fetch name)))
+          (add-script name script)
+          (set-edit-view)
+          (back)))
+      ""
+      (list "<h3>Fetching script</h3>" (html-escape name) "<br/>")
+      "The script has been fetched from the Gambit wiki"
+      "Could not fetch script!"
+      back))
+
+    ((file)
+     (with-exception-catcher
+      (lambda (e)
+        (display-exception e (repl-output-port))
+        (repl))
+      (lambda ()
+        (let ((script
+               (call-with-input-file
+                   (##path-expand name "~")
+                 (lambda (port)
+                   (read-line port #f)))))
+          (add-script name script)
+          (set-edit-view)
+          (back))))
+     (back))))
 
 (define (delete-script-event index)
   (let loop ((scripts (get-script-db)) (i 0) (accum '()))
@@ -1546,12 +868,22 @@ edit-page-content-part3-end
             (loop (cdr scripts) (+ i 1) (cons (car scripts) accum)))))
   (save-script-db))
 
-(define (new-script)
-  (add-script "untitled" ""))
+(define script-name-prefix ";;; ") ;; must be consistent with the definition of the click_save JavaScript function
 
-(define (add-script name script)
-  (set! script-db (cons (cons name script) (get-script-db)))
-  (save-script-db))
+(define (extract-script-name script)
+  (let* ((line1 (first-line script))
+         (name (has-prefix? line1 script-name-prefix)))
+    (and (wiki-script-name-type name)
+         name)))
+
+(define (first-line str)
+  (let loop ((i 0))
+    (if (< i (string-length str))
+        (if (char=? (string-ref str i) #\newline)
+            (substring str 0 i)
+            (loop (+ i 1)))
+        str)))
+
 
 ;;;----------------------------------------------------------------------------
 
@@ -1561,39 +893,44 @@ edit-page-content-part3-end
 
 <body class="repo">
 
-
 repo-page-content-part1-end
 )
 
 (define repo-page-content-part2 #<<repo-page-content-part2-end
 
-<center>
-<div class="bigbutton" onClick="window.location='event:back';">Back</div>
-<div class="bigbutton" onClick="window.location='event:edit';">Edit Scripts</div>
-<div class="bigbutton" onClick="window.location='event:repl';">Show REPL</div>
-</center>
-
+<div class="repohead">
+<div class="button1" onClick="window.location='event:back';">&#9664;</div>
+</div>
 
 repo-page-content-part2-end
 )
 
 (define repo-page-content-part3 #<<repo-page-content-part3-end
 
-<form>
-<table>
-
+<div class="repohead">
+&nbsp;
+</div>
 
 repo-page-content-part3-end
 )
 
 (define repo-page-content-part4 #<<repo-page-content-part4-end
 
+<form>
+<table>
+
+
+repo-page-content-part4-end
+)
+
+(define repo-page-content-part5 #<<repo-page-content-part5-end
+
 </table>
 </form>
 </body>
 </html>
 
-repo-page-content-part4-end
+repo-page-content-part5-end
 )
 
 (define (html-for-script-tree tree)
@@ -1606,7 +943,7 @@ repo-page-content-part4-end
                 (list "<td class=\"repoget\"></td>\n"
                       "<td><div class=\"button1\" onClick=\"window.location='event:view:"
                       (url-encode name)
-                      "';\">=&gt;</div></td>\n")
+                      "';\">&#9654;</div></td>\n")
                 (list "<td class=\"repoget\"><div class=\"button0\" onClick=\"window.location='event:get:"
                       (url-encode name)
                       "';\">Get</div></td>\n"
@@ -1624,19 +961,32 @@ repo-page-content-part4-end
           (loop (cdr tree) (cons (html branch) accum)))
         (reverse accum))))
 
-(define (repo #!optional (back repl))
-  (auto-login
-   (lambda ()
-     (repo-transaction
-      (lambda ()
-        (let ((scripts (wiki-script-list)))
-          (repo-browse back (script-list->tree scripts))))
-      repo-page-content-part2
-      ""
-      #f
-      "Could not get list of scripts!"
-      back))
-   back))
+(define repo-enabled? #f)
+
+(define (repo-enable!)
+  (if (not repo-enabled?)
+      (begin
+        (set! repo-enabled? #t)
+        (segm-ctrl-set-title 1 "Repo"))))
+
+(define (repo)
+  (repo-enable!)
+  (wiki))
+
+(define (wiki)
+  (if (not repo-enabled?)
+      (begin
+        (visit-wiki-Gambit-REPL)
+        (repl))
+      (repo-transaction
+       (lambda ()
+         (let ((scripts (wiki-script-list)))
+           (repo-browse #f (script-list->tree scripts))))
+       repo-page-content-part3
+       (list "<h3>Accessing Gambit wiki</h3><br/>")
+       #f
+       "Could not get list of scripts!"
+       repl)))
 
 (define (script-list->tree scripts)
 
@@ -1672,42 +1022,46 @@ repo-page-content-part4-end
   (cvt scripts ""))
 
 (define (repo-browse back tree)
-  (set-page
+  (set-navigation 1)
+  (set-event-handler
+   (lambda (old-event-handler)
+     (lambda (event)
+       (cond ((has-prefix? event "event:view:") =>
+              (lambda (rest)
+                (let* ((params (get-event-parameters rest))
+                       (name (car params))
+                       (branch (assoc name tree)))
+                  (if branch
+                      (let ((subtree (cdr branch)))
+                        (if (pair? subtree)
+                            (repo-browse (lambda () (repo-browse back tree))
+                                         subtree)
+                            (view-script name)))))))
+
+             ((has-prefix? event "event:get:") =>
+              (lambda (rest)
+                (let* ((params (get-event-parameters rest))
+                       (name (car params)))
+                  (get-repo-script-event name edit))))
+
+             ((equal? event "event:back")
+              (back))
+
+             (else
+              (generic-event-handler event))))))
+  (set-view-content
+   1
    (list common-html-header
          repo-page-content-part1
-         repo-page-content-part2
-         repo-page-content-part3
+         (if back
+             repo-page-content-part2
+             repo-page-content-part3)
+         repo-page-content-part4
          (html-for-script-tree tree)
-         repo-page-content-part4)
-   (lambda (event)
-     (cond ((has-prefix? event "event:view:") =>
-            (lambda (rest)
-              (let* ((params (get-event-parameters rest))
-                     (name (car params))
-                     (branch (assoc name tree)))
-                (if branch
-                    (let ((subtree (cdr branch)))
-                      (if (pair? subtree)
-                          (repo-browse (lambda () (repo-browse back tree))
-                                       subtree)
-                          (view-script name)))
-                    (back))))) ;; this should never happen
+         repo-page-content-part5)
 
-           ((has-prefix? event "event:get:") =>
-            (lambda (rest)
-              (let* ((params (get-event-parameters rest))
-                     (name (car params)))
-                (get-repo-script-event name edit))))
-
-           ((equal? event "event:back")
-            (back))
-
-           ((equal? event "event:repl")
-            (repl))
-
-           ((equal? event "event:edit")
-            (edit))))
-   #t))
+   #t)
+  (show-view 1))
 
 (define (view-script name)
   (open-URL
@@ -1719,38 +1073,9 @@ repo-page-content-part4-end
     (url-encode
      (string-append wiki-script-prefix name)))))
 
-(define obtain-script #f)
-(set! obtain-script view-script)
-
 (define get-repo-script-event #f)
-(set! get-repo-script-event
-      (lambda (name #!optional (back repl))
-        (let ((script
-               (string-append
-                obtain-script-prefix
-                name
-                obtain-script-suffix)))
-          (add-script name script)
-          (back))))
+(set! get-repo-script-event fetch-script)
 
-(define obtain-script-prefix #<<obtain-script-prefix-end
-;; Apple forbids downloads, so you must
-;; copy/paste the script from the wiki.
-;; Tap on "Run" to visit the wiki. Then
-;; double-tap-drag on the script to
-;; select and copy it.  Then return to
-;; Gambit REPL, select this text and
-;; paste the script.
-
-(obtain-script "
-obtain-script-prefix-end
-)
-
-(define obtain-script-suffix #<<obtain-script-suffix-end
-")
-
-obtain-script-suffix-end
-)
 
 ;;;----------------------------------------------------------------------------
 
@@ -1797,9 +1122,10 @@ repo-transaction-page-content-part3-end
 
   (define (exec)
 
-    (set-page-content
-     (make-repo-transaction-page header msg spinner-html)
-     #t)
+    (let ((content (make-repo-transaction-page header msg spinner-html)))
+      (set-navigation 1)
+      (set-view-content 1 content #t)
+      (show-view 1))
 
     (guard-repo-transaction
      (lambda ()
@@ -1809,7 +1135,8 @@ repo-transaction-page-content-part3-end
        (if success-msg
            (begin
 
-             (set-page-content
+             (set-view-content
+              1
               (make-repo-transaction-page
                header
                msg
@@ -1834,7 +1161,8 @@ repo-transaction-page-content-part3-end
   (with-exception-catcher
    (lambda (e)
 
-     (set-page-content
+     (set-view-content
+      1
       (make-repo-transaction-page
        header
        msg
@@ -1886,6 +1214,7 @@ repo-transaction-page-content-part3-end
          "Unknown error")
         (else
          (with-output-to-string "" (lambda () (display-exception e))))))
+
 
 ;;;----------------------------------------------------------------------------
 
@@ -1948,7 +1277,7 @@ login-page-content-part4-end
 
 <center>
 If you don't have an account, you should<br/>
-<div class="widebutton" onClick="window.location='event:create';">Create an account</div><br/>
+<div class="widebutton" onClick="window.location='event:create-account';">Create an account</div><br/>
 It's free!
 </center>
 
@@ -1987,50 +1316,43 @@ login-page-content-part5-end
   (login-with-page (make-initial-login-page) success fail))
 
 (define (login-with-page page success fail)
-  (set-page
-   page
-   (lambda (event)
-     (cond ((has-prefix? event "event:login:") =>
-            (lambda (rest)
-              (let* ((params (get-event-parameters rest))
-                     (username (car params))
-                     (password (cadr params))
-                     (remember-pass? (equal? (caddr params) "on")))
-                (attempt-login success
-                               fail
-                               username
-                               password
-                               remember-pass?))))
+  (set-navigation 1)
+  (set-event-handler
+   (lambda (old-event-handler)
+     (lambda (event)
+       (cond ((has-prefix? event "event:login:") =>
+              (lambda (rest)
+                (let* ((params (get-event-parameters rest))
+                       (username (car params))
+                       (password (cadr params))
+                       (remember-pass? (equal? (caddr params) "on")))
+                  (attempt-login success
+                                 fail
+                                 username
+                                 password
+                                 remember-pass?))))
 
-           ((equal? event "event:cancel")
-            (fail))
+             ((equal? event "event:cancel")
+              (fail))
 
-           ((equal? event "event:create")
-            (open-URL
-             (string-append
-              "http://"
-              wiki-server-address
-              wiki-root
-              "/index.php/Special:RequestAccount")))))
-   #t))
+             (else
+              (generic-event-handler event))))))
+  (set-view-content 1 page #t)
+  (show-view 1))
 
 (define (attempt-login success fail username password remember-pass?)
 
-  (set! login-info
-        (list username
-              (if remember-pass? password "")
-              remember-pass?))
+  (set-login-info username password remember-pass?)
 
   (save-login-info)
 
-  (set-page
+  (set-view-content
+   1
    (make-login-page
     username
     password
     remember-pass?
     spinner-html)
-   (lambda (event)
-     #f)
    #t)
 
   ((with-exception-catcher
@@ -2055,19 +1377,47 @@ login-page-content-part5-end
       (wiki-logout)
       (wiki-login username password #t)
 
-      (set-page
+      (set-view-content
+       1
        (make-login-page
         username
         password
         remember-pass?
         "<div class=\"statussuccess\">You are now logged in!</div>")
-       (lambda (event)
-         #f)
        #t)
 
       (thread-sleep! 2) ;; display success message for 2 seconds
 
       success))))
+
+
+;;;----------------------------------------------------------------------------
+
+;; Opening URLs.
+
+(##namespace ("" open-URL))
+
+(define (open-URL str)
+  (if (string? str)
+      (intf#open-URL str)))
+
+
+;;;----------------------------------------------------------------------------
+
+;; Key handler.
+
+(set! handle-key
+  (lambda (str)
+    (if (char=? #\F (string-ref str 0))
+        (let ((script (get-script-by-name str)))
+          (cond (script
+                 (run-script str script))
+                ((equal? str "F12")
+                 (##thread-interrupt! (macro-primordial-thread)))
+                (else
+                 (add-input-to-textView 0 (string-append "<" str ">")))))
+        (add-input-to-textView 0 str))))
+
 
 ;;;----------------------------------------------------------------------------
 
@@ -2086,6 +1436,12 @@ login-page-content-part5-end
 
    ;; the primordial thread is running this...
 
+   (set-splash-view) ;; init the splash view
+   (set-edit-view) ;; init the edit view
+
+   (if (equal? CFBundleDisplayName "Gambit REPL dev")
+       (repo-enable!))
+
    (if (get-pref "run-main-script")
 
        (begin
@@ -2103,5 +1459,6 @@ login-page-content-part5-end
    (##repl-debug-main)
 
    (exit)))
+
 
 ;;;============================================================================

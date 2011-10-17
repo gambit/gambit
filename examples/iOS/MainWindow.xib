@@ -53,7 +53,7 @@
 				<string key="targetRuntimeIdentifier">IBIPadFramework</string>
 				<bool key="IBUIHorizontal">NO</bool>
 			</object>
-			<object class="IBUIWindow" id="225323145">
+			<object class="IBUIWindow" id="774030385">
 				<reference key="NSNextResponder"/>
 				<int key="NSvFlags">292</int>
 				<string key="NSFrameSize">{768, 1024}</string>
@@ -61,8 +61,8 @@
 				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView"/>
 				<object class="NSColor" key="IBUIBackgroundColor">
-					<int key="NSColorSpace">3</int>
-					<bytes key="NSWhite">MQA</bytes>
+					<int key="NSColorSpace">1</int>
+					<bytes key="NSRGB">MSAxIDEAA</bytes>
 				</object>
 				<bool key="IBUIOpaque">NO</bool>
 				<bool key="IBUIClearsContextBeforeDrawing">NO</bool>
@@ -70,19 +70,13 @@
 					<int key="IBUIStatusBarStyle">2</int>
 				</object>
 				<string key="targetRuntimeIdentifier">IBIPadFramework</string>
+				<bool key="IBUIVisibleAtLaunch">YES</bool>
+				<bool key="IBUIResizesToFullScreen">YES</bool>
 			</object>
 		</object>
 		<object class="IBObjectContainer" key="IBDocument.Objects">
 			<object class="NSMutableArray" key="connectionRecords">
 				<bool key="EncodedWithXMLCoder">YES</bool>
-				<object class="IBConnectionRecord">
-					<object class="IBCocoaTouchOutletConnection" key="connection">
-						<string key="label">window</string>
-						<reference key="source" ref="807868132"/>
-						<reference key="destination" ref="225323145"/>
-					</object>
-					<int key="connectionID">8</int>
-				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBCocoaTouchOutletConnection" key="connection">
 						<string key="label">delegate</string>
@@ -98,6 +92,14 @@
 						<reference key="destination" ref="1044503176"/>
 					</object>
 					<int key="connectionID">28</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBCocoaTouchOutletConnection" key="connection">
+						<string key="label">rootViewController</string>
+						<reference key="source" ref="774030385"/>
+						<reference key="destination" ref="1044503176"/>
+					</object>
+					<int key="connectionID">30</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -133,8 +135,8 @@
 						<string key="objectName">View Controller</string>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">7</int>
-						<reference key="object" ref="225323145"/>
+						<int key="objectID">29</int>
+						<reference key="object" ref="774030385"/>
 						<reference key="parent" ref="0"/>
 					</object>
 				</object>
@@ -145,24 +147,22 @@
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>-1.CustomClassName</string>
 					<string>-2.CustomClassName</string>
+					<string>29.IBPluginDependency</string>
 					<string>3.CustomClassName</string>
 					<string>3.IBPluginDependency</string>
 					<string>4.CustomClassName</string>
 					<string>4.IBEditorWindowLastContentRect</string>
 					<string>4.IBPluginDependency</string>
-					<string>7.IBEditorWindowLastContentRect</string>
-					<string>7.IBPluginDependency</string>
 				</object>
 				<object class="NSMutableArray" key="dict.values">
 					<bool key="EncodedWithXMLCoder">YES</bool>
 					<string>UIApplication</string>
 					<string>UIResponder</string>
+					<string>com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 					<string>AppDelegate</string>
 					<string>com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 					<string>ViewController</string>
 					<string>{{52, 4}, {783, 852}}</string>
-					<string>com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
-					<string>{{289, 4}, {783, 852}}</string>
 					<string>com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
 				</object>
 			</object>
@@ -178,7 +178,7 @@
 				<reference key="dict.values" ref="0"/>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">28</int>
+			<int key="maxID">30</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -230,6 +230,7 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>navigation_changed:</string>
 							<string>touch_down:</string>
 							<string>touch_up_COMMA:</string>
 							<string>touch_up_DQUOTE:</string>
@@ -257,6 +258,7 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -287,6 +289,7 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>navigation_changed:</string>
 							<string>touch_down:</string>
 							<string>touch_up_COMMA:</string>
 							<string>touch_up_DQUOTE:</string>
@@ -314,6 +317,10 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBActionInfo">
+								<string key="name">navigation_changed:</string>
+								<string key="candidateClassName">id</string>
+							</object>
 							<object class="IBActionInfo">
 								<string key="name">touch_down:</string>
 								<string key="candidateClassName">id</string>
@@ -417,12 +424,16 @@
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>accessoryView</string>
-							<string>textView</string>
-							<string>webView</string>
+							<string>imageView0</string>
+							<string>segmCtrl</string>
+							<string>textView0</string>
+							<string>webView0</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>UIView</string>
+							<string>UIImageView</string>
+							<string>UISegmentedControl</string>
 							<string>UITextView</string>
 							<string>UIWebView</string>
 						</object>
@@ -432,8 +443,10 @@
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>accessoryView</string>
-							<string>textView</string>
-							<string>webView</string>
+							<string>imageView0</string>
+							<string>segmCtrl</string>
+							<string>textView0</string>
+							<string>webView0</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
@@ -442,11 +455,19 @@
 								<string key="candidateClassName">UIView</string>
 							</object>
 							<object class="IBToOneOutletInfo">
-								<string key="name">textView</string>
+								<string key="name">imageView0</string>
+								<string key="candidateClassName">UIImageView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">segmCtrl</string>
+								<string key="candidateClassName">UISegmentedControl</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">textView0</string>
 								<string key="candidateClassName">UITextView</string>
 							</object>
 							<object class="IBToOneOutletInfo">
-								<string key="name">webView</string>
+								<string key="name">webView0</string>
 								<string key="candidateClassName">UIWebView</string>
 							</object>
 						</object>

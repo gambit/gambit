@@ -280,7 +280,7 @@
                       (cdar (table->list revision1))))
                 content))))))
 
-(define (mediawiki-page-delete timeout server-address docu session title)
+(define (mediawiki-page-remove timeout server-address docu session title)
   (let* ((x
           (mediawiki-action
            timeout
@@ -419,10 +419,10 @@
           (let ((source-text (substring text tag1-len (- len tag2-len))))
             source-text)))))
 
-(define (wiki-script-delete script-name)
+(define (wiki-script-remove script-name)
   (wiki-script-name-verify script-name)
   (wiki-logged-in-verify)
-  (mediawiki-page-delete
+  (mediawiki-page-remove
    wiki-timeout
    wiki-server-address
    (string-append wiki-root wiki-api)
@@ -437,25 +437,54 @@
       (raise "you must first login to the Gambit wiki")))
 
 (define (wiki-script-name-verify script-name)
+  (if (not (eq? (wiki-script-name-type script-name) 'wiki))
+      (raise "illegal wiki script name")))
+
+(define (wiki-script-name-type script-name)
   (if (not (string? script-name))
-      (raise "script name must be a string")
+      #f
       (let ((len (string-length script-name)))
-        (if (or (< len 4)
-                (not (string=? ".scm" (substring script-name (- len 4) len))))
-            (raise "script name must end with \".scm\"")
-            (let ((x (string->list script-name)))
-              (cond ((not (and (char>=? (car x) #\A) (char<=? (car x) #\Z)))
-                     (raise "script name must start with an upper case letter"))
-                    ((not (memv #\: x))
-                     (raise "script name must contain at least one colon"))
-                    (else
-                     (for-each
-                      (lambda (c)
-                        (if (not (or (and (char>=? c #\a) (char<=? c #\z))
-                                     (and (char>=? c #\A) (char<=? c #\Z))
-                                     (and (char>=? c #\0) (char<=? c #\9))
-                                     (memv c '(#\space #\- #\. #\:))))
-                            (raise "illegal character in script name")))
-                      x))))))))
+        (if (= len 0)
+            #f
+            (let ((has-scm-ext? #f)
+                  (has-colon? #f)
+                  (has-space? #f))
+              (let loop ((i (- (if (or (< len 4)
+                                       (not (string=? ".scm"
+                                                      (substring script-name (- len 4) len))))
+                                   len
+                                   (begin
+                                     (set! has-scm-ext? #t)
+                                     (- len 4)))
+                               1)))
+                (if (< i 0)
+                    (cond ((and has-scm-ext?
+                                has-colon?
+                                (let ((c (string-ref script-name 0)))
+                                  (and (char>=? c #\A) (char<=? c #\Z))))
+                           'wiki)
+                          ((and has-scm-ext?
+                                (not has-colon?)
+                                (not has-space?))
+                           'file)
+                          ((not has-space?)
+                           'script)
+                          (else
+                           #f))
+                    (let ((c (string-ref script-name i)))
+                      (cond ((char=? c #\:)
+                             (set! has-colon? #t)
+                             (loop (- i 1)))
+                            ((char=? c #\space)
+                             (set! has-space? #t)
+                             (loop (- i 1)))
+                            ((or (and (char>=? c #\a) (char<=? c #\z))
+                                 (and (char>=? c #\A) (char<=? c #\Z))
+                                 (and (char>=? c #\0) (char<=? c #\9))
+                                 (memv c '(#\- #\.)))
+                             (loop (- i 1)))
+                            (else
+                             #f))))))))))
+
 
 ;;;============================================================================

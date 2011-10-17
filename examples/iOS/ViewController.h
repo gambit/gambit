@@ -10,37 +10,81 @@
 
 // ViewController methods callable from Scheme.
 
-void show_textView();
-void show_webView();
-NSString *get_textView_content();
-void set_textView_font(NSString *name, int size);
-void set_textView_content(NSString *str);
-void add_output_to_textView(NSString *str);
-void add_input_to_textView(NSString *str);
-void set_webView_content(NSString *str, BOOL enable_scaling, NSString *mime_type);
+void set_navigation(int n);
+void show_cancelButton();
+void hide_cancelButton();
+void show_webView(int view);
+void show_textView(int view);
+void show_imageView(int view);
+void set_textView_font(int view, NSString *name, int size);
+void set_textView_content(int view, NSString *str);
+NSString *get_textView_content(int view);
+void add_output_to_textView(int view, NSString *str);
+void add_input_to_textView(int view, NSString *str);
+void set_webView_content(int view, NSString *str, BOOL enable_scaling, NSString *mime_type);
+void set_webView_content_from_file(int view, NSString *path, BOOL enable_scaling, NSString *mime_type);
+NSString *eval_js_in_webView(int view, NSString *script);
 void open_URL(NSString *url);
+void segm_ctrl_set_title(int segment, NSString *title);
+void segm_ctrl_insert(int segment, NSString *title);
 void set_pref(NSString *key, NSString *value);
 NSString *get_pref(NSString *key);
+void set_pasteboard(NSString *value);
+NSString *get_pasteboard();
+NSString *get_documents_dir();
+void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSString *accept_button);
 
+#define NB_WEBVIEWS   4
+#define NB_TEXTVIEWS  2
+#define NB_IMAGEVIEWS 2
 
-@interface ViewController : UIViewController <UITextViewDelegate,UIWebViewDelegate> {
+@interface ViewController : UIViewController <UITextViewDelegate,UIWebViewDelegate,UIAlertViewDelegate> {
 
-  UITextView *textView;
+  UISegmentedControl *segmCtrl;
+  UIWebView *webViews[NB_WEBVIEWS];
+  UIWebView *webView0;
+  UIWebView *webView1;
+  UIWebView *webView2;
+  UIWebView *webView3;
+  UITextView *textViews[NB_TEXTVIEWS];
+  UITextView *textView0;
+  UITextView *textView1;
+  UIImageView *imageViews[NB_IMAGEVIEWS];
+  UIImageView *imageView0;
+  UIImageView *imageView1;
+  UIButton *cancelButton;
   UIView *accessoryView;
-  UIWebView *webView;
   int keyboardSounds;
   NSTimer *timer;
+  NSMutableArray *queuedActions;
 }
 
-@property (nonatomic, retain) IBOutlet UITextView *textView;
+@property (nonatomic, assign) IBOutlet UISegmentedControl *segmCtrl;
+@property (nonatomic, assign) IBOutlet UIWebView *webView0;
+@property (nonatomic, assign) IBOutlet UIWebView *webView1;
+@property (nonatomic, assign) IBOutlet UIWebView *webView2;
+@property (nonatomic, assign) IBOutlet UIWebView *webView3;
+@property (nonatomic, retain) IBOutlet UITextView *textView0;
+@property (nonatomic, retain) IBOutlet UITextView *textView1;
+@property (nonatomic, retain) IBOutlet UIImageView *imageView0;
+@property (nonatomic, retain) IBOutlet UIImageView *imageView1;
+@property (nonatomic, assign) IBOutlet UIButton *cancelButton;
 @property (nonatomic, assign) IBOutlet UIView *accessoryView;
-@property (nonatomic, assign) IBOutlet UIWebView *webView;
 @property (assign) int keyboardSounds;
 @property (assign) NSTimer *timer;
+@property (assign) NSMutableArray *queuedActions;
 
-- (void)up_key:(NSString*)name;
+- (void)queue_action:(void(^)())action;
+- (void)send_event:(NSString*)name;
+- (void)send_key:(NSString*)name;
 - (void)heartbeat_tick;
 - (void)schedule_next_heartbeat_tick:(double)interval;
+
+- (void)app_become_active;
+
+- (IBAction)navigation_changed:(id)sender;
+
+- (IBAction)touch_up_cancel:(id)sender;
 
 - (IBAction)touch_down:(id)sender;
 - (IBAction)touch_up_F1:(id)sender;

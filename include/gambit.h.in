@@ -1,4 +1,4 @@
-/* File: "gambit.h", Time-stamp: <2011-04-26 09:17:04 feeley> */
+/* File: "gambit.h" */
 
 /*
  * Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
@@ -1210,10 +1210,14 @@
 #endif
 #else
 #ifndef ___NOT_USE_LABEL_VALUES
+#ifdef __llvm__
+#define ___NOT_USE_LABEL_VALUES
+#else
 #ifdef __GNUC__
 #define ___USE_LABEL_VALUES
 #else
 #define ___NOT_USE_LABEL_VALUES
+#endif
 #endif
 #endif
 #endif

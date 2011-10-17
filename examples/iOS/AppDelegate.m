@@ -23,8 +23,6 @@
   [window addSubview:viewController.view];
   [window makeKeyAndVisible];
 
-  viewController.keyboardSounds = -1;
-
   return YES;
 }
 
@@ -73,7 +71,7 @@
     the background, optionally refresh the user interface.
   */
 
-  viewController.keyboardSounds = -1; // delay check of user preferences
+  [viewController app_become_active];
 }
 
 

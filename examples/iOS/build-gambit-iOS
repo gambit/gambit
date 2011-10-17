@@ -84,11 +84,12 @@ select_ios()
 
   esac
 
-  export CC="$ios_platform_dir/Developer/usr/bin/gcc -isysroot $ios_sdk_dir -arch $arch"
-  export CXX="$ios_platform_dir/Developer/usr/bin/g++ -isysroot $ios_sdk_dir -arch $arch"
+  export PATH="$ios_platform_dir/Developer/usr/bin:$PATH"
+  export CC="gcc -isysroot $ios_sdk_dir -arch $arch"
+  export CXX="g++ -isysroot $ios_sdk_dir -arch $arch"
   export CFLAGS="-Wno-trigraphs -Wreturn-type -Wunused-variable -I$gambit_prefix/include -L$gambit_prefix/lib"
   export CXXFLAGS="$CFLAGS"
-  export LD="$ios_platform_dir/Developer/usr/bin/ld -arch $arch"
+  export LD="ld -arch $arch"
   export LDFLAGS=""
 }
 

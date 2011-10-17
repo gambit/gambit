@@ -76,7 +76,7 @@ RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
 makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
 relpath
 
-GITRCFILES = .gitignore
+GITRCFILES = .gitignore .gitattributes
 HGRCFILES = .hgignore .hgtags
 
 GENDISTFILES =

@@ -319,12 +319,13 @@
                                port)
                               (loop (+ end 1) (+ end 1))))))
                      (else
+                      #;
                       (display
                        (string-append
                         "Warning: Character (integer->char "
                         (number->string index)
                         ") is not a valid HTML 4.0 character entity\n")
-                       (current-error-port))
+                       (repl-output-port))
                       (loop start (+ end 1)))))))))))
 )
 

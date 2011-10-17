@@ -2,9 +2,9 @@
 <archive type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="7.10">
 	<data>
 		<int key="IBDocument.SystemTarget">1056</int>
-		<string key="IBDocument.SystemVersion">10J869</string>
+		<string key="IBDocument.SystemVersion">10K540</string>
 		<string key="IBDocument.InterfaceBuilderVersion">1305</string>
-		<string key="IBDocument.AppKitVersion">1038.35</string>
+		<string key="IBDocument.AppKitVersion">1038.36</string>
 		<string key="IBDocument.HIToolboxVersion">461.00</string>
 		<object class="NSMutableDictionary" key="IBDocument.PluginVersions">
 			<string key="NS.key.0">com.apple.InterfaceBuilder.IBCocoaTouchPlugin</string>
@@ -197,35 +197,6 @@
 							<string key="NSResourceName">key-quote-46x42.png</string>
 						</object>
 					</object>
-					<object class="IBUIButton" id="420911439">
-						<reference key="NSNextResponder" ref="795231795"/>
-						<int key="NSvFlags">297</int>
-						<string key="NSFrame">{{593, 2}, {46, 42}}</string>
-						<reference key="NSSuperview" ref="795231795"/>
-						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView" ref="965625217"/>
-						<object class="NSColor" key="IBUIBackgroundColor">
-							<int key="NSColorSpace">2</int>
-							<bytes key="NSRGB">MC42MTE3NjQ3MjkgMC42MDc4NDMxNjA2IDAuNjUwOTgwNDEzAA</bytes>
-						</object>
-						<bool key="IBUIOpaque">NO</bool>
-						<bool key="IBUIClearsContextBeforeDrawing">NO</bool>
-						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
-						<int key="IBUIContentHorizontalAlignment">0</int>
-						<int key="IBUIContentVerticalAlignment">0</int>
-						<reference key="IBUIFont" ref="262793430"/>
-						<string key="IBUINormalTitle">STOP</string>
-						<reference key="IBUIHighlightedTitleColor" ref="107046278"/>
-						<object class="NSColor" key="IBUINormalTitleColor">
-							<int key="NSColorSpace">2</int>
-							<bytes key="NSRGB">MC4yMzkyMTU3MDE4IDAuMjM5MjE1NzAxOCAwLjI0MzEzNzI3MDIAA</bytes>
-						</object>
-						<reference key="IBUINormalTitleShadowColor" ref="811716299"/>
-						<object class="NSCustomResource" key="IBUINormalImage">
-							<string key="NSClassName">NSImage</string>
-							<string key="NSResourceName">key-stop-46x42.png</string>
-						</object>
-					</object>
 					<object class="IBUIButton" id="47015903">
 						<reference key="NSNextResponder" ref="795231795"/>
 						<int key="NSvFlags">297</int>
@@ -247,7 +218,7 @@
 							<double key="NSSize">14</double>
 							<int key="NSfFlags">16</int>
 						</object>
-						<string key="IBUINormalTitle">EDIT</string>
+						<string key="IBUINormalTitle">STOP</string>
 						<reference key="IBUIHighlightedTitleColor" ref="107046278"/>
 						<object class="NSColor" key="IBUINormalTitleColor">
 							<int key="NSColorSpace">2</int>
@@ -256,8 +227,38 @@
 						<reference key="IBUINormalTitleShadowColor" ref="811716299"/>
 						<object class="NSCustomResource" key="IBUINormalImage">
 							<string key="NSClassName">NSImage</string>
-							<string key="NSResourceName">key-edit-46x42.png</string>
+							<string key="NSResourceName">key-stop-46x42.png</string>
 						</object>
+					</object>
+					<object class="IBUIButton" id="420911439">
+						<reference key="NSNextResponder" ref="795231795"/>
+						<int key="NSvFlags">297</int>
+						<string key="NSFrame">{{593, 2}, {46, 42}}</string>
+						<reference key="NSSuperview" ref="795231795"/>
+						<reference key="NSWindow"/>
+						<reference key="NSNextKeyView" ref="965625217"/>
+						<object class="NSColor" key="IBUIBackgroundColor">
+							<int key="NSColorSpace">2</int>
+							<bytes key="NSRGB">MC42MTE3NjQ3MjkgMC42MDc4NDMxNjA2IDAuNjUwOTgwNDEzAA</bytes>
+						</object>
+						<bool key="IBUIOpaque">NO</bool>
+						<bool key="IBUIClearsContextBeforeDrawing">NO</bool>
+						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
+						<int key="IBUIContentHorizontalAlignment">0</int>
+						<int key="IBUIContentVerticalAlignment">0</int>
+						<reference key="IBUIFont" ref="262793430"/>
+						<string key="IBUINormalTitle">COMMA</string>
+						<reference key="IBUIHighlightedTitleColor" ref="107046278"/>
+						<object class="NSColor" key="IBUINormalTitleColor">
+							<int key="NSColorSpace">2</int>
+							<bytes key="NSRGB">MC4yMzkyMTU3MDE4IDAuMjM5MjE1NzAxOCAwLjI0MzEzNzI3MDIAA</bytes>
+						</object>
+						<reference key="IBUINormalTitleShadowColor" ref="811716299"/>
+						<object class="NSCustomResource" key="IBUINormalImage" id="561697142">
+							<string key="NSClassName">NSImage</string>
+							<string key="NSResourceName">key-comma-46x42.png</string>
+						</object>
+						<reference key="IBUINormalBackgroundImage" ref="561697142"/>
 					</object>
 					<object class="IBUIButton" id="949690578">
 						<reference key="NSNextResponder" ref="795231795"/>
@@ -1046,15 +1047,6 @@
 				</object>
 				<object class="IBConnectionRecord">
 					<object class="IBCocoaTouchEventConnection" key="connection">
-						<string key="label">touch_up_F13:</string>
-						<reference key="source" ref="420911439"/>
-						<reference key="destination" ref="372490531"/>
-						<int key="IBEventType">7</int>
-					</object>
-					<int key="connectionID">162</int>
-				</object>
-				<object class="IBConnectionRecord">
-					<object class="IBCocoaTouchEventConnection" key="connection">
 						<string key="label">touch_up_QUOTE:</string>
 						<reference key="source" ref="965625217"/>
 						<reference key="destination" ref="372490531"/>
@@ -1070,6 +1062,15 @@
 						<int key="IBEventType">7</int>
 					</object>
 					<int key="connectionID">164</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBCocoaTouchEventConnection" key="connection">
+						<string key="label">touch_up_COMMA:</string>
+						<reference key="source" ref="420911439"/>
+						<reference key="destination" ref="372490531"/>
+						<int key="IBEventType">7</int>
+					</object>
+					<int key="connectionID">165</int>
 				</object>
 			</object>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -1104,7 +1105,6 @@
 							<reference ref="933032107"/>
 							<reference ref="214816834"/>
 							<reference ref="965625217"/>
-							<reference ref="420911439"/>
 							<reference ref="47015903"/>
 							<reference ref="949690578"/>
 							<reference ref="237724049"/>
@@ -1118,6 +1118,7 @@
 							<reference ref="996814062"/>
 							<reference ref="305193239"/>
 							<reference ref="1057799585"/>
+							<reference ref="420911439"/>
 						</object>
 						<reference key="parent" ref="0"/>
 					</object>
@@ -1160,6 +1161,7 @@
 						<int key="objectID">57</int>
 						<reference key="object" ref="420911439"/>
 						<reference key="parent" ref="795231795"/>
+						<string key="objectName">Button - COMMA</string>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">60</int>
@@ -1215,7 +1217,7 @@
 						<int key="objectID">118</int>
 						<reference key="object" ref="996814062"/>
 						<reference key="parent" ref="795231795"/>
-						<string key="objectName">Button</string>
+						<string key="objectName">Button - F2</string>
 					</object>
 					<object class="IBObjectRecord">
 						<int key="objectID">121</int>
@@ -1388,7 +1390,7 @@
 				<reference key="dict.values" ref="0"/>
 			</object>
 			<nil key="sourceID"/>
-			<int key="maxID">164</int>
+			<int key="maxID">165</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<object class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -1400,6 +1402,7 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>navigation_changed:</string>
 							<string>touch_down:</string>
 							<string>touch_up_COMMA:</string>
 							<string>touch_up_DQUOTE:</string>
@@ -1427,6 +1430,7 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>id</string>
 							<string>id</string>
 							<string>id</string>
 							<string>id</string>
@@ -1457,6 +1461,7 @@
 						<bool key="EncodedWithXMLCoder">YES</bool>
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<string>navigation_changed:</string>
 							<string>touch_down:</string>
 							<string>touch_up_COMMA:</string>
 							<string>touch_up_DQUOTE:</string>
@@ -1484,6 +1489,10 @@
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
+							<object class="IBActionInfo">
+								<string key="name">navigation_changed:</string>
+								<string key="candidateClassName">id</string>
+							</object>
 							<object class="IBActionInfo">
 								<string key="name">touch_down:</string>
 								<string key="candidateClassName">id</string>
@@ -1587,13 +1596,23 @@
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>accessoryView</string>
-							<string>textView</string>
-							<string>webView</string>
+							<string>imageView0</string>
+							<string>imageView1</string>
+							<string>segmCtrl</string>
+							<string>textView0</string>
+							<string>textView1</string>
+							<string>webView0</string>
+							<string>webView1</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>UIView</string>
+							<string>UIImageView</string>
+							<string>UIImageView</string>
+							<string>UISegmentedControl</string>
 							<string>UITextView</string>
+							<string>UITextView</string>
+							<string>UIWebView</string>
 							<string>UIWebView</string>
 						</object>
 					</object>
@@ -1602,8 +1621,13 @@
 						<object class="NSArray" key="dict.sortedKeys">
 							<bool key="EncodedWithXMLCoder">YES</bool>
 							<string>accessoryView</string>
-							<string>textView</string>
-							<string>webView</string>
+							<string>imageView0</string>
+							<string>imageView1</string>
+							<string>segmCtrl</string>
+							<string>textView0</string>
+							<string>textView1</string>
+							<string>webView0</string>
+							<string>webView1</string>
 						</object>
 						<object class="NSMutableArray" key="dict.values">
 							<bool key="EncodedWithXMLCoder">YES</bool>
@@ -1612,11 +1636,31 @@
 								<string key="candidateClassName">UIView</string>
 							</object>
 							<object class="IBToOneOutletInfo">
-								<string key="name">textView</string>
+								<string key="name">imageView0</string>
+								<string key="candidateClassName">UIImageView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">imageView1</string>
+								<string key="candidateClassName">UIImageView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">segmCtrl</string>
+								<string key="candidateClassName">UISegmentedControl</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">textView0</string>
 								<string key="candidateClassName">UITextView</string>
 							</object>
 							<object class="IBToOneOutletInfo">
-								<string key="name">webView</string>
+								<string key="name">textView1</string>
+								<string key="candidateClassName">UITextView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">webView0</string>
+								<string key="candidateClassName">UIWebView</string>
+							</object>
+							<object class="IBToOneOutletInfo">
+								<string key="name">webView1</string>
 								<string key="candidateClassName">UIWebView</string>
 							</object>
 						</object>
@@ -1644,8 +1688,8 @@
 			<bool key="EncodedWithXMLCoder">YES</bool>
 			<object class="NSArray" key="dict.sortedKeys">
 				<bool key="EncodedWithXMLCoder">YES</bool>
+				<string>key-comma-46x42.png</string>
 				<string>key-doublequote-46x42.png</string>
-				<string>key-edit-46x42.png</string>
 				<string>key-f1-46x42.png</string>
 				<string>key-f10-46x42.png</string>
 				<string>key-f11-46x42.png</string>

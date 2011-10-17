@@ -1,27 +1,26 @@
 ;;;============================================================================
 
-;;; File: "wiki#.scm"
+;;; File: "script#.scm"
 
 ;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-(##namespace ("wiki#"
+(##namespace ("script#"
 
-wiki-server-address
-wiki-root
-wiki-script-prefix
-
-wiki-login
-wiki-logout
-wiki-script-list
-wiki-script-store
-wiki-script-fetch
-wiki-script-remove
-wiki-logged-in?
-wiki-logged-in-verify
-wiki-script-name-verify
-wiki-script-name-type
+predefined-scripts
+script-db
+script-db-version
+reset-scripts
+get-script-by-name
+get-script-index-by-name
+get-script-at-index
+get-script-db
+new-script
+add-script name
+save-script-db
+load-script
+run-script
 
 ))
 

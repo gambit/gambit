@@ -15,7 +15,7 @@
 
 @implementation ViewController
 
-@synthesize textView, accessoryView, webView, keyboardSounds, timer;
+@synthesize segmCtrl, webView0, webView1, webView2, webView3, textView0, textView1, imageView0, imageView1, cancelButton, accessoryView, keyboardSounds, timer, queuedActions;
 
 //-----------------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ ___END_C_LINKAGE
 
 
 extern char **main_argv;
-
+___UCS_2 ucs2_gambcdir[1024];
 
 void gambit_setup()
 {
@@ -55,12 +55,29 @@ void gambit_setup()
 
   int debug_settings = ___DEBUG_SETTINGS_INITIAL;
   ___UCS_2STRING *ucs2_argv;
+  int last_dir_sep;
+  int i;
 
   if (___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST
         (main_argv,
          &ucs2_argv)
       != ___FIX(___NO_ERR))
     exit(1);
+
+  last_dir_sep = 0;
+  i = 0;
+
+  while (ucs2_argv[0][i] != '\0')
+    {
+      if (ucs2_argv[0][i] == '/')
+        last_dir_sep = i;
+      i++;
+    }
+
+  for (i=0; i<last_dir_sep; i++)
+    ucs2_gambcdir[i] = ucs2_argv[0][i];
+
+  ucs2_gambcdir[i] = '\0';
 
   // Set debugging settings so that all threads with uncaught
   // exceptions start a REPL.
@@ -84,6 +101,7 @@ void gambit_setup()
   setup_params.version        = ___VERSION;
   setup_params.linker         = SCHEME_LIBRARY_LINKER;
   setup_params.argv           = ucs2_argv;
+  setup_params.gambcdir       = ucs2_gambcdir;
   setup_params.debug_settings = debug_settings;
 
   ___setup (&setup_params);
@@ -107,14 +125,29 @@ static ViewController *theViewController = nil;
 
   [super viewDidLoad];
 
+  webViews[0] = webView0;
+  webViews[1] = webView1;
+  webViews[2] = webView2;
+  webViews[3] = webView3;
+
+  textViews[0] = textView0;
+  textViews[1] = textView1;
+
+  imageViews[0] = imageView0;
+  imageViews[1] = imageView1;
+
   theViewController = self;
 
-  set_textView_font(@"Courier-Bold", 16);
+  set_textView_font(0, @"Courier-Bold", 16);
+
+  segmCtrl.selectedSegmentIndex = UISegmentedControlNoSegment;
 
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
 
   timer = nil;
+
+  queuedActions = [[NSMutableArray alloc] init];
 
   gambit_setup();
 
@@ -129,9 +162,23 @@ static ViewController *theViewController = nil;
   [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillShowNotification object:nil];
   [[NSNotificationCenter defaultCenter] removeObserver:self name:UIKeyboardWillHideNotification object:nil];
 
-  textView = nil;
+  segmCtrl = nil;
+
+  webView0 = nil;
+  webView1 = nil;
+  webView2 = nil;
+  webView3 = nil;
+
+  textView0 = nil;
+  textView1 = nil;
+
+  imageView0 = nil;
+  imageView1 = nil;
+
+  cancelButton = nil;
+
   accessoryView = nil;
-  webView = nil;
+
   theViewController = nil;
 
   gambit_cleanup();
@@ -161,16 +208,15 @@ static ViewController *theViewController = nil;
 
 - (BOOL)textViewShouldBeginEditing:(UITextView *)aTextView {
 
-  if (textView.inputAccessoryView == nil)
+  if (textViews[0].inputAccessoryView == nil)
     {
-
       [[NSBundle mainBundle] loadNibNamed:@"AccessoryView" owner:self options:nil];
 
-      textView.inputAccessoryView = accessoryView;
+      textViews[0].inputAccessoryView = accessoryView;
 
       accessoryView = nil;
 
-      show_textView();
+      show_textView(0);
     }
 
   return YES;
@@ -219,7 +265,7 @@ static ViewController *theViewController = nil;
   [UIView beginAnimations:nil context:NULL];
   [UIView setAnimationDuration:animationDuration];
 
-  textView.frame = newTextViewFrame;
+  textViews[0].frame = newTextViewFrame;
 
   [UIView commitAnimations];
 }
@@ -242,40 +288,71 @@ static ViewController *theViewController = nil;
   [UIView beginAnimations:nil context:NULL];
   [UIView setAnimationDuration:animationDuration];
 
-  textView.frame = self.view.bounds;
+  textViews[0].frame = self.view.bounds;
 
   [UIView commitAnimations];
 }
 
 
-#include "program.h"
+#include "intf.h"
 
 
-- (void)up_key:(NSString*)name {
+void set_navigation(int n) {
 
-  ___enable_heartbeat_interrupts ();
-
-  ___ON_THROW(
+  ViewController *vc = theViewController;
+  if (vc != nil)
     {
-      [self schedule_next_heartbeat_tick:send_key(name)];
-    },
-    exit(0);
-  );
+      [vc->segmCtrl removeTarget:vc action:@selector(navigation_changed:) forControlEvents:UIControlEventValueChanged];
+      vc->segmCtrl.selectedSegmentIndex = n;
+      [vc->segmCtrl addTarget:vc action:@selector(navigation_changed:) forControlEvents:UIControlEventValueChanged];
+    }
+}
 
-  ___disable_heartbeat_interrupts ();
+
+- (void)queue_action:(void(^)())action {
+
+  [queuedActions addObject:[action copy]];
+}
+
+
+- (void)queue_action_asap:(void(^)())action {
+
+  [self queue_action:action];
+
+  [self schedule_next_heartbeat_tick:0.0];
+}
+
+
+- (void)send_event:(NSString*)name {
+
+  [self queue_action_asap:^{ send_event(name); }];
+}
+
+
+- (void)send_key:(NSString*)name {
+
+  [self queue_action_asap:^{ send_key(name); }];
 }
 
 
 - (void)heartbeat_tick {
 
+  [self queue_action:^{ [self schedule_next_heartbeat_tick:heartbeat()]; }];
+
   ___enable_heartbeat_interrupts ();
 
-  ___ON_THROW(
+  while ([queuedActions count] > 0)
     {
-      [self schedule_next_heartbeat_tick:heartbeat()];
-    },
-    exit(0);
-  );
+      void (^action)(void) = [queuedActions objectAtIndex:0];
+      [queuedActions removeObjectAtIndex:0];
+
+      ___ON_THROW(
+        {
+          action();
+        },
+        exit(0);
+      );
+    }
 
   ___disable_heartbeat_interrupts ();
 }
@@ -283,7 +360,7 @@ static ViewController *theViewController = nil;
 
 - (void)schedule_next_heartbeat_tick:(double)interval {
 
-  if (interval > 0)
+  if (interval >= 0)
     {
       if (timer != nil)
         {
@@ -296,118 +373,271 @@ static ViewController *theViewController = nil;
 }
 
 
-void show_textView() {
+- (void)app_become_active {
+
+  theViewController.keyboardSounds = -1; // delay check of user preferences
+
+  [self send_event:@"app-become-active"];
+}
+
+
+void show_cancelButton() {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      [vc.webView resignFirstResponder];
-      vc.textView.hidden = NO;
-      vc.webView.hidden = YES;
-      [vc.textView becomeFirstResponder];
+      vc->cancelButton.hidden = NO;
     }
 }
 
 
-void show_webView() {
+void hide_cancelButton() {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      [vc.textView resignFirstResponder];
-      vc.webView.hidden = NO;
-      vc.textView.hidden = YES;
-      [vc.webView becomeFirstResponder];
+      vc->cancelButton.hidden = YES;
     }
 }
 
 
-void set_textView_content(NSString *str) {
+void show_webView(int view) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      vc.textView.text = str;
+      int i;
+
+      for (int i=0; i<NB_WEBVIEWS; i++)
+        if (i != view)
+          {
+            [vc->webViews[i] resignFirstResponder];
+            vc->webViews[i].hidden = YES;
+          }
+          
+      for (int i=0; i<NB_TEXTVIEWS; i++)
+        {
+          [vc->textViews[i] resignFirstResponder];
+          vc->textViews[i].hidden = YES;
+        }
+
+      for (int i=0; i<NB_IMAGEVIEWS; i++)
+        {
+          [vc->imageViews[i] resignFirstResponder];
+          vc->imageViews[i].hidden = YES;
+        }
+      
+      [vc->webViews[view] becomeFirstResponder];
+      vc->webViews[view].hidden = NO;
     }
 }
 
 
-NSString *get_textView_content() {
+void show_textView(int view) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      return vc.textView.text;
+      int i;
+
+      for (int i=0; i<NB_WEBVIEWS; i++)
+        {
+          [vc->webViews[i] resignFirstResponder];
+          vc->webViews[i].hidden = YES;
+        }
+          
+      for (int i=0; i<NB_TEXTVIEWS; i++)
+        if (i != view)
+          {
+            [vc->textViews[i] resignFirstResponder];
+            vc->textViews[i].hidden = YES;
+          }
+
+      for (int i=0; i<NB_IMAGEVIEWS; i++)
+        {
+          [vc->imageViews[i] resignFirstResponder];
+          vc->imageViews[i].hidden = YES;
+        }
+      
+      [vc->textViews[view] becomeFirstResponder];
+      vc->textViews[view].hidden = NO;
+    }
+}
+
+
+void show_imageView(int view) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      int i;
+
+      for (int i=0; i<NB_WEBVIEWS; i++)
+        {
+          [vc->webViews[i] resignFirstResponder];
+          vc->webViews[i].hidden = YES;
+        }
+          
+      for (int i=0; i<NB_TEXTVIEWS; i++)
+        {
+          [vc->textViews[i] resignFirstResponder];
+          vc->textViews[i].hidden = YES;
+        }
+
+      for (int i=0; i<NB_IMAGEVIEWS; i++)
+        if (i != view)
+          {
+            [vc->imageViews[i] resignFirstResponder];
+            vc->imageViews[i].hidden = YES;
+          }
+      
+      [vc->imageViews[view] becomeFirstResponder];
+      vc->imageViews[view].hidden = NO;
+    }
+}
+
+
+void set_textView_font(int view, NSString *name, int size) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      vc->textViews[view].font = [UIFont fontWithName:name size:size];
+    }
+}
+
+
+void set_textView_content(int view, NSString *str) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      vc->textViews[view].text = str;
+    }
+}
+
+
+NSString *get_textView_content(int view) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      return vc->textViews[view].text;
     }
 
   return @"";
 }
 
 
-void set_textView_font(NSString *name, int size) {
+void add_to_textView(int view, NSString *str) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      vc.textView.font = [UIFont fontWithName:name size:size];
-    }
-}
-
-
-void add_to_textView(NSString *str) {
-
-  ViewController *vc = theViewController;
-  if (vc != nil)
-    {
-      NSMutableString *new_text = [vc.textView.text mutableCopy];
+      NSMutableString *new_text = [vc->textViews[view].text mutableCopy];
       [new_text appendString:str];
-      vc.textView.text = new_text;
+      vc->textViews[view].text = new_text;
       [new_text release];
     }
 }
 
 
-void add_output_to_textView(NSString *str) {
+void add_output_to_textView(int view, NSString *str) {
 
-  add_to_textView([str stringByReplacingOccurrencesOfString:@" " withString:@"\u2007"]);
+  add_to_textView(view, [str stringByReplacingOccurrencesOfString:@" " withString:@"\u2007"]);
 }
 
 
-void add_input_to_textView(NSString *str) {
+void add_input_to_textView(int view, NSString *str) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      NSMutableString *new_text = [vc.textView.text mutableCopy];
-      NSRange selectedRange = vc.textView.selectedRange;
+      NSMutableString *new_text = [vc->textViews[view].text mutableCopy];
+      NSRange selectedRange = vc->textViews[view].selectedRange;
 
       [new_text replaceCharactersInRange:selectedRange withString:str];
 
-      vc.textView.text = new_text;
+      vc->textViews[view].text = new_text;
       [new_text release];
     }
 }
 
 
-void set_webView_content(NSString *str, BOOL enable_scaling, NSString *mime_type) {
+void set_webView_content(int view, NSString *str, BOOL enable_scaling, NSString *mime_type) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      [vc.webView
+      [vc->webViews[view]
           loadData:[str dataUsingEncoding:NSUnicodeStringEncoding]
           MIMEType:mime_type
           textEncodingName:@"UTF-8" 
           baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]]
       ];
-      vc.webView.scalesPageToFit = enable_scaling;
+      vc->webViews[0].scalesPageToFit = enable_scaling;
     }
 }
 
 
+void set_webView_content_from_file(int view, NSString *path, BOOL enable_scaling, NSString *mime_type) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      NSString *p = [[NSBundle mainBundle] pathForResource:path ofType:nil];
+      if (p != nil)
+        {
+          NSData *data = [NSData dataWithContentsOfFile:p]; 
+          if (data != nil)
+            {
+              [vc->webViews[view]
+                  loadData:data
+                  MIMEType:mime_type
+                  textEncodingName:@"UTF-8" 
+                  baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]]
+               ];
+              vc->webViews[view].scalesPageToFit = enable_scaling;
+            }
+        }
+    }
+}
+
+
+NSString *eval_js_in_webView(int view, NSString *script) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      return [vc->webViews[view] stringByEvaluatingJavaScriptFromString:script];
+    }
+
+  return nil;
+}
+
 void open_URL(NSString *url) {
 
   [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+}
+
+
+void segm_ctrl_set_title(int segment, NSString *title) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      [vc->segmCtrl setTitle:title forSegmentAtIndex:segment];
+    }
+}
+
+
+void segm_ctrl_insert(int segment, NSString *title) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      [vc->segmCtrl insertSegmentWithTitle:title atIndex:segment animated:true];
+    }
 }
 
 
@@ -426,49 +656,118 @@ NSString *get_pref(NSString *key) {
 }
 
 
+void set_pasteboard(NSString *value) {
+
+  UIPasteboard *pb = [UIPasteboard generalPasteboard];
+  pb.string = value;
+}
+
+
+NSString *get_pasteboard() {
+
+  UIPasteboard *pb = [UIPasteboard generalPasteboard];
+  return pb.string;
+}
+
+
+NSString *get_documents_dir() {
+
+  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+  return [paths objectAtIndex:0];
+}
+
+
+void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSString *accept_button) {
+
+  UIAlertView *alert = [[UIAlertView alloc]
+                        initWithTitle: title
+                        message: msg
+                        delegate: theViewController
+                        cancelButtonTitle: cancel_button
+                        otherButtonTitles: accept_button, nil];
+  [alert show];
+  [alert release];
+}
+
+
+// Called when an alertview button is touched
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+
+  NSString *event;
+
+  switch (buttonIndex) {
+
+  case 1:
+    event = @"popup-alert-accept";
+    break;
+
+  default:
+  case 0:
+    event = @"popup-alert-cancel";
+    break;
+  }
+
+  [self send_event:event];
+}
+
+
+#pragma mark -
+#pragma mark Toolbar action
+
+- (IBAction)navigation_changed:(id)sender {
+  int n = segmCtrl.selectedSegmentIndex;
+  if (n >= 0)
+    [self send_event:[NSString stringWithFormat:@"NAV%d", n]];
+}
+
+
+#pragma mark -
+#pragma mark Cancel button action
+
+- (IBAction)touch_up_cancel:(id)sender {
+  [self send_event:@"cancel"];
+}
+
+
 - (BOOL)textView:(UITextView *)textView2 shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
 
   if ([text hasSuffix:@"\n"])
     {
       unichar c;
-      int end = [textView.text length];
+      int end = [textViews[0].text length];
 
       int line_start = range.location+range.length;
 
       while (line_start > 0 &&
-             (c = [textView.text characterAtIndex:line_start-1]) != '\n' &&
+             (c = [textViews[0].text characterAtIndex:line_start-1]) != '\n' &&
              c != 0x2007) // non breaking space
         line_start--;
 
       int line_end = range.location+range.length;
 
       while (line_end < end &&
-             [textView.text characterAtIndex:line_end] != '\n')
+             [textViews[0].text characterAtIndex:line_end] != '\n')
         line_end++;
 
-      NSString *line = [textView.text substringWithRange:NSMakeRange(line_start, line_end-line_start)];
-
-      if (line_end == end)
+      if (line_start == line_end)
         {
-          add_to_textView(text);
-
-          ___enable_heartbeat_interrupts ();
-
-          ___ON_THROW(
-            {
-              [self schedule_next_heartbeat_tick:send_input([line stringByAppendingString:text])];
-            },
-            exit(0);
-          );
-
-          ___disable_heartbeat_interrupts ();
-
-#if 0
-          [textView resignFirstResponder]; // Hide the keyboard after "return" key is pressed
-#endif
+          [textViews[0] resignFirstResponder]; // Hide the keyboard after "return" key is pressed on empty line
         }
       else
-        add_to_textView(line);
+        {
+          NSString *line = [textViews[0].text substringWithRange:NSMakeRange(line_start, line_end-line_start)];
+
+          if (line_end == end)
+            {
+              add_to_textView(0, text);
+
+              [self queue_action_asap:^{
+                  send_input([line stringByAppendingString:text]);
+              }];
+            }
+          else
+            add_to_textView(0, line);
+        }
 
       return NO;
     }
@@ -479,7 +778,7 @@ NSString *get_pref(NSString *key) {
 
 - (IBAction)touch_up_Char:(id)sender withString:(NSString *)aString {
 
-  add_input_to_textView(aString);
+  add_input_to_textView(0, aString);
 }
 
 
@@ -511,7 +810,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F1:(id)sender {
-  [self up_key:@"F1"];
+  [self send_key:@"F1"];
 }
 
 
@@ -519,7 +818,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F2:(id)sender {
-  [self up_key:@"F2"];
+  [self send_key:@"F2"];
 }
 
 
@@ -527,7 +826,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F3:(id)sender {
-  [self up_key:@"F3"];
+  [self send_key:@"F3"];
 }
 
 
@@ -535,7 +834,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F4:(id)sender {
-  [self up_key:@"F4"];
+  [self send_key:@"F4"];
 }
 
 
@@ -543,7 +842,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F5:(id)sender {
-  [self up_key:@"F5"];
+  [self send_key:@"F5"];
 }
 
 
@@ -551,7 +850,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F6:(id)sender {
-  [self up_key:@"F6"];
+  [self send_key:@"F6"];
 }
 
 
@@ -559,7 +858,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F7:(id)sender {
-  [self up_key:@"F7"];
+  [self send_key:@"F7"];
 }
 
 
@@ -567,7 +866,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F8:(id)sender {
-  [self up_key:@"F8"];
+  [self send_key:@"F8"];
 }
 
 
@@ -575,7 +874,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F9:(id)sender {
-  [self up_key:@"F9"];
+  [self send_key:@"F9"];
 }
 
 
@@ -583,7 +882,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F10:(id)sender {
-  [self up_key:@"F10"];
+  [self send_key:@"F10"];
 }
 
 
@@ -591,7 +890,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F11:(id)sender {
-  [self up_key:@"F11"];
+  [self send_key:@"F11"];
 }
 
 
@@ -599,7 +898,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F12:(id)sender {
-  [self up_key:@"F12"];
+  [self send_key:@"F12"];
 }
 
 
@@ -607,7 +906,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_F13:(id)sender {
-  [self up_key:@"F13"];
+  [self send_key:@"F13"];
 }
 
 
@@ -615,7 +914,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_SHARP:(id)sender {
-  [self up_key:@"#"];
+  [self send_key:@"#"];
 }
 
 
@@ -623,7 +922,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_DQUOTE:(id)sender {
-  [self up_key:@"\""];
+  [self send_key:@"\""];
 }
 
 
@@ -631,7 +930,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_QUOTE:(id)sender {
-  [self up_key:@"'"];
+  [self send_key:@"'"];
 }
 
 
@@ -639,7 +938,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_COMMA:(id)sender {
-  [self up_key:@","];
+  [self send_key:@","];
 }
 
 
@@ -647,7 +946,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_PLUS:(id)sender {
-  [self up_key:@"+"];
+  [self send_key:@"+"];
 }
 
 
@@ -655,7 +954,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_MINUS:(id)sender {
-  [self up_key:@"-"];
+  [self send_key:@"-"];
 }
 
 
@@ -663,7 +962,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_STAR:(id)sender {
-  [self up_key:@"*"];
+  [self send_key:@"*"];
 }
 
 
@@ -671,7 +970,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_SLASH:(id)sender {
-  [self up_key:@"/"];
+  [self send_key:@"/"];
 }
 
 
@@ -679,7 +978,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_LPAREN:(id)sender {
-  [self up_key:@"("];
+  [self send_key:@"("];
 }
 
 
@@ -687,7 +986,7 @@ NSString *get_pref(NSString *key) {
 #pragma mark Accessory view action
 
 - (IBAction)touch_up_RPAREN:(id)sender {
-  [self up_key:@")"];
+  [self send_key:@")"];
 }
 
 
@@ -697,16 +996,7 @@ NSString *get_pref(NSString *key) {
 
   if ([url hasPrefix:@"event:"])
     {
-      ___enable_heartbeat_interrupts ();
-
-      ___ON_THROW(
-        {
-          [self schedule_next_heartbeat_tick:send_event([url stringByAppendingString:@"\n"])];
-        },
-        exit(0);
-      );
-
-      ___disable_heartbeat_interrupts ();
+      [self send_event:url];
 
       return NO;
     }
@@ -720,8 +1010,22 @@ NSString *get_pref(NSString *key) {
 
 - (void)dealloc {
 
+  int i;
+
   [[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:nil];
-  [textView release];
+
+  [segmCtrl release];
+
+  for (i=0; i<NB_WEBVIEWS; i++)
+    [webViews[i] release];
+
+  for (i=0; i<NB_TEXTVIEWS; i++)
+    [textViews[i] release];
+
+  for (i=0; i<NB_IMAGEVIEWS; i++)
+    [imageViews[i] release];
+
+  [cancelButton release];
 
   [super dealloc];
 }

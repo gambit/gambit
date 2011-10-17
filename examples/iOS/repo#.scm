@@ -1,27 +1,17 @@
 ;;;============================================================================
 
-;;; File: "wiki#.scm"
+;;; File: "repo#.scm"
 
 ;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-(##namespace ("wiki#"
+(##namespace ("repo#"
 
-wiki-server-address
-wiki-root
-wiki-script-prefix
-
-wiki-login
-wiki-logout
-wiki-script-list
-wiki-script-store
-wiki-script-fetch
-wiki-script-remove
-wiki-logged-in?
-wiki-logged-in-verify
-wiki-script-name-verify
-wiki-script-name-type
+reset-login-info
+set-login-info
+get-login-info
+save-login-info
 
 ))
 
