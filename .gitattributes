@@ -2,3 +2,5 @@
 *.png binary
 *.tiff binary
 *.key binary
+*.exe binary
+*.dmg binary
