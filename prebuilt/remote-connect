@@ -1,0 +1,234 @@
+#! /usr/bin/env gsi
+
+;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+
+;; This program allows execution of commands on a remote host.  The
+;; "remote host" may be a real computer or a VM running locally in
+;; VirtualBox.  In the latter case, the VM is started, configured for
+;; ssh, and then terminated when the commands terminate.  The commands
+;; are a sequence of Scheme expressions to execute.  The commands can
+;; include calls to the following procedures, which all return #t if
+;; they executed without error:
+;;
+;;  (sh <command>)                              local shell command execution
+;;  (ssh <timeout-in-seconds> <command>)        remote shell command execution
+;;  (scp-to <timeout-in-seconds> <src> <dst>)   copy local <src> to remote <dst>
+;;  (scp-from <timeout-in-seconds> <src> <dst>) copy remote <src> to local <dst>
+;;
+;; Usage: ./remote-connect <host> <password> <commands>
+
+(define (main host pw commands)
+
+  (define (err)
+    (exit 1))
+
+  (let* ((alias (assoc host host-aliases))
+         (h (if alias (cadr alias) host))
+         (vbox-vm (assoc h vbox-vms)))
+
+    (if vbox-vm
+        (begin
+          (set! hostname "localhost")
+          (set! username (list-ref vbox-vm 1))
+          (set! password (if (equal? pw "") (list-ref vbox-vm 2) pw))
+          (set! ssh-port (list-ref vbox-vm 3)))
+        (begin
+          (set! hostname h)
+          (set! username
+                (if (and alias (>= (length alias) 3))
+                    (caddr alias)
+                    (user-name)))
+          (set! password
+                (if (and (equal? pw "") alias (>= (length alias) 4))
+                    (cadddr alias)
+                    pw))
+          (if (equal? password "")
+              (begin
+                (print "\nPassword for " username "@" hostname ": ")
+                (set! password (read-line))
+                (print "\n")
+                (if (equal? password "")
+                    (set! password #f))))
+          (set! ssh-port
+                (if (and alias (>= (length alias) 5))
+                    (car (cddddr alias))
+                    22))))
+
+    (end-vbox-vm vbox-vm)
+    (if (not (start-vbox-vm vbox-vm))
+        (err)
+        (begin
+          (eval (cons 'begin (with-input-from-string commands read-all)))
+          (if (not (end-vbox-vm vbox-vm))
+              (err))))))
+
+(define hostname #f)
+(define username #f)
+(define password #f)
+(define ssh-port #f)
+
+(define host-aliases
+  '(("macosx"  "Snow-Leopard-x86-VM1")
+    ("windows" "Windows-7-Ultimate-x86-VM1")
+    ("farm"    "frontal.iro.umontreal.ca" "gambit" "" 22)
+   ))
+
+;; Name of the VM and username, password and port to connect to the VM
+;; with ssh.  Note that the password need not be hidden because the
+;; VirtualBox VMs are run locally.
+
+(define vbox-vms
+  '(("Snow-Leopard-x86-VM1"       "administrator" "pass999word" 2211)
+    ("Snow-Leopard-x86-VM2"       "administrator" "pass999word" 2212)
+    ("Snow-Leopard-x86-VM3"       "administrator" "pass999word" 2213)
+    ("Snow-Leopard-x86-VM4"       "administrator" "pass999word" 2214)
+    ("Windows-7-Ultimate-x86-VM1" "Admin"         "pass999word" 2221)
+    ("Windows-7-Ultimate-x86-VM2" "Admin"         "pass999word" 2222)
+    ("Windows-7-Ultimate-x86-VM3" "Admin"         "pass999word" 2223)
+    ("Windows-7-Ultimate-x86-VM4" "Admin"         "pass999word" 2224)
+   ))
+
+(define (ssh-options scp?)
+  (append (if password
+              (list "-o" "UserKnownHostsFile=/dev/null"
+                    "-o" "StrictHostKeyChecking=no"
+                    "-o" "PreferredAuthentications=keyboard-interactive,password")
+              '())
+          (list (if scp? "-P" "-p") (number->string ssh-port))))
+
+(define start-marker "575e2a05-9d7b-448b-ab91-1adbb2a93fd7")
+
+(define (expect str port echo?)
+
+  (define (same-prefix? prefix lst)
+    (if (null? prefix)
+        #t
+        (if (null? lst)
+            #f
+            (if (char=? (car prefix) (car lst))
+                (same-prefix? (cdr prefix) (cdr lst))
+                #f))))
+
+  (let ((rev-str (reverse (string->list str))))
+    (let loop ((lst '()))
+      (if (same-prefix? rev-str lst)
+          (list->string (reverse lst))
+          (let ((c (read-char port)))
+            (if (char? c)
+                (begin
+                  (if echo? (display c))
+                  (loop (cons c lst)))
+                #f))))))
+
+(define (send output port)
+  ;;(print output)
+  (print port: port output)
+  (force-output port))
+
+(define (end-process port echo?)
+  (let* ((output (read-line port #f))
+         (output (if (string? output) output "")))
+    (if echo? (print output)) ;; echo command output
+    (close-port port)
+    (if (= 0 (process-status port))
+        #t
+        (begin
+          (if (not echo?) (print output))
+          #f))))
+
+(define (sh cmd)
+  (= 0 (shell-command cmd)))
+
+(define (ssh timeout command)
+  (let ((port
+         (open-process
+          (list path: "ssh"
+                arguments: (append (ssh-options #f)
+                                   (list (string-append username "@" hostname)
+                                         (string-append "echo " start-marker
+                                                        ";" command)))
+                output-eol-encoding: 'cr
+                pseudo-terminal: #t))))
+
+    (input-port-timeout-set! port timeout) ;; must login within this time
+
+    (if password
+        (begin
+          (expect "assword:" port #f)
+          (send (list password "\n") port)))
+
+    (if (expect (string-append start-marker "\n") port #f)
+
+        (begin
+          (input-port-timeout-set! port +inf.0)
+          (end-process port #t))
+
+        (begin
+          (close-port port)
+          #f))))
+
+(define (scp-to timeout src dst)
+  (let ((port
+         (open-process
+          (list path: "scp"
+                arguments: (append (ssh-options #t)
+                                   (list src
+                                         (string-append username "@" hostname ":" dst)))
+                output-eol-encoding: 'cr
+                pseudo-terminal: #t))))
+
+    (input-port-timeout-set! port timeout) ;; must login and copy within this time
+
+    (expect "assword:" port #f)
+    (send (list password "\n") port)
+
+    (end-process port #f)))
+
+(define (scp-from timeout src dst)
+  (let ((port
+         (open-process
+          (list path: "scp"
+                arguments: (append (ssh-options #t)
+                                   (list (string-append username "@" hostname ":" src)
+                                         dst))
+                output-eol-encoding: 'cr
+                pseudo-terminal: #t))))
+
+    (input-port-timeout-set! port timeout) ;; must login and copy within this time
+
+    (expect "assword:" port #f)
+    (send (list password "\n") port)
+
+    (end-process port #f)))
+
+(define (start-vbox-vm vbox-vm)
+  (if vbox-vm
+      (let ((vm-name (list-ref vbox-vm 0)))
+        (and (sh (string-append "VBoxManage modifyvm \""
+                                vm-name
+                                "\" --natpf1 \"ssh,tcp,localhost,"
+                                (number->string ssh-port)
+                                ",,22\""))
+             (if (sh (string-append "VBoxManage startvm --type headless \""
+                                    vm-name
+                                    "\""))
+                 (begin
+                   (thread-sleep! 70) ;; allow some time for VM to boot up
+                   #t)
+                 (begin
+                   (end-vbox-vm vbox-vm)
+                   #f))))
+      #t))
+
+(define (end-vbox-vm vbox-vm)
+  (if vbox-vm
+      (let ((vm-name (list-ref vbox-vm 0)))
+        (sh (string-append "VBoxManage controlvm \""
+                           vm-name
+                           "\" poweroff"
+                           " > /dev/null 2>&1"))
+        (sh (string-append "VBoxManage modifyvm \""
+                           vm-name
+                           "\" --natpf1 delete \"ssh\""
+                           " > /dev/null 2>&1")))))
+
