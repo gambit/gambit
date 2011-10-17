@@ -625,6 +625,7 @@ else
   AC_CHECK_HEADERS(memory.h)
   AC_CHECK_HEADERS(sys/sysctl.h)
   AC_CHECK_HEADERS(crt_externs.h)
+  AC_CHECK_HEADERS(ws2tcpip.h)
 
   if test "$C_COMP_VISUALC" != yes; then
 
@@ -633,7 +634,12 @@ else
     [
       AC_TRY_COMPILE(
       [#include <sys/types.h>
-       #include <sys/socket.h>],
+       #ifdef HAVE_SYS_SOCKET_H
+       #include <sys/socket.h>
+       #endif
+       #ifdef HAVE_WS2TCPIP_H
+       #include <ws2tcpip.h>
+       #endif],
       [socklen_t len = 42; return 0;],
       ac_cv_type_socklen_t=yes,
       ac_cv_type_socklen_t=no)
