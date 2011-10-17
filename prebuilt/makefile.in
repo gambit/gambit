@@ -1,6 +1,6 @@
 # makefile for Gambit-C builds.
 
-# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 herefromroot = prebuilt
 rootfromhere = ..
@@ -64,7 +64,7 @@ mandir = @mandir@
 
 .SUFFIXES:
 
-RCFILES = makefile.in README
+RCFILES = makefile.in README remote-connect
 
 GENDISTFILES =
 
@@ -76,27 +76,9 @@ all-pre:
 
 all-post:
 
-prebuilt:
-	@for subdir in $(SUBDIRS); do \
-	  echo "************ $$subdir BUILD STARTING"; \
-	  rm -f remote-script remote-script.out; \
-	  echo "#! /bin/sh" > remote-script; \
-	  echo "cd /tmp" >> remote-script; \
-	  echo "sudo rm -rf $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)" >> remote-script; \
-	  echo "scp \$$ORIGINATOR:$(PWD)/$(rootfromhere)/$(PACKAGE_TARNAME).tgz ." >> remote-script; \
-	  echo "tar zxf $(PACKAGE_TARNAME).tgz" >> remote-script; \
-	  echo "cd $(PACKAGE_TARNAME)" >> remote-script; \
-	  echo "sudo prebuilt/$$subdir/build" >> remote-script; \
-	  echo "scp $(PACKAGE_TARNAME)* \$$ORIGINATOR:$(PWD)/$(rootfromhere)" >> remote-script; \
-	  echo "sudo rm -rf $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)" >> remote-script; \
-	  if ./$$subdir/remote-shell remote-script > remote-script.out && cat remote-script.out && fgrep "************ $$subdir BUILD SUCCESSFUL" remote-script.out > /dev/null; then \
-	    rm -f remote-script remote-script.out; \
-	  else \
-	    echo "************ $$subdir BUILD FAILED"; \
-	    rm -f remote-script remote-script.out; \
-	    exit 1; \
-	  fi; \
-	done
+prebuilt-pre:
+
+prebuilt-post:
 
 install-pre:
 
@@ -109,7 +91,6 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f remote-script remote-script.out
 
 clean-pre: mostlyclean-pre
 
@@ -145,7 +126,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive prebuilt-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -219,6 +200,12 @@ dist-devel: dist-devel-post
 dist-devel-post: dist-devel-recursive
 
 dist-devel-recursive: dist-devel-pre
+
+prebuilt: prebuilt-post
+
+prebuilt-post: prebuilt-recursive
+
+prebuilt-recursive: prebuilt-pre
 
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
