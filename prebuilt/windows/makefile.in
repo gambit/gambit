@@ -1,6 +1,6 @@
 # makefile for Gambit-C build on Windows.
 
-# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 herefromroot = prebuilt/windows
 rootfromhere = ../..
@@ -77,6 +77,9 @@ all:
 all-pre:
 
 all-post:
+
+prebuilt:
+	PATH="$(rootfromhere)/gsi:$$PATH" ../remote-connect windows "" "(define tmpdir \"gambtmp1\")(define gambc-dist \"$(PACKAGE_TARNAME)\")(define timeout 600)(ssh timeout (string-append \"rm -rf \" tmpdir \";mkdir \" tmpdir \";\"))(scp-to timeout (string-append \"$(rootfromhere)/\" gambc-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"c:/MinGW/msys/1.0/bin/sh --login -c 'cd \" tmpdir \";tar zxf \" gambc-dist \".tgz;cd \" gambc-dist \";$(herefromroot)/build'\"))(scp-from timeout (string-append tmpdir \"/\" gambc-dist \"/$(PACKAGE_TARNAME)-*\") \"$(rootfromhere)\")"
 
 install-pre:
 

@@ -2883,8 +2883,14 @@ ___stream_index *len_done;)
 
       if ((n = read (d->fd_rd, buf, len)) < 0)
         {
+#if 0
           if (errno == EIO) errno = EAGAIN;
-          e = err_code_from_errno ();
+#else
+          if (errno == EIO) /* on linux, treating EIO as EAGAIN gives an infinite loop */
+            n = 0;
+          else
+#endif
+            e = err_code_from_errno ();
         }
 
       *len_done = n;

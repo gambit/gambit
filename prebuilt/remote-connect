@@ -17,7 +17,12 @@
 ;;
 ;; Usage: ./remote-connect <host> <password> <commands>
 
+(define debug? #f)
+
 (define (main host pw commands)
+  (remote-connect host pw commands))
+
+(define (remote-connect host pw commands)
 
   (define (err)
     (exit 1))
@@ -109,6 +114,7 @@
                 (same-prefix? (cdr prefix) (cdr lst))
                 #f))))
 
+  (if debug? (set! echo? #t))
   (let ((rev-str (reverse (string->list str))))
     (let loop ((lst '()))
       (if (same-prefix? rev-str lst)
@@ -121,11 +127,12 @@
                 #f))))))
 
 (define (send output port)
-  ;;(print output)
+  (if debug? (print output))
   (print port: port output)
   (force-output port))
 
 (define (end-process port echo?)
+  (if debug? (set! echo? #t))
   (let* ((output (read-line port #f))
          (output (if (string? output) output "")))
     (if echo? (print output)) ;; echo command output
@@ -135,6 +142,12 @@
         (begin
           (if (not echo?) (print output))
           #f))))
+
+(define (send-password port)
+  (if password
+      (begin
+        (expect "assword:" port #f)
+        (send (list password "\n") port))))
 
 (define (sh cmd)
   (= 0 (shell-command cmd)))
@@ -152,10 +165,7 @@
 
     (input-port-timeout-set! port timeout) ;; must login within this time
 
-    (if password
-        (begin
-          (expect "assword:" port #f)
-          (send (list password "\n") port)))
+    (send-password port)
 
     (if (expect (string-append start-marker "\n") port #f)
 
@@ -179,8 +189,7 @@
 
     (input-port-timeout-set! port timeout) ;; must login and copy within this time
 
-    (expect "assword:" port #f)
-    (send (list password "\n") port)
+    (send-password port)
 
     (end-process port #f)))
 
@@ -196,8 +205,7 @@
 
     (input-port-timeout-set! port timeout) ;; must login and copy within this time
 
-    (expect "assword:" port #f)
-    (send (list password "\n") port)
+    (send-password port)
 
     (end-process port #f)))
 

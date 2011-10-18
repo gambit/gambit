@@ -9,7 +9,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 #
-# Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 ## --------------------- ##
 ## M4sh Initialization.  ##
 ## --------------------- ##
@@ -695,6 +695,7 @@ GREP
 EGREP
 CONF_VOIDSTAR_WIDTH
 C_COMP_GNUC
+C_COMP_LLVM
 C_COMP_VISUALC
 GCC_42_OR_43
 DASH_no_cpp_precomp
@@ -1589,7 +1590,7 @@ Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
+Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 _ACEOF
   exit
 fi
@@ -2192,7 +2193,201 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 if test -n "$ac_tool_prefix"; then
-  for ac_prog in gcc cc
+  # Extract the first word of "${ac_tool_prefix}gcc", so it can be a program name with args.
+set dummy ${ac_tool_prefix}gcc; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CC+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CC"; then
+  ac_cv_prog_CC="$CC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CC="${ac_tool_prefix}gcc"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CC=$ac_cv_prog_CC
+if test -n "$CC"; then
+  { echo "$as_me:$LINENO: result: $CC" >&5
+echo "${ECHO_T}$CC" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_CC"; then
+  ac_ct_CC=$CC
+  # Extract the first word of "gcc", so it can be a program name with args.
+set dummy gcc; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_ac_ct_CC+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$ac_ct_CC"; then
+  ac_cv_prog_ac_ct_CC="$ac_ct_CC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_CC="gcc"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_CC=$ac_cv_prog_ac_ct_CC
+if test -n "$ac_ct_CC"; then
+  { echo "$as_me:$LINENO: result: $ac_ct_CC" >&5
+echo "${ECHO_T}$ac_ct_CC" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+  if test "x$ac_ct_CC" = x; then
+    CC=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ echo "$as_me:$LINENO: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&5
+echo "$as_me: WARNING: In the future, Autoconf will not detect cross-tools
+whose name does not start with the host triplet.  If you think this
+configuration is useful to you, please write to autoconf@gnu.org." >&2;}
+ac_tool_warned=yes ;;
+esac
+    CC=$ac_ct_CC
+  fi
+else
+  CC="$ac_cv_prog_CC"
+fi
+
+if test -z "$CC"; then
+          if test -n "$ac_tool_prefix"; then
+    # Extract the first word of "${ac_tool_prefix}cc", so it can be a program name with args.
+set dummy ${ac_tool_prefix}cc; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CC+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CC"; then
+  ac_cv_prog_CC="$CC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_CC="${ac_tool_prefix}cc"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+CC=$ac_cv_prog_CC
+if test -n "$CC"; then
+  { echo "$as_me:$LINENO: result: $CC" >&5
+echo "${ECHO_T}$CC" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+  fi
+fi
+if test -z "$CC"; then
+  # Extract the first word of "cc", so it can be a program name with args.
+set dummy cc; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_CC+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$CC"; then
+  ac_cv_prog_CC="$CC" # Let the user override the test.
+else
+  ac_prog_rejected=no
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    if test "$as_dir/$ac_word$ac_exec_ext" = "/usr/ucb/cc"; then
+       ac_prog_rejected=yes
+       continue
+     fi
+    ac_cv_prog_CC="cc"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+if test $ac_prog_rejected = yes; then
+  # We found a bogon in the path, so make sure we never use it.
+  set dummy $ac_cv_prog_CC
+  shift
+  if test $# != 0; then
+    # We chose a different compiler from the bogus one.
+    # However, it has the same basename, so the bogon will be chosen
+    # first if we set CC to just the basename; use the full file name.
+    shift
+    ac_cv_prog_CC="$as_dir/$ac_word${1+' '}$@"
+  fi
+fi
+fi
+fi
+CC=$ac_cv_prog_CC
+if test -n "$CC"; then
+  { echo "$as_me:$LINENO: result: $CC" >&5
+echo "${ECHO_T}$CC" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+fi
+if test -z "$CC"; then
+  if test -n "$ac_tool_prefix"; then
+  for ac_prog in cl.exe
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -2236,7 +2431,7 @@ fi
 fi
 if test -z "$CC"; then
   ac_ct_CC=$CC
-  for ac_prog in gcc cc
+  for ac_prog in cl.exe
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -2293,6 +2488,8 @@ ac_tool_warned=yes ;;
 esac
     CC=$ac_ct_CC
   fi
+fi
+
 fi
 
 
@@ -3159,7 +3356,7 @@ if test -z "$CXX"; then
     CXX=$CCC
   else
     if test -n "$ac_tool_prefix"; then
-  for ac_prog in g++
+  for ac_prog in g++ c++ gpp aCC CC cxx cc++ cl.exe FCC KCC RCC xlC_r xlC
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -3203,7 +3400,7 @@ fi
 fi
 if test -z "$CXX"; then
   ac_ct_CXX=$CXX
-  for ac_prog in g++
+  for ac_prog in g++ c++ gpp aCC CC cxx cc++ cl.exe FCC KCC RCC xlC_r xlC
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3800,16 +3997,20 @@ if test "$ENABLE_GUIDE" = yes; then
         ENABLE_GUIDE=no
         { echo "$as_me:$LINENO:
 ************************************************************************
+***                                                                  ***
 *** The Gambit Universal IDE requires that the system be built using ***
 *** the Qt GUI library version 3.3.  Version $qt_version of Qt is currently  ***
 *** installed.                                                       ***
+***                                                                  ***
 ************************************************************************
 " >&5
 echo "$as_me:
 ************************************************************************
+***                                                                  ***
 *** The Gambit Universal IDE requires that the system be built using ***
 *** the Qt GUI library version 3.3.  Version $qt_version of Qt is currently  ***
 *** installed.                                                       ***
+***                                                                  ***
 ************************************************************************
 " >&6;}
 
@@ -3820,16 +4021,20 @@ echo "$as_me:
       ENABLE_GUIDE=no
       { echo "$as_me:$LINENO:
 ************************************************************************
+***                                                                  ***
 *** The Gambit Universal IDE requires that the system be built using ***
 *** the Qt GUI library.  This library could not be located.  Make    ***
 *** sure that the program qmake is in your PATH.                     ***
+***                                                                  ***
 ************************************************************************
 " >&5
 echo "$as_me:
 ************************************************************************
+***                                                                  ***
 *** The Gambit Universal IDE requires that the system be built using ***
 *** the Qt GUI library.  This library could not be located.  Make    ***
 *** sure that the program qmake is in your PATH.                     ***
+***                                                                  ***
 ************************************************************************
 " >&6;}
 
@@ -3840,16 +4045,20 @@ echo "$as_me:
     ENABLE_GUIDE=no
     { echo "$as_me:$LINENO:
 ************************************************************************
+***                                                                  ***
 *** The Gambit Universal IDE requires that the system be built using ***
 *** a C++ compiler.  You must specify both \"--enable-cplusplus\" and  ***
 *** \"--enable-guide\" to include the Gambit Universal IDE.            ***
+***                                                                  ***
 ************************************************************************
 " >&5
 echo "$as_me:
 ************************************************************************
+***                                                                  ***
 *** The Gambit Universal IDE requires that the system be built using ***
 *** a C++ compiler.  You must specify both \"--enable-cplusplus\" and  ***
 *** \"--enable-guide\" to include the Gambit Universal IDE.            ***
+***                                                                  ***
 ************************************************************************
 " >&6;}
 
@@ -5424,6 +5633,39 @@ fi
 fi
 { echo "$as_me:$LINENO: result: $C_COMP_GNUC" >&5
 echo "${ECHO_T}$C_COMP_GNUC" >&6; }
+{ echo "$as_me:$LINENO: checking whether $C_COMPILER defines __llvm__" >&5
+echo $ECHO_N "checking whether $C_COMPILER defines __llvm__... $ECHO_C" >&6; }
+if test "${C_COMP_LLVM+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+#ifndef __llvm__
+       choke me
+#endif
+
+  ;
+  return 0;
+}
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  C_COMP_LLVM="yes"
+else
+  C_COMP_LLVM=""
+fi
+
+fi
+{ echo "$as_me:$LINENO: result: $C_COMP_LLVM" >&5
+echo "${ECHO_T}$C_COMP_LLVM" >&6; }
 { echo "$as_me:$LINENO: checking whether $C_COMPILER defines _MSC_VER" >&5
 echo $ECHO_N "checking whether $C_COMPILER defines _MSC_VER... $ECHO_C" >&6; }
 if test "${C_COMP_VISUALC+set}" = set; then
@@ -12964,6 +13206,151 @@ fi
 done
 
 
+for ac_header in ws2tcpip.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
+  { echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6; }
+if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+ac_res=`eval echo '${'$as_ac_Header'}'`
+	       { echo "$as_me:$LINENO: result: $ac_res" >&5
+echo "${ECHO_T}$ac_res" >&6; }
+else
+  # Is the header compilable?
+{ echo "$as_me:$LINENO: checking $ac_header usability" >&5
+echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_header_compiler=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+{ echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6; }
+
+# Is the header present?
+{ echo "$as_me:$LINENO: checking $ac_header presence" >&5
+echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6; }
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <$ac_header>
+_ACEOF
+if { (ac_try="$ac_cpp conftest.$ac_ext"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_cpp conftest.$ac_ext") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null && {
+	 test -z "$ac_cxx_preproc_warn_flag$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       }; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+  ac_header_preproc=no
+fi
+
+rm -f conftest.err conftest.$ac_ext
+{ echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6; }
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_cxx_preproc_warn_flag in
+  yes:no: )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the compiler's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the compiler's result" >&2;}
+    ac_header_preproc=yes
+    ;;
+  no:yes:* )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header:     check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: $ac_header:     check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: see the Autoconf documentation" >&5
+echo "$as_me: WARNING: $ac_header: see the Autoconf documentation" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&5
+echo "$as_me: WARNING: $ac_header:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: in the future, the compiler will take precedence" >&5
+echo "$as_me: WARNING: $ac_header: in the future, the compiler will take precedence" >&2;}
+    ( cat <<\_ASBOX
+## -------------------------------------- ##
+## Report this to gambit@iro.umontreal.ca ##
+## -------------------------------------- ##
+_ASBOX
+     ) | sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+esac
+{ echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6; }
+if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  eval "$as_ac_Header=\$ac_header_preproc"
+fi
+ac_res=`eval echo '${'$as_ac_Header'}'`
+	       { echo "$as_me:$LINENO: result: $ac_res" >&5
+echo "${ECHO_T}$ac_res" >&6; }
+
+fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
   if test "$C_COMP_VISUALC" != yes; then
 
 
@@ -12981,7 +13368,12 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 #include <sys/types.h>
+       #ifdef HAVE_SYS_SOCKET_H
        #include <sys/socket.h>
+       #endif
+       #ifdef HAVE_WS2TCPIP_H
+       #include <ws2tcpip.h>
+       #endif
 int
 main ()
 {
@@ -23170,6 +23562,7 @@ echo "${ECHO_T}$DASH_G" >&6; }
 
              { echo "$as_me:$LINENO:
 *********************************************************************
+***                                                               ***
 *** The GCC compiler is not being used and the operating system   ***
 *** is not one that has been tested with the Gambit-C system.     ***
 *** The configure script will use certain compiler options that   ***
@@ -23177,10 +23570,12 @@ echo "${ECHO_T}$DASH_G" >&6; }
 *** Please report success or failure to gambit@iro.umontreal.ca.  ***
 *** This will help us support this operating system in the        ***
 *** future.                                                       ***
+***                                                               ***
 *********************************************************************
 " >&5
 echo "$as_me:
 *********************************************************************
+***                                                               ***
 *** The GCC compiler is not being used and the operating system   ***
 *** is not one that has been tested with the Gambit-C system.     ***
 *** The configure script will use certain compiler options that   ***
@@ -23188,6 +23583,7 @@ echo "$as_me:
 *** Please report success or failure to gambit@iro.umontreal.ca.  ***
 *** This will help us support this operating system in the        ***
 *** future.                                                       ***
+***                                                               ***
 *********************************************************************
 " >&6;}
 
@@ -26141,6 +26537,7 @@ GREP!$GREP$ac_delim
 EGREP!$EGREP$ac_delim
 CONF_VOIDSTAR_WIDTH!$CONF_VOIDSTAR_WIDTH$ac_delim
 C_COMP_GNUC!$C_COMP_GNUC$ac_delim
+C_COMP_LLVM!$C_COMP_LLVM$ac_delim
 C_COMP_VISUALC!$C_COMP_VISUALC$ac_delim
 GCC_42_OR_43!$GCC_42_OR_43$ac_delim
 DASH_no_cpp_precomp!$DASH_no_cpp_precomp$ac_delim
@@ -26160,7 +26557,6 @@ DASH_fno_trapping_math!$DASH_fno_trapping_math$ac_delim
 DASH_fno_strict_aliasing!$DASH_fno_strict_aliasing$ac_delim
 DASH_fwrapv!$DASH_fwrapv$ac_delim
 DASH_fomit_frame_pointer!$DASH_fomit_frame_pointer$ac_delim
-DASH_fno_move_loop_invariants!$DASH_fno_move_loop_invariants$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -26202,6 +26598,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+DASH_fno_move_loop_invariants!$DASH_fno_move_loop_invariants$ac_delim
 DASH_fmodulo_sched!$DASH_fmodulo_sched$ac_delim
 DASH_freschedule_modulo_scheduled_loops!$DASH_freschedule_modulo_scheduled_loops$ac_delim
 DASH_fPIC!$DASH_fPIC$ac_delim
@@ -26298,7 +26695,6 @@ LIB_PREFIX_MF!$LIB_PREFIX_MF$ac_delim
 LIB_EXTENSION_MF!$LIB_EXTENSION_MF$ac_delim
 BUILD_OBJ_SH!$BUILD_OBJ_SH$ac_delim
 BUILD_DYN_SH!$BUILD_DYN_SH$ac_delim
-BUILD_LIB_SH!$BUILD_LIB_SH$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -26340,6 +26736,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+BUILD_LIB_SH!$BUILD_LIB_SH$ac_delim
 BUILD_EXE_SH!$BUILD_EXE_SH$ac_delim
 DEFS_SH!$DEFS_SH$ac_delim
 LIBS_SH!$LIBS_SH$ac_delim
@@ -26399,7 +26796,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 57; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 58; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
@@ -26755,7 +27152,7 @@ do
     cat >>$CONFIG_STATUS <<_ACEOF
     # First, check the format of the line:
     cat >"\$tmp/defines.sed" <<\\CEOF
-/^[	 ]*#[	 ]*undef[	 ][	 ]*$ac_word_re[	 ]*\$/b def
+/^[	 ]*#[	 ]*undef[	 ][	 ]*$ac_word_re[	 ]*/b def
 /^[	 ]*#[	 ]*define[	 ][	 ]*$ac_word_re[(	 ]/b def
 b
 :def
@@ -26827,6 +27224,7 @@ fi
 if test "$ENABLE_SINGLE_HOST" != yes; then
   { echo "$as_me:$LINENO:
 **************************************************************************
+***                                                                    ***
 *** The option \"--enable-single-host\" was not specified to the         ***
 *** configure script.  The Gambit-C system will compile correctly but  ***
 *** the code generated by the C compiler will be suboptimal and the    ***
@@ -26835,10 +27233,12 @@ if test "$ENABLE_SINGLE_HOST" != yes; then
 *** process will be faster and require less memory.  If you have lots  ***
 *** of RAM memory (>= 500 Mbytes) and you are willing to wait for the  ***
 *** longer build try the configure option \"--enable-single-host\".      ***
+***                                                                    ***
 **************************************************************************
 " >&5
 echo "$as_me:
 **************************************************************************
+***                                                                    ***
 *** The option \"--enable-single-host\" was not specified to the         ***
 *** configure script.  The Gambit-C system will compile correctly but  ***
 *** the code generated by the C compiler will be suboptimal and the    ***
@@ -26847,6 +27247,7 @@ echo "$as_me:
 *** process will be faster and require less memory.  If you have lots  ***
 *** of RAM memory (>= 500 Mbytes) and you are willing to wait for the  ***
 *** longer build try the configure option \"--enable-single-host\".      ***
+***                                                                    ***
 **************************************************************************
 " >&6;}
 fi
@@ -26856,6 +27257,7 @@ if test "$C_COMP_GNUC" = yes; then
   if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
     { echo "$as_me:$LINENO:
 **************************************************************************
+***                                                                    ***
 *** The GCC compiler that is being used has problems compiling Gambit  ***
 *** generated code when the normal set of C compiler optimizations are ***
 *** enabled and the configure flag \"--enable-single-host\" is           ***
@@ -26868,10 +27270,12 @@ if test "$C_COMP_GNUC" = yes; then
 *** loops the effect is larger.  If you want to avoid this problem     ***
 *** then upgrade your version of GCC to 4.4 (or above hopefully) or    ***
 *** downgrade to a version prior to 4.2 .                              ***
+***                                                                    ***
 **************************************************************************
 " >&5
 echo "$as_me:
 **************************************************************************
+***                                                                    ***
 *** The GCC compiler that is being used has problems compiling Gambit  ***
 *** generated code when the normal set of C compiler optimizations are ***
 *** enabled and the configure flag \"--enable-single-host\" is           ***
@@ -26884,6 +27288,43 @@ echo "$as_me:
 *** loops the effect is larger.  If you want to avoid this problem     ***
 *** then upgrade your version of GCC to 4.4 (or above hopefully) or    ***
 *** downgrade to a version prior to 4.2 .                              ***
+***                                                                    ***
+**************************************************************************
+" >&6;}
+  fi
+
+  if test "$C_COMP_LLVM" = yes ; then
+
+    { echo "$as_me:$LINENO:
+**************************************************************************
+***                                                                    ***
+*** The LLVM GCC compiler that is being used has a bug in the          ***
+*** compilation of label values (i.e. &&label).  For this reason the   ***
+*** use of computed gotos in the generated code has been disabled.     ***
+*** This greatly reduces the run time performance.  The system runs    ***
+*** 5 times slower than when it is compiled with GNU GCC.  It is       ***
+*** highly recommended that you use the GNU GCC if possible.  For      ***
+*** example, on a Mac OS X computer with Xcode 4.0, you can select     ***
+*** GNU GCC by configuring Gambit with the command:                    ***
+***                                                                    ***
+*** CC=i686-apple-darwin11-gcc-4.2.1 ./configure --enable-single-host  ***
+***                                                                    ***
+**************************************************************************
+" >&5
+echo "$as_me:
+**************************************************************************
+***                                                                    ***
+*** The LLVM GCC compiler that is being used has a bug in the          ***
+*** compilation of label values (i.e. &&label).  For this reason the   ***
+*** use of computed gotos in the generated code has been disabled.     ***
+*** This greatly reduces the run time performance.  The system runs    ***
+*** 5 times slower than when it is compiled with GNU GCC.  It is       ***
+*** highly recommended that you use the GNU GCC if possible.  For      ***
+*** example, on a Mac OS X computer with Xcode 4.0, you can select     ***
+*** GNU GCC by configuring Gambit with the command:                    ***
+***                                                                    ***
+*** CC=i686-apple-darwin11-gcc-4.2.1 ./configure --enable-single-host  ***
+***                                                                    ***
 **************************************************************************
 " >&6;}
   fi
