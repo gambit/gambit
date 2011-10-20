@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_ptree1.scm", Time-stamp: <2010-06-10 15:31:40 feeley>
+;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -485,7 +485,7 @@
 (define (inline-primitive? name env) ; true iff name can be inlined
   (declaration-value inline-primitives-sym name #t env))
 
-(define (add-not-inline-primitive? env)
+(define (add-not-inline-primitives env)
   (env-declare env (list inline-primitives-sym #f)))
 
 (define (inlining-limit env) ; returns the inlining limit
@@ -542,6 +542,9 @@
 
 (define (proper-tail-calls? env) ; true iff proper tail calls should be generated
   (declaration-value proper-tail-calls-sym #f #t env))
+
+(define (add-proper-tail-calls env)
+  (env-declare env (list proper-tail-calls-sym #t)))
 
 (define (optimize-dead-local-variables? env) ; true iff dead local variables should be optimized
   (declaration-value optimize-dead-local-variables-sym #f #t env))

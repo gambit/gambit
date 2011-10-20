@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-2.scm", Time-stamp: <2010-06-10 15:28:28 feeley>
+;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -5223,6 +5223,8 @@
               (node-source ptree))
              (env
               (node-env ptree))
+             (env2
+              (add-proper-tail-calls env))
              (vars
               (gen-temp-vars source args))
              (f-var
@@ -5251,7 +5253,7 @@
                   (gen-temp-vars source lst-vars))
                  (x-var
                   (new-temp-variable source 'x)))
-            (new-call source env
+            (new-call source env2
               (new-prc source env
                 #f
                 #f
@@ -5259,7 +5261,7 @@
                 '()
                 #f
                 #f
-                (new-call source env
+                (new-call source env2
                   (new-ref source env
                     loop2-var)
                   (map (lambda (var)
@@ -5279,7 +5281,7 @@
                           (if (safe? env) ;; in case lists are truncated by other threads
                               lst2-vars
                               (list (car lst2-vars))))
-                        (new-call source env
+                        (new-call source env2
                           (new-prc source env
                             #f
                             #f
@@ -5288,7 +5290,7 @@
                             #f
                             #f
                             (let ((rec-call
-                                   (new-call source env
+                                   (new-call source env2
                                      (new-ref source env
                                        loop2-var)
                                      (map (lambda (var)
@@ -6359,7 +6361,7 @@
              (gen-call-prim-vars source env **fixnum?-sym vars)
              (new-disj source env
                (gen-call-prim-vars source env **flonum?-sym vars)
-               (gen-call-prim-vars source (add-not-inline-primitive? env)
+               (gen-call-prim-vars source (add-not-inline-primitives env)
                  **real?-sym
                  vars))))
          fail)))
@@ -6381,7 +6383,7 @@
              (new-tst source env
                (gen-call-prim-vars source env **flonum?-sym vars)
                (gen-call-prim-vars source env **flfinite?-sym vars)
-               (gen-call-prim-vars source (add-not-inline-primitive? env)
+               (gen-call-prim-vars source (add-not-inline-primitives env)
                  **rational?-sym
                  vars))))
          fail)))
@@ -6400,7 +6402,7 @@
          (lambda ()
            (new-disj source env
              (gen-call-prim-vars source env **fixnum?-sym vars)
-             (gen-call-prim-vars source (add-not-inline-primitive? env)
+             (gen-call-prim-vars source (add-not-inline-primitives env)
                **integer?-sym
                vars)))
          fail)))
@@ -6423,7 +6425,7 @@
                (gen-call-prim source env
                  **not-sym
                  (list (gen-call-prim-vars source env **flonum?-sym vars)))
-               (gen-call-prim-vars source (add-not-inline-primitive? env)
+               (gen-call-prim-vars source (add-not-inline-primitives env)
                  fallback
                  vars))))
          fail)))
@@ -6446,7 +6448,7 @@
                (list (gen-call-prim-vars source env **fixnum?-sym vars)))
              (new-disj source env
                (gen-call-prim-vars source env **flonum?-sym vars)
-               (gen-call-prim-vars source (add-not-inline-primitive? env)
+               (gen-call-prim-vars source (add-not-inline-primitives env)
                  fallback
                  vars))))
          fail)))

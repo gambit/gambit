@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_ptree2.scm", Time-stamp: <2011-05-19 09:42:02 feeley>
+;;; File: "_ptree2.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -214,7 +214,7 @@
                                         (lambda (vars)
                                           (new-call
                                             source
-                                            (add-not-inline-primitive? env)
+                                            (add-not-inline-primitives env)
                                             (new-ref (node-source oper)
                                                      (node-env oper)
                                               var)
@@ -311,7 +311,7 @@
                                       (lambda (vars)
                                         (new-call
                                          source
-                                         (add-not-inline-primitive? env)
+                                         (add-not-inline-primitives env)
                                          (new-cst source env
                                            spec)
                                          (gen-var-refs source env vars)))
