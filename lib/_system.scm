@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2009-06-11 10:06:27 feeley>
+;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1402,11 +1402,11 @@
           (macro-table-test table))
          (test
           (or test-field
-              (macro-absent-obj)))
+              ##eq?)) ;; test-field = #f means test function = ##eq?
          (hash
           (if test-field
             (macro-table-hash table)
-            (macro-absent-obj)))
+            (macro-absent-obj))) ;; test-field = #f means special hash function
          (loads
           (macro-table-loads table))
          (min-load
