@@ -134,7 +134,7 @@ status: fake_target
 
 push: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
-	  $(GIT) push ssh://gambit@public-gambit-repo/~/HTML/repo/gambit.git/; \
+	  $(GIT) push ssh://gambit@frontal.iro.umontreal.ca/~/HTML/repo/gambit.git/; \
 	else \
 	  $(HG) push; \
 	fi
@@ -309,7 +309,7 @@ rc-setup-pre:
 	  $(HG) add $(RCFILES) $(HGRCFILES); \
 	  rm -f .hg/hgrc; \
 	  echo "[paths]" > .hg/hgrc; \
-	  echo "default-push = ssh://gambit@public-gambit-repo/HTML/repo/gambit" >> .hg/hgrc; \
+	  echo "default-push = ssh://gambit@frontal.iro.umontreal.ca/HTML/repo/gambit" >> .hg/hgrc; \
 	  echo "default = http://www.iro.umontreal.ca/~gambit/repo/gambit/" >> .hg/hgrc; \
 	fi
 
