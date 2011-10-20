@@ -5104,6 +5104,8 @@
               (node-source ptree))
              (env
               (node-env ptree))
+             (env2
+              (add-proper-tail-calls env))
              (vars
               (gen-temp-vars source args))
              (obj-var
@@ -5118,7 +5120,7 @@
               (new-temp-variable source 'x)))
 
         (define (gen-main-loop)
-          (new-call source env
+          (new-call source env2
             (new-prc source env
               #f
               #f
@@ -5126,7 +5128,7 @@
               '()
               #f
               #f
-              (new-call source env
+              (new-call source env2
                 (new-ref source env
                   loop-var)
                 (list (new-ref source env
@@ -5140,7 +5142,7 @@
                     #f
                     (new-tst source env
                       (gen-call-prim-vars source env **pair?-sym (list lst1-var))
-                      (new-call source env
+                      (new-call source env2
                         (new-prc source env
                           #f
                           #f
@@ -5164,7 +5166,7 @@
                                             (list x-var))))
                                   (new-ref source env
                                     x-var)
-                                  (new-call source env
+                                  (new-call source env2
                                     (new-ref source env
                                       loop-var)
                                     (list (gen-call-prim-vars source env
@@ -5190,7 +5192,7 @@
                                         x-var)))
                               (new-ref source env
                                 lst1-var)
-                              (new-call source env
+                              (new-call source env2
                                 (new-ref source env
                                   loop-var)
                                 (list (gen-call-prim-vars source env
