@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_t-c-3.scm", Time-stamp: <2010-01-14 19:40:19 feeley>
+;;; File: "_t-c-3.scm"
 
-;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -201,11 +201,13 @@
          (e-bits (if f64? 11 8)))
 
     (let ((y (vector-ref z 0)))
-      (if (not (< y targ-inexact-+2)) ; +inf.0 or +nan.0?
+      (if (not (< y targ-inexact-+2)) ;; +inf.0 or +nan.0?
         (begin
           (if (< targ-inexact-+0 y)
-            (vector-set! z 0 (expt 2 m-bits))              ; +inf.0
-            (vector-set! z 0 (- (* (expt 2 m-bits) 2) 1))) ; +nan.0
+            (vector-set! z 0 (expt 2 m-bits)) ;; +inf.0
+            (begin
+              (vector-set! z 2 -1) ;; normalize sign bit to negative
+              (vector-set! z 0 (- (* (expt 2 m-bits) 2) 1)))) ;; +nan.0
           (vector-set! z 1 (expt 2 (- e-bits 1))))
         (vector-set! z 0
           (truncate
