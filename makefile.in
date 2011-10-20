@@ -134,7 +134,7 @@ status: fake_target
 
 push: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
-	  $(GIT) push ssh://gambit@frontal.iro.umontreal.ca/~/HTML/repo/gambit.git/; \
+	  $(GIT) push ssh://gambit@frontal07.iro.umontreal.ca/~/HTML/repo/gambit.git/; \
 	else \
 	  $(HG) push; \
 	fi
@@ -300,7 +300,7 @@ rc-setup-pre:
 	  echo '	ignorecase = true' >> .git/config; \
 	  echo '	autocrlf = false' >> .git/config; \
 	  echo '[remote "origin"]' >> .git/config; \
-	  echo '	url = http://www.iro.umontreal.ca/~gambit/repo/gambit.git/' >> .git/config; \
+	  echo '	url = ssh://gambit@frontal07.iro.umontreal.ca/~/HTML/repo/gambit.git' >> .git/config; \
 	  echo '	fetch = +refs/heads/*:refs/remotes/origin/*' >> .git/config; \
 	  echo '[branch "master"]' >> .git/config; \
 	  echo '	remote = origin' >> .git/config; \
@@ -309,7 +309,7 @@ rc-setup-pre:
 	  $(HG) add $(RCFILES) $(HGRCFILES); \
 	  rm -f .hg/hgrc; \
 	  echo "[paths]" > .hg/hgrc; \
-	  echo "default-push = ssh://gambit@frontal.iro.umontreal.ca/HTML/repo/gambit" >> .hg/hgrc; \
+	  echo "default-push = ssh://gambit@frontal07.iro.umontreal.ca/HTML/repo/gambit" >> .hg/hgrc; \
 	  echo "default = http://www.iro.umontreal.ca/~gambit/repo/gambit/" >> .hg/hgrc; \
 	fi
 
