@@ -1,11 +1,13 @@
 .hgignore
 .hgtags
 .hg
+bin/gambc-cc
+bin/gambc-cc.unix
 bin/gambc-cc.bat
-bin/gambc-cc.bat.unix
 bin/gambc-cc.bat.windows
+bin/gambc-doc
+bin/gambc-doc.unix
 bin/gambc-doc.bat
-bin/gambc-doc.bat.unix
 bin/gambc-doc.bat.windows
 bin/gsc-script
 bin/gsc-script.bat
@@ -56,6 +58,10 @@ examples/Xlib-simple/makefile
 examples/distr-comp/dc.o1
 examples/distr-comp/distr-comp.o1
 examples/distr-comp/makefile
+examples/iOS/GambitREPL.xcodeproj
+examples/iOS/gambit-c.pdf
+examples/iOS/gambit-iOS
+examples/iOS/lib
 examples/makefile
 examples/misc/makefile
 examples/misc/signals.o1
