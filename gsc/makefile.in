@@ -1,6 +1,6 @@
 # makefile for Gambit-C compiler.
 
-# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsc
 rootfromhere = ..

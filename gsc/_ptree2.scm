@@ -199,6 +199,33 @@
                                     (node-source ptree))
                                    (env
                                     (node-env ptree)))
+
+                              (define (generate-spec-call vars)
+                                (new-call source (add-not-inline-primitives env)
+                                  (new-cst source env
+                                    spec)
+                                  (gen-var-refs source env vars)))
+
+                              (define (generate-original-call vars)
+                                (new-call source (add-not-inline-primitives env)
+                                  (new-ref (node-source oper) (node-env oper)
+                                    var)
+                                  (gen-var-refs source env vars)))
+
+                              (define (generate-run-time-binding-test gen-body)
+                                (let ((vars (gen-temp-vars source args)))
+                                  (gen-prc source env
+                                    vars
+                                    (new-tst source env
+                                      (gen-eq-proc source env
+                                        (new-ref
+                                          (node-source oper)
+                                          (node-env oper)
+                                          var)
+                                        proc)
+                                      (gen-body vars)
+                                      (generate-original-call vars)))))
+
                               (if (and spec
                                        (inline-primitive? name env)
                                        (or ((proc-obj-inlinable? spec) env)
@@ -210,29 +237,6 @@
                                        (rtb?
                                         (run-time-binding? name
                                                            (node-env oper)))
-                                       (generate-original-call
-                                        (lambda (vars)
-                                          (new-call
-                                            source
-                                            (add-not-inline-primitives env)
-                                            (new-ref (node-source oper)
-                                                     (node-env oper)
-                                              var)
-                                            (gen-var-refs source env vars))))
-                                       (generate-run-time-binding-test
-                                        (lambda (gen-body)
-                                          (let ((vars (gen-temp-vars source args)))
-                                            (gen-prc source env
-                                              vars
-                                              (new-tst source env
-                                                (gen-eq-proc source env
-                                                  (new-ref
-                                                    (node-source oper)
-                                                    (node-env oper)
-                                                    var)
-                                                  proc)
-                                                (gen-body vars)
-                                                (generate-original-call vars))))))
                                        (new-oper
                                         (if ((proc-obj-inlinable? spec) env)
                                           (cond (std?
@@ -240,11 +244,7 @@
                                                    spec))
                                                 (rtb?
                                                  (generate-run-time-binding-test
-                                                  (lambda (vars)
-                                                    (new-call source env
-                                                      (new-cst source env
-                                                        spec)
-                                                      (gen-var-refs source env vars)))))
+                                                  generate-spec-call))
                                                 (else
                                                  #f))
                                           (and (or std?
@@ -256,11 +256,7 @@
                                                        args
                                                        (if (eq? proc spec)
                                                          generate-original-call
-                                                         (lambda (vars)
-                                                           (new-call source env
-                                                             (new-cst source env
-                                                               spec)
-                                                             (gen-var-refs source env vars))))
+                                                         generate-spec-call)
                                                        (and (not std?)
                                                             (eq? proc spec)
                                                             (lambda ()

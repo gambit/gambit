@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_front.scm", Time-stamp: <2010-06-10 16:34:45 feeley>
+;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 

@@ -1,7 +1,7 @@
 ;;; -*- Mode:Emacs-Lisp -*-
 ;;; gambit.el --- Run Gambit in an [X]Emacs buffer
 
-;; Copyright (c) 1997-2004 Marc Feeley & Michael Sperber
+;; Copyright (c) 1997-2011 Marc Feeley & Michael Sperber
 
 ;; Authors: Marc Feeley <feeley@iro.umontreal.ca>
 ;;          Mike Sperber <sperber@informatik.uni-tuebingen.de>
@@ -14,7 +14,7 @@
 ;; (autoload 'gambit-mode "gambit" "Hook Gambit mode into scheme.")
 ;; (add-hook 'inferior-scheme-mode-hook (function gambit-inferior-mode))
 ;; (add-hook 'scheme-mode-hook (function gambit-mode))
-;; (setq scheme-program-name "gsi -:t")
+;; (setq scheme-program-name "gsi -:d-")
 ;;
 ;; Alternatively, if you don't mind always loading this package,
 ;; you can simply add this line to your ".emacs" file:
