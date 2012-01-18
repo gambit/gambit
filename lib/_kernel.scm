@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2600,6 +2600,56 @@ end-of-code
         (##raise-heap-overflow-exception)
         (##make-f64vector k fill))
       v)))
+
+(define-prim (##make-machine-code-block len)
+  ((c-lambda (unsigned-long)
+             (pointer void)
+     #<<end-of-code
+
+     ___result = ___alloc_mem_code (___arg1);
+
+end-of-code
+)
+   len))
+
+(define-prim (##machine-code-block-ref mcb i)
+  ((c-lambda ((nonnull-pointer void) int)
+             unsigned-int8
+     #<<end-of-code
+
+     ___result = ___CAST(___U8*,___arg1)[___arg2];
+
+end-of-code
+)
+   mcb
+   i))
+
+(define-prim (##machine-code-block-set! mcb i byte)
+  ((c-lambda ((nonnull-pointer void) int unsigned-int8)
+             void
+     #<<end-of-code
+
+     ___CAST(___U8*,___arg1)[___arg2] = ___arg3;
+
+end-of-code
+)
+   mcb
+   i
+   byte))
+
+(define-prim (##machine-code-block-exec mcb #!optional (arg1 0) (arg2 0) (arg3 0))
+  ((c-lambda ((nonnull-pointer void) scheme-object scheme-object scheme-object)
+             scheme-object
+     #<<end-of-code
+
+     ___result = ___CAST(___SCMOBJ (*)(___SCMOBJ, ___SCMOBJ, ___SCMOBJ),___arg1)(___arg2, ___arg3, ___arg4);
+
+end-of-code
+)
+   mcb
+   arg1
+   arg2
+   arg3))
 
 ;;;----------------------------------------------------------------------------
 

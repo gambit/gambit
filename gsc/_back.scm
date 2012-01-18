@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_back.scm", Time-stamp: <2008-02-12 14:50:55 feeley>
+;;; File: "_back.scm"
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -161,7 +161,7 @@
     (if x
         (cdr x)
         (compiler-error
-         "Target module is not available" name))))
+         "Target module is not available:" name))))
 
 (define (target-add targ)
   (let* ((name (target-name targ))

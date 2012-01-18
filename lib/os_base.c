@@ -1,6 +1,6 @@
 /* File: "os_base.c" */
 
-/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.
@@ -267,6 +267,83 @@ char *file;)
 
 #endif
 #endif
+
+
+void *___alloc_mem_code
+   ___P((unsigned long bytes),
+        (bytes)
+unsigned long bytes;)
+{
+#ifndef USE_mmap
+#ifndef USE_VirtualAlloc
+
+  return NULL;
+
+#endif
+#endif
+
+#ifdef USE_mmap
+
+  ___BOOL executable = 1;
+
+  void* ptr = mmap (0,
+                    bytes + sizeof (long),
+                    PROT_READ | PROT_WRITE | (executable ? PROT_EXEC : 0),
+                    MAP_PRIVATE | MAP_ANON,
+                    -1,
+                    0);
+
+  if (ptr == MAP_FAILED)
+    return NULL;
+
+  *___CAST(long*,ptr) = bytes;
+
+  return ___CAST(long*,ptr)+1;
+
+#endif
+
+#ifdef USE_VirtualAlloc
+
+  ___BOOL executable = 1;
+
+  void *ptr = VirtualAlloc (NULL,
+                            bytes,
+                            MEM_COMMIT,
+                            (executable
+                             ? PAGE_EXECUTE_READWRITE
+                             : PAGE_READWRITE));
+
+  return ptr;
+
+#endif
+}
+
+
+void ___free_mem_code
+   ___P((void *ptr),
+        (ptr)
+void *ptr;)
+{
+#ifndef USE_mmap
+#ifndef USE_VirtualAlloc
+
+#endif
+#endif
+
+#ifdef USE_mmap
+
+  long* p = ___CAST(long*,ptr)-1;
+
+  munmap (p, *p + sizeof (long));
+
+#endif
+
+#ifdef USE_VirtualAlloc
+
+  VirtualFree (ptr, 0, MEM_RELEASE);
+
+#endif
+}
 
 
 /*---------------------------------------------------------------------------*/

@@ -7920,6 +7920,12 @@ typedef struct ___global_state_struct
     void (*___free_mem)
        ___P((void *ptr),
             ());
+    void *(*___alloc_mem_code)
+       ___P((unsigned long bytes),
+            ());
+    void (*___free_mem_code)
+       ___P((void *ptr),
+            ());
     void (*___disable_heartbeat_interrupts) ___PVOID;
     void (*___enable_heartbeat_interrupts) ___PVOID;
 #endif
@@ -9004,6 +9010,12 @@ ___IMP_FUNC(void *,___alloc_mem)
    ___P((unsigned long bytes),
         ());
 ___IMP_FUNC(void,___free_mem)
+   ___P((void *ptr),
+        ());
+___IMP_FUNC(void *,___alloc_mem_code)
+   ___P((unsigned long bytes),
+        ());
+___IMP_FUNC(void,___free_mem_code)
    ___P((void *ptr),
         ());
 #endif

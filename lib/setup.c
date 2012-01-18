@@ -1,6 +1,6 @@
-/* File: "setup.c", Time-stamp: <2011-04-26 09:20:53 feeley> */
+/* File: "setup.c" */
 
-/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
 
 /* 
  * This module contains the routines that setup the Scheme program for
@@ -2836,6 +2836,12 @@ ___setup_params_struct *setup_params;)
 
   ___gstate.___free_mem
     = ___free_mem;
+
+  ___gstate.___alloc_mem_code
+    = ___alloc_mem_code;
+
+  ___gstate.___free_mem_code
+    = ___free_mem_code;
 
   ___gstate.___disable_heartbeat_interrupts
     = ___disable_heartbeat_interrupts;

@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -118,13 +118,11 @@
     (define (obj-file? file)
       (##string=? (##path-extension file) ##os-obj-extension-string-saved))
 
-    (let* ((opts (##map ##car options))
-           (sym-opts (##map ##string->symbol opts))
-           (c-opt?       (##memq 'c sym-opts))
-           (link-opt?    (##memq 'link sym-opts))
-           (exe-opt?     (##memq 'exe sym-opts))
-           (obj-opt?     (##memq 'obj sym-opts))
-           (dynamic-opt? (##memq 'dynamic sym-opts)))
+    (let* ((c-opt?       (##assq 'c options))
+           (link-opt?    (##assq 'link options))
+           (exe-opt?     (##assq 'exe options))
+           (obj-opt?     (##assq 'obj options))
+           (dynamic-opt? (##assq 'dynamic options)))
       (if (##fixnum.< 1 (##fixnum.+
                          (if c-opt? 1 0)
                          (if link-opt? 1 0)
@@ -172,12 +170,12 @@
                                   (##fixnum.+ nb-output-files 1)))))
 
                   (let* ((output
-                          (let ((x (##assoc "o" options)))
+                          (let ((x (##assq 'o options)))
                             (cond ((##not x)
                                    #f)
                                   ((and (##not (##memq type '(link exe)))
                                         (##fixnum.< 1 nb-output-files)
-                                        (let ((outdir (##path-normalize (##cdr x))))
+                                        (let ((outdir (##path-normalize (##cadr x))))
                                           (##equal?
                                            outdir
                                            (##path-strip-trailing-directory-separator
@@ -185,25 +183,25 @@
                                    (warn-multiple-output-files-and-o-option)
                                    #f)
                                   (else
-                                   (##cdr x)))))
+                                   (##cadr x)))))
                          (pre
-                          (##assoc "prelude" options))
+                          (##assq 'prelude options))
                          (post
-                          (##assoc "postlude" options))
+                          (##assq 'postlude options))
                          (cc-options
-                          (let ((x (##assoc "cc-options" options)))
+                          (let ((x (##assq 'cc-options options)))
                             (if x
-                                (##cdr x)
+                                (##cadr x)
                                 "")))
                          (ld-options-prelude
-                          (let ((x (##assoc "ld-options-prelude" options)))
+                          (let ((x (##assq 'ld-options-prelude options)))
                             (if x
-                                (##cdr x)
+                                (##cadr x)
                                 "")))
                          (ld-options
-                          (let ((x (##assoc "ld-options" options)))
+                          (let ((x (##assq 'ld-options options)))
                             (if x
-                                (##cdr x)
+                                (##cadr x)
                                 ""))))
 
                     (if (or pre post)
@@ -219,7 +217,7 @@
                                             (if pre
                                                 (let ((pre-src
                                                        (read-source-from-string
-                                                        (##cdr pre)
+                                                        (##cadr pre)
                                                         (and path
                                                              (##string-append
                                                               path
@@ -230,7 +228,7 @@
                                                     (if post
                                                         (let ((post-src
                                                                (read-source-from-string
-                                                                (##cdr post)
+                                                                (##cadr post)
                                                                 (and path
                                                                      (##string-append
                                                                       path
@@ -275,34 +273,34 @@
                                (##write-string ":\n" output-port)
                                #t))))
 
-                      (define (do-compile-file file sym-opts output)
+                      (define (do-compile-file file opts output)
                         (handling file)
                         (or (if output
                                 (compile-file
                                  file
-                                 options: sym-opts
+                                 options: opts
                                  output: output
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options)
                                 (compile-file
                                  file
-                                 options: sym-opts
+                                 options: opts
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options))
                             (exit-abnormally)))
 
-                      (define (do-compile-file-to-c file sym-opts output)
+                      (define (do-compile-file-to-c file opts output)
                         (handling file)
                         (or (if output
                                 (compile-file-to-c
                                  file
-                                 options: sym-opts
+                                 options: opts
                                  output: output)
                                 (compile-file-to-c
                                  file
-                                 options: sym-opts))
+                                 options: opts))
                             (exit-abnormally)))
 
                       (define (do-build-executable obj-files output-filename)
@@ -341,7 +339,7 @@
                                                (let ((obj-file
                                                       (do-compile-file
                                                        file
-                                                       (##cons 'obj sym-opts)
+                                                       (##cons '(obj) options)
                                                        (and (##eq? type 'obj)
                                                             output))))
                                                  (add-obj-file obj-file)
@@ -360,21 +358,21 @@
                                               (let ((dyn-obj-file
                                                      (do-compile-file
                                                       file
-                                                      sym-opts
+                                                      options
                                                       output)))
                                                 #f))
                                              ((obj)
                                               (let ((obj-file
                                                      (do-compile-file
                                                       file
-                                                      (##cons 'obj sym-opts)
+                                                      (##cons '(obj) options)
                                                       output)))
                                                 (add-obj-file obj-file)))
                                              ((link exe c)
                                               (let ((gen-c-file
                                                      (do-compile-file-to-c
                                                       file
-                                                      sym-opts
+                                                      options
                                                       (and (##eq? type 'c)
                                                            output))))
                                                 (add-gen-c-file gen-c-file)
@@ -382,18 +380,18 @@
                                                     (let ((obj-file
                                                            (do-compile-file
                                                             gen-c-file
-                                                            (##cons 'obj sym-opts)
+                                                            (##cons '(obj) options)
                                                             #f)))
                                                       (add-obj-file obj-file)
                                                       (add-tmp-file obj-file)
-                                                      (if (##not (##memq 'keep-c sym-opts))
+                                                      (if (##not (##assq 'keep-c options))
                                                           (add-tmp-file gen-c-file)))))))
                                            (loop2 rest))))))
 
                             (let* ((flat?
-                                    (##memq 'flat sym-opts))
+                                    (##assq 'flat options))
                                    (base
-                                    (let ((x (##assoc "l" options)))
+                                    (let ((x (##assq 'l options)))
                                       (cond ((##not x)
                                              #f)
                                             ((or (##not (##eq? type 'link))
@@ -401,7 +399,7 @@
                                              (warn-no-incremental-link)
                                              #f)
                                             (else
-                                             (##cdr x))))))
+                                             (##cadr x))))))
 
                               (if (##memq type '(link exe))
 
@@ -437,11 +435,11 @@
                                               (let ((obj-link-file
                                                      (do-compile-file
                                                       link-file
-                                                      (##cons 'obj sym-opts)
+                                                      (##cons '(obj) options)
                                                       #f)))
                                                 (add-obj-file obj-link-file)
                                                 (add-tmp-file obj-link-file)
-                                                (if (##not (##memq 'keep-c sym-opts))
+                                                (if (##not (##assq 'keep-c options))
                                                     (add-tmp-file link-file))))))
 
                                     (if (##eq? type 'exe)
@@ -533,28 +531,40 @@
 
   (define (split-command-line
            arguments
-           options-with-no-args
-           options-with-args
+           allowed-options
            cont)
     (let loop1 ((args arguments)
                 (rev-options '()))
       (if (and (##pair? args)
                (option? (##car args)))
 
-        (let ((opt (convert-option (##car args)))
-              (rest (##cdr args)))
-          (cond ((##member opt options-with-no-args)
-                 (loop1 rest
-                        (##cons (##cons opt #f) rev-options)))
-                ((##member opt options-with-args)
-                 (if (##pair? rest)
-                   (loop1 (##cdr rest)
-                          (##cons (##cons opt (##car rest)) rev-options))
-                   (begin
-                     (warn-missing-argument-for-option opt)
-                     (loop1 rest rev-options))))
-                (else
-                 (cont (##reverse rev-options) args))))
+        (let* ((opt (convert-option (##car args)))
+               (rest (##cdr args))
+               (x (##assoc opt allowed-options)))
+          (if x
+              (let ((opt-sym (##string->symbol opt)))
+                (cond ((##not (##pair? (##cdr x)))
+                       (loop1 rest
+                              (##cons (##cons opt-sym
+                                              '())
+                                      rev-options)))
+                      ((##not (##pair? rest))
+                       (warn-missing-argument-for-option opt)
+                       (loop1 rest rev-options))
+                      (else
+                       (let ((opt-val (##car rest)))
+                         (case (##cadr x)
+                           ((symbol)
+                            (loop1 (##cdr rest)
+                                   (##cons (##list opt-sym
+                                                   (##string->symbol opt-val))
+                                           rev-options)))
+                           (else
+                            (loop1 (##cdr rest)
+                                   (##cons (##list opt-sym
+                                                   opt-val)
+                                           rev-options))))))))
+              (cont (##reverse rev-options) args)))
 
         (cont (##reverse rev-options) args))))
 
@@ -569,16 +579,15 @@
 
     (split-command-line
       (##cdr ##processed-command-line)
-      '("f" "i" "v")
-      '()
+      '(("f") ("i") ("v"))
       (lambda (main-options arguments)
         (let ((skip-initialization-file?
-               (##assoc "f" main-options))
+               (##assq 'f main-options))
               (force-interpreter?
                (or language-and-tail
-                   (##assoc "i" main-options)))
+                   (##assq 'i main-options)))
               (version?
-               (##assoc "v" main-options)))
+               (##assq 'v main-options)))
           (if version?
             (begin
               (##write-string (##system-version-string) ##stdout-port)
@@ -594,15 +603,17 @@
               arguments
               (if (interpreter-or force-interpreter?)
                 '()
-                '("c" "dynamic" "exe" "obj" "link" "flat"
-                  "warnings" "verbose" "report" "expansion" "gvm"
-                  "check" "force" "keep-c"
-                  "debug" "debug-location" "debug-source" "debug-environments"
-                  "track-scheme"))
-              (if (interpreter-or force-interpreter?)
-                '()
-                '("o" "l" "prelude" "postlude"
-                  "cc-options" "ld-options-prelude" "ld-options"))
+                '(("c") ("dynamic") ("exe") ("obj") ("link") ("flat")
+                  ("warnings") ("verbose") ("report")
+                  ("expansion") ("gvm") ("asm")
+                  ("check") ("force") ("keep-c")
+                  ("debug") ("debug-location") ("debug-source") ("debug-environments")
+                  ("track-scheme")
+                  ("o" string) ("l" string)
+                  ("prelude" string) ("postlude" string)
+                  ("cc-options" string)
+                  ("ld-options-prelude" string) ("ld-options" string)
+                  ("target" symbol)))
               (lambda (known-options arguments)
 
                 (if (##not skip-initialization-file?)

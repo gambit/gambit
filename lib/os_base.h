@@ -1,6 +1,6 @@
 /* File: "os_base.h" */
 
-/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_BASE_H
 #define ___OS_BASE_H
@@ -131,6 +131,15 @@ extern void * ___alloc_mem_debug
 
 #endif
 #endif
+
+
+extern void *___alloc_mem_code
+   ___P((unsigned long bytes),
+        ());
+
+extern void ___free_mem_code
+   ___P((void *ptr),
+        ());
 
 
 /*---------------------------------------------------------------------------*/

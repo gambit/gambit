@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "gambit#.scm", Time-stamp: <2009-11-24 20:23:13 feeley>
+;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 

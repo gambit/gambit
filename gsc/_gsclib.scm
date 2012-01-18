@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -22,6 +22,13 @@
             (extract-macros parent-cte)))))
 
     (extract-macros (##cte-top-cte ##interaction-cte))))
+
+(define (##compile-options-normalize options)
+  (##map (lambda (opt)
+           (if (##pair? opt)
+               opt
+               (##list opt)))
+         options))
 
 (define (compile-file-to-c
          filename
@@ -62,7 +69,9 @@
                                     mod-name)))))))
 
 (define (##compile-file-to-c filename options output mod-name)
-  (let* ((expanded-output
+  (let* ((options
+          (##compile-options-normalize options))
+         (expanded-output
           (##path-normalize output))
          (c-filename
           (if (##equal? expanded-output
@@ -76,7 +85,6 @@
                 expanded-output)
                (c#targ-preferred-c-file-extension)))))
     (and (c#cf filename
-               #f
                options
                c-filename
                (or mod-name
@@ -147,82 +155,83 @@
          cc-options
          ld-options-prelude
          ld-options)
+  (let ((options
+         (##compile-options-normalize options)))
 
-  (define type
-    (cond ((##memq 'obj options)
-           'obj)
-          ((##memq 'exe options)
-           'exe)
-          (else
-           'dyn)))
+    (define type
+      (cond ((##assq 'obj options)
+             'obj)
+            ((##assq 'exe options)
+             'exe)
+            (else
+             'dyn)))
 
-  (define (generate-next-version-of-object-file root)
-    (let loop ((version 1))
-      (let ((root-with-ext
-             (##string-append root ".o" (##number->string version 10))))
-        (if (##file-exists? root-with-ext)
-            (loop (##fixnum.+ version 1))
-            root-with-ext))))
+    (define (generate-next-version-of-object-file root)
+      (let loop ((version 1))
+        (let ((root-with-ext
+               (##string-append root ".o" (##number->string version 10))))
+          (if (##file-exists? root-with-ext)
+              (loop (##fixnum.+ version 1))
+              root-with-ext))))
 
-  (define (generate-output-filename root input-is-c-file?)
-    (case type
-      ((obj)
-       (##string-append root ##os-obj-extension-string-saved))
-      (else
-       (if input-is-c-file?
-           root
-           (generate-next-version-of-object-file root)))))
+    (define (generate-output-filename root input-is-c-file?)
+      (case type
+        ((obj)
+         (##string-append root ##os-obj-extension-string-saved))
+        (else
+         (if input-is-c-file?
+             root
+             (generate-next-version-of-object-file root)))))
 
-  (let* ((input-is-c-file?
-          (##assoc (##path-extension filename) c#targ-c-file-extensions))
-         (c-filename
-          (if input-is-c-file?
-              filename
-              (##string-append (##path-strip-extension filename)
-                               (c#targ-preferred-c-file-extension))))
-         (expanded-output
-          (##path-normalize output))
-         (output-filename
-          (if (##equal? expanded-output
-                        (##path-strip-trailing-directory-separator
-                         expanded-output))
-              expanded-output
-              (generate-output-filename
-               (##path-expand
-                (##path-strip-directory
-                 (##path-strip-extension filename))
-                expanded-output)
-               input-is-c-file?)))
-         (output-dir
-          (##path-directory output-filename))
-         (output-filename-no-dir
-          (##path-strip-directory output-filename)))
-    (and (or input-is-c-file?
-             (c#cf filename
-                   #f
-                   options
-                   c-filename
-                   (if (##eq? type 'dyn)
-                       output-filename-no-dir
-                       (##path-strip-extension output-filename-no-dir))))
-         (let ((exit-status
-                (##gambc-cc
-                 type
-                 output-dir
-                 (##list c-filename)
-                 output-filename-no-dir
-                 cc-options
-                 ld-options-prelude
-                 ld-options
-                 (##memq 'verbose options))))
-           (if (and (##not (##memq 'keep-c options))
-                    (##not (##string=? filename c-filename)))
-               (##delete-file c-filename))
-           (if (##fixnum.= exit-status 0)
-               output-filename
-               (##raise-error-exception
-                "C compilation or link failed while compiling"
-                (##list filename)))))))
+    (let* ((input-is-c-file?
+            (##assoc (##path-extension filename) c#targ-c-file-extensions))
+           (c-filename
+            (if input-is-c-file?
+                filename
+                (##string-append (##path-strip-extension filename)
+                                 (c#targ-preferred-c-file-extension))))
+           (expanded-output
+            (##path-normalize output))
+           (output-filename
+            (if (##equal? expanded-output
+                          (##path-strip-trailing-directory-separator
+                           expanded-output))
+                expanded-output
+                (generate-output-filename
+                 (##path-expand
+                  (##path-strip-directory
+                   (##path-strip-extension filename))
+                  expanded-output)
+                 input-is-c-file?)))
+           (output-dir
+            (##path-directory output-filename))
+           (output-filename-no-dir
+            (##path-strip-directory output-filename)))
+      (and (or input-is-c-file?
+               (c#cf filename
+                     options
+                     c-filename
+                     (if (##eq? type 'dyn)
+                         output-filename-no-dir
+                         (##path-strip-extension output-filename-no-dir))))
+           (let ((exit-status
+                  (##gambc-cc
+                   type
+                   output-dir
+                   (##list c-filename)
+                   output-filename-no-dir
+                   cc-options
+                   ld-options-prelude
+                   ld-options
+                   (##assq 'verbose options))))
+             (if (and (##not (##assq 'keep-c options))
+                      (##not (##string=? filename c-filename)))
+                 (##delete-file c-filename))
+             (if (##fixnum.= exit-status 0)
+                 output-filename
+                 (##raise-error-exception
+                  "C compilation or link failed while compiling"
+                  (##list filename))))))))
 
 (define (##build-executable
          obj-files
@@ -231,7 +240,9 @@
          cc-options
          ld-options-prelude
          ld-options)
-  (let* ((output-dir
+  (let* ((options
+          (##compile-options-normalize options))
+         (output-dir
           (##path-directory output-filename))
          (output-filename-no-dir
           (##path-strip-directory output-filename))
@@ -244,7 +255,7 @@
            cc-options
            ld-options-prelude
            ld-options
-           (##memq 'verbose options))))
+           (##assq 'verbose options))))
     (if (##fixnum.= exit-status 0)
         output-filename
         (##raise-error-exception

@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -208,6 +208,10 @@
 #define USE_waitpid
 #endif
 
+#ifdef HAVE_MMAP
+#define USE_mmap
+#endif
+
 #if 0
 
 /*
@@ -264,6 +268,7 @@
 #define USE_WSAGetLastError
 #define USE_GetConsoleWindow
 #define USE_GetModuleFileName
+#define USE_VirtualAlloc
 
 #define HAVE_CLOCK 1
 #define HAVE_CREATETHREAD 1
@@ -776,6 +781,13 @@ ___END_C_LINKAGE
 #define INCLUDE_sys_wait_h
 #endif
 
+#ifdef USE_mmap
+#undef INCLUDE_sys_types_h
+#define INCLUDE_sys_types_h
+#undef INCLUDE_sys_mman_h
+#define INCLUDE_sys_mman_h
+#endif
+
 #ifdef USE_gethostname
 #undef INCLUDE_unistd_h
 #define INCLUDE_unistd_h
@@ -1051,6 +1063,12 @@ ___END_C_LINKAGE
 #ifdef INCLUDE_sys_wait_h
 #ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
+#endif
+
+#ifdef INCLUDE_sys_mman_h
+#ifdef HAVE_SYS_MMAN_H
+#include <sys/mman.h>
 #endif
 #endif
 

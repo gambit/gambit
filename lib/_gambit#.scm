@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_gambit#.scm", Time-stamp: <2009-06-11 09:44:24 feeley>
+;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -474,19 +474,34 @@
 ;;;----------------------------------------------------------------------------
 
 (##define-macro (macro-if-forces forces noforces)
-  (if (memq 'force ##compilation-options)
-    forces
-    noforces))
+  (if ((if (and (pair? ##compilation-options)
+                (pair? (car ##compilation-options)))
+           assq
+           memq)
+       'force
+       ##compilation-options)
+      forces
+      noforces))
 
 (##define-macro (macro-force-vars vars expr)
-  (if (memq 'force ##compilation-options)
-    `(let ,(map (lambda (x) `(,x (##force ,x))) vars) ,expr)
-    expr))
+  (if ((if (and (pair? ##compilation-options)
+                (pair? (car ##compilation-options)))
+           assq
+           memq)
+       'force
+       ##compilation-options)
+      `(let ,(map (lambda (x) `(,x (##force ,x))) vars) ,expr)
+      expr))
 
 (##define-macro (macro-if-checks checks nochecks)
-  (if (memq 'check ##compilation-options)
-    checks
-    nochecks))
+  (if ((if (and (pair? ##compilation-options)
+                (pair? (car ##compilation-options)))
+           assq
+           memq)
+       'check
+       ##compilation-options)
+      checks
+      nochecks))
 
 (##define-macro (macro-no-force vars expr)
   expr)

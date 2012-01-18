@@ -1,6 +1,6 @@
 # Configure template for Gambit-C system.
 
-# Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -18,7 +18,7 @@ AC_SUBST(PACKAGE_STRING)
 AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
@@ -590,6 +590,7 @@ else
   AC_CHECK_HEADERS(sys/resource.h)
   AC_CHECK_HEADERS(sys/stat.h)
   AC_CHECK_HEADERS(sys/wait.h)
+  AC_CHECK_HEADERS(sys/mman.h)
   AC_CHECK_HEADERS(stat.h)
   AC_CHECK_HEADERS(netdb.h)
   AC_CHECK_HEADERS(grp.h)
@@ -741,6 +742,7 @@ else
   AC_CHECK_FUNCS(sysctl)
   AC_CHECK_FUNCS(unlink)
   AC_CHECK_FUNCS(waitpid)
+  AC_CHECK_FUNCS(mmap)
 
   # The following checks for library functions have been written
   # specially to catch the case where they are declared as inline

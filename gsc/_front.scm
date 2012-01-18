@@ -39,20 +39,20 @@
 
 ;; sample use:
 ;;
-;; (cf "tak" 'c '() #f #f)          -- compile tak.scm to tak.c using C back-end
-;; (cf "tak" #f '() #f #f)          -- compile tak.scm using default back-end
-;; (cf "tak" 'c '() "foo.c" #f)     -- compile tak.scm to foo.c using C back-end
-;; (cf "tak" 'c '(verbose) #f #f)   -- produce compiler trace
-;; (cf "tak" 'c '(report) #f #f)    -- show usage of global variables
-;; (cf "tak" 'c '(gvm) #f #f)       -- write GVM code on 'tak.gvm'
-;; (cf "tak" 'c '(debug) #f #f)     -- generate code with debugging info
-;; (cf "tak" 'c '(expansion) #f #f) -- show code after source-to-source transf.
-;; (cf "tak" 'c '(asm stats) #f #f) -- various back-end options
+;; (cf "tak" '((target c)) #f #f)    -- compile tak.scm to tak.c with C back-end
+;; (cf "tak" '() #f #f)              -- compile tak.scm with default back-end
+;; (cf "tak" '() "foo.c" #f)         -- compile tak.scm to foo.c
+;; (cf "tak" '((verbose)) #f #f)     -- produce compiler trace
+;; (cf "tak" '((report)) #f #f)      -- show usage of global variables
+;; (cf "tak" '((gvm)) #f #f)         -- write GVM code on 'tak.gvm'
+;; (cf "tak" '((debug)) #f #f)       -- generate code with debugging info
+;; (cf "tak" '((expansion)) #f #f)   -- show code after source-to-source transf.
+;; (cf "tak" '((asm) (stats)) #f #f) -- various back-end options
 
 (define cf #f)
 
 (set! cf
-  (lambda (input target-name opts output mod-name)
+  (lambda (input opts output mod-name)
     (let ((remaining-opts
            (handle-options opts)))
 
@@ -75,8 +75,9 @@
                       "Unhandled compiler options:" remaining-opts))
                  (compile-program
                   input
-                  (or target-name (default-target))
-                  opts
+                  (if compiler-option-target
+                      opts
+                      (cons (list 'target (default-target)) opts))
                   remaining-opts
                   output
                   output-root
@@ -91,35 +92,45 @@
 
     (for-each
      (lambda (opt)
-       (case opt
-         ((warnings)
-          (set! compiler-option-warnings           #t))
-         ((verbose)
-          (set! compiler-option-verbose            #t))
-         ((report)
-          (set! compiler-option-report             #t))
-         ((expansion)
-          (set! compiler-option-expansion          #t))
-         ((gvm)
-          (set! compiler-option-gvm                #t))
-         ((debug)
-          (set! compiler-option-debug              #t))
-         ((debug-location)
-          (set! compiler-option-debug-location     #t))
-         ((debug-source)
-          (set! compiler-option-debug-source       #t))
-         ((debug-environments)
-          (set! compiler-option-debug-environments #t))
-         ((track-scheme)
-          (set! compiler-option-track-scheme       #t))
-         ((c dynamic exe obj link flat
-           check force keep-c
-           o l prelude postlude
-           cc-options ld-options-prelude ld-options)
-          #f) ;; these options are innocuous
-         (else
-          (set! rev-remaining-opts
-                (cons opt rev-remaining-opts)))))
+       (let ((handled?
+              (and (pair? opt)
+                   (case (car opt)
+                     ((target)
+                      (and (pair? (cdr opt))
+                           (begin
+                             (set! compiler-option-target (cadr opt))
+                             #t)))
+                     ((warnings)
+                      (set! compiler-option-warnings           #t))
+                     ((verbose)
+                      (set! compiler-option-verbose            #t))
+                     ((report)
+                      (set! compiler-option-report             #t))
+                     ((expansion)
+                      (set! compiler-option-expansion          #t))
+                     ((gvm)
+                      (set! compiler-option-gvm                #t))
+                     ((debug)
+                      (set! compiler-option-debug              #t))
+                     ((debug-location)
+                      (set! compiler-option-debug-location     #t))
+                     ((debug-source)
+                      (set! compiler-option-debug-source       #t))
+                     ((debug-environments)
+                      (set! compiler-option-debug-environments #t))
+                     ((track-scheme)
+                      (set! compiler-option-track-scheme       #t))
+                     ((c dynamic exe obj link flat
+                         check force keep-c
+                         o l prelude postlude
+                         cc-options ld-options-prelude ld-options
+                         asm)
+                      #t) ;; these options are innocuous
+                     (else
+                      #f)))))
+         (if (not handled?)
+             (set! rev-remaining-opts
+                   (cons opt rev-remaining-opts)))))
      opts)
 
     (if (or compiler-option-debug-location
@@ -134,6 +145,7 @@
     (reverse rev-remaining-opts)))
 
 (define (reset-options)
+  (set! compiler-option-target             #f)
   (set! compiler-option-warnings           #f)
   (set! compiler-option-verbose            #f)
   (set! compiler-option-report             #f)
@@ -145,6 +157,7 @@
   (set! compiler-option-debug-environments #f)
   (set! compiler-option-track-scheme       #f))
 
+(define compiler-option-target             #f)
 (define compiler-option-warnings           #f)
 (define compiler-option-verbose            #f)
 (define compiler-option-report             #f)
@@ -174,7 +187,6 @@
 
 (define (compile-program
          input
-         target-name
          opts
          remaining-opts
          output
@@ -198,12 +210,15 @@
           (scheme-global-var-define!
             (scheme-global-var
               (string->canonical-symbol "##compilation-options"))
-            (cons target-name opts))
+            opts)
 
           (env.begin!)
           (ptree.begin! info-port)
           (virtual.begin!)
-          (target-select! target-name info-port)
+
+          (let ((target-name
+                 (cadr (assq 'target opts))))
+            (target-select! target-name info-port))
 
           (let ((x (read-source input #f #t)))
             (parse-program
