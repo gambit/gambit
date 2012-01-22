@@ -77,17 +77,33 @@ if test "${LDFLAGS+set}" != set; then
 fi
 
 AC_LANG(C)
-AC_PROG_CC
+
+case "$target_os" in
+  darwin*) AC_PROG_CC(i686-apple-darwin11-gcc-4.2.1 i686-apple-darwin10-gcc-4.2.1 clang gcc)
+           ;;
+        *) AC_PROG_CC
+           ;;
+esac
+
 AC_PROG_CPP
 C_COMPILER=$CC
 C_PREPROC=$CPP
 
 if test "$ENABLE_CPLUSPLUS" = yes; then
+
   AC_LANG(C++)
-  AC_PROG_CXX
+
+  case "$target_os" in
+    darwin*) AC_PROG_CXX(i686-apple-darwin11-g++-4.2.1 i686-apple-darwin10-g++-4.2.1 clang++ g++)
+             ;;
+          *) AC_PROG_CXX
+             ;;
+  esac
+
   AC_PROG_CXXCPP
   C_COMPILER=$CXX
   C_PREPROC=$CXXCPP
+
 fi
 
 AC_SUBST(C_COMPILER)
@@ -541,6 +557,7 @@ fi
 ])])
 
 AC_CHECK_C_COMPILER_DEF(__GNUC__,C_COMP_GNUC)
+AC_CHECK_C_COMPILER_DEF(__clang__,C_COMP_CLANG)
 AC_CHECK_C_COMPILER_DEF(__llvm__,C_COMP_LLVM)
 AC_CHECK_C_COMPILER_DEF(_MSC_VER,C_COMP_VISUALC)
 #AC_CHECK_C_COMPILER_DEF(__WATCOMC__,C_COMP_WATCOMC)
@@ -966,10 +983,35 @@ if test "$C_COMP_GNUC" = yes; then
 
   # Determine which gcc version is being used.
 
-  AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*100+__GNUC_MINOR__)>=402&&(__GNUC__*100+__GNUC_MINOR__)<=403,GCC_42_OR_43)
+  AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*1000+__GNUC_MINOR__)>=4002&&(__GNUC__*1000+__GNUC_MINOR__)<=4003,GCC_42_OR_43)
+  AC_CHECK_C_COMPILER_CPP_EXPR(__llvm__ && !__clang__ && (__GNUC__*1000+__GNUC_MINOR__)<4005,POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG)
 
-  # preprocessor options:
-  AC_CHECK_C_COMPILER_OPT(-no-cpp-precomp,DASH_no_cpp_precomp)
+  if test "$C_COMP_CLANG" = yes; then
+
+    # clang does not support these options:
+    DASH_no_cpp_precomp=""
+    DASH_fschedule_insns2=""
+    DASH_fno_trapping_math=""
+    DASH_fno_move_loop_invariants=""
+    DASH_mieee=""
+    DASH_mieee_with_inexact=""
+    DASH_mieee_fp=""
+
+  else
+
+    # preprocessor options:
+    AC_CHECK_C_COMPILER_OPT(-no-cpp-precomp,DASH_no_cpp_precomp)
+
+    # optimization options:
+    AC_CHECK_C_COMPILER_OPT(-fschedule-insns2,DASH_fschedule_insns2)
+    AC_CHECK_C_COMPILER_OPT(-fno-trapping-math,DASH_fno_trapping_math)
+    AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
+
+    # machine specific options:
+    AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
+    AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
+    AC_CHECK_C_COMPILER_OPT(-mieee-fp,DASH_mieee_fp)
+  fi
 
   # debugging options:
   AC_CHECK_C_COMPILER_OPT(-Wall,DASH_Wall)
@@ -987,12 +1029,9 @@ if test "$C_COMP_GNUC" = yes; then
   # optimization options:
   AC_CHECK_C_COMPILER_OPT(-O1,DASH_O1)
   AC_CHECK_C_COMPILER_OPT(-fno-math-errno,DASH_fno_math_errno)
-  AC_CHECK_C_COMPILER_OPT(-fschedule-insns2,DASH_fschedule_insns2)
-  AC_CHECK_C_COMPILER_OPT(-fno-trapping-math,DASH_fno_trapping_math)
   AC_CHECK_C_COMPILER_OPT(-fno-strict-aliasing,DASH_fno_strict_aliasing)
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
-  AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
@@ -1036,11 +1075,6 @@ if test "$C_COMP_GNUC" = yes; then
              ;;
   esac
   AC_CHECK_C_COMPILER_OPT(-fno-common,DASH_fno_common)
-
-  # machine specific options:
-  AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
-  AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
-  AC_CHECK_C_COMPILER_OPT(-mieee-fp,DASH_mieee_fp)
 
   # linking options:
   case "$target_os" in
@@ -1121,10 +1155,8 @@ if test "$C_COMP_GNUC" = yes; then
   esac
 
   ENABLE_GCC_MOVE_LOOP_INVARIANTS=yes
-  if test "$ENABLE_SINGLE_HOST" = yes; then
-    if test "$GCC_42_OR_43" = yes; then
-      ENABLE_GCC_MOVE_LOOP_INVARIANTS=no
-    fi
+  if test "$ENABLE_SINGLE_HOST" = yes -a "$GCC_42_OR_43" = yes -a "$C_COMP_CLANG" != yes; then
+    ENABLE_GCC_MOVE_LOOP_INVARIANTS=no
   fi
 
   if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
@@ -1998,7 +2030,7 @@ AC_PROG_MAKE_SET
 
 AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.unix bin/gambc-cc.bat.windows bin/gambc-doc.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile examples/iOS/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
 
-if test "$ENABLE_SINGLE_HOST" != yes; then
+if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_LLVM" != yes; then
   AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***
@@ -2008,8 +2040,53 @@ if test "$ENABLE_SINGLE_HOST" != yes; then
 *** executables will run considerably slower than if                   ***
 *** "--enable-single-host" is specified.  On the other hand the build  ***
 *** process will be faster and require less memory.  If you have lots  ***
-*** of RAM memory (>= 500 Mbytes) and you are willing to wait for the  ***
+*** of RAM memory (>= 1 GB) and you are willing to wait for the        ***
 *** longer build try the configure option "--enable-single-host".      ***
+***                                                                    ***
+**************************************************************************
+])
+fi
+
+if test "$ENABLE_SINGLE_HOST" = yes -a "$C_COMP_LLVM" = yes; then
+  AC_MSG_NOTICE([
+**************************************************************************
+***                                                                    ***
+*** The option "--enable-single-host" was specified to the configure   ***
+*** script and a LLVM C compiler is being used (clang or LLVM GCC).    ***
+*** This combination is not recommended as the build may require a     ***
+*** lot of memory and a very long time (for example, clang 3.1 takes   ***
+*** over 8 GB and 10 hours to build Gambit on a 2.2 GHz Mac Book Pro), ***
+*** and the executable is much slower than when GNU GCC is used.       ***
+***                                                                    ***
+*** Configuring with GNU GCC will give a faster build (1 min on the    ***
+*** same machine with GNU GCC 4.2.1) and the executable will be        ***
+*** faster.                                                            ***
+***                                                                    ***
+*** On a Mac OS X computer with Xcode 4.0, you can select GNU GCC by   ***
+*** configuring Gambit with the command:                               ***
+***                                                                    ***
+*** CC=i686-apple-darwin11-gcc-4.2.1 ./configure --enable-single-host  ***
+***                                                                    ***
+**************************************************************************
+])
+fi
+
+if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_CLANG" = yes; then
+  AC_MSG_NOTICE([
+**************************************************************************
+***                                                                    ***
+*** The clang compiler is being used.  Please be aware that the build  ***
+*** may take a long time (40 mins on a 2.2 GHz Mac Book Pro with       ***
+*** clang 3.1).                                                        ***
+***                                                                    ***
+*** Configuring with GNU GCC will give a faster build (1 min on the    ***
+*** same machine with GNU GCC 4.2.1) and the executable will be        ***
+*** faster.                                                            ***
+***                                                                    ***
+*** On a Mac OS X computer with Xcode 4.0, you can select GNU GCC by   ***
+*** configuring Gambit with the command:                               ***
+***                                                                    ***
+*** CC=i686-apple-darwin11-gcc-4.2.1 ./configure --enable-single-host  ***
 ***                                                                    ***
 **************************************************************************
 ])
@@ -2024,7 +2101,7 @@ if test "$C_COMP_GNUC" = yes; then
 *** The GCC compiler that is being used has problems compiling Gambit  ***
 *** generated code when the normal set of C compiler optimizations are ***
 *** enabled and the configure flag "--enable-single-host" is           ***
-*** specified.  It can take over 20 GBytes of virtual memory to        ***
+*** specified.  It can take over 20 GB of virtual memory to            ***
 *** compile some files.  For this reason the GCC compiler optimization ***
 *** which performs loop invariant code motion has been disabled by     ***
 *** adding the GCC command line option "-fno-move-loop-invariants".    ***
@@ -2038,19 +2115,22 @@ if test "$C_COMP_GNUC" = yes; then
 ])
   fi
 
-  if test "$C_COMP_LLVM" = yes ; then
+  if test "$POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" = yes ; then
 
     AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***
-*** The LLVM GCC compiler that is being used has a bug in the          ***
-*** compilation of label values (i.e. &&label).  For this reason the   ***
-*** use of computed gotos in the generated code has been disabled.     ***
-*** This greatly reduces the run time performance.  The system runs    ***
-*** 5 times slower than when it is compiled with GNU GCC.  It is       ***
-*** highly recommended that you use the GNU GCC if possible.  For      ***
-*** example, on a Mac OS X computer with Xcode 4.0, you can select     ***
-*** GNU GCC by configuring Gambit with the command:                    ***
+*** The LLVM GCC compiler that is being used may have a bug in the     ***
+*** compilation of label values (i.e. &&label).  This bug was          ***
+*** discovered when compiling Gambit with Xcode on Mac OS X (see bug   ***
+*** ID# 9956714).  For this reason the use of computed gotos in the    ***
+*** generated code has been disabled.  This greatly reduces the run    ***
+*** time performance.  The system runs 5 times slower than when it is  ***
+*** compiled with GNU GCC.  It is highly recommended that you use      ***
+*** another C compiler if possible.                                    ***
+***                                                                    ***
+*** On a Mac OS X computer with Xcode 4.0, you can select GNU GCC by   ***
+*** configuring Gambit with the command:                               ***
 ***                                                                    ***
 *** CC=i686-apple-darwin11-gcc-4.2.1 ./configure --enable-single-host  ***
 ***                                                                    ***
