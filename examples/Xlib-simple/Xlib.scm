@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "Xlib.scm", Time-stamp: <2011-01-17 15:19:20 feeley>
+;;; File: "Xlib.scm"
 
-;;; Copyright (c) 2006-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2006-2012 by Marc Feeley, All Rights Reserved.
 
 ;;; A simple interface to the X Window System Xlib library.
 
@@ -241,6 +241,14 @@ end-of-c-declare
              Window)        ;; w
             int
             "XMapWindow"))
+
+(define XResizeWindow
+  (c-lambda (Display*       ;; display
+             Window         ;; w
+             unsigned-int   ;; width
+             unsigned-int)  ;; height
+            int
+            "XResizeWindow"))
 
 (define XFlush
   (c-lambda (Display*)      ;; display
@@ -979,6 +987,41 @@ end-of-c-lambda
             unsigned-int
             "___result = ___arg1->xcrossing.state;"))
 
+(define XConfigureEvent-x
+  (c-lambda (XEvent*)       ;; XEvent box
+            int
+            "___result = ___arg1->xconfigure.x;"))
+
+(define XConfigureEvent-y
+  (c-lambda (XEvent*)       ;; XEvent box
+            int
+            "___result = ___arg1->xconfigure.y;"))
+
+(define XConfigureEvent-width
+  (c-lambda (XEvent*)       ;; XEvent box
+            int
+            "___result = ___arg1->xconfigure.width;"))
+
+(define XConfigureEvent-height
+  (c-lambda (XEvent*)       ;; XEvent box
+            int
+            "___result = ___arg1->xconfigure.height;"))
+
+(define XConfigureEvent-border-width
+  (c-lambda (XEvent*)       ;; XEvent box
+            int
+            "___result = ___arg1->xconfigure.border_width;"))
+
+(define XResizeRequestEvent-width
+  (c-lambda (XEvent*)       ;; XEvent box
+            int
+            "___result = ___arg1->xresizerequest.width;"))
+
+(define XResizeRequestEvent-height
+  (c-lambda (XEvent*)       ;; XEvent box
+            int
+            "___result = ___arg1->xresizerequest.height;"))
+
 (define XLookupString
   (c-lambda (XEvent*)      ;; event_struct (XKeyEvent)
             KeySym
@@ -998,6 +1041,7 @@ end-of-c-lambda
 (define (convert-XEvent ev)
   (and ev
        (let ((type (XAnyEvent-type ev)))
+
          (cond ((or (##fixnum.= type KeyPress)
                     (##fixnum.= type KeyRelease))
                 (##list
@@ -1020,6 +1064,7 @@ end-of-c-lambda
                  (XKeyEvent-keycode ev)
                  (XKeyEvent-same-screen ev)
                  (XLookupString ev)))
+
                ((or (##fixnum.= type ButtonPress)
                     (##fixnum.= type ButtonRelease))
                 (##list
@@ -1041,13 +1086,13 @@ end-of-c-lambda
                  (XButtonEvent-state ev)
                  (XButtonEvent-button ev)
                  (XButtonEvent-same-screen ev)))
+
                ((##fixnum.= type MotionNotify)
                 (##list
                  'XPointerMovedEvent
                  type
                  (XAnyEvent-serial ev)
                  (XAnyEvent-send-event ev)
-'
                  (XAnyEvent-display ev)
                  (XAnyEvent-window ev)
                  (XMotionEvent-root ev)
@@ -1060,6 +1105,7 @@ end-of-c-lambda
                  (XMotionEvent-state ev)
                  (XMotionEvent-is-hint ev)
                  (XMotionEvent-same-screen ev)))
+
                ((or (##fixnum.= type EnterNotify)
                     (##fixnum.= type LeaveNotify))
                 (##list
@@ -1083,6 +1129,32 @@ end-of-c-lambda
                  (XCrossingEvent-same-screen ev)
                  (XCrossingEvent-focus ev)
                  (XCrossingEvent-state ev)))
+
+               ((##fixnum.= type ConfigureNotify)
+                (##list
+                 'XConfigureEvent
+                 type
+                 (XAnyEvent-serial ev)
+                 (XAnyEvent-send-event ev)
+                 (XAnyEvent-display ev)
+                 (XAnyEvent-window ev)
+                 (XConfigureEvent-x ev)
+                 (XConfigureEvent-y ev)
+                 (XConfigureEvent-width ev)
+                 (XConfigureEvent-height ev)
+                 (XConfigureEvent-border-width ev)))
+
+               ((##fixnum.= type ResizeRequest)
+                (##list
+                 'XResizeRequestEvent
+                 type
+                 (XAnyEvent-serial ev)
+                 (XAnyEvent-send-event ev)
+                 (XAnyEvent-display ev)
+                 (XAnyEvent-window ev)
+                 (XResizeRequestEvent-width ev)
+                 (XResizeRequestEvent-height ev)))
+
                (else
                 #f)))))
 
