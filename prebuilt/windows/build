@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -28,7 +28,7 @@ for VARIANT in mingw visualc; do
              ;;
   esac
 
-  cmd /c "C:\PROGRA~1\MICROS~1.0\VC\VCVARS~1.BAT && c:/MinGW/msys/1.0/bin/sh -c \"CC=\\\"$CONFIG_CC\\\" ./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-multiple-versions --enable-symlinks --enable-single-host # --enable-gcc-opts\""
+  cmd /c "C:\PROGRA~1\MICROS~1.0\VC\VCVARS~1.BAT && c:/MinGW/msys/1.0/bin/sh -c \"./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-multiple-versions --enable-symlinks --enable-single-host CC=\\\"$CONFIG_CC\\\"\""
 
   cd "$herefromroot"
 

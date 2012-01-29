@@ -8,7 +8,6 @@ AC_INIT(Gambit-C,v4.6.3,gambit@iro.umontreal.ca,gambc-v4_6_3)
 
 AC_CONFIG_HEADERS(include/config.h)
 
-CONFIGURE_COMMAND="$0 $@"
 PACKAGE_SHORTNAME="gambc"
 
 AC_SUBST(PACKAGE_SHORTNAME)
@@ -1823,7 +1822,7 @@ emacsdir="\${datadir}/emacs/site-lisp"
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\""
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___CONFIGURE_COMMAND=\"\\\"$CONFIGURE_COMMAND\\\"\""
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___CONFIGURE_COMMAND=\"\\\"`echo "$0$ac_configure_args" | sed -e s/\\\\\\\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g -e s/\\\\\\\"/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"/g`\"\\\""
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___OBJ_EXTENSION=\"\\\"$obj\\\"\""
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___EXE_EXTENSION=\"\\\"$exe\\\"\""
 GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___BAT_EXTENSION=\"\\\"$bat\\\"\""

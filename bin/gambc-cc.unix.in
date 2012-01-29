@@ -183,7 +183,7 @@ case "$1" in
     ;;
 
   *)
-    echo "gambc-cc.bat unknown operation \"$1\""
+    echo "gambc-cc unknown operation \"$1\""
     exit 1
     ;;
 
