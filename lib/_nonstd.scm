@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1334,22 +1334,30 @@
       (##raise-os-exception #f code ##shell-command-blocking cmd)
       code)))
 
-(define-prim (##shell-program)
+(define ##shell-program #f)
+
+(define-prim (##get-shell-program)
 
   (define unix-shell-program    '("/bin/sh" . "-c"))
   (define windows-shell-program '("CMD.EXE" . "/C"))
   (define default-shell-program '("sh"      . "-c"))
 
-  (cond ((##file-exists? (##car unix-shell-program))
-         unix-shell-program)
-        ((##equal? (##getenv "COMSPEC" #f) (##car windows-shell-program))
-         windows-shell-program)
-        (else
-         default-shell-program)))
+  (or ##shell-program
+      (let ((sp
+	     (if (##file-exists? (##car unix-shell-program))
+		 unix-shell-program
+		 (if (##getenv "HOME" #f)
+		     default-shell-program
+		     (let ((comspec (##getenv "COMSPEC" #f)))
+		       (if comspec
+			   (##cons comspec "/C")
+			   windows-shell-program))))))
+	(set! ##shell-program sp)
+	sp)))
 
 (define-prim (##shell-command cmd)
   (let* ((shell-prog
-          (##shell-program))
+          (##get-shell-program))
          (path-or-settings
           (##list path: (##car shell-prog)
                   arguments:
