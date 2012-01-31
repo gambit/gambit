@@ -1007,6 +1007,8 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_fschedule_insns2=""
     DASH_fno_trapping_math=""
     DASH_fno_move_loop_invariants=""
+    DASH_fno_keep_inline_dllexport=""
+    #DASH_fpermissive=""
     DASH_mieee=""
     DASH_mieee_with_inexact=""
     DASH_mieee_fp=""
@@ -1020,6 +1022,8 @@ if test "$C_COMP_GNUC" = yes; then
     AC_CHECK_C_COMPILER_OPT(-fschedule-insns2,DASH_fschedule_insns2)
     AC_CHECK_C_COMPILER_OPT(-fno-trapping-math,DASH_fno_trapping_math)
     AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
+    AC_CHECK_C_COMPILER_OPT(-fno-keep-inline-dllexport,DASH_fno_keep_inline_dllexport)
+    #AC_CHECK_C_COMPILER_OPT(-fpermissive,DASH_fpermissive)
 
     # machine specific options:
     AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
@@ -1031,6 +1035,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-Wall,DASH_Wall)
   AC_CHECK_C_COMPILER_OPT(-W,DASH_W)
   AC_CHECK_C_COMPILER_OPT(-Wno-unused,DASH_Wno_unused)
+  AC_CHECK_C_COMPILER_OPT(-Wno-write-strings,DASH_Wno_write_strings)
   AC_CHECK_C_COMPILER_OPT(-g,DASH_g)
 
   # profiling options:
@@ -1130,6 +1135,7 @@ if test "$C_COMP_GNUC" = yes; then
   esac
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_unused"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_write_strings"
 
   if test "$ENABLE_DEBUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
@@ -1144,16 +1150,23 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   if test "$ENABLE_DEBUG" != yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   fi
 
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
+  #FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
 
 # It isn't clear these are useful:
 #  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
 
   if test "$ENABLE_GCC_OPTS" = yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched$DASH_freschedule_modulo_scheduled_loops"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_freschedule_modulo_scheduled_loops"
   fi
 
   case "$target_os" in
@@ -1198,7 +1211,9 @@ if test "$C_COMP_GNUC" = yes; then
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_common"
 
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee$DASH_mieee_with_inexact$DASH_mieee_fp"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_with_inexact"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_fp"
 
   case "$target_os" in
 
@@ -1209,7 +1224,8 @@ if test "$C_COMP_GNUC" = yes; then
              ;;
 
           *) # for other systems
-             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_rdynamic$DASH_shared"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_rdynamic"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_shared"
              FLAGS_EXE="$FLAGS_EXE$DASH_rdynamic"
              ;;
   esac

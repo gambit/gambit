@@ -706,12 +706,14 @@ DASH_no_cpp_precomp
 DASH_fschedule_insns2
 DASH_fno_trapping_math
 DASH_fno_move_loop_invariants
+DASH_fno_keep_inline_dllexport
 DASH_mieee
 DASH_mieee_with_inexact
 DASH_mieee_fp
 DASH_Wall
 DASH_W
 DASH_Wno_unused
+DASH_Wno_write_strings
 DASH_g
 DASH_p
 DASH_pg
@@ -21084,6 +21086,8 @@ echo "${ECHO_T}$POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" >&6; }
     DASH_fschedule_insns2=""
     DASH_fno_trapping_math=""
     DASH_fno_move_loop_invariants=""
+    DASH_fno_keep_inline_dllexport=""
+    #DASH_fpermissive=""
     DASH_mieee=""
     DASH_mieee_with_inexact=""
     DASH_mieee_fp=""
@@ -21253,6 +21257,47 @@ fi
 fi
 { echo "$as_me:$LINENO: result: $DASH_fno_move_loop_invariants" >&5
 echo "${ECHO_T}$DASH_fno_move_loop_invariants" >&6; }
+    { echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -fno-keep-inline-dllexport" >&5
+echo $ECHO_N "checking whether $C_COMPILER accepts -fno-keep-inline-dllexport... $ECHO_C" >&6; }
+if test "${DASH_fno_keep_inline_dllexport+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fno-keep-inline-dllexport"
+CXXFLAGS="-fno-keep-inline-dllexport"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  DASH_fno_keep_inline_dllexport=" -fno-keep-inline-dllexport"
+else
+  DASH_fno_keep_inline_dllexport=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ echo "$as_me:$LINENO: result: $DASH_fno_keep_inline_dllexport" >&5
+echo "${ECHO_T}$DASH_fno_keep_inline_dllexport" >&6; }
+    #AC_CHECK_C_COMPILER_OPT(-fpermissive,DASH_fpermissive)
 
     # machine specific options:
     { echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -mieee" >&5
@@ -21498,6 +21543,46 @@ fi
 fi
 { echo "$as_me:$LINENO: result: $DASH_Wno_unused" >&5
 echo "${ECHO_T}$DASH_Wno_unused" >&6; }
+  { echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -Wno-write-strings" >&5
+echo $ECHO_N "checking whether $C_COMPILER accepts -Wno-write-strings... $ECHO_C" >&6; }
+if test "${DASH_Wno_write_strings+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-Wno-write-strings"
+CXXFLAGS="-Wno-write-strings"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  DASH_Wno_write_strings=" -Wno-write-strings"
+else
+  DASH_Wno_write_strings=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ echo "$as_me:$LINENO: result: $DASH_Wno_write_strings" >&5
+echo "${ECHO_T}$DASH_Wno_write_strings" >&6; }
   { echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -g" >&5
 echo $ECHO_N "checking whether $C_COMPILER accepts -g... $ECHO_C" >&6; }
 if test "${DASH_g+set}" = set; then
@@ -22572,6 +22657,7 @@ echo "${ECHO_T}$DASH_shared" >&6; }
   esac
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_unused"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_write_strings"
 
   if test "$ENABLE_DEBUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
@@ -22586,16 +22672,23 @@ echo "${ECHO_T}$DASH_shared" >&6; }
   fi
 
   if test "$ENABLE_DEBUG" != yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1$DASH_fno_math_errno$DASH_fschedule_insns2"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   fi
 
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
+  #FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
 
 # It isn't clear these are useful:
 #  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
 
   if test "$ENABLE_GCC_OPTS" = yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched$DASH_freschedule_modulo_scheduled_loops"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_freschedule_modulo_scheduled_loops"
   fi
 
   case "$target_os" in
@@ -22646,7 +22739,9 @@ _ACEOF
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_common"
 
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee$DASH_mieee_with_inexact$DASH_mieee_fp"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_with_inexact"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_fp"
 
   case "$target_os" in
 
@@ -22657,7 +22752,8 @@ _ACEOF
              ;;
 
           *) # for other systems
-             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_rdynamic$DASH_shared"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_rdynamic"
+             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_shared"
              FLAGS_EXE="$FLAGS_EXE$DASH_rdynamic"
              ;;
   esac
@@ -26974,15 +27070,15 @@ DASH_no_cpp_precomp!$DASH_no_cpp_precomp$ac_delim
 DASH_fschedule_insns2!$DASH_fschedule_insns2$ac_delim
 DASH_fno_trapping_math!$DASH_fno_trapping_math$ac_delim
 DASH_fno_move_loop_invariants!$DASH_fno_move_loop_invariants$ac_delim
+DASH_fno_keep_inline_dllexport!$DASH_fno_keep_inline_dllexport$ac_delim
 DASH_mieee!$DASH_mieee$ac_delim
 DASH_mieee_with_inexact!$DASH_mieee_with_inexact$ac_delim
 DASH_mieee_fp!$DASH_mieee_fp$ac_delim
 DASH_Wall!$DASH_Wall$ac_delim
 DASH_W!$DASH_W$ac_delim
 DASH_Wno_unused!$DASH_Wno_unused$ac_delim
+DASH_Wno_write_strings!$DASH_Wno_write_strings$ac_delim
 DASH_g!$DASH_g$ac_delim
-DASH_p!$DASH_p$ac_delim
-DASH_pg!$DASH_pg$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -27024,6 +27120,8 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+DASH_p!$DASH_p$ac_delim
+DASH_pg!$DASH_pg$ac_delim
 DASH_ftest_coverage!$DASH_ftest_coverage$ac_delim
 DASH_fprofile_arcs!$DASH_fprofile_arcs$ac_delim
 DASH_fbranch_probabilities!$DASH_fbranch_probabilities$ac_delim
@@ -27119,8 +27217,6 @@ DEFS_MF!$DEFS_MF$ac_delim
 LIBS_MF!$LIBS_MF$ac_delim
 GAMBCLIB_DEFS_MF!$GAMBCLIB_DEFS_MF$ac_delim
 GAMBCLIB_MF!$GAMBCLIB_MF$ac_delim
-GAMBCGSCLIB_MF!$GAMBCGSCLIB_MF$ac_delim
-GAMBCGSILIB_MF!$GAMBCGSILIB_MF$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -27162,6 +27258,8 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+GAMBCGSCLIB_MF!$GAMBCGSCLIB_MF$ac_delim
+GAMBCGSILIB_MF!$GAMBCGSILIB_MF$ac_delim
 LIB_PREFIX_MF!$LIB_PREFIX_MF$ac_delim
 LIB_EXTENSION_MF!$LIB_EXTENSION_MF$ac_delim
 BUILD_OBJ_SH!$BUILD_OBJ_SH$ac_delim
@@ -27226,7 +27324,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 62; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 64; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
