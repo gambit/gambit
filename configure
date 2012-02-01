@@ -22681,7 +22681,10 @@ echo "${ECHO_T}$DASH_shared" >&6; }
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
-  #FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
+
+#  if test "$ENABLE_CPLUSPLUS" = yes; then
+#    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
+#  fi
 
 # It isn't clear these are useful:
 #  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"

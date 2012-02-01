@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -3396,7 +3396,8 @@ ___U8 *text_arg;)
           {
             if (text_arg != NULL)
               {
-                SetWindowTextA (cons_wind, text_arg); /* ignore error */
+                SetWindowTextA (cons_wind,
+                                ___CAST(LPCSTR,text_arg)); /* ignore error */
               }
             else
               {
@@ -4496,7 +4497,7 @@ int len;)
 
           if (global_copy != NULL)
             {
-              ___U16 *locked_copy = GlobalLock (global_copy);
+              ___U16 *locked_copy = ___CAST(___U16*,GlobalLock (global_copy));
 
               if (locked_copy == NULL)
                 GlobalFree (global_copy);
@@ -4581,7 +4582,7 @@ ___device_tty *self;)
 
           if (global_copy != NULL)
             {
-              ___U16 *locked_copy = GlobalLock (global_copy);
+              ___U16 *locked_copy = ___CAST(___U16*,GlobalLock (global_copy));
 
               if (locked_copy != NULL)
                 {
