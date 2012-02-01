@@ -6383,6 +6383,10 @@ void *___x;) \
 #define ___END_CFUN_SCMOBJ_TO_LONG(s,c,i)}
 #define ___BEGIN_CFUN_SCMOBJ_TO_ULONG(s,c,i)___IF_STOC3(___SCMOBJ_to_ULONG,s,&c,i){
 #define ___END_CFUN_SCMOBJ_TO_ULONG(s,c,i)}
+#define ___BEGIN_CFUN_SCMOBJ_TO_LONGLONG(s,c,i)___IF_STOC3(___SCMOBJ_to_LONGLONG,s,&c,i){
+#define ___END_CFUN_SCMOBJ_TO_LONGLONG(s,c,i)}
+#define ___BEGIN_CFUN_SCMOBJ_TO_ULONGLONG(s,c,i)___IF_STOC3(___SCMOBJ_to_ULONGLONG,s,&c,i){
+#define ___END_CFUN_SCMOBJ_TO_ULONGLONG(s,c,i)}
 #define ___BEGIN_CFUN_SCMOBJ_TO_FLOAT(s,c,i)___IF_STOC3(___SCMOBJ_to_FLOAT,s,&c,i){
 #define ___END_CFUN_SCMOBJ_TO_FLOAT(s,c,i)}
 #define ___BEGIN_CFUN_SCMOBJ_TO_DOUBLE(s,c,i)___IF_STOC3(___SCMOBJ_to_DOUBLE,s,&c,i){
@@ -6494,6 +6498,10 @@ void *___x;) \
 #define ___END_CFUN_LONG_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_ULONG_TO_SCMOBJ(c,s)___IF_CTOS3(___ULONG_to_SCMOBJ,c,&s,___RETURN_POS){
 #define ___END_CFUN_ULONG_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_CFUN_LONGLONG_TO_SCMOBJ(c,s)___IF_CTOS3(___LONGLONG_to_SCMOBJ,c,&s,___RETURN_POS){
+#define ___END_CFUN_LONGLONG_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_CFUN_ULONGLONG_TO_SCMOBJ(c,s)___IF_CTOS3(___ULONGLONG_to_SCMOBJ,c,&s,___RETURN_POS){
+#define ___END_CFUN_ULONGLONG_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_FLOAT_TO_SCMOBJ(c,s)___IF_CTOS3(___FLOAT_to_SCMOBJ,c,&s,___RETURN_POS){
 #define ___END_CFUN_FLOAT_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_DOUBLE_TO_SCMOBJ(c,s)___IF_CTOS3(___DOUBLE_to_SCMOBJ,c,&s,___RETURN_POS){
