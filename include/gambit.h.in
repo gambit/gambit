@@ -1236,7 +1236,15 @@
 #define ___BEGIN_C_LINKAGE extern "C" {
 #define ___END_C_LINKAGE }
 
-#define ___BOOL int /* should be "bool" but some compilers don't support it */
+/*
+ * Define ___BOOL as "bool" or "int", according to what is supported
+ * by the compiler (this is determined by the configure script) unless
+ * it is defined elsewhere.
+ */
+
+#ifndef ___BOOL
+#define ___BOOL @CONF_BOOL@
+#endif
 
 #define ___USE_CPLUSPLUS_NEW_DELETE
 #define ___USE_CPLUSPLUS_CLEANUP
@@ -1258,7 +1266,9 @@
 #define ___BEGIN_C_LINKAGE
 #define ___END_C_LINKAGE
 
+#ifndef ___BOOL
 #define ___BOOL int
+#endif
 
 #undef ___USE_SETJMP
 #define ___USE_SETJMP

@@ -368,6 +368,21 @@ AC_SUBST(CONF_VOIDSTAR_WIDTH)
 
 ###############################################################################
 #
+# Check for existence of the type "bool".  If the compiler does not
+# support it, the ___BOOL type will be mapped to "int".
+
+AC_CHECK_TYPE([bool])
+  
+if test "$ac_cv_type_bool" = yes; then
+  CONF_BOOL="bool"
+else
+  CONF_BOOL="int"
+fi
+
+AC_SUBST(CONF_BOOL)
+
+###############################################################################
+#
 # Check if a shared library must be built.
 
 AC_ARG_ENABLE(shared,

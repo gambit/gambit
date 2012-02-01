@@ -696,6 +696,7 @@ CONF_MAX_CHR
 GREP
 EGREP
 CONF_VOIDSTAR_WIDTH
+CONF_BOOL
 C_COMP_GNUC
 C_COMP_CLANG
 C_COMP_LLVM
@@ -5567,6 +5568,74 @@ if test "$ac_cv_sizeof_voidp" != "$ac_cv_sizeof_long"; then
   CONF_VOIDSTAR_WIDTH="($ac_cv_sizeof_voidp * ___CHAR_WIDTH)"
 else
   CONF_VOIDSTAR_WIDTH="___LONG_WIDTH"
+fi
+
+
+
+###############################################################################
+#
+# Check for existence of the type "bool".  If the compiler does not
+# support it, the ___BOOL type will be mapped to "int".
+
+{ echo "$as_me:$LINENO: checking for bool" >&5
+echo $ECHO_N "checking for bool... $ECHO_C" >&6; }
+if test "${ac_cv_type_bool+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$ac_includes_default
+typedef bool ac__type_new_;
+int
+main ()
+{
+if ((ac__type_new_ *) 0)
+  return 0;
+if (sizeof (ac__type_new_))
+  return 0;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  ac_cv_type_bool=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_type_bool=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_type_bool" >&5
+echo "${ECHO_T}$ac_cv_type_bool" >&6; }
+
+
+if test "$ac_cv_type_bool" = yes; then
+  CONF_BOOL="bool"
+else
+  CONF_BOOL="int"
 fi
 
 
@@ -27063,6 +27132,7 @@ CONF_MAX_CHR!$CONF_MAX_CHR$ac_delim
 GREP!$GREP$ac_delim
 EGREP!$EGREP$ac_delim
 CONF_VOIDSTAR_WIDTH!$CONF_VOIDSTAR_WIDTH$ac_delim
+CONF_BOOL!$CONF_BOOL$ac_delim
 C_COMP_GNUC!$C_COMP_GNUC$ac_delim
 C_COMP_CLANG!$C_COMP_CLANG$ac_delim
 C_COMP_LLVM!$C_COMP_LLVM$ac_delim
@@ -27081,7 +27151,6 @@ DASH_Wall!$DASH_Wall$ac_delim
 DASH_W!$DASH_W$ac_delim
 DASH_Wno_unused!$DASH_Wno_unused$ac_delim
 DASH_Wno_write_strings!$DASH_Wno_write_strings$ac_delim
-DASH_g!$DASH_g$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -27123,6 +27192,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+DASH_g!$DASH_g$ac_delim
 DASH_p!$DASH_p$ac_delim
 DASH_pg!$DASH_pg$ac_delim
 DASH_ftest_coverage!$DASH_ftest_coverage$ac_delim
@@ -27219,7 +27289,6 @@ BUILD_EXE_MF!$BUILD_EXE_MF$ac_delim
 DEFS_MF!$DEFS_MF$ac_delim
 LIBS_MF!$LIBS_MF$ac_delim
 GAMBCLIB_DEFS_MF!$GAMBCLIB_DEFS_MF$ac_delim
-GAMBCLIB_MF!$GAMBCLIB_MF$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -27261,6 +27330,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+GAMBCLIB_MF!$GAMBCLIB_MF$ac_delim
 GAMBCGSCLIB_MF!$GAMBCGSCLIB_MF$ac_delim
 GAMBCGSILIB_MF!$GAMBCGSILIB_MF$ac_delim
 LIB_PREFIX_MF!$LIB_PREFIX_MF$ac_delim
@@ -27327,7 +27397,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 64; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 65; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
