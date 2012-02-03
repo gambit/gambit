@@ -27,6 +27,9 @@ GAMBCGSCLIB=@GAMBCGSCLIB_SH@
 GAMBCGSILIB=@GAMBCGSILIB_SH@
 LIB_PREFIX=@LIB_PREFIX_SH@
 LIB_EXTENSION=@LIB_EXTENSION_SH@
+OBJ_EXTENSION=@OBJ_EXTENSION_SH@
+EXE_EXTENSION=@EXE_EXTENSION_SH@
+BAT_EXTENSION=@BAT_EXTENSION_SH@
 
 case "$1" in
 
@@ -150,6 +153,18 @@ case "$1" in
     echo "${LIB_EXTENSION}"
     ;;
 
+  "OBJ_EXTENSION")
+    echo "${OBJ_EXTENSION}"
+    ;;
+
+  "EXE_EXTENSION")
+    echo "${EXE_EXTENSION}"
+    ;;
+
+  "BAT_EXTENSION")
+    echo "${BAT_EXTENSION}"
+    ;;
+
   "")
     # Dump configure script settings
 
@@ -180,6 +195,9 @@ case "$1" in
     echo GAMBCGSILIB=`echo "${GAMBCGSILIB}" | ${ESC_SH}`
     echo LIB_PREFIX=`echo "${LIB_PREFIX}" | ${ESC_SH}`
     echo LIB_EXTENSION=`echo "${LIB_EXTENSION}" | ${ESC_SH}`
+    echo OBJ_EXTENSION=`echo "${OBJ_EXTENSION}" | ${ESC_SH}`
+    echo EXE_EXTENSION=`echo "${EXE_EXTENSION}" | ${ESC_SH}`
+    echo BAT_EXTENSION=`echo "${BAT_EXTENSION}" | ${ESC_SH}`
     ;;
 
   *)

@@ -27,6 +27,9 @@ set GAMBCGSCLIB=@GAMBCGSCLIB_BAT@
 set GAMBCGSILIB=@GAMBCGSILIB_BAT@
 set LIB_PREFIX=@LIB_PREFIX_BAT@
 set LIB_EXTENSION=@LIB_EXTENSION_BAT@
+set OBJ_EXTENSION=@OBJ_EXTENSION_BAT@
+set EXE_EXTENSION=@EXE_EXTENSION_BAT@
+set BAT_EXTENSION=@BAT_EXTENSION_BAT@
 
 if "%1" == "obj" goto obj
 if not "%1" == ""obj"" goto not_obj
@@ -233,6 +236,27 @@ if not "%1" == ""LIB_EXTENSION"" goto not_LIB_EXTENSION
 echo.%LIB_EXTENSION%
 goto end
 :not_LIB_EXTENSION
+
+if "%1" == "OBJ_EXTENSION" goto OBJ_EXTENSION
+if not "%1" == ""OBJ_EXTENSION"" goto not_OBJ_EXTENSION
+:OBJ_EXTENSION
+echo.%OBJ_EXTENSION%
+goto end
+:not_OBJ_EXTENSION
+
+if "%1" == "EXE_EXTENSION" goto EXE_EXTENSION
+if not "%1" == ""EXE_EXTENSION"" goto not_EXE_EXTENSION
+:EXE_EXTENSION
+echo.%EXE_EXTENSION%
+goto end
+:not_EXE_EXTENSION
+
+if "%1" == "BAT_EXTENSION" goto BAT_EXTENSION
+if not "%1" == ""BAT_EXTENSION"" goto not_BAT_EXTENSION
+:BAT_EXTENSION
+echo.%BAT_EXTENSION%
+goto end
+:not_BAT_EXTENSION
 
 echo.gambc-cc.bat unknown operation "%1"
 exit /b 1
