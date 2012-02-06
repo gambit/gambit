@@ -1,6 +1,6 @@
 # makefile for iOS example
 
-# Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/iOS
 rootfromhere = ../..

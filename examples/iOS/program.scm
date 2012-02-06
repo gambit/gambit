@@ -2,7 +2,7 @@
 
 ;;; File: "program.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 ;; This program implements the "Gambit REPL" application for iOS
 ;; devices.  It is a simple development environment for Scheme.  The
@@ -1410,12 +1410,13 @@ login-page-content-part5-end
   (lambda (str)
     (if (char=? #\F (string-ref str 0))
         (let ((script (get-script-by-name str)))
-          (cond (script
-                 (run-script str script))
-                ((equal? str "F12")
-                 (##thread-interrupt! (macro-primordial-thread)))
-                (else
-                 (add-input-to-textView 0 (string-append "<" str ">")))))
+          (if script
+              (run-script str script)
+              (let ((n (string->number (substring str 1 (string-length str)))))
+                (cond ((eqv? n 12)
+                       (##thread-interrupt! (macro-primordial-thread)))
+                      ((and n (<= n 10))
+                       (add-input-to-textView 0 (number->string (modulo n 10))))))))
         (add-input-to-textView 0 str))))
 
 
