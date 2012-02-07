@@ -184,6 +184,17 @@
 #endif
 #endif
 
+#define USE_NONBLOCKING_FILE_IO
+
+#ifdef HAVE_TARGETCONDITIONALS_H
+#include <TargetConditionals.h>
+#ifdef TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE == 1
+#undef USE_NONBLOCKING_FILE_IO
+#endif
+#endif
+#endif
+
 #ifdef HAVE_STRERROR
 #define USE_strerror
 #endif
@@ -956,7 +967,6 @@ ___END_C_LINKAGE
 #define INCLUDE_curses_h
 #endif
 
-
 /*---------------------------------------------------------------------------*/
 
 /* Inclusion of header files. */
@@ -1395,7 +1405,6 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #include <crt_externs.h>
 #endif
 #endif
-
 
 /*
  * Use the process-time timer unless only the real-time timer is

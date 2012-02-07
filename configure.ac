@@ -680,6 +680,7 @@ else
   AC_CHECK_HEADERS(sys/sysctl.h)
   AC_CHECK_HEADERS(crt_externs.h)
   AC_CHECK_HEADERS(ws2tcpip.h)
+  AC_CHECK_HEADERS(TargetConditionals.h)
 
   if test "$C_COMP_VISUALC" != yes; then
 

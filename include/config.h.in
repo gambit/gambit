@@ -97,6 +97,8 @@
 #undef HAVE_MEMORY_H
 #undef HAVE_SYS_SYSCTL_H
 #undef HAVE_CRT_EXTERNS_H
+#undef HAVE_WS2TCPIP_H
+#undef HAVE_TARGETCONDITIONALS_H
 
 /*---------------------------------------------------------------------------*/
 
