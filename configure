@@ -722,6 +722,7 @@ DASH_ftest_coverage
 DASH_fprofile_arcs
 DASH_fbranch_probabilities
 DASH_O1
+DASH_O2
 DASH_fno_math_errno
 DASH_fno_strict_aliasing
 DASH_fwrapv
@@ -739,7 +740,6 @@ DASH_rdynamic
 DASH_xO2
 DASH_KPIC
 DASH_G
-DASH_O2
 DASH_ieee
 DASH_call_shared
 DASH_expect_unresolved
@@ -22093,6 +22093,46 @@ fi
 fi
 { echo "$as_me:$LINENO: result: $DASH_O1" >&5
 echo "${ECHO_T}$DASH_O1" >&6; }
+  { echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -O2" >&5
+echo $ECHO_N "checking whether $C_COMPILER accepts -O2... $ECHO_C" >&6; }
+if test "${DASH_O2+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-O2"
+CXXFLAGS="-O2"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  DASH_O2=" -O2"
+else
+  DASH_O2=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ echo "$as_me:$LINENO: result: $DASH_O2" >&5
+echo "${ECHO_T}$DASH_O2" >&6; }
   { echo "$as_me:$LINENO: checking whether $C_COMPILER accepts -fno-math-errno" >&5
 echo $ECHO_N "checking whether $C_COMPILER accepts -fno-math-errno... $ECHO_C" >&6; }
 if test "${DASH_fno_math_errno+set}" = set; then
@@ -22253,6 +22293,12 @@ fi
 fi
 { echo "$as_me:$LINENO: result: $DASH_fomit_frame_pointer" >&5
 echo "${ECHO_T}$DASH_fomit_frame_pointer" >&6; }
+
+  if test "$DASH_O2" != ""; then
+    OPT_LEVEL_FLAG="$DASH_O2"
+  else
+    OPT_LEVEL_FLAG="$DASH_O1"
+  fi
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
@@ -22898,7 +22944,7 @@ echo "${ECHO_T}$DASH_shared" >&6; }
   fi
 
   if test "$ENABLE_DEBUG" != yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$OPT_LEVEL_FLAG"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   fi
@@ -27381,6 +27427,7 @@ DASH_ftest_coverage!$DASH_ftest_coverage$ac_delim
 DASH_fprofile_arcs!$DASH_fprofile_arcs$ac_delim
 DASH_fbranch_probabilities!$DASH_fbranch_probabilities$ac_delim
 DASH_O1!$DASH_O1$ac_delim
+DASH_O2!$DASH_O2$ac_delim
 DASH_fno_math_errno!$DASH_fno_math_errno$ac_delim
 DASH_fno_strict_aliasing!$DASH_fno_strict_aliasing$ac_delim
 DASH_fwrapv!$DASH_fwrapv$ac_delim
@@ -27398,7 +27445,6 @@ DASH_rdynamic!$DASH_rdynamic$ac_delim
 DASH_xO2!$DASH_xO2$ac_delim
 DASH_KPIC!$DASH_KPIC$ac_delim
 DASH_G!$DASH_G$ac_delim
-DASH_O2!$DASH_O2$ac_delim
 DASH_ieee!$DASH_ieee$ac_delim
 DASH_call_shared!$DASH_call_shared$ac_delim
 DASH_expect_unresolved!$DASH_expect_unresolved$ac_delim

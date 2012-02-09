@@ -1063,10 +1063,17 @@ if test "$C_COMP_GNUC" = yes; then
 
   # optimization options:
   AC_CHECK_C_COMPILER_OPT(-O1,DASH_O1)
+  AC_CHECK_C_COMPILER_OPT(-O2,DASH_O2)
   AC_CHECK_C_COMPILER_OPT(-fno-math-errno,DASH_fno_math_errno)
   AC_CHECK_C_COMPILER_OPT(-fno-strict-aliasing,DASH_fno_strict_aliasing)
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
+
+  if test "$DASH_O2" != ""; then
+    OPT_LEVEL_FLAG="$DASH_O2"
+  else
+    OPT_LEVEL_FLAG="$DASH_O1"
+  fi
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
@@ -1166,7 +1173,7 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   if test "$ENABLE_DEBUG" != yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_O1"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$OPT_LEVEL_FLAG"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   fi
