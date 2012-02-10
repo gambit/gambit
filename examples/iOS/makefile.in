@@ -65,6 +65,8 @@ mandir = @mandir@
 .SUFFIXES: .scm .m @obj@
 
 RCFILES = makefile.in README build-gambit-iOS GambitREPL.xcodeproj.tgz \
+digest.scm "digest\#.scm" genport.scm "genport\#.scm" \
+zlib.scm "zlib\#.scm" tar.scm "tar\#.scm" \
 json.scm "json\#.scm" url.scm "url\#.scm" html.scm "html\#.scm" \
 wiki.scm "wiki\#.scm" repl-server.scm "repl-server\#.scm" \
 intf.scm "intf\#.scm" intf.h script.scm "script\#.scm" \
@@ -120,7 +122,7 @@ gambit-iOS:
 	cp gambit-iOS/current/lib/*.scm lib
 	cp gambit-iOS/current/doc/gambit-c.pdf .
 
-prepare-for-xcode: json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m GambitREPL.xcodeproj gambit-iOS
+prepare-for-xcode: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m GambitREPL.xcodeproj gambit-iOS
 	@echo "*************************************************************"
 	@echo "*                                                           *"
 	@echo "* To complete the iOS example the following steps must be   *"
@@ -137,7 +139,7 @@ prepare-for-xcode: json.m url.m html.m wiki.m repl-server.m intf.m script.m repo
 .scm.m:
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check -o $*.m $(srcdirpfx)$*.scm
 
-program_.m: json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m
+program_.m: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -o $@ $^
 
 GambitREPL.xcodeproj: GambitREPL.xcodeproj.tgz
@@ -160,7 +162,7 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m
+	rm -f digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m
 
 clean-pre: mostlyclean-pre
 

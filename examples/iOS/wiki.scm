@@ -2,7 +2,7 @@
 
 ;;; File: "wiki.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -13,6 +13,7 @@
 (##include "wiki#.scm")
 (##include "url#.scm")
 (##include "json#.scm")
+(##include "genport#.scm")
 
 (declare
   (standard-bindings)
@@ -329,7 +330,7 @@
 (define wiki-timeout        #f)
 (define wiki-server-address #f)
 (define wiki-root           #f)
-(define wiki-docu           #f)
+(define wiki-api            #f)
 (define wiki-script-ns      #f)
 (define wiki-script-prefix  #f)
 (define wiki-script-tags    #f)
@@ -486,5 +487,15 @@
                             (else
                              #f))))))))))
 
+;;;----------------------------------------------------------------------------
+
+(define (http-get docu #!optional (server-address wiki-server-address))
+  (let ((port (open-tcp-client server-address)))
+    (print port: port "GET " docu "\r\n\r\n")
+    (force-output port)
+    (let* ((genport-in (genport-native-input-port->genport port))
+           (u8vect (genport-read-u8vector genport-in)))
+      (close-port port)
+      u8vect)))
 
 ;;;============================================================================

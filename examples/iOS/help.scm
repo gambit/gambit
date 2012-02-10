@@ -2,7 +2,7 @@
 
 ;;; File: "help.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -24,9 +24,9 @@
 
 ;; Access to online help.
 
-(define main-help-document     "help.html")
-(define r5rs-help-document     "r5rs.html")
-(define gambit-c-help-document "gambit-c.html")
+(define main-help-document     (path-expand "~~/help.html"))
+(define r5rs-help-document     (path-expand "~~/r5rs.html"))
+(define gambit-c-help-document (path-expand "~~/gambit-c.html"))
 
 (define help-names-r5rs '(
 *

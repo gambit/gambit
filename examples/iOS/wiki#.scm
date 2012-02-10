@@ -2,7 +2,7 @@
 
 ;;; File: "wiki#.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -22,6 +22,8 @@ wiki-logged-in?
 wiki-logged-in-verify
 wiki-script-name-verify
 wiki-script-name-type
+
+http-get
 
 ))
 

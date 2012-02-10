@@ -2,10 +2,11 @@
 //  ViewController.h
 //
 //  Created by Marc Feeley on 11-03-06.
-//  Copyright 2011 Université de Montréal. All rights reserved.
+//  Copyright 2011-2012 Université de Montréal. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
+#import <CoreLocation/CoreLocation.h>
 
 
 // ViewController methods callable from Scheme.
@@ -21,24 +22,27 @@ void set_textView_content(int view, NSString *str);
 NSString *get_textView_content(int view);
 void add_output_to_textView(int view, NSString *str);
 void add_input_to_textView(int view, NSString *str);
-void set_webView_content(int view, NSString *str, BOOL enable_scaling, NSString *mime_type);
-void set_webView_content_from_file(int view, NSString *path, BOOL enable_scaling, NSString *mime_type);
+void set_webView_content(int view, NSString *str, NSString *base_url_path, BOOL enable_scaling, NSString *mime_type);
+void set_webView_content_from_file(int view, NSString *path, NSString *base_url_path, BOOL enable_scaling, NSString *mime_type);
 NSString *eval_js_in_webView(int view, NSString *script);
 void open_URL(NSString *url);
 void segm_ctrl_set_title(int segment, NSString *title);
 void segm_ctrl_insert(int segment, NSString *title);
+void segm_ctrl_remove(int segment);
+void segm_ctrl_remove_all();
 void set_pref(NSString *key, NSString *value);
 NSString *get_pref(NSString *key);
 void set_pasteboard(NSString *value);
 NSString *get_pasteboard();
 NSString *get_documents_dir();
 void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSString *accept_button);
+void setup_location_updates(double desired_accuracy, double distance_filter);
 
 #define NB_WEBVIEWS   4
 #define NB_TEXTVIEWS  2
 #define NB_IMAGEVIEWS 2
 
-@interface ViewController : UIViewController <UITextViewDelegate,UIWebViewDelegate,UIAlertViewDelegate> {
+@interface ViewController : UIViewController <UITextViewDelegate,UIWebViewDelegate,UIAlertViewDelegate,CLLocationManagerDelegate> {
 
   UISegmentedControl *segmCtrl;
   UIWebView *webViews[NB_WEBVIEWS];
@@ -57,6 +61,7 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
   int keyboardSounds;
   NSTimer *timer;
   NSMutableArray *queuedActions;
+  CLLocationManager *locationManager;
 }
 
 @property (nonatomic, assign) IBOutlet UISegmentedControl *segmCtrl;
@@ -73,6 +78,7 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
 @property (assign) int keyboardSounds;
 @property (assign) NSTimer *timer;
 @property (assign) NSMutableArray *queuedActions;
+@property (assign) CLLocationManager *locationManager;
 
 - (void)queue_action:(void(^)())action;
 - (void)send_event:(NSString*)name;

@@ -319,6 +319,7 @@ splash-page-content-part2-end
          splash-page-content-part1
          CFBundleDisplayName
          splash-page-content-part2)
+   #f
    #t))
 
 (define (splash)
@@ -380,7 +381,7 @@ splash-page-content-part2-end
     (if load-docu?
         (begin
           (set! current-help-document docu)
-          (set-webView-content-from-file 2 docu #t))
+          (set-webView-content-from-file 2 docu (path-directory docu) #t))
         (goto-anchor))
 
     (set-navigation 2)
@@ -574,6 +575,7 @@ edit-page-content-part5-end
            edit-page-content-part4
            (html-for-local-scripts scripts)
            edit-page-content-part5))
+   #f
    #t))
 
 (define (edit)
@@ -1059,7 +1061,7 @@ repo-page-content-part5-end
          repo-page-content-part4
          (html-for-script-tree tree)
          repo-page-content-part5)
-
+   #f
    #t)
   (show-view 1))
 
@@ -1124,7 +1126,7 @@ repo-transaction-page-content-part3-end
 
     (let ((content (make-repo-transaction-page header msg spinner-html)))
       (set-navigation 1)
-      (set-view-content 1 content #t)
+      (set-view-content 1 content #f #t)
       (show-view 1))
 
     (guard-repo-transaction
@@ -1143,6 +1145,7 @@ repo-transaction-page-content-part3-end
                (list "<div class=\"statussuccess\">"
                      success-msg
                      "</div>"))
+              #f
               #t)
 
              (thread-sleep! 2) ;; display success message for 2 seconds
@@ -1171,6 +1174,7 @@ repo-transaction-page-content-part3-end
              "<br/><br/>"
              (exception->error-msg e)
              "</div>"))
+      #f
       #t)
 
      (thread-sleep! 4) ;; display error message for 4 seconds
@@ -1337,7 +1341,7 @@ login-page-content-part5-end
 
              (else
               (generic-event-handler event))))))
-  (set-view-content 1 page #t)
+  (set-view-content 1 page #f #t)
   (show-view 1))
 
 (define (attempt-login success fail username password remember-pass?)
@@ -1353,6 +1357,7 @@ login-page-content-part5-end
     password
     remember-pass?
     spinner-html)
+   #f
    #t)
 
   ((with-exception-catcher
@@ -1384,6 +1389,7 @@ login-page-content-part5-end
         password
         remember-pass?
         "<div class=\"statussuccess\">You are now logged in!</div>")
+       #f
        #t)
 
       (thread-sleep! 2) ;; display success message for 2 seconds
@@ -1436,6 +1442,8 @@ login-page-content-part5-end
        (continuation-return cont #f))))
 
    ;; the primordial thread is running this...
+
+   (set-navigation-bar '("REPL" "Wiki" "Help" "Edit"))
 
    (set-splash-view) ;; init the splash view
    (set-edit-view) ;; init the edit view

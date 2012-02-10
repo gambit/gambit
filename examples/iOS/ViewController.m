@@ -2,7 +2,7 @@
 //  ViewController.m
 //
 //  Created by Marc Feeley on 11-03-06.
-//  Copyright 2011 Université de Montréal. All rights reserved.
+//  Copyright 2011-2012 Université de Montréal. All rights reserved.
 //
 
 // Note: some of this code comes from the KeyboardAccessory
@@ -15,7 +15,7 @@
 
 @implementation ViewController
 
-@synthesize segmCtrl, webView0, webView1, webView2, webView3, textView0, textView1, imageView0, imageView1, cancelButton, accessoryView, keyboardSounds, timer, queuedActions;
+@synthesize segmCtrl, webView0, webView1, webView2, webView3, textView0, textView1, imageView0, imageView1, cancelButton, accessoryView, keyboardSounds, timer, queuedActions, locationManager;
 
 //-----------------------------------------------------------------------------
 
@@ -148,6 +148,8 @@ static ViewController *theViewController = nil;
   timer = nil;
 
   queuedActions = [[NSMutableArray alloc] init];
+
+  locationManager = nil;
 
   gambit_setup();
 
@@ -414,7 +416,7 @@ void show_webView(int view) {
             [vc->webViews[i] resignFirstResponder];
             vc->webViews[i].hidden = YES;
           }
-          
+
       for (int i=0; i<NB_TEXTVIEWS; i++)
         {
           [vc->textViews[i] resignFirstResponder];
@@ -426,7 +428,7 @@ void show_webView(int view) {
           [vc->imageViews[i] resignFirstResponder];
           vc->imageViews[i].hidden = YES;
         }
-      
+
       [vc->webViews[view] becomeFirstResponder];
       vc->webViews[view].hidden = NO;
     }
@@ -445,7 +447,7 @@ void show_textView(int view) {
           [vc->webViews[i] resignFirstResponder];
           vc->webViews[i].hidden = YES;
         }
-          
+
       for (int i=0; i<NB_TEXTVIEWS; i++)
         if (i != view)
           {
@@ -458,7 +460,7 @@ void show_textView(int view) {
           [vc->imageViews[i] resignFirstResponder];
           vc->imageViews[i].hidden = YES;
         }
-      
+
       [vc->textViews[view] becomeFirstResponder];
       vc->textViews[view].hidden = NO;
     }
@@ -477,7 +479,7 @@ void show_imageView(int view) {
           [vc->webViews[i] resignFirstResponder];
           vc->webViews[i].hidden = YES;
         }
-          
+
       for (int i=0; i<NB_TEXTVIEWS; i++)
         {
           [vc->textViews[i] resignFirstResponder];
@@ -490,7 +492,7 @@ void show_imageView(int view) {
             [vc->imageViews[i] resignFirstResponder];
             vc->imageViews[i].hidden = YES;
           }
-      
+
       [vc->imageViews[view] becomeFirstResponder];
       vc->imageViews[view].hidden = NO;
     }
@@ -564,7 +566,7 @@ void add_input_to_textView(int view, NSString *str) {
 }
 
 
-void set_webView_content(int view, NSString *str, BOOL enable_scaling, NSString *mime_type) {
+void set_webView_content(int view, NSString *str, NSString *base_url_path, BOOL enable_scaling, NSString *mime_type) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
@@ -572,33 +574,29 @@ void set_webView_content(int view, NSString *str, BOOL enable_scaling, NSString 
       [vc->webViews[view]
           loadData:[str dataUsingEncoding:NSUnicodeStringEncoding]
           MIMEType:mime_type
-          textEncodingName:@"UTF-8" 
-          baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]]
+          textEncodingName:@"UTF-8"
+          baseURL:[NSURL fileURLWithPath:(base_url_path != nil) ? base_url_path : [[NSBundle mainBundle] bundlePath]]
       ];
       vc->webViews[0].scalesPageToFit = enable_scaling;
     }
 }
 
 
-void set_webView_content_from_file(int view, NSString *path, BOOL enable_scaling, NSString *mime_type) {
+void set_webView_content_from_file(int view, NSString *path, NSString *base_url_path, BOOL enable_scaling, NSString *mime_type) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      NSString *p = [[NSBundle mainBundle] pathForResource:path ofType:nil];
-      if (p != nil)
+      NSData *data = [NSData dataWithContentsOfFile:path];
+      if (data != nil)
         {
-          NSData *data = [NSData dataWithContentsOfFile:p]; 
-          if (data != nil)
-            {
-              [vc->webViews[view]
-                  loadData:data
-                  MIMEType:mime_type
-                  textEncodingName:@"UTF-8" 
-                  baseURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] bundlePath]]
-               ];
-              vc->webViews[view].scalesPageToFit = enable_scaling;
-            }
+          [vc->webViews[view]
+              loadData:data
+              MIMEType:mime_type
+              textEncodingName:@"UTF-8"
+              baseURL:[NSURL fileURLWithPath:(base_url_path != nil) ? base_url_path : [[NSBundle mainBundle] bundlePath]]
+           ];
+          vc->webViews[view].scalesPageToFit = enable_scaling;
         }
     }
 }
@@ -636,7 +634,27 @@ void segm_ctrl_insert(int segment, NSString *title) {
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      [vc->segmCtrl insertSegmentWithTitle:title atIndex:segment animated:true];
+      [vc->segmCtrl insertSegmentWithTitle:title atIndex:segment animated:false];
+    }
+}
+
+
+void segm_ctrl_remove(int segment) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      [vc->segmCtrl removeSegmentAtIndex:segment animated:false];
+    }
+}
+
+
+void segm_ctrl_remove_all() {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      [vc->segmCtrl removeAllSegments];
     }
 }
 
@@ -1004,6 +1022,59 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
   return YES;
 }
 
+
+void setup_location_updates(double desired_accuracy, double distance_filter)
+{
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      if (vc->locationManager == nil)
+        {
+          vc->locationManager = [[CLLocationManager alloc] init];
+          vc->locationManager.delegate = vc;
+        }
+
+      if (desired_accuracy < 0.0)
+        [vc->locationManager stopUpdatingLocation];
+      else
+        {
+          if (desired_accuracy == 0.0)
+            vc->locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation;
+          else
+            vc->locationManager.desiredAccuracy = desired_accuracy;
+
+          vc->locationManager.distanceFilter = kCLDistanceFilterNone;
+
+          if (distance_filter < 0.0)
+            [vc->locationManager startMonitoringSignificantLocationChanges];
+          else
+            {
+              if (distance_filter > 0.0)
+                vc->locationManager.distanceFilter = distance_filter;
+              [vc->locationManager startUpdatingLocation];
+            }
+        }
+    }
+}
+
+
+// Delegate method from the CLLocationManagerDelegate protocol.
+
+- (void)locationManager:(CLLocationManager *)manager
+    didUpdateToLocation:(CLLocation *)newLocation
+    fromLocation:(CLLocation *)oldLocation
+{
+    NSString *event = [NSString stringWithFormat:@"location-update:%+.9f %+.9f %+.1f %+.1f %+.1f %+.1f %+.1f %+.6f",
+                                newLocation.coordinate.latitude,
+                                newLocation.coordinate.longitude,
+                                newLocation.horizontalAccuracy,
+                                newLocation.altitude,
+                                newLocation.verticalAccuracy,
+                                newLocation.course,
+                                newLocation.speed,
+                                [newLocation.timestamp timeIntervalSince1970]];
+    [self send_event:event];
+}
 
 #pragma mark -
 #pragma mark Memory management

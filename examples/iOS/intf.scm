@@ -2,7 +2,7 @@
 
 ;;; File: "intf.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -410,11 +410,11 @@ c-declare-end
 (define add-input-to-textView
   (c-lambda (int NSString*) void "add_input_to_textView"))
 
-(define (set-webView-content view str #!optional (enable-scaling #f) (mime-type "text/html"))
-  ((c-lambda (int NSString* bool NSString*) void "set_webView_content") view str enable-scaling mime-type))
+(define (set-webView-content view str #!optional (base-url-path #f) (enable-scaling #f) (mime-type "text/html"))
+  ((c-lambda (int NSString* NSString* bool NSString*) void "set_webView_content") view str base-url-path enable-scaling mime-type))
 
-(define (set-webView-content-from-file view path #!optional (enable-scaling #f) (mime-type "text/html"))
-  ((c-lambda (int NSString* bool NSString*) void "set_webView_content_from_file") view path enable-scaling mime-type))
+(define (set-webView-content-from-file view path #!optional (base-url-path (path-directory path)) (enable-scaling #f) (mime-type "text/html"))
+  ((c-lambda (int NSString* NSString* bool NSString*) void "set_webView_content_from_file") view path base-url-path enable-scaling mime-type))
 
 (define eval-js-in-webView
   (c-lambda (int NSString*) NSString* "eval_js_in_webView"))
@@ -427,6 +427,12 @@ c-declare-end
 
 (define segm-ctrl-insert
   (c-lambda (int NSString*) void "segm_ctrl_insert"))
+
+(define segm-ctrl-remove
+  (c-lambda (int) void "segm_ctrl_remove"))
+
+(define segm-ctrl-remove-all
+  (c-lambda () void "segm_ctrl_remove_all"))
 
 (define set-pref
   (c-lambda (NSString* NSString*) void "set_pref"))
@@ -442,6 +448,17 @@ c-declare-end
 
 (define popup-alert
   (c-lambda (NSString* NSString* NSString* NSString*) void "popup_alert"))
+
+(define (setup-location-updates desired-accuracy #!optional (distance-filter 0.0))
+  ((c-lambda (double double) void "setup_location_updates") desired-accuracy distance-filter))
+
+(define (set-navigation-bar titles)
+  (segm-ctrl-remove-all)
+  (let loop ((i 0) (lst titles))
+    (if (pair? lst)
+        (begin
+          (segm-ctrl-insert i (car lst))
+          (loop (+ i 1) (cdr lst))))))
 
 ;; Scheme functions callable from C.
 
@@ -587,6 +604,11 @@ c-declare-end
     ;; ignore event
     #f))
 
+(define location-update-event-handler
+  (lambda (event)
+    ;; ignore event
+    #f))
+
 (receive (i o) (open-vector-pipe '(direction: input))
 
   (set! event-port o)
@@ -597,20 +619,32 @@ c-declare-end
       (let loop ()
         (let ((event (read i)))
           (if (not (eof-object? event))
-              (begin
-                (event-handler event)
+              (let ((x (has-prefix? event "location-update:")))
+                (if x
+                    (let ((location
+                           (with-exception-catcher
+                            (lambda (e)
+                              #f)
+                            (lambda ()
+                              (list->vector (with-input-from-string x read-all))))))
+                      (location-update-event-handler location))
+                    (event-handler event))
                 (loop)))))))))
 
 (define (set-event-handler proc)
   (set! event-handler (proc event-handler)))
 
+(define (set-location-update-event-handler proc)
+  (set! location-update-event-handler proc))
+
 (define (show-view view)
   (show-webView view))
 
-(define (set-view-content view content #!optional (enable-scaling #f) (mime-type "text/html"))
+(define (set-view-content view content #!optional (base-url-path #f) (enable-scaling #f) (mime-type "text/html"))
   (set-webView-content
    view
    (with-output-to-string "" (lambda () (print content)))
+   base-url-path
    enable-scaling
    mime-type))
 

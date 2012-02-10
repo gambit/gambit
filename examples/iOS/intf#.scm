@@ -80,6 +80,9 @@ get-pref
 set-pasteboard
 get-pasteboard
 popup-alert
+setup-location-updates
+
+set-navigation-bar
 
 send-input
 send-event
@@ -99,6 +102,7 @@ event-port
 event-handler
 
 set-event-handler
+set-location-update-event-handler
 show-view
 set-view-content
 set-page
