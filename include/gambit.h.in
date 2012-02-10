@@ -8,8 +8,8 @@
 #error "___VERSION has not been set by includer"
 #endif
 
-#if ___VERSION != 406003
-#include "gambit-not406003.h"
+#if ___VERSION != 406004
+#include "gambit-not406004.h"
 #else
 
 #ifndef ___GAMBIT_H
