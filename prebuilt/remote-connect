@@ -1,6 +1,6 @@
 #! /usr/bin/env gsi
 
-;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 ;; This program allows execution of commands on a remote host.  The
 ;; "remote host" may be a real computer or a VM running locally in
@@ -47,17 +47,18 @@
                 (if (and (equal? pw "") alias (>= (length alias) 4))
                     (cadddr alias)
                     pw))
-          (if (equal? password "")
+          (if (equal? password "?")
               (begin
                 (print "\nPassword for " username "@" hostname ": ")
                 (set! password (read-line))
-                (print "\n")
-                (if (equal? password "")
-                    (set! password #f))))
+                (print "\n")))
           (set! ssh-port
                 (if (and alias (>= (length alias) 5))
                     (car (cddddr alias))
                     22))))
+
+    (if (equal? password "")
+        (set! password #f))
 
     (end-vbox-vm vbox-vm)
     (if (not (start-vbox-vm vbox-vm))
@@ -73,9 +74,10 @@
 (define ssh-port #f)
 
 (define host-aliases
-  '(("macosx"  "Snow-Leopard-x86-VM1")
-    ("windows" "Windows-7-Ultimate-x86-VM1")
-    ("farm"    "frontal.iro.umontreal.ca" "gambit" "" 22)
+  '(("macosx"    "Snow-Leopard-x86-VM1")
+    ("windows"   "Windows-7-Ultimate-x86-VM1")
+    ("farm"      "frontal.iro.umontreal.ca" "gambit" "?" 22)
+    ("localhost" "localhost")
    ))
 
 ;; Name of the VM and username, password and port to connect to the VM

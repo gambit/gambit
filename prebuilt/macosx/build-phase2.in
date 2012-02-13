@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -51,7 +51,7 @@ install_gambc()
 {
   cd "$rootfromhere"
   make clean
-  make
+  make -j 2
   make install
 
   if [ "$RUN_TESTS" == "0" ] ; then

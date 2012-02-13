@@ -1,6 +1,6 @@
 # makefile for Gambit-C system.
 
-# Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -86,6 +86,11 @@ DISTFILES = $(RCFILES) $(GENDISTFILES)
 GITDISTFILES = $(GITRCFILES)
 HGDISTFILES = $(HGRCFILES)
 
+#BUILD_FARM = farm
+BUILD_FARM = localhost
+#BUILD_HOST = baro.iro.umontreal.ca
+BUILD_HOST = localhost
+
 .SUFFIXES:
 
 all:
@@ -110,7 +115,7 @@ examples: fake_target all
 	cd examples && $(MAKE) $(MDEFINES) $@
 
 prebuilt:  dist dist-devel
-	PATH="gsi:$$PATH" prebuilt/remote-connect farm "" "(define tmpdir \"gambtmp0\")(define gambc-dist \"$(PACKAGE_TARNAME)\")(define timeout 600)(ssh timeout (string-append \"rm -rf \" tmpdir \";mkdir \" tmpdir \";echo 'logged in on:';hostname\"))(scp-to timeout (string-append gambc-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"ssh baro.iro.umontreal.ca 'cd \" tmpdir \";tar zxf \" gambc-dist \".tgz;cd \" gambc-dist \";./configure;make -j 4;mv ../\" gambc-dist \".tgz .;cd prebuilt;make prebuilt'\"))(scp-from timeout (string-append tmpdir \"/\" gambc-dist \"/$(PACKAGE_TARNAME)-*\") \".\")"
+	PATH="gsi:$$PATH" prebuilt/remote-connect $(BUILD_FARM) "" "(define tmpdir \"gambtmp0\")(define gambc-dist \"$(PACKAGE_TARNAME)\")(define timeout 600)(ssh timeout (string-append \"rm -rf \" tmpdir \";mkdir \" tmpdir \";echo 'logged in on:';hostname\"))(scp-to timeout (string-append gambc-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"ssh $(BUILD_HOST) 'cd \" tmpdir \";tar zxf \" gambc-dist \".tgz;cd \" gambc-dist \";./configure;make -j 4;mv ../\" gambc-dist \".tgz .;cd prebuilt;make prebuilt'\"))(scp-from timeout (string-append tmpdir \"/\" gambc-dist \"/$(PACKAGE_TARNAME)-*\") \".\")"
 	@# cd prebuilt && $(MAKE) $(MDEFINES) $@
 
 stamp: fake_target
