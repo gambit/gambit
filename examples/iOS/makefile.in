@@ -72,6 +72,7 @@ wiki.scm "wiki\#.scm" repl-server.scm "repl-server\#.scm" \
 intf.scm "intf\#.scm" intf.h script.scm "script\#.scm" \
 repo.scm "repo\#.scm" help.scm "help\#.scm" program.scm \
 Prefix.pch main.m \
+grd.scm \
 AppDelegate.m AppDelegate.h ViewController.m ViewController.h \
 AccessoryView.xib MainWindow.xib ViewController.xib \
 Icon-72.png Icon-Small-50.png Icon-Small.png Icon-Small@2x.png Icon-512.png \
@@ -104,7 +105,7 @@ all-pre:
 
 all-post:
 
-examples: prepare-for-xcode
+examples: grd@exe@ prepare-for-xcode
 
 gambit-iOS:
 	@echo "*************************************************************"
@@ -151,6 +152,9 @@ xcodeproj:
 	gzip -9 GambitREPL.xcodeproj.tar
 	mv GambitREPL.xcodeproj.tar.gz GambitREPL.xcodeproj.tgz
 
+grd@exe@: grd.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -o grd@exe@ -exe grd.scm
+
 install-pre:
 
 install-post: all
@@ -162,7 +166,7 @@ uninstall-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m
+	rm -f digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m grd@exe@
 
 clean-pre: mostlyclean-pre
 
