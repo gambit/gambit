@@ -2,7 +2,7 @@
 
 ;;; File: "intf#.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -73,6 +73,7 @@ set-webView-content-from-file
 eval-js-in-webView
 
 open-URL
+set-idle-timer
 segm-ctrl-set-title
 segm-ctrl-insert
 set-pref

@@ -422,6 +422,9 @@ c-declare-end
 (define open-URL
   (c-lambda (NSString*) void "open_URL"))
 
+(define set-idle-timer
+  (c-lambda (bool) void "set_idle_timer"))
+
 (define segm-ctrl-set-title
   (c-lambda (int NSString*) void "segm_ctrl_set_title"))
 

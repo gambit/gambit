@@ -26,6 +26,7 @@ void set_webView_content(int view, NSString *str, NSString *base_url_path, BOOL 
 void set_webView_content_from_file(int view, NSString *path, NSString *base_url_path, BOOL enable_scaling, NSString *mime_type);
 NSString *eval_js_in_webView(int view, NSString *script);
 void open_URL(NSString *url);
+void set_idle_timer(BOOL enable);
 void segm_ctrl_set_title(int segment, NSString *title);
 void segm_ctrl_insert(int segment, NSString *title);
 void segm_ctrl_remove(int segment);

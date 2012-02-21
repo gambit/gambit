@@ -618,6 +618,10 @@ void open_URL(NSString *url) {
   [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
 }
 
+void set_idle_timer(BOOL enable) {
+
+  [UIApplication sharedApplication].idleTimerDisabled = !enable;
+}
 
 void segm_ctrl_set_title(int segment, NSString *title) {
 
