@@ -497,9 +497,10 @@
             (seconds (file-last-change-time filename)))
            (tr
             (make-tar-rec
-             (if (eq? type 'directory)
-                 (path-expand "" filename)
-                 filename)
+             (path-to-unix
+              (if (eq? type 'directory)
+                  (path-expand "" filename)
+                  filename))
              mode ;; mode
              0 ;; uid
              0 ;; gid
@@ -594,18 +595,35 @@
           (create-dir-recursive (path-directory d))
           (create-dir d)))))
 
-(define (delete-file-recursive filename)
-  (if (exists? filename)
-      (let ((type (file-type filename)))
-        (if (eq? type 'directory)
-            (let ((files
-                   (directory-files
-                    (list path: filename
-                          ignore-hidden: 'dot-and-dot-dot))))
-              (parameterize ((current-directory filename))
-                (for-each delete-file-recursive files))
-              (delete-directory filename))
-            (delete-file filename)))))
+(define (delete-file-recursive path)
+  (let ((path2 (path-expand path)))
+    (if (exists? path2)
+        (let ((type (file-type path2)))
+          (if (eq? type 'directory)
+              (let ((files
+                     (directory-files
+                      (list path: path2
+                            ignore-hidden: 'dot-and-dot-dot))))
+                (parameterize ((current-directory path2))
+                              (for-each delete-file-recursive files))
+                (delete-directory path2))
+              (delete-file path2))))))
+
+(define (path-to-unix path)
+
+  (define (p2u path parts)
+    (let* ((f (path-strip-directory path))
+           (x (cons f parts))
+           (d (path-directory path)))
+      (if (string=? d "")
+          x
+          (let ((y (cons "/" x))
+                (p (path-strip-trailing-directory-separator d)))
+            (if (string=? p "")
+                y
+                (p2u p y))))))
+
+  (append-strings (p2u (path-strip-volume path) '())))
 
 ;;;----------------------------------------------------------------------------
 

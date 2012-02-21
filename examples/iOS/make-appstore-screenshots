@@ -25,10 +25,20 @@ for f in IMG_[0-9][0-9][0-9][0-9].PNG ; do
      480x320) geom="480x300+0+20"
               ;;
 
+     640x960) geom="640x920+0+40"
+              ;;
+
+     960x640) geom="960x600+0+40"
+              ;;
+
     768x1024) geom="768x1004+0+20"
               ;;
 
     1024x768) geom="1024x748+0+20"
+              ;;
+
+           *) echo "unsupported resolution $res"
+              exit 1
               ;;
 
   esac

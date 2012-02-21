@@ -2,7 +2,7 @@
 
 ;;; File: "repl-server.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -88,8 +88,19 @@
               (loop))))))
 
   (let ((tgroup (make-thread-group 'repl-pump #f)))
-    (thread-start! (make-thread process-input #f tgroup))
-    (thread-start! (make-thread process-output #f tgroup))))
+
+    (define (start thunk)
+      (thread-start! (make-thread
+                      (lambda ()
+                        (with-exception-catcher
+                         (lambda (e)
+                           #f)
+                         thunk))
+                      #f
+                      tgroup)))
+
+    (start process-input)
+    (start process-output)))
 
 (define (make-ide-repl-ports ide-repl-connection tgroup)
   (receive (in-rd-port in-wr-port) (open-string-pipe '(direction: input permanent-close: #f))
