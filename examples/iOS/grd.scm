@@ -11,44 +11,8 @@
 ;; REPL server with the command:
 ;;
 ;;  (repl-server #f)
-;;
-
-(define usage #<<EOF
-This program implements several commands:
-
- grd scan                     list the Gambit REPL apps on the LAN
- grd pwd                      get current directory
- grd cd <remote_dir>          change current directory
- grd ls [<remote_dir>]        list files in directory
- grd mkdir <remote_dir>       create directory
- grd rm <remote_file>         remove file or dir
- grd eval <expr>              evaluate expression
- grd load <remote_file>       load file
- grd push <local_file>        copy local file or dir to iOS device
- grd pull <remote_file>       copy remote file or dir locally
- grd add-script <local_file>  add a script to iOS device
-
-A specific "Gambit REPL dev" can be chosen by doing a "scan" or by
-using the option "-addr host:port".  For example:
-
- % ./grd scan
- 192.168.0.100:7000 mega.local
- 192.168.0.101:7000 My-iPhone
- % ./grd eval "(host-name)"
- "My-iPhone"
- % ./grd -addr 192.168.0.100:7000 eval "(host-name)"
- "mega.local"
- % ./grd eval "(host-name)"
- "mega.local"
-
-EOF
-)
 
 ;;;============================================================================
-
-(define REPL-server-port-num 7000)
-
-;;-----------------------------------------------------------------------------
 
 (##include "digest.scm")
 (##include "genport.scm")
@@ -71,7 +35,45 @@ EOF
   (extended-bindings)
   (block)
   (generic)
-  (not safe)
+  (safe)
+)
+
+;;-----------------------------------------------------------------------------
+
+(define REPL-server-port-num 7000)
+
+;;-----------------------------------------------------------------------------
+
+(define usage #<<EOF
+This program implements several commands:
+
+ grd scan                        list the Gambit REPL apps on the LAN
+ grd pwd                         get current directory
+ grd cd <remote_dir>             change current directory
+ grd ls [<remote_dir>]           list files in directory
+ grd mkdir <remote_dir>          create directory
+ grd rm <remote_file>            remove file or dir
+ grd mv <rem_file1> <rem_file2>  remove file or dir
+ grd eval <expr>                 evaluate expression
+ grd load <remote_file>          load file
+ grd push <local_file>           copy local file or dir to iOS device
+ grd pull <remote_file>          copy remote file or dir locally
+ grd add-script <local_file>     add a script to iOS device
+
+A specific "Gambit REPL dev" can be chosen by doing a "scan" or by
+using the option "-addr host:port".  For example:
+
+ % ./grd scan
+ 192.168.0.100:7000 mega.local
+ 192.168.0.101:7000 My-iPhone
+ % ./grd eval "(host-name)"
+ "My-iPhone"
+ % ./grd -addr 192.168.0.100:7000 eval "(host-name)"
+ "mega.local"
+ % ./grd eval "(host-name)"
+ "mega.local"
+
+EOF
 )
 
 ;;-----------------------------------------------------------------------------
@@ -191,15 +193,17 @@ EOF
 
 (define (self-local-ip)
 
-  ;; (self-local-ip) => #u8(192 168 0 101)
+  ;; (self-local-ip) => #u8(192 168 0 100)
 
   (let* ((port (open-tcp-client
                 (list server-address: '#u8(73 125 226 48) ;; google.com
-                      port-number: 80)))
+                      port-number: 443)))
+         (_ (thread-sleep! 2))
          (ip (socket-info-address
               (tcp-client-self-socket-info port))))
     (close-port port)
-    ip))
+    (or ip
+        '#u8(192 168 0 100)))) ;; sometimes ip=#f on Windows
 
 ;;-----------------------------------------------------------------------------
 
@@ -267,8 +271,8 @@ EOF
              (number->string port-num)))))
 
 (define (discover-local-REPL-servers ip port-num found)
-  (let* ((nm #xffffff00)
-         (throttle (make-throttle 100)))
+  (let* ((nm #xfffffe00)
+         (throttle (make-throttle 50)))
     (pfor 0
           (- #xffffffff nm)
           (lambda (i)
@@ -322,6 +326,9 @@ EOF
 
 (define (grd-rm path #!key (addr (default-addr)))
   (remote-eval addr `(tar#delete-file-recursive ,path)))
+
+(define (grd-mv path1 path2 #!key (addr (default-addr)))
+  (remote-eval addr `(rename-file ,path1 ,path2)))
 
 (define (grd-eval expr #!key (addr (default-addr)))
   (remote-eval addr expr))
@@ -378,6 +385,12 @@ EOF
                  (save-default-addr addr)
                  (loop (cddr args)))
 
+                ((equal? op "-load")
+                 (if (not (pair? (cdr args)))
+                     (error "filename expected"))
+                 (load (cadr args))
+                 (loop (cddr args)))
+
                 ((equal? op "scan")
                  (scan-local-REPL-servers))
 
@@ -424,6 +437,17 @@ EOF
                          (grd-rm path addr: addr)
                          (grd-rm path))))
                   (cdr args)))
+
+                ((equal? op "mv")
+                 (if (or (not (pair? (cdr args)))
+                         (not (pair? (cddr args))))
+                     (error "paths expected"))
+                 (let ((path1 (cadr args))
+                       (path2 (caddr args)))
+                   (println
+                    (if addr
+                        (grd-mv path1 path2 addr: addr)
+                        (grd-mv path1 path2)))))
 
                 ((equal? op "eval")
                  (for-each
