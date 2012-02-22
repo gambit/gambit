@@ -15,7 +15,7 @@
 
 @implementation ViewController
 
-@synthesize segmCtrl, webView0, webView1, webView2, webView3, textView0, textView1, imageView0, imageView1, cancelButton, accessoryView, keyboardSounds, timer, queuedActions, locationManager;
+@synthesize segmCtrl, webView0, webView1, webView2, webView3, textView0, textView1, imageView0, imageView1, cancelButton, accessoryView, toolbar, keyboardSounds, timer, queuedActions, locationManager;
 
 //-----------------------------------------------------------------------------
 
@@ -180,6 +180,7 @@ static ViewController *theViewController = nil;
   cancelButton = nil;
 
   accessoryView = nil;
+  toolbar = nil;
 
   theViewController = nil;
 
@@ -613,14 +614,26 @@ NSString *eval_js_in_webView(int view, NSString *script) {
   return nil;
 }
 
+
 void open_URL(NSString *url) {
 
   [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
 }
 
+
 void set_idle_timer(BOOL enable) {
 
   [UIApplication sharedApplication].idleTimerDisabled = !enable;
+}
+
+
+void set_toolbar_alpha(double alpha) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      [vc->toolbar setAlpha: alpha];
+    }
 }
 
 void segm_ctrl_set_title(int segment, NSString *title) {

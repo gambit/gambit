@@ -425,6 +425,9 @@ c-declare-end
 (define set-idle-timer
   (c-lambda (bool) void "set_idle_timer"))
 
+(define set-toolbar-alpha
+  (c-lambda (double) void "set_toolbar_alpha"))
+
 (define segm-ctrl-set-title
   (c-lambda (int NSString*) void "segm_ctrl_set_title"))
 

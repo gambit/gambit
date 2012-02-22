@@ -74,6 +74,7 @@ eval-js-in-webView
 
 open-URL
 set-idle-timer
+set-toolbar-alpha
 segm-ctrl-set-title
 segm-ctrl-insert
 set-pref

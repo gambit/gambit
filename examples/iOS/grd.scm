@@ -54,6 +54,7 @@ This program implements several commands:
  grd mkdir <remote_dir>          create directory
  grd rm <remote_file>            remove file or dir
  grd mv <rem_file1> <rem_file2>  remove file or dir
+ grd cat <remote_file>           show content of file
  grd eval <expr>                 evaluate expression
  grd load <remote_file>          load file
  grd push <local_file>           copy local file or dir to iOS device
@@ -315,11 +316,16 @@ EOF
 (define (grd-pwd #!key (addr (default-addr)))
   (remote-eval addr `(current-directory)))
 
-(define (grd-cd path #!key (addr (default-addr)))
+(define (grd-cd #!optional (path "~") #!key (addr (default-addr)))
   (remote-eval addr `(current-directory ,path)))
 
-(define (grd-ls path #!key (addr (default-addr)))
-  (remote-eval addr `(directory-files ,path)))
+(define (grd-ls #!optional (path ".") #!key (addr (default-addr)))
+  (remote-eval addr `(parameterize ((current-directory ,path))
+                       (map (lambda (f)
+                              (if (eq? (file-type f) 'directory)
+                                  (string-append f "/")
+                                  f))
+                            (directory-files)))))
 
 (define (grd-mkdir path #!key (addr (default-addr)))
   (remote-eval addr `(tar#create-dir ,path)))
@@ -329,6 +335,9 @@ EOF
 
 (define (grd-mv path1 path2 #!key (addr (default-addr)))
   (remote-eval addr `(rename-file ,path1 ,path2)))
+
+(define (grd-cat path #!key (addr (default-addr)))
+  (remote-eval addr `(call-with-input-file ,path (lambda (port) (read-line port #f)))))
 
 (define (grd-eval expr #!key (addr (default-addr)))
   (remote-eval addr expr))
@@ -391,6 +400,9 @@ EOF
                  (load (cadr args))
                  (loop (cddr args)))
 
+                ((equal? op "-repl")
+                 (##repl-debug-main))
+
                 ((equal? op "scan")
                  (scan-local-REPL-servers))
 
@@ -448,6 +460,15 @@ EOF
                     (if addr
                         (grd-mv path1 path2 addr: addr)
                         (grd-mv path1 path2)))))
+
+                ((equal? op "cat")
+                 (for-each
+                  (lambda (path)
+                    (println
+                     (if addr
+                         (grd-cat path addr: addr)
+                         (grd-cat path))))
+                  (cdr args)))
 
                 ((equal? op "eval")
                  (for-each
