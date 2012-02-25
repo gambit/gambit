@@ -73,6 +73,8 @@ set-webView-content-from-file
 eval-js-in-webView
 
 open-URL
+send-SMS
+pick-image
 set-idle-timer
 set-toolbar-alpha
 segm-ctrl-set-title

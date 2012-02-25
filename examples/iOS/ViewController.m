@@ -621,6 +621,88 @@ void open_URL(NSString *url) {
 }
 
 
+BOOL send_SMS(NSString *recipient, NSString *message) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      if ([MFMessageComposeViewController canSendText])
+        {
+          MFMessageComposeViewController *controller = [[[MFMessageComposeViewController alloc] init] autorelease];
+
+          controller.body = message;
+          controller.recipients = [NSArray arrayWithObjects:recipient,nil];
+          controller.messageComposeDelegate = vc;
+          [vc presentModalViewController:controller animated:YES];
+
+          return YES;
+        }
+    }
+
+  return NO;
+}
+
+
+- (void)messageComposeViewController:(MFMessageComposeViewController *)controller didFinishWithResult:(MessageComposeResult)result
+{
+  NSString *event;
+
+  [self dismissModalViewControllerAnimated:YES];
+
+  switch (result) {
+
+  default:
+  case MessageComposeResultFailed:
+    event = @"SMS-failed";
+    break;
+
+  case MessageComposeResultCancelled:
+    event = @"SMS-cancelled";
+    break;
+
+  case MessageComposeResultSent:
+    event = @"SMS-sent";
+    break;
+  }
+
+  [self send_event:event];
+}
+
+
+BOOL pick_image() {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      if ([UIImagePickerController isCameraDeviceAvailable: UIImagePickerControllerCameraDeviceRear] ||
+          [UIImagePickerController isCameraDeviceAvailable: UIImagePickerControllerCameraDeviceFront])
+        {
+          UIImagePickerController *controller = [[[UIImagePickerController alloc] init] autorelease];
+
+          controller.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType: UIImagePickerControllerSourceTypeCamera];
+
+          controller.sourceType = UIImagePickerControllerSourceTypeCamera;
+
+          controller.delegate = vc;
+
+          [vc presentModalViewController:controller animated:YES];
+
+          return YES;
+        }
+    }
+
+  return NO;
+}
+
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+  [picker dismissModalViewControllerAnimated:YES];
+
+  [self send_event:@"pick-image:"];
+}
+
+
 void set_idle_timer(BOOL enable) {
 
   [UIApplication sharedApplication].idleTimerDisabled = !enable;

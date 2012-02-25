@@ -199,7 +199,6 @@ EOF
   (let* ((port (open-tcp-client
                 (list server-address: '#u8(73 125 226 48) ;; google.com
                       port-number: 443)))
-         (_ (thread-sleep! 2))
          (ip (socket-info-address
               (tcp-client-self-socket-info port))))
     (close-port port)
@@ -217,7 +216,7 @@ EOF
     (and port
          (try-catch
           (begin
-            (input-port-timeout-set! port 2.0)
+            (input-port-timeout-set! port 1.0)
             (let ((header (read port)))
               (input-port-timeout-set! port +inf.0)
               (if (equal? header 'Gambit)
@@ -288,7 +287,7 @@ EOF
   (let ((conn (REPL-server-connect addr)))
     (if conn
         (found conn))
-    (sleep 0.5)))
+    (sleep 1.0)))
 
 (define (scan-local-REPL-servers)
   (discover-local-REPL-servers

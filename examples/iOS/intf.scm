@@ -422,6 +422,12 @@ c-declare-end
 (define open-URL
   (c-lambda (NSString*) void "open_URL"))
 
+(define send-SMS
+  (c-lambda (NSString* NSString*) bool "send_SMS"))
+
+(define pick-image
+  (c-lambda () bool "pick_image"))
+
 (define set-idle-timer
   (c-lambda (bool) void "set_idle_timer"))
 

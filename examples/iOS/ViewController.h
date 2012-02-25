@@ -7,6 +7,7 @@
 
 #import <UIKit/UIKit.h>
 #import <CoreLocation/CoreLocation.h>
+#import <MessageUI/MessageUI.h>
 
 
 // ViewController methods callable from Scheme.
@@ -26,6 +27,8 @@ void set_webView_content(int view, NSString *str, NSString *base_url_path, BOOL 
 void set_webView_content_from_file(int view, NSString *path, NSString *base_url_path, BOOL enable_scaling, NSString *mime_type);
 NSString *eval_js_in_webView(int view, NSString *script);
 void open_URL(NSString *url);
+BOOL send_SMS(NSString *recipient, NSString *messsage);
+BOOL pick_image();
 void set_idle_timer(BOOL enable);
 void set_toolbar_alpha(double alpha);
 void segm_ctrl_set_title(int segment, NSString *title);
@@ -44,7 +47,7 @@ void setup_location_updates(double desired_accuracy, double distance_filter);
 #define NB_TEXTVIEWS  2
 #define NB_IMAGEVIEWS 2
 
-@interface ViewController : UIViewController <UITextViewDelegate,UIWebViewDelegate,UIAlertViewDelegate,CLLocationManagerDelegate> {
+@interface ViewController : UIViewController <UITextViewDelegate,UIWebViewDelegate,UIAlertViewDelegate,CLLocationManagerDelegate,MFMessageComposeViewControllerDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate> {
 
   UISegmentedControl *segmCtrl;
   UIWebView *webViews[NB_WEBVIEWS];
