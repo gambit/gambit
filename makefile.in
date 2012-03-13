@@ -139,7 +139,7 @@ status: fake_target
 
 push: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
-	  $(GIT) push ssh://gambit@frontal07.iro.umontreal.ca/~/HTML/repo/gambit.git/; \
+	  $(GIT) push git@github.com:feeley/Gambit.git; \
 	else \
 	  $(HG) push; \
 	fi
@@ -305,7 +305,7 @@ rc-setup-pre:
 	  echo '	ignorecase = true' >> .git/config; \
 	  echo '	autocrlf = false' >> .git/config; \
 	  echo '[remote "origin"]' >> .git/config; \
-	  echo '	url = ssh://gambit@frontal07.iro.umontreal.ca/~/HTML/repo/gambit.git' >> .git/config; \
+	  echo '	url = git@github.com:feeley/Gambit.git' >> .git/config; \
 	  echo '	fetch = +refs/heads/*:refs/remotes/origin/*' >> .git/config; \
 	  echo '[branch "master"]' >> .git/config; \
 	  echo '	remote = origin' >> .git/config; \
