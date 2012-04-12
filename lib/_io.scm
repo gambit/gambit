@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -9465,9 +9465,9 @@
      #f)
     (else
      (cond ((##eq? obj #t)
-            (##wr-str we "#t"))
+            (##wr-str we "#t")) ;; TODO: change to "#T" eventually
            ((##eq? obj #f)
-            (##wr-str we "#f"))
+            (##wr-str we "#f")) ;; TODO: change to "#F" eventually
            ((##eq? obj '())
             (case (macro-writeenv-style we)
               ((print)
@@ -10853,9 +10853,11 @@
                   (macro-readenv-filepos-set! re old-pos) ;; restore pos
                   (##read-datum-or-label-or-none-or-dot re))))) ;; skip error
 
-          (cond ((##read-string=? re s "#f")
+          (cond ((or ;;(##read-string=? re s "#f")
+                     (string-ci=? s "#F"))
                  (macro-readenv-wrap re (false-obj)))
-                ((##read-string=? re s "#t")
+                ((or ;;(##read-string=? re s "#t")
+                     (string-ci=? s "#T"))
                  (macro-readenv-wrap re #t))
                 ((##read-string=? re s "#s8")
                  (build-vect re 's8vector))
