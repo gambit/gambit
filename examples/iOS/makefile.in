@@ -1,4 +1,4 @@
-# makefile for iOS example
+# makefile for iOS example.
 
 # Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
@@ -163,6 +163,14 @@ uninstall-pre:
 
 uninstall-post:
 
+select-gen-for-commit-pre:
+
+select-gen-for-commit-post:
+
+deselect-gen-for-commit-pre:
+
+deselect-gen-for-commit-post:
+
 mostlyclean-pre:
 
 mostlyclean-post:
@@ -203,7 +211,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -229,6 +237,18 @@ uninstall: uninstall-post
 uninstall-post: uninstall-recursive
 
 uninstall-recursive: uninstall-pre
+
+select-gen-for-commit: select-gen-for-commit-post
+
+select-gen-for-commit-post: select-gen-for-commit-recursive
+
+select-gen-for-commit-recursive: select-gen-for-commit-pre
+
+deselect-gen-for-commit: deselect-gen-for-commit-post
+
+deselect-gen-for-commit-post: deselect-gen-for-commit-recursive
+
+deselect-gen-for-commit-recursive: deselect-gen-for-commit-pre
 
 mostlyclean: mostlyclean-post
 

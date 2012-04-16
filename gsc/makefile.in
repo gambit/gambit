@@ -194,13 +194,13 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	@MAKE_LIBRARY@
 
 _$(GAMBCGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambc.c
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambc -o $@ $(LIBRARY_MODULES_C)
+	@SETDLPATH@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambc -o $@ $(LIBRARY_MODULES_C)
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
 _gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBCGSCLIB).c
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l _$(GAMBCGSCLIB) -o $@ $(EXECUTABLE_MODULES_C)
+	@SETDLPATH@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l _$(GAMBCGSCLIB) -o $@ $(EXECUTABLE_MODULES_C)
 
 _gsc@obj@: _gsc.c
 	@BUILD_OBJ@
@@ -212,7 +212,7 @@ _gsc_@obj@: _gsc_.c
 	@BUILD_OBJ@ -D___LIBRARY
 
 .scm.c:
-	@SETDLPATH@ $(rootfromhere)/gsc-comp -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
 
 _gsc.c: $(srcdirpfx)$(rootfromhere)/gsi/main.scm
 
@@ -299,6 +299,16 @@ uninstall-post:
 	  rmdir $$i_bindir 2> /dev/null; \
 	fi
 
+select-gen-for-commit-pre:
+
+select-gen-for-commit-post:
+	$(RC) update-index --no-assume-unchanged $(GENDISTFILES)
+
+deselect-gen-for-commit-pre:
+
+deselect-gen-for-commit-post:
+	$(RC) update-index --assume-unchanged $(GENDISTFILES)
+
 mostlyclean-pre:
 
 mostlyclean-post:
@@ -316,7 +326,7 @@ distclean-post: clean-post
 bootclean-pre: distclean-pre
 
 bootclean-post: distclean-post
-	rm -f $(MODULES_C) _$(GAMBCGSCLIB).c _gsc_.c
+	rm -f $(GENDISTFILES)
 
 realclean-pre: bootclean-pre
 
@@ -324,7 +334,7 @@ realclean-post: bootclean-post
 	rm -f makefile
 
 rc-setup-pre:
-	$(RC) add $(RCFILES)
+	$(RC) add $(RCFILES) $(GENDISTFILES)
 
 rc-setup-post:
 
@@ -340,7 +350,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -366,6 +376,18 @@ uninstall: uninstall-post
 uninstall-post: uninstall-recursive
 
 uninstall-recursive: uninstall-pre
+
+select-gen-for-commit: select-gen-for-commit-post
+
+select-gen-for-commit-post: select-gen-for-commit-recursive
+
+select-gen-for-commit-recursive: select-gen-for-commit-pre
+
+deselect-gen-for-commit: deselect-gen-for-commit-post
+
+deselect-gen-for-commit-post: deselect-gen-for-commit-recursive
+
+deselect-gen-for-commit-recursive: deselect-gen-for-commit-pre
 
 mostlyclean: mostlyclean-post
 

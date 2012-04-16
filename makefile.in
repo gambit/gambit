@@ -74,7 +74,7 @@ SUBDIRS = include lib gsi gsc bin misc doc tests examples prebuilt
 
 RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
 makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
-relpath
+relpath gsc-boot.c
 
 GITRCFILES = .gitignore .gitattributes
 HGRCFILES = .hgignore .hgtags
@@ -93,12 +93,14 @@ BUILD_HOST = localhost
 
 .SUFFIXES:
 
-all:
+all: gsc-boot@exe@
 
 all-pre:
 
 all-post:
-	test -f "gsc-comp@exe@" || cp gsc/gsc@exe@ gsc-comp@exe@
+
+gsc-boot@exe@: gsc-boot.c
+	@C_COMPILER@ -o gsc-boot@exe@ gsc-boot.c
 
 fake_target:
 
@@ -106,7 +108,7 @@ doc info pdf html txt: fake_target
 	cd doc && $(MAKE) $(MDEFINES) $@
 
 bootstrap: fake_target all
-	cp gsc/gsc@exe@ gsc-comp@exe@
+	cp gsc/gsc@exe@ gsc-boot@exe@
 
 check: fake_target all
 	cd tests && $(MAKE) $(MDEFINES) $@
@@ -121,7 +123,7 @@ prebuilt:  dist dist-devel
 stamp: fake_target
 	cd include && $(MAKE) $(MDEFINES) $@
 
-commit: fake_target stamp
+commit: stamp deselect-gen-for-commit
 	@if test "$(RC)" = "$(GIT)"; then \
 	  $(GIT) commit -a; \
 	else \
@@ -195,7 +197,7 @@ new-revision: fake_target
 	next_version=v$$major.$$minor.$$next_revision; \
 	$(MAKE) NEW_VERSION=$$next_version change-version
 
-change-version: fake_target
+change-version: deselect-gen-for-commit
 	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
@@ -217,7 +219,7 @@ change-version: fake_target
 	    misc/changev $$version_num $$new_version_num; \
 	    touch doc/gambit-c.txi; \
 	    cd tests; @SETDLPATH@ ../gsc/gsc -:~~bin=../bin,~~lib=../lib,~~include=../include -f -c mix.scm; mv mix.c test5.ok; cd ..; \
-	    if $(MAKE) bootclean && $(MAKE) -j 2 && $(MAKE) check && $(MAKE) doc; then \
+	    if $(MAKE) bootclean && $(MAKE) -j 2 && $(MAKE) check && $(MAKE) doc && $(MAKE) select-gen-for-commit; then \
 	      if test "$(RC)" = "$(GIT)"; then \
 	        $(GIT) commit -a -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
 	      else \
@@ -270,6 +272,14 @@ uninstall-post:
 	     rmdir $(PACKAGE_VERSION)); \
 	  fi; \
 	fi
+
+select-gen-for-commit-pre:
+
+select-gen-for-commit-post:
+
+deselect-gen-for-commit-pre:
+
+deselect-gen-for-commit-post:
 
 mostlyclean-pre:
 
@@ -380,7 +390,7 @@ dist-devel-post:
 	mv $(PACKAGE_TARNAME)-devel.tar.gz $(PACKAGE_TARNAME)-devel.tgz
 	rm -rf $(PACKAGE_TARNAME)-devel
 
-all-recursive install-recursive uninstall-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@for subdir in $(SUBDIRS); do \
 	  target=`echo $@ | sed 's/-recursive//'`; \
 	  echo making $$target in $$subdir; \
@@ -404,6 +414,18 @@ uninstall: uninstall-post
 uninstall-post: uninstall-recursive
 
 uninstall-recursive: uninstall-pre
+
+select-gen-for-commit: select-gen-for-commit-post
+
+select-gen-for-commit-post: select-gen-for-commit-recursive
+
+select-gen-for-commit-recursive: select-gen-for-commit-pre
+
+deselect-gen-for-commit: deselect-gen-for-commit-post
+
+deselect-gen-for-commit-post: deselect-gen-for-commit-recursive
+
+deselect-gen-for-commit-recursive: deselect-gen-for-commit-pre
 
 mostlyclean: mostlyclean-post
 
