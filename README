@@ -1,14 +1,28 @@
                       README file for Gambit-C
                       ========================
 
-              [Time-stamp: <2007-09-12 11:54:59 feeley>]
+Quick-install instructions for a typical installation
+-----------------------------------------------------
 
-This directory contains a release of the Gambit-C Scheme programming
-system (see the file configure.ac for the version number).  Gambit-C
-includes a Scheme interpreter and a Scheme compiler which can be used
-to build standalone executables.  Because the compiler generates
-portable C code it is fairly easy to port to any platform with a
-decent C compiler.
+  git clone https://github.com/feeley/gambit.git
+  cd gambit
+  ./configure --enable-single-host
+  make bootstrap
+  make bootclean
+  make
+  make check
+  sudo make install
+
+Detailed installation instructions are given in the file "INSTALL.txt".
+
+
+General information
+-------------------
+
+Gambit-C includes a Scheme interpreter and a Scheme compiler which can
+be used to build standalone executables.  Because the compiler
+generates portable C code it is fairly easy to port to any platform
+with a decent C compiler.
 
 The Gambit-C system conforms to the R4RS, R5RS and IEEE Scheme standards.
 The full numeric tower is implemented, including: infinite precision
@@ -18,7 +32,7 @@ standards including:
 
  - an optimizing compiler
    - with several powerful transformations (automatic function inlining,
-     partial evaluation, etc)
+     speculative inlining of primitives, partial evaluation, etc)
    - that generates properly tail-recursive portable C code
  - a scalable thread system that can handle millions of concurrent threads
  - an I/O system fully integrated with the thread system that supports
@@ -70,13 +84,10 @@ The user manual for the Gambit-C system is available in PDF format
 "doc/gambit-c.html"), in text format (the file "doc/gambit-c.txt") and
 in "info" format (the files "doc/gambit-c.info*").
 
-Installation instructions are given in the file "INSTALL.txt".
-
-If you have any questions concerning Gambit-C please address them to:
-
-  gambit@iro.umontreal.ca
+The Gambit mailing list (gambit-list@iro.umontreal.ca) is a good
+place to ask questions about Gambit.
 
 The latest official release of the system and other helpful documents
-related to Gambit can be obtained from the Gambit web page at:
+related to Gambit can be obtained from the Gambit wiki at:
 
-  http://www.iro.umontreal.ca/~gambit
+  http://gambit.iro.umontreal.ca

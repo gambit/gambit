@@ -1,8 +1,6 @@
                 Installation instructions for Gambit-C
                 ======================================
 
-              [Time-stamp: <2009-06-09 17:32:05 feeley>]
-
 
 This directory contains a release of the Gambit-C Scheme programming
 system (see the file configure.ac for the version number).  Gambit-C
@@ -11,8 +9,49 @@ to build standalone executables.  Because the compiler generates
 portable C code it is fairly easy to port to any platform with a
 decent C compiler.
 
+1) Obtaining the Gambit source code
+===================================
 
-1) Quick-install instructions
+The Gambit source code can be obtained in different ways.
+
+ - You can get the most recent version of the sources directly from
+   the Gambit repository on github:
+
+     % git clone https://github.com/feeley/gambit.git
+     % cd gambit
+
+   Note that the source code obtained may contain some stale .c files.
+   Up to date files can be obtained after the system is built using
+   the commands "make bootstrap; make bootclean; make".  The last
+   "make" uses the Gambit compiler to generate up to date .c files.
+
+ - You can get a specific release, preferably the latest, in the form
+   of a compressed tar ball (.tgz extension).  The simplest is to use
+   a browser to visit the Gambit wiki (http://gambit.iro.umontreal.ca)
+   and click on "Development Sources" to download the compressed tar
+   ball.  Alternatively, use wget or curl from the command line,
+   for example:
+
+     % wget http://www.iro.umontreal.ca/~gambit/download/gambit/v4.6/source/gambc-v4_6_5-devel.tgz
+     % tar zxf gambc-v4_6_5-devel.tgz
+     % mv gambc-v4_6_5-devel gambit
+     % cd gambit
+
+   Note that releases come in two flavors.  The "developer" release,
+   which has a "-devel" suffix in its name, contains the complete git
+   history.  It is a snapshot of the Gambit repository at a particular
+   point in time.  The "plain" release, without the "-devel" suffix in
+   its name, does not contain the git history and is much more compact
+   than the developer release.
+
+Obtaining a version of the sources with the git history is required if
+you intend to contribute changes to the Gambit repository.  In that
+case you will need a github account.  Please send a message with your
+github user name to gambit@iro.umontreal.ca to request write
+permissions.
+
+
+2) Quick-install instructions
 =============================
 
 On most Unix platforms the system can be easily built, tested and
@@ -78,7 +117,7 @@ it is recommended to use these options:
   % ./configure --enable-single-host --enable-multiple-versions
 
 
-2) Other options of the "configure" script
+3) Other options of the "configure" script
 ==========================================
 
 The detailed list of options accepted by the "configure" script can be
@@ -93,13 +132,13 @@ directory with the option --prefix:
   % ./configure --prefix=/Users/feeley/my-gambit
   % make install
   % ~/my-gambit/bin/gsi
-  Gambit v4.4.0
+  Gambit v4.6.5
   ...
 
 If the --prefix option is not used, the default is to install all
 files in /usr/local/Gambit-C and its subdirectories, namely "bin",
 "lib", "include", etc.  The files that would normally go in these
-subdirectories can be redirected to other directories using one of
+subdirectories can be redirected to other directories using
 the following configure options:
 
   --bindir=DIR            executables (gsi, gsc, ...)
@@ -248,19 +287,16 @@ the name of the C compiler in CC.  Here are some examples.
       % ./configure CFLAGS="-D___FORCE_MAX_HEAP=5000"
 
 
-3) Other "make" targets
+4) Other "make" targets
 =======================
 
 Here is a description of the most useful "make" targets:
 
   % make bootstrap           Builds the system and copies the gsc
-                             executable to gsc-comp in the root directory.
-                             The makefiles call up gsc-comp to
+                             executable to gsc-boot in the root directory.
+                             The makefiles call up gsc-boot to
                              compile the Scheme source files
                              in the system if they are modified.
-                             Note that a simple "make" will also
-                             copy the gsc executable to gsc-comp if
-                             it does not exist.
 
   % make mostlyclean         Removes all the files that can be
                              regenerated using basic tools
@@ -273,13 +309,13 @@ Here is a description of the most useful "make" targets:
                              gsi, gsc, etc).
 
   % make bootclean           Like "make clean", but also removes the
-                             C files that the gsc-comp compiler can
+                             C files that the gsc-boot compiler can
                              create from the Scheme source files.  This
                              should only be used after a successful
                              "make bootstrap".  The next "make" will
                              compile the whole system from scratch,
                              including compiling the Scheme sources
-                             to C.
+                             to C, using gsc-boot.
 
   % make realclean           Like "make bootclean", but also removes all
                              the files which can be created using the
@@ -305,18 +341,28 @@ Here is a description of the most useful "make" targets:
                              management using git.  This should
                              only be performed by the Gambit maintainers.
 
-  % make prebuilt            Builds installers for Mac OS X and Windows.
-                             Note: this make target is very platform
-                             specific and is intended for the Gambit
-                             maintainers.
+  % make new-revision        Changes the version number of the system,
+  % make new-minor           by incrementing either the revision number,
+  % make new-major           the minor number or the major number.
+                             This should only be performed by the
+                             Gambit maintainers after thorough testing.
 
   % make release             Builds source tarball and installers.
+                             This is normally done after changing
+                             the version number of the system.
+                             Note: this make target is very platform
+                             specific and is intended for the Gambit
+                             maintainers.
+
+  % make prebuilt            Builds installers for Mac OS X and Windows.
+                             This is normally done after changing
+                             the version number of the system.
                              Note: this make target is very platform
                              specific and is intended for the Gambit
                              maintainers.
 
 
-4) Building on Microsoft Windows
+5) Building on Microsoft Windows
 ================================
 
 There are several alternatives for building the system on Microsoft
@@ -347,7 +393,7 @@ Windows:
      "Build Solution" (Ctrl+Shift+B).
 
 
-5) If you can't build the system on your platform
+6) If you can't build the system on your platform
 =================================================
 
 The configure script tailors the build process to your platform.
