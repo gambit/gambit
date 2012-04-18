@@ -1613,6 +1613,7 @@ if test "$ENABLE_SHARED" = yes; then
              LIB_EXTENSION=".so"
              SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LD_LIBRARY_PATH}"
              SETDLPATHBOOT="LD_LIBRARY_PATH=\$(rootfromhere):\${LD_LIBRARY_PATH}"
+             FLAGS_LIB="$FLAGS_LIB -Wl,-soname,\$(LIBRARY)"
              ;;
   esac
 
