@@ -107,9 +107,6 @@ fake_target:
 doc info pdf html txt: fake_target
 	cd doc && $(MAKE) $(MDEFINES) $@
 
-bootstrap: fake_target all
-	cp gsc/gsc@exe@ gsc-boot@exe@
-
 check: fake_target all
 	cd tests && $(MAKE) $(MDEFINES) $@
 
@@ -243,6 +240,10 @@ release: fake_target
 
 publish-release: fake_target
 	misc/publish-release $(PACKAGE_VERSION) $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
+
+bootstrap-pre: all
+
+bootstrap-post:
 
 install-pre:
 	@if test "@ENABLE_SHARED@" = "yes" -a "@ENABLE_ABSOLUTE_SHARED_LIBS@" = "yes" -a "$(DESTDIR)" != ""; then \
@@ -390,7 +391,7 @@ dist-devel-post:
 	mv $(PACKAGE_TARNAME)-devel.tar.gz $(PACKAGE_TARNAME)-devel.tgz
 	rm -rf $(PACKAGE_TARNAME)-devel
 
-all-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@for subdir in $(SUBDIRS); do \
 	  target=`echo $@ | sed 's/-recursive//'`; \
 	  echo making $$target in $$subdir; \
@@ -402,6 +403,12 @@ all: all-post
 all-post: all-recursive
 
 all-recursive: all-pre
+
+bootstrap: bootstrap-post
+
+bootstrap-post: bootstrap-recursive
+
+bootstrap-recursive: bootstrap-pre
 
 install: install-post
 

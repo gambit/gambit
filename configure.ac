@@ -1588,26 +1588,31 @@ if test "$ENABLE_SHARED" = yes; then
              LIB_PREFIX="lib"
              LIB_EXTENSION=".dll"
              SETDLPATH="PATH=\"\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${PATH}\""
+             SETDLPATHBOOT="PATH=\"\$(rootfromhere):\${PATH}\""
              ;;
 
     darwin*) LIB_PREFIX="lib"
              LIB_EXTENSION=".dylib"
              SETDLPATH="DYLD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${DYLD_LIBRARY_PATH}"
+             SETDLPATHBOOT="DYLD_LIBRARY_PATH=\$(rootfromhere):\${DYLD_LIBRARY_PATH}"
              ;;
 
       hpux*) LIB_PREFIX="lib"
              LIB_EXTENSION=".so"
              SETDLPATH="SHLIB_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${SHLIB_PATH}"
+             SETDLPATHBOOT="SHLIB_PATH=\$(rootfromhere):\${SHLIB_PATH}"
              ;;
 
        aix*) LIB_PREFIX="lib"
              LIB_EXTENSION=".so"
              SETDLPATH="LIBPATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LIBPATH}"
+             SETDLPATHBOOT="LIBPATH=\$(rootfromhere):\${LIBPATH}"
              ;;
 
           *) LIB_PREFIX="lib"
              LIB_EXTENSION=".so"
              SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LD_LIBRARY_PATH}"
+             SETDLPATHBOOT="LD_LIBRARY_PATH=\$(rootfromhere):\${LD_LIBRARY_PATH}"
              ;;
   esac
 
@@ -1619,6 +1624,7 @@ if test "$ENABLE_SHARED" = yes; then
 else
 
   SETDLPATH=""
+  SETDLPATHBOOT=""
 
   if test "$C_COMP_VISUALC" = yes; then
 
@@ -2001,6 +2007,7 @@ AC_SUBST(exe)
 AC_SUBST(obj)
 AC_SUBST(bat)
 AC_SUBST(SETDLPATH)
+AC_SUBST(SETDLPATHBOOT)
 
 AC_SUBST(BUILD_OBJ)
 AC_SUBST(BUILD_DYN)

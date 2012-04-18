@@ -140,14 +140,14 @@ all-post: $(LIBRARY) _$(GAMBCLIB).c
 	@BUILD_OBJ@ -D___LIBRARY
 
 .scm.c:
-	@SETDLPATH@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check $(srcdirpfx)$*.scm
 
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f $(LIBRARY)
 	@MAKE_LIBRARY@
 
 _$(GAMBCLIB).c: $(MODULES_C)
-	@SETDLPATH@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o _$(GAMBCLIB).c $(MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o _$(GAMBCLIB).c $(MODULES_C)
 
 main@obj@: main.c $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
@@ -191,6 +191,11 @@ $(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm
 $(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
 _kernel.o: $(srcdirpfx)$(rootfromhere)/include/stamp.h
+
+bootstrap-pre:
+
+bootstrap-post:
+	cp $(LIBRARY) $(rootfromhere)/$(LIBRARY)
 
 install-pre:
 
@@ -301,7 +306,7 @@ all-recursive:
 	  done \
 	fi
 
-install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -315,6 +320,12 @@ all: all-post
 all-post: all-recursive
 
 all-recursive: all-pre
+
+bootstrap: bootstrap-post
+
+bootstrap-post: bootstrap-recursive
+
+bootstrap-recursive: bootstrap-pre
 
 install: install-post
 

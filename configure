@@ -795,6 +795,7 @@ exe
 obj
 bat
 SETDLPATH
+SETDLPATHBOOT
 BUILD_OBJ
 BUILD_DYN
 BUILD_LIB
@@ -26083,26 +26084,31 @@ if test "$ENABLE_SHARED" = yes; then
              LIB_PREFIX="lib"
              LIB_EXTENSION=".dll"
              SETDLPATH="PATH=\"\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${PATH}\""
+             SETDLPATHBOOT="PATH=\"\$(rootfromhere):\${PATH}\""
              ;;
 
     darwin*) LIB_PREFIX="lib"
              LIB_EXTENSION=".dylib"
              SETDLPATH="DYLD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${DYLD_LIBRARY_PATH}"
+             SETDLPATHBOOT="DYLD_LIBRARY_PATH=\$(rootfromhere):\${DYLD_LIBRARY_PATH}"
              ;;
 
       hpux*) LIB_PREFIX="lib"
              LIB_EXTENSION=".so"
              SETDLPATH="SHLIB_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${SHLIB_PATH}"
+             SETDLPATHBOOT="SHLIB_PATH=\$(rootfromhere):\${SHLIB_PATH}"
              ;;
 
        aix*) LIB_PREFIX="lib"
              LIB_EXTENSION=".so"
              SETDLPATH="LIBPATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LIBPATH}"
+             SETDLPATHBOOT="LIBPATH=\$(rootfromhere):\${LIBPATH}"
              ;;
 
           *) LIB_PREFIX="lib"
              LIB_EXTENSION=".so"
              SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LD_LIBRARY_PATH}"
+             SETDLPATHBOOT="LD_LIBRARY_PATH=\$(rootfromhere):\${LD_LIBRARY_PATH}"
              ;;
   esac
 
@@ -26114,6 +26120,7 @@ if test "$ENABLE_SHARED" = yes; then
 else
 
   SETDLPATH=""
+  SETDLPATHBOOT=""
 
   if test "$C_COMP_VISUALC" = yes; then
 
@@ -26490,6 +26497,7 @@ INSTALL='$(rootfromhere)/install-sh -c'
 INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
+
 
 
 
@@ -27500,6 +27508,7 @@ exe!$exe$ac_delim
 obj!$obj$ac_delim
 bat!$bat$ac_delim
 SETDLPATH!$SETDLPATH$ac_delim
+SETDLPATHBOOT!$SETDLPATHBOOT$ac_delim
 BUILD_OBJ!$BUILD_OBJ$ac_delim
 BUILD_DYN!$BUILD_DYN$ac_delim
 BUILD_LIB!$BUILD_LIB$ac_delim
@@ -27516,7 +27525,6 @@ BAT_EXTENSION!$BAT_EXTENSION$ac_delim
 BUILD_OBJ_MF!$BUILD_OBJ_MF$ac_delim
 BUILD_DYN_MF!$BUILD_DYN_MF$ac_delim
 BUILD_LIB_MF!$BUILD_LIB_MF$ac_delim
-BUILD_EXE_MF!$BUILD_EXE_MF$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -27558,6 +27566,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+BUILD_EXE_MF!$BUILD_EXE_MF$ac_delim
 DEFS_MF!$DEFS_MF$ac_delim
 LIBS_MF!$LIBS_MF$ac_delim
 GAMBCLIB_DEFS_MF!$GAMBCLIB_DEFS_MF$ac_delim
@@ -27637,7 +27646,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 77; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 78; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -1,0 +1,88 @@
+#! /bin/sh
+
+# Utility to change the makefiles.
+#
+# The changes need to be explicitly coded in this file.
+
+add_bootstrap_target()
+{
+    old="$1"
+    new="$2"
+
+    add_recursive_target "$old" "$new" "bootstrap" "install"
+}
+
+add_recursive_target()
+{
+    old="$1"
+    new="$2"
+    target="$3"
+    before_target="$4"
+
+    cat <<EOF > "$old.sed"
+
+/install-recursive uninstall-recursive/s/$before_target-recursive/$target-recursive $before_target-recursive/
+
+/$before_target: $before_target-post/i\\
+$target: $target-post\\
+\\
+$target-post: $target-recursive\\
+\\
+$target-recursive: $target-pre\\
+\\
+
+
+/^$before_target-pre:/i\\
+$target-pre:\\
+\\
+$target-post:\\
+\\
+
+
+EOF
+
+    sed -f "$old.sed" < "$old" > "$new"
+
+    rm "$old.sed"
+}
+
+ALL_MAKEFILES="                      \
+bin/makefile.in                      \
+doc/makefile.in                      \
+examples/distr-comp/makefile.in      \
+examples/iOS/makefile.in             \
+examples/makefile.in                 \
+examples/misc/makefile.in            \
+examples/pi/makefile.in              \
+examples/pthread/makefile.in         \
+examples/ring/makefile.in            \
+examples/tcltk/makefile.in           \
+examples/web-repl/makefile.in        \
+examples/web-server/makefile.in      \
+examples/Xlib-simple/makefile.in     \
+gsc/makefile.in                      \
+gsi/makefile.in                      \
+include/makefile.in                  \
+lib/guide/images/makefile.in         \
+lib/guide/makefile.in                \
+lib/makefile.in                      \
+makefile.in                          \
+misc/makefile.in                     \
+prebuilt/macosx/makefile.in          \
+prebuilt/makefile.in                 \
+prebuilt/windows/makefile.in         \
+tests/makefile.in                    \
+"
+
+for mf in $ALL_MAKEFILES ; do
+
+    echo "---------------------------------------------- $mf"
+
+    add_bootstrap_target "$mf" "$mf.new"
+
+    diff "$mf" "$mf.new"
+
+    mv "$mf.new" "$mf"
+    #rm "$mf.new"
+
+done

@@ -81,6 +81,10 @@ all-post:
 prebuilt:
 	PATH="$(rootfromhere)/gsi:$$PATH" ../remote-connect windows "" "(define tmpdir \"gambtmp1\")(define gambc-dist \"$(PACKAGE_TARNAME)\")(define timeout 600)(ssh timeout (string-append \"rm -rf \" tmpdir \";mkdir \" tmpdir \";\"))(scp-to timeout (string-append \"$(rootfromhere)/\" gambc-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"c:/MinGW/msys/1.0/bin/sh --login -c 'cd \" tmpdir \";tar zxf \" gambc-dist \".tgz;cd \" gambc-dist \";$(herefromroot)/build'\"))(scp-from timeout (string-append tmpdir \"/\" gambc-dist \"/$(PACKAGE_TARNAME)-*\") \"$(rootfromhere)\")"
 
+bootstrap-pre:
+
+bootstrap-post:
+
 install-pre:
 
 install-post: all
@@ -135,7 +139,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -149,6 +153,12 @@ all: all-post
 all-post: all-recursive
 
 all-recursive: all-pre
+
+bootstrap: bootstrap-post
+
+bootstrap-post: bootstrap-recursive
+
+bootstrap-recursive: bootstrap-pre
 
 install: install-post
 

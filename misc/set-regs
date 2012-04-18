@@ -1,7 +1,5 @@
 #! /bin/sh
 
-# Time-stamp: <2010-01-19 17:56:00 feeley>
-
 # Utility to change the number of registers in the virtual machine.
 #
 # Usage:  misc/set-regs [ <NB_GVM_REGS> [ <NB_ARG_REGS> ]]
@@ -48,7 +46,7 @@ make -j 2
 
 # Save the current bootstrap compiler just in case something goes wrong.
 
-cp gsc-comp gsc-comp-old
+cp gsc-boot gsc-boot-old
 
 # Set the number of registers in the gsc/_t-c-1.scm file.
 
@@ -60,7 +58,7 @@ mv gsc/_t-c-1.scm-new gsc/_t-c-1.scm
 
 make -j 2
 
-mv gsc/gsc gsc-comp
+make bootstrap
 
 # Set the number of registers in the include/gambit.h file.
 
