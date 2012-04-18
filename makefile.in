@@ -93,9 +93,9 @@ BUILD_HOST = localhost
 
 .SUFFIXES:
 
-all: gsc-boot@exe@
+all:
 
-all-pre:
+all-pre: gsc-boot@exe@
 
 all-post:
 
