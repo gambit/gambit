@@ -26642,7 +26642,7 @@ echo "${ECHO_T}no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.unix bin/gambc-cc.bat.windows bin/gambc-doc.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile examples/iOS/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.unix bin/gambc-cc.bat.windows bin/gambc-doc.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -27224,7 +27224,8 @@ do
     "examples/Xlib-simple/makefile") CONFIG_FILES="$CONFIG_FILES examples/Xlib-simple/makefile" ;;
     "examples/pthread/makefile") CONFIG_FILES="$CONFIG_FILES examples/pthread/makefile" ;;
     "examples/misc/makefile") CONFIG_FILES="$CONFIG_FILES examples/misc/makefile" ;;
-    "examples/iOS/makefile") CONFIG_FILES="$CONFIG_FILES examples/iOS/makefile" ;;
+    "contrib/makefile") CONFIG_FILES="$CONFIG_FILES contrib/makefile" ;;
+    "contrib/GambitREPL/makefile") CONFIG_FILES="$CONFIG_FILES contrib/GambitREPL/makefile" ;;
     "prebuilt/makefile") CONFIG_FILES="$CONFIG_FILES prebuilt/makefile" ;;
     "prebuilt/macosx/makefile") CONFIG_FILES="$CONFIG_FILES prebuilt/macosx/makefile" ;;
     "prebuilt/macosx/build-phase2") CONFIG_FILES="$CONFIG_FILES prebuilt/macosx/build-phase2" ;;

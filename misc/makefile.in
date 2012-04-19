@@ -75,7 +75,8 @@ proj_cw.hqx \
 gambit.el \
 changev changev1 \
 set-regs \
-publish-release
+publish-release \
+build-gambit-iOS
 
 GENDISTFILES =
 

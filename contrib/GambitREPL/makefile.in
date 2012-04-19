@@ -1,8 +1,8 @@
-# makefile for iOS example.
+# makefile for Gambit REPL app.
 
 # Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
-herefromroot = examples/iOS
+herefromroot = contrib/GambitREPL
 rootfromhere = ../..
 SUBDIRS =
 
@@ -64,7 +64,7 @@ mandir = @mandir@
 
 .SUFFIXES: .scm .m @obj@
 
-RCFILES = makefile.in README build-gambit-iOS GambitREPL.xcodeproj.tgz \
+RCFILES = makefile.in README GambitREPL.xcodeproj.tgz \
 digest.scm "digest\#.scm" genport.scm "genport\#.scm" \
 zlib.scm "zlib\#.scm" tar.scm "tar\#.scm" \
 json.scm "json\#.scm" url.scm "url\#.scm" html.scm "html\#.scm" \
@@ -105,7 +105,7 @@ all-pre:
 
 all-post:
 
-examples: grd@exe@ prepare-for-xcode
+ios: grd@exe@ prepare-for-xcode
 
 gambit-iOS:
 	@echo "*************************************************************"
@@ -116,14 +116,13 @@ gambit-iOS:
 	@echo "*   the iPhone/iPad/iPod Touch devices and simulators       *"
 	@echo "*                                                           *"
 	@echo "*************************************************************"
-	chmod +x build-gambit-iOS
-	./build-gambit-iOS
+	$(rootfromhere)/misc/build-gambit-iOS
+
+prepare-for-xcode: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m GambitREPL.xcodeproj gambit-iOS
 	rm -rf lib
 	mkdir lib
 	cp gambit-iOS/current/lib/*.scm lib
 	cp gambit-iOS/current/doc/gambit-c.pdf .
-
-prepare-for-xcode: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m GambitREPL.xcodeproj gambit-iOS
 	@echo "*************************************************************"
 	@echo "*                                                           *"
 	@echo "* To complete the iOS example the following steps must be   *"
