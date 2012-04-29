@@ -1486,6 +1486,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-cplusplus      compile using C++ compiler (default is NO)
   --enable-guide          include the Gambit Universal IDE (default is NO)
+  --enable-c-opt[=level]  use higher C optimization level (default is NO)
   --enable-debug          build system so that it can be debugged (default is
                           NO)
   --enable-profile        build system so that it can be profiled (default is
@@ -4197,6 +4198,19 @@ _ACEOF
   LIBS="$LIBS $QTLIBS"
 fi
 
+
+
+###############################################################################
+#
+# Check if a specific C optimization level should be used.  An
+# optimization level of -O1 will be used by default.
+
+# Check whether --enable-c-opt was given.
+if test "${enable_c_opt+set}" = set; then
+  enableval=$enable_c_opt; ENABLE_C_OPT=$enableval
+else
+  ENABLE_C_OPT=no
+fi
 
 
 ###############################################################################
@@ -22295,11 +22309,21 @@ fi
 { echo "$as_me:$LINENO: result: $DASH_fomit_frame_pointer" >&5
 echo "${ECHO_T}$DASH_fomit_frame_pointer" >&6; }
 
-  if test "$DASH_O2" != ""; then
-    OPT_LEVEL_FLAG="$DASH_O2"
-  else
-    OPT_LEVEL_FLAG="$DASH_O1"
-  fi
+  OPT_LEVEL_FLAG="$DASH_O1"
+
+  case "$ENABLE_C_OPT" in
+
+     yes) if test "$DASH_O2" != ""; then
+            OPT_LEVEL_FLAG="$DASH_O2"
+          fi
+          ;;
+
+      no) ;;
+
+       *) OPT_LEVEL_FLAG=" $ENABLE_C_OPT"
+          ;;
+
+  esac
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)

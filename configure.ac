@@ -227,6 +227,17 @@ AC_SUBST(ENABLE_GUIDE)
 
 ###############################################################################
 #
+# Check if a specific C optimization level should be used.  An
+# optimization level of -O1 will be used by default.
+
+AC_ARG_ENABLE(c-opt,
+              AC_HELP_STRING([--enable-c-opt@<:@=level@:>@],
+                             [use higher C optimization level (default is NO)]),
+              ENABLE_C_OPT=$enableval,
+              ENABLE_C_OPT=no)
+
+###############################################################################
+#
 # Check if the system is to be debugged.
 
 AC_ARG_ENABLE(debug,
@@ -1069,11 +1080,21 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
 
-  if test "$DASH_O2" != ""; then
-    OPT_LEVEL_FLAG="$DASH_O2"
-  else
-    OPT_LEVEL_FLAG="$DASH_O1"
-  fi
+  OPT_LEVEL_FLAG="$DASH_O1"
+
+  case "$ENABLE_C_OPT" in
+
+     yes) if test "$DASH_O2" != ""; then
+            OPT_LEVEL_FLAG="$DASH_O2"
+          fi
+          ;;
+
+      no) ;;
+
+       *) OPT_LEVEL_FLAG=" $ENABLE_C_OPT"
+          ;;
+
+  esac
 
 # It isn't clear these are useful:
 #  AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
