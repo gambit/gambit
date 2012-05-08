@@ -74,7 +74,7 @@ SUBDIRS = include lib gsi gsc bin misc doc tests examples contrib prebuilt
 
 RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
 makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
-relpath gsc-boot.c
+relpath gsc-boot.unix gsc-boot.bat.windows
 
 GITRCFILES = .gitignore .gitattributes
 HGRCFILES = .hgignore .hgtags
@@ -99,8 +99,14 @@ all-pre: gsc-boot@exe@
 
 all-post:
 
-gsc-boot@exe@: gsc-boot.c
-	@C_COMPILER@ -o gsc-boot@exe@ gsc-boot.c
+gsc-boot@exe@:
+	rm -f gsc-boot@bat@
+	if test "@bat@" = ""; then \
+	  cp gsc-boot.unix gsc-boot@bat@; \
+	  chmod +x gsc-boot@bat@; \
+	else \
+	  cp gsc-boot.bat.windows gsc-boot@bat@; \
+	fi
 
 fake_target:
 

@@ -1,0 +1,17 @@
+@echo off
+
+rem Copyright (c) 2012 by Marc Feeley, All Rights Reserved.
+
+rem Due to the meta-circular nature of the system, an executable
+rem version of the Gambit compiler (gsc-boot) is necessary to compile
+rem the .scm source files that are part of the Gambit runtime library
+rem into .c files.  The Gambit git repository contains precompiled
+rem versions of these files.  When Gambit is initially built, it is
+rem necessary to avoid generating these .c files (since an executable
+rem Gambit compiler is not yet available to generate them).  This
+rem circular dependence is resolved by using a dummy gsc-boot script
+rem which does not touch the .c files obtained from the repository.
+
+rem echo "***DUMMY*** compilation (this is normal when bootstrapping)"
+
+exit 0
