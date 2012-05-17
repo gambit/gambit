@@ -403,7 +403,7 @@
           (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")
           (let ((opnd (jump-opnd gvm-instr)))
             (if (jump-poll? gvm-instr)
-                (gen "nextpc = " (translate-gvm-opnd ctx opnd) ";\n"
+                (gen "save_pc = " (translate-gvm-opnd ctx opnd) ";\n"
                      "return null;\n")
                 (gen "return " (translate-gvm-opnd ctx opnd) ";\n")))
           "}\n"))
@@ -490,13 +490,16 @@ var reg = [null];
 var stack = [];
 var sp = -1;
 var nargs = 0;
-var nextpc = null;
-var yield;
+var save_pc = null;
+var poll;
 
-if (this.hasOwnProperty('setTimeout')) {
-    yield = this.setTimeout;
-} else {
-    yield = function() {};
+if (this.hasOwnProperty('setTimeout'))
+{
+    poll = function (wakeup) { setTimeout(wakeup,1); return true; };
+}
+else
+{
+    poll = function (wakeup) { return false; };
 }
 
 
@@ -533,15 +536,15 @@ function lbl1_print() { // print
 glo["print"] = lbl1_print;
 
 
-function run(pc) {
-    nextpc = pc;
-    while (nextpc !== null) {
-        yield("", 0);
-        pc = nextpc;
-        nextpc = null;
-        while (pc !== null) {
+function run()
+{
+    while (save_pc !== null)
+    {
+        pc = save_pc;
+        save_pc = null;
+        while (pc !== null)
             pc = pc();
-        }
+        if (poll(run)) break;
     }
 }
 
@@ -549,6 +552,6 @@ EOF
 )
 
 (define (entry-point ctx main-proc)
-  (gen "run(" (lbl->id ctx 1 (proc-obj-name main-proc)) ");\n"))
+  (gen "save_pc = " (lbl->id ctx 1 (proc-obj-name main-proc)) "; run();\n"))
 
 ;;;============================================================================
