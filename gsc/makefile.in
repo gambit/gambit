@@ -81,35 +81,35 @@ $(LIBRARY_NORMAL_H)
 LIBRARY_MODULES = _host _utils _source _parms \
 _env _ptree1 _ptree2 _gvm _back _front \
 _prims _assert _asm _x86 _codegen \
-_t-c-1 _t-c-2 _t-c-3 \
+_t-univ _t-c-1 _t-c-2 _t-c-3 \
 _gsclib
 LIBRARY_MODULES_SCM = _host.scm _utils.scm _source.scm _parms.scm \
 _env.scm _ptree1.scm _ptree2.scm _gvm.scm _back.scm _front.scm \
 _prims.scm _assert.scm _asm.scm _x86.scm _codegen.scm \
-_t-c-1.scm _t-c-2.scm _t-c-3.scm \
+_t-univ.scm _t-c-1.scm _t-c-2.scm _t-c-3.scm \
 _gsclib.scm
 LIBRARY_MODULES_C = _host.c _utils.c _source.c _parms.c \
 _env.c _ptree1.c _ptree2.c _gvm.c _back.c _front.c \
 _prims.c _assert.c _asm.c _x86.c _codegen.c \
-_t-c-1.c _t-c-2.c _t-c-3.c \
+_t-univ.c _t-c-1.c _t-c-2.c _t-c-3.c \
 _gsclib.c
 LIBRARY_MODULES_O = _host@obj@ _utils@obj@ _source@obj@ _parms@obj@ \
 _env@obj@ _ptree1@obj@ _ptree2@obj@ _gvm@obj@ _back@obj@ _front@obj@ \
 _prims@obj@ _assert@obj@ _asm@obj@ _x86@obj@ _codegen@obj@ \
-_t-c-1@obj@ _t-c-2@obj@ _t-c-3@obj@ \
+_t-univ@obj@ _t-c-1@obj@ _t-c-2@obj@ _t-c-3@obj@ \
 _gsclib@obj@
 LIBRARY_MODULES_O_PLUS = +_host@obj@ +_utils@obj@ +_source@obj@ +_parms@obj@ \
 +_env@obj@ +_ptree1@obj@ +_ptree2@obj@ +_gvm@obj@ +_back@obj@ +_front@obj@ \
 +_prims@obj@ +_assert@obj@ +_asm@obj@ +_x86@obj@ +_codegen@obj@ \
-+_t-c-1@obj@ +_t-c-2@obj@ +_t-c-3@obj@ \
++_t-univ@obj@ +_t-c-1@obj@ +_t-c-2@obj@ +_t-c-3@obj@ \
 +_gsclib@obj@
 LIBRARY_MODULES_O_COMMA = _host@obj@,_utils@obj@,_source@obj@,_parms@obj@,\
 _env@obj@,_ptree1@obj@,_ptree2@obj@,_gvm@obj@,_back@obj@,_front@obj@,\
 _prims@obj@,_assert@obj@,_asm@obj@,_x86@obj@,_codegen@obj@,\
-_t-c-1@obj@,_t-c-2@obj@,_t-c-3@obj@,\
+_t-univ@obj@,_t-c-1@obj@,_t-c-2@obj@,_t-c-3@obj@,\
 _gsclib@obj@
 LIBRARY_MODULES_O_IN_COMPILE_ORDER = _t-c-2@obj@ _ptree1@obj@ _ptree2@obj@ \
-_front@obj@ _t-c-1@obj@ _gvm@obj@ _source@obj@ _t-c-3@obj@ \
+_front@obj@ _t-univ@obj@ _t-c-1@obj@ _gvm@obj@ _source@obj@ _t-c-3@obj@ \
 _x86@obj@ _asm@obj@ _utils@obj@ _parms@obj@ _host@obj@ _env@obj@ _prims@obj@ \
 _back@obj@ _codegen@obj@ _assert@obj@ _gsclib@obj@
 LIBRARY_OBJECTS = $(LIBRARY_NORMAL_O) \

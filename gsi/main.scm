@@ -291,14 +291,14 @@
                                  ld-options: ld-options))
                             (exit-abnormally)))
 
-                      (define (do-compile-file-to-c file opts output)
+                      (define (do-compile-file-to-target file opts output)
                         (handling file)
                         (or (if output
-                                (compile-file-to-c
+                                (compile-file-to-target
                                  file
                                  options: opts
                                  output: output)
-                                (compile-file-to-c
+                                (compile-file-to-target
                                  file
                                  options: opts))
                             (exit-abnormally)))
@@ -370,7 +370,7 @@
                                                 (add-obj-file obj-file)))
                                              ((link exe c)
                                               (let ((gen-c-file
-                                                     (do-compile-file-to-c
+                                                     (do-compile-file-to-target
                                                       file
                                                       options
                                                       (and (##eq? type 'c)

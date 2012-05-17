@@ -43,7 +43,7 @@
 ;;              References to the other fields in the module should thus
 ;;              happen inside calls to 'begin!' and 'end!'.
 ;;
-;; dump         Procedure (lambda (procs output output-root c-intf script-line
+;; dump         Procedure (lambda (procs output c-intf script-line
 ;;                                 options) ...)
 ;;              This procedure takes a list of 'procedure objects' and dumps
 ;;              the corresponding loader-compatible object file to the
@@ -61,10 +61,8 @@
 ;;              will NOT produce the C interface file automatically as is
 ;;              normally the case (this is useful in the case of a back-end
 ;;              generating C that will itself be creating this file).
-;;              The 'output' argument specifies the file name of the
-;;              file to produce.  If it is #f, 'output-root' concatenated
-;;              with the appropriate extension should be used as a
-;;              file name.  The 'script-line' argument indicates the text
+;;              The 'output' argument specifies the file name of the file
+;;              to produce.  The 'script-line' argument indicates the text
 ;;              on the first line of the source file (after the #! or @;)
 ;;              if the source file is a script or #f if it is not a script.
 ;;
@@ -102,6 +100,12 @@
 ;; task-return  GVM location.
 ;;              This value is the GVM register where the task's return address
 ;;              is passed.
+;;
+;; switch-testable?  Function.
+;;              This function tests whether an object can be tested
+;;              in a GVM "switch" instruction.
+;;
+;; file-extension  The file extension for generated files.
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -109,13 +113,13 @@
 
 (define (make-target version name)
 
-  (define current-target-version 6) ; number for this version of the module
+  (define current-target-version 7) ; number for this version of the module
 
   (if (not (= version current-target-version))
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((x (make-vector 13)))
+  (let ((x (make-vector 14)))
     (vector-set! x 0 'target)
     (vector-set! x 1 name)
     x))
@@ -145,6 +149,8 @@
 (define (target-task-return-set! x y)       (vector-set! x 11 y))
 (define (target-switch-testable? x)         (vector-ref x 12))
 (define (target-switch-testable?-set! x y)  (vector-set! x 12 y))
+(define (target-file-extension x)           (vector-ref x 13))
+(define (target-file-extension-set! x y)    (vector-set! x 13 y))
 
 ;;;; Frame constraints structure
 
@@ -194,7 +200,8 @@
   (set! target.frame-constraints (target-frame-constraints target))
   (set! target.proc-result       (target-proc-result target))
   (set! target.task-return       (target-task-return target))
-  (set! target.switch-testable?  (target-switch-testable?  target))
+  (set! target.switch-testable?  (target-switch-testable? target))
+  (set! target.file-extension    (target-file-extension target))
 
   (set! **not-proc-obj
         (target.prim-info **not-sym))
@@ -247,6 +254,7 @@
 (define target.proc-result       #f)
 (define target.task-return       #f)
 (define target.switch-testable?  #f)
+(define target.file-extension    #f)
 
 ;; procedures defined in back-end:
 

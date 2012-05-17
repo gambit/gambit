@@ -30,7 +30,7 @@
                (##list opt)))
          options))
 
-(define (compile-file-to-c
+(define (compile-file-to-target
          filename
          #!rest other;;;;;;;;;;
          #!key
@@ -38,7 +38,7 @@
          (output (macro-absent-obj))
          (module-name (macro-absent-obj)))
   (macro-force-vars (filename)
-    (macro-check-string filename 1 (compile-file-to-c filename . other);;;;;;
+    (macro-check-string filename 1 (compile-file-to-target filename . other);;;;;;
       (let* ((opts
               (if (##eq? options (macro-absent-obj))
                   '()
@@ -63,34 +63,42 @@
               ((##not (or (##not mod-name) (##string? mod-name)))
                (error "string or #f expected for module-name: parameter"));;;;;;;;;;
               (else
-               (##compile-file-to-c filename
-                                    opts
-                                    out
-                                    mod-name)))))))
+               (##compile-file-to-target filename
+                                         opts
+                                         out
+                                         mod-name)))))))
 
-(define (##compile-file-to-c filename options output mod-name)
+(define (##compile-file-to-target filename options output mod-name)
   (let* ((options
           (##compile-options-normalize options))
          (expanded-output
           (##path-normalize output))
-         (c-filename
-          (if (##equal? expanded-output
-                        (##path-strip-trailing-directory-separator
-                         expanded-output))
-              expanded-output
-              (##string-append
-               (##path-expand
+         (output-directory?
+          (##not (##equal? expanded-output
+                           (##path-strip-trailing-directory-separator
+                            expanded-output))))
+         (output-filename-gen
+          (lambda ()
+            (if output-directory?
+                (##string-append
+                 (##path-expand
+                  (##path-strip-directory
+                   (##path-strip-extension filename))
+                  expanded-output)
+                 target.file-extension)
+                expanded-output)))
+         (module-name-gen
+          (lambda ()
+            (or mod-name
                 (##path-strip-directory
-                 (##path-strip-extension filename))
-                expanded-output)
-               (c#targ-preferred-c-file-extension)))))
-    (and (c#cf filename
-               options
-               c-filename
-               (or mod-name
-                   (##path-strip-directory
-                    (##path-strip-extension c-filename))))
-         c-filename)))
+                 (##path-strip-extension
+                  (if output-directory?
+                      filename
+                      expanded-output)))))))
+    (c#cf filename
+          options
+          output-filename-gen
+          (module-name-gen))))
 
 (define (compile-file
          filename
@@ -192,17 +200,19 @@
                                  (c#targ-preferred-c-file-extension))))
            (expanded-output
             (##path-normalize output))
+           (output-directory?
+            (##not (##equal? expanded-output
+                             (##path-strip-trailing-directory-separator
+                              expanded-output))))
            (output-filename
-            (if (##equal? expanded-output
-                          (##path-strip-trailing-directory-separator
-                           expanded-output))
-                expanded-output
+            (if output-directory?
                 (generate-output-filename
                  (##path-expand
                   (##path-strip-directory
                    (##path-strip-extension filename))
                   expanded-output)
-                 input-is-c-file?)))
+                 input-is-c-file?)
+                expanded-output))
            (output-dir
             (##path-directory output-filename))
            (output-filename-no-dir
@@ -210,7 +220,7 @@
       (and (or input-is-c-file?
                (c#cf filename
                      options
-                     c-filename
+                     (lambda () c-filename)
                      (if (##eq? type 'dyn)
                          output-filename-no-dir
                          (##path-strip-extension output-filename-no-dir))))
@@ -428,7 +438,6 @@
     (c#targ-linker #t
                    base-and-mods
                    c-filename
-                   #f
                    warnings?)))
 
 (define (link-flat
@@ -489,7 +498,6 @@
     (c#targ-linker #f
                    mods
                    c-filename
-                   #f
                    warnings?)))
 
 (define-prim (##c-code . args) ;; avoid errors when using -expansion

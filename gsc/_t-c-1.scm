@@ -208,7 +208,7 @@
 ;;
 ;; Initialization/finalization of back-end
 
-(let ((targ (make-target 6 'c)))
+(let ((targ (make-target 7 'c)))
 
   (define (begin! info-port)
 
@@ -225,6 +225,7 @@
     (target-proc-result-set!       targ (make-reg 1))
     (target-task-return-set!       targ (make-reg 0))
     (target-switch-testable?-set!  targ targ-switch-testable?)
+    (target-file-extension-set!    targ (targ-preferred-c-file-extension))
 
     #f)
 
@@ -277,7 +278,7 @@
 ;;
 ;; Dumping of a compilation module
 
-(define (targ-dump procs output output-root c-intf script-line options)
+(define (targ-dump procs output c-intf script-line options)
   (let ((c-decls (c-intf-decls c-intf))
         (c-procs (c-intf-procs c-intf))
         (c-inits (c-intf-inits c-intf))
@@ -316,8 +317,7 @@
       (newline targ-info-port))
 
     (targ-heap-dump
-      (or output
-          (string-append output-root (targ-preferred-c-file-extension)))
+      output
       (proc-obj-name (car procs))
       c-decls
       c-inits
@@ -762,15 +762,11 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (targ-linker extension? inputs output output-root warnings?)
+(define (targ-linker extension? inputs output warnings?)
   (with-exception-handling
     (lambda ()
       (let* ((root
-               (or output-root
-                   (path-strip-extension output)))
-             (out
-               (or output
-                   (string-append root (targ-preferred-c-file-extension))))
+               (path-strip-extension output))
              (name
                (string-append module-prefix
                               (path-strip-directory root)))
@@ -805,7 +801,7 @@
 
         (targ-link
           extension?
-          out
+          output
           name
           input-mods
           (if extension?
@@ -829,7 +825,7 @@
           script-line
           warnings?)
 
-        out))))
+        output))))
 
 (define (targ-make-mod name mods sym-rsrc key-rsrc glo-rsrc script-line)
   (vector name mods sym-rsrc key-rsrc glo-rsrc script-line))

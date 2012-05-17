@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -52,22 +52,17 @@
 (define cf #f)
 
 (set! cf
-  (lambda (input opts output mod-name)
+  (lambda (input opts output-filename-gen mod-name)
     (let ((remaining-opts
            (handle-options opts)))
 
       (set! warnings-requested? compiler-option-warnings)
 
-      (let* ((output-root
-              (if output
-                  #f
-                  (path-strip-directory
-                   (path-strip-extension input))))
-             (info-port
+      (let* ((info-port
               (if compiler-option-verbose
                   (current-output-port)
                   #f))
-             (successful
+             (result
               (with-exception-handling
                (lambda ()
                  (if (not (null? remaining-opts))
@@ -79,12 +74,11 @@
                       opts
                       (cons (list 'target (default-target)) opts))
                   remaining-opts
-                  output
-                  output-root
+                  output-filename-gen
                   mod-name
                   info-port)))))
 
-        successful))))
+        result))))
 
 (define (handle-options opts)
   (reset-options)
@@ -189,15 +183,35 @@
          input
          opts
          remaining-opts
-         output
-         output-root
+         output-filename-gen
          mod-name
          info-port)
 
   (define (compiler-body)
-    (let* ((root
-            (or output-root
-                (path-strip-extension output)))
+
+    (scheme-global-var-define!
+      (scheme-global-var
+        (string->canonical-symbol "##compilation-options"))
+      opts)
+
+    (env.begin!)
+    (ptree.begin! info-port)
+    (virtual.begin!)
+
+    (let ((target-name (cadr (assq 'target opts))))
+      (target-select! target-name info-port))
+
+    (let* ((output-filename
+            (and output-filename-gen
+                 (output-filename-gen)))
+           (root
+            (if output-filename
+                (path-strip-extension output-filename)
+                (path-strip-directory (path-strip-extension input))))
+           (output
+            (if output-filename
+                output-filename
+                (string-append root target.file-extension)))
            (module-name
             (or mod-name
                 (path-strip-directory root))))
@@ -206,19 +220,6 @@
         (compiler-error
           "Invalid characters in file name (must be a symbol with no \"#\")")
         (begin
-
-          (scheme-global-var-define!
-            (scheme-global-var
-              (string->canonical-symbol "##compilation-options"))
-            opts)
-
-          (env.begin!)
-          (ptree.begin! info-port)
-          (virtual.begin!)
-
-          (let ((target-name
-                 (cadr (assq 'target opts))))
-            (target-select! target-name info-port))
 
           (let ((x (read-source input #f #t)))
             (parse-program
@@ -259,7 +260,6 @@
                    (target.dump
                     module-procs
                     output
-                    output-root
                     c-intf
                     (##vector-ref x 0);;;;;;;;;;;;;;;;;;;;
                     opts)
@@ -271,14 +271,14 @@
           (ptree.end!)
           (env.end!)
 
-          #t))))
+          output))))
 
   (set! warnings-requested? compiler-option-warnings)
 
-  (let ((successful (with-exception-handling compiler-body)))
+  (let ((result (with-exception-handling compiler-body)))
 
     (if info-port
-      (if successful
+      (if result
         (begin
           (display "Compilation finished." info-port)
           (newline info-port))
@@ -286,7 +286,7 @@
           (display "Compilation terminated abnormally." info-port)
           (newline info-port))))
 
-    successful))
+    result))
 
 (define (valid-module-name? module-name)
 

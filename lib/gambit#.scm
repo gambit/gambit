@@ -90,7 +90,7 @@ clear-bit-field
 close-port
 command-line
 compile-file
-compile-file-to-c
+compile-file-to-target
 condition-variable-broadcast!
 condition-variable-name
 condition-variable-signal!
