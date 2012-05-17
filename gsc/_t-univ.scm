@@ -309,7 +309,8 @@
   (case (gvm-instr-type gvm-instr)
 
     ((label)
-     (gen "function "
+     (gen "\n"
+          "function "
           (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
           "() {\n"
 
@@ -323,7 +324,7 @@
                       "// closure-entry-point\n"
                       "// entry-point\n")
                   "if (nargs !== " (label-entry-nb-parms gvm-instr) ") "
-                  "throw \"wrong number of arguments\";\n"))
+                  "throw \"wrong number of arguments\";\n\n"))
 
             ((return)
              (gen "// return-point\n"))
@@ -394,14 +395,17 @@
     ((jump)
      ;; TODO
      ;; (jump-safe? gvm-instr)
-     ;; (jump-poll? gvm-instr)
+     ;; test: (jump-poll? gvm-instr) 
      (gen (let ((nb-args (jump-nb-args gvm-instr)))
             (if nb-args
                 (gen "nargs = " nb-args ";\n")
                 ""))
           (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")
           (let ((opnd (jump-opnd gvm-instr)))
-            (gen "return " (translate-gvm-opnd ctx opnd) ";\n"))
+            (if (jump-poll? gvm-instr)
+                (gen "nextpc = " (translate-gvm-opnd ctx opnd) ";\n"
+                     "return null;\n")
+                (gen "return " (translate-gvm-opnd ctx opnd) ";\n")))
           "}\n"))
 
     (else
@@ -486,37 +490,59 @@ var reg = [null];
 var stack = [];
 var sp = -1;
 var nargs = 0;
+var nextpc = null;
+var yield;
+
+if (this.hasOwnProperty('setTimeout')) {
+    yield = this.setTimeout;
+} else {
+    yield = function() {};
+}
+
 
 function lbl1_fx_3c_() { // fx<
-if (nargs !== 2) throw "wrong number of arguments";
-reg[1] = reg[1] < reg[2];
-return reg[0];
+    if (nargs !== 2) throw "wrong number of arguments";
+    reg[1] = reg[1] < reg[2];
+    return reg[0];
 }
+
 glo["fx<"] = lbl1_fx_3c_;
 
 function lbl1_fx_2b_() { // fx+
-if (nargs !== 2) throw "wrong number of arguments";
-reg[1] = reg[1] + reg[2];
-return reg[0];
+    if (nargs !== 2) throw "wrong number of arguments";
+    reg[1] = reg[1] + reg[2];
+    return reg[0];
 }
+
 glo["fx+"] = lbl1_fx_2b_;
 
 function lbl1_fx_2d_() { // fx-
-if (nargs !== 2) throw "wrong number of arguments";
-reg[1] = reg[1] - reg[2];
-return reg[0];
+    if (nargs !== 2) throw "wrong number of arguments";
+    reg[1] = reg[1] - reg[2];
+    return reg[0];
 }
+
 glo["fx-"] = lbl1_fx_2d_;
 
 function lbl1_print() { // print
-if (nargs !== 1) throw "wrong number of arguments";
-print(reg[1]);
-return reg[0];
+    if (nargs !== 1) throw "wrong number of arguments";
+    print(reg[1]);
+    return reg[0];
 }
+
 glo["print"] = lbl1_print;
 
+
 function run(pc) {
-while (pc !== null) pc = pc();
+    nextpc = pc;
+    while (nextpc !== null) {
+        yield("", 0);
+        pc = nextpc;
+        nextpc = null;
+        while (pc !== null) {
+            pc = pc();
+        }
+    }
 }
 
 EOF
