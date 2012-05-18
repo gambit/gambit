@@ -95,16 +95,16 @@ BUILD_HOST = localhost
 
 all:
 
-all-pre: gsc-boot@exe@
+all-pre: gsc-boot@bat@
 
 all-post:
 
-gsc-boot@exe@:
-	rm -f gsc-boot@bat@
-	if test "@bat@" = ""; then \
-	  cp gsc-boot.unix gsc-boot@bat@; \
-	  chmod +x gsc-boot@bat@; \
-	else \
+gsc-boot@bat@:
+	rm -f gsc-boot
+	cp gsc-boot.unix gsc-boot
+	chmod +x gsc-boot
+	if test "@bat@" != ""; then \
+	  rm -f gsc-boot@bat@; \
 	  cp gsc-boot.bat.windows gsc-boot@bat@; \
 	fi
 
