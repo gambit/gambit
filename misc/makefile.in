@@ -76,7 +76,7 @@ gambit.el \
 changev changev1 \
 set-regs \
 publish-release \
-build-gambit-iOS
+build-gambit-iOS build-gambit-android
 
 GENDISTFILES =
 

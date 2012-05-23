@@ -1,0 +1,198 @@
+#!/bin/sh
+
+### File: "build-gambit-android"
+
+### Copyright (c) 2010-2012 by Marc Feeley, All Rights Reserved.
+
+# The following definitions should be adjusted to your context.
+
+# Where is the Android NDK?
+android_ndk_root="/Users/feeley/gambit/android-ndk-r8"
+
+# Which Android platform to target?
+android_platform="android-5"
+
+# Which ./configure options are to be used?
+#config_options="--enable-single-host --enable-debug"
+config_options="--enable-single-host"
+#config_options=""
+prefix_subdir="current"
+
+# The following two settings are only relevant when this script is used
+# outside of the Gambit distribution tree.  In this case the Gambit
+# distribution must be downloaded.
+gambit_dist_if_downloaded="gambc-v4_6_5-devel"
+update_with_latest_changes_if_downloaded="yes"
+
+# Note that the Android NDK is required.  It can be downloaded from:
+#
+# http://dl.google.com/android/ndk/android-ndk-r8-windows.zip
+# http://dl.google.com/android/ndk/android-ndk-r8-darwin-x86.tar.bz2
+# http://dl.google.com/android/ndk/android-ndk-r8-linux-x86.tar.bz2
+
+select_macosx()
+{
+  gambit_dir="`pwd`/gambit-macosx"
+  gambit_prefix="$gambit_dir/$prefix_subdir"
+
+  echo "*** Selecting Mac OS X."
+
+  config_options_extras=
+
+  export CC="gcc"
+  export CXX="g++"
+  export CFLAGS="-I$gambit_prefix/include -L$gambit_prefix/lib"
+  export CXXFLAGS="$CFLAGS"
+  export LD="ld"
+  export LDFLAGS=""
+}
+
+select_android()
+{
+  platform="$1"
+
+  gambit_dir="`pwd`/gambit-android"
+  gambit_prefix="$gambit_dir/$prefix_subdir"
+
+  android_toolchain_dir="`pwd`/$platform-toolchain"
+
+  platforms_dir="$android_ndk_root/platforms"
+  android_platform_dir="$platforms_dir/$platform"
+
+  if [ ! -d "$android_ndk_root" ]; then
+    echo "*** ERROR!  The Android NDK was expected here: $android_ndk_root"
+    echo "*** Please change the definition of android_ndk_root"
+    echo "*** You need to edit the top of the build-gambit-android script"
+    exit 1
+  fi
+
+  if [ ! -d "$android_platform_dir" ]; then
+    echo "*** ERROR!  The platform \"$platform\" is not available."
+    echo "*** The available platforms are:"
+    (cd "$platforms_dir" ; ls | sed -e "s/^/***   /g")
+    echo "*** You need to edit the top of the build-gambit-android script"
+    exit 1
+  fi
+
+  echo "*** Selecting platform \"$platform\"."
+  echo "*** Please add to your path: $android_toolchain_dir/bin"
+
+  rm -rf "$android_toolchain_dir"
+
+  $android_ndk_root/build/tools/make-standalone-toolchain.sh --platform="$platform" --install-dir="$android_toolchain_dir"
+
+  config_options_extras=--host=arm-eabi
+
+  export PATH="$android_toolchain_dir/bin:$PATH"
+  export CC="arm-linux-androideabi-gcc"
+  export CXX="arm-linux-androideabi-g++"
+  export CFLAGS=""
+  export CXXFLAGS=""
+  export LD="arm-linux-androideabi-ld"
+  export LDFLAGS=""
+
+  export AR="arm-linux-androideabi-ar"
+  export STRIP="arm-linux-androideabi-strip"
+  export RANLIB="arm-linux-androideabi-ranlib"
+}
+
+download_gambit_dist_tgz()
+{
+  gambit_dist="$gambit_dist_if_downloaded"
+  update_with_latest_changes="$update_with_latest_changes_if_downloaded"
+
+  major_minor="`echo \"$gambit_dist\" | sed -e \"s/gambc-\\([^_]*_[^_]*\\)\\(.*\\)/\\1/g\" -e \"s/_/./g\"`"
+
+  curl "http://www.iro.umontreal.ca/~gambit/download/gambit/$major_minor/source/$gambit_dist.tgz" > "$gambit_dist.tgz"
+}
+
+get_gambit_dist_tgz()
+{
+  rootfromhere="`grep \"^rootfromhere = *\" makefile 2> /dev/null | sed -e \"s/rootfromhere = //\"`"
+  gambit_dist="`grep \"^PACKAGE_TARNAME = *\" makefile 2> /dev/null | sed -e \"s/PACKAGE_TARNAME = *//\"`"
+
+  if [ "$gambit_dist" == "" ]; then
+
+    download_gambit_dist_tgz
+
+    downloaded="yes"
+
+  else
+
+    (cd "$rootfromhere" ; make dist)
+    mv "$rootfromhere/$gambit_dist.tgz" .
+
+    update_with_latest_changes="no"
+    downloaded="no"
+
+  fi
+}
+
+unpack_gambit()
+{
+  dir="$1"
+  rm -rf "$dir"
+  tar zxf "$gambit_dist.tgz"
+  mv "$gambit_dist" "$dir"
+}  
+
+configure_gambit()
+{
+  dir="$1"
+  unpack_gambit "$dir"
+  cd "$dir"
+  ./configure --prefix="$gambit_prefix" $config_options_extras $config_options
+  cd ..
+}
+
+make_gambit()
+{
+  dir="$1"
+  cd "$dir"
+  make clean
+  make -j 2
+  if [ "$update_with_latest_changes" == "yes" ]; then
+    make update
+    make -j 2
+  fi
+  make install
+  cd ..
+}
+
+build_macosx()
+{
+  select_macosx
+
+  configure_gambit "$gambit_dir"
+
+  make_gambit "$gambit_dir"
+}
+
+build_one_android()
+{
+  platform="$1"
+
+  select_android "$platform"
+
+  configure_gambit "$gambit_dir"
+
+  make_gambit "$gambit_dir"
+}
+
+build_all_android()
+{
+  build_one_android "$android_platform"
+}
+
+# Get the Gambit distribution.
+
+get_gambit_dist_tgz
+
+# Build Gambit for Android.
+
+build_all_android
+
+# If you also want to build the Mac OS X version, then uncomment the
+# following line:
+
+#build_macosx
