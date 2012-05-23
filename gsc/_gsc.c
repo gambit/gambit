@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc.c", produced by Gambit-C v4.6.5
+; File: "_gsc.c", produced by Gambit-C v4.6.6
 (
-406005
+406006
 " _gsc"
 (" _gsc")
 (
@@ -181,14 +181,14 @@
 "c#targ-c-file-extensions"
 "c#targ-generated-c-file?"
 "compile-file"
-"compile-file-to-c"
+"compile-file-to-target"
 "link-flat"
 "link-incremental"
 )
  #f
 )
 #else
-#define ___VERSION 406005
+#define ___VERSION 406006
 #define ___MODULE_NAME " _gsc"
 #define ___LINKER_ID ____20___gsc
 #define ___MH_PROC ___H__20___gsc
@@ -372,7 +372,7 @@ ___NEED_GLO(___G_c_23_targ_2d_c_2d_file_2d_extensions)
 ___NEED_GLO(___G_c_23_targ_2d_generated_2d_c_2d_file_3f_)
 ___NEED_GLO(___G_c_23_wrap_2d_program)
 ___NEED_GLO(___G_compile_2d_file)
-___NEED_GLO(___G_compile_2d_file_2d_to_2d_c)
+___NEED_GLO(___G_compile_2d_file_2d_to_2d_target)
 ___NEED_GLO(___G_link_2d_flat)
 ___NEED_GLO(___G_link_2d_incremental)
 ___NEED_GLO(___G_main)
@@ -559,7 +559,7 @@ ___DEF_GLO(54,"##write-string")
 ___DEF_GLO(55,"c#targ-c-file-extensions")
 ___DEF_GLO(56,"c#targ-generated-c-file?")
 ___DEF_GLO(57,"compile-file")
-___DEF_GLO(58,"compile-file-to-c")
+___DEF_GLO(58,"compile-file-to-target")
 ___DEF_GLO(59,"link-flat")
 ___DEF_GLO(60,"link-incremental")
 ___END_GLO
@@ -3122,7 +3122,7 @@ ___DEF_SLBL(170,___L170__23__23_main_2d_gsi_2f_gsc)
    ___SET_R2(___KEY(5,___K_output))
    ___SET_R0(___LBL(171))
    ___ADJFP(-2)
-   ___JUMPGLONOTSAFE(___SET_NARGS(5),58,___G_compile_2d_file_2d_to_2d_c)
+   ___JUMPGLONOTSAFE(___SET_NARGS(5),58,___G_compile_2d_file_2d_to_2d_target)
 ___DEF_SLBL(171,___L171__23__23_main_2d_gsi_2f_gsc)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L384__23__23_main_2d_gsi_2f_gsc)
@@ -3150,7 +3150,7 @@ ___DEF_GLBL(___L386__23__23_main_2d_gsi_2f_gsc)
    ___SET_R2(___KEY(4,___K_options))
    ___SET_R0(___LBL(172))
    ___ADJFP(-4)
-   ___JUMPGLONOTSAFE(___SET_NARGS(3),58,___G_compile_2d_file_2d_to_2d_c)
+   ___JUMPGLONOTSAFE(___SET_NARGS(3),58,___G_compile_2d_file_2d_to_2d_target)
 ___DEF_SLBL(175,___L175__23__23_main_2d_gsi_2f_gsc)
    ___SET_STK(-3,___R1)
    ___SET_R2(___R1)

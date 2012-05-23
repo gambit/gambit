@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_eval.c", produced by Gambit-C v4.6.5
+; File: "_eval.c", produced by Gambit-C v4.6.6
 (
-406005
+406006
 " _eval"
 (" _eval")
 (
@@ -645,7 +645,7 @@
  #f
 )
 #else
-#define ___VERSION 406005
+#define ___VERSION 406006
 #define ___MODULE_NAME " _eval"
 #define ___LINKER_ID ____20___eval
 #define ___MH_PROC ___H__20___eval

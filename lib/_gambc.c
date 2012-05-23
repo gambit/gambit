@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gambc.c", produced by Gambit-C v4.6.5
+; File: "_gambc.c", produced by Gambit-C v4.6.6
 (
-406005
+406006
 " _gambc"
 (" _kernel" " _system" " _num" " _std" " _eval" " _io" " _nonstd" " _thread" " _repl")
 (
@@ -4440,7 +4440,7 @@
  #f
 )
 #else
-#define ___VERSION 406005
+#define ___VERSION 406006
 #define ___LINKFILE_NAME " _gambc"
 #define ___LINKER_ID ____20___gambc
 #define ___FLAT_LINKFILE

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit-C v4.6.5
+; File: "_gsi_.c", produced by Gambit-C v4.6.6
 (
-406005
+406006
 " _gsi_"
 (" _kernel" " _system" " _num" " _std" " _eval" " _io" " _nonstd" " _thread" " _repl" " _gsilib" " _gsi")
 (
@@ -4445,7 +4445,7 @@
  #f
 )
 #else
-#define ___VERSION 406005
+#define ___VERSION 406006
 #define ___LINKFILE_NAME " _gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
