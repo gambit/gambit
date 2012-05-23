@@ -1,0 +1,570 @@
+#!/bin/sh
+
+### File: "bench-gccs"
+
+### Copyright (c) 2012 by Marc Feeley, All Rights Reserved.
+
+# The following definitions should be adjusted to your context.
+
+# The set of gcc versions to install
+gcc_versions="\
+2.95   \
+2.95.1 \
+2.95.2 \
+2.95.3 \
+3.0    \
+3.0.1  \
+3.0.2  \
+3.0.3  \
+3.0.4  \
+3.1    \
+3.1.1  \
+3.2    \
+3.2.1  \
+3.2.2  \
+3.2.3  \
+3.3    \
+3.3.1  \
+3.3.2  \
+3.3.3  \
+3.3.4  \
+3.3.5  \
+3.3.6  \
+3.4.0  \
+3.4.1  \
+3.4.2  \
+3.4.3  \
+3.4.4  \
+3.4.5  \
+3.4.6  \
+4.0.0  \
+4.0.1  \
+4.0.2  \
+4.0.3  \
+4.0.4  \
+4.1.0  \
+4.1.1  \
+4.1.2  \
+4.2.0  \
+4.2.1  \
+4.2.2  \
+4.2.3  \
+4.2.4  \
+4.3.0  \
+4.3.1  \
+4.3.2  \
+4.3.3  \
+4.3.4  \
+4.3.5  \
+4.3.6  \
+4.4.0  \
+4.4.1  \
+4.4.2  \
+4.4.3  \
+4.4.4  \
+4.4.5  \
+4.4.6  \
+4.4.7  \
+4.5.0  \
+4.5.1  \
+4.5.2  \
+4.5.3  \
+4.6.0  \
+4.6.1  \
+4.6.2  \
+4.6.3  \
+4.7.0  \
+"
+
+# The URL where the gcc sources are downloaded from
+gcc_url="http://mirror.csclub.uwaterloo.ca/gnu/gcc"
+
+# The directory where the gcc versions are installed
+gcc_install_dir="$HOME/gcc-install"
+
+# The directory where Gambit compiled by the various gcc versions are installed
+install_dir="$HOME/gambit-install"
+
+get_gcc_filename()
+{
+  gcc_version="$1"
+
+  if [[ "$gcc_version" < "3.4" ]]; then
+    gcc_extension=".tar.gz"
+  else
+    gcc_extension=".tar.bz2"
+  fi
+
+  gcc_dir="gcc-$gcc_version"
+  gcc_filename="gcc-$gcc_version$gcc_extension"
+  gcc_key="`echo \"$gcc_version\" | sed -e 's/\./_/g'`"
+}
+
+download_gcc()
+{
+  gcc_version="$1"
+
+  get_gcc_filename "$gcc_version"
+
+  if [[ "$gcc_version" < "3" ]]; then
+    directory=""
+  else
+    directory="gcc-$gcc_version/"
+  fi
+
+  if [ ! -e "$gcc_install_dir" ]; then
+    mkdir "$gcc_install_dir"
+  fi
+
+  if [ ! -e "$gcc_install_dir/$gcc_version" ]; then
+    mkdir "$gcc_install_dir/$gcc_version"
+  fi
+
+  if [ ! -e "$gcc_install_dir/$gcc_version/.download" ]; then
+    mkdir "$gcc_install_dir/$gcc_version/.download"
+  fi
+
+  if [ ! -e "$gcc_install_dir/$gcc_version/.download/$gcc_filename" ]; then
+    wget -O "$gcc_install_dir/$gcc_version/.download/$gcc_filename" "$gcc_url/$directory$gcc_filename"
+    #curl -o "$gcc_install_dir/$gcc_version/.download/$gcc_filename" "$gcc_url/$directory$gcc_filename"
+  fi
+}
+
+unpack_gcc()
+{
+  gcc_version="$1"
+
+  get_gcc_filename "$gcc_version"
+
+  if [ ! -e "$gcc_install_dir/$gcc_version/.sources" ]; then
+    mkdir "$gcc_install_dir/$gcc_version/.sources"
+  fi
+
+  if [ ! -e "$gcc_install_dir/$gcc_version/.sources/$gcc_dir" ]; then
+
+    here="`pwd`"
+
+    cd "$gcc_install_dir/$gcc_version/.sources"
+
+    if [[ "$gcc_extension" == ".tar.bz2" ]]; then
+      bunzip2 -c "../.download/$gcc_filename" | tar xf -
+    else
+      gunzip -c "../.download/$gcc_filename" | tar xf -
+    fi
+
+    cd "$gcc_dir"
+
+    if [[ "$gcc_version" < "3.3.4" ]]; then
+      if [ -e "include/obstack.h" ]; then
+        sed -e "s/if defined __GNUC__ && defined __STDC__ && __STDC__/if 0/" "include/obstack.h" > "include/obstack.h-new"
+        mv "include/obstack.h-new" "include/obstack.h"
+      fi
+    fi
+
+    cd "$here"
+
+  fi
+}
+
+compile_gcc()
+{
+  gcc_version="$1"
+
+  get_gcc_filename "$gcc_version"
+
+  rm -rf "$gcc_install_dir/$gcc_version/.build"
+
+  mkdir "$gcc_install_dir/$gcc_version/.build"
+  mkdir "$gcc_install_dir/$gcc_version/.build/$gcc_dir"
+
+  here="`pwd`"
+
+  cd "$gcc_install_dir/$gcc_version/.build/$gcc_dir"
+
+  echo "====================================================== $gcc_install_dir/$gcc_version/.build/$gcc_dir"
+
+  eval "config_opts=\$config_opts_$gcc_key"
+
+  if (CC="$c_compiler_for_bootstrap" AS="$gcc_install_dir/.bin/as" ../../.sources/$gcc_dir/configure --prefix="$gcc_install_dir/$gcc_version" $config_opts && make bootstrap && make install) ; then
+    c_compiler_for_bootstrap_not="$gcc_install_dir/$gcc_version/bin/gcc"
+  fi
+
+  cd "$here"
+}
+
+config_opts_2_95="   i686-pc-linux-gnu --enable-languages=c"
+config_opts_2_95_1=" i686-pc-linux-gnu --enable-languages=c"
+config_opts_2_95_2=" i686-pc-linux-gnu --enable-languages=c"
+config_opts_2_95_3=" i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_0="    i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_0_1="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_0_2="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_0_3="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_0_4="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_1="    i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_1_1="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_2="    i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_2_1="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_2_2="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_2_3="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_3="    i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_3_1="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_3_2="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_3_3="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_3_4="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_3_5="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_3_6="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_4_0="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_4_1="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_4_2="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_4_3="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_4_4="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_4_5="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_3_4_6="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_0_0="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_0_1="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_0_2="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_0_3="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_0_4="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_1_0="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_1_1="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_1_2="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_2_0="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_2_1="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_2_2="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_2_3="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_2_4="  i686-pc-linux-gnu --enable-languages=c"
+config_opts_4_3_0="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_3_1="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_3_2="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_3_3="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_3_4="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_3_5="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_3_6="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_4_0="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_4_1="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_4_2="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_4_3="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_4_4="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_4_5="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_4_6="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_4_7="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr"
+config_opts_4_5_0="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+config_opts_4_5_1="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+config_opts_4_5_2="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+config_opts_4_5_3="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+config_opts_4_6_0="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+config_opts_4_6_1="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+config_opts_4_6_2="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+config_opts_4_6_3="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+config_opts_4_7_0="  i686-pc-linux-gnu --enable-languages=c --with-gmp=$gcc_install_dir/.gmp --with-mpfr=$gcc_install_dir/.mpfr  --with-mpc=$gcc_install_dir/.mpc"
+
+build_gcc()
+{
+  gcc_version="$1"
+
+  if [ ! -e "$gcc_install_dir/$gcc_version" ]; then
+
+    download_gcc "$gcc_version"
+    unpack_gcc "$gcc_version"
+    compile_gcc "$gcc_version"
+
+  fi
+}
+
+build_gmp()
+{
+  if [ ! -e "$gcc_install_dir" ]; then
+    mkdir "$gcc_install_dir"
+  fi
+
+  if [ ! -e "$gcc_install_dir/.gmp" ]; then
+
+    mkdir "$gcc_install_dir/.gmp"
+
+    if [ ! -e "$gcc_install_dir/.gmp/.sources" ]; then
+      mkdir "$gcc_install_dir/.gmp/.sources"
+    fi
+
+    here="`pwd`"
+
+    cd "$gcc_install_dir/.gmp/.sources"
+
+    wget "ftp://gcc.gnu.org/pub/gcc/infrastructure/gmp-4.3.2.tar.bz2"
+
+    cd ..
+
+    rm -rf ".build"
+
+   bunzip2 -c ".sources/gmp-4.3.2.tar.bz2" | tar xf -
+    mv "gmp-4.3.2" ".build"
+
+    cd ".build"
+
+    ./configure --prefix="$gcc_install_dir/.gmp" i686-pc-linux-gnu CC='gcc -m32'
+
+    make
+
+    make check
+
+    make install
+
+  fi
+
+  cd "$here"
+}
+
+build_mpfr()
+{
+  if [ ! -e "$gcc_install_dir" ]; then
+    mkdir "$gcc_install_dir"
+  fi
+
+  if [ ! -e "$gcc_install_dir/.mpfr" ]; then
+
+    mkdir "$gcc_install_dir/.mpfr"
+
+    if [ ! -e "$gcc_install_dir/.mpfr/.sources" ]; then
+      mkdir "$gcc_install_dir/.mpfr/.sources"
+    fi
+
+    here="`pwd`"
+
+    cd "$gcc_install_dir/.mpfr/.sources"
+
+    wget "ftp://gcc.gnu.org/pub/gcc/infrastructure/mpfr-2.4.2.tar.bz2"
+
+    cd ..
+
+    rm -rf ".build"
+
+    bunzip2 -c ".sources/mpfr-2.4.2.tar.bz2" | tar xf -
+    mv "mpfr-2.4.2" ".build"
+
+    cd ".build"
+
+    ./configure --prefix="$gcc_install_dir/.mpfr" --with-gmp-build="$gcc_install_dir/.gmp/.build" i686-pc-linux-gnu CC='gcc -m32'
+
+    make
+
+    make check
+
+    make install
+
+  fi
+
+  cd "$here"
+}
+
+build_mpc()
+{
+  if [ ! -e "$gcc_install_dir" ]; then
+    mkdir "$gcc_install_dir"
+  fi
+
+  if [ ! -e "$gcc_install_dir/.mpc" ]; then
+
+    mkdir "$gcc_install_dir/.mpc"
+
+    if [ ! -e "$gcc_install_dir/.mpc/.sources" ]; then
+      mkdir "$gcc_install_dir/.mpc/.sources"
+    fi
+
+    here="`pwd`"
+
+    cd "$gcc_install_dir/.mpc/.sources"
+
+    wget "http://www.multiprecision.org/mpc/download/mpc-0.9.tar.gz"
+
+    cd ..
+
+    rm -rf ".build"
+
+    gunzip -c ".sources/mpc-0.9.tar.gz" | tar xf -
+    mv "mpc-0.9" ".build"
+
+    cd ".build"
+
+    ./configure --prefix="$gcc_install_dir/.mpc" --with-gmp="$gcc_install_dir/.gmp" --with-mpfr="$gcc_install_dir/.mpfr" i686-pc-linux-gnu CC='gcc -m32'
+
+    make
+
+    make check
+
+    make install
+
+  fi
+
+  cd "$here"
+}
+
+unpack_gambit()
+{
+  gcc_version="$1"
+
+  get_gcc_filename "$gcc_version"
+
+  if [ ! -e "$gambit_install_dir" ]; then
+    mkdir "$gambit_install_dir"
+  fi
+
+  if [ ! -e "$gambit_install_dir/$gcc_version" ]; then
+    mkdir "$gambit_install_dir/$gcc_version"
+  fi
+
+  if [ ! -e "$gambit_install_dir/$gcc_version/.build" ]; then
+
+    here="`pwd`"
+
+    cd "$gambit_install_dir/$gcc_version"
+
+    tar zxf ~/new-gambc-v4_6_5.tgz
+
+    mv gambc-v4_6_5 ".build"
+
+    cd "$here"
+
+  fi
+}
+
+compile_gambit()
+{
+  gcc_version="$1"
+
+  get_gcc_filename "$gcc_version"
+
+  here="`pwd`"
+
+  cd "$gambit_install_dir/$gcc_version/.build"
+
+  echo "====================================================== $gambit_install_dir/$gcc_version/.build"
+
+  config_options="--enable-single-host --enable-c-opt=-O1"
+
+  if (./configure --prefix="$gambit_install_dir/$gcc_version/shO1" CC="$gcc_install_dir/$gcc_version/bin/gcc" $config_options && make clean && /usr/bin/time make && make install && make check) ; then
+    echo "####### $config_options VERSION BUILT SUCCESSFULLY"
+  else
+    echo "####### $config_options VERSION FAILED"
+  fi
+
+  config_options="--enable-multiple-hosts --enable-c-opt=-O1"
+
+  if (./configure --prefix="$gambit_install_dir/$gcc_version/mhO1" CC="$gcc_install_dir/$gcc_version/bin/gcc" $config_options && make clean && /usr/bin/time make && make install && make check) ; then
+    echo "####### $config_options VERSION BUILT SUCCESSFULLY"
+  else
+    echo "####### $config_options VERSION FAILED"
+  fi
+
+  config_options="--enable-single-host --enable-c-opt=-O2"
+
+  if (./configure --prefix="$gambit_install_dir/$gcc_version/shO2" CC="$gcc_install_dir/$gcc_version/bin/gcc" $config_options && make clean && /usr/bin/time make && make install && make check) ; then
+    echo "####### $config_options VERSION BUILT SUCCESSFULLY"
+  else
+    echo "####### $config_options VERSION FAILED"
+  fi
+
+  config_options="--enable-multiple-hosts --enable-c-opt=-O2"
+
+  if (./configure --prefix="$gambit_install_dir/$gcc_version/mhO2" CC="$gcc_install_dir/$gcc_version/bin/gcc" $config_options && make clean && /usr/bin/time make && make install && make check) ; then
+    echo "####### $config_options VERSION BUILT SUCCESSFULLY"
+  else
+    echo "####### $config_options VERSION FAILED"
+  fi
+
+  cd "$here"
+}
+
+build_gambit()
+{
+  gcc_version="$1"
+
+  unpack_gambit "$gcc_version"
+  compile_gambit "$gcc_version"
+}
+
+build_all()
+{
+  if [ ! -e "$gcc_install_dir" ]; then
+    mkdir "$gcc_install_dir"
+  fi
+
+  if [ ! -e "$gcc_install_dir/.bin" ]; then
+
+    mkdir "$gcc_install_dir/.bin"
+
+    cat <<EOF > "$gcc_install_dir/.bin/as"
+#!/bin/sh
+/usr/bin/as --32 \$*
+EOF
+
+    chmod +x "$gcc_install_dir/.bin/as"
+
+  fi
+
+  export PATH="$gcc_install_dir/.bin:$PATH"
+  export LD_LIBRARY_PATH="$gcc_install_dir/.gmp/lib:$gcc_install_dir/.mpfr/lib:$gcc_install_dir/.mpc/lib:$LD_LIBRARY_PATH"
+
+  c_compiler_for_bootstrap="gcc -m32"
+
+  build_gmp
+  build_mpfr
+  build_mpc
+
+  for v in $gcc_versions ; do
+    #build_gcc "$v"
+    build_gambit "$v"
+  done
+}
+
+bench()
+{
+  gcc_version="$1"
+  opt="$2"
+
+  echo "("
+  for i in 1 2 3 4 5 ; do
+    PATH="$gcc_install_dir/.bin:$PATH" $gambit_install_dir/$gcc_version/$opt/bin/gsi mix.scm > /dev/null
+  done
+  echo ")"
+
+  echo "("
+  for i in 1 2 3 4 5 ; do
+    PATH="$gcc_install_dir/.bin:$PATH" /usr/bin/time $gambit_install_dir/$gcc_version/$opt/bin/gsc -c _io.scm
+    rm -f _io.c
+  done
+  echo ")"
+
+  echo "("
+  for i in 1 2 3 4 5 ; do
+    PATH="$gcc_install_dir/.bin:$PATH" /usr/bin/time $gambit_install_dir/$gcc_version/$opt/bin/gsc _io.scm
+    rm -f _io.o*
+  done
+  echo ")"
+}
+
+bench_all()
+{
+  for v in $gcc_versions ; do
+
+    echo "("
+    echo "\"$v\""
+
+    for opt in mhO1 mhO2 shO1 shO2 ; do
+
+      echo "("
+      echo "\"$opt\""
+
+      bench "$v" "$opt"
+
+      echo ")"
+
+    done
+
+    echo ")"
+
+  done
+}
+
+build_all
+
+bench_all
