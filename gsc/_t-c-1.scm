@@ -208,7 +208,7 @@
 ;;
 ;; Initialization/finalization of back-end
 
-(let ((targ (make-target 7 'c)))
+(let ((targ (make-target 7 'c 0)))
 
   (define (begin! info-port)
 

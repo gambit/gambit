@@ -18,7 +18,7 @@
 ;; Initialization/finalization of back-end.
 
 (define (univ-setup target-language file-extension)
-  (let ((targ (make-target 7 target-language)))
+  (let ((targ (make-target 7 target-language 0)))
 
     (define (begin! info-port)
 
@@ -77,6 +77,78 @@
 (univ-setup 'js     ".js")
 (univ-setup 'python ".py")
 (univ-setup 'php    ".php")
+
+;;;----------------------------------------------------------------------------
+
+;; Generation of textual target code.
+
+(define (univ-indent . rest)
+  (cons '$$indent$$ rest))
+
+(define (univ-display x port)
+
+  (define indent-level 0)
+  (define after-newline? #t)
+
+  (define (indent)
+    (if after-newline?
+        (begin
+          (display (make-string (* 2 indent-level) #\space) port)
+          (set! after-newline? #f))))
+
+  (define (disp x)
+
+    (cond ((string? x)
+           (let loop1 ((i 0))
+             (let loop2 ((j i))
+
+               (define (display-substring limit)
+                 (if (< i limit)
+                     (begin
+                       (indent)
+                       (if (and (= i 0) (= limit (string-length x)))
+                           (display x port)
+                           (display (substring x i limit) port)))))
+
+               (if (< j (string-length x))
+
+                   (let ((c (string-ref x j))
+                         (j+1 (+ j 1)))
+                       (if (char=? c #\newline)
+                           (begin
+                             (display-substring j+1)
+                             (set! after-newline? #t)
+                             (loop1 j+1))
+                           (loop2 j+1)))
+
+                   (display-substring j)))))
+
+          ((symbol? x)
+           (disp (symbol->string x)))
+
+          ((char? x)
+           (disp (string x)))
+
+          ((null? x))
+
+          ((pair? x)
+           (if (eq? (car x) '$$indent$$)
+               (begin
+                 (set! indent-level (+ indent-level 1))
+                 (disp (cdr x))
+                 (set! indent-level (- indent-level 1)))
+               (begin
+                 (disp (car x))
+                 (disp (cdr x)))))
+
+          ((vector? x)
+           (disp (vector->list x)))
+
+          (else
+           (indent)
+           (display x port))))
+
+   (disp x))
 
 ;;;----------------------------------------------------------------------------
 
@@ -198,15 +270,15 @@
       output
     (lambda (port)
 
-      (print
-       port: port
-       (runtime-system targ))
+      (univ-display
+       (runtime-system targ)
+       port)
 
       (univ-dump-procs targ procs port)
 
-      (print
-       port: port
-       (entry-point (make-ctx targ #f) (list-ref procs 0)))))
+      (univ-display
+       (entry-point (make-ctx targ #f) (list-ref procs 0))
+       port)))
 
   #f)
 
@@ -235,7 +307,7 @@
       (define (scan-code ctx code)
         (let ((gvm-instr (code-gvm-instr code)))
 
-          (print port: port (translate-gvm-instr ctx gvm-instr))
+          (univ-display (translate-gvm-instr ctx gvm-instr) port)
 
           (case (gvm-instr-type gvm-instr)
 
@@ -265,15 +337,15 @@
             ((jump)
              (scan-opnd (jump-opnd gvm-instr))))))
 
-      (print
-       port: port
+      (univ-display
        (gen "\n// *** #<"
             (if (proc-obj-primitive? p)
                 "primitive"
                 "procedure")
             " "
             (object->string (string->canonical-symbol (proc-obj-name p)))
-            "> =\n"))
+            "> =\n")
+       port)
 
       (let ((x (proc-obj-code p)))
         (if (bbs? x)
@@ -374,14 +446,24 @@
            (opnds (ifjump-opnds gvm-instr))
            (true (ifjump-true gvm-instr))
            (false (ifjump-false gvm-instr))
-           (adj (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) " ")))
+           (adj (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")))
        (gen "if ("
             (prim-applic ctx test opnds #t)
-            ") "
-            "{ " adj "return " (translate-gvm-opnd ctx (make-lbl true)) "; }"
-            " else "
-            "{ " adj "return " (translate-gvm-opnd ctx (make-lbl false)) "; }"
-            "\n}\n")))
+            ")\n"
+            (univ-indent
+             "{\n"
+             (univ-indent
+              adj
+              "return " (translate-gvm-opnd ctx (make-lbl true)) ";\n")
+             "}\n")
+            "else\n"
+            (univ-indent
+             "{\n"
+             (univ-indent
+              adj
+              "return " (translate-gvm-opnd ctx (make-lbl false)) ";\n")
+             "}\n")
+            "}\n")))
 
     ((switch)
      ;; TODO
