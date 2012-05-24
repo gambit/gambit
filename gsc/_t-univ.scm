@@ -5,6 +5,7 @@
 ;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
+(include "_t-maps.scm")
 
 (include-adt "_envadt.scm")
 (include-adt "_gvmadt.scm")
@@ -200,13 +201,13 @@
 
       (print
        port: port
-       (runtime-system targ))
+       (univ-runtime-system (target-name targ)))
 
       (univ-dump-procs targ procs port)
 
       (print
        port: port
-       (entry-point (make-ctx targ #f) (list-ref procs 0)))))
+       (univ-entry-point (target-name targ) (make-ctx targ #f) (list-ref procs 0)))))
 
   #f)
 
@@ -235,7 +236,9 @@
       (define (scan-code ctx code)
         (let ((gvm-instr (code-gvm-instr code)))
 
-          (print port: port (translate-gvm-instr ctx gvm-instr))
+          (print
+           port: port
+           (translate-gvm-instr ctx gvm-instr))
 
           (case (gvm-instr-type gvm-instr)
 
@@ -265,15 +268,20 @@
             ((jump)
              (scan-opnd (jump-opnd gvm-instr))))))
 
-      (print
-       port: port
-       (gen "\n// *** #<"
-            (if (proc-obj-primitive? p)
-                "primitive"
-                "procedure")
-            " "
-            (object->string (string->canonical-symbol (proc-obj-name p)))
-            "> =\n"))
+      (let ((tgt (target-name targ)))
+        (print
+         port: port
+         (univ-gen-nl tgt)
+         (univ-open-comment tgt)
+         (univ-gen-string tgt "*** #<")
+         (if (proc-obj-primitive? p)
+              (univ-gen-string tgt "primitive")
+              (univ-gen-string tgt "procedure"))
+          (univ-gen-string tgt " ")
+          (univ-gen-string tgt (object->string (string->canonical-symbol (proc-obj-name p))))
+          (univ-gen-string tgt "> =")
+          (univ-end-comment tgt)
+          (univ-gen-nl tgt)))
 
       (let ((x (proc-obj-code p)))
         (if (bbs? x)
@@ -293,7 +301,6 @@
             (dump-proc (queue-get! proc-left))
             (loop))))))
 
-(define gen vector)
 
 (define (make-ctx target ns)
   (vector target ns))
@@ -305,253 +312,62 @@
 (define (ctx-ns-set! ctx x)     (vector-set! ctx 1 x))
 
 (define (translate-gvm-instr ctx gvm-instr)
+  
+  (let ((targ (target-name (ctx-target ctx))))
+    (case (gvm-instr-type gvm-instr)
+      ((label)
+       (univ-gen-label-instr targ ctx gvm-instr))
 
-  (case (gvm-instr-type gvm-instr)
+      ((apply)
+       (univ-gen-apply-instr targ ctx gvm-instr))
 
-    ((label)
-     (gen "\n"
-          "function "
-          (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
-          "() {\n"
+      ((copy)
+       (univ-gen-copy-instr targ ctx gvm-instr))
 
-          (case (label-type gvm-instr)
+      ((close)
+       (univ-gen-close-instr targ ctx gvm-instr))
 
-            ((simple)
-             (gen ""))
+      ((ifjump)
+       (univ-gen-ifjump-instr targ ctx gvm-instr))
 
-            ((entry)
-             (gen (if (label-entry-closed? gvm-instr)
-                      "// closure-entry-point\n"
-                      "// entry-point\n")
-                  "if (nargs !== " (label-entry-nb-parms gvm-instr) ") "
-                  "throw \"wrong number of arguments\";\n\n"))
+      ((switch)
+       (univ-gen-switch-instr targ ctx gvm-instr))
 
-            ((return)
-             (gen "// return-point\n"))
+      ((jump)
+       (univ-gen-jump-instr targ ctx gvm-instr))
 
-            ((task-entry)
-             (gen "// task-entry-point\n"
-                  "throw \"task-entry-point GVM label unimplemented\";\n"))
-
-            ((task-return)
-             (gen "// task-return-point\n"
-                  "throw \"task-return-point GVM label unimplemented\";\n"))
-
-            (else
-             (compiler-internal-error
-              "translate-gvm-instr, unknown label type")))
-
-          (sp-adjust ctx (- (frame-size (gvm-instr-frame gvm-instr))) "\n")))
-
-    ((apply)
-     (let ((loc (apply-loc gvm-instr))
-           (prim (apply-prim gvm-instr))
-           (opnds (apply-opnds gvm-instr)))
-       (gen (translate-gvm-opnd ctx loc)
-            " = "
-            (prim-applic ctx prim opnds #f)
-            ";\n")))
-
-    ((copy)
-     (let ((loc (copy-loc gvm-instr))
-           (opnd (copy-opnd gvm-instr)))
-       (if opnd
-           (gen (translate-gvm-opnd ctx loc)
-                " = "
-                (translate-gvm-opnd ctx opnd)
-                ";\n")
-           (gen ""))))
-
-    ((close)
-     ;; TODO
-     ;; (close-parms gvm-instr)
-     (gen "throw \"close GVM instruction unimplemented\";\n"))
-
-    ((ifjump)
-     ;; TODO
-     ;; (ifjump-poll? gvm-instr)
-     (let ((test (ifjump-test gvm-instr))
-           (opnds (ifjump-opnds gvm-instr))
-           (true (ifjump-true gvm-instr))
-           (false (ifjump-false gvm-instr))
-           (adj (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) " ")))
-       (gen "if ("
-            (prim-applic ctx test opnds #t)
-            ") "
-            "{ " adj "return " (translate-gvm-opnd ctx (make-lbl true)) "; }"
-            " else "
-            "{ " adj "return " (translate-gvm-opnd ctx (make-lbl false)) "; }"
-            "\n}\n")))
-
-    ((switch)
-     ;; TODO
-     ;; (switch-opnd gvm-instr)
-     ;; (switch-cases gvm-instr)
-     ;; (switch-poll? gvm-instr)
-     ;; (switch-default gvm-instr)
-     (gen "throw \"switch GVM instruction unimplemented\";\n"
-          "}\n"))
-
-    ((jump)
-     ;; TODO
-     ;; (jump-safe? gvm-instr)
-     ;; test: (jump-poll? gvm-instr) 
-     (gen (let ((nb-args (jump-nb-args gvm-instr)))
-            (if nb-args
-                (gen "nargs = " nb-args ";\n")
-                ""))
-          (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")
-          (let ((opnd (jump-opnd gvm-instr)))
-            (if (jump-poll? gvm-instr)
-                (gen "save_pc = " (translate-gvm-opnd ctx opnd) ";\n"
-                     "return null;\n")
-                (gen "return " (translate-gvm-opnd ctx opnd) ";\n")))
-          "}\n"))
-
-    (else
-     (compiler-internal-error
-      "translate-gvm-instr, unknown 'gvm-instr':"
-      gvm-instr))))
+      (else
+       (compiler-internal-error
+        "translate-gvm-instr, unknown 'gvm-instr':"
+        gvm-instr)))))
 
 (define (translate-gvm-opnd ctx gvm-opnd)
 
-  (cond ((not gvm-opnd)
-         (gen "NO_OPERAND"))
+  (let ((targ (target-name (ctx-target ctx))))
+    (cond ((not gvm-opnd)
+           (univ-gen-string targ "NO_OPERAND"))
 
-        ((reg? gvm-opnd)
-         (gen "reg["
-              (reg-num gvm-opnd)
-              "]"))
+          ((reg? gvm-opnd)
+           (univ-gen-reg-opnd targ ctx gvm-opnd))
 
-        ((stk? gvm-opnd)
-         (gen "stack[sp"
-              (if (< (stk-num gvm-opnd) 0) "" "+")
-              (stk-num gvm-opnd)
-              "]"))
+          ((stk? gvm-opnd)
+           (univ-gen-stk-opnd targ ctx gvm-opnd))
 
-        ((glo? gvm-opnd)
-         (gen "glo["
-              (object->string (symbol->string (glo-name gvm-opnd)))
-              "]"))
+          ((glo? gvm-opnd)
+           (univ-gen-glo-opnd targ ctx gvm-opnd))
 
-        ((clo? gvm-opnd)
-         (gen (translate-gvm-opnd ctx (clo-base gvm-opnd))
-              "["
-              (clo-index gvm-opnd)
-              "]"))
+          ((clo? gvm-opnd)
+           (univ-gen-clo-opnd targ ctx gvm-opnd))
 
-        ((lbl? gvm-opnd)
-         (translate-lbl ctx gvm-opnd))
+          ((lbl? gvm-opnd)
+           (univ-translate-lbl targ ctx gvm-opnd))
 
-        ((obj? gvm-opnd)
-         (let ((val (obj-val gvm-opnd)))
-           (cond ((number? val)
-                  (gen val))
-                 ((void-object? val)
-                  (gen "undefined"))
-                 ((proc-obj? val)
-                  (lbl->id ctx 1 (proc-obj-name val)))
-                 (else
-                  (gen "UNIMPLEMENTED_OBJECT("
-                       (object->string val)
-                       ")")))))
+          ((obj? gvm-opnd)
+           (univ-gen-obj-opnd targ ctx gvm-opnd))
 
-        (else
-         (compiler-internal-error
-           "translate-gvm-opnd, unknown 'gvm-opnd':"
-           gvm-opnd))))
-
-(define (sp-adjust ctx n sep)
-  (if (not (= n 0))
-      (gen "sp += " n ";" sep)
-      (gen "")))
-
-(define (translate-lbl ctx lbl)
-  (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
-
-(define (lbl->id ctx num ns)
-  (gen "lbl" num "_" (scheme-id->c-id ns)))
-
-(define (prim-applic ctx prim opnds test?)
-  (case (string->symbol (proc-obj-name prim))
-
-    ((##not)
-     (gen (translate-gvm-opnd ctx (list-ref opnds 0)) " === false"))
-
-    (else
-     (compiler-internal-error
-      "prim-applic, unimplemented primitive:"
-      (proc-obj-name prim)))))
-
-(define (runtime-system targ)
-#<<EOF
-var glo = {};
-var reg = [null];
-var stack = [];
-var sp = -1;
-var nargs = 0;
-var save_pc = null;
-var poll;
-
-if (this.hasOwnProperty('setTimeout'))
-{
-    poll = function (wakeup) { setTimeout(wakeup,1); return true; };
-}
-else
-{
-    poll = function (wakeup) { return false; };
-}
-
-
-function lbl1_fx_3c_() { // fx<
-    if (nargs !== 2) throw "wrong number of arguments";
-    reg[1] = reg[1] < reg[2];
-    return reg[0];
-}
-
-glo["fx<"] = lbl1_fx_3c_;
-
-function lbl1_fx_2b_() { // fx+
-    if (nargs !== 2) throw "wrong number of arguments";
-    reg[1] = reg[1] + reg[2];
-    return reg[0];
-}
-
-glo["fx+"] = lbl1_fx_2b_;
-
-function lbl1_fx_2d_() { // fx-
-    if (nargs !== 2) throw "wrong number of arguments";
-    reg[1] = reg[1] - reg[2];
-    return reg[0];
-}
-
-glo["fx-"] = lbl1_fx_2d_;
-
-function lbl1_print() { // print
-    if (nargs !== 1) throw "wrong number of arguments";
-    print(reg[1]);
-    return reg[0];
-}
-
-glo["print"] = lbl1_print;
-
-
-function run()
-{
-    while (save_pc !== null)
-    {
-        pc = save_pc;
-        save_pc = null;
-        while (pc !== null)
-            pc = pc();
-        if (poll(run)) break;
-    }
-}
-
-EOF
-)
-
-(define (entry-point ctx main-proc)
-  (gen "save_pc = " (lbl->id ctx 1 (proc-obj-name main-proc)) "; run();\n"))
+          (else
+           (compiler-internal-error
+            "translate-gvm-opnd, unknown 'gvm-opnd':"
+            gvm-opnd)))))
 
 ;;;============================================================================
