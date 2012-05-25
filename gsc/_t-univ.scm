@@ -246,14 +246,17 @@
 ;; ***** PRIMITIVE PROCEDURE DATABASE
 
 (define (univ-prim-info targ name)
+  (univ-prim-info* name))
+
+(define (univ-prim-info* name)
   (table-ref univ-prim-proc-table name #f))
 
 (define univ-prim-proc-table (make-table))
 
 (define (univ-prim-proc-add! x)
-  (let ((sym (string->canonical-symbol (car x))))
+  (let ((name (string->canonical-symbol (car x))))
     (table-set! univ-prim-proc-table
-                sym
+                name
                 (apply make-proc-obj (car x) #f #t #f (cdr x)))))
 
 (for-each univ-prim-proc-add! prim-procs)
@@ -419,19 +422,22 @@
      (let ((loc (apply-loc gvm-instr))
            (prim (apply-prim gvm-instr))
            (opnds (apply-opnds gvm-instr)))
-       (gen (translate-gvm-opnd ctx loc)
-            " = "
-            (prim-applic ctx prim opnds #f)
-            ";\n")))
+
+       (let ((proc (proc-obj-inline prim)))
+         (if (not proc)
+
+             (compiler-internal-error
+              "translate-gvm-instr, unknown 'prim'" prim)
+
+             (proc ctx opnds loc)))))
 
     ((copy)
      (let ((loc (copy-loc gvm-instr))
            (opnd (copy-opnd gvm-instr)))
        (if opnd
-           (gen (translate-gvm-opnd ctx loc)
-                " = "
-                (translate-gvm-opnd ctx opnd)
-                ";\n")
+           (univ-assign ctx
+                        (translate-gvm-opnd ctx loc)
+                        (translate-gvm-opnd ctx opnd))
            (gen ""))))
 
     ((close)
@@ -447,23 +453,30 @@
            (true (ifjump-true gvm-instr))
            (false (ifjump-false gvm-instr))
            (adj (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")))
-       (gen "if ("
-            (prim-applic ctx test opnds #t)
-            ")\n"
-            (univ-indent
-             "{\n"
-             (univ-indent
-              adj
-              "return " (translate-gvm-opnd ctx (make-lbl true)) ";\n")
-             "}\n")
-            "else\n"
-            (univ-indent
-             "{\n"
-             (univ-indent
-              adj
-              "return " (translate-gvm-opnd ctx (make-lbl false)) ";\n")
-             "}\n")
-            "}\n")))
+
+       (let ((proc (proc-obj-test test)))
+         (if (not proc)
+
+             (compiler-internal-error
+              "translate-gvm-instr, unknown 'test'" test)
+
+             (gen "if ("
+                  (proc ctx opnds)
+                  ")\n"
+                  (univ-indent
+                   "{\n"
+                   (univ-indent
+                    adj
+                    "return " (translate-gvm-opnd ctx (make-lbl true)) ";\n")
+                   "}\n")
+                  "else\n"
+                  (univ-indent
+                   "{\n"
+                   (univ-indent
+                    adj
+                    "return " (translate-gvm-opnd ctx (make-lbl false)) ";\n")
+                   "}\n")
+                  "}\n")))))
 
     ((switch)
      ;; TODO
@@ -585,30 +598,6 @@ else
 }
 
 
-function lbl1_fx_3c_() { // fx<
-    if (nargs !== 2) throw "wrong number of arguments";
-    reg[1] = reg[1] < reg[2];
-    return reg[0];
-}
-
-glo["fx<"] = lbl1_fx_3c_;
-
-function lbl1_fx_2b_() { // fx+
-    if (nargs !== 2) throw "wrong number of arguments";
-    reg[1] = reg[1] + reg[2];
-    return reg[0];
-}
-
-glo["fx+"] = lbl1_fx_2b_;
-
-function lbl1_fx_2d_() { // fx-
-    if (nargs !== 2) throw "wrong number of arguments";
-    reg[1] = reg[1] - reg[2];
-    return reg[0];
-}
-
-glo["fx-"] = lbl1_fx_2d_;
-
 function lbl1_print() { // print
     if (nargs !== 1) throw "wrong number of arguments";
     print(reg[1]);
@@ -635,5 +624,92 @@ EOF
 
 (define (entry-point ctx main-proc)
   (gen "save_pc = " (lbl->id ctx 1 (proc-obj-name main-proc)) "; run();\n"))
+
+;;;----------------------------------------------------------------------------
+
+(define (univ-assign ctx loc expr)
+  (gen loc " = " expr ";\n"))
+
+(define (univ-expr ctx expr)
+  (gen expr ";\n"))
+
+(define (univ-define-prim name proc-safe? side-effects? apply-gen ifjump-gen)
+  (let ((prim (univ-prim-info* (string->canonical-symbol name))))
+
+    (if apply-gen
+        (begin
+
+          (proc-obj-inlinable?-set!
+           prim
+           (lambda (env)
+             (or proc-safe?
+                 (not (safe? env)))))
+
+          (proc-obj-inline-set!
+           prim
+           (lambda (ctx opnds loc)
+             (if loc ;; result is needed?
+
+                 (univ-assign ctx
+                              (translate-gvm-opnd ctx loc)
+                              (apply-gen ctx opnds))
+
+                 (if side-effects? ;; only generate code for side-effect
+                     (univ-expr ctx
+                                (apply-gen ctx opnds))
+                     (gen "")))))))
+
+    (if ifjump-gen
+        (begin
+
+          (proc-obj-testable?-set!
+           prim
+           (lambda (env)
+             (or proc-safe?
+                 (not (safe? env)))))
+
+          (proc-obj-test-set!
+           prim
+           (lambda (ctx opnds)
+             (ifjump-gen ctx opnds)))))))
+
+;;; Primitive procedures
+
+(univ-define-prim "##not" #f #f
+
+  (lambda (ctx opnds)
+    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+         " === false"))
+
+  (lambda (ctx opnds)
+    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+         " === false")))
+
+(univ-define-prim "fx+" #f #f
+
+  (lambda (ctx opnds)
+    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+         " + "
+         (translate-gvm-opnd ctx (list-ref opnds 1))))
+
+  #f)
+
+(univ-define-prim "fx-" #f #f
+
+  (lambda (ctx opnds)
+    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+         " - "
+         (translate-gvm-opnd ctx (list-ref opnds 1))))
+
+  #f)
+
+(univ-define-prim "fx<" #f #f
+
+  #f
+
+  (lambda (ctx opnds)
+    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+         " < "
+         (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 ;;;============================================================================
