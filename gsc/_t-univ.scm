@@ -11,6 +11,9 @@
 (include-adt "_ptreeadt.scm")
 (include-adt "_sourceadt.scm")
 
+(define univ-enable-jump-destination-inlining? #f)
+(set! univ-enable-jump-destination-inlining? #t)
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; "Universal" back-end.
@@ -298,13 +301,6 @@
             (queue-put! proc-seen obj)
             (queue-put! proc-left obj))))
 
-    (define (scan-opnd gvm-opnd)
-      (cond ((not gvm-opnd))
-            ((obj? gvm-opnd)
-             (scan-obj (obj-val gvm-opnd)))
-            ((clo? gvm-opnd)
-             (scan-opnd (clo-base gvm-opnd)))))
-
     (define (dump-proc p)
 
       (define (scan-bbs bbs)
@@ -312,18 +308,18 @@
                (bb-done (make-stretchable-vector #f))
                (bb-todo (queue-empty)))
 
-          (define (todo! bb)
+          (define (todo-bb! bb)
             (queue-put! bb-todo bb))
 
+          (define (todo-lbl-num! n)
+            (todo-bb! (lbl-num->bb n bbs)))
+
           (define (scan-bb bb)
-            (let ((lbl-num (bb-lbl-num bb)))
-              (if (stretchable-vector-ref bb-done lbl-num)
-                  (gen "")
-                  (begin
-                    (stretchable-vector-set! bb-done lbl-num #t)
-                    (let ((code (scan-bb-all bb)))
-                      (for-each todo! (bb-references bb))
-                      code)))))
+            (if (stretchable-vector-ref bb-done (bb-lbl-num bb))
+                (gen "")
+                (begin
+                  (stretchable-vector-set! bb-done (bb-lbl-num bb) #t)
+                  (scan-bb-all bb))))
 
           (define (scan-bb-all bb)
             (scan-gvm-label
@@ -331,12 +327,6 @@
              (scan-bb-all-except-label bb)))
 
           (define (scan-bb-all-except-label bb)
-
-            (let ((lbl-num (bb-lbl-num bb)));;;;;;;;;;;;;;;;;;;;
-              (pp (list lbl-num
-                        (length (bb-precedents bb))
-                        (map bb-lbl-num (bb-references bb)))))
-
             (let loop ((lst (bb-non-branch-instrs bb))
                        (rev-res '()))
               (if (pair? lst)
@@ -390,7 +380,15 @@
 
           (define (scan-gvm-instr gvm-instr)
 
-            ;; TODO: combine with other case
+            ;; TODO: combine with scan-gvm-opnd
+            (define (scan-opnd gvm-opnd)
+              (cond ((not gvm-opnd))
+                    ((obj? gvm-opnd)
+                     (scan-obj (obj-val gvm-opnd)))
+                    ((clo? gvm-opnd)
+                     (scan-opnd (clo-base gvm-opnd)))))
+
+            ;; TODO: combine with scan-gvm-opnd
             (case (gvm-instr-type gvm-instr)
 
               ((apply)
@@ -439,8 +437,8 @@
                      (opnd (copy-opnd gvm-instr)))
                  (if opnd
                      (univ-assign ctx
-                                  (translate-gvm-opnd ctx loc)
-                                  (translate-gvm-opnd ctx opnd))
+                                  (scan-gvm-opnd loc)
+                                  (scan-gvm-opnd opnd))
                      (gen ""))))
 
               ((close)
@@ -455,7 +453,7 @@
                      (opnds (ifjump-opnds gvm-instr))
                      (true (ifjump-true gvm-instr))
                      (false (ifjump-false gvm-instr))
-                     (adj (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")))
+                     (fs (frame-size (gvm-instr-frame gvm-instr))))
 
                  (let ((proc (proc-obj-test test)))
                    (if (not proc)
@@ -466,13 +464,9 @@
                        (gen "if ("
                             (proc ctx opnds)
                             ") {\n"
-                            (univ-indent
-                             adj
-                             "return " (translate-gvm-opnd ctx (make-lbl true)) ";\n")
+                            (univ-indent (jump-to-label true fs))
                             "} else {\n"
-                            (univ-indent
-                             adj
-                             "return " (translate-gvm-opnd ctx (make-lbl false)) ";\n")
+                            (univ-indent (jump-to-label false fs))
                             "}\n")))))
 
               ((switch)
@@ -494,16 +488,39 @@
                     (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")
                     (let ((opnd (jump-opnd gvm-instr)))
                       (if (jump-poll? gvm-instr)
-                          (gen "save_pc = " (translate-gvm-opnd ctx opnd) ";\n"
+                          (gen "save_pc = " (scan-gvm-opnd opnd) ";\n"
                                "return null;\n")
-                          (gen "return " (translate-gvm-opnd ctx opnd) ";\n")))))
+                          (gen "return " (scan-gvm-opnd opnd) ";\n")))))
 
               (else
                (compiler-internal-error
                 "scan-gvm-instr, unknown 'gvm-instr':"
                 gvm-instr))))
 
-          (todo! (lbl-num->bb (bbs-entry-lbl-num bbs) bbs))
+          (define (jump-to-label n jump-fs)
+
+            (cond ((and univ-enable-jump-destination-inlining?
+                        (let* ((bb (lbl-num->bb n bbs))
+                               (label-instr (bb-label-instr bb)))
+                          (and (eq? (label-type label-instr) 'simple)
+                               (or (= (length (bb-precedents bb)) 1) ;; sole jump to destination bb?
+                                   (= (length (bb-non-branch-instrs bb)) 0))))) ;; very short destination bb?
+                   (let* ((bb (lbl-num->bb n bbs))
+                          (label-instr (bb-label-instr bb))
+                          (label-fs (frame-size (gvm-instr-frame label-instr))))
+                     (gen (sp-adjust ctx (- jump-fs label-fs) "\n")
+                          (scan-bb-all-except-label bb))))
+
+                  (else
+                   (gen (sp-adjust ctx jump-fs "\n")
+                        "return " (scan-gvm-opnd (make-lbl n)) ";\n"))))
+
+          (define (scan-gvm-opnd gvm-opnd)
+            (if (lbl? gvm-opnd)
+                (todo-lbl-num! (lbl-num gvm-opnd)))
+            (translate-gvm-opnd ctx gvm-opnd))
+
+          (todo-lbl-num! (bbs-entry-lbl-num bbs))
 
           (let loop ((rev-res '()))
             (if (queue-empty? bb-todo)
@@ -523,7 +540,7 @@
                  (scan-bbs x)
                  (gen "")))))
 
-    (for-each (lambda (proc) (scan-opnd (make-obj proc))) procs)
+    (for-each scan-obj procs)
 
     (let loop ((rev-res '()))
       (if (queue-empty? proc-left)
