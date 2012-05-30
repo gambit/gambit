@@ -461,13 +461,11 @@
                        (compiler-internal-error
                         "scan-gvm-instr, unknown 'test'" test)
 
-                       (gen "if ("
-                            (proc ctx opnds)
-                            ") {\n"
-                            (univ-indent (jump-to-label ctx true fs))
-                            "} else {\n"
-                            (univ-indent (jump-to-label ctx false fs))
-                            "}\n")))))
+                       (univ-if
+                        ctx
+                        (proc ctx opnds)
+                        (jump-to-label ctx true fs)
+                        (jump-to-label ctx false fs))))))
 
               ((switch)
                ;; TODO
@@ -483,7 +481,7 @@
                ;; test: (jump-poll? gvm-instr)
                (gen (let ((nb-args (jump-nb-args gvm-instr)))
                       (if nb-args
-                          (gen "nargs = " nb-args ";\n")
+                          (univ-assign ctx "nargs" nb-args)
                           ""))
                     (with-stack-pointer-adjust
                      ctx
@@ -492,7 +490,7 @@
                      (lambda (ctx)
                        (let ((opnd (jump-opnd gvm-instr)))
                          (if (jump-poll? gvm-instr)
-                             (gen "save_pc = " (scan-gvm-opnd ctx opnd) ";\n"
+                             (gen (univ-assign ctx "save_pc" (scan-gvm-opnd ctx opnd))
                                   "return null;\n")
                              (gen "return " (scan-gvm-opnd ctx opnd) ";\n")))))))
 
@@ -594,7 +592,7 @@
 (define (with-stack-pointer-adjust ctx n proc)
   (gen (if (= n 0)
            (gen "")
-           (gen "sp += " n ";\n"))
+           (univ-increment ctx "sp" n))
        (with-stack-base-offset
         ctx
         (- (ctx-stack-base-offset ctx) n)
@@ -701,16 +699,73 @@ EOF
 
 (define (entry-point ctx main-proc)
   (gen "\n// --------------------------------\n\n"
-       "save_pc = " (lbl->id ctx 1 (proc-obj-name main-proc)) ";\n"
+       (univ-assign ctx "save_pc" (lbl->id ctx 1 (proc-obj-name main-proc)))
        "run();\n"))
 
 ;;;----------------------------------------------------------------------------
 
 (define (univ-assign ctx loc expr)
-  (gen loc " = " expr ";\n"))
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen loc " = " expr ";\n"))
+
+    ((python)
+     (gen loc " = " expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-assign, unknown target"))))
+
+(define (univ-increment ctx loc expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen loc " += " expr ";\n"))
+
+    ((python)
+     (gen loc " += " expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-increment, unknown target"))))
 
 (define (univ-expr ctx expr)
-  (gen expr ";\n"))
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen expr ";\n"))
+
+    ((python)
+     (gen expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-expr, unknown target"))))
+
+(define (univ-if ctx test true false)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "if ("
+          test
+          ") {\n"
+          (univ-indent true)
+          "} else {\n"
+          (univ-indent false)
+          "}\n"))
+
+    ((python)
+     (gen "if ("
+          test
+          "):\n"
+          (univ-indent true)
+          "else:\n"
+          (univ-indent false)))
+
+    (else
+     (compiler-internal-error
+      "univ-if, unknown target"))))
 
 (define (univ-define-prim name proc-safe? side-effects? apply-gen ifjump-gen)
   (let ((prim (univ-prim-info* (string->canonical-symbol name))))
