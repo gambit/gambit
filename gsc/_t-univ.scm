@@ -304,40 +304,38 @@
     (define (dump-proc p)
 
       (define (scan-bbs bbs)
-        (let* ((ctx (make-ctx targ (proc-obj-name p)))
-               (bb-done (make-stretchable-vector #f))
+        (let* ((bb-done (make-stretchable-vector #f))
                (bb-todo (queue-empty)))
 
-          (define (todo-bb! bb)
-            (queue-put! bb-todo bb))
-
           (define (todo-lbl-num! n)
-            (todo-bb! (lbl-num->bb n bbs)))
+            (queue-put! bb-todo (lbl-num->bb n bbs)))
 
-          (define (scan-bb bb)
+          (define (scan-bb ctx bb)
             (if (stretchable-vector-ref bb-done (bb-lbl-num bb))
                 (gen "")
                 (begin
                   (stretchable-vector-set! bb-done (bb-lbl-num bb) #t)
-                  (scan-bb-all bb))))
+                  (scan-bb-all ctx bb))))
 
-          (define (scan-bb-all bb)
+          (define (scan-bb-all ctx bb)
             (scan-gvm-label
+             ctx
              (bb-label-instr bb)
-             (scan-bb-all-except-label bb)))
+             (lambda (ctx)
+               (scan-bb-all-except-label ctx bb))))
 
-          (define (scan-bb-all-except-label bb)
+          (define (scan-bb-all-except-label ctx bb)
             (let loop ((lst (bb-non-branch-instrs bb))
                        (rev-res '()))
               (if (pair? lst)
                   (loop (cdr lst)
-                        (cons (scan-gvm-instr (car lst))
+                        (cons (scan-gvm-instr ctx (car lst))
                               rev-res))
                   (reverse
-                   (cons (scan-gvm-instr (bb-branch-instr bb))
+                   (cons (scan-gvm-instr ctx (bb-branch-instr bb))
                          rev-res)))))
 
-          (define (scan-gvm-label gvm-instr body)
+          (define (scan-gvm-label ctx gvm-instr proc)
             (gen "\n"
                  "function "
                  (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
@@ -372,13 +370,15 @@
                      (compiler-internal-error
                       "scan-gvm-label, unknown label type")))
 
-                  (sp-adjust ctx (- (frame-size (gvm-instr-frame gvm-instr))) "\n")
-
-                  body)
+                  (with-stack-base-offset
+                   ctx
+                   (- (frame-size (gvm-instr-frame gvm-instr)))
+                   (lambda (ctx)
+                     (proc ctx))));;;;;;;;;;;;;;;;;;;;;;
 
                  "}\n"))
 
-          (define (scan-gvm-instr gvm-instr)
+          (define (scan-gvm-instr ctx gvm-instr)
 
             ;; TODO: combine with scan-gvm-opnd
             (define (scan-opnd gvm-opnd)
@@ -437,8 +437,8 @@
                      (opnd (copy-opnd gvm-instr)))
                  (if opnd
                      (univ-assign ctx
-                                  (scan-gvm-opnd loc)
-                                  (scan-gvm-opnd opnd))
+                                  (scan-gvm-opnd ctx loc)
+                                  (scan-gvm-opnd ctx opnd))
                      (gen ""))))
 
               ((close)
@@ -464,9 +464,9 @@
                        (gen "if ("
                             (proc ctx opnds)
                             ") {\n"
-                            (univ-indent (jump-to-label true fs))
+                            (univ-indent (jump-to-label ctx true fs))
                             "} else {\n"
-                            (univ-indent (jump-to-label false fs))
+                            (univ-indent (jump-to-label ctx false fs))
                             "}\n")))))
 
               ((switch)
@@ -480,24 +480,28 @@
               ((jump)
                ;; TODO
                ;; (jump-safe? gvm-instr)
-               ;; test: (jump-poll? gvm-instr) 
+               ;; test: (jump-poll? gvm-instr)
                (gen (let ((nb-args (jump-nb-args gvm-instr)))
                       (if nb-args
                           (gen "nargs = " nb-args ";\n")
                           ""))
-                    (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")
-                    (let ((opnd (jump-opnd gvm-instr)))
-                      (if (jump-poll? gvm-instr)
-                          (gen "save_pc = " (scan-gvm-opnd opnd) ";\n"
-                               "return null;\n")
-                          (gen "return " (scan-gvm-opnd opnd) ";\n")))))
+                    (with-stack-pointer-adjust
+                     ctx
+                     (+ (frame-size (gvm-instr-frame gvm-instr))
+                        (ctx-stack-base-offset ctx))
+                     (lambda (ctx)
+                       (let ((opnd (jump-opnd gvm-instr)))
+                         (if (jump-poll? gvm-instr)
+                             (gen "save_pc = " (scan-gvm-opnd ctx opnd) ";\n"
+                                  "return null;\n")
+                             (gen "return " (scan-gvm-opnd ctx opnd) ";\n")))))))
 
               (else
                (compiler-internal-error
                 "scan-gvm-instr, unknown 'gvm-instr':"
                 gvm-instr))))
 
-          (define (jump-to-label n jump-fs)
+          (define (jump-to-label ctx n jump-fs)
 
             (cond ((and univ-enable-jump-destination-inlining?
                         (let* ((bb (lbl-num->bb n bbs))
@@ -508,25 +512,39 @@
                    (let* ((bb (lbl-num->bb n bbs))
                           (label-instr (bb-label-instr bb))
                           (label-fs (frame-size (gvm-instr-frame label-instr))))
-                     (gen (sp-adjust ctx (- jump-fs label-fs) "\n")
-                          (scan-bb-all-except-label bb))))
+                     (with-stack-pointer-adjust
+                      ctx
+                      (+ jump-fs
+                         (ctx-stack-base-offset ctx))
+                      (lambda (ctx)
+                        (with-stack-base-offset
+                         ctx
+                         (- label-fs)
+                         (lambda (ctx)
+                           (scan-bb-all-except-label ctx bb)))))))
 
                   (else
-                   (gen (sp-adjust ctx jump-fs "\n")
-                        "return " (scan-gvm-opnd (make-lbl n)) ";\n"))))
+                   (with-stack-pointer-adjust
+                    ctx
+                    (+ jump-fs
+                       (ctx-stack-base-offset ctx))
+                    (lambda (ctx)
+                      (gen "return " (scan-gvm-opnd ctx (make-lbl n)) ";\n"))))))
 
-          (define (scan-gvm-opnd gvm-opnd)
+          (define (scan-gvm-opnd ctx gvm-opnd)
             (if (lbl? gvm-opnd)
                 (todo-lbl-num! (lbl-num gvm-opnd)))
             (translate-gvm-opnd ctx gvm-opnd))
 
-          (todo-lbl-num! (bbs-entry-lbl-num bbs))
+          (let ((ctx (make-ctx targ (proc-obj-name p))))
+               
+            (todo-lbl-num! (bbs-entry-lbl-num bbs))
 
-          (let loop ((rev-res '()))
-            (if (queue-empty? bb-todo)
-                (reverse rev-res)
-                (loop (cons (scan-bb (queue-get! bb-todo))
-                            rev-res))))))
+            (let loop ((rev-res '()))
+              (if (queue-empty? bb-todo)
+                  (reverse rev-res)
+                  (loop (cons (scan-bb ctx (queue-get! bb-todo))
+                              rev-res)))))))
 
       (gen "\n// -------------------------------- #<"
            (if (proc-obj-primitive? p)
@@ -555,13 +573,32 @@
 (define gen vector)
 
 (define (make-ctx target ns)
-  (vector target ns))
+  (vector target ns 0))
 
-(define (ctx-target ctx)        (vector-ref ctx 0))
-(define (ctx-target-set! ctx x) (vector-set! ctx 0 x))
+(define (ctx-target ctx)                   (vector-ref ctx 0))
+(define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
 
-(define (ctx-ns ctx)            (vector-ref ctx 1))
-(define (ctx-ns-set! ctx x)     (vector-set! ctx 1 x))
+(define (ctx-ns ctx)                       (vector-ref ctx 1))
+(define (ctx-ns-set! ctx x)                (vector-set! ctx 1 x))
+
+(define (ctx-stack-base-offset ctx)        (vector-ref ctx 2))
+(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 2 x))
+
+(define (with-stack-base-offset ctx n proc)
+  (let ((save (ctx-stack-base-offset ctx)))
+    (ctx-stack-base-offset-set! ctx n)
+    (let ((result (proc ctx)))
+      (ctx-stack-base-offset-set! ctx save)
+      result)))
+
+(define (with-stack-pointer-adjust ctx n proc)
+  (gen (if (= n 0)
+           (gen "")
+           (gen "sp += " n ";\n"))
+       (with-stack-base-offset
+        ctx
+        (- (ctx-stack-base-offset ctx) n)
+        proc)))
 
 (define (translate-gvm-opnd ctx gvm-opnd)
 
@@ -574,10 +611,15 @@
               "]"))
 
         ((stk? gvm-opnd)
-         (gen "stack[sp"
-              (if (< (stk-num gvm-opnd) 0) "" "+")
-              (stk-num gvm-opnd)
-              "]"))
+         (let ((n (+ (stk-num gvm-opnd) (ctx-stack-base-offset ctx))))
+           (gen "stack[sp"
+                (cond ((= n 0)
+                       (gen ""))
+                      ((< n 0)
+                       (gen n))
+                      (else
+                       (gen "+" n)))
+                "]")))
 
         ((glo? gvm-opnd)
          (gen "glo["
@@ -610,11 +652,6 @@
          (compiler-internal-error
           "translate-gvm-opnd, unknown 'gvm-opnd':"
           gvm-opnd))))
-
-(define (sp-adjust ctx n sep)
-  (if (not (= n 0))
-      (gen "sp += " n ";" sep)
-      (gen "")))
 
 (define (translate-lbl ctx lbl)
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
