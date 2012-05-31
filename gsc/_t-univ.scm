@@ -79,6 +79,7 @@
 
 (univ-setup 'js     ".js")
 (univ-setup 'python ".py")
+(univ-setup 'ruby   ".rb")
 (univ-setup 'php    ".php")
 
 ;;;----------------------------------------------------------------------------
@@ -336,45 +337,53 @@
                          rev-res)))))
 
           (define (scan-gvm-label ctx gvm-instr proc)
-            (univ-fun ctx
-                      (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
-                      (univ-indent
-                       (case (label-type gvm-instr)
+            (univ-function
 
-                         ((simple)
-                          (gen "\n"))
+             ctx
 
-                         ((entry)
-                          (gen " " (univ-comment ctx)
-                               (if (label-entry-closed? gvm-instr)
-                                   "closure-entry-point\n"
-                                   "entry-point\n")
-                               (univ-if ctx
-                                        (gen "nargs"
-                                             (univ-nonequality ctx)
-                                             (label-entry-nb-parms gvm-instr))
-                                        (gen "throw \"wrong number of arguments\";\n\n"))))
+             (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
 
-                         ((return)
-                          (gen " " (univ-comment ctx) "return-point\n"))
+             (univ-indent
+              (case (label-type gvm-instr)
 
-                         ((task-entry)
-                          (gen " " (univ-comment ctx) "task-entry-point\n"
-                               "throw \"task-entry-point GVM label unimplemented\";\n"))
+                ((simple)
+                 (gen "\n"))
 
-                         ((task-return)
-                          (gen " "(univ-comment ctx) "task-return-point\n"
-                               "throw \"task-return-point GVM label unimplemented\";\n"))
+                ((entry)
+                 (gen " "
+                      (univ-comment
+                       ctx
+                       (if (label-entry-closed? gvm-instr)
+                           "closure-entry-point\n"
+                           "entry-point\n"))
+                      (univ-if-then
+                       ctx
+                       (univ-ne ctx
+                                "nargs"
+                                (label-entry-nb-parms gvm-instr))
+                       (gen "throw \"wrong number of arguments\";\n"))))
 
-                         (else
-                          (compiler-internal-error
-                           "scan-gvm-label, unknown label type")))
+                ((return)
+                 (gen " " (univ-comment ctx "return-point\n")))
 
-                       (with-stack-base-offset
-                        ctx
-                        (- (frame-size (gvm-instr-frame gvm-instr)))
-                        (lambda (ctx)
-                          (proc ctx))))))
+                ((task-entry)
+                 (gen " " (univ-comment ctx "task-entry-point\n")
+                      "throw \"task-entry-point GVM label unimplemented\";\n"))
+
+                ((task-return)
+                 (gen " " (univ-comment ctx "task-return-point\n")
+                      "throw \"task-return-point GVM label unimplemented\";\n"))
+
+                (else
+                 (compiler-internal-error
+                  "scan-gvm-label, unknown label type"))))
+
+             (univ-indent
+              (with-stack-base-offset
+               ctx
+               (- (frame-size (gvm-instr-frame gvm-instr)))
+               (lambda (ctx)
+                 (proc ctx))))))
 
           (define (scan-gvm-instr ctx gvm-instr)
 
@@ -459,7 +468,7 @@
                        (compiler-internal-error
                         "scan-gvm-instr, unknown 'test'" test)
 
-                       (univ-if-else
+                       (univ-if-then-else
                         ctx
                         (proc ctx opnds)
                         (jump-to-label ctx true fs)
@@ -544,14 +553,16 @@
                               rev-res)))))))
 
       (let ((ctx (make-ctx targ (proc-obj-name p))))
-        (gen "\n" (univ-comment ctx)
-             "-------------------------------- #<"
-             (if (proc-obj-primitive? p)
-                 "primitive"
-                 "procedure")
-             " "
-             (object->string (string->canonical-symbol (proc-obj-name p)))
-             "> =\n"
+        (gen "\n"
+             (univ-comment
+              ctx
+              (gen "-------------------------------- #<"
+                   (if (proc-obj-primitive? p)
+                       "primitive"
+                       "procedure")
+                   " "
+                   (object->string (string->canonical-symbol (proc-obj-name p)))
+                   "> =\n"))
              (let ((x (proc-obj-code p)))
                (if (bbs? x)
                    (scan-bbs x)
@@ -699,51 +710,39 @@ EOF
 )
 
 (define (entry-point ctx main-proc)
-  (gen "\n// --------------------------------\n\n"
+  (gen "\n"
+       (univ-comment ctx "--------------------------------\n")
+       "\n"
        (univ-assign ctx "save_pc" (lbl->id ctx 1 (proc-obj-name main-proc)))
        "run();\n"))
 
 ;;;----------------------------------------------------------------------------
 
-(define (univ-fun ctx name body)
+(define (univ-function ctx name header body)
   (gen "\n"
-       (univ-fun-head ctx name)
-       (univ-fun-body ctx body)))
+       (case (target-name (ctx-target ctx))
 
-(define (univ-fun-head ctx name)
+         ((js php)
+          (gen "function " name "() {" header body "}\n"))
+
+         ((python)
+          (gen "def " name "():" header body))
+
+         ((ruby)
+          (gen "def " name "()" header body "end\n"))
+
+         (else
+          (compiler-internal-error
+           "univ-function, unknown target")))))
+
+(define (univ-comment ctx comment)
   (case (target-name (ctx-target ctx))
 
-    ((js)
-     (gen "function " name " ()\n"))
+    ((js php)
+     (gen "// " comment))
 
-    ((python)
-     (gen "def " name " ():\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-fun-head, unknown target"))))
-
-(define (univ-fun-body ctx body)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (gen "{\n" body "\n}\n"))
-
-    ((python)
-     (gen body "\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-fun-head, unknown target"))))
-
-(define (univ-comment ctx)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (gen "// "))
-
-    ((python)
-     (gen "# "))
+    ((python ruby)
+     (gen "# " comment))
 
     (else
      (compiler-internal-error
@@ -752,49 +751,49 @@ EOF
 (define (univ-return ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js)
+    ((js php)
      (gen "return " expr ";\n"))
 
-    ((python)
+    ((python ruby)
      (gen "return " expr "\n"))
 
     (else
      (compiler-internal-error
       "univ-return, unknown target"))))
 
-(define (univ-equality ctx)
+(define (univ-eq ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (gen " === "))
+     (gen expr1 " === " expr2))
 
-    ((python)
-     (gen " == "))
+    ((python ruby php)
+     (gen expr1 " == " expr2))
 
     (else
      (compiler-internal-error
-      "univ-equality, unknown target"))))
+      "univ-eq, unknown target"))))
 
-(define (univ-nonequality ctx)
+(define (univ-ne ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (gen " !== "))
+     (gen expr1 " !== " expr2))
 
-    ((python)
-     (gen " != "))
+    ((python ruby php)
+     (gen expr1 " != " expr2))
 
     (else
      (compiler-internal-error
-      "univ-nonequality, unknown target"))))
+      "univ-ne, unknown target"))))
 
 (define (univ-assign ctx loc expr)
   (case (target-name (ctx-target ctx))
 
-    ((js)
+    ((js php)
      (gen loc " = " expr ";\n"))
 
-    ((python)
+    ((python ruby)
      (gen loc " = " expr "\n"))
 
     (else
@@ -804,10 +803,10 @@ EOF
 (define (univ-increment ctx loc expr)
   (case (target-name (ctx-target ctx))
 
-    ((js)
+    ((js php)
      (gen loc " += " expr ";\n"))
 
-    ((python)
+    ((python ruby)
      (gen loc " += " expr "\n"))
 
     (else
@@ -817,55 +816,61 @@ EOF
 (define (univ-expr ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js)
+    ((js php)
      (gen expr ";\n"))
 
-    ((python)
+    ((python ruby)
      (gen expr "\n"))
 
     (else
      (compiler-internal-error
       "univ-expr, unknown target"))))
 
-(define (univ-if ctx test true)
+(define (univ-if-then ctx test true)
   (case (target-name (ctx-target ctx))
 
-    ((js)
+    ((js php)
      (gen "if (" test ") {\n"
           (univ-indent true)
           "}\n"))
 
     ((python)
-     (gen "if (" test "):\n"
+     (gen "if " test ":\n"
+          (univ-indent true)))
+
+    ((ruby)
+     (gen "if " test "\n"
           (univ-indent true)))
 
     (else
      (compiler-internal-error
-      "univ-if, unknown target"))))
+      "univ-if-then, unknown target"))))
 
-(define (univ-if-else ctx test true false)
+(define (univ-if-then-else ctx test true false)
   (case (target-name (ctx-target ctx))
 
-    ((js)
-     (gen "if ("
-          test
-          ") {\n"
+    ((js php)
+     (gen "if (" test ") {\n"
           (univ-indent true)
           "} else {\n"
           (univ-indent false)
           "}\n"))
 
     ((python)
-     (gen "if ("
-          test
-          "):\n"
+     (gen "if " test ":\n"
           (univ-indent true)
           "else:\n"
           (univ-indent false)))
 
+    ((ruby)
+     (gen "if " test "\n"
+          (univ-indent true)
+          "else\n"
+          (univ-indent false)))
+
     (else
      (compiler-internal-error
-      "univ-if-else, unknown target"))))
+      "univ-if-then-else, unknown target"))))
 
 (define (univ-define-prim name proc-safe? side-effects? apply-gen ifjump-gen)
   (let ((prim (univ-prim-info* (string->canonical-symbol name))))
@@ -945,5 +950,246 @@ EOF
     (gen (translate-gvm-opnd ctx (list-ref opnds 0))
          " < "
          (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim "##fx+?" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "(temp2 = (temp1 = "
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " + "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ">>"
+            univ-tag-bits
+            ") === temp1 && temp2"))
+
+      ((python)
+       (gen "(temp2 = ctypes.c_int32((temp1 = "
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " + "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ").value>>"
+            univ-tag-bits
+            ") == temp1 && temp2"))
+
+      ((ruby php)
+       (gen "(temp2 = (((temp1 = "
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " + "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ") + "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") & "
+            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            ") - "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") == temp1 && temp2"))
+
+      (else
+       (compiler-internal-error
+        "fx?, unknown target"))))
+
+  #f)
+
+(univ-define-prim "fxwrap+" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " + "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ">>"
+            univ-tag-bits))
+
+      ((python)
+       (gen "ctypes.c_int32(("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " + "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ").value>>"
+            univ-tag-bits))
+
+      ((ruby php)
+       (gen "((("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " + "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ") + "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") & "
+            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            ") - "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+
+      (else
+       (compiler-internal-error
+        "fxwrap+, unknown target"))))
+
+  #f)
+
+(univ-define-prim "fxwrap-" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " - "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ">>"
+            univ-tag-bits))
+
+      ((python)
+       (gen "ctypes.c_int32(("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " - "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ").value>>"
+            univ-tag-bits))
+
+      ((ruby php)
+       (gen "((("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " - "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ") + "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") & "
+            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            ") - "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+
+      (else
+       (compiler-internal-error
+        "fxwrap-, unknown target"))))
+
+  #f)
+
+(univ-define-prim "fxwrap*" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       ;; TODO: fix this JS code, which does not work when the result of the multiplication is more than 52 bits (due to JS's use of 64 IEEE floats)
+       ;; idea: detect the special case of a constant in either operands that is less than 22 bits (because a multiplication of a 30 bit fixnum integer and 22 bit integer will fit in 52 bits)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " * "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ">>"
+            univ-tag-bits))
+
+      ((python)
+       (gen "ctypes.c_int32(("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " * "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ").value>>"
+            univ-tag-bits))
+
+      ((ruby php)
+       ;; TODO: fix this for PHP which may have 32 or 64 bit ints
+       ;; For ruby it is OK because ruby will use bignums
+       (gen "((("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " * "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ") + "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") & "
+            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            ") - "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+
+      (else
+       (compiler-internal-error
+        "fxwrap*, unknown target"))))
+
+  #f)
+
+(univ-define-prim "fixnum?" #f #f
+
+  #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "typeof "
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " == \"number\""))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", int)"))
+
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == Fixnum"))
+
+      ((php)
+       (gen "is_int("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+
+      (else
+       (compiler-internal-error
+        "fixnum?, unknown target")))))
+
+(univ-define-prim "flonum?" #f #f
+
+  #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            " instanceof Flonum"))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", float)"))
+
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == Float"))
+
+      ((php)
+       (gen "is_float("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+
+      (else
+       (compiler-internal-error
+        "flonum?, unknown target")))))
+
+(define univ-tag-bits 2)
+(define univ-word-bits 32)
 
 ;;;============================================================================
