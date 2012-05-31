@@ -336,47 +336,45 @@
                          rev-res)))))
 
           (define (scan-gvm-label ctx gvm-instr proc)
-            (gen "\n"
-                 "function "
-                 (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
-                 "() {"
+            (univ-fun ctx
+                      (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
+                      (univ-indent
+                       (case (label-type gvm-instr)
 
-                 (univ-indent
+                         ((simple)
+                          (gen "\n"))
 
-                  (case (label-type gvm-instr)
+                         ((entry)
+                          (gen " " (univ-comment ctx)
+                               (if (label-entry-closed? gvm-instr)
+                                   "closure-entry-point\n"
+                                   "entry-point\n")
+                               (univ-if ctx
+                                        (gen "nargs"
+                                             (univ-nonequality ctx)
+                                             (label-entry-nb-parms gvm-instr))
+                                        (gen "throw \"wrong number of arguments\";\n\n"))))
 
-                    ((simple)
-                     (gen "\n"))
+                         ((return)
+                          (gen " " (univ-comment ctx) "return-point\n"))
 
-                    ((entry)
-                     (gen (if (label-entry-closed? gvm-instr)
-                              " // closure-entry-point\n"
-                              " // entry-point\n")
-                          "if (nargs !== " (label-entry-nb-parms gvm-instr) ") "
-                          "throw \"wrong number of arguments\";\n\n"))
+                         ((task-entry)
+                          (gen " " (univ-comment ctx) "task-entry-point\n"
+                               "throw \"task-entry-point GVM label unimplemented\";\n"))
 
-                    ((return)
-                     (gen " // return-point\n"))
+                         ((task-return)
+                          (gen " "(univ-comment ctx) "task-return-point\n"
+                               "throw \"task-return-point GVM label unimplemented\";\n"))
 
-                    ((task-entry)
-                     (gen " // task-entry-point\n"
-                          "throw \"task-entry-point GVM label unimplemented\";\n"))
+                         (else
+                          (compiler-internal-error
+                           "scan-gvm-label, unknown label type")))
 
-                    ((task-return)
-                     (gen " // task-return-point\n"
-                          "throw \"task-return-point GVM label unimplemented\";\n"))
-
-                    (else
-                     (compiler-internal-error
-                      "scan-gvm-label, unknown label type")))
-
-                  (with-stack-base-offset
-                   ctx
-                   (- (frame-size (gvm-instr-frame gvm-instr)))
-                   (lambda (ctx)
-                     (proc ctx))));;;;;;;;;;;;;;;;;;;;;;
-
-                 "}\n"))
+                       (with-stack-base-offset
+                        ctx
+                        (- (frame-size (gvm-instr-frame gvm-instr)))
+                        (lambda (ctx)
+                          (proc ctx))))))
 
           (define (scan-gvm-instr ctx gvm-instr)
 
@@ -461,7 +459,7 @@
                        (compiler-internal-error
                         "scan-gvm-instr, unknown 'test'" test)
 
-                       (univ-if
+                       (univ-if-else
                         ctx
                         (proc ctx opnds)
                         (jump-to-label ctx true fs)
@@ -491,8 +489,8 @@
                        (let ((opnd (jump-opnd gvm-instr)))
                          (if (jump-poll? gvm-instr)
                              (gen (univ-assign ctx "save_pc" (scan-gvm-opnd ctx opnd))
-                                  "return null;\n")
-                             (gen "return " (scan-gvm-opnd ctx opnd) ";\n")))))))
+                                  (univ-return ctx "null"))
+                             (univ-return ctx (scan-gvm-opnd ctx opnd))))))))
 
               (else
                (compiler-internal-error
@@ -527,7 +525,8 @@
                     (+ jump-fs
                        (ctx-stack-base-offset ctx))
                     (lambda (ctx)
-                      (gen "return " (scan-gvm-opnd ctx (make-lbl n)) ";\n"))))))
+                      (univ-return ctx (scan-gvm-opnd ctx (make-lbl n))))))))
+;;                      (gen "return " (scan-gvm-opnd ctx (make-lbl n)) ";\n"))))))
 
           (define (scan-gvm-opnd ctx gvm-opnd)
             (if (lbl? gvm-opnd)
@@ -544,17 +543,19 @@
                   (loop (cons (scan-bb ctx (queue-get! bb-todo))
                               rev-res)))))))
 
-      (gen "\n// -------------------------------- #<"
-           (if (proc-obj-primitive? p)
-               "primitive"
-               "procedure")
-           " "
-           (object->string (string->canonical-symbol (proc-obj-name p)))
-           "> =\n"
-           (let ((x (proc-obj-code p)))
-             (if (bbs? x)
-                 (scan-bbs x)
-                 (gen "")))))
+      (let ((ctx (make-ctx targ (proc-obj-name p))))
+        (gen "\n" (univ-comment ctx)
+             "-------------------------------- #<"
+             (if (proc-obj-primitive? p)
+                 "primitive"
+                 "procedure")
+             " "
+             (object->string (string->canonical-symbol (proc-obj-name p)))
+             "> =\n"
+             (let ((x (proc-obj-code p)))
+               (if (bbs? x)
+                   (scan-bbs x)
+                   (gen ""))))))
 
     (for-each scan-obj procs)
 
@@ -704,6 +705,89 @@ EOF
 
 ;;;----------------------------------------------------------------------------
 
+(define (univ-fun ctx name body)
+  (gen "\n"
+       (univ-fun-head ctx name)
+       (univ-fun-body ctx body)))
+
+(define (univ-fun-head ctx name)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "function " name " ()\n"))
+
+    ((python)
+     (gen "def " name " ():\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-fun-head, unknown target"))))
+
+(define (univ-fun-body ctx body)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "{\n" body "\n}\n"))
+
+    ((python)
+     (gen body "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-fun-head, unknown target"))))
+
+(define (univ-comment ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "// "))
+
+    ((python)
+     (gen "# "))
+
+    (else
+     (compiler-internal-error
+      "univ-comment, unknown target"))))
+
+(define (univ-return ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "return " expr ";\n"))
+
+    ((python)
+     (gen "return " expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-return, unknown target"))))
+
+(define (univ-equality ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen " === "))
+
+    ((python)
+     (gen " == "))
+
+    (else
+     (compiler-internal-error
+      "univ-equality, unknown target"))))
+
+(define (univ-nonequality ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen " !== "))
+
+    ((python)
+     (gen " != "))
+
+    (else
+     (compiler-internal-error
+      "univ-nonequality, unknown target"))))
+
 (define (univ-assign ctx loc expr)
   (case (target-name (ctx-target ctx))
 
@@ -743,7 +827,23 @@ EOF
      (compiler-internal-error
       "univ-expr, unknown target"))))
 
-(define (univ-if ctx test true false)
+(define (univ-if ctx test true)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "if (" test ") {\n"
+          (univ-indent true)
+          "}\n"))
+
+    ((python)
+     (gen "if (" test "):\n"
+          (univ-indent true)))
+
+    (else
+     (compiler-internal-error
+      "univ-if, unknown target"))))
+
+(define (univ-if-else ctx test true false)
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -765,7 +865,7 @@ EOF
 
     (else
      (compiler-internal-error
-      "univ-if, unknown target"))))
+      "univ-if-else, unknown target"))))
 
 (define (univ-define-prim name proc-safe? side-effects? apply-gen ifjump-gen)
   (let ((prim (univ-prim-info* (string->canonical-symbol name))))
