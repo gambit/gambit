@@ -489,7 +489,7 @@
                        (let ((opnd (jump-opnd gvm-instr)))
                          (if (jump-poll? gvm-instr)
                              (gen (univ-assign ctx "save_pc" (scan-gvm-opnd ctx opnd))
-                                  (univ-return ctx "null"))
+                                  (univ-return ctx (univ-null ctx)))
                              (univ-return ctx (scan-gvm-opnd ctx opnd))))))))
 
               (else
@@ -705,6 +705,17 @@ EOF
 
 ;;;----------------------------------------------------------------------------
 
+(define (univ-null ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js)     "null")
+
+    ((python) "None")
+
+    (else
+     (compiler-internal-error
+      "univ-null, unknown target"))))
+  
 (define (univ-fun ctx name body)
   (gen "\n"
        (univ-fun-head ctx name)
