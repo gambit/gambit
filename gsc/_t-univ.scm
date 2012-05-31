@@ -11,6 +11,9 @@
 (include-adt "_ptreeadt.scm")
 (include-adt "_sourceadt.scm")
 
+(define univ-enable-jump-destination-inlining? #f)
+(set! univ-enable-jump-destination-inlining? #t)
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; "Universal" back-end.
@@ -298,215 +301,302 @@
             (queue-put! proc-seen obj)
             (queue-put! proc-left obj))))
 
-    (define (scan-opnd gvm-opnd)
-      (cond ((not gvm-opnd))
-            ((obj? gvm-opnd)
-             (scan-obj (obj-val gvm-opnd)))
-            ((clo? gvm-opnd)
-             (scan-opnd (clo-base gvm-opnd)))))
-
     (define (dump-proc p)
 
-      (define (scan-code ctx code)
-        (let ((gvm-instr (code-gvm-instr code)))
+      (define (scan-bbs bbs)
+        (let* ((bb-done (make-stretchable-vector #f))
+               (bb-todo (queue-empty)))
 
-          (univ-display (translate-gvm-instr ctx gvm-instr) port)
+          (define (todo-lbl-num! n)
+            (queue-put! bb-todo (lbl-num->bb n bbs)))
 
-          (case (gvm-instr-type gvm-instr)
+          (define (scan-bb ctx bb)
+            (if (stretchable-vector-ref bb-done (bb-lbl-num bb))
+                (gen "")
+                (begin
+                  (stretchable-vector-set! bb-done (bb-lbl-num bb) #t)
+                  (scan-bb-all ctx bb))))
 
-            ((apply)
-             (for-each scan-opnd (apply-opnds gvm-instr))
-             (if (apply-loc gvm-instr)
-                 (scan-opnd (apply-loc gvm-instr))))
+          (define (scan-bb-all ctx bb)
+            (scan-gvm-label
+             ctx
+             (bb-label-instr bb)
+             (lambda (ctx)
+               (scan-bb-all-except-label ctx bb))))
 
-            ((copy)
-             (scan-opnd (copy-opnd gvm-instr))
-             (scan-opnd (copy-loc gvm-instr)))
+          (define (scan-bb-all-except-label ctx bb)
+            (let loop ((lst (bb-non-branch-instrs bb))
+                       (rev-res '()))
+              (if (pair? lst)
+                  (loop (cdr lst)
+                        (cons (scan-gvm-instr ctx (car lst))
+                              rev-res))
+                  (reverse
+                   (cons (scan-gvm-instr ctx (bb-branch-instr bb))
+                         rev-res)))))
 
-            ((close)
-             (for-each (lambda (parms)
-                         (scan-opnd (closure-parms-loc parms))
-                         (for-each scan-opnd (closure-parms-opnds parms)))
-                       (close-parms gvm-instr)))
+          (define (scan-gvm-label ctx gvm-instr proc)
+            (gen "\n"
+                 "function "
+                 (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
+                 "() {"
 
-            ((ifjump)
-             (for-each scan-opnd (ifjump-opnds gvm-instr)))
+                 (univ-indent
 
-            ((switch)
-             (scan-opnd (switch-opnd gvm-instr))
-             (for-each (lambda (c) (scan-obj (switch-case-obj c)))
-                       (switch-cases gvm-instr)))
+                  (case (label-type gvm-instr)
 
-            ((jump)
-             (scan-opnd (jump-opnd gvm-instr))))))
+                    ((simple)
+                     (gen "\n"))
 
-      (univ-display
-       (gen "\n// *** #<"
-            (if (proc-obj-primitive? p)
-                "primitive"
-                "procedure")
-            " "
-            (object->string (string->canonical-symbol (proc-obj-name p)))
-            "> =\n")
-       port)
+                    ((entry)
+                     (gen (if (label-entry-closed? gvm-instr)
+                              " // closure-entry-point\n"
+                              " // entry-point\n")
+                          "if (nargs !== " (label-entry-nb-parms gvm-instr) ") "
+                          "throw \"wrong number of arguments\";\n\n"))
 
-      (let ((x (proc-obj-code p)))
-        (if (bbs? x)
-            (let ((ctx (make-ctx targ (proc-obj-name p))))
-              (let loop ((lst (bbs->code-list x)))
-                (if (pair? lst)
-                    (let* ((code (car lst)))
-                      (scan-code ctx code)
-                      (loop (cdr lst)))))))))
+                    ((return)
+                     (gen " // return-point\n"))
 
-    (for-each (lambda (proc) (scan-opnd (make-obj proc))) procs)
+                    ((task-entry)
+                     (gen " // task-entry-point\n"
+                          "throw \"task-entry-point GVM label unimplemented\";\n"))
 
-    (let loop ()
-      (if (not (queue-empty? proc-left))
-          (begin
-            (dump-proc (queue-get! proc-left))
-            (loop))))))
+                    ((task-return)
+                     (gen " // task-return-point\n"
+                          "throw \"task-return-point GVM label unimplemented\";\n"))
+
+                    (else
+                     (compiler-internal-error
+                      "scan-gvm-label, unknown label type")))
+
+                  (with-stack-base-offset
+                   ctx
+                   (- (frame-size (gvm-instr-frame gvm-instr)))
+                   (lambda (ctx)
+                     (proc ctx))));;;;;;;;;;;;;;;;;;;;;;
+
+                 "}\n"))
+
+          (define (scan-gvm-instr ctx gvm-instr)
+
+            ;; TODO: combine with scan-gvm-opnd
+            (define (scan-opnd gvm-opnd)
+              (cond ((not gvm-opnd))
+                    ((obj? gvm-opnd)
+                     (scan-obj (obj-val gvm-opnd)))
+                    ((clo? gvm-opnd)
+                     (scan-opnd (clo-base gvm-opnd)))))
+
+            ;; TODO: combine with scan-gvm-opnd
+            (case (gvm-instr-type gvm-instr)
+
+              ((apply)
+               (for-each scan-opnd (apply-opnds gvm-instr))
+               (if (apply-loc gvm-instr)
+                   (scan-opnd (apply-loc gvm-instr))))
+
+              ((copy)
+               (scan-opnd (copy-opnd gvm-instr))
+               (scan-opnd (copy-loc gvm-instr)))
+
+              ((close)
+               (for-each (lambda (parms)
+                           (scan-opnd (closure-parms-loc parms))
+                           (for-each scan-opnd (closure-parms-opnds parms)))
+                         (close-parms gvm-instr)))
+
+              ((ifjump)
+               (for-each scan-opnd (ifjump-opnds gvm-instr)))
+
+              ((switch)
+               (scan-opnd (switch-opnd gvm-instr))
+               (for-each (lambda (c) (scan-obj (switch-case-obj c)))
+                         (switch-cases gvm-instr)))
+
+              ((jump)
+               (scan-opnd (jump-opnd gvm-instr))))
+
+            (case (gvm-instr-type gvm-instr)
+
+              ((apply)
+               (let ((loc (apply-loc gvm-instr))
+                     (prim (apply-prim gvm-instr))
+                     (opnds (apply-opnds gvm-instr)))
+
+                 (let ((proc (proc-obj-inline prim)))
+                   (if (not proc)
+
+                       (compiler-internal-error
+                        "scan-gvm-instr, unknown 'prim'" prim)
+
+                       (proc ctx opnds loc)))))
+
+              ((copy)
+               (let ((loc (copy-loc gvm-instr))
+                     (opnd (copy-opnd gvm-instr)))
+                 (if opnd
+                     (univ-assign ctx
+                                  (scan-gvm-opnd ctx loc)
+                                  (scan-gvm-opnd ctx opnd))
+                     (gen ""))))
+
+              ((close)
+               ;; TODO
+               ;; (close-parms gvm-instr)
+               (gen "throw \"close GVM instruction unimplemented\";\n"))
+
+              ((ifjump)
+               ;; TODO
+               ;; (ifjump-poll? gvm-instr)
+               (let ((test (ifjump-test gvm-instr))
+                     (opnds (ifjump-opnds gvm-instr))
+                     (true (ifjump-true gvm-instr))
+                     (false (ifjump-false gvm-instr))
+                     (fs (frame-size (gvm-instr-frame gvm-instr))))
+
+                 (let ((proc (proc-obj-test test)))
+                   (if (not proc)
+
+                       (compiler-internal-error
+                        "scan-gvm-instr, unknown 'test'" test)
+
+                       (univ-if
+                        ctx
+                        (proc ctx opnds)
+                        (jump-to-label ctx true fs)
+                        (jump-to-label ctx false fs))))))
+
+              ((switch)
+               ;; TODO
+               ;; (switch-opnd gvm-instr)
+               ;; (switch-cases gvm-instr)
+               ;; (switch-poll? gvm-instr)
+               ;; (switch-default gvm-instr)
+               (gen "throw \"switch GVM instruction unimplemented\";\n"))
+
+              ((jump)
+               ;; TODO
+               ;; (jump-safe? gvm-instr)
+               ;; test: (jump-poll? gvm-instr)
+               (gen (let ((nb-args (jump-nb-args gvm-instr)))
+                      (if nb-args
+                          (univ-assign ctx "nargs" nb-args)
+                          ""))
+                    (with-stack-pointer-adjust
+                     ctx
+                     (+ (frame-size (gvm-instr-frame gvm-instr))
+                        (ctx-stack-base-offset ctx))
+                     (lambda (ctx)
+                       (let ((opnd (jump-opnd gvm-instr)))
+                         (if (jump-poll? gvm-instr)
+                             (gen (univ-assign ctx "save_pc" (scan-gvm-opnd ctx opnd))
+                                  "return null;\n")
+                             (gen "return " (scan-gvm-opnd ctx opnd) ";\n")))))))
+
+              (else
+               (compiler-internal-error
+                "scan-gvm-instr, unknown 'gvm-instr':"
+                gvm-instr))))
+
+          (define (jump-to-label ctx n jump-fs)
+
+            (cond ((and univ-enable-jump-destination-inlining?
+                        (let* ((bb (lbl-num->bb n bbs))
+                               (label-instr (bb-label-instr bb)))
+                          (and (eq? (label-type label-instr) 'simple)
+                               (or (= (length (bb-precedents bb)) 1) ;; sole jump to destination bb?
+                                   (= (length (bb-non-branch-instrs bb)) 0))))) ;; very short destination bb?
+                   (let* ((bb (lbl-num->bb n bbs))
+                          (label-instr (bb-label-instr bb))
+                          (label-fs (frame-size (gvm-instr-frame label-instr))))
+                     (with-stack-pointer-adjust
+                      ctx
+                      (+ jump-fs
+                         (ctx-stack-base-offset ctx))
+                      (lambda (ctx)
+                        (with-stack-base-offset
+                         ctx
+                         (- label-fs)
+                         (lambda (ctx)
+                           (scan-bb-all-except-label ctx bb)))))))
+
+                  (else
+                   (with-stack-pointer-adjust
+                    ctx
+                    (+ jump-fs
+                       (ctx-stack-base-offset ctx))
+                    (lambda (ctx)
+                      (gen "return " (scan-gvm-opnd ctx (make-lbl n)) ";\n"))))))
+
+          (define (scan-gvm-opnd ctx gvm-opnd)
+            (if (lbl? gvm-opnd)
+                (todo-lbl-num! (lbl-num gvm-opnd)))
+            (translate-gvm-opnd ctx gvm-opnd))
+
+          (let ((ctx (make-ctx targ (proc-obj-name p))))
+               
+            (todo-lbl-num! (bbs-entry-lbl-num bbs))
+
+            (let loop ((rev-res '()))
+              (if (queue-empty? bb-todo)
+                  (reverse rev-res)
+                  (loop (cons (scan-bb ctx (queue-get! bb-todo))
+                              rev-res)))))))
+
+      (gen "\n// -------------------------------- #<"
+           (if (proc-obj-primitive? p)
+               "primitive"
+               "procedure")
+           " "
+           (object->string (string->canonical-symbol (proc-obj-name p)))
+           "> =\n"
+           (let ((x (proc-obj-code p)))
+             (if (bbs? x)
+                 (scan-bbs x)
+                 (gen "")))))
+
+    (for-each scan-obj procs)
+
+    (let loop ((rev-res '()))
+      (if (queue-empty? proc-left)
+
+          (univ-display
+           (reverse rev-res)
+           port)
+
+          (loop (cons (dump-proc (queue-get! proc-left))
+                      rev-res))))))
 
 (define gen vector)
 
 (define (make-ctx target ns)
-  (vector target ns))
+  (vector target ns 0))
 
-(define (ctx-target ctx)        (vector-ref ctx 0))
-(define (ctx-target-set! ctx x) (vector-set! ctx 0 x))
+(define (ctx-target ctx)                   (vector-ref ctx 0))
+(define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
 
-(define (ctx-ns ctx)            (vector-ref ctx 1))
-(define (ctx-ns-set! ctx x)     (vector-set! ctx 1 x))
+(define (ctx-ns ctx)                       (vector-ref ctx 1))
+(define (ctx-ns-set! ctx x)                (vector-set! ctx 1 x))
 
-(define (translate-gvm-instr ctx gvm-instr)
+(define (ctx-stack-base-offset ctx)        (vector-ref ctx 2))
+(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 2 x))
 
-  (case (gvm-instr-type gvm-instr)
+(define (with-stack-base-offset ctx n proc)
+  (let ((save (ctx-stack-base-offset ctx)))
+    (ctx-stack-base-offset-set! ctx n)
+    (let ((result (proc ctx)))
+      (ctx-stack-base-offset-set! ctx save)
+      result)))
 
-    ((label)
-     (gen "\n"
-          "function "
-          (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
-          "() {\n"
-
-          (case (label-type gvm-instr)
-
-            ((simple)
-             (gen ""))
-
-            ((entry)
-             (gen (if (label-entry-closed? gvm-instr)
-                      "// closure-entry-point\n"
-                      "// entry-point\n")
-                  "if (nargs !== " (label-entry-nb-parms gvm-instr) ") "
-                  "throw \"wrong number of arguments\";\n\n"))
-
-            ((return)
-             (gen "// return-point\n"))
-
-            ((task-entry)
-             (gen "// task-entry-point\n"
-                  "throw \"task-entry-point GVM label unimplemented\";\n"))
-
-            ((task-return)
-             (gen "// task-return-point\n"
-                  "throw \"task-return-point GVM label unimplemented\";\n"))
-
-            (else
-             (compiler-internal-error
-              "translate-gvm-instr, unknown label type")))
-
-          (sp-adjust ctx (- (frame-size (gvm-instr-frame gvm-instr))) "\n")))
-
-    ((apply)
-
-     (let ((loc (apply-loc gvm-instr))
-           (prim (apply-prim gvm-instr))
-           (opnds (apply-opnds gvm-instr)))
-
-       (let ((proc (proc-obj-inline prim)))
-         (if (not proc)
-
-             (compiler-internal-error
-              "translate-gvm-instr, unknown 'prim'" prim)
-
-             (proc ctx opnds loc)))))
-
-    ((copy)
-     (let ((loc (copy-loc gvm-instr))
-           (opnd (copy-opnd gvm-instr)))
-       (if opnd
-           (univ-assign ctx
-                        (translate-gvm-opnd ctx loc)
-                        (translate-gvm-opnd ctx opnd))
-           (gen ""))))
-
-    ((close)
-     ;; TODO
-     ;; (close-parms gvm-instr)
-     (gen "throw \"close GVM instruction unimplemented\";\n"))
-
-    ((ifjump)
-     ;; TODO
-     ;; (ifjump-poll? gvm-instr)
-     (let ((test (ifjump-test gvm-instr))
-           (opnds (ifjump-opnds gvm-instr))
-           (true (ifjump-true gvm-instr))
-           (false (ifjump-false gvm-instr))
-           (adj (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")))
-
-       (let ((proc (proc-obj-test test)))
-         (if (not proc)
-
-             (compiler-internal-error
-              "translate-gvm-instr, unknown 'test'" test)
-
-             (gen "if ("
-                  (proc ctx opnds)
-                  ")\n"
-                  (univ-indent
-                   "{\n"
-                   (univ-indent
-                    adj
-                    "return " (translate-gvm-opnd ctx (make-lbl true)) ";\n")
-                   "}\n")
-                  "else\n"
-                  (univ-indent
-                   "{\n"
-                   (univ-indent
-                    adj
-                    "return " (translate-gvm-opnd ctx (make-lbl false)) ";\n")
-                   "}\n")
-                  "}\n")))))
-
-    ((switch)
-     ;; TODO
-     ;; (switch-opnd gvm-instr)
-     ;; (switch-cases gvm-instr)
-     ;; (switch-poll? gvm-instr)
-     ;; (switch-default gvm-instr)
-     (gen "throw \"switch GVM instruction unimplemented\";\n"
-          "}\n"))
-
-    ((jump)
-     ;; TODO
-     ;; (jump-safe? gvm-instr)
-     ;; test: (jump-poll? gvm-instr) 
-     (gen (let ((nb-args (jump-nb-args gvm-instr)))
-            (if nb-args
-                (gen "nargs = " nb-args ";\n")
-                ""))
-          (sp-adjust ctx (frame-size (gvm-instr-frame gvm-instr)) "\n")
-          (let ((opnd (jump-opnd gvm-instr)))
-            (if (jump-poll? gvm-instr)
-                (gen "save_pc = " (translate-gvm-opnd ctx opnd) ";\n"
-                     "return null;\n")
-                (gen "return " (translate-gvm-opnd ctx opnd) ";\n")))
-          "}\n"))
-
-    (else
-     (compiler-internal-error
-      "translate-gvm-instr, unknown 'gvm-instr':"
-      gvm-instr))))
+(define (with-stack-pointer-adjust ctx n proc)
+  (gen (if (= n 0)
+           (gen "")
+           (univ-increment ctx "sp" n))
+       (with-stack-base-offset
+        ctx
+        (- (ctx-stack-base-offset ctx) n)
+        proc)))
 
 (define (translate-gvm-opnd ctx gvm-opnd)
 
@@ -519,10 +609,15 @@
               "]"))
 
         ((stk? gvm-opnd)
-         (gen "stack[sp"
-              (if (< (stk-num gvm-opnd) 0) "" "+")
-              (stk-num gvm-opnd)
-              "]"))
+         (let ((n (+ (stk-num gvm-opnd) (ctx-stack-base-offset ctx))))
+           (gen "stack[sp"
+                (cond ((= n 0)
+                       (gen ""))
+                      ((< n 0)
+                       (gen n))
+                      (else
+                       (gen "+" n)))
+                "]")))
 
         ((glo? gvm-opnd)
          (gen "glo["
@@ -553,30 +648,14 @@
 
         (else
          (compiler-internal-error
-           "translate-gvm-opnd, unknown 'gvm-opnd':"
-           gvm-opnd))))
-
-(define (sp-adjust ctx n sep)
-  (if (not (= n 0))
-      (gen "sp += " n ";" sep)
-      (gen "")))
+          "translate-gvm-opnd, unknown 'gvm-opnd':"
+          gvm-opnd))))
 
 (define (translate-lbl ctx lbl)
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
 
 (define (lbl->id ctx num ns)
   (gen "lbl" num "_" (scheme-id->c-id ns)))
-
-(define (prim-applic ctx prim opnds test?)
-  (case (string->symbol (proc-obj-name prim))
-
-    ((##not)
-     (gen (translate-gvm-opnd ctx (list-ref opnds 0)) " === false"))
-
-    (else
-     (compiler-internal-error
-      "prim-applic, unimplemented primitive:"
-      (proc-obj-name prim)))))
 
 (define (runtime-system targ)
 #<<EOF
@@ -588,20 +667,17 @@ var nargs = 0;
 var save_pc = null;
 var poll;
 
-if (this.hasOwnProperty('setTimeout'))
-{
-    poll = function (wakeup) { setTimeout(wakeup,1); return true; };
-}
-else
-{
-    poll = function (wakeup) { return false; };
+if (this.hasOwnProperty('setTimeout')) {
+  poll = function (wakeup) { setTimeout(wakeup,1); return true; };
+} else {
+  poll = function (wakeup) { return false; };
 }
 
 
 function lbl1_print() { // print
-    if (nargs !== 1) throw "wrong number of arguments";
-    print(reg[1]);
-    return reg[0];
+  if (nargs !== 1) throw "wrong number of arguments";
+  print(reg[1]);
+  return reg[0];
 }
 
 glo["print"] = lbl1_print;
@@ -609,29 +685,87 @@ glo["print"] = lbl1_print;
 
 function run()
 {
-    while (save_pc !== null)
-    {
-        pc = save_pc;
-        save_pc = null;
-        while (pc !== null)
-            pc = pc();
-        if (poll(run)) break;
-    }
+  while (save_pc !== null) {
+    pc = save_pc;
+    save_pc = null;
+    while (pc !== null)
+      pc = pc();
+    if (poll(run)) break;
+  }
 }
 
 EOF
 )
 
 (define (entry-point ctx main-proc)
-  (gen "save_pc = " (lbl->id ctx 1 (proc-obj-name main-proc)) "; run();\n"))
+  (gen "\n// --------------------------------\n\n"
+       (univ-assign ctx "save_pc" (lbl->id ctx 1 (proc-obj-name main-proc)))
+       "run();\n"))
 
 ;;;----------------------------------------------------------------------------
 
 (define (univ-assign ctx loc expr)
-  (gen loc " = " expr ";\n"))
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen loc " = " expr ";\n"))
+
+    ((python)
+     (gen loc " = " expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-assign, unknown target"))))
+
+(define (univ-increment ctx loc expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen loc " += " expr ";\n"))
+
+    ((python)
+     (gen loc " += " expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-increment, unknown target"))))
 
 (define (univ-expr ctx expr)
-  (gen expr ";\n"))
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen expr ";\n"))
+
+    ((python)
+     (gen expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-expr, unknown target"))))
+
+(define (univ-if ctx test true false)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "if ("
+          test
+          ") {\n"
+          (univ-indent true)
+          "} else {\n"
+          (univ-indent false)
+          "}\n"))
+
+    ((python)
+     (gen "if ("
+          test
+          "):\n"
+          (univ-indent true)
+          "else:\n"
+          (univ-indent false)))
+
+    (else
+     (compiler-internal-error
+      "univ-if, unknown target"))))
 
 (define (univ-define-prim name proc-safe? side-effects? apply-gen ifjump-gen)
   (let ((prim (univ-prim-info* (string->canonical-symbol name))))
