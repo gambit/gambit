@@ -4916,6 +4916,7 @@
 "c#univ-jump-info"
 "c#univ-label-info"
 "c#univ-nonequality"
+"c#univ-null"
 "c#univ-prim-info*"
 "c#univ-prim-proc-add!"
 "c#univ-prim-proc-table"
@@ -11612,6 +11613,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_label_2d_info,___G_c_23_univ_2d_label_2d_in
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_arg_2d_regs,___G_c_23_univ_2d_nb_2d_arg_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_gvm_2d_regs,___G_c_23_univ_2d_nb_2d_gvm_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nonequality,___G_c_23_univ_2d_nonequality)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_null,___G_c_23_univ_2d_null)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_info,___G_c_23_univ_2d_prim_2d_info)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_info_2a_,___G_c_23_univ_2d_prim_2d_info_2a_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_proc_2d_add_21_,___G_c_23_univ_2d_prim_2d_proc_2d_add_21_)
