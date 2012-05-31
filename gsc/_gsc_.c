@@ -152,6 +152,7 @@
 "##type-super"
 "##type-type"
 "##vector-ref"
+"$$indent$$"
 "$code"
 "*"
 "**filepos-col"
@@ -4262,7 +4263,6 @@
 "c#prc-req-and-opt-parms-only?"
 "c#prc-tag"
 "c#prc?"
-"c#prim-applic"
 "c#prim-procs"
 "c#proc-body-live-varset"
 "c#proc-info->jump-state"
@@ -4901,10 +4901,13 @@
 "c#unbox-object"
 "c#unicode->character"
 "c#union-sym"
+"c#univ-define-prim"
+"c#univ-display"
 "c#univ-dump"
 "c#univ-dump-procs"
 "c#univ-jump-info"
 "c#univ-label-info"
+"c#univ-prim-info*"
 "c#univ-prim-proc-add!"
 "c#univ-prim-proc-table"
 "c#univ-setup"
@@ -5290,7 +5293,6 @@
 "positive?"
 "pp"
 "pretty-print"
-"print"
 "procedure?"
 "process-status"
 "protocol-info"
@@ -6226,6 +6228,7 @@
 "c#prc-parms-set!"
 "c#prc-rest?"
 "c#prc-rest?-set!"
+"c#prim-applic"
 "c#proc-info-bb"
 "c#proc-info-context"
 "c#proc-info-lbl1"
@@ -6326,8 +6329,11 @@
 "c#target-switch-testable?"
 "c#target-task-return"
 "c#type-pot-fut?"
+"c#univ-assign"
+"c#univ-expr"
 "c#univ-frame-alignment"
 "c#univ-frame-reserve"
+"c#univ-indent"
 "c#univ-nb-arg-regs"
 "c#univ-nb-gvm-regs"
 "c#univ-prim-info"
@@ -6574,6 +6580,7 @@
 "path-volume"
 "port?"
 "primordial-exception-handler"
+"print"
 "println"
 "process-pid"
 "process-times"
@@ -9492,6 +9499,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_write_2d_substring,___G__23__23_write_2d_substri
 ___DEF_OLD_SYM_GLO(___S__23__23_write_2d_subu8vector,___G__23__23_write_2d_subu8vector)
 ___DEF_OLD_SYM_GLO(___S__23__23_write_2d_u8,___G__23__23_write_2d_u8)
 ___DEF_OLD_SYM_GLO(___S__23__23_zero_3f_,___G__23__23_zero_3f_)
+___DEF_OLD_SYM_GLO(___S__24__24_indent_24__24_,___G__24__24_indent_24__24_)
 ___DEF_OLD_SYM_GLO(___S__24_code,___G__24_code)
 ___DEF_OLD_SYM_GLO(___S__2a_,___G__2a_)
 ___DEF_OLD_SYM_GLO(___S__2a__2a_filepos_2d_col,___G__2a__2a_filepos_2d_col)
@@ -11571,15 +11579,21 @@ ___DEF_OLD_SYM_GLO(___S_c_23_unbound2_2d_object_3f_,___G_c_23_unbound2_2d_object
 ___DEF_OLD_SYM_GLO(___S_c_23_unbox_2d_object,___G_c_23_unbox_2d_object)
 ___DEF_OLD_SYM_GLO(___S_c_23_unicode_2d__3e_character,___G_c_23_unicode_2d__3e_character)
 ___DEF_OLD_SYM_GLO(___S_c_23_union_2d_sym,___G_c_23_union_2d_sym)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_assign,___G_c_23_univ_2d_assign)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_define_2d_prim,___G_c_23_univ_2d_define_2d_prim)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_display,___G_c_23_univ_2d_display)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_dump,___G_c_23_univ_2d_dump)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_dump_2d_procs,___G_c_23_univ_2d_dump_2d_procs)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_expr,___G_c_23_univ_2d_expr)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_frame_2d_alignment,___G_c_23_univ_2d_frame_2d_alignment)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_frame_2d_reserve,___G_c_23_univ_2d_frame_2d_reserve)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_indent,___G_c_23_univ_2d_indent)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_jump_2d_info,___G_c_23_univ_2d_jump_2d_info)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_label_2d_info,___G_c_23_univ_2d_label_2d_info)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_arg_2d_regs,___G_c_23_univ_2d_nb_2d_arg_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_gvm_2d_regs,___G_c_23_univ_2d_nb_2d_gvm_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_info,___G_c_23_univ_2d_prim_2d_info)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_info_2a_,___G_c_23_univ_2d_prim_2d_info_2a_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_proc_2d_add_21_,___G_c_23_univ_2d_prim_2d_proc_2d_add_21_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_proc_2d_table,___G_c_23_univ_2d_prim_2d_proc_2d_table)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_setup,___G_c_23_univ_2d_setup)

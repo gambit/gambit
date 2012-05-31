@@ -544,11 +544,11 @@ ___END_P_COD
 #undef ___PH_LBL0
 #define ___PH_LBL0 13
 #undef ___PD_ALL
-#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
 #undef ___PW_ALL
-#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R4
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
@@ -561,21 +561,22 @@ ___DEF_P_HLBL(___L5_c_23_make_2d_target)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0_c_23_make_2d_target)
-   ___IF_NARGS_EQ(2,___NOTHING)
-   ___WRONG_NARGS(0,2,0,0)
+   ___IF_NARGS_EQ(3,___NOTHING)
+   ___WRONG_NARGS(0,3,0,0)
 ___DEF_GLBL(___L_c_23_make_2d_target)
    ___IF(___FIXEQ(___R1,___FIX(7L)))
    ___GOTO(___L6_c_23_make_2d_target)
    ___END_IF
    ___GOTO(___L7_c_23_make_2d_target)
 ___DEF_SLBL(1,___L1_c_23_make_2d_target)
+   ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
 ___DEF_GLBL(___L6_c_23_make_2d_target)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R2)
-   ___SET_R1(___FIX(14L))
+   ___SET_R1(___FIXADD(___FIX(14L),___R3))
    ___SET_R0(___LBL(3))
    ___ADJFP(8)
    ___POLL(2)
@@ -591,6 +592,7 @@ ___DEF_SLBL(4,___L4_c_23_make_2d_target)
 ___DEF_GLBL(___L7_c_23_make_2d_target)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R2)
+   ___SET_STK(3,___R3)
    ___SET_R1(___SUB(0))
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
@@ -1745,12 +1747,12 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__20___back,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__20___back,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_INTRO(___H_c_23_make_2d_target,"c#make-target",___REF_FAL,6,0)
-,___DEF_LBL_PROC(___H_c_23_make_2d_target,2,0)
-,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,5,0,0x3L))
+,___DEF_LBL_PROC(___H_c_23_make_2d_target,3,0)
+,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,8,0,0x3f01L))
-,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,8,0,0x3f03L))
+,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_INTRO(___H_c_23_target_2d_name,"c#target-name",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H_c_23_target_2d_name,1,0)
 ,___DEF_LBL_INTRO(___H_c_23_target_2d_begin_21_,"c#target-begin!",___REF_FAL,1,0)

@@ -352,7 +352,6 @@
 
       (let ((x (proc-obj-code p)))
         (if (bbs? x)
-
             (let ((ctx (make-ctx targ (proc-obj-name p))))
               (let loop ((lst (bbs->code-list x)))
                 (if (pair? lst)
@@ -419,6 +418,7 @@
           (sp-adjust ctx (- (frame-size (gvm-instr-frame gvm-instr))) "\n")))
 
     ((apply)
+
      (let ((loc (apply-loc gvm-instr))
            (prim (apply-prim gvm-instr))
            (opnds (apply-opnds gvm-instr)))
