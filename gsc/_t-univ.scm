@@ -3,8 +3,9 @@
 ;;; File: "_t-univ.scm"
 
 ;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
-(include "fixnum.scm")
+(include "generic.scm")
 
 (include-adt "_envadt.scm")
 (include-adt "_gvmadt.scm")
@@ -694,14 +695,19 @@ if (this.hasOwnProperty('setTimeout')) {
 }
 
 
-function lbl1_print() { // print
+function Flonum(val) {
+  this.val = val;
+}
+
+
+function lbl1_println() { // println
   if (nargs !== 1)
     throw "wrong number of arguments";
   print(reg[1]);
   return reg[0];
 }
 
-glo["print"] = lbl1_print;
+glo["println"] = lbl1_println;
 
 
 function run(pc)
@@ -728,14 +734,18 @@ temp1 = False
 temp2 = False
 
 
-def lbl1_print(): # print
+def lbl1_println(): # println
   global glo, reg, stack, sp, nargs, temp1, temp2
   if nargs != 1:
     raise "wrong number of arguments"
   print(reg[1])
   return reg[0]
 
-glo["print"] = lbl1_print
+glo["println"] = lbl1_println
+
+
+def poll(wakeup):
+  return wakeup
 
 
 def run(pc):
@@ -756,7 +766,7 @@ $temp1 = false
 $temp2 = false
 
 
-$lbl1_print = lambda { # print
+$lbl1_println = lambda { # println
   if $nargs != 1
     raise "wrong number of arguments"
   end
@@ -765,7 +775,12 @@ $lbl1_print = lambda { # print
   return $reg[0]
 }
 
-$glo["print"] = $lbl1_print
+$glo["println"] = $lbl1_println
+
+
+def poll(wakeup)
+  return wakeup
+end
 
 
 def run(pc)
@@ -905,6 +920,19 @@ EOF
      (compiler-internal-error
       "univ-ne, unknown target"))))
 
+(define (univ-false ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby php)
+     (gen "false"))
+
+    ((python)
+     (gen "False"))
+
+    (else
+     (compiler-internal-error
+      "univ-false, unknown target"))))
+
 (define (univ-assign ctx loc expr)
   (case (target-name (ctx-target ctx))
 
@@ -1034,19 +1062,31 @@ EOF
 
 ;;; Primitive procedures
 
-(univ-define-prim "##not" #f #f
+(let ((fn
+       (lambda (ctx opnds)
+         (case (target-name (ctx-target ctx))
 
-  (lambda (ctx opnds)
-    (univ-eq ctx
-             (translate-gvm-opnd ctx (list-ref opnds 0))
-             "false"))
+           ((js ruby php)
+            (univ-eq ctx
+                     (translate-gvm-opnd ctx (list-ref opnds 0))
+                     (univ-false ctx)))
 
-  (lambda (ctx opnds)
-    (univ-eq ctx
-             (translate-gvm-opnd ctx (list-ref opnds 0))
-             "false")))
+           ((python)
+            ;; needed because in Python False == 0 is True
+            (gen (univ-eq ctx
+                          (translate-gvm-opnd ctx (list-ref opnds 0))
+                          (univ-false ctx))
+                 " and isinstance("
+                 (translate-gvm-opnd ctx (list-ref opnds 0))
+                 ", bool)"))
 
-(univ-define-prim "fx+" #f #f
+           (else
+            (compiler-internal-error
+             "##not, unknown target"))))))
+
+  (univ-define-prim "##not" #f #f fn fn))
+
+(univ-define-prim "##fx+" #f #f
 
   (lambda (ctx opnds)
     (gen (translate-gvm-opnd ctx (list-ref opnds 0))
@@ -1055,7 +1095,7 @@ EOF
 
   #f)
 
-(univ-define-prim "fx-" #f #f
+(univ-define-prim "##fx-" #f #f
 
   (lambda (ctx opnds)
     (gen (translate-gvm-opnd ctx (list-ref opnds 0))
@@ -1064,7 +1104,7 @@ EOF
 
   #f)
 
-(univ-define-prim "fx<" #f #f
+(univ-define-prim "##fx<" #f #f
 
   #f
 
@@ -1090,15 +1130,15 @@ EOF
             ") === temp1 && temp2"))
 
       ((python)
-       (gen "(temp2 = ctypes.c_int32((temp1 = "
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            " + "
-            (translate-gvm-opnd ctx (list-ref opnds 1))
-            ")<<"
+       (gen "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
             univ-tag-bits
             ").value>>"
             univ-tag-bits
-            ") == temp1 && temp2"))
+            "))("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " + "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
 
       ((ruby php)
        (gen "(temp2 = (((temp1 = "
@@ -1115,11 +1155,57 @@ EOF
 
       (else
        (compiler-internal-error
-        "fx?, unknown target"))))
+        "##fx+?, unknown target"))))
 
   #f)
 
-(univ-define-prim "fxwrap+" #f #f
+(univ-define-prim "##fx-?" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "(temp2 = (temp1 = "
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " - "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")<<"
+            univ-tag-bits
+            ">>"
+            univ-tag-bits
+            ") === temp1 && temp2"))
+
+      ((python)
+       (gen "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+            univ-tag-bits
+            ").value>>"
+            univ-tag-bits
+            "))("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " - "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+
+      ((ruby php)
+       (gen "(temp2 = (((temp1 = "
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " - "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ") + "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") & "
+            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            ") - "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") == temp1 && temp2"))
+
+      (else
+       (compiler-internal-error
+        "##fx-?, unknown target"))))
+
+  #f)
+
+(univ-define-prim "##fxwrap+" #f #f
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
@@ -1158,11 +1244,11 @@ EOF
 
       (else
        (compiler-internal-error
-        "fxwrap+, unknown target"))))
+        "##fxwrap+, unknown target"))))
 
   #f)
 
-(univ-define-prim "fxwrap-" #f #f
+(univ-define-prim "##fxwrap-" #f #f
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
@@ -1201,11 +1287,11 @@ EOF
 
       (else
        (compiler-internal-error
-        "fxwrap-, unknown target"))))
+        "##fxwrap-, unknown target"))))
 
   #f)
 
-(univ-define-prim "fxwrap*" #f #f
+(univ-define-prim "##fxwrap*" #f #f
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
@@ -1248,11 +1334,11 @@ EOF
 
       (else
        (compiler-internal-error
-        "fxwrap*, unknown target"))))
+        "##fxwrap*, unknown target"))))
 
   #f)
 
-(univ-define-prim "fixnum?" #f #f
+(univ-define-prim "##fixnum?" #f #f
 
   #f
 
@@ -1280,9 +1366,9 @@ EOF
 
       (else
        (compiler-internal-error
-        "fixnum?, unknown target")))))
+        "##fixnum?, unknown target")))))
 
-(univ-define-prim "flonum?" #f #f
+(univ-define-prim "##flonum?" #f #f
 
   #f
 
@@ -1309,7 +1395,7 @@ EOF
 
       (else
        (compiler-internal-error
-        "flonum?, unknown target")))))
+        "##flonum?, unknown target")))))
 
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
