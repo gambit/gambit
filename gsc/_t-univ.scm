@@ -281,6 +281,7 @@
        (runtime-system targ)
        port)
 
+      
       (univ-dump-procs targ procs port)
 
       (univ-display
@@ -361,7 +362,7 @@
                        (univ-ne ctx
                                 "nargs"
                                 (label-entry-nb-parms gvm-instr))
-                       (univ-exit ctx "wrong number of arguments") "\n")))
+                       (gen (univ-exit ctx "wrong number of arguments") "\n"))))
 
                 ((return)
                  (gen " " (univ-comment ctx "return-point\n")))
@@ -376,14 +377,14 @@
 
                 (else
                  (compiler-internal-error
-                  "scan-gvm-label, unknown label type"))))
+                  "scan-gvm-label, unknown label type")))))
 
              (univ-indent
               (with-stack-base-offset
                ctx
                (- (frame-size (gvm-instr-frame gvm-instr)))
                (lambda (ctx)
-                 (proc ctx))))))
+                 (proc ctx)))))
 
           (define (scan-gvm-instr ctx gvm-instr)
 
@@ -535,7 +536,6 @@
                        (ctx-stack-base-offset ctx))
                     (lambda (ctx)
                       (univ-return ctx (scan-gvm-opnd ctx (make-lbl n))))))))
-;;                      (gen "return " (scan-gvm-opnd ctx (make-lbl n)) ";\n"))))))
 
           (define (scan-gvm-opnd ctx gvm-opnd)
             (if (lbl? gvm-opnd)
@@ -577,8 +577,11 @@
            (reverse rev-res)
            port)
 
-          (loop (cons (dump-proc (queue-get! proc-left))
-                      rev-res))))))
+          (begin
+            (display "univ-dump-procs")(newline)
+            (display loop)(newline)
+            (loop (cons (dump-proc (queue-get! proc-left))
+                        rev-res)))))))
 
 (define gen vector)
 
