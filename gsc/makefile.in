@@ -160,7 +160,8 @@ MODULES_C = $(LIBRARY_MODULES_C) $(EXECUTABLE_MODULES_C)
 OBJECTS = $(LIBRARY_OBJECTS) $(EXECUTABLE_OBJECTS)
 
 RCFILES = makefile.in fixnum.scm generic.scm igsc.scm $(MODULES_SCM) \
-$(LIBRARIES_SCM) _envadt.scm _gvmadt.scm _ptreeadt.scm _sourceadt.scm
+$(LIBRARIES_SCM) _envadt.scm _gvmadt.scm _ptreeadt.scm _sourceadt.scm \
+runtests.scm
 
 GENDISTFILES = $(MODULES_C) _$(GAMBCGSCLIB).c _gsc_.c
 
