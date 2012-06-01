@@ -1104,6 +1104,15 @@ EOF
 
   #f)
 
+(univ-define-prim "##fx*" #f #f
+
+  (lambda (ctx opnds)
+    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+         " * "
+         (translate-gvm-opnd ctx (list-ref opnds 1))))
+
+  #f)
+
 (univ-define-prim "##fx<" #f #f
 
   #f
