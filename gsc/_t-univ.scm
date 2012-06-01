@@ -281,7 +281,6 @@
        (runtime-system targ)
        port)
 
-      
       (univ-dump-procs targ procs port)
 
       (univ-display
@@ -362,41 +361,29 @@
                        (univ-ne ctx
                                 (univ-global ctx "nargs")
                                 (label-entry-nb-parms gvm-instr))
-<<<<<<< HEAD
-                       (gen (univ-exit ctx "wrong number of arguments") "\n"))))
-=======
                        (univ-throw ctx "\"wrong number of arguments\""))))
->>>>>>> master
 
                 ((return)
                  (gen " " (univ-comment ctx "return-point\n")))
 
                 ((task-entry)
                  (gen " " (univ-comment ctx "task-entry-point\n")
-<<<<<<< HEAD
-                      (univ-exit ctx "task-entry-point GVM label unimplemented") "\n"))
-
-                ((task-return)
-                 (gen " " (univ-comment ctx "task-return-point\n")
-                      (univ-exit ctx "task-return-point GVM label unimplemented") "\n"))
-=======
                       (univ-throw ctx "\"task-entry-point GVM label unimplemented\"")))
 
                 ((task-return)
                  (gen " " (univ-comment ctx "task-return-point\n")
                       (univ-throw ctx "\"task-return-point GVM label unimplemented\"")))
->>>>>>> master
 
                 (else
                  (compiler-internal-error
-                  "scan-gvm-label, unknown label type")))))
+                  "scan-gvm-label, unknown label type"))))
 
              (univ-indent
               (with-stack-base-offset
                ctx
                (- (frame-size (gvm-instr-frame gvm-instr)))
                (lambda (ctx)
-                 (proc ctx)))))
+                 (proc ctx))))))
 
           (define (scan-gvm-instr ctx gvm-instr)
 
@@ -464,11 +451,7 @@
               ((close)
                ;; TODO
                ;; (close-parms gvm-instr)
-<<<<<<< HEAD
-               (univ-exit ctx "close GVM instruction unimplemented") "\n")
-=======
                (univ-throw ctx "\"close GVM instruction unimplemented\""))
->>>>>>> master
 
               ((ifjump)
                ;; TODO
@@ -497,11 +480,7 @@
                ;; (switch-cases gvm-instr)
                ;; (switch-poll? gvm-instr)
                ;; (switch-default gvm-instr)
-<<<<<<< HEAD
-               (univ-exit ctx "switch GVM instruction unimplemented") "\n")
-=======
                (univ-throw ctx "\"switch GVM instruction unimplemented\""))
->>>>>>> master
 
               ((jump)
                ;; TODO
@@ -517,18 +496,11 @@
                         (ctx-stack-base-offset ctx))
                      (lambda (ctx)
                        (let ((opnd (jump-opnd gvm-instr)))
-<<<<<<< HEAD
-                         (if (jump-poll? gvm-instr)
-                             (gen (univ-assign ctx "save_pc" (scan-gvm-opnd ctx opnd))
-                                  (univ-return ctx (univ-null ctx)))
-                             (univ-return ctx (scan-gvm-opnd ctx opnd))))))))
-=======
                          (univ-return
                           ctx
                           (if (jump-poll? gvm-instr)
                               (gen "poll(" (scan-gvm-opnd ctx opnd) ")")
                               (scan-gvm-opnd ctx opnd))))))))
->>>>>>> master
 
               (else
                (compiler-internal-error
@@ -605,11 +577,8 @@
            (reverse rev-res)
            port)
 
-          (begin
-            (display "univ-dump-procs")(newline)
-            (display loop)(newline)
-            (loop (cons (dump-proc (queue-get! proc-left))
-                        rev-res)))))))
+          (loop (cons (dump-proc (queue-get! proc-left))
+                      rev-res))))))
 
 (define gen vector)
 
@@ -819,56 +788,6 @@ EOF
       "runtime-system, unknown target"))))
 
 (define (entry-point ctx main-proc)
-<<<<<<< HEAD
-  (gen "\n"
-       (univ-comment ctx "--------------------------------\n")
-       "\n"
-       (univ-assign ctx "save_pc" (lbl->id ctx 1 (proc-obj-name main-proc)))
-       (univ-expr ctx "run()") "\n"))
-
-;;;----------------------------------------------------------------------------
-
-(define (univ-exit ctx msg)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (gen "throw \"" msg "\";\n" ))
-
-    ((python)
-     (gen "sys.exit(\"" msg "\")\n"))
-
-    ;; TODO: confirm this
-    ;; ((php)
-    ;;  (gen "throw new Exception('" msg "')\n"))
-
-    ;; TODO: confirm this
-    ;; ((ruby)
-    ;;  (gen "raise \"" msg "\"\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-exit, unknown target"))))
-
-(define (univ-null ctx)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (gen "null"))
-
-    ((php)
-     (gen "NULL"))
-
-    ((python)
-     (gen "None"))
-
-    ;; TODO: confirm this
-    ;; ((ruby)
-    ;;  (gen "nil"))
-
-    (else
-     (compiler-internal-error
-      "univ-null, unknown target"))))
-=======
   (let ((entry (lbl->id ctx 1 (proc-obj-name main-proc))))
     (gen "\n"
          (univ-comment ctx "--------------------------------\n")
@@ -900,7 +819,6 @@ EOF
     (else
      (compiler-internal-error
       "univ-global, unknown target"))))
->>>>>>> master
 
 (define (univ-function ctx name header body)
   (gen "\n"

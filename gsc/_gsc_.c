@@ -4078,6 +4078,7 @@
 "c#lambda-lift?"
 "c#lambda-sym"
 "c#last-pair"
+"c#lbl->id"
 "c#lbl-num"
 "c#lbl-num->bb"
 "c#lbl?"
@@ -4388,6 +4389,7 @@
 "c#reverse-append!"
 "c#run-time-binding?"
 "c#run-time-bindings-sym"
+"c#runtime-system"
 "c#s16vect->list"
 "c#s16vect-length"
 "c#s16vect-ref"
@@ -4908,21 +4910,22 @@
 "c#univ-dump"
 "c#univ-dump-procs"
 "c#univ-enable-jump-destination-inlining?"
-"c#univ-exit"
+"c#univ-eq"
 "c#univ-expr"
+"c#univ-global"
 "c#univ-if-then"
 "c#univ-if-then-else"
 "c#univ-increment"
 "c#univ-jump-info"
 "c#univ-label-info"
 "c#univ-ne"
-"c#univ-null"
 "c#univ-prim-info*"
 "c#univ-prim-proc-add!"
 "c#univ-prim-proc-table"
 "c#univ-return"
 "c#univ-setup"
 "c#univ-switch-testable?"
+"c#univ-throw"
 "c#unquote-expr?"
 "c#unquote-splicing-expr?"
 "c#unquote-splicing-sym"
@@ -4985,6 +4988,7 @@
 "c#wchar_t-sym"
 "c#with-exception-handling"
 "c#with-stack-base-offset"
+"c#with-stack-pointer-adjust"
 "c#wrap-program"
 "c#write-bb"
 "c#write-frame"
@@ -6181,7 +6185,6 @@
 "c#jump-state-in-stk"
 "c#label-lbl-num-set!"
 "c#lambda-expr?"
-"c#lbl->id"
 "c#live-slot-var?"
 "c#locat-filename"
 "c#lowest"
@@ -6258,7 +6261,6 @@
 "c#ref-var"
 "c#ref-var-set!"
 "c#reg-num"
-"c#runtime-system"
 "c#s16vect-set!"
 "c#s32vect-set!"
 "c#s64vect-set!"
@@ -6340,7 +6342,6 @@
 "c#target-switch-testable?"
 "c#target-task-return"
 "c#type-pot-fut?"
-"c#univ-eq"
 "c#univ-frame-alignment"
 "c#univ-frame-reserve"
 "c#univ-function"
@@ -6374,7 +6375,6 @@
 "c#var-stamp-set!"
 "c#varset-unwrap"
 "c#varset-wrap"
-"c#with-stack-pointer-adjust"
 "c#write-bbs"
 "c#write-word"
 "call-with-input-process"
@@ -11600,11 +11600,11 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_dump,___G_c_23_univ_2d_dump)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_dump_2d_procs,___G_c_23_univ_2d_dump_2d_procs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_enable_2d_jump_2d_destination_2d_inlining_3f_,___G_c_23_univ_2d_enable_2d_jump_2d_destination_2d_inlining_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_eq,___G_c_23_univ_2d_eq)
-___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_exit,___G_c_23_univ_2d_exit)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_expr,___G_c_23_univ_2d_expr)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_frame_2d_alignment,___G_c_23_univ_2d_frame_2d_alignment)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_frame_2d_reserve,___G_c_23_univ_2d_frame_2d_reserve)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_function,___G_c_23_univ_2d_function)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_global,___G_c_23_univ_2d_global)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_if_2d_then,___G_c_23_univ_2d_if_2d_then)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_if_2d_then_2d_else,___G_c_23_univ_2d_if_2d_then_2d_else)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_increment,___G_c_23_univ_2d_increment)
@@ -11614,7 +11614,6 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_label_2d_info,___G_c_23_univ_2d_label_2d_in
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_arg_2d_regs,___G_c_23_univ_2d_nb_2d_arg_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_gvm_2d_regs,___G_c_23_univ_2d_nb_2d_gvm_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_ne,___G_c_23_univ_2d_ne)
-___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_null,___G_c_23_univ_2d_null)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_info,___G_c_23_univ_2d_prim_2d_info)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_info_2a_,___G_c_23_univ_2d_prim_2d_info_2a_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_proc_2d_add_21_,___G_c_23_univ_2d_prim_2d_proc_2d_add_21_)
@@ -11623,6 +11622,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_return,___G_c_23_univ_2d_return)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_setup,___G_c_23_univ_2d_setup)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_switch_2d_testable_3f_,___G_c_23_univ_2d_switch_2d_testable_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_tag_2d_bits,___G_c_23_univ_2d_tag_2d_bits)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_throw,___G_c_23_univ_2d_throw)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_word_2d_bits,___G_c_23_univ_2d_word_2d_bits)
 ___DEF_OLD_SYM_GLO(___S_c_23_unquote_2d_expr_3f_,___G_c_23_unquote_2d_expr_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_unquote_2d_splicing_2d_expr_3f_,___G_c_23_unquote_2d_splicing_2d_expr_3f_)
