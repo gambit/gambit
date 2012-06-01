@@ -43,7 +43,6 @@
 "##list"
 "##make-uninterned-symbol"
 "##namespace"
-"##not"
 "##or"
 "##pair?"
 "##parameterize"
@@ -152,6 +151,7 @@
 "##type-super"
 "##type-type"
 "##vector-ref"
+"$$indent$$"
 "$code"
 "*"
 "**filepos-col"
@@ -3717,6 +3717,7 @@
 "c#bb-lbl-num"
 "c#bb-non-branch-instrs"
 "c#bb-non-branch-instrs-set!"
+"c#bb-precedents"
 "c#bb-put-branch!"
 "c#bb-put-non-branch!"
 "c#bb-slots-gained"
@@ -4906,7 +4907,6 @@
 "c#transform-declaration"
 "c#transform-to-case?"
 "c#transitive-closure"
-"c#translate-gvm-instr"
 "c#translate-gvm-opnd"
 "c#trivial?"
 "c#tst-alt"
@@ -4943,8 +4943,13 @@
 "c#unbox-object"
 "c#unicode->character"
 "c#union-sym"
+"c#univ-assign"
+"c#univ-comment"
+"c#univ-define-prim"
+"c#univ-display"
 "c#univ-dump"
 "c#univ-dump-procs"
+<<<<<<< HEAD
 "c#univ-end-comment"
 "c#univ-gen-apply-instr"
 "c#univ-gen-clo-opnd"
@@ -4963,8 +4968,23 @@
 "c#univ-jump-info"
 "c#univ-label-info"
 "c#univ-open-comment"
+=======
+"c#univ-enable-jump-destination-inlining?"
+"c#univ-expr"
+"c#univ-fun-body"
+"c#univ-fun-head"
+"c#univ-if"
+"c#univ-if-else"
+"c#univ-increment"
+"c#univ-jump-info"
+"c#univ-label-info"
+"c#univ-nonequality"
+"c#univ-null"
+"c#univ-prim-info*"
+>>>>>>> master
 "c#univ-prim-proc-add!"
 "c#univ-prim-proc-table"
+"c#univ-return"
 "c#univ-setup"
 "c#univ-switch-testable?"
 "c#univ-to-target"
@@ -5030,6 +5050,7 @@
 "c#wchar_t-string-sym"
 "c#wchar_t-sym"
 "c#with-exception-handling"
+"c#with-stack-base-offset"
 "c#wrap-program"
 "c#write-bb"
 "c#write-frame"
@@ -5350,7 +5371,6 @@
 "positive?"
 "pp"
 "pretty-print"
-"print"
 "procedure?"
 "process-status"
 "protocol-info"
@@ -6175,7 +6195,6 @@
 "c#append-lists"
 "c#bb-branch-instr-set!"
 "c#bb-label-instr-set!"
-"c#bb-precedents"
 "c#bb-precedents-set!"
 "c#bb-references"
 "c#bb-references-set!"
@@ -6207,6 +6226,8 @@
 "c#cst-val-set!"
 "c#ctx-ns"
 "c#ctx-ns-set!"
+"c#ctx-stack-base-offset"
+"c#ctx-stack-base-offset-set!"
 "c#ctx-target"
 "c#ctx-target-set!"
 "c#def-var-set!"
@@ -6383,9 +6404,15 @@
 "c#target-switch-testable?"
 "c#target-task-return"
 "c#type-pot-fut?"
+<<<<<<< HEAD
 "c#univ-entry-point"
+=======
+"c#univ-equality"
+>>>>>>> master
 "c#univ-frame-alignment"
 "c#univ-frame-reserve"
+"c#univ-fun"
+"c#univ-indent"
 "c#univ-nb-arg-regs"
 "c#univ-nb-gvm-regs"
 "c#univ-prim-applic"
@@ -6416,6 +6443,7 @@
 "c#var-stamp-set!"
 "c#varset-unwrap"
 "c#varset-wrap"
+"c#with-stack-pointer-adjust"
 "c#write-bbs"
 "c#write-word"
 "call-with-input-process"
@@ -6635,6 +6663,7 @@
 "path-volume"
 "port?"
 "primordial-exception-handler"
+"print"
 "println"
 "process-pid"
 "process-times"
@@ -9553,6 +9582,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_write_2d_substring,___G__23__23_write_2d_substri
 ___DEF_OLD_SYM_GLO(___S__23__23_write_2d_subu8vector,___G__23__23_write_2d_subu8vector)
 ___DEF_OLD_SYM_GLO(___S__23__23_write_2d_u8,___G__23__23_write_2d_u8)
 ___DEF_OLD_SYM_GLO(___S__23__23_zero_3f_,___G__23__23_zero_3f_)
+___DEF_OLD_SYM_GLO(___S__24__24_indent_24__24_,___G__24__24_indent_24__24_)
 ___DEF_OLD_SYM_GLO(___S__24_code,___G__24_code)
 ___DEF_OLD_SYM_GLO(___S__2a_,___G__2a_)
 ___DEF_OLD_SYM_GLO(___S__2a__2a_filepos_2d_col,___G__2a__2a_filepos_2d_col)
@@ -10418,6 +10448,8 @@ ___DEF_OLD_SYM_GLO(___S_c_23_cst_2d_val_2d_set_21_,___G_c_23_cst_2d_val_2d_set_2
 ___DEF_OLD_SYM_GLO(___S_c_23_cst_3f_,___G_c_23_cst_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_ctx_2d_ns,___G_c_23_ctx_2d_ns)
 ___DEF_OLD_SYM_GLO(___S_c_23_ctx_2d_ns_2d_set_21_,___G_c_23_ctx_2d_ns_2d_set_21_)
+___DEF_OLD_SYM_GLO(___S_c_23_ctx_2d_stack_2d_base_2d_offset,___G_c_23_ctx_2d_stack_2d_base_2d_offset)
+___DEF_OLD_SYM_GLO(___S_c_23_ctx_2d_stack_2d_base_2d_offset_2d_set_21_,___G_c_23_ctx_2d_stack_2d_base_2d_offset_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S_c_23_ctx_2d_target,___G_c_23_ctx_2d_target)
 ___DEF_OLD_SYM_GLO(___S_c_23_ctx_2d_target_2d_set_21_,___G_c_23_ctx_2d_target_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S_c_23_current_2d_context,___G_c_23_current_2d_context)
@@ -11612,7 +11644,6 @@ ___DEF_OLD_SYM_GLO(___S_c_23_trace_2d_unindent,___G_c_23_trace_2d_unindent)
 ___DEF_OLD_SYM_GLO(___S_c_23_transform_2d_declaration,___G_c_23_transform_2d_declaration)
 ___DEF_OLD_SYM_GLO(___S_c_23_transform_2d_to_2d_case_3f_,___G_c_23_transform_2d_to_2d_case_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_transitive_2d_closure,___G_c_23_transitive_2d_closure)
-___DEF_OLD_SYM_GLO(___S_c_23_translate_2d_gvm_2d_instr,___G_c_23_translate_2d_gvm_2d_instr)
 ___DEF_OLD_SYM_GLO(___S_c_23_translate_2d_gvm_2d_opnd,___G_c_23_translate_2d_gvm_2d_opnd)
 ___DEF_OLD_SYM_GLO(___S_c_23_trivial_3f_,___G_c_23_trivial_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_tst_2d_alt,___G_c_23_tst_2d_alt)
@@ -11650,8 +11681,13 @@ ___DEF_OLD_SYM_GLO(___S_c_23_unbound2_2d_object_3f_,___G_c_23_unbound2_2d_object
 ___DEF_OLD_SYM_GLO(___S_c_23_unbox_2d_object,___G_c_23_unbox_2d_object)
 ___DEF_OLD_SYM_GLO(___S_c_23_unicode_2d__3e_character,___G_c_23_unicode_2d__3e_character)
 ___DEF_OLD_SYM_GLO(___S_c_23_union_2d_sym,___G_c_23_union_2d_sym)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_assign,___G_c_23_univ_2d_assign)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_comment,___G_c_23_univ_2d_comment)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_define_2d_prim,___G_c_23_univ_2d_define_2d_prim)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_display,___G_c_23_univ_2d_display)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_dump,___G_c_23_univ_2d_dump)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_dump_2d_procs,___G_c_23_univ_2d_dump_2d_procs)
+<<<<<<< HEAD
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_end_2d_comment,___G_c_23_univ_2d_end_2d_comment)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_entry_2d_point,___G_c_23_univ_2d_entry_2d_point)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_frame_2d_alignment,___G_c_23_univ_2d_frame_2d_alignment)
@@ -11670,16 +11706,40 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_gen_2d_reg_2d_opnd,___G_c_23_univ_2d_gen_2d
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_gen_2d_stk_2d_opnd,___G_c_23_univ_2d_gen_2d_stk_2d_opnd)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_gen_2d_string,___G_c_23_univ_2d_gen_2d_string)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_gen_2d_switch_2d_instr,___G_c_23_univ_2d_gen_2d_switch_2d_instr)
+=======
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_enable_2d_jump_2d_destination_2d_inlining_3f_,___G_c_23_univ_2d_enable_2d_jump_2d_destination_2d_inlining_3f_)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_equality,___G_c_23_univ_2d_equality)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_expr,___G_c_23_univ_2d_expr)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_frame_2d_alignment,___G_c_23_univ_2d_frame_2d_alignment)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_frame_2d_reserve,___G_c_23_univ_2d_frame_2d_reserve)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_fun,___G_c_23_univ_2d_fun)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_fun_2d_body,___G_c_23_univ_2d_fun_2d_body)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_fun_2d_head,___G_c_23_univ_2d_fun_2d_head)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_if,___G_c_23_univ_2d_if)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_if_2d_else,___G_c_23_univ_2d_if_2d_else)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_increment,___G_c_23_univ_2d_increment)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_indent,___G_c_23_univ_2d_indent)
+>>>>>>> master
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_jump_2d_info,___G_c_23_univ_2d_jump_2d_info)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_label_2d_info,___G_c_23_univ_2d_label_2d_info)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_arg_2d_regs,___G_c_23_univ_2d_nb_2d_arg_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_gvm_2d_regs,___G_c_23_univ_2d_nb_2d_gvm_2d_regs)
+<<<<<<< HEAD
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_open_2d_comment,___G_c_23_univ_2d_open_2d_comment)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_applic,___G_c_23_univ_2d_prim_2d_applic)
+=======
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nonequality,___G_c_23_univ_2d_nonequality)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_null,___G_c_23_univ_2d_null)
+>>>>>>> master
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_info,___G_c_23_univ_2d_prim_2d_info)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_info_2a_,___G_c_23_univ_2d_prim_2d_info_2a_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_proc_2d_add_21_,___G_c_23_univ_2d_prim_2d_proc_2d_add_21_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_prim_2d_proc_2d_table,___G_c_23_univ_2d_prim_2d_proc_2d_table)
+<<<<<<< HEAD
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_runtime_2d_system,___G_c_23_univ_2d_runtime_2d_system)
+=======
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_return,___G_c_23_univ_2d_return)
+>>>>>>> master
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_setup,___G_c_23_univ_2d_setup)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_sp_2d_adjust,___G_c_23_univ_2d_sp_2d_adjust)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_switch_2d_testable_3f_,___G_c_23_univ_2d_switch_2d_testable_3f_)
@@ -11770,6 +11830,8 @@ ___DEF_OLD_SYM_GLO(___S_c_23_warnings_3f_,___G_c_23_warnings_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_wchar__t_2d_string_2d_sym,___G_c_23_wchar__t_2d_string_2d_sym)
 ___DEF_OLD_SYM_GLO(___S_c_23_wchar__t_2d_sym,___G_c_23_wchar__t_2d_sym)
 ___DEF_OLD_SYM_GLO(___S_c_23_with_2d_exception_2d_handling,___G_c_23_with_2d_exception_2d_handling)
+___DEF_OLD_SYM_GLO(___S_c_23_with_2d_stack_2d_base_2d_offset,___G_c_23_with_2d_stack_2d_base_2d_offset)
+___DEF_OLD_SYM_GLO(___S_c_23_with_2d_stack_2d_pointer_2d_adjust,___G_c_23_with_2d_stack_2d_pointer_2d_adjust)
 ___DEF_OLD_SYM_GLO(___S_c_23_wrap_2d_program,___G_c_23_wrap_2d_program)
 ___DEF_OLD_SYM_GLO(___S_c_23_write_2d_bb,___G_c_23_write_2d_bb)
 ___DEF_OLD_SYM_GLO(___S_c_23_write_2d_bbs,___G_c_23_write_2d_bbs)

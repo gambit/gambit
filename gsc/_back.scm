@@ -111,7 +111,7 @@
 
 ;;;; Target description object manipulation
 
-(define (make-target version name)
+(define (make-target version name extra)
 
   (define current-target-version 7) ; number for this version of the module
 
@@ -119,7 +119,7 @@
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((x (make-vector 14)))
+  (let ((x (make-vector (+ 14 extra))))
     (vector-set! x 0 'target)
     (vector-set! x 1 name)
     x))

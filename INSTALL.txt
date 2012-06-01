@@ -758,7 +758,7 @@ gcc    |  secs    rel   |  secs    rel   |  secs    rel   |  secs    rel   |
 -------+----------------+----------------+----------------+----------------+
 
 
-The same experiment was done with clang version 2.6 to 3.0.  Bugs were
+The same experiment was done with clang version 2.6 to 3.1.  Bugs were
 encountered getting all these clang versions working on linux (due to
 linking problems) so the prebuilt compilers were installed on a x86_64
 Mac OS X machine.  This Mac OS X machine is about 15% faster than the
@@ -770,7 +770,7 @@ Clang versions 2.7, 2.8 and 2.9 have bugs which prevent the Gambit
 The build and execution times are given below.  Note that the fastest
 execution speed is obtained with --enable-single-host (regardless of
 optimization level) and that clang 2.6 generates code that is about
-40% faster than clang 3.0 .
+40% faster than clang 3.0 and clang 3.1 .
 
 As for the build time, clang is very roughly the same speed as gcc
 when --enable-multiple-hosts is used.  However, when
@@ -793,6 +793,8 @@ clang  |  secs    rel   |  secs    rel   |  secs    rel   |  secs    rel   |
 -------+----------------+----------------+----------------+----------------+
 3.0    |   3.83 ( 1.40) |   3.76 ( 1.37) |   4.49 ( 1.64) |   4.87 ( 1.78) |
 -------+----------------+----------------+----------------+----------------+
+3.1    |   3.82 ( 1.39) |   3.89 ( 1.42) |   4.32 ( 1.58) |   4.90 ( 1.79) |
+-------+----------------+----------------+----------------+----------------+
 
 
 **** Elapsed time of "make"
@@ -801,9 +803,11 @@ clang  |  secs    rel   |  secs    rel   |  secs    rel   |  secs    rel   |
        |                | --enable-c-opt |                | --enable-c-opt |
 clang  |  secs    rel   |  secs    rel   |  secs    rel   |  secs    rel   |
 -------+----------------+----------------+----------------+----------------+
-2.6    |   95.7 ( 1.00) |   96.0 ( 1.00) |  694.4 ( 7.26) |  699.1 ( 7.31) |
+2.6    |   95.7 ( 1.12) |   96.0 ( 1.12) |  694.4 ( 8.10) |  699.1 ( 8.16) |
 -------+----------------+----------------+----------------+----------------+
-3.0    |  164.3 ( 1.72) |  127.2 ( 1.33) | 4313.0 (45.08) | 1825.3 (19.08) |
+3.0    |  164.3 ( 1.92) |  127.2 ( 1.48) | 4313.0 (50.33) | 1825.3 (21.30) |
+-------+----------------+----------------+----------------+----------------+
+3.1    |   90.1 ( 1.05) |   85.7 ( 1.00) | 1110.0 (12.95) |  915.7 (10.68) |
 -------+----------------+----------------+----------------+----------------+
 
 
