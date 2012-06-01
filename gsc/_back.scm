@@ -192,6 +192,8 @@
 
   ((target-begin! target) info-port)
 
+  (setup-prim-expanders target)
+
   (set! target.dump              (target-dump target))
   (set! target.nb-regs           (target-nb-regs target))
   (set! target.prim-info         (target-prim-info target))

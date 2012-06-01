@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -208,33 +208,44 @@
 ;;
 ;; Initialization/finalization of back-end
 
-(let ((targ (make-target 7 'c 0)))
+(define (targ-make-target)
+  (let ((targ (make-target 7 'c 1)))
 
-  (define (begin! info-port)
+    (define (begin! info-port)
 
-    (set! targ-info-port info-port)
+      (set! targ-info-port info-port)
 
-    (target-dump-set!              targ targ-dump)
-    (target-nb-regs-set!           targ targ-nb-gvm-regs)
-    (target-prim-info-set!         targ targ-prim-info)
-    (target-label-info-set!        targ targ-label-info)
-    (target-jump-info-set!         targ targ-jump-info)
-    (target-frame-constraints-set! targ (make-frame-constraints
-                                         targ-frame-reserve
-                                         targ-frame-alignment))
-    (target-proc-result-set!       targ (make-reg 1))
-    (target-task-return-set!       targ (make-reg 0))
-    (target-switch-testable?-set!  targ targ-switch-testable?)
-    (target-file-extension-set!    targ (targ-preferred-c-file-extension))
+      (target-dump-set!              targ targ-dump)
+      (target-nb-regs-set!           targ targ-nb-gvm-regs)
+      (target-prim-info-set!         targ targ-prim-info)
+      (target-label-info-set!        targ targ-label-info)
+      (target-jump-info-set!         targ targ-jump-info)
+      (target-frame-constraints-set! targ (make-frame-constraints
+                                           targ-frame-reserve
+                                           targ-frame-alignment))
+      (target-proc-result-set!       targ (make-reg 1))
+      (target-task-return-set!       targ (make-reg 0))
+      (target-switch-testable?-set!  targ targ-switch-testable?)
+      (target-file-extension-set!    targ (targ-preferred-c-file-extension))
 
-    #f)
+      #f)
 
-  (define (end!)
-    #f)
+    (define (end!)
+      #f)
 
-  (target-begin!-set! targ begin!)
-  (target-end!-set! targ end!)
-  (target-add targ))
+    (target-begin!-set! targ begin!)
+    (target-end!-set! targ end!)
+
+    (targ-prim-proc-table-set! targ (make-vector 403 '()))
+
+    targ))
+
+(define (targ-prim-proc-table x)        (vector-ref x 14))
+(define (targ-prim-proc-table-set! x y) (vector-set! x 14 y))
+
+(define targ-target (targ-make-target))
+
+(target-add targ-target)
 
 (define targ-info-port #f)
 
@@ -242,26 +253,23 @@
 ;;
 ;; Primitive procedure database
 
-(define targ-prim-proc-table
-  (make-vector 403 '()))
-
 (define (targ-prim-proc-add! x)
   (let* ((sym (string->canonical-symbol (car x)))
          (index (modulo (symbol-hash sym) 403)))
     (vector-set!
-     targ-prim-proc-table
+     (targ-prim-proc-table targ-target)
      index
      (cons
       (cons
        sym
        (apply make-proc-obj (car x) #f #t #f (cdr x)))
-      (vector-ref targ-prim-proc-table index)))))
+      (vector-ref (targ-prim-proc-table targ-target) index)))))
 
 (for-each targ-prim-proc-add! prim-procs)
 
 (define (targ-prim-info name)
   (let ((index (modulo (symbol-hash name) 403)))
-    (let ((x (assq name (vector-ref targ-prim-proc-table index))))
+    (let ((x (assq name (vector-ref (targ-prim-proc-table targ-target) index))))
       (if x (cdr x) #f))))
 
 (define (targ-get-prim-info name)
