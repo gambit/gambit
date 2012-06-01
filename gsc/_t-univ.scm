@@ -360,20 +360,32 @@
                       (univ-if-then
                        ctx
                        (univ-ne ctx
-                                "nargs"
+                                (univ-global ctx "nargs")
                                 (label-entry-nb-parms gvm-instr))
+<<<<<<< HEAD
                        (gen (univ-exit ctx "wrong number of arguments") "\n"))))
+=======
+                       (univ-throw ctx "\"wrong number of arguments\""))))
+>>>>>>> master
 
                 ((return)
                  (gen " " (univ-comment ctx "return-point\n")))
 
                 ((task-entry)
                  (gen " " (univ-comment ctx "task-entry-point\n")
+<<<<<<< HEAD
                       (univ-exit ctx "task-entry-point GVM label unimplemented") "\n"))
 
                 ((task-return)
                  (gen " " (univ-comment ctx "task-return-point\n")
                       (univ-exit ctx "task-return-point GVM label unimplemented") "\n"))
+=======
+                      (univ-throw ctx "\"task-entry-point GVM label unimplemented\"")))
+
+                ((task-return)
+                 (gen " " (univ-comment ctx "task-return-point\n")
+                      (univ-throw ctx "\"task-return-point GVM label unimplemented\"")))
+>>>>>>> master
 
                 (else
                  (compiler-internal-error
@@ -452,7 +464,11 @@
               ((close)
                ;; TODO
                ;; (close-parms gvm-instr)
+<<<<<<< HEAD
                (univ-exit ctx "close GVM instruction unimplemented") "\n")
+=======
+               (univ-throw ctx "\"close GVM instruction unimplemented\""))
+>>>>>>> master
 
               ((ifjump)
                ;; TODO
@@ -481,7 +497,11 @@
                ;; (switch-cases gvm-instr)
                ;; (switch-poll? gvm-instr)
                ;; (switch-default gvm-instr)
+<<<<<<< HEAD
                (univ-exit ctx "switch GVM instruction unimplemented") "\n")
+=======
+               (univ-throw ctx "\"switch GVM instruction unimplemented\""))
+>>>>>>> master
 
               ((jump)
                ;; TODO
@@ -489,7 +509,7 @@
                ;; test: (jump-poll? gvm-instr)
                (gen (let ((nb-args (jump-nb-args gvm-instr)))
                       (if nb-args
-                          (univ-assign ctx "nargs" nb-args)
+                          (univ-assign ctx (univ-global ctx "nargs") nb-args)
                           ""))
                     (with-stack-pointer-adjust
                      ctx
@@ -497,10 +517,18 @@
                         (ctx-stack-base-offset ctx))
                      (lambda (ctx)
                        (let ((opnd (jump-opnd gvm-instr)))
+<<<<<<< HEAD
                          (if (jump-poll? gvm-instr)
                              (gen (univ-assign ctx "save_pc" (scan-gvm-opnd ctx opnd))
                                   (univ-return ctx (univ-null ctx)))
                              (univ-return ctx (scan-gvm-opnd ctx opnd))))))))
+=======
+                         (univ-return
+                          ctx
+                          (if (jump-poll? gvm-instr)
+                              (gen "poll(" (scan-gvm-opnd ctx opnd) ")")
+                              (scan-gvm-opnd ctx opnd))))))))
+>>>>>>> master
 
               (else
                (compiler-internal-error
@@ -607,7 +635,7 @@
 (define (with-stack-pointer-adjust ctx n proc)
   (gen (if (= n 0)
            (gen "")
-           (univ-increment ctx "sp" n))
+           (univ-increment ctx (univ-global ctx "sp") n))
        (with-stack-base-offset
         ctx
         (- (ctx-stack-base-offset ctx) n)
@@ -619,13 +647,16 @@
          (gen "NO_OPERAND"))
 
         ((reg? gvm-opnd)
-         (gen "reg["
+         (gen (univ-global ctx "reg")
+              "["
               (reg-num gvm-opnd)
               "]"))
 
         ((stk? gvm-opnd)
          (let ((n (+ (stk-num gvm-opnd) (ctx-stack-base-offset ctx))))
-           (gen "stack[sp"
+           (gen (univ-global ctx "stack")
+                "["
+                (univ-global ctx "sp")
                 (cond ((= n 0)
                        (gen ""))
                       ((< n 0)
@@ -635,7 +666,8 @@
                 "]")))
 
         ((glo? gvm-opnd)
-         (gen "glo["
+         (gen (univ-global ctx "glo")
+              "["
               (object->string (symbol->string (glo-name gvm-opnd)))
               "]"))
 
@@ -670,27 +702,32 @@
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
 
 (define (lbl->id ctx num ns)
-  (gen "lbl" num "_" (scheme-id->c-id ns)))
+  (univ-global ctx (gen "lbl" num "_" (scheme-id->c-id ns))))
 
 (define (runtime-system targ)
+  (case (target-name targ)
+
+    ((js)
 #<<EOF
 var glo = {};
-var reg = [null];
+var reg = [false];
 var stack = [];
 var sp = -1;
 var nargs = 0;
-var save_pc = null;
+var temp1 = false;
+var temp2 = false;
 var poll;
 
 if (this.hasOwnProperty('setTimeout')) {
-  poll = function (wakeup) { setTimeout(wakeup,1); return true; };
+  poll = function (wakeup) { setTimeout(function () { run(wakeup); }, 1); return false; };
 } else {
-  poll = function (wakeup) { return false; };
+  poll = function (wakeup) { return wakeup; };
 }
 
 
 function lbl1_print() { // print
-  if (nargs !== 1) throw "wrong number of arguments";
+  if (nargs !== 1)
+    throw "wrong number of arguments";
   print(reg[1]);
   return reg[0];
 }
@@ -698,21 +735,91 @@ function lbl1_print() { // print
 glo["print"] = lbl1_print;
 
 
-function run()
+function run(pc)
 {
-  while (save_pc !== null) {
-    pc = save_pc;
-    save_pc = null;
-    while (pc !== null)
-      pc = pc();
-    if (poll(run)) break;
-  }
+  while (pc !== false)
+    pc = pc();
 }
 
 EOF
 )
 
+    ((python)
+#<<EOF
+#! /usr/bin/python
+
+import ctypes
+
+glo = {}
+reg = {0:False}
+stack = {}
+sp = -1
+nargs = 0
+temp1 = False
+temp2 = False
+
+
+def lbl1_print(): # print
+  global glo, reg, stack, sp, nargs, temp1, temp2
+  if nargs != 1:
+    raise "wrong number of arguments"
+  print(reg[1])
+  return reg[0]
+
+glo["print"] = lbl1_print
+
+
+def run(pc):
+  while pc != False:
+    pc = pc()
+
+EOF
+)
+
+    ((ruby)
+#<<EOF
+$glo = {}
+$reg = {0=>false}
+$stack = {}
+$sp = -1
+$nargs = 0
+$temp1 = false
+$temp2 = false
+
+
+$lbl1_print = lambda { # print
+  if $nargs != 1
+    raise "wrong number of arguments"
+  end
+  print($reg[1])
+  print("\n")
+  return $reg[0]
+}
+
+$glo["print"] = $lbl1_print
+
+
+def run(pc)
+  while pc != false
+    pc = pc.call
+  end
+end
+
+EOF
+)
+
+    ((php)
+#<<EOF
+??????????????????????????????????
+EOF
+)
+
+    (else
+     (compiler-internal-error
+      "runtime-system, unknown target"))))
+
 (define (entry-point ctx main-proc)
+<<<<<<< HEAD
   (gen "\n"
        (univ-comment ctx "--------------------------------\n")
        "\n"
@@ -761,6 +868,39 @@ EOF
     (else
      (compiler-internal-error
       "univ-null, unknown target"))))
+=======
+  (let ((entry (lbl->id ctx 1 (proc-obj-name main-proc))))
+    (gen "\n"
+         (univ-comment ctx "--------------------------------\n")
+         "\n"
+
+         (case (target-name (ctx-target ctx))
+
+           ((js php)
+            (gen "run(" entry ");\n"))
+
+           ((python ruby)
+            (gen "run(" entry ")\n"))
+
+           (else
+            (compiler-internal-error
+             "entry-point, unknown target"))))))
+
+;;;----------------------------------------------------------------------------
+
+(define (univ-global ctx name)
+  (case (target-name (ctx-target ctx))
+
+    ((js python php)
+     name)
+
+    ((python ruby)
+     (gen "$" name))
+
+    (else
+     (compiler-internal-error
+      "univ-global, unknown target"))))
+>>>>>>> master
 
 (define (univ-function ctx name header body)
   (gen "\n"
@@ -770,10 +910,13 @@ EOF
           (gen "function " name "() {" header body "}\n"))
 
          ((python)
-          (gen "def " name "():" header body))
+          (gen "def " name "():\n"
+               (univ-indent "global glo, reg, stack, sp, nargs, temp1, temp2")
+               header
+               body))
 
          ((ruby)
-          (gen "def " name "()" header body "end\n"))
+          (univ-assign ctx name (gen "lambda {" header body "}")))
 
          (else
           (compiler-internal-error
@@ -804,6 +947,19 @@ EOF
     (else
      (compiler-internal-error
       "univ-return, unknown target"))))
+
+(define (univ-throw ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (gen "throw " expr ";\n"))
+
+    ((python ruby)
+     (gen "raise " expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-throw, unknown target"))))
 
 (define (univ-eq ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -884,7 +1040,8 @@ EOF
 
     ((ruby)
      (gen "if " test "\n"
-          (univ-indent true)))
+          (univ-indent true)
+          "end\n"))
 
     (else
      (compiler-internal-error
@@ -910,7 +1067,8 @@ EOF
      (gen "if " test "\n"
           (univ-indent true)
           "else\n"
-          (univ-indent false)))
+          (univ-indent false)
+          "end\n"))
 
     (else
      (compiler-internal-error
@@ -961,12 +1119,14 @@ EOF
 (univ-define-prim "##not" #f #f
 
   (lambda (ctx opnds)
-    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-         " === false"))
+    (univ-eq ctx
+             (translate-gvm-opnd ctx (list-ref opnds 0))
+             "false"))
 
   (lambda (ctx opnds)
-    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-         " === false")))
+    (univ-eq ctx
+             (translate-gvm-opnd ctx (list-ref opnds 0))
+             "false")))
 
 (univ-define-prim "fx+" #f #f
 
