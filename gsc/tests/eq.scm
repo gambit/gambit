@@ -1,0 +1,26 @@
+(declare (extended-bindings))
+
+(define str "")
+(define fl0 0.0)
+(define fl1 1.0)
+
+(define (test2 x y)
+  (println (##eq? x y))
+  (println (if (##eq? x y) "yes" "no")))
+
+(define (test x)
+  (test2 x #t)
+  (test2 x #f)
+  (test2 x 0)
+  (test2 x 1)
+  (test2 x str)
+  (test2 x fl0)
+  (test2 x fl1))
+
+(test #t)
+(test #f)
+(test 0)
+(test 1)
+(test str)
+(test fl0)
+(test fl1)

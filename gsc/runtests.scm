@@ -36,9 +36,9 @@
        (if (not (equal? result (car results)))
            (begin
              (if (not diff?)
-                 (print "\n================ EXPECTED:\n" (cdr (car results))))
+                 (print " (FAILED)\n======================= EXPECTED:\n" (cdr (car results))))
              (set! diff? #t)
-             (print "================ " (car target) ":\n" (cdr result)))))
+             (print "======================= " (car target) ":\n" (cdr result)))))
      (cdr results)
      (cdr targets))
 

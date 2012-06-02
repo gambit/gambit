@@ -651,22 +651,47 @@
          (translate-lbl ctx gvm-opnd))
 
         ((obj? gvm-opnd)
-         (let ((val (obj-val gvm-opnd)))
-           (cond ((number? val)
-                  (gen val))
-                 ((void-object? val)
-                  (gen "undefined"))
-                 ((proc-obj? val)
-                  (lbl->id ctx 1 (proc-obj-name val)))
-                 (else
-                  (gen "UNIMPLEMENTED_OBJECT("
-                       (object->string val)
-                       ")")))))
+         (translate-obj ctx (obj-val gvm-opnd)))
 
         (else
          (compiler-internal-error
           "translate-gvm-opnd, unknown 'gvm-opnd':"
           gvm-opnd))))
+
+(define (translate-obj ctx obj)
+  (cond ((boolean? obj)
+         (univ-boolean ctx obj))
+        ((number? obj)
+         (if (exact? obj)
+             (cond ((integer? obj)
+                    (gen obj))
+                   (else
+                    (compiler-internal-error
+                     "translate-obj, unsupported exact number:" obj)))
+             (cond ((real? obj)
+                    (let ((x
+                           (if (integer? obj)
+                               (gen obj 0)
+                               (gen obj))))
+                      (case (target-name (ctx-target ctx))
+                        ((js)
+                         (gen "new Flonum(" x ")"))
+                        (else
+                         x))))
+                   (else
+                    (compiler-internal-error
+                     "translate-obj, unsupported inexact number:" obj)))))
+        ((string? obj)
+         ;; TODO: fix JS which has immutable strings
+         (gen (object->string obj)))
+        ((void-object? obj)
+         (gen "undefined"))
+        ((proc-obj? obj)
+         (lbl->id ctx 1 (proc-obj-name obj)))
+        (else
+         (gen "UNIMPLEMENTED_OBJECT("
+              (object->string obj)
+              ")"))))
 
 (define (translate-lbl ctx lbl)
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
@@ -703,7 +728,14 @@ function Flonum(val) {
 function lbl1_println() { // println
   if (nargs !== 1)
     throw "wrong number of arguments";
-  print(reg[1]);
+  if (reg[1] === false)
+    print("#f");
+  else if (reg[1] === true)
+    print("#t");
+  else if (reg[1] instanceof Flonum)
+    print(reg[1].val);
+  else
+    print(reg[1]);
   return reg[0];
 }
 
@@ -738,7 +770,13 @@ def lbl1_println(): # println
   global glo, reg, stack, sp, nargs, temp1, temp2
   if nargs != 1:
     raise "wrong number of arguments"
-  print(reg[1])
+  if reg[1] is False:
+    print("#f")
+  else:
+    if reg[1] is True:
+      print("#t")
+    else:
+      print(reg[1])
   return reg[0]
 
 glo["println"] = lbl1_println
@@ -770,7 +808,15 @@ $lbl1_println = lambda { # println
   if $nargs != 1
     raise "wrong number of arguments"
   end
-  print($reg[1])
+  if $reg[1] == false
+    print("#f")
+  else
+    if $reg[1] == true
+      print("#t")
+    else
+      print($reg[1])
+    end
+  end
   print("\n")
   return $reg[0]
 }
@@ -951,18 +997,18 @@ EOF
      (compiler-internal-error
       "univ-not=, unknown target"))))
 
-(define (univ-false ctx)
+(define (univ-boolean ctx val)
   (case (target-name (ctx-target ctx))
 
     ((js ruby php)
-     (gen "false"))
+     (gen (if val "true" "false")))
 
     ((python)
-     (gen "False"))
+     (gen (if val "True" "False")))
 
     (else
      (compiler-internal-error
-      "univ-false, unknown target"))))
+      "univ-boolean, unknown target"))))
 
 (define (univ-assign ctx loc expr)
   (case (target-name (ctx-target ctx))
@@ -1091,19 +1137,19 @@ EOF
            (lambda (ctx opnds)
              (ifjump-gen ctx opnds)))))))
 
-(define (univ-define-prim-bool name proc-safe? side-effects? gen)
-  (univ-define-prim name proc-safe? side-effects? gen gen))
+(define (univ-define-prim-bool name proc-safe? side-effects? prim-gen)
+  (univ-define-prim name proc-safe? side-effects? prim-gen prim-gen))
 
 ;;; Primitive procedures
 
-(univ-define-prim-bool "##not" #f #f
+(univ-define-prim-bool "##not" #t #f
 
   (lambda (ctx opnds)
     (univ-eq ctx
              (translate-gvm-opnd ctx (list-ref opnds 0))
-             (univ-false ctx))))
+             (univ-boolean ctx #f))))
 
-(univ-define-prim-bool "##eq?" #f #f
+(univ-define-prim-bool "##eq?" #t #f
 
   (lambda (ctx opnds)
     (univ-eq ctx
@@ -1140,13 +1186,36 @@ EOF
 (univ-define-prim-bool "##fx<" #f #f
 
   (lambda (ctx opnds)
-    (univ-< (translate-gvm-opnd ctx (list-ref opnds 0))
+    (univ-< ctx
+            (translate-gvm-opnd ctx (list-ref opnds 0))
             (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim-bool "##fx<=" #f #f
+
+  (lambda (ctx opnds)
+    (univ-<= ctx
+             (translate-gvm-opnd ctx (list-ref opnds 0))
+             (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim-bool "##fx>" #f #f
+
+  (lambda (ctx opnds)
+    (univ-> ctx
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim-bool "##fx>=" #f #f
+
+  (lambda (ctx opnds)
+    (univ->= ctx
+             (translate-gvm-opnd ctx (list-ref opnds 0))
+             (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim-bool "##fx=" #f #f
 
   (lambda (ctx opnds)
-    (univ-= (translate-gvm-opnd ctx (list-ref opnds 0))
+    (univ-= ctx
+            (translate-gvm-opnd ctx (list-ref opnds 0))
             (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim "##fx+?" #f #f
@@ -1374,9 +1443,7 @@ EOF
 
   #f)
 
-(univ-define-prim "##fixnum?" #f #f
-
-  #f
+(univ-define-prim-bool "##fixnum?" #t #f
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
@@ -1389,7 +1456,10 @@ EOF
       ((python)
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
-            ", int)"))
+            ", int) and not "
+            "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", bool)"))
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
@@ -1404,9 +1474,7 @@ EOF
        (compiler-internal-error
         "##fixnum?, unknown target")))))
 
-(univ-define-prim "##flonum?" #f #f
-
-  #f
+(univ-define-prim-bool "##flonum?" #t #f
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
