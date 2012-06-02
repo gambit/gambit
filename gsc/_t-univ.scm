@@ -359,9 +359,9 @@
                            "entry-point\n"))
                       (univ-if-then
                        ctx
-                       (univ-ne ctx
-                                (univ-global ctx "nargs")
-                                (label-entry-nb-parms gvm-instr))
+                       (univ-not= ctx
+                                  (univ-global ctx "nargs")
+                                  (label-entry-nb-parms gvm-instr))
                        (univ-throw ctx "\"wrong number of arguments\""))))
 
                 ((return)
@@ -900,14 +900,45 @@ EOF
     ((js)
      (gen expr1 " === " expr2))
 
-    ((python ruby php)
+    ((python)
+     (gen expr1 " is " expr2))
+
+    ((ruby)
+     (gen expr1 " .equal?(" expr2 ")"))
+
+    ((php)
      (gen expr1 " == " expr2))
 
     (else
      (compiler-internal-error
       "univ-eq, unknown target"))))
 
-(define (univ-ne ctx expr1 expr2)
+(define (univ-< ctx expr1 expr2)
+  (gen expr1 " < " expr2))
+
+(define (univ-<= ctx expr1 expr2)
+  (gen expr1 " <= " expr2))
+
+(define (univ-> ctx expr1 expr2)
+  (gen expr1 " > " expr2))
+
+(define (univ->= ctx expr1 expr2)
+  (gen expr1 " >= " expr2))
+
+(define (univ-= ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen expr1 " === " expr2))
+
+    ((python ruby php)
+     (gen expr1 " == " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-=, unknown target"))))
+
+(define (univ-not= ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -918,7 +949,7 @@ EOF
 
     (else
      (compiler-internal-error
-      "univ-ne, unknown target"))))
+      "univ-not=, unknown target"))))
 
 (define (univ-false ctx)
   (case (target-name (ctx-target ctx))
@@ -1060,31 +1091,24 @@ EOF
            (lambda (ctx opnds)
              (ifjump-gen ctx opnds)))))))
 
+(define (univ-define-prim-bool name proc-safe? side-effects? gen)
+  (univ-define-prim name proc-safe? side-effects? gen gen))
+
 ;;; Primitive procedures
 
-(let ((fn
-       (lambda (ctx opnds)
-         (case (target-name (ctx-target ctx))
+(univ-define-prim-bool "##not" #f #f
 
-           ((js ruby php)
-            (univ-eq ctx
-                     (translate-gvm-opnd ctx (list-ref opnds 0))
-                     (univ-false ctx)))
+  (lambda (ctx opnds)
+    (univ-eq ctx
+             (translate-gvm-opnd ctx (list-ref opnds 0))
+             (univ-false ctx))))
 
-           ((python)
-            ;; needed because in Python False == 0 is True
-            (gen (univ-eq ctx
-                          (translate-gvm-opnd ctx (list-ref opnds 0))
-                          (univ-false ctx))
-                 " and isinstance("
-                 (translate-gvm-opnd ctx (list-ref opnds 0))
-                 ", bool)"))
+(univ-define-prim-bool "##eq?" #f #f
 
-           (else
-            (compiler-internal-error
-             "##not, unknown target"))))))
-
-  (univ-define-prim "##not" #f #f fn fn))
+  (lambda (ctx opnds)
+    (univ-eq ctx
+             (translate-gvm-opnd ctx (list-ref opnds 0))
+             (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim "##fx+" #f #f
 
@@ -1113,14 +1137,17 @@ EOF
 
   #f)
 
-(univ-define-prim "##fx<" #f #f
-
-  #f
+(univ-define-prim-bool "##fx<" #f #f
 
   (lambda (ctx opnds)
-    (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-         " < "
-         (translate-gvm-opnd ctx (list-ref opnds 1)))))
+    (univ-< (translate-gvm-opnd ctx (list-ref opnds 0))
+            (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim-bool "##fx=" #f #f
+
+  (lambda (ctx opnds)
+    (univ-= (translate-gvm-opnd ctx (list-ref opnds 0))
+            (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim "##fx+?" #f #f
 
