@@ -1,0 +1,6 @@
+This directory contains extremely basic tests of the compiler.
+
+The only data type required by these tests is fixnum integers.
+
+The only primitive procedure required by these tests is
+println which is always used to print a single fixnum.

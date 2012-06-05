@@ -1,0 +1,27 @@
+This directory contains basic tests of the compiler.
+
+The only data types required by these tests are:
+
+- fixnum integers
+- booleans
+- strings
+
+The only primitive procedures required by these tests are:
+
+- println: which is always used to print a single fixnum, boolean or string
+- ##not
+- ##fixnum?
+- ##fx+: which is only used with 2 fixnum parameters
+- ##fx+?: which is only used with 2 fixnum parameters
+- ##fxwrap+: which is only used with 2 fixnum parameters
+- ##fx-: which is only used with 2 fixnum parameters
+- ##fx-?: which is only used with 2 fixnum parameters
+- ##fxwrap-: which is only used with 2 fixnum parameters
+- ##fx*: which is only used with 2 fixnum parameters
+- ##fx*?: which is only used with 2 fixnum parameters
+- ##fxwrap*: which is only used with 2 fixnum parameters
+- ##fx=: which is only used with 2 fixnum parameters
+- ##fx<: which is only used with 2 fixnum parameters
+- ##fx>: which is only used with 2 fixnum parameters
+- ##fx<=: which is only used with 2 fixnum parameters
+- ##fx>=: which is only used with 2 fixnum parameters
