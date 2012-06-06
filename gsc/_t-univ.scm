@@ -681,6 +681,8 @@
                    (else
                     (compiler-internal-error
                      "translate-obj, unsupported inexact number:" obj)))))
+        ((char? obj)
+         (univ-char ctx obj))
         ((string? obj)
          ;; TODO: fix JS which has immutable strings
          (gen (object->string obj)))
@@ -724,6 +726,100 @@ function Flonum(val) {
   this.val = val;
 }
 
+var chars = {}
+function Char(i) {
+  this.i = i;
+}
+
+Char.integerToChar = function (i) {
+    var ch = chars[i];
+
+    if (!ch) {
+        chars[i] = new Char(i);
+        ch = chars[i];
+    }
+    
+    return ch;
+}
+
+function Pair(car, cdr) {
+    this.car = car;
+    this.cdr = cdr;
+}
+
+function _String(charray) {
+    this.charray = charray;
+}
+
+_String.makestring = function ( n, c ) {
+    var a = new Array(n);
+    c = c || "";
+    for (i = 0; i < n; i++) {
+        a[i] = c;
+    }
+
+    return new _String(a);
+}
+
+_String.prototype.stringlength = function ( ) {
+    return this.charray.length;
+}
+
+// srtring-ref
+_String.prototype.stringref = function ( n ) {
+    return this.charray[n];
+}
+
+// string-set!
+_String.prototype.stringset = function ( n, c ) {
+    this.charray[n] = c;
+}
+
+_String.prototype.toString = function ( ) {
+    var s = "\"";
+    for (i = 0; i < this.stringlength(); i++) {
+        s = s.concat(String.fromCharCode(this.stringref(i)));
+    }
+
+    return s.concat("\"");
+}
+
+
+var syms = {};
+function Symbol(s) {
+    this.symbolToString = function ( ) { return s; }
+    this.toString = function ( ) { return s; }
+}
+
+Symbol.stringToSymbol = function ( s ) {
+    var sym = syms[s];
+    
+    if (!sym) {
+        syms[s] = new Symbol(s);
+        sym = syms[s];
+    }
+    
+    return sym;
+}
+
+var kwds = {};
+function Keyword(s) {
+    s = s + ":";
+
+    this.keywordToString = function( ) { return s.substring(0, s.length-1); }
+    this.toString = function( ) { return s; }
+}
+
+Keyword.stringToKeyword = function(s) {
+    var kwd = kwds[s];
+    
+    if (!kwd) {
+        kwds[s] = new Keyword(s);
+        kwd = kwds[s];
+    }
+    
+    return kwd;
+}
 
 function lbl1_println() { // println
   if (nargs !== 1)
@@ -734,6 +830,8 @@ function lbl1_println() { // println
     print("#t");
   else if (reg[1] instanceof Flonum)
     print(reg[1].val);
+  else if (reg[1] instanceof _String)
+    print(reg[1].toString());
   else
     print(reg[1]);
   return reg[0];
@@ -1140,6 +1238,16 @@ EOF
 (define (univ-define-prim-bool name proc-safe? side-effects? prim-gen)
   (univ-define-prim name proc-safe? side-effects? prim-gen prim-gen))
 
+(define (univ-char ctx ch)
+  (let ((code (char->integer ch)))
+    (case (target-name (ctx-target ctx))
+
+      ((js) (gen code))
+
+      (else
+       (compiler-internal-error
+        "univ-char, unknown target")))))
+
 ;;; Primitive procedures
 
 (univ-define-prim-bool "##not" #t #f
@@ -1443,6 +1551,25 @@ EOF
 
   #f)
 
+(univ-define-prim "##make-string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "_String.makestring("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+            
+
+      (else
+       (compiler-internal-error
+        "##make-string, unknown target"))))
+
+  #f)
+
 (univ-define-prim-bool "##fixnum?" #t #f
 
   (lambda (ctx opnds)
@@ -1500,6 +1627,60 @@ EOF
       (else
        (compiler-internal-error
         "##flonum?, unknown target")))))
+
+(univ-define-prim-bool "##char?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            " instanceof Char"))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", Char)"))
+
+      (else
+       (compiler-internal-error
+        "##char?, unknown target")))))
+
+(univ-define-prim-bool "##pair?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            " instanceof Pair"))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", Pair)"))
+
+      (else
+       (compiler-internal-error
+        "##pair?, unknown target")))))
+
+(univ-define-prim-bool "##string?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            " instanceof String"))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", String)"))
+
+      (else
+       (compiler-internal-error
+        "##string?, unknown target")))))
 
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
