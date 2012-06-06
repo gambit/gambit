@@ -1242,7 +1242,7 @@ EOF
   (let ((code (char->integer ch)))
     (case (target-name (ctx-target ctx))
 
-      ((js) (gen code))
+      ((js python ruby php) (gen code))
 
       (else
        (compiler-internal-error
@@ -1551,6 +1551,29 @@ EOF
 
   #f)
 
+(univ-define-prim "##null?" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " === null)"))
+      
+      ((python)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " is None)"))
+      ((ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##null?, unknown target"))))
+
+  #f)
+
 (univ-define-prim "##make-string" #f #f
 
   (lambda (ctx opnds)
@@ -1562,7 +1585,9 @@ EOF
             ", "
             (translate-gvm-opnd ctx (list-ref opnds 1))
             ")"))
-            
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
 
       (else
        (compiler-internal-error
@@ -1642,6 +1667,9 @@ EOF
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", Char)"))
 
+      ((ruby php)                       ;TODO: complete
+       (gen ""))
+
       (else
        (compiler-internal-error
         "##char?, unknown target")))))
@@ -1659,6 +1687,9 @@ EOF
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", Pair)"))
+      
+      ((ruby php)                       ;TODO: complete
+       (gen ""))
 
       (else
        (compiler-internal-error
@@ -1677,6 +1708,9 @@ EOF
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", String)"))
+
+      ((ruby php)                       ;TODO: complete
+       (gen ""))
 
       (else
        (compiler-internal-error
