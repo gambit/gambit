@@ -853,6 +853,7 @@ EOF
 #<<EOF
 #! /usr/bin/python
 
+from array import array
 import ctypes
 
 glo = {}
@@ -862,6 +863,32 @@ sp = -1
 nargs = 0
 temp1 = False
 temp2 = False
+
+#
+# String
+#
+class String:
+  def __init__ ( self, *args ):
+    self.chars = array('u', list(args))
+
+  def stringset ( self, n, c ):
+    self.chars[n] = c
+
+  def stringref ( self, n ):
+    return self.chars[n]
+
+  def __len__ ( self ):
+    return len(self.chars)
+
+  def __str__ ( self ):
+    return "".join(self.chars)
+
+def makestring ( n, c ):
+  args = [unicode(c)]*n
+  return String(*args)
+    
+def stringp ( s ):
+  return isinstance(s, String)
 
 
 def lbl1_println(): # println
@@ -1586,7 +1613,14 @@ EOF
             (translate-gvm-opnd ctx (list-ref opnds 1))
             ")"))
       
-      ((python ruby php)                ;TODO: complete
+      ((python)
+       (gen "makestring("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", unicode(chr("
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")))"))
+
+      ((ruby php)                ;TODO: complete
        (gen ""))
 
       (else
