@@ -925,7 +925,7 @@ class String:
     return "".join(self.chars)
 
 def makestring ( n, c ):
-  args = [unicode(c)]*n
+  args = [unichr(c)]*n
   return String(*args)
     
 def stringp ( s ):
@@ -1680,9 +1680,9 @@ EOF
       ((python)
        (gen "makestring("
             (translate-gvm-opnd ctx (list-ref opnds 0))
-            ", unichr("
+            ", "
             (translate-gvm-opnd ctx (list-ref opnds 1))
-            "))"))
+            ")"))
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 1))
