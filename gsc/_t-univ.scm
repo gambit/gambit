@@ -753,6 +753,14 @@ function Flonum(val) {
   this.val = val;
 }
 
+Flonum.prototype.toString = function ( ) {
+  if (parseFloat(this.val) == parseInt(this.val)) {
+    return this.val + ".";
+  } else {
+    return this.val;
+  }
+}
+
 var chars = {}
 function Char(i) {
   this.i = i;
@@ -860,7 +868,7 @@ function lbl1_println() { // println
   else if (reg[1] === true)
     print("#t");
   else if (reg[1] instanceof Flonum)
-    print(reg[1].val);
+    print(reg[1].toString());
   else if (reg[1] instanceof _String)
     print(reg[1].toString());
   else if (reg[1] instanceof Char)
@@ -930,11 +938,12 @@ def lbl1_println(): # println
     raise "wrong number of arguments"
   if reg[1] is False:
     print("#f")
+  elif reg[1] is True:
+    print("#t")
+  elif isinstance(reg[1], float) and (int(reg[1]) == round(reg[1])):
+    print(str(int(reg[1])) + '.')
   else:
-    if reg[1] is True:
-      print("#t")
-    else:
-      print(reg[1])
+    print(reg[1])
   return reg[0]
 
 glo["println"] = lbl1_println
@@ -986,6 +995,8 @@ $lbl1_println = lambda { # println
     print("#t")
   elsif $reg[1].equal?(nil)
     print("'()")
+  elsif $reg[1].class == Float && $reg[1] == $reg[1].round
+    print($reg[1].round.to_s() + ".")
   else
     print($reg[1])
   end
