@@ -659,6 +659,27 @@
           gvm-opnd))))
 
 (define (translate-obj ctx obj)
+
+  (define (flatten list)
+    (cond ((null? list) '())
+          ((list? (car list)) (append (flatten (car list)) (flatten (cdr list))))
+          (else
+           (cons (car list) (flatten (cdr list))))))
+  
+  (define (string->charray s)    ; js: "AAA" -> "[65, 65, 65]"
+    (define (inscomma lst res)    ; ("65" "65" "65") -> ("65" ", " "65" ", " "65")
+      (cond ((null? lst) res)
+            ((= 1 (length lst)) (append res (list (car lst))))
+            (else (append (list (car lst) ", ")
+                          res
+                          (inscomma (cdr lst) '())))))
+             
+    (let* ((charlist (string->list s))
+           (intlist (map char->integer charlist))
+           (strlist (map number->string intlist))
+           (charray (inscomma strlist '())))
+      (apply string-append (flatten (list "[" charray "]")))))
+  
   (cond ((boolean? obj)
          (univ-boolean ctx obj))
         ((number? obj)
@@ -684,8 +705,14 @@
         ((char? obj)
          (univ-char ctx obj))
         ((string? obj)
-         ;; TODO: fix JS which has immutable strings
-         (gen (object->string obj)))
+         (case (target-name (ctx-target ctx))
+           ((js)
+            (let ((s (object->string obj)))
+              (gen "new _String("
+                   (string->charray (substring s 1 (- (string-length s) 1)))
+                   ")")))
+           (else
+            (gen (object->string obj)))))
         ((void-object? obj)
          (gen "undefined"))
         ((proc-obj? obj)
@@ -704,7 +731,7 @@
 (define (runtime-system targ)
   (case (target-name targ)
 
-    ((js)
+    ((js)                               ;rts js
 #<<EOF
 var glo = {};
 var reg = [false];
@@ -742,6 +769,10 @@ Char.integerToChar = function (i) {
     return ch;
 }
 
+Char.prototype.toString = function ( ) {
+    return String.fromCharCode(this.i);
+}
+
 function Pair(car, cdr) {
     this.car = car;
     this.cdr = cdr;
@@ -776,12 +807,12 @@ _String.prototype.stringset = function ( n, c ) {
 }
 
 _String.prototype.toString = function ( ) {
-    var s = "\"";
+    var s = "";
     for (i = 0; i < this.stringlength(); i++) {
         s = s.concat(String.fromCharCode(this.stringref(i)));
     }
 
-    return s.concat("\"");
+    return s;
 }
 
 
@@ -832,6 +863,8 @@ function lbl1_println() { // println
     print(reg[1].val);
   else if (reg[1] instanceof _String)
     print(reg[1].toString());
+  else if (reg[1] instanceof Char)
+    print(reg[1].toString());
   else
     print(reg[1]);
   return reg[0];
@@ -849,7 +882,7 @@ function run(pc)
 EOF
 )
 
-    ((python)
+    ((python)                           ;rts py
 #<<EOF
 #! /usr/bin/python
 
@@ -871,11 +904,11 @@ class String:
   def __init__ ( self, *args ):
     self.chars = array('u', list(args))
 
-  def stringset ( self, n, c ):
-    self.chars[n] = c
-
-  def stringref ( self, n ):
+  def __getitem__ ( self, n ):
     return self.chars[n]
+
+  def __setitem__ ( self, n, v ):
+    self.chars[n] = v
 
   def __len__ ( self ):
     return len(self.chars)
@@ -918,8 +951,10 @@ def run(pc):
 EOF
 )
 
-    ((ruby)
+    ((ruby)                             ;rts rb
 #<<EOF
+# encoding: utf-8
+
 $glo = {}
 $reg = {0=>false}
 $stack = {}
@@ -928,20 +963,33 @@ $nargs = 0
 $temp1 = false
 $temp2 = false
 
+class Char
+  def initialize ( code )
+    @code = code
+  end
+  def code
+    @code
+  end
+  def to_s
+    @code.chr
+  end
+end
 
 $lbl1_println = lambda { # println
   if $nargs != 1
     raise "wrong number of arguments"
   end
+  
   if $reg[1] == false
     print("#f")
+  elsif $reg[1] == true
+    print("#t")
+  elsif $reg[1].equal?(nil)
+    print("'()")
   else
-    if $reg[1] == true
-      print("#t")
-    else
-      print($reg[1])
-    end
+    print($reg[1])
   end
+  
   print("\n")
   return $reg[0]
 }
@@ -963,7 +1011,7 @@ end
 EOF
 )
 
-    ((php)
+    ((php)                              ;rts php
 #<<EOF
 ??????????????????????????????????
 EOF
@@ -1592,7 +1640,12 @@ EOF
        (gen "("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             " is None)"))
-      ((ruby php)                       ;TODO: complete
+      
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".equal?(nil)"))
+
+      ((php)                       ;TODO: complete
        (gen ""))
 
       (else
@@ -1616,16 +1669,94 @@ EOF
       ((python)
        (gen "makestring("
             (translate-gvm-opnd ctx (list-ref opnds 0))
-            ", unicode(chr("
+            ", unichr("
             (translate-gvm-opnd ctx (list-ref opnds 1))
-            ")))"))
+            "))"))
 
-      ((ruby php)                ;TODO: complete
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 1))
+            ".chr*"
+            (translate-gvm-opnd ctx (list-ref opnds 0))))
+
+      ((php)                ;TODO: complete
        (gen ""))
 
       (else
        (compiler-internal-error
         "##make-string, unknown target"))))
+
+  #f)
+
+(univ-define-prim "##string-set!" #f #t
+
+  (lambda (ctx opnds)
+    (display "##string-set!")(newline)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".stringset("
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 2))
+            ")"))
+      
+      ((python)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            "["
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            "] = unichr("
+            (translate-gvm-opnd ctx (list-ref opnds 2))
+            ")"))
+
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            "["
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            "] = "
+            (translate-gvm-opnd ctx (list-ref opnds 2))
+            ".chr"))
+
+      ((php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##string-set!, unknown target"))))
+
+  #f)
+
+(univ-define-prim "##string-ref" #f #f
+
+  (lambda (ctx opnds)
+    (display "##string-ref")(newline)    
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "new Char("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".stringref("
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            "))"))
+       
+      ((python)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            "["
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            "]"))
+
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            "["
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            "].chr"))
+
+      ((php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##string-ref, unknown target"))))
 
   #f)
 
@@ -1701,7 +1832,11 @@ EOF
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", Char)"))
 
-      ((ruby php)                       ;TODO: complete
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == Char"))
+      
+      ((php)                       ;TODO: complete
        (gen ""))
 
       (else
@@ -1722,7 +1857,11 @@ EOF
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", Pair)"))
       
-      ((ruby php)                       ;TODO: complete
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == Pair"))
+
+      ((php)                       ;TODO: complete
        (gen ""))
 
       (else
@@ -1741,9 +1880,13 @@ EOF
       ((python)
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
-            ", String)"))
+            ", _String)"))
 
-      ((ruby php)                       ;TODO: complete
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == String"))
+
+      ((php)                       ;TODO: complete
        (gen ""))
 
       (else
