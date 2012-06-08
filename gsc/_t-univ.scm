@@ -659,64 +659,25 @@
           gvm-opnd))))
 
 (define (translate-obj ctx obj)
-
-  (define (flatten list)
-    (cond ((null? list) '())
-          ((list? (car list)) (append (flatten (car list)) (flatten (cdr list))))
-          (else
-           (cons (car list) (flatten (cdr list))))))
-  
-  (define (string->charray s)    ; js: "AAA" -> "[65, 65, 65]"
-    (define (inscomma lst res)    ; ("65" "65" "65") -> ("65" ", " "65" ", " "65")
-      (cond ((null? lst) res)
-            ((= 1 (length lst)) (append res (list (car lst))))
-            (else (append (list (car lst) ", ")
-                          res
-                          (inscomma (cdr lst) '())))))
-             
-    (let* ((charlist (string->list s))
-           (intlist (map char->integer charlist))
-           (strlist (map number->string intlist))
-           (charray (inscomma strlist '())))
-      (apply string-append (flatten (list "[" charray "]")))))
   
   (cond ((boolean? obj)
          (univ-boolean ctx obj))
+        
         ((number? obj)
-         (if (exact? obj)
-             (cond ((integer? obj)
-                    (gen obj))
-                   (else
-                    (compiler-internal-error
-                     "translate-obj, unsupported exact number:" obj)))
-             (cond ((real? obj)
-                    (let ((x
-                           (if (integer? obj)
-                               (gen obj 0)
-                               (gen obj))))
-                      (case (target-name (ctx-target ctx))
-                        ((js)
-                         (gen "new Flonum(" x ")"))
-                        (else
-                         x))))
-                   (else
-                    (compiler-internal-error
-                     "translate-obj, unsupported inexact number:" obj)))))
+         (univ-number ctx obj))
+
         ((char? obj)
          (univ-char ctx obj))
+        
         ((string? obj)
-         (case (target-name (ctx-target ctx))
-           ((js)
-            (let ((s (object->string obj)))
-              (gen "new _String("
-                   (string->charray (substring s 1 (- (string-length s) 1)))
-                   ")")))
-           (else
-            (gen (object->string obj)))))
+         (univ-string ctx obj))
+        
         ((void-object? obj)
          (gen "undefined"))
+        
         ((proc-obj? obj)
          (lbl->id ctx 1 (proc-obj-name obj)))
+        
         (else
          (gen "UNIMPLEMENTED_OBJECT("
               (object->string obj)
@@ -794,7 +755,7 @@ _String.makestring = function ( n, c ) {
     var a = new Array(n);
     c = c || "";
     for (i = 0; i < n; i++) {
-        a[i] = c;
+        a[i] = c.i;
     }
 
     return new _String(a);
@@ -811,7 +772,7 @@ _String.prototype.stringref = function ( n ) {
 
 // string-set!
 _String.prototype.stringset = function ( n, c ) {
-    this.charray[n] = c;
+    this.charray[n] = c.i;
 }
 
 _String.prototype.toString = function ( ) {
@@ -906,6 +867,33 @@ temp1 = False
 temp2 = False
 
 #
+# char
+#
+class Char:
+  chars = {}
+  def __init__ ( self,  c ):
+    self.c = c
+
+  def __str__ ( self ):
+    return self.c
+        
+# integer->char
+def integerToChar ( i ):
+  if Char.chars.has_key(i):
+    return Char.chars[i]
+  else:
+    Char.chars[i] = Char(unichr(i))
+    return Char.chars[i]
+
+# char->integer
+def charToInteger ( c ):
+  return ord(c.c)
+
+# char?
+def charp ( c ):
+  return (isinstance(c, Char))
+
+#
 # String
 #
 class String:
@@ -915,17 +903,20 @@ class String:
   def __getitem__ ( self, n ):
     return self.chars[n]
 
-  def __setitem__ ( self, n, v ):
-    self.chars[n] = v
+  def __setitem__ ( self, n, c ):
+    self.chars[n] = c.c
 
   def __len__ ( self ):
     return len(self.chars)
+
+  def __eq__ ( self, s ):
+    self.chars == s.chars
 
   def __str__ ( self ):
     return "".join(self.chars)
 
 def makestring ( n, c ):
-  args = [unichr(c)]*n
+  args = [c.c]*n
   return String(*args)
     
 def stringp ( s ):
@@ -972,6 +963,7 @@ $nargs = 0
 $temp1 = false
 $temp2 = false
 
+$chars = {}
 class Char
   def initialize ( code )
     @code = code
@@ -981,6 +973,16 @@ class Char
   end
   def to_s
     @code.chr
+  end
+end
+
+def integerToChar ( i )
+  if $chars.has_key?(i)
+    return $chars[i]
+  else
+    c = Char.new(i)
+    $chars[i] = c
+    return c
   end
 end
 
@@ -1324,15 +1326,90 @@ EOF
 (define (univ-define-prim-bool name proc-safe? side-effects? prim-gen)
   (univ-define-prim name proc-safe? side-effects? prim-gen prim-gen))
 
-(define (univ-char ctx ch)
-  (let ((code (char->integer ch)))
+(define (univ-number ctx obj)
+  (if (exact? obj)
+      (cond ((integer? obj)
+             (gen obj))
+            (else
+             (compiler-internal-error
+              "translate-obj, unsupported exact number:" obj)))
+      (cond ((real? obj)
+             (let ((x
+                    (if (integer? obj)
+                        (gen obj 0)
+                        (gen obj))))
+               (case (target-name (ctx-target ctx))
+                 ((js)
+                  (gen "new Flonum(" x ")"))
+                 (else
+                  x))))
+            (else
+             (compiler-internal-error
+              "translate-obj, unsupported inexact number:" obj)))))
+
+(define (univ-char ctx obj)
+  (let ((code (char->integer obj)))
     (case (target-name (ctx-target ctx))
 
-      ((js python ruby php) (gen code))
+      ((js)
+       (gen "Char.integerToChar("
+            code
+            ")"))
+
+      ((python ruby)
+       (gen "integerToChar("
+            code
+            ")"))
+
+      ((php) (gen code))
 
       (else
        (compiler-internal-error
         "univ-char, unknown target")))))
+
+(define (univ-string ctx obj)
+
+  (define (flatten list)
+    (cond ((null? list) '())
+          ((list? (car list)) (append (flatten (car list))
+                                      (flatten (cdr list))))
+          (else
+           (cons (car list) (flatten (cdr list))))))
+  
+  (define (string->charray s)    ; js: "AAA" -> "[65, 65, 65]"
+    
+    (define (inscomma lst res)    ; ("65" "65" "65") -> ("65" ", " "65" ", " "65")
+      (cond ((null? lst) res)
+            ((= 1 (length lst)) (append res (list (car lst))))
+            (else (append (list (car lst) ", ")
+                          res
+                          (inscomma (cdr lst) '())))))
+             
+    (let* ((charlist (string->list s))
+           (intlist (map char->integer charlist))
+           (strlist (map number->string intlist))
+           (charray (inscomma strlist '())))
+      (apply string-append (flatten (list "[" charray "]")))))
+
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (let ((s (object->string obj)))
+       (gen "new _String("
+            (string->charray (substring s 1 (- (string-length s) 1)))
+            ")")))
+    
+    ((python)
+     (gen "String(*list(unicode("
+          (object->string obj)
+          ")))"))
+
+    ((ruby php)
+     (gen (object->string obj)))
+
+    (else
+     (compiler-internal-error
+      "univ-string, unknown target"))))
 
 ;;; Primitive procedures
 
@@ -1665,6 +1742,131 @@ EOF
 
   #f)
 
+(univ-define-prim "##cons" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "new Pair("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cons, unknown target"))))
+
+  #f)
+
+(univ-define-prim "##car" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".car"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##car, unknown target"))))
+
+  #f)
+
+(univ-define-prim "##cdr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".cdr"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdr, unknown target"))))
+
+  #f)
+
+(univ-define-prim "##set-car!" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".car = "
+            (translate-gvm-opnd ctx (list-ref opnds 1))))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##set-car!, unknown target"))))
+
+  #f)
+
+(univ-define-prim "##set-cdr!" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".cdr = "
+            (translate-gvm-opnd ctx (list-ref opnds 1))))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##set-cdr!, unknown target"))))
+
+  #f)
+
 (univ-define-prim "##make-string" #f #f
 
   (lambda (ctx opnds)
@@ -1686,7 +1888,7 @@ EOF
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 1))
-            ".chr*"
+            ".code.chr*"
             (translate-gvm-opnd ctx (list-ref opnds 0))))
 
       ((php)                ;TODO: complete
@@ -1716,17 +1918,16 @@ EOF
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
             "["
             (translate-gvm-opnd ctx (list-ref opnds 1))
-            "] = unichr("
-            (translate-gvm-opnd ctx (list-ref opnds 2))
-            ")"))
-
+            "] = "
+            (translate-gvm-opnd ctx (list-ref opnds 2))))
+      
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
             "["
             (translate-gvm-opnd ctx (list-ref opnds 1))
             "] = "
             (translate-gvm-opnd ctx (list-ref opnds 2))
-            ".chr"))
+            ".code.chr"))
 
       ((php)                ;TODO: complete
        (gen ""))
