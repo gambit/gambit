@@ -15,6 +15,8 @@
 (define univ-enable-jump-destination-inlining? #f)
 (set! univ-enable-jump-destination-inlining? #t)
 
+(define (univ-prefix ctx name) (string-append "Gambit_" name))
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; "Universal" back-end.
@@ -360,7 +362,7 @@
                       (univ-if-then
                        ctx
                        (univ-not= ctx
-                                  (univ-global ctx "nargs")
+                                  (univ-global ctx "Gambit_nargs")
                                   (label-entry-nb-parms gvm-instr))
                        (univ-throw ctx "\"wrong number of arguments\""))))
 
@@ -489,7 +491,7 @@
                ;; test: (jump-poll? gvm-instr)
                (gen (let ((nb-args (jump-nb-args gvm-instr)))
                       (if nb-args
-                          (univ-assign ctx (univ-global ctx "nargs") nb-args)
+                          (univ-assign ctx (univ-global ctx "Gambit_nargs") nb-args)
                           ""))
                     (with-stack-pointer-adjust
                      ctx
@@ -500,7 +502,7 @@
                          (univ-return
                           ctx
                           (if (jump-poll? gvm-instr)
-                              (gen "poll(" (scan-gvm-opnd ctx opnd) ")")
+                              (gen (univ-prefix ctx "poll(") (scan-gvm-opnd ctx opnd) ")")
                               (scan-gvm-opnd ctx opnd))))))))
 
               (else
@@ -605,7 +607,7 @@
 (define (with-stack-pointer-adjust ctx n proc)
   (gen (if (= n 0)
            (gen "")
-           (univ-increment ctx (univ-global ctx "sp") n))
+           (univ-increment ctx (univ-global ctx (univ-prefix ctx "sp")) n))
        (with-stack-base-offset
         ctx
         (- (ctx-stack-base-offset ctx) n)
@@ -617,16 +619,16 @@
          (gen "NO_OPERAND"))
 
         ((reg? gvm-opnd)
-         (gen (univ-global ctx "reg")
+         (gen (univ-global ctx (univ-prefix ctx "reg"))
               "["
               (reg-num gvm-opnd)
               "]"))
 
         ((stk? gvm-opnd)
          (let ((n (+ (stk-num gvm-opnd) (ctx-stack-base-offset ctx))))
-           (gen (univ-global ctx "stack")
+           (gen (univ-global ctx (univ-prefix ctx "stack"))
                 "["
-                (univ-global ctx "sp")
+                (univ-global ctx (univ-prefix ctx "sp"))
                 (cond ((= n 0)
                        (gen ""))
                       ((< n 0)
@@ -636,7 +638,7 @@
                 "]")))
 
         ((glo? gvm-opnd)
-         (gen (univ-global ctx "glo")
+         (gen (univ-global ctx (univ-prefix ctx "glo"))
               "["
               (object->string (symbol->string (glo-name gvm-opnd)))
               "]"))
@@ -694,27 +696,27 @@
 
     ((js)                               ;rts js
 #<<EOF
-var glo = {};
-var reg = [false];
-var stack = [];
-var sp = -1;
-var nargs = 0;
-var temp1 = false;
-var temp2 = false;
-var poll;
+var Gambit_glo = {};
+var Gambit_reg = [false];
+var Gambit_stack = [];
+var Gambit_sp = -1;
+var Gambit_nargs = 0;
+var Gambit_temp1 = false;
+var Gambit_temp2 = false;
+var Gambit_poll;
 
 if (this.hasOwnProperty('setTimeout')) {
-  poll = function (wakeup) { setTimeout(function () { run(wakeup); }, 1); return false; };
+  Gambit_poll = function (wakeup) { setTimeout(function () { Gambit_run(wakeup); }, 1); return false; };
 } else {
-  poll = function (wakeup) { return wakeup; };
+  Gambit_poll = function (wakeup) { return wakeup; };
 }
 
 
-function Flonum(val) {
+function Gambit_Flonum(val) {
   this.val = val;
 }
 
-Flonum.prototype.toString = function ( ) {
+Gambit_Flonum.prototype.toString = function ( ) {
   if (parseFloat(this.val) == parseInt(this.val)) {
     return this.val + ".";
   } else {
@@ -722,60 +724,60 @@ Flonum.prototype.toString = function ( ) {
   }
 }
 
-var chars = {}
-function Char(i) {
+var Gambit_chars = {}
+function Gambit_Char(i) {
   this.i = i;
 }
 
-Char.integerToChar = function (i) {
-    var ch = chars[i];
+Gambit_Char.integerToChar = function (i) {
+    var ch = Gambit_chars[i];
 
     if (!ch) {
-        chars[i] = new Char(i);
-        ch = chars[i];
+        Gambit_chars[i] = new Gambit_Char(i);
+        ch = Gambit_chars[i];
     }
     
     return ch;
 }
 
-Char.prototype.toString = function ( ) {
+Gambit_Char.prototype.toString = function ( ) {
     return String.fromCharCode(this.i);
 }
 
-function Pair(car, cdr) {
+function Gambit_Pair(car, cdr) {
     this.car = car;
     this.cdr = cdr;
 }
 
-function _String(charray) {
+function Gambit_String(charray) {
     this.charray = charray;
 }
 
-_String.makestring = function ( n, c ) {
+Gambit_String.makestring = function ( n, c ) {
     var a = new Array(n);
     c = c || "";
     for (i = 0; i < n; i++) {
         a[i] = c.i;
     }
 
-    return new _String(a);
+    return new Gambit_String(a);
 }
 
-_String.prototype.stringlength = function ( ) {
+Gambit_String.prototype.stringlength = function ( ) {
     return this.charray.length;
 }
 
 // srtring-ref
-_String.prototype.stringref = function ( n ) {
+Gambit_String.prototype.stringref = function ( n ) {
     return this.charray[n];
 }
 
 // string-set!
-_String.prototype.stringset = function ( n, c ) {
+Gambit_String.prototype.stringset = function ( n, c ) {
     this.charray[n] = c.i;
 }
 
-_String.prototype.toString = function ( ) {
+Gambit_String.prototype.toString = function ( ) {
     var s = "";
     for (i = 0; i < this.stringlength(); i++) {
         s = s.concat(String.fromCharCode(this.stringref(i)));
@@ -785,64 +787,64 @@ _String.prototype.toString = function ( ) {
 }
 
 
-var syms = {};
-function Symbol(s) {
+var Gambit_syms = {};
+function Gambit_Symbol(s) {
     this.symbolToString = function ( ) { return s; }
     this.toString = function ( ) { return s; }
 }
 
-Symbol.stringToSymbol = function ( s ) {
-    var sym = syms[s];
+Gambit_Symbol.stringToSymbol = function ( s ) {
+    var sym = Gambit_syms[s];
     
     if (!sym) {
-        syms[s] = new Symbol(s);
-        sym = syms[s];
+        Gambit_syms[s] = new Gambit_Symbol(s);
+        sym = Gambit_syms[s];
     }
     
     return sym;
 }
 
-var kwds = {};
-function Keyword(s) {
+var Gambit_kwds = {};
+function Gambit_Keyword(s) {
     s = s + ":";
 
     this.keywordToString = function( ) { return s.substring(0, s.length-1); }
     this.toString = function( ) { return s; }
 }
 
-Keyword.stringToKeyword = function(s) {
-    var kwd = kwds[s];
+Gambit_Keyword.stringToKeyword = function(s) {
+    var kwd = Gambit_kwds[s];
     
     if (!kwd) {
-        kwds[s] = new Keyword(s);
-        kwd = kwds[s];
+        Gambit_kwds[s] = new Gambit_Keyword(s);
+        kwd = Gambit_kwds[s];
     }
     
     return kwd;
 }
 
 function lbl1_println() { // println
-  if (nargs !== 1)
+  if (Gambit_nargs !== 1)
     throw "wrong number of arguments";
-  if (reg[1] === false)
+  if (Gambit_reg[1] === false)
     print("#f");
-  else if (reg[1] === true)
+  else if (Gambit_reg[1] === true)
     print("#t");
-  else if (reg[1] instanceof Flonum)
-    print(reg[1].toString());
-  else if (reg[1] instanceof _String)
-    print(reg[1].toString());
-  else if (reg[1] instanceof Char)
-    print(reg[1].toString());
+  else if (Gambit_reg[1] instanceof Gambit_Flonum)
+    print(Gambit_reg[1].toString());
+  else if (Gambit_reg[1] instanceof Gambit_String)
+    print(Gambit_reg[1].toString());
+  else if (Gambit_reg[1] instanceof Gambit_Char)
+    print(Gambit_reg[1].toString());
   else
-    print(reg[1]);
-  return reg[0];
+    print(Gambit_reg[1]);
+  return Gambit_reg[0];
 }
 
-glo["println"] = lbl1_println;
+Gambit_glo["println"] = lbl1_println;
 
 
-function run(pc)
+function Gambit_run(pc)
 {
   while (pc !== false)
     pc = pc();
@@ -858,18 +860,18 @@ EOF
 from array import array
 import ctypes
 
-glo = {}
-reg = {0:False}
-stack = {}
-sp = -1
-nargs = 0
-temp1 = False
-temp2 = False
+Gambit_glo = {}
+Gambit_reg = {0:False}
+Gambit_stack = {}
+Gambit_sp = -1
+Gambit_nargs = 0
+Gambit_temp1 = False
+Gambit_temp2 = False
 
 #
 # char
 #
-class Char:
+class Gambit_Char:
   chars = {}
   def __init__ ( self,  c ):
     self.c = c
@@ -878,25 +880,25 @@ class Char:
     return self.c
         
 # integer->char
-def integerToChar ( i ):
-  if Char.chars.has_key(i):
-    return Char.chars[i]
+def Gambit_integerToChar ( i ):
+  if Gambit_Char.chars.has_key(i):
+    return Gambit_Char.chars[i]
   else:
-    Char.chars[i] = Char(unichr(i))
-    return Char.chars[i]
+    Gambit_Char.chars[i] = Gambit_Char(unichr(i))
+    return Gambit_Char.chars[i]
 
 # char->integer
-def charToInteger ( c ):
+def Gambit_charToInteger ( c ):
   return ord(c.c)
 
 # char?
-def charp ( c ):
+def Gambit_charp ( c ):
   return (isinstance(c, Char))
 
 #
 # String
 #
-class String:
+class Gambit_String:
   def __init__ ( self, *args ):
     self.chars = array('u', list(args))
 
@@ -915,36 +917,36 @@ class String:
   def __str__ ( self ):
     return "".join(self.chars)
 
-def makestring ( n, c ):
+def Gambit_makestring ( n, c ):
   args = [c.c]*n
-  return String(*args)
+  return Gambit_String(*args)
     
-def stringp ( s ):
+def Gambit_stringp ( s ):
   return isinstance(s, String)
 
 
 def lbl1_println(): # println
-  global glo, reg, stack, sp, nargs, temp1, temp2
-  if nargs != 1:
+  global Gambit_glo, Gambit_reg, Gambit_stack, Gambit_sp, Gambit_nargs, Gambit_temp1, Gambit_temp2
+  if Gambit_nargs != 1:
     raise "wrong number of arguments"
-  if reg[1] is False:
+  if Gambit_reg[1] is False:
     print("#f")
-  elif reg[1] is True:
+  elif Gambit_reg[1] is True:
     print("#t")
-  elif isinstance(reg[1], float) and (int(reg[1]) == round(reg[1])):
-    print(str(int(reg[1])) + '.')
+  elif isinstance(Gambit_reg[1], float) and (int(Gambit_reg[1]) == round(Gambit_reg[1])):
+    print(str(int(Gambit_reg[1])) + '.')
   else:
-    print(reg[1])
-  return reg[0]
+    print(Gambit_reg[1])
+  return Gambit_reg[0]
 
-glo["println"] = lbl1_println
+Gambit_glo["println"] = lbl1_println
 
 
-def poll(wakeup):
+def Gambit_poll(wakeup):
   return wakeup
 
 
-def run(pc):
+def Gambit_run(pc):
   while pc != False:
     pc = pc()
 
@@ -955,16 +957,16 @@ EOF
 #<<EOF
 # encoding: utf-8
 
-$glo = {}
-$reg = {0=>false}
-$stack = {}
-$sp = -1
-$nargs = 0
-$temp1 = false
-$temp2 = false
+$Gambit_glo = {}
+$Gambit_reg = {0=>false}
+$Gambit_stack = {}
+$Gambit_sp = -1
+$Gambit_nargs = 0
+$Gambit_temp1 = false
+$Gambit_temp2 = false
 
-$chars = {}
-class Char
+$Gambit_chars = {}
+class Gambit_Char
   def initialize ( code )
     @code = code
   end
@@ -976,46 +978,46 @@ class Char
   end
 end
 
-def integerToChar ( i )
-  if $chars.has_key?(i)
-    return $chars[i]
+def Gambit_integerToChar ( i )
+  if $Gambit_chars.has_key?(i)
+    return $Gambit_chars[i]
   else
-    c = Char.new(i)
-    $chars[i] = c
+    c = Gambit_Char.new(i)
+    $Gambit_chars[i] = c
     return c
   end
 end
 
 $lbl1_println = lambda { # println
-  if $nargs != 1
+  if $Gambit_nargs != 1
     raise "wrong number of arguments"
   end
   
-  if $reg[1] == false
+  if $Gambit_reg[1] == false
     print("#f")
-  elsif $reg[1] == true
+  elsif $Gambit_reg[1] == true
     print("#t")
-  elsif $reg[1].equal?(nil)
+  elsif $Gambit_reg[1].equal?(nil)
     print("'()")
-  elsif $reg[1].class == Float && $reg[1] == $reg[1].round
-    print($reg[1].round.to_s() + ".")
+  elsif $Gambit_reg[1].class == Float && $Gambit_reg[1] == $Gambit_reg[1].round
+    print($Gambit_reg[1].round.to_s() + ".")
   else
-    print($reg[1])
+    print($Gambit_reg[1])
   end
   
   print("\n")
-  return $reg[0]
+  return $Gambit_reg[0]
 }
 
-$glo["println"] = $lbl1_println
+$Gambit_glo["println"] = $lbl1_println
 
 
-def poll(wakeup)
+def Gambit_poll(wakeup)
   return wakeup
 end
 
 
-def run(pc)
+def Gambit_run(pc)
   while pc != false
     pc = pc.call
   end
@@ -1043,10 +1045,10 @@ EOF
          (case (target-name (ctx-target ctx))
 
            ((js php)
-            (gen "run(" entry ");\n"))
+            (gen (univ-prefix ctx "run(") entry ");\n"))
 
            ((python ruby)
-            (gen "run(" entry ")\n"))
+            (gen (univ-prefix ctx "run(") entry ")\n"))
 
            (else
             (compiler-internal-error
@@ -1057,11 +1059,9 @@ EOF
 (define (univ-global ctx name)
   (case (target-name (ctx-target ctx))
 
-    ((js python php)
-     name)
+    ((js python php) name)
 
-    ((python ruby)
-     (gen "$" name))
+    ((ruby) (gen "$" name))
 
     (else
      (compiler-internal-error
@@ -1076,7 +1076,14 @@ EOF
 
          ((python)
           (gen "def " name "():\n"
-               (univ-indent "global glo, reg, stack, sp, nargs, temp1, temp2")
+               (univ-indent (gen "global "
+                                 (univ-prefix ctx "glo") ","
+                                 (univ-prefix ctx "reg") ","
+                                 (univ-prefix ctx "stack") ","
+                                 (univ-prefix ctx "sp") ","
+                                 (univ-prefix ctx "nargs") ","
+                                 (univ-prefix ctx "temp1") ","
+                                 (univ-prefix ctx "temp2")))
                header
                body))
 
@@ -1340,7 +1347,7 @@ EOF
                         (gen obj))))
                (case (target-name (ctx-target ctx))
                  ((js)
-                  (gen "new Flonum(" x ")"))
+                  (gen "new " (univ-prefix ctx "Flonum(") x ")"))
                  (else
                   x))))
             (else
@@ -1352,16 +1359,16 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen "Char.integerToChar("
+       (gen (univ-prefix ctx "Char.integerToChar(")
             code
             ")"))
 
       ((python ruby)
-       (gen "integerToChar("
+       (gen (univ-prefix ctx "integerToChar(")
             code
             ")"))
 
-      ((php) (gen code))
+      ((php) (gen code))                ;TODO: complete
 
       (else
        (compiler-internal-error
@@ -1395,16 +1402,16 @@ EOF
 
     ((js)
      (let ((s (object->string obj)))
-       (gen "new _String("
+       (gen "new " (univ-prefix ctx "String(")
             (string->charray (substring s 1 (- (string-length s) 1)))
             ")")))
     
     ((python)
-     (gen "String(*list(unicode("
+     (gen (univ-prefix ctx "String(*list(unicode(")
           (object->string obj)
           ")))"))
 
-    ((ruby php)
+    ((ruby php)                         ;TODO: complete
      (gen (object->string obj)))
 
     (else
@@ -1748,7 +1755,8 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen "new Pair("
+       (gen "new "
+            (univ-prefix ctx "Pair(")
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
             (translate-gvm-opnd ctx (list-ref opnds 1))
@@ -1873,14 +1881,14 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen "_String.makestring("
+       (gen (univ-prefix ctx "String.makestring(")
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
             (translate-gvm-opnd ctx (list-ref opnds 1))
             ")"))
       
       ((python)
-       (gen "makestring("
+       (gen (univ-prefix ctx "makestring(")
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
             (translate-gvm-opnd ctx (list-ref opnds 1))
@@ -1945,7 +1953,8 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen "new Char("
+       (gen "new "
+            (univ-prefix ctx "Char(")
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ".stringref("
             (translate-gvm-opnd ctx (list-ref opnds 1))
@@ -2010,7 +2019,8 @@ EOF
 
       ((js)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            " instanceof Flonum"))
+            " instanceof "
+            (univ-prefix ctx "Flonum")))
 
       ((python)
        (gen "isinstance("
@@ -2035,22 +2045,22 @@ EOF
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
 
-      ((js)
+      ((js php)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            " instanceof Char"))
+            " instanceof "
+            (univ-prefix ctx "Char")))
 
       ((python)
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
-            ", Char)"))
+            ", "
+            (univ-prefix ctx "Char")))
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".class == Char"))
+            ".class == "
+            (univ-prefix ctx "Char")))
       
-      ((php)                       ;TODO: complete
-       (gen ""))
-
       (else
        (compiler-internal-error
         "##char?, unknown target")))))
@@ -2060,21 +2070,21 @@ EOF
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
 
-      ((js)
+      ((js php)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            " instanceof Pair"))
+            " instanceof "
+            (univ-prefix ctx "Pair")))
 
       ((python)
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
-            ", Pair)"))
+            ", "
+            (univ-prefix ctx "Pair")))
       
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".class == Pair"))
-
-      ((php)                       ;TODO: complete
-       (gen ""))
+            ".class == "
+            (univ-prefix ctx "Pair")))
 
       (else
        (compiler-internal-error
@@ -2085,21 +2095,21 @@ EOF
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
 
-      ((js)
+      ((js php)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            " instanceof String"))
+            " instanceof "
+            (univ-prefix ctx "String")))
 
       ((python)
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
-            ", _String)"))
+            ", "
+            (univ-prefix ctx "String")))
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".class == String"))
-
-      ((php)                       ;TODO: complete
-       (gen ""))
+            ".class == "
+            (univ-prefix ctx "String")))
 
       (else
        (compiler-internal-error
