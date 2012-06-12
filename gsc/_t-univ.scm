@@ -15,7 +15,7 @@
 (define univ-enable-jump-destination-inlining? #f)
 (set! univ-enable-jump-destination-inlining? #t)
 
-(define (univ-prefix ctx name) (string-append "Gambit_" name))
+(define (univ-prefix ctx name) (gen "Gambit_" name))
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -706,7 +706,7 @@
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
 
 (define (lbl->id ctx num ns)
-  (univ-global ctx (gen "lbl" num "_" (scheme-id->c-id ns))))
+  (univ-global ctx (univ-prefix ctx (gen "lbl" num "_" (scheme-id->c-id ns)))))
 
 (define (runtime-system targ)
   (case (target-name targ)
@@ -887,7 +887,7 @@ Gambit_Keyword.stringToKeyword = function(s) {
     return kwd;
 }
 
-function lbl1_println() { // println
+function Gambit_lbl1_println() { // println
   if (Gambit_nargs !== 1)
     throw "wrong number of arguments";
   if (Gambit_reg[1] === false)
@@ -905,7 +905,13 @@ function lbl1_println() { // println
   return Gambit_reg[0];
 }
 
-Gambit_glo["println"] = lbl1_println;
+Gambit_glo["println"] = Gambit_lbl1_println;
+
+
+function Gambit_Continuation(frame, denv) {
+  this.frame = frame;
+  this.denv = denv;
+}
 
 
 function Gambit_dump_cont(sp, ra) {
@@ -918,36 +924,36 @@ function Gambit_dump_cont(sp, ra) {
   print("------------------------");
 }
 
-function lbl1__23__23_continuation_2d_capture() { // ##continuation-capture
+function Gambit_lbl1__23__23_continuation_2d_capture() { // ##continuation-capture
   if (Gambit_nargs !== 1)
     throw "wrong number of arguments";
   Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
   var fn = Gambit_reg[1];
-  Gambit_reg[1] = Gambit_stack[0];
+  Gambit_reg[1] = new Gambit_Continuation(Gambit_stack[0], false);
   return fn;
 }
 
-Gambit_glo["##continuation-capture"] = lbl1__23__23_continuation_2d_capture;
+Gambit_glo["##continuation-capture"] = Gambit_lbl1__23__23_continuation_2d_capture;
 
 
-function lbl1__23__23_continuation_2d_return() { // ##continuation-return
+function Gambit_lbl1__23__23_continuation_2d_return() { // ##continuation-return
   if (Gambit_nargs !== 2)
     throw "wrong number of arguments";
   Gambit_sp = 0;
-  Gambit_stack[0] = Gambit_reg[1];
+  Gambit_stack[0] = Gambit_reg[1].frame;
   Gambit_reg[0] = Gambit_underflow_handler;
   Gambit_reg[1] = Gambit_reg[2];
   return Gambit_reg[0];
 }
 
-Gambit_glo["##continuation-return"] = lbl1__23__23_continuation_2d_return;
+Gambit_glo["##continuation-return"] = Gambit_lbl1__23__23_continuation_2d_return;
 
 
-function lbl1__23__23_continuation_2d_graft() { // ##continuation-graft
+function Gambit_lbl1__23__23_continuation_2d_graft() { // ##continuation-graft
   if (Gambit_nargs < 2 || Gambit_nargs > 3)
     throw "wrong number of arguments";
   Gambit_sp = 0;
-  Gambit_stack[0] = Gambit_reg[1];
+  Gambit_stack[0] = Gambit_reg[1].frame;
   Gambit_reg[0] = Gambit_underflow_handler;
   var fn = Gambit_reg[2];
   Gambit_reg[1] = Gambit_reg[3]; // copy first argument (if there is one)
@@ -955,7 +961,161 @@ function lbl1__23__23_continuation_2d_graft() { // ##continuation-graft
   return fn;
 }
 
-Gambit_glo["##continuation-graft"] = lbl1__23__23_continuation_2d_graft;
+Gambit_glo["##continuation-graft"] = Gambit_lbl1__23__23_continuation_2d_graft;
+
+
+function Gambit_lbl1__23__23_continuation_3f_() { // ##continuation?
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1] instanceof Gambit_Continuation;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation?"] = Gambit_lbl1__23__23_continuation_3f_;
+
+
+function Gambit_lbl1__23__23_continuation_2d_frame() { // ##continuation-frame
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1].frame;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-frame"] = Gambit_lbl1__23__23_continuation_2d_frame;
+
+
+function Gambit_lbl1__23__23_continuation_2d_denv() { // ##continuation-denv
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1].denv;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-denv"] = Gambit_lbl1__23__23_continuation_2d_denv;
+
+
+function Gambit_lbl1__23__23_continuation_2d_fs() { // ##continuation-fs
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1].frame[0].fs;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-fs"] = Gambit_lbl1__23__23_continuation_2d_fs;
+
+
+function Gambit_lbl1__23__23_frame_2d_fs() { // ##frame-fs
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1][0].fs;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##frame-fs"] = Gambit_lbl1__23__23_frame_2d_fs;
+
+
+function Gambit_lbl1__23__23_return_2d_fs() { // ##return-fs
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1].fs;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##return-fs"] = Gambit_lbl1__23__23_return_2d_fs;
+
+
+function Gambit_lbl1__23__23_continuation_2d_link() { // ##continuation-link
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1].frame[0].link;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-link"] = Gambit_lbl1__23__23_continuation_2d_link;
+
+
+function Gambit_lbl1__23__23_frame_2d_link() { // ##frame-link
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1][0].link;
+  return Gambit_reg[0];
+}
+
+
+function Gambit_lbl1__23__23_continuation_2d_ret() { // ##continuation-ret
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1].frame[0];
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-ret"] = Gambit_lbl1__23__23_continuation_2d_ret;
+
+
+function Gambit_lbl1__23__23_frame_2d_ret() { // ##frame-ret
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1][0];
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##frame-ret"] = Gambit_lbl1__23__23_frame_2d_ret;
+
+
+function Gambit_lbl1__23__23_continuation_2d_ref() { // ##continuation-ref
+  if (Gambit_nargs !== 2)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1].frame[Gambit_reg[2]];
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-ref"] = Gambit_lbl1__23__23_continuation_2d_ref;
+
+
+function Gambit_lbl1__23__23_frame_2d_ref() { // ##frame-ref
+  if (Gambit_nargs !== 2)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = Gambit_reg[1][Gambit_reg[2]];
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##frame-ref"] = Gambit_lbl1__23__23_frame_2d_ref;
+
+
+function Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
+  if (Gambit_nargs !== 2)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = true;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-slot-live?"] = Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_;
+
+
+function Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
+  if (Gambit_nargs !== 2)
+    throw "wrong number of arguments";
+  Gambit_reg[1] = true;
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##frame-slot-live?"] = Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_;
+
+
+function Gambit_lbl1__23__23_continuation_2d_next() { // ##continuation-next
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  var frame = Gambit_reg[1].frame;
+  var denv = Gambit_reg[1].denv;
+  var next_frame = frame[frame[0].link+1];
+  if (next_frame === false)
+    Gambit_reg[1] = false;
+  else
+    Gambit_reg[1] = new Gambit_Continuation(next_frame, denv);
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-next"] = Gambit_lbl1__23__23_continuation_2d_next;
 
 
 function Gambit_run(pc)
@@ -1039,7 +1199,7 @@ def Gambit_stringp ( s ):
   return isinstance(s, String)
 
 
-def lbl1_println(): # println
+def Gambit_lbl1_println(): # println
   global Gambit_glo, Gambit_reg, Gambit_stack, Gambit_sp, Gambit_nargs, Gambit_temp1, Gambit_temp2
   if Gambit_nargs != 1:
     raise "wrong number of arguments"
@@ -1053,7 +1213,7 @@ def lbl1_println(): # println
     print(Gambit_reg[1])
   return Gambit_reg[0]
 
-Gambit_glo["println"] = lbl1_println
+Gambit_glo["println"] = Gambit_lbl1_println
 
 
 def Gambit_poll(wakeup):
@@ -1102,7 +1262,7 @@ def Gambit_integerToChar ( i )
   end
 end
 
-$lbl1_println = lambda { # println
+$Gambit_lbl1_println = lambda { # println
   if $Gambit_nargs != 1
     raise "wrong number of arguments"
   end
@@ -1123,7 +1283,7 @@ $lbl1_println = lambda { # println
   return $Gambit_reg[0]
 }
 
-$Gambit_glo["println"] = $lbl1_println
+$Gambit_glo["println"] = $Gambit_lbl1_println
 
 
 def Gambit_poll(wakeup)
