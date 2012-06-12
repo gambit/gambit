@@ -243,12 +243,8 @@
 ;; The frame constraints are defined by the parameters
 ;; univ-frame-reserve and univ-frame-alignment.
 
-(define univ-frame-reserve 3) ;; when the stack frame is transformed to a
-                              ;; heap frame, 3 extra slots are needed to
-                              ;; store the subtype object header, the link
-                              ;; to the next frame and the return address.
-
-(define univ-frame-alignment 4) ;; align frame to multiple of 4 slots
+(define univ-frame-reserve 0) ;; no extra slots reserved
+(define univ-frame-alignment 1) ;; no alignment constraint
 
 ;; ***** PRIMITIVE PROCEDURE DATABASE
 
@@ -340,53 +336,74 @@
                          rev-res)))))
 
           (define (scan-gvm-label ctx gvm-instr proc)
-            (univ-function
 
-             ctx
+            (define (frame-info gvm-instr)
+              (let* ((frame
+                      (gvm-instr-frame gvm-instr))
+                     (fs
+                      (frame-size frame))
+                     (vars
+                      (reverse (frame-slots frame)))
+                     (link
+                      (pos-in-list ret-var vars)))
+                (vector fs link)))
 
-             (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))
+            (let ((id (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))))
 
-             (univ-indent
-              (case (label-type gvm-instr)
+              (gen (univ-function
 
-                ((simple)
-                 (gen "\n"))
+                    ctx
 
-                ((entry)
-                 (gen " "
-                      (univ-comment
-                       ctx
-                       (if (label-entry-closed? gvm-instr)
-                           "closure-entry-point\n"
-                           "entry-point\n"))
-                      (univ-if-then
-                       ctx
-                       (univ-not= ctx
-                                  (univ-global ctx "Gambit_nargs")
-                                  (label-entry-nb-parms gvm-instr))
-                       (univ-throw ctx "\"wrong number of arguments\""))))
+                    id
 
-                ((return)
-                 (gen " " (univ-comment ctx "return-point\n")))
+                    (univ-indent
+                     (case (label-type gvm-instr)
 
-                ((task-entry)
-                 (gen " " (univ-comment ctx "task-entry-point\n")
-                      (univ-throw ctx "\"task-entry-point GVM label unimplemented\"")))
+                       ((simple)
+                        (gen "\n"))
 
-                ((task-return)
-                 (gen " " (univ-comment ctx "task-return-point\n")
-                      (univ-throw ctx "\"task-return-point GVM label unimplemented\"")))
+                       ((entry)
+                        (gen " "
+                             (univ-comment
+                              ctx
+                              (if (label-entry-closed? gvm-instr)
+                                  "closure-entry-point\n"
+                                  "entry-point\n"))
+                             (univ-if-then
+                              ctx
+                              (univ-not= ctx
+                                         (univ-global ctx (univ-prefix ctx "nargs"))
+                                         (label-entry-nb-parms gvm-instr))
+                              (univ-throw ctx "\"wrong number of arguments\""))))
 
-                (else
-                 (compiler-internal-error
-                  "scan-gvm-label, unknown label type"))))
+                       ((return)
+                        (gen " " (univ-comment ctx "return-point\n")))
 
-             (univ-indent
-              (with-stack-base-offset
-               ctx
-               (- (frame-size (gvm-instr-frame gvm-instr)))
-               (lambda (ctx)
-                 (proc ctx))))))
+                       ((task-entry)
+                        (gen " " (univ-comment ctx "task-entry-point\n")
+                             (univ-throw ctx "\"task-entry-point GVM label unimplemented\"")))
+
+                       ((task-return)
+                        (gen " " (univ-comment ctx "task-return-point\n")
+                             (univ-throw ctx "\"task-return-point GVM label unimplemented\"")))
+
+                       (else
+                        (compiler-internal-error
+                         "scan-gvm-label, unknown label type"))))
+
+                    (univ-indent
+                     (with-stack-base-offset
+                      ctx
+                      (- (frame-size (gvm-instr-frame gvm-instr)))
+                      (lambda (ctx)
+                        (proc ctx)))))
+
+                   (if (and (eq? (label-type gvm-instr) 'return)
+                            (eq? (target-name (ctx-target ctx)) 'js))
+                       (let ((info (frame-info gvm-instr)))
+                         (gen id ".fs = " (vector-ref info 0) ";\n"
+                              id ".link = " (vector-ref info 1) ";\n"))
+                       ""))))
 
           (define (scan-gvm-instr ctx gvm-instr)
 
@@ -491,7 +508,7 @@
                ;; test: (jump-poll? gvm-instr)
                (gen (let ((nb-args (jump-nb-args gvm-instr)))
                       (if nb-args
-                          (univ-assign ctx (univ-global ctx "Gambit_nargs") nb-args)
+                          (univ-assign ctx (univ-global ctx (univ-prefix ctx "nargs")) nb-args)
                           ""))
                     (with-stack-pointer-adjust
                      ctx
@@ -502,7 +519,7 @@
                          (univ-return
                           ctx
                           (if (jump-poll? gvm-instr)
-                              (gen (univ-prefix ctx "poll(") (scan-gvm-opnd ctx opnd) ")")
+                              (gen (univ-prefix ctx "poll") "(" (scan-gvm-opnd ctx opnd) ")")
                               (scan-gvm-opnd ctx opnd))))))))
 
               (else
@@ -696,10 +713,57 @@
 
     ((js)                               ;rts js
 #<<EOF
+function Gambit_heapify_continuation(ra) {
+  var chain = false;
+  var prev_frame = false;
+  var prev_link = 0;
+
+  while (Gambit_sp !== 0) { // stack not empty
+    var fs = ra.fs;
+    var link = ra.link;
+    var frame = Gambit_stack.slice(Gambit_sp-fs, Gambit_sp+1);
+    if (prev_frame === false)
+      chain = frame;
+    else
+      prev_frame[prev_link+1] = frame;
+    prev_frame = frame;
+    frame[0] = ra;
+    Gambit_sp = Gambit_sp-fs;
+    ra = Gambit_stack[Gambit_sp+link+1];
+    prev_link = link;
+  }
+
+  if (prev_frame === false)
+    chain = Gambit_stack[0];
+  else
+    prev_frame[prev_link+1] = Gambit_stack[0];
+  
+  Gambit_stack = [chain];
+  Gambit_sp = 0;
+
+  return Gambit_underflow_handler;
+}
+
+function Gambit_underflow_handler() {
+  var ra = false;
+  var frame = Gambit_stack[0];
+  if (frame !== false) { // not end of continuation?
+    ra = frame[0];
+    var fs = ra.fs;
+    var link = ra.link;
+    Gambit_stack = frame.slice(0, fs+1);
+    Gambit_sp = fs;
+    Gambit_stack[0] = frame[link+1];
+    Gambit_stack[link+1] = Gambit_underflow_handler;
+  }
+  return ra;
+}
+Gambit_underflow_handler.fs = 0;
+
 var Gambit_glo = {};
-var Gambit_reg = [false];
-var Gambit_stack = [];
-var Gambit_sp = -1;
+var Gambit_reg = [Gambit_underflow_handler];
+var Gambit_stack = [false];
+var Gambit_sp = 0;
 var Gambit_nargs = 0;
 var Gambit_temp1 = false;
 var Gambit_temp2 = false;
@@ -767,7 +831,7 @@ Gambit_String.prototype.stringlength = function ( ) {
     return this.charray.length;
 }
 
-// srtring-ref
+// string-ref
 Gambit_String.prototype.stringref = function ( n ) {
     return this.charray[n];
 }
@@ -842,6 +906,56 @@ function lbl1_println() { // println
 }
 
 Gambit_glo["println"] = lbl1_println;
+
+
+function Gambit_dump_cont(sp, ra) {
+  print("------------------------");
+  while (ra !== false) {
+    print("sp="+Gambit_sp + " fs="+ra.fs + " link="+ra.link);
+    Gambit_sp = Gambit_sp-ra.fs;
+    ra = Gambit_stack[Gambit_sp+ra.link+1];
+  }
+  print("------------------------");
+}
+
+function lbl1__23__23_continuation_2d_capture() { // ##continuation-capture
+  if (Gambit_nargs !== 1)
+    throw "wrong number of arguments";
+  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
+  var fn = Gambit_reg[1];
+  Gambit_reg[1] = Gambit_stack[0];
+  return fn;
+}
+
+Gambit_glo["##continuation-capture"] = lbl1__23__23_continuation_2d_capture;
+
+
+function lbl1__23__23_continuation_2d_return() { // ##continuation-return
+  if (Gambit_nargs !== 2)
+    throw "wrong number of arguments";
+  Gambit_sp = 0;
+  Gambit_stack[0] = Gambit_reg[1];
+  Gambit_reg[0] = Gambit_underflow_handler;
+  Gambit_reg[1] = Gambit_reg[2];
+  return Gambit_reg[0];
+}
+
+Gambit_glo["##continuation-return"] = lbl1__23__23_continuation_2d_return;
+
+
+function lbl1__23__23_continuation_2d_graft() { // ##continuation-graft
+  if (Gambit_nargs < 2 || Gambit_nargs > 3)
+    throw "wrong number of arguments";
+  Gambit_sp = 0;
+  Gambit_stack[0] = Gambit_reg[1];
+  Gambit_reg[0] = Gambit_underflow_handler;
+  var fn = Gambit_reg[2];
+  Gambit_reg[1] = Gambit_reg[3]; // copy first argument (if there is one)
+  Gambit_nargs = Gambit_nargs-2;
+  return fn;
+}
+
+Gambit_glo["##continuation-graft"] = lbl1__23__23_continuation_2d_graft;
 
 
 function Gambit_run(pc)
@@ -1045,10 +1159,10 @@ EOF
          (case (target-name (ctx-target ctx))
 
            ((js php)
-            (gen (univ-prefix ctx "run(") entry ");\n"))
+            (gen (univ-prefix ctx "run") "(" entry ");\n"))
 
            ((python ruby)
-            (gen (univ-prefix ctx "run(") entry ")\n"))
+            (gen (univ-prefix ctx "run") "(" entry ")\n"))
 
            (else
             (compiler-internal-error
@@ -1347,7 +1461,7 @@ EOF
                         (gen obj))))
                (case (target-name (ctx-target ctx))
                  ((js)
-                  (gen "new " (univ-prefix ctx "Flonum(") x ")"))
+                  (gen "new " (univ-prefix ctx "Flonum") "(" x ")"))
                  (else
                   x))))
             (else
@@ -1359,12 +1473,14 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen (univ-prefix ctx "Char.integerToChar(")
+       (gen (univ-prefix ctx "Char.integerToChar")
+            "("
             code
             ")"))
 
       ((python ruby)
-       (gen (univ-prefix ctx "integerToChar(")
+       (gen (univ-prefix ctx "integerToChar")
+            "("
             code
             ")"))
 
@@ -1402,12 +1518,14 @@ EOF
 
     ((js)
      (let ((s (object->string obj)))
-       (gen "new " (univ-prefix ctx "String(")
+       (gen "new " (univ-prefix ctx "String")
+            "("
             (string->charray (substring s 1 (- (string-length s) 1)))
             ")")))
     
     ((python)
-     (gen (univ-prefix ctx "String(*list(unicode(")
+     (gen (univ-prefix ctx "String")
+          "(*list(unicode("
           (object->string obj)
           ")))"))
 
@@ -1756,7 +1874,8 @@ EOF
 
       ((js)
        (gen "new "
-            (univ-prefix ctx "Pair(")
+            (univ-prefix ctx "Pair")
+            "("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
             (translate-gvm-opnd ctx (list-ref opnds 1))
@@ -1881,14 +2000,16 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen (univ-prefix ctx "String.makestring(")
+       (gen (univ-prefix ctx "String.makestring")
+            "("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
             (translate-gvm-opnd ctx (list-ref opnds 1))
             ")"))
       
       ((python)
-       (gen (univ-prefix ctx "makestring(")
+       (gen (univ-prefix ctx "makestring")
+            "("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
             (translate-gvm-opnd ctx (list-ref opnds 1))
@@ -1954,7 +2075,8 @@ EOF
 
       ((js)
        (gen "new "
-            (univ-prefix ctx "Char(")
+            (univ-prefix ctx "Char")
+            "("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ".stringref("
             (translate-gvm-opnd ctx (list-ref opnds 1))
