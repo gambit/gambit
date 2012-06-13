@@ -53,7 +53,7 @@ DEFS_EXE=""
 
 DEFS_OBJ_DYN_LIB_EXE=""
 
-COMPILATION_OPTIONS="-check"
+COMPILATION_OPTIONS=""
 
 ###############################################################################
 #
@@ -501,6 +501,24 @@ AC_ARG_ENABLE(help-browser,
                              [Browser to use for help (default is to search)]),
               HELP_BROWSER=$enableval,
               HELP_BROWSER="")
+
+###############################################################################
+#
+# Check if the system must perform type checking.
+
+AC_ARG_ENABLE(type-checking,
+              AC_HELP_STRING([--enable-type-checking],
+                             [perform type checking (default is YES)]),
+              ENABLE_TYPE_CHECKING=$enableval,
+              ENABLE_TYPE_CHECKING=yes)
+
+echo "ENABLE_TYPE_CHECKING = $ENABLE_TYPE_CHECKING"
+
+if test "$ENABLE_TYPE_CHECKING" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -check"
+
+fi
 
 ###############################################################################
 #

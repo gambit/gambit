@@ -1520,6 +1520,7 @@ Optional Features:
                           absolute path (default is YES)
   --enable-help-browser=BROWSER
                           Browser to use for help (default is to search)
+  --enable-type-checking  perform type checking (default is YES)
   --enable-auto-forcing   automatically force promises (default is NO)
 
 Optional Packages:
@@ -2179,7 +2180,7 @@ DEFS_EXE=""
 
 DEFS_OBJ_DYN_LIB_EXE=""
 
-COMPILATION_OPTIONS="-check"
+COMPILATION_OPTIONS=""
 
 ###############################################################################
 #
@@ -5797,6 +5798,26 @@ else
   HELP_BROWSER=""
 fi
 
+
+###############################################################################
+#
+# Check if the system must perform type checking.
+
+# Check whether --enable-type-checking was given.
+if test "${enable_type_checking+set}" = set; then
+  enableval=$enable_type_checking; ENABLE_TYPE_CHECKING=$enableval
+else
+  ENABLE_TYPE_CHECKING=yes
+fi
+
+
+echo "ENABLE_TYPE_CHECKING = $ENABLE_TYPE_CHECKING"
+
+if test "$ENABLE_TYPE_CHECKING" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -check"
+
+fi
 
 ###############################################################################
 #
