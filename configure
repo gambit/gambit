@@ -887,6 +887,7 @@ ENABLE_ABSOLUTE_SHARED_LIBS
 ENABLE_VERSIONNED_LIBS
 emacsdir
 HELP_BROWSER
+COMPILATION_OPTIONS
 SET_MAKE
 LIBOBJS
 LTLIBOBJS'
@@ -1519,6 +1520,7 @@ Optional Features:
                           absolute path (default is YES)
   --enable-help-browser=BROWSER
                           Browser to use for help (default is to search)
+  --enable-auto-forcing   automatically force promises (default is NO)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -2176,6 +2178,8 @@ DEFS_LIB=""
 DEFS_EXE=""
 
 DEFS_OBJ_DYN_LIB_EXE=""
+
+COMPILATION_OPTIONS="-check"
 
 ###############################################################################
 #
@@ -5793,6 +5797,24 @@ else
   HELP_BROWSER=""
 fi
 
+
+###############################################################################
+#
+# Check if the system must automatically force promises.
+
+# Check whether --enable-auto-forcing was given.
+if test "${enable_auto_forcing+set}" = set; then
+  enableval=$enable_auto_forcing; ENABLE_AUTO_FORCING=$enableval
+else
+  ENABLE_AUTO_FORCING=no
+fi
+
+
+if test "$ENABLE_AUTO_FORCING" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -force"
+
+fi
 
 ###############################################################################
 #
@@ -26635,6 +26657,7 @@ INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
 
 
 
+
 { echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
 echo $ECHO_N "checking whether ${MAKE-make} sets \$(MAKE)... $ECHO_C" >&6; }
 set x ${MAKE-make}; ac_make=`echo "$2" | sed 's/+/p/g; s/[^a-zA-Z0-9_]/_/g'`
@@ -27667,12 +27690,13 @@ ENABLE_ABSOLUTE_SHARED_LIBS!$ENABLE_ABSOLUTE_SHARED_LIBS$ac_delim
 ENABLE_VERSIONNED_LIBS!$ENABLE_VERSIONNED_LIBS$ac_delim
 emacsdir!$emacsdir$ac_delim
 HELP_BROWSER!$HELP_BROWSER$ac_delim
+COMPILATION_OPTIONS!$COMPILATION_OPTIONS$ac_delim
 SET_MAKE!$SET_MAKE$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 78; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 79; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

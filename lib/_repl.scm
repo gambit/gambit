@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2275,7 +2275,7 @@
        (if (##not (##eq? obj (##void)))
            (begin
              (##repl-channel-result-history-add channel obj)
-             (##pretty-print obj output-port))))
+             (##pretty-print obj output-port ##max-fixnum #f))))
      results)))
 
 (define-prim (##repl-channel-ports-display-monoline-message channel writer)
