@@ -209,7 +209,7 @@
 ;; Initialization/finalization of back-end
 
 (define (targ-make-target)
-  (let ((targ (make-target 7 'c 1)))
+  (let ((targ (make-target 8 'c 1)))
 
     (define (begin! info-port)
 
@@ -226,6 +226,7 @@
       (target-proc-result-set!       targ (make-reg 1))
       (target-task-return-set!       targ (make-reg 0))
       (target-switch-testable?-set!  targ targ-switch-testable?)
+      (target-object-type-set!       targ targ-object-type)
       (target-file-extension-set!    targ (targ-preferred-c-file-extension))
 
       #f)
@@ -240,8 +241,8 @@
 
     targ))
 
-(define (targ-prim-proc-table x)        (vector-ref x 14))
-(define (targ-prim-proc-table-set! x y) (vector-set! x 14 y))
+(define (targ-prim-proc-table x)        (vector-ref x 15))
+(define (targ-prim-proc-table-set! x y) (vector-set! x 15 y))
 
 (define targ-target (targ-make-target))
 
@@ -281,6 +282,12 @@
 
 (define (targ-switch-testable? obj)
   (targ-testable-with-eq? obj))
+
+(define (targ-object-type obj)
+  (let ((t (targ-obj-type obj)))
+    (if (eq? t 'subtyped)
+        (targ-obj-subtype obj)
+        t)))
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -659,7 +666,7 @@
        '("REST"))
 ;;      ((body)
 ;;       '("BODY_OBJ"))
-      ((fixnum32)
+      ((fixnum)
        (list "FIX" (targ-c-s32 obj)))
       ((char)
        (list "CHR" (targ-c-char obj)))
@@ -760,7 +767,7 @@
        '("REF_REST"))
 ;;      ((body)
 ;;       '("REF_BODY_OBJ"))
-      ((fixnum32)
+      ((fixnum)
        (list "REF_FIX" obj))
       ((char)
        (list "REF_CHR" (targ-c-char obj)))

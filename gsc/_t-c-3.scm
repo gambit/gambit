@@ -331,7 +331,7 @@
          'pair)
         ((number? obj)
          (cond ((targ-fixnum32? obj)
-                'fixnum32)
+                'fixnum)
                (else
                 'subtyped)))
         ((char? obj)

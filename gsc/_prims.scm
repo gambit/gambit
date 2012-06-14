@@ -1909,12 +1909,12 @@
   (define gen-flonum-0
     (lambda (source env vars invalid)
       (new-cst source env
-        targ-inexact-+0))) ;; TODO: remove this dependency on C backend
+        (macro-inexact-+0))))
 
   (define gen-flonum-1
     (lambda (source env vars invalid)
       (new-cst source env
-        targ-inexact-+1))) ;; TODO: remove this dependency on C backend
+        (macro-inexact-+1))))
 
   (define gen-first-arg
     (lambda (source env vars invalid)
@@ -2809,28 +2809,35 @@
   (define **f64vector-set!-sym   (string->canonical-symbol "##f64vector-set!"))
 
   (define (make-fixnum-interval-checker lo hi)
-    ; assumes (integer-length hi) >= (integer-length lo)
-    (lambda (source env var)
-      (if (targ-fixnum64? hi) ;; TODO: remove this dependency on C backend
-        (let ((interval-check
-               (gen-fixnum-interval-check source env
-                 var
-                 (new-cst source env
-                   lo)
-                 (new-cst source env
-                   hi)
-                 #t)))
-          (if (targ-fixnum32? hi) ;; TODO: remove this dependency on C backend
-            interval-check
-            (new-conj source env
-              (gen-call-prim source env
-                **fixnum?-sym
-                (list (new-cst source env
-                        hi)))
-              interval-check)))
-        (gen-call-prim-vars source env
-          **fixnum?-sym
-          (list var)))))
+
+    ;; assumes (integer-length hi) >= (integer-length lo)
+
+    (let ((hi-type ((target-object-type targ) hi)))
+      (lambda (source env var)
+        (if (eq? hi-type 'bignum)
+
+            (gen-call-prim-vars source env
+              **fixnum?-sym
+              (list var))
+
+            (let ((interval-check
+                   (gen-fixnum-interval-check source env
+                     var
+                     (new-cst source env
+                       lo)
+                     (new-cst source env
+                       hi)
+                     #t)))
+              (if (eq? hi-type 'fixnum)
+
+                  interval-check
+
+                  (new-conj source env
+                    (gen-call-prim source env
+                      **fixnum?-sym
+                      (list (new-cst source env
+                              hi)))
+                    interval-check)))))))
 
   (define (make-flonum-checker)
     (lambda (source env var)

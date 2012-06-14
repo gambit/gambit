@@ -105,6 +105,12 @@
 ;;              This function tests whether an object can be tested
 ;;              in a GVM "switch" instruction.
 ;;
+;; object-type  Function.
+;;              This function returns a symbol indicating the type of its
+;;              argument.  For exact integers the return value is
+;;              either fixnum, bignum, or bigfixnum (when the integer
+;;              could be a fixnum or bignum).
+;;
 ;; file-extension  The file extension for generated files.
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -113,13 +119,13 @@
 
 (define (make-target version name extra)
 
-  (define current-target-version 7) ; number for this version of the module
+  (define current-target-version 8) ; number for this version of the module
 
   (if (not (= version current-target-version))
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((x (make-vector (+ 14 extra))))
+  (let ((x (make-vector (+ 15 extra))))
     (vector-set! x 0 'target)
     (vector-set! x 1 name)
     x))
@@ -149,8 +155,10 @@
 (define (target-task-return-set! x y)       (vector-set! x 11 y))
 (define (target-switch-testable? x)         (vector-ref x 12))
 (define (target-switch-testable?-set! x y)  (vector-set! x 12 y))
-(define (target-file-extension x)           (vector-ref x 13))
-(define (target-file-extension-set! x y)    (vector-set! x 13 y))
+(define (target-object-type x)              (vector-ref x 13))
+(define (target-object-type-set! x y)       (vector-set! x 13 y))
+(define (target-file-extension x)           (vector-ref x 14))
+(define (target-file-extension-set! x y)    (vector-set! x 14 y))
 
 ;;;; Frame constraints structure
 

@@ -1166,7 +1166,7 @@
      (targ-adjust-stack fs))
 
     (let loop ((lst cases)
-               (rev-cases-fixnum32 '())
+               (rev-cases-fixnum '())
                (rev-cases-char '())
                (rev-cases-symbol '())
                (rev-cases-keyword '())
@@ -1177,41 +1177,41 @@
                (obj (switch-case-obj c)))
           (cond ((targ-fixnum32? obj)
                  (loop (cdr lst)
-                       (cons c rev-cases-fixnum32)
+                       (cons c rev-cases-fixnum)
                        rev-cases-char
                        rev-cases-symbol
                        rev-cases-keyword
                        rev-cases-other))
                 ((char? obj)
                  (loop (cdr lst)
-                       rev-cases-fixnum32
+                       rev-cases-fixnum
                        (cons c rev-cases-char)
                        rev-cases-symbol
                        rev-cases-keyword
                        rev-cases-other))
                 ((symbol-object? obj)
                  (loop (cdr lst)
-                       rev-cases-fixnum32
+                       rev-cases-fixnum
                        rev-cases-char
                        (cons c rev-cases-symbol)
                        rev-cases-keyword
                        rev-cases-other))
                 ((keyword-object? obj)
                  (loop (cdr lst)
-                       rev-cases-fixnum32
+                       rev-cases-fixnum
                        rev-cases-char
                        rev-cases-symbol
                        (cons c rev-cases-keyword)
                        rev-cases-other))
                 (else
                  (loop (cdr lst)
-                       rev-cases-fixnum32
+                       rev-cases-fixnum
                        rev-cases-char
                        rev-cases-symbol
                        rev-cases-keyword
                        (cons c rev-cases-other)))))
 
-        (let* ((cases-fixnum32 (reverse rev-cases-fixnum32))
+        (let* ((cases-fixnum (reverse rev-cases-fixnum))
                (cases-char (reverse rev-cases-char))
                (cases-symbol (reverse rev-cases-symbol))
                (cases-keyword (reverse rev-cases-keyword))
@@ -1231,10 +1231,10 @@
                  cases)
                 (targ-emit (list end-macro)))))
 
-          (if (<= (length cases-fixnum32) 2)
+          (if (<= (length cases-fixnum) 2)
             (begin
-              (set! cases-other (append cases-fixnum32 cases-other))
-              (set! cases-fixnum32 '())))
+              (set! cases-other (append cases-fixnum cases-other))
+              (set! cases-fixnum '())))
 
           (if (<= (length cases-char) 2)
             (begin
@@ -1246,7 +1246,7 @@
                "SWITCH_CASE_GOTO"
                "END_SWITCH")
 
-          (gen cases-fixnum32
+          (gen cases-fixnum
                "BEGIN_SWITCH_FIXNUM"
                "SWITCH_FIXNUM_CASE_GOTO"
                "END_SWITCH_FIXNUM")
@@ -2651,7 +2651,7 @@
       (memq (targ-obj-type obj)
             '(boolean null absent unused deleted void eof optional
               key rest
-              fixnum32 char))))
+              fixnum char))))
 
 ;;;----------------------------------------------------------------------------
 
