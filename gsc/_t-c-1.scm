@@ -209,7 +209,7 @@
 ;; Initialization/finalization of back-end
 
 (define (targ-make-target)
-  (let ((targ (make-target 8 'c 1)))
+  (let ((targ (make-target 9 'c 1)))
 
     (define (begin! info-port)
 
@@ -226,6 +226,7 @@
       (target-proc-result-set!       targ (make-reg 1))
       (target-task-return-set!       targ (make-reg 0))
       (target-switch-testable?-set!  targ targ-switch-testable?)
+      (target-eq-testable?-set!      targ targ-eq-testable?)
       (target-object-type-set!       targ targ-object-type)
       (target-file-extension-set!    targ (targ-preferred-c-file-extension))
 
@@ -241,8 +242,8 @@
 
     targ))
 
-(define (targ-prim-proc-table x)        (vector-ref x 15))
-(define (targ-prim-proc-table-set! x y) (vector-set! x 15 y))
+(define (targ-prim-proc-table x)        (vector-ref x 16))
+(define (targ-prim-proc-table-set! x y) (vector-set! x 16 y))
 
 (define targ-target (targ-make-target))
 
@@ -281,7 +282,15 @@
         "targ-get-prim-info, unknown primitive:" name))))
 
 (define (targ-switch-testable? obj)
-  (targ-testable-with-eq? obj))
+  (targ-eq-testable? obj))
+
+(define (targ-eq-testable? obj)
+  (or (symbol-object? obj)
+      (keyword-object? obj)
+      (memq (targ-obj-type obj)
+            '(boolean null absent unused deleted void eof optional
+              key rest
+              fixnum char))))
 
 (define (targ-object-type obj)
   (let ((t (targ-obj-type obj)))

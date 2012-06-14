@@ -24,7 +24,7 @@
 ;; Initialization/finalization of back-end.
 
 (define (univ-setup target-language file-extension)
-  (let ((targ (make-target 8 target-language 0)))
+  (let ((targ (make-target 9 target-language 0)))
 
     (define (begin! info-port)
 
@@ -66,6 +66,11 @@
        targ
        (lambda (obj)
          (univ-switch-testable? targ obj)))
+
+      (target-eq-testable?-set!
+       targ
+       (lambda (obj)
+         (univ-eq-testable? targ obj)))
 
       (target-object-type-set!
        targ
@@ -271,11 +276,15 @@
 
 (define (univ-switch-testable? targ obj)
   (pretty-print (list 'univ-switch-testable? 'targ obj))
-  #f)
+  #f);;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (univ-eq-testable? targ obj)
+  (pretty-print (list 'univ-eq-testable? 'targ obj))
+  #f);;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (univ-object-type targ obj)
   (pretty-print (list 'univ-object-type 'targ obj))
-  'bignum)
+  'bignum);;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 

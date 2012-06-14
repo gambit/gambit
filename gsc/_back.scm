@@ -105,6 +105,10 @@
 ;;              This function tests whether an object can be tested
 ;;              in a GVM "switch" instruction.
 ;;
+;; eq-testable?  Function.
+;;              This function tests whether an object tested to another
+;;              with eq? is equivalent to testing it with equal?.
+;;
 ;; object-type  Function.
 ;;              This function returns a symbol indicating the type of its
 ;;              argument.  For exact integers the return value is
@@ -119,13 +123,13 @@
 
 (define (make-target version name extra)
 
-  (define current-target-version 8) ; number for this version of the module
+  (define current-target-version 9) ; number for this version of the module
 
   (if (not (= version current-target-version))
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((x (make-vector (+ 15 extra))))
+  (let ((x (make-vector (+ 16 extra))))
     (vector-set! x 0 'target)
     (vector-set! x 1 name)
     x))
@@ -155,10 +159,12 @@
 (define (target-task-return-set! x y)       (vector-set! x 11 y))
 (define (target-switch-testable? x)         (vector-ref x 12))
 (define (target-switch-testable?-set! x y)  (vector-set! x 12 y))
-(define (target-object-type x)              (vector-ref x 13))
-(define (target-object-type-set! x y)       (vector-set! x 13 y))
-(define (target-file-extension x)           (vector-ref x 14))
-(define (target-file-extension-set! x y)    (vector-set! x 14 y))
+(define (target-eq-testable? x)             (vector-ref x 13))
+(define (target-eq-testable?-set! x y)      (vector-set! x 13 y))
+(define (target-object-type x)              (vector-ref x 14))
+(define (target-object-type-set! x y)       (vector-set! x 14 y))
+(define (target-file-extension x)           (vector-ref x 15))
+(define (target-file-extension-set! x y)    (vector-set! x 15 y))
 
 ;;;; Frame constraints structure
 
@@ -200,7 +206,7 @@
 
   ((target-begin! target) info-port)
 
-  (setup-prim-expanders target)
+  (setup-prims target)
 
   (set! target.dump              (target-dump target))
   (set! target.nb-regs           (target-nb-regs target))
@@ -211,6 +217,8 @@
   (set! target.proc-result       (target-proc-result target))
   (set! target.task-return       (target-task-return target))
   (set! target.switch-testable?  (target-switch-testable? target))
+  (set! target.eq-testable?      (target-eq-testable? target))
+  (set! target.object-type       (target-object-type target))
   (set! target.file-extension    (target-file-extension target))
 
   (set! **not-proc-obj
@@ -264,6 +272,8 @@
 (define target.proc-result       #f)
 (define target.task-return       #f)
 (define target.switch-testable?  #f)
+(define target.eq-testable?      #f)
+(define target.object-type       #f)
 (define target.file-extension    #f)
 
 ;; procedures defined in back-end:
