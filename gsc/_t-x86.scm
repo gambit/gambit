@@ -169,9 +169,11 @@
 (define (nat-target-prc-objs-to-scan-set! x y) (vector-set! x 27 y))
 (define (nat-target-cgc x)                     (vector-ref x 28))
 (define (nat-target-cgc-set! x y)              (vector-set! x 28 y))
+(define (nat-target-nb-arg-gvm-reg x)          (vector-ref x 29))
+(define (nat-target-nb-arg-gvm-reg-set! x y)   (vector-set! x 29 y))
 
 (define (x86-setup target-language arch file-extension)
-  (let ((targ (make-target 9 target-language 13)))
+  (let ((targ (make-target 9 target-language 14)))
 
     (define (begin! info-port)
 
@@ -239,6 +241,7 @@
                                                      (x86-ebx)
                                                      (x86-edi)
                                                      (x86-edx)))
+           (nat-target-nb-arg-gvm-reg-set! targ (x86-cl))
            (nat-target-pstate-ptr-reg-set! targ (x86-ecx))
            (nat-target-heap-ptr-reg-set! targ (x86-esp))
            (nat-target-stack-ptr-reg-set! targ (x86-ebp))))
@@ -250,11 +253,10 @@
                                                      (x86-rbx)
                                                      (x86-rdi)
                                                      (x86-rdx)))
+           (nat-target-nb-arg-gvm-reg-set! targ (x86-cl))
            (nat-target-pstate-ptr-reg-set! targ (x86-rcx))
            (nat-target-heap-ptr-reg-set! targ (x86-rsp))
            (nat-target-stack-ptr-reg-set! targ (x86-rbp)))))
-
-
       #f)
 
     (define (end!)
@@ -416,13 +418,15 @@
 
 (define (x86-dump targ procs output c-intf script-line options)
   (for-each (lambda (p) (scan-opnd (make-obj p))) procs)
-  (let* ((cgc (make-cgc 'x86-32 'le))
-         (main-lbl (asm-make-label cgc 'main)))
+  (let* ((cgc (make-cgc (nat-target-arch targ) 'le))
+         (main-lbl (asm-make-label cgc 'main))
+         (println-lbl (asm-make-label cgc 'println)))
     ;; Create a main label, put it into the proc-labels table and jump
     ;; to it.
     (nat-target-cgc-set! targ cgc)
-    (table-set! proc-labels 'main main-lbl)
+    (table-set! proc-labels 'main main-lbl) ; HACK: do better than this.
     (x86-jmp cgc main-lbl)
+    (generate-println targ println-lbl)
     (x86-translate-procs targ)
     (entry-point targ (list-ref procs 0)))
 
@@ -434,9 +438,7 @@
   (let* ((cgc (nat-target-cgc targ))
          (main-lbl (table-ref proc-labels 'main)) ; Get main label from procs table.
          (exit-lbl (asm-make-label cgc 'exit))
-         (entry-lbl (table-ref proc-labels (proc-obj-name main-proc)))
-         (println-lbl (asm-make-label cgc 'println)))
-    (generate-println targ println-lbl)
+         (entry-lbl (table-ref proc-labels (proc-obj-name main-proc))))
     (x86-label cgc main-lbl)
     (x86-mov cgc (x86-esi) (x86-imm-lbl exit-lbl))
     (x86-jmp cgc entry-lbl)
@@ -471,16 +473,15 @@
                    (opnd (copy-opnd gvm-instr)))
               (scan-opnd opnd)
               (scan-opnd loc)
-              (pp (table->list proc-labels))
               (x86-mov cgc
                        (nat-opnd targ loc)
                        (nat-opnd targ opnd))))
 
-           ((apply)
-            (pp 'hello!))
-
            ((jump)
-            (let ((opnd (jump-opnd gvm-instr)))
+            (let ((opnd (jump-opnd gvm-instr))
+                  (nargs (jump-nb-args gvm-instr)))
+              (scan-opnd opnd)
+              (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs))
               (x86-jmp cgc (nat-opnd targ opnd))))
 
            ((ifjump)
@@ -566,8 +567,7 @@
 
         ((glo? opnd)
          (let ((name (glo-name opnd)))
-           (x86-nop (nat-target-cgc targ))))
-           ;;(x86-glo name 0)))
+           (table-ref proc-labels name)))
 
         ((clo? opnd)
          (let ((base (clo-base opnd))
@@ -640,7 +640,6 @@
 
 
 
-;; FIXME: Replace r0..r4, etc. with nat-target-gvm-reg-map.
 (define (generate-println targ println-lbl)
   (let* ((cgc (nat-target-cgc targ))
          (print-lbl (asm-make-label cgc 'print))
@@ -663,6 +662,7 @@
         ((hp) (nat-target-heap-ptr-reg targ))
         (else (compiler-internal-error "invalid register" x))))
 
+    (table-set! proc-labels 'println println-lbl)
 
     (x86-label cgc println-lbl)
     (x86-call cgc print-lbl)
@@ -718,25 +718,25 @@
     (x86-label cgc write_int_pos-lbl)
     (x86-neg  cgc (reg 1))
     (x86-push cgc (reg 2))
-    (x86-push cgc (reg 3))
+    (x86-push cgc (reg 4))
     (x86-call cgc write_int_loop-lbl)
-    (x86-pop  cgc (reg 3))
+    (x86-pop  cgc (reg 4))
     (x86-pop  cgc (reg 2))
     (x86-ret  cgc)
 
     (x86-label cgc write_int_loop-lbl)
-    (x86-mov  cgc (reg 3) (x86-imm-int -1))
+    (x86-mov  cgc (reg 4) (x86-imm-int -1))
     (x86-mov  cgc (reg 2) (x86-imm-int 10))
     (x86-idiv cgc (reg 2))
     (x86-cmp  cgc (reg 1) (x86-imm-int 0))
     (x86-je   cgc write_digit-lbl)
-    (x86-push cgc (reg 3))
+    (x86-push cgc (reg 4))
     (x86-call cgc write_int_loop-lbl)
-    (x86-pop  cgc (reg 3))
+    (x86-pop  cgc (reg 4))
 
     (x86-label cgc write_digit-lbl)
     (x86-mov  cgc (reg 1) (x86-imm-int 48))
-    (x86-sub  cgc (reg 1) (reg 3))
+    (x86-sub  cgc (reg 1) (reg 4))
     (x86-call cgc write_char-lbl)
     (x86-ret  cgc)
 
