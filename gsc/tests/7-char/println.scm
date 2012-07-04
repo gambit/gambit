@@ -1,0 +1,2 @@
+(println #\A)
+(println #\B)
