@@ -467,15 +467,14 @@
               (let ((opnd* (nat-opnd cgc ctx opnd)))
                 (x86-mov cgc
                          (nat-opnd cgc ctx loc)
-                         (if (asm-label? opnd*)
-                             (x86-imm-lbl opnd*)
-                             opnd*)))))
+                         (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)))))
 
            ((jump)
             (let ((opnd (jump-opnd gvm-instr))
                   (nargs (jump-nb-args gvm-instr)))
               (scan-opnd opnd)
-              (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs))
+              (if nargs
+                  (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs)))
               (x86-jmp cgc (nat-opnd cgc ctx opnd))))
 
            ((ifjump)
