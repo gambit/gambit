@@ -128,8 +128,8 @@
 ;;       (u8vector->procedure code fixups))))
 
 
-(define (create-procedure targ #!optional (show-listing? #f))
-  (let ((cgc (nat-target-cgc targ)))
+(define (create-procedure cgc #!optional (show-listing? #f))
+  (let ((targ (codegen-context-target cgc)))
     (let* ((code (asm-assemble-to-u8vector cgc))
            (fixups (codegen-context-fixup-list cgc)))
       (if show-listing?
@@ -167,13 +167,11 @@
 (define (nat-target-prc-objs-seen-set! x y)    (vector-set! x 26 y))
 (define (nat-target-prc-objs-to-scan x)        (vector-ref x 27))
 (define (nat-target-prc-objs-to-scan-set! x y) (vector-set! x 27 y))
-(define (nat-target-cgc x)                     (vector-ref x 28))
-(define (nat-target-cgc-set! x y)              (vector-set! x 28 y))
-(define (nat-target-nb-arg-gvm-reg x)          (vector-ref x 29))
-(define (nat-target-nb-arg-gvm-reg-set! x y)   (vector-set! x 29 y))
+(define (nat-target-nb-arg-gvm-reg x)          (vector-ref x 28))
+(define (nat-target-nb-arg-gvm-reg-set! x y)   (vector-set! x 28 y))
 
 (define (x86-setup target-language arch file-extension)
-  (let ((targ (make-target 9 target-language 14)))
+  (let ((targ (make-target 9 target-language 13)))
 
     (define (begin! info-port)
 
@@ -267,7 +265,6 @@
     (target-add targ)))
 
 (x86-setup 'nat (auto-detect-arch) ".s")
-
 
 
 ;;;----------------------------------------------------------------------------
@@ -391,9 +388,23 @@
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 
+(define nat-label-ref  #f)
+(define nat-label-set! #f)
+(let ((labels (make-table test: eq?)))
+  (set! nat-label-ref
+        (lambda (cgc label-name)
+          (let ((x (table-ref labels label-name #f)))
+            (if x
+                x
+                (let ((l  (asm-make-label cgc label-name)))
+                  (table-set! labels label-name l)
+                  l)))))
+  (set! nat-label-set!
+        (lambda (cgc label-name val)
+          (table-set! labels label-name val))))
+
 (define procs-seen (queue-empty))
 (define procs-not-visited (queue-empty))
-(define proc-labels (make-table test: eq?))
 
 (define (scan-obj obj)
   (if (and (proc-obj? obj)
@@ -419,43 +430,40 @@
 (define (x86-dump targ procs output c-intf script-line options)
   (for-each (lambda (p) (scan-opnd (make-obj p))) procs)
   (let* ((cgc (make-cgc (nat-target-arch targ) 'le))
-         (main-lbl (asm-make-label cgc 'main))
-         (println-lbl (asm-make-label cgc 'println)))
-    ;; Create a main label, put it into the proc-labels table and jump
-    ;; to it.
-    (nat-target-cgc-set! targ cgc)
-    (table-set! proc-labels 'main main-lbl) ; HACK: do better than this.
+         (main-lbl (nat-label-ref cgc 'main))
+         (println-lbl (nat-label-ref cgc 'println)))
+    (codegen-context-target-set! cgc targ)
     (x86-jmp cgc main-lbl)
-    (generate-println targ println-lbl)
-    (x86-translate-procs targ)
-    (entry-point targ (list-ref procs 0)))
+    (generate-println cgc println-lbl)
+    (x86-translate-procs cgc)
+    (entry-point cgc (list-ref procs 0))
 
-  (let ((f (create-procedure targ #t)))
-    (f))
+    (let ((f (create-procedure cgc #t)))
+      (f)))
   #f)
 
-(define (entry-point targ main-proc)
-  (let* ((cgc (nat-target-cgc targ))
-         (main-lbl (table-ref proc-labels 'main)) ; Get main label from procs table.
-         (exit-lbl (asm-make-label cgc 'exit))
-         (entry-lbl (table-ref proc-labels (proc-obj-name main-proc))))
+(define (entry-point cgc main-proc)
+  (let* ((targ (codegen-context-target cgc))
+         (main-lbl  (nat-label-ref cgc 'main)) ; Get main label from procs table.
+         (exit-lbl  (nat-label-ref cgc 'exit))
+         (entry-lbl (nat-label-ref cgc (proc-obj-name main-proc))))
     (x86-label cgc main-lbl)
     (x86-mov cgc (x86-esi) (x86-imm-lbl exit-lbl))
     (x86-jmp cgc entry-lbl)
     (x86-label cgc exit-lbl)
     (x86-ret cgc)))
 
-(define (x86-translate-procs targ)
+(define (x86-translate-procs cgc)
   (if (queue-empty? procs-not-visited)
       '()
       (begin
-        (translate-proc targ (queue-get! procs-not-visited))
-        (x86-translate-procs targ))))
+        (translate-proc cgc (queue-get! procs-not-visited))
+        (x86-translate-procs cgc))))
 
-(define (translate-proc targ proc)
+(define (translate-proc cgc proc)
   (let* ((code (proc-obj-code proc))
          (lst (bbs->code-list code))
-         (cgc (nat-target-cgc targ)))
+         (targ (codegen-context-target cgc)))
     (for-each
      (lambda (bb)
        (let* ((gvm-instr (code-gvm-instr bb))
@@ -465,7 +473,7 @@
             (let* ((ctx (make-ctx targ (proc-obj-name proc)))
                    (lbl (make-lbl (label-lbl-num gvm-instr)))
                    (asm-lbl (asm-make-label cgc (translate-lbl ctx lbl))))
-              (table-set! proc-labels (proc-obj-name proc) asm-lbl)
+              (nat-label-set! cgc (proc-obj-name proc) asm-lbl)
               (x86-label cgc asm-lbl)))
 
            ((copy)
@@ -474,15 +482,15 @@
               (scan-opnd opnd)
               (scan-opnd loc)
               (x86-mov cgc
-                       (nat-opnd targ loc)
-                       (nat-opnd targ opnd))))
+                       (nat-opnd cgc loc)
+                       (nat-opnd cgc opnd))))
 
            ((jump)
             (let ((opnd (jump-opnd gvm-instr))
                   (nargs (jump-nb-args gvm-instr)))
               (scan-opnd opnd)
               (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs))
-              (x86-jmp cgc (nat-opnd targ opnd))))
+              (x86-jmp cgc (nat-opnd cgc opnd))))
 
            ((ifjump)
             (x86-nop cgc))
@@ -503,104 +511,52 @@
                  (scheme-id->c-id ns)))
 
 
-;; (define (translate-proc proc)
-;;   (define (ppp x) (pp x (current-output-port)))
+(define (nat-opnd cgc opnd) ;; fetch GVM operand
+  (let ((targ (codegen-context-target cgc)))
+    (cond ((reg? opnd)
+           (let ((n (reg-num opnd)))
+             (vector-ref (nat-target-gvm-reg-map targ) n)))
 
-;;   (let* ((code (proc-obj-code proc))
-;;          (lst (bbs->code-list code)))
-;;     (for-each
-;;      (lambda (x)
-;;        (let* ((gvm-instr (code-gvm-instr x))
-;;               (gvm-type (gvm-instr-type gvm-instr)))
-;;          (case gvm-type
-;;            ((jump)
-;;             (let ((opnd (jump-opnd gvm-instr)))
-;;               (scan-opnd opnd)
-;;               (ppp (list 'jump opnd))))
+          ((stk? opnd)
+           (let ((n (stk-num opnd)))
+             (x86-mem (* word-size
+                         (- (nat-code-gen-context-fs cgc)
+                            (- n 1)))
+                      sp))) ;;;;;;;;;;;;;;
 
-;;            ((copy)
-;;             (let ((loc (copy-loc gvm-instr))
-;;                   (opnd (copy-opnd gvm-instr)))
-;;               (scan-opnd loc)
-;;               (scan-opnd opnd)
-;;               (ppp (list 'copy (translate-opnd loc) '= (translate-opnd opnd)))))
+          ((glo? opnd)
+           (let ((name (glo-name opnd)))
+             (nat-label-ref cgc name)))
 
-;;            ((apply)
-;;             (let ((loc (apply-loc gvm-instr))
-;;                   (prim (apply-prim gvm-instr))
-;;                   (opnds (apply-opnds gvm-instr)))
-;;               (scan-opnd loc)
-;;               (for-each scan-opnd opnds)
-;;               (ppp (list 'apply
-;;                          loc
-;;                          '=
-;;                          (list prim opnds)))))
+          ((clo? opnd)
+           (let ((base (clo-base opnd))
+                 (index (clo-index opnd)))
+             (let ((reg (nat-opnd-reg targ base)))
+               (x86-mem (+ 1 (* 4 index)) reg)))) ;;;;;;;;;;;;;;;;
 
-;;            ((ifjump)
-;;             (let ((opnds (ifjump-opnds gvm-instr)))
-;;               (for-each scan-opnd opnds)
-;;               (ppp (list 'ifjump
-;;                          (ifjump-test gvm-instr)
-;;                          (ifjump-opnds gvm-instr)
-;;                          (ifjump-true gvm-instr)
-;;                          (ifjump-false gvm-instr)))))
+          ((lbl? opnd)
+           (let ((n (lbl-num opnd)))
+             (let ((lbl (nat-label-lookup targ n 'current-code-variant)))
+               (x86-imm-lbl lbl 0))))
 
-;;            ((label) (ppp (list 'label (if (proc-obj-primitive? proc) 'primitive 'procedure)
-;;                               (proc-obj-name proc) (label-lbl-num gvm-instr))))
+          ((obj? opnd)
+           (let ((val (obj-val opnd)))
+             (cond ((and (integer? val) (exact? val))
+                    (x86-imm-int (* val 4)))
+                   ((proc-obj? val)
+                    (nat-table-ref cgc val))
+                   ((eq? val #f)
+                    (x86-imm-int -2))
+                   ((eq? val #t)
+                    (x86-imm-int -6))
+                   ((eq? val '())
+                    (x86-imm-int -10))
+                   (else
+                    (x86-imm-int 0)))));;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;            (else (ppp (list 'UNKNOWN gvm-type))))))
-;;      lst)))
-
-
-
-(define (nat-opnd targ opnd) ;; fetch GVM operand
-  (cond ((reg? opnd)
-         (let ((n (reg-num opnd)))
-           (vector-ref (nat-target-gvm-reg-map targ) n)))
-
-        ((stk? opnd)
-         (let ((n (stk-num opnd)))
-           (x86-mem (* word-size
-                       (- (nat-code-gen-context-fs (nat-target-cgc targ))
-                          (- n 1)))
-                    sp))) ;;;;;;;;;;;;;;
-
-        ((glo? opnd)
-         (let ((name (glo-name opnd)))
-           (table-ref proc-labels name)))
-
-        ((clo? opnd)
-         (let ((base (clo-base opnd))
-               (index (clo-index opnd)))
-           (let ((reg (nat-opnd-reg targ base)))
-             (x86-mem (+ 1 (* 4 index)) reg)))) ;;;;;;;;;;;;;;;;
-
-        ((lbl? opnd)
-         (let ((n (lbl-num opnd)))
-           (let ((lbl (nat-label-lookup targ n 'current-code-variant)))
-             (x86-imm-lbl lbl 0))))
-
-        ((obj? opnd)
-         (let ((val (obj-val opnd)))
-           (cond ((and (integer? val) (exact? val))
-                  (x86-imm-int (* val 4)))
-                 ((proc-obj? val)
-                  (pp (table->list proc-labels))
-                  (table-ref proc-labels val))
-                  ;; (let ((lbl (nat-use-prc targ val #f)))
-                  ;;   (x86-imm-lbl lbl 0)))
-                 ((eq? val #f)
-                  (x86-imm-int -2))
-                 ((eq? val #t)
-                  (x86-imm-int -6))
-                 ((eq? val '())
-                  (x86-imm-int -10))
-                 (else
-                  (x86-imm-int 0)))));;;;;;;;;;;;;;;;;;;;;;;;;
-
-        (else
-         (compiler-internal-error
-          "nat-opnd, unknown 'opnd'" opnd))))
+          (else
+           (compiler-internal-error
+            "nat-opnd, unknown 'opnd'" opnd)))))
 
 
 
@@ -640,8 +596,8 @@
 
 
 
-(define (generate-println targ println-lbl)
-  (let* ((cgc (nat-target-cgc targ))
+(define (generate-println cgc println-lbl)
+  (let* ((targ (codegen-context-target cgc))
          (print-lbl (asm-make-label cgc 'print))
          (print_other-lbl (asm-make-label cgc 'print_other))
          (print_false-lbl (asm-make-label cgc 'print_false))
@@ -662,7 +618,7 @@
         ((hp) (nat-target-heap-ptr-reg targ))
         (else (compiler-internal-error "invalid register" x))))
 
-    (table-set! proc-labels 'println println-lbl)
+    (nat-label-set! cgc 'println println-lbl)
 
     (x86-label cgc println-lbl)
     (x86-call cgc print-lbl)
@@ -747,18 +703,28 @@
 
     ;; Mac OS X version of write_char
     (if (memq (caddr (system-type)) '(darwin9 darwin11.3.0))
-        (begin
-          (x86-label cgc write_char-lbl)
-          (x86-push cgc (x86-rax))           ;; put character to write on stack
-          (x86-mov  cgc (x86-rax) (x86-rsp)) ;; get address of character in %rax
-          (x86-push cgc (x86-imm-int 1))     ;; number of bytes to write = 1
-          (x86-push cgc (x86-rax))           ;; address of byte to write
-          (x86-push cgc (x86-imm-int 1))     ;; "stdout" is file descriptor 1
-          (x86-push cgc (x86-imm-int 0))     ;; reserve space for system call
-          (x86-mov  cgc (x86-rax) (x86-imm-int 4)) ;; "write" system call is 4
-          (asm-8 cgc #xcd) (asm-8 cgc #x80)  ;; perform system call (int 0x80)
-          (x86-add  cgc (x86-rsp) (x86-imm-int 20)) ;; pop what was pushed
-          (x86-ret cgc)))
+        (case (nat-target-arch targ)
+          ((x86-32)
+           (x86-label cgc write_char-lbl)
+           (x86-push cgc (x86-eax))           ;; put character to write on stack
+           (x86-mov  cgc (x86-eax) (x86-esp)) ;; get address of character in %rax
+           (x86-push cgc (x86-imm-int 1))     ;; number of bytes to write = 1
+           (x86-push cgc (x86-eax))           ;; address of byte to write
+           (x86-push cgc (x86-imm-int 1))     ;; "stdout" is file descriptor 1
+           (x86-push cgc (x86-imm-int 0))     ;; reserve space for system call
+           (x86-mov  cgc (x86-eax) (x86-imm-int 4)) ;; "write" system call is 4
+           (asm-8 cgc #xcd) (asm-8 cgc #x80)  ;; perform system call (int 0x80)
+           (x86-add  cgc (x86-esp) (x86-imm-int 20)) ;; pop what was pushed
+           (x86-ret cgc))
+          ((x86-64)
+           (x86-push cgc (x86-rax))           ;; put character to write on stack
+           (x86-mov  cgc (x86-rsi) (x86-rsp)) ;; get address of character in %eax
+           (x86-mov  cgc (x86-rdx) (x86-imm-int 1)) ;; number of bytes to write = 1
+           (x86-mov  cgc (x86-rdi) (x86-imm-int 1)) ;; "stdout" is file descriptor 1
+           (x86-mov  cgc (x86-rax) (x86-imm-int #x2000004)) ;; "write" system call is 0x2000004
+           (x86-syscall cgc)
+           (x86-add  cgc (x86-rsp) (x86-imm-int 8)) ;; pop what was pushed
+           (x86-ret cgc))))
 
     ;; Linux version of write_char
     (if (memq (caddr (system-type)) '(linux-gnu))

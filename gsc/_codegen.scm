@@ -19,9 +19,10 @@
 ;;;============================================================================
 
 (define (make-codegen-context)
-  (let ((cgc (make-vector (+ (asm-code-block-size) 3) 'codegen-context)))
+  (let ((cgc (make-vector (+ (asm-code-block-size) 4) 'codegen-context)))
     (codegen-context-listing-format-set! cgc #f)
     (codegen-context-arch-set!           cgc #f)
+    (codegen-context-target-set!         cgc #f)
     (codegen-context-fixup-list-set!     cgc '())
     cgc))
 
@@ -42,5 +43,11 @@
 
 (define (codegen-context-fixup-list-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 2) x))
+
+(define (codegen-context-target cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 3)))
+
+(define (codegen-context-target-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 3) x))
 
 ;;;============================================================================
