@@ -111,23 +111,6 @@
  (lambda (#!optional (arg1 0) (arg2 0) (arg3 0))
    (##machine-code-block-exec mcb arg1 arg2 arg3)))
 
-;; (define (create-procedure arch gen #!optional (show-listing? #t))
-;;   (let* ((cgc (make-codegen-context))
-;;          (endianness 'le))
-;;     (asm-init-code-block cgc 0 endianness)
-;;     (codegen-context-listing-format-set! cgc 'gnu)
-;;     (x86-arch-set! cgc arch)
-
-;;     (gen cgc)
-
-;;     (let* ((code (asm-assemble-to-u8vector cgc))
-;;            (fixups (codegen-context-fixup-list cgc)))
-;;       (if show-listing?
-;;           (asm-display-listing cgc (current-output-port) #t))
-
-;;       (u8vector->procedure code fixups))))
-
-
 (define (create-procedure cgc #!optional (show-listing? #f))
   (let ((targ (codegen-context-target cgc)))
     (let* ((code (asm-assemble-to-u8vector cgc))
@@ -438,7 +421,7 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #t)))
+    (let ((f (create-procedure cgc #f)))
       (f)))
   #f)
 
@@ -463,15 +446,15 @@
 (define (translate-proc cgc proc)
   (let* ((code (proc-obj-code proc))
          (lst (bbs->code-list code))
-         (targ (codegen-context-target cgc)))
+         (targ (codegen-context-target cgc))
+         (ctx (make-ctx targ (proc-obj-name proc))))
     (for-each
      (lambda (bb)
        (let* ((gvm-instr (code-gvm-instr bb))
               (gvm-type (gvm-instr-type gvm-instr)))
          (case gvm-type
            ((label)
-            (let* ((ctx (make-ctx targ (proc-obj-name proc)))
-                   (lbl (make-lbl (label-lbl-num gvm-instr)))
+            (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
                    (asm-lbl (asm-make-label cgc (translate-lbl ctx lbl))))
               (nat-label-set! cgc (proc-obj-name proc) asm-lbl)
               (x86-label cgc asm-lbl)))
@@ -481,16 +464,19 @@
                    (opnd (copy-opnd gvm-instr)))
               (scan-opnd opnd)
               (scan-opnd loc)
-              (x86-mov cgc
-                       (nat-opnd cgc loc)
-                       (nat-opnd cgc opnd))))
+              (let ((opnd* (nat-opnd cgc ctx opnd)))
+                (x86-mov cgc
+                         (nat-opnd cgc ctx loc)
+                         (if (asm-label? opnd*)
+                             (x86-imm-lbl opnd*)
+                             opnd*)))))
 
            ((jump)
             (let ((opnd (jump-opnd gvm-instr))
                   (nargs (jump-nb-args gvm-instr)))
               (scan-opnd opnd)
               (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs))
-              (x86-jmp cgc (nat-opnd cgc opnd))))
+              (x86-jmp cgc (nat-opnd cgc ctx opnd))))
 
            ((ifjump)
             (x86-nop cgc))
@@ -511,7 +497,7 @@
                  (scheme-id->c-id ns)))
 
 
-(define (nat-opnd cgc opnd) ;; fetch GVM operand
+(define (nat-opnd cgc ctx opnd) ;; fetch GVM operand
   (let ((targ (codegen-context-target cgc)))
     (cond ((reg? opnd)
            (let ((n (reg-num opnd)))
@@ -519,10 +505,11 @@
 
           ((stk? opnd)
            (let ((n (stk-num opnd)))
-             (x86-mem (* word-size
-                         (- (nat-code-gen-context-fs cgc)
-                            (- n 1)))
-                      sp))) ;;;;;;;;;;;;;;
+             (x86-mem (* (nat-target-word-width targ) n))))
+             ;; (x86-mem (* word-size
+             ;;             (- (nat-code-gen-context-fs cgc)
+             ;;                (- n 1)))
+             ;;          sp))) ;;;;;;;;;;;;;;
 
           ((glo? opnd)
            (let ((name (glo-name opnd)))
@@ -535,9 +522,13 @@
                (x86-mem (+ 1 (* 4 index)) reg)))) ;;;;;;;;;;;;;;;;
 
           ((lbl? opnd)
-           (let ((n (lbl-num opnd)))
-             (let ((lbl (nat-label-lookup targ n 'current-code-variant)))
-               (x86-imm-lbl lbl 0))))
+           (let* ((lbl-name (translate-lbl ctx opnd))
+                  (asm-lbl (asm-make-label cgc lbl-name)))
+             (nat-label-set! cgc lbl-name asm-lbl)
+             asm-lbl))
+           ;; (let ((n (lbl-num opnd)))
+           ;;   (let ((lbl (nat-label-lookup targ n 'current-code-variant)))
+           ;;     (x86-imm-lbl lbl 0))))
 
           ((obj? opnd)
            (let ((val (obj-val opnd)))
