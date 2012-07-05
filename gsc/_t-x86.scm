@@ -19,8 +19,6 @@
 (include "_x86#.scm")
 (include "_codegen#.scm")
 
-
-
 (define auto-detect-arch-code '#u8(
                     ;;       ARM              X86-32            X86-64
                     ;;
@@ -373,7 +371,8 @@
 
 (define nat-label-ref  #f)
 (define nat-label-set! #f)
-(let ((labels (make-table test: eq?)))
+
+(let ((labels (make-table test: equal?)))
   (set! nat-label-ref
         (lambda (cgc label-name)
           (let ((x (table-ref labels label-name #f)))
@@ -411,6 +410,11 @@
     cgc))
 
 (define (x86-dump targ procs output c-intf script-line options)
+
+  (set! throw-to-exception-handler
+      (lambda (val) (error val)))
+
+
   (for-each (lambda (p) (scan-opnd (make-obj p))) procs)
   (let* ((cgc (make-cgc (nat-target-arch targ) 'le))
          (main-lbl (nat-label-ref cgc 'main))
@@ -421,7 +425,7 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #f)))
+    (let ((f (create-procedure cgc #t)))
       (f)))
   #f)
 
@@ -429,11 +433,14 @@
   (let* ((targ (codegen-context-target cgc))
          (main-lbl  (nat-label-ref cgc 'main)) ; Get main label from procs table.
          (exit-lbl  (nat-label-ref cgc 'exit))
-         (entry-lbl (nat-label-ref cgc (proc-obj-name main-proc))))
+         (entry-lbl (nat-label-ref cgc (lbl->id 1 (proc-obj-name main-proc)))))
     (x86-label cgc main-lbl)
+    (x86-sub cgc (x86-esp) (x86-imm-int 16))
+    (x86-mov cgc (x86-ebp) (x86-esp))
     (x86-mov cgc (x86-esi) (x86-imm-lbl exit-lbl))
     (x86-jmp cgc entry-lbl)
     (x86-label cgc exit-lbl)
+    (x86-add cgc (x86-esp) (x86-imm-int 16))
     (x86-ret cgc)))
 
 (define (x86-translate-procs cgc)
@@ -455,8 +462,8 @@
          (case gvm-type
            ((label)
             (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
-                   (asm-lbl (asm-make-label cgc (translate-lbl ctx lbl))))
-              (nat-label-set! cgc (proc-obj-name proc) asm-lbl)
+                   (lbl-name (translate-lbl ctx lbl))
+                   (asm-lbl (nat-label-ref cgc lbl-name)))
               (x86-label cgc asm-lbl)))
 
            ((copy)
@@ -504,7 +511,8 @@
 
           ((stk? opnd)
            (let ((n (stk-num opnd)))
-             (x86-mem (* (nat-target-word-width targ) n))))
+             (x86-mem (* (nat-target-word-width targ) n)
+                      (nat-target-stack-ptr-reg targ))))
              ;; (x86-mem (* word-size
              ;;             (- (nat-code-gen-context-fs cgc)
              ;;                (- n 1)))
@@ -522,8 +530,9 @@
 
           ((lbl? opnd)
            (let* ((lbl-name (translate-lbl ctx opnd))
-                  (asm-lbl (asm-make-label cgc lbl-name)))
-             (nat-label-set! cgc lbl-name asm-lbl)
+                  (asm-lbl (nat-label-ref cgc lbl-name)))
+             ;;      (asm-lbl (asm-make-label cgc lbl-name)))
+             ;; (nat-label-set! cgc lbl-name asm-lbl)
              asm-lbl))
            ;; (let ((n (lbl-num opnd)))
            ;;   (let ((lbl (nat-label-lookup targ n 'current-code-variant)))
@@ -534,7 +543,7 @@
              (cond ((and (integer? val) (exact? val))
                     (x86-imm-int (* val 4)))
                    ((proc-obj? val)
-                    (nat-table-ref cgc val))
+                    (nat-label-ref cgc val))
                    ((eq? val #f)
                     (x86-imm-int -2))
                    ((eq? val #t)
