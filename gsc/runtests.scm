@@ -15,7 +15,8 @@
   (let* ((port
           (open-process (list path: path
                               arguments: args
-                              stderr-redirection: #t)))
+                              ;; stderr-redirection: #t
+                              )))
          (output
           (read-line port #f))
          (status

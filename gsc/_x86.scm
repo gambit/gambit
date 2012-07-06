@@ -954,6 +954,19 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; X86 instruction: INT.
+
+(define (x86-int cgc n)
+  (asm-8 cgc #xcd) ;; opcode
+  (asm-8 cgc n)
+  (if (codegen-context-listing-format cgc)
+      (x86-listing cgc
+                   "int"
+                   0
+                   (x86-imm-int n 0))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; X86 instructions: SYSCALL, SYSRET, WRMSR, RDTSC, RDMSR, RDPMC,
 ;;; and CPUID.
 

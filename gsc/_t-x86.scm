@@ -114,7 +114,7 @@
     (let* ((code (asm-assemble-to-u8vector cgc))
            (fixups (codegen-context-fixup-list cgc)))
       (if show-listing?
-          (asm-display-listing cgc (current-output-port) #t))
+          (asm-display-listing cgc (current-error-port) #t))
 
       (u8vector->procedure code fixups))))
 
@@ -425,7 +425,7 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #f)))
+    (let ((f (create-procedure cgc #t)))
       (f)))
   #f)
 
@@ -726,7 +726,7 @@
            (x86-push cgc (x86-imm-int 1))     ;; "stdout" is file descriptor 1
            (x86-push cgc (x86-imm-int 0))     ;; reserve space for system call
            (x86-mov  cgc (x86-eax) (x86-imm-int 4)) ;; "write" system call is 4
-           (asm-8 cgc #xcd) (asm-8 cgc #x80)  ;; perform system call (int 0x80)
+           (x86-int  cgc #x80)                ;; perform system call (int 0x80)
            (x86-add  cgc (x86-esp) (x86-imm-int 20)) ;; pop what was pushed
            (x86-ret cgc))
           ((x86-64)
@@ -759,7 +759,7 @@
            (x86-mov  cgc (x86-edx) (x86-imm-int 1)) ;; number of bytes to write = 1
            (x86-mov  cgc (x86-ebx) (x86-imm-int 1)) ;; "stdout" is file descriptor 1
            (x86-mov  cgc (x86-eax) (x86-imm-int 4)) ;; "write" system call is 4
-           (asm-8 cgc #xcd) (asm-8 cgc #x80)  ;; perform system call (int 0x80)
+           (x86-int  cgc #x80)                      ;; perform system call (int 0x80)
            (x86-add  cgc (x86-esp) (x86-imm-int 4)) ;; pop what was pushed
            (x86-pop  cgc (x86-edx))
            (x86-pop  cgc (x86-ecx))
