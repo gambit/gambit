@@ -435,6 +435,7 @@
          (exit-lbl  (nat-label-ref cgc 'exit))
          (entry-lbl (nat-label-ref cgc (lbl->id 1 (proc-obj-name main-proc)))))
     (x86-label cgc main-lbl)
+    ;; FIXME: use register abstraction.
     (case (nat-target-arch targ)
       ((x86-32)
        (x86-push cgc (x86-ebp))
@@ -477,7 +478,9 @@
            ((label)
             (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
                    (lbl-name (translate-lbl ctx lbl))
-                   (asm-lbl (nat-label-ref cgc lbl-name)))
+                   (asm-lbl (nat-label-ref cgc lbl-name))
+                   (fs (frame-size (gvm-instr-frame gvm-instr))))
+              (codegen-context-frame-size-set! cgc fs)
               (x86-label cgc asm-lbl)))
 
            ((copy)
@@ -492,14 +495,20 @@
 
            ((jump)
             (let ((opnd (jump-opnd gvm-instr))
-                  (nargs (jump-nb-args gvm-instr)))
+                  (nargs (jump-nb-args gvm-instr))
+                  (jump-size (frame-size (gvm-instr-frame gvm-instr))))
               (scan-opnd opnd)
               (if nargs
                   (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs)))
-              (x86-jmp cgc (nat-opnd cgc ctx opnd))))
+              (let ((offset (* (nat-target-word-width targ)
+                               (- (codegen-context-frame-size cgc)
+                                  jump-size))))
+                (if (not (= offset 0))
+                    (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))
+                (x86-jmp cgc (nat-opnd cgc ctx opnd)))))
 
-           ((ifjump)
-            (x86-nop cgc))
+           ;; ((ifjump)
+           ;;  (x86-nop cgc))
 
 
            (else
@@ -525,12 +534,9 @@
 
           ((stk? opnd)
            (let ((n (stk-num opnd)))
-             (x86-mem (* (nat-target-word-width targ) n)
+             (x86-mem (* (nat-target-word-width targ)
+                         (+ (codegen-context-frame-size cgc) n))
                       (nat-target-stack-ptr-reg targ))))
-             ;; (x86-mem (* word-size
-             ;;             (- (nat-code-gen-context-fs cgc)
-             ;;                (- n 1)))
-             ;;          sp))) ;;;;;;;;;;;;;;
 
           ((glo? opnd)
            (let ((name (glo-name opnd)))

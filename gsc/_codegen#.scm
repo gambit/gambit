@@ -19,6 +19,8 @@ codegen-context-fixup-list
 codegen-context-fixup-list-set!
 codegen-context-target
 codegen-context-target-set!
+codegen-context-frame-size
+codegen-context-frame-size-set!
 
 ))
 
