@@ -425,7 +425,7 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #t)))
+    (let ((f (create-procedure cgc #f)))
       (f)))
   #f)
 
@@ -435,13 +435,27 @@
          (exit-lbl  (nat-label-ref cgc 'exit))
          (entry-lbl (nat-label-ref cgc (lbl->id 1 (proc-obj-name main-proc)))))
     (x86-label cgc main-lbl)
-    (x86-sub cgc (x86-esp) (x86-imm-int 16))
-    (x86-mov cgc (x86-ebp) (x86-esp))
-    (x86-mov cgc (x86-esi) (x86-imm-lbl exit-lbl))
-    (x86-jmp cgc entry-lbl)
-    (x86-label cgc exit-lbl)
-    (x86-add cgc (x86-esp) (x86-imm-int 16))
-    (x86-ret cgc)))
+    (case (nat-target-arch targ)
+      ((x86-32)
+       (x86-push cgc (x86-ebp))
+       (x86-sub cgc (x86-esp) (x86-imm-int 16))
+       (x86-mov cgc (x86-ebp) (x86-esp))
+       (x86-mov cgc (x86-esi) (x86-imm-lbl exit-lbl))
+       (x86-jmp cgc entry-lbl)
+       (x86-label cgc exit-lbl)
+       (x86-add cgc (x86-esp) (x86-imm-int 16))
+       (x86-pop cgc (x86-ebp))
+       (x86-ret cgc))
+      ((x86-64)
+       (x86-push cgc (x86-rbp))
+       (x86-sub cgc (x86-rsp) (x86-imm-int 32))
+       (x86-mov cgc (x86-rbp) (x86-rsp))
+       (x86-mov cgc (x86-rsi) (x86-imm-lbl exit-lbl))
+       (x86-jmp cgc entry-lbl)
+       (x86-label cgc exit-lbl)
+       (x86-add cgc (x86-rsp) (x86-imm-int 32))
+       (x86-pop cgc (x86-rbp))
+       (x86-ret cgc)))))
 
 (define (x86-translate-procs cgc)
   (if (queue-empty? procs-not-visited)
@@ -716,6 +730,10 @@
            (x86-add  cgc (x86-esp) (x86-imm-int 20)) ;; pop what was pushed
            (x86-ret cgc))
           ((x86-64)
+           (x86-label cgc write_char-lbl)
+           (x86-push cgc (x86-rsi))
+           (x86-push cgc (x86-rdx))
+           (x86-push cgc (x86-rdi))
            (x86-push cgc (x86-rax))           ;; put character to write on stack
            (x86-mov  cgc (x86-rsi) (x86-rsp)) ;; get address of character in %eax
            (x86-mov  cgc (x86-rdx) (x86-imm-int 1)) ;; number of bytes to write = 1
@@ -723,6 +741,9 @@
            (x86-mov  cgc (x86-rax) (x86-imm-int #x2000004)) ;; "write" system call is 0x2000004
            (x86-syscall cgc)
            (x86-add  cgc (x86-rsp) (x86-imm-int 8)) ;; pop what was pushed
+           (x86-pop cgc (x86-rdi))
+           (x86-pop cgc (x86-rdx))
+           (x86-pop cgc (x86-rsi))
            (x86-ret cgc))))
 
     ;; Linux version of write_char
