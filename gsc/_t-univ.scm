@@ -818,7 +818,9 @@ Gambit_Char.prototype.toString = function ( ) {
   return String.fromCharCode(this.i);
 }
 
+//
 // pair obj
+//
 function Gambit_Pair ( car, cdr ) {
   this.car = car;
   this.cdr = cdr;
@@ -888,11 +890,6 @@ function Gambit_list ( ) {
 
   var res = listaux(arguments, arguments.length - 1, null);
   return res;
-}
-
-// list?
-function Gambit_listp ( lst ) {
-    return (Gambit_nullp(lst) || (Gambit_pairp(lst) && Gambit_listp(Gambit_cdr(lst))));
 }
 
 function Gambit_String(charray) {
@@ -984,8 +981,6 @@ function lbl1_println() { // println
     print(Gambit_reg[1].toString());
   else if (Gambit_reg[1] instanceof Gambit_Char)
     print(Gambit_reg[1].toString());
-  else if (Gambit_listp(Gambit_reg[1]))
-    print("(" + prettyPrintList(Gambit_reg[1]) + ")");  
   else if (Gambit_reg[1] instanceof Gambit_Pair)
     print(Gambit_reg[1].toString());    
   else
@@ -1106,7 +1101,12 @@ class Gambit_Pair:
     self.cdr = cdr
 
   def __str__ ( self ):
-    return "(" + self.car + " . " + self.cdr + ")"
+    res = "(" + self.car
+    if (self.cdr is not None):
+      res += " . " + self.cdr
+    res += ")"
+
+    return res
 
   def __eq__ ( self, p ):
     return self is p
@@ -2056,7 +2056,7 @@ EOF
        (compiler-internal-error
         "##null?, unknown target")))))
 
-(univ-define-prim "##cons" #f #f
+(univ-define-prim "##cons" #t #f
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
@@ -2483,23 +2483,6 @@ EOF
       (else
        (compiler-internal-error
         "##pair?, unknown target")))))
-
-(univ-define-prim-bool "list?" #t #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (gen (univ-prefix ctx "listp(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-
-      ((python ruby php)
-       (gen ""))
-      
-      (else
-       (compiler-internal-error
-        "list?, unknown target")))))
 
 (univ-define-prim-bool "##string?" #t #f
 
