@@ -414,7 +414,6 @@
   (set! throw-to-exception-handler
       (lambda (val) (error val)))
 
-
   (for-each (lambda (p) (scan-opnd (make-obj p))) procs)
   (let* ((cgc (make-cgc (nat-target-arch targ) 'le))
          (main-lbl (nat-label-ref cgc 'main))
@@ -429,18 +428,68 @@
       (f)))
   #f)
 
+(define nat-stack-limit-slot 0)
+(define nat-heap-limit-slot  1)
+(define nat-sp-slot          2)
+(define nat-pstate-size      100)
+(define nat-stack-size       (expt 2 20))
+(define nat-stack-fudge      (expt 2 14))
+(define nat-heap-size        (expt 2 20))
+(define nat-heap-fudge       (expt 2 14))
+
 (define (entry-point cgc main-proc)
   (let* ((targ (codegen-context-target cgc))
          (main-lbl  (nat-label-ref cgc 'main)) ; Get main label from procs table.
          (exit-lbl  (nat-label-ref cgc 'exit))
          (entry-lbl (nat-label-ref cgc (lbl->id 1 (proc-obj-name main-proc)))))
+
     (x86-label cgc main-lbl)
+
     (x86-push cgc (nat-target-stack-ptr-reg targ))
+    (x86-push cgc (nat-target-pstate-ptr-reg targ))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 2))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 3))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 4))
+
+    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+    (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-pstate-size)))
+    (x86-and  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int -256)) ;; align to multiple of 256 (low 8 bits = 0)
+    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-heap-ptr-reg targ)) (nat-target-pstate-ptr-reg targ))
+    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+
     (x86-mov  cgc (nat-target-stack-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+    (x86-sub  cgc (nat-target-stack-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) 16))) ;; TODO: remove me! (tracking of frame size seems wrong)
+
+    (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-stack-fudge nat-stack-size)) (nat-target-heap-ptr-reg targ)))
+    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-stack-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
+    (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-stack-size)))
+
+    (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-heap-fudge nat-heap-size)) (nat-target-heap-ptr-reg targ)))
+    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-heap-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
+
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 0) (x86-imm-lbl exit-lbl))
+    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-int 0))
+    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 2) (x86-imm-int 0))
+    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 3) (x86-imm-int 0))
+    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 4) (x86-imm-int 0))
     (x86-jmp  cgc entry-lbl)
+
     (x86-label cgc exit-lbl)
+
+    (x86-mov  cgc (nat-target-heap-ptr-reg targ) (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-pstate-ptr-reg targ)))
+
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 4))
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 3))
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 2))
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+    (x86-pop cgc (nat-target-pstate-ptr-reg targ))
     (x86-pop cgc (nat-target-stack-ptr-reg targ))
+
+;;    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-int 0))
+
     (x86-ret cgc)))
 
 (define (x86-translate-procs cgc)
@@ -466,7 +515,30 @@
                    (asm-lbl (nat-label-ref cgc lbl-name))
                    (fs (frame-size (gvm-instr-frame gvm-instr))))
               (codegen-context-frame-size-set! cgc fs)
-              (x86-label cgc asm-lbl)))
+              (x86-label cgc asm-lbl)
+
+              (case (label-type gvm-instr)
+
+                ((simple)
+                 #f)
+
+                ((entry)
+                 (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int (label-entry-nb-parms gvm-instr)))
+                 ;; TODO: add "jne wrong_nb_args_handler"
+                 )
+
+                ((return)
+                 #f)
+
+                ((task-entry)
+                 #f)
+
+                ((task-return)
+                 #f)
+
+                (else
+                 (compiler-internal-error
+                  "translate-proc, unknown label type")))))
 
            ((copy)
             (let* ((loc (copy-loc gvm-instr))
@@ -625,6 +697,8 @@
     (nat-label-set! cgc 'println println-lbl)
 
     (x86-label cgc println-lbl)
+    (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int 1))
+    ;; TODO: add "jne wrong_nb_args_handler"
     (x86-call cgc print-lbl)
     (x86-mov  cgc (reg 1) (x86-imm-int 10))
     (x86-call cgc write_char-lbl)
