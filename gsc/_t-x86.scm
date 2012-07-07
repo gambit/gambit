@@ -784,31 +784,52 @@
         (case (nat-target-arch targ)
           ((x86-32)
            (x86-label cgc write_char-lbl)
+           (x86-push cgc (x86-ebp))
+           (x86-push cgc (x86-esi))
+           (x86-push cgc (x86-edi))
+           (x86-push cgc (x86-edx))
+           (x86-push cgc (x86-ecx))
+           (x86-push cgc (x86-ebx))
            (x86-push cgc (x86-eax))           ;; put character to write on stack
-           (x86-mov  cgc (x86-eax) (x86-esp)) ;; get address of character in %rax
+           (x86-mov  cgc (x86-eax) (x86-esp)) ;; get address of character in %eax
            (x86-push cgc (x86-imm-int 1))     ;; number of bytes to write = 1
            (x86-push cgc (x86-eax))           ;; address of byte to write
            (x86-push cgc (x86-imm-int 1))     ;; "stdout" is file descriptor 1
            (x86-push cgc (x86-imm-int 0))     ;; reserve space for system call
            (x86-mov  cgc (x86-eax) (x86-imm-int 4)) ;; "write" system call is 4
-           (x86-int  cgc #x80)                ;; perform system call (int 0x80)
-           (x86-add  cgc (x86-esp) (x86-imm-int 20)) ;; pop what was pushed
+           (x86-int  cgc #x80)                ;; perform system call
+           (x86-add  cgc (x86-esp) (x86-imm-int 16)) ;; pop what was pushed
+           (x86-pop cgc (x86-eax))
+           (x86-pop cgc (x86-ebx))
+           (x86-pop cgc (x86-ecx))
+           (x86-pop cgc (x86-edx))
+           (x86-pop cgc (x86-edi))
+           (x86-pop cgc (x86-esi))
+           (x86-pop cgc (x86-ebp))
            (x86-ret cgc))
           ((x86-64)
            (x86-label cgc write_char-lbl)
+           (x86-push cgc (x86-r11))
+           (x86-push cgc (x86-rbp))
            (x86-push cgc (x86-rsi))
-           (x86-push cgc (x86-rdx))
            (x86-push cgc (x86-rdi))
+           (x86-push cgc (x86-rdx))
+           (x86-push cgc (x86-rcx))
+           (x86-push cgc (x86-rbx))
            (x86-push cgc (x86-rax))           ;; put character to write on stack
-           (x86-mov  cgc (x86-rsi) (x86-rsp)) ;; get address of character in %eax
+           (x86-mov  cgc (x86-rsi) (x86-rsp)) ;; get address of character in %rsi
            (x86-mov  cgc (x86-rdx) (x86-imm-int 1)) ;; number of bytes to write = 1
            (x86-mov  cgc (x86-rdi) (x86-imm-int 1)) ;; "stdout" is file descriptor 1
            (x86-mov  cgc (x86-rax) (x86-imm-int #x2000004)) ;; "write" system call is 0x2000004
            (x86-syscall cgc)
-           (x86-add  cgc (x86-rsp) (x86-imm-int 8)) ;; pop what was pushed
-           (x86-pop cgc (x86-rdi))
+           (x86-pop cgc (x86-rax))
+           (x86-pop cgc (x86-rbx))
+           (x86-pop cgc (x86-rcx))
            (x86-pop cgc (x86-rdx))
+           (x86-pop cgc (x86-rdi))
            (x86-pop cgc (x86-rsi))
+           (x86-pop cgc (x86-rbp))
+           (x86-pop cgc (x86-r11))
            (x86-ret cgc))))
 
     ;; Linux version of write_char
@@ -816,44 +837,54 @@
         (case (nat-target-arch targ)
           ((x86-32)
            (x86-label cgc write_char-lbl)
-           (x86-push cgc (x86-ebx))
-           (x86-push cgc (x86-ecx))
+           (x86-push cgc (x86-ebp))
+           (x86-push cgc (x86-esi))
+           (x86-push cgc (x86-edi))
            (x86-push cgc (x86-edx))
+           (x86-push cgc (x86-ecx))
+           (x86-push cgc (x86-ebx))
            (x86-push cgc (x86-eax))           ;; put character to write on stack
            (x86-mov  cgc (x86-ecx) (x86-esp)) ;; get address of character in %ecx
            (x86-mov  cgc (x86-edx) (x86-imm-int 1)) ;; number of bytes to write = 1
            (x86-mov  cgc (x86-ebx) (x86-imm-int 1)) ;; "stdout" is file descriptor 1
            (x86-mov  cgc (x86-eax) (x86-imm-int 4)) ;; "write" system call is 4
            (x86-int  cgc #x80)                      ;; perform system call (int 0x80)
-           (x86-add  cgc (x86-esp) (x86-imm-int 4)) ;; pop what was pushed
-           (x86-pop  cgc (x86-edx))
-           (x86-pop  cgc (x86-ecx))
-           (x86-pop  cgc (x86-ebx))
+           (x86-pop cgc (x86-eax))
+           (x86-pop cgc (x86-ebx))
+           (x86-pop cgc (x86-ecx))
+           (x86-pop cgc (x86-edx))
+           (x86-pop cgc (x86-edi))
+           (x86-pop cgc (x86-esi))
+           (x86-pop cgc (x86-ebp))
            (x86-ret cgc))
 
           ((x86-64)
            (x86-label cgc write_char-lbl)
            ;; Save args + destroyed registers
-           (x86-push cgc (x86-rdi))
+           (x86-push cgc (x86-r11))
+           (x86-push cgc (x86-rbp))
            (x86-push cgc (x86-rsi))
+           (x86-push cgc (x86-rdi))
            (x86-push cgc (x86-rdx))
            (x86-push cgc (x86-rcx))
-           (x86-push cgc (x86-r11))
-           (x86-push cgc (x86-rax))
+           (x86-push cgc (x86-rbx))
+           (x86-push cgc (x86-rax))           ;; put character to write on stack
 
-           ;; Prepare write syscall
-           (x86-mov cgc (x86-rdi) (x86-imm-int 1)) ; fd = stdout
-           (x86-mov cgc (x86-rsi) (x86-rsp))       ; buf = 0(%esp)
-           (x86-mov cgc (x86-rdx) (x86-imm-int 1)) ; count = 1
-           (x86-mov cgc (x86-rax) (x86-imm-int 1)) ; write
+           ;; Perform "write" syscall
+           (x86-mov cgc (x86-rdi) (x86-imm-int 1)) ;; fd = stdout
+           (x86-mov cgc (x86-rsi) (x86-rsp))       ;; buf = 0(%esp)
+           (x86-mov cgc (x86-rdx) (x86-imm-int 1)) ;; count = 1
+           (x86-mov cgc (x86-rax) (x86-imm-int 1)) ;; write
            (x86-syscall cgc)
 
            (x86-pop cgc (x86-rax))
-           (x86-pop cgc (x86-r11))
+           (x86-pop cgc (x86-rbx))
            (x86-pop cgc (x86-rcx))
            (x86-pop cgc (x86-rdx))
-           (x86-pop cgc (x86-rsi))
            (x86-pop cgc (x86-rdi))
+           (x86-pop cgc (x86-rsi))
+           (x86-pop cgc (x86-rbp))
+           (x86-pop cgc (x86-r11))
            (x86-ret cgc))))
 ))
 
