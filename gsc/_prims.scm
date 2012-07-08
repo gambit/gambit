@@ -954,10 +954,462 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+;; Table of primitive procedure specializers
+
+(define (setup-prim-specializers targ)
+
+;; TODO: remove dependencies to C back-end
+
+(define (get-prim-info name)
+  ((target-prim-info targ) (string->canonical-symbol name)))
+
+(define (def-spec name specializer-maker)
+  (let ((proc (get-prim-info name))
+        (proc-name (string->canonical-symbol name)))
+    (proc-obj-specialize-set! proc (specializer-maker proc proc-name))))
+
+(define (spec-s name) ;; Safe specialization
+  (lambda (proc proc-name)
+    (let ((spec (get-prim-info name)))
+      (lambda (env args) spec))))
+
+(define (spec-u name) ;; Unsafe specialization
+  (lambda (proc proc-name)
+    (let ((spec (get-prim-info name)))
+      (lambda (env args) (if (not (safe? env)) spec proc)))))
+
+(define (spec-arith fix-name flo-name) ;; Arithmetic specialization
+  (lambda (proc proc-name)
+    (let ((fix-spec (if fix-name (get-prim-info fix-name) proc))
+          (flo-spec (if flo-name (get-prim-info flo-name) proc)))
+      (lambda (env args)
+        (let ((arith (arith-implementation proc-name env)))
+          (cond ((eq? arith fixnum-sym)
+                 fix-spec)
+                ((eq? arith flonum-sym)
+                 flo-spec)
+                (else
+                 proc)))))))
+
+(define (spec-s-eqv?) ;; Safe specialization for eqv? and ##eqv?
+  (lambda (proc proc-name)
+    (let ((spec (get-prim-info "##eq?")))
+      (lambda (env args)
+        (if (and (= (length args) 2)
+                 (or (eq? (arith-implementation proc-name env) fixnum-sym)
+                     (eq-testable-object? (car args))
+                     (eq-testable-object? (cadr args))))
+          spec
+          proc)))))
+
+(define (spec-s-equal?) ;; Safe specialization for equal? and ##equal?
+  (lambda (proc proc-name)
+    (let ((spec (get-prim-info "##eq?")))
+      (lambda (env args)
+        (if (and (= (length args) 2)
+                 (or (eq-testable-object? (car args))
+                     (eq-testable-object? (cadr args))))
+          spec
+          proc)))))
+
+(define (eq-testable-object? obj)
+  (and (not (void-object? obj)) ;; the void-object denotes a non-constant
+       (testable-with-eq? obj)))
+
+(define (testable-with-eq? obj)
+  (or (symbol-object? obj)
+      (keyword-object? obj)
+      (memq (targ-obj-type obj) ;; TODO: remove dependency on C back-end
+            '(boolean null absent unused deleted void eof optional
+              key rest
+              fixnum char))))
+
+(def-spec "not"         (spec-s "##not"))
+(def-spec "boolean?"    (spec-s "##boolean?"))
+(def-spec "null?"       (spec-s "##null?"))
+(def-spec "eq?"         (spec-s "##eq?"))
+(def-spec "eof-object?" (spec-s "##eof-object?"))
+
+(def-spec "pair?"       (spec-s "##pair?"))
+(def-spec "procedure?"  (spec-s "##procedure?"))
+(def-spec "vector?"     (spec-s "##vector?"))
+(def-spec "symbol?"     (spec-s "##symbol?"))
+(def-spec "keyword?"    (spec-s "##keyword?"))
+(def-spec "string?"     (spec-s "##string?"))
+(def-spec "char?"       (spec-s "##char?"))
+
+(def-spec "fixnum?"     (spec-s "##fixnum?"))
+(def-spec "flonum?"     (spec-s "##flonum?"))
+
+(def-spec "number?"     (spec-s "##number?"))
+(def-spec "complex?"    (spec-s "##complex?"))
+(def-spec "real?"       (spec-s "##real?"))
+(def-spec "rational?"   (spec-s "##rational?"))
+(def-spec "integer?"    (spec-s "##integer?"))
+
+;;the following primitives must check that their parameter is a number:
+;;(def-spec "exact?"      (spec-s "##exact?"))
+;;(def-spec "inexact?"    (spec-s "##inexact?"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "fx=" (spec-u "##fx="))
+(def-spec "fl=" (spec-u "##fl="))
+(def-spec "="   (spec-arith "fx=" "fl="))
+
+(def-spec "fx<" (spec-u "##fx<"))
+(def-spec "fl<" (spec-u "##fl<"))
+(def-spec "<"   (spec-arith "fx<" "fl<"))
+
+(def-spec "fx>" (spec-u "##fx>"))
+(def-spec "fl>" (spec-u "##fl>"))
+(def-spec ">"   (spec-arith "fx>" "fl>"))
+
+(def-spec "fx<=" (spec-u "##fx<="))
+(def-spec "fl<=" (spec-u "##fl<="))
+(def-spec "<="   (spec-arith "fx<=" "fl<="))
+
+(def-spec "fx>=" (spec-u "##fx>="))
+(def-spec "fl>=" (spec-u "##fl>="))
+(def-spec ">="   (spec-arith "fx>=" "fl>="))
+
+(def-spec "flinteger?" (spec-u "##flinteger?"))
+
+(def-spec "fxzero?" (spec-u "##fxzero?"))
+(def-spec "flzero?" (spec-u "##flzero?"))
+(def-spec "zero?"   (spec-arith "fxzero?" "flzero?"))
+
+(def-spec "fxpositive?" (spec-u "##fxpositive?"))
+(def-spec "flpositive?" (spec-u "##flpositive?"))
+(def-spec "positive?"   (spec-arith "fxpositive?" "flpositive?"))
+
+(def-spec "fxnegative?" (spec-u "##fxnegative?"))
+(def-spec "flnegative?" (spec-u "##flnegative?"))
+(def-spec "negative?"   (spec-arith "fxnegative?" "flnegative?"))
+
+(def-spec "fxodd?" (spec-u "##fxodd?"))
+(def-spec "flodd?" (spec-u "##flodd?"))
+(def-spec "odd?"   (spec-arith "fxodd?" "flodd?"))
+
+(def-spec "fxeven?" (spec-u "##fxeven?"))
+(def-spec "fleven?" (spec-u "##fleven?"))
+(def-spec "even?"   (spec-arith "fxeven?" "fleven?"))
+
+(def-spec "flfinite?" (spec-u "##flfinite?"))
+(def-spec "finite?"   (spec-arith #f "flfinite?"))
+
+(def-spec "flinfinite?" (spec-u "##flinfinite?"))
+(def-spec "infinite?"   (spec-arith #f "flinfinite?"))
+
+(def-spec "flnan?" (spec-u "##flnan?"))
+(def-spec "nan?"   (spec-arith #f "flnan?"))
+
+(def-spec "fxmax" (spec-u "##fxmax"))
+(def-spec "flmax" (spec-u "##flmax"))
+(def-spec "max"   (spec-arith "fxmax" "flmax"))
+
+(def-spec "fxmin" (spec-u "##fxmin"))
+(def-spec "flmin" (spec-u "##flmin"))
+(def-spec "min"   (spec-arith "fxmin" "flmin"))
+
+(def-spec "fxwrap+" (spec-u "##fxwrap+"))
+(def-spec "fx+"     (spec-u "##fx+"))
+(def-spec "fl+"     (spec-u "##fl+"))
+(def-spec "+"       (spec-arith "fx+" "fl+"))
+
+(def-spec "fxwrap*" (spec-u "##fxwrap*"))
+(def-spec "fx*"     (spec-u "##fx*"))
+(def-spec "fl*"     (spec-u "##fl*"))
+(def-spec "*"       (spec-arith "fx*" "fl*"))
+
+(def-spec "fxwrap-" (spec-u "##fxwrap-"))
+(def-spec "fx-"     (spec-u "##fx-"))
+(def-spec "fl-"     (spec-u "##fl-"))
+(def-spec "-"       (spec-arith "fx-" "fl-"))
+
+(def-spec "fl/"     (spec-u "##fl/"))
+(def-spec "/"       (spec-arith #f "fl/"))
+
+(def-spec "fxwrapquotient" (spec-u "##fxwrapquotient"))
+(def-spec "fxquotient"     (spec-u "##fxquotient"))
+(def-spec "quotient"       (spec-arith "fxquotient" #f))
+
+(def-spec "fxremainder" (spec-u "##fxremainder"))
+(def-spec "remainder"   (spec-arith "fxremainder" #f))
+
+(def-spec "fxmodulo" (spec-u "##fxmodulo"))
+(def-spec "modulo"   (spec-arith "fxmodulo" #f))
+
+(def-spec "fxnot" (spec-u "##fxnot"))
+
+(def-spec "fxand" (spec-u "##fxand"))
+
+(def-spec "fxior" (spec-u "##fxior"))
+
+(def-spec "fxxor" (spec-u "##fxxor"))
+
+(def-spec "fxif" (spec-u "##fxif"))
+
+(def-spec "fxbit-count" (spec-u "##fxbit-count"))
+
+(def-spec "fxlength" (spec-u "##fxlength"))
+
+(def-spec "fxfirst-bit-set" (spec-u "##fxfirst-bit-set"))
+
+(def-spec "fxbit-set?" (spec-u "##fxbit-set?"))
+
+(def-spec "fxwraparithmetic-shift" (spec-u "##fxwraparithmetic-shift"))
+(def-spec "fxarithmetic-shift"     (spec-u "##fxarithmetic-shift"))
+(def-spec "arithmetic-shift"       (spec-arith "fxarithmetic-shift" #f))
+
+(def-spec "fxwraparithmetic-shift-left" (spec-u "##fxwraparithmetic-shift-left"))
+(def-spec "fxarithmetic-shift-left"   (spec-u "##fxarithmetic-shift-left"))
+(def-spec "fxarithmetic-shift-right"  (spec-u "##fxarithmetic-shift-right"))
+(def-spec "fxwraplogical-shift-right" (spec-u "##fxwraplogical-shift-right"))
+
+(def-spec "fxwrapabs" (spec-u "##fxwrapabs"))
+(def-spec "fxabs"     (spec-u "##fxabs"))
+(def-spec "flabs"     (spec-u "##flabs"))
+(def-spec "abs"       (spec-arith "fxabs" "flabs"))
+
+(def-spec "flfloor" (spec-u "##flfloor"))
+(def-spec "floor"   (spec-arith #f "flfloor"))
+
+(def-spec "flceiling" (spec-u "##flceiling"))
+(def-spec "ceiling"   (spec-arith #f "flceiling"))
+
+(def-spec "fltruncate" (spec-u "##fltruncate"))
+(def-spec "truncate"   (spec-arith #f "fltruncate"))
+
+(def-spec "flround" (spec-u "##flround"))
+(def-spec "round"   (spec-arith #f "flround"))
+
+(def-spec "flexp" (spec-u "##flexp"))
+(def-spec "exp"   (spec-arith #f "flexp"))
+
+(def-spec "fllog" (spec-u "##fllog"))
+(def-spec "log"   (spec-arith #f "fllog"))
+
+(def-spec "flsin" (spec-u "##flsin"))
+(def-spec "sin"   (spec-arith #f "flsin"))
+
+(def-spec "flcos" (spec-u "##flcos"))
+(def-spec "cos"   (spec-arith #f "flcos"))
+
+(def-spec "fltan" (spec-u "##fltan"))
+(def-spec "tan"   (spec-arith #f "fltan"))
+
+(def-spec "flasin" (spec-u "##flasin"))
+(def-spec "asin"   (spec-arith #f "flasin"))
+
+(def-spec "flacos" (spec-u "##flacos"))
+(def-spec "acos"   (spec-arith #f "flacos"))
+
+(def-spec "flatan" (spec-u "##flatan"))
+(def-spec "atan"   (spec-arith #f "flatan"))
+
+(def-spec "flexpt" (spec-u "##flexpt"))
+(def-spec "expt"   (spec-arith #f "flexpt"))
+
+(def-spec "flsqrt" (spec-u "##flsqrt"))
+(def-spec "sqrt"   (spec-arith #f "flsqrt"))
+
+(def-spec "fixnum->flonum" (spec-u "##fixnum->flonum"))
+
+;(def-spec "exact->inexact" (spec-arith "##fixnum->flonum" #f))
+;(def-spec "inexact->exact" (spec-arith "##flonum->fixnum" #f))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "char=?"     (spec-u "##char=?"))
+(def-spec "char<?"     (spec-u "##char<?"))
+(def-spec "char>?"     (spec-u "##char>?"))
+(def-spec "char<=?"    (spec-u "##char<=?"))
+(def-spec "char>=?"    (spec-u "##char>=?"))
+
+(def-spec "char-alphabetic?" (spec-u "##char-alphabetic?"))
+(def-spec "char-numeric?"    (spec-u "##char-numeric?"))
+(def-spec "char-whitespace?" (spec-u "##char-whitespace?"))
+(def-spec "char-upper-case?" (spec-u "##char-upper-case?"))
+(def-spec "char-lower-case?" (spec-u "##char-lower-case?"))
+(def-spec "char->integer"    (spec-u "##char->fixnum"))
+(def-spec "integer->char"    (spec-u "##fixnum->char"))
+(def-spec "char-upcase"      (spec-u "##char-upcase"))
+(def-spec "char-downcase"    (spec-u "##char-downcase"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "cons"       (spec-s "##cons"))
+(def-spec "set-car!"   (spec-u "##set-car!"))
+(def-spec "set-cdr!"   (spec-u "##set-cdr!"))
+(def-spec "car"        (spec-u "##car"))
+(def-spec "cdr"        (spec-u "##cdr"))
+(def-spec "caar"       (spec-u "##caar"))
+(def-spec "cadr"       (spec-u "##cadr"))
+(def-spec "cdar"       (spec-u "##cdar"))
+(def-spec "cddr"       (spec-u "##cddr"))
+(def-spec "caaar"      (spec-u "##caaar"))
+(def-spec "caadr"      (spec-u "##caadr"))
+(def-spec "cadar"      (spec-u "##cadar"))
+(def-spec "caddr"      (spec-u "##caddr"))
+(def-spec "cdaar"      (spec-u "##cdaar"))
+(def-spec "cdadr"      (spec-u "##cdadr"))
+(def-spec "cddar"      (spec-u "##cddar"))
+(def-spec "cdddr"      (spec-u "##cdddr"))
+(def-spec "caaaar"     (spec-u "##caaaar"))
+(def-spec "caaadr"     (spec-u "##caaadr"))
+(def-spec "caadar"     (spec-u "##caadar"))
+(def-spec "caaddr"     (spec-u "##caaddr"))
+(def-spec "cadaar"     (spec-u "##cadaar"))
+(def-spec "cadadr"     (spec-u "##cadadr"))
+(def-spec "caddar"     (spec-u "##caddar"))
+(def-spec "cadddr"     (spec-u "##cadddr"))
+(def-spec "cdaaar"     (spec-u "##cdaaar"))
+(def-spec "cdaadr"     (spec-u "##cdaadr"))
+(def-spec "cdadar"     (spec-u "##cdadar"))
+(def-spec "cdaddr"     (spec-u "##cdaddr"))
+(def-spec "cddaar"     (spec-u "##cddaar"))
+(def-spec "cddadr"     (spec-u "##cddadr"))
+(def-spec "cdddar"     (spec-u "##cdddar"))
+(def-spec "cddddr"     (spec-u "##cddddr"))
+
+(def-spec "list"       (spec-s "##list"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "will?"          (spec-s "##will?"))
+(def-spec "make-will"      (spec-s "##make-will"))
+(def-spec "will-testator"  (spec-u "##will-testator"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "box?"           (spec-s "##box?"))
+(def-spec "box"            (spec-s "##box"))
+(def-spec "unbox"          (spec-u "##unbox"))
+(def-spec "set-box!"       (spec-u "##set-box!"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "values"         (spec-s "##values"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "string"         (spec-u "##string"))
+(def-spec "string-length"  (spec-u "##string-length"))
+(def-spec "string-ref"     (spec-u "##string-ref"))
+(def-spec "string-set!"    (spec-u "##string-set!"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "vector"         (spec-s "##vector"))
+(def-spec "vector-length"  (spec-u "##vector-length"))
+(def-spec "vector-ref"     (spec-u "##vector-ref"))
+(def-spec "vector-set!"    (spec-u "##vector-set!"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "s8vector?"        (spec-s "##s8vector?"))
+(def-spec "s8vector"         (spec-u "##s8vector"))
+(def-spec "s8vector-length"  (spec-u "##s8vector-length"))
+(def-spec "s8vector-ref"     (spec-u "##s8vector-ref"))
+(def-spec "s8vector-set!"    (spec-u "##s8vector-set!"))
+
+(def-spec "u8vector?"        (spec-s "##u8vector?"))
+(def-spec "u8vector"         (spec-u "##u8vector"))
+(def-spec "u8vector-length"  (spec-u "##u8vector-length"))
+(def-spec "u8vector-ref"     (spec-u "##u8vector-ref"))
+(def-spec "u8vector-set!"    (spec-u "##u8vector-set!"))
+
+(def-spec "s16vector?"       (spec-s "##s16vector?"))
+(def-spec "s16vector"        (spec-u "##s16vector"))
+(def-spec "s16vector-length" (spec-u "##s16vector-length"))
+(def-spec "s16vector-ref"    (spec-u "##s16vector-ref"))
+(def-spec "s16vector-set!"   (spec-u "##s16vector-set!"))
+
+(def-spec "u16vector?"       (spec-s "##u16vector?"))
+(def-spec "u16vector"        (spec-u "##u16vector"))
+(def-spec "u16vector-length" (spec-u "##u16vector-length"))
+(def-spec "u16vector-ref"    (spec-u "##u16vector-ref"))
+(def-spec "u16vector-set!"   (spec-u "##u16vector-set!"))
+
+(def-spec "s32vector?"       (spec-s "##s32vector?"))
+(def-spec "s32vector"        (spec-u "##s32vector"))
+(def-spec "s32vector-length" (spec-u "##s32vector-length"))
+(def-spec "s32vector-ref"    (spec-u "##s32vector-ref"))
+(def-spec "s32vector-set!"   (spec-u "##s32vector-set!"))
+
+(def-spec "u32vector?"       (spec-s "##u32vector?"))
+(def-spec "u32vector"        (spec-u "##u32vector"))
+(def-spec "u32vector-length" (spec-u "##u32vector-length"))
+(def-spec "u32vector-ref"    (spec-u "##u32vector-ref"))
+(def-spec "u32vector-set!"   (spec-u "##u32vector-set!"))
+
+(def-spec "s64vector?"       (spec-s "##s64vector?"))
+(def-spec "s64vector"        (spec-u "##s64vector"))
+(def-spec "s64vector-length" (spec-u "##s64vector-length"))
+(def-spec "s64vector-ref"    (spec-u "##s64vector-ref"))
+(def-spec "s64vector-set!"   (spec-u "##s64vector-set!"))
+
+(def-spec "u64vector?"       (spec-s "##u64vector?"))
+(def-spec "u64vector"        (spec-u "##u64vector"))
+(def-spec "u64vector-length" (spec-u "##u64vector-length"))
+(def-spec "u64vector-ref"    (spec-u "##u64vector-ref"))
+(def-spec "u64vector-set!"   (spec-u "##u64vector-set!"))
+
+(def-spec "f32vector?"       (spec-s "##f32vector?"))
+(def-spec "f32vector"        (spec-u "##f32vector"))
+(def-spec "f32vector-length" (spec-u "##f32vector-length"))
+(def-spec "f32vector-ref"    (spec-u "##f32vector-ref"))
+(def-spec "f32vector-set!"   (spec-u "##f32vector-set!"))
+
+(def-spec "f64vector?"       (spec-s "##f64vector?"))
+(def-spec "f64vector"        (spec-u "##f64vector"))
+(def-spec "f64vector-length" (spec-u "##f64vector-length"))
+(def-spec "f64vector-ref"    (spec-u "##f64vector-ref"))
+(def-spec "f64vector-set!"   (spec-u "##f64vector-set!"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "##structure-ref"  (spec-u "##unchecked-structure-ref"))
+(def-spec "##structure-set!" (spec-u "##unchecked-structure-set!"))
+
+(def-spec "##direct-structure-ref"  (spec-u "##unchecked-structure-ref"))
+(def-spec "##direct-structure-set!" (spec-u "##unchecked-structure-set!"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-spec "touch"            (spec-s "##force"))
+(def-spec "force"            (spec-s "##force"))
+(def-spec "void"             (spec-s "##void"))
+
+(def-spec "eqv?"             (spec-s-eqv?))
+(def-spec "##eqv?"           (spec-s-eqv?))
+(def-spec "equal?"           (spec-s-equal?))
+(def-spec "##equal?"         (spec-s-equal?))
+
+(def-spec "call/cc"          (spec-s "##call-with-current-continuation"))
+(def-spec "call-with-current-continuation"
+                              (spec-s "##call-with-current-continuation"))
+
+(def-spec "continuation?"        (spec-s "##continuation?"))
+(def-spec "continuation-capture" (spec-s "##continuation-capture"))
+(def-spec "continuation-graft"   (spec-s "##continuation-graft"))
+(def-spec "continuation-return"  (spec-s "##continuation-return"))
+
+(def-spec "current-thread"   (spec-s "##current-thread"))
+)
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Table of primitive procedure expanders
+
 (define (setup-prim-expanders targ)
 
+(define (get-prim-info name)
+  ((target-prim-info targ) (string->canonical-symbol name)))
+
 (define (def-exp name expander)
-  (let ((proc ((target-prim-info targ) (string->canonical-symbol name))))
+  (let ((proc (get-prim-info name)))
     (proc-obj-expandable?-set! proc (lambda (env) #t))
     (proc-obj-expand-set! proc expander)))
 
@@ -1909,12 +2361,12 @@
   (define gen-flonum-0
     (lambda (source env vars invalid)
       (new-cst source env
-        targ-inexact-+0))) ;; TODO: remove this dependency on C backend
+        (macro-inexact-+0))))
 
   (define gen-flonum-1
     (lambda (source env vars invalid)
       (new-cst source env
-        targ-inexact-+1))) ;; TODO: remove this dependency on C backend
+        (macro-inexact-+1))))
 
   (define gen-first-arg
     (lambda (source env vars invalid)
@@ -2809,28 +3261,35 @@
   (define **f64vector-set!-sym   (string->canonical-symbol "##f64vector-set!"))
 
   (define (make-fixnum-interval-checker lo hi)
-    ; assumes (integer-length hi) >= (integer-length lo)
-    (lambda (source env var)
-      (if (targ-fixnum64? hi) ;; TODO: remove this dependency on C backend
-        (let ((interval-check
-               (gen-fixnum-interval-check source env
-                 var
-                 (new-cst source env
-                   lo)
-                 (new-cst source env
-                   hi)
-                 #t)))
-          (if (targ-fixnum32? hi) ;; TODO: remove this dependency on C backend
-            interval-check
-            (new-conj source env
-              (gen-call-prim source env
-                **fixnum?-sym
-                (list (new-cst source env
-                        hi)))
-              interval-check)))
-        (gen-call-prim-vars source env
-          **fixnum?-sym
-          (list var)))))
+
+    ;; assumes (integer-length hi) >= (integer-length lo)
+
+    (let ((hi-type ((target-object-type targ) hi)))
+      (lambda (source env var)
+        (if (eq? hi-type 'bignum)
+
+            (gen-call-prim-vars source env
+              **fixnum?-sym
+              (list var))
+
+            (let ((interval-check
+                   (gen-fixnum-interval-check source env
+                     var
+                     (new-cst source env
+                       lo)
+                     (new-cst source env
+                       hi)
+                     #t)))
+              (if (eq? hi-type 'fixnum)
+
+                  interval-check
+
+                  (new-conj source env
+                    (gen-call-prim source env
+                      **fixnum?-sym
+                      (list (new-cst source env
+                              hi)))
+                    interval-check)))))))
 
   (define (make-flonum-checker)
     (lambda (source env var)
@@ -3208,5 +3667,649 @@
 (setup-structure-primitives)
 
 )
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Table of primitive procedure simplifiers
+
+(define (setup-prim-simplifiers targ)
+
+;; TODO: remove dependencies to C back-end
+
+(define (get-prim-info name)
+  ((target-prim-info targ) (string->canonical-symbol name)))
+
+(define (def-simp name . folders)
+  (let ((proc (get-prim-info name)))
+    (proc-obj-simplify-set!
+     proc
+     (lambda (ptree args)
+       (let loop ((lst folders))
+         (if (pair? lst)
+           (let ((folder (car lst)))
+             (or (folder ptree args)
+                 (loop (cdr lst))))
+           #f))))))
+
+(define (constant-folder op . type-patterns)
+  (constant-folder-with-ptree-maker
+   (lambda (ptree arg-vals)
+     (let ((result (apply op arg-vals)))
+       (new-cst (node-source ptree) (node-env ptree)
+         result)))
+   type-patterns))
+
+(define constant-folder-gen constant-folder)
+
+(define (constant-folder-fix op . type-patterns)
+  (constant-folder-with-ptree-maker
+   (lambda (ptree arg-vals)
+     (let ((result (apply op arg-vals)))
+       (and (or (not (number? result))
+                (targ-fixnum32? result)) ;; TODO: remove dependency on C back-end
+            (new-cst (node-source ptree) (node-env ptree)
+              result))))
+   type-patterns))
+
+(define (constant-folder-flo op . type-patterns)
+  (constant-folder-with-ptree-maker
+   (lambda (ptree arg-vals)
+     (let ((result (apply op arg-vals)))
+       (and (or (not (number? result))
+                (targ-flonum? result)) ;; TODO: remove dependency on C back-end
+            (new-cst (node-source ptree) (node-env ptree)
+              result))))
+   type-patterns))
+
+(define (constant-folder-with-ptree-maker ptree-maker type-patterns)
+  (let ((type-patterns
+         (if (null? type-patterns)
+           (list (lambda (obj) #t))
+           type-patterns)))
+    (lambda (ptree args)
+
+      (define (match? args type-pattern)
+        (if (pair? args)
+          (cond ((pair? type-pattern)
+                 (and ((car type-pattern) (car args))
+                      (match? (cdr args) (cdr type-pattern))))
+                ((null? type-pattern)
+                 #f)
+                (else
+                 (and (type-pattern (car args))
+                      (match? (cdr args) type-pattern))))
+          (not (pair? type-pattern))))
+
+      (and (every? cst? args) ; are all arguments constants?
+           (let ((arg-vals (map cst-val args)))
+             (let loop ((type-pats type-patterns))
+               (if (pair? type-pats)
+                 (if (match? arg-vals (car type-pats))
+                   (ptree-maker ptree arg-vals)
+                   (loop (cdr type-pats)))
+                 #f)))))))
+
+(define (constant-folder-ref op get-length type?)
+  (lambda (ptree args)
+    (and (every? cst? args) ; are all arguments constants?
+         (let* ((arg-vals (map cst-val args))
+                (vect (car arg-vals))
+                (index (cadr arg-vals)))
+           (and (type? vect)
+                (integer? index)
+                (exact? index)
+                (not (< index 0))
+                (< index (get-length vect))
+                (let ((result (op vect index)))
+                  (new-cst (node-source ptree) (node-env ptree)
+                    result)))))))
+
+(define (num? obj) (targ-number? obj)) ;; TODO: remove dependency on C back-end
+(define (nz-num? obj) (targ-nonzero-number? obj)) ;; TODO: remove dependency on C back-end
+
+(define (int? obj) (targ-integer? obj)) ;; TODO: remove dependency on C back-end
+(define (nz-int? obj) (targ-nonzero-integer? obj)) ;; TODO: remove dependency on C back-end
+
+(define (flo? obj) (targ-flonum? obj)) ;; TODO: remove dependency on C back-end
+(define (nz-flo? obj) (targ-nonzero-flonum? obj)) ;; TODO: remove dependency on C back-end
+
+(define (fix32? obj) (targ-fixnum32? obj)) ;; TODO: remove dependency on C back-end
+(define (nz-fix32? obj) (targ-nonzero-fixnum32? obj)) ;; TODO: remove dependency on C back-end
+
+(define (not-bigfix? obj)
+  (not (and (targ-fixnum64? obj) (not (targ-fixnum32? obj))))) ;; TODO: remove dependency on C back-end
+
+(define (mem-alloc? obj)
+  (let ((type (targ-obj-type obj))) ;; TODO: remove dependency on C back-end
+    (or (eq? type 'pair)
+        (and (eq? type 'subtyped)
+             (not-bigfix? obj)))))
+
+(define (any obj) #t)
+
+(define (alist? obj) (and (list? obj) (every? pair? obj)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(def-simp "##not"            (constant-folder false-object?  ))
+(def-simp "boolean?"         (constant-folder (lambda (obj)
+                                                      (or (false-object? obj)
+                                                          (eq? obj #t)))))
+(def-simp "##eqv?"           (constant-folder eqv?           ))
+(def-simp "##eq?"            (constant-folder eq?            ))
+(def-simp "equal?"           (constant-folder equal?         ))
+(def-simp "##mem-allocated?" (constant-folder (lambda (obj)
+                                                      (case (targ-obj-type obj) ;; TODO: remove dependency on C back-end
+                                                        ((subtyped pair) #t)
+                                                        (else            #f)))
+                                                    not-bigfix?))
+(def-simp "##subtyped?"      (constant-folder (lambda (obj)
+                                                      (case (targ-obj-type obj) ;; TODO: remove dependency on C back-end
+                                                        ((subtyped) #t)
+                                                        (else       #f)))
+                                                    not-bigfix?))
+(def-simp "##subtype"        (constant-folder targ-obj-subtype-integer ;; TODO: remove dependency on C back-end
+                                                    mem-alloc?))
+(def-simp "##pair?"          (constant-folder pair?          ))
+;(def-simp "##cons"           (constant-folder cons           ))
+(def-simp "car"              (constant-folder car            pair?))
+(def-simp "##car"            (constant-folder car            pair?))
+(def-simp "cdr"              (constant-folder cdr            pair?))
+(def-simp "##cdr"            (constant-folder cdr            pair?))
+;(def-simp "caar"             (constant-folder caar           ))
+;(def-simp "cadr"             (constant-folder cadr           ))
+;(def-simp "cdar"             (constant-folder cdar           ))
+;(def-simp "cddr"             (constant-folder cddr           ))
+;(def-simp "caaar"            (constant-folder caaar          ))
+;(def-simp "caadr"            (constant-folder caadr          ))
+;(def-simp "cadar"            (constant-folder cadar          ))
+;(def-simp "caddr"            (constant-folder caddr          ))
+;(def-simp "cdaar"            (constant-folder cdaar          ))
+;(def-simp "cdadr"            (constant-folder cdadr          ))
+;(def-simp "cddar"            (constant-folder cddar          ))
+;(def-simp "cdddr"            (constant-folder cdddr          ))
+;(def-simp "caaaar"           (constant-folder caaaar         ))
+;(def-simp "caaadr"           (constant-folder caaadr         ))
+;(def-simp "caadar"           (constant-folder caadar         ))
+;(def-simp "caaddr"           (constant-folder caaddr         ))
+;(def-simp "cadaar"           (constant-folder cadaar         ))
+;(def-simp "cadadr"           (constant-folder cadadr         ))
+;(def-simp "caddar"           (constant-folder caddar         ))
+;(def-simp "cadddr"           (constant-folder cadddr         ))
+;(def-simp "cdaaar"           (constant-folder cdaaar         ))
+;(def-simp "cdaadr"           (constant-folder cdaadr         ))
+;(def-simp "cdadar"           (constant-folder cdadar         ))
+;(def-simp "cdaddr"           (constant-folder cdaddr         ))
+;(def-simp "cddaar"           (constant-folder cddaar         ))
+;(def-simp "cddadr"           (constant-folder cddadr         ))
+;(def-simp "cdddar"           (constant-folder cdddar         ))
+;(def-simp "cddddr"           (constant-folder cddddr         ))
+(def-simp "##null?"          (constant-folder null?          ))
+(def-simp "list?"            (constant-folder list?          ))
+;(def-simp "list"             (constant-folder list           ))
+(def-simp "length"           (constant-folder length         list?))
+;(def-simp "append"           (constant-folder append         list?))
+;(def-simp "reverse"          (constant-folder reverse        list?))
+(def-simp "list-ref"         (constant-folder-ref
+                               list-ref
+                               length
+                               list?))
+(def-simp "memq"             (constant-folder memq
+                                                    (list any list?)))
+(def-simp "memv"             (constant-folder memv
+                                                    (list any list?)))
+(def-simp "member"           (constant-folder member
+                                                    (list any list?)))
+(def-simp "assq"             (constant-folder assq
+                                                    (list any alist?)))
+(def-simp "assv"             (constant-folder assv
+                                                    (list any alist?)))
+(def-simp "assoc"            (constant-folder assoc
+                                                    (list any alist?)))
+(def-simp "##symbol?"        (constant-folder symbol-object? ))
+;(def-simp "symbol->string"   (constant-folder symbol->string
+;;                                                    symbol-object?))
+(def-simp "string->symbol"   (constant-folder string->symbol ))
+(def-simp "number?"          (constant-folder number?        ))
+(def-simp "complex?"         (constant-folder complex?       ))
+(def-simp "real?"            (constant-folder real?          ))
+(def-simp "rational?"        (constant-folder rational?      ))
+(def-simp "integer?"         (constant-folder integer?       ))
+(def-simp "exact?"           (constant-folder exact?         num?))
+(def-simp "inexact?"         (constant-folder inexact?       num?))
+(def-simp "="                (constant-folder =              num?))
+(def-simp "##fx="       (constant-folder =              fix32?))
+(def-simp "##fixnum.="       (constant-folder =              fix32?))
+(def-simp "##fl="       (constant-folder =              flo?))
+(def-simp "##flonum.="       (constant-folder =              flo?))
+(def-simp "<"                (constant-folder <              real?))
+(def-simp "##fx<"       (constant-folder <              fix32?))
+(def-simp "##fixnum.<"       (constant-folder <              fix32?))
+(def-simp "##fl<"       (constant-folder <              flo?))
+(def-simp "##flonum.<"       (constant-folder <              flo?))
+(def-simp ">"                (constant-folder >              real?))
+(def-simp "##fx>"       (constant-folder >              fix32?))
+(def-simp "##fixnum.>"       (constant-folder >              fix32?))
+(def-simp "##fl>"       (constant-folder >              flo?))
+(def-simp "##flonum.>"       (constant-folder >              flo?))
+(def-simp "<="               (constant-folder <=             real?))
+(def-simp "##fx<="      (constant-folder <=             fix32?))
+(def-simp "##fixnum.<="      (constant-folder <=             fix32?))
+(def-simp "##fl<="      (constant-folder <=             flo?))
+(def-simp "##flonum.<="      (constant-folder <=             flo?))
+(def-simp ">="               (constant-folder >=             real?))
+(def-simp "##fx>="      (constant-folder >=             fix32?))
+(def-simp "##fixnum.>="      (constant-folder >=             fix32?))
+(def-simp "##fl>="      (constant-folder >=             flo?))
+(def-simp "##flonum.>="      (constant-folder >=             flo?))
+(def-simp "zero?"            (constant-folder zero?          num?))
+(def-simp "##fxzero?"   (constant-folder zero?          fix32?))
+(def-simp "##fixnum.zero?"   (constant-folder zero?          fix32?))
+(def-simp "##flzero?"   (constant-folder zero?          flo?))
+(def-simp "##flonum.zero?"   (constant-folder zero?          flo?))
+(def-simp "positive?"         (constant-folder positive?     real?))
+(def-simp "##fxpositive?"(constant-folder positive?     fix32?))
+(def-simp "##fixnum.positive?"(constant-folder positive?     fix32?))
+(def-simp "##flpositive?"(constant-folder positive?     flo?))
+(def-simp "##flonum.positive?"(constant-folder positive?     flo?))
+(def-simp "negative?"         (constant-folder negative?     real?))
+(def-simp "##fxnegative?"(constant-folder negative?     fix32?))
+(def-simp "##fixnum.negative?"(constant-folder negative?     fix32?))
+(def-simp "##flnegative?"(constant-folder negative?     flo?))
+(def-simp "##flonum.negative?"(constant-folder negative?     flo?))
+(def-simp "odd?"             (constant-folder odd?           int?))
+(def-simp "##fxodd?"    (constant-folder odd?           fix32?))
+(def-simp "##fixnum.odd?"    (constant-folder odd?           fix32?))
+(def-simp "##flodd?"    (constant-folder odd?           flo?))
+(def-simp "##flonum.odd?"    (constant-folder odd?           flo?))
+(def-simp "even?"            (constant-folder even?          int?))
+(def-simp "##fxeven?"   (constant-folder even?          fix32?))
+(def-simp "##fixnum.even?"   (constant-folder even?          fix32?))
+(def-simp "##fleven?"   (constant-folder even?          flo?))
+(def-simp "##flonum.even?"   (constant-folder even?          flo?))
+(def-simp "max"              (constant-folder-gen max        real?))
+(def-simp "##fxmax"     (constant-folder-fix max        fix32?))
+(def-simp "##fixnum.max"     (constant-folder-fix max        fix32?))
+(def-simp "##flmax"     (constant-folder-flo max        flo?))
+(def-simp "##flonum.max"     (constant-folder-flo max        flo?))
+(def-simp "min"              (constant-folder-gen min        real?))
+(def-simp "##fxmin"     (constant-folder-fix min        fix32?))
+(def-simp "##fixnum.min"     (constant-folder-fix min        fix32?))
+(def-simp "##flmin"     (constant-folder-flo min        flo?))
+(def-simp "##flonum.min"     (constant-folder-flo min        flo?))
+(def-simp "+"                (constant-folder-gen +          num?))
+(def-simp "##fxwrap+"   (constant-folder-fix +          fix32?))
+(def-simp "##fixnum.wrap+"   (constant-folder-fix +          fix32?))
+(def-simp "##fx+"       (constant-folder-fix +          fix32?))
+(def-simp "##fixnum.+"       (constant-folder-fix +          fix32?))
+(def-simp "##fx+?"      (constant-folder-fix +          fix32?))
+(def-simp "##fixnum.+?"      (constant-folder-fix +          fix32?))
+(def-simp "##fl+"       (constant-folder-flo +          flo?));;;;;;;;;;must return 0.0 when 0 args
+(def-simp "##flonum.+"       (constant-folder-flo +          flo?));;;;;;;;;;must return 0.0 when 0 args
+(def-simp "*"                (constant-folder-gen *          num?))
+(def-simp "##fxwrap*"   (constant-folder-fix *          fix32?))
+(def-simp "##fixnum.wrap*"   (constant-folder-fix *          fix32?))
+(def-simp "##fx*"       (constant-folder-fix *          fix32?))
+(def-simp "##fixnum.*"       (constant-folder-fix *          fix32?))
+(def-simp "##fx*?"      (constant-folder-fix *          fix32?))
+(def-simp "##fixnum.*?"      (constant-folder-fix *          fix32?))
+(def-simp "##fl*"       (constant-folder-flo *          flo?));;;;;;;;;;must return 1.0 when 0 args
+(def-simp "##flonum.*"       (constant-folder-flo *          flo?));;;;;;;;;;must return 1.0 when 0 args
+(def-simp "-"                (constant-folder-gen -          num?))
+(def-simp "##fxwrap-"   (constant-folder-fix -          fix32?))
+(def-simp "##fixnum.wrap-"   (constant-folder-fix -          fix32?))
+(def-simp "##fx-"       (constant-folder-fix -          fix32?))
+(def-simp "##fixnum.-"       (constant-folder-fix -          fix32?))
+(def-simp "##fx-?"      (constant-folder-fix -          fix32?))
+(def-simp "##fixnum.-?"      (constant-folder-fix -          fix32?))
+(def-simp "##fl-"       (constant-folder-flo -          flo?))
+(def-simp "##flonum.-"       (constant-folder-flo -          flo?))
+(def-simp "/"                (constant-folder-gen /
+                                                        (list nz-num?)
+                                                        (cons num?
+                                                              (cons nz-num?
+                                                                    nz-num?))))
+(def-simp "##fl/"       (constant-folder-flo /
+                                                        (list nz-flo?)
+                                                        (cons flo?
+                                                              (cons nz-flo?
+                                                                    nz-flo?))))
+(def-simp "##flonum./"       (constant-folder-flo /
+                                                        (list nz-flo?)
+                                                        (cons flo?
+                                                              (cons nz-flo?
+                                                                    nz-flo?))))
+(def-simp "abs"              (constant-folder-gen abs        real?))
+(def-simp "##flabs"     (constant-folder-flo abs        flo?))
+(def-simp "##flonum.abs"     (constant-folder-flo abs        flo?))
+(def-simp "quotient"         (constant-folder-gen quotient
+                                                        (list int? nz-int?)))
+(def-simp "##fxwrapquotient"(constant-folder-fix quotient
+                                                            (list fix32? nz-fix32?)))
+(def-simp "##fixnum.wrapquotient"(constant-folder-fix quotient
+                                                            (list fix32? nz-fix32?)))
+(def-simp "##fxquotient"(constant-folder-fix quotient
+                                                        (list fix32? nz-fix32?)))
+(def-simp "##fixnum.quotient"(constant-folder-fix quotient
+                                                        (list fix32? nz-fix32?)))
+(def-simp "remainder"        (constant-folder-gen remainder
+                                                        (list int? nz-int?)))
+(def-simp "##fxremainder"(constant-folder-fix remainder
+                                                        (list fix32? nz-fix32?)))
+(def-simp "##fixnum.remainder"(constant-folder-fix remainder
+                                                        (list fix32? nz-fix32?)))
+(def-simp "modulo"           (constant-folder-gen modulo
+                                                        (list int? nz-int?)))
+(def-simp "##fxmodulo"  (constant-folder-fix modulo
+                                                        (list fix32? nz-fix32?)))
+(def-simp "##fixnum.modulo"  (constant-folder-fix modulo
+                                                        (list fix32? nz-fix32?)))
+(def-simp "gcd"              (constant-folder-gen gcd        int?))
+(def-simp "lcm"              (constant-folder-gen lcm        int?))
+(def-simp "numerator"        (constant-folder-gen numerator  rational?))
+(def-simp "denominator"      (constant-folder-gen denominator rational?))
+(def-simp "floor"            (constant-folder-gen floor      real?))
+(def-simp "##flfloor"   (constant-folder-flo floor      flo?))
+(def-simp "##flonum.floor"   (constant-folder-flo floor      flo?))
+(def-simp "ceiling"          (constant-folder-gen ceiling    real?))
+(def-simp "##flceiling" (constant-folder-flo ceiling    flo?))
+(def-simp "##flonum.ceiling" (constant-folder-flo ceiling    flo?))
+(def-simp "truncate"         (constant-folder-gen truncate   real?))
+(def-simp "##fltruncate"(constant-folder-flo truncate   flo?))
+(def-simp "##flonum.truncate"(constant-folder-flo truncate   flo?))
+(def-simp "round"            (constant-folder-gen round      real?))
+(def-simp "##flround"   (constant-folder-flo round      flo?))
+(def-simp "##flonum.round"   (constant-folder-flo round      flo?))
+(def-simp "rationalize"      (constant-folder-gen rationalize real?))
+(def-simp "exp"              (constant-folder-gen exp        num?))
+(def-simp "##flexp"     (constant-folder-flo exp        flo?))
+(def-simp "##flonum.exp"     (constant-folder-flo exp        flo?))
+(def-simp "log"              (constant-folder-gen log        nz-num?))
+(def-simp "##fllog"     (constant-folder-flo log        nz-flo?))
+(def-simp "##flonum.log"     (constant-folder-flo log        nz-flo?))
+(def-simp "sin"              (constant-folder-gen sin        num?))
+(def-simp "##flsin"     (constant-folder-flo sin        flo?))
+(def-simp "##flonum.sin"     (constant-folder-flo sin        flo?))
+(def-simp "cos"              (constant-folder-gen cos        num?))
+(def-simp "##flcos"     (constant-folder-flo cos        flo?))
+(def-simp "##flonum.cos"     (constant-folder-flo cos        flo?))
+(def-simp "tan"              (constant-folder-gen tan        num?))
+(def-simp "##fltan"     (constant-folder-flo tan        flo?))
+(def-simp "##flonum.tan"     (constant-folder-flo tan        flo?))
+(def-simp "asin"             (constant-folder-gen asin       num?))
+(def-simp "##flasin"    (constant-folder-flo asin       flo?))
+(def-simp "##flonum.asin"    (constant-folder-flo asin       flo?))
+(def-simp "acos"             (constant-folder-gen acos       num?))
+(def-simp "##flacos"    (constant-folder-flo acos       flo?))
+(def-simp "##flonum.acos"    (constant-folder-flo acos       flo?))
+(def-simp "atan"             (constant-folder-gen atan       num?))
+(def-simp "##flatan"    (constant-folder-flo atan       flo?))
+(def-simp "##flonum.atan"    (constant-folder-flo atan       flo?))
+(def-simp "expt"             (constant-folder-gen expt       num?))
+(def-simp "##flexpt"    (constant-folder-flo expt       flo?))
+(def-simp "##flonum.expt"    (constant-folder-flo expt       flo?))
+(def-simp "sqrt"             (constant-folder-gen sqrt       num?))
+(def-simp "##flsqrt"    (constant-folder-flo sqrt       flo?))
+(def-simp "##flonum.sqrt"    (constant-folder-flo sqrt       flo?))
+(def-simp "expt"             (constant-folder-gen expt       num?))
+(def-simp "##flonum->fixnum"(constant-folder-flo exact->inexact fix32?))
+(def-simp "##flonum.<-fixnum"(constant-folder-flo exact->inexact fix32?))
+
+(def-simp "make-rectangular" (constant-folder-gen make-rectangular real?))
+(def-simp "make-polar"       (constant-folder-gen make-polar     real?))
+(def-simp "real-part"        (constant-folder-gen real-part      num?))
+(def-simp "imag-part"        (constant-folder-gen imag-part      num?))
+(def-simp "magnitude"        (constant-folder-gen magnitude      num?))
+(def-simp "angle"            (constant-folder-gen angle          num?))
+(def-simp "exact->inexact"   (constant-folder-gen exact->inexact num?))
+(def-simp "inexact->exact"   (constant-folder-gen inexact->exact num?))
+;(def-simp "number->string"   (constant-folder number->string num?))
+(def-simp "string->number"   (constant-folder string->number string?))
+
+(def-simp "##char?"          (constant-folder char?          ))
+(def-simp "char=?"           (constant-folder char=?         char?))
+(def-simp "char<?"           (constant-folder char<?         char?))
+(def-simp "char>?"           (constant-folder char>?         char?))
+(def-simp "char<=?"          (constant-folder char<=?        char?))
+(def-simp "char>=?"          (constant-folder char>=?        char?))
+(def-simp "char-ci=?"        (constant-folder char-ci=?      char?))
+(def-simp "char-ci<?"        (constant-folder char-ci<?      char?))
+(def-simp "char-ci>?"        (constant-folder char-ci>?      char?))
+(def-simp "char-ci<=?"       (constant-folder char-ci<=?     char?))
+(def-simp "char-ci>=?"       (constant-folder char-ci>=?     char?))
+(def-simp "char-alphabetic?" (constant-folder char-alphabetic? char?))
+(def-simp "char-numeric?"    (constant-folder char-numeric?  char?))
+(def-simp "char-whitespace?" (constant-folder char-whitespace? char?))
+(def-simp "char-upper-case?" (constant-folder char-upper-case? char?))
+(def-simp "char-lower-case?" (constant-folder char-lower-case? char?))
+(def-simp "char->integer"    (constant-folder char->integer  char?))
+;(def-simp "integer->char"    (constant-folder integer->char  ))
+(def-simp "char-upcase"      (constant-folder char-upcase    char?))
+(def-simp "char-downcase"    (constant-folder char-downcase  char?))
+
+(def-simp "##string?"        (constant-folder string?        ))
+;(def-simp "make-string"      (constant-folder make-string    ))
+;(def-simp "string"           (constant-folder string         char?))
+(def-simp "string-length"    (constant-folder string-length  string?))
+(def-simp "string-ref"       (constant-folder-ref
+                               string-ref
+                               string-length
+                               string?))
+(def-simp "string=?"         (constant-folder string=?       string?))
+(def-simp "string<?"         (constant-folder string<?       string?))
+(def-simp "string>?"         (constant-folder string>?       string?))
+(def-simp "string<=?"        (constant-folder string<=?      string?))
+(def-simp "string>=?"        (constant-folder string>=?      string?))
+(def-simp "string-ci=?"      (constant-folder string-ci=?    string?))
+(def-simp "string-ci<?"      (constant-folder string-ci<?    string?))
+(def-simp "string-ci>?"      (constant-folder string-ci>?    string?))
+(def-simp "string-ci<=?"     (constant-folder string-ci<=?   string?))
+(def-simp "string-ci>=?"     (constant-folder string-ci>=?   string?))
+;(def-simp "substring"        (constant-folder substring      ))
+;(def-simp "string-append"    (constant-folder string-append  string?))
+
+(def-simp "##vector?"          (constant-folder vector-object? ))
+(def-simp "##vector-length"    (constant-folder vector-length
+                                                    vector-object?))
+(def-simp "##vector-ref"       (constant-folder-ref
+                                 vector-ref
+                                 vector-length
+                                 vector-object?))
+;(def-simp "make-vector"        (constant-folder make-vector    ))
+;(def-simp "vector"             (constant-folder vector         ))
+(def-simp "vector-length"      (constant-folder vector-length
+                                                      vector-object?))
+(def-simp "vector-ref"         (constant-folder-ref
+                                 vector-ref
+                                 vector-length
+                                 vector-object?))
+
+(def-simp "##s8vector?"        (constant-folder s8vect? ))
+(def-simp "##s8vector-length"  (constant-folder s8vect-length
+                                                    s8vect?))
+(def-simp "##s8vector-ref"     (constant-folder-ref
+                                 s8vect-ref
+                                 s8vect-length
+                                 s8vect?))
+;(def-simp "make-s8vector"      (constant-folder make-s8vect    ))
+;(def-simp "s8vector"           (constant-folder s8vect         ))
+(def-simp "s8vector-length"    (constant-folder s8vect-length
+                                                      s8vect?))
+(def-simp "s8vector-ref"       (constant-folder-ref
+                                 s8vect-ref
+                                 s8vect-length
+                                 s8vect?))
+
+(def-simp "##u8vector?"        (constant-folder u8vect? ))
+(def-simp "##u8vector-length"  (constant-folder u8vect-length
+                                                      u8vect?))
+(def-simp "##u8vector-ref"     (constant-folder-ref
+                                 u8vect-ref
+                                 u8vect-length
+                                 u8vect?))
+;(def-simp "make-u8vector"      (constant-folder make-u8vect    ))
+;(def-simp "u8vector"           (constant-folder u8vect         ))
+(def-simp "u8vector-length"    (constant-folder u8vect-length
+                                                      u8vect?))
+(def-simp "u8vector-ref"       (constant-folder-ref
+                                 u8vect-ref
+                                 u8vect-length
+                                 u8vect?))
+
+(def-simp "##s16vector?"       (constant-folder s16vect? ))
+(def-simp "##s16vector-length" (constant-folder s16vect-length
+                                                      s16vect?))
+(def-simp "##s16vector-ref"    (constant-folder-ref
+                                 s16vect-ref
+                                 s16vect-length
+                                 s16vect?))
+;(def-simp "make-s16vector"     (constant-folder make-s16vect    ))
+;(def-simp "s16vector"          (constant-folder s16vect         ))
+(def-simp "s16vector-length"   (constant-folder s16vect-length
+                                                      s16vect?))
+(def-simp "s16vector-ref"      (constant-folder-ref
+                                 s16vect-ref
+                                 s16vect-length
+                                 s16vect?))
+
+(def-simp "##u16vector?"       (constant-folder u16vect? ))
+(def-simp "##u16vector-length" (constant-folder u16vect-length
+                                                      u16vect?))
+(def-simp "##u16vector-ref"    (constant-folder-ref
+                                 u16vect-ref
+                                 u16vect-length
+                                 u16vect?))
+;(def-simp "make-u16vector"     (constant-folder make-u16vect    ))
+;(def-simp "u16vector"          (constant-folder u16vect         ))
+(def-simp "u16vector-length"   (constant-folder u16vect-length
+                                                      u16vect?))
+(def-simp "u16vector-ref"      (constant-folder-ref
+                                 u16vect-ref
+                                 u16vect-length
+                                 u16vect?))
+
+(def-simp "##s32vector?"       (constant-folder s32vect? ))
+(def-simp "##s32vector-length" (constant-folder s32vect-length
+                                                      s32vect?))
+(def-simp "##s32vector-ref"    (constant-folder-ref
+                                 s32vect-ref
+                                 s32vect-length
+                                 s32vect?))
+;(def-simp "make-s32vector"     (constant-folder make-s32vect    ))
+;(def-simp "s32vector"          (constant-folder s32vect         ))
+(def-simp "s32vector-length"   (constant-folder s32vect-length
+                                                      s32vect?))
+(def-simp "s32vector-ref"      (constant-folder-ref
+                                 s32vect-ref
+                                 s32vect-length
+                                 s32vect?))
+
+(def-simp "##u32vector?"       (constant-folder u32vect? ))
+(def-simp "##u32vector-length" (constant-folder u32vect-length
+                                                      u32vect?))
+(def-simp "##u32vector-ref"    (constant-folder-ref
+                                 u32vect-ref
+                                 u32vect-length
+                                 u32vect?))
+;(def-simp "make-u32vector"     (constant-folder make-u32vect    ))
+;(def-simp "u32vector"          (constant-folder u32vect         ))
+(def-simp "u32vector-length"   (constant-folder u32vect-length
+                                                      u32vect?))
+(def-simp "u32vector-ref"      (constant-folder-ref
+                                 u32vect-ref
+                                 u32vect-length
+                                 u32vect?))
+
+(def-simp "##s64vector?"       (constant-folder s64vect? ))
+(def-simp "##s64vector-length" (constant-folder s64vect-length
+                                                      s64vect?))
+(def-simp "##s64vector-ref"    (constant-folder-ref
+                                 s64vect-ref
+                                 s64vect-length
+                                 s64vect?))
+;(def-simp "make-s64vector"     (constant-folder make-s64vect    ))
+;(def-simp "s64vector"          (constant-folder s64vect         ))
+(def-simp "s64vector-length"   (constant-folder s64vect-length
+                                                      s64vect?))
+(def-simp "s64vector-ref"      (constant-folder-ref
+                                 s64vect-ref
+                                 s64vect-length
+                                 s64vect?))
+
+(def-simp "##u64vector?"       (constant-folder u64vect? ))
+(def-simp "##u64vector-length" (constant-folder u64vect-length
+                                                      u64vect?))
+(def-simp "##u64vector-ref"    (constant-folder-ref
+                                 u64vect-ref
+                                 u64vect-length
+                                 u64vect?))
+;(def-simp "make-u64vector"     (constant-folder make-u64vect    ))
+;(def-simp "u64vector"          (constant-folder u64vect         ))
+(def-simp "u64vector-length"   (constant-folder u64vect-length
+                                                      u64vect?))
+(def-simp "u64vector-ref"      (constant-folder-ref
+                                 u64vect-ref
+                                 u64vect-length
+                                 u64vect?))
+
+(def-simp "##f32vector?"       (constant-folder f32vect? ))
+(def-simp "##f32vector-length" (constant-folder f32vect-length
+                                                      f32vect?))
+(def-simp "##f32vector-ref"    (constant-folder-ref
+                                 f32vect-ref
+                                 f32vect-length
+                                 f32vect?))
+;(def-simp "make-f32vector"     (constant-folder make-f32vect    ))
+;(def-simp "f32vector"          (constant-folder f32vect         ))
+(def-simp "f32vector-length"   (constant-folder f32vect-length
+                                                      f32vect?))
+(def-simp "f32vector-ref"      (constant-folder-ref
+                                 f32vect-ref
+                                 f32vect-length
+                                 f32vect?))
+
+(def-simp "##f64vector?"       (constant-folder f64vect? ))
+(def-simp "##f64vector-length" (constant-folder f64vect-length
+                                                      f64vect?))
+(def-simp "##f64vector-ref"    (constant-folder-ref
+                                 f64vect-ref
+                                 f64vect-length
+                                 f64vect?))
+;(def-simp "make-f64vector"     (constant-folder make-f64vect    ))
+;(def-simp "f64vector"          (constant-folder f64vect         ))
+(def-simp "f64vector-length"   (constant-folder f64vect-length
+                                                      f64vect?))
+(def-simp "f64vector-ref"      (constant-folder-ref
+                                 f64vect-ref
+                                 f64vect-length
+                                 f64vect?))
+
+(def-simp "##procedure?"     (constant-folder proc-obj?      ))
+;(def-simp "apply"            (constant-folder apply          ))
+(def-simp "input-port?"      (constant-folder input-port?    ))
+(def-simp "output-port?"     (constant-folder output-port?   ))
+(def-simp "##eof-object?"    (constant-folder end-of-file-object?))
+;(def-simp "list-tail"        (constant-folder list-tail      ))
+;(def-simp "string->list"     (constant-folder string->list   string?))
+;(def-simp "list->string"     (constant-folder list->string   ))
+;(def-simp "string-copy"      (constant-folder string-copy    string?))
+;(def-simp "vector->list"     (constant-folder vector->list
+;;                                                    vector-object?))
+;(def-simp "list->vector"     (constant-folder list->vector   list?))
+(def-simp "##keyword?"       (constant-folder keyword-object?))
+;(def-simp "keyword->string"  (constant-folder keyword-object->string))
+(def-simp "string->keyword"  (constant-folder string->keyword-object))
+(def-simp "##void"           (constant-folder (lambda () void-object)))
+
+(def-simp "##fixnum?"        (constant-folder fix32?         not-bigfix?))
+(def-simp "##flonum?"        (constant-folder flo?           ))
+)
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define (setup-prims target)
+  (setup-prim-specializers target)
+  (setup-prim-expanders target)
+  (setup-prim-simplifiers target))
 
 ;;;============================================================================

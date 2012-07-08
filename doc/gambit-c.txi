@@ -10073,14 +10073,17 @@ For example:
 
 @end deffn
 
-@deffn {special form} time @r{@i{expr}}
+@deffn {special form} time @r{@i{expr}} @r{[}@var{port}@r{]}
 
 The @code{time} special form evaluates @i{expr} and returns the
-result.  As a side effect it displays a message on the interaction
-channel which indicates how long the evaluation took (in real time and
-cpu time), how much time was spent in the garbage collector, how much
-memory was allocated during the evaluation and how many minor and
-major page faults occured (0 is reported if not running under UNIX).
+result.  As a side effect it displays a message on the port @var{port}
+which indicates various statistics about the evaluation of @i{expr}
+including how long the evaluation took (in real time and cpu time),
+how much time was spent in the garbage collector, how much memory was
+allocated during the evaluation and how many minor and major page
+faults occured (0 is reported if not running under UNIX).  If it is
+not specified, @var{port} defaults to the interaction channel
+(i.e. the output will appear at the REPL).
 
 For example:
 

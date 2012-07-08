@@ -188,6 +188,8 @@ x86-sti
 x86-cld
 x86-std
 
+x86-int
+
 x86-syscall
 x86-sysret
 x86-wrmsr

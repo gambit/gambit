@@ -3681,14 +3681,19 @@
       ((macro-port-write-datum port) port obj we2)
       (##fixnum.- limit (macro-writeenv-limit we2)))))
 
-(define-prim (##write obj port #!optional (max-length ##max-fixnum))
+(define-prim (##write
+              obj
+              port
+              #!optional
+              (max-length ##max-fixnum)
+              (force? (macro-if-forces #t #f)))
   (if (macro-character-output-port? port)
     (begin
       (##write-generic-to-character-port
        'write
        port
        (macro-character-port-output-readtable port)
-       (macro-if-forces #t #f)
+       force?
        max-length
        obj)
       (##void))
@@ -3706,14 +3711,19 @@
       (macro-check-output-port p 2 (write obj p)
         (##write obj p)))))
 
-(define-prim (##display obj port #!optional (max-length ##max-fixnum))
+(define-prim (##display
+              obj
+              port
+              #!optional
+              (max-length ##max-fixnum)
+              (force? (macro-if-forces #t #f)))
   (if (macro-character-output-port? port)
     (begin
       (##write-generic-to-character-port
        'display
        port
        (macro-character-port-output-readtable port)
-       (macro-if-forces #t #f)
+       force?
        max-length
        obj)
       (##void))
@@ -3731,14 +3741,19 @@
       (macro-check-output-port p 2 (display obj p)
         (##display obj p)))))
 
-(define-prim (##pretty-print obj port #!optional (max-length ##max-fixnum))
+(define-prim (##pretty-print
+              obj
+              port
+              #!optional
+              (max-length ##max-fixnum)
+              (force? (macro-if-forces #t #f)))
   (if (macro-character-output-port? port)
     (begin
       (##write-generic-to-character-port
        'pretty-print
        port
        (macro-character-port-output-readtable port)
-       (macro-if-forces #t #f)
+       force?
        max-length
        obj)
       (##newline port))
@@ -3756,14 +3771,19 @@
       (macro-check-output-port p 2 (pretty-print obj p)
         (##pretty-print obj p)))))
 
-(define-prim (##print-fringe obj port #!optional (max-length ##max-fixnum))
+(define-prim (##print
+              obj
+              port
+              #!optional
+              (max-length ##max-fixnum)
+              (force? (macro-if-forces #t #f)))
   (if (macro-character-output-port? port)
     (begin
       (##write-generic-to-character-port
        'print
        port
        (macro-character-port-output-readtable port)
-       (macro-if-forces #t #f)
+       force?
        max-length
        obj)
       (##void))
@@ -3778,7 +3798,7 @@
              (macro-current-output-port)
              port)))
       (macro-check-output-port p 2 (print port: p . body)
-        (##print-fringe body p)))))
+        (##print body p)))))
 
 (define-prim (println
               #!key (port (macro-absent-obj))
@@ -3790,7 +3810,7 @@
              port)))
       (macro-check-output-port p 2 (println port: p . body)
         (begin
-          (##print-fringe body p)
+          (##print body p)
           (##newline p))))))
 
 (define-prim (##newline port)
@@ -6370,7 +6390,8 @@
               (family (macro-absent-obj))
               (socket-type (macro-absent-obj))
               (protocol (macro-absent-obj)))
-  (macro-force-vars (host service flags family socket-type protocol)
+  (macro-force-vars (host service ;;flags
+                     family socket-type protocol)
     (let ((flags (macro-absent-obj)))
 
       (define (check-host arg-num)

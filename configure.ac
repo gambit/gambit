@@ -53,6 +53,8 @@ DEFS_EXE=""
 
 DEFS_OBJ_DYN_LIB_EXE=""
 
+COMPILATION_OPTIONS=""
+
 ###############################################################################
 #
 # Check if the system must be compiled using the C compiler or C++ compiler.
@@ -499,6 +501,40 @@ AC_ARG_ENABLE(help-browser,
                              [Browser to use for help (default is to search)]),
               HELP_BROWSER=$enableval,
               HELP_BROWSER="")
+
+###############################################################################
+#
+# Check if the system must perform type checking.
+
+AC_ARG_ENABLE(type-checking,
+              AC_HELP_STRING([--enable-type-checking],
+                             [perform type checking (default is YES)]),
+              ENABLE_TYPE_CHECKING=$enableval,
+              ENABLE_TYPE_CHECKING=yes)
+
+echo "ENABLE_TYPE_CHECKING = $ENABLE_TYPE_CHECKING"
+
+if test "$ENABLE_TYPE_CHECKING" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -check"
+
+fi
+
+###############################################################################
+#
+# Check if the system must automatically force promises.
+
+AC_ARG_ENABLE(auto-forcing,
+              AC_HELP_STRING([--enable-auto-forcing],
+                             [automatically force promises (default is NO)]),
+              ENABLE_AUTO_FORCING=$enableval,
+              ENABLE_AUTO_FORCING=no)
+
+if test "$ENABLE_AUTO_FORCING" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -force"
+
+fi
 
 ###############################################################################
 #
@@ -2135,6 +2171,7 @@ AC_SUBST(ENABLE_ABSOLUTE_SHARED_LIBS)
 AC_SUBST(ENABLE_VERSIONNED_LIBS)
 AC_SUBST(emacsdir)
 AC_SUBST(HELP_BROWSER)
+AC_SUBST(COMPILATION_OPTIONS)
 
 AC_PROG_MAKE_SET
 

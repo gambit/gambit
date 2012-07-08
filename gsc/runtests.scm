@@ -15,7 +15,8 @@
   (let* ((port
           (open-process (list path: path
                               arguments: args
-                              stderr-redirection: #t)))
+                              ;; stderr-redirection: #t
+                              )))
          (output
           (read-line port #f))
          (status
@@ -32,15 +33,16 @@
         (diff? #f))
 
     (for-each
-     (lambda (result target)
-       (if (not (equal? result (car results)))
-           (begin
-             (if (not diff?)
-                 (print " (FAILED)\n======================= EXPECTED:\n" (cdr (car results))))
-             (set! diff? #t)
-             (print "======================= " (car target) ":\n" (cdr result)))))
-     (cdr results)
-     (cdr targets))
+     (lambda (x)
+       (let ((target (car x))
+             (result (cdr x)))
+         (if (not (equal? result (cdar results)))
+             (begin
+               (if (not diff?)
+                   (print " (FAILED)\n======================= EXPECTED:\n" (cdr (cdar results))))
+               (set! diff? #t)
+               (print "======================= " (car target) ":\n" (cdr result))))))
+     (cdr results))
 
     (set! nb-tests (+ nb-tests 1))
 
@@ -51,14 +53,20 @@
 (define (test-with-each-target file)
   (map (lambda (t)
          (let ((target (car t))
-               (out (string-append (path-strip-extension file) (cadr t))))
-           (if (not (equal? target "gambit"))
-               (compile file target))
-           (let ((result (apply run (append (cddr t) (list out)))))
-             (if (not (equal? target "gambit"))
-                 (delete-file out))
-             result)))
-       targets))
+               (ext (cadr t)))
+           (cons t
+                 (if ext
+                     (let ((out (string-append (path-strip-extension file) ext)))
+                       (if (not (equal? target "gambit"))
+                           (compile file target))
+                       (let ((result (apply run (append (cddr t) (list out)))))
+                         (if (not (equal? target "gambit"))
+                             (delete-file out))
+                         result))
+                     (apply run (append (cddr t) (list file)))))))
+       (keep (lambda (t)
+               (member (car t) (cons "gambit" back-ends)))
+             targets)))
 
 (define (compile file target)
   (let ((x
@@ -72,6 +80,7 @@
   '(
     ("gambit" ".scm" "./gsc" "-i")
     ("c"      ".o1"  "./gsc" "-i")
+    ("nat"    #f     "./gsc" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
     ("js"     ".js"  "d8")
     ("python" ".py"  "python")
     ("ruby"   ".rb"  "ruby")
@@ -92,10 +101,31 @@
       (runtest-dir file-or-dir)
       (runtest-file file-or-dir)))
 
+(define (keep keep? lst)
+  (cond ((null? lst)       '())
+        ((keep? (car lst)) (cons (car lst) (keep keep? (cdr lst))))
+        (else              (keep keep? (cdr lst)))))
+
+(define back-ends '())
+
 (define (main . args)
+
+  (let loop ()
+    (if (and (pair? args)
+             (> (string-length (car args)) 1)
+             (char=? #\- (string-ref (car args) 0)))
+        (begin
+          (set! back-ends
+                (cons (substring (car args) 1 (string-length (car args)))
+                      back-ends))
+          (set! args (cdr args))
+          (loop))))
 
   (if (null? args)
       (set! args '("tests")))
+
+  (if (null? back-ends)
+      (set! back-ends (map car targets)))
 
   (for-each runtest args)
 

@@ -215,6 +215,14 @@ The configure options which are specific to the Gambit-C system are:
   --enable-help-browser=BROWSER
                           use the specified browser to view documentation
                           requested through the help procedure or REPL
+  --enable-type-checking
+                          cause primitives to perform type checking
+                          of their arguments
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-auto-forcing
+                          cause strict operations such as car, but not
+                          cons, to automatically force their arguments
+                          (requires: make bootstrap; make bootclean; make)
 
 The option --enable-cplusplus should be used when applications
 developped with the Gambit-C compiler are to be linked with code or

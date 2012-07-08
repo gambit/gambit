@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2275,7 +2275,7 @@
        (if (##not (##eq? obj (##void)))
            (begin
              (##repl-channel-result-history-add channel obj)
-             (##pretty-print obj output-port))))
+             (##pretty-print obj output-port ##max-fixnum #f))))
      results)))
 
 (define-prim (##repl-channel-ports-display-monoline-message channel writer)
@@ -4042,117 +4042,157 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-runtime-macro (time expr)
-  `(##time (lambda () ,expr) ',expr))
+(define-runtime-macro (time
+                       expr
+                       #!optional (port (macro-absent-obj)))
+  (if (eq? port (macro-absent-obj))
+      `(##time (lambda () ,expr) ',expr)
+      `(##time (lambda () ,expr) ',expr ,port)))
 
-(define-prim (##time thunk expr)
-  (let ((at-start (##process-statistics)))
-    (let ((result (thunk)))
-      (let ((at-end (##process-statistics)))
+(define-prim (##exec-stats thunk)
+  (let* ((at-start (##process-statistics))
+         (result (thunk))
+         (at-end (##process-statistics))
+         (user-time
+          (##- (##f64vector-ref at-end 0)
+               (##f64vector-ref at-start 0)))
+         (sys-time
+          (##- (##f64vector-ref at-end 1)
+               (##f64vector-ref at-start 1)))
+         (real-time
+          (##- (##f64vector-ref at-end 2)
+               (##f64vector-ref at-start 2)))
+         (gc-user-time
+          (##- (##f64vector-ref at-end 3)
+               (##f64vector-ref at-start 3)))
+         (gc-sys-time
+          (##- (##f64vector-ref at-end 4)
+               (##f64vector-ref at-start 4)))
+         (gc-real-time
+          (##- (##f64vector-ref at-end 5)
+               (##f64vector-ref at-start 5)))
+         (nb-gcs
+          (##flonum.->exact-int
+           (##- (##f64vector-ref at-end 6)
+                (##f64vector-ref at-start 6))))
+         (minflt
+          (##flonum.->exact-int
+           (##- (##f64vector-ref at-end 10)
+                (##f64vector-ref at-start 10))))
+         (majflt
+          (##flonum.->exact-int
+           (##- (##f64vector-ref at-end 11)
+                (##f64vector-ref at-start 11))))
+         (bytes-allocated
+          (##flonum.->exact-int
+           (##- (##- (##f64vector-ref at-end 7)
+                     (##f64vector-ref at-start 7))
+                (##+ (if (##interp-procedure? thunk)
+                         (##f64vector-ref at-end 8) ;; thunk call frame space
+                         (macro-inexact-+0))
+                     (##f64vector-ref at-end 9)))))) ;; at-end structure space
 
-        (define (secs->msecs x)
-          (##inexact->exact (##round (##* x 1000))))
+    (##list (##cons 'result          result)
+            (##cons 'user-time       user-time)
+            (##cons 'sys-time        sys-time)
+            (##cons 'real-time       real-time)
+            (##cons 'gc-user-time    gc-user-time)
+            (##cons 'gc-sys-time     gc-sys-time)
+            (##cons 'gc-real-time    gc-real-time)
+            (##cons 'nb-gcs          nb-gcs)
+            (##cons 'minflt          minflt)
+            (##cons 'majflt          majflt)
+            (##cons 'bytes-allocated bytes-allocated))))
 
-        (##repl
-         (lambda (first output-port)
-           (let* ((user-time
-                   (secs->msecs
-                    (##- (##f64vector-ref at-end 0)
-                         (##f64vector-ref at-start 0))))
-                  (sys-time
-                   (secs->msecs
-                    (##- (##f64vector-ref at-end 1)
-                         (##f64vector-ref at-start 1))))
-                  (cpu-time
-                   (##+ user-time sys-time))
-                  (real-time
-                   (secs->msecs
-                    (##- (##f64vector-ref at-end 2)
-                         (##f64vector-ref at-start 2))))
-                  (gc-user-time
-                   (secs->msecs
-                    (##- (##f64vector-ref at-end 3)
-                         (##f64vector-ref at-start 3))))
-                  (gc-sys-time
-                   (secs->msecs
-                    (##- (##f64vector-ref at-end 4)
-                         (##f64vector-ref at-start 4))))
-                  (gc-real-time
-                   (secs->msecs
-                    (##- (##f64vector-ref at-end 5)
-                         (##f64vector-ref at-start 5))))
-                  (nb-gcs
-                   (##flonum.->exact-int
-                    (##- (##f64vector-ref at-end 6)
-                         (##f64vector-ref at-start 6))))
-                  (minflt
-                   (##flonum.->exact-int
-                    (##- (##f64vector-ref at-end 10)
-                         (##f64vector-ref at-start 10))))
-                  (majflt
-                   (##flonum.->exact-int
-                    (##- (##f64vector-ref at-end 11)
-                         (##f64vector-ref at-start 11))))
-                  (bytes-allocated
-                   (##flonum.->exact-int
-                    (##- (##- (##f64vector-ref at-end 7)
-                              (##f64vector-ref at-start 7))
-                         (##+ (if (##interp-procedure? thunk)
-                                (##f64vector-ref at-end 8) ;; thunk call frame space
-                                (macro-inexact-+0))
-                              (##f64vector-ref at-end 9)))))) ;; at-end structure space
+(define-prim (##time
+              thunk
+              expr
+              #!optional (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+             (##repl-output-port)
+             port)))
+      (macro-check-output-port p 3 (##time thunk expr p)
+        (let* ((stats (##exec-stats thunk))
+               (result (##cdar stats))
+               (stats (##cdr stats))
+               (user-time (##cdar stats))
+               (stats (##cdr stats))
+               (sys-time (##cdar stats))
+               (stats (##cdr stats))
+               (real-time (##cdar stats))
+               (stats (##cdr stats))
+               (gc-user-time (##cdar stats))
+               (stats (##cdr stats))
+               (gc-sys-time (##cdar stats))
+               (stats (##cdr stats))
+               (gc-real-time (##cdar stats))
+               (stats (##cdr stats))
+               (nb-gcs (##cdar stats))
+               (stats (##cdr stats))
+               (minflt (##cdar stats))
+               (stats (##cdr stats))
+               (majflt (##cdar stats))
+               (stats (##cdr stats))
+               (bytes-allocated (##cdar stats)))
 
-             (define (pluralize n msg)
-               (##write-string "    " output-port)
-               (if (##= n 0)
-                 (##write-string "no" output-port)
-                 (##write n output-port))
-               (##write-string msg output-port)
-               (if (##not (##= n 1))
-                 (##write-string "s" output-port)))
+          (define (secs->msecs x)
+            (##inexact->exact (##round (##* x 1000))))
 
-             (##write (##list 'time expr) output-port)
-             (##newline output-port)
+          (define (print-stats port)
 
-             (##write-string "    " output-port)
-             (##write real-time output-port)
-             (##write-string " ms real time" output-port)
-             (##newline output-port)
+            (define (pluralize n msg)
+              (##write-string "    " port)
+              (if (##= n 0)
+                  (##write-string "no" port)
+                  (##write n port))
+              (##write-string msg port)
+              (if (##not (##= n 1))
+                  (##write-string "s" port)))
 
-             (##write-string "    " output-port)
-             (##write cpu-time output-port)
-             (##write-string " ms cpu time (" output-port)
-             (##write user-time output-port)
-             (##write-string " user, " output-port)
-             (##write sys-time output-port)
-             (##write-string " system)" output-port)
-             (##newline output-port)
+            (##write (##list 'time expr) port)
+            (##newline port)
 
-             (pluralize nb-gcs " collection")
-             (if (##not (##= nb-gcs 0))
-               (begin
-                 (##write-string " accounting for " output-port)
-                 (##write gc-real-time output-port)
-                 (##write-string " ms real time (" output-port)
-                 (##write gc-user-time output-port)
-                 (##write-string " user, " output-port)
-                 (##write gc-sys-time output-port)
-                 (##write-string " system)" output-port)))
-             (##newline output-port)
+            (##write-string "    " port)
+            (##write (secs->msecs real-time) port)
+            (##write-string " ms real time" port)
+            (##newline port)
 
-             (pluralize bytes-allocated " byte")
-             (##write-string " allocated" output-port)
-             (##newline output-port)
+            (##write-string "    " port)
+            (##write (secs->msecs (##+ user-time sys-time)) port)
+            (##write-string " ms cpu time (" port)
+            (##write (secs->msecs user-time) port)
+            (##write-string " user, " port)
+            (##write (secs->msecs sys-time) port)
+            (##write-string " system)" port)
+            (##newline port)
 
-             (pluralize minflt " minor fault")
-             (##newline output-port)
+            (pluralize nb-gcs " collection")
+            (if (##not (##= nb-gcs 0))
+                (begin
+                  (##write-string " accounting for " port)
+                  (##write (secs->msecs gc-real-time) port)
+                  (##write-string " ms real time (" port)
+                  (##write (secs->msecs gc-user-time) port)
+                  (##write-string " user, " port)
+                  (##write (secs->msecs gc-sys-time) port)
+                  (##write-string " system)" port)))
+            (##newline port)
 
-             (pluralize majflt " major fault")
-             (##newline output-port)
+            (pluralize bytes-allocated " byte")
+            (##write-string " allocated" port)
+            (##newline port)
 
-             #t)))
+            (pluralize minflt " minor fault")
+            (##newline port)
 
-        result))))
+            (pluralize majflt " major fault")
+            (##newline port))
+
+          (print-stats p)
+
+          result)))))
 
 ;;;----------------------------------------------------------------------------
 
