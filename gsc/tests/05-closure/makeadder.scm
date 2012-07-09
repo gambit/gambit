@@ -2,6 +2,7 @@
  (standard-bindings)
  (extended-bindings)
  (not safe)
+ (not interrupts-enabled)
 )
 
 (define (make-adder x)
