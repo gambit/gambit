@@ -493,39 +493,51 @@
 
               ((close)
                (let ((parms (close-parms gvm-instr)))
-                 (gen
-                  (map
-                   (lambda (parms)
-                     (let* ((lbl (closure-parms-lbl parms))
-                            (loc (closure-parms-loc parms))
-                            (opnds (closure-parms-opnds parms)))
-                       (univ-closure-alloc
-                        ctx
-                        lbl
-                        (length opnds)
-                        (lambda (name)
-                          (univ-assign ctx
-                                       (translate-gvm-opnd ctx loc)
-                                       name)))))
-                   (close-parms gvm-instr))
-                  (map
-                   (lambda (parms)
-                     (let* ((lbl (closure-parms-lbl parms))
-                            (loc (closure-parms-loc parms))
-                            (opnds (closure-parms-opnds parms)))
-                       (let loop ((i 0)
-                                  (opnds (cons (make-lbl lbl) opnds))
-                                  (rev-code '()))
-                         (if (pair? opnds)
-                             (let ((opnd (car opnds)))
-                               (loop (+ i 1)
-                                     (cdr opnds)
-                                     (cons (univ-assign ctx
-                                                        (translate-gvm-opnd ctx (make-clo loc i))
-                                                        (translate-gvm-opnd ctx opnd))
-                                           rev-code)))
-                             (reverse rev-code)))))
-                   (close-parms gvm-instr)))))
+
+                 (define (alloc lst rev-loc-names)
+                   (if (pair? lst)
+
+                       (let* ((parms (car lst))
+                              (lbl (closure-parms-lbl parms))
+                              (loc (closure-parms-loc parms))
+                              (opnds (closure-parms-opnds parms)))
+                         (univ-closure-alloc
+                          ctx
+                          lbl
+                          (length opnds)
+                          (lambda (name)
+                            (gen (univ-assign ctx
+                                              (translate-gvm-opnd ctx loc)
+                                              name)
+                                 (alloc (cdr lst)
+                                        (cons (cons loc name)
+                                              rev-loc-names))))))
+
+                       (map
+                        (lambda (parms loc-name)
+                          (let* ((lbl (closure-parms-lbl parms))
+                                 (loc (closure-parms-loc parms))
+                                 (opnds (closure-parms-opnds parms)))
+                            (let loop ((i 0)
+                                       (opnds (cons (make-lbl lbl) opnds))
+                                       (rev-code '()))
+                              (if (pair? opnds)
+                                  (let ((opnd (car opnds)))
+                                    (loop (+ i 1)
+                                          (cdr opnds)
+                                          (cons (univ-assign
+                                                 ctx
+                                                 (univ-clo ctx (cdr loc-name) i)
+                                                 (let ((x (assv opnd rev-loc-names)))
+                                                   (if x
+                                                       (cdr x)
+                                                       (translate-gvm-opnd ctx opnd))))
+                                                rev-code)))
+                                  (reverse rev-code)))))
+                        (close-parms gvm-instr)
+                        (reverse rev-loc-names))))
+
+                 (alloc (close-parms gvm-instr) '())))
 
               ((ifjump)
                ;; TODO
@@ -754,9 +766,9 @@
               "]"))
 
         ((clo? gvm-opnd)
-         (gen (translate-gvm-opnd ctx (clo-base gvm-opnd))
-              ".v"
-              (clo-index gvm-opnd)))
+         (univ-clo ctx
+                   (translate-gvm-opnd ctx (clo-base gvm-opnd))
+                   (clo-index gvm-opnd)))
 
         ((lbl? gvm-opnd)
          (translate-lbl ctx gvm-opnd))
@@ -768,6 +780,11 @@
          (compiler-internal-error
           "translate-gvm-opnd, unknown 'gvm-opnd':"
           gvm-opnd))))
+
+(define (univ-clo ctx closure index)
+  (gen closure
+       ".v"
+       index))
 
 (define (translate-obj ctx obj)
   
