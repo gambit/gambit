@@ -428,6 +428,8 @@
             ;; TODO: combine with scan-gvm-opnd
             (define (scan-opnd gvm-opnd)
               (cond ((not gvm-opnd))
+                    ((lbl? gvm-opnd)
+                     (todo-lbl-num! (lbl-num gvm-opnd)))
                     ((obj? gvm-opnd)
                      (scan-obj (obj-val gvm-opnd)))
                     ((clo? gvm-opnd)
@@ -448,6 +450,7 @@
               ((close)
                (for-each (lambda (parms)
                            (scan-opnd (closure-parms-loc parms))
+                           (scan-opnd (make-lbl (closure-parms-lbl parms)))
                            (for-each scan-opnd (closure-parms-opnds parms)))
                          (close-parms gvm-instr)))
 
@@ -468,7 +471,6 @@
                (let ((loc (apply-loc gvm-instr))
                      (prim (apply-prim gvm-instr))
                      (opnds (apply-opnds gvm-instr)))
-
                  (let ((proc (proc-obj-inline prim)))
                    (if (not proc)
 
@@ -487,9 +489,35 @@
                      (gen ""))))
 
               ((close)
-               ;; TODO
-               ;; (close-parms gvm-instr)
-               (univ-throw ctx "\"close GVM instruction unimplemented\""))
+               (let ((parms (close-parms gvm-instr)))
+                 (gen
+                  (map
+                   (lambda (parms)
+                     (let* ((lbl (closure-parms-lbl parms))
+                            (loc (closure-parms-loc parms))
+                            (opnds (closure-parms-opnds parms)))
+                       (univ-assign ctx
+                                    (translate-gvm-opnd ctx loc)
+                                    (univ-closure-alloc ctx lbl (length opnds)))))
+                   (close-parms gvm-instr))
+                  (map
+                   (lambda (parms)
+                     (let* ((lbl (closure-parms-lbl parms))
+                            (loc (closure-parms-loc parms))
+                            (opnds (closure-parms-opnds parms)))
+                       (let loop ((i 0)
+                                  (opnds (cons (make-lbl lbl) opnds))
+                                  (rev-code '()))
+                         (if (pair? opnds)
+                             (let ((opnd (car opnds)))
+                               (loop (+ i 1)
+                                     (cdr opnds)
+                                     (cons (univ-assign ctx
+                                                        (translate-gvm-opnd ctx (make-clo loc i))
+                                                        (translate-gvm-opnd ctx opnd))
+                                           rev-code)))
+                             (reverse rev-code)))))
+                   (close-parms gvm-instr)))))
 
               ((ifjump)
                ;; TODO
@@ -617,6 +645,29 @@
 
           (loop (cons (dump-proc (queue-get! proc-left))
                       rev-res))))))
+
+(define (univ-closure-alloc ctx lbl nb-closed-vars)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (univ-indent
+      (gen "(function () {\n"
+           (univ-indent
+            (gen "function self() {\n"
+                 (univ-indent
+                  (gen (univ-assign ctx
+                                    (translate-gvm-opnd ctx (make-reg (+ univ-nb-arg-regs 1)))
+                                    "self")
+                       (univ-return ctx
+                                    (translate-lbl ctx (make-lbl lbl)))))
+                 "};\n"
+                 (univ-return ctx
+                              "self")))
+           "})()")))
+
+    (else
+     (compiler-internal-error
+      "univ-closure-alloc, unknown target"))))
 
 (define gen vector)
 

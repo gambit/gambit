@@ -372,7 +372,7 @@
 (define nat-label-ref  #f)
 (define nat-label-set! #f)
 
-(let ((labels (make-table test: equal?)))
+(let ((labels (make-table test: eq?)))
   (set! nat-label-ref
         (lambda (cgc label-name)
           (let ((x (table-ref labels label-name #f)))
@@ -508,6 +508,7 @@
      (lambda (bb)
        (let* ((gvm-instr (code-gvm-instr bb))
               (gvm-type (gvm-instr-type gvm-instr)))
+(pp gvm-type);;;;;;;;;;;;;;;;;;;;;;
          (case gvm-type
            ((label)
             (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
@@ -548,7 +549,11 @@
               (let ((opnd* (nat-opnd cgc ctx opnd)))
                 (x86-mov cgc
                          (nat-opnd cgc ctx loc)
-                         (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)))))
+                         (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)
+                         (* (nat-target-word-width targ) 8)))))
+
+           ((close)
+            (nat-close cgc (close-parms gvm-instr)))
 
            ((jump)
             (let ((opnd (jump-opnd gvm-instr))
@@ -572,6 +577,20 @@
             (compiler-internal-error "unrecognized type:" gvm-type)))
        ))
      lst)))
+
+(define (nat-close cgc parms)
+
+  (define (close parms)
+    (if (pair? parms)
+
+      (let* ((parm (car parms))
+             (lbl (closure-parms-lbl parm))
+             (loc (closure-parms-loc parm))
+             (opnds (closure-parms-opnds parm)))
+        (pp (list loc lbl opnds));;;;;;;;;;;;;;;
+        (close (cdr parms)))))
+
+  (close (reverse parms)))
 
 (define (translate-lbl ctx lbl)
   (lbl->id (lbl-num lbl) (ctx-ns ctx)))
@@ -603,7 +622,8 @@
            (let ((base (clo-base opnd))
                  (index (clo-index opnd)))
              (let ((reg (nat-opnd-reg targ base)))
-               (x86-mem (+ 1 (* 4 index)) reg)))) ;;;;;;;;;;;;;;;;
+               (x86-mem (+ 1 (* (nat-target-word-width targ) index))
+                        reg)))) ;;;;;;;;;;;;;;;;
 
           ((lbl? opnd)
            (let* ((lbl-name (translate-lbl ctx opnd))
@@ -620,7 +640,8 @@
              (cond ((and (integer? val) (exact? val))
                     (x86-imm-int (* val 4)))
                    ((proc-obj? val)
-                    (nat-label-ref cgc val))
+                    (x86-imm-int 0))
+                    ;;;;(nat-label-ref cgc (proc-obj-name val)))
                    ((eq? val #f)
                     (x86-imm-int -2))
                    ((eq? val #t)
