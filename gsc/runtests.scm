@@ -36,6 +36,8 @@
      (lambda (x)
        (let ((target (car x))
              (result (cdr x)))
+         ;;(pp result)
+         ;;(pp (cdar results))
          (if (not (equal? result (cdar results)))
              (begin
                (if (not diff?)
@@ -80,7 +82,8 @@
   '(
     ("gambit" ".scm" "./gsc" "-i")
     ("c"      ".o1"  "./gsc" "-i")
-    ("nat"    #f     "./gsc" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+    ("x86"    #f     "./gsc32" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+    ("x86-64" #f     "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
     ("js"     ".js"  "d8")
     ("python" ".py"  "python")
     ("ruby"   ".rb"  "ruby")

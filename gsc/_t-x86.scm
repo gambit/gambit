@@ -450,18 +450,69 @@
 ;; Define the entry point (main) of the program.  Do all the
 ;; register shuffling, and jump to the main procedure of the
 ;; program.
+
+(define nat-stack-limit-slot 0)
+(define nat-heap-limit-slot  1)
+(define nat-sp-slot          2)
+(define nat-pstate-size      100)
+(define nat-stack-size       (expt 2 20))
+(define nat-stack-fudge      (expt 2 14))
+(define nat-heap-size        (expt 2 20))
+(define nat-heap-fudge       (expt 2 14))
+
 (define (entry-point cgc main-proc)
   (let* ((targ (codegen-context-target cgc))
          (main-lbl  (nat-label-ref cgc 'main))
          (exit-lbl  (nat-label-ref cgc 'exit))
          (entry-lbl (nat-label-ref cgc (lbl->id 1 (proc-obj-name main-proc)))))
+
     (x86-label cgc main-lbl)
+
     (x86-push cgc (nat-target-stack-ptr-reg targ))
+    (x86-push cgc (nat-target-pstate-ptr-reg targ))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 2))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 3))
+    (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 4))
+
+    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+    (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-pstate-size)))
+    (x86-and  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int -256)) ;; align to multiple of 256 (low 8 bits = 0)
+    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-heap-ptr-reg targ)) (nat-target-pstate-ptr-reg targ))
+    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+
     (x86-mov  cgc (nat-target-stack-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+    (x86-sub  cgc (nat-target-stack-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) 16))) ;; TODO: remove me! (tracking of frame size seems wrong)
+
+    (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-stack-fudge nat-stack-size)) (nat-target-heap-ptr-reg targ)))
+    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-stack-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
+    (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-stack-size)))
+
+    (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-heap-fudge nat-heap-size)) (nat-target-heap-ptr-reg targ)))
+    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-heap-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
+
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 0) (x86-imm-lbl exit-lbl))
+    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-int 0))
+    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 2) (x86-imm-int 0))
+    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 3) (x86-imm-int 0))
+    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 4) (x86-imm-int 0))
     (x86-jmp  cgc entry-lbl)
+
     (x86-label cgc exit-lbl)
+
+    (x86-mov  cgc (nat-target-heap-ptr-reg targ) (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-pstate-ptr-reg targ)))
+
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 4))
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 3))
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 2))
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
+    (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+    (x86-pop cgc (nat-target-pstate-ptr-reg targ))
     (x86-pop cgc (nat-target-stack-ptr-reg targ))
+
+;;    (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-int 0))
+
     (x86-ret cgc)))
 
 ;; Pop and translate every proc in procs-not-visited.
@@ -483,6 +534,7 @@
      (lambda (bb)
        (let* ((gvm-instr (code-gvm-instr bb))
               (gvm-type (gvm-instr-type gvm-instr)))
+(pp gvm-type);;;;;;;;;;;;;;;;;;;;;;
          (case gvm-type
            ((label)
             (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
@@ -490,7 +542,30 @@
                    (asm-lbl (nat-label-ref cgc lbl-name))
                    (fs (frame-size (gvm-instr-frame gvm-instr))))
               (codegen-context-frame-size-set! cgc fs)
-              (x86-label cgc asm-lbl)))
+              (x86-label cgc asm-lbl)
+
+              (case (label-type gvm-instr)
+
+                ((simple)
+                 #f)
+
+                ((entry)
+                 (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int (label-entry-nb-parms gvm-instr)))
+                 ;; TODO: add "jne wrong_nb_args_handler"
+                 )
+
+                ((return)
+                 #f)
+
+                ((task-entry)
+                 #f)
+
+                ((task-return)
+                 #f)
+
+                (else
+                 (compiler-internal-error
+                  "translate-proc, unknown label type")))))
 
            ((copy)
             (let* ((loc (copy-loc gvm-instr))
@@ -500,7 +575,11 @@
               (let ((opnd* (nat-opnd cgc ctx opnd)))
                 (x86-mov cgc
                          (nat-opnd cgc ctx loc)
-                         (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)))))
+                         (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)
+                         (* (nat-target-word-width targ) 8)))))
+
+           ((close)
+            (nat-close cgc (close-parms gvm-instr)))
 
            ((jump)
             (let ((opnd (jump-opnd gvm-instr))
@@ -524,6 +603,20 @@
             (compiler-internal-error "unrecognized type:" gvm-type)))
        ))
      lst)))
+
+(define (nat-close cgc parms)
+
+  (define (close parms)
+    (if (pair? parms)
+
+      (let* ((parm (car parms))
+             (lbl (closure-parms-lbl parm))
+             (loc (closure-parms-loc parm))
+             (opnds (closure-parms-opnds parm)))
+        (pp (list loc lbl opnds));;;;;;;;;;;;;;;
+        (close (cdr parms)))))
+
+  (close (reverse parms)))
 
 (define (translate-lbl ctx lbl)
   (lbl->id (lbl-num lbl) (ctx-ns ctx)))
@@ -555,7 +648,8 @@
            (let ((base (clo-base opnd))
                  (index (clo-index opnd)))
              (let ((reg (nat-opnd-reg targ base)))
-               (x86-mem (+ 1 (* 4 index)) reg)))) ;;;;;;;;;;;;;;;;
+               (x86-mem (+ 1 (* (nat-target-word-width targ) index))
+                        reg)))) ;;;;;;;;;;;;;;;;
 
           ((lbl? opnd)
            (let* ((lbl-name (translate-lbl ctx opnd))
@@ -572,7 +666,8 @@
              (cond ((and (integer? val) (exact? val))
                     (x86-imm-int (* val 4)))
                    ((proc-obj? val)
-                    (nat-label-ref cgc val))
+                    (x86-imm-int 0))
+                    ;;;;(nat-label-ref cgc (proc-obj-name val)))
                    ((eq? val #f)
                     (x86-imm-int -2))
                    ((eq? val #t)
@@ -649,6 +744,8 @@
     (nat-label-set! cgc 'println println-lbl)
 
     (x86-label cgc println-lbl)
+    (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int 1))
+    ;; TODO: add "jne wrong_nb_args_handler"
     (x86-call cgc print-lbl)
     (x86-mov  cgc (reg 1) (x86-imm-int 10))
     (x86-call cgc write_char-lbl)
@@ -734,31 +831,52 @@
         (case (nat-target-arch targ)
           ((x86-32)
            (x86-label cgc write_char-lbl)
+           (x86-push cgc (x86-ebp))
+           (x86-push cgc (x86-esi))
+           (x86-push cgc (x86-edi))
+           (x86-push cgc (x86-edx))
+           (x86-push cgc (x86-ecx))
+           (x86-push cgc (x86-ebx))
            (x86-push cgc (x86-eax))           ;; put character to write on stack
-           (x86-mov  cgc (x86-eax) (x86-esp)) ;; get address of character in %rax
+           (x86-mov  cgc (x86-eax) (x86-esp)) ;; get address of character in %eax
            (x86-push cgc (x86-imm-int 1))     ;; number of bytes to write = 1
            (x86-push cgc (x86-eax))           ;; address of byte to write
            (x86-push cgc (x86-imm-int 1))     ;; "stdout" is file descriptor 1
            (x86-push cgc (x86-imm-int 0))     ;; reserve space for system call
            (x86-mov  cgc (x86-eax) (x86-imm-int 4)) ;; "write" system call is 4
-           (x86-int  cgc #x80)                ;; perform system call (int 0x80)
-           (x86-add  cgc (x86-esp) (x86-imm-int 20)) ;; pop what was pushed
+           (x86-int  cgc #x80)                ;; perform system call
+           (x86-add  cgc (x86-esp) (x86-imm-int 16)) ;; pop what was pushed
+           (x86-pop cgc (x86-eax))
+           (x86-pop cgc (x86-ebx))
+           (x86-pop cgc (x86-ecx))
+           (x86-pop cgc (x86-edx))
+           (x86-pop cgc (x86-edi))
+           (x86-pop cgc (x86-esi))
+           (x86-pop cgc (x86-ebp))
            (x86-ret cgc))
           ((x86-64)
            (x86-label cgc write_char-lbl)
+           (x86-push cgc (x86-r11))
+           (x86-push cgc (x86-rbp))
            (x86-push cgc (x86-rsi))
-           (x86-push cgc (x86-rdx))
            (x86-push cgc (x86-rdi))
+           (x86-push cgc (x86-rdx))
+           (x86-push cgc (x86-rcx))
+           (x86-push cgc (x86-rbx))
            (x86-push cgc (x86-rax))           ;; put character to write on stack
-           (x86-mov  cgc (x86-rsi) (x86-rsp)) ;; get address of character in %eax
+           (x86-mov  cgc (x86-rsi) (x86-rsp)) ;; get address of character in %rsi
            (x86-mov  cgc (x86-rdx) (x86-imm-int 1)) ;; number of bytes to write = 1
            (x86-mov  cgc (x86-rdi) (x86-imm-int 1)) ;; "stdout" is file descriptor 1
            (x86-mov  cgc (x86-rax) (x86-imm-int #x2000004)) ;; "write" system call is 0x2000004
            (x86-syscall cgc)
-           (x86-add  cgc (x86-rsp) (x86-imm-int 8)) ;; pop what was pushed
-           (x86-pop cgc (x86-rdi))
+           (x86-pop cgc (x86-rax))
+           (x86-pop cgc (x86-rbx))
+           (x86-pop cgc (x86-rcx))
            (x86-pop cgc (x86-rdx))
+           (x86-pop cgc (x86-rdi))
            (x86-pop cgc (x86-rsi))
+           (x86-pop cgc (x86-rbp))
+           (x86-pop cgc (x86-r11))
            (x86-ret cgc))))
 
     ;; Linux version of write_char
@@ -766,44 +884,54 @@
         (case (nat-target-arch targ)
           ((x86-32)
            (x86-label cgc write_char-lbl)
-           (x86-push cgc (x86-ebx))
-           (x86-push cgc (x86-ecx))
+           (x86-push cgc (x86-ebp))
+           (x86-push cgc (x86-esi))
+           (x86-push cgc (x86-edi))
            (x86-push cgc (x86-edx))
+           (x86-push cgc (x86-ecx))
+           (x86-push cgc (x86-ebx))
            (x86-push cgc (x86-eax))           ;; put character to write on stack
            (x86-mov  cgc (x86-ecx) (x86-esp)) ;; get address of character in %ecx
            (x86-mov  cgc (x86-edx) (x86-imm-int 1)) ;; number of bytes to write = 1
            (x86-mov  cgc (x86-ebx) (x86-imm-int 1)) ;; "stdout" is file descriptor 1
            (x86-mov  cgc (x86-eax) (x86-imm-int 4)) ;; "write" system call is 4
            (x86-int  cgc #x80)                      ;; perform system call (int 0x80)
-           (x86-add  cgc (x86-esp) (x86-imm-int 4)) ;; pop what was pushed
-           (x86-pop  cgc (x86-edx))
-           (x86-pop  cgc (x86-ecx))
-           (x86-pop  cgc (x86-ebx))
+           (x86-pop cgc (x86-eax))
+           (x86-pop cgc (x86-ebx))
+           (x86-pop cgc (x86-ecx))
+           (x86-pop cgc (x86-edx))
+           (x86-pop cgc (x86-edi))
+           (x86-pop cgc (x86-esi))
+           (x86-pop cgc (x86-ebp))
            (x86-ret cgc))
 
           ((x86-64)
            (x86-label cgc write_char-lbl)
            ;; Save args + destroyed registers
-           (x86-push cgc (x86-rdi))
+           (x86-push cgc (x86-r11))
+           (x86-push cgc (x86-rbp))
            (x86-push cgc (x86-rsi))
+           (x86-push cgc (x86-rdi))
            (x86-push cgc (x86-rdx))
            (x86-push cgc (x86-rcx))
-           (x86-push cgc (x86-r11))
-           (x86-push cgc (x86-rax))
+           (x86-push cgc (x86-rbx))
+           (x86-push cgc (x86-rax))           ;; put character to write on stack
 
-           ;; Prepare write syscall
-           (x86-mov cgc (x86-rdi) (x86-imm-int 1)) ; fd = stdout
-           (x86-mov cgc (x86-rsi) (x86-rsp))       ; buf = 0(%esp)
-           (x86-mov cgc (x86-rdx) (x86-imm-int 1)) ; count = 1
-           (x86-mov cgc (x86-rax) (x86-imm-int 1)) ; write
+           ;; Perform "write" syscall
+           (x86-mov cgc (x86-rdi) (x86-imm-int 1)) ;; fd = stdout
+           (x86-mov cgc (x86-rsi) (x86-rsp))       ;; buf = 0(%esp)
+           (x86-mov cgc (x86-rdx) (x86-imm-int 1)) ;; count = 1
+           (x86-mov cgc (x86-rax) (x86-imm-int 1)) ;; write
            (x86-syscall cgc)
 
            (x86-pop cgc (x86-rax))
-           (x86-pop cgc (x86-r11))
+           (x86-pop cgc (x86-rbx))
            (x86-pop cgc (x86-rcx))
            (x86-pop cgc (x86-rdx))
-           (x86-pop cgc (x86-rsi))
            (x86-pop cgc (x86-rdi))
+           (x86-pop cgc (x86-rsi))
+           (x86-pop cgc (x86-rbp))
+           (x86-pop cgc (x86-r11))
            (x86-ret cgc))))
 ))
 

@@ -368,11 +368,14 @@
 
             (let ((id (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))))
 
-              (gen (univ-function
+              (gen "\n"
+                   (univ-function
 
                     ctx
 
                     id
+
+                    ""
 
                     (univ-indent
                      (case (label-type gvm-instr)
@@ -428,6 +431,8 @@
             ;; TODO: combine with scan-gvm-opnd
             (define (scan-opnd gvm-opnd)
               (cond ((not gvm-opnd))
+                    ((lbl? gvm-opnd)
+                     (todo-lbl-num! (lbl-num gvm-opnd)))
                     ((obj? gvm-opnd)
                      (scan-obj (obj-val gvm-opnd)))
                     ((clo? gvm-opnd)
@@ -448,6 +453,7 @@
               ((close)
                (for-each (lambda (parms)
                            (scan-opnd (closure-parms-loc parms))
+                           (scan-opnd (make-lbl (closure-parms-lbl parms)))
                            (for-each scan-opnd (closure-parms-opnds parms)))
                          (close-parms gvm-instr)))
 
@@ -468,7 +474,6 @@
                (let ((loc (apply-loc gvm-instr))
                      (prim (apply-prim gvm-instr))
                      (opnds (apply-opnds gvm-instr)))
-
                  (let ((proc (proc-obj-inline prim)))
                    (if (not proc)
 
@@ -487,9 +492,52 @@
                      (gen ""))))
 
               ((close)
-               ;; TODO
-               ;; (close-parms gvm-instr)
-               (univ-throw ctx "\"close GVM instruction unimplemented\""))
+               (let ((parms (close-parms gvm-instr)))
+
+                 (define (alloc lst rev-loc-names)
+                   (if (pair? lst)
+
+                       (let* ((parms (car lst))
+                              (lbl (closure-parms-lbl parms))
+                              (loc (closure-parms-loc parms))
+                              (opnds (closure-parms-opnds parms)))
+                         (univ-closure-alloc
+                          ctx
+                          lbl
+                          (length opnds)
+                          (lambda (name)
+                            (gen (univ-assign ctx
+                                              (translate-gvm-opnd ctx loc)
+                                              name)
+                                 (alloc (cdr lst)
+                                        (cons (cons loc name)
+                                              rev-loc-names))))))
+
+                       (map
+                        (lambda (parms loc-name)
+                          (let* ((lbl (closure-parms-lbl parms))
+                                 (loc (closure-parms-loc parms))
+                                 (opnds (closure-parms-opnds parms)))
+                            (let loop ((i 0)
+                                       (opnds (cons (make-lbl lbl) opnds))
+                                       (rev-code '()))
+                              (if (pair? opnds)
+                                  (let ((opnd (car opnds)))
+                                    (loop (+ i 1)
+                                          (cdr opnds)
+                                          (cons (univ-assign
+                                                 ctx
+                                                 (univ-clo ctx (cdr loc-name) i)
+                                                 (let ((x (assv opnd rev-loc-names)))
+                                                   (if x
+                                                       (cdr x)
+                                                       (translate-gvm-opnd ctx opnd))))
+                                                rev-code)))
+                                  (reverse rev-code)))))
+                        (close-parms gvm-instr)
+                        (reverse rev-loc-names))))
+
+                 (alloc (close-parms gvm-instr) '())))
 
               ((ifjump)
                ;; TODO
@@ -524,21 +572,35 @@
                ;; TODO
                ;; (jump-safe? gvm-instr)
                ;; test: (jump-poll? gvm-instr)
-               (gen (let ((nb-args (jump-nb-args gvm-instr)))
-                      (if nb-args
-                          (univ-assign ctx (univ-global ctx (univ-prefix ctx "nargs")) nb-args)
-                          ""))
-                    (with-stack-pointer-adjust
-                     ctx
-                     (+ (frame-size (gvm-instr-frame gvm-instr))
-                        (ctx-stack-base-offset ctx))
-                     (lambda (ctx)
-                       (let ((opnd (jump-opnd gvm-instr)))
-                         (univ-return
-                          ctx
-                          (if (jump-poll? gvm-instr)
-                              (gen (univ-prefix ctx "poll") "(" (scan-gvm-opnd ctx opnd) ")")
-                              (scan-gvm-opnd ctx opnd))))))))
+
+               (let ((nb-args (jump-nb-args gvm-instr))
+                     (poll? (jump-poll? gvm-instr))
+                     (safe? (jump-safe? gvm-instr))
+                     (opnd (jump-opnd gvm-instr))
+                     (fs (frame-size (gvm-instr-frame gvm-instr))))
+
+                 (or (and (obj? opnd)
+                          (proc-obj? (obj-val opnd))
+                          nb-args
+                          (let* ((proc (obj-val opnd))
+                                 (jump-inliner (proc-obj-jump-inline proc)))
+                            (and jump-inliner
+                                 (jump-inliner ctx nb-args poll? safe? fs))))
+
+                     (gen (if nb-args
+                              (univ-assign ctx (univ-global ctx (univ-prefix ctx "nargs")) nb-args)
+                              "")
+                          (with-stack-pointer-adjust
+                           ctx
+                           (+ fs
+                              (ctx-stack-base-offset ctx))
+                           (lambda (ctx)
+                             (univ-return
+                              ctx
+                              (univ-poll
+                               ctx
+                               (scan-gvm-opnd ctx opnd)
+                               poll?))))))))
 
               (else
                (compiler-internal-error
@@ -618,6 +680,31 @@
           (loop (cons (dump-proc (queue-get! proc-left))
                       rev-res))))))
 
+(define closure-count 0)
+
+(define (univ-closure-alloc ctx lbl nb-closed-vars cont)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (set! closure-count (+ closure-count 1))
+     (let ((name (string-append "closure" (number->string closure-count))))
+       (gen (univ-function
+             ctx
+             name
+             ""
+             "\n"
+             (univ-indent
+              (gen (univ-assign ctx
+                                (translate-gvm-opnd ctx (make-reg (+ univ-nb-arg-regs 1)))
+                                name)
+                   (univ-return ctx
+                                (translate-lbl ctx (make-lbl lbl))))))
+            (cont name))))
+
+    (else
+     (compiler-internal-error
+      "univ-closure-alloc, unknown target"))))
+
 (define gen vector)
 
 (define (make-ctx target ns)
@@ -679,10 +766,9 @@
               "]"))
 
         ((clo? gvm-opnd)
-         (gen (translate-gvm-opnd ctx (clo-base gvm-opnd))
-              "["
-              (clo-index gvm-opnd)
-              "]"))
+         (univ-clo ctx
+                   (translate-gvm-opnd ctx (clo-base gvm-opnd))
+                   (clo-index gvm-opnd)))
 
         ((lbl? gvm-opnd)
          (translate-lbl ctx gvm-opnd))
@@ -694,6 +780,11 @@
          (compiler-internal-error
           "translate-gvm-opnd, unknown 'gvm-opnd':"
           gvm-opnd))))
+
+(define (univ-clo ctx closure index)
+  (gen closure
+       ".v"
+       index))
 
 (define (translate-obj ctx obj)
   
@@ -708,6 +799,12 @@
         
         ((string? obj)
          (univ-string ctx obj))
+
+        ((null? obj)
+         (univ-null ctx obj))
+
+        ((list? obj)
+         (univ-list ctx obj))
         
         ((void-object? obj)
          (gen "undefined"))
@@ -811,98 +908,171 @@ function Gambit_Char(i) {
   this.i = i;
 }
 
-Gambit_Char.integerToChar = function (i) {
-    var ch = Gambit_chars[i];
+Gambit_Char.fxToChar = function ( i ) {
+  var ch = Gambit_chars[i];
 
-    if (!ch) {
-        Gambit_chars[i] = new Gambit_Char(i);
-        ch = Gambit_chars[i];
-    }
+  if (!ch) {
+      Gambit_chars[i] = new Gambit_Char(i);
+      ch = Gambit_chars[i];
+  }
     
-    return ch;
+  return ch;
+}
+
+Gambit_Char.charToFx = function ( c ) {
+  return c.i;
 }
 
 Gambit_Char.prototype.toString = function ( ) {
-    return String.fromCharCode(this.i);
+  return String.fromCharCode(this.i);
 }
 
-function Gambit_Pair(car, cdr) {
-    this.car = car;
-    this.cdr = cdr;
+//
+// pair obj
+//
+function Gambit_Pair ( car, cdr ) {
+  this.car = car;
+  this.cdr = cdr;
+}
+
+function Gambit_pairp ( p ) {
+  return (p instanceof Gambit_Pair);
+}
+
+Gambit_Pair.prototype.toString = function ( ) {
+  var res = "(" + this.car.toString();
+  if (this.cdr !== null)
+    res += " . " + this.cdr.toString();
+  res += ")";
+  
+  return res;
+}
+
+function prettyPrintList ( o ) {
+  if (!Gambit_nullp(o)) {
+    lbl1_println(Gambit_car(o));
+    if (!Gambit_nullp(Gambit_cdr(o))) {
+      print(" ");
+      prettyPrintList(Gambit_cdr(o));
+    }
+  }
+}
+
+function Gambit_nullp ( o ) {
+  return o === null;
+}
+
+// cons
+function Gambit_cons ( a, b ) {
+  return new Gambit_Pair(a, b);
+}
+
+// car
+function Gambit_car ( p ) {
+    return p.car;
+}
+
+// cdr
+function Gambit_cdr ( p ) {
+    return p.cdr;
+}
+
+// set-car!
+function Gambit_setcar ( p, a ) {
+    p.car = a;
+}
+
+// set-cdr!
+function Gambit_setcdr ( p, b ) {
+    p.cdr = b;
+}
+
+// list
+function Gambit_list ( ) {
+  var listaux = function (a, n, lst) {
+    if (n === 0) {
+      return Gambit_cons(a[0], lst);
+    } else {
+      return listaux(a, n-1, Gambit_cons(a[n], lst));
+    }
+  }
+
+  var res = listaux(arguments, arguments.length - 1, null);
+  return res;
 }
 
 function Gambit_String(charray) {
-    this.charray = charray;
+  this.charray = charray;
 }
 
 Gambit_String.makestring = function ( n, c ) {
-    var a = new Array(n);
-    c = c || "";
-    for (i = 0; i < n; i++) {
-        a[i] = c.i;
-    }
+  var a = new Array(n);
+  c = c || "";
+  for (i = 0; i < n; i++) {
+      a[i] = c.i;
+  }
 
-    return new Gambit_String(a);
+  return new Gambit_String(a);
 }
 
 Gambit_String.prototype.stringlength = function ( ) {
-    return this.charray.length;
+  return this.charray.length;
 }
 
 // string-ref
 Gambit_String.prototype.stringref = function ( n ) {
-    return this.charray[n];
+  return this.charray[n];
 }
 
 // string-set!
 Gambit_String.prototype.stringset = function ( n, c ) {
-    this.charray[n] = c.i;
+  this.charray[n] = c.i;
 }
 
 Gambit_String.prototype.toString = function ( ) {
-    var s = "";
-    for (i = 0; i < this.stringlength(); i++) {
-        s = s.concat(String.fromCharCode(this.stringref(i)));
-    }
+  var s = "";
+  for (i = 0; i < this.stringlength(); i++) {
+      s = s.concat(String.fromCharCode(this.stringref(i)));
+  }
 
-    return s;
+  return s;
 }
 
 
 var Gambit_syms = {};
 function Gambit_Symbol(s) {
-    this.symbolToString = function ( ) { return s; }
-    this.toString = function ( ) { return s; }
+  this.symbolToString = function ( ) { return s; }
+  this.toString = function ( ) { return s; }
 }
 
 Gambit_Symbol.stringToSymbol = function ( s ) {
-    var sym = Gambit_syms[s];
+  var sym = Gambit_syms[s];
     
-    if (!sym) {
-        Gambit_syms[s] = new Gambit_Symbol(s);
-        sym = Gambit_syms[s];
-    }
+  if (!sym) {
+      Gambit_syms[s] = new Gambit_Symbol(s);
+      sym = Gambit_syms[s];
+  }
     
-    return sym;
+  return sym;
 }
 
 var Gambit_kwds = {};
 function Gambit_Keyword(s) {
-    s = s + ":";
+  s = s + ":";
 
-    this.keywordToString = function( ) { return s.substring(0, s.length-1); }
-    this.toString = function( ) { return s; }
+  this.keywordToString = function( ) { return s.substring(0, s.length-1); }
+  this.toString = function( ) { return s; }
 }
 
 Gambit_Keyword.stringToKeyword = function(s) {
-    var kwd = Gambit_kwds[s];
+  var kwd = Gambit_kwds[s];
     
-    if (!kwd) {
-        Gambit_kwds[s] = new Gambit_Keyword(s);
-        kwd = Gambit_kwds[s];
-    }
+  if (!kwd) {
+      Gambit_kwds[s] = new Gambit_Keyword(s);
+      kwd = Gambit_kwds[s];
+  }
     
-    return kwd;
+  return kwd;
 }
 
 function Gambit_lbl1_println() { // println
@@ -912,12 +1082,16 @@ function Gambit_lbl1_println() { // println
     print("#f");
   else if (Gambit_reg[1] === true)
     print("#t");
+  else if (Gambit_reg[1] === null)
+    print("");
   else if (Gambit_reg[1] instanceof Gambit_Flonum)
     print(Gambit_reg[1].toString());
   else if (Gambit_reg[1] instanceof Gambit_String)
     print(Gambit_reg[1].toString());
   else if (Gambit_reg[1] instanceof Gambit_Char)
     print(Gambit_reg[1].toString());
+  else if (Gambit_reg[1] instanceof Gambit_Pair)
+    print(Gambit_reg[1].toString());    
   else
     print(Gambit_reg[1]);
   return Gambit_reg[0];
@@ -942,45 +1116,109 @@ function Gambit_dump_cont(sp, ra) {
   print("------------------------");
 }
 
-function Gambit_lbl1__23__23_continuation_2d_capture() { // ##continuation-capture
+// Obsolete?
+function Gambit_lbl1__23__23_call_2d_with_2d_current_2d_continuation() { // ##call-with-current-continuation
   if (Gambit_nargs !== 1)
     throw "wrong number of arguments";
   Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
   var fn = Gambit_reg[1];
-  Gambit_reg[1] = new Gambit_Continuation(Gambit_stack[0], false);
+  var cont = new Gambit_Continuation(Gambit_stack[0], false);
+  Gambit_reg[1] = function () {
+    if (Gambit_nargs !== 1)
+      throw "wrong number of arguments";
+    Gambit_sp = 0;
+    Gambit_stack[0] = cont.frame;
+    return Gambit_underflow_handler;
+  };
   return fn;
 }
 
-Gambit_glo["##continuation-capture"] = Gambit_lbl1__23__23_continuation_2d_capture;
+Gambit_glo["##call-with-current-continuation"] = Gambit_lbl1__23__23_call_2d_with_2d_current_2d_continuation;
 
 
-function Gambit_lbl1__23__23_continuation_2d_return() { // ##continuation-return
-  if (Gambit_nargs !== 2)
-    throw "wrong number of arguments";
+function Gambit_continuation_capture1() {
+  var receiver = Gambit_reg[1];
+  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
+  Gambit_reg[1] = new Gambit_Continuation(Gambit_stack[0], false);
+  Gambit_nargs = 1;
+  return receiver;
+}
+
+function Gambit_continuation_capture2() {
+  var receiver = Gambit_reg[1];
+  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
+  Gambit_reg[1] = new Gambit_Continuation(Gambit_stack[0], false);
+  Gambit_nargs = 2;
+  return receiver;
+}
+
+function Gambit_continuation_capture3() {
+  var receiver = Gambit_reg[1];
+  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
+  Gambit_reg[1] = new Gambit_Continuation(Gambit_stack[0], false);
+  Gambit_nargs = 3;
+  return receiver;
+}
+
+function Gambit_continuation_capture4() {
+  var receiver = Gambit_stack[Gambit_sp--];
+  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
+  Gambit_stack[++Gambit_sp] = new Gambit_Continuation(Gambit_stack[0], false);
+  Gambit_nargs = 4;
+  return receiver;
+}
+
+function Gambit_continuation_graft_no_winding2() {
+  var proc = Gambit_reg[2];
+  var cont = Gambit_reg[1];
   Gambit_sp = 0;
-  Gambit_stack[0] = Gambit_reg[1].frame;
+  Gambit_stack[0] = cont.frame;
+  Gambit_reg[0] = Gambit_underflow_handler;
+  Gambit_nargs = 0;
+  return proc;
+}
+
+function Gambit_continuation_graft_no_winding3() {
+  var proc = Gambit_reg[2];
+  var cont = Gambit_reg[1];
+  Gambit_sp = 0;
+  Gambit_stack[0] = cont.frame;
+  Gambit_reg[0] = Gambit_underflow_handler;
+  Gambit_reg[1] = Gambit_reg[3];
+  Gambit_nargs = 1;
+  return proc;
+}
+
+function Gambit_continuation_graft_no_winding4() {
+  var proc = Gambit_reg[1];
+  var cont = Gambit_stack[Gambit_sp];
+  Gambit_sp = 0;
+  Gambit_stack[0] = cont.frame;
+  Gambit_reg[0] = Gambit_underflow_handler;
+  Gambit_reg[1] = Gambit_reg[2];
+  Gambit_reg[2] = Gambit_reg[3];
+  Gambit_nargs = 2;
+  return proc;
+}
+
+function Gambit_continuation_graft_no_winding5() {
+  var proc = Gambit_stack[Gambit_sp];
+  var cont = Gambit_stack[Gambit_sp-1];
+  Gambit_sp = 0;
+  Gambit_stack[0] = cont.frame;
+  Gambit_reg[0] = Gambit_underflow_handler;
+  Gambit_nargs = 3;
+  return proc;
+}
+
+function Gambit_continuation_return_no_winding2() {
+  var cont = Gambit_reg[1];
+  Gambit_sp = 0;
+  Gambit_stack[0] = cont.frame;
   Gambit_reg[0] = Gambit_underflow_handler;
   Gambit_reg[1] = Gambit_reg[2];
   return Gambit_reg[0];
 }
-
-Gambit_glo["##continuation-return"] = Gambit_lbl1__23__23_continuation_2d_return;
-
-
-function Gambit_lbl1__23__23_continuation_2d_graft() { // ##continuation-graft
-  if (Gambit_nargs < 2 || Gambit_nargs > 3)
-    throw "wrong number of arguments";
-  Gambit_sp = 0;
-  Gambit_stack[0] = Gambit_reg[1].frame;
-  Gambit_reg[0] = Gambit_underflow_handler;
-  var fn = Gambit_reg[2];
-  Gambit_reg[1] = Gambit_reg[3]; // copy first argument (if there is one)
-  Gambit_nargs = Gambit_nargs-2;
-  return fn;
-}
-
-Gambit_glo["##continuation-graft"] = Gambit_lbl1__23__23_continuation_2d_graft;
-
 
 function Gambit_lbl1__23__23_continuation_3f_() { // ##continuation?
   if (Gambit_nargs !== 1)
@@ -1171,21 +1409,65 @@ class Gambit_Char:
   def __str__ ( self ):
     return self.c
         
-# integer->char
-def Gambit_integerToChar ( i ):
+# ##fx->char
+def Gambit_fxToChar ( i ):
   if Gambit_Char.chars.has_key(i):
     return Gambit_Char.chars[i]
   else:
     Gambit_Char.chars[i] = Gambit_Char(unichr(i))
     return Gambit_Char.chars[i]
 
-# char->integer
-def Gambit_charToInteger ( c ):
+# ##fx<-char
+def Gambit_charToFx ( c ):
   return ord(c.c)
 
 # char?
 def Gambit_charp ( c ):
   return (isinstance(c, Char))
+
+#
+# Pair
+#
+class Gambit_Pair:
+  def __init__ ( self, car, cdr ):
+    self.car = car
+    self.cdr = cdr
+
+  def __str__ ( self ):
+    res = "(" + self.car
+    if (self.cdr is not None):
+      res += " . " + self.cdr
+    res += ")"
+
+    return res
+
+  def __eq__ ( self, p ):
+    return self is p
+
+  def car ( self ):
+    return self.car
+
+  def cdr ( self ):
+    return self.cdr
+
+  def setcar ( self, newcar ):
+    self.car = newcar
+
+  def setcdr ( self, newcdr ):
+    self.cdr = newcdr
+
+def Gambit_cons ( a, b ):
+  return Gambit_Pair(a, b)
+
+def Gambit_list ( *args ):
+  n = len(args)
+  lst = None
+
+  while n > 0:
+    lst = Gambit_cons(args[n-1], lst)
+    n -= 1
+
+  return lst
 
 #
 # String
@@ -1270,7 +1552,7 @@ class Gambit_Char
   end
 end
 
-def Gambit_integerToChar ( i )
+def Gambit_fxToChar ( i )
   if $Gambit_chars.has_key?(i)
     return $Gambit_chars[i]
   else
@@ -1278,6 +1560,10 @@ def Gambit_integerToChar ( i )
     $Gambit_chars[i] = c
     return c
   end
+end
+
+def Gambit_charToFx ( c )
+  return c.code
 end
 
 $Gambit_lbl1_println = lambda { # println
@@ -1290,7 +1576,7 @@ $Gambit_lbl1_println = lambda { # println
   elsif $Gambit_reg[1] == true
     print("#t")
   elsif $Gambit_reg[1].equal?(nil)
-    print("'()")
+    print("")
   elsif $Gambit_reg[1].class == Float && $Gambit_reg[1] == $Gambit_reg[1].round
     print($Gambit_reg[1].round.to_s() + ".")
   else
@@ -1359,32 +1645,63 @@ EOF
      (compiler-internal-error
       "univ-global, unknown target"))))
 
-(define (univ-function ctx name header body)
-  (gen "\n"
-       (case (target-name (ctx-target ctx))
+(define (univ-function ctx name params header body)
+  (case (target-name (ctx-target ctx))
 
-         ((js php)
-          (gen "function " name "() {" header body "}\n"))
+    ((js php)
+     (gen "function " name "(" params ") {" header body "}\n"))
 
-         ((python)
-          (gen "def " name "():\n"
-               (univ-indent (gen "global "
-                                 (univ-prefix ctx "glo") ","
-                                 (univ-prefix ctx "reg") ","
-                                 (univ-prefix ctx "stack") ","
-                                 (univ-prefix ctx "sp") ","
-                                 (univ-prefix ctx "nargs") ","
-                                 (univ-prefix ctx "temp1") ","
-                                 (univ-prefix ctx "temp2")))
-               header
-               body))
+    ((python)
+     (gen "def " name "(" params "):\n"
+          (univ-indent (gen "global "
+                            (univ-prefix ctx "glo") ","
+                            (univ-prefix ctx "reg") ","
+                            (univ-prefix ctx "stack") ","
+                            (univ-prefix ctx "sp") ","
+                            (univ-prefix ctx "nargs") ","
+                            (univ-prefix ctx "temp1") ","
+                            (univ-prefix ctx "temp2")))
+          header
+          body))
 
-         ((ruby)
-          (univ-assign ctx name (gen "lambda {" header body "}")))
+    ((ruby)
+     (univ-assign ctx
+                  name
+                  (gen "lambda {"
+                       (if (equal? params "")
+                           (gen "")
+                           (gen "|" params "|"))
+                       header
+                       body
+                       "}")))
 
-         (else
-          (compiler-internal-error
-           "univ-function, unknown target")))))
+    (else
+     (compiler-internal-error
+      "univ-function, unknown target"))))
+
+(define (univ-rec-function ctx name params header body)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "(function () {\n"
+          (univ-indent
+           (gen (univ-function ctx name header body)
+                (univ-return ctx name)))
+          "})()"))
+
+    ((python)
+     (gen "(lambda:\n"
+          (univ-indent
+           (gen (univ-function ctx name header body)
+                (univ-return ctx name)))
+          ")()"))
+
+    ((ruby)
+     "???")
+
+    (else
+     (compiler-internal-error
+      "univ-rec-function, unknown target"))))
 
 (define (univ-comment ctx comment)
   (case (target-name (ctx-target ctx))
@@ -1411,6 +1728,11 @@ EOF
     (else
      (compiler-internal-error
       "univ-return, unknown target"))))
+
+(define (univ-poll ctx expr poll?)
+  (if poll?
+      (gen (univ-prefix ctx "poll") "(" expr ")")
+      expr))
 
 (define (univ-throw ctx expr)
   (case (target-name (ctx-target ctx))
@@ -1582,7 +1904,14 @@ EOF
      (compiler-internal-error
       "univ-if-then-else, unknown target"))))
 
-(define (univ-define-prim name proc-safe? side-effects? apply-gen ifjump-gen)
+(define (univ-define-prim
+         name
+         proc-safe?
+         side-effects?
+         apply-gen
+         #!optional
+         (ifjump-gen #f)
+         (jump-gen #f))
   (let ((prim (univ-prim-info* (string->canonical-symbol name))))
 
     (if apply-gen
@@ -1620,7 +1949,19 @@ EOF
           (proc-obj-test-set!
            prim
            (lambda (ctx opnds)
-             (ifjump-gen ctx opnds)))))))
+             (ifjump-gen ctx opnds)))))
+
+    (if jump-gen
+        (begin
+
+          (proc-obj-jump-inlinable?-set!
+           prim
+           (lambda (env)
+             #t))
+
+          (proc-obj-jump-inline-set!
+           prim
+           jump-gen)))))
 
 (define (univ-define-prim-bool name proc-safe? side-effects? prim-gen)
   (univ-define-prim name proc-safe? side-effects? prim-gen prim-gen))
@@ -1651,13 +1992,13 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen (univ-prefix ctx "Char.integerToChar")
+       (gen (univ-prefix ctx "Char.fxToChar")
             "("
             code
             ")"))
 
       ((python ruby)
-       (gen (univ-prefix ctx "integerToChar")
+       (gen (univ-prefix ctx "fxToChar")
             "("
             code
             ")"))
@@ -1714,6 +2055,67 @@ EOF
      (compiler-internal-error
       "univ-string, unknown target"))))
 
+(define (univ-null ctx obj)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "null"))
+    
+    ((python)
+     (gen "None"))
+
+    ((ruby)
+     (gen "nil"))
+
+    ((php)                                ;TODO: complete
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-null, unknown target"))))
+
+(define (univ-list ctx obj)             ;obj is a non-null list
+  
+  (define (make-list n elt)
+  (if (<= n 0)
+      '()
+      (cons elt (make-list (- n 1) elt))))
+  
+  (define (zip lst1 lst2)
+    (define (zip-aux lst1 lst2 lst)
+      (cond ((null? lst1)
+             (append lst lst2))
+            ((null? lst2)
+             (append lst lst1))
+            (else
+             (cons (car lst1)
+                   (cons (car lst2)
+                         (zip-aux (cdr lst1) (cdr lst2) lst))))))
+
+    (zip-aux lst1 lst2 '()))
+
+  (define (univ-list-aux ctx obj objs)  ;translate each obj in list
+    (if (null? obj)
+           objs
+           (cons (translate-obj ctx (car obj))
+                 (univ-list-aux ctx (cdr obj) objs))))
+      
+  (case (target-name (ctx-target ctx))
+
+    ((js python)
+     (let ((tobj (univ-list-aux ctx obj '()))
+           (sep (make-list (- (length obj) 1) ", ")))
+       (gen (univ-prefix ctx "list(")
+            (apply gen (zip tobj sep))
+            ")")))
+    
+    ((python ruby php)                         ;TODO: complete
+     (gen (object->string obj)))
+
+    (else
+     (compiler-internal-error
+      "univ-list, unknown target"))))
+
 ;;; Primitive procedures
 
 (univ-define-prim-bool "##not" #t #f
@@ -1735,27 +2137,21 @@ EOF
   (lambda (ctx opnds)
     (gen (translate-gvm-opnd ctx (list-ref opnds 0))
          " + "
-         (translate-gvm-opnd ctx (list-ref opnds 1))))
-
-  #f)
+         (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim "##fx-" #f #f
 
   (lambda (ctx opnds)
     (gen (translate-gvm-opnd ctx (list-ref opnds 0))
          " - "
-         (translate-gvm-opnd ctx (list-ref opnds 1))))
-
-  #f)
+         (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim "##fx*" #f #f
 
   (lambda (ctx opnds)
     (gen (translate-gvm-opnd ctx (list-ref opnds 0))
          " * "
-         (translate-gvm-opnd ctx (list-ref opnds 1))))
-
-  #f)
+         (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim-bool "##fx<" #f #f
 
@@ -1834,9 +2230,7 @@ EOF
 
       (else
        (compiler-internal-error
-        "##fx+?, unknown target"))))
-
-  #f)
+        "##fx+?, unknown target")))))
 
 (univ-define-prim "##fx-?" #f #f
 
@@ -1880,9 +2274,7 @@ EOF
 
       (else
        (compiler-internal-error
-        "##fx-?, unknown target"))))
-
-  #f)
+        "##fx-?, unknown target")))))
 
 (univ-define-prim "##fxwrap+" #f #f
 
@@ -1923,9 +2315,7 @@ EOF
 
       (else
        (compiler-internal-error
-        "##fxwrap+, unknown target"))))
-
-  #f)
+        "##fxwrap+, unknown target")))))
 
 (univ-define-prim "##fxwrap-" #f #f
 
@@ -1966,9 +2356,7 @@ EOF
 
       (else
        (compiler-internal-error
-        "##fxwrap-, unknown target"))))
-
-  #f)
+        "##fxwrap-, unknown target")))))
 
 (univ-define-prim "##fxwrap*" #f #f
 
@@ -2013,11 +2401,9 @@ EOF
 
       (else
        (compiler-internal-error
-        "##fxwrap*, unknown target"))))
+        "##fxwrap*, unknown target")))))
 
-  #f)
-
-(univ-define-prim "##null?" #f #f
+(univ-define-prim-bool "##null?" #t #f
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
@@ -2041,11 +2427,9 @@ EOF
 
       (else
        (compiler-internal-error
-        "##null?, unknown target"))))
+        "##null?, unknown target")))))
 
-  #f)
-
-(univ-define-prim "##cons" #f #f
+(univ-define-prim "##cons" #t #f
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
@@ -2070,9 +2454,7 @@ EOF
 
       (else
        (compiler-internal-error
-        "##cons, unknown target"))))
-
-  #f)
+        "##cons, unknown target")))))
 
 (univ-define-prim "##car" #f #f
 
@@ -2080,8 +2462,9 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".car"))
+       (gen (univ-prefix ctx "car(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
       
       ;; ((python)
       ;;  (gen ""))
@@ -2094,9 +2477,7 @@ EOF
 
       (else
        (compiler-internal-error
-        "##car, unknown target"))))
-
-  #f)
+        "##car, unknown target")))))
 
 (univ-define-prim "##cdr" #f #f
 
@@ -2104,8 +2485,9 @@ EOF
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".cdr"))
+       (gen (univ-prefix ctx "cdr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
       
       ;; ((python)
       ;;  (gen ""))
@@ -2118,19 +2500,19 @@ EOF
 
       (else
        (compiler-internal-error
-        "##cdr, unknown target"))))
+        "##cdr, unknown target")))))
 
-  #f)
-
-(univ-define-prim "##set-car!" #f #f
+(univ-define-prim "##set-car!" #f #t
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".car = "
-            (translate-gvm-opnd ctx (list-ref opnds 1))))
+       (gen (univ-prefix ctx "setcar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
       
       ;; ((python)
       ;;  (gen ""))
@@ -2143,19 +2525,19 @@ EOF
 
       (else
        (compiler-internal-error
-        "##set-car!, unknown target"))))
+        "##set-car!, unknown target")))))
 
-  #f)
-
-(univ-define-prim "##set-cdr!" #f #f
+(univ-define-prim "##set-cdr!" #f #t
 
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".cdr = "
-            (translate-gvm-opnd ctx (list-ref opnds 1))))
+       (gen (univ-prefix ctx "setcdr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
       
       ;; ((python)
       ;;  (gen ""))
@@ -2168,9 +2550,34 @@ EOF
 
       (else
        (compiler-internal-error
-        "##set-cdr!, unknown target"))))
+        "##set-cdr!, unknown target")))))
 
-  #f)
+(univ-define-prim "##list" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (let ((nbopnd (length opnds)))
+         (if (= nbopnd 0)
+             (gen "null")
+             (let ((args (list (univ-prefix ctx "list(")
+                               (translate-gvm-opnd ctx (list-ref opnds 0)))))
+               (let loop ((opnd 1)
+                          (args args))
+                 (if (= opnd nbopnd)
+                     (apply gen (append args '(")")))
+                     (loop (+ opnd 1)
+                           (append args
+                                   (list ", "
+                                         (translate-gvm-opnd ctx (list-ref opnds opnd)))))))))))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##list, unknown target")))))
 
 (univ-define-prim "##make-string" #f #f
 
@@ -2203,9 +2610,7 @@ EOF
 
       (else
        (compiler-internal-error
-        "##make-string, unknown target"))))
-
-  #f)
+        "##make-string, unknown target")))))
 
 (univ-define-prim "##string-set!" #f #t
 
@@ -2241,14 +2646,11 @@ EOF
 
       (else
        (compiler-internal-error
-        "##string-set!, unknown target"))))
-
-  #f)
+        "##string-set!, unknown target")))))
 
 (univ-define-prim "##string-ref" #f #f
 
   (lambda (ctx opnds)
-    (display "##string-ref")(newline)    
     (case (target-name (ctx-target ctx))
 
       ((js)
@@ -2277,9 +2679,51 @@ EOF
 
       (else
        (compiler-internal-error
-        "##string-ref, unknown target"))))
+        "##string-ref, unknown target")))))
 
-  #f)
+(univ-define-prim "##fx->char" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "Char.fxToChar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+       
+      ((python ruby)
+       (gen (univ-prefix ctx "fxToChar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+
+      ((php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##fx->char, unknown target")))))
+
+(univ-define-prim "##fx<-char" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "Char.charToFx(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+       
+      ((python ruby)
+       (gen (univ-prefix ctx "charToFx(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+
+      ((php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##fx<-char, unknown target")))))
 
 (univ-define-prim-bool "##fixnum?" #t #f
 
@@ -2354,7 +2798,7 @@ EOF
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
-            (univ-prefix ctx "Char")))
+            (univ-prefix ctx "Char)")))
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
@@ -2379,7 +2823,7 @@ EOF
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
-            (univ-prefix ctx "Pair")))
+            (univ-prefix ctx "Pair)")))
       
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
@@ -2404,7 +2848,7 @@ EOF
        (gen "isinstance("
             (translate-gvm-opnd ctx (list-ref opnds 0))
             ", "
-            (univ-prefix ctx "String")))
+            (univ-prefix ctx "String)")))
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
@@ -2417,5 +2861,68 @@ EOF
 
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
+
+(univ-define-prim "##continuation-capture" #f #t
+
+  #f
+  #f
+
+  (lambda (ctx nb-args poll? safe? fs)
+    (univ-jump-inline ctx
+                      nb-args
+                      1
+                      4
+                      poll?
+                      safe?
+                      fs
+                      "continuation_capture")))
+
+(univ-define-prim "##continuation-graft-no-winding" #f #t
+
+  #f
+  #f
+
+  (lambda (ctx nb-args poll? safe? fs)
+    (univ-jump-inline ctx
+                      nb-args
+                      2
+                      6
+                      poll?
+                      safe?
+                      fs
+                      "continuation_graft_no_winding")))
+
+(univ-define-prim "##continuation-return-no-winding" #f #t
+
+  #f
+  #f
+
+  (lambda (ctx nb-args poll? safe? fs)
+    (univ-jump-inline ctx
+                      nb-args
+                      2
+                      2
+                      poll?
+                      safe?
+                      fs
+                      "continuation_return_no_winding")))
+
+(define (univ-jump-inline ctx nb-args min-args max-args poll? safe? fs name)
+  (and (>= nb-args min-args)
+       (<= nb-args max-args)
+       (with-stack-pointer-adjust
+        ctx
+        (+ fs
+           (ctx-stack-base-offset ctx))
+        (lambda (ctx)
+          (gen (univ-return
+                ctx
+                (univ-poll
+                 ctx
+                 (gen (univ-prefix ctx
+                                   (string-append name
+                                                  (number->string nb-args)))
+                      "()")
+                 poll?)))))))
 
 ;;;============================================================================
