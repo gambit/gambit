@@ -19,7 +19,13 @@
 (include "_x86#.scm")
 (include "_codegen#.scm")
 
-(define auto-detect-arch-code '#u8(
+
+;; Return the architecture of the compiler.
+;; x86-32 for Intel 32
+;; x86-64 for Intel 64
+;; arm    for ARM
+(define (auto-detect-arch)
+  (define auto-detect-arch-code '#u8(
                     ;;       ARM              X86-32            X86-64
                     ;;
 #xEB #x0A #xA0 #xE3 ;;      mov r0,#962560    jmp x86           jmp x86
@@ -36,21 +42,16 @@
                     ;;      returns -4        returns 0         returns 4
 ))
 
-;;------------------------------------------------------------------------------
+  (define (run-code code #!optional (arg1 0) (arg2 0) (arg3 0))
+    (let* ((len (u8vector-length code))
+           (mcb (##make-machine-code-block len)))
+      (let loop ((i (- len 1)))
+        (if (>= i 0)
+            (begin
+              (##machine-code-block-set! mcb i (u8vector-ref code i))
+              (loop (- i 1)))))
+      (##machine-code-block-exec mcb arg1 arg2 arg3)))
 
-(define (run-code code #!optional (arg1 0) (arg2 0) (arg3 0))
- (let* ((len (u8vector-length code))
-        (mcb (##make-machine-code-block len)))
-   (let loop ((i (- len 1)))
-     (if (>= i 0)
-         (begin
-           (##machine-code-block-set! mcb i (u8vector-ref code i))
-           (loop (- i 1)))))
-   (##machine-code-block-exec mcb arg1 arg2 arg3)))
-
-;;------------------------------------------------------------------------------
-
-(define (auto-detect-arch)
  (case (run-code auto-detect-arch-code)
    ((-1) 'arm)
    ((0)  'x86-32)
@@ -109,6 +110,10 @@
  (lambda (#!optional (arg1 0) (arg2 0) (arg3 0))
    (##machine-code-block-exec mcb arg1 arg2 arg3)))
 
+;; Take a code generation context, assemble it,
+;; fix the addresses, and convert the code to
+;; a procedure.  Optionally display the resulting
+;; assembly code.
 (define (create-procedure cgc #!optional (show-listing? #f))
   (let ((targ (codegen-context-target cgc)))
     (let* ((code (asm-assemble-to-u8vector cgc))
@@ -119,10 +124,6 @@
       (u8vector->procedure code fixups))))
 
 
-
-;;;----------------------------------------------------------------------------
-;;
-;; Initialization/finalization of back-end.
 
 (define (nat-target-info-port x)               (vector-ref x 16))
 (define (nat-target-info-port-set! x y)        (vector-set! x 16 y))
@@ -151,8 +152,10 @@
 (define (nat-target-nb-arg-gvm-reg x)          (vector-ref x 28))
 (define (nat-target-nb-arg-gvm-reg-set! x y)   (vector-set! x 28 y))
 
+
+;; Initialization/finalization of back-end.
 (define (x86-setup target-language arch file-extension)
-  (let ((targ (make-target 9 target-language 13)))
+  (let ((targ (make-target 9 target-language 13))) ; We need 13 extra fields (see above).
 
     (define (begin! info-port)
 
@@ -245,6 +248,7 @@
     (target-end!-set! targ end!)
     (target-add targ)))
 
+;; Install the backend.
 (x86-setup 'nat (auto-detect-arch) ".s")
 
 
@@ -367,12 +371,16 @@
 ;  (pretty-print (list 'x86-object-type 'targ obj))
   'bignum);;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; ***** DUMPING OF A COMPILATION MODULE
 
+
+;;;; ***** DUMPING OF A COMPILATION MODULE
+
+;; nat-label-ref: finds the label associated with a symbol. Creates it if
+;;                it doesn't exist.
+;; nat-label-set!: insert or update a symbol/label association in the table.
 (define nat-label-ref  #f)
 (define nat-label-set! #f)
-
-(let ((labels (make-table test: equal?)))
+(let ((labels (make-table test: eq?)))
   (set! nat-label-ref
         (lambda (cgc label-name)
           (let ((x (table-ref labels label-name #f)))
@@ -385,9 +393,15 @@
         (lambda (cgc label-name val)
           (table-set! labels label-name val))))
 
+
+;; Queue containing the procs we've seen so far. (Could we use a set instead?)
 (define procs-seen (queue-empty))
+
+;; Queue containing the procs that have been seen, but not yet generated.
 (define procs-not-visited (queue-empty))
 
+;; Add obj to the procs-seen and procs-visited queues if it's
+;; a procedure object and has not been seen before.
 (define (scan-obj obj)
   (if (and (proc-obj? obj)
            (proc-obj-code obj)
@@ -396,24 +410,27 @@
         (queue-put! procs-seen obj)
         (queue-put! procs-not-visited obj))))
 
+;; Scan an operand only if it is an object or a closure.
 (define (scan-opnd opnd)
   (cond ((not opnd))
         ((obj? opnd) (scan-obj (obj-val opnd)))
         ((clo? opnd) (scan-obj (clo-base opnd)))))
 
-
-(define (make-cgc arch endianness)
+;; Create a new codegen context for the specified architecture and
+;; endianness.  The style of the resulting listing can also be
+;; specified, and defaults to GNU (AT&T).
+(define (make-cgc arch endianness #!optional (style 'gnu))
   (let ((cgc (make-codegen-context)))
     (asm-init-code-block cgc 0 endianness)
-    (codegen-context-listing-format-set! cgc 'gnu)
+    (codegen-context-listing-format-set! cgc style)
     (x86-arch-set! cgc arch)
     cgc))
 
-(define (x86-dump targ procs output c-intf script-line options)
 
+(define (x86-dump targ procs output c-intf script-line options)
+  ;; Allows gsc to fall into the REPL when there's an error.
   (set! throw-to-exception-handler
       (lambda (val) (error val)))
-
 
   (for-each (lambda (p) (scan-opnd (make-obj p))) procs)
   (let* ((cgc (make-cgc (nat-target-arch targ) 'le))
@@ -429,9 +446,13 @@
       (f)))
   #f)
 
+
+;; Define the entry point (main) of the program.  Do all the
+;; register shuffling, and jump to the main procedure of the
+;; program.
 (define (entry-point cgc main-proc)
   (let* ((targ (codegen-context-target cgc))
-         (main-lbl  (nat-label-ref cgc 'main)) ; Get main label from procs table.
+         (main-lbl  (nat-label-ref cgc 'main))
          (exit-lbl  (nat-label-ref cgc 'exit))
          (entry-lbl (nat-label-ref cgc (lbl->id 1 (proc-obj-name main-proc)))))
     (x86-label cgc main-lbl)
@@ -443,6 +464,7 @@
     (x86-pop cgc (nat-target-stack-ptr-reg targ))
     (x86-ret cgc)))
 
+;; Pop and translate every proc in procs-not-visited.
 (define (x86-translate-procs cgc)
   (if (queue-empty? procs-not-visited)
       '()
@@ -450,6 +472,8 @@
         (translate-proc cgc (queue-get! procs-not-visited))
         (x86-translate-procs cgc))))
 
+
+;; Do the code generation for a procedure.
 (define (translate-proc cgc proc)
   (let* ((code (proc-obj-code proc))
          (lst (bbs->code-list code))
@@ -505,10 +529,10 @@
   (lbl->id (lbl-num lbl) (ctx-ns ctx)))
 
 (define (lbl->id num ns)
-  (string-append "lbl_"
-                 (number->string num)
-                 "_"
-                 (scheme-id->c-id ns)))
+  (string->symbol (string-append "lbl_"
+                                 (number->string num)
+                                 "_"
+                                 (scheme-id->c-id ns))))
 
 
 (define (nat-opnd cgc ctx opnd) ;; fetch GVM operand
