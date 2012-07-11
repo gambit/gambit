@@ -1748,7 +1748,7 @@ EOF
 
 (define (univ-poll ctx expr poll?)
   (if poll?
-      (univ-call (univ-prefix ctx "poll") expr)
+      (univ-call ctx (univ-prefix ctx "poll") expr)
       expr))
 
 (define (univ-throw ctx expr)
