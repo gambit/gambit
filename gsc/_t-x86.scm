@@ -453,14 +453,53 @@
 
 (define nat-stack-limit-slot 0)
 (define nat-heap-limit-slot  1)
-(define nat-sp-slot          2)
-(define nat-pstate-size      100)
+(define nat-globals-slot     8)
+(define nat-sp-slot          2)         ; sp du code C.
+(define nat-pstate-size      100)       ; number of words
 (define nat-stack-size       (expt 2 20))
 (define nat-stack-fudge      (expt 2 14))
 (define nat-heap-size        (expt 2 20))
 (define nat-heap-fudge       (expt 2 14))
 
+;; Table from symbol to pstate offset.
+(define nat-globals (make-table test: eq?))
+
+;; Get the memory address of a symbol. If the symbol doesn't exist,
+;; add it to the table.
+(define nat-global-ref
+  (let ((current -1))
+    (lambda (targ symbol)
+      (let* ((x (table-ref nat-globals symbol #f))
+             (offset (if x
+                         x
+                         (begin
+                           (set! current (+ current 1))
+                           (table-set! nat-globals symbol current)
+                           current))))
+        (x86-mem (* (nat-target-word-width targ)
+                    (+ nat-globals-slot offset))
+                 (nat-target-pstate-ptr-reg targ))))))
+
+
+
 (define (entry-point cgc main-proc)
+  ;; |       | C stack
+  ;; +-------+ <--- pstate register
+  ;; |   .   |
+  ;; |   .   | pstate (nat-pstate-size)
+  ;; |   .   |
+  ;; +-------+
+  ;; |       | Wasted space to align to multiple of 256.
+  ;; +-------+ <--- stack pointer register
+  ;; |   .   |
+  ;; |   .   | Gambit stack (nat-stack-size)
+  ;; |   .   |
+  ;; |~~~~~~~| Gambit stack fudge (nat-stack-fudge)
+  ;; +-------+ <--- heap pointer register
+  ;; |   .   |
+  ;; |   .   | Gambit heap (nat-heap-size)
+  ;; |   .   |
+  ;; |~~~~~~~| Gambit heap fudge (nat-heap-fudge)
   (let* ((targ (codegen-context-target cgc))
          (main-lbl  (nat-label-ref cgc 'main))
          (exit-lbl  (nat-label-ref cgc 'exit))
@@ -468,6 +507,7 @@
 
     (x86-label cgc main-lbl)
 
+    ;; Save general purpose registers, stack and base registers onto the stack.
     (x86-push cgc (nat-target-stack-ptr-reg targ))
     (x86-push cgc (nat-target-pstate-ptr-reg targ))
     (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
@@ -476,14 +516,15 @@
     (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 3))
     (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 4))
 
-    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
-    (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-pstate-size)))
-    (x86-and  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int -256)) ;; align to multiple of 256 (low 8 bits = 0)
-    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-heap-ptr-reg targ)) (nat-target-pstate-ptr-reg targ))
-    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ)) ; pstate starts where the stack pointer is up to.
+    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-pstate-ptr-reg targ)) (nat-target-heap-ptr-reg targ)) ; save C sp in pstate
+    (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-pstate-size))) ; allocate nat-pstate-size words
+    (x86-and  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int -256)) ; align to multiple of 256 (low 8 bits = 0) (256 = 0xffff_ff00)
+    ;; (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-heap-ptr-reg targ)) (nat-target-pstate-ptr-reg targ))
+    ;; (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
 
-    (x86-mov  cgc (nat-target-stack-ptr-reg targ) (nat-target-heap-ptr-reg targ))
-    (x86-sub  cgc (nat-target-stack-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) 16))) ;; TODO: remove me! (tracking of frame size seems wrong)
+    (x86-mov  cgc (nat-target-stack-ptr-reg targ) (nat-target-heap-ptr-reg targ)) ; Gambit stack starts where the stack pointer is up to.
+    ;; (x86-sub  cgc (nat-target-stack-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) 16))) ;; TODO: remove me! (tracking of frame size seems wrong)
 
     (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-stack-fudge nat-stack-size)) (nat-target-heap-ptr-reg targ)))
     (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-stack-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
@@ -497,12 +538,23 @@
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 2) (x86-imm-int 0))
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 3) (x86-imm-int 0))
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 4) (x86-imm-int 0))
+
+    (let ((mem-loc (nat-global-ref targ 'println))
+          (mem-opnd (nat-label-ref cgc 'println)))
+      (x86-push cgc (x86-eax))
+      (x86-mov cgc (x86-eax) (x86-imm-lbl (nat-label-ref cgc 'println)))
+      (x86-mov cgc mem-loc (x86-eax))
+      (x86-pop cgc (x86-eax)))
+      ;;(x86-mov cgc mem-loc (x86-imm-lbl (nat-label-ref cgc 'println))))
+
     (x86-jmp  cgc entry-lbl)
 
     (x86-label cgc exit-lbl)
 
+    ;; Restore the C stack pointer.
     (x86-mov  cgc (nat-target-heap-ptr-reg targ) (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-pstate-ptr-reg targ)))
 
+    ;; Restore general purpose registers, stack and base registers from the stack.
     (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 4))
     (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 3))
     (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 2))
@@ -534,7 +586,7 @@
      (lambda (bb)
        (let* ((gvm-instr (code-gvm-instr bb))
               (gvm-type (gvm-instr-type gvm-instr)))
-(pp gvm-type);;;;;;;;;;;;;;;;;;;;;;
+         (pp gvm-type)
          (case gvm-type
            ((label)
             (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
@@ -572,9 +624,10 @@
                    (opnd (copy-opnd gvm-instr)))
               (scan-opnd opnd)
               (scan-opnd loc)
-              (let ((opnd* (nat-opnd cgc ctx opnd)))
+              (let ((loc* (nat-opnd cgc ctx loc))
+                    (opnd* (nat-opnd cgc ctx opnd)))
                 (x86-mov cgc
-                         (nat-opnd cgc ctx loc)
+                         (if (asm-label? loc*)  (x86-imm-lbl loc*)  loc*)
                          (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)
                          (* (nat-target-word-width targ) 8)))))
 
@@ -586,8 +639,8 @@
                   (nargs (jump-nb-args gvm-instr))
                   (jump-size (frame-size (gvm-instr-frame gvm-instr))))
               (scan-opnd opnd)
-              (if nargs
-                  (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs)))
+              ;; (if nargs
+              ;;     (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs)))
               (let ((offset (* (nat-target-word-width targ)
                                (- (codegen-context-frame-size cgc)
                                   jump-size))))
@@ -627,8 +680,16 @@
                                  "_"
                                  (scheme-id->c-id ns))))
 
+(define (classify-opnd opnd)
+  (list (list 'reg? (reg? opnd))
+        (list 'stk? (stk? opnd))
+        (list 'lbl? (lbl? opnd))
+        (list 'glo? (glo? opnd))
+        (list 'obj? (obj? opnd))
+        (list 'clo? (clo? opnd))))
 
 (define (nat-opnd cgc ctx opnd) ;; fetch GVM operand
+  (pp (classify-opnd opnd))
   (let ((targ (codegen-context-target cgc)))
     (cond ((reg? opnd)
            (let ((n (reg-num opnd)))
@@ -641,8 +702,10 @@
                       (nat-target-stack-ptr-reg targ))))
 
           ((glo? opnd)
-           (let ((name (glo-name opnd)))
-             (nat-label-ref cgc name)))
+           (let* ((name (glo-name opnd))
+                  (mem-loc (nat-global-ref targ name)))
+             (pp (list name mem-loc))
+             mem-loc))
 
           ((clo? opnd)
            (let ((base (clo-base opnd))
@@ -743,8 +806,9 @@
 
     (nat-label-set! cgc 'println println-lbl)
 
+
     (x86-label cgc println-lbl)
-    (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int 1))
+    ;;(x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int 1))
     ;; TODO: add "jne wrong_nb_args_handler"
     (x86-call cgc print-lbl)
     (x86-mov  cgc (reg 1) (x86-imm-int 10))
