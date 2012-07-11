@@ -395,7 +395,10 @@
                               (univ-not= ctx
                                          (univ-global ctx (univ-prefix ctx "nargs"))
                                          (label-entry-nb-parms gvm-instr))
-                              (univ-throw ctx "\"wrong number of arguments\""))))
+                              (univ-return ctx
+                                           (univ-call ctx
+                                                      (univ-prefix ctx "wrong_nargs")
+                                                      id)))))
 
                        ((return)
                         (gen " " (univ-comment ctx "return-point\n")))
@@ -506,36 +509,44 @@
                           lbl
                           (length opnds)
                           (lambda (name)
-                            (gen (univ-assign ctx
-                                              (translate-gvm-opnd ctx loc)
-                                              name)
-                                 (alloc (cdr lst)
-                                        (cons (cons loc name)
-                                              rev-loc-names))))))
+                            (alloc (cdr lst)
+                                   (cons (cons loc name)
+                                         rev-loc-names)))))
 
-                       (map
-                        (lambda (parms loc-name)
-                          (let* ((lbl (closure-parms-lbl parms))
-                                 (loc (closure-parms-loc parms))
-                                 (opnds (closure-parms-opnds parms)))
-                            (let loop ((i 0)
-                                       (opnds (cons (make-lbl lbl) opnds))
-                                       (rev-code '()))
-                              (if (pair? opnds)
-                                  (let ((opnd (car opnds)))
-                                    (loop (+ i 1)
-                                          (cdr opnds)
-                                          (cons (univ-assign
-                                                 ctx
-                                                 (univ-clo ctx (cdr loc-name) i)
-                                                 (let ((x (assv opnd rev-loc-names)))
-                                                   (if x
-                                                       (cdr x)
-                                                       (translate-gvm-opnd ctx opnd))))
-                                                rev-code)))
-                                  (reverse rev-code)))))
-                        (close-parms gvm-instr)
-                        (reverse rev-loc-names))))
+                       (init (reverse rev-loc-names))))
+
+                 (define (init loc-names)
+                   (gen (map
+                         (lambda (parms loc-name)
+                           (let* ((lbl (closure-parms-lbl parms))
+                                  (loc (closure-parms-loc parms))
+                                  (opnds (closure-parms-opnds parms)))
+                             (let loop ((i 0)
+                                        (opnds (cons (make-lbl lbl) opnds))
+                                        (rev-code '()))
+                               (if (pair? opnds)
+                                   (let ((opnd (car opnds)))
+                                     (loop (+ i 1)
+                                           (cdr opnds)
+                                           (cons (univ-assign
+                                                  ctx
+                                                  (univ-clo ctx (cdr loc-name) i)
+                                                  (let ((x (assv opnd loc-names)))
+                                                    (if x
+                                                        (cdr x)
+                                                        (translate-gvm-opnd ctx opnd))))
+                                                 rev-code)))
+                                   (reverse rev-code)))))
+                         (close-parms gvm-instr)
+                         loc-names)
+                        (map
+                         (lambda (loc-name)
+                           (let* ((loc (car loc-name))
+                                  (name (cdr loc-name)))
+                             (univ-assign ctx
+                                          (translate-gvm-opnd ctx loc)
+                                          name)))
+                         loc-names)))
 
                  (alloc (close-parms gvm-instr) '())))
 
@@ -891,6 +902,12 @@ if (this.hasOwnProperty('setTimeout')) {
 }
 
 
+function Gambit_wrong_nargs(fn) {
+  print("*** wrong number of arguments ("+Gambit_nargs+") when calling");
+  print(fn);
+  return false;
+}
+
 function Gambit_Flonum(val) {
   this.val = val;
 }
@@ -1076,8 +1093,9 @@ Gambit_Keyword.stringToKeyword = function(s) {
 }
 
 function Gambit_lbl1_println() { // println
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1_println);
+  }
   if (Gambit_reg[1] === false)
     print("#f");
   else if (Gambit_reg[1] === true)
@@ -1106,6 +1124,7 @@ function Gambit_Continuation(frame, denv) {
 }
 
 
+// Obsolete
 function Gambit_dump_cont(sp, ra) {
   print("------------------------");
   while (ra !== false) {
@@ -1115,26 +1134,6 @@ function Gambit_dump_cont(sp, ra) {
   }
   print("------------------------");
 }
-
-// Obsolete?
-function Gambit_lbl1__23__23_call_2d_with_2d_current_2d_continuation() { // ##call-with-current-continuation
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
-  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
-  var fn = Gambit_reg[1];
-  var cont = new Gambit_Continuation(Gambit_stack[0], false);
-  Gambit_reg[1] = function () {
-    if (Gambit_nargs !== 1)
-      throw "wrong number of arguments";
-    Gambit_sp = 0;
-    Gambit_stack[0] = cont.frame;
-    return Gambit_underflow_handler;
-  };
-  return fn;
-}
-
-Gambit_glo["##call-with-current-continuation"] = Gambit_lbl1__23__23_call_2d_with_2d_current_2d_continuation;
-
 
 function Gambit_continuation_capture1() {
   var receiver = Gambit_reg[1];
@@ -1221,8 +1220,9 @@ function Gambit_continuation_return_no_winding2() {
 }
 
 function Gambit_lbl1__23__23_continuation_3f_() { // ##continuation?
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_3f_);
+  }
   Gambit_reg[1] = Gambit_reg[1] instanceof Gambit_Continuation;
   return Gambit_reg[0];
 }
@@ -1231,8 +1231,9 @@ Gambit_glo["##continuation?"] = Gambit_lbl1__23__23_continuation_3f_;
 
 
 function Gambit_lbl1__23__23_continuation_2d_frame() { // ##continuation-frame
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_frame);
+  }
   Gambit_reg[1] = Gambit_reg[1].frame;
   return Gambit_reg[0];
 }
@@ -1241,8 +1242,9 @@ Gambit_glo["##continuation-frame"] = Gambit_lbl1__23__23_continuation_2d_frame;
 
 
 function Gambit_lbl1__23__23_continuation_2d_denv() { // ##continuation-denv
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_denv);
+  }
   Gambit_reg[1] = Gambit_reg[1].denv;
   return Gambit_reg[0];
 }
@@ -1251,8 +1253,9 @@ Gambit_glo["##continuation-denv"] = Gambit_lbl1__23__23_continuation_2d_denv;
 
 
 function Gambit_lbl1__23__23_continuation_2d_fs() { // ##continuation-fs
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_fs);
+  }
   Gambit_reg[1] = Gambit_reg[1].frame[0].fs;
   return Gambit_reg[0];
 }
@@ -1261,8 +1264,9 @@ Gambit_glo["##continuation-fs"] = Gambit_lbl1__23__23_continuation_2d_fs;
 
 
 function Gambit_lbl1__23__23_frame_2d_fs() { // ##frame-fs
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_fs);
+  }
   Gambit_reg[1] = Gambit_reg[1][0].fs;
   return Gambit_reg[0];
 }
@@ -1271,8 +1275,9 @@ Gambit_glo["##frame-fs"] = Gambit_lbl1__23__23_frame_2d_fs;
 
 
 function Gambit_lbl1__23__23_return_2d_fs() { // ##return-fs
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_return_2d_fs);
+  }
   Gambit_reg[1] = Gambit_reg[1].fs;
   return Gambit_reg[0];
 }
@@ -1281,8 +1286,9 @@ Gambit_glo["##return-fs"] = Gambit_lbl1__23__23_return_2d_fs;
 
 
 function Gambit_lbl1__23__23_continuation_2d_link() { // ##continuation-link
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_link);
+  }
   Gambit_reg[1] = Gambit_reg[1].frame[0].link;
   return Gambit_reg[0];
 }
@@ -1291,16 +1297,18 @@ Gambit_glo["##continuation-link"] = Gambit_lbl1__23__23_continuation_2d_link;
 
 
 function Gambit_lbl1__23__23_frame_2d_link() { // ##frame-link
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_link);
+  }
   Gambit_reg[1] = Gambit_reg[1][0].link;
   return Gambit_reg[0];
 }
 
 
 function Gambit_lbl1__23__23_continuation_2d_ret() { // ##continuation-ret
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_ret);
+  }
   Gambit_reg[1] = Gambit_reg[1].frame[0];
   return Gambit_reg[0];
 }
@@ -1309,8 +1317,9 @@ Gambit_glo["##continuation-ret"] = Gambit_lbl1__23__23_continuation_2d_ret;
 
 
 function Gambit_lbl1__23__23_frame_2d_ret() { // ##frame-ret
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_ret);
+  }
   Gambit_reg[1] = Gambit_reg[1][0];
   return Gambit_reg[0];
 }
@@ -1319,8 +1328,9 @@ Gambit_glo["##frame-ret"] = Gambit_lbl1__23__23_frame_2d_ret;
 
 
 function Gambit_lbl1__23__23_continuation_2d_ref() { // ##continuation-ref
-  if (Gambit_nargs !== 2)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 2) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_ref);
+  }
   Gambit_reg[1] = Gambit_reg[1].frame[Gambit_reg[2]];
   return Gambit_reg[0];
 }
@@ -1329,8 +1339,9 @@ Gambit_glo["##continuation-ref"] = Gambit_lbl1__23__23_continuation_2d_ref;
 
 
 function Gambit_lbl1__23__23_frame_2d_ref() { // ##frame-ref
-  if (Gambit_nargs !== 2)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 2) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_ref);
+  }
   Gambit_reg[1] = Gambit_reg[1][Gambit_reg[2]];
   return Gambit_reg[0];
 }
@@ -1339,8 +1350,9 @@ Gambit_glo["##frame-ref"] = Gambit_lbl1__23__23_frame_2d_ref;
 
 
 function Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
-  if (Gambit_nargs !== 2)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 2) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_);
+  }
   Gambit_reg[1] = true;
   return Gambit_reg[0];
 }
@@ -1349,8 +1361,9 @@ Gambit_glo["##continuation-slot-live?"] = Gambit_lbl1__23__23_continuation_2d_sl
 
 
 function Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
-  if (Gambit_nargs !== 2)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 2) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_);
+  }
   Gambit_reg[1] = true;
   return Gambit_reg[0];
 }
@@ -1359,8 +1372,9 @@ Gambit_glo["##frame-slot-live?"] = Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_
 
 
 function Gambit_lbl1__23__23_continuation_2d_next() { // ##continuation-next
-  if (Gambit_nargs !== 1)
-    throw "wrong number of arguments";
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_next);
+  }
   var frame = Gambit_reg[1].frame;
   var denv = Gambit_reg[1].denv;
   var next_frame = frame[frame[0].link+1];
@@ -1729,9 +1743,12 @@ EOF
      (compiler-internal-error
       "univ-return, unknown target"))))
 
+(define (univ-call ctx name params)
+  (gen name "(" params ")"))
+
 (define (univ-poll ctx expr poll?)
   (if poll?
-      (gen (univ-prefix ctx "poll") "(" expr ")")
+      (univ-call ctx (univ-prefix ctx "poll") expr)
       expr))
 
 (define (univ-throw ctx expr)
