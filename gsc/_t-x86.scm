@@ -380,7 +380,9 @@
 ;; nat-label-set!: insert or update a symbol/label association in the table.
 (define nat-label-ref  #f)
 (define nat-label-set! #f)
+(define nat-label-list #f)
 (let ((labels (make-table test: eq?)))
+  (set! nat-label-list (lambda () (table->list labels)))
   (set! nat-label-ref
         (lambda (cgc label-name)
           (let ((x (table-ref labels label-name #f)))
@@ -442,6 +444,8 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
+    (pp (nat-label-list))
+    (pp (table->list nat-globals))
     (let ((f (create-procedure cgc #t)))
       (f)))
   #f)
@@ -541,10 +545,10 @@
 
     (let ((mem-loc (nat-global-ref targ 'println))
           (mem-opnd (nat-label-ref cgc 'println)))
-      (x86-push cgc (x86-eax))
-      (x86-mov cgc (x86-eax) (x86-imm-lbl (nat-label-ref cgc 'println)))
-      (x86-mov cgc mem-loc (x86-eax))
-      (x86-pop cgc (x86-eax)))
+      (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
+      (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-lbl (nat-label-ref cgc 'println)))
+      (x86-mov cgc mem-loc (vector-ref (nat-target-gvm-reg-map targ) 1))
+      (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1)))
       ;;(x86-mov cgc mem-loc (x86-imm-lbl (nat-label-ref cgc 'println))))
 
     (x86-jmp  cgc entry-lbl)
@@ -586,7 +590,7 @@
      (lambda (bb)
        (let* ((gvm-instr (code-gvm-instr bb))
               (gvm-type (gvm-instr-type gvm-instr)))
-         (pp gvm-type)
+         ;;(pp gvm-type)
          (case gvm-type
            ((label)
             (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
@@ -602,8 +606,9 @@
                  #f)
 
                 ((entry)
-                 (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int (label-entry-nb-parms gvm-instr)))
+                 ;;(x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int (label-entry-nb-parms gvm-instr)))
                  ;; TODO: add "jne wrong_nb_args_handler"
+                 #f
                  )
 
                 ((return)
@@ -626,10 +631,16 @@
               (scan-opnd loc)
               (let ((loc* (nat-opnd cgc ctx loc))
                     (opnd* (nat-opnd cgc ctx opnd)))
-                (x86-mov cgc
-                         (if (asm-label? loc*)  (x86-imm-lbl loc*)  loc*)
-                         (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)
-                         (* (nat-target-word-width targ) 8)))))
+                (if (not (or (x86-reg? loc*) (x86-reg? opnd*)))
+                    (let ((temp-reg (vector-ref (nat-target-gvm-reg-map targ) 1)))
+                      (x86-push cgc temp-reg)
+                      (x86-mov  cgc temp-reg (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*))
+                      (x86-mov  cgc (if (asm-label? loc*) (x86-imm-lbl loc*) loc*) temp-reg)
+                      (x86-pop  cgc temp-reg))
+                    (x86-mov cgc
+                             (if (asm-label? loc*)  (x86-imm-lbl loc*)  loc*)
+                             (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)
+                             (* (nat-target-word-width targ) 8))))))
 
            ((close)
             (nat-close cgc (close-parms gvm-instr)))
@@ -689,7 +700,7 @@
         (list 'clo? (clo? opnd))))
 
 (define (nat-opnd cgc ctx opnd) ;; fetch GVM operand
-  (pp (classify-opnd opnd))
+  ;;(pp (classify-opnd opnd))
   (let ((targ (codegen-context-target cgc)))
     (cond ((reg? opnd)
            (let ((n (reg-num opnd)))
@@ -704,7 +715,7 @@
           ((glo? opnd)
            (let* ((name (glo-name opnd))
                   (mem-loc (nat-global-ref targ name)))
-             (pp (list name mem-loc))
+             ;;(pp (list name mem-loc))
              mem-loc))
 
           ((clo? opnd)
@@ -729,8 +740,8 @@
              (cond ((and (integer? val) (exact? val))
                     (x86-imm-int (* val 4)))
                    ((proc-obj? val)
-                    (x86-imm-int 0))
-                    ;;;;(nat-label-ref cgc (proc-obj-name val)))
+                    (let ((lbl-name (lbl->id 1 (proc-obj-name val))))
+                      (nat-label-ref cgc lbl-name)))
                    ((eq? val #f)
                     (x86-imm-int -2))
                    ((eq? val #t)
