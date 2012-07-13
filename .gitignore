@@ -177,3 +177,5 @@ gambc-v*.tgz
 *.pdb
 *.dep
 *.idb
+*.o
+*.gvm
