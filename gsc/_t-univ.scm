@@ -994,6 +994,146 @@ function Gambit_cdr ( p ) {
     return p.cdr;
 }
 
+// caar
+function Gambit_caar ( p ) {
+    return p.car.car;
+}
+
+// cadr
+function Gambit_cadr ( p ) {
+    return p.cdr.car;
+}
+
+// cdar
+function Gambit_cdar ( p ) {
+    return p.car.cdr;
+}
+
+// cddr
+function Gambit_cddr ( p ) {
+    return p.cdr.cdr;
+}
+
+// caaar
+function Gambit_caaar ( p ) {
+    return p.car.car.car;
+}
+
+// caadr
+function Gambit_caadr ( p ) {
+    return p.cdr.car.car;
+}
+
+// cadar
+function Gambit_cadar ( p ) {
+    return p.car.cdr.car;
+}
+
+// caddr
+function Gambit_caddr ( p ) {
+    return p.cdr.cdr.car;
+}
+
+// cdaar
+function Gambit_cdaar ( p ) {
+    return p.car.car.cdr;
+}
+
+// cdadr
+function Gambit_cdadr ( p ) {
+    return p.cdr.car.cdr;
+}
+
+// cddar
+function Gambit_cddar ( p ) {
+    return p.car.cdr.cdr;
+}
+
+// cdddr
+function Gambit_cdddr ( p ) {
+    return p.cdr.cdr.cdr;
+}
+
+// caaaar
+function Gambit_caaaar ( p ) {
+    return p.car.car.car.car;
+}
+
+// caaadr
+function Gambit_caaadr ( p ) {
+    return p.cdr.car.car.car;
+}
+
+// caadar
+function Gambit_caadar ( p ) {
+    return p.car.cdr.car.car;
+}
+
+// caaddr
+function Gambit_caaddr ( p ) {
+    return p.cdr.cdr.car.car;
+}
+
+// cadaar
+function Gambit_cadaar ( p ) {
+    return p.car.car.cdr.car;
+}
+
+// cadadr
+function Gambit_cadadr ( p ) {
+    return p.cdr.car.cdr.car;
+}
+
+// caddar
+function Gambit_caddar ( p ) {
+    return p.car.cdr.cdr.car;
+}
+
+// cadddr
+function Gambit_cadddr ( p ) {
+    return p.cdr.cdr.cdr.car;
+}
+
+// cdaaar
+function Gambit_cdaaar ( p ) {
+    return p.car.car.car.cdr;
+}
+
+// cdaadr
+function Gambit_cdaadr ( p ) {
+    return p.cdr.car.car.cdr;
+}
+
+// cdadar
+function Gambit_cdadar ( p ) {
+    return p.car.cdr.car.cdr;
+}
+
+// cdaddr
+function Gambit_cdaddr ( p ) {
+    return p.cdr.car.cdr.cdr;
+}
+
+// cddaar
+function Gambit_cddaar ( p ) {
+    return p.car.car.cdr.cdr;
+}
+
+// cddadr
+function Gambit_cddadr ( p ) {
+    return p.cdr.cdr.car.cdr;
+}
+
+// cdddar
+function Gambit_cdddar ( p ) {
+    return p.car.cdr.cdr.cdr;
+}
+
+// cddddr
+function Gambit_cddddr ( p ) {
+    return p.cdr.cdr.cdr.cdr;
+}
+
 // set-car!
 function Gambit_setcar ( p, a ) {
     p.car = a;
@@ -1055,6 +1195,44 @@ Gambit_String.prototype.toString = function ( ) {
   return s;
 }
 
+//
+// Vector obj
+//
+var Gambit_Vector = function ( ) {
+  this.a = new Array(arguments.length);
+  for (i = 0; i < arguments.length; i++) {
+      this.a[i] = arguments[i];
+  }
+}
+
+// vector-length
+Gambit_Vector.prototype.vectorlength = function ( ) {
+  return this.a.length;
+}
+
+// vector-ref
+Gambit_Vector.prototype.vectorref = function ( n ) {
+  return this.a[n];
+}
+
+// vector-set!
+Gambit_Vector.prototype.vectorset = function ( n, v ) {
+  this.a[n] = v;
+}
+
+Gambit_Vector.prototype.toString = function ( ) {
+  var s = "[";
+  if (this.a.length > 0) {
+      s = s.concat(this.a[0].toString());
+      for (i = 1; i < this.a.length; i++) {
+          s = s.concat(", ");
+          s = s.concat(this.a[i].toString());
+      }
+  }
+  s = s.concat("]");
+
+  return s;
+}
 
 var Gambit_syms = {};
 function Gambit_Symbol(s) {
@@ -2420,6 +2598,8 @@ EOF
        (compiler-internal-error
         "##fxwrap*, unknown target")))))
 
+
+
 (univ-define-prim-bool "##null?" #t #f
 
   (lambda (ctx opnds)
@@ -2518,6 +2698,678 @@ EOF
       (else
        (compiler-internal-error
         "##cdr, unknown target")))))
+
+// ##caar
+(univ-define-prim "##caar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caar, unknown target")))))
+
+// ##cadr
+(univ-define-prim "##cadr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cadr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cadr, unknown target")))))
+
+// ##cdar
+(univ-define-prim "##cdar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdar, unknown target")))))
+
+// ##cddr
+(univ-define-prim "##cddr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cddr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cddr, unknown target")))))
+
+// ##caaar
+(univ-define-prim "##caaar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caaar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caaar, unknown target")))))
+
+// ##caadr
+(univ-define-prim "##caadr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caadr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caadr, unknown target")))))
+
+// ##cadar
+(univ-define-prim "##cadar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cadar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cadar, unknown target")))))
+
+// ##caddr
+(univ-define-prim "##caddr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caddr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caddr, unknown target")))))
+
+// ##cdaar
+(univ-define-prim "##cdaar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdaar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdaar, unknown target")))))
+
+// ##cdadr
+(univ-define-prim "##cdadr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdadr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdadr, unknown target")))))
+
+// ##cddar
+(univ-define-prim "##cddar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cddar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cddar, unknown target")))))
+
+// ##cdddr
+(univ-define-prim "##cdddr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdddr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdddr, unknown target")))))
+
+// ##caaaar
+(univ-define-prim "##caaaar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caaaar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caaaar, unknown target")))))
+
+// ##caaadr
+(univ-define-prim "##caaadr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caaadr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caaadr, unknown target")))))
+
+// ##caadar
+(univ-define-prim "##caadar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caadar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caadar, unknown target")))))
+
+// ##caaddr
+(univ-define-prim "##caaddr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caaddr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caaddr, unknown target")))))
+
+// ##cadaar
+(univ-define-prim "##cadaar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cadaar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cadaar, unknown target")))))
+
+// ##cadadr
+(univ-define-prim "##cadadr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cadadr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cadadr, unknown target")))))
+
+// ##caddar
+(univ-define-prim "##caddar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "caddar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##caddar, unknown target")))))
+
+// ##cadddr
+(univ-define-prim "##cadddr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cadddr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cadddr, unknown target")))))
+
+// ##cdaaar
+(univ-define-prim "##cdaaar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdaaar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdaaar, unknown target")))))
+
+// ##cdaadr
+(univ-define-prim "##cdaadr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdaadr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdaadr, unknown target")))))
+
+// ##cdadar
+(univ-define-prim "##cdadar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdadar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdadar, unknown target")))))
+
+// ##cdaddr
+(univ-define-prim "##cdaddr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdaddr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdaddr, unknown target")))))
+
+// ##cddaar
+(univ-define-prim "##cddaar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cddaar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cddaar, unknown target")))))
+
+// ##cddadr
+(univ-define-prim "##cddadr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cddadr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cddadr, unknown target")))))
+
+// ##cdddar
+(univ-define-prim "##cdddar" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cdddar(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cdddar, unknown target")))))
+
+// ##cddddr
+(univ-define-prim "##cddddr" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "cddddr(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ;; ((python)
+      ;;  (gen ""))
+
+      ;; ((ruby)
+      ;;  (gen ""))
+
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##cddddr, unknown target")))))
 
 (univ-define-prim "##set-car!" #f #t
 
