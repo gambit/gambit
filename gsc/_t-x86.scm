@@ -1048,19 +1048,24 @@
   (let ((targ (codegen-context-target cgc)))
     ;; ##not
     (let ((entry-label (nat-label-ref targ (lbl->id 1 "##not")))
-          (eq-label (asm-make-label cgc (lbl->id 1 (symbol->string (gensym))))))
+          (eq-label (asm-make-label cgc (lbl->id 1 (symbol->string (gensym)))))
+          (ret-label (asm-make-label cgc (lbl->id 1 (symbol->string (gensym))))))
       (x86-label cgc entry-label)
       (x86-cmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
       (x86-je    cgc eq-label)
       (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-      (x86-ret   cgc)
+      (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
       (x86-label cgc eq-label)
       (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
-      (x86-ret   cgc)
+      (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
       (let ((not-prim (x86-prim-info* '##not)))
         (proc-obj-test-set! not-prim
           (lambda (cgc args)
-            (x86-call cgc entry-label)))))))
+            (x86-push cgc (x86-esi))
+            (x86-mov  cgc (x86-esi) (x86-imm-lbl ret-label))
+            (x86-jmp cgc entry-label)
+            (x86-label cgc ret-label)
+            (x86-pop  cgc (x86-esi))))))))
 
 
 
