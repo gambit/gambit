@@ -814,14 +814,17 @@
         ((null? obj)
          (univ-null ctx obj))
 
-        ((list? obj)
-         (univ-list ctx obj))
-        
         ((void-object? obj)
          (gen "undefined"))
         
         ((proc-obj? obj)
          (lbl->id ctx 1 (proc-obj-name obj)))
+
+        ((list? obj)
+         (univ-list ctx obj))
+
+        ((vector? obj)
+         (univ-vector ctx obj))
         
         (else
          (gen "UNIMPLEMENTED_OBJECT("
@@ -957,12 +960,7 @@ function Gambit_pairp ( p ) {
 }
 
 Gambit_Pair.prototype.toString = function ( ) {
-  var res = "(" + this.car.toString();
-  if (this.cdr !== null)
-    res += " . " + this.cdr.toString();
-  res += ")";
-  
-  return res;
+  return Gambit_toString(this.car) + Gambit_toString(this.cdr);
 }
 
 function prettyPrintList ( o ) {
@@ -1111,7 +1109,7 @@ function Gambit_cdadar ( p ) {
 
 // cdaddr
 function Gambit_cdaddr ( p ) {
-    return p.cdr.car.cdr.cdr;
+    return p.cdr.cdr.car.cdr;
 }
 
 // cddaar
@@ -1121,7 +1119,7 @@ function Gambit_cddaar ( p ) {
 
 // cddadr
 function Gambit_cddadr ( p ) {
-    return p.cdr.cdr.car.cdr;
+    return p.cdr.car.cdr.cdr;
 }
 
 // cdddar
@@ -1145,7 +1143,7 @@ function Gambit_setcdr ( p, b ) {
 }
 
 // list
-function Gambit_list ( ) {
+function Gambit_List ( ) {
   var listaux = function (a, n, lst) {
     if (n === 0) {
       return Gambit_cons(a[0], lst);
@@ -1155,6 +1153,7 @@ function Gambit_list ( ) {
   }
 
   var res = listaux(arguments, arguments.length - 1, null);
+  
   return res;
 }
 
@@ -1221,17 +1220,12 @@ Gambit_Vector.prototype.vectorset = function ( n, v ) {
 }
 
 Gambit_Vector.prototype.toString = function ( ) {
-  var s = "[";
-  if (this.a.length > 0) {
-      s = s.concat(this.a[0].toString());
-      for (i = 1; i < this.a.length; i++) {
-          s = s.concat(", ");
-          s = s.concat(this.a[i].toString());
-      }
+  var res = "";
+  for (var i = 0; i<this.a.length; i++) {
+    res += Gambit_toString(this.a[i]);
   }
-  s = s.concat("]");
 
-  return s;
+  return res;
 }
 
 var Gambit_syms = {};
@@ -1270,26 +1264,34 @@ Gambit_Keyword.stringToKeyword = function(s) {
   return kwd;
 }
 
-function Gambit_lbl1_println() { // println
+function Gambit_toString ( obj ) {
+  if (obj === false)
+    return "#f";
+  else if (obj === true)
+    return "#t";
+  else if (obj === null)
+    return "";
+  else if (obj instanceof Gambit_Flonum)
+    return obj.toString();
+  else if (obj instanceof Gambit_String)
+    return obj.toString();
+  else if (obj instanceof Gambit_Char)
+    return obj.toString();
+  else if (obj instanceof Gambit_Pair)
+    return obj.toString();
+//  else if (obj instanceof Gambit_Vector)
+//    return obj.toString();
+  else
+    return obj;
+}
+  
+function Gambit_lbl1_println ( ) { // println
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1_println);
   }
-  if (Gambit_reg[1] === false)
-    print("#f");
-  else if (Gambit_reg[1] === true)
-    print("#t");
-  else if (Gambit_reg[1] === null)
-    print("");
-  else if (Gambit_reg[1] instanceof Gambit_Flonum)
-    print(Gambit_reg[1].toString());
-  else if (Gambit_reg[1] instanceof Gambit_String)
-    print(Gambit_reg[1].toString());
-  else if (Gambit_reg[1] instanceof Gambit_Char)
-    print(Gambit_reg[1].toString());
-  else if (Gambit_reg[1] instanceof Gambit_Pair)
-    print(Gambit_reg[1].toString());    
-  else
-    print(Gambit_reg[1]);
+
+  print(Gambit_toString(Gambit_reg[1]));
+  
   return Gambit_reg[0];
 }
 
@@ -2272,9 +2274,7 @@ EOF
 (define (univ-list ctx obj)             ;obj is a non-null list
   
   (define (make-list n elt)
-  (if (<= n 0)
-      '()
-      (cons elt (make-list (- n 1) elt))))
+    (vector->list (make-vector n elt)))
   
   (define (zip lst1 lst2)
     (define (zip-aux lst1 lst2 lst)
@@ -2289,18 +2289,13 @@ EOF
 
     (zip-aux lst1 lst2 '()))
 
-  (define (univ-list-aux ctx obj objs)  ;translate each obj in list
-    (if (null? obj)
-           objs
-           (cons (translate-obj ctx (car obj))
-                 (univ-list-aux ctx (cdr obj) objs))))
-      
   (case (target-name (ctx-target ctx))
 
     ((js python)
-     (let ((tobj (univ-list-aux ctx obj '()))
+     (let ((tobj (map (lambda (o) (translate-obj ctx o))
+                      obj))
            (sep (make-list (- (length obj) 1) ", ")))
-       (gen (univ-prefix ctx "list(")
+       (gen (univ-prefix ctx "List(")
             (apply gen (zip tobj sep))
             ")")))
     
@@ -2310,6 +2305,45 @@ EOF
     (else
      (compiler-internal-error
       "univ-list, unknown target"))))
+
+(define (univ-vector ctx obj)
+
+  (define (make-list n elt)
+    (vector->list (make-vector n elt)))
+  
+  (define (zip lst1 lst2)
+    (define (zip-aux lst1 lst2 lst)
+      (cond ((null? lst1)
+             (append lst lst2))
+            ((null? lst2)
+             (append lst lst1))
+            (else
+             (cons (car lst1)
+                   (cons (car lst2)
+                         (zip-aux (cdr lst1) (cdr lst2) lst))))))
+
+    (zip-aux lst1 lst2 '()))  
+
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (let ((vlen (vector-length obj)))
+       (if (> vlen 0)
+           (let ((tobj (map (lambda (o) (translate-obj ctx o))
+                            (vector->list obj)))
+                 (sep (make-list (- vlen 1) ", ")))
+
+             (gen "new " (univ-prefix ctx "Vector(")
+                  (apply gen (zip tobj sep))
+                  ")"))
+           (gen "new " (univ-prefix ctx "Vector()")))))
+    
+    ((python ruby php)                         ;TODO: complete
+     (gen (object->string obj)))
+
+    (else
+     (compiler-internal-error
+      "univ-vector, unknown target"))))
 
 ;;; Primitive procedures
 
@@ -3430,7 +3464,7 @@ EOF
        (let ((nbopnd (length opnds)))
          (if (= nbopnd 0)
              (gen "null")
-             (let ((args (list (univ-prefix ctx "list(")
+             (let ((args (list (univ-prefix ctx "List(")
                                (translate-gvm-opnd ctx (list-ref opnds 0)))))
                (let loop ((opnd 1)
                           (args args))
@@ -3447,6 +3481,34 @@ EOF
       (else
        (compiler-internal-error
         "##list, unknown target")))))
+
+(univ-define-prim "##vector" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (let ((nbopnd (length opnds)))
+         (if (= nbopnd 0)
+             (gen "new " (univ-prefix ctx "Vector()"))
+             (let ((args (list "new "
+                               (univ-prefix ctx "Vector(")
+                               (translate-gvm-opnd ctx (list-ref opnds 0)))))
+               (let loop ((opnd 1)
+                          (args args))
+                 (if (= opnd nbopnd)
+                     (apply gen (append args '(")")))
+                     (loop (+ opnd 1)
+                           (append args
+                                   (list ", "
+                                         (translate-gvm-opnd ctx (list-ref opnds opnd)))))))))))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##vector, unknown target")))))
 
 (univ-define-prim "##make-string" #f #f
 

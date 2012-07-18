@@ -1,8 +1,7 @@
 (declare
  (standard-bindings)
  (extended-bindings)
- (not safe)
-)
+ (not safe))
 
 (define x (##cons 11 22))
 
