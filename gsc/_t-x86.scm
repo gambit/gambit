@@ -458,11 +458,16 @@
   (set! throw-to-exception-handler
       (lambda (val) (error val)))
 
+
+
   (for-each (lambda (p) (scan-opnd (make-obj p))) procs)
   (let* ((cgc (make-cgc (nat-target-arch targ) 'le))
          (main-lbl (nat-label-ref cgc 'main))
          (println-lbl (nat-label-ref cgc 'println)))
+
     (codegen-context-target-set! cgc targ)
+
+
     (x86-jmp cgc main-lbl)
     (generate-primitives cgc)
     (generate-println cgc println-lbl)
@@ -547,8 +552,6 @@
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 3) (x86-imm-int 0))
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 4) (x86-imm-int 0))
 
-    (pp (table->list nat-globals))
-    (pp (table->list nat-labels))
     (let ((mem-loc (nat-global-ref targ 'println))
           (mem-opnd (nat-label-ref cgc 'println)))
       (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
@@ -637,9 +640,9 @@
               (scan-opnd loc)
               (let ((loc* (nat-opnd cgc ctx loc))
                     (opnd* (nat-opnd cgc ctx opnd)))
+                ;; Can't move from memory to memory.
                 (if (or (x86-reg? loc*)
                         (x86-reg? opnd*)
-                        (x86-imm-int? loc*)
                         (x86-imm-int? opnd*))
                     (x86-mov cgc
                              (if (asm-label? loc*)  (x86-imm-lbl loc*)  loc*)
@@ -668,14 +671,34 @@
                     (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))
                 (x86-jmp cgc (nat-opnd cgc ctx opnd)))))
 
-           ;; ((ifjump)
-           ;;  (x86-nop cgc))
+           ((ifjump)
+            (let* ((test (ifjump-test gvm-instr))
+                   (true (ifjump-true gvm-instr))
+                   (false (ifjump-false gvm-instr))
+                   (opnds (ifjump-opnds gvm-instr))
+                   (test-proc (proc-obj-test test)))
+              (pp ctx)
+              (if test-proc
+                  (nat-if-then-else cgc ctx test-proc opnds true false)
+                  (compiler-internal-error "test is not a procedure"))))
 
 
            (else
             (compiler-internal-error "unrecognized type:" gvm-type)))
        ))
      lst)))
+
+(define (nat-if-then-else cgc ctx test opnds true false*)
+  (pp (list test opnds true false))
+  (let* ((targ (codegen-context-target cgc))
+         (true-lbl (nat-label-ref cgc (lbl->id true (ctx-ns ctx))))
+         (false-lbl (nat-label-ref cgc (lbl->id false* (ctx-ns ctx)))))
+    (pp true-lbl)
+    (pp false-lbl)
+    (test cgc opnds)
+    (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+    (x86-je  cgc false-lbl)
+    (x86-jmp cgc true-lbl)))
 
 (define (nat-close cgc parms)
 
@@ -724,7 +747,6 @@
           ((glo? opnd)
            (let* ((name (glo-name opnd))
                   (mem-loc (nat-global-ref targ name)))
-             ;;(pp (list name mem-loc))
              mem-loc))
 
           ((clo? opnd)
@@ -744,7 +766,7 @@
              (cond ((and (integer? val) (exact? val))
                     (x86-imm-int (* val 4)))
                    ((proc-obj? val)
-                    ;; Is there entry-point of a procedure always going to be
+                    ;; Is the entry-point of a procedure always going to be
                     ;; at label 1?
                     (let ((lbl-name (lbl->id 1 (proc-obj-name val))))
                       (nat-label-ref cgc lbl-name)))
@@ -1025,15 +1047,20 @@
 (define (generate-primitives cgc)
   (let ((targ (codegen-context-target cgc)))
     ;; ##not
-    (let ((eq-label (asm-make-label cgc '##not-eq)))
-      (x86-label cgc (nat-label-ref targ '##not))
+    (let ((entry-label (nat-label-ref targ (lbl->id 1 "##not")))
+          (eq-label (asm-make-label cgc (lbl->id 1 (symbol->string (gensym))))))
+      (x86-label cgc entry-label)
       (x86-cmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
       (x86-je    cgc eq-label)
-      (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
-      (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
-      (x86-label cgc eq-label)
       (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-      (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0)))))
+      (x86-ret   cgc)
+      (x86-label cgc eq-label)
+      (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
+      (x86-ret   cgc)
+      (let ((not-prim (x86-prim-info* '##not)))
+        (proc-obj-test-set! not-prim
+          (lambda (cgc args)
+            (x86-call cgc entry-label)))))))
 
 
 
