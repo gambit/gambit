@@ -1,5 +1,11 @@
 ;;;============================================================================
 
+;; TODO
+;; - Clean up creation of global labels and their insertion into the global table.
+;; - ##not primitive
+;; - if.scm unit test.
+;; - Fix nargs (%cl) + %ecx
+
 ;;; File: "_t-x86.scm"
 
 ;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
@@ -375,25 +381,43 @@
 
 ;;;; ***** DUMPING OF A COMPILATION MODULE
 
+;; Table from symbol to asm-labels.
+(define nat-labels (make-table test: eq?))
+
 ;; nat-label-ref: finds the label associated with a symbol. Creates it if
 ;;                it doesn't exist.
 ;; nat-label-set!: insert or update a symbol/label association in the table.
-(define nat-label-ref  #f)
-(define nat-label-set! #f)
-(define nat-label-list #f)
-(let ((labels (make-table test: eq?)))
-  (set! nat-label-list (lambda () (table->list labels)))
-  (set! nat-label-ref
-        (lambda (cgc label-name)
-          (let ((x (table-ref labels label-name #f)))
-            (if x
-                x
-                (let ((l  (asm-make-label cgc label-name)))
-                  (table-set! labels label-name l)
-                  l)))))
-  (set! nat-label-set!
-        (lambda (cgc label-name val)
-          (table-set! labels label-name val))))
+(define (nat-label-ref cgc label-name)
+  (let ((x (table-ref nat-labels label-name #f)))
+    (if x
+        x
+        (let ((l  (asm-make-label cgc label-name)))
+          (table-set! nat-labels label-name l)
+          l))))
+(define (nat-label-set! cgc label-name val)
+  (table-set! nat-labels label-name val))
+
+
+;; Table from symbol to pstate offset.
+(define nat-globals (make-table test: eq?))
+
+;; Get the memory address of a symbol. If the symbol doesn't exist,
+;; add it to the table.
+(define nat-global-ref
+  (let ((current -1))
+    (lambda (targ symbol)
+      (let* ((x (table-ref nat-globals symbol #f))
+             (offset (if x
+                         x
+                         (begin
+                           (set! current (+ current 1))
+                           (table-set! nat-globals symbol current)
+                           current))))
+        (x86-mem (* (nat-target-word-width targ)
+                    (+ nat-globals-slot offset))
+                 (nat-target-pstate-ptr-reg targ))))))
+
+
 
 
 ;; Queue containing the procs we've seen so far. (Could we use a set instead?)
@@ -434,18 +458,22 @@
   (set! throw-to-exception-handler
       (lambda (val) (error val)))
 
+
+
   (for-each (lambda (p) (scan-opnd (make-obj p))) procs)
   (let* ((cgc (make-cgc (nat-target-arch targ) 'le))
          (main-lbl (nat-label-ref cgc 'main))
          (println-lbl (nat-label-ref cgc 'println)))
+
     (codegen-context-target-set! cgc targ)
+
+
     (x86-jmp cgc main-lbl)
+    (generate-primitives cgc)
     (generate-println cgc println-lbl)
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (pp (nat-label-list))
-    (pp (table->list nat-globals))
     (let ((f (create-procedure cgc #t)))
       (f)))
   #f)
@@ -464,25 +492,6 @@
 (define nat-stack-fudge      (expt 2 14))
 (define nat-heap-size        (expt 2 20))
 (define nat-heap-fudge       (expt 2 14))
-
-;; Table from symbol to pstate offset.
-(define nat-globals (make-table test: eq?))
-
-;; Get the memory address of a symbol. If the symbol doesn't exist,
-;; add it to the table.
-(define nat-global-ref
-  (let ((current -1))
-    (lambda (targ symbol)
-      (let* ((x (table-ref nat-globals symbol #f))
-             (offset (if x
-                         x
-                         (begin
-                           (set! current (+ current 1))
-                           (table-set! nat-globals symbol current)
-                           current))))
-        (x86-mem (* (nat-target-word-width targ)
-                    (+ nat-globals-slot offset))
-                 (nat-target-pstate-ptr-reg targ))))))
 
 
 
@@ -631,16 +640,19 @@
               (scan-opnd loc)
               (let ((loc* (nat-opnd cgc ctx loc))
                     (opnd* (nat-opnd cgc ctx opnd)))
-                (if (not (or (x86-reg? loc*) (x86-reg? opnd*)))
+                ;; Can't move from memory to memory.
+                (if (or (x86-reg? loc*)
+                        (x86-reg? opnd*)
+                        (x86-imm-int? opnd*))
+                    (x86-mov cgc
+                             (if (asm-label? loc*)  (x86-imm-lbl loc*)  loc*)
+                             (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)
+                             (* (nat-target-word-width targ) 8))
                     (let ((temp-reg (vector-ref (nat-target-gvm-reg-map targ) 1)))
                       (x86-push cgc temp-reg)
                       (x86-mov  cgc temp-reg (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*))
                       (x86-mov  cgc (if (asm-label? loc*) (x86-imm-lbl loc*) loc*) temp-reg)
-                      (x86-pop  cgc temp-reg))
-                    (x86-mov cgc
-                             (if (asm-label? loc*)  (x86-imm-lbl loc*)  loc*)
-                             (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)
-                             (* (nat-target-word-width targ) 8))))))
+                      (x86-pop  cgc temp-reg))))))
 
            ((close)
             (nat-close cgc (close-parms gvm-instr)))
@@ -659,14 +671,34 @@
                     (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))
                 (x86-jmp cgc (nat-opnd cgc ctx opnd)))))
 
-           ;; ((ifjump)
-           ;;  (x86-nop cgc))
+           ((ifjump)
+            (let* ((test (ifjump-test gvm-instr))
+                   (true (ifjump-true gvm-instr))
+                   (false (ifjump-false gvm-instr))
+                   (opnds (ifjump-opnds gvm-instr))
+                   (test-proc (proc-obj-test test)))
+              (pp ctx)
+              (if test-proc
+                  (nat-if-then-else cgc ctx test-proc opnds true false)
+                  (compiler-internal-error "test is not a procedure"))))
 
 
            (else
             (compiler-internal-error "unrecognized type:" gvm-type)))
        ))
      lst)))
+
+(define (nat-if-then-else cgc ctx test opnds true false*)
+  (pp (list test opnds true false))
+  (let* ((targ (codegen-context-target cgc))
+         (true-lbl (nat-label-ref cgc (lbl->id true (ctx-ns ctx))))
+         (false-lbl (nat-label-ref cgc (lbl->id false* (ctx-ns ctx)))))
+    (pp true-lbl)
+    (pp false-lbl)
+    (test cgc opnds)
+    (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+    (x86-je  cgc false-lbl)
+    (x86-jmp cgc true-lbl)))
 
 (define (nat-close cgc parms)
 
@@ -715,7 +747,6 @@
           ((glo? opnd)
            (let* ((name (glo-name opnd))
                   (mem-loc (nat-global-ref targ name)))
-             ;;(pp (list name mem-loc))
              mem-loc))
 
           ((clo? opnd)
@@ -728,18 +759,15 @@
           ((lbl? opnd)
            (let* ((lbl-name (translate-lbl ctx opnd))
                   (asm-lbl (nat-label-ref cgc lbl-name)))
-             ;;      (asm-lbl (asm-make-label cgc lbl-name)))
-             ;; (nat-label-set! cgc lbl-name asm-lbl)
              asm-lbl))
-           ;; (let ((n (lbl-num opnd)))
-           ;;   (let ((lbl (nat-label-lookup targ n 'current-code-variant)))
-           ;;     (x86-imm-lbl lbl 0))))
 
           ((obj? opnd)
            (let ((val (obj-val opnd)))
              (cond ((and (integer? val) (exact? val))
                     (x86-imm-int (* val 4)))
                    ((proc-obj? val)
+                    ;; Is the entry-point of a procedure always going to be
+                    ;; at label 1?
                     (let ((lbl-name (lbl->id 1 (proc-obj-name val))))
                       (nat-label-ref cgc lbl-name)))
                    ((eq? val #f)
@@ -790,6 +818,11 @@
 
 (define x86-tag-bits 2)
 (define x86-word-bits 32)
+
+
+
+(define true (x86-imm-int -6))
+(define false (x86-imm-int -2))
 
 
 
@@ -1009,6 +1042,26 @@
            (x86-pop cgc (x86-r11))
            (x86-ret cgc))))
 ))
+
+
+(define (generate-primitives cgc)
+  (let ((targ (codegen-context-target cgc)))
+    ;; ##not
+    (let ((entry-label (nat-label-ref targ (lbl->id 1 "##not")))
+          (eq-label (asm-make-label cgc (lbl->id 1 (symbol->string (gensym))))))
+      (x86-label cgc entry-label)
+      (x86-cmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+      (x86-je    cgc eq-label)
+      (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+      (x86-ret   cgc)
+      (x86-label cgc eq-label)
+      (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
+      (x86-ret   cgc)
+      (let ((not-prim (x86-prim-info* '##not)))
+        (proc-obj-test-set! not-prim
+          (lambda (cgc args)
+            (x86-call cgc entry-label)))))))
+
 
 
 ;;;============================================================================
