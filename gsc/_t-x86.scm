@@ -2,8 +2,6 @@
 
 ;; TODO
 ;; - Clean up creation of global labels and their insertion into the global table.
-;; - ##not primitive
-;; - if.scm unit test.
 ;; - Fix nargs (%cl) + %ecx
 
 ;;; File: "_t-x86.scm"
@@ -484,9 +482,9 @@
 ;; program.
 
 (define nat-stack-limit-slot 0)
-(define nat-heap-limit-slot  1)
-(define nat-globals-slot     8)
-(define nat-sp-slot          2)         ; sp du code C.
+(define nat-heap-limit-slot  -1)
+(define nat-sp-slot          -2)         ; sp du code C.
+(define nat-globals-slot     -8)
 (define nat-pstate-size      100)       ; number of words
 (define nat-stack-size       (expt 2 20))
 (define nat-stack-fudge      (expt 2 14))
@@ -673,11 +671,11 @@
 
            ((ifjump)
             (let* ((test (ifjump-test gvm-instr))
+                   (opnds (ifjump-opnds gvm-instr))
                    (true (ifjump-true gvm-instr))
                    (false (ifjump-false gvm-instr))
-                   (opnds (ifjump-opnds gvm-instr))
                    (test-proc (proc-obj-test test)))
-              (pp ctx)
+              ;;(pp ctx)
               (if test-proc
                   (nat-if-then-else cgc ctx test-proc opnds true false)
                   (compiler-internal-error "test is not a procedure"))))
@@ -688,17 +686,11 @@
        ))
      lst)))
 
-(define (nat-if-then-else cgc ctx test opnds true false*)
-  (pp (list test opnds true false))
+(define (nat-if-then-else cgc ctx test opnds true* false*)
   (let* ((targ (codegen-context-target cgc))
-         (true-lbl (nat-label-ref cgc (lbl->id true (ctx-ns ctx))))
+         (true-lbl (nat-label-ref cgc (lbl->id true* (ctx-ns ctx))))
          (false-lbl (nat-label-ref cgc (lbl->id false* (ctx-ns ctx)))))
-    (pp true-lbl)
-    (pp false-lbl)
-    (test cgc opnds)
-    (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-    (x86-je  cgc false-lbl)
-    (x86-jmp cgc true-lbl)))
+    (test cgc opnds true-lbl false-lbl)))
 
 (define (nat-close cgc parms)
 
@@ -741,7 +733,7 @@
           ((stk? opnd)
            (let ((n (stk-num opnd)))
              (x86-mem (* (nat-target-word-width targ)
-                         (+ (codegen-context-frame-size cgc) n 1))
+                         (+ (codegen-context-frame-size cgc) (- n) 1))
                       (nat-target-stack-ptr-reg targ))))
 
           ((glo? opnd)
@@ -1043,13 +1035,19 @@
            (x86-ret cgc))))
 ))
 
+(define make-temp-label
+  (let ((n 0))
+    (lambda (cgc)
+      (set! n (+ n 1))
+      (let* ((g (gensym))
+             (label-name (lbl->id n (symbol->string g))))
+        (asm-make-label cgc label-name)))))
 
 (define (generate-primitives cgc)
   (let ((targ (codegen-context-target cgc)))
     ;; ##not
     (let ((entry-label (nat-label-ref targ (lbl->id 1 "##not")))
-          (eq-label (asm-make-label cgc (lbl->id 1 (symbol->string (gensym)))))
-          (ret-label (asm-make-label cgc (lbl->id 1 (symbol->string (gensym))))))
+          (eq-label (make-temp-label cgc)))
       (x86-label cgc entry-label)
       (x86-cmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
       (x86-je    cgc eq-label)
@@ -1058,15 +1056,29 @@
       (x86-label cgc eq-label)
       (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
       (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+
+      ;; Update primitives table.
       (let ((not-prim (x86-prim-info* '##not)))
         (proc-obj-test-set! not-prim
-          (lambda (cgc args)
-            (x86-push cgc (x86-esi))
-            (x86-mov  cgc (x86-esi) (x86-imm-lbl ret-label))
-            (x86-jmp cgc entry-label)
-            (x86-label cgc ret-label)
-            (x86-pop  cgc (x86-esi))))))))
+          (lambda (cgc args true-lbl false-lbl)
+            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+            (x86-jne cgc false-lbl)
+            (x86-jmp cgc true-lbl)))))))
 
+            ;; (let ((ret-label (make-temp-label cgc)))
+            ;;   ;; If the argument to ##not is on the stack, move it into +1.
+            ;;   (if (stk? (car args))
+            ;;       (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
+            ;;       (x86-mov cgc
+            ;;                (vector-ref (nat-target-gvm-reg-map targ) 1)
+            ;;                (nat-opnd cgc (make-ctx #f #f) (car args))))
+            ;;   (x86-push cgc (x86-esi))                         ; Save +0
+            ;;   (x86-mov  cgc (x86-esi) (x86-imm-lbl ret-label)) ; +0 = temp_label
+            ;;   (x86-jmp cgc entry-label)                        ; jump to ##not
+            ;;   (x86-label cgc ret-label)                        ; this is where ##not will jump back to
+            ;;   (x86-pop  cgc (x86-esi))                         ; restore +0
+            ;;   (if (stk? (car args))
+            ;;       (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1))))))))))
 
 
 ;;;============================================================================
