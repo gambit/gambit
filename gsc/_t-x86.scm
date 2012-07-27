@@ -467,7 +467,7 @@
 
 
     (x86-jmp cgc main-lbl)
-    (generate-primitives cgc)
+    ;;(generate-primitives cgc)
     (generate-println cgc println-lbl)
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
@@ -671,6 +671,17 @@
                     (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))
                 (x86-jmp cgc (nat-opnd cgc ctx opnd)))))
 
+           ((apply)
+            (let ((prim  (apply-prim gvm-instr))
+                  (opnds (apply-opnds gvm-instr))
+                  (loc   (apply-loc gvm-instr)))
+              (let ((proc (proc-obj-inline prim)))
+                (if proc
+                    (proc cgc opnds loc)
+                    (compiler-internal-error
+                     "nat-gen-apply, unknown 'prim'" prim)))))
+
+
            ((ifjump)
             (let* ((test (ifjump-test gvm-instr))
                    (opnds (ifjump-opnds gvm-instr))
@@ -692,7 +703,9 @@
   (let* ((targ (codegen-context-target cgc))
          (true-lbl (nat-label-ref cgc (lbl->id true* (ctx-ns ctx))))
          (false-lbl (nat-label-ref cgc (lbl->id false* (ctx-ns ctx)))))
-    (test cgc opnds true-lbl false-lbl)))
+    (test cgc opnds)
+    (x86-jne cgc false-lbl)
+    (x86-jmp cgc true-lbl)))
 
 (define (nat-close cgc parms)
 
@@ -1045,24 +1058,98 @@
              (label-name (lbl->id n (symbol->string g))))
         (asm-make-label cgc label-name)))))
 
-(define (generate-primitives cgc)
-  (let ((targ (codegen-context-target cgc)))
-    ;; ##not
-    (let ((entry-label (nat-label-ref targ (lbl->id 1 "##not")))
-          (eq-label (make-temp-label cgc)))
-      (x86-label cgc entry-label)
-      (x86-cmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-      (x86-je    cgc eq-label)
-      (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-      (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
-      (x86-label cgc eq-label)
-      (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
-      (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+;; (define (generate-primitives cgc)
+;;   (let ((targ (codegen-context-target cgc)))
+;;     ;; ##not
+;;     (let ((entry-label (nat-label-ref targ (lbl->id 1 "##not")))
+;;           (eq-label (make-temp-label cgc)))
+;;       (x86-label cgc entry-label)
+;;       (x86-cmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+;;       (x86-je    cgc eq-label)
+;;       (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+;;       (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+;;       (x86-label cgc eq-label)
+;;       (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
+;;       (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
 
-      ;; Update primitives table.
-      (let ((not-prim (x86-prim-info* '##not)))
-        (proc-obj-test-set! not-prim
-          (lambda (cgc args true-lbl false-lbl)
-            (x86-cmp cgc (nat-opnd cgc (make-ctx targ #f) (car args)) false)
-            (x86-jne cgc false-lbl)
-            (x86-jmp cgc true-lbl)))))))
+;;       ;; Update primitives table.
+;;       (let ((not-prim (x86-prim-info* '##not)))
+;;         (proc-obj-test-set! not-prim
+;;           (lambda (cgc args true-lbl false-lbl)
+;;             (x86-cmp cgc (nat-opnd cgc (make-ctx targ #f) (car args)) false)
+;;             (x86-jne cgc false-lbl)
+;;             (x86-jmp cgc true-lbl)))))))
+
+
+(define (x86-prim-define
+         name
+         proc-safe?
+         side-effects?
+         apply-gen
+         #!optional
+         (ifjump-gen #f)
+         (jump-gen #f))
+  (let ((prim (x86-prim-info* (string->canonical-symbol name))))
+    (if apply-gen
+        (begin
+          (proc-obj-inlinable?-set!
+           prim
+           (lambda (env)
+             (or proc-safe? (not (safe? env)))))
+
+          (proc-obj-inline-set!
+           prim
+           (lambda (cgc opnds loc)
+             (let ((targ (codegen-context-target cgc)))
+               (if loc
+                   (begin
+                     (apply-gen cgc opnds)
+                     (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (nat-opnd cgc (make-ctx targ #f) (car opnds))))
+                   (if side-effects?
+                       (apply-gen cgc opnds))))))))
+
+    (if ifjump-gen
+        (begin
+          (proc-obj-testable?-set!
+           prim
+           (lambda (env)
+             (or proc-safe? (not (safe? env)))))
+
+          (proc-obj-test-set!
+           prim
+           (lambda (cgc opnds)
+             (ifjump-gen cgc opnds)))))
+
+    (if jump-gen
+        (begin
+          (proc-obj-jump-inlinable?-set!
+           prim
+           (lambda (env) #t))
+
+          (proc-obj-jump-inline-set!
+           prim
+           jump-gen)))))
+
+(define (x86-prim-define-bool name proc-safe? side-effects prim-gen)
+  (x86-prim-define name proc-safe? side-effects prim-gen prim-gen))
+
+(x86-prim-define "##not" #t #f
+  (lambda (cgc opnds)
+    (let* ((targ (codegen-context-target cgc))
+           (is-false-lbl (make-temp-label cgc))
+           (end-if-lbl (make-temp-label cgc)))
+    (x86-cmp cgc
+             (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0))
+             false)
+    (x86-je  cgc is-false-lbl)
+    (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+    (x86-jmp cgc end-if-lbl)
+    (x86-label cgc is-false-lbl)
+    (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
+    (x86-label cgc end-if-lbl)))
+
+  (lambda (cgc opnds)
+    (let* ((targ (codegen-context-target cgc)))
+      (x86-cmp cgc
+               (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0))
+               false))))
