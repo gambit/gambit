@@ -1104,7 +1104,9 @@
                (if loc
                    (begin
                      (apply-gen cgc opnds)
-                     (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (nat-opnd cgc (make-ctx targ #f) (car opnds))))
+                     (x86-mov cgc
+                              (nat-opnd cgc (make-ctx targ #f) loc)
+                              (vector-ref (nat-target-gvm-reg-map targ) 1)))
                    (if side-effects?
                        (apply-gen cgc opnds))))))))
 
@@ -1137,16 +1139,20 @@
   (lambda (cgc opnds)
     (let* ((targ (codegen-context-target cgc))
            (is-false-lbl (make-temp-label cgc))
-           (end-if-lbl (make-temp-label cgc)))
-    (x86-cmp cgc
-             (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0))
-             false)
-    (x86-je  cgc is-false-lbl)
-    (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-    (x86-jmp cgc end-if-lbl)
-    (x86-label cgc is-false-lbl)
-    (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
-    (x86-label cgc end-if-lbl)))
+           (end-if-lbl (make-temp-label cgc))
+           (opnd (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0))))
+      (pp (map classify-opnd opnds))
+      (if (x86-reg? opnd)
+          (x86-cmp cgc opnd false)
+          (begin
+            (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) opnd)
+            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)))
+      (x86-je  cgc is-false-lbl)
+      (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+      (x86-jmp cgc end-if-lbl)
+      (x86-label cgc is-false-lbl)
+      (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
+      (x86-label cgc end-if-lbl)))
 
   (lambda (cgc opnds)
     (let* ((targ (codegen-context-target cgc)))
