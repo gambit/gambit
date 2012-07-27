@@ -482,9 +482,9 @@
 ;; program.
 
 (define nat-stack-limit-slot 0)
-(define nat-heap-limit-slot  -1)
-(define nat-sp-slot          -2)         ; sp du code C.
-(define nat-globals-slot     -8)
+(define nat-heap-limit-slot  1)
+(define nat-sp-slot          2)         ; sp du code C.
+(define nat-globals-slot     8)
 (define nat-pstate-size      100)       ; number of words
 (define nat-stack-size       (expt 2 20))
 (define nat-stack-fudge      (expt 2 14))
@@ -527,20 +527,22 @@
     (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 3))
     (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 4))
 
-    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ)) ; pstate starts where the stack pointer is up to.
-    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-pstate-ptr-reg targ)) (nat-target-heap-ptr-reg targ)) ; save C sp in pstate
-    (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-pstate-size))) ; allocate nat-pstate-size words
-    (x86-and  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int -256)) ; align to multiple of 256 (low 8 bits = 0) (256 = 0xffff_ff00)
-    ;; (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-heap-ptr-reg targ)) (nat-target-pstate-ptr-reg targ))
-    ;; (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+    ;; First part of the memory is the pstate.
+    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+    (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-pstate-size)))
+    (x86-and  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int -256)) ;; align to multiple of 256 (low 8 bits = 0) (256 = 0xfff_ff00)
+    (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-sp-slot) (nat-target-heap-ptr-reg targ)) (nat-target-pstate-ptr-reg targ))
+    (x86-mov  cgc (nat-target-pstate-ptr-reg targ) (nat-target-heap-ptr-reg targ))
 
-    (x86-mov  cgc (nat-target-stack-ptr-reg targ) (nat-target-heap-ptr-reg targ)) ; Gambit stack starts where the stack pointer is up to.
-    ;; (x86-sub  cgc (nat-target-stack-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) 16))) ;; TODO: remove me! (tracking of frame size seems wrong)
+    ;; Then comes the stack
+    (x86-mov  cgc (nat-target-stack-ptr-reg targ) (nat-target-heap-ptr-reg targ))
+    (x86-sub  cgc (nat-target-stack-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) 16))) ;; TODO: remove me! (tracking of frame size seems wrong)
 
     (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-stack-fudge nat-stack-size)) (nat-target-heap-ptr-reg targ)))
     (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-stack-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
     (x86-sub  cgc (nat-target-heap-ptr-reg targ) (x86-imm-int (* (nat-target-word-width targ) nat-stack-size)))
 
+    ;; And finally, the heap.
     (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-heap-fudge nat-heap-size)) (nat-target-heap-ptr-reg targ)))
     (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-heap-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
 
@@ -1046,39 +1048,35 @@
 (define (generate-primitives cgc)
   (let ((targ (codegen-context-target cgc)))
     ;; ##not
-    (let ((entry-label (nat-label-ref targ (lbl->id 1 "##not")))
-          (eq-label (make-temp-label cgc)))
-      (x86-label cgc entry-label)
-      (x86-cmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-      (x86-je    cgc eq-label)
-      (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-      (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
-      (x86-label cgc eq-label)
-      (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
-      (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+    ;; (let ((entry-label (nat-label-ref targ (lbl->id 1 "##not")))
+    ;;       (eq-label (make-temp-label cgc)))
+    ;;   (x86-label cgc entry-label)
+    ;;   (x86-cmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+    ;;   (x86-je    cgc eq-label)
+    ;;   (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+    ;;   (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
+    ;;   (x86-label cgc eq-label)
+    ;;   (x86-mov   cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
+    ;;   (x86-jmp   cgc (vector-ref (nat-target-gvm-reg-map targ) 0))
 
       ;; Update primitives table.
       (let ((not-prim (x86-prim-info* '##not)))
+        (proc-obj-inlinable?-set! not-prim #t)
+        (proc-obj-jump-inlinable?-set! not-prim #t)
+        (proc-obj-inline-set! not-prim
+          (lambda (cgc)
+            (let ((is-false-lbl (make-temp-label cgc))
+                  (end-if-lbl   (make-temp-label cgc)))
+              (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+              (x86-je  cgc is-false-lbl)
+              (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
+              (x86-jmp cgc end-if-lbl)
+              (x86-label cgc is-false-lbl)
+              (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+              (x86-label cgc end-if-lbl))))
+
         (proc-obj-test-set! not-prim
           (lambda (cgc args true-lbl false-lbl)
-            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+            (x86-cmp cgc (nat-opnd cgc (make-ctx targ #f) (car args)) false)
             (x86-jne cgc false-lbl)
-            (x86-jmp cgc true-lbl)))))))
-
-            ;; (let ((ret-label (make-temp-label cgc)))
-            ;;   ;; If the argument to ##not is on the stack, move it into +1.
-            ;;   (if (stk? (car args))
-            ;;       (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
-            ;;       (x86-mov cgc
-            ;;                (vector-ref (nat-target-gvm-reg-map targ) 1)
-            ;;                (nat-opnd cgc (make-ctx #f #f) (car args))))
-            ;;   (x86-push cgc (x86-esi))                         ; Save +0
-            ;;   (x86-mov  cgc (x86-esi) (x86-imm-lbl ret-label)) ; +0 = temp_label
-            ;;   (x86-jmp cgc entry-label)                        ; jump to ##not
-            ;;   (x86-label cgc ret-label)                        ; this is where ##not will jump back to
-            ;;   (x86-pop  cgc (x86-esi))                         ; restore +0
-            ;;   (if (stk? (car args))
-            ;;       (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1))))))))))
-
-
-;;;============================================================================
+            (x86-jmp cgc true-lbl))))))
