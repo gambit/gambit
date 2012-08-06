@@ -472,7 +472,7 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #t)))
+    (let ((f (create-procedure cgc #f)))
       (f)))
   #f)
 
@@ -683,14 +683,21 @@
 
 
            ((ifjump)
-            (let* ((test (ifjump-test gvm-instr))
+            (let* ((jump-size (frame-size (gvm-instr-frame gvm-instr)))
+                   (test (ifjump-test gvm-instr))
                    (opnds (ifjump-opnds gvm-instr))
                    (true (ifjump-true gvm-instr))
                    (false (ifjump-false gvm-instr))
                    (test-proc (proc-obj-test test)))
               ;;(pp ctx)
               (if test-proc
-                  (nat-if-then-else cgc ctx test-proc opnds true false)
+                  (let ((offset (* (nat-target-word-width targ)
+                                   (- (codegen-context-frame-size cgc)
+                                      jump-size))))
+                    (if (not (= offset 0))
+                        (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))
+
+                    (nat-if-then-else cgc ctx test-proc opnds true false))
                   (compiler-internal-error "test is not a procedure"))))
 
 
@@ -1141,12 +1148,14 @@
            (is-false-lbl (make-temp-label cgc))
            (end-if-lbl (make-temp-label cgc))
            (opnd (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0))))
-      (pp (map classify-opnd opnds))
-      (if (x86-reg? opnd)
+      (if (or (x86-reg? opnd))
           (x86-cmp cgc opnd false)
           (begin
+            (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
             (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) opnd)
-            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)))
+            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+            (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1))))
+
       (x86-je  cgc is-false-lbl)
       (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
       (x86-jmp cgc end-if-lbl)
@@ -1155,7 +1164,10 @@
       (x86-label cgc end-if-lbl)))
 
   (lambda (cgc opnds)
-    (let* ((targ (codegen-context-target cgc)))
-      (x86-cmp cgc
-               (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0))
-               false))))
+    (let* ((targ (codegen-context-target cgc))
+           (opnd (nat-opnd cgc (make-ctx targ #f) (car opnds))))
+      (if (x86-reg? opnd)
+          (x86-cmp cgc opnd false)
+          (begin
+            (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) opnd)
+            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false))))))
