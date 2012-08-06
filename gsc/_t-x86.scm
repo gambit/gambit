@@ -1111,9 +1111,11 @@
                (if loc
                    (begin
                      (apply-gen cgc opnds)
-                     (x86-mov cgc
-                              (nat-opnd cgc (make-ctx targ #f) loc)
-                              (vector-ref (nat-target-gvm-reg-map targ) 1)))
+                     (let ((translated-loc (nat-opnd cgc (make-ctx targ #f) loc)))
+                       (if (not (eq? (vector-ref (nat-target-gvm-reg-map targ) 1) translated-loc))
+                           (x86-mov cgc
+                              translated-loc
+                              (vector-ref (nat-target-gvm-reg-map targ) 1)))))
                    (if side-effects?
                        (apply-gen cgc opnds))))))))
 
@@ -1148,7 +1150,7 @@
            (is-false-lbl (make-temp-label cgc))
            (end-if-lbl (make-temp-label cgc))
            (opnd (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0))))
-      (if (or (x86-reg? opnd))
+      (if (x86-reg? opnd)
           (x86-cmp cgc opnd false)
           (begin
             (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
