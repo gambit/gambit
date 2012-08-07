@@ -1109,15 +1109,9 @@
            (lambda (cgc opnds loc)
              (let ((targ (codegen-context-target cgc)))
                (if loc
-                   (begin
-                     (apply-gen cgc opnds)
-                     (let ((translated-loc (nat-opnd cgc (make-ctx targ #f) loc)))
-                       (if (not (eq? (vector-ref (nat-target-gvm-reg-map targ) 1) translated-loc))
-                           (x86-mov cgc
-                              translated-loc
-                              (vector-ref (nat-target-gvm-reg-map targ) 1)))))
+                   (apply-gen cgc opnds loc)
                    (if side-effects?
-                       (apply-gen cgc opnds))))))))
+                       (apply-gen cgc opnds #f))))))))
 
     (if ifjump-gen
         (begin
@@ -1145,25 +1139,31 @@
   (x86-prim-define name proc-safe? side-effects prim-gen prim-gen))
 
 (x86-prim-define "##not" #t #f
-  (lambda (cgc opnds)
+  (lambda (cgc opnds loc)
     (let* ((targ (codegen-context-target cgc))
            (is-false-lbl (make-temp-label cgc))
            (end-if-lbl (make-temp-label cgc))
-           (opnd (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0))))
-      (if (x86-reg? opnd)
-          (x86-cmp cgc opnd false)
-          (begin
-            (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
-            (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) opnd)
-            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
-            (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1))))
+           (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+           (opnd (nat-opnd cgc (make-ctx targ #f) (list-ref opnds 0)))
+           (translated-loc (nat-opnd cgc (make-ctx targ #f) loc)))
 
+      (if (not (eq? translated-loc r1))
+          (x86-push cgc r1))
+
+      (if (not (eq? r1 opnd))
+          (x86-mov cgc r1 opnd))
+      (x86-cmp cgc r1 false)
       (x86-je  cgc is-false-lbl)
-      (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+      (x86-mov cgc r1 false)
       (x86-jmp cgc end-if-lbl)
       (x86-label cgc is-false-lbl)
-      (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) true)
-      (x86-label cgc end-if-lbl)))
+      (x86-mov cgc r1 true)
+      (x86-label cgc end-if-lbl)
+      (if (not (eq? translated-loc r1))
+          (x86-mov cgc translated-loc r1))
+
+      (if (not (eq? translated-loc r1))
+          (x86-pop cgc r1))))
 
   (lambda (cgc opnds)
     (let* ((targ (codegen-context-target cgc))
