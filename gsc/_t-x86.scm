@@ -1,8 +1,8 @@
 ;;;============================================================================
 
 ;; TODO
-;; - Clean up creation of global labels and their insertion into the global table.
 ;; - Fix nargs (%cl) + %ecx
+;; - Primitives
 
 ;;; File: "_t-x86.scm"
 
@@ -546,19 +546,16 @@
     (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-heap-fudge nat-heap-size)) (nat-target-heap-ptr-reg targ)))
     (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-heap-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
 
+    (let ((mem-loc (nat-global-ref targ 'println))
+          (mem-opnd (nat-label-ref cgc 'println)))
+      (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-lbl (nat-label-ref cgc 'println)))
+      (x86-mov cgc mem-loc (vector-ref (nat-target-gvm-reg-map targ) 1)))
+
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 0) (x86-imm-lbl exit-lbl))
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-int 0))
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 2) (x86-imm-int 0))
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 3) (x86-imm-int 0))
     (x86-mov  cgc (vector-ref (nat-target-gvm-reg-map targ) 4) (x86-imm-int 0))
-
-    (let ((mem-loc (nat-global-ref targ 'println))
-          (mem-opnd (nat-label-ref cgc 'println)))
-      (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
-      (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-lbl (nat-label-ref cgc 'println)))
-      (x86-mov cgc mem-loc (vector-ref (nat-target-gvm-reg-map targ) 1))
-      (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1)))
-      ;;(x86-mov cgc mem-loc (x86-imm-lbl (nat-label-ref cgc 'println))))
 
     (x86-jmp  cgc entry-lbl)
 
@@ -664,12 +661,8 @@
               (scan-opnd opnd)
               ;; (if nargs
               ;;     (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs)))
-              (let ((offset (* (nat-target-word-width targ)
-                               (- (codegen-context-frame-size cgc)
-                                  jump-size))))
-                (if (not (= offset 0))
-                    (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))
-                (x86-jmp cgc (nat-opnd cgc ctx opnd)))))
+              (adjust-frame-size cgc jump-size)
+              (x86-jmp cgc (nat-opnd cgc ctx opnd))))
 
            ((apply)
             (let ((prim  (apply-prim gvm-instr))
@@ -691,12 +684,8 @@
                    (test-proc (proc-obj-test test)))
               ;;(pp ctx)
               (if test-proc
-                  (let ((offset (* (nat-target-word-width targ)
-                                   (- (codegen-context-frame-size cgc)
-                                      jump-size))))
-                    (if (not (= offset 0))
-                        (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))
-
+                  (begin
+                    (adjust-frame-size cgc jump-size)
                     (nat-if-then-else cgc ctx test-proc opnds true false))
                   (compiler-internal-error "test is not a procedure"))))
 
@@ -705,6 +694,15 @@
             (compiler-internal-error "unrecognized type:" gvm-type)))
        ))
      lst)))
+
+(define (adjust-frame-size cgc jump-size)
+  (let* ((targ (codegen-context-target cgc))
+         (offset (* (nat-target-word-width targ)
+                   (- (codegen-context-frame-size cgc)
+                      jump-size))))
+    (if (not (= offset 0))
+        (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))))
+
 
 (define (nat-if-then-else cgc ctx test opnds true* false*)
   (let* ((targ (codegen-context-target cgc))
