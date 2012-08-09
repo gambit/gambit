@@ -80,7 +80,7 @@ fi
 case "$target_os" in
 
   darwin*) if test "$CC" = ""; then
-             SEARCH_LIST_FOR_CC="i686-apple-darwin11-gcc-4.2.1 i686-apple-darwin10-gcc-4.2.1 clang"
+             SEARCH_LIST_FOR_CC="i686-apple-darwin11-gcc-4.2.1 i686-apple-darwin10-gcc-4.2.1 gcc clang"
              for cc in $SEARCH_LIST_FOR_CC; do
                AC_CHECK_PROG(HAVE_SPECIAL_CC, $cc, yes)
                if test "$HAVE_SPECIAL_CC" = yes; then
@@ -92,7 +92,7 @@ case "$target_os" in
            fi
 
            if test "$CXX" = "" -a "$ENABLE_CPLUSPLUS" = yes; then
-             SEARCH_LIST_FOR_CXX="i686-apple-darwin11-g++-4.2.1 i686-apple-darwin10-g++-4.2.1 clang++"
+             SEARCH_LIST_FOR_CXX="i686-apple-darwin11-g++-4.2.1 i686-apple-darwin10-g++-4.2.1 g++ clang++"
              for cxx in $SEARCH_LIST_FOR_CXX; do
                AC_CHECK_PROG(HAVE_SPECIAL_CXX, $cxx, yes)
                if test "$HAVE_SPECIAL_CXX" = yes; then
@@ -511,8 +511,6 @@ AC_ARG_ENABLE(type-checking,
                              [perform type checking (default is YES)]),
               ENABLE_TYPE_CHECKING=$enableval,
               ENABLE_TYPE_CHECKING=yes)
-
-echo "ENABLE_TYPE_CHECKING = $ENABLE_TYPE_CHECKING"
 
 if test "$ENABLE_TYPE_CHECKING" = yes; then
 

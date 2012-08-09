@@ -295,7 +295,7 @@
     (lambda (port)
 
       (univ-display
-       (runtime-system targ)
+       (runtime-system (make-ctx targ #f))
        port)
 
       (univ-dump-procs targ procs port)
@@ -426,7 +426,7 @@
                             (eq? (target-name (ctx-target ctx)) 'js))
                        (let ((info (frame-info gvm-instr)))
                          (gen id ".fs = " (vector-ref info 0) ";\n"
-                              id ".link = " (vector-ref info 1) ";\n"))
+                              id ".link = " (+ (vector-ref info 1) 1) ";\n"))
                        ""))))
 
           (define (scan-gvm-instr ctx gvm-instr)
@@ -752,10 +752,13 @@
          (gen "NO_OPERAND"))
 
         ((reg? gvm-opnd)
+         #;
          (gen (univ-global ctx (univ-prefix ctx "reg"))
               "["
               (reg-num gvm-opnd)
-              "]"))
+              "]")
+         (gen (univ-global ctx (univ-prefix ctx "reg"))
+              (reg-num gvm-opnd)))
 
         ((stk? gvm-opnd)
          (let ((n (+ (stk-num gvm-opnd) (ctx-stack-base-offset ctx))))
@@ -837,15 +840,20 @@
 (define (lbl->id ctx num ns)
   (univ-global ctx (univ-prefix ctx (gen "lbl" num "_" (scheme-id->c-id ns)))))
 
-(define (runtime-system targ)
-  (case (target-name targ)
+(define (runtime-system ctx)
+  (case (target-name (ctx-target ctx))
 
     ((js)                               ;rts js
-#<<EOF
+     (let ((R0 (translate-gvm-opnd ctx (make-reg 0)))
+           (R1 (translate-gvm-opnd ctx (make-reg 1)))
+           (R2 (translate-gvm-opnd ctx (make-reg 2)))
+           (R3 (translate-gvm-opnd ctx (make-reg 3)))
+           (R4 (translate-gvm-opnd ctx (make-reg 4))))
+       (list "
 function Gambit_heapify_continuation(ra) {
   var chain = false;
   var prev_frame = false;
-  var prev_link = 0;
+  var prev_link = 1;
 
   while (Gambit_sp !== 0) { // stack not empty
     var fs = ra.fs;
@@ -854,18 +862,18 @@ function Gambit_heapify_continuation(ra) {
     if (prev_frame === false)
       chain = frame;
     else
-      prev_frame[prev_link+1] = frame;
+      prev_frame[prev_link] = frame;
     prev_frame = frame;
     frame[0] = ra;
     Gambit_sp = Gambit_sp-fs;
-    ra = Gambit_stack[Gambit_sp+link+1];
+    ra = Gambit_stack[Gambit_sp+link];
     prev_link = link;
   }
 
   if (prev_frame === false)
     chain = Gambit_stack[0];
   else
-    prev_frame[prev_link+1] = Gambit_stack[0];
+    prev_frame[prev_link] = Gambit_stack[0];
   
   Gambit_stack = [chain];
   Gambit_sp = 0;
@@ -882,21 +890,27 @@ function Gambit_underflow_handler() {
     var link = ra.link;
     Gambit_stack = frame.slice(0, fs+1);
     Gambit_sp = fs;
-    Gambit_stack[0] = frame[link+1];
-    Gambit_stack[link+1] = Gambit_underflow_handler;
+    Gambit_stack[0] = frame[link];
+    Gambit_stack[link] = Gambit_underflow_handler;
   }
   return ra;
 }
 Gambit_underflow_handler.fs = 0;
 
 var Gambit_glo = {};
-var Gambit_reg = [Gambit_underflow_handler];
-var Gambit_stack = [false];
+var " R0 " = Gambit_underflow_handler;
+var " R1 " = false;
+var " R2 " = false;
+var " R3 " = false;
+var " R4 " = false;
+var Gambit_stack = [];
 var Gambit_sp = 0;
 var Gambit_nargs = 0;
 var Gambit_temp1 = false;
 var Gambit_temp2 = false;
 var Gambit_poll;
+
+Gambit_stack[0] = false;
 
 if (this.hasOwnProperty('setTimeout')) {
   Gambit_poll = function (wakeup) { setTimeout(function () { Gambit_run(wakeup); }, 1); return false; };
@@ -906,7 +920,7 @@ if (this.hasOwnProperty('setTimeout')) {
 
 
 function Gambit_wrong_nargs(fn) {
-  print("*** wrong number of arguments ("+Gambit_nargs+") when calling");
+  print(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
   print(fn);
   return false;
 }
@@ -917,7 +931,7 @@ function Gambit_Flonum(val) {
 
 Gambit_Flonum.prototype.toString = function ( ) {
   if (parseFloat(this.val) == parseInt(this.val)) {
-    return this.val + ".";
+    return this.val + \".\";
   } else {
     return this.val;
   }
@@ -967,7 +981,7 @@ function prettyPrintList ( o ) {
   if (!Gambit_nullp(o)) {
     lbl1_println(Gambit_car(o));
     if (!Gambit_nullp(Gambit_cdr(o))) {
-      print(" ");
+      print(\" \");
       prettyPrintList(Gambit_cdr(o));
     }
   }
@@ -1163,7 +1177,7 @@ function Gambit_String(charray) {
 
 Gambit_String.makestring = function ( n, c ) {
   var a = new Array(n);
-  c = c || "";
+  c = c || \"\";
   for (i = 0; i < n; i++) {
       a[i] = c.i;
   }
@@ -1186,7 +1200,7 @@ Gambit_String.prototype.stringset = function ( n, c ) {
 }
 
 Gambit_String.prototype.toString = function ( ) {
-  var s = "";
+  var s = \"\";
   for (i = 0; i < this.stringlength(); i++) {
       s = s.concat(String.fromCharCode(this.stringref(i)));
   }
@@ -1220,7 +1234,7 @@ Gambit_Vector.prototype.vectorset = function ( n, v ) {
 }
 
 Gambit_Vector.prototype.toString = function ( ) {
-  var res = "";
+  var res = \"\";
   for (var i = 0; i<this.a.length; i++) {
     res += Gambit_toString(this.a[i]);
   }
@@ -1247,7 +1261,7 @@ Gambit_Symbol.stringToSymbol = function ( s ) {
 
 var Gambit_kwds = {};
 function Gambit_Keyword(s) {
-  s = s + ":";
+  s = s + \":\";
 
   this.keywordToString = function( ) { return s.substring(0, s.length-1); }
   this.toString = function( ) { return s; }
@@ -1266,11 +1280,11 @@ Gambit_Keyword.stringToKeyword = function(s) {
 
 function Gambit_toString ( obj ) {
   if (obj === false)
-    return "#f";
+    return \"#f\";
   else if (obj === true)
-    return "#t";
+    return \"#t\";
   else if (obj === null)
-    return "";
+    return \"\";
   else if (obj instanceof Gambit_Flonum)
     return obj.toString();
   else if (obj instanceof Gambit_String)
@@ -1290,12 +1304,12 @@ function Gambit_lbl1_println ( ) { // println
     return Gambit_wrong_nargs(Gambit_lbl1_println);
   }
 
-  print(Gambit_toString(Gambit_reg[1]));
+  print(Gambit_toString(" R1 "));
   
-  return Gambit_reg[0];
+  return " R0 ";
 }
 
-Gambit_glo["println"] = Gambit_lbl1_println;
+Gambit_glo[\"println\"] = Gambit_lbl1_println;
 
 
 function Gambit_Continuation(frame, denv) {
@@ -1306,76 +1320,76 @@ function Gambit_Continuation(frame, denv) {
 
 // Obsolete
 function Gambit_dump_cont(sp, ra) {
-  print("------------------------");
+  print(\"------------------------\");
   while (ra !== false) {
-    print("sp="+Gambit_sp + " fs="+ra.fs + " link="+ra.link);
+    print(\"sp=\"+Gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
     Gambit_sp = Gambit_sp-ra.fs;
-    ra = Gambit_stack[Gambit_sp+ra.link+1];
+    ra = Gambit_stack[Gambit_sp+ra.link];
   }
-  print("------------------------");
+  print(\"------------------------\");
 }
 
 function Gambit_continuation_capture1() {
-  var receiver = Gambit_reg[1];
-  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
-  Gambit_reg[1] = new Gambit_Continuation(Gambit_stack[0], false);
+  var receiver = " R1 ";
+  " R0 " = Gambit_heapify_continuation(" R0 ");
+  " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
   Gambit_nargs = 1;
   return receiver;
 }
 
 function Gambit_continuation_capture2() {
-  var receiver = Gambit_reg[1];
-  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
-  Gambit_reg[1] = new Gambit_Continuation(Gambit_stack[0], false);
+  var receiver = " R1 ";
+  " R0 " = Gambit_heapify_continuation(" R0 ");
+  " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
   Gambit_nargs = 2;
   return receiver;
 }
 
 function Gambit_continuation_capture3() {
-  var receiver = Gambit_reg[1];
-  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
-  Gambit_reg[1] = new Gambit_Continuation(Gambit_stack[0], false);
+  var receiver = " R1 ";
+  " R0 " = Gambit_heapify_continuation(" R0 ");
+  " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
   Gambit_nargs = 3;
   return receiver;
 }
 
 function Gambit_continuation_capture4() {
   var receiver = Gambit_stack[Gambit_sp--];
-  Gambit_reg[0] = Gambit_heapify_continuation(Gambit_reg[0]);
+  " R0 " = Gambit_heapify_continuation(" R0 ");
   Gambit_stack[++Gambit_sp] = new Gambit_Continuation(Gambit_stack[0], false);
   Gambit_nargs = 4;
   return receiver;
 }
 
 function Gambit_continuation_graft_no_winding2() {
-  var proc = Gambit_reg[2];
-  var cont = Gambit_reg[1];
+  var proc = " R2 ";
+  var cont = " R1 ";
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  Gambit_reg[0] = Gambit_underflow_handler;
+  " R0 " = Gambit_underflow_handler;
   Gambit_nargs = 0;
   return proc;
 }
 
 function Gambit_continuation_graft_no_winding3() {
-  var proc = Gambit_reg[2];
-  var cont = Gambit_reg[1];
+  var proc = " R2 ";
+  var cont = " R1 ";
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  Gambit_reg[0] = Gambit_underflow_handler;
-  Gambit_reg[1] = Gambit_reg[3];
+  " R0 " = Gambit_underflow_handler;
+  " R1 " = " R3 ";
   Gambit_nargs = 1;
   return proc;
 }
 
 function Gambit_continuation_graft_no_winding4() {
-  var proc = Gambit_reg[1];
+  var proc = " R1 ";
   var cont = Gambit_stack[Gambit_sp];
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  Gambit_reg[0] = Gambit_underflow_handler;
-  Gambit_reg[1] = Gambit_reg[2];
-  Gambit_reg[2] = Gambit_reg[3];
+  " R0 " = Gambit_underflow_handler;
+  " R1 " = " R2 ";
+  " R2 " = " R3 ";
   Gambit_nargs = 2;
   return proc;
 }
@@ -1385,103 +1399,103 @@ function Gambit_continuation_graft_no_winding5() {
   var cont = Gambit_stack[Gambit_sp-1];
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  Gambit_reg[0] = Gambit_underflow_handler;
+  " R0 " = Gambit_underflow_handler;
   Gambit_nargs = 3;
   return proc;
 }
 
 function Gambit_continuation_return_no_winding2() {
-  var cont = Gambit_reg[1];
+  var cont = " R1 ";
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  Gambit_reg[0] = Gambit_underflow_handler;
-  Gambit_reg[1] = Gambit_reg[2];
-  return Gambit_reg[0];
+  " R0 " = Gambit_underflow_handler;
+  " R1 " = " R2 ";
+  return " R0 ";
 }
 
 function Gambit_lbl1__23__23_continuation_3f_() { // ##continuation?
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_3f_);
   }
-  Gambit_reg[1] = Gambit_reg[1] instanceof Gambit_Continuation;
-  return Gambit_reg[0];
+  " R1 " = " R1 " instanceof Gambit_Continuation;
+  return " R0 ";
 }
 
-Gambit_glo["##continuation?"] = Gambit_lbl1__23__23_continuation_3f_;
+Gambit_glo[\"##continuation?\"] = Gambit_lbl1__23__23_continuation_3f_;
 
 
 function Gambit_lbl1__23__23_continuation_2d_frame() { // ##continuation-frame
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_frame);
   }
-  Gambit_reg[1] = Gambit_reg[1].frame;
-  return Gambit_reg[0];
+  " R1 " = " R1 ".frame;
+  return " R0 ";
 }
 
-Gambit_glo["##continuation-frame"] = Gambit_lbl1__23__23_continuation_2d_frame;
+Gambit_glo[\"##continuation-frame\"] = Gambit_lbl1__23__23_continuation_2d_frame;
 
 
 function Gambit_lbl1__23__23_continuation_2d_denv() { // ##continuation-denv
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_denv);
   }
-  Gambit_reg[1] = Gambit_reg[1].denv;
-  return Gambit_reg[0];
+  " R1 " = " R1 ".denv;
+  return " R0 ";
 }
 
-Gambit_glo["##continuation-denv"] = Gambit_lbl1__23__23_continuation_2d_denv;
+Gambit_glo[\"##continuation-denv\"] = Gambit_lbl1__23__23_continuation_2d_denv;
 
 
 function Gambit_lbl1__23__23_continuation_2d_fs() { // ##continuation-fs
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_fs);
   }
-  Gambit_reg[1] = Gambit_reg[1].frame[0].fs;
-  return Gambit_reg[0];
+  " R1 " = " R1 ".frame[0].fs;
+  return " R0 ";
 }
 
-Gambit_glo["##continuation-fs"] = Gambit_lbl1__23__23_continuation_2d_fs;
+Gambit_glo[\"##continuation-fs\"] = Gambit_lbl1__23__23_continuation_2d_fs;
 
 
 function Gambit_lbl1__23__23_frame_2d_fs() { // ##frame-fs
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_fs);
   }
-  Gambit_reg[1] = Gambit_reg[1][0].fs;
-  return Gambit_reg[0];
+  " R1 " = " R1 "[0].fs;
+  return " R0 ";
 }
 
-Gambit_glo["##frame-fs"] = Gambit_lbl1__23__23_frame_2d_fs;
+Gambit_glo[\"##frame-fs\"] = Gambit_lbl1__23__23_frame_2d_fs;
 
 
 function Gambit_lbl1__23__23_return_2d_fs() { // ##return-fs
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_return_2d_fs);
   }
-  Gambit_reg[1] = Gambit_reg[1].fs;
-  return Gambit_reg[0];
+  " R1 " = " R1 ".fs;
+  return " R0 ";
 }
 
-Gambit_glo["##return-fs"] = Gambit_lbl1__23__23_return_2d_fs;
+Gambit_glo[\"##return-fs\"] = Gambit_lbl1__23__23_return_2d_fs;
 
 
 function Gambit_lbl1__23__23_continuation_2d_link() { // ##continuation-link
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_link);
   }
-  Gambit_reg[1] = Gambit_reg[1].frame[0].link;
-  return Gambit_reg[0];
+  " R1 " = " R1 ".frame[0].link-1;
+  return " R0 ";
 }
 
-Gambit_glo["##continuation-link"] = Gambit_lbl1__23__23_continuation_2d_link;
+Gambit_glo[\"##continuation-link\"] = Gambit_lbl1__23__23_continuation_2d_link;
 
 
 function Gambit_lbl1__23__23_frame_2d_link() { // ##frame-link
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_link);
   }
-  Gambit_reg[1] = Gambit_reg[1][0].link;
-  return Gambit_reg[0];
+  " R1 " = " R1 "[0].link-1;
+  return " R0 ";
 }
 
 
@@ -1489,83 +1503,83 @@ function Gambit_lbl1__23__23_continuation_2d_ret() { // ##continuation-ret
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_ret);
   }
-  Gambit_reg[1] = Gambit_reg[1].frame[0];
-  return Gambit_reg[0];
+  " R1 " = " R1 ".frame[0];
+  return " R0 ";
 }
 
-Gambit_glo["##continuation-ret"] = Gambit_lbl1__23__23_continuation_2d_ret;
+Gambit_glo[\"##continuation-ret\"] = Gambit_lbl1__23__23_continuation_2d_ret;
 
 
 function Gambit_lbl1__23__23_frame_2d_ret() { // ##frame-ret
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_ret);
   }
-  Gambit_reg[1] = Gambit_reg[1][0];
-  return Gambit_reg[0];
+  " R1 " = " R1 "[0];
+  return " R0 ";
 }
 
-Gambit_glo["##frame-ret"] = Gambit_lbl1__23__23_frame_2d_ret;
+Gambit_glo[\"##frame-ret\"] = Gambit_lbl1__23__23_frame_2d_ret;
 
 
 function Gambit_lbl1__23__23_continuation_2d_ref() { // ##continuation-ref
   if (Gambit_nargs !== 2) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_ref);
   }
-  Gambit_reg[1] = Gambit_reg[1].frame[Gambit_reg[2]];
-  return Gambit_reg[0];
+  " R1 " = " R1 ".frame[" R2 "];
+  return " R0 ";
 }
 
-Gambit_glo["##continuation-ref"] = Gambit_lbl1__23__23_continuation_2d_ref;
+Gambit_glo[\"##continuation-ref\"] = Gambit_lbl1__23__23_continuation_2d_ref;
 
 
 function Gambit_lbl1__23__23_frame_2d_ref() { // ##frame-ref
   if (Gambit_nargs !== 2) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_ref);
   }
-  Gambit_reg[1] = Gambit_reg[1][Gambit_reg[2]];
-  return Gambit_reg[0];
+  " R1 " = " R1 "[" R2 "];
+  return " R0 ";
 }
 
-Gambit_glo["##frame-ref"] = Gambit_lbl1__23__23_frame_2d_ref;
+Gambit_glo[\"##frame-ref\"] = Gambit_lbl1__23__23_frame_2d_ref;
 
 
 function Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
   if (Gambit_nargs !== 2) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_);
   }
-  Gambit_reg[1] = true;
-  return Gambit_reg[0];
+  " R1 " = true;
+  return " R0 ";
 }
 
-Gambit_glo["##continuation-slot-live?"] = Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_;
+Gambit_glo[\"##continuation-slot-live?\"] = Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_;
 
 
 function Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
   if (Gambit_nargs !== 2) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_);
   }
-  Gambit_reg[1] = true;
-  return Gambit_reg[0];
+  " R1 " = true;
+  return " R0 ";
 }
 
-Gambit_glo["##frame-slot-live?"] = Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_;
+Gambit_glo[\"##frame-slot-live?\"] = Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_;
 
 
 function Gambit_lbl1__23__23_continuation_2d_next() { // ##continuation-next
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_next);
   }
-  var frame = Gambit_reg[1].frame;
-  var denv = Gambit_reg[1].denv;
-  var next_frame = frame[frame[0].link+1];
+  var frame = " R1 ".frame;
+  var denv = " R1 ".denv;
+  var next_frame = frame[frame[0].link];
   if (next_frame === false)
-    Gambit_reg[1] = false;
+    " R1 " = false;
   else
-    Gambit_reg[1] = new Gambit_Continuation(next_frame, denv);
-  return Gambit_reg[0];
+    " R1 " = new Gambit_Continuation(next_frame, denv);
+  return " R0 ";
 }
 
-Gambit_glo["##continuation-next"] = Gambit_lbl1__23__23_continuation_2d_next;
+Gambit_glo[\"##continuation-next\"] = Gambit_lbl1__23__23_continuation_2d_next;
 
 
 function Gambit_run(pc)
@@ -1574,8 +1588,8 @@ function Gambit_run(pc)
     pc = pc();
 }
 
-EOF
-)
+"
+)))
 
     ((python)                           ;rts py
 #<<EOF
@@ -2687,147 +2701,85 @@ EOF
        (compiler-internal-error
         "##cons, unknown target")))))
 
+(define (univ-car ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     #;
+     (gen (univ-prefix ctx "car(")
+          expr
+          ")")
+     (gen expr
+          ".car"))
+
+    ((python ruby php)                ;TODO: complete
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-car, unknown target"))))
+
+(define (univ-cdr ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     #;
+     (gen (univ-prefix ctx "cdr(")
+          expr
+          ")")
+     (gen expr
+          ".cdr"))
+
+    ((python ruby php)                ;TODO: complete
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-cdr, unknown target"))))
+
 (univ-define-prim "##car" #f #f
 
   (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (gen (univ-prefix ctx "car(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (gen ""))
-
-      ;; ((ruby)
-      ;;  (gen ""))
-
-      ((python ruby php)                ;TODO: complete
-       (gen ""))
-
-      (else
-       (compiler-internal-error
-        "##car, unknown target")))))
+    (univ-car ctx
+              (translate-gvm-opnd ctx (list-ref opnds 0)))))
 
 (univ-define-prim "##cdr" #f #f
 
   (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (gen (univ-prefix ctx "cdr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (gen ""))
-
-      ;; ((ruby)
-      ;;  (gen ""))
-
-      ((python ruby php)                ;TODO: complete
-       (gen ""))
-
-      (else
-       (compiler-internal-error
-        "##cdr, unknown target")))))
+    (univ-cdr ctx
+              (translate-gvm-opnd ctx (list-ref opnds 0)))))
 
 // ##caar
 (univ-define-prim "##caar" #f #f
 
   (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (gen (univ-prefix ctx "caar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (gen ""))
-
-      ;; ((ruby)
-      ;;  (gen ""))
-
-      ((python ruby php)                ;TODO: complete
-       (gen ""))
-
-      (else
-       (compiler-internal-error
-        "##caar, unknown target")))))
+    (univ-car ctx
+              (univ-car ctx
+                        (translate-gvm-opnd ctx (list-ref opnds 0))))))
 
 // ##cadr
 (univ-define-prim "##cadr" #f #f
 
   (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (gen (univ-prefix ctx "cadr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (gen ""))
-
-      ;; ((ruby)
-      ;;  (gen ""))
-
-      ((python ruby php)                ;TODO: complete
-       (gen ""))
-
-      (else
-       (compiler-internal-error
-        "##cadr, unknown target")))))
+    (univ-car ctx
+              (univ-cdr ctx
+                        (translate-gvm-opnd ctx (list-ref opnds 0))))))
 
 // ##cdar
 (univ-define-prim "##cdar" #f #f
 
   (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (gen (univ-prefix ctx "cdar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (gen ""))
-
-      ;; ((ruby)
-      ;;  (gen ""))
-
-      ((python ruby php)                ;TODO: complete
-       (gen ""))
-
-      (else
-       (compiler-internal-error
-        "##cdar, unknown target")))))
+    (univ-cdr ctx
+              (univ-car ctx
+                        (translate-gvm-opnd ctx (list-ref opnds 0))))))
 
 // ##cddr
 (univ-define-prim "##cddr" #f #f
 
   (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (gen (univ-prefix ctx "cddr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (gen ""))
-
-      ;; ((ruby)
-      ;;  (gen ""))
-
-      ((python ruby php)                ;TODO: complete
-       (gen ""))
-
-      (else
-       (compiler-internal-error
-        "##cddr, unknown target")))))
+    (univ-cdr ctx
+              (univ-cdr ctx
+                        (translate-gvm-opnd ctx (list-ref opnds 0))))))
 
 // ##caaar
 (univ-define-prim "##caaar" #f #f

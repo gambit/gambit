@@ -77,7 +77,7 @@ changev changev1 \
 set-regs \
 publish-release \
 build-gambit-iOS build-gambit-android \
-bench-gccs
+bench-gccs install-gnu-gcc-osx
 
 GENDISTFILES =
 
