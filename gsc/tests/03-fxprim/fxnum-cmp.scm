@@ -1,0 +1,115 @@
+(declare
+ (standard-bindings)
+ (extended-bindings)
+ (fixnum)
+ (not safe)
+ (not interrupts-enabled))
+
+(define zero 0)
+
+(define (test x y)
+  (println (##fx< x y))
+  (println (##fx< x 0))
+  (println (##fx< 0 y))
+  (println (##fx< x zero))
+  (println (##fx< zero y))
+
+  (println (##fx<= x y))
+  (println (##fx<= x 0))
+  (println (##fx<= 0 y))
+  (println (##fx<= x zero))
+  (println (##fx<= zero y))
+
+  (println (##fx> x y))
+  (println (##fx> x 0))
+  (println (##fx> 0 y))
+  (println (##fx> x zero))
+  (println (##fx> zero y))
+
+  (println (##fx>= x y))
+  (println (##fx>= x 0))
+  (println (##fx>= 0 y))
+  (println (##fx>= x zero))
+  (println (##fx>= zero y))
+
+  (println (##fx= x y))
+  (println (##fx= x 0))
+  (println (##fx= 0 y))
+  (println (##fx= x zero))
+  (println (##fx= zero y)))
+
+(define (test-reg+stack a b x y e f)
+  (println (##fx< x y))
+  (println (##fx< x 0))
+  (println (##fx< 0 y))
+  (println (##fx< x zero))
+  (println (##fx< zero y))
+
+  (println (##fx<= x y))
+  (println (##fx<= x 0))
+  (println (##fx<= 0 y))
+  (println (##fx<= x zero))
+  (println (##fx<= zero y))
+
+  (println (##fx> x y))
+  (println (##fx> x 0))
+  (println (##fx> 0 y))
+  (println (##fx> x zero))
+  (println (##fx> zero y))
+
+  (println (##fx>= x y))
+  (println (##fx>= x 0))
+  (println (##fx>= 0 y))
+  (println (##fx>= x zero))
+  (println (##fx>= zero y))
+
+  (println (##fx= x y))
+  (println (##fx= x 0))
+  (println (##fx= 0 y))
+  (println (##fx= x zero))
+  (println (##fx= zero y)))
+
+
+(define (test-stack a x y d e f)
+  (println (##fx< x y))
+  (println (##fx< x 0))
+  (println (##fx< 0 y))
+  (println (##fx< x zero))
+  (println (##fx< zero y))
+
+  (println (##fx<= x y))
+  (println (##fx<= x 0))
+  (println (##fx<= 0 y))
+  (println (##fx<= x zero))
+  (println (##fx<= zero y))
+
+  (println (##fx> x y))
+  (println (##fx> x 0))
+  (println (##fx> 0 y))
+  (println (##fx> x zero))
+  (println (##fx> zero y))
+
+  (println (##fx>= x y))
+  (println (##fx>= x 0))
+  (println (##fx>= 0 y))
+  (println (##fx>= x zero))
+  (println (##fx>= zero y))
+
+  (println (##fx= x y))
+  (println (##fx= x 0))
+  (println (##fx= 0 y))
+  (println (##fx= x zero))
+  (println (##fx= zero y)))
+
+
+(test 0 0)
+(test 0 1)
+(test 1 0)
+
+(test-reg+stack 9 9 0 0 9 9)
+(test-reg+stack 9 9 0 1 9 9)
+(test-reg+stack 9 9 1 0 9 9)
+
+(test-stack 9 0 0 9 9 9)
+(test-stack 9 0 1 9 9 9)
+(test-stack 9 1 0 9 9 9)
