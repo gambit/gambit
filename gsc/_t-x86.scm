@@ -384,7 +384,6 @@
 
 ;; nat-label-ref: finds the label associated with a symbol. Creates it if
 ;;                it doesn't exist.
-;; nat-label-set!: insert or update a symbol/label association in the table.
 (define (nat-label-ref cgc label-name)
   (let ((x (table-ref nat-labels label-name #f)))
     (if x
@@ -392,6 +391,8 @@
         (let ((l  (asm-make-label cgc label-name)))
           (table-set! nat-labels label-name l)
           l))))
+
+;; nat-label-set!: insert or update a symbol/label association in the table.
 (define (nat-label-set! cgc label-name val)
   (table-set! nat-labels label-name val))
 
@@ -686,7 +687,7 @@
               (if test-proc
                   (begin
                     (adjust-frame-size cgc jump-size)
-                    (nat-if-then-else cgc ctx test-proc opnds true false))
+                    (test-proc cgc ctx opnds true false))
                   (compiler-internal-error "test is not a procedure"))))
 
 
@@ -697,20 +698,22 @@
 
 (define (adjust-frame-size cgc jump-size)
   (let* ((targ (codegen-context-target cgc))
-         (offset (* (nat-target-word-width targ)
-                   (- (codegen-context-frame-size cgc)
-                      jump-size))))
+         (offset (- (codegen-context-frame-size cgc)
+                    jump-size)))
+    (codegen-context-frame-size-set! cgc
+                                     (- (codegen-context-frame-size cgc) offset))
     (if (not (= offset 0))
-        (x86-add cgc (nat-target-stack-ptr-reg targ) (x86-imm-int offset)))))
+        (x86-add cgc (nat-target-stack-ptr-reg targ)
+                 (x86-imm-int (* (nat-target-word-width targ) offset))))))
 
 
-(define (nat-if-then-else cgc ctx test opnds true* false*)
-  (let* ((targ (codegen-context-target cgc))
-         (true-lbl (nat-label-ref cgc (lbl->id true* (ctx-ns ctx))))
-         (false-lbl (nat-label-ref cgc (lbl->id false* (ctx-ns ctx)))))
-    (test cgc opnds)
-    (x86-jne cgc false-lbl)
-    (x86-jmp cgc true-lbl)))
+;; (define (nat-if-then-else cgc ctx test opnds true* false*)
+;;   (let* ((targ (codegen-context-target cgc))
+;;          (true-lbl (nat-label-ref cgc (lbl->id true* (ctx-ns ctx))))
+;;          (false-lbl (nat-label-ref cgc (lbl->id false* (ctx-ns ctx)))))
+;;     (test cgc opnds)
+;;     (x86-jne cgc false-lbl)
+;;     (x86-jmp cgc true-lbl)))
 
 (define (nat-close cgc parms)
 
@@ -744,7 +747,7 @@
         (list 'clo? (clo? opnd))))
 
 (define (nat-opnd cgc ctx opnd) ;; fetch GVM operand
-  ;;(pp (classify-opnd opnd))
+  ;; (pp (classify-opnd opnd))
   (let ((targ (codegen-context-target cgc)))
     (cond ((reg? opnd)
            (let ((n (reg-num opnd)))
@@ -1120,8 +1123,8 @@
 
           (proc-obj-test-set!
            prim
-           (lambda (cgc opnds)
-             (ifjump-gen cgc opnds)))))
+           (lambda (cgc ctx opnds true-branch false-branch)
+             (ifjump-gen cgc ctx opnds true-branch false-branch)))))
 
     (if jump-gen
         (begin
@@ -1132,9 +1135,6 @@
           (proc-obj-jump-inline-set!
            prim
            jump-gen)))))
-
-(define (x86-prim-define-bool name proc-safe? side-effects prim-gen)
-  (x86-prim-define name proc-safe? side-effects prim-gen prim-gen))
 
 (x86-prim-define "##not" #t #f
   (lambda (cgc opnds loc)
@@ -1163,11 +1163,137 @@
       (if (not (eq? translated-loc r1))
           (x86-pop cgc r1))))
 
-  (lambda (cgc opnds)
+  (lambda (cgc ctx opnds true-branch false-branch)
+    ;;   (let* ((targ (codegen-context-target cgc))
+    ;;          (true-lbl (nat-label-ref cgc (lbl->id true* (ctx-ns ctx))))
+    ;;          (false-lbl (nat-label-ref cgc (lbl->id false* (ctx-ns ctx)))))
+    ;;     (test cgc opnds)
+    ;;     (x86-jne cgc false-lbl)
+    ;;     (x86-jmp cgc true-lbl)))
+
     (let* ((targ (codegen-context-target cgc))
-           (opnd (nat-opnd cgc (make-ctx targ #f) (car opnds))))
+           (opnd (nat-opnd cgc (make-ctx targ #f) (car opnds)))
+           (true-lbl  (nat-label-ref cgc (lbl->id true-branch  (ctx-ns ctx))))
+           (false-lbl (nat-label-ref cgc (lbl->id false-branch (ctx-ns ctx)))))
       (if (x86-reg? opnd)
           (x86-cmp cgc opnd false)
           (begin
+            (x86-push cgc (vector-ref (nat-target-gvm-reg-map targ) 1))
             (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) opnd)
-            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false))))))
+            (x86-cmp cgc (vector-ref (nat-target-gvm-reg-map targ) 1) false)
+            (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1))))
+      (x86-jne cgc false-lbl)
+      (x86-jmp cgc true-lbl))))
+
+
+;; TODO: handle 0-ary, 1-ary and >2-ary cases
+(x86-prim-define "##fx+" #f #f
+  (lambda (cgc opnds loc)
+    (let* ((targ (codegen-context-target cgc))
+           (ctx (make-ctx targ #f))
+           (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+           (translated-loc (nat-opnd cgc ctx loc))
+           (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
+           (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
+      (if (x86-reg? translated-loc)
+          (cond ((eq? translated-loc opnd1) (x86-add cgc translated-loc opnd2))
+                ((eq? translated-loc opnd2) (x86-add cgc translated-loc opnd1))
+                (else
+                 (x86-mov cgc translated-loc opnd1)
+                 (x86-add cgc translated-loc opnd2)))
+          (cond ((x86-reg? opnd1)
+                 (x86-push cgc opnd1)
+                 (x86-add cgc opnd1 opnd2)
+                 (x86-mov cgc translated-loc opnd1)
+                 (x86-pop cgc opnd1))
+                ((x86-reg? opnd2)
+                 (x86-push cgc opnd2)
+                 (x86-add cgc opnd2 opnd1)
+                 (x86-mov cgc translated-loc opnd2)
+                 (x86-pop cgc opnd2))
+                (else
+                 (x86-push cgc r1)
+                 (x86-mov cgc r1 opnd1)
+                 (x86-add cgc r1 opnd2)
+                 (x86-mov cgc translated-loc r1)
+                 (x86-pop cgc r1)))))))
+
+;; TODO: handle 0-ary, 1-ary and >2-ary cases
+(x86-prim-define "##fx-" #f #f
+  (lambda (cgc opnds loc)
+    (let* ((targ (codegen-context-target cgc))
+           (ctx (make-ctx targ #f))
+           (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+           (translated-loc (nat-opnd cgc ctx loc))
+           (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
+           (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
+      (if (x86-reg? translated-loc)
+          (cond ((eq? translated-loc opnd1) (x86-sub cgc translated-loc opnd2))
+                ((eq? translated-loc opnd2)
+                 (x86-neg cgc opnd2)
+                 (x86-add cgc translated-loc opnd1)
+                 (x86-neg cgc opnd2))
+                (else
+                 (x86-mov cgc translated-loc opnd1)
+                 (x86-sub cgc translated-loc opnd2)))
+          (cond ((x86-reg? opnd1)
+                 (x86-push cgc opnd1)
+                 (x86-sub cgc opnd1 opnd2)
+                 (x86-mov cgc translated-loc opnd1)
+                 (x86-pop cgc opnd1))
+                ((x86-reg? opnd2)
+                 (x86-push cgc opnd2)
+                 (x86-sub cgc opnd2 opnd1)
+                 (x86-mov cgc translated-loc opnd2)
+                 (x86-pop cgc opnd2))
+                (else
+                 (x86-push cgc r1)
+                 (x86-mov cgc r1 opnd1)
+                 (x86-sub cgc r1 opnd2)
+                 (x86-mov cgc translated-loc r1)
+                 (x86-pop cgc r1)))))))
+
+
+;; FIXME: what to do with immediate values?
+(define (box/unbox-fixnum cgc opnd fn)
+  (cond
+   ((x86-reg? opnd)
+    (fn cgc opnd (x86-imm-int 2)))
+
+   (else
+      (let* ((targ (codegen-context-target cgc))
+             (r1 (vector-ref (nat-target-gvm-reg-map targ) 1)))
+        (x86-push cgc r1)
+        (x86-mov cgc r1 opnd)
+        (fn cgc r1 (x86-imm-int 2))
+        (x86-mov cgc opnd r1)
+        (x86-pop cgc r1)))))
+
+(define (unbox-fixnum cgc opnd)
+  (box/unbox-fixnum cgc opnd x86-sar))
+
+(define (box-fixnum cgc opnd)
+  (box/unbox-fixnum cgc opnd x86-shl))
+
+
+
+(x86-prim-define "##fx<" #f #f
+  (lambda (cgc opnds loc)
+    (x86-nop cgc))
+
+  (lambda (cgc ctx opnds true-branch false-branch)
+    (let* ((targ (codegen-context-target cgc))
+           (true-lbl  (nat-label-ref cgc (lbl->id true-branch  (ctx-ns ctx))))
+           (false-lbl (nat-label-ref cgc (lbl->id false-branch (ctx-ns ctx))))
+           (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+           (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
+           (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
+      (if (or (x86-reg? opnd1) (x86-reg? opnd2))
+          (x86-cmp cgc opnd1 opnd2)
+          (begin
+            (x86-push cgc r1)
+            (x86-mov cgc r1 opnd1)
+            (x86-cmp cgc r1 opnd2)
+            (x86-pop cgc r1)))
+      (x86-jl cgc true-lbl)
+      (x86-jmp cgc false-lbl))))
