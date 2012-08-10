@@ -939,10 +939,16 @@ if (this.hasOwnProperty('setTimeout')) {
 }
 
 function Gambit_buildrest ( f ) {    // nb formal args
-                                     // *** assume (= univ-nb-arg-regs 3) for now ***    
+                                     // *** assume (= univ-nb-arg-regs 3) for now ***
     var nb_static_args = f - 1;
-    var nb_rest_args = Gambit_nargs - nb_static_args;    
+    var nb_rest_args = Gambit_nargs - nb_static_args;
+    print(\"nb_rest_args: \");
+    print(nb_rest_args);
     var rest = null;
+    var Gambit_reg = [];
+    Gambit_reg[1] = " R1 ";
+    Gambit_reg[2] = " R2 ";
+    Gambit_reg[3] = " R3 ";
 
     if (Gambit_nargs < nb_static_args)  // Wrong number of args
         return false;
@@ -955,6 +961,10 @@ function Gambit_buildrest ( f ) {    // nb formal args
 
         Gambit_reg[nb_static_args + 1] = rest;
         Gambit_nargs -= (nb_rest_args - 1);
+
+        " R1 " = Gambit_reg[1];
+        " R2 " = Gambit_reg[2];
+        " R3 " = Gambit_reg[3];
         
         return true;
     }
@@ -963,11 +973,15 @@ function Gambit_buildrest ( f ) {    // nb formal args
     if ((Gambit_nargs >= 3) && (nb_rest_args === 0)) { // only append '()
         var spill_loc = nb_static_args - 2;        // univ-nb-arg-regs - 1
         Gambit_sp += 1;
-        Gambit_stack[Gambit_sp] = Gambit_reg[1];
-        Gambit_reg[1] = Gambit_reg[2];
-        Gambit_reg[2] = Gambit_reg[3];
-        Gambit_reg[3] = null;
+        Gambit_stack[Gambit_sp] = " R1 ";
+        " R1 " = " R2 ";
+        " R2 " = " R3 ";
+        " R3 " = null;
         Gambit_nargs += 1;
+
+        " R1 " = Gambit_reg[1];
+        " R2 " = Gambit_reg[2];
+        " R3 " = Gambit_reg[3];
         
         return true;
     }
@@ -986,12 +1000,12 @@ function Gambit_buildrest ( f ) {    // nb formal args
 
     switch (nb_static_args) {
     case 0:
-        Gambit_reg[1] = Gambit_stack[Gambit_sp];
+        " R1 " = Gambit_stack[Gambit_sp];
         Gambit_sp -= 1;
         break;
     case 1:
-        Gambit_reg[2] = Gambit_stack[Gambit_sp];
-        Gambit_reg[1] = Gambit_stack[Gambit_sp - 1];
+        " R2 " = Gambit_stack[Gambit_sp];
+        " R1 " = Gambit_stack[Gambit_sp - 1];
         Gambit_sp -= 2;
         break;
     default:
@@ -1002,6 +1016,10 @@ function Gambit_buildrest ( f ) {    // nb formal args
         break;
     }
     Gambit_nargs = f;
+
+    " R1 " = Gambit_reg[1];
+    " R2 " = Gambit_reg[2];
+    " R3 " = Gambit_reg[3];
 
     return true;
 }         
@@ -1438,9 +1456,9 @@ function Gambit_lbl1_print ( ) { // print
         return Gambit_wrong_nargs(Gambit_lbl1_print);
     }
 
-    write(Gambit_toString(Gambit_reg[1]));
+    write(Gambit_toString(" R1 "));
     
-    return Gambit_reg[0];
+    return " R0 ";
 }
 
 Gambit_glo[\"print\"] = Gambit_lbl1_print;
@@ -1452,7 +1470,7 @@ function Gambit_lbl1_newline ( ) { // newline
 
     print();
     
-    return Gambit_reg[0];
+    return " R0 ";
 }
 
 Gambit_glo[\"newline\"] = Gambit_lbl1_newline;
@@ -1462,9 +1480,9 @@ function Gambit_lbl1_display ( ) { // display
         return Gambit_wrong_nargs(Gambit_lbl1_display);
     }
 
-    write(Gambit_toString(Gambit_reg[1]));
+    write(Gambit_toString(" R1 "));
     
-    return Gambit_reg[0];
+    return " R0 ";
 }
 
 Gambit_glo[\"display\"] = Gambit_lbl1_display;
@@ -1476,7 +1494,7 @@ function Gambit_lbl1_real_2d_time_2d_milliseconds ( ) { // real-time-millisecond
 
     Gambit_rer[1] = new Date();
     
-    return Gambit_reg[0];
+    return " R0 ";
 }
 
 Gambit_glo[\"real-time-milliseconds\"] = Gambit_lbl1_real_2d_time_2d_milliseconds;
