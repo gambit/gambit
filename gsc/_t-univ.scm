@@ -851,6 +851,9 @@
 
         ((undefined? obj)
          (univ-undefined ctx))
+
+        ((symbol? obj)
+         (univ-symbol ctx obj))
         
         (else
          (gen "UNIMPLEMENTED_OBJECT("
@@ -1400,6 +1403,7 @@ Gambit_Symbol.stringToSymbol = function ( s ) {
     return sym;
 }
 
+// Keyword
 var Gambit_kwds = {};
 function Gambit_Keyword(s) {
     s = s + \":\";
@@ -1436,6 +1440,10 @@ function Gambit_toString ( obj ) {
         return obj.toString();
     else if (obj instanceof Gambit_Vector)
         return obj.toString();
+    else if (obj instanceof Gambit_Symbol)
+        return obj.symbolToString();
+    else if (obj instanceof Gambit_Keyword)
+        return obj.keywordToString();
     else
         return obj;
 }
@@ -2502,6 +2510,22 @@ EOF
     (else
      (compiler-internal-error
       "univ-string, unknown target"))))
+
+(define (univ-symbol ctx obj)
+
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen (univ-prefix ctx "Symbol.stringToSymbol(")
+          (univ-string ctx (symbol->string obj))
+          ")"))
+
+    ((python ruby php)                         ;TODO: complete
+     (gen (object->string obj)))
+
+    (else
+     (compiler-internal-error
+      "univ-symbol, unknown target"))))
 
 (define (univ-null ctx obj)
   (case (target-name (ctx-target ctx))
