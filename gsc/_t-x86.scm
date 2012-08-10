@@ -473,7 +473,7 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #t)))
+    (let ((f (create-procedure cgc #f)))
       (f)))
   #f)
 
@@ -1218,6 +1218,48 @@
                  (x86-mov cgc translated-loc r1)
                  (x86-pop cgc r1)))))))
 
+
+;; TODO: handle 0-ary, 1-ary and >2-ary cases
+(x86-prim-define "##fx*" #f #f
+  (lambda (cgc opnds loc)
+    (let* ((targ (codegen-context-target cgc))
+           (ctx (make-ctx targ #f))
+           (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+           (translated-loc (nat-opnd cgc ctx loc))
+           (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
+           (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
+      (if (x86-reg? translated-loc)
+          (cond ((eq? translated-loc opnd1)
+                 (unbox-fixnum cgc opnd1)
+                 (x86-imul cgc translated-loc opnd2))
+                ((eq? translated-loc opnd2)
+                 (unbox-fixnum cgc opnd2)
+                 (x86-imul cgc translated-loc opnd1))
+                (else
+                 (x86-mov cgc translated-loc opnd1)
+                 (unbox-fixnum cgc translated-loc)
+                 (x86-imul cgc translated-loc opnd2)))
+          (cond ((x86-reg? opnd1)
+                 (x86-push cgc opnd1)
+                 (unbox-fixnum cgc opnd1)
+                 (x86-imul cgc opnd1 opnd2)
+                 (x86-mov cgc translated-loc opnd1)
+                 (x86-pop cgc opnd1))
+                ((x86-reg? opnd2)
+                 (x86-push cgc opnd2)
+                 (unbox-fixnum cgc opnd2)
+                 (x86-imul cgc opnd2 opnd1)
+                 (x86-mov cgc translated-loc opnd2)
+                 (x86-pop cgc opnd2))
+                (else
+                 (x86-push cgc r1)
+                 (x86-mov cgc r1 opnd1)
+                 (unbox-fixnum cgc r1)
+                 (x86-imul cgc r1 opnd2)
+                 (x86-mov cgc translated-loc r1)
+                 (x86-pop cgc r1)))))))
+
+
 ;; TODO: handle 0-ary, 1-ary and >2-ary cases
 (x86-prim-define "##fx-" #f #f
   (lambda (cgc opnds loc)
@@ -1290,6 +1332,7 @@
              (loc (nat-opnd cgc ctx loc))
              (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
              (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
+
         (if (or (x86-reg? opnd1) (x86-reg? opnd2))
             (x86-cmp cgc opnd1 opnd2)
             (begin
@@ -1336,8 +1379,8 @@
         (x86-jmp cgc false-lbl)))))
 
 
-(define-fxcmp-primitive "##fx<" x86-jl)
+(define-fxcmp-primitive "##fx<"  x86-jl)
 (define-fxcmp-primitive "##fx<=" x86-jle)
-(define-fxcmp-primitive "##fx>" x86-jg)
+(define-fxcmp-primitive "##fx>"  x86-jg)
 (define-fxcmp-primitive "##fx>=" x86-jge)
-(define-fxcmp-primitive "##fx=" x86-je)
+(define-fxcmp-primitive "##fx="  x86-je)
