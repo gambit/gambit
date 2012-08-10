@@ -848,6 +848,9 @@
 
         ((vector? obj)
          (univ-vector ctx obj))
+
+        ((undefined? obj)
+         (univ-undefined ctx))
         
         (else
          (gen "UNIMPLEMENTED_OBJECT("
@@ -942,8 +945,6 @@ function Gambit_buildrest ( f ) {    // nb formal args
                                      // *** assume (= univ-nb-arg-regs 3) for now ***
     var nb_static_args = f - 1;
     var nb_rest_args = Gambit_nargs - nb_static_args;
-    print(\"nb_rest_args: \");
-    print(nb_rest_args);
     var rest = null;
     var Gambit_reg = [];
     Gambit_reg[1] = " R1 ";
@@ -1492,7 +1493,7 @@ function Gambit_lbl1_real_2d_time_2d_milliseconds ( ) { // real-time-millisecond
         return Gambit_wrong_nargs(Gambit_lbl1_display);
     }
 
-    Gambit_rer[1] = new Date();
+    " R1 " = new Date();
     
     return " R0 ";
 }
@@ -2520,6 +2521,28 @@ EOF
     (else
      (compiler-internal-error
       "univ-null, unknown target"))))
+
+(define (undefined? obj)
+  (eq? obj 'undefined))
+
+(define (univ-undefined ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "undefined"))
+    
+    ((python)
+     (gen "None"))
+
+    ((ruby)
+     (gen "nil"))
+
+    ((php)                                ;TODO: complete
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-undefined, unknown target"))))
 
 (define (univ-list ctx obj)             ;obj is a non-null list
   
