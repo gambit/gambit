@@ -969,6 +969,10 @@ function Gambit_buildrest ( f ) {    // nb formal args
     var nb_static_args = f - 1;
     var nb_rest_args = Gambit_nargs - nb_static_args;    
     var rest = null;
+    Gambit_reg[1] = " R1 ";
+    Gambit_reg[2] = " R2 ";
+    Gambit_reg[3] = " R3 ";
+
 
     if (Gambit_nargs < nb_static_args)  // Wrong number of args
         return false;
@@ -982,6 +986,10 @@ function Gambit_buildrest ( f ) {    // nb formal args
         Gambit_reg[nb_static_args + 1] = rest;
         Gambit_nargs -= (nb_rest_args - 1);
         
+        " R1 " = Gambit_reg[1];
+        " R2 " = Gambit_reg[2];
+        " R3 " = Gambit_reg[3];
+        
         return true;
     }
 
@@ -994,6 +1002,10 @@ function Gambit_buildrest ( f ) {    // nb formal args
         Gambit_reg[2] = Gambit_reg[3];
         Gambit_reg[3] = null;
         Gambit_nargs += 1;
+        
+        " R1 " = Gambit_reg[1];
+        " R2 " = Gambit_reg[2];
+        " R3 " = Gambit_reg[3];
         
         return true;
     }
@@ -1029,6 +1041,10 @@ function Gambit_buildrest ( f ) {    // nb formal args
     }
     Gambit_nargs = f;
 
+    " R1 " = Gambit_reg[1];
+    " R2 " = Gambit_reg[2];
+    " R3 " = Gambit_reg[3];
+        
     return true;
 }         
 
@@ -1049,7 +1065,8 @@ function closure_alloc(entry_bb) {
 
   return self;
 }
-  
+
+// Flonum
 function Gambit_Flonum(val) {
     this.val = val;
 }
@@ -1255,7 +1272,7 @@ function Gambit_setcdr ( p, b ) {
     p.cdr = b;
 }
 
-// list
+// List
 function Gambit_List ( ) {
     var listaux = function (a, n, lst) {
         if (n === 0) {
@@ -1455,6 +1472,10 @@ function Gambit_toString ( obj ) {
         return obj.toString();
     else if (obj instanceof Gambit_Vector)
         return obj.toString();
+    else if (obj instanceof Gambit_Symbol)
+        return obj.symbolToString();
+    else if (obj instanceof Gambit_Keyword)
+        return obj.keywordToString();
     else
         return obj;
 }
@@ -1512,7 +1533,7 @@ function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
         return Gambit_wrong_nargs(Gambit_bb1_display);
     }
 
-    Gambit_rer[1] = new Date();
+    Gambit_reg[1] = new Date();
     
     return Gambit_reg[0];
 }
@@ -2234,6 +2255,32 @@ EOF
      (compiler-internal-error
       "univ-or, unknown target"))))
 
+(define (univ-fxquotient ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "parseInt(" expr1 " / " expr2 ")"))
+
+    ((python ruby php)
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-fxquotient, unknown target"))))
+
+(define (univ-fxmodulo ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "(" expr1 " % " expr2 ")"))
+
+    ((python ruby php)
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-fxmodulo, unknown target"))))
+
 (define (univ-< ctx expr1 expr2)
   (gen expr1 " < " expr2))
 
@@ -2522,6 +2569,22 @@ EOF
      (compiler-internal-error
       "univ-string, unknown target"))))
 
+(define (univ-symbol ctx obj)
+
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen (univ-prefix ctx "Symbol.stringToSymbol(")
+          (univ-string ctx (symbol->string obj))
+          ")"))
+
+    ((python ruby php)                         ;TODO: complete
+     (gen (object->string obj)))
+
+    (else
+     (compiler-internal-error
+      "univ-symbol, unknown target"))))
+
 (define (univ-null ctx obj)
   (case (target-name (ctx-target ctx))
 
@@ -2540,6 +2603,28 @@ EOF
     (else
      (compiler-internal-error
       "univ-null, unknown target"))))
+
+(define (undefined? obj)
+  (eq? obj 'undefined))
+
+(define (univ-undefined ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "undefined"))
+    
+    ((python)
+     (gen "None"))
+
+    ((ruby)
+     (gen "nil"))
+
+    ((php)                                ;TODO: complete
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-undefined, unknown target"))))
 
 (define (univ-list ctx obj)             ;obj is a non-null list
   
@@ -2651,6 +2736,20 @@ EOF
     (gen (translate-gvm-opnd ctx (list-ref opnds 0))
          " * "
          (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim "##fxquotient" #f #f
+
+  (lambda (ctx opnds)
+    (univ-fxquotient ctx
+                   (translate-gvm-opnd ctx (list-ref opnds 0))
+                   (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim "##fxmodulo" #f #f
+
+  (lambda (ctx opnds)
+    (univ-fxmodulo ctx
+                   (translate-gvm-opnd ctx (list-ref opnds 0))
+                   (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim-bool "##fx<" #f #f
 
@@ -2902,7 +3001,27 @@ EOF
        (compiler-internal-error
         "##fxwrap*, unknown target")))))
 
+(univ-define-prim-bool "##fxzero?" #t #f
 
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " === 0)"))
+      
+      ((python ruby)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " == 0)"))
+      
+      ((php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##null?, unknown target")))))
 
 (univ-define-prim-bool "##null?" #t #f
 
