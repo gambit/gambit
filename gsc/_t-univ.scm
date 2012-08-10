@@ -541,8 +541,8 @@
                            (let* ((lbl (closure-parms-lbl parms))
                                   (loc (closure-parms-loc parms))
                                   (opnds (closure-parms-opnds parms)))
-                             (let loop ((i 0)
-                                        (opnds (cons (make-lbl lbl) opnds))
+                             (let loop ((i 1) ;; 0
+                                        (opnds opnds) ;; (cons (make-lbl lbl) opnds)
                                         (rev-code '()))
                                (if (pair? opnds)
                                    (let ((opnd (car opnds)))
@@ -713,6 +713,7 @@
 
 (define closure-count 0)
 
+#;
 (define (univ-closure-alloc ctx lbl nb-closed-vars cont)
   (case (target-name (ctx-target ctx))
 
@@ -730,6 +731,19 @@
                                 name)
                    (univ-return ctx
                                 (translate-lbl ctx (make-lbl lbl))))))
+            (cont name))))
+
+    (else
+     (compiler-internal-error
+      "univ-closure-alloc, unknown target"))))
+
+(define (univ-closure-alloc ctx lbl nb-closed-vars cont)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (set! closure-count (+ closure-count 1))
+     (let ((name (string-append "closure" (number->string closure-count))))
+       (gen "var " name " = closure_alloc(" (translate-lbl ctx (make-lbl lbl)) ");\n"
             (cont name))))
 
     (else
@@ -848,9 +862,6 @@
 
         ((vector? obj)
          (univ-vector ctx obj))
-
-        ((undefined? obj)
-         (univ-undefined ctx))
         
         (else
          (gen "UNIMPLEMENTED_OBJECT("
@@ -861,7 +872,7 @@
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
 
 (define (lbl->id ctx num ns)
-  (univ-global ctx (univ-prefix ctx (gen "lbl" num "_" (scheme-id->c-id ns)))))
+  (univ-global ctx (univ-prefix ctx (gen "bb" num "_" (scheme-id->c-id ns)))))
 
 (define (runtime-system ctx)
   (case (target-name (ctx-target ctx))
@@ -874,49 +885,50 @@
            (R4 (translate-gvm-opnd ctx (make-reg 4))))
        (list "
 function Gambit_heapify_continuation(ra) {
-    var chain = false;
-    var prev_frame = false;
-    var prev_link = 1;
-  
-    while (Gambit_sp !== 0) { // stack not empty
-      var fs = ra.fs;
-      var link = ra.link;
-      var frame = Gambit_stack.slice(Gambit_sp-fs, Gambit_sp+1);
-      if (prev_frame === false)
-        chain = frame;
-      else
-        prev_frame[prev_link] = frame;
-      prev_frame = frame;
-      frame[0] = ra;
-      Gambit_sp = Gambit_sp-fs;
-      ra = Gambit_stack[Gambit_sp+link];
-      prev_link = link;
-    }
-  
+  var chain = false;
+  var prev_frame = false;
+  var prev_link;
+
+  while (Gambit_sp !== 0) { // stack not empty
+    var fs = ra.fs;
+    var link = ra.link;
+    var frame = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
     if (prev_frame === false)
-      chain = Gambit_stack[0];
+      chain = frame;
     else
-      prev_frame[prev_link] = Gambit_stack[0];
-    
-    Gambit_stack = [chain];
-    Gambit_sp = 0;
+      prev_frame[prev_link] = frame;
+    prev_frame = frame;
+    frame[0] = ra;
+    Gambit_sp = Gambit_sp - fs;
+    ra = Gambit_stack[Gambit_sp + link];
+    prev_link = link;
+  }
+
+  if (prev_frame === false)
+    chain = Gambit_stack[0];
+  else
+    prev_frame[prev_link] = Gambit_stack[0];
   
-    return Gambit_underflow_handler;
+  Gambit_stack = [chain];
+  Gambit_sp = 0;
+
+  return Gambit_underflow_handler;
 }
 
 function Gambit_underflow_handler() {
-    var ra = false;
-    var frame = Gambit_stack[0];
-    if (frame !== false) { // not end of continuation?
-        ra = frame[0];
-        var fs = ra.fs;
-        var link = ra.link;
-        Gambit_stack = frame.slice(0, fs+1);
-        Gambit_sp = fs;
-        Gambit_stack[0] = frame[link+1];
-        Gambit_stack[link+1] = Gambit_underflow_handler;
-    }
-    return ra;
+  var frame = Gambit_stack[0];
+  if (frame === false) // end of continuation?
+    return false; // terminate trampoline
+
+  var ra = frame[0];
+  var fs = ra.fs;
+  var link = ra.link;
+  Gambit_stack = frame.slice(0, fs + 1);
+  Gambit_sp = fs;
+  Gambit_stack[0] = frame[link];
+  Gambit_stack[link] = Gambit_underflow_handler;
+
+  return ra;
 }
 Gambit_underflow_handler.fs = 0;
 
@@ -935,21 +947,28 @@ var Gambit_poll;
 
 Gambit_stack[0] = false;
 
+var Gambit_poll_count = 0;
+
 if (this.hasOwnProperty('setTimeout')) {
-    Gambit_poll = function (wakeup) { setTimeout(function () { Gambit_run(wakeup); }, 1); return false; };
+  Gambit_poll = function (dest_pc) {
+                  setTimeout(function () { Gambit_run(dest_pc); }, 1);
+                  return false;
+                };
 } else {
-    Gambit_poll = function (wakeup) { return wakeup; };
+  Gambit_poll = function (dest_pc) {
+                  if (--Gambit_poll_count < 0) {
+                    Gambit_poll_count = 100;
+                    Gambit_stack.length = Gambit_sp+1;
+                  }
+                  return dest_pc;
+                };
 }
 
 function Gambit_buildrest ( f ) {    // nb formal args
-                                     // *** assume (= univ-nb-arg-regs 3) for now ***
+                                     // *** assume (= univ-nb-arg-regs 3) for now ***    
     var nb_static_args = f - 1;
-    var nb_rest_args = Gambit_nargs - nb_static_args;
+    var nb_rest_args = Gambit_nargs - nb_static_args;    
     var rest = null;
-    var Gambit_reg = [];
-    Gambit_reg[1] = " R1 ";
-    Gambit_reg[2] = " R2 ";
-    Gambit_reg[3] = " R3 ";
 
     if (Gambit_nargs < nb_static_args)  // Wrong number of args
         return false;
@@ -962,10 +981,6 @@ function Gambit_buildrest ( f ) {    // nb formal args
 
         Gambit_reg[nb_static_args + 1] = rest;
         Gambit_nargs -= (nb_rest_args - 1);
-
-        " R1 " = Gambit_reg[1];
-        " R2 " = Gambit_reg[2];
-        " R3 " = Gambit_reg[3];
         
         return true;
     }
@@ -974,15 +989,11 @@ function Gambit_buildrest ( f ) {    // nb formal args
     if ((Gambit_nargs >= 3) && (nb_rest_args === 0)) { // only append '()
         var spill_loc = nb_static_args - 2;        // univ-nb-arg-regs - 1
         Gambit_sp += 1;
-        Gambit_stack[Gambit_sp] = " R1 ";
-        " R1 " = " R2 ";
-        " R2 " = " R3 ";
-        " R3 " = null;
+        Gambit_stack[Gambit_sp] = Gambit_reg[1];
+        Gambit_reg[1] = Gambit_reg[2];
+        Gambit_reg[2] = Gambit_reg[3];
+        Gambit_reg[3] = null;
         Gambit_nargs += 1;
-
-        " R1 " = Gambit_reg[1];
-        " R2 " = Gambit_reg[2];
-        " R3 " = Gambit_reg[3];
         
         return true;
     }
@@ -1001,12 +1012,12 @@ function Gambit_buildrest ( f ) {    // nb formal args
 
     switch (nb_static_args) {
     case 0:
-        " R1 " = Gambit_stack[Gambit_sp];
+        Gambit_reg[1] = Gambit_stack[Gambit_sp];
         Gambit_sp -= 1;
         break;
     case 1:
-        " R2 " = Gambit_stack[Gambit_sp];
-        " R1 " = Gambit_stack[Gambit_sp - 1];
+        Gambit_reg[2] = Gambit_stack[Gambit_sp];
+        Gambit_reg[1] = Gambit_stack[Gambit_sp - 1];
         Gambit_sp -= 2;
         break;
     default:
@@ -1018,10 +1029,6 @@ function Gambit_buildrest ( f ) {    // nb formal args
     }
     Gambit_nargs = f;
 
-    " R1 " = Gambit_reg[1];
-    " R2 " = Gambit_reg[2];
-    " R3 " = Gambit_reg[3];
-
     return true;
 }         
 
@@ -1031,6 +1038,18 @@ function Gambit_wrong_nargs(fn) {
     return false;
 }
 
+function closure_alloc(entry_bb) {
+
+  function self() {
+    " R4 " = self;
+    return self.v0;
+  }
+
+  self.v0 = entry_bb;
+
+  return self;
+}
+  
 function Gambit_Flonum(val) {
     this.val = val;
 }
@@ -1059,7 +1078,7 @@ Gambit_Pair.prototype.toString = function ( ) {
 
 function prettyPrintList ( o ) {
     if (!Gambit_nullp(o)) {
-        lbl1_println(Gambit_car(o));
+        bb1_println(Gambit_car(o));
         if (!Gambit_nullp(Gambit_cdr(o))) {
             print(\" \");
             prettyPrintList(Gambit_cdr(o));
@@ -1440,9 +1459,9 @@ function Gambit_toString ( obj ) {
         return obj;
 }
 
-function Gambit_lbl1_println ( ) { // println
+function Gambit_bb1_println ( ) { // println
     if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_lbl1_println);
+        return Gambit_wrong_nargs(Gambit_bb1_println);
     }
 
     print(Gambit_toString(" R1 "));
@@ -1450,55 +1469,55 @@ function Gambit_lbl1_println ( ) { // println
     return " R0 ";
 }
 
-Gambit_glo[\"println\"] = Gambit_lbl1_println;
+Gambit_glo[\"println\"] = Gambit_bb1_println;
 
-function Gambit_lbl1_print ( ) { // print
+function Gambit_bb1_print ( ) { // print
     if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_lbl1_print);
+        return Gambit_wrong_nargs(Gambit_bb1_print);
     }
 
-    write(Gambit_toString(" R1 "));
+    write(Gambit_toString(Gambit_reg[1]));
     
-    return " R0 ";
+    return Gambit_reg[0];
 }
 
-Gambit_glo[\"print\"] = Gambit_lbl1_print;
+Gambit_glo[\"print\"] = Gambit_bb1_print;
 
-function Gambit_lbl1_newline ( ) { // newline
+function Gambit_bb1_newline ( ) { // newline
     if (Gambit_nargs !== 0) {
-        return Gambit_wrong_nargs(Gambit_lbl1_newline);
+        return Gambit_wrong_nargs(Gambit_bb1_newline);
     }
 
     print();
     
-    return " R0 ";
+    return Gambit_reg[0];
 }
 
-Gambit_glo[\"newline\"] = Gambit_lbl1_newline;
+Gambit_glo[\"newline\"] = Gambit_bb1_newline;
 
-function Gambit_lbl1_display ( ) { // display
+function Gambit_bb1_display ( ) { // display
     if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_lbl1_display);
+        return Gambit_wrong_nargs(Gambit_bb1_display);
     }
 
-    write(Gambit_toString(" R1 "));
+    write(Gambit_toString(Gambit_reg[1]));
     
-    return " R0 ";
+    return Gambit_reg[0];
 }
 
-Gambit_glo[\"display\"] = Gambit_lbl1_display;
+Gambit_glo[\"display\"] = Gambit_bb1_display;
 
-function Gambit_lbl1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
+function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
     if (Gambit_nargs !== 0) {
-        return Gambit_wrong_nargs(Gambit_lbl1_display);
+        return Gambit_wrong_nargs(Gambit_bb1_display);
     }
 
-    " R1 " = new Date();
+    Gambit_rer[1] = new Date();
     
-    return " R0 ";
+    return Gambit_reg[0];
 }
 
-Gambit_glo[\"real-time-milliseconds\"] = Gambit_lbl1_real_2d_time_2d_milliseconds;
+Gambit_glo[\"real-time-milliseconds\"] = Gambit_bb1_real_2d_time_2d_milliseconds;
 
 function Gambit_Continuation(frame, denv) {
     this.frame = frame;
@@ -1601,161 +1620,161 @@ function Gambit_continuation_return_no_winding2() {
   return " R0 ";
 }
 
-function Gambit_lbl1__23__23_continuation_3f_() { // ##continuation?
+function Gambit_bb1__23__23_continuation_3f_() { // ##continuation?
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_3f_);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_3f_);
   }
   " R1 " = " R1 " instanceof Gambit_Continuation;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation?\"] = Gambit_lbl1__23__23_continuation_3f_;
+Gambit_glo[\"##continuation?\"] = Gambit_bb1__23__23_continuation_3f_;
 
 
-function Gambit_lbl1__23__23_continuation_2d_frame() { // ##continuation-frame
+function Gambit_bb1__23__23_continuation_2d_frame() { // ##continuation-frame
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_frame);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_frame);
   }
   " R1 " = " R1 ".frame;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-frame\"] = Gambit_lbl1__23__23_continuation_2d_frame;
+Gambit_glo[\"##continuation-frame\"] = Gambit_bb1__23__23_continuation_2d_frame;
 
 
-function Gambit_lbl1__23__23_continuation_2d_denv() { // ##continuation-denv
+function Gambit_bb1__23__23_continuation_2d_denv() { // ##continuation-denv
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_denv);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_denv);
   }
   " R1 " = " R1 ".denv;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-denv\"] = Gambit_lbl1__23__23_continuation_2d_denv;
+Gambit_glo[\"##continuation-denv\"] = Gambit_bb1__23__23_continuation_2d_denv;
 
 
-function Gambit_lbl1__23__23_continuation_2d_fs() { // ##continuation-fs
+function Gambit_bb1__23__23_continuation_2d_fs() { // ##continuation-fs
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_fs);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_fs);
   }
   " R1 " = " R1 ".frame[0].fs;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-fs\"] = Gambit_lbl1__23__23_continuation_2d_fs;
+Gambit_glo[\"##continuation-fs\"] = Gambit_bb1__23__23_continuation_2d_fs;
 
 
-function Gambit_lbl1__23__23_frame_2d_fs() { // ##frame-fs
+function Gambit_bb1__23__23_frame_2d_fs() { // ##frame-fs
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_fs);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_fs);
   }
   " R1 " = " R1 "[0].fs;
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-fs\"] = Gambit_lbl1__23__23_frame_2d_fs;
+Gambit_glo[\"##frame-fs\"] = Gambit_bb1__23__23_frame_2d_fs;
 
 
-function Gambit_lbl1__23__23_return_2d_fs() { // ##return-fs
+function Gambit_bb1__23__23_return_2d_fs() { // ##return-fs
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_return_2d_fs);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_return_2d_fs);
   }
   " R1 " = " R1 ".fs;
   return " R0 ";
 }
 
-Gambit_glo[\"##return-fs\"] = Gambit_lbl1__23__23_return_2d_fs;
+Gambit_glo[\"##return-fs\"] = Gambit_bb1__23__23_return_2d_fs;
 
 
-function Gambit_lbl1__23__23_continuation_2d_link() { // ##continuation-link
+function Gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_link);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_link);
   }
   " R1 " = " R1 ".frame[0].link-1;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-link\"] = Gambit_lbl1__23__23_continuation_2d_link;
+Gambit_glo[\"##continuation-link\"] = Gambit_bb1__23__23_continuation_2d_link;
 
 
-function Gambit_lbl1__23__23_frame_2d_link() { // ##frame-link
+function Gambit_bb1__23__23_frame_2d_link() { // ##frame-link
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_link);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_link);
   }
   " R1 " = " R1 "[0].link-1;
   return " R0 ";
 }
 
 
-function Gambit_lbl1__23__23_continuation_2d_ret() { // ##continuation-ret
+function Gambit_bb1__23__23_continuation_2d_ret() { // ##continuation-ret
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_ret);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_ret);
   }
   " R1 " = " R1 ".frame[0];
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-ret\"] = Gambit_lbl1__23__23_continuation_2d_ret;
+Gambit_glo[\"##continuation-ret\"] = Gambit_bb1__23__23_continuation_2d_ret;
 
 
-function Gambit_lbl1__23__23_frame_2d_ret() { // ##frame-ret
+function Gambit_bb1__23__23_frame_2d_ret() { // ##frame-ret
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_ret);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_ret);
   }
   " R1 " = " R1 "[0];
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-ret\"] = Gambit_lbl1__23__23_frame_2d_ret;
+Gambit_glo[\"##frame-ret\"] = Gambit_bb1__23__23_frame_2d_ret;
 
 
-function Gambit_lbl1__23__23_continuation_2d_ref() { // ##continuation-ref
+function Gambit_bb1__23__23_continuation_2d_ref() { // ##continuation-ref
   if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_ref);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_ref);
   }
   " R1 " = " R1 ".frame[" R2 "];
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-ref\"] = Gambit_lbl1__23__23_continuation_2d_ref;
+Gambit_glo[\"##continuation-ref\"] = Gambit_bb1__23__23_continuation_2d_ref;
 
 
-function Gambit_lbl1__23__23_frame_2d_ref() { // ##frame-ref
+function Gambit_bb1__23__23_frame_2d_ref() { // ##frame-ref
   if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_ref);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_ref);
   }
   " R1 " = " R1 "[" R2 "];
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-ref\"] = Gambit_lbl1__23__23_frame_2d_ref;
+Gambit_glo[\"##frame-ref\"] = Gambit_bb1__23__23_frame_2d_ref;
 
 
-function Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
+function Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
   if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_);
   }
   " R1 " = true;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-slot-live?\"] = Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_;
+Gambit_glo[\"##continuation-slot-live?\"] = Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_;
 
 
-function Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
+function Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
   if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_);
   }
   " R1 " = true;
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-slot-live?\"] = Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_;
+Gambit_glo[\"##frame-slot-live?\"] = Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_;
 
 
-function Gambit_lbl1__23__23_continuation_2d_next() { // ##continuation-next
+function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_next);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_next);
   }
   var frame = " R1 ".frame;
   var denv = " R1 ".denv;
@@ -1767,7 +1786,7 @@ function Gambit_lbl1__23__23_continuation_2d_next() { // ##continuation-next
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-next\"] = Gambit_lbl1__23__23_continuation_2d_next;
+Gambit_glo[\"##continuation-next\"] = Gambit_bb1__23__23_continuation_2d_next;
 
 
 function Gambit_run(pc)
@@ -1897,7 +1916,7 @@ def Gambit_stringp ( s ):
   return isinstance(s, String)
 
 
-def Gambit_lbl1_println(): # println
+def Gambit_bb1_println(): # println
   global Gambit_glo, Gambit_reg, Gambit_stack, Gambit_sp, Gambit_nargs, Gambit_temp1, Gambit_temp2
   if Gambit_nargs != 1:
     raise "wrong number of arguments"
@@ -1911,7 +1930,7 @@ def Gambit_lbl1_println(): # println
     print(Gambit_reg[1])
   return Gambit_reg[0]
 
-Gambit_glo["println"] = Gambit_lbl1_println
+Gambit_glo["println"] = Gambit_bb1_println
 
 
 def Gambit_poll(wakeup):
@@ -1964,7 +1983,7 @@ def Gambit_charToFx ( c )
   return c.code
 end
 
-$Gambit_lbl1_println = lambda { # println
+$Gambit_bb1_println = lambda { # println
   if $Gambit_nargs != 1
     raise "wrong number of arguments"
   end
@@ -1985,7 +2004,7 @@ $Gambit_lbl1_println = lambda { # println
   return $Gambit_reg[0]
 }
 
-$Gambit_glo["println"] = $Gambit_lbl1_println
+$Gambit_glo["println"] = $Gambit_bb1_println
 
 
 def Gambit_poll(wakeup)
@@ -2521,28 +2540,6 @@ EOF
     (else
      (compiler-internal-error
       "univ-null, unknown target"))))
-
-(define (undefined? obj)
-  (eq? obj 'undefined))
-
-(define (univ-undefined ctx)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (gen "undefined"))
-    
-    ((python)
-     (gen "None"))
-
-    ((ruby)
-     (gen "nil"))
-
-    ((php)                                ;TODO: complete
-     (gen ""))
-
-    (else
-     (compiler-internal-error
-      "univ-undefined, unknown target"))))
 
 (define (univ-list ctx obj)             ;obj is a non-null list
   
