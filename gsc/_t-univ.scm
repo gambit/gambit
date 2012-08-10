@@ -853,6 +853,9 @@
 
         ((void-object? obj)
          (gen "undefined"))
+
+        ((undefined? obj)
+         (univ-undefined ctx))
         
         ((proc-obj? obj)
          (lbl->id ctx 1 (proc-obj-name obj)))
@@ -969,6 +972,7 @@ function Gambit_buildrest ( f ) {    // nb formal args
     var nb_static_args = f - 1;
     var nb_rest_args = Gambit_nargs - nb_static_args;    
     var rest = null;
+    var Gambit_reg = [];
     Gambit_reg[1] = " R1 ";
     Gambit_reg[2] = " R2 ";
     Gambit_reg[3] = " R3 ";
@@ -1497,9 +1501,9 @@ function Gambit_bb1_print ( ) { // print
         return Gambit_wrong_nargs(Gambit_bb1_print);
     }
 
-    write(Gambit_toString(Gambit_reg[1]));
+    write(Gambit_toString(" R1 "));
     
-    return Gambit_reg[0];
+    return " R0 ";
 }
 
 Gambit_glo[\"print\"] = Gambit_bb1_print;
@@ -1511,7 +1515,7 @@ function Gambit_bb1_newline ( ) { // newline
 
     print();
     
-    return Gambit_reg[0];
+    return " R0 ";
 }
 
 Gambit_glo[\"newline\"] = Gambit_bb1_newline;
@@ -1521,9 +1525,9 @@ function Gambit_bb1_display ( ) { // display
         return Gambit_wrong_nargs(Gambit_bb1_display);
     }
 
-    write(Gambit_toString(Gambit_reg[1]));
+    write(Gambit_toString(" R1 "));
     
-    return Gambit_reg[0];
+    return " R0 ";
 }
 
 Gambit_glo[\"display\"] = Gambit_bb1_display;
@@ -1533,9 +1537,9 @@ function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
         return Gambit_wrong_nargs(Gambit_bb1_display);
     }
 
-    Gambit_reg[1] = new Date();
+    " R1 " = new Date();
     
-    return Gambit_reg[0];
+    return " R0 ";
 }
 
 Gambit_glo[\"real-time-milliseconds\"] = Gambit_bb1_real_2d_time_2d_milliseconds;
@@ -1949,7 +1953,7 @@ def Gambit_bb1_println(): # println
     print(str(int(Gambit_reg[1])) + '.')
   else:
     print(Gambit_reg[1])
-  return Gambit_reg[0]
+  return " R0 ";
 
 Gambit_glo["println"] = Gambit_bb1_println
 
