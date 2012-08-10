@@ -384,21 +384,41 @@
                         (gen "\n"))
 
                        ((entry)
-                        (gen " "
-                             (univ-comment
-                              ctx
-                              (if (label-entry-closed? gvm-instr)
-                                  "closure-entry-point\n"
-                                  "entry-point\n"))
-                             (univ-if-then
-                              ctx
-                              (univ-not= ctx
-                                         (univ-global ctx (univ-prefix ctx "nargs"))
-                                         (label-entry-nb-parms gvm-instr))
-                              (univ-return ctx
-                                           (univ-call ctx
-                                                      (univ-prefix ctx "wrong_nargs")
-                                                      id)))))
+                        (if (label-entry-rest? gvm-instr)
+                            (gen " "
+                                 (univ-comment
+                                  ctx
+                                  (if (label-entry-closed? gvm-instr)
+                                      "closure-entry-point (+rest)\n"
+                                      "entry-point (+rest)\n"))
+                                 (univ-ifnot-then
+                                  ctx
+                                  (univ-and ctx
+                                            (univ-call ctx
+                                                       (univ-prefix ctx "buildrest")
+                                                       (label-entry-nb-parms gvm-instr))
+                                            (univ-= ctx
+                                                    (univ-global ctx (univ-prefix ctx "nargs"))
+                                                    (label-entry-nb-parms gvm-instr)))
+                                  (univ-return ctx
+                                               (univ-call ctx
+                                                          (univ-prefix ctx "wrong_nargs")
+                                                          id))))
+                            (gen " "
+                                 (univ-comment
+                                  ctx
+                                  (if (label-entry-closed? gvm-instr)
+                                      "closure-entry-point\n"
+                                      "entry-point\n"))
+                                 (univ-if-then
+                                  ctx
+                                  (univ-not= ctx
+                                             (univ-global ctx (univ-prefix ctx "nargs"))
+                                             (label-entry-nb-parms gvm-instr))
+                                  (univ-return ctx
+                                               (univ-call ctx
+                                                          (univ-prefix ctx "wrong_nargs")
+                                                          id))))))
 
                        ((return)
                         (gen " " (univ-comment ctx "return-point\n")))
@@ -851,49 +871,49 @@
            (R4 (translate-gvm-opnd ctx (make-reg 4))))
        (list "
 function Gambit_heapify_continuation(ra) {
-  var chain = false;
-  var prev_frame = false;
-  var prev_link = 1;
-
-  while (Gambit_sp !== 0) { // stack not empty
-    var fs = ra.fs;
-    var link = ra.link;
-    var frame = Gambit_stack.slice(Gambit_sp-fs, Gambit_sp+1);
-    if (prev_frame === false)
-      chain = frame;
-    else
-      prev_frame[prev_link] = frame;
-    prev_frame = frame;
-    frame[0] = ra;
-    Gambit_sp = Gambit_sp-fs;
-    ra = Gambit_stack[Gambit_sp+link];
-    prev_link = link;
-  }
-
-  if (prev_frame === false)
-    chain = Gambit_stack[0];
-  else
-    prev_frame[prev_link] = Gambit_stack[0];
+    var chain = false;
+    var prev_frame = false;
+    var prev_link = 1;
   
-  Gambit_stack = [chain];
-  Gambit_sp = 0;
-
-  return Gambit_underflow_handler;
+    while (Gambit_sp !== 0) { // stack not empty
+      var fs = ra.fs;
+      var link = ra.link;
+      var frame = Gambit_stack.slice(Gambit_sp-fs, Gambit_sp+1);
+      if (prev_frame === false)
+        chain = frame;
+      else
+        prev_frame[prev_link] = frame;
+      prev_frame = frame;
+      frame[0] = ra;
+      Gambit_sp = Gambit_sp-fs;
+      ra = Gambit_stack[Gambit_sp+link];
+      prev_link = link;
+    }
+  
+    if (prev_frame === false)
+      chain = Gambit_stack[0];
+    else
+      prev_frame[prev_link] = Gambit_stack[0];
+    
+    Gambit_stack = [chain];
+    Gambit_sp = 0;
+  
+    return Gambit_underflow_handler;
 }
 
 function Gambit_underflow_handler() {
-  var ra = false;
-  var frame = Gambit_stack[0];
-  if (frame !== false) { // not end of continuation?
-    ra = frame[0];
-    var fs = ra.fs;
-    var link = ra.link;
-    Gambit_stack = frame.slice(0, fs+1);
-    Gambit_sp = fs;
-    Gambit_stack[0] = frame[link];
-    Gambit_stack[link] = Gambit_underflow_handler;
-  }
-  return ra;
+    var ra = false;
+    var frame = Gambit_stack[0];
+    if (frame !== false) { // not end of continuation?
+        ra = frame[0];
+        var fs = ra.fs;
+        var link = ra.link;
+        Gambit_stack = frame.slice(0, fs+1);
+        Gambit_sp = fs;
+        Gambit_stack[0] = frame[link+1];
+        Gambit_stack[link+1] = Gambit_underflow_handler;
+    }
+    return ra;
 }
 Gambit_underflow_handler.fs = 0;
 
@@ -913,87 +933,128 @@ var Gambit_poll;
 Gambit_stack[0] = false;
 
 if (this.hasOwnProperty('setTimeout')) {
-  Gambit_poll = function (wakeup) { setTimeout(function () { Gambit_run(wakeup); }, 1); return false; };
+    Gambit_poll = function (wakeup) { setTimeout(function () { Gambit_run(wakeup); }, 1); return false; };
 } else {
-  Gambit_poll = function (wakeup) { return wakeup; };
+    Gambit_poll = function (wakeup) { return wakeup; };
 }
 
+function Gambit_buildrest ( f ) {    // nb formal args
+                                     // *** assume (= univ-nb-arg-regs 3) for now ***    
+    var nb_static_args = f - 1;
+    var nb_rest_args = Gambit_nargs - nb_static_args;    
+    var rest = null;
+
+    if (Gambit_nargs < nb_static_args)  // Wrong number of args
+        return false;
+
+    // simple case, all in reg
+    if ((Gambit_nargs <= 3) && (nb_static_args < 3)) {
+        for (var i = nb_static_args + 1; i < nb_static_args + nb_rest_args + 1; i++) {
+            rest = Gambit_cons(Gambit_reg[i], rest);
+        }
+
+        Gambit_reg[nb_static_args + 1] = rest;
+        Gambit_nargs -= (nb_rest_args - 1);
+        
+        return true;
+    }
+
+    // rest is empty
+    if ((Gambit_nargs >= 3) && (nb_rest_args === 0)) { // only append '()
+        var spill_loc = nb_static_args - 2;        // univ-nb-arg-regs - 1
+        Gambit_sp += 1;
+        Gambit_stack[Gambit_sp] = Gambit_reg[1];
+        Gambit_reg[1] = Gambit_reg[2];
+        Gambit_reg[2] = Gambit_reg[3];
+        Gambit_reg[3] = null;
+        Gambit_nargs += 1;
+        
+        return true;
+    }
+
+    // general case
+    for (var i = 1; i <= 3; i++) {
+        Gambit_stack[Gambit_sp + i] = Gambit_reg[i];
+    }
+    Gambit_sp += 3;
+    for (var i = 0; i < nb_rest_args; i++) {
+        rest = Gambit_cons(Gambit_stack[Gambit_sp - i], rest);
+    }
+    Gambit_sp -= nb_rest_args;
+    Gambit_stack[Gambit_sp + 1] = rest;
+    Gambit_sp += 1;
+
+    switch (nb_static_args) {
+    case 0:
+        Gambit_reg[1] = Gambit_stack[Gambit_sp];
+        Gambit_sp -= 1;
+        break;
+    case 1:
+        Gambit_reg[2] = Gambit_stack[Gambit_sp];
+        Gambit_reg[1] = Gambit_stack[Gambit_sp - 1];
+        Gambit_sp -= 2;
+        break;
+    default:
+        for (var i = 3; i > 0; i--) {
+            Gambit_reg[i] = Gambit_stack[Gambit_sp - 3 + i];
+        }
+        Gambit_sp -= 3;
+        break;
+    }
+    Gambit_nargs = f;
+
+    return true;
+}         
 
 function Gambit_wrong_nargs(fn) {
-  print(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
-  print(fn);
-  return false;
+    print(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
+    print(fn);
+    return false;
 }
 
 function Gambit_Flonum(val) {
-  this.val = val;
+    this.val = val;
 }
 
 Gambit_Flonum.prototype.toString = function ( ) {
-  if (parseFloat(this.val) == parseInt(this.val)) {
-    return this.val + \".\";
-  } else {
-    return this.val;
-  }
+    if (parseFloat(this.val) == parseInt(this.val)) {
+        return this.val + \".\";
+    } else {
+        return this.val;
+    }
 }
 
-var Gambit_chars = {}
-function Gambit_Char(i) {
-  this.i = i;
-}
-
-Gambit_Char.fxToChar = function ( i ) {
-  var ch = Gambit_chars[i];
-
-  if (!ch) {
-      Gambit_chars[i] = new Gambit_Char(i);
-      ch = Gambit_chars[i];
-  }
-    
-  return ch;
-}
-
-Gambit_Char.charToFx = function ( c ) {
-  return c.i;
-}
-
-Gambit_Char.prototype.toString = function ( ) {
-  return String.fromCharCode(this.i);
-}
-
-//
-// pair obj
-//
+// Pair, List
 function Gambit_Pair ( car, cdr ) {
-  this.car = car;
-  this.cdr = cdr;
+    this.car = car;
+    this.cdr = cdr;
 }
 
 function Gambit_pairp ( p ) {
-  return (p instanceof Gambit_Pair);
+    return (p instanceof Gambit_Pair);
 }
 
 Gambit_Pair.prototype.toString = function ( ) {
-  return Gambit_toString(this.car) + Gambit_toString(this.cdr);
+    return Gambit_toString(this.car) + Gambit_toString(this.cdr);
 }
 
 function prettyPrintList ( o ) {
-  if (!Gambit_nullp(o)) {
-    lbl1_println(Gambit_car(o));
-    if (!Gambit_nullp(Gambit_cdr(o))) {
-      print(\" \");
-      prettyPrintList(Gambit_cdr(o));
+    if (!Gambit_nullp(o)) {
+        lbl1_println(Gambit_car(o));
+        if (!Gambit_nullp(Gambit_cdr(o))) {
+            print(\" \");
+            prettyPrintList(Gambit_cdr(o));
+        }
     }
-  }
 }
 
 function Gambit_nullp ( o ) {
-  return o === null;
+    return o === null;
 }
 
 // cons
 function Gambit_cons ( a, b ) {
-  return new Gambit_Pair(a, b);
+    return new Gambit_Pair(a, b);
 }
 
 // car
@@ -1158,175 +1219,283 @@ function Gambit_setcdr ( p, b ) {
 
 // list
 function Gambit_List ( ) {
-  var listaux = function (a, n, lst) {
-    if (n === 0) {
-      return Gambit_cons(a[0], lst);
-    } else {
-      return listaux(a, n-1, Gambit_cons(a[n], lst));
+    var listaux = function (a, n, lst) {
+        if (n === 0) {
+            return Gambit_cons(a[0], lst);
+        } else {
+            return listaux(a, n-1, Gambit_cons(a[n], lst));
+        }
     }
-  }
 
-  var res = listaux(arguments, arguments.length - 1, null);
-  
-  return res;
+    var res = listaux(arguments, arguments.length - 1, null);
+    
+    return res;
 }
 
-function Gambit_String(charray) {
-  this.charray = charray;
+// Chars
+var Gambit_chars = {}
+function Gambit_Char(charcode) {
+    this.charcode = charcode;
 }
 
-Gambit_String.makestring = function ( n, c ) {
-  var a = new Array(n);
-  c = c || \"\";
-  for (i = 0; i < n; i++) {
-      a[i] = c.i;
-  }
+Gambit_Char.fxToChar = function ( charcode ) {
+    var ch = Gambit_chars[charcode];
 
-  return new Gambit_String(a);
+    if (!ch) {
+        Gambit_chars[charcode] = new Gambit_Char(charcode);
+        ch = Gambit_chars[charcode];
+    }
+    
+    return ch;
+}
+
+Gambit_Char.charToFx = function ( c ) {
+    return c.charcode;
+}
+
+Gambit_Char.prototype.toString = function ( ) {
+    return String.fromCharCode(this.charcode);
+}
+
+// String
+var Gambit_String = function ( ) {
+    this.chars = new Array(arguments.length);
+    for (i = 0; i < arguments.length; i++) {
+        this.chars[i] = arguments[i];
+    }
+}
+
+Gambit_String.makestring = function ( n, ch ) {
+    var s = new Gambit_String();
+    for (i = 0; i < n; i++) {
+        s.chars[i] = ch;
+    }
+
+    return s;
 }
 
 Gambit_String.prototype.stringlength = function ( ) {
-  return this.charray.length;
+    return this.chars.length;
 }
 
 // string-ref
 Gambit_String.prototype.stringref = function ( n ) {
-  return this.charray[n];
+    return this.chars[n];
 }
 
 // string-set!
-Gambit_String.prototype.stringset = function ( n, c ) {
-  this.charray[n] = c.i;
+Gambit_String.prototype.stringset = function ( n, ch ) {  // ch: Char
+    this.chars[n] = ch;
 }
 
 Gambit_String.prototype.toString = function ( ) {
-  var s = \"\";
-  for (i = 0; i < this.stringlength(); i++) {
-      s = s.concat(String.fromCharCode(this.stringref(i)));
-  }
+    var s = \"\";
+    for (i = 0; i < this.stringlength(); i++) {
+        s = s.concat(this.stringref(i).toString());
+    }
 
-  return s;
+    return s;
 }
 
-//
-// Vector obj
-//
+var Gambit_stringappend = function ( ) {
+    var totallen = 0;
+    var lens = [];
+
+    for (i = 0; i < arguments.length; i++) {
+        lens[i] = arguments[i].stringlength();
+        totallen += lens[i];
+    }
+
+    var s = Gambit_String.makestring(totallen);
+    var partlen = 0;
+    for (i = 0; i < lens.length; i++) {
+        var len = lens[i];
+        for (j = 0; j < len; j++) {
+            s.stringset(partlen + j, arguments[i].stringref(j));
+        }
+        partlen += len;
+    }
+
+    return s;
+}
+Gambit_glo[\"string-append\"] = Gambit_stringappend;
+
+// Vector
 var Gambit_Vector = function ( ) {
-  this.a = new Array(arguments.length);
-  for (i = 0; i < arguments.length; i++) {
-      this.a[i] = arguments[i];
-  }
+    this.a = new Array(arguments.length);
+    for (i = 0; i < arguments.length; i++) {
+        this.a[i] = arguments[i];
+    }
 }
 
 // vector-length
 Gambit_Vector.prototype.vectorlength = function ( ) {
-  return this.a.length;
+    return this.a.length;
 }
 
 // vector-ref
 Gambit_Vector.prototype.vectorref = function ( n ) {
-  return this.a[n];
+    return this.a[n];
 }
 
 // vector-set!
 Gambit_Vector.prototype.vectorset = function ( n, v ) {
-  this.a[n] = v;
+    this.a[n] = v;
 }
 
 Gambit_Vector.prototype.toString = function ( ) {
-  var res = \"\";
-  for (var i = 0; i<this.a.length; i++) {
-    res += Gambit_toString(this.a[i]);
-  }
+    var res = \"\";
+    for (var i = 0; i<this.a.length; i++) {
+        res += Gambit_toString(this.a[i]);
+    }
 
-  return res;
+    return res;
 }
 
+// make-vector
+var Gambit_makevector = function ( n, val ) {
+    var v = new Gambit_Vector();
+
+    for (var i = 0; i < n; i++) {
+        v.a[i] = val;
+    }
+
+    return v;
+}
+
+// Symbol
 var Gambit_syms = {};
 function Gambit_Symbol(s) {
-  this.symbolToString = function ( ) { return s; }
-  this.toString = function ( ) { return s; }
+    this.symbolToString = function ( ) { return s; }
+    this.toString = function ( ) { return s; }
 }
 
 Gambit_Symbol.stringToSymbol = function ( s ) {
-  var sym = Gambit_syms[s];
+    var sym = Gambit_syms[s];
     
-  if (!sym) {
-      Gambit_syms[s] = new Gambit_Symbol(s);
-      sym = Gambit_syms[s];
-  }
+    if (!sym) {
+        Gambit_syms[s] = new Gambit_Symbol(s);
+        sym = Gambit_syms[s];
+    }
     
-  return sym;
+    return sym;
 }
 
 var Gambit_kwds = {};
 function Gambit_Keyword(s) {
-  s = s + \":\";
+    s = s + \":\";
 
-  this.keywordToString = function( ) { return s.substring(0, s.length-1); }
-  this.toString = function( ) { return s; }
+    this.keywordToString = function( ) { return s.substring(0, s.length-1); }
+    this.toString = function( ) { return s; }
 }
 
 Gambit_Keyword.stringToKeyword = function(s) {
-  var kwd = Gambit_kwds[s];
+    var kwd = Gambit_kwds[s];
     
-  if (!kwd) {
-      Gambit_kwds[s] = new Gambit_Keyword(s);
-      kwd = Gambit_kwds[s];
-  }
+    if (!kwd) {
+        Gambit_kwds[s] = new Gambit_Keyword(s);
+        kwd = Gambit_kwds[s];
+    }
     
-  return kwd;
+    return kwd;
 }
 
 function Gambit_toString ( obj ) {
-  if (obj === false)
-    return \"#f\";
-  else if (obj === true)
-    return \"#t\";
-  else if (obj === null)
-    return \"\";
-  else if (obj instanceof Gambit_Flonum)
-    return obj.toString();
-  else if (obj instanceof Gambit_String)
-    return obj.toString();
-  else if (obj instanceof Gambit_Char)
-    return obj.toString();
-  else if (obj instanceof Gambit_Pair)
-    return obj.toString();
-//  else if (obj instanceof Gambit_Vector)
-//    return obj.toString();
-  else
-    return obj;
+    if (obj === false)
+        return \"#f\";
+    else if (obj === true)
+        return \"#t\";
+    else if (obj === null)
+        return \"\";
+    else if (obj instanceof Gambit_Flonum)
+        return obj.toString();
+    else if (obj instanceof Gambit_String)
+        return obj.toString();
+    else if (obj instanceof Gambit_Char)
+        return obj.toString();
+    else if (obj instanceof Gambit_Pair)
+        return obj.toString();
+    else if (obj instanceof Gambit_Vector)
+        return obj.toString();
+    else
+        return obj;
 }
-  
-function Gambit_lbl1_println ( ) { // println
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1_println);
-  }
 
-  print(Gambit_toString(" R1 "));
-  
-  return " R0 ";
+function Gambit_lbl1_println ( ) { // println
+    if (Gambit_nargs !== 1) {
+        return Gambit_wrong_nargs(Gambit_lbl1_println);
+    }
+
+    print(Gambit_toString(" R1 "));
+    
+    return " R0 ";
 }
 
 Gambit_glo[\"println\"] = Gambit_lbl1_println;
 
+function Gambit_lbl1_print ( ) { // print
+    if (Gambit_nargs !== 1) {
+        return Gambit_wrong_nargs(Gambit_lbl1_print);
+    }
+
+    write(Gambit_toString(Gambit_reg[1]));
+    
+    return Gambit_reg[0];
+}
+
+Gambit_glo[\"print\"] = Gambit_lbl1_print;
+
+function Gambit_lbl1_newline ( ) { // newline
+    if (Gambit_nargs !== 0) {
+        return Gambit_wrong_nargs(Gambit_lbl1_newline);
+    }
+
+    print();
+    
+    return Gambit_reg[0];
+}
+
+Gambit_glo[\"newline\"] = Gambit_lbl1_newline;
+
+function Gambit_lbl1_display ( ) { // display
+    if (Gambit_nargs !== 1) {
+        return Gambit_wrong_nargs(Gambit_lbl1_display);
+    }
+
+    write(Gambit_toString(Gambit_reg[1]));
+    
+    return Gambit_reg[0];
+}
+
+Gambit_glo[\"display\"] = Gambit_lbl1_display;
+
+function Gambit_lbl1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
+    if (Gambit_nargs !== 0) {
+        return Gambit_wrong_nargs(Gambit_lbl1_display);
+    }
+
+    Gambit_rer[1] = new Date();
+    
+    return Gambit_reg[0];
+}
+
+Gambit_glo[\"real-time-milliseconds\"] = Gambit_lbl1_real_2d_time_2d_milliseconds;
 
 function Gambit_Continuation(frame, denv) {
-  this.frame = frame;
-  this.denv = denv;
+    this.frame = frame;
+    this.denv = denv;
 }
 
 
 // Obsolete
 function Gambit_dump_cont(sp, ra) {
-  print(\"------------------------\");
-  while (ra !== false) {
-    print(\"sp=\"+Gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
-    Gambit_sp = Gambit_sp-ra.fs;
-    ra = Gambit_stack[Gambit_sp+ra.link];
-  }
-  print(\"------------------------\");
+    print(\"------------------------\");
+    while (ra !== false) {
+        print(\"sp=\"+Gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
+        Gambit_sp = Gambit_sp-ra.fs;
+        ra = Gambit_stack[Gambit_sp+ra.link+1];
+    }
+    print(\"------------------------\");
 }
 
 function Gambit_continuation_capture1() {
@@ -1584,14 +1753,16 @@ Gambit_glo[\"##continuation-next\"] = Gambit_lbl1__23__23_continuation_2d_next;
 
 function Gambit_run(pc)
 {
-  while (pc !== false)
-    pc = pc();
+    while (pc !== false) {
+        pc = pc();
+    }
 }
 
 "
-)))
 
-    ((python)                           ;rts py
+)))
+    
+    ((python)                           ;rts py     
 #<<EOF
 #! /usr/bin/python
 
@@ -1937,8 +2108,30 @@ EOF
      (compiler-internal-error
       "univ-return, unknown target"))))
 
-(define (univ-call ctx name params)
-  (gen name "(" params ")"))
+(define (makecall ctx name args)
+    (apply univ-call (cons ctx (cons name args))))
+
+(define (univ-call ctx name . params)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (letrec ((addcommas
+               (lambda (lst res)
+                 (if (null? lst)
+                     (reverse res)
+                     (if (= (length lst) 1)
+                         (addcommas (cdr lst) (cons (car lst) res))
+                         (addcommas (cdr lst) (append (list ", " (car lst)) res)))))))
+       (gen name "("
+            (apply gen (addcommas params '()))
+            ")")))
+    
+    ((python ruby php)                ;TODO: complete
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-call, unknown target"))))
 
 (define (univ-poll ctx expr poll?)
   (if poll?
@@ -1976,6 +2169,32 @@ EOF
     (else
      (compiler-internal-error
       "univ-eq, unknown target"))))
+
+(define (univ-and ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby php)
+     (gen "(" expr1 " && " expr2 ")"))
+
+    ((python)
+     (gen "(" expr1 " and " expr2 ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-and, unknown target"))))
+
+(define (univ-or ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby php)
+     (gen "(" expr1 " || " expr2 ")"))
+
+    ((python)
+     (gen "(" expr1 " or " expr2 ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-or, unknown target"))))
 
 (define (univ-< ctx expr1 expr2)
   (gen expr1 " < " expr2))
@@ -2066,6 +2285,27 @@ EOF
     (else
      (compiler-internal-error
       "univ-expr, unknown target"))))
+
+(define (univ-ifnot-then ctx test true)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (gen "if (!(" test ")) {\n"
+          (univ-indent true)
+          "}\n"))
+
+    ((python)
+     (gen "if not " test ":\n"
+          (univ-indent true)))
+
+    ((ruby)
+     (gen "if not(" test ")\n"
+          (univ-indent true)
+          "end\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-ifnot-then, unknown target"))))
 
 (define (univ-if-then ctx test true)
   (case (target-name (ctx-target ctx))
@@ -2222,37 +2462,15 @@ EOF
 
 (define (univ-string ctx obj)
 
-  (define (flatten list)
-    (cond ((null? list) '())
-          ((list? (car list)) (append (flatten (car list))
-                                      (flatten (cdr list))))
-          (else
-           (cons (car list) (flatten (cdr list))))))
-  
-  (define (string->charray s)    ; js: "AAA" -> "[65, 65, 65]"
-    
-    (define (inscomma lst res)    ; ("65" "65" "65") -> ("65" ", " "65" ", " "65")
-      (cond ((null? lst) res)
-            ((= 1 (length lst)) (append res (list (car lst))))
-            (else (append (list (car lst) ", ")
-                          res
-                          (inscomma (cdr lst) '())))))
-             
-    (let* ((charlist (string->list s))
-           (intlist (map char->integer charlist))
-           (strlist (map number->string intlist))
-           (charray (inscomma strlist '())))
-      (apply string-append (flatten (list "[" charray "]")))))
-
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (let ((s (object->string obj)))
-       (gen "new " (univ-prefix ctx "String")
-            "("
-            (string->charray (substring s 1 (- (string-length s) 1)))
-            ")")))
-    
+     (gen "new "
+          (makecall ctx
+                    (univ-prefix ctx "String")
+                    (map (lambda (ch) (univ-char ctx ch))
+                         (string->list obj)))))
+
     ((python)
      (gen (univ-prefix ctx "String")
           "(*list(unicode("
@@ -3462,6 +3680,93 @@ EOF
        (compiler-internal-error
         "##vector, unknown target")))))
 
+(univ-define-prim "##vector-ref" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".vectorref("
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+       
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##vector-ref, unknown target")))))
+
+(univ-define-prim "##vector-set!" #f #t
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".vectorset("
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 2))
+            ")"))
+      
+      ((python)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            "["
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            "] = "
+            (translate-gvm-opnd ctx (list-ref opnds 2))))
+      
+      ((ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##vector-set!, unknown target")))))
+
+(univ-define-prim "##string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "new "
+            (makecall ctx
+                      (univ-prefix ctx "String")
+                      ;; (list (translate-gvm-opnd ctx (list-ref opnds 0)))
+                      (map (lambda (opnd) (translate-gvm-opnd ctx opnd))
+                           opnds)
+                      )))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##string, unknown target")))))
+
+;;(univ-define-prim "string-append" #f #f (lambda (ctx opnds) (gen "")))
+
+(univ-define-prim "string-append" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (makecall ctx
+                      (univ-prefix ctx "stringappend")                      
+                      (map (lambda (opnd) (translate-gvm-opnd ctx opnd))
+                           opnds)
+                      )))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##string-append, unknown target")))))
+
 (univ-define-prim "##make-string" #f #f
 
   (lambda (ctx opnds)
@@ -3536,26 +3841,17 @@ EOF
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (gen "new "
-            (univ-prefix ctx "Char")
-            "("
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".stringref("
-            (translate-gvm-opnd ctx (list-ref opnds 1))
-            "))"))
-       
+       ((js)
+        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+             ".stringref(" (translate-gvm-opnd ctx (list-ref opnds 1)) ")"))
+        
       ((python)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            "["
-            (translate-gvm-opnd ctx (list-ref opnds 1))
-            "]"))
+            "[" (translate-gvm-opnd ctx (list-ref opnds 1)) "]"))
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            "["
-            (translate-gvm-opnd ctx (list-ref opnds 1))
-            "].chr"))
+            "[" (translate-gvm-opnd ctx (list-ref opnds 1)) "].chr"))
 
       ((php)                ;TODO: complete
        (gen ""))
