@@ -2223,6 +2223,32 @@ EOF
      (compiler-internal-error
       "univ-or, unknown target"))))
 
+(define (univ-fxquotient ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "parseInt(" expr1 " / " expr2 ")"))
+
+    ((python ruby php)
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-fxquotient, unknown target"))))
+
+(define (univ-fxmodulo ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "(" expr1 " % " expr2 ")"))
+
+    ((python ruby php)
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-fxmodulo, unknown target"))))
+
 (define (univ-< ctx expr1 expr2)
   (gen expr1 " < " expr2))
 
@@ -2679,6 +2705,20 @@ EOF
          " * "
          (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
+(univ-define-prim "##fxquotient" #f #f
+
+  (lambda (ctx opnds)
+    (univ-fxquotient ctx
+                   (translate-gvm-opnd ctx (list-ref opnds 0))
+                   (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim "##fxmodulo" #f #f
+
+  (lambda (ctx opnds)
+    (univ-fxmodulo ctx
+                   (translate-gvm-opnd ctx (list-ref opnds 0))
+                   (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
 (univ-define-prim-bool "##fx<" #f #f
 
   (lambda (ctx opnds)
@@ -2930,6 +2970,28 @@ EOF
         "##fxwrap*, unknown target")))))
 
 
+
+(univ-define-prim-bool "##fxzero?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " === 0)"))
+      
+      ((python ruby)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " == 0)"))
+      
+      ((php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##null?, unknown target")))))
 
 (univ-define-prim-bool "##null?" #t #f
 
