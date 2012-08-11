@@ -283,7 +283,7 @@
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (univ-object-type targ obj)
-  (pretty-print (list 'univ-object-type 'targ obj))
+  ;;(pretty-print (list 'univ-object-type 'targ obj))
   'bignum);;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; ***** DUMPING OF A COMPILATION MODULE
@@ -400,10 +400,9 @@
                                             (univ-= ctx
                                                     (univ-global ctx (univ-prefix ctx "nargs"))
                                                     (label-entry-nb-parms gvm-instr)))
-                                  (univ-return ctx
-                                               (univ-call ctx
-                                                          (univ-prefix ctx "wrong_nargs")
-                                                          id))))
+                                  (univ-return-call ctx
+                                                    (univ-prefix ctx "wrong_nargs")
+                                                    id)))
                             (gen " "
                                  (univ-comment
                                   ctx
@@ -415,10 +414,9 @@
                                   (univ-not= ctx
                                              (univ-global ctx (univ-prefix ctx "nargs"))
                                              (label-entry-nb-parms gvm-instr))
-                                  (univ-return ctx
-                                               (univ-call ctx
-                                                          (univ-prefix ctx "wrong_nargs")
-                                                          id))))))
+                                  (univ-return-call ctx
+                                                    (univ-prefix ctx "wrong_nargs")
+                                                    id)))))
 
                        ((return)
                         (gen " " (univ-comment ctx "return-point\n")))
@@ -621,17 +619,21 @@
                      (gen (if nb-args
                               (univ-assign ctx (univ-global ctx (univ-prefix ctx "nargs")) nb-args)
                               "")
-                          (with-stack-pointer-adjust
-                           ctx
-                           (+ fs
-                              (ctx-stack-base-offset ctx))
-                           (lambda (ctx)
-                             (univ-return
-                              ctx
-                              (univ-poll
+
+                          (or (and (lbl? opnd)
+                                   (not poll?)
+                                   (jump-to-label ctx (lbl-num opnd) fs))
+
+                              (with-stack-pointer-adjust
                                ctx
-                               (scan-gvm-opnd ctx opnd)
-                               poll?))))))))
+                               (+ fs
+                                  (ctx-stack-base-offset ctx))
+                               (lambda (ctx)
+                                 (univ-return-poll
+                                  ctx
+                                  (scan-gvm-opnd ctx opnd)
+                                  poll?
+                                  (not (reg? opnd)))))))))) ;; avoid call optimization on JavaScript globals, because the underlying JavaScript VM uses a counterproductive speculative optimization (which slows down fib by a factor of 10!)
 
               (else
                (compiler-internal-error
@@ -640,11 +642,11 @@
 
           (define (jump-to-label ctx n jump-fs)
 
-            (cond ((and univ-enable-jump-destination-inlining?
+            (cond ((and (ctx-allow-jump-destination-inlining? ctx)
                         (let* ((bb (lbl-num->bb n bbs))
                                (label-instr (bb-label-instr bb)))
                           (and (eq? (label-type label-instr) 'simple)
-                               (or (= (length (bb-precedents bb)) 1) ;; sole jump to destination bb?
+                               (or (= (length (bb-precedents bb)) 1)
                                    (= (length (bb-non-branch-instrs bb)) 0))))) ;; very short destination bb?
                    (let* ((bb (lbl-num->bb n bbs))
                           (label-instr (bb-label-instr bb))
@@ -658,7 +660,11 @@
                          ctx
                          (- label-fs)
                          (lambda (ctx)
-                           (scan-bb-all-except-label ctx bb)))))))
+                           (with-allow-jump-destination-inlining?
+                            ctx
+                            (= (length (bb-precedents bb)) 1) ;; #f
+                            (lambda (ctx)
+                              (scan-bb-all-except-label ctx bb)))))))))
 
                   (else
                    (with-stack-pointer-adjust
@@ -666,7 +672,8 @@
                     (+ jump-fs
                        (ctx-stack-base-offset ctx))
                     (lambda (ctx)
-                      (univ-return ctx (scan-gvm-opnd ctx (make-lbl n))))))))
+                      (univ-return-call ctx
+                                        (scan-gvm-opnd ctx (make-lbl n))))))))
 
           (define (scan-gvm-opnd ctx gvm-opnd)
             (if (lbl? gvm-opnd)
@@ -729,8 +736,7 @@
               (gen (univ-assign ctx
                                 (translate-gvm-opnd ctx (make-reg (+ univ-nb-arg-regs 1)))
                                 name)
-                   (univ-return ctx
-                                (translate-lbl ctx (make-lbl lbl))))))
+                   (univ-return-call ctx (translate-lbl ctx (make-lbl lbl))))))
             (cont name))))
 
     (else
@@ -753,7 +759,7 @@
 (define gen vector)
 
 (define (make-ctx target ns)
-  (vector target ns 0))
+  (vector target ns 0 univ-enable-jump-destination-inlining?))
 
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
@@ -763,6 +769,9 @@
 
 (define (ctx-stack-base-offset ctx)        (vector-ref ctx 2))
 (define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 2 x))
+
+(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 3))
+(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 3 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -779,6 +788,13 @@
         ctx
         (- (ctx-stack-base-offset ctx) n)
         proc)))
+
+(define (with-allow-jump-destination-inlining? ctx allow? proc)
+  (let ((save (ctx-allow-jump-destination-inlining? ctx)))
+    (ctx-allow-jump-destination-inlining?-set! ctx allow?)
+    (let ((result (proc ctx)))
+      (ctx-allow-jump-destination-inlining?-set! ctx save)
+      result)))
 
 (define (translate-gvm-opnd ctx gvm-opnd)
 
@@ -956,20 +972,20 @@ var Gambit_poll;
 
 Gambit_stack[0] = false;
 
-var Gambit_poll_count = 0;
+var Gambit_poll_count = 1;
 
 if (this.hasOwnProperty('setTimeout')) {
-  Gambit_poll = function (dest_pc) {
-                  setTimeout(function () { Gambit_run(dest_pc); }, 1);
+  Gambit_poll = function (dest_bb) {
+                  Gambit_poll_count = 100;
+                  Gambit_stack.length = Gambit_sp + 1;
+                  setTimeout(function () { Gambit_run(dest_bb); }, 1);
                   return false;
                 };
 } else {
-  Gambit_poll = function (dest_pc) {
-                  if (--Gambit_poll_count < 0) {
-                    Gambit_poll_count = 100;
-                    Gambit_stack.length = Gambit_sp+1;
-                  }
-                  return dest_pc;
+  Gambit_poll = function (dest_bb) {
+                  Gambit_poll_count = 100;
+                  Gambit_stack.length = Gambit_sp + 1;
+                  return dest_bb;
                 };
 }
 
@@ -2164,6 +2180,9 @@ EOF
      (compiler-internal-error
       "univ-comment, unknown target"))))
 
+(define (univ-return-call ctx expr . params)
+  (univ-return ctx (apply univ-call (cons ctx (cons expr params)))))
+
 (define (univ-return ctx expr)
   (case (target-name (ctx-target ctx))
 
@@ -2202,10 +2221,24 @@ EOF
      (compiler-internal-error
       "univ-call, unknown target"))))
 
-(define (univ-poll ctx expr poll?)
+(define (univ-return-poll ctx expr poll? call?)
   (if poll?
-      (univ-call ctx (univ-prefix ctx "poll") expr)
-      expr))
+
+      #;
+       (univ-return
+        ctx
+        (univ-call ctx (univ-prefix ctx "poll") expr))
+      (univ-if-then-else
+       ctx
+       (gen "--" (univ-prefix ctx "poll_count") " === 0")
+       (univ-return-call ctx (univ-prefix ctx "poll") expr)
+       (if call?
+           (univ-return-call ctx expr)
+           (univ-return ctx expr)))
+
+      (if call?
+          (univ-return-call ctx expr)
+          (univ-return ctx expr))))
 
 (define (univ-throw ctx expr)
   (case (target-name (ctx-target ctx))
@@ -2367,6 +2400,19 @@ EOF
     (else
      (compiler-internal-error
       "univ-increment, unknown target"))))
+
+(define (univ-decrement ctx loc expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (gen loc " -= " expr ";\n"))
+
+    ((python ruby)
+     (gen loc " -= " expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-decrement, unknown target"))))
 
 (define (univ-expr ctx expr)
   (case (target-name (ctx-target ctx))
@@ -4276,14 +4322,13 @@ EOF
         (+ fs
            (ctx-stack-base-offset ctx))
         (lambda (ctx)
-          (gen (univ-return
-                ctx
-                (univ-poll
-                 ctx
-                 (gen (univ-prefix ctx
-                                   (string-append name
-                                                  (number->string nb-args)))
-                      "()")
-                 poll?)))))))
+          (univ-return-poll
+           ctx
+           (gen (univ-prefix ctx
+                             (string-append name
+                                            (number->string nb-args)))
+                "()")
+           poll?
+           #t)))))
 
 ;;;============================================================================
