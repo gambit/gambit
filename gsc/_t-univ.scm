@@ -863,8 +863,14 @@
         ((list? obj)
          (univ-list ctx obj))
 
+        ;; ((pair? obj)
+        ;;  (univ-pair ctx obj))
+
         ((vector? obj)
          (univ-vector ctx obj))
+
+        ((symbol? obj)
+         (univ-symbol ctx obj))
         
         (else
          (gen "UNIMPLEMENTED_OBJECT("
@@ -3907,6 +3913,22 @@ EOF
        (compiler-internal-error
         "##string, unknown target")))))
 
+(univ-define-prim "##string-length" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".stringlength()"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##string-length, unknown target")))))
+
 ;;(univ-define-prim "string-append" #f #f (lambda (ctx opnds) (gen "")))
 
 (univ-define-prim "string-append" #f #f
@@ -3964,7 +3986,6 @@ EOF
 (univ-define-prim "##string-set!" #f #t
 
   (lambda (ctx opnds)
-    (display "##string-set!")(newline)
     (case (target-name (ctx-target ctx))
 
       ((js)
