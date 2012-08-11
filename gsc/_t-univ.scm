@@ -966,18 +966,18 @@ var Gambit_poll;
 
 Gambit_stack[0] = false;
 
-var Gambit_poll_count = 0;
+var Gambit_poll_count = 1;
 
 if (this.hasOwnProperty('setTimeout')) {
   Gambit_poll = function (dest_bb) {
-                  Gambit_poll_count = 50;
+                  Gambit_poll_count = 100;
                   Gambit_stack.length = Gambit_sp + 1;
                   setTimeout(function () { Gambit_run(dest_bb); }, 1);
                   return false;
                 };
 } else {
   Gambit_poll = function (dest_bb) {
-                  Gambit_poll_count = 50;
+                  Gambit_poll_count = 100;
                   Gambit_stack.length = Gambit_sp + 1;
                   return dest_bb;
                 };
@@ -2224,7 +2224,7 @@ EOF
         (univ-call ctx (univ-prefix ctx "poll") expr))
       (univ-if-then-else
        ctx
-       (gen "--" (univ-prefix ctx "poll_count") " < 0")
+       (gen "--" (univ-prefix ctx "poll_count") " === 0")
        (univ-return-call ctx (univ-prefix ctx "poll") expr)
        (if call?
            (univ-return-call ctx expr)
