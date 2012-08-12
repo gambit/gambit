@@ -1308,9 +1308,21 @@ function Gambit_List ( ) {
         }
     }
 
-    var res = listaux(arguments, arguments.length - 1, null);
+//    var res = listaux(arguments, arguments.length - 1, null);
     
-    return res;
+    return listaux(arguments, arguments.length - 1, null);
+}
+
+Gambit_List.prototype.length = function ( ) {
+    var len = 0;
+    var h = this;
+
+    while (h !== null) {
+        len += 1;
+        h = h.cdr;
+    }
+
+    return len;
 }
 
 // Chars
@@ -1350,6 +1362,42 @@ Gambit_String.makestring = function ( n, ch ) {
     var s = new Gambit_String();
     for (i = 0; i < n; i++) {
         s.chars[i] = ch;
+    }
+
+    return s;
+}
+
+Gambit_String.listToString = function ( lst ) {
+    var len = lst.length();
+    var s = Gambit_String.makestring(len);
+    var h = lst;
+    for (i = 0; i < len; i++) {
+        s.chars[i] = h.car;
+        h = h.cdr;
+    }
+
+    return s;
+}
+
+Gambit_String.stringToList = function ( s ) {
+    var len = s.stringlength();
+
+    var listaux = function (a, n, lst) {
+        if (n === 0) {
+            return Gambit_cons(a[0], lst);
+        } else {
+            return listaux(a, n-1, Gambit_cons(a[n], lst));
+        }
+    }
+    
+    return listaux(s.chars, len - 1, null);    
+}
+
+Gambit_String.jsstringToString = function ( s ) {
+    var len = s.length;
+    var s = Gambit_String.makestring(len, Gambit_Char.fxToChar(0));
+    for (i = 0; i < len; i++) {
+        s.chars[i] = Gambit_Char.fxToChar(s.charCodeAt(i));
     }
 
     return s;
@@ -1409,6 +1457,17 @@ var Gambit_Vector = function ( ) {
     }
 }
 
+// make-vector
+Gambit_Vector.makevector = function ( n, val ) {
+    var v = new Gambit_Vector();
+
+    for (var i = 0; i < n; i++) {
+        v.a[i] = val;
+    }
+
+    return v;
+}
+
 // vector-length
 Gambit_Vector.prototype.vectorlength = function ( ) {
     return this.a.length;
@@ -1431,17 +1490,6 @@ Gambit_Vector.prototype.toString = function ( ) {
     }
 
     return res;
-}
-
-// make-vector
-var Gambit_makevector = function ( n, val ) {
-    var v = new Gambit_Vector();
-
-    for (var i = 0; i < n; i++) {
-        v.a[i] = val;
-    }
-
-    return v;
 }
 
 // Symbol
@@ -3079,6 +3127,78 @@ EOF
        (compiler-internal-error
         "##null?, unknown target")))))
 
+(univ-define-prim-bool "##fxodd?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " % 2 == 1)"))
+      
+      ((python ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##odd?, unknown target")))))
+
+(univ-define-prim-bool "##fxeven?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " % 2 == 0)"))
+      
+      ((python ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##even?, unknown target")))))
+
+(univ-define-prim-bool "##fxmax" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "Math.max("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ","
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+      
+      ((python ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##fxmax, unknown target")))))
+
+(univ-define-prim-bool "##fxmin" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "Math.min("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ","
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+      
+      ((python ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##fxmin, unknown target")))))
+
 (univ-define-prim-bool "##null?" #t #f
 
   (lambda (ctx opnds)
@@ -3865,6 +3985,26 @@ EOF
        (compiler-internal-error
         "##list, unknown target")))))
 
+(univ-define-prim "##make-vector" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "Vector.makevector")
+            "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+      
+      ((php python ruby)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##make-vector, unknown target")))))
+
 (univ-define-prim "##vector" #f #f
 
   (lambda (ctx opnds)
@@ -3975,7 +4115,74 @@ EOF
        (compiler-internal-error
         "##string-length, unknown target")))))
 
+(univ-define-prim "##vector-length" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".vectorlength()"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##vector-length, unknown target")))))
+
 ;;(univ-define-prim "string-append" #f #f (lambda (ctx opnds) (gen "")))
+
+(univ-define-prim "list->string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "new "
+            (makecall ctx
+                      (univ-prefix ctx "String")
+                      (list (translate-gvm-opnd ctx (list-ref opnds 0))))))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "list->string, unknown target")))))
+
+(univ-define-prim "symbol->string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".symbolToString()"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "symbol->string, unknown target")))))
+
+(univ-define-prim "string->list" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "String.stringToList(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "string->list, unknown target")))))
 
 (univ-define-prim "string-append" #f #f
 
@@ -4028,6 +4235,26 @@ EOF
       (else
        (compiler-internal-error
         "##make-string, unknown target")))))
+
+(univ-define-prim "number->string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ").toString()"
+            ;; (translate-gvm-opnd ctx (list-ref opnds 1))
+            ;; ")"
+            ))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "number->string, unknown target")))))
 
 (univ-define-prim "##string-set!" #f #t
 
@@ -4265,6 +4492,77 @@ EOF
       (else
        (compiler-internal-error
         "##string?, unknown target")))))
+
+(univ-define-prim-bool "##number?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js php)
+       (gen "typeof("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ") == \"number\""))
+
+      ((python ruby php)
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##number?, unknown target")))))
+
+(univ-define-prim-bool "##symbol?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js php)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            " instanceof "
+            (univ-prefix ctx "Symbol")))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (univ-prefix ctx "Symbol)")))
+
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == "
+            (univ-prefix ctx "Symbol")))
+      ((php)
+       (gen ""))      
+
+      (else
+       (compiler-internal-error
+        "##symbol?, unknown target")))))
+
+(univ-define-prim-bool "##mem-allocated?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "true"))
+
+      ((python ruby php)
+       (gen ""))      
+
+      (else
+       (compiler-internal-error
+        "##mem-allocated?, unknown target")))))
+
+(univ-define-prim "##subtype" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js python ruby js)
+       (gen "1"))
+
+      (else
+       (compiler-internal-error
+        "##subtype, unknown target")))))
 
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
