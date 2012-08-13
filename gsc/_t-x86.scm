@@ -1197,52 +1197,80 @@
         (x86-pop  cgc r1))))
 
 
-(define (fxadd-binary cgc opnds loc)
+
+(define (remove x xs)
+  (cond ((null? xs) '())
+        ((eq? x (car xs)) (cdr xs))
+        (else (cons (car xs) (remove x (cdr xs))))))
+
+
+;; if loc is a register:
+;;   if loc is in opnds:
+;;     remove loc from opnds
+;;     add each opnd in opnds to loc
+;;   else:
+;;     move (car opnds) into loc
+;;     add each opnd in (cdr opnds) to loc
+;; else:
+;;   if r1 { accumulating register } is in opnds:
+;;     push r1
+;;     remove r1 from opnds
+;;     add each opnd in opnds to r1
+;;     move r1 into loc
+;;     pop r1
+;;   else:
+;;     push r1
+;;     move (car opnd) into r1
+;;     add each opnd in (cdr opnds) to r1
+;;     move r1 into loc
+;;     pop r1
+(define (fxadd-nary cgc opnds loc)
   (let* ((targ (codegen-context-target cgc))
          (ctx (make-ctx targ #f))
          (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
-         (translated-loc (nat-opnd cgc ctx loc))
-         (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
-         (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
-    (if (x86-reg? translated-loc)
-        (cond ((eq? translated-loc opnd1) (x86-add cgc translated-loc opnd2))
-              ((eq? translated-loc opnd2) (x86-add cgc translated-loc opnd1))
-              (else
-               (x86-mov cgc translated-loc opnd1)
-               (x86-add cgc translated-loc opnd2)))
-        (cond ((x86-reg? opnd1)
-               (x86-push cgc opnd1)
-               (x86-add cgc opnd1 opnd2)
-               (x86-mov cgc translated-loc opnd1)
-               (x86-pop cgc opnd1))
-              ((x86-reg? opnd2)
-               (x86-push cgc opnd2)
-               (x86-add cgc opnd2 opnd1)
-               (x86-mov cgc translated-loc opnd2)
-               (x86-pop cgc opnd2))
-              (else
-               (x86-push cgc r1)
-               (x86-mov cgc r1 opnd1)
-               (x86-add cgc r1 opnd2)
-               (x86-mov cgc translated-loc r1)
-               (x86-pop cgc r1))))))
+         (loc (nat-opnd cgc ctx loc))
+         (opnds (map (lambda (opnd) (nat-opnd cgc ctx opnd)) opnds)))
+    (cond ((x86-reg? loc)
+           (cond ((member loc opnds)
+                  (let ((opnds2 (remove loc opnds)))
+                    (for-each (lambda (opnd) (x86-add cgc loc opnd)) opnds2)))
+                 (else
+                  (x86-mov cgc loc (car opnds))
+                  (for-each (lambda (opnd) (x86-add cgc loc opnd)) (cdr opnds)))))
+
+          (else
+           (cond ((member r1 opnds)
+                  (let ((opnds2 (remove r1 opnds)))
+                    (x86-push cgc r1)
+                    (for-each (lambda (opnd) (x86-add cgc r1 opnd)) opnds2)
+                    (x86-mov cgc loc r1)
+                    (x86-pop cgc r1)))
+                 (else
+                    (x86-push cgc r1)
+                    (x86-mov cgc r1 (car opnds))
+                    (for-each (lambda (opnd) (x86-add cgc r1 opnd)) (cdr opnds))
+                    (x86-mov cgc loc r1)
+                    (x86-pop cgc r1)))))))
+
 
 ;; TODO: handle >2-ary cases
 (x86-prim-define "##fx+" #f #f
   (lambda (cgc opnds loc)
     (cond ((null? opnds) (mov cgc loc (x86-imm-int 0)))
           ((null? (cdr opnds)) (mov cgc loc (car opnds)))
-          (else (fxadd-binary cgc opnds loc)))))
+          (else (fxadd-nary cgc opnds loc)))))
 
 (x86-prim-define "##fx+?" #f #f
   (lambda (cgc opnds loc)
-    (let* ((no-overflow (make-temp-label cgc))
-           (targ (codegen-context-target cgc))
-           (translated-loc (nat-opnd cgc (make-ctx targ #f) loc)))
-      (fxadd-binary cgc opnds loc)
-      (x86-jno cgc no-overflow)
-      (mov cgc translated-loc false)
-      (x86-label cgc no-overflow))))
+    (if (not (= 2 (length opnds)))
+        (compiler-internal-error "##fx+? takes only 2 arguments")
+        (let* ((no-overflow (make-temp-label cgc))
+               (targ (codegen-context-target cgc))
+               (translated-loc (nat-opnd cgc (make-ctx targ #f) loc)))
+          (fxadd-nary cgc opnds loc)
+          (x86-jno cgc no-overflow)
+          (mov cgc translated-loc false)
+          (x86-label cgc no-overflow)))))
 
 
 ;; TODO: handle >2-ary cases
