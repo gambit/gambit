@@ -283,7 +283,7 @@
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (univ-object-type targ obj)
-  (pretty-print (list 'univ-object-type 'targ obj))
+  ;;(pretty-print (list 'univ-object-type 'targ obj))
   'bignum);;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; ***** DUMPING OF A COMPILATION MODULE
@@ -384,21 +384,39 @@
                         (gen "\n"))
 
                        ((entry)
-                        (gen " "
-                             (univ-comment
-                              ctx
-                              (if (label-entry-closed? gvm-instr)
-                                  "closure-entry-point\n"
-                                  "entry-point\n"))
-                             (univ-if-then
-                              ctx
-                              (univ-not= ctx
-                                         (univ-global ctx (univ-prefix ctx "nargs"))
-                                         (label-entry-nb-parms gvm-instr))
-                              (univ-return ctx
-                                           (univ-call ctx
-                                                      (univ-prefix ctx "wrong_nargs")
-                                                      id)))))
+                        (if (label-entry-rest? gvm-instr)
+                            (gen " "
+                                 (univ-comment
+                                  ctx
+                                  (if (label-entry-closed? gvm-instr)
+                                      "closure-entry-point (+rest)\n"
+                                      "entry-point (+rest)\n"))
+                                 (univ-ifnot-then
+                                  ctx
+                                  (univ-and ctx
+                                            (univ-call ctx
+                                                       (univ-prefix ctx "buildrest")
+                                                       (label-entry-nb-parms gvm-instr))
+                                            (univ-= ctx
+                                                    (univ-global ctx (univ-prefix ctx "nargs"))
+                                                    (label-entry-nb-parms gvm-instr)))
+                                  (univ-return-call ctx
+                                                    (univ-prefix ctx "wrong_nargs")
+                                                    id)))
+                            (gen " "
+                                 (univ-comment
+                                  ctx
+                                  (if (label-entry-closed? gvm-instr)
+                                      "closure-entry-point\n"
+                                      "entry-point\n"))
+                                 (univ-if-then
+                                  ctx
+                                  (univ-not= ctx
+                                             (univ-global ctx (univ-prefix ctx "nargs"))
+                                             (label-entry-nb-parms gvm-instr))
+                                  (univ-return-call ctx
+                                                    (univ-prefix ctx "wrong_nargs")
+                                                    id)))))
 
                        ((return)
                         (gen " " (univ-comment ctx "return-point\n")))
@@ -521,8 +539,8 @@
                            (let* ((lbl (closure-parms-lbl parms))
                                   (loc (closure-parms-loc parms))
                                   (opnds (closure-parms-opnds parms)))
-                             (let loop ((i 0)
-                                        (opnds (cons (make-lbl lbl) opnds))
+                             (let loop ((i 1) ;; 0
+                                        (opnds opnds) ;; (cons (make-lbl lbl) opnds)
                                         (rev-code '()))
                                (if (pair? opnds)
                                    (let ((opnd (car opnds)))
@@ -601,17 +619,21 @@
                      (gen (if nb-args
                               (univ-assign ctx (univ-global ctx (univ-prefix ctx "nargs")) nb-args)
                               "")
-                          (with-stack-pointer-adjust
-                           ctx
-                           (+ fs
-                              (ctx-stack-base-offset ctx))
-                           (lambda (ctx)
-                             (univ-return
-                              ctx
-                              (univ-poll
+
+                          (or (and (lbl? opnd)
+                                   (not poll?)
+                                   (jump-to-label ctx (lbl-num opnd) fs))
+
+                              (with-stack-pointer-adjust
                                ctx
-                               (scan-gvm-opnd ctx opnd)
-                               poll?))))))))
+                               (+ fs
+                                  (ctx-stack-base-offset ctx))
+                               (lambda (ctx)
+                                 (univ-return-poll
+                                  ctx
+                                  (scan-gvm-opnd ctx opnd)
+                                  poll?
+                                  (not (reg? opnd)))))))))) ;; avoid call optimization on JavaScript globals, because the underlying JavaScript VM uses a counterproductive speculative optimization (which slows down fib by a factor of 10!)
 
               (else
                (compiler-internal-error
@@ -620,11 +642,11 @@
 
           (define (jump-to-label ctx n jump-fs)
 
-            (cond ((and univ-enable-jump-destination-inlining?
+            (cond ((and (ctx-allow-jump-destination-inlining? ctx)
                         (let* ((bb (lbl-num->bb n bbs))
                                (label-instr (bb-label-instr bb)))
                           (and (eq? (label-type label-instr) 'simple)
-                               (or (= (length (bb-precedents bb)) 1) ;; sole jump to destination bb?
+                               (or (= (length (bb-precedents bb)) 1)
                                    (= (length (bb-non-branch-instrs bb)) 0))))) ;; very short destination bb?
                    (let* ((bb (lbl-num->bb n bbs))
                           (label-instr (bb-label-instr bb))
@@ -638,7 +660,11 @@
                          ctx
                          (- label-fs)
                          (lambda (ctx)
-                           (scan-bb-all-except-label ctx bb)))))))
+                           (with-allow-jump-destination-inlining?
+                            ctx
+                            (= (length (bb-precedents bb)) 1) ;; #f
+                            (lambda (ctx)
+                              (scan-bb-all-except-label ctx bb)))))))))
 
                   (else
                    (with-stack-pointer-adjust
@@ -646,7 +672,8 @@
                     (+ jump-fs
                        (ctx-stack-base-offset ctx))
                     (lambda (ctx)
-                      (univ-return ctx (scan-gvm-opnd ctx (make-lbl n))))))))
+                      (univ-return-call ctx
+                                        (scan-gvm-opnd ctx (make-lbl n))))))))
 
           (define (scan-gvm-opnd ctx gvm-opnd)
             (if (lbl? gvm-opnd)
@@ -693,6 +720,7 @@
 
 (define closure-count 0)
 
+#;
 (define (univ-closure-alloc ctx lbl nb-closed-vars cont)
   (case (target-name (ctx-target ctx))
 
@@ -708,8 +736,20 @@
               (gen (univ-assign ctx
                                 (translate-gvm-opnd ctx (make-reg (+ univ-nb-arg-regs 1)))
                                 name)
-                   (univ-return ctx
-                                (translate-lbl ctx (make-lbl lbl))))))
+                   (univ-return-call ctx (translate-lbl ctx (make-lbl lbl))))))
+            (cont name))))
+
+    (else
+     (compiler-internal-error
+      "univ-closure-alloc, unknown target"))))
+
+(define (univ-closure-alloc ctx lbl nb-closed-vars cont)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (set! closure-count (+ closure-count 1))
+     (let ((name (string-append "closure" (number->string closure-count))))
+       (gen "var " name " = closure_alloc(" (translate-lbl ctx (make-lbl lbl)) ");\n"
             (cont name))))
 
     (else
@@ -719,7 +759,7 @@
 (define gen vector)
 
 (define (make-ctx target ns)
-  (vector target ns 0))
+  (vector target ns 0 univ-enable-jump-destination-inlining?))
 
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
@@ -729,6 +769,9 @@
 
 (define (ctx-stack-base-offset ctx)        (vector-ref ctx 2))
 (define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 2 x))
+
+(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 3))
+(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 3 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -745,6 +788,13 @@
         ctx
         (- (ctx-stack-base-offset ctx) n)
         proc)))
+
+(define (with-allow-jump-destination-inlining? ctx allow? proc)
+  (let ((save (ctx-allow-jump-destination-inlining? ctx)))
+    (ctx-allow-jump-destination-inlining?-set! ctx allow?)
+    (let ((result (proc ctx)))
+      (ctx-allow-jump-destination-inlining?-set! ctx save)
+      result)))
 
 (define (translate-gvm-opnd ctx gvm-opnd)
 
@@ -819,6 +869,9 @@
 
         ((void-object? obj)
          (gen "undefined"))
+
+        ((undefined? obj)
+         (univ-undefined ctx))
         
         ((proc-obj? obj)
          (lbl->id ctx 1 (proc-obj-name obj)))
@@ -826,8 +879,14 @@
         ((list? obj)
          (univ-list ctx obj))
 
+        ;; ((pair? obj)
+        ;;  (univ-pair ctx obj))
+
         ((vector? obj)
          (univ-vector ctx obj))
+
+        ((symbol? obj)
+         (univ-symbol ctx obj))
         
         (else
          (gen "UNIMPLEMENTED_OBJECT("
@@ -838,7 +897,7 @@
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
 
 (define (lbl->id ctx num ns)
-  (univ-global ctx (univ-prefix ctx (gen "lbl" num "_" (scheme-id->c-id ns)))))
+  (univ-global ctx (univ-prefix ctx (gen "bb" num "_" (scheme-id->c-id ns)))))
 
 (define (runtime-system ctx)
   (case (target-name (ctx-target ctx))
@@ -853,20 +912,20 @@
 function Gambit_heapify_continuation(ra) {
   var chain = false;
   var prev_frame = false;
-  var prev_link = 1;
+  var prev_link;
 
   while (Gambit_sp !== 0) { // stack not empty
     var fs = ra.fs;
     var link = ra.link;
-    var frame = Gambit_stack.slice(Gambit_sp-fs, Gambit_sp+1);
+    var frame = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
     if (prev_frame === false)
       chain = frame;
     else
       prev_frame[prev_link] = frame;
     prev_frame = frame;
     frame[0] = ra;
-    Gambit_sp = Gambit_sp-fs;
-    ra = Gambit_stack[Gambit_sp+link];
+    Gambit_sp = Gambit_sp - fs;
+    ra = Gambit_stack[Gambit_sp + link];
     prev_link = link;
   }
 
@@ -882,17 +941,18 @@ function Gambit_heapify_continuation(ra) {
 }
 
 function Gambit_underflow_handler() {
-  var ra = false;
   var frame = Gambit_stack[0];
-  if (frame !== false) { // not end of continuation?
-    ra = frame[0];
-    var fs = ra.fs;
-    var link = ra.link;
-    Gambit_stack = frame.slice(0, fs+1);
-    Gambit_sp = fs;
-    Gambit_stack[0] = frame[link];
-    Gambit_stack[link] = Gambit_underflow_handler;
-  }
+  if (frame === false) // end of continuation?
+    return false; // terminate trampoline
+
+  var ra = frame[0];
+  var fs = ra.fs;
+  var link = ra.link;
+  Gambit_stack = frame.slice(0, fs + 1);
+  Gambit_sp = fs;
+  Gambit_stack[0] = frame[link];
+  Gambit_stack[link] = Gambit_underflow_handler;
+
   return ra;
 }
 Gambit_underflow_handler.fs = 0;
@@ -912,88 +972,170 @@ var Gambit_poll;
 
 Gambit_stack[0] = false;
 
+var Gambit_poll_count = 1;
+
 if (this.hasOwnProperty('setTimeout')) {
-  Gambit_poll = function (wakeup) { setTimeout(function () { Gambit_run(wakeup); }, 1); return false; };
+  Gambit_poll = function (dest_bb) {
+                  Gambit_poll_count = 100;
+                  Gambit_stack.length = Gambit_sp + 1;
+                  setTimeout(function () { Gambit_run(dest_bb); }, 1);
+                  return false;
+                };
 } else {
-  Gambit_poll = function (wakeup) { return wakeup; };
+  Gambit_poll = function (dest_bb) {
+                  Gambit_poll_count = 100;
+                  Gambit_stack.length = Gambit_sp + 1;
+                  return dest_bb;
+                };
 }
 
+function Gambit_buildrest ( f ) {    // nb formal args
+                                     // *** assume (= univ-nb-arg-regs 3) for now ***    
+    var nb_static_args = f - 1;
+    var nb_rest_args = Gambit_nargs - nb_static_args;    
+    var rest = null;
+    var Gambit_reg = [];
+    Gambit_reg[1] = " R1 ";
+    Gambit_reg[2] = " R2 ";
+    Gambit_reg[3] = " R3 ";
+
+
+    if (Gambit_nargs < nb_static_args)  // Wrong number of args
+        return false;
+
+    // simple case, all in reg
+    if ((Gambit_nargs <= 3) && (nb_static_args < 3)) {
+        for (var i = nb_static_args + 1; i < nb_static_args + nb_rest_args + 1; i++) {
+            rest = Gambit_cons(Gambit_reg[i], rest);
+        }
+
+        Gambit_reg[nb_static_args + 1] = rest;
+        Gambit_nargs -= (nb_rest_args - 1);
+        
+        " R1 " = Gambit_reg[1];
+        " R2 " = Gambit_reg[2];
+        " R3 " = Gambit_reg[3];
+        
+        return true;
+    }
+
+    // rest is empty
+    if ((Gambit_nargs >= 3) && (nb_rest_args === 0)) { // only append '()
+        var spill_loc = nb_static_args - 2;        // univ-nb-arg-regs - 1
+        Gambit_sp += 1;
+        Gambit_stack[Gambit_sp] = Gambit_reg[1];
+        Gambit_reg[1] = Gambit_reg[2];
+        Gambit_reg[2] = Gambit_reg[3];
+        Gambit_reg[3] = null;
+        Gambit_nargs += 1;
+        
+        " R1 " = Gambit_reg[1];
+        " R2 " = Gambit_reg[2];
+        " R3 " = Gambit_reg[3];
+        
+        return true;
+    }
+
+    // general case
+    for (var i = 1; i <= 3; i++) {
+        Gambit_stack[Gambit_sp + i] = Gambit_reg[i];
+    }
+    Gambit_sp += 3;
+    for (var i = 0; i < nb_rest_args; i++) {
+        rest = Gambit_cons(Gambit_stack[Gambit_sp - i], rest);
+    }
+    Gambit_sp -= nb_rest_args;
+    Gambit_stack[Gambit_sp + 1] = rest;
+    Gambit_sp += 1;
+
+    switch (nb_static_args) {
+    case 0:
+        Gambit_reg[1] = Gambit_stack[Gambit_sp];
+        Gambit_sp -= 1;
+        break;
+    case 1:
+        Gambit_reg[2] = Gambit_stack[Gambit_sp];
+        Gambit_reg[1] = Gambit_stack[Gambit_sp - 1];
+        Gambit_sp -= 2;
+        break;
+    default:
+        for (var i = 3; i > 0; i--) {
+            Gambit_reg[i] = Gambit_stack[Gambit_sp - 3 + i];
+        }
+        Gambit_sp -= 3;
+        break;
+    }
+    Gambit_nargs = f;
+
+    " R1 " = Gambit_reg[1];
+    " R2 " = Gambit_reg[2];
+    " R3 " = Gambit_reg[3];
+        
+    return true;
+}         
 
 function Gambit_wrong_nargs(fn) {
-  print(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
-  print(fn);
-  return false;
+    print(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
+    print(fn);
+    return false;
 }
 
+function closure_alloc(entry_bb) {
+
+  function self() {
+    " R4 " = self;
+    return self.v0;
+  }
+
+  self.v0 = entry_bb;
+
+  return self;
+}
+
+// Flonum
 function Gambit_Flonum(val) {
-  this.val = val;
+    this.val = val;
 }
 
 Gambit_Flonum.prototype.toString = function ( ) {
-  if (parseFloat(this.val) == parseInt(this.val)) {
-    return this.val + \".\";
-  } else {
-    return this.val;
-  }
+    if (parseFloat(this.val) == parseInt(this.val)) {
+        return this.val + \".\";
+    } else {
+        return this.val;
+    }
 }
 
-var Gambit_chars = {}
-function Gambit_Char(i) {
-  this.i = i;
-}
-
-Gambit_Char.fxToChar = function ( i ) {
-  var ch = Gambit_chars[i];
-
-  if (!ch) {
-      Gambit_chars[i] = new Gambit_Char(i);
-      ch = Gambit_chars[i];
-  }
-    
-  return ch;
-}
-
-Gambit_Char.charToFx = function ( c ) {
-  return c.i;
-}
-
-Gambit_Char.prototype.toString = function ( ) {
-  return String.fromCharCode(this.i);
-}
-
-//
-// pair obj
-//
+// Pair, List
 function Gambit_Pair ( car, cdr ) {
-  this.car = car;
-  this.cdr = cdr;
+    this.car = car;
+    this.cdr = cdr;
 }
 
 function Gambit_pairp ( p ) {
-  return (p instanceof Gambit_Pair);
+    return (p instanceof Gambit_Pair);
 }
 
 Gambit_Pair.prototype.toString = function ( ) {
-  return Gambit_toString(this.car) + Gambit_toString(this.cdr);
+    return Gambit_toString(this.car) + Gambit_toString(this.cdr);
 }
 
 function prettyPrintList ( o ) {
-  if (!Gambit_nullp(o)) {
-    lbl1_println(Gambit_car(o));
-    if (!Gambit_nullp(Gambit_cdr(o))) {
-      print(\" \");
-      prettyPrintList(Gambit_cdr(o));
+    if (!Gambit_nullp(o)) {
+        bb1_println(Gambit_car(o));
+        if (!Gambit_nullp(Gambit_cdr(o))) {
+            print(\" \");
+            prettyPrintList(Gambit_cdr(o));
+        }
     }
-  }
 }
 
 function Gambit_nullp ( o ) {
-  return o === null;
+    return o === null;
 }
 
 // cons
 function Gambit_cons ( a, b ) {
-  return new Gambit_Pair(a, b);
+    return new Gambit_Pair(a, b);
 }
 
 // car
@@ -1156,177 +1298,337 @@ function Gambit_setcdr ( p, b ) {
     p.cdr = b;
 }
 
-// list
+// List
 function Gambit_List ( ) {
-  var listaux = function (a, n, lst) {
-    if (n === 0) {
-      return Gambit_cons(a[0], lst);
-    } else {
-      return listaux(a, n-1, Gambit_cons(a[n], lst));
+    var listaux = function (a, n, lst) {
+        if (n === 0) {
+            return Gambit_cons(a[0], lst);
+        } else {
+            return listaux(a, n-1, Gambit_cons(a[n], lst));
+        }
     }
-  }
 
-  var res = listaux(arguments, arguments.length - 1, null);
-  
-  return res;
+//    var res = listaux(arguments, arguments.length - 1, null);
+    
+    return listaux(arguments, arguments.length - 1, null);
 }
 
-function Gambit_String(charray) {
-  this.charray = charray;
+Gambit_List.prototype.length = function ( ) {
+    var len = 0;
+    var h = this;
+
+    while (h !== null) {
+        len += 1;
+        h = h.cdr;
+    }
+
+    return len;
 }
 
-Gambit_String.makestring = function ( n, c ) {
-  var a = new Array(n);
-  c = c || \"\";
-  for (i = 0; i < n; i++) {
-      a[i] = c.i;
-  }
+// Chars
+var Gambit_chars = {}
+function Gambit_Char(charcode) {
+    this.charcode = charcode;
+}
 
-  return new Gambit_String(a);
+Gambit_Char.fxToChar = function ( charcode ) {
+    var ch = Gambit_chars[charcode];
+
+    if (!ch) {
+        Gambit_chars[charcode] = new Gambit_Char(charcode);
+        ch = Gambit_chars[charcode];
+    }
+    
+    return ch;
+}
+
+Gambit_Char.charToFx = function ( c ) {
+    return c.charcode;
+}
+
+Gambit_Char.prototype.toString = function ( ) {
+    return String.fromCharCode(this.charcode);
+}
+
+// String
+var Gambit_String = function ( ) {
+    this.chars = new Array(arguments.length);
+    for (i = 0; i < arguments.length; i++) {
+        this.chars[i] = arguments[i];
+    }
+}
+
+Gambit_String.makestring = function ( n, ch ) {
+    var s = new Gambit_String();
+    for (i = 0; i < n; i++) {
+        s.chars[i] = ch;
+    }
+
+    return s;
+}
+
+Gambit_String.listToString = function ( lst ) {
+    var len = lst.length();
+    var s = Gambit_String.makestring(len);
+    var h = lst;
+    for (i = 0; i < len; i++) {
+        s.chars[i] = h.car;
+        h = h.cdr;
+    }
+
+    return s;
+}
+
+Gambit_String.stringToList = function ( s ) {
+    var len = s.stringlength();
+
+    var listaux = function (a, n, lst) {
+        if (n === 0) {
+            return Gambit_cons(a[0], lst);
+        } else {
+            return listaux(a, n-1, Gambit_cons(a[n], lst));
+        }
+    }
+    
+    return listaux(s.chars, len - 1, null);    
+}
+
+Gambit_String.jsstringToString = function ( s ) {
+    var len = s.length;
+    var s2 = Gambit_String.makestring(len, Gambit_Char.fxToChar(0));
+    for (i = 0; i < len; i++) {
+        s2.chars[i] = Gambit_Char.fxToChar(s.charCodeAt(i));
+    }
+
+    return s2;
 }
 
 Gambit_String.prototype.stringlength = function ( ) {
-  return this.charray.length;
+    return this.chars.length;
 }
 
 // string-ref
 Gambit_String.prototype.stringref = function ( n ) {
-  return this.charray[n];
+    return this.chars[n];
 }
 
 // string-set!
-Gambit_String.prototype.stringset = function ( n, c ) {
-  this.charray[n] = c.i;
+Gambit_String.prototype.stringset = function ( n, ch ) {  // ch: Char
+    this.chars[n] = ch;
 }
 
 Gambit_String.prototype.toString = function ( ) {
-  var s = \"\";
-  for (i = 0; i < this.stringlength(); i++) {
-      s = s.concat(String.fromCharCode(this.stringref(i)));
-  }
+    var s = \"\";
+    for (i = 0; i < this.stringlength(); i++) {
+        s = s.concat(this.stringref(i).toString());
+    }
 
-  return s;
+    return s;
 }
 
-//
-// Vector obj
-//
+var Gambit_stringappend = function ( ) {
+    var totallen = 0;
+    var lens = [];
+
+    for (i = 0; i < arguments.length; i++) {
+        lens[i] = arguments[i].stringlength();
+        totallen += lens[i];
+    }
+
+    var s = Gambit_String.makestring(totallen);
+    var partlen = 0;
+    for (i = 0; i < lens.length; i++) {
+        var len = lens[i];
+        for (j = 0; j < len; j++) {
+            s.stringset(partlen + j, arguments[i].stringref(j));
+        }
+        partlen += len;
+    }
+
+    return s;
+}
+Gambit_glo[\"string-append\"] = Gambit_stringappend;
+
+// Vector
 var Gambit_Vector = function ( ) {
-  this.a = new Array(arguments.length);
-  for (i = 0; i < arguments.length; i++) {
-      this.a[i] = arguments[i];
-  }
+    this.a = new Array(arguments.length);
+    for (i = 0; i < arguments.length; i++) {
+        this.a[i] = arguments[i];
+    }
+}
+
+// make-vector
+Gambit_Vector.makevector = function ( n, val ) {
+    var v = new Gambit_Vector();
+
+    for (var i = 0; i < n; i++) {
+        v.a[i] = val;
+    }
+
+    return v;
 }
 
 // vector-length
 Gambit_Vector.prototype.vectorlength = function ( ) {
-  return this.a.length;
+    return this.a.length;
 }
 
 // vector-ref
 Gambit_Vector.prototype.vectorref = function ( n ) {
-  return this.a[n];
+    return this.a[n];
 }
 
 // vector-set!
 Gambit_Vector.prototype.vectorset = function ( n, v ) {
-  this.a[n] = v;
+    this.a[n] = v;
 }
 
 Gambit_Vector.prototype.toString = function ( ) {
-  var res = \"\";
-  for (var i = 0; i<this.a.length; i++) {
-    res += Gambit_toString(this.a[i]);
-  }
+    var res = \"\";
+    for (var i = 0; i<this.a.length; i++) {
+        res += Gambit_toString(this.a[i]);
+    }
 
-  return res;
+    return res;
 }
 
+// Symbol
 var Gambit_syms = {};
 function Gambit_Symbol(s) {
-  this.symbolToString = function ( ) { return s; }
-  this.toString = function ( ) { return s; }
+    this.symbolToString = function ( ) { return s; }
+    this.toString = function ( ) { return s; }
 }
 
 Gambit_Symbol.stringToSymbol = function ( s ) {
-  var sym = Gambit_syms[s];
+    var sym = Gambit_syms[s];
     
-  if (!sym) {
-      Gambit_syms[s] = new Gambit_Symbol(s);
-      sym = Gambit_syms[s];
-  }
+    if (!sym) {
+        Gambit_syms[s] = new Gambit_Symbol(s);
+        sym = Gambit_syms[s];
+    }
     
-  return sym;
+    return sym;
 }
 
 var Gambit_kwds = {};
 function Gambit_Keyword(s) {
-  s = s + \":\";
+    s = s + \":\";
 
-  this.keywordToString = function( ) { return s.substring(0, s.length-1); }
-  this.toString = function( ) { return s; }
+    this.keywordToString = function( ) { return s.substring(0, s.length-1); }
+    this.toString = function( ) { return s; }
 }
 
 Gambit_Keyword.stringToKeyword = function(s) {
-  var kwd = Gambit_kwds[s];
+    var kwd = Gambit_kwds[s];
     
-  if (!kwd) {
-      Gambit_kwds[s] = new Gambit_Keyword(s);
-      kwd = Gambit_kwds[s];
-  }
+    if (!kwd) {
+        Gambit_kwds[s] = new Gambit_Keyword(s);
+        kwd = Gambit_kwds[s];
+    }
     
-  return kwd;
+    return kwd;
 }
 
 function Gambit_toString ( obj ) {
-  if (obj === false)
-    return \"#f\";
-  else if (obj === true)
-    return \"#t\";
-  else if (obj === null)
-    return \"\";
-  else if (obj instanceof Gambit_Flonum)
-    return obj.toString();
-  else if (obj instanceof Gambit_String)
-    return obj.toString();
-  else if (obj instanceof Gambit_Char)
-    return obj.toString();
-  else if (obj instanceof Gambit_Pair)
-    return obj.toString();
-//  else if (obj instanceof Gambit_Vector)
-//    return obj.toString();
-  else
-    return obj;
-}
-  
-function Gambit_lbl1_println ( ) { // println
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1_println);
-  }
-
-  print(Gambit_toString(" R1 "));
-  
-  return " R0 ";
+    if (obj === false)
+        return \"#f\";
+    else if (obj === true)
+        return \"#t\";
+    else if (obj === null)
+        return \"\";
+    else if (obj instanceof Gambit_Flonum)
+        return obj.toString();
+    else if (obj instanceof Gambit_String)
+        return obj.toString();
+    else if (obj instanceof Gambit_Char)
+        return obj.toString();
+    else if (obj instanceof Gambit_Pair)
+        return obj.toString();
+    else if (obj instanceof Gambit_Vector)
+        return obj.toString();
+    else if (obj instanceof Gambit_Symbol)
+        return obj.symbolToString();
+    else if (obj instanceof Gambit_Keyword)
+        return obj.keywordToString();
+    else
+        return obj;
 }
 
-Gambit_glo[\"println\"] = Gambit_lbl1_println;
+function Gambit_bb1_println ( ) { // println
+    if (Gambit_nargs !== 1) {
+        return Gambit_wrong_nargs(Gambit_bb1_println);
+    }
 
+    print(Gambit_toString(" R1 "));
+    
+    return " R0 ";
+}
+
+Gambit_glo[\"println\"] = Gambit_bb1_println;
+
+function Gambit_bb1_print ( ) { // print
+    if (Gambit_nargs !== 1) {
+        return Gambit_wrong_nargs(Gambit_bb1_print);
+    }
+
+    write(Gambit_toString(" R1 "));
+    
+    return " R0 ";
+}
+
+Gambit_glo[\"print\"] = Gambit_bb1_print;
+
+function Gambit_bb1_newline ( ) { // newline
+    if (Gambit_nargs !== 0) {
+        return Gambit_wrong_nargs(Gambit_bb1_newline);
+    }
+
+    print();
+    
+    return " R0 ";
+}
+
+Gambit_glo[\"newline\"] = Gambit_bb1_newline;
+
+function Gambit_bb1_display ( ) { // display
+    if (Gambit_nargs !== 1) {
+        return Gambit_wrong_nargs(Gambit_bb1_display);
+    }
+
+    write(Gambit_toString(" R1 "));
+    
+    return " R0 ";
+}
+
+Gambit_glo[\"display\"] = Gambit_bb1_display;
+
+function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
+    if (Gambit_nargs !== 0) {
+        return Gambit_wrong_nargs(Gambit_bb1_display);
+    }
+
+    " R1 " = new Date();
+    
+    return " R0 ";
+}
+
+Gambit_glo[\"real-time-milliseconds\"] = Gambit_bb1_real_2d_time_2d_milliseconds;
 
 function Gambit_Continuation(frame, denv) {
-  this.frame = frame;
-  this.denv = denv;
+    this.frame = frame;
+    this.denv = denv;
 }
 
 
 // Obsolete
 function Gambit_dump_cont(sp, ra) {
-  print(\"------------------------\");
-  while (ra !== false) {
-    print(\"sp=\"+Gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
-    Gambit_sp = Gambit_sp-ra.fs;
-    ra = Gambit_stack[Gambit_sp+ra.link];
-  }
-  print(\"------------------------\");
+    print(\"------------------------\");
+    while (ra !== false) {
+        print(\"sp=\"+Gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
+        Gambit_sp = Gambit_sp-ra.fs;
+        ra = Gambit_stack[Gambit_sp+ra.link+1];
+    }
+    print(\"------------------------\");
 }
 
 function Gambit_continuation_capture1() {
@@ -1413,161 +1715,161 @@ function Gambit_continuation_return_no_winding2() {
   return " R0 ";
 }
 
-function Gambit_lbl1__23__23_continuation_3f_() { // ##continuation?
+function Gambit_bb1__23__23_continuation_3f_() { // ##continuation?
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_3f_);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_3f_);
   }
   " R1 " = " R1 " instanceof Gambit_Continuation;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation?\"] = Gambit_lbl1__23__23_continuation_3f_;
+Gambit_glo[\"##continuation?\"] = Gambit_bb1__23__23_continuation_3f_;
 
 
-function Gambit_lbl1__23__23_continuation_2d_frame() { // ##continuation-frame
+function Gambit_bb1__23__23_continuation_2d_frame() { // ##continuation-frame
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_frame);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_frame);
   }
   " R1 " = " R1 ".frame;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-frame\"] = Gambit_lbl1__23__23_continuation_2d_frame;
+Gambit_glo[\"##continuation-frame\"] = Gambit_bb1__23__23_continuation_2d_frame;
 
 
-function Gambit_lbl1__23__23_continuation_2d_denv() { // ##continuation-denv
+function Gambit_bb1__23__23_continuation_2d_denv() { // ##continuation-denv
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_denv);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_denv);
   }
   " R1 " = " R1 ".denv;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-denv\"] = Gambit_lbl1__23__23_continuation_2d_denv;
+Gambit_glo[\"##continuation-denv\"] = Gambit_bb1__23__23_continuation_2d_denv;
 
 
-function Gambit_lbl1__23__23_continuation_2d_fs() { // ##continuation-fs
+function Gambit_bb1__23__23_continuation_2d_fs() { // ##continuation-fs
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_fs);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_fs);
   }
   " R1 " = " R1 ".frame[0].fs;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-fs\"] = Gambit_lbl1__23__23_continuation_2d_fs;
+Gambit_glo[\"##continuation-fs\"] = Gambit_bb1__23__23_continuation_2d_fs;
 
 
-function Gambit_lbl1__23__23_frame_2d_fs() { // ##frame-fs
+function Gambit_bb1__23__23_frame_2d_fs() { // ##frame-fs
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_fs);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_fs);
   }
   " R1 " = " R1 "[0].fs;
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-fs\"] = Gambit_lbl1__23__23_frame_2d_fs;
+Gambit_glo[\"##frame-fs\"] = Gambit_bb1__23__23_frame_2d_fs;
 
 
-function Gambit_lbl1__23__23_return_2d_fs() { // ##return-fs
+function Gambit_bb1__23__23_return_2d_fs() { // ##return-fs
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_return_2d_fs);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_return_2d_fs);
   }
   " R1 " = " R1 ".fs;
   return " R0 ";
 }
 
-Gambit_glo[\"##return-fs\"] = Gambit_lbl1__23__23_return_2d_fs;
+Gambit_glo[\"##return-fs\"] = Gambit_bb1__23__23_return_2d_fs;
 
 
-function Gambit_lbl1__23__23_continuation_2d_link() { // ##continuation-link
+function Gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_link);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_link);
   }
   " R1 " = " R1 ".frame[0].link-1;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-link\"] = Gambit_lbl1__23__23_continuation_2d_link;
+Gambit_glo[\"##continuation-link\"] = Gambit_bb1__23__23_continuation_2d_link;
 
 
-function Gambit_lbl1__23__23_frame_2d_link() { // ##frame-link
+function Gambit_bb1__23__23_frame_2d_link() { // ##frame-link
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_link);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_link);
   }
   " R1 " = " R1 "[0].link-1;
   return " R0 ";
 }
 
 
-function Gambit_lbl1__23__23_continuation_2d_ret() { // ##continuation-ret
+function Gambit_bb1__23__23_continuation_2d_ret() { // ##continuation-ret
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_ret);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_ret);
   }
   " R1 " = " R1 ".frame[0];
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-ret\"] = Gambit_lbl1__23__23_continuation_2d_ret;
+Gambit_glo[\"##continuation-ret\"] = Gambit_bb1__23__23_continuation_2d_ret;
 
 
-function Gambit_lbl1__23__23_frame_2d_ret() { // ##frame-ret
+function Gambit_bb1__23__23_frame_2d_ret() { // ##frame-ret
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_ret);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_ret);
   }
   " R1 " = " R1 "[0];
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-ret\"] = Gambit_lbl1__23__23_frame_2d_ret;
+Gambit_glo[\"##frame-ret\"] = Gambit_bb1__23__23_frame_2d_ret;
 
 
-function Gambit_lbl1__23__23_continuation_2d_ref() { // ##continuation-ref
+function Gambit_bb1__23__23_continuation_2d_ref() { // ##continuation-ref
   if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_ref);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_ref);
   }
   " R1 " = " R1 ".frame[" R2 "];
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-ref\"] = Gambit_lbl1__23__23_continuation_2d_ref;
+Gambit_glo[\"##continuation-ref\"] = Gambit_bb1__23__23_continuation_2d_ref;
 
 
-function Gambit_lbl1__23__23_frame_2d_ref() { // ##frame-ref
+function Gambit_bb1__23__23_frame_2d_ref() { // ##frame-ref
   if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_ref);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_ref);
   }
   " R1 " = " R1 "[" R2 "];
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-ref\"] = Gambit_lbl1__23__23_frame_2d_ref;
+Gambit_glo[\"##frame-ref\"] = Gambit_bb1__23__23_frame_2d_ref;
 
 
-function Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
+function Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
   if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_);
   }
   " R1 " = true;
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-slot-live?\"] = Gambit_lbl1__23__23_continuation_2d_slot_2d_live_3f_;
+Gambit_glo[\"##continuation-slot-live?\"] = Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_;
 
 
-function Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
+function Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
   if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_);
   }
   " R1 " = true;
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-slot-live?\"] = Gambit_lbl1__23__23_frame_2d_slot_2d_live_3f_;
+Gambit_glo[\"##frame-slot-live?\"] = Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_;
 
 
-function Gambit_lbl1__23__23_continuation_2d_next() { // ##continuation-next
+function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
   if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_lbl1__23__23_continuation_2d_next);
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_next);
   }
   var frame = " R1 ".frame;
   var denv = " R1 ".denv;
@@ -1579,19 +1881,21 @@ function Gambit_lbl1__23__23_continuation_2d_next() { // ##continuation-next
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-next\"] = Gambit_lbl1__23__23_continuation_2d_next;
+Gambit_glo[\"##continuation-next\"] = Gambit_bb1__23__23_continuation_2d_next;
 
 
 function Gambit_run(pc)
 {
-  while (pc !== false)
-    pc = pc();
+    while (pc !== false) {
+        pc = pc();
+    }
 }
 
 "
-)))
 
-    ((python)                           ;rts py
+)))
+    
+    ((python)                           ;rts py     
 #<<EOF
 #! /usr/bin/python
 
@@ -1707,7 +2011,7 @@ def Gambit_stringp ( s ):
   return isinstance(s, String)
 
 
-def Gambit_lbl1_println(): # println
+def Gambit_bb1_println(): # println
   global Gambit_glo, Gambit_reg, Gambit_stack, Gambit_sp, Gambit_nargs, Gambit_temp1, Gambit_temp2
   if Gambit_nargs != 1:
     raise "wrong number of arguments"
@@ -1719,9 +2023,9 @@ def Gambit_lbl1_println(): # println
     print(str(int(Gambit_reg[1])) + '.')
   else:
     print(Gambit_reg[1])
-  return Gambit_reg[0]
+  return " R0 ";
 
-Gambit_glo["println"] = Gambit_lbl1_println
+Gambit_glo["println"] = Gambit_bb1_println
 
 
 def Gambit_poll(wakeup):
@@ -1774,7 +2078,7 @@ def Gambit_charToFx ( c )
   return c.code
 end
 
-$Gambit_lbl1_println = lambda { # println
+$Gambit_bb1_println = lambda { # println
   if $Gambit_nargs != 1
     raise "wrong number of arguments"
   end
@@ -1795,7 +2099,7 @@ $Gambit_lbl1_println = lambda { # println
   return $Gambit_reg[0]
 }
 
-$Gambit_glo["println"] = $Gambit_lbl1_println
+$Gambit_glo["println"] = $Gambit_bb1_println
 
 
 def Gambit_poll(wakeup)
@@ -1924,6 +2228,9 @@ EOF
      (compiler-internal-error
       "univ-comment, unknown target"))))
 
+(define (univ-return-call ctx expr . params)
+  (univ-return ctx (apply univ-call (cons ctx (cons expr params)))))
+
 (define (univ-return ctx expr)
   (case (target-name (ctx-target ctx))
 
@@ -1937,13 +2244,49 @@ EOF
      (compiler-internal-error
       "univ-return, unknown target"))))
 
-(define (univ-call ctx name params)
-  (gen name "(" params ")"))
+(define (makecall ctx name args)
+    (apply univ-call (cons ctx (cons name args))))
 
-(define (univ-poll ctx expr poll?)
+(define (univ-call ctx name . params)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (letrec ((addcommas
+               (lambda (lst res)
+                 (if (null? lst)
+                     (reverse res)
+                     (if (= (length lst) 1)
+                         (addcommas (cdr lst) (cons (car lst) res))
+                         (addcommas (cdr lst) (append (list ", " (car lst)) res)))))))
+       (gen name "("
+            (apply gen (addcommas params '()))
+            ")")))
+    
+    ((python ruby php)                ;TODO: complete
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-call, unknown target"))))
+
+(define (univ-return-poll ctx expr poll? call?)
   (if poll?
-      (univ-call ctx (univ-prefix ctx "poll") expr)
-      expr))
+
+      #;
+       (univ-return
+        ctx
+        (univ-call ctx (univ-prefix ctx "poll") expr))
+      (univ-if-then-else
+       ctx
+       (gen "--" (univ-prefix ctx "poll_count") " === 0")
+       (univ-return-call ctx (univ-prefix ctx "poll") expr)
+       (if call?
+           (univ-return-call ctx expr)
+           (univ-return ctx expr)))
+
+      (if call?
+          (univ-return-call ctx expr)
+          (univ-return ctx expr))))
 
 (define (univ-throw ctx expr)
   (case (target-name (ctx-target ctx))
@@ -1976,6 +2319,58 @@ EOF
     (else
      (compiler-internal-error
       "univ-eq, unknown target"))))
+
+(define (univ-and ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby php)
+     (gen "(" expr1 " && " expr2 ")"))
+
+    ((python)
+     (gen "(" expr1 " and " expr2 ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-and, unknown target"))))
+
+(define (univ-or ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby php)
+     (gen "(" expr1 " || " expr2 ")"))
+
+    ((python)
+     (gen "(" expr1 " or " expr2 ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-or, unknown target"))))
+
+(define (univ-fxquotient ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "parseInt(" expr1 " / " expr2 ")"))
+
+    ((python ruby php)
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-fxquotient, unknown target"))))
+
+(define (univ-fxmodulo ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "(" expr1 " % " expr2 ")"))
+
+    ((python ruby php)
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-fxmodulo, unknown target"))))
 
 (define (univ-< ctx expr1 expr2)
   (gen expr1 " < " expr2))
@@ -2054,6 +2449,19 @@ EOF
      (compiler-internal-error
       "univ-increment, unknown target"))))
 
+(define (univ-decrement ctx loc expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (gen loc " -= " expr ";\n"))
+
+    ((python ruby)
+     (gen loc " -= " expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-decrement, unknown target"))))
+
 (define (univ-expr ctx expr)
   (case (target-name (ctx-target ctx))
 
@@ -2066,6 +2474,27 @@ EOF
     (else
      (compiler-internal-error
       "univ-expr, unknown target"))))
+
+(define (univ-ifnot-then ctx test true)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (gen "if (!(" test ")) {\n"
+          (univ-indent true)
+          "}\n"))
+
+    ((python)
+     (gen "if not " test ":\n"
+          (univ-indent true)))
+
+    ((ruby)
+     (gen "if not(" test ")\n"
+          (univ-indent true)
+          "end\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-ifnot-then, unknown target"))))
 
 (define (univ-if-then ctx test true)
   (case (target-name (ctx-target ctx))
@@ -2222,37 +2651,20 @@ EOF
 
 (define (univ-string ctx obj)
 
-  (define (flatten list)
-    (cond ((null? list) '())
-          ((list? (car list)) (append (flatten (car list))
-                                      (flatten (cdr list))))
-          (else
-           (cons (car list) (flatten (cdr list))))))
-  
-  (define (string->charray s)    ; js: "AAA" -> "[65, 65, 65]"
-    
-    (define (inscomma lst res)    ; ("65" "65" "65") -> ("65" ", " "65" ", " "65")
-      (cond ((null? lst) res)
-            ((= 1 (length lst)) (append res (list (car lst))))
-            (else (append (list (car lst) ", ")
-                          res
-                          (inscomma (cdr lst) '())))))
-             
-    (let* ((charlist (string->list s))
-           (intlist (map char->integer charlist))
-           (strlist (map number->string intlist))
-           (charray (inscomma strlist '())))
-      (apply string-append (flatten (list "[" charray "]")))))
-
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (let ((s (object->string obj)))
-       (gen "new " (univ-prefix ctx "String")
-            "("
-            (string->charray (substring s 1 (- (string-length s) 1)))
-            ")")))
-    
+     (gen (univ-prefix ctx "String.jsstringToString(")
+          (object->string obj)
+          ")"))
+
+    ;; ((js)
+    ;;  (gen "new "
+    ;;       (makecall ctx
+    ;;                 (univ-prefix ctx "String")
+    ;;                 (map (lambda (ch) (univ-char ctx ch))
+    ;;                      (string->list obj)))))
+
     ((python)
      (gen (univ-prefix ctx "String")
           "(*list(unicode("
@@ -2265,6 +2677,22 @@ EOF
     (else
      (compiler-internal-error
       "univ-string, unknown target"))))
+
+(define (univ-symbol ctx obj)
+
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen (univ-prefix ctx "Symbol.stringToSymbol(")
+          (univ-string ctx (symbol->string obj))
+          ")"))
+
+    ((python ruby php)                         ;TODO: complete
+     (gen (object->string obj)))
+
+    (else
+     (compiler-internal-error
+      "univ-symbol, unknown target"))))
 
 (define (univ-null ctx obj)
   (case (target-name (ctx-target ctx))
@@ -2284,6 +2712,28 @@ EOF
     (else
      (compiler-internal-error
       "univ-null, unknown target"))))
+
+(define (undefined? obj)
+  (eq? obj 'undefined))
+
+(define (univ-undefined ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (gen "undefined"))
+    
+    ((python)
+     (gen "None"))
+
+    ((ruby)
+     (gen "nil"))
+
+    ((php)                                ;TODO: complete
+     (gen ""))
+
+    (else
+     (compiler-internal-error
+      "univ-undefined, unknown target"))))
 
 (define (univ-list ctx obj)             ;obj is a non-null list
   
@@ -2395,6 +2845,20 @@ EOF
     (gen (translate-gvm-opnd ctx (list-ref opnds 0))
          " * "
          (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim "##fxquotient" #f #f
+
+  (lambda (ctx opnds)
+    (univ-fxquotient ctx
+                   (translate-gvm-opnd ctx (list-ref opnds 0))
+                   (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+(univ-define-prim "##fxmodulo" #f #f
+
+  (lambda (ctx opnds)
+    (univ-fxmodulo ctx
+                   (translate-gvm-opnd ctx (list-ref opnds 0))
+                   (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (univ-define-prim-bool "##fx<" #f #f
 
@@ -2646,7 +3110,99 @@ EOF
        (compiler-internal-error
         "##fxwrap*, unknown target")))))
 
+(univ-define-prim-bool "##fxzero?" #t #f
 
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " === 0)"))
+      
+      ((python ruby)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " == 0)"))
+      
+      ((php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##null?, unknown target")))))
+
+(univ-define-prim-bool "##fxodd?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " % 2 == 1)"))
+      
+      ((python ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##odd?, unknown target")))))
+
+(univ-define-prim-bool "##fxeven?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            " % 2 == 0)"))
+      
+      ((python ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##even?, unknown target")))))
+
+(univ-define-prim-bool "##fxmax" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "Math.max("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ","
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+      
+      ((python ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##fxmax, unknown target")))))
+
+(univ-define-prim-bool "##fxmin" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "Math.min("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ","
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+      
+      ((python ruby php)                       ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##fxmin, unknown target")))))
 
 (univ-define-prim-bool "##null?" #t #f
 
@@ -3434,6 +3990,26 @@ EOF
        (compiler-internal-error
         "##list, unknown target")))))
 
+(univ-define-prim "##make-vector" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "Vector.makevector")
+            "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+      
+      ((php python ruby)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##make-vector, unknown target")))))
+
 (univ-define-prim "##vector" #f #f
 
   (lambda (ctx opnds)
@@ -3461,6 +4037,193 @@ EOF
       (else
        (compiler-internal-error
         "##vector, unknown target")))))
+
+(univ-define-prim "##vector-ref" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".vectorref("
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ")"))
+       
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##vector-ref, unknown target")))))
+
+(univ-define-prim "##vector-set!" #f #t
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".vectorset("
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            ", "
+            (translate-gvm-opnd ctx (list-ref opnds 2))
+            ")"))
+      
+      ((python)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            "["
+            (translate-gvm-opnd ctx (list-ref opnds 1))
+            "] = "
+            (translate-gvm-opnd ctx (list-ref opnds 2))))
+      
+      ((ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##vector-set!, unknown target")))))
+
+(univ-define-prim "##string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "new "
+            (makecall ctx
+                      (univ-prefix ctx "String")
+                      ;; (list (translate-gvm-opnd ctx (list-ref opnds 0)))
+                      (map (lambda (opnd) (translate-gvm-opnd ctx opnd))
+                           opnds)
+                      )))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##string, unknown target")))))
+
+(univ-define-prim "##string-length" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".stringlength()"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##string-length, unknown target")))))
+
+(univ-define-prim "##vector-length" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".vectorlength()"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##vector-length, unknown target")))))
+
+;;(univ-define-prim "string-append" #f #f (lambda (ctx opnds) (gen "")))
+
+(univ-define-prim "list->string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "new "
+            (makecall ctx
+                      (univ-prefix ctx "String")
+                      (list (translate-gvm-opnd ctx (list-ref opnds 0))))))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "list->string, unknown target")))))
+
+(univ-define-prim "symbol->string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".symbolToString()"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "symbol->string, unknown target")))))
+
+(univ-define-prim "string->symbol" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "Symbol.stringToSymbol(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "string->symbol, unknown target")))))
+
+(univ-define-prim "string->list" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "String.stringToList(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "string->list, unknown target")))))
+
+(univ-define-prim "string-append" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (makecall ctx
+                      (univ-prefix ctx "stringappend")                      
+                      (map (lambda (opnd) (translate-gvm-opnd ctx opnd))
+                           opnds)
+                      )))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##string-append, unknown target")))))
 
 (univ-define-prim "##make-string" #f #f
 
@@ -3495,10 +4258,29 @@ EOF
        (compiler-internal-error
         "##make-string, unknown target")))))
 
+(univ-define-prim "number->string" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ").toString()"
+            ;; (translate-gvm-opnd ctx (list-ref opnds 1))
+            ;; ")"
+            ))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "number->string, unknown target")))))
+
 (univ-define-prim "##string-set!" #f #t
 
   (lambda (ctx opnds)
-    (display "##string-set!")(newline)
     (case (target-name (ctx-target ctx))
 
       ((js)
@@ -3536,26 +4318,17 @@ EOF
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (gen "new "
-            (univ-prefix ctx "Char")
-            "("
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".stringref("
-            (translate-gvm-opnd ctx (list-ref opnds 1))
-            "))"))
-       
+       ((js)
+        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+             ".stringref(" (translate-gvm-opnd ctx (list-ref opnds 1)) ")"))
+        
       ((python)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            "["
-            (translate-gvm-opnd ctx (list-ref opnds 1))
-            "]"))
+            "[" (translate-gvm-opnd ctx (list-ref opnds 1)) "]"))
 
       ((ruby)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            "["
-            (translate-gvm-opnd ctx (list-ref opnds 1))
-            "].chr"))
+            "[" (translate-gvm-opnd ctx (list-ref opnds 1)) "].chr"))
 
       ((php)                ;TODO: complete
        (gen ""))
@@ -3717,6 +4490,31 @@ EOF
        (compiler-internal-error
         "##pair?, unknown target")))))
 
+(univ-define-prim-bool "##vector?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js php)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            " instanceof "
+            (univ-prefix ctx "Vector")))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (univ-prefix ctx "Vector)")))
+
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == "
+            (univ-prefix ctx "Vector")))
+
+      (else
+       (compiler-internal-error
+        "##vector?, unknown target")))))
+
 (univ-define-prim-bool "##string?" #t #f
 
   (lambda (ctx opnds)
@@ -3741,6 +4539,77 @@ EOF
       (else
        (compiler-internal-error
         "##string?, unknown target")))))
+
+(univ-define-prim-bool "##number?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js php)
+       (gen "typeof("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ") == \"number\""))
+
+      ((python ruby php)
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "##number?, unknown target")))))
+
+(univ-define-prim-bool "##symbol?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js php)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            " instanceof "
+            (univ-prefix ctx "Symbol")))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (univ-prefix ctx "Symbol)")))
+
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == "
+            (univ-prefix ctx "Symbol")))
+      ((php)
+       (gen ""))      
+
+      (else
+       (compiler-internal-error
+        "##symbol?, unknown target")))))
+
+(univ-define-prim-bool "##mem-allocated?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen "true"))
+
+      ((python ruby php)
+       (gen ""))      
+
+      (else
+       (compiler-internal-error
+        "##mem-allocated?, unknown target")))))
+
+(univ-define-prim "##subtype" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js python ruby js)
+       (gen "1"))
+
+      (else
+       (compiler-internal-error
+        "##subtype, unknown target")))))
 
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
@@ -3798,14 +4667,13 @@ EOF
         (+ fs
            (ctx-stack-base-offset ctx))
         (lambda (ctx)
-          (gen (univ-return
-                ctx
-                (univ-poll
-                 ctx
-                 (gen (univ-prefix ctx
-                                   (string-append name
-                                                  (number->string nb-args)))
-                      "()")
-                 poll?)))))))
+          (univ-return-poll
+           ctx
+           (gen (univ-prefix ctx
+                             (string-append name
+                                            (number->string nb-args)))
+                "()")
+           poll?
+           #t)))))
 
 ;;;============================================================================
