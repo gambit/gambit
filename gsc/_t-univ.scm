@@ -1395,12 +1395,12 @@ Gambit_String.stringToList = function ( s ) {
 
 Gambit_String.jsstringToString = function ( s ) {
     var len = s.length;
-    var s = Gambit_String.makestring(len, Gambit_Char.fxToChar(0));
+    var s2 = Gambit_String.makestring(len, Gambit_Char.fxToChar(0));
     for (i = 0; i < len; i++) {
-        s.chars[i] = Gambit_Char.fxToChar(s.charCodeAt(i));
+        s2.chars[i] = Gambit_Char.fxToChar(s.charCodeAt(i));
     }
 
-    return s;
+    return s2;
 }
 
 Gambit_String.prototype.stringlength = function ( ) {
@@ -2654,11 +2654,16 @@ EOF
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (gen "new "
-          (makecall ctx
-                    (univ-prefix ctx "String")
-                    (map (lambda (ch) (univ-char ctx ch))
-                         (string->list obj)))))
+     (gen (univ-prefix ctx "String.jsstringToString(")
+          (object->string obj)
+          ")"))
+
+    ;; ((js)
+    ;;  (gen "new "
+    ;;       (makecall ctx
+    ;;                 (univ-prefix ctx "String")
+    ;;                 (map (lambda (ch) (univ-char ctx ch))
+    ;;                      (string->list obj)))))
 
     ((python)
      (gen (univ-prefix ctx "String")
@@ -4167,6 +4172,23 @@ EOF
        (compiler-internal-error
         "symbol->string, unknown target")))))
 
+(univ-define-prim "string->symbol" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen (univ-prefix ctx "Symbol.stringToSymbol(")
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ")"))
+      
+      ((python ruby php)                ;TODO: complete
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "string->symbol, unknown target")))))
+
 (univ-define-prim "string->list" #f #f
 
   (lambda (ctx opnds)
@@ -4467,6 +4489,31 @@ EOF
       (else
        (compiler-internal-error
         "##pair?, unknown target")))))
+
+(univ-define-prim-bool "##vector?" #t #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js php)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            " instanceof "
+            (univ-prefix ctx "Vector")))
+
+      ((python)
+       (gen "isinstance("
+            (translate-gvm-opnd ctx (list-ref opnds 0))
+            ", "
+            (univ-prefix ctx "Vector)")))
+
+      ((ruby)
+       (gen (translate-gvm-opnd ctx (list-ref opnds 0))
+            ".class == "
+            (univ-prefix ctx "Vector")))
+
+      (else
+       (compiler-internal-error
+        "##vector?, unknown target")))))
 
 (univ-define-prim-bool "##string?" #t #f
 
