@@ -712,7 +712,7 @@
       (if (queue-empty? proc-left)
 
           (univ-display
-           (reverse rev-res)
+           (reverse (append (gen-literals *literals* '()) rev-res))
            port)
 
           (loop (cons (dump-proc (queue-get! proc-left))
@@ -859,10 +859,10 @@
          (univ-number ctx obj))
 
         ((char? obj)
-         (univ-char ctx obj))
+         (univ-literal ctx char-literal-type obj))
         
         ((string? obj)
-         (univ-string ctx obj))
+         (univ-literal ctx string-literal-type obj))
 
         ((null? obj)
          (univ-null ctx obj))
@@ -877,13 +877,13 @@
          (lbl->id ctx 1 (proc-obj-name obj)))
 
         ((list? obj)
-         (univ-list ctx obj))
+         (univ-literal ctx list-literal-type obj))
 
         ;; ((pair? obj)
         ;;  (univ-pair ctx obj))
 
         ((vector? obj)
-         (univ-vector ctx obj))
+         (univ-literal ctx vector-literal-type obj))
 
         ((symbol? obj)
          (univ-symbol ctx obj))
@@ -892,6 +892,134 @@
          (gen "UNIMPLEMENTED_OBJECT("
               (object->string obj)
               ")"))))
+
+;;==================================================================
+;; ((loc_0 literal_0) (loc_0 literal_1))
+(define *literals* '())
+(define literal-tag (gensym))
+(define literal-len 4)
+
+(define tag-index  0)
+(define type-index 1)
+(define obj-index  2)
+(define ctx-index  3)
+
+(define (literal-get-tag    lit)      (vector-ref lit tag-index))
+(define (literal-get-type   lit)      (vector-ref lit type-index))
+(define (literal-get-obj    lit)      (vector-ref lit obj-index))
+(define (literal-get-ctx    lit)      (vector-ref lit ctx-index))
+(define (literal-set-tag!   lit tag)  (vector-set! lit tag-index  tag))
+(define (literal-set-type!  lit type) (vector-set! lit type-index type))
+(define (literal-set-obj!   lit obj)  (vector-set! lit obj-index  obj))
+(define (literal-set-ctx!   lit ctx)  (vector-set! lit ctx-index  ctx))
+
+(define vector-literal-type 0)
+(define list-literal-type   1)
+(define string-literal-type 2)
+(define char-literal-type   3)
+
+(define make-loc-literal list)
+(define get-loc car)
+(define get-literal cadr)
+
+(define (make-literal ctx type obj)
+  (let ((v (make-vector literal-len)))
+    (literal-set-tag!  v literal-tag)
+    (literal-set-type! v type)
+    (literal-set-obj!  v obj)
+    (literal-set-ctx!  v ctx)
+    v))
+
+(define (univ-literal ctx type obj)
+  (let* ((sym (gensym))
+         (loc (gen (univ-global ctx (univ-prefix ctx "glo"))
+                   "[" (object->string (symbol->string sym)) "]")))
+
+    (add-literal! loc type obj ctx)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (gen loc))
+
+      ((python ruby php)
+       (gen ""))
+
+      (else
+       (compiler-internal-error
+        "univ-literal, unknown target")))))
+
+(define (gen-literals literals done)
+
+  (define (gen-literal loc-literal)
+    (let* ((literal (get-literal loc-literal))
+           (loc (get-loc loc-literal))
+           (ctx (literal-get-ctx literal))
+           (obj (literal-get-obj literal))
+           (type (literal-get-type literal))
+           (expr (if (eqv? type vector-literal-type)
+                     (univ-vector ctx obj)
+                     (if (eqv? type list-literal-type)
+                         (univ-list ctx obj)
+                         (if (eqv? type string-literal-type)
+                             (univ-string ctx obj)
+                             (if (eqv? type char-literal-type)
+                                 (univ-char ctx obj)
+                                 (gen "UNIMPLEMENTED_LITERAL_OBJECT("
+                                      (object->string obj)
+                                      ")")))))))
+
+           ;; (expr (univ-string ctx obj)))
+           ;; (expr (case (literal-get-type literal)
+           ;;         ((vector-literal-type)
+           ;;          (univ-vector ctx obj))
+
+           ;;         ((list-literal-type)
+           ;;          (univ-list ctx obj))
+
+           ;;         ((string-literal-type)
+           ;;          (univ-string ctx obj))
+
+           ;;         ((char-literal-type)
+           ;;          (univ-char ctx obj))
+
+           ;;         (else
+           ;;          (gen "UNIMPLEMENTED_LITERAL_OBJECT("
+           ;;               (object->string obj)
+           ;;               ")"))))
+      (univ-assign ctx loc expr)))
+
+  (if (null? literals)
+      done
+      (gen-literals (cdr literals)
+                    (cons (gen-literal (car literals))
+                          done))))
+
+(define (add-literal! loc type obj ctx)
+  (set! *literals* (cons (make-loc-literal loc (make-literal ctx type obj))
+                         *literals*)))
+
+(define (literal? obj)
+  (and (vector? obj)
+       (= (vector-length obj) literal-len)
+       (eq? (literal-get-tag obj) literal-tag)))
+
+(define (vector-literal? ctx obj)
+  (and (literal? obj)
+       (= (literal-get-type obj) vector-literal-type)))
+
+(define (list-literal? ctx obj)
+  (and (literal? obj)
+       (= (literal-get-type obj) list-literal-type)))
+
+(define (string-literal? ctx obj)
+  (and (literal? obj)
+       (= (literal-get-type obj) string-literal-type)))
+
+(define (char-literal? ctx obj)
+  (and (literal? obj)
+       (= (literal-get-type obj) char-literal-type)))
+
+;; =============================================================================
 
 (define (translate-lbl ctx lbl)
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
