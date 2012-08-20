@@ -404,16 +404,20 @@
 ;; add it to the table.
 (define nat-global-ref
   (let ((current -1))
-    (lambda (targ symbol)
-      (let* ((x (table-ref nat-globals symbol #f))
+    (lambda (cgc symbol)
+      (let* ((targ (codegen-context-target cgc))
+             (x (table-ref nat-globals symbol #f))
              (offset (if x
                          x
                          (begin
                            (set! current (+ current 1))
                            (table-set! nat-globals symbol current)
                            current))))
-        (x86-mem (* (nat-target-word-width targ)
-                    (+ nat-globals-slot offset))
+
+        (x86-mem (- (* (nat-target-word-width targ)
+                       (+ nat-globals-slot
+                          offset))
+                    (codegen-context-nargs cgc))
                  (nat-target-pstate-ptr-reg targ))))))
 
 
@@ -517,6 +521,8 @@
          (exit-lbl  (nat-label-ref cgc 'exit))
          (entry-lbl (nat-label-ref cgc (lbl->id 1 (proc-obj-name main-proc)))))
 
+    (codegen-context-nargs-set! cgc 0)
+
     (x86-label cgc main-lbl)
 
     ;; Save general purpose registers, stack and base registers onto the stack.
@@ -547,7 +553,7 @@
     (x86-lea  cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-mem (* (nat-target-word-width targ) (- nat-heap-fudge nat-heap-size)) (nat-target-heap-ptr-reg targ)))
     (x86-mov  cgc (x86-mem (* (nat-target-word-width targ) nat-heap-limit-slot) (nat-target-pstate-ptr-reg targ)) (vector-ref (nat-target-gvm-reg-map targ) 1))
 
-    (let ((mem-loc (nat-global-ref targ 'println))
+    (let ((mem-loc (nat-global-ref cgc 'println))
           (mem-opnd (nat-label-ref cgc 'println)))
       (x86-mov cgc (vector-ref (nat-target-gvm-reg-map targ) 1) (x86-imm-lbl (nat-label-ref cgc 'println)))
       (x86-mov cgc mem-loc (vector-ref (nat-target-gvm-reg-map targ) 1)))
@@ -613,12 +619,14 @@
                  #f)
 
                 ((entry)
-                 ;;(x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int (label-entry-nb-parms gvm-instr)))
+                 (codegen-context-nargs-set! cgc 0)
+                 (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int (label-entry-nb-parms gvm-instr)))
                  ;; TODO: add "jne wrong_nb_args_handler"
                  #f
                  )
 
                 ((return)
+                 (codegen-context-nargs-set! cgc 0)
                  #f)
 
                 ((task-entry)
@@ -660,8 +668,11 @@
                   (nargs (jump-nb-args gvm-instr))
                   (jump-size (frame-size (gvm-instr-frame gvm-instr))))
               (scan-opnd opnd)
-              ;; (if nargs
-              ;;     (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs)))
+
+              (if nargs
+                  (begin
+                    (codegen-context-nargs-set! cgc nargs)
+                    (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs))))
               (adjust-frame-size cgc jump-size)
               (x86-jmp cgc (nat-opnd cgc ctx opnd))))
 
@@ -761,7 +772,7 @@
 
           ((glo? opnd)
            (let* ((name (glo-name opnd))
-                  (mem-loc (nat-global-ref targ name)))
+                  (mem-loc (nat-global-ref cgc name)))
              mem-loc))
 
           ((clo? opnd)
@@ -867,7 +878,8 @@
 
 
     (x86-label cgc println-lbl)
-    ;;(x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int 1))
+    (codegen-context-nargs-set! cgc 0)
+    (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int 1))
     ;; TODO: add "jne wrong_nb_args_handler"
     (x86-call cgc print-lbl)
     (x86-mov  cgc (reg 1) (x86-imm-int 10))
@@ -1184,7 +1196,6 @@
             (x86-pop cgc (vector-ref (nat-target-gvm-reg-map targ) 1))))
       (x86-jne cgc false-lbl)
       (x86-jmp cgc true-lbl))))
-
 
 (define (mov cgc loc value)
   (if (or (x86-reg? value) (x86-mov cgc loc value))

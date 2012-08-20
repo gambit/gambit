@@ -21,6 +21,8 @@ codegen-context-target
 codegen-context-target-set!
 codegen-context-frame-size
 codegen-context-frame-size-set!
+codegen-context-nargs
+codegen-context-nargs-set!
 
 ))
 
