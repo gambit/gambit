@@ -1328,8 +1328,7 @@
                         (x86-pop cgc r1)))))))))
 
 
-;; TODO: handle 1-ary and >2-ary cases
-(x86-prim-define "##fx-" #f #f
+(define fxsub-nary
   (lambda (cgc opnds loc)
     (let* ((targ (codegen-context-target cgc))
            (ctx (make-ctx targ #f))
@@ -1363,6 +1362,43 @@
                  (x86-mov cgc translated-loc r1)
                  (x86-pop cgc r1)))))))
 
+(define (fxnegate cgc opnds loc)
+  (let* ((targ (codegen-context-target cgc))
+         (ctx (make-ctx targ #f))
+         (opnd (nat-opnd cgc ctx (car opnds)))
+         (loc (nat-opnd cgc ctx loc)))
+    (if (x86-reg? loc)
+        (begin
+          (x86-mov cgc loc opnd)
+          (x86-neg cgc loc))
+        (let ((r1 (vector-ref (nat-target-gvm-reg-map targ) 1)))
+          (x86-push cgc r1)
+          (x86-mov  cgc r1 opnd)
+          (x86-neg  cgc r1)
+          (x86-mov  cgc loc r1)
+          (x86-pop  cgc r1)))))
+
+
+;; TODO: handle 1-ary and >2-ary cases
+(x86-prim-define "##fx-" #f #f
+  (lambda (cgc opnds loc)
+    (cond ((null? opnds) (compiler-internal-error "##fx- requires at least one argument"))
+          ((null? (cdr opnds)) (fxnegate cgc opnds loc))
+          (else (fxsub-nary cgc opnds loc)))))
+
+(x86-prim-define "##fx-?" #f #f
+  (lambda (cgc opnds loc)
+    (cond ((not (= 2 (length opnds)))
+           (compiler-internal-error "##fx-? requires exactly 2 arguments"))
+          (else
+           (let* ((no-overflow (make-temp-label cgc))
+                  (targ (codegen-context-target cgc))
+                  (translated-loc (nat-opnd cgc (make-ctx targ #f) loc)))
+             (fxsub-nary cgc opnds loc)
+             (x86-jno cgc no-overflow)
+             (mov cgc translated-loc false)
+             (x86-label cgc no-overflow))))))
+
 
 ;; FIXME: what to do with immediate values?
 (define (box/unbox-fixnum cgc opnd fn)
@@ -1390,6 +1426,7 @@
 
 ;; All fixnum primitives (<, <=, =, >=, >) are defined simply in terms
 ;; of their names and their corresponding jump operation.
+;; TODO: variable number of arguments.
 (define (define-fxcmp-primitive name jump-op)
   (x86-prim-define name #f #f
     (lambda (cgc opnds loc)
