@@ -1379,7 +1379,7 @@
           (x86-pop  cgc r1)))))
 
 
-;; TODO: handle 1-ary and >2-ary cases
+;; TODO: handle >2-ary cases
 (x86-prim-define "##fx-" #f #f
   (lambda (cgc opnds loc)
     (cond ((null? opnds) (compiler-internal-error "##fx- requires at least one argument"))
@@ -1483,6 +1483,60 @@
               (x86-pop cgc r1)))
         (jump-op cgc true-lbl)
         (x86-jmp cgc false-lbl)))))
+
+
+(x86-prim-define "##fixnum?" #f #f
+  (lambda (cgc opnds loc)
+    (let* ((targ (codegen-context-target cgc))
+           (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+           (not-fixnum-lbl (make-temp-label cgc))
+           (end-if-lbl (make-temp-label cgc))
+           (ctx (make-ctx targ #f))
+           (opnd (nat-opnd cgc ctx (list-ref opnds 0)))
+           (loc (nat-opnd cgc ctx loc)))
+      (if (x86-reg? loc)
+          (begin
+            (x86-mov cgc loc opnd)
+            (x86-and cgc loc (x86-imm-int 3))
+            (x86-jne cgc not-fixnum-lbl)
+            (x86-mov cgc loc true)
+            (x86-jmp cgc end-if-lbl)
+            (x86-label cgc not-fixnum-lbl)
+            (x86-mov cgc loc false)
+            (x86-label cgc end-if-lbl))
+          (begin
+            (x86-push cgc r1)
+            (x86-mov cgc r1 opnd)
+            (x86-and cgc r1 (x86-imm-int 3))
+            (x86-jne cgc not-fixnum-lbl)
+            (mov cgc loc true)
+            (x86-jmp cgc end-if-lbl)
+            (x86-label cgc not-fixnum-lbl)
+            (mov cgc loc false)
+            (x86-label cgc end-if-lbl)
+            (x86-pop cgc r1)))))
+
+  (lambda (cgc ctx opnds true-branch false-branch)
+      (let* ((targ (codegen-context-target cgc))
+             (true-lbl  (nat-label-ref cgc (lbl->id true-branch  (ctx-ns ctx))))
+             (false-lbl (nat-label-ref cgc (lbl->id false-branch (ctx-ns ctx))))
+             (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+             (opnd (nat-opnd cgc ctx (list-ref opnds 0))))
+        (if (x86-reg? opnd)
+            (begin
+              (x86-push cgc opnd)
+              (x86-and  cgc opnd (x86-imm-int 3))
+              (x86-pop  cgc opnd)
+              (x86-je   cgc true-lbl)
+              (x86-jmp  cgc false-lbl))
+            (begin
+              (x86-push cgc r1)
+              (x86-mov  cgc r1 opnd)
+              (x86-and  cgc r1 (x86-imm-int 3))
+              (x86-pop  cgc r1)
+              (x86-je   cgc true-lbl)
+              (x86-jmp  cgc false-lbl))))))
+
 
 
 (define-fxcmp-primitive "##fx<"  x86-jl)
