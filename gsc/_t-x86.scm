@@ -1269,11 +1269,11 @@
 ;; TODO: handle >2-ary cases
 (x86-prim-define "##fx+" #f #f
   (lambda (cgc opnds loc)
-    (cond ((null? opnds) (mov cgc loc (x86-imm-int 0)))
-          ((null? (cdr opnds))
-           (let ((ctx (make-ctx (codegen-context-target cgc) #f)))
-             (mov cgc (nat-opnd cgc ctx loc) (nat-opnd cgc ctx (car opnds)))))
-          (else (fxadd-nary cgc opnds loc)))))
+    (let ((ctx (make-ctx (codegen-context-target cgc) #f)))
+      (cond ((null? opnds) (mov cgc (nat-opnd cgc ctx loc) (x86-imm-int 0)))
+            ((null? (cdr opnds))
+             (mov cgc (nat-opnd cgc ctx loc) (nat-opnd cgc ctx (car opnds))))
+            (else (fxadd-nary cgc opnds loc))))))
 
 (x86-prim-define "##fx+?" #f #f
   (lambda (cgc opnds loc)
@@ -1288,48 +1288,59 @@
           (x86-label cgc no-overflow)))))
 
 
+(define (fxmul-nary cgc opnds loc)
+  (let* ((targ (codegen-context-target cgc))
+         (ctx (make-ctx targ #f))
+         (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+         (loc (nat-opnd cgc ctx loc))
+         (opnds (map (lambda (opnd) (nat-opnd cgc ctx opnd)) opnds)))
+    (cond ((x86-reg? loc)
+           (cond ((member loc opnds)
+                  (let ((opnds2 (remove loc opnds)))
+                    (for-each (lambda (opnd)
+                                (unbox-fixnum cgc loc)
+                                (x86-imul cgc loc opnd))
+                              opnds2)))
+                 (else
+                  (x86-mov cgc loc (car opnds))
+                  (for-each (lambda (opnd)
+                              (unbox-fixnum cgc loc)
+                              (x86-imul cgc loc opnd))
+                            (cdr opnds)))))
+
+          (else
+           (cond ((member r1 opnds)
+                  (let ((opnds2 (remove r1 opnds)))
+                    (x86-push cgc r1)
+                    (for-each (lambda (opnd)
+                                (unbox-fixnum cgc r1)
+                                (x86-imul cgc r1 opnd))
+                              opnds2)
+                    (x86-mov cgc loc r1)
+                    (x86-pop cgc r1)))
+                 (else
+                    (x86-push cgc r1)
+                    (x86-mov cgc r1 (car opnds))
+                    (for-each (lambda (opnd)
+                                (unbox-fixnum cgc r1)
+                                (x86-imul cgc r1 opnd))
+                              (cdr opnds))
+                    (x86-mov cgc loc r1)
+                    (x86-pop cgc r1)))))))
+
+
 ;; TODO: handle >2-ary cases
 (x86-prim-define "##fx*" #f #f
   (lambda (cgc opnds loc)
-    (cond ((null? opnds) (mov cgc loc (x86-imm-int 1)))
-          ((null? (cdr opnds)) (mov cgc loc (car opnds)))
-          (else
-           (let* ((targ (codegen-context-target cgc))
-                  (ctx (make-ctx targ #f))
-                  (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
-                  (translated-loc (nat-opnd cgc ctx loc))
-                  (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
-                  (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
-             (if (x86-reg? translated-loc)
-                 (cond ((eq? translated-loc opnd1)
-                        (unbox-fixnum cgc opnd1)
-                        (x86-imul cgc translated-loc opnd2))
-                       ((eq? translated-loc opnd2)
-                        (unbox-fixnum cgc opnd2)
-                        (x86-imul cgc translated-loc opnd1))
-                       (else
-                        (x86-mov cgc translated-loc opnd1)
-                        (unbox-fixnum cgc translated-loc)
-                        (x86-imul cgc translated-loc opnd2)))
-                 (cond ((x86-reg? opnd1)
-                        (x86-push cgc opnd1)
-                        (unbox-fixnum cgc opnd1)
-                        (x86-imul cgc opnd1 opnd2)
-                        (x86-mov cgc translated-loc opnd1)
-                        (x86-pop cgc opnd1))
-                       ((x86-reg? opnd2)
-                        (x86-push cgc opnd2)
-                        (unbox-fixnum cgc opnd2)
-                        (x86-imul cgc opnd2 opnd1)
-                        (x86-mov cgc translated-loc opnd2)
-                        (x86-pop cgc opnd2))
-                       (else
-                        (x86-push cgc r1)
-                        (x86-mov cgc r1 opnd1)
-                        (unbox-fixnum cgc r1)
-                        (x86-imul cgc r1 opnd2)
-                        (x86-mov cgc translated-loc r1)
-                        (x86-pop cgc r1)))))))))
+    (let* ((targ (codegen-context-target cgc))
+           (ctx (make-ctx targ #f))
+           (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+           (translated-loc (nat-opnd cgc ctx loc)))
+      (cond ((null? opnds) (mov cgc (nat-opnd cgc ctx loc) (x86-imm-int 1)))
+            ((null? (cdr opnds)) (mov cgc
+                                      (nat-opnd cgc ctx loc)
+                                      (nat-opnd cgc ctx (car opnds))))
+            (else (fxmul-nary cgc opnds loc))))))
 
 
 (define fxsub-nary
