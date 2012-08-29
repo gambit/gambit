@@ -796,6 +796,8 @@
                     ;; at label 1?
                     (let ((lbl-name (lbl->id 1 (proc-obj-name val))))
                       (nat-label-ref cgc lbl-name)))
+                   ((string? val)
+                    (x86-imm-int -2))   ; Temporarily to support a test case
                    ((eq? val #f)
                     (x86-imm-int -2))
                    ((eq? val #t)
@@ -1198,10 +1200,10 @@
       (x86-jmp cgc true-lbl))))
 
 (define (mov cgc loc value)
-  (if (or (x86-reg? value) (x86-mov cgc loc value))
+  (if (or (x86-reg? loc) (x86-reg? value))
       (x86-mov cgc loc value)
-      (let ((targ (codegen-context-target cgc))
-            (r1 (vector-ref (nat-target-gvm-reg-map targ) 1)))
+      (let* ((targ (codegen-context-target cgc))
+             (r1 (vector-ref (nat-target-gvm-reg-map targ) 1)))
         (x86-push cgc r1)
         (x86-mov  cgc r1 value)
         (x86-mov  cgc loc r1)
@@ -1268,7 +1270,9 @@
 (x86-prim-define "##fx+" #f #f
   (lambda (cgc opnds loc)
     (cond ((null? opnds) (mov cgc loc (x86-imm-int 0)))
-          ((null? (cdr opnds)) (mov cgc loc (car opnds)))
+          ((null? (cdr opnds))
+           (let ((ctx (make-ctx (codegen-context-target cgc) #f)))
+             (mov cgc (nat-opnd cgc ctx loc) (nat-opnd cgc ctx (car opnds)))))
           (else (fxadd-nary cgc opnds loc)))))
 
 (x86-prim-define "##fx+?" #f #f
