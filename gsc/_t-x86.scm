@@ -477,7 +477,7 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #f)))
+    (let ((f (create-procedure cgc #t)))
       (f)))
   #f)
 
@@ -1438,6 +1438,12 @@
 
 
 
+(define (zip-with fn as bs)
+  (cond
+   ((or (null? as) (null? bs)) '())
+   (else (cons (fn (car as) (car bs))
+               (zip-with fn (cdr as) (cdr bs))))))
+
 
 ;; All fixnum primitives (<, <=, =, >=, >) are defined simply in terms
 ;; of their names and their corresponding jump operation.
@@ -1447,57 +1453,59 @@
     (lambda (cgc opnds loc)
       (let* ((targ (codegen-context-target cgc))
              (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
-             (true-lbl (make-temp-label cgc))
+             (not-true-lbl (make-temp-label cgc))
              (end-if-lbl (make-temp-label cgc))
              (ctx (make-ctx targ #f))
              (loc (nat-opnd cgc ctx loc))
-             (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
-             (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
-
-        (if (or (x86-reg? opnd1) (x86-reg? opnd2))
-            (x86-cmp cgc opnd1 opnd2)
+             (opnds (map (lambda (opnd) (nat-opnd cgc ctx opnd)) opnds))
+             (zipped-opnds (zip-with cons opnds (cdr opnds))))
+        (if (< (length opnds) 2)
+            (mov cgc loc true)
             (begin
-              (x86-push cgc r1)
-              (x86-mov cgc r1 opnd1)
-              (x86-cmp cgc r1 opnd2)
-              (x86-pop cgc r1)))
-
-        (jump-op cgc true-lbl)
-        (if (x86-reg? loc)
-            (x86-mov cgc loc false)
-            (begin
-              (x86-push cgc r1)
-              (x86-mov cgc r1 false)
-              (x86-mov cgc loc r1)
-              (x86-pop cgc r1)))
-        (x86-jmp cgc end-if-lbl)
-        (x86-label cgc true-lbl)
-        (if (x86-reg? loc)
-            (x86-mov cgc loc true)
-            (begin
-              (x86-push cgc r1)
+              (for-each (lambda (p)
+                          (let ((a (car p))
+                                (b (cdr p)))
+                            (if (or (x86-reg? a) (x86-reg? b))
+                                (x86-cmp cgc a b)
+                                (begin
+                                  (x86-push cgc r1)
+                                  (x86-mov cgc r1 a)
+                                  (x86-cmp cgc r1 b)
+                                  (x86-pop cgc r1)))
+                            (jump-op cgc not-true-lbl)))
+                        zipped-opnds)
               (x86-mov cgc r1 true)
-              (x86-mov cgc loc r1)
-              (x86-pop cgc r1)))
-        (x86-label cgc end-if-lbl)))
+              (x86-jmp cgc end-if-lbl)
+              (x86-label cgc not-true-lbl)
+              (x86-mov cgc r1 false)
+              (x86-label cgc end-if-lbl)))))
 
 
     (lambda (cgc ctx opnds true-branch false-branch)
       (let* ((targ (codegen-context-target cgc))
              (true-lbl  (nat-label-ref cgc (lbl->id true-branch  (ctx-ns ctx))))
              (false-lbl (nat-label-ref cgc (lbl->id false-branch (ctx-ns ctx))))
-             (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
-             (opnd1 (nat-opnd cgc ctx (list-ref opnds 0)))
-             (opnd2 (nat-opnd cgc ctx (list-ref opnds 1))))
-        (if (or (x86-reg? opnd1) (x86-reg? opnd2))
-            (x86-cmp cgc opnd1 opnd2)
-            (begin
-              (x86-push cgc r1)
-              (x86-mov cgc r1 opnd1)
-              (x86-cmp cgc r1 opnd2)
-              (x86-pop cgc r1)))
-        (jump-op cgc true-lbl)
-        (x86-jmp cgc false-lbl)))))
+             (r1 (vector-ref (nat-target-gvm-reg-map targ) 1)))
+        (if (< (length opnds) 2)
+            (x86-jmp cgc true-lbl)
+            (let* ((opnds (map (lambda (opnd) (nat-opnd cgc ctx opnd)) opnds))
+                   (zipped-opnds (zip-with cons opnds (cdr opnds)))
+                   (not-true-lbl (make-temp-label cgc)))
+              (for-each (lambda (p)
+                          (let ((a (car p))
+                                (b (cdr p)))
+                            (if (or (x86-reg? a) (x86-reg? b))
+                                (x86-cmp cgc a b)
+                                (begin
+                                  (x86-push cgc r1)
+                                  (x86-mov cgc r1 a)
+                                  (x86-cmp cgc r1 b)
+                                  (x86-pop cgc r1)))
+                            (jump-op cgc not-true-lbl)))
+                        zipped-opnds)
+              (x86-jmp cgc true-lbl)
+              (x86-label cgc not-true-lbl)
+              (x86-jmp cgc false-lbl)))))))
 
 
 (x86-prim-define "##fixnum?" #f #f
@@ -1554,8 +1562,8 @@
 
 
 
-(define-fxcmp-primitive "##fx<"  x86-jl)
-(define-fxcmp-primitive "##fx<=" x86-jle)
-(define-fxcmp-primitive "##fx>"  x86-jg)
-(define-fxcmp-primitive "##fx>=" x86-jge)
-(define-fxcmp-primitive "##fx="  x86-je)
+(define-fxcmp-primitive "##fx<"  x86-jge)
+(define-fxcmp-primitive "##fx<=" x86-jg)
+(define-fxcmp-primitive "##fx>"  x86-jle)
+(define-fxcmp-primitive "##fx>=" x86-jl)
+(define-fxcmp-primitive "##fx="  x86-jne)
