@@ -865,7 +865,7 @@
          (univ-literal ctx string-literal-type obj))
 
         ((null? obj)
-         (univ-null ctx obj))
+         (univ-null ctx))
 
         ((void-object? obj)
          (gen "undefined"))
@@ -2970,7 +2970,7 @@ EOF
      (compiler-internal-error
       "univ-symbol, unknown target"))))
 
-(define (univ-null ctx obj)
+(define (univ-null ctx)
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -3013,21 +3013,25 @@ EOF
       "univ-undefined, unknown target"))))
 
 (define (univ-pair ctx obj)
+  (univ-cons ctx
+             (translate-obj ctx (car obj))
+             (translate-obj ctx (cdr obj))))
+
+(define (univ-cons ctx expr1 expr2)
   
   (case (target-name (ctx-target ctx))
 
     ((js)
      (gen "new " (makecall ctx
                            (univ-prefix ctx "Pair")
-                           (list (translate-obj ctx (car obj))
-                                 (translate-obj ctx (cdr obj))))))
+                           (list expr1 expr2))))
     
     ((python ruby php)                         ;TODO: complete
-     (gen (object->string obj)))
+     (gen ""))
 
     (else
      (compiler-internal-error
-      "univ-pair, unknown target"))))
+      "univ-cons, unknown target"))))
 
 
 ;; (define (univ-list ctx obj)             ;obj is a non-null list
@@ -3528,29 +3532,9 @@ EOF
 (univ-define-prim "##cons" #t #f
 
   (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (gen "new "
-            (univ-prefix ctx "Pair")
-            "("
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ", "
-            (translate-gvm-opnd ctx (list-ref opnds 1))
-            ")"))
-      
-      ;; ((python)
-      ;;  (gen ""))
-
-      ;; ((ruby)
-      ;;  (gen ""))
-
-      ((python ruby php)                ;TODO: complete
-       (gen ""))
-
-      (else
-       (compiler-internal-error
-        "##cons, unknown target")))))
+    (univ-cons ctx
+               (translate-gvm-opnd ctx (list-ref opnds 0))
+               (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 (define (univ-car ctx expr)
   (case (target-name (ctx-target ctx))
@@ -4277,24 +4261,16 @@ EOF
       (compiler-internal-error
        "list, unknown target")))))
 
-(univ-define-prim "##list" #f #f
+(univ-define-prim "##list" #t #f
  (lambda (ctx opnds)
-   (case (target-name (ctx-target ctx))
-     
-     ((js)
-      (gen (makecall ctx
-                     (univ-prefix ctx "list")
-                     ;; (list (translate-gvm-opnd ctx (list-ref opnds 0)))
-                     (map (lambda (opnd) (translate-gvm-opnd ctx opnd))
-                          opnds)
-                     )))
-     
-     ((python ruby php)                ;TODO: complete
-      (gen ""))
-     
-     (else
-      (compiler-internal-error
-       "##list, unknown target")))))
+   (let loop ((lst (reverse opnds))
+              (result (univ-null ctx)))
+     (if (pair? lst)
+         (loop (cdr lst)
+               (univ-cons ctx
+                          (translate-gvm-opnd ctx (car lst))
+                          result))
+         result))))
 
 ;; (univ-define-prim "##length" #f #f
 ;;   (lambda (ctx opnds)
@@ -4335,33 +4311,6 @@ EOF
       (else
        (compiler-internal-error
         "length, unknown target")))))
-
-(univ-define-prim "##list" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (let ((nbopnd (length opnds)))
-         (if (= nbopnd 0)
-             (gen "null")
-             (let ((args (list (univ-prefix ctx "List(")
-                               (translate-gvm-opnd ctx (list-ref opnds 0)))))
-               (let loop ((opnd 1)
-                          (args args))
-                 (if (= opnd nbopnd)
-                     (apply gen (append args '(")")))
-                     (loop (+ opnd 1)
-                           (append args
-                                   (list ", "
-                                         (translate-gvm-opnd ctx (list-ref opnds opnd)))))))))))
-      
-      ((python ruby php)                ;TODO: complete
-       (gen ""))
-
-      (else
-       (compiler-internal-error
-        "##list, unknown target")))))
 
 (univ-define-prim "##make-vector" #f #f
 
