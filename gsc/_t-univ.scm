@@ -803,11 +803,11 @@
 
         ((reg? gvm-opnd)
          #;
-         (gen (univ-global ctx (univ-prefix ctx "reg"))
+         (gen (univ-global ctx (univ-prefix ctx "r"))
               "["
               (reg-num gvm-opnd)
               "]")
-         (gen (univ-global ctx (univ-prefix ctx "reg"))
+         (gen (univ-global ctx (univ-prefix ctx "r"))
               (reg-num gvm-opnd)))
 
         ((stk? gvm-opnd)
@@ -1052,56 +1052,62 @@
            (R3 (translate-gvm-opnd ctx (make-reg 3)))
            (R4 (translate-gvm-opnd ctx (make-reg 4))))
        (list "
-function Gambit_heapify_continuation(ra) {
-  var chain = false;
-  var prev_frame = false;
-  var prev_link;
+function Gambit_heapify(ra) {
 
-  while (Gambit_sp !== 0) { // stack not empty
-    var fs = ra.fs;
-    var link = ra.link;
-    var frame = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
-    if (prev_frame === false)
-      chain = frame;
-    else
-      prev_frame[prev_link] = frame;
-    prev_frame = frame;
-    frame[0] = ra;
-    Gambit_sp = Gambit_sp - fs;
-    ra = Gambit_stack[Gambit_sp + link];
-    prev_link = link;
+  if (Gambit_sp > 0) { // stack contains at least one frame
+
+    var fs = ra.fs, link = ra.link;
+    var chain = Gambit_stack;
+
+    if (Gambit_sp > fs) { // stack contains at least two frames
+      chain = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
+      chain[0] = ra;
+      Gambit_sp = Gambit_sp - fs;
+      var prev_frame = chain, prev_link = link;
+      ra = prev_frame[prev_link]; fs = ra.fs; link = ra.link;
+
+      while (Gambit_sp > fs) {
+        var frame = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
+        frame[0] = ra;
+        Gambit_sp = Gambit_sp - fs;
+        prev_frame[prev_link] = frame;
+        prev_frame = frame; prev_link = link;
+        ra = prev_frame[prev_link]; fs = ra.fs; link = ra.link;
+      }
+
+      prev_frame[prev_link] = Gambit_stack;
+    }
+
+    Gambit_stack.length = fs + 1;
+    Gambit_stack[link] = Gambit_stack[0];
+    Gambit_stack[0] = ra;
+  
+    Gambit_stack = [chain];
+    Gambit_sp = 0;
   }
 
-  if (prev_frame === false)
-    chain = Gambit_stack[0];
-  else
-    prev_frame[prev_link] = Gambit_stack[0];
-  
-  Gambit_stack = [chain];
-  Gambit_sp = 0;
-
-  return Gambit_underflow_handler;
+  return Gambit_underflow;
 }
 
-function Gambit_underflow_handler() {
+function Gambit_underflow() {
+
   var frame = Gambit_stack[0];
+
   if (frame === false) // end of continuation?
     return false; // terminate trampoline
 
-  var ra = frame[0];
-  var fs = ra.fs;
-  var link = ra.link;
+  var ra = frame[0], fs = ra.fs, link = ra.link;
   Gambit_stack = frame.slice(0, fs + 1);
   Gambit_sp = fs;
   Gambit_stack[0] = frame[link];
-  Gambit_stack[link] = Gambit_underflow_handler;
+  Gambit_stack[link] = Gambit_underflow;
 
   return ra;
 }
-Gambit_underflow_handler.fs = 0;
+Gambit_underflow.fs = 0;
 
 var Gambit_glo = {};
-var " R0 " = Gambit_underflow_handler;
+var " R0 " = Gambit_underflow;
 var " R1 " = false;
 var " R2 " = false;
 var " R3 " = false;
@@ -1112,24 +1118,44 @@ var Gambit_nargs = 0;
 var Gambit_temp1 = false;
 var Gambit_temp2 = false;
 var Gambit_poll;
+var Gambit_printout;
 
 Gambit_stack[0] = false;
 
 var Gambit_poll_count = 1;
 
-if (this.hasOwnProperty('setTimeout')) {
-  Gambit_poll = function (dest_bb) {
-                  Gambit_poll_count = 100;
-                  Gambit_stack.length = Gambit_sp + 1;
-                  setTimeout(function () { Gambit_run(dest_bb); }, 1);
-                  return false;
-                };
-} else {
+//if (this.hasOwnProperty('setTimeout')) {
+//  Gambit_poll = function (dest_bb) {
+//                  Gambit_poll_count = 100;
+//                  Gambit_stack.length = Gambit_sp + 1;
+//                  setTimeout(function () { Gambit_trampoline(dest_bb); }, 1);
+//                  return false;
+//                };
+//} else {
   Gambit_poll = function (dest_bb) {
                   Gambit_poll_count = 100;
                   Gambit_stack.length = Gambit_sp + 1;
                   return dest_bb;
                 };
+//}
+
+if (this.hasOwnProperty('document')) {
+  Gambit_printout = function (text) {
+                      if (text === \"\\n\")
+                        document.write(\"<br/>\");
+                      else
+                        document.write(text);
+                    };
+} else if (this.hasOwnProperty('print')) {
+  Gambit_printout = function (text) {
+                      if (text !== \"\\n\")
+                        print(text);
+                    };
+} else {
+  Gambit_printout = function (text) {
+                      if (text !== \"\\n\")
+                        alert(text);
+                    };
 }
 
 function Gambit_buildrest ( f ) {    // nb formal args
@@ -1218,8 +1244,8 @@ function Gambit_buildrest ( f ) {    // nb formal args
 }         
 
 function Gambit_wrong_nargs(fn) {
-    print(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
-    print(fn);
+    Gambit_printout(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
+    Gambit_printout(fn);
     return false;
 }
 
@@ -1701,30 +1727,30 @@ Gambit_Keyword.stringToKeyword = function(s) {
 
 function Gambit_write ( obj ) {
     if (obj === false)
-        write(\"#f\");
+        Gambit_printout(\"#f\");
     else if (obj === true)
-        write(\"#t\");
+        Gambit_printout(\"#t\");
     else if (obj === null)
-        write(\"()\");
+        Gambit_printout(\"()\");
     else if (obj instanceof Gambit_Flonum)
-        write(obj.toString());
+        Gambit_printout(obj.toString());
     else if (obj instanceof Gambit_String)
-        write(\"\\\"\" + obj.toString() + \"\\\"\");
+        Gambit_printout(\"\\\"\" + obj.toString() + \"\\\"\");
     else if (obj instanceof Gambit_Char)
-        write(obj.toString());
+        Gambit_printout(obj.toString());
     else if (obj instanceof Gambit_Pair) {
-        write(\"(\");
+        Gambit_printout(\"(\");
         Gambit_write(obj.car);
         Gambit_writelist(obj.cdr);
     }
     else if (obj instanceof Gambit_Vector)
-        write(obj.toString());
+        Gambit_printout(obj.toString());
     else if (obj instanceof Gambit_Symbol)
-        write(obj.symbolToString());
+        Gambit_printout(obj.symbolToString());
     else if (obj instanceof Gambit_Keyword)
-        write(obj.keywordToString());
+        Gambit_printout(obj.keywordToString());
     else
-        write(obj);
+        Gambit_printout(obj);
 }
 
 function Gambit_bb1_write ( ) { // write
@@ -1741,16 +1767,16 @@ Gambit_glo[\"write\"] = Gambit_bb1_write;
 
 function Gambit_writelist ( obj ) {
     if (obj === null) {
-        write(\")\");
+        Gambit_printout(\")\");
     } else {
         if (obj instanceof Gambit_Pair) {
-            write(\" \");
+            Gambit_printout(\" \");
             Gambit_write(obj.car);
             Gambit_writelist(obj.cdr);
         } else {
-            write(\" . \");
+            Gambit_printout(\" . \");
             Gambit_write(obj);
-            write(\")\");
+            Gambit_printout(\")\");
         }
     }
 }
@@ -1769,17 +1795,17 @@ Gambit_glo[\"write-list\"] = Gambit_bb1_writelist;
 
 function Gambit_print ( obj ) {
     if (obj === false)
-        write(\"#f\");
+        Gambit_printout(\"#f\");
     else if (obj === true)
-        write(\"#t\");
+        Gambit_printout(\"#t\");
     else if (obj === null)
-        write(\"\");
+        Gambit_printout(\"\");
     else if (obj instanceof Gambit_Flonum)
-        write(obj.toString());
+        Gambit_printout(obj.toString());
     else if (obj instanceof Gambit_String)
-        write(obj.print());
+        Gambit_printout(obj.print());
     else if (obj instanceof Gambit_Char)
-        write(obj.print());
+        Gambit_printout(obj.print());
     else if (obj instanceof Gambit_Pair) {
         Gambit_print(obj.car);
         Gambit_print(obj.cdr);
@@ -1790,11 +1816,11 @@ function Gambit_print ( obj ) {
         }
     }
     else if (obj instanceof Gambit_Symbol)
-        write(obj.symbolToString());
+        Gambit_printout(obj.symbolToString());
     else if (obj instanceof Gambit_Keyword)
-        write(obj.keywordToString());
+        Gambit_printout(obj.keywordToString());
     else
-        write(obj);
+        Gambit_printout(obj);
 }
 
 function Gambit_bb1_print ( ) { // print
@@ -1811,7 +1837,7 @@ Gambit_glo[\"print\"] = Gambit_bb1_print;
 
 function Gambit_println ( obj ) {
     Gambit_print(obj);
-    print();
+    Gambit_printout(\"\\n\");
 }
 
 function Gambit_bb1_println ( ) { // println
@@ -1831,7 +1857,7 @@ function Gambit_bb1_newline ( ) { // newline
         return Gambit_wrong_nargs(Gambit_bb1_newline);
     }
 
-    print();
+    Gambit_printout(\"\\n\");
     
     return " R0 ";
 }
@@ -1856,7 +1882,7 @@ function Gambit_bb1_prettyprint ( ) { // prettyprint
     }
 
     Gambit_write(" R1 ");
-    print();
+    Gambit_printout(\"\\n\");
     
     return " R0 ";
 }
@@ -1869,7 +1895,7 @@ function Gambit_bb1_pp ( ) { // pp
     }
 
     Gambit_write(" R1 ");
-    print();
+    Gambit_printout(\"\\n\");
     
     return " R0 ";
 }
@@ -1898,18 +1924,18 @@ function Gambit_Continuation(frame, denv) {
 
 // Obsolete
 function Gambit_dump_cont(sp, ra) {
-    print(\"------------------------\");
+    Gambit_printout(\"------------------------\");
     while (ra !== false) {
-        print(\"sp=\"+Gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
+        Gambit_printout(\"sp=\"+Gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
         Gambit_sp = Gambit_sp-ra.fs;
         ra = Gambit_stack[Gambit_sp+ra.link+1];
     }
-    print(\"------------------------\");
+    Gambit_printout(\"------------------------\");
 }
 
 function Gambit_continuation_capture1() {
   var receiver = " R1 ";
-  " R0 " = Gambit_heapify_continuation(" R0 ");
+  " R0 " = Gambit_heapify(" R0 ");
   " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
   Gambit_nargs = 1;
   return receiver;
@@ -1917,7 +1943,7 @@ function Gambit_continuation_capture1() {
 
 function Gambit_continuation_capture2() {
   var receiver = " R1 ";
-  " R0 " = Gambit_heapify_continuation(" R0 ");
+  " R0 " = Gambit_heapify(" R0 ");
   " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
   Gambit_nargs = 2;
   return receiver;
@@ -1925,7 +1951,7 @@ function Gambit_continuation_capture2() {
 
 function Gambit_continuation_capture3() {
   var receiver = " R1 ";
-  " R0 " = Gambit_heapify_continuation(" R0 ");
+  " R0 " = Gambit_heapify(" R0 ");
   " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
   Gambit_nargs = 3;
   return receiver;
@@ -1933,7 +1959,7 @@ function Gambit_continuation_capture3() {
 
 function Gambit_continuation_capture4() {
   var receiver = Gambit_stack[Gambit_sp--];
-  " R0 " = Gambit_heapify_continuation(" R0 ");
+  " R0 " = Gambit_heapify(" R0 ");
   Gambit_stack[++Gambit_sp] = new Gambit_Continuation(Gambit_stack[0], false);
   Gambit_nargs = 4;
   return receiver;
@@ -1944,7 +1970,7 @@ function Gambit_continuation_graft_no_winding2() {
   var cont = " R1 ";
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow_handler;
+  " R0 " = Gambit_underflow;
   Gambit_nargs = 0;
   return proc;
 }
@@ -1954,7 +1980,7 @@ function Gambit_continuation_graft_no_winding3() {
   var cont = " R1 ";
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow_handler;
+  " R0 " = Gambit_underflow;
   " R1 " = " R3 ";
   Gambit_nargs = 1;
   return proc;
@@ -1965,7 +1991,7 @@ function Gambit_continuation_graft_no_winding4() {
   var cont = Gambit_stack[Gambit_sp];
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow_handler;
+  " R0 " = Gambit_underflow;
   " R1 " = " R2 ";
   " R2 " = " R3 ";
   Gambit_nargs = 2;
@@ -1977,7 +2003,7 @@ function Gambit_continuation_graft_no_winding5() {
   var cont = Gambit_stack[Gambit_sp-1];
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow_handler;
+  " R0 " = Gambit_underflow;
   Gambit_nargs = 3;
   return proc;
 }
@@ -1986,7 +2012,7 @@ function Gambit_continuation_return_no_winding2() {
   var cont = " R1 ";
   Gambit_sp = 0;
   Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow_handler;
+  " R0 " = Gambit_underflow;
   " R1 " = " R2 ";
   return " R0 ";
 }
@@ -2160,7 +2186,7 @@ function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
 Gambit_glo[\"##continuation-next\"] = Gambit_bb1__23__23_continuation_2d_next;
 
 
-function Gambit_run(pc)
+function Gambit_trampoline(pc)
 {
     while (pc !== false) {
         pc = pc();
@@ -2308,7 +2334,7 @@ def Gambit_poll(wakeup):
   return wakeup
 
 
-def Gambit_run(pc):
+def Gambit_trampoline(pc):
   while pc != False:
     pc = pc()
 
@@ -2383,7 +2409,7 @@ def Gambit_poll(wakeup)
 end
 
 
-def Gambit_run(pc)
+def Gambit_trampoline(pc)
   while pc != false
     pc = pc.call
   end
@@ -2411,10 +2437,10 @@ EOF
          (case (target-name (ctx-target ctx))
 
            ((js php)
-            (gen (univ-prefix ctx "run") "(" entry ");\n"))
+            (gen (univ-prefix ctx "trampoline") "(" entry ");\n"))
 
            ((python ruby)
-            (gen (univ-prefix ctx "run") "(" entry ")\n"))
+            (gen (univ-prefix ctx "trampoline") "(" entry ")\n"))
 
            (else
             (compiler-internal-error
@@ -2443,7 +2469,7 @@ EOF
      (gen "def " name "(" params "):\n"
           (univ-indent (gen "global "
                             (univ-prefix ctx "glo") ","
-                            (univ-prefix ctx "reg") ","
+                            (univ-prefix ctx "r") ","
                             (univ-prefix ctx "stack") ","
                             (univ-prefix ctx "sp") ","
                             (univ-prefix ctx "nargs") ","
