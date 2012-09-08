@@ -513,7 +513,7 @@
                      (gen ""))))
 
               ((close)
-               (let ((parms (close-parms gvm-instr)))
+               (let ()
 
                  (define (alloc lst rev-loc-names)
                    (if (pair? lst)
@@ -525,46 +525,53 @@
                          (univ-closure-alloc
                           ctx
                           lbl
-                          (length opnds)
+                          (map (lambda (opnd)
+                                 (cond ((assv opnd rev-loc-names) => cdr)
+                                       ((memv opnd (map closure-parms-loc lst))
+                                        (univ-boolean ctx #f))
+                                       (else
+                                        (translate-gvm-opnd ctx opnd))))
+                               opnds)
                           (lambda (name)
                             (alloc (cdr lst)
                                    (cons (cons loc name)
                                          rev-loc-names)))))
 
-                       (init (reverse rev-loc-names))))
+                       (init (close-parms gvm-instr) (reverse rev-loc-names))))
 
-                 (define (init loc-names)
-                   (gen (map
-                         (lambda (parms loc-name)
-                           (let* ((lbl (closure-parms-lbl parms))
-                                  (loc (closure-parms-loc parms))
-                                  (opnds (closure-parms-opnds parms)))
-                             (let loop ((i 1) ;; 0
-                                        (opnds opnds) ;; (cons (make-lbl lbl) opnds)
-                                        (rev-code '()))
-                               (if (pair? opnds)
-                                   (let ((opnd (car opnds)))
-                                     (loop (+ i 1)
-                                           (cdr opnds)
-                                           (cons (univ-assign
+                 (define (init lst loc-names)
+                   (if (pair? lst)
+
+                       (let* ((parms (car lst))
+                              (loc (closure-parms-loc parms))
+                              (opnds (closure-parms-opnds parms))
+                              (loc-name (assv loc loc-names)))
+                         (let loop ((i 1) ;; 0
+                                    (opnds opnds) ;; (cons (make-lbl lbl) opnds)
+                                    (rev-code '()))
+                           (if (pair? opnds)
+                               (let ((opnd (car opnds)))
+                                 (loop (+ i 1)
+                                       (cdr opnds)
+                                       (cons (if (and (assv opnd loc-names)
+                                                      (memv opnd (map closure-parms-loc lst)))
+                                                 (univ-assign
                                                   ctx
                                                   (univ-clo ctx (cdr loc-name) i)
-                                                  (let ((x (assv opnd loc-names)))
-                                                    (if x
-                                                        (cdr x)
-                                                        (translate-gvm-opnd ctx opnd))))
-                                                 rev-code)))
-                                   (reverse rev-code)))))
-                         (close-parms gvm-instr)
-                         loc-names)
-                        (map
-                         (lambda (loc-name)
-                           (let* ((loc (car loc-name))
-                                  (name (cdr loc-name)))
-                             (univ-assign ctx
-                                          (translate-gvm-opnd ctx loc)
-                                          name)))
-                         loc-names)))
+                                                  (cdr (assv opnd loc-names)))
+                                                 "")
+                                             rev-code)))
+                               (list (reverse rev-code)
+                                     (init (cdr lst) loc-names)))))
+
+                       (map
+                        (lambda (loc-name)
+                          (let* ((loc (car loc-name))
+                                 (name (cdr loc-name)))
+                            (univ-assign ctx
+                                         (translate-gvm-opnd ctx loc)
+                                         name)))
+                        loc-names)))
 
                  (alloc (close-parms gvm-instr) '())))
 
@@ -743,13 +750,36 @@
      (compiler-internal-error
       "univ-closure-alloc, unknown target"))))
 
-(define (univ-closure-alloc ctx lbl nb-closed-vars cont)
+(define (univ-separated-list sep lst)
+  (if (pair? lst)
+      (if (pair? (cdr lst))
+          (list (car lst) sep (univ-separated-list sep (cdr lst)))
+          (car lst))
+      '()))
+
+(define (univ-map-index f lst)
+
+  (define (mp f lst i)
+    (if (pair? lst)
+        (cons (f (car lst) i)
+              (mp f (cdr lst) (+ i 1)))
+        '()))
+
+  (mp f lst 0))
+
+(define (univ-closure-alloc ctx lbl exprs cont)
   (case (target-name (ctx-target ctx))
 
     ((js)
      (set! closure-count (+ closure-count 1))
      (let ((name (string-append "closure" (number->string closure-count))))
-       (gen "var " name " = closure_alloc(" (translate-lbl ctx (make-lbl lbl)) ");\n"
+       (gen "var " name " = closure_alloc({"
+            (univ-separated-list
+             ","
+             (univ-map-index (lambda (x i) (list "v" i ":" x))
+                             (cons (translate-lbl ctx (make-lbl lbl))
+                                   exprs)))
+            "});\n"
             (cont name))))
 
     (else
@@ -847,7 +877,7 @@
 
 (define (univ-clo ctx closure index)
   (gen closure
-       ".v"
+       "(false).v"
        index))
 
 (define (translate-obj ctx obj)
@@ -1249,14 +1279,13 @@ function Gambit_wrong_nargs(fn) {
     return false;
 }
 
-function closure_alloc(entry_bb) {
+function closure_alloc(slots) {
 
-  function self() {
+  function self(msg) {
+    if (msg === false) return slots;
     " R4 " = self;
-    return self.v0;
+    return slots.v0;
   }
-
-  self.v0 = entry_bb;
 
   return self;
 }
