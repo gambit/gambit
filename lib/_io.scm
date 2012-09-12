@@ -7762,6 +7762,18 @@
           (macro-readtable-max-unescaped-char-set! new-rt char)
           new-rt)))))
 
+(define-prim (readtable-comment-handler rt)
+  (macro-force-vars (rt)
+    (macro-check-readtable rt 1 (readtable-comment-handler rt)
+      (macro-readtable-comment-handler rt))))
+
+(define-prim (readtable-comment-handler-set rt conversion?)
+  (macro-force-vars (rt conversion?)
+    (macro-check-readtable rt 1 (readtable-comment-handler-set rt conversion?)
+      (let ((new-rt (##readtable-copy-shallow rt)))
+        (macro-readtable-comment-handler-set! new-rt conversion?)
+        new-rt))))
+
 (define-prim (readtable-start-syntax rt)
   (macro-force-vars (rt)
     (macro-check-readtable rt 1 (readtable-start-syntax rt)
@@ -9580,6 +9592,8 @@
 (##define-macro (set-box! . args)         `(##set-box! ,@args))
 (##define-macro (set-car! . args)         `(##set-car! ,@args))
 (##define-macro (set-cdr! . args)         `(##set-cdr! ,@args))
+(##define-macro (string . args)           `(##string ,@args))
+(##define-macro (list->string . args)     `(##list->string ,@args))
 (##define-macro (string->number . args)   `(##string->number ,@args))
 (##define-macro (string->symbol-object . args)   `(##make-interned-symkey ,@args #t))
 (##define-macro (string->uninterned-symbol-object . args)   `(##make-uninterned-symbol ,@args))
@@ -10450,34 +10464,63 @@
 ;;; Procedures to handle comments.
 
 (define (##skip-extended-comment re open1 open2 close1 close2)
-  (let loop1 ((level 0))
+
+  (define (done lst)
+    (##skip-comment-done
+     (and lst (list->string (reverse lst)))
+     re))
+
+  (let loop1 ((level 0)
+              (lst (if (macro-readtable-comment-handler
+                        (macro-readenv-readtable re))
+                       (list open2 open1)
+                       #f)))
     (let ((c (macro-read-next-char-or-eof re)))
       (if (not (char? c))
-        (##raise-datum-parsing-exception 'incomplete-form-eof-reached re)
-        (let loop2 ((level level) (c c))
-          (if (or (char=? c open1) (char=? c close1))
-            (let ((x (macro-read-next-char-or-eof re)))
-              (if (not (char? x))
-                (##raise-datum-parsing-exception 'incomplete-form-eof-reached re)
-                (if (char=? c open1)
-                  (if (char=? x open2)
-                    (loop1 (+ level 1))
-                    (loop2 level x))
-                  (if (char=? x close2)
-                    (if (< 0 level)
-                      (loop1 (- level 1))
-                      #f) ;; comment has ended
-                    (loop2 level x)))))
-            (loop1 level)))))))
+          (##raise-datum-parsing-exception 'incomplete-form-eof-reached re)
+          (let loop2 ((level level) (c c) (lst lst))
+            (if (or (char=? c open1) (char=? c close1))
+                (let ((x (macro-read-next-char-or-eof re)))
+                  (if (not (char? x))
+                      (##raise-datum-parsing-exception 'incomplete-form-eof-reached re)
+                      (let ((new-lst (and lst (cons x (cons c lst)))))
+                        (if (char=? c open1)
+                            (if (char=? x open2)
+                                (loop1 (+ level 1) new-lst)
+                                (loop2 level x new-lst))
+                            (if (char=? x close2)
+                                (if (< 0 level)
+                                    (loop1 (- level 1) new-lst)
+                                    (done new-lst))
+                                (loop2 level x new-lst))))))
+                (loop1 level (and lst (cons c lst)))))))))
 
-(define (##skip-single-line-comment re)
-  (let loop ()
+(define (##skip-single-line-comment prefix re)
+
+  (define (done lst)
+    (##skip-comment-done
+     (and lst (string-append prefix (list->string (reverse lst))))
+     re))
+
+  (let loop ((lst (if (macro-readtable-comment-handler
+                        (macro-readenv-readtable re))
+                      '()
+                      #f)))
     (let ((next (macro-peek-next-char-or-eof re)))
-      (if (char? next)
+      (if (not (char? next))
+        (done lst)
         (begin
           (macro-read-next-char-or-eof re) ;; skip "next"
           (if (not (char=? next #\newline))
-            (loop)))))))
+            (loop (and lst (cons next lst)))
+            (done lst)))))))
+
+(define (##skip-comment-done comment re)
+  (let ((handler
+         (macro-readtable-comment-handler
+          (macro-readenv-readtable re))))
+    (if (##procedure? handler)
+        (handler (macro-readenv-wrap re comment)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -10936,7 +10979,7 @@
   (##read-datum-or-label-or-none-or-dot re)) ;; read what follows whitespace
 
 (define (##read-single-line-comment re c)
-  (##skip-single-line-comment re) ;; skip comment
+  (##skip-single-line-comment "" re) ;; skip comment
   (##read-datum-or-label-or-none-or-dot re)) ;; read what follows comment
 
 (define (##read-escaped-string re c)
@@ -11200,6 +11243,16 @@
         (char=? c #\$)
         (alphabetic? c)))
 
+  (define (eat-either re char1 char2)
+    (let ((next (macro-peek-next-char-or-eof re)))
+      (if (and (char? next)
+               (or (char=? next char1)
+                   (char=? next char2)))
+          (begin
+            (macro-read-next-char-or-eof re) ;; skip "next"
+            #t)
+          #f)))
+
   (define (parse-number re c1 c2)
     (let ((str
            (let loop ((i 2) (state (if (char=? c1 #\.) 1 0)))
@@ -11208,23 +11261,35 @@
                        (not (or (decimal-digit? next)
                                 (and (= state 0)
                                      (char=? next #\.))
-                                (and (= state 1)
+                                (and (< state 2)
                                      (or (char=? next #\e)
                                          (char=? next #\E)))
                                 (and (= state 2)
                                      (or (char=? next #\+)
                                          (char=? next #\-))))))
-                 (make-string i c2)
-                 (begin
-                   (macro-read-next-char-or-eof re) ;; skip "next"
-                   (let ((s
-                          (loop (+ i 1)
-                                (if (or (= state 2)
-                                        (not (decimal-digit? next)))
-                                  (+ state 1)
-                                  state))))
-                     (string-set! s i next)
-                     s)))))))
+                   (let ((str (make-string i c2)))
+                     ;; handle C number suffixes
+                     (let* ((suff-l (eat-either re #\l #\L))
+                            (suff-u (and (= state 0)
+                                         (eat-either re #\u #\U)))
+                            (suff-l2 (and (not suff-l)
+                                          suff-u
+                                          (eat-either re #\l #\L)))
+                            (suff-f (and (> state 0)
+                                         (not suff-l)
+                                         (not suff-u)
+                                         (eat-either re #\f #\F))))
+                       str))
+                   (begin
+                     (macro-read-next-char-or-eof re) ;; skip "next"
+                     (let ((s
+                            (loop (+ i 1)
+                                  (if (or (= state 2)
+                                          (not (decimal-digit? next)))
+                                      (+ state 1)
+                                      state))))
+                       (string-set! s i next)
+                       s)))))))
       (string-set! str 0 c1)
       (let ((last (string-ref str (- (string-length str) 1))))
         (if (or (char=? last #\.) (decimal-digit? last))
@@ -11247,9 +11312,8 @@
            (let loop ((i 1))
              (let ((next (macro-peek-next-char-or-eof re)))
                (if (or (not (char? next))
-                       (and (not (alphabetic? next))
-                            (not (decimal-digit? next))
-                            (not (char=? next #\_))))
+                       (not (or (identifier-starter? next)
+                                (decimal-digit? next))))
                  (make-string i c)
                  (begin
                    (macro-read-next-char-or-eof re) ;; skip "next"
@@ -11346,7 +11410,7 @@
                               ((char=? c #\/)
                                (cond ((char=? x #\/)
                                       (macro-read-next-char-or-eof re);;skip #\/
-                                      (##skip-single-line-comment re)
+                                      (##skip-single-line-comment "//" re)
                                       (parse-token re))
                                      ((char=? x #\*)
                                       (macro-read-next-char-or-eof re);;skip #\*
@@ -12596,6 +12660,7 @@
           #t                 ;; r6rs-compatible-read?
           #t                 ;; r6rs-compatible-write?
           'multiline         ;; here-strings-allowed?
+          #f                 ;; comment-handler
           )))
 
     (##readtable-setup-for-standard-level! rt)
