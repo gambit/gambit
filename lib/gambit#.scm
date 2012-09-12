@@ -500,6 +500,8 @@ read-subu8vector
 read-u8
 readtable-case-conversion?
 readtable-case-conversion?-set
+readtable-comment-handler
+readtable-comment-handler-set
 readtable-eval-allowed?
 readtable-eval-allowed?-set
 readtable-keywords-allowed?

@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_io#.scm", Time-stamp: <2009-11-24 19:11:32 feeley>
+;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1124,6 +1124,7 @@
   (r6rs-compatible-read?          unprintable: read-write:)
   (r6rs-compatible-write?         unprintable: read-write:)
   (here-strings-allowed?          unprintable: read-write:)
+  (comment-handler                unprintable: read-write:)
 )
 
 (define-check-type readtable (macro-type-readtable)
