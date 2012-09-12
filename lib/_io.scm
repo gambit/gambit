@@ -8105,7 +8105,8 @@
 (set! ##pretty-print-shifting-allowed? #t)
 
 (define-prim (##wr-indent we shifted-col)
-  (##wr-ch we #\newline)
+  (if (##fixnum.> (##output-port-column (macro-writeenv-port we)) 1)
+      (##wr-ch we #\newline))
   (let ((col
          (if ##pretty-print-shifting-allowed?
              (let loop ()
@@ -8400,7 +8401,7 @@
                            (else
                             #f)))))))
 
-  (define (wr-list-possibly-with-read-macro-prefix we obj plain-pretty-print?)
+  (define (wr-list-according-to-head we obj plain-pretty-print?)
     (let* ((head
             (force-if-required we (##car obj)))
            (tail
@@ -8428,22 +8429,28 @@
            ((pretty-print) plain-format)
            (else           space-format))))
 
-      (if (and head
-               (or (##null? tail)
-                   (##pair? tail)))
-        (cond ((##head->open-close we head #f)
-               =>
-               (lambda (open-close)
-                 (parenthesized-read-macro open-close)))
-              (else
-               (let ((prefix
-                      (read-macro-prefix we head tail)))
-                 (if prefix
+      (cond ((##eq? head (##print-marker))
+             (let ((style (macro-writeenv-style we)))
+               (macro-writeenv-style-set! we 'print)
+               (let ((result (##wr we tail)))
+                 (macro-writeenv-style-set! we style)
+                 result)))
+            ((not (and head
+                       (or (##null? tail)
+                           (##pair? tail))))
+             (parenthesized-normal))
+            ((##head->open-close we head #f)
+             =>
+             (lambda (open-close)
+               (parenthesized-read-macro open-close)))
+            (else
+             (let ((prefix
+                    (read-macro-prefix we head tail)))
+               (if prefix
                    (begin
                      (##wr-str we prefix)
                      (##wr we (##car tail)))
-                   (parenthesized-normal)))))
-        (parenthesized-normal))))
+                   (parenthesized-normal)))))))
 
   (define space-format
     '#(0 #f 0 #f -1))
@@ -8584,13 +8591,13 @@
                        we
                        obj
                        (lambda (we obj)
-                         (wr-list-possibly-with-read-macro-prefix
+                         (wr-list-according-to-head
                           we
                           obj
                           plain-pretty-print?)))))
               (else
                #t))
-            (wr-list-possibly-with-read-macro-prefix
+            (wr-list-according-to-head
              we
              obj
              plain-pretty-print?))))
@@ -8606,6 +8613,8 @@
      (##wr we (##cdr obj)))
     (else
      (wr-list we obj #f))))
+
+(define (##print-marker) '#(print))
 
 (define-prim (##wr-one-line-pretty-print we obj wr-obj)
   (let* ((col
