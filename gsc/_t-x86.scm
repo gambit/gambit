@@ -1561,7 +1561,20 @@
               (x86-jmp  cgc false-lbl))))))
 
 
-
+;; Use the opposite operator to make code easier to generate.
+;; e.g.:
+;; (< 1 2 3)
+;;  =>
+;;   cmp 1 2
+;;   jge not-true
+;;   cmp 2 3
+;;   jge not-true
+;;   mov true, r1
+;;   jmp end-if
+;; not-true:
+;;   mov false, r1
+;;   jmp end-if
+;; end-if:
 (define-fxcmp-primitive "##fx<"  x86-jge)
 (define-fxcmp-primitive "##fx<=" x86-jg)
 (define-fxcmp-primitive "##fx>"  x86-jle)
@@ -1580,32 +1593,9 @@
       (x86-push cgc (x86-imm-int (macro-subtype-pair)))
       (x86-mov cgc loc sp))))
 
-;; (x86-prim-define "##car" #f #f
-;;   (lambda (cgc opnds loc)
-;;     (let* ((targ (codegen-context-target cgc))
-;;            (ctx (make-ctx targ #f))
-;;            (pair (nat-opnd cgc ctx (car opnds)))
-;;            (loc (nat-opnd cgc ctx loc))
-;;            (working-reg (nat-target-pstate-ptr-reg targ)))
-;;       (x86-push cgc working-reg)
-;;       (x86-mov cgc working-reg pair)
-;;       (x86-mov cgc loc (x86-mem (* 2 (nat-target-word-width targ)) working-reg))
-;;       (x86-pop cgc working-reg))))
 
-;; (x86-prim-define "##cdr" #f #f
-;;   (lambda (cgc opnds loc)
-;;     (let* ((targ (codegen-context-target cgc))
-;;            (ctx (make-ctx targ #f))
-;;            (pair (nat-opnd cgc ctx (car opnds)))
-;;            (loc (nat-opnd cgc ctx loc))
-;;            (working-reg (nat-target-pstate-ptr-reg targ)))
-;;       (x86-push cgc working-reg)
-;;       (x86-mov cgc working-reg pair)
-;;       (x86-mov cgc loc (x86-mem (* 1 (nat-target-word-width targ)) working-reg))
-;;       (x86-pop cgc working-reg))))
-
-
-
+;; Create the primitive op-name (##car, ##caar, etc.) by following the
+;; links (as described in operations).
 (define (x86-define-cxxxxr op-name operations)
   (x86-prim-define op-name #f #f
     (lambda (cgc opnds loc)
@@ -1624,8 +1614,6 @@
              (x86-mov cgc working-reg (x86-mem offset working-reg))))
          operations)
         (x86-mov cgc loc working-reg)
-        ;; (x86-mov cgc working-reg pair)
-        ;; (x86-mov cgc loc (x86-mem (* 1 (nat-target-word-width targ)) working-reg))
         (x86-pop cgc working-reg)))))
 
 (x86-define-cxxxxr "##car"    (reverse '(a)))
@@ -1661,3 +1649,28 @@
 (x86-define-cxxxxr "##cdaddr" (reverse '(d a d d)))
 (x86-define-cxxxxr "##cadddr" (reverse '(a d d d)))
 (x86-define-cxxxxr "##cddddr" (reverse '(d d d d)))
+
+
+(define (##set-car/cdr name offset)
+  (x86-prim-define name #f #t
+    (lambda (cgc opnds loc)
+      (let* ((targ (codegen-context-target cgc))
+             (ctx (make-ctx targ #f))
+             (loc (if loc (nat-opnd cgc ctx loc) loc))
+             (pair (nat-opnd cgc ctx (list-ref opnds 0)))
+             (value (nat-opnd cgc ctx (list-ref opnds 1)))
+             (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
+             (r2 (vector-ref (nat-target-gvm-reg-map targ) 2)))
+        (x86-push cgc r1)
+        (x86-push cgc r2)
+        (x86-mov cgc r1 pair)
+        (x86-mov cgc r2 value)
+        (x86-mov cgc (x86-mem (* offset (nat-target-word-width targ)) r1) r2)
+        (x86-pop cgc r2)
+        (x86-pop cgc r1)
+        (if loc
+            (mov cgc loc pair))))))
+
+
+(##set-car/cdr "##set-car!" 2)
+(##set-car/cdr "##set-cdr!" 1)
