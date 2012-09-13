@@ -440,6 +440,11 @@
                       (lambda (ctx)
                         (proc ctx)))))
 
+                   (if (and (memq (label-type gvm-instr) '(entry return))
+                            (eq? (target-name (ctx-target ctx)) 'js))
+                       (gen id ".id = \"" id "\";\n")
+                       "")
+
                    (if (and (eq? (label-type gvm-instr) 'return)
                             (eq? (target-name (ctx-target ctx)) 'js))
                        (let ((info (frame-info gvm-instr)))
