@@ -854,10 +854,8 @@
                 "]")))
 
         ((glo? gvm-opnd)
-         (gen (univ-global ctx (univ-prefix ctx "glo"))
-              "["
-              (object->string (symbol->string (glo-name gvm-opnd)))
-              "]"))
+         (univ-glo ctx
+                   (glo-name gvm-opnd)))
 
         ((clo? gvm-opnd)
          (univ-clo ctx
@@ -879,6 +877,16 @@
   (gen closure
        "(false).v"
        index))
+
+(define (univ-glo ctx name)
+  (gen (univ-global ctx (univ-prefix ctx "glo"))
+       "["
+       (object->string (symbol->string name))
+       "]")
+
+#;
+  (gen (univ-global ctx (univ-prefix ctx "glo_"))
+       (scheme-id->c-id (symbol->string name))))
 
 (define (translate-obj ctx obj)
   
@@ -1655,7 +1663,7 @@ var Gambit_stringappend = function ( ) {
 
     return s;
 }
-Gambit_glo[\"string-append\"] = Gambit_stringappend;
+" (univ-glo ctx 'string-append) " = Gambit_stringappend;
 
 // Vector
 var Gambit_Vector = function ( ) {
@@ -1772,7 +1780,7 @@ function Gambit_write ( obj ) {
         Gambit_write(obj.car);
         Gambit_writelist(obj.cdr);
     }
-    else if (obj instanceof Gambit_Vector)
+    else if (obj instanceof Array)
         Gambit_printout(obj.toString());
     else if (obj instanceof Gambit_Symbol)
         Gambit_printout(obj.symbolToString());
@@ -1792,7 +1800,7 @@ function Gambit_bb1_write ( ) { // write
     return Gambit_reg0;
 }
 
-Gambit_glo[\"write\"] = Gambit_bb1_write;
+" (univ-glo ctx 'write) " = Gambit_bb1_write;
 
 function Gambit_writelist ( obj ) {
     if (obj === null) {
@@ -1820,7 +1828,7 @@ function Gambit_bb1_writelist ( ) { // write-list
     return Gambit_reg0;
 }
 
-Gambit_glo[\"write-list\"] = Gambit_bb1_writelist;
+" (univ-glo ctx 'write-list) " = Gambit_bb1_writelist;
 
 function Gambit_print ( obj ) {
     if (obj === false)
@@ -1839,7 +1847,7 @@ function Gambit_print ( obj ) {
         Gambit_print(obj.car);
         Gambit_print(obj.cdr);
     }
-    else if (obj instanceof Gambit_Vector) {
+    else if (obj instanceof Array) {
         for (i = 0; i < obj.vectorlength(); i++) {
             Gambit_print(obj.a[i]);
         }
@@ -1862,7 +1870,7 @@ function Gambit_bb1_print ( ) { // print
     return " R0 ";
 }
 
-Gambit_glo[\"print\"] = Gambit_bb1_print;
+" (univ-glo ctx 'print) " = Gambit_bb1_print;
 
 function Gambit_println ( obj ) {
     Gambit_print(obj);
@@ -1879,7 +1887,7 @@ function Gambit_bb1_println ( ) { // println
     return " R0 ";
 }
 
-Gambit_glo[\"println\"] = Gambit_bb1_println;
+" (univ-glo ctx 'println) " = Gambit_bb1_println;
 
 function Gambit_bb1_newline ( ) { // newline
     if (Gambit_nargs !== 0) {
@@ -1891,7 +1899,7 @@ function Gambit_bb1_newline ( ) { // newline
     return " R0 ";
 }
 
-Gambit_glo[\"newline\"] = Gambit_bb1_newline;
+" (univ-glo ctx 'newline) " = Gambit_bb1_newline;
 
 function Gambit_bb1_display ( ) { // display
     if (Gambit_nargs !== 1) {
@@ -1903,7 +1911,7 @@ function Gambit_bb1_display ( ) { // display
     return " R0 ";
 }
 
-Gambit_glo[\"display\"] = Gambit_bb1_display;
+" (univ-glo ctx 'display) " = Gambit_bb1_display;
 
 function Gambit_bb1_prettyprint ( ) { // prettyprint
     if (Gambit_nargs !== 1) {
@@ -1916,7 +1924,7 @@ function Gambit_bb1_prettyprint ( ) { // prettyprint
     return " R0 ";
 }
 
-Gambit_glo[\"prettyprint\"] = Gambit_bb1_prettyprint;
+" (univ-glo ctx 'prettyprint) " = Gambit_bb1_prettyprint;
 
 function Gambit_bb1_pp ( ) { // pp
     if (Gambit_nargs !== 1) {
@@ -1929,7 +1937,7 @@ function Gambit_bb1_pp ( ) { // pp
     return " R0 ";
 }
 
-Gambit_glo[\"pp\"] = Gambit_bb1_pp;
+" (univ-glo ctx 'pp) " = Gambit_bb1_pp;
 
 function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
     if (Gambit_nargs !== 0) {
@@ -1941,7 +1949,7 @@ function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
     return " R0 ";
 }
 
-Gambit_glo[\"real-time-milliseconds\"] = Gambit_bb1_real_2d_time_2d_milliseconds;
+" (univ-glo ctx 'real-time-milliseconds) " = Gambit_bb1_real_2d_time_2d_milliseconds;
 
 
 // Continuations
@@ -2054,7 +2062,7 @@ function Gambit_bb1__23__23_continuation_3f_() { // ##continuation?
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation?\"] = Gambit_bb1__23__23_continuation_3f_;
+" (univ-glo ctx '##continuation?) " = Gambit_bb1__23__23_continuation_3f_;
 
 
 function Gambit_bb1__23__23_continuation_2d_frame() { // ##continuation-frame
@@ -2065,7 +2073,7 @@ function Gambit_bb1__23__23_continuation_2d_frame() { // ##continuation-frame
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-frame\"] = Gambit_bb1__23__23_continuation_2d_frame;
+" (univ-glo ctx '##continuation-frame) " = Gambit_bb1__23__23_continuation_2d_frame;
 
 
 function Gambit_bb1__23__23_continuation_2d_denv() { // ##continuation-denv
@@ -2076,7 +2084,7 @@ function Gambit_bb1__23__23_continuation_2d_denv() { // ##continuation-denv
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-denv\"] = Gambit_bb1__23__23_continuation_2d_denv;
+" (univ-glo ctx '##continuation-denv) " = Gambit_bb1__23__23_continuation_2d_denv;
 
 
 function Gambit_bb1__23__23_continuation_2d_fs() { // ##continuation-fs
@@ -2087,7 +2095,7 @@ function Gambit_bb1__23__23_continuation_2d_fs() { // ##continuation-fs
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-fs\"] = Gambit_bb1__23__23_continuation_2d_fs;
+" (univ-glo ctx '##continuation-fs) " = Gambit_bb1__23__23_continuation_2d_fs;
 
 
 function Gambit_bb1__23__23_frame_2d_fs() { // ##frame-fs
@@ -2098,7 +2106,7 @@ function Gambit_bb1__23__23_frame_2d_fs() { // ##frame-fs
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-fs\"] = Gambit_bb1__23__23_frame_2d_fs;
+" (univ-glo ctx '##frame-fs) " = Gambit_bb1__23__23_frame_2d_fs;
 
 
 function Gambit_bb1__23__23_return_2d_fs() { // ##return-fs
@@ -2109,7 +2117,7 @@ function Gambit_bb1__23__23_return_2d_fs() { // ##return-fs
   return " R0 ";
 }
 
-Gambit_glo[\"##return-fs\"] = Gambit_bb1__23__23_return_2d_fs;
+" (univ-glo ctx '##return-fs) " = Gambit_bb1__23__23_return_2d_fs;
 
 
 function Gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
@@ -2120,7 +2128,7 @@ function Gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-link\"] = Gambit_bb1__23__23_continuation_2d_link;
+" (univ-glo ctx '##continuation-link) " = Gambit_bb1__23__23_continuation_2d_link;
 
 
 function Gambit_bb1__23__23_frame_2d_link() { // ##frame-link
@@ -2140,7 +2148,7 @@ function Gambit_bb1__23__23_continuation_2d_ret() { // ##continuation-ret
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-ret\"] = Gambit_bb1__23__23_continuation_2d_ret;
+" (univ-glo ctx '##continuation-ret) " = Gambit_bb1__23__23_continuation_2d_ret;
 
 
 function Gambit_bb1__23__23_frame_2d_ret() { // ##frame-ret
@@ -2151,7 +2159,7 @@ function Gambit_bb1__23__23_frame_2d_ret() { // ##frame-ret
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-ret\"] = Gambit_bb1__23__23_frame_2d_ret;
+" (univ-glo ctx '##frame-ret) " = Gambit_bb1__23__23_frame_2d_ret;
 
 
 function Gambit_bb1__23__23_continuation_2d_ref() { // ##continuation-ref
@@ -2162,7 +2170,7 @@ function Gambit_bb1__23__23_continuation_2d_ref() { // ##continuation-ref
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-ref\"] = Gambit_bb1__23__23_continuation_2d_ref;
+" (univ-glo ctx '##continuation-ref) " = Gambit_bb1__23__23_continuation_2d_ref;
 
 
 function Gambit_bb1__23__23_frame_2d_ref() { // ##frame-ref
@@ -2173,7 +2181,7 @@ function Gambit_bb1__23__23_frame_2d_ref() { // ##frame-ref
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-ref\"] = Gambit_bb1__23__23_frame_2d_ref;
+" (univ-glo ctx '##frame-ref) " = Gambit_bb1__23__23_frame_2d_ref;
 
 
 function Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
@@ -2184,7 +2192,7 @@ function Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuati
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-slot-live?\"] = Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_;
+" (univ-glo ctx '##continuation-slot-live?) " = Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_;
 
 
 function Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
@@ -2195,7 +2203,7 @@ function Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
   return " R0 ";
 }
 
-Gambit_glo[\"##frame-slot-live?\"] = Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_;
+" (univ-glo ctx '##frame-slot-live?) " = Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_;
 
 
 function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
@@ -2212,7 +2220,7 @@ function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
   return " R0 ";
 }
 
-Gambit_glo[\"##continuation-next\"] = Gambit_bb1__23__23_continuation_2d_next;
+" (univ-glo ctx '##continuation-next) " = Gambit_bb1__23__23_continuation_2d_next;
 
 
 function Gambit_trampoline(pc)
@@ -3151,10 +3159,10 @@ EOF
                             (vector->list obj)))
                  (sep (make-list (- vlen 1) ", ")))
 
-             (gen "new " (univ-prefix ctx "Vector(")
+             (gen "["
                   (apply gen (zip tobj sep))
-                  ")"))
-           (gen "new " (univ-prefix ctx "Vector()")))))
+                  "]"))
+           (gen "[]"))))
     
     ((python ruby php)                         ;TODO: complete
      (gen (object->string obj)))
@@ -4395,14 +4403,13 @@ EOF
       ((js)
        (let ((nbopnd (length opnds)))
          (if (= nbopnd 0)
-             (gen "new " (univ-prefix ctx "Vector()"))
-             (let ((args (list "new "
-                               (univ-prefix ctx "Vector(")
+             (gen "[]")
+             (let ((args (list "["
                                (translate-gvm-opnd ctx (list-ref opnds 0)))))
                (let loop ((opnd 1)
                           (args args))
                  (if (= opnd nbopnd)
-                     (apply gen (append args '(")")))
+                     (apply gen (append args '("]")))
                      (loop (+ opnd 1)
                            (append args
                                    (list ", "
@@ -4422,9 +4429,9 @@ EOF
 
       ((js)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".vectorref("
+            "["
             (translate-gvm-opnd ctx (list-ref opnds 1))
-            ")"))
+            "]"))
        
       ((python ruby php)                ;TODO: complete
        (gen ""))
@@ -4440,11 +4447,10 @@ EOF
 
       ((js)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".vectorset("
+            "["
             (translate-gvm-opnd ctx (list-ref opnds 1))
-            ", "
-            (translate-gvm-opnd ctx (list-ref opnds 2))
-            ")"))
+            "] = "
+            (translate-gvm-opnd ctx (list-ref opnds 2))))
       
       ((python)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
