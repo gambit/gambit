@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_gvm.scm", Time-stamp: <2010-06-10 16:31:50 feeley>
+;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1723,9 +1723,10 @@
       0))
 
   (define (write-param-pattern gvm-instr port)
-    (let ((len (write-returning-len
-                 (label-entry-nb-parms gvm-instr)
-                 port)))
+    (display "nparams=" port)
+    (let ((len (+ 8 (write-returning-len
+                     (label-entry-nb-parms gvm-instr)
+                     port))))
       (display " (" port)
       (let ((len (+ len
                     (+ 2
@@ -1750,9 +1751,9 @@
 
       ((label)
        (let ((len (write-gvm-lbl (label-lbl-num gvm-instr) port)))
-         (display " " port)
+         (display " fs=" port)
          (let ((len (+ len
-                       (+ 1 (write-returning-len
+                       (+ 4 (write-returning-len
                               (frame-size (gvm-instr-frame gvm-instr))
                               port)))))
            (case (label-type gvm-instr)
@@ -1813,12 +1814,13 @@
                                         port))))
          (let ((len (+ len
                        (if (ifjump-poll? gvm-instr)
-                         (begin (display " jump* " port) 7)
+                         (begin (display " jump/poll " port) 11)
                          (begin (display " jump " port) 6)))))
+           (display "fs=" port)
            (let ((len (+ len
-                         (write-returning-len
-                           (frame-size (gvm-instr-frame gvm-instr))
-                           port))))
+                         (+ 3 (write-returning-len
+                               (frame-size (gvm-instr-frame gvm-instr))
+                               port)))))
              (display " " port)
              (let ((len (+ len
                            (+ 1 (write-gvm-lbl
@@ -1833,12 +1835,13 @@
        (display "  " port)
        (let ((len (+ 2
                      (if (switch-poll? gvm-instr)
-                       (begin (display "switch* " port) 8)
+                       (begin (display "switch/poll " port) 12)
                        (begin (display "switch " port) 7)))))
+         (display "fs=" port)
          (let ((len (+ len
-                       (write-returning-len
-                        (frame-size (gvm-instr-frame gvm-instr))
-                        port))))
+                       (+ 3 (write-returning-len
+                             (frame-size (gvm-instr-frame gvm-instr))
+                             port)))))
            (display " " port)
            (let ((len (+ len
                          (+ 1 (write-gvm-opnd (switch-opnd gvm-instr) port)))))
@@ -1872,24 +1875,25 @@
        (display "  " port)
        (let ((len (+ 2
                      (if (jump-poll? gvm-instr)
-                       (begin (display "jump*" port) 5)
+                       (begin (display "jump/poll" port) 9)
                        (begin (display "jump" port) 4)))))
          (let ((len (+ len
                        (if (jump-safe? gvm-instr)
-                         (begin (display "$ " port) 2)
+                         (begin (display "/safe " port) 6)
                          (begin (display " " port) 1)))))
+           (display "fs=" port)
            (let ((len (+ len
-                         (write-returning-len
-                           (frame-size (gvm-instr-frame gvm-instr))
-                           port))))
+                         (+ 3 (write-returning-len
+                               (frame-size (gvm-instr-frame gvm-instr))
+                               port)))))
              (display " " port)
              (let ((len (+ len
                            (+ 1 (write-gvm-opnd (jump-opnd gvm-instr) port)))))
                (+ len
                   (if (jump-nb-args gvm-instr)
                     (begin
-                      (display " " port)
-                      (+ 1 (write-returning-len
+                      (display " nargs=" port)
+                      (+ 7 (write-returning-len
                              (jump-nb-args gvm-instr)
                              port)))
                     0)))))))
@@ -1927,7 +1931,7 @@
       (begin
         (display "=" port)
         (cond ((eq? var closure-env-var)
-               (write (map (lambda (var) (var-name var)) (frame-closed frame))
+               (write (map var-name (frame-closed frame))
                       port))
               ((eq? var ret-var)
                (display "#" port))
@@ -1968,21 +1972,26 @@
          (display "." port)
          1)
         ((reg? gvm-opnd)
-         (display "+" port)
+         (display "r" port)
          (+ 1 (write-returning-len (reg-num gvm-opnd) port)))
         ((stk? gvm-opnd)
-         (display "-" port)
-         (+ 1 (write-returning-len (stk-num gvm-opnd) port)))
+         (display "frame[" port)
+         (let ((len (write-returning-len (stk-num gvm-opnd) port)))
+           (display "]" port)
+           (+ 7 len)))
         ((glo? gvm-opnd)
-         (write-returning-len (glo-name gvm-opnd) port))
+         (display "global[" port)
+         (let ((len (write-returning-len (glo-name gvm-opnd) port)))
+           (display "]" port)
+           (+ 8 len)))
         ((clo? gvm-opnd)
          (let ((len (write-gvm-opnd (clo-base gvm-opnd) port)))
-           (display "(" port)
+           (display "[" port)
            (let ((len (+ len
                          (+ 1 (write-returning-len
                                 (clo-index gvm-opnd)
                                 port)))))
-             (display ")" port)
+             (display "]" port)
              (+ len 1))))
         ((lbl? gvm-opnd)
          (write-gvm-lbl (lbl-num gvm-opnd) port))
