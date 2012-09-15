@@ -94,6 +94,7 @@
 (univ-setup 'python ".py")
 (univ-setup 'ruby   ".rb")
 (univ-setup 'php    ".php")
+(univ-setup 'dart   ".dart")
 
 ;;;----------------------------------------------------------------------------
 
@@ -1168,17 +1169,17 @@ Gambit_stack[0] = false;
 var Gambit_poll_count = 1;
 
 //if (this.hasOwnProperty('setTimeout')) {
-//  Gambit_poll = function (dest_bb) {
+//  Gambit_poll = function (dest) {
 //                  Gambit_poll_count = 100;
 //                  Gambit_stack.length = Gambit_sp + 1;
-//                  setTimeout(function () { Gambit_trampoline(dest_bb); }, 1);
+//                  setTimeout(function () { Gambit_trampoline(dest); }, 1);
 //                  return false;
 //                };
 //} else {
-  Gambit_poll = function (dest_bb) {
+  Gambit_poll = function (dest) {
                   Gambit_poll_count = 100;
                   Gambit_stack.length = Gambit_sp + 1;
-                  return dest_bb;
+                  return dest;
                 };
 //}
 
@@ -2125,6 +2126,28 @@ function Gambit_bb1__23__23_return_2d_fs() { // ##return-fs
 " (univ-glo ctx '##return-fs) " = Gambit_bb1__23__23_return_2d_fs;
 
 
+function Gambit_bb1__23__23_return_2d_link() { // ##return-link
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_return_2d_link);
+  }
+  " R1 " = " R1 ".link-1;
+  return " R0 ";
+}
+
+" (univ-glo ctx '##return-link) " = Gambit_bb1__23__23_return_2d_link;
+
+
+function Gambit_bb1__23__23_return_2d_id() { // ##return-id
+  if (Gambit_nargs !== 1) {
+    return Gambit_wrong_nargs(Gambit_bb1__23__23_return_2d_id);
+  }
+  " R1 " = " R1 ".id;
+  return " R0 ";
+}
+
+" (univ-glo ctx '##return-id) " = Gambit_bb1__23__23_return_2d_id;
+
+
 function Gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
   if (Gambit_nargs !== 1) {
     return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_link);
@@ -2143,7 +2166,7 @@ function Gambit_bb1__23__23_frame_2d_link() { // ##frame-link
   " R1 " = " R1 "[0].link-1;
   return " R0 ";
 }
-
+" (univ-glo ctx '##frame-link) " = Gambit_bb1__23__23_frame_2d_link;
 
 function Gambit_bb1__23__23_continuation_2d_ret() { // ##continuation-ret
   if (Gambit_nargs !== 1) {
@@ -2228,17 +2251,16 @@ function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
 " (univ-glo ctx '##continuation-next) " = Gambit_bb1__23__23_continuation_2d_next;
 
 
-function Gambit_trampoline(pc)
-{
-    while (pc !== false) {
-        pc = pc();
-    }
+function Gambit_trampoline(pc) {
+  while (pc !== false) {
+    pc = pc();
+  }
 }
 
 "
 
 )))
-    
+
     ((python)                           ;rts py     
 #<<EOF
 #! /usr/bin/python
@@ -2466,6 +2488,117 @@ EOF
 EOF
 )
 
+    ((dart)                               ;rts dart
+     (let ((R0 (translate-gvm-opnd ctx (make-reg 0)))
+           (R1 (translate-gvm-opnd ctx (make-reg 1)))
+           (R2 (translate-gvm-opnd ctx (make-reg 2)))
+           (R3 (translate-gvm-opnd ctx (make-reg 3)))
+           (R4 (translate-gvm-opnd ctx (make-reg 4))))
+       (list "
+function Gambit_heapify(ra) {
+
+  if (Gambit_sp > 0) { // stack contains at least one frame
+
+    var fs = ra.fs, link = ra.link;
+    var chain = Gambit_stack;
+
+    if (Gambit_sp > fs) { // stack contains at least two frames
+      chain = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
+      chain[0] = ra;
+      Gambit_sp = Gambit_sp - fs;
+      var prev_frame = chain, prev_link = link;
+      ra = prev_frame[prev_link]; fs = ra.fs; link = ra.link;
+
+      while (Gambit_sp > fs) {
+        var frame = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
+        frame[0] = ra;
+        Gambit_sp = Gambit_sp - fs;
+        prev_frame[prev_link] = frame;
+        prev_frame = frame; prev_link = link;
+        ra = prev_frame[prev_link]; fs = ra.fs; link = ra.link;
+      }
+
+      prev_frame[prev_link] = Gambit_stack;
+    }
+
+    Gambit_stack.length = fs + 1;
+    Gambit_stack[link] = Gambit_stack[0];
+    Gambit_stack[0] = ra;
+  
+    Gambit_stack = [chain];
+    Gambit_sp = 0;
+  }
+
+  return Gambit_underflow;
+}
+
+function Gambit_underflow() {
+
+  var frame = Gambit_stack[0];
+
+  if (frame == false) // end of continuation?
+    return false; // terminate trampoline
+
+  var ra = frame[0], fs = ra.fs, link = ra.link;
+  Gambit_stack = frame.slice(0, fs + 1);
+  Gambit_sp = fs;
+  Gambit_stack[0] = frame[link];
+  Gambit_stack[link] = Gambit_underflow;
+
+  return ra;
+}
+
+var Gambit_glo;
+var Gambit_stack;
+var Gambit_sp = 0;
+var " R0 " = Gambit_underflow;
+var " R1 " = false;
+var " R2 " = false;
+var " R3 " = false;
+var " R4 " = false;
+var Gambit_nargs = 0;
+var Gambit_temp1 = false;
+var Gambit_temp2 = false;
+var Gambit_poll_count = 1;
+
+function Gambit_poll(dest) {
+  Gambit_poll_count = 100;
+//  Gambit_stack.length = Gambit_sp + 1;
+  return dest;
+}
+
+function Gambit_printout(text) {
+  if (text != \"\\n\")
+    print(text);
+}
+
+function Gambit_wrong_nargs(fn) {
+    Gambit_printout(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
+    Gambit_printout(fn);
+    return false;
+}
+
+function closure_alloc(slots) {
+
+  function self(msg) {
+    if (msg == false) return slots;
+    " R4 " = self;
+    return slots.v0;
+  }
+
+  return self;
+}
+
+function Gambit_trampoline(pc) {
+  while (pc != false) {
+    pc = pc();
+  }
+}
+
+"
+
+)))
+
     (else
      (compiler-internal-error
       "runtime-system, unknown target"))))
@@ -2484,6 +2617,18 @@ EOF
            ((python ruby)
             (gen (univ-prefix ctx "trampoline") "(" entry ")\n"))
 
+           ((dart)
+            (univ-function
+             ctx
+             "main"
+             ""
+             "\n"
+             (univ-indent
+              (gen (univ-assign ctx (univ-prefix ctx "glo") "{}")
+                   (univ-assign ctx (univ-prefix ctx "stack") "new List(1000)")
+                   (univ-assign ctx (univ-prefix ctx "stack[0]") "false")
+                   (gen (univ-prefix ctx "trampoline") "(" entry ");\n")))))
+
            (else
             (compiler-internal-error
              "entry-point, unknown target"))))))
@@ -2493,7 +2638,7 @@ EOF
 (define (univ-global ctx name)
   (case (target-name (ctx-target ctx))
 
-    ((js python php) name)
+    ((js python php dart) name)
 
     ((ruby) (gen "$" name))
 
@@ -2504,7 +2649,7 @@ EOF
 (define (univ-function ctx name params header body)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen "function " name "(" params ") {" header body "}\n"))
 
     ((python)
@@ -2562,7 +2707,7 @@ EOF
 (define (univ-comment ctx comment)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen "// " comment))
 
     ((python ruby)
@@ -2578,7 +2723,7 @@ EOF
 (define (univ-return ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen "return " expr ";\n"))
 
     ((python ruby)
@@ -2594,7 +2739,7 @@ EOF
 (define (univ-call ctx name . params)
   (case (target-name (ctx-target ctx))
 
-    ((js)
+    ((js dart)
      (letrec ((addcommas
                (lambda (lst res)
                  (if (null? lst)
@@ -2657,7 +2802,7 @@ EOF
     ((ruby)
      (gen expr1 " .equal?(" expr2 ")"))
 
-    ((php)
+    ((php dart)
      (gen expr1 " == " expr2))
 
     (else
@@ -2734,7 +2879,7 @@ EOF
     ((js)
      (gen expr1 " === " expr2))
 
-    ((python ruby php)
+    ((python ruby php dart)
      (gen expr1 " == " expr2))
 
     (else
@@ -2747,7 +2892,7 @@ EOF
     ((js)
      (gen expr1 " !== " expr2))
 
-    ((python ruby php)
+    ((python ruby php dart)
      (gen expr1 " != " expr2))
 
     (else
@@ -2757,7 +2902,7 @@ EOF
 (define (univ-boolean ctx val)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php)
+    ((js ruby php dart)
      (gen (if val "true" "false")))
 
     ((python)
@@ -2770,7 +2915,7 @@ EOF
 (define (univ-assign ctx loc expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen loc " = " expr ";\n"))
 
     ((python ruby)
@@ -2783,7 +2928,7 @@ EOF
 (define (univ-increment ctx loc expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen loc " += " expr ";\n"))
 
     ((python ruby)
@@ -2796,7 +2941,7 @@ EOF
 (define (univ-decrement ctx loc expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen loc " -= " expr ";\n"))
 
     ((python ruby)
@@ -2809,7 +2954,7 @@ EOF
 (define (univ-expr ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen expr ";\n"))
 
     ((python ruby)
@@ -2822,7 +2967,7 @@ EOF
 (define (univ-ifnot-then ctx test true)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen "if (!(" test ")) {\n"
           (univ-indent true)
           "}\n"))
@@ -2843,7 +2988,7 @@ EOF
 (define (univ-if-then ctx test true)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen "if (" test ") {\n"
           (univ-indent true)
           "}\n"))
@@ -2864,7 +3009,7 @@ EOF
 (define (univ-if-then-else ctx test true false)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js php dart)
      (gen "if (" test ") {\n"
           (univ-indent true)
           "} else {\n"
