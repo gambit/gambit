@@ -287,6 +287,179 @@
   ;;(pretty-print (list 'univ-object-type 'targ obj))
   'bignum);;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; ***** TARGET CODE EMITTERS
+
+(define-macro (emit ctx . forms)
+
+  (define (generate form)
+    (cond ((and (pair? form) (symbol? (car form)))
+           (let ((name (car form)))
+             (if (eq? name 'unquote)
+                 (cadr form)
+                 `(,(string->symbol
+                     (string-append "univ-emitter-"
+                                    (symbol->string name)))
+                   $ctx$
+                   ,@(map generate (cdr form))))))
+          ((symbol? form)
+           form)
+          (else
+           (error "unexpected form in emit"))))
+
+  `(let (($ctx$ ,ctx))
+     ,(cond ((null? forms)
+             ''())
+            ((null? (cdr forms))
+             (generate (car forms)))
+            (else
+             `(list ,@(map generate forms))))))
+
+(define (univ-emitter-expr-statement ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php dart)
+     (list expr ";\n"))
+
+    ((python ruby)
+     (list expr "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-expr-statement, unknown target"))))
+
+(define (univ-emitter-if ctx test true #!optional (false #f))
+  (case (target-name (ctx-target ctx))
+
+    ((js php dart)
+     (list "if (" test ") {\n"
+           (univ-indent true)
+           (if false
+               (list "} else {\n"
+                     (univ-indent false))
+               '())
+           "}\n"))
+
+    ((python)
+     (list "if " test ":\n"
+           (univ-indent true)
+           (if false
+               (list "else:\n"
+                     (univ-indent false))
+               '())))
+
+    ((ruby)
+     (list "if " test "\n"
+           (univ-indent true)
+           (if false
+               (list "else\n"
+                     (univ-indent false))
+               '())
+           "end\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-if, unknown target"))))
+
+(define (univ-emitter-= ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (list expr1 " === " expr2))
+
+    ((python ruby php dart)
+     (list expr1 " == " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-=, unknown target"))))
+
+(define (univ-emitter-!= ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (list expr1 " !== " expr2))
+
+    ((python ruby php dart)
+     (list expr1 " != " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-!=, unknown target"))))
+
+(define (univ-emitter-< ctx expr1 expr2)
+  (univ-emitter-comparison ctx " < " expr1 expr2))
+
+(define (univ-emitter-<= ctx expr1 expr2)
+  (univ-emitter-comparison ctx " <= " expr1 expr2))
+
+(define (univ-emitter-> ctx expr1 expr2)
+  (univ-emitter-comparison ctx " > " expr1 expr2))
+
+(define (univ-emitter->= ctx expr1 expr2)
+  (univ-emitter-comparison ctx " >= " expr1 expr2))
+
+(define (univ-emitter-comparison ctx comp expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby php dart)
+     (list expr1 comp expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-comparison, unknown target"))))
+
+(define (univ-emitter-not ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php dart)
+     (list "!" expr))
+
+    ((python ruby)
+     (list "not " expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-not, unknown target"))))
+
+(define (univ-emitter-and ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby php dart)
+     (list expr1 " && " expr2))
+
+    ((python)
+     (list expr1 " and " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-and, unknown target"))))
+
+(define (univ-emitter-or ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby php dart)
+     (list expr1 " || " expr2))
+
+    ((python)
+     (list expr1 " or " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-or, unknown target"))))
+
+(define (univ-emitter-parens ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby php python dart)
+     (list "(" expr ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emitter-parens, unknown target"))))
+
+(define (univ-emitter-operand ctx opnd)
+  (translate-gvm-opnd ctx opnd)) ;; TODO: deprecate translate-gvm-opnd
+
 ;; ***** DUMPING OF A COMPILATION MODULE
 
 (define (univ-dump targ procs output c-intf script-line options)
@@ -392,32 +565,30 @@
                                   (if (label-entry-closed? gvm-instr)
                                       "closure-entry-point (+rest)\n"
                                       "entry-point (+rest)\n"))
-                                 (univ-ifnot-then
+                                 (emit
                                   ctx
-                                  (univ-and ctx
-                                            (univ-call ctx
-                                                       (univ-prefix ctx "buildrest")
-                                                       (label-entry-nb-parms gvm-instr))
-                                            (univ-= ctx
-                                                    (univ-global ctx (univ-prefix ctx "nargs"))
-                                                    (label-entry-nb-parms gvm-instr)))
-                                  (univ-return-call ctx
-                                                    (univ-prefix ctx "wrong_nargs")
-                                                    id)))
+                                  (if (not (and
+                                            ,(univ-call ctx
+                                                        (univ-prefix ctx "buildrest")
+                                                        (label-entry-nb-parms gvm-instr))
+                                            (= ,(univ-global ctx (univ-prefix ctx "nargs"))
+                                               ,(label-entry-nb-parms gvm-instr))))
+                                      ,(univ-return-call ctx
+                                                         (univ-prefix ctx "wrong_nargs")
+                                                         id))))
                             (gen " "
                                  (univ-comment
                                   ctx
                                   (if (label-entry-closed? gvm-instr)
                                       "closure-entry-point\n"
                                       "entry-point\n"))
-                                 (univ-if-then
+                                 (emit
                                   ctx
-                                  (univ-not= ctx
-                                             (univ-global ctx (univ-prefix ctx "nargs"))
-                                             (label-entry-nb-parms gvm-instr))
-                                  (univ-return-call ctx
-                                                    (univ-prefix ctx "wrong_nargs")
-                                                    id)))))
+                                  (if (!= ,(univ-global ctx (univ-prefix ctx "nargs"))
+                                          ,(label-entry-nb-parms gvm-instr))
+                                      ,(univ-return-call ctx
+                                                         (univ-prefix ctx "wrong_nargs")
+                                                         id))))))
 
                        ((return)
                         (gen " " (univ-comment ctx "return-point\n")))
@@ -596,11 +767,11 @@
                        (compiler-internal-error
                         "scan-gvm-instr, unknown 'test'" test)
 
-                       (univ-if-then-else
+                       (emit
                         ctx
-                        (proc ctx opnds)
-                        (jump-to-label ctx true fs)
-                        (jump-to-label ctx false fs))))))
+                        (if ,(proc ctx opnds)
+                            ,(jump-to-label ctx true fs)
+                            ,(jump-to-label ctx false fs)))))))
 
               ((switch)
                ;; TODO
@@ -1183,23 +1354,19 @@ var Gambit_poll_count = 1;
                 };
 //}
 
-if (this.hasOwnProperty('document')) {
-  Gambit_printout = function (text) {
-                      if (text === \"\\n\")
-                        document.write(\"<br/>\");
-                      else
-                        document.write(text);
-                    };
-} else if (this.hasOwnProperty('print')) {
-  Gambit_printout = function (text) {
-                      if (text !== \"\\n\")
-                        print(text);
-                    };
-} else {
-  Gambit_printout = function (text) {
-                      if (text !== \"\\n\")
-                        alert(text);
-                    };
+var iobuffer = \"\";
+
+function Gambit_printout(text) {
+  if (text === \"\\n\") {
+    print(iobuffer);
+    iobuffer = \"\";
+  } else {
+    iobuffer += text;
+  }
+//  if (text === \"\\n\")
+//    document.write(\"<br/>\");
+//  else
+//    document.write(text);
 }
 
 function Gambit_buildrest ( f ) {    // nb formal args
@@ -1854,8 +2021,8 @@ function Gambit_print ( obj ) {
         Gambit_print(obj.cdr);
     }
     else if (obj instanceof Array) {
-        for (i = 0; i < obj.vectorlength(); i++) {
-            Gambit_print(obj.a[i]);
+        for (i = 0; i < obj.length; i++) {
+            Gambit_print(obj[i]);
         }
     }
     else if (obj instanceof Gambit_Symbol)
@@ -2765,13 +2932,13 @@ function Gambit_trampoline(pc) {
        (univ-return
         ctx
         (univ-call ctx (univ-prefix ctx "poll") expr))
-      (univ-if-then-else
+      (emit
        ctx
-       (gen "--" (univ-prefix ctx "poll_count") " === 0")
-       (univ-return-call ctx (univ-prefix ctx "poll") expr)
-       (if call?
-           (univ-return-call ctx expr)
-           (univ-return ctx expr)))
+       (if ,(gen "--" (univ-prefix ctx "poll_count") " === 0")
+           ,(univ-return-call ctx (univ-prefix ctx "poll") expr)
+           ,(if call?
+                (univ-return-call ctx expr)
+                (univ-return ctx expr))))
 
       (if call?
           (univ-return-call ctx expr)
@@ -2809,32 +2976,6 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-eq, unknown target"))))
 
-(define (univ-and ctx expr1 expr2)
-  (case (target-name (ctx-target ctx))
-
-    ((js ruby php)
-     (gen "(" expr1 " && " expr2 ")"))
-
-    ((python)
-     (gen "(" expr1 " and " expr2 ")"))
-
-    (else
-     (compiler-internal-error
-      "univ-and, unknown target"))))
-
-(define (univ-or ctx expr1 expr2)
-  (case (target-name (ctx-target ctx))
-
-    ((js ruby php)
-     (gen "(" expr1 " || " expr2 ")"))
-
-    ((python)
-     (gen "(" expr1 " or " expr2 ")"))
-
-    (else
-     (compiler-internal-error
-      "univ-or, unknown target"))))
-
 (define (univ-fxquotient ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -2860,44 +3001,6 @@ function Gambit_trampoline(pc) {
     (else
      (compiler-internal-error
       "univ-fxmodulo, unknown target"))))
-
-(define (univ-< ctx expr1 expr2)
-  (gen expr1 " < " expr2))
-
-(define (univ-<= ctx expr1 expr2)
-  (gen expr1 " <= " expr2))
-
-(define (univ-> ctx expr1 expr2)
-  (gen expr1 " > " expr2))
-
-(define (univ->= ctx expr1 expr2)
-  (gen expr1 " >= " expr2))
-
-(define (univ-= ctx expr1 expr2)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (gen expr1 " === " expr2))
-
-    ((python ruby php dart)
-     (gen expr1 " == " expr2))
-
-    (else
-     (compiler-internal-error
-      "univ-=, unknown target"))))
-
-(define (univ-not= ctx expr1 expr2)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (gen expr1 " !== " expr2))
-
-    ((python ruby php dart)
-     (gen expr1 " != " expr2))
-
-    (else
-     (compiler-internal-error
-      "univ-not=, unknown target"))))
 
 (define (univ-boolean ctx val)
   (case (target-name (ctx-target ctx))
@@ -2951,88 +3054,6 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-decrement, unknown target"))))
 
-(define (univ-expr ctx expr)
-  (case (target-name (ctx-target ctx))
-
-    ((js php dart)
-     (gen expr ";\n"))
-
-    ((python ruby)
-     (gen expr "\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-expr, unknown target"))))
-
-(define (univ-ifnot-then ctx test true)
-  (case (target-name (ctx-target ctx))
-
-    ((js php dart)
-     (gen "if (!(" test ")) {\n"
-          (univ-indent true)
-          "}\n"))
-
-    ((python)
-     (gen "if not " test ":\n"
-          (univ-indent true)))
-
-    ((ruby)
-     (gen "if not(" test ")\n"
-          (univ-indent true)
-          "end\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-ifnot-then, unknown target"))))
-
-(define (univ-if-then ctx test true)
-  (case (target-name (ctx-target ctx))
-
-    ((js php dart)
-     (gen "if (" test ") {\n"
-          (univ-indent true)
-          "}\n"))
-
-    ((python)
-     (gen "if " test ":\n"
-          (univ-indent true)))
-
-    ((ruby)
-     (gen "if " test "\n"
-          (univ-indent true)
-          "end\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-if-then, unknown target"))))
-
-(define (univ-if-then-else ctx test true false)
-  (case (target-name (ctx-target ctx))
-
-    ((js php dart)
-     (gen "if (" test ") {\n"
-          (univ-indent true)
-          "} else {\n"
-          (univ-indent false)
-          "}\n"))
-
-    ((python)
-     (gen "if " test ":\n"
-          (univ-indent true)
-          "else:\n"
-          (univ-indent false)))
-
-    ((ruby)
-     (gen "if " test "\n"
-          (univ-indent true)
-          "else\n"
-          (univ-indent false)
-          "end\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-if-then-else, unknown target"))))
-
 (define (univ-define-prim
          name
          proc-safe?
@@ -3062,8 +3083,9 @@ function Gambit_trampoline(pc) {
                               (apply-gen ctx opnds))
 
                  (if side-effects? ;; only generate code for side-effect
-                     (univ-expr ctx
-                                (apply-gen ctx opnds))
+                     (emit
+                      ctx
+                      (expr-statement ,(apply-gen ctx opnds)))
                      (gen "")))))))
 
     (if ifjump-gen
@@ -3375,37 +3397,37 @@ function Gambit_trampoline(pc) {
 (univ-define-prim-bool "##fx<" #f #f
 
   (lambda (ctx opnds)
-    (univ-< ctx
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            (translate-gvm-opnd ctx (list-ref opnds 1)))))
+    (let ((opnd1 (list-ref opnds 0))
+          (opnd2 (list-ref opnds 1)))
+      (emit ctx (< (operand opnd1) (operand opnd2))))))
 
 (univ-define-prim-bool "##fx<=" #f #f
 
   (lambda (ctx opnds)
-    (univ-<= ctx
-             (translate-gvm-opnd ctx (list-ref opnds 0))
-             (translate-gvm-opnd ctx (list-ref opnds 1)))))
+    (let ((opnd1 (list-ref opnds 0))
+          (opnd2 (list-ref opnds 1)))
+      (emit ctx (<= (operand opnd1) (operand opnd2))))))
 
 (univ-define-prim-bool "##fx>" #f #f
 
   (lambda (ctx opnds)
-    (univ-> ctx
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            (translate-gvm-opnd ctx (list-ref opnds 1)))))
+    (let ((opnd1 (list-ref opnds 0))
+          (opnd2 (list-ref opnds 1)))
+      (emit ctx (> (operand opnd1) (operand opnd2))))))
 
 (univ-define-prim-bool "##fx>=" #f #f
 
   (lambda (ctx opnds)
-    (univ->= ctx
-             (translate-gvm-opnd ctx (list-ref opnds 0))
-             (translate-gvm-opnd ctx (list-ref opnds 1)))))
+    (let ((opnd1 (list-ref opnds 0))
+          (opnd2 (list-ref opnds 1)))
+      (emit ctx (>= (operand opnd1) (operand opnd2))))))
 
 (univ-define-prim-bool "##fx=" #f #f
 
   (lambda (ctx opnds)
-    (univ-= ctx
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            (translate-gvm-opnd ctx (list-ref opnds 1)))))
+    (let ((opnd1 (list-ref opnds 0))
+          (opnd2 (list-ref opnds 1)))
+      (emit ctx (= (operand opnd1) (operand opnd2))))))
 
 (univ-define-prim "##fx+?" #f #f
 
@@ -4660,7 +4682,7 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (gen (translate-gvm-opnd ctx (list-ref opnds 0))
-            ".vectorlength()"))
+            ".length"))
       
       ((python ruby php)                ;TODO: complete
        (gen ""))
