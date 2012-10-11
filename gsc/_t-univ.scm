@@ -297,7 +297,7 @@
              (if (eq? name 'unquote)
                  (cadr form)
                  `(,(string->symbol
-                     (string-append "univ-emitter-"
+                     (string-append "univ-emit-"
                                     (symbol->string name)))
                    $ctx$
                    ,@(map generate (cdr form))))))
@@ -314,7 +314,7 @@
             (else
              `(list ,@(map generate forms))))))
 
-(define (univ-emitter-expr-statement ctx expr)
+(define (univ-emit-expr-statement ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((js php dart)
@@ -325,9 +325,9 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-expr-statement, unknown target"))))
+      "univ-emit-expr-statement, unknown target"))))
 
-(define (univ-emitter-if ctx test true #!optional (false #f))
+(define (univ-emit-if ctx test true #!optional (false #f))
   (case (target-name (ctx-target ctx))
 
     ((js php dart)
@@ -358,9 +358,9 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-if, unknown target"))))
+      "univ-emit-if, unknown target"))))
 
-(define (univ-emitter-= ctx expr1 expr2)
+(define (univ-emit-= ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -371,9 +371,9 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-=, unknown target"))))
+      "univ-emit-=, unknown target"))))
 
-(define (univ-emitter-!= ctx expr1 expr2)
+(define (univ-emit-!= ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -384,21 +384,21 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-!=, unknown target"))))
+      "univ-emit-!=, unknown target"))))
 
-(define (univ-emitter-< ctx expr1 expr2)
-  (univ-emitter-comparison ctx " < " expr1 expr2))
+(define (univ-emit-< ctx expr1 expr2)
+  (univ-emit-comparison ctx " < " expr1 expr2))
 
-(define (univ-emitter-<= ctx expr1 expr2)
-  (univ-emitter-comparison ctx " <= " expr1 expr2))
+(define (univ-emit-<= ctx expr1 expr2)
+  (univ-emit-comparison ctx " <= " expr1 expr2))
 
-(define (univ-emitter-> ctx expr1 expr2)
-  (univ-emitter-comparison ctx " > " expr1 expr2))
+(define (univ-emit-> ctx expr1 expr2)
+  (univ-emit-comparison ctx " > " expr1 expr2))
 
-(define (univ-emitter->= ctx expr1 expr2)
-  (univ-emitter-comparison ctx " >= " expr1 expr2))
+(define (univ-emit->= ctx expr1 expr2)
+  (univ-emit-comparison ctx " >= " expr1 expr2))
 
-(define (univ-emitter-comparison ctx comp expr1 expr2)
+(define (univ-emit-comparison ctx comp expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js python ruby php dart)
@@ -406,9 +406,9 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-comparison, unknown target"))))
+      "univ-emit-comparison, unknown target"))))
 
-(define (univ-emitter-not ctx expr)
+(define (univ-emit-not ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((js php dart)
@@ -419,9 +419,9 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-not, unknown target"))))
+      "univ-emit-not, unknown target"))))
 
-(define (univ-emitter-and ctx expr1 expr2)
+(define (univ-emit-and ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js ruby php dart)
@@ -432,9 +432,9 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-and, unknown target"))))
+      "univ-emit-and, unknown target"))))
 
-(define (univ-emitter-or ctx expr1 expr2)
+(define (univ-emit-or ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js ruby php dart)
@@ -445,9 +445,9 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-or, unknown target"))))
+      "univ-emit-or, unknown target"))))
 
-(define (univ-emitter-parens ctx expr)
+(define (univ-emit-parens ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((js ruby php python dart)
@@ -455,9 +455,9 @@
 
     (else
      (compiler-internal-error
-      "univ-emitter-parens, unknown target"))))
+      "univ-emit-parens, unknown target"))))
 
-(define (univ-emitter-operand ctx opnd)
+(define (univ-emit-operand ctx opnd)
   (translate-gvm-opnd ctx opnd)) ;; TODO: deprecate translate-gvm-opnd
 
 ;; ***** DUMPING OF A COMPILATION MODULE
