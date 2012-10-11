@@ -289,30 +289,8 @@
 
 ;; ***** TARGET CODE EMITTERS
 
-(define-macro (emit ctx . forms)
-
-  (define (generate form)
-    (cond ((and (pair? form) (symbol? (car form)))
-           (let ((name (car form)))
-             (if (eq? name 'unquote)
-                 (cadr form)
-                 `(,(string->symbol
-                     (string-append "univ-emit-"
-                                    (symbol->string name)))
-                   $ctx$
-                   ,@(map generate (cdr form))))))
-          ((symbol? form)
-           form)
-          (else
-           (error "unexpected form in emit"))))
-
-  `(let (($ctx$ ,ctx))
-     ,(cond ((null? forms)
-             ''())
-            ((null? (cdr forms))
-             (generate (car forms)))
-            (else
-             `(list ,@(map generate forms))))))
+(define-macro (^expr-statement expr)
+  `(univ-emit-expr-statement ctx ,expr))
 
 (define (univ-emit-expr-statement ctx expr)
   (case (target-name (ctx-target ctx))
@@ -326,6 +304,9 @@
     (else
      (compiler-internal-error
       "univ-emit-expr-statement, unknown target"))))
+
+(define-macro (^if test true #!optional (false #f))
+  `(univ-emit-if ctx ,test ,true ,false))
 
 (define (univ-emit-if ctx test true #!optional (false #f))
   (case (target-name (ctx-target ctx))
@@ -360,6 +341,9 @@
      (compiler-internal-error
       "univ-emit-if, unknown target"))))
 
+(define-macro (^= expr1 expr2)
+  `(univ-emit-= ctx ,expr1 ,expr2))
+
 (define (univ-emit-= ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -372,6 +356,9 @@
     (else
      (compiler-internal-error
       "univ-emit-=, unknown target"))))
+
+(define-macro (^!= expr1 expr2)
+  `(univ-emit-!= ctx ,expr1 ,expr2))
 
 (define (univ-emit-!= ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -386,14 +373,26 @@
      (compiler-internal-error
       "univ-emit-!=, unknown target"))))
 
+(define-macro (^< expr1 expr2)
+  `(univ-emit-< ctx ,expr1 ,expr2))
+
 (define (univ-emit-< ctx expr1 expr2)
   (univ-emit-comparison ctx " < " expr1 expr2))
+
+(define-macro (^<= expr1 expr2)
+  `(univ-emit-<= ctx ,expr1 ,expr2))
 
 (define (univ-emit-<= ctx expr1 expr2)
   (univ-emit-comparison ctx " <= " expr1 expr2))
 
+(define-macro (^> expr1 expr2)
+  `(univ-emit-> ctx ,expr1 ,expr2))
+
 (define (univ-emit-> ctx expr1 expr2)
   (univ-emit-comparison ctx " > " expr1 expr2))
+
+(define-macro (^>= expr1 expr2)
+  `(univ-emit->= ctx ,expr1 ,expr2))
 
 (define (univ-emit->= ctx expr1 expr2)
   (univ-emit-comparison ctx " >= " expr1 expr2))
@@ -408,6 +407,9 @@
      (compiler-internal-error
       "univ-emit-comparison, unknown target"))))
 
+(define-macro (^not expr)
+  `(univ-emit-not ctx ,expr))
+
 (define (univ-emit-not ctx expr)
   (case (target-name (ctx-target ctx))
 
@@ -420,6 +422,9 @@
     (else
      (compiler-internal-error
       "univ-emit-not, unknown target"))))
+
+(define-macro (^and expr1 expr2)
+  `(univ-emit-and ctx ,expr1 ,expr2))
 
 (define (univ-emit-and ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -434,6 +439,9 @@
      (compiler-internal-error
       "univ-emit-and, unknown target"))))
 
+(define-macro (^or expr1 expr2)
+  `(univ-emit-or ctx ,expr1 ,expr2))
+
 (define (univ-emit-or ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -447,6 +455,9 @@
      (compiler-internal-error
       "univ-emit-or, unknown target"))))
 
+(define-macro (^parens expr)
+  `(univ-emit-parens ctx ,expr))
+
 (define (univ-emit-parens ctx expr)
   (case (target-name (ctx-target ctx))
 
@@ -456,6 +467,9 @@
     (else
      (compiler-internal-error
       "univ-emit-parens, unknown target"))))
+
+(define-macro (^operand opnd)
+  `(univ-emit-operand ctx ,opnd))
 
 (define (univ-emit-operand ctx opnd)
   (translate-gvm-opnd ctx opnd)) ;; TODO: deprecate translate-gvm-opnd
@@ -565,30 +579,27 @@
                                   (if (label-entry-closed? gvm-instr)
                                       "closure-entry-point (+rest)\n"
                                       "entry-point (+rest)\n"))
-                                 (emit
-                                  ctx
-                                  (if (not (and
-                                            ,(univ-call ctx
+                                 
+                                 (^if (^not (^and
+                                             (univ-call ctx
                                                         (univ-prefix ctx "buildrest")
                                                         (label-entry-nb-parms gvm-instr))
-                                            (= ,(univ-global ctx (univ-prefix ctx "nargs"))
-                                               ,(label-entry-nb-parms gvm-instr))))
-                                      ,(univ-return-call ctx
-                                                         (univ-prefix ctx "wrong_nargs")
-                                                         id))))
+                                             (^= (univ-global ctx (univ-prefix ctx "nargs"))
+                                                 (label-entry-nb-parms gvm-instr))))
+                                      (univ-return-call ctx
+                                                        (univ-prefix ctx "wrong_nargs")
+                                                        id))))
                             (gen " "
                                  (univ-comment
                                   ctx
                                   (if (label-entry-closed? gvm-instr)
                                       "closure-entry-point\n"
                                       "entry-point\n"))
-                                 (emit
-                                  ctx
-                                  (if (!= ,(univ-global ctx (univ-prefix ctx "nargs"))
-                                          ,(label-entry-nb-parms gvm-instr))
-                                      ,(univ-return-call ctx
-                                                         (univ-prefix ctx "wrong_nargs")
-                                                         id))))))
+                                 (^if (^!= (univ-global ctx (univ-prefix ctx "nargs"))
+                                           (label-entry-nb-parms gvm-instr))
+                                      (univ-return-call ctx
+                                                        (univ-prefix ctx "wrong_nargs")
+                                                        id))))
 
                        ((return)
                         (gen " " (univ-comment ctx "return-point\n")))
@@ -767,11 +778,9 @@
                        (compiler-internal-error
                         "scan-gvm-instr, unknown 'test'" test)
 
-                       (emit
-                        ctx
-                        (if ,(proc ctx opnds)
-                            ,(jump-to-label ctx true fs)
-                            ,(jump-to-label ctx false fs)))))))
+                       (^if (proc ctx opnds)
+                            (jump-to-label ctx true fs)
+                            (jump-to-label ctx false fs))))))
 
               ((switch)
                ;; TODO
@@ -2932,13 +2941,11 @@ function Gambit_trampoline(pc) {
        (univ-return
         ctx
         (univ-call ctx (univ-prefix ctx "poll") expr))
-      (emit
-       ctx
-       (if ,(gen "--" (univ-prefix ctx "poll_count") " === 0")
-           ,(univ-return-call ctx (univ-prefix ctx "poll") expr)
-           ,(if call?
-                (univ-return-call ctx expr)
-                (univ-return ctx expr))))
+      (^if (gen "--" (univ-prefix ctx "poll_count") " === 0")
+           (univ-return-call ctx (univ-prefix ctx "poll") expr)
+           (if call?
+               (univ-return-call ctx expr)
+               (univ-return ctx expr)))
 
       (if call?
           (univ-return-call ctx expr)
@@ -3083,10 +3090,8 @@ function Gambit_trampoline(pc) {
                               (apply-gen ctx opnds))
 
                  (if side-effects? ;; only generate code for side-effect
-                     (emit
-                      ctx
-                      (expr-statement ,(apply-gen ctx opnds)))
-                     (gen "")))))))
+                     (^expr-statement (apply-gen ctx opnds))
+                     '()))))))
 
     (if ifjump-gen
         (begin
@@ -3399,35 +3404,35 @@ function Gambit_trampoline(pc) {
   (lambda (ctx opnds)
     (let ((opnd1 (list-ref opnds 0))
           (opnd2 (list-ref opnds 1)))
-      (emit ctx (< (operand opnd1) (operand opnd2))))))
+      (^< (^operand opnd1) (^operand opnd2)))))
 
 (univ-define-prim-bool "##fx<=" #f #f
 
   (lambda (ctx opnds)
     (let ((opnd1 (list-ref opnds 0))
           (opnd2 (list-ref opnds 1)))
-      (emit ctx (<= (operand opnd1) (operand opnd2))))))
+      (^<= (^operand opnd1) (^operand opnd2)))))
 
 (univ-define-prim-bool "##fx>" #f #f
 
   (lambda (ctx opnds)
     (let ((opnd1 (list-ref opnds 0))
           (opnd2 (list-ref opnds 1)))
-      (emit ctx (> (operand opnd1) (operand opnd2))))))
+      (^> (^operand opnd1) (^operand opnd2)))))
 
 (univ-define-prim-bool "##fx>=" #f #f
 
   (lambda (ctx opnds)
     (let ((opnd1 (list-ref opnds 0))
           (opnd2 (list-ref opnds 1)))
-      (emit ctx (>= (operand opnd1) (operand opnd2))))))
+      (^>= (^operand opnd1) (^operand opnd2)))))
 
 (univ-define-prim-bool "##fx=" #f #f
 
   (lambda (ctx opnds)
     (let ((opnd1 (list-ref opnds 0))
           (opnd2 (list-ref opnds 1)))
-      (emit ctx (= (operand opnd1) (operand opnd2))))))
+      (^= (^operand opnd1) (^operand opnd2)))))
 
 (univ-define-prim "##fx+?" #f #f
 
