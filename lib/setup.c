@@ -663,19 +663,19 @@ ___SCMOBJ *sub_tbl;)
   ___SCMOBJ v = *p;
   switch (___TYP(v))
     {
-    case ___tPAIR:
+    case ___tMEM1:
+      if (___INT(v)<0)
+        *p = key_tbl[-1-___INT(v)];
+      else
+        *p = sub_tbl[___INT(v)];
+      break;
+
+    case ___tMEM2:
       if (___INT(v)<0)
         *p = sym_tbl[-1-___INT(v)];
       else
         *p = ___TAG(___ALIGNUP(&cns_tbl[(___PAIR_SIZE+1)*___INT(v)],___WS),
                     ___tPAIR);
-      break;
-
-    case ___tSUBTYPED:
-      if (___INT(v)<0)
-        *p = key_tbl[-1-___INT(v)];
-      else
-        *p = sub_tbl[___INT(v)];
       break;
     }
 }

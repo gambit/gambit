@@ -704,8 +704,8 @@
 
 (define-prim (##mem-allocated? obj)
   (let ((type (##type obj)))
-    (or (##fixnum.= type (macro-type-subtyped))
-        (##fixnum.= type (macro-type-pair)))))
+    (or (##fixnum.= type (macro-type-mem1))
+        (##fixnum.= type (macro-type-mem2)))))
 
 (implement-type-table)
 
@@ -1615,9 +1615,15 @@
 ;;; Type tags.
 
 (##define-macro (macro-type-fixnum)   0)
-(##define-macro (macro-type-subtyped) 1)
+(##define-macro (macro-type-mem1)     1)
 (##define-macro (macro-type-special)  2)
-(##define-macro (macro-type-pair)     3)
+(##define-macro (macro-type-mem2)     3)
+
+(##define-macro (macro-type-subtyped) `(macro-type-mem1))
+
+;; The type for pair depends on compile-time flags
+;; (##define-macro (macro-type-pair) `(macro-type-mem1))
+;; (##define-macro (macro-type-pair) `(macro-type-mem2))
 
 ;;; Subtype tags.
 

@@ -1,6 +1,6 @@
-/* File: "mem.c", Time-stamp: <2010-12-03 16:45:18 feeley> */
+/* File: "mem.c" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 406006
@@ -104,8 +104,12 @@
  *    ___tSPECIAL   object is a boolean, character, or other immediate
  *
  *  memory allocated:
- *    ___tPAIR      object is a pair
- *    ___tSUBTYPED  object is memory allocated but not a pair
+ *    if ___USE_SAME_TAG_FOR_PAIRS_AND_SUBTYPED is defined
+ *    ___tMEM1 = ___tSUBTYPED = ___tPAIR   subtyped object, possibly a pair
+ *    ___tMEM2                             contained object, or a pair
+ *    otherwise
+ *    ___tMEM1 = ___tSUBTYPED              subtyped object, but not a pair
+ *    ___tMEM2 = ___tPAIR                  a pair
  *
  * A special type of object exists to support object finalization:
  * 'will' objects.  Wills contain a weak reference to an object, the
@@ -1233,7 +1237,12 @@ int kind;)
       base[___PERM_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___PERM);
 
       return ___TAG((base + ___PERM_HAND_OFS - ___BODY_OFS),
-                    (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
+#if ___tPAIR == ___tSUBTYPED
+                    ___tSUBTYPED
+#else
+                    (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED)
+#endif
+                   );
     }
   else
     {
@@ -1249,7 +1258,12 @@ int kind;)
       base[___STILL_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___STILL);
 
       return ___TAG((base + ___STILL_HAND_OFS - ___BODY_OFS),
-                    (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
+#if ___tPAIR == ___tSUBTYPED
+                    ___tSUBTYPED
+#else
+                    (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED)
+#endif
+                   );
     }
 }
 
@@ -1833,9 +1847,11 @@ char *msg;)
         int subtype = ___HD_SUBTYPE(head);
         int i;
 
+#if ___tPAIR != ___tSUBTYPED
         if (subtype == ___sPAIR)
           container = ___TAG(container_body-___BODY_OFS,___tPAIR);
         else
+#endif
           container = ___TAG(container_body-___BODY_OFS,___tSUBTYPED);
 
         ___printf (">>> The reference was found in ");

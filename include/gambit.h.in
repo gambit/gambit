@@ -1738,15 +1738,24 @@ ___CAST_U64((val)<<(((i)&7)<<3))
  * ___TB = number of tag bits
  * ___tFIXNUM   = tag for fixnums (small integers), must be 0
  * ___tSPECIAL  = tag for other immediates (#f, #t, (), #!eof, chars, ...)
- * ___tPAIR     = tag for pairs
- * ___tSUBTYPED = tag for other memory allocated objects
+ * ___tMEM1     = tag #1 for memory allocated objects (lower bit must be 1)
+ * ___tMEM2     = tag #2 for memory allocated objects (lower bit must be 1)
+ * ___tSUBTYPED = ___tMEM1
+ * ___tPAIR     = ___tMEM1 or ___tMEM2
  */
 
 #define ___TB 2
 #define ___tFIXNUM   0
 #define ___tSPECIAL  2
-#define ___tPAIR     3
-#define ___tSUBTYPED 1
+#define ___tMEM1     1
+#define ___tMEM2     3
+#define ___tSUBTYPED ___tMEM1
+
+#ifdef ___USE_SAME_TAG_FOR_PAIRS_AND_SUBTYPED
+#define ___tPAIR ___tMEM1
+#else
+#define ___tPAIR ___tMEM2
+#endif
 
 #define ___MEM_ALLOCATED(obj)((obj)&1)
 #define ___MEM_ALLOCATED_CLEAR(obj)((obj)&~___CAST(___WORD,1))
@@ -1921,10 +1930,10 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #endif
 #define ___REF_CHR(x)___CHR(x)
 
-#define ___REF_SYM(i,id)((___CAST(___WORD,-1-i)<<___TB)+___tPAIR)
-#define ___REF_KEY(i,id)((___CAST(___WORD,-1-i)<<___TB)+___tSUBTYPED)
-#define ___REF_CNS(i)((___CAST(___WORD,i)<<___TB)+___tPAIR)
-#define ___REF_SUB(i)((___CAST(___WORD,i)<<___TB)+___tSUBTYPED)
+#define ___REF_SYM(i,id)((___CAST(___WORD,-1-i)<<___TB)+___tMEM2)
+#define ___REF_KEY(i,id)((___CAST(___WORD,-1-i)<<___TB)+___tMEM1)
+#define ___REF_CNS(i)((___CAST(___WORD,i)<<___TB)+___tMEM2)
+#define ___REF_SUB(i)((___CAST(___WORD,i)<<___TB)+___tMEM1)
 
 /*---------------------------------------------------------------------------*/
 
@@ -2550,7 +2559,11 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXNUMP(x)___TESTTYPE(x,___tFIXNUM)
 #define ___FLONUMP(x)___TESTSUBTYPE(x,___sFLONUM)
 #define ___SPECIALP(x)___TESTTYPE(x,___tSPECIAL)
+#if ___tPAIR == ___tSUBTYPED
+#define ___PAIRP(x)___TESTSUBTYPE(x,___sPAIR)
+#else
 #define ___PAIRP(x)___TESTTYPE(x,___tPAIR)
+#endif
 #define ___PAIRMUTABLEP(obj)(___HD_TYP(*___UNTAG_AS(obj,___tPAIR))!=___PERM)
 #define ___SUBTYPEDP(x)___TESTTYPE(x,___tSUBTYPED)
 #define ___SUBTYPEDMUTABLEP(obj)(___HD_TYP(*___UNTAG_AS(obj,___tSUBTYPED))!=___PERM)
