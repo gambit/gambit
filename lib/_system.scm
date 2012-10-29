@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2538,7 +2538,15 @@
   (define (serialize! obj)
     (let* ((transform (vector-ref state 4))
            (obj (transform obj)))
-      (cond ((subtyped? obj)
+      (cond ((pair? obj)
+             (or (share obj)
+                 (begin
+                   (alloc! obj)
+                   (write-u8 (pair-tag))
+                   (serialize! (car obj))
+                   (serialize! (cdr obj)))))
+
+            ((subtyped? obj)
 
              (cond ((symbol? obj)
                     (or (share obj)
@@ -2824,14 +2832,6 @@
 
                    (else
                     (cannot-serialize obj))))
-
-            ((pair? obj)
-             (or (share obj)
-                 (begin
-                   (alloc! obj)
-                   (write-u8 (pair-tag))
-                   (serialize! (car obj))
-                   (serialize! (cdr obj)))))
 
             ((fixnum? obj)
              (cond ((and (>= obj #x00)
