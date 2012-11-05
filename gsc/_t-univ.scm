@@ -273,6 +273,8 @@
 
 (for-each univ-prim-proc-add! prim-procs)
 
+(univ-prim-proc-add! '("js-code" (1) #t 0 0 (#f) extended))
+
 (define (univ-switch-testable? targ obj)
   (pretty-print (list 'univ-switch-testable? 'targ obj))
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3780,6 +3782,16 @@ function Gambit_trampoline(pc) {
     (univ-cons ctx
                (translate-gvm-opnd ctx (list-ref opnds 0))
                (translate-gvm-opnd ctx (list-ref opnds 1)))))
+
+
+(univ-define-prim "js-code" #f #f
+                  (lambda (ctx opnds)
+                    (if (and (eq? 'js (target-name (ctx-target ctx)))
+                             (obj? (car opnds)))
+                        (^ (obj-val (car opnds)))
+                        (compiler-internal-error "js-code, target incompatible"))))
+
+
 
 (define (univ-car ctx expr)
   (case (target-name (ctx-target ctx))
