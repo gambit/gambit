@@ -1388,7 +1388,7 @@ var iobuffer = \"\";
 
 function Gambit_printout(text) {
   if (text === \"\\n\") {
-    print(iobuffer);
+    console ? console.log(iobuffer) : print(iobuffer);
     iobuffer = \"\";
   } else {
     iobuffer += text;
