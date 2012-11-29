@@ -3784,7 +3784,7 @@ function Gambit_trampoline(pc) {
                (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
 
-(univ-define-prim "js-code" #f #f
+(univ-define-prim "js-code" #f #t
                   (lambda (ctx opnds)
                     (if (and (eq? 'js (target-name (ctx-target ctx)))
                              (obj? (car opnds)))
