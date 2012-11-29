@@ -16,7 +16,7 @@
 "eof"
 "f32vector"
 "f64vector"
-"fixnum32"
+"fixnum"
 "flonum"
 "internal"
 "key"
@@ -201,7 +201,7 @@ ___NEED_SYM(___S_deleted)
 ___NEED_SYM(___S_eof)
 ___NEED_SYM(___S_f32vector)
 ___NEED_SYM(___S_f64vector)
-___NEED_SYM(___S_fixnum32)
+___NEED_SYM(___S_fixnum)
 ___NEED_SYM(___S_flonum)
 ___NEED_SYM(___S_internal)
 ___NEED_SYM(___S_key)
@@ -364,7 +364,7 @@ ___DEF_SYM1(7,___S_deleted,"deleted")
 ___DEF_SYM1(8,___S_eof,"eof")
 ___DEF_SYM1(9,___S_f32vector,"f32vector")
 ___DEF_SYM1(10,___S_f64vector,"f64vector")
-___DEF_SYM1(11,___S_fixnum32,"fixnum32")
+___DEF_SYM1(11,___S_fixnum,"fixnum")
 ___DEF_SYM1(12,___S_flonum,"flonum")
 ___DEF_SYM1(13,___S_internal,"internal")
 ___DEF_SYM1(14,___S_key,"key")
@@ -7140,7 +7140,7 @@ ___DEF_SLBL(9,___L9_c_23_targ_2d_obj_2d_type)
 ___DEF_SLBL(10,___L10_c_23_targ_2d_obj_2d_type)
    ___GOTO(___L43_c_23_targ_2d_obj_2d_type)
 ___DEF_GLBL(___L42_c_23_targ_2d_obj_2d_type)
-   ___SET_R1(___SYM(11,___S_fixnum32))
+   ___SET_R1(___SYM(11,___S_fixnum))
    ___POLL(11)
 ___DEF_SLBL(11,___L11_c_23_targ_2d_obj_2d_type)
 ___DEF_GLBL(___L43_c_23_targ_2d_obj_2d_type)
@@ -10401,7 +10401,7 @@ ___DEF_SYM2(7,___S_deleted,"deleted")
 ___DEF_SYM2(8,___S_eof,"eof")
 ___DEF_SYM2(9,___S_f32vector,"f32vector")
 ___DEF_SYM2(10,___S_f64vector,"f64vector")
-___DEF_SYM2(11,___S_fixnum32,"fixnum32")
+___DEF_SYM2(11,___S_fixnum,"fixnum")
 ___DEF_SYM2(12,___S_flonum,"flonum")
 ___DEF_SYM2(13,___S_internal,"internal")
 ___DEF_SYM2(14,___S_key,"key")

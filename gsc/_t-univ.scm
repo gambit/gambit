@@ -273,6 +273,8 @@
 
 (for-each univ-prim-proc-add! prim-procs)
 
+(univ-prim-proc-add! '("js-code" (1) #t 0 0 (#f) extended))
+
 (define (univ-switch-testable? targ obj)
   (pretty-print (list 'univ-switch-testable? 'targ obj))
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1386,7 +1388,7 @@ var iobuffer = \"\";
 
 function Gambit_printout(text) {
   if (text === \"\\n\") {
-    print(iobuffer);
+    console ? console.log(iobuffer) : print(iobuffer);
     iobuffer = \"\";
   } else {
     iobuffer += text;
@@ -3781,6 +3783,16 @@ function Gambit_trampoline(pc) {
                (translate-gvm-opnd ctx (list-ref opnds 0))
                (translate-gvm-opnd ctx (list-ref opnds 1)))))
 
+
+(univ-define-prim "js-code" #f #t
+                  (lambda (ctx opnds)
+                    (if (and (eq? 'js (target-name (ctx-target ctx)))
+                             (obj? (car opnds)))
+                        (^ (obj-val (car opnds)))
+                        (compiler-internal-error "js-code, target incompatible"))))
+
+
+
 (define (univ-car ctx expr)
   (case (target-name (ctx-target ctx))
 
@@ -3829,7 +3841,7 @@ function Gambit_trampoline(pc) {
     (univ-cdr ctx
               (translate-gvm-opnd ctx (list-ref opnds 0)))))
 
-// ##caar
+;; ##caar
 (univ-define-prim "##caar" #f #f
 
   (lambda (ctx opnds)
@@ -3837,7 +3849,7 @@ function Gambit_trampoline(pc) {
               (univ-car ctx
                         (translate-gvm-opnd ctx (list-ref opnds 0))))))
 
-// ##cadr
+;; ##cadr
 (univ-define-prim "##cadr" #f #f
 
   (lambda (ctx opnds)
@@ -3845,7 +3857,7 @@ function Gambit_trampoline(pc) {
               (univ-cdr ctx
                         (translate-gvm-opnd ctx (list-ref opnds 0))))))
 
-// ##cdar
+;; ##cdar
 (univ-define-prim "##cdar" #f #f
 
   (lambda (ctx opnds)
@@ -3853,7 +3865,7 @@ function Gambit_trampoline(pc) {
               (univ-car ctx
                         (translate-gvm-opnd ctx (list-ref opnds 0))))))
 
-// ##cddr
+;; ##cddr
 (univ-define-prim "##cddr" #f #f
 
   (lambda (ctx opnds)
@@ -3861,7 +3873,7 @@ function Gambit_trampoline(pc) {
               (univ-cdr ctx
                         (translate-gvm-opnd ctx (list-ref opnds 0))))))
 
-// ##caaar
+;; ##caaar
 (univ-define-prim "##caaar" #f #f
 
   (lambda (ctx opnds)
@@ -3885,7 +3897,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##caaar, unknown target")))))
 
-// ##caadr
+;; ##caadr
 (univ-define-prim "##caadr" #f #f
 
   (lambda (ctx opnds)
@@ -3909,7 +3921,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##caadr, unknown target")))))
 
-// ##cadar
+;; ##cadar
 (univ-define-prim "##cadar" #f #f
 
   (lambda (ctx opnds)
@@ -3933,7 +3945,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cadar, unknown target")))))
 
-// ##caddr
+;; ##caddr
 (univ-define-prim "##caddr" #f #f
 
   (lambda (ctx opnds)
@@ -3957,7 +3969,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##caddr, unknown target")))))
 
-// ##cdaar
+;; ##cdaar
 (univ-define-prim "##cdaar" #f #f
 
   (lambda (ctx opnds)
@@ -3981,7 +3993,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cdaar, unknown target")))))
 
-// ##cdadr
+;; ##cdadr
 (univ-define-prim "##cdadr" #f #f
 
   (lambda (ctx opnds)
@@ -4005,7 +4017,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cdadr, unknown target")))))
 
-// ##cddar
+;; ##cddar
 (univ-define-prim "##cddar" #f #f
 
   (lambda (ctx opnds)
@@ -4029,7 +4041,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cddar, unknown target")))))
 
-// ##cdddr
+;; ##cdddr
 (univ-define-prim "##cdddr" #f #f
 
   (lambda (ctx opnds)
@@ -4053,7 +4065,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cdddr, unknown target")))))
 
-// ##caaaar
+;; ##caaaar
 (univ-define-prim "##caaaar" #f #f
 
   (lambda (ctx opnds)
@@ -4077,7 +4089,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##caaaar, unknown target")))))
 
-// ##caaadr
+;; ##caaadr
 (univ-define-prim "##caaadr" #f #f
 
   (lambda (ctx opnds)
@@ -4101,7 +4113,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##caaadr, unknown target")))))
 
-// ##caadar
+;; ##caadar
 (univ-define-prim "##caadar" #f #f
 
   (lambda (ctx opnds)
@@ -4125,7 +4137,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##caadar, unknown target")))))
 
-// ##caaddr
+;; ##caaddr
 (univ-define-prim "##caaddr" #f #f
 
   (lambda (ctx opnds)
@@ -4149,7 +4161,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##caaddr, unknown target")))))
 
-// ##cadaar
+;; ##cadaar
 (univ-define-prim "##cadaar" #f #f
 
   (lambda (ctx opnds)
@@ -4173,7 +4185,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cadaar, unknown target")))))
 
-// ##cadadr
+;; ##cadadr
 (univ-define-prim "##cadadr" #f #f
 
   (lambda (ctx opnds)
@@ -4197,7 +4209,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cadadr, unknown target")))))
 
-// ##caddar
+;; ##caddar
 (univ-define-prim "##caddar" #f #f
 
   (lambda (ctx opnds)
@@ -4221,7 +4233,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##caddar, unknown target")))))
 
-// ##cadddr
+;; ##cadddr
 (univ-define-prim "##cadddr" #f #f
 
   (lambda (ctx opnds)
@@ -4245,7 +4257,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cadddr, unknown target")))))
 
-// ##cdaaar
+;; ##cdaaar
 (univ-define-prim "##cdaaar" #f #f
 
   (lambda (ctx opnds)
@@ -4269,7 +4281,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cdaaar, unknown target")))))
 
-// ##cdaadr
+;; ##cdaadr
 (univ-define-prim "##cdaadr" #f #f
 
   (lambda (ctx opnds)
@@ -4293,7 +4305,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cdaadr, unknown target")))))
 
-// ##cdadar
+;; ##cdadar
 (univ-define-prim "##cdadar" #f #f
 
   (lambda (ctx opnds)
@@ -4317,7 +4329,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cdadar, unknown target")))))
 
-// ##cdaddr
+;; ##cdaddr
 (univ-define-prim "##cdaddr" #f #f
 
   (lambda (ctx opnds)
@@ -4341,7 +4353,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cdaddr, unknown target")))))
 
-// ##cddaar
+;; ##cddaar
 (univ-define-prim "##cddaar" #f #f
 
   (lambda (ctx opnds)
@@ -4365,7 +4377,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cddaar, unknown target")))))
 
-// ##cddadr
+;; ##cddadr
 (univ-define-prim "##cddadr" #f #f
 
   (lambda (ctx opnds)
@@ -4389,7 +4401,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cddadr, unknown target")))))
 
-// ##cdddar
+;; ##cdddar
 (univ-define-prim "##cdddar" #f #f
 
   (lambda (ctx opnds)
@@ -4413,7 +4425,7 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "##cdddar, unknown target")))))
 
-// ##cddddr
+;; ##cddddr
 (univ-define-prim "##cddddr" #f #f
 
   (lambda (ctx opnds)
