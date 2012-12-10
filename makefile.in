@@ -476,13 +476,13 @@ rc-setup-post: rc-setup-recursive
 
 rc-setup-recursive: rc-setup-pre
 
-dist: dist-post
+dist: doc dist-post
 
 dist-post: dist-recursive
 
 dist-recursive: dist-pre
 
-dist-devel: dist-devel-post
+dist-devel: doc dist-devel-post
 
 dist-devel-post: dist-devel-recursive
 
