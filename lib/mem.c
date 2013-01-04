@@ -2924,7 +2924,7 @@ ___SCMOBJ ___setup_mem ___PVOID
      * Choose a reasonable minimum heap size.
      */
 
-    ___setup_params.min_heap = ___processor_cache_size (0, 0) * 2 / 3;
+    ___setup_params.min_heap = ___processor_cache_size (0, 0) / 2;
 
     if (___setup_params.min_heap < ___DEFAULT_MIN_HEAP) {
       ___setup_params.min_heap = ___DEFAULT_MIN_HEAP;
