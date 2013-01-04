@@ -1,6 +1,6 @@
 /* File: "os.c" */
 
-/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -21,6 +21,8 @@
  *  - dynamic loading
  *  - dynamic C compilation
  *  - floating point environment setup
+ *  - processor count
+ *  - processor cache size
  *  - virtual memory statistics
  *  - filesystem path expansion
  *  - formatting of source code position
@@ -87,6 +89,267 @@ void ___enable_os_interrupts ___PVOID
 {
   ___enable_user_interrupts ();
   ___enable_heartbeat_interrupts ();
+}
+
+
+/*---------------------------------------------------------------------------*/
+
+/* Processor information. */
+
+int ___processor_count ___PVOID
+{
+  int nb_processors = 0;
+
+#ifdef USE_sysconf
+
+#ifdef _SC_NPROCESSORS_ONLN
+#define OP_SC_NPROCESSORS _SC_NPROCESSORS_ONLN
+#else
+#ifdef _SC_NPROCESSORS_CONF
+#define OP_SC_NPROCESSORS _SC_NPROCESSORS_CONF
+#endif
+#endif
+
+#endif
+
+#ifdef OP_SC_NPROCESSORS
+
+  nb_processors = sysconf (OP_SC_NPROCESSORS);
+
+#else
+
+#ifdef USE_sysctl
+
+#ifdef CTL_HW
+#ifdef HW_AVAILCPU
+#define OP_NB_CPU HW_AVAILCPU
+#else
+#ifdef HW_NCPU
+#define OP_NB_CPU HW_NCPU
+#endif
+#endif
+#endif
+
+#ifdef OP_NB_CPU
+
+  size_t n = 0;
+  size_t sizeof_n = sizeof(n);
+  int mib[2];
+
+  mib[0] = CTL_HW;
+  mib[1] = OP_NB_CPU;
+
+  if (sysctl (mib, 2, &n, &sizeof_n, NULL, 0) == 0) {
+    nb_processors = n;
+  }
+
+#endif
+
+#endif
+
+#endif
+
+#ifdef USE_GetSystemInfo
+
+ SYSTEM_INFO si;
+
+ GetSystemInfo (&si);
+
+ nb_processors = si.dwNumberOfProcessors;
+
+#endif
+
+  return nb_processors;
+}
+
+
+int ___processor_cache_size
+   ___P((___BOOL instruction_cache,
+         int level),
+        (instruction_cache,
+         level)
+___BOOL instruction_cache;
+int level;)
+{
+  int cache_size = 0;
+
+#ifdef USE_sysconf
+
+  {
+
+  static struct { int name; int level; int kind; } sysconf_info[] = {
+
+#ifdef _SC_LEVEL1_DCACHE_SIZE
+    { _SC_LEVEL1_DCACHE_SIZE, 1, 1 },
+#endif
+#ifdef _SC_LEVEL1_ICACHE_SIZE
+    { _SC_LEVEL1_ICACHE_SIZE, 1, 2 },
+#endif
+#ifdef _SC_LEVEL1_CACHE_SIZE
+    { _SC_LEVEL1_CACHE_SIZE,  1, 3 },
+#endif
+
+#ifdef _SC_LEVEL2_DCACHE_SIZE
+    { _SC_LEVEL2_DCACHE_SIZE, 2, 1 },
+#endif
+#ifdef _SC_LEVEL2_ICACHE_SIZE
+    { _SC_LEVEL2_ICACHE_SIZE, 2, 2 },
+#endif
+#ifdef _SC_LEVEL2_CACHE_SIZE
+    { _SC_LEVEL2_CACHE_SIZE,  2, 3 },
+#endif
+
+#ifdef _SC_LEVEL3_DCACHE_SIZE
+    { _SC_LEVEL3_DCACHE_SIZE, 3, 1 },
+#endif
+#ifdef _SC_LEVEL3_ICACHE_SIZE
+    { _SC_LEVEL3_ICACHE_SIZE, 3, 2 },
+#endif
+#ifdef _SC_LEVEL3_CACHE_SIZE
+    { _SC_LEVEL3_CACHE_SIZE,  3, 3 },
+#endif
+
+#ifdef _SC_LEVEL4_DCACHE_SIZE
+    { _SC_LEVEL4_DCACHE_SIZE, 4, 1 },
+#endif
+#ifdef _SC_LEVEL4_ICACHE_SIZE
+    { _SC_LEVEL4_ICACHE_SIZE, 4, 2 },
+#endif
+#ifdef _SC_LEVEL4_CACHE_SIZE
+    { _SC_LEVEL4_CACHE_SIZE,  4, 3 },
+#endif
+
+      { 0, 0, 0 }
+  };
+
+  int i = 0;
+
+  while (sysconf_info[i].kind != 0) {
+
+    if ((level == 0 || level == sysconf_info[i].level) &&
+        (sysconf_info[i].kind & (1<<instruction_cache))) {
+
+      int size = sysconf (sysconf_info[i].name);
+
+      if (level != 0) {
+        cache_size = size;
+        break;
+      }
+
+      if (size > cache_size) {
+        cache_size = size;
+      }
+    }
+
+    i++;
+  }
+
+  if (cache_size != 0) {
+    return cache_size;
+  }
+
+  }
+
+#endif
+
+#ifdef USE_sysctl
+
+#ifdef CTL_HW
+
+  {
+
+  static struct { int name; int level; int kind; } sysctl_info[] = {
+
+#ifdef HW_L1DCACHESIZE
+    { HW_L1DCACHESIZE, 1, 1 },
+#endif
+#ifdef HW_L1ICACHESIZE
+    { HW_L1ICACHESIZE, 1, 2 },
+#endif
+#ifdef HW_L1CACHESIZE
+    { HW_L1CACHESIZE,  1, 3 },
+#endif
+
+#ifdef HW_L2DCACHESIZE
+    { HW_L2DCACHESIZE, 2, 1 },
+#endif
+#ifdef HW_L2ICACHESIZE
+    { HW_L2ICACHESIZE, 2, 2 },
+#endif
+#ifdef HW_L2CACHESIZE
+    { HW_L2CACHESIZE,  2, 3 },
+#endif
+
+#ifdef HW_L3DCACHESIZE
+    { HW_L3DCACHESIZE, 3, 1 },
+#endif
+#ifdef HW_L3ICACHESIZE
+    { HW_L3ICACHESIZE, 3, 2 },
+#endif
+#ifdef HW_L3CACHESIZE
+    { HW_L3CACHESIZE,  3, 3 },
+#endif
+
+#ifdef HW_L4DCACHESIZE
+    { HW_L4DCACHESIZE, 4, 1 },
+#endif
+#ifdef HW_L4ICACHESIZE
+    { HW_L4ICACHESIZE, 4, 2 },
+#endif
+#ifdef HW_L4CACHESIZE
+    { HW_L4CACHESIZE,  4, 3 },
+#endif
+
+      { 0, 0, 0 }
+  };
+
+  int i = 0;
+
+  while (sysctl_info[i].kind != 0) {
+
+    if ((level == 0 || level == sysctl_info[i].level) &&
+        (sysctl_info[i].kind & (1<<instruction_cache))) {
+
+      size_t size = 0;
+      size_t sizeof_size = sizeof(size);
+      int mib[2];
+
+      mib[0] = CTL_HW;
+      mib[1] = sysctl_info[i].name;
+
+      if (sysctl (mib, 2, &size, &sizeof_size, NULL, 0) == 0) {
+
+        if (level != 0) {
+          cache_size = size;
+          break;
+        }
+
+        if (size > cache_size) {
+          cache_size = size;
+        }
+      }
+    }
+
+    i++;
+  }
+
+  if (cache_size != 0) {
+    return cache_size;
+  }
+
+  }
+
+#endif
+
+#endif
+
+#ifdef USE_WIN32
+
+  /* TODO: use GetLogicalProcessorInformation */
+
+#endif
+
+  return cache_size;
 }
 
 

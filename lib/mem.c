@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 406006
@@ -2794,18 +2794,12 @@ long avail;
 long live;)
 {
   long target;
-  int live_percent;
 
   if (___setup_params.gc_hook != 0)
     return ___setup_params.gc_hook (avail, live);
 
-  live_percent = ___setup_params.live_percent;
-
-  if (live_percent <= 0 || live_percent > 100)
-    live_percent = ___DEFAULT_LIVE_PERCENT;
-
-  if (live_percent < 100)
-    target = live / live_percent * 100;
+  if (___setup_params.live_percent < 100)
+    target = live / ___setup_params.live_percent * 100;
   else
     target = live + ___MSECTION_BIGGEST;
 
@@ -2923,6 +2917,29 @@ ___SCMOBJ ___setup_mem ___PVOID
   overflow_reserve = normal_overflow_reserve;
 
   /* Allocate heap */
+
+  if (___setup_params.min_heap == 0) {
+
+    /*
+     * Choose a reasonable minimum heap size.
+     */
+
+    ___setup_params.min_heap = ___processor_cache_size (0, 0) * 2 / 3;
+
+    if (___setup_params.min_heap < ___DEFAULT_MIN_HEAP) {
+      ___setup_params.min_heap = ___DEFAULT_MIN_HEAP;
+    }
+  }
+
+  if (___setup_params.live_percent <= 0 ||
+      ___setup_params.live_percent > 100) {
+
+    /*
+     * Choose a reasonable minimum live percent.
+     */
+
+    ___setup_params.live_percent = ___DEFAULT_LIVE_PERCENT;
+  }
 
   init_nb_sections = ((___setup_params.min_heap >> ___LWS) +
                       overflow_reserve + 2*___MSECTION_FUDGE +

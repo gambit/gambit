@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1802,6 +1802,26 @@ end-of-code
       ___FIX(___set_debug_settings (___INT(___ARG1), ___INT(___ARG2)));"
    mask
    new-settings))
+
+;;;----------------------------------------------------------------------------
+
+;;; Processor information.
+
+(define-prim (##processor-count)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___RESULT = ___FIX(___processor_count ());"))
+
+(define-prim (##processor-cache-size
+              #!optional
+              (instruction-cache #f)
+              (level 0))
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___RESULT =
+       ___FIX(___processor_cache_size (!___FALSEP(___ARG1), ___INT(___ARG2)));"
+   instruction-cache
+   level))
 
 ;;;----------------------------------------------------------------------------
 

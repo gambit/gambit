@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -207,6 +207,10 @@
 #define USE_sysconf
 #endif
 
+#ifdef HAVE_SYSCTL
+#define USE_sysctl
+#endif
+
 #ifdef HAVE_TCGETATTR
 #define USE_tcgetattr
 #endif
@@ -280,11 +284,13 @@
 #define USE_GetConsoleWindow
 #define USE_GetModuleFileName
 #define USE_VirtualAlloc
+#define USE_GetSystemInfo
 
 #define HAVE_CLOCK 1
 #define HAVE_CREATETHREAD 1
 #define HAVE_GETPROCESSTIMES 1
 #define HAVE_GETSYSTEMTIME 1
+#define HAVE_GETSYSTEMINFO 1
 #define HAVE_LOADLIBRARY 1
 #define HAVE_MSGWAITFORMULTIPLEOBJECTS 1
 #define HAVE_Sleep 1
@@ -950,6 +956,13 @@ ___END_C_LINKAGE
 #define INCLUDE_stropts_h
 #endif
 
+#ifdef USE_sysctl
+#undef INCLUDE_sys_types_h
+#define INCLUDE_sys_types_h
+#undef INCLUDE_sys_sysctl_h
+#define INCLUDE_sys_sysctl_h
+#endif
+
 #ifdef USE_tcgetattr
 #undef INCLUDE_termios_h
 #define INCLUDE_termios_h
@@ -1304,6 +1317,12 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #endif
 #endif
 
+#ifdef INCLUDE_sys_sysctl_h
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
+#endif
+
 #ifdef INCLUDE_termios_h
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
@@ -1458,6 +1477,16 @@ extern void ___enable_os_interrupts ___PVOID;
 
 
 /*---------------------------------------------------------------------------*/
+
+/* Processor information. */
+
+extern int ___processor_count ___PVOID;
+
+extern int ___processor_cache_size
+   ___P((___BOOL instruction_cache,
+         int level),
+        ());
+
 
 /* Virtual memory statistics. */
 

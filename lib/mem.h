@@ -1,6 +1,6 @@
-/* File: "mem.h", Time-stamp: <2007-06-08 08:24:00 feeley> */
+/* File: "mem.h" */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___MEM_H
 #define ___MEM_H
@@ -64,6 +64,7 @@
 #define ___PSECTION_SIZE        4096
 #define ___PSECTION_WASTE       32
 #define ___DEFAULT_LIVE_PERCENT 50
+#define ___DEFAULT_MIN_HEAP     (1*(1<<20))
 
 
 extern ___SCMOBJ ___setup_mem ___PVOID;
