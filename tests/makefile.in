@@ -1,6 +1,6 @@
 # makefile for regression tests.
 
-# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 herefromroot = tests
 rootfromhere = ..
@@ -112,7 +112,7 @@ test1:
 
 test2:
 	@echo "------------ TEST 2 (error handling)"
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:h4000,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f error.scm < error.scm > test2.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:m1,h4000,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f error.scm < error.scm > test2.out
 	diff $(srcdirpfx)test2.ok test2.out && rm -f test2.out
 
 test3:
@@ -144,7 +144,7 @@ test7:
 	@echo "------------ TEST 7 (memory management and C-interface)"
 	rm -f mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -o mem@exe@ -exe mem.scm
-	@SETDLPATH@ ./mem@exe@ -:h4000 > test7.out
+	@SETDLPATH@ ./mem@exe@ -:m1,h4000 > test7.out
 	diff $(srcdirpfx)test7.ok test7.out && \
 	  rm -f test7.out mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
 
@@ -180,7 +180,7 @@ test9: test7
 	@echo "------------ TEST 9 (dynamic compilation and loading of a module)"
 	rm -rf mem@obj@ mem.o*
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f mem.scm
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:h4000 -f mem.o1 > test9.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:m1,h4000 -f mem.o1 > test9.out
 	diff $(srcdirpfx)test9.ok test9.out && rm -f test9.out mem@obj@ mem.o1
 
 test10:
