@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -12,7 +12,8 @@ PACKAGE_STRING="@PACKAGE_STRING@"
 PACKAGE_BUGREPORT="@PACKAGE_BUGREPORT@"
 PACKAGE_TARNAME="@PACKAGE_TARNAME@"
 
-PKGM="/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/PackageMaker"
+# PackageMaker is now separate form Xcode and must be downloaded separately.
+PKGM="/Applications/PackageMaker.app/Contents/MacOS/PackageMaker"
 
 VARIANT="$1"
 RUN_TESTS="$2"

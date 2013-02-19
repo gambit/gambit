@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1403,7 +1403,8 @@
                (let* ((proc (obj-val opnd))
                       (x (targ-use-prc proc #f)))
 ;;                 (targ-repr-exit-block! #f)
-                 (if (eq? (car x) 'prm)
+                 (if (and (not (proc-obj-code proc))
+                          (proc-obj-primitive? proc))
                    (targ-emit
                      (list "JUMPPRM"
                            set-nargs
@@ -1424,12 +1425,13 @@
                                      (targ-make-glbl 0 name)))))))))
               ((glo? opnd)
 ;;               (targ-repr-exit-block! #f)
-               (targ-emit
-                 (cons (begin
-                         (targ-wr-reg (+ targ-nb-arg-regs 1))
-                         (if safe? "JUMPGLOSAFE" "JUMPGLONOTSAFE"))
-                       (cons (if nb-args set-nargs '("NOTHING"))
-                             (cdr (targ-opnd opnd))))))
+               (let ((name (glo-name opnd)))
+                 (targ-wr-reg (+ targ-nb-arg-regs 1))
+                 (targ-emit
+                  (list (if safe? "JUMPGLOSAFE" "JUMPGLONOTSAFE")
+                        (if nb-args set-nargs '("NOTHING"))
+                        (targ-use-glo name #f)
+                        (targ-c-id-glo (symbol->string name))))))
               (else
 ;;               (targ-repr-exit-block! #f)
                (targ-emit
@@ -2309,9 +2311,8 @@
 
         ((glo? opnd)
          (let ((name (glo-name opnd)))
-           (list "GLO"
-                 (targ-use-glo name #f)
-                 (targ-c-id-glo (symbol->string name)))))
+           (targ-use-glo name #f)
+           (targ-c-id-glo2 (symbol->string name))))
 
         ((clo? opnd)
          (list "CLO"
@@ -2413,9 +2414,8 @@
 
         ((glo? opnd)
          (let ((name (glo-name opnd)))
-           (list "GLO"
-                 (targ-use-glo name #f)
-                 (targ-c-id-glo (symbol->string name)))))
+           (targ-use-glo name #f)
+           (targ-c-id-glo2 (symbol->string name))))
 
         ((clo? opnd)
          (list "CLO"

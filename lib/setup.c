@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /* 
  * This module contains the routines that setup the Scheme program for
@@ -295,9 +295,9 @@ ___SCMOBJ symkey;)
   if (___INT(___FIELD(tbl,0)) > ___INT(___VECTORLENGTH(tbl)) * 4)
     {
       int new_len = (___INT(___VECTORLENGTH(tbl))-1) * 2;
-      ___SCMOBJ new_tbl = symkey_table_alloc (subtype, new_len);
+      ___SCMOBJ newtbl = symkey_table_alloc (subtype, new_len);
 
-      if (!___FIXNUMP(new_tbl))
+      if (!___FIXNUMP(newtbl))
         {
           for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
             {
@@ -309,14 +309,14 @@ ___SCMOBJ symkey;)
                   int j = ___INT(___FIELD(symkey,___SYMKEY_HASH))%new_len + 1;
 
                   probe = ___FIELD(symkey,___SYMKEY_NEXT);
-                  ___FIELD(symkey,___SYMKEY_NEXT) = ___FIELD(new_tbl,j);
-                  ___FIELD(new_tbl,j) = symkey;
+                  ___FIELD(symkey,___SYMKEY_NEXT) = ___FIELD(newtbl,j);
+                  ___FIELD(newtbl,j) = symkey;
                 }
             }
 
-          ___FIELD(new_tbl,0) = ___FIELD(tbl,0);
+          ___FIELD(newtbl,0) = ___FIELD(tbl,0);
 
-          symkey_table_set (subtype, new_tbl);
+          symkey_table_set (subtype, newtbl);
         }
     }
 }
@@ -607,7 +607,7 @@ ___mod_or_lnk (*linker) ();)
   ___mod_or_lnk mol = linker (&___gstate);
   if (mol->module.kind == ___LINKFILE_KIND)
     {
-      void **p = mol->linkfile.linker_tbl;
+      void **p = mol->linkfile.linkertbl;
       while (*p != 0)
         {
           *p = linker_to_mod_or_lnk
@@ -629,7 +629,7 @@ ___SCMOBJ (*proc) ();)
 {
   if (mol->module.kind == ___LINKFILE_KIND)
     {
-      void **p = mol->linkfile.linker_tbl;
+      void **p = mol->linkfile.linkertbl;
       while (*p != 0)
         {
           ___SCMOBJ e = for_each_module (___CAST(___mod_or_lnk,*p++), proc);
@@ -645,36 +645,36 @@ ___SCMOBJ (*proc) ();)
 
 ___HIDDEN void fixref
    ___P((___SCMOBJ *p,
-         ___SCMOBJ *sym_tbl,
-         ___SCMOBJ *key_tbl,
-         ___SCMOBJ *cns_tbl,
-         ___SCMOBJ *sub_tbl),
+         ___SCMOBJ *symtbl,
+         ___SCMOBJ *keytbl,
+         ___SCMOBJ *cnstbl,
+         ___SCMOBJ *subtbl),
         (p,
-         sym_tbl,
-         key_tbl,
-         cns_tbl,
-         sub_tbl)
+         symtbl,
+         keytbl,
+         cnstbl,
+         subtbl)
 ___SCMOBJ *p;
-___SCMOBJ *sym_tbl;
-___SCMOBJ *key_tbl;
-___SCMOBJ *cns_tbl;
-___SCMOBJ *sub_tbl;)
+___SCMOBJ *symtbl;
+___SCMOBJ *keytbl;
+___SCMOBJ *cnstbl;
+___SCMOBJ *subtbl;)
 {
   ___SCMOBJ v = *p;
   switch (___TYP(v))
     {
     case ___tMEM1:
       if (___INT(v)<0)
-        *p = key_tbl[-1-___INT(v)];
+        *p = keytbl[-1-___INT(v)];
       else
-        *p = sub_tbl[___INT(v)];
+        *p = subtbl[___INT(v)];
       break;
 
     case ___tMEM2:
       if (___INT(v)<0)
-        *p = sym_tbl[-1-___INT(v)];
+        *p = symtbl[-1-___INT(v)];
       else
-        *p = ___TAG(___ALIGNUP(&cns_tbl[(___PAIR_SIZE+1)*___INT(v)],___WS),
+        *p = ___TAG(___ALIGNUP(&cnstbl[(___PAIR_SIZE+1)*___INT(v)],___WS),
                     ___tPAIR);
       break;
     }
@@ -694,24 +694,24 @@ ___module_struct *module;)
   ___SCMOBJ *cns = 0;
 
   int flags                 = module->flags;
-  ___FAKEWORD *glo_tbl      = module->glo_tbl;
-  int sup_count             = module->sup_count;
+  ___FAKEWORD *glotbl      = module->glotbl;
+  int supcount             = module->supcount;
   ___UTF_8STRING *glo_names = module->glo_names;
-  ___SCMOBJ *sym_tbl        = ___CAST(___SCMOBJ*,module->sym_tbl);
-  int sym_count             = module->sym_count;
+  ___SCMOBJ *symtbl        = ___CAST(___SCMOBJ*,module->symtbl);
+  int symcount             = module->symcount;
   ___UTF_8STRING *sym_names = module->sym_names;
-  ___SCMOBJ *key_tbl        = ___CAST(___SCMOBJ*,module->key_tbl);
-  int key_count             = module->key_count;
+  ___SCMOBJ *keytbl        = ___CAST(___SCMOBJ*,module->keytbl);
+  int keycount             = module->keycount;
   ___UTF_8STRING *key_names = module->key_names;
   ___SCMOBJ *lp             = module->lp;
-  ___SCMOBJ *lbl_tbl        = ___CAST(___SCMOBJ*,module->lbl_tbl);
-  int lbl_count             = module->lbl_count;
-  ___SCMOBJ *ofd_tbl        = module->ofd_tbl;
+  ___SCMOBJ *lbltbl        = ___CAST(___SCMOBJ*,module->lbltbl);
+  int lblcount             = module->lblcount;
+  ___SCMOBJ *ofdtbl        = module->ofdtbl;
   int ofd_length            = module->ofd_length;
-  ___SCMOBJ *cns_tbl        = module->cns_tbl;
-  int cns_count             = module->cns_count;
-  ___SCMOBJ *sub_tbl        = ___CAST(___SCMOBJ*,module->sub_tbl);
-  int sub_count             = module->sub_count;
+  ___SCMOBJ *cnstbl        = module->cnstbl;
+  int cnscount             = module->cnscount;
+  ___SCMOBJ *subtbl        = ___CAST(___SCMOBJ*,module->subtbl);
+  int subcount             = module->subcount;
 
   /* 
    * Check that the version of the compiler used to compile the module
@@ -727,8 +727,8 @@ ___module_struct *module;)
 
   /* Align module's pair table */
 
-  if (cns_tbl != 0)
-    cns = align (cns_tbl, (___PAIR_SIZE+1)*cns_count, 0);
+  if (cnstbl != 0)
+    cns = align (cnstbl, (___PAIR_SIZE+1)*cnscount, 0);
 
   /* Setup module's global variable table */
 
@@ -744,10 +744,10 @@ ___module_struct *module;)
       while (i-- > 0)
         {
           ___glo_struct *glo = 0;
-          ___SCMOBJ e = make_global (glo_names[i], i<sup_count, &glo);
+          ___SCMOBJ e = make_global (glo_names[i], i<supcount, &glo);
           if (e != ___FIX(___NO_ERR))
             return e;
-          glo_tbl[i] = ___CAST(___FAKEWORD,glo);
+          glotbl[i] = ___CAST(___FAKEWORD,glo);
         }
     }
 
@@ -761,13 +761,13 @@ ___module_struct *module;)
           ___SCMOBJ sym = make_symkey (sym_names[i], ___sSYMBOL);
           if (___FIXNUMP(sym))
             return sym;
-          sym_tbl[i] = sym;
+          symtbl[i] = sym;
           i++;
         }
     }
   else
-    for (i=sym_count-1; i>=0; i--)
-      sym_tbl[i] = ___TAG(___ALIGNUP(sym_tbl[i], ___WS), ___tSUBTYPED);
+    for (i=symcount-1; i>=0; i--)
+      symtbl[i] = ___TAG(___ALIGNUP(symtbl[i], ___WS), ___tSUBTYPED);
 
   /* Setup module's keyword table */
 
@@ -779,32 +779,32 @@ ___module_struct *module;)
           ___SCMOBJ key = make_symkey (key_names[i], ___sKEYWORD);
           if (___FIXNUMP(key))
             return key;
-          key_tbl[i] = key;
+          keytbl[i] = key;
           i++;
         }
     }
   else
-    for (i=key_count-1; i>=0; i--)
-      key_tbl[i] = ___TAG(___ALIGNUP(key_tbl[i], ___WS), ___tSUBTYPED);
+    for (i=keycount-1; i>=0; i--)
+      keytbl[i] = ___TAG(___ALIGNUP(keytbl[i], ___WS), ___tSUBTYPED);
 
   /* Setup module's subtyped object table */
 
-  for (i=sub_count-1; i>=0; i--)
-    sub_tbl[i] = align_subtyped (___CAST(___SCMOBJ*,sub_tbl[i]));
+  for (i=subcount-1; i>=0; i--)
+    subtbl[i] = align_subtyped (___CAST(___SCMOBJ*,subtbl[i]));
 
   /* Fix references in module's pair table */
 
-  for (i=cns_count-1; i>=0; i--)
+  for (i=cnscount-1; i>=0; i--)
   {
-    fixref (cns+i*(___PAIR_SIZE+1)+1, sym_tbl, key_tbl, cns_tbl, sub_tbl);
-    fixref (cns+i*(___PAIR_SIZE+1)+2, sym_tbl, key_tbl, cns_tbl, sub_tbl);
+    fixref (cns+i*(___PAIR_SIZE+1)+1, symtbl, keytbl, cnstbl, subtbl);
+    fixref (cns+i*(___PAIR_SIZE+1)+2, symtbl, keytbl, cnstbl, subtbl);
   }
 
   /* Fix references in module's subtyped object table */
 
-  for (j=sub_count-1; j>=0; j--)
+  for (j=subcount-1; j>=0; j--)
     {
-      ___SCMOBJ *p = ___UNTAG_AS(sub_tbl[j],___tSUBTYPED);
+      ___SCMOBJ *p = ___UNTAG_AS(subtbl[j],___tSUBTYPED);
       ___SCMOBJ head = p[0];
       int subtype = ___HD_SUBTYPE(head);
       int words = ___HD_WORDS(head);
@@ -817,18 +817,18 @@ ___module_struct *module;)
         case ___sRATNUM:
         case ___sCPXNUM:
           for (i=1; i<=words; i++)
-            fixref (p+i, sym_tbl, key_tbl, cns_tbl, sub_tbl);
+            fixref (p+i, symtbl, keytbl, cnstbl, subtbl);
         }
     }
 
   /* Align module's out-of-line frame descriptor table */
 
-  if (ofd_tbl != 0)
-    ofd_tbl = ___CAST(___SCMOBJ*,align (ofd_tbl, ofd_length, 0));
+  if (ofdtbl != 0)
+    ofdtbl = ___CAST(___SCMOBJ*,align (ofdtbl, ofd_length, 0));
 
   /* Align module's label table */
 
-  if (lbl_count > 0)
+  if (lblcount > 0)
     {
       ___host current_host = 0;
       void **hlbl_ptr = 0;
@@ -837,10 +837,10 @@ ___module_struct *module;)
 
       module_count++;
 
-      new_lt = ___CAST(___label_struct*,align (lbl_tbl, lbl_count*___LS, 0));
-      ofd_alloc = ofd_tbl;
+      new_lt = ___CAST(___label_struct*,align (lbltbl, lblcount*___LS, 0));
+      ofd_alloc = ofdtbl;
 
-      for (i=0; i<lbl_count; i++)
+      for (i=0; i<lblcount; i++)
         {
           ___label_struct *lbl = &new_lt[i];
           ___SCMOBJ head = lbl->header;
@@ -867,7 +867,7 @@ ___module_struct *module;)
                   lbl->host_label = ___CAST(___FAKEVOIDSTAR,sym);
                 }
 
-              fixref (&lbl->entry_or_descr, sym_tbl, key_tbl, cns_tbl, sub_tbl);
+              fixref (&lbl->entry_or_descr, symtbl, keytbl, cnstbl, subtbl);
 
               if (hlbl_ptr != 0)
                 hlbl_ptr++; /* skip INTRO label */
@@ -924,18 +924,18 @@ ___module_struct *module;)
   if (glo_names != 0)
     {
       ___UTF_8STRING name = module->name;
-      ___FAKEWORD *glo_tbl = module->glo_tbl;
-      int glo_count = module->glo_count;
-      int sup_count = module->sup_count;
+      ___FAKEWORD *glotbl = module->glotbl;
+      int glocount = module->glocount;
+      int supcount = module->supcount;
       int i;
-      for (i=sup_count; i<glo_count; i++)
+      for (i=supcount; i<glocount; i++)
         {
           /* 
            * If the global variable is undefined, add it to the list
            * of undefined variables in the module descriptor.
            */
 
-          ___glo_struct *glo = ___CAST(___glo_struct*,glo_tbl[i]);
+          ___glo_struct *glo = ___CAST(___glo_struct*,glotbl[i]);
 
           if (glo->val == ___UNB1)
             {
@@ -993,7 +993,7 @@ ___HIDDEN ___SCMOBJ setup_module_phase3
         (module)
 ___module_struct *module;)
 {
-  if (module->lbl_count > 0)
+  if (module->lblcount > 0)
     {
       ___SCMOBJ err;
       ___SCMOBJ mod_name;
@@ -1679,7 +1679,7 @@ ___mod_or_lnk mol;)
 {
   if (mol->module.kind == ___LINKFILE_KIND)
     {
-      void **p1 = mol->linkfile.linker_tbl;
+      void **p1 = mol->linkfile.linkertbl;
       ___FAKEWORD *p2 = mol->linkfile.sym_list;
 
       while (*p1 != 0)
@@ -1708,7 +1708,7 @@ ___mod_or_lnk mol;)
 {
   if (mol->module.kind == ___LINKFILE_KIND)
     {
-      void **p1 = mol->linkfile.linker_tbl;
+      void **p1 = mol->linkfile.linkertbl;
       ___FAKEWORD *p2 = mol->linkfile.sym_list;
       ___FAKEWORD *p3 = mol->linkfile.key_list;
       ___processor_state ___ps = ___PSTATE;

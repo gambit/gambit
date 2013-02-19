@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___VERSION
@@ -1887,7 +1887,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___UNB1 ((___CAST(___WORD,-7)<<___TB)+___tSPECIAL)
 #define ___UNB2 ((___CAST(___WORD,-8)<<___TB)+___tSPECIAL)
 #define ___OPTIONAL ((___CAST(___WORD,-9)<<___TB)+___tSPECIAL)
-#define ___KEY_OBJ ((___CAST(___WORD,-10)<<___TB)+___tSPECIAL)
+#define ___KEYOBJ ((___CAST(___WORD,-10)<<___TB)+___tSPECIAL)
 #define ___REST ((___CAST(___WORD,-11)<<___TB)+___tSPECIAL)
 #define ___UNUSED ((___CAST(___WORD,-14)<<___TB)+___tSPECIAL)
 #define ___DELETED ((___CAST(___WORD,-15)<<___TB)+___tSPECIAL)
@@ -1899,10 +1899,10 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #endif
 #define ___CHR(x)((___CAST(___WORD,___CS_SELECT(___CAST_U8(x),___CAST_U16(x),___CAST_U32(x)))<<___TB)+___tSPECIAL)
 
-#define ___SYM(i,id)___CAST_FAKEWORD_TO_WORD(___sym_tbl[i])
-#define ___KEY(i,id)___CAST_FAKEWORD_TO_WORD(___key_tbl[i])
-#define ___CNS(i)___TAG((___ALIGNUP(___cns_tbl,___WS)+i*(___PAIR_SIZE+1)),___tPAIR)
-#define ___SUB(i)___CAST_FAKEWORD_TO_WORD(___sub_tbl[i])
+#define ___SYM(i,id)___CAST_FAKEWORD_TO_WORD(___symtbl[i])
+#define ___KEY(i,id)___CAST_FAKEWORD_TO_WORD(___keytbl[i])
+#define ___CNS(i)___TAG((___ALIGNUP(___cnstbl,___WS)+i*(___PAIR_SIZE+1)),___tPAIR)
+#define ___SUB(i)___CAST_FAKEWORD_TO_WORD(___subtbl[i])
 
 /*
  * Value constructors for object references inside constant
@@ -1918,7 +1918,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___REF_UNB1 ___UNB1
 #define ___REF_UNB2 ___UNB2
 #define ___REF_OPTIONAL ___OPTIONAL
-#define ___REF_KEY_OBJ ___KEY_OBJ
+#define ___REF_KEYOBJ ___KEYOBJ
 #define ___REF_REST ___REST
 #define ___REF_UNUSED ___UNUSED
 #define ___REF_DELETED ___DELETED
@@ -3338,7 +3338,7 @@ ___SET_R0(___GSTATE->handler_break)
 #define ___GLO(i,glo)___GLOSTRUCT(i,glo).val
 #define ___SET_GLO(i,glo,x)___GLOSTRUCT(i,glo).val=x;
 #ifdef ___BIND_LATE
-#define ___GLOSTRUCT(i,glo)(*(___glo_struct*)___glo_tbl[i])
+#define ___GLOSTRUCT(i,glo)(*(___glo_struct*)___glotbl[i])
 #else
 #define ___GLOSTRUCT(i,glo)glo
 #endif
@@ -3396,11 +3396,11 @@ ___EXT(___register_host_entry) (___start, ___MODULE_NAME);
 
 #define ___SETUP_HOST_LABEL 1
 
-#define ___BEGIN_HLBL static void *___hlbl_tbl[]={
+#define ___BEGIN_HLBL static void *___hlbltbl[]={
 #define ___DEF_HLBL_INTRO 0,
 #define ___DEF_HLBL(id)&&id,
 #define ___END_HLBL \
-0}; if (___EXPECT_FALSE(___ps == 0)) return ___CAST(___WORD,___hlbl_tbl);
+0}; if (___EXPECT_FALSE(___ps == 0)) return ___CAST(___WORD,___hlbltbl);
 
 #define ___BEGIN_SW \
 ___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
@@ -4865,13 +4865,13 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 #ifdef ___LOCAL_GSTATE
 
 #define ___GSTATE ___local_gstate
-#define ___GSTATE_DECL ___LOCAL ___global_state_struct *___local_gstate;
+#define ___GSTATEDECL ___LOCAL ___global_state_struct *___local_gstate;
 #define ___SET_LOCAL_GSTATE(gs) ___local_gstate = gs;
 
 #else
 
 #define ___GSTATE (&___gstate)
-#define ___GSTATE_DECL ___IMP_DATA(___global_state_struct,___gstate);
+#define ___GSTATEDECL ___IMP_DATA(___global_state_struct,___gstate);
 #define ___SET_LOCAL_GSTATE(gs)
 
 #endif
@@ -4936,27 +4936,27 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 
 #ifndef ___IMPORTED_ADR_IS_CONST
 
-#define ___BEGIN_SYM1 ___LOCAL ___FAKEWORD ___sym_tbl[___SYM_COUNT];
+#define ___BEGIN_SYM1 ___LOCAL ___FAKEWORD ___symtbl[___SYMCOUNT];
 #define ___DEF_SYM1(i,sym,str)
 #define ___END_SYM1
 
-#define ___DEF_SYM2(i,sym,str)___sym_tbl[i]=(___FAKEWORD)(sym);
+#define ___DEF_SYM2(i,sym,str)___symtbl[i]=(___FAKEWORD)(sym);
 
-#define ___BEGIN_KEY1 ___LOCAL ___FAKEWORD ___key_tbl[___KEY_COUNT];
+#define ___BEGIN_KEY1 ___LOCAL ___FAKEWORD ___keytbl[___KEYCOUNT];
 #define ___DEF_KEY1(i,key,str)
 #define ___END_KEY1
 
-#define ___DEF_KEY2(i,key,str)___key_tbl[i]=(___FAKEWORD)(key);
+#define ___DEF_KEY2(i,key,str)___keytbl[i]=(___FAKEWORD)(key);
 
 #else
 
-#define ___BEGIN_SYM1 ___LOCAL ___FAKEWORD ___sym_tbl[]={
+#define ___BEGIN_SYM1 ___LOCAL ___FAKEWORD ___symtbl[]={
 #define ___DEF_SYM1(i,sym,str)(___FAKEWORD)(sym),
 #define ___END_SYM1 0};
 
 #define ___DEF_SYM2(i,sym,str)
 
-#define ___BEGIN_KEY1 ___LOCAL ___FAKEWORD ___key_tbl[]={
+#define ___BEGIN_KEY1 ___LOCAL ___FAKEWORD ___keytbl[]={
 #define ___DEF_KEY1(i,key,str)(___FAKEWORD)(key),
 #define ___END_KEY1 0};
 
@@ -5004,12 +5004,12 @@ ___EXP_DATA(___symkey_struct,sym)={(___FAKEWORD)prevsym,(___FAKEWORD)str,0,0,(__
 #endif
 
 #define ___BEGIN_CNS \
-___LOCAL ___WORD ___cns_tbl[]={
+___LOCAL ___WORD ___cnstbl[]={
 #define ___DEF_CNS(car,cdr)___MAKE_HD((___PAIR_SIZE<<___LWS),___sPAIR,___PERM),cdr,car
 #define ___END_CNS ___PADDING};
 
 #define ___BEGIN_SUB \
-___LOCAL ___FAKEWORD ___sub_tbl[]={
+___LOCAL ___FAKEWORD ___subtbl[]={
 #define ___DEF_SUB(id)___CAST_WORDSTAR_TO_FAKEWORD(id)
 #define ___END_SUB };
 
@@ -5301,21 +5301,21 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 #define ___FRAME_ALIGN 4
 
 #define ___BEGIN_LBL \
-___LOCAL ___label_struct ___lbl_tbl[]={
+___LOCAL ___label_struct ___lbltbl[]={
 #define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc){___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM),info,___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name),___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc))}
 #define ___DEF_LBL_PROC(id,nbp,nbc){___PRD(nbp,nbc),0,0,___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id))}
 #define ___DEF_LBL_RET(id,frm){___MAKE_HD((3<<___LWS),___sRETURN,___PERM),frm,0,___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id))}
 
 #define ___END_LBL ___PADDING_LBL};
 
-#ifdef ___OFD_COUNT
-#define ___OFD_TBL ___ofd_tbl,sizeof(___ofd_tbl)/sizeof(___WORD)
+#ifdef ___OFDCOUNT
+#define ___OFDTBL ___ofdtbl,sizeof(___ofdtbl)/sizeof(___WORD)
 #else
-#define ___OFD_TBL 0,0
+#define ___OFDTBL 0,0
 #endif
 
 #define ___BEGIN_OFD \
-___LOCAL ___WORD ___ofd_tbl[]={
+___LOCAL ___WORD ___ofdtbl[]={
 #define ___END_OFD ___PADDING};
 
 #define ___DEF_OFD(kind,fs,link)(link<<16)+(fs<<2)+kind
@@ -5414,61 +5414,61 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 #define ___RETI 2
 #define ___RETT 3
 
-#ifdef ___GLO_COUNT
+#ifdef ___GLOCOUNT
 #ifdef ___BIND_LATE
-#define ___GLO_DECL ___LOCAL ___FAKEWORD ___glo_tbl[___GLO_COUNT];
-#define ___GLO_TBL ___glo_tbl,___GLO_COUNT,___SUP_COUNT,___glo_names
+#define ___GLODECL ___LOCAL ___FAKEWORD ___glotbl[___GLOCOUNT];
+#define ___GLOTBL ___glotbl,___GLOCOUNT,___SUPCOUNT,___glo_names
 #else
-#define ___GLO_DECL
-#define ___GLO_TBL 0,0,0,0
+#define ___GLODECL
+#define ___GLOTBL 0,0,0,0
 #endif
 #else
-#define ___GLO_DECL
-#define ___GLO_TBL 0,0,0,0
+#define ___GLODECL
+#define ___GLOTBL 0,0,0,0
 #endif
 
-#ifdef ___SYM_COUNT
+#ifdef ___SYMCOUNT
 #ifdef ___BIND_LATE
-#define ___SYM_DECL ___LOCAL ___FAKEWORD ___sym_tbl[___SYM_COUNT];
-#define ___SYM_TBL ___sym_tbl,___SYM_COUNT,___sym_names
+#define ___SYMDECL ___LOCAL ___FAKEWORD ___symtbl[___SYMCOUNT];
+#define ___SYMTBL ___symtbl,___SYMCOUNT,___sym_names
 #else
-#define ___SYM_DECL
-#define ___SYM_TBL ___sym_tbl,___SYM_COUNT,0
+#define ___SYMDECL
+#define ___SYMTBL ___symtbl,___SYMCOUNT,0
 #endif
 #else
-#define ___SYM_DECL
-#define ___SYM_TBL 0,0,0
+#define ___SYMDECL
+#define ___SYMTBL 0,0,0
 #endif
 
-#ifdef ___KEY_COUNT
+#ifdef ___KEYCOUNT
 #ifdef ___BIND_LATE
-#define ___KEY_DECL ___LOCAL ___FAKEWORD ___key_tbl[___KEY_COUNT];
-#define ___KEY_TBL ___key_tbl,___KEY_COUNT,___key_names
+#define ___KEYDECL ___LOCAL ___FAKEWORD ___keytbl[___KEYCOUNT];
+#define ___KEYTBL ___keytbl,___KEYCOUNT,___key_names
 #else
-#define ___KEY_DECL
-#define ___KEY_TBL ___key_tbl,___KEY_COUNT,0
+#define ___KEYDECL
+#define ___KEYTBL ___keytbl,___KEYCOUNT,0
 #endif
 #else
-#define ___KEY_DECL
-#define ___KEY_TBL 0,0,0
-#endif
-
-#ifdef ___LBL_COUNT
-#define ___LBL_TBL &___lp,___lbl_tbl,___LBL_COUNT
-#else
-#define ___LBL_TBL 0,0,0
+#define ___KEYDECL
+#define ___KEYTBL 0,0,0
 #endif
 
-#ifdef ___CNS_COUNT
-#define ___CNS_TBL ___cns_tbl,___CNS_COUNT
+#ifdef ___LBLCOUNT
+#define ___LBLTBL &___lp,___lbltbl,___LBLCOUNT
 #else
-#define ___CNS_TBL 0,0
+#define ___LBLTBL 0,0,0
 #endif
 
-#ifdef ___SUB_COUNT
-#define ___SUB_TBL ___sub_tbl,___SUB_COUNT
+#ifdef ___CNSCOUNT
+#define ___CNSTBL ___cnstbl,___CNSCOUNT
 #else
-#define ___SUB_TBL 0,0
+#define ___CNSTBL 0,0
+#endif
+
+#ifdef ___SUBCOUNT
+#define ___SUBTBL ___subtbl,___SUBCOUNT
+#else
+#define ___SUBTBL 0,0
 #endif
 
 #define ___BEGIN_MOD1 ___LOCAL ___WORD ___init_proc ___PVOID{
@@ -5480,13 +5480,13 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
   ___MODULE_KIND, \
   ___MODULE_NAME, \
   ___SETUP_HOST_LABEL, \
-  ___GLO_TBL, \
-  ___SYM_TBL, \
-  ___KEY_TBL, \
-  ___LBL_TBL, \
-  ___OFD_TBL, \
-  ___CNS_TBL, \
-  ___SUB_TBL, \
+  ___GLOTBL, \
+  ___SYMTBL, \
+  ___KEYTBL, \
+  ___LBLTBL, \
+  ___OFDTBL, \
+  ___CNSTBL, \
+  ___SUBTBL, \
   ___init_proc, \
   ___SCRIPT_LINE, \
   0,\
@@ -5606,7 +5606,7 @@ ___LOCAL ___linkfile_struct ___linkfile_descr = { \
   ___LINKFILE_NAME, \
   sym_list, \
   key_list, \
-  ___linker_tbl, \
+  ___linkertbl, \
   0,0,0,0,0,0,0,0 \
 }; \
 ___BEGIN_C_LINKAGE \
@@ -5631,7 +5631,7 @@ ___P((___global_state_struct *___gs),()); ___END_C_LINKAGE
 ___P((___global_state_struct *___gs),()); ___END_C_LINKAGE
 #define ___END_NEW_LNK
 
-#define ___BEGIN_LNK ___LOCAL void *___linker_tbl[]={
+#define ___BEGIN_LNK ___LOCAL void *___linkertbl[]={
 #define ___DEF_LNK(id)(void*)id
 #define ___END_LNK ,0};
 
@@ -6885,17 +6885,17 @@ typedef struct ___module_struct
     int kind;
     ___UTF_8STRING name;
     int flags;
-    ___FAKEWORD *glo_tbl; int glo_count; int sup_count;
+    ___FAKEWORD *glotbl; int glocount; int supcount;
     ___UTF_8STRING *glo_names;
-    ___FAKEWORD *sym_tbl; int sym_count;
+    ___FAKEWORD *symtbl; int symcount;
     ___UTF_8STRING *sym_names;
-    ___FAKEWORD *key_tbl; int key_count;
+    ___FAKEWORD *keytbl; int keycount;
     ___UTF_8STRING *key_names;
     ___WORD *lp;
-    ___label_struct *lbl_tbl; int lbl_count;
-    ___WORD *ofd_tbl; int ofd_length;
-    ___WORD *cns_tbl; int cns_count;
-    ___FAKEWORD *sub_tbl; int sub_count;
+    ___label_struct *lbltbl; int lblcount;
+    ___WORD *ofdtbl; int ofd_length;
+    ___WORD *cnstbl; int cnscount;
+    ___FAKEWORD *subtbl; int subcount;
     ___WORD (*init_proc) ___PVOID;
     ___UTF_8STRING script_line;
     struct ___module_struct *next;
@@ -6919,7 +6919,7 @@ typedef struct ___linkfile_struct
     ___UTF_8STRING name;
     ___FAKEWORD *sym_list;
     ___FAKEWORD *key_list;
-    void **linker_tbl;
+    void **linkertbl;
 
     void (*dummy8) ___PVOID;
     void (*dummy7) ___PVOID;
@@ -7963,13 +7963,13 @@ typedef struct ___global_state_struct
 #endif
   } ___global_state_struct;
 
-#ifdef ___LBL_COUNT
+#ifdef ___LBLCOUNT
 ___LOCAL ___WORD ___lp; /* Module's label table pointer */
 #endif
 
-___GLO_DECL
-___SYM_DECL
-___KEY_DECL
+___GLODECL
+___SYMDECL
+___KEYDECL
 
 /* Setup parameters structure */
 
@@ -8919,7 +8919,7 @@ ___IMP_FUNC(___SCMOBJ,___gc_hash_table_rehash)
 #endif
 
 #ifndef ___INCLUDED_FROM_SETUP
-___GSTATE_DECL
+___GSTATEDECL
 ___IMP_FUNC(___BOOL,___iswalpha)
    ___P((___UCS_4 x),
         ());

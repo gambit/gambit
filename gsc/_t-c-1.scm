@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -633,13 +633,11 @@
            ((procedure)
             (targ-use-prc obj #f))
            ((symbol)
-            (list "SYM"
-                  (targ-use-sym obj)
-                  (targ-c-id-sym (symbol->string obj))))
+            (targ-use-sym obj)
+            (targ-c-id-sym2 (symbol->string obj)))
            ((keyword)
-            (list "KEY"
-                  (targ-use-key obj)
-                  (targ-c-id-key (keyword-object->string obj))))
+            (targ-use-key obj)
+            (targ-c-id-key2 (keyword-object->string obj)))
            ((flonum bigfixnum bignum ratnum cpxnum)
             (let ((x (table-ref targ-num-objs obj #f)))
               (use-subtyped-obj
@@ -670,11 +668,11 @@
       ((optional)
        '("OPTIONAL"))
       ((key)
-       '("KEY_OBJ"))
+       '("KEYOBJ"))
       ((rest)
        '("REST"))
 ;;      ((body)
-;;       '("BODY_OBJ"))
+;;       '("BODYOBJ"))
       ((fixnum)
        (list "FIX" (targ-c-s32 obj)))
       ((char)
@@ -697,10 +695,11 @@
                     y)))
               #f)))
     (if (proc-obj-primitive? proc)
-      (let ((i (targ-use-glo (string->symbol name) supply?)))
+      (begin
+        (targ-use-glo (string->symbol name) supply?)
         (if p
-          p
-          (list 'prm i (targ-c-id-glo name))))
+            p
+            (targ-c-id-prm2 name)))
       p)))
 
 (define (targ-heap-ref-obj obj)
@@ -771,11 +770,11 @@
       ((optional)
        '("REF_OPTIONAL"))
       ((key)
-       '("REF_KEY_OBJ"))
+       '("REF_KEYOBJ"))
       ((rest)
        '("REF_REST"))
 ;;      ((body)
-;;       '("REF_BODY_OBJ"))
+;;       '("REF_BODYOBJ"))
       ((fixnum)
        (list "REF_FIX" obj))
       ((char)
@@ -982,14 +981,14 @@
 
     (targ-dump-module-info name #f #f script-line)
 
-    (targ-define-count "SYM_COUNT" (length sym-list))
-    (targ-define-count "KEY_COUNT" (length key-list))
-    (targ-define-count "GLO_COUNT" (length glo-list))
-    (targ-define-count "SUP_COUNT" (length (keep targ-glo-supplied? glo-list)))
-    (targ-define-count "CNS_COUNT" (length cns-list))
-    (targ-define-count "SUB_COUNT" (length sub-list))
-    (targ-define-count "LBL_COUNT" targ-lbl-alloc)
-    (targ-define-count "OFD_COUNT" ofd-count)
+    (targ-define-count "SYMCOUNT" (length sym-list))
+    (targ-define-count "KEYCOUNT" (length key-list))
+    (targ-define-count "GLOCOUNT" (length glo-list))
+    (targ-define-count "SUPCOUNT" (length (keep targ-glo-supplied? glo-list)))
+    (targ-define-count "CNSCOUNT" (length cns-list))
+    (targ-define-count "SUBCOUNT" (length sub-list))
+    (targ-define-count "LBLCOUNT" targ-lbl-alloc)
+    (targ-define-count "OFDCOUNT" ofd-count)
     (targ-display "#include \"gambit.h\"")
     (targ-line)
 
@@ -1146,39 +1145,31 @@
 
 (define (targ-dump-module-info name linkfile? extension? script-line)
 
-  (targ-display "#define ")
-  (targ-code '("VERSION "))
-  (targ-display (compiler-version))
-  (targ-line)
+  (targ-macro-definition '("VERSION")
+                         (compiler-version))
 
-  (targ-display "#define ")
+  (targ-macro-definition (if linkfile?
+                             '("LINKFILE_NAME")
+                             '("MODULE_NAME"))
+                         (targ-c-string name))
+
+  (targ-macro-definition '("LINKER_ID")
+                         (targ-c-id-linker name))
+
   (if linkfile?
-    (targ-code '("LINKFILE_NAME "))
-    (targ-code '("MODULE_NAME ")))
-  (targ-display-c-string name)
-  (targ-line)
 
-  (targ-display "#define ")
-  (targ-code '("LINKER_ID "))
-  (targ-code (targ-c-id-linker name))
-  (targ-line)
+      (targ-macro-definition (if extension?
+                                 '("INCREMENTAL_LINKFILE")
+                                 '("FLAT_LINKFILE"))
+                             #f)
 
-  (targ-display "#define ")
-  (if linkfile?
-    (if extension?
-      (targ-code '("INCREMENTAL_LINKFILE"))
-      (targ-code '("FLAT_LINKFILE")))
-    (begin
-      (targ-code '("MH_PROC "))
-      (targ-code (targ-c-id-host name))))
-  (targ-line)
+      (targ-macro-definition '("MH_PROC")
+                             (targ-c-id-host name)))
 
-  (targ-display "#define ")
-  (targ-code '("SCRIPT_LINE "))
-  (if script-line
-    (targ-display-c-string script-line)
-    (targ-display 0))
-  (targ-line))
+  (targ-macro-definition '("SCRIPT_LINE")
+                         (if script-line
+                             (targ-c-string script-line)
+                             0)))
 
 (define (targ-dump-sym-key-glo-comp sym-list key-list glo-list)
 
@@ -1218,6 +1209,14 @@
                           (targ-c-id-sym name)
                           (targ-c-string name))))))
 
+  (targ-dump-section #f #f #f sym-list
+    (lambda (i s)
+      (let ((name (symbol->string (car s))))
+        (targ-macro-definition (targ-c-id-sym2 name)
+                               (list "SYM"
+                                     i
+                                     (targ-c-id-sym name))))))
+
   (targ-dump-section "BEGIN_KEY1" "END_KEY1" #f key-list
     (lambda (i k)
       (targ-cell-set! (cdr k) i)
@@ -1227,15 +1226,37 @@
                           (targ-c-id-key name)
                           (targ-c-string name))))))
 
-  (targ-dump-section "BEGIN_GLO" "END_GLO" #f
-    (append (keep targ-glo-supplied? glo-list)
-            (keep targ-glo-not-supplied? glo-list))
-    (lambda (i g)
-      (targ-cell-set! (cadr g) i)
-      (let ((name (symbol->string (car g))))
-        (targ-code* (list "DEF_GLO"
-                          i
-                          (targ-c-string name)))))))
+  (targ-dump-section #f #f #f key-list
+    (lambda (i k)
+      (let ((name (keyword-object->string (car k))))
+        (targ-macro-definition (targ-c-id-key2 name)
+                               (list "KEY"
+                                     i
+                                     (targ-c-id-key name))))))
+
+  (let ((glos
+         (append (keep targ-glo-supplied? glo-list)
+                 (keep targ-glo-not-supplied? glo-list))))
+
+    (targ-dump-section "BEGIN_GLO" "END_GLO" #f glos
+      (lambda (i g)
+        (targ-cell-set! (cadr g) i)
+        (let ((name (symbol->string (car g))))
+          (targ-code* (list "DEF_GLO"
+                            i
+                            (targ-c-string name))))))
+
+    (targ-dump-section #f #f #f glos
+      (lambda (i g)
+        (let ((name (symbol->string (car g))))
+          (targ-macro-definition (targ-c-id-glo2 name)
+                                 (list "GLO"
+                                       i
+                                       (targ-c-id-glo name)))
+          (targ-macro-definition (targ-c-id-prm2 name)
+                                 (list "PRM"
+                                       i
+                                       (targ-c-id-glo name))))))))
 
 (define (targ-dump-sym-key-glo-link
           old-sym-glo-rsrc
@@ -1294,12 +1315,7 @@
 
 (define (targ-define-count name n)
   (if (not (= n 0))
-    (begin
-      (targ-display "#define ")
-      (targ-code (list name))
-      (targ-display " ")
-      (targ-display n)
-      (targ-line))))
+      (targ-macro-definition (list name) n)))
 
 (define (targ-define-prefix var)
   (targ-display "#undef ")
@@ -1312,7 +1328,7 @@
   (if (not (null? lst))
     (begin
       (targ-line)
-      (targ-code* (list begin-name))
+      (if begin-name (targ-code* (list begin-name)))
       (if comma? (targ-display " "))
       (dump 0 (car lst))
       (let loop ((i 1) (lst (cdr lst)))
@@ -1321,7 +1337,7 @@
             (if comma? (targ-display ","))
             (dump i (car lst))
             (loop (+ i 1) (cdr lst)))))
-      (targ-code* (list end-name)))))
+      (if end-name (targ-code* (list end-name))))))
 
 (define (targ-dump-cns objs)
   (targ-dump-section "BEGIN_CNS" "END_CNS" #t objs
@@ -1540,12 +1556,7 @@
                 (p (cdr obj))
                 (c-name (proc-obj-c-name proc)))
            (if c-name
-             (begin
-               (targ-display "#define ")
-               (targ-code (cons 'c-lbl- c-name))
-               (targ-display " ")
-               (targ-code (caddr p))
-               (targ-line)))))
+               (targ-macro-definition (cons 'c-lbl- c-name) (caddr p)))))
        objs)))
 
   (if (pair? c-objs)
@@ -1554,11 +1565,7 @@
       (let loop ((i 0) (lst c-objs))
         (if (pair? lst)
           (let ((x (car lst)))
-            (targ-display "#define ")
-            (targ-code (cons 'c-obj- i))
-            (targ-display " ")
-            (targ-code x)
-            (targ-line)
+            (targ-macro-definition (cons 'c-obj- i) x)
             (loop (+ i 1) (cdr lst)))))))
 
   (if (pair? c-decls)
@@ -1904,8 +1911,12 @@
 (define targ-linker-tag "")
 (define targ-host-tag   "H_")
 (define targ-glo-tag    "G_")
+(define targ-glo2-tag   "GLO_")
+(define targ-prm2-tag   "PRM_")
 (define targ-sym-tag    "S_")
+(define targ-sym2-tag   "SYM_")
 (define targ-key-tag    "K_")
+(define targ-key2-tag   "KEY_")
 
 (define targ-port #f)
 (define targ-line-size #f)
@@ -1949,8 +1960,12 @@
         ((c-id-linker) (targ-display-c-id        targ-linker-tag tail))
         ((c-id-host)   (targ-display-c-id        targ-host-tag   tail))
         ((c-id-glo)    (targ-display-c-id        targ-glo-tag    tail))
+        ((c-id-glo2)   (targ-display-c-id        targ-glo2-tag   tail))
+        ((c-id-prm2)   (targ-display-c-id        targ-prm2-tag   tail))
         ((c-id-sym)    (targ-display-c-id        targ-sym-tag    tail))
+        ((c-id-sym2)   (targ-display-c-id        targ-sym2-tag   tail))
         ((c-id-key)    (targ-display-c-id        targ-key-tag    tail))
+        ((c-id-key2)   (targ-display-c-id        targ-key2-tag   tail))
         ((sub-name)    (targ-display-prefixed "X") (targ-code tail))
         ((glbl)        (goto-lbl (car tail) (cadr tail)))
         ((d-)          (two-heads "D_"        tail '()))
@@ -1986,7 +2001,6 @@
         ((seq)         (targ-code-seq tail))
         ((append)      (targ-code-append tail))
         ((cell)        (targ-code tail))
-        ((prm)         (one-head "PRM" tail))
         ((prc)         (one-head "PRC" tail))
         (else          (one-head head tail))))
     (if x (targ-display x))))
@@ -2073,6 +2087,17 @@
         (set! targ-current-filename targ-source-filename))))
   (targ-display-no-line-info x))
 
+(define (targ-macro-definition name value)
+  (set! targ-in-macro-definition? #t)
+  (targ-display "#define ")
+  (targ-code name)
+  (if value
+      (begin
+        (targ-display " ")
+        (targ-code value)))
+  (set! targ-in-macro-definition? #f)
+  (targ-line))
+
 (define (targ-line)
   (if targ-in-macro-definition?
     (begin
@@ -2111,11 +2136,23 @@
 (define (targ-c-id-glo name)
   (cons 'c-id-glo name))
 
+(define (targ-c-id-glo2 name)
+  (cons 'c-id-glo2 name))
+
+(define (targ-c-id-prm2 name)
+  (cons 'c-id-prm2 name))
+
 (define (targ-c-id-sym name)
   (cons 'c-id-sym name))
 
+(define (targ-c-id-sym2 name)
+  (cons 'c-id-sym2 name))
+
 (define (targ-c-id-key name)
   (cons 'c-id-key name))
+
+(define (targ-c-id-key2 name)
+  (cons 'c-id-key2 name))
 
 (define (targ-sub-name n)
   (cons 'sub-name n))

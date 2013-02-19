@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -27,7 +27,7 @@ for VARIANT in intel32 intel64; do
                ;;
       intel64) CONFIG_ARCH="-arch x86_64 -m64"
                CONFIG_BUILD="--build=i386-apple-darwin9"
-               RUN_TESTS=0
+               RUN_TESTS=1
                ;;
            G3) CONFIG_ARCH="-arch ppc750"
                CONFIG_BUILD="--build=powerpc-apple-darwin9"
@@ -47,7 +47,8 @@ for VARIANT in intel32 intel64; do
                ;;
   esac
 
-  SYSROOT="/Developer/SDKs/MacOSX10.6.sdk"
+  #SYSROOT="/Developer/SDKs/MacOSX10.6.sdk"
+  SYSROOT="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk"
 
   CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-mmacosx-version-min=10.5 -Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host CC="gcc"
 

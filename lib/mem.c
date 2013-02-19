@@ -1236,13 +1236,7 @@ int kind;)
 #endif
       base[___PERM_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___PERM);
 
-      return ___TAG((base + ___PERM_HAND_OFS - ___BODY_OFS),
-#if ___tPAIR == ___tSUBTYPED
-                    ___tSUBTYPED
-#else
-                    (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED)
-#endif
-                   );
+      return ___TAG((base + ___PERM_HAND_OFS - ___BODY_OFS), (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
     }
   else
     {
@@ -1257,13 +1251,7 @@ int kind;)
 #endif
       base[___STILL_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___STILL);
 
-      return ___TAG((base + ___STILL_HAND_OFS - ___BODY_OFS),
-#if ___tPAIR == ___tSUBTYPED
-                    ___tSUBTYPED
-#else
-                    (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED)
-#endif
-                   );
+      return ___TAG((base + ___STILL_HAND_OFS - ___BODY_OFS), (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
     }
 }
 
