@@ -16,7 +16,7 @@ then
     misc/changev1 $OLDVERSION $NEWVERSION doc/gambit-c.txi
     misc/changev1 $OLDVERSION $NEWVERSION configure.ac
     misc/changev1 $OLDVERSION $NEWVERSION examples/pthread/pthread.c
-    misc/changev1 $OLDVERSION $NEWVERSION contrib/GambitREPL/ios/ViewController.m
+    misc/changev1 $OLDVERSION $NEWVERSION contrib/GambitREPL/ViewController.m
     misc/changev1 $OLDVERSION $NEWVERSION include/gambit.h.in
 
   fi

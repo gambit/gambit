@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_assert.c", produced by Gambit-C v4.6.6
+; File: "_assert.c", produced by Gambit-C v4.6.7
 (
-406006
+406007
 " _assert"
 (" _assert")
 (
@@ -18,14 +18,14 @@
  #f
 )
 #else
-#define ___VERSION 406006
+#define ___VERSION 406007
 #define ___MODULE_NAME " _assert"
 #define ___LINKER_ID ____20___assert
 #define ___MH_PROC ___H__20___assert
 #define ___SCRIPT_LINE 0
-#define ___GLO_COUNT 1
-#define ___SUP_COUNT 1
-#define ___LBL_COUNT 2
+#define ___GLOCOUNT 1
+#define ___SUPCOUNT 1
+#define ___LBLCOUNT 2
 #include "gambit.h"
 
 ___NEED_GLO(___G__20___assert)
@@ -33,6 +33,9 @@ ___NEED_GLO(___G__20___assert)
 ___BEGIN_GLO
 ___DEF_GLO(0," _assert")
 ___END_GLO
+
+#define ___GLO__20___assert ___GLO(0,___G__20___assert)
+#define ___PRM__20___assert ___PRM(0,___G__20___assert)
 
 
 #undef ___MD_ALL
