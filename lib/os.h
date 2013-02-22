@@ -940,6 +940,14 @@ ___END_C_LINKAGE
 #define INCLUDE_pty_h
 #undef INCLUDE_util_h
 #define INCLUDE_util_h
+#undef INCLUDE_sys_types_h
+#define INCLUDE_sys_types_h
+#undef INCLUDE_sys_ioctl_h
+#define INCLUDE_sys_ioctl_h
+#undef INCLUDE_termios_h
+#define INCLUDE_termios_h
+#undef INCLUDE_libutil_h
+#define INCLUDE_libutil_h
 #endif
 
 #ifdef USE_getpt
