@@ -1821,7 +1821,7 @@
 
   (##wait-for-io!
    (macro-device-port-wdevice-condvar port)
-   (macro-port-rtimeout port)))
+   (macro-port-wtimeout port)))
 
 ;;;----------------------------------------------------------------------------
 
