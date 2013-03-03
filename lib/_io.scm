@@ -1807,7 +1807,7 @@
   ;; Complement to ##device-port-wait-for-input! . 
 
   ;; The thread will wait until the port's device is writeable in the
-  ;; sense that more data can be written to it, to or the port's timeout
+  ;; sense that more data can be written to it, or the port's timeout
   ;; is reached.  The value #f is returned when the timeout is reached.
   ;; The value #t is returned when the port's device is writeable or the
   ;; thread was interrupted (for example with thread-interrupt!).
