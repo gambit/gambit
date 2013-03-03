@@ -1802,6 +1802,27 @@
    (macro-device-port-rdevice-condvar port)
    (macro-port-rtimeout port)))
 
+(define-prim (##device-port-wait-for-output! port)
+
+  ;; Complement to ##device-port-wait-for-input! . 
+
+  ;; The thread will wait until the port's device is writeable in the
+  ;; sense that more data can be written to it, to or the port's timeout
+  ;; is reached.  The value #f is returned when the timeout is reached.
+  ;; The value #t is returned when the port's device is writeable or the
+  ;; thread was interrupted (for example with thread-interrupt!).
+
+  ;; An example of when a port is not writeable is when a TCP client port
+  ;; has full OS transmit buffers. For such a port, a
+  ;; ##device-port-wait-for-output! on it will return when space has
+  ;; become available in the buffers.
+
+  (##declare (not interrupts-enabled))
+
+  (##wait-for-io!
+   (macro-device-port-wdevice-condvar port)
+   (macro-port-rtimeout port)))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##char-rbuf-fill port want block?)
