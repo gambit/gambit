@@ -1,6 +1,12 @@
-(declare (extended-bindings) (not safe))
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (println (##fxwrap- 11 33))
 (println (##fxwrap- 11 -11))
 (println (##fxwrap- 11 -33))
 (println (##fxwrap- -11 33))
+(println (##fxwrap- 536870910 0))
+(println (##fxwrap- 536870910 -1))
+(println (##fxwrap- 536870910 -2))
+(println (##fxwrap- -536870910 1))
+(println (##fxwrap- -536870910 2))
+(println (##fxwrap- -536870910 3))

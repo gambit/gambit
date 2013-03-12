@@ -1,12 +1,7 @@
-(declare
- (standard-bindings)
- (extended-bindings)
- (not safe)
- (not interrupts-enabled)
-)
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (define (make-adder x)
-  (lambda (y) (fx+ x y)))
+  (lambda (y) (##fx+ x y)))
 
 (define inc (make-adder 1))
 

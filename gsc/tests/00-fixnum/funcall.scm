@@ -1,3 +1,5 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
 (define (test n)
   (println n))
 

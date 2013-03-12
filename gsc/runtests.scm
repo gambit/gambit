@@ -4,7 +4,7 @@
 
 ;;; File: "runtests.scm"
 
-;;; Copyright (c) 2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@
                            (compile file target))
                        (let ((result (apply run (append (cddr t) (list out)))))
                          (if (not (equal? target "gambit"))
-                             (delete-file out))
+                             '(delete-file out))
                          result))
                      (apply run (append (cddr t) (list file)))))))
        (keep (lambda (t)
@@ -80,13 +80,17 @@
 
 (define targets
   '(
-    ("gambit" ".scm" "./gsc" "-i")
-    ("c"      ".o1"  "./gsc" "-i")
-    ("x86"    #f     "./gsc32" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
-    ("x86-64" #f     "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
-    ("js"     ".js"  "d8")
-    ("python" ".py"  "python")
-    ("ruby"   ".rb"  "ruby")
+    ("gambit" ".scm"  "./gsc" "-i")
+    ("c"      ".o1"   "./gsc" "-i")
+    ("x86"    #f      "./gsc32" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+    ("x86-64" #f      "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+    ("js"     ".js"   "d8")
+    ("python" ".py"   "python")
+;;    ("ruby"   ".rb"   "/usr/bin/ruby")
+    ("ruby"   ".rb"   "/usr/local/bin/ruby") ;; ruby 1.9.3p392
+    ("php"   ".php"   "/usr/bin/php")
+;;    ("php"   ".php"   "/usr/local/bin/php") ;; PHP 5.4.11
+;;    ("dart"   ".dart" "/Users/feeley/dart/dart-sdk/bin/dart")
    ))
 
 (define (runtest-file file)

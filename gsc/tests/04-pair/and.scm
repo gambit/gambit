@@ -1,4 +1,4 @@
-(declare (extended-bindings))
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (define x1 '())
 (define x2 '(1))

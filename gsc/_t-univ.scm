@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ.scm"
 
-;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2013 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -92,7 +92,6 @@
 (univ-setup 'python ".py")
 (univ-setup 'ruby   ".rb")
 (univ-setup 'php    ".php")
-(univ-setup 'dart   ".dart")
 
 ;;;----------------------------------------------------------------------------
 
@@ -292,13 +291,198 @@
       `'()
       `(list ,@forms)))
 
+(define-macro (^var-declaration name #!optional (expr #f))
+  `(univ-emit-var-declaration ctx ,name ,expr))
+
 (define-macro (^expr-statement expr)
   `(univ-emit-expr-statement ctx ,expr))
+
+(define-macro (^if test true #!optional (false #f))
+  `(univ-emit-if ctx ,test ,true ,false))
+
+(define-macro (^if-expr expr1 expr2 expr3)
+  `(univ-emit-if-expr ctx ,expr1 ,expr2 ,expr3))
+
+(define-macro (^while test body)
+  `(univ-emit-while ctx ,test ,body))
+
+(define-macro (^eq? expr1 expr2)
+  `(univ-emit-eq? ctx ,expr1 ,expr2))
+
+(define-macro (^+ expr1 #!optional (expr2 #f))
+  `(univ-emit-+ ctx ,expr1 ,expr2))
+
+(define-macro (^- expr1 #!optional (expr2 #f))
+  `(univ-emit-- ctx ,expr1 ,expr2))
+
+(define-macro (^* expr1 expr2)
+  `(univ-emit-* ctx ,expr1 ,expr2))
+
+(define-macro (^/ expr1 expr2)
+  `(univ-emit-/ ctx ,expr1 ,expr2))
+
+(define-macro (^<< expr1 expr2)
+  `(univ-emit-<< ctx ,expr1 ,expr2))
+
+(define-macro (^>> expr1 expr2)
+  `(univ-emit->> ctx ,expr1 ,expr2))
+
+(define-macro (^bitor expr1 expr2)
+  `(univ-emit-bitor ctx ,expr1 ,expr2))
+
+(define-macro (^bitand expr1 expr2)
+  `(univ-emit-bitand ctx ,expr1 ,expr2))
+
+(define-macro (^= expr1 expr2)
+  `(univ-emit-= ctx ,expr1 ,expr2))
+
+(define-macro (^!= expr1 expr2)
+  `(univ-emit-!= ctx ,expr1 ,expr2))
+
+(define-macro (^< expr1 expr2)
+  `(univ-emit-< ctx ,expr1 ,expr2))
+
+(define-macro (^<= expr1 expr2)
+  `(univ-emit-<= ctx ,expr1 ,expr2))
+
+(define-macro (^> expr1 expr2)
+  `(univ-emit-> ctx ,expr1 ,expr2))
+
+(define-macro (^>= expr1 expr2)
+  `(univ-emit->= ctx ,expr1 ,expr2))
+
+(define-macro (^not expr)
+  `(univ-emit-not ctx ,expr))
+
+(define-macro (^&& expr1 expr2)
+  `(univ-emit-&& ctx ,expr1 ,expr2))
+
+(define-macro (^and expr1 expr2)
+  `(univ-emit-and ctx ,expr1 ,expr2))
+
+(define-macro (^or expr1 expr2)
+  `(univ-emit-or ctx ,expr1 ,expr2))
+
+(define-macro (^concat expr1 expr2)
+  `(univ-emit-concat ctx ,expr1 ,expr2))
+
+(define-macro (^tostr expr)
+  `(univ-emit-tostr ctx ,expr))
+
+(define-macro (^parens expr)
+  `(univ-emit-parens ctx ,expr))
+
+(define-macro (^local-var name)
+  `(univ-emit-local-var ctx ,name))
+
+(define-macro (^global-var name)
+  `(univ-emit-global-var ctx ,name))
+
+(define-macro (^global-prim-function name)
+  `(univ-emit-global-prim-function ctx ,name))
+
+(define-macro (^global-function name)
+  `(univ-emit-global-function ctx ,name))
+
+(define-macro (^prefix name)
+  `(univ-emit-prefix ctx ,name))
+
+(define-macro (^assign loc expr)
+  `(univ-emit-assign ctx ,loc ,expr))
+
+(define-macro (^inc-by loc expr #!optional (embed #f))
+  `(univ-emit-inc-by ctx ,loc ,expr ,embed))
+
+(define-macro (^index expr1 expr2)
+  `(univ-emit-index ctx ,expr1 ,expr2))
+
+(define-macro (^get obj name)
+  `(univ-emit-get ctx ,obj ,name))
+
+(define-macro (^set obj name val)
+  `(univ-emit-set ctx ,obj ,name ,val))
+
+(define-macro (^obj obj)
+  `(univ-emit-obj ctx ,obj))
+
+(define-macro (^call-prim name . params)
+  `(univ-emit-call-prim ctx ,name ,@params))
+
+(define-macro (^call name . params)
+  `(univ-emit-call ctx ,name ,@params))
+
+(define-macro (^apply name params)
+  `(univ-emit-apply ctx ,name ,params))
+
+(define-macro (^new class . params)
+  `(univ-emit-new ctx ,class ,@params))
+
+(define-macro (^instanceof class expr)
+  `(univ-emit-instanceof ctx ,class ,expr))
+
+(define-macro (^operand opnd)
+  `(univ-emit-operand ctx ,opnd))
+
+(define-macro (^prim-function-declaration name params attribs header body)
+  `(univ-emit-prim-function-declaration ctx ,name ,params ,attribs ,header ,body))
+
+(define-macro (^function-declaration name params attribs header body #!optional (prim? #f))
+  `(univ-emit-function-declaration ctx ,name ,params ,attribs ,header ,body ,prim?))
+
+(define-macro (^getclo closure index)
+  `(univ-emit-getclo ctx ,closure ,index))
+
+(define-macro (^setclo closure index val)
+  `(univ-emit-setclo ctx ,closure ,index ,val))
+
+(define-macro (^getglo name)
+  `(univ-emit-getglo ctx ,name))
+
+(define-macro (^setglo name val)
+  `(univ-emit-setglo ctx ,name ,val))
+
+(define-macro (^return expr)
+  `(univ-emit-return ctx ,expr))
+
+(define-macro (^bool val)
+  `(univ-emit-bool ctx ,val))
+
+(define-macro (^int val)
+  `(univ-emit-int ctx ,val))
+
+(define-macro (^float val)
+  `(univ-emit-float ctx ,val))
+
+(define-macro (^string val)
+  `(univ-emit-string ctx ,val))
+
+(define-macro (^dict alist)
+  `(univ-emit-dict ctx ,alist))
+
+(define-macro (^member expr name)
+  `(univ-emit-member ctx ,expr ,name))
+
+
+(define (univ-emit-var-declaration ctx name #!optional (expr #f))
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ "var " name (if expr (^ " = " expr) (^)) ";\n"))
+
+    ((python ruby)
+     (^ name " = " (or expr (^obj #f)) "\n"))
+
+    ((php)
+     (^ name " = " (or expr (^obj #f)) ";\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-expr-statement, unknown target"))))
 
 (define (univ-emit-expr-statement ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php dart)
+    ((js php)
      (^ expr ";\n"))
 
     ((python ruby)
@@ -308,13 +492,10 @@
      (compiler-internal-error
       "univ-emit-expr-statement, unknown target"))))
 
-(define-macro (^if test true #!optional (false #f))
-  `(univ-emit-if ctx ,test ,true ,false))
-
 (define (univ-emit-if ctx test true #!optional (false #f))
   (case (target-name (ctx-target ctx))
 
-    ((js php dart)
+    ((js php)
      (^ "if (" test ") {\n"
         (univ-indent true)
         (if false
@@ -344,8 +525,142 @@
      (compiler-internal-error
       "univ-emit-if, unknown target"))))
 
-(define-macro (^= expr1 expr2)
-  `(univ-emit-= ctx ,expr1 ,expr2))
+(define (univ-emit-if-expr ctx expr1 expr2 expr3)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby)
+     (^ expr1 " ? " expr2 " : " expr3))
+
+    ((php)
+     (^parens (^ expr1 " ? " expr2 " : " expr3)))
+
+    ((python)
+     (^ expr2 " if " expr1 " else " expr3))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-if-expr, unknown target"))))
+
+(define (univ-emit-while ctx test body)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ "while (" test ") {\n"
+        (univ-indent body)
+        "}\n"))
+
+    ((python)
+     (^ "while " test ":\n"
+        (univ-indent body)))
+
+    ((ruby)
+     (^ "while " test "\n"
+        (univ-indent body)
+        "end\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-while, unknown target"))))
+
+(define (univ-emit-eq? ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ expr1 " === " expr2))
+
+    ((python)
+     (^ expr1 " is " expr2))
+
+    ((ruby)
+     (^ expr1 ".equal?(" expr2 ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-eq?, unknown target"))))
+
+(define (univ-emit-+ ctx expr1 #!optional (expr2 #f))
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (if expr2
+         (^ expr1 " + " expr2)
+         (^ "+ " expr1)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-+, unknown target"))))
+
+(define (univ-emit-- ctx expr1 #!optional (expr2 #f))
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (if expr2
+         (^ expr1 " - " expr2)
+         (^ "- " expr1)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit--, unknown target"))))
+
+(define (univ-emit-* ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^ expr1 " * " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-*, unknown target"))))
+
+(define (univ-emit-/ ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^ expr1 " / " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-/, unknown target"))))
+
+(define (univ-emit-<< ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^ expr1 " << " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-<<, unknown target"))))
+
+(define (univ-emit->> ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^ expr1 " >> " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit->>, unknown target"))))
+
+(define (univ-emit-bitor ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^ expr1 " | " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-bitor, unknown target"))))
+
+(define (univ-emit-bitand ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^ expr1 " & " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-bitand, unknown target"))))
 
 (define (univ-emit-= ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -353,15 +668,12 @@
     ((js)
      (^ expr1 " === " expr2))
 
-    ((python ruby php dart)
+    ((python ruby php)
      (^ expr1 " == " expr2))
 
     (else
      (compiler-internal-error
       "univ-emit-=, unknown target"))))
-
-(define-macro (^!= expr1 expr2)
-  `(univ-emit-!= ctx ,expr1 ,expr2))
 
 (define (univ-emit-!= ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -369,33 +681,21 @@
     ((js)
      (^ expr1 " !== " expr2))
 
-    ((python ruby php dart)
+    ((python ruby php)
      (^ expr1 " != " expr2))
 
     (else
      (compiler-internal-error
       "univ-emit-!=, unknown target"))))
 
-(define-macro (^< expr1 expr2)
-  `(univ-emit-< ctx ,expr1 ,expr2))
-
 (define (univ-emit-< ctx expr1 expr2)
   (univ-emit-comparison ctx " < " expr1 expr2))
-
-(define-macro (^<= expr1 expr2)
-  `(univ-emit-<= ctx ,expr1 ,expr2))
 
 (define (univ-emit-<= ctx expr1 expr2)
   (univ-emit-comparison ctx " <= " expr1 expr2))
 
-(define-macro (^> expr1 expr2)
-  `(univ-emit-> ctx ,expr1 ,expr2))
-
 (define (univ-emit-> ctx expr1 expr2)
   (univ-emit-comparison ctx " > " expr1 expr2))
-
-(define-macro (^>= expr1 expr2)
-  `(univ-emit->= ctx ,expr1 ,expr2))
 
 (define (univ-emit->= ctx expr1 expr2)
   (univ-emit-comparison ctx " >= " expr1 expr2))
@@ -403,20 +703,17 @@
 (define (univ-emit-comparison ctx comp expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js python ruby php dart)
+    ((js python ruby php)
      (^ expr1 comp expr2))
 
     (else
      (compiler-internal-error
       "univ-emit-comparison, unknown target"))))
 
-(define-macro (^not expr)
-  `(univ-emit-not ctx ,expr))
-
 (define (univ-emit-not ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php dart)
+    ((js php)
      (^ "!" expr))
 
     ((python ruby)
@@ -426,13 +723,10 @@
      (compiler-internal-error
       "univ-emit-not, unknown target"))))
 
-(define-macro (^and expr1 expr2)
-  `(univ-emit-and ctx ,expr1 ,expr2))
-
-(define (univ-emit-and ctx expr1 expr2)
+(define (univ-emit-&& ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php dart)
+    ((js ruby php)
      (^ expr1 " && " expr2))
 
     ((python)
@@ -440,16 +734,29 @@
 
     (else
      (compiler-internal-error
-      "univ-emit-and, unknown target"))))
+      "univ-emit-&&, unknown target"))))
 
-(define-macro (^or expr1 expr2)
-  `(univ-emit-or ctx ,expr1 ,expr2))
+(define (univ-emit-and ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby)
+     (^ expr1 " && " expr2))
+
+    ((python)
+     (^ expr1 " and " expr2))
+
+    ((php)
+     (^ expr1 " ? " expr2 " : False"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-and, unknown target"))))
 
 (define (univ-emit-or ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php dart)
-     (^ expr1 " || " expr2))
+    ((js ruby php)
+     (^ expr1 " || " expr2)) ;; TODO: PHP || operator always yields a boolean
 
     ((python)
      (^ expr1 " or " expr2))
@@ -458,46 +765,181 @@
      (compiler-internal-error
       "univ-emit-or, unknown target"))))
 
-(define-macro (^parens expr)
-  `(univ-emit-parens ctx ,expr))
+(define (univ-emit-concat ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^ expr1 " + " expr2))
+
+    ((php)
+     (^ expr1 " . " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-concat, unknown target"))))
+
+(define (univ-emit-tostr ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ expr ".toString()"))
+
+    ((python)
+     (^ "str(" expr ")"))
+
+    ((php)
+     (^ "(string)" expr))
+
+    ((ruby)
+     (^ expr ".to_s"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-tostr, unknown target"))))
 
 (define (univ-emit-parens ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php python dart)
+    ((js ruby php python)
      (^ "(" expr ")"))
 
     (else
      (compiler-internal-error
       "univ-emit-parens, unknown target"))))
 
-(define-macro (^operand opnd)
-  `(univ-emit-operand ctx ,opnd))
+(define (univ-emit-local-var ctx name)
+  (case (target-name (ctx-target ctx))
 
-(define (univ-emit-operand ctx opnd)
-  (translate-gvm-opnd ctx opnd)) ;; TODO: deprecate translate-gvm-opnd
+    ((js python ruby)
+     name)
 
-(define-macro (^global-var name)
-  `(univ-emit-global-var ctx ,name))
+    ((php)
+     (^ "$" name))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-local-var, unknown target"))))
 
 (define (univ-emit-global-var ctx name)
   (case (target-name (ctx-target ctx))
 
-    ((js python php dart)
+    ((js python)
      name)
 
-    ((ruby)
+    ((ruby php)
      (^ "$" name))
 
     (else
      (compiler-internal-error
       "univ-emit-global-var, unknown target"))))
 
-(define-macro (^prefix name)
-  `(univ-emit-prefix ctx ,name))
+(define (univ-emit-global-prim-function ctx name)
+  (case (target-name (ctx-target ctx))
+
+    ((js python php ruby)
+     name)
+
+    (else
+     (compiler-internal-error
+      "univ-emit-global-prim-function, unknown target"))))
+
+(define (univ-emit-global-function ctx name)
+  (case (target-name (ctx-target ctx))
+
+    ((js python)
+     name)
+
+    ((ruby php)
+     (^ "$" name))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-global-function, unknown target"))))
 
 (define (univ-emit-prefix ctx name)
   (^ "Gambit_" name))
+
+(define (univ-emit-assign ctx loc expr)
+  (^ loc " = " expr))
+
+(define (univ-emit-inc-by ctx loc expr #!optional (embed #f))
+
+  (define (embed-read x)
+    (if embed
+        (embed x)
+        (^)))
+
+  (define (embed-expr x)
+    (if embed
+        (embed x)
+        (^expr-statement x)))
+
+  (define (inc-general loc expr)
+    (if (and (number? expr) (< expr 0))
+        (^ loc " -= " (- expr))
+        (^ loc " += " expr)))
+
+  (if (equal? expr 0)
+
+      (embed-read loc)
+
+      (case (target-name (ctx-target ctx))
+
+        ((js php)
+         (cond ((equal? expr 1)
+                (embed-expr (^ "++" loc)))
+               ((equal? expr -1)
+                (embed-expr (^ "--" loc)))
+               (else
+                (embed-expr (^parens (inc-general loc expr))))))
+
+        ((python)
+         (^ (^expr-statement (inc-general loc expr))
+            (embed-read loc)))
+
+        ((ruby)
+         (embed-expr (^parens (inc-general loc expr))))
+
+        (else
+         (compiler-internal-error
+          "univ-emit-inc-by, unknown target")))))
+
+(define (univ-emit-index ctx expr1 expr2)
+  (^ expr1 "[" expr2 "]"))
+
+(define (univ-emit-get ctx obj name)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^index obj (^string name)))
+
+    ((php)
+     (^call-prim
+      (^global-prim-function (^prefix "get"))
+      obj
+      (^string name)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-get, unknown target"))))
+
+(define (univ-emit-set ctx obj name val)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^assign (^index obj (^string name)) val))
+
+    ((php)
+     (^call-prim
+      (^global-prim-function (^prefix "set"))
+      obj
+      (^string name)
+      val))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-set, unknown target"))))
+
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 
@@ -582,83 +1024,80 @@
             (let ((id (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))))
 
               (^ "\n"
-                 (univ-function
-
-                  ctx
+                 (^function-declaration
 
                   id
 
-                  ""
+                  '()
 
-                  (univ-indent
-                   (case (label-type gvm-instr)
+                  (append
+                   (if (memq (label-type gvm-instr) '(entry return))
+                       (list (cons "id" (^string id)))
+                       '())
+                   (if (eq? (label-type gvm-instr) 'return)
+                       (let ((info (frame-info gvm-instr)))
+                         (list (cons "fs" (vector-ref info 0))
+                               (cons "link" (+ (vector-ref info 1) 1))))
+                       '()))
 
-                     ((simple)
-                      (^ "\n"))
+                  (case (label-type gvm-instr)
 
-                     ((entry)
-                      (if (label-entry-rest? gvm-instr)
-                          (^ " "
-                             (univ-comment
+                    ((simple)
+                     (^ "\n"))
+
+                    ((entry)
+                     (if (label-entry-rest? gvm-instr)
+                         (^ " "
+                            (univ-comment
+                             ctx
+                             (if (label-entry-closed? gvm-instr)
+                                 "closure-entry-point (+rest)\n"
+                                 "entry-point (+rest)\n"))
+
+                            (^if (^not (^&&
+                                        (univ-emit-call-prim
+                                         ctx
+                                         (^prefix "buildrest")
+                                         (label-entry-nb-parms gvm-instr))
+                                        (^= (gvm-state-nargs ctx)
+                                            (label-entry-nb-parms gvm-instr))))
+                                 (univ-emit-return-call-prim
+                                  ctx
+                                  (^global-prim-function (^prefix "wrong_nargs"))
+                                  id))))
+                     (^ " "
+                        (univ-comment
+                         ctx
+                         (if (label-entry-closed? gvm-instr)
+                             "closure-entry-point\n"
+                             "entry-point\n"))
+                        (^if (^!= (gvm-state-nargs ctx)
+                                  (label-entry-nb-parms gvm-instr))
+                             (univ-emit-return-call-prim
                               ctx
-                              (if (label-entry-closed? gvm-instr)
-                                  "closure-entry-point (+rest)\n"
-                                  "entry-point (+rest)\n"))
-                                 
-                             (^if (^not (^and
-                                         (univ-call ctx
-                                                    (^prefix "buildrest")
-                                                    (label-entry-nb-parms gvm-instr))
-                                         (^= (^global-var (^prefix "nargs"))
-                                             (label-entry-nb-parms gvm-instr))))
-                                  (univ-return-call ctx
-                                                    (^prefix "wrong_nargs")
-                                                    id))))
-                      (^ " "
-                         (univ-comment
-                          ctx
-                          (if (label-entry-closed? gvm-instr)
-                              "closure-entry-point\n"
-                              "entry-point\n"))
-                         (^if (^!= (^global-var (^prefix "nargs"))
-                                   (label-entry-nb-parms gvm-instr))
-                              (univ-return-call ctx
-                                                (^prefix "wrong_nargs")
-                                                id))))
+                              (^global-prim-function (^prefix "wrong_nargs"))
+                              id))))
 
-                     ((return)
-                      (^ " " (univ-comment ctx "return-point\n")))
+                    ((return)
+                     (^ " " (univ-comment ctx "return-point\n")))
 
-                     ((task-entry)
-                      (^ " " (univ-comment ctx "task-entry-point\n")
-                         (univ-throw ctx "\"task-entry-point GVM label unimplemented\"")))
+                    ((task-entry)
+                     (^ " " (univ-comment ctx "task-entry-point\n")
+                        (univ-throw ctx "\"task-entry-point GVM label unimplemented\"")))
 
-                     ((task-return)
-                      (^ " " (univ-comment ctx "task-return-point\n")
-                         (univ-throw ctx "\"task-return-point GVM label unimplemented\"")))
+                    ((task-return)
+                     (^ " " (univ-comment ctx "task-return-point\n")
+                        (univ-throw ctx "\"task-return-point GVM label unimplemented\"")))
 
-                     (else
-                      (compiler-internal-error
-                       "scan-gvm-label, unknown label type"))))
+                    (else
+                     (compiler-internal-error
+                      "scan-gvm-label, unknown label type")))
 
-                  (univ-indent
-                   (with-stack-base-offset
-                    ctx
-                    (- (frame-size (gvm-instr-frame gvm-instr)))
-                    (lambda (ctx)
-                      (proc ctx)))))
-
-                 (if (and (memq (label-type gvm-instr) '(entry return))
-                          (eq? (target-name (ctx-target ctx)) 'js))
-                     (^ id ".id = \"" id "\";\n")
-                     (^))
-
-                 (if (and (eq? (label-type gvm-instr) 'return)
-                          (eq? (target-name (ctx-target ctx)) 'js))
-                     (let ((info (frame-info gvm-instr)))
-                       (^ id ".fs = " (vector-ref info 0) ";\n"
-                          id ".link = " (+ (vector-ref info 1) 1) ";\n"))
-                     (^)))))
+                  (with-stack-base-offset
+                   ctx
+                   (- (frame-size (gvm-instr-frame gvm-instr)))
+                   (lambda (ctx)
+                     (proc ctx)))))))
 
           (define (scan-gvm-instr ctx gvm-instr)
 
@@ -720,9 +1159,10 @@
                (let ((loc (copy-loc gvm-instr))
                      (opnd (copy-opnd gvm-instr)))
                  (if opnd
-                     (univ-assign ctx
-                                  (scan-gvm-opnd ctx loc)
-                                  (scan-gvm-opnd ctx opnd))
+                     (^expr-statement
+                      (^assign
+                       (scan-gvm-opnd ctx loc)
+                       (scan-gvm-opnd ctx opnd)))
                      (^))))
 
               ((close)
@@ -743,7 +1183,7 @@
                                        ((memv opnd (map closure-parms-loc lst))
                                         (univ-boolean ctx #f))
                                        (else
-                                        (translate-gvm-opnd ctx opnd))))
+                                        (^operand opnd))))
                                opnds)
                           (lambda (name)
                             (alloc (cdr lst)
@@ -768,9 +1208,9 @@
                                        (cdr opnds)
                                        (cons (if (and (assv opnd loc-names)
                                                       (memv opnd (map closure-parms-loc lst)))
-                                                 (univ-assign
-                                                  ctx
-                                                  (univ-clo ctx (cdr loc-name) i)
+                                                 (^setclo
+                                                  (cdr loc-name)
+                                                  i
                                                   (cdr (assv opnd loc-names)))
                                                  (^))
                                              rev-code)))
@@ -781,9 +1221,10 @@
                         (lambda (loc-name)
                           (let* ((loc (car loc-name))
                                  (name (cdr loc-name)))
-                            (univ-assign ctx
-                                         (translate-gvm-opnd ctx loc)
-                                         name)))
+                            (^expr-statement
+                             (^assign
+                              (^operand loc)
+                              name))))
                         loc-names)))
 
                  (alloc (close-parms gvm-instr) '())))
@@ -835,7 +1276,8 @@
                                  (jump-inliner ctx nb-args poll? safe? fs))))
 
                      (^ (if nb-args
-                            (univ-assign ctx (^global-var (^prefix "nargs")) nb-args)
+                            (^expr-statement
+                             (^assign (gvm-state-nargs ctx) nb-args))
                             (^))
 
                         (or (and (lbl? opnd)
@@ -847,11 +1289,25 @@
                              (+ fs
                                 (ctx-stack-base-offset ctx))
                              (lambda (ctx)
-                               (univ-return-poll
+                               (univ-emit-return-poll
                                 ctx
                                 (scan-gvm-opnd ctx opnd)
                                 poll?
-                                (not (reg? opnd)))))))))) ;; avoid call optimization on JavaScript globals, because the underlying JavaScript VM uses a counterproductive speculative optimization (which slows down fib by a factor of 10!)
+                                (case (target-name (ctx-target ctx))
+                                  ((js)
+                                   ;; avoid call optimization on JavaScript
+                                   ;; globals, because the underlying
+                                   ;; JavaScript VM uses a counterproductive
+                                   ;; speculative optimization (which slows
+                                   ;; down fib by a factor of 10!)
+                                   (not (reg? opnd)))
+                                  ((php)
+                                   ;; avoid call optimization on PHP
+                                   ;; because it generates syntactically
+                                   ;; incorrect code (PHP grammar issue)
+                                   #f)
+                                  (else
+                                   #t))))))))))
 
               (else
                (compiler-internal-error
@@ -890,16 +1346,17 @@
                     (+ jump-fs
                        (ctx-stack-base-offset ctx))
                     (lambda (ctx)
-                      (univ-return-call ctx
-                                        (scan-gvm-opnd ctx (make-lbl n))))))))
+                      (univ-emit-return-call
+                       ctx
+                       (scan-gvm-opnd ctx (make-lbl n))))))))
 
           (define (scan-gvm-opnd ctx gvm-opnd)
             (if (lbl? gvm-opnd)
                 (todo-lbl-num! (lbl-num gvm-opnd)))
-            (translate-gvm-opnd ctx gvm-opnd))
+            (^operand gvm-opnd))
 
           (let ((ctx (make-ctx targ (proc-obj-name p))))
-               
+
             (todo-lbl-num! (bbs-entry-lbl-num bbs))
 
             (let loop ((rev-res '()))
@@ -945,16 +1402,15 @@
     ((js python ruby)
      (set! closure-count (+ closure-count 1))
      (let ((name (string-append "closure" (number->string closure-count))))
-       (^ (univ-function
-           ctx
+       (^ (^function-declaration
            name
-           ""
+           '()
+           '()
            "\n"
-           (univ-indent
-            (^ (univ-assign ctx
-                            (translate-gvm-opnd ctx (make-reg (+ univ-nb-arg-regs 1)))
-                            name)
-               (univ-return-call ctx (translate-lbl ctx (make-lbl lbl))))))
+           (^ (univ-emit-assign ctx
+                                (^operand (make-reg (+ univ-nb-arg-regs 1)))
+                                name)
+              (univ-emit-return-call ctx (translate-lbl ctx (make-lbl lbl)))))
           (cont name))))
 
     (else
@@ -979,26 +1435,25 @@
   (mp f lst 0))
 
 (define (univ-closure-alloc ctx lbl exprs cont)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (set! closure-count (+ closure-count 1))
-     (let ((name (string-append "closure" (number->string closure-count))))
-       (^ "var " name " = closure_alloc({"
-          (univ-separated-list
-           ","
-           (univ-map-index (lambda (x i) (^ "v" i ":" x))
-                           (cons (translate-lbl ctx (make-lbl lbl))
-                                 exprs)))
-          "});\n"
-          (cont name))))
-
-    (else
-     (compiler-internal-error
-      "univ-closure-alloc, unknown target"))))
+  (let ((count (ctx-serial-num ctx)))
+    (ctx-serial-num-set! ctx (+ count 1))
+    (let ((name
+           (^local-var (string-append "closure" (number->string count)))))
+      (^ (^var-declaration
+          name
+          (^call-prim
+           (^global-prim-function (^prefix "closure_alloc"))
+           (^dict
+            (univ-map-index (lambda (x i)
+                              (cons (string-append "v"
+                                                   (number->string i))
+                                    x))
+                            (cons (translate-lbl ctx (make-lbl lbl))
+                                  exprs)))))
+         (cont name)))))
 
 (define (make-ctx target ns)
-  (vector target ns 0 univ-enable-jump-destination-inlining?))
+  (vector target ns 0 0 univ-enable-jump-destination-inlining?))
 
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
@@ -1009,8 +1464,11 @@
 (define (ctx-stack-base-offset ctx)        (vector-ref ctx 2))
 (define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 2 x))
 
-(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 3))
-(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 3 x))
+(define (ctx-serial-num ctx)               (vector-ref ctx 3))
+(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 3 x))
+
+(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 4))
+(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 4 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -1020,9 +1478,7 @@
       result)))
 
 (define (with-stack-pointer-adjust ctx n proc)
-  (^ (if (= n 0)
-         (^)
-         (univ-increment ctx (^global-var (^prefix "sp")) n))
+  (^ (^inc-by (gvm-state-sp ctx) n)
      (with-stack-base-offset
       ctx
       (- (ctx-stack-base-offset ctx) n)
@@ -1035,77 +1491,98 @@
       (ctx-allow-jump-destination-inlining?-set! ctx save)
       result)))
 
-(define (translate-gvm-opnd ctx gvm-opnd)
+(define (gvm-state-nargs ctx)
+  (^global-var (^prefix "nargs")))
+
+(define (gvm-state-reg ctx)
+  (^global-var (^prefix "r")))
+
+(define (gvm-state-stack ctx)
+  (^global-var (^prefix "stack")))
+
+(define (gvm-state-sp ctx)
+  (^global-var (^prefix "sp")))
+
+(define (gvm-state-glo ctx)
+  (^global-var (^prefix "glo")))
+
+(define (univ-emit-operand ctx gvm-opnd)
 
   (cond ((not gvm-opnd)
          (^ "NO_OPERAND"))
 
         ((reg? gvm-opnd)
-         #;
-         (^ (^global-var (^prefix "r"))
-            "["
-            (reg-num gvm-opnd)
-            "]")
-         (^ (^global-var (^prefix "r"))
+         (^ (gvm-state-reg ctx)
             (reg-num gvm-opnd)))
 
         ((stk? gvm-opnd)
          (let ((n (+ (stk-num gvm-opnd) (ctx-stack-base-offset ctx))))
-           (^ (^global-var (^prefix "stack"))
-              "["
-              (^global-var (^prefix "sp"))
-              (cond ((= n 0)
-                     (^))
-                    ((< n 0)
-                     (^ n))
-                    (else
-                     (^ "+" n)))
-              "]")))
+           (^index (gvm-state-stack ctx)
+                   (^ (gvm-state-sp ctx)
+                      (cond ((= n 0)
+                             (^))
+                            ((< n 0)
+                             (^ n))
+                            (else
+                             (^ "+" n)))))))
 
         ((glo? gvm-opnd)
-         (univ-glo ctx
-                   (glo-name gvm-opnd)))
+         (^getglo (glo-name gvm-opnd)))
 
         ((clo? gvm-opnd)
-         (univ-clo ctx
-                   (translate-gvm-opnd ctx (clo-base gvm-opnd))
-                   (clo-index gvm-opnd)))
+         (^getclo (univ-emit-operand ctx (clo-base gvm-opnd))
+                  (clo-index gvm-opnd)))
 
         ((lbl? gvm-opnd)
          (translate-lbl ctx gvm-opnd))
 
         ((obj? gvm-opnd)
-         (translate-obj ctx (obj-val gvm-opnd)))
+         (univ-emit-obj ctx (obj-val gvm-opnd)))
 
         (else
          (compiler-internal-error
-          "translate-gvm-opnd, unknown 'gvm-opnd':"
+          "univ-emit-operand, unknown 'gvm-opnd':"
           gvm-opnd))))
 
-(define (univ-clo ctx closure index)
-  (^ closure
-     "(false).v"
-     index))
+(define (univ-emit-operands ctx gvm-opnds)
+  (map (lambda (gvm-opnd) (univ-emit-operand ctx gvm-opnd))
+       gvm-opnds))
 
-(define (univ-glo ctx name)
-  (^ (^global-var (^prefix "glo"))
-     "["
-     (object->string (symbol->string name))
-     "]"))
+(define (univ-emit-getclo ctx closure index)
+  (^get (^call closure (^bool #t))
+        (string-append "v" (number->string index))))
 
-(define (translate-obj ctx obj)
-  
+(define (univ-emit-setclo ctx closure index val)
+  (^expr-statement
+   (^set (^call closure (^bool #t))
+         (string-append "v" (number->string index))
+         val)))
+
+(define (univ-emit-getglo ctx name)
+  (^index (gvm-state-glo ctx)
+          (^string (symbol->string name))))
+
+(define (univ-emit-setglo ctx name val)
+  (^expr-statement
+   (^assign
+    (^index (gvm-state-glo ctx)
+            (^string (symbol->string name)))
+    val)))
+
+(define (univ-emit-obj ctx obj)
+
   (cond ((boolean? obj)
          (univ-boolean ctx obj))
-        
+
         ((number? obj)
          (univ-number ctx obj))
 
         ((char? obj)
          (univ-literal ctx char-literal-type obj))
-        
+
         ((string? obj)
-         (univ-literal ctx string-literal-type obj))
+         ;;(univ-literal ctx string-literal-type obj)
+         (object->string obj));;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
         ((null? obj)
          (univ-null ctx))
@@ -1115,7 +1592,7 @@
 
         ((undefined? obj)
          (univ-undefined ctx))
-        
+
         ((proc-obj? obj)
          (lbl->id ctx 1 (proc-obj-name obj)))
 
@@ -1130,7 +1607,7 @@
 
         ((symbol? obj)
          (univ-symbol ctx obj))
-        
+
         (else
          (^ "UNIMPLEMENTED_OBJECT("
             (object->string obj)
@@ -1175,7 +1652,7 @@
 
 (define (univ-literal ctx type obj)
   (let* ((sym (gensym))
-         (loc (^ (^global-var (^prefix "glo"))
+         (loc (^ (gvm-state-glo ctx)
                  "[" (object->string (symbol->string sym)) "]"))
          (expr (if (= type vector-literal-type)
                      (univ-vector ctx obj)
@@ -1189,34 +1666,24 @@
                                     (object->string obj)
                                     ")")))))))
 
-    (set! *literals* (cons (^ (univ-assign ctx loc expr))
+    (set! *literals* (cons (^expr-statement (^assign loc expr))
                           *literals*))
-    
-    ;; (add-literal! )    
+
+    ;; (add-literal! )
     ;; (add-literal! loc type obj ctx)
-    
+
     ;; (if (= type pair-literal-type)
-    ;;     (for-each (lambda (obj) (translate-obj ctx obj)) obj))
+    ;;     (for-each (lambda (obj) (univ-emit-obj ctx obj)) obj))
 
     ;; (if (= type vector-literal-type)
     ;;     (do ((i 0 (+ i 1))) (< i (vector-length obj))
-    ;;       (translate-obj ctx (vector-ref obj i))
+    ;;       (univ-emit-obj ctx (vector-ref obj i))
     ;;       #f))
-    
-    (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ loc))
-
-      ((python ruby php)
-       (^));;FIXME
-
-      (else
-       (compiler-internal-error
-        "univ-literal, unknown target")))))
+    (^ loc)))
 
 ;; (define (gen-literals literals done)
-;; (define (gen-literals done)  
+;; (define (gen-literals done)
 
 ;;   (define (gen-literal loc-literal)
 ;;     (let* ((literal (get-literal loc-literal))
@@ -1244,7 +1711,7 @@
 ;;            ;;          (^ "UNIMPLEMENTED_LITERAL_OBJECT("
 ;;            ;;             (object->string obj)
 ;;            ;;             ")"))))
-;;       (univ-assign ctx loc expr)))
+;;       (univ-emit-assign ctx loc expr)))
 
 ;;   (if (null? *literals*)
 ;;       done
@@ -1283,17 +1750,365 @@
   (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
 
 (define (lbl->id ctx num ns)
-  (^global-var (^prefix (^ "bb" num "_" (scheme-id->c-id ns)))))
+  (^global-function (^prefix (^ "bb" num "_" (scheme-id->c-id ns)))))
+
+(define (univ-emit-empty-dict ctx)
+  (case (target-name (ctx-target ctx))
+    ((js python ruby)
+     (^ "{}"))
+    ((php)
+     (^ "array()"))
+    (else
+     (compiler-internal-error
+      "univ-emit-empty-dict, unknown target"))))
+
+(define (univ-emit-empty-extensible-array ctx)
+  (case (target-name (ctx-target ctx))
+    ((js ruby)
+     (^ "[]"))
+    ((python)
+     (^ "{}"))
+    ((php)
+     (^ "array()"))
+    (else
+     (compiler-internal-error
+      "univ-emit-empty-extensible-array, unknown target"))))
 
 (define (runtime-system ctx)
+  (let ((R0 (^operand (make-reg 0)))
+        (R1 (^operand (make-reg 1)))
+        (R2 (^operand (make-reg 2)))
+        (R3 (^operand (make-reg 3)))
+        (R4 (^operand (make-reg 4))))
+
+    (^ (case (target-name (ctx-target ctx))
+
+         ((js)
+          (^
+#<<EOF
+function Gambit_Pair(car, cdr) {
+  this.car = car;
+  this.cdr = cdr;
+}
+//Gambit_Pair.prototype.toString = function () {
+//  return this.car.toString() + this.car.toString();
+//};
+
+
+EOF
+))
+
+         ((python)
+          (^ "#! /usr/bin/python\n"
+             "\n"
+             "from array import array\n"
+             "import ctypes\n"
+             "\n"
+#<<EOF
+class Gambit_Pair:
+
+  def __init__(self, car, cdr):
+    self.car = car
+    self.cdr = cdr
+
+#  def __str__(self):
+#    return self.car + self.cdr
+
+
+EOF
+))
+         ((ruby)
+          (^ "# encoding: utf-8\n"
+             "\n"
+#<<EOF
+class Gambit_Pair
+
+  attr_accessor :car, :cdr
+
+  def initialize(car, cdr)
+    @car = car
+    @cdr = cdr
+  end
+
+#  def to_s
+#    @car.to_s + @cdr.to_s
+#  end
+
+end
+
+
+EOF
+))
+
+         ((php)
+          (^ "<?php\n"
+#<<EOF
+class Gambit_closure {
+
+  function __construct($slots) {
+    $this->slots = $slots;
+  }
+
+  function __invoke($msg=false) {
+    global $Gambit_r4;
+    if ($msg == true) {
+      return $this->slots;
+    }
+    $Gambit_r4 = $this;
+    return $this->slots["v0"];
+  }
+}
+
+function Gambit_closure_alloc($slots) {
+  return new Gambit_closure($slots);
+}
+
+function Gambit_get($obj,$name) {
+  return $obj[$name];
+}
+
+function Gambit_set($obj,$name,$val) {
+  $obj[$name] = $val;
+}
+
+class Gambit_Pair {
+
+  public $car;
+  public $cdr;
+
+  public function __construct($car, $cdr) {
+    $this->car = $car;
+    $this->cdr = $cdr;
+  }
+
+/*
+  public function __toString() {
+    return $this->car . $this->cdr;
+  }
+*/
+}
+
+
+EOF
+))
+
+         (else
+          (compiler-internal-error
+           "runtime-system, unknown target")))
+
+       (^var-declaration (^global-var (^prefix "glo")) (univ-emit-empty-dict ctx));;;;;;;;;;;;;;;;;;;;;
+       (^var-declaration (^global-var (^prefix "r0")) (^obj #f))
+       (^var-declaration (^global-var (^prefix "r1")))
+       (^var-declaration (^global-var (^prefix "r2")))
+       (^var-declaration (^global-var (^prefix "r3")))
+       (^var-declaration (^global-var (^prefix "r4")))
+       (^var-declaration (^global-var (^prefix "stack")) (univ-emit-empty-extensible-array ctx));;;;;;;;;;;;;;;;;;;;;;;
+       (^var-declaration (^global-var (^prefix "sp")) -1)
+       (^var-declaration (^global-var (^prefix "nargs")) 0)
+       (^var-declaration (^global-var (^prefix "temp1")) (^obj #f))
+       (^var-declaration (^global-var (^prefix "temp2")) (^obj #f))
+       (^var-declaration (^global-var (^prefix "poll_count")) 100)
+
+       "\n"
+
+       (^prim-function-declaration
+        (^global-prim-function (^prefix "trampoline"))
+        (list (cons (^local-var "pc") #f))
+        '()
+        "\n"
+        (^while (^!= (^local-var "pc") (^obj #f))
+                (^expr-statement
+                 (^assign (^local-var "pc")
+                          (^call (^local-var "pc"))))))
+
+       "\n"
+
+       (case (target-name (ctx-target ctx))
+
+         ((php)
+          (^))
+
+         (else
+          (^ (^prim-function-declaration
+              (^global-prim-function (^prefix "closure_alloc"))
+              (list (cons (^local-var "slots") #f))
+              '()
+              "\n"
+              (^ (^function-declaration
+                  (^local-var "closure")
+                  (list (cons (^local-var "msg") #t))
+                  '()
+                  "\n"
+                  (^ (^if (^= (^local-var "msg") (^bool #t))
+                          (^return (^local-var "slots")))
+                     (^expr-statement
+                      (^assign R4 (^local-var "closure")))
+                     (^return (^get (^local-var "slots") "v0"))))
+                 (^return (^local-var "closure"))))
+
+             "\n")))
+
+       (^prim-function-declaration
+        (^global-prim-function (^prefix "poll"))
+        (list (cons (^local-var "dest") #f))
+        '()
+        "\n"
+        (^ (^expr-statement
+            (^assign (^global-var (^prefix "poll_count"))
+                     100))
+           (^return (^local-var "dest"))))
+
+       "\n"
+
+       (^prim-function-declaration
+        (^global-prim-function (^prefix "println"))
+        (list (cons (^local-var "obj") #f))
+        '()
+        "\n"
+        (case (target-name (ctx-target ctx))
+          ((js python)
+           (^expr-statement (^call-prim "print" (^local-var "obj"))))
+          ((ruby php)
+           (^ (^expr-statement (^call-prim "print" (^local-var "obj")))
+              (^expr-statement (^call-prim "print" "\"\\n\""))))
+          (else
+           (compiler-internal-error
+            "runtime-system, unknown target"))))
+
+       "\n"
+
+       (^prim-function-declaration
+        (^global-prim-function (^prefix "tostr"))
+        (list (cons (^local-var "obj") #f))
+        '()
+        "\n"
+        (^if (^eq? (^local-var "obj")
+                   (^obj #f))
+             (^return (^string "#f"))
+             (^if (^eq? (^local-var "obj")
+                        (^obj #t))
+                  (^return (^string "#t"))
+                  (^if (^eq? (^local-var "obj")
+                             (^obj '()))
+                       (^return (^string ""))
+                       (^if (univ-pair? ctx (^local-var "obj"))
+                            (^return (^concat
+                                      (^call-prim
+                                       (^global-prim-function (^prefix "tostr"))
+                                       (^member (^local-var "obj") "car"))
+                                      (^call-prim
+                                       (^global-prim-function (^prefix "tostr"))
+                                       (^member (^local-var "obj") "cdr"))))
+                            (^return (^tostr (^local-var "obj"))))))))
+
+       "\n"
+
+       (^function-declaration
+        (lbl->id ctx 1 "println")
+        '()
+        '()
+        "\n"
+        (^ (^expr-statement
+            (^call-prim
+             (^global-prim-function (^prefix "println"))
+             (^call-prim
+              (^global-prim-function (^prefix "tostr"))
+              R1)))
+           (^return R0)))
+
+       "\n"
+
+       (^setglo 'println
+                (lbl->id ctx 1 "println"))
+
+       "\n"
+
+       )))
+
+(define (runtime-system-old ctx)
   (case (target-name (ctx-target ctx))
 
-    ((js)                               ;rts js
-     (let ((R0 (translate-gvm-opnd ctx (make-reg 0)))
-           (R1 (translate-gvm-opnd ctx (make-reg 1)))
-           (R2 (translate-gvm-opnd ctx (make-reg 2)))
-           (R3 (translate-gvm-opnd ctx (make-reg 3)))
-           (R4 (translate-gvm-opnd ctx (make-reg 4))))
+    ((python)                               ;rts js
+     (let ((R0 (^operand (make-reg 0)))
+           (R1 (^operand (make-reg 1)))
+           (R2 (^operand (make-reg 2)))
+           (R3 (^operand (make-reg 3)))
+           (R4 (^operand (make-reg 4))))
+       (^
+
+"#! /usr/bin/python
+
+from array import array
+import ctypes
+
+"
+
+        (^var-declaration (^prefix "glo") "{}")
+        (^var-declaration (^prefix "r0") (^obj #f))
+        (^var-declaration (^prefix "r1"))
+        (^var-declaration (^prefix "r2"))
+        (^var-declaration (^prefix "r3"))
+        (^var-declaration (^prefix "r4"))
+        (^var-declaration (^prefix "stack") "{}")
+        (^var-declaration (^prefix "sp") -1)
+        (^var-declaration (^prefix "nargs") 0)
+        (^var-declaration (^prefix "temp1") (^obj #f))
+        (^var-declaration (^prefix "temp2") (^obj #f))
+        (^var-declaration (^prefix "poll_count") 100)
+
+        "\n"
+
+        (^prim-function-declaration
+         (^global-prim-function (^prefix "trampoline"))
+         "pc"
+         '()
+         "\n"
+         (univ-indent
+          (^while (^!= "pc" (^obj #f))
+                  (^expr-statement
+                   (^assign "pc" (^call "pc"))))))
+
+        (^prim-function-declaration
+         (^global-prim-function (^prefix "println"))
+         "obj"
+         '()
+         "\n"
+         (univ-indent
+          (^expr-statement (^call "print" "obj"))))
+
+        (^function-declaration
+         (lbl->id ctx 1 "println")
+         ""
+         '()
+         "\n"
+         (univ-indent
+          (^ (^if (^eq? R1 (^obj #f))
+                  (^expr-statement
+                   (^call-prim
+                    (^global-prim-function (^prefix "println"))
+                    (^string "#f")))
+                  (^if (^eq? R1 (^obj #t))
+                       (^expr-statement
+                        (^call-prim
+                         (^global-prim-function (^prefix "println"))
+                         (^string "#t")))
+                       (^expr-statement
+                        (^call-prim
+                         (^global-prim-function (^prefix "println"))
+                         R1))))
+             (^return R0))))
+
+        (^setglo 'println
+                 (lbl->id ctx 1 "println"))
+
+)))
+
+    ((js-old)                               ;rts js
+     (let ((R0 (^operand (make-reg 0)))
+           (R1 (^operand (make-reg 1)))
+           (R2 (^operand (make-reg 2)))
+           (R3 (^operand (make-reg 3)))
+           (R4 (^operand (make-reg 4))))
        (^ "
 function Gambit_heapify(ra) {
 
@@ -1324,7 +2139,7 @@ function Gambit_heapify(ra) {
     Gambit_stack.length = fs + 1;
     Gambit_stack[link] = Gambit_stack[0];
     Gambit_stack[0] = ra;
-  
+
     Gambit_stack = [chain];
     Gambit_sp = 0;
   }
@@ -1398,9 +2213,9 @@ function Gambit_printout(text) {
 }
 
 function Gambit_buildrest ( f ) {    // nb formal args
-                                     // *** assume (= univ-nb-arg-regs 3) for now ***    
+                                     // *** assume (= univ-nb-arg-regs 3) for now ***
     var nb_static_args = f - 1;
-    var nb_rest_args = Gambit_nargs - nb_static_args;    
+    var nb_rest_args = Gambit_nargs - nb_static_args;
     var rest = null;
     var Gambit_reg = [];
     Gambit_reg[1] = " R1 ";
@@ -1419,11 +2234,11 @@ function Gambit_buildrest ( f ) {    // nb formal args
 
         Gambit_reg[nb_static_args + 1] = rest;
         Gambit_nargs -= (nb_rest_args - 1);
-        
+
         " R1 " = Gambit_reg[1];
         " R2 " = Gambit_reg[2];
         " R3 " = Gambit_reg[3];
-        
+
         return true;
     }
 
@@ -1436,11 +2251,11 @@ function Gambit_buildrest ( f ) {    // nb formal args
         Gambit_reg[2] = Gambit_reg[3];
         Gambit_reg[3] = null;
         Gambit_nargs += 1;
-        
+
         " R1 " = Gambit_reg[1];
         " R2 " = Gambit_reg[2];
         " R3 " = Gambit_reg[3];
-        
+
         return true;
     }
 
@@ -1478,9 +2293,9 @@ function Gambit_buildrest ( f ) {    // nb formal args
     " R1 " = Gambit_reg[1];
     " R2 " = Gambit_reg[2];
     " R3 " = Gambit_reg[3];
-        
+
     return true;
-}         
+}
 
 function Gambit_wrong_nargs(fn) {
     Gambit_printout(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
@@ -1711,7 +2526,7 @@ Gambit_list = function ( ) {
     }
 
 //    var res = listaux(arguments, arguments.length - 1, null);
-    
+
     return listaux(arguments, arguments.length - 1, null);
 }
 
@@ -1741,7 +2556,7 @@ Gambit_Char.fxToChar = function ( charcode ) {
         Gambit_chars[charcode] = new Gambit_Char(charcode);
         ch = Gambit_chars[charcode];
     }
-    
+
     return ch;
 }
 
@@ -1796,8 +2611,8 @@ Gambit_String.stringToList = function ( s ) {
             return listaux(a, n-1, Gambit_cons(a[n], lst));
         }
     }
-    
-    return listaux(s.chars, len - 1, null);    
+
+    return listaux(s.chars, len - 1, null);
 }
 
 Gambit_String.jsstringToString = function ( s ) {
@@ -1864,7 +2679,7 @@ var Gambit_stringappend = function ( ) {
 
     return s;
 }
-" (univ-glo ctx 'string-append) " = Gambit_stringappend;
+" (univ-emit-getglo ctx 'string-append) " = Gambit_stringappend;
 
 // Vector
 var Gambit_Vector = function ( ) {
@@ -1933,12 +2748,12 @@ function Gambit_Symbol(s) {
 
 Gambit_Symbol.stringToSymbol = function ( s ) {
     var sym = Gambit_syms[s];
-    
+
     if (!sym) {
         Gambit_syms[s] = new Gambit_Symbol(s);
         sym = Gambit_syms[s];
     }
-    
+
     return sym;
 }
 
@@ -1952,12 +2767,12 @@ function Gambit_Keyword(s) {
 
 Gambit_Keyword.stringToKeyword = function(s) {
     var kwd = Gambit_kwds[s];
-    
+
     if (!kwd) {
         Gambit_kwds[s] = new Gambit_Keyword(s);
         kwd = Gambit_kwds[s];
     }
-    
+
     return kwd;
 }
 
@@ -1997,11 +2812,11 @@ function Gambit_bb1_write ( ) { // write
     }
 
     Gambit_write(Gambit_reg1);
-    
+
     return Gambit_reg0;
 }
 
-" (univ-glo ctx 'write) " = Gambit_bb1_write;
+" (univ-emit-getglo ctx 'write) " = Gambit_bb1_write;
 
 function Gambit_writelist ( obj ) {
     if (obj === null) {
@@ -2025,11 +2840,11 @@ function Gambit_bb1_writelist ( ) { // write-list
     }
 
     Gambit_writelist(Gambit_reg1);
-    
+
     return Gambit_reg0;
 }
 
-" (univ-glo ctx 'write-list) " = Gambit_bb1_writelist;
+" (univ-emit-getglo ctx 'write-list) " = Gambit_bb1_writelist;
 
 function Gambit_print ( obj ) {
     if (obj === false)
@@ -2067,11 +2882,11 @@ function Gambit_bb1_print ( ) { // print
     }
 
     Gambit_print(" R1 ");
-    
+
     return " R0 ";
 }
 
-" (univ-glo ctx 'print) " = Gambit_bb1_print;
+" (univ-emit-getglo ctx 'print) " = Gambit_bb1_print;
 
 function Gambit_println ( obj ) {
     Gambit_print(obj);
@@ -2084,11 +2899,11 @@ function Gambit_bb1_println ( ) { // println
     }
 
     Gambit_println(" R1 ");
-    
+
     return " R0 ";
 }
 
-" (univ-glo ctx 'println) " = Gambit_bb1_println;
+" (univ-emit-getglo ctx 'println) " = Gambit_bb1_println;
 
 function Gambit_bb1_newline ( ) { // newline
     if (Gambit_nargs !== 0) {
@@ -2096,11 +2911,11 @@ function Gambit_bb1_newline ( ) { // newline
     }
 
     Gambit_printout(\"\\n\");
-    
+
     return " R0 ";
 }
 
-" (univ-glo ctx 'newline) " = Gambit_bb1_newline;
+" (univ-emit-getglo ctx 'newline) " = Gambit_bb1_newline;
 
 function Gambit_bb1_display ( ) { // display
     if (Gambit_nargs !== 1) {
@@ -2108,11 +2923,11 @@ function Gambit_bb1_display ( ) { // display
     }
 
     Gambit_write(" R1 ");
-    
+
     return " R0 ";
 }
 
-" (univ-glo ctx 'display) " = Gambit_bb1_display;
+" (univ-emit-getglo ctx 'display) " = Gambit_bb1_display;
 
 function Gambit_bb1_prettyprint ( ) { // prettyprint
     if (Gambit_nargs !== 1) {
@@ -2121,11 +2936,11 @@ function Gambit_bb1_prettyprint ( ) { // prettyprint
 
     Gambit_write(" R1 ");
     Gambit_printout(\"\\n\");
-    
+
     return " R0 ";
 }
 
-" (univ-glo ctx 'prettyprint) " = Gambit_bb1_prettyprint;
+" (univ-emit-getglo ctx 'prettyprint) " = Gambit_bb1_prettyprint;
 
 function Gambit_bb1_pp ( ) { // pp
     if (Gambit_nargs !== 1) {
@@ -2134,11 +2949,11 @@ function Gambit_bb1_pp ( ) { // pp
 
     Gambit_write(" R1 ");
     Gambit_printout(\"\\n\");
-    
+
     return " R0 ";
 }
 
-" (univ-glo ctx 'pp) " = Gambit_bb1_pp;
+" (univ-emit-getglo ctx 'pp) " = Gambit_bb1_pp;
 
 function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
     if (Gambit_nargs !== 0) {
@@ -2146,11 +2961,11 @@ function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
     }
 
     " R1 " = new Date();
-    
+
     return " R0 ";
 }
 
-" (univ-glo ctx 'real-time-milliseconds) " = Gambit_bb1_real_2d_time_2d_milliseconds;
+" (univ-emit-getglo ctx 'real-time-milliseconds) " = Gambit_bb1_real_2d_time_2d_milliseconds;
 
 
 // Continuations
@@ -2263,7 +3078,7 @@ function Gambit_bb1__23__23_continuation_3f_() { // ##continuation?
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation?) " = Gambit_bb1__23__23_continuation_3f_;
+" (univ-emit-getglo ctx '##continuation?) " = Gambit_bb1__23__23_continuation_3f_;
 
 
 function Gambit_bb1__23__23_continuation_2d_frame() { // ##continuation-frame
@@ -2274,7 +3089,7 @@ function Gambit_bb1__23__23_continuation_2d_frame() { // ##continuation-frame
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation-frame) " = Gambit_bb1__23__23_continuation_2d_frame;
+" (univ-emit-getglo ctx '##continuation-frame) " = Gambit_bb1__23__23_continuation_2d_frame;
 
 
 function Gambit_bb1__23__23_continuation_2d_denv() { // ##continuation-denv
@@ -2285,7 +3100,7 @@ function Gambit_bb1__23__23_continuation_2d_denv() { // ##continuation-denv
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation-denv) " = Gambit_bb1__23__23_continuation_2d_denv;
+" (univ-emit-getglo ctx '##continuation-denv) " = Gambit_bb1__23__23_continuation_2d_denv;
 
 
 function Gambit_bb1__23__23_continuation_2d_fs() { // ##continuation-fs
@@ -2296,7 +3111,7 @@ function Gambit_bb1__23__23_continuation_2d_fs() { // ##continuation-fs
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation-fs) " = Gambit_bb1__23__23_continuation_2d_fs;
+" (univ-emit-getglo ctx '##continuation-fs) " = Gambit_bb1__23__23_continuation_2d_fs;
 
 
 function Gambit_bb1__23__23_frame_2d_fs() { // ##frame-fs
@@ -2307,7 +3122,7 @@ function Gambit_bb1__23__23_frame_2d_fs() { // ##frame-fs
   return " R0 ";
 }
 
-" (univ-glo ctx '##frame-fs) " = Gambit_bb1__23__23_frame_2d_fs;
+" (univ-emit-getglo ctx '##frame-fs) " = Gambit_bb1__23__23_frame_2d_fs;
 
 
 function Gambit_bb1__23__23_return_2d_fs() { // ##return-fs
@@ -2318,7 +3133,7 @@ function Gambit_bb1__23__23_return_2d_fs() { // ##return-fs
   return " R0 ";
 }
 
-" (univ-glo ctx '##return-fs) " = Gambit_bb1__23__23_return_2d_fs;
+" (univ-emit-getglo ctx '##return-fs) " = Gambit_bb1__23__23_return_2d_fs;
 
 
 function Gambit_bb1__23__23_return_2d_link() { // ##return-link
@@ -2329,7 +3144,7 @@ function Gambit_bb1__23__23_return_2d_link() { // ##return-link
   return " R0 ";
 }
 
-" (univ-glo ctx '##return-link) " = Gambit_bb1__23__23_return_2d_link;
+" (univ-emit-getglo ctx '##return-link) " = Gambit_bb1__23__23_return_2d_link;
 
 
 function Gambit_bb1__23__23_return_2d_id() { // ##return-id
@@ -2340,7 +3155,7 @@ function Gambit_bb1__23__23_return_2d_id() { // ##return-id
   return " R0 ";
 }
 
-" (univ-glo ctx '##return-id) " = Gambit_bb1__23__23_return_2d_id;
+" (univ-emit-getglo ctx '##return-id) " = Gambit_bb1__23__23_return_2d_id;
 
 
 function Gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
@@ -2351,7 +3166,7 @@ function Gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation-link) " = Gambit_bb1__23__23_continuation_2d_link;
+" (univ-emit-getglo ctx '##continuation-link) " = Gambit_bb1__23__23_continuation_2d_link;
 
 
 function Gambit_bb1__23__23_frame_2d_link() { // ##frame-link
@@ -2361,7 +3176,7 @@ function Gambit_bb1__23__23_frame_2d_link() { // ##frame-link
   " R1 " = " R1 "[0].link-1;
   return " R0 ";
 }
-" (univ-glo ctx '##frame-link) " = Gambit_bb1__23__23_frame_2d_link;
+" (univ-emit-getglo ctx '##frame-link) " = Gambit_bb1__23__23_frame_2d_link;
 
 function Gambit_bb1__23__23_continuation_2d_ret() { // ##continuation-ret
   if (Gambit_nargs !== 1) {
@@ -2371,7 +3186,7 @@ function Gambit_bb1__23__23_continuation_2d_ret() { // ##continuation-ret
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation-ret) " = Gambit_bb1__23__23_continuation_2d_ret;
+" (univ-emit-getglo ctx '##continuation-ret) " = Gambit_bb1__23__23_continuation_2d_ret;
 
 
 function Gambit_bb1__23__23_frame_2d_ret() { // ##frame-ret
@@ -2382,7 +3197,7 @@ function Gambit_bb1__23__23_frame_2d_ret() { // ##frame-ret
   return " R0 ";
 }
 
-" (univ-glo ctx '##frame-ret) " = Gambit_bb1__23__23_frame_2d_ret;
+" (univ-emit-getglo ctx '##frame-ret) " = Gambit_bb1__23__23_frame_2d_ret;
 
 
 function Gambit_bb1__23__23_continuation_2d_ref() { // ##continuation-ref
@@ -2393,7 +3208,7 @@ function Gambit_bb1__23__23_continuation_2d_ref() { // ##continuation-ref
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation-ref) " = Gambit_bb1__23__23_continuation_2d_ref;
+" (univ-emit-getglo ctx '##continuation-ref) " = Gambit_bb1__23__23_continuation_2d_ref;
 
 
 function Gambit_bb1__23__23_frame_2d_ref() { // ##frame-ref
@@ -2404,7 +3219,7 @@ function Gambit_bb1__23__23_frame_2d_ref() { // ##frame-ref
   return " R0 ";
 }
 
-" (univ-glo ctx '##frame-ref) " = Gambit_bb1__23__23_frame_2d_ref;
+" (univ-emit-getglo ctx '##frame-ref) " = Gambit_bb1__23__23_frame_2d_ref;
 
 
 function Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
@@ -2415,7 +3230,7 @@ function Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuati
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation-slot-live?) " = Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_;
+" (univ-emit-getglo ctx '##continuation-slot-live?) " = Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_;
 
 
 function Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
@@ -2426,7 +3241,7 @@ function Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
   return " R0 ";
 }
 
-" (univ-glo ctx '##frame-slot-live?) " = Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_;
+" (univ-emit-getglo ctx '##frame-slot-live?) " = Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_;
 
 
 function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
@@ -2443,7 +3258,7 @@ function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
   return " R0 ";
 }
 
-" (univ-glo ctx '##continuation-next) " = Gambit_bb1__23__23_continuation_2d_next;
+" (univ-emit-getglo ctx '##continuation-next) " = Gambit_bb1__23__23_continuation_2d_next;
 
 
 function Gambit_trampoline(pc) {
@@ -2456,7 +3271,7 @@ function Gambit_trampoline(pc) {
 
 )))
 
-    ((python)                           ;rts py     
+    ((python-old)                           ;rts py
 #<<EOF
 #! /usr/bin/python
 
@@ -2481,7 +3296,7 @@ class Gambit_Char:
 
   def __str__ ( self ):
     return self.c
-        
+
 # ##fx->char
 def Gambit_fxToChar ( i ):
   if Gambit_Char.chars.has_key(i):
@@ -2567,7 +3382,7 @@ class Gambit_String:
 def Gambit_makestring ( n, c ):
   args = [c.c]*n
   return Gambit_String(*args)
-    
+
 def Gambit_stringp ( s ):
   return isinstance(s, String)
 
@@ -2643,7 +3458,7 @@ $Gambit_bb1_println = lambda { # println
   if $Gambit_nargs != 1
     raise "wrong number of arguments"
   end
-  
+
   if $Gambit_reg[1] == false
     print("#f")
   elsif $Gambit_reg[1] == true
@@ -2655,7 +3470,7 @@ $Gambit_bb1_println = lambda { # println
   else
     print($Gambit_reg[1])
   end
-  
+
   print("\n")
   return $Gambit_reg[0]
 }
@@ -2684,11 +3499,11 @@ EOF
 )
 
     ((dart)                               ;rts dart
-     (let ((R0 (translate-gvm-opnd ctx (make-reg 0)))
-           (R1 (translate-gvm-opnd ctx (make-reg 1)))
-           (R2 (translate-gvm-opnd ctx (make-reg 2)))
-           (R3 (translate-gvm-opnd ctx (make-reg 3)))
-           (R4 (translate-gvm-opnd ctx (make-reg 4))))
+     (let ((R0 (^operand (make-reg 0)))
+           (R1 (^operand (make-reg 1)))
+           (R2 (^operand (make-reg 2)))
+           (R3 (^operand (make-reg 3)))
+           (R4 (^operand (make-reg 4))))
        (^ "
 function Gambit_heapify(ra) {
 
@@ -2719,7 +3534,7 @@ function Gambit_heapify(ra) {
     Gambit_stack.length = fs + 1;
     Gambit_stack[link] = Gambit_stack[0];
     Gambit_stack[0] = ra;
-  
+
     Gambit_stack = [chain];
     Gambit_sp = 0;
   }
@@ -2806,23 +3621,11 @@ function Gambit_trampoline(pc) {
 
        (case (target-name (ctx-target ctx))
 
-         ((js php)
-          (^ (^prefix "trampoline") "(" entry ");\n"))
-
-         ((python ruby)
-          (^ (^prefix "trampoline") "(" entry ")\n"))
-
-         ((dart)
-          (univ-function
-           ctx
-           "main"
-           ""
-           "\n"
-           (univ-indent
-            (^ (univ-assign ctx (^global-var (^prefix "glo")) "{}")
-               (univ-assign ctx (^global-var (^prefix "stack")) "new List(1000)")
-               (univ-assign ctx (^ (^global-var (^prefix "stack")) "[0]") "false")
-               (^ (^prefix "trampoline") "(" entry ");\n")))))
+         ((js php python ruby)
+          (^expr-statement
+           (^call-prim
+            (^global-prim-function (^prefix "trampoline"))
+            entry)))
 
          (else
           (compiler-internal-error
@@ -2830,68 +3633,136 @@ function Gambit_trampoline(pc) {
 
 ;;;----------------------------------------------------------------------------
 
-(define (univ-function ctx name params header body)
-  (case (target-name (ctx-target ctx))
+(define (univ-emit-prim-function-declaration ctx name params attribs header body)
+  (univ-emit-function-declaration ctx name params attribs header body #t))
 
-    ((js php dart)
-     (^ "function " name "(" params ") {" header body "}\n"))
-
-    ((python)
-     (^ "def " name "(" params "):\n"
-        (univ-indent (^ "global "
-                        (^prefix "glo") ","
-                        (^prefix "r") ","
-                        (^prefix "stack") ","
-                        (^prefix "sp") ","
-                        (^prefix "nargs") ","
-                        (^prefix "temp1") ","
-                        (^prefix "temp2")))
-        header
-        body))
-
-    ((ruby)
-     (univ-assign ctx
-                  name
-                  (^ "lambda {"
-                     (if (equal? params "")
-                         (^)
-                         (^ "|" params "|"))
-                     header
-                     body
-                     "}")))
-
-    (else
-     (compiler-internal-error
-      "univ-function, unknown target"))))
-
-(define (univ-rec-function ctx name params header body)
+(define (univ-emit-function-declaration ctx name params attribs header body #!optional (prim? #f))
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^ "(function () {\n"
-        (univ-indent
-         (^ (univ-function ctx name header body)
-            (univ-return ctx name)))
-        "})()"))
+     (^ "function " name "("
+        (univ-separated-list
+         ","
+         (map car params))
+        ") {" (univ-indent (^ header body)) "}\n"
+        (map (lambda (attrib)
+               (^expr-statement
+                (^assign (^ name "." (car attrib))
+                         (cdr attrib))))
+             attribs)))
+
+    ((php)
+     (let ((decl
+            (^ "function " (if prim? name "") "("
+               (univ-separated-list
+                ","
+                (map (lambda (x)
+                       (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+                     params))
+               ") {\n"
+               (univ-indent
+                (^ (map (lambda (attrib)
+                          (^ "static "
+                             (^expr-statement
+                              (^assign (^local-var (car attrib))
+                                       (cdr attrib)))))
+                        attribs)
+                   "global "
+                   (^global-var (^prefix "glo")) ","
+                   (^global-var (^prefix "r0")) ","
+                   (^global-var (^prefix "r1")) ","
+                   (^global-var (^prefix "r2")) ","
+                   (^global-var (^prefix "r3")) ","
+                   (^global-var (^prefix "r4")) ","
+                   (^global-var (^prefix "stack")) ","
+                   (^global-var (^prefix "sp")) ","
+                   (^global-var (^prefix "nargs")) ","
+                   (^global-var (^prefix "temp1")) ","
+                   (^global-var (^prefix "temp2")) ","
+                   (^global-var (^prefix "poll_count")) ";"
+                   header
+                   body))
+               "}")))
+       (if prim?
+           (^ decl "\n")
+           (^expr-statement (^assign name decl)))))
+
 
     ((python)
-     (^ "(lambda:\n"
+     (^ "def " name "("
+        (univ-separated-list
+         ","
+         (map (lambda (x)
+                (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+              params))
+        "):\n"
         (univ-indent
-         (^ (univ-function ctx name header body)
-            (univ-return ctx name)))
-        ")()"))
+         (^ "global "
+            (^global-var (^prefix "glo")) ","
+            (^global-var (^prefix "r0")) ","
+            (^global-var (^prefix "r1")) ","
+            (^global-var (^prefix "r2")) ","
+            (^global-var (^prefix "r3")) ","
+            (^global-var (^prefix "r4")) ","
+            (^global-var (^prefix "stack")) ","
+            (^global-var (^prefix "sp")) ","
+            (^global-var (^prefix "nargs")) ","
+            (^global-var (^prefix "temp1")) ","
+            (^global-var (^prefix "temp2")) ","
+            (^global-var (^prefix "poll_count"))
+            header
+            body))
+        (map (lambda (attrib)
+               (^expr-statement
+                (^assign (^ name "." (car attrib))
+                         (cdr attrib))))
+             attribs)))
 
     ((ruby)
-     "???")
+     (let ((parameters
+            (univ-separated-list
+             ","
+             (map (lambda (x)
+                    (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+                  params))))
+
+       (^ (if prim?
+
+              (^ "def " name "(" parameters ")"
+                 (univ-indent (^ header body))
+                 "end\n")
+
+              (^expr-statement
+               (^assign
+                name
+                (^ "lambda {"
+                   (if (null? params)
+                       (^)
+                       (^ "|" parameters "|"))
+                   (univ-indent (^ header body))
+                   "}"))))
+
+          (if (pair? attribs)
+              (^ "class << " name "; attr_accessor :" (car (car attribs))
+                 (map (lambda (attrib)
+                        (^ ", :" (car attrib)))
+                      (cdr attribs))
+                 "; end\n"
+                 (map (lambda (attrib)
+                        (^expr-statement
+                         (^assign (^ name "." (car attrib))
+                                  (cdr attrib))))
+                      attribs))
+              (^)))))
 
     (else
      (compiler-internal-error
-      "univ-rec-function, unknown target"))))
+      "univ-emit-function-declaration, unknown target"))))
 
 (define (univ-comment ctx comment)
   (case (target-name (ctx-target ctx))
 
-    ((js php dart)
+    ((js php)
      (^ "// " comment))
 
     ((python ruby)
@@ -2901,13 +3772,16 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-comment, unknown target"))))
 
-(define (univ-return-call ctx expr . params)
-  (univ-return ctx (apply univ-call (cons ctx (cons expr params)))))
+(define (univ-emit-return-call-prim ctx expr . params)
+  (univ-emit-return ctx (apply univ-emit-call-prim (cons ctx (cons expr params)))))
 
-(define (univ-return ctx expr)
+(define (univ-emit-return-call ctx expr . params)
+  (univ-emit-return ctx (apply univ-emit-call (cons ctx (cons expr params)))))
+
+(define (univ-emit-return ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php dart)
+    ((js php)
      (^ "return " expr ";\n"))
 
     ((python ruby)
@@ -2915,43 +3789,142 @@ function Gambit_trampoline(pc) {
 
     (else
      (compiler-internal-error
-      "univ-return, unknown target"))))
+      "univ-emit-return, unknown target"))))
 
-(define (makecall ctx name args)
-  (apply univ-call (cons ctx (cons name args))))
-
-(define (univ-call ctx name . params)
+(define (univ-emit-bool ctx val)
   (case (target-name (ctx-target ctx))
 
-    ((js dart)
-     (^ name
-        "("
-        (univ-separated-list "," params)
-        ")"))
-    
-    ((python ruby php)                ;TODO: complete
-     (^))
+    ((js ruby php)
+     (^ (if val "true" "false")))
+
+    ((python)
+     (^ (if val "True" "False")))
 
     (else
      (compiler-internal-error
-      "univ-call, unknown target"))))
+      "univ-emit-bool, unknown target"))))
 
-(define (univ-return-poll ctx expr poll? call?)
+(define (univ-emit-int ctx val)
+  (^ val))
+
+(define (univ-emit-float ctx val)
+  (^ val))
+
+(define (univ-emit-string ctx val)
+  (^ "'" val "'")) ;;; TODO: generate correct escapes
+
+(define (univ-emit-dict ctx alist)
+
+  (define (dict alist sep open close)
+    (^ open
+       (univ-separated-list
+        ","
+        (map (lambda (x) (^ (^string (car x)) sep (cdr x))) alist))
+       close))
+
+  (case (target-name (ctx-target ctx))
+
+    ((js python)
+     (dict alist ":" "{" "}"))
+
+    ((php)
+     (dict alist "=>" "array(" ")"))
+
+    ((ruby)
+     (dict alist "=>" "{" "}"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-dict, unknown target"))))
+
+(define (univ-emit-member ctx expr name)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^ expr "." name))
+
+    ((php)
+     (^ expr "->" name))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-member, unknown target"))))
+
+(define (univ-emit-call-prim ctx name . params)
+  (univ-emit-apply ctx name params))
+
+(define (univ-emit-call ctx name . params)
+  (case (target-name (ctx-target ctx))
+
+    ((js python php)
+     (univ-emit-apply-aux ctx name params "(" ")"))
+
+    ((ruby)
+     (univ-emit-apply-aux ctx name params "[" "]"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-call, unknown target"))))
+
+(define (univ-emit-apply ctx name params)
+  (univ-emit-apply-aux ctx name params "(" ")"))
+
+(define (univ-emit-apply-aux ctx name params open close)
+  (^ name
+     open
+     (univ-separated-list "," params)
+     close))
+
+(define (univ-emit-new ctx class . params)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ "new " (^apply class params)))
+
+    ((python)
+     (^apply class params))
+
+    ((ruby)
+     (^apply (^ class ".new") params))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-new, unknown target"))))
+
+(define (univ-emit-instanceof ctx class expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ expr " instanceof " class))
+
+    ((python)
+     (^ "isinstance(" expr ", " class ")"))
+
+    ((ruby)
+     (^ expr ".class == " class))
+
+    (else
+     (compiler-internal-error
+      "unit-emit-instanceof, unknown target"))))
+
+(define (univ-emit-return-poll ctx expr poll? call?)
   (if poll?
 
-      #;
-       (univ-return
-        ctx
-        (univ-call ctx (^prefix "poll") expr))
-      (^if (^ "--" (^global-var (^prefix "poll_count")) " === 0")
-           (univ-return-call ctx (^prefix "poll") expr)
-           (if call?
-               (univ-return-call ctx expr)
-               (univ-return ctx expr)))
+      (^inc-by (^global-var (^prefix "poll_count"))
+               -1
+               (lambda (inc)
+                 (^if (^= inc 0)
+                      (univ-emit-return-call-prim
+                       ctx
+                       (^global-prim-function (^prefix "poll"))
+                       expr)
+                      (if call?
+                          (univ-emit-return-call ctx expr)
+                          (univ-emit-return ctx expr)))))
 
       (if call?
-          (univ-return-call ctx expr)
-          (univ-return ctx expr))))
+          (univ-emit-return-call ctx expr)
+          (univ-emit-return ctx expr))))
 
 (define (univ-throw ctx expr)
   (case (target-name (ctx-target ctx))
@@ -2967,32 +3940,23 @@ function Gambit_trampoline(pc) {
       "univ-throw, unknown target"))))
 
 (define (univ-eq ctx expr1 expr2)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (^ expr1 " === " expr2))
-
-    ((python)
-     (^ expr1 " is " expr2))
-
-    ((ruby)
-     (^ expr1 " .equal?(" expr2 ")"))
-
-    ((php dart)
-     (^ expr1 " == " expr2))
-
-    (else
-     (compiler-internal-error
-      "univ-eq, unknown target"))))
+  (^eq? expr1 expr2))
 
 (define (univ-fxquotient ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^ "parseInt(" expr1 " / " expr2 ")"))
+     (^ (^parens (^ expr1 " / " expr2)) " | 0"))
 
-    ((python ruby php)
-     (^))
+    ((python)
+     (^call-prim "int" (^/ (^call-prim "float" expr1)
+                           (^call-prim "float" expr2))))
+
+    ((ruby)
+     (^ (^parens (^ (^ expr1 ".to_f") "/" (^ expr2 ".to_f"))) ".to_int"))
+
+    ((php)
+     (^ "(int)(" expr1 " / " expr2 ")"))
 
     (else
      (compiler-internal-error
@@ -3001,20 +3965,39 @@ function Gambit_trampoline(pc) {
 (define (univ-fxmodulo ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js)
-     (^ "(" expr1 " % " expr2 ")"))
+    ((js php)
+     (^ (^parens (^ (^parens (^ expr1 " % " expr2)) " + " expr2)) " % " expr2))
 
-    ((python ruby php)
-     (^))
+    ((python ruby)
+     (^ expr1 " % " expr2))
 
     (else
      (compiler-internal-error
       "univ-fxmodulo, unknown target"))))
 
+(define (univ-fxremainder ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ expr1 " % " expr2))
+
+    ((python)
+     (^- expr1
+         (^* (^call-prim "int" (^/ (^call-prim "float" expr1)
+                                   (^call-prim "float" expr2)))
+             expr2)))
+
+    ((ruby)
+     (^ expr1 ".remainder(" expr2 ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-fxremainder, unknown target"))))
+
 (define (univ-boolean ctx val)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php dart)
+    ((js ruby php)
      (^ (if val "true" "false")))
 
     ((python)
@@ -3023,45 +4006,6 @@ function Gambit_trampoline(pc) {
     (else
      (compiler-internal-error
       "univ-boolean, unknown target"))))
-
-(define (univ-assign ctx loc expr)
-  (case (target-name (ctx-target ctx))
-
-    ((js php dart)
-     (^ loc " = " expr ";\n"))
-
-    ((python ruby)
-     (^ loc " = " expr "\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-assign, unknown target"))))
-
-(define (univ-increment ctx loc expr)
-  (case (target-name (ctx-target ctx))
-
-    ((js php dart)
-     (^ loc " += " expr ";\n"))
-
-    ((python ruby)
-     (^ loc " += " expr "\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-increment, unknown target"))))
-
-(define (univ-decrement ctx loc expr)
-  (case (target-name (ctx-target ctx))
-
-    ((js php dart)
-     (^ loc " -= " expr ";\n"))
-
-    ((python ruby)
-     (^ loc " -= " expr "\n"))
-
-    (else
-     (compiler-internal-error
-      "univ-decrement, unknown target"))))
 
 (define (univ-define-prim
          name
@@ -3087,9 +4031,10 @@ function Gambit_trampoline(pc) {
            (lambda (ctx opnds loc)
              (if loc ;; result is needed?
 
-                 (univ-assign ctx
-                              (translate-gvm-opnd ctx loc)
-                              (apply-gen ctx opnds))
+                 (^expr-statement
+                  (^assign
+                   (^operand loc)
+                   (apply-gen ctx opnds)))
 
                  (if side-effects? ;; only generate code for side-effect
                      (^expr-statement (apply-gen ctx opnds))
@@ -3130,7 +4075,7 @@ function Gambit_trampoline(pc) {
              (^ obj))
             (else
              (compiler-internal-error
-              "translate-obj, unsupported exact number:" obj)))
+              "univ-emit-obj, unsupported exact number:" obj)))
       (cond ((real? obj)
              (let ((x
                     (if (integer? obj)
@@ -3143,7 +4088,7 @@ function Gambit_trampoline(pc) {
                   x))))
             (else
              (compiler-internal-error
-              "translate-obj, unsupported inexact number:" obj)))))
+              "univ-emit-obj, unsupported inexact number:" obj)))))
 
 (define (univ-char ctx obj)
   (let ((code (char->integer obj)))
@@ -3180,10 +4125,10 @@ function Gambit_trampoline(pc) {
 
     ;; ((js)
     ;;  (^ "new "
-    ;;     (makecall ctx
-    ;;               (^prefix "String")
-    ;;               (map (lambda (ch) (univ-char ctx ch))
-    ;;                    (string->list obj)))))
+    ;;     (univ-emit-apply ctx
+    ;;                      (^prefix "String")
+    ;;                      (map (lambda (ch) (univ-char ctx ch))
+    ;;                           (string->list obj)))))
 
     ((python)
      (^ (^prefix "String")
@@ -3220,7 +4165,7 @@ function Gambit_trampoline(pc) {
 
     ((js)
      (^ "null"))
-    
+
     ((python)
      (^ "None"))
 
@@ -3228,7 +4173,7 @@ function Gambit_trampoline(pc) {
      (^ "nil"))
 
     ((php)                                ;TODO: complete
-     (^))
+     (^ "NULL"))
 
     (else
      (compiler-internal-error
@@ -3238,12 +4183,12 @@ function Gambit_trampoline(pc) {
   (eq? obj 'undefined))
 
 (define (univ-undefined ctx)
-  
+
   (case (target-name (ctx-target ctx))
 
     ((js)
      (^ "undefined"))
-    
+
     ((python)
      (^ "None"))
 
@@ -3259,31 +4204,27 @@ function Gambit_trampoline(pc) {
 
 (define (univ-pair ctx obj)
   (univ-cons ctx
-             (translate-obj ctx (car obj))
-             (translate-obj ctx (cdr obj))))
+             (univ-emit-obj ctx (car obj))
+             (univ-emit-obj ctx (cdr obj))))
+
+(define (univ-pair? ctx expr)
+  (^instanceof (^prefix "Pair") expr))
 
 (define (univ-cons ctx expr1 expr2)
-  
-  (case (target-name (ctx-target ctx))
+  (^new (^prefix "Pair") expr1 expr2))
 
-    ((js)
-     (^ "new " (makecall ctx
-                         (^prefix "Pair")
-                         (list expr1 expr2))))
-    
-    ((python ruby php)                         ;TODO: complete
-     (^))
+(define (univ-car ctx expr)
+  (^member expr "car"))
 
-    (else
-     (compiler-internal-error
-      "univ-cons, unknown target"))))
+(define (univ-cdr ctx expr)
+  (^member expr "cdr"))
 
 
 ;; (define (univ-list ctx obj)             ;obj is a non-null list
-  
+
 ;;   (define (make-list n elt)
 ;;     (vector->list (make-vector n elt)))
-  
+
 ;;   (define (zip lst1 lst2)
 ;;     (define (zip-aux lst1 lst2 lst)
 ;;       (cond ((null? lst1)
@@ -3300,13 +4241,13 @@ function Gambit_trampoline(pc) {
 ;;   (case (target-name (ctx-target ctx))
 
 ;;     ((js python)
-;;      (let ((tobj (map (lambda (o) (translate-obj ctx o))
+;;      (let ((tobj (map (lambda (o) (univ-emit-obj ctx o))
 ;;                       obj))
 ;;            (sep (make-list (- (length obj) 1) ", ")))
 ;;        (^ (^prefix "List(")
 ;;           (zip tobj sep)
 ;;           ")")))
-    
+
 ;;     ((python ruby php)                         ;TODO: complete
 ;;      (^ (object->string obj)))
 
@@ -3318,7 +4259,7 @@ function Gambit_trampoline(pc) {
 
   (define (make-list n elt)
     (vector->list (make-vector n elt)))
-  
+
   (define (zip lst1 lst2)
     (define (zip-aux lst1 lst2 lst)
       (cond ((null? lst1)
@@ -3330,14 +4271,14 @@ function Gambit_trampoline(pc) {
                    (cons (car lst2)
                          (zip-aux (cdr lst1) (cdr lst2) lst))))))
 
-    (zip-aux lst1 lst2 '()))  
+    (zip-aux lst1 lst2 '()))
 
   (case (target-name (ctx-target ctx))
 
     ((js)
      (let ((vlen (vector-length obj)))
        (if (> vlen 0)
-           (let ((tobj (map (lambda (o) (translate-obj ctx o))
+           (let ((tobj (map (lambda (o) (univ-emit-obj ctx o))
                             (vector->list obj)))
                  (sep (make-list (- vlen 1) ", ")))
 
@@ -3345,7 +4286,7 @@ function Gambit_trampoline(pc) {
                 (zip tobj sep)
                 "]"))
            (^ "[]"))))
-    
+
     ((python ruby php)                         ;TODO: complete
      (^ (object->string obj)))
 
@@ -3355,54 +4296,75 @@ function Gambit_trampoline(pc) {
 
 ;;; Primitive procedures
 
+(define (make-translated-operand-generator proc)
+  (lambda (ctx opnds)
+    (apply proc (cons ctx (univ-emit-operands ctx opnds)))))
+
 (univ-define-prim-bool "##not" #t #f
 
-  (lambda (ctx opnds)
-    (univ-eq ctx
-             (translate-gvm-opnd ctx (list-ref opnds 0))
-             (univ-boolean ctx #f))))
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (univ-eq ctx arg1 (^obj #f)))))
 
 (univ-define-prim-bool "##eq?" #t #f
 
-  (lambda (ctx opnds)
-    (univ-eq ctx
-             (translate-gvm-opnd ctx (list-ref opnds 0))
-             (translate-gvm-opnd ctx (list-ref opnds 1)))))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (univ-eq ctx arg1 arg2))))
 
 (univ-define-prim "##fx+" #f #f
 
-  (lambda (ctx opnds)
-    (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-       " + "
-       (translate-gvm-opnd ctx (list-ref opnds 1)))))
+  (univ-fold-left (lambda (ctx)           (^obj 0))
+                  (lambda (ctx arg1)      arg1)
+                  (lambda (ctx arg1 arg2) (^ arg1 " + " arg2))))
+
+;; TODO move elsewhere
+(define (univ-fold-left op0 op1 op2)
+  (make-translated-operand-generator
+   (lambda (ctx . args)
+     (cond ((null? args)
+            (op0 ctx))
+           ((null? (cdr args))
+            (op1 ctx (car args)))
+           (else
+            (let loop ((lst (cddr args))
+                       (res (op2 ctx (car args) (cadr args))))
+              (if (null? lst)
+                  res
+                  (loop (cdr lst)
+                        (op2 ctx (^ "(" res ")") (car lst))))))))))
 
 (univ-define-prim "##fx-" #f #f
 
-  (lambda (ctx opnds)
-    (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-       " - "
-       (translate-gvm-opnd ctx (list-ref opnds 1)))))
+  (univ-fold-left #f ;; 0 arguments impossible
+                  (lambda (ctx arg1)      (^- arg1))
+                  (lambda (ctx arg1 arg2) (^- arg1 arg2))))
 
 (univ-define-prim "##fx*" #f #f
 
-  (lambda (ctx opnds)
-    (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-       " * "
-       (translate-gvm-opnd ctx (list-ref opnds 1)))))
+  (univ-fold-left (lambda (ctx)           (^obj 1))
+                  (lambda (ctx arg1)      arg1)
+                  (lambda (ctx arg1 arg2) (^* arg1 arg2))))
 
 (univ-define-prim "##fxquotient" #f #f
 
-  (lambda (ctx opnds)
-    (univ-fxquotient ctx
-                   (translate-gvm-opnd ctx (list-ref opnds 0))
-                   (translate-gvm-opnd ctx (list-ref opnds 1)))))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (univ-fxquotient ctx arg1 arg2))))
 
 (univ-define-prim "##fxmodulo" #f #f
 
   (lambda (ctx opnds)
     (univ-fxmodulo ctx
-                   (translate-gvm-opnd ctx (list-ref opnds 0))
-                   (translate-gvm-opnd ctx (list-ref opnds 1)))))
+                   (^operand (list-ref opnds 0))
+                   (^operand (list-ref opnds 1)))))
+
+(univ-define-prim "##fxremainder" #f #f
+
+  (lambda (ctx opnds)
+    (univ-fxremainder ctx
+                      (^operand (list-ref opnds 0))
+                      (^operand (list-ref opnds 1)))))
 
 (univ-define-prim-bool "##fx<" #f #f
 
@@ -3445,15 +4407,15 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ "(temp2 = (temp1 = "
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+          (^operand (list-ref opnds 0))
           " + "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")<<"
           univ-tag-bits
           ">>"
           univ-tag-bits
-          ") === temp1 && temp2"))
+          ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
       ((python)
        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
@@ -3461,23 +4423,29 @@ function Gambit_trampoline(pc) {
           ").value>>"
           univ-tag-bits
           "))("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " + "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
 
-      ((ruby php)
-       (^ "(temp2 = (((temp1 = "
-          (translate-gvm-opnd ctx (list-ref opnds 0))
-          " + "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
-          ") + "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") & "
-          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
-          ") - "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") == temp1 && temp2"))
+      ((php ruby)
+       (^and (^parens
+              (^= (^parens
+                   (^assign (^global-var (^prefix "temp2"))
+                            (^-
+                             (^parens
+                              (^bitand
+                               (^parens
+                                (^+
+                                 (^parens
+                                  (^assign (^global-var (^prefix "temp1"))
+                                           (^+ (^operand (list-ref opnds 0))
+                                               (^operand (list-ref opnds 1)))))
+                                 (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                               (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                  (^global-var (^prefix "temp1"))))
+             (^global-var (^prefix "temp2"))))
 
       (else
        (compiler-internal-error
@@ -3489,15 +4457,15 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ "(temp2 = (temp1 = "
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+          (^operand (list-ref opnds 0))
           " - "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")<<"
           univ-tag-bits
           ">>"
           univ-tag-bits
-          ") === temp1 && temp2"))
+          ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
       ((python)
        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
@@ -3505,27 +4473,90 @@ function Gambit_trampoline(pc) {
           ").value>>"
           univ-tag-bits
           "))("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " - "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
 
-      ((ruby php)
-       (^ "(temp2 = (((temp1 = "
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+      ((ruby)
+       (^ "(" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
+          (^operand (list-ref opnds 0))
           " - "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ") + "
           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
           ") & "
           (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
           ") - "
           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") == temp1 && temp2"))
+          ") == " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+
+      ((php)
+       (^ "((" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
+          (^operand (list-ref opnds 0))
+          " - "
+          (^operand (list-ref opnds 1))
+          ") + "
+          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+          ") & "
+          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+          ") - "
+          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+          ") === " (^global-var (^prefix "temp1")) ") ? " (^global-var (^prefix "temp2")) " : False"))
 
       (else
        (compiler-internal-error
         "##fx-?, unknown target")))))
+
+(univ-define-prim "##fx*?" #f #f
+
+  (lambda (ctx opnds)
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+          (^operand (list-ref opnds 0))
+          " * "
+          (^operand (list-ref opnds 1))
+          ")<<"
+          univ-tag-bits
+          ">>"
+          univ-tag-bits
+          ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+
+      ((python)
+       (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+          univ-tag-bits
+          ").value>>"
+          univ-tag-bits
+          "))("
+          (^operand (list-ref opnds 0))
+          " * "
+          (^operand (list-ref opnds 1))
+          ")"))
+
+      ((php ruby)
+       (^and (^parens
+              (^= (^parens
+                   (^assign (^global-var (^prefix "temp2"))
+                            (^-
+                             (^parens
+                              (^bitand
+                               (^parens
+                                (^+
+                                 (^parens
+                                  (^assign (^global-var (^prefix "temp1"))
+                                           (^* (^operand (list-ref opnds 0))
+                                               (^operand (list-ref opnds 1)))))
+                                 (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                               (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                  (^global-var (^prefix "temp1"))))
+             (^global-var (^prefix "temp2"))))
+
+      (else
+       (compiler-internal-error
+        "##fx*?, unknown target")))))
 
 (univ-define-prim "##fxwrap+" #f #f
 
@@ -3534,9 +4565,9 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " + "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")<<"
           univ-tag-bits
           ">>"
@@ -3544,9 +4575,9 @@ function Gambit_trampoline(pc) {
 
       ((python)
        (^ "ctypes.c_int32(("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " + "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")<<"
           univ-tag-bits
           ").value>>"
@@ -3554,9 +4585,9 @@ function Gambit_trampoline(pc) {
 
       ((ruby php)
        (^ "((("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " + "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ") + "
           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
           ") & "
@@ -3575,9 +4606,9 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " - "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")<<"
           univ-tag-bits
           ">>"
@@ -3585,9 +4616,9 @@ function Gambit_trampoline(pc) {
 
       ((python)
        (^ "ctypes.c_int32(("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " - "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")<<"
           univ-tag-bits
           ").value>>"
@@ -3595,9 +4626,9 @@ function Gambit_trampoline(pc) {
 
       ((ruby php)
        (^ "((("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " - "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ") + "
           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
           ") & "
@@ -3615,22 +4646,26 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       ;; TODO: fix this JS code, which does not work when the result of the multiplication is more than 52 bits (due to JS's use of 64 bit IEEE floats)
-       ;; idea: detect the special case of a constant in either operands that is less than 22 bits (because a multiplication of a 30 bit fixnum integer and 22 bit integer will fit in 52 bits)
-       (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
-          " * "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ">>"
-          univ-tag-bits))
+       (^>> (^parens
+             (^<< (^parens
+                   (^+ (^* (^parens
+                            (^bitand (^operand (list-ref opnds 0))
+                                     #xffff))
+                           (^operand (list-ref opnds 1)))
+                       (^* (^parens
+                            (^bitand (^operand (list-ref opnds 0))
+                                     #xffff0000))
+                           (^parens
+                            (^bitand (^operand (list-ref opnds 1))
+                                     #xffff)))))
+                  univ-tag-bits))
+            univ-tag-bits))
 
       ((python)
        (^ "ctypes.c_int32(("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " * "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")<<"
           univ-tag-bits
           ").value>>"
@@ -3640,9 +4675,9 @@ function Gambit_trampoline(pc) {
        ;; TODO: fix this for PHP which may have 32 or 64 bit ints
        ;; For ruby it is OK because ruby will use bignums
        (^ "((("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " * "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ") + "
           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
           ") & "
@@ -3661,20 +4696,20 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " === 0)"))
-      
+
       ((python ruby)
        (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " == 0)"))
-      
+
       ((php)                       ;TODO: complete
        (^))
 
       (else
        (compiler-internal-error
-        "##null?, unknown target")))))
+        "##fxzero?, unknown target")))))
 
 (univ-define-prim-bool "##fxodd?" #t #f
 
@@ -3683,15 +4718,15 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " % 2 == 1)"))
-      
+
       ((python ruby php)                       ;TODO: complete
        (^))
 
       (else
        (compiler-internal-error
-        "##odd?, unknown target")))))
+        "##fxodd?, unknown target")))))
 
 (univ-define-prim-bool "##fxeven?" #t #f
 
@@ -3700,15 +4735,15 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " % 2 == 0)"))
-      
+
       ((python ruby php)                       ;TODO: complete
        (^))
 
       (else
        (compiler-internal-error
-        "##even?, unknown target")))))
+        "##fxeven?, unknown target")))))
 
 (univ-define-prim-bool "##fxmax" #t #f
 
@@ -3717,11 +4752,11 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "Math.max("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ","
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
-      
+
       ((python ruby php)                       ;TODO: complete
        (^))
 
@@ -3736,11 +4771,11 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "Math.min("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ","
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
-      
+
       ((python ruby php)                       ;TODO: complete
        (^))
 
@@ -3755,16 +4790,16 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " === null)"))
-      
+
       ((python)
        (^ "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " is None)"))
-      
+
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".equal?(nil)"))
 
       ((php)                       ;TODO: complete
@@ -3776,666 +4811,35 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim "##cons" #t #f
 
-  (lambda (ctx opnds)
-    (univ-cons ctx
-               (translate-gvm-opnd ctx (list-ref opnds 0))
-               (translate-gvm-opnd ctx (list-ref opnds 1)))))
-
-(define (univ-car ctx expr)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     #;
-     (^ (^prefix "car(")
-        expr
-        ")")
-     (^ expr
-        ".car"))
-
-    ((python ruby php)                ;TODO: complete
-     (^))
-
-    (else
-     (compiler-internal-error
-      "univ-car, unknown target"))))
-
-(define (univ-cdr ctx expr)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     #;
-     (^ (^prefix "cdr(")
-        expr
-        ")")
-     (^ expr
-        ".cdr"))
-
-    ((python ruby php)                ;TODO: complete
-     (^))
-
-    (else
-     (compiler-internal-error
-      "univ-cdr, unknown target"))))
-
-(univ-define-prim "##car" #f #f
-
-  (lambda (ctx opnds)
-    (univ-car ctx
-              (translate-gvm-opnd ctx (list-ref opnds 0)))))
-
-(univ-define-prim "##cdr" #f #f
-
-  (lambda (ctx opnds)
-    (univ-cdr ctx
-              (translate-gvm-opnd ctx (list-ref opnds 0)))))
-
-// ##caar
-(univ-define-prim "##caar" #f #f
-
-  (lambda (ctx opnds)
-    (univ-car ctx
-              (univ-car ctx
-                        (translate-gvm-opnd ctx (list-ref opnds 0))))))
-
-// ##cadr
-(univ-define-prim "##cadr" #f #f
-
-  (lambda (ctx opnds)
-    (univ-car ctx
-              (univ-cdr ctx
-                        (translate-gvm-opnd ctx (list-ref opnds 0))))))
-
-// ##cdar
-(univ-define-prim "##cdar" #f #f
-
-  (lambda (ctx opnds)
-    (univ-cdr ctx
-              (univ-car ctx
-                        (translate-gvm-opnd ctx (list-ref opnds 0))))))
-
-// ##cddr
-(univ-define-prim "##cddr" #f #f
-
-  (lambda (ctx opnds)
-    (univ-cdr ctx
-              (univ-cdr ctx
-                        (translate-gvm-opnd ctx (list-ref opnds 0))))))
-
-// ##caaar
-(univ-define-prim "##caaar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "caaar(")
-          (translate-gvm-opnd ctx (list-ref opnds 0))
-          ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##caaar, unknown target")))))
-
-// ##caadr
-(univ-define-prim "##caadr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "caadr(")
-          (translate-gvm-opnd ctx (list-ref opnds 0))
-          ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##caadr, unknown target")))))
-
-// ##cadar
-(univ-define-prim "##cadar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cadar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cadar, unknown target")))))
-
-// ##caddr
-(univ-define-prim "##caddr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "caddr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##caddr, unknown target")))))
-
-// ##cdaar
-(univ-define-prim "##cdaar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cdaar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cdaar, unknown target")))))
-
-// ##cdadr
-(univ-define-prim "##cdadr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cdadr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cdadr, unknown target")))))
-
-// ##cddar
-(univ-define-prim "##cddar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cddar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cddar, unknown target")))))
-
-// ##cdddr
-(univ-define-prim "##cdddr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cdddr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cdddr, unknown target")))))
-
-// ##caaaar
-(univ-define-prim "##caaaar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "caaaar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##caaaar, unknown target")))))
-
-// ##caaadr
-(univ-define-prim "##caaadr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "caaadr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##caaadr, unknown target")))))
-
-// ##caadar
-(univ-define-prim "##caadar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "caadar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##caadar, unknown target")))))
-
-// ##caaddr
-(univ-define-prim "##caaddr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "caaddr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##caaddr, unknown target")))))
-
-// ##cadaar
-(univ-define-prim "##cadaar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cadaar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cadaar, unknown target")))))
-
-// ##cadadr
-(univ-define-prim "##cadadr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cadadr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cadadr, unknown target")))))
-
-// ##caddar
-(univ-define-prim "##caddar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "caddar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##caddar, unknown target")))))
-
-// ##cadddr
-(univ-define-prim "##cadddr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cadddr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cadddr, unknown target")))))
-
-// ##cdaaar
-(univ-define-prim "##cdaaar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cdaaar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cdaaar, unknown target")))))
-
-// ##cdaadr
-(univ-define-prim "##cdaadr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cdaadr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cdaadr, unknown target")))))
-
-// ##cdadar
-(univ-define-prim "##cdadar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cdadar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cdadar, unknown target")))))
-
-// ##cdaddr
-(univ-define-prim "##cdaddr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cdaddr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cdaddr, unknown target")))))
-
-// ##cddaar
-(univ-define-prim "##cddaar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cddaar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cddaar, unknown target")))))
-
-// ##cddadr
-(univ-define-prim "##cddadr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cddadr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cddadr, unknown target")))))
-
-// ##cdddar
-(univ-define-prim "##cdddar" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cdddar(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cdddar, unknown target")))))
-
-// ##cddddr
-(univ-define-prim "##cddddr" #f #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (^prefix "cddddr(")
-            (translate-gvm-opnd ctx (list-ref opnds 0))
-            ")"))
-      
-      ;; ((python)
-      ;;  (^))
-
-      ;; ((ruby)
-      ;;  (^))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##cddddr, unknown target")))))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (univ-cons ctx arg1 arg2))))
+
+(let cxxxxr-loop ((n #b10))
+  (if (<= n #b11111)
+      (let ()
+
+        (define (ad-name prefix x)
+          (if (>= x #b10)
+              (string-append (ad-name prefix (quotient x 2))
+                             (string (string-ref "ad" (modulo x 2))))
+              prefix))
+
+        (univ-define-prim (string-append (ad-name "##c" n) "r") #f #f
+          (make-translated-operand-generator
+           (lambda (ctx arg)
+
+             (define (ad-expr expr x)
+               (if (>= x #b10)
+                   (ad-expr (if (= (modulo x 2) 0)
+                                (univ-car ctx expr)
+                                (univ-cdr ctx expr))
+                            (quotient x 2))
+                   expr))
+
+             (ad-expr arg n))))
+
+        (cxxxxr-loop (+ n 1)))))
 
 (univ-define-prim "##set-car!" #f #t
 
@@ -4444,11 +4848,11 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ (^prefix "setcar(")
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
-      
+
       ;; ((python)
       ;;  (^))
 
@@ -4469,11 +4873,11 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ (^prefix "setcdr(")
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
-      
+
       ;; ((python)
       ;;  (^))
 
@@ -4490,18 +4894,18 @@ function Gambit_trampoline(pc) {
 (univ-define-prim "list" #f #f
  (lambda (ctx opnds)
    (case (target-name (ctx-target ctx))
-     
+
      ((js)
-      (^ (makecall ctx
-                   (^prefix "list")
-                   ;; (list (translate-gvm-opnd ctx (list-ref opnds 0)))
-                   (map (lambda (opnd) (translate-gvm-opnd ctx opnd))
-                        opnds)
-                   )))
-     
+      (^ (univ-emit-apply ctx
+                     (^prefix "list")
+                     ;; (list (^operand (list-ref opnds 0)))
+                     (map (lambda (opnd) (^operand opnd))
+                          opnds)
+                     )))
+
      ((python ruby php)                ;TODO: complete
       (^))
-     
+
      (else
       (compiler-internal-error
        "list, unknown target")))))
@@ -4513,23 +4917,23 @@ function Gambit_trampoline(pc) {
      (if (pair? lst)
          (loop (cdr lst)
                (univ-cons ctx
-                          (translate-gvm-opnd ctx (car lst))
+                          (^operand (car lst))
                           result))
          result))))
 
 ;; (univ-define-prim "##length" #f #f
 ;;   (lambda (ctx opnds)
 ;;     (case (target-name (ctx-target ctx))
-      
+
 ;;       ((js)
-;;        (^ (makecall ctx
-;;                     (^prefix "length")
-;;                     (list (translate-gvm-opnd ctx (list-ref opnds 0))))))
-;;                     ;; (list (translate-gvm-opnd ctx (list-ref opnds 0)))
-;;                     ;; (map (lambda (opnd) )
-;;                     ;;      opnds)
-;;                     ;; )))
-      
+;;        (^ (univ-emit-apply ctx
+;;                       (^prefix "length")
+;;                       (list (^operand (list-ref opnds 0))))))
+;;                       ;; (list (^operand (list-ref opnds 0)))
+;;                       ;; (map (lambda (opnd) )
+;;                       ;;      opnds)
+;;                       ;; )))
+
 ;;       ((python ruby php)                ;TODO: complete
 ;;        (^))
 
@@ -4540,16 +4944,16 @@ function Gambit_trampoline(pc) {
 (univ-define-prim "length" #f #f
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
-      
+
       ((js)
-       (^ (makecall ctx
-                    (^prefix "length")
-                    (list (translate-gvm-opnd ctx (list-ref opnds 0))))))
-                    ;; (list (translate-gvm-opnd ctx (list-ref opnds 0)))
-                    ;; (map (lambda (opnd) )
-                    ;;      opnds)
-                    ;; )))
-      
+       (^ (univ-emit-apply ctx
+                      (^prefix "length")
+                      (list (^operand (list-ref opnds 0))))))
+                      ;; (list (^operand (list-ref opnds 0)))
+                      ;; (map (lambda (opnd) )
+                      ;;      opnds)
+                      ;; )))
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4565,11 +4969,11 @@ function Gambit_trampoline(pc) {
       ((js)
        (^ (^prefix "Vector.makevector")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
-      
+
       ((php python ruby)                ;TODO: complete
        (^))
 
@@ -4596,7 +5000,7 @@ function Gambit_trampoline(pc) {
                            (^ args
                               ","
                               (^operand (list-ref opnds i))))))))))
-      
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4610,11 +5014,9 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-          "["
-          (translate-gvm-opnd ctx (list-ref opnds 1))
-          "]"))
-       
+       (^index (^operand (list-ref opnds 0))
+               (^operand (list-ref opnds 1))))
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4627,20 +5029,11 @@ function Gambit_trampoline(pc) {
   (lambda (ctx opnds)
     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-          "["
-          (translate-gvm-opnd ctx (list-ref opnds 1))
-          "] = "
-          (translate-gvm-opnd ctx (list-ref opnds 2))))
-      
-      ((python)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-          "["
-          (translate-gvm-opnd ctx (list-ref opnds 1))
-          "] = "
-          (translate-gvm-opnd ctx (list-ref opnds 2))))
-      
+      ((js python)
+       (^assign (^index (^operand (list-ref opnds 0))
+                        (^operand (list-ref opnds 1)))
+                (^operand (list-ref opnds 2))))
+
       ((ruby php)                ;TODO: complete
        (^))
 
@@ -4655,13 +5048,13 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "new "
-          (makecall ctx
-                    (^prefix "String")
-                    ;; (list (translate-gvm-opnd ctx (list-ref opnds 0)))
-                    (map (lambda (opnd) (translate-gvm-opnd ctx opnd))
-                         opnds)
-                    )))
-      
+          (univ-emit-apply ctx
+                      (^prefix "String")
+                      ;; (list (^operand (list-ref opnds 0)))
+                      (map (lambda (opnd) (^operand opnd))
+                           opnds)
+                      )))
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4675,9 +5068,9 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".stringlength()"))
-      
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4691,9 +5084,9 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".length"))
-      
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4710,10 +5103,10 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "new "
-          (makecall ctx
-                    (^prefix "String.listToString")
-                    (list (translate-gvm-opnd ctx (list-ref opnds 0))))))
-      
+          (univ-emit-apply ctx
+                      (^prefix "String.listToString")
+                      (list (^operand (list-ref opnds 0))))))
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4727,9 +5120,9 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".symbolToString()"))
-      
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4745,9 +5138,9 @@ function Gambit_trampoline(pc) {
       ((js)
        (^ (^prefix "Symbol.stringToSymbol")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ")"))
-      
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4763,9 +5156,9 @@ function Gambit_trampoline(pc) {
       ((js)
        (^ (^prefix "String.stringToList")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ")"))
-      
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4779,12 +5172,12 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (makecall ctx
-                    (^prefix "stringappend")                      
-                    (map (lambda (opnd) (translate-gvm-opnd ctx opnd))
-                         opnds)
-                    )))
-      
+       (^ (univ-emit-apply ctx
+                      (^prefix "stringappend")
+                      (map (lambda (opnd) (^operand opnd))
+                           opnds)
+                      )))
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4800,23 +5193,23 @@ function Gambit_trampoline(pc) {
       ((js)
        (^ (^prefix "String.makestring")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
-      
+
       ((python)
        (^ (^prefix "makestring")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ")"))
 
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 1))
+       (^ (^operand (list-ref opnds 1))
           ".code.chr*"
-          (translate-gvm-opnd ctx (list-ref opnds 0))))
+          (^operand (list-ref opnds 0))))
 
       ((php)                ;TODO: complete
        (^))
@@ -4833,9 +5226,9 @@ function Gambit_trampoline(pc) {
       ((js)
        (^ (^prefix "String.jsstringToString")
           "(("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ").toString())"))
-      
+
       ((python ruby php)                ;TODO: complete
        (^))
 
@@ -4849,26 +5242,26 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".stringset("
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           ", "
-          (translate-gvm-opnd ctx (list-ref opnds 2))
+          (^operand (list-ref opnds 2))
           ")"))
-      
+
       ((python)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           "["
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           "] = "
-          (translate-gvm-opnd ctx (list-ref opnds 2))))
-      
+          (^operand (list-ref opnds 2))))
+
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           "["
-          (translate-gvm-opnd ctx (list-ref opnds 1))
+          (^operand (list-ref opnds 1))
           "] = "
-          (translate-gvm-opnd ctx (list-ref opnds 2))
+          (^operand (list-ref opnds 2))
           ".code.chr"))
 
       ((php)                ;TODO: complete
@@ -4884,16 +5277,16 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-          ".stringref(" (translate-gvm-opnd ctx (list-ref opnds 1)) ")"))
-        
+       (^ (^operand (list-ref opnds 0))
+          ".stringref(" (^operand (list-ref opnds 1)) ")"))
+
       ((python)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-          "[" (translate-gvm-opnd ctx (list-ref opnds 1)) "]"))
+       (^ (^operand (list-ref opnds 0))
+          "[" (^operand (list-ref opnds 1)) "]"))
 
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
-          "[" (translate-gvm-opnd ctx (list-ref opnds 1)) "].chr"))
+       (^ (^operand (list-ref opnds 0))
+          "[" (^operand (list-ref opnds 1)) "].chr"))
 
       ((php)                            ;TODO: complete
        (^))
@@ -4910,13 +5303,13 @@ function Gambit_trampoline(pc) {
       ((js)
        (^ (^prefix "Char.fxToChar")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ")"))
-       
+
       ((python ruby)
        (^ (^prefix "fxToChar")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ")"))
 
       ((php)                            ;TODO: complete
@@ -4934,13 +5327,13 @@ function Gambit_trampoline(pc) {
       ((js)
        (^ (^prefix "Char.charToFx")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ")"))
-       
+
       ((python ruby)
        (^ (^prefix "charToFx")
           "("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ")"))
 
       ((php)                            ;TODO: complete
@@ -4957,24 +5350,24 @@ function Gambit_trampoline(pc) {
 
       ((js)
        (^ "typeof "
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           " == \"number\""))
 
       ((python)
        (^ "isinstance("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", int) and not "
           "isinstance("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", bool)"))
 
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".class == Fixnum"))
 
       ((php)
        (^ "is_int("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ")"))
 
       (else
@@ -4987,22 +5380,22 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           " instanceof "
           (^prefix "Flonum")))
 
       ((python)
        (^ "isinstance("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", float)"))
 
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".class == Float"))
 
       ((php)
        (^ "is_float("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ")"))
 
       (else
@@ -5015,22 +5408,22 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js php)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           " instanceof "
           (^prefix "Char")))
 
       ((python)
        (^ "isinstance("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
           (^prefix "Char")
           ")"))
 
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".class == "
           (^prefix "Char")))
-      
+
       (else
        (compiler-internal-error
         "##char?, unknown target")))))
@@ -5041,19 +5434,19 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js php)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           " instanceof "
           (^prefix "Pair")))
 
       ((python)
        (^ "isinstance("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
           (^prefix "Pair")
           ")"))
-      
+
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".class == "
           (^prefix "Pair")))
 
@@ -5067,19 +5460,19 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js php)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           " instanceof "
           (^prefix "Vector")))
 
       ((python)
        (^ "isinstance("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
           (^prefix "Vector")
           ")"))
 
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".class == "
           (^prefix "Vector")))
 
@@ -5093,19 +5486,19 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js php)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           " instanceof "
           (^prefix "String")))
 
       ((python)
        (^ "isinstance("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
           (^prefix "String")
           ")"))
 
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".class == "
           (^prefix "String")))
 
@@ -5120,7 +5513,7 @@ function Gambit_trampoline(pc) {
 
       ((js php)
        (^ "typeof("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ") == \"number\""))
 
       ((python ruby php)
@@ -5136,23 +5529,23 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js php)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           " instanceof "
           (^prefix "Symbol")))
 
       ((python)
        (^ "isinstance("
-          (translate-gvm-opnd ctx (list-ref opnds 0))
+          (^operand (list-ref opnds 0))
           ", "
           (^prefix "Symbol")
           ")"))
 
       ((ruby)
-       (^ (translate-gvm-opnd ctx (list-ref opnds 0))
+       (^ (^operand (list-ref opnds 0))
           ".class == "
           (^prefix "Symbol")))
       ((php)
-       (^))      
+       (^))
 
       (else
        (compiler-internal-error
@@ -5167,7 +5560,7 @@ function Gambit_trampoline(pc) {
        (^ "true"))
 
       ((python ruby php)
-       (^))      
+       (^))
 
       (else
        (compiler-internal-error
@@ -5241,7 +5634,7 @@ function Gambit_trampoline(pc) {
         (+ fs
            (ctx-stack-base-offset ctx))
         (lambda (ctx)
-          (univ-return-poll
+          (univ-emit-return-poll
            ctx
            (^ (^prefix
                (string-append name

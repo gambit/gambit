@@ -1,13 +1,8 @@
-(declare
- (standard-bindings)
- (extended-bindings)
- (not safe)
- (not interrupts-enabled)
-)
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (define (oddeven n)
-  (define (o x) (if (fx= x 0) #f (e (fx- x n))))
-  (define (e x) (if (fx= x 0) #t (o (fx- x n))))
+  (define (o x) (if (##fx= x 0) #f (e (##fx- x n))))
+  (define (e x) (if (##fx= x 0) #t (o (##fx- x n))))
   o)
 
 (define odd (oddeven 1))

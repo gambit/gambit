@@ -1,7 +1,4 @@
-(declare
- (standard-bindings)
- (extended-bindings)
- (not safe))
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (define x (##list 11 22 33))
 

@@ -1,9 +1,4 @@
-(declare
- (standard-bindings)
- (extended-bindings)
- (fixnum)
- (not safe)
- (not interrupts-enabled))
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (define zero 0)
 

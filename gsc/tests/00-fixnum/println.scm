@@ -1,3 +1,5 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
 (println 0)
 (println 1)
 (println -1)

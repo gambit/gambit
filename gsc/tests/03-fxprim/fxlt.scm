@@ -1,4 +1,4 @@
-(declare (extended-bindings) (not safe))
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (define a 11)
 (define b 11)

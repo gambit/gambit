@@ -1,8 +1,4 @@
-(declare
- (standard-bindings)
- (extended-bindings)
- (not safe)
-)
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (define (ctak x y z)
   (##continuation-capture

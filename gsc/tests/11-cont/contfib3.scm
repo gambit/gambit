@@ -1,8 +1,4 @@
-(declare
- (standard-bindings)
- (extended-bindings)
- (not safe)
-)
+(declare (extended-bindings) (not constant-fold) (not safe))
 
 (define (my-call/cc receiver)
   (##continuation-capture

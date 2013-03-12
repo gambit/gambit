@@ -1,3 +1,5 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
 (define (test a b c d e f g h i j)
   (test2 a c e g i))
 
