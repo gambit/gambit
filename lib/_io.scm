@@ -1802,6 +1802,34 @@
    (macro-device-port-rdevice-condvar port)
    (macro-port-rtimeout port)))
 
+(define-prim (##device-port-wait-for-output! port)
+
+  ;; Complement to ##device-port-wait-for-input! . 
+
+  ;; The thread will wait until the port's device is writeable in the
+  ;; sense that more data can be written to it, or the port's timeout
+  ;; is reached.  The value #f is returned when the timeout is reached.
+  ;; The value #t is returned when the port's device is writeable or
+  ;; the thread was interrupted (for example with thread-interrupt!).
+
+  ;; An example of when a port is not writeable is when a TCP client
+  ;; port has full OS transmit buffers. For such a port, a
+  ;; ##device-port-wait-for-output! on it will return when space has
+  ;; become available in the buffers.
+  ;;
+  ;; Additionally, waiting for writability on a TCP client port is a way
+  ;; to ensure that the connection has been established at all in the
+  ;; first place. This may be of relevance to determine in some lowlevel
+  ;; use scenarios, as Gambit does TCP connect:s asynchronously in such
+  ;; a way that open-tcp-client returns the TCP client port object
+  ;; actually prior to the connection having been established.
+
+  (##declare (not interrupts-enabled))
+
+  (##wait-for-io!
+   (macro-device-port-wdevice-condvar port)
+   (macro-port-wtimeout port)))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##char-rbuf-fill port want block?)
