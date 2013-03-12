@@ -1607,6 +1607,22 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 
 #endif
 
+/*
+ * Macros to access ___F32 and ___F64 data types.
+ */
+
+#ifdef ___F32
+#define ___FETCH_F32(base,i)*(___CAST(___F32*,base)+(i))
+#define ___STORE_F32(base,i,val)*(___CAST(___F32*,base)+(i)) = (val)
+#define ___CAST_F32(x)___CAST(___F32,x)
+#endif
+
+#ifdef ___F64
+#define ___FETCH_F64(base,i)*(___CAST(___F64*,base)+(i))
+#define ___STORE_F64(base,i,val)*(___CAST(___F64*,base)+(i)) = (val)
+#define ___CAST_F64(x)___CAST(___F64,x)
+#endif
+
 /*---------------------------------------------------------------------------*/
 
 /*
