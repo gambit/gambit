@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -15,36 +15,45 @@
 (implement-library-type-datum-parsing-exception)
 
 (define-prim (##raise-datum-parsing-exception kind readenv . parameters)
-  (macro-raise
-   (macro-make-datum-parsing-exception
-    kind
-    readenv
-    parameters)))
+
+  (define (raise-exception)
+    (##raise-io-exception
+     (macro-readenv-port readenv)
+     (macro-make-datum-parsing-exception kind readenv parameters)))
+
+  (let ((read-cont (macro-readenv-read-cont readenv)))
+    (if read-cont
+        (##continuation-graft
+         read-cont
+         (lambda () (raise-exception)))
+        (raise-exception))))
 
 (implement-library-type-unterminated-process-exception)
 
-(define-prim (##raise-unterminated-process-exception proc . args)
+(define-prim (##raise-unterminated-process-exception port proc . args)
   (##extract-procedure-and-arguments
+   port
    proc
    args
    #f
    #f
-   #f
-   (lambda (procedure arguments dummy1 dummy2 dummy3)
-     (macro-raise
+   (lambda (port procedure arguments dummy2 dummy3)
+     (##raise-io-exception
+      port
       (macro-make-unterminated-process-exception procedure arguments)))))
 
 (implement-library-type-nonempty-input-port-character-buffer-exception)
 
-(define-prim (##raise-nonempty-input-port-character-buffer-exception proc . args)
+(define-prim (##raise-nonempty-input-port-character-buffer-exception port proc . args)
   (##extract-procedure-and-arguments
+   port
    proc
    args
    #f
    #f
-   #f
-   (lambda (procedure arguments dummy1 dummy2 dummy3)
-     (macro-raise
+   (lambda (port procedure arguments dummy2 dummy3)
+     (##raise-io-exception
+      port
       (macro-make-nonempty-input-port-character-buffer-exception procedure arguments)))))
 
 (implement-library-type-no-such-file-or-directory-exception)
@@ -61,6 +70,26 @@
       (macro-make-no-such-file-or-directory-exception
        procedure
        arguments)))))
+
+(define-prim (##raise-os-io-exception port message code proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   message
+   code
+   port
+   (lambda (procedure arguments message code port)
+     (##raise-io-exception
+      port
+      (if (##fixnum.= code ##err-code-ENOENT)
+          (macro-make-no-such-file-or-directory-exception procedure arguments)
+          (macro-make-os-exception procedure arguments message code))))))
+
+(define-prim (##raise-io-exception port exc)
+  (let ((handler (macro-port-io-exception-handler port)))
+    (if (##procedure? handler)
+        (handler exc)
+        (macro-raise exc))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -111,7 +140,8 @@
               readtable
               wrapper
               unwrapper
-              allow-script?)
+              allow-script?
+              read-cont)
   (macro-make-readenv
    port
    readtable
@@ -120,7 +150,8 @@
    allow-script?
    '()
    #f
-   0))
+   0
+   read-cont))
 
 (define-prim (##readenv-current-filepos re)
   (##readenv-relative-filepos re 0))
@@ -1244,7 +1275,9 @@
      woptions
      wtimeout
      wtimeout-thunk
-     set-wtimeout)))
+     set-wtimeout
+     #f ;; io-exception-handler
+    )))
 
 (define (open-dummy)
   (##make-dummy-port))
@@ -1401,7 +1434,7 @@
        (let ((code (force-output-aux port level #t)))
          (macro-port-mutex-unlock! port)
          (if (##fixnum.< code 0)
-           (##raise-os-exception #f code prim arg1 arg2 arg3 arg4)
+           (##raise-os-io-exception port #f code prim arg1 arg2 arg3 arg4)
            (##void))))
 
      (define (force-output-aux port level block?)
@@ -1464,7 +1497,7 @@
        (let ((result (close-aux1 port prim)))
          (macro-port-mutex-unlock! port)
          (if (##fixnum? result)
-           (##raise-os-exception #f result prim arg1)
+           (##raise-os-io-exception port #f result prim arg1)
            result)))
 
      (define (close-aux1 port prim)
@@ -1550,7 +1583,7 @@
               (result (##os-device-stream-width wdevice)))
          (macro-port-mutex-unlock! port)
          (if (##fixnum.< result 0)
-           (##raise-os-exception #f result output-port-width port)
+           (##raise-os-io-exception port #f result output-port-width port)
            result)))
 
      (let ((port
@@ -1572,6 +1605,7 @@
              wtimeout
              wtimeout-thunk
              set-wtimeout
+             #f ;; io-exception-handler
              char-rbuf
              char-rlo
              char-rhi
@@ -1692,7 +1726,8 @@
         (if (or (##fixnum.= result ##err-code-EINTR)
                 (##fixnum.= result ##err-code-EAGAIN))
           (loop)
-          (##raise-os-exception
+          (##raise-os-io-exception
+           port
            #f
            result
            input-port-byte-position
@@ -1749,7 +1784,8 @@
         (if (or (##fixnum.= result ##err-code-EINTR)
                 (##fixnum.= result ##err-code-EAGAIN))
           (loop)
-          (##raise-os-exception
+          (##raise-os-io-exception
+           port
            #f
            result
            output-port-byte-position
@@ -2493,7 +2529,7 @@
                         (if (##fixnum? code)
                           (if (##fixnum.= code ##err-code-EAGAIN)
                             #f;;;;;;;;;;;this doesn't appear to be right!
-                            (##raise-os-exception #f code prim arg1 arg2 arg3 arg4))
+                            (##raise-os-io-exception port #f code prim arg1 arg2 arg3 arg4))
                           (##void)))
                      `(begin
                         (macro-port-mutex-unlock! port)
@@ -3072,7 +3108,7 @@
                       (macro-port-mutex-unlock! port)
                       (if (##fixnum.= code ##err-code-EAGAIN)
                         #!eof ;; the read timeout thunk returned #f
-                        (##raise-os-exception #f code read port)))
+                        (##raise-os-io-exception port #f code read port)))
 
                      (code
 
@@ -3138,7 +3174,7 @@
                    (macro-port-mutex-unlock! port)
                    (if (##fixnum.= code ##err-code-EAGAIN)
                      #f
-                     (##raise-os-exception #f code write obj port)))
+                     (##raise-os-io-exception port #f code write obj port)))
                  (loop)))))))
 
      (define (newline port)
@@ -3171,6 +3207,7 @@
              wtimeout
              wtimeout-thunk
              set-wtimeout
+             #f ;; io-exception-handler
              vector-rbuf
              vector-rlo
              vector-rhi
@@ -3343,6 +3380,7 @@
              wtimeout
              wtimeout-thunk
              set-wtimeout
+             #f ;; io-exception-handler
              string-rbuf
              string-rlo
              string-rhi
@@ -3597,6 +3635,7 @@
              wtimeout
              wtimeout-thunk
              set-wtimeout
+             #f ;; io-exception-handler
              char-rbuf
              char-rlo
              char-rhi
@@ -3668,16 +3707,29 @@
   (##declare (not interrupts-enabled))
 
   (if (macro-character-input-port? port)
-    (let* ((noop
-            (lambda (re x) x)) ;; do not wrap datum
-           (re
-            (##make-readenv
-             port
-             (macro-character-port-input-readtable port)
-             noop
-             noop
-             #f)))
-      ((macro-port-read-datum port) port re))
+
+    (let ()
+
+      (define (read-with-cont port read-cont)
+        (let* ((noop
+                (lambda (re x) x)) ;; do not wrap datum
+               (re
+                (##make-readenv
+                 port
+                 (macro-character-port-input-readtable port)
+                 noop
+                 noop
+                 #f
+                 read-cont)))
+          ((macro-port-read-datum port) port re)))
+
+      (let ((handler (macro-port-io-exception-handler port)))
+        (if (##procedure? handler) ;; optimization: only capture continuation when using custom exception handler
+            (##continuation-capture
+             (lambda (read-cont)
+               (read-with-cont port read-cont)))
+            (read-with-cont port #f))))
+
     ((macro-port-read-datum port) port #f)))
 
 (define-prim (read
@@ -4012,6 +4064,23 @@
          (output-port-timeout-set! port absrel-timeout t)
          (##output-port-timeout-set! port absrel-timeout thunk)))))))
 
+(define-prim (##port-io-exception-handler-set! port handler)
+  (##declare (not interrupts-enabled))
+  (macro-port-io-exception-handler-set! port handler)
+  (##void))
+
+(define-prim (port-io-exception-handler-set! port handler)
+  (macro-force-vars (port handler)
+    (macro-check-port
+     port
+     1
+     (port-io-exception-handler-set! port handler)
+     (macro-check-procedure
+      handler
+      2
+      (port-io-exception-handler-set! port handler)
+      (##port-io-exception-handler-set! port handler)))))
+
 (define-prim (##input-port-char-position port)
   (##fixnum.+ (macro-character-port-rchars port)
               (macro-character-port-rlo port)))
@@ -4235,7 +4304,7 @@
                 #f) ;; a call to read-char would block
               (begin
                 (macro-port-mutex-unlock! port)
-                (##raise-os-exception #f code char-ready? port)))
+                (##raise-os-io-exception port #f code char-ready? port)))
             (begin
               (if (##not code)
                 (macro-character-port-peek-eof?-set! port #t))
@@ -4297,7 +4366,7 @@
                        #!eof) ;; the read timeout thunk returned #f
                      (begin
                        (macro-port-mutex-unlock! port)
-                       (##raise-os-exception #f code peek-char port))))
+                       (##raise-os-io-exception port #f code peek-char port))))
 
                   (code
 
@@ -4394,7 +4463,7 @@
                    (macro-port-mutex-unlock! port)
                    (if (##fixnum.= code ##err-code-EAGAIN)
                      #!eof ;; the read timeout thunk returned #f
-                     (##raise-os-exception #f code read-char port)))
+                     (##raise-os-io-exception port #f code read-char port)))
 
                   (code
 
@@ -4500,7 +4569,8 @@
                          (if (or (##fixnum.< 0 n)
                                  (##fixnum.= code ##err-code-EAGAIN))
                              n
-                             (##raise-os-exception
+                             (##raise-os-io-exception
+                              port
                               #f
                               code
                               read-substring
@@ -4762,7 +4832,7 @@
             (##readtable-copy-shallow readtable)))
        (macro-readtable-start-syntax-set! rt start-syntax)
        (let* ((re
-               (##make-readenv port rt wrap unwrap 'script))
+               (##make-readenv port rt wrap unwrap 'script #f))
               (head
                (##cons (wrap re '##begin)
                        '())) ;; tail will be replaced with expressions read
@@ -4879,7 +4949,7 @@
               (macro-port-mutex-unlock! port)
               (if (##fixnum.= code3 ##err-code-EAGAIN)
                 #f
-                (##raise-os-exception #f code3 write-char c port)))
+                (##raise-os-io-exception port #f code3 write-char c port)))
             (loop)))))))
 
 (define-prim (write-char
@@ -4957,7 +5027,7 @@
 
        (begin
          (macro-port-mutex-unlock! ,port)
-         (##raise-nonempty-input-port-character-buffer-exception ,@form))
+         (##raise-nonempty-input-port-character-buffer-exception ,port ,@form))
 
        ,expr)))
 
@@ -5017,7 +5087,8 @@
 
                     (if (##fixnum.= code ##err-code-EAGAIN)
                         #!eof ;; the read timeout thunk returned #f
-                        (##raise-os-exception
+                        (##raise-os-io-exception
+                         port
                          #f
                          code
                          read-u8
@@ -5112,7 +5183,8 @@
                           (if (or (##fixnum.< 0 n)
                                   (##fixnum.= code ##err-code-EAGAIN))
                               n
-                              (##raise-os-exception
+                              (##raise-os-io-exception
+                               port
                                #f
                                code
                                read-subu8vector
@@ -5191,7 +5263,8 @@
 
       (begin
         (macro-port-mutex-unlock! port)
-        (##raise-os-exception
+        (##raise-os-io-exception
+         port
          #f
          code
          write-u8
@@ -5234,7 +5307,8 @@
 
                   (macro-port-mutex-unlock! port)
 
-                  (##raise-os-exception
+                  (##raise-os-io-exception
+                   port
                    #f
                    code
                    write-u8
@@ -5275,7 +5349,8 @@
         (macro-port-mutex-unlock! port)
         (if (##fixnum.= code ##err-code-EAGAIN)
           0
-          (##raise-os-exception
+          (##raise-os-io-exception
+           port
            #f
            code
            write-subu8vector
@@ -5340,7 +5415,8 @@
                       (if (or (##fixnum.< 0 n)
                               (##fixnum.= code ##err-code-EAGAIN))
                         n
-                        (##raise-os-exception
+                        (##raise-os-io-exception
+                         port
                          #f
                          code
                          write-subu8vector
@@ -5464,7 +5540,8 @@
 
             (begin
               (macro-port-mutex-unlock! port)
-              (##raise-os-exception
+              (##raise-os-io-exception
+               port
                #f
                code
                port-settings-set!
@@ -5480,7 +5557,13 @@
               (if (##fixnum? result)
                 (begin
                   (macro-port-mutex-unlock! port)
-                  (##raise-os-exception #f result port-settings-set! port settings))
+                  (##raise-os-io-exception
+                   port
+                   #f
+                   result
+                   port-settings-set!
+                   port
+                   settings))
                 (begin
                   (macro-port-roptions-set! port roptions)
                   (macro-port-woptions-set! port woptions)
@@ -5553,7 +5636,7 @@
           term-type
           emacs-bindings)))
     (if (##fixnum.< code 0)
-        (##raise-os-exception #f code tty-type-set! port term-type emacs-bindings)
+        (##raise-os-io-exception port #f code tty-type-set! port term-type emacs-bindings)
         (##void))))
 
 (define-prim (tty-type-set! port term-type emacs-bindings)
@@ -5594,7 +5677,7 @@
 (define-prim (##tty-history port)
   (let ((result (##os-device-tty-history (##port-device port))))
     (if (##fixnum? result)
-        (##raise-os-exception #f result tty-history port)
+        (##raise-os-io-exception port #f result tty-history port)
         result)))
 
 (define-prim (tty-history port)
@@ -5608,7 +5691,7 @@
 (define-prim (##tty-history-set! port history)
   (let ((code (##os-device-tty-history-set! (##port-device port) history)))
     (if (##fixnum.< code 0)
-        (##raise-os-exception #f code tty-history-set! port history)
+        (##raise-os-io-exception port #f code tty-history-set! port history)
         (##void))))
 
 (define-prim (tty-history-set! port history)
@@ -5671,7 +5754,8 @@
           output-raw
           speed)))
     (if (##fixnum.< code 0)
-        (##raise-os-exception
+        (##raise-os-io-exception
+         port
          #f
          code
          tty-mode-set!
@@ -6002,12 +6086,13 @@
                      (loop (##flonum.min 0.2 (##flonum.* 1.2 poll-interval))))
                    (if (##eq? timeout-val (macro-absent-obj))
                      (##raise-unterminated-process-exception
+                      port
                       process-status
                       port
                       timeout-val)
                      timeout-val))))
               ((##fixnum.< result 0)
-               (##raise-os-exception #f result process-status port))
+               (##raise-os-io-exception port #f result process-status port))
               (else
                result))))))
 
@@ -6340,7 +6425,7 @@
                       (macro-port-wtimeout port))
                      ((macro-port-wtimeout-thunk port))))
           (loop)
-          (##raise-os-exception #f result prim port))
+          (##raise-os-io-exception port #f result prim port))
 
         (##socket-info-setup! result)))))
 
@@ -6670,7 +6755,7 @@
                        ;; signal an error
 
                        (macro-port-mutex-unlock! port)
-                       (##raise-os-exception #f client-device read port)))
+                       (##raise-os-io-exception port #f client-device read port)))
 
                 (begin
                   (macro-port-mutex-unlock! port)
@@ -6724,7 +6809,7 @@
                   prim)))
             (macro-port-mutex-unlock! port)
             (if (##fixnum? result)
-              (##raise-os-exception #f result prim arg1)
+              (##raise-os-io-exception port #f result prim arg1)
               result)))
 
         (let ((port
@@ -6746,6 +6831,7 @@
                 wtimeout
                 wtimeout-thunk
                 set-wtimeout
+                #f ;; io-exception-handler
                 rdevice-condvar
                 client-psettings)))
           (##io-condvar-port-set! rdevice-condvar port)
@@ -6878,7 +6964,7 @@
           (macro-condvar-name (macro-tcp-server-port-rdevice-condvar port)))))
     (if (##fixnum? result)
 
-        (##raise-os-exception #f result tcp-server-socket-info port))
+        (##raise-os-io-exception port #f result tcp-server-socket-info port))
 
         (##socket-info-setup! result)))
 
@@ -7025,7 +7111,7 @@
                        ;; signal an error
 
                        (macro-port-mutex-unlock! port)
-                       (##raise-os-exception #f datum read port)))
+                       (##raise-os-io-exception port #f datum read port)))
 
                 (begin
                   (macro-port-mutex-unlock! port)
@@ -7073,7 +7159,7 @@
                   prim)))
             (macro-port-mutex-unlock! port)
             (if (##fixnum? result)
-              (##raise-os-exception #f result prim arg1)
+              (##raise-os-io-exception port #f result prim arg1)
               result)))
 
         (let ((port
@@ -7095,6 +7181,7 @@
                 wtimeout
                 wtimeout-thunk
                 set-wtimeout
+                #f ;; io-exception-handler
                 rdevice-condvar
                 path)))
           (##io-condvar-port-set! rdevice-condvar port)
@@ -7227,7 +7314,7 @@
                        ;; signal an error
 
                        (macro-port-mutex-unlock! port)
-                       (##raise-os-exception #f datum read port)))
+                       (##raise-os-io-exception port #f datum read port)))
 
                 (begin
                   (macro-port-mutex-unlock! port)
@@ -7275,7 +7362,7 @@
                   prim)))
             (macro-port-mutex-unlock! port)
             (if (##fixnum? result)
-              (##raise-os-exception #f result prim arg1)
+              (##raise-os-io-exception port #f result prim arg1)
               result)))
 
         (let ((port
@@ -7297,6 +7384,7 @@
                 wtimeout
                 wtimeout-thunk
                 set-wtimeout
+                #f ;; io-exception-handler
                 rdevice-condvar
                 index)))
           (##io-condvar-port-set! rdevice-condvar port)

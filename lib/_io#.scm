@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -121,6 +121,7 @@
   wtimeout           ;; time at which a write that would block times out
   wtimeout-thunk     ;; thunk called when a write timeout occurs
   set-wtimeout       ;; procedure to set wtimeout and wtimeout-thunk
+  io-exception-handler ;; procedure to handle I/O exceptions on this port
 )
 
 (define-check-type port (macro-type-port)
@@ -948,6 +949,7 @@
   labels
   container
   filepos
+  read-cont ;; the continuation of the read procedure
 )
 
 (##define-macro (macro-readenv-wrap re x)

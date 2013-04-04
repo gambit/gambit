@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -461,6 +461,7 @@ path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
 port-settings-set!
+port-io-exception-handler-set!
 port?
 pp
 pretty-print

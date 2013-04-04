@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3807,6 +3807,7 @@
                          (macro-character-port-input-readtable port)
                          ##wrap-datum
                          ##unwrap-datum
+                         #f
                          #f)))
     (##read-datum-or-eof re)))
 

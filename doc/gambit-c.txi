@@ -4273,6 +4273,9 @@ For example:
 @deffn procedure port-settings-set! @var{port} @var{settings}
 @end deffn
 
+@deffn procedure port-io-exception-handler-set! @var{port} @var{handler}
+@end deffn
+
 @deffn procedure input-port-bytes-buffered @var{port}
 @end deffn
 

@@ -8635,55 +8635,56 @@ ___SCMOBJ timeout;)
 #define ___PORT_WTIMEOUT             15
 #define ___PORT_WTIMEOUT_THUNK       16
 #define ___PORT_SET_WTIMEOUT         17
+#define ___PORT_IO_EXCEPTION_HANDLER 18
 
-#define ___PORT_OBJECT_OTHER1        18
-#define ___PORT_OBJECT_OTHER2        19
-#define ___PORT_OBJECT_OTHER3        20
+#define ___PORT_OBJECT_OTHER1        19
+#define ___PORT_OBJECT_OTHER2        20
+#define ___PORT_OBJECT_OTHER3        21
 
-#define ___PORT_CHAR_RBUF            18
-#define ___PORT_CHAR_RLO             19
-#define ___PORT_CHAR_RHI             20
-#define ___PORT_CHAR_RCHARS          21
-#define ___PORT_CHAR_RLINES          22
-#define ___PORT_CHAR_RCURLINE        23
-#define ___PORT_CHAR_RBUF_FILL       24
-#define ___PORT_CHAR_PEEK_EOFP       25
+#define ___PORT_CHAR_RBUF            19
+#define ___PORT_CHAR_RLO             20
+#define ___PORT_CHAR_RHI             21
+#define ___PORT_CHAR_RCHARS          22
+#define ___PORT_CHAR_RLINES          23
+#define ___PORT_CHAR_RCURLINE        24
+#define ___PORT_CHAR_RBUF_FILL       25
+#define ___PORT_CHAR_PEEK_EOFP       26
 
-#define ___PORT_CHAR_WBUF            26
-#define ___PORT_CHAR_WLO             27
-#define ___PORT_CHAR_WHI             28
-#define ___PORT_CHAR_WCHARS          29
-#define ___PORT_CHAR_WLINES          30
-#define ___PORT_CHAR_WCURLINE        31
-#define ___PORT_CHAR_WBUF_DRAIN      32
-#define ___PORT_INPUT_READTABLE      33
-#define ___PORT_OUTPUT_READTABLE     34
-#define ___PORT_OUTPUT_WIDTH         35
+#define ___PORT_CHAR_WBUF            27
+#define ___PORT_CHAR_WLO             28
+#define ___PORT_CHAR_WHI             29
+#define ___PORT_CHAR_WCHARS          30
+#define ___PORT_CHAR_WLINES          31
+#define ___PORT_CHAR_WCURLINE        32
+#define ___PORT_CHAR_WBUF_DRAIN      33
+#define ___PORT_INPUT_READTABLE      34
+#define ___PORT_OUTPUT_READTABLE     35
+#define ___PORT_OUTPUT_WIDTH         36
 
-#define ___PORT_CHAR_OTHER1          36
-#define ___PORT_CHAR_OTHER2          37
-#define ___PORT_CHAR_OTHER3          38
-#define ___PORT_CHAR_OTHER4          39
-#define ___PORT_CHAR_OTHER5          40
+#define ___PORT_CHAR_OTHER1          37
+#define ___PORT_CHAR_OTHER2          38
+#define ___PORT_CHAR_OTHER3          39
+#define ___PORT_CHAR_OTHER4          40
+#define ___PORT_CHAR_OTHER5          41
 
-#define ___PORT_BYTE_RBUF            36
-#define ___PORT_BYTE_RLO             37
-#define ___PORT_BYTE_RHI             38
-#define ___PORT_BYTE_RBUF_FILL       39
+#define ___PORT_BYTE_RBUF            37
+#define ___PORT_BYTE_RLO             38
+#define ___PORT_BYTE_RHI             39
+#define ___PORT_BYTE_RBUF_FILL       40
 
-#define ___PORT_BYTE_WBUF            40
-#define ___PORT_BYTE_WLO             41
-#define ___PORT_BYTE_WHI             42
-#define ___PORT_BYTE_WBUF_DRAIN      43
+#define ___PORT_BYTE_WBUF            41
+#define ___PORT_BYTE_WLO             42
+#define ___PORT_BYTE_WHI             43
+#define ___PORT_BYTE_WBUF_DRAIN      44
 
-#define ___PORT_BYTE_OTHER1          44
-#define ___PORT_BYTE_OTHER2          45
+#define ___PORT_BYTE_OTHER1          45
+#define ___PORT_BYTE_OTHER2          46
 
-#define ___PORT_RDEVICE_CONDVAR      44
-#define ___PORT_WDEVICE_CONDVAR      45
+#define ___PORT_RDEVICE_CONDVAR      45
+#define ___PORT_WDEVICE_CONDVAR      46
 
-#define ___PORT_DEVICE_OTHER1        46
-#define ___PORT_DEVICE_OTHER2        47
+#define ___PORT_DEVICE_OTHER1        47
+#define ___PORT_DEVICE_OTHER2        48
 
 #define ___C ___CS_SELECT(___U8,___U16,___U32)
 
