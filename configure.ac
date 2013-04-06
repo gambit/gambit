@@ -542,7 +542,7 @@ AC_ARG_ENABLE(poll,
               AC_HELP_STRING([--enable-poll],
                              [Enable poll as the select method (default is NO)]),
               ENABLE_POLL=$enableval,
-              ENABLE_AUTO_FORCING=no)
+              ENABLE_POLL=no)
 
 if test "$ENABLE_POLL" = yes; then
   AC_DEFINE(USE_POLL, 1)
