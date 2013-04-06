@@ -536,6 +536,20 @@ fi
 
 ###############################################################################
 #
+# Check whether to enable poll as the select method
+
+AC_ARG_ENABLE(poll,
+              AC_HELP_STRING([--enable-poll],
+                             [Enable poll as the select method (default is NO)]),
+              ENABLE_POLL=$enableval,
+              ENABLE_AUTO_FORCING=no)
+
+if test "$ENABLE_POLL" = yes; then
+  AC_DEFINE(USE_POLL, 1)
+fi
+
+###############################################################################
+#
 # Check for C compiler.
 
 AC_DEFUN(AC_CHECK_C_COMPILER_DEF,
@@ -726,6 +740,7 @@ else
   AC_CHECK_HEADERS(crt_externs.h)
   AC_CHECK_HEADERS(ws2tcpip.h)
   AC_CHECK_HEADERS(TargetConditionals.h)
+  AC_CHECK_HEADERS(poll.h)
 
   if test "$C_COMP_VISUALC" != yes; then
 
@@ -1026,6 +1041,8 @@ else
   AC_CHECK_FUNCS(getnetbyname)
 
   AC_CHECK_FUNCS(select)
+  AC_CHECK_FUNCS(poll)
+  AC_CHECK_FUNCS(ppoll)
   #AC_CHECK_FUNCS(MsgWaitForMultipleObjects)
 
   #AC_CHECK_FUNCS(tgetstr)
