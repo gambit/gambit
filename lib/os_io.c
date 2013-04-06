@@ -884,9 +884,17 @@ ___time timeout;)
 
   state.highest_fd_plus_1 = 0;
 
-  FD_ZERO(&state.readfds);
-  FD_ZERO(&state.writefds);
-  FD_ZERO(&state.exceptfds);
+  ___FD_ZERO(&state.readfds);
+  ___FD_ZERO(&state.writefds);
+  ___FD_ZERO(&state.exceptfds);
+
+#endif
+
+#ifdef USE_poll
+
+  state.pollfd_count = 0;
+  ___FD_ZERO (&state.readfds);
+  ___FD_ZERO (&state.writefds);
 
 #endif
 
@@ -1055,6 +1063,133 @@ ___time timeout;)
     state.timeout_reached = (result == 0);
   }
 
+#endif
+
+#ifdef USE_poll
+  {
+
+    struct timeval delta_tv_struct;
+    struct timeval *delta_tv = &delta_tv_struct;
+
+#ifdef USE_ppoll
+    struct timespec delta_ts_struct;
+    struct timespec *delta_ts;
+#else
+    int delta_msecs;
+#endif
+    int result;
+    
+    ___absolute_time_to_nonnegative_timeval (delta, &delta_tv);
+
+    /* pure sleep optimizations */
+    if (state.pollfd_count == 0 && delta_tv != NULL)
+      {
+        if (delta_tv->tv_sec < 0 ||
+            (delta_tv->tv_sec == 0 &&
+             delta_tv->tv_usec == 0))
+          {
+            result = 0;
+            goto poll_done;
+          }
+#ifdef USE_nanosleep
+        else
+          {
+            struct timespec delta_ts_struct;
+            delta_ts_struct.tv_sec = delta_tv->tv_sec;
+            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
+            
+            result = nanosleep (&delta_ts_struct, NULL);
+            
+            goto poll_done;
+          }
+#endif
+      }
+    
+    /* setup timeout */
+#ifdef USE_ppoll
+
+    if (delta_tv != NULL)
+      {
+        /* ppoll doesn't like negative times */
+        if (delta_tv->tv_sec < 0)
+          {
+            delta_ts_struct.tv_sec = 0;
+            delta_ts_struct.tv_nsec = 0;
+          }
+        else
+          {
+            delta_ts_struct.tv_sec = delta_tv->tv_sec;
+            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
+          }
+        
+        delta_ts = &delta_ts_struct;
+      }
+    else
+      delta_ts = NULL;
+    
+#else
+
+    if (delta_tv != NULL)
+      {
+        if (delta_tv->tv_sec < 0)
+          delta_msecs = 0;
+        else if (delta_tv->tv_sec < (INT_MAX / 1000))
+          delta_msecs = delta_tv->tv_sec * 1000 + delta_tv->tv_usec / 1000;
+        else
+          delta_msecs = INT_MAX;
+      }
+    else
+      delta_msecs = -1;
+    
+#endif
+    
+    /* see comments on select above regarding heartbeat interrupts */
+    ___disable_heartbeat_interrupts ();
+    
+#ifdef USE_ppoll
+    result = ppoll (state.pollfds, state.pollfd_count, delta_ts, NULL);
+#else
+    result = poll (state.pollfds, state.pollfd_count, delta_msecs);
+#endif
+    
+    ___enable_heartbeat_interrupts ();
+    
+    /* Set the active bitmaps */
+    if (result > 0)
+      {
+        int errmask = (POLLERR | POLLHUP | POLLNVAL);
+        int active = result;
+        int x;
+        
+        
+        for (x = 0; active > 0; ++x)
+          {
+            if (state.pollfds[x].revents)
+              {
+                if (state.pollfds[x].events & POLLIN)
+                  {
+                    if (state.pollfds[x].revents & (POLLIN | errmask))
+                      ___FD_SET (state.pollfds[x].fd, &state.readfds);
+                  }
+                
+                if (state.pollfds[x].events & POLLOUT)
+                  {
+                    if (state.pollfds[x].revents & (POLLOUT | errmask))
+                      ___FD_SET (state.pollfds[x].fd, &state.writefds);
+                  }
+                
+                --active;
+              }
+          }
+      }
+    
+  poll_done:
+
+    if (result < 0)
+      return err_code_from_errno ();
+
+    state.timeout_reached = (result == 0);
+  }
 #endif
 
 #ifdef USE_MsgWaitForMultipleObjects
@@ -1239,12 +1374,37 @@ int fd;
 ___BOOL for_writing;)
 {
   if (for_writing)
-    FD_SET(fd, &state->writefds);
+    ___FD_SET(fd, &state->writefds);
   else
-    FD_SET(fd, &state->readfds);
+    ___FD_SET(fd, &state->readfds);
 
   if (fd >= state->highest_fd_plus_1)
     state->highest_fd_plus_1 = fd+1;
+}
+
+#endif
+
+#ifdef USE_poll
+
+void ___device_select_add_fd
+   ___P((___device_select_state *state,
+         int fd,
+         ___BOOL for_writing),
+        (state,
+         fd,
+         for_writing)
+___device_select_state *state;
+int fd;
+___BOOL for_writing;)
+{
+  state->pollfds[state->pollfd_count].fd = fd;
+  
+  if (for_writing) 
+    state->pollfds[state->pollfd_count].events = POLLOUT;
+  else
+    state->pollfds[state->pollfd_count].events = POLLIN;
+  
+  ++state->pollfd_count;
 }
 
 #endif
@@ -2790,12 +2950,12 @@ ___device_select_state *state;)
 
       if (for_writing)
         {
-          if (d->fd_wr < 0 || FD_ISSET(d->fd_wr, &state->writefds))
+          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, &state->writefds))
             state->devs[i] = NULL;
         }
       else
         {
-          if (d->fd_rd < 0 || FD_ISSET(d->fd_rd, &state->readfds))
+          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, &state->readfds))
             state->devs[i] = NULL;
         }
 
@@ -3830,8 +3990,8 @@ ___device_select_state *state;)
 
       if (d->try_connect_again != 0 ||
           (for_writing
-           ? FD_ISSET(d->s, &state->writefds)
-           : FD_ISSET(d->s, &state->readfds)))
+           ? ___FD_ISSET(d->s, &state->writefds)
+           : ___FD_ISSET(d->s, &state->readfds)))
         {
           d->connect_done = 1;
           state->devs[i] = NULL;
@@ -4387,7 +4547,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (FD_ISSET(d->s, &state->readfds))
+      if (___FD_ISSET(d->s, &state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -5305,8 +5465,8 @@ ___device_select_state *state;)
 #ifdef USE_POSIX
 
       if (for_writing
-           ? FD_ISSET(d->fd, &state->writefds)
-           : FD_ISSET(d->fd, &state->readfds))
+           ? ___FD_ISSET(d->fd, &state->writefds)
+           : ___FD_ISSET(d->fd, &state->readfds))
         state->devs[i] = NULL;
 
 #endif

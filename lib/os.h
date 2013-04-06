@@ -527,8 +527,15 @@
 
 
 /* Determine which select interface to use.  */
-
-#ifdef HAVE_SELECT
+#if HAVE_POLL && USE_POLL
+#define USE_poll
+#if HAVE_PPOLL
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#define USE_ppoll
+#endif
+#elif HAVE_SELECT
 #define USE_select
 #else
 #ifdef HAVE_MSGWAITFORMULTIPLEOBJECTS
@@ -988,6 +995,12 @@ ___END_C_LINKAGE
 #define INCLUDE_curses_h
 #endif
 
+#ifdef USE_poll
+#undef INCLUDE_poll_h
+#define INCLUDE_poll_h
+#endif
+
+
 /*---------------------------------------------------------------------------*/
 
 /* Inclusion of header files. */
@@ -1430,6 +1443,12 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #ifdef INCLUDE_crt_externs_h
 #ifdef HAVE_CRT_EXTERNS_H
 #include <crt_externs.h>
+#endif
+#endif
+
+#ifdef INCLUDE_poll_h
+#ifdef HAVE_POLL_H
+#include <poll.h>
 #endif
 #endif
 

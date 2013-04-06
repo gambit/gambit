@@ -7432,7 +7432,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (FD_ISSET(d->fd, &state->writefds))
+      if (___FD_ISSET(d->fd, &state->writefds))
         state->devs[i] = NULL;
 
 #endif
@@ -7448,7 +7448,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (FD_ISSET(d->fd, &state->readfds))
+      if (___FD_ISSET(d->fd, &state->readfds))
         state->devs[i] = NULL;
 
 #endif
