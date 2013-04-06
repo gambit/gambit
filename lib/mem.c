@@ -1606,7 +1606,7 @@ int indent;)
         ___printf ("#<unbound2>\n");
       else if (obj == ___OPTIONAL)
         ___printf ("#!optional\n");
-      else if (obj == ___KEY_OBJ)
+      else if (obj == ___KEYOBJ)
         ___printf ("#!key\n");
       else if (obj == ___REST)
         ___printf ("#!rest\n");
