@@ -99,6 +99,7 @@
 #undef HAVE_CRT_EXTERNS_H
 #undef HAVE_WS2TCPIP_H
 #undef HAVE_TARGETCONDITIONALS_H
+#undef HAVE_POLL_H
 
 /*---------------------------------------------------------------------------*/
 
@@ -182,6 +183,8 @@
 #undef HAVE_GETNETBYNAME
 
 #undef HAVE_SELECT
+#undef HAVE_POLL
+#undef HAVE_PPOLL
 #undef HAVE_MSGWAITFORMULTIPLEOBJECTS
 
 #undef HAVE_TGETSTR
@@ -213,6 +216,9 @@
  */
 #undef ___IMPORTED_ID_PREFIX
 #undef ___IMPORTED_ID_SUFFIX
+
+/* Define as 1 if you want to enable poll support */
+#undef USE_POLL
 
 /*---------------------------------------------------------------------------*/
 

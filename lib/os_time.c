@@ -444,7 +444,7 @@ ___time tim;)
 #endif
 
 
-#ifdef USE_select
+#ifdef USE_POSIX
 
 
 #ifdef ___TIMEVAL_NOT_LIMITED
