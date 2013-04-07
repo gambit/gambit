@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -291,7 +291,7 @@
 (define (valid-module-name? module-name)
 
   ; Valid module names are exactly the valid symbols except those
-  ; containing "#".
+  ; containing "#".  A module name can also be a number.
 
   (define (valid-char? c)
     (and (not (memv c '(#\# #\; #\( #\) #\  #\[ #\] #\{ #\} #\" #\' #\` #\,)))
@@ -300,7 +300,7 @@
   (let ((n (string-length module-name)))
     (and (> n 0)                               ; should not be empty
          (not (string=? module-name "."))      ; should not be "."
-         (not (string->number module-name 10)) ; should not be a number
+         ;;(not (string->number module-name 10)) ; should not be a number
          (let loop ((i 0))
            (if (< i n)
              (if (valid-char? (string-ref module-name i))
