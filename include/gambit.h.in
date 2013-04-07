@@ -4,6 +4,9 @@
  * Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
  */
 
+#ifndef ___GAMBIT_H
+#define ___GAMBIT_H
+
 #ifndef ___VERSION
 #error "___VERSION has not been set by includer"
 #endif
@@ -11,9 +14,6 @@
 #if ___VERSION != 406007
 #include "gambit-not406007.h"
 #else
-
-#ifndef ___GAMBIT_H
-#define ___GAMBIT_H
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -6606,8 +6606,6 @@ void *___x;) \
 #define ___BEGIN_CFUN_VARIANT_TO_SCMOBJ(c,s)___IF_CTOS3(___VARIANT_to_SCMOBJ,c,&s,___RETURN_POS){
 #define ___END_CFUN_VARIANT_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 
-#endif
-
 /*---------------------------------------------------------------------------*/
 
 #ifndef ___DEFINES_ONLY
@@ -9075,3 +9073,6 @@ ___IMP_FUNC(void,___enable_heartbeat_interrupts) ___PVOID;
 
 #endif
 #endif
+
+#endif
+
