@@ -2879,6 +2879,7 @@ test -n "$target_alias" &&
 # Accumulate subsystems to include in runtime library.
 
 RTLIBSUBSYS=""
+RTLIBMAKEFILES=""
 
 ###############################################################################
 #
@@ -4497,6 +4498,7 @@ if test "$ENABLE_GUIDE" = yes; then
 
 
   RTLIBSUBSYS="$RTLIBSUBSYS guide"
+  RTLIBMAKEFILES="$RTLIBMAKEFILES lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile"
   LIBS="$LIBS $QTLIBS"
 fi
 
@@ -12485,7 +12487,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.unix bin/gambc-cc.bat.windows bin/gambc-doc.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.unix bin/gambc-cc.bat.windows bin/gambc-doc.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -13181,9 +13183,7 @@ do
     "include/makefile") CONFIG_FILES="$CONFIG_FILES include/makefile" ;;
     "include/gambit.h") CONFIG_FILES="$CONFIG_FILES include/gambit.h" ;;
     "lib/makefile") CONFIG_FILES="$CONFIG_FILES lib/makefile" ;;
-    "lib/guide/guidepro") CONFIG_FILES="$CONFIG_FILES lib/guide/guidepro" ;;
-    "lib/guide/makefile") CONFIG_FILES="$CONFIG_FILES lib/guide/makefile" ;;
-    "lib/guide/images/makefile") CONFIG_FILES="$CONFIG_FILES lib/guide/images/makefile" ;;
+    "$RTLIBMAKEFILES") CONFIG_FILES="$CONFIG_FILES $RTLIBMAKEFILES" ;;
     "gsi/makefile") CONFIG_FILES="$CONFIG_FILES gsi/makefile" ;;
     "gsc/makefile") CONFIG_FILES="$CONFIG_FILES gsc/makefile" ;;
     "bin/makefile") CONFIG_FILES="$CONFIG_FILES bin/makefile" ;;
