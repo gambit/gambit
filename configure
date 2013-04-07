@@ -924,6 +924,7 @@ enable_absolute_shared_libs
 enable_help_browser
 enable_type_checking
 enable_auto_forcing
+enable_poll
 with_x
 '
       ac_precious_vars='build_alias
@@ -1595,6 +1596,7 @@ Optional Features:
                           Browser to use for help (default is to search)
   --enable-type-checking  perform type checking (default is YES)
   --enable-auto-forcing   automatically force promises (default is NO)
+  --enable-poll           Enable poll as the select method (default is NO)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -5183,6 +5185,23 @@ fi
 
 ###############################################################################
 #
+# Check whether to enable poll as the select method
+
+# Check whether --enable-poll was given.
+if test "${enable_poll+set}" = set; then :
+  enableval=$enable_poll; ENABLE_POLL=$enableval
+else
+  ENABLE_POLL=no
+fi
+
+
+if test "$ENABLE_POLL" = yes; then
+  $as_echo "#define USE_POLL 1" >>confdefs.h
+
+fi
+
+###############################################################################
+#
 # Check for C compiler.
 
 
@@ -6066,6 +6085,18 @@ do :
 if test "x$ac_cv_header_TargetConditionals_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TARGETCONDITIONALS_H 1
+_ACEOF
+
+fi
+
+done
+
+  for ac_header in poll.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "poll.h" "ac_cv_header_poll_h" "$ac_includes_default"
+if test "x$ac_cv_header_poll_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_POLL_H 1
 _ACEOF
 
 fi
@@ -7544,6 +7575,28 @@ do :
 if test "x$ac_cv_func_select" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SELECT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in poll
+do :
+  ac_fn_cxx_check_func "$LINENO" "poll" "ac_cv_func_poll"
+if test "x$ac_cv_func_poll" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_POLL 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in ppoll
+do :
+  ac_fn_cxx_check_func "$LINENO" "ppoll" "ac_cv_func_ppoll"
+if test "x$ac_cv_func_ppoll" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_PPOLL 1
 _ACEOF
 
 fi

@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1067,7 +1067,6 @@ ___time timeout;)
 
 #ifdef USE_poll
   {
-
     struct timeval delta_tv_struct;
     struct timeval *delta_tv = &delta_tv_struct;
 
@@ -1078,7 +1077,7 @@ ___time timeout;)
     int delta_msecs;
 #endif
     int result;
-    
+
     ___absolute_time_to_nonnegative_timeval (delta, &delta_tv);
 
     /* pure sleep optimizations */
@@ -1097,14 +1096,14 @@ ___time timeout;)
             struct timespec delta_ts_struct;
             delta_ts_struct.tv_sec = delta_tv->tv_sec;
             delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
-            
+
             result = nanosleep (&delta_ts_struct, NULL);
-            
+
             goto poll_done;
           }
 #endif
       }
-    
+
     /* setup timeout */
 #ifdef USE_ppoll
 
@@ -1121,12 +1120,12 @@ ___time timeout;)
             delta_ts_struct.tv_sec = delta_tv->tv_sec;
             delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
           }
-        
+
         delta_ts = &delta_ts_struct;
       }
     else
       delta_ts = NULL;
-    
+
 #else
 
     if (delta_tv != NULL)
@@ -1140,28 +1139,27 @@ ___time timeout;)
       }
     else
       delta_msecs = -1;
-    
+
 #endif
-    
+
     /* see comments on select above regarding heartbeat interrupts */
     ___disable_heartbeat_interrupts ();
-    
+
 #ifdef USE_ppoll
     result = ppoll (state.pollfds, state.pollfd_count, delta_ts, NULL);
 #else
     result = poll (state.pollfds, state.pollfd_count, delta_msecs);
 #endif
-    
+
     ___enable_heartbeat_interrupts ();
-    
+
     /* Set the active bitmaps */
     if (result > 0)
       {
         int errmask = (POLLERR | POLLHUP | POLLNVAL);
         int active = result;
         int x;
-        
-        
+
         for (x = 0; active > 0; ++x)
           {
             if (state.pollfds[x].revents)
@@ -1171,18 +1169,18 @@ ___time timeout;)
                     if (state.pollfds[x].revents & (POLLIN | errmask))
                       ___FD_SET (state.pollfds[x].fd, &state.readfds);
                   }
-                
+
                 if (state.pollfds[x].events & POLLOUT)
                   {
                     if (state.pollfds[x].revents & (POLLOUT | errmask))
                       ___FD_SET (state.pollfds[x].fd, &state.writefds);
                   }
-                
+
                 --active;
               }
           }
       }
-    
+
   poll_done:
 
     if (result < 0)
@@ -1398,12 +1396,12 @@ int fd;
 ___BOOL for_writing;)
 {
   state->pollfds[state->pollfd_count].fd = fd;
-  
-  if (for_writing) 
+
+  if (for_writing)
     state->pollfds[state->pollfd_count].events = POLLOUT;
   else
     state->pollfds[state->pollfd_count].events = POLLIN;
-  
+
   ++state->pollfd_count;
 }
 
@@ -3389,7 +3387,7 @@ ___device_process *dev;)
     {
 #ifdef USE_POSIX
 
-      /* 
+      /*
        * The process status is updated asynchronously by
        * sigchld_signal_handler.
        */
