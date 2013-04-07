@@ -6610,8 +6610,6 @@ void *___x;) \
 
 /*---------------------------------------------------------------------------*/
 
-#ifndef ___DEFINES_ONLY
-
 #ifdef _MSC_VER
 #ifdef ___DYNAMIC
 int _fltused; /* needed if floating-point used. */
@@ -9073,5 +9071,4 @@ ___IMP_FUNC(void,___disable_heartbeat_interrupts) ___PVOID;
 ___IMP_FUNC(void,___enable_heartbeat_interrupts) ___PVOID;
 #endif
 
-#endif
 #endif
