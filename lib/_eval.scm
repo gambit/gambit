@@ -17,13 +17,14 @@
 (implement-library-type-expression-parsing-exception)
 
 (define-prim (##raise-expression-parsing-exception kind source . parameters)
-  (macro-raise
+  (macro-abort
    (macro-make-expression-parsing-exception kind source parameters)))
 
 (implement-library-type-unbound-global-exception)
 
 (define-prim (##raise-unbound-global-exception code rte variable)
-  (macro-raise (macro-make-unbound-global-exception code rte variable)))
+  (macro-abort
+   (macro-make-unbound-global-exception code rte variable)))
 
 ;;;----------------------------------------------------------------------------
 
