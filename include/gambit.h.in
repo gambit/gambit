@@ -6606,8 +6606,6 @@ void *___x;) \
 #define ___BEGIN_CFUN_VARIANT_TO_SCMOBJ(c,s)___IF_CTOS3(___VARIANT_to_SCMOBJ,c,&s,___RETURN_POS){
 #define ___END_CFUN_VARIANT_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 
-#endif
-
 /*---------------------------------------------------------------------------*/
 
 #ifdef _MSC_VER
@@ -9072,3 +9070,6 @@ ___IMP_FUNC(void,___enable_heartbeat_interrupts) ___PVOID;
 #endif
 
 #endif
+
+#endif
+
