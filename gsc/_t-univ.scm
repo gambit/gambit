@@ -272,6 +272,8 @@
 
 (for-each univ-prim-proc-add! prim-procs)
 
+(univ-prim-proc-add! '("##inline-host-code" (1) #t 0 0 (#f) extended))
+
 (define (univ-switch-testable? targ obj)
   (pretty-print (list 'univ-switch-testable? 'targ obj))
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4299,6 +4301,14 @@ function Gambit_trampoline(pc) {
 (define (make-translated-operand-generator proc)
   (lambda (ctx opnds)
     (apply proc (cons ctx (univ-emit-operands ctx opnds)))))
+
+(univ-define-prim "##inline-host-code" #f #t
+
+  (lambda (ctx opnds)
+    (let ((arg1 (car opnds)))
+      (if (obj? arg1)
+          (^ (obj-val arg1))
+          (compiler-internal-error "##inline-host-code requires constant argument")))))
 
 (univ-define-prim-bool "##not" #t #f
 
