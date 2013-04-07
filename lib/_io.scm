@@ -1147,11 +1147,11 @@
       permissions
       default-permissions)))
 
-(define-prim (##psettings->output-width psettings)
+(define-prim (##psettings->output-width psettings #!optional (default 80))
   (let ((output-width (macro-psettings-output-width psettings)))
-    (if (##not (##fixnum.= output-width (macro-default-output-width)))
-      output-width
-      80)))
+    (if (##fixnum.= output-width (macro-default-output-width))
+      default
+      output-width)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1623,7 +1623,10 @@
              char-wbuf-drain
              input-readtable
              output-readtable
-             output-width
+             (let ((width (##psettings->output-width psettings #f)))
+               (if width
+                   (lambda (port) width)
+                   output-width))
              byte-rbuf
              byte-rlo
              byte-rhi
