@@ -6481,6 +6481,7 @@ typedef struct
     int completion_point;
     int word_end;
     ___SCMOBJ next;
+    int common_length;
   } visit_symbol_data;
 
 
@@ -6532,7 +6533,10 @@ void *data;)
  found:
 
   if (dat->next == ___FAL)
-    dat->next = sym;
+    {
+      dat->next = sym;
+      dat->common_length = n;
+    }
   else
     {
       ___SCMOBJ name2 = ___FIELD(dat->next,___SYMKEY_NAME);
@@ -6547,14 +6551,16 @@ void *data;)
               if (c1 < c2)
                 goto found2;
               if (c1 > c2)
-                return;
+                goto done;
             }
           else
-            return;
+            goto done;
           i++;
         }
     found2:
       dat->next = sym;
+    done:
+      dat->common_length = i;
     }
 }
 
@@ -6590,6 +6596,7 @@ extensible_string *completion;)
   dat.completion_point = completion_point;
   dat.word_end = word_end;
   dat.next = ___FAL;
+  dat.common_length = 0;
 
   ___for_each_symkey (___sSYMBOL, visit_symbol, ___CAST(void*,&dat));
 
@@ -6598,6 +6605,13 @@ extensible_string *completion;)
       ___SCMOBJ name = ___FIELD(dat.next,___SYMKEY_NAME);
       int n = ___INT(___STRINGLENGTH(name));
       int i;
+
+#define USE_EMACS_COMPLETION
+
+#ifdef USE_EMACS_COMPLETION
+      if (dat.common_length > word_end - word_start)
+        n = dat.common_length;
+#endif
 
       if (extensible_string_setup (completion, n) != ___FIX(___NO_ERR))
         return CANNOT_COMPLETE;
