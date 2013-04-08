@@ -8,7 +8,7 @@
 #define ___GAMBIT_H
 
 #ifndef ___VERSION
-#error "___VERSION has not been set by includer"
+#define ___VERSION 406007
 #endif
 
 #if ___VERSION != 406007
