@@ -1,7 +1,7 @@
 ;;; -*- Mode:Emacs-Lisp -*-
 ;;; gambit.el --- Run Gambit in an [X]Emacs buffer
 
-;; Copyright (c) 1997-2011 Marc Feeley & Michael Sperber
+;; Copyright (c) 1997-2013 Marc Feeley & Michael Sperber
 
 ;; Authors: Marc Feeley <feeley@iro.umontreal.ca>
 ;;          Mike Sperber <sperber@informatik.uni-tuebingen.de>
@@ -129,8 +129,6 @@
         (setq alist (cdr alist))))
     method))
 
-(set lisp-indent-function 'gambit-indent-function)
-
 (defvar gambit-indent-regexp-alist
   '(
     ("^declare$"               . defun)
@@ -150,7 +148,7 @@
       (car (cdr (window-edges window)))
       (car (cdr (window-pixel-edges window)))))
 
-;; Xemacs calls its overlays "extents", so we have to use them to emulate 
+;; Xemacs calls its overlays "extents", so we have to use them to emulate
 ;; overlays on Xemacs.  Some versions of Xemacs have the portability package
 ;; "overlays.el" for this, so we could simply do:
 ;;
@@ -308,7 +306,7 @@
 (defun gambit-crawl-backtrace-newer ()
   (interactive)
   (scheme-send-string "#||#,-;"))
-  
+
 (defun gambit-crawl-backtrace-older ()
   (interactive)
   (scheme-send-string "#||#,+;"))
@@ -628,6 +626,10 @@ enlarge the window if it is too small."
   (setq gambit-last-output-marker (make-marker))
   (set-marker gambit-last-output-marker 0)
 
+  (make-local-variable 'lisp-indent-function)
+  (setq lisp-indent-function (function gambit-indent-function))
+
+  (make-local-variable 'comint-input-sender)
   (setq comint-input-sender (function gambit-input-sender))
 
   (add-hook 'comint-output-filter-functions
@@ -636,6 +638,7 @@ enlarge the window if it is too small."
             t)) ; hook is buffer-local
 
 (defun gambit-mode ()
+  (gambit-inferior-mode)
   (gambit-install-comment-syntax)
   (gambit-extend-mode-map scheme-mode-map))
 
