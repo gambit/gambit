@@ -428,11 +428,24 @@
 (define-macro (^setloc loc val)
   `(univ-emit-setloc ctx ,loc ,val))
 
-(define-macro (^prim-function-declaration name params header attribs globals body)
-  `(univ-emit-prim-function-declaration ctx ,name ,params ,header ,attribs ,globals ,body))
+(define-macro (^prim-function-declaration name params header attribs body)
+  `(^function-declaration
+    ,name
+    ,params
+    ,header
+    ,attribs
+    ,body
+    #t))
 
-(define-macro (^function-declaration name params header attribs globals body #!optional (prim? #f))
-  `(univ-emit-function-declaration ctx ,name ,params ,header ,attribs ,globals ,body ,prim?))
+(define-macro (^function-declaration name params header attribs body #!optional (prim? #f))
+  `(univ-emit-function-declaration
+    ctx
+    ,name
+    ,params
+    (lambda (ctx) ,header)
+    (lambda (ctx) ,attribs)
+    (lambda (ctx) ,body)
+    ,prim?))
 
 (define-macro (^getreg num)
   `(univ-emit-getreg ctx ,num))
@@ -1038,125 +1051,95 @@
                       (pos-in-list ret-var vars)))
                 (vector fs link)))
 
-            (with-new-resources-used
+            (with-stack-base-offset
              ctx
+             (- (frame-size (gvm-instr-frame gvm-instr)))
              (lambda (ctx)
-               (let ((id (lbl->id ctx (label-lbl-num gvm-instr) (ctx-ns ctx))))
-                 (with-stack-base-offset
-                  ctx
-                  (- (frame-size (gvm-instr-frame gvm-instr)))
-                  (lambda (ctx)
-                    (let* ((header
-                            (case (label-type gvm-instr)
+               (let ((id (gvm-bb-use ctx (label-lbl-num gvm-instr) (ctx-ns ctx))))
+                 (^ "\n"
+                    (^function-declaration
 
-                              ((simple)
-                               (^ "\n"))
+                     ;; name
+                     id
 
-                              ((entry)
-                               (if (label-entry-rest? gvm-instr)
-                                   (^ " "
-                                      (univ-comment
-                                       ctx
-                                       (if (label-entry-closed? gvm-instr)
-                                           "closure-entry-point (+rest)\n"
-                                           "entry-point (+rest)\n")))
-                                   (^ " "
-                                      (univ-comment
-                                       ctx
-                                       (if (label-entry-closed? gvm-instr)
-                                           "closure-entry-point\n"
-                                           "entry-point\n")))))
+                     ;; params
+                     '()
 
-                              ((return)
-                               (^ " "
-                                  (univ-comment ctx "return-point\n")))
+                     ;; header
+                     (case (label-type gvm-instr)
 
-                              ((task-entry)
-                               (^ " "
-                                  (univ-comment ctx "task-entry-point\n")))
+                       ((simple)
+                        (^ "\n"))
 
-                              ((task-return)
-                               (^ " "
-                                  (univ-comment ctx "task-return-point\n")))
+                       ((entry)
+                        (if (label-entry-rest? gvm-instr)
+                            (^ " "
+                               (univ-comment
+                                ctx
+                                (if (label-entry-closed? gvm-instr)
+                                    "closure-entry-point (+rest)\n"
+                                    "entry-point (+rest)\n")))
+                            (^ " "
+                               (univ-comment
+                                ctx
+                                (if (label-entry-closed? gvm-instr)
+                                    "closure-entry-point\n"
+                                    "entry-point\n")))))
 
-                              (else
-                               (compiler-internal-error
-                                "scan-gvm-label, unknown label type"))))
+                       ((return)
+                        (^ " "
+                           (univ-comment ctx "return-point\n")))
 
-                           (nargs-check
-                            (case (label-type gvm-instr)
+                       ((task-entry)
+                        (^ " "
+                           (univ-comment ctx "task-entry-point\n")))
 
-                              ((entry)
-                               (if (label-entry-rest? gvm-instr)
-                                   (^if (^not (^&&
-                                               (univ-emit-call-prim
-                                                ctx
-                                                (^prefix "buildrest")
-                                                (label-entry-nb-parms gvm-instr))
-                                               (^= (gvm-state-nargs-use ctx 'rd)
-                                                   (label-entry-nb-parms gvm-instr))))
-                                        (univ-emit-return-call-prim
-                                         ctx
-                                         (^global-prim-function (^prefix "wrong_nargs"))
-                                         id))
-                                   (^if (^!= (gvm-state-nargs-use ctx 'rd)
-                                             (label-entry-nb-parms gvm-instr))
-                                        (univ-emit-return-call-prim
-                                         ctx
-                                         (^global-prim-function (^prefix "wrong_nargs"))
-                                         id))))
+                       ((task-return)
+                        (^ " "
+                           (univ-comment ctx "task-return-point\n")))
 
-                              (else
-                               (^))))
+                       (else
+                        (compiler-internal-error
+                         "scan-gvm-label, unknown label type")))
 
-                           (body
-                            (^ nargs-check
-                               (proc ctx)))
+                     ;; attribs
+                     (append
+                      (if (memq (label-type gvm-instr) '(entry return))
+                          (list (cons "id" (^string id)))
+                          '())
+                      (if (eq? (label-type gvm-instr) 'return)
+                          (let ((info (frame-info gvm-instr)))
+                            (list (cons "fs" (vector-ref info 0))
+                                  (cons "link" (+ (vector-ref info 1) 1))))
+                          '()))
 
-                           (globals
-                            '()))
+                     ;; body
+                     (^ (case (label-type gvm-instr)
 
-                      (define (used? x)
-                        (or (resource-set-member? (ctx-resources-used-rd ctx) x)
-                            (resource-set-member? (ctx-resources-used-wr ctx) x)))
+                          ((entry)
+                           (if (label-entry-rest? gvm-instr)
+                               (^if (^not (^&&
+                                           (univ-emit-call-prim
+                                            ctx
+                                            (^prefix "buildrest")
+                                            (label-entry-nb-parms gvm-instr))
+                                           (^= (gvm-state-nargs-use ctx 'rd)
+                                               (label-entry-nb-parms gvm-instr))))
+                                    (univ-emit-return-call-prim
+                                     ctx
+                                     (^global-prim-function (^prefix "wrong_nargs"))
+                                     id))
+                               (^if (^!= (gvm-state-nargs-use ctx 'rd)
+                                         (label-entry-nb-parms gvm-instr))
+                                    (univ-emit-return-call-prim
+                                     ctx
+                                     (^global-prim-function (^prefix "wrong_nargs"))
+                                     id))))
 
-                      (define (add! x)
-                        (set! globals (cons x globals)))
+                          (else
+                           (^)))
 
-                      (let loop ((num (- univ-nb-gvm-regs 1)))
-                        (if (>= num 0)
-                            (begin
-                              (if (used? num) (add! (gvm-state-reg ctx num)))
-                              (loop (- num 1)))))
-
-                      (if (used? 'sp)        (add! (gvm-state-sp ctx)))
-                      (if (used? 'stack)     (add! (gvm-state-stack ctx)))
-                      (if (used? 'glo)       (add! (gvm-state-glo ctx)))
-                      (if (used? 'nargs)     (add! (gvm-state-nargs ctx)))
-                      (if (used? 'pollcount) (add! (gvm-state-pollcount ctx)))
-
-                      (^ "\n"
-                         (^function-declaration
-
-                          id
-
-                          '()
-
-                          header
-
-                          (append
-                           (if (memq (label-type gvm-instr) '(entry return))
-                               (list (cons "id" (^string id)))
-                               '())
-                           (if (eq? (label-type gvm-instr) 'return)
-                               (let ((info (frame-info gvm-instr)))
-                                 (list (cons "fs" (vector-ref info 0))
-                                       (cons "link" (+ (vector-ref info 1) 1))))
-                               '()))
-
-                          globals
-
-                          body)))))))))
+                        (proc ctx))))))))
 
           (define (scan-gvm-instr ctx gvm-instr)
 
@@ -1463,11 +1446,10 @@
            '()
            "\n"
            '()
-           '()
            (^ (univ-emit-assign ctx
                                 (^getopnd (make-reg (+ univ-nb-arg-regs 1)))
                                 name)
-              (univ-emit-return-call ctx (translate-lbl ctx (make-lbl lbl)))))
+              (univ-emit-return-call ctx (gvm-lbl-use ctx (make-lbl lbl)))))
           (cont name))))
 
     (else
@@ -1505,7 +1487,7 @@
                               (cons (string-append "v"
                                                    (number->string i))
                                     x))
-                            (cons (translate-lbl ctx (make-lbl lbl))
+                            (cons (gvm-lbl-use ctx (make-lbl lbl))
                                   exprs)))))
          (cont name)))))
 
@@ -1515,6 +1497,7 @@
           0
           0
           univ-enable-jump-destination-inlining?
+          (make-resource-set)
           (make-resource-set)
           (make-resource-set)))
 
@@ -1538,6 +1521,9 @@
 
 (define (ctx-resources-used-wr ctx)        (vector-ref ctx 6))
 (define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 6 x))
+
+(define (ctx-globals-used ctx)             (vector-ref ctx 7))
+(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 7 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -1566,13 +1552,16 @@
       result)))
 
 (define (with-new-resources-used ctx proc)
-  (let ((save-rd (ctx-resources-used-rd ctx))
-        (save-wr (ctx-resources-used-wr ctx)))
+  (let ((save-rsrc-rd (ctx-resources-used-rd ctx))
+        (save-rsrc-wr (ctx-resources-used-wr ctx))
+        (save-glob-rd (ctx-globals-used ctx)))
     (ctx-resources-used-rd-set! ctx (make-resource-set))
     (ctx-resources-used-wr-set! ctx (make-resource-set))
+    (ctx-globals-used-set! ctx (make-resource-set))
     (let ((result (proc ctx)))
-      (ctx-resources-used-rd-set! ctx save-rd)
-      (ctx-resources-used-wr-set! ctx save-wr)
+      (ctx-resources-used-rd-set! ctx save-rsrc-rd)
+      (ctx-resources-used-wr-set! ctx save-rsrc-wr)
+      (ctx-globals-used-set! ctx save-glob-rd)
       result)))
 
 (define (make-resource-set)
@@ -1592,6 +1581,9 @@
 
 (define (use-resource-wr ctx resource)
   (resource-set-add! (ctx-resources-used-wr ctx) resource))
+
+(define (use-global ctx global)
+  (resource-set-add! (ctx-globals-used ctx) global))
 
 (define (use-resource ctx dir resource)
   (if (eq? dir 'rd)
@@ -1713,7 +1705,7 @@
                   (clo-index gvm-opnd)))
 
         ((lbl? gvm-opnd)
-         (translate-lbl ctx gvm-opnd))
+         (gvm-lbl-use ctx gvm-opnd))
 
         ((obj? gvm-opnd)
          (univ-emit-obj ctx (obj-val gvm-opnd)))
@@ -1776,7 +1768,7 @@
          (univ-undefined ctx))
 
         ((proc-obj? obj)
-         (lbl->id ctx 1 (proc-obj-name obj)))
+         (gvm-proc-use ctx (proc-obj-name obj)))
 
         ;; ((list? obj)
         ;;  (univ-literal ctx list-literal-type obj))
@@ -1834,7 +1826,7 @@
 
 (define (univ-literal ctx type obj)
   (let* ((sym (gensym))
-         (loc (^ (gvm-state-glo ctx)
+         (loc (^ (gvm-state-glo-use ctx 'rd)
                  "[" (object->string (symbol->string sym)) "]"))
          (expr (if (= type vector-literal-type)
                      (univ-vector ctx obj)
@@ -1928,8 +1920,16 @@
 
 ;; =============================================================================
 
-(define (translate-lbl ctx lbl)
-  (lbl->id ctx (lbl-num lbl) (ctx-ns ctx)))
+(define (gvm-lbl-use ctx lbl)
+  (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx)))
+
+(define (gvm-proc-use ctx name)
+  (gvm-bb-use ctx 1 name))
+
+(define (gvm-bb-use ctx num ns)
+  (let ((global (lbl->id ctx num ns)))
+    (use-global ctx global)
+    global))
 
 (define (lbl->id ctx num ns)
   (^global-function (^prefix (^ "bb" num "_" (scheme-id->c-id ns)))))
@@ -1957,16 +1957,10 @@
       "univ-emit-empty-extensible-array, unknown target"))))
 
 (define (runtime-system ctx)
-  (let ((R0 (^getopnd (make-reg 0)));;;;;;;;;;;rd or wr?
-        (R1 (^getopnd (make-reg 1)))
-        (R2 (^getopnd (make-reg 2)))
-        (R3 (^getopnd (make-reg 3)))
-        (R4 (^getopnd (make-reg 4))))
+  (^ (case (target-name (ctx-target ctx))
 
-    (^ (case (target-name (ctx-target ctx))
-
-         ((js)
-          (^
+       ((js)
+        (^
 #<<EOF
 function Gambit_Pair(car, cdr) {
   this.car = car;
@@ -1980,12 +1974,12 @@ function Gambit_Pair(car, cdr) {
 EOF
 ))
 
-         ((python)
-          (^ "#! /usr/bin/python\n"
-             "\n"
-             "from array import array\n"
-             "import ctypes\n"
-             "\n"
+       ((python)
+        (^ "#! /usr/bin/python\n"
+           "\n"
+           "from array import array\n"
+           "import ctypes\n"
+           "\n"
 #<<EOF
 class Gambit_Pair:
 
@@ -2022,8 +2016,8 @@ end
 EOF
 ))
 
-         ((php)
-          (^ "<?php\n"
+       ((php)
+        (^ "<?php\n"
 #<<EOF
 class Gambit_closure {
 
@@ -2074,146 +2068,140 @@ class Gambit_Pair {
 EOF
 ))
 
-         (else
-          (compiler-internal-error
-           "runtime-system, unknown target")))
+       (else
+        (compiler-internal-error
+         "runtime-system, unknown target")))
 
-       (^var-declaration (^global-var (^prefix "glo")) (univ-emit-empty-dict ctx));;;;;;;;;;;;;;;;;;;;;
-       (^var-declaration (^global-var (^prefix "r0")) (^obj #f))
-       (^var-declaration (^global-var (^prefix "r1")))
-       (^var-declaration (^global-var (^prefix "r2")))
-       (^var-declaration (^global-var (^prefix "r3")))
-       (^var-declaration (^global-var (^prefix "r4")))
-       (^var-declaration (^global-var (^prefix "stack")) (univ-emit-empty-extensible-array ctx));;;;;;;;;;;;;;;;;;;;;;;
-       (^var-declaration (^global-var (^prefix "sp")) -1)
-       (^var-declaration (^global-var (^prefix "nargs")) 0)
-       (^var-declaration (^global-var (^prefix "temp1")) (^obj #f))
-       (^var-declaration (^global-var (^prefix "temp2")) (^obj #f))
-       (^var-declaration (^global-var (^prefix "pollcount")) 100)
+     (^var-declaration (^global-var (^prefix "glo")) (univ-emit-empty-dict ctx));;;;;;;;;;;;;;;;;;;;;
+     (^var-declaration (^global-var (^prefix "r0")) (^obj #f))
+     (^var-declaration (^global-var (^prefix "r1")))
+     (^var-declaration (^global-var (^prefix "r2")))
+     (^var-declaration (^global-var (^prefix "r3")))
+     (^var-declaration (^global-var (^prefix "r4")))
+     (^var-declaration (^global-var (^prefix "stack")) (univ-emit-empty-extensible-array ctx));;;;;;;;;;;;;;;;;;;;;;;
+     (^var-declaration (^global-var (^prefix "sp")) -1)
+     (^var-declaration (^global-var (^prefix "nargs")) 0)
+     (^var-declaration (^global-var (^prefix "temp1")) (^obj #f))
+     (^var-declaration (^global-var (^prefix "temp2")) (^obj #f))
+     (^var-declaration (^global-var (^prefix "pollcount")) 100)
 
-       "\n"
+     "\n"
 
-       (^prim-function-declaration
-        (^global-prim-function (^prefix "trampoline"))
-        (list (cons (^local-var "pc") #f))
-        "\n"
-        '()
-        '()
-        (^while (^!= (^local-var "pc") (^obj #f))
-                (^expr-statement
-                 (^assign (^local-var "pc")
-                          (^call (^local-var "pc"))))))
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "trampoline"))
+      (list (cons (^local-var "pc") #f))
+      "\n"
+      '()
+      (^while (^!= (^local-var "pc") (^obj #f))
+              (^expr-statement
+               (^assign (^local-var "pc")
+                        (^call (^local-var "pc"))))))
 
-       "\n"
+     "\n"
 
-       (case (target-name (ctx-target ctx))
+     (case (target-name (ctx-target ctx))
 
-         ((php)
-          (^))
+       ((php)
+        (^))
 
-         (else
-          (^ (^prim-function-declaration
-              (^global-prim-function (^prefix "closure_alloc"))
-              (list (cons (^local-var "slots") #f))
-              "\n"
-              '()
-              '()
-              (^ (^function-declaration
-                  (^local-var "closure")
-                  (list (cons (^local-var "msg") #t))
-                  "\n"
-                  '()
-                  '()
-                  (^ (^if (^= (^local-var "msg") (^bool #t))
-                          (^return (^local-var "slots")))
-                     (^expr-statement
-                      (^assign R4 (^local-var "closure")))
-                     (^return (^get (^local-var "slots") "v0"))))
-                 (^return (^local-var "closure"))))
+       (else
+        (^ (^prim-function-declaration
+            (^global-prim-function (^prefix "closure_alloc"))
+            (list (cons (^local-var "slots") #f))
+            "\n"
+            '()
+            (^ (^function-declaration
+                (^local-var "closure")
+                (list (cons (^local-var "msg") #t))
+                "\n"
+                '()
+                (^ (^if (^= (^local-var "msg") (^bool #t))
+                        (^return (^local-var "slots")))
+                   (^setreg (+ univ-nb-arg-regs 1)
+                            (^local-var "closure"))
+                   (^return (^get (^local-var "slots") "v0"))))
+               (^return (^local-var "closure"))))
 
-             "\n")))
+           "\n")))
 
-       (^prim-function-declaration
-        (^global-prim-function (^prefix "poll"))
-        (list (cons (^local-var "dest") #f))
-        "\n"
-        '()
-        '()
-        (^ (^expr-statement
-            (^assign (gvm-state-pollcount-use ctx 'wr)
-                     100))
-           (^return (^local-var "dest"))))
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "poll"))
+      (list (cons (^local-var "dest") #f))
+      "\n"
+      '()
+      (^ (^expr-statement
+          (^assign (gvm-state-pollcount-use ctx 'wr)
+                   100))
+         (^return (^local-var "dest"))))
 
-       "\n"
+     "\n"
 
-       (^prim-function-declaration
-        (^global-prim-function (^prefix "println"))
-        (list (cons (^local-var "obj") #f))
-        "\n"
-        '()
-        '()
-        (case (target-name (ctx-target ctx))
-          ((js python)
-           (^expr-statement (^call-prim "print" (^local-var "obj"))))
-          ((ruby php)
-           (^ (^expr-statement (^call-prim "print" (^local-var "obj")))
-              (^expr-statement (^call-prim "print" "\"\\n\""))))
-          (else
-           (compiler-internal-error
-            "runtime-system, unknown target"))))
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "println"))
+      (list (cons (^local-var "obj") #f))
+      "\n"
+      '()
+      (case (target-name (ctx-target ctx))
+        ((js python)
+         (^expr-statement (^call-prim "print" (^local-var "obj"))))
+        ((ruby php)
+         (^ (^expr-statement (^call-prim "print" (^local-var "obj")))
+            (^expr-statement (^call-prim "print" "\"\\n\""))))
+        (else
+         (compiler-internal-error
+          "runtime-system, unknown target"))))
 
-       "\n"
+     "\n"
 
-       (^prim-function-declaration
-        (^global-prim-function (^prefix "tostr"))
-        (list (cons (^local-var "obj") #f))
-        "\n"
-        '()
-        '()
-        (^if (^eq? (^local-var "obj")
-                   (^obj #f))
-             (^return (^string "#f"))
-             (^if (^eq? (^local-var "obj")
-                        (^obj #t))
-                  (^return (^string "#t"))
-                  (^if (^eq? (^local-var "obj")
-                             (^obj '()))
-                       (^return (^string ""))
-                       (^if (univ-pair? ctx (^local-var "obj"))
-                            (^return (^concat
-                                      (^call-prim
-                                       (^global-prim-function (^prefix "tostr"))
-                                       (^member (^local-var "obj") "car"))
-                                      (^call-prim
-                                       (^global-prim-function (^prefix "tostr"))
-                                       (^member (^local-var "obj") "cdr"))))
-                            (^return (^tostr (^local-var "obj"))))))))
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "tostr"))
+      (list (cons (^local-var "obj") #f))
+      "\n"
+      '()
+      (^if (^eq? (^local-var "obj")
+                 (^obj #f))
+           (^return (^string "#f"))
+           (^if (^eq? (^local-var "obj")
+                      (^obj #t))
+                (^return (^string "#t"))
+                (^if (^eq? (^local-var "obj")
+                           (^obj '()))
+                     (^return (^string ""))
+                     (^if (univ-pair? ctx (^local-var "obj"))
+                          (^return (^concat
+                                    (^call-prim
+                                     (^global-prim-function (^prefix "tostr"))
+                                     (^member (^local-var "obj") "car"))
+                                    (^call-prim
+                                     (^global-prim-function (^prefix "tostr"))
+                                     (^member (^local-var "obj") "cdr"))))
+                          (^return (^tostr (^local-var "obj"))))))))
 
-       "\n"
+     "\n"
 
-       (^function-declaration
-        (lbl->id ctx 1 "println")
-        '()
-        "\n"
-        '()
-        '()
-        (^ (^expr-statement
-            (^call-prim
-             (^global-prim-function (^prefix "println"))
-             (^call-prim
-              (^global-prim-function (^prefix "tostr"))
-              R1)))
-           (^return R0)))
+     (^function-declaration
+      (gvm-proc-use ctx "println")
+      '()
+      "\n"
+      '()
+      (^ (^expr-statement
+          (^call-prim
+           (^global-prim-function (^prefix "println"))
+           (^call-prim
+            (^global-prim-function (^prefix "tostr"))
+            (^getreg 1))))
+         (^return (^getreg 0))))
 
-       "\n"
+     "\n"
 
-       (^setglo 'println
-                (lbl->id ctx 1 "println"))
+     (^setglo 'println
+              (gvm-proc-use ctx "println"))
 
-       "\n"
+     "\n"
 
-       )))
+     ))
 
+#;
 (define (runtime-system-old ctx)
   (case (target-name (ctx-target ctx))
 
@@ -2252,7 +2240,6 @@ import ctypes
          "pc"
          "\n"
          '()
-         '()
          (univ-indent
           (^while (^!= "pc" (^obj #f))
                   (^expr-statement
@@ -2263,15 +2250,13 @@ import ctypes
          "obj"
          "\n"
          '()
-         '()
          (univ-indent
           (^expr-statement (^call "print" "obj"))))
 
         (^function-declaration
-         (lbl->id ctx 1 "println")
+         (gvm-proc-use ctx "println")
          ""
          "\n"
-         '()
          '()
          (univ-indent
           (^ (^if (^eq? R1 (^obj #f))
@@ -2291,7 +2276,7 @@ import ctypes
              (^return R0))))
 
         (^setglo 'println
-                 (lbl->id ctx 1 "println"))
+                 (gvm-proc-use ctx "println"))
 
 )))
 
@@ -3806,7 +3791,7 @@ function Gambit_trampoline(pc) {
       "runtime-system, unknown target"))))
 
 (define (entry-point ctx main-proc)
-  (let ((entry (lbl->id ctx 1 (proc-obj-name main-proc))))
+  (let ((entry (gvm-proc-use ctx (proc-obj-name main-proc))))
     (^ "\n"
        (univ-comment ctx "--------------------------------\n")
        "\n"
@@ -3825,10 +3810,45 @@ function Gambit_trampoline(pc) {
 
 ;;;----------------------------------------------------------------------------
 
-(define (univ-emit-prim-function-declaration ctx name params header attribs globals body)
-  (univ-emit-function-declaration ctx name params header attribs globals body #t))
+(define (univ-emit-function-declaration ctx name params gen-header gen-attribs gen-body #!optional (prim? #f))
+  (with-new-resources-used
+   ctx
+   (lambda (ctx)
+     (let* ((header (gen-header ctx))
+            (attribs (gen-attribs ctx))
+            (body (gen-body ctx))
+            (globals (resource-set->list (ctx-globals-used ctx))))
 
-(define (univ-emit-function-declaration ctx name params header attribs globals body #!optional (prim? #f))
+       (define (used? x)
+         (or (resource-set-member? (ctx-resources-used-rd ctx) x)
+             (resource-set-member? (ctx-resources-used-wr ctx) x)))
+
+       (define (add! x)
+         (set! globals (cons x globals)))
+
+       (let loop ((num (- univ-nb-gvm-regs 1)))
+         (if (>= num 0)
+             (begin
+               (if (used? num) (add! (gvm-state-reg ctx num)))
+               (loop (- num 1)))))
+
+       (if (used? 'sp)        (add! (gvm-state-sp ctx)))
+       (if (used? 'stack)     (add! (gvm-state-stack ctx)))
+       (if (used? 'glo)       (add! (gvm-state-glo ctx)))
+       (if (used? 'nargs)     (add! (gvm-state-nargs ctx)))
+       (if (used? 'pollcount) (add! (gvm-state-pollcount ctx)))
+
+       (univ-emit-function-declaration*
+        ctx
+        name
+        params
+        header
+        attribs
+        globals
+        body
+        prim?)))))
+
+(define (univ-emit-function-declaration* ctx name params header attribs globals body prim?)
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -3938,7 +3958,7 @@ function Gambit_trampoline(pc) {
 
     (else
      (compiler-internal-error
-      "univ-emit-function-declaration, unknown target"))))
+      "univ-emit-function-declaration*, unknown target"))))
 
 (define (univ-comment ctx comment)
   (case (target-name (ctx-target ctx))
