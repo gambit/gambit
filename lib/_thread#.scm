@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_thread#.scm", Time-stamp: <2008-11-22 09:00:30 feeley>
+;;; File: "_thread#.scm"
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -761,12 +761,16 @@
 
 (##define-macro (macro-raise obj)
   `(let ((obj ,obj))
-     (##declare (not safe)) ;; avoid procedure check on the call to the handler
+     (##declare
+      (not safe) ;; avoid procedure check on the call to the handler
+      (interrupts-enabled)) ;; make sure exceptions can be interrupted
      ((macro-current-exception-handler) obj)))
 
 (##define-macro (macro-abort obj)
   `(let ((obj ,obj))
-     (##declare (not safe)) ;; avoid procedure check on the call to the handler
+     (##declare
+      (not safe) ;; avoid procedure check on the call to the handler
+      (interrupts-enabled)) ;; make sure exceptions can be interrupted
      ((macro-current-exception-handler) obj)
      (##abort (macro-make-noncontinuable-exception obj))))
 
