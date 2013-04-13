@@ -4,6 +4,8 @@
 @rem C++ 2008 Professional Edition.  It probably will work with the
 @rem Express Edition as well.
 @rem
+@rem This batch file must be executed in the Gambit root directory.
+@rem
 @rem TODO: turn this into a makefile
 
 @rem Setup environment variables
@@ -93,6 +95,11 @@ cd gsc
 %COMP_LIB% _back.c
 %COMP_LIB% _front.c
 %COMP_LIB% _prims.c
+%COMP_LIB% _assert.c
+%COMP_LIB% _asm.c
+%COMP_LIB% _x86.c
+%COMP_LIB% _codegen.c
+%COMP_LIB% _t-univ.c
 %COMP_LIB% _t-c-1.c
 %COMP_LIB% _t-c-2.c
 %COMP_LIB% _t-c-3.c
@@ -101,7 +108,7 @@ cd gsc
 %COMP_APP% _gsc.c
 %COMP_APP% _gsc_.c
 
-cl -Fegsc.exe ..\lib\libgambc.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsclib.obj _gambcgsc.obj _gsc.obj _gsc_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
+cl -Fegsc.exe ..\lib\libgambc.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _assert.obj _asm.obj _x86.obj _codegen.obj _t-univ.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsclib.obj _gambcgsc.obj _gsc.obj _gsc_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
 
 cd ..
 
