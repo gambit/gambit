@@ -103,7 +103,9 @@ download_gambit_dist_tgz()
 
   major_minor="`echo \"$gambit_dist\" | sed -e \"s/gambc-\\([^_]*_[^_]*\\)\\(.*\\)/\\1/g\" -e \"s/_/./g\"`"
 
-  curl "http://www.iro.umontreal.ca/~gambit/download/gambit/$major_minor/source/$gambit_dist.tgz" > "$gambit_dist.tgz"
+  if [ ! -f "$gambit_dist.tgz" ]; then
+    curl "http://www.iro.umontreal.ca/~gambit/download/gambit/$major_minor/source/$gambit_dist.tgz" > "$gambit_dist.tgz"
+  fi
 }
 
 get_gambit_dist_tgz()
