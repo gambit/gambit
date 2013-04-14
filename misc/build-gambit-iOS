@@ -10,9 +10,7 @@
 sdk_version="4.3"
 
 # Which ./configure options are to be used?
-#config_options="--enable-single-host --enable-debug"
 config_options="--enable-single-host"
-#config_options=""
 prefix_subdir="current"
 
 # The following two settings are only relevant when this script is used
