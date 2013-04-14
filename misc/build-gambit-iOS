@@ -54,7 +54,7 @@ select_ios()
   ios_platform="$kind$platform_type.platform"
   ios_sdk="$kind$platform_type$sdk_version.sdk"
 
-  platforms_dir="/Developer/Platforms"
+  platforms_dir="`xcode-select --print-path`/Platforms"
   ios_platform_dir="$platforms_dir/$ios_platform"
   ios_sdks="$ios_platform_dir/Developer/SDKs"
   ios_sdk_dir="$ios_sdks/$ios_sdk"
