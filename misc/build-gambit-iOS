@@ -8,8 +8,7 @@
 
 # Which iOS kind and version are to be used?
 ios_kind="iPhone"
-#ios_version="5.0"
-ios_version="4.3"
+sdk_version="4.3"
 
 # Which ./configure options are to be used?
 #config_options="--enable-single-host --enable-debug"
@@ -48,7 +47,6 @@ select_ios()
   arch="$4"
 
   gambit_dir="`pwd`/gambit-iOS"
-  #gambit_dir="`pwd`/gambit-$kind$platform_type"
   gambit_prefix="$gambit_dir/$prefix_subdir"
 
   ios_platform="$kind$platform_type.platform"
@@ -204,12 +202,10 @@ build_all_ios()
   rm -rf temp-lib
   mkdir temp-lib
 
-  for arch in i386 ; do
-    build_one_ios "$ios_kind" Simulator "$ios_version" "$arch"
-  done
+  build_one_ios "$ios_kind" Simulator "$sdk_version" i386
 
   for arch in armv6 armv7 ; do
-    build_one_ios "$ios_kind" OS "$ios_version" "$arch"
+    build_one_ios "$ios_kind" OS "$sdk_version" "$arch"
   done
 
   rm -rf temp-lib
