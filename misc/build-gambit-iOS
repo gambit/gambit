@@ -6,8 +6,7 @@
 
 # The following definitions should be adjusted to your context.
 
-# Which iOS kind and version are to be used?
-ios_kind="iPhone"
+# Which iOS SDK version are to be used?
 sdk_version="4.3"
 
 # Which ./configure options are to be used?
@@ -41,16 +40,15 @@ select_macosx()
 
 select_ios()
 {
-  kind="$1"
-  platform_type="$2"
-  sdk_version="$3"
-  arch="$4"
+  platform_type="$1"
+  sdk_version="$2"
+  arch="$3"
 
   gambit_dir="`pwd`/gambit-iOS"
   gambit_prefix="$gambit_dir/$prefix_subdir"
 
-  ios_platform="$kind$platform_type.platform"
-  ios_sdk="$kind$platform_type$sdk_version.sdk"
+  ios_platform="$platform_type.platform"
+  ios_sdk="iPhone$platform_type$sdk_version.sdk"
 
   platforms_dir="`xcode-select --print-path`/Platforms"
   ios_platform_dir="$platforms_dir/$ios_platform"
@@ -62,7 +60,7 @@ select_ios()
   if [ ! -d "$ios_platform_dir" ]; then
     echo "*** ERROR!  The platform \"$ios_platform\" is not available."
     echo "*** The available platforms are:"
-    (cd "$platforms_dir" ; ls -d $kind* | sed -e "s/^/***   /g")
+    (cd "$platforms_dir" ; ls -d iPhone* | sed -e "s/^/***   /g")
     echo "*** You need to edit the top of the build-gambit-iOS script"
     exit 1
   fi
@@ -75,7 +73,7 @@ select_ios()
     exit 1
   fi
 
-  case "$kind$platform_type" in
+  case "$platform_type" in
 
            iPhoneOS) config_options_extras=--host=arm-apple-darwin
                      ;;
@@ -170,12 +168,11 @@ build_macosx()
 
 build_one_ios()
 {
-  kind="$1"
-  platform_type="$2"
-  sdk_version="$3"
-  arch="$4"
+  platform_type="$1"
+  sdk_version="$2"
+  arch="$3"
 
-  select_ios "$kind" "$platform_type" "$sdk_version" "$arch"
+  select_ios "$platform_type" "$sdk_version" "$arch"
 
   configure_gambit "$gambit_dir"
 
@@ -202,21 +199,16 @@ build_all_ios()
   rm -rf temp-lib
   mkdir temp-lib
 
-  build_one_ios "$ios_kind" Simulator "$sdk_version" i386
+  build_one_ios iPhoneSimulator "$sdk_version" i386
 
   for arch in armv6 armv7 ; do
-    build_one_ios "$ios_kind" OS "$sdk_version" "$arch"
+    build_one_ios iPhoneOS "$sdk_version" "$arch"
   done
 
   rm -rf temp-lib
 }
 
-# Get the Gambit distribution.
-
 get_gambit_dist_tgz
-
-# Build Gambit for all iOS platforms.
-
 build_all_ios
 
 # If you also want to build the Mac OS X version, then uncomment the
