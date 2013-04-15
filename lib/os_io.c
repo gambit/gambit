@@ -6380,6 +6380,9 @@ HANDLE h;)
   if (GetFileType (h) == FILE_TYPE_PIPE)
     return ___PIPE_DEVICE_KIND;
 
+  if (GetFileType (h) == FILE_TYPE_CHAR)
+    return ___FILE_DEVICE_KIND;
+
   if (GetFileInformationByHandle (h, &finfo))
     return ___FILE_DEVICE_KIND;
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1344,16 +1344,16 @@
 
   (or ##shell-program
       (let ((sp
-	     (if (##file-exists? (##car unix-shell-program))
-		 unix-shell-program
-		 (if (##getenv "HOME" #f)
-		     default-shell-program
-		     (let ((comspec (##getenv "COMSPEC" #f)))
-		       (if comspec
-			   (##cons comspec "/C")
-			   windows-shell-program))))))
-	(set! ##shell-program sp)
-	sp)))
+             (if (##file-exists? (##car unix-shell-program))
+                 unix-shell-program
+                 (if (##getenv "HOME" #f)
+                     default-shell-program
+                     (let ((comspec (##getenv "COMSPEC" #f)))
+                       (if comspec
+                           (##cons comspec "/C")
+                           windows-shell-program))))))
+        (set! ##shell-program sp)
+        sp)))
 
 (define-prim (##shell-command cmd)
   (let* ((shell-prog
@@ -1676,33 +1676,20 @@
                              (let ((c (##string-ref path 1)))
                                (or (##char=? #\\ c)
                                    (##char=? #\/ c))))
-                      (let loop2 ((i 2)
-                                  (nb-seps 2)
-                                  (last 1))
+                      (let loop2 ((i 2))
                         (if (##fixnum.< i (##string-length path))
                           (let ((c (##string-ref path i)))
-                            (cond ((##not (or (##char=? #\\ c)
-                                              (##char=? #\/ c)))
-                                   (loop2 (##fixnum.+ i 1)
-                                          nb-seps
-                                          last))
-                                  ((##fixnum.= i (##fixnum.+ last 1))
-                                   0)
-                                  ((##fixnum.= nb-seps 3)
-                                   i)
-                                  (else
-                                   (loop2 (##fixnum.+ i 1)
-                                          (##fixnum.+ nb-seps 1)
-                                          i))))
-                          (if (or (##fixnum.< nb-seps 3)
-                                  (##fixnum.= i (##fixnum.+ last 1)))
-                            0
-                            i)))
+                            (if (or (##char=? #\\ c)
+                                    (##char=? #\/ c))
+                                i
+                                (loop2 (##fixnum.+ i 1))))
+                          0))
                       0))
                    (else
                     0)))))
         (else
          0)))
+
 
 (define ##path-resolve-hook #f)
 (set! ##path-resolve-hook #f)
