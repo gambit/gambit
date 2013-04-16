@@ -188,6 +188,19 @@ build_all_ios()
   rm -rf temp-lib
 }
 
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --no-update)
+      update_with_latest_changes_if_downloaded=no
+      ;;
+    *)
+      printf 'Unknown option: %s\n' "$1" >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
+
 get_gambit_dist_tgz
 build_all_ios
 
