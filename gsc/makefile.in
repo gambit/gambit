@@ -229,7 +229,7 @@ $(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 bootstrap-pre:
 
 bootstrap-post:
-	rm -f $(rootfromhere)/gsc-boot@bat@ $(rootfromhere)/gsc-boot@exe@
+	rm -f $(rootfromhere)/gsc-boot@bat@ $(rootfromhere)/gsc-boot@exe@ $(rootfromhere)/gsc-boot
 	cp $(EXECUTABLE) $(rootfromhere)/gsc-boot@exe@
 	cp $(LIBRARY) $(rootfromhere)/$(LIBRARY)
 
