@@ -6,21 +6,14 @@
 
 # The following definitions should be adjusted to your context.
 
-# Which iOS kind and version are to be used?
-ios_kind="iPhone"
-#ios_version="5.0"
-ios_version="4.3"
-
 # Which ./configure options are to be used?
-#config_options="--enable-single-host --enable-debug"
 config_options="--enable-single-host"
-#config_options=""
 prefix_subdir="current"
 
 # The following two settings are only relevant when this script is used
 # outside of the Gambit distribution tree.  In this case the Gambit
 # distribution must be downloaded.
-gambit_dist_if_downloaded="gambc-v4_6_5-devel"
+gambit_dist_if_downloaded="gambc-v4_6_7-devel"
 update_with_latest_changes_if_downloaded="yes"
 
 select_macosx()
@@ -42,42 +35,26 @@ select_macosx()
 
 select_ios()
 {
-  kind="$1"
-  platform_type="$2"
-  sdk_version="$3"
-  arch="$4"
+  platform_type="$1"
+  arch="$2"
 
   gambit_dir="`pwd`/gambit-iOS"
-  #gambit_dir="`pwd`/gambit-$kind$platform_type"
   gambit_prefix="$gambit_dir/$prefix_subdir"
 
-  ios_platform="$kind$platform_type.platform"
-  ios_sdk="$kind$platform_type$sdk_version.sdk"
+  ios_platform="$platform_type.platform"
 
-  platforms_dir="/Developer/Platforms"
+  platforms_dir="`xcode-select --print-path`/Platforms"
   ios_platform_dir="$platforms_dir/$ios_platform"
   ios_sdks="$ios_platform_dir/Developer/SDKs"
+
+  sdk_version=`(cd "$ios_sdks"; ls -1d *.sdk |sed -e 's/\.sdk$//' -e 's/^[^0-9\.]*//' |awk 'BEGIN{best = 0.0}($0 + 0.0) > best + 0.0{best = $0;}END{print best}')`
+  ios_sdk="$platform_type$sdk_version.sdk"
+
   ios_sdk_dir="$ios_sdks/$ios_sdk"
 
   echo "*** Selecting platform \"$ios_platform\" and SDK \"$ios_sdk\" for \"$arch\"."
 
-  if [ ! -d "$ios_platform_dir" ]; then
-    echo "*** ERROR!  The platform \"$ios_platform\" is not available."
-    echo "*** The available platforms are:"
-    (cd "$platforms_dir" ; ls -d $kind* | sed -e "s/^/***   /g")
-    echo "*** You need to edit the top of the build-gambit-iOS script"
-    exit 1
-  fi
-
-  if [ ! -d "$ios_sdk_dir" ]; then
-    echo "*** ERROR!  The SDK \"$ios_sdk\" is not available."
-    echo "*** The available SDKs are:"
-    (cd "$ios_sdks" ; ls | sed -e "s/^/***   /g")
-    echo "*** You need to edit the top of the build-gambit-iOS script"
-    exit 1
-  fi
-
-  case "$kind$platform_type" in
+  case "$platform_type" in
 
            iPhoneOS) config_options_extras=--host=arm-apple-darwin
                      ;;
@@ -103,7 +80,9 @@ download_gambit_dist_tgz()
 
   major_minor="`echo \"$gambit_dist\" | sed -e \"s/gambc-\\([^_]*_[^_]*\\)\\(.*\\)/\\1/g\" -e \"s/_/./g\"`"
 
-  curl "http://www.iro.umontreal.ca/~gambit/download/gambit/$major_minor/source/$gambit_dist.tgz" > "$gambit_dist.tgz"
+  if [ ! -f "$gambit_dist.tgz" ]; then
+    curl "http://www.iro.umontreal.ca/~gambit/download/gambit/$major_minor/source/$gambit_dist.tgz" > "$gambit_dist.tgz"
+  fi
 }
 
 get_gambit_dist_tgz()
@@ -170,12 +149,10 @@ build_macosx()
 
 build_one_ios()
 {
-  kind="$1"
-  platform_type="$2"
-  sdk_version="$3"
-  arch="$4"
+  platform_type="$1"
+  arch="$2"
 
-  select_ios "$kind" "$platform_type" "$sdk_version" "$arch"
+  select_ios "$platform_type" "$arch"
 
   configure_gambit "$gambit_dir"
 
@@ -192,7 +169,7 @@ build_one_ios()
 
     fi
 
-    cp $gambit_prefix/lib/$library temp-lib
+    cp $gambit_prefix/lib/$library temp-lib/
 
   done
 }
@@ -202,23 +179,29 @@ build_all_ios()
   rm -rf temp-lib
   mkdir temp-lib
 
-  for arch in i386 ; do
-    build_one_ios "$ios_kind" Simulator "$ios_version" "$arch"
-  done
+  build_one_ios iPhoneSimulator i386
 
   for arch in armv6 armv7 ; do
-    build_one_ios "$ios_kind" OS "$ios_version" "$arch"
+    build_one_ios iPhoneOS "$arch"
   done
 
   rm -rf temp-lib
 }
 
-# Get the Gambit distribution.
+while [ $# -ne 0 ]; do
+  case "$1" in
+    --no-update)
+      update_with_latest_changes_if_downloaded=no
+      ;;
+    *)
+      printf 'Unknown option: %s\n' "$1" >&2
+      exit 1
+      ;;
+  esac
+  shift
+done
 
 get_gambit_dist_tgz
-
-# Build Gambit for all iOS platforms.
-
 build_all_ios
 
 # If you also want to build the Mac OS X version, then uncomment the
