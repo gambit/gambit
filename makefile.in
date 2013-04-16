@@ -1,6 +1,6 @@
 # makefile for Gambit-C system.
 
-# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -100,12 +100,12 @@ all-pre: gsc-boot@bat@
 all-post:
 
 gsc-boot@bat@:
-	rm -f gsc-boot
-	cp gsc-boot.unix gsc-boot
-	chmod +x gsc-boot
+	rm -f gsc-boot@bat@
 	if test "@bat@" != ""; then \
-	  rm -f gsc-boot@bat@; \
 	  cp gsc-boot.bat.windows gsc-boot@bat@; \
+	else \
+	  cp gsc-boot.unix gsc-boot@bat@; \
+	  chmod +x gsc-boot@bat@; \
 	fi
 
 fake_target:
