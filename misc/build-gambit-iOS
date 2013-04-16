@@ -6,9 +6,6 @@
 
 # The following definitions should be adjusted to your context.
 
-# Which iOS SDK version are to be used?
-sdk_version="4.3"
-
 # Which ./configure options are to be used?
 config_options="--enable-single-host"
 prefix_subdir="current"
@@ -39,37 +36,23 @@ select_macosx()
 select_ios()
 {
   platform_type="$1"
-  sdk_version="$2"
-  arch="$3"
+  arch="$2"
 
   gambit_dir="`pwd`/gambit-iOS"
   gambit_prefix="$gambit_dir/$prefix_subdir"
 
   ios_platform="$platform_type.platform"
-  ios_sdk="iPhone$platform_type$sdk_version.sdk"
 
   platforms_dir="`xcode-select --print-path`/Platforms"
   ios_platform_dir="$platforms_dir/$ios_platform"
   ios_sdks="$ios_platform_dir/Developer/SDKs"
+
+  sdk_version=`(cd "$ios_sdks"; ls -1d *.sdk |sed -e 's/\.sdk$//' -e 's/^[^0-9\.]*//' |awk 'BEGIN{best = 0.0}($0 + 0.0) > best + 0.0{best = $0;}END{print best}')`
+  ios_sdk="$platform_type$sdk_version.sdk"
+
   ios_sdk_dir="$ios_sdks/$ios_sdk"
 
   echo "*** Selecting platform \"$ios_platform\" and SDK \"$ios_sdk\" for \"$arch\"."
-
-  if [ ! -d "$ios_platform_dir" ]; then
-    echo "*** ERROR!  The platform \"$ios_platform\" is not available."
-    echo "*** The available platforms are:"
-    (cd "$platforms_dir" ; ls -d iPhone* | sed -e "s/^/***   /g")
-    echo "*** You need to edit the top of the build-gambit-iOS script"
-    exit 1
-  fi
-
-  if [ ! -d "$ios_sdk_dir" ]; then
-    echo "*** ERROR!  The SDK \"$ios_sdk\" is not available."
-    echo "*** The available SDKs are:"
-    (cd "$ios_sdks" ; ls | sed -e "s/^/***   /g")
-    echo "*** You need to edit the top of the build-gambit-iOS script"
-    exit 1
-  fi
 
   case "$platform_type" in
 
@@ -167,10 +150,9 @@ build_macosx()
 build_one_ios()
 {
   platform_type="$1"
-  sdk_version="$2"
-  arch="$3"
+  arch="$2"
 
-  select_ios "$platform_type" "$sdk_version" "$arch"
+  select_ios "$platform_type" "$arch"
 
   configure_gambit "$gambit_dir"
 
@@ -187,7 +169,7 @@ build_one_ios()
 
     fi
 
-    cp $gambit_prefix/lib/$library temp-lib
+    cp $gambit_prefix/lib/$library temp-lib/
 
   done
 }
@@ -197,10 +179,10 @@ build_all_ios()
   rm -rf temp-lib
   mkdir temp-lib
 
-  build_one_ios iPhoneSimulator "$sdk_version" i386
+  build_one_ios iPhoneSimulator i386
 
   for arch in armv6 armv7 ; do
-    build_one_ios iPhoneOS "$sdk_version" "$arch"
+    build_one_ios iPhoneOS "$arch"
   done
 
   rm -rf temp-lib
