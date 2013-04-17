@@ -4142,14 +4142,14 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-throw, unknown target"))))
 
-(define (univ-eq ctx expr1 expr2)
-  (^eq? expr1 expr2))
-
 (define (univ-fxquotient ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
      (^ (^parens (^ expr1 " / " expr2)) " | 0"))
+
+    ((php)
+     (^ "(int)(" expr1 " / " expr2 ")"))
 
     ((python)
      (^call-prim "int" (^/ (^call-prim "float" expr1)
@@ -4157,9 +4157,6 @@ function Gambit_trampoline(pc) {
 
     ((ruby)
      (^ (^parens (^ (^ expr1 ".to_f") "/" (^ expr2 ".to_f"))) ".to_int"))
-
-    ((php)
-     (^ "(int)(" expr1 " / " expr2 ")"))
 
     (else
      (compiler-internal-error
@@ -4494,7 +4491,50 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-vector, unknown target"))))
 
+;; =============================================================================
+
 ;;; Primitive procedures
+
+;; TODO move elsewhere
+(define (univ-fold-left op0 op1 op2)
+  (make-translated-operand-generator
+   (lambda (ctx . args)
+     (cond ((null? args)
+            (op0 ctx))
+           ((null? (cdr args))
+            (op1 ctx (car args)))
+           (else
+            (let loop ((lst (cddr args))
+                       (res (op2 ctx
+                                 (car args)
+                                 (cadr args))))
+              (if (null? lst)
+                  res
+                  (loop (cdr lst)
+                        (op2 ctx
+                             (^parens res)
+                             (car lst))))))))))
+
+(define (univ-fold-left-compare op0 op1 op2)
+  (make-translated-operand-generator
+   (lambda (ctx . args)
+     (cond ((null? args)
+            (op0 ctx))
+           ((null? (cdr args))
+            (op1 ctx (car args)))
+           (else
+            (let loop ((lst (cdr args))
+                       (res (op2 ctx
+                                 (car args)
+                                 (cadr args))))
+              (let ((rest (cdr lst)))
+                (if (null? rest)
+                    res
+                    (loop rest
+                          (^&& (^parens res)
+                               (op2 ctx
+                                    (car lst)
+                                    (car rest))))))))))))
 
 (define (make-translated-operand-generator proc)
   (lambda (ctx opnds)
@@ -4512,47 +4552,34 @@ function Gambit_trampoline(pc) {
 
   (make-translated-operand-generator
    (lambda (ctx arg1)
-     (univ-eq ctx arg1 (^obj #f)))))
+     (^eq? arg1 (^obj #f)))))
 
 (univ-define-prim-bool "##eq?" #t #f
 
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
-     (univ-eq ctx arg1 arg2))))
+     (^eq? arg1 arg2))))
 
 (univ-define-prim "##fx+" #f #f
 
-  (univ-fold-left (lambda (ctx)           (^obj 0))
-                  (lambda (ctx arg1)      arg1)
-                  (lambda (ctx arg1 arg2) (^ arg1 " + " arg2))))
-
-;; TODO move elsewhere
-(define (univ-fold-left op0 op1 op2)
-  (make-translated-operand-generator
-   (lambda (ctx . args)
-     (cond ((null? args)
-            (op0 ctx))
-           ((null? (cdr args))
-            (op1 ctx (car args)))
-           (else
-            (let loop ((lst (cddr args))
-                       (res (op2 ctx (car args) (cadr args))))
-              (if (null? lst)
-                  res
-                  (loop (cdr lst)
-                        (op2 ctx (^ "(" res ")") (car lst))))))))))
+  (univ-fold-left
+   (lambda (ctx)           (^obj 0))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^+ arg1 arg2))))
 
 (univ-define-prim "##fx-" #f #f
 
-  (univ-fold-left #f ;; 0 arguments impossible
-                  (lambda (ctx arg1)      (^- arg1))
-                  (lambda (ctx arg1 arg2) (^- arg1 arg2))))
+  (univ-fold-left
+   #f ;; 0 arguments impossible
+   (lambda (ctx arg1)      (^- arg1))
+   (lambda (ctx arg1 arg2) (^- arg1 arg2))))
 
 (univ-define-prim "##fx*" #f #f
 
-  (univ-fold-left (lambda (ctx)           (^obj 1))
-                  (lambda (ctx arg1)      arg1)
-                  (lambda (ctx arg1 arg2) (^* arg1 arg2))))
+  (univ-fold-left
+   (lambda (ctx)           (^obj 1))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^* arg1 arg2))))
 
 (univ-define-prim "##fxquotient" #f #f
 
@@ -4562,52 +4589,50 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim "##fxmodulo" #f #f
 
-  (lambda (ctx opnds)
-    (univ-fxmodulo ctx
-                   (^getopnd (list-ref opnds 0))
-                   (^getopnd (list-ref opnds 1)))))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (univ-fxmodulo ctx arg1 arg2))))
 
 (univ-define-prim "##fxremainder" #f #f
 
-  (lambda (ctx opnds)
-    (univ-fxremainder ctx
-                      (^getopnd (list-ref opnds 0))
-                      (^getopnd (list-ref opnds 1)))))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (univ-fxremainder ctx arg1 arg2))))
 
 (univ-define-prim-bool "##fx<" #f #f
 
-  (lambda (ctx opnds)
-    (let ((opnd1 (list-ref opnds 0))
-          (opnd2 (list-ref opnds 1)))
-      (^< (^getopnd opnd1) (^getopnd opnd2)))))
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^< arg1 arg2))))
 
 (univ-define-prim-bool "##fx<=" #f #f
 
-  (lambda (ctx opnds)
-    (let ((opnd1 (list-ref opnds 0))
-          (opnd2 (list-ref opnds 1)))
-      (^<= (^getopnd opnd1) (^getopnd opnd2)))))
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^<= arg1 arg2))))
 
 (univ-define-prim-bool "##fx>" #f #f
 
-  (lambda (ctx opnds)
-    (let ((opnd1 (list-ref opnds 0))
-          (opnd2 (list-ref opnds 1)))
-      (^> (^getopnd opnd1) (^getopnd opnd2)))))
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^> arg1 arg2))))
 
 (univ-define-prim-bool "##fx>=" #f #f
 
-  (lambda (ctx opnds)
-    (let ((opnd1 (list-ref opnds 0))
-          (opnd2 (list-ref opnds 1)))
-      (^>= (^getopnd opnd1) (^getopnd opnd2)))))
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^>= arg1 arg2))))
 
 (univ-define-prim-bool "##fx=" #f #f
 
-  (lambda (ctx opnds)
-    (let ((opnd1 (list-ref opnds 0))
-          (opnd2 (list-ref opnds 1)))
-      (^= (^getopnd opnd1) (^getopnd opnd2)))))
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^= arg1 arg2))))
 
 (univ-define-prim "##fx+?" #f #f
 

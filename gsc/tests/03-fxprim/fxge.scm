@@ -5,8 +5,16 @@
 (define c 22)
 
 (define (test2 x y)
+  (println (##fx>=))
+  (println (if (##fx>=) 11 22))
+  (println (##fx>= x))
+  (println (if (##fx>= x) 11 22))
   (println (##fx>= x y))
-  (println (if (##fx>= x y) 11 22)))
+  (println (if (##fx>= x y) 11 22))
+  (println (##fx>= x y 17))
+  (println (if (##fx>= x y 17) 11 22))
+  (println (##fx>= x y 5))
+  (println (if (##fx>= x y 5) 11 22)))
 
 (define (test x)
   (test2 x a)
