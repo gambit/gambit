@@ -4,4 +4,4 @@
 *.key binary
 *.exe binary
 *.dmg binary
-tests/test*.ok binary
+tests/test*.ok -text
