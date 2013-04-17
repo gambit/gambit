@@ -103,6 +103,7 @@ gsc-boot@exe@:
 	rm -f gsc-boot@bat@ gsc-boot
 	cp gsc-boot.bat.windows gsc-boot@bat@
 	cp gsc-boot.unix gsc-boot
+	chmod +x gsc-boot
 
 fake_target:
 
