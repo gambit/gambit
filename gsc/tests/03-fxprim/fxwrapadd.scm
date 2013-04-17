@@ -10,3 +10,12 @@
 (println (##fxwrap+ -536870910 -1))
 (println (##fxwrap+ -536870910 -2))
 (println (##fxwrap+ -536870910 -3))
+
+(println (##fxwrap+))
+(println (##fxwrap+ 11))
+(println (##fxwrap+ 11 22))
+(println (##fxwrap+ 11 22 33))
+(println (##fxwrap+ 11 22 33 44))
+(println (##fxwrap+ 0 -536870910 -3))
+(println (##fxwrap+ -536870910 0 -3))
+(println (##fxwrap+ -536870910 -3 0))

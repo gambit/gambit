@@ -1,0 +1,12 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(println (##fx*? 11 33))
+(println (##fx*? 11 -11))
+(println (##fx*? 11 -33))
+(println (##fx*? -11 33))
+(println (##fx*? 536870910 1))
+(println (##fx*? 536870910 2))
+(println (##fx*? 536870910 3))
+(println (##fx*? -536870910 -1))
+(println (##fx*? -536870910 -2))
+(println (##fx*? -536870910 -3))

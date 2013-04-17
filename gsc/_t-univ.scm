@@ -652,6 +652,104 @@
      (compiler-internal-error
       "univ-emit-/, unknown target"))))
 
+(define (univ-wrap+ ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^>> (^<< (^parens (^+ expr1 expr2))
+               univ-tag-bits)
+          univ-tag-bits))
+
+    ((python)
+     (^>> (^member (^call-prim
+                    "ctypes.c_int32"
+                    (^<< (^parens (^+ expr1 expr2))
+                         univ-tag-bits))
+                   "value")
+          univ-tag-bits))
+
+    ((ruby php)
+     (let ((maxfix+1
+            (arithmetic-shift 1
+                              (- univ-word-bits (+ 1 univ-tag-bits)))))
+       (^- (^parens (^bitand (^parens (^+ (^+ expr1 expr2)
+                                          maxfix+1))
+                             (- (* 2 maxfix+1) 1)))
+           maxfix+1)))
+
+    (else
+     (compiler-internal-error
+      "univ-wrap+, unknown target"))))
+
+(define (univ-wrap- ctx expr1 #!optional (expr2 #f))
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^>> (^<< (^parens (if expr2
+                            (^- expr1 expr2)
+                            (^- expr1)))
+               univ-tag-bits)
+          univ-tag-bits))
+
+    ((python)
+     (^>> (^member (^call-prim
+                    "ctypes.c_int32"
+                    (^<< (^parens (if expr2
+                                      (^- expr1 expr2)
+                                      (^- expr1)))
+                         univ-tag-bits))
+                   "value")
+          univ-tag-bits))
+
+    ((ruby php)
+     (let ((maxfix+1
+            (arithmetic-shift 1
+                              (- univ-word-bits (+ 1 univ-tag-bits)))))
+       (^- (^parens (^bitand (^parens (^+ (if expr2
+                                              (^- expr1 expr2)
+                                              (^- expr1))
+                                          maxfix+1))
+                             (- (* 2 maxfix+1) 1)))
+           maxfix+1)))
+
+    (else
+     (compiler-internal-error
+      "univ-wrap-, unknown target"))))
+
+(define (univ-wrap* ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^>> (^parens
+           (^<< (^parens
+                 (^+ (^* (^parens (^bitand expr1 #xffff))
+                         expr2)
+                     (^* (^parens (^bitand expr1 #xffff0000))
+                         (^parens (^bitand expr2 #xffff)))))
+                univ-tag-bits))
+          univ-tag-bits))
+
+    ((python)
+     (^>> (^member (^call-prim
+                    "ctypes.c_int32"
+                    (^<< (^parens (^* expr1 expr2))
+                         univ-tag-bits))
+                   "value")
+          univ-tag-bits))
+
+    ((ruby php)
+     (let ((maxfix+1
+            (arithmetic-shift 1
+                              (- univ-word-bits (+ 1 univ-tag-bits)))))
+       (^- (^parens (^bitand (^parens (^+ (^* expr1 expr2)
+                                          maxfix+1))
+                             (- (* 2 maxfix+1) 1)))
+           maxfix+1)))
+
+    (else
+     (compiler-internal-error
+      "univ-wrap*, unknown target"))))
+
 (define (univ-emit-<< ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -4634,379 +4732,253 @@ function Gambit_trampoline(pc) {
    (lambda (ctx arg1)      (^obj #t))
    (lambda (ctx arg1 arg2) (^= arg1 arg2))))
 
+;;TODO
 (univ-define-prim "##fx+?" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-          (^getopnd (list-ref opnds 0))
-          " + "
-          (^getopnd (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ">>"
-          univ-tag-bits
-          ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+       ((js)
+        (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+           arg1
+           " + "
+           arg2
+           ")<<"
+           univ-tag-bits
+           ">>"
+           univ-tag-bits
+           ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
-      ((python)
-       (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
-          univ-tag-bits
-          ").value>>"
-          univ-tag-bits
-          "))("
-          (^getopnd (list-ref opnds 0))
-          " + "
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((python)
+        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+           univ-tag-bits
+           ").value>>"
+           univ-tag-bits
+           "))("
+           arg1
+           " + "
+           arg2
+           ")"))
 
-      ((php ruby)
-       (^and (^parens
-              (^= (^parens
-                   (^assign (^global-var (^prefix "temp2"))
-                            (^-
-                             (^parens
-                              (^bitand
-                               (^parens
-                                (^+
-                                 (^parens
-                                  (^assign (^global-var (^prefix "temp1"))
-                                           (^+ (^getopnd (list-ref opnds 0))
-                                               (^getopnd (list-ref opnds 1)))))
-                                 (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                               (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
-                  (^global-var (^prefix "temp1"))))
-             (^global-var (^prefix "temp2"))))
+       ((php ruby)
+        (^and (^parens
+               (^= (^parens
+                    (^assign (^global-var (^prefix "temp2"))
+                             (^-
+                              (^parens
+                               (^bitand
+                                (^parens
+                                 (^+
+                                  (^parens
+                                   (^assign (^global-var (^prefix "temp1"))
+                                            (^+ arg1
+                                                arg2)))
+                                  (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                                (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                              (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                   (^global-var (^prefix "temp1"))))
+              (^global-var (^prefix "temp2"))))
 
-      (else
-       (compiler-internal-error
-        "##fx+?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##fx+?, unknown target"))))))
 
+;;TODO
 (univ-define-prim "##fx-?" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-          (^getopnd (list-ref opnds 0))
-          " - "
-          (^getopnd (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ">>"
-          univ-tag-bits
-          ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+       ((js)
+        (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+           arg1
+           " - "
+           arg2
+           ")<<"
+           univ-tag-bits
+           ">>"
+           univ-tag-bits
+           ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
-      ((python)
-       (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
-          univ-tag-bits
-          ").value>>"
-          univ-tag-bits
-          "))("
-          (^getopnd (list-ref opnds 0))
-          " - "
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((python)
+        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+           univ-tag-bits
+           ").value>>"
+           univ-tag-bits
+           "))("
+           arg1
+           " - "
+           arg2
+           ")"))
 
-      ((ruby)
-       (^ "(" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
-          (^getopnd (list-ref opnds 0))
-          " - "
-          (^getopnd (list-ref opnds 1))
-          ") + "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") & "
-          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
-          ") - "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") == " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+       ((ruby)
+        (^ "(" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
+           arg1
+           " - "
+           arg2
+           ") + "
+           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+           ") & "
+           (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+           ") - "
+           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+           ") == " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
-      ((php)
-       (^ "((" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
-          (^getopnd (list-ref opnds 0))
-          " - "
-          (^getopnd (list-ref opnds 1))
-          ") + "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") & "
-          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
-          ") - "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") === " (^global-var (^prefix "temp1")) ") ? " (^global-var (^prefix "temp2")) " : False"))
+       ((php)
+        (^ "((" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
+           arg1
+           " - "
+           arg2
+           ") + "
+           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+           ") & "
+           (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+           ") - "
+           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+           ") === " (^global-var (^prefix "temp1")) ") ? " (^global-var (^prefix "temp2")) " : False"))
 
-      (else
-       (compiler-internal-error
-        "##fx-?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##fx-?, unknown target"))))))
 
+;;TODO
 (univ-define-prim "##fx*?" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-          (^getopnd (list-ref opnds 0))
-          " * "
-          (^getopnd (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ">>"
-          univ-tag-bits
-          ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+       ((js)
+        (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+           arg1
+           " * "
+           arg2
+           ")<<"
+           univ-tag-bits
+           ">>"
+           univ-tag-bits
+           ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
-      ((python)
-       (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
-          univ-tag-bits
-          ").value>>"
-          univ-tag-bits
-          "))("
-          (^getopnd (list-ref opnds 0))
-          " * "
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((python)
+        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+           univ-tag-bits
+           ").value>>"
+           univ-tag-bits
+           "))("
+           arg1
+           " * "
+           arg2
+           ")"))
 
-      ((php ruby)
-       (^and (^parens
-              (^= (^parens
-                   (^assign (^global-var (^prefix "temp2"))
-                            (^-
-                             (^parens
-                              (^bitand
-                               (^parens
-                                (^+
-                                 (^parens
-                                  (^assign (^global-var (^prefix "temp1"))
-                                           (^* (^getopnd (list-ref opnds 0))
-                                               (^getopnd (list-ref opnds 1)))))
-                                 (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                               (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
-                  (^global-var (^prefix "temp1"))))
-             (^global-var (^prefix "temp2"))))
+       ((php ruby)
+        (^and (^parens
+               (^= (^parens
+                    (^assign (^global-var (^prefix "temp2"))
+                             (^-
+                              (^parens
+                               (^bitand
+                                (^parens
+                                 (^+
+                                  (^parens
+                                   (^assign (^global-var (^prefix "temp1"))
+                                            (^* arg1
+                                                arg2)))
+                                  (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                                (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                              (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                   (^global-var (^prefix "temp1"))))
+              (^global-var (^prefix "temp2"))))
 
-      (else
-       (compiler-internal-error
-        "##fx*?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##fx*?, unknown target"))))))
 
 (univ-define-prim "##fxwrap+" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ "("
-          (^getopnd (list-ref opnds 0))
-          " + "
-          (^getopnd (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ">>"
-          univ-tag-bits))
-
-      ((python)
-       (^ "ctypes.c_int32(("
-          (^getopnd (list-ref opnds 0))
-          " + "
-          (^getopnd (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ").value>>"
-          univ-tag-bits))
-
-      ((ruby php)
-       (^ "((("
-          (^getopnd (list-ref opnds 0))
-          " + "
-          (^getopnd (list-ref opnds 1))
-          ") + "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") & "
-          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
-          ") - "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-
-      (else
-       (compiler-internal-error
-        "##fxwrap+, unknown target")))))
+  (univ-fold-left
+   (lambda (ctx)           (^obj 0))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (univ-wrap+ ctx arg1 arg2))))
 
 (univ-define-prim "##fxwrap-" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ "("
-          (^getopnd (list-ref opnds 0))
-          " - "
-          (^getopnd (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ">>"
-          univ-tag-bits))
-
-      ((python)
-       (^ "ctypes.c_int32(("
-          (^getopnd (list-ref opnds 0))
-          " - "
-          (^getopnd (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ").value>>"
-          univ-tag-bits))
-
-      ((ruby php)
-       (^ "((("
-          (^getopnd (list-ref opnds 0))
-          " - "
-          (^getopnd (list-ref opnds 1))
-          ") + "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") & "
-          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
-          ") - "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-
-      (else
-       (compiler-internal-error
-        "##fxwrap-, unknown target")))))
+  (univ-fold-left
+   #f ;; 0 arguments impossible
+   (lambda (ctx arg1)      (univ-wrap- ctx arg1))
+   (lambda (ctx arg1 arg2) (univ-wrap- ctx arg1 arg2))))
 
 (univ-define-prim "##fxwrap*" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^>> (^parens
-             (^<< (^parens
-                   (^+ (^* (^parens
-                            (^bitand (^getopnd (list-ref opnds 0))
-                                     #xffff))
-                           (^getopnd (list-ref opnds 1)))
-                       (^* (^parens
-                            (^bitand (^getopnd (list-ref opnds 0))
-                                     #xffff0000))
-                           (^parens
-                            (^bitand (^getopnd (list-ref opnds 1))
-                                     #xffff)))))
-                  univ-tag-bits))
-            univ-tag-bits))
-
-      ((python)
-       (^ "ctypes.c_int32(("
-          (^getopnd (list-ref opnds 0))
-          " * "
-          (^getopnd (list-ref opnds 1))
-          ")<<"
-          univ-tag-bits
-          ").value>>"
-          univ-tag-bits))
-
-      ((ruby php)
-       ;; TODO: fix this for PHP which may have 32 or 64 bit ints
-       ;; For ruby it is OK because ruby will use bignums
-       (^ "((("
-          (^getopnd (list-ref opnds 0))
-          " * "
-          (^getopnd (list-ref opnds 1))
-          ") + "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-          ") & "
-          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
-          ") - "
-          (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-
-      (else
-       (compiler-internal-error
-        "##fxwrap*, unknown target")))))
+  (univ-fold-left
+   (lambda (ctx)           (^obj 1))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (univ-wrap* ctx arg1 arg2))))
 
 (univ-define-prim-bool "##fxzero?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (^= arg1 (^obj 0)))))
 
-      ((js)
-       (^ "("
-          (^getopnd (list-ref opnds 0))
-          " === 0)"))
+(univ-define-prim-bool "##fxpositive?" #t #f
 
-      ((python ruby)
-       (^ "("
-          (^getopnd (list-ref opnds 0))
-          " == 0)"))
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (^> arg1 (^obj 0)))))
 
-      ((php)                       ;TODO: complete
-       (^))
+(univ-define-prim-bool "##fxnegative?" #t #f
 
-      (else
-       (compiler-internal-error
-        "##fxzero?, unknown target")))))
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (^< arg1 (^obj 0)))))
 
 (univ-define-prim-bool "##fxodd?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ "("
-          (^getopnd (list-ref opnds 0))
-          " % 2 == 1)"))
-
-      ((python ruby php)                       ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##fxodd?, unknown target")))))
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (^= (^parens (^bitand arg1 (^obj 1))) (^obj 1)))))
 
 (univ-define-prim-bool "##fxeven?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (^= (^parens (^bitand arg1 (^obj 1))) (^obj 0)))))
 
-      ((js)
-       (^ "("
-          (^getopnd (list-ref opnds 0))
-          " % 2 == 0)"))
-
-      ((python ruby php)                       ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##fxeven?, unknown target")))))
-
+;;TODO
 (univ-define-prim-bool "##fxmax" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "Math.max("
-          (^getopnd (list-ref opnds 0))
-          ","
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((js)
+        (^ "Math.max("
+           arg1
+           ","
+           arg2
+           ")"))
 
-      ((python ruby php)                       ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##fxmax, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##fxmax, unknown target"))))))
 
+;;TODO
 (univ-define-prim-bool "##fxmin" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
 
       ((js)
        (^ "Math.min("
-          (^getopnd (list-ref opnds 0))
+          arg1
           ","
-          (^getopnd (list-ref opnds 1))
+          arg2
           ")"))
 
       ((python ruby php)                       ;TODO: complete
@@ -5014,33 +4986,30 @@ function Gambit_trampoline(pc) {
 
       (else
        (compiler-internal-error
-        "##fxmin, unknown target")))))
+        "##fxmin, unknown target"))))))
 
+;;TODO
 (univ-define-prim-bool "##null?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "("
-          (^getopnd (list-ref opnds 0))
-          " === null)"))
+       ((js)
+        (^ arg1 " === null"))
 
-      ((python)
-       (^ "("
-          (^getopnd (list-ref opnds 0))
-          " is None)"))
+       ((python)
+        (^ arg1 " is None"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          ".equal?(nil)"))
+       ((ruby)
+        (^ arg1 ".equal?(nil)"))
 
-      ((php)                       ;TODO: complete
-       (^))
+       ((php)                           ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##null?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##null?, unknown target"))))))
 
 (univ-define-prim "##cons" #t #f
 
@@ -5076,72 +5045,74 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim "##set-car!" #f #t
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "setcar(")
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((js)
+        (^ (^prefix "setcar(")
+           arg1
+           ", "
+           arg2
+           ")"))
 
-      ;; ((python)
-      ;;  (^))
+       ;; ((python)
+       ;;  (^))
 
-      ;; ((ruby)
-      ;;  (^))
+       ;; ((ruby)
+       ;;  (^))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##set-car!, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##set-car!, unknown target"))))))
 
 (univ-define-prim "##set-cdr!" #f #t
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "setcdr(")
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((js)
+        (^ (^prefix "setcdr(")
+           arg1
+           ", "
+           arg2
+           ")"))
 
-      ;; ((python)
-      ;;  (^))
+       ;; ((python)
+       ;;  (^))
 
-      ;; ((ruby)
-      ;;  (^))
+       ;; ((ruby)
+       ;;  (^))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##set-cdr!, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##set-cdr!, unknown target"))))))
 
 (univ-define-prim "list" #f #f
- (lambda (ctx opnds)
-   (case (target-name (ctx-target ctx))
 
-     ((js)
-      (^ (univ-emit-apply ctx
-                     (^prefix "list")
-                     ;; (list (^getopnd (list-ref opnds 0)))
-                     (map (lambda (opnd) (^getopnd opnd))
-                          opnds)
-                     )))
+  (make-translated-operand-generator
+   (lambda (ctx . args)
+     (case (target-name (ctx-target ctx))
 
-     ((python ruby php)                ;TODO: complete
-      (^))
+       ((js)
+        (^ (univ-emit-apply ctx
+                            (^prefix "list")
+                            args
+                            )))
 
-     (else
-      (compiler-internal-error
-       "list, unknown target")))))
+       ((python ruby php)               ;TODO: complete
+        (^))
+
+       (else
+        (compiler-internal-error
+         "list, unknown target"))))))
 
 (univ-define-prim "##list" #t #f
  (lambda (ctx opnds)

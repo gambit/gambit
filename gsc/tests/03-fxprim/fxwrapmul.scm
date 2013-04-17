@@ -15,3 +15,12 @@
 (println (##fxwrap* 1000001 1000001))
 (println (##fxwrap* 10000001 10000001))
 (println (##fxwrap* 100000001 100000001))
+
+(println (##fxwrap*))
+(println (##fxwrap* 11))
+(println (##fxwrap* 11 22))
+(println (##fxwrap* 11 22 33))
+(println (##fxwrap* 11 22 33 44))
+(println (##fxwrap* 1 100000001 100000001))
+(println (##fxwrap* 100000001 1 100000001))
+(println (##fxwrap* 100000001 100000001 1))
