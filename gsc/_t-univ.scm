@@ -419,6 +419,9 @@
 (define-macro (^new class . params)
   `(univ-emit-new ctx ,class ,@params))
 
+(define-macro (^typeof type expr)
+  `(univ-emit-typeof ctx ,type ,expr))
+
 (define-macro (^instanceof class expr)
   `(univ-emit-instanceof ctx ,class ,expr))
 
@@ -4190,6 +4193,16 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-emit-new, unknown target"))))
 
+(define (univ-emit-typeof ctx type expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^= (^ "typeof " expr) (^string type)))
+
+    (else
+     (compiler-internal-error
+      "unit-emit-typeof, unknown target"))))
+
 (define (univ-emit-instanceof ctx class expr)
   (case (target-name (ctx-target ctx))
 
@@ -4197,7 +4210,7 @@ function Gambit_trampoline(pc) {
      (^ expr " instanceof " class))
 
     ((python)
-     (^ "isinstance(" expr ", " class ")"))
+     (^call-prim "isinstance" expr class))
 
     ((ruby)
      (^ expr ".class == " class))
@@ -4638,103 +4651,219 @@ function Gambit_trampoline(pc) {
   (lambda (ctx opnds)
     (apply proc (cons ctx (univ-emit-getopnds ctx opnds)))))
 
-(univ-define-prim "##inline-host-code" #f #t
+;;----------------------------------------------------------------------------
 
-  (lambda (ctx opnds)
-    (let ((arg1 (car opnds)))
-      (if (obj? arg1)
-          (^ (obj-val arg1))
-          (compiler-internal-error "##inline-host-code requires constant argument")))))
+(univ-define-prim-bool "##type" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (^obj 0))));;TODO: implement
+
+(univ-define-prim-bool "##type-cast" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     arg1)));;TODO: implement
+
+(univ-define-prim-bool "##subtype" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (^obj 0))));;TODO: implement
+
+(univ-define-prim-bool "##subtype-set!" #t #t
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     arg1)));;TODO: implement
 
 (univ-define-prim-bool "##not" #t #f
-
   (make-translated-operand-generator
    (lambda (ctx arg1)
      (^eq? arg1 (^obj #f)))))
 
-(univ-define-prim-bool "##eq?" #t #f
+(univ-define-prim-bool "##boolean?" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (case (target-name (ctx-target ctx))
 
+       ((js)
+        (^typeof "boolean" arg1))
+
+       ((php)
+        (^call-prim "is_bool" arg1))
+
+       ((python)
+        (^instanceof "bool" arg1))
+
+       ((ruby)
+        (^or (^instanceof "FalseClass" arg1)
+             (^instanceof "TrueClass" arg1)))
+
+       (else
+        (compiler-internal-error
+         "##boolean?, unknown target"))))))
+
+(univ-define-prim-bool "##null?" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (case (target-name (ctx-target ctx))
+
+       ((js)
+        (^= arg1 (univ-null ctx)))
+
+       ((php)
+        (^));;TODO: implement
+
+       ((python)
+        (^ arg1 " is " (univ-null ctx)))
+
+       ((ruby)
+        (^call-prim (^member arg1 "equal?") (univ-null ctx)))
+
+       (else
+        (compiler-internal-error
+         "##null?, unknown target"))))))
+
+(univ-define-prim-bool "##unbound?" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (^obj #f))));;TODO: implement
+
+(univ-define-prim-bool "##eq?" #t #f
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
      (^eq? arg1 arg2))))
 
-(univ-define-prim "##fx+" #f #f
+;;TODO: ("##eqv?"               (2)   #f ()    0    boolean extended)
+;;TODO: ("##equal?"             (2)   #f ()    0    boolean extended)
+;;TODO: ("##eof-object?"        (1)   #f ()    0    boolean extended)
 
+(univ-define-prim-bool "##fixnum?" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1)
+     (case (target-name (ctx-target ctx))
+
+       ((js)
+        (^typeof "number" arg1))
+
+       ((php)
+        (^call-prim "is_int" arg1))
+
+       ((python)
+        (^and (^instanceof "int" arg1)
+              (^not (^instanceof "bool" arg1))))
+
+       ((ruby)
+        (^instanceof "Fixnum" arg1))
+
+       (else
+        (compiler-internal-error
+         "##fixnum?, unknown target"))))))
+
+;;TODO: ("##special?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##pair?"                    (1)   #f ()    0    boolean extended)
+;;TODO: ("##pair-mutable?"            (1)   #f ()    0    boolean extended)
+;;TODO: ("##subtyped?"                (1)   #f ()    0    boolean extended)
+;;TODO: ("##subtyped-mutable?"        (1)   #f ()    0    boolean extended)
+;;TODO: ("##subtyped.vector?"         (1)   #f ()    0    boolean extended)
+;;TODO: ("##subtyped.symbol?"         (1)   #f ()    0    boolean extended)
+;;TODO: ("##subtyped.flonum?"         (1)   #f ()    0    boolean extended)
+;;TODO: ("##subtyped.bignum?"         (1)   #f ()    0    boolean extended)
+;;TODO: ("##vector?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##ratnum?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##cpxnum?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##structure?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##box?"                     (1)   #f ()    0    boolean extended)
+;;TODO: ("##values?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##meroon?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##jazz?"                    (1)   #f ()    0    boolean extended)
+;;TODO: ("##symbol?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##keyword?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##frame?"                   (1)   #f ()    0    boolean extended)
+;;TODO: ("##continuation?"            (1)   #f ()    0    boolean extended)
+;;TODO: ("##promise?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##will?"                    (1)   #f ()    0    boolean extended)
+;;TODO: ("##gc-hash-table?"           (1)   #f ()    0    boolean extended)
+;;TODO: ("##mem-allocated?"           (1)   #f ()    0    boolean extended)
+;;TODO: ("##procedure?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##return?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##foreign?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##string?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##s8vector?"                (1)   #f ()    0    boolean extended)
+;;TODO: ("##u8vector?"                (1)   #f ()    0    boolean extended)
+;;TODO: ("##s16vector?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##u16vector?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##s32vector?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##u32vector?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##s64vector?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##u64vector?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##f32vector?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##f64vector?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##flonum?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##bignum?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##char?"                    (1)   #f ()    0    boolean extended)
+;;TODO: ("##closure?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##subprocedure?"            (1)   #f ()    0    boolean extended)
+;;TODO: ("##return-dynamic-env-bind?" (1)   #f ()    0    boolean extended)
+;;TODO: ("##number?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##complex?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##real?"                    (1)   #f ()    0    boolean extended)
+;;TODO: ("##rational?"                (1)   #f ()    0    boolean extended)
+;;TODO: ("##integer?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##exact?"                   (1)   #f ()    0    boolean extended)
+;;TODO: ("##inexact?"                 (1)   #f ()    0    boolean extended)
+
+;;TODO: complete, clean up and test
+(univ-define-prim-bool "##fxmax" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
+
+       ((js)
+        (^ "Math.max("
+           arg1
+           ","
+           arg2
+           ")"))
+
+       ((python ruby php)               ;TODO: complete
+        (^))
+
+       (else
+        (compiler-internal-error
+         "##fxmax, unknown target"))))))
+
+;;TODO: complete, clean up and test
+(univ-define-prim-bool "##fxmin" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
+
+      ((js)
+       (^ "Math.min("
+          arg1
+          ","
+          arg2
+          ")"))
+
+      ((python ruby php)                       ;TODO: complete
+       (^))
+
+      (else
+       (compiler-internal-error
+        "##fxmin, unknown target"))))))
+
+(univ-define-prim "##fxwrap+" #f #f
+  (univ-fold-left
+   (lambda (ctx)           (^obj 0))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (univ-wrap+ ctx arg1 arg2))))
+
+(univ-define-prim "##fx+" #f #f
   (univ-fold-left
    (lambda (ctx)           (^obj 0))
    (lambda (ctx arg1)      arg1)
    (lambda (ctx arg1 arg2) (^+ arg1 arg2))))
 
-(univ-define-prim "##fx-" #f #f
-
-  (univ-fold-left
-   #f ;; 0 arguments impossible
-   (lambda (ctx arg1)      (^- arg1))
-   (lambda (ctx arg1 arg2) (^- arg1 arg2))))
-
-(univ-define-prim "##fx*" #f #f
-
-  (univ-fold-left
-   (lambda (ctx)           (^obj 1))
-   (lambda (ctx arg1)      arg1)
-   (lambda (ctx arg1 arg2) (^* arg1 arg2))))
-
-(univ-define-prim "##fxquotient" #f #f
-
-  (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-fxquotient ctx arg1 arg2))))
-
-(univ-define-prim "##fxmodulo" #f #f
-
-  (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-fxmodulo ctx arg1 arg2))))
-
-(univ-define-prim "##fxremainder" #f #f
-
-  (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-fxremainder ctx arg1 arg2))))
-
-(univ-define-prim-bool "##fx<" #f #f
-
-  (univ-fold-left-compare
-   (lambda (ctx)           (^obj #t))
-   (lambda (ctx arg1)      (^obj #t))
-   (lambda (ctx arg1 arg2) (^< arg1 arg2))))
-
-(univ-define-prim-bool "##fx<=" #f #f
-
-  (univ-fold-left-compare
-   (lambda (ctx)           (^obj #t))
-   (lambda (ctx arg1)      (^obj #t))
-   (lambda (ctx arg1 arg2) (^<= arg1 arg2))))
-
-(univ-define-prim-bool "##fx>" #f #f
-
-  (univ-fold-left-compare
-   (lambda (ctx)           (^obj #t))
-   (lambda (ctx arg1)      (^obj #t))
-   (lambda (ctx arg1 arg2) (^> arg1 arg2))))
-
-(univ-define-prim-bool "##fx>=" #f #f
-
-  (univ-fold-left-compare
-   (lambda (ctx)           (^obj #t))
-   (lambda (ctx arg1)      (^obj #t))
-   (lambda (ctx arg1 arg2) (^>= arg1 arg2))))
-
-(univ-define-prim-bool "##fx=" #f #f
-
-  (univ-fold-left-compare
-   (lambda (ctx)           (^obj #t))
-   (lambda (ctx arg1)      (^obj #t))
-   (lambda (ctx arg1 arg2) (^= arg1 arg2))))
-
-;;TODO
+;;TODO: complete, clean up and test
 (univ-define-prim "##fx+?" #f #f
-
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
      (case (target-name (ctx-target ctx))
@@ -4784,9 +4913,83 @@ function Gambit_trampoline(pc) {
         (compiler-internal-error
          "##fx+?, unknown target"))))))
 
-;;TODO
-(univ-define-prim "##fx-?" #f #f
+(univ-define-prim "##fxwrap*" #f #f
+  (univ-fold-left
+   (lambda (ctx)           (^obj 1))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (univ-wrap* ctx arg1 arg2))))
 
+(univ-define-prim "##fx*" #f #f
+  (univ-fold-left
+   (lambda (ctx)           (^obj 1))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^* arg1 arg2))))
+
+;;TODO: complete, clean up and test
+(univ-define-prim "##fx*?" #f #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (case (target-name (ctx-target ctx))
+
+       ((js)
+        (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+           arg1
+           " * "
+           arg2
+           ")<<"
+           univ-tag-bits
+           ">>"
+           univ-tag-bits
+           ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+
+       ((python)
+        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+           univ-tag-bits
+           ").value>>"
+           univ-tag-bits
+           "))("
+           arg1
+           " * "
+           arg2
+           ")"))
+
+       ((php ruby)
+        (^and (^parens
+               (^= (^parens
+                    (^assign (^global-var (^prefix "temp2"))
+                             (^-
+                              (^parens
+                               (^bitand
+                                (^parens
+                                 (^+
+                                  (^parens
+                                   (^assign (^global-var (^prefix "temp1"))
+                                            (^* arg1
+                                                arg2)))
+                                  (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                                (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                              (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                   (^global-var (^prefix "temp1"))))
+              (^global-var (^prefix "temp2"))))
+
+       (else
+        (compiler-internal-error
+         "##fx*?, unknown target"))))))
+
+(univ-define-prim "##fxwrap-" #f #f
+  (univ-fold-left
+   #f ;; 0 arguments impossible
+   (lambda (ctx arg1)      (univ-wrap- ctx arg1))
+   (lambda (ctx arg1 arg2) (univ-wrap- ctx arg1 arg2))))
+
+(univ-define-prim "##fx-" #f #f
+  (univ-fold-left
+   #f ;; 0 arguments impossible
+   (lambda (ctx arg1)      (^- arg1))
+   (lambda (ctx arg1 arg2) (^- arg1 arg2))))
+
+;;TODO: complete, clean up and test
+(univ-define-prim "##fx-?" #f #f
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
      (case (target-name (ctx-target ctx))
@@ -4843,179 +5046,219 @@ function Gambit_trampoline(pc) {
         (compiler-internal-error
          "##fx-?, unknown target"))))))
 
-;;TODO
-(univ-define-prim "##fx*?" #f #f
+;;TODO: ("##fxwrapquotient"              (2)   #f ()    0    fixnum  extended)
 
+(univ-define-prim "##fxquotient" #f #f
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
+     (univ-fxquotient ctx arg1 arg2))))
 
-       ((js)
-        (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-           arg1
-           " * "
-           arg2
-           ")<<"
-           univ-tag-bits
-           ">>"
-           univ-tag-bits
-           ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+(univ-define-prim "##fxremainder" #f #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (univ-fxremainder ctx arg1 arg2))))
 
-       ((python)
-        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
-           univ-tag-bits
-           ").value>>"
-           univ-tag-bits
-           "))("
-           arg1
-           " * "
-           arg2
-           ")"))
+(univ-define-prim "##fxmodulo" #f #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (univ-fxmodulo ctx arg1 arg2))))
 
-       ((php ruby)
-        (^and (^parens
-               (^= (^parens
-                    (^assign (^global-var (^prefix "temp2"))
-                             (^-
-                              (^parens
-                               (^bitand
-                                (^parens
-                                 (^+
-                                  (^parens
-                                   (^assign (^global-var (^prefix "temp1"))
-                                            (^* arg1
-                                                arg2)))
-                                  (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                                (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                              (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
-                   (^global-var (^prefix "temp1"))))
-              (^global-var (^prefix "temp2"))))
-
-       (else
-        (compiler-internal-error
-         "##fx*?, unknown target"))))))
-
-(univ-define-prim "##fxwrap+" #f #f
-
-  (univ-fold-left
-   (lambda (ctx)           (^obj 0))
-   (lambda (ctx arg1)      arg1)
-   (lambda (ctx arg1 arg2) (univ-wrap+ ctx arg1 arg2))))
-
-(univ-define-prim "##fxwrap-" #f #f
-
-  (univ-fold-left
-   #f ;; 0 arguments impossible
-   (lambda (ctx arg1)      (univ-wrap- ctx arg1))
-   (lambda (ctx arg1 arg2) (univ-wrap- ctx arg1 arg2))))
-
-(univ-define-prim "##fxwrap*" #f #f
-
-  (univ-fold-left
-   (lambda (ctx)           (^obj 1))
-   (lambda (ctx arg1)      arg1)
-   (lambda (ctx arg1 arg2) (univ-wrap* ctx arg1 arg2))))
+;;TODO: ("##fxnot"                       (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxand"                       0     #f ()    0    fixnum  extended)
+;;TODO: ("##fxior"                       0     #f ()    0    fixnum  extended)
+;;TODO: ("##fxxor"                       0     #f ()    0    fixnum  extended)
+;;TODO: ("##fxif"                        (3)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxbit-count"                 (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxlength"                    (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxfirst-bit-set"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxbit-set?"                  (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxwraparithmetic-shift"      (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxarithmetic-shift"          (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxarithmetic-shift?"         (2)   #f ()    0    #f      extended)
+;;TODO: ("##fxwraparithmetic-shift-left" (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxarithmetic-shift-left"     (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxarithmetic-shift-left?"    (2)   #f ()    0    #f      extended)
+;;TODO: ("##fxarithmetic-shift-right"    (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxarithmetic-shift-right?"   (2)   #f ()    0    #f      extended)
+;;TODO: ("##fxwraplogical-shift-right"   (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxwraplogical-shift-right?"  (2)   #f ()    0    #f      extended)
+;;TODO: ("##fxwrapabs"                   (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxabs"                       (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##fxabs?"                      (1)   #f ()    0    #f      extended)
 
 (univ-define-prim-bool "##fxzero?" #t #f
-
   (make-translated-operand-generator
    (lambda (ctx arg1)
      (^= arg1 (^obj 0)))))
 
 (univ-define-prim-bool "##fxpositive?" #t #f
-
   (make-translated-operand-generator
    (lambda (ctx arg1)
      (^> arg1 (^obj 0)))))
 
 (univ-define-prim-bool "##fxnegative?" #t #f
-
   (make-translated-operand-generator
    (lambda (ctx arg1)
      (^< arg1 (^obj 0)))))
 
 (univ-define-prim-bool "##fxodd?" #t #f
-
   (make-translated-operand-generator
    (lambda (ctx arg1)
      (^= (^parens (^bitand arg1 (^obj 1))) (^obj 1)))))
 
 (univ-define-prim-bool "##fxeven?" #t #f
-
   (make-translated-operand-generator
    (lambda (ctx arg1)
      (^= (^parens (^bitand arg1 (^obj 1))) (^obj 0)))))
 
-;;TODO
-(univ-define-prim-bool "##fxmax" #t #f
+(univ-define-prim-bool "##fx=" #f #f
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^= arg1 arg2))))
 
+(univ-define-prim-bool "##fx<" #f #f
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^< arg1 arg2))))
+
+(univ-define-prim-bool "##fx>" #f #f
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^> arg1 arg2))))
+
+(univ-define-prim-bool "##fx<=" #f #f
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^<= arg1 arg2))))
+
+(univ-define-prim-bool "##fx>=" #f #f
+  (univ-fold-left-compare
+   (lambda (ctx)           (^obj #t))
+   (lambda (ctx arg1)      (^obj #t))
+   (lambda (ctx arg1 arg2) (^>= arg1 arg2))))
+
+;;TODO: ("##fx->char"                    (1)   #f ()    0    char    extended)
+;;TODO: ("##fx<-char"                    (1)   #f ()    0    fixnum  extended)
+
+;;TODO: ("##fixnum->char"                (1)   #f ()    0    char    extended)
+;;TODO: ("##char->fixnum"                (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##flonum->fixnum"              (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##fixnum->flonum"              (1)   #f ()    0    real    extended)
+;;TODO: ("##fixnum->flonum-exact?"       (1)   #f ()    0    boolean extended)
+
+;;TODO: ("##fl->fx"                      (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##fl<-fx"                      (1)   #f ()    0    real    extended)
+;;TODO: ("##flmax"                       1     #f ()    0    real    extended)
+;;TODO: ("##flmin"                       1     #f ()    0    real    extended)
+;;TODO: ("##fl+"                         0     #f ()    0    real    extended)
+;;TODO: ("##fl*"                         0     #f ()    0    real    extended)
+;;TODO: ("##fl-"                         1     #f ()    0    real    extended)
+;;TODO: ("##fl/"                         1     #f ()    0    real    extended)
+;;TODO: ("##flabs"                       (1)   #f ()    0    real    extended)
+;;TODO: ("##flfloor"                     (1)   #f ()    0    real    extended)
+;;TODO: ("##flceiling"                   (1)   #f ()    0    real    extended)
+;;TODO: ("##fltruncate"                  (1)   #f ()    0    real    extended)
+;;TODO: ("##flround"                     (1)   #f ()    0    real    extended)
+;;TODO: ("##flexp"                       (1)   #f ()    0    real    extended)
+;;TODO: ("##fllog"                       (1)   #f ()    0    real    extended)
+;;TODO: ("##flsin"                       (1)   #f ()    0    real    extended)
+;;TODO: ("##flcos"                       (1)   #f ()    0    real    extended)
+;;TODO: ("##fltan"                       (1)   #f ()    0    real    extended)
+;;TODO: ("##flasin"                      (1)   #f ()    0    real    extended)
+;;TODO: ("##flacos"                      (1)   #f ()    0    real    extended)
+;;TODO: ("##flatan"                      (1 2) #f ()    0    real    extended)
+;;TODO: ("##flexpt"                      (2)   #f ()    0    real    extended)
+;;TODO: ("##flsqrt"                      (1)   #f ()    0    real    extended)
+;;TODO: ("##flcopysign"                  (2)   #f ()    0    real    extended)
+;;TODO: ("##flinteger?"                  (1)   #f ()    0    boolean extended)
+;;TODO: ("##flzero?"                     (1)   #f ()    0    boolean extended)
+;;TODO: ("##flpositive?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##flnegative?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##flodd?"                      (1)   #f ()    0    boolean extended)
+;;TODO: ("##fleven?"                     (1)   #f ()    0    boolean extended)
+;;TODO: ("##flfinite?"                   (1)   #f ()    0    boolean extended)
+;;TODO: ("##flinfinite?"                 (1)   #f ()    0    boolean extended)
+;;TODO: ("##flnan?"                      (1)   #f ()    0    boolean extended)
+;;TODO: ("##fl<-fx-exact?"               (1)   #f ()    0    boolean extended)
+;;TODO: ("##fl="                         0     #f ()    0    boolean extended)
+;;TODO: ("##fl<"                         0     #f ()    0    boolean extended)
+;;TODO: ("##fl>"                         0     #f ()    0    boolean extended)
+;;TODO: ("##fl<="                        0     #f ()    0    boolean extended)
+;;TODO: ("##fl>="                        0     #f ()    0    boolean extended)
+
+;;TODO: ("##char=?"                       0     #f ()    0    boolean extended)
+;;TODO: ("##char<?"                       0     #f ()    0    boolean extended)
+;;TODO: ("##char>?"                       0     #f ()    0    boolean extended)
+;;TODO: ("##char<=?"                      0     #f ()    0    boolean extended)
+;;TODO: ("##char>=?"                      0     #f ()    0    boolean extended)
+;;TODO: ("##char-alphabetic?"             (1)   #f ()    0    boolean extended)
+;;TODO: ("##char-numeric?"                (1)   #f ()    0    boolean extended)
+;;TODO: ("##char-whitespace?"             (1)   #f ()    0    boolean extended)
+;;TODO: ("##char-upper-case?"             (1)   #f ()    0    boolean extended)
+;;TODO: ("##char-lower-case?"             (1)   #f ()    0    boolean extended)
+;;TODO: ("##char-upcase"                  (1)   #f ()    0    char    extended)
+;;TODO: ("##char-downcase"                (1)   #f ()    0    char    extended)
+
+(univ-define-prim "##cons" #t #f
+  (make-translated-operand-generator
+   (lambda (ctx arg1 arg2)
+     (univ-cons ctx arg1 arg2))))
+
+;;TODO: complete, clean up and test
+(univ-define-prim "##set-car!" #f #t
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
      (case (target-name (ctx-target ctx))
 
        ((js)
-        (^ "Math.max("
+        (^ (^prefix "setcar(")
            arg1
-           ","
+           ", "
            arg2
            ")"))
+
+       ;; ((python)
+       ;;  (^))
+
+       ;; ((ruby)
+       ;;  (^))
 
        ((python ruby php)               ;TODO: complete
         (^))
 
        (else
         (compiler-internal-error
-         "##fxmax, unknown target"))))))
+         "##set-car!, unknown target"))))))
 
-;;TODO
-(univ-define-prim-bool "##fxmin" #t #f
-
+;;TODO: complete, clean up and test
+(univ-define-prim "##set-cdr!" #f #t
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
      (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "Math.min("
-          arg1
-          ","
-          arg2
-          ")"))
-
-      ((python ruby php)                       ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##fxmin, unknown target"))))))
-
-;;TODO
-(univ-define-prim-bool "##null?" #t #f
-
-  (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (case (target-name (ctx-target ctx))
-
        ((js)
-        (^ arg1 " === null"))
+        (^ (^prefix "setcdr(")
+           arg1
+           ", "
+           arg2
+           ")"))
 
-       ((python)
-        (^ arg1 " is None"))
+       ;; ((python)
+       ;;  (^))
 
-       ((ruby)
-        (^ arg1 ".equal?(nil)"))
+       ;; ((ruby)
+       ;;  (^))
 
-       ((php)                           ;TODO: complete
+       ((python ruby php)               ;TODO: complete
         (^))
 
        (else
         (compiler-internal-error
-         "##null?, unknown target"))))))
-
-(univ-define-prim "##cons" #t #f
-
-  (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-cons ctx arg1 arg2))))
+         "##set-cdr!, unknown target"))))))
 
 (let cxxxxr-loop ((n #b10))
   (if (<= n #b11111)
@@ -5043,127 +5286,228 @@ function Gambit_trampoline(pc) {
 
         (cxxxxr-loop (+ n 1)))))
 
-(univ-define-prim "##set-car!" #f #t
-
-  (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^ (^prefix "setcar(")
-           arg1
-           ", "
-           arg2
-           ")"))
-
-       ;; ((python)
-       ;;  (^))
-
-       ;; ((ruby)
-       ;;  (^))
-
-       ((python ruby php)               ;TODO: complete
-        (^))
-
-       (else
-        (compiler-internal-error
-         "##set-car!, unknown target"))))))
-
-(univ-define-prim "##set-cdr!" #f #t
-
-  (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^ (^prefix "setcdr(")
-           arg1
-           ", "
-           arg2
-           ")"))
-
-       ;; ((python)
-       ;;  (^))
-
-       ;; ((ruby)
-       ;;  (^))
-
-       ((python ruby php)               ;TODO: complete
-        (^))
-
-       (else
-        (compiler-internal-error
-         "##set-cdr!, unknown target"))))))
-
-(univ-define-prim "list" #f #f
-
+(univ-define-prim "##list" #t #f
   (make-translated-operand-generator
    (lambda (ctx . args)
-     (case (target-name (ctx-target ctx))
+     (let loop ((lst (reverse args))
+                (result (univ-null ctx)))
+       (if (pair? lst)
+           (loop (cdr lst)
+                 (univ-cons ctx
+                            (car lst)
+                            result))
+           result)))))
 
-       ((js)
-        (^ (univ-emit-apply ctx
-                            (^prefix "list")
-                            args
-                            )))
+;;TODO: ("##box"                          (1)   #f ()    0    #f      extended)
+;;TODO: ("##unbox"                        (1)   #f ()    0    (#f)    extended)
+;;TODO: ("##set-box!"                     (2)   #t ()    0    #f      extended)
 
-       ((python ruby php)               ;TODO: complete
-        (^))
+;;TODO: ("##make-will"                    (2)   #t ()    0    #f      extended)
+;;TODO: ("##will-testator"                (1)   #f ()    0    (#f)    extended)
 
-       (else
-        (compiler-internal-error
-         "list, unknown target"))))))
+;;TODO: ("##gc-hash-table-ref"            (2)   #f ()    0    (#f)    extended)
+;;TODO: ("##gc-hash-table-set!"           (3)   #t ()    0    (#f)    extended)
+;;TODO: ("##gc-hash-table-rehash!"        (2)   #t ()    0    (#f)    extended)
 
-(univ-define-prim "##list" #t #f
- (lambda (ctx opnds)
-   (let loop ((lst (reverse opnds))
-              (result (univ-null ctx)))
-     (if (pair? lst)
-         (loop (cdr lst)
-               (univ-cons ctx
-                          (^getopnd (car lst))
-                          result))
-         result))))
+;;TODO: ("##values"                       0     #f ()    0    (#f)    extended)
 
-;; (univ-define-prim "##length" #f #f
-;;   (lambda (ctx opnds)
-;;     (case (target-name (ctx-target ctx))
+;;TODO: ("##vector"                       0     #f ()    0    vector  extended)
+;;TODO: ("##make-vector"                  (2)   #f ()    0    vector  extended)
+;;TODO: ("##vector-length"                (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##vector-ref"                   (2)   #f ()    0    (#f)    extended)
+;;TODO: ("##vector-set!"                  (3)   #t ()    0    vector  extended)
+;;TODO: ("##vector-shrink!"               (2)   #t ()    0    vector  extended)
 
-;;       ((js)
-;;        (^ (univ-emit-apply ctx
-;;                       (^prefix "length")
-;;                       (list (^getopnd (list-ref opnds 0))))))
-;;                       ;; (list (^getopnd (list-ref opnds 0)))
-;;                       ;; (map (lambda (opnd) )
-;;                       ;;      opnds)
-;;                       ;; )))
+;;TODO: ("##string"                       0     #f ()    0    string  extended)
+;;TODO: ("##make-string"                  (2)   #f ()    0    string  extended)
+;;TODO: ("##string-length"                (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##string-ref"                   (2)   #f ()    0    char    extended)
+;;TODO: ("##string-set!"                  (3)   #t ()    0    string  extended)
+;;TODO: ("##string-shrink!"               (2)   #t ()    0    string  extended)
 
-;;       ((python ruby php)                ;TODO: complete
-;;        (^))
+;;TODO: ("##s8vector"                     0     #f ()    0    #f      extended)
+;;TODO: ("##make-s8vector"                (2)   #f ()    0    #f      extended)
+;;TODO: ("##s8vector-length"              (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##s8vector-ref"                 (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##s8vector-set!"                (3)   #t ()    0    #f      extended)
+;;TODO: ("##s8vector-shrink!"             (2)   #t ()    0    #f      extended)
 
-;;       (else
-;;        (compiler-internal-error
-;;         "##length, unknown target")))))
+;;TODO: ("##u8vector"                     0     #f ()    0    #f      extended)
+;;TODO: ("##make-u8vector"                (2)   #f ()    0    #f      extended)
+;;TODO: ("##u8vector-length"              (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##u8vector-ref"                 (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##u8vector-set!"                (3)   #t ()    0    #f      extended)
+;;TODO: ("##u8vector-shrink!"             (2)   #t ()    0    #f      extended)
 
-(univ-define-prim "length" #f #f
+;;TODO: ("##s16vector"                    0     #f ()    0    #f      extended)
+;;TODO: ("##make-s16vector"               (2)   #f ()    0    #f      extended)
+;;TODO: ("##s16vector-length"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##s16vector-ref"                (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##s16vector-set!"               (3)   #t ()    0    #f      extended)
+;;TODO: ("##s16vector-shrink!"            (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##u16vector"                    0     #f ()    0    #f      extended)
+;;TODO: ("##make-u16vector"               (2)   #f ()    0    #f      extended)
+;;TODO: ("##u16vector-length"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##u16vector-ref"                (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##u16vector-set!"               (3)   #t ()    0    #f      extended)
+;;TODO: ("##u16vector-shrink!"            (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##s32vector"                    0     #f ()    0    #f      extended)
+;;TODO: ("##make-s32vector"               (2)   #f ()    0    #f      extended)
+;;TODO: ("##s32vector-length"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##s32vector-ref"                (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##s32vector-set!"               (3)   #t ()    0    #f      extended)
+;;TODO: ("##s32vector-shrink!"            (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##u32vector"                    0     #f ()    0    #f      extended)
+;;TODO: ("##make-u32vector"               (2)   #f ()    0    #f      extended)
+;;TODO: ("##u32vector-length"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##u32vector-ref"                (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##u32vector-set!"               (3)   #t ()    0    #f      extended)
+;;TODO: ("##u32vector-shrink!"            (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##s64vector"                    0     #f ()    0    #f      extended)
+;;TODO: ("##make-s64vector"               (2)   #f ()    0    #f      extended)
+;;TODO: ("##s64vector-length"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##s64vector-ref"                (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##s64vector-set!"               (3)   #t ()    0    #f      extended)
+;;TODO: ("##s64vector-shrink!"            (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##u64vector"                    0     #f ()    0    #f      extended)
+;;TODO: ("##make-u64vector"               (2)   #f ()    0    #f      extended)
+;;TODO: ("##u64vector-length"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##u64vector-ref"                (2)   #f ()    0    fixnum  extended)
+;;TODO: ("##u64vector-set!"               (3)   #t ()    0    #f      extended)
+;;TODO: ("##u64vector-shrink!"            (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##f32vector"                    0     #f ()    0    #f      extended)
+;;TODO: ("##make-f32vector"               (2)   #f ()    0    #f      extended)
+;;TODO: ("##f32vector-length"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##f32vector-ref"                (2)   #f ()    0    real    extended)
+;;TODO: ("##f32vector-set!"               (3)   #t ()    0    #f      extended)
+;;TODO: ("##f32vector-shrink!"            (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##f64vector"                    0     #f ()    0    #f      extended)
+;;TODO: ("##make-f64vector"               (2)   #f ()    0    #f      extended)
+;;TODO: ("##f64vector-length"             (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##f64vector-ref"                (2)   #f ()    0    real    extended)
+;;TODO: ("##f64vector-set!"               (3)   #t ()    0    #f      extended)
+;;TODO: ("##f64vector-shrink!"            (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##structure-direct-instance-of?"(2)   #f ()    0    boolean extended)
+;;TODO: ("##structure-instance-of?"       (2)   #f ()    0    boolean extended)
+;;TODO: ("##structure-type"               (1)   #f ()    0    (#f)    extended)
+;;TODO: ("##structure-type-set!"          (2)   #t ()    0    (#f)    extended)
+;;TODO: ("##structure"                    1     #f ()    0    (#f)    extended)
+;;TODO: ("##structure-ref"                (4)   #f ()    0    (#f)    extended)
+;;TODO: ("##structure-set!"               (5)   #t ()    0    (#f)    extended)
+;;TODO: ("##direct-structure-ref"         (4)   #f ()    0    (#f)    extended)
+;;TODO: ("##direct-structure-set!"        (5)   #t ()    0    (#f)    extended)
+;;TODO: ("##unchecked-structure-ref"      (4)   #f ()    0    (#f)    extended)
+;;TODO: ("##unchecked-structure-set!"     (5)   #t ()    0    (#f)    extended)
+
+;;TODO: ("##type-id"                      (1)   #f ()    0    #f      extended)
+;;TODO: ("##type-name"                    (1)   #f ()    0    #f      extended)
+;;TODO: ("##type-flags"                   (1)   #f ()    0    #f      extended)
+;;TODO: ("##type-super"                   (1)   #f ()    0    #f      extended)
+;;TODO: ("##type-fields"                  (1)   #f ()    0    #f      extended)
+
+;;TODO: ("##symbol->string"               (1)   #f ()    0    string  extended)
+
+;;TODO: ("##keyword->string"              (1)   #f ()    0    string  extended)
+
+;;TODO: ("##closure-length"               (1)   #f ()    0    fixnum  extended)
+;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
+;;TODO: ("##closure-ref"                  (2)   #f ()    0    (#f)    extended)
+;;TODO: ("##closure-set!"                 (3)   #t ()    0    #f      extended)
+
+;;TODO: ("##subprocedure-id"              (1)   #f ()    0    #f      extended)
+;;TODO: ("##subprocedure-parent"          (1)   #f ()    0    #f      extended)
+
+;;TODO: ("##procedure-info"               (1)   #f ()    0    #f      extended)
+
+;;TODO: ("##make-promise"                 (1)   #f 0     0    (#f)    extended)
+;;TODO: ("##force"                        (1)   #t 0     0    #f      extended)
+
+;;TODO: ("##void"                         (0)   #f ()    0    #f      extended)
+
+;;TODO: ("current-thread"                 (0)   #f ()    0    #f      extended)
+;;TODO: ("##current-thread"               (0)   #f ()    0    #f      extended)
+;;TODO: ("##run-queue"                    (0)   #f ()    0    #f      extended)
+
+;;TODO: ("##thread-save!"                 1     #t ()    1113 (#f)    extended)
+;;TODO: ("##thread-restore!"              2     #t ()    2203 #f      extended)
+
+;;TODO: ("##continuation-capture"         1     #t ()    1113 (#f)    extended)
+;;TODO: ("##continuation-graft"           2     #t ()    2203 #f      extended)
+;;TODO: ("##continuation-graft-no-winding" 2     #t ()    2203 #f      extended)
+;;TODO: ("##continuation-return"           (2)   #t ()    0    #f      extended)
+;;TODO: ("##continuation-return-no-winding"(2)   #t ()    0    #f      extended)
+
+;;TODO: ("##apply"                         (2)   #t ()    0    (#f)    extended)
+;;TODO: ("##call-with-current-continuation"1     #t ()    1113 (#f)    extended)
+;;TODO: ("##make-global-var"               (1)   #t ()    0    #f      extended)
+;;TODO: ("##global-var-ref"                (1)   #f ()    0    (#f)    extended)
+;;TODO: ("##global-var-primitive-ref"      (1)   #f ()    0    (#f)    extended)
+;;TODO: ("##global-var-set!"               (2)   #t ()    0    #f      extended)
+;;TODO: ("##global-var-primitive-set!"     (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##first-argument"                1     #f ()    0    (#f)    extended)
+;;TODO: ("##check-heap-limit"              (0)   #t ()    0    (#f)    extended)
+
+;;TODO: ("##quasi-append"                  0     #f 0     0    list    extended)
+;;TODO: ("##quasi-list"                    0     #f ()    0    list    extended)
+;;TODO: ("##quasi-cons"                    (2)   #f ()    0    pair    extended)
+;;TODO: ("##quasi-list->vector"            (1)   #f 0     0    vector  extended)
+;;TODO: ("##quasi-vector"                  0     #f ()    0    vector  extended)
+;;TODO: ("##case-memv"                     (2)   #f 0     0    list    extended)
+
+;;TODO: ("##bignum.negative?"              (1)   #f ()    0    boolean extended)
+;;TODO: ("##bignum.adigit-length"          (1)   #f ()    0    integer extended)
+;;TODO: ("##bignum.adigit-inc!"            (2)   #t ()    0    integer extended)
+;;TODO: ("##bignum.adigit-dec!"            (2)   #t ()    0    integer extended)
+;;TODO: ("##bignum.adigit-add!"            (5)   #t ()    0    integer extended)
+;;TODO: ("##bignum.adigit-sub!"            (5)   #t ()    0    integer extended)
+;;TODO: ("##bignum.mdigit-length"          (1)   #f ()    0    integer extended)
+;;TODO: ("##bignum.mdigit-ref"             (2)   #f ()    0    integer extended)
+;;TODO: ("##bignum.mdigit-set!"            (3)   #t ()    0    #f      extended)
+;;TODO: ("##bignum.mdigit-mul!"            (6)   #t ()    0    integer extended)
+;;TODO: ("##bignum.mdigit-div!"            (6)   #t ()    0    integer extended)
+;;TODO: ("##bignum.mdigit-quotient"        (3)   #f ()    0    integer extended)
+;;TODO: ("##bignum.mdigit-remainder"       (4)   #f ()    0    integer extended)
+;;TODO: ("##bignum.mdigit-test?"           (4)   #f ()    0    boolean extended)
+
+;;TODO: ("##bignum.adigit-ones?"           (2)   #f ()    0    boolean extended)
+;;TODO: ("##bignum.adigit-zero?"           (2)   #f ()    0    boolean extended)
+;;TODO: ("##bignum.adigit-negative?"       (2)   #f ()    0    boolean extended)
+;;TODO: ("##bignum.adigit-="               (3)   #f ()    0    boolean extended)
+;;TODO: ("##bignum.adigit-<"               (3)   #f ()    0    boolean extended)
+;;TODO: ("##bignum.->fixnum"               (1)   #f ()    0    integer extended)
+;;TODO: ("##bignum.<-fixnum"               (1)   #f ()    0    integer extended)
+;;TODO: ("##bignum.adigit-shrink!"         (2)   #t ()    0    #f      extended)
+;;TODO: ("##bignum.adigit-copy!"           (4)   #t ()    0    #f      extended)
+;;TODO: ("##bignum.adigit-cat!"            (7)   #t ()    0    #f      extended)
+;;TODO: ("##bignum.adigit-bitwise-and!"    (4)   #t ()    0    #f      extended)
+;;TODO: ("##bignum.adigit-bitwise-ior!"    (4)   #t ()    0    #f      extended)
+;;TODO: ("##bignum.adigit-bitwise-xor!"    (4)   #t ()    0    #f      extended)
+;;TODO: ("##bignum.adigit-bitwise-not!"    (2)   #t ()    0    #f      extended)
+
+;;TODO: ("##bignum.fdigit-length"          (1)   #f ()    0    integer extended)
+;;TODO: ("##bignum.fdigit-ref"             (2)   #f ()    0    integer extended)
+;;TODO: ("##bignum.fdigit-set!"            (3)   #t ()    0    #f      extended)
+
+;;----------------------------------------------------------------------------
+
+;;TODO: clean up and integrate to above
+
+(univ-define-prim "##inline-host-code" #f #t
+
   (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ (univ-emit-apply ctx
-                      (^prefix "length")
-                      (list (^getopnd (list-ref opnds 0))))))
-                      ;; (list (^getopnd (list-ref opnds 0)))
-                      ;; (map (lambda (opnd) )
-                      ;;      opnds)
-                      ;; )))
-
-      ((python ruby php)                ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "length, unknown target")))))
+    (let ((arg1 (car opnds)))
+      (if (obj? arg1)
+          (^ (obj-val arg1))
+          (compiler-internal-error "##inline-host-code requires constant argument")))))
 
 (univ-define-prim "##make-vector" #f #f
 
@@ -5546,37 +5890,6 @@ function Gambit_trampoline(pc) {
       (else
        (compiler-internal-error
         "##fx<-char, unknown target")))))
-
-(univ-define-prim-bool "##fixnum?" #t #f
-
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ "typeof "
-          (^getopnd (list-ref opnds 0))
-          " == \"number\""))
-
-      ((python)
-       (^ "isinstance("
-          (^getopnd (list-ref opnds 0))
-          ", int) and not "
-          "isinstance("
-          (^getopnd (list-ref opnds 0))
-          ", bool)"))
-
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          ".class == Fixnum"))
-
-      ((php)
-       (^ "is_int("
-          (^getopnd (list-ref opnds 0))
-          ")"))
-
-      (else
-       (compiler-internal-error
-        "##fixnum?, unknown target")))))
 
 (univ-define-prim-bool "##flonum?" #t #f
 

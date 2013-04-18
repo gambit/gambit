@@ -9,3 +9,4 @@ The only primitive procedures required by these tests are:
 
 - println: which is always used to print a single fixnum or boolean
 - ##not
+- ##boolean?
