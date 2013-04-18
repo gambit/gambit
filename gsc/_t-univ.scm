@@ -4810,45 +4810,17 @@ function Gambit_trampoline(pc) {
 ;;TODO: ("##exact?"                   (1)   #f ()    0    boolean extended)
 ;;TODO: ("##inexact?"                 (1)   #f ()    0    boolean extended)
 
-;;TODO: complete, clean up and test
+;;TODO: make variadic, complete, clean up and test
 (univ-define-prim-bool "##fxmax" #t #f
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
+     (^if-expr (^> arg1 arg2) arg1 arg2))))
 
-       ((js)
-        (^ "Math.max("
-           arg1
-           ","
-           arg2
-           ")"))
-
-       ((python ruby php)               ;TODO: complete
-        (^))
-
-       (else
-        (compiler-internal-error
-         "##fxmax, unknown target"))))))
-
-;;TODO: complete, clean up and test
+;;TODO: make variadic, complete, clean up and test
 (univ-define-prim-bool "##fxmin" #t #f
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
-
-      ((js)
-       (^ "Math.min("
-          arg1
-          ","
-          arg2
-          ")"))
-
-      ((python ruby php)                       ;TODO: complete
-       (^))
-
-      (else
-       (compiler-internal-error
-        "##fxmin, unknown target"))))))
+     (^if-expr (^< arg1 arg2) arg1 arg2))))
 
 (univ-define-prim "##fxwrap+" #f #f
   (univ-fold-left
