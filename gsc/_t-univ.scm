@@ -4340,12 +4340,19 @@ function Gambit_trampoline(pc) {
           (proc-obj-inline-set!
            prim
            (lambda (ctx opnds loc)
-             (if loc ;; result is needed?
+             (if side-effects?
 
-                 (^setloc loc (apply-gen ctx opnds))
+                 (^ (apply-gen ctx opnds)
+                    (if loc ;; result is needed?
+                        (^setloc loc
+                                 (if (pair? opnds)
+                                     (^getopnd (car opnds))
+                                     (^obj #f)));;TODO: use void object
+                        (^)))
 
-                 (if side-effects? ;; only generate code for side-effect
-                     (^expr-statement (apply-gen ctx opnds))
+                 (if loc ;; result is needed?
+                     (^setloc loc
+                              (apply-gen ctx opnds))
                      (^)))))))
 
     (if ifjump-gen
@@ -4521,11 +4528,19 @@ function Gambit_trampoline(pc) {
 (define (univ-cons ctx expr1 expr2)
   (^new (^prefix "Pair") expr1 expr2))
 
-(define (univ-car ctx expr)
+(define (univ-getcar ctx expr)
   (^member expr "car"))
 
-(define (univ-cdr ctx expr)
+(define (univ-getcdr ctx expr)
   (^member expr "cdr"))
+
+(define (univ-setcar ctx expr1 expr2)
+  (^expr-statement
+   (^assign (^member expr1 "car") expr2)))
+
+(define (univ-setcdr ctx expr1 expr2)
+  (^expr-statement
+   (^assign (^member expr1 "cdr") expr2)))
 
 
 ;; (define (univ-list ctx obj)             ;obj is a non-null list
@@ -4671,7 +4686,7 @@ function Gambit_trampoline(pc) {
 (univ-define-prim-bool "##subtype-set!" #t #t
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
-     arg1)));;TODO: implement
+     (^))));;TODO: implement
 
 (univ-define-prim-bool "##not" #t #f
   (make-translated-operand-generator
@@ -5180,57 +5195,15 @@ function Gambit_trampoline(pc) {
    (lambda (ctx arg1 arg2)
      (univ-cons ctx arg1 arg2))))
 
-;;TODO: complete, clean up and test
 (univ-define-prim "##set-car!" #f #t
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
+     (univ-setcar ctx arg1 arg2))))
 
-       ((js)
-        (^ (^prefix "setcar(")
-           arg1
-           ", "
-           arg2
-           ")"))
-
-       ;; ((python)
-       ;;  (^))
-
-       ;; ((ruby)
-       ;;  (^))
-
-       ((python ruby php)               ;TODO: complete
-        (^))
-
-       (else
-        (compiler-internal-error
-         "##set-car!, unknown target"))))))
-
-;;TODO: complete, clean up and test
 (univ-define-prim "##set-cdr!" #f #t
   (make-translated-operand-generator
    (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^ (^prefix "setcdr(")
-           arg1
-           ", "
-           arg2
-           ")"))
-
-       ;; ((python)
-       ;;  (^))
-
-       ;; ((ruby)
-       ;;  (^))
-
-       ((python ruby php)               ;TODO: complete
-        (^))
-
-       (else
-        (compiler-internal-error
-         "##set-cdr!, unknown target"))))))
+     (univ-setcdr ctx arg1 arg2))))
 
 (let cxxxxr-loop ((n #b10))
   (if (<= n #b11111)
@@ -5249,8 +5222,8 @@ function Gambit_trampoline(pc) {
              (define (ad-expr expr x)
                (if (>= x #b10)
                    (ad-expr (if (= (modulo x 2) 0)
-                                (univ-car ctx expr)
-                                (univ-cdr ctx expr))
+                                (univ-getcar ctx expr)
+                                (univ-getcdr ctx expr))
                             (quotient x 2))
                    expr))
 
@@ -5478,7 +5451,7 @@ function Gambit_trampoline(pc) {
   (lambda (ctx opnds)
     (let ((arg1 (car opnds)))
       (if (obj? arg1)
-          (^ (obj-val arg1))
+          (obj-val arg1)
           (compiler-internal-error "##inline-host-code requires constant argument")))))
 
 (univ-define-prim "##make-vector" #f #f
@@ -5550,9 +5523,10 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js python)
-       (^assign (^index (^getopnd (list-ref opnds 0))
-                        (^getopnd (list-ref opnds 1)))
-                (^getopnd (list-ref opnds 2))))
+       (^expr-statement
+        (^assign (^index (^getopnd (list-ref opnds 0))
+                         (^getopnd (list-ref opnds 1)))
+                 (^getopnd (list-ref opnds 2)))))
 
       ((ruby php)                ;TODO: complete
        (^))
@@ -5762,27 +5736,30 @@ function Gambit_trampoline(pc) {
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^ (^getopnd (list-ref opnds 0))
-          ".stringset("
-          (^getopnd (list-ref opnds 1))
-          ", "
-          (^getopnd (list-ref opnds 2))
-          ")"))
+       (^expr-statement
+        (^ (^getopnd (list-ref opnds 0))
+           ".stringset("
+           (^getopnd (list-ref opnds 1))
+           ", "
+           (^getopnd (list-ref opnds 2))
+           ")")))
 
       ((python)
-       (^ (^getopnd (list-ref opnds 0))
-          "["
-          (^getopnd (list-ref opnds 1))
-          "] = "
-          (^getopnd (list-ref opnds 2))))
+       (^expr-statement
+        (^ (^getopnd (list-ref opnds 0))
+           "["
+           (^getopnd (list-ref opnds 1))
+           "] = "
+           (^getopnd (list-ref opnds 2)))))
 
       ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          "["
-          (^getopnd (list-ref opnds 1))
-          "] = "
-          (^getopnd (list-ref opnds 2))
-          ".code.chr"))
+       (^expr-statement
+        (^ (^getopnd (list-ref opnds 0))
+           "["
+           (^getopnd (list-ref opnds 1))
+           "] = "
+           (^getopnd (list-ref opnds 2))
+           ".code.chr")))
 
       ((php)                ;TODO: complete
        (^))
