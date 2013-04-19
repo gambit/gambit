@@ -5205,31 +5205,34 @@ function Gambit_trampoline(pc) {
    (lambda (ctx arg1 arg2)
      (univ-setcdr ctx arg1 arg2))))
 
-(let cxxxxr-loop ((n #b10))
-  (if (<= n #b11111)
-      (let ()
+(define (univ-cxxxxr-init)
+  (let cxxxxr-loop ((n #b10))
+    (if (<= n #b11111)
+        (let ()
 
-        (define (ad-name prefix x)
-          (if (>= x #b10)
-              (string-append (ad-name prefix (quotient x 2))
-                             (string (string-ref "ad" (modulo x 2))))
-              prefix))
+          (define (ad-name prefix x)
+            (if (>= x #b10)
+                (string-append (ad-name prefix (quotient x 2))
+                               (string (string-ref "ad" (modulo x 2))))
+                prefix))
 
-        (univ-define-prim (string-append (ad-name "##c" n) "r") #f #f
-          (make-translated-operand-generator
-           (lambda (ctx arg)
+          (univ-define-prim (string-append (ad-name "##c" n) "r") #f #f
+            (make-translated-operand-generator
+             (lambda (ctx arg)
 
-             (define (ad-expr expr x)
-               (if (>= x #b10)
-                   (ad-expr (if (= (modulo x 2) 0)
-                                (univ-getcar ctx expr)
-                                (univ-getcdr ctx expr))
-                            (quotient x 2))
-                   expr))
+               (define (ad-expr expr x)
+                 (if (>= x #b10)
+                     (ad-expr (if (= (modulo x 2) 0)
+                                  (univ-getcar ctx expr)
+                                  (univ-getcdr ctx expr))
+                              (quotient x 2))
+                     expr))
 
-             (ad-expr arg n))))
+               (ad-expr arg n))))
 
-        (cxxxxr-loop (+ n 1)))))
+          (cxxxxr-loop (+ n 1))))))
+
+(univ-cxxxxr-init)
 
 (univ-define-prim "##list" #t #f
   (make-translated-operand-generator
