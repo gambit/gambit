@@ -450,6 +450,13 @@
     (lambda (ctx) ,body)
     ,prim?))
 
+(define-macro (^class-declaration name fields methods)
+  `(univ-emit-class-declaration
+    ctx
+    ,name
+    ,fields
+    ,methods))
+
 (define-macro (^getreg num)
   `(univ-emit-getreg ctx ,num))
 
@@ -2062,18 +2069,11 @@
 
        ((js)
         (^
-#<<EOF
-function Gambit_Pair(car, cdr) {
-  this.car = car;
-  this.cdr = cdr;
-}
-//Gambit_Pair.prototype.toString = function () {
-//  return this.car.toString() + this.car.toString();
-//};
 
-
-EOF
-))
+         (^class-declaration
+          (^prefix "Pair")
+          '((car #f) (cdr #f))
+          '())))
 
        ((python)
         (^ "#! /usr/bin/python\n"
@@ -4060,6 +4060,38 @@ function Gambit_trampoline(pc) {
     (else
      (compiler-internal-error
       "univ-emit-function-declaration*, unknown target"))))
+
+(define (univ-emit-class-declaration ctx name fields methods)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ "function " name "("
+        (univ-separated-list
+         ","
+         (map car (keep (lambda (field) (not (cadr field))) fields)))
+        ") {\n"
+        (univ-indent
+         (map (lambda (field)
+                (let ((field-name (car field))
+                      (field-init (cadr field)))
+                  (^ "this." field-name " = "
+                     (or field-init field-name)
+                     ";\n")))
+              fields))
+        "}\n"
+        (map (lambda (method)
+               (^ "\n"
+                  name ".prototype." (car method) " = function ("
+                  (univ-separated-list "," (cadr method))
+                  ") {"
+                  (univ-indent (caddr method))
+                  "}\n"))
+             methods)
+        "\n"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-class-declaration, unknown target"))))
 
 (define (univ-comment ctx comment)
   (case (target-name (ctx-target ctx))
