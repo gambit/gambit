@@ -2068,57 +2068,59 @@
   (^ (case (target-name (ctx-target ctx))
 
        ((js)
-        (^
+        (^))
 
-         (^class-declaration
-          (^prefix "Pair")
-          '((car #f) (cdr #f))
-          '())))
+       ((php)
+        (^ "<?php\n\n"))
 
        ((python)
         (^ "#! /usr/bin/python\n"
            "\n"
            "from array import array\n"
            "import ctypes\n"
-           "\n"
-#<<EOF
-class Gambit_Pair:
+           "\n"))
 
-  def __init__(self, car, cdr):
-    self.car = car
-    self.cdr = cdr
+       ((ruby)
+        (^ "# encoding: utf-8\n"
+           "\n"))
 
-#  def __str__(self):
-#    return self.car + self.cdr
+       (else
+        (compiler-internal-error
+         "runtime-system, unknown target")))
 
+     (^class-declaration
+      (^prefix "Pair")
+      '((car #f) (cdr #f))
+      '())
 
-EOF
-))
-         ((ruby)
-          (^ "# encoding: utf-8\n"
-             "\n"
-#<<EOF
-class Gambit_Pair
+#|
+//JavaScript toString method:
+Gambit_Pair.prototype.toString = function () {
+  return this.car.toString() + this.car.toString();
+};
 
-  attr_accessor :car, :cdr
+/* PHP toString method: */
+  public function __toString() {
+    return $this->car . $this->cdr;
+  }
 
-  def initialize(car, cdr)
-    @car = car
-    @cdr = cdr
+# Python toString method:
+  def __str__(self):
+    return self.car + self.cdr
+
+# Ruby toString method:
+  def to_s
+    @car.to_s + @cdr.to_s
   end
+|#
 
-#  def to_s
-#    @car.to_s + @cdr.to_s
-#  end
+     (case (target-name (ctx-target ctx))
 
-end
-
-
-EOF
-))
+       ((js python ruby)
+        (^))
 
        ((php)
-        (^ "<?php\n"
+        (^
 #<<EOF
 class Gambit_closure {
 
@@ -2146,23 +2148,6 @@ function Gambit_get($obj,$name) {
 
 function Gambit_set($obj,$name,$val) {
   $obj[$name] = $val;
-}
-
-class Gambit_Pair {
-
-  public $car;
-  public $cdr;
-
-  public function __construct($car, $cdr) {
-    $this->car = $car;
-    $this->cdr = $cdr;
-  }
-
-/*
-  public function __toString() {
-    return $this->car . $this->cdr;
-  }
-*/
 }
 
 
@@ -4088,6 +4073,104 @@ function Gambit_trampoline(pc) {
                   "}\n"))
              methods)
         "\n"))
+
+    ((php)
+     (^ "class " name " {\n\n"
+        (if (pair? fields)
+            (^ (univ-indent
+                (map (lambda (field) (^ "public $" (car field) ";\n")) fields))
+               "\n")
+            (^))
+        (univ-indent
+         (^ "public function __construct("
+            (univ-separated-list
+             ","
+             (map (lambda (x) (^local-var x)) (map car (keep (lambda (field) (not (cadr field))) fields))))
+            ") {\n"
+            (univ-indent
+             (map (lambda (field)
+                    (let ((field-name (car field))
+                          (field-init (cadr field)))
+                      (^ "$this->" field-name " = "
+                         (or field-init (^local-var field-name))
+                         ";\n")))
+                  fields))
+            "}\n"))
+        (map (lambda (method)
+               (^ "\n"
+                  (univ-indent
+                   (^ "public function " (car method) "("
+                      (univ-separated-list "," (map (lambda (x) (^local-var x)) (cadr method)))
+                      ") {\n"
+                      (univ-indent (caddr method))
+                      "}\n"))))
+             methods)
+        "}\n\n"))
+
+    ((python)
+     (^ "class " name ":\n\n"
+        (univ-indent
+         (^ "def __init__("
+            (univ-separated-list
+             ","
+             (cons 'self
+                   (map car (keep (lambda (field) (not (cadr field))) fields))))
+            "):\n"
+            (univ-indent
+             (map (lambda (field)
+                    (let ((field-name (car field))
+                          (field-init (cadr field)))
+                      (^ "self." field-name " = "
+                         (or field-init field-name)
+                         "\n")))
+                  fields))))
+        "\n"
+        (map (lambda (method)
+               (^ "\n"
+                  (univ-indent
+                   (^ "def " (car method) "("
+                      (univ-separated-list "," (cons 'self (cadr method)))
+                      "):\n"
+                      (univ-indent (caddr method))))))
+             methods)
+        "\n"))
+
+    ((ruby)
+     (^ "class " name "\n\n"
+        (if (pair? fields)
+            (^ (univ-indent
+                (^ "attr_accessor "
+                   (univ-separated-list
+                    ","
+                    (map (lambda (field) (^ ":" (car field))) fields))
+                   "\n"))
+               "\n")
+            (^))
+        (univ-indent
+         (^ "def initialize("
+            (univ-separated-list
+             ","
+             (map car (keep (lambda (field) (not (cadr field))) fields)))
+            ")\n"
+            (univ-indent
+             (map (lambda (field)
+                    (let ((field-name (car field))
+                          (field-init (cadr field)))
+                      (^ "@" field-name " = "
+                         (or field-init field-name)
+                         "\n")))
+                  fields))
+            "end\n"))
+        (map (lambda (method)
+               (^ "\n"
+                  (univ-indent
+                   (^ "def " (car method) "(" ;; TODO: no parameter list when no parameters
+                      (univ-separated-list "," (cadr method))
+                      ")\n"
+                      (univ-indent (caddr method))
+                      "end\n"))))
+             methods)
+        "\nend\n\n"))
 
     (else
      (compiler-internal-error
