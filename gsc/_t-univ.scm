@@ -330,7 +330,7 @@
   `(univ-emit->> ctx ,expr1 ,expr2))
 
 (define-macro (^bitnot expr)
-  `(univ-emit-bitnot ctx ,expr)
+  `(univ-emit-bitnot ctx ,expr))
 
 (define-macro (^bitand expr1 expr2)
   `(univ-emit-bitand ctx ,expr1 ,expr2))
@@ -790,7 +790,7 @@
   (case (target-name (ctx-target ctx))
 
     ((js php python ruby)
-     (^ "~ " expr)
+     (^ "~ " expr))
 
     (else
      (compiler-internal-error
