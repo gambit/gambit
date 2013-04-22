@@ -329,11 +329,17 @@
 (define-macro (^>> expr1 expr2)
   `(univ-emit->> ctx ,expr1 ,expr2))
 
-(define-macro (^bitor expr1 expr2)
-  `(univ-emit-bitor ctx ,expr1 ,expr2))
+(define-macro (^bitnot expr)
+  `(univ-emit-bitnot ctx ,expr)
 
 (define-macro (^bitand expr1 expr2)
   `(univ-emit-bitand ctx ,expr1 ,expr2))
+
+(define-macro (^bitior expr1 expr2)
+  `(univ-emit-bitior ctx ,expr1 ,expr2))
+
+(define-macro (^bitxor expr1 expr2)
+  `(univ-emit-bitxor ctx ,expr1 ,expr2))
 
 (define-macro (^= expr1 expr2)
   `(univ-emit-= ctx ,expr1 ,expr2))
@@ -780,15 +786,15 @@
      (compiler-internal-error
       "univ-emit->>, unknown target"))))
 
-(define (univ-emit-bitor ctx expr1 expr2)
+(define (univ-emit-bitnot ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((js php python ruby)
-     (^ expr1 " | " expr2))
+     (^ "~ " expr)
 
     (else
      (compiler-internal-error
-      "univ-emit-bitor, unknown target"))))
+      "univ-emit-bitnot, unknown target"))))
 
 (define (univ-emit-bitand ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -799,6 +805,26 @@
     (else
      (compiler-internal-error
       "univ-emit-bitand, unknown target"))))
+
+(define (univ-emit-bitior ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^ expr1 " | " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-bitior, unknown target"))))
+
+(define (univ-emit-bitxor ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^ expr1 " ^ " expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-bitxor, unknown target"))))
 
 (define (univ-emit-= ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -5165,10 +5191,34 @@ function Gambit_trampoline(pc) {
    (lambda (ctx arg1 arg2)
      (univ-fxmodulo ctx arg1 arg2))))
 
+(univ-define-prim "##fxnot" #f #f
+  (make-translated-operand-generator
+   (lambda (ctx arg)
+     (^bitand (^bitnot arg) (- (expt 2 univ-tag-bits))))))
+
+(univ-define-prim "##fxand" #f #f
+  (univ-fold-left
+   (lambda (ctx)           (^obj -1))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^bitand arg1 arg2))))
+
+(univ-define-prim "##fxior" #f #f
+  (univ-fold-left
+   (lambda (ctx)           (^obj 0))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^bitior arg1 arg2))))
+
+(univ-define-prim "##fxxor" #f #f
+  (univ-fold-left
+   (lambda (ctx)           (^obj 0))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^bitxor arg1 arg2))))
+
 ;;TODO: ("##fxnot"                       (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##fxand"                       0     #f ()    0    fixnum  extended)
 ;;TODO: ("##fxior"                       0     #f ()    0    fixnum  extended)
 ;;TODO: ("##fxxor"                       0     #f ()    0    fixnum  extended)
+
 ;;TODO: ("##fxif"                        (3)   #f ()    0    fixnum  extended)
 ;;TODO: ("##fxbit-count"                 (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##fxlength"                    (1)   #f ()    0    fixnum  extended)
