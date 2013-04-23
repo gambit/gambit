@@ -5119,19 +5119,28 @@ function Gambit_trampoline(pc) {
 ;;TODO: complete, clean up and test
 (univ-define-prim "##fx-?" #f #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
+   (lambda (ctx arg1 #!optional (arg2 #f))
      (case (target-name (ctx-target ctx))
 
        ((js)
-        (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-           arg1
-           " - "
-           arg2
-           ")<<"
-           univ-tag-bits
-           ">>"
-           univ-tag-bits
-           ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+        (if arg2
+            (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+               arg1
+               " - "
+               arg2
+               ")<<"
+               univ-tag-bits
+               ">>"
+               univ-tag-bits
+               ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2")))
+            (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+               "- "
+               arg1
+               ")<<"
+               univ-tag-bits
+               ">>"
+               univ-tag-bits
+               ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2")))))
 
        ((python)
         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
