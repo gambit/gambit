@@ -1,6 +1,6 @@
 # makefile for Gambit-C examples.
 
-# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples
 rootfromhere = ..
@@ -40,6 +40,7 @@ INSTALL_LIB = @INSTALL_LIB@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 LN_S = @LN_S@
 RANLIB = @RANLIB@
+AR = @AR@
 RC = @RC@
 GIT = @GIT@
 HG = @HG@
