@@ -211,8 +211,8 @@
 #define USE_sysctl
 #endif
 
-#ifdef HAVE_TCGETATTR
-#define USE_tcgetattr
+#ifdef HAVE_TCGETSETATTR
+#define USE_tcgetsetattr
 #endif
 
 #ifdef HAVE_UNLINK
@@ -225,6 +225,10 @@
 
 #ifdef HAVE_MMAP
 #define USE_mmap
+#endif
+
+#ifdef HAVE_FCNTL
+#define USE_fcntl
 #endif
 
 #if 0
@@ -978,7 +982,7 @@ ___END_C_LINKAGE
 #define INCLUDE_sys_sysctl_h
 #endif
 
-#ifdef USE_tcgetattr
+#ifdef USE_tcgetsetattr
 #undef INCLUDE_termios_h
 #define INCLUDE_termios_h
 #undef INCLUDE_unistd_h
@@ -998,6 +1002,11 @@ ___END_C_LINKAGE
 #ifdef USE_poll
 #undef INCLUDE_poll_h
 #define INCLUDE_poll_h
+#endif
+
+#ifdef USE_fcntl
+#undef INCLUDE_fcntl_h
+#define INCLUDE_fcntl_h
 #endif
 
 

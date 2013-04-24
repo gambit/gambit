@@ -852,6 +852,7 @@ else
   AC_CHECK_FUNCS(unlink)
   AC_CHECK_FUNCS(waitpid)
   AC_CHECK_FUNCS(mmap)
+  AC_CHECK_FUNCS(fcntl)
 
   # The following checks for library functions have been written
   # specially to catch the case where they are declared as inline
@@ -860,23 +861,23 @@ else
 
   # used to be: AC_CHECK_FUNCS(tcgetattr)
 
-  AC_DEFUN([AC_CHECK_FUNC_TCGETATTR],
-  [AC_CACHE_CHECK([for tcgetattr], ac_cv_func_tcgetattr,
+  AC_DEFUN([AC_CHECK_FUNC_TCGETSETATTR],
+  [AC_CACHE_CHECK([for tcgetsetattr], ac_cv_func_tcgetsetattr,
   [
     AC_TRY_COMPILE([
       #ifdef HAVE_TERMIOS_H
       #include <termios.h>
       #endif
-      ],[int fd = 1; struct termios tios; tcgetattr (fd, &tios);],
-    ac_cv_func_tcgetattr=yes,
-    ac_cv_func_tcgetattr=no)
+      ],[int fd = 1; struct termios tios; tcgetattr (fd, &tios); tcsetattr (fd, TCSANOW, &tios);],
+    ac_cv_func_tcgetsetattr=yes,
+    ac_cv_func_tcgetsetattr=no)
   ])
-    if test $ac_cv_func_tcgetattr = yes; then
-      AC_DEFINE(HAVE_TCGETATTR)
+    if test $ac_cv_func_tcgetsetattr = yes; then
+      AC_DEFINE(HAVE_TCGETSETATTR)
     fi
   ])
 
-  AC_CHECK_FUNC_TCGETATTR
+  AC_CHECK_FUNC_TCGETSETATTR
 
   # used to be: AC_CHECK_FUNCS(sigaction)
 

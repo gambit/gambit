@@ -836,10 +836,18 @@ ___BOOL blocking;)
 {
   int fl;
 
+#ifdef USE_fcntl
+
   if ((fl = fcntl (fd, F_GETFL, 0)) >= 0)
     fl = fcntl (fd,
                 F_SETFL,
                 blocking ? (fl & ~O_NONBLOCK) : (fl | O_NONBLOCK));
+
+#else
+
+  fl = 0;
+
+#endif
 
   return fl;
 }
@@ -5533,12 +5541,14 @@ int level;)
         case 2:
         case 3:
 
+#ifdef USE_fcntl
 #ifdef F_FULLFSYNC
 
           if (fcntl (d->fd, F_FULLFSYNC, 0) < 0)
             return err_code_from_errno ();
           break;
 
+#endif
 #endif
 
         case 1:
@@ -7143,8 +7153,14 @@ int options;)
                 goto return_errno;
             }
 
+#ifdef USE_fcntl
+#ifdef FD_CLOEXEC
+
           if (fcntl (hdp_errno.writing_fd, F_SETFD, FD_CLOEXEC) < 0)
             goto return_errno;
+
+#endif
+#endif
 
           close_half_duplex_pipe (&fdp.input, 1);
           close_half_duplex_pipe (&fdp.output, 0);

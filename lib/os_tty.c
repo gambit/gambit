@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -231,7 +231,8 @@ ___device_tty *self;)
 {
   ___device_tty *d = self;
 
-#ifdef USE_POSIX
+#ifdef USE_tcgetsetattr
+#ifdef USE_fcntl
 
 #ifdef ___DEBUG_TTY
 
@@ -250,6 +251,7 @@ ___device_tty *self;)
   ___printf ("  d->initial_termios.c_oflag = 0x%08x\n", d->initial_termios.c_oflag);
   ___printf ("  d->initial_termios.c_lflag = 0x%08x\n", d->initial_termios.c_lflag);
 
+#endif
 #endif
 
 #endif
@@ -297,7 +299,8 @@ ___BOOL current;)
   ___device_tty *d = self;
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-#ifdef USE_POSIX
+#ifdef USE_tcgetsetattr
+#ifdef USE_fcntl
 
   {
     struct termios new_termios = d->initial_termios;
@@ -528,6 +531,7 @@ ___BOOL current;)
       e = err_code_from_errno ();
   }
 
+#endif
 #endif
 
 #ifdef USE_WIN32
