@@ -420,6 +420,10 @@
 #define ___LITTLE_ENDIAN
 #endif
 
+#ifdef EMSCRIPTEN
+#define ___LITTLE_ENDIAN
+#endif
+
 #ifndef ___LITTLE_ENDIAN
 #define ___BIG_ENDIAN
 #endif
