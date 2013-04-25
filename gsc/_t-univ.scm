@@ -2311,6 +2311,40 @@ EOF
 
      "\n"
 
+      (case (target-name (ctx-target ctx))
+
+        ((js)
+         (^ (^var-declaration (^global-var (^prefix "start_time"))
+                              (^call-prim (^member (^new "Date") "getTime")))
+            "\n"))
+
+        (else
+         (^)))
+
+     (^function-declaration
+      (gvm-proc-use ctx "real-time-milliseconds")
+      '()
+      "\n"
+      '()
+      (^ (case (target-name (ctx-target ctx))
+
+           ((js)
+            (^setreg 1 (^- (^call-prim (^member (^new "Date") "getTime"))
+                           (^global-var (^prefix "start_time")))))
+
+           ((php python ruby)
+            (^))
+
+           (else
+            (compiler-internal-error
+             "runtime-system, unknown target")))
+         (^return (^getreg 0))))
+
+     "\n"
+
+     (^setglo 'real-time-milliseconds
+              (gvm-proc-use ctx "real-time-milliseconds"))
+
      ))
 
 #;
