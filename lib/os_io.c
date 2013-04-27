@@ -739,19 +739,19 @@ int options;)
 }
 
 
-ssize_t read_no_EINTR
+___SSIZE_T read_no_EINTR
    ___P((int fd,
          void *buf,
-         size_t len),
+         ___SIZE_T len),
         (fd,
          buf,
          len)
 int fd;
 void *buf;
-size_t len;)
+___SIZE_T len;)
 {
   char *p = ___CAST(char*,buf);
-  ssize_t result = 0;
+  ___SSIZE_T result = 0;
   int n;
 
   while (result < len)

@@ -1,6 +1,6 @@
-/* File: "os_io.h", Time-stamp: <2011-01-17 13:54:53 feeley> */
+/* File: "os_io.h" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -88,7 +88,7 @@ typedef struct ___device_struct
 #define MAX_POLLFDS MAX_CONDVARS
 #endif
 
-typedef long int ___fdbits;
+typedef ___SIZE_T ___fdbits;
 
 #define ___FDBITS (8 * sizeof (___fdbits))
 #define ___FD_ELT(fd) ((fd) / ___FDBITS)
@@ -440,10 +440,10 @@ extern pid_t waitpid_no_EINTR
          int options),
         ());
 
-extern ssize_t read_no_EINTR
+extern ___SSIZE_T read_no_EINTR
    ___P((int fd,
          void *buf,
-         size_t len),
+         ___SIZE_T len),
         ());
 
 extern int close_no_EINTR

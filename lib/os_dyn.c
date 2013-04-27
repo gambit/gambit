@@ -1,6 +1,6 @@
-/* File: "os_dyn.c", Time-stamp: <2009-06-07 10:55:37 feeley> */
+/* File: "os_dyn.c" */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -684,7 +684,7 @@ ___LOCAL void sync_icache_and_dcache (void *start, int length)
 
 #define CACHE_BLOCK_SIZE 4 /* we are conservative! */
 
-  ___U8 *s = ___CAST(___U8*,___CAST(long,start) & -CACHE_BLOCK_SIZE);
+  ___U8 *s = ___CAST(___U8*,___CAST(___SIZE_T,start) & -CACHE_BLOCK_SIZE);
 
   do
     {
@@ -714,7 +714,7 @@ ___LOCAL void sync_icache_and_dcache (void *start, int length)
 
 #define MACHINE_WORD_SIZE 4
 
-  ___U8 *s = ___CAST(___U8*,___CAST(long,start) & -MACHINE_WORD_SIZE);
+  ___U8 *s = ___CAST(___U8*,___CAST(___SIZE_T,start) & -MACHINE_WORD_SIZE);
 
   do
     {

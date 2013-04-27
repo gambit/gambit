@@ -1656,6 +1656,10 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___FLONUM_SIZE 1
 #endif
 
+#define ___SIZE_T size_t
+#define ___SSIZE_T ssize_t
+#define ___PTRDIFF_T ptrdiff_t
+
 #define ___SCMOBJ ___WORD
 #define ___SCMOBJ_WIDTH ___WORD_WIDTH
 
@@ -7861,7 +7865,7 @@ typedef struct ___global_state_struct
        ___P((___SCMOBJ marker),
             ());
     void *(*___alloc_rc)
-       ___P((unsigned long bytes),
+       ___P((___SIZE_T bytes),
             ());
     void (*___release_rc)
        ___P((void *ptr),
@@ -7878,7 +7882,7 @@ typedef struct ___global_state_struct
             ());
     ___SCMOBJ (*___alloc_scmobj)
        ___P((int subtype,
-             long bytes,
+             ___SIZE_T bytes,
              int kind),
             ());
     void (*___release_scmobj)
@@ -7890,7 +7894,7 @@ typedef struct ___global_state_struct
              int kind),
             ());
     ___SCMOBJ (*___make_vector)
-       ___P((long length,
+       ___P((___SIZE_T length,
              ___SCMOBJ init,
              int kind),
             ());
@@ -7913,13 +7917,13 @@ typedef struct ___global_state_struct
        ___P((___SCMOBJ ht_src,
              ___SCMOBJ ht_dst),
             ());
-    unsigned long (*___get_min_heap) ___PVOID;
+    ___SIZE_T (*___get_min_heap) ___PVOID;
     void (*___set_min_heap)
-       ___P((unsigned long bytes),
+       ___P((___SIZE_T bytes),
             ());
-    unsigned long (*___get_max_heap) ___PVOID;
+    ___SIZE_T (*___get_max_heap) ___PVOID;
     void (*___set_max_heap)
-       ___P((unsigned long bytes),
+       ___P((___SIZE_T bytes),
             ());
     int (*___get_live_percent) ___PVOID;
     void (*___set_live_percent)
@@ -7965,13 +7969,13 @@ typedef struct ___global_state_struct
     void (*___disable_interrupts) ___PVOID;
     void (*___enable_interrupts) ___PVOID;
     void *(*___alloc_mem)
-       ___P((unsigned long bytes),
+       ___P((___SIZE_T bytes),
             ());
     void (*___free_mem)
        ___P((void *ptr),
             ());
     void *(*___alloc_mem_code)
-       ___P((unsigned long bytes),
+       ___P((___SIZE_T bytes),
             ());
     void (*___free_mem_code)
        ___P((void *ptr),
@@ -7995,10 +7999,10 @@ typedef struct ___setup_params_struct
   {
     int version;
     ___UCS_2STRING *argv;
-    unsigned long min_heap;
-    unsigned long max_heap;
+    ___SIZE_T min_heap;
+    ___SIZE_T max_heap;
     int live_percent;
-    long (*gc_hook) ___P((long avail, long live),());
+    ___SIZE_T (*gc_hook) ___P((___SIZE_T avail, ___SIZE_T live),());
     void (*display_error) ___P((char **msgs),());
     void (*fatal_error) ___P((char **msgs),());
     int standard_level;
@@ -8882,7 +8886,7 @@ ___IMP_FUNC(void,___kill_sfun_stack_marker)
 
 #ifndef ___INCLUDED_FROM_MEM
 ___IMP_FUNC(void*,___alloc_rc)
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         ());
 ___IMP_FUNC(void,___release_rc)
    ___P((void *ptr),
@@ -8899,7 +8903,7 @@ ___IMP_FUNC(void,___set_data_rc)
         ());
 ___IMP_FUNC(___SCMOBJ,___alloc_scmobj)
    ___P((int subtype,
-         long bytes,
+         ___SIZE_T bytes,
          int kind),
         ());
 ___IMP_FUNC(void,___release_scmobj)
@@ -8911,7 +8915,7 @@ ___IMP_FUNC(___SCMOBJ,___make_pair)
          int kind),
         ());
 ___IMP_FUNC(___SCMOBJ,___make_vector)
-   ___P((long length,
+   ___P((___SIZE_T length,
          ___SCMOBJ init,
          int kind),
         ());
@@ -9001,13 +9005,13 @@ ___IMP_FUNC(void,___setup_params_reset)
 ___IMP_FUNC(___SCMOBJ,___setup)
    ___P((struct ___setup_params_struct *setup_params),
         ());
-___IMP_FUNC(unsigned long,___get_min_heap) ___PVOID;
+___IMP_FUNC(___SIZE_T,___get_min_heap) ___PVOID;
 ___IMP_FUNC(void,___set_min_heap)
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         ());
-___IMP_FUNC(unsigned long,___get_max_heap) ___PVOID;
+___IMP_FUNC(___SIZE_T,___get_max_heap) ___PVOID;
 ___IMP_FUNC(void,___set_max_heap)
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         ());
 ___IMP_FUNC(int,___get_live_percent) ___PVOID;
 ___IMP_FUNC(void,___set_live_percent)
@@ -9057,13 +9061,13 @@ ___IMP_FUNC(void,___enable_interrupts) ___PVOID;
 
 #ifndef ___INCLUDED_FROM_OS_BASE
 ___IMP_FUNC(void *,___alloc_mem)
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         ());
 ___IMP_FUNC(void,___free_mem)
    ___P((void *ptr),
         ());
 ___IMP_FUNC(void *,___alloc_mem_code)
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         ());
 ___IMP_FUNC(void,___free_mem_code)
    ___P((void *ptr),

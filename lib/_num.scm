@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2009-11-26 16:15:21 feeley>
+;;; File: "_num.scm", Time-stamp: <2013-04-27 18:21:40 feeley>
 
 ;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2009 by Brad Lucier, All Rights Reserved.
@@ -5560,15 +5560,15 @@
 (define-prim (##bignum.make k x complement?)
   (##declare (not interrupts-enabled))
   (let ((v (##c-code "
-long i;
-long n = ___INT(___ARG1);
+___SIZE_T i;
+___SIZE_T n = ___INT(___ARG1);
 #if ___BIG_ABASE_WIDTH == 32
-long words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
+___SIZE_T words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
 #else
 #if ___WS == 4
-long words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 2;
+___SIZE_T words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 2;
 #else
-long words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
+___SIZE_T words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
 #endif
 #endif
 ___SCMOBJ result;

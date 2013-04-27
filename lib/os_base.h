@@ -1,6 +1,6 @@
 /* File: "os_base.h" */
 
-/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_BASE_H
 #define ___OS_BASE_H
@@ -30,17 +30,17 @@ extern int ___fclose
    ___P((___FILE *stream),
         ());
 
-extern size_t ___fread
+extern ___SIZE_T ___fread
    ___P((void *ptr,
-         size_t size,
-         size_t nmemb,
+         ___SIZE_T size,
+         ___SIZE_T nmemb,
          ___FILE *stream),
         ());
 
-extern size_t ___fwrite
+extern ___SIZE_T ___fwrite
    ___P((const void *ptr,
-         size_t size,
-         size_t nmemb,
+         ___SIZE_T size,
+         ___SIZE_T nmemb,
          ___FILE *stream),
         ());
 
@@ -69,8 +69,8 @@ typedef struct ___base_module_struct
 
     ___FILE *debug;
 
-    long alloc_mem_calls;
-    long free_mem_calls;
+    ___SIZE_T alloc_mem_calls;
+    ___SIZE_T free_mem_calls;
 
 #endif
 
@@ -112,7 +112,7 @@ extern ___base_module ___base_mod;
 
 
 extern void *___alloc_mem
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         ());
 
 extern void ___free_mem
@@ -124,7 +124,7 @@ extern void ___free_mem
 #ifdef ___DEBUG_ALLOC_MEM_TRACE
 
 extern void * ___alloc_mem_debug
-   ___P((unsigned long bytes,
+   ___P((___SIZE_T bytes,
          int lineno,
          char *file),
         ());
@@ -134,7 +134,7 @@ extern void * ___alloc_mem_debug
 
 
 extern void *___alloc_mem_code
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         ());
 
 extern void ___free_mem_code

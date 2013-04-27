@@ -313,13 +313,13 @@ typedef struct
 
 
 /* size of heap in words (number of words that can be occupied) */
-___HIDDEN long heap_size;
+___HIDDEN ___SIZE_T heap_size;
 
 /*
  * 'normal_overflow_reserve' is the number of words reserved in the
  * heap in normal circumstances for handling heap overflows.
  */
-___HIDDEN long normal_overflow_reserve;
+___HIDDEN ___SIZE_T normal_overflow_reserve;
 
 /*
  * 'overflow_reserve' is the number of words currently reserved in the
@@ -330,13 +330,13 @@ ___HIDDEN long normal_overflow_reserve;
  * 'normal_overflow_reserve' free, then 'overflow_reserve' is reset to
  * 'normal_overflow_reserve'.
  */
-___HIDDEN long overflow_reserve;
+___HIDDEN ___SIZE_T overflow_reserve;
 
 /* words occupied by nonmovable objects */
-___HIDDEN long words_nonmovable;
+___HIDDEN ___SIZE_T words_nonmovable;
 
 /* words occupied in heap by movable objects excluding current msections */
-___HIDDEN long words_prev_msections;
+___HIDDEN ___SIZE_T words_prev_msections;
 
 /* words occupied in heap by movable objects including current msections */
 #define WORDS_MOVABLE \
@@ -349,7 +349,7 @@ ___HIDDEN long words_prev_msections;
 
 /* words usable in msections */
 #define WORDS_MOVABLE_USABLE \
-(2*the_msections->nb_sections*(long)((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1))
+(2*the_msections->nb_sections*___CAST(___SIZE_T,((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1)))
 
 /* words available in heap */
 #define WORDS_AVAILABLE \
@@ -498,13 +498,13 @@ int ___gc_calls_to_punt = 2000; /* for GC stress test */
  */
 
 ___HIDDEN void *alloc_mem_aligned
-   ___P((long words,
+   ___P((___SIZE_T words,
          unsigned int multiplier,
          unsigned int modulus),
         (words,
          multiplier,
          modulus)
-long words;
+___SIZE_T words;
 unsigned int multiplier;
 unsigned int modulus;)
 {
@@ -600,9 +600,9 @@ ___HIDDEN void cleanup_rc ___PVOID
 
 
 ___EXP_FUNC(void*,___alloc_rc)
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         (bytes)
-unsigned long bytes;)
+___SIZE_T bytes;)
 {
   rc_header *h = ___CAST(rc_header*,
                          ___alloc_mem (bytes + sizeof (rc_header)));
@@ -970,13 +970,13 @@ ___HIDDEN ___WORD *palloc_limit; /* allocation limit in current psection */
  */
 
 ___HIDDEN void *alloc_mem_aligned_psection
-   ___P((long words,
+   ___P((___SIZE_T words,
          unsigned int multiplier,
          unsigned int modulus),
         (words,
          multiplier,
          modulus)
-long words;
+___SIZE_T words;
 unsigned int multiplier;
 unsigned int modulus;)
 {
@@ -1019,17 +1019,17 @@ unsigned int modulus;)
  */
 
 ___HIDDEN void *alloc_mem_aligned_perm
-   ___P((long words,
+   ___P((___SIZE_T words,
          int multiplier,
          int modulus),
         (words,
          multiplier,
          modulus)
-long words;
+___SIZE_T words;
 int multiplier;
 int modulus;)
 {
-  long waste;
+  ___SIZE_T waste;
   ___WORD *base;
 
   /*
@@ -1161,19 +1161,19 @@ ___WORD obj;)
 
 ___EXP_FUNC(___WORD,___alloc_scmobj)
    ___P((int subtype,
-         long bytes,
+         ___SIZE_T bytes,
          int kind),
         (subtype,
          bytes,
          kind)
 int subtype;
-long bytes;
+___SIZE_T bytes;
 int kind;)
 {
   void *ptr;
   ___processor_state ___ps = ___PSTATE;
-  long words = (kind==___PERM ? ___PERM_BODY_OFS : ___STILL_BODY_OFS)
-               + ___WORDS(bytes);
+  ___SIZE_T words = (kind==___PERM ? ___PERM_BODY_OFS : ___STILL_BODY_OFS)
+                    + ___WORDS(bytes);
 
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
   alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
@@ -1311,13 +1311,13 @@ int kind;)
  */
 
 ___EXP_FUNC(___WORD,___make_vector)
-   ___P((long length,
+   ___P((___SIZE_T length,
          ___WORD init,
          int kind),
         (length,
          init,
          kind)
-long length;
+___SIZE_T length;
 ___WORD init;
 int kind;)
 {
@@ -1831,7 +1831,7 @@ char *msg;)
       {
         ___WORD container;
         ___WORD head = container_body[-1];
-        long words = ___HD_WORDS(head);
+        ___SIZE_T words = ___HD_WORDS(head);
         int subtype = ___HD_SUBTYPE(head);
         int i;
 
@@ -1927,7 +1927,7 @@ ___WORD obj;)
   int i = find_msection (the_msections, hd_ptr);
   if (i >= 0 && i < the_msections->nb_sections)
     {
-      long pos = hd_ptr - the_msections->sections[i]->base;
+      ___PTRDIFF_T pos = hd_ptr - the_msections->sections[i]->base;
       if (pos >= 0 && pos < ___MSECTION_SIZE)
         {
           head = *hd_ptr;
@@ -1937,7 +1937,7 @@ ___WORD obj;)
               int i2 = find_msection (the_msections, hd_ptr2);
               if (i2 >= 0 && i2 < the_msections->nb_sections)
                 {
-                  long pos2 = hd_ptr2 - the_msections->sections[i2]->base;
+                  ___PTRDIFF_T pos2 = hd_ptr2 - the_msections->sections[i2]->base;
                   if (tospace_at_top
                       ? (pos2 < ___MSECTION_SIZE>>1 ||
                          pos2 >= ___MSECTION_SIZE)
@@ -2050,8 +2050,8 @@ ___HIDDEN void zap_fromspace ___PVOID
 
 #define MAX_STAT_SIZE 20
 
-___HIDDEN long movable_pair_objs;
-___HIDDEN long movable_subtyped_objs[MAX_STAT_SIZE+2];
+___HIDDEN ___SIZE_T movable_pair_objs;
+___HIDDEN ___SIZE_T movable_subtyped_objs[MAX_STAT_SIZE+2];
 
 #endif
 
@@ -2115,7 +2115,7 @@ ___WORD n;)
 
           if (head_typ == ___MOVABLE0)
             {
-              long words = ___HD_WORDS(head);
+              ___SIZE_T words = ___HD_WORDS(head);
 #if ___WS == 4
               ___BOOL pad = 0;
               while (alloc + words + (subtype >= ___sS64VECTOR ? 2 : 1) >
@@ -2273,7 +2273,7 @@ fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
       else
         {
           ___WORD forw;
-          long words;
+          ___SIZE_T words;
 
           ___COVER_MARK_CAPTURED_CONTINUATION_COPY;
 
@@ -2512,13 +2512,13 @@ ___HIDDEN void mark_rc ___PVOID
 (UNMARKED_MOVABLE(obj) || UNMARKED_STILL(obj))
 
 
-___HIDDEN long scan
+___HIDDEN ___SIZE_T scan
    ___P((___WORD *body),
         (body)
 ___WORD *body;)
 {
   ___WORD head = body[-1];
-  long words = ___HD_WORDS(head);
+  ___SIZE_T words = ___HD_WORDS(head);
   int subtype = ___HD_SUBTYPE(head);
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
@@ -2703,7 +2703,7 @@ ___HIDDEN void scan_still_objs_to_scan ___PVOID
 ___HIDDEN void scan_movable_objs_to_scan ___PVOID
 {
   ___WORD *body;
-  long words;
+  ___SIZE_T words;
 
   for (;;)
     {
@@ -2773,15 +2773,15 @@ ___HIDDEN void free_still_objs ___PVOID
 }
 
 
-___HIDDEN long adjust_heap
-   ___P((long avail,
-         long live),
+___HIDDEN ___SIZE_T adjust_heap
+   ___P((___SIZE_T avail,
+         ___SIZE_T live),
         (avail,
          live)
-long avail;
-long live;)
+___SIZE_T avail;
+___SIZE_T live;)
 {
-  long target;
+  ___SIZE_T target;
 
   if (___setup_params.gc_hook != 0)
     return ___setup_params.gc_hook (avail, live);
@@ -2791,12 +2791,12 @@ long live;)
   else
     target = live + ___MSECTION_BIGGEST;
 
-  if (target < ___CAST(long,(___setup_params.min_heap >> ___LWS)))
-    target = ___CAST(long,(___setup_params.min_heap >> ___LWS));
+  if (target < ___CAST(___SIZE_T,(___setup_params.min_heap >> ___LWS)))
+    target = ___CAST(___SIZE_T,(___setup_params.min_heap >> ___LWS));
 
   if (___setup_params.max_heap > 0 &&
-      target > ___CAST(long,(___setup_params.max_heap >> ___LWS)))
-    target = ___CAST(long,(___setup_params.max_heap >> ___LWS));
+      target > ___CAST(___SIZE_T,(___setup_params.max_heap >> ___LWS)))
+    target = ___CAST(___SIZE_T,(___setup_params.max_heap >> ___LWS));
 
   return target;
 }
@@ -2805,11 +2805,11 @@ long live;)
 ___HIDDEN void setup_pstate ___PVOID
 {
   ___processor_state ___ps = ___PSTATE;
-  long avail;
-  long stack_avail;
-  long stack_left_before_fudge;
-  long heap_avail;
-  long heap_left_before_fudge;
+  ___SIZE_T avail;
+  ___SIZE_T stack_avail;
+  ___SIZE_T stack_left_before_fudge;
+  ___SIZE_T heap_avail;
+  ___SIZE_T heap_left_before_fudge;
 
 #ifdef CALL_GC_FREQUENTLY
   avail = 0;
@@ -3140,7 +3140,7 @@ ___HIDDEN void process_gc_hash_tables ___PVOID
   while (curr != ___TAG(0,0))
     {
       ___WORD* body = ___BODY(curr);
-      long words = ___HD_WORDS(body[-1]);
+      ___SIZE_T words = ___HD_WORDS(body[-1]);
       int flags = ___INT(body[___GCHASHTABLE_FLAGS]);
       int i;
 
@@ -3495,7 +3495,7 @@ void ___gc_hash_table_rehash_in_situ
 ___SCMOBJ ht;)
 {
   ___WORD* body = ___BODY_AS(ht,___tSUBTYPED);
-  long words = ___HD_WORDS(body[-1]);
+  ___SIZE_T words = ___HD_WORDS(body[-1]);
   int size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
   int i;
 
@@ -3834,7 +3834,7 @@ ___SCMOBJ ht_src;
 ___SCMOBJ ht_dst;)
 {
   ___WORD* body_src = ___BODY_AS(ht_src,___tSUBTYPED);
-  long words = ___HD_WORDS(body_src[-1]);
+  ___SIZE_T words = ___HD_WORDS(body_src[-1]);
   int i;
 
   for (i=___GCHASHTABLE_KEY0; i<words; i+=2)
@@ -3852,26 +3852,26 @@ ___SCMOBJ ht_dst;)
 #ifdef ___DEBUG_GARBAGE_COLLECT
 
 ___BOOL ___garbage_collect_debug
-   ___P((long nonmovable_words_needed,
+   ___P((___SIZE_T nonmovable_words_needed,
          int line,
          char *file),
         (nonmovable_words_needed,
          line,
          file)
-long nonmovable_words_needed;
+___SIZE_T nonmovable_words_needed;
 int line;
 char *file;)
 
 #else
 
 ___BOOL ___garbage_collect
-   ___P((long nonmovable_words_needed),
+   ___P((___SIZE_T nonmovable_words_needed),
         (nonmovable_words_needed)
-long nonmovable_words_needed;)
+___SIZE_T nonmovable_words_needed;)
 
 #endif
 {
-  long avail;
+  ___SIZE_T avail;
   int target_nb_sections;
   int stack_msection_index;
   ___BOOL overflow = 0;
@@ -4038,7 +4038,7 @@ long nonmovable_words_needed;)
 
   {
     ___WORD *start;
-    long length;
+    ___SIZE_T length;
     ___WORD *p1;
     ___WORD *p2;
 
@@ -4153,7 +4153,7 @@ ___BOOL ___stack_limit ___PVOID
 #endif
 {
   ___processor_state ___ps = ___PSTATE;
-  long avail;
+  ___SIZE_T avail;
 
 #ifdef ___DEBUG_STACK_LIMIT
   ___ps->stack_limit_line = line;
@@ -4229,7 +4229,7 @@ ___BOOL ___heap_limit ___PVOID
 #endif
 {
   ___processor_state ___ps = ___PSTATE;
-  long avail;
+  ___SIZE_T avail;
 
 #ifdef ___DEBUG_HEAP_LIMIT
   ___ps->heap_limit_line = line;

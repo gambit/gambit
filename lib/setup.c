@@ -214,7 +214,7 @@ ___HIDDEN ___SCMOBJ hash_scheme_string
         (str)
 ___SCMOBJ str;)
 {
-  unsigned long i, n = ___INT(___STRINGLENGTH(str));
+  ___SIZE_T i, n = ___INT(___STRINGLENGTH(str));
   ___UM32 h = 0;
 
   for (i=0; i<n; i++)
@@ -261,11 +261,11 @@ ___SCMOBJ new_table;)
 
 ___HIDDEN ___SCMOBJ symkey_table_alloc
    ___P((unsigned int subtype,
-         long length),
+         ___SIZE_T length),
         (subtype,
          length)
 unsigned int subtype;
-long length;)
+___SIZE_T length;)
 {
   ___SCMOBJ tbl = ___make_vector (length+1, ___NUL, ___STILL);
 
@@ -343,8 +343,8 @@ unsigned int subtype;)
   while (probe != ___NUL)
     {
       ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
-      unsigned long i;
-      unsigned long n = ___INT(___STRINGLENGTH(name));
+      ___SIZE_T i;
+      ___SIZE_T n = ___INT(___STRINGLENGTH(name));
       ___UTF_8STRING p = str;
       for (i=0; i<n; i++)
         if (___UTF_8_get (&p) !=
@@ -378,8 +378,8 @@ unsigned int subtype;)
   while (probe != ___NUL)
     {
       ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
-      long i = 0;
-      long n = ___INT(___STRINGLENGTH(name));
+      ___SIZE_T i = 0;
+      ___SIZE_T n = ___INT(___STRINGLENGTH(name));
       if (___INT(___STRINGLENGTH(str)) == n)
         {
           for (i=0; i<n; i++)
@@ -551,13 +551,13 @@ void *data;)
 
 ___HIDDEN ___SCMOBJ *align
    ___P((___SCMOBJ *from,
-         long words,
+         ___SIZE_T words,
          int need_64bit_alignment),
         (from,
          words,
          need_64bit_alignment)
 ___SCMOBJ *from;
-long words;
+___SIZE_T words;
 int need_64bit_alignment;)
 {
   ___SCMOBJ *to;
@@ -2043,31 +2043,31 @@ ___setup_params_struct *setup_params;)
 }
 
 
-___EXP_FUNC(unsigned long,___get_min_heap) ___PVOID
+___EXP_FUNC(___SIZE_T,___get_min_heap) ___PVOID
 {
   return ___setup_params.min_heap;
 }
 
 
 ___EXP_FUNC(void,___set_min_heap)
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         (bytes)
-unsigned long bytes;)
+___SIZE_T bytes;)
 {
   ___setup_params.min_heap = bytes;
 }
 
 
-___EXP_FUNC(unsigned long,___get_max_heap) ___PVOID
+___EXP_FUNC(___SIZE_T,___get_max_heap) ___PVOID
 {
   return ___setup_params.max_heap;
 }
 
 
 ___EXP_FUNC(void,___set_max_heap)
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         (bytes)
-unsigned long bytes;)
+___SIZE_T bytes;)
 {
   ___setup_params.max_heap = bytes;
 }

@@ -1,6 +1,6 @@
-/* File: "os_time.h", Time-stamp: <2008-09-03 14:33:47 feeley> */
+/* File: "os_time.h" */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TIME_H
 #define ___OS_TIME_H
@@ -84,8 +84,8 @@ typedef struct ___time_module_struct
 #ifdef USE_dos_setvect_1Ch
 
     ___BOOL heartbeat_enabled;
-    long heartbeat_interval;
-    long heartbeat_countdown;
+    ___SIZE_T heartbeat_interval;
+    ___SIZE_T heartbeat_countdown;
     void (__interrupt __far *prev_vector_1Ch) ___PVOID;
 
 #define ___TIME_MODULE_INIT , 0, 0, 0, 0

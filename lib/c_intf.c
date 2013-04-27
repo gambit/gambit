@@ -1,6 +1,6 @@
-/* File: "c_intf.c", Time-stamp: <2009-08-04 12:03:35 feeley> */
+/* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -486,7 +486,7 @@ ___UTF_8STRING *ptr;)
       byte <<= 1;
       bits += 5;
     }
-  c &= ((unsigned long)1<<bits)-1;
+  c &= ((___U32)1<<bits)-1;
 #ifdef ___REJECT_ILLEGAL_UCS_4
   if ((c > 0xd7ff && c <= 0xdfff) ||
       (c > 0xfffd && c <= 0xffff))
@@ -2997,7 +2997,7 @@ int fudge;)
     {
     case ___CHAR_ENCODING_ISO_8859_1:
       {
-        unsigned long i, n;
+        ___SIZE_T i, n;
         ___ISO_8859_1STRING r;
 
         n = ___INT(___STRINGLENGTH(obj));
@@ -3027,7 +3027,7 @@ int fudge;)
 
     case ___CHAR_ENCODING_UTF_8:
       {
-        unsigned long i, bytes, n;
+        ___SIZE_T i, bytes, n;
         ___UTF_8STRING r;
         ___UTF_8STRING p;
 
@@ -3063,7 +3063,7 @@ int fudge;)
 
     case ___CHAR_ENCODING_UTF_16:
       {
-        unsigned long i, bytes, n;
+        ___SIZE_T i, bytes, n;
         ___UTF_16STRING r;
         ___UTF_16STRING p;
 
@@ -3111,7 +3111,7 @@ int fudge;)
 
     case ___CHAR_ENCODING_UCS_2:
       {
-        unsigned long i, n;
+        ___SIZE_T i, n;
         ___UCS_2STRING r;
 
         n = ___INT(___STRINGLENGTH(obj));
@@ -3141,7 +3141,7 @@ int fudge;)
 
     case ___CHAR_ENCODING_UCS_4:
       {
-        unsigned long i, n;
+        ___SIZE_T i, n;
         ___UCS_4STRING r;
 
         n = ___INT(___STRINGLENGTH(obj));
@@ -3171,7 +3171,7 @@ int fudge;)
 
     case ___CHAR_ENCODING_WCHAR:
       {
-        unsigned long i, n;
+        ___SIZE_T i, n;
         ___WCHARSTRING r;
 
         n = ___INT(___STRINGLENGTH(obj));
@@ -3214,7 +3214,7 @@ int fudge;)
 
     case ___CHAR_ENCODING_NATIVE:
       {
-        unsigned long i, n;
+        ___SIZE_T i, n;
         char *r;
 
         n = ___INT(___STRINGLENGTH(obj));
@@ -4669,7 +4669,6 @@ int arg_num;)
     *obj = ___FAL; /* #f counts as NULL */
   else
     {
-      long i;
       ___SCMOBJ r = ___alloc_scmobj (___sFOREIGN,
                                      ___FOREIGN_SIZE<<___LWS,
                                      ___STILL);
@@ -4895,7 +4894,7 @@ int arg_num;
 int char_encoding;)
 {
   ___SCMOBJ result = ___FAL;
-  unsigned long i, n = 0;
+  ___SIZE_T i, n = 0;
 
   if (x == 0)
     return err_code_from_char_encoding (char_encoding, 1, 1, arg_num);

@@ -132,8 +132,8 @@ int ___processor_count ___PVOID
 
 #ifdef OP_NB_CPU
 
-  size_t n = 0;
-  size_t sizeof_n = sizeof(n);
+  ___SIZE_T n = 0;
+  ___SIZE_T sizeof_n = sizeof(n);
   int mib[2];
 
   mib[0] = CTL_HW;
@@ -310,8 +310,8 @@ int level;)
     if ((level == 0 || level == sysctl_info[i].level) &&
         (sysctl_info[i].kind & (1<<instruction_cache))) {
 
-      size_t size = 0;
-      size_t sizeof_size = sizeof(size);
+      ___SIZE_T size = 0;
+      ___SIZE_T sizeof_size = sizeof(size);
       int mib[2];
 
       mib[0] = CTL_HW;
@@ -358,12 +358,12 @@ int level;)
 /* Virtual memory statistics. */
 
 void ___vm_stats
-   ___P((long *minflt,
-         long *majflt),
+   ___P((___SIZE_T *minflt,
+         ___SIZE_T *majflt),
         (minflt,
          majflt)
-long *minflt;
-long *majflt;)
+___SIZE_T *minflt;
+___SIZE_T *majflt;)
 {
 #ifndef USE_getrusage
 
@@ -397,13 +397,13 @@ long *majflt;)
 
 char *___format_filepos
    ___P((char *path,
-         long filepos,
+         ___SIZE_T filepos,
          ___BOOL pinpoint),
         (path,
          filepos,
          pinpoint)
 char *path;
-long filepos;
+___SIZE_T filepos;
 ___BOOL pinpoint;)
 {
 #ifdef USE_MACOS
@@ -605,7 +605,7 @@ ___SCMOBJ ___in_addr_to_SCMOBJ
 struct in_addr *ia;
 int arg_num;)
 {
-  unsigned long a;
+  ___U32 a;
   ___SCMOBJ result;
 
   a = ntohl (ia->s_addr);

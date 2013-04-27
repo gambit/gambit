@@ -76,7 +76,7 @@ extern void ___cleanup_mem ___PVOID;
 #define ___garbage_collect(n) ___garbage_collect_debug (n,__LINE__,__FILE__)
 
 extern ___BOOL ___garbage_collect_debug
-   ___P((long nonmovable_words_needed,
+   ___P((___SIZE_T nonmovable_words_needed,
          int line,
          char *file),
         ());
@@ -84,7 +84,7 @@ extern ___BOOL ___garbage_collect_debug
 #else
 
 extern ___BOOL ___garbage_collect
-   ___P((long nonmovable_words_needed),
+   ___P((___SIZE_T nonmovable_words_needed),
         ());
 
 #endif

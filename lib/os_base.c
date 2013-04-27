@@ -1,6 +1,6 @@
 /* File: "os_base.c" */
 
-/* Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.
@@ -65,36 +65,36 @@ ___FILE *stream;)
 }
 
 
-size_t ___fread
+___SIZE_T ___fread
    ___P((void *ptr,
-         size_t size,
-         size_t nmemb,
+         ___SIZE_T size,
+         ___SIZE_T nmemb,
          ___FILE *stream),
         (ptr,
          size,
          nmemb,
          stream)
 void *ptr;
-size_t size;
-size_t nmemb;
+___SIZE_T size;
+___SIZE_T nmemb;
 ___FILE *stream;)
 {
   return fread (ptr, size, nmemb, stream);
 }
 
 
-size_t ___fwrite
+___SIZE_T ___fwrite
    ___P((const void *ptr,
-         size_t size,
-         size_t nmemb,
+         ___SIZE_T size,
+         ___SIZE_T nmemb,
          ___FILE *stream),
         (ptr,
          size,
          nmemb,
          stream)
 const void *ptr;
-size_t size;
-size_t nmemb;
+___SIZE_T size;
+___SIZE_T nmemb;
 ___FILE *stream;)
 {
   return fwrite (ptr, size, nmemb, stream);
@@ -145,9 +145,9 @@ const char *format;)
 
 
 void *___alloc_mem
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         (bytes)
-unsigned long bytes;)
+___SIZE_T bytes;)
 {
   void *ptr;
 
@@ -238,13 +238,13 @@ void *ptr;)
 
 
 void * ___alloc_mem_debug
-   ___P((unsigned long bytes,
+   ___P((___SIZE_T bytes,
          int lineno,
          char *file),
         (bytes,
          lineno,
          file)
-unsigned long bytes;
+___SIZE_T bytes;
 int lineno;
 char *file;)
 {
@@ -270,9 +270,9 @@ char *file;)
 
 
 void *___alloc_mem_code
-   ___P((unsigned long bytes),
+   ___P((___SIZE_T bytes),
         (bytes)
-unsigned long bytes;)
+___SIZE_T bytes;)
 {
 #ifndef USE_mmap
 #ifndef USE_VirtualAlloc
@@ -287,7 +287,7 @@ unsigned long bytes;)
   ___BOOL executable = 1;
 
   void* ptr = mmap (0,
-                    bytes + sizeof (long),
+                    bytes + sizeof (___SIZE_T),
                     PROT_READ | PROT_WRITE | (executable ? PROT_EXEC : 0),
                     MAP_PRIVATE | MAP_ANON,
                     -1,
@@ -296,9 +296,9 @@ unsigned long bytes;)
   if (ptr == MAP_FAILED)
     return NULL;
 
-  *___CAST(long*,ptr) = bytes;
+  *___CAST(___SIZE_T*,ptr) = bytes;
 
-  return ___CAST(long*,ptr)+1;
+  return ___CAST(___SIZE_T*,ptr)+1;
 
 #endif
 
@@ -332,9 +332,9 @@ void *ptr;)
 
 #ifdef USE_mmap
 
-  long* p = ___CAST(long*,ptr)-1;
+  ___SIZE_T* p = ___CAST(___SIZE_T*,ptr)-1;
 
-  munmap (p, *p + sizeof (long));
+  munmap (p, *p + sizeof (___SIZE_T));
 
 #endif
 

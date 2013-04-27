@@ -217,7 +217,7 @@ ___HIDDEN ___SCMOBJ path_expand_to_absolute
    ___P((char *path,
          char *directory,/******************* currently ignored*/
          char *new_path,
-         long max_length),
+         ___SIZE_T max_length),
         (path,
          directory,
          new_path,
@@ -225,12 +225,12 @@ ___HIDDEN ___SCMOBJ path_expand_to_absolute
 char *path;
 char *directory;
 char *new_path;
-long max_length;)
+___SIZE_T max_length;)
 {
   ___BOOL result = 0;
   FSSpec spec;
   short vol;
-  long dir;
+  ___SIZE_T dir;
   char tmp[___PATH_MAX_LENGTH+1];
   Str255 ppath;
 
