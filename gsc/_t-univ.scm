@@ -910,7 +910,7 @@
      (^ expr1 " and " expr2))
 
     ((php)
-     (^ expr1 " ? " expr2 " : False"))
+     (^ expr1 " ? " expr2 " : false"))
 
     (else
      (compiler-internal-error
@@ -2104,6 +2104,7 @@
            "\n"
            "from array import array\n"
            "import ctypes\n"
+           "import time\n"
            "\n"))
 
        ((ruby)
@@ -2311,15 +2312,27 @@ EOF
 
      "\n"
 
+     (^var-declaration
+      (^global-var (^prefix "start_time"))
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ (^var-declaration (^global-var (^prefix "start_time"))
-                              (^call-prim (^member (^new "Date") "getTime")))
-            "\n"))
+         (^call-prim (^member (^new "Date") "getTime")))
+
+        ((php)
+         (^call-prim "microtime" (^bool #t)))
+
+        ((python)
+         (^call-prim (^member "time" "time")))
+
+        ((ruby)
+         (^new "Time"))
 
         (else
-         (^)))
+         (compiler-internal-error
+          "runtime-system, unknown target"))))
+
+     "\n"
 
      (^function-declaration
       (gvm-proc-use ctx "real-time-milliseconds")
@@ -2332,8 +2345,32 @@ EOF
             (^setreg 1 (^- (^call-prim (^member (^new "Date") "getTime"))
                            (^global-var (^prefix "start_time")))))
 
-           ((php python ruby)
-            (^))
+           ((php)
+            (^ "global " (^global-var (^prefix "start_time")) ";\n"
+               (^setreg 1 (^ "(int)"
+                             (^parens
+                              (^* 1000
+                                  (^parens
+                                  (^- (^call-prim "microtime" (^bool #t))
+                                      (^global-var (^prefix "start_time"))))))))))
+
+           ((python)
+            (^setreg 1 (^call-prim
+                        "int"
+                        (^* 1000
+                            (^parens
+                             (^- (^call-prim (^member "time" "time"))
+                                 (^global-var (^prefix "start_time"))))))))
+
+           ((ruby)
+            (^setreg 1 (^call-prim
+                        (^member
+                         (^parens
+                          (^* 1000
+                              (^parens
+                               (^- (^new "Time")
+                                   (^global-var (^prefix "start_time"))))))
+                         "floor"))))
 
            (else
             (compiler-internal-error
