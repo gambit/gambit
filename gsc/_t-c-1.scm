@@ -611,7 +611,7 @@
                            obj
                            (if (eq? subtype 'bigfixnum)
                              (lambda (obj i)
-                               (list "BIGFIX" i obj))
+                               (list "BIGFIX" i (targ-c-s64 obj)))
                              (lambda (obj i)
                                (list "SUB" i))))))
                    (case subtype
@@ -1953,6 +1953,7 @@
     (let ((head (car x)) (tail (cdr x)))
       (case head
         ((c-s32)       (targ-display-c-s32       tail))
+        ((c-s64)       (targ-display-c-s64       tail))
         ((c-hex-u32)   (targ-display-c-hex-u32   tail))
         ((c-hex)       (targ-display-c-hex       tail))
         ((c-char)      (targ-display-c-char      tail))
@@ -2115,6 +2116,9 @@
 (define (targ-c-s32 n)
   (cons 'c-s32 n))
 
+(define (targ-c-s64 n)
+  (cons 'c-s64 n))
+
 (define (targ-c-hex-u32 n)
   (cons 'c-hex-u32 n))
 
@@ -2164,6 +2168,10 @@
 (define (targ-display-c-s32 n)
   (targ-display n)
   (targ-display-no-line-info "L"))
+
+(define (targ-display-c-s64 n)
+  (targ-display n)
+  (targ-display-no-line-info "LL"))
 
 (define (targ-display-c-hex-u32 n)
   (targ-display-c-hex (targ-u32-to-s32 n)))
