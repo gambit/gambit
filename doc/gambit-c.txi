@@ -14636,6 +14636,12 @@ C type
 @code{UCS-4}
 @item wchar_t
 @code{wchar_t}
+@item size_t
+@code{size_t} (type @code{___SIZE_T} defined in @samp{gambit.h})
+@item ssize_t
+@code{ssize_t} (type @code{___SSIZE_T} defined in @samp{gambit.h})
+@item ptrdiff_t
+@code{ptrdiff_t} (type @code{___PTRDIFF_T} defined in @samp{gambit.h})
 @item short
 @code{short}
 @item unsigned-short
@@ -14877,7 +14883,7 @@ Allowed target C types
 @item exact integer
 @code{scheme-object}; @code{bool}; @r{[}@code{unsigned-}@r{]}
 @code{int8}/@code{int16}/@code{int32}/@code{int64}; @r{[}@code{unsigned}@r{]}
-@code{short}/@code{int}/@code{long}
+@code{short}/@code{int}/@code{long}; @code{size_t}/@code{ssize_t}/@code{ptrdiff_t}
 @item inexact real
 @code{scheme-object}; @code{bool}; @code{float}; @code{double}; @code{float32}; @code{float64}
 @item string
@@ -14922,7 +14928,7 @@ the Scheme object encoded
 boolean
 @item @r{[}@code{@r{[}un@r{]}signed}@r{]} @code{char}; @code{ISO-8859-1}; @code{UCS-2}; @code{UCS-4}; @code{wchar_t}
 character
-@item @r{[}@code{unsigned-}@r{]} @code{int8}/@code{int16}/@code{int32}/@code{int64}; @r{[}@code{unsigned}@r{]} @code{short}/@code{int}/@code{long}
+@item @r{[}@code{unsigned-}@r{]} @code{int8}/@code{int16}/@code{int32}/@code{int64}; @r{[}@code{unsigned}@r{]} @code{short}/@code{int}/@code{long}; @code{size_t}/@code{ssize_t}/@code{ptrdiff_t}
 exact integer
 @item @code{float}; @code{double}; @code{float32}; @code{float64}
 inexact real
