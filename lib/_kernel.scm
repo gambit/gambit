@@ -2622,7 +2622,7 @@ end-of-code
       v)))
 
 (define-prim (##make-machine-code-block len)
-  ((c-lambda (unsigned-long)
+  ((c-lambda (size_t)
              (pointer void)
      #<<end-of-code
 
@@ -3700,9 +3700,9 @@ end-of-code
 
 (define-prim (##foreign-address f)
   ((c-lambda (scheme-object)
-             unsigned-long
+             size_t
     " 
-    ___result = ___CAST(unsigned ___WORD,
+    ___result = ___CAST(___SIZE_T,
                         ___CAST(void*,___FIELD(___arg1,___FOREIGN_PTR)));
     ")
    f))
@@ -3940,7 +3940,7 @@ end-of-code
 
 (define-prim ##format-filepos
   (c-lambda (char-string
-             long
+             size_t
              bool)
             char-string
    "___format_filepos"))
