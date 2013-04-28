@@ -2367,6 +2367,15 @@ ___setup_params_struct *setup_params;)
   ___gstate.___SCMOBJ_to_WCHAR
     = ___SCMOBJ_to_WCHAR;
 
+  ___gstate.___SCMOBJ_to_SIZE_T
+    = ___SCMOBJ_to_SIZE_T;
+
+  ___gstate.___SCMOBJ_to_SSIZE_T
+    = ___SCMOBJ_to_SSIZE_T;
+
+  ___gstate.___SCMOBJ_to_PTRDIFF_T
+    = ___SCMOBJ_to_PTRDIFF_T;
+
   ___gstate.___SCMOBJ_to_SHORT
     = ___SCMOBJ_to_SHORT;
 
@@ -2576,6 +2585,15 @@ ___setup_params_struct *setup_params;)
 
   ___gstate.___WCHAR_to_SCMOBJ
     = ___WCHAR_to_SCMOBJ;
+
+  ___gstate.___SIZE_T_to_SCMOBJ
+    = ___SIZE_T_to_SCMOBJ;
+
+  ___gstate.___SSIZE_T_to_SCMOBJ
+    = ___SSIZE_T_to_SCMOBJ;
+
+  ___gstate.___PTRDIFF_T_to_SCMOBJ
+    = ___PTRDIFF_T_to_SCMOBJ;
 
   ___gstate.___SHORT_to_SCMOBJ
     = ___SHORT_to_SCMOBJ;

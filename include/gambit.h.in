@@ -1641,6 +1641,9 @@ ___CAST_U64((val)<<(((i)&7)<<3))
  */
 
 #ifdef ___USE_32_BIT_ADDR
+#define ___SIZE_T ___U32
+#define ___SSIZE_T ___S32
+#define ___PTRDIFF_T ___S32
 #define ___WORD ___S32
 #define ___WORD_WIDTH 32
 #define ___LOG_WORD_WIDTH 5
@@ -1648,6 +1651,9 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___LWS 2
 #define ___FLONUM_SIZE 2
 #else
+#define ___SIZE_T ___U64
+#define ___SSIZE_T ___S64
+#define ___PTRDIFF_T ___S64
 #define ___WORD ___S64
 #define ___WORD_WIDTH 64
 #define ___LOG_WORD_WIDTH 6
@@ -1655,10 +1661,6 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___LWS 3
 #define ___FLONUM_SIZE 1
 #endif
-
-#define ___SIZE_T size_t
-#define ___SSIZE_T ssize_t
-#define ___PTRDIFF_T ptrdiff_t
 
 #define ___SCMOBJ ___WORD
 #define ___SCMOBJ_WIDTH ___WORD_WIDTH
@@ -5770,48 +5772,51 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 #define ___STOC_UCS_2_ERR                       (___ERR_BASE+(15<<7))
 #define ___STOC_UCS_4_ERR                       (___ERR_BASE+(16<<7))
 #define ___STOC_WCHAR_ERR                       (___ERR_BASE+(17<<7))
-#define ___STOC_SHORT_ERR                       (___ERR_BASE+(18<<7))
-#define ___STOC_USHORT_ERR                      (___ERR_BASE+(19<<7))
-#define ___STOC_INT_ERR                         (___ERR_BASE+(20<<7))
-#define ___STOC_UINT_ERR                        (___ERR_BASE+(21<<7))
-#define ___STOC_LONG_ERR                        (___ERR_BASE+(22<<7))
-#define ___STOC_ULONG_ERR                       (___ERR_BASE+(23<<7))
-#define ___STOC_LONGLONG_ERR                    (___ERR_BASE+(24<<7))
-#define ___STOC_ULONGLONG_ERR                   (___ERR_BASE+(25<<7))
-#define ___STOC_FLOAT_ERR                       (___ERR_BASE+(26<<7))
-#define ___STOC_DOUBLE_ERR                      (___ERR_BASE+(27<<7))
-#define ___STOC_STRUCT_ERR                      (___ERR_BASE+(28<<7))
-#define ___STOC_UNION_ERR                       (___ERR_BASE+(29<<7))
-#define ___STOC_TYPE_ERR                        (___ERR_BASE+(30<<7))
-#define ___STOC_POINTER_ERR                     (___ERR_BASE+(31<<7))
-#define ___STOC_NONNULLPOINTER_ERR              (___ERR_BASE+(32<<7))
-#define ___STOC_FUNCTION_ERR                    (___ERR_BASE+(33<<7))
-#define ___STOC_NONNULLFUNCTION_ERR             (___ERR_BASE+(34<<7))
-#define ___STOC_BOOL_ERR                        (___ERR_BASE+(35<<7))
-#define ___STOC_CHARSTRING_ERR                  (___ERR_BASE+(36<<7))
-#define ___STOC_NONNULLCHARSTRING_ERR           (___ERR_BASE+(37<<7))
-#define ___STOC_NONNULLCHARSTRINGLIST_ERR       (___ERR_BASE+(38<<7))
-#define ___STOC_ISO_8859_1STRING_ERR            (___ERR_BASE+(39<<7))
-#define ___STOC_NONNULLISO_8859_1STRING_ERR     (___ERR_BASE+(40<<7))
-#define ___STOC_NONNULLISO_8859_1STRINGLIST_ERR (___ERR_BASE+(41<<7))
-#define ___STOC_UTF_8STRING_ERR                 (___ERR_BASE+(42<<7))
-#define ___STOC_NONNULLUTF_8STRING_ERR          (___ERR_BASE+(43<<7))
-#define ___STOC_NONNULLUTF_8STRINGLIST_ERR      (___ERR_BASE+(44<<7))
-#define ___STOC_UTF_16STRING_ERR                (___ERR_BASE+(45<<7))
-#define ___STOC_NONNULLUTF_16STRING_ERR         (___ERR_BASE+(46<<7))
-#define ___STOC_NONNULLUTF_16STRINGLIST_ERR     (___ERR_BASE+(47<<7))
-#define ___STOC_UCS_2STRING_ERR                 (___ERR_BASE+(48<<7))
-#define ___STOC_NONNULLUCS_2STRING_ERR          (___ERR_BASE+(49<<7))
-#define ___STOC_NONNULLUCS_2STRINGLIST_ERR      (___ERR_BASE+(50<<7))
-#define ___STOC_UCS_4STRING_ERR                 (___ERR_BASE+(51<<7))
-#define ___STOC_NONNULLUCS_4STRING_ERR          (___ERR_BASE+(52<<7))
-#define ___STOC_NONNULLUCS_4STRINGLIST_ERR      (___ERR_BASE+(53<<7))
-#define ___STOC_WCHARSTRING_ERR                 (___ERR_BASE+(54<<7))
-#define ___STOC_NONNULLWCHARSTRING_ERR          (___ERR_BASE+(55<<7))
-#define ___STOC_NONNULLWCHARSTRINGLIST_ERR      (___ERR_BASE+(56<<7))
-#define ___STOC_VARIANT_ERR                     (___ERR_BASE+(57<<7))
-#define ___STOC_HEAP_OVERFLOW_ERR               (___ERR_BASE+(58<<7))
-#define ___STOC_MAX                             (___ERR_BASE+(59<<7)-1)
+#define ___STOC_SIZE_T_ERR                      (___ERR_BASE+(18<<7))
+#define ___STOC_SSIZE_T_ERR                     (___ERR_BASE+(19<<7))
+#define ___STOC_PTRDIFF_T_ERR                   (___ERR_BASE+(20<<7))
+#define ___STOC_SHORT_ERR                       (___ERR_BASE+(21<<7))
+#define ___STOC_USHORT_ERR                      (___ERR_BASE+(22<<7))
+#define ___STOC_INT_ERR                         (___ERR_BASE+(23<<7))
+#define ___STOC_UINT_ERR                        (___ERR_BASE+(24<<7))
+#define ___STOC_LONG_ERR                        (___ERR_BASE+(25<<7))
+#define ___STOC_ULONG_ERR                       (___ERR_BASE+(26<<7))
+#define ___STOC_LONGLONG_ERR                    (___ERR_BASE+(27<<7))
+#define ___STOC_ULONGLONG_ERR                   (___ERR_BASE+(28<<7))
+#define ___STOC_FLOAT_ERR                       (___ERR_BASE+(29<<7))
+#define ___STOC_DOUBLE_ERR                      (___ERR_BASE+(30<<7))
+#define ___STOC_STRUCT_ERR                      (___ERR_BASE+(31<<7))
+#define ___STOC_UNION_ERR                       (___ERR_BASE+(32<<7))
+#define ___STOC_TYPE_ERR                        (___ERR_BASE+(33<<7))
+#define ___STOC_POINTER_ERR                     (___ERR_BASE+(34<<7))
+#define ___STOC_NONNULLPOINTER_ERR              (___ERR_BASE+(35<<7))
+#define ___STOC_FUNCTION_ERR                    (___ERR_BASE+(36<<7))
+#define ___STOC_NONNULLFUNCTION_ERR             (___ERR_BASE+(37<<7))
+#define ___STOC_BOOL_ERR                        (___ERR_BASE+(38<<7))
+#define ___STOC_CHARSTRING_ERR                  (___ERR_BASE+(39<<7))
+#define ___STOC_NONNULLCHARSTRING_ERR           (___ERR_BASE+(40<<7))
+#define ___STOC_NONNULLCHARSTRINGLIST_ERR       (___ERR_BASE+(41<<7))
+#define ___STOC_ISO_8859_1STRING_ERR            (___ERR_BASE+(42<<7))
+#define ___STOC_NONNULLISO_8859_1STRING_ERR     (___ERR_BASE+(43<<7))
+#define ___STOC_NONNULLISO_8859_1STRINGLIST_ERR (___ERR_BASE+(44<<7))
+#define ___STOC_UTF_8STRING_ERR                 (___ERR_BASE+(45<<7))
+#define ___STOC_NONNULLUTF_8STRING_ERR          (___ERR_BASE+(46<<7))
+#define ___STOC_NONNULLUTF_8STRINGLIST_ERR      (___ERR_BASE+(47<<7))
+#define ___STOC_UTF_16STRING_ERR                (___ERR_BASE+(48<<7))
+#define ___STOC_NONNULLUTF_16STRING_ERR         (___ERR_BASE+(49<<7))
+#define ___STOC_NONNULLUTF_16STRINGLIST_ERR     (___ERR_BASE+(50<<7))
+#define ___STOC_UCS_2STRING_ERR                 (___ERR_BASE+(51<<7))
+#define ___STOC_NONNULLUCS_2STRING_ERR          (___ERR_BASE+(52<<7))
+#define ___STOC_NONNULLUCS_2STRINGLIST_ERR      (___ERR_BASE+(53<<7))
+#define ___STOC_UCS_4STRING_ERR                 (___ERR_BASE+(54<<7))
+#define ___STOC_NONNULLUCS_4STRING_ERR          (___ERR_BASE+(55<<7))
+#define ___STOC_NONNULLUCS_4STRINGLIST_ERR      (___ERR_BASE+(56<<7))
+#define ___STOC_WCHARSTRING_ERR                 (___ERR_BASE+(57<<7))
+#define ___STOC_NONNULLWCHARSTRING_ERR          (___ERR_BASE+(58<<7))
+#define ___STOC_NONNULLWCHARSTRINGLIST_ERR      (___ERR_BASE+(59<<7))
+#define ___STOC_VARIANT_ERR                     (___ERR_BASE+(60<<7))
+#define ___STOC_HEAP_OVERFLOW_ERR               (___ERR_BASE+(61<<7))
+#define ___STOC_MAX                             (___ERR_BASE+(62<<7)-1)
 #define ___CTOS_BASE ___CTOS_S8_ERR
 #define ___CTOS_S8_ERR                          (___ERR_BASE+(65<<7))
 #define ___CTOS_U8_ERR                          (___ERR_BASE+(66<<7))
@@ -5830,48 +5835,51 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 #define ___CTOS_UCS_2_ERR                       (___ERR_BASE+(79<<7))
 #define ___CTOS_UCS_4_ERR                       (___ERR_BASE+(80<<7))
 #define ___CTOS_WCHAR_ERR                       (___ERR_BASE+(81<<7))
-#define ___CTOS_SHORT_ERR                       (___ERR_BASE+(82<<7))
-#define ___CTOS_USHORT_ERR                      (___ERR_BASE+(83<<7))
-#define ___CTOS_INT_ERR                         (___ERR_BASE+(84<<7))
-#define ___CTOS_UINT_ERR                        (___ERR_BASE+(85<<7))
-#define ___CTOS_LONG_ERR                        (___ERR_BASE+(86<<7))
-#define ___CTOS_ULONG_ERR                       (___ERR_BASE+(87<<7))
-#define ___CTOS_LONGLONG_ERR                    (___ERR_BASE+(88<<7))
-#define ___CTOS_ULONGLONG_ERR                   (___ERR_BASE+(89<<7))
-#define ___CTOS_FLOAT_ERR                       (___ERR_BASE+(90<<7))
-#define ___CTOS_DOUBLE_ERR                      (___ERR_BASE+(91<<7))
-#define ___CTOS_STRUCT_ERR                      (___ERR_BASE+(92<<7))
-#define ___CTOS_UNION_ERR                       (___ERR_BASE+(93<<7))
-#define ___CTOS_TYPE_ERR                        (___ERR_BASE+(94<<7))
-#define ___CTOS_POINTER_ERR                     (___ERR_BASE+(95<<7))
-#define ___CTOS_NONNULLPOINTER_ERR              (___ERR_BASE+(96<<7))
-#define ___CTOS_FUNCTION_ERR                    (___ERR_BASE+(97<<7))
-#define ___CTOS_NONNULLFUNCTION_ERR             (___ERR_BASE+(98<<7))
-#define ___CTOS_BOOL_ERR                        (___ERR_BASE+(99<<7))
-#define ___CTOS_CHARSTRING_ERR                  (___ERR_BASE+(100<<7))
-#define ___CTOS_NONNULLCHARSTRING_ERR           (___ERR_BASE+(101<<7))
-#define ___CTOS_NONNULLCHARSTRINGLIST_ERR       (___ERR_BASE+(102<<7))
-#define ___CTOS_ISO_8859_1STRING_ERR            (___ERR_BASE+(103<<7))
-#define ___CTOS_NONNULLISO_8859_1STRING_ERR     (___ERR_BASE+(104<<7))
-#define ___CTOS_NONNULLISO_8859_1STRINGLIST_ERR (___ERR_BASE+(105<<7))
-#define ___CTOS_UTF_8STRING_ERR                 (___ERR_BASE+(106<<7))
-#define ___CTOS_NONNULLUTF_8STRING_ERR          (___ERR_BASE+(107<<7))
-#define ___CTOS_NONNULLUTF_8STRINGLIST_ERR      (___ERR_BASE+(108<<7))
-#define ___CTOS_UTF_16STRING_ERR                (___ERR_BASE+(109<<7))
-#define ___CTOS_NONNULLUTF_16STRING_ERR         (___ERR_BASE+(110<<7))
-#define ___CTOS_NONNULLUTF_16STRINGLIST_ERR     (___ERR_BASE+(111<<7))
-#define ___CTOS_UCS_2STRING_ERR                 (___ERR_BASE+(112<<7))
-#define ___CTOS_NONNULLUCS_2STRING_ERR          (___ERR_BASE+(113<<7))
-#define ___CTOS_NONNULLUCS_2STRINGLIST_ERR      (___ERR_BASE+(114<<7))
-#define ___CTOS_UCS_4STRING_ERR                 (___ERR_BASE+(115<<7))
-#define ___CTOS_NONNULLUCS_4STRING_ERR          (___ERR_BASE+(116<<7))
-#define ___CTOS_NONNULLUCS_4STRINGLIST_ERR      (___ERR_BASE+(117<<7))
-#define ___CTOS_WCHARSTRING_ERR                 (___ERR_BASE+(118<<7))
-#define ___CTOS_NONNULLWCHARSTRING_ERR          (___ERR_BASE+(119<<7))
-#define ___CTOS_NONNULLWCHARSTRINGLIST_ERR      (___ERR_BASE+(120<<7))
-#define ___CTOS_VARIANT_ERR                     (___ERR_BASE+(121<<7))
-#define ___CTOS_HEAP_OVERFLOW_ERR               (___ERR_BASE+(122<<7))
-#define ___CTOS_MAX                             (___ERR_BASE+(123<<7)-1)
+#define ___CTOS_SIZE_T_ERR                      (___ERR_BASE+(82<<7))
+#define ___CTOS_SSIZE_T_ERR                     (___ERR_BASE+(83<<7))
+#define ___CTOS_PTRDIFF_T_ERR                   (___ERR_BASE+(84<<7))
+#define ___CTOS_SHORT_ERR                       (___ERR_BASE+(85<<7))
+#define ___CTOS_USHORT_ERR                      (___ERR_BASE+(86<<7))
+#define ___CTOS_INT_ERR                         (___ERR_BASE+(87<<7))
+#define ___CTOS_UINT_ERR                        (___ERR_BASE+(88<<7))
+#define ___CTOS_LONG_ERR                        (___ERR_BASE+(89<<7))
+#define ___CTOS_ULONG_ERR                       (___ERR_BASE+(90<<7))
+#define ___CTOS_LONGLONG_ERR                    (___ERR_BASE+(91<<7))
+#define ___CTOS_ULONGLONG_ERR                   (___ERR_BASE+(92<<7))
+#define ___CTOS_FLOAT_ERR                       (___ERR_BASE+(93<<7))
+#define ___CTOS_DOUBLE_ERR                      (___ERR_BASE+(94<<7))
+#define ___CTOS_STRUCT_ERR                      (___ERR_BASE+(95<<7))
+#define ___CTOS_UNION_ERR                       (___ERR_BASE+(96<<7))
+#define ___CTOS_TYPE_ERR                        (___ERR_BASE+(97<<7))
+#define ___CTOS_POINTER_ERR                     (___ERR_BASE+(98<<7))
+#define ___CTOS_NONNULLPOINTER_ERR              (___ERR_BASE+(99<<7))
+#define ___CTOS_FUNCTION_ERR                    (___ERR_BASE+(100<<7))
+#define ___CTOS_NONNULLFUNCTION_ERR             (___ERR_BASE+(101<<7))
+#define ___CTOS_BOOL_ERR                        (___ERR_BASE+(102<<7))
+#define ___CTOS_CHARSTRING_ERR                  (___ERR_BASE+(103<<7))
+#define ___CTOS_NONNULLCHARSTRING_ERR           (___ERR_BASE+(104<<7))
+#define ___CTOS_NONNULLCHARSTRINGLIST_ERR       (___ERR_BASE+(105<<7))
+#define ___CTOS_ISO_8859_1STRING_ERR            (___ERR_BASE+(106<<7))
+#define ___CTOS_NONNULLISO_8859_1STRING_ERR     (___ERR_BASE+(107<<7))
+#define ___CTOS_NONNULLISO_8859_1STRINGLIST_ERR (___ERR_BASE+(108<<7))
+#define ___CTOS_UTF_8STRING_ERR                 (___ERR_BASE+(109<<7))
+#define ___CTOS_NONNULLUTF_8STRING_ERR          (___ERR_BASE+(110<<7))
+#define ___CTOS_NONNULLUTF_8STRINGLIST_ERR      (___ERR_BASE+(111<<7))
+#define ___CTOS_UTF_16STRING_ERR                (___ERR_BASE+(112<<7))
+#define ___CTOS_NONNULLUTF_16STRING_ERR         (___ERR_BASE+(113<<7))
+#define ___CTOS_NONNULLUTF_16STRINGLIST_ERR     (___ERR_BASE+(114<<7))
+#define ___CTOS_UCS_2STRING_ERR                 (___ERR_BASE+(115<<7))
+#define ___CTOS_NONNULLUCS_2STRING_ERR          (___ERR_BASE+(116<<7))
+#define ___CTOS_NONNULLUCS_2STRINGLIST_ERR      (___ERR_BASE+(117<<7))
+#define ___CTOS_UCS_4STRING_ERR                 (___ERR_BASE+(118<<7))
+#define ___CTOS_NONNULLUCS_4STRING_ERR          (___ERR_BASE+(119<<7))
+#define ___CTOS_NONNULLUCS_4STRINGLIST_ERR      (___ERR_BASE+(120<<7))
+#define ___CTOS_WCHARSTRING_ERR                 (___ERR_BASE+(121<<7))
+#define ___CTOS_NONNULLWCHARSTRING_ERR          (___ERR_BASE+(122<<7))
+#define ___CTOS_NONNULLWCHARSTRINGLIST_ERR      (___ERR_BASE+(123<<7))
+#define ___CTOS_VARIANT_ERR                     (___ERR_BASE+(124<<7))
+#define ___CTOS_HEAP_OVERFLOW_ERR               (___ERR_BASE+(125<<7))
+#define ___CTOS_MAX                             (___ERR_BASE+(126<<7)-1)
 
 #define ___RETURN_POS 127
 
@@ -6142,6 +6150,12 @@ void *___x;) \
 #define ___END_SFUN_SCMOBJ_TO_UCS_4(s,c)
 #define ___BEGIN_SFUN_SCMOBJ_TO_WCHAR(s,c)___STOC3(___SCMOBJ_to_WCHAR,s,&c,___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_TO_WCHAR(s,c)
+#define ___BEGIN_SFUN_SCMOBJ_TO_SIZE_T(s,c)___STOC3(___SCMOBJ_to_SIZE_T,s,&c,___RETURN_POS);
+#define ___END_SFUN_SCMOBJ_TO_SIZE_T(s,c)
+#define ___BEGIN_SFUN_SCMOBJ_TO_SSIZE_T(s,c)___STOC3(___SCMOBJ_to_SSIZE_T,s,&c,___RETURN_POS);
+#define ___END_SFUN_SCMOBJ_TO_SSIZE_T(s,c)
+#define ___BEGIN_SFUN_SCMOBJ_TO_PTRDIFF_T(s,c)___STOC3(___SCMOBJ_to_PTRDIFF_T,s,&c,___RETURN_POS);
+#define ___END_SFUN_SCMOBJ_TO_PTRDIFF_T(s,c)
 #define ___BEGIN_SFUN_SCMOBJ_TO_SHORT(s,c)___STOC3(___SCMOBJ_to_SHORT,s,&c,___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_TO_SHORT(s,c)
 #define ___BEGIN_SFUN_SCMOBJ_TO_USHORT(s,c)___STOC3(___SCMOBJ_to_USHORT,s,&c,___RETURN_POS);
@@ -6253,6 +6267,12 @@ void *___x;) \
 #define ___END_SFUN_UCS_4_TO_SCMOBJ(c,s,i)}
 #define ___BEGIN_SFUN_WCHAR_TO_SCMOBJ(c,s,i)___IF_CTOS3(___WCHAR_to_SCMOBJ,c,&s,i){
 #define ___END_SFUN_WCHAR_TO_SCMOBJ(c,s,i)}
+#define ___BEGIN_SFUN_SIZE_T_TO_SCMOBJ(c,s,i)___IF_CTOS3(___SIZE_T_to_SCMOBJ,c,&s,i){
+#define ___END_SFUN_SIZE_T_TO_SCMOBJ(c,s,i)}
+#define ___BEGIN_SFUN_SSIZE_T_TO_SCMOBJ(c,s,i)___IF_CTOS3(___SSIZE_T_to_SCMOBJ,c,&s,i){
+#define ___END_SFUN_SSIZE_T_TO_SCMOBJ(c,s,i)}
+#define ___BEGIN_SFUN_PTRDIFF_T_TO_SCMOBJ(c,s,i)___IF_CTOS3(___PTRDIFF_T_to_SCMOBJ,c,&s,i){
+#define ___END_SFUN_PTRDIFF_T_TO_SCMOBJ(c,s,i)}
 #define ___BEGIN_SFUN_SHORT_TO_SCMOBJ(c,s,i)___IF_CTOS3(___SHORT_to_SCMOBJ,c,&s,i){
 #define ___END_SFUN_SHORT_TO_SCMOBJ(c,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_USHORT_TO_SCMOBJ(c,s,i)___IF_CTOS3(___USHORT_to_SCMOBJ,c,&s,i){
@@ -6418,6 +6438,12 @@ void *___x;) \
 #define ___END_CFUN_SCMOBJ_TO_UCS_4(s,c,i)}
 #define ___BEGIN_CFUN_SCMOBJ_TO_WCHAR(s,c,i)___IF_STOC3(___SCMOBJ_to_WCHAR,s,&c,i){
 #define ___END_CFUN_SCMOBJ_TO_WCHAR(s,c,i)}
+#define ___BEGIN_CFUN_SCMOBJ_TO_SIZE_T(s,c,i)___IF_STOC3(___SCMOBJ_to_SIZE_T,s,&c,i){
+#define ___END_CFUN_SCMOBJ_TO_SIZE_T(s,c,i)}
+#define ___BEGIN_CFUN_SCMOBJ_TO_SSIZE_T(s,c,i)___IF_STOC3(___SCMOBJ_to_SSIZE_T,s,&c,i){
+#define ___END_CFUN_SCMOBJ_TO_SSIZE_T(s,c,i)}
+#define ___BEGIN_CFUN_SCMOBJ_TO_PTRDIFF_T(s,c,i)___IF_STOC3(___SCMOBJ_to_PTRDIFF_T,s,&c,i){
+#define ___END_CFUN_SCMOBJ_TO_PTRDIFF_T(s,c,i)}
 #define ___BEGIN_CFUN_SCMOBJ_TO_SHORT(s,c,i)___IF_STOC3(___SCMOBJ_to_SHORT,s,&c,i){
 #define ___END_CFUN_SCMOBJ_TO_SHORT(s,c,i)}
 #define ___BEGIN_CFUN_SCMOBJ_TO_USHORT(s,c,i)___IF_STOC3(___SCMOBJ_to_USHORT,s,&c,i){
@@ -6533,6 +6559,12 @@ void *___x;) \
 #define ___END_CFUN_UCS_4_TO_SCMOBJ(c,s)
 #define ___BEGIN_CFUN_WCHAR_TO_SCMOBJ(c,s)___CTOS3(___WCHAR_to_SCMOBJ,c,&s,___RETURN_POS);
 #define ___END_CFUN_WCHAR_TO_SCMOBJ(c,s)
+#define ___BEGIN_CFUN_SIZE_T_TO_SCMOBJ(c,s)___CTOS3(___SIZE_T_to_SCMOBJ,c,&s,___RETURN_POS);
+#define ___END_CFUN_SIZE_T_TO_SCMOBJ(c,s)
+#define ___BEGIN_CFUN_SSIZE_T_TO_SCMOBJ(c,s)___CTOS3(___SSIZE_T_to_SCMOBJ,c,&s,___RETURN_POS);
+#define ___END_CFUN_SSIZE_T_TO_SCMOBJ(c,s)
+#define ___BEGIN_CFUN_PTRDIFF_T_TO_SCMOBJ(c,s)___CTOS3(___PTRDIFF_T_to_SCMOBJ,c,&s,___RETURN_POS);
+#define ___END_CFUN_PTRDIFF_T_TO_SCMOBJ(c,s)
 #define ___BEGIN_CFUN_SHORT_TO_SCMOBJ(c,s)___IF_CTOS3(___SHORT_to_SCMOBJ,c,&s,___RETURN_POS){
 #define ___END_CFUN_SHORT_TO_SCMOBJ(c,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_USHORT_TO_SCMOBJ(c,s)___IF_CTOS3(___USHORT_to_SCMOBJ,c,&s,___RETURN_POS){
@@ -7273,6 +7305,21 @@ typedef struct ___global_state_struct
              ___WCHAR *x,
              int arg_num),
             ());
+    ___SCMOBJ (*___SCMOBJ_to_SIZE_T)
+       ___P((___SCMOBJ obj,
+             ___SIZE_T *x,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___SCMOBJ_to_SSIZE_T)
+       ___P((___SCMOBJ obj,
+             ___SSIZE_T *x,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___SCMOBJ_to_PTRDIFF_T)
+       ___P((___SCMOBJ obj,
+             ___PTRDIFF_T *x,
+             int arg_num),
+            ());
     ___SCMOBJ (*___SCMOBJ_to_SHORT)
        ___P((___SCMOBJ obj,
              short *x,
@@ -7612,6 +7659,21 @@ typedef struct ___global_state_struct
             ());
     ___SCMOBJ (*___WCHAR_to_SCMOBJ)
        ___P((___WCHAR x,
+             ___SCMOBJ *obj,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___SIZE_T_to_SCMOBJ)
+       ___P((___SIZE_T x,
+             ___SCMOBJ *obj,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___SSIZE_T_to_SCMOBJ)
+       ___P((___SSIZE_T x,
+             ___SCMOBJ *obj,
+             int arg_num),
+            ());
+    ___SCMOBJ (*___PTRDIFF_T_to_SCMOBJ)
+       ___P((___PTRDIFF_T x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
@@ -8291,6 +8353,21 @@ ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_WCHAR)
          ___WCHAR *x,
          int arg_num),
         ());
+___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_SIZE_T)
+   ___P((___SCMOBJ obj,
+         ___SIZE_T *x,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_SSIZE_T)
+   ___P((___SCMOBJ obj,
+         ___SSIZE_T *x,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_PTRDIFF_T)
+   ___P((___SCMOBJ obj,
+         ___PTRDIFF_T *x,
+         int arg_num),
+        ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_SHORT)
    ___P((___SCMOBJ obj,
          short *x,
@@ -8630,6 +8707,21 @@ ___IMP_FUNC(___SCMOBJ,___UCS_4_to_SCMOBJ)
         ());
 ___IMP_FUNC(___SCMOBJ,___WCHAR_to_SCMOBJ)
    ___P((___WCHAR x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___SIZE_T_to_SCMOBJ)
+   ___P((___SIZE_T x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___SSIZE_T_to_SCMOBJ)
+   ___P((___SSIZE_T x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___PTRDIFF_T_to_SCMOBJ)
+   ___P((___PTRDIFF_T x,
          ___SCMOBJ *obj,
          int arg_num),
         ());

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_parms.scm", Time-stamp: <2010-06-10 13:53:05 feeley>
+;;; File: "_parms.scm", Time-stamp: <2013-04-28 13:49:50 feeley>
 
 ;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
 
@@ -148,6 +148,9 @@
 (define UCS-2-sym              (string->canonical-symbol "UCS-2"))
 (define UCS-4-sym              (string->canonical-symbol "UCS-4"))
 (define wchar_t-sym            (string->canonical-symbol "wchar_t"))
+(define size_t-sym             (string->canonical-symbol "size_t"))
+(define ssize_t-sym            (string->canonical-symbol "ssize_t"))
+(define ptrdiff_t-sym          (string->canonical-symbol "ptrdiff_t"))
 (define short-sym              (string->canonical-symbol "short"))
 (define unsigned-short-sym     (string->canonical-symbol "unsigned-short"))
 (define int-sym                (string->canonical-symbol "int"))
@@ -314,6 +317,24 @@
                   (string-append c-id-prefix "WCHAR")
                   "WCHAR_TO_SCMOBJ"
                   "SCMOBJ_TO_WCHAR"
+                  #f))
+    (cons size_t-sym
+          (vector 'c-type
+                  (string-append c-id-prefix "SIZE_T")
+                  "SIZE_T_TO_SCMOBJ"
+                  "SCMOBJ_TO_SIZE_T"
+                  #f))
+    (cons ssize_t-sym
+          (vector 'c-type
+                  (string-append c-id-prefix "SSIZE_T")
+                  "SSIZE_T_TO_SCMOBJ"
+                  "SCMOBJ_TO_SSIZE_T"
+                  #f))
+    (cons ptrdiff_t-sym
+          (vector 'c-type
+                  (string-append c-id-prefix "PTRDIFF_T")
+                  "PTRDIFF_T_TO_SCMOBJ"
+                  "SCMOBJ_TO_PTRDIFF_T"
                   #f))
     (cons short-sym
           (vector 'c-type

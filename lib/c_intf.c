@@ -2335,6 +2335,90 @@ int arg_num;)
 }
 
 
+/* Convert a Scheme integer to a C 'size_t'. */
+
+___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_SIZE_T)
+   ___P((___SCMOBJ obj,
+         ___SIZE_T *x,
+         int arg_num),
+        (obj,
+         x,
+         arg_num)
+___SCMOBJ obj;
+___SIZE_T *x;
+int arg_num;)
+{
+  ___U64 val;
+
+  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+    return ___FIX(___STOC_SIZE_T_ERR+arg_num);
+
+#if ___WS == 4
+  if (!___U64_fits_in_width (val, 32))
+    return ___FIX(___STOC_SIZE_T_ERR+arg_num);
+#endif
+
+  *x = ___CAST(___SIZE_T,___U64_to_ULONGLONG (val));
+  return ___FIX(___NO_ERR);
+}
+
+
+/* Convert a Scheme integer to a C 'ssize_t'. */
+
+___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_SSIZE_T)
+   ___P((___SCMOBJ obj,
+         ___SSIZE_T *x,
+         int arg_num),
+        (obj,
+         x,
+         arg_num)
+___SCMOBJ obj;
+___SSIZE_T *x;
+int arg_num;)
+{
+  ___S64 val;
+
+  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+    return ___FIX(___STOC_SSIZE_T_ERR+arg_num);
+
+#if ___WS == 4
+  if (!___S64_fits_in_width (val, 32))
+    return ___FIX(___STOC_SSIZE_T_ERR+arg_num);
+#endif
+
+  *x = ___CAST(___SSIZE_T,___S64_to_LONGLONG (val));
+  return ___FIX(___NO_ERR);
+}
+
+
+/* Convert a Scheme integer to a C 'ptrdiff_t'. */
+
+___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_PTRDIFF_T)
+   ___P((___SCMOBJ obj,
+         ___PTRDIFF_T *x,
+         int arg_num),
+        (obj,
+         x,
+         arg_num)
+___SCMOBJ obj;
+___PTRDIFF_T *x;
+int arg_num;)
+{
+  ___S64 val;
+
+  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+    return ___FIX(___STOC_PTRDIFF_T_ERR+arg_num);
+
+#if ___WS == 4
+  if (!___S64_fits_in_width (val, 32))
+    return ___FIX(___STOC_PTRDIFF_T_ERR+arg_num);
+#endif
+
+  *x = ___CAST(___PTRDIFF_T,___S64_to_LONGLONG (val));
+  return ___FIX(___NO_ERR);
+}
+
+
 /* Convert a Scheme integer to a C 'short'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_SHORT)
@@ -4473,6 +4557,57 @@ int arg_num;)
 
   *obj = ___CHR(x);
   return ___FIX(___NO_ERR);
+}
+
+
+/* Convert a C 'size_t' to a Scheme integer. */
+
+___EXP_FUNC(___SCMOBJ,___SIZE_T_to_SCMOBJ)
+   ___P((___SIZE_T x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        (x,
+         obj,
+         arg_num)
+___SIZE_T x;
+___SCMOBJ *obj;
+int arg_num;)
+{
+  return ___U64_to_SCMOBJ (___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
+}
+
+
+/* Convert a C 'ssize_t' to a Scheme integer. */
+
+___EXP_FUNC(___SCMOBJ,___SSIZE_T_to_SCMOBJ)
+   ___P((___SSIZE_T x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        (x,
+         obj,
+         arg_num)
+___SSIZE_T x;
+___SCMOBJ *obj;
+int arg_num;)
+{
+  return ___S64_to_SCMOBJ (___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
+}
+
+
+/* Convert a C 'ptrdiff_t' to a Scheme integer. */
+
+___EXP_FUNC(___SCMOBJ,___PTRDIFF_T_to_SCMOBJ)
+   ___P((___PTRDIFF_T x,
+         ___SCMOBJ *obj,
+         int arg_num),
+        (x,
+         obj,
+         arg_num)
+___PTRDIFF_T x;
+___SCMOBJ *obj;
+int arg_num;)
+{
+  return ___S64_to_SCMOBJ (___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
 }
 
 
