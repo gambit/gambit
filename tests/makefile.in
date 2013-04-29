@@ -153,29 +153,10 @@ test8:
 	@echo "------------ TEST 8 (use C-interface to implement a Scheme server)"
 	rm -f server.c server_.c server@obj@ server_@obj@ \
 	  client@obj@ client@exe@
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link server.scm
-	$(MAKE) build_obj \
-	  BUILD_OBJ_OUTPUT_FILENAME="client@obj@" \
-	  BUILD_OBJ_CC_OPTIONS="" \
-	  BUILD_OBJ_INPUT_FILENAMES="client.c"
-	$(MAKE) build_obj_library \
-	  BUILD_OBJ_OUTPUT_FILENAME="server@obj@" \
-	  BUILD_OBJ_CC_OPTIONS="" \
-	  BUILD_OBJ_INPUT_FILENAMES="server.c"
-	$(MAKE) build_obj_library \
-	  BUILD_OBJ_OUTPUT_FILENAME="server_@obj@" \
-	  BUILD_OBJ_CC_OPTIONS="" \
-	  BUILD_OBJ_INPUT_FILENAMES="server_.c"
-	$(MAKE) build_exe \
-	  BUILD_EXE_OUTPUT_FILENAME="client@exe@" \
-	  BUILD_EXE_CC_OPTIONS="" \
-	  BUILD_EXE_LD_OPTIONS_PRELUDE="" \
-	  BUILD_EXE_INPUT_FILENAMES="client@obj@ server@obj@ server_@obj@" \
-	  BUILD_EXE_LD_OPTIONS=""
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -exe -cc-options "-D___LIBRARY" -o client@exe@ client.c server.scm
 	@SETDLPATH@ ./client@exe@ > test8.out
 	diff -w $(srcdirpfx)test8.ok test8.out && \
-	  rm -f test8.out server.c server_.c server@obj@ server_@obj@ \
-	    client@obj@ client@exe@
+	  rm -f test8.out client@exe@
 
 test9: test7
 	@echo "------------ TEST 9 (dynamic compilation and loading of a module)"
@@ -188,15 +169,6 @@ test10:
 	@echo "------------ TEST 10 (consistency of lib/gambit#.scm)"
 	rm -rf mem@obj@ mem.o*
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -i test10.scm
-
-build_obj:
-	@BUILD_OBJ@
-
-build_obj_library:
-	@BUILD_OBJ@ -D___LIBRARY
-
-build_exe:
-	@BUILD_EXE@
 
 bootstrap-pre:
 

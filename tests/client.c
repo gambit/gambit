@@ -1,15 +1,14 @@
-/* File: "client.c", Time-stamp: <2007-09-12 00:07:21 feeley> */
+/* File: "client.c" */
 
-/* Copyright (c) 1996-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1996-2013 by Marc Feeley, All Rights Reserved. */
 
 #include <stdio.h>
 #include <stdlib.h>
 
 /*
- * ___VERSION must match the version number of the Gambit header file.
+ * Include the Gambit header file.
  */
 
-#define ___VERSION 406007
 #include "gambit.h"
 
 /*
