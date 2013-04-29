@@ -530,20 +530,23 @@
 #endif
 
 
-/* Determine which select interface to use.  */
-#if HAVE_POLL && USE_POLL
+/* Determine which select interface should be used.  */
+
+#ifdef HAVE_MSGWAITFORMULTIPLEOBJECTS
+#define USE_MsgWaitForMultipleObjects
+#else
+#ifdef HAVE_POLL
 #define USE_poll
-#if HAVE_PPOLL
+#ifdef HAVE_PPOLL
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 #define USE_ppoll
 #endif
-#elif HAVE_SELECT
-#define USE_select
 #else
-#ifdef HAVE_MSGWAITFORMULTIPLEOBJECTS
-#define USE_MsgWaitForMultipleObjects
+#ifdef HAVE_SELECT
+#define USE_select
+#endif
 #endif
 #endif
 
