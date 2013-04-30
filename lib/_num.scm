@@ -1,9 +1,9 @@
 ;;;============================================================================
 
-;;; File: "_num.scm", Time-stamp: <2013-04-27 18:21:40 feeley>
+;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2009 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2013 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4816,7 +4816,8 @@
            (error "define-prim-fixnum supports only 1 or 2 parameter procedures")))))
 
 (define-prim (fixnum? obj)
-  (##fixnum? obj))
+  (macro-force-vars (obj)
+    (##fixnum? obj)))
 
 (define-prim-nary-bool (##fx= x y)
   #t
@@ -9830,7 +9831,8 @@ ___RESULT = result;
            (error "define-prim-flonum supports only 1 or 2 parameter procedures")))))
 
 (define-prim (flonum? obj)
-  (##flonum? obj))
+  (macro-force-vars (obj)
+    (##flonum? obj)))
 
 (define-prim-nary-bool (##fl= x y)
   #t
