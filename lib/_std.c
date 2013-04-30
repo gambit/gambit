@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_std.c", produced by Gambit-C v4.6.7
+; File: "_std.c", produced by Gambit-C v4.6.8
 (
-406007
+406008
 " _std"
 (" _std")
 (
@@ -740,7 +740,7 @@
  #f
 )
 #else
-#define ___VERSION 406007
+#define ___VERSION 406008
 #define ___MODULE_NAME " _std"
 #define ___LINKER_ID ____20___std
 #define ___MH_PROC ___H__20___std
@@ -18775,7 +18775,7 @@ ___DEF_GLBL(___L12_make_2d_s32vector)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R3)
-   ___SET_R2(___BIGFIX(8,-2147483648))
+   ___SET_R2(___BIGFIX(8,-2147483648LL))
    ___SET_R0(___LBL(3))
    ___ADJFP(8)
    ___POLL(2)
@@ -18814,7 +18814,7 @@ ___DEF_SLBL(6,___L6_make_2d_s32vector)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_make_2d_s32vector)
 ___DEF_GLBL(___L16_make_2d_s32vector)
    ___SET_R2(___STK(-4))
-   ___SET_R1(___BIGFIX(9,2147483647))
+   ___SET_R1(___BIGFIX(9,2147483647LL))
    ___SET_R0(___LBL(4))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L17_make_2d_s32vector)
@@ -18948,7 +18948,7 @@ ___DEF_GLBL(___L14_s32vector)
    ___SET_STK(4,___R3)
    ___SET_STK(5,___R4)
    ___SET_R1(___R4)
-   ___SET_R2(___BIGFIX(8,-2147483648))
+   ___SET_R2(___BIGFIX(8,-2147483648LL))
    ___SET_R0(___LBL(9))
    ___ADJFP(11)
    ___POLL(8)
@@ -18981,7 +18981,7 @@ ___DEF_SLBL(10,___L10_s32vector)
    ___JUMPGLONOTSAFE(___SET_NARGS(4),616,___G__23__23_fail_2d_check_2d_exact_2d_signed_2d_int32)
 ___DEF_GLBL(___L18_s32vector)
    ___SET_R2(___STK(-6))
-   ___SET_R1(___BIGFIX(9,2147483647))
+   ___SET_R1(___BIGFIX(9,2147483647LL))
    ___SET_R0(___LBL(6))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L19_s32vector)
@@ -19244,7 +19244,7 @@ ___DEF_GLBL(___L12_s32vector_2d_set_21_)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R3)
-   ___SET_R2(___BIGFIX(8,-2147483648))
+   ___SET_R2(___BIGFIX(8,-2147483648LL))
    ___SET_R0(___LBL(3))
    ___ADJFP(8)
    ___POLL(2)
@@ -19281,7 +19281,7 @@ ___DEF_SLBL(6,___L6_s32vector_2d_set_21_)
    ___JUMPPRM(___NOTHING,___STK(1))
 ___DEF_GLBL(___L16_s32vector_2d_set_21_)
    ___SET_R2(___STK(-4))
-   ___SET_R1(___BIGFIX(9,2147483647))
+   ___SET_R1(___BIGFIX(9,2147483647LL))
    ___SET_R0(___LBL(4))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L17_s32vector_2d_set_21_)
@@ -19594,7 +19594,7 @@ ___DEF_GLBL(___L15_list_2d__3e_s32vector)
    ___SET_STK(4,___R3)
    ___SET_STK(5,___R4)
    ___SET_R1(___R4)
-   ___SET_R2(___BIGFIX(8,-2147483648))
+   ___SET_R2(___BIGFIX(8,-2147483648LL))
    ___SET_R0(___LBL(9))
    ___ADJFP(10)
    ___POLL(8)
@@ -19622,7 +19622,7 @@ ___DEF_SLBL(10,___L10_list_2d__3e_s32vector)
    ___JUMPGLONOTSAFE(___SET_NARGS(3),617,___G__23__23_fail_2d_check_2d_exact_2d_signed_2d_int32_2d_list)
 ___DEF_GLBL(___L19_list_2d__3e_s32vector)
    ___SET_R2(___STK(-5))
-   ___SET_R1(___BIGFIX(9,2147483647))
+   ___SET_R1(___BIGFIX(9,2147483647LL))
    ___SET_R0(___LBL(6))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L20_list_2d__3e_s32vector)
@@ -19714,7 +19714,7 @@ ___DEF_GLBL(___L8_s32vector_2d_fill_21_)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_R1(___R2)
-   ___SET_R2(___BIGFIX(8,-2147483648))
+   ___SET_R2(___BIGFIX(8,-2147483648LL))
    ___SET_R0(___LBL(2))
    ___ADJFP(8)
    ___POLL(1)
@@ -19753,7 +19753,7 @@ ___DEF_SLBL(5,___L5_s32vector_2d_fill_21_)
    ___JUMPINT(___SET_NARGS(2),___PRC(1117),___L__23__23_s32vector_2d_fill_21_)
 ___DEF_GLBL(___L12_s32vector_2d_fill_21_)
    ___SET_R2(___STK(-5))
-   ___SET_R1(___BIGFIX(9,2147483647))
+   ___SET_R1(___BIGFIX(9,2147483647LL))
    ___SET_R0(___LBL(3))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L13_s32vector_2d_fill_21_)
@@ -20547,7 +20547,7 @@ ___DEF_GLBL(___L17_subs32vector_2d_fill_21_)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R3)
-   ___SET_R2(___BIGFIX(8,-2147483648))
+   ___SET_R2(___BIGFIX(8,-2147483648LL))
    ___SET_R0(___LBL(4))
    ___ADJFP(7)
    ___POLL(3)
@@ -20588,7 +20588,7 @@ ___DEF_SLBL(7,___L7_subs32vector_2d_fill_21_)
    ___JUMPINT(___SET_NARGS(4),___PRC(1187),___L__23__23_subs32vector_2d_fill_21_)
 ___DEF_GLBL(___L21_subs32vector_2d_fill_21_)
    ___SET_R2(___STK(-3))
-   ___SET_R1(___BIGFIX(9,2147483647))
+   ___SET_R1(___BIGFIX(9,2147483647LL))
    ___SET_R0(___LBL(5))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L22_subs32vector_2d_fill_21_)
@@ -20964,7 +20964,7 @@ ___DEF_SLBL(6,___L6_make_2d_u32vector)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_make_2d_u32vector)
 ___DEF_GLBL(___L16_make_2d_u32vector)
    ___SET_R2(___STK(-4))
-   ___SET_R1(___BIGFIX(10,4294967295))
+   ___SET_R1(___BIGFIX(10,4294967295LL))
    ___SET_R0(___LBL(4))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L17_make_2d_u32vector)
@@ -21131,7 +21131,7 @@ ___DEF_SLBL(10,___L10_u32vector)
    ___JUMPGLONOTSAFE(___SET_NARGS(4),624,___G__23__23_fail_2d_check_2d_exact_2d_unsigned_2d_int32)
 ___DEF_GLBL(___L18_u32vector)
    ___SET_R2(___STK(-6))
-   ___SET_R1(___BIGFIX(10,4294967295))
+   ___SET_R1(___BIGFIX(10,4294967295LL))
    ___SET_R0(___LBL(6))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L19_u32vector)
@@ -21431,7 +21431,7 @@ ___DEF_SLBL(6,___L6_u32vector_2d_set_21_)
    ___JUMPPRM(___NOTHING,___STK(1))
 ___DEF_GLBL(___L16_u32vector_2d_set_21_)
    ___SET_R2(___STK(-4))
-   ___SET_R1(___BIGFIX(10,4294967295))
+   ___SET_R1(___BIGFIX(10,4294967295LL))
    ___SET_R0(___LBL(4))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L17_u32vector_2d_set_21_)
@@ -21772,7 +21772,7 @@ ___DEF_SLBL(10,___L10_list_2d__3e_u32vector)
    ___JUMPGLONOTSAFE(___SET_NARGS(3),625,___G__23__23_fail_2d_check_2d_exact_2d_unsigned_2d_int32_2d_list)
 ___DEF_GLBL(___L19_list_2d__3e_u32vector)
    ___SET_R2(___STK(-5))
-   ___SET_R1(___BIGFIX(10,4294967295))
+   ___SET_R1(___BIGFIX(10,4294967295LL))
    ___SET_R0(___LBL(6))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L20_list_2d__3e_u32vector)
@@ -21903,7 +21903,7 @@ ___DEF_SLBL(5,___L5_u32vector_2d_fill_21_)
    ___JUMPINT(___SET_NARGS(2),___PRC(1305),___L__23__23_u32vector_2d_fill_21_)
 ___DEF_GLBL(___L12_u32vector_2d_fill_21_)
    ___SET_R2(___STK(-5))
-   ___SET_R1(___BIGFIX(10,4294967295))
+   ___SET_R1(___BIGFIX(10,4294967295LL))
    ___SET_R0(___LBL(3))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L13_u32vector_2d_fill_21_)
@@ -22738,7 +22738,7 @@ ___DEF_SLBL(7,___L7_subu32vector_2d_fill_21_)
    ___JUMPINT(___SET_NARGS(4),___PRC(1375),___L__23__23_subu32vector_2d_fill_21_)
 ___DEF_GLBL(___L21_subu32vector_2d_fill_21_)
    ___SET_R2(___STK(-3))
-   ___SET_R1(___BIGFIX(10,4294967295))
+   ___SET_R1(___BIGFIX(10,4294967295LL))
    ___SET_R0(___LBL(5))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),608,___G__23__23__3c_)
 ___DEF_GLBL(___L22_subu32vector_2d_fill_21_)
@@ -42338,7 +42338,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FIELD(___arg1,___INT(___arg2)));
   void *dst = ___CAST(void*,&___FIELD(___arg4,___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * ___WS;
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * ___WS;
 
   memmove (dst, src, len);
 
@@ -42431,7 +42431,7 @@ ___BEGIN_CFUN_BODY
                 ___CS_SELECT(&___FETCH_U8(___BODY(___arg4),___INT(___arg5)),
                              &___FETCH_U16(___BODY(___arg4),___INT(___arg5)),
                              &___FETCH_U32(___BODY(___arg4),___INT(___arg5))));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * ___CS;
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * ___CS;
 
   memmove (dst, src, len);
 
@@ -42516,7 +42516,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FETCH_S8(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_S8(___BODY(___arg4),___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S8);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S8);
 
   memmove (dst, src, len);
 
@@ -42601,7 +42601,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FETCH_U8(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_U8(___BODY(___arg4),___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U8);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U8);
 
   memmove (dst, src, len);
 
@@ -42686,7 +42686,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FETCH_S16(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_S16(___BODY(___arg4),___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S16);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S16);
 
   memmove (dst, src, len);
 
@@ -42771,7 +42771,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FETCH_U16(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_U16(___BODY(___arg4),___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U16);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U16);
 
   memmove (dst, src, len);
 
@@ -42856,7 +42856,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FETCH_S32(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_S32(___BODY(___arg4),___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S32);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S32);
 
   memmove (dst, src, len);
 
@@ -42941,7 +42941,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FETCH_U32(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_U32(___BODY(___arg4),___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U32);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U32);
 
   memmove (dst, src, len);
 
@@ -43026,7 +43026,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FETCH_S64(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_S64(___BODY(___arg4),___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S64);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S64);
 
   memmove (dst, src, len);
 
@@ -43111,7 +43111,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,&___FETCH_U64(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_U64(___BODY(___arg4),___INT(___arg5)));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U64);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U64);
 
   memmove (dst, src, len);
 
@@ -43196,7 +43196,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,___CAST(___F32*,___BODY(___arg1))+___INT(___arg2));
   void *dst = ___CAST(void*,___CAST(___F32*,___BODY(___arg4))+___INT(___arg5));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F32);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F32);
 
   memmove (dst, src, len);
 
@@ -43281,7 +43281,7 @@ ___BEGIN_CFUN_BODY
 
   void *src = ___CAST(void*,___CAST(___F64*,___BODY(___arg1))+___INT(___arg2));
   void *dst = ___CAST(void*,___CAST(___F64*,___BODY(___arg4))+___INT(___arg5));
-  long len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F64);
+  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F64);
 
   memmove (dst, src, len);
 

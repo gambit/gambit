@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_source.c", produced by Gambit-C v4.6.7
+; File: "_source.c", produced by Gambit-C v4.6.8
 (
-406007
+406008
 " _source"
 (" _source")
 (
@@ -362,7 +362,7 @@
  #f
 )
 #else
-#define ___VERSION 406007
+#define ___VERSION 406008
 #define ___MODULE_NAME " _source"
 #define ___LINKER_ID ____20___source
 #define ___MH_PROC ___H__20___source
@@ -9357,7 +9357,7 @@ ___DEF_SLBL(34,___L34_c_23__2a__2a_build_2d_vector)
    ___GOTO(___L74_c_23__2a__2a_build_2d_vector)
 ___DEF_SLBL(35,___L35_c_23__2a__2a_build_2d_vector)
    ___SET_STK(-8,___R1)
-   ___SET_R3(___BIGFIX(78,4294967295))
+   ___SET_R3(___BIGFIX(78,4294967295LL))
    ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(37))
    ___IF(___FIXNUMP(___R1))

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_asm.c", produced by Gambit-C v4.6.7
+; File: "_asm.c", produced by Gambit-C v4.6.8
 (
-406007
+406008
 " _asm"
 (" _asm")
 (
@@ -150,7 +150,7 @@
  #f
 )
 #else
-#define ___VERSION 406007
+#define ___VERSION 406008
 #define ___MODULE_NAME " _asm"
 #define ___LINKER_ID ____20___asm
 #define ___MH_PROC ___H__20___asm
@@ -13794,10 +13794,10 @@ ___DEF_GLBL(___L___asm_23_asm_2d_signed32_3f_)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L10___asm_23_asm_2d_signed32_3f_)
    ___END_IF
-   ___IF(___NOT(___FIXNUMP(___BIGFIX(12,-2147483648))))
+   ___IF(___NOT(___FIXNUMP(___BIGFIX(12,-2147483648LL))))
    ___GOTO(___L10___asm_23_asm_2d_signed32_3f_)
    ___END_IF
-   ___SET_R2(___BOOLEAN(___FIXLE(___BIGFIX(12,-2147483648),___R1)))
+   ___SET_R2(___BOOLEAN(___FIXLE(___BIGFIX(12,-2147483648LL),___R1)))
    ___GOTO(___L6___asm_23_asm_2d_signed32_3f_)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_signed32_3f_)
    ___SET_R2(___R1)
@@ -13820,19 +13820,19 @@ ___DEF_GLBL(___L8___asm_23_asm_2d_signed32_3f_)
    ___IF(___NOT(___EQP(___GLO__3c__3d_,___PRM__3c__3d_)))
    ___GOTO(___L9___asm_23_asm_2d_signed32_3f_)
    ___END_IF
-   ___IF(___NOT(___FIXNUMP(___BIGFIX(13,2147483647))))
+   ___IF(___NOT(___FIXNUMP(___BIGFIX(13,2147483647LL))))
    ___GOTO(___L9___asm_23_asm_2d_signed32_3f_)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___STK(0))))
    ___GOTO(___L9___asm_23_asm_2d_signed32_3f_)
    ___END_IF
-   ___SET_R1(___BOOLEAN(___FIXLE(___STK(0),___BIGFIX(13,2147483647))))
+   ___SET_R1(___BOOLEAN(___FIXLE(___STK(0),___BIGFIX(13,2147483647LL))))
    ___POLL(3)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_signed32_3f_)
    ___GOTO(___L7___asm_23_asm_2d_signed32_3f_)
 ___DEF_GLBL(___L9___asm_23_asm_2d_signed32_3f_)
    ___SET_R1(___STK(0))
-   ___SET_R2(___BIGFIX(13,2147483647))
+   ___SET_R2(___BIGFIX(13,2147483647LL))
    ___POLL(4)
 ___DEF_SLBL(4,___L4___asm_23_asm_2d_signed32_3f_)
    ___ADJFP(-1)
@@ -13841,7 +13841,7 @@ ___DEF_GLBL(___L10___asm_23_asm_2d_signed32_3f_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_R2(___R1)
-   ___SET_R1(___BIGFIX(12,-2147483648))
+   ___SET_R1(___BIGFIX(12,-2147483648LL))
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
    ___POLL(5)
@@ -14103,18 +14103,18 @@ ___DEF_GLBL(___L___asm_23_asm_2d_signed_2d_lo32)
    ___IF(___NOT(___EQP(___GLO__2b_,___PRM__2b_)))
    ___GOTO(___L7___asm_23_asm_2d_signed_2d_lo32)
    ___END_IF
-   ___IF(___NOT(___FIXNUMP(___BIGFIX(14,2147483648))))
+   ___IF(___NOT(___FIXNUMP(___BIGFIX(14,2147483648LL))))
    ___GOTO(___L7___asm_23_asm_2d_signed_2d_lo32)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L7___asm_23_asm_2d_signed_2d_lo32)
    ___END_IF
-   ___SET_R2(___FIXADDP(___R1,___BIGFIX(14,2147483648)))
+   ___SET_R2(___FIXADDP(___R1,___BIGFIX(14,2147483648LL)))
    ___IF(___NOT(___FALSEP(___R2)))
    ___GOTO(___L8___asm_23_asm_2d_signed_2d_lo32)
    ___END_IF
 ___DEF_GLBL(___L7___asm_23_asm_2d_signed_2d_lo32)
-   ___SET_R2(___BIGFIX(14,2147483648))
+   ___SET_R2(___BIGFIX(14,2147483648LL))
    ___SET_R0(___LBL(2))
    ___ADJFP(3)
    ___POLL(1)
@@ -14125,7 +14125,7 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_signed_2d_lo32)
    ___ADJFP(-3)
 ___DEF_GLBL(___L8___asm_23_asm_2d_signed_2d_lo32)
    ___SET_R1(___R2)
-   ___SET_R2(___BIGFIX(15,4294967295))
+   ___SET_R2(___BIGFIX(15,4294967295LL))
    ___SET_R0(___LBL(4))
    ___ADJFP(3)
    ___POLL(3)
@@ -14135,18 +14135,18 @@ ___DEF_SLBL(4,___L4___asm_23_asm_2d_signed_2d_lo32)
    ___IF(___NOT(___EQP(___GLO__2d_,___PRM__2d_)))
    ___GOTO(___L9___asm_23_asm_2d_signed_2d_lo32)
    ___END_IF
-   ___IF(___NOT(___FIXNUMP(___BIGFIX(14,2147483648))))
+   ___IF(___NOT(___FIXNUMP(___BIGFIX(14,2147483648LL))))
    ___GOTO(___L9___asm_23_asm_2d_signed_2d_lo32)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L9___asm_23_asm_2d_signed_2d_lo32)
    ___END_IF
-   ___SET_R2(___FIXSUBP(___R1,___BIGFIX(14,2147483648)))
+   ___SET_R2(___FIXSUBP(___R1,___BIGFIX(14,2147483648LL)))
    ___IF(___NOT(___FALSEP(___R2)))
    ___GOTO(___L10___asm_23_asm_2d_signed_2d_lo32)
    ___END_IF
 ___DEF_GLBL(___L9___asm_23_asm_2d_signed_2d_lo32)
-   ___SET_R2(___BIGFIX(14,2147483648))
+   ___SET_R2(___BIGFIX(14,2147483648LL))
    ___SET_R0(___STK(-3))
    ___POLL(5)
 ___DEF_SLBL(5,___L5___asm_23_asm_2d_signed_2d_lo32)
@@ -14182,7 +14182,7 @@ ___DEF_SLBL(0,___L0___asm_23_asm_2d_unsigned_2d_lo32)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L___asm_23_asm_2d_unsigned_2d_lo32)
-   ___SET_R2(___BIGFIX(15,4294967295))
+   ___SET_R2(___BIGFIX(15,4294967295LL))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_unsigned_2d_lo32)
    ___JUMPGLOSAFE(___SET_NARGS(2),69,___G_bitwise_2d_and)
@@ -14793,19 +14793,19 @@ ___DEF_SLBL(1,___L1___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___GOTO(___L13___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___END_IF
 ___DEF_GLBL(___L11___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
-   ___IF(___NOT(___FIXNUMP(___BIGFIX(20,4294967296))))
+   ___IF(___NOT(___FIXNUMP(___BIGFIX(20,4294967296LL))))
    ___GOTO(___L13___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L13___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___END_IF
-   ___SET_R1(___FIXQUO(___R1,___BIGFIX(20,4294967296)))
+   ___SET_R1(___FIXQUO(___R1,___BIGFIX(20,4294967296LL)))
    ___POLL(2)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
 ___DEF_GLBL(___L12___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___JUMPPRM(___NOTHING,___R0)
 ___DEF_GLBL(___L13___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
-   ___SET_R2(___BIGFIX(20,4294967296))
+   ___SET_R2(___BIGFIX(20,4294967296LL))
    ___POLL(3)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___JUMPGLOSAFE(___SET_NARGS(2),105,___G_quotient)
@@ -14850,13 +14850,13 @@ ___DEF_GLBL(___L18___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___GOTO(___L23___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___END_IF
 ___DEF_GLBL(___L19___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
-   ___IF(___NOT(___FIXNUMP(___BIGFIX(20,4294967296))))
+   ___IF(___NOT(___FIXNUMP(___BIGFIX(20,4294967296LL))))
    ___GOTO(___L23___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L23___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___END_IF
-   ___SET_R1(___FIXQUO(___R2,___BIGFIX(20,4294967296)))
+   ___SET_R1(___FIXQUO(___R2,___BIGFIX(20,4294967296LL)))
    ___IF(___NOT(___EQP(___GLO__2d_,___PRM__2d_)))
    ___GOTO(___L21___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___END_IF
@@ -14881,7 +14881,7 @@ ___DEF_SLBL(7,___L7___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
 ___DEF_GLBL(___L23___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
    ___SET_STK(1,___R0)
    ___SET_R1(___R2)
-   ___SET_R2(___BIGFIX(20,4294967296))
+   ___SET_R2(___BIGFIX(20,4294967296LL))
    ___SET_R0(___LBL(9))
    ___ADJFP(4)
    ___POLL(8)

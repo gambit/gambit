@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_thread.c", produced by Gambit-C v4.6.7
+; File: "_thread.c", produced by Gambit-C v4.6.8
 (
-406007
+406008
 " _thread"
 (" _thread")
 (
@@ -540,7 +540,7 @@
  #f
 )
 #else
-#define ___VERSION 406007
+#define ___VERSION 406008
 #define ___MODULE_NAME " _thread"
 #define ___LINKER_ID ____20___thread
 #define ___MH_PROC ___H__20___thread
@@ -549,7 +549,7 @@
 #define ___GLOCOUNT 355
 #define ___SUPCOUNT 306
 #define ___SUBCOUNT 67
-#define ___LBLCOUNT 1008
+#define ___LBLCOUNT 1017
 #define ___OFDCOUNT 3
 #include "gambit.h"
 
@@ -3923,6 +3923,7 @@ ___DEF_M_HLBL(___L1__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___DEF_M_HLBL(___L2__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___DEF_M_HLBL(___L3__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___DEF_M_HLBL(___L4__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
+___DEF_M_HLBL(___L5__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_thread_2d_interrupt_21_)
 ___DEF_M_HLBL(___L1__23__23_thread_2d_interrupt_21_)
@@ -3956,6 +3957,7 @@ ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_thread_2d_void_2d_action_21_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
+___DEF_M_HLBL(___L1__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_thread_2d_locked_2d_mutex_2d_action_21_)
 ___DEF_M_HLBL_INTRO
@@ -3965,6 +3967,7 @@ ___DEF_M_HLBL(___L0__23__23_thread_2d_timeout_2d_action_21_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_thread_2d_deadlock_2d_action_21_)
 ___DEF_M_HLBL(___L1__23__23_thread_2d_deadlock_2d_action_21_)
+___DEF_M_HLBL(___L2__23__23_thread_2d_deadlock_2d_action_21_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_thread_2d_suspend_21_)
 ___DEF_M_HLBL_INTRO
@@ -4300,16 +4303,22 @@ ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_with_2d_exception_2d_catcher)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_raise)
+___DEF_M_HLBL(___L1__23__23_raise)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_raise)
+___DEF_M_HLBL(___L1_raise)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_abort)
 ___DEF_M_HLBL(___L1__23__23_abort)
 ___DEF_M_HLBL(___L2__23__23_abort)
+___DEF_M_HLBL(___L3__23__23_abort)
+___DEF_M_HLBL(___L4__23__23_abort)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_abort)
 ___DEF_M_HLBL(___L1_abort)
 ___DEF_M_HLBL(___L2_abort)
+___DEF_M_HLBL(___L3_abort)
+___DEF_M_HLBL(___L4_abort)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_call_2d_with_2d_current_2d_continuation)
 ___DEF_M_HLBL(___L1__23__23_call_2d_with_2d_current_2d_continuation)
@@ -4562,10 +4571,10 @@ ___DEF_SLBL(6,___L6__20___thread)
 ___DEF_SLBL(7,___L7__20___thread)
    ___SET_GLO(20,___G__23__23_current_2d_directory,___R1)
    ___SET_GLO(181,___G_current_2d_directory,___GLO__23__23_current_2d_directory)
-   ___SET_GLO(231,___G_primordial_2d_exception_2d_handler,___PRC(525))
+   ___SET_GLO(231,___G_primordial_2d_exception_2d_handler,___PRC(528))
    ___SET_GLO(83,___G__23__23_primordial_2d_exception_2d_handler_2d_hook,___FAL)
    ___SET_GLO(83,___G__23__23_primordial_2d_exception_2d_handler_2d_hook,___FAL)
-   ___SET_GLO(170,___G_call_2f_cc,___PRC(879))
+   ___SET_GLO(170,___G_call_2f_cc,___PRC(888))
    ___SET_GLO(68,___G__23__23_initial_2d_dynwind,___SUB(0))
    ___SET_R1(___LBL(20))
    ___SET_GLO(142,___G__23__23_thread_2d_save_21_,___R1)
@@ -4628,9 +4637,9 @@ ___DEF_SLBL(8,___L8__20___thread)
    ___UNCHECKEDSTRUCTURESET(___R2,___R2,___FIX(13L),___SUB(5),___FAL)
    ___SET_GLO(100,___G__23__23_tcp_2d_service_2d_tgroup,___R2)
    ___SET_GLO(31,___G__23__23_deferred_2d_user_2d_interrupt_3f_,___FAL)
-   ___SET_GLO(191,___G_defer_2d_user_2d_interrupts,___PRC(1004))
+   ___SET_GLO(191,___G_defer_2d_user_2d_interrupts,___PRC(1013))
    ___SET_R2(___LBL(13))
-   ___SET_R1(___PRC(1004))
+   ___SET_R1(___PRC(1013))
    ___SET_R0(___LBL(10))
    ___CHECK_HEAP(9,4096)
 ___DEF_SLBL(9,___L9__20___thread)
@@ -4638,18 +4647,18 @@ ___DEF_SLBL(9,___L9__20___thread)
 ___DEF_SLBL(10,___L10__20___thread)
    ___SET_GLO(29,___G__23__23_current_2d_user_2d_interrupt_2d_handler,___R1)
    ___SET_GLO(189,___G_current_2d_user_2d_interrupt_2d_handler,___GLO__23__23_current_2d_user_2d_interrupt_2d_handler)
-   ___SET_R2(___PRC(1006))
+   ___SET_R2(___PRC(1015))
    ___SET_R1(___FIX(0L))
    ___SET_R0(___LBL(11))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),326,___G__23__23_interrupt_2d_vector_2d_set_21_)
 ___DEF_SLBL(11,___L11__20___thread)
    ___SET_R0(___LBL(12))
-   ___JUMPINT(___SET_NARGS(0),___PRC(552),___L__23__23_thread_2d_startup_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(555),___L__23__23_thread_2d_startup_21_)
 ___DEF_SLBL(12,___L12__20___thread)
    ___SET_R1(___SUB(7))
    ___SET_R0(___STK(-3))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(560),___L__23__23_thread_2d_heartbeat_2d_interval_2d_set_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(563),___L__23__23_thread_2d_heartbeat_2d_interval_2d_set_21_)
 ___DEF_SLBL(13,___L13__20___thread)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(13,1,0,0)
@@ -4943,7 +4952,7 @@ ___DEF_SLBL(31,___L31__20___thread)
 ___DEF_SLBL(32,___L32__20___thread)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(32,1,0,0)
-   ___JUMPINT(___SET_NARGS(1),___PRC(523),___L__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(526),___L__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_)
 ___END_P_SW
 ___END_P_COD
 
@@ -7938,7 +7947,7 @@ ___DEF_SLBL(2,___L2__23__23_parameterize)
    ___ADJFP(-8)
    ___CHECK_HEAP(3,4096)
 ___DEF_SLBL(3,___L3__23__23_parameterize)
-   ___JUMPINT(___SET_NARGS(3),___PRC(902),___L__23__23_dynamic_2d_wind)
+   ___JUMPINT(___SET_NARGS(3),___PRC(911),___L__23__23_dynamic_2d_wind)
 ___DEF_SLBL(4,___L4__23__23_parameterize)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(4,0,0,0)
@@ -8951,7 +8960,7 @@ ___DEF_SLBL(4,___L4__23__23_timeout_2d__3e_time)
    ___GOTO(___L7__23__23_timeout_2d__3e_time)
 ___DEF_GLBL(___L9__23__23_timeout_2d__3e_time)
    ___SET_R3(___STK(-6))
-   ___SET_R2(___PRC(694))
+   ___SET_R2(___PRC(697))
    ___SET_R1(___FIX(1L))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
@@ -9854,7 +9863,7 @@ ___DEF_GLBL(___L6__23__23_btq_2d_abandon_21_)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_structure_2d_instance_2d_of_3f_)
 ___DEF_GLBL(___L7__23__23_btq_2d_abandon_21_)
    ___SET_R3(___TRU)
-   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(619),___L__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
 ___END_P_SW
 ___END_P_COD
 
@@ -10843,7 +10852,7 @@ ___DEF_GLBL(___L__23__23_make_2d_thread)
    ___SET_STK(4,___VECTORREF(___R1,___FIX(2L)))
    ___SET_R1(___VECTORREF(___R1,___FIX(0L)))
    ___SET_STK(5,___CONS(___FAL,___FAL))
-   ___SET_STK(6,___CONS(___GLO__23__23_current_2d_exception_2d_handler,___PRC(525)))
+   ___SET_STK(6,___CONS(___GLO__23__23_current_2d_exception_2d_handler,___PRC(528)))
    ___BEGIN_ALLOC_VECTOR(8)
    ___ADD_VECTOR_ELEM(0,___R1)
    ___ADD_VECTOR_ELEM(1,___SUB(0))
@@ -10898,7 +10907,7 @@ ___DEF_SLBL(0,___L0__23__23_thread_2d_start_21_)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L__23__23_thread_2d_start_21_)
-   ___UNCHECKEDSTRUCTURESET(___R1,___PRC(498),___FIX(18L),___SUB(22),___FAL)
+   ___UNCHECKEDSTRUCTURESET(___R1,___PRC(499),___FIX(18L),___SUB(22),___FAL)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_R2(___R1)
@@ -11625,7 +11634,7 @@ ___DEF_SLBL(1,___L1__23__23_thread_2d_check_2d_timeouts_21_)
    ___IF(___F64LT(___F64V2,___F64V1))
    ___GOTO(___L5__23__23_thread_2d_check_2d_timeouts_21_)
    ___END_IF
-   ___UNCHECKEDSTRUCTURESET(___R2,___PRC(512),___FIX(18L),___SUB(22),___FAL)
+   ___UNCHECKEDSTRUCTURESET(___R2,___PRC(514),___FIX(18L),___SUB(22),___FAL)
    ___IF(___NOT(___NOT(___FALSEP(___VECTORREF(___R2,___FIX(4L))))))
    ___GOTO(___L4__23__23_thread_2d_check_2d_timeouts_21_)
    ___END_IF
@@ -11726,7 +11735,7 @@ ___DEF_GLBL(___L4__23__23_thread_2d_check_2d_devices_21_)
    ___SET_R1(___R3)
    ___SET_R0(___LBL(2))
    ___ADJFP(7)
-   ___JUMPINT(___SET_NARGS(1),___PRC(643),___L__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(646),___L__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedule_21_)
 ___DEF_GLBL(___L5__23__23_thread_2d_check_2d_devices_21_)
    ___SET_R1(___R2)
    ___JUMPPRM(___NOTHING,___R0)
@@ -11962,7 +11971,7 @@ ___DEF_SLBL(4,___L4__23__23_thread_2d_yield_21_)
    ___JUMPINT(___SET_NARGS(1),___PRC(407),___L__23__23_thread_2d_boosted_2d_priority_2d_changed_21_)
 ___DEF_SLBL(5,___L5__23__23_thread_2d_yield_21_)
 ___DEF_GLBL(___L12__23__23_thread_2d_yield_21_)
-   ___UNCHECKEDSTRUCTURESET(___STK(-6),___PRC(504),___FIX(18L),___SUB(22),___FAL)
+   ___UNCHECKEDSTRUCTURESET(___STK(-6),___PRC(505),___FIX(18L),___SUB(22),___FAL)
    ___SET_R2(___STK(-6))
    ___SET_R1(___RUNQUEUE)
    ___SET_R0(___LBL(6))
@@ -12004,7 +12013,7 @@ ___DEF_SLBL(1,___L1__23__23_thread_2d_reschedule_21_)
 ___DEF_SLBL(2,___L2__23__23_thread_2d_reschedule_21_)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(2,1,0,0)
-   ___UNCHECKEDSTRUCTURESET(___R1,___PRC(504),___FIX(18L),___SUB(22),___FAL)
+   ___UNCHECKEDSTRUCTURESET(___R1,___PRC(505),___FIX(18L),___SUB(22),___FAL)
    ___JUMPINT(___SET_NARGS(0),___PRC(464),___L__23__23_thread_2d_schedule_21_)
 ___END_P_SW
 ___END_P_COD
@@ -12211,12 +12220,12 @@ ___DEF_GLBL(___L9__23__23_thread_2d_schedule_21_)
    ___GOTO(___L8__23__23_thread_2d_schedule_21_)
 ___DEF_GLBL(___L10__23__23_thread_2d_schedule_21_)
    ___SET_STK(1,___R0)
-   ___SET_R2(___PRC(514))
+   ___SET_R2(___PRC(516))
    ___SET_R1(___RUNQUEUE)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(12L),___SUB(55),___FAL))
    ___SET_R0(___LBL(3))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(480),___L__23__23_thread_2d_int_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(481),___L__23__23_thread_2d_int_21_)
 ___DEF_SLBL(3,___L3__23__23_thread_2d_schedule_21_)
    ___GOTO(___L5__23__23_thread_2d_schedule_21_)
 ___DEF_GLBL(___L11__23__23_thread_2d_schedule_21_)
@@ -12231,14 +12240,14 @@ ___DEF_GLBL(___L12__23__23_thread_2d_schedule_21_)
    ___ADJFP(-4)
    ___JUMPINT(___SET_NARGS(1),___PRC(469),___L__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___DEF_GLBL(___L13__23__23_thread_2d_schedule_21_)
-   ___SET_R2(___PRC(501))
+   ___SET_R2(___PRC(502))
    ___SET_R0(___LBL(3))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(480),___L__23__23_thread_2d_int_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(481),___L__23__23_thread_2d_int_21_)
 ___DEF_GLBL(___L14__23__23_thread_2d_schedule_21_)
    ___SET_R0(___LBL(3))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(643),___L__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(646),___L__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedule_21_)
 ___END_P_SW
 ___END_P_COD
 
@@ -12260,6 +12269,7 @@ ___DEF_P_HLBL(___L1__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___DEF_P_HLBL(___L2__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___DEF_P_HLBL(___L3__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___DEF_P_HLBL(___L4__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
+___DEF_P_HLBL(___L5__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
@@ -12275,7 +12285,7 @@ ___DEF_GLBL(___L__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(12L),___SUB(55),___FAL))
    ___CHECK_HEAP(1,4096)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(480),___L__23__23_thread_2d_int_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(481),___L__23__23_thread_2d_int_21_)
 ___DEF_SLBL(2,___L2__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(2,0,0,0)
@@ -12294,7 +12304,7 @@ ___DEF_SLBL(2,___L2__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
    ___END_ALLOC_STRUCTURE(2)
    ___SET_R1(___GET_STRUCTURE(2))
    ___SET_STK(1,___R0)
-   ___SET_R0(___LBL(4))
+   ___SET_R0(___LBL(5))
    ___SET_R2(___CURRENTTHREAD)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R2,___FIX(20L),___SUB(22),___FAL))
    ___SET_R2(___VECTORREF(___R2,___FIX(4L)))
@@ -12302,8 +12312,10 @@ ___DEF_SLBL(2,___L2__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
    ___ADJFP(4)
    ___CHECK_HEAP(3,4096)
 ___DEF_SLBL(3,___L3__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
-   ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
+   ___POLL(4)
 ___DEF_SLBL(4,___L4__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
+   ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
+___DEF_SLBL(5,___L5__23__23_thread_2d_report_2d_scheduler_2d_error_21_)
    ___SET_R1(___VOID)
    ___ADJFP(-4)
    ___JUMPPRM(___NOTHING,___STK(1))
@@ -12313,7 +12325,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_interrupt_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 475
+#define ___PH_LBL0 476
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12337,7 +12349,7 @@ ___DEF_GLBL(___L__23__23_thread_2d_interrupt_21_)
    ___IF(___NOT(___EQP(___R2,___ABSENT)))
    ___GOTO(___L4__23__23_thread_2d_interrupt_21_)
    ___END_IF
-   ___SET_R3(___PRC(1006))
+   ___SET_R3(___PRC(1015))
    ___GOTO(___L5__23__23_thread_2d_interrupt_21_)
 ___DEF_GLBL(___L4__23__23_thread_2d_interrupt_21_)
    ___SET_R3(___R2)
@@ -12370,7 +12382,7 @@ ___DEF_GLBL(___L6__23__23_thread_2d_interrupt_21_)
    ___ADJFP(4)
    ___CHECK_HEAP(1,4096)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_interrupt_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(480),___L__23__23_thread_2d_int_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(481),___L__23__23_thread_2d_int_21_)
 ___DEF_SLBL(2,___L2__23__23_thread_2d_interrupt_21_)
    ___SET_R1(___VOID)
    ___ADJFP(-4)
@@ -12385,7 +12397,7 @@ ___DEF_SLBL(3,___L3__23__23_thread_2d_interrupt_21_)
 ___DEF_GLBL(___L7__23__23_thread_2d_interrupt_21_)
    ___SET_R3(___R2)
    ___SET_R2(___R1)
-   ___SET_R1(___PRC(767))
+   ___SET_R1(___PRC(770))
    ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(106),___L0__23__23_raise_2d_inactive_2d_thread_2d_exception)
 ___DEF_GLBL(___L8__23__23_thread_2d_interrupt_21_)
    ___SET_STK(1,___R0)
@@ -12398,7 +12410,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_int_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 480
+#define ___PH_LBL0 481
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -12462,7 +12474,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_continuation_2d_capture
 #undef ___PH_LBL0
-#define ___PH_LBL0 484
+#define ___PH_LBL0 485
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -12482,7 +12494,7 @@ ___DEF_SLBL(0,___L0__23__23_thread_2d_continuation_2d_capture)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L__23__23_thread_2d_continuation_2d_capture)
    ___SET_R2(___LBL(1))
-   ___JUMPINT(___SET_NARGS(2),___PRC(488),___L__23__23_thread_2d_call)
+   ___JUMPINT(___SET_NARGS(2),___PRC(489),___L__23__23_thread_2d_call)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_continuation_2d_capture)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(1,0,0,0)
@@ -12498,7 +12510,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_call
 #undef ___PH_LBL0
-#define ___PH_LBL0 488
+#define ___PH_LBL0 489
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12574,7 +12586,7 @@ ___DEF_GLBL(___L9__23__23_thread_2d_call)
    ___ADJFP(8)
    ___CHECK_HEAP(3,4096)
 ___DEF_SLBL(3,___L3__23__23_thread_2d_call)
-   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(475),___L0__23__23_thread_2d_interrupt_21_)
+   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(476),___L0__23__23_thread_2d_interrupt_21_)
 ___DEF_SLBL(4,___L4__23__23_thread_2d_call)
    ___SET_R1(___CURRENTTHREAD)
    ___SET_R2(___VECTORREF(___STK(-6),___FIX(7L)))
@@ -12598,7 +12610,7 @@ ___DEF_GLBL(___L11__23__23_thread_2d_call)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___DEF_SLBL(6,___L6__23__23_thread_2d_call)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(6,0,0,0)
@@ -12643,7 +12655,7 @@ ___DEF_GLBL(___L13__23__23_thread_2d_call)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(8))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(613),___L__23__23_mutex_2d_signal_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_21_)
 ___DEF_GLBL(___L14__23__23_thread_2d_call)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -12654,14 +12666,14 @@ ___DEF_GLBL(___L14__23__23_thread_2d_call)
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(2))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_start_2d_action_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 498
+#define ___PH_LBL0 499
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12692,14 +12704,14 @@ ___DEF_SLBL(1,___L1__23__23_thread_2d_start_2d_action_21_)
    ___SET_R1(___CURRENTTHREAD)
    ___SET_R0(___STK(-3))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(527),___L__23__23_thread_2d_end_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(530),___L__23__23_thread_2d_end_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_check_2d_interrupts_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 501
+#define ___PH_LBL0 502
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -12719,14 +12731,14 @@ ___DEF_SLBL(0,___L0__23__23_thread_2d_check_2d_interrupts_21_)
 ___DEF_GLBL(___L__23__23_thread_2d_check_2d_interrupts_21_)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_check_2d_interrupts_21_)
-   ___JUMPINT(___SET_NARGS(0),___PRC(504),___L__23__23_thread_2d_void_2d_action_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(505),___L__23__23_thread_2d_void_2d_action_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_void_2d_action_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 504
+#define ___PH_LBL0 505
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -12751,17 +12763,18 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 506
+#define ___PH_LBL0 507
 #undef ___PD_ALL
-#define ___PD_ALL ___D_R1 ___D_R2 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_R1 ___R_R2 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R1 ___R_R2 ___R_R4
 #undef ___PW_ALL
 #define ___PW_ALL ___W_R1 ___W_R2 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
 ___DEF_P_HLBL(___L0__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
+___DEF_P_HLBL(___L1__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
@@ -12773,6 +12786,8 @@ ___DEF_GLBL(___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R2,___FIX(20L),___SUB(22),___FAL))
    ___SET_R2(___VECTORREF(___R2,___FIX(4L)))
    ___SET_R2(___CDR(___R2))
+   ___POLL(1)
+___DEF_SLBL(1,___L1__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
    ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
 ___END_P_SW
 ___END_P_COD
@@ -12780,7 +12795,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_locked_2d_mutex_2d_action_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 508
+#define ___PH_LBL0 510
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -12805,7 +12820,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_signaled_2d_condvar_2d_action_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 510
+#define ___PH_LBL0 512
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -12830,7 +12845,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_timeout_2d_action_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 512
+#define ___PH_LBL0 514
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -12855,7 +12870,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_deadlock_2d_action_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 514
+#define ___PH_LBL0 516
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -12867,6 +12882,7 @@ ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
 ___DEF_P_HLBL(___L0__23__23_thread_2d_deadlock_2d_action_21_)
 ___DEF_P_HLBL(___L1__23__23_thread_2d_deadlock_2d_action_21_)
+___DEF_P_HLBL(___L2__23__23_thread_2d_deadlock_2d_action_21_)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_thread_2d_deadlock_2d_action_21_)
@@ -12875,14 +12891,16 @@ ___DEF_SLBL(0,___L0__23__23_thread_2d_deadlock_2d_action_21_)
 ___DEF_GLBL(___L__23__23_thread_2d_deadlock_2d_action_21_)
    ___SET_STK(1,___R0)
    ___SET_R1(___SUB(60))
-   ___SET_R0(___LBL(1))
+   ___SET_R0(___LBL(2))
    ___SET_R2(___CURRENTTHREAD)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R2,___FIX(20L),___SUB(22),___FAL))
    ___SET_R2(___VECTORREF(___R2,___FIX(4L)))
    ___SET_R2(___CDR(___R2))
    ___ADJFP(4)
-   ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
+   ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_deadlock_2d_action_21_)
+   ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
+___DEF_SLBL(2,___L2__23__23_thread_2d_deadlock_2d_action_21_)
    ___SET_R1(___VOID)
    ___ADJFP(-4)
    ___JUMPPRM(___NOTHING,___STK(1))
@@ -12892,7 +12910,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_suspend_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 517
+#define ___PH_LBL0 520
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -12917,7 +12935,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_resume_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 519
+#define ___PH_LBL0 522
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -12942,7 +12960,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_terminate_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 521
+#define ___PH_LBL0 524
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -12961,14 +12979,14 @@ ___DEF_SLBL(0,___L0__23__23_thread_2d_terminate_21_)
 ___DEF_GLBL(___L__23__23_thread_2d_terminate_21_)
    ___SET_R3(___FAL)
    ___SET_R2(___SYM_terminated_2d_thread_2d_exception)
-   ___JUMPINT(___SET_NARGS(3),___PRC(527),___L__23__23_thread_2d_end_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(530),___L__23__23_thread_2d_end_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 523
+#define ___PH_LBL0 526
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -12988,14 +13006,14 @@ ___DEF_GLBL(___L__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_)
    ___SET_R3(___R1)
    ___SET_R2(___SYM_uncaught_2d_exception)
    ___SET_R1(___CURRENTTHREAD)
-   ___JUMPINT(___SET_NARGS(3),___PRC(527),___L__23__23_thread_2d_end_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(530),___L__23__23_thread_2d_end_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_primordial_2d_exception_2d_handler
 #undef ___PH_LBL0
-#define ___PH_LBL0 525
+#define ___PH_LBL0 528
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -13017,19 +13035,19 @@ ___DEF_GLBL(___L__23__23_primordial_2d_exception_2d_handler)
    ___IF(___NOT(___PROCEDUREP(___STK(0))))
    ___GOTO(___L1__23__23_primordial_2d_exception_2d_handler)
    ___END_IF
-   ___SET_R2(___PRC(523))
+   ___SET_R2(___PRC(526))
    ___ADJFP(-1)
    ___JUMPGENNOTSAFE(___SET_NARGS(2),___STK(1))
 ___DEF_GLBL(___L1__23__23_primordial_2d_exception_2d_handler)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(1),___PRC(523),___L__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(526),___L__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_end_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 527
+#define ___PH_LBL0 530
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13101,7 +13119,7 @@ ___DEF_SLBL(2,___L2__23__23_thread_2d_end_21_)
    ___SET_R1(___STK(-3))
    ___SET_R2(___TRU)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(651),___L__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(654),___L__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_)
 ___DEF_SLBL(3,___L3__23__23_thread_2d_end_21_)
    ___IF(___NOT(___FALSEP(___VECTORREF(___STK(-6),___FIX(4L)))))
    ___GOTO(___L14__23__23_thread_2d_end_21_)
@@ -13162,7 +13180,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_join_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 534
+#define ___PH_LBL0 537
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) \
  ___D_F64(___F64V3) ___D_F64(___F64V4)
@@ -13215,7 +13233,7 @@ ___DEF_GLBL(___L11__23__23_thread_2d_join_21_)
    ___GOTO(___L12__23__23_thread_2d_join_21_)
    ___END_IF
    ___SET_STK(1,___STK(0))
-   ___SET_STK(0,___PRC(763))
+   ___SET_STK(0,___PRC(766))
    ___SET_R1(___STK(1))
    ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(177),___L0__23__23_raise_2d_join_2d_timeout_2d_exception)
 ___DEF_GLBL(___L12__23__23_thread_2d_join_21_)
@@ -13231,7 +13249,7 @@ ___DEF_GLBL(___L13__23__23_thread_2d_join_21_)
    ___GOTO(___L14__23__23_thread_2d_join_21_)
    ___END_IF
    ___SET_STK(1,___STK(0))
-   ___SET_STK(0,___PRC(763))
+   ___SET_STK(0,___PRC(766))
    ___SET_R1(___STK(1))
    ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(140),___L0__23__23_raise_2d_terminated_2d_thread_2d_exception)
 ___DEF_GLBL(___L14__23__23_thread_2d_join_21_)
@@ -13243,7 +13261,7 @@ ___DEF_GLBL(___L15__23__23_thread_2d_join_21_)
    ___SET_STK(1,___STK(0))
    ___SET_STK(0,___R1)
    ___SET_STK(2,___STK(1))
-   ___SET_STK(1,___PRC(763))
+   ___SET_STK(1,___PRC(766))
    ___SET_R1(___STK(2))
    ___ADJFP(1)
    ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(160),___L0__23__23_raise_2d_uncaught_2d_exception)
@@ -13374,7 +13392,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_root_2d_thread
 #undef ___PH_LBL0
-#define ___PH_LBL0 545
+#define ___PH_LBL0 548
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13474,7 +13492,7 @@ ___DEF_GLBL(___L__23__23_make_2d_root_2d_thread)
    ___END_ALLOC_VECTOR(3)
    ___SET_STK(-1,___GET_VECTOR(3))
    ___SET_STK(0,___CONS(___FAL,___FAL))
-   ___SET_STK(2,___CONS(___GLO__23__23_current_2d_exception_2d_handler,___PRC(525)))
+   ___SET_STK(2,___CONS(___GLO__23__23_current_2d_exception_2d_handler,___PRC(528)))
    ___BEGIN_ALLOC_VECTOR(8)
    ___ADD_VECTOR_ELEM(0,___STK(-1))
    ___ADD_VECTOR_ELEM(1,___SUB(0))
@@ -13508,7 +13526,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_make_2d_root_2d_thread
 #undef ___PH_LBL0
-#define ___PH_LBL0 548
+#define ___PH_LBL0 551
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13621,7 +13639,7 @@ ___DEF_GLBL(___L11_make_2d_root_2d_thread)
    ___SET_R2(___STK(-2))
    ___SET_R1(___STK(-3))
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(5),___PRC(545),___L__23__23_make_2d_root_2d_thread)
+   ___JUMPINT(___SET_NARGS(5),___PRC(548),___L__23__23_make_2d_root_2d_thread)
 ___DEF_GLBL(___L12_make_2d_root_2d_thread)
    ___SET_STK(-1,___TYPESUPER(___STK(-1)))
    ___IF(___FALSEP(___STK(-1)))
@@ -13755,7 +13773,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_startup_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 552
+#define ___PH_LBL0 555
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13783,7 +13801,7 @@ ___DEF_GLBL(___L__23__23_thread_2d_startup_21_)
    ___SET_R1(___SYM_primordial)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(656),___L__23__23_make_2d_tgroup)
+   ___JUMPINT(___SET_NARGS(2),___PRC(659),___L__23__23_make_2d_tgroup)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_startup_21_)
    ___SET_R2(___CLOSUREREF(___GLO__23__23_current_2d_input_2d_port,___FIX(1L)))
    ___SET_R2(___VECTORREF(___R2,___FIX(0L)))
@@ -13793,7 +13811,7 @@ ___DEF_SLBL(1,___L1__23__23_thread_2d_startup_21_)
    ___SET_STK(2,___SYM_primordial)
    ___SET_R0(___LBL(2))
    ___ADJFP(2)
-   ___JUMPINT(___SET_NARGS(5),___PRC(545),___L__23__23_make_2d_root_2d_thread)
+   ___JUMPINT(___SET_NARGS(5),___PRC(548),___L__23__23_make_2d_root_2d_thread)
 ___DEF_SLBL(2,___L2__23__23_thread_2d_startup_21_)
    ___BEGIN_ALLOC_F64VECTOR(3)
    ___ADD_F64VECTOR_ELEM(0,0.)
@@ -13876,7 +13894,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_heartbeat_2d_interval_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 560
+#define ___PH_LBL0 563
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -13911,7 +13929,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_mailbox_2d_get_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 563
+#define ___PH_LBL0 566
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14009,7 +14027,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_mailbox_2d_rewind
 #undef ___PH_LBL0
-#define ___PH_LBL0 566
+#define ___PH_LBL0 569
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14031,7 +14049,7 @@ ___DEF_GLBL(___L__23__23_thread_2d_mailbox_2d_rewind)
    ___SET_R1(___CURRENTTHREAD)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(563),___L__23__23_thread_2d_mailbox_2d_get_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(566),___L__23__23_thread_2d_mailbox_2d_get_21_)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_mailbox_2d_rewind)
    ___UNCHECKEDSTRUCTURESET(___R1,___FAL,___FIX(4L),___SUB(61),___FAL)
    ___SET_R1(___VOID)
@@ -14043,7 +14061,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_mailbox_2d_rewind
 #undef ___PH_LBL0
-#define ___PH_LBL0 569
+#define ___PH_LBL0 572
 #undef ___PD_ALL
 #define ___PD_ALL
 #undef ___PR_ALL
@@ -14060,14 +14078,14 @@ ___DEF_SLBL(0,___L0_thread_2d_mailbox_2d_rewind)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_thread_2d_mailbox_2d_rewind)
-   ___JUMPINT(___SET_NARGS(0),___PRC(566),___L__23__23_thread_2d_mailbox_2d_rewind)
+   ___JUMPINT(___SET_NARGS(0),___PRC(569),___L__23__23_thread_2d_mailbox_2d_rewind)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_mailbox_2d_extract_2d_and_2d_rewind
 #undef ___PH_LBL0
-#define ___PH_LBL0 571
+#define ___PH_LBL0 574
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14089,7 +14107,7 @@ ___DEF_GLBL(___L__23__23_thread_2d_mailbox_2d_extract_2d_and_2d_rewind)
    ___SET_R1(___CURRENTTHREAD)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(563),___L__23__23_thread_2d_mailbox_2d_get_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(566),___L__23__23_thread_2d_mailbox_2d_get_21_)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_mailbox_2d_extract_2d_and_2d_rewind)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(4L),___SUB(61),___FAL))
    ___IF(___FALSEP(___R2))
@@ -14115,7 +14133,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_mailbox_2d_extract_2d_and_2d_rewind
 #undef ___PH_LBL0
-#define ___PH_LBL0 574
+#define ___PH_LBL0 577
 #undef ___PD_ALL
 #define ___PD_ALL
 #undef ___PR_ALL
@@ -14132,14 +14150,14 @@ ___DEF_SLBL(0,___L0_thread_2d_mailbox_2d_extract_2d_and_2d_rewind)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_thread_2d_mailbox_2d_extract_2d_and_2d_rewind)
-   ___JUMPINT(___SET_NARGS(0),___PRC(571),___L__23__23_thread_2d_mailbox_2d_extract_2d_and_2d_rewind)
+   ___JUMPINT(___SET_NARGS(0),___PRC(574),___L__23__23_thread_2d_mailbox_2d_extract_2d_and_2d_rewind)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive
 #undef ___PH_LBL0
-#define ___PH_LBL0 576
+#define ___PH_LBL0 579
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14169,7 +14187,7 @@ ___DEF_GLBL(___L__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R1(___CURRENTTHREAD)
    ___SET_R0(___LBL(1))
    ___ADJFP(7)
-   ___JUMPINT(___SET_NARGS(1),___PRC(563),___L__23__23_thread_2d_mailbox_2d_get_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(566),___L__23__23_thread_2d_mailbox_2d_get_21_)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(4L),___SUB(61),___FAL))
    ___IF(___NOT(___FALSEP(___R2)))
@@ -14241,7 +14259,7 @@ ___DEF_GLBL(___L15__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R1(___CURRENTTHREAD)
    ___SET_R0(___LBL(4))
    ___ADJFP(10)
-   ___JUMPINT(___SET_NARGS(1),___PRC(563),___L__23__23_thread_2d_mailbox_2d_get_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(566),___L__23__23_thread_2d_mailbox_2d_get_21_)
 ___DEF_SLBL(4,___L4__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(1L),___SUB(61),___FAL))
    ___SET_R3(___CURRENTTHREAD)
@@ -14300,7 +14318,7 @@ ___DEF_GLBL(___L20__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(6))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(613),___L__23__23_mutex_2d_signal_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_21_)
 ___DEF_SLBL(6,___L6__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R0(___STK(-7))
    ___GOTO(___L19__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
@@ -14322,7 +14340,7 @@ ___DEF_GLBL(___L23__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(3),___PRC(621),___L__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(624),___L__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
 ___DEF_GLBL(___L24__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R3(___CDR(___R3))
    ___GOTO(___L17__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
@@ -14332,7 +14350,7 @@ ___DEF_GLBL(___L25__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___SET_R1(___R2)
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___DEF_GLBL(___L26__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
    ___IF(___NOT(___EQP(___STK(-7),___ABSENT)))
    ___GOTO(___L27__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
@@ -14353,7 +14371,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_mailbox_2d_next
 #undef ___PH_LBL0
-#define ___PH_LBL0 584
+#define ___PH_LBL0 587
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14409,7 +14427,7 @@ ___DEF_GLBL(___L3_thread_2d_mailbox_2d_next)
    ___SET_R2(___R1)
    ___SET_R1(___LBL(0))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(576),___L__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
+   ___JUMPINT(___SET_NARGS(4),___PRC(579),___L__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
 ___DEF_GLBL(___L4_thread_2d_mailbox_2d_next)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___FIX(1L))
@@ -14425,7 +14443,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_receive
 #undef ___PH_LBL0
-#define ___PH_LBL0 587
+#define ___PH_LBL0 590
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14481,7 +14499,7 @@ ___DEF_GLBL(___L3_thread_2d_receive)
    ___SET_R2(___R1)
    ___SET_R1(___LBL(0))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(576),___L__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
+   ___JUMPINT(___SET_NARGS(4),___PRC(579),___L__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive)
 ___DEF_GLBL(___L4_thread_2d_receive)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___FIX(1L))
@@ -14497,7 +14515,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_send
 #undef ___PH_LBL0
-#define ___PH_LBL0 590
+#define ___PH_LBL0 593
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14523,7 +14541,7 @@ ___DEF_GLBL(___L__23__23_thread_2d_send)
    ___SET_STK(2,___R2)
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(563),___L__23__23_thread_2d_mailbox_2d_get_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(566),___L__23__23_thread_2d_mailbox_2d_get_21_)
 ___DEF_SLBL(1,___L1__23__23_thread_2d_send)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(1L),___SUB(61),___FAL))
    ___SET_R3(___CURRENTTHREAD)
@@ -14565,7 +14583,7 @@ ___DEF_GLBL(___L7__23__23_thread_2d_send)
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(4))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(648),___L__23__23_condvar_2d_signal_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(651),___L__23__23_condvar_2d_signal_21_)
 ___DEF_SLBL(4,___L4__23__23_thread_2d_send)
    ___SET_R1(___VOID)
    ___ADJFP(-4)
@@ -14577,7 +14595,7 @@ ___DEF_GLBL(___L8__23__23_thread_2d_send)
    ___SET_R1(___STK(-5))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(613),___L__23__23_mutex_2d_signal_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_21_)
 ___DEF_SLBL(5,___L5__23__23_thread_2d_send)
    ___SET_R1(___STK(-6))
    ___GOTO(___L7__23__23_thread_2d_send)
@@ -14587,14 +14605,14 @@ ___DEF_GLBL(___L9__23__23_thread_2d_send)
    ___SET_R1(___R2)
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_send
 #undef ___PH_LBL0
-#define ___PH_LBL0 597
+#define ___PH_LBL0 600
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14633,7 +14651,7 @@ ___DEF_GLBL(___L2_thread_2d_send)
    ___GOTO(___L4_thread_2d_send)
    ___END_IF
 ___DEF_GLBL(___L3_thread_2d_send)
-   ___JUMPINT(___SET_NARGS(2),___PRC(590),___L__23__23_thread_2d_send)
+   ___JUMPINT(___SET_NARGS(2),___PRC(593),___L__23__23_thread_2d_send)
 ___DEF_SLBL(1,___L1_thread_2d_send)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L5_thread_2d_send)
@@ -14676,7 +14694,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_mutex
 #undef ___PH_LBL0
-#define ___PH_LBL0 600
+#define ___PH_LBL0 603
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14722,7 +14740,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 603
+#define ___PH_LBL0 606
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) \
  ___D_F64(___F64V3) ___D_F64(___F64V4)
@@ -14764,12 +14782,12 @@ ___DEF_GLBL(___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
    ___VECTORSET(___R1,___FIX(1L),___R3)
    ___VECTORSET(___R1,___FIX(2L),___R2)
    ___VECTORSET(___R1,___FIX(7L),___R3)
-   ___JUMPINT(___SET_NARGS(0),___PRC(506),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(507),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
 ___DEF_GLBL(___L9__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
-   ___JUMPINT(___SET_NARGS(0),___PRC(506),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(507),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
 ___DEF_GLBL(___L10__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
    ___VECTORSET(___R1,___FIX(7L),___SYM_not_2d_owned)
-   ___JUMPINT(___SET_NARGS(0),___PRC(506),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(507),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
 ___DEF_GLBL(___L11__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -14856,14 +14874,14 @@ ___DEF_GLBL(___L16__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
    ___VECTORSET(___R1,___FIX(2L),___R2)
    ___VECTORSET(___R1,___FIX(7L),___R3)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(0),___PRC(506),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(507),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
 ___DEF_GLBL(___L17__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(0),___PRC(506),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(507),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
 ___DEF_GLBL(___L18__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
    ___VECTORSET(___R1,___FIX(7L),___SYM_not_2d_owned)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(0),___PRC(506),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(507),___L__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_)
 ___DEF_GLBL(___L19__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -14932,7 +14950,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_mutex_2d_signal_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 613
+#define ___PH_LBL0 616
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -14953,7 +14971,7 @@ ___DEF_GLBL(___L__23__23_mutex_2d_signal_21_)
    ___SET_STK(1,___R0)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(619),___L__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
 ___DEF_SLBL(1,___L1__23__23_mutex_2d_signal_21_)
    ___SET_R1(___RUNQUEUE)
    ___SET_R1(___VECTORREF(___R1,___FIX(6L)))
@@ -14974,7 +14992,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 616
+#define ___PH_LBL0 619
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_F64(___F64V1) ___D_F64(___F64V2)
 #undef ___PR_ALL
@@ -15019,7 +15037,7 @@ ___DEF_SLBL(2,___L2__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
    ___GOTO(___L9__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
    ___END_IF
 ___DEF_GLBL(___L4__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
-   ___SET_R1(___PRC(508))
+   ___SET_R1(___PRC(510))
 ___DEF_GLBL(___L5__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
    ___UNCHECKEDSTRUCTURESET(___STK(-5),___R1,___FIX(18L),___SUB(22),___FAL)
    ___IF(___NOT(___NOT(___FALSEP(___VECTORREF(___STK(-5),___FIX(9L))))))
@@ -15061,7 +15079,7 @@ ___DEF_GLBL(___L8__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
    ___GOTO(___L4__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
    ___END_IF
 ___DEF_GLBL(___L9__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
-   ___SET_R1(___PRC(506))
+   ___SET_R1(___PRC(507))
    ___GOTO(___L5__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
 ___DEF_GLBL(___L10__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
    ___VECTORSET(___STK(-6),___FIX(1L),___STK(-6))
@@ -15083,7 +15101,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 621
+#define ___PH_LBL0 624
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) \
  ___D_F64(___F64V3) ___D_F64(___F64V4)
@@ -15151,7 +15169,7 @@ ___DEF_GLBL(___L13__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(619),___L__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
 ___DEF_GLBL(___L14__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
    ___SET_STK(1,___R0)
    ___SET_STK(5,___LBL(5))
@@ -15225,7 +15243,7 @@ ___DEF_GLBL(___L19__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
    ___SET_R1(___STK(-5))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(619),___L__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_)
 ___DEF_SLBL(10,___L10__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
    ___GOTO(___L18__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
 ___DEF_GLBL(___L20__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
@@ -15254,7 +15272,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_wait_2d_for_2d_io_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 633
+#define ___PH_LBL0 636
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) \
  ___D_F64(___F64V3) ___D_F64(___F64V4)
@@ -15391,7 +15409,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedule_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 643
+#define ___PH_LBL0 646
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -15415,14 +15433,14 @@ ___DEF_GLBL(___L__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedule_21_)
    ___VECTORSET(___R1,___FIX(1L),___R1)
    ___VECTORSET(___R1,___FIX(2L),___R1)
    ___SET_R2(___TRU)
-   ___JUMPINT(___SET_NARGS(2),___PRC(651),___L__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(654),___L__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_condvar
 #undef ___PH_LBL0
-#define ___PH_LBL0 645
+#define ___PH_LBL0 648
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -15468,7 +15486,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_condvar_2d_signal_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 648
+#define ___PH_LBL0 651
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -15489,7 +15507,7 @@ ___DEF_GLBL(___L__23__23_condvar_2d_signal_21_)
    ___SET_STK(1,___R0)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(651),___L__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(654),___L__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_)
 ___DEF_SLBL(1,___L1__23__23_condvar_2d_signal_21_)
    ___SET_R1(___RUNQUEUE)
    ___SET_R1(___VECTORREF(___R1,___FIX(6L)))
@@ -15510,7 +15528,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 651
+#define ___PH_LBL0 654
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -15544,7 +15562,7 @@ ___DEF_GLBL(___L4__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_)
    ___IF(___EQP(___R3,___R1))
    ___GOTO(___L6__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_)
    ___END_IF
-   ___UNCHECKEDSTRUCTURESET(___R3,___PRC(510),___FIX(18L),___SUB(22),___FAL)
+   ___UNCHECKEDSTRUCTURESET(___R3,___PRC(512),___FIX(18L),___SUB(22),___FAL)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
@@ -15579,7 +15597,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_tgroup
 #undef ___PH_LBL0
-#define ___PH_LBL0 656
+#define ___PH_LBL0 659
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -15644,7 +15662,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tgroup_2d_suspend_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 659
+#define ___PH_LBL0 662
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -15669,7 +15687,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tgroup_2d_resume_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 661
+#define ___PH_LBL0 664
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -15694,7 +15712,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tgroup_2d_terminate_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 663
+#define ___PH_LBL0 666
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -15719,7 +15737,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tgroup_2d__3e_tgroup_2d_vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 665
+#define ___PH_LBL0 668
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -15790,7 +15808,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tgroup_2d__3e_tgroup_2d_list
 #undef ___PH_LBL0
-#define ___PH_LBL0 668
+#define ___PH_LBL0 671
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R4
 #undef ___PR_ALL
@@ -15811,7 +15829,7 @@ ___DEF_GLBL(___L__23__23_tgroup_2d__3e_tgroup_2d_list)
    ___SET_STK(1,___R0)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(665),___L__23__23_tgroup_2d__3e_tgroup_2d_vector)
+   ___JUMPINT(___SET_NARGS(1),___PRC(668),___L__23__23_tgroup_2d__3e_tgroup_2d_vector)
 ___DEF_SLBL(1,___L1__23__23_tgroup_2d__3e_tgroup_2d_list)
    ___SET_R0(___STK(-3))
    ___ADJFP(-4)
@@ -15822,7 +15840,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tgroup_2d__3e_thread_2d_vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 671
+#define ___PH_LBL0 674
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -15892,7 +15910,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tgroup_2d__3e_thread_2d_list
 #undef ___PH_LBL0
-#define ___PH_LBL0 674
+#define ___PH_LBL0 677
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R4
 #undef ___PR_ALL
@@ -15913,7 +15931,7 @@ ___DEF_GLBL(___L__23__23_tgroup_2d__3e_thread_2d_list)
    ___SET_STK(1,___R0)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(671),___L__23__23_tgroup_2d__3e_thread_2d_vector)
+   ___JUMPINT(___SET_NARGS(1),___PRC(674),___L__23__23_tgroup_2d__3e_thread_2d_vector)
 ___DEF_SLBL(1,___L1__23__23_tgroup_2d__3e_thread_2d_list)
    ___SET_R0(___STK(-3))
    ___ADJFP(-4)
@@ -15924,7 +15942,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_current_2d_time_2d_point
 #undef ___PH_LBL0
-#define ___PH_LBL0 677
+#define ___PH_LBL0 680
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -15965,7 +15983,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_current_2d_time
 #undef ___PH_LBL0
-#define ___PH_LBL0 681
+#define ___PH_LBL0 684
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -15987,7 +16005,7 @@ ___DEF_GLBL(___L_current_2d_time)
    ___SET_STK(1,___R0)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(0),___PRC(677),___L__23__23_current_2d_time_2d_point)
+   ___JUMPINT(___SET_NARGS(0),___PRC(680),___L__23__23_current_2d_time_2d_point)
 ___DEF_SLBL(1,___L1_current_2d_time)
    ___BEGIN_ALLOC_STRUCTURE(5)
    ___ADD_STRUCTURE_ELEM(0,___SUB(40))
@@ -16008,7 +16026,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_time_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 685
+#define ___PH_LBL0 688
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -16033,7 +16051,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_time_2d__3e_seconds
 #undef ___PH_LBL0
-#define ___PH_LBL0 687
+#define ___PH_LBL0 690
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16066,7 +16084,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_seconds_2d__3e_time
 #undef ___PH_LBL0
-#define ___PH_LBL0 689
+#define ___PH_LBL0 692
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16146,7 +16164,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_timeout_2d__3e_time
 #undef ___PH_LBL0
-#define ___PH_LBL0 694
+#define ___PH_LBL0 697
 #undef ___PD_ALL
 #define ___PD_ALL
 #undef ___PR_ALL
@@ -16170,7 +16188,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_current_2d_thread
 #undef ___PH_LBL0
-#define ___PH_LBL0 696
+#define ___PH_LBL0 699
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -16195,7 +16213,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 698
+#define ___PH_LBL0 701
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16254,7 +16272,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_make_2d_thread
 #undef ___PH_LBL0
-#define ___PH_LBL0 700
+#define ___PH_LBL0 703
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -16392,7 +16410,7 @@ ___DEF_GLBL(___L5_make_2d_thread)
    ___SET_STK(3,___VECTORREF(___R4,___FIX(2L)))
    ___SET_R4(___VECTORREF(___R4,___FIX(0L)))
    ___SET_STK(4,___CONS(___FAL,___FAL))
-   ___SET_STK(5,___CONS(___GLO__23__23_current_2d_exception_2d_handler,___PRC(525)))
+   ___SET_STK(5,___CONS(___GLO__23__23_current_2d_exception_2d_handler,___PRC(528)))
    ___BEGIN_ALLOC_VECTOR(8)
    ___ADD_VECTOR_ELEM(0,___R4)
    ___ADD_VECTOR_ELEM(1,___SUB(0))
@@ -16444,7 +16462,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_init_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 703
+#define ___PH_LBL0 706
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -16568,7 +16586,7 @@ ___DEF_GLBL(___L8_thread_2d_init_21_)
    ___SET_STK(0,___VECTORREF(___R3,___FIX(2L)))
    ___SET_R3(___VECTORREF(___R3,___FIX(0L)))
    ___SET_STK(1,___CONS(___FAL,___FAL))
-   ___SET_STK(2,___CONS(___GLO__23__23_current_2d_exception_2d_handler,___PRC(525)))
+   ___SET_STK(2,___CONS(___GLO__23__23_current_2d_exception_2d_handler,___PRC(528)))
    ___BEGIN_ALLOC_VECTOR(8)
    ___ADD_VECTOR_ELEM(0,___R3)
    ___ADD_VECTOR_ELEM(1,___SUB(0))
@@ -16677,7 +16695,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 707
+#define ___PH_LBL0 710
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16754,7 +16772,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_thread_2d_group
 #undef ___PH_LBL0
-#define ___PH_LBL0 710
+#define ___PH_LBL0 713
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16831,7 +16849,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_specific
 #undef ___PH_LBL0
-#define ___PH_LBL0 713
+#define ___PH_LBL0 716
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16908,7 +16926,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_specific_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 716
+#define ___PH_LBL0 719
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16992,7 +17010,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_base_2d_priority
 #undef ___PH_LBL0
-#define ___PH_LBL0 719
+#define ___PH_LBL0 722
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -17074,7 +17092,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_base_2d_priority_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 723
+#define ___PH_LBL0 726
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17209,7 +17227,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_quantum
 #undef ___PH_LBL0
-#define ___PH_LBL0 728
+#define ___PH_LBL0 731
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -17291,7 +17309,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_quantum_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 732
+#define ___PH_LBL0 735
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -17447,7 +17465,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_priority_2d_boost
 #undef ___PH_LBL0
-#define ___PH_LBL0 737
+#define ___PH_LBL0 740
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -17529,7 +17547,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_priority_2d_boost_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 741
+#define ___PH_LBL0 744
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -17685,7 +17703,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_start_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 746
+#define ___PH_LBL0 749
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17776,7 +17794,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_yield_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 749
+#define ___PH_LBL0 752
 #undef ___PD_ALL
 #define ___PD_ALL
 #undef ___PR_ALL
@@ -17800,7 +17818,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_sleep_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 751
+#define ___PH_LBL0 754
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17856,7 +17874,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_suspend_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 754
+#define ___PH_LBL0 757
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17895,7 +17913,7 @@ ___DEF_GLBL(___L2_thread_2d_suspend_21_)
    ___GOTO(___L4_thread_2d_suspend_21_)
    ___END_IF
 ___DEF_GLBL(___L3_thread_2d_suspend_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(517),___L__23__23_thread_2d_suspend_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(520),___L__23__23_thread_2d_suspend_21_)
 ___DEF_SLBL(1,___L1_thread_2d_suspend_21_)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L5_thread_2d_suspend_21_)
@@ -17932,7 +17950,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_resume_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 757
+#define ___PH_LBL0 760
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17971,7 +17989,7 @@ ___DEF_GLBL(___L2_thread_2d_resume_21_)
    ___GOTO(___L4_thread_2d_resume_21_)
    ___END_IF
 ___DEF_GLBL(___L3_thread_2d_resume_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(519),___L__23__23_thread_2d_resume_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(522),___L__23__23_thread_2d_resume_21_)
 ___DEF_SLBL(1,___L1_thread_2d_resume_21_)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L5_thread_2d_resume_21_)
@@ -18008,7 +18026,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_terminate_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 760
+#define ___PH_LBL0 763
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18047,7 +18065,7 @@ ___DEF_GLBL(___L2_thread_2d_terminate_21_)
    ___GOTO(___L4_thread_2d_terminate_21_)
    ___END_IF
 ___DEF_GLBL(___L3_thread_2d_terminate_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(521),___L__23__23_thread_2d_terminate_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(524),___L__23__23_thread_2d_terminate_21_)
 ___DEF_SLBL(1,___L1_thread_2d_terminate_21_)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L5_thread_2d_terminate_21_)
@@ -18084,7 +18102,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_join_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 763
+#define ___PH_LBL0 766
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18151,7 +18169,7 @@ ___DEF_GLBL(___L6_thread_2d_join_21_)
    ___END_IF
 ___DEF_GLBL(___L7_thread_2d_join_21_)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(3),___PRC(534),___L__23__23_thread_2d_join_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(537),___L__23__23_thread_2d_join_21_)
 ___DEF_GLBL(___L8_thread_2d_join_21_)
    ___SET_STK(-3,___STK(-7))
    ___SET_STK(-7,___FIX(2L))
@@ -18222,7 +18240,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_interrupt_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 767
+#define ___PH_LBL0 770
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18272,7 +18290,7 @@ ___DEF_GLBL(___L3_thread_2d_interrupt_21_)
    ___ADJFP(1)
    ___JUMPGLONOTSAFE(___SET_NARGS(4),320,___G__23__23_fail_2d_check_2d_procedure)
 ___DEF_GLBL(___L4_thread_2d_interrupt_21_)
-   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(475),___L0__23__23_thread_2d_interrupt_21_)
+   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(476),___L0__23__23_thread_2d_interrupt_21_)
 ___DEF_SLBL(1,___L1_thread_2d_interrupt_21_)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L6_thread_2d_interrupt_21_)
@@ -18285,7 +18303,7 @@ ___DEF_SLBL(1,___L1_thread_2d_interrupt_21_)
    ___GOTO(___L3_thread_2d_interrupt_21_)
    ___END_IF
 ___DEF_GLBL(___L5_thread_2d_interrupt_21_)
-   ___SET_NARGS(1) ___JUMPINT(___NOTHING,___PRC(475),___L0__23__23_thread_2d_interrupt_21_)
+   ___SET_NARGS(1) ___JUMPINT(___NOTHING,___PRC(476),___L0__23__23_thread_2d_interrupt_21_)
 ___DEF_GLBL(___L6_thread_2d_interrupt_21_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
@@ -18312,7 +18330,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_state
 #undef ___PH_LBL0
-#define ___PH_LBL0 770
+#define ___PH_LBL0 773
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18368,16 +18386,16 @@ ___DEF_GLBL(___L3_thread_2d_state)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(773),___L__23__23_thread_2d_state)
+   ___JUMPINT(___SET_NARGS(1),___PRC(776),___L__23__23_thread_2d_state)
 ___DEF_GLBL(___L4_thread_2d_state)
-   ___JUMPINT(___SET_NARGS(1),___PRC(773),___L__23__23_thread_2d_state)
+   ___JUMPINT(___SET_NARGS(1),___PRC(776),___L__23__23_thread_2d_state)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_thread_2d_state
 #undef ___PH_LBL0
-#define ___PH_LBL0 773
+#define ___PH_LBL0 776
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -18563,7 +18581,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_mutex_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 781
+#define ___PH_LBL0 784
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18588,7 +18606,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_make_2d_mutex
 #undef ___PH_LBL0
-#define ___PH_LBL0 783
+#define ___PH_LBL0 786
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18640,7 +18658,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_mutex_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 786
+#define ___PH_LBL0 789
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18673,7 +18691,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_mutex_2d_specific
 #undef ___PH_LBL0
-#define ___PH_LBL0 788
+#define ___PH_LBL0 791
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18706,7 +18724,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_mutex_2d_specific_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 790
+#define ___PH_LBL0 793
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18742,7 +18760,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_mutex_2d_state
 #undef ___PH_LBL0
-#define ___PH_LBL0 792
+#define ___PH_LBL0 795
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18781,7 +18799,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_mutex_2d_lock_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 794
+#define ___PH_LBL0 797
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18832,7 +18850,7 @@ ___DEF_GLBL(___L4_mutex_2d_lock_21_)
 ___DEF_GLBL(___L5_mutex_2d_lock_21_)
    ___SET_R3(___R2)
    ___SET_R2(___FAL)
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___DEF_GLBL(___L6_mutex_2d_lock_21_)
    ___IF(___FIXNUMP(___R2))
    ___GOTO(___L7_mutex_2d_lock_21_)
@@ -18859,7 +18877,7 @@ ___DEF_GLBL(___L8_mutex_2d_lock_21_)
    ___SET_R1(___TRU)
    ___JUMPPRM(___NOTHING,___R0)
 ___DEF_GLBL(___L9_mutex_2d_lock_21_)
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___DEF_SLBL(1,___L1_mutex_2d_lock_21_)
    ___IF(___NOT(___FALSEP(___R1)))
    ___GOTO(___L10_mutex_2d_lock_21_)
@@ -18890,7 +18908,7 @@ ___DEF_GLBL(___L12_mutex_2d_lock_21_)
    ___JUMPPRM(___NOTHING,___R0)
 ___DEF_GLBL(___L13_mutex_2d_lock_21_)
    ___SET_R3(___FAL)
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___DEF_GLBL(___L14_mutex_2d_lock_21_)
    ___IF(___NOT(___STRUCTUREP(___R3)))
    ___GOTO(___L22_mutex_2d_lock_21_)
@@ -18929,7 +18947,7 @@ ___DEF_GLBL(___L16_mutex_2d_lock_21_)
    ___JUMPPRM(___NOTHING,___R0)
 ___DEF_GLBL(___L17_mutex_2d_lock_21_)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___DEF_SLBL(2,___L2_mutex_2d_lock_21_)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L20_mutex_2d_lock_21_)
@@ -19048,7 +19066,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_mutex_2d_unlock_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 799
+#define ___PH_LBL0 802
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19090,7 +19108,7 @@ ___DEF_GLBL(___L_mutex_2d_unlock_21_)
    ___JUMPPRM(___NOTHING,___R0)
 ___DEF_GLBL(___L3_mutex_2d_unlock_21_)
    ___SET_R3(___FAL)
-   ___JUMPINT(___SET_NARGS(3),___PRC(613),___L__23__23_mutex_2d_signal_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_21_)
 ___DEF_GLBL(___L4_mutex_2d_unlock_21_)
    ___IF(___NOT(___STRUCTUREDIOP(___R2,___SYM__23__23_type_2d_9_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716)))
    ___GOTO(___L10_mutex_2d_unlock_21_)
@@ -19135,7 +19153,7 @@ ___DEF_SLBL(2,___L2_mutex_2d_unlock_21_)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(621),___L__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(624),___L__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
 ___DEF_GLBL(___L7_mutex_2d_unlock_21_)
    ___SET_STK(-3,___STK(-7))
    ___SET_STK(-7,___FIX(3L))
@@ -19158,7 +19176,7 @@ ___DEF_GLBL(___L8_mutex_2d_unlock_21_)
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_real_3f_)
 ___DEF_GLBL(___L9_mutex_2d_unlock_21_)
    ___SET_R3(___TRU)
-   ___JUMPINT(___SET_NARGS(3),___PRC(621),___L__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(624),___L__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_)
 ___DEF_GLBL(___L10_mutex_2d_unlock_21_)
    ___SET_STK(1,___FIX(2L))
    ___SET_STK(2,___LBL(0))
@@ -19175,7 +19193,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_condition_2d_variable_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 803
+#define ___PH_LBL0 806
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19200,7 +19218,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_make_2d_condition_2d_variable
 #undef ___PH_LBL0
-#define ___PH_LBL0 805
+#define ___PH_LBL0 808
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19252,7 +19270,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_condition_2d_variable_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 808
+#define ___PH_LBL0 811
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19285,7 +19303,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_condition_2d_variable_2d_specific
 #undef ___PH_LBL0
-#define ___PH_LBL0 810
+#define ___PH_LBL0 813
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19318,7 +19336,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_condition_2d_variable_2d_specific_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 812
+#define ___PH_LBL0 815
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19354,7 +19372,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_condition_2d_variable_2d_signal_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 814
+#define ___PH_LBL0 817
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19375,7 +19393,7 @@ ___DEF_GLBL(___L_condition_2d_variable_2d_signal_21_)
    ___GOTO(___L1_condition_2d_variable_2d_signal_21_)
    ___END_IF
    ___SET_R2(___FAL)
-   ___JUMPINT(___SET_NARGS(2),___PRC(648),___L__23__23_condvar_2d_signal_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(651),___L__23__23_condvar_2d_signal_21_)
 ___DEF_GLBL(___L1_condition_2d_variable_2d_signal_21_)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19387,7 +19405,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_condition_2d_variable_2d_broadcast_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 816
+#define ___PH_LBL0 819
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19408,7 +19426,7 @@ ___DEF_GLBL(___L_condition_2d_variable_2d_broadcast_21_)
    ___GOTO(___L1_condition_2d_variable_2d_broadcast_21_)
    ___END_IF
    ___SET_R2(___TRU)
-   ___JUMPINT(___SET_NARGS(2),___PRC(648),___L__23__23_condvar_2d_signal_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(651),___L__23__23_condvar_2d_signal_21_)
 ___DEF_GLBL(___L1_condition_2d_variable_2d_broadcast_21_)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19420,7 +19438,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 818
+#define ___PH_LBL0 821
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19445,7 +19463,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_make_2d_thread_2d_group
 #undef ___PH_LBL0
-#define ___PH_LBL0 820
+#define ___PH_LBL0 823
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19492,23 +19510,23 @@ ___DEF_GLBL(___L2_make_2d_thread_2d_group)
    ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(241),___L0__23__23_fail_2d_check_2d_tgroup)
 ___DEF_GLBL(___L3_make_2d_thread_2d_group)
    ___SET_R1(___R3)
-   ___JUMPINT(___SET_NARGS(2),___PRC(656),___L__23__23_make_2d_tgroup)
+   ___JUMPINT(___SET_NARGS(2),___PRC(659),___L__23__23_make_2d_tgroup)
 ___DEF_GLBL(___L4_make_2d_thread_2d_group)
    ___SET_R1(___R3)
    ___SET_R2(___FAL)
-   ___JUMPINT(___SET_NARGS(2),___PRC(656),___L__23__23_make_2d_tgroup)
+   ___JUMPINT(___SET_NARGS(2),___PRC(659),___L__23__23_make_2d_tgroup)
 ___DEF_GLBL(___L5_make_2d_thread_2d_group)
    ___SET_R1(___R3)
    ___SET_R2(___CURRENTTHREAD)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R2,___FIX(7L),___SUB(22),___FAL))
-   ___JUMPINT(___SET_NARGS(2),___PRC(656),___L__23__23_make_2d_tgroup)
+   ___JUMPINT(___SET_NARGS(2),___PRC(659),___L__23__23_make_2d_tgroup)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 822
+#define ___PH_LBL0 825
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19541,7 +19559,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d_parent
 #undef ___PH_LBL0
-#define ___PH_LBL0 824
+#define ___PH_LBL0 827
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19574,7 +19592,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d_suspend_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 826
+#define ___PH_LBL0 829
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19594,7 +19612,7 @@ ___DEF_GLBL(___L_thread_2d_group_2d_suspend_21_)
    ___IF(___NOT(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
    ___GOTO(___L1_thread_2d_group_2d_suspend_21_)
    ___END_IF
-   ___JUMPINT(___SET_NARGS(1),___PRC(659),___L__23__23_tgroup_2d_suspend_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(662),___L__23__23_tgroup_2d_suspend_21_)
 ___DEF_GLBL(___L1_thread_2d_group_2d_suspend_21_)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19606,7 +19624,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d_resume_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 828
+#define ___PH_LBL0 831
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19626,7 +19644,7 @@ ___DEF_GLBL(___L_thread_2d_group_2d_resume_21_)
    ___IF(___NOT(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
    ___GOTO(___L1_thread_2d_group_2d_resume_21_)
    ___END_IF
-   ___JUMPINT(___SET_NARGS(1),___PRC(661),___L__23__23_tgroup_2d_resume_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(664),___L__23__23_tgroup_2d_resume_21_)
 ___DEF_GLBL(___L1_thread_2d_group_2d_resume_21_)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19638,7 +19656,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d_terminate_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 830
+#define ___PH_LBL0 833
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19658,7 +19676,7 @@ ___DEF_GLBL(___L_thread_2d_group_2d_terminate_21_)
    ___IF(___NOT(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
    ___GOTO(___L1_thread_2d_group_2d_terminate_21_)
    ___END_IF
-   ___JUMPINT(___SET_NARGS(1),___PRC(663),___L__23__23_tgroup_2d_terminate_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(666),___L__23__23_tgroup_2d_terminate_21_)
 ___DEF_GLBL(___L1_thread_2d_group_2d_terminate_21_)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19670,7 +19688,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d__3e_thread_2d_group_2d_vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 832
+#define ___PH_LBL0 835
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19690,7 +19708,7 @@ ___DEF_GLBL(___L_thread_2d_group_2d__3e_thread_2d_group_2d_vector)
    ___IF(___NOT(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
    ___GOTO(___L1_thread_2d_group_2d__3e_thread_2d_group_2d_vector)
    ___END_IF
-   ___JUMPINT(___SET_NARGS(1),___PRC(665),___L__23__23_tgroup_2d__3e_tgroup_2d_vector)
+   ___JUMPINT(___SET_NARGS(1),___PRC(668),___L__23__23_tgroup_2d__3e_tgroup_2d_vector)
 ___DEF_GLBL(___L1_thread_2d_group_2d__3e_thread_2d_group_2d_vector)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19702,7 +19720,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d__3e_thread_2d_group_2d_list
 #undef ___PH_LBL0
-#define ___PH_LBL0 834
+#define ___PH_LBL0 837
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19722,7 +19740,7 @@ ___DEF_GLBL(___L_thread_2d_group_2d__3e_thread_2d_group_2d_list)
    ___IF(___NOT(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
    ___GOTO(___L1_thread_2d_group_2d__3e_thread_2d_group_2d_list)
    ___END_IF
-   ___JUMPINT(___SET_NARGS(1),___PRC(668),___L__23__23_tgroup_2d__3e_tgroup_2d_list)
+   ___JUMPINT(___SET_NARGS(1),___PRC(671),___L__23__23_tgroup_2d__3e_tgroup_2d_list)
 ___DEF_GLBL(___L1_thread_2d_group_2d__3e_thread_2d_group_2d_list)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19734,7 +19752,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d__3e_thread_2d_vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 836
+#define ___PH_LBL0 839
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19754,7 +19772,7 @@ ___DEF_GLBL(___L_thread_2d_group_2d__3e_thread_2d_vector)
    ___IF(___NOT(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
    ___GOTO(___L1_thread_2d_group_2d__3e_thread_2d_vector)
    ___END_IF
-   ___JUMPINT(___SET_NARGS(1),___PRC(671),___L__23__23_tgroup_2d__3e_thread_2d_vector)
+   ___JUMPINT(___SET_NARGS(1),___PRC(674),___L__23__23_tgroup_2d__3e_thread_2d_vector)
 ___DEF_GLBL(___L1_thread_2d_group_2d__3e_thread_2d_vector)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19766,7 +19784,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_thread_2d_group_2d__3e_thread_2d_list
 #undef ___PH_LBL0
-#define ___PH_LBL0 838
+#define ___PH_LBL0 841
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19786,7 +19804,7 @@ ___DEF_GLBL(___L_thread_2d_group_2d__3e_thread_2d_list)
    ___IF(___NOT(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
    ___GOTO(___L1_thread_2d_group_2d__3e_thread_2d_list)
    ___END_IF
-   ___JUMPINT(___SET_NARGS(1),___PRC(674),___L__23__23_tgroup_2d__3e_thread_2d_list)
+   ___JUMPINT(___SET_NARGS(1),___PRC(677),___L__23__23_tgroup_2d__3e_thread_2d_list)
 ___DEF_GLBL(___L1_thread_2d_group_2d__3e_thread_2d_list)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -19798,7 +19816,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_with_2d_exception_2d_handler
 #undef ___PH_LBL0
-#define ___PH_LBL0 840
+#define ___PH_LBL0 843
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19866,7 +19884,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_with_2d_exception_2d_catcher
 #undef ___PH_LBL0
-#define ___PH_LBL0 843
+#define ___PH_LBL0 846
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19937,7 +19955,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_with_2d_exception_2d_catcher
 #undef ___PH_LBL0
-#define ___PH_LBL0 848
+#define ___PH_LBL0 851
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19967,7 +19985,7 @@ ___DEF_GLBL(___L_with_2d_exception_2d_catcher)
    ___ADJFP(1)
    ___JUMPGLONOTSAFE(___SET_NARGS(4),320,___G__23__23_fail_2d_check_2d_procedure)
 ___DEF_GLBL(___L1_with_2d_exception_2d_catcher)
-   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L__23__23_with_2d_exception_2d_catcher)
+   ___JUMPINT(___SET_NARGS(2),___PRC(846),___L__23__23_with_2d_exception_2d_catcher)
 ___DEF_GLBL(___L2_with_2d_exception_2d_catcher)
    ___SET_STK(1,___FIX(1L))
    ___SET_R3(___R2)
@@ -19981,17 +19999,18 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_raise
 #undef ___PH_LBL0
-#define ___PH_LBL0 850
+#define ___PH_LBL0 853
 #undef ___PD_ALL
-#define ___PD_ALL ___D_R2 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R2 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_R2 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R2 ___R_R4
 #undef ___PW_ALL
 #define ___PW_ALL ___W_R2 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
 ___DEF_P_HLBL(___L0__23__23_raise)
+___DEF_P_HLBL(___L1__23__23_raise)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_raise)
@@ -20002,6 +20021,8 @@ ___DEF_GLBL(___L__23__23_raise)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R2,___FIX(20L),___SUB(22),___FAL))
    ___SET_R2(___VECTORREF(___R2,___FIX(4L)))
    ___SET_R2(___CDR(___R2))
+   ___POLL(1)
+___DEF_SLBL(1,___L1__23__23_raise)
    ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
 ___END_P_SW
 ___END_P_COD
@@ -20009,17 +20030,18 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_raise
 #undef ___PH_LBL0
-#define ___PH_LBL0 852
+#define ___PH_LBL0 856
 #undef ___PD_ALL
-#define ___PD_ALL ___D_R2 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R2 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_R2 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R2 ___R_R4
 #undef ___PW_ALL
 #define ___PW_ALL ___W_R2 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
 ___DEF_P_HLBL(___L0_raise)
+___DEF_P_HLBL(___L1_raise)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0_raise)
@@ -20030,6 +20052,8 @@ ___DEF_GLBL(___L_raise)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R2,___FIX(20L),___SUB(22),___FAL))
    ___SET_R2(___VECTORREF(___R2,___FIX(4L)))
    ___SET_R2(___CDR(___R2))
+   ___POLL(1)
+___DEF_SLBL(1,___L1_raise)
    ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
 ___END_P_SW
 ___END_P_COD
@@ -20037,7 +20061,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_abort
 #undef ___PH_LBL0
-#define ___PH_LBL0 854
+#define ___PH_LBL0 859
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -20050,13 +20074,15 @@ ___DEF_P_HLBL_INTRO
 ___DEF_P_HLBL(___L0__23__23_abort)
 ___DEF_P_HLBL(___L1__23__23_abort)
 ___DEF_P_HLBL(___L2__23__23_abort)
+___DEF_P_HLBL(___L3__23__23_abort)
+___DEF_P_HLBL(___L4__23__23_abort)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_abort)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L__23__23_abort)
-   ___GOTO(___L3__23__23_abort)
+   ___GOTO(___L5__23__23_abort)
 ___DEF_SLBL(1,___L1__23__23_abort)
    ___BEGIN_ALLOC_STRUCTURE(2)
    ___ADD_STRUCTURE_ELEM(0,___SUB(18))
@@ -20067,7 +20093,9 @@ ___DEF_SLBL(1,___L1__23__23_abort)
    ___ADJFP(-8)
    ___CHECK_HEAP(2,4096)
 ___DEF_SLBL(2,___L2__23__23_abort)
-___DEF_GLBL(___L3__23__23_abort)
+   ___POLL(3)
+___DEF_SLBL(3,___L3__23__23_abort)
+___DEF_GLBL(___L5__23__23_abort)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_R0(___LBL(1))
@@ -20076,6 +20104,8 @@ ___DEF_GLBL(___L3__23__23_abort)
    ___SET_R2(___VECTORREF(___R2,___FIX(4L)))
    ___SET_R2(___CDR(___R2))
    ___ADJFP(8)
+   ___POLL(4)
+___DEF_SLBL(4,___L4__23__23_abort)
    ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
 ___END_P_SW
 ___END_P_COD
@@ -20083,7 +20113,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_abort
 #undef ___PH_LBL0
-#define ___PH_LBL0 858
+#define ___PH_LBL0 865
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -20096,6 +20126,8 @@ ___DEF_P_HLBL_INTRO
 ___DEF_P_HLBL(___L0_abort)
 ___DEF_P_HLBL(___L1_abort)
 ___DEF_P_HLBL(___L2_abort)
+___DEF_P_HLBL(___L3_abort)
+___DEF_P_HLBL(___L4_abort)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0_abort)
@@ -20104,31 +20136,35 @@ ___DEF_SLBL(0,___L0_abort)
 ___DEF_GLBL(___L_abort)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
-   ___SET_R0(___LBL(1))
+   ___SET_R0(___LBL(2))
    ___SET_R2(___CURRENTTHREAD)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R2,___FIX(20L),___SUB(22),___FAL))
    ___SET_R2(___VECTORREF(___R2,___FIX(4L)))
    ___SET_R2(___CDR(___R2))
    ___ADJFP(8)
-   ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
+   ___POLL(1)
 ___DEF_SLBL(1,___L1_abort)
+   ___JUMPGENNOTSAFE(___SET_NARGS(1),___R2)
+___DEF_SLBL(2,___L2_abort)
    ___BEGIN_ALLOC_STRUCTURE(2)
    ___ADD_STRUCTURE_ELEM(0,___SUB(18))
    ___ADD_STRUCTURE_ELEM(1,___STK(-6))
    ___END_ALLOC_STRUCTURE(2)
    ___SET_R1(___GET_STRUCTURE(2))
    ___SET_R0(___STK(-7))
+   ___CHECK_HEAP(3,4096)
+___DEF_SLBL(3,___L3_abort)
+   ___POLL(4)
+___DEF_SLBL(4,___L4_abort)
    ___ADJFP(-8)
-   ___CHECK_HEAP(2,4096)
-___DEF_SLBL(2,___L2_abort)
-   ___JUMPINT(___SET_NARGS(1),___PRC(854),___L__23__23_abort)
+   ___JUMPINT(___SET_NARGS(1),___PRC(859),___L__23__23_abort)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_call_2d_with_2d_current_2d_continuation
 #undef ___PH_LBL0
-#define ___PH_LBL0 862
+#define ___PH_LBL0 871
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20228,7 +20264,7 @@ ___DEF_SLBL(5,___L5__23__23_call_2d_with_2d_current_2d_continuation)
    ___SET_STK(1,___STK(0))
    ___SET_STK(0,___CLO(___R4,1))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(945),___L__23__23_continuation_2d_return_2d_aux)
+   ___JUMPINT(___SET_NARGS(5),___PRC(954),___L__23__23_continuation_2d_return_2d_aux)
 ___DEF_SLBL(6,___L6__23__23_call_2d_with_2d_current_2d_continuation)
    ___SET_R2(___CONS(___R1,___STK(-5)))
    ___SET_R1(___STK(-6))
@@ -20325,7 +20361,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_call_2d_with_2d_current_2d_continuation
 #undef ___PH_LBL0
-#define ___PH_LBL0 879
+#define ___PH_LBL0 888
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20412,7 +20448,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_values
 #undef ___PH_LBL0
-#define ___PH_LBL0 882
+#define ___PH_LBL0 891
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20501,7 +20537,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_values
 #undef ___PH_LBL0
-#define ___PH_LBL0 889
+#define ___PH_LBL0 898
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20590,7 +20626,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_call_2d_with_2d_values
 #undef ___PH_LBL0
-#define ___PH_LBL0 896
+#define ___PH_LBL0 905
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20663,7 +20699,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_call_2d_with_2d_values
 #undef ___PH_LBL0
-#define ___PH_LBL0 900
+#define ___PH_LBL0 909
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20693,7 +20729,7 @@ ___DEF_GLBL(___L_call_2d_with_2d_values)
    ___ADJFP(1)
    ___JUMPGLONOTSAFE(___SET_NARGS(4),320,___G__23__23_fail_2d_check_2d_procedure)
 ___DEF_GLBL(___L1_call_2d_with_2d_values)
-   ___JUMPINT(___SET_NARGS(2),___PRC(896),___L__23__23_call_2d_with_2d_values)
+   ___JUMPINT(___SET_NARGS(2),___PRC(905),___L__23__23_call_2d_with_2d_values)
 ___DEF_GLBL(___L2_call_2d_with_2d_values)
    ___SET_STK(1,___FIX(1L))
    ___SET_R3(___R2)
@@ -20707,7 +20743,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_dynamic_2d_wind
 #undef ___PH_LBL0
-#define ___PH_LBL0 902
+#define ___PH_LBL0 911
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20794,7 +20830,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_dynamic_2d_wind
 #undef ___PH_LBL0
-#define ___PH_LBL0 909
+#define ___PH_LBL0 918
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20825,7 +20861,7 @@ ___DEF_GLBL(___L_dynamic_2d_wind)
    ___ADJFP(2)
    ___JUMPGLONOTSAFE(___SET_NARGS(5),320,___G__23__23_fail_2d_check_2d_procedure)
 ___DEF_GLBL(___L1_dynamic_2d_wind)
-   ___JUMPINT(___SET_NARGS(3),___PRC(902),___L__23__23_dynamic_2d_wind)
+   ___JUMPINT(___SET_NARGS(3),___PRC(911),___L__23__23_dynamic_2d_wind)
 ___DEF_GLBL(___L2_dynamic_2d_wind)
    ___SET_STK(1,___FIX(2L))
    ___SET_STK(2,___PRM_dynamic_2d_wind)
@@ -20842,7 +20878,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_procedure_2d__3e_continuation
 #undef ___PH_LBL0
-#define ___PH_LBL0 911
+#define ___PH_LBL0 920
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -20867,7 +20903,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_continuation_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 913
+#define ___PH_LBL0 922
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -20892,7 +20928,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_capture_2d_aux
 #undef ___PH_LBL0
-#define ___PH_LBL0 915
+#define ___PH_LBL0 924
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20972,7 +21008,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_capture
 #undef ___PH_LBL0
-#define ___PH_LBL0 920
+#define ___PH_LBL0 929
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -20995,14 +21031,14 @@ ___NUL))
    ___IF_NARGS_EQ(4,___PUSH(___R1) ___SET_R1(___R2) ___SET_R2(___R3) ___SET_R3(___NUL))
    ___GET_REST(0,1,3,0)
 ___DEF_GLBL(___L__23__23_continuation_2d_capture)
-   ___JUMPINT(___SET_NARGS(5),___PRC(915),___L__23__23_continuation_2d_capture_2d_aux)
+   ___JUMPINT(___SET_NARGS(5),___PRC(924),___L__23__23_continuation_2d_capture_2d_aux)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_continuation_2d_capture
 #undef ___PH_LBL0
-#define ___PH_LBL0 922
+#define ___PH_LBL0 931
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21040,14 +21076,14 @@ ___DEF_GLBL(___L_continuation_2d_capture)
    ___ADJFP(3)
    ___JUMPGLONOTSAFE(___SET_NARGS(8),320,___G__23__23_fail_2d_check_2d_procedure)
 ___DEF_GLBL(___L1_continuation_2d_capture)
-   ___JUMPINT(___SET_NARGS(5),___PRC(915),___L__23__23_continuation_2d_capture_2d_aux)
+   ___JUMPINT(___SET_NARGS(5),___PRC(924),___L__23__23_continuation_2d_capture_2d_aux)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_unwind_2d_wind
 #undef ___PH_LBL0
-#define ___PH_LBL0 924
+#define ___PH_LBL0 933
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21260,7 +21296,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_graft_2d_aux
 #undef ___PH_LBL0
-#define ___PH_LBL0 936
+#define ___PH_LBL0 945
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21380,14 +21416,14 @@ ___DEF_GLBL(___L10__23__23_continuation_2d_graft_2d_aux)
    ___ADJFP(-5)
    ___CHECK_HEAP(3,4096)
 ___DEF_SLBL(3,___L3__23__23_continuation_2d_graft_2d_aux)
-   ___JUMPINT(___SET_NARGS(3),___PRC(924),___L__23__23_continuation_2d_unwind_2d_wind)
+   ___JUMPINT(___SET_NARGS(3),___PRC(933),___L__23__23_continuation_2d_unwind_2d_wind)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_graft
 #undef ___PH_LBL0
-#define ___PH_LBL0 941
+#define ___PH_LBL0 950
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21410,14 +21446,14 @@ ___NUL))
    ___IF_NARGS_EQ(5,___PUSH(___R1) ___SET_R1(___R2) ___SET_R2(___R3) ___SET_R3(___NUL))
    ___GET_REST(0,2,3,0)
 ___DEF_GLBL(___L__23__23_continuation_2d_graft)
-   ___JUMPINT(___SET_NARGS(6),___PRC(936),___L__23__23_continuation_2d_graft_2d_aux)
+   ___JUMPINT(___SET_NARGS(6),___PRC(945),___L__23__23_continuation_2d_graft_2d_aux)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_continuation_2d_graft
 #undef ___PH_LBL0
-#define ___PH_LBL0 943
+#define ___PH_LBL0 952
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21455,7 +21491,7 @@ ___DEF_GLBL(___L_continuation_2d_graft)
    ___ADJFP(3)
    ___JUMPGLONOTSAFE(___SET_NARGS(9),320,___G__23__23_fail_2d_check_2d_procedure)
 ___DEF_GLBL(___L1_continuation_2d_graft)
-   ___JUMPINT(___SET_NARGS(6),___PRC(936),___L__23__23_continuation_2d_graft_2d_aux)
+   ___JUMPINT(___SET_NARGS(6),___PRC(945),___L__23__23_continuation_2d_graft_2d_aux)
 ___DEF_GLBL(___L2_continuation_2d_graft)
    ___SET_STK(1,___STK(-2))
    ___SET_STK(-2,___FIX(1L))
@@ -21471,7 +21507,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_return_2d_aux
 #undef ___PH_LBL0
-#define ___PH_LBL0 945
+#define ___PH_LBL0 954
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21607,14 +21643,14 @@ ___DEF_GLBL(___L15__23__23_continuation_2d_return_2d_aux)
    ___ADJFP(-4)
    ___CHECK_HEAP(7,4096)
 ___DEF_SLBL(7,___L7__23__23_continuation_2d_return_2d_aux)
-   ___JUMPINT(___SET_NARGS(3),___PRC(924),___L__23__23_continuation_2d_unwind_2d_wind)
+   ___JUMPINT(___SET_NARGS(3),___PRC(933),___L__23__23_continuation_2d_unwind_2d_wind)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_return
 #undef ___PH_LBL0
-#define ___PH_LBL0 954
+#define ___PH_LBL0 963
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21637,14 +21673,14 @@ ___NUL))
    ___IF_NARGS_EQ(4,___PUSH(___R1) ___SET_R1(___R2) ___SET_R2(___R3) ___SET_R3(___NUL))
    ___GET_REST(0,1,3,0)
 ___DEF_GLBL(___L__23__23_continuation_2d_return)
-   ___JUMPINT(___SET_NARGS(5),___PRC(945),___L__23__23_continuation_2d_return_2d_aux)
+   ___JUMPINT(___SET_NARGS(5),___PRC(954),___L__23__23_continuation_2d_return_2d_aux)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_continuation_2d_return
 #undef ___PH_LBL0
-#define ___PH_LBL0 956
+#define ___PH_LBL0 965
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21682,14 +21718,14 @@ ___DEF_GLBL(___L_continuation_2d_return)
    ___ADJFP(3)
    ___SET_NARGS(8) ___JUMPINT(___NOTHING,___PRC(220),___L0__23__23_fail_2d_check_2d_continuation)
 ___DEF_GLBL(___L1_continuation_2d_return)
-   ___JUMPINT(___SET_NARGS(5),___PRC(945),___L__23__23_continuation_2d_return_2d_aux)
+   ___JUMPINT(___SET_NARGS(5),___PRC(954),___L__23__23_continuation_2d_return_2d_aux)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_apply
 #undef ___PH_LBL0
-#define ___PH_LBL0 958
+#define ___PH_LBL0 967
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21825,7 +21861,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tcp_2d_service_2d_serve
 #undef ___PH_LBL0
-#define ___PH_LBL0 963
+#define ___PH_LBL0 972
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21888,7 +21924,7 @@ ___DEF_SLBL(3,___L3__23__23_tcp_2d_service_2d_serve)
    ___ADJFP(2)
    ___CHECK_HEAP(4,4096)
 ___DEF_SLBL(4,___L4__23__23_tcp_2d_service_2d_serve)
-   ___JUMPINT(___SET_NARGS(5),___PRC(545),___L__23__23_make_2d_root_2d_thread)
+   ___JUMPINT(___SET_NARGS(5),___PRC(548),___L__23__23_make_2d_root_2d_thread)
 ___DEF_SLBL(5,___L5__23__23_tcp_2d_service_2d_serve)
    ___SET_R0(___LBL(1))
    ___JUMPINT(___SET_NARGS(1),___PRC(395),___L__23__23_thread_2d_start_21_)
@@ -21924,7 +21960,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tcp_2d_service_2d_update_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 974
+#define ___PH_LBL0 983
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -22012,7 +22048,7 @@ ___DEF_GLBL(___L8__23__23_tcp_2d_service_2d_update_21_)
    ___SET_R1(___GLO__23__23_tcp_2d_service_2d_mutex)
    ___SET_R0(___STK(-3))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(613),___L__23__23_mutex_2d_signal_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(616),___L__23__23_mutex_2d_signal_21_)
 ___DEF_GLBL(___L9__23__23_tcp_2d_service_2d_update_21_)
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
@@ -22030,7 +22066,7 @@ ___DEF_GLBL(___L10__23__23_tcp_2d_service_2d_update_21_)
 ___DEF_SLBL(5,___L5__23__23_tcp_2d_service_2d_update_21_)
    ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(521),___L__23__23_thread_2d_terminate_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(524),___L__23__23_thread_2d_terminate_21_)
 ___DEF_GLBL(___L11__23__23_tcp_2d_service_2d_update_21_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -22039,14 +22075,14 @@ ___DEF_GLBL(___L11__23__23_tcp_2d_service_2d_update_21_)
    ___SET_R1(___GLO__23__23_tcp_2d_service_2d_mutex)
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(603),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(606),___L__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tcp_2d_service_2d_register_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 981
+#define ___PH_LBL0 990
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -22086,7 +22122,7 @@ ___DEF_GLBL(___L__23__23_tcp_2d_service_2d_register_21_)
    ___END_SETUP_CLO(4)
    ___SET_STK(3,___STK(1))
    ___SET_STK(1,___STK(2))
-   ___SET_STK(2,___PRC(995))
+   ___SET_STK(2,___PRC(1004))
    ___SET_R3(___ABSENT)
    ___ADJFP(3)
    ___CHECK_HEAP(1,4096)
@@ -22109,7 +22145,7 @@ ___DEF_SLBL(2,___L2__23__23_tcp_2d_service_2d_register_21_)
    ___ADJFP(8)
    ___CHECK_HEAP(3,4096)
 ___DEF_SLBL(3,___L3__23__23_tcp_2d_service_2d_register_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(974),___L__23__23_tcp_2d_service_2d_update_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(983),___L__23__23_tcp_2d_service_2d_update_21_)
 ___DEF_SLBL(4,___L4__23__23_tcp_2d_service_2d_register_21_)
    ___SET_STK(-3,___STK(-7))
    ___SET_STK(-7,___TRU)
@@ -22121,7 +22157,7 @@ ___DEF_SLBL(4,___L4__23__23_tcp_2d_service_2d_register_21_)
    ___END_SETUP_CLO(3)
    ___SET_STK(-5,___STK(-2))
    ___SET_STK(-2,___STK(-4))
-   ___SET_STK(-4,___PRC(995))
+   ___SET_STK(-4,___PRC(1004))
    ___SET_STK(-1,___STK(-3))
    ___SET_STK(-3,___CLO(___STK(-2),1))
    ___SET_R2(___CLO(___STK(-2),2))
@@ -22153,7 +22189,7 @@ ___DEF_SLBL(6,___L6__23__23_tcp_2d_service_2d_register_21_)
    ___ADJFP(10)
    ___CHECK_HEAP(7,4096)
 ___DEF_SLBL(7,___L7__23__23_tcp_2d_service_2d_register_21_)
-   ___JUMPINT(___SET_NARGS(5),___PRC(545),___L__23__23_make_2d_root_2d_thread)
+   ___JUMPINT(___SET_NARGS(5),___PRC(548),___L__23__23_make_2d_root_2d_thread)
 ___DEF_SLBL(8,___L8__23__23_tcp_2d_service_2d_register_21_)
    ___SET_STK(-4,___R1)
    ___SET_R2(___CONS(___STK(-6),___R1))
@@ -22161,7 +22197,7 @@ ___DEF_SLBL(8,___L8__23__23_tcp_2d_service_2d_register_21_)
    ___SET_R0(___LBL(10))
    ___CHECK_HEAP(9,4096)
 ___DEF_SLBL(9,___L9__23__23_tcp_2d_service_2d_register_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(974),___L__23__23_tcp_2d_service_2d_update_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(983),___L__23__23_tcp_2d_service_2d_update_21_)
 ___DEF_SLBL(10,___L10__23__23_tcp_2d_service_2d_register_21_)
    ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(11))
@@ -22177,14 +22213,14 @@ ___DEF_SLBL(12,___L12__23__23_tcp_2d_service_2d_register_21_)
    ___SET_R3(___CLO(___R4,2))
    ___SET_R2(___CLO(___R4,3))
    ___SET_R1(___CLO(___R4,1))
-   ___JUMPINT(___SET_NARGS(3),___PRC(963),___L__23__23_tcp_2d_service_2d_serve)
+   ___JUMPINT(___SET_NARGS(3),___PRC(972),___L__23__23_tcp_2d_service_2d_serve)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_tcp_2d_service_2d_register_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 995
+#define ___PH_LBL0 1004
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -22232,7 +22268,7 @@ ___DEF_GLBL(___L3_tcp_2d_service_2d_register_21_)
    ___SET_R2(___STK(2))
    ___SET_R1(___STK(3))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(981),___L__23__23_tcp_2d_service_2d_register_21_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(990),___L__23__23_tcp_2d_service_2d_register_21_)
 ___DEF_GLBL(___L4_tcp_2d_service_2d_register_21_)
    ___SET_STK(1,___FIX(2L))
    ___SET_STK(2,___LBL(0))
@@ -22244,7 +22280,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_tcp_2d_service_2d_unregister_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 997
+#define ___PH_LBL0 1006
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -22266,7 +22302,7 @@ ___DEF_SLBL(0,___L0__23__23_tcp_2d_service_2d_unregister_21_)
 ___DEF_GLBL(___L__23__23_tcp_2d_service_2d_unregister_21_)
    ___SET_STK(1,___TRU)
    ___SET_STK(2,___LBL(1))
-   ___SET_STK(3,___PRC(1002))
+   ___SET_STK(3,___PRC(1011))
    ___SET_STK(4,___R1)
    ___SET_R3(___ABSENT)
    ___SET_R2(___ABSENT)
@@ -22286,7 +22322,7 @@ ___DEF_SLBL(1,___L1__23__23_tcp_2d_service_2d_unregister_21_)
    ___ADJFP(4)
    ___CHECK_HEAP(2,4096)
 ___DEF_SLBL(2,___L2__23__23_tcp_2d_service_2d_unregister_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(974),___L__23__23_tcp_2d_service_2d_update_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(983),___L__23__23_tcp_2d_service_2d_update_21_)
 ___DEF_SLBL(3,___L3__23__23_tcp_2d_service_2d_unregister_21_)
    ___SET_R1(___VOID)
    ___ADJFP(-4)
@@ -22297,7 +22333,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_tcp_2d_service_2d_unregister_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1002
+#define ___PH_LBL0 1011
 #undef ___PD_ALL
 #define ___PD_ALL
 #undef ___PR_ALL
@@ -22314,14 +22350,14 @@ ___DEF_SLBL(0,___L0_tcp_2d_service_2d_unregister_21_)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_tcp_2d_service_2d_unregister_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(997),___L__23__23_tcp_2d_service_2d_unregister_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(1006),___L__23__23_tcp_2d_service_2d_unregister_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_defer_2d_user_2d_interrupts
 #undef ___PH_LBL0
-#define ___PH_LBL0 1004
+#define ___PH_LBL0 1013
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -22347,7 +22383,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_user_2d_interrupt_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1006
+#define ___PH_LBL0 1015
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) ___D_F64(___F64V3) \
  ___D_F64(___F64V4)
@@ -22936,10 +22972,11 @@ ___REF_FAL,2,0)
 ,___DEF_LBL_RET(___H__23__23_thread_2d_schedule_21_,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H__23__23_thread_2d_schedule_21_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_INTRO(___H__23__23_thread_2d_report_2d_scheduler_2d_error_21_,"##thread-report-scheduler-error!",
-___REF_FAL,5,0)
+___REF_FAL,6,0)
 ,___DEF_LBL_PROC(___H__23__23_thread_2d_report_2d_scheduler_2d_error_21_,1,0)
 ,___DEF_LBL_RET(___H__23__23_thread_2d_report_2d_scheduler_2d_error_21_,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_PROC(___H__23__23_thread_2d_report_2d_scheduler_2d_error_21_,0,1)
+,___DEF_LBL_RET(___H__23__23_thread_2d_report_2d_scheduler_2d_error_21_,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_thread_2d_report_2d_scheduler_2d_error_21_,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_thread_2d_report_2d_scheduler_2d_error_21_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_INTRO(___H__23__23_thread_2d_interrupt_21_,"##thread-interrupt!",___REF_FAL,4,0)
@@ -22976,8 +23013,9 @@ ___REF_FAL,5,0)
 ,___DEF_LBL_INTRO(___H__23__23_thread_2d_void_2d_action_21_,"##thread-void-action!",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_thread_2d_void_2d_action_21_,0,0)
 ,___DEF_LBL_INTRO(___H__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_,"##thread-abandoned-mutex-action!",
-___REF_FAL,1,0)
+___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_,0,0)
+,___DEF_LBL_RET(___H__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_INTRO(___H__23__23_thread_2d_locked_2d_mutex_2d_action_21_,"##thread-locked-mutex-action!",___REF_FAL,
 1,0)
 ,___DEF_LBL_PROC(___H__23__23_thread_2d_locked_2d_mutex_2d_action_21_,0,0)
@@ -22987,9 +23025,10 @@ ___REF_FAL,1,0)
 ,___DEF_LBL_INTRO(___H__23__23_thread_2d_timeout_2d_action_21_,"##thread-timeout-action!",___REF_FAL,1,0)
 
 ,___DEF_LBL_PROC(___H__23__23_thread_2d_timeout_2d_action_21_,0,0)
-,___DEF_LBL_INTRO(___H__23__23_thread_2d_deadlock_2d_action_21_,"##thread-deadlock-action!",___REF_FAL,2,
+,___DEF_LBL_INTRO(___H__23__23_thread_2d_deadlock_2d_action_21_,"##thread-deadlock-action!",___REF_FAL,3,
 0)
 ,___DEF_LBL_PROC(___H__23__23_thread_2d_deadlock_2d_action_21_,0,0)
+,___DEF_LBL_RET(___H__23__23_thread_2d_deadlock_2d_action_21_,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_thread_2d_deadlock_2d_action_21_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_INTRO(___H__23__23_thread_2d_suspend_21_,"##thread-suspend!",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_thread_2d_suspend_21_,1,0)
@@ -23352,18 +23391,24 @@ ___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_with_2d_exception_2d_catcher,1,2)
 ,___DEF_LBL_INTRO(___H_with_2d_exception_2d_catcher,"with-exception-catcher",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H_with_2d_exception_2d_catcher,2,0)
-,___DEF_LBL_INTRO(___H__23__23_raise,"##raise",___REF_FAL,1,0)
+,___DEF_LBL_INTRO(___H__23__23_raise,"##raise",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H__23__23_raise,1,0)
-,___DEF_LBL_INTRO(___H_raise,"raise",___REF_FAL,1,0)
+,___DEF_LBL_RET(___H__23__23_raise,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_INTRO(___H_raise,"raise",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H_raise,1,0)
-,___DEF_LBL_INTRO(___H__23__23_abort,"##abort",___REF_FAL,3,0)
+,___DEF_LBL_RET(___H_raise,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_INTRO(___H__23__23_abort,"##abort",___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H__23__23_abort,1,0)
 ,___DEF_LBL_RET(___H__23__23_abort,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H__23__23_abort,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H_abort,"abort",___REF_FAL,3,0)
+,___DEF_LBL_RET(___H__23__23_abort,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H__23__23_abort,___IFD(___RETI,8,0,0x3f03L))
+,___DEF_LBL_INTRO(___H_abort,"abort",___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H_abort,1,0)
+,___DEF_LBL_RET(___H_abort,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H_abort,___IFD(___RETN,5,0,0x3L))
-,___DEF_LBL_RET(___H_abort,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H_abort,___IFD(___RETI,8,8,0x3f00L))
+,___DEF_LBL_RET(___H_abort,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_INTRO(___H__23__23_call_2d_with_2d_current_2d_continuation,"##call-with-current-continuation",
 ___REF_FAL,16,0)
 ,___DEF_LBL_PROC(___H__23__23_call_2d_with_2d_current_2d_continuation,5,0)
@@ -23658,149 +23703,149 @@ ___DEF_PRM(139,___G__23__23_thread_2d_reschedule_21_,451)
 ___DEF_PRM(146,___G__23__23_thread_2d_sleep_21_,455)
 ___DEF_PRM(143,___G__23__23_thread_2d_schedule_21_,464)
 ___DEF_PRM(138,___G__23__23_thread_2d_report_2d_scheduler_2d_error_21_,469)
-___DEF_PRM(128,___G__23__23_thread_2d_interrupt_21_,475)
-___DEF_PRM(127,___G__23__23_thread_2d_int_21_,480)
-___DEF_PRM(119,___G__23__23_thread_2d_continuation_2d_capture,484)
-___DEF_PRM(115,___G__23__23_thread_2d_call,488)
-___DEF_PRM(148,___G__23__23_thread_2d_start_2d_action_21_,498)
-___DEF_PRM(117,___G__23__23_thread_2d_check_2d_interrupts_21_,501)
-___DEF_PRM(155,___G__23__23_thread_2d_void_2d_action_21_,504)
-___DEF_PRM(110,___G__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_,506)
-___DEF_PRM(130,___G__23__23_thread_2d_locked_2d_mutex_2d_action_21_,508)
-___DEF_PRM(145,___G__23__23_thread_2d_signaled_2d_condvar_2d_action_21_,510)
-___DEF_PRM(153,___G__23__23_thread_2d_timeout_2d_action_21_,512)
-___DEF_PRM(120,___G__23__23_thread_2d_deadlock_2d_action_21_,514)
-___DEF_PRM(151,___G__23__23_thread_2d_suspend_21_,517)
-___DEF_PRM(141,___G__23__23_thread_2d_resume_21_,519)
-___DEF_PRM(152,___G__23__23_thread_2d_terminate_21_,521)
-___DEF_PRM(124,___G__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_,523)
-___DEF_PRM(82,___G__23__23_primordial_2d_exception_2d_handler,525)
-___DEF_PRM(123,___G__23__23_thread_2d_end_21_,527)
-___DEF_PRM(129,___G__23__23_thread_2d_join_21_,534)
-___DEF_PRM(72,___G__23__23_make_2d_root_2d_thread,545)
-___DEF_PRM(208,___G_make_2d_root_2d_thread,548)
-___DEF_PRM(149,___G__23__23_thread_2d_startup_21_,552)
-___DEF_PRM(126,___G__23__23_thread_2d_heartbeat_2d_interval_2d_set_21_,560)
-___DEF_PRM(132,___G__23__23_thread_2d_mailbox_2d_get_21_,563)
-___DEF_PRM(134,___G__23__23_thread_2d_mailbox_2d_rewind,566)
-___DEF_PRM(265,___G_thread_2d_mailbox_2d_rewind,569)
-___DEF_PRM(131,___G__23__23_thread_2d_mailbox_2d_extract_2d_and_2d_rewind,571)
-___DEF_PRM(263,___G_thread_2d_mailbox_2d_extract_2d_and_2d_rewind,574)
-___DEF_PRM(133,___G__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive,576)
-___DEF_PRM(264,___G_thread_2d_mailbox_2d_next,584)
-___DEF_PRM(271,___G_thread_2d_receive,587)
-___DEF_PRM(144,___G__23__23_thread_2d_send,590)
-___DEF_PRM(273,___G_thread_2d_send,597)
-___DEF_PRM(70,___G__23__23_make_2d_mutex,600)
-___DEF_PRM(75,___G__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_,603)
-___DEF_PRM(76,___G__23__23_mutex_2d_signal_21_,613)
-___DEF_PRM(78,___G__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_,616)
-___DEF_PRM(77,___G__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_,621)
-___DEF_PRM(163,___G__23__23_wait_2d_for_2d_io_21_,633)
-___DEF_PRM(32,___G__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedule_21_,643)
-___DEF_PRM(69,___G__23__23_make_2d_condvar,645)
-___DEF_PRM(9,___G__23__23_condvar_2d_signal_21_,648)
-___DEF_PRM(10,___G__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_,651)
-___DEF_PRM(73,___G__23__23_make_2d_tgroup,656)
-___DEF_PRM(108,___G__23__23_tgroup_2d_suspend_21_,659)
-___DEF_PRM(107,___G__23__23_tgroup_2d_resume_21_,661)
-___DEF_PRM(109,___G__23__23_tgroup_2d_terminate_21_,663)
-___DEF_PRM(104,___G__23__23_tgroup_2d__3e_tgroup_2d_vector,665)
-___DEF_PRM(103,___G__23__23_tgroup_2d__3e_tgroup_2d_list,668)
-___DEF_PRM(106,___G__23__23_tgroup_2d__3e_thread_2d_vector,671)
-___DEF_PRM(105,___G__23__23_tgroup_2d__3e_thread_2d_list,674)
-___DEF_PRM(28,___G__23__23_current_2d_time_2d_point,677)
-___DEF_PRM(188,___G_current_2d_time,681)
-___DEF_PRM(294,___G_time_3f_,685)
-___DEF_PRM(293,___G_time_2d__3e_seconds,687)
-___DEF_PRM(239,___G_seconds_2d__3e_time,689)
-___DEF_PRM(295,___G_timeout_2d__3e_time,694)
-___DEF_PRM(187,___G_current_2d_thread,696)
-___DEF_PRM(292,___G_thread_3f_,698)
-___DEF_PRM(209,___G_make_2d_thread,700)
-___DEF_PRM(260,___G_thread_2d_init_21_,703)
-___DEF_PRM(266,___G_thread_2d_name,707)
-___DEF_PRM(290,___G_thread_2d_thread_2d_group,710)
-___DEF_PRM(275,___G_thread_2d_specific,713)
-___DEF_PRM(276,___G_thread_2d_specific_2d_set_21_,716)
-___DEF_PRM(248,___G_thread_2d_base_2d_priority,719)
-___DEF_PRM(249,___G_thread_2d_base_2d_priority_2d_set_21_,723)
-___DEF_PRM(269,___G_thread_2d_quantum,728)
-___DEF_PRM(270,___G_thread_2d_quantum_2d_set_21_,732)
-___DEF_PRM(267,___G_thread_2d_priority_2d_boost,737)
-___DEF_PRM(268,___G_thread_2d_priority_2d_boost_2d_set_21_,741)
-___DEF_PRM(277,___G_thread_2d_start_21_,746)
-___DEF_PRM(291,___G_thread_2d_yield_21_,749)
-___DEF_PRM(274,___G_thread_2d_sleep_21_,751)
-___DEF_PRM(288,___G_thread_2d_suspend_21_,754)
-___DEF_PRM(272,___G_thread_2d_resume_21_,757)
-___DEF_PRM(289,___G_thread_2d_terminate_21_,760)
-___DEF_PRM(262,___G_thread_2d_join_21_,763)
-___DEF_PRM(261,___G_thread_2d_interrupt_21_,767)
-___DEF_PRM(278,___G_thread_2d_state,770)
-___DEF_PRM(150,___G__23__23_thread_2d_state,773)
-___DEF_PRM(217,___G_mutex_3f_,781)
-___DEF_PRM(206,___G_make_2d_mutex,783)
-___DEF_PRM(212,___G_mutex_2d_name,786)
-___DEF_PRM(213,___G_mutex_2d_specific,788)
-___DEF_PRM(214,___G_mutex_2d_specific_2d_set_21_,790)
-___DEF_PRM(215,___G_mutex_2d_state,792)
-___DEF_PRM(211,___G_mutex_2d_lock_21_,794)
-___DEF_PRM(216,___G_mutex_2d_unlock_21_,799)
-___DEF_PRM(176,___G_condition_2d_variable_3f_,803)
-___DEF_PRM(205,___G_make_2d_condition_2d_variable,805)
-___DEF_PRM(172,___G_condition_2d_variable_2d_name,808)
-___DEF_PRM(174,___G_condition_2d_variable_2d_specific,810)
-___DEF_PRM(175,___G_condition_2d_variable_2d_specific_2d_set_21_,812)
-___DEF_PRM(173,___G_condition_2d_variable_2d_signal_21_,814)
-___DEF_PRM(171,___G_condition_2d_variable_2d_broadcast_21_,816)
-___DEF_PRM(259,___G_thread_2d_group_3f_,818)
-___DEF_PRM(210,___G_make_2d_thread_2d_group,820)
-___DEF_PRM(254,___G_thread_2d_group_2d_name,822)
-___DEF_PRM(255,___G_thread_2d_group_2d_parent,824)
-___DEF_PRM(257,___G_thread_2d_group_2d_suspend_21_,826)
-___DEF_PRM(256,___G_thread_2d_group_2d_resume_21_,828)
-___DEF_PRM(258,___G_thread_2d_group_2d_terminate_21_,830)
-___DEF_PRM(251,___G_thread_2d_group_2d__3e_thread_2d_group_2d_vector,832)
-___DEF_PRM(250,___G_thread_2d_group_2d__3e_thread_2d_group_2d_list,834)
-___DEF_PRM(253,___G_thread_2d_group_2d__3e_thread_2d_vector,836)
-___DEF_PRM(252,___G_thread_2d_group_2d__3e_thread_2d_list,838)
-___DEF_PRM(305,___G_with_2d_exception_2d_handler,840)
-___DEF_PRM(164,___G__23__23_with_2d_exception_2d_catcher,843)
-___DEF_PRM(304,___G_with_2d_exception_2d_catcher,848)
-___DEF_PRM(85,___G__23__23_raise,850)
-___DEF_PRM(232,___G_raise,852)
-___DEF_PRM(1,___G__23__23_abort,854)
-___DEF_PRM(166,___G_abort,858)
-___DEF_PRM(7,___G__23__23_call_2d_with_2d_current_2d_continuation,862)
-___DEF_PRM(168,___G_call_2d_with_2d_current_2d_continuation,879)
-___DEF_PRM(162,___G__23__23_values,882)
-___DEF_PRM(303,___G_values,889)
-___DEF_PRM(8,___G__23__23_call_2d_with_2d_values,896)
-___DEF_PRM(169,___G_call_2d_with_2d_values,900)
-___DEF_PRM(37,___G__23__23_dynamic_2d_wind,902)
-___DEF_PRM(192,___G_dynamic_2d_wind,909)
-___DEF_PRM(84,___G__23__23_procedure_2d__3e_continuation,911)
-___DEF_PRM(180,___G_continuation_3f_,913)
-___DEF_PRM(12,___G__23__23_continuation_2d_capture_2d_aux,915)
-___DEF_PRM(11,___G__23__23_continuation_2d_capture,920)
-___DEF_PRM(177,___G_continuation_2d_capture,922)
-___DEF_PRM(19,___G__23__23_continuation_2d_unwind_2d_wind,924)
-___DEF_PRM(14,___G__23__23_continuation_2d_graft_2d_aux,936)
-___DEF_PRM(13,___G__23__23_continuation_2d_graft,941)
-___DEF_PRM(178,___G_continuation_2d_graft,943)
-___DEF_PRM(17,___G__23__23_continuation_2d_return_2d_aux,945)
-___DEF_PRM(16,___G__23__23_continuation_2d_return,954)
-___DEF_PRM(179,___G_continuation_2d_return,956)
-___DEF_PRM(167,___G_apply,958)
-___DEF_PRM(98,___G__23__23_tcp_2d_service_2d_serve,963)
-___DEF_PRM(102,___G__23__23_tcp_2d_service_2d_update_21_,974)
-___DEF_PRM(97,___G__23__23_tcp_2d_service_2d_register_21_,981)
-___DEF_PRM(243,___G_tcp_2d_service_2d_register_21_,995)
-___DEF_PRM(101,___G__23__23_tcp_2d_service_2d_unregister_21_,997)
-___DEF_PRM(244,___G_tcp_2d_service_2d_unregister_21_,1002)
-___DEF_PRM(30,___G__23__23_defer_2d_user_2d_interrupts,1004)
-___DEF_PRM(161,___G__23__23_user_2d_interrupt_21_,1006)
+___DEF_PRM(128,___G__23__23_thread_2d_interrupt_21_,476)
+___DEF_PRM(127,___G__23__23_thread_2d_int_21_,481)
+___DEF_PRM(119,___G__23__23_thread_2d_continuation_2d_capture,485)
+___DEF_PRM(115,___G__23__23_thread_2d_call,489)
+___DEF_PRM(148,___G__23__23_thread_2d_start_2d_action_21_,499)
+___DEF_PRM(117,___G__23__23_thread_2d_check_2d_interrupts_21_,502)
+___DEF_PRM(155,___G__23__23_thread_2d_void_2d_action_21_,505)
+___DEF_PRM(110,___G__23__23_thread_2d_abandoned_2d_mutex_2d_action_21_,507)
+___DEF_PRM(130,___G__23__23_thread_2d_locked_2d_mutex_2d_action_21_,510)
+___DEF_PRM(145,___G__23__23_thread_2d_signaled_2d_condvar_2d_action_21_,512)
+___DEF_PRM(153,___G__23__23_thread_2d_timeout_2d_action_21_,514)
+___DEF_PRM(120,___G__23__23_thread_2d_deadlock_2d_action_21_,516)
+___DEF_PRM(151,___G__23__23_thread_2d_suspend_21_,520)
+___DEF_PRM(141,___G__23__23_thread_2d_resume_21_,522)
+___DEF_PRM(152,___G__23__23_thread_2d_terminate_21_,524)
+___DEF_PRM(124,___G__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_,526)
+___DEF_PRM(82,___G__23__23_primordial_2d_exception_2d_handler,528)
+___DEF_PRM(123,___G__23__23_thread_2d_end_21_,530)
+___DEF_PRM(129,___G__23__23_thread_2d_join_21_,537)
+___DEF_PRM(72,___G__23__23_make_2d_root_2d_thread,548)
+___DEF_PRM(208,___G_make_2d_root_2d_thread,551)
+___DEF_PRM(149,___G__23__23_thread_2d_startup_21_,555)
+___DEF_PRM(126,___G__23__23_thread_2d_heartbeat_2d_interval_2d_set_21_,563)
+___DEF_PRM(132,___G__23__23_thread_2d_mailbox_2d_get_21_,566)
+___DEF_PRM(134,___G__23__23_thread_2d_mailbox_2d_rewind,569)
+___DEF_PRM(265,___G_thread_2d_mailbox_2d_rewind,572)
+___DEF_PRM(131,___G__23__23_thread_2d_mailbox_2d_extract_2d_and_2d_rewind,574)
+___DEF_PRM(263,___G_thread_2d_mailbox_2d_extract_2d_and_2d_rewind,577)
+___DEF_PRM(133,___G__23__23_thread_2d_mailbox_2d_next_2d_or_2d_receive,579)
+___DEF_PRM(264,___G_thread_2d_mailbox_2d_next,587)
+___DEF_PRM(271,___G_thread_2d_receive,590)
+___DEF_PRM(144,___G__23__23_thread_2d_send,593)
+___DEF_PRM(273,___G_thread_2d_send,600)
+___DEF_PRM(70,___G__23__23_make_2d_mutex,603)
+___DEF_PRM(75,___G__23__23_mutex_2d_lock_2d_out_2d_of_2d_line_21_,606)
+___DEF_PRM(76,___G__23__23_mutex_2d_signal_21_,616)
+___DEF_PRM(78,___G__23__23_mutex_2d_signal_2d_no_2d_reschedule_21_,619)
+___DEF_PRM(77,___G__23__23_mutex_2d_signal_2d_and_2d_condvar_2d_wait_21_,624)
+___DEF_PRM(163,___G__23__23_wait_2d_for_2d_io_21_,636)
+___DEF_PRM(32,___G__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedule_21_,646)
+___DEF_PRM(69,___G__23__23_make_2d_condvar,648)
+___DEF_PRM(9,___G__23__23_condvar_2d_signal_21_,651)
+___DEF_PRM(10,___G__23__23_condvar_2d_signal_2d_no_2d_reschedule_21_,654)
+___DEF_PRM(73,___G__23__23_make_2d_tgroup,659)
+___DEF_PRM(108,___G__23__23_tgroup_2d_suspend_21_,662)
+___DEF_PRM(107,___G__23__23_tgroup_2d_resume_21_,664)
+___DEF_PRM(109,___G__23__23_tgroup_2d_terminate_21_,666)
+___DEF_PRM(104,___G__23__23_tgroup_2d__3e_tgroup_2d_vector,668)
+___DEF_PRM(103,___G__23__23_tgroup_2d__3e_tgroup_2d_list,671)
+___DEF_PRM(106,___G__23__23_tgroup_2d__3e_thread_2d_vector,674)
+___DEF_PRM(105,___G__23__23_tgroup_2d__3e_thread_2d_list,677)
+___DEF_PRM(28,___G__23__23_current_2d_time_2d_point,680)
+___DEF_PRM(188,___G_current_2d_time,684)
+___DEF_PRM(294,___G_time_3f_,688)
+___DEF_PRM(293,___G_time_2d__3e_seconds,690)
+___DEF_PRM(239,___G_seconds_2d__3e_time,692)
+___DEF_PRM(295,___G_timeout_2d__3e_time,697)
+___DEF_PRM(187,___G_current_2d_thread,699)
+___DEF_PRM(292,___G_thread_3f_,701)
+___DEF_PRM(209,___G_make_2d_thread,703)
+___DEF_PRM(260,___G_thread_2d_init_21_,706)
+___DEF_PRM(266,___G_thread_2d_name,710)
+___DEF_PRM(290,___G_thread_2d_thread_2d_group,713)
+___DEF_PRM(275,___G_thread_2d_specific,716)
+___DEF_PRM(276,___G_thread_2d_specific_2d_set_21_,719)
+___DEF_PRM(248,___G_thread_2d_base_2d_priority,722)
+___DEF_PRM(249,___G_thread_2d_base_2d_priority_2d_set_21_,726)
+___DEF_PRM(269,___G_thread_2d_quantum,731)
+___DEF_PRM(270,___G_thread_2d_quantum_2d_set_21_,735)
+___DEF_PRM(267,___G_thread_2d_priority_2d_boost,740)
+___DEF_PRM(268,___G_thread_2d_priority_2d_boost_2d_set_21_,744)
+___DEF_PRM(277,___G_thread_2d_start_21_,749)
+___DEF_PRM(291,___G_thread_2d_yield_21_,752)
+___DEF_PRM(274,___G_thread_2d_sleep_21_,754)
+___DEF_PRM(288,___G_thread_2d_suspend_21_,757)
+___DEF_PRM(272,___G_thread_2d_resume_21_,760)
+___DEF_PRM(289,___G_thread_2d_terminate_21_,763)
+___DEF_PRM(262,___G_thread_2d_join_21_,766)
+___DEF_PRM(261,___G_thread_2d_interrupt_21_,770)
+___DEF_PRM(278,___G_thread_2d_state,773)
+___DEF_PRM(150,___G__23__23_thread_2d_state,776)
+___DEF_PRM(217,___G_mutex_3f_,784)
+___DEF_PRM(206,___G_make_2d_mutex,786)
+___DEF_PRM(212,___G_mutex_2d_name,789)
+___DEF_PRM(213,___G_mutex_2d_specific,791)
+___DEF_PRM(214,___G_mutex_2d_specific_2d_set_21_,793)
+___DEF_PRM(215,___G_mutex_2d_state,795)
+___DEF_PRM(211,___G_mutex_2d_lock_21_,797)
+___DEF_PRM(216,___G_mutex_2d_unlock_21_,802)
+___DEF_PRM(176,___G_condition_2d_variable_3f_,806)
+___DEF_PRM(205,___G_make_2d_condition_2d_variable,808)
+___DEF_PRM(172,___G_condition_2d_variable_2d_name,811)
+___DEF_PRM(174,___G_condition_2d_variable_2d_specific,813)
+___DEF_PRM(175,___G_condition_2d_variable_2d_specific_2d_set_21_,815)
+___DEF_PRM(173,___G_condition_2d_variable_2d_signal_21_,817)
+___DEF_PRM(171,___G_condition_2d_variable_2d_broadcast_21_,819)
+___DEF_PRM(259,___G_thread_2d_group_3f_,821)
+___DEF_PRM(210,___G_make_2d_thread_2d_group,823)
+___DEF_PRM(254,___G_thread_2d_group_2d_name,825)
+___DEF_PRM(255,___G_thread_2d_group_2d_parent,827)
+___DEF_PRM(257,___G_thread_2d_group_2d_suspend_21_,829)
+___DEF_PRM(256,___G_thread_2d_group_2d_resume_21_,831)
+___DEF_PRM(258,___G_thread_2d_group_2d_terminate_21_,833)
+___DEF_PRM(251,___G_thread_2d_group_2d__3e_thread_2d_group_2d_vector,835)
+___DEF_PRM(250,___G_thread_2d_group_2d__3e_thread_2d_group_2d_list,837)
+___DEF_PRM(253,___G_thread_2d_group_2d__3e_thread_2d_vector,839)
+___DEF_PRM(252,___G_thread_2d_group_2d__3e_thread_2d_list,841)
+___DEF_PRM(305,___G_with_2d_exception_2d_handler,843)
+___DEF_PRM(164,___G__23__23_with_2d_exception_2d_catcher,846)
+___DEF_PRM(304,___G_with_2d_exception_2d_catcher,851)
+___DEF_PRM(85,___G__23__23_raise,853)
+___DEF_PRM(232,___G_raise,856)
+___DEF_PRM(1,___G__23__23_abort,859)
+___DEF_PRM(166,___G_abort,865)
+___DEF_PRM(7,___G__23__23_call_2d_with_2d_current_2d_continuation,871)
+___DEF_PRM(168,___G_call_2d_with_2d_current_2d_continuation,888)
+___DEF_PRM(162,___G__23__23_values,891)
+___DEF_PRM(303,___G_values,898)
+___DEF_PRM(8,___G__23__23_call_2d_with_2d_values,905)
+___DEF_PRM(169,___G_call_2d_with_2d_values,909)
+___DEF_PRM(37,___G__23__23_dynamic_2d_wind,911)
+___DEF_PRM(192,___G_dynamic_2d_wind,918)
+___DEF_PRM(84,___G__23__23_procedure_2d__3e_continuation,920)
+___DEF_PRM(180,___G_continuation_3f_,922)
+___DEF_PRM(12,___G__23__23_continuation_2d_capture_2d_aux,924)
+___DEF_PRM(11,___G__23__23_continuation_2d_capture,929)
+___DEF_PRM(177,___G_continuation_2d_capture,931)
+___DEF_PRM(19,___G__23__23_continuation_2d_unwind_2d_wind,933)
+___DEF_PRM(14,___G__23__23_continuation_2d_graft_2d_aux,945)
+___DEF_PRM(13,___G__23__23_continuation_2d_graft,950)
+___DEF_PRM(178,___G_continuation_2d_graft,952)
+___DEF_PRM(17,___G__23__23_continuation_2d_return_2d_aux,954)
+___DEF_PRM(16,___G__23__23_continuation_2d_return,963)
+___DEF_PRM(179,___G_continuation_2d_return,965)
+___DEF_PRM(167,___G_apply,967)
+___DEF_PRM(98,___G__23__23_tcp_2d_service_2d_serve,972)
+___DEF_PRM(102,___G__23__23_tcp_2d_service_2d_update_21_,983)
+___DEF_PRM(97,___G__23__23_tcp_2d_service_2d_register_21_,990)
+___DEF_PRM(243,___G_tcp_2d_service_2d_register_21_,1004)
+___DEF_PRM(101,___G__23__23_tcp_2d_service_2d_unregister_21_,1006)
+___DEF_PRM(244,___G_tcp_2d_service_2d_unregister_21_,1011)
+___DEF_PRM(30,___G__23__23_defer_2d_user_2d_interrupts,1013)
+___DEF_PRM(161,___G__23__23_user_2d_interrupt_21_,1015)
 ___END_MOD1
 
 ___BEGIN_MOD2

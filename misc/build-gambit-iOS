@@ -13,7 +13,7 @@ prefix_subdir="current"
 # The following two settings are only relevant when this script is used
 # outside of the Gambit distribution tree.  In this case the Gambit
 # distribution must be downloaded.
-gambit_dist_if_downloaded="gambc-v4_6_7-devel"
+gambit_dist_if_downloaded="gambc-v4_6_8-devel"
 update_with_latest_changes_if_downloaded="yes"
 
 select_macosx()
