@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -15,26 +15,44 @@ export DOS_INSTALL_PREFIX="`echo \"$INSTALL_PREFIX\" | sed -e \"s|^/c|C:|g\"`"
 
 cd "`dirname $0`"
 
-for VARIANT in mingw visualc; do
+PATHMINGW32="/c/mingw32/bin:$PATH"
+PATHMINGW64="/c/mingw64/bin:$PATH"
+PATHVC="$PATH"
+
+for VARIANT in mingw32 mingw64 visualc32 visualc64; do
 
   cd "$rootfromhere"
 
   case "$VARIANT" in
-      mingw) CONFIG_CC="gcc -mno-cygwin"
+    mingw32) CONFIG_CC="gcc -m32 -static-libgcc"
              RUN_TESTS=0
+             VCARCH=""
+             export PATH="$PATHMINGW32"
              ;;
-    visualc) CONFIG_CC="cl.exe"
+    mingw64) CONFIG_CC="gcc -m64 -static-libgcc"
              RUN_TESTS=0
+             VCARCH=""
+             export PATH="$PATHMINGW64"
+             ;;
+  visualc32) CONFIG_CC="cl.exe"
+             RUN_TESTS=0
+             VCARCH="x86"
+             export PATH="$PATHVC"
+             ;;
+  visualc64) CONFIG_CC="cl.exe"
+             RUN_TESTS=0
+             VCARCH="x86_amd64"
+             export PATH="$PATHVC"
              ;;
   esac
 
-  cmd /c "C:\PROGRA~1\MICROS~1.0\VC\VCVARS~1.BAT && c:/MinGW/msys/1.0/bin/sh -c \"./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-multiple-versions --enable-symlinks --enable-single-host CC=\\\"$CONFIG_CC\\\"\""
+  cmd /c "C:\PROGRA~2\MICROS~1.0\VC\VCVARS~1.BAT $VCARCH && c:/msys/bin/sh -c \"./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-multiple-versions --enable-symlinks --enable-single-host CC=\\\"$CONFIG_CC\\\"\""
 
   cd "$herefromroot"
 
   chmod +x build-phase2
 
-  cmd /c "C:\PROGRA~1\MICROS~1.0\VC\VCVARS~1.BAT && c:/MinGW/msys/1.0/bin/sh -c \"./build-phase2 \\\"$VARIANT\\\" \\\"$RUN_TESTS\\\"\"" > build-phase2.out
+  cmd /c "C:\PROGRA~2\MICROS~1.0\VC\VCVARS~1.BAT $VCARCH && c:/msys/bin/sh -c \"./build-phase2 \\\"$VARIANT\\\" \\\"$RUN_TESTS\\\"\"" > build-phase2.out
 
   cat build-phase2.out
 

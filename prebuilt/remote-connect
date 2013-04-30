@@ -1,4 +1,4 @@
-#! /usr/bin/env gsi
+#! /usr/bin/env gsi -:d-
 
 ;; Copyright (c) 2011-2013 by Marc Feeley, All Rights Reserved.
 
@@ -76,7 +76,7 @@
 (define host-aliases
   '(("macosx"    "localhost") ;; override VirtualBox VM which has 32 bit OS
     ("macosx"    "Snow-Leopard-x86-VM1")
-    ("windows"   "Windows-7-Ultimate-x86-VM1")
+    ("windows"   "Windows-7-Ultimate-x64-VM1")
     ("farm"      "frontal.iro.umontreal.ca" "gambit" "?" 22)
     ("localhost" "localhost")
    ))
@@ -94,6 +94,10 @@
     ("Windows-7-Ultimate-x86-VM2" "Admin"         "pass999word" 2222)
     ("Windows-7-Ultimate-x86-VM3" "Admin"         "pass999word" 2223)
     ("Windows-7-Ultimate-x86-VM4" "Admin"         "pass999word" 2224)
+    ("Windows-7-Ultimate-x64-VM1" "Admin"         "pass999word" 2231)
+    ("Windows-7-Ultimate-x64-VM2" "Admin"         "pass999word" 2232)
+    ("Windows-7-Ultimate-x64-VM3" "Admin"         "pass999word" 2233)
+    ("Windows-7-Ultimate-x64-VM4" "Admin"         "pass999word" 2234)
    ))
 
 (define (ssh-options scp?)
@@ -161,8 +165,8 @@
           (list path: "ssh"
                 arguments: (append (ssh-options #f)
                                    (list (string-append username "@" hostname)
-                                         (string-append "echo " start-marker
-                                                        ";" command)))
+                                         (string-append "sh -c 'echo " start-marker
+                                                        ";" command "'")))
                 output-eol-encoding: 'cr
                 pseudo-terminal: #t))))
 
