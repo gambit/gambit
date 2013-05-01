@@ -5199,7 +5199,7 @@ fi
 
 
 if test "$ENABLE_POLL" = yes; then
-  $as_echo "#define USE_POLL 1" >>confdefs.h
+  $as_echo "#define USE_POLL_FOR_SELECT 1" >>confdefs.h
 
 fi
 

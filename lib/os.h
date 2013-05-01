@@ -532,6 +532,10 @@
 
 /* Determine which select interface should be used.  */
 
+#ifndef USE_POLL_FOR_SELECT
+#undef HAVE_POLL
+#endif
+
 #ifdef HAVE_MSGWAITFORMULTIPLEOBJECTS
 #define USE_MsgWaitForMultipleObjects
 #else

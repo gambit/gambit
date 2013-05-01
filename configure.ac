@@ -547,7 +547,7 @@ AC_ARG_ENABLE(poll,
               ENABLE_POLL=no)
 
 if test "$ENABLE_POLL" = yes; then
-  AC_DEFINE(USE_POLL, 1)
+  AC_DEFINE(USE_POLL_FOR_SELECT, 1)
 fi
 
 ###############################################################################
