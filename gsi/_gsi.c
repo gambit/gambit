@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi.c", produced by Gambit-C v4.6.8
+; File: "_gsi.c", produced by Gambit-C v4.6.9
 (
-406008
+406009
 " _gsi"
 (" _gsi")
 (
@@ -143,7 +143,7 @@
  #f
 )
 #else
-#define ___VERSION 406008
+#define ___VERSION 406009
 #define ___MODULE_NAME " _gsi"
 #define ___LINKER_ID ____20___gsi
 #define ___MH_PROC ___H__20___gsi

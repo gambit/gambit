@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_num.c", produced by Gambit-C v4.6.8
+; File: "_num.c", produced by Gambit-C v4.6.9
 (
-406008
+406009
 " _num"
 (" _num")
 (
@@ -704,7 +704,7 @@
  #f
 )
 #else
-#define ___VERSION 406008
+#define ___VERSION 406009
 #define ___MODULE_NAME " _num"
 #define ___LINKER_ID ____20___num
 #define ___MH_PROC ___H__20___num

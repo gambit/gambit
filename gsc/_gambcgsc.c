@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gambcgsc.c", produced by Gambit-C v4.6.8
+; File: "_gambcgsc.c", produced by Gambit-C v4.6.9
 (
-406008
+406009
 " _gambcgsc"
 (" _kernel" " _system" " _num" " _std" " _eval" " _io" " _nonstd" " _thread" " _repl" " _host" " _utils" " _source" " _parms" " _env" " _ptree1" " _ptree2" " _gvm" " _back" " _front" " _prims" " _assert" " _asm" " _x86" " _codegen" " _t-univ" " _t-c-1" " _t-c-2" " _t-c-3" " _gsclib")
 (
@@ -7101,7 +7101,7 @@
  #f
 )
 #else
-#define ___VERSION 406008
+#define ___VERSION 406009
 #define ___LINKFILE_NAME " _gambcgsc"
 #define ___LINKER_ID ____20___gambcgsc
 #define ___INCREMENTAL_LINKFILE
