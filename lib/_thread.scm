@@ -657,6 +657,11 @@
  #f
 )
 
+;;;for debugging
+(define ##thread-trace 0)
+(define-macro (thread-trace n expr)
+  `(begin (set! ##thread-trace (##fx+ ,n (##fx* (##fxmodulo ##thread-trace 10000000) 10))) ,expr))
+
 (define-prim (##btq-abandon! btq)
   (##declare (not interrupts-enabled))
   (macro-btq-deq-remove! btq)
@@ -668,7 +673,7 @@
         (begin
           (let ((owner (macro-btq-owner btq)))
             (if (macro-thread? owner)
-              (##thread-effective-priority-downgrade! owner)))
+              (thread-trace 0 (##thread-effective-priority-downgrade! owner))))
           (macro-btq-unlink! btq 'abandoned))))))
 
 ;;; Implementation of timeout queues.
@@ -742,7 +747,7 @@
 
     (macro-base-priority-set! floats base-priority)
 
-    (##thread-boosted-priority-changed! thread)
+    (thread-trace 1 (##thread-boosted-priority-changed! thread))
 
     ;; the change of priority may have made a higher priority
     ;; thread runnable, check for this
@@ -788,7 +793,7 @@
          (##flonum.+ (macro-base-priority floats)
                      priority-boost))
 
-        (##thread-boosted-priority-changed! thread)
+        (thread-trace 2 (##thread-boosted-priority-changed! thread))
 
         ;; the change of priority may have made a higher priority
         ;; thread runnable, check for this
@@ -806,11 +811,11 @@
            (macro-effective-priority-set!
             floats
             (macro-boosted-priority floats))
-           (##thread-effective-priority-changed! thread #t))
+           (thread-trace 3 (##thread-effective-priority-changed! thread #t)))
           ((##flonum.=
             (macro-effective-priority floats)
             (macro-temp (macro-thread-floats (macro-run-queue))))
-           (##thread-effective-priority-downgrade! thread)))))
+           (thread-trace 4 (##thread-effective-priority-downgrade! thread))))))
 
 (define-prim (##thread-effective-priority-changed! thread effective-priority-increased?)
 
@@ -831,7 +836,7 @@
         (if (macro-thread? owner)
           (if effective-priority-increased?
             (macro-thread-inherit-priority! owner thread)
-            (##thread-effective-priority-downgrade! owner)))))))
+            (thread-trace 5 (##thread-effective-priority-downgrade! owner))))))))
 
 ;; (##thread-effective-priority-downgrade! thread) is called to
 ;; recompute the effective priority of a thread.  It is only called in
@@ -873,7 +878,7 @@
     (if (##not (##flonum.=
                 (macro-temp (macro-thread-floats (macro-run-queue)))
                 (macro-effective-priority floats)))
-      (##thread-effective-priority-changed! thread #f))))
+      (thread-trace 6 (##thread-effective-priority-changed! thread #f)))))
 
 (define-prim (##thread-btq-insert! btq thread)
   (##declare (not interrupts-enabled))
@@ -891,7 +896,7 @@
     (if (macro-thread? owner)
       (if (##flonum.= (macro-thread-effective-priority thread)
                       (macro-thread-effective-priority owner))
-        (##thread-effective-priority-downgrade! owner)))))
+        (thread-trace 7 (##thread-effective-priority-downgrade! owner))))))
 
 (define-prim (##thread-toq-remove! thread)
   (##declare (not interrupts-enabled))
@@ -1842,7 +1847,7 @@
 
   (##declare (not interrupts-enabled))
 
-  (##thread-btq-remove! thread)
+  (thread-trace 8 (##thread-btq-remove! thread))
 
   (let ((new-owner (macro-thread-result thread)))
     (if new-owner
@@ -1956,7 +1961,7 @@
           (macro-thread-result-set!
            leftmost
            ##thread-signaled-condvar-action!)
-          (##thread-btq-remove! leftmost)
+          (thread-trace 9 (##thread-btq-remove! leftmost))
           (macro-thread-toq-remove-if-in-toq! leftmost)
           (##btq-insert! (macro-run-queue) leftmost)
           (if broadcast?
