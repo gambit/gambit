@@ -732,17 +732,13 @@
 
     (if (##flonum.= (macro-base-priority floats)
                     (macro-boosted-priority floats))
-(begin (set! pcase3 (##fixnum.+ pcase3 1));;;;;;;;;;;;;;;;;;
       (macro-boosted-priority-set!
        floats
        base-priority)
-)
-(begin (set! pcase4 (##fixnum.+ pcase4 1));;;;;;;;;;;;;;;;;;
       (macro-boosted-priority-set!
        floats
        (##flonum.+ base-priority
                    (macro-priority-boost floats))))
-)
 
     (macro-base-priority-set! floats base-priority)
 
@@ -777,13 +773,9 @@
     (if (##flonum.= (macro-base-priority floats)
                     (macro-boosted-priority floats))
 
-(begin (set! pcase5 (##fixnum.+ pcase5 1));;;;;;;;;;;;;;;;;;
       (##void)
-)
 
       (begin
-
-(set! pcase6 (##fixnum.+ pcase6 1));;;;;;;;;;;;;;;;;;
 
         ;; save old boosted priority for ##thread-boosted-priority-changed!
 
@@ -811,7 +803,6 @@
     (cond ((##flonum.<
             (macro-effective-priority floats)
             (macro-boosted-priority floats))
-(set! pcase7 (##fixnum.+ pcase7 1));;;;;;;;;;;;;;;;;;
            (macro-effective-priority-set!
             floats
             (macro-boosted-priority floats))
@@ -819,10 +810,7 @@
           ((##flonum.=
             (macro-effective-priority floats)
             (macro-temp (macro-thread-floats (macro-run-queue))))
-(set! pcase8 (##fixnum.+ pcase8 1));;;;;;;;;;;;;;;;;;
-           (##thread-effective-priority-downgrade! thread))
-(else (set! pcase9 (##fixnum.+ pcase9 1)));;;;;;;;;;;;;;;;;;
-)))
+           (##thread-effective-priority-downgrade! thread)))))
 
 (define-prim (##thread-effective-priority-changed! thread effective-priority-increased?)
 
@@ -842,12 +830,8 @@
       (let ((owner (macro-btq-owner (macro-thread->btq thread))))
         (if (macro-thread? owner)
           (if effective-priority-increased?
-(begin (set! pcase10 (##fixnum.+ pcase10 1));;;;;;;;;;;;;;;;;;
             (macro-thread-inherit-priority! owner thread)
-)
-(begin (set! pcase11 (##fixnum.+ pcase11 1));;;;;;;;;;;;;;;;;;
             (##thread-effective-priority-downgrade! owner)))))))
-)
 
 ;; (##thread-effective-priority-downgrade! thread) is called to
 ;; recompute the effective priority of a thread.  It is only called in
@@ -886,15 +870,10 @@
                  (macro-effective-priority leftmost-floats)))))
           (loop (macro-btq-deq-next btq)))))
 
-;;;;;;;;;;;;(set! pcase14 (##cons (##cons (macro-temp (macro-thread-floats (macro-run-queue))) (macro-effective-priority floats))pcase14));;;;;;;;;;;;;;;;;;;;;;;
     (if (##not (##flonum.=
                 (macro-temp (macro-thread-floats (macro-run-queue)))
                 (macro-effective-priority floats)))
-(begin (set! pcase12 (##fixnum.+ pcase12 1));;;;;;;;;;;;;;;;;;
-      (##thread-effective-priority-changed! thread #f)
-)
-(set! pcase13 (##fixnum.+ pcase13 1));;;;;;;;;;;;;;;;;;
-)))
+      (##thread-effective-priority-changed! thread #f))))
 
 (define-prim (##thread-btq-insert! btq thread)
   (##declare (not interrupts-enabled))
@@ -1980,7 +1959,6 @@
           (##thread-btq-remove! leftmost)
           (macro-thread-toq-remove-if-in-toq! leftmost)
           (##btq-insert! (macro-run-queue) leftmost)
-;;;;;;(set! pcase14 (##cons leftmost pcase14));;;;;;;;;;;;;;;;;;;;;;;
           (if broadcast?
             (loop)
             (##void)))
