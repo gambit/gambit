@@ -132,8 +132,8 @@ int ___processor_count ___PVOID
 
 #ifdef OP_NB_CPU
 
-  ___SIZE_T n = 0;
-  ___SIZE_T sizeof_n = sizeof(n);
+  size_t n = 0;
+  size_t sizeof_n = sizeof(n);
   int mib[2];
 
   mib[0] = CTL_HW;
@@ -310,8 +310,8 @@ int level;)
     if ((level == 0 || level == sysctl_info[i].level) &&
         (sysctl_info[i].kind & (1<<instruction_cache))) {
 
-      ___SIZE_T size = 0;
-      ___SIZE_T sizeof_size = sizeof(size);
+      size_t size = 0;
+      size_t sizeof_size = sizeof(size);
       int mib[2];
 
       mib[0] = CTL_HW;
