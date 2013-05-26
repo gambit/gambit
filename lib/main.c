@@ -1,6 +1,6 @@
-/* File: "main.c", Time-stamp: <2009-08-04 13:10:04 feeley> */
+/* File: "main.c" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit-C system */
 
@@ -142,10 +142,10 @@ ___BOOL free_old;)
   ___UCS_2STRING *new_strvec;
 
   if (old_strvec != 0)
-    while (old_strvec[n++] != 0) ;
+    while (old_strvec[n] != 0) n++;
 
   new_strvec = ___CAST(___UCS_2STRING*,
-                       ___alloc_mem ((n+nb_to_add) * sizeof (___UCS_2STRING)));
+                       ___alloc_mem ((n+nb_to_add+1) * sizeof (___UCS_2STRING)));
 
   if (new_strvec == 0)
     return 0;
@@ -155,6 +155,8 @@ ___BOOL free_old;)
 
   for (i=0; i<pos; i++)
     new_strvec[i] = old_strvec[i];
+
+  new_strvec[n+nb_to_add] = 0;
 
   *strvec = new_strvec;
 
