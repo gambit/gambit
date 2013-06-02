@@ -23,7 +23,7 @@
 (implement-library-type-unbound-global-exception)
 
 (define-prim (##raise-unbound-global-exception code rte variable)
-  (macro-abort
+  (macro-raise
    (macro-make-unbound-global-exception code rte variable)))
 
 ;;;----------------------------------------------------------------------------
