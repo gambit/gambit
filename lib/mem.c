@@ -2996,6 +2996,11 @@ ___SCMOBJ ___setup_mem ___PVOID
   ___ps->heap_limit_line = 0;
 #endif
 
+#ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
+  ___ps->heartbeat_interval = ___HEARTBEAT_USING_POLL_COUNTDOWN;
+  ___ps->heartbeat_countdown = ___ps->heartbeat_interval;
+#endif
+
   setup_pstate ();
 
   /* Setup global state */

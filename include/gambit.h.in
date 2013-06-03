@@ -4807,9 +4807,18 @@ ___hp[0]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
 #define ___END_ALLOC_VALUES(n)___ALLOC(n+1);
 #define ___GET_VALUES(n)___TAG((___hp-n-1),___tSUBTYPED)
 
+#define ___STACK_TRIPPED (___fp < ___ps->stack_trip)
+
+#ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
+#define ___HEARTBEAT_INTERVAL_ENDED (___ps->heartbeat_countdown-- <= 0)
+#define ___POLL_TRIGGER ___HEARTBEAT_INTERVAL_ENDED || ___STACK_TRIPPED
+#else
+#define ___POLL_TRIGGER ___STACK_TRIPPED
+#endif
+
 #ifdef ___DEBUG_STACK_LIMIT
 #define ___POLL(n) \
-if (___EXPECT_FALSE(___fp<___ps->stack_trip)) \
+if (___EXPECT_FALSE(___POLL_TRIGGER)) \
 {___ps->temp1=___LBL(n); \
 ___ps->poll_file=__FILE__; \
 ___ps->poll_line=__LINE__; \
@@ -4817,7 +4826,7 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
 }
 #else
 #define ___POLL(n) \
-if (___EXPECT_FALSE(___fp<___ps->stack_trip)) \
+if (___EXPECT_FALSE(___POLL_TRIGGER)) \
 {___ps->temp1=___LBL(n); \
 ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
 }
@@ -6904,6 +6913,11 @@ typedef struct ___processor_state_struct
     char *check_heap_file;
     int heap_limit_line;
     char *heap_limit_file;
+#endif
+
+#ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
+    int heartbeat_interval;
+    int heartbeat_countdown;
 #endif
   } ___processor_state_struct, *___processor_state;
 

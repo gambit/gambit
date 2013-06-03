@@ -120,6 +120,16 @@ end-of-code
    int fs;
    ___SCMOBJ ra;
 
+#ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
+
+  if (___ps->heartbeat_countdown <= 0)
+  {
+    ___ps->heartbeat_countdown = ___ps->heartbeat_interval;
+    ___raise_interrupt (___INTR_HEARTBEAT);
+  }
+
+#endif
+
    /* setup internal return continuation frame */
 
    ra = ___ps->temp1;
