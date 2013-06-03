@@ -3797,7 +3797,9 @@
 ;;;============================================================================
 
 (define (##wrap-datum re x)
-  (##make-source x (##readenv->locat re)))
+  (if (##source? x) ;; avoid adding source location on #.expr when expr returns a source object
+      x
+      (##make-source x (##readenv->locat re))))
 
 (define (##unwrap-datum re x)
   (##source-code x))
