@@ -3754,7 +3754,7 @@
     (and (< 0 nb-args)
          (< nb-args 5)
          (let ((fs (frame-size targ-proc-exit-frame)))
-           (targ-end-of-block-checks #t fs) ; force a poll
+           (targ-end-of-block-checks poll? fs)
            (targ-emit (targ-adjust-stack fs))
            (targ-emit-jump-inline "THREAD_SAVE" safe? nb-args)
            (targ-rd-fp)
