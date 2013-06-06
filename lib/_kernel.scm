@@ -458,9 +458,9 @@ end-of-code
 
             ___COVER_REST_PARAM_HANDLER_HEAP_LIMIT;
 
-            ___W_HEAP
+            ___W_ALL
             need_to_gc = ___heap_limit ();
-            ___R_HEAP
+            ___R_ALL
 
             if (need_to_gc)
               {
@@ -824,9 +824,9 @@ end-of-code
 
             ___COVER_KEYWORD_REST_PARAM_HANDLER_HEAP_LIMIT;
 
-            ___W_HEAP
+            ___W_ALL
             need_to_gc = ___heap_limit ();
-            ___R_HEAP
+            ___R_ALL
 
             if (need_to_gc)
               {

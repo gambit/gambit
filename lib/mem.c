@@ -1433,65 +1433,48 @@ ___HIDDEN void next_heap_msection ___PVOID
 
 #ifdef ___DEBUG
 
-void print_string
-   ___P((___SCMOBJ str),
-        (str)
-___SCMOBJ str;)
-{
-  int i;
-  for (i=0; i<___INT(___STRINGLENGTH(str)); i++)
-    ___printf ("%c", ___INT(___STRINGREF(str,___FIX(i))));
-}
 
-void print_subtyped
-   ___P((___SCMOBJ val),
-        (val)
-___SCMOBJ val;)
+#define ZAP_PATTERN ___CAST(___WORD,0xcafebabe)
+
+
+char *subtype_to_string
+   ___P((int subtype),
+        (subtype)
+int subtype;)
 {
-  ___SCMOBJ ___temp;
-  if (___SUBTYPEDP(val))
+  switch (subtype)
     {
-      ___SCMOBJ sym;
-      if (___PROCEDUREP(val) || ___RETURNP(val))
-        {
-          if (___PROCEDUREP(val))
-            ___printf ("#<procedure ");
-          else
-            ___printf ("#<return ");
-          if ((sym = find_global_var_bound_to (val)) != ___NUL)
-            print_string (___FIELD(sym,___SYMKEY_NAME));
-          else
-            {
-              if (___HD_TYP(___HEADER(val)) == ___PERM)
-                {
-                  ___SCMOBJ *start = ___CAST(___SCMOBJ*,val-___tSUBTYPED);
-                  ___SCMOBJ *ptr = start;
-                  while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-                    ptr -= ___LS;
-                  ptr += ___LS;
-                  if (ptr == start)
-                    ___printf ("???");
-                  else
-                    {
-                      ___printf ("%d in ", (start-ptr)/___LS);
-                      print_subtyped (___TAG(ptr,___tSUBTYPED));
-                    }
-                }
-              else
-                ___printf ("???");
-            }
-          ___printf (">");
-        }
-      else if (___STRINGP(val))
-        {
-          ___printf ("\"");
-          print_string (val);
-          ___printf ("\"");
-        }
-      else
-        {
-          ___printf ("#<other ???>");
-        }
+    case ___sVECTOR:       return "vector";
+    case ___sPAIR:         return "pair";
+    case ___sRATNUM:       return "ratnum";
+    case ___sCPXNUM:       return "cpxnum";
+    case ___sSTRUCTURE:    return "structure";
+    case ___sBOXVALUES:    return "boxvalues";
+    case ___sMEROON:       return "meroon";
+    case ___sJAZZ:         return "jazz";
+    case ___sSYMBOL:       return "symbol";
+    case ___sKEYWORD:      return "keyword";
+    case ___sFRAME:        return "frame";
+    case ___sCONTINUATION: return "continuation";
+    case ___sPROMISE:      return "promise";
+    case ___sWEAK:         return "weak";
+    case ___sPROCEDURE:    return "procedure";
+    case ___sRETURN:       return "return";
+    case ___sFOREIGN:      return "foreign";
+    case ___sSTRING:       return "string";
+    case ___sS8VECTOR:     return "s8vector";
+    case ___sU8VECTOR:     return "u8vector";
+    case ___sS16VECTOR:    return "s16vector";
+    case ___sU16VECTOR:    return "u16vector";
+    case ___sS32VECTOR:    return "s32vector";
+    case ___sU32VECTOR:    return "u32vector";
+    case ___sF32VECTOR:    return "f32vector";
+    case ___sS64VECTOR:    return "s64vector";
+    case ___sU64VECTOR:    return "u64vector";
+    case ___sF64VECTOR:    return "f64vector";
+    case ___sFLONUM:       return "flonum";
+    case ___sBIGNUM:       return "bignum";
+    default:               return "UNKNOWN SUBTYPE";
     }
 }
 
@@ -1515,16 +1498,76 @@ ___SCMOBJ val;)
     ___printf ("#!void");
   else if (___CHARP(val))
     ___printf ("#\\x%x", ___INT(val));
-  else if (___PAIRP(val))
-    ___printf ("0x%08x (... . ...)", val);
-  else if (___SUBTYPEDP(val))
-    {
-      ___SCMOBJ sym;
-      ___printf ("0x%08x ", val);
-      print_subtyped (val);
-    }
   else
-    ___printf ("0x%08x other", val);
+    {
+      ___WORD* body = ___BODY(val);
+      ___WORD head = body[-1];
+      int subtype;
+
+      if (___TYP(head) == ___FORW)
+        {
+          /* indirect forwarding pointer */
+          body = ___UNTAG_AS(head, ___FORW) + ___BODY_OFS;
+          head = body[-1];
+        }
+
+      if (head == ZAP_PATTERN)
+        ___printf ("[WARNING: HEAD=ZAP_PATTERN] ");
+
+      subtype = ___HD_SUBTYPE(head);
+
+      if (subtype == ___sPAIR)
+        {
+          ___printf ("0x%08x (... . ...)", val);
+        }
+      else
+        {
+          ___SCMOBJ sym;
+          if (subtype == ___sPROCEDURE || subtype == ___sRETURN)
+            {
+              if (subtype == ___sPROCEDURE)
+                ___printf ("#<procedure ");
+              else
+                ___printf ("#<return ");
+              if ((sym = find_global_var_bound_to (val)) != ___NUL)
+                print_value (___FIELD(sym,___SYMKEY_NAME));
+              else
+                {
+                  if (___HD_TYP(head) == ___PERM)
+                    {
+                      ___SCMOBJ *start = &body[-1];
+                      ___SCMOBJ *ptr = start;
+                      while (!___TESTHEADERTAG(*ptr,___sVECTOR))
+                        ptr -= ___LS;
+                      ptr += ___LS;
+                      if (ptr == start)
+                        ___printf ("???");
+                      else
+                        {
+                          ___printf ("%d in ", (start-ptr)/___LS);
+                          print_value (___TAG(ptr,___tSUBTYPED));
+                        }
+                    }
+                  else
+                    ___printf ("???");
+                }
+              ___printf (">");
+            }
+          else if (subtype == ___sSTRING)
+            {
+              int i;
+              ___SCMOBJ str = ___TAG((body-1),___tSUBTYPED);
+              ___printf ("\"");
+              for (i=0; i<___INT(___STRINGLENGTH(str)); i++)
+                ___printf ("%c", ___INT(___STRINGREF(str,___FIX(i))));
+              ___printf ("\"");
+            }
+          else
+            {
+              ___printf ("#<%s>", subtype_to_string (subtype));
+            }
+        }
+    }
 }
 
 #endif
@@ -1965,9 +2008,6 @@ ___WORD obj;)
   if (___HD_TYP(head) != ___PERM && ___HD_TYP(head) != ___STILL)
     bug (obj, "is not ___PERM or ___STILL");
 }
-
-
-#define ZAP_PATTERN ___CAST(___WORD,0xcafebabe)
 
 
 ___HIDDEN void zap_section
@@ -2419,7 +2459,12 @@ ___WORD *nextgcmap;)
       if (i == fs)
         return;
       if ((i & (___WORD_WIDTH-1)) == 0)
+      {
         gcmap = *nextgcmap++;
+#ifdef SHOW_FRAMES
+  ___printf ("gcmap = 0x%08x\n", gcmap);
+#endif
+      }
       else
         gcmap >>= 1;
       i++;
