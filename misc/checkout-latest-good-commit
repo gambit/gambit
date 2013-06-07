@@ -1,0 +1,78 @@
+#! /bin/sh
+
+# Usage: checkout-latest-good-commit <test program and arguments>
+#
+# Example: checkout-latest-good-commit gsi/gsi -:m1 chud1.scm
+
+CONFIGURE_OPTIONS='--enable-single-host'
+
+TEST_PROGRAM="$*"
+
+START_COMMIT=`git log --pretty=format:'%H' -n 1`
+
+check_test_program()
+{
+  if ! (rm -f gsc-boot && ./configure $CONFIGURE_OPTIONS && make clean && make -j8 bootstrap) 2>&1 > /dev/null ; then
+    echo "=================================================> FAILED './configure ; make bootstrap' (SKIPPING THIS BRANCH)"
+    return 125
+  else
+    if ! (make bootclean && make -j8) 2>&1 > /dev/null ; then
+      echo "=================================================> FAILED 'make' after 'make bootstrap' (SKIPPING THIS COMMIT)"
+      return 125
+    else
+      if $TEST_PROGRAM ; then
+        echo "=================================================> GOOD"
+        return 0
+      else
+        echo "=================================================> BAD"
+        return 1
+      fi
+    fi
+  fi
+}
+
+checkout()
+{
+  echo
+  git checkout $1 > checkout-latest-good-commit-tmp 2>&1 || return $?
+  fgrep "HEAD is now at " checkout-latest-good-commit-tmp | sed -e "s/^/================================================== /" -e "s/\.\.\. /\\
+================================================== /"
+  rm -f checkout-latest-good-commit-tmp
+}
+
+search_end()
+{
+  exit $1
+}
+
+search_succeeded()
+{
+  echo "================================================== SEARCH SUCCEEDED"
+  search_end 0
+}
+
+search_failed()
+{
+  echo "================================================== SEARCH FAILED"
+  search_end 1
+}
+
+echo "================================================== STARTING AT:"
+git log -n 1 | cat
+echo "=================================================="
+
+found=false
+
+while ! $found ; do
+
+  check_test_program && found=true
+
+  git reset --hard 2>&1 > /dev/null
+
+  if ! $found ; then
+    checkout HEAD^ || search_failed
+  fi
+
+done
+
+search_succeeded
