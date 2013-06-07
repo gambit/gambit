@@ -84,8 +84,8 @@ typedef struct ___time_module_struct
 #ifdef USE_dos_setvect_1Ch
 
     ___BOOL heartbeat_enabled;
-    ___SIZE_T heartbeat_interval;
-    ___SIZE_T heartbeat_countdown;
+    ___SIZE_TS heartbeat_interval;
+    ___SIZE_TS heartbeat_countdown;
     void (__interrupt __far *prev_vector_1Ch) ___PVOID;
 
 #define ___TIME_MODULE_INIT , 0, 0, 0, 0

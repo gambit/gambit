@@ -486,7 +486,7 @@ ___UTF_8STRING *ptr;)
       byte <<= 1;
       bits += 5;
     }
-  c &= ((___U32)1<<bits)-1;
+  c &= ___CAST(___U32,1<<bits)-1;
 #ifdef ___REJECT_ILLEGAL_UCS_4
   if ((c > 0xd7ff && c <= 0xdfff) ||
       (c > 0xfffd && c <= 0xffff))

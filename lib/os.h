@@ -1534,8 +1534,8 @@ extern int ___processor_cache_size
 /* Virtual memory statistics. */
 
 extern void ___vm_stats
-   ___P((___SIZE_T *minflt,
-         ___SIZE_T *majflt),
+   ___P((___SIZE_TS *minflt,
+         ___SIZE_TS *majflt),
         ());
 
 
@@ -1543,7 +1543,7 @@ extern void ___vm_stats
 
 extern char *___format_filepos
    ___P((char *path,
-         ___SIZE_T filepos,
+         ___SIZE_TS filepos,
          ___BOOL pinpoint),
         ());
 

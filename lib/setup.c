@@ -261,11 +261,11 @@ ___SCMOBJ new_table;)
 
 ___HIDDEN ___SCMOBJ symkey_table_alloc
    ___P((unsigned int subtype,
-         ___SIZE_T length),
+         ___SIZE_TS length),
         (subtype,
          length)
 unsigned int subtype;
-___SIZE_T length;)
+___SIZE_TS length;)
 {
   ___SCMOBJ tbl = ___make_vector (length+1, ___NUL, ___STILL);
 
@@ -378,8 +378,8 @@ unsigned int subtype;)
   while (probe != ___NUL)
     {
       ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
-      ___SIZE_T i = 0;
-      ___SIZE_T n = ___INT(___STRINGLENGTH(name));
+      ___SIZE_TS i = 0;
+      ___SIZE_TS n = ___INT(___STRINGLENGTH(name));
       if (___INT(___STRINGLENGTH(str)) == n)
         {
           for (i=0; i<n; i++)
@@ -551,13 +551,13 @@ void *data;)
 
 ___HIDDEN ___SCMOBJ *align
    ___P((___SCMOBJ *from,
-         ___SIZE_T words,
+         ___SIZE_TS words,
          int need_64bit_alignment),
         (from,
          words,
          need_64bit_alignment)
 ___SCMOBJ *from;
-___SIZE_T words;
+___SIZE_TS words;
 int need_64bit_alignment;)
 {
   ___SCMOBJ *to;

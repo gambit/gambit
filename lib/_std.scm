@@ -551,7 +551,7 @@ c-declare-end
 
   void *src = ___CAST(void*,&___FIELD(___arg1,___INT(___arg2)));
   void *dst = ___CAST(void*,&___FIELD(___arg4,___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * ___WS;
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * ___WS;
 
   memmove (dst, src, len);
 
@@ -579,7 +579,7 @@ end-of-code
                 ___CS_SELECT(&___FETCH_U8(___BODY(___arg4),___INT(___arg5)),
                              &___FETCH_U16(___BODY(___arg4),___INT(___arg5)),
                              &___FETCH_U32(___BODY(___arg4),___INT(___arg5))));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * ___CS;
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * ___CS;
 
   memmove (dst, src, len);
 
@@ -599,7 +599,7 @@ end-of-code
 
   void *src = ___CAST(void*,&___FETCH_S8(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_S8(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S8);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S8);
 
   memmove (dst, src, len);
 
@@ -619,7 +619,7 @@ end-of-code
 
   void *src = ___CAST(void*,&___FETCH_U8(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_U8(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U8);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U8);
 
   memmove (dst, src, len);
 
@@ -639,7 +639,7 @@ end-of-code
 
   void *src = ___CAST(void*,&___FETCH_S16(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_S16(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S16);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S16);
 
   memmove (dst, src, len);
 
@@ -659,7 +659,7 @@ end-of-code
 
   void *src = ___CAST(void*,&___FETCH_U16(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_U16(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U16);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U16);
 
   memmove (dst, src, len);
 
@@ -679,7 +679,7 @@ end-of-code
 
   void *src = ___CAST(void*,&___FETCH_S32(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_S32(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S32);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S32);
 
   memmove (dst, src, len);
 
@@ -699,7 +699,7 @@ end-of-code
 
   void *src = ___CAST(void*,&___FETCH_U32(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_U32(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U32);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U32);
 
   memmove (dst, src, len);
 
@@ -719,7 +719,7 @@ end-of-code
 
   void *src = ___CAST(void*,&___FETCH_S64(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_S64(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S64);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S64);
 
   memmove (dst, src, len);
 
@@ -739,7 +739,7 @@ end-of-code
 
   void *src = ___CAST(void*,&___FETCH_U64(___BODY(___arg1),___INT(___arg2)));
   void *dst = ___CAST(void*,&___FETCH_U64(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U64);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U64);
 
   memmove (dst, src, len);
 
@@ -759,7 +759,7 @@ end-of-code
 
   void *src = ___CAST(void*,___CAST(___F32*,___BODY(___arg1))+___INT(___arg2));
   void *dst = ___CAST(void*,___CAST(___F32*,___BODY(___arg4))+___INT(___arg5));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F32);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F32);
 
   memmove (dst, src, len);
 
@@ -779,7 +779,7 @@ end-of-code
 
   void *src = ___CAST(void*,___CAST(___F64*,___BODY(___arg1))+___INT(___arg2));
   void *dst = ___CAST(void*,___CAST(___F64*,___BODY(___arg4))+___INT(___arg5));
-  ___SIZE_T len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F64);
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F64);
 
   memmove (dst, src, len);
 

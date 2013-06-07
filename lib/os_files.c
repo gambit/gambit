@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -217,7 +217,7 @@ ___HIDDEN ___SCMOBJ path_expand_to_absolute
    ___P((char *path,
          char *directory,/******************* currently ignored*/
          char *new_path,
-         ___SIZE_T max_length),
+         ___SIZE_TS max_length),
         (path,
          directory,
          new_path,
@@ -225,12 +225,12 @@ ___HIDDEN ___SCMOBJ path_expand_to_absolute
 char *path;
 char *directory;
 char *new_path;
-___SIZE_T max_length;)
+___SIZE_TS max_length;)
 {
   ___BOOL result = 0;
   FSSpec spec;
   short vol;
-  ___SIZE_T dir;
+  ___SIZE_TS dir;
   char tmp[___PATH_MAX_LENGTH+1];
   Str255 ppath;
 

@@ -1662,6 +1662,8 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___FLONUM_SIZE 1
 #endif
 
+#define ___SIZE_TS ___SSIZE_T /* temporary hack... in principle ___SIZE_TS should be replaced with ___SIZE_T (unsigned integer) */
+
 #define ___SCMOBJ ___WORD
 #define ___SCMOBJ_WIDTH ___WORD_WIDTH
 
@@ -7958,7 +7960,7 @@ typedef struct ___global_state_struct
             ());
     ___SCMOBJ (*___alloc_scmobj)
        ___P((int subtype,
-             ___SIZE_T bytes,
+             ___SIZE_TS bytes,
              int kind),
             ());
     void (*___release_scmobj)
@@ -7970,7 +7972,7 @@ typedef struct ___global_state_struct
              int kind),
             ());
     ___SCMOBJ (*___make_vector)
-       ___P((___SIZE_T length,
+       ___P((___SIZE_TS length,
              ___SCMOBJ init,
              int kind),
             ());
@@ -8078,7 +8080,7 @@ typedef struct ___setup_params_struct
     ___SIZE_T min_heap;
     ___SIZE_T max_heap;
     int live_percent;
-    ___SIZE_T (*gc_hook) ___P((___SIZE_T avail, ___SIZE_T live),());
+    ___SIZE_TS (*gc_hook) ___P((___SIZE_TS avail, ___SIZE_TS live),());
     void (*display_error) ___P((char **msgs),());
     void (*fatal_error) ___P((char **msgs),());
     int standard_level;
@@ -9009,7 +9011,7 @@ ___IMP_FUNC(void,___set_data_rc)
         ());
 ___IMP_FUNC(___SCMOBJ,___alloc_scmobj)
    ___P((int subtype,
-         ___SIZE_T bytes,
+         ___SIZE_TS bytes,
          int kind),
         ());
 ___IMP_FUNC(void,___release_scmobj)
@@ -9021,7 +9023,7 @@ ___IMP_FUNC(___SCMOBJ,___make_pair)
          int kind),
         ());
 ___IMP_FUNC(___SCMOBJ,___make_vector)
-   ___P((___SIZE_T length,
+   ___P((___SIZE_TS length,
          ___SCMOBJ init,
          int kind),
         ());

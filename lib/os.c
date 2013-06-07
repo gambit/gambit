@@ -358,12 +358,12 @@ int level;)
 /* Virtual memory statistics. */
 
 void ___vm_stats
-   ___P((___SIZE_T *minflt,
-         ___SIZE_T *majflt),
+   ___P((___SIZE_TS *minflt,
+         ___SIZE_TS *majflt),
         (minflt,
          majflt)
-___SIZE_T *minflt;
-___SIZE_T *majflt;)
+___SIZE_TS *minflt;
+___SIZE_TS *majflt;)
 {
 #ifndef USE_getrusage
 
@@ -397,13 +397,13 @@ ___SIZE_T *majflt;)
 
 char *___format_filepos
    ___P((char *path,
-         ___SIZE_T filepos,
+         ___SIZE_TS filepos,
          ___BOOL pinpoint),
         (path,
          filepos,
          pinpoint)
 char *path;
-___SIZE_T filepos;
+___SIZE_TS filepos;
 ___BOOL pinpoint;)
 {
 #ifdef USE_MACOS

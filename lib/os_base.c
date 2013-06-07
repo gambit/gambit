@@ -287,7 +287,7 @@ ___SIZE_T bytes;)
   ___BOOL executable = 1;
 
   void* ptr = mmap (0,
-                    bytes + sizeof (___SIZE_T),
+                    bytes + sizeof (___SIZE_TS),
                     PROT_READ | PROT_WRITE | (executable ? PROT_EXEC : 0),
                     MAP_PRIVATE | MAP_ANON,
                     -1,
@@ -296,9 +296,9 @@ ___SIZE_T bytes;)
   if (ptr == MAP_FAILED)
     return NULL;
 
-  *___CAST(___SIZE_T*,ptr) = bytes;
+  *___CAST(___SIZE_TS*,ptr) = bytes;
 
-  return ___CAST(___SIZE_T*,ptr)+1;
+  return ___CAST(___SIZE_TS*,ptr)+1;
 
 #endif
 
@@ -332,9 +332,9 @@ void *ptr;)
 
 #ifdef USE_mmap
 
-  ___SIZE_T* p = ___CAST(___SIZE_T*,ptr)-1;
+  ___SIZE_TS* p = ___CAST(___SIZE_TS*,ptr)-1;
 
-  munmap (p, *p + sizeof (___SIZE_T));
+  munmap (p, *p + sizeof (___SIZE_TS));
 
 #endif
 

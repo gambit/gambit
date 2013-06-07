@@ -69,8 +69,8 @@ typedef struct ___base_module_struct
 
     ___FILE *debug;
 
-    ___SIZE_T alloc_mem_calls;
-    ___SIZE_T free_mem_calls;
+    ___SIZE_TS alloc_mem_calls;
+    ___SIZE_TS free_mem_calls;
 
 #endif
 

@@ -1852,7 +1852,7 @@ ___R_ALL
 ___SET_R0(___FRAME_FETCH_RA)
 if (!___FIXNUMP(result))
   {
-    ___SIZE_T words = ___HD_WORDS(head);
+    ___SIZE_TS words = ___HD_WORDS(head);
     while (words > 0)
       {
         ___UNTAG(result)[words] = ___UNTAG(___ARG1)[words];
@@ -1883,9 +1883,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = n + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = n + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LWS)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -1946,9 +1946,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((s (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = ___WORDS((n<<___LCS)) + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = ___WORDS((n<<___LCS)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LCS)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -2006,9 +2006,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = ___WORDS(n) + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = ___WORDS(n) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -2066,9 +2066,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = ___WORDS(n) + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = ___WORDS(n) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -2126,9 +2126,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = ___WORDS((n<<1)) + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = ___WORDS((n<<1)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -2186,9 +2186,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = ___WORDS((n<<1)) + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = ___WORDS((n<<1)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -2246,9 +2246,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = ___WORDS((n<<2)) + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -2306,9 +2306,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = ___WORDS((n<<2)) + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -2366,12 +2366,12 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
 #if ___WS == 4
-___SIZE_T words = ___WORDS((n<<3)) + 2;
+___SIZE_TS words = ___WORDS((n<<3)) + 2;
 #else
-___SIZE_T words = ___WORDS((n<<3)) + 1;
+___SIZE_TS words = ___WORDS((n<<3)) + 1;
 #endif
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
@@ -2435,12 +2435,12 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
 #if ___WS == 4
-___SIZE_T words = ___WORDS((n<<3)) + 2;
+___SIZE_TS words = ___WORDS((n<<3)) + 2;
 #else
-___SIZE_T words = ___WORDS((n<<3)) + 1;
+___SIZE_TS words = ___WORDS((n<<3)) + 1;
 #endif
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
@@ -2504,9 +2504,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
-___SIZE_T words = ___WORDS((n<<2)) + 1;
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -2565,12 +2565,12 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
 #if ___WS == 4
-___SIZE_T words = ___WORDS((n<<3)) + 2;
+___SIZE_TS words = ___WORDS((n<<3)) + 2;
 #else
-___SIZE_T words = ___WORDS((n<<3)) + 1;
+___SIZE_TS words = ___WORDS((n<<3)) + 1;
 #endif
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
@@ -3872,7 +3872,7 @@ end-of-code
 
      int n;
      ___F64 user, sys, real;
-     ___SIZE_T minflt, majflt;
+     ___SIZE_TS minflt, majflt;
      ___SCMOBJ aligned_v = /* must align to turn u8vector to f64vector */
        ___TAG(((___ARG1 - ___tSUBTYPED)+7)&~7,___tSUBTYPED);
      ___HEADER(aligned_v) = ___MAKE_HD_BYTES(20*sizeof(___F64),___sF64VECTOR);

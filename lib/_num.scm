@@ -5561,15 +5561,15 @@
 (define-prim (##bignum.make k x complement?)
   (##declare (not interrupts-enabled))
   (let ((v (##c-code "
-___SIZE_T i;
-___SIZE_T n = ___INT(___ARG1);
+___SIZE_TS i;
+___SIZE_TS n = ___INT(___ARG1);
 #if ___BIG_ABASE_WIDTH == 32
-___SIZE_T words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
+___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
 #else
 #if ___WS == 4
-___SIZE_T words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 2;
+___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 2;
 #else
-___SIZE_T words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
+___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
 #endif
 #endif
 ___SCMOBJ result;

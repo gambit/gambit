@@ -684,7 +684,7 @@ ___LOCAL void sync_icache_and_dcache (void *start, int length)
 
 #define CACHE_BLOCK_SIZE 4 /* we are conservative! */
 
-  ___U8 *s = ___CAST(___U8*,___CAST(___SIZE_T,start) & -CACHE_BLOCK_SIZE);
+  ___U8 *s = ___CAST(___U8*,___CAST(___SIZE_TS,start) & -CACHE_BLOCK_SIZE);
 
   do
     {
@@ -714,7 +714,7 @@ ___LOCAL void sync_icache_and_dcache (void *start, int length)
 
 #define MACHINE_WORD_SIZE 4
 
-  ___U8 *s = ___CAST(___U8*,___CAST(___SIZE_T,start) & -MACHINE_WORD_SIZE);
+  ___U8 *s = ___CAST(___U8*,___CAST(___SIZE_TS,start) & -MACHINE_WORD_SIZE);
 
   do
     {

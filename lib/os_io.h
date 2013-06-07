@@ -88,7 +88,7 @@ typedef struct ___device_struct
 #define MAX_POLLFDS MAX_CONDVARS
 #endif
 
-typedef ___SIZE_T ___fdbits;
+typedef ___SIZE_TS ___fdbits;
 
 #define ___FDBITS (8 * sizeof (___fdbits))
 #define ___FD_ELT(fd) ((fd) / ___FDBITS)
