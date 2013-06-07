@@ -5576,8 +5576,7 @@ ___SCMOBJ result;
 
 if (n > ___CAST(___WORD, ___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-//else if (words > ___MSECTION_BIGGEST)
-else if (1)
+else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
