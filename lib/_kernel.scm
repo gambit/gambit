@@ -3866,46 +3866,58 @@ end-of-code
 
 (define-prim (##process-statistics)
   (##declare (not interrupts-enabled))
-  (let ((v (##make-u8vector 168))) ;; max(4,8) + 20*sizeof(___F64)
-                                   ;; v must be a **movable** object
-    (##c-code #<<end-of-code
+  (let ((v (##c-code #<<end-of-code
 
-     int n;
-     ___F64 user, sys, real;
-     ___SIZE_TS minflt, majflt;
-     ___SCMOBJ aligned_v = /* must align to turn u8vector to f64vector */
-       ___TAG(((___ARG1 - ___tSUBTYPED)+7)&~7,___tSUBTYPED);
-     ___HEADER(aligned_v) = ___MAKE_HD_BYTES(20*sizeof(___F64),___sF64VECTOR);
-     ___W_ALL
-     ___process_times (&user, &sys, &real);
-     ___vm_stats (&minflt, &majflt);
-     ___F64VECTORSET(aligned_v,___FIX(0),user)
-     ___F64VECTORSET(aligned_v,___FIX(1),sys)
-     ___F64VECTORSET(aligned_v,___FIX(2),real)
-     ___F64VECTORSET(aligned_v,___FIX(3),___GSTATE->gc_user_time)
-     ___F64VECTORSET(aligned_v,___FIX(4),___GSTATE->gc_sys_time)
-     ___F64VECTORSET(aligned_v,___FIX(5),___GSTATE->gc_real_time)
-     ___F64VECTORSET(aligned_v,___FIX(6),___GSTATE->nb_gcs)
-     ___F64VECTORSET(aligned_v,___FIX(7),___bytes_allocated ())
-     ___F64VECTORSET(aligned_v,___FIX(8),(2*(1+2)<<___LWS))
-     n = (1<<___LWS) + 8 + 20 * sizeof (___F64); /* space for u8vector */
-     ___F64VECTORSET(aligned_v,___FIX(9),(2*n))
-     ___F64VECTORSET(aligned_v,___FIX(10),minflt)
-     ___F64VECTORSET(aligned_v,___FIX(11),majflt)
-     ___F64VECTORSET(aligned_v,___FIX(12),___GSTATE->last_gc_user_time)
-     ___F64VECTORSET(aligned_v,___FIX(13),___GSTATE->last_gc_sys_time)
-     ___F64VECTORSET(aligned_v,___FIX(14),___GSTATE->last_gc_real_time)
-     ___F64VECTORSET(aligned_v,___FIX(15),___GSTATE->last_gc_heap_size)
-     ___F64VECTORSET(aligned_v,___FIX(16),___GSTATE->last_gc_alloc)
-     ___F64VECTORSET(aligned_v,___FIX(17),___GSTATE->last_gc_live)
-     ___F64VECTORSET(aligned_v,___FIX(18),___GSTATE->last_gc_movable)
-     ___F64VECTORSET(aligned_v,___FIX(19),___GSTATE->last_gc_nonmovable)
-     ___R_ALL
-     ___RESULT = aligned_v;
+   ___F64 user, sys, real;
+   ___SIZE_TS minflt, majflt;
+   ___F64 n = ___bytes_allocated ();
+   ___SCMOBJ result = ___alloc_scmobj (___sF64VECTOR, 20<<3, ___STILL);
+
+    if (!___FIXNUMP(result))
+    {
+      ___W_ALL
+
+      n = ___bytes_allocated () - n;
+
+      ___process_times (&user, &sys, &real);
+      ___vm_stats (&minflt, &majflt);
+
+      ___F64VECTORSET(result,___FIX(0),user)
+      ___F64VECTORSET(result,___FIX(1),sys)
+      ___F64VECTORSET(result,___FIX(2),real)
+      ___F64VECTORSET(result,___FIX(3),___GSTATE->gc_user_time)
+      ___F64VECTORSET(result,___FIX(4),___GSTATE->gc_sys_time)
+      ___F64VECTORSET(result,___FIX(5),___GSTATE->gc_real_time)
+      ___F64VECTORSET(result,___FIX(6),___GSTATE->nb_gcs)
+      ___F64VECTORSET(result,___FIX(7),___bytes_allocated ())
+      ___F64VECTORSET(result,___FIX(8),(2*(1+2)<<___LWS))
+      ___F64VECTORSET(result,___FIX(9),n)
+      ___F64VECTORSET(result,___FIX(10),minflt)
+      ___F64VECTORSET(result,___FIX(11),majflt)
+      ___F64VECTORSET(result,___FIX(12),___GSTATE->last_gc_user_time)
+      ___F64VECTORSET(result,___FIX(13),___GSTATE->last_gc_sys_time)
+      ___F64VECTORSET(result,___FIX(14),___GSTATE->last_gc_real_time)
+      ___F64VECTORSET(result,___FIX(15),___GSTATE->last_gc_heap_size)
+      ___F64VECTORSET(result,___FIX(16),___GSTATE->last_gc_alloc)
+      ___F64VECTORSET(result,___FIX(17),___GSTATE->last_gc_live)
+      ___F64VECTORSET(result,___FIX(18),___GSTATE->last_gc_movable)
+      ___F64VECTORSET(result,___FIX(19),___GSTATE->last_gc_nonmovable)
+
+      ___R_ALL
+
+      ___still_obj_refcount_dec (result);
+   }
+
+   ___RESULT = result;
 
 end-of-code
 
-     v)))
+     )))
+    (if (##fixnum? v)
+      (begin
+        (##raise-heap-overflow-exception)
+        (##process-statistics))
+      v)))
 
 (define-prim (##process-times)
   (##declare (not interrupts-enabled))

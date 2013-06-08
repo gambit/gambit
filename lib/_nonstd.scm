@@ -1076,9 +1076,6 @@
   (set! ##gc-report? (if report? #t #f)))
 
 (define-prim (##display-gc-report)
-
-  ;;;;;;;;;;; report is not accurate on 64 bit machines
-
   (if (let* ((settings
               (##set-debug-settings! 0 0))
              (level
