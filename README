@@ -9,6 +9,8 @@ Quick-install instructions for a typical installation
   ./configure --enable-single-host
   make bootstrap
   make bootclean
+  make bootstrap
+  make bootclean
   make
   make check
   sudo make install
@@ -90,4 +92,4 @@ place to ask questions about Gambit.
 The latest official release of the system and other helpful documents
 related to Gambit can be obtained from the Gambit wiki at:
 
-  http://gambit.iro.umontreal.ca
+  http://gambitscheme.org
