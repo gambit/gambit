@@ -3113,6 +3113,7 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
   ___fp = ___ps->stack_break; \
   ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
   ___FIELD(cont,___CONTINUATION_FRAME) = ___FIX(0); \
+  ___INTERRUPT_MASK_SET(___FIELD(___FIELD(thread,___THREAD_DENV),___DENV_INTERRUPT_MASK)); \
   ___ps->current_thread = thread; \
   ___SET_R0(___GSTATE->handler_break) \
 }
@@ -4809,6 +4810,22 @@ ___hp[0]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
 #define ___END_ALLOC_VALUES(n)___ALLOC(n+1);
 #define ___GET_VALUES(n)___TAG((___hp-n-1),___tSUBTYPED)
 
+#define ___NB_INTRS 4
+#define ___INTR_USER      0
+#define ___INTR_HEARTBEAT 1
+#define ___INTR_GC        2
+#define ___INTR_TERMINATE 3
+
+#define ___INTERRUPT_FLAGS() (___ps->intr_flag[0]|___ps->intr_flag[1]|___ps->intr_flag[2]|___ps->intr_flag[3])
+
+#define ___INTERRUPT_REQ(x, mask) (((x) & ___ps->intr_enabled & ~mask) != ___FIX(0))
+
+#define ___INTERRUPT_MASK_SET(mask) \
+if (___INTERRUPT_REQ(___INTERRUPT_FLAGS(), (___ps->intr_mask = mask))) \
+  ___STACK_TRIP_ON()
+
+#define ___STACK_TRIP_ON()___ps->stack_trip = ___ps->stack_start
+#define ___STACK_TRIP_OFF()___ps->stack_trip = ___ps->stack_limit
 #define ___STACK_TRIPPED (___fp < ___ps->stack_trip)
 
 #ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
@@ -4857,16 +4874,6 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_heap_limit) \
 if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___TB){___ps->temp1=___LBL(n);___ps->temp2=___temp;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_force);
 #define ___FORCE2 ___temp=___ps->temp2;}
 #define ___FORCE3 ___temp
-
-#define ___NB_INTRS 8
-#define ___INTR_USER      0
-#define ___INTR_HEARTBEAT 1
-#define ___INTR_GC        2
-#define ___INTR_TERMINATE 3
-#define ___INTR_4         4
-#define ___INTR_5         5
-#define ___INTR_6         6
-#define ___INTR_7         7
 
 #define ___MODULE_KIND 0
 #define ___LINKFILE_KIND 1
@@ -6881,8 +6888,10 @@ typedef struct ___processor_state_struct
     ___WORD temp4;
 
     int na;
-    ___BOOL intr_enabled;
-    ___BOOL intr_flag[___NB_INTRS];
+
+    ___WORD intr_enabled; /* global interrupt enable */
+    ___WORD intr_mask; /* 1 bit means interrupt disabled */
+    ___WORD intr_flag[___NB_INTRS];
 
     ___WORD glo_list_head;
     ___WORD glo_list_tail;

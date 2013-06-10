@@ -175,7 +175,7 @@ end-of-code
 
    ___begin_interrupt_service ();
 
-   if (___ps->intr_enabled)
+   if (___ps->intr_enabled != ___FIX(0))
      {
        int i;
 

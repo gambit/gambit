@@ -90,9 +90,9 @@ int code;)
     return;
 #endif
 
-  ___ps->intr_flag[code] = 1;
-  if (___ps->intr_enabled)
-    ___ps->stack_trip = ___ps->stack_start;
+  if (___INTERRUPT_REQ(___ps->intr_flag[code] = ___FIX(1)<<code,
+                       ___ps->intr_mask))
+    ___STACK_TRIP_ON();
 }
 
 
@@ -100,7 +100,7 @@ ___EXP_FUNC(void,___begin_interrupt_service) ___PVOID
 {
   ___processor_state ___ps = ___PSTATE;
 
-  ___ps->stack_trip = ___ps->stack_limit;
+  ___STACK_TRIP_OFF();
 }
 
 
@@ -111,9 +111,9 @@ int code;)
 {
   ___processor_state ___ps = ___PSTATE;
 
-  if (___ps->intr_flag[code])
+  if ((___ps->intr_flag[code] & ~___ps->intr_mask) != ___FIX(0))
     {
-      ___ps->intr_flag[code] = 0;
+      ___ps->intr_flag[code] = ___FIX(0);
       return 1;
     }
 
@@ -128,16 +128,16 @@ int code;)
 {
   ___processor_state ___ps = ___PSTATE;
 
-  if (___ps->intr_enabled)
+  if (___ps->intr_enabled != ___FIX(0))
     {
 #ifdef CALL_HANDLER_AT_EVERY_POLL
-      ___ps->stack_trip = ___ps->stack_start;
+      ___STACK_TRIP_ON();
 #else
       while (code < ___NB_INTRS)
         {
-          if (___ps->intr_flag[code]) /* don't ignore other interrupts */
+          if ((___ps->intr_flag[code] & ~___ps->intr_mask) != ___FIX(0))
             {
-              ___ps->stack_trip = ___ps->stack_start;
+              ___STACK_TRIP_ON();
               break;
             }
           code++;
@@ -151,7 +151,7 @@ ___EXP_FUNC(void,___disable_interrupts) ___PVOID
 {
   ___processor_state ___ps = ___PSTATE;
 
-  ___ps->intr_enabled = 0;
+  ___ps->intr_enabled = ___FIX(0);
 
   ___begin_interrupt_service ();
   ___end_interrupt_service (0);
@@ -162,7 +162,7 @@ ___EXP_FUNC(void,___enable_interrupts) ___PVOID
 {
   ___processor_state ___ps = ___PSTATE;
 
-  ___ps->intr_enabled = 1;
+  ___ps->intr_enabled = ___FIX((1<<___NB_INTRS)-1);
 
   ___begin_interrupt_service ();
   ___end_interrupt_service (0);
@@ -2903,10 +2903,12 @@ ___setup_params_struct *setup_params;)
    * Setup interrupt system.
    */
 
-  ___disable_interrupts ();
+  ___disable_interrupts (); /* globally disable all interrupts */
 
-  for (i=0; i<___NB_INTRS; i++)
-    ___ps->intr_flag[i] = 0;
+  ___ps->intr_mask = ___FIX(0); /* None of the interrupts are ignored */
+
+  for (i=0; i<___NB_INTRS; i++) /* None of the interrupts are requested */
+    ___ps->intr_flag[i] = ___FIX(0);
 
   ___begin_interrupt_service ();
   ___end_interrupt_service (0);
