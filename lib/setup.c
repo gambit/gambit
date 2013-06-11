@@ -1776,6 +1776,41 @@ ___mod_or_lnk mol;)
  * C to Scheme call handler.
  */
 
+
+#ifdef EMSCRIPTEN
+
+/*
+ * The trampoline function must not be inlined into the ___call
+ * function when using emscripten because the fact that ___call uses
+ * setjmp will slow down the indirect calls.
+ */
+
+__attribute__((noinline))
+
+#endif
+
+___HIDDEN void trampoline
+   ___P((___processor_state ___ps),
+        (ps)
+___processor_state ___ps;)
+{
+  ___SCMOBJ ___pc = ___ps->pc;
+
+  for (;;)
+    {
+#define CALL_STEP ___pc = ___LABEL_HOST(___pc)(___ps)
+      CALL_STEP;
+      CALL_STEP;
+      CALL_STEP;
+      CALL_STEP;
+      CALL_STEP;
+      CALL_STEP;
+      CALL_STEP;
+      CALL_STEP;
+    }
+}
+
+
 ___EXP_FUNC(___SCMOBJ,___call)
    ___P((int nargs,
          ___SCMOBJ proc,
@@ -1851,20 +1886,7 @@ ___SCMOBJ stack_marker;)
 
   ___BEGIN_TRY
 
-  ___SCMOBJ ___pc = ___ps->pc;
-
-  for (;;)
-    {
-#define CALL_STEP ___pc = ___LABEL_HOST(___pc)(___ps)
-      CALL_STEP;
-      CALL_STEP;
-      CALL_STEP;
-      CALL_STEP;
-      CALL_STEP;
-      CALL_STEP;
-      CALL_STEP;
-      CALL_STEP;
-    }
+  trampoline(___ps);
 
   ___END_TRY
 
