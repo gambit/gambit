@@ -2125,6 +2125,15 @@ int level;)
 }
 
 
+___EXP_FUNC(void,___set_gambcdir)
+   ___P((___UCS_2STRING gambcdir),
+        (gambcdir)
+___UCS_2STRING gambcdir;)
+{
+  ___setup_params.gambcdir = gambcdir;
+}
+
+
 ___EXP_FUNC(int,___set_debug_settings)
    ___P((int mask,
          int new_settings),
