@@ -7689,7 +7689,12 @@ fi
 done
 
 
-  for ac_func in get_fpc_csr
+  case "$target_os" in
+    OpenBSD*)
+      # OpenBSD/mips64(el) does have get_fpc_csr(), but lacks union fpc_csr.
+      ;;
+    *)
+      for ac_func in get_fpc_csr
 do :
   ac_fn_cxx_check_func "$LINENO" "get_fpc_csr" "ac_cv_func_get_fpc_csr"
 if test "x$ac_cv_func_get_fpc_csr" = xyes; then :
@@ -7700,6 +7705,8 @@ _ACEOF
 fi
 done
 
+      ;;
+  esac
 
 fi
 

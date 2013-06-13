@@ -54,11 +54,10 @@ permissions.
 2) Quick-install instructions
 =============================
 
-On most Unix platforms the system can be easily built using the
-following commands:
+On most Unix platforms the system is easily built using
+configure/make.  First the configure script is executed, as in:
 
   % ./configure
-  % make
 
 If the source code was obtained by cloning the Gambit repository, the
 following commands should then be entered to make sure that any stale
@@ -68,7 +67,6 @@ following commands should then be entered to make sure that any stale
   % make bootclean
   % make bootstrap
   % make bootclean
-  % make
 
 The first "make boostrap" builds the Gambit compiler that was current
 at the last release.  The second "make boostrap" uses that compiler to
@@ -76,11 +74,21 @@ build the Gambit compiler of the master branch.  That compiler is
 finally used in the last "make" to create up to date .c files from the
 .scm files.
 
+Then the system can be built by invoking "make":
+
+  % make
+
 The system can then be tested and installed using the following
 commands:
 
   % make check
   % sudo make install
+
+On a computer with multiple cores it is normally beneficial to build
+the system in parallel by adding a "-j" option to all the invocations
+of "make" before "make check".  For example:
+
+  % make -j4
 
 
 3) Recommended "configure" script options
