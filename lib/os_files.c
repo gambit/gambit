@@ -517,38 +517,38 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
       n = GetModuleFileName (NULL, temp, ___PATH_MAX_LENGTH+1);
       if (n > 0)
         {
-	  int cch;
-	  ___UCS_2STRING gambcdir = 0;
-	  /* remove filename */
-	  *(_tcsrchr (temp, '\\')) = 0;
-	  /* remove bin subdirectory, if present */
-	  cch = _tcslen (temp);
-	  if (cch > 7) /* e.g. C:\x\bin */
+          int cch;
+          ___UCS_2STRING gambcdir = 0;
+          /* remove filename */
+          *(_tcsrchr (temp, '\\')) = 0;
+          /* remove bin subdirectory, if present */
+          cch = _tcslen (temp);
+          if (cch > 7) /* e.g. C:\x\bin */
             {
-	      if (0 == _tcsicmp (temp+cch-4, _T("\\bin")))
+              if (0 == _tcsicmp (temp+cch-4, _T("\\bin")))
                 {
-		  cch -= 4;
-		  *(temp+cch) = '\0';
+                  cch -= 4;
+                  *(temp+cch) = '\0';
                 }
             }
 
-	  gambcdir = ___CAST(___UCS_2STRING,
-			     ___alloc_mem ((cch+1) * sizeof (___UCS_2)));
+          gambcdir = ___CAST(___UCS_2STRING,
+                             ___alloc_rc ((cch+1) * sizeof (___UCS_2)));
 
-	  if (gambcdir == 0)
+          if (gambcdir == 0)
             {
-	      e = ___FIX(___HEAP_OVERFLOW_ERR);
-	      return e;
+              e = ___FIX(___HEAP_OVERFLOW_ERR);
+              return e;
             }
-	  else
+          else
             {
 #ifdef _UNICODE
-	      _tcscpy (gambcdir, temp);
+              _tcscpy (gambcdir, temp);
 #else
-	      mbstowcs (gambcdir, temp, cch);
+              mbstowcs (gambcdir, temp, cch);
               gambcdir[cch] = '\0';
 #endif
-	      ___setup_params.gambcdir = gambcdir;
+              ___setup_params.gambcdir = gambcdir;
             }
       }
   }

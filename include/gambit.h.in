@@ -8020,6 +8020,9 @@ typedef struct ___global_state_struct
     void (*___set_standard_level)
        ___P((int level),
             ());
+    void (*___set_gambcdir)
+       ___P((___UCS_2STRING gambcdir),
+            ());
     int (*___set_debug_settings)
        ___P((int mask,
              int new_settings),
@@ -9137,6 +9140,9 @@ ___IMP_FUNC(void,___set_live_percent)
 ___IMP_FUNC(int,___get_standard_level) ___PVOID;
 ___IMP_FUNC(void,___set_standard_level)
    ___P((int level),
+        ());
+___IMP_FUNC(void,___set_gambcdir)
+   ___P((___UCS_2STRING gambcdir),
         ());
 ___IMP_FUNC(int,___set_debug_settings)
    ___P((int mask,

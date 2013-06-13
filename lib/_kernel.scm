@@ -1805,12 +1805,11 @@ end-of-code
    "___set_standard_level (___INT(___ARG1)); ___RESULT = ___VOID;"
    level))
  
- (define-prim (##set-gambcdir! dir)
+(define-prim (##set-gambcdir! dir)
   (##declare (not interrupts-enabled))
-  (##c-code
-   "___UCS_2STRING str; ___SCMOBJ_to_UCS_2STRING(___ARG1,&str,___ARG2); ___set_gambcdir (str); ___RESULT = ___VOID;"
-   dir
-   (##string-length dir)))
+  ((##c-lambda (UCS-2-string) void
+               "___addref_string (___arg1); ___set_gambcdir (___arg1);")
+   dir))
    
 (define-prim (##set-debug-settings! mask new-settings)
   (##declare (not interrupts-enabled))
