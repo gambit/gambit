@@ -748,7 +748,7 @@
       (set! proc-queue '())
       (set! known-procs '())
 
-      (let* ((proc-info (schedule-gen-proc node '()))
+      (let* ((proc-info (schedule-gen-proc node #f))
              (entry-lbl-num (proc-info-lbl1 proc-info)))
 
         (define (do-body)
@@ -899,10 +899,11 @@
 (define poll-tail #f) ; R
 (set! poll-tail 200)
 
-;; (entry-context proc closed) returns the context in existence upon entry to
-;; the procedure `proc'
+;; (entry-context proc closed-list) returns the context in existence
+;; upon entry to the procedure `proc'.  When the procedure is not
+;; a closure, closed-list = #f.
 
-(define (entry-context proc closed)
+(define (entry-context proc closed-list)
 
   (define (empty-vars-list n)
     (if (> n 0)
@@ -910,7 +911,7 @@
       '()))
 
   (let* ((parms (prc-parms proc))
-         (pc (target.label-info (length parms) (not (null? closed))))
+         (pc (target.label-info (length parms) (not (not closed-list))))
          (fs (pcontext-fs pc))
          (slots-list (empty-vars-list fs))
          (regs-list (empty-vars-list target.nb-regs)))
@@ -950,8 +951,13 @@
           (loop (cdr l)))))
 
 ;;;;;;;;;;;;;;;;;;
-'(pp (list '********2 fs (map (lambda (x) (and x (var-name x))) slots-list) (map (lambda (x) (and x (var-name x))) regs-list) (map var-name closed)))
-    (make-context fs slots-list regs-list closed (entry-poll) #f)))
+'(pp (list '********2 fs (map (lambda (x) (and x (var-name x))) slots-list) (map (lambda (x) (and x (var-name x))) regs-list) (and closed-list (map var-name closed-list))))
+    (make-context fs
+                  slots-list
+                  regs-list
+                  (or closed-list '())
+                  (entry-poll)
+                  #f)))
 
 (define (get-var opnd)
   (cond ((glo? opnd)
@@ -1213,6 +1219,7 @@
         (list->varset (prc-parms proc)))))
 
 (define (schedule-gen-proc proc closed-list)
+  ;; closed-list = #f when proc is not a closure
   (let* ((lbl1 (bbs-new-lbl! *bbs*)) ; arg check entry point
          (lbl2 (bbs-new-lbl! *bbs*)) ; no arg check entry point
          (context-lbl1 (entry-context proc closed-list))
@@ -1223,6 +1230,7 @@
                                     (varset-union (proc-body-live-varset proc)
                                                   ret-var-set))))
          (frame-lbl2 frame-lbl1)
+         (closed? (not (not closed-list)))
          (bb1 (make-bb
                 (make-label-entry
                   lbl1
@@ -1233,7 +1241,7 @@
                               (cons (car x) (make-obj (cdr x))))
                             (prc-keys proc)))
                   (prc-rest? proc)
-                  (not (null? closed-list))
+                  closed?
                   frame-lbl1
                   (node->comment proc))
                 *bbs*))
@@ -1244,7 +1252,9 @@
                   (node->comment proc))
                 *bbs*))
          (proc-info (make-proc-info proc lbl1 lbl2 bb2 context-lbl2
-                                    (target.label-info (length (prc-parms proc)) (not (null? closed-list))))));**************
+                                    (target.label-info
+                                     (length (prc-parms proc))
+                                     closed?))))
     (context-entry-bb-set! context-lbl1 bb1)
     (bb-put-branch! bb1
       (make-jump (make-lbl lbl2) #f #f #f frame-lbl2 (node->comment proc)))
@@ -1398,10 +1408,12 @@
         ((prc? node)
          (let* ((closed (not-constant-closed-vars node))
                 (closed-list (sort-variables (varset->list closed)))
-                (proc-info (schedule-gen-proc node closed-list))
+                (closed? (or (not (null? closed-list))
+                             (generative-lambda? (node-env node))))
+                (proc-info (schedule-gen-proc node (and closed? closed-list)))
                 (proc-lbl (make-lbl (proc-info-lbl1 proc-info))))
            (let ((opnd
-                  (if (null? closed-list)
+                  (if (not closed?)
                     (begin
                       (add-known-proc proc-info)
                       proc-lbl)
@@ -3459,6 +3471,10 @@
     (define (closed-vars? var const-proc-vars)
       (not (no-closed-vars? var const-proc-vars)))
 
+    (define (optional-closure? var)
+      (or (ptset-every? oper-pos? (var-refs var))
+          (not (generative-lambda? (node-env (var->val var))))))
+
     (define (compute-const-proc-vars proc-vars)
       (let loop1 ((const-proc-vars proc-vars))
         (let ((new-const-proc-vars
@@ -3470,15 +3486,24 @@
             const-proc-vars
             (loop1 new-const-proc-vars)))))
 
-    (let* ((proc-vars (list->varset (keep proc-var? (varset->list var-set))))
-           (const-proc-vars (compute-const-proc-vars proc-vars))
-           (clo-vars-list (keep (lambda (x) (closed-vars? x const-proc-vars))
-                                (varset->list proc-vars)))
-           (clo-vars (list->varset clo-vars-list)))
+    (let* ((proc-vars-list
+            (keep proc-var? (varset->list var-set)))
+           (proc-vars
+            (list->varset proc-vars-list))
+           (proc-vars-with-optional-closure-list
+            (keep optional-closure? proc-vars-list))
+           (proc-vars-with-optional-closure
+            (list->varset proc-vars-with-optional-closure-list))
+           (const-proc-vars
+            (compute-const-proc-vars proc-vars-with-optional-closure))
+           (clo-vars
+            (varset-difference proc-vars const-proc-vars))
+           (clo-vars-list
+            (varset->list clo-vars)))
 
       (for-each
         (lambda (proc-var)
-          (let* ((proc-info (schedule-gen-proc (var->val proc-var) '()))
+          (let* ((proc-info (schedule-gen-proc (var->val proc-var) #f))
                  (proc-lbl (make-lbl (proc-info-lbl1 proc-info))))
             (add-known-proc proc-info)
             (add-constant-var proc-var proc-lbl)))
@@ -3530,20 +3555,16 @@
             (zzzbb-put-non-branch! *bb* "IN gen-let"
               (make-close
                 (map (lambda (var)
-                       (let ((closed-list
+                       (let* ((closed-list
                                (sort-variables
-                                 (varset->list
-                                   (closed-vars var const-proc-vars)))))
-                         (if (null? closed-list)
-                           (compiler-internal-error
-                             "gen-let, no closed variables:" (var-name var))
-                           (let ((proc-info
-                                  (schedule-gen-proc (var->val var)
-                                                     closed-list)))
-                             (make-closure-parms
-                              (var->opnd var)
-                              (proc-info-lbl1 proc-info)
-                              (map var->opnd closed-list))))))
+                                (varset->list
+                                 (closed-vars var const-proc-vars))))
+                              (proc-info
+                               (schedule-gen-proc (var->val var) closed-list)))
+                         (make-closure-parms
+                          (var->opnd var)
+                          (proc-info-lbl1 proc-info)
+                          (map var->opnd closed-list))))
                      clo-vars-list)
                 (current-frame liv)
                 (node->comment node)))))

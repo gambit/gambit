@@ -259,7 +259,7 @@
   (targ-emit-label lbl #f #f))
 
 (define (targ-emit-label-entry lbl nb-parms label-descr)
-  (targ-emit-label lbl 'proc (vector nb-parms 0)))
+  (targ-emit-label lbl 'proc (vector nb-parms -1)))
 
 (define (targ-emit-label-subproc lbl nb-parms nb-closed label-descr)
   (targ-emit-label lbl 'proc (vector nb-parms nb-closed)))
@@ -821,7 +821,7 @@
         (targ-ref-lbl-val lbl)
         (targ-ref-lbl-goto lbl))
       (let ((nb-closed (length (frame-closed targ-proc-exit-frame))));******
-        (targ-emit-label-subproc lbl nb-parms nb-closed label-descr))))
+        (targ-emit-label-subproc lbl nb-parms (if closed? nb-closed -1) label-descr))))
 
   (let* ((nb-parms-except-rest
           (- nb-parms (if rest? 1 0)))

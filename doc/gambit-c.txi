@@ -3948,6 +3948,18 @@ cause the stack to overflow when performing long iterations with tail
 calls (whether they are expressed with a @code{letrec}, named
 @code{let}, @code{do}, or other form).
 
+@item (@r{[}not@r{]} generative-lambda)
+@opindex generative-lambda
+@cindex generative-lambda
+Force (or don't force) the creation of fresh closures when evaluating
+lambda-expressions.  A fresh closure is always created when a
+lambda-expression has at least one free variable (that has not been
+eliminated by dead-code elimination or other compiler optimization) or
+when the generative-lambda declaration is turned on.  When a
+lambda-expression has no free variables and the generative-lambda
+declaration is turned off, the value of the lambda-expression may be
+the same procedure (in the sense of @code{eq?}).
+
 @item (@r{[}not@r{]} optimize-dead-local-variables)
 @opindex optimize-dead-local-variables
 Remove (or preserve) the dead local variables in the environment.
@@ -4006,6 +4018,7 @@ The default declarations used by the compiler are equivalent to:
   (debug-source)        ;; depends on debugging command line options
   (debug-environments)  ;; depends on debugging command line options
   (proper-tail-calls)
+  (not generative-lambda)
   (optimize-dead-local-variables)
   (generic)
   (mostly-fixnum-flonum)

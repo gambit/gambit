@@ -387,7 +387,7 @@ end-of-code
 
    /* ___ps->temp1 points to the entry point of the procedure */
 
-   if (___PRD_NBCLOSED(___HEADER(___ps->temp1)) == 0)
+   if (___HD_TYP(___HEADER(___ps->temp1)) == ___PERM)
      {
        ___COVER_WRONG_NARGS_HANDLER_NONCLOSURE;
        ___SET_STK(-na,___ps->temp1) /*set operator argument when nonclosure*/

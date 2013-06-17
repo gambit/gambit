@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_parms.scm", Time-stamp: <2013-04-28 13:49:50 feeley>
+;;; File: "_parms.scm"
 
-;;; Copyright (c) 1994-2010 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -117,6 +117,8 @@
 (define environment-map-sym    (string->canonical-symbol "environment-map")) ;; deprecated: use debug-environments
 
 (define proper-tail-calls-sym  (string->canonical-symbol "proper-tail-calls"))
+
+(define generative-lambda-sym  (string->canonical-symbol "generative-lambda"))
 
 (define optimize-dead-local-variables-sym (string->canonical-symbol "optimize-dead-local-variables"))
 

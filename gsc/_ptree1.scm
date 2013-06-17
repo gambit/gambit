@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -425,6 +425,11 @@
 ;; (proper-tail-calls)                 generate proper tail calls
 ;; (not proper-tail-calls)             don't generate proper tail calls
 ;;
+;; Proper procedure identity declarations:
+;;
+;; (generative-lambda)                 generate closures even when no free vars
+;; (not generative-lambda)             don't generate closures when no free vars
+;;
 ;; Optimizing dead local variables declarations:
 ;;
 ;; (optimize-dead-local-variables)     optimize dead local variables
@@ -467,6 +472,8 @@
 (define-boolean-decl environment-map-sym) ;; deprecated: use debug-environments
 
 (define-boolean-decl proper-tail-calls-sym)
+
+(define-boolean-decl generative-lambda-sym)
 
 (define-boolean-decl optimize-dead-local-variables-sym)
 
@@ -545,6 +552,9 @@
 
 (define (add-proper-tail-calls env)
   (env-declare env (list proper-tail-calls-sym #t)))
+
+(define (generative-lambda? env) ; true iff closures should be created even when there are no free variables
+  (declaration-value generative-lambda-sym #f #f env))
 
 (define (optimize-dead-local-variables? env) ; true iff dead local variables should be optimized
   (declaration-value optimize-dead-local-variables-sym #f #t env))

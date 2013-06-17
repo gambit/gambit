@@ -5379,9 +5379,9 @@ ___LOCAL ___WORD ___ofdtbl[]={
 #define ___U64VEC1(hi,lo),___P1U64(hi,lo)
 
 #define ___PRD(nbparms,nbclosed) \
-___MAKE_HD((nbclosed<<12)+nbparms,___sPROCEDURE,___PERM)
+___MAKE_HD(((nbclosed+1)<<12)+nbparms,___sPROCEDURE,___PERM)
 #define ___PRD_NBPARMS(x)(((x)>>(___SB+___HTB))&((1<<12)-1))
-#define ___PRD_NBCLOSED(x)(((x)>>(___SB+___HTB+12))&((1<<12)-1))
+#define ___PRD_NBCLOSED(x)((((x)>>(___SB+___HTB+12))&((1<<12)-1))-1)
 
 #define ___IFD(kind,fs,link,gcmap)(gcmap<<12)+(link<<7)+(fs<<2)+kind
 #define ___OFD(kind,fs,link,gcmap)___IFD(kind,0,0,0)

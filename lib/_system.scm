@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3775,7 +3775,7 @@
                           (err)
                           (let ((nb-closed
                                  (subprocedure-nb-closed subproc)))
-                            (if #f;;;;; nb-closed = 0
+                            (if #f;;;;; nb-closed < 0
                                 (err)
                                 (let ((obj (make-vector (+ nb-closed 1))))
                                   (vector-set! obj 0 subproc)
