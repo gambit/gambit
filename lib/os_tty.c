@@ -750,12 +750,14 @@ ___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
 
 #ifdef USE_WIN32
 
+#if 0
 #ifdef USE_GetConsoleWindow
 
 ___BEGIN_C_LINKAGE
 HWND WINAPI GetConsoleWindow (void);
 ___END_C_LINKAGE
 
+#endif
 #endif
 
 ___HIDDEN BOOL WINAPI console_event_handler

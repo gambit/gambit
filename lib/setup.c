@@ -1791,7 +1791,7 @@ __attribute__((noinline))
 
 ___HIDDEN void trampoline
    ___P((___processor_state ___ps),
-        (ps)
+        (___ps)
 ___processor_state ___ps;)
 {
   ___SCMOBJ ___pc = ___ps->pc;
