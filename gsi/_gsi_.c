@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit-C v4.6.9
+; File: "_gsi_.c", produced by Gambit-C v4.7.0
 (
-406009
+407000
 " _gsi_"
 (" _kernel" " _system" " _num" " _std" " _eval" " _io" " _nonstd" " _thread" " _repl" " _gsilib" " _gsi")
 (
@@ -1147,6 +1147,7 @@
 " _kernel#78"
 " _kernel#79"
 " _kernel#8"
+" _kernel#80"
 " _kernel#9"
 " _nonstd"
 " _num"
@@ -2753,6 +2754,7 @@
 "##thread-terminate!"
 "##thread-timeout-action!"
 "##thread-toq-remove!"
+"##thread-trace"
 "##thread-void-action!"
 "##thread-yield!"
 "##timeout->time"
@@ -3209,17 +3211,6 @@
 "output-port-width"
 "path-expand"
 "path-normalize"
-"pcase10"
-"pcase11"
-"pcase12"
-"pcase13"
-"pcase3"
-"pcase4"
-"pcase5"
-"pcase6"
-"pcase7"
-"pcase8"
-"pcase9"
 "peek-char"
 "port-settings-set!"
 "positive?"
@@ -3820,6 +3811,7 @@
 "##set-box!"
 "##set-car!"
 "##set-cdr!"
+"##set-gambcdir!"
 "##set-live-percent!"
 "##set-max-heap!"
 "##set-min-heap!"
@@ -4470,7 +4462,7 @@
  #f
 )
 #else
-#define ___VERSION 406009
+#define ___VERSION 407000
 #define ___LINKFILE_NAME " _gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
@@ -4649,6 +4641,7 @@ ___DEF_OLD_SYM_GLO(___S__20___kernel_23_77,___G__20___kernel_23_77)
 ___DEF_OLD_SYM_GLO(___S__20___kernel_23_78,___G__20___kernel_23_78)
 ___DEF_OLD_SYM_GLO(___S__20___kernel_23_79,___G__20___kernel_23_79)
 ___DEF_OLD_SYM_GLO(___S__20___kernel_23_8,___G__20___kernel_23_8)
+___DEF_OLD_SYM_GLO(___S__20___kernel_23_80,___G__20___kernel_23_80)
 ___DEF_OLD_SYM_GLO(___S__20___kernel_23_9,___G__20___kernel_23_9)
 ___DEF_OLD_SYM_GLO(___S__20___nonstd,___G__20___nonstd)
 ___DEF_OLD_SYM_GLO(___S__20___num,___G__20___num)
@@ -6549,6 +6542,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_box_21_,___G__23__23_set_2d_box_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_car_21_,___G__23__23_set_2d_car_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_cdr_21_,___G__23__23_set_2d_cdr_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_debug_2d_settings_21_,___G__23__23_set_2d_debug_2d_settings_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_set_2d_gambcdir_21_,___G__23__23_set_2d_gambcdir_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_live_2d_percent_21_,___G__23__23_set_2d_live_2d_percent_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_max_2d_heap_21_,___G__23__23_set_2d_max_2d_heap_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_min_2d_heap_21_,___G__23__23_set_2d_min_2d_heap_21_)
@@ -6796,6 +6790,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_suspend_21_,___G__23__23_thread_2d_sus
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_terminate_21_,___G__23__23_thread_2d_terminate_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_timeout_2d_action_21_,___G__23__23_thread_2d_timeout_2d_action_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_toq_2d_remove_21_,___G__23__23_thread_2d_toq_2d_remove_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_trace,___G__23__23_thread_2d_trace)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_void_2d_action_21_,___G__23__23_thread_2d_void_2d_action_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_yield_21_,___G__23__23_thread_2d_yield_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_time,___G__23__23_time)
@@ -8059,17 +8054,6 @@ ___DEF_OLD_SYM_GLO(___S_path_2d_strip_2d_extension,___G_path_2d_strip_2d_extensi
 ___DEF_OLD_SYM_GLO(___S_path_2d_strip_2d_trailing_2d_directory_2d_separator,___G_path_2d_strip_2d_trailing_2d_directory_2d_separator)
 ___DEF_OLD_SYM_GLO(___S_path_2d_strip_2d_volume,___G_path_2d_strip_2d_volume)
 ___DEF_OLD_SYM_GLO(___S_path_2d_volume,___G_path_2d_volume)
-___DEF_OLD_SYM_GLO(___S_pcase10,___G_pcase10)
-___DEF_OLD_SYM_GLO(___S_pcase11,___G_pcase11)
-___DEF_OLD_SYM_GLO(___S_pcase12,___G_pcase12)
-___DEF_OLD_SYM_GLO(___S_pcase13,___G_pcase13)
-___DEF_OLD_SYM_GLO(___S_pcase3,___G_pcase3)
-___DEF_OLD_SYM_GLO(___S_pcase4,___G_pcase4)
-___DEF_OLD_SYM_GLO(___S_pcase5,___G_pcase5)
-___DEF_OLD_SYM_GLO(___S_pcase6,___G_pcase6)
-___DEF_OLD_SYM_GLO(___S_pcase7,___G_pcase7)
-___DEF_OLD_SYM_GLO(___S_pcase8,___G_pcase8)
-___DEF_OLD_SYM_GLO(___S_pcase9,___G_pcase9)
 ___DEF_OLD_SYM_GLO(___S_peek_2d_char,___G_peek_2d_char)
 ___DEF_OLD_SYM_GLO(___S_peek_2d_eof_3f_,___G_peek_2d_eof_3f_)
 ___DEF_OLD_SYM_GLO(___S_peer,___G_peer)

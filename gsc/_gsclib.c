@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsclib.c", produced by Gambit-C v4.6.9
+; File: "_gsclib.c", produced by Gambit-C v4.7.0
 (
-406009
+407000
 " _gsclib"
 (" _gsclib")
 (
@@ -98,7 +98,7 @@
  #f
 )
 #else
-#define ___VERSION 406009
+#define ___VERSION 407000
 #define ___MODULE_NAME " _gsclib"
 #define ___LINKER_ID ____20___gsclib
 #define ___MH_PROC ___H__20___gsclib
@@ -2945,8 +2945,8 @@ ___END_M_COD
 
 ___BEGIN_LBL
  ___DEF_LBL_INTRO(___H__20___gsclib," _gsclib",___REF_FAL,15,0)
-,___DEF_LBL_PROC(___H__20___gsclib,0,0)
-,___DEF_LBL_PROC(___H__20___gsclib,0,0)
+,___DEF_LBL_PROC(___H__20___gsclib,0,-1)
+,___DEF_LBL_PROC(___H__20___gsclib,0,-1)
 ,___DEF_LBL_RET(___H__20___gsclib,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__20___gsclib,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__20___gsclib,___IFD(___RETI,0,0,0x3fL))
@@ -2962,12 +2962,12 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__20___gsclib,___IFD(___RETI,8,8,0x3f0cL))
 ,___DEF_LBL_INTRO(___H__23__23_compile_2d_options_2d_normalize,"##compile-options-normalize",___REF_FAL,
 4,0)
-,___DEF_LBL_PROC(___H__23__23_compile_2d_options_2d_normalize,1,0)
+,___DEF_LBL_PROC(___H__23__23_compile_2d_options_2d_normalize,1,-1)
 ,___DEF_LBL_RET(___H__23__23_compile_2d_options_2d_normalize,___IFD(___RETI,1,4,0x3f0L))
-,___DEF_LBL_PROC(___H__23__23_compile_2d_options_2d_normalize,1,0)
+,___DEF_LBL_PROC(___H__23__23_compile_2d_options_2d_normalize,1,-1)
 ,___DEF_LBL_RET(___H__23__23_compile_2d_options_2d_normalize,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_INTRO(___H_compile_2d_file_2d_to_2d_target,"compile-file-to-target",___REF_FAL,9,0)
-,___DEF_LBL_PROC(___H_compile_2d_file_2d_to_2d_target,5,0)
+,___DEF_LBL_PROC(___H_compile_2d_file_2d_to_2d_target,5,-1)
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETI,8,1,0x3f0fL))
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETN,5,1,0xfL))
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETN,5,1,0xfL))
@@ -2978,7 +2978,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETI,3,4,0x3f3L))
 ,___DEF_LBL_INTRO(___H__23__23_compile_2d_file_2d_to_2d_target,"##compile-file-to-target",___REF_FAL,16,0)
 
-,___DEF_LBL_PROC(___H__23__23_compile_2d_file_2d_to_2d_target,4,0)
+,___DEF_LBL_PROC(___H__23__23_compile_2d_file_2d_to_2d_target,4,-1)
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETI,8,1,0x3f0fL))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETN,5,1,0xfL))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETN,5,1,0x1bL))
@@ -2995,7 +2995,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETI,4,4,0x3f0L))
 ,___DEF_LBL_INTRO(___H_compile_2d_file,"compile-file",___REF_FAL,11,0)
-,___DEF_LBL_PROC(___H_compile_2d_file,7,0)
+,___DEF_LBL_PROC(___H_compile_2d_file,7,-1)
 ,___DEF_LBL_RET(___H_compile_2d_file,___OFD(___RETI,12,1,0x3f03fL))
 ,___DEF_LBL_RET(___H_compile_2d_file,___IFD(___RETN,9,1,0x3fL))
 ,___DEF_LBL_RET(___H_compile_2d_file,___IFD(___RETN,9,1,0x3fL))
@@ -3007,7 +3007,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_compile_2d_file,___IFD(___RETI,4,4,0x3f0L))
 ,___DEF_LBL_RET(___H_compile_2d_file,___IFD(___RETI,4,4,0x3f3L))
 ,___DEF_LBL_INTRO(___H__23__23_compile_2d_file,"##compile-file",___REF_FAL,39,0)
-,___DEF_LBL_PROC(___H__23__23_compile_2d_file,6,0)
+,___DEF_LBL_PROC(___H__23__23_compile_2d_file,6,-1)
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file,___OFD(___RETI,12,3,0x3f07dL))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file,___IFD(___RETN,9,3,0x7dL))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file,___IFD(___RETN,9,3,0x7fL))
@@ -3047,7 +3047,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file,___IFD(___RETN,9,3,0x1ffL))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file,___IFD(___RETN,13,3,0x3ffL))
 ,___DEF_LBL_INTRO(___H__23__23_build_2d_executable,"##build-executable",___REF_FAL,9,0)
-,___DEF_LBL_PROC(___H__23__23_build_2d_executable,6,0)
+,___DEF_LBL_PROC(___H__23__23_build_2d_executable,6,-1)
 ,___DEF_LBL_RET(___H__23__23_build_2d_executable,___OFD(___RETI,12,3,0x3f07dL))
 ,___DEF_LBL_RET(___H__23__23_build_2d_executable,___IFD(___RETN,9,3,0x7dL))
 ,___DEF_LBL_RET(___H__23__23_build_2d_executable,___IFD(___RETN,9,3,0x7fL))
@@ -3057,13 +3057,13 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_build_2d_executable,___IFD(___RETI,8,3,0x3f08L))
 ,___DEF_LBL_RET(___H__23__23_build_2d_executable,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_INTRO(___H__23__23_gambc_2d_cc,"##gambc-cc",___REF_FAL,53,0)
-,___DEF_LBL_PROC(___H__23__23_gambc_2d_cc,8,0)
+,___DEF_LBL_PROC(___H__23__23_gambc_2d_cc,8,-1)
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___OFD(___RETI,16,6,0x3f07ffL))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___OFD(___RETI,16,6,0x3f07ffL))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETI,8,1,0x3f03L))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETN,5,1,0x3L))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_PROC(___H__23__23_gambc_2d_cc,0,0)
+,___DEF_LBL_PROC(___H__23__23_gambc_2d_cc,0,-1)
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETN,13,6,0x7ffL))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETN,13,6,0xfffL))
@@ -3103,7 +3103,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___OFD(___RETI,20,20,0x3f04003L))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETN,17,6,0x1fff7L))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETN,17,6,0x1ffefL))
-,___DEF_LBL_PROC(___H__23__23_gambc_2d_cc,1,0)
+,___DEF_LBL_PROC(___H__23__23_gambc_2d_cc,1,-1)
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_PROC(___H__23__23_gambc_2d_cc,1,1)
@@ -3111,7 +3111,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H__23__23_gambc_2d_cc,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_INTRO(___H_link_2d_incremental,"link-incremental",___REF_FAL,18,0)
-,___DEF_LBL_PROC(___H_link_2d_incremental,5,0)
+,___DEF_LBL_PROC(___H_link_2d_incremental,5,-1)
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,4,4,0x3ffL))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,4,4,0x3ffL))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,4,4,0x3ffL))
@@ -3125,12 +3125,12 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,4,4,0x3f1L))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,4,4,0x3f0L))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_PROC(___H_link_2d_incremental,0,0)
+,___DEF_LBL_PROC(___H_link_2d_incremental,0,-1)
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,4,4,0x3f3L))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,3,4,0x3f3L))
 ,___DEF_LBL_INTRO(___H__23__23_link_2d_incremental,"##link-incremental",___REF_FAL,13,0)
-,___DEF_LBL_PROC(___H__23__23_link_2d_incremental,4,0)
+,___DEF_LBL_PROC(___H__23__23_link_2d_incremental,4,-1)
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETI,8,1,0x3f0fL))
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0xfL))
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1fL))
@@ -3144,7 +3144,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1fL))
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1fL))
 ,___DEF_LBL_INTRO(___H_link_2d_flat,"link-flat",___REF_FAL,11,0)
-,___DEF_LBL_PROC(___H_link_2d_flat,4,0)
+,___DEF_LBL_PROC(___H_link_2d_flat,4,-1)
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,3,4,0x3f7L))
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,3,4,0x3f7L))
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,3,4,0x3f7L))
@@ -3156,7 +3156,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,3,4,0x3f3L))
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,3,4,0x3f3L))
 ,___DEF_LBL_INTRO(___H__23__23_link_2d_flat,"##link-flat",___REF_FAL,12,0)
-,___DEF_LBL_PROC(___H__23__23_link_2d_flat,3,0)
+,___DEF_LBL_PROC(___H__23__23_link_2d_flat,3,-1)
 ,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xfL))
@@ -3169,7 +3169,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_INTRO(___H__23__23_c_2d_code,"##c-code",___REF_FAL,2,0)
-,___DEF_LBL_PROC(___H__23__23_c_2d_code,1,0)
+,___DEF_LBL_PROC(___H__23__23_c_2d_code,1,-1)
 ,___DEF_LBL_RET(___H__23__23_c_2d_code,___IFD(___RETI,0,0,0x3fL))
 ___END_LBL
 

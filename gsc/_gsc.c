@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc.c", produced by Gambit-C v4.6.9
+; File: "_gsc.c", produced by Gambit-C v4.7.0
 (
-406009
+407000
 " _gsc"
 (" _gsc")
 (
@@ -190,7 +190,7 @@
  #f
 )
 #else
-#define ___VERSION 406009
+#define ___VERSION 407000
 #define ___MODULE_NAME " _gsc"
 #define ___LINKER_ID ____20___gsc
 #define ___MH_PROC ___H__20___gsc
@@ -4341,12 +4341,12 @@ ___END_M_COD
 
 ___BEGIN_LBL
  ___DEF_LBL_INTRO(___H__20___gsc," _gsc",___REF_FAL,4,0)
-,___DEF_LBL_PROC(___H__20___gsc,0,0)
+,___DEF_LBL_PROC(___H__20___gsc,0,-1)
 ,___DEF_LBL_RET(___H__20___gsc,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__20___gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__20___gsc,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_INTRO(___H__23__23_main_2d_gsi_2f_gsc,"##main-gsi/gsc",___REF_FAL,296,0)
-,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,0,0)
+,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,0,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
@@ -4469,7 +4469,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,9,8,0x100L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___OFD(___RETI,12,12,0x3f000L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,0)
+,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
@@ -4506,7 +4506,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,13,8,0xfffL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,13,8,0xfffL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,0)
+,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
@@ -4555,7 +4555,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,0)
+,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
@@ -4607,7 +4607,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,6,0,0x3f31L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
-,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,0)
+,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x3L))
@@ -4625,7 +4625,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,9,0,0x7fL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,0)
+,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
@@ -4643,7 +4643,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,4,0x3f0L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_INTRO(___H_main,"main",___REF_FAL,1,0)
-,___DEF_LBL_PROC(___H_main,1,0)
+,___DEF_LBL_PROC(___H_main,1,-1)
 ___END_LBL
 
 ___BEGIN_OFD

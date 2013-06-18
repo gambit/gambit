@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi.c", produced by Gambit-C v4.6.9
+; File: "_gsi.c", produced by Gambit-C v4.7.0
 (
-406009
+407000
 " _gsi"
 (" _gsi")
 (
@@ -143,7 +143,7 @@
  #f
 )
 #else
-#define ___VERSION 406009
+#define ___VERSION 407000
 #define ___MODULE_NAME " _gsi"
 #define ___LINKER_ID ____20___gsi
 #define ___MH_PROC ___H__20___gsi
@@ -1996,12 +1996,12 @@ ___END_M_COD
 
 ___BEGIN_LBL
  ___DEF_LBL_INTRO(___H__20___gsi," _gsi",___REF_FAL,4,0)
-,___DEF_LBL_PROC(___H__20___gsi,0,0)
+,___DEF_LBL_PROC(___H__20___gsi,0,-1)
 ,___DEF_LBL_RET(___H__20___gsi,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__20___gsi,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__20___gsi,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_INTRO(___H__23__23_main_2d_gsi_2f_gsc,"##main-gsi/gsc",___REF_FAL,114,0)
-,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,0,0)
+,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,0,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
@@ -2094,7 +2094,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,6,0,0x3f31L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
-,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,0)
+,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,2,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x3L))
@@ -2116,7 +2116,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,4,0x3f0L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_INTRO(___H_main,"main",___REF_FAL,1,0)
-,___DEF_LBL_PROC(___H_main,1,0)
+,___DEF_LBL_PROC(___H_main,1,-1)
 ___END_LBL
 
 ___BEGIN_OFD
