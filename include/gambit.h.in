@@ -2999,10 +2999,11 @@ ___STORE_U64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___U64UNBOX(z));
 #define ___CLOSUREREF(x,y)___CLO(x,___INT(y))
 #define ___CLOSURESET(x,y,z)___SET_CLO(x,___INT(y),z)
 
-#define ___GLOBALVARREF(gv)((___glo_struct*)___FIELD(gv,___SYMBOL_GLOBAL))->val
-#define ___GLOBALVARPRIMREF(gv)((___glo_struct*)___FIELD(gv,___SYMBOL_GLOBAL))->prm
-#define ___GLOBALVARSET(gv,x)((___glo_struct*)___FIELD(gv,___SYMBOL_GLOBAL))->val = x;
-#define ___GLOBALVARPRIMSET(gv,x)((___glo_struct*)___FIELD(gv,___SYMBOL_GLOBAL))->prm = x;
+#define ___GLOBALVARSTRUCT(gv)___CAST(___glo_struct*,___FIELD(gv,___SYMBOL_GLOBAL))
+#define ___GLOBALVARREF(gv)___GLOCELL(___GLOBALVARSTRUCT(gv)->val)
+#define ___GLOBALVARPRIMREF(gv)___PRMCELL(___GLOBALVARSTRUCT(gv)->prm)
+#define ___GLOBALVARSET(gv,x)___GLOCELL(___GLOBALVARSTRUCT(gv)->val) = x;
+#define ___GLOBALVARPRIMSET(gv,x)___PRMCELL(___GLOBALVARSTRUCT(gv)->prm) = x;
 
 #define ___MAKEPROMISE(x) \
 (___ALLOC(___PROMISE_SIZE+1), \
@@ -3363,11 +3364,23 @@ ___SET_R0(___GSTATE->handler_break)
 #define ___PSSTK(fpo)___FP_STK(___PSFP,fpo)
 #define ___PSADJFP(fpa)___FP_ADJFP(___PSFP,fpa)
 
-#define ___PRM(i,glo)___GLOSTRUCT(i,glo).prm
-#define ___GLO(i,glo)___GLOSTRUCT(i,glo).val
-#define ___SET_GLO(i,glo,x)___GLOSTRUCT(i,glo).val=x;
+#ifdef ___MULTIPLE_GLO
+#define ___GLOCELL(x)___ps->glos[x]
+#else
+#define ___GLOCELL(x)x
+#endif
+
+#ifdef ___MULTIPLE_PRM
+#define ___PRMCELL(x)___ps->prms[x]
+#else
+#define ___PRMCELL(x)x
+#endif
+
+#define ___PRM(i,glo)___PRMCELL(___GLOSTRUCT(i,glo).prm)
+#define ___GLO(i,glo)___GLOCELL(___GLOSTRUCT(i,glo).val)
+#define ___SET_GLO(i,glo,x)___GLO(i,glo)=x;
 #ifdef ___BIND_LATE
-#define ___GLOSTRUCT(i,glo)(*(___glo_struct*)___glotbl[i])
+#define ___GLOSTRUCT(i,glo)(*___CAST(___glo_struct*,___glotbl[i]))
 #else
 #define ___GLOSTRUCT(i,glo)glo
 #endif
@@ -5515,7 +5528,8 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 #define ___SUBTBL 0,0
 #endif
 
-#define ___BEGIN_MOD1 ___LOCAL ___WORD ___init_proc ___PVOID{
+#define ___BEGIN_MOD1 ___LOCAL ___WORD ___init_proc ___PVOID { \
+___processor_state ___ps=___PSTATE;
 #define ___DEF_PRM(i,glo,n)___PRM(i,glo)=___GLO(i,glo)=___MLBL(n);
 #define ___END_MOD1 return ___FIX(___NO_ERR); }
 
@@ -6908,6 +6922,14 @@ typedef struct ___processor_state_struct
     void (*dummy2) ___PVOID;
     void (*dummy1) ___PVOID;
 
+#ifdef ___MULTIPLE_GLO
+    ___SCMOBJ *glos;
+#endif
+
+#ifdef ___MULTIPLE_PRM
+    ___SCMOBJ *prms;
+#endif
+
 #ifdef ___USE_SETJMP
     ___jmpbuf_struct *catcher;
 #endif
@@ -7071,6 +7093,8 @@ typedef struct ___global_state_struct
     ___WORD handler_break;
     ___WORD internal_return;
     ___WORD dynamic_env_bind_return;
+
+    ___SIZE_T nb_glo_vars;    /* number of global variables */
 
     ___SCMOBJ symbol_table;   /* Hash table of all interned symbols.  */
     ___SCMOBJ keyword_table;  /* Hash table of all interned keywords. */

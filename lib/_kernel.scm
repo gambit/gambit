@@ -58,7 +58,7 @@ c-declare-end
    ___COVER_SFUN_CONVERSION_ERROR_HANDLER;
 
    ___JUMPPRM(___SET_NARGS(3),
-              ___G__23__23_raise_2d_sfun_2d_conversion_2d_exception.prm)
+              ___PRMCELL(___G__23__23_raise_2d_sfun_2d_conversion_2d_exception.prm))
 
 end-of-code
 )
@@ -96,7 +96,7 @@ end-of-code
    ___COVER_CFUN_CONVERSION_ERROR_HANDLER;
 
    ___JUMPPRM(___SET_NARGS(na+3),
-              ___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary.prm)
+              ___PRMCELL(___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary.prm))
 
 end-of-code
 
@@ -167,7 +167,7 @@ end-of-code
          {
            ___COVER_STACK_LIMIT_HANDLER_HEAP_OVERFLOW;
            ___JUMPPRM(___SET_NARGS(0),
-                      ___G__23__23_raise_2d_stack_2d_overflow_2d_exception.prm)
+                      ___PRMCELL(___G__23__23_raise_2d_stack_2d_overflow_2d_exception.prm))
          }
      }
 
@@ -193,7 +193,7 @@ end-of-code
 
            ___SET_R1(___FIX(i))
            ___JUMPPRM(___SET_NARGS(1),
-                      ___G__23__23_interrupt_2d_handler.prm)
+                      ___PRMCELL(___G__23__23_interrupt_2d_handler.prm))
          }
      }
    else
@@ -241,7 +241,7 @@ end-of-code
    ___COVER_HEAP_LIMIT_HANDLER_END;
 
    ___JUMPPRM(___SET_NARGS(0),
-              ___G__23__23_check_2d_heap.prm)
+              ___PRMCELL(___G__23__23_check_2d_heap.prm))
 
 end-of-code
 
@@ -279,7 +279,7 @@ end-of-code
    ___COVER_NONPROC_HANDLER_END;
 
    ___JUMPPRM(___SET_NARGS(na+1),
-              ___G__23__23_apply_2d_with_2d_procedure_2d_check_2d_nary.prm)
+              ___PRMCELL(___G__23__23_apply_2d_with_2d_procedure_2d_check_2d_nary.prm))
 
 end-of-code
 
@@ -318,8 +318,8 @@ end-of-code
    for (i=0; i<na; i++)
      ___SET_STK(-i,___STK(-(i+1))) /* shift arguments up by one */
 
-   result = ___CAST(___glo_struct*,___ps->temp4)->val;
-   handler = ___G__23__23_apply_2d_with_2d_procedure_2d_check_2d_nary.prm;
+   result = ___GLOCELL(___CAST(___glo_struct*,___ps->temp4)->val);
+   handler = ___PRMCELL(___G__23__23_apply_2d_with_2d_procedure_2d_check_2d_nary.prm);
 
 #if 0
 
@@ -335,7 +335,7 @@ end-of-code
              {
                ___COVER_GLOBAL_NONPROC_HANDLER_FOUND;
                result = probe;
-               handler = ___G__23__23_apply_2d_global_2d_with_2d_procedure_2d_check_2d_nary.prm;
+               handler = ___PRMCELL(___G__23__23_apply_2d_global_2d_with_2d_procedure_2d_check_2d_nary.prm);
                break;
              }
            ___COVER_GLOBAL_NONPROC_HANDLER_NEXT;
@@ -401,7 +401,7 @@ end-of-code
    ___POP_ARGS_IN_REGS(na+1) /* load register arguments */
 
    ___JUMPPRM(___SET_NARGS(na+1),
-              ___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary.prm)
+              ___PRMCELL(___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary.prm))
 
 end-of-code
 
@@ -440,7 +440,7 @@ end-of-code
        ___POP_ARGS_IN_REGS(na+1) /* load register arguments */
 
        ___JUMPPRM(___SET_NARGS(na+1),
-                  ___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary.prm)
+                  ___PRMCELL(___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary.prm))
      }
 
    rest_param_list = ___NUL;
@@ -492,7 +492,7 @@ end-of-code
                 ___PUSH_ARGS2(___ps->temp1,___GET_VECTOR(np))
 
                 ___JUMPPRM(___SET_NARGS(2),
-                           ___G__23__23_rest_2d_param_2d_check_2d_heap.prm)
+                           ___PRMCELL(___G__23__23_rest_2d_param_2d_check_2d_heap.prm))
               }
           }
      }
@@ -556,7 +556,7 @@ end-of-code
        ___POP_ARGS_IN_REGS(na+1) /* load register arguments */
 
        ___JUMPPRM(___SET_NARGS(na+1),
-                  ___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary.prm)
+                  ___PRMCELL(___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary.prm))
      }
 
    /* find first non-keyword pair in remaining arguments */
@@ -598,7 +598,7 @@ end-of-code
        ___POP_ARGS_IN_REGS(na+1) /* load register arguments */
 
        ___JUMPPRM(___SET_NARGS(na+1),
-                  ___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary.prm)
+                  ___PRMCELL(___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary.prm))
 
        continue1:;
      }
@@ -624,7 +624,7 @@ end-of-code
        ___POP_ARGS_IN_REGS(na+1) /* load register arguments */
 
        ___JUMPPRM(___SET_NARGS(na+1),
-                  ___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary.prm)
+                  ___PRMCELL(___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary.prm))
      }
 
    ___ADJFP(-k) /* remove keyword arguments */
@@ -717,7 +717,7 @@ end-of-code
        ___POP_ARGS_IN_REGS(na+1) /* load register arguments */
 
        ___JUMPPRM(___SET_NARGS(na+1),
-                  ___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary.prm)
+                  ___PRMCELL(___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary.prm))
      }
 
    /* find first non-keyword pair in remaining arguments */
@@ -761,7 +761,7 @@ end-of-code
            ___POP_ARGS_IN_REGS(na+1) /* load register arguments */
 
            ___JUMPPRM(___SET_NARGS(na+1),
-                      ___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary.prm)
+                      ___PRMCELL(___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary.prm))
          }
 
        continue2:;
@@ -794,7 +794,7 @@ end-of-code
            ___POP_ARGS_IN_REGS(na+1) /* load register arguments */
 
            ___JUMPPRM(___SET_NARGS(na+1),
-                      ___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary.prm)
+                      ___PRMCELL(___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary.prm))
          }
 
 #endif
@@ -865,7 +865,7 @@ end-of-code
                 ___PUSH_ARGS2(___ps->temp1,___GET_VECTOR(np))
 
                 ___JUMPPRM(___SET_NARGS(2),
-                           ___G__23__23_rest_2d_param_2d_check_2d_heap.prm)
+                           ___PRMCELL(___G__23__23_rest_2d_param_2d_check_2d_heap.prm))
               }
           }
      }
@@ -938,7 +938,7 @@ end-of-code
        ___COVER_FORCE_HANDLER_NOT_DETERMINED;
 
        ___JUMPPRM(___SET_NARGS(2),
-                  ___G__23__23_force_2d_undetermined.prm)
+                  ___PRMCELL(___G__23__23_force_2d_undetermined.prm))
      }
 
 end-of-code
@@ -972,7 +972,7 @@ end-of-code
          ___COVER_RETURN_TO_C_HANDLER_MULTIPLE_RETURN;
          ___SET_R0(___GSTATE->handler_return_to_c)
          ___JUMPPRM(___SET_NARGS(0),
-                    ___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception.prm)
+                    ___PRMCELL(___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception.prm))
        }
 
 end-of-code
@@ -2724,7 +2724,7 @@ end-of-code
              ___COVER_APPLY_ARGUMENT_LIMIT;
 
              ___JUMPPRM(___SET_NARGS(2),
-                        ___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception.prm)
+                        ___PRMCELL(___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception.prm))
            }
        }
 
@@ -3579,8 +3579,15 @@ end-of-code
                 ___RESULT = e;
               else
                 {
-                  p->val = ___UNB1;
-                  p->prm = ___FAL;
+#ifdef ___MULTIPLE_GLO
+                  p->val = ___GSTATE->nb_glo_vars;
+#endif
+#ifdef ___MULTIPLE_PRM
+                  p->prm = ___GSTATE->nb_glo_vars;
+#endif
+                  ___GSTATE->nb_glo_vars++;
+                  ___GLOCELL(p->val) = ___UNB1;
+                  ___PRMCELL(p->prm) = ___FAL;
                   p->next = 0;
                   if (___ps->glo_list_head == 0)
                     ___ps->glo_list_head = ___CAST(___SCMOBJ,p);
@@ -3627,10 +3634,10 @@ end-of-code
 
    ___SCMOBJ p = ___ps->glo_list_head;
    if (___ARG2 == ___FAL)
-     while (p != 0 && ___CAST(___glo_struct*,p)->val != ___ARG1)
+     while (p != 0 && ___GLOCELL(___CAST(___glo_struct*,p)->val) != ___ARG1)
        p = ___CAST(___glo_struct*,p)->next;
    else
-     while (p != 0 && ___CAST(___glo_struct*,p)->prm != ___ARG1)
+     while (p != 0 && ___PRMCELL(___CAST(___glo_struct*,p)->prm) != ___ARG1)
        p = ___CAST(___glo_struct*,p)->next;
    ___RESULT = ___FAL;
    if (p != 0)

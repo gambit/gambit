@@ -4004,6 +4004,12 @@ ___SIZE_TS nonmovable_words_needed;)
   reference_location = IN_GLOBAL_VAR;
 #endif
 
+#ifdef ___MULTIPLE_GLO
+
+  mark_array (___ps->glos, ___GSTATE->nb_glo_vars);
+
+#else
+
   {
     ___WORD p = ___ps->glo_list_head;
 
@@ -4012,10 +4018,12 @@ ___SIZE_TS nonmovable_words_needed;)
 #ifdef ___DEBUG_GARBAGE_COLLECT
         print_global_var_name (p);
 #endif
-        mark_array (&___CAST(___glo_struct*,p)->val, 1);
+        mark_array (&___GLOCELL(___CAST(___glo_struct*,p)->val), 1);
         p = ___CAST(___glo_struct*,p)->next;
       }
   }
+
+#endif
 
   /* trace continuation */
 

@@ -475,6 +475,7 @@ ___UTF_8STRING str;
 int supply;
 ___glo_struct **glo;)
 {
+  ___processor_state ___ps = ___PSTATE;
   ___SCMOBJ sym;
   ___SCMOBJ g;
   ___glo_struct *p;
@@ -488,12 +489,23 @@ ___glo_struct **glo;)
 
   if (g == ___FIX(0))
     {
-      ___processor_state ___ps = ___PSTATE;
       ___SCMOBJ e;
+
       if ((e = ___alloc_global_var (&p)) != ___FIX(___NO_ERR))
         return e;
-      p->val = supply?___UNB2:___UNB1;
-      p->prm = ___FAL;
+
+#ifdef ___MULTIPLE_GLO
+      p->val = ___gstate.nb_glo_vars;
+#endif
+
+#ifdef ___MULTIPLE_PRM
+      p->prm = ___gstate.nb_glo_vars;
+#endif
+
+      ___gstate.nb_glo_vars++;
+      ___GLOCELL(p->val) = supply?___UNB2:___UNB1;
+      ___PRMCELL(p->prm) = ___FAL;
+
       p->next = 0;
       if (___ps->glo_list_head == 0)
         ___ps->glo_list_head = ___CAST(___SCMOBJ,p);
@@ -501,13 +513,14 @@ ___glo_struct **glo;)
         ___CAST(___glo_struct*,___ps->glo_list_tail)->next =
           ___CAST(___SCMOBJ,p);
       ___ps->glo_list_tail = ___CAST(___SCMOBJ,p);
+
       ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,p);
     }
   else
     {
       p = ___CAST(___glo_struct*,g);
-      if (supply && p->val == ___UNB1)
-        p->val = ___UNB2;
+      if (supply && ___GLOCELL(p->val) == ___UNB1)
+        ___GLOCELL(p->val) = ___UNB2;
     }
 
   *glo = p;
@@ -694,24 +707,24 @@ ___module_struct *module;)
   ___SCMOBJ *cns = 0;
 
   int flags                 = module->flags;
-  ___FAKEWORD *glotbl      = module->glotbl;
-  int supcount             = module->supcount;
+  ___FAKEWORD *glotbl       = module->glotbl;
+  int supcount              = module->supcount;
   ___UTF_8STRING *glo_names = module->glo_names;
-  ___SCMOBJ *symtbl        = ___CAST(___SCMOBJ*,module->symtbl);
-  int symcount             = module->symcount;
+  ___SCMOBJ *symtbl         = ___CAST(___SCMOBJ*,module->symtbl);
+  int symcount              = module->symcount;
   ___UTF_8STRING *sym_names = module->sym_names;
-  ___SCMOBJ *keytbl        = ___CAST(___SCMOBJ*,module->keytbl);
-  int keycount             = module->keycount;
+  ___SCMOBJ *keytbl         = ___CAST(___SCMOBJ*,module->keytbl);
+  int keycount              = module->keycount;
   ___UTF_8STRING *key_names = module->key_names;
   ___SCMOBJ *lp             = module->lp;
-  ___SCMOBJ *lbltbl        = ___CAST(___SCMOBJ*,module->lbltbl);
-  int lblcount             = module->lblcount;
-  ___SCMOBJ *ofdtbl        = module->ofdtbl;
+  ___SCMOBJ *lbltbl         = ___CAST(___SCMOBJ*,module->lbltbl);
+  int lblcount              = module->lblcount;
+  ___SCMOBJ *ofdtbl         = module->ofdtbl;
   int ofd_length            = module->ofd_length;
-  ___SCMOBJ *cnstbl        = module->cnstbl;
-  int cnscount             = module->cnscount;
-  ___SCMOBJ *subtbl        = ___CAST(___SCMOBJ*,module->subtbl);
-  int subcount             = module->subcount;
+  ___SCMOBJ *cnstbl         = module->cnstbl;
+  int cnscount              = module->cnscount;
+  ___SCMOBJ *subtbl         = ___CAST(___SCMOBJ*,module->subtbl);
+  int subcount              = module->subcount;
 
   /* 
    * Check that the version of the compiler used to compile the module
@@ -919,6 +932,7 @@ ___HIDDEN ___SCMOBJ setup_module_phase2
         (module)
 ___module_struct *module;)
 {
+  ___processor_state ___ps = ___PSTATE;
   ___UTF_8STRING *glo_names = module->glo_names;
 
   if (glo_names != 0)
@@ -937,7 +951,7 @@ ___module_struct *module;)
 
           ___glo_struct *glo = ___CAST(___glo_struct*,glotbl[i]);
 
-          if (glo->val == ___UNB1)
+          if (___GLOCELL(glo->val) == ___UNB1)
             {
               ___SCMOBJ err;
               ___SCMOBJ glo_name;
@@ -1729,6 +1743,30 @@ ___mod_or_lnk mol;)
           str = align_subtyped (___CAST(___SCMOBJ*,sym_ptr[1+___SYMKEY_NAME]));
           glo = ___CAST(___glo_struct*,sym_ptr[1+___SYMBOL_GLOBAL]);
 
+#ifdef ___MULTIPLE_GLO
+          {
+            ___SCMOBJ tmp = glo->val;
+            glo->val = ___gstate.nb_glo_vars;
+            ___GLOCELL(glo->val) = tmp;
+          }
+#endif
+
+#ifdef ___MULTIPLE_PRM
+          {
+            ___SCMOBJ tmp = glo->prm;
+            glo->prm = ___gstate.nb_glo_vars;
+            ___PRMCELL(glo->prm) = tmp;
+          }
+#endif
+
+#ifdef ___MULTIPLE_GLO
+          ___gstate.nb_glo_vars++;
+#else
+#ifdef ___MULTIPLE_PRM
+          ___gstate.nb_glo_vars++;
+#endif
+#endif
+
           glo->next = 0;
           if (___ps->glo_list_head == 0)
             ___ps->glo_list_head = ___CAST(___SCMOBJ,glo);
@@ -1921,6 +1959,7 @@ ___SCMOBJ find_global_var_bound_to
         (val)
 ___SCMOBJ val;)
 {
+  ___processor_state ___ps = ___PSTATE;
   ___SCMOBJ sym = ___NUL;
   int i;
 
@@ -1936,7 +1975,7 @@ ___SCMOBJ val;)
             {
               ___glo_struct *p = ___CAST(___glo_struct*,g);
 
-              if (p->prm == val || p->val == val)
+              if (___PRMCELL(p->prm) == val || ___GLOCELL(p->val) == val)
                 {
                   i = 0;
                   break;
@@ -2949,6 +2988,16 @@ ___setup_params_struct *setup_params;)
    * table.
    */
 
+  /* TODO: implement expansion of glos and prms arrays when number of globals grows beyond 20000 */
+
+#ifdef ___MULTIPLE_GLO
+  ___ps->glos = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
+#endif
+
+#ifdef ___MULTIPLE_PRM
+  ___ps->prms = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
+#endif
+
   ___ps->glo_list_head = 0;
   ___ps->glo_list_tail = 0;
 
@@ -3031,7 +3080,7 @@ ___setup_params_struct *setup_params;)
    * "##kernel-handlers" in the file "_kernel.scm".
    */
 
-  ___start = ___G__23__23_kernel_2d_handlers.prm;
+  ___start = ___PRMCELL(___G__23__23_kernel_2d_handlers.prm);
 
   ___gstate.handler_sfun_conv_error = ___LBL(0);
   ___gstate.handler_cfun_conv_error = ___LBL(1);
@@ -3053,7 +3102,7 @@ ___setup_params_struct *setup_params;)
    * "##dynamic-env-bind" in the file "_kernel.scm".
    */
 
-  ___start = ___G__23__23_dynamic_2d_env_2d_bind.prm;
+  ___start = ___PRMCELL(___G__23__23_dynamic_2d_env_2d_bind.prm);
 
   ___gstate.dynamic_env_bind_return = ___LBL(1);
 
