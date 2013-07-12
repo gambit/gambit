@@ -2323,6 +2323,54 @@
                    btq))
             timeout)))))
 
+; (##thread-status thread #!optional capture-continuation-if-running?)
+; => list ('created) = The thread has not yet been started
+;    list ('starting) = The thread has been started but execution has not yet begun
+;    list ('running [continuation-object]) = The thread is running
+;    list ('ended result) = The thread terminated ordinarily, with the return value result
+;    list ('ended/exception exception) = The thread terminated with the exception exception
+(define (##thread-status thread #!optional capture-continuation-if-running?)
+
+  (let loop ()
+
+    ; Make snapshot of thread state
+    ; Quantum manipulation just to ensure get a consistent snapshot
+    (define quantum-pre (thread-quantum (current-thread)))
+    (thread-quantum-set! (current-thread) +inf.0)
+    (let* ((end-condvar (macro-thread-end-condvar thread))
+           (exception?  (macro-thread-exception?  thread))
+           (result      (macro-thread-result      thread)))
+      (thread-quantum-set! (current-thread) quantum-pre)
+
+      ; Generate return value
+      (cond ((not end-condvar)
+             ;; Thread has terminated
+             (if exception?
+                 ;; Thread has terminated with exception
+                 (list 'ended/exception result)
+                 ;; Thread has terminated with result
+                 (list 'ended result)))
+            (exception?
+             ;; Thread has never run and is not terminated
+             (if (not result)
+                 ;; Thread is not yet started
+                 (list 'created)
+                 ;; Thread is started but has not yet run
+                 (list 'starting)))
+            (else
+             (if capture-continuation-if-running?
+                 ; continuation = #f here indicates that the thread state changed during the course
+                 ;                of execution of this procedure, in such a way that the thread no
+                 ;                longer has a continuation. This is the case if the thread ended.
+                 (let ((continuation
+                        (with-exception-catcher
+                         (lambda (e) #f)
+                         (lambda () (##thread-continuation-capture thread)))))
+                   (if continuation
+                       (list 'running continuation)
+                       (loop)))
+                 (list 'running)))))))
+
 ;;; User accessible primitives for mutexes.
 
 (define-prim (mutex? obj)
