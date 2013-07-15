@@ -632,11 +632,22 @@ ___mod_or_lnk (*linker) ();)
 }
 
 
+typedef struct fem_context
+  {
+    int module_count;
+    ___SCMOBJ module_descr;
+    ___UTF_8STRING module_script_line;
+  } fem_context;
+
+
 ___HIDDEN ___SCMOBJ for_each_module
-   ___P((___mod_or_lnk mol,
-         ___SCMOBJ (*proc) (___module_struct*)),
-        (mol,
+   ___P((fem_context *ctx,
+         ___mod_or_lnk mol,
+         ___SCMOBJ (*proc) (fem_context*, ___module_struct*)),
+        (ctx,
+         mol,
          proc)
+fem_context *ctx;
 ___mod_or_lnk mol;
 ___SCMOBJ (*proc) ();)
 {
@@ -645,14 +656,16 @@ ___SCMOBJ (*proc) ();)
       void **p = mol->linkfile.linkertbl;
       while (*p != 0)
         {
-          ___SCMOBJ e = for_each_module (___CAST(___mod_or_lnk,*p++), proc);
+          ___SCMOBJ e = for_each_module (ctx,
+                                         ___CAST(___mod_or_lnk,*p++),
+                                         proc);
           if (e != ___FIX(___NO_ERR))
             return e;
         }
       return ___FIX(___NO_ERR);
     }
   else
-    return proc (___CAST(___module_struct*,mol));
+    return proc (ctx, ___CAST(___module_struct*,mol));
 }
 
 
@@ -694,37 +707,66 @@ ___SCMOBJ *subtbl;)
 }
 
 
-___HIDDEN int module_count;
-___HIDDEN ___SCMOBJ module_descr;
-
-
 ___HIDDEN ___SCMOBJ setup_module_phase1
-   ___P((___module_struct *module),
-        (module)
+   ___P((fem_context *ctx,
+         ___module_struct *module),
+        (ctx,
+         module)
+fem_context *ctx;
 ___module_struct *module;)
 {
   int i, j;
-  ___SCMOBJ *cns = 0;
+  ___SCMOBJ *cns;
+  int flags;
+  ___FAKEWORD *glotbl;
+  int supcount;
+  ___UTF_8STRING *glo_names;
+  ___SCMOBJ *symtbl;
+  int symcount;
+  ___UTF_8STRING *sym_names;
+  ___SCMOBJ *keytbl;
+  int keycount;
+  ___UTF_8STRING *key_names;
+  ___SCMOBJ *lp;
+  ___SCMOBJ *lbltbl;
+  int lblcount;
+  ___SCMOBJ *ofdtbl;
+  int ofd_length;
+  ___SCMOBJ *cnstbl;
+  int cnscount;
+  ___SCMOBJ *subtbl;
+  int subcount;
 
-  int flags                 = module->flags;
-  ___FAKEWORD *glotbl       = module->glotbl;
-  int supcount              = module->supcount;
-  ___UTF_8STRING *glo_names = module->glo_names;
-  ___SCMOBJ *symtbl         = ___CAST(___SCMOBJ*,module->symtbl);
-  int symcount              = module->symcount;
-  ___UTF_8STRING *sym_names = module->sym_names;
-  ___SCMOBJ *keytbl         = ___CAST(___SCMOBJ*,module->keytbl);
-  int keycount              = module->keycount;
-  ___UTF_8STRING *key_names = module->key_names;
-  ___SCMOBJ *lp             = module->lp;
-  ___SCMOBJ *lbltbl         = ___CAST(___SCMOBJ*,module->lbltbl);
-  int lblcount              = module->lblcount;
-  ___SCMOBJ *ofdtbl         = module->ofdtbl;
-  int ofd_length            = module->ofd_length;
-  ___SCMOBJ *cnstbl         = module->cnstbl;
-  int cnscount              = module->cnscount;
-  ___SCMOBJ *subtbl         = ___CAST(___SCMOBJ*,module->subtbl);
-  int subcount              = module->subcount;
+  lblcount = module->lblcount;
+
+  if (lblcount > 0)
+    ctx->module_count++;
+
+  flags = module->flags;
+
+  if (flags & ___SETUP_PHASE1_DONE)
+    return ___FIX(___NO_ERR);
+
+  module->flags = flags | ___SETUP_PHASE1_DONE;
+
+  cns        = 0;
+  glotbl     = module->glotbl;
+  supcount   = module->supcount;
+  glo_names  = module->glo_names;
+  symtbl     = ___CAST(___SCMOBJ*,module->symtbl);
+  symcount   = module->symcount;
+  sym_names  = module->sym_names;
+  keytbl     = ___CAST(___SCMOBJ*,module->keytbl);
+  keycount   = module->keycount;
+  key_names  = module->key_names;
+  lp         = module->lp;
+  lbltbl     = ___CAST(___SCMOBJ*,module->lbltbl);
+  ofdtbl     = module->ofdtbl;
+  ofd_length = module->ofd_length;
+  cnstbl     = module->cnstbl;
+  cnscount   = module->cnscount;
+  subtbl     = ___CAST(___SCMOBJ*,module->subtbl);
+  subcount   = module->subcount;
 
   /* 
    * Check that the version of the compiler used to compile the module
@@ -848,8 +890,6 @@ ___module_struct *module;)
       ___label_struct *new_lt;
       ___SCMOBJ *ofd_alloc;
 
-      module_count++;
-
       new_lt = ___CAST(___label_struct*,align (lbltbl, lblcount*___LS, 0));
       ofd_alloc = ofdtbl;
 
@@ -887,7 +927,7 @@ ___module_struct *module;)
             }
           else
             {
-              if (flags & 1) /* module uses gcc's computed goto? */
+              if (flags & ___USES_INDIRECT_GOTO) /* module uses indirect goto statement? */
                 {
                   if (___CAST_FAKEHOST_TO_HOST(lbl->host) != current_host)
                     {
@@ -928,8 +968,11 @@ ___HIDDEN char module_prefix[] = ___MODULE_PREFIX;
 
 
 ___HIDDEN ___SCMOBJ setup_module_phase2
-   ___P((___module_struct *module),
-        (module)
+   ___P((fem_context *ctx,
+         ___module_struct *module),
+        (ctx,
+         module)
+fem_context *ctx;
 ___module_struct *module;)
 {
   ___processor_state ___ps = ___PSTATE;
@@ -984,14 +1027,14 @@ ___module_struct *module;)
               if (___FIXNUMP(pair1))
                 return pair1;
 
-              pair2 = ___make_pair (pair1, ___FIELD(module_descr,1), ___STILL);
+              pair2 = ___make_pair (pair1, ___FIELD(ctx->module_descr,1), ___STILL);
 
               ___release_scmobj (pair1);
 
               if (___FIXNUMP(pair2))
                 return pair2;
 
-              ___FIELD(module_descr,1) = pair2;
+              ___FIELD(ctx->module_descr,1) = pair2;
 
               ___release_scmobj (pair2);
             }
@@ -1003,8 +1046,11 @@ ___module_struct *module;)
 
 
 ___HIDDEN ___SCMOBJ setup_module_phase3
-   ___P((___module_struct *module),
-        (module)
+   ___P((fem_context *ctx,
+         ___module_struct *module),
+        (ctx,
+         module)
+fem_context *ctx;
 ___module_struct *module;)
 {
   if (module->lblcount > 0)
@@ -1032,27 +1078,27 @@ ___module_struct *module;)
 
       ___FIELD(descr,1) = *module->lp+___LS*___WS;
 
-      ___FIELD(___FIELD(module_descr,0),module_count) = descr;
+      ___FIELD(___FIELD(ctx->module_descr,0),ctx->module_count) = descr;
 
       ___release_scmobj (descr);
 
-      module_count++;
+      ctx->module_count++;
     }
 
   return module->init_proc ();
 }
 
 
-___HIDDEN ___UTF_8STRING module_script_line;
-
-
 ___HIDDEN ___SCMOBJ get_script_line_proc
-   ___P((___module_struct *module),
-        (module)
+   ___P((fem_context *ctx,
+         ___module_struct *module),
+        (ctx,
+         module)
+fem_context *ctx;
 ___module_struct *module;)
 {
   if (module->script_line != 0)
-    module_script_line = module->script_line;
+    ctx->module_script_line = module->script_line;
   return ___FIX(___NO_ERR);
 }
 
@@ -1062,10 +1108,13 @@ ___HIDDEN ___UTF_8STRING get_script_line
         (mol)
 ___mod_or_lnk mol;)
 {
-  module_script_line = 0;
+  fem_context fem_ctx;
+  fem_context *ctx = &fem_ctx;
 
-  if (for_each_module (mol, get_script_line_proc) == ___FIX(___NO_ERR))
-    return module_script_line;
+  ctx->module_script_line = 0;
+
+  if (for_each_module (ctx, mol, get_script_line_proc) == ___FIX(___NO_ERR))
+    return ctx->module_script_line;
 
   return 0;
 }
@@ -1082,25 +1131,34 @@ ___mod_or_lnk mol;)
 
   if (!___FIXNUMP(result))
     {
-      module_count = 0;
-      module_descr = result;
+      fem_context fem_ctx;
+      fem_context *ctx = &fem_ctx;
 
-      if ((result = for_each_module (mol, setup_module_phase1))
+      ctx->module_count = 0;
+      ctx->module_descr = result;
+
+      if ((result = for_each_module (ctx,
+                                     mol,
+                                     setup_module_phase1))
           == ___FIX(___NO_ERR))
         {
-          if ((result = for_each_module (mol, setup_module_phase2))
+          if ((result = for_each_module (ctx,
+                                         mol,
+                                         setup_module_phase2))
               == ___FIX(___NO_ERR))
             {
-              result = ___make_vector (module_count, ___FAL, ___STILL);
+              result = ___make_vector (ctx->module_count, ___FAL, ___STILL);
 
               if (!___FIXNUMP(result))
                 {
-                  ___FIELD(module_descr,0) = result;
+                  ___FIELD(ctx->module_descr,0) = result;
                   ___release_scmobj (result);
 
-                  module_count = 0;
+                  ctx->module_count = 0;
 
-                  if ((result = for_each_module (mol, setup_module_phase3))
+                  if ((result = for_each_module (ctx,
+                                                 mol,
+                                                 setup_module_phase3))
                       == ___FIX(___NO_ERR))
                     {
                       ___SCMOBJ script_line;
@@ -1111,9 +1169,9 @@ ___mod_or_lnk mol;)
                                        0))
                           == ___FIX(___NO_ERR))
                         {
-                          ___FIELD(module_descr,2) = script_line;
+                          ___FIELD(ctx->module_descr,2) = script_line;
                           ___release_scmobj (script_line);
-                          result = module_descr;
+                          result = ctx->module_descr;
                         }
                     }
                 }
@@ -1121,7 +1179,7 @@ ___mod_or_lnk mol;)
         }
 
       if (___FIXNUMP(result))
-        ___release_scmobj (module_descr);
+        ___release_scmobj (ctx->module_descr);
     }
 
   return result;

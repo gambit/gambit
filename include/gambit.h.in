@@ -3434,9 +3434,12 @@ ___EXT(___register_host_entry) (___start, ___MODULE_NAME);
 #define ___REGISTER_HOST_ENTRY
 #endif
 
+#define ___USES_INDIRECT_GOTO 1
+#define ___SETUP_PHASE1_DONE  2
+
 #ifdef ___USE_LABEL_VALUES
 
-#define ___SETUP_HOST_LABEL 1
+#define ___MODULE_FLAGS ___USES_INDIRECT_GOTO
 
 #define ___BEGIN_HLBL static void *___hlbltbl[]={
 #define ___DEF_HLBL_INTRO 0,
@@ -3478,7 +3481,7 @@ ___jumpext:
 
 #else
 
-#define ___SETUP_HOST_LABEL 0
+#define ___MODULE_FLAGS 0
 
 #define ___BEGIN_HLBL
 #define ___DEF_HLBL_INTRO
@@ -5537,7 +5540,7 @@ ___processor_state ___ps=___PSTATE;
   ___VERSION, \
   ___MODULE_KIND, \
   ___MODULE_NAME, \
-  ___SETUP_HOST_LABEL, \
+  ___MODULE_FLAGS, \
   ___GLOTBL, \
   ___SYMTBL, \
   ___KEYTBL, \
