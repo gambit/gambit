@@ -3970,6 +3970,19 @@ end-of-code
    floats
    i))
 
+(define-prim (##get-bytes-allocated! floats i)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   ___F64VECTORSET(___ARG1,___ARG2,___bytes_allocated());
+
+   ___RESULT = ___VOID;
+
+end-of-code
+
+   floats
+   i))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Error message formatting.
