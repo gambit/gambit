@@ -196,7 +196,9 @@ _kernel.o: $(srcdirpfx)$(rootfromhere)/include/stamp.h
 bootstrap-pre:
 
 bootstrap-post:
-	cp $(LIBRARY) $(rootfromhere)/$(LIBRARY)
+	if test "@ENABLE_SHARED@" = "yes"; then \
+	  cp $(LIBRARY) $(rootfromhere)/$(LIBRARY); \
+	fi
 
 install-pre:
 

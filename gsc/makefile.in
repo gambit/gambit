@@ -232,7 +232,9 @@ bootstrap-pre:
 bootstrap-post:
 	rm -f $(rootfromhere)/gsc-boot@bat@ $(rootfromhere)/gsc-boot@exe@ $(rootfromhere)/gsc-boot
 	cp $(EXECUTABLE) $(rootfromhere)/gsc-boot@exe@
-	cp $(LIBRARY) $(rootfromhere)/$(LIBRARY)
+	if test "@ENABLE_SHARED@" = "yes"; then \
+	  cp $(LIBRARY) $(rootfromhere)/$(LIBRARY); \
+	fi
 
 install-pre:
 

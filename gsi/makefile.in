@@ -192,7 +192,9 @@ $(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 bootstrap-pre:
 
 bootstrap-post:
-	cp $(LIBRARY) $(rootfromhere)/$(LIBRARY)
+	if test "@ENABLE_SHARED@" = "yes"; then \
+	  cp $(LIBRARY) $(rootfromhere)/$(LIBRARY); \
+	fi
 
 install-pre:
 

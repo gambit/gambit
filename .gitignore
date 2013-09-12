@@ -164,6 +164,15 @@ tests/makefile
 autom4te.cache
 gsc-boot
 gsc-boot.exe
+libgambc.dll
+libgambcgsi.dll
+libgambcgsc.dll
+libgambc.dylib
+libgambcgsi.dylib
+libgambcgsc.dylib
+libgambc.so
+libgambcgsi.so
+libgambcgsc.so
 gambc-v*.dmg
 gambc-v*.exe
 gambc-v*.tgz
