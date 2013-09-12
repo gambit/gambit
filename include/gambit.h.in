@@ -1227,6 +1227,40 @@
 #endif
 #endif
 
+/*
+ * Allow multiple Gambit VM instances or not?
+ */
+
+#ifndef ___SINGLE_VM
+#ifndef ___MULTIPLE_VMS
+#define @CONF_SINGLE_MULTIPLE_VMS@
+#endif
+#endif
+
+#ifdef ___SINGLE_VM
+#ifdef ___MULTIPLE_VMS
+#error "Define either ___SINGLE_VM or ___MULTIPLE_VMS"
+#endif
+#endif
+
+/*
+ * Are Gambit VM instances single or multiple threaded at the OS
+ * level?  In other words, is it allowed for multiple OS threads to be
+ * running in a given VM instance?
+ */
+
+#ifndef ___SINGLE_THREADED_VMS
+#ifndef ___MULTIPLE_THREADED_VMS
+#define @CONF_SINGLE_MULTIPLE_THREADED_VMS@
+#endif
+#endif
+
+#ifdef ___SINGLE_THREADED_VMS
+#ifdef ___MULTIPLE_THREADED_VMS
+#error "Define either ___SINGLE_THREADED_VMS or ___MULTIPLE_THREADED_VMS"
+#endif
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 

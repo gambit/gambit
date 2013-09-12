@@ -552,6 +552,46 @@ fi
 
 ###############################################################################
 #
+# Check if the runtime system must be compiled to support multiple
+# Gambit VM instances or not.  A Gambit VM instance has its own global
+# environment and heap, separate from other Gambit VM instances.
+
+AC_ARG_ENABLE(multiple-vms,
+              AC_HELP_STRING([--enable-multiple-vms],
+                             [support multiple Gambit VM instances (default is NO)]),
+              ENABLE_MULTIPLE_VMS=$enableval,
+              ENABLE_MULTIPLE_VMS=no)
+
+if test "$ENABLE_MULTIPLE_VMS" = no; then
+  CONF_SINGLE_MULTIPLE_VMS="___SINGLE_VM"
+else
+  CONF_SINGLE_MULTIPLE_VMS="___MULTIPLE_VMS"
+fi
+
+AC_SUBST(CONF_SINGLE_MULTIPLE_VMS)
+
+###############################################################################
+#
+# Check if the runtime system must be compiled to support multiple OS
+# threads per Gambit VM instance.  In other words, is it allowed for
+# multiple OS threads to be running in a given VM instance?
+
+AC_ARG_ENABLE(multiple-threaded-vms,
+              AC_HELP_STRING([--enable-multiple-threaded-vms],
+                             [support multiple OS threads per Gambit VM instance (default is NO)]),
+              ENABLE_MULTIPLE_THREADED_VMS=$enableval,
+              ENABLE_MULTIPLE_THREADED_VMS=no)
+
+if test "$ENABLE_MULTIPLE_THREADED_VMS" = no; then
+  CONF_SINGLE_MULTIPLE_THREADED_VMS="___SINGLE_THREADED_VMS"
+else
+  CONF_SINGLE_MULTIPLE_THREADED_VMS="___MULTIPLE_THREADED_VMS"
+fi
+
+AC_SUBST(CONF_SINGLE_MULTIPLE_THREADED_VMS)
+
+###############################################################################
+#
 # Check for C compiler.
 
 AC_DEFUN(AC_CHECK_C_COMPILER_DEF,
