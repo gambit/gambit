@@ -10837,7 +10837,7 @@ ___RESULT = result;
 
       (define (random-fixnum-from-time)
         (let ((v (f64vector (macro-inexact-+0))))
-          (##get-current-time! v)
+          (##get-current-time! v 0)
           (let ((x (f64vector-ref v 0)))
             (##flonum->fixnum
              (fl* 536870912.0 ;; (expt 2.0 29)

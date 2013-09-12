@@ -1584,7 +1584,7 @@
 (##define-macro (macro-temp-set! f x)              `(##f64vector-set! ,f 2 ,x))
 
 (##define-macro (macro-update-current-time!)
-  `(##get-current-time! (macro-thread-floats (macro-run-queue))))
+  `(##get-current-time! (macro-thread-floats (macro-run-queue)) 0))
 
 (##define-macro (macro-make-run-queue)
   `(let ((run-queue

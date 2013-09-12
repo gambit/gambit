@@ -3952,7 +3952,7 @@ end-of-code
 
      v)))
 
-(define-prim (##get-current-time! floats)
+(define-prim (##get-current-time! floats i)
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
@@ -3961,13 +3961,14 @@ end-of-code
 
    ___time_get_current_time (&t);
    ___time_to_seconds (t, &ft);
-   ___F64VECTORSET(___ARG1,___FIX(0),ft)
+   ___F64VECTORSET(___ARG1,___ARG2,ft)
 
    ___RESULT = ___VOID;
 
 end-of-code
 
-   floats))
+   floats
+   i))
 
 ;;;----------------------------------------------------------------------------
 
