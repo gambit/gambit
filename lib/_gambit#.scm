@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -476,6 +476,18 @@
 (##define-macro (macro-promise-thunk-set! p x)  `(macro-slot 0 ,p ,x))
 (##define-macro (macro-promise-result p)        `(macro-slot 1 ,p))
 (##define-macro (macro-promise-result-set! p x) `(macro-slot 1 ,p ,x))
+
+;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Foreign objects
+
+;; A foreign object is represented by an object vector of length 3
+;; slot 0 = tags
+;; slot 1 = C pointer to release function
+;; slot 2 = C pointer to foreign data
+
+(##define-macro (macro-foreign-tags f)         `(macro-slot 0 ,f))
+(##define-macro (macro-foreign-tags-set! f x)  `(macro-slot 0 ,f ,x))
 
 ;;;----------------------------------------------------------------------------
 

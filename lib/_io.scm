@@ -9030,7 +9030,7 @@
     ((mark)
      (##wr-mark we obj))
     (else
-     (let ((tags (##foreign-tags obj)))
+     (let ((tags (macro-foreign-tags obj)))
        (##wr-str we "#<")
        (if (##pair? tags)
            (##wr-no-display we (##car tags))

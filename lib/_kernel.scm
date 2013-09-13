@@ -3679,20 +3679,10 @@ end-of-code
 (define-prim (foreign? obj)
   (##foreign? obj))
 
-(define-prim (##foreign-tags f)
-  (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   ___RESULT = ___FIELD(___ARG1,___FOREIGN_TAGS);
-
-end-of-code
-
-   f))
-
 (define-prim (foreign-tags f)
   (macro-force-vars (f)
     (macro-check-foreign f 1 (foreign-tags f)
-      (##foreign-tags f))))
+      (macro-foreign-tags f))))
 
 (define-prim (##foreign-released? f)
   (##declare (not interrupts-enabled))
