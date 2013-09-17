@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "syntax-case.scm", Time-stamp: <2008-12-15 11:35:18 feeley>
+;;; File: "syntax-case.scm", Time-stamp: <2013-09-17 09:08:23 feeley>
 
 ;;; Copyright (c) 1998-2008 by Marc Feeley, All Rights Reserved.
 
@@ -74,6 +74,7 @@ identifier?
 interaction-environment
 literal-identifier=?
 sc-expand
+sc-compile-expand
 syntax-error
 syntax-object->datum
 syntax->list
@@ -196,6 +197,7 @@ gensym
 
 (define $sc-put-cte #f)
 (define sc-expand (lambda (src) src)) ; temporary definition
+(define sc-compile-expand (lambda (src) src)) ; temporary definition
 (define $make-environment #f)
 (define environment? #f)
 (define interaction-environment #f)

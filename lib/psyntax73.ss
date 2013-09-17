@@ -652,7 +652,12 @@
       (let ((n -1))
         (lambda (name) ; name is #f or a symbol
           (set! n (+ n 1))
-          (string->symbol (string-append session-key (fmt n))))))))
+;***          (string->symbol (string-append session-key (fmt n))))))))
+          (string->symbol (string-append session-key
+                                         (fmt n)
+                                         (if name
+                                             (string-append "." (symbol->string name))
+                                             ""))))))))
 )
 
 
@@ -705,7 +710,11 @@
  ; should build a call that has the same effect as calling put-cte-hook
   (syntax-rules ()
 ;***     ((_ sym exp token) `($sc-put-cte ',sym ,exp ',token))))
-    ((_ sym exp token) (build-source #f `(,(build-source #f '$sc-put-cte) ',sym ,exp ,(build-source #f (list (build-source #f 'quote) token)))))))
+    ((_ sym exp token)
+     (build-source #f `(,(build-source #f '$sc-put-cte)
+                        ,(build-source #f (list (build-source #f 'quote) (attach-source #f sym)))
+                        ,exp
+                        ,(build-source #f (list (build-source #f 'quote) token)))))))
 
 (define-syntax build-visit-only
  ; should mark the result as "visit only" for compile-file
@@ -3750,16 +3759,26 @@
 ;;; are also residualized into the object file if we are compiling
 ;;; a file.
 
+(let ()
+
+(define (make-sc-expander ctem rtem)
+  (lambda (x)
+    (let ((env (interaction-environment)))
+      (if (and (pair? x) (equal? (car x) noexpand))
+          (cadr x)
+          (chi-top* x null-env
+            (env-wrap env)
+            ctem rtem #f
+            (env-top-ribcage env))))))
+
 (set! sc-expand
   (let ((ctem '(E)) (rtem '(E)))
-    (lambda (x)
-      (let ((env (interaction-environment)))
-        (if (and (pair? x) (equal? (car x) noexpand))
-            (cadr x)
-            (chi-top* x null-env
-              (env-wrap env)
-              ctem rtem #f
-              (env-top-ribcage env)))))))
+    (make-sc-expander ctem rtem))) ;***
+
+(set! sc-compile-expand ;*** added for macro expansion by compiler
+  (let ((ctem '(L C)) (rtem '(L)))
+    (make-sc-expander ctem rtem)))
+)
 
 
 

@@ -8,7 +8,7 @@
 
 (set! c#expand-source ;; setup compiler's expander
   (lambda (src)
-    (sc-expand src)))
+    (sc-compile-expand src)))
 
 (set! ##expand-source ;; setup interpreter's expander
   (lambda (src)
