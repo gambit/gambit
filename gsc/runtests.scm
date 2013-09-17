@@ -43,7 +43,7 @@
                (if (not diff?)
                    (print " (FAILED)\n======================= EXPECTED:\n" (cdr (cdar results))))
                (set! diff? #t)
-               (print "======================= " (car target) ":\n" (cdr result))))))
+               (print "======================= " (car target) ":\n" (diff (car target) (cdr (cdar results)) (cdr result)))))))
      (cdr results))
 
     (set! nb-tests (+ nb-tests 1))
@@ -51,6 +51,14 @@
     (if diff?
         (set! failed-tests (+ failed-tests 1))
         (print " (OK)\n"))))
+
+(define (diff target-name target-output expected-output)
+  (with-output-to-file "expected" (lambda () (print expected-output)))
+  (with-output-to-file target-name (lambda () (print target-output)))
+  (let ((d (run "diff" "-u" target-name "expected")))
+    (delete-file target-name)
+    (delete-file "expected")
+    (cdr d)))
 
 (define (test-with-each-target file)
   (map (lambda (t)
@@ -86,8 +94,8 @@
     ("x86-64" #f      "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
     ("js"     ".js"   "d8")
     ("python" ".py"   "python")
-;;    ("ruby"   ".rb"   "/usr/bin/ruby")
-    ("ruby"   ".rb"   "/usr/local/bin/ruby") ;; ruby 1.9.3p392
+    ("ruby"   ".rb"   "/usr/bin/ruby")
+;;    ("ruby"   ".rb"   "/usr/local/bin/ruby") ;; ruby 1.9.3p392
     ("php"   ".php"   "/usr/bin/php")
 ;;    ("php"   ".php"   "/usr/local/bin/php") ;; PHP 5.4.11
 ;;    ("dart"   ".dart" "/Users/feeley/dart/dart-sdk/bin/dart")

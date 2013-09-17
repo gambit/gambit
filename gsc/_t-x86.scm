@@ -477,7 +477,7 @@
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #t)))
+    (let ((f (create-procedure cgc #f))) ;; #f = don't generate listing
       (f)))
   #f)
 
@@ -603,6 +603,7 @@
      (lambda (bb)
        (let* ((gvm-instr (code-gvm-instr bb))
               (gvm-type (gvm-instr-type gvm-instr)))
+         ;;(write-gvm-instr gvm-instr (current-output-port)) (newline)
          ;;(pp gvm-type)
          (case gvm-type
            ((label)
@@ -964,7 +965,8 @@
     (x86-ret  cgc)
 
     ;; Mac OS X version of write_char
-    (if (memq (caddr (system-type)) '(darwin9 darwin11.3.0))
+    (if (memq (cadr (system-type)) '(apple))
+        ;;(memq (caddr (system-type)) '(darwin9 darwin11.3.0 darwin12.4.0))
         (case (nat-target-arch targ)
           ((x86-32)
            (x86-label cgc write_char-lbl)
