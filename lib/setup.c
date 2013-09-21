@@ -35,17 +35,6 @@ ___NEED_GLO(___G__23__23_kernel_2d_handlers) /* from "_kernel.scm" */
 ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
 
 
-/*
- * Parameters passed to ___setup.
- */
-
-___HIDDEN ___UCS_2 reset_argv0[] = { 0 };
-___HIDDEN ___UCS_2STRING reset_argv[] = { reset_argv0, 0 };
-
-___setup_params_struct ___setup_params =
-{ 0, reset_argv, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-
 /* 
  * Initial length of symbol table and keyword table.
  */
@@ -616,7 +605,7 @@ ___SCMOBJ *ptr;)
  */
 
 ___HIDDEN ___mod_or_lnk linker_to_mod_or_lnk
-   ___P((___mod_or_lnk (*linker) (___global_state_struct*)),
+   ___P((___mod_or_lnk (*linker) (___global_state)),
         (linker)
 ___mod_or_lnk (*linker) ();)
 {
@@ -627,7 +616,7 @@ ___mod_or_lnk (*linker) ();)
       while (*p != 0)
         {
           *p = linker_to_mod_or_lnk
-                 (*___CAST(___mod_or_lnk (**) ___P((___global_state_struct*),()),p));
+                 (*___CAST(___mod_or_lnk (**) ___P((___global_state),()),p));
           p++;
         }
     }
@@ -1204,7 +1193,7 @@ ___SCMOBJ modname;)
   if ((result = ___dynamic_load (path, modname, &linker)) == ___FIX(___NO_ERR))
     {
       mol = linker_to_mod_or_lnk
-              (___CAST(___mod_or_lnk (*) ___P((___global_state_struct*),()),
+              (___CAST(___mod_or_lnk (*) ___P((___global_state),()),
                        linker));
 
       if (mol->linkfile.version < 0) /* was it already setup? */
@@ -2116,7 +2105,7 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
 
   setup_state = 2;
 
-  ___cleanup_mem ();
+  ___cleanup_mem (___PSTATE);
   ___cleanup_os ();
 }
 
@@ -2137,7 +2126,7 @@ ___EXP_FUNC(void,___setup_params_reset)
 ___setup_params_struct *setup_params;)
 {
   setup_params->version           = 0;
-  setup_params->argv              = reset_argv;
+  setup_params->argv              = setup_params->reset_argv;
   setup_params->min_heap          = 0;
   setup_params->max_heap          = 0;
   setup_params->live_percent      = 0;
@@ -2154,6 +2143,9 @@ ___setup_params_struct *setup_params;)
   setup_params->remote_dbg_addr   = 0;
   setup_params->rpc_server_addr   = 0;
   setup_params->linker            = 0;
+  setup_params->reset_argv0[0]    = 0;
+  setup_params->reset_argv[0]     = setup_params->reset_argv0;
+  setup_params->reset_argv[1]     = 0;
   setup_params->dummy8            = 0;
   setup_params->dummy7            = 0;
   setup_params->dummy6            = 0;
@@ -2167,7 +2159,7 @@ ___setup_params_struct *setup_params;)
 
 ___EXP_FUNC(___SIZE_T,___get_min_heap) ___PVOID
 {
-  return ___setup_params.min_heap;
+  return ___GSTATE->setup_params.min_heap;
 }
 
 
@@ -2176,13 +2168,13 @@ ___EXP_FUNC(void,___set_min_heap)
         (bytes)
 ___SIZE_T bytes;)
 {
-  ___setup_params.min_heap = bytes;
+  ___GSTATE->setup_params.min_heap = bytes;
 }
 
 
 ___EXP_FUNC(___SIZE_T,___get_max_heap) ___PVOID
 {
-  return ___setup_params.max_heap;
+  return ___GSTATE->setup_params.max_heap;
 }
 
 
@@ -2191,13 +2183,13 @@ ___EXP_FUNC(void,___set_max_heap)
         (bytes)
 ___SIZE_T bytes;)
 {
-  ___setup_params.max_heap = bytes;
+  ___GSTATE->setup_params.max_heap = bytes;
 }
 
 
 ___EXP_FUNC(int,___get_live_percent) ___PVOID
 {
-  return ___setup_params.live_percent;
+  return ___GSTATE->setup_params.live_percent;
 }
 
 
@@ -2206,13 +2198,13 @@ ___EXP_FUNC(void,___set_live_percent)
         (percent)
 int percent;)
 {
-  ___setup_params.live_percent = percent;
+  ___GSTATE->setup_params.live_percent = percent;
 }
 
 
 ___EXP_FUNC(int,___get_standard_level) ___PVOID
 {
-  return ___setup_params.standard_level;
+  return ___GSTATE->setup_params.standard_level;
 }
 
 
@@ -2221,7 +2213,7 @@ ___EXP_FUNC(void,___set_standard_level)
         (level)
 int level;)
 {
-  ___setup_params.standard_level = level;
+  ___GSTATE->setup_params.standard_level = level;
 }
 
 
@@ -2230,7 +2222,7 @@ ___EXP_FUNC(void,___set_gambcdir)
         (gambcdir)
 ___UCS_2STRING gambcdir;)
 {
-  ___setup_params.gambcdir = gambcdir;
+  ___GSTATE->setup_params.gambcdir = gambcdir;
 }
 
 
@@ -2242,9 +2234,9 @@ ___EXP_FUNC(int,___set_debug_settings)
 int mask;
 int new_settings;)
 {
-  int old_settings = ___setup_params.debug_settings;
+  int old_settings = ___GSTATE->setup_params.debug_settings;
 
-  ___setup_params.debug_settings =
+  ___GSTATE->setup_params.debug_settings =
     (old_settings & ~mask) | (new_settings & mask);
 
   return old_settings;
@@ -2255,6 +2247,24 @@ ___EXP_FUNC(___program_startup_info_struct*,___get_program_startup_info)
    ___PVOID
 {
   return &___program_startup_info;
+}
+
+
+/* TODO: really need to EXP_FUNC ___setup_vm and ___cleanup_vm? */
+
+___EXP_FUNC(___SCMOBJ,___setup_vm)
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+}
+
+
+___EXP_FUNC(___SCMOBJ,___cleanup_vm)
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
 }
 
 
@@ -2291,7 +2301,7 @@ ___setup_params_struct *setup_params;)
    * Remember setup parameters.
    */
 
-  ___setup_params = *setup_params;
+  ___GSTATE->setup_params = *setup_params;
 
   /* 
    * Setup the operating system module.
@@ -2304,7 +2314,7 @@ ___setup_params_struct *setup_params;)
    * Setup stack and heap.
    */
 
-  if ((___err = ___setup_mem ()) != ___FIX(___NO_ERR))
+  if ((___err = ___setup_mem (___PSTATE)) != ___FIX(___NO_ERR))
     {
       ___cleanup_os ();
       return ___err;
@@ -3084,7 +3094,7 @@ ___setup_params_struct *setup_params;)
    * Setup program's linker structure.
    */
 
-  mol = linker_to_mod_or_lnk (___setup_params.linker);
+  mol = linker_to_mod_or_lnk (___GSTATE->setup_params.linker);
 
   /* 
    * Initialize symbol table, keyword table, global variables
@@ -3111,10 +3121,10 @@ ___setup_params_struct *setup_params;)
    */
 
   {
-    ___UCS_2STRING *argv = ___setup_params.argv;
+    ___UCS_2STRING *argv = ___GSTATE->setup_params.argv;
 
     if (argv[0] == 0) /* use dummy program name if none supplied */
-      argv = reset_argv;
+      argv = ___GSTATE->setup_params.reset_argv;
 
 #define ___COMMAND_LINE_CE_SELECT(ISO_8859_1,UTF_8,UCS_2,UCS_4,wchar,native) UCS_2
 

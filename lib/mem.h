@@ -67,16 +67,22 @@
 #define ___DEFAULT_MIN_HEAP     (1*(1<<20))
 
 
-extern ___SCMOBJ ___setup_mem ___PVOID;
-extern void ___cleanup_mem ___PVOID;
+extern ___SCMOBJ ___setup_mem
+   ___P((___processor_state ___ps),
+        ());
+
+extern ___SCMOBJ ___cleanup_mem
+   ___P((___processor_state ___ps),
+        ());
 
 
 #ifdef ___DEBUG_GARBAGE_COLLECT
 
-#define ___garbage_collect(n) ___garbage_collect_debug (n,__LINE__,__FILE__)
+#define ___garbage_collect(ps,n) ___garbage_collect_debug (ps,n,__LINE__,__FILE__)
 
 extern ___BOOL ___garbage_collect_debug
-   ___P((___SIZE_TS nonmovable_words_needed,
+   ___P((___processor_state ___ps,
+         ___SIZE_TS nonmovable_words_needed,
          int line,
          char *file),
         ());
@@ -84,36 +90,58 @@ extern ___BOOL ___garbage_collect_debug
 #else
 
 extern ___BOOL ___garbage_collect
-   ___P((___SIZE_TS nonmovable_words_needed),
+   ___P((___processor_state ___ps,
+         ___SIZE_TS nonmovable_words_needed),
         ());
 
 #endif
 
 
 #ifdef ___DEBUG_STACK_LIMIT
-#define ___stack_limit() ___stack_limit_debug (__LINE__,__FILE__)
-extern ___BOOL ___stack_limit_debug ___P((int line, char *file),());
+
+#define ___stack_limit(ps) ___stack_limit_debug (ps,__LINE__,__FILE__)
+
+extern ___BOOL ___stack_limit_debug
+   ___P((___processor_state ___ps,
+         int line,
+         char *file),
+        ());
+
 #else
-extern ___BOOL ___stack_limit ___PVOID;
+
+extern ___BOOL ___stack_limit_debug
+   ___P((___processor_state ___ps),
+        ());
+
 #endif
 
 
 #ifdef ___DEBUG_HEAP_LIMIT
-#define ___heap_limit() ___heap_limit_debug (__LINE__,__FILE__)
-extern ___BOOL ___heap_limit_debug ___P((int line, char *file),());
+
+#define ___heap_limit(ps) ___heap_limit_debug (ps,__LINE__,__FILE__)
+
+extern ___BOOL ___heap_limit_debug
+   ___P((___processor_state ___ps,
+         int line,
+         char *file),
+        ());
+
 #else
-extern ___BOOL ___heap_limit ___PVOID;
+
+extern ___BOOL ___heap_limit_debug
+   ___P((___processor_state ___ps),
+        ());
+
 #endif
 
 
-extern ___SCMOBJ ___alloc_global_var ___P((___glo_struct **glo),());
+extern ___SCMOBJ ___alloc_global_var
+   ___P((___glo_struct **glo),
+        ());
 
-extern ___F64 ___bytes_allocated ___PVOID;
-
-
-#ifdef CALL_GC_FREQUENTLY
-extern int ___gc_calls_to_punt;
-#endif
+extern ___F64 ___bytes_allocated
+   ___P((___processor_state ___ps),
+        ());
 
 
 #endif

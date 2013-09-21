@@ -1,15 +1,12 @@
-/* File: "setup.h", Time-stamp: <2007-09-28 09:57:58 feeley> */
+/* File: "setup.h" */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___SETUP_H
 #define ___SETUP_H
 
 
 /*---------------------------------------------------------------------------*/
-
-
-extern ___setup_params_struct ___setup_params; /* params passed to ___setup */
 
 
 extern ___SCMOBJ ___os_load_object_file

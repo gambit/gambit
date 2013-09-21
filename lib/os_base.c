@@ -379,7 +379,7 @@ ___program_startup_info_struct ___program_startup_info =
 ___EXP_FUNC(int,___main_char)
   ___P((int argc,
         char *argv[],
-        ___mod_or_lnk (*linker)(___global_state_struct*),
+        ___mod_or_lnk (*linker)(___global_state),
         char *script_line),
        (argc,
         argv,
@@ -428,7 +428,7 @@ char *script_line;)
 ___EXP_FUNC(int,___main_UCS_2)
   ___P((int argc,
         ___UCS_2STRING argv[],
-        ___mod_or_lnk (*linker)(___global_state_struct*),
+        ___mod_or_lnk (*linker)(___global_state),
         char *script_line),
        (argc,
         argv,
@@ -608,7 +608,7 @@ ___EXP_FUNC(int,___winmain)
         HINSTANCE hPrevInstance,
         LPSTR lpCmdLine,
         int nCmdShow,
-        ___mod_or_lnk (*linker)(___global_state_struct*),
+        ___mod_or_lnk (*linker)(___global_state),
         char *script_line),
        (hInstance,
         hPrevInstance,
@@ -620,7 +620,7 @@ HINSTANCE hInstance;
 HINSTANCE hPrevInstance;
 LPSTR lpCmdLine;
 int nCmdShow;
-___mod_or_lnk (*linker)(___global_state_struct*);
+___mod_or_lnk (*linker)(___global_state);
 char *script_line;)
 {
   int result;
@@ -698,8 +698,8 @@ void ___fatal_error
         (msgs)
 char **msgs;)
 {
-  if (___setup_params.fatal_error != 0)
-    ___setup_params.fatal_error (msgs);
+  if (___GSTATE->setup_params.fatal_error != 0)
+    ___GSTATE->setup_params.fatal_error (msgs);
   else
     {
       char *new_msgs[100];
@@ -725,9 +725,9 @@ void ___display_error
         (msgs)
 char **msgs;)
 {
-  if (___setup_params.display_error != 0)
-    ___setup_params.display_error (msgs);
-  else if (___DEBUG_SETTINGS_LEVEL(___setup_params.debug_settings) > 0)
+  if (___GSTATE->setup_params.display_error != 0)
+    ___GSTATE->setup_params.display_error (msgs);
+  else if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) > 0)
     {
       while (*msgs != 0)
         {

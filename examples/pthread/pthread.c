@@ -1,6 +1,6 @@
-/* File: "pthread.c", Time-stamp: <2007-11-13 17:49:37 feeley> */
+/* File: "pthread.c" */
 
-/* Copyright (c) 2006-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2006-2013 by Marc Feeley, All Rights Reserved. */
 
 #include <stdio.h>
 #include <pthread.h>
@@ -27,7 +27,7 @@
 #define SCHEME_LIBRARY_LINKER ____20_mylib__
 
 ___BEGIN_C_LINKAGE
-extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state_struct*);
+extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state);
 ___END_C_LINKAGE
 
 #define N 5 /* number of threads */

@@ -4959,7 +4959,7 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 #ifdef ___LOCAL_GSTATE
 
 #define ___GSTATE ___local_gstate
-#define ___GSTATEDECL ___LOCAL ___global_state_struct *___local_gstate;
+#define ___GSTATEDECL ___LOCAL ___global_state ___local_gstate;
 #define ___SET_LOCAL_GSTATE(gs) ___local_gstate = gs;
 
 #else
@@ -4970,7 +4970,14 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 
 #endif
 
-#define ___PSTATE (&___GSTATE->pstate)
+#ifdef ___SINGLE_VM
+#define ___VMSTATE (&___GSTATE->vmstate1)
+#endif
+
+#ifdef ___SINGLE_THREADED_VMS
+#define ___PSTATE (&___VMSTATE->pstate1)
+#define ___VMSTATE_FROM_PSTATE(ps) ___CAST(___virtual_machine_state,ps)
+#endif
 
 #ifdef ___BIND_LATE
 
@@ -5589,9 +5596,9 @@ ___processor_state ___ps=___PSTATE;
 }; \
 ___BEGIN_C_LINKAGE \
 ___EXP_FUNC(___mod_or_lnk,___LINKER_ID) \
-   ___P((___global_state_struct *___gs), \
+   ___P((___global_state ___gs), \
         (___gs) \
-___global_state_struct *___gs;) \
+___global_state ___gs;) \
 { \
   ___SET_LOCAL_GSTATE(___gs)
 #define ___END_MOD2 \
@@ -5614,7 +5621,7 @@ ___IMP_FUNC(int,___winmain) \
         HINSTANCE hPrevInstance, \
         LPSTR lpCmdLine, \
         int nCmdShow, \
-        ___mod_or_lnk (*linker)(___global_state_struct*), \
+        ___mod_or_lnk (*linker)(___global_state), \
         char *script_line), \
        ()); \
 int WINAPI WinMain ___P((HINSTANCE hInstance, \
@@ -5649,7 +5656,7 @@ int nCmdShow;) \
 ___IMP_FUNC(int,___main_UCS_2) \
   ___P((int argc, \
         ___UCS_2STRING argv[], \
-        ___mod_or_lnk (*linker)(___global_state_struct*), \
+        ___mod_or_lnk (*linker)(___global_state), \
         char *script_line), \
        ()); \
 int wmain ___P((int argc, \
@@ -5672,7 +5679,7 @@ wchar_t *argv[];) \
 ___IMP_FUNC(int,___main_char) \
   ___P((int argc, \
         char *argv[], \
-        ___mod_or_lnk (*linker)(___global_state_struct*), \
+        ___mod_or_lnk (*linker)(___global_state), \
         char *script_line), \
        ()); \
 int main ___P((int argc, \
@@ -5706,9 +5713,9 @@ ___LOCAL ___linkfile_struct ___linkfile_descr = { \
 }; \
 ___BEGIN_C_LINKAGE \
 ___EXP_FUNC(___mod_or_lnk,___LINKER_ID) \
-   ___P((___global_state_struct *___gs), \
+   ___P((___global_state ___gs), \
         (___gs) \
-___global_state_struct *___gs;) \
+___global_state ___gs;) \
 { \
   ___SET_LOCAL_GSTATE(___gs) \
   return (___mod_or_lnk)&___linkfile_descr; \
@@ -5718,12 +5725,12 @@ ___MAIN_PROC
 
 #define ___BEGIN_OLD_LNK
 #define ___DEF_OLD_LNK(id)___BEGIN_C_LINKAGE ___IMP_FUNC(___mod_or_lnk,id) \
-___P((___global_state_struct *___gs),()); ___END_C_LINKAGE
+___P((___global_state ___gs),()); ___END_C_LINKAGE
 #define ___END_OLD_LNK
 
 #define ___BEGIN_NEW_LNK
 #define ___DEF_NEW_LNK(id)___BEGIN_C_LINKAGE ___mod_or_lnk id \
-___P((___global_state_struct *___gs),()); ___END_C_LINKAGE
+___P((___global_state ___gs),()); ___END_C_LINKAGE
 #define ___END_NEW_LNK
 
 #define ___BEGIN_LNK ___LOCAL void *___linkertbl[]={
@@ -6915,6 +6922,172 @@ typedef struct ___glo_struct
     ___WORD val, prm, next;
   } ___glo_struct;
 
+/*---------------------------------------------------------------------------*/
+
+/* TODO: where to put this? */
+
+/* Memory management */
+
+/*
+ * Movable Scheme objects are allocated in an area of memory
+ * distributed in multiple noncontiguous sections (collectively
+ * called the "msections").  All sections are of the same size and are
+ * allocated through the '___alloc_mem' function.  The number of
+ * sections can expand and contract to accommodate the needs of the
+ * program.
+ */
+
+typedef struct ___msect
+  {
+    int index;             /* index in list of sections */
+    int pos;               /* position in msections's 'sections' array */
+    ___WORD *alloc;        /* heap allocation pointer, grows towards high addr. */
+    struct ___msect *prev; /* previous section in list of sections */
+    struct ___msect *next; /* next section in list of sections */
+    ___WORD base[1];       /* content of section */
+  } ___msection;
+
+#define ___sizeof_msection(n) (sizeof (___msection) + ((n)-1) * ___WS)
+
+typedef struct
+  {
+    int max_nb_sections;      /* actual size of 'sections' array */
+    int nb_sections;          /* number of sections */
+    ___msection *head;        /* head of doubly-linked list of sections */
+    ___msection *tail;        /* tail of doubly-linked list of sections */
+    ___msection *sections[1]; /* each section ordered by address */
+                              /* (increasing order if ___ALLOC_MEM_UP */
+                              /* is defined otherwise decreasing order) */
+  } ___msections;
+
+#define ___sizeof_msections(n) (sizeof (___msections) + ((n)-1) * sizeof (___msection*))
+
+/*
+ * Header structure of reference counted blocks of memory.
+ */
+
+typedef struct ___rc_header_struct
+  {
+    struct ___rc_header_struct *prev;
+    struct ___rc_header_struct *next;
+    ___SCMOBJ refcount; /* integer but declared ___SCMOBJ for alignment */
+    ___SCMOBJ data; /* needed for C closures */
+  } ___rc_header;
+
+typedef struct ___pstate_mem_struct {
+
+/* msection where continuation frames are currently being allocated */
+___msection *stack_msection_;
+
+/* start of allocation of continuation frames in stack_msection */
+___WORD *alloc_stack_start_;
+
+/* allocation pointer for continuation frames in stack_msection */
+___WORD *alloc_stack_ptr_;
+
+/* allocation limit for continuation frames in stack_msection */
+___WORD *alloc_stack_limit_;
+
+/* msection where movable objects are currently being allocated */
+___msection *heap_msection_;
+
+/* start of allocation of movable objects in heap_msection */
+___WORD *alloc_heap_start_;
+
+/* allocation pointer for movable objects in heap_msection */
+___WORD *alloc_heap_ptr_;
+
+/* allocation limit for movable objects in heap_msection */
+___WORD *alloc_heap_limit_;
+
+#ifdef ___CALL_GC_FREQUENTLY
+int gc_calls_to_punt_;
+#endif
+} ___pstate_mem;
+
+typedef struct ___vmstate_mem_struct {
+
+/* size of heap in words (number of words that can be occupied) */
+___SIZE_TS heap_size_;
+
+/*
+ * 'normal_overflow_reserve' is the number of words reserved in the
+ * heap in normal circumstances for handling heap overflows.
+ */
+___SIZE_TS normal_overflow_reserve_;
+
+/*
+ * 'overflow_reserve' is the number of words currently reserved in the
+ * heap for handling heap overflows.  Initially 'overflow_reserve' is
+ * set to 'normal_overflow_reserve'.  When a heap overflow occurs,
+ * some fraction of the 'overflow_reserve' is made available to the
+ * heap overflow handler.  When a GC makes at least
+ * 'normal_overflow_reserve' free, then 'overflow_reserve' is reset to
+ * 'normal_overflow_reserve'.
+ */
+___SIZE_TS overflow_reserve_;
+
+/* words occupied by nonmovable objects */
+___SIZE_TS words_nonmovable_;
+
+/* words occupied in heap by movable objects excluding current msections */
+___SIZE_TS words_prev_msections_;
+
+/* list of still objects */
+___WORD still_objs_;
+
+/* still objects remaining to scan */
+___WORD still_objs_to_scan_;
+
+/* the msections */
+___msections *the_msections_;
+
+/* location of tospace in each msection */
+___BOOL tospace_at_top_;
+
+/* number of msections used */
+int nb_msections_used_;
+
+/* last msection allocated */
+___msection *alloc_msection_;
+
+/* msection currently being scanned */
+___msection *scan_msection_;
+
+/* scan pointer in msection being scanned */
+___WORD *scan_ptr_;
+
+/* indicates if weak references must be traversed */
+___BOOL traverse_weak_refs_;
+
+/* GC hash tables reached by GC */
+___WORD reached_gc_hash_tables_;
+
+/* Head of list of reference counted blocks of memory */
+___rc_header rc_head_;
+
+/*
+ * Permanent objects are allocated in sections called "psections".
+ * Each section contains multiple objects.  The sections are kept in a
+ * list so that the storage they occupy can be reclaimed when the
+ * program terminates.
+ */
+
+void *psections_;       /* list of psections */
+___WORD *palloc_ptr_;   /* allocation pointer in current psection */
+___WORD *palloc_limit_; /* allocation limit in current psection */
+
+} ___vmstate_mem;
+
+typedef struct ___gstate_mem_struct {
+} ___gstate_mem;
+
+/*---------------------------------------------------------------------------*/
+
+typedef struct ___processor_state_struct *___processor_state;
+typedef struct ___virtual_machine_state_struct *___virtual_machine_state;
+typedef struct ___global_state_struct *___global_state;
+
 /* Processor structure */
 
 typedef struct ___processor_state_struct
@@ -6950,6 +7123,8 @@ typedef struct ___processor_state_struct
     ___WORD executable_wills;
     ___WORD nonexecutable_wills;
 
+    ___pstate_mem mem; /* memory management state */
+
     void (*dummy8) ___PVOID;
     void (*dummy7) ___PVOID;
     void (*dummy6) ___PVOID;
@@ -6958,6 +7133,15 @@ typedef struct ___processor_state_struct
     void (*dummy3) ___PVOID;
     void (*dummy2) ___PVOID;
     void (*dummy1) ___PVOID;
+
+#ifdef ___MULTIPLE_THREADED_VMS
+
+    struct ___processor_state_struct *prev; /* circular list links */
+    struct ___processor_state_struct *next;
+
+    struct ___virtual_machine_state_struct *vmstate; /* this processor's VM */
+
+#endif
 
 #ifdef ___MULTIPLE_GLO
     ___SCMOBJ *glos;
@@ -6989,7 +7173,7 @@ typedef struct ___processor_state_struct
     int heartbeat_interval;
     int heartbeat_countdown;
 #endif
-  } ___processor_state_struct, *___processor_state;
+  } ___processor_state_struct;
 
 typedef ___WORD (*___host) ___P((___processor_state),());
 
@@ -7094,11 +7278,11 @@ typedef struct ___program_startup_info_struct
 #endif
   } ___program_startup_info_struct;
 
-/* Global state structure */
+/* Virtual machine state structure */
 
-typedef struct ___global_state_struct
+typedef struct ___virtual_machine_state_struct
   {
-    ___processor_state_struct pstate;
+    ___processor_state_struct pstate1; /* first processor of this VM */
 
     ___F64 nb_gcs;
     ___F64 gc_user_time;
@@ -7114,6 +7298,135 @@ typedef struct ___global_state_struct
     ___F64 last_gc_live;
     ___F64 last_gc_movable;
     ___F64 last_gc_nonmovable;
+
+    ___vmstate_mem mem; /* memory management state */
+
+    void (*dummy8) ___PVOID;
+    void (*dummy7) ___PVOID;
+    void (*dummy6) ___PVOID;
+    void (*dummy5) ___PVOID;
+    void (*dummy4) ___PVOID;
+    void (*dummy3) ___PVOID;
+    void (*dummy2) ___PVOID;
+    void (*dummy1) ___PVOID;
+
+#ifdef ___MULTIPLE_VMS
+
+    struct ___virtual_machine_state_struct *prev; /* circular list links */
+    struct ___virtual_machine_state_struct *next;
+
+#endif
+
+  } ___virtual_machine_state_struct;
+
+/* Setup parameters structure */
+
+typedef struct ___setup_params_struct
+  {
+    int version;
+    ___UCS_2STRING *argv;
+    ___SIZE_T min_heap;
+    ___SIZE_T max_heap;
+    int live_percent;
+    ___SIZE_TS (*gc_hook) ___P((___SIZE_TS avail, ___SIZE_TS live),());
+    void (*display_error) ___P((char **msgs),());
+    void (*fatal_error) ___P((char **msgs),());
+    int standard_level;
+    int debug_settings;
+    int file_settings;
+    int terminal_settings;
+    int stdio_settings;
+    ___UCS_2STRING gambcdir;
+    ___UCS_2STRING *gambcdir_map;
+    ___UCS_2STRING remote_dbg_addr;
+    ___UCS_2STRING rpc_server_addr;
+    ___mod_or_lnk (*linker) ___P((___global_state),());
+
+    ___UCS_2 reset_argv0[1]; /* defaults for argv */
+    ___UCS_2STRING reset_argv[2];
+
+    void (*dummy8) ___PVOID;
+    void (*dummy7) ___PVOID;
+    void (*dummy6) ___PVOID;
+    void (*dummy5) ___PVOID;
+    void (*dummy4) ___PVOID;
+    void (*dummy3) ___PVOID;
+    void (*dummy2) ___PVOID;
+    void (*dummy1) ___PVOID;
+  } ___setup_params_struct;
+
+#define ___DEBUG_SETTINGS_LEVEL_MASK          15
+#define ___DEBUG_SETTINGS_LEVEL_SHIFT         0
+#define ___DEBUG_SETTINGS_UNCAUGHT_MASK       (1<<4)
+#define ___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL 0
+#define ___DEBUG_SETTINGS_UNCAUGHT_ALL        1
+#define ___DEBUG_SETTINGS_UNCAUGHT_SHIFT      4
+#define ___DEBUG_SETTINGS_ERROR_MASK          (3<<5)
+#define ___DEBUG_SETTINGS_ERROR_REPL          0
+#define ___DEBUG_SETTINGS_ERROR_SINGLE_STEP   1
+#define ___DEBUG_SETTINGS_ERROR_QUIT          2
+#define ___DEBUG_SETTINGS_ERROR_SHIFT         5
+#define ___DEBUG_SETTINGS_REPL_MASK           (3<<7)
+#define ___DEBUG_SETTINGS_REPL_IDE            0
+#define ___DEBUG_SETTINGS_REPL_CONSOLE        1
+#define ___DEBUG_SETTINGS_REPL_STDIO          2
+#define ___DEBUG_SETTINGS_REPL_REMOTE         3
+#define ___DEBUG_SETTINGS_REPL_SHIFT          7
+#define ___DEBUG_SETTINGS_USER_INTR_MASK      (3<<9)
+#define ___DEBUG_SETTINGS_USER_INTR_REPL      0
+#define ___DEBUG_SETTINGS_USER_INTR_DEFER     1
+#define ___DEBUG_SETTINGS_USER_INTR_QUIT      2
+#define ___DEBUG_SETTINGS_USER_INTR_SHIFT     9
+
+#define ___DEBUG_SETTINGS_LEVEL(settings) \
+(((settings) & ___DEBUG_SETTINGS_LEVEL_MASK) \
+ >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
+
+#define ___DEBUG_SETTINGS_UNCAUGHT(settings) \
+(((settings) & ___DEBUG_SETTINGS_UNCAUGHT_MASK) \
+ >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
+
+#define ___DEBUG_SETTINGS_ERROR(settings) \
+(((settings) & ___DEBUG_SETTINGS_ERROR_MASK) \
+ >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
+
+#define ___DEBUG_SETTINGS_REPL(settings) \
+(((settings) & ___DEBUG_SETTINGS_REPL_MASK) \
+ >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
+
+#define ___DEBUG_SETTINGS_USER_INTR(settings) \
+(((settings) & ___DEBUG_SETTINGS_USER_INTR_MASK) \
+ >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
+
+#define ___DEBUG_SETTINGS_INITIAL \
+((1 << ___DEBUG_SETTINGS_LEVEL_SHIFT) | \
+ (___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL \
+  << ___DEBUG_SETTINGS_UNCAUGHT_SHIFT) | \
+ (___DEBUG_SETTINGS_ERROR_QUIT \
+  << ___DEBUG_SETTINGS_ERROR_SHIFT) | \
+ (___DEBUG_SETTINGS_REPL_IDE \
+  << ___DEBUG_SETTINGS_REPL_SHIFT) | \
+ (___DEBUG_SETTINGS_USER_INTR_QUIT \
+  << ___DEBUG_SETTINGS_USER_INTR_SHIFT))
+
+#define ___DEBUG_SETTINGS_DEFAULT \
+((1 << ___DEBUG_SETTINGS_LEVEL_SHIFT) | \
+ (___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL \
+  << ___DEBUG_SETTINGS_UNCAUGHT_SHIFT) | \
+ (___DEBUG_SETTINGS_ERROR_REPL \
+  << ___DEBUG_SETTINGS_ERROR_SHIFT) | \
+ (___DEBUG_SETTINGS_REPL_IDE \
+  << ___DEBUG_SETTINGS_REPL_SHIFT) | \
+ (___DEBUG_SETTINGS_USER_INTR_REPL \
+  << ___DEBUG_SETTINGS_USER_INTR_SHIFT))
+
+/* Global state structure */
+
+typedef struct ___global_state_struct
+  {
+    ___virtual_machine_state_struct vmstate1; /* first VM */
+
+    struct ___setup_params_struct setup_params; /* params received by ___setup */
 
     ___WORD handler_sfun_conv_error;
     ___WORD handler_cfun_conv_error;
@@ -7137,6 +7450,8 @@ typedef struct ___global_state_struct
     ___SCMOBJ keyword_table;  /* Hash table of all interned keywords. */
     ___SCMOBJ command_line;   /* List of command line arguments.      */
     ___SCMOBJ program_descr;  /* Program descriptor.                  */
+
+    ___gstate_mem mem; /* memory management state */
 
     void (*dummy8) ___PVOID;
     void (*dummy7) ___PVOID;
@@ -8143,104 +8458,6 @@ ___LOCAL ___WORD ___lp; /* Module's label table pointer */
 ___GLODECL
 ___SYMDECL
 ___KEYDECL
-
-/* Setup parameters structure */
-
-typedef struct ___setup_params_struct
-  {
-    int version;
-    ___UCS_2STRING *argv;
-    ___SIZE_T min_heap;
-    ___SIZE_T max_heap;
-    int live_percent;
-    ___SIZE_TS (*gc_hook) ___P((___SIZE_TS avail, ___SIZE_TS live),());
-    void (*display_error) ___P((char **msgs),());
-    void (*fatal_error) ___P((char **msgs),());
-    int standard_level;
-    int debug_settings;
-    int file_settings;
-    int terminal_settings;
-    int stdio_settings;
-    ___UCS_2STRING gambcdir;
-    ___UCS_2STRING *gambcdir_map;
-    ___UCS_2STRING remote_dbg_addr;
-    ___UCS_2STRING rpc_server_addr;
-    ___mod_or_lnk (*linker) ___P((___global_state_struct*),());
-
-    void (*dummy8) ___PVOID;
-    void (*dummy7) ___PVOID;
-    void (*dummy6) ___PVOID;
-    void (*dummy5) ___PVOID;
-    void (*dummy4) ___PVOID;
-    void (*dummy3) ___PVOID;
-    void (*dummy2) ___PVOID;
-    void (*dummy1) ___PVOID;
-  } ___setup_params_struct;
-
-#define ___DEBUG_SETTINGS_LEVEL_MASK          15
-#define ___DEBUG_SETTINGS_LEVEL_SHIFT         0
-#define ___DEBUG_SETTINGS_UNCAUGHT_MASK       (1<<4)
-#define ___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL 0
-#define ___DEBUG_SETTINGS_UNCAUGHT_ALL        1
-#define ___DEBUG_SETTINGS_UNCAUGHT_SHIFT      4
-#define ___DEBUG_SETTINGS_ERROR_MASK          (3<<5)
-#define ___DEBUG_SETTINGS_ERROR_REPL          0
-#define ___DEBUG_SETTINGS_ERROR_SINGLE_STEP   1
-#define ___DEBUG_SETTINGS_ERROR_QUIT          2
-#define ___DEBUG_SETTINGS_ERROR_SHIFT         5
-#define ___DEBUG_SETTINGS_REPL_MASK           (3<<7)
-#define ___DEBUG_SETTINGS_REPL_IDE            0
-#define ___DEBUG_SETTINGS_REPL_CONSOLE        1
-#define ___DEBUG_SETTINGS_REPL_STDIO          2
-#define ___DEBUG_SETTINGS_REPL_REMOTE         3
-#define ___DEBUG_SETTINGS_REPL_SHIFT          7
-#define ___DEBUG_SETTINGS_USER_INTR_MASK      (3<<9)
-#define ___DEBUG_SETTINGS_USER_INTR_REPL      0
-#define ___DEBUG_SETTINGS_USER_INTR_DEFER     1
-#define ___DEBUG_SETTINGS_USER_INTR_QUIT      2
-#define ___DEBUG_SETTINGS_USER_INTR_SHIFT     9
-
-#define ___DEBUG_SETTINGS_LEVEL(settings) \
-(((settings) & ___DEBUG_SETTINGS_LEVEL_MASK) \
- >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
-
-#define ___DEBUG_SETTINGS_UNCAUGHT(settings) \
-(((settings) & ___DEBUG_SETTINGS_UNCAUGHT_MASK) \
- >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
-
-#define ___DEBUG_SETTINGS_ERROR(settings) \
-(((settings) & ___DEBUG_SETTINGS_ERROR_MASK) \
- >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
-
-#define ___DEBUG_SETTINGS_REPL(settings) \
-(((settings) & ___DEBUG_SETTINGS_REPL_MASK) \
- >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
-
-#define ___DEBUG_SETTINGS_USER_INTR(settings) \
-(((settings) & ___DEBUG_SETTINGS_USER_INTR_MASK) \
- >> ___DEBUG_SETTINGS_LEVEL_SHIFT)
-
-#define ___DEBUG_SETTINGS_INITIAL \
-((1 << ___DEBUG_SETTINGS_LEVEL_SHIFT) | \
- (___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL \
-  << ___DEBUG_SETTINGS_UNCAUGHT_SHIFT) | \
- (___DEBUG_SETTINGS_ERROR_QUIT \
-  << ___DEBUG_SETTINGS_ERROR_SHIFT) | \
- (___DEBUG_SETTINGS_REPL_IDE \
-  << ___DEBUG_SETTINGS_REPL_SHIFT) | \
- (___DEBUG_SETTINGS_USER_INTR_QUIT \
-  << ___DEBUG_SETTINGS_USER_INTR_SHIFT))
-
-#define ___DEBUG_SETTINGS_DEFAULT \
-((1 << ___DEBUG_SETTINGS_LEVEL_SHIFT) | \
- (___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL \
-  << ___DEBUG_SETTINGS_UNCAUGHT_SHIFT) | \
- (___DEBUG_SETTINGS_ERROR_REPL \
-  << ___DEBUG_SETTINGS_ERROR_SHIFT) | \
- (___DEBUG_SETTINGS_REPL_IDE \
-  << ___DEBUG_SETTINGS_REPL_SHIFT) | \
- (___DEBUG_SETTINGS_USER_INTR_REPL \
-  << ___DEBUG_SETTINGS_USER_INTR_SHIFT))
 
 #define ___CHAR_ENCODING(x)                       ((x)&(31<<0))
 #define ___CHAR_ENCODING_MASK(x)                  ((x)&~(31<<0))

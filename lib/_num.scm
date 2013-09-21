@@ -5596,7 +5596,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }

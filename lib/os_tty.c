@@ -5118,7 +5118,7 @@ int plain;)
     d->input_echo = 0;
   else
     {
-      if (___TERMINAL_LINE_EDITING(___setup_params.terminal_settings) !=
+      if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.terminal_settings) !=
           ___TERMINAL_LINE_EDITING_OFF)
         d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
     }
@@ -7789,7 +7789,7 @@ ___HIDDEN ___SCMOBJ ___device_tty_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int settings = ___setup_params.terminal_settings;
+  int settings = ___GSTATE->setup_params.terminal_settings;
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
   int char_encoding = ___CHAR_ENCODING(settings);
   int eol_encoding = ___EOL_ENCODING(settings);
