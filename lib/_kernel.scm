@@ -2900,7 +2900,7 @@ end-of-code
 
 (define-prim (##continuation-frame cont)
   (let ((frame (##vector-ref cont 0)))
-    (if (##frame? frame)
+    (if (or (##eq? frame 0) (##frame? frame))
       frame
       (begin
         (##gc)
@@ -3199,6 +3199,30 @@ end-of-code
 
    frame
    i))
+
+(define-prim (##frame-set! frame i val)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   int i = ___INT(___ARG2);
+   ___SCMOBJ ra = ___FIELD(___ARG1,0);
+   int fs;
+   int link;
+
+   if (ra == ___GSTATE->internal_return)
+     ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
+   else
+     ___RETN_GET_FS_LINK(ra,fs,link)
+
+   ___BODY_AS(___ARG1,___tSUBTYPED)[fs-i+1] = ___ARG3;  /* what if i==link and frame is first in section???? */
+
+   ___RESULT = ___VOID;
+
+end-of-code
+
+   frame
+   i
+   val))
 
 (define-prim (##continuation-ref cont i)
   (##declare (not interrupts-enabled))

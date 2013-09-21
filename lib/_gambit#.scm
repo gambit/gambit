@@ -456,6 +456,11 @@
 ;; slot 0 = frame object
 ;; slot 1 = dynamic-environment
 
+(##define-macro (macro-make-continuation frame denv)
+  `(##subtype-set!
+    (##vector ,frame ,denv)
+    (macro-subtype-continuation)))
+
 (##define-macro (macro-continuation-frame c)        `(macro-slot 0 ,c))
 (##define-macro (macro-continuation-frame-set! c x) `(macro-slot 0 ,c ,x))
 (##define-macro (macro-continuation-denv c)         `(macro-slot 1 ,c))
