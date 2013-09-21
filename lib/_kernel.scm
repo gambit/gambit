@@ -148,8 +148,8 @@ end-of-code
    /* check why the handler was called */
 
    if (___FP_AFTER(___fp,___ps->stack_limit)
-#ifdef CALL_GC_FREQUENTLY
-       || --___gc_calls_to_punt < 0
+#ifdef ___CALL_GC_FREQUENTLY
+       || --___ps->mem.gc_calls_to_punt_ < 0
 #endif
       )
      {
@@ -159,7 +159,7 @@ end-of-code
 
        ___FRAME_STORE_RA(___R0)
        ___W_ALL
-       overflow = ___stack_limit () && ___garbage_collect (0);
+       overflow = ___stack_limit (___ps) && ___garbage_collect (___ps, 0);
        ___R_ALL
        ___SET_R0(___FRAME_FETCH_RA)
 
@@ -459,7 +459,7 @@ end-of-code
             ___COVER_REST_PARAM_HANDLER_HEAP_LIMIT;
 
             ___W_ALL
-            need_to_gc = ___heap_limit ();
+            need_to_gc = ___heap_limit (___ps);
             ___R_ALL
 
             if (need_to_gc)
@@ -825,7 +825,7 @@ end-of-code
             ___COVER_KEYWORD_REST_PARAM_HANDLER_HEAP_LIMIT;
 
             ___W_ALL
-            need_to_gc = ___heap_limit ();
+            need_to_gc = ___heap_limit (___ps);
             ___R_ALL
 
             if (need_to_gc)
@@ -1590,7 +1590,7 @@ end-of-code
               ___BOOL overflow;
               ___FRAME_STORE_RA(___R0)
               ___W_ALL
-              overflow = ___heap_limit () && ___garbage_collect (0);
+              overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
               ___R_ALL
               ___SET_R0(___FRAME_FETCH_RA)
               if (overflow)
@@ -1656,7 +1656,7 @@ end-of-code
 
    ___FRAME_STORE_RA(___R0)
    ___W_ALL
-   overflow = ___garbage_collect (0);
+   overflow = ___garbage_collect (___ps, 0);
    ___R_ALL
    ___SET_R0(___FRAME_FETCH_RA)
 
@@ -1674,7 +1674,7 @@ end-of-code
           ___BOOL overflow;
           ___FRAME_STORE_RA(___R0)
           ___W_ALL
-          overflow = ___garbage_collect (0);
+          overflow = ___garbage_collect (___ps, 0);
           ___R_ALL
           ___SET_R0(___FRAME_FETCH_RA)
           ___RESULT = ___BOOLEAN(overflow);
@@ -1913,7 +1913,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -1976,7 +1976,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2036,7 +2036,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2096,7 +2096,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2156,7 +2156,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2216,7 +2216,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2276,7 +2276,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2336,7 +2336,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2400,7 +2400,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2469,7 +2469,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2534,7 +2534,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2599,7 +2599,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit () && ___garbage_collect (0);
+        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -3897,14 +3897,14 @@ end-of-code
 
    ___F64 user, sys, real;
    ___SIZE_TS minflt, majflt;
-   ___F64 n = ___bytes_allocated ();
+   ___F64 n = ___bytes_allocated (___ps);
    ___SCMOBJ result = ___alloc_scmobj (___sF64VECTOR, 20<<3, ___STILL);
 
     if (!___FIXNUMP(result))
     {
       ___W_ALL
 
-      n = ___bytes_allocated () - n;
+      n = ___bytes_allocated (___ps) - n;
 
       ___process_times (&user, &sys, &real);
       ___vm_stats (&minflt, &majflt);
@@ -3912,23 +3912,23 @@ end-of-code
       ___F64VECTORSET(result,___FIX(0),user)
       ___F64VECTORSET(result,___FIX(1),sys)
       ___F64VECTORSET(result,___FIX(2),real)
-      ___F64VECTORSET(result,___FIX(3),___GSTATE->gc_user_time)
-      ___F64VECTORSET(result,___FIX(4),___GSTATE->gc_sys_time)
-      ___F64VECTORSET(result,___FIX(5),___GSTATE->gc_real_time)
-      ___F64VECTORSET(result,___FIX(6),___GSTATE->nb_gcs)
-      ___F64VECTORSET(result,___FIX(7),___bytes_allocated ())
+      ___F64VECTORSET(result,___FIX(3),___VMSTATE->gc_user_time)
+      ___F64VECTORSET(result,___FIX(4),___VMSTATE->gc_sys_time)
+      ___F64VECTORSET(result,___FIX(5),___VMSTATE->gc_real_time)
+      ___F64VECTORSET(result,___FIX(6),___VMSTATE->nb_gcs)
+      ___F64VECTORSET(result,___FIX(7),___bytes_allocated (___ps))
       ___F64VECTORSET(result,___FIX(8),(2*(1+2)<<___LWS))
       ___F64VECTORSET(result,___FIX(9),n)
       ___F64VECTORSET(result,___FIX(10),minflt)
       ___F64VECTORSET(result,___FIX(11),majflt)
-      ___F64VECTORSET(result,___FIX(12),___GSTATE->last_gc_user_time)
-      ___F64VECTORSET(result,___FIX(13),___GSTATE->last_gc_sys_time)
-      ___F64VECTORSET(result,___FIX(14),___GSTATE->last_gc_real_time)
-      ___F64VECTORSET(result,___FIX(15),___GSTATE->last_gc_heap_size)
-      ___F64VECTORSET(result,___FIX(16),___GSTATE->last_gc_alloc)
-      ___F64VECTORSET(result,___FIX(17),___GSTATE->last_gc_live)
-      ___F64VECTORSET(result,___FIX(18),___GSTATE->last_gc_movable)
-      ___F64VECTORSET(result,___FIX(19),___GSTATE->last_gc_nonmovable)
+      ___F64VECTORSET(result,___FIX(12),___VMSTATE->last_gc_user_time)
+      ___F64VECTORSET(result,___FIX(13),___VMSTATE->last_gc_sys_time)
+      ___F64VECTORSET(result,___FIX(14),___VMSTATE->last_gc_real_time)
+      ___F64VECTORSET(result,___FIX(15),___VMSTATE->last_gc_heap_size)
+      ___F64VECTORSET(result,___FIX(16),___VMSTATE->last_gc_alloc)
+      ___F64VECTORSET(result,___FIX(17),___VMSTATE->last_gc_live)
+      ___F64VECTORSET(result,___FIX(18),___VMSTATE->last_gc_movable)
+      ___F64VECTORSET(result,___FIX(19),___VMSTATE->last_gc_nonmovable)
 
       ___R_ALL
 
@@ -3988,7 +3988,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___F64VECTORSET(___ARG1,___ARG2,___bytes_allocated());
+   ___F64VECTORSET(___ARG1,___ARG2,___bytes_allocated (___ps));
 
    ___RESULT = ___VOID;
 
@@ -4043,12 +4043,12 @@ end-of-code
 (define-prim ##remote-dbg-addr
   (c-lambda ()
             UCS-2-string
-   "___result = ___setup_params.remote_dbg_addr;"))
+   "___result = ___GSTATE->setup_params.remote_dbg_addr;"))
 
 (define-prim ##rpc-server-addr
   (c-lambda ()
             UCS-2-string
-   "___result = ___setup_params.rpc_server_addr;"))
+   "___result = ___GSTATE->setup_params.rpc_server_addr;"))
 
 ;;;----------------------------------------------------------------------------
 

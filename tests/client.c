@@ -26,7 +26,7 @@
 #define SCHEME_LIBRARY_LINKER ____20_server__
 
 ___BEGIN_C_LINKAGE
-extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state_struct*);
+extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state);
 ___END_C_LINKAGE
 
 int main (int argc, char **argv)

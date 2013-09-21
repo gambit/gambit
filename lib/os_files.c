@@ -251,7 +251,7 @@ ___SIZE_TS max_length;)
           if (path[2]!='\0' && !DIR_SEPARATOR(path[2]))
             goto ret;
 
-          tilde_dir = ___setup_params.gambcdir;
+          tilde_dir = ___GSTATE->setup_params.gambcdir;
           if (tilde_dir == 0)
 #ifdef ___GAMBCDIR
             tilde_dir = ___GAMBCDIR;
@@ -509,7 +509,7 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 #ifdef USE_WIN32
 #ifndef ___GAMBCDIR
 #ifdef USE_GetModuleFileName
-  if (___setup_params.gambcdir == 0)
+  if (___GSTATE->setup_params.gambcdir == 0)
     {
       ___CHAR_TYPE(___PATH_CE_SELECT) temp[___PATH_MAX_LENGTH+1];
       DWORD n;
@@ -548,7 +548,7 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
               mbstowcs (gambcdir, temp, cch);
               gambcdir[cch] = '\0';
 #endif
-              ___setup_params.gambcdir = gambcdir;
+              ___GSTATE->setup_params.gambcdir = gambcdir;
             }
       }
   }
@@ -556,10 +556,10 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 #endif
 #endif
 
-  if (___setup_params.gambcdir != 0)
+  if (___GSTATE->setup_params.gambcdir != 0)
     {
       if ((e = ___NONNULLUCS_2STRING_to_SCMOBJ
-                 (___setup_params.gambcdir,
+                 (___GSTATE->setup_params.gambcdir,
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -628,7 +628,7 @@ ___HIDDEN ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) gambcdir_map_lookup
 ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d;)
 {
   ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) dir;
-  ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) *p = ___setup_params.gambcdir_map;
+  ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) *p = ___GSTATE->setup_params.gambcdir_map;
 
   if (p == 0)
     return 0;

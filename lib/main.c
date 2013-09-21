@@ -33,7 +33,7 @@ ___HIDDEN ___SCMOBJ usage_err
         (debug_settings)
 int debug_settings;)
 {
-  ___setup_params.debug_settings = debug_settings;
+  ___GSTATE->setup_params.debug_settings = debug_settings;
 
   if (___DEBUG_SETTINGS_LEVEL(debug_settings) != 0)
     {
@@ -168,7 +168,7 @@ ___BOOL free_old;)
 
 
 int ___main
-   ___P((___mod_or_lnk (*linker)(___global_state_struct*)),
+   ___P((___mod_or_lnk (*linker)(___global_state)),
         (linker)
 ___mod_or_lnk (*linker)();)
 {
@@ -505,6 +505,8 @@ ___mod_or_lnk (*linker)();)
 
                 gambcdir_map[0] = dir;
 
+                gambcdir_map_len++;
+
                 break;
               }
 
@@ -721,7 +723,7 @@ ___mod_or_lnk (*linker)();)
     ___free_mem (current_argv);
 
   while (gambcdir_map_len > 0)
-    ___free_UCS_2STRING (gambcdir_map[gambcdir_map_len--]);
+    ___free_UCS_2STRING (gambcdir_map[--gambcdir_map_len]);
 
   if (gambcdir_map != 0)
     ___free_mem (gambcdir_map);

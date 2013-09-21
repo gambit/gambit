@@ -5806,7 +5806,7 @@ ___HIDDEN ___SCMOBJ ___device_file_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int settings = ___setup_params.file_settings;
+  int settings = ___GSTATE->setup_params.file_settings;
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
   int char_encoding = ___CHAR_ENCODING(settings);
   int eol_encoding = ___EOL_ENCODING(settings);
