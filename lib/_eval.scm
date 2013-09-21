@@ -1314,8 +1314,6 @@
      (unsupported))
     ((##c-define)
      (unsupported))
-    ((##this-source-file)
-     (##comp-this-source-file cte src tail?))
     (else
      (##comp-app cte src tail?))))
 
@@ -2307,21 +2305,6 @@
   (let ((code (##source-code src)))
     (macro-gen ##gen-future src
       (##comp-subexpr cte (##sourcify (##cadr code) src) #t))))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-(define (##comp-this-source-file cte src tail?)
-  (let* ((locat
-          (##source-locat src))
-         (path
-          (and locat
-               (##container->path (##locat-container locat)))))
-    (if path
-      (macro-gen ##gen-cst src
-        path)
-      (##raise-expression-parsing-exception
-       'unknown-location
-       src))))
 
 ;;;============================================================================
 
@@ -4118,8 +4101,5 @@
 
 (define-runtime-syntax namespace
   (##make-alias-syntax '##namespace))
-
-(define-runtime-syntax this-source-file
-  (##make-alias-syntax '##this-source-file))
 
 ;;;============================================================================

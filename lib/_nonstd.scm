@@ -179,6 +179,21 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define-runtime-syntax this-source-file
+  (lambda (src)
+    (let* ((locat
+            (##source-locat src))
+           (path
+            (and locat
+                 (##container->path (##locat-container locat)))))
+      (if path
+          (##make-source path locat)
+          (##raise-expression-parsing-exception
+           'unknown-location
+           src)))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define-runtime-syntax cond-expand
   (lambda (src)
     (##deconstruct-call
