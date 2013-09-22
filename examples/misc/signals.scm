@@ -1,4 +1,4 @@
-; File: "signals.scm", Time-stamp: <2006-10-07 17:44:19 feeley>
+; File: "signals.scm"
 
 ; This program shows how UNIX signals can be handled in Scheme.
 ;
@@ -19,10 +19,10 @@ void signal_handler (int sig)
   switch (sig)
     {
       case SIGUSR1:
-        ___EXT(___raise_interrupt) (___INTR_6);
+        ___EXT(___raise_interrupt) (___INTR_USER); /* interrupt 0 */
         break;
       case SIGUSR2:
-        ___EXT(___raise_interrupt) (___INTR_7);
+        ___EXT(___raise_interrupt) (___INTR_TERMINATE); /* interrupt 3 */
         break;
     }
 }
@@ -40,8 +40,8 @@ c-declare-end
   (c-lambda () void "install_SIGUSR_handlers"))
 
 (define (install-handlers)
-  (##interrupt-vector-set! 6 (lambda () (pretty-print 'got-SIGUSR1)))
-  (##interrupt-vector-set! 7 (lambda () (pretty-print 'got-SIGUSR2)))
+  (##interrupt-vector-set! 0 (lambda () (pretty-print 'got-SIGUSR1)))
+  (##interrupt-vector-set! 3 (lambda () (pretty-print 'got-SIGUSR2)))
   (install-SIGUSR-handlers))
 
 (install-handlers)
