@@ -1030,9 +1030,7 @@
       (##cpxnum./ x (##cpxnum.<-noncpxnum y)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum, no error possible
-      (if (and (macro-special-case-exact-zero?) (##fixnum.zero? x))
-          x
-          (##flonum./ (##flonum.<-fixnum x) y))
+      (##flonum./ (##flonum.<-fixnum x) y)
       (##flonum./ (##flonum.<-exact-int x) y)
       (##flonum./ (##flonum.<-ratnum x) y)
       (##flonum./ x y)
@@ -2782,7 +2780,7 @@
             ((##eq? x 0)
              (if (##flonum.negative? y)
                  (##raise-range-exception 1 expt x y)
-                 0))
+                 0.))
             ((or (##fixnum.positive? x)
                  (macro-flonum-int? y))
              (##flonum.expt (##flonum.<-fixnum x) y))
