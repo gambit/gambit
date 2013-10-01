@@ -2036,7 +2036,7 @@
   (define (exact-log x)
 
     ;; x is positive, x is not 1.
-    
+
     ;; There are three places where just converting to a flonum and
     ;; taking the flonum logarithm doesn't work well.
     ;; 1. Overflow in the conversion
@@ -2049,16 +2049,16 @@
              (##fllog float-x)) ;; first, we trust the builtin flonum log
 
             ((##not (##flonum.full-precision? float-x))
-             
+
              ;; direct conversion to flonum could incur massive relative
              ;; rounding errors, or would just lead to an infinite result
              ;; so we tolerate more than one rounding error in the calculation
-             
+
              (let* ((wn (##integer-length (##numerator x)))
                     (wd (##integer-length (##denominator x)))
                     (p  (##fx- wn wd))
                     (float-p (##flonum.<-fixnum p))
-                    (partial-result (##fllog 
+                    (partial-result (##fllog
                                      (##exact->inexact
                                       (##* x (##expt 2 (##fx- p)))))))
                (##fl+ (##fl* float-p
@@ -2083,7 +2083,7 @@
              (let* ((y (##/ (##- x 1) (##+ x 1)))
                     (normalizer (##expt 2 (##fx+ (macro-flonum-m-bits-plus-1*2)
                                                  (##fx- (##integer-length (##denominator y))
-                                                        (##integer-length (##numerator   y))))))    
+                                                        (##integer-length (##numerator   y))))))
                     (dyadic-y (##/ (##round (##* y normalizer))
                                    normalizer))
                     (dyadic-y^2 (##* dyadic-y dyadic-y))
@@ -2102,10 +2102,10 @@
                              y^2k+1
                              (##+ result (##/ y^2k+1 (##fx+ (##fx* 2 k) 1)))
                              (##fx+ accuracy bits-gained-per-loop))))))))))
-  
+
   (define (complex-log-magnitude x)
 
-    (define (log-mag a b)    
+    (define (log-mag a b)
       ;; both are finite, 0 <= a <= b, b is nonzero
       (let* ((c (##/ a b))
              (approx-mag (##* b (##sqrt (##+ 1 (##* c c))))))
@@ -2118,10 +2118,10 @@
             (let ((a (##inexact->exact a))
                   (b (##inexact->exact b)))
               (##* 1/2 (exact-log (##+ (##* a a) (##* b b))))))))
-    
+
     (let ((abs-r (##abs (##real-part x)))
           (abs-i (##abs (##imag-part x))))
-      
+
       ;; abs-i is not exact 0
       (cond ((or (and (##flonum? abs-r)
                       (##flonum.= abs-r (macro-inexact-+inf)))
@@ -2473,7 +2473,7 @@
                          (leading-bits
                           (##car
                            (##exact-int.sqrt
-                            (##quotient 
+                            (##quotient
                              (##arithmetic-shift p shift)
                              q))))
                          (pre-rounded-result
@@ -2497,7 +2497,7 @@
 
   (define (complex-sqrt-magnitude x)
 
-    (define (sqrt-mag a b)    
+    (define (sqrt-mag a b)
       ;; both are finite, 0 <= a <= b, b is nonzero
       (let* ((c (##/ a b))
              (d (##sqrt (##+ 1 (##* c c)))))
@@ -2505,10 +2505,10 @@
         ;; result is exact, but we're just feeding it into make-polar
         ;; with a non-exact-zero angle, anyway.
         (##* (##sqrt b) (##sqrt d))))
-    
+
     (let ((abs-r (##abs (##real-part x)))
           (abs-i (##abs (##imag-part x))))
-      
+
       ;; abs-i is not exact 0
       (cond ((or (and (##flonum? abs-r)
                       (##flonum.= abs-r (macro-inexact-+inf)))
@@ -9109,6 +9109,86 @@ ___RESULT = result;
             -1
             0))))
 
+(define-prim (##bignum.arithmetic-shift-into! x shift result)
+
+  #|
+  Shifts x by shift bits into result.
+  Will eventually replace other "shift"ing code.
+
+  Left pads by sign bit as necessary, right pads by zeros as necessary.
+  Makes *no* error checks.
+  |#
+
+  ;; allocates nothing
+  (declare (not interrupts-enabled))
+
+  (let* ((bit-shift
+          (##fxmodulo shift ##bignum.adigit-width))
+         (digit-shift
+          (##fxquotient (##fx- shift bit-shift)
+                        ##bignum.adigit-width))
+         (x-length
+          (##bignum.adigit-length x))
+         (result-length
+          (##bignum.adigit-length result))
+         (zeros
+          ##bignum.adigit-zeros)
+         (left-fill
+          (if (##bignum.negative? x)
+              ##bignum.adigit-ones
+              ##bignum.adigit-zeros)))
+    (if (##fxzero? bit-shift)
+        ;; Copy left-fill into leftmost digits of result as needed.
+        (let loop1 ((i (##fx- result-length 1))              ; index for adigit in result
+                    (j (##fx- result-length 1 digit-shift))) ; index for adigit in x
+          (if (and (##fx>= i 0) (##fx>= j x-length))
+              (begin (##bignum.adigit-copy! result i left-fill 0)
+                     (loop1 (##fx- i 1) (##fx- j 1)))
+              ;; Copy the digits from x into result as needed.
+              (let loop2 ((i i)
+                          (j j))
+                (if (and (##fx>= i 0) (##fx>= j 0))
+                    (begin (##bignum.adigit-copy! result i x j)
+                           (loop2 (##fx- i 1) (##fx- j 1)))
+                    ;; copy zero into digits of result as needed.
+                    (let loop3 ((i i))
+                      (if (##fx>= i 0)
+                          (begin (##bignum.adigit-copy! result i zeros 0)
+                                 (loop3 (##fx- i 1)))))))))
+        (let ()
+          ;; copy left-fill into leftmost digits of result as needed,
+          ;; then concatenate left-fill with leftmost digit of x if needed.
+          (define (loop4 i j)
+            (if (and (##fx>= i 0) (##fx>= j x-length))
+                (begin (##bignum.adigit-copy! result i left-fill 0)
+                       (loop4 (##fx- i 1) (##fx- j 1)))
+                (if (##fx>= i 0)
+                    (if (##fx= (##fx+ j 1) x-length)
+                        (begin (##bignum.adigit-cat! result i left-fill 0 x j bit-shift)
+                               (loop5 (##fx- i 1) (##fx- j 1)))
+                        (loop5 i j)))))
+          ;; concatenate adjacent digits of x into result as needed,
+          ;; then concatenate rightmost digit of x with 0 if needed.
+          (define (loop5 i j)
+            (if (and (##fx>= i 0) (##fx>= j 0))
+                (begin (##bignum.adigit-cat! result i x (##fx+ j 1) x j bit-shift)
+                       (loop5 (##fx- i 1) (##fx- j 1)))
+                (if (##fx>= i 0)
+                    (if (##fx= (##fx+ j 1) 0)
+                        (begin (##bignum.adigit-cat! result i x 0 zeros 0 bit-shift)
+                               (loop6 (##fx- i 1)))
+                        (loop6 i)))))
+          ;; copy 0 into rightmost digits of x as needed.
+          (define (loop6 i)
+            (if (##fx>= i 0)
+                (begin (##bignum.adigit-copy! result i zeros 0)
+                       (loop6 (##fx- i 1)))))
+
+          (loop4 (##fx- result-length 1)                  ; index for adigit in result
+                 (##fx- result-length digit-shift 2))))   ; index for adigit in x
+    ;; return something useful
+    result))
+
 ;;; Bignum division.
 
 (define ##reciprocal-cache (##make-table 0 #f #t #f ##eq?))
@@ -9189,136 +9269,189 @@ ___RESULT = result;
 
   (define (naive-div u v)
 
-    ;; u is a normalized bignum, v is an unnormalized bignum
-    ;; v >= ##bignum.mdigit-base
+    ;; u is a normalized bignum, v is a possibly unnormalized bignum
+    ;; u >= v >= ##bignum.mdigit-base
 
-    (let ((n
-           (let loop1 ((i (##fixnum.- (##bignum.mdigit-length v) 1)))
-             (if (##fixnum.< 0 (##bignum.mdigit-ref v i))
-                 (##fixnum.+ i 1)
-                 (loop1 (##fixnum.- i 1))))))
-      (let ((normalizing-bit-shift
-             (##fixnum.- ##bignum.mdigit-width
-                         (##integer-length
-                          (##bignum.mdigit-ref v (##fixnum.- n 1))))))
-        (let ((u (##bignum.arithmetic-shift u normalizing-bit-shift))
-              (v (##bignum.arithmetic-shift v normalizing-bit-shift)))
-          (let ((q
-                 (##bignum.make
-                  (##fixnum.+ (##fixnum.- (##bignum.adigit-length u)
-                                          (##bignum.adigit-length v))
-                              2) ;; 1 is not always sufficient...
-                  #f
-                  #f))
-                (v_n-1
-                 (##bignum.mdigit-ref v (##fixnum.- n 1)))
-                (v_n-2 (##bignum.mdigit-ref v (##fixnum.- n 2))))
-            (let ((m
-                   (let loop2 ((i (##fixnum.- (##bignum.mdigit-length u) 1)))
-                     (let ((u_i (##bignum.mdigit-ref u i)))
-                       (if (##fixnum.< 0 u_i)
-                           (if (##not (##fixnum.< u_i v_n-1))
-                               (##fixnum.- (##fixnum.+ i 1) n)
-                               (##fixnum.- i n))
-                           (loop2 (##fixnum.- i 1)))))))
-              (let loop3 ((j m))
-                (if (##not (##fixnum.< j 0))
-                    (let ((q-hat
-                           (let ((q-hat
-                                  (##bignum.mdigit-quotient
-                                   u
-                                   (##fixnum.+ j n)
-                                   v_n-1))
-                                 (u_n+j-2
-                                  (##bignum.mdigit-ref
-                                   u
-                                   (##fixnum.+ (##fixnum.- j 2) n)
-                                   )))
-                             (let ((r-hat
-                                    (##bignum.mdigit-remainder
-                                     u
-                                     (##fixnum.+ j n)
-                                     v_n-1
-                                     q-hat)))
-                               (if (or (##fixnum.= q-hat ##bignum.mdigit-base)
-                                       (##bignum.mdigit-test?
-                                        q-hat
-                                        v_n-2
-                                        r-hat
-                                        u_n+j-2))
-                                   (let ((q-hat (##fixnum.- q-hat 1))
-                                         (r-hat (##fixnum.+ r-hat v_n-1)))
-                                     (if (and (##fixnum.< r-hat
-                                                          ##bignum.mdigit-base)
-                                              (or (##fixnum.= q-hat
-                                                              ##bignum.mdigit-base)
-                                                  (##bignum.mdigit-test?
-                                                   q-hat
-                                                   v_n-2
-                                                   r-hat
-                                                   u_n+j-2)))
-                                         (##fixnum.- q-hat 1)
-                                         q-hat))
-                                   q-hat)))))
+    ;; on a 64-bit machine, allocates three words (24 bytes) for temp
 
-                      (##declare (not interrupts-enabled))
+    (let ((need-quotient? #t)    ;; will be made an optional argument later
+          (keep-dividend? #t)    ;; will be made an optional argument later
+          (n
+           (let loop1 ((i (##fx- (##bignum.mdigit-length v) 1)))
+             (if (##fx< 0 (##bignum.mdigit-ref v i))
+                 (##fx+ i 1)
+                 (loop1 (##fx- i 1)))))
+          (u-bits
+           (##integer-length u))
+          (v-bits
+           (##integer-length v)))
+      (let* ((temp
+              (##bignum.make (if (and (##fx= ##bignum.adigit-width 64)
+                                      (##fx= ##bignum.mdigit-width 16))
+                                 ;; need three mdigits for top-bits-of-u, which will fit into one adigit
+                                 1
+                                 ;; in the other cases, we need two adigits
+                                 2)
+                             #f #f))
+             (top-2*mdigit-width-bits-of-v
+              (##bignum.arithmetic-shift-into! v
+                                               (##fx- (##fx* ##bignum.mdigit-width 2)
+                                                      v-bits)
+                                               temp))
+             (v_n-1
+              (##bignum.mdigit-ref top-2*mdigit-width-bits-of-v 1))
+             (v_n-2
+              (##bignum.mdigit-ref top-2*mdigit-width-bits-of-v 0)))
 
+        ;; Knuth says to simplify things by shifting u and v so that
+        ;; the top nonzero mdigit of v is >= mdigit-base/2
+
+        ;; We're not going to do the shift, but we're going to use that
+        ;; idea to do the next calculation.
+
+        ;; this strategy does more work, but generates less garbage.
+
+        (let* ((conceptual-shift
+                (##fx- ##bignum.mdigit-width
+                       (##fxlength (##bignum.mdigit-ref v (##fx- n 1)))))
+               (shifted-v-adigits
+                (##fxquotient (##fx+ v-bits
+                                     conceptual-shift
+                                     64)
+                              ##bignum.adigit-width))
+               (shifted-u-adigits
+                (##fxquotient (##fx+ u-bits
+                                     conceptual-shift
+                                     64)
+                              ##bignum.adigit-width))
+               (q-adigits
+                (##fx+ (##fx- shifted-u-adigits
+                              shifted-v-adigits)
+                       2))                      ; 1 is not always sufficient...
+               (q-mdigits
+                (##fxquotient (##fx* q-adigits ##bignum.adigit-width)
+                              ##bignum.mdigit-width))
+               (q
+                (and need-quotient? (##bignum.make q-adigits #f #f)))
+               (u
+                (if keep-dividend?
+                    ;; copy u
+                    (##bignum.make (##bignum.adigit-length u) u #f)
+                    ;; overwrite u with remainder
+                    u)))
+          (let loop3 ((j (##fx- q-mdigits 1)))
+            (if (##not (##fx< j 0))
+                (let* ((top-bits-of-u
+                        (##bignum.arithmetic-shift-into!
+                         u
+                         (##fx- (##fx* (##fx- 2 j) ##bignum.mdigit-width)
+                                v-bits)
+                         temp))
+                       (q-hat
+                        (let ((q-hat
+                               (##bignum.mdigit-quotient
+                                top-bits-of-u
+                                2
+                                v_n-1))
+                              (u_n+j-2
+                               (##bignum.mdigit-ref
+                                top-bits-of-u
+                                0
+                                )))
+                          (let ((r-hat
+                                 (##bignum.mdigit-remainder
+                                  top-bits-of-u
+                                  2
+                                  v_n-1
+                                  q-hat)))
+                            (if (or (##fx= q-hat ##bignum.mdigit-base)
+                                    (##bignum.mdigit-test?
+                                     q-hat
+                                     v_n-2
+                                     r-hat
+                                     u_n+j-2))
+                                (let ((q-hat
+                                       (##fx- q-hat 1))
+                                      (r-hat
+                                       (##fx+ r-hat v_n-1)))
+                                  (if (and (##fx< r-hat ##bignum.mdigit-base)
+                                           (or (##fx= q-hat ##bignum.mdigit-base)
+                                               (##bignum.mdigit-test?
+                                                q-hat
+                                                v_n-2
+                                                r-hat
+                                                u_n+j-2)))
+                                      (##fx- q-hat 1)
+                                      q-hat))
+                                q-hat)))))
+                  (##declare (not interrupts-enabled))
+                  (if (##fx= q-hat 0)
+                      (begin
+                        (and need-quotient?
+                             (##bignum.mdigit-set! q j q-hat))
+                        (loop3 (##fx- j 1)))
+                      ;; in previous versions of naive-div, we doubled-up on ##bignum.mdigit-div!
+                      ;; as kind of a poor man's unrolling.
+                      ;; But that gets to be too difficult here.
                       (let loop4 ((i j)
                                   (k 0)
                                   (borrow 0))
-                        (if (##fixnum.< k n)
-                            (loop4 (##fixnum.+ i 2)
-                                   (##fixnum.+ k 2)
+                        (if (##fx< k n)
+                            (loop4 (##fx+ i 1)
+                                   (##fx+ k 1)
                                    (##bignum.mdigit-div!
                                     u
-                                    (##fixnum.+ i 1)
+                                    i
                                     v
-                                    (##fixnum.+ k 1)
+                                    k
                                     q-hat
-                                    (##bignum.mdigit-div!
-                                     u
-                                     i
-                                     v
-                                     k
-                                     q-hat
-                                     borrow)))
-                            (let ((borrow
-                                   (if (##fixnum.< n k)
-                                       borrow
-                                       (##bignum.mdigit-div!
-                                        u
-                                        i
-                                        v
-                                        k
-                                        q-hat
-                                        borrow))))
-                              (if (##fixnum.< borrow 0)
+                                    borrow))
+                            (let* ((borrow  (if (or (##fxzero? borrow)
+                                                    (##fx= i (##bignum.mdigit-length u))
+                                                    (##fx= (##bignum.mdigit-ref u i) 0))
+                                                borrow
+                                                (##bignum.mdigit-div!
+                                                 u
+                                                 i
+                                                 ##bignum.adigit-zeros
+                                                 0
+                                                 q-hat
+                                                 borrow))))
+                              (if (##fx< borrow 0)
                                   (let loop5 ((i j)
                                               (l 0)
                                               (carry 0))
-                                    (if (##fixnum.< n l)
-                                        (begin
-                                          (##bignum.mdigit-set!
-                                           q
-                                           j
-                                           (##fixnum.- q-hat 1))
-                                          (loop3 (##fixnum.- j 1)))
-                                        (loop5 (##fixnum.+ i 1)
-                                               (##fixnum.+ l 1)
+                                    (if (##fx< l n)
+                                        (loop5 (##fx+ i 1)
+                                               (##fx+ l 1)
                                                (##bignum.mdigit-mul!
                                                 u
                                                 i
                                                 v
                                                 l
                                                 1
-                                                carry))))
+                                                carry))
+                                        (begin
+                                          (if (and (##fx= carry 1)
+                                                   (not (or (##fx= i (##bignum.mdigit-length u))
+                                                            (##fx= (##bignum.mdigit-ref u i) 0))))
+                                              (##bignum.mdigit-mul!
+                                               u
+                                               i
+                                               ##bignum.adigit-zeros ;; v
+                                               0 ;; l
+                                               1
+                                               carry))
+                                          (and need-quotient?
+                                               (##bignum.mdigit-set! q j (##fx- q-hat 1)))
+                                          (loop3 (##fx- j 1)))))
                                   (begin
-                                    (##bignum.mdigit-set! q j q-hat)
-                                    (loop3 (##fixnum.- j 1))))))))
-                    (##cons (##bignum.normalize! q)
-                            (##arithmetic-shift
-                             (##bignum.normalize! u)
-                             (##fixnum.- normalizing-bit-shift)))))))))))
+                                    (and need-quotient?
+                                         (##bignum.mdigit-set! q j q-hat))
+                                    (loop3 (##fx- j 1)))))))))
+                (##cons (and need-quotient?
+                             (##bignum.normalize! q))
+                        (##bignum.normalize! u))))))))
 
   (define (div-one u v)
     (let ((m
