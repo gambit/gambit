@@ -286,6 +286,7 @@ stamp:
 	eval `date -u '+stamp_ymd=%Y%m%d stamp_hms=%H%M%S'`; \
 	sed -e "s/#define ___STAMP_YMD [0-9][0-9]*/#define ___STAMP_YMD `expr $$stamp_ymd`/" -e "s/#define ___STAMP_HMS [0-9][0-9]*/#define ___STAMP_HMS `expr $$stamp_hms`/" stamp.h > stamp2.h
 	mv stamp2.h stamp.h
+	$(RC) add stamp.h
 
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status

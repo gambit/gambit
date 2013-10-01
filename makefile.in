@@ -125,11 +125,7 @@ stamp: fake_target
 	cd include && $(MAKE) $(MDEFINES) $@
 
 commit: stamp deselect-gen-for-commit
-	@if test "$(RC)" = "$(GIT)"; then \
-	  $(GIT) commit; \
-	else \
-	  $(HG) commit; \
-	fi
+	$(RC) commit
 
 diff: fake_target
 	@$(RC) diff | cat
