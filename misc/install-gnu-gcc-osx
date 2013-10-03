@@ -11,53 +11,42 @@
 #
 # you should add this line to your ~/.profile and ~/.bashrc files:
 #
-#    export PATH=/usr/gcc-4.8.0/bin:$PATH
+#    export PATH=/usr/local/gcc-4.8.1/bin:$PATH
 
-# The shell script assumes that the homebrew system (see
-# http://http://mxcl.github.com/homebrew) and Xcode have been
-# installed.
-
-VERSION=4.8.0
-PREFIX=/usr/gcc-$VERSION
-LANGUAGES=c,c++
+GCCVERSION=4.8.1
+GMPVERSION=5.1.3
+MPFRVERSION=3.1.2
+MPCVERSION=1.0.1
+PREFIX=/usr/local/gcc-$GCCVERSION
 MAKE="make -j 4"
 
-brew_path() { brew info $1 | head -n3 | tail -n1 | cut -d' ' -f1; }
-
-# Prerequisites
-
-brew install gmp
-brew install mpfr
-brew install libmpc
-
-# Download & install the latest GCC
+# Download & install the latest GCC and prerequisites
 
 mkdir temp-gcc
 cd temp-gcc
-wget ftp://ftp.gnu.org/gnu/gcc/gcc-$VERSION/gcc-$VERSION.tar.gz
-tar xfz gcc-$VERSION.tar.gz
-#rm gcc-$VERSION.tar.gz
-cd gcc-$VERSION
 
-mkdir build
-cd build
+wget ftp://ftp.gnu.org/gnu/gcc/gcc-$GCCVERSION/gcc-$GCCVERSION.tar.gz
+wget ftp://ftp.gnu.org/gnu/gmp/gmp-$GMPVERSION.tar.gz
+wget ftp://ftp.gnu.org/gnu/mpfr/mpfr-$MPFRVERSION.tar.gz
+wget ftp://ftp.gnu.org/gnu/mpc/mpc-$MPCVERSION.tar.gz
 
-../configure \
-   --prefix=$PREFIX \
-   --with-gmp=$(brew_path gmp) \
-   --with-mpfr=$(brew_path mpfr) \
-   --with-mpc=$(brew_path libmpc) \
-   --enable-languages=$LANGUAGES \
-   --with-system-zlib \
-   --enable-stage1-checking \
-   --enable-plugin \
-   --enable-lto \
-   --disable-multilib
+tar zxf gcc-$GCCVERSION.tar.gz
+tar zxf gmp-$GMPVERSION.tar.gz
+tar zxf mpfr-$MPFRVERSION.tar.gz
+tar zxf mpc-$MPCVERSION.tar.gz
 
-$MAKE bootstrap
+ln -s ../gmp-$GMPVERSION   gcc-$GCCVERSION/gmp
+ln -s ../mpfr-$MPFRVERSION gcc-$GCCVERSION/mpfr
+ln -s ../mpc-$MPCVERSION   gcc-$GCCVERSION/mpc
+
+mkdir build-dir
+cd build-dir
+../gcc-$GCCVERSION/configure --prefix=$PREFIX
+time $MAKE bootstrap > build.log
 
 sudo mkdir -p $PREFIX
 sudo make install
 
-cd ../../..
-rm -r temp-gcc
+cd ../..
+#rm -rf temp-gcc
+ls -ld temp-gcc
