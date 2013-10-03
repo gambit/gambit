@@ -272,7 +272,8 @@
 
 (for-each univ-prim-proc-add! prim-procs)
 
-(univ-prim-proc-add! '("##inline-host-code" (1) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##inline-host-statement" (1) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##inline-host-expression" (1) #t 0 0 (#f) extended))
 
 (define (univ-switch-testable? targ obj)
   (pretty-print (list 'univ-switch-testable? 'targ obj))
@@ -4552,20 +4553,16 @@ function Gambit_trampoline(pc) {
           (proc-obj-inline-set!
            prim
            (lambda (ctx opnds loc)
-             (if side-effects?
-
-                 (^ (apply-gen ctx opnds)
-                    (if loc ;; result is needed?
-                        (^setloc loc
-                                 (if (pair? opnds)
-                                     (^getopnd (car opnds))
-                                     (^obj #f)));;TODO: use void object
-                        (^)))
-
-                 (if loc ;; result is needed?
-                     (^setloc loc
-                              (apply-gen ctx opnds))
-                     (^)))))))
+             (apply-gen
+              ctx
+              (lambda (result)
+                (cond (loc ;; result is needed?
+                       (^setloc loc (or result (^obj #f))))
+                      ((and result side-effects?)
+                       (^expr-statement result))
+                      (else
+                       (^))))
+              opnds)))))
 
     (if ifjump-gen
         (begin
@@ -4594,7 +4591,16 @@ function Gambit_trampoline(pc) {
            jump-gen)))))
 
 (define (univ-define-prim-bool name proc-safe? side-effects? prim-gen)
-  (univ-define-prim name proc-safe? side-effects? prim-gen prim-gen))
+  (univ-define-prim
+   name
+   proc-safe?
+   side-effects?
+   prim-gen
+   (lambda (ctx . opnds)
+     (apply prim-gen
+            (cons ctx
+                  (cons (lambda (result) result)
+                        opnds))))))
 
 (define (univ-number ctx obj)
   (if (exact? obj)
@@ -4836,127 +4842,131 @@ function Gambit_trampoline(pc) {
 ;; TODO move elsewhere
 (define (univ-fold-left op0 op1 op2)
   (make-translated-operand-generator
-   (lambda (ctx . args)
-     (cond ((null? args)
-            (op0 ctx))
-           ((null? (cdr args))
-            (op1 ctx (car args)))
-           (else
-            (let loop ((lst (cddr args))
-                       (res (op2 ctx
-                                 (car args)
-                                 (cadr args))))
-              (if (null? lst)
-                  res
-                  (loop (cdr lst)
-                        (op2 ctx
-                             (^parens res)
-                             (car lst))))))))))
+   (lambda (ctx return . args)
+     (return
+      (cond ((null? args)
+             (op0 ctx))
+            ((null? (cdr args))
+             (op1 ctx (car args)))
+            (else
+             (let loop ((lst (cddr args))
+                        (res (op2 ctx
+                                  (car args)
+                                  (cadr args))))
+               (if (null? lst)
+                   res
+                   (loop (cdr lst)
+                         (op2 ctx
+                              (^parens res)
+                              (car lst)))))))))))
 
 (define (univ-fold-left-compare op0 op1 op2)
   (make-translated-operand-generator
-   (lambda (ctx . args)
-     (cond ((null? args)
-            (op0 ctx))
-           ((null? (cdr args))
-            (op1 ctx (car args)))
-           (else
-            (let loop ((lst (cdr args))
-                       (res (op2 ctx
-                                 (car args)
-                                 (cadr args))))
-              (let ((rest (cdr lst)))
-                (if (null? rest)
-                    res
-                    (loop rest
-                          (^&& (^parens res)
-                               (op2 ctx
-                                    (car lst)
-                                    (car rest))))))))))))
+   (lambda (ctx return . args)
+     (return
+      (cond ((null? args)
+             (op0 ctx))
+            ((null? (cdr args))
+             (op1 ctx (car args)))
+            (else
+             (let loop ((lst (cdr args))
+                        (res (op2 ctx
+                                  (car args)
+                                  (cadr args))))
+               (let ((rest (cdr lst)))
+                 (if (null? rest)
+                     res
+                     (loop rest
+                           (^&& (^parens res)
+                                (op2 ctx
+                                     (car lst)
+                                     (car rest)))))))))))))
 
 (define (make-translated-operand-generator proc)
-  (lambda (ctx opnds)
-    (apply proc (cons ctx (univ-emit-getopnds ctx opnds)))))
+  (lambda (ctx return opnds)
+    (apply proc (cons ctx (cons return (univ-emit-getopnds ctx opnds))))))
 
 ;;----------------------------------------------------------------------------
 
 (univ-define-prim-bool "##type" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^obj 0))));;TODO: implement
+   (lambda (ctx return arg1)
+     (return (^obj 0)))));;TODO: implement
 
 (univ-define-prim-bool "##type-cast" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     arg1)));;TODO: implement
+   (lambda (ctx return arg1 arg2)
+     (return arg1))));;TODO: implement
 
 (univ-define-prim-bool "##subtype" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^obj 0))));;TODO: implement
+   (lambda (ctx return arg1)
+     (return (^obj 0)))));;TODO: implement
 
 (univ-define-prim-bool "##subtype-set!" #t #t
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (^))));;TODO: implement
+   (lambda (ctx return arg1 arg2)
+     (return (^)))));;TODO: implement
 
 (univ-define-prim-bool "##not" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^eq? arg1 (^obj #f)))))
+   (lambda (ctx return arg1)
+     (return (^eq? arg1 (^obj #f))))))
 
 (univ-define-prim-bool "##boolean?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (case (target-name (ctx-target ctx))
+   (lambda (ctx return arg1)
+     (return
+      (case (target-name (ctx-target ctx))
 
-       ((js)
-        (^typeof "boolean" arg1))
+        ((js)
+         (^typeof "boolean" arg1))
 
-       ((php)
-        (^call-prim "is_bool" arg1))
+        ((php)
+         (^call-prim "is_bool" arg1))
 
-       ((python)
-        (^instanceof "bool" arg1))
+        ((python)
+         (^instanceof "bool" arg1))
 
-       ((ruby)
-        (^or (^instanceof "FalseClass" arg1)
-             (^instanceof "TrueClass" arg1)))
+        ((ruby)
+         (^or (^instanceof "FalseClass" arg1)
+              (^instanceof "TrueClass" arg1)))
 
-       (else
-        (compiler-internal-error
-         "##boolean?, unknown target"))))))
+        (else
+         (compiler-internal-error
+          "##boolean?, unknown target")))))))
 
 (univ-define-prim-bool "##null?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (case (target-name (ctx-target ctx))
+   (lambda (ctx return arg1)
+     (return
+      (case (target-name (ctx-target ctx))
 
-       ((js)
-        (^= arg1 (univ-null ctx)))
+        ((js)
+         (^= arg1 (univ-null ctx)))
 
-       ((php)
-        (^));;TODO: implement
+        ((php)
+         (^)) ;;TODO: implement
 
-       ((python)
-        (^ arg1 " is " (univ-null ctx)))
+        ((python)
+         (^ arg1 " is " (univ-null ctx)))
 
-       ((ruby)
-        (^call-prim (^member arg1 "equal?") (univ-null ctx)))
+        ((ruby)
+         (^call-prim (^member arg1 "equal?") (univ-null ctx)))
 
-       (else
-        (compiler-internal-error
-         "##null?, unknown target"))))))
+        (else
+         (compiler-internal-error
+          "##null?, unknown target")))))))
 
 (univ-define-prim-bool "##unbound?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^obj #f))));;TODO: implement
+   (lambda (ctx return arg1)
+     (return (^obj #f)))));;TODO: implement
 
 (univ-define-prim-bool "##eq?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (^eq? arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (return (^eq? arg1 arg2)))))
 
 ;;TODO: ("##eqv?"               (2)   #f ()    0    boolean extended)
 ;;TODO: ("##equal?"             (2)   #f ()    0    boolean extended)
@@ -4964,25 +4974,26 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim-bool "##fixnum?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (case (target-name (ctx-target ctx))
+   (lambda (ctx return arg1)
+     (return
+      (case (target-name (ctx-target ctx))
 
-       ((js)
-        (^typeof "number" arg1))
+        ((js)
+         (^typeof "number" arg1))
 
-       ((php)
-        (^call-prim "is_int" arg1))
+        ((php)
+         (^call-prim "is_int" arg1))
 
-       ((python)
-        (^and (^instanceof "int" arg1)
-              (^not (^instanceof "bool" arg1))))
+        ((python)
+         (^and (^instanceof "int" arg1)
+               (^not (^instanceof "bool" arg1))))
 
-       ((ruby)
-        (^instanceof "Fixnum" arg1))
+        ((ruby)
+         (^instanceof "Fixnum" arg1))
 
-       (else
-        (compiler-internal-error
-         "##fixnum?, unknown target"))))))
+        (else
+         (compiler-internal-error
+          "##fixnum?, unknown target")))))))
 
 ;;TODO: ("##special?"                 (1)   #f ()    0    boolean extended)
 ;;TODO: ("##pair?"                    (1)   #f ()    0    boolean extended)
@@ -5040,14 +5051,14 @@ function Gambit_trampoline(pc) {
 ;;TODO: make variadic, complete, clean up and test
 (univ-define-prim-bool "##fxmax" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (^if-expr (^> arg1 arg2) arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (return (^if-expr (^> arg1 arg2) arg1 arg2)))))
 
 ;;TODO: make variadic, complete, clean up and test
 (univ-define-prim-bool "##fxmin" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (^if-expr (^< arg1 arg2) arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (return (^if-expr (^< arg1 arg2) arg1 arg2)))))
 
 (univ-define-prim "##fxwrap+" #f #f
   (univ-fold-left
@@ -5064,53 +5075,54 @@ function Gambit_trampoline(pc) {
 ;;TODO: complete, clean up and test
 (univ-define-prim "##fx+?" #f #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
+   (lambda (ctx return arg1 arg2)
+     (return
+      (case (target-name (ctx-target ctx))
 
-       ((js)
-        (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-           arg1
-           " + "
-           arg2
-           ")<<"
-           univ-tag-bits
-           ">>"
-           univ-tag-bits
-           ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+        ((js)
+         (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+            arg1
+            " + "
+            arg2
+            ")<<"
+            univ-tag-bits
+            ">>"
+            univ-tag-bits
+            ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
-       ((python)
-        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
-           univ-tag-bits
-           ").value>>"
-           univ-tag-bits
-           "))("
-           arg1
-           " + "
-           arg2
-           ")"))
+        ((python)
+         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+            univ-tag-bits
+            ").value>>"
+            univ-tag-bits
+            "))("
+            arg1
+            " + "
+            arg2
+            ")"))
 
-       ((php ruby)
-        (^and (^parens
-               (^= (^parens
-                    (^assign (^global-var (^prefix "temp2"))
-                             (^-
-                              (^parens
-                               (^bitand
-                                (^parens
-                                 (^+
-                                  (^parens
-                                   (^assign (^global-var (^prefix "temp1"))
-                                            (^+ arg1
-                                                arg2)))
-                                  (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                                (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                              (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
-                   (^global-var (^prefix "temp1"))))
-              (^global-var (^prefix "temp2"))))
+        ((php ruby)
+         (^and (^parens
+                (^= (^parens
+                     (^assign (^global-var (^prefix "temp2"))
+                              (^-
+                               (^parens
+                                (^bitand
+                                 (^parens
+                                  (^+
+                                   (^parens
+                                    (^assign (^global-var (^prefix "temp1"))
+                                             (^+ arg1
+                                                 arg2)))
+                                   (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                                 (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                               (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                    (^global-var (^prefix "temp1"))))
+               (^global-var (^prefix "temp2"))))
 
-       (else
-        (compiler-internal-error
-         "##fx+?, unknown target"))))))
+        (else
+         (compiler-internal-error
+          "##fx+?, unknown target")))))))
 
 (univ-define-prim "##fxwrap*" #f #f
   (univ-fold-left
@@ -5127,53 +5139,54 @@ function Gambit_trampoline(pc) {
 ;;TODO: complete, clean up and test
 (univ-define-prim "##fx*?" #f #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (case (target-name (ctx-target ctx))
+   (lambda (ctx return arg1 arg2)
+     (return
+      (case (target-name (ctx-target ctx))
 
-       ((js)
-        (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-           arg1
-           " * "
-           arg2
-           ")<<"
-           univ-tag-bits
-           ">>"
-           univ-tag-bits
-           ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+        ((js)
+         (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+            arg1
+            " * "
+            arg2
+            ")<<"
+            univ-tag-bits
+            ">>"
+            univ-tag-bits
+            ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
-       ((python)
-        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
-           univ-tag-bits
-           ").value>>"
-           univ-tag-bits
-           "))("
-           arg1
-           " * "
-           arg2
-           ")"))
+        ((python)
+         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+            univ-tag-bits
+            ").value>>"
+            univ-tag-bits
+            "))("
+            arg1
+            " * "
+            arg2
+            ")"))
 
-       ((php ruby)
-        (^and (^parens
-               (^= (^parens
-                    (^assign (^global-var (^prefix "temp2"))
-                             (^-
-                              (^parens
-                               (^bitand
-                                (^parens
-                                 (^+
-                                  (^parens
-                                   (^assign (^global-var (^prefix "temp1"))
-                                            (^* arg1
-                                                arg2)))
-                                  (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                                (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                              (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
-                   (^global-var (^prefix "temp1"))))
-              (^global-var (^prefix "temp2"))))
+        ((php ruby)
+         (^and (^parens
+                (^= (^parens
+                     (^assign (^global-var (^prefix "temp2"))
+                              (^-
+                               (^parens
+                                (^bitand
+                                 (^parens
+                                  (^+
+                                   (^parens
+                                    (^assign (^global-var (^prefix "temp1"))
+                                             (^* arg1
+                                                 arg2)))
+                                   (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                                 (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                               (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                    (^global-var (^prefix "temp1"))))
+               (^global-var (^prefix "temp2"))))
 
-       (else
-        (compiler-internal-error
-         "##fx*?, unknown target"))))))
+        (else
+         (compiler-internal-error
+          "##fx*?, unknown target")))))))
 
 (univ-define-prim "##fxwrap-" #f #f
   (univ-fold-left
@@ -5190,91 +5203,92 @@ function Gambit_trampoline(pc) {
 ;;TODO: complete, clean up and test
 (univ-define-prim "##fx-?" #f #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 #!optional (arg2 #f))
-     (case (target-name (ctx-target ctx))
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (case (target-name (ctx-target ctx))
 
-       ((js)
-        (if arg2
-            (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-               arg1
-               " - "
-               arg2
-               ")<<"
-               univ-tag-bits
-               ">>"
-               univ-tag-bits
-               ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2")))
-            (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
-               "- "
-               arg1
-               ")<<"
-               univ-tag-bits
-               ">>"
-               univ-tag-bits
-               ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2")))))
+        ((js)
+         (if arg2
+             (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+                arg1
+                " - "
+                arg2
+                ")<<"
+                univ-tag-bits
+                ">>"
+                univ-tag-bits
+                ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2")))
+             (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+                "- "
+                arg1
+                ")<<"
+                univ-tag-bits
+                ">>"
+                univ-tag-bits
+                ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2")))))
 
-       ((python)
-        (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
-           univ-tag-bits
-           ").value>>"
-           univ-tag-bits
-           "))("
-           arg1
-           " - "
-           arg2
-           ")"))
+        ((python)
+         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+            univ-tag-bits
+            ").value>>"
+            univ-tag-bits
+            "))("
+            arg1
+            " - "
+            arg2
+            ")"))
 
-       ((ruby)
-        (^ "(" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
-           arg1
-           " - "
-           arg2
-           ") + "
-           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-           ") & "
-           (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
-           ") - "
-           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-           ") == " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+        ((ruby)
+         (^ "(" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
+            arg1
+            " - "
+            arg2
+            ") + "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") & "
+            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            ") - "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") == " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
 
-       ((php)
-        (^ "((" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
-           arg1
-           " - "
-           arg2
-           ") + "
-           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-           ") & "
-           (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
-           ") - "
-           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-           ") === " (^global-var (^prefix "temp1")) ") ? " (^global-var (^prefix "temp2")) " : False"))
+        ((php)
+         (^ "((" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
+            arg1
+            " - "
+            arg2
+            ") + "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") & "
+            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            ") - "
+            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            ") === " (^global-var (^prefix "temp1")) ") ? " (^global-var (^prefix "temp2")) " : False"))
 
-       (else
-        (compiler-internal-error
-         "##fx-?, unknown target"))))))
+        (else
+         (compiler-internal-error
+          "##fx-?, unknown target")))))))
 
 ;;TODO: ("##fxwrapquotient"              (2)   #f ()    0    fixnum  extended)
 
 (univ-define-prim "##fxquotient" #f #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-fxquotient ctx arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (return (univ-fxquotient ctx arg1 arg2)))))
 
 (univ-define-prim "##fxremainder" #f #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-fxremainder ctx arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (return (univ-fxremainder ctx arg1 arg2)))))
 
 (univ-define-prim "##fxmodulo" #f #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-fxmodulo ctx arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (return (univ-fxmodulo ctx arg1 arg2)))))
 
 (univ-define-prim "##fxnot" #f #f
   (make-translated-operand-generator
-   (lambda (ctx arg)
-     (^bitand (^bitnot arg) (- (expt 2 univ-tag-bits))))))
+   (lambda (ctx return arg)
+     (return (^bitand (^bitnot arg) (- (expt 2 univ-tag-bits)))))))
 
 (univ-define-prim "##fxand" #f #f
   (univ-fold-left
@@ -5320,28 +5334,28 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim-bool "##fxzero?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^= arg1 (^obj 0)))))
+   (lambda (ctx return arg1)
+     (return (^= arg1 (^obj 0))))))
 
 (univ-define-prim-bool "##fxpositive?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^> arg1 (^obj 0)))))
+   (lambda (ctx return arg1)
+     (return (^> arg1 (^obj 0))))))
 
 (univ-define-prim-bool "##fxnegative?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^< arg1 (^obj 0)))))
+   (lambda (ctx return arg1)
+     (return (^< arg1 (^obj 0))))))
 
 (univ-define-prim-bool "##fxodd?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^= (^parens (^bitand arg1 (^obj 1))) (^obj 1)))))
+   (lambda (ctx return arg1)
+     (return (^= (^parens (^bitand arg1 (^obj 1))) (^obj 1))))))
 
 (univ-define-prim-bool "##fxeven?" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1)
-     (^= (^parens (^bitand arg1 (^obj 1))) (^obj 0)))))
+   (lambda (ctx return arg1)
+     (return (^= (^parens (^bitand arg1 (^obj 1))) (^obj 0))))))
 
 (univ-define-prim-bool "##fx=" #f #f
   (univ-fold-left-compare
@@ -5437,18 +5451,20 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim "##cons" #t #f
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-cons ctx arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (return (univ-cons ctx arg1 arg2)))))
 
 (univ-define-prim "##set-car!" #f #t
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-setcar ctx arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (^ (univ-setcar ctx arg1 arg2)
+        (return arg1)))))
 
 (univ-define-prim "##set-cdr!" #f #t
   (make-translated-operand-generator
-   (lambda (ctx arg1 arg2)
-     (univ-setcdr ctx arg1 arg2))))
+   (lambda (ctx return arg1 arg2)
+     (^ (univ-setcdr ctx arg1 arg2)
+        (return arg1)))))
 
 (define (univ-cxxxxr-init)
   (let cxxxxr-loop ((n #b10))
@@ -5463,7 +5479,7 @@ function Gambit_trampoline(pc) {
 
           (univ-define-prim (string-append (ad-name "##c" n) "r") #f #f
             (make-translated-operand-generator
-             (lambda (ctx arg)
+             (lambda (ctx return arg)
 
                (define (ad-expr expr x)
                  (if (>= x #b10)
@@ -5473,7 +5489,7 @@ function Gambit_trampoline(pc) {
                               (quotient x 2))
                      expr))
 
-               (ad-expr arg n))))
+               (return (ad-expr arg n)))))
 
           (cxxxxr-loop (+ n 1))))))
 
@@ -5481,7 +5497,7 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim "##list" #t #f
   (make-translated-operand-generator
-   (lambda (ctx . args)
+   (lambda (ctx return . args)
      (let loop ((lst (reverse args))
                 (result (univ-null ctx)))
        (if (pair? lst)
@@ -5489,7 +5505,7 @@ function Gambit_trampoline(pc) {
                  (univ-cons ctx
                             (car lst)
                             result))
-           result)))))
+           (return result))))))
 
 ;;TODO: ("##box"                          (1)   #f ()    0    #f      extended)
 ;;TODO: ("##unbox"                        (1)   #f ()    0    (#f)    extended)
@@ -5694,89 +5710,104 @@ function Gambit_trampoline(pc) {
 
 ;;TODO: clean up and integrate to above
 
-(univ-define-prim "##inline-host-code" #f #t
+(univ-define-prim "##inline-host-statement" #f #t
 
-  (lambda (ctx opnds)
-    (let ((arg1 (car opnds)))
-      (if (obj? arg1)
-          (obj-val arg1)
-          (compiler-internal-error "##inline-host-code requires constant argument")))))
+  (lambda (ctx return opnds)
+    (if (and (= (length opnds) 1)
+             (obj? (car opnds))
+             (string? (obj-val (car opnds))))
+        (^ (obj-val (car opnds))
+           (return #f))
+        (compiler-internal-error "##inline-host-statement requires a constant string argument"))))
+
+(univ-define-prim "##inline-host-expression" #f #t
+
+  (lambda (ctx return opnds)
+    (if (and (= (length opnds) 1)
+             (obj? (car opnds))
+             (string? (obj-val (car opnds))))
+        (return (obj-val (car opnds)))
+        (compiler-internal-error "##inline-host-expression requires a constant string argument"))))
 
 (univ-define-prim "##make-vector" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "Vector.makevector")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((js)
+        (^ (^prefix "Vector.makevector")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ", "
+           (^getopnd (list-ref opnds 1))
+           ")"))
 
-      ((php python ruby)                ;TODO: complete
-       (^))
+       ((php python ruby)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##make-vector, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##make-vector, unknown target"))))))
 
 (univ-define-prim "##vector" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (let ((nbopnd (length opnds)))
-         (if (= nbopnd 0)
-             (^ "[]")
-             (let ((args (^ "["
-                            (^getopnd (list-ref opnds 0)))))
-               (let loop ((i 1)
-                          (args args))
-                 (if (= i nbopnd)
-                     (^ args "]")
-                     (loop (+ i 1)
-                           (^ args
-                              ","
-                              (^getopnd (list-ref opnds i))))))))))
+       ((js)
+        (let ((nbopnd (length opnds)))
+          (if (= nbopnd 0)
+              (^ "[]")
+              (let ((args (^ "["
+                             (^getopnd (list-ref opnds 0)))))
+                (let loop ((i 1)
+                           (args args))
+                  (if (= i nbopnd)
+                      (^ args "]")
+                      (loop (+ i 1)
+                            (^ args
+                               ","
+                               (^getopnd (list-ref opnds i))))))))))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##vector, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##vector, unknown target"))))))
 
 (univ-define-prim "##vector-ref" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^index (^getopnd (list-ref opnds 0))
-               (^getopnd (list-ref opnds 1))))
+       ((js)
+        (^index (^getopnd (list-ref opnds 0))
+                (^getopnd (list-ref opnds 1))))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##vector-ref, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##vector-ref, unknown target"))))))
 
 (univ-define-prim "##vector-set!" #f #t
 
-  (lambda (ctx opnds)
+  (lambda (ctx return opnds)
     (case (target-name (ctx-target ctx))
 
       ((js python)
-       (^expr-statement
-        (^assign (^index (^getopnd (list-ref opnds 0))
-                         (^getopnd (list-ref opnds 1)))
-                 (^getopnd (list-ref opnds 2)))))
+       (^ (^expr-statement
+           (^assign (^index (^getopnd (list-ref opnds 0))
+                            (^getopnd (list-ref opnds 1)))
+                    (^getopnd (list-ref opnds 2))))
+          (return (^getopnd (list-ref opnds 0)))))
 
-      ((ruby php)                ;TODO: complete
+      ((ruby php)                       ;TODO: complete
        (^))
 
       (else
@@ -5785,231 +5816,244 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim "##string" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "new "
-          (univ-emit-apply ctx
-                      (^prefix "String")
-                      ;; (list (^getopnd (list-ref opnds 0)))
-                      (map (lambda (opnd) (^getopnd opnd))
-                           opnds)
-                      )))
+       ((js)
+        (^ "new "
+           (univ-emit-apply ctx
+                            (^prefix "String")
+                            ;; (list (^getopnd (list-ref opnds 0)))
+                            (map (lambda (opnd) (^getopnd opnd))
+                                 opnds)
+                            )))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##string, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##string, unknown target"))))))
 
 (univ-define-prim "##string-length" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^getopnd (list-ref opnds 0))
-          ".stringlength()"))
+       ((js)
+        (^ (^getopnd (list-ref opnds 0))
+           ".stringlength()"))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##string-length, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##string-length, unknown target"))))))
 
 (univ-define-prim "##vector-length" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^getopnd (list-ref opnds 0))
-          ".length"))
+       ((js)
+        (^ (^getopnd (list-ref opnds 0))
+           ".length"))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##vector-length, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##vector-length, unknown target"))))))
 
-;;(univ-define-prim "string-append" #f #f (lambda (ctx opnds) (^)))
+;;(univ-define-prim "string-append" #f #f (lambda (ctx return opnds) (return (^))))
 
 (univ-define-prim "list->string" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "new "
-          (univ-emit-apply ctx
-                      (^prefix "String.listToString")
-                      (list (^getopnd (list-ref opnds 0))))))
+       ((js)
+        (^ "new "
+           (univ-emit-apply ctx
+                            (^prefix "String.listToString")
+                            (list (^getopnd (list-ref opnds 0))))))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "list->string, unknown target")))))
+       (else
+        (compiler-internal-error
+         "list->string, unknown target"))))))
 
 (univ-define-prim "symbol->string" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^getopnd (list-ref opnds 0))
-          ".symbolToString()"))
+       ((js)
+        (^ (^getopnd (list-ref opnds 0))
+           ".symbolToString()"))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "symbol->string, unknown target")))))
+       (else
+        (compiler-internal-error
+         "symbol->string, unknown target"))))))
 
 (univ-define-prim "string->symbol" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "Symbol.stringToSymbol")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ")"))
+       ((js)
+        (^ (^prefix "Symbol.stringToSymbol")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ")"))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "string->symbol, unknown target")))))
+       (else
+        (compiler-internal-error
+         "string->symbol, unknown target"))))))
 
 (univ-define-prim "string->list" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "String.stringToList")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ")"))
+       ((js)
+        (^ (^prefix "String.stringToList")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ")"))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "string->list, unknown target")))))
+       (else
+        (compiler-internal-error
+         "string->list, unknown target"))))))
 
 (univ-define-prim "string-append" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (univ-emit-apply ctx
-                      (^prefix "stringappend")
-                      (map (lambda (opnd) (^getopnd opnd))
-                           opnds)
-                      )))
+       ((js)
+        (^ (univ-emit-apply ctx
+                            (^prefix "stringappend")
+                            (map (lambda (opnd) (^getopnd opnd))
+                                 opnds)
+                            )))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##string-append, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##string-append, unknown target"))))))
 
 (univ-define-prim "##make-string" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "String.makestring")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((js)
+        (^ (^prefix "String.makestring")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ", "
+           (^getopnd (list-ref opnds 1))
+           ")"))
 
-      ((python)
-       (^ (^prefix "makestring")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^getopnd (list-ref opnds 1))
-          ")"))
+       ((python)
+        (^ (^prefix "makestring")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ", "
+           (^getopnd (list-ref opnds 1))
+           ")"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 1))
-          ".code.chr*"
-          (^getopnd (list-ref opnds 0))))
+       ((ruby)
+        (^ (^getopnd (list-ref opnds 1))
+           ".code.chr*"
+           (^getopnd (list-ref opnds 0))))
 
-      ((php)                ;TODO: complete
-       (^))
+       ((php)                           ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##make-string, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##make-string, unknown target"))))))
 
 (univ-define-prim "number->string" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "String.jsstringToString")
-          "(("
-          (^getopnd (list-ref opnds 0))
-          ").toString())"))
+       ((js)
+        (^ (^prefix "String.jsstringToString")
+           "(("
+           (^getopnd (list-ref opnds 0))
+           ").toString())"))
 
-      ((python ruby php)                ;TODO: complete
-       (^))
+       ((python ruby php)               ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "number->string, unknown target")))))
+       (else
+        (compiler-internal-error
+         "number->string, unknown target"))))))
 
 (univ-define-prim "##string-set!" #f #t
 
-  (lambda (ctx opnds)
+  (lambda (ctx return opnds)
     (case (target-name (ctx-target ctx))
 
       ((js)
-       (^expr-statement
-        (^ (^getopnd (list-ref opnds 0))
-           ".stringset("
-           (^getopnd (list-ref opnds 1))
-           ", "
-           (^getopnd (list-ref opnds 2))
-           ")")))
+       (^ (^expr-statement
+           (^ (^getopnd (list-ref opnds 0))
+              ".stringset("
+              (^getopnd (list-ref opnds 1))
+              ", "
+              (^getopnd (list-ref opnds 2))
+              ")"))
+          (return (^getopnd (list-ref opnds 0)))))
 
       ((python)
-       (^expr-statement
-        (^ (^getopnd (list-ref opnds 0))
-           "["
-           (^getopnd (list-ref opnds 1))
-           "] = "
-           (^getopnd (list-ref opnds 2)))))
+       (^ (^expr-statement
+           (^ (^getopnd (list-ref opnds 0))
+              "["
+              (^getopnd (list-ref opnds 1))
+              "] = "
+              (^getopnd (list-ref opnds 2))))
+          (return (^getopnd (list-ref opnds 0)))))
 
       ((ruby)
-       (^expr-statement
-        (^ (^getopnd (list-ref opnds 0))
-           "["
-           (^getopnd (list-ref opnds 1))
-           "] = "
-           (^getopnd (list-ref opnds 2))
-           ".code.chr")))
+       (^ (^expr-statement
+           (^ (^getopnd (list-ref opnds 0))
+              "["
+              (^getopnd (list-ref opnds 1))
+              "] = "
+              (^getopnd (list-ref opnds 2))
+              ".code.chr"))
+          (return (^getopnd (list-ref opnds 0)))))
 
-      ((php)                ;TODO: complete
+      ((php)                            ;TODO: complete
        (^))
 
       (else
@@ -6018,279 +6062,291 @@ function Gambit_trampoline(pc) {
 
 (univ-define-prim "##string-ref" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^getopnd (list-ref opnds 0))
-          ".stringref(" (^getopnd (list-ref opnds 1)) ")"))
+       ((js)
+        (^ (^getopnd (list-ref opnds 0))
+           ".stringref(" (^getopnd (list-ref opnds 1)) ")"))
 
-      ((python)
-       (^ (^getopnd (list-ref opnds 0))
-          "[" (^getopnd (list-ref opnds 1)) "]"))
+       ((python)
+        (^ (^getopnd (list-ref opnds 0))
+           "[" (^getopnd (list-ref opnds 1)) "]"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          "[" (^getopnd (list-ref opnds 1)) "].chr"))
+       ((ruby)
+        (^ (^getopnd (list-ref opnds 0))
+           "[" (^getopnd (list-ref opnds 1)) "].chr"))
 
-      ((php)                            ;TODO: complete
-       (^))
+       ((php)                           ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##string-ref, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##string-ref, unknown target"))))))
 
 (univ-define-prim "##fx->char" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "Char.fxToChar")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ")"))
+       ((js)
+        (^ (^prefix "Char.fxToChar")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ")"))
 
-      ((python ruby)
-       (^ (^prefix "fxToChar")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ")"))
+       ((python ruby)
+        (^ (^prefix "fxToChar")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ")"))
 
-      ((php)                            ;TODO: complete
-       (^))
+       ((php)                           ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##fx->char, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##fx->char, unknown target"))))))
 
 (univ-define-prim "##fx<-char" #f #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^prefix "Char.charToFx")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ")"))
+       ((js)
+        (^ (^prefix "Char.charToFx")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ")"))
 
-      ((python ruby)
-       (^ (^prefix "charToFx")
-          "("
-          (^getopnd (list-ref opnds 0))
-          ")"))
+       ((python ruby)
+        (^ (^prefix "charToFx")
+           "("
+           (^getopnd (list-ref opnds 0))
+           ")"))
 
-      ((php)                            ;TODO: complete
-       (^))
+       ((php)                           ;TODO: complete
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##fx<-char, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##fx<-char, unknown target"))))))
 
 (univ-define-prim-bool "##flonum?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ (^getopnd (list-ref opnds 0))
-          " instanceof "
-          (^prefix "Flonum")))
+       ((js)
+        (^ (^getopnd (list-ref opnds 0))
+           " instanceof "
+           (^prefix "Flonum")))
 
-      ((python)
-       (^ "isinstance("
-          (^getopnd (list-ref opnds 0))
-          ", float)"))
+       ((python)
+        (^ "isinstance("
+           (^getopnd (list-ref opnds 0))
+           ", float)"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          ".class == Float"))
+       ((ruby)
+        (^ (^getopnd (list-ref opnds 0))
+           ".class == Float"))
 
-      ((php)
-       (^ "is_float("
-          (^getopnd (list-ref opnds 0))
-          ")"))
+       ((php)
+        (^ "is_float("
+           (^getopnd (list-ref opnds 0))
+           ")"))
 
-      (else
-       (compiler-internal-error
-        "##flonum?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##flonum?, unknown target"))))))
 
 (univ-define-prim-bool "##char?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js php)
-       (^ (^getopnd (list-ref opnds 0))
-          " instanceof "
-          (^prefix "Char")))
+       ((js php)
+        (^ (^getopnd (list-ref opnds 0))
+           " instanceof "
+           (^prefix "Char")))
 
-      ((python)
-       (^ "isinstance("
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^prefix "Char")
-          ")"))
+       ((python)
+        (^ "isinstance("
+           (^getopnd (list-ref opnds 0))
+           ", "
+           (^prefix "Char")
+           ")"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          ".class == "
-          (^prefix "Char")))
+       ((ruby)
+        (^ (^getopnd (list-ref opnds 0))
+           ".class == "
+           (^prefix "Char")))
 
-      (else
-       (compiler-internal-error
-        "##char?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##char?, unknown target"))))))
 
 (univ-define-prim-bool "##pair?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js php)
-       (^ (^getopnd (list-ref opnds 0))
-          " instanceof "
-          (^prefix "Pair")))
+       ((js php)
+        (^ (^getopnd (list-ref opnds 0))
+           " instanceof "
+           (^prefix "Pair")))
 
-      ((python)
-       (^ "isinstance("
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^prefix "Pair")
-          ")"))
+       ((python)
+        (^ "isinstance("
+           (^getopnd (list-ref opnds 0))
+           ", "
+           (^prefix "Pair")
+           ")"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          ".class == "
-          (^prefix "Pair")))
+       ((ruby)
+        (^ (^getopnd (list-ref opnds 0))
+           ".class == "
+           (^prefix "Pair")))
 
-      (else
-       (compiler-internal-error
-        "##pair?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##pair?, unknown target"))))))
 
 (univ-define-prim-bool "##vector?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js php)
-       (^ (^getopnd (list-ref opnds 0))
-          " instanceof "
-          (^prefix "Vector")))
+       ((js php)
+        (^ (^getopnd (list-ref opnds 0))
+           " instanceof "
+           (^prefix "Vector")))
 
-      ((python)
-       (^ "isinstance("
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^prefix "Vector")
-          ")"))
+       ((python)
+        (^ "isinstance("
+           (^getopnd (list-ref opnds 0))
+           ", "
+           (^prefix "Vector")
+           ")"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          ".class == "
-          (^prefix "Vector")))
+       ((ruby)
+        (^ (^getopnd (list-ref opnds 0))
+           ".class == "
+           (^prefix "Vector")))
 
-      (else
-       (compiler-internal-error
-        "##vector?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##vector?, unknown target"))))))
 
 (univ-define-prim-bool "##string?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js php)
-       (^ (^getopnd (list-ref opnds 0))
-          " instanceof "
-          (^prefix "String")))
+       ((js php)
+        (^ (^getopnd (list-ref opnds 0))
+           " instanceof "
+           (^prefix "String")))
 
-      ((python)
-       (^ "isinstance("
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^prefix "String")
-          ")"))
+       ((python)
+        (^ "isinstance("
+           (^getopnd (list-ref opnds 0))
+           ", "
+           (^prefix "String")
+           ")"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          ".class == "
-          (^prefix "String")))
+       ((ruby)
+        (^ (^getopnd (list-ref opnds 0))
+           ".class == "
+           (^prefix "String")))
 
-      (else
-       (compiler-internal-error
-        "##string?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##string?, unknown target"))))))
 
 (univ-define-prim-bool "##number?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js php)
-       (^ "typeof("
-          (^getopnd (list-ref opnds 0))
-          ") == \"number\""))
+       ((js php)
+        (^ "typeof("
+           (^getopnd (list-ref opnds 0))
+           ") == \"number\""))
 
-      ((python ruby php)
-       (^))
+       ((python ruby php)
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##number?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##number?, unknown target"))))))
 
 (univ-define-prim-bool "##symbol?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js php)
-       (^ (^getopnd (list-ref opnds 0))
-          " instanceof "
-          (^prefix "Symbol")))
+       ((js php)
+        (^ (^getopnd (list-ref opnds 0))
+           " instanceof "
+           (^prefix "Symbol")))
 
-      ((python)
-       (^ "isinstance("
-          (^getopnd (list-ref opnds 0))
-          ", "
-          (^prefix "Symbol")
-          ")"))
+       ((python)
+        (^ "isinstance("
+           (^getopnd (list-ref opnds 0))
+           ", "
+           (^prefix "Symbol")
+           ")"))
 
-      ((ruby)
-       (^ (^getopnd (list-ref opnds 0))
-          ".class == "
-          (^prefix "Symbol")))
-      ((php)
-       (^))
+       ((ruby)
+        (^ (^getopnd (list-ref opnds 0))
+           ".class == "
+           (^prefix "Symbol")))
+       ((php)
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##symbol?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##symbol?, unknown target"))))))
 
 (univ-define-prim-bool "##mem-allocated?" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js)
-       (^ "true"))
+       ((js)
+        (^ "true"))
 
-      ((python ruby php)
-       (^))
+       ((python ruby php)
+        (^))
 
-      (else
-       (compiler-internal-error
-        "##mem-allocated?, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##mem-allocated?, unknown target"))))))
 
 (univ-define-prim "##subtype" #t #f
 
-  (lambda (ctx opnds)
-    (case (target-name (ctx-target ctx))
+  (lambda (ctx return opnds)
+    (return
+     (case (target-name (ctx-target ctx))
 
-      ((js python ruby js)
-       (^ "1"))
+       ((js python ruby js)
+        (^ "1"))
 
-      (else
-       (compiler-internal-error
-        "##subtype, unknown target")))))
+       (else
+        (compiler-internal-error
+         "##subtype, unknown target"))))))
 
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
