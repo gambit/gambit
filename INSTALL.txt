@@ -82,7 +82,7 @@ If the source code was obtained by cloning the Gambit repository,
 these steps can be shortened to the following commands:
 
   % ./configure
-  % make all-from-repo-clone
+  % make from-scratch
 
 The system can then be tested and installed using the following
 commands:
@@ -94,7 +94,7 @@ On a computer with multiple cores it is normally beneficial to build
 the system in parallel by adding a "-j" option to all the invocations
 of "make" before "make check".  For example:
 
-  % make -j4 all-from-repo-clone
+  % make -j4 from-scratch
 
 
 3) Recommended "configure" script options

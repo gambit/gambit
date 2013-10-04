@@ -100,7 +100,7 @@ all-pre: gsc-boot@exe@
 
 all-post:
 
-all-from-repo-clone: fake_target
+from-scratch: fake_target
 	$(MAKE) bootstrap # make gsc compiler of latest *release*
 	$(MAKE) bootclean
 	$(MAKE) bootstrap # make gsc compiler corresponding to repo HEAD

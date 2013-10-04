@@ -7,7 +7,7 @@ Quick-install instructions for a typical installation
   git clone https://github.com/feeley/gambit.git
   cd gambit
   ./configure --enable-single-host
-  make -j4 all-from-repo-clone
+  make -j4 from-scratch
   make check
   sudo make install
 
