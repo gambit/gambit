@@ -100,6 +100,13 @@ all-pre: gsc-boot@exe@
 
 all-post:
 
+all-from-repo-clone: fake_target
+	$(MAKE) bootstrap # make gsc compiler of latest *release*
+	$(MAKE) bootclean
+	$(MAKE) bootstrap # make gsc compiler corresponding to repo HEAD
+	$(MAKE) bootclean
+	$(MAKE) all       # make everything with repo HEAD gsc compiler
+
 gsc-boot@exe@:
 	rm -f gsc-boot@bat@ gsc-boot
 	cp gsc-boot.bat.windows gsc-boot@bat@
