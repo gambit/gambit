@@ -350,6 +350,19 @@ the name of the C compiler in CC.  Here are some examples.
 
 Here is a description of the most useful "make" targets:
 
+  % make from-scratch        Builds the system from source where the .c
+                             files which are generated from .scm files
+                             are stale.  This is normally the case after
+                             cloning the Gambit repository (because the
+                             repository HEAD keeps track of the latest
+                             .scm files, but not the .c files generated
+                             from them).  This way of building Gambit may
+                             fail if the Gambit compiler itself has
+                             evolved in an incompatible way since the latest
+                             release (the Gambit maintainer should prevent
+                             this situation by creating a release when the
+                             compiler changes incompatibly).
+
   % make bootstrap           Builds the system and copies the gsc
                              executable to gsc-boot in the root directory.
                              The makefiles call up gsc-boot to
