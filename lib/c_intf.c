@@ -5028,6 +5028,7 @@ ___SCMOBJ *obj;
 int arg_num;
 int char_encoding;)
 {
+  int kind = arg_num < 0 ? ___PERM : ___STILL;
   ___SCMOBJ result = ___FAL;
   ___SIZE_T i, n = 0;
 
@@ -5043,7 +5044,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5071,7 +5072,7 @@ int char_encoding;)
         while (___UTF_8_get (&p) != 0) /* advance until end or error */
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5117,7 +5118,7 @@ int char_encoding;)
             n++;
           }
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5151,7 +5152,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5180,7 +5181,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5209,7 +5210,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5254,7 +5255,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
 
         if (___FIXNUMP(result))
           result = ___FAL;

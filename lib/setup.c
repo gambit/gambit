@@ -453,7 +453,10 @@ unsigned int subtype;)
       ___SCMOBJ name;
       ___SCMOBJ err;
 
-      if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ (str, &name, 0))
+      if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
+                   (str,
+                    &name,
+                    -1)) /* allocate as permanent object */
           != ___FIX(___NO_ERR))
         return err;
 
