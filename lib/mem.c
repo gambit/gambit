@@ -1178,29 +1178,36 @@ int kind;)
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
   alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
 
-  words_nonmovable += words;
-
-  if (WORDS_OCCUPIED > heap_size
-#ifdef CALL_GC_FREQUENTLY
-      || --___gc_calls_to_punt < 0
-#endif
-     )
+  if (kind != ___PERM)
     {
-      ___BOOL overflow;
-
-      words_nonmovable -= words;
-
-      overflow = ___garbage_collect (words);
+      /*
+       * Account for words allocated only for non-permanent objects.
+       */
 
       words_nonmovable += words;
 
-      alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
-      alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
-
-      if (overflow || WORDS_OCCUPIED > heap_size)
+      if (WORDS_OCCUPIED > heap_size
+#ifdef CALL_GC_FREQUENTLY
+          || --___gc_calls_to_punt < 0
+#endif
+          )
         {
+          ___BOOL overflow;
+
           words_nonmovable -= words;
-          return ___FIX(___HEAP_OVERFLOW_ERR);
+
+          overflow = ___garbage_collect (words);
+
+          words_nonmovable += words;
+
+          alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
+          alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
+
+          if (overflow || WORDS_OCCUPIED > heap_size)
+            {
+              words_nonmovable -= words;
+              return ___FIX(___HEAP_OVERFLOW_ERR);
+            }
         }
     }
 
@@ -1224,7 +1231,8 @@ int kind;)
 
   if (ptr == 0)
     {
-      words_nonmovable -= words;
+      if (kind != ___PERM)
+        words_nonmovable -= words;
       return ___FIX(___HEAP_OVERFLOW_ERR);
     }
   else if (kind == ___PERM)
