@@ -3394,7 +3394,6 @@
 
       (define (make-ref-set!-expander type-check? set!?)
         (lambda (ptree oper args generate-call check-run-time-binding)
-(pp (list set!? (var-name (ref-var oper))))
           (let* ((source
                   (node-source ptree))
                  (env
