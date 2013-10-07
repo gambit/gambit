@@ -1615,7 +1615,7 @@
                   (gen-call-prim-vars source env
                     **pair-mutable?-sym
                     (list (car vars))))
-                (gen-call-prim-vars source env
+                (gen-call-prim-vars source (add-not-inline-primitives env)
                   (op-prim pattern)
                   vars)
                 (generate-call vars)))))))
@@ -3394,6 +3394,7 @@
 
       (define (make-ref-set!-expander type-check? set!?)
         (lambda (ptree oper args generate-call check-run-time-binding)
+(pp (list set!? (var-name (ref-var oper))))
           (let* ((source
                   (node-source ptree))
                  (env
@@ -3406,49 +3407,57 @@
                   (cadr vars))
                  (type-check
                   (and type-check?
-                       (let ((check
-                              (gen-type-check source env arg1)))
-                         (if set!?
-                           (new-conj source env
-                             check
-                             (gen-mutability-check source env arg1))
-                           check))))
+                       (gen-type-check source env arg1)))
+                 (mutability-check
+                  (and set!?
+                       type-check
+                       (gen-mutability-check source env arg1)))
                  (index-check
-                  (gen-index-check source env arg1 arg2))
+                  (and type-check?
+                       (gen-index-check source env arg1 arg2)))
+                 (value-check
+                  (and value-checker
+                       set!?
+                       (value-checker source env (caddr vars))))
                  (index-value-check
-                  (if (and value-checker set!?)
-                    (let ((val-check (value-checker source env (caddr vars))))
+                  (if (and index-check value-check)
                       (new-conj source env
                         index-check
-                        val-check))
-                    index-check))
-                 (type-index-value-check
-                  (if type-check
-                    (new-conj source env
-                      type-check
-                      index-value-check)
-                    index-value-check))
+                        value-check)
+                      (or index-check value-check)))
+                 (mutability-index-value-check
+                  (if (and mutability-check index-value-check)
+                      (new-conj source env
+                        mutability-check
+                        index-value-check)
+                      (or mutability-check index-value-check)))
+                 (type-mutability-index-value-check
+                  (if (and type-check mutability-index-value-check)
+                      (new-conj source env
+                        type-check
+                        mutability-index-value-check)
+                      (or type-check mutability-index-value-check)))
                  (checks
                   (if check-run-time-binding
-                    (let ((rtb-check (check-run-time-binding)))
-                      (if type-index-value-check
-                        (new-conj source env
-                          rtb-check
-                          type-index-value-check)
-                        rtb-check))
-                    type-index-value-check))
+                      (let ((rtb-check (check-run-time-binding)))
+                        (if type-mutability-index-value-check
+                            (new-conj source env
+                              rtb-check
+                              type-mutability-index-value-check)
+                            rtb-check))
+                      type-mutability-index-value-check))
                  (call-prim
-                  (gen-call-prim-vars source env
+                  (gen-call-prim-vars source (add-not-inline-primitives env)
                     (if set!? **vect-set!-sym **vect-ref-sym)
                     vars)))
             (gen-prc source env
               vars
               (if checks
-                (new-tst source env
-                  checks
-                  call-prim
-                  (generate-call vars))
-                call-prim)))))
+                  (new-tst source env
+                    checks
+                    call-prim
+                    (generate-call vars))
+                  call-prim)))))
 
       (def-exp
        vect-length-str
@@ -3640,7 +3649,7 @@
              (type-check
               (gen-type-check source env obj-var type-var))
              (call-prim
-              (gen-call-prim-vars source env
+              (gen-call-prim-vars source (add-not-inline-primitives env)
                 (if set!?
                   **unchecked-structure-set!-sym
                   **unchecked-structure-ref-sym)

@@ -238,7 +238,8 @@
                                         (run-time-binding? name
                                                            (node-env oper)))
                                        (new-oper
-                                        (if ((proc-obj-inlinable? spec) env)
+                                        (if (not ((proc-obj-expandable? spec) env))
+
                                           (cond (std?
                                                  (new-cst source env
                                                    spec))
@@ -247,6 +248,7 @@
                                                   generate-spec-call))
                                                 (else
                                                  #f))
+
                                           (and (or std?
                                                    rtb?)
                                                (let ((x
