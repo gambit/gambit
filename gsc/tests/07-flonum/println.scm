@@ -1,4 +1,4 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
-(println 0.0)
-(println -2.7)
+(println 3.125)
+(println -1.25)

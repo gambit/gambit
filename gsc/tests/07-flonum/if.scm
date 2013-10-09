@@ -1,7 +1,7 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
-(define a 0.0)
-(define b -2.7)
+(define a 3.125)
+(define b -1.25)
 
 (define (test x)
   (println (if x 11 22)))
