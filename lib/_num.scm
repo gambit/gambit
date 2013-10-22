@@ -9311,25 +9311,18 @@ ___RESULT = result;
 
         ;; this strategy does more work, but generates less garbage.
 
-        (let* ((conceptual-shift
-                (##fx- ##bignum.mdigit-width
-                       (##fxlength (##bignum.mdigit-ref v (##fx- n 1)))))
-               (shifted-v-adigits
-                (##fxquotient (##fx+ v-bits
-                                     conceptual-shift
-                                     64)
-                              ##bignum.adigit-width))
-               (shifted-u-adigits
-                (##fxquotient (##fx+ u-bits
-                                     conceptual-shift
-                                     64)
-                              ##bignum.adigit-width))
+        (let* ((q-bits                         ; maximum number of possible bits in q
+                (##fx+ (##fx- u-bits v-bits)
+                       2))                     ; 1 is not always sufficient...
                (q-adigits
-                (##fx+ (##fx- shifted-u-adigits
-                              shifted-v-adigits)
-                       2))                      ; 1 is not always sufficient...
+                (##fxquotient (##fx+ q-bits
+                                     ##bignum.adigit-width
+                                     -1)
+                              ##bignum.adigit-width))
                (q-mdigits
-                (##fxquotient (##fx* q-adigits ##bignum.adigit-width)
+                (##fxquotient (##fx+ q-bits
+                                     ##bignum.mdigit-width
+                                     -1)
                               ##bignum.mdigit-width))
                (q
                 (and need-quotient? (##bignum.make q-adigits #f #f)))
