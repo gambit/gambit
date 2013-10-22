@@ -117,8 +117,12 @@
   (print "\n")
 
   (if (= nb-good nb-total)
-      (print "PASSED ALL\n")
-      (print "FAILED " nb-fail " OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")))
+      (begin
+        (print "PASSED ALL\n")
+        (exit 0))
+      (begin
+        (print "FAILED " nb-fail " OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
+        (exit 1))))
 
 (define (diff target-name target-output expected-output)
   (with-output-to-file "expected" (lambda () (print expected-output)))
@@ -164,8 +168,8 @@
     ("python" ".py"   "python")
 ;;    ("ruby"   ".rb"   "/usr/bin/ruby")
     ("ruby"   ".rb"   "/usr/local/bin/ruby") ;; ruby 1.9.3p392
-    ("php"   ".php"   "/usr/bin/php")
-;;    ("php"   ".php"   "/usr/local/bin/php") ;; PHP 5.4.11
+;;    ("php"   ".php"   "/usr/bin/php")
+    ("php"   ".php"   "/usr/local/bin/php") ;; PHP 5.4.11
 ;;    ("dart"   ".dart" "/Users/feeley/dart/dart-sdk/bin/dart")
    ))
 

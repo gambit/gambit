@@ -10,7 +10,7 @@
 (println (##car x))
 (println (##cdr x))
 
-(println (##set-car! x 44))
+(##set-cdr! x 44)
 
 (println (##car x))
 (println (##cdr x))

@@ -2,6 +2,6 @@
 
 (define s (##make-string 5 #\!))
 
-(##string-set! s 3 #\x)
+(println (##eq? s (##string-set! s 3 #\x)))
 
 (println s)
