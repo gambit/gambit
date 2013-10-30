@@ -17,8 +17,6 @@
 #include "mem.h"
 #include "c_intf.h"
 
-___LOCAL ___SCMOBJ ___temp; /* needed by some macros in "gambit.h" */
-
 /**********************************/
 #ifdef ___DEBUG
 #ifdef ___DEBUG_ALLOC_MEM_TRACE
@@ -1697,6 +1695,7 @@ ___SCMOBJ obj;)
   ___SCMOBJ e;
   ___SCMOBJ (*release_fn) ___P((void *ptr),());
   void *ptr;
+  ___SCMOBJ ___temp;
 
   if (!___TESTSUBTYPE(obj,___sFOREIGN))
     return ___FIX(___UNKNOWN_ERR);
@@ -1853,6 +1852,7 @@ ___S64 *x;
 int arg_num;)
 {
   ___S64 val;
+  ___SCMOBJ ___temp;
 
   if (___FIXNUMP(obj))
     {
@@ -1906,6 +1906,7 @@ ___U64 *x;
 int arg_num;)
 {
   ___U64 val;
+  ___SCMOBJ ___temp;
 
   if (___FIXNUMP(obj))
     {
@@ -2119,6 +2120,8 @@ ___SCMOBJ obj;
 ___F32 *x;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___FLONUMP(obj))
     return ___FIX(___STOC_F32_ERR+arg_num);
 
@@ -2140,6 +2143,8 @@ ___SCMOBJ obj;
 ___F64 *x;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___FLONUMP(obj))
     return ___FIX(___STOC_F64_ERR+arg_num);
 
@@ -2162,6 +2167,7 @@ char *x;
 int arg_num;)
 {
   ___UCS_4 c;
+  ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
       (c=UCS_4_to_uchar(___INT(obj))) > (1<<___CHAR_WIDTH)-1)
@@ -2186,6 +2192,7 @@ ___SCHAR *x;
 int arg_num;)
 {
   ___UCS_4 c;
+  ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
       (c=UCS_4_to_uchar(___INT(obj))) > (1<<___CHAR_WIDTH)-1)
@@ -2210,6 +2217,7 @@ unsigned char *x;
 int arg_num;)
 {
   ___UCS_4 c;
+  ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
       (c=UCS_4_to_uchar(___INT(obj))) > (1<<___CHAR_WIDTH)-1)
@@ -2234,6 +2242,7 @@ ___ISO_8859_1 *x;
 int arg_num;)
 {
   ___UCS_4 c;
+  ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
       (c=___INT(obj)) > 0xff) /* ISO-8859-1 is 8 bits */
@@ -2258,6 +2267,7 @@ ___UCS_2 *x;
 int arg_num;)
 {
   ___UCS_4 c;
+  ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
       (c=___INT(obj)) > 0xffff) /* UCS-2 is 16 bits */
@@ -2282,6 +2292,7 @@ ___UCS_4 *x;
 int arg_num;)
 {
   ___UCS_4 c;
+  ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
       (c=___INT(obj)) > 0x7fffffff) /* UCS-4 is 31 bits */
@@ -2305,6 +2316,8 @@ ___SCMOBJ obj;
 ___WCHAR *x;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___CHARP(obj))
     return ___FIX(___STOC_WCHAR_ERR+arg_num);
 
@@ -2656,6 +2669,8 @@ ___SCMOBJ obj;
 float *x;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___FLONUMP(obj))
     return ___FIX(___STOC_FLOAT_ERR+arg_num);
 
@@ -2677,6 +2692,8 @@ ___SCMOBJ obj;
 double *x;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___FLONUMP(obj))
     return ___FIX(___STOC_DOUBLE_ERR+arg_num);
 
@@ -2697,6 +2714,7 @@ ___SCMOBJ dest_tags;)
 {
   ___SCMOBJ tag;
   ___SCMOBJ probe;
+  ___SCMOBJ ___temp;
 
   if (src_tags == ___FAL || /* source type == void* */
       dest_tags == ___FAL) /* destination type == void* */
@@ -2730,6 +2748,8 @@ void **x;
 ___SCMOBJ tags;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (___FALSEP(obj)) /* #f counts as NULL */
     {
       *x = 0;
@@ -2784,6 +2804,8 @@ void *converter;
 void **x;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (___FALSEP(obj)) /* #f counts as NULL */
     *x = 0;
   else if (!___PROCEDUREP(obj))
@@ -2878,6 +2900,8 @@ void **x;
 ___SCMOBJ tags;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
       !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
     return ___FIX(___STOC_STRUCT_ERR+arg_num);
@@ -2903,6 +2927,8 @@ void **x;
 ___SCMOBJ tags;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
       !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
     return ___FIX(___STOC_UNION_ERR+arg_num);
@@ -2928,6 +2954,8 @@ void **x;
 ___SCMOBJ tags;
 int arg_num;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
       !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
     return ___FIX(___STOC_TYPE_ERR+arg_num);
@@ -3074,6 +3102,8 @@ int arg_num;
 int char_encoding;
 int fudge;)
 {
+  ___SCMOBJ ___temp;
+
   if (!___STRINGP(obj))
     return err_code_from_char_encoding (char_encoding, 0, 1, arg_num);
 

@@ -733,6 +733,7 @@ ___LOCAL void sync_icache_and_dcache (void *start, int length)
 #endif
 
 
+/* TODO: c_closure_self needs to be thread local */
 ___LOCAL void *c_closure_self; /* set by the C closure trampoline code */
 
 
