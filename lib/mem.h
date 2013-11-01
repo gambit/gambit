@@ -67,13 +67,25 @@
 #define ___DEFAULT_MIN_HEAP     (1*(1<<20))
 
 
-extern ___SCMOBJ ___setup_mem
+extern ___SCMOBJ ___setup_mem_pstate
    ___P((___processor_state ___ps),
         ());
 
-extern ___SCMOBJ ___cleanup_mem
+extern ___SCMOBJ ___setup_mem_vmstate
+   ___P((___virtual_machine_state ___vms),
+        ());
+
+extern ___SCMOBJ ___setup_mem ___PVOID;
+
+extern void ___cleanup_mem_pstate
    ___P((___processor_state ___ps),
         ());
+
+extern void ___cleanup_mem_vmstate
+   ___P((___virtual_machine_state ___vms),
+        ());
+
+extern void ___cleanup_mem ___PVOID;
 
 
 #ifdef ___DEBUG_GARBAGE_COLLECT
@@ -109,7 +121,7 @@ extern ___BOOL ___stack_limit_debug
 
 #else
 
-extern ___BOOL ___stack_limit_debug
+extern ___BOOL ___stack_limit
    ___P((___processor_state ___ps),
         ());
 
@@ -128,15 +140,15 @@ extern ___BOOL ___heap_limit_debug
 
 #else
 
-extern ___BOOL ___heap_limit_debug
+extern ___BOOL ___heap_limit
    ___P((___processor_state ___ps),
         ());
 
 #endif
 
 
-extern ___SCMOBJ ___alloc_global_var
-   ___P((___glo_struct **glo),
+extern ___SCMOBJ ___make_global_var
+   ___P((___SCMOBJ sym),
         ());
 
 extern ___F64 ___bytes_allocated

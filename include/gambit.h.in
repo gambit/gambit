@@ -4964,18 +4964,18 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 
 #else
 
-#define ___GSTATE (&___gstate)
-#define ___GSTATEDECL ___IMP_DATA(___global_state_struct,___gstate);
+#define ___GSTATE (&___gstate0)
+#define ___GSTATEDECL ___IMP_DATA(___global_state_struct,___gstate0);
 #define ___SET_LOCAL_GSTATE(gs)
 
 #endif
 
 #ifdef ___SINGLE_VM
-#define ___VMSTATE (&___GSTATE->vmstate1)
+#define ___VMSTATE (&___GSTATE->vmstate0)
 #endif
 
 #ifdef ___SINGLE_THREADED_VMS
-#define ___PSTATE (&___VMSTATE->pstate1)
+#define ___PSTATE (&___VMSTATE->pstate0)
 #define ___VMSTATE_FROM_PSTATE(ps) ___CAST(___virtual_machine_state,ps)
 #endif
 
@@ -6919,7 +6919,9 @@ typedef ___FAKEWORD ___symkey_struct[5+___PADDING_SIZE];
 
 typedef struct ___glo_struct
   {
-    ___WORD val, prm, next;
+    ___WORD val;
+    ___WORD prm;
+    struct ___glo_struct* next;
   } ___glo_struct;
 
 /*---------------------------------------------------------------------------*/
@@ -7077,9 +7079,34 @@ void *psections_;       /* list of psections */
 ___WORD *palloc_ptr_;   /* allocation pointer in current psection */
 ___WORD *palloc_limit_; /* allocation limit in current psection */
 
+/*
+ * Garbage collection statistics.
+ */
+
+___F64 nb_gcs_;
+___F64 gc_user_time_;
+___F64 gc_sys_time_;
+___F64 gc_real_time_;
+___F64 bytes_allocated_minus_occupied_;
+
+___F64 last_gc_user_time_;
+___F64 last_gc_sys_time_;
+___F64 last_gc_real_time_;
+___F64 last_gc_heap_size_;
+___F64 last_gc_alloc_;
+___F64 last_gc_live_;
+___F64 last_gc_movable_;
+___F64 last_gc_nonmovable_;
+
 } ___vmstate_mem;
 
 typedef struct ___gstate_mem_struct {
+
+  ___SIZE_T nb_glo_vars;    /* number of global variables */
+
+  ___glo_struct *glo_list_head;  /* list of global variables */
+  ___glo_struct *glo_list_tail;
+
 } ___gstate_mem;
 
 /*---------------------------------------------------------------------------*/
@@ -7116,9 +7143,6 @@ typedef struct ___processor_state_struct
     ___WORD intr_enabled; /* global interrupt enable */
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
     ___WORD intr_flag[___NB_INTRS];
-
-    ___WORD glo_list_head;
-    ___WORD glo_list_tail;
 
     ___WORD executable_wills;
     ___WORD nonexecutable_wills;
@@ -7282,22 +7306,7 @@ typedef struct ___program_startup_info_struct
 
 typedef struct ___virtual_machine_state_struct
   {
-    ___processor_state_struct pstate1; /* first processor of this VM */
-
-    ___F64 nb_gcs;
-    ___F64 gc_user_time;
-    ___F64 gc_sys_time;
-    ___F64 gc_real_time;
-    ___F64 bytes_allocated_minus_occupied;
-
-    ___F64 last_gc_user_time;
-    ___F64 last_gc_sys_time;
-    ___F64 last_gc_real_time;
-    ___F64 last_gc_heap_size;
-    ___F64 last_gc_alloc;
-    ___F64 last_gc_live;
-    ___F64 last_gc_movable;
-    ___F64 last_gc_nonmovable;
+    ___processor_state_struct pstate0; /* first processor of this VM */
 
     ___vmstate_mem mem; /* memory management state */
 
@@ -7424,7 +7433,9 @@ typedef struct ___setup_params_struct
 
 typedef struct ___global_state_struct
   {
-    ___virtual_machine_state_struct vmstate1; /* first VM */
+    ___virtual_machine_state_struct vmstate0; /* first VM */
+
+    int setup_state; /* 0=pre-setup, 1=post-setup, 2=post-cleanup */
 
     struct ___setup_params_struct setup_params; /* params received by ___setup */
 
@@ -7443,8 +7454,6 @@ typedef struct ___global_state_struct
     ___WORD handler_break;
     ___WORD internal_return;
     ___WORD dynamic_env_bind_return;
-
-    ___SIZE_T nb_glo_vars;    /* number of global variables */
 
     ___SCMOBJ symbol_table;   /* Hash table of all interned symbols.  */
     ___SCMOBJ keyword_table;  /* Hash table of all interned keywords. */
