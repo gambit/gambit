@@ -331,7 +331,7 @@ end-of-code
 
        while (probe != ___NUL)
          {
-           if (___ps->temp4 == ___FIELD(probe,___SYMBOL_GLOBAL))
+           if (___CAST(___glo_struct*,___ps->temp4) == ___GLOBALVARSTRUCT(probe))
              {
                ___COVER_GLOBAL_NONPROC_HANDLER_FOUND;
                result = probe;
@@ -3592,43 +3592,7 @@ end-of-code
 
 (define-prim (##make-global-var id)
   (##declare (not interrupts-enabled))
-  (let ((gv
-         (##c-code #<<end-of-code
-
-          if (___FIELD(___ARG1,___SYMBOL_GLOBAL) == ___FIX(0))
-            {
-              ___glo_struct *p;
-              ___SCMOBJ e;
-              if ((e = ___alloc_global_var (&p)) != ___FIX(___NO_ERR))
-                ___RESULT = e;
-              else
-                {
-#ifdef ___MULTIPLE_GLO
-                  p->val = ___GSTATE->nb_glo_vars;
-#endif
-#ifdef ___MULTIPLE_PRM
-                  p->prm = ___GSTATE->nb_glo_vars;
-#endif
-                  ___GSTATE->nb_glo_vars++;
-                  ___GLOCELL(p->val) = ___UNB1;
-                  ___PRMCELL(p->prm) = ___FAL;
-                  p->next = 0;
-                  if (___ps->glo_list_head == 0)
-                    ___ps->glo_list_head = ___CAST(___SCMOBJ,p);
-                  else
-                    ___CAST(___glo_struct*,___ps->glo_list_tail)->next
-                      = ___CAST(___SCMOBJ,p);
-                  ___ps->glo_list_tail = ___CAST(___SCMOBJ,p);
-                  ___FIELD(___ARG1,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,p);
-                  ___RESULT = ___ARG1;
-                }
-            }
-          else
-            ___RESULT = ___ARG1;
-       
-end-of-code
-
-          id)))
+  (let ((gv (##c-code "___RESULT = ___make_global_var (___ARG1);" id)))
     (if (##fixnum? gv)
       (begin
         (##raise-heap-overflow-exception)
@@ -3637,13 +3601,7 @@ end-of-code
 
 (define-prim (##global-var? id)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   ___RESULT = ___BOOLEAN(___FIELD(___ARG1,___SYMBOL_GLOBAL) != ___FIX(0));
-
-end-of-code
-
-   id))
+  (##c-code "___RESULT = ___BOOLEAN(___GLOBALVARSTRUCT(___ARG1) != 0);" id))
 
 (define-prim (##global-var-ref gv))
 (define-prim (##global-var-primitive-ref gv))
@@ -3656,13 +3614,13 @@ end-of-code
 (define-prim (##object->global-var obj primitive?)
   (##c-code #<<end-of-code
 
-   ___SCMOBJ p = ___ps->glo_list_head;
+   ___glo_struct *p = ___GSTATE->mem.glo_list_head;
    if (___ARG2 == ___FAL)
-     while (p != 0 && ___GLOCELL(___CAST(___glo_struct*,p)->val) != ___ARG1)
-       p = ___CAST(___glo_struct*,p)->next;
+     while (p != 0 && ___GLOCELL(p->val) != ___ARG1)
+       p = p->next;
    else
-     while (p != 0 && ___PRMCELL(___CAST(___glo_struct*,p)->prm) != ___ARG1)
-       p = ___CAST(___glo_struct*,p)->next;
+     while (p != 0 && ___PRMCELL(p->prm) != ___ARG1)
+       p = p->next;
    ___RESULT = ___FAL;
    if (p != 0)
      {
@@ -3675,7 +3633,7 @@ end-of-code
 
            while (probe != ___NUL)
              {
-               if (___FIELD(probe,___SYMBOL_GLOBAL) == p)
+               if (___GLOBALVARSTRUCT(probe) == p)
                  {
                    ___RESULT = probe;
                    goto end_search;
@@ -3912,23 +3870,23 @@ end-of-code
       ___F64VECTORSET(result,___FIX(0),user)
       ___F64VECTORSET(result,___FIX(1),sys)
       ___F64VECTORSET(result,___FIX(2),real)
-      ___F64VECTORSET(result,___FIX(3),___VMSTATE->gc_user_time)
-      ___F64VECTORSET(result,___FIX(4),___VMSTATE->gc_sys_time)
-      ___F64VECTORSET(result,___FIX(5),___VMSTATE->gc_real_time)
-      ___F64VECTORSET(result,___FIX(6),___VMSTATE->nb_gcs)
+      ___F64VECTORSET(result,___FIX(3),___VMSTATE->mem.gc_user_time_)
+      ___F64VECTORSET(result,___FIX(4),___VMSTATE->mem.gc_sys_time_)
+      ___F64VECTORSET(result,___FIX(5),___VMSTATE->mem.gc_real_time_)
+      ___F64VECTORSET(result,___FIX(6),___VMSTATE->mem.nb_gcs_)
       ___F64VECTORSET(result,___FIX(7),___bytes_allocated (___ps))
       ___F64VECTORSET(result,___FIX(8),(2*(1+2)<<___LWS))
       ___F64VECTORSET(result,___FIX(9),n)
       ___F64VECTORSET(result,___FIX(10),minflt)
       ___F64VECTORSET(result,___FIX(11),majflt)
-      ___F64VECTORSET(result,___FIX(12),___VMSTATE->last_gc_user_time)
-      ___F64VECTORSET(result,___FIX(13),___VMSTATE->last_gc_sys_time)
-      ___F64VECTORSET(result,___FIX(14),___VMSTATE->last_gc_real_time)
-      ___F64VECTORSET(result,___FIX(15),___VMSTATE->last_gc_heap_size)
-      ___F64VECTORSET(result,___FIX(16),___VMSTATE->last_gc_alloc)
-      ___F64VECTORSET(result,___FIX(17),___VMSTATE->last_gc_live)
-      ___F64VECTORSET(result,___FIX(18),___VMSTATE->last_gc_movable)
-      ___F64VECTORSET(result,___FIX(19),___VMSTATE->last_gc_nonmovable)
+      ___F64VECTORSET(result,___FIX(12),___VMSTATE->mem.last_gc_user_time_)
+      ___F64VECTORSET(result,___FIX(13),___VMSTATE->mem.last_gc_sys_time_)
+      ___F64VECTORSET(result,___FIX(14),___VMSTATE->mem.last_gc_real_time_)
+      ___F64VECTORSET(result,___FIX(15),___VMSTATE->mem.last_gc_heap_size_)
+      ___F64VECTORSET(result,___FIX(16),___VMSTATE->mem.last_gc_alloc_)
+      ___F64VECTORSET(result,___FIX(17),___VMSTATE->mem.last_gc_live_)
+      ___F64VECTORSET(result,___FIX(18),___VMSTATE->mem.last_gc_movable_)
+      ___F64VECTORSET(result,___FIX(19),___VMSTATE->mem.last_gc_nonmovable_)
 
       ___R_ALL
 

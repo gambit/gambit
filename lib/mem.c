@@ -310,6 +310,21 @@
 #define palloc_ptr              ___VMSTATE_MEM(palloc_ptr_)
 #define palloc_limit            ___VMSTATE_MEM(palloc_limit_)
 
+#define nb_gcs                  ___VMSTATE_MEM(nb_gcs_)
+#define gc_user_time            ___VMSTATE_MEM(gc_user_time_)
+#define gc_sys_time             ___VMSTATE_MEM(gc_sys_time_)
+#define gc_real_time            ___VMSTATE_MEM(gc_real_time_)
+#define bytes_allocated_minus_occupied ___VMSTATE_MEM(bytes_allocated_minus_occupied_)
+
+#define last_gc_user_time       ___VMSTATE_MEM(last_gc_user_time_)
+#define last_gc_sys_time        ___VMSTATE_MEM(last_gc_sys_time_)
+#define last_gc_real_time       ___VMSTATE_MEM(last_gc_real_time_)
+#define last_gc_heap_size       ___VMSTATE_MEM(last_gc_heap_size_)
+#define last_gc_alloc           ___VMSTATE_MEM(last_gc_alloc_)
+#define last_gc_live            ___VMSTATE_MEM(last_gc_live_)
+#define last_gc_movable         ___VMSTATE_MEM(last_gc_movable_)
+#define last_gc_nonmovable      ___VMSTATE_MEM(last_gc_nonmovable_)
+
 /* words occupied in heap by movable objects including current msections */
 #define WORDS_MOVABLE \
 (2*(words_prev_msections + \
@@ -996,20 +1011,47 @@ ___HIDDEN void free_psections ___PVOID
 }
 
 
-___SCMOBJ ___alloc_global_var
-   ___P((___glo_struct **glo),
-        (glo)
-___glo_struct **glo;)
+___SCMOBJ ___make_global_var
+   ___P((___SCMOBJ sym),
+        (sym)
+___SCMOBJ sym;)
 {
-  ___glo_struct *p = ___CAST(___glo_struct*,
-                             alloc_mem_aligned_perm
-                               (___WORDS(sizeof (___glo_struct)),
-                                1,
-                                0));
-  if (p == 0)
-    return ___FIX(___HEAP_OVERFLOW_ERR);
-  *glo = p;
-  return ___FIX(___NO_ERR);
+  if (___GLOBALVARSTRUCT(sym) == 0)
+    {
+      ___glo_struct *g = ___CAST(___glo_struct*,
+                                 alloc_mem_aligned_perm
+                                 (___WORDS(sizeof (___glo_struct)),
+                                  1,
+                                  0));
+
+      if (g == 0)
+        return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#ifdef ___MULTIPLE_GLO
+      g->val = ___GSTATE->mem.nb_glo_vars;
+#endif
+
+#ifdef ___MULTIPLE_PRM
+      g->prm = ___GSTATE->mem.nb_glo_vars;
+#endif
+
+      ___GSTATE->mem.nb_glo_vars++;
+
+      ___GLOCELL(g->val) = ___UNB1;
+      ___PRMCELL(g->prm) = ___FAL;
+
+      g->next = 0;
+
+      if (___GSTATE->mem.glo_list_head == 0)
+        ___GSTATE->mem.glo_list_head = g;
+      else
+        ___GSTATE->mem.glo_list_tail->next = g;
+      ___GSTATE->mem.glo_list_tail = g;
+
+      ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,g);
+    }
+
+  return sym;
 }
 
 
@@ -2796,7 +2838,7 @@ ___SIZE_TS live;)
 }
 
 
-___HIDDEN void setup_pstate
+___HIDDEN void prepare_mem_pstate
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
@@ -2874,59 +2916,14 @@ ___processor_state ___ps;)
 }
 
 
-___SCMOBJ ___setup_mem
+___SCMOBJ ___setup_mem_pstate
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
   int init_nb_sections;
 
-  /*
-   * It is important to initialize the following pointers first so
-   * that if the program terminates early the procedure ___cleanup_mem
-   * will not access dangling pointers.
-   */
-
-  the_msections = 0;
-  psections     = 0;
-  still_objs    = 0;
-
-  setup_rc ();
-
-  /*
-   * Set the overflow reserve so that the rest parameter handler can
-   * construct the rest parameter list without having to call the
-   * garbage collector.
-   */
-
-  normal_overflow_reserve = 2*((___MAX_NB_PARMS+___SUBTYPED_OVERHEAD) +
-                               ___MAX_NB_ARGS*(___PAIR_SIZE+___PAIR_OVERHEAD));
-  overflow_reserve = normal_overflow_reserve;
-
   /* Allocate heap */
-
-  if (___GSTATE->setup_params.min_heap == 0) {
-
-    /*
-     * Choose a reasonable minimum heap size.
-     */
-
-    ___GSTATE->setup_params.min_heap = ___processor_cache_size (0, 0) / 2;
-
-    if (___GSTATE->setup_params.min_heap < ___DEFAULT_MIN_HEAP) {
-      ___GSTATE->setup_params.min_heap = ___DEFAULT_MIN_HEAP;
-    }
-  }
-
-  if (___GSTATE->setup_params.live_percent <= 0 ||
-      ___GSTATE->setup_params.live_percent > 100) {
-
-    /*
-     * Choose a reasonable minimum live percent.
-     */
-
-    ___GSTATE->setup_params.live_percent = ___DEFAULT_LIVE_PERCENT;
-  }
 
   init_nb_sections = ((___GSTATE->setup_params.min_heap >> ___LWS) +
                       overflow_reserve + 2*___MSECTION_FUDGE +
@@ -3000,35 +2997,147 @@ ___processor_state ___ps;)
   ___ps->heartbeat_countdown = ___ps->heartbeat_interval;
 #endif
 
-  setup_pstate (___ps);
+  /* TODO: implement expansion of glos and prms arrays when number of globals grows beyond 20000 */
 
-  /* Setup virtual machine state */
+#ifdef ___MULTIPLE_GLO
+  ___ps->glos = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
+#endif
 
-  ___VMSTATE->nb_gcs = 0.0;
-  ___VMSTATE->gc_user_time = 0.0;
-  ___VMSTATE->gc_sys_time = 0.0;
-  ___VMSTATE->gc_real_time = 0.0;
-  ___VMSTATE->bytes_allocated_minus_occupied = 0.0;
+#ifdef ___MULTIPLE_PRM
+  ___ps->prms = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
+#endif
 
-  ___VMSTATE->last_gc_real_time = 0.0;
-  ___VMSTATE->last_gc_heap_size = ___CAST(___F64,heap_size) * ___WS;
-  ___VMSTATE->last_gc_live = 0.0;
-  ___VMSTATE->last_gc_movable = 0.0;
-  ___VMSTATE->last_gc_nonmovable = 0.0;
+  prepare_mem_pstate (___ps);
 
   return ___FIX(___NO_ERR);
 }
 
 
-___SCMOBJ ___cleanup_mem
+___SCMOBJ ___setup_mem_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
+  /*
+   * It is important to initialize the following pointers first so
+   * that if the program terminates early the procedure
+   * ___cleanup_mem_vmstate will not access dangling pointers.
+   */
+
+  the_msections = 0;
+  psections     = 0;
+  still_objs    = 0;
+
+  /*
+   * Setup reference counted memory management.
+   */
+
+  setup_rc ();
+
+  /*
+   * Set the overflow reserve so that the rest parameter handler can
+   * construct the rest parameter list without having to call the
+   * garbage collector.
+   */
+
+  normal_overflow_reserve = 2*((___MAX_NB_PARMS+___SUBTYPED_OVERHEAD) +
+                               ___MAX_NB_ARGS*(___PAIR_SIZE+___PAIR_OVERHEAD));
+  overflow_reserve = normal_overflow_reserve;
+
+  /* Setup GC statistics */
+
+  nb_gcs = 0.0;
+  gc_user_time = 0.0;
+  gc_sys_time = 0.0;
+  gc_real_time = 0.0;
+  bytes_allocated_minus_occupied = 0.0;
+
+  last_gc_real_time = 0.0;
+  last_gc_heap_size = ___CAST(___F64,heap_size) * ___WS;
+  last_gc_live = 0.0;
+  last_gc_movable = 0.0;
+  last_gc_nonmovable = 0.0;
+
+  return ___setup_mem_pstate (&___vms->pstate0);
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
+}
+
+
+___SCMOBJ ___setup_mem ___PVOID
+{
+  if (___GSTATE->setup_params.min_heap == 0) {
+
+    /*
+     * Choose a reasonable minimum heap size.
+     */
+
+    ___GSTATE->setup_params.min_heap = ___processor_cache_size (0, 0) / 2;
+
+    if (___GSTATE->setup_params.min_heap < ___DEFAULT_MIN_HEAP) {
+      ___GSTATE->setup_params.min_heap = ___DEFAULT_MIN_HEAP;
+    }
+  }
+
+  if (___GSTATE->setup_params.live_percent <= 0 ||
+      ___GSTATE->setup_params.live_percent > 100) {
+
+    /*
+     * Choose a reasonable minimum live percent.
+     */
+
+    ___GSTATE->setup_params.live_percent = ___DEFAULT_LIVE_PERCENT;
+  }
+
+  /* 
+   * Create empty global variable list, symbol table and keyword
+   * table.
+   */
+
+  ___GSTATE->mem.nb_glo_vars = 0;
+
+  ___GSTATE->mem.glo_list_head = 0;
+  ___GSTATE->mem.glo_list_tail = 0;
+
+  return ___setup_mem_vmstate (&___GSTATE->vmstate0);
+}
+
+
+void ___cleanup_mem_pstate
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
+}
+
+
+void ___cleanup_mem_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
+  ___cleanup_mem_pstate (&___vms->pstate0);
+
   free_msections (&the_msections);
   free_psections ();
   free_still_objs ();
   cleanup_rc ();
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
+}
+
+
+void ___cleanup_mem ___PVOID
+{
+  ___cleanup_mem_vmstate (&___GSTATE->vmstate0);
 }
 
 
@@ -3893,7 +4002,7 @@ ___SIZE_TS nonmovable_words_needed;)
   ___BOOL overflow = 0;
   ___F64 user_time_start, sys_time_start, real_time_start;
   ___F64 user_time_end, sys_time_end, real_time_end;
-  ___F64 gc_user_time, gc_sys_time, gc_real_time;
+  ___F64 user_time, sys_time, real_time;
 
   ___process_times (&user_time_start, &sys_time_start, &real_time_start);
 
@@ -3914,8 +4023,8 @@ ___SIZE_TS nonmovable_words_needed;)
 
   words_nonmovable += nonmovable_words_needed;
 
-  ___VMSTATE->bytes_allocated_minus_occupied =
-    ___VMSTATE->bytes_allocated_minus_occupied +
+  bytes_allocated_minus_occupied =
+    bytes_allocated_minus_occupied +
     ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
 
 #ifdef GATHER_STATS
@@ -3971,20 +4080,20 @@ ___SIZE_TS nonmovable_words_needed;)
 
 #ifdef ___MULTIPLE_GLO
 
-  mark_array (___ps, ___ps->glos, ___VMSTATE->nb_glo_vars);
+  mark_array (___ps, ___ps->glos, ___GSTATE->mem.nb_glo_vars);
 
 #else
 
   {
-    ___WORD p = ___ps->glo_list_head;
+    ___glo_struct *p = ___GSTATE->mem.glo_list_head;
 
     while (p != 0)
       {
 #ifdef ___DEBUG_GARBAGE_COLLECT
         print_global_var_name (p);
 #endif
-        mark_array (___ps, &___GLOCELL(___CAST(___glo_struct*,p)->val), 1);
-        p = ___CAST(___glo_struct*,p)->next;
+        mark_array (___ps, &___GLOCELL(p->val), 1);
+        p = p->next;
       }
   }
 
@@ -4121,37 +4230,37 @@ ___SIZE_TS nonmovable_words_needed;)
   else if (avail >= normal_overflow_reserve)
     overflow_reserve = normal_overflow_reserve; /* restore overflow reserve */
 
-  ___VMSTATE->bytes_allocated_minus_occupied =
-    ___VMSTATE->bytes_allocated_minus_occupied -
+  bytes_allocated_minus_occupied =
+    bytes_allocated_minus_occupied -
     ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
 
   words_nonmovable -= nonmovable_words_needed;
 
   heap_size = WORDS_AVAILABLE;
 
-  setup_pstate (___ps);
+  prepare_mem_pstate (___ps);
 
   ___process_times (&user_time_end, &sys_time_end, &real_time_end);
 
-  gc_user_time = user_time_end - user_time_start;
-  gc_sys_time = sys_time_end - sys_time_start;
-  gc_real_time = real_time_end - real_time_start;
+  user_time = user_time_end - user_time_start;
+  sys_time = sys_time_end - sys_time_start;
+  real_time = real_time_end - real_time_start;
 
-  ___VMSTATE->nb_gcs = ___VMSTATE->nb_gcs + 1.0;
-  ___VMSTATE->gc_user_time += gc_user_time;
-  ___VMSTATE->gc_sys_time += gc_sys_time;
-  ___VMSTATE->gc_real_time += gc_real_time;
+  nb_gcs = nb_gcs + 1.0;
+  gc_user_time += user_time;
+  gc_sys_time += sys_time;
+  gc_real_time += real_time;
 
-  ___VMSTATE->last_gc_user_time = gc_user_time;
-  ___VMSTATE->last_gc_sys_time = gc_sys_time;
-  ___VMSTATE->last_gc_real_time = gc_real_time;
-  ___VMSTATE->last_gc_heap_size = ___CAST(___F64,heap_size) * ___WS;
-  ___VMSTATE->last_gc_alloc =
-    ___VMSTATE->bytes_allocated_minus_occupied +
+  last_gc_user_time = user_time;
+  last_gc_sys_time = sys_time;
+  last_gc_real_time = real_time;
+  last_gc_heap_size = ___CAST(___F64,heap_size) * ___WS;
+  last_gc_alloc =
+    bytes_allocated_minus_occupied +
     ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
-  ___VMSTATE->last_gc_live = ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
-  ___VMSTATE->last_gc_movable = ___CAST(___F64,WORDS_MOVABLE) * ___WS;
-  ___VMSTATE->last_gc_nonmovable = ___CAST(___F64,words_nonmovable) * ___WS;
+  last_gc_live = ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
+  last_gc_movable = ___CAST(___F64,WORDS_MOVABLE) * ___WS;
+  last_gc_nonmovable = ___CAST(___F64,words_nonmovable) * ___WS;
 
   ___raise_interrupt (___INTR_GC); /* raise gc interrupt */
 
@@ -4231,7 +4340,7 @@ ___processor_state ___ps;)
           ___ps->stack_break = alloc_stack_ptr;
         }
 
-      setup_pstate (___ps);
+      prepare_mem_pstate (___ps);
 
       return 0;
     }
@@ -4288,7 +4397,7 @@ ___processor_state ___ps;)
       if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
         next_heap_msection (___ps);
 
-      setup_pstate (___ps);
+      prepare_mem_pstate (___ps);
 
       return 0;
     }
@@ -4308,7 +4417,7 @@ ___processor_state ___ps;)
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
   alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
 
-  return ___VMSTATE->bytes_allocated_minus_occupied +
+  return bytes_allocated_minus_occupied +
          ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
 }
 

@@ -24,7 +24,7 @@
  * Global state structure.
  */
 
-___EXP_DATA(___global_state_struct,___gstate);
+___EXP_DATA(___global_state_struct,___gstate0);
 
 
 /*
@@ -416,7 +416,7 @@ unsigned int subtype;)
   ___FIELD(obj,___SYMKEY_HASH) = hash_scheme_string (name);
 
   if (subtype == ___sSYMBOL)
-    ___FIELD(obj,___SYMBOL_GLOBAL) = 0;
+    ___FIELD(obj,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,___CAST(___glo_struct*,0));
 
   symkey_add (obj);
 
@@ -467,55 +467,23 @@ ___UTF_8STRING str;
 int supply;
 ___glo_struct **glo;)
 {
-  ___processor_state ___ps = ___PSTATE;
-  ___SCMOBJ sym;
-  ___SCMOBJ g;
-  ___glo_struct *p;
-
-  sym = make_symkey (str, ___sSYMBOL);
+  ___glo_struct *g;
+  ___SCMOBJ sym = make_symkey (str, ___sSYMBOL);
 
   if (___FIXNUMP(sym))
     return sym;
 
-  g = ___FIELD(sym,___SYMBOL_GLOBAL);
+  sym = ___make_global_var (sym);
 
-  if (g == ___FIX(0))
-    {
-      ___SCMOBJ e;
+  if (___FIXNUMP(sym))
+    return sym;
 
-      if ((e = ___alloc_global_var (&p)) != ___FIX(___NO_ERR))
-        return e;
+  g = ___GLOBALVARSTRUCT(sym);
 
-#ifdef ___MULTIPLE_GLO
-      p->val = ___gstate.nb_glo_vars;
-#endif
+  if (supply && ___GLOCELL(g->val) == ___UNB1)
+    ___GLOCELL(g->val) = ___UNB2;
 
-#ifdef ___MULTIPLE_PRM
-      p->prm = ___gstate.nb_glo_vars;
-#endif
-
-      ___gstate.nb_glo_vars++;
-      ___GLOCELL(p->val) = supply?___UNB2:___UNB1;
-      ___PRMCELL(p->prm) = ___FAL;
-
-      p->next = 0;
-      if (___ps->glo_list_head == 0)
-        ___ps->glo_list_head = ___CAST(___SCMOBJ,p);
-      else
-        ___CAST(___glo_struct*,___ps->glo_list_tail)->next =
-          ___CAST(___SCMOBJ,p);
-      ___ps->glo_list_tail = ___CAST(___SCMOBJ,p);
-
-      ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,p);
-    }
-  else
-    {
-      p = ___CAST(___glo_struct*,g);
-      if (supply && ___GLOCELL(p->val) == ___UNB1)
-        ___GLOCELL(p->val) = ___UNB2;
-    }
-
-  *glo = p;
+  *glo = g;
 
   return ___FIX(___NO_ERR);
 }
@@ -609,7 +577,7 @@ ___HIDDEN ___mod_or_lnk linker_to_mod_or_lnk
         (linker)
 ___mod_or_lnk (*linker) ();)
 {
-  ___mod_or_lnk mol = linker (&___gstate);
+  ___mod_or_lnk mol = linker (___GSTATE);
   if (mol->module.kind == ___LINKFILE_KIND)
     {
       void **p = mol->linkfile.linkertbl;
@@ -1796,7 +1764,7 @@ ___mod_or_lnk mol;)
 #ifdef ___MULTIPLE_GLO
           {
             ___SCMOBJ tmp = glo->val;
-            glo->val = ___gstate.nb_glo_vars;
+            glo->val = ___GSTATE->mem.nb_glo_vars;
             ___GLOCELL(glo->val) = tmp;
           }
 #endif
@@ -1804,26 +1772,25 @@ ___mod_or_lnk mol;)
 #ifdef ___MULTIPLE_PRM
           {
             ___SCMOBJ tmp = glo->prm;
-            glo->prm = ___gstate.nb_glo_vars;
+            glo->prm = ___GSTATE->mem.nb_glo_vars;
             ___PRMCELL(glo->prm) = tmp;
           }
 #endif
 
 #ifdef ___MULTIPLE_GLO
-          ___gstate.nb_glo_vars++;
+          ___GSTATE->mem.nb_glo_vars++;
 #else
 #ifdef ___MULTIPLE_PRM
-          ___gstate.nb_glo_vars++;
+          ___GSTATE->mem.nb_glo_vars++;
 #endif
 #endif
 
           glo->next = 0;
-          if (___ps->glo_list_head == 0)
-            ___ps->glo_list_head = ___CAST(___SCMOBJ,glo);
+          if (___GSTATE->mem.glo_list_head == 0)
+            ___GSTATE->mem.glo_list_head = glo;
           else
-            ___CAST(___glo_struct*,___ps->glo_list_tail)->next =
-              ___CAST(___SCMOBJ,glo);
-          ___ps->glo_list_tail = ___CAST(___SCMOBJ,glo);
+            ___GSTATE->mem.glo_list_tail->next = glo;
+          ___GSTATE->mem.glo_list_tail = glo;
 
           *sym_ptr = ___MAKE_HD((___SYMBOL_SIZE<<___LWS),___sSYMBOL,___PERM);
 
@@ -1910,9 +1877,9 @@ int nargs;
 ___SCMOBJ proc;
 ___SCMOBJ stack_marker;)
 {
-  ___SCMOBJ ___err;
   ___processor_state ___ps = ___PSTATE;
   ___SCMOBJ *___fp = ___ps->fp;
+  ___SCMOBJ ___err;
 
   /* 
    * The C function which has called ___call() has put the arguments
@@ -2019,17 +1986,13 @@ ___SCMOBJ val;)
 
       while (sym != ___NUL)
        {
-          ___SCMOBJ g = ___FIELD(sym,___SYMBOL_GLOBAL);
+          ___glo_struct *g = ___GLOBALVARSTRUCT(sym);
 
-          if (g != ___FIX(0))
+          if (g != 0 &&
+              (___PRMCELL(g->prm) == val || ___GLOCELL(g->val) == val))
             {
-              ___glo_struct *p = ___CAST(___glo_struct*,g);
-
-              if (___PRMCELL(p->prm) == val || ___GLOCELL(p->val) == val)
-                {
-                  i = 0;
-                  break;
-                }
+              i = 0;
+              break;
             }
 
           sym = ___FIELD(sym,___SYMKEY_NEXT);
@@ -2091,8 +2054,6 @@ char *module_name;)
  * Setup program and execute it.
  */
 
-___HIDDEN int setup_state = 0; /* 0=pre-setup, 1=post-setup, 2=post-cleanup */
-
 
 ___EXP_FUNC(void,___cleanup) ___PVOID
 {
@@ -2100,12 +2061,12 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
    * Only do cleanup once after successful setup.
    */
 
-  if (setup_state != 1)
+  if (___GSTATE->setup_state != 1)
     return;
 
-  setup_state = 2;
+  ___GSTATE->setup_state = 2;
 
-  ___cleanup_mem (___PSTATE);
+  ___cleanup_mem ();
   ___cleanup_os ();
 }
 
@@ -2250,771 +2211,745 @@ ___EXP_FUNC(___program_startup_info_struct*,___get_program_startup_info)
 }
 
 
-/* TODO: really need to EXP_FUNC ___setup_vm and ___cleanup_vm? */
-
-___EXP_FUNC(___SCMOBJ,___setup_vm)
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
+___HIDDEN void setup_kernel_handlers ___PVOID
 {
-}
-
-
-___EXP_FUNC(___SCMOBJ,___cleanup_vm)
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
-{
-}
-
-
-___EXP_FUNC(___SCMOBJ,___setup)
-   ___P((___setup_params_struct *setup_params),
-        (setup_params)
-___setup_params_struct *setup_params;)
-{
-  ___SCMOBJ ___err;
-  ___processor_state ___ps;
-  ___mod_or_lnk mol;
   ___SCMOBJ ___start;
-  ___SCMOBJ marker;
-  int i;
 
-  /*
-   * Check for valid setup_params structure.
-   */
-
-  if (setup_params == 0 ||
-      setup_params->version != ___VERSION)
-    return ___FIX(___UNKNOWN_ERR);
-
-  /*
-   * Only do setup once.
-   */
-
-  if (setup_state != 0)
-    return ___FIX(___UNKNOWN_ERR);
-
-  setup_state = 2; /* disallow cleanup, in case setup fails */
-
-  /*
-   * Remember setup parameters.
-   */
-
-  ___GSTATE->setup_params = *setup_params;
+#define ___PH_LBL0 1
 
   /* 
-   * Setup the operating system module.
+   * The label numbers must match those in the procedure
+   * "##kernel-handlers" in the file "_kernel.scm".
    */
 
-  if ((___err = ___setup_os ()) != ___FIX(___NO_ERR))
-    return ___err;
+  ___start = ___PRMCELL(___G__23__23_kernel_2d_handlers.prm);
+
+  ___GSTATE->handler_sfun_conv_error = ___LBL(0);
+  ___GSTATE->handler_cfun_conv_error = ___LBL(1);
+  ___GSTATE->handler_stack_limit     = ___LBL(2);
+  ___GSTATE->handler_heap_limit      = ___LBL(3);
+  ___GSTATE->handler_not_proc        = ___LBL(4);
+  ___GSTATE->handler_not_proc_glo    = ___LBL(5);
+  ___GSTATE->handler_wrong_nargs     = ___LBL(6);
+  ___GSTATE->handler_get_rest        = ___LBL(7);
+  ___GSTATE->handler_get_key         = ___LBL(8);
+  ___GSTATE->handler_get_key_rest    = ___LBL(9);
+  ___GSTATE->handler_force           = ___LBL(10);
+  ___GSTATE->handler_return_to_c     = ___LBL(11);
+  ___GSTATE->handler_break           = ___LBL(12);
+  ___GSTATE->internal_return         = ___LBL(13);
 
   /* 
-   * Setup stack and heap.
+   * The label numbers must match those in the procedure
+   * "##dynamic-env-bind" in the file "_kernel.scm".
    */
 
-  if ((___err = ___setup_mem (___PSTATE)) != ___FIX(___NO_ERR))
-    {
-      ___cleanup_os ();
-      return ___err;
-    }
+  ___start = ___PRMCELL(___G__23__23_dynamic_2d_env_2d_bind.prm);
 
-  setup_state = 1; /* allow cleanup */
+  ___GSTATE->dynamic_env_bind_return = ___LBL(1);
 
+#undef ___PH_LBL0
+}
+
+
+___HIDDEN void setup_dynamic_linking ___PVOID
+{
   /* 
    * Setup global state to avoid problems on systems that don't
    * support the dynamic loading of files that import functions.
    */
 
-  ___gstate.dummy8 = 0;
-  ___gstate.dummy7 = 0;
-  ___gstate.dummy6 = 0;
-  ___gstate.dummy5 = 0;
-  ___gstate.dummy4 = 0;
-  ___gstate.dummy3 = 0;
-  ___gstate.dummy2 = 0;
-  ___gstate.dummy1 = 0;
+  ___GSTATE->dummy8 = 0;
+  ___GSTATE->dummy7 = 0;
+  ___GSTATE->dummy6 = 0;
+  ___GSTATE->dummy5 = 0;
+  ___GSTATE->dummy4 = 0;
+  ___GSTATE->dummy3 = 0;
+  ___GSTATE->dummy2 = 0;
+  ___GSTATE->dummy1 = 0;
 
 #ifndef ___CAN_IMPORT_CLIB_DYNAMICALLY
 
-  ___gstate.fabs  = fabs;
-  ___gstate.floor = floor;
-  ___gstate.ceil  = ceil;
-  ___gstate.exp   = exp;
-  ___gstate.log   = log;
-  ___gstate.sin   = sin;
-  ___gstate.cos   = cos;
-  ___gstate.tan   = tan;
-  ___gstate.asin  = asin;
-  ___gstate.acos  = acos;
-  ___gstate.atan  = atan;
+  ___GSTATE->fabs  = fabs;
+  ___GSTATE->floor = floor;
+  ___GSTATE->ceil  = ceil;
+  ___GSTATE->exp   = exp;
+  ___GSTATE->log   = log;
+  ___GSTATE->sin   = sin;
+  ___GSTATE->cos   = cos;
+  ___GSTATE->tan   = tan;
+  ___GSTATE->asin  = asin;
+  ___GSTATE->acos  = acos;
+  ___GSTATE->atan  = atan;
 #ifdef ___GOOD_ATAN2
-  ___gstate.atan2 = atan2;
+  ___GSTATE->atan2 = atan2;
 #endif
 #ifdef ___GOOD_POW
-  ___gstate.pow = pow;
+  ___GSTATE->pow = pow;
 #endif
-  ___gstate.sqrt  = sqrt;
+  ___GSTATE->sqrt  = sqrt;
 
 #endif
 
 #ifdef ___USE_SETJMP
 #ifndef ___CAN_IMPORT_SETJMP_DYNAMICALLY
 
-  ___gstate.setjmp = setjmp;
+  ___GSTATE->setjmp = setjmp;
 
 #endif
 #endif
 
 #ifndef ___CAN_IMPORT_DYNAMICALLY
 
-  ___gstate.___iswalpha
+  ___GSTATE->___iswalpha
     = ___iswalpha;
 
-  ___gstate.___iswdigit
+  ___GSTATE->___iswdigit
     = ___iswdigit;
 
-  ___gstate.___iswspace
+  ___GSTATE->___iswspace
     = ___iswspace;
 
-  ___gstate.___iswupper
+  ___GSTATE->___iswupper
     = ___iswupper;
 
-  ___gstate.___iswlower
+  ___GSTATE->___iswlower
     = ___iswlower;
 
-  ___gstate.___towupper
+  ___GSTATE->___towupper
     = ___towupper;
 
-  ___gstate.___towlower
+  ___GSTATE->___towlower
     = ___towlower;
 
-  ___gstate.___string_collate
+  ___GSTATE->___string_collate
     = ___string_collate;
 
-  ___gstate.___string_collate_ci
+  ___GSTATE->___string_collate_ci
     = ___string_collate_ci;
 
-  ___gstate.___copysign
+  ___GSTATE->___copysign
     = ___copysign;
 
-  ___gstate.___isfinite
+  ___GSTATE->___isfinite
     = ___isfinite;
 
-  ___gstate.___isnan
+  ___GSTATE->___isnan
     = ___isnan;
 
-  ___gstate.___trunc
+  ___GSTATE->___trunc
     = ___trunc;
 
-  ___gstate.___round
+  ___GSTATE->___round
     = ___round;
 
 #ifndef ___GOOD_ATAN2
-  ___gstate.___atan2
+  ___GSTATE->___atan2
     = ___atan2;
 #endif
 
 #ifndef ___GOOD_POW
-  ___gstate.___pow
+  ___GSTATE->___pow
     = ___pow;
 #endif
 
-  ___gstate.___S64_from_SM32_fn
+  ___GSTATE->___S64_from_SM32_fn
     = ___S64_from_SM32_fn;
 
-  ___gstate.___S64_from_SM32_UM32_fn
+  ___GSTATE->___S64_from_SM32_UM32_fn
     = ___S64_from_SM32_UM32_fn;
 
-  ___gstate.___S64_from_LONGLONG_fn
+  ___GSTATE->___S64_from_LONGLONG_fn
     = ___S64_from_LONGLONG_fn;
 
-  ___gstate.___S64_to_LONGLONG_fn
+  ___GSTATE->___S64_to_LONGLONG_fn
     = ___S64_to_LONGLONG_fn;
 
-  ___gstate.___S64_fits_in_width_fn
+  ___GSTATE->___S64_fits_in_width_fn
     = ___S64_fits_in_width_fn;
 
-  ___gstate.___U64_from_UM32_fn
+  ___GSTATE->___U64_from_UM32_fn
     = ___U64_from_UM32_fn;
 
-  ___gstate.___U64_from_UM32_UM32_fn
+  ___GSTATE->___U64_from_UM32_UM32_fn
     = ___U64_from_UM32_UM32_fn;
 
-  ___gstate.___U64_from_ULONGLONG_fn
+  ___GSTATE->___U64_from_ULONGLONG_fn
     = ___U64_from_ULONGLONG_fn;
 
-  ___gstate.___U64_to_ULONGLONG_fn
+  ___GSTATE->___U64_to_ULONGLONG_fn
     = ___U64_to_ULONGLONG_fn;
 
-  ___gstate.___U64_fits_in_width_fn
+  ___GSTATE->___U64_fits_in_width_fn
     = ___U64_fits_in_width_fn;
 
-  ___gstate.___U64_mul_UM32_UM32_fn
+  ___GSTATE->___U64_mul_UM32_UM32_fn
     = ___U64_mul_UM32_UM32_fn;
 
-  ___gstate.___U64_add_U64_U64_fn
+  ___GSTATE->___U64_add_U64_U64_fn
     = ___U64_add_U64_U64_fn;
 
-  ___gstate.___SCMOBJ_to_S8
+  ___GSTATE->___SCMOBJ_to_S8
     = ___SCMOBJ_to_S8;
 
-  ___gstate.___SCMOBJ_to_U8
+  ___GSTATE->___SCMOBJ_to_U8
     = ___SCMOBJ_to_U8;
 
-  ___gstate.___SCMOBJ_to_S16
+  ___GSTATE->___SCMOBJ_to_S16
     = ___SCMOBJ_to_S16;
 
-  ___gstate.___SCMOBJ_to_U16
+  ___GSTATE->___SCMOBJ_to_U16
     = ___SCMOBJ_to_U16;
 
-  ___gstate.___SCMOBJ_to_S32
+  ___GSTATE->___SCMOBJ_to_S32
     = ___SCMOBJ_to_S32;
 
-  ___gstate.___SCMOBJ_to_U32
+  ___GSTATE->___SCMOBJ_to_U32
     = ___SCMOBJ_to_U32;
 
-  ___gstate.___SCMOBJ_to_S64
+  ___GSTATE->___SCMOBJ_to_S64
     = ___SCMOBJ_to_S64;
 
-  ___gstate.___SCMOBJ_to_U64
+  ___GSTATE->___SCMOBJ_to_U64
     = ___SCMOBJ_to_U64;
 
-  ___gstate.___SCMOBJ_to_F32
+  ___GSTATE->___SCMOBJ_to_F32
     = ___SCMOBJ_to_F32;
 
-  ___gstate.___SCMOBJ_to_F64
+  ___GSTATE->___SCMOBJ_to_F64
     = ___SCMOBJ_to_F64;
 
-  ___gstate.___SCMOBJ_to_CHAR
+  ___GSTATE->___SCMOBJ_to_CHAR
     = ___SCMOBJ_to_CHAR;
 
-  ___gstate.___SCMOBJ_to_SCHAR
+  ___GSTATE->___SCMOBJ_to_SCHAR
     = ___SCMOBJ_to_SCHAR;
 
-  ___gstate.___SCMOBJ_to_UCHAR
+  ___GSTATE->___SCMOBJ_to_UCHAR
     = ___SCMOBJ_to_UCHAR;
 
-  ___gstate.___SCMOBJ_to_ISO_8859_1
+  ___GSTATE->___SCMOBJ_to_ISO_8859_1
     = ___SCMOBJ_to_ISO_8859_1;
 
-  ___gstate.___SCMOBJ_to_UCS_2
+  ___GSTATE->___SCMOBJ_to_UCS_2
     = ___SCMOBJ_to_UCS_2;
 
-  ___gstate.___SCMOBJ_to_UCS_4
+  ___GSTATE->___SCMOBJ_to_UCS_4
     = ___SCMOBJ_to_UCS_4;
 
-  ___gstate.___SCMOBJ_to_WCHAR
+  ___GSTATE->___SCMOBJ_to_WCHAR
     = ___SCMOBJ_to_WCHAR;
 
-  ___gstate.___SCMOBJ_to_SIZE_T
+  ___GSTATE->___SCMOBJ_to_SIZE_T
     = ___SCMOBJ_to_SIZE_T;
 
-  ___gstate.___SCMOBJ_to_SSIZE_T
+  ___GSTATE->___SCMOBJ_to_SSIZE_T
     = ___SCMOBJ_to_SSIZE_T;
 
-  ___gstate.___SCMOBJ_to_PTRDIFF_T
+  ___GSTATE->___SCMOBJ_to_PTRDIFF_T
     = ___SCMOBJ_to_PTRDIFF_T;
 
-  ___gstate.___SCMOBJ_to_SHORT
+  ___GSTATE->___SCMOBJ_to_SHORT
     = ___SCMOBJ_to_SHORT;
 
-  ___gstate.___SCMOBJ_to_USHORT
+  ___GSTATE->___SCMOBJ_to_USHORT
     = ___SCMOBJ_to_USHORT;
 
-  ___gstate.___SCMOBJ_to_INT
+  ___GSTATE->___SCMOBJ_to_INT
     = ___SCMOBJ_to_INT;
 
-  ___gstate.___SCMOBJ_to_UINT
+  ___GSTATE->___SCMOBJ_to_UINT
     = ___SCMOBJ_to_UINT;
 
-  ___gstate.___SCMOBJ_to_LONG
+  ___GSTATE->___SCMOBJ_to_LONG
     = ___SCMOBJ_to_LONG;
 
-  ___gstate.___SCMOBJ_to_ULONG
+  ___GSTATE->___SCMOBJ_to_ULONG
     = ___SCMOBJ_to_ULONG;
 
-  ___gstate.___SCMOBJ_to_LONGLONG
+  ___GSTATE->___SCMOBJ_to_LONGLONG
     = ___SCMOBJ_to_LONGLONG;
 
-  ___gstate.___SCMOBJ_to_ULONGLONG
+  ___GSTATE->___SCMOBJ_to_ULONGLONG
     = ___SCMOBJ_to_ULONGLONG;
 
-  ___gstate.___SCMOBJ_to_FLOAT
+  ___GSTATE->___SCMOBJ_to_FLOAT
     = ___SCMOBJ_to_FLOAT;
 
-  ___gstate.___SCMOBJ_to_DOUBLE
+  ___GSTATE->___SCMOBJ_to_DOUBLE
     = ___SCMOBJ_to_DOUBLE;
 
-  ___gstate.___SCMOBJ_to_STRUCT
+  ___GSTATE->___SCMOBJ_to_STRUCT
     = ___SCMOBJ_to_STRUCT;
 
-  ___gstate.___SCMOBJ_to_UNION
+  ___GSTATE->___SCMOBJ_to_UNION
     = ___SCMOBJ_to_UNION;
 
-  ___gstate.___SCMOBJ_to_TYPE
+  ___GSTATE->___SCMOBJ_to_TYPE
     = ___SCMOBJ_to_TYPE;
 
-  ___gstate.___SCMOBJ_to_POINTER
+  ___GSTATE->___SCMOBJ_to_POINTER
     = ___SCMOBJ_to_POINTER;
 
-  ___gstate.___SCMOBJ_to_NONNULLPOINTER
+  ___GSTATE->___SCMOBJ_to_NONNULLPOINTER
     = ___SCMOBJ_to_NONNULLPOINTER;
 
-  ___gstate.___SCMOBJ_to_FUNCTION
+  ___GSTATE->___SCMOBJ_to_FUNCTION
     = ___SCMOBJ_to_FUNCTION;
 
-  ___gstate.___SCMOBJ_to_NONNULLFUNCTION
+  ___GSTATE->___SCMOBJ_to_NONNULLFUNCTION
     = ___SCMOBJ_to_NONNULLFUNCTION;
 
-  ___gstate.___SCMOBJ_to_BOOL
+  ___GSTATE->___SCMOBJ_to_BOOL
     = ___SCMOBJ_to_BOOL;
 
-  ___gstate.___SCMOBJ_to_STRING
+  ___GSTATE->___SCMOBJ_to_STRING
     = ___SCMOBJ_to_STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLSTRING
+  ___GSTATE->___SCMOBJ_to_NONNULLSTRING
     = ___SCMOBJ_to_NONNULLSTRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLSTRINGLIST
+  ___GSTATE->___SCMOBJ_to_NONNULLSTRINGLIST
     = ___SCMOBJ_to_NONNULLSTRINGLIST;
 
-  ___gstate.___SCMOBJ_to_CHARSTRING
+  ___GSTATE->___SCMOBJ_to_CHARSTRING
     = ___SCMOBJ_to_CHARSTRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLCHARSTRING
+  ___GSTATE->___SCMOBJ_to_NONNULLCHARSTRING
     = ___SCMOBJ_to_NONNULLCHARSTRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLCHARSTRINGLIST
+  ___GSTATE->___SCMOBJ_to_NONNULLCHARSTRINGLIST
     = ___SCMOBJ_to_NONNULLCHARSTRINGLIST;
 
-  ___gstate.___SCMOBJ_to_ISO_8859_1STRING
+  ___GSTATE->___SCMOBJ_to_ISO_8859_1STRING
     = ___SCMOBJ_to_ISO_8859_1STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLISO_8859_1STRING
+  ___GSTATE->___SCMOBJ_to_NONNULLISO_8859_1STRING
     = ___SCMOBJ_to_NONNULLISO_8859_1STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLISO_8859_1STRINGLIST
+  ___GSTATE->___SCMOBJ_to_NONNULLISO_8859_1STRINGLIST
     = ___SCMOBJ_to_NONNULLISO_8859_1STRINGLIST;
 
-  ___gstate.___SCMOBJ_to_UTF_8STRING
+  ___GSTATE->___SCMOBJ_to_UTF_8STRING
     = ___SCMOBJ_to_UTF_8STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLUTF_8STRING
+  ___GSTATE->___SCMOBJ_to_NONNULLUTF_8STRING
     = ___SCMOBJ_to_NONNULLUTF_8STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLUTF_8STRINGLIST
+  ___GSTATE->___SCMOBJ_to_NONNULLUTF_8STRINGLIST
     = ___SCMOBJ_to_NONNULLUTF_8STRINGLIST;
 
-  ___gstate.___SCMOBJ_to_UTF_16STRING
+  ___GSTATE->___SCMOBJ_to_UTF_16STRING
     = ___SCMOBJ_to_UTF_16STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLUTF_16STRING
+  ___GSTATE->___SCMOBJ_to_NONNULLUTF_16STRING
     = ___SCMOBJ_to_NONNULLUTF_16STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLUTF_16STRINGLIST
+  ___GSTATE->___SCMOBJ_to_NONNULLUTF_16STRINGLIST
     = ___SCMOBJ_to_NONNULLUTF_16STRINGLIST;
 
-  ___gstate.___SCMOBJ_to_UCS_2STRING
+  ___GSTATE->___SCMOBJ_to_UCS_2STRING
     = ___SCMOBJ_to_UCS_2STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLUCS_2STRING
+  ___GSTATE->___SCMOBJ_to_NONNULLUCS_2STRING
     = ___SCMOBJ_to_NONNULLUCS_2STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLUCS_2STRINGLIST
+  ___GSTATE->___SCMOBJ_to_NONNULLUCS_2STRINGLIST
     = ___SCMOBJ_to_NONNULLUCS_2STRINGLIST;
 
-  ___gstate.___SCMOBJ_to_UCS_4STRING
+  ___GSTATE->___SCMOBJ_to_UCS_4STRING
     = ___SCMOBJ_to_UCS_4STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLUCS_4STRING
+  ___GSTATE->___SCMOBJ_to_NONNULLUCS_4STRING
     = ___SCMOBJ_to_NONNULLUCS_4STRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLUCS_4STRINGLIST
+  ___GSTATE->___SCMOBJ_to_NONNULLUCS_4STRINGLIST
     = ___SCMOBJ_to_NONNULLUCS_4STRINGLIST;
 
-  ___gstate.___SCMOBJ_to_WCHARSTRING
+  ___GSTATE->___SCMOBJ_to_WCHARSTRING
     = ___SCMOBJ_to_WCHARSTRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLWCHARSTRING
+  ___GSTATE->___SCMOBJ_to_NONNULLWCHARSTRING
     = ___SCMOBJ_to_NONNULLWCHARSTRING;
 
-  ___gstate.___SCMOBJ_to_NONNULLWCHARSTRINGLIST
+  ___GSTATE->___SCMOBJ_to_NONNULLWCHARSTRINGLIST
     = ___SCMOBJ_to_NONNULLWCHARSTRINGLIST;
 
-  ___gstate.___SCMOBJ_to_VARIANT
+  ___GSTATE->___SCMOBJ_to_VARIANT
     = ___SCMOBJ_to_VARIANT;
 
-  ___gstate.___release_foreign
+  ___GSTATE->___release_foreign
     = ___release_foreign;
 
-  ___gstate.___release_pointer
+  ___GSTATE->___release_pointer
     = ___release_pointer;
 
-  ___gstate.___release_function
+  ___GSTATE->___release_function
     = ___release_function;
 
-  ___gstate.___addref_function
+  ___GSTATE->___addref_function
     = ___addref_function;
 
-  ___gstate.___release_string
+  ___GSTATE->___release_string
     = ___release_string;
 
-  ___gstate.___addref_string
+  ___GSTATE->___addref_string
     = ___addref_string;
 
-  ___gstate.___release_string_list
+  ___GSTATE->___release_string_list
     = ___release_string_list;
 
-  ___gstate.___addref_string_list
+  ___GSTATE->___addref_string_list
     = ___addref_string_list;
 
-  ___gstate.___release_variant
+  ___GSTATE->___release_variant
     = ___release_variant;
 
-  ___gstate.___addref_variant
+  ___GSTATE->___addref_variant
     = ___addref_variant;
 
-  ___gstate.___S8_to_SCMOBJ
+  ___GSTATE->___S8_to_SCMOBJ
     = ___S8_to_SCMOBJ;
 
-  ___gstate.___U8_to_SCMOBJ
+  ___GSTATE->___U8_to_SCMOBJ
     = ___U8_to_SCMOBJ;
 
-  ___gstate.___S16_to_SCMOBJ
+  ___GSTATE->___S16_to_SCMOBJ
     = ___S16_to_SCMOBJ;
 
-  ___gstate.___U16_to_SCMOBJ
+  ___GSTATE->___U16_to_SCMOBJ
     = ___U16_to_SCMOBJ;
 
-  ___gstate.___S32_to_SCMOBJ
+  ___GSTATE->___S32_to_SCMOBJ
     = ___S32_to_SCMOBJ;
 
-  ___gstate.___U32_to_SCMOBJ
+  ___GSTATE->___U32_to_SCMOBJ
     = ___U32_to_SCMOBJ;
 
-  ___gstate.___S64_to_SCMOBJ
+  ___GSTATE->___S64_to_SCMOBJ
     = ___S64_to_SCMOBJ;
 
-  ___gstate.___U64_to_SCMOBJ
+  ___GSTATE->___U64_to_SCMOBJ
     = ___U64_to_SCMOBJ;
 
-  ___gstate.___F32_to_SCMOBJ
+  ___GSTATE->___F32_to_SCMOBJ
     = ___F32_to_SCMOBJ;
 
-  ___gstate.___F64_to_SCMOBJ
+  ___GSTATE->___F64_to_SCMOBJ
     = ___F64_to_SCMOBJ;
 
-  ___gstate.___CHAR_to_SCMOBJ
+  ___GSTATE->___CHAR_to_SCMOBJ
     = ___CHAR_to_SCMOBJ;
 
-  ___gstate.___SCHAR_to_SCMOBJ
+  ___GSTATE->___SCHAR_to_SCMOBJ
     = ___SCHAR_to_SCMOBJ;
 
-  ___gstate.___UCHAR_to_SCMOBJ
+  ___GSTATE->___UCHAR_to_SCMOBJ
     = ___UCHAR_to_SCMOBJ;
 
-  ___gstate.___ISO_8859_1_to_SCMOBJ
+  ___GSTATE->___ISO_8859_1_to_SCMOBJ
     = ___ISO_8859_1_to_SCMOBJ;
 
-  ___gstate.___UCS_2_to_SCMOBJ
+  ___GSTATE->___UCS_2_to_SCMOBJ
     = ___UCS_2_to_SCMOBJ;
 
-  ___gstate.___UCS_4_to_SCMOBJ
+  ___GSTATE->___UCS_4_to_SCMOBJ
     = ___UCS_4_to_SCMOBJ;
 
-  ___gstate.___WCHAR_to_SCMOBJ
+  ___GSTATE->___WCHAR_to_SCMOBJ
     = ___WCHAR_to_SCMOBJ;
 
-  ___gstate.___SIZE_T_to_SCMOBJ
+  ___GSTATE->___SIZE_T_to_SCMOBJ
     = ___SIZE_T_to_SCMOBJ;
 
-  ___gstate.___SSIZE_T_to_SCMOBJ
+  ___GSTATE->___SSIZE_T_to_SCMOBJ
     = ___SSIZE_T_to_SCMOBJ;
 
-  ___gstate.___PTRDIFF_T_to_SCMOBJ
+  ___GSTATE->___PTRDIFF_T_to_SCMOBJ
     = ___PTRDIFF_T_to_SCMOBJ;
 
-  ___gstate.___SHORT_to_SCMOBJ
+  ___GSTATE->___SHORT_to_SCMOBJ
     = ___SHORT_to_SCMOBJ;
 
-  ___gstate.___USHORT_to_SCMOBJ
+  ___GSTATE->___USHORT_to_SCMOBJ
     = ___USHORT_to_SCMOBJ;
 
-  ___gstate.___INT_to_SCMOBJ
+  ___GSTATE->___INT_to_SCMOBJ
     = ___INT_to_SCMOBJ;
 
-  ___gstate.___UINT_to_SCMOBJ
+  ___GSTATE->___UINT_to_SCMOBJ
     = ___UINT_to_SCMOBJ;
 
-  ___gstate.___LONG_to_SCMOBJ
+  ___GSTATE->___LONG_to_SCMOBJ
     = ___LONG_to_SCMOBJ;
 
-  ___gstate.___ULONG_to_SCMOBJ
+  ___GSTATE->___ULONG_to_SCMOBJ
     = ___ULONG_to_SCMOBJ;
 
-  ___gstate.___LONGLONG_to_SCMOBJ
+  ___GSTATE->___LONGLONG_to_SCMOBJ
     = ___LONGLONG_to_SCMOBJ;
 
-  ___gstate.___ULONGLONG_to_SCMOBJ
+  ___GSTATE->___ULONGLONG_to_SCMOBJ
     = ___ULONGLONG_to_SCMOBJ;
 
-  ___gstate.___FLOAT_to_SCMOBJ
+  ___GSTATE->___FLOAT_to_SCMOBJ
     = ___FLOAT_to_SCMOBJ;
 
-  ___gstate.___DOUBLE_to_SCMOBJ
+  ___GSTATE->___DOUBLE_to_SCMOBJ
     = ___DOUBLE_to_SCMOBJ;
 
-  ___gstate.___STRUCT_to_SCMOBJ
+  ___GSTATE->___STRUCT_to_SCMOBJ
     = ___STRUCT_to_SCMOBJ;
 
-  ___gstate.___UNION_to_SCMOBJ
+  ___GSTATE->___UNION_to_SCMOBJ
     = ___UNION_to_SCMOBJ;
 
-  ___gstate.___TYPE_to_SCMOBJ
+  ___GSTATE->___TYPE_to_SCMOBJ
     = ___TYPE_to_SCMOBJ;
 
-  ___gstate.___POINTER_to_SCMOBJ
+  ___GSTATE->___POINTER_to_SCMOBJ
     = ___POINTER_to_SCMOBJ;
 
-  ___gstate.___NONNULLPOINTER_to_SCMOBJ
+  ___GSTATE->___NONNULLPOINTER_to_SCMOBJ
     = ___NONNULLPOINTER_to_SCMOBJ;
 
-  ___gstate.___FUNCTION_to_SCMOBJ
+  ___GSTATE->___FUNCTION_to_SCMOBJ
     = ___FUNCTION_to_SCMOBJ;
 
-  ___gstate.___NONNULLFUNCTION_to_SCMOBJ
+  ___GSTATE->___NONNULLFUNCTION_to_SCMOBJ
     = ___NONNULLFUNCTION_to_SCMOBJ;
 
-  ___gstate.___BOOL_to_SCMOBJ
+  ___GSTATE->___BOOL_to_SCMOBJ
     = ___BOOL_to_SCMOBJ;
 
-  ___gstate.___STRING_to_SCMOBJ
+  ___GSTATE->___STRING_to_SCMOBJ
     = ___STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLSTRING_to_SCMOBJ
+  ___GSTATE->___NONNULLSTRING_to_SCMOBJ
     = ___NONNULLSTRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLSTRINGLIST_to_SCMOBJ
+  ___GSTATE->___NONNULLSTRINGLIST_to_SCMOBJ
     = ___NONNULLSTRINGLIST_to_SCMOBJ;
 
-  ___gstate.___CHARSTRING_to_SCMOBJ
+  ___GSTATE->___CHARSTRING_to_SCMOBJ
     = ___CHARSTRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLCHARSTRING_to_SCMOBJ
+  ___GSTATE->___NONNULLCHARSTRING_to_SCMOBJ
     = ___NONNULLCHARSTRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLCHARSTRINGLIST_to_SCMOBJ
+  ___GSTATE->___NONNULLCHARSTRINGLIST_to_SCMOBJ
     = ___NONNULLCHARSTRINGLIST_to_SCMOBJ;
 
-  ___gstate.___ISO_8859_1STRING_to_SCMOBJ
+  ___GSTATE->___ISO_8859_1STRING_to_SCMOBJ
     = ___ISO_8859_1STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLISO_8859_1STRING_to_SCMOBJ
+  ___GSTATE->___NONNULLISO_8859_1STRING_to_SCMOBJ
     = ___NONNULLISO_8859_1STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLISO_8859_1STRINGLIST_to_SCMOBJ
+  ___GSTATE->___NONNULLISO_8859_1STRINGLIST_to_SCMOBJ
     = ___NONNULLISO_8859_1STRINGLIST_to_SCMOBJ;
 
-  ___gstate.___UTF_8STRING_to_SCMOBJ
+  ___GSTATE->___UTF_8STRING_to_SCMOBJ
     = ___UTF_8STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLUTF_8STRING_to_SCMOBJ
+  ___GSTATE->___NONNULLUTF_8STRING_to_SCMOBJ
     = ___NONNULLUTF_8STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLUTF_8STRINGLIST_to_SCMOBJ
+  ___GSTATE->___NONNULLUTF_8STRINGLIST_to_SCMOBJ
     = ___NONNULLUTF_8STRINGLIST_to_SCMOBJ;
 
-  ___gstate.___UTF_16STRING_to_SCMOBJ
+  ___GSTATE->___UTF_16STRING_to_SCMOBJ
     = ___UTF_16STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLUTF_16STRING_to_SCMOBJ
+  ___GSTATE->___NONNULLUTF_16STRING_to_SCMOBJ
     = ___NONNULLUTF_16STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLUTF_16STRINGLIST_to_SCMOBJ
+  ___GSTATE->___NONNULLUTF_16STRINGLIST_to_SCMOBJ
     = ___NONNULLUTF_16STRINGLIST_to_SCMOBJ;
 
-  ___gstate.___UCS_2STRING_to_SCMOBJ
+  ___GSTATE->___UCS_2STRING_to_SCMOBJ
     = ___UCS_2STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLUCS_2STRING_to_SCMOBJ
+  ___GSTATE->___NONNULLUCS_2STRING_to_SCMOBJ
     = ___NONNULLUCS_2STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLUCS_2STRINGLIST_to_SCMOBJ
+  ___GSTATE->___NONNULLUCS_2STRINGLIST_to_SCMOBJ
     = ___NONNULLUCS_2STRINGLIST_to_SCMOBJ;
 
-  ___gstate.___UCS_4STRING_to_SCMOBJ
+  ___GSTATE->___UCS_4STRING_to_SCMOBJ
     = ___UCS_4STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLUCS_4STRING_to_SCMOBJ
+  ___GSTATE->___NONNULLUCS_4STRING_to_SCMOBJ
     = ___NONNULLUCS_4STRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLUCS_4STRINGLIST_to_SCMOBJ
+  ___GSTATE->___NONNULLUCS_4STRINGLIST_to_SCMOBJ
     = ___NONNULLUCS_4STRINGLIST_to_SCMOBJ;
 
-  ___gstate.___WCHARSTRING_to_SCMOBJ
+  ___GSTATE->___WCHARSTRING_to_SCMOBJ
     = ___WCHARSTRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLWCHARSTRING_to_SCMOBJ
+  ___GSTATE->___NONNULLWCHARSTRING_to_SCMOBJ
     = ___NONNULLWCHARSTRING_to_SCMOBJ;
 
-  ___gstate.___NONNULLWCHARSTRINGLIST_to_SCMOBJ
+  ___GSTATE->___NONNULLWCHARSTRINGLIST_to_SCMOBJ
     = ___NONNULLWCHARSTRINGLIST_to_SCMOBJ;
 
-  ___gstate.___VARIANT_to_SCMOBJ
+  ___GSTATE->___VARIANT_to_SCMOBJ
     = ___VARIANT_to_SCMOBJ;
 
-  ___gstate.___CHARSTRING_to_UCS_2STRING
+  ___GSTATE->___CHARSTRING_to_UCS_2STRING
     = ___CHARSTRING_to_UCS_2STRING;
 
-  ___gstate.___free_UCS_2STRING
+  ___GSTATE->___free_UCS_2STRING
     = ___free_UCS_2STRING;
 
-  ___gstate.___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST
+  ___GSTATE->___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST
     = ___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST;
 
-  ___gstate.___free_NONNULLUCS_2STRINGLIST
+  ___GSTATE->___free_NONNULLUCS_2STRINGLIST
     = ___free_NONNULLUCS_2STRINGLIST;
 
-  ___gstate.___make_sfun_stack_marker
+  ___GSTATE->___make_sfun_stack_marker
     = ___make_sfun_stack_marker;
 
-  ___gstate.___kill_sfun_stack_marker
+  ___GSTATE->___kill_sfun_stack_marker
     = ___kill_sfun_stack_marker;
 
-  ___gstate.___alloc_rc
+  ___GSTATE->___alloc_rc
     = ___alloc_rc;
 
-  ___gstate.___release_rc
+  ___GSTATE->___release_rc
     = ___release_rc;
 
-  ___gstate.___addref_rc
+  ___GSTATE->___addref_rc
     = ___addref_rc;
 
-  ___gstate.___data_rc
+  ___GSTATE->___data_rc
     = ___data_rc;
 
-  ___gstate.___set_data_rc
+  ___GSTATE->___set_data_rc
     = ___set_data_rc;
 
-  ___gstate.___alloc_scmobj
+  ___GSTATE->___alloc_scmobj
     = ___alloc_scmobj;
 
-  ___gstate.___release_scmobj
+  ___GSTATE->___release_scmobj
     = ___release_scmobj;
 
-  ___gstate.___make_pair
+  ___GSTATE->___make_pair
     = ___make_pair;
 
-  ___gstate.___make_vector
+  ___GSTATE->___make_vector
     = ___make_vector;
 
-  ___gstate.___still_obj_refcount_inc
+  ___GSTATE->___still_obj_refcount_inc
     = ___still_obj_refcount_inc;
 
-  ___gstate.___still_obj_refcount_dec
+  ___GSTATE->___still_obj_refcount_dec
     = ___still_obj_refcount_dec;
 
-  ___gstate.___gc_hash_table_ref
+  ___GSTATE->___gc_hash_table_ref
     = ___gc_hash_table_ref;
 
-  ___gstate.___gc_hash_table_set
+  ___GSTATE->___gc_hash_table_set
     = ___gc_hash_table_set;
 
-  ___gstate.___gc_hash_table_rehash
+  ___GSTATE->___gc_hash_table_rehash
     = ___gc_hash_table_rehash;
 
-  ___gstate.___get_min_heap
+  ___GSTATE->___get_min_heap
     = ___get_min_heap;
 
-  ___gstate.___set_min_heap
+  ___GSTATE->___set_min_heap
     = ___set_min_heap;
 
-  ___gstate.___get_max_heap
+  ___GSTATE->___get_max_heap
     = ___get_max_heap;
 
-  ___gstate.___set_max_heap
+  ___GSTATE->___set_max_heap
     = ___set_max_heap;
 
-  ___gstate.___get_live_percent
+  ___GSTATE->___get_live_percent
     = ___get_live_percent;
 
-  ___gstate.___set_live_percent
+  ___GSTATE->___set_live_percent
     = ___set_live_percent;
 
-  ___gstate.___get_standard_level
+  ___GSTATE->___get_standard_level
     = ___get_standard_level;
 
-  ___gstate.___set_standard_level
+  ___GSTATE->___set_standard_level
     = ___set_standard_level;
 
-  ___gstate.___set_debug_settings
+  ___GSTATE->___set_debug_settings
     = ___set_debug_settings;
 
-  ___gstate.___get_program_startup_info
+  ___GSTATE->___get_program_startup_info
     = ___get_program_startup_info;
 
-  ___gstate.___cleanup
+  ___GSTATE->___cleanup
     = ___cleanup;
 
-  ___gstate.___cleanup_and_exit_process
+  ___GSTATE->___cleanup_and_exit_process
     = ___cleanup_and_exit_process;
 
-  ___gstate.___call
+  ___GSTATE->___call
     = ___call;
 
-  ___gstate.___propagate_error
+  ___GSTATE->___propagate_error
     = ___propagate_error;
 
 #ifdef ___DEBUG_HOST_CHANGES
-  ___gstate.___register_host_entry
+  ___GSTATE->___register_host_entry
     = ___register_host_entry;
 #endif
 
-  ___gstate.___raise_interrupt
+  ___GSTATE->___raise_interrupt
     = ___raise_interrupt;
 
-  ___gstate.___begin_interrupt_service
+  ___GSTATE->___begin_interrupt_service
     = ___begin_interrupt_service;
 
-  ___gstate.___check_interrupt
+  ___GSTATE->___check_interrupt
     = ___check_interrupt;
 
-  ___gstate.___end_interrupt_service
+  ___GSTATE->___end_interrupt_service
     = ___end_interrupt_service;
 
-  ___gstate.___disable_interrupts
+  ___GSTATE->___disable_interrupts
     = ___disable_interrupts;
 
-  ___gstate.___enable_interrupts
+  ___GSTATE->___enable_interrupts
     = ___enable_interrupts;
 
-  ___gstate.___alloc_mem
+  ___GSTATE->___alloc_mem
     = ___alloc_mem;
 
-  ___gstate.___free_mem
+  ___GSTATE->___free_mem
     = ___free_mem;
 
-  ___gstate.___alloc_mem_code
+  ___GSTATE->___alloc_mem_code
     = ___alloc_mem_code;
 
-  ___gstate.___free_mem_code
+  ___GSTATE->___free_mem_code
     = ___free_mem_code;
 
-  ___gstate.___disable_heartbeat_interrupts
+  ___GSTATE->___disable_heartbeat_interrupts
     = ___disable_heartbeat_interrupts;
 
-  ___gstate.___enable_heartbeat_interrupts
+  ___GSTATE->___enable_heartbeat_interrupts
     = ___enable_heartbeat_interrupts;
 
 #endif
+}
 
-  /* 
-   * Get processor state.
-   */
 
-  ___ps = ___PSTATE;
+___HIDDEN void setup_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  int i;
 
   /*
    * Setup multithreading structures.
@@ -3053,24 +2988,108 @@ ___setup_params_struct *setup_params;)
 
   ___begin_interrupt_service ();
   ___end_interrupt_service (0);
+}
+
+
+/* TODO: really need to EXP_FUNC ___setup_vm and ___cleanup_vm? */
+
+___EXP_FUNC(void,___setup_pstate)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+}
+
+
+___EXP_FUNC(void,___cleanup_pstate)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+}
+
+
+___EXP_FUNC(void,___setup_vmstate)
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+}
+
+
+___EXP_FUNC(void,___cleanup_vmstate)
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+}
+
+
+___EXP_FUNC(___SCMOBJ,___setup)
+   ___P((___setup_params_struct *setup_params),
+        (setup_params)
+___setup_params_struct *setup_params;)
+{
+  ___processor_state ___ps = &___GSTATE->vmstate0.pstate0;
+  ___SCMOBJ ___err;
+  ___mod_or_lnk mol;
+  ___SCMOBJ marker;
+
+  /*
+   * Check for valid setup_params structure.
+   */
+
+  if (setup_params == 0 ||
+      setup_params->version != ___VERSION)
+    return ___FIX(___UNKNOWN_ERR);
+
+  /*
+   * Disallow cleanup, in case setup fails.
+   */
+
+  ___GSTATE->setup_state = 2;
+
+  /*
+   * Remember setup parameters.
+   */
+
+  ___GSTATE->setup_params = *setup_params;
+
+  /* 
+   * Setup the operating system module.
+   */
+
+  if ((___err = ___setup_os ()) != ___FIX(___NO_ERR))
+    return ___err;
+
+  /* 
+   * Setup stack and heap.
+   */
+
+  if ((___err = ___setup_mem ()) != ___FIX(___NO_ERR))
+    {
+      ___cleanup_os ();
+      return ___err;
+    }
+
+  ___GSTATE->setup_state = 1; /* allow cleanup */
+
+  /*
+   * Setup support for dynamic linking.
+   */
+
+  setup_dynamic_linking ();
+
+  /* 
+   * Setup processor state.
+   */
+
+  setup_pstate (___ps);
 
   /* 
    * Create empty global variable list, symbol table and keyword
    * table.
    */
-
-  /* TODO: implement expansion of glos and prms arrays when number of globals grows beyond 20000 */
-
-#ifdef ___MULTIPLE_GLO
-  ___ps->glos = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
-#endif
-
-#ifdef ___MULTIPLE_PRM
-  ___ps->prms = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
-#endif
-
-  ___ps->glo_list_head = 0;
-  ___ps->glo_list_tail = 0;
 
   ___GSTATE->symbol_table =
     symkey_table_alloc (___sSYMBOL, INIT_SYMKEY_TBL_LENGTH);
@@ -3131,7 +3150,7 @@ ___setup_params_struct *setup_params;)
     if ((___err = ___NONNULLSTRINGLIST_to_SCMOBJ
                     (argv,
                      &___GSTATE->command_line,
-                     0,
+                     -1, /* allocate as permanent object */
                      ___CE(___COMMAND_LINE_CE_SELECT)))
         != ___FIX(___NO_ERR))
       {
@@ -3144,46 +3163,13 @@ ___setup_params_struct *setup_params;)
    * Setup kernel handlers.
    */
 
-#define ___PH_LBL0 1
-
-  /* 
-   * The label numbers must match those in the procedure
-   * "##kernel-handlers" in the file "_kernel.scm".
-   */
-
-  ___start = ___PRMCELL(___G__23__23_kernel_2d_handlers.prm);
-
-  ___gstate.handler_sfun_conv_error = ___LBL(0);
-  ___gstate.handler_cfun_conv_error = ___LBL(1);
-  ___gstate.handler_stack_limit     = ___LBL(2);
-  ___gstate.handler_heap_limit      = ___LBL(3);
-  ___gstate.handler_not_proc        = ___LBL(4);
-  ___gstate.handler_not_proc_glo    = ___LBL(5);
-  ___gstate.handler_wrong_nargs     = ___LBL(6);
-  ___gstate.handler_get_rest        = ___LBL(7);
-  ___gstate.handler_get_key         = ___LBL(8);
-  ___gstate.handler_get_key_rest    = ___LBL(9);
-  ___gstate.handler_force           = ___LBL(10);
-  ___gstate.handler_return_to_c     = ___LBL(11);
-  ___gstate.handler_break           = ___LBL(12);
-  ___gstate.internal_return         = ___LBL(13);
-
-  /* 
-   * The label numbers must match those in the procedure
-   * "##dynamic-env-bind" in the file "_kernel.scm".
-   */
-
-  ___start = ___PRMCELL(___G__23__23_dynamic_2d_env_2d_bind.prm);
-
-  ___gstate.dynamic_env_bind_return = ___LBL(1);
-
-#undef ___PH_LBL0
+  setup_kernel_handlers ();
 
   /*
    * Call kernel to start executing program.
    */
 
-  ___ps->r[0] = ___gstate.handler_break;
+  ___ps->r[0] = ___GSTATE->handler_break;
 
   ___BEGIN_TRY
 
