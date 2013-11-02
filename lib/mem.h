@@ -67,6 +67,14 @@
 #define ___DEFAULT_MIN_HEAP     (1*(1<<20))
 
 
+/* 
+ * Initial length of symbol table and keyword table.
+ */
+
+#define INIT_SYMBOL_TABLE_LENGTH  128
+#define INIT_KEYWORD_TABLE_LENGTH 128
+
+
 extern ___SCMOBJ ___setup_mem_pstate
    ___P((___processor_state ___ps),
         ());
@@ -146,6 +154,52 @@ extern ___BOOL ___heap_limit
 
 #endif
 
+
+extern ___SCMOBJ ___hash_UTF_8_string
+   ___P((___UTF_8STRING str),
+        ());
+
+extern ___SCMOBJ ___hash_scheme_string
+   ___P((___SCMOBJ str),
+        ());
+
+extern void ___intern_symkey
+   ___P((___SCMOBJ symkey),
+        ());
+
+extern ___SCMOBJ ___find_symkey_from_UTF_8_string
+   ___P((char *str,
+         unsigned int subtype),
+        ());
+
+extern ___SCMOBJ ___find_symkey_from_scheme_string
+   ___P((___SCMOBJ str,
+         unsigned int subtype),
+        ());
+
+extern ___SCMOBJ ___new_symkey
+   ___P((___SCMOBJ name,
+         unsigned int subtype),
+        ());
+
+extern ___SCMOBJ ___make_symkey
+   ___P((___UTF_8STRING str,
+         unsigned int subtype),
+        ());
+
+extern void ___for_each_symkey
+   ___P((unsigned int subtype,
+         void (*visit) (___SCMOBJ symkey, void *data),
+         void *data),
+        ());
+
+#ifdef ___DEBUG
+
+extern ___SCMOBJ ___find_global_var_bound_to
+   ___P((___SCMOBJ val),
+        ());
+
+#endif
 
 extern ___SCMOBJ ___make_global_var
    ___P((___SCMOBJ sym),
