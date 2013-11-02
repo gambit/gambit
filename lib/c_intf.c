@@ -5375,6 +5375,7 @@ ___SCMOBJ *obj;
 int arg_num;
 int char_encoding;)
 {
+  int kind = arg_num < 0 ? ___PERM : ___STILL;
   ___SCMOBJ lst;
   void **string_list = ___CAST(void**,x);
   int i;
@@ -5409,7 +5410,7 @@ int char_encoding;)
           return e;
         }
 
-      pair = ___make_pair (str, lst, ___STILL);
+      pair = ___make_pair (str, lst, kind);
 
       ___release_scmobj (str);
       ___release_scmobj (lst);
