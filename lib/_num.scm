@@ -5579,9 +5579,9 @@ else if (words > ___MSECTION_BIGGEST)
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
 #if ___BIG_ABASE_WIDTH == 32
-    result = ___alloc_scmobj (___sBIGNUM, n<<2, ___STILL);
+    result = ___alloc_scmobj_still (___sBIGNUM, n<<2);
 #else
-    result = ___alloc_scmobj (___sBIGNUM, n<<3, ___STILL);
+    result = ___alloc_scmobj_still (___sBIGNUM, n<<3);
 #endif
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
