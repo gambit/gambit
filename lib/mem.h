@@ -71,7 +71,7 @@
  * Initial length of symbol table and keyword table.
  */
 
-#define INIT_SYMBOL_TABLE_LENGTH  128
+#define INIT_SYMBOL_TABLE_LENGTH  2048
 #define INIT_KEYWORD_TABLE_LENGTH 128
 
 
