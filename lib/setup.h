@@ -15,32 +15,6 @@ extern ___SCMOBJ ___os_load_object_file
         ());
 
 
-extern ___SCMOBJ ___find_symkey_from_scheme_string
-   ___P((___SCMOBJ str,
-         unsigned int subtype),
-        ());
-
-
-extern ___SCMOBJ ___new_symkey
-   ___P((___SCMOBJ name,
-         unsigned int subtype),
-        ());
-
-extern void ___for_each_symkey
-   ___P((unsigned int subtype,
-         void (*visit) (___SCMOBJ symkey, void *data),
-         void *data),
-        ());
-
-#ifdef ___DEBUG
-
-extern ___SCMOBJ find_global_var_bound_to
-   ___P((___SCMOBJ val),
-        ());
-
-#endif
-
-
 #define ___COVER(n)
 #define ___COVER_SFUN_CONVERSION_ERROR_HANDLER               ___COVER(0)
 #define ___COVER_CFUN_CONVERSION_ERROR_HANDLER               ___COVER(1)

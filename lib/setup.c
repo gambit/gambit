@@ -35,13 +35,6 @@ ___NEED_GLO(___G__23__23_kernel_2d_handlers) /* from "_kernel.scm" */
 ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
 
 
-/* 
- * Initial length of symbol table and keyword table.
- */
-
-#define INIT_SYMKEY_TBL_LENGTH 128
-
-
 /*---------------------------------------------------------------------------*/
 
 /* 
@@ -155,364 +148,6 @@ ___EXP_FUNC(void,___enable_interrupts) ___PVOID
 
   ___begin_interrupt_service ();
   ___end_interrupt_service (0);
-}
-
-
-/*---------------------------------------------------------------------------*/
-
-/* 
- * Routines to setup symbol table, keyword table and global variable
- * table.
- */
-
-/* 
- * The hashing functions 'hash_UTF_8_string (str)' and
- * 'hash_scheme_string (str)' must compute the same value as the
- * function 'targ-hash' in the file "gsc/_t-c-3.scm".
- * A fixnum error code is returned when there is an error.
- */
-
-#define HASH_STEP(h,c) ((((h)>>8) + (c)) * 331804471) & ___MAX_FIX32
-
-___HIDDEN ___SCMOBJ hash_UTF_8_string
-   ___P((___UTF_8STRING str),
-        (str)
-___UTF_8STRING str;)
-{
-  ___UM32 h = 0;
-  ___UTF_8STRING p = str;
-  ___UCS_4 c;
-
-  for (;;)
-    {
-      ___UTF_8STRING start = p;
-      c = ___UTF_8_get (&p);
-      if (p == start || c > ___MAX_CHR)
-        return ___FIX(___CTOS_UTF_8STRING_ERR);
-      if (c == 0)
-        break;
-      h = HASH_STEP(h,c);
-    }
-
-  return ___FIX(h);
-}
-
-
-___HIDDEN ___SCMOBJ hash_scheme_string
-   ___P((___SCMOBJ str),
-        (str)
-___SCMOBJ str;)
-{
-  ___SIZE_T i, n = ___INT(___STRINGLENGTH(str));
-  ___UM32 h = 0;
-
-  for (i=0; i<n; i++)
-    h = HASH_STEP(h,___INT(___STRINGREF(str,___FIX(i))));
-
-  return ___FIX(h);
-}
-
-
-___HIDDEN ___SCMOBJ symkey_table
-   ___P((unsigned int subtype),
-        (subtype)
-unsigned int subtype;)
-{
-  switch (subtype)
-    {
-    case ___sKEYWORD:
-      return ___GSTATE->keyword_table;
-    default: /* assume ___sSYMBOL */
-      return ___GSTATE->symbol_table;
-    }
-}
-
-
-___HIDDEN void symkey_table_set
-   ___P((unsigned int subtype,
-         ___SCMOBJ new_table),
-        (subtype,
-         new_table)
-unsigned int subtype;
-___SCMOBJ new_table;)
-{
-  switch (subtype)
-    {
-    case ___sKEYWORD:
-      ___GSTATE->keyword_table = new_table;
-      break;
-    default: /* assume ___sSYMBOL */
-      ___GSTATE->symbol_table = new_table;
-      break;
-    }
-}
-
-
-___HIDDEN ___SCMOBJ symkey_table_alloc
-   ___P((unsigned int subtype,
-         ___SIZE_TS length),
-        (subtype,
-         length)
-unsigned int subtype;
-___SIZE_TS length;)
-{
-  ___SCMOBJ tbl = ___make_vector (length+1, ___NUL, ___STILL);
-
-  if (!___FIXNUMP(tbl))
-    ___FIELD(tbl,0) = ___FIX(0);
-
-  return tbl;
-}
-
-
-___HIDDEN void symkey_add
-   ___P((___SCMOBJ symkey),
-        (symkey)
-___SCMOBJ symkey;)
-{
-  unsigned int subtype = ___INT(___SUBTYPE(symkey));
-  ___SCMOBJ tbl = symkey_table (subtype);
-  int i = ___INT(___FIELD(symkey,___SYMKEY_HASH))
-          % (___INT(___VECTORLENGTH(tbl)) - 1)
-          + 1;
-
-  ___FIELD(symkey,___SYMKEY_NEXT) = ___FIELD(tbl,i);
-  ___FIELD(tbl,i) = symkey;
-
-  ___FIELD(tbl,0) = ___FIXADD(___FIELD(tbl,0),___FIX(1));
-
-  if (___INT(___FIELD(tbl,0)) > ___INT(___VECTORLENGTH(tbl)) * 4)
-    {
-      int new_len = (___INT(___VECTORLENGTH(tbl))-1) * 2;
-      ___SCMOBJ newtbl = symkey_table_alloc (subtype, new_len);
-
-      if (!___FIXNUMP(newtbl))
-        {
-          for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
-            {
-              ___SCMOBJ probe = ___FIELD(tbl,i);
-
-              while (probe != ___NUL)
-                {
-                  ___SCMOBJ symkey = probe;
-                  int j = ___INT(___FIELD(symkey,___SYMKEY_HASH))%new_len + 1;
-
-                  probe = ___FIELD(symkey,___SYMKEY_NEXT);
-                  ___FIELD(symkey,___SYMKEY_NEXT) = ___FIELD(newtbl,j);
-                  ___FIELD(newtbl,j) = symkey;
-                }
-            }
-
-          ___FIELD(newtbl,0) = ___FIELD(tbl,0);
-
-          symkey_table_set (subtype, newtbl);
-        }
-    }
-}
-
-
-___HIDDEN ___SCMOBJ find_symkey_from_UTF_8_string
-   ___P((char *str,
-         unsigned int subtype),
-        (str,
-         subtype)
-char *str;
-unsigned int subtype;)
-{
-  ___SCMOBJ tbl;
-  ___SCMOBJ probe;
-  ___SCMOBJ h = hash_UTF_8_string (str);
-
-  if (h < ___FIX(0))
-    return h;
-
-  tbl = symkey_table (subtype);
-  probe = ___FIELD(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
-
-  while (probe != ___NUL)
-    {
-      ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
-      ___SIZE_T i;
-      ___SIZE_T n = ___INT(___STRINGLENGTH(name));
-      ___UTF_8STRING p = str;
-      for (i=0; i<n; i++)
-        if (___UTF_8_get (&p) !=
-            ___CAST(___UCS_4,___INT(___STRINGREF(name,___FIX(i)))))
-          goto next;
-      if (___UTF_8_get (&p) == 0)
-        return probe;
-    next:
-      probe = ___FIELD(probe,___SYMKEY_NEXT);
-    }
-
-  return ___FAL;
-}
-
-
-___SCMOBJ ___find_symkey_from_scheme_string
-   ___P((___SCMOBJ str,
-         unsigned int subtype),
-        (str,
-         subtype)
-___SCMOBJ str;
-unsigned int subtype;)
-{
-  ___SCMOBJ tbl;
-  ___SCMOBJ probe;
-  ___SCMOBJ h = hash_scheme_string (str);
-
-  tbl = symkey_table (subtype);
-  probe = ___FIELD(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
-
-  while (probe != ___NUL)
-    {
-      ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
-      ___SIZE_TS i = 0;
-      ___SIZE_TS n = ___INT(___STRINGLENGTH(name));
-      if (___INT(___STRINGLENGTH(str)) == n)
-        {
-          for (i=0; i<n; i++)
-            if (___STRINGREF(str,___FIX(i)) != ___STRINGREF(name,___FIX(i)))
-              goto next;
-          return probe;
-        }
-    next:
-      probe = ___FIELD(probe,___SYMKEY_NEXT);
-    }
-
-  return ___FAL;
-}
-
-
-___SCMOBJ ___new_symkey
-   ___P((___SCMOBJ name, /* name must be a permanent object */
-         unsigned int subtype),
-        (name,
-         subtype)
-___SCMOBJ name;
-unsigned int subtype;)
-{
-  ___SCMOBJ obj;
-  ___SCMOBJ tbl;
-
-  switch (subtype)
-    {
-    case ___sKEYWORD:
-      obj = ___alloc_scmobj (___sKEYWORD, ___KEYWORD_SIZE<<___LWS, ___PERM);
-      break;
-    default: /* assume ___sSYMBOL */
-      obj = ___alloc_scmobj (___sSYMBOL, ___SYMBOL_SIZE<<___LWS, ___PERM);
-      break;
-    }
-
-  if (___FIXNUMP(obj))
-    return obj;
-
-  tbl = symkey_table (subtype);
-
-  /* object layout is same for ___sSYMBOL and ___sKEYWORD */
-
-  ___FIELD(obj,___SYMKEY_NAME) = name;
-  ___FIELD(obj,___SYMKEY_HASH) = hash_scheme_string (name);
-
-  if (subtype == ___sSYMBOL)
-    ___FIELD(obj,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,___CAST(___glo_struct*,0));
-
-  symkey_add (obj);
-
-  return obj;
-}
-
-
-___HIDDEN ___SCMOBJ make_symkey
-   ___P((___UTF_8STRING str,
-         unsigned int subtype),
-        (str,
-         subtype)
-___UTF_8STRING str;
-unsigned int subtype;)
-{
-  ___SCMOBJ obj = find_symkey_from_UTF_8_string (str, subtype);
-
-  if (___FIXNUMP(obj))
-    return obj;
-
-  if (obj == ___FAL)
-    {
-      ___SCMOBJ name;
-      ___SCMOBJ err;
-
-      if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
-                   (str,
-                    &name,
-                    -1)) /* allocate as permanent object */
-          != ___FIX(___NO_ERR))
-        return err;
-
-      obj = ___new_symkey (name, subtype);
-    }
-
-  return obj;
-}
-
-
-___HIDDEN ___SCMOBJ make_global
-   ___P((___UTF_8STRING str,
-         int supply,
-         ___glo_struct **glo),
-        (str,
-         supply,
-         glo)
-___UTF_8STRING str;
-int supply;
-___glo_struct **glo;)
-{
-  ___glo_struct *g;
-  ___SCMOBJ sym = make_symkey (str, ___sSYMBOL);
-
-  if (___FIXNUMP(sym))
-    return sym;
-
-  sym = ___make_global_var (sym);
-
-  if (___FIXNUMP(sym))
-    return sym;
-
-  g = ___GLOBALVARSTRUCT(sym);
-
-  if (supply && ___GLOCELL(g->val) == ___UNB1)
-    ___GLOCELL(g->val) = ___UNB2;
-
-  *glo = g;
-
-  return ___FIX(___NO_ERR);
-}
-
-
-void ___for_each_symkey
-   ___P((unsigned int subtype,
-         void (*visit) (___SCMOBJ symkey, void *data),
-         void *data),
-        (subtype,
-         visit,
-         data)
-unsigned int subtype;
-void (*visit) ();
-void *data;)
-{
-  ___SCMOBJ tbl = symkey_table (subtype);
-  int i;
-
-  for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
-    {
-      ___SCMOBJ probe = ___FIELD(tbl, i);
-      
-      while (probe != ___NUL)
-        {
-          visit (probe, data);
-          probe = ___FIELD(probe,___SYMKEY_NEXT);
-        }
-    }
 }
 
 
@@ -667,6 +302,39 @@ ___SCMOBJ *subtbl;)
 }
 
 
+___HIDDEN ___SCMOBJ make_global
+   ___P((___UTF_8STRING str,
+         int supply,
+         ___glo_struct **glo),
+        (str,
+         supply,
+         glo)
+___UTF_8STRING str;
+int supply;
+___glo_struct **glo;)
+{
+  ___glo_struct *g;
+  ___SCMOBJ sym = ___make_symkey (str, ___sSYMBOL);
+
+  if (___FIXNUMP(sym))
+    return sym;
+
+  sym = ___make_global_var (sym);
+
+  if (___FIXNUMP(sym))
+    return sym;
+
+  g = ___GLOBALVARSTRUCT(sym);
+
+  if (supply && ___GLOCELL(g->val) == ___UNB1)
+    ___GLOCELL(g->val) = ___UNB2;
+
+  *glo = g;
+
+  return ___FIX(___NO_ERR);
+}
+
+
 ___HIDDEN ___SCMOBJ setup_module_phase1
    ___P((fem_context *ctx,
          ___module_struct *module),
@@ -773,7 +441,7 @@ ___module_struct *module;)
       i = 0;
       while (sym_names[i] != 0)
         {
-          ___SCMOBJ sym = make_symkey (sym_names[i], ___sSYMBOL);
+          ___SCMOBJ sym = ___make_symkey (sym_names[i], ___sSYMBOL);
           if (___FIXNUMP(sym))
             return sym;
           symtbl[i] = sym;
@@ -791,7 +459,7 @@ ___module_struct *module;)
       i = 0;
       while (key_names[i] != 0)
         {
-          ___SCMOBJ key = make_symkey (key_names[i], ___sKEYWORD);
+          ___SCMOBJ key = ___make_symkey (key_names[i], ___sKEYWORD);
           if (___FIXNUMP(key))
             return key;
           keytbl[i] = key;
@@ -869,7 +537,7 @@ ___module_struct *module;)
               else
                 {
                   ___SCMOBJ sym =
-                    find_symkey_from_UTF_8_string (name, ___sSYMBOL);
+                    ___find_symkey_from_UTF_8_string (name, ___sSYMBOL);
 
                   if (___FIXNUMP(sym))
                     return sym;
@@ -1799,7 +1467,7 @@ ___mod_or_lnk mol;)
           ___FIELD(sym,___SYMKEY_NAME) = str;
           ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,glo);
 
-          symkey_add (sym);
+          ___intern_symkey (sym);
         }
 
       while (p3 != 0)
@@ -1817,9 +1485,9 @@ ___mod_or_lnk mol;)
           key = align_subtyped (key_ptr);
 
           ___FIELD(key,___SYMKEY_NAME) = str;
-          ___FIELD(key,___SYMKEY_HASH) = hash_scheme_string (str);
+          ___FIELD(key,___SYMKEY_HASH) = ___hash_scheme_string (str);
 
-          symkey_add (key);
+          ___intern_symkey (key);
         }
     }
 }
@@ -3085,29 +2753,6 @@ ___setup_params_struct *setup_params;)
    */
 
   setup_pstate (___ps);
-
-  /* 
-   * Create empty global variable list, symbol table and keyword
-   * table.
-   */
-
-  ___GSTATE->symbol_table =
-    symkey_table_alloc (___sSYMBOL, INIT_SYMKEY_TBL_LENGTH);
-
-  if (___FIXNUMP(___GSTATE->symbol_table))
-    {
-      ___cleanup ();
-      return ___GSTATE->symbol_table;
-    }
-
-  ___GSTATE->keyword_table =
-    symkey_table_alloc (___sKEYWORD, INIT_SYMKEY_TBL_LENGTH);
-
-  if (___FIXNUMP(___GSTATE->keyword_table))
-    {
-      ___cleanup ();
-      return ___GSTATE->keyword_table;
-    }
 
   /*
    * Setup program's linker structure.
