@@ -4150,7 +4150,7 @@ int arg_num;)
       else
         n = 1 + (d1 != 0);
 
-      r = ___alloc_scmobj (___sBIGNUM, n<<2, ___STILL);
+      r = ___alloc_scmobj_still (___sBIGNUM, n<<2);
 
       if (___FIXNUMP(r))
         {
@@ -4165,7 +4165,7 @@ int arg_num;)
       int n = 1;
       ___BIGADIGIT d0 = x;
 
-      r = ___alloc_scmobj (___sBIGNUM, n<<3, ___STILL);
+      r = ___alloc_scmobj_still (___sBIGNUM, n<<3);
 
       if (___FIXNUMP(r))
         {
@@ -4211,7 +4211,7 @@ int arg_num;)
       else
         n = 2 + (___CAST(___BIGADIGITSIGNED,d1) < 0);
 
-      r = ___alloc_scmobj (___sBIGNUM, n<<2, ___STILL);
+      r = ___alloc_scmobj_still (___sBIGNUM, n<<2);
 
       if (___FIXNUMP(r))
         {
@@ -4232,7 +4232,7 @@ int arg_num;)
 
       n = 1 + (___CAST(___BIGADIGITSIGNED,d0) < 0);
 
-      r = ___alloc_scmobj (___sBIGNUM, n<<3, ___STILL);
+      r = ___alloc_scmobj_still (___sBIGNUM, n<<3);
 
       if (___FIXNUMP(r))
         {
@@ -4386,7 +4386,7 @@ ___F64 x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  ___SCMOBJ r = ___alloc_scmobj (___sFLONUM, ___FLONUM_SIZE<<___LWS, ___STILL);
+  ___SCMOBJ r = ___alloc_scmobj_still (___sFLONUM, ___FLONUM_SIZE<<___LWS);
 
   if (___FIXNUMP(r))
     {
@@ -4834,9 +4834,7 @@ int arg_num;)
     *obj = ___FAL; /* #f counts as NULL */
   else
     {
-      ___SCMOBJ r = ___alloc_scmobj (___sFOREIGN,
-                                     ___FOREIGN_SIZE<<___LWS,
-                                     ___STILL);
+      ___SCMOBJ r = ___alloc_scmobj_still (___sFOREIGN, ___FOREIGN_SIZE<<___LWS);
       if (___FIXNUMP(r))
         {
           *obj = ___FAL;

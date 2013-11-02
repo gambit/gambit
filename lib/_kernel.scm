@@ -1851,9 +1851,7 @@ ___SCMOBJ result;
 ___WORD head = *___UNTAG(___ARG1);
 ___FRAME_STORE_RA(___R0)
 ___W_ALL
-result = ___alloc_scmobj (___HD_SUBTYPE(head),
-                          ___HD_BYTES(head),
-                          ___STILL);
+result = ___alloc_scmobj_still (___HD_SUBTYPE(head), ___HD_BYTES(head));
 ___R_ALL
 ___SET_R0(___FRAME_FETCH_RA)
 if (!___FIXNUMP(result))
@@ -1899,7 +1897,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sVECTOR, n<<___LWS, ___STILL);
+    result = ___alloc_scmobj_still (___sVECTOR, n<<___LWS);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -1962,7 +1960,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sSTRING, n<<___LCS, ___STILL);
+    result = ___alloc_scmobj_still (___sSTRING, n<<___LCS);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2022,7 +2020,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sS8VECTOR, n, ___STILL);
+    result = ___alloc_scmobj_still (___sS8VECTOR, n);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2082,7 +2080,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sU8VECTOR, n, ___STILL);
+    result = ___alloc_scmobj_still (___sU8VECTOR, n);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2142,7 +2140,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sS16VECTOR, n<<1, ___STILL);
+    result = ___alloc_scmobj_still (___sS16VECTOR, n<<1);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2202,7 +2200,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sU16VECTOR, n<<1, ___STILL);
+    result = ___alloc_scmobj_still (___sU16VECTOR, n<<1);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2262,7 +2260,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sS32VECTOR, n<<2, ___STILL);
+    result = ___alloc_scmobj_still (___sS32VECTOR, n<<2);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2322,7 +2320,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sU32VECTOR, n<<2, ___STILL);
+    result = ___alloc_scmobj_still (___sU32VECTOR, n<<2);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2386,7 +2384,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sS64VECTOR, n<<3, ___STILL);
+    result = ___alloc_scmobj_still (___sS64VECTOR, n<<3);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2455,7 +2453,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sU64VECTOR, n<<3, ___STILL);
+    result = ___alloc_scmobj_still (___sU64VECTOR, n<<3);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2520,7 +2518,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sF32VECTOR, n<<2, ___STILL);
+    result = ___alloc_scmobj_still (___sF32VECTOR, n<<2);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2585,7 +2583,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj (___sF64VECTOR, n<<3, ___STILL);
+    result = ___alloc_scmobj_still (___sF64VECTOR, n<<3);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -3534,25 +3532,8 @@ end-of-code
                     scheme-object
            #<<end-of-code
 
-           unsigned int subtype = (___arg2 != ___FAL)
-                                  ? ___sSYMBOL
-                                  : ___sKEYWORD;
-           ___SCMOBJ obj = ___find_symkey_from_scheme_string
-                             (___arg1,
-                              subtype);
-           if (obj == ___FAL)
-             {
-               ___SIZE_T n = ___INT(___STRINGLENGTH(___arg1));
-               obj = ___alloc_scmobj (___sSTRING, n<<___LCS, ___PERM);
-               if (!___FIXNUMP(obj))
-                 {
-                   memmove (___BODY_AS(obj,___tSUBTYPED),
-                            ___BODY_AS(___arg1,___tSUBTYPED),
-                            n<<___LCS);
-                   obj = ___new_symkey (obj, subtype);
-                 }
-             }
-           ___result = obj;
+           unsigned int subtype = ___arg2 != ___FAL ? ___sSYMBOL : ___sKEYWORD;
+           ___result = ___make_symkey_from_scheme_string (___arg1, subtype);
 
 end-of-code
 )
@@ -3576,9 +3557,7 @@ end-of-code
              scheme-object
      #<<end-of-code
 
-     unsigned int subtype = (___arg2 != ___FAL)
-                            ? ___sSYMBOL
-                            : ___sKEYWORD;
+     unsigned int subtype = ___arg2 != ___FAL ? ___sSYMBOL : ___sKEYWORD;
      ___result = ___find_symkey_from_scheme_string (___arg1, subtype);
 
 end-of-code
@@ -3856,7 +3835,7 @@ end-of-code
    ___F64 user, sys, real;
    ___SIZE_TS minflt, majflt;
    ___F64 n = ___bytes_allocated (___ps);
-   ___SCMOBJ result = ___alloc_scmobj (___sF64VECTOR, 20<<3, ___STILL);
+   ___SCMOBJ result = ___alloc_scmobj_still (___sF64VECTOR, 20<<3);
 
     if (!___FIXNUMP(result))
     {

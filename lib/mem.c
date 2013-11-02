@@ -1100,55 +1100,89 @@ ___WORD obj;)
  * there is an error.
  */
 
-___EXP_FUNC(___WORD,___alloc_scmobj)
+___EXP_FUNC(___WORD,___alloc_scmobj_perm)
    ___P((int subtype,
-         ___SIZE_TS bytes,
-         int kind),
+         ___SIZE_TS bytes),
         (subtype,
-         bytes,
-         kind)
+         bytes)
 int subtype;
-___SIZE_TS bytes;
-int kind;)
+___SIZE_TS bytes;)
 {
   void *ptr;
+  ___WORD *base;
+  ___SIZE_TS words = ___PERM_BODY_OFS + ___WORDS(bytes);
+
+  /*
+   * Some objects, such as ___sFOREIGN, ___sS64VECTOR, ___sU64VECTOR,
+   * ___sF64VECTOR, ___sFLONUM and ___sBIGNUM, must have a body that
+   * is aligned on a multiple of 8 on some machines.  Here, we force
+   * alignment to a multiple of 8 even if not necessary in all cases
+   * because it is typically more efficient due to a better
+   * utilization of the cache.
+   */
+
+  ptr = alloc_mem_aligned_perm (words,
+                                8>>___LWS,
+                                (-___PERM_BODY_OFS)&((8>>___LWS)-1));
+
+  if (ptr == 0)
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+  base = ___CAST(___WORD*,ptr);
+
+#ifdef ___USE_HANDLES
+  base[___PERM_HAND_OFS] = ___CAST(___WORD,base+___PERM_BODY_OFS-___BODY_OFS);
+#endif
+  base[___PERM_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___PERM);
+
+  return ___TAG((base + ___PERM_HAND_OFS - ___BODY_OFS),
+                (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
+}
+
+
+___EXP_FUNC(___WORD,___alloc_scmobj_still)
+   ___P((int subtype,
+         ___SIZE_TS bytes),
+        (subtype,
+         bytes)
+int subtype;
+___SIZE_TS bytes;)
+{
+  void *ptr;
+  ___WORD *base;
   ___processor_state ___ps = ___PSTATE;
-  ___SIZE_TS words = (kind==___PERM ? ___PERM_BODY_OFS : ___STILL_BODY_OFS)
-                     + ___WORDS(bytes);
+  ___SIZE_TS words = ___STILL_BODY_OFS + ___WORDS(bytes);
 
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
   alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
 
-  if (kind != ___PERM)
+  /*
+   * Account for words allocated only for non-permanent objects.
+   */
+
+  words_nonmovable += words;
+
+  if (WORDS_OCCUPIED > heap_size
+#ifdef CALL_GC_FREQUENTLY
+      || --___gc_calls_to_punt < 0
+#endif
+      )
     {
-      /*
-       * Account for words allocated only for non-permanent objects.
-       */
+      ___BOOL overflow;
+
+      words_nonmovable -= words;
+
+      overflow = ___garbage_collect (___ps, words);
 
       words_nonmovable += words;
 
-      if (WORDS_OCCUPIED > heap_size
-#ifdef CALL_GC_FREQUENTLY
-          || --___gc_calls_to_punt < 0
-#endif
-          )
+      alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
+      alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
+
+      if (overflow || WORDS_OCCUPIED > heap_size)
         {
-          ___BOOL overflow;
-
           words_nonmovable -= words;
-
-          overflow = ___garbage_collect (___ps, words);
-
-          words_nonmovable += words;
-
-          alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
-          alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
-
-          if (overflow || WORDS_OCCUPIED > heap_size)
-            {
-              words_nonmovable -= words;
-              return ___FIX(___HEAP_OVERFLOW_ERR);
-            }
+          return ___FIX(___HEAP_OVERFLOW_ERR);
         }
     }
 
@@ -1161,47 +1195,47 @@ int kind;)
    * utilization of the cache.
    */
 
-  if (kind == ___PERM)
-    ptr = alloc_mem_aligned_perm (words,
-                                  8>>___LWS,
-                                  (-___PERM_BODY_OFS)&((8>>___LWS)-1));
-  else
-    ptr = alloc_mem_aligned (words,
-                             8>>___LWS,
-                             (-___STILL_BODY_OFS)&((8>>___LWS)-1));
+  ptr = alloc_mem_aligned (words,
+                           8>>___LWS,
+                           (-___STILL_BODY_OFS)&((8>>___LWS)-1));
 
   if (ptr == 0)
     {
-      if (kind != ___PERM)
-        words_nonmovable -= words;
+      words_nonmovable -= words;
       return ___FIX(___HEAP_OVERFLOW_ERR);
     }
-  else if (kind == ___PERM)
-    {
-      ___WORD *base = ___CAST(___WORD*,ptr);
 
+  base = ___CAST(___WORD*,ptr);
+
+  base[___STILL_LINK_OFS] = still_objs;
+  still_objs = ___CAST(___WORD,base);
+  base[___STILL_REFCOUNT_OFS] = 1;
+  base[___STILL_LENGTH_OFS] = words;
 #ifdef ___USE_HANDLES
-      base[___PERM_HAND_OFS] = ___CAST(___WORD,base+___PERM_BODY_OFS-___BODY_OFS);
+  base[___STILL_HAND_OFS] = ___CAST(___WORD,base+___STILL_BODY_OFS-___BODY_OFS);
 #endif
-      base[___PERM_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___PERM);
+  base[___STILL_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___STILL);
 
-      return ___TAG((base + ___PERM_HAND_OFS - ___BODY_OFS), (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
-    }
+  return ___TAG((base + ___STILL_HAND_OFS - ___BODY_OFS),
+                (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
+}
+
+
+___EXP_FUNC(___WORD,___alloc_scmobj)
+   ___P((int subtype,
+         ___SIZE_TS bytes,
+         int kind),
+        (subtype,
+         bytes,
+         kind)
+int subtype;
+___SIZE_TS bytes;
+int kind;)
+{
+  if (kind == ___PERM)
+    return ___alloc_scmobj_perm (subtype, bytes);
   else
-    {
-      ___WORD *base = ___CAST(___WORD*,ptr);
-
-      base[___STILL_LINK_OFS] = still_objs;
-      still_objs = ___CAST(___WORD,base);
-      base[___STILL_REFCOUNT_OFS] = 1;
-      base[___STILL_LENGTH_OFS] = words;
-#ifdef ___USE_HANDLES
-      base[___STILL_HAND_OFS] = ___CAST(___WORD,base+___STILL_BODY_OFS-___BODY_OFS);
-#endif
-      base[___STILL_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___STILL);
-
-      return ___TAG((base + ___STILL_HAND_OFS - ___BODY_OFS), (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
-    }
+    return ___alloc_scmobj_still (subtype, bytes);
 }
 
 
@@ -1450,6 +1484,46 @@ ___SCMOBJ symkey;)
 }
 
 
+___SCMOBJ ___new_symkey
+   ___P((___SCMOBJ name, /* name must be a permanent object */
+         unsigned int subtype),
+        (name,
+         subtype)
+___SCMOBJ name;
+unsigned int subtype;)
+{
+  ___SCMOBJ obj;
+  ___SCMOBJ tbl;
+
+  switch (subtype)
+    {
+    case ___sKEYWORD:
+      obj = ___alloc_scmobj_perm (___sKEYWORD, ___KEYWORD_SIZE<<___LWS);
+      break;
+    default: /* assume ___sSYMBOL */
+      obj = ___alloc_scmobj_perm (___sSYMBOL, ___SYMBOL_SIZE<<___LWS);
+      break;
+    }
+
+  if (___FIXNUMP(obj))
+    return obj;
+
+  tbl = symkey_table (subtype);
+
+  /* object layout is same for ___sSYMBOL and ___sKEYWORD */
+
+  ___FIELD(obj,___SYMKEY_NAME) = name;
+  ___FIELD(obj,___SYMKEY_HASH) = ___hash_scheme_string (name);
+
+  if (subtype == ___sSYMBOL)
+    ___FIELD(obj,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,___CAST(___glo_struct*,0));
+
+  ___intern_symkey (obj);
+
+  return obj;
+}
+
+
 ___SCMOBJ ___find_symkey_from_UTF_8_string
    ___P((char *str,
          unsigned int subtype),
@@ -1523,47 +1597,7 @@ unsigned int subtype;)
 }
 
 
-___SCMOBJ ___new_symkey
-   ___P((___SCMOBJ name, /* name must be a permanent object */
-         unsigned int subtype),
-        (name,
-         subtype)
-___SCMOBJ name;
-unsigned int subtype;)
-{
-  ___SCMOBJ obj;
-  ___SCMOBJ tbl;
-
-  switch (subtype)
-    {
-    case ___sKEYWORD:
-      obj = ___alloc_scmobj (___sKEYWORD, ___KEYWORD_SIZE<<___LWS, ___PERM);
-      break;
-    default: /* assume ___sSYMBOL */
-      obj = ___alloc_scmobj (___sSYMBOL, ___SYMBOL_SIZE<<___LWS, ___PERM);
-      break;
-    }
-
-  if (___FIXNUMP(obj))
-    return obj;
-
-  tbl = symkey_table (subtype);
-
-  /* object layout is same for ___sSYMBOL and ___sKEYWORD */
-
-  ___FIELD(obj,___SYMKEY_NAME) = name;
-  ___FIELD(obj,___SYMKEY_HASH) = ___hash_scheme_string (name);
-
-  if (subtype == ___sSYMBOL)
-    ___FIELD(obj,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,___CAST(___glo_struct*,0));
-
-  ___intern_symkey (obj);
-
-  return obj;
-}
-
-
-___SCMOBJ ___make_symkey
+___SCMOBJ ___make_symkey_from_UTF_8_string
    ___P((___UTF_8STRING str,
          unsigned int subtype),
         (str,
@@ -1584,6 +1618,35 @@ unsigned int subtype;)
                     -1)) /* allocate as permanent object */
           != ___FIX(___NO_ERR))
         return err;
+
+      obj = ___new_symkey (name, subtype);
+    }
+
+  return obj;
+}
+
+
+___SCMOBJ ___make_symkey_from_scheme_string
+   ___P((___SCMOBJ str,
+         unsigned int subtype),
+        (str,
+         subtype)
+___SCMOBJ str;
+unsigned int subtype;)
+{
+  ___SCMOBJ obj = ___find_symkey_from_scheme_string (str, subtype);
+
+  if (obj == ___FAL)
+    {
+      ___SIZE_T n = ___INT(___STRINGLENGTH(str));
+      ___SCMOBJ name = ___alloc_scmobj_perm (___sSTRING, n<<___LCS);
+
+      if (___FIXNUMP(name))
+        return name;
+
+      memmove (___BODY_AS(name,___tSUBTYPED),
+               ___BODY_AS(str,___tSUBTYPED),
+               n<<___LCS);
 
       obj = ___new_symkey (name, subtype);
     }

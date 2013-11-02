@@ -8352,6 +8352,14 @@ typedef struct ___global_state_struct
        ___P((void *ptr,
              ___SCMOBJ val),
             ());
+    ___SCMOBJ (*___alloc_scmobj_perm)
+       ___P((int subtype,
+             ___SIZE_TS bytes),
+            ());
+    ___SCMOBJ (*___alloc_scmobj_still)
+       ___P((int subtype,
+             ___SIZE_TS bytes),
+            ());
     ___SCMOBJ (*___alloc_scmobj)
        ___P((int subtype,
              ___SIZE_TS bytes,
@@ -9307,6 +9315,14 @@ ___IMP_FUNC(___SCMOBJ,___data_rc)
 ___IMP_FUNC(void,___set_data_rc)
    ___P((void *ptr,
          ___SCMOBJ val),
+        ());
+___IMP_FUNC(___SCMOBJ,___alloc_scmobj_perm)
+   ___P((int subtype,
+         ___SIZE_TS bytes),
+        ());
+___IMP_FUNC(___SCMOBJ,___alloc_scmobj_still)
+   ___P((int subtype,
+         ___SIZE_TS bytes),
         ());
 ___IMP_FUNC(___SCMOBJ,___alloc_scmobj)
    ___P((int subtype,

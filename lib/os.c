@@ -614,7 +614,7 @@ int arg_num;)
     result = ___FAL; /* wildcard address */
   else
     {
-      result = ___alloc_scmobj (___sU8VECTOR, 4, ___STILL);
+      result = ___alloc_scmobj_still (___sU8VECTOR, 4);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -688,7 +688,7 @@ int arg_num;)
     result = ___FAL; /* wildcard address */
   else
     {
-      result = ___alloc_scmobj (___sU16VECTOR, 8<<1, ___STILL);
+      result = ___alloc_scmobj_still (___sU16VECTOR, 8<<1);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -833,7 +833,7 @@ int arg_num;)
       struct in_addr *ia = ___CAST(struct in_addr*,sa);
       ___U32 a;
 
-      result = ___alloc_scmobj (___sU8VECTOR, 4, ___STILL);
+      result = ___alloc_scmobj_still (___sU8VECTOR, 4);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -851,7 +851,7 @@ int arg_num;)
       struct in6_addr *ia = ___CAST(struct in6_addr*,sa);
       int i;
 
-      result = ___alloc_scmobj (___sU16VECTOR, 8<<1, ___STILL);
+      result = ___alloc_scmobj_still (___sU16VECTOR, 8<<1);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);

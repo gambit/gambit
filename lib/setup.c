@@ -314,7 +314,7 @@ int supply;
 ___glo_struct **glo;)
 {
   ___glo_struct *g;
-  ___SCMOBJ sym = ___make_symkey (str, ___sSYMBOL);
+  ___SCMOBJ sym = ___make_symkey_from_UTF_8_string (str, ___sSYMBOL);
 
   if (___FIXNUMP(sym))
     return sym;
@@ -441,7 +441,7 @@ ___module_struct *module;)
       i = 0;
       while (sym_names[i] != 0)
         {
-          ___SCMOBJ sym = ___make_symkey (sym_names[i], ___sSYMBOL);
+          ___SCMOBJ sym = ___make_symkey_from_UTF_8_string (sym_names[i], ___sSYMBOL);
           if (___FIXNUMP(sym))
             return sym;
           symtbl[i] = sym;
@@ -459,7 +459,7 @@ ___module_struct *module;)
       i = 0;
       while (key_names[i] != 0)
         {
-          ___SCMOBJ key = ___make_symkey (key_names[i], ___sKEYWORD);
+          ___SCMOBJ key = ___make_symkey_from_UTF_8_string (key_names[i], ___sKEYWORD);
           if (___FIXNUMP(key))
             return key;
           keytbl[i] = key;
@@ -2497,6 +2497,12 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___set_data_rc
     = ___set_data_rc;
+
+  ___GSTATE->___alloc_scmobj_perm
+    = ___alloc_scmobj_perm;
+
+  ___GSTATE->___alloc_scmobj_still
+    = ___alloc_scmobj_still;
 
   ___GSTATE->___alloc_scmobj
     = ___alloc_scmobj;

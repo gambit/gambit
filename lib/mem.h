@@ -167,6 +167,11 @@ extern void ___intern_symkey
    ___P((___SCMOBJ symkey),
         ());
 
+extern ___SCMOBJ ___new_symkey
+   ___P((___SCMOBJ name,
+         unsigned int subtype),
+        ());
+
 extern ___SCMOBJ ___find_symkey_from_UTF_8_string
    ___P((char *str,
          unsigned int subtype),
@@ -177,13 +182,13 @@ extern ___SCMOBJ ___find_symkey_from_scheme_string
          unsigned int subtype),
         ());
 
-extern ___SCMOBJ ___new_symkey
-   ___P((___SCMOBJ name,
+extern ___SCMOBJ ___make_symkey_from_UTF_8_string
+   ___P((___UTF_8STRING str,
          unsigned int subtype),
         ());
 
-extern ___SCMOBJ ___make_symkey
-   ___P((___UTF_8STRING str,
+extern ___SCMOBJ ___make_symkey_from_scheme_string
+   ___P((___SCMOBJ str,
          unsigned int subtype),
         ());
 
