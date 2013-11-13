@@ -4666,7 +4666,7 @@ function Gambit_trampoline(pc) {
                (^ "\n"
                   name ".prototype." (car method) " = function ("
                   (univ-separated-list "," (cadr method))
-                  ") {"
+                  ") {\n"
                   (univ-indent (caddr method))
                   "}\n"))
              methods)
