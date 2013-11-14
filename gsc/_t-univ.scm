@@ -41,7 +41,7 @@
   'class)
 
 (define (univ-symbol-representation ctx)
-  'class)
+  'host)
 
 (define (univ-tostr-method-name ctx)
   (case (target-name (ctx-target ctx))
@@ -323,11 +323,11 @@
 (univ-prim-proc-add! '("##inline-host-expression" (1) #t 0 0 (#f) extended))
 
 (define (univ-switch-testable? targ obj)
-  (pretty-print (list 'univ-switch-testable? 'targ obj))
+  ;;(pretty-print (list 'univ-switch-testable? 'targ obj))
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (univ-eq-testable? targ obj)
-  (pretty-print (list 'univ-eq-testable? 'targ obj))
+  ;;(pretty-print (list 'univ-eq-testable? 'targ obj))
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (univ-object-type targ obj)
@@ -774,6 +774,9 @@
 
 (define-macro (^symbol? val)
   `(univ-emit-symbol? ctx ,val))
+
+(define-macro (^symtostr val)
+  `(univ-emit-symtostr ctx ,val))
 
 (define-macro (^box? val)
   `(univ-emit-box? ctx ,val))
@@ -2515,7 +2518,7 @@
          ((class)
           (^class-declaration
            (^prefix "Symbol")
-           '((codes #f))
+           '((str #f))
            '()))
 
          (else
@@ -2668,6 +2671,29 @@ EOF
           ((ruby php)
            (^ (^expr-statement (^call-prim "print" (^local-var "obj")))
               (^expr-statement (^call-prim "print" "\"\\n\""))))
+          (else
+           (compiler-internal-error
+            "runtime-system, unknown target"))))
+
+       "\n"
+
+       (^prim-function-declaration
+        (^global-prim-function (^prefix "strtocodes"))
+        (list (cons (^local-var "str") #f))
+        "\n"
+        '()
+        (case (target-name (ctx-target ctx))
+          ((js)
+;;TODO: clean up
+"
+    var codes = [];
+    for (var i=0; i < str.length; i++) {
+        codes.push(str.charCodeAt(i));
+    }
+    return codes;
+")
+          ((php python ruby)
+           (^return (^array-literal '(67 68 69)))) ;; TODO: implement
           (else
            (compiler-internal-error
             "runtime-system, unknown target"))))
@@ -5846,7 +5872,7 @@ tanh
   (case (univ-symbol-representation ctx)
 
     ((class)
-     (^member expr "codes"))
+     (^member expr "str"))
 
     (else
      expr)))
@@ -5875,6 +5901,11 @@ tanh
        (else
         (compiler-internal-error
          "univ-emit-symbol?, unknown target"))))))
+
+(define (univ-emit-symtostr ctx expr)
+  (^call-prim
+   (^global-prim-function (^prefix "strtocodes"))
+   expr))
 
 (define (univ-emit-box? ctx expr)
   (^instanceof (^prefix "Box") expr))
@@ -7448,7 +7479,12 @@ tanh
 ;;TODO: ("##type-super"                   (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-fields"                  (1)   #f ()    0    #f      extended)
 
-;;TODO: ("##symbol->string"               (1)   #f ()    0    string  extended)
+;; TODO: test ##symbol->string primitive
+
+(univ-define-prim "##symbol->string" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^string-box (^symtostr (^symbol-unbox arg1)))))))
 
 ;;TODO: ("##keyword->string"              (1)   #f ()    0    string  extended)
 
