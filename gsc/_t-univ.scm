@@ -7477,6 +7477,7 @@ tanh
         (return (obj-val (car opnds)))
         (compiler-internal-error "##inline-host-expression requires a constant string argument"))))
 
+#|
 ;;(univ-define-prim "string-append" #f (lambda (ctx return opnds) (return (^))))
 
 (univ-define-prim "list->string" #f
@@ -7695,6 +7696,7 @@ tanh
        (else
         (compiler-internal-error
          "##subtype, unknown target"))))))
+|#
 
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
