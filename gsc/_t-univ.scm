@@ -43,9 +43,6 @@
 (define (univ-symbol-representation ctx)
   'class)
 
-(define (univ-pair-representation ctx)
-  'class)
-
 (define (univ-tostr-method-name ctx)
   (case (target-name (ctx-target ctx))
 
@@ -777,6 +774,18 @@
 
 (define-macro (^symbol? val)
   `(univ-emit-symbol? ctx ,val))
+
+(define-macro (^box? val)
+  `(univ-emit-box? ctx ,val))
+
+(define-macro (^box val)
+  `(univ-emit-box ctx ,val))
+
+(define-macro (^unbox val)
+  `(univ-emit-unbox ctx ,val))
+
+(define-macro (^setbox val1 val2)
+  `(univ-emit-setbox ctx ,val1 ,val2))
 
 (define (univ-emit-var-declaration ctx name #!optional (expr #f))
   (case (target-name (ctx-target ctx))
@@ -2509,16 +2518,15 @@
          (else
           (^)))
 
-       (case (univ-pair-representation ctx)
+       (^class-declaration
+        (^prefix "Pair")
+        '((car #f) (cdr #f))
+        '())
 
-         ((class)
-          (^class-declaration
-           (^prefix "Pair")
-           '((car #f) (cdr #f))
-           '()))
-
-         (else
-          (^)))
+       (^class-declaration
+        (^prefix "Box")
+        '((val #f))
+        '())
 
 #|
 //JavaScript toString method:
@@ -5865,6 +5873,19 @@ tanh
         (compiler-internal-error
          "univ-emit-symbol?, unknown target"))))))
 
+(define (univ-emit-box? ctx expr)
+  (^instanceof (^prefix "Box") expr))
+
+(define (univ-emit-box ctx expr)
+  (^new (^prefix "Box") expr))
+
+(define (univ-emit-unbox ctx expr)
+  (^member expr "val"))
+
+(define (univ-emit-setbox ctx expr1 expr2)
+  (^expr-statement
+   (^assign (^member expr1 "val") expr2)))
+
 (define (univ-emit-call-prim ctx name . params)
   (univ-emit-apply ctx name params))
 
@@ -6370,7 +6391,12 @@ tanh
 ;;TODO: ("##ratnum?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##cpxnum?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##structure?"               (1)   #f ()    0    boolean extended)
-;;TODO: ("##box?"                     (1)   #f ()    0    boolean extended)
+
+(univ-define-prim-bool "##box?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^box? arg1)))))
+
 ;;TODO: ("##values?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##meroon?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##jazz?"                    (1)   #f ()    0    boolean extended)
@@ -7184,9 +7210,21 @@ tanh
                         result))
            (return result))))))
 
-;;TODO: ("##box"                          (1)   #f ()    0    #f      extended)
-;;TODO: ("##unbox"                        (1)   #f ()    0    (#f)    extended)
-;;TODO: ("##set-box!"                     (2)   #t ()    0    #f      extended)
+(univ-define-prim "##box" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^box arg1)))))
+
+(univ-define-prim "##unbox" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^unbox arg1)))))
+
+(univ-define-prim "##set-box!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^setbox arg1 arg2)
+        (return arg1)))))
 
 ;;TODO: ("##make-will"                    (2)   #t ()    0    #f      extended)
 ;;TODO: ("##will-testator"                (1)   #f ()    0    (#f)    extended)
