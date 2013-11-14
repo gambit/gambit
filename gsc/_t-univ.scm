@@ -787,6 +787,9 @@
 (define-macro (^setbox val1 val2)
   `(univ-emit-setbox ctx ,val1 ,val2))
 
+(define-macro (^procedure? val)
+  `(univ-emit-procedure? ctx ,val))
+
 (define (univ-emit-var-declaration ctx name #!optional (expr #f))
   (case (target-name (ctx-target ctx))
 
@@ -5886,6 +5889,19 @@ tanh
   (^expr-statement
    (^assign (^member expr1 "val") expr2)))
 
+(define (univ-emit-procedure? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^typeof "function" expr))
+
+    ((python)
+     (^ "hasattr(" expr ", '__call__')"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-procedure?, unknown target"))))
+
 (define (univ-emit-call-prim ctx name . params)
   (univ-emit-apply ctx name params))
 
@@ -6428,7 +6444,14 @@ tanh
 ;;TODO: ("##will?"                    (1)   #f ()    0    boolean extended)
 ;;TODO: ("##gc-hash-table?"           (1)   #f ()    0    boolean extended)
 ;;TODO: ("##mem-allocated?"           (1)   #f ()    0    boolean extended)
-;;TODO: ("##procedure?"               (1)   #f ()    0    boolean extended)
+
+;; TODO: test ##procedure?
+
+(univ-define-prim-bool "##procedure?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^procedure? arg1)))))
+
 ;;TODO: ("##return?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##foreign?"                 (1)   #f ()    0    boolean extended)
 
