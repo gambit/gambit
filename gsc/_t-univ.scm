@@ -6375,9 +6375,22 @@ tanh
    (lambda (ctx return arg1)
      (return (^pair? arg1)))))
 
-;;TODO: ("##pair-mutable?"            (1)   #f ()    0    boolean extended)
+;; TODO: test ##pair-mutable?
+
+(univ-define-prim-bool "##pair-mutable?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^obj #t))))) ;; there are no immutable data (currently)
+
 ;;TODO: ("##subtyped?"                (1)   #f ()    0    boolean extended)
-;;TODO: ("##subtyped-mutable?"        (1)   #f ()    0    boolean extended)
+
+;; TODO: test ##subtyped-mutable?
+
+(univ-define-prim-bool "##subtyped-mutable?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^obj #t))))) ;; there are no immutable data (currently)
+
 ;;TODO: ("##subtyped.vector?"         (1)   #f ()    0    boolean extended)
 ;;TODO: ("##subtyped.symbol?"         (1)   #f ()    0    boolean extended)
 ;;TODO: ("##subtyped.flonum?"         (1)   #f ()    0    boolean extended)
@@ -6391,6 +6404,8 @@ tanh
 ;;TODO: ("##ratnum?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##cpxnum?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##structure?"               (1)   #f ()    0    boolean extended)
+
+;; TODO: test box? primitive
 
 (univ-define-prim-bool "##box?" #t
   (make-translated-operand-generator
@@ -7209,6 +7224,8 @@ tanh
                  (^cons (car lst)
                         result))
            (return result))))))
+
+;; TODO: test box primitives
 
 (univ-define-prim "##box" #t
   (make-translated-operand-generator
