@@ -1,7 +1,7 @@
 ;;;============================================================================
 
-;;; File: "_gsilib.scm", Time-stamp: <2007-12-13 22:56:11 feeley>
+;;; File: "_gsilib.scm"
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================

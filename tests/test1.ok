@@ -352,10 +352,6 @@
 #return(##cprc-future 3) : ($code rte)
 #return(##cprc-future 4) : ($code rte)
 
-#procedure(##cprc-require)
-#return(##cprc-require 1) : ($code rte)
-#return(##cprc-require 2) : ($code rte)
-
 #procedure(##subproblem-apply0)
 #procedure(##subproblem-apply0 1)
 #return(##subproblem-apply0 2) : ($code rte)

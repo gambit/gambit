@@ -39,20 +39,20 @@
 
 ;; sample use:
 ;;
-;; (cf "tak" '((target c)) #f #f)    -- compile tak.scm to tak.c with C back-end
-;; (cf "tak" '() #f #f)              -- compile tak.scm with default back-end
-;; (cf "tak" '() "foo.c" #f)         -- compile tak.scm to foo.c
-;; (cf "tak" '((verbose)) #f #f)     -- produce compiler trace
-;; (cf "tak" '((report)) #f #f)      -- show usage of global variables
-;; (cf "tak" '((gvm)) #f #f)         -- write GVM code on 'tak.gvm'
-;; (cf "tak" '((debug)) #f #f)       -- generate code with debugging info
-;; (cf "tak" '((expansion)) #f #f)   -- show code after source-to-source transf.
-;; (cf "tak" '((asm) (stats)) #f #f) -- various back-end options
+;; (cf "tak" '((target c)) #f #f #f)    -- compile tak.scm to tak.c with C back-end
+;; (cf "tak" '() #f #f #f)              -- compile tak.scm with default back-end
+;; (cf "tak" '() "foo.c" #f #f)         -- compile tak.scm to foo.c
+;; (cf "tak" '((verbose)) #f #f #f)     -- produce compiler trace
+;; (cf "tak" '((report)) #f #f #f)      -- show usage of global variables
+;; (cf "tak" '((gvm)) #f #f #f)         -- write GVM code on 'tak.gvm'
+;; (cf "tak" '((debug)) #f #f #f)       -- generate code with debugging info
+;; (cf "tak" '((expansion)) #f #f #f)   -- show code after source-to-source transf.
+;; (cf "tak" '((asm) (stats)) #f #f #f) -- various back-end options
 
 (define cf #f)
 
 (set! cf
-  (lambda (input opts output-filename-gen mod-name)
+  (lambda (input opts output-filename-gen module-name unique-name)
     (let ((remaining-opts
            (handle-options opts)))
 
@@ -75,7 +75,8 @@
                       (cons (list 'target (default-target)) opts))
                   remaining-opts
                   output-filename-gen
-                  mod-name
+                  module-name
+                  unique-name
                   info-port)))))
 
         result))))
@@ -184,7 +185,8 @@
          opts
          remaining-opts
          output-filename-gen
-         mod-name
+         module-name
+         unique-name
          info-port)
 
   (define (compiler-body)
@@ -213,58 +215,105 @@
                 output-filename
                 (string-append root target.file-extension)))
            (module-name
-            (or mod-name
-                (path-strip-directory root))))
+            (or module-name
+                (path-strip-directory root)))
+           (unique-name
+            (or unique-name
+                module-name)))
 
       (if (not (valid-module-name? module-name))
         (compiler-error
           "Invalid characters in file name (must be a symbol with no \"#\")")
-        (begin
+        (let ()
 
-          (let ((x (read-source input #f #t)))
-            (parse-program
-             (expand-source (wrap-program (##vector-ref x 1)));;;;;;;;;;;;;;
-             (make-global-environment)
-             module-name
-             (lambda (lst env c-intf)
-               (let ((parsed-program (normalize-program lst)))
+          (define (add-loading-of-required-modules ptrees source env comp-scope)
+            (let ((required-modules
+                   (table-ref comp-scope 'required-modules '())))
+              (if (pair? required-modules)
+                  (let ((env
+                         (add-extended-bindings
+                          (add-proper-tail-calls
+                           (add-safe env)))))
+                    (append
+                     (map (lambda (module-ref)
+                            (new-call source env
+                              (new-ref source env
+                                (env-lookup-global-var
+                                 env
+                                 '##load-required-module))
+                              (list (new-cst source env
+                                      module-ref))))
+                          required-modules)
+                     ptrees))
+                  ptrees)))
 
-                 (if compiler-option-expansion
-                   (let ((port (current-output-port)))
-                     (display "Expansion:" port)
-                     (newline port)
-                     (let loop ((l parsed-program))
-                       (if (pair? l)
-                         (let ((ptree (car l)))
-                           (newline port)
-                           (pp-expression (parse-tree->expression ptree) port)
-                           (loop (cdr l)))))
-                     (newline port)))
+          (let* ((v1 (read-source input #f #t))
+                 (script-line (vector-ref v1 0))
+                 (expr (vector-ref v1 1))
+                 (program (expand-source (wrap-program expr)))
+                 (x (##in-new-compilation-scope
+                     (lambda ()
+                       (parse-program
+                        program
+                        (make-global-environment)
+                        module-name
+                        vector))))
+                 (v2 (car x))
+                 (comp-scope (cdr x))
+                 (lst (vector-ref v2 0))
+                 (env (vector-ref v2 1))
+                 (c-intf (vector-ref v2 2))
+                 (ptrees (add-loading-of-required-modules lst program env comp-scope))
+                 (parsed-program (normalize-program ptrees)))
 
-                 (let ((module-procs
-                        (compile-parsed-program module-name
-                                                parsed-program
-                                                env
-                                                c-intf
-                                                info-port)))
+            (if compiler-option-expansion
+                (let ((port (current-output-port)))
+                  (display "Expansion:" port)
+                  (newline port)
+                  (let loop ((l parsed-program))
+                    (if (pair? l)
+                        (let ((ptree (car l)))
+                          (newline port)
+                          (pp-expression (parse-tree->expression ptree) port)
+                          (loop (cdr l)))))
+                  (newline port)))
 
-                   (if compiler-option-report
-                     (generate-report env))
+            (let* ((module-procs
+                    (compile-parsed-program module-name
+                                            parsed-program
+                                            env
+                                            c-intf
+                                            info-port))
+                   (module-meta-info
+                    (append
+                     (table->list comp-scope)
+                     (if script-line
+                         (list (cons 'script-line script-line))
+                         '())))
+                   (module-descr
+                    ;; TODO: support type descriptor
+                    (vector (string->symbol module-name)
+                            (car module-procs)
+                            module-meta-info)))
 
-                   (if compiler-option-gvm
-                     (let ((gvm-port
-                            (open-output-file (string-append root ".gvm"))))
-                       (virtual.dump module-procs gvm-port)
-                       (close-output-port gvm-port)))
+              (if compiler-option-report
+                  (generate-report env))
 
-                   (target.dump
-                    module-procs
-                    output
-                    c-intf
-                    (##vector-ref x 0);;;;;;;;;;;;;;;;;;;;
-                    opts)
+              (if compiler-option-gvm
+                  (let ((gvm-port
+                         (open-output-file (string-append root ".gvm"))))
+                    (virtual.dump module-procs gvm-port)
+                    (close-output-port gvm-port)))
 
-                   (dump-c-intf module-procs root c-intf))))))
+              (target.dump
+               module-procs
+               output
+               c-intf
+               module-descr
+               unique-name
+               opts)
+
+              (dump-c-intf module-procs root c-intf)))
 
           (target-unselect!)
           (virtual.end!)

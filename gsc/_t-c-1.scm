@@ -302,7 +302,7 @@
 ;;
 ;; Dumping of a compilation module
 
-(define (targ-dump procs output c-intf script-line options)
+(define (targ-dump procs output c-intf module-descr unique-name options)
   (let ((c-decls (c-intf-decls c-intf))
         (c-procs (c-intf-procs c-intf))
         (c-inits (c-intf-inits c-intf))
@@ -340,13 +340,16 @@
     (if targ-info-port
       (newline targ-info-port))
 
+    (targ-use-obj module-descr)
+
     (targ-heap-dump
-      output
-      (proc-obj-name (car procs))
-      c-decls
-      c-inits
-      (map targ-use-obj c-objs)
-      script-line)
+     output
+     (proc-obj-name (car procs))
+     c-decls
+     c-inits
+     (map targ-use-obj c-objs)
+     module-descr
+     unique-name)
 
     (targ-heap-end!)
 
@@ -747,6 +750,11 @@
               (if x
                 (ref-subtyped-obj x)
                 (err))))
+           ((procedure)
+            (let ((x (table-ref targ-prc-objs-seen obj #f)))
+              (if x
+                  (cons "REF_PRC" (cdddr x))
+                  (err))))
            (else
             (ref-subtyped-obj obj)))))
       ((boolean)
@@ -816,7 +824,11 @@
               (let loop ((lst input-infos)
                          (last-script-line #f))
                 (if (pair? lst)
-                  (let ((script-line (targ-mod-script-line (car lst))))
+                  (let* ((module-meta-info
+                          (targ-mod-meta-info (car lst)))
+                         (script-line
+                          (cond ((assq 'script-line module-meta-info) => cdr)
+                                (else #f))))
                     (loop (cdr lst)
                           (or script-line
                               last-script-line)))
@@ -868,7 +880,7 @@
 (define (targ-mod-glo-rsrc module-info)
   (vector-ref module-info 4))
 
-(define (targ-mod-script-line module-info)
+(define (targ-mod-meta-info module-info)
   (vector-ref module-info 5))
 
 (define targ-generated-c-file-first-line
@@ -946,7 +958,7 @@
 ;; These routines write out the C code that represents the Scheme objects
 ;; contained in the compilation module.
 
-(define (targ-heap-dump filename name c-decls c-inits c-objs script-line)
+(define (targ-heap-dump filename name c-decls c-inits c-objs module-descr unique-name)
   (let* ((sym-list
           (targ-sort (table->list targ-sym-objs) symbol->string))
          (key-list
@@ -968,7 +980,12 @@
          (glo-rsrc
           (map targ-glo-rsrc glo-list))
          (ofd-count
-          (targ-get-ofd-count prc-list)))
+          (targ-get-ofd-count prc-list))
+         (module-meta-info
+          (vector-ref module-descr 2))
+         (script-line
+          (cond ((assq 'script-line module-meta-info) => cdr)
+                (else #f))))
 
     (targ-start-dump
      filename
@@ -977,9 +994,14 @@
      sym-rsrc
      key-rsrc
      glo-rsrc
-     script-line)
+     module-meta-info)
 
-    (targ-dump-module-info name #f #f script-line)
+    (targ-dump-module-info
+     name
+     (string-append module-prefix unique-name)
+     #f
+     #f
+     script-line)
 
     (targ-define-count "SYMCOUNT" (length sym-list))
     (targ-define-count "KEYCOUNT" (length key-list))
@@ -989,6 +1011,7 @@
     (targ-define-count "SUBCOUNT" (length sub-list))
     (targ-define-count "LBLCOUNT" targ-lbl-alloc)
     (targ-define-count "OFDCOUNT" ofd-count)
+    (targ-define-count "MODDESCR" (targ-heap-ref-obj module-descr))
     (targ-display "#include \"gambit.h\"")
     (targ-line)
 
@@ -1036,9 +1059,14 @@
      sym-rsrc
      key-rsrc
      glo-rsrc
-     script-line)
+     #f)
 
-    (targ-dump-module-info name #t extension? script-line)
+    (targ-dump-module-info
+     name
+     name
+     #t
+     extension?
+     script-line)
 
     (targ-display "#include \"gambit.h\"")
     (targ-line)
@@ -1069,7 +1097,7 @@
          sym-rsrc
          key-rsrc
          glo-rsrc
-         script-line)
+         module-meta-info)
 
   (set! targ-port (open-output-file filename))
   (set! targ-line-size 0)
@@ -1108,9 +1136,9 @@
   (targ-write-rsrc-names (keep targ-rsrc-supplied-and-not-demanded? glo-rsrc))
   (targ-write-rsrc-names (keep targ-rsrc-not-supplied? glo-rsrc))
 
-  (display " " targ-port) ; some C preprocessors don't like #f at the
-                          ; beginning of a line
-  (write script-line targ-port)
+  (display " " targ-port) ;; some C preprocessors don't like #f or #( at the
+                          ;; beginning of a line
+  (write module-meta-info targ-port)
   (targ-line)
 
   (targ-display ")")
@@ -1143,7 +1171,7 @@
   (targ-display ")")
   (targ-line))
 
-(define (targ-dump-module-info name linkfile? extension? script-line)
+(define (targ-dump-module-info name linker-id linkfile? extension? script-line)
 
   (targ-macro-definition '("VERSION")
                          (compiler-version))
@@ -1154,7 +1182,7 @@
                          (targ-c-string name))
 
   (targ-macro-definition '("LINKER_ID")
-                         (targ-c-id-linker name))
+                         (targ-c-id-linker linker-id))
 
   (if linkfile?
 
@@ -1851,7 +1879,7 @@
 
 (define (targ-dump-mod objs c-inits sym-list key-list)
 
-  (targ-code* '("BEGIN_MOD1"))
+  (targ-code* '("BEGIN_MOD_PRM"))
 
   (for-each
     (lambda (obj)
@@ -1864,17 +1892,23 @@
                           (caddr p)))))
     objs)
 
+  (targ-code* '("END_MOD_PRM"))
+
+  (targ-line)
+
+  (targ-code* '("BEGIN_MOD_C_INIT"))
+
   (for-each
     (lambda (x)
       (targ-display x)
       (targ-line))
     c-inits)
 
-  (targ-code* '("END_MOD1"))
+  (targ-code* '("END_MOD_C_INIT"))
 
   (targ-line)
 
-  (targ-code* '("BEGIN_MOD2"))
+  (targ-code* '("BEGIN_MOD_SYM_KEY"))
 
   (for-each
     (lambda (s)
@@ -1894,7 +1928,7 @@
                           (targ-c-string name)))))
     key-list)
 
-  (targ-code* '("END_MOD2")))
+  (targ-code* '("END_MOD_SYM_KEY")))
 
 (define (targ-extract-primitives objs)
   (let loop ((objs objs) (prms '()))
