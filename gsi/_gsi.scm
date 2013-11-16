@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_gsi.scm", Time-stamp: <2008-12-15 11:31:47 feeley>
+;;; File: "_gsi.scm"
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 (##define-macro (interpreter-or x)
   #t)

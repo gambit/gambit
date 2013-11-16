@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -87,18 +87,18 @@
                   expanded-output)
                  target.file-extension)
                 expanded-output)))
-         (module-name-gen
-          (lambda ()
-            (or mod-name
-                (##path-strip-directory
-                 (##path-strip-extension
-                  (if output-directory?
-                      filename
-                      expanded-output)))))))
+         (module-name
+          (or mod-name
+              (##path-strip-directory
+               (##path-strip-extension
+                (if output-directory?
+                    filename
+                    expanded-output))))))
     (c#cf filename
           options
           output-filename-gen
-          (module-name-gen))))
+          module-name
+          module-name)))
 
 (define (compile-file
          filename
@@ -216,14 +216,19 @@
            (output-dir
             (##path-directory output-filename))
            (output-filename-no-dir
-            (##path-strip-directory output-filename)))
+            (##path-strip-directory output-filename))
+           (module-name
+            (##path-strip-extension output-filename-no-dir))
+           (unique-name
+            (if (##eq? type 'dyn)
+                output-filename-no-dir
+                module-name)))
       (and (or input-is-c-file?
                (c#cf filename
                      options
                      (lambda () c-filename)
-                     (if (##eq? type 'dyn)
-                         output-filename-no-dir
-                         (##path-strip-extension output-filename-no-dir))))
+                     module-name
+                     unique-name))
            (let ((exit-status
                   (##gambc-cc
                    type

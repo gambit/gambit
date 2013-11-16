@@ -1997,6 +1997,12 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___REF_CNS(i)((___CAST(___WORD,i)<<___TB)+___tMEM2)
 #define ___REF_SUB(i)((___CAST(___WORD,i)<<___TB)+___tMEM1)
 
+#ifdef ___SUBCOUNT
+#define ___REF_PRC(i)((___CAST(___WORD,___SUBCOUNT+i)<<___TB)+___tMEM1)
+#else
+#define ___REF_PRC(i)((___CAST(___WORD,i)<<___TB)+___tMEM1)
+#endif
+
 /*---------------------------------------------------------------------------*/
 
 /* Miscellaneous macros */
@@ -5572,10 +5578,21 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 #define ___SUBTBL 0,0
 #endif
 
+#define ___BEGIN_MOD_PRM ___BEGIN_MOD1
+#define ___END_MOD_PRM
+
+#define ___BEGIN_MOD_C_INIT
+#define ___END_MOD_C_INIT ___END_MOD1
+
+#define ___BEGIN_MOD_SYM_KEY ___BEGIN_MOD2
+#define ___END_MOD_SYM_KEY ___END_MOD2
+
 #define ___BEGIN_MOD1 ___LOCAL ___WORD ___init_proc ___PVOID { \
 ___processor_state ___ps=___PSTATE;
 #define ___DEF_PRM(i,glo,n)___PRM(i,glo)=___GLO(i,glo)=___MLBL(n);
 #define ___END_MOD1 return ___FIX(___NO_ERR); }
+
+#ifdef ___MODDESCR
 
 #define ___BEGIN_MOD2 ___LOCAL ___module_struct ___module_descr = { \
   ___VERSION, \
@@ -5593,6 +5610,7 @@ ___processor_state ___ps=___PSTATE;
   ___SCRIPT_LINE, \
   0,\
   0,0,0,0,0,0,0,0 \
+,___MODDESCR /* TODO: move with above */ \
 }; \
 ___BEGIN_C_LINKAGE \
 ___EXP_FUNC(___mod_or_lnk,___LINKER_ID) \
@@ -5605,6 +5623,41 @@ ___global_state ___gs;) \
   return (___mod_or_lnk)&___module_descr; \
 } \
 ___END_C_LINKAGE
+
+#else
+/* TODO: remove this definition.*/
+
+#define ___BEGIN_MOD2 ___LOCAL ___module_struct ___module_descr = { \
+  ___VERSION, \
+  ___MODULE_KIND, \
+  ___MODULE_NAME, \
+  ___MODULE_FLAGS, \
+  ___GLOTBL, \
+  ___SYMTBL, \
+  ___KEYTBL, \
+  ___LBLTBL, \
+  ___OFDTBL, \
+  ___CNSTBL, \
+  ___SUBTBL, \
+  ___init_proc, \
+  ___SCRIPT_LINE, \
+  0,\
+  0,0,0,0,0,0,0,0 \
+,___REF_FAL \
+};              \
+___BEGIN_C_LINKAGE \
+___EXP_FUNC(___mod_or_lnk,___LINKER_ID) \
+   ___P((___global_state ___gs), \
+        (___gs) \
+___global_state ___gs;) \
+{ \
+  ___SET_LOCAL_GSTATE(___gs)
+#define ___END_MOD2 \
+  return (___mod_or_lnk)&___module_descr; \
+} \
+___END_C_LINKAGE
+
+#endif
 
 #ifdef ___LIBRARY
 
@@ -7069,17 +7122,6 @@ ___WORD reached_gc_hash_tables_;
 ___rc_header rc_head_;
 
 /*
- * Permanent objects are allocated in sections called "psections".
- * Each section contains multiple objects.  The sections are kept in a
- * list so that the storage they occupy can be reclaimed when the
- * program terminates.
- */
-
-void *psections_;       /* list of psections */
-___WORD *palloc_ptr_;   /* allocation pointer in current psection */
-___WORD *palloc_limit_; /* allocation limit in current psection */
-
-/*
  * Garbage collection statistics.
  */
 
@@ -7101,6 +7143,21 @@ ___F64 last_gc_nonmovable_;
 } ___vmstate_mem;
 
 typedef struct ___gstate_mem_struct {
+
+  /*
+   * Permanent objects are allocated in sections called "psections".
+   * Each section contains multiple objects.  The sections are kept in a
+   * list so that the storage they occupy can be reclaimed when the
+   * program terminates.
+   */
+
+  void *psections;       /* list of psections */
+  ___WORD *palloc_ptr;   /* allocation pointer in current psection */
+  ___WORD *palloc_limit; /* allocation limit in current psection */
+
+  /*
+   * Global variables.
+   */
 
   ___SIZE_T nb_glo_vars;    /* number of global variables */
 
@@ -7254,6 +7311,9 @@ typedef struct ___module_struct
     void (*dummy3) ___PVOID;
     void (*dummy2) ___PVOID;
     void (*dummy1) ___PVOID;
+
+    ___SCMOBJ moddescr; /* module descriptor */
+
   } ___module_struct;
 
 /* Linkfile structure */

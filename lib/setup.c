@@ -2,7 +2,7 @@
 
 /* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
 
-/* 
+/*
  * This module contains the routines that setup the Scheme program for
  * execution.
  */
@@ -20,7 +20,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-/* 
+/*
  * Global state structure.
  */
 
@@ -37,7 +37,7 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
 
 /*---------------------------------------------------------------------------*/
 
-/* 
+/*
  * Interrupt handling.
  */
 
@@ -61,7 +61,7 @@ int code;)
 {
   ___processor_state ___ps = ___PSTATE;
 
-  /* 
+  /*
    * Note: ___raise_interrupt may be called before the processor state
    * is initialized.  As a consequence, the interrupt(s) received
    * before the initialization of the processor state will be ignored.
@@ -265,38 +265,34 @@ ___SCMOBJ (*proc) ();)
 
 
 ___HIDDEN void fixref
-   ___P((___SCMOBJ *p,
-         ___SCMOBJ *symtbl,
-         ___SCMOBJ *keytbl,
-         ___SCMOBJ *cnstbl,
-         ___SCMOBJ *subtbl),
-        (p,
-         symtbl,
-         keytbl,
-         cnstbl,
-         subtbl)
-___SCMOBJ *p;
-___SCMOBJ *symtbl;
-___SCMOBJ *keytbl;
-___SCMOBJ *cnstbl;
-___SCMOBJ *subtbl;)
+   ___P((___module_struct *module,
+         ___SCMOBJ *p),
+        (module,
+         p)
+___module_struct *module;
+___SCMOBJ *p;)
 {
   ___SCMOBJ v = *p;
   switch (___TYP(v))
     {
     case ___tMEM1:
       if (___INT(v)<0)
-        *p = keytbl[-1-___INT(v)];
+        *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-___INT(v)];
       else
-        *p = subtbl[___INT(v)];
+        {
+          int n = ___INT(v);
+          if (n < module->subcount)
+            *p = ___CAST(___SCMOBJ*,module->subtbl)[n];
+          else
+            *p = ___TAG(___CAST(___SCMOBJ*,&module->lbltbl[n-module->subcount]),___tSUBTYPED);
+        }
       break;
 
     case ___tMEM2:
       if (___INT(v)<0)
-        *p = symtbl[-1-___INT(v)];
+        *p = ___CAST(___SCMOBJ*,module->symtbl)[-1-___INT(v)];
       else
-        *p = ___TAG(___ALIGNUP(&cnstbl[(___PAIR_SIZE+1)*___INT(v)],___WS),
-                    ___tPAIR);
+        *p = ___TAG(&___CAST(___SCMOBJ*,module->cnstbl)[(___PAIR_SIZE+1)*___INT(v)], ___tPAIR);
       break;
     }
 }
@@ -344,7 +340,6 @@ fem_context *ctx;
 ___module_struct *module;)
 {
   int i, j;
-  ___SCMOBJ *cns;
   int flags;
   ___FAKEWORD *glotbl;
   int supcount;
@@ -356,7 +351,7 @@ ___module_struct *module;)
   int keycount;
   ___UTF_8STRING *key_names;
   ___SCMOBJ *lp;
-  ___SCMOBJ *lbltbl;
+  ___label_struct *lbltbl;
   int lblcount;
   ___SCMOBJ *ofdtbl;
   int ofd_length;
@@ -364,6 +359,8 @@ ___module_struct *module;)
   int cnscount;
   ___SCMOBJ *subtbl;
   int subcount;
+
+  /* TODO: make this phase atomic for when there are multiple VMs? */
 
   lblcount = module->lblcount;
 
@@ -377,7 +374,6 @@ ___module_struct *module;)
 
   module->flags = flags | ___SETUP_PHASE1_DONE;
 
-  cns        = 0;
   glotbl     = module->glotbl;
   supcount   = module->supcount;
   glo_names  = module->glo_names;
@@ -388,7 +384,7 @@ ___module_struct *module;)
   keycount   = module->keycount;
   key_names  = module->key_names;
   lp         = module->lp;
-  lbltbl     = ___CAST(___SCMOBJ*,module->lbltbl);
+  lbltbl     = module->lbltbl;
   ofdtbl     = module->ofdtbl;
   ofd_length = module->ofd_length;
   cnstbl     = module->cnstbl;
@@ -396,7 +392,7 @@ ___module_struct *module;)
   subtbl     = ___CAST(___SCMOBJ*,module->subtbl);
   subcount   = module->subcount;
 
-  /* 
+  /*
    * Check that the version of the compiler used to compile the module
    * is compatible with the compiler used to compile the runtime
    * system.
@@ -408,16 +404,20 @@ ___module_struct *module;)
   if (module->version / 10000 > ___VERSION / 10000)
     return ___FIX(___MODULE_VERSION_TOO_NEW_ERR);
 
-  /* Align module's pair table */
+  /* Align label table and pair table */
 
-  if (cnstbl != 0)
-    cns = align (cnstbl, (___PAIR_SIZE+1)*cnscount, 0);
+  lbltbl = ___CAST(___label_struct*,
+                   align (___CAST(___SCMOBJ*,lbltbl), lblcount*___LS, 0));
+  module->lbltbl = lbltbl;
+
+  cnstbl = align (cnstbl, (___PAIR_SIZE+1)*cnscount, 0);
+  module->cnstbl = cnstbl;
 
   /* Setup module's global variable table */
 
   if (glo_names != 0)
     {
-      /* 
+      /*
        * Create global variables in reverse order so that global
        * variables bound to c-lambdas are created last.
        */
@@ -449,8 +449,10 @@ ___module_struct *module;)
         }
     }
   else
-    for (i=symcount-1; i>=0; i--)
-      symtbl[i] = ___TAG(___ALIGNUP(symtbl[i], ___WS), ___tSUBTYPED);
+    {
+      for (i=symcount-1; i>=0; i--)
+        symtbl[i] = ___TAG(___ALIGNUP(symtbl[i], ___WS), ___tSUBTYPED);
+    }
 
   /* Setup module's keyword table */
 
@@ -467,21 +469,27 @@ ___module_struct *module;)
         }
     }
   else
-    for (i=keycount-1; i>=0; i--)
-      keytbl[i] = ___TAG(___ALIGNUP(keytbl[i], ___WS), ___tSUBTYPED);
+    {
+      for (i=keycount-1; i>=0; i--)
+        keytbl[i] = ___TAG(___ALIGNUP(keytbl[i], ___WS), ___tSUBTYPED);
+    }
 
   /* Setup module's subtyped object table */
 
   for (i=subcount-1; i>=0; i--)
     subtbl[i] = align_subtyped (___CAST(___SCMOBJ*,subtbl[i]));
 
+  /* Fix reference in module's descriptor */
+
+  fixref (module, &module->moddescr);
+
   /* Fix references in module's pair table */
 
   for (i=cnscount-1; i>=0; i--)
-  {
-    fixref (cns+i*(___PAIR_SIZE+1)+1, symtbl, keytbl, cnstbl, subtbl);
-    fixref (cns+i*(___PAIR_SIZE+1)+2, symtbl, keytbl, cnstbl, subtbl);
-  }
+    {
+      fixref (module, cnstbl+i*(___PAIR_SIZE+1)+1);
+      fixref (module, cnstbl+i*(___PAIR_SIZE+1)+2);
+    }
 
   /* Fix references in module's subtyped object table */
 
@@ -500,14 +508,13 @@ ___module_struct *module;)
         case ___sRATNUM:
         case ___sCPXNUM:
           for (i=1; i<=words; i++)
-            fixref (p+i, symtbl, keytbl, cnstbl, subtbl);
+            fixref (module, p+i);
         }
     }
 
   /* Align module's out-of-line frame descriptor table */
 
-  if (ofdtbl != 0)
-    ofdtbl = ___CAST(___SCMOBJ*,align (ofdtbl, ofd_length, 0));
+  ofdtbl = ___CAST(___SCMOBJ*,align (ofdtbl, ofd_length, 0));
 
   /* Align module's label table */
 
@@ -515,19 +522,22 @@ ___module_struct *module;)
     {
       ___host current_host = 0;
       void **hlbl_ptr = 0;
-      ___label_struct *new_lt;
       ___SCMOBJ *ofd_alloc;
 
-      new_lt = ___CAST(___label_struct*,align (lbltbl, lblcount*___LS, 0));
       ofd_alloc = ofdtbl;
 
       for (i=0; i<lblcount; i++)
         {
-          ___label_struct *lbl = &new_lt[i];
+          ___label_struct *lbl = &lbltbl[i];
           ___SCMOBJ head = lbl->header;
 
           if (___TESTHEADERTAG(head,___sVECTOR))
             {
+              /*
+               * Setup name returned by
+               * (##subprocedure-parent-name proc)
+               */
+
               ___UTF_8STRING name =
                 ___CAST(___UTF_8STRING,
                         ___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(lbl->host_label));
@@ -536,6 +546,8 @@ ___module_struct *module;)
                 lbl->host_label = ___CAST(___FAKEVOIDSTAR,___FAL);
               else
                 {
+                  /* TODO: the time needed to create these symbols dynamically dominates the module setup time... optimize by using the local symbol table... this may require changes to the linker */
+
                   ___SCMOBJ sym =
                     ___find_symkey_from_UTF_8_string (name, ___sSYMBOL);
 
@@ -548,23 +560,44 @@ ___module_struct *module;)
                   lbl->host_label = ___CAST(___FAKEVOIDSTAR,sym);
                 }
 
-              fixref (&lbl->entry_or_descr, symtbl, keytbl, cnstbl, subtbl);
+              /*
+               * Setup debugging information returned by
+               * (##subprocedure-parent-info proc)
+               */
+
+              fixref (module, &lbl->entry_or_descr);
 
               if (hlbl_ptr != 0)
                 hlbl_ptr++; /* skip INTRO label */
             }
           else
             {
-              if (flags & ___USES_INDIRECT_GOTO) /* module uses indirect goto statement? */
+              if (flags & ___USES_INDIRECT_GOTO)
                 {
+                  /*
+                   * The module uses the indirect goto statement, so
+                   * we must call the current C host function to get
+                   * the table of goto labels used to initialize the
+                   * label structures.  This should be done once per C
+                   * host function.
+                   */
+
                   if (___CAST_FAKEHOST_TO_HOST(lbl->host) != current_host)
                     {
                       current_host = ___CAST_FAKEHOST_TO_HOST(lbl->host);
                       hlbl_ptr = ___CAST(void**,current_host (0));
                       hlbl_ptr++; /* skip INTRO label */
                     }
+
                   lbl->host_label = ___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(*hlbl_ptr++);
                 }
+
+              /*
+               * Return labels contain a GC map descriptor which has
+               * to be setup if it is out-of-line (which happens when
+               * the stack frame is large.
+               */
+
               if (head == ___MAKE_HD((3<<___LWS),___sRETURN,___PERM))
                 {
                   ___SCMOBJ descr;
@@ -583,7 +616,7 @@ ___module_struct *module;)
                 lbl->entry_or_descr = ___TAG(&lbl->header,___tSUBTYPED);
             }
         }
-      *lp = ___TAG(new_lt,___tSUBTYPED);
+      *lp = ___TAG(lbltbl,___tSUBTYPED);
     }
 
   return ___FIX(___NO_ERR);
@@ -613,9 +646,10 @@ ___module_struct *module;)
       int glocount = module->glocount;
       int supcount = module->supcount;
       int i;
+
       for (i=supcount; i<glocount; i++)
         {
-          /* 
+          /*
            * If the global variable is undefined, add it to the list
            * of undefined variables in the module descriptor.
            */
@@ -640,31 +674,21 @@ ___module_struct *module;)
               if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
                            (name+module_prefix_length,
                             &module_name,
-                            0))
+                            -1)) /* allocate as permanent object */
                   != ___FIX(___NO_ERR))
-                {
-                  ___release_scmobj (glo_name);
-                  return ___FIX(err);
-                }
+                return ___FIX(err);
 
-              pair1 = ___make_pair (glo_name, module_name, ___STILL);
-
-              ___release_scmobj (glo_name);
-              ___release_scmobj (module_name);
+              pair1 = ___make_pair (glo_name, module_name, ___PERM);
 
               if (___FIXNUMP(pair1))
                 return pair1;
 
-              pair2 = ___make_pair (pair1, ___FIELD(ctx->module_descr,1), ___STILL);
-
-              ___release_scmobj (pair1);
+              pair2 = ___make_pair (pair1, ___FIELD(ctx->module_descr,1), ___PERM);
 
               if (___FIXNUMP(pair2))
                 return pair2;
 
               ___FIELD(ctx->module_descr,1) = pair2;
-
-              ___release_scmobj (pair2);
             }
         }
     }
@@ -683,32 +707,31 @@ ___module_struct *module;)
 {
   if (module->lblcount > 0)
     {
-      ___SCMOBJ err;
-      ___SCMOBJ mod_name;
-      ___SCMOBJ descr = ___make_vector (2, ___FAL, ___STILL);
+      ___SCMOBJ descr = module->moddescr;
 
-      if (___FIXNUMP(descr))
-        return descr;
-
-      if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
-                   (module->name+1,
-                    &mod_name,
-                    0))
-          != ___FIX(___NO_ERR))
+      /* TODO: obsolete code */
+      if (descr == ___FAL)
         {
-          ___release_scmobj (descr);
-          return err;
+          ___SCMOBJ err;
+          ___SCMOBJ mod_name;
+
+          descr = ___make_vector (3, ___FAL, ___PERM);
+
+          if (___FIXNUMP(descr))
+            return descr;
+
+          if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
+                       (module->name+1,
+                        &mod_name,
+                        -1)) /* allocate as permanent object */
+              != ___FIX(___NO_ERR))
+            return err;
+
+          ___FIELD(descr,0) = mod_name;
+          ___FIELD(descr,1) = *module->lp+___LS*___WS;
         }
 
-      ___FIELD(descr,0) = mod_name;
-
-      ___release_scmobj (mod_name);
-
-      ___FIELD(descr,1) = *module->lp+___LS*___WS;
-
       ___FIELD(___FIELD(ctx->module_descr,0),ctx->module_count) = descr;
-
-      ___release_scmobj (descr);
 
       ctx->module_count++;
     }
@@ -755,7 +778,7 @@ ___mod_or_lnk mol;)
 {
   ___SCMOBJ result;
 
-  result = ___make_vector (3, ___NUL, ___STILL);
+  result = ___make_vector (3, ___NUL, ___PERM);
 
   if (!___FIXNUMP(result))
     {
@@ -775,12 +798,11 @@ ___mod_or_lnk mol;)
                                          setup_module_phase2))
               == ___FIX(___NO_ERR))
             {
-              result = ___make_vector (ctx->module_count, ___FAL, ___STILL);
+              result = ___make_vector (ctx->module_count, ___FAL, ___PERM);
 
               if (!___FIXNUMP(result))
                 {
                   ___FIELD(ctx->module_descr,0) = result;
-                  ___release_scmobj (result);
 
                   ctx->module_count = 0;
 
@@ -794,20 +816,16 @@ ___mod_or_lnk mol;)
                       if ((result = ___UTF_8STRING_to_SCMOBJ
                                       (get_script_line (mol),
                                        &script_line,
-                                       0))
+                                       -1)) /* allocate as permanent object */
                           == ___FIX(___NO_ERR))
                         {
                           ___FIELD(ctx->module_descr,2) = script_line;
-                          ___release_scmobj (script_line);
                           result = ctx->module_descr;
                         }
                     }
                 }
             }
         }
-
-      if (___FIXNUMP(result))
-        ___release_scmobj (ctx->module_descr);
     }
 
   return result;
@@ -840,8 +858,6 @@ ___SCMOBJ modname;)
           mol->linkfile.version = -1; /* mark link file as 'setup' */
         }
     }
-
-  ___release_scmobj (result);
 
   return result;
 }
@@ -1368,7 +1384,7 @@ double y;)
 
 /*---------------------------------------------------------------------------*/
 
-/* 
+/*
  * Initialization of symbol and keyword tables, and global variables.
  */
 
@@ -1549,7 +1565,7 @@ ___SCMOBJ stack_marker;)
   ___SCMOBJ *___fp = ___ps->fp;
   ___SCMOBJ ___err;
 
-  /* 
+  /*
    * The C function which has called ___call() has put the arguments
    * of the Scheme procedure on the stack above ___fp as shown in the
    * 'on entry' picture below.  The free space under arg1 is for a
@@ -1637,42 +1653,6 @@ ___SCMOBJ err;)
 }
 
 
-#ifdef ___DEBUG
-
-___SCMOBJ find_global_var_bound_to
-   ___P((___SCMOBJ val),
-        (val)
-___SCMOBJ val;)
-{
-  ___processor_state ___ps = ___PSTATE;
-  ___SCMOBJ sym = ___NUL;
-  int i;
-
-  for (i = ___INT(___VECTORLENGTH(___GSTATE->symbol_table)) - 1; i>0; i--)
-    {
-      sym = ___FIELD(___GSTATE->symbol_table,i);
-
-      while (sym != ___NUL)
-       {
-          ___glo_struct *g = ___GLOBALVARSTRUCT(sym);
-
-          if (g != 0 &&
-              (___PRMCELL(g->prm) == val || ___GLOCELL(g->val) == val))
-            {
-              i = 0;
-              break;
-            }
-
-          sym = ___FIELD(sym,___SYMKEY_NEXT);
-        }
-    }
-
-  return sym;
-}
-
-#endif
-
-
 #ifdef ___DEBUG_HOST_CHANGES
 
 ___EXP_FUNC(void,___register_host_entry)
@@ -1690,8 +1670,8 @@ char *module_name;)
 
   ___printf ("*** Entering ");
 
-  if ((sym = find_global_var_bound_to (___ps->pc)) != ___NUL ||
-      (sym = find_global_var_bound_to (start)) != ___NUL)
+  if ((sym = ___find_global_var_bound_to (___ps->pc)) != ___NUL ||
+      (sym = ___find_global_var_bound_to (start)) != ___NUL)
     {
       ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
       int i;
@@ -1879,13 +1859,30 @@ ___EXP_FUNC(___program_startup_info_struct*,___get_program_startup_info)
 }
 
 
+___HIDDEN ___SCMOBJ setup_command_line_arguments ___PVOID
+{
+  ___UCS_2STRING *argv = ___GSTATE->setup_params.argv;
+
+  if (argv[0] == 0) /* use dummy program name if none supplied */
+    argv = ___GSTATE->setup_params.reset_argv;
+
+#define ___COMMAND_LINE_CE_SELECT(ISO_8859_1,UTF_8,UCS_2,UCS_4,wchar,native) UCS_2
+
+  return ___NONNULLSTRINGLIST_to_SCMOBJ
+           (argv,
+            &___GSTATE->command_line,
+            -1, /* allocate as permanent object */
+            ___CE(___COMMAND_LINE_CE_SELECT));
+}
+
+
 ___HIDDEN void setup_kernel_handlers ___PVOID
 {
   ___SCMOBJ ___start;
 
 #define ___PH_LBL0 1
 
-  /* 
+  /*
    * The label numbers must match those in the procedure
    * "##kernel-handlers" in the file "_kernel.scm".
    */
@@ -1907,7 +1904,7 @@ ___HIDDEN void setup_kernel_handlers ___PVOID
   ___GSTATE->handler_break           = ___LBL(12);
   ___GSTATE->internal_return         = ___LBL(13);
 
-  /* 
+  /*
    * The label numbers must match those in the procedure
    * "##dynamic-env-bind" in the file "_kernel.scm".
    */
@@ -1922,7 +1919,7 @@ ___HIDDEN void setup_kernel_handlers ___PVOID
 
 ___HIDDEN void setup_dynamic_linking ___PVOID
 {
-  /* 
+  /*
    * Setup global state to avoid problems on systems that don't
    * support the dynamic loading of files that import functions.
    */
@@ -2639,7 +2636,7 @@ ___processor_state ___ps;)
   for (i=0; i<___NB_GVM_REGS; i++)
     ___ps->r[i] = ___VOID;
 
-  /* 
+  /*
    * Setup exception handling.
    */
 
@@ -2649,7 +2646,7 @@ ___processor_state ___ps;)
 
 #endif
 
-  /* 
+  /*
    * Setup interrupt system.
    */
 
@@ -2699,6 +2696,28 @@ ___virtual_machine_state ___vms;)
 }
 
 
+___HIDDEN ___SCMOBJ setup_os_and_mem ___PVOID
+{
+  ___SCMOBJ err;
+
+  /*
+   * Setup the operating system module.
+   */
+
+  if ((err = ___setup_os ()) == ___FIX(___NO_ERR))
+    {
+      /*
+       * Setup memory management.
+       */
+
+      if ((err = ___setup_mem ()) != ___FIX(___NO_ERR))
+        ___cleanup_os ();
+    }
+
+  return err;
+}
+
+
 ___EXP_FUNC(___SCMOBJ,___setup)
    ___P((___setup_params_struct *setup_params),
         (setup_params)
@@ -2718,35 +2737,29 @@ ___setup_params_struct *setup_params;)
     return ___FIX(___UNKNOWN_ERR);
 
   /*
+   * Remember setup parameters.
+   */
+
+  ___GSTATE->setup_params = *setup_params;
+
+  /*
    * Disallow cleanup, in case setup fails.
    */
 
   ___GSTATE->setup_state = 2;
 
   /*
-   * Remember setup parameters.
+   * Setup the operating system and memory management modules.
    */
 
-  ___GSTATE->setup_params = *setup_params;
-
-  /* 
-   * Setup the operating system module.
-   */
-
-  if ((___err = ___setup_os ()) != ___FIX(___NO_ERR))
+  if ((___err = setup_os_and_mem ()) != ___FIX(___NO_ERR))
     return ___err;
 
-  /* 
-   * Setup stack and heap.
+  /*
+   * Allow cleanup.
    */
 
-  if ((___err = ___setup_mem ()) != ___FIX(___NO_ERR))
-    {
-      ___cleanup_os ();
-      return ___err;
-    }
-
-  ___GSTATE->setup_state = 1; /* allow cleanup */
+  ___GSTATE->setup_state = 1;
 
   /*
    * Setup support for dynamic linking.
@@ -2754,19 +2767,13 @@ ___setup_params_struct *setup_params;)
 
   setup_dynamic_linking ();
 
-  /* 
-   * Setup processor state.
-   */
-
-  setup_pstate (___ps);
-
   /*
    * Setup program's linker structure.
    */
 
   mol = linker_to_mod_or_lnk (___GSTATE->setup_params.linker);
 
-  /* 
+  /*
    * Initialize symbol table, keyword table, global variables
    * and primitives.
    */
@@ -2774,7 +2781,7 @@ ___setup_params_struct *setup_params;)
   init_symkey_glo1 (mol);
   init_symkey_glo2 (mol);
 
-  /* 
+  /*
    * Setup each module.
    */
 
@@ -2786,38 +2793,30 @@ ___setup_params_struct *setup_params;)
       return ___GSTATE->program_descr;
     }
 
-  /* 
-   * Create list of command line arguments (accessible through ##command-line).
-   */
-
-  {
-    ___UCS_2STRING *argv = ___GSTATE->setup_params.argv;
-
-    if (argv[0] == 0) /* use dummy program name if none supplied */
-      argv = ___GSTATE->setup_params.reset_argv;
-
-#define ___COMMAND_LINE_CE_SELECT(ISO_8859_1,UTF_8,UCS_2,UCS_4,wchar,native) UCS_2
-
-    if ((___err = ___NONNULLSTRINGLIST_to_SCMOBJ
-                    (argv,
-                     &___GSTATE->command_line,
-                     -1, /* allocate as permanent object */
-                     ___CE(___COMMAND_LINE_CE_SELECT)))
-        != ___FIX(___NO_ERR))
-      {
-        ___cleanup ();
-        return ___err;
-      }
-  }
-
-  /* 
+  /*
    * Setup kernel handlers.
    */
 
   setup_kernel_handlers ();
 
   /*
-   * Call kernel to start executing program.
+   * Create list of command line arguments (accessible through ##command-line).
+   */
+
+  if ((___err = setup_command_line_arguments ()) != ___FIX(___NO_ERR))
+    {
+      ___cleanup;
+      return ___err;
+    }
+
+  /*
+   * Setup processor state.
+   */
+
+  setup_pstate (___ps);
+
+  /*
+   * Start program execution by loading _kernel module.
    */
 
   ___ps->r[0] = ___GSTATE->handler_break;

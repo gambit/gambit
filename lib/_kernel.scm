@@ -1264,6 +1264,28 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
+;;; List utilities.
+
+(define-prim (##assq-cdr obj lst)
+  (let loop ((x lst))
+    (if (##pair? x)
+      (let ((couple (##car x)))
+        (if (##eq? obj (##cdr couple))
+          couple
+          (loop (##cdr x))))
+        #f)))
+
+(define-prim (##assq obj lst)
+  (let loop ((x lst))
+    (if (##pair? x)
+      (let ((couple (##car x)))
+        (if (##eq? obj (##car couple))
+          couple
+          (loop (##cdr x))))
+        #f)))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Interrupt system.
 
 (define-prim (##disable-interrupts!)
@@ -4411,14 +4433,7 @@ end-of-code
 ;; program descriptor.
 
 (define ##program-descr
-  (##c-code #<<end-of-code
-
-   ___release_scmobj (___GSTATE->program_descr); /* allow GC of descriptor */
-   ___RESULT = ___GSTATE->program_descr;
-   ___GSTATE->program_descr = ___FAL;
-
-end-of-code
-))
+  (##c-code "___RESULT = ___GSTATE->program_descr;"))
 
 (define-prim (##main)
   (##exit-cleanup))
@@ -4426,25 +4441,140 @@ end-of-code
 (define-prim (##main-set! thunk)
   (set! ##main thunk))
 
-(define-prim (##execute-modules exec-vector i)
-  (let loop ((i i))
-    (let ((len (##vector-length exec-vector)))
-      (if (##fixnum.< i len)
-          (let* ((descr (##vector-ref exec-vector i))
-                 (init-mod (##vector-ref descr 1)))
-            (if (##fixnum.= i (##fixnum.- len 1))
-                (init-mod) ;; tail-call last module
-                (begin
-                  (init-mod)
-                  (loop (##fixnum.+ i 1)))))))))
+(define-prim (##create-module name module-descr)
+  (##vector #f name 0 module-descr))
 
-(define-prim (##execute-program)
-  (let ((exec-vector (##vector-ref ##program-descr 0)))
-    (##execute-modules
-     exec-vector
-     1) ; start at 1 so that kernel module is not executed twice
+(##define-macro (macro-module-name module)
+  `(##vector-ref ,module 1))
+
+(##define-macro (macro-module-state module)
+  `(##vector-ref ,module 2))
+
+(##define-macro (macro-module-state-set! module state)
+  `(##vector-set! ,module 2 ,state))
+
+(##define-macro (macro-module-descr module)
+  `(##vector-ref ,module 3))
+
+(define ##registered-modules '())
+
+(define-prim (##register-module-descr! name module-descr)
+  ;; TODO: make manipulation of ##registered-modules atomic
+  (let* ((name
+          (##vector-ref module-descr 0))
+         (module
+          (##create-module name module-descr))
+         (x
+          (##lookup-module name ##registered-modules)))
+    (if x
+        (##set-car! x module)
+        (set! ##registered-modules
+              (##cons module
+                      ##registered-modules)))))
+
+(define-prim (##register-module-descrs! module-descrs)
+  (let loop ((i (##fx- (##vector-length module-descrs) 1)))
+    (if (##fx>= i 0)
+        (let* ((module-descr
+                (##vector-ref module-descrs i))
+               (name
+                (##vector-ref module-descr 0)))
+          (##register-module-descr! name module-descr)
+          (loop (##fx- i 1))))))
+
+(define-prim (##lookup-registered-module name)
+  (let ((x (##lookup-module name ##registered-modules)))
+    (and x (##car x))))
+
+(define-prim (##lookup-module name modules)
+  (let loop ((lst modules))
+    (if (##pair? lst)
+        (let ((module (##car lst)))
+          (if (##eq? name (macro-module-name module))
+              lst
+              (loop (##cdr lst))))
+        #f)))
+
+(define-prim (##load-module-struct module)
+  (let ((module-descr (macro-module-descr module)))
+    (if (##vector? module-descr)
+        (let ((exec (##vector-ref module-descr 1)))
+          (exec)))))
+
+(define-prim (##load-required-module-struct module)
+  (if (##fx= (##fxand (macro-module-state module) 1) 0)
+      (begin
+
+        ;; TODO: this state change should be atomic with above test
+        ;; set state to indicate module has been loaded
+        (macro-module-state-set!
+         module
+         (##fxior (macro-module-state module) 1))
+
+        (##load-module-struct module))))
+
+(define-prim (##default-load-required-module module-ref)
+
+  (define (err)
+    (##raise-os-exception
+     "nonexistent module"
+     ##err-code-ENOENT
+     ##default-load-required-module
+     module-ref))
+
+  (cond ((##symbol? module-ref)
+         (let ((module (##lookup-registered-module module-ref)))
+           (if module
+               (##load-required-module-struct module)
+               (err))))
+        (else
+         (err))))
+
+(define ##load-required-module #f)
+(set! ##load-required-module ##default-load-required-module)
+
+(define-prim (##register-module-descrs-and-load! module-descrs)
+
+  (##register-module-descrs! module-descrs)
+
+  (##load-required-module
+   (##vector-ref (##vector-ref
+                  module-descrs
+                  (##fx- (##vector-length module-descrs) 1))
+                 0)))
+
+(define-prim (##load-program)
+  (let ((module-descrs (##vector-ref ##program-descr 0)))
+
+    (##register-module-descrs! module-descrs)
+
+    (macro-module-state-set! (##car ##registered-modules) 1) ;; _kernel has run
+
+    (if #f
+
+        (##load-required-module
+         (##vector-ref (##vector-ref
+                        module-descrs
+                        (##fx- (##vector-length module-descrs) 1))
+                       0))
+
+        (let ()
+
+          (define (##execute-modules modules)
+            (if (##pair? modules)
+                (let loop ((modules modules))
+                  (let ((module (##car modules))
+                        (rest (##cdr modules)))
+                    (if (##pair? rest)
+                        (begin
+                          (##load-required-module-struct module)
+                          (loop rest))
+                        (##load-required-module-struct module)))))) ;; tail call last module
+
+          (##execute-modules (##cdr ##registered-modules))))
+
     (##main)))
 
-(##execute-program)
+(##load-program)
 
 ;;;============================================================================

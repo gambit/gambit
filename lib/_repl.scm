@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -443,10 +443,6 @@
   (mk-degen ()
     (##list 'future (##decomp (^ 0)))))
 
-(define-prim ##degen-require
-  (mk-degen ()
-    (##decomp (^ 1))))
-
 ;;;----------------------------------------------------------------------------
 
 (define ##decomp-dispatch-table #f)
@@ -520,8 +516,6 @@
 
       (##cons ##cprc-delay       ##degen-delay)
       (##cons ##cprc-future      ##degen-future)
-
-      (##cons ##cprc-require     ##degen-require)
 )))
 
 (##setup-decomp-dispatch-table)
@@ -778,7 +772,7 @@
           (##eq? parent ##dynamic-wind)
           (##eq? parent ##dynamic-env-bind)
           (##eq? parent ##kernel-handlers)
-          (##eq? parent ##execute-modules)
+          (##eq? parent ##load-program)
           (##eq? parent ##repl-debug)
           (##eq? parent ##repl-debug-main)
           (##eq? parent ##repl-within)

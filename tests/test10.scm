@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "check-consistency.scm", Time-stamp: <2008-11-26 20:24:28 feeley>
+;;; File: "test10.scm"
 
-;;; Copyright (c) 2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2008-2013 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -69,18 +69,22 @@ default-random-source
                         (reverse lst))))
                 (vector->list st))))
 
+  (define (hidden-id? id)
+    (let ((str (symbol->string id)))
+      (or (memv #\# (string->list str))
+          #;
+          (and (>= (string-length str) 2)
+               (equal? (substring str 0 2) "##"))
+          (and (>= (string-length str) 1)
+               (equal? (substring str 0 1) " ")))))
+
+  (define (public-id? id)
+    (not (hidden-id? id)))
+
   (define (public-procedure? s)
-    (if (let ((str (symbol->string s)))
-          (or (memv #\# (string->list str))
-              #;
-              (and (>= (string-length str) 2)
-                   (equal? (substring str 0 2) "##"))
-              (and (>= (string-length str) 1)
-                   (equal? (substring str 0 1) " "))))
-              
-        #f
-        (let ((val (##global-var-ref (##make-global-var s))))
-          (procedure? val))))
+    (and (public-id? s)
+         (let ((val (##global-var-ref (##make-global-var s))))
+           (procedure? val))))
 
   (define (extract-macros cte)
     (cond ((##cte-top? cte)
@@ -109,7 +113,7 @@ default-random-source
           (keep public-procedure?
                 (symbol-table->list (##symbol-table))))
          (public-macros
-          (gambit-macros))
+          (keep public-id? (gambit-macros)))
          (sorted-public-names
           (sort-symbols
            (append public-macros

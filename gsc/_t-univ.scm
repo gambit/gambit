@@ -78,8 +78,8 @@
 
       (target-dump-set!
        targ
-       (lambda (procs output c-intf script-line options)
-         (univ-dump targ procs output c-intf script-line options)))
+       (lambda (procs output c-intf module-descr unique-name options)
+         (univ-dump targ procs output c-intf module-descr unique-name options)))
 
       (target-nb-regs-set! targ univ-nb-gvm-regs)
 
@@ -1414,7 +1414,7 @@
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 
-(define (univ-dump targ procs output c-intf script-line options)
+(define (univ-dump targ procs output c-intf module-descr unique-name options)
 
   (call-with-output-file
       output

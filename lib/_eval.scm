@@ -861,7 +861,7 @@
     src))
 
 (define (##compile-module top-cte src)
-  (##with-compilation-scope
+  (##compile-in-compilation-scope
    top-cte
    src
    #f
@@ -883,7 +883,7 @@
          (##comp-top top-cte new-src tail?))))))
 
 (define (##compile-top top-cte src)
-  (##with-compilation-scope
+  (##compile-in-compilation-scope
    top-cte
    src
    #f
@@ -892,7 +892,7 @@
        (##comp-top top-cte src tail?)))))
 
 (define (##compile-inner cte src)
-  (##with-compilation-scope
+  (##compile-in-compilation-scope
    cte
    src
    #f
@@ -931,25 +931,49 @@
 (define ##compilation-scope
   (##make-parameter #f))
 
-(define (##with-compilation-scope cte src tail? proc)
+(define (##compile-in-compilation-scope cte src tail? proc)
   (let* ((src
           (##expand-source src))
-         (comp-scope
-          (##vector '()))
+         (x
+          (##in-new-compilation-scope
+           (lambda ()
+             (proc cte src tail?))))
          (code
+          (##car x))
+         (comp-scope
+          (##cdr x))
+         (required-modules
+          (##table-ref comp-scope 'required-modules '())))
+
+    (define (add-loading-of-required-modules required-modules code)
+      (if (##pair? required-modules)
+
+          (let ((module-ref (##car required-modules)))
+            (macro-gen ##gen-seq src
+              (macro-gen ##gen-app-no-step src
+                (macro-gen ##gen-glo-ref src
+                  (##make-global-var '##load-required-module))
+                (##list (macro-gen ##gen-cst-no-step src
+                          module-ref)))
+              (add-loading-of-required-modules
+               (##cdr required-modules)
+               code)))
+
+          code))
+
+    (##convert-source-to-locat!
+     (add-loading-of-required-modules required-modules code))))
+
+(define (##in-new-compilation-scope thunk)
+  (let* ((comp-scope
+          (##make-table 0 (macro-absent-obj) #f #f ##eq?))
+         (result
           (##parameterize
            ##compilation-scope
            comp-scope
-           (lambda ()
-             (proc cte src tail?))))
-         (imports
-          (##reverse (##vector-ref comp-scope 0))))
-    (##convert-source-to-locat!
-     (if (##null? imports)
-       code
-       (macro-gen ##gen-require src
-         code
-         imports)))))
+           thunk)))
+    (##cons result
+            comp-scope)))
 
 (define (##cte-process-import cte src)
   (let* ((code (##source-code src))
@@ -967,18 +991,12 @@
 (set! ##add-import-requirement
       (lambda (lib-name)
         (let ((comp-scope (##compilation-scope)))
-          (##vector-set!
+          (##table-set!
            comp-scope
-           0
+           'imports
            (##cons lib-name
-                   (##vector-ref comp-scope 0)))
+                   (##table-ref comp-scope 'imports '())))
           #f)))
-
-(define ##fulfill-requirements #f)
-(set! ##fulfill-requirements
-      (lambda (requirements)
-        (##pretty-print (##cons requirements: requirements)
-                        ##stdout-port)))
 
 (define (##extract-library expr)
   #f #; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3725,20 +3743,6 @@
     (let ((stepper (##current-stepper)))
       (macro-make-code ##cprc-future cte src stepper (val)))))
 
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-(define ##cprc-require
-  (macro-make-cprc
-   (let ((requirements (^ 1)))
-     (##fulfill-requirements requirements)
-     (macro-code-run (^ 0)))))
-
-(define ##gen-require
-  (macro-make-gen (val requirements)
-    (let ((stepper (##no-stepper)))
-      (macro-make-code ##cprc-require cte src stepper (val)
-        requirements))))
-
 ;;;============================================================================
 
 ;;; Eval
@@ -3842,10 +3846,10 @@
             ((##fixnum.= 2 (##vector-length result))
              (raise-error (##vector-ref result 0)))
             (else
-             (let ((exec-vector (##vector-ref result 0))
+             (let ((module-descrs (##vector-ref result 0))
                    (script-line (##vector-ref result 2)))
                (script-callback script-line abs-path)
-               (##execute-modules exec-vector 0)
+               (##register-module-descrs-and-load! module-descrs)
                abs-path)))))
 
   (define (load-no-ext psettings path)

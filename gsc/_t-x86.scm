@@ -165,8 +165,8 @@
 
       (target-dump-set!
        targ
-       (lambda (procs output c-intf script-line options)
-         (x86-dump targ procs output c-intf script-line options)))
+       (lambda (procs output c-intf module-descr options)
+         (x86-dump targ procs output c-intf module-descr options)))
 
 
       (target-nb-regs-set! targ x86-nb-gvm-regs)
@@ -456,7 +456,7 @@
     cgc))
 
 
-(define (x86-dump targ procs output c-intf script-line options)
+(define (x86-dump targ procs output c-intf module-descr options)
   ;; Allows gsc to fall into the REPL when there's an error.
   (set! throw-to-exception-handler
       (lambda (val) (error val)))

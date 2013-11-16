@@ -520,6 +520,9 @@
 (define (safe? env) ; true iff system should prevent fatal runtime errors
   (declaration-value safe-sym #f #t env))
 
+(define (add-safe env)
+  (env-declare env (list safe-sym #t)))
+
 (define (add-not-safe env)
   (env-declare env (list safe-sym #f)))
 

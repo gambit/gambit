@@ -112,6 +112,41 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define-runtime-syntax ##require-module
+  (lambda (src)
+    (##deconstruct-call
+     src
+     2
+     (lambda (module-ref-src)
+       (let ((module-ref (##desourcify module-ref-src)))
+
+         (if (##not (##symbol? module-ref))
+             (##raise-expression-parsing-exception
+              'ill-formed-special-form
+              src
+              (##source-strip (##car (##source-strip src)))))
+
+         (let* ((comp-scope
+                 (##compilation-scope))
+                (required-modules
+                 (##table-ref comp-scope 'required-modules '())))
+           (if (##pair? required-modules)
+               (let loop ((lst required-modules))
+                 (if (##not (##eq? (##car lst) module-ref))
+                     (let ((rest (##cdr lst)))
+                       (if (##pair? rest)
+                           (loop rest)
+                           (##set-cdr! lst (##list module-ref))))))
+               (##table-set! comp-scope
+                             'required-modules
+                             (##list module-ref))))
+
+         (##expand-source-template
+          src
+          `(##begin)))))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define-runtime-syntax parameterize
   (lambda (src)
     (##deconstruct-call

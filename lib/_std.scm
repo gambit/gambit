@@ -1103,24 +1103,6 @@ end-of-code
         (macro-check-list x 2 (member obj lst)
           #f)))))
 
-(define-prim (##assq-cdr obj lst)
-  (let loop ((x lst))
-    (if (##pair? x)
-      (let ((couple (##car x)))
-        (if (##eq? obj (##cdr couple))
-          couple
-          (loop (##cdr x))))
-        #f)))
-
-(define-prim (##assq obj lst)
-  (let loop ((x lst))
-    (if (##pair? x)
-      (let ((couple (##car x)))
-        (if (##eq? obj (##car couple))
-          couple
-          (loop (##cdr x))))
-        #f)))
-
 (define-prim (assq obj lst)
   (macro-force-vars (obj)
     (let loop ((x lst))

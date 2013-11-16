@@ -279,7 +279,6 @@
 
 #define ___PSTATE_MEM(var) ___ps->mem.var
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
-#define ___GSTATE_MEM(var) ___GSTATE->mem.var
 
 #define stack_msection          ___PSTATE_MEM(stack_msection_)
 #define alloc_stack_start       ___PSTATE_MEM(alloc_stack_start_)
@@ -306,9 +305,6 @@
 #define traverse_weak_refs      ___VMSTATE_MEM(traverse_weak_refs_)
 #define reached_gc_hash_tables  ___VMSTATE_MEM(reached_gc_hash_tables_)
 #define rc_head                 ___VMSTATE_MEM(rc_head_)
-#define psections               ___VMSTATE_MEM(psections_)
-#define palloc_ptr              ___VMSTATE_MEM(palloc_ptr_)
-#define palloc_limit            ___VMSTATE_MEM(palloc_limit_)
 
 #define nb_gcs                  ___VMSTATE_MEM(nb_gcs_)
 #define gc_user_time            ___VMSTATE_MEM(gc_user_time_)
@@ -891,7 +887,6 @@ ___SIZE_TS words;
 unsigned int multiplier;
 unsigned int modulus;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   void *container;
 
   /* Make sure alignment is sufficient for pointers */
@@ -912,8 +907,8 @@ unsigned int modulus;)
   if (container == 0)
     return 0;
 
-  *___CAST(void**,container) = psections;
-  psections = container;
+  *___CAST(void**,container) = ___GSTATE->mem.psections;
+  ___GSTATE->mem.psections = container;
   return ___CAST(void*,___CAST(___WORD*,container) + modulus);
 }
 
@@ -941,7 +936,6 @@ ___SIZE_TS words;
 int multiplier;
 int modulus;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   ___SIZE_TS waste;
   ___WORD *base;
 
@@ -949,24 +943,24 @@ int modulus;)
    * Try to satisfy request in current psection.
    */
 
-  if (palloc_ptr != 0)
+  if (___GSTATE->mem.palloc_ptr != 0)
     {
       ___WORD *new_palloc_ptr;
 
       base = ___CAST(___WORD*,
-                     ___CAST(___WORD,palloc_ptr+multiplier-1-modulus) &
+                     ___CAST(___WORD,___GSTATE->mem.palloc_ptr+multiplier-1-modulus) &
                      (multiplier * -___WS)) +
              modulus;
 
       new_palloc_ptr = base + words;
 
-      if (new_palloc_ptr <= palloc_limit) /* did it fit in the psection? */
+      if (new_palloc_ptr <= ___GSTATE->mem.palloc_limit) /* did it fit in the psection? */
         {
-          palloc_ptr = new_palloc_ptr;
+          ___GSTATE->mem.palloc_ptr = new_palloc_ptr;
           return base;
         }
 
-      waste = palloc_limit - palloc_ptr;
+      waste = ___GSTATE->mem.palloc_limit - ___GSTATE->mem.palloc_ptr;
     }
   else
     waste = 0;
@@ -987,8 +981,8 @@ int modulus;)
 
   if (base != 0)
     {
-      palloc_ptr = base + words;
-      palloc_limit = base + ___PSECTION_SIZE;
+      ___GSTATE->mem.palloc_ptr = base + words;
+      ___GSTATE->mem.palloc_limit = base + ___PSECTION_SIZE;
     }
 
   return base;
@@ -997,10 +991,9 @@ int modulus;)
 
 ___HIDDEN void free_psections ___PVOID
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
-  void *base = psections;
+  void *base = ___GSTATE->mem.psections;
 
-  psections = 0;
+  ___GSTATE->mem.psections = 0;
 
   while (base != 0)
     {
@@ -1053,6 +1046,42 @@ ___SCMOBJ sym;)
 
   return sym;
 }
+
+
+#ifdef ___DEBUG
+
+___SCMOBJ ___find_global_var_bound_to
+   ___P((___SCMOBJ val),
+        (val)
+___SCMOBJ val;)
+{
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ sym = ___NUL;
+  int i;
+
+  for (i = ___INT(___VECTORLENGTH(___GSTATE->symbol_table)) - 1; i>0; i--)
+    {
+      sym = ___FIELD(___GSTATE->symbol_table,i);
+
+      while (sym != ___NUL)
+       {
+          ___glo_struct *g = ___GLOBALVARSTRUCT(sym);
+
+          if (g != 0 &&
+              (___PRMCELL(g->prm) == val || ___GLOCELL(g->val) == val))
+            {
+              i = 0;
+              break;
+            }
+
+          sym = ___FIELD(sym,___SYMKEY_NEXT);
+        }
+    }
+
+  return sym;
+}
+
+#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -2176,6 +2205,7 @@ ___glo_struct *glo;)
 
 ___HIDDEN void dump_memory_map ___PVOID
 {
+  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   int ns = the_msections->nb_sections;
   ___msection **sections = the_msections->sections;
   int i;
@@ -2319,6 +2349,7 @@ ___HIDDEN void validate_old_obj
         (obj)
 ___WORD obj;)
 {
+  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   ___WORD *hd_ptr = ___BODY(obj)-1;
   ___WORD head;
   int i = find_msection (the_msections, hd_ptr);
@@ -2432,6 +2463,7 @@ ___processor_state ___ps;)
 
 ___HIDDEN void zap_fromspace ___PVOID
 {
+  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   int i;
   for (i=0; i<the_msections->nb_sections; i++)
     zap_section (start_of_fromspace (the_msections->sections[i]),
@@ -3353,8 +3385,6 @@ ___processor_state ___ps;)
   next_stack_msection (___ps);
   next_heap_msection (___ps);
 
-  palloc_ptr = 0;
-
   /*
    * Create "break frame" of initial top section.
    */
@@ -3422,7 +3452,6 @@ ___virtual_machine_state ___vms;)
    */
 
   the_msections = 0;
-  psections     = 0;
   still_objs    = 0;
 
   /*
@@ -3488,6 +3517,13 @@ ___SCMOBJ ___setup_mem ___PVOID
   }
 
   /*
+   * Setup psections.
+   */
+
+  ___GSTATE->mem.psections = 0;
+  ___GSTATE->mem.palloc_ptr = 0;
+
+  /*
    * Create empty global variable list, symbol table and keyword
    * table.
    */
@@ -3538,7 +3574,6 @@ ___virtual_machine_state ___vms;)
   ___cleanup_mem_pstate (&___vms->pstate0);
 
   free_msections (&the_msections);
-  free_psections ();
   free_still_objs ();
   cleanup_rc ();
 
@@ -3550,6 +3585,7 @@ ___virtual_machine_state ___vms;)
 void ___cleanup_mem ___PVOID
 {
   ___cleanup_mem_vmstate (&___GSTATE->vmstate0);
+  free_psections ();
 }
 
 
