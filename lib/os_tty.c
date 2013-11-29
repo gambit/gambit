@@ -15,7 +15,7 @@
 #include "os_tty.h"
 #include "os_shell.h"
 #include "os_io.h"
-#include "setup.h"
+#include "mem.h"
 #include "c_intf.h"
 
 

@@ -1009,6 +1009,8 @@ ___SCMOBJ ___make_global_var
         (sym)
 ___SCMOBJ sym;)
 {
+  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+
   if (___GLOBALVARSTRUCT(sym) == 0)
     {
       ___glo_struct *g = ___CAST(___glo_struct*,
@@ -1020,12 +1022,8 @@ ___SCMOBJ sym;)
       if (g == 0)
         return ___FIX(___HEAP_OVERFLOW_ERR);
 
-#ifdef ___MULTIPLE_GLO
+#ifndef ___SINGLE_VM
       g->val = ___GSTATE->mem.nb_glo_vars;
-#endif
-
-#ifdef ___MULTIPLE_PRM
-      g->prm = ___GSTATE->mem.nb_glo_vars;
 #endif
 
       ___GSTATE->mem.nb_glo_vars++;
@@ -3421,16 +3419,6 @@ ___processor_state ___ps;)
   ___ps->heartbeat_countdown = ___ps->heartbeat_interval;
 #endif
 
-  /* TODO: implement expansion of glos and prms arrays when number of globals grows beyond 20000 */
-
-#ifdef ___MULTIPLE_GLO
-  ___ps->glos = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
-#endif
-
-#ifdef ___MULTIPLE_PRM
-  ___ps->prms = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
-#endif
-
   prepare_mem_pstate (___ps);
 
   return ___FIX(___NO_ERR);
@@ -3444,6 +3432,12 @@ ___virtual_machine_state ___vms;)
 {
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___vms->mem.var
+
+  /* TODO: implement expansion of glos array when number of globals grows beyond 20000 */
+
+#ifndef ___SINGLE_VM
+  ___vms->glos = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
+#endif
 
   /*
    * It is important to initialize the following pointers first so
@@ -4526,11 +4520,9 @@ ___SIZE_TS nonmovable_words_needed;)
   reference_location = IN_GLOBAL_VAR;
 #endif
 
-#ifdef ___MULTIPLE_GLO
+  /* TODO: globals should only be scanned once when not ___SINGLE_THREADED_VMS */
 
-  mark_array (___ps, ___ps->glos, ___GSTATE->mem.nb_glo_vars);
-
-#else
+#ifdef ___SINGLE_VM
 
   {
     ___glo_struct *p = ___GSTATE->mem.glo_list_head;
@@ -4544,6 +4536,12 @@ ___SIZE_TS nonmovable_words_needed;)
         p = p->next;
       }
   }
+
+#else
+
+  mark_array (___ps,
+              ___VMSTATE_FROM_PSTATE(___ps)->glos,
+              ___GSTATE->mem.nb_glo_vars);
 
 #endif
 

@@ -319,6 +319,7 @@ ___UTF_8STRING str;
 int supply;
 ___glo_struct **glo;)
 {
+  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   ___glo_struct *g;
   ___SCMOBJ sym = ___make_symkey_from_UTF_8_string (str, ___sSYMBOL);
 
@@ -1464,28 +1465,13 @@ ___mod_or_lnk mol;)
           str = align_subtyped (___CAST(___SCMOBJ*,sym_ptr[1+___SYMKEY_NAME]));
           glo = ___CAST(___glo_struct*,sym_ptr[1+___SYMBOL_GLOBAL]);
 
-#ifdef ___MULTIPLE_GLO
+#ifndef ___SINGLE_VM
           {
             ___SCMOBJ tmp = glo->val;
             glo->val = ___GSTATE->mem.nb_glo_vars;
             ___GLOCELL(glo->val) = tmp;
+            ___GSTATE->mem.nb_glo_vars++;
           }
-#endif
-
-#ifdef ___MULTIPLE_PRM
-          {
-            ___SCMOBJ tmp = glo->prm;
-            glo->prm = ___GSTATE->mem.nb_glo_vars;
-            ___PRMCELL(glo->prm) = tmp;
-          }
-#endif
-
-#ifdef ___MULTIPLE_GLO
-          ___GSTATE->mem.nb_glo_vars++;
-#else
-#ifdef ___MULTIPLE_PRM
-          ___GSTATE->mem.nb_glo_vars++;
-#endif
 #endif
 
           glo->next = 0;

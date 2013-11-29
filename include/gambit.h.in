@@ -3404,17 +3404,13 @@ ___SET_R0(___GSTATE->handler_break)
 #define ___PSSTK(fpo)___FP_STK(___PSFP,fpo)
 #define ___PSADJFP(fpa)___FP_ADJFP(___PSFP,fpa)
 
-#ifdef ___MULTIPLE_GLO
-#define ___GLOCELL(x)___ps->glos[x]
-#else
+#ifdef ___SINGLE_VM
 #define ___GLOCELL(x)x
+#else
+#define ___GLOCELL(x)___VMSTATE_FROM_PSTATE(___ps)->glos[x]
 #endif
 
-#ifdef ___MULTIPLE_PRM
-#define ___PRMCELL(x)___ps->prms[x]
-#else
 #define ___PRMCELL(x)x
-#endif
 
 #define ___PRM(i,glo)___PRMCELL(___GLOSTRUCT(i,glo).prm)
 #define ___GLO(i,glo)___GLOCELL(___GLOSTRUCT(i,glo).val)
@@ -4978,11 +4974,16 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 
 #ifdef ___SINGLE_VM
 #define ___VMSTATE (&___GSTATE->vmstate0)
+#else
+#define ___VMSTATE (&___GSTATE->vmstate0) /* TODO: actually get the VMSTATE */
 #endif
 
 #ifdef ___SINGLE_THREADED_VMS
 #define ___PSTATE (&___VMSTATE->pstate0)
 #define ___VMSTATE_FROM_PSTATE(ps) ___CAST(___virtual_machine_state,ps)
+#else
+#define ___PSTATE (&___VMSTATE->pstate0) /* TODO: actually get the PSTATE */
+#define ___VMSTATE_FROM_PSTATE(ps) ps->vmstate
 #endif
 
 #ifdef ___BIND_LATE
@@ -7216,21 +7217,13 @@ typedef struct ___processor_state_struct
     void (*dummy2) ___PVOID;
     void (*dummy1) ___PVOID;
 
-#ifdef ___MULTIPLE_THREADED_VMS
+#ifndef ___SINGLE_THREADED_VMS
 
     struct ___processor_state_struct *prev; /* circular list links */
     struct ___processor_state_struct *next;
 
     struct ___virtual_machine_state_struct *vmstate; /* this processor's VM */
 
-#endif
-
-#ifdef ___MULTIPLE_GLO
-    ___SCMOBJ *glos;
-#endif
-
-#ifdef ___MULTIPLE_PRM
-    ___SCMOBJ *prms;
 #endif
 
 #ifdef ___USE_SETJMP
@@ -7388,10 +7381,12 @@ typedef struct ___virtual_machine_state_struct
     void (*dummy2) ___PVOID;
     void (*dummy1) ___PVOID;
 
-#ifdef ___MULTIPLE_VMS
+#ifndef ___SINGLE_VM
 
     struct ___virtual_machine_state_struct *prev; /* circular list links */
     struct ___virtual_machine_state_struct *next;
+
+    ___SCMOBJ *glos; /* Scheme global variables */
 
 #endif
 
