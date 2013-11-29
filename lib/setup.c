@@ -215,11 +215,11 @@ ___mod_or_lnk (*linker) ();)
   ___mod_or_lnk mol = linker (___GSTATE);
   if (mol->module.kind == ___LINKFILE_KIND)
     {
-      void **p = mol->linkfile.linkertbl;
-      while (*p != 0)
+      ___linkinfo *p = mol->linkfile.linkertbl;
+      while (p->mol != 0)
         {
-          *p = linker_to_mod_or_lnk
-                 (*___CAST(___mod_or_lnk (**) ___P((___global_state),()),p));
+          p->mol = linker_to_mod_or_lnk
+                     (___CAST(___mod_or_lnk (*) ___P((___global_state),()),p->mol));
           p++;
         }
     }
@@ -232,6 +232,7 @@ typedef struct fem_context
     int module_count;
     ___SCMOBJ module_descr;
     ___UTF_8STRING module_script_line;
+    ___SCMOBJ flags;
   } fem_context;
 
 
@@ -248,19 +249,28 @@ ___SCMOBJ (*proc) ();)
 {
   if (mol->module.kind == ___LINKFILE_KIND)
     {
-      void **p = mol->linkfile.linkertbl;
-      while (*p != 0)
+      ___linkinfo *p = mol->linkfile.linkertbl;
+
+      while (p->mol != 0)
         {
-          ___SCMOBJ e = for_each_module (ctx,
-                                         ___CAST(___mod_or_lnk,*p++),
-                                         proc);
+          ___SCMOBJ e;
+
+          ctx->flags = p->flags;
+
+          e = for_each_module (ctx, p->mol, proc);
+
           if (e != ___FIX(___NO_ERR))
             return e;
+
+          p++;
         }
+
       return ___FIX(___NO_ERR);
     }
   else
-    return proc (ctx, ___CAST(___module_struct*,mol));
+    {
+      return proc (ctx, ___CAST(___module_struct*,mol));
+    }
 }
 
 
@@ -731,6 +741,8 @@ ___module_struct *module;)
           ___FIELD(descr,1) = *module->lp+___LS*___WS;
         }
 
+      ___FIELD(descr,2) = ctx->flags;
+
       ___FIELD(___FIELD(ctx->module_descr,0),ctx->module_count) = descr;
 
       ctx->module_count++;
@@ -805,6 +817,7 @@ ___mod_or_lnk mol;)
                   ___FIELD(ctx->module_descr,0) = result;
 
                   ctx->module_count = 0;
+                  ctx->flags = ___FIX(0); /* preload flag */
 
                   if ((result = for_each_module (ctx,
                                                  mol,
@@ -1395,11 +1408,14 @@ ___mod_or_lnk mol;)
 {
   if (mol->module.kind == ___LINKFILE_KIND)
     {
-      void **p1 = mol->linkfile.linkertbl;
+      ___linkinfo *p1 = mol->linkfile.linkertbl;
       ___FAKEWORD *p2 = mol->linkfile.sym_list;
 
-      while (*p1 != 0)
-        init_symkey_glo1 (___CAST(___mod_or_lnk,*p1++));
+      while (p1->mol != 0)
+        {
+          init_symkey_glo1 (p1->mol);
+          p1++;
+        }
 
       while (p2 != 0)
         {
@@ -1424,13 +1440,16 @@ ___mod_or_lnk mol;)
 {
   if (mol->module.kind == ___LINKFILE_KIND)
     {
-      void **p1 = mol->linkfile.linkertbl;
+      ___linkinfo *p1 = mol->linkfile.linkertbl;
       ___FAKEWORD *p2 = mol->linkfile.sym_list;
       ___FAKEWORD *p3 = mol->linkfile.key_list;
       ___processor_state ___ps = ___PSTATE;
 
-      while (*p1 != 0)
-        init_symkey_glo2 (___CAST(___mod_or_lnk,*p1++));
+      while (p1->mol != 0)
+        {
+          init_symkey_glo2 (p1->mol);
+          p1++;
+        }
 
       while (p2 != 0)
         {
@@ -2723,7 +2742,8 @@ ___EXP_FUNC(___SCMOBJ,___setup)
         (setup_params)
 ___setup_params_struct *setup_params;)
 {
-  ___processor_state ___ps = &___GSTATE->vmstate0.pstate0;
+  ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+  ___processor_state ___ps = &___vms->pstate0;
   ___SCMOBJ ___err;
   ___mod_or_lnk mol;
   ___SCMOBJ marker;
@@ -2792,6 +2812,20 @@ ___setup_params_struct *setup_params;)
       ___cleanup ();
       return ___GSTATE->program_descr;
     }
+
+  {
+    /*
+     * By convention, the main module is the last one in the module
+     * descriptors.
+     */
+
+    ___SCMOBJ module_descrs = ___FIELD(___GSTATE->program_descr,0);
+
+    ___vms->main_module_id =
+      ___FIELD(___FIELD(module_descrs,
+                        ___INT(___VECTORLENGTH(module_descrs))-1),
+               0);
+  }
 
   /*
    * Setup kernel handlers.

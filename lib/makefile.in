@@ -148,7 +148,7 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	@MAKE_LIBRARY@
 
 _$(GAMBCLIB).c: $(MODULES_C)
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o _$(GAMBCLIB).c $(MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o _$(GAMBCLIB).c -preload $(MODULES_C)
 
 main@obj@: main.c $(srcdirpfx)$(rootfromhere)/include/gambit.h
 

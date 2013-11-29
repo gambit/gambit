@@ -5786,9 +5786,10 @@ ___P((___global_state ___gs),()); ___END_C_LINKAGE
 ___P((___global_state ___gs),()); ___END_C_LINKAGE
 #define ___END_NEW_LNK
 
-#define ___BEGIN_LNK ___LOCAL void *___linkertbl[]={
-#define ___DEF_LNK(id)(void*)id
-#define ___END_LNK ,0};
+#define ___BEGIN_LNK ___LOCAL ___linkinfo ___linkertbl[]={
+#define ___DEF_LNK(id){ ___CAST(___mod_or_lnk,id), ___FIX(1) }
+#define ___DEF_LNK_NOPRELOAD(id){ ___CAST(___mod_or_lnk,id), ___FIX(0) }
+#define ___END_LNK , { 0, ___FIX(0) }};
 
 /*---------------------------------------------------------------------------*/
 
@@ -7318,6 +7319,12 @@ typedef struct ___module_struct
 
 /* Linkfile structure */
 
+typedef struct ___linkinfo_struct
+  {
+    union ___mod_or_lnk_union *mol;
+    ___SCMOBJ flags;
+  } ___linkinfo;
+
 typedef struct ___linkfile_struct
   {
     int version;
@@ -7325,7 +7332,7 @@ typedef struct ___linkfile_struct
     ___UTF_8STRING name;
     ___FAKEWORD *sym_list;
     ___FAKEWORD *key_list;
-    void **linkertbl;
+    ___linkinfo *linkertbl;
 
     void (*dummy8) ___PVOID;
     void (*dummy7) ___PVOID;
@@ -7369,6 +7376,8 @@ typedef struct ___virtual_machine_state_struct
     ___processor_state_struct pstate0; /* first processor of this VM */
 
     ___vmstate_mem mem; /* memory management state */
+
+    ___SCMOBJ main_module_id; /* symbol identifying the VM's main module */
 
     void (*dummy8) ___PVOID;
     void (*dummy7) ___PVOID;

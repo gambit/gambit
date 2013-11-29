@@ -801,16 +801,21 @@
              (name
                (string-append module-prefix
                               (path-strip-directory root)))
-             (input-files
+             (input-files-and-flags
                (map (lambda (x)
-                      (if (string=? (path-extension x) "")
-                          (string-append x (targ-preferred-c-file-extension))
-                          x))
+                      (let ((name (if (pair? x) (car x) x))
+                            (flags (if (pair? x) (cdr x) '())))
+                        (cons (if (string=? (path-extension name) "")
+                                  (string-append
+                                   name
+                                   (targ-preferred-c-file-extension))
+                                  name)
+                              flags)))
                     inputs))
              (input-infos
-               (map targ-read-linker-info input-files))
-             (input-mods
-               (apply append (map targ-mod-mods input-infos)))
+               (map targ-read-linker-info input-files-and-flags))
+             (input-mods-and-flags
+               (apply append (map targ-mod-mods-and-flags input-infos)))
              (sym-rsrc
                (targ-union-list-of-rsrc
                  (map targ-mod-sym-rsrc input-infos)))
@@ -838,13 +843,13 @@
           extension?
           output
           name
-          input-mods
+          input-mods-and-flags
           (if extension?
-            (list (targ-mod-name (car input-infos)))
+            (list (list (targ-mod-name (car input-infos))))
             '())
           (if extension?
-            (apply append (map targ-mod-mods (cdr input-infos)))
-            input-mods)
+            (apply append (map targ-mod-mods-and-flags (cdr input-infos)))
+            input-mods-and-flags)
           (if extension?
             (targ-mod-sym-rsrc (car input-infos))
             '())
@@ -862,13 +867,13 @@
 
         output))))
 
-(define (targ-make-mod name mods sym-rsrc key-rsrc glo-rsrc script-line)
-  (vector name mods sym-rsrc key-rsrc glo-rsrc script-line))
+(define (targ-make-mod name mods-and-flags sym-rsrc key-rsrc glo-rsrc script-line)
+  (vector name mods-and-flags sym-rsrc key-rsrc glo-rsrc script-line))
 
 (define (targ-mod-name module-info)
   (vector-ref module-info 0))
 
-(define (targ-mod-mods module-info)
+(define (targ-mod-mods-and-flags module-info)
   (vector-ref module-info 1))
 
 (define (targ-mod-sym-rsrc module-info)
@@ -902,12 +907,17 @@
            (close-input-port in)
            (string=? targ-generated-c-file-first-line first-line)))))
 
-(define (targ-read-linker-info file)
-  (let ((in (open-input-file* file)))
+(define (targ-read-linker-info file-and-flags)
+  (let* ((file (car file-and-flags))
+         (flags (cdr file-and-flags))
+         (in (open-input-file* file)))
 
     (define (err msg)
       (if in (close-input-port in))
       (compiler-error (string-append msg " " file)))
+
+    (define (combine-flags flags1 flags2)
+      (append flags1 flags2))
 
     (if in
       (let ((first-line (targ-read-line in)))
@@ -917,7 +927,9 @@
                      (= (length linker-info) 9)
                      (equal? (car linker-info) (compiler-version)))
               (let* ((name (cadr linker-info))
-                     (mods (caddr linker-info))
+                     (mods (map (lambda (x)
+                                  (cons (car x) (combine-flags flags (cdr x))))
+                                (caddr linker-info)))
                      (rest (cdddr linker-info))
                      (syms (car rest))
                      (keys (cadr rest))
@@ -990,7 +1002,7 @@
     (targ-start-dump
      filename
      name
-     (list name)
+     (list (list name))
      sym-rsrc
      key-rsrc
      glo-rsrc
@@ -1026,9 +1038,9 @@
           extension?
           filename
           name
-          all-mods
-          old-mods
-          new-mods
+          all-mods-and-flags
+          old-mods-and-flags
+          new-mods-and-flags
           old-sym-rsrc
           old-key-rsrc
           old-glo-rsrc
@@ -1055,7 +1067,7 @@
     (targ-start-dump
      filename
      name
-     all-mods
+     all-mods-and-flags
      sym-rsrc
      key-rsrc
      glo-rsrc
@@ -1071,7 +1083,7 @@
     (targ-display "#include \"gambit.h\"")
     (targ-line)
 
-    (targ-dump-linkfile old-mods new-mods)
+    (targ-dump-linkfile old-mods-and-flags new-mods-and-flags)
     (targ-dump-sym-key-glo-link
       old-sym-glo-rsrc
       old-key-rsrc
@@ -1079,21 +1091,25 @@
       new-key-rsrc)
     (targ-end-dump)))
 
-(define (targ-dump-linkfile old-mods new-mods)
-  (targ-dump-section "BEGIN_OLD_LNK" "END_OLD_LNK" #f old-mods
+(define (targ-dump-linkfile old-mods-and-flags new-mods-and-flags)
+  (targ-dump-section "BEGIN_OLD_LNK" "END_OLD_LNK" #f old-mods-and-flags
     (lambda (i x)
-      (targ-code* (list "DEF_OLD_LNK" (targ-c-id-linker x)))))
-  (targ-dump-section "BEGIN_NEW_LNK" "END_NEW_LNK" #f new-mods
+      (targ-code* (list "DEF_OLD_LNK" (targ-c-id-linker (car x))))))
+  (targ-dump-section "BEGIN_NEW_LNK" "END_NEW_LNK" #f new-mods-and-flags
     (lambda (i x)
-      (targ-code* (list "DEF_NEW_LNK" (targ-c-id-linker x)))))
-  (targ-dump-section "BEGIN_LNK" "END_LNK" #t (append old-mods new-mods)
+      (targ-code* (list "DEF_NEW_LNK" (targ-c-id-linker (car x))))))
+  (targ-dump-section "BEGIN_LNK" "END_LNK" #t (append old-mods-and-flags new-mods-and-flags)
     (lambda (i x)
-      (targ-code* (list "DEF_LNK" (targ-c-id-linker x))))))
+      (targ-code* (list (if (cond ((assq 'preload (cdr x)) => cdr)
+                                  (else #t))
+                            "DEF_LNK"
+                            "DEF_LNK_NOPRELOAD")
+                        (targ-c-id-linker (car x)))))))
 
 (define (targ-start-dump
          filename
          name
-         mods
+         mods-and-flags
          sym-rsrc
          key-rsrc
          glo-rsrc
@@ -1127,7 +1143,7 @@
   (write name targ-port)
   (targ-line)
 
-  (write mods targ-port)
+  (write mods-and-flags targ-port)
   (targ-line)
 
   (targ-write-rsrc-names sym-rsrc)

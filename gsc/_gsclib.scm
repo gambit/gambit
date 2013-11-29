@@ -379,49 +379,49 @@
          (base (macro-absent-obj))
          (warnings? (macro-absent-obj)))
   (macro-force-vars (modules)
-    (if (##not (##pair? modules))
-        (macro-check-string-list modules 1 (link-incremental modules . other);;;;;;;;;;;;
-          #f)
-        (let loop ((lst modules) (rev-mods '()))
-          (macro-force-vars (lst)
-            (if (##pair? lst)
-                (let ((s (##car lst)))
-                  (macro-force-vars (s)
-                    (macro-check-string-list
-                      s
-                      1
-                      (link-incremental modules . other);;;;;;;;;;;;
-                      (loop (##cdr lst) (##cons s rev-mods)))))
-                (let* ((out
-                        (if (##eq? output (macro-absent-obj))
-                            (##path-directory
-                             (##path-normalize (##car rev-mods)))
-                            (macro-force-vars (output)
-                              output)))
-                       (baselib
-                        (if (##eq? base (macro-absent-obj))
-                            (let ((gambcdir-lib
-                                   (parameterize
-                                    ((##current-directory
-                                      (##path-expand "~~lib")))
-                                    (##current-directory))))
-                              (##string-append gambcdir-lib "_gambc"))
-                            (macro-force-vars (base)
-                              base)))
-                       (warn?
-                        (if (##eq? warnings? (macro-absent-obj))
-                            #t
-                            (macro-force-vars (warnings?)
-                              warnings?))))
-                  (cond ((##not (##string? out))
-                         (error "string expected for output: parameter"));;;;;;;;;;
-                        ((##not (##string? baselib))
-                         (error "string expected for base: parameter"));;;;;;;;;;
-                        (else
-                         (##link-incremental rev-mods
-                                             out
-                                             baselib
-                                             warn?))))))))))
+    (let loop ((lst modules) (rev-mods '()))
+      (macro-force-vars (lst)
+        (if (##pair? lst)
+            (let ((m (##car lst)))
+              (cond ((##string? m)
+                     (loop (##cdr lst)
+                           (##cons (##list m) rev-mods)))
+                    ((and (##pair? m)
+                          (##string? (##car m)))
+                     (loop (##cdr lst)
+                           (##cons m rev-mods)))
+                    (else
+                     (error "module list expected")))) ;;;;;;;;;;
+            (let* ((out
+                    (if (##eq? output (macro-absent-obj))
+                        (##path-directory
+                         (##path-normalize (##car (##car rev-mods))))
+                        (macro-force-vars (output)
+                          output)))
+                   (baselib
+                    (if (##eq? base (macro-absent-obj))
+                        (let ((gambcdir-lib
+                               (parameterize
+                                ((##current-directory
+                                  (##path-expand "~~lib")))
+                                (##current-directory))))
+                          (##string-append gambcdir-lib "_gambc"))
+                        (macro-force-vars (base)
+                          base)))
+                   (warn?
+                    (if (##eq? warnings? (macro-absent-obj))
+                        #t
+                        (macro-force-vars (warnings?)
+                          warnings?))))
+              (cond ((##not (##string? out))
+                     (error "string expected for output: parameter")) ;;;;;;;;;;
+                    ((##not (##string? baselib))
+                     (error "string expected for base: parameter")) ;;;;;;;;;;
+                    (else
+                     (##link-incremental rev-mods
+                                         out
+                                         baselib
+                                         warn?)))))))))
 
 (define (##link-incremental rev-mods output base warnings?)
   (let* ((expanded-output
@@ -434,12 +434,12 @@
               (##path-expand
                (##path-strip-directory
                 (##string-append
-                 (##path-strip-extension (##car rev-mods))
+                 (##path-strip-extension (##car (##car rev-mods)))
                  "_"
                  (c#targ-preferred-c-file-extension)))
                expanded-output)))
          (base-and-mods
-          (##cons base (##reverse rev-mods))))
+          (##cons (##list base) (##reverse rev-mods))))
     (c#targ-linker #t
                    base-and-mods
                    c-filename
@@ -452,36 +452,36 @@
          (output (macro-absent-obj))
          (warnings? (macro-absent-obj)))
   (macro-force-vars (modules)
-    (if (##not (##pair? modules))
-        (macro-check-string-list modules 1 (link-flat modules . other);;;;;;;;;;;;
-          #f)
-        (let loop ((lst modules) (rev-mods '()))
-          (macro-force-vars (lst)
-            (if (##pair? lst)
-                (let ((s (##car lst)))
-                  (macro-force-vars (s)
-                    (macro-check-string-list
-                      s
-                      1
-                      (link-flat modules . other);;;;;;;;;;;;
-                      (loop (##cdr lst) (##cons s rev-mods)))))
-                (let* ((out
-                        (if (##eq? output (macro-absent-obj))
-                            (##path-directory
-                             (##path-normalize (##car rev-mods)))
-                            (macro-force-vars (output)
-                              output)))
-                        (warn?
-                         (if (##eq? warnings? (macro-absent-obj))
-                             #t
-                             (macro-force-vars (warnings?)
-                               warnings?))))
-                  (cond ((##not (##string? out))
-                         (error "string expected for output: parameter"));;;;;;;;;;
-                        (else
-                         (##link-flat rev-mods
-                                      out
-                                      warn?))))))))))
+    (let loop ((lst modules) (rev-mods '()))
+      (macro-force-vars (lst)
+        (if (##pair? lst)
+            (let ((m (##car lst)))
+              (cond ((##string? m)
+                     (loop (##cdr lst)
+                           (##cons (##list m) rev-mods)))
+                    ((and (##pair? m)
+                          (##string? (##car m)))
+                     (loop (##cdr lst)
+                           (##cons m rev-mods)))
+                    (else
+                     (error "module list expected")))) ;;;;;;;;;;
+            (let* ((out
+                    (if (##eq? output (macro-absent-obj))
+                        (##path-directory
+                         (##path-normalize (##car (##car rev-mods))))
+                        (macro-force-vars (output)
+                          output)))
+                   (warn?
+                    (if (##eq? warnings? (macro-absent-obj))
+                        #t
+                        (macro-force-vars (warnings?)
+                          warnings?))))
+              (cond ((##not (##string? out))
+                     (error "string expected for output: parameter")) ;;;;;;;;;;
+                    (else
+                     (##link-flat rev-mods
+                                  out
+                                  warn?)))))))))
 
 (define (##link-flat rev-mods output warnings?)
   (let* ((expanded-output
@@ -494,7 +494,7 @@
               (##path-expand
                (##path-strip-directory
                 (##string-append
-                 (##path-strip-extension (##car rev-mods))
+                 (##path-strip-extension (##car (##car rev-mods)))
                  "_"
                  (c#targ-preferred-c-file-extension)))
                expanded-output)))

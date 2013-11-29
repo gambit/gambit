@@ -144,13 +144,19 @@
                         (rest (##cdr lst)))
                     (cond ((option? file)
                            (let ((option-name (convert-option file)))
-                             (cond ((##string=? option-name "")
-                                    (loop1 rest
-                                           nb-output-files))
-                                   ((##string=? option-name "e")
+                             (cond ((##string=? option-name "e")
                                     (loop1 (if (##pair? rest)
                                                (##cdr rest)
                                                rest)
+                                           nb-output-files))
+                                   ((##string=? option-name "")
+                                    (loop1 rest
+                                           nb-output-files))
+                                   ((or (##string=? option-name "preload")
+                                        (##string=? option-name "nopreload"))
+                                    (if (##not (##memq type '(link exe)))
+                                        (warn-invalid-preload-options))
+                                    (loop1 rest
                                            nb-output-files))
                                    (else
                                     (warn-unknown-option option-name)
@@ -239,11 +245,12 @@
 
                     (let ((rev-gen-c-files '())
                           (rev-obj-files '())
-                          (rev-tmp-files '()))
+                          (rev-tmp-files '())
+                          (flags '()))
 
                       (define (add-gen-c-file gen-c-file)
                         (set! rev-gen-c-files
-                              (##cons gen-c-file
+                              (##cons (##cons gen-c-file flags)
                                       rev-gen-c-files)))
 
                       (define (add-obj-file obj-file)
@@ -320,10 +327,7 @@
                                   (rest (##cdr lst)))
                               (if (option? file)
                                   (let ((option-name (convert-option file)))
-                                    (cond ((##string=? option-name "")
-                                           (##repl-debug #f #t)
-                                           (loop2 rest))
-                                          ((##string=? option-name "e")
+                                    (cond ((##string=? option-name "e")
                                            (if (##pair? rest)
                                                (let ((src (read-source-from-string
                                                            (##car rest)
@@ -331,6 +335,15 @@
                                                  (##eval-top src ##interaction-cte)
                                                  (loop2 (##cdr rest)))
                                                (loop2 rest)))
+                                          ((##string=? option-name "")
+                                           (##repl-debug #f #t)
+                                           (loop2 rest))
+                                          ((##string=? option-name "preload")
+                                           (set! flags '((preload . #t)))
+                                           (loop2 rest))
+                                          ((##string=? option-name "nopreload")
+                                           (set! flags '((preload . #f)))
+                                           (loop2 rest))
                                           (else
                                            (loop2 rest))))
                                   (let ((root (##path-strip-extension file)))
@@ -458,9 +471,11 @@
                                                       expanded-output
                                                       (##string-append
                                                        (##path-strip-extension
-                                                        (##car
-                                                         (if (##pair? gen-c-files)
-                                                             (##reverse gen-c-files)
+                                                        (if (##pair? gen-c-files)
+                                                            (##car
+                                                             (##car
+                                                              (##reverse gen-c-files)))
+                                                            (##car
                                                              rev-obj-files)))
                                                        ##os-exe-extension-string-saved))))))))
 
@@ -519,6 +534,14 @@
      (lambda (first output-port)
        (##write-string
         "*** WARNING -- The options \"c\", \"link\", \"dynamic\", \"exe\" and \"obj\" are mutually exclusive\n"
+        output-port)
+       #t)))
+
+  (define (warn-invalid-preload-options)
+    (##repl
+     (lambda (first output-port)
+       (##write-string
+        "*** WARNING -- The options \"preload\" and \"nopreload\" must be used with the options \"link\" and \"exe\"\n"
         output-port)
        #t)))
 

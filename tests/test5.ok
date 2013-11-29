@@ -3,7 +3,7 @@
 (
 407000
 " mix"
-(" mix")
+((" mix"))
 (
 "*"
 "+"
@@ -395,7 +395,7 @@
 "with-exception-handler"
 "write"
 )
- ()
+ 1
 )
 #else
 #define ___VERSION 407000
@@ -3266,9 +3266,10 @@ ___DEF_SUB_STR(___X269,32)
                ___STR8(42,32,45,48,46,32,48,46)
                ___STR8(41,32,33,61,32,45,48,46)
                ___STR0
-___DEF_SUB_VEC(___X270,3)
+___DEF_SUB_VEC(___X270,4)
                ___VEC1(___REF_SYM(45,___S_mix))
                ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
                ___VEC1(___REF_NUL)
                ___VEC0
 

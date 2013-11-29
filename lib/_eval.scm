@@ -3849,7 +3849,7 @@
              (let ((module-descrs (##vector-ref result 0))
                    (script-line (##vector-ref result 2)))
                (script-callback script-line abs-path)
-               (##register-module-descrs-and-load! module-descrs)
+               (##register-module-descrs-and-load-last! module-descrs)
                abs-path)))))
 
   (define (load-no-ext psettings path)

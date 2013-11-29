@@ -294,6 +294,7 @@
                     ;; TODO: support type descriptor
                     (vector (string->symbol module-name)
                             (car module-procs)
+                            1 ;; preload flag, note that linker may change this
                             module-meta-info)))
 
               (if compiler-option-report

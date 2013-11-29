@@ -772,7 +772,7 @@
           (##eq? parent ##dynamic-wind)
           (##eq? parent ##dynamic-env-bind)
           (##eq? parent ##kernel-handlers)
-          (##eq? parent ##load-program)
+          (##eq? parent ##load-vm)
           (##eq? parent ##repl-debug)
           (##eq? parent ##repl-debug-main)
           (##eq? parent ##repl-within)

@@ -4435,6 +4435,9 @@ end-of-code
 (define ##program-descr
   (##c-code "___RESULT = ___GSTATE->program_descr;"))
 
+(define ##vm-main-module-id
+  (##c-code "___RESULT = ___VMSTATE->main_module_id;"))
+
 (define-prim (##main)
   (##exit-cleanup))
 
@@ -4470,17 +4473,21 @@ end-of-code
         (##set-car! x module)
         (set! ##registered-modules
               (##cons module
-                      ##registered-modules)))))
+                      ##registered-modules)))
+    module))
 
 (define-prim (##register-module-descrs! module-descrs)
-  (let loop ((i (##fx- (##vector-length module-descrs) 1)))
+  (let loop ((i (##fx- (##vector-length module-descrs) 1))
+             (modules '()))
     (if (##fx>= i 0)
         (let* ((module-descr
                 (##vector-ref module-descrs i))
                (name
                 (##vector-ref module-descr 0)))
-          (##register-module-descr! name module-descr)
-          (loop (##fx- i 1))))))
+          (loop (##fx- i 1)
+                (##cons (##register-module-descr! name module-descr)
+                        modules)))
+        modules)))
 
 (define-prim (##lookup-registered-module name)
   (let ((x (##lookup-module name ##registered-modules)))
@@ -4513,6 +4520,18 @@ end-of-code
 
         (##load-module-struct module))))
 
+(define-prim (##load-required-module-structs modules force-load-last?)
+  (let loop ((modules modules))
+    (if (##pair? modules)
+        (let* ((module (##car modules))
+               (module-descr (macro-module-descr module))
+               (rest (##cdr modules)))
+          ;; load module if the preload flag is set or we force the loading
+          (if (or (##fx= (##fxand 1 (##vector-ref module-descr 2)) 1)
+                  (and force-load-last? (##not (##pair? rest))))
+              (##load-required-module-struct module))
+          (loop rest)))))
+
 (define-prim (##default-load-required-module module-ref)
 
   (define (err)
@@ -4533,48 +4552,18 @@ end-of-code
 (define ##load-required-module #f)
 (set! ##load-required-module ##default-load-required-module)
 
-(define-prim (##register-module-descrs-and-load! module-descrs)
+(define-prim (##register-module-descrs-and-load-last! module-descrs)
+  (let ((modules (##register-module-descrs! module-descrs)))
+    (##load-required-module-structs modules #t)))
 
-  (##register-module-descrs! module-descrs)
-
-  (##load-required-module
-   (##vector-ref (##vector-ref
-                  module-descrs
-                  (##fx- (##vector-length module-descrs) 1))
-                 0)))
-
-(define-prim (##load-program)
+(define-prim (##load-vm)
   (let ((module-descrs (##vector-ref ##program-descr 0)))
+    (let ((modules (##register-module-descrs! module-descrs)))
+      (macro-module-state-set! (##car modules) 1) ;; _kernel has run
+      (##load-required-module-structs (##cdr modules) #f)
+      (##load-required-module ##vm-main-module-id)
+      (##main))))
 
-    (##register-module-descrs! module-descrs)
-
-    (macro-module-state-set! (##car ##registered-modules) 1) ;; _kernel has run
-
-    (if #f
-
-        (##load-required-module
-         (##vector-ref (##vector-ref
-                        module-descrs
-                        (##fx- (##vector-length module-descrs) 1))
-                       0))
-
-        (let ()
-
-          (define (##execute-modules modules)
-            (if (##pair? modules)
-                (let loop ((modules modules))
-                  (let ((module (##car modules))
-                        (rest (##cdr modules)))
-                    (if (##pair? rest)
-                        (begin
-                          (##load-required-module-struct module)
-                          (loop rest))
-                        (##load-required-module-struct module)))))) ;; tail call last module
-
-          (##execute-modules (##cdr ##registered-modules))))
-
-    (##main)))
-
-(##load-program)
+(##load-vm)
 
 ;;;============================================================================
