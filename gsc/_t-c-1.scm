@@ -1244,11 +1244,11 @@
             (targ-code* (list "NEED_GLO" (targ-c-id-glo name)))))
         glo-list)))
 
-  (targ-dump-section "BEGIN_SYM1" "END_SYM1" #f sym-list
+  (targ-dump-section "BEGIN_SYM" "END_SYM" #f sym-list
     (lambda (i s)
       (targ-cell-set! (cdr s) i)
       (let ((name (symbol->string (car s))))
-        (targ-code* (list "DEF_SYM1"
+        (targ-code* (list "DEF_SYM"
                           i
                           (targ-c-id-sym name)
                           (targ-c-string name))))))
@@ -1261,11 +1261,11 @@
                                      i
                                      (targ-c-id-sym name))))))
 
-  (targ-dump-section "BEGIN_KEY1" "END_KEY1" #f key-list
+  (targ-dump-section "BEGIN_KEY" "END_KEY" #f key-list
     (lambda (i k)
       (targ-cell-set! (cdr k) i)
       (let ((name (keyword-object->string (car k))))
-        (targ-code* (list "DEF_KEY1"
+        (targ-code* (list "DEF_KEY"
                           i
                           (targ-c-id-key name)
                           (targ-c-string name))))))
@@ -1895,18 +1895,21 @@
 
 (define (targ-dump-mod objs c-inits sym-list key-list)
 
+  (define (def-mod-prm-glo kind)
+    (for-each
+     (lambda (obj)
+       (let* ((proc (car obj))
+              (p (cdr obj))
+              (name (proc-obj-name proc)))
+         (targ-code* (list kind
+                           (targ-use-glo (string->symbol name) #f)
+                           (targ-c-id-glo name)
+                           (caddr p)))))
+     objs))
+
   (targ-code* '("BEGIN_MOD_PRM"))
 
-  (for-each
-    (lambda (obj)
-      (let* ((proc (car obj))
-             (p (cdr obj))
-             (name (proc-obj-name proc)))
-        (targ-code* (list "DEF_PRM"
-                          (targ-use-glo (string->symbol name) #f)
-                          (targ-c-id-glo name)
-                          (caddr p)))))
-    objs)
+  (def-mod-prm-glo "DEF_MOD_PRM")
 
   (targ-code* '("END_MOD_PRM"))
 
@@ -1924,12 +1927,20 @@
 
   (targ-line)
 
+  (targ-code* '("BEGIN_MOD_GLO"))
+
+  (def-mod-prm-glo "DEF_MOD_GLO")
+
+  (targ-code* '("END_MOD_GLO"))
+
+  (targ-line)
+
   (targ-code* '("BEGIN_MOD_SYM_KEY"))
 
   (for-each
     (lambda (s)
       (let ((name (symbol->string (car s))))
-        (targ-code* (list "DEF_SYM2"
+        (targ-code* (list "DEF_MOD_SYM"
                           (cdr s)
                           (targ-c-id-sym name)
                           (targ-c-string name)))))
@@ -1938,7 +1949,7 @@
   (for-each
     (lambda (k)
       (let ((name (keyword-object->string (car k))))
-        (targ-code* (list "DEF_KEY2"
+        (targ-code* (list "DEF_MOD_KEY"
                           (cdr k)
                           (targ-c-id-key name)
                           (targ-c-string name)))))

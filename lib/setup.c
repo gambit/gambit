@@ -42,29 +42,31 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
  */
 
 /*
- * '___raise_interrupt (code)' is called when an interrupt has
- * occured.  At some later point in time, the Gambit kernel will cause
- * the Scheme procedure ##interrupt-handler to be called with a single
- * integer argument indicating which interrupt has been received.
- * Interrupt codes are defined in "gambit.h".  Currently, the
- * following codes are defined:
+ * '___raise_interrupt_pstate (___ps, code)' is called when an
+ * interrupt has occured.  At some later point in time, the Gambit
+ * kernel will cause the Scheme procedure ##interrupt-handler to be
+ * called with a single integer argument indicating which interrupt
+ * has been received.  Interrupt codes are defined in "gambit.h".
+ * Currently, the following codes are defined:
  *
  *   ___INTR_USER        user has interrupted the program (e.g. ctrl-C)
  *   ___INTR_HEARTBEAT   heartbeat time interval has elapsed
  *   ___INTR_GC          a garbage collection has finished
  */
 
-___EXP_FUNC(void,___raise_interrupt)
-   ___P((int code),
-        (code)
+___EXP_FUNC(void,___raise_interrupt_pstate)
+   ___P((___processor_state ___ps,
+         int code),
+        (___ps,
+         code)
+___processor_state ___ps;
 int code;)
 {
-  ___processor_state ___ps = ___PSTATE;
-
   /*
-   * Note: ___raise_interrupt may be called before the processor state
-   * is initialized.  As a consequence, the interrupt(s) received
-   * before the initialization of the processor state will be ignored.
+   * Note: ___raise_interrupt_pstate may be called before the
+   * processor state is initialized.  As a consequence, the
+   * interrupt(s) received before the initialization of the processor
+   * state will be ignored.
    */
 
 #ifdef CALL_GC_FREQUENTLY
@@ -78,21 +80,48 @@ int code;)
 }
 
 
-___EXP_FUNC(void,___begin_interrupt_service) ___PVOID
+___EXP_FUNC(void,___raise_interrupt_vmstate)
+   ___P((___virtual_machine_state ___vms,
+         int code),
+        (___vms,
+         code)
+___virtual_machine_state ___vms;
+int code;)
 {
-  ___processor_state ___ps = ___PSTATE;
-
-  ___STACK_TRIP_OFF();
+  /*TODO: extend to all processors in the VM*/
+  ___raise_interrupt_pstate (&___vms->pstate0, code);
 }
 
 
-___EXP_FUNC(___BOOL,___check_interrupt)
+___EXP_FUNC(void,___raise_interrupt)
    ___P((int code),
         (code)
 int code;)
 {
-  ___processor_state ___ps = ___PSTATE;
+  /*TODO: extend to all virtual machines*/
+  ___raise_interrupt_vmstate (&___GSTATE->vmstate0, code);
+}
 
+
+___EXP_FUNC(void,___begin_interrupt_service_pstate)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+  ___STACK_TRIP_OFF();
+}
+
+
+___EXP_FUNC(___BOOL,___check_interrupt_pstate)
+   ___P((___PSD
+         int code),
+        (___PSV
+         code)
+___PSDKR
+int code;)
+{
+  ___PSGET
   if ((___ps->intr_flag[code] & ~___ps->intr_mask) != ___FIX(0))
     {
       ___ps->intr_flag[code] = ___FIX(0);
@@ -103,13 +132,15 @@ int code;)
 }
 
 
-___EXP_FUNC(void,___end_interrupt_service)
-   ___P((int code),
-        (code)
+___EXP_FUNC(void,___end_interrupt_service_pstate)
+   ___P((___PSD
+         int code),
+        (___PSV
+         code)
+___PSDKR
 int code;)
 {
-  ___processor_state ___ps = ___PSTATE;
-
+  ___PSGET
   if (___ps->intr_enabled != ___FIX(0))
     {
 #ifdef CALL_HANDLER_AT_EVERY_POLL
@@ -129,25 +160,31 @@ int code;)
 }
 
 
-___EXP_FUNC(void,___disable_interrupts) ___PVOID
+___EXP_FUNC(void,___disable_interrupts_pstate)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
-  ___processor_state ___ps = ___PSTATE;
+  ___PSGET
 
   ___ps->intr_enabled = ___FIX(0);
 
-  ___begin_interrupt_service ();
-  ___end_interrupt_service (0);
+  ___begin_interrupt_service_pstate (___PSPNC);
+  ___end_interrupt_service_pstate (___PSP 0);
 }
 
 
-___EXP_FUNC(void,___enable_interrupts) ___PVOID
+___EXP_FUNC(void,___enable_interrupts_pstate)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
-  ___processor_state ___ps = ___PSTATE;
+  ___PSGET
 
   ___ps->intr_enabled = ___FIX((1<<___NB_INTRS)-1);
 
-  ___begin_interrupt_service ();
-  ___end_interrupt_service (0);
+  ___begin_interrupt_service_pstate (___PSPNC);
+  ___end_interrupt_service_pstate (___PSP 0);
 }
 
 
@@ -229,8 +266,9 @@ ___mod_or_lnk (*linker) ();)
 
 typedef struct fem_context
   {
+    ___processor_state ps;
     int module_count;
-    ___SCMOBJ module_descr;
+    ___SCMOBJ program_descr;
     ___UTF_8STRING module_script_line;
     ___SCMOBJ flags;
   } fem_context;
@@ -319,7 +357,7 @@ ___UTF_8STRING str;
 int supply;
 ___glo_struct **glo;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___PSTATE);/* TODO: remove and fix ___GLOCELL_IN_VM*/
   ___glo_struct *g;
   ___SCMOBJ sym = ___make_symkey_from_UTF_8_string (str, ___sSYMBOL);
 
@@ -333,8 +371,8 @@ ___glo_struct **glo;)
 
   g = ___GLOBALVARSTRUCT(sym);
 
-  if (supply && ___GLOCELL(g->val) == ___UNB1)
-    ___GLOCELL(g->val) = ___UNB2;
+  if (supply && ___GLOCELL_IN_VM(___vms,g->val) == ___UNB1)
+    ___GLOCELL_IN_VM(___vms,g->val) = ___UNB2;
 
   *glo = g;
 
@@ -342,7 +380,7 @@ ___glo_struct **glo;)
 }
 
 
-___HIDDEN ___SCMOBJ setup_module_phase1
+___HIDDEN ___SCMOBJ setup_module_fixup
    ___P((fem_context *ctx,
          ___module_struct *module),
         (ctx,
@@ -380,10 +418,10 @@ ___module_struct *module;)
 
   flags = module->flags;
 
-  if (flags & ___SETUP_PHASE1_DONE)
+  if (flags & ___SETUP_FIXUP_DONE)
     return ___FIX(___NO_ERR);
 
-  module->flags = flags | ___SETUP_PHASE1_DONE;
+  module->flags = flags | ___SETUP_FIXUP_DONE;
 
   glotbl     = module->glotbl;
   supcount   = module->supcount;
@@ -639,7 +677,7 @@ ___HIDDEN char module_prefix[] = ___MODULE_PREFIX;
 #define module_prefix_length (sizeof(module_prefix)-1)
 
 
-___HIDDEN ___SCMOBJ setup_module_phase2
+___HIDDEN ___SCMOBJ setup_module_collect_undef_globals
    ___P((fem_context *ctx,
          ___module_struct *module),
         (ctx,
@@ -647,7 +685,9 @@ ___HIDDEN ___SCMOBJ setup_module_phase2
 fem_context *ctx;
 ___module_struct *module;)
 {
-  ___processor_state ___ps = ___PSTATE;
+/* TODO: remove */
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(ctx->ps);/* TODO: remove and fix ___GLOCELL_IN_VM*/
+
   ___UTF_8STRING *glo_names = module->glo_names;
 
   if (glo_names != 0)
@@ -667,7 +707,7 @@ ___module_struct *module;)
 
           ___glo_struct *glo = ___CAST(___glo_struct*,glotbl[i]);
 
-          if (___GLOCELL(glo->val) == ___UNB1)
+          if (___GLOCELL_IN_VM(___vms,glo->val) == ___UNB1)
             {
               ___SCMOBJ err;
               ___SCMOBJ glo_name;
@@ -676,30 +716,36 @@ ___module_struct *module;)
               ___SCMOBJ pair2;
 
               if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
-                           (glo_names[i],
+                           (NULL, /* allocate as permanent object */
+                            glo_names[i],
                             &glo_name,
-                            0))
+                            -1))
                   != ___FIX(___NO_ERR))
                 return err;
 
               if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
-                           (name+module_prefix_length,
+                           (NULL, /* allocate as permanent object */
+                            name+module_prefix_length,
                             &module_name,
-                            -1)) /* allocate as permanent object */
+                            -1))
                   != ___FIX(___NO_ERR))
-                return ___FIX(err);
+                return err;
 
-              pair1 = ___make_pair (glo_name, module_name, ___PERM);
+              pair1 = ___make_pair (NULL, /* allocate as permanent object */
+                                    glo_name,
+                                    module_name);
 
               if (___FIXNUMP(pair1))
                 return pair1;
 
-              pair2 = ___make_pair (pair1, ___FIELD(ctx->module_descr,1), ___PERM);
+              pair2 = ___make_pair (NULL, /* allocate as permanent object */
+                                    pair1,
+                                    ___FIELD(ctx->program_descr,1));
 
               if (___FIXNUMP(pair2))
                 return pair2;
 
-              ___FIELD(ctx->module_descr,1) = pair2;
+              ___FIELD(ctx->program_descr,1) = pair2;
             }
         }
     }
@@ -708,7 +754,7 @@ ___module_struct *module;)
 }
 
 
-___HIDDEN ___SCMOBJ setup_module_phase3
+___HIDDEN ___SCMOBJ setup_module_collect_moddescrs
    ___P((fem_context *ctx,
          ___module_struct *module),
         (ctx,
@@ -718,23 +764,24 @@ ___module_struct *module;)
 {
   if (module->lblcount > 0)
     {
+      ___SCMOBJ err;
       ___SCMOBJ descr = module->moddescr;
 
       /* TODO: obsolete code */
       if (descr == ___FAL)
         {
-          ___SCMOBJ err;
           ___SCMOBJ mod_name;
 
-          descr = ___make_vector (3, ___FAL, ___PERM);
+          descr = ___make_vector (NULL, 3, ___FAL);
 
           if (___FIXNUMP(descr))
             return descr;
 
           if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
-                       (module->name+1,
+                       (NULL, /* allocate as permanent object */
+                        module->name+1,
                         &mod_name,
-                        -1)) /* allocate as permanent object */
+                        -1))
               != ___FIX(___NO_ERR))
             return err;
 
@@ -744,12 +791,22 @@ ___module_struct *module;)
 
       ___FIELD(descr,2) = ctx->flags;
 
-      ___FIELD(___FIELD(ctx->module_descr,0),ctx->module_count) = descr;
+      if ((err = ___NONNULLPOINTER_to_SCMOBJ
+                   (NULL, /* allocate as permanent object */
+                    ___CAST(void*,module),
+                    ___FAL,
+                    NULL,
+                    &___FIELD(descr,4),
+                    ___RETURN_POS))
+          != ___FIX(___NO_ERR))
+        return err;
+
+      ___FIELD(___FIELD(ctx->program_descr,0),ctx->module_count) = descr;
 
       ctx->module_count++;
     }
 
-  return module->init_proc ();
+  return module->setup_mod ();
 }
 
 
@@ -785,64 +842,71 @@ ___mod_or_lnk mol;)
 
 
 ___HIDDEN ___SCMOBJ setup_modules
-   ___P((___mod_or_lnk mol),
-        (mol)
+   ___P((___PSD
+         ___mod_or_lnk mol),
+        (___PSV
+         mol)
+___PSDKR
 ___mod_or_lnk mol;)
 {
+  ___PSGET
   ___SCMOBJ result;
+  ___SCMOBJ script_line;
+  fem_context fem_ctx;
+  fem_context *ctx = &fem_ctx;
 
-  result = ___make_vector (3, ___NUL, ___PERM);
+  /* Create program descriptor */
 
-  if (!___FIXNUMP(result))
-    {
-      fem_context fem_ctx;
-      fem_context *ctx = &fem_ctx;
+  if (___FIXNUMP(result = ___make_vector (NULL, 3, ___NUL)))
+    return result;
 
-      ctx->module_count = 0;
-      ctx->module_descr = result;
+  ctx->ps = ___ps;
+  ctx->module_count = 0;
+  ctx->program_descr = result;
 
-      if ((result = for_each_module (ctx,
-                                     mol,
-                                     setup_module_phase1))
-          == ___FIX(___NO_ERR))
-        {
-          if ((result = for_each_module (ctx,
-                                         mol,
-                                         setup_module_phase2))
-              == ___FIX(___NO_ERR))
-            {
-              result = ___make_vector (ctx->module_count, ___FAL, ___PERM);
+  /* Fixup objects and tables in all the modules and count modules */
 
-              if (!___FIXNUMP(result))
-                {
-                  ___FIELD(ctx->module_descr,0) = result;
+  if ((result = for_each_module (ctx,
+                                 mol,
+                                 setup_module_fixup))
+      != ___FIX(___NO_ERR))
+    return result;
 
-                  ctx->module_count = 0;
-                  ctx->flags = ___FIX(0); /* preload flag */
+  /* Collect undefined globals */
 
-                  if ((result = for_each_module (ctx,
-                                                 mol,
-                                                 setup_module_phase3))
-                      == ___FIX(___NO_ERR))
-                    {
-                      ___SCMOBJ script_line;
+  if ((result = for_each_module (ctx,
+                                 mol,
+                                 setup_module_collect_undef_globals))
+      != ___FIX(___NO_ERR))
+    return result;
 
-                      if ((result = ___UTF_8STRING_to_SCMOBJ
-                                      (get_script_line (mol),
-                                       &script_line,
-                                       -1)) /* allocate as permanent object */
-                          == ___FIX(___NO_ERR))
-                        {
-                          ___FIELD(ctx->module_descr,2) = script_line;
-                          result = ctx->module_descr;
-                        }
-                    }
-                }
-            }
-        }
-    }
+  /* Create vector of module descriptors */
 
-  return result;
+  if (___FIXNUMP(result = ___make_vector (NULL, ctx->module_count, ___FAL)))
+    return result;
+
+  ___FIELD(ctx->program_descr,0) = result;
+
+  ctx->module_count = 0;
+  ctx->flags = ___FIX(0); /* preload flag */
+
+  if ((result = for_each_module (ctx,
+                                 mol,
+                                 setup_module_collect_moddescrs))
+      != ___FIX(___NO_ERR))
+    return result;
+
+  if ((result = ___UTF_8STRING_to_SCMOBJ
+                  (NULL, /* allocate as permanent object */
+                   get_script_line (mol),
+                   &script_line,
+                   -1))
+      != ___FIX(___NO_ERR))
+    return result;
+
+  ___FIELD(ctx->program_descr,2) = script_line;
+
+  return ctx->program_descr;
 }
 
 
@@ -868,7 +932,7 @@ ___SCMOBJ modname;)
         result = ___FIX(___MODULE_ALREADY_LOADED_ERR);
       else
         {
-          result = setup_modules (mol);
+          result = setup_modules (___PSA(___PSTATE) mol);
           mol->linkfile.version = -1; /* mark link file as 'setup' */
         }
     }
@@ -1444,7 +1508,9 @@ ___mod_or_lnk mol;)
       ___linkinfo *p1 = mol->linkfile.linkertbl;
       ___FAKEWORD *p2 = mol->linkfile.sym_list;
       ___FAKEWORD *p3 = mol->linkfile.key_list;
-      ___processor_state ___ps = ___PSTATE;
+
+/* TODO: remove */
+      ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___PSTATE);/* TODO: remove and fix ___GLOCELL_IN_VM*/
 
       while (p1->mol != 0)
         {
@@ -1469,7 +1535,7 @@ ___mod_or_lnk mol;)
           {
             ___SCMOBJ tmp = glo->val;
             glo->val = ___GSTATE->mem.nb_glo_vars;
-            ___GLOCELL(glo->val) = tmp;
+            ___GLOCELL_IN_VM(___vms,glo->val) = tmp;
             ___GSTATE->mem.nb_glo_vars++;
           }
 #endif
@@ -1556,17 +1622,20 @@ ___processor_state ___ps;)
 
 
 ___EXP_FUNC(___SCMOBJ,___call)
-   ___P((int nargs,
+   ___P((___PSD
+         int nargs,
          ___SCMOBJ proc,
          ___SCMOBJ stack_marker),
-        (nargs,
+        (___PSV
+         nargs,
          proc,
          stack_marker)
+___PSDKR
 int nargs;
 ___SCMOBJ proc;
 ___SCMOBJ stack_marker;)
 {
-  ___processor_state ___ps = ___PSTATE;
+  ___PSGET
   ___SCMOBJ *___fp = ___ps->fp;
   ___SCMOBJ ___err;
 
@@ -1630,7 +1699,7 @@ ___SCMOBJ stack_marker;)
 
   ___BEGIN_TRY
 
-  trampoline(___ps);
+  trampoline (___ps);
 
   ___END_TRY
 
@@ -1646,13 +1715,17 @@ ___SCMOBJ stack_marker;)
 
 
 ___EXP_FUNC(void,___propagate_error)
-   ___P((___SCMOBJ err),
-        (err)
+   ___P((___PSD
+         ___SCMOBJ err),
+        (___PSV
+         err)
+___PSDKR
 ___SCMOBJ err;)
 {
+  ___PSGET
+
   if (err != ___FIX(___NO_ERR))
     {
-      ___processor_state ___ps = ___PSTATE;
       ___THROW (err);
     }
 }
@@ -1661,16 +1734,19 @@ ___SCMOBJ err;)
 #ifdef ___DEBUG_HOST_CHANGES
 
 ___EXP_FUNC(void,___register_host_entry)
-   ___P((___WORD start,
+   ___P((___PSD
+         ___WORD start,
          char *module_name),
-        (start,
+        (___PSV
+         start,
          module_name)
+___PSDKR
 ___WORD start;
 char *module_name;)
 {
 #ifdef ___DEBUG
 
-  ___processor_state ___ps = ___PSTATE;
+  ___PSGET
   ___SCMOBJ sym;
 
   ___printf ("*** Entering ");
@@ -1874,9 +1950,10 @@ ___HIDDEN ___SCMOBJ setup_command_line_arguments ___PVOID
 #define ___COMMAND_LINE_CE_SELECT(ISO_8859_1,UTF_8,UCS_2,UCS_4,wchar,native) UCS_2
 
   return ___NONNULLSTRINGLIST_to_SCMOBJ
-           (argv,
+           (NULL, /* allocate as permanent object */
+            argv,
             &___GSTATE->command_line,
-            -1, /* allocate as permanent object */
+            -1,
             ___CE(___COMMAND_LINE_CE_SELECT));
 }
 
@@ -2500,12 +2577,6 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___set_data_rc
     = ___set_data_rc;
 
-  ___GSTATE->___alloc_scmobj_perm
-    = ___alloc_scmobj_perm;
-
-  ___GSTATE->___alloc_scmobj_still
-    = ___alloc_scmobj_still;
-
   ___GSTATE->___alloc_scmobj
     = ___alloc_scmobj;
 
@@ -2580,23 +2651,29 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
     = ___register_host_entry;
 #endif
 
+  ___GSTATE->___raise_interrupt_pstate
+    = ___raise_interrupt_pstate;
+
+  ___GSTATE->___raise_interrupt_vmstate
+    = ___raise_interrupt_vmstate;
+
   ___GSTATE->___raise_interrupt
     = ___raise_interrupt;
 
-  ___GSTATE->___begin_interrupt_service
-    = ___begin_interrupt_service;
+  ___GSTATE->___begin_interrupt_service_pstate
+    = ___begin_interrupt_service_pstate;
 
-  ___GSTATE->___check_interrupt
-    = ___check_interrupt;
+  ___GSTATE->___check_interrupt_pstate
+    = ___check_interrupt_pstate;
 
-  ___GSTATE->___end_interrupt_service
-    = ___end_interrupt_service;
+  ___GSTATE->___end_interrupt_service_pstate
+    = ___end_interrupt_service_pstate;
 
-  ___GSTATE->___disable_interrupts
-    = ___disable_interrupts;
+  ___GSTATE->___disable_interrupts_pstate
+    = ___disable_interrupts_pstate;
 
-  ___GSTATE->___enable_interrupts
-    = ___enable_interrupts;
+  ___GSTATE->___enable_interrupts_pstate
+    = ___enable_interrupts_pstate;
 
   ___GSTATE->___alloc_mem
     = ___alloc_mem;
@@ -2609,6 +2686,23 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___free_mem_code
     = ___free_mem_code;
+
+#ifdef ___USE_emulated_compare_and_swap_word
+
+  ___GSTATE->___emulated_compare_and_swap_word
+    = ___emulated_compare_and_swap_word;
+
+#endif
+
+#ifndef ___THREAD_LOCAL_STORAGE_CLASS
+
+  ___GSTATE->___get_tls_ptr
+    = ___get_tls_ptr;
+
+  ___GSTATE->___set_tls_ptr
+    = ___set_tls_ptr;
+
+#endif
 
   ___GSTATE->___disable_heartbeat_interrupts
     = ___disable_heartbeat_interrupts;
@@ -2652,18 +2746,18 @@ ___processor_state ___ps;)
 #endif
 
   /*
-   * Setup interrupt system.
+   * Setup interrupt system of this processor.
    */
 
-  ___disable_interrupts (); /* globally disable all interrupts */
+  ___disable_interrupts_pstate (___PSPNC); /* disable all interrupts */
 
   ___ps->intr_mask = ___FIX(0); /* None of the interrupts are ignored */
 
   for (i=0; i<___NB_INTRS; i++) /* None of the interrupts are requested */
     ___ps->intr_flag[i] = ___FIX(0);
 
-  ___begin_interrupt_service ();
-  ___end_interrupt_service (0);
+  ___begin_interrupt_service_pstate (___PSPNC);
+  ___end_interrupt_service_pstate (___PSP 0);
 }
 
 
@@ -2734,6 +2828,8 @@ ___setup_params_struct *setup_params;)
   ___mod_or_lnk mol;
   ___SCMOBJ marker;
 
+  ___SET_PSTATE(___ps);
+
   /*
    * Check for valid setup_params structure.
    */
@@ -2791,7 +2887,7 @@ ___setup_params_struct *setup_params;)
    * Setup each module.
    */
 
-  ___GSTATE->program_descr = setup_modules (mol);
+  ___GSTATE->program_descr = setup_modules (___PSP mol);
 
   if (___FIXNUMP(___GSTATE->program_descr))
     {
@@ -2844,11 +2940,12 @@ ___setup_params_struct *setup_params;)
   ___BEGIN_TRY
 
   if ((___err = ___make_sfun_stack_marker
-                  (&marker,
+                  (___ps,
+                   &marker,
                    ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1)))
       == ___FIX(___NO_ERR))
     {
-      ___err = ___call (0, ___FIELD(marker,0), marker);
+      ___err = ___call (___PSP 0, ___FIELD(marker,0), marker);
       ___kill_sfun_stack_marker (marker);
     }
 

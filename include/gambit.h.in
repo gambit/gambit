@@ -1261,6 +1261,43 @@
 #endif
 #endif
 
+/*
+ * Determine which thread system is being used.  This needs to be
+ * known by this header file to allow the definition of macros which
+ * expand to calls to thread system specific functions, thus avoiding
+ * the overhead of a function call (which could be significant for
+ * some basic operations such as ___MUTEX_LOCK and ___MUTEX_UNLOCK).
+ */
+
+#ifndef ___USE_NO_THREAD_SYSTEM
+
+#ifndef ___USE_POSIX_THREADS
+#ifndef ___USE_WIN32_THREADS
+#define @CONF_THREAD_SYSTEM@
+#endif
+#endif
+
+#ifdef ___USE_POSIX_THREADS
+#ifdef ___USE_WIN32_THREADS
+#error "Define either ___USE_POSIX_THREADS or ___USE_WIN32_THREADS"
+#endif
+#endif
+
+#endif
+
+/*
+ * Determine which thread local storage class keyword to use.  The
+ * configure script normally determines this because it depends on
+ * many factors (the compiler, the version and the OS).  It is
+ * normally __thread on gcc and __declspec(thread) on WIN32.
+ */
+
+#ifndef ___NO_THREAD_LOCAL_STORAGE_CLASS
+#ifndef ___THREAD_LOCAL_STORAGE_CLASS
+#define @CONF_THREAD_LOCAL_STORAGE_CLASS@
+#endif
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -3405,9 +3442,11 @@ ___SET_R0(___GSTATE->handler_break)
 #define ___PSADJFP(fpa)___FP_ADJFP(___PSFP,fpa)
 
 #ifdef ___SINGLE_VM
+#define ___GLOCELL_IN_VM(vm,x)x
 #define ___GLOCELL(x)x
 #else
-#define ___GLOCELL(x)___VMSTATE_FROM_PSTATE(___ps)->glos[x]
+#define ___GLOCELL_IN_VM(vm,x)vm->glos[x]
+#define ___GLOCELL(x)___GLOCELL_IN_VM(___VMSTATE_FROM_PSTATE(___ps),x)
 #endif
 
 #define ___PRMCELL(x)x
@@ -3452,7 +3491,7 @@ ___SET_R0(___GSTATE->handler_break)
 
 #define ___BEGIN_COD \
 ___HIDDEN ___WORD ___HOST_PROC ___P((___processor_state ___ps),(___ps) \
-___processor_state ___ps;){ \
+___processor_state ___ps;) { \
 register ___WORD ___pc, ___start, ___temp; \
 register ___S32 ___s32_temp; /*******************/ \
 register ___U32 ___u32_temp; /*******************/ \
@@ -3465,13 +3504,13 @@ ___ps->pc=___pc; ___W_ALL return ___pc; }
 
 #ifdef ___DEBUG_HOST_CHANGES
 #define ___REGISTER_HOST_ENTRY \
-___EXT(___register_host_entry) (___start, ___MODULE_NAME);
+___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME);
 #else
 #define ___REGISTER_HOST_ENTRY
 #endif
 
 #define ___USES_INDIRECT_GOTO 1
-#define ___SETUP_PHASE1_DONE  2
+#define ___SETUP_FIXUP_DONE   2
 
 #ifdef ___USE_LABEL_VALUES
 
@@ -4972,19 +5011,88 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 
 #endif
 
-#ifdef ___SINGLE_VM
-#define ___VMSTATE (&___GSTATE->vmstate0)
+#ifdef ___USE_NO_THREAD_SYSTEM
+
+/* Use direct access to the only pstate (this is probably fast) */
+
+#define ___FAST_GET_PSTATE
+#define ___GET_PSTATE() (&___GSTATE->vmstate0.pstate0)
+#define ___SET_PSTATE(ps)
+
 #else
-#define ___VMSTATE (&___GSTATE->vmstate0) /* TODO: actually get the VMSTATE */
+
+#ifdef ___THREAD_LOCAL_STORAGE_CLASS
+
+/* Use thread local storage class (this is probably fast) */
+
+extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
+
+#define ___FAST_GET_PSTATE
+#define ___GET_PSTATE() ___CAST(___processor_state,___tls_ptr)
+#define ___SET_PSTATE(ps) ___tls_ptr = ___CAST(void*,ps)
+
+#else
+
+/* Use thread local storage getter/setter (this is probably slow) */
+
+#define ___GET_PSTATE() ___CAST(___processor_state,___get_tls_ptr())
+#define ___SET_PSTATE(ps) ___set_tls_ptr(___CAST(void*,ps))
+
 #endif
 
+#endif
+
+#ifdef ___FAST_GET_PSTATE
+
+/*
+ * ___GET_PSTATE is fast, so it is acceptable to get the processor
+ * state pointer at the top of every function that needs to access the
+ * processor state.
+ */
+
+#define ___PSGET ___processor_state ___ps = ___PSTATE;
+
+#define ___PSDNC
+#define ___PSVNC
+
+#define ___PSD
+#define ___PSV
+#define ___PSDKR
+
+#define ___PSANC(ps)
+#define ___PSA(ps)
+#else
+
+/*
+ * ___GET_PSTATE is slow, so the processor state pointer will be
+ * propagated from one function to its callees when possible.
+ */
+
+#define ___PSGET
+
+#define ___PSDNC ___processor_state ___ps
+#define ___PSVNC ___ps
+
+#define ___PSD ___PSDNC,
+#define ___PSV ___PSVNC,
+#define ___PSDKR ___PSDNC;
+
+#define ___PSANC(ps) ps
+#define ___PSA(ps) ps,
+
+#endif
+
+#define ___PSPNC ___PSANC(___PSVNC)
+#define ___PSP ___PSA(___PSVNC)
+
 #ifdef ___SINGLE_THREADED_VMS
-#define ___PSTATE (&___VMSTATE->pstate0)
 #define ___VMSTATE_FROM_PSTATE(ps) ___CAST(___virtual_machine_state,ps)
 #else
-#define ___PSTATE (&___VMSTATE->pstate0) /* TODO: actually get the PSTATE */
 #define ___VMSTATE_FROM_PSTATE(ps) ps->vmstate
 #endif
+
+#define ___PSTATE ___GET_PSTATE()
+#define ___VMSTATE ___VMSTATE_FROM_PSTATE(___PSTATE)
 
 #ifdef ___BIND_LATE
 
@@ -4992,17 +5100,17 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 #define ___NEED_KEY(key)
 #define ___NEED_GLO(glo)
 
-#define ___BEGIN_SYM1 ___LOCAL ___UTF_8STRING ___sym_names[]={
-#define ___DEF_SYM1(i,sym,str)str,
-#define ___END_SYM1 0};
+#define ___BEGIN_SYM ___LOCAL ___UTF_8STRING ___sym_names[]={
+#define ___DEF_SYM(i,sym,str)str,
+#define ___END_SYM 0};
 
-#define ___DEF_SYM2(i,sym,str)
+#define ___DEF_MOD_SYM(i,sym,str)
 
-#define ___BEGIN_KEY1 ___LOCAL ___UTF_8STRING ___key_names[]={
-#define ___DEF_KEY1(i,key,str)str,
-#define ___END_KEY1 0};
+#define ___BEGIN_KEY ___LOCAL ___UTF_8STRING ___key_names[]={
+#define ___DEF_KEY(i,key,str)str,
+#define ___END_KEY 0};
 
-#define ___DEF_KEY2(i,key,str)
+#define ___DEF_MOD_KEY(i,key,str)
 
 #define ___BEGIN_GLO ___LOCAL ___UTF_8STRING ___glo_names[]={
 #define ___DEF_GLO(i,str)str,
@@ -5044,31 +5152,31 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 
 #ifndef ___IMPORTED_ADR_IS_CONST
 
-#define ___BEGIN_SYM1 ___LOCAL ___FAKEWORD ___symtbl[___SYMCOUNT];
-#define ___DEF_SYM1(i,sym,str)
-#define ___END_SYM1
+#define ___BEGIN_SYM ___LOCAL ___FAKEWORD ___symtbl[___SYMCOUNT];
+#define ___DEF_SYM(i,sym,str)
+#define ___END_SYM
 
-#define ___DEF_SYM2(i,sym,str)___symtbl[i]=(___FAKEWORD)(sym);
+#define ___DEF_MOD_SYM(i,sym,str)___symtbl[i]=(___FAKEWORD)(sym);
 
-#define ___BEGIN_KEY1 ___LOCAL ___FAKEWORD ___keytbl[___KEYCOUNT];
-#define ___DEF_KEY1(i,key,str)
-#define ___END_KEY1
+#define ___BEGIN_KEY ___LOCAL ___FAKEWORD ___keytbl[___KEYCOUNT];
+#define ___DEF_KEY(i,key,str)
+#define ___END_KEY
 
-#define ___DEF_KEY2(i,key,str)___keytbl[i]=(___FAKEWORD)(key);
+#define ___DEF_MOD_KEY(i,key,str)___keytbl[i]=(___FAKEWORD)(key);
 
 #else
 
-#define ___BEGIN_SYM1 ___LOCAL ___FAKEWORD ___symtbl[]={
-#define ___DEF_SYM1(i,sym,str)(___FAKEWORD)(sym),
-#define ___END_SYM1 0};
+#define ___BEGIN_SYM ___LOCAL ___FAKEWORD ___symtbl[]={
+#define ___DEF_SYM(i,sym,str)(___FAKEWORD)(sym),
+#define ___END_SYM 0};
 
-#define ___DEF_SYM2(i,sym,str)
+#define ___DEF_MOD_SYM(i,sym,str)
 
-#define ___BEGIN_KEY1 ___LOCAL ___FAKEWORD ___keytbl[]={
-#define ___DEF_KEY1(i,key,str)(___FAKEWORD)(key),
-#define ___END_KEY1 0};
+#define ___BEGIN_KEY ___LOCAL ___FAKEWORD ___keytbl[]={
+#define ___DEF_KEY(i,key,str)(___FAKEWORD)(key),
+#define ___END_KEY 0};
 
-#define ___DEF_KEY2(i,key,str)
+#define ___DEF_MOD_KEY(i,key,str)
 
 #endif
 
@@ -5579,23 +5687,21 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 #define ___SUBTBL 0,0
 #endif
 
-#define ___BEGIN_MOD_PRM ___BEGIN_MOD1
-#define ___END_MOD_PRM
+#define ___BEGIN_MOD_PRM ___LOCAL ___WORD ___setup_mod ___PVOID {
+#define ___DEF_MOD_PRM(i,glo,n)___PRM(i,glo)=___MLBL(n);
+#define ___END_MOD_PRM return ___FIX(___NO_ERR); }
 
-#define ___BEGIN_MOD_C_INIT
-#define ___END_MOD_C_INIT ___END_MOD1
+#define ___BEGIN_MOD_C_INIT ___LOCAL ___WORD ___init_mod \
+   ___P((___PSDNC), \
+        (___PSVNC) \
+___PSDKR) { ___PSGET
+#define ___END_MOD_C_INIT
 
-#define ___BEGIN_MOD_SYM_KEY ___BEGIN_MOD2
-#define ___END_MOD_SYM_KEY ___END_MOD2
+#define ___BEGIN_MOD_GLO
+#define ___DEF_MOD_GLO(i,glo,n)___GLO(i,glo)=___MLBL(n);
+#define ___END_MOD_GLO return ___FIX(___NO_ERR); }
 
-#define ___BEGIN_MOD1 ___LOCAL ___WORD ___init_proc ___PVOID { \
-___processor_state ___ps=___PSTATE;
-#define ___DEF_PRM(i,glo,n)___PRM(i,glo)=___GLO(i,glo)=___MLBL(n);
-#define ___END_MOD1 return ___FIX(___NO_ERR); }
-
-#ifdef ___MODDESCR
-
-#define ___BEGIN_MOD2 ___LOCAL ___module_struct ___module_descr = { \
+#define ___BEGIN_MOD_SYM_KEY ___LOCAL ___module_struct ___module_descr = { \
   ___VERSION, \
   ___MODULE_KIND, \
   ___MODULE_NAME, \
@@ -5607,7 +5713,8 @@ ___processor_state ___ps=___PSTATE;
   ___OFDTBL, \
   ___CNSTBL, \
   ___SUBTBL, \
-  ___init_proc, \
+  ___setup_mod, \
+  ___init_mod, \
   ___SCRIPT_LINE, \
   0,\
   0,0,0,0,0,0,0,0 \
@@ -5620,45 +5727,10 @@ ___EXP_FUNC(___mod_or_lnk,___LINKER_ID) \
 ___global_state ___gs;) \
 { \
   ___SET_LOCAL_GSTATE(___gs)
-#define ___END_MOD2 \
+#define ___END_MOD_SYM_KEY \
   return (___mod_or_lnk)&___module_descr; \
 } \
 ___END_C_LINKAGE
-
-#else
-/* TODO: remove this definition.*/
-
-#define ___BEGIN_MOD2 ___LOCAL ___module_struct ___module_descr = { \
-  ___VERSION, \
-  ___MODULE_KIND, \
-  ___MODULE_NAME, \
-  ___MODULE_FLAGS, \
-  ___GLOTBL, \
-  ___SYMTBL, \
-  ___KEYTBL, \
-  ___LBLTBL, \
-  ___OFDTBL, \
-  ___CNSTBL, \
-  ___SUBTBL, \
-  ___init_proc, \
-  ___SCRIPT_LINE, \
-  0,\
-  0,0,0,0,0,0,0,0 \
-,___REF_FAL \
-};              \
-___BEGIN_C_LINKAGE \
-___EXP_FUNC(___mod_or_lnk,___LINKER_ID) \
-   ___P((___global_state ___gs), \
-        (___gs) \
-___global_state ___gs;) \
-{ \
-  ___SET_LOCAL_GSTATE(___gs)
-#define ___END_MOD2 \
-  return (___mod_or_lnk)&___module_descr; \
-} \
-___END_C_LINKAGE
-
-#endif
 
 #ifdef ___LIBRARY
 
@@ -6022,7 +6094,7 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 
 #define ___CPLUSPLUS_ASSIGN_NEW(var,type) \
 do { \
-     void *___ptr = ___EXT(___alloc_rc) (sizeof (type)); \
+     void *___ptr = ___EXT(___alloc_rc) (___PSP sizeof (type)); \
      if (___ptr == 0) \
        var = 0; \
      else \
@@ -6030,7 +6102,7 @@ do { \
    } while (0)
 #define ___CPLUSPLUS_ASSIGN_NEW_WITH_INIT(var,type,init) \
 do { \
-     void *___ptr = ___EXT(___alloc_rc) (sizeof (type)); \
+     void *___ptr = ___EXT(___alloc_rc) (___PSP sizeof (type)); \
      if (___ptr == 0) \
        var = 0; \
      else \
@@ -6052,11 +6124,11 @@ do { \
 
 #define ___C_ASSIGN_NEW(var,type) \
 do { \
-     var = ___CAST(type*,___EXT(___alloc_rc) (sizeof (type)); \
+     var = ___CAST(type*,___EXT(___alloc_rc) (___PSP sizeof (type)); \
    } while (0)
 #define ___C_ASSIGN_NEW_WITH_INIT(var,type,init) \
 do { \
-     if ((var = ___CAST(type*,___EXT(___alloc_rc) (sizeof (type)))) != 0) \
+     if ((var = ___CAST(type*,___EXT(___alloc_rc) (___PSP sizeof (type)))) != 0) \
        *___CAST(type*,var) = init; \
    } while (0)
 #define ___C_DELETE_STRUCT(name,ptr) \
@@ -6210,10 +6282,10 @@ void *___x;) \
 
 #define ___CFUN_CONV_ERROR if ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___LBL(0);___JUMPEXTPRM(___SET_NARGS(___NARGS),___GSTATE->handler_cfun_conv_error;)}
 
-#define ___STOC3(f,s,c,i)___err=___EXT(f)(s,c,i)
-#define ___STOC4(f,s,c,t,i)___err=___EXT(f)(s,c,t,i)
-#define ___CTOS3(f,c,s,i)___err=___EXT(f)(c,s,i)
-#define ___CTOS5(f,c,t,r,s,i)___err=___EXT(f)(c,t,r,s,i)
+#define ___STOC3(f,s,c,i)___err=___EXT(f)(___PSP s,c,i)
+#define ___STOC4(f,s,c,t,i)___err=___EXT(f)(___PSP s,c,t,i)
+#define ___CTOS3(f,c,s,i)___err=___EXT(f)(___ps,c,s,i)
+#define ___CTOS5(f,c,t,r,s,i)___err=___EXT(f)(___ps,c,t,r,s,i)
 #define ___IF_STOC3(f,s,c,i)if ((___STOC3(f,s,c,i))==___FIX(___NO_ERR))
 #define ___IF_STOC4(f,s,c,t,i)if ((___STOC4(f,s,c,t,i))==___FIX(___NO_ERR))
 #define ___IF_CTOS3(f,c,s,i)if ((___CTOS3(f,c,s,i))==___FIX(___NO_ERR))
@@ -6222,23 +6294,23 @@ void *___x;) \
 #define ___BEGIN_SFUN_BODY
 #define ___END_SFUN_BODY
 
-#define ___BEGIN_SFUN_VOID(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (&___marker,proc))==___FIX(___NO_ERR)) {
-#define ___SFUN_CALL_VOID ___err=___EXT(___call) (___NARGS,___FIELD(___marker,0),___marker);
+#define ___BEGIN_SFUN_VOID(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
+#define ___SFUN_CALL_VOID ___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker);
 #define ___SFUN_SET_RESULT_VOID /* no result to set */
-#define ___SFUN_ERROR_VOID while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (0,___GSTATE->handler_sfun_conv_error,___marker);
-#define ___END_SFUN_VOID } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___err);
+#define ___SFUN_ERROR_VOID while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (___PSP 0,___GSTATE->handler_sfun_conv_error,___marker);
+#define ___END_SFUN_VOID } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
-#define ___BEGIN_SFUN_SCMOBJ(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___result;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (&___marker,proc))==___FIX(___NO_ERR)) {
-#define ___SFUN_CALL_SCMOBJ ___err=___EXT(___call) (___NARGS,___FIELD(___marker,0),___marker);
+#define ___BEGIN_SFUN_SCMOBJ(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___result;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
+#define ___SFUN_CALL_SCMOBJ ___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker);
 #define ___SFUN_SET_RESULT_SCMOBJ ___result = ___SFUN_RESULT;
-#define ___SFUN_ERROR_SCMOBJ while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (0,___GSTATE->handler_sfun_conv_error,___marker);
-#define ___END_SFUN_SCMOBJ } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___err);
+#define ___SFUN_ERROR_SCMOBJ while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (___PSP 0,___GSTATE->handler_sfun_conv_error,___marker);
+#define ___END_SFUN_SCMOBJ } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
-#define ___BEGIN_SFUN(proc,decl)___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;decl;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (&___marker,proc))==___FIX(___NO_ERR)) {
-#define ___SFUN_CALL if ((___err=___EXT(___call) (___NARGS,___FIELD(___marker,0),___marker))==___FIX(___NO_ERR))
+#define ___BEGIN_SFUN(proc,decl)___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;decl;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
+#define ___SFUN_CALL if ((___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker))==___FIX(___NO_ERR))
 #define ___SFUN_SET_RESULT /* done in conversion function */
-#define ___SFUN_ERROR while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;if ((___err=___EXT(___call) (0,___GSTATE->handler_sfun_conv_error,___marker))==___FIX(___NO_ERR))
-#define ___END_SFUN } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___err);
+#define ___SFUN_ERROR while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;if ((___err=___EXT(___call) (___PSP 0,___GSTATE->handler_sfun_conv_error,___marker))==___FIX(___NO_ERR))
+#define ___END_SFUN } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
 #define ___BEGIN_SFUN_ARG(i,arg)___SCMOBJ arg;
 #define ___END_SFUN_ARG(i)
@@ -6513,19 +6585,19 @@ void *___x;) \
 #define ___BEGIN_CFUN_VOID ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errmsg=___FAL;
 #define ___CFUN_SET_RESULT_VOID ___CFUN_RESULT = ___VOID;
 #define ___CFUN_ERROR_VOID ___CFUN_CONV_ERROR
-#define ___CFUN_ERROR_CLEANUP_VOID ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___err);
+#define ___CFUN_ERROR_CLEANUP_VOID ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
 #define ___END_CFUN_VOID } ___R_ALL
 
 #define ___BEGIN_CFUN_SCMOBJ ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___result;___SCMOBJ ___errmsg=___FAL;
 #define ___CFUN_SET_RESULT_SCMOBJ ___CFUN_RESULT = ___result;
 #define ___CFUN_ERROR_SCMOBJ ___CFUN_CONV_ERROR
-#define ___CFUN_ERROR_CLEANUP_SCMOBJ ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___err);
+#define ___CFUN_ERROR_CLEANUP_SCMOBJ ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
 #define ___END_CFUN_SCMOBJ } ___R_ALL
 
 #define ___BEGIN_CFUN(decl)___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errmsg=___FAL;decl;
 #define ___CFUN_SET_RESULT /* done in conversion function */
 #define ___CFUN_ERROR ___CFUN_CONV_ERROR
-#define ___CFUN_ERROR_CLEANUP ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___err);
+#define ___CFUN_ERROR_CLEANUP ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
 #define ___END_CFUN } ___R_ALL
 
 #define ___BEGIN_CFUN_ARG(i,decl)decl;
@@ -6981,6 +7053,91 @@ typedef struct ___glo_struct
 
 /*---------------------------------------------------------------------------*/
 
+/*
+ * Thread system inlined operations.
+ */
+
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+
+#ifndef ___DONT_HAVE_PTHREAD_H
+#include <pthread.h>
+#endif
+
+#define ___MUTEX pthread_mutex_t
+
+#define ___MUTEX_INIT(mut) (pthread_mutex_init (&mut, NULL) == 0)
+#define ___MUTEX_DESTROY(mut) (pthread_mutex_destroy (&mut) == 0)
+#define ___MUTEX_LOCK(mut) (pthread_mutex_lock (&mut) == 0)
+#define ___MUTEX_UNLOCK(mut) (pthread_mutex_unlock (&mut) == 0)
+
+#endif
+
+
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+
+#define ___MUTEX HANDLE
+
+#define ___MUTEX_INIT(mut) ((mut = CreateMutex (NULL, FALSE, NULL)) != NULL)
+#define ___MUTEX_DESTROY(mut) CloseHandle (mut)
+#define ___MUTEX_LOCK(mut) (WaitForSingleObject (mut, INFINITE) != WAIT_FAILED)
+#define ___MUTEX_UNLOCK(mut) ReleaseMutex (mut)
+
+#endif
+
+
+#if 0
+/*TODO: enable*/
+#if ___WS == 4
+#ifdef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
+#define ___USE_sync_val_compare_and_swap
+#endif
+#else
+#if ___WS == 8
+#ifdef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_8
+#define ___USE_sync_val_compare_and_swap
+#endif
+#endif
+#endif
+#endif
+
+
+#ifndef ___USE_sync_val_compare_and_swap
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+#define ___USE_InterlockedCompareExchangePointer
+#else
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+#define ___USE_emulated_compare_and_swap_word
+#endif
+#endif
+#endif
+
+
+#ifdef ___USE_sync_val_compare_and_swap
+
+#define ___COMPARE_AND_SWAP_WORD(p,newv,oldv) \
+__sync_val_compare_and_swap(p,newv,oldv)
+
+#endif
+
+
+#ifdef ___USE_InterlockedCompareExchangePointer
+
+#define ___COMPARE_AND_SWAP_WORD(p,newv,oldv) \
+___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void*,oldv),___CAST(void*,newv)))
+
+#endif
+
+
+#ifdef ___USE_emulated_compare_and_swap_word
+
+#define ___COMPARE_AND_SWAP_WORD(p,newv,oldv) \
+___EXT(___emulated_compare_and_swap_word)(p,newv,oldv)
+
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
 /* TODO: where to put this? */
 
 /* Memory management */
@@ -7219,6 +7376,7 @@ typedef struct ___processor_state_struct
 
 #ifndef ___SINGLE_THREADED_VMS
 
+    /* TODO: replace circular list by array */
     struct ___processor_state_struct *prev; /* circular list links */
     struct ___processor_state_struct *next;
 
@@ -7250,7 +7408,7 @@ typedef struct ___processor_state_struct
 #endif
   } ___processor_state_struct;
 
-typedef ___WORD (*___host) ___P((___processor_state),());
+typedef ___WORD (*___host) ___P((___processor_state ___ps),());
 
 typedef struct ___label_struct
   {
@@ -7293,7 +7451,8 @@ typedef struct ___module_struct
     ___WORD *ofdtbl; int ofd_length;
     ___WORD *cnstbl; int cnscount;
     ___FAKEWORD *subtbl; int subcount;
-    ___WORD (*init_proc) ___PVOID;
+    ___WORD (*setup_mod) ___PVOID;
+    ___WORD (*init_mod) ___P((___PSDNC),());
     ___UTF_8STRING script_line;
     struct ___module_struct *next;
 
@@ -7695,329 +7854,392 @@ typedef struct ___global_state_struct
              ___U64 y),
             ());
     ___SCMOBJ (*___SCMOBJ_to_S8)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___S8 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_U8)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___U8 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_S16)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___S16 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_U16)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___U16 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_S32)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___S32 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_U32)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___U32 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_S64)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___S64 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_U64)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___U64 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_F32)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___F32 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_F64)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___F64 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_CHAR)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              char *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_SCHAR)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___SCHAR *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UCHAR)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              unsigned char *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_ISO_8859_1)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___ISO_8859_1 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UCS_2)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UCS_2 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UCS_4)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UCS_4 *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_WCHAR)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___WCHAR *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_SIZE_T)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___SIZE_T *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_SSIZE_T)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___SSIZE_T *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_PTRDIFF_T)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___PTRDIFF_T *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_SHORT)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              short *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_USHORT)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              unsigned short *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_INT)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              int *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UINT)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              unsigned int *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_LONG)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              long *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_ULONG)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              unsigned long *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_LONGLONG)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___LONGLONG *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_ULONGLONG)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___ULONGLONG *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_FLOAT)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              float *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_DOUBLE)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              double *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_STRUCT)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void **x,
              ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UNION)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void **x,
              ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_TYPE)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void **x,
              ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_POINTER)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void **x,
              ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLPOINTER)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void **x,
              ___SCMOBJ tags,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_FUNCTION)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void *converter,
              void **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLFUNCTION)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void *converter,
              void **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_BOOL)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___BOOL *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void **x,
              int arg_num,
              int char_encoding,
              int fudge),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLSTRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void **x,
              int arg_num,
              int char_encoding,
              int fudge),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLSTRINGLIST)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              void **x,
              int arg_num,
              int char_encoding),
             ());
     ___SCMOBJ (*___SCMOBJ_to_CHARSTRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              char **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLCHARSTRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              char **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLCHARSTRINGLIST)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              char ***x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_ISO_8859_1STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___ISO_8859_1STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLISO_8859_1STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___ISO_8859_1STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLISO_8859_1STRINGLIST)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___ISO_8859_1STRING **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UTF_8STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UTF_8STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLUTF_8STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UTF_8STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLUTF_8STRINGLIST)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UTF_8STRING **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UTF_16STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UTF_16STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLUTF_16STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UTF_16STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLUTF_16STRINGLIST)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UTF_16STRING **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UCS_2STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UCS_2STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLUCS_2STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UCS_2STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLUCS_2STRINGLIST)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UCS_2STRING **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_UCS_4STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UCS_4STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLUCS_4STRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UCS_4STRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLUCS_4STRINGLIST)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___UCS_4STRING **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_WCHARSTRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___WCHARSTRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLWCHARSTRING)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___WCHARSTRING *x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_NONNULLWCHARSTRINGLIST)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___WCHARSTRING **x,
              int arg_num),
             ());
     ___SCMOBJ (*___SCMOBJ_to_VARIANT)
-       ___P((___SCMOBJ obj,
+       ___P((___PSD
+             ___SCMOBJ obj,
              ___VARIANT *x,
              int arg_num),
             ());
@@ -8052,330 +8274,393 @@ typedef struct ___global_state_struct
        ___P((___VARIANT x),
             ());
     ___SCMOBJ (*___S8_to_SCMOBJ)
-       ___P((___S8 x,
+       ___P((___processor_state ___ps,
+             ___S8 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___U8_to_SCMOBJ)
-       ___P((___U8 x,
+       ___P((___processor_state ___ps,
+             ___U8 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___S16_to_SCMOBJ)
-       ___P((___S16 x,
+       ___P((___processor_state ___ps,
+             ___S16 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___U16_to_SCMOBJ)
-       ___P((___U16 x,
+       ___P((___processor_state ___ps,
+             ___U16 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___S32_to_SCMOBJ)
-       ___P((___S32 x,
+       ___P((___processor_state ___ps,
+             ___S32 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___U32_to_SCMOBJ)
-       ___P((___U32 x,
+       ___P((___processor_state ___ps,
+             ___U32 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___S64_to_SCMOBJ)
-       ___P((___S64 x,
+       ___P((___processor_state ___ps,
+             ___S64 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___U64_to_SCMOBJ)
-       ___P((___U64 x,
+       ___P((___processor_state ___ps,
+             ___U64 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___F32_to_SCMOBJ)
-       ___P((___F32 x,
+       ___P((___processor_state ___ps,
+             ___F32 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___F64_to_SCMOBJ)
-       ___P((___F64 x,
+       ___P((___processor_state ___ps,
+             ___F64 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___CHAR_to_SCMOBJ)
-       ___P((char x,
+       ___P((___processor_state ___ps,
+             char x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___SCHAR_to_SCMOBJ)
-       ___P((___SCHAR x,
+       ___P((___processor_state ___ps,
+             ___SCHAR x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UCHAR_to_SCMOBJ)
-       ___P((unsigned char x,
+       ___P((___processor_state ___ps,
+             unsigned char x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___ISO_8859_1_to_SCMOBJ)
-       ___P((___ISO_8859_1 x,
+       ___P((___processor_state ___ps,
+             ___ISO_8859_1 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UCS_2_to_SCMOBJ)
-       ___P((___UCS_2 x,
+       ___P((___processor_state ___ps,
+             ___UCS_2 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UCS_4_to_SCMOBJ)
-       ___P((___UCS_4 x,
+       ___P((___processor_state ___ps,
+             ___UCS_4 x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___WCHAR_to_SCMOBJ)
-       ___P((___WCHAR x,
+       ___P((___processor_state ___ps,
+             ___WCHAR x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___SIZE_T_to_SCMOBJ)
-       ___P((___SIZE_T x,
+       ___P((___processor_state ___ps,
+             ___SIZE_T x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___SSIZE_T_to_SCMOBJ)
-       ___P((___SSIZE_T x,
+       ___P((___processor_state ___ps,
+             ___SSIZE_T x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___PTRDIFF_T_to_SCMOBJ)
-       ___P((___PTRDIFF_T x,
+       ___P((___processor_state ___ps,
+             ___PTRDIFF_T x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___SHORT_to_SCMOBJ)
-       ___P((short x,
+       ___P((___processor_state ___ps,
+             short x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___USHORT_to_SCMOBJ)
-       ___P((unsigned short x,
+       ___P((___processor_state ___ps,
+             unsigned short x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___INT_to_SCMOBJ)
-       ___P((int x,
+       ___P((___processor_state ___ps,
+             int x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UINT_to_SCMOBJ)
-       ___P((unsigned int x,
+       ___P((___processor_state ___ps,
+             unsigned int x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___LONG_to_SCMOBJ)
-       ___P((long x,
+       ___P((___processor_state ___ps,
+             long x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___ULONG_to_SCMOBJ)
-       ___P((unsigned long x,
+       ___P((___processor_state ___ps,
+             unsigned long x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___LONGLONG_to_SCMOBJ)
-       ___P((___LONGLONG x,
+       ___P((___processor_state ___ps,
+             ___LONGLONG x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___ULONGLONG_to_SCMOBJ)
-       ___P((___ULONGLONG x,
+       ___P((___processor_state ___ps,
+             ___ULONGLONG x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___FLOAT_to_SCMOBJ)
-       ___P((float x,
+       ___P((___processor_state ___ps,
+             float x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___DOUBLE_to_SCMOBJ)
-       ___P((double x,
+       ___P((___processor_state ___ps,
+             double x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___STRUCT_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UNION_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___TYPE_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___POINTER_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLPOINTER_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ tags,
              ___SCMOBJ (*release_fn) ___P((void *ptr),()),
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___FUNCTION_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLFUNCTION_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___BOOL_to_SCMOBJ)
-       ___P((___BOOL x,
+       ___P((___processor_state ___ps,
+             ___BOOL x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___STRING_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ *obj,
              int arg_num,
              int char_encoding),
             ());
     ___SCMOBJ (*___NONNULLSTRING_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ *obj,
              int arg_num,
              int char_encoding),
             ());
     ___SCMOBJ (*___NONNULLSTRINGLIST_to_SCMOBJ)
-       ___P((void *x,
+       ___P((___processor_state ___ps,
+             void *x,
              ___SCMOBJ *obj,
              int arg_num,
              int char_encoding),
             ());
     ___SCMOBJ (*___CHARSTRING_to_SCMOBJ)
-       ___P((char *x,
+       ___P((___processor_state ___ps,
+             char *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLCHARSTRING_to_SCMOBJ)
-       ___P((char *x,
+       ___P((___processor_state ___ps,
+             char *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLCHARSTRINGLIST_to_SCMOBJ)
-       ___P((char **x,
+       ___P((___processor_state ___ps,
+             char **x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___ISO_8859_1STRING_to_SCMOBJ)
-       ___P((___ISO_8859_1STRING x,
+       ___P((___processor_state ___ps,
+             ___ISO_8859_1STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLISO_8859_1STRING_to_SCMOBJ)
-       ___P((___ISO_8859_1STRING x,
+       ___P((___processor_state ___ps,
+             ___ISO_8859_1STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLISO_8859_1STRINGLIST_to_SCMOBJ)
-       ___P((___ISO_8859_1STRING *x,
+       ___P((___processor_state ___ps,
+             ___ISO_8859_1STRING *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UTF_8STRING_to_SCMOBJ)
-       ___P((___UTF_8STRING x,
+       ___P((___processor_state ___ps,
+             ___UTF_8STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLUTF_8STRING_to_SCMOBJ)
-       ___P((___UTF_8STRING x,
+       ___P((___processor_state ___ps,
+             ___UTF_8STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLUTF_8STRINGLIST_to_SCMOBJ)
-       ___P((___UTF_8STRING *x,
+       ___P((___processor_state ___ps,
+             ___UTF_8STRING *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UTF_16STRING_to_SCMOBJ)
-       ___P((___UTF_16STRING x,
+       ___P((___processor_state ___ps,
+             ___UTF_16STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLUTF_16STRING_to_SCMOBJ)
-       ___P((___UTF_16STRING x,
+       ___P((___processor_state ___ps,
+             ___UTF_16STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLUTF_16STRINGLIST_to_SCMOBJ)
-       ___P((___UTF_16STRING *x,
+       ___P((___processor_state ___ps,
+             ___UTF_16STRING *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UCS_2STRING_to_SCMOBJ)
-       ___P((___UCS_2STRING x,
+       ___P((___processor_state ___ps,
+             ___UCS_2STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLUCS_2STRING_to_SCMOBJ)
-       ___P((___UCS_2STRING x,
+       ___P((___processor_state ___ps,
+             ___UCS_2STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLUCS_2STRINGLIST_to_SCMOBJ)
-       ___P((___UCS_2STRING *x,
+       ___P((___processor_state ___ps,
+             ___UCS_2STRING *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___UCS_4STRING_to_SCMOBJ)
-       ___P((___UCS_4STRING x,
+       ___P((___processor_state ___ps,
+             ___UCS_4STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLUCS_4STRING_to_SCMOBJ)
-       ___P((___UCS_4STRING x,
+       ___P((___processor_state ___ps,
+             ___UCS_4STRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLUCS_4STRINGLIST_to_SCMOBJ)
-       ___P((___UCS_4STRING *x,
+       ___P((___processor_state ___ps,
+             ___UCS_4STRING *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___WCHARSTRING_to_SCMOBJ)
-       ___P((___WCHARSTRING x,
+       ___P((___processor_state ___ps,
+             ___WCHARSTRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLWCHARSTRING_to_SCMOBJ)
-       ___P((___WCHARSTRING x,
+       ___P((___processor_state ___ps,
+             ___WCHARSTRING x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___NONNULLWCHARSTRINGLIST_to_SCMOBJ)
-       ___P((___WCHARSTRING *x,
+       ___P((___processor_state ___ps,
+             ___WCHARSTRING *x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
     ___SCMOBJ (*___VARIANT_to_SCMOBJ)
-       ___P((___VARIANT x,
+       ___P((___processor_state ___ps,
+             ___VARIANT x,
              ___SCMOBJ *obj,
              int arg_num),
             ());
@@ -8394,14 +8679,16 @@ typedef struct ___global_state_struct
        ___P((___UCS_2STRING *str_list_UCS_2),
             ());
     ___SCMOBJ (*___make_sfun_stack_marker)
-       ___P((___SCMOBJ *marker,
+       ___P((___processor_state ___ps,
+             ___SCMOBJ *marker,
              ___SCMOBJ proc_or_false),
             ());
     void (*___kill_sfun_stack_marker)
        ___P((___SCMOBJ marker),
             ());
     void *(*___alloc_rc)
-       ___P((___SIZE_T bytes),
+       ___P((___PSD
+             ___SIZE_T bytes),
             ());
     void (*___release_rc)
        ___P((void *ptr),
@@ -8416,31 +8703,23 @@ typedef struct ___global_state_struct
        ___P((void *ptr,
              ___SCMOBJ val),
             ());
-    ___SCMOBJ (*___alloc_scmobj_perm)
-       ___P((int subtype,
-             ___SIZE_TS bytes),
-            ());
-    ___SCMOBJ (*___alloc_scmobj_still)
-       ___P((int subtype,
-             ___SIZE_TS bytes),
-            ());
     ___SCMOBJ (*___alloc_scmobj)
-       ___P((int subtype,
-             ___SIZE_TS bytes,
-             int kind),
+       ___P((___processor_state ___ps,
+             int subtype,
+             ___SIZE_TS bytes),
             ());
     void (*___release_scmobj)
        ___P((___SCMOBJ obj),
             ());
     ___SCMOBJ (*___make_pair)
-       ___P((___SCMOBJ car,
-             ___SCMOBJ cdr,
-             int kind),
+       ___P((___processor_state ___ps,
+             ___SCMOBJ car,
+             ___SCMOBJ cdr),
             ());
     ___SCMOBJ (*___make_vector)
-       ___P((___SIZE_TS length,
-             ___SCMOBJ init,
-             int kind),
+       ___P((___processor_state ___ps,
+             ___SIZE_TS length,
+             ___SCMOBJ init),
             ());
     void (*___still_obj_refcount_inc)
        ___P((___SCMOBJ obj),
@@ -8490,31 +8769,50 @@ typedef struct ___global_state_struct
        ___P((int status),
             ());
     ___SCMOBJ (*___call)
-       ___P((int nargs,
+       ___P((___PSD
+             int nargs,
              ___SCMOBJ proc,
              ___SCMOBJ marker),
             ());
     void (*___propagate_error)
-       ___P((___SCMOBJ err),
+       ___P((___PSD
+             ___SCMOBJ err),
             ());
 #ifdef ___DEBUG_HOST_CHANGES
     void (*___register_host_entry)
-       ___P((___WORD start,
+       ___P((___PSD
+             ___WORD start,
              char *module_name),
             ());
 #endif
+    void (*___raise_interrupt_pstate)
+       ___P((___processor_state ___ps,
+             int code),
+            ());
+    void (*___raise_interrupt_vmstate)
+       ___P((___virtual_machine_state ___vms,
+             int code),
+            ());
     void (*___raise_interrupt)
        ___P((int code),
             ());
-    void (*___begin_interrupt_service) ___PVOID;
-    ___BOOL (*___check_interrupt)
-       ___P((int code),
+    void (*___begin_interrupt_service_pstate)
+       ___P((___PSDNC),
             ());
-    void (*___end_interrupt_service)
-       ___P((int code),
+    ___BOOL (*___check_interrupt_pstate)
+       ___P((___PSD
+             int code),
             ());
-    void (*___disable_interrupts) ___PVOID;
-    void (*___enable_interrupts) ___PVOID;
+    void (*___end_interrupt_service_pstate)
+       ___P((___PSD
+             int code),
+            ());
+    void (*___disable_interrupts_pstate)
+       ___P((___PSDNC),
+            ());
+    void (*___enable_interrupts_pstate)
+       ___P((___PSDNC),
+            ());
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes),
             ());
@@ -8527,6 +8825,19 @@ typedef struct ___global_state_struct
     void (*___free_mem_code)
        ___P((void *ptr),
             ());
+#ifdef ___USE_emulated_compare_and_swap_word
+    ___WORD (*___emulated_compare_and_swap_word)
+       ___P((___WORD *ptr,
+             ___WORD oldval,
+             ___WORD newval),
+            ());
+#endif
+#ifndef ___THREAD_LOCAL_STORAGE_CLASS
+    void *(*___get_tls_ptr) ___PVOID;
+    void (*___set_tls_ptr)
+       ___P((void *ptr),
+            ());
+#endif
     void (*___disable_heartbeat_interrupts) ___PVOID;
     void (*___enable_heartbeat_interrupts) ___PVOID;
 #endif
@@ -8656,329 +8967,392 @@ ___IMP_FUNC(___U64,___U64_add_U64_U64_fn)
          ___U64 y),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_S8)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___S8 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_U8)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___U8 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_S16)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___S16 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_U16)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___U16 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_S32)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___S32 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_U32)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___U32 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_S64)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___S64 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_U64)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___U64 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_F32)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___F32 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_F64)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___F64 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_CHAR)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          char *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_SCHAR)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___SCHAR *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UCHAR)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          unsigned char *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_ISO_8859_1)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ISO_8859_1 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_2)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_2 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_4)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_4 *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_WCHAR)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___WCHAR *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_SIZE_T)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___SIZE_T *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_SSIZE_T)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___SSIZE_T *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_PTRDIFF_T)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___PTRDIFF_T *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_SHORT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          short *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_USHORT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          unsigned short *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_INT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          int *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UINT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          unsigned int *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_LONG)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          long *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_ULONG)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          unsigned long *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_LONGLONG)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___LONGLONG *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_ULONGLONG)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ULONGLONG *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_FLOAT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          float *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_DOUBLE)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          double *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_STRUCT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UNION)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_TYPE)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_POINTER)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLPOINTER)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_FUNCTION)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void *converter,
          void **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLFUNCTION)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void *converter,
          void **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_BOOL)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___BOOL *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          int arg_num,
          int char_encoding,
          int fudge),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          int arg_num,
          int char_encoding,
          int fudge),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLSTRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          int arg_num,
          int char_encoding),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_CHARSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          char **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLCHARSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          char **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLCHARSTRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          char ***x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_ISO_8859_1STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ISO_8859_1STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLISO_8859_1STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ISO_8859_1STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLISO_8859_1STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ISO_8859_1STRING **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UTF_8STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_8STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_8STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_8STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_8STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_8STRING **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UTF_16STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_16STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_16STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_16STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_16STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_16STRING **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_2STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_2STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUCS_2STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_2STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUCS_2STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_2STRING **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_4STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_4STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUCS_4STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_4STRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUCS_4STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_4STRING **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_WCHARSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___WCHARSTRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLWCHARSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___WCHARSTRING *x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLWCHARSTRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___WCHARSTRING **x,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCMOBJ_to_VARIANT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___VARIANT *x,
          int arg_num),
         ());
@@ -9013,330 +9387,393 @@ ___IMP_FUNC(void,___addref_variant)
    ___P((___VARIANT x),
         ());
 ___IMP_FUNC(___SCMOBJ,___S8_to_SCMOBJ)
-   ___P((___S8 x,
+   ___P((___processor_state ___ps,
+         ___S8 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___U8_to_SCMOBJ)
-   ___P((___U8 x,
+   ___P((___processor_state ___ps,
+         ___U8 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___S16_to_SCMOBJ)
-   ___P((___S16 x,
+   ___P((___processor_state ___ps,
+         ___S16 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___U16_to_SCMOBJ)
-   ___P((___U16 x,
+   ___P((___processor_state ___ps,
+         ___U16 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___S32_to_SCMOBJ)
-   ___P((___S32 x,
+   ___P((___processor_state ___ps,
+         ___S32 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___U32_to_SCMOBJ)
-   ___P((___U32 x,
+   ___P((___processor_state ___ps,
+         ___U32 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___S64_to_SCMOBJ)
-   ___P((___S64 x,
+   ___P((___processor_state ___ps,
+         ___S64 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___U64_to_SCMOBJ)
-   ___P((___U64 x,
+   ___P((___processor_state ___ps,
+         ___U64 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___F32_to_SCMOBJ)
-   ___P((___F32 x,
+   ___P((___processor_state ___ps,
+         ___F32 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___F64_to_SCMOBJ)
-   ___P((___F64 x,
+   ___P((___processor_state ___ps,
+         ___F64 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___CHAR_to_SCMOBJ)
-   ___P((char x,
+   ___P((___processor_state ___ps,
+         char x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SCHAR_to_SCMOBJ)
-   ___P((___SCHAR x,
+   ___P((___processor_state ___ps,
+         ___SCHAR x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UCHAR_to_SCMOBJ)
-   ___P((unsigned char x,
+   ___P((___processor_state ___ps,
+         unsigned char x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___ISO_8859_1_to_SCMOBJ)
-   ___P((___ISO_8859_1 x,
+   ___P((___processor_state ___ps,
+         ___ISO_8859_1 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UCS_2_to_SCMOBJ)
-   ___P((___UCS_2 x,
+   ___P((___processor_state ___ps,
+         ___UCS_2 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UCS_4_to_SCMOBJ)
-   ___P((___UCS_4 x,
+   ___P((___processor_state ___ps,
+         ___UCS_4 x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___WCHAR_to_SCMOBJ)
-   ___P((___WCHAR x,
+   ___P((___processor_state ___ps,
+         ___WCHAR x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SIZE_T_to_SCMOBJ)
-   ___P((___SIZE_T x,
+   ___P((___processor_state ___ps,
+         ___SIZE_T x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SSIZE_T_to_SCMOBJ)
-   ___P((___SSIZE_T x,
+   ___P((___processor_state ___ps,
+         ___SSIZE_T x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___PTRDIFF_T_to_SCMOBJ)
-   ___P((___PTRDIFF_T x,
+   ___P((___processor_state ___ps,
+         ___PTRDIFF_T x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___SHORT_to_SCMOBJ)
-   ___P((short x,
+   ___P((___processor_state ___ps,
+         short x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___USHORT_to_SCMOBJ)
-   ___P((unsigned short x,
+   ___P((___processor_state ___ps,
+         unsigned short x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___INT_to_SCMOBJ)
-   ___P((int x,
+   ___P((___processor_state ___ps,
+         int x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UINT_to_SCMOBJ)
-   ___P((unsigned int x,
+   ___P((___processor_state ___ps,
+         unsigned int x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___LONG_to_SCMOBJ)
-   ___P((long x,
+   ___P((___processor_state ___ps,
+         long x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___ULONG_to_SCMOBJ)
-   ___P((unsigned long x,
+   ___P((___processor_state ___ps,
+         unsigned long x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___LONGLONG_to_SCMOBJ)
-   ___P((___LONGLONG x,
+   ___P((___processor_state ___ps,
+         ___LONGLONG x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___ULONGLONG_to_SCMOBJ)
-   ___P((___ULONGLONG x,
+   ___P((___processor_state ___ps,
+         ___ULONGLONG x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___FLOAT_to_SCMOBJ)
-   ___P((float x,
+   ___P((___processor_state ___ps,
+         float x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___DOUBLE_to_SCMOBJ)
-   ___P((double x,
+   ___P((___processor_state ___ps,
+         double x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___STRUCT_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UNION_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___TYPE_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___POINTER_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLPOINTER_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___FUNCTION_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLFUNCTION_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___BOOL_to_SCMOBJ)
-   ___P((___BOOL x,
+   ___P((___processor_state ___ps,
+         ___BOOL x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___STRING_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num,
          int char_encoding),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLSTRING_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num,
          int char_encoding),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLSTRINGLIST_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num,
          int char_encoding),
         ());
 ___IMP_FUNC(___SCMOBJ,___CHARSTRING_to_SCMOBJ)
-   ___P((char *x,
+   ___P((___processor_state ___ps,
+         char *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLCHARSTRING_to_SCMOBJ)
-   ___P((char *x,
+   ___P((___processor_state ___ps,
+         char *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLCHARSTRINGLIST_to_SCMOBJ)
-   ___P((char **x,
+   ___P((___processor_state ___ps,
+         char **x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___ISO_8859_1STRING_to_SCMOBJ)
-   ___P((___ISO_8859_1STRING x,
+   ___P((___processor_state ___ps,
+         ___ISO_8859_1STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLISO_8859_1STRING_to_SCMOBJ)
-   ___P((___ISO_8859_1STRING x,
+   ___P((___processor_state ___ps,
+         ___ISO_8859_1STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLISO_8859_1STRINGLIST_to_SCMOBJ)
-   ___P((___ISO_8859_1STRING *x,
+   ___P((___processor_state ___ps,
+         ___ISO_8859_1STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UTF_8STRING_to_SCMOBJ)
-   ___P((___UTF_8STRING x,
+   ___P((___processor_state ___ps,
+         ___UTF_8STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUTF_8STRING_to_SCMOBJ)
-   ___P((___UTF_8STRING x,
+   ___P((___processor_state ___ps,
+         ___UTF_8STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUTF_8STRINGLIST_to_SCMOBJ)
-   ___P((___UTF_8STRING *x,
+   ___P((___processor_state ___ps,
+         ___UTF_8STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UTF_16STRING_to_SCMOBJ)
-   ___P((___UTF_16STRING x,
+   ___P((___processor_state ___ps,
+         ___UTF_16STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUTF_16STRING_to_SCMOBJ)
-   ___P((___UTF_16STRING x,
+   ___P((___processor_state ___ps,
+         ___UTF_16STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUTF_16STRINGLIST_to_SCMOBJ)
-   ___P((___UTF_16STRING *x,
+   ___P((___processor_state ___ps,
+         ___UTF_16STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UCS_2STRING_to_SCMOBJ)
-   ___P((___UCS_2STRING x,
+   ___P((___processor_state ___ps,
+         ___UCS_2STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUCS_2STRING_to_SCMOBJ)
-   ___P((___UCS_2STRING x,
+   ___P((___processor_state ___ps,
+         ___UCS_2STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUCS_2STRINGLIST_to_SCMOBJ)
-   ___P((___UCS_2STRING *x,
+   ___P((___processor_state ___ps,
+         ___UCS_2STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___UCS_4STRING_to_SCMOBJ)
-   ___P((___UCS_4STRING x,
+   ___P((___processor_state ___ps,
+         ___UCS_4STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUCS_4STRING_to_SCMOBJ)
-   ___P((___UCS_4STRING x,
+   ___P((___processor_state ___ps,
+         ___UCS_4STRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLUCS_4STRINGLIST_to_SCMOBJ)
-   ___P((___UCS_4STRING *x,
+   ___P((___processor_state ___ps,
+         ___UCS_4STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___WCHARSTRING_to_SCMOBJ)
-   ___P((___WCHARSTRING x,
+   ___P((___processor_state ___ps,
+         ___WCHARSTRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLWCHARSTRING_to_SCMOBJ)
-   ___P((___WCHARSTRING x,
+   ___P((___processor_state ___ps,
+         ___WCHARSTRING x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___NONNULLWCHARSTRINGLIST_to_SCMOBJ)
-   ___P((___WCHARSTRING *x,
+   ___P((___processor_state ___ps,
+         ___WCHARSTRING *x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___VARIANT_to_SCMOBJ)
-   ___P((___VARIANT x,
+   ___P((___processor_state ___ps,
+         ___VARIANT x,
          ___SCMOBJ *obj,
          int arg_num),
         ());
@@ -9355,7 +9792,8 @@ ___IMP_FUNC(void,___free_NONNULLUCS_2STRINGLIST)
    ___P((___UCS_2STRING *str_list_UCS_2),
         ());
 ___IMP_FUNC(___SCMOBJ,___make_sfun_stack_marker)
-   ___P((___SCMOBJ *marker,
+   ___P((___processor_state ___ps,
+         ___SCMOBJ *marker,
          ___SCMOBJ proc_or_false),
         ());
 ___IMP_FUNC(void,___kill_sfun_stack_marker)
@@ -9365,7 +9803,8 @@ ___IMP_FUNC(void,___kill_sfun_stack_marker)
 
 #ifndef ___INCLUDED_FROM_MEM
 ___IMP_FUNC(void*,___alloc_rc)
-   ___P((___SIZE_T bytes),
+   ___P((___PSD
+         ___SIZE_T bytes),
         ());
 ___IMP_FUNC(void,___release_rc)
    ___P((void *ptr),
@@ -9380,31 +9819,23 @@ ___IMP_FUNC(void,___set_data_rc)
    ___P((void *ptr,
          ___SCMOBJ val),
         ());
-___IMP_FUNC(___SCMOBJ,___alloc_scmobj_perm)
-   ___P((int subtype,
-         ___SIZE_TS bytes),
-        ());
-___IMP_FUNC(___SCMOBJ,___alloc_scmobj_still)
-   ___P((int subtype,
-         ___SIZE_TS bytes),
-        ());
 ___IMP_FUNC(___SCMOBJ,___alloc_scmobj)
-   ___P((int subtype,
-         ___SIZE_TS bytes,
-         int kind),
+   ___P((___processor_state ___ps,
+         int subtype,
+         ___SIZE_TS bytes),
         ());
 ___IMP_FUNC(void,___release_scmobj)
    ___P((___SCMOBJ obj),
         ());
 ___IMP_FUNC(___SCMOBJ,___make_pair)
-   ___P((___SCMOBJ car,
-         ___SCMOBJ cdr,
-         int kind),
+   ___P((___processor_state ___ps,
+         ___SCMOBJ car,
+         ___SCMOBJ cdr),
         ());
 ___IMP_FUNC(___SCMOBJ,___make_vector)
-   ___P((___SIZE_TS length,
-         ___SCMOBJ init,
-         int kind),
+   ___P((___processor_state ___ps,
+         ___SIZE_TS length,
+         ___SCMOBJ init),
         ());
 ___IMP_FUNC(void,___still_obj_refcount_inc)
    ___P((___SCMOBJ obj),
@@ -9522,31 +9953,50 @@ ___IMP_FUNC(void,___cleanup_and_exit_process)
    ___P((int status),
         ());
 ___IMP_FUNC(___SCMOBJ,___call)
-   ___P((int nargs,
+   ___P((___PSD
+         int nargs,
          ___SCMOBJ proc,
          ___SCMOBJ marker),
         ());
 ___IMP_FUNC(void,___propagate_error)
-   ___P((___SCMOBJ err),
+   ___P((___PSD
+         ___SCMOBJ err),
         ());
 #ifdef ___DEBUG_HOST_CHANGES
 ___IMP_FUNC(void,___register_host_entry)
-   ___P((___WORD start,
+   ___P((___PSD
+         ___WORD start,
          char *module_name),
         ());
 #endif
+___IMP_FUNC(void,___raise_interrupt_pstate)
+   ___P((___processor_state ___ps,
+         int code),
+        ());
+___IMP_FUNC(void,___raise_interrupt_vmstate)
+   ___P((___virtual_machine_state ___vms,
+         int code),
+        ());
 ___IMP_FUNC(void,___raise_interrupt)
    ___P((int code),
         ());
-___IMP_FUNC(void,___begin_interrupt_service) ___PVOID;
-___IMP_FUNC(___BOOL,___check_interrupt)
-    ___P((int code),
-         ());
-___IMP_FUNC(void,___end_interrupt_service)
-   ___P((int code),
+___IMP_FUNC(void,___begin_interrupt_service_pstate)
+   ___P((___PSDNC),
         ());
-___IMP_FUNC(void,___disable_interrupts) ___PVOID;
-___IMP_FUNC(void,___enable_interrupts) ___PVOID;
+___IMP_FUNC(___BOOL,___check_interrupt_pstate)
+   ___P((___PSD
+         int code),
+        ());
+___IMP_FUNC(void,___end_interrupt_service_pstate)
+   ___P((___PSD
+         int code),
+        ());
+___IMP_FUNC(void,___disable_interrupts_pstate)
+   ___P((___PSDNC),
+        ());
+___IMP_FUNC(void,___enable_interrupts_pstate)
+   ___P((___PSDNC),
+        ());
 #endif
 
 #ifndef ___INCLUDED_FROM_OS_BASE
@@ -9564,6 +10014,22 @@ ___IMP_FUNC(void,___free_mem_code)
         ());
 #endif
 
+#ifndef ___INCLUDED_FROM_OS_THREAD
+#ifdef ___USE_emulated_compare_and_swap_word
+___IMP_FUNC(___WORD,___emulated_compare_and_swap_word)
+   ___P((___WORD *ptr,
+         ___WORD oldval,
+         ___WORD newval),
+        ());
+#endif
+#ifndef ___THREAD_LOCAL_STORAGE_CLASS
+___IMP_FUNC(void *,___get_tls_ptr) ___PVOID;
+___IMP_FUNC(void,___set_tls_ptr)
+   ___P((void *ptr),
+        ());
+#endif
+#endif
+
 #ifndef ___INCLUDED_FROM_OS_TIME
 ___IMP_FUNC(void,___disable_heartbeat_interrupts) ___PVOID;
 ___IMP_FUNC(void,___enable_heartbeat_interrupts) ___PVOID;
@@ -9573,4 +10039,3 @@ ___IMP_FUNC(void,___enable_heartbeat_interrupts) ___PVOID;
 #endif
 
 #endif
-

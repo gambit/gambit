@@ -159,7 +159,7 @@ end-of-code
 
        ___FRAME_STORE_RA(___R0)
        ___W_ALL
-       overflow = ___stack_limit (___ps) && ___garbage_collect (___ps, 0);
+       overflow = ___stack_limit (___PSPNC) && ___garbage_collect (___PSP 0);
        ___R_ALL
        ___SET_R0(___FRAME_FETCH_RA)
 
@@ -173,7 +173,7 @@ end-of-code
 
    /* prepare for next interrupt */
 
-   ___begin_interrupt_service ();
+   ___EXT(___begin_interrupt_service_pstate) (___PSPNC);
 
    if (___ps->intr_enabled != ___FIX(0))
      {
@@ -182,10 +182,10 @@ end-of-code
        ___COVER_STACK_LIMIT_HANDLER_INTR_ENABLED;
 
        for (i=0; i<___NB_INTRS; i++)
-         if (___check_interrupt (i))
+         if (___EXT(___check_interrupt_pstate) (___PSP i))
            break;
 
-       ___end_interrupt_service (i+1);
+       ___EXT(___end_interrupt_service_pstate) (___PSP i+1);
 
        if (i < ___NB_INTRS)
          {
@@ -197,7 +197,7 @@ end-of-code
          }
      }
    else
-     ___end_interrupt_service (0);
+     ___EXT(___end_interrupt_service_pstate) (___PSP 0);
 
    ___COVER_STACK_LIMIT_HANDLER_END;
 
@@ -459,7 +459,7 @@ end-of-code
             ___COVER_REST_PARAM_HANDLER_HEAP_LIMIT;
 
             ___W_ALL
-            need_to_gc = ___heap_limit (___ps);
+            need_to_gc = ___heap_limit (___PSPNC);
             ___R_ALL
 
             if (need_to_gc)
@@ -825,7 +825,7 @@ end-of-code
             ___COVER_KEYWORD_REST_PARAM_HANDLER_HEAP_LIMIT;
 
             ___W_ALL
-            need_to_gc = ___heap_limit (___ps);
+            need_to_gc = ___heap_limit (___PSPNC);
             ___R_ALL
 
             if (need_to_gc)
@@ -1290,11 +1290,11 @@ end-of-code
 
 (define-prim (##disable-interrupts!)
   (##declare (not interrupts-enabled))
-  (##c-code "___disable_interrupts (); ___RESULT = ___VOID;"))
+  (##c-code "___EXT(___disable_interrupts_pstate) (___PSPNC); ___RESULT = ___VOID;"))
 
 (define-prim (##enable-interrupts!)
   (##declare (not interrupts-enabled))
-  (##c-code "___enable_interrupts (); ___RESULT = ___VOID;"))
+  (##c-code "___EXT(___enable_interrupts_pstate) (___PSPNC); ___RESULT = ___VOID;"))
 
 (define ##interrupt-vector
   (##vector #f #f #f #f #f #f #f #f))
@@ -1612,7 +1612,7 @@ end-of-code
               ___BOOL overflow;
               ___FRAME_STORE_RA(___R0)
               ___W_ALL
-              overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+              overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
               ___R_ALL
               ___SET_R0(___FRAME_FETCH_RA)
               if (overflow)
@@ -1678,7 +1678,7 @@ end-of-code
 
    ___FRAME_STORE_RA(___R0)
    ___W_ALL
-   overflow = ___garbage_collect (___ps, 0);
+   overflow = ___garbage_collect (___PSP 0);
    ___R_ALL
    ___SET_R0(___FRAME_FETCH_RA)
 
@@ -1696,7 +1696,7 @@ end-of-code
           ___BOOL overflow;
           ___FRAME_STORE_RA(___R0)
           ___W_ALL
-          overflow = ___garbage_collect (___ps, 0);
+          overflow = ___garbage_collect (___PSP 0);
           ___R_ALL
           ___SET_R0(___FRAME_FETCH_RA)
           ___RESULT = ___BOOLEAN(overflow);
@@ -1873,7 +1873,7 @@ ___SCMOBJ result;
 ___WORD head = *___UNTAG(___ARG1);
 ___FRAME_STORE_RA(___R0)
 ___W_ALL
-result = ___alloc_scmobj_still (___HD_SUBTYPE(head), ___HD_BYTES(head));
+result = ___EXT(___alloc_scmobj) (___ps, ___HD_SUBTYPE(head), ___HD_BYTES(head));
 ___R_ALL
 ___SET_R0(___FRAME_FETCH_RA)
 if (!___FIXNUMP(result))
@@ -1919,7 +1919,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sVECTOR, n<<___LWS);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sVECTOR, n<<___LWS);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -1933,7 +1933,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -1982,7 +1982,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sSTRING, n<<___LCS);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sSTRING, n<<___LCS);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -1996,7 +1996,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2042,7 +2042,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sS8VECTOR, n);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sS8VECTOR, n);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2056,7 +2056,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2102,7 +2102,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sU8VECTOR, n);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sU8VECTOR, n);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2116,7 +2116,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2162,7 +2162,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sS16VECTOR, n<<1);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sS16VECTOR, n<<1);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2176,7 +2176,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2222,7 +2222,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sU16VECTOR, n<<1);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sU16VECTOR, n<<1);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2236,7 +2236,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2282,7 +2282,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sS32VECTOR, n<<2);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sS32VECTOR, n<<2);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2296,7 +2296,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2342,7 +2342,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sU32VECTOR, n<<2);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sU32VECTOR, n<<2);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2356,7 +2356,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2406,7 +2406,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sS64VECTOR, n<<3);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sS64VECTOR, n<<3);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2420,7 +2420,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2475,7 +2475,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sU64VECTOR, n<<3);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sU64VECTOR, n<<3);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2489,7 +2489,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2540,7 +2540,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sF32VECTOR, n<<2);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sF32VECTOR, n<<2);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2554,7 +2554,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -2605,7 +2605,7 @@ else if (words > ___MSECTION_BIGGEST)
   {
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
-    result = ___alloc_scmobj_still (___sF64VECTOR, n<<3);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sF64VECTOR, n<<3);
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
     if (!___FIXNUMP(result))
@@ -2619,7 +2619,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }
@@ -3854,16 +3854,17 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
    ___F64 user, sys, real;
    ___SIZE_TS minflt, majflt;
-   ___F64 n = ___bytes_allocated (___ps);
-   ___SCMOBJ result = ___alloc_scmobj_still (___sF64VECTOR, 20<<3);
+   ___F64 n = ___bytes_allocated (___PSPNC);
+   ___SCMOBJ result = ___EXT(___alloc_scmobj) (___ps, ___sF64VECTOR, 20<<3);
 
     if (!___FIXNUMP(result))
     {
       ___W_ALL
 
-      n = ___bytes_allocated (___ps) - n;
+      n = ___bytes_allocated (___PSPNC) - n;
 
       ___process_times (&user, &sys, &real);
       ___vm_stats (&minflt, &majflt);
@@ -3871,23 +3872,23 @@ end-of-code
       ___F64VECTORSET(result,___FIX(0),user)
       ___F64VECTORSET(result,___FIX(1),sys)
       ___F64VECTORSET(result,___FIX(2),real)
-      ___F64VECTORSET(result,___FIX(3),___VMSTATE->mem.gc_user_time_)
-      ___F64VECTORSET(result,___FIX(4),___VMSTATE->mem.gc_sys_time_)
-      ___F64VECTORSET(result,___FIX(5),___VMSTATE->mem.gc_real_time_)
-      ___F64VECTORSET(result,___FIX(6),___VMSTATE->mem.nb_gcs_)
-      ___F64VECTORSET(result,___FIX(7),___bytes_allocated (___ps))
+      ___F64VECTORSET(result,___FIX(3),___vms->mem.gc_user_time_)
+      ___F64VECTORSET(result,___FIX(4),___vms->mem.gc_sys_time_)
+      ___F64VECTORSET(result,___FIX(5),___vms->mem.gc_real_time_)
+      ___F64VECTORSET(result,___FIX(6),___vms->mem.nb_gcs_)
+      ___F64VECTORSET(result,___FIX(7),___bytes_allocated (___PSPNC))
       ___F64VECTORSET(result,___FIX(8),(2*(1+2)<<___LWS))
       ___F64VECTORSET(result,___FIX(9),n)
       ___F64VECTORSET(result,___FIX(10),minflt)
       ___F64VECTORSET(result,___FIX(11),majflt)
-      ___F64VECTORSET(result,___FIX(12),___VMSTATE->mem.last_gc_user_time_)
-      ___F64VECTORSET(result,___FIX(13),___VMSTATE->mem.last_gc_sys_time_)
-      ___F64VECTORSET(result,___FIX(14),___VMSTATE->mem.last_gc_real_time_)
-      ___F64VECTORSET(result,___FIX(15),___VMSTATE->mem.last_gc_heap_size_)
-      ___F64VECTORSET(result,___FIX(16),___VMSTATE->mem.last_gc_alloc_)
-      ___F64VECTORSET(result,___FIX(17),___VMSTATE->mem.last_gc_live_)
-      ___F64VECTORSET(result,___FIX(18),___VMSTATE->mem.last_gc_movable_)
-      ___F64VECTORSET(result,___FIX(19),___VMSTATE->mem.last_gc_nonmovable_)
+      ___F64VECTORSET(result,___FIX(12),___vms->mem.last_gc_user_time_)
+      ___F64VECTORSET(result,___FIX(13),___vms->mem.last_gc_sys_time_)
+      ___F64VECTORSET(result,___FIX(14),___vms->mem.last_gc_real_time_)
+      ___F64VECTORSET(result,___FIX(15),___vms->mem.last_gc_heap_size_)
+      ___F64VECTORSET(result,___FIX(16),___vms->mem.last_gc_alloc_)
+      ___F64VECTORSET(result,___FIX(17),___vms->mem.last_gc_live_)
+      ___F64VECTORSET(result,___FIX(18),___vms->mem.last_gc_movable_)
+      ___F64VECTORSET(result,___FIX(19),___vms->mem.last_gc_nonmovable_)
 
       ___R_ALL
 
@@ -3947,7 +3948,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___F64VECTORSET(___ARG1,___ARG2,___bytes_allocated (___ps));
+   ___F64VECTORSET(___ARG1,___ARG2,___bytes_allocated (___PSPNC));
 
    ___RESULT = ___VOID;
 
@@ -4397,7 +4398,7 @@ end-of-code
 (define-prim (##exit-with-err-code-no-cleanup err-code)
   (##c-code #<<end-of-code
 
-   ___propagate_error (___ARG1);
+   ___propagate_error (___PSP ___ARG1);
    ___RESULT = ___VOID; /* never reached */
 
 end-of-code
@@ -4436,7 +4437,12 @@ end-of-code
   (##c-code "___RESULT = ___GSTATE->program_descr;"))
 
 (define ##vm-main-module-id
-  (##c-code "___RESULT = ___VMSTATE->main_module_id;"))
+  (##c-code "___RESULT = ___VMSTATE_FROM_PSTATE(___ps)->main_module_id;"))
+
+(define (##module-init module-descr)
+  (##c-code
+   "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___ps);"
+   (##vector-ref module-descr 4)))
 
 (define-prim (##main)
   (##exit-cleanup))
@@ -4502,35 +4508,50 @@ end-of-code
               (loop (##cdr lst))))
         #f)))
 
-(define-prim (##load-module-struct module)
-  (let ((module-descr (macro-module-descr module)))
-    (if (##vector? module-descr)
-        (let ((exec (##vector-ref module-descr 1)))
-          (exec)))))
-
-(define-prim (##load-required-module-struct module)
-  (if (##fx= (##fxand (macro-module-state module) 1) 0)
-      (begin
-
-        ;; TODO: this state change should be atomic with above test
-        ;; set state to indicate module has been loaded
-        (macro-module-state-set!
-         module
-         (##fxior (macro-module-state module) 1))
-
-        (##load-module-struct module))))
-
 (define-prim (##load-required-module-structs modules force-load-last?)
-  (let loop ((modules modules))
-    (if (##pair? modules)
-        (let* ((module (##car modules))
-               (module-descr (macro-module-descr module))
-               (rest (##cdr modules)))
-          ;; load module if the preload flag is set or we force the loading
-          (if (or (##fx= (##fxand 1 (##vector-ref module-descr 2)) 1)
-                  (and force-load-last? (##not (##pair? rest))))
-              (##load-required-module-struct module))
-          (loop rest)))))
+
+  (define (init module)
+    (if (##fx= (##fxand (macro-module-state module) 1) 0)
+        (begin
+
+          ;; TODO: this state change should be atomic with above test
+          ;; set state to indicate module has been initialized
+          (macro-module-state-set!
+           module
+           (##fxior (macro-module-state module) 1))
+
+          (let ((module-descr (macro-module-descr module)))
+            (if (##vector? module-descr)
+                (##module-init module-descr))))))
+
+  (define (run module)
+    (if (##fx= (##fxand (macro-module-state module) 2) 0)
+        (begin
+
+          ;; TODO: this state change should be atomic with above test
+          ;; set state to indicate module has been run
+          (macro-module-state-set!
+           module
+           (##fxior (macro-module-state module) 2))
+
+          (let ((module-descr (macro-module-descr module)))
+            (if (##vector? module-descr)
+                ((##vector-ref module-descr 1)))))))
+
+  (define (for-each-module proc)
+    (let loop ((modules modules))
+      (if (##pair? modules)
+          (let* ((module (##car modules))
+                 (module-descr (macro-module-descr module))
+                 (rest (##cdr modules)))
+            ;; load module if the preload flag is set or we force the loading
+            (if (or (##fx= (##fxand 1 (##vector-ref module-descr 2)) 1)
+                    (and force-load-last? (##not (##pair? rest))))
+                (proc module))
+            (loop rest)))))
+
+  (for-each-module init)
+  (for-each-module run))
 
 (define-prim (##default-load-required-module module-ref)
 
@@ -4544,7 +4565,7 @@ end-of-code
   (cond ((##symbol? module-ref)
          (let ((module (##lookup-registered-module module-ref)))
            (if module
-               (##load-required-module-struct module)
+               (##load-required-module-structs (##list module) #t)
                (err))))
         (else
          (err))))
@@ -4558,9 +4579,12 @@ end-of-code
 
 (define-prim (##load-vm)
   (let ((module-descrs (##vector-ref ##program-descr 0)))
-    (let ((modules (##register-module-descrs! module-descrs)))
-      (macro-module-state-set! (##car modules) 1) ;; _kernel has run
-      (##load-required-module-structs (##cdr modules) #f)
+    (##module-init (##vector-ref module-descrs 0)) ;; init _kernel
+    (let* ((modules (##register-module-descrs! module-descrs))
+           (kernel-module (##car modules))
+           (other-modules (##cdr modules)))
+      (macro-module-state-set! kernel-module 3) ;; _kernel init and run done
+      (##load-required-module-structs other-modules #f)
       (##load-required-module ##vm-main-module-id)
       (##main))))
 

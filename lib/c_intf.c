@@ -1637,7 +1637,7 @@ int *encoding_state;)
 
 /*
  * The following Scheme to C conversion functions may allocate memory
- * in the C heap:
+ * in the C heap using the ___alloc_rc function:
  *
  *    ___SCMOBJ_to_FUNCTION
  *    ___SCMOBJ_to_NONNULLFUNCTION
@@ -1841,12 +1841,15 @@ ___VARIANT x;)
 /* Convert a Scheme integer to a C '___S64'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_S64)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___S64 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___S64 *x;
 int arg_num;)
@@ -1895,12 +1898,15 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___U64'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_U64)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___U64 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___U64 *x;
 int arg_num;)
@@ -1966,19 +1972,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___S8'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_S8)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___S8 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___S8 *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR) ||
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___S64_fits_in_width (val, 8))
     return ___FIX(___STOC_S8_ERR+arg_num);
 
@@ -1990,19 +1999,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___U8'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_U8)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___U8 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___U8 *x;
 int arg_num;)
 {
   ___U64 val;
 
-  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR) ||
+  if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___U64_fits_in_width (val, 8))
     return ___FIX(___STOC_U8_ERR+arg_num);
 
@@ -2014,19 +2026,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___S16'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_S16)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___S16 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___S16 *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR) ||
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___S64_fits_in_width (val, 16))
     return ___FIX(___STOC_S16_ERR+arg_num);
 
@@ -2038,19 +2053,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___U16'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_U16)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___U16 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___U16 *x;
 int arg_num;)
 {
   ___U64 val;
 
-  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR) ||
+  if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___U64_fits_in_width (val, 16))
     return ___FIX(___STOC_U16_ERR+arg_num);
 
@@ -2062,19 +2080,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___S32'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_S32)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___S32 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___S32 *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR) ||
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___S64_fits_in_width (val, 32))
     return ___FIX(___STOC_S32_ERR+arg_num);
 
@@ -2086,19 +2107,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___U32'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_U32)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___U32 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___U32 *x;
 int arg_num;)
 {
   ___U64 val;
 
-  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR) ||
+  if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___U64_fits_in_width (val, 32))
     return ___FIX(___STOC_U32_ERR+arg_num);
 
@@ -2110,12 +2134,15 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___F32'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_F32)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___F32 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___F32 *x;
 int arg_num;)
@@ -2133,12 +2160,15 @@ int arg_num;)
 /* Convert a Scheme integer to a C '___F64'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_F64)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___F64 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___F64 *x;
 int arg_num;)
@@ -2156,12 +2186,15 @@ int arg_num;)
 /* Convert a Scheme character to a C 'char'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_CHAR)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          char *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 char *x;
 int arg_num;)
@@ -2181,12 +2214,15 @@ int arg_num;)
 /* Convert a Scheme character to a C 'signed char'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_SCHAR)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___SCHAR *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___SCHAR *x;
 int arg_num;)
@@ -2206,12 +2242,15 @@ int arg_num;)
 /* Convert a Scheme character to a C 'unsigned char'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UCHAR)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          unsigned char *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 unsigned char *x;
 int arg_num;)
@@ -2231,12 +2270,15 @@ int arg_num;)
 /* Convert a Scheme character to a C ISO-8859-1 encoded character. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_ISO_8859_1)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ISO_8859_1 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___ISO_8859_1 *x;
 int arg_num;)
@@ -2256,12 +2298,15 @@ int arg_num;)
 /* Convert a Scheme character to a C UCS-2 encoded character. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_2)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_2 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UCS_2 *x;
 int arg_num;)
@@ -2281,12 +2326,15 @@ int arg_num;)
 /* Convert a Scheme character to a C UCS-4 encoded character. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_4)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_4 *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UCS_4 *x;
 int arg_num;)
@@ -2306,12 +2354,15 @@ int arg_num;)
 /* Convert a Scheme character to a C ___WCHAR encoded character. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_WCHAR)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___WCHAR *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___WCHAR *x;
 int arg_num;)
@@ -2351,19 +2402,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'size_t'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_SIZE_T)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___SIZE_T *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___SIZE_T *x;
 int arg_num;)
 {
   ___U64 val;
 
-  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_SIZE_T_ERR+arg_num);
 
 #if ___WS == 4
@@ -2379,19 +2433,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'ssize_t'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_SSIZE_T)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___SSIZE_T *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___SSIZE_T *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_SSIZE_T_ERR+arg_num);
 
 #if ___WS == 4
@@ -2407,19 +2464,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'ptrdiff_t'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_PTRDIFF_T)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___PTRDIFF_T *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___PTRDIFF_T *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_PTRDIFF_T_ERR+arg_num);
 
 #if ___WS == 4
@@ -2435,19 +2495,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'short'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_SHORT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          short *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 short *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_SHORT_ERR+arg_num);
 
 #if ___SHORT_WIDTH < 64
@@ -2463,19 +2526,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'unsigned short'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_USHORT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          unsigned short *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 unsigned short *x;
 int arg_num;)
 {
   ___U64 val;
 
-  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_USHORT_ERR+arg_num);
 
 #if ___SHORT_WIDTH < 64
@@ -2491,19 +2557,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'int'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_INT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          int *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 int *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_INT_ERR+arg_num);
 
 #if ___INT_WIDTH < 64
@@ -2519,19 +2588,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'unsigned int'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UINT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          unsigned int *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 unsigned int *x;
 int arg_num;)
 {
   ___U64 val;
 
-  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_UINT_ERR+arg_num);
 
 #if ___INT_WIDTH < 64
@@ -2547,19 +2619,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'long'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_LONG)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          long *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 long *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_LONG_ERR+arg_num);
 
 #if ___LONG_WIDTH < 64
@@ -2575,19 +2650,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'unsigned long'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_ULONG)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          unsigned long *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 unsigned long *x;
 int arg_num;)
 {
   ___U64 val;
 
-  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_ULONG_ERR+arg_num);
 
 #if ___LONG_WIDTH < 64
@@ -2603,19 +2681,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'long long'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_LONGLONG)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___LONGLONG *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___LONGLONG *x;
 int arg_num;)
 {
   ___S64 val;
 
-  if (___SCMOBJ_to_S64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_LONGLONG_ERR+arg_num);
 
 #if ___LONGLONG_WIDTH < 64
@@ -2631,19 +2712,22 @@ int arg_num;)
 /* Convert a Scheme integer to a C 'unsigned long long'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_ULONGLONG)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ULONGLONG *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___ULONGLONG *x;
 int arg_num;)
 {
   ___U64 val;
 
-  if (___SCMOBJ_to_U64 (obj, &val, arg_num) != ___FIX(___NO_ERR))
+  if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_ULONGLONG_ERR+arg_num);
 
 #if ___LONGLONG_WIDTH < 64
@@ -2659,12 +2743,15 @@ int arg_num;)
 /* Convert a Scheme flonum to a C 'float'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_FLOAT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          float *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 float *x;
 int arg_num;)
@@ -2682,12 +2769,15 @@ int arg_num;)
 /* Convert a Scheme flonum to a C 'double'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_DOUBLE)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          double *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 double *x;
 int arg_num;)
@@ -2735,14 +2825,17 @@ ___SCMOBJ dest_tags;)
 
          
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_POINTER)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          tags,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 void **x;
 ___SCMOBJ tags;
@@ -2768,20 +2861,23 @@ int arg_num;)
 /* Convert a Scheme foreign object to a nonnull C pointer. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLPOINTER)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          tags,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 void **x;
 ___SCMOBJ tags;
 int arg_num;)
 {
-  if (___SCMOBJ_to_POINTER (obj, x, tags, arg_num) != ___FIX(___NO_ERR) ||
+  if (___SCMOBJ_to_POINTER (___PSP obj, x, tags, arg_num) != ___FIX(___NO_ERR) ||
       *x == 0)
     return ___FIX(___STOC_NONNULLPOINTER_ERR+arg_num);
   return ___FIX(___NO_ERR);
@@ -2791,14 +2887,17 @@ int arg_num;)
 /* Convert a Scheme procedure to a C function. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_FUNCTION)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void *converter,
          void **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          converter,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 void *converter;
 void **x;
@@ -2845,20 +2944,23 @@ int arg_num;)
 /* Convert a Scheme procedure to a nonnull C function. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLFUNCTION)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void *converter,
          void **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          converter,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 void *converter;
 void **x;
 int arg_num;)
 {
-  if (___SCMOBJ_to_FUNCTION (obj, converter, x, arg_num)
+  if (___SCMOBJ_to_FUNCTION (___PSP obj, converter, x, arg_num)
       != ___FIX(___NO_ERR) ||
       *x == 0)
     return ___FIX(___STOC_NONNULLFUNCTION_ERR+arg_num);
@@ -2869,12 +2971,15 @@ int arg_num;)
 /* Convert a Scheme extended boolean to a C boolean. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_BOOL)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___BOOL *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___BOOL *x;
 int arg_num;)
@@ -2887,14 +2992,17 @@ int arg_num;)
 /* Convert a Scheme foreign object to a C struct pointer. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_STRUCT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          tags,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 void **x;
 ___SCMOBJ tags;
@@ -2914,14 +3022,17 @@ int arg_num;)
 /* Convert a Scheme foreign object to a C union pointer. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UNION)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          tags,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 void **x;
 ___SCMOBJ tags;
@@ -2941,14 +3052,17 @@ int arg_num;)
 /* Convert a Scheme foreign object to a C type pointer. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_TYPE)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          ___SCMOBJ tags,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          tags,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 void **x;
 ___SCMOBJ tags;
@@ -3086,16 +3200,19 @@ int arg_num;)
 /* Convert a Scheme string to a nonnull C string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          int arg_num,
          int char_encoding,
          int fudge),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num,
          char_encoding,
          fudge)
+___PSDKR
 ___SCMOBJ obj;
 void **x;
 int arg_num;
@@ -3116,7 +3233,8 @@ int fudge;)
 
         n = ___INT(___STRINGLENGTH(obj));
         r = ___CAST(___ISO_8859_1STRING,
-                    ___alloc_rc (n + 1 + fudge));
+                    ___alloc_rc (___PSP
+                                 n + 1 + fudge));
 
         if (r == 0)
           return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -3158,7 +3276,8 @@ int fudge;)
           }
 
         r = ___CAST(___UTF_8STRING,
-                    ___alloc_rc (bytes + 1 + fudge));
+                    ___alloc_rc (___PSP
+                                 bytes + 1 + fudge));
 
         if (r == 0)
           return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -3196,7 +3315,8 @@ int fudge;)
           }
 
         r = ___CAST(___UTF_16STRING,
-                    ___alloc_rc (bytes + 2 + fudge));
+                    ___alloc_rc (___PSP
+                                 bytes + 2 + fudge));
 
         if (r == 0)
           return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -3230,7 +3350,8 @@ int fudge;)
 
         n = ___INT(___STRINGLENGTH(obj));
         r = ___CAST(___UCS_2STRING,
-                    ___alloc_rc ((n + 1 + fudge) * sizeof (___UCS_2)));
+                    ___alloc_rc (___PSP
+                                 (n + 1 + fudge) * sizeof (___UCS_2)));
 
         if (r == 0)
           return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -3260,7 +3381,8 @@ int fudge;)
 
         n = ___INT(___STRINGLENGTH(obj));
         r = ___CAST(___UCS_4STRING,
-                    ___alloc_rc ((n + 1 + fudge) * sizeof (___UCS_4)));
+                    ___alloc_rc (___PSP
+                                 (n + 1 + fudge) * sizeof (___UCS_4)));
 
         if (r == 0)
           return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -3290,7 +3412,8 @@ int fudge;)
 
         n = ___INT(___STRINGLENGTH(obj));
         r = ___CAST(___WCHARSTRING,
-                    ___alloc_rc ((n + 1 + fudge) * sizeof (___WCHAR)));
+                    ___alloc_rc (___PSP
+                                 (n + 1 + fudge) * sizeof (___WCHAR)));
 
         if (r == 0)
           return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -3333,7 +3456,8 @@ int fudge;)
 
         n = ___INT(___STRINGLENGTH(obj));
         r = ___CAST(char*,
-                    ___alloc_rc (n + 1 + fudge));
+                    ___alloc_rc (___PSP
+                                 n + 1 + fudge));
 
         if (r == 0)
           return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -3367,16 +3491,19 @@ int fudge;)
 /* Convert a Scheme string to a C string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          int arg_num,
          int char_encoding,
          int fudge),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num,
          char_encoding,
          fudge)
+___PSDKR
 ___SCMOBJ obj;
 void **x;
 int arg_num;
@@ -3391,7 +3518,7 @@ int fudge;)
       return ___FIX(___NO_ERR);
     }
 
-  if ((e = ___SCMOBJ_to_NONNULLSTRING (obj, x, arg_num, char_encoding, fudge))
+  if ((e = ___SCMOBJ_to_NONNULLSTRING (___PSP obj, x, arg_num, char_encoding, fudge))
       != ___FIX(___NO_ERR))
     if (e == err_code_from_char_encoding (char_encoding, 0, 1, arg_num))
       e = err_code_from_char_encoding (char_encoding, 0, 0, arg_num);
@@ -3403,14 +3530,17 @@ int fudge;)
 /* Convert a Scheme list of strings to a nonnull C string list. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLSTRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          void **x,
          int arg_num,
          int char_encoding),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num,
          char_encoding)
+___PSDKR
 ___SCMOBJ obj;
 void **x;
 int arg_num;
@@ -3442,7 +3572,8 @@ int char_encoding;)
     return err_code_from_char_encoding (char_encoding, 0, 2, arg_num);
 
   string_list = ___CAST(void**,
-                        ___alloc_rc ((len + 1) * sizeof (void*)));
+                        ___alloc_rc (___PSP
+                                     (len + 1) * sizeof (void*)));
 
   if (string_list == 0)
     return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -3454,7 +3585,8 @@ int char_encoding;)
   while (i < len)
     {
       if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (___CAR(list1),
+                 (___PSP
+                  ___CAR(list1),
                   &string_list[i],
                   arg_num,
                   char_encoding,
@@ -3487,12 +3619,15 @@ int char_encoding;)
 /* Convert a Scheme string to a C 'char *'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_CHARSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          char **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 char **x;
 int arg_num;)
@@ -3501,7 +3636,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_NATIVE,
@@ -3516,12 +3652,15 @@ int arg_num;)
 /* Convert a Scheme string to a nonnull C 'char *'. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLCHARSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          char **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 char **x;
 int arg_num;)
@@ -3530,7 +3669,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_NATIVE,
@@ -3545,12 +3685,15 @@ int arg_num;)
 /* Convert a Scheme list of strings to a nonnull C 'char *' list. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLCHARSTRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          char ***x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 char ***x;
 int arg_num;)
@@ -3559,7 +3702,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_NATIVE))
@@ -3573,12 +3717,15 @@ int arg_num;)
 /* Convert a Scheme string to a C ISO-8859-1 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_ISO_8859_1STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ISO_8859_1STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___ISO_8859_1STRING *x;
 int arg_num;)
@@ -3587,7 +3734,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_ISO_8859_1,
@@ -3602,12 +3750,15 @@ int arg_num;)
 /* Convert a Scheme string to a nonnull C ISO-8859-1 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLISO_8859_1STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ISO_8859_1STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___ISO_8859_1STRING *x;
 int arg_num;)
@@ -3616,7 +3767,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_ISO_8859_1,
@@ -3631,12 +3783,15 @@ int arg_num;)
 /* Convert a Scheme list of strings to a nonnull C ISO-8859-1 encoded character string list. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLISO_8859_1STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___ISO_8859_1STRING **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___ISO_8859_1STRING **x;
 int arg_num;)
@@ -3645,7 +3800,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_ISO_8859_1))
@@ -3659,12 +3815,15 @@ int arg_num;)
 /* Convert a Scheme string to a C UTF-8 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UTF_8STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_8STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UTF_8STRING *x;
 int arg_num;)
@@ -3673,7 +3832,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UTF_8,
@@ -3688,12 +3848,15 @@ int arg_num;)
 /* Convert a Scheme string to a nonnull C UTF-8 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_8STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_8STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UTF_8STRING *x;
 int arg_num;)
@@ -3702,7 +3865,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UTF_8,
@@ -3717,12 +3881,15 @@ int arg_num;)
 /* Convert a Scheme list of strings to a nonnull C UTF-8 encoded character string list. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_8STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_8STRING **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UTF_8STRING **x;
 int arg_num;)
@@ -3731,7 +3898,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UTF_8))
@@ -3745,12 +3913,15 @@ int arg_num;)
 /* Convert a Scheme string to a C UTF-16 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UTF_16STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_16STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UTF_16STRING *x;
 int arg_num;)
@@ -3759,7 +3930,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UTF_16,
@@ -3774,12 +3946,15 @@ int arg_num;)
 /* Convert a Scheme string to a nonnull C UTF-16 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_16STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_16STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UTF_16STRING *x;
 int arg_num;)
@@ -3788,7 +3963,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UTF_16,
@@ -3803,12 +3979,15 @@ int arg_num;)
 /* Convert a Scheme list of strings to a nonnull C UTF-16 encoded character string list. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUTF_16STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UTF_16STRING **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UTF_16STRING **x;
 int arg_num;)
@@ -3817,7 +3996,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UTF_16))
@@ -3831,12 +4011,15 @@ int arg_num;)
 /* Convert a Scheme string to a C UCS-2 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_2STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_2STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UCS_2STRING *x;
 int arg_num;)
@@ -3845,7 +4028,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UCS_2,
@@ -3860,12 +4044,15 @@ int arg_num;)
 /* Convert a Scheme string to a nonnull C UCS-2 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUCS_2STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_2STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UCS_2STRING *x;
 int arg_num;)
@@ -3874,7 +4061,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UCS_2,
@@ -3889,12 +4077,15 @@ int arg_num;)
 /* Convert a Scheme list of strings to a nonnull C UCS-2 encoded character string list. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUCS_2STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_2STRING **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UCS_2STRING **x;
 int arg_num;)
@@ -3903,7 +4094,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UCS_2))
@@ -3917,12 +4109,15 @@ int arg_num;)
 /* Convert a Scheme string to a C UCS-4 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_UCS_4STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_4STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UCS_4STRING *x;
 int arg_num;)
@@ -3931,7 +4126,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UCS_4,
@@ -3946,12 +4142,15 @@ int arg_num;)
 /* Convert a Scheme string to a nonnull C UCS-4 encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUCS_4STRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_4STRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UCS_4STRING *x;
 int arg_num;)
@@ -3960,7 +4159,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UCS_4,
@@ -3975,12 +4175,15 @@ int arg_num;)
 /* Convert a Scheme list of strings to a nonnull C UCS-4 encoded character string list. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLUCS_4STRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___UCS_4STRING **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___UCS_4STRING **x;
 int arg_num;)
@@ -3989,7 +4192,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_UCS_4))
@@ -4003,12 +4207,15 @@ int arg_num;)
 /* Convert a Scheme string to a C ___WCHAR encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_WCHARSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___WCHARSTRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___WCHARSTRING *x;
 int arg_num;)
@@ -4017,7 +4224,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_WCHAR,
@@ -4032,12 +4240,15 @@ int arg_num;)
 /* Convert a Scheme string to a nonnull C ___WCHAR encoded character string. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLWCHARSTRING)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___WCHARSTRING *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___WCHARSTRING *x;
 int arg_num;)
@@ -4046,7 +4257,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_WCHAR,
@@ -4061,12 +4273,15 @@ int arg_num;)
 /* Convert a Scheme list of strings to a nonnull C ___WCHAR encoded character string list. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_NONNULLWCHARSTRINGLIST)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___WCHARSTRING **x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___WCHARSTRING **x;
 int arg_num;)
@@ -4075,7 +4290,8 @@ int arg_num;)
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
-             (obj,
+             (___PSP
+              obj,
               &result,
               arg_num,
               ___CHAR_ENCODING_WCHAR))
@@ -4089,12 +4305,15 @@ int arg_num;)
 /* Convert a Scheme object to a variant. */
 
 ___EXP_FUNC(___SCMOBJ,___SCMOBJ_to_VARIANT)
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___VARIANT *x,
          int arg_num),
-        (obj,
+        (___PSV
+         obj,
          x,
          arg_num)
+___PSDKR
 ___SCMOBJ obj;
 ___VARIANT *x;
 int arg_num;)
@@ -4112,8 +4331,10 @@ int arg_num;)
 
 /*
  * The C to Scheme conversion functions may allocate memory in the
- * Scheme heap.  However, all objects allocated are still objects with
- * a reference count of 1.  The only special processing that must be
+ * Scheme heap.  When the first parameter '___ps' is NULL, the object
+ * is permanently allocated.  When '___ps' is not NULL, the object is
+ * a still object with a reference count of 1 allocated in that
+ * processor's heap.  The only special processing that must be
  * performed by the caller of a C to Scheme conversion function is a
  * call to '___release_scmobj' when the caller no longer needs a
  * reference to the object.  This call is generated automatically by
@@ -4124,12 +4345,15 @@ int arg_num;)
 /* Convert a C '___S64' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___S64_to_SCMOBJ)
-   ___P((___S64 x,
+   ___P((___processor_state ___ps,
+         ___S64 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___S64 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4150,7 +4374,7 @@ int arg_num;)
       else
         n = 1 + (d1 != 0);
 
-      r = ___alloc_scmobj_still (___sBIGNUM, n<<2);
+      r = ___alloc_scmobj (___ps, ___sBIGNUM, n<<2);
 
       if (___FIXNUMP(r))
         {
@@ -4165,7 +4389,7 @@ int arg_num;)
       int n = 1;
       ___BIGADIGIT d0 = x;
 
-      r = ___alloc_scmobj_still (___sBIGNUM, n<<3);
+      r = ___alloc_scmobj (___ps, ___sBIGNUM, n<<3);
 
       if (___FIXNUMP(r))
         {
@@ -4185,12 +4409,15 @@ int arg_num;)
 /* Convert a C '___U64' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___U64_to_SCMOBJ)
-   ___P((___U64 x,
+   ___P((___processor_state ___ps,
+         ___U64 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___U64 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4211,7 +4438,7 @@ int arg_num;)
       else
         n = 2 + (___CAST(___BIGADIGITSIGNED,d1) < 0);
 
-      r = ___alloc_scmobj_still (___sBIGNUM, n<<2);
+      r = ___alloc_scmobj (___ps, ___sBIGNUM, n<<2);
 
       if (___FIXNUMP(r))
         {
@@ -4232,7 +4459,7 @@ int arg_num;)
 
       n = 1 + (___CAST(___BIGADIGITSIGNED,d0) < 0);
 
-      r = ___alloc_scmobj_still (___sBIGNUM, n<<3);
+      r = ___alloc_scmobj (___ps, ___sBIGNUM, n<<3);
 
       if (___FIXNUMP(r))
         {
@@ -4254,12 +4481,15 @@ int arg_num;)
 /* Convert a C '___S8' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___S8_to_SCMOBJ)
-   ___P((___S8 x,
+   ___P((___processor_state ___ps,
+         ___S8 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___S8 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4276,12 +4506,15 @@ int arg_num;)
 /* Convert a C '___U8' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___U8_to_SCMOBJ)
-   ___P((___U8 x,
+   ___P((___processor_state ___ps,
+         ___U8 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___U8 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4298,12 +4531,15 @@ int arg_num;)
 /* Convert a C '___S16' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___S16_to_SCMOBJ)
-   ___P((___S16 x,
+   ___P((___processor_state ___ps,
+         ___S16 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___S16 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4320,12 +4556,15 @@ int arg_num;)
 /* Convert a C '___U16' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___U16_to_SCMOBJ)
-   ___P((___U16 x,
+   ___P((___processor_state ___ps,
+         ___U16 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___U16 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4342,51 +4581,60 @@ int arg_num;)
 /* Convert a C '___S32' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___S32_to_SCMOBJ)
-   ___P((___S32 x,
+   ___P((___processor_state ___ps,
+         ___S32 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___S32 x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___S64_to_SCMOBJ (___S64_from_SM32 (x), obj, arg_num);
+  return ___S64_to_SCMOBJ (___ps, ___S64_from_SM32 (x), obj, arg_num);
 }
 
 
 /* Convert a C '___U32' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___U32_to_SCMOBJ)
-   ___P((___U32 x,
+   ___P((___processor_state ___ps,
+         ___U32 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___U32 x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___U64_to_SCMOBJ (___U64_from_UM32 (x), obj, arg_num);
+  return ___U64_to_SCMOBJ (___ps, ___U64_from_UM32 (x), obj, arg_num);
 }
 
 
 /* Convert a C '___F64' to a Scheme flonum. */
 
 ___EXP_FUNC(___SCMOBJ,___F64_to_SCMOBJ)
-   ___P((___F64 x,
+   ___P((___processor_state ___ps,
+         ___F64 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___F64 x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  ___SCMOBJ r = ___alloc_scmobj_still (___sFLONUM, ___FLONUM_SIZE<<___LWS);
+  ___SCMOBJ r = ___alloc_scmobj (___ps, ___sFLONUM, ___FLONUM_SIZE<<___LWS);
 
   if (___FIXNUMP(r))
     {
@@ -4404,29 +4652,35 @@ int arg_num;)
 /* Convert a C '___F32' to a Scheme flonum. */
 
 ___EXP_FUNC(___SCMOBJ,___F32_to_SCMOBJ)
-   ___P((___F32 x,
+   ___P((___processor_state ___ps,
+         ___F32 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___F32 x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___F64_to_SCMOBJ (___CAST(___F64,x), obj, arg_num);
+  return ___F64_to_SCMOBJ (___ps, ___CAST(___F64,x), obj, arg_num);
 }
 
 
 /* Convert a C 'char' to a Scheme character. */
 
 ___EXP_FUNC(___SCMOBJ,___CHAR_to_SCMOBJ)
-   ___P((char x,
+   ___P((___processor_state ___ps,
+         char x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 char x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4443,12 +4697,15 @@ int arg_num;)
 /* Convert a C 'signed char' to a Scheme character. */
 
 ___EXP_FUNC(___SCMOBJ,___SCHAR_to_SCMOBJ)
-   ___P((___SCHAR x,
+   ___P((___processor_state ___ps,
+         ___SCHAR x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___SCHAR x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4465,12 +4722,15 @@ int arg_num;)
 /* Convert a C 'unsigned char' to a Scheme character. */
 
 ___EXP_FUNC(___SCMOBJ,___UCHAR_to_SCMOBJ)
-   ___P((unsigned char x,
+   ___P((___processor_state ___ps,
+         unsigned char x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 unsigned char x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4487,12 +4747,15 @@ int arg_num;)
 /* Convert a C ISO-8859-1 encoded character to a Scheme character. */
 
 ___EXP_FUNC(___SCMOBJ,___ISO_8859_1_to_SCMOBJ)
-   ___P((___ISO_8859_1 x,
+   ___P((___processor_state ___ps,
+         ___ISO_8859_1 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___ISO_8859_1 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4509,12 +4772,15 @@ int arg_num;)
 /* Convert a C UCS-2 encoded character to a Scheme character. */
 
 ___EXP_FUNC(___SCMOBJ,___UCS_2_to_SCMOBJ)
-   ___P((___UCS_2 x,
+   ___P((___processor_state ___ps,
+         ___UCS_2 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UCS_2 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4535,12 +4801,15 @@ int arg_num;)
 /* Convert a C UCS-4 encoded character to a Scheme character. */
 
 ___EXP_FUNC(___SCMOBJ,___UCS_4_to_SCMOBJ)
-   ___P((___UCS_4 x,
+   ___P((___processor_state ___ps,
+         ___UCS_4 x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UCS_4 x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4559,12 +4828,15 @@ int arg_num;)
 /* Convert a C ___WCHAR encoded character to a Scheme character. */
 
 ___EXP_FUNC(___SCMOBJ,___WCHAR_to_SCMOBJ)
-   ___P((___WCHAR x,
+   ___P((___processor_state ___ps,
+         ___WCHAR x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___WCHAR x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4593,237 +4865,279 @@ int arg_num;)
 /* Convert a C 'size_t' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___SIZE_T_to_SCMOBJ)
-   ___P((___SIZE_T x,
+   ___P((___processor_state ___ps,
+         ___SIZE_T x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___SIZE_T x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___U64_to_SCMOBJ (___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
+  return ___U64_to_SCMOBJ (___ps, ___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'ssize_t' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___SSIZE_T_to_SCMOBJ)
-   ___P((___SSIZE_T x,
+   ___P((___processor_state ___ps,
+         ___SSIZE_T x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___SSIZE_T x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___S64_to_SCMOBJ (___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
+  return ___S64_to_SCMOBJ (___ps, ___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'ptrdiff_t' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___PTRDIFF_T_to_SCMOBJ)
-   ___P((___PTRDIFF_T x,
+   ___P((___processor_state ___ps,
+         ___PTRDIFF_T x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___PTRDIFF_T x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___S64_to_SCMOBJ (___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
+  return ___S64_to_SCMOBJ (___ps, ___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'short' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___SHORT_to_SCMOBJ)
-   ___P((short x,
+   ___P((___processor_state ___ps,
+         short x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 short x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___S64_to_SCMOBJ (___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
+  return ___S64_to_SCMOBJ (___ps, ___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'unsigned short' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___USHORT_to_SCMOBJ)
-   ___P((unsigned short x,
+   ___P((___processor_state ___ps,
+         unsigned short x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 unsigned short x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___U64_to_SCMOBJ (___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
+  return ___U64_to_SCMOBJ (___ps, ___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'int' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___INT_to_SCMOBJ)
-   ___P((int x,
+   ___P((___processor_state ___ps,
+         int x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 int x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___S64_to_SCMOBJ (___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
+  return ___S64_to_SCMOBJ (___ps, ___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'unsigned int' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___UINT_to_SCMOBJ)
-   ___P((unsigned int x,
+   ___P((___processor_state ___ps,
+         unsigned int x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 unsigned int x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___U64_to_SCMOBJ (___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
+  return ___U64_to_SCMOBJ (___ps, ___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'long' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___LONG_to_SCMOBJ)
-   ___P((long x,
+   ___P((___processor_state ___ps,
+         long x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 long x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___S64_to_SCMOBJ (___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
+  return ___S64_to_SCMOBJ (___ps, ___S64_from_LONGLONG (___CAST(___LONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'unsigned long' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___ULONG_to_SCMOBJ)
-   ___P((unsigned long x,
+   ___P((___processor_state ___ps,
+         unsigned long x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 unsigned long x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___U64_to_SCMOBJ (___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
+  return ___U64_to_SCMOBJ (___ps, ___U64_from_ULONGLONG (___CAST(___ULONGLONG,x)), obj, arg_num);
 }
 
 
 /* Convert a C 'long long' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___LONGLONG_to_SCMOBJ)
-   ___P((___LONGLONG x,
+   ___P((___processor_state ___ps,
+         ___LONGLONG x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___LONGLONG x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___S64_to_SCMOBJ (___S64_from_LONGLONG (x), obj, arg_num);
+  return ___S64_to_SCMOBJ (___ps, ___S64_from_LONGLONG (x), obj, arg_num);
 }
 
 
 /* Convert a C 'unsigned long long' to a Scheme integer. */
 
 ___EXP_FUNC(___SCMOBJ,___ULONGLONG_to_SCMOBJ)
-   ___P((___ULONGLONG x,
+   ___P((___processor_state ___ps,
+         ___ULONGLONG x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___ULONGLONG x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___U64_to_SCMOBJ (___U64_from_ULONGLONG (x), obj, arg_num);
+  return ___U64_to_SCMOBJ (___ps, ___U64_from_ULONGLONG (x), obj, arg_num);
 }
 
 
 /* Convert a C 'float' to a Scheme flonum. */
 
 ___EXP_FUNC(___SCMOBJ,___FLOAT_to_SCMOBJ)
-   ___P((float x,
+   ___P((___processor_state ___ps,
+         float x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 float x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___F64_to_SCMOBJ (___CAST(___F64,x), obj, arg_num);
+  return ___F64_to_SCMOBJ (___ps, ___CAST(___F64,x), obj, arg_num);
 }
 
 
 /* Convert a C 'double' to a Scheme flonum. */
 
 ___EXP_FUNC(___SCMOBJ,___DOUBLE_to_SCMOBJ)
-   ___P((double x,
+   ___P((___processor_state ___ps,
+         double x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 double x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  return ___F64_to_SCMOBJ (___CAST(___F64,x), obj, arg_num);
+  return ___F64_to_SCMOBJ (___ps, ___CAST(___F64,x), obj, arg_num);
 }
 
 
 /* Convert a C pointer to a Scheme foreign object. */
 
 ___EXP_FUNC(___SCMOBJ,___POINTER_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          tags,
          release_fn,
          obj,
          arg_num)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
@@ -4834,7 +5148,7 @@ int arg_num;)
     *obj = ___FAL; /* #f counts as NULL */
   else
     {
-      ___SCMOBJ r = ___alloc_scmobj_still (___sFOREIGN, ___FOREIGN_SIZE<<___LWS);
+      ___SCMOBJ r = ___alloc_scmobj (___ps, ___sFOREIGN, ___FOREIGN_SIZE<<___LWS);
       if (___FIXNUMP(r))
         {
           *obj = ___FAL;
@@ -4852,16 +5166,19 @@ int arg_num;)
 /* Convert a nonnull C pointer to a Scheme foreign object. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLPOINTER_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          tags,
          release_fn,
          obj,
          arg_num)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
@@ -4873,19 +5190,22 @@ int arg_num;)
       *obj = ___FAL;
       return ___FIX(___CTOS_NONNULLPOINTER_ERR+arg_num);
     }
-  return ___POINTER_to_SCMOBJ (x, tags, release_fn, obj, arg_num);
+  return ___POINTER_to_SCMOBJ (___ps, x, tags, release_fn, obj, arg_num);
 }
 
 
 /* Convert a C function to a Scheme procedure. */
 
 ___EXP_FUNC(___SCMOBJ,___FUNCTION_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4907,12 +5227,15 @@ int arg_num;)
 /* Convert a nonnull C function to a Scheme procedure. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLFUNCTION_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -4922,23 +5245,26 @@ int arg_num;)
       *obj = ___FAL;
       return ___FIX(___CTOS_NONNULLFUNCTION_ERR+arg_num);
     }
-  return ___FUNCTION_to_SCMOBJ (x, obj, arg_num);
+  return ___FUNCTION_to_SCMOBJ (___ps, x, obj, arg_num);
 }
 
 
 /* Convert a C struct pointer to a Scheme foreign object. */
 
 ___EXP_FUNC(___SCMOBJ,___STRUCT_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          tags,
          release_fn,
          obj,
          arg_num)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
@@ -4951,7 +5277,7 @@ int arg_num;)
       *obj = ___FAL;
       e = ___FIX(___CTOS_STRUCT_ERR+arg_num);
     }
-  else if ((e = ___POINTER_to_SCMOBJ (x, tags, release_fn, obj, arg_num))
+  else if ((e = ___POINTER_to_SCMOBJ (___ps, x, tags, release_fn, obj, arg_num))
            != ___FIX(___NO_ERR))
     release_fn (x);
   return e;
@@ -4961,16 +5287,19 @@ int arg_num;)
 /* Convert a C union pointer to a Scheme foreign object. */
 
 ___EXP_FUNC(___SCMOBJ,___UNION_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          tags,
          release_fn,
          obj,
          arg_num)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
@@ -4983,7 +5312,7 @@ int arg_num;)
       *obj = ___FAL;
       e = ___FIX(___CTOS_UNION_ERR+arg_num);
     }
-  else if ((e = ___POINTER_to_SCMOBJ (x, tags, release_fn, obj, arg_num))
+  else if ((e = ___POINTER_to_SCMOBJ (___ps, x, tags, release_fn, obj, arg_num))
            != ___FIX(___NO_ERR))
     release_fn (x);
   return e;
@@ -4993,16 +5322,19 @@ int arg_num;)
 /* Convert a C type pointer to a Scheme foreign object. */
 
 ___EXP_FUNC(___SCMOBJ,___TYPE_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ tags,
          ___SCMOBJ (*release_fn) ___P((void *ptr),()),
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          tags,
          release_fn,
          obj,
          arg_num)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ tags;
 ___SCMOBJ (*release_fn) ___P((void *ptr),());
@@ -5015,7 +5347,7 @@ int arg_num;)
       *obj = ___FAL;
       e = ___FIX(___CTOS_TYPE_ERR+arg_num);
     }
-  else if ((e = ___POINTER_to_SCMOBJ (x, tags, release_fn, obj, arg_num))
+  else if ((e = ___POINTER_to_SCMOBJ (___ps, x, tags, release_fn, obj, arg_num))
            != ___FIX(___NO_ERR))
     release_fn (x);
   return e;
@@ -5025,12 +5357,15 @@ int arg_num;)
 /* Convert a C extended boolean to a Scheme boolean. */
 
 ___EXP_FUNC(___SCMOBJ,___BOOL_to_SCMOBJ)
-   ___P((___BOOL x,
+   ___P((___processor_state ___ps,
+         ___BOOL x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___BOOL x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -5043,20 +5378,22 @@ int arg_num;)
 /* Convert a nonnull C string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLSTRING_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num,
          int char_encoding),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num,
          char_encoding)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ *obj;
 int arg_num;
 int char_encoding;)
 {
-  int kind = arg_num < 0 ? ___PERM : ___STILL;
   ___SCMOBJ result = ___FAL;
   ___SIZE_T i, n = 0;
 
@@ -5072,7 +5409,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
+        result = ___alloc_scmobj (___ps, ___sSTRING, n<<___LCS);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5100,7 +5437,7 @@ int char_encoding;)
         while (___UTF_8_get (&p) != 0) /* advance until end or error */
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
+        result = ___alloc_scmobj (___ps, ___sSTRING, n<<___LCS);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5146,7 +5483,7 @@ int char_encoding;)
             n++;
           }
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
+        result = ___alloc_scmobj (___ps, ___sSTRING, n<<___LCS);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5180,7 +5517,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
+        result = ___alloc_scmobj (___ps, ___sSTRING, n<<___LCS);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5209,7 +5546,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
+        result = ___alloc_scmobj (___ps, ___sSTRING, n<<___LCS);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5238,7 +5575,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
+        result = ___alloc_scmobj (___ps, ___sSTRING, n<<___LCS);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5283,7 +5620,7 @@ int char_encoding;)
         while (str[n] != 0)
           n++;
 
-        result = ___alloc_scmobj (___sSTRING, n<<___LCS, kind);
+        result = ___alloc_scmobj (___ps, ___sSTRING, n<<___LCS);
 
         if (___FIXNUMP(result))
           result = ___FAL;
@@ -5321,14 +5658,17 @@ int char_encoding;)
 /* Convert a nonnull C string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___STRING_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num,
          int char_encoding),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num,
          char_encoding)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ *obj;
 int arg_num;
@@ -5342,7 +5682,8 @@ int char_encoding;)
       e = ___FIX(___NO_ERR);
     }
   else if ((e = ___NONNULLSTRING_to_SCMOBJ
-                  (x,
+                  (___ps,
+                   x,
                    obj,
                    arg_num,
                    char_encoding))
@@ -5360,20 +5701,22 @@ int char_encoding;)
 /* Convert a nonnull C string list to a Scheme string list. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLSTRINGLIST_to_SCMOBJ)
-   ___P((void *x,
+   ___P((___processor_state ___ps,
+         void *x,
          ___SCMOBJ *obj,
          int arg_num,
          int char_encoding),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num,
          char_encoding)
+___processor_state ___ps;
 void *x;
 ___SCMOBJ *obj;
 int arg_num;
 int char_encoding;)
 {
-  int kind = arg_num < 0 ? ___PERM : ___STILL;
   ___SCMOBJ lst;
   void **string_list = ___CAST(void**,x);
   int i;
@@ -5395,7 +5738,8 @@ int char_encoding;)
       ___SCMOBJ pair;
 
       if ((e = ___NONNULLSTRING_to_SCMOBJ
-                 (string_list[i],
+                 (___ps,
+                  string_list[i],
                   &str,
                   arg_num,
                   char_encoding))
@@ -5408,7 +5752,7 @@ int char_encoding;)
           return e;
         }
 
-      pair = ___make_pair (str, lst, kind);
+      pair = ___make_pair (___ps, str, lst);
 
       ___release_scmobj (str);
       ___release_scmobj (lst);
@@ -5431,18 +5775,22 @@ int char_encoding;)
 /* Convert a C 'char *' to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___CHARSTRING_to_SCMOBJ)
-   ___P((char *x,
+   ___P((___processor_state ___ps,
+         char *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 char *x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___STRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_NATIVE);
@@ -5452,18 +5800,22 @@ int arg_num;)
 /* Convert a nonnull C 'char *' to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLCHARSTRING_to_SCMOBJ)
-   ___P((char *x,
+   ___P((___processor_state ___ps,
+         char *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 char *x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_NATIVE);
@@ -5473,18 +5825,22 @@ int arg_num;)
 /* Convert a nonnull C 'char *' list to a Scheme list of strings. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLCHARSTRINGLIST_to_SCMOBJ)
-   ___P((char **x,
+   ___P((___processor_state ___ps,
+         char **x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 char **x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
-           (___CAST(void*,x),
+           (___ps,
+            ___CAST(void*,x),
             obj,
             arg_num,
             ___CHAR_ENCODING_NATIVE);
@@ -5494,18 +5850,22 @@ int arg_num;)
 /* Convert a C ISO-8859-1 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___ISO_8859_1STRING_to_SCMOBJ)
-   ___P((___ISO_8859_1STRING x,
+   ___P((___processor_state ___ps,
+         ___ISO_8859_1STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___ISO_8859_1STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___STRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_ISO_8859_1);
@@ -5515,18 +5875,22 @@ int arg_num;)
 /* Convert a nonnull C ISO-8859-1 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLISO_8859_1STRING_to_SCMOBJ)
-   ___P((___ISO_8859_1STRING x,
+   ___P((___processor_state ___ps,
+         ___ISO_8859_1STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___ISO_8859_1STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_ISO_8859_1);
@@ -5536,18 +5900,22 @@ int arg_num;)
 /* Convert a nonnull C ISO-8859-1 encoded character string list to a Scheme list of strings. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLISO_8859_1STRINGLIST_to_SCMOBJ)
-   ___P((___ISO_8859_1STRING *x,
+   ___P((___processor_state ___ps,
+         ___ISO_8859_1STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___ISO_8859_1STRING *x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
-           (___CAST(void*,x),
+           (___ps,
+            ___CAST(void*,x),
             obj,
             arg_num,
             ___CHAR_ENCODING_ISO_8859_1);
@@ -5557,18 +5925,22 @@ int arg_num;)
 /* Convert a C UTF-8 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___UTF_8STRING_to_SCMOBJ)
-   ___P((___UTF_8STRING x,
+   ___P((___processor_state ___ps,
+         ___UTF_8STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UTF_8STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___STRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_8);
@@ -5578,18 +5950,22 @@ int arg_num;)
 /* Convert a nonnull C UTF-8 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLUTF_8STRING_to_SCMOBJ)
-   ___P((___UTF_8STRING x,
+   ___P((___processor_state ___ps,
+         ___UTF_8STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UTF_8STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_8);
@@ -5599,18 +5975,22 @@ int arg_num;)
 /* Convert a nonnull C UTF-8 encoded character string list to a Scheme list of strings. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLUTF_8STRINGLIST_to_SCMOBJ)
-   ___P((___UTF_8STRING *x,
+   ___P((___processor_state ___ps,
+         ___UTF_8STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UTF_8STRING *x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
-           (___CAST(void*,x),
+           (___ps,
+            ___CAST(void*,x),
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_8);
@@ -5620,18 +6000,22 @@ int arg_num;)
 /* Convert a C UTF-16 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___UTF_16STRING_to_SCMOBJ)
-   ___P((___UTF_16STRING x,
+   ___P((___processor_state ___ps,
+         ___UTF_16STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UTF_16STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___STRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_16);
@@ -5641,18 +6025,22 @@ int arg_num;)
 /* Convert a nonnull C UTF-16 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLUTF_16STRING_to_SCMOBJ)
-   ___P((___UTF_16STRING x,
+   ___P((___processor_state ___ps,
+         ___UTF_16STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UTF_16STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_16);
@@ -5662,18 +6050,22 @@ int arg_num;)
 /* Convert a nonnull C UTF-16 encoded character string list to a Scheme list of strings. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLUTF_16STRINGLIST_to_SCMOBJ)
-   ___P((___UTF_16STRING *x,
+   ___P((___processor_state ___ps,
+         ___UTF_16STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UTF_16STRING *x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
-           (___CAST(void*,x),
+           (___ps,
+            ___CAST(void*,x),
             obj,
             arg_num,
             ___CHAR_ENCODING_UTF_16);
@@ -5683,18 +6075,22 @@ int arg_num;)
 /* Convert a C UCS-2 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___UCS_2STRING_to_SCMOBJ)
-   ___P((___UCS_2STRING x,
+   ___P((___processor_state ___ps,
+         ___UCS_2STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UCS_2STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___STRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_UCS_2);
@@ -5704,18 +6100,22 @@ int arg_num;)
 /* Convert a nonnull C UCS-2 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLUCS_2STRING_to_SCMOBJ)
-   ___P((___UCS_2STRING x,
+   ___P((___processor_state ___ps,
+         ___UCS_2STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UCS_2STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_UCS_2);
@@ -5724,18 +6124,22 @@ int arg_num;)
 /* Convert a nonnull C UCS-2 encoded character string list to a Scheme list of strings. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLUCS_2STRINGLIST_to_SCMOBJ)
-   ___P((___UCS_2STRING *x,
+   ___P((___processor_state ___ps,
+         ___UCS_2STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UCS_2STRING *x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
-           (___CAST(void*,x),
+           (___ps,
+            ___CAST(void*,x),
             obj,
             arg_num,
             ___CHAR_ENCODING_UCS_2);
@@ -5745,18 +6149,22 @@ int arg_num;)
 /* Convert a C UCS-4 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___UCS_4STRING_to_SCMOBJ)
-   ___P((___UCS_4STRING x,
+   ___P((___processor_state ___ps,
+         ___UCS_4STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UCS_4STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___STRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_UCS_4);
@@ -5766,18 +6174,22 @@ int arg_num;)
 /* Convert a nonnull C UCS-4 encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLUCS_4STRING_to_SCMOBJ)
-   ___P((___UCS_4STRING x,
+   ___P((___processor_state ___ps,
+         ___UCS_4STRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UCS_4STRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_UCS_4);
@@ -5787,18 +6199,22 @@ int arg_num;)
 /* Convert a nonnull C UCS-4 encoded character string list to a Scheme list of strings. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLUCS_4STRINGLIST_to_SCMOBJ)
-   ___P((___UCS_4STRING *x,
+   ___P((___processor_state ___ps,
+         ___UCS_4STRING *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___UCS_4STRING *x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
-           (___CAST(void*,x),
+           (___ps,
+            ___CAST(void*,x),
             obj,
             arg_num,
             ___CHAR_ENCODING_UCS_4);
@@ -5808,18 +6224,22 @@ int arg_num;)
 /* Convert a C ___WCHAR encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___WCHARSTRING_to_SCMOBJ)
-   ___P((___WCHARSTRING x,
+   ___P((___processor_state ___ps,
+         ___WCHARSTRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___WCHARSTRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___STRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_WCHAR);
@@ -5829,18 +6249,22 @@ int arg_num;)
 /* Convert a nonnull C ___WCHAR encoded character string to a Scheme string. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLWCHARSTRING_to_SCMOBJ)
-   ___P((___WCHARSTRING x,
+   ___P((___processor_state ___ps,
+         ___WCHARSTRING x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___WCHARSTRING x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRING_to_SCMOBJ
-           (x,
+           (___ps,
+            x,
             obj,
             arg_num,
             ___CHAR_ENCODING_WCHAR);
@@ -5850,18 +6274,22 @@ int arg_num;)
 /* Convert a nonnull C ___WCHAR encoded character string list to a Scheme list of strings. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLWCHARSTRINGLIST_to_SCMOBJ)
-   ___P((___WCHARSTRING *x,
+   ___P((___processor_state ___ps,
+         ___WCHARSTRING *x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___WCHARSTRING *x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
   return ___NONNULLSTRINGLIST_to_SCMOBJ
-           (___CAST(void*,x),
+           (___ps,
+            ___CAST(void*,x),
             obj,
             arg_num,
             ___CHAR_ENCODING_WCHAR);
@@ -5871,12 +6299,15 @@ int arg_num;)
 /* Convert a variant to a Scheme object. */
 
 ___EXP_FUNC(___SCMOBJ,___VARIANT_to_SCMOBJ)
-   ___P((___VARIANT x,
+   ___P((___processor_state ___ps,
+         ___VARIANT x,
          ___SCMOBJ *obj,
          int arg_num),
-        (x,
+        (___ps,
+         x,
          obj,
          arg_num)
+___processor_state ___ps;
 ___VARIANT x;
 ___SCMOBJ *obj;
 int arg_num;)
@@ -6006,16 +6437,19 @@ ___UCS_2STRING **str_list_UCS_2;)
 /* Create a stack marker for a C to Scheme function call. */
 
 ___EXP_FUNC(___SCMOBJ,___make_sfun_stack_marker)
-   ___P((___SCMOBJ *marker,
+   ___P((___processor_state ___ps,
+         ___SCMOBJ *marker,
          ___SCMOBJ proc_or_false),
-        (marker,
+        (___ps,
+         marker,
          proc_or_false)
+___processor_state ___ps;
 ___SCMOBJ *marker;
 ___SCMOBJ proc_or_false;)
 {
   ___SCMOBJ stack_marker;
 
-  stack_marker = ___make_vector (1, ___FAL, ___STILL);
+  stack_marker = ___make_vector (___ps, 1, ___FAL);
 
   /************************ beware!  proc_or_false may have been GC'd at this point! */
 

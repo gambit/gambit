@@ -1384,7 +1384,8 @@ ___SCMOBJ err;)
     }
 
   if ((e = ___NONNULLSTRING_to_SCMOBJ
-             (buf,
+             (___PSTATE,
+              buf,
               &result,
               ___RETURN_POS,
               ___CE(___ERR_CODE_CE_SELECT)))

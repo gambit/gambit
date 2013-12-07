@@ -182,7 +182,8 @@ void **linker;)
         if (errmsg != 0)
           {
             if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                       (errmsg,
+                       (___PSTATE,
+                        errmsg,
                         &result,
                         ___RETURN_POS))
                 != ___FIX(___NO_ERR))
@@ -264,7 +265,8 @@ void **linker;)
   else
     {
       if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (___CAST(char*,dlerror ()),
+                 (___PSTATE,
+                  ___CAST(char*,dlerror ()),
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -348,7 +350,8 @@ void **linker;)
             if (errmsg != 0)
               {
                 if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                           (errmsg,
+                           (___PSTATE,
+                            errmsg,
                             &result,
                             ___RETURN_POS))
                     != ___FIX(___NO_ERR))
@@ -372,14 +375,15 @@ void **linker;)
 
   if (result != ___FIX(___NO_ERR))
     {
-      ___SCMOBJ r = ___make_vector (2, ___FAL, ___STILL);
+      ___SCMOBJ r = ___make_vector (___PSTATE, 2, ___FAL);
 
       if (!___FIXNUMP(r))
         {
           ___SCMOBJ modname;
 
           if ((e = ___NONNULLSTRING_to_SCMOBJ
-                     (cmodname,
+                     (___PSTATE,
+                      cmodname,
                       &modname,
                       ___RETURN_POS,
                       ___CE(___DL_MODNAME_CE_SELECT)))
@@ -591,7 +595,8 @@ void **linker;)
   void *cmodname;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___DL_PATH_CE_SELECT),
@@ -753,7 +758,7 @@ void *converter;)
 
 #else
 
-  if ((c_closure = ___alloc_rc (C_CLOSURE_CODE_SIZE)) == 0)
+  if ((c_closure = ___alloc_rc (___PSTATE, C_CLOSURE_CODE_SIZE)) == 0)
     return 0;
 
   ___set_data_rc (c_closure, proc);

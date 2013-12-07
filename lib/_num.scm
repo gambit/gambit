@@ -5579,9 +5579,9 @@ else if (words > ___MSECTION_BIGGEST)
     ___FRAME_STORE_RA(___R0)
     ___W_ALL
 #if ___BIG_ABASE_WIDTH == 32
-    result = ___alloc_scmobj_still (___sBIGNUM, n<<2);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sBIGNUM, n<<2);
 #else
-    result = ___alloc_scmobj_still (___sBIGNUM, n<<3);
+    result = ___EXT(___alloc_scmobj) (___ps, ___sBIGNUM, n<<3);
 #endif
     ___R_ALL
     ___SET_R0(___FRAME_FETCH_RA)
@@ -5596,7 +5596,7 @@ else
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___ps) && ___garbage_collect (___ps, 0);
+        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
       }

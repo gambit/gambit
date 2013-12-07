@@ -5264,7 +5264,7 @@ ___SCMOBJ *event;)
 #ifdef USE_WIN32
 
   {
-    MSG *msg = ___CAST(MSG*, ___alloc_rc (sizeof (MSG)));
+    MSG *msg = ___CAST(MSG*, ___alloc_rc (___PSTATE, sizeof (MSG)));
 
     if (msg == 0)
       return ___FIX(___STOC_HEAP_OVERFLOW_ERR+___RETURN_POS);
@@ -5276,11 +5276,12 @@ ___SCMOBJ *event;)
                      0,
                      PM_REMOVE))  /* remove message */
       return ___NONNULLPOINTER_to_SCMOBJ
-              (___CAST(void*,msg),
-               ___FAL,
-               ___release_event,
-               event,
-               ___RETURN_POS);
+               (___PSTATE,
+                ___CAST(void*,msg),
+                ___FAL,
+                ___release_event,
+                event,
+                ___RETURN_POS);
 
     ___release_rc (msg);
   }
@@ -7697,11 +7698,11 @@ ___SCMOBJ whence;)
   ___SCMOBJ e;
   ___SCMOBJ result;
 
-  if ((e = ___SCMOBJ_to_S32 (pos, &p, 2)) == ___FIX(___NO_ERR))
+  if ((e = ___SCMOBJ_to_S32 (___PSA(___PSTATE) pos, &p, 2)) == ___FIX(___NO_ERR))
     e = ___device_stream_seek (d, &p, ___INT(whence));
 
   if (e != ___FIX(___NO_ERR) ||
-      (e = ___S32_to_SCMOBJ (p, &result, ___RETURN_POS)) != ___FIX(___NO_ERR))
+      (e = ___S32_to_SCMOBJ (___PSTATE, p, &result, ___RETURN_POS)) != ___FIX(___NO_ERR))
     result = e;
 
   return result;
@@ -8019,7 +8020,8 @@ ___SCMOBJ flags;)
 #endif
 
   e = ___NONNULLPOINTER_to_SCMOBJ
-        (dev,
+        (___PSTATE,
+         dev,
          ___FAL,
          ___device_cleanup_from_ptr,
          &result,
@@ -8064,7 +8066,8 @@ ___SCMOBJ mode;)
   void *cpath;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___STREAM_OPEN_PATH_CE_SELECT),
@@ -8087,7 +8090,8 @@ ___SCMOBJ mode;)
       else
         {
           if ((e = ___NONNULLPOINTER_to_SCMOBJ
-                     (dev,
+                     (___PSTATE,
+                      dev,
                       ___FAL,
                       ___device_cleanup_from_ptr,
                       &result,
@@ -8142,21 +8146,24 @@ ___SCMOBJ options;)
   void *dir = NULL;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
-             (path_and_args,
+             (___PSA(___PSTATE)
+              path_and_args,
               &argv,
               1,
               ___CE(___STREAM_OPEN_PROCESS_CE_SELECT)))
       != ___FIX(___NO_ERR) ||
       (environment != ___FAL &&
        (e = ___SCMOBJ_to_NONNULLSTRINGLIST
-              (environment,
+              (___PSA(___PSTATE)
+               environment,
                &env,
                2,
                ___CE(___STREAM_OPEN_PROCESS_CE_SELECT)))
        != ___FIX(___NO_ERR)) ||
       (directory != ___FAL &&
        (e = ___SCMOBJ_to_NONNULLSTRING
-              (directory,
+              (___PSA(___PSTATE)
+               directory,
                &dir,
                3,
                ___CE(___STREAM_OPEN_PROCESS_CE_SELECT),
@@ -8174,7 +8181,8 @@ ___SCMOBJ options;)
   else
     {
       if ((e = ___NONNULLPOINTER_to_SCMOBJ
-                 (dev,
+                 (___PSTATE,
+                  dev,
                   ___FAL,
                   ___device_cleanup_from_ptr,
                   &result,
@@ -8303,7 +8311,8 @@ ___SCMOBJ options;)
     return e;
 
   if ((e = ___NONNULLPOINTER_to_SCMOBJ
-             (dev,
+             (___PSTATE,
+              dev,
               ___FAL,
               ___device_cleanup_from_ptr,
               &result,
@@ -8416,7 +8425,8 @@ ___SCMOBJ options;)
     return e;
 
   e = ___NONNULLPOINTER_to_SCMOBJ
-        (dev,
+        (___PSTATE,
+         dev,
          ___FAL,
          ___device_cleanup_from_ptr,
          &result,
@@ -8458,7 +8468,8 @@ ___SCMOBJ dev;)
     return e;
 
   e = ___NONNULLPOINTER_to_SCMOBJ
-        (client,
+        (___PSTATE,
+         client,
          ___FAL,
          ___device_cleanup_from_ptr,
          &result,
@@ -8529,7 +8540,8 @@ ___SCMOBJ ignore_hidden;)
   void *cpath;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___DIR_OPEN_PATH_CE_SELECT),
@@ -8551,7 +8563,8 @@ ___SCMOBJ ignore_hidden;)
       else
         {
           if ((e = ___NONNULLPOINTER_to_SCMOBJ
-                     (dev,
+                     (___PSTATE,
+                      dev,
                       ___FAL,
                       ___device_cleanup_from_ptr,
                       &result,
@@ -8597,7 +8610,7 @@ ___SCMOBJ dev;)
   if (name == NULL)
     return ___EOF;
 
-  if ((e = ___STRING_to_SCMOBJ (name, &result, ___RETURN_POS, ___CE(___DIR_OPEN_PATH_CE_SELECT) ))
+  if ((e = ___STRING_to_SCMOBJ (___PSTATE, name, &result, ___RETURN_POS, ___CE(___DIR_OPEN_PATH_CE_SELECT) ))
       != ___FIX(___NO_ERR))
     return e;
 
@@ -8631,7 +8644,8 @@ ___SCMOBJ selector;)
   else
     {
       if ((e = ___NONNULLPOINTER_to_SCMOBJ
-                 (dev,
+                 (___PSTATE,
+                  dev,
                   ___FAL,
                   ___device_cleanup_from_ptr,
                   &result,

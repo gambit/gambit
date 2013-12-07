@@ -295,7 +295,9 @@
                     (vector (string->symbol module-name)
                             (car module-procs)
                             1 ;; preload flag, note that linker may change this
-                            module-meta-info)))
+                            module-meta-info
+                            #f ;; space for foreign pointer to ___module_struct
+                            )))
 
               (if compiler-option-report
                   (generate-report env))

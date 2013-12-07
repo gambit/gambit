@@ -439,7 +439,8 @@ ___SCMOBJ ___os_path_homedir ___PVOID
       if (cstr1 != 0)
         {
           if ((e = ___UCS_2STRING_to_SCMOBJ
-                     (cstr1,
+                     (___PSTATE,
+                      cstr1,
                       &result,
                       ___RETURN_POS))
               != ___FIX(___NO_ERR))
@@ -474,7 +475,8 @@ ___SCMOBJ ___os_path_homedir ___PVOID
               if (n > 0 && n < len)
                 {
                   if ((e = ___NONNULLSTRING_to_SCMOBJ
-                             (homedir,
+                             (___PSTATE,
+                              homedir,
                               &result,
                               ___RETURN_POS,
                               ___CE(___PATH_CE_SELECT)))
@@ -533,7 +535,7 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
             }
 
           gambcdir = ___CAST(___UCS_2STRING,
-                             ___alloc_rc ((cch+1) * sizeof (___UCS_2)));
+                             ___alloc_rc (___PSTATE, (cch+1) * sizeof (___UCS_2)));
 
           if (gambcdir == 0)
             {
@@ -559,7 +561,8 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
   if (___GSTATE->setup_params.gambcdir != 0)
     {
       if ((e = ___NONNULLUCS_2STRING_to_SCMOBJ
-                 (___GSTATE->setup_params.gambcdir,
+                 (___PSTATE,
+                  ___GSTATE->setup_params.gambcdir,
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -591,7 +594,8 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 #endif
 
       if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (___GAMBCDIR,
+                 (___PSTATE,
+                  ___GAMBCDIR,
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -725,7 +729,8 @@ ___SCMOBJ dir;)
   void *cdir;
 
   if ((e = ___SCMOBJ_to_STRING
-             (dir,
+             (___PSA(___PSTATE)
+              dir,
               &cdir,
               1,
               ___CE(___GAMBCDIR_MAP_CE_SELECT),
@@ -743,7 +748,8 @@ ___SCMOBJ dir;)
       if ((dir1 = gambcdir_map_lookup (d)) != 0)
         {
           if ((e = ___STRING_to_SCMOBJ
-                     (dir1,
+                     (___PSTATE,
+                      dir1,
                       &result,
                       ___RETURN_POS,
                       ___CE(___GAMBCDIR_MAP_CE_SELECT)))
@@ -755,7 +761,8 @@ ___SCMOBJ dir;)
       else if ((dir2 = config_gambcdir_map_lookup (d)) != 0)
         {
           if ((e = ___STRING_to_SCMOBJ
-                     (dir2,
+                     (___PSTATE,
+                      dir2,
                       &result,
                       ___RETURN_POS,
                       ___CE(___CONFIG_GAMBCDIR_MAP_CE_SELECT)))
@@ -784,7 +791,8 @@ ___SCMOBJ path;)
   void *cpath;
 
   if ((e = ___SCMOBJ_to_STRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___PATH_CE_SELECT),
@@ -830,7 +838,8 @@ ___SCMOBJ path;)
           ___fclose (exist_check);
 
           if ((e = ___NONNULLSTRING_to_SCMOBJ
-                     (dir,
+                     (___PSTATE,
+                      dir,
                       &result,
                       ___RETURN_POS,
                       ___CE(___PATH_CE_SELECT)))
@@ -887,7 +896,8 @@ ___SCMOBJ path;)
             }
 
           if ((e = ___NONNULLSTRING_to_SCMOBJ
-                     (dir,
+                     (___PSTATE,
+                      dir,
                       &result,
                       ___RETURN_POS,
                       ___CE(___PATH_CE_SELECT)))
@@ -949,7 +959,8 @@ ___SCMOBJ path;)
             }
 
           if ((e = ___NONNULLSTRING_to_SCMOBJ
-                     (dir,
+                     (___PSTATE,
+                      dir,
                       &result,
                       ___RETURN_POS,
                       ___CE(___PATH_CE_SELECT)))
@@ -997,7 +1008,8 @@ ___SCMOBJ mode;)
 #define ___CREATE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___CREATE_DIRECTORY_PATH_CE_SELECT),
@@ -1020,7 +1032,8 @@ ___SCMOBJ mode;)
 #endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___CREATE_DIRECTORY_PATH_CE_SELECT),
@@ -1063,7 +1076,8 @@ ___SCMOBJ mode;)
 #define ___CREATE_FIFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___CREATE_FIFO_PATH_CE_SELECT),
@@ -1104,7 +1118,8 @@ ___SCMOBJ path2;)
 #define ___CREATE_LINK_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path1,
+             (___PSA(___PSTATE)
+              path1,
               &cpath1,
               1,
               ___CE(___CREATE_LINK_PATH_CE_SELECT),
@@ -1112,7 +1127,8 @@ ___SCMOBJ path2;)
       == ___FIX(___NO_ERR))
     {
       if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (path2,
+                 (___PSA(___PSTATE)
+                  path2,
                   &cpath2,
                   2,
                   ___CE(___CREATE_LINK_PATH_CE_SELECT),
@@ -1157,7 +1173,8 @@ ___SCMOBJ path2;)
 #define ___CREATE_SYMLINK_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path1,
+             (___PSA(___PSTATE)
+              path1,
               &cpath1,
               1,
               ___CE(___CREATE_SYMLINK_PATH_CE_SELECT),
@@ -1165,7 +1182,8 @@ ___SCMOBJ path2;)
       == ___FIX(___NO_ERR))
     {
       if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (path2,
+                 (___PSA(___PSTATE)
+                  path2,
                   &cpath2,
                   2,
                   ___CE(___CREATE_SYMLINK_PATH_CE_SELECT),
@@ -1208,7 +1226,8 @@ ___SCMOBJ path;)
 #define ___DELETE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___DELETE_DIRECTORY_PATH_CE_SELECT),
@@ -1231,7 +1250,8 @@ ___SCMOBJ path;)
 #endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___DELETE_DIRECTORY_PATH_CE_SELECT),
@@ -1272,7 +1292,8 @@ ___SCMOBJ path;)
 #define ___SET_CURRENT_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),
@@ -1295,7 +1316,8 @@ ___SCMOBJ path;)
 #endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),
@@ -1340,7 +1362,8 @@ ___SCMOBJ path2;)
 #define ___RENAME_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path1,
+             (___PSA(___PSTATE)
+              path1,
               &cpath1,
               1,
               ___CE(___RENAME_FILE_PATH_CE_SELECT),
@@ -1348,7 +1371,8 @@ ___SCMOBJ path2;)
       == ___FIX(___NO_ERR))
     {
       if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (path2,
+                 (___PSA(___PSTATE)
+                  path2,
                   &cpath2,
                   2,
                   ___CE(___RENAME_FILE_PATH_CE_SELECT),
@@ -1375,7 +1399,8 @@ ___SCMOBJ path2;)
 #endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path1,
+             (___PSA(___PSTATE)
+              path1,
               &cpath1,
               1,
               ___CE(___RENAME_FILE_PATH_CE_SELECT),
@@ -1383,7 +1408,8 @@ ___SCMOBJ path2;)
       == ___FIX(___NO_ERR))
     {
       if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (path2,
+                 (___PSA(___PSTATE)
+                  path2,
                   &cpath2,
                   2,
                   ___CE(___RENAME_FILE_PATH_CE_SELECT),
@@ -1432,7 +1458,8 @@ ___SCMOBJ path2;)
 #define ___COPY_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path1,
+             (___PSA(___PSTATE)
+              path1,
               &cpath1,
               1,
               ___CE(___COPY_FILE_PATH_CE_SELECT),
@@ -1440,7 +1467,8 @@ ___SCMOBJ path2;)
       == ___FIX(___NO_ERR))
     {
       if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (path2,
+                 (___PSA(___PSTATE)
+                  path2,
                   &cpath2,
                   2,
                   ___CE(___COPY_FILE_PATH_CE_SELECT),
@@ -1521,7 +1549,8 @@ ___SCMOBJ path2;)
 #endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path1,
+             (___PSA(___PSTATE)
+              path1,
               &cpath1,
               1,
               ___CE(___COPY_FILE_PATH_CE_SELECT),
@@ -1529,7 +1558,8 @@ ___SCMOBJ path2;)
       == ___FIX(___NO_ERR))
     {
       if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (path2,
+                 (___PSA(___PSTATE)
+                  path2,
                   &cpath2,
                   2,
                   ___CE(___COPY_FILE_PATH_CE_SELECT),
@@ -1575,7 +1605,8 @@ ___SCMOBJ path;)
 #define ___DELETE_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___DELETE_FILE_PATH_CE_SELECT),
@@ -1599,7 +1630,8 @@ ___SCMOBJ path;)
 #endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___DELETE_FILE_PATH_CE_SELECT),

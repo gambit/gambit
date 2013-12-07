@@ -816,6 +816,9 @@ DASH_fschedule_insns2
 DASH_no_cpp_precomp
 POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG
 GCC_42_OR_43
+CONF_THREAD_LOCAL_STORAGE_CLASS
+CONF_THREAD_SYSTEM
+OS_WIN32
 C_COMP_VISUALC
 C_COMP_LLVM
 C_COMP_CLANG
@@ -930,6 +933,7 @@ enable_auto_forcing
 enable_poll
 enable_multiple_vms
 enable_multiple_threaded_vms
+enable_thread_system
 with_x
 '
       ac_precious_vars='build_alias
@@ -1606,6 +1610,8 @@ Optional Features:
   --enable-multiple-threaded-vms
                           support multiple OS threads per Gambit VM instance
                           (default is NO)
+  --enable-thread-system[=thread-system]
+                          use OS threads (default is NO)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -5257,6 +5263,26 @@ fi
 
 ###############################################################################
 #
+# Check if OS threads are supported by the runtime system and if so
+# which thread system is to be used.
+
+# Check whether --enable-thread-system was given.
+if test "${enable_thread_system+set}" = set; then :
+  enableval=$enable_thread_system; ENABLE_THREAD_SYSTEM=$enableval
+else
+  ENABLE_THREAD_SYSTEM=no
+fi
+
+
+if test "$ENABLE_THREAD_SYSTEM" = no; then
+
+  if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
+    ENABLE_THREAD_SYSTEM=yes
+  fi
+fi
+
+###############################################################################
+#
 # Check for C compiler.
 
 
@@ -5399,6 +5425,39 @@ fi
 $as_echo "$C_COMP_VISUALC" >&6; }
 #AC_CHECK_C_COMPILER_DEF(__WATCOMC__,C_COMP_WATCOMC)
 #AC_CHECK_C_COMPILER_DEF(__BORLANDC__,C_COMP_BORLANDC)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER defines _WIN32" >&5
+$as_echo_n "checking whether $C_COMPILER defines _WIN32... " >&6; }
+if ${OS_WIN32+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+#ifndef _WIN32
+       choke me
+#endif
+
+  ;
+  return 0;
+}
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  OS_WIN32="yes"
+else
+  OS_WIN32=""
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $OS_WIN32" >&5
+$as_echo "$OS_WIN32" >&6; }
 
 ###############################################################################
 #
@@ -7768,6 +7827,221 @@ if test "x$ac_cv_type_struct_stat64" = xyes; then :
   $as_echo "#define HAVE_STRUCT_STAT64 1" >>confdefs.h
 
 fi
+
+
+###############################################################################
+#
+# Determine which thread system to use.
+
+# Check for threading system early, in case this has an impact on
+# other functionality.
+
+CONF_THREAD_SYSTEM="___USE_NO_THREAD_SYSTEM"
+CONF_THREAD_LOCAL_STORAGE_CLASS="___NO_THREAD_LOCAL_STORAGE_CLASS"
+
+if test "$ENABLE_THREAD_SYSTEM" != no; then
+
+  FOUND_THREAD_SYSTEM="no"
+
+  if test "$FOUND_THREAD_SYSTEM" = no -a \( "$ENABLE_THREAD_SYSTEM" = yes -o "$ENABLE_THREAD_SYSTEM" = posix -o "$ENABLE_THREAD_SYSTEM" = pthreads \); then
+
+    # check if posix thread system is available
+
+    ORIG_CFLAGS="$CFLAGS"
+    ORIG_LIBS="$LIBS"
+
+    for opt in "" "OPT_CFLAGS=\"-mt\"" "OPT_CFLAGS=\"-pthread\"" "OPT_LIBS=\"-lpthread\""; do
+
+      OPT_CFLAGS=""
+      OPT_LIBS=""
+
+      eval "$opt"
+
+      CFLAGS="$ORIG_CFLAGS $OPT_CFLAGS"
+      LIBS="$ORIG_LIBS $OPT_LIBS"
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for posix threads with CFLAGS='$CFLAGS' and LIBS='$LIBS'" >&5
+$as_echo_n "checking for posix threads with CFLAGS='$CFLAGS' and LIBS='$LIBS'... " >&6; }
+
+      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+           #include <pthread.h>
+           void *start_fn (void *ptr) { return ptr; }
+
+int
+main ()
+{
+
+           pthread_t thread;
+           pthread_mutex_t mut;
+           if (pthread_mutex_init (&mut, NULL) == 0 &&
+               pthread_mutex_lock (&mut) == 0 &&
+               pthread_mutex_unlock (&mut) == 0 &&
+               pthread_mutex_destroy (&mut) == 0) {
+             pthread_create (&thread, NULL, start_fn, NULL);
+             pthread_join (&thread, NULL);
+           }
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+
+         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+         FOUND_THREAD_SYSTEM="posix"
+         FLAGS_OBJ="$FLAGS_OBJ $OPT_CFLAGS"
+         break
+
+else
+
+         { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+         LIBS="$ORIG_LIBS"
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+      CFLAGS="$ORIG_CFLAGS"
+
+    done
+
+  fi
+
+  if test "$FOUND_THREAD_SYSTEM" = no -a \( "$ENABLE_THREAD_SYSTEM" = yes -o "$ENABLE_THREAD_SYSTEM" = win32 \); then
+
+    # check if win32 thread system is available
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for win32 threads" >&5
+$as_echo_n "checking for win32 threads... " >&6; }
+
+    if test "$OS_WIN32" = yes; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+      FOUND_THREAD_SYSTEM="win32"
+    else
+      { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+    fi
+
+  fi
+
+  if test "$FOUND_THREAD_SYSTEM" != no; then
+
+    case "$FOUND_THREAD_SYSTEM" in
+
+      posix)
+        CONF_THREAD_SYSTEM="___USE_POSIX_THREAD_SYSTEM"
+        ;;
+
+      win32)
+        CONF_THREAD_SYSTEM="___USE_WIN32_THREAD_SYSTEM"
+        ;;
+
+    esac
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for thread local storage class" >&5
+$as_echo_n "checking for thread local storage class... " >&6; }
+
+    TLS_CLASS="none"
+
+    for tls_class in "__thread" "__declspec(thread)"; do
+      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+        #include <stdlib.h>
+         $tls_class  int foo;
+
+int
+main ()
+{
+
+        foo = 42;
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  TLS_CLASS="$tls_class"; break
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+    done
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TLS_CLASS" >&5
+$as_echo "$TLS_CLASS" >&6; }
+
+    if test "$TLS_CLASS" != none; then
+      CONF_THREAD_LOCAL_STORAGE_CLASS="___THREAD_LOCAL_STORAGE_CLASS $TLS_CLASS"
+    fi
+
+  else
+
+    if test "$ENABLE_THREAD_SYSTEM" = yes; then
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}:
+*********************************************************************
+***                                                               ***
+*** A thread system is required for this configuration but none   ***
+*** of the supported thread systems (posix threads and win32      ***
+*** threads) are available on this platform. The configuration    ***
+*** will proceed as though --disable-thread-system,               ***
+*** --disable-multiple-vms, and --disable-multiple-threaded-vms   ***
+*** were specified.                                               ***
+***                                                               ***
+*********************************************************************
+" >&5
+$as_echo "$as_me:
+*********************************************************************
+***                                                               ***
+*** A thread system is required for this configuration but none   ***
+*** of the supported thread systems (posix threads and win32      ***
+*** threads) are available on this platform. The configuration    ***
+*** will proceed as though --disable-thread-system,               ***
+*** --disable-multiple-vms, and --disable-multiple-threaded-vms   ***
+*** were specified.                                               ***
+***                                                               ***
+*********************************************************************
+" >&6;}
+
+    else
+
+      { $as_echo "$as_me:${as_lineno-$LINENO}:
+*********************************************************************
+***                                                               ***
+*** The thread system selected with --enable-thread-system=XXX    ***
+*** is not available on this platform. The configuration will     ***
+*** proceed as though --disable-thread-system,                    ***
+*** --disable-multiple-vms, and --disable-multiple-threaded-vms   ***
+*** were specified.                                               ***
+***                                                               ***
+*********************************************************************
+" >&5
+$as_echo "$as_me:
+*********************************************************************
+***                                                               ***
+*** The thread system selected with --enable-thread-system=XXX    ***
+*** is not available on this platform. The configuration will     ***
+*** proceed as though --disable-thread-system,                    ***
+*** --disable-multiple-vms, and --disable-multiple-threaded-vms   ***
+*** were specified.                                               ***
+***                                                               ***
+*********************************************************************
+" >&6;}
+
+    fi
+
+    CONF_SINGLE_MULTIPLE_VMS="___SINGLE_VM"
+    CONF_SINGLE_MULTIPLE_THREADED_VMS="___SINGLE_THREADED_VMS"
+
+  fi
+
+fi
+
+
 
 
 ###############################################################################
@@ -14132,5 +14406,73 @@ $as_echo "$as_me:
 #**************************************************************************
 #])
 #  fi
+
+fi
+
+if false; then
+
+if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}:
+*********************************************************************
+***                                                               ***
+*** The option --enable-multiple-vms or the option                ***
+*** --enable-multiple-threaded-vms (or both) have been specified. ***
+*** This enables support for parallel execution of Scheme code.   ***
+***                                                               ***
+*** This is a feature that is considered experimental and of beta ***
+*** quality currently. You are encouraged to report any issues    ***
+*** encountered at https://github.com/feeley/gambit/issues .      ***
+***                                                               ***
+*********************************************************************
+" >&5
+$as_echo "$as_me:
+*********************************************************************
+***                                                               ***
+*** The option --enable-multiple-vms or the option                ***
+*** --enable-multiple-threaded-vms (or both) have been specified. ***
+*** This enables support for parallel execution of Scheme code.   ***
+***                                                               ***
+*** This is a feature that is considered experimental and of beta ***
+*** quality currently. You are encouraged to report any issues    ***
+*** encountered at https://github.com/feeley/gambit/issues .      ***
+***                                                               ***
+*********************************************************************
+" >&6;}
+
+else
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}:
+*********************************************************************
+***                                                               ***
+*** Neither of the options --enable-multiple-vms and              ***
+*** --enable-multiple-threaded-vms have been specified. This      ***
+*** means that support for parallel execution of Scheme code is   ***
+*** disabled. In the future, support for parallel execution will  ***
+*** be the default. If you wish to contribute to the testing of   ***
+*** this feature, please activate one of those options. Note that ***
+*** this is a feature that is considered experimental and of beta ***
+*** quality currently. You are encouraged to report any issues    ***
+*** encountered at https://github.com/feeley/gambit/issues .      ***
+***                                                               ***
+*********************************************************************
+" >&5
+$as_echo "$as_me:
+*********************************************************************
+***                                                               ***
+*** Neither of the options --enable-multiple-vms and              ***
+*** --enable-multiple-threaded-vms have been specified. This      ***
+*** means that support for parallel execution of Scheme code is   ***
+*** disabled. In the future, support for parallel execution will  ***
+*** be the default. If you wish to contribute to the testing of   ***
+*** this feature, please activate one of those options. Note that ***
+*** this is a feature that is considered experimental and of beta ***
+*** quality currently. You are encouraged to report any issues    ***
+*** encountered at https://github.com/feeley/gambit/issues .      ***
+***                                                               ***
+*********************************************************************
+" >&6;}
+
+fi
 
 fi

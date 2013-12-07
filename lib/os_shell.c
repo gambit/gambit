@@ -1,4 +1,4 @@
-/* File: "os_shell.c", Time-stamp: <2009-03-14 09:15:57 feeley> */
+/* File: "os_shell.c", Time-stamp: <2013-12-04 18:23:40 feeley> */
 
 /* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
 
@@ -633,7 +633,8 @@ ___SCMOBJ name;)
   ___UCS_2STRING cvalue;
 
   if ((e = ___SCMOBJ_to_NONNULLUCS_2STRING
-             (name,
+             (___PSA(___PSTATE)
+              name,
               &cname,
               1))
       != ___FIX(___NO_ERR))
@@ -645,7 +646,8 @@ ___SCMOBJ name;)
       else
         {
           if ((e = ___UCS_2STRING_to_SCMOBJ
-                     (cvalue,
+                     (___PSTATE,
+                      cvalue,
                       &result,
                       ___RETURN_POS))
               != ___FIX(___NO_ERR))
@@ -677,7 +679,8 @@ ___SCMOBJ value;)
   ___UCS_2STRING cvalue;
 
   if ((e = ___SCMOBJ_to_NONNULLUCS_2STRING
-             (name,
+             (___PSA(___PSTATE)
+              name,
               &cname,
               1))
       == ___FIX(___NO_ERR))
@@ -685,7 +688,8 @@ ___SCMOBJ value;)
       if (value == ___ABSENT)
         e = ___unsetenv_UCS_2 (cname);
       else if ((e = ___SCMOBJ_to_NONNULLUCS_2STRING
-                      (value,
+                      (___PSA(___PSTATE)
+                       value,
                        &cvalue,
                        2))
                == ___FIX(___NO_ERR))
@@ -717,7 +721,8 @@ ___SCMOBJ ___os_environ ___PVOID
 #ifdef USE_environ
 
   if ((e = ___NONNULLCHARSTRINGLIST_to_SCMOBJ
-             (environ,
+             (___PSTATE,
+              environ,
               &result,
               ___RETURN_POS))
       != ___FIX(___NO_ERR))
@@ -759,14 +764,15 @@ ___SCMOBJ ___os_environ ___PVOID
             ptr--;
 
           if ((e = ___NONNULLSTRING_to_SCMOBJ
-                     (ptr,
+                     (___PSTATE,
+                      ptr,
                       &str,
                       ___RETURN_POS,
                       ___CE(___ENVIRON_CE_SELECT)))
               != ___FIX(___NO_ERR))
             break;
 
-          pair = ___make_pair (str, result, ___STILL);
+          pair = ___make_pair (___PSTATE, str, result);
 
           ___release_scmobj (str);
           ___release_scmobj (result);
@@ -824,7 +830,8 @@ ___SCMOBJ dir;)
   char *ccmd;
 
   if ((e = ___SCMOBJ_to_NONNULLCHARSTRING
-             (cmd,
+             (___PSA(___PSTATE)
+              cmd,
               &ccmd,
               1))
       == ___FIX(___NO_ERR))
@@ -832,7 +839,8 @@ ___SCMOBJ dir;)
       void *cdir;
 
       if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (dir,
+                 (___PSA(___PSTATE)
+                  dir,
                   &cdir,
                   2,
                   ___CE(___PATH_CE_SELECT),
@@ -885,7 +893,8 @@ ___SCMOBJ dir;)
   void *ccmd;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (cmd,
+             (___PSA(___PSTATE)
+              cmd,
               &ccmd,
               1,
               ___CE(___SHELL_COMMAND_CE_SELECT),
@@ -895,7 +904,8 @@ ___SCMOBJ dir;)
       void *cdir;
 
       if ((e = ___SCMOBJ_to_STRING
-                 (dir,
+                 (___PSA(___PSTATE)
+                  dir,
                   &cdir,
                   2,
                   ___CE(___PATH_CE_SELECT),

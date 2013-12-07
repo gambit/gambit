@@ -245,6 +245,16 @@ The configure options which are specific to the Gambit-C system are:
                           cause strict operations such as car, but not
                           cons, to automatically force their arguments
                           (requires: make bootstrap; make bootclean; make)
+  --enable-thread-system[=thread-system]
+                          cause the selection of a specific thread system
+                          (either posix or win32)
+  --enable-multiple-vms
+                          compiles with support for instantiating more
+                          than one Gambit VM (implies --enable-thread-system)
+  --enable-multiple-threaded-vms
+                          compiles with support for having more than one
+                          OS thread per Gambit VM (implies
+                          --enable-thread-system)
 
 The option --enable-cplusplus should be used when applications
 developped with the Gambit-C compiler are to be linked with code or

@@ -614,7 +614,7 @@ int arg_num;)
     result = ___FAL; /* wildcard address */
   else
     {
-      result = ___alloc_scmobj_still (___sU8VECTOR, 4);
+      result = ___alloc_scmobj (___PSTATE, ___sU8VECTOR, 4);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -688,7 +688,7 @@ int arg_num;)
     result = ___FAL; /* wildcard address */
   else
     {
-      result = ___alloc_scmobj_still (___sU16VECTOR, 8<<1);
+      result = ___alloc_scmobj (___PSTATE, ___sU16VECTOR, 8<<1);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -767,7 +767,7 @@ int arg_num;)
 {
   ___SCMOBJ result;
 
-  result = ___make_vector (4, ___FAL, ___STILL);
+  result = ___make_vector (___PSTATE, 4, ___FAL);
 
   if (___FIXNUMP(result))
     return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -833,7 +833,7 @@ int arg_num;)
       struct in_addr *ia = ___CAST(struct in_addr*,sa);
       ___U32 a;
 
-      result = ___alloc_scmobj_still (___sU8VECTOR, 4);
+      result = ___alloc_scmobj (___PSTATE, ___sU8VECTOR, 4);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -851,7 +851,7 @@ int arg_num;)
       struct in6_addr *ia = ___CAST(struct in6_addr*,sa);
       int i;
 
-      result = ___alloc_scmobj_still (___sU16VECTOR, 8<<1);
+      result = ___alloc_scmobj (___PSTATE, ___sU16VECTOR, 8<<1);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
@@ -969,11 +969,11 @@ ___SCMOBJ protocol;)
   struct addrinfo hints, *res, *res0;
   int code;
 
-  if ((e = ___SCMOBJ_to_CHARSTRING (host, &chost, 1))
+  if ((e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) host, &chost, 1))
       != ___FIX(___NO_ERR))
     return e;
 
-  if ((e = ___SCMOBJ_to_CHARSTRING (serv, &cserv, 2))
+  if ((e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) serv, &cserv, 2))
       != ___FIX(___NO_ERR))
     {
       ___release_string (chost);
@@ -1015,7 +1015,7 @@ ___SCMOBJ protocol;)
 
       if (x != ___FAL)
         {
-          vect = ___make_vector (5, ___FAL, ___STILL);
+          vect = ___make_vector (___PSTATE, 5, ___FAL);
 
           if (___FIXNUMP(vect))
             {
@@ -1032,7 +1032,7 @@ ___SCMOBJ protocol;)
 
           ___release_scmobj (x);
 
-          p = ___make_pair (vect, ___NUL, ___STILL);
+          p = ___make_pair (___PSTATE, vect, ___NUL);
 
           ___release_scmobj (vect);
 
@@ -1130,7 +1130,7 @@ ___SCMOBJ host;)
        * invalid character is seen then return an error.
        */
 
-      if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (host, &chost, 1))
+      if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___PSTATE) host, &chost, 1))
           != ___FIX(___NO_ERR))
         return e;
 
@@ -1180,7 +1180,7 @@ ___SCMOBJ host;)
   if (e != ___FIX(___NO_ERR))
     return e;
 
-  vect = ___make_vector (4, ___FAL, ___STILL);
+  vect = ___make_vector (___PSTATE, 4, ___FAL);
 
   if (___FIXNUMP(vect))
     return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
@@ -1188,7 +1188,8 @@ ___SCMOBJ host;)
   /* convert h_name to string */
 
   if ((e = ___CHARSTRING_to_SCMOBJ
-             (___CAST(char*,he->h_name),
+             (___PSTATE,
+              ___CAST(char*,he->h_name),
               &x,
               ___RETURN_POS))
       != ___FIX(___NO_ERR))
@@ -1210,7 +1211,8 @@ ___SCMOBJ host;)
   while (i-- > 0)
     {
       if ((e = ___CHARSTRING_to_SCMOBJ
-                 (___CAST(char*,he->h_aliases[i]),
+                 (___PSTATE,
+                  ___CAST(char*,he->h_aliases[i]),
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1220,7 +1222,7 @@ ___SCMOBJ host;)
           return e;
         }
 
-      p = ___make_pair (x, lst, ___STILL);
+      p = ___make_pair (___PSTATE, x, lst);
 
       ___release_scmobj (x);
       ___release_scmobj (lst);
@@ -1278,7 +1280,7 @@ ___SCMOBJ host;)
           return x;
         }
 
-      p = ___make_pair (x, lst, ___STILL);
+      p = ___make_pair (___PSTATE, x, lst);
 
       ___release_scmobj (x);
       ___release_scmobj (lst);
@@ -1326,7 +1328,7 @@ ___SCMOBJ ___os_host_name ___PVOID
   if (gethostname (name, HOSTNAME_MAX_LEN) < 0)
     return err_code_from_errno ();
 
-  if ((e = ___NONNULLCHARSTRING_to_SCMOBJ (name, &result, ___RETURN_POS))
+  if ((e = ___NONNULLCHARSTRING_to_SCMOBJ (___PSTATE, name, &result, ___RETURN_POS))
       != ___FIX(___NO_ERR))
     return e;
 
@@ -1374,11 +1376,11 @@ ___SCMOBJ protocol;)
    */
 
   if (!___FIXNUMP(service))
-    if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (service, &cservice, 1))
+    if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___PSTATE) service, &cservice, 1))
         != ___FIX(___NO_ERR))
       return e;
 
-  if ((e = ___SCMOBJ_to_CHARSTRING (protocol, &cprotocol, 2))
+  if ((e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) protocol, &cprotocol, 2))
       != ___FIX(___NO_ERR))
     {
       if (!___FIXNUMP(service))
@@ -1424,14 +1426,14 @@ ___SCMOBJ protocol;)
   if (e != ___FIX(___NO_ERR))
     return e;
 
-  vect = ___make_vector (5, ___FAL, ___STILL);
+  vect = ___make_vector (___PSTATE, 5, ___FAL);
 
   if (___FIXNUMP(vect))
     return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/************/
 
   /* convert s_name to string */
 
-  if ((e = ___CHARSTRING_to_SCMOBJ (se->s_name, &x, ___RETURN_POS))
+  if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, se->s_name, &x, ___RETURN_POS))
       != ___FIX(___NO_ERR))
     {
       ___release_scmobj (vect);
@@ -1450,7 +1452,7 @@ ___SCMOBJ protocol;)
   lst = ___NUL;
   while (i-- > 0)
     {
-      if ((e = ___CHARSTRING_to_SCMOBJ (se->s_aliases[i], &x, ___RETURN_POS))
+      if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, se->s_aliases[i], &x, ___RETURN_POS))
           != ___FIX(___NO_ERR))
         {
           ___release_scmobj (lst);
@@ -1458,7 +1460,7 @@ ___SCMOBJ protocol;)
           return e;
         }
 
-      p = ___make_pair (x, lst, ___STILL);
+      p = ___make_pair (___PSTATE, x, lst);
 
       ___release_scmobj (x);
       ___release_scmobj (lst);
@@ -1481,7 +1483,7 @@ ___SCMOBJ protocol;)
 
   /* convert s_name to string */
 
-  if ((e = ___CHARSTRING_to_SCMOBJ (se->s_proto, &x, ___RETURN_POS))
+  if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, se->s_proto, &x, ___RETURN_POS))
       != ___FIX(___NO_ERR))
     {
       ___release_scmobj (vect);
@@ -1531,7 +1533,7 @@ ___SCMOBJ protocol;)
    */
 
   if (!___FIXNUMP(protocol))
-    if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (protocol, &cprotocol, 1))
+    if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___PSTATE) protocol, &cprotocol, 1))
         != ___FIX(___NO_ERR))
       return e;
 
@@ -1570,14 +1572,14 @@ ___SCMOBJ protocol;)
   if (e != ___FIX(___NO_ERR))
     return e;
 
-  vect = ___make_vector (4, ___FAL, ___STILL);
+  vect = ___make_vector (___PSTATE, 4, ___FAL);
 
   if (___FIXNUMP(vect))
     return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/************/
 
   /* convert p_name to string */
 
-  if ((e = ___CHARSTRING_to_SCMOBJ (pe->p_name, &x, ___RETURN_POS))
+  if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, pe->p_name, &x, ___RETURN_POS))
       != ___FIX(___NO_ERR))
     {
       ___release_scmobj (vect);
@@ -1596,7 +1598,7 @@ ___SCMOBJ protocol;)
   lst = ___NUL;
   while (i-- > 0)
     {
-      if ((e = ___CHARSTRING_to_SCMOBJ (pe->p_aliases[i], &x, ___RETURN_POS))
+      if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, pe->p_aliases[i], &x, ___RETURN_POS))
           != ___FIX(___NO_ERR))
         {
           ___release_scmobj (lst);
@@ -1604,7 +1606,7 @@ ___SCMOBJ protocol;)
           return e;
         }
 
-      p = ___make_pair (x, lst, ___STILL);
+      p = ___make_pair (___PSTATE, x, lst);
 
       ___release_scmobj (x);
       ___release_scmobj (lst);
@@ -1677,7 +1679,8 @@ ___SCMOBJ chase;)
 #define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___INFO_PATH_CE_SELECT),
@@ -1697,7 +1700,7 @@ ___SCMOBJ chase;)
 
       ___release_string (cpath);
 
-      result = ___make_vector (14, ___FAL, ___STILL);
+      result = ___make_vector (___PSTATE, 14, ___FAL);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
@@ -1711,7 +1714,8 @@ ___SCMOBJ chase;)
       ___FIELD(result,7) = ___FIX(0);
       ___FIELD(result,8) = ___FIX(0);
 
-      if ((e = ___F64_to_SCMOBJ (___CAST(___F64,NEG_INFINITY),
+      if ((e = ___F64_to_SCMOBJ (___PSTATE,
+                                 ___CAST(___F64,NEG_INFINITY),
                                  &x,
                                  ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1741,7 +1745,8 @@ ___SCMOBJ chase;)
 #define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___INFO_PATH_CE_SELECT),
@@ -1762,7 +1767,7 @@ ___SCMOBJ chase;)
 
       ___release_string (cpath);
 
-      result = ___make_vector (14, ___FAL, ___STILL);
+      result = ___make_vector (___PSTATE, 14, ___FAL);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
@@ -1784,7 +1789,8 @@ ___SCMOBJ chase;)
       else
         ___FIELD(result,1) = ___FIX(0);
 
-      if ((e = ___ULONGLONG_to_SCMOBJ (___CAST(___ULONGLONG,s.st_dev),
+      if ((e = ___ULONGLONG_to_SCMOBJ (___PSTATE,
+                                       ___CAST(___ULONGLONG,s.st_dev),
                                        &x,
                                        ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1796,7 +1802,8 @@ ___SCMOBJ chase;)
       ___FIELD(result,2) = x;
       ___release_scmobj (x);
 
-      if ((e = ___LONGLONG_to_SCMOBJ (___CAST(___LONGLONG,s.st_ino),
+      if ((e = ___LONGLONG_to_SCMOBJ (___PSTATE,
+                                      ___CAST(___LONGLONG,s.st_ino),
                                       &x,
                                       ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1811,7 +1818,8 @@ ___SCMOBJ chase;)
       ___FIELD(result,4) =
         ___FIX(s.st_mode & (S_ISUID|S_ISGID|S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO));
 
-      if ((e = ___ULONGLONG_to_SCMOBJ (___CAST(___ULONGLONG,s.st_nlink),
+      if ((e = ___ULONGLONG_to_SCMOBJ (___PSTATE,
+                                       ___CAST(___ULONGLONG,s.st_nlink),
                                        &x,
                                        ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1827,7 +1835,8 @@ ___SCMOBJ chase;)
 
       ___FIELD(result,7) = ___FIX(s.st_gid);
 
-      if ((e = ___LONGLONG_to_SCMOBJ (___CAST(___LONGLONG,s.st_size),
+      if ((e = ___LONGLONG_to_SCMOBJ (___PSTATE,
+                                      ___CAST(___LONGLONG,s.st_size),
                                       &x,
                                       ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1839,7 +1848,7 @@ ___SCMOBJ chase;)
       ___FIELD(result,8) = x;
       ___release_scmobj (x);
 
-      if ((e = ___F64_to_SCMOBJ (___CAST(___F64,s.st_atime), &x, ___RETURN_POS))
+      if ((e = ___F64_to_SCMOBJ (___PSTATE, ___CAST(___F64,s.st_atime), &x, ___RETURN_POS))
           != ___FIX(___NO_ERR))
         {
           ___release_scmobj (result);
@@ -1849,7 +1858,7 @@ ___SCMOBJ chase;)
       ___FIELD(result,9) = x;
       ___release_scmobj (x);
 
-      if ((e = ___F64_to_SCMOBJ (___CAST(___F64,s.st_mtime), &x, ___RETURN_POS))
+      if ((e = ___F64_to_SCMOBJ (___PSTATE, ___CAST(___F64,s.st_mtime), &x, ___RETURN_POS))
           != ___FIX(___NO_ERR))
         {
           ___release_scmobj (result);
@@ -1859,7 +1868,7 @@ ___SCMOBJ chase;)
       ___FIELD(result,10) = x;
       ___release_scmobj (x);
 
-      if ((e = ___F64_to_SCMOBJ (___CAST(___F64,s.st_ctime), &x, ___RETURN_POS))
+      if ((e = ___F64_to_SCMOBJ (___PSTATE, ___CAST(___F64,s.st_ctime), &x, ___RETURN_POS))
           != ___FIX(___NO_ERR))
         {
           ___release_scmobj (result);
@@ -1886,7 +1895,8 @@ ___SCMOBJ chase;)
                ? FILE_ATTRIBUTE_DIRECTORY
                : FILE_ATTRIBUTE_NORMAL);
 
-      if ((e = ___F64_to_SCMOBJ (___CAST(___F64,NEG_INFINITY),
+      if ((e = ___F64_to_SCMOBJ (___PSTATE,
+                                 ___CAST(___F64,NEG_INFINITY),
                                  &x,
                                  ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1914,7 +1924,8 @@ ___SCMOBJ chase;)
 #endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (path,
+             (___PSA(___PSTATE)
+              path,
               &cpath,
               1,
               ___CE(___INFO_PATH_CE_SELECT),
@@ -1935,7 +1946,7 @@ ___SCMOBJ chase;)
 
       ___release_string (cpath);
 
-      result = ___make_vector (14, ___FAL, ___STILL);
+      result = ___make_vector (___PSTATE, 14, ___FAL);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
@@ -1958,7 +1969,8 @@ ___SCMOBJ chase;)
       ___FIELD(result,7) = ___FIX(0);
 
       if ((e = ___U64_to_SCMOBJ
-                 (___U64_from_UM32_UM32(fad.nFileSizeHigh,fad.nFileSizeLow),
+                 (___PSTATE,
+                  ___U64_from_UM32_UM32(fad.nFileSizeHigh,fad.nFileSizeLow),
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1971,7 +1983,8 @@ ___SCMOBJ chase;)
       ___release_scmobj (x);
 
       if ((e = ___F64_to_SCMOBJ
-                 (___CAST(___F64,FILETIME_TO_TIME(fad.ftLastAccessTime)),
+                 (___PSTATE,
+                  ___CAST(___F64,FILETIME_TO_TIME(fad.ftLastAccessTime)),
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -1984,7 +1997,8 @@ ___SCMOBJ chase;)
       ___release_scmobj (x);
 
       if ((e = ___F64_to_SCMOBJ
-                 (___CAST(___F64,FILETIME_TO_TIME(fad.ftLastWriteTime)),
+                 (___PSTATE,
+                  ___CAST(___F64,FILETIME_TO_TIME(fad.ftLastWriteTime)),
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2000,7 +2014,8 @@ ___SCMOBJ chase;)
       ___FIELD(result,12) = ___FIX(fad.dwFileAttributes);
 
       if ((e = ___F64_to_SCMOBJ
-                 (___CAST(___F64,FILETIME_TO_TIME(fad.ftCreationTime)),
+                 (___PSTATE,
+                  ___CAST(___F64,FILETIME_TO_TIME(fad.ftCreationTime)),
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2051,7 +2066,8 @@ ___SCMOBJ user;)
 
   if (___FIXNUMP(user) ||
       (e = ___SCMOBJ_to_NONNULLSTRING
-             (user,
+             (___PSA(___PSTATE)
+              user,
               &cuser,
               1,
               ___CE(___USER_CE_SELECT),
@@ -2080,13 +2096,14 @@ ___SCMOBJ user;)
           ___release_string (cuser);
         }
 
-      result = ___make_vector (6, ___FAL, ___STILL);
+      result = ___make_vector (___PSTATE, 6, ___FAL);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
 
       if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (p->pw_name,
+                 (___PSTATE,
+                  p->pw_name,
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2103,7 +2120,8 @@ ___SCMOBJ user;)
       ___FIELD(result,3) = ___FIX(p->pw_gid);
 
       if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (p->pw_dir,
+                 (___PSTATE,
+                  p->pw_dir,
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2116,7 +2134,8 @@ ___SCMOBJ user;)
       ___release_scmobj (x);
 
       if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (p->pw_shell,
+                 (___PSTATE,
+                  p->pw_shell,
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2162,7 +2181,8 @@ ___SCMOBJ ___os_user_name ___PVOID
   else
     {
       if ((e = ___UCS_2STRING_to_SCMOBJ
-                 (cstr,
+                 (___PSTATE,
+                  cstr,
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2206,7 +2226,8 @@ ___SCMOBJ group;)
 
   if (___FIXNUMP(group) ||
       (e = ___SCMOBJ_to_NONNULLSTRING
-             (group,
+             (___PSA(___PSTATE)
+              group,
               &cgroup,
               1,
               ___CE(___GROUP_CE_SELECT),
@@ -2235,13 +2256,14 @@ ___SCMOBJ group;)
           ___release_string (cgroup);
         }
 
-      result = ___make_vector (3, ___FAL, ___STILL);
+      result = ___make_vector (___PSTATE, 3, ___FAL);
 
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
 
       if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (g->gr_name,
+                 (___PSTATE,
+                  g->gr_name,
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2256,7 +2278,8 @@ ___SCMOBJ group;)
       ___FIELD(result,2) = ___FIX(g->gr_gid);
 
       if ((e = ___NONNULLCHARSTRINGLIST_to_SCMOBJ
-                 (g->gr_mem,
+                 (___PSTATE,
+                  g->gr_mem,
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))

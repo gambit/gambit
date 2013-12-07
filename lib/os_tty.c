@@ -8273,7 +8273,8 @@ ___SCMOBJ dev;)
                   &nul))
           != ___FIX(___NO_ERR) ||
           (e = ___NONNULLSTRING_to_SCMOBJ
-                 (hist.buffer,
+                 (___PSTATE,
+                  hist.buffer,
                   &result,
                   ___RETURN_POS,
                   ___CE(___C_CE_SELECT)))
@@ -8301,7 +8302,8 @@ ___SCMOBJ history;)
   void *hist;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (history,
+             (___PSA(___PSTATE)
+              history,
               &hist,
               1,
               ___CE(___C_CE_SELECT),

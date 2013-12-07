@@ -592,6 +592,24 @@ AC_SUBST(CONF_SINGLE_MULTIPLE_THREADED_VMS)
 
 ###############################################################################
 #
+# Check if OS threads are supported by the runtime system and if so
+# which thread system is to be used.
+
+AC_ARG_ENABLE(thread-system,
+              AC_HELP_STRING([--enable-thread-system@<:@=thread-system@:>@],
+                             [use OS threads (default is NO)]),
+              ENABLE_THREAD_SYSTEM=$enableval,
+              ENABLE_THREAD_SYSTEM=no)
+
+if test "$ENABLE_THREAD_SYSTEM" = no; then
+
+  if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
+    ENABLE_THREAD_SYSTEM=yes
+  fi
+fi
+
+###############################################################################
+#
 # Check for C compiler.
 
 AC_DEFUN(AC_CHECK_C_COMPILER_DEF,
@@ -692,6 +710,7 @@ AC_CHECK_C_COMPILER_DEF(__llvm__,C_COMP_LLVM)
 AC_CHECK_C_COMPILER_DEF(_MSC_VER,C_COMP_VISUALC)
 #AC_CHECK_C_COMPILER_DEF(__WATCOMC__,C_COMP_WATCOMC)
 #AC_CHECK_C_COMPILER_DEF(__BORLANDC__,C_COMP_BORLANDC)
+AC_CHECK_C_COMPILER_DEF(_WIN32,OS_WIN32)
 
 ###############################################################################
 #
@@ -1114,6 +1133,160 @@ AC_CHECK_TYPE([struct stat64],
               [AC_DEFINE(HAVE_STRUCT_STAT64, 1, [])],
               [],
               [#include <sys/stat.h>])
+
+###############################################################################
+#
+# Determine which thread system to use.
+
+# Check for threading system early, in case this has an impact on
+# other functionality.
+
+CONF_THREAD_SYSTEM="___USE_NO_THREAD_SYSTEM"
+CONF_THREAD_LOCAL_STORAGE_CLASS="___NO_THREAD_LOCAL_STORAGE_CLASS"
+
+if test "$ENABLE_THREAD_SYSTEM" != no; then
+
+  FOUND_THREAD_SYSTEM="no"
+
+  if test "$FOUND_THREAD_SYSTEM" = no -a \( "$ENABLE_THREAD_SYSTEM" = yes -o "$ENABLE_THREAD_SYSTEM" = posix -o "$ENABLE_THREAD_SYSTEM" = pthreads \); then
+
+    # check if posix thread system is available
+
+    ORIG_CFLAGS="$CFLAGS"
+    ORIG_LIBS="$LIBS"
+
+    for opt in "" "OPT_CFLAGS=\"-mt\"" "OPT_CFLAGS=\"-pthread\"" "OPT_LIBS=\"-lpthread\""; do
+
+      OPT_CFLAGS=""
+      OPT_LIBS=""
+
+      eval "$opt"
+
+      CFLAGS="$ORIG_CFLAGS $OPT_CFLAGS"
+      LIBS="$ORIG_LIBS $OPT_LIBS"
+
+      AC_MSG_CHECKING([for posix threads with CFLAGS='$CFLAGS' and LIBS='$LIBS'])
+
+      AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM([
+           #include <pthread.h>
+           void *start_fn (void *ptr) { return ptr; }
+        ],[
+           pthread_t thread;
+           pthread_mutex_t mut;
+           if (pthread_mutex_init (&mut, NULL) == 0 &&
+               pthread_mutex_lock (&mut) == 0 &&
+               pthread_mutex_unlock (&mut) == 0 &&
+               pthread_mutex_destroy (&mut) == 0) {
+             pthread_create (&thread, NULL, start_fn, NULL);
+             pthread_join (&thread, NULL);
+           }
+        ])],[
+         AC_MSG_RESULT([yes])
+         FOUND_THREAD_SYSTEM="posix"
+         FLAGS_OBJ="$FLAGS_OBJ $OPT_CFLAGS"
+         break
+        ],[
+         AC_MSG_RESULT([no])
+         LIBS="$ORIG_LIBS"
+        ])
+
+      CFLAGS="$ORIG_CFLAGS"
+
+    done
+
+  fi
+
+  if test "$FOUND_THREAD_SYSTEM" = no -a \( "$ENABLE_THREAD_SYSTEM" = yes -o "$ENABLE_THREAD_SYSTEM" = win32 \); then
+
+    # check if win32 thread system is available
+
+    AC_MSG_CHECKING([for win32 threads])
+
+    if test "$OS_WIN32" = yes; then
+      AC_MSG_RESULT([yes])
+      FOUND_THREAD_SYSTEM="win32"
+    else
+      AC_MSG_RESULT([no])
+    fi
+
+  fi
+
+  if test "$FOUND_THREAD_SYSTEM" != no; then
+
+    case "$FOUND_THREAD_SYSTEM" in
+
+      posix)
+        CONF_THREAD_SYSTEM="___USE_POSIX_THREAD_SYSTEM"
+        ;;
+
+      win32)
+        CONF_THREAD_SYSTEM="___USE_WIN32_THREAD_SYSTEM"
+        ;;
+
+    esac
+
+    AC_MSG_CHECKING([for thread local storage class])
+
+    TLS_CLASS="none"
+
+    for tls_class in "__thread" "__declspec(thread)"; do
+      AC_TRY_COMPILE([
+        #include <stdlib.h>
+        ] $tls_class [ int foo;
+       ],[
+        foo = 42;
+       ],[TLS_CLASS="$tls_class"; break])
+    done
+
+    AC_MSG_RESULT($TLS_CLASS)
+
+    if test "$TLS_CLASS" != none; then
+      CONF_THREAD_LOCAL_STORAGE_CLASS="___THREAD_LOCAL_STORAGE_CLASS $TLS_CLASS"
+    fi
+
+  else
+
+    if test "$ENABLE_THREAD_SYSTEM" = yes; then
+
+      AC_MSG_NOTICE([
+*********************************************************************
+***                                                               ***
+*** A thread system is required for this configuration but none   ***
+*** of the supported thread systems (posix threads and win32      ***
+*** threads) are available on this platform. The configuration    ***
+*** will proceed as though --disable-thread-system,               ***
+*** --disable-multiple-vms, and --disable-multiple-threaded-vms   ***
+*** were specified.                                               ***
+***                                                               ***
+*********************************************************************
+])
+
+    else
+
+      AC_MSG_NOTICE([
+*********************************************************************
+***                                                               ***
+*** The thread system selected with --enable-thread-system=XXX    ***
+*** is not available on this platform. The configuration will     ***
+*** proceed as though --disable-thread-system,                    ***
+*** --disable-multiple-vms, and --disable-multiple-threaded-vms   ***
+*** were specified.                                               ***
+***                                                               ***
+*********************************************************************
+])
+
+    fi
+
+    CONF_SINGLE_MULTIPLE_VMS="___SINGLE_VM"
+    CONF_SINGLE_MULTIPLE_THREADED_VMS="___SINGLE_THREADED_VMS"
+
+  fi
+
+fi
+
+AC_SUBST(CONF_THREAD_SYSTEM)
+AC_SUBST(CONF_THREAD_LOCAL_STORAGE_CLASS)
 
 ###############################################################################
 #
@@ -2350,5 +2523,45 @@ if test "$C_COMP_GNUC" = yes; then
 #**************************************************************************
 #])
 #  fi
+
+fi
+
+if false; then
+
+if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
+
+  AC_MSG_NOTICE([
+*********************************************************************
+***                                                               ***
+*** The option --enable-multiple-vms or the option                ***
+*** --enable-multiple-threaded-vms (or both) have been specified. ***
+*** This enables support for parallel execution of Scheme code.   ***
+***                                                               ***
+*** This is a feature that is considered experimental and of beta ***
+*** quality currently. You are encouraged to report any issues    ***
+*** encountered at https://github.com/feeley/gambit/issues .      ***
+***                                                               ***
+*********************************************************************
+])
+
+else
+
+  AC_MSG_NOTICE([
+*********************************************************************
+***                                                               ***
+*** Neither of the options --enable-multiple-vms and              ***
+*** --enable-multiple-threaded-vms have been specified. This      ***
+*** means that support for parallel execution of Scheme code is   ***
+*** disabled. In the future, support for parallel execution will  ***
+*** be the default. If you wish to contribute to the testing of   ***
+*** this feature, please activate one of those options. Note that ***
+*** this is a feature that is considered experimental and of beta ***
+*** quality currently. You are encouraged to report any issues    ***
+*** encountered at https://github.com/feeley/gambit/issues .      ***
+***                                                               ***
+*********************************************************************
+])
+
+fi
 
 fi

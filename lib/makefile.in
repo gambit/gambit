@@ -66,12 +66,12 @@ mandir = @mandir@
 .SUFFIXES:
 .SUFFIXES: .scm .c @obj@
 
-NORMAL_C = main.c setup.c mem.c os.c os_base.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c
+NORMAL_C = main.c setup.c mem.c os.c os_base.c os_thread.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c
 NORMAL_CPP =
-NORMAL_H = setup.h mem.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h dead.h
-NORMAL_O = main@obj@ setup@obj@ mem@obj@ c_intf@obj@ os@obj@ os_base@obj@ os_time@obj@ os_shell@obj@ os_files@obj@ os_dyn@obj@ os_tty@obj@ os_io@obj@
-NORMAL_O_PLUS = +main@obj@ +setup@obj@ +mem@obj@ +c_intf@obj@ +os@obj@ +os_base@obj@ +os_time@obj@ +os_shell@obj@ +os_files@obj@ +os_dyn@obj@ +os_tty@obj@ +os_io@obj@
-NORMAL_O_COMMA = main@obj@,setup@obj@,mem@obj@,c_intf@obj@,os@obj@,os_base@obj@,os_time@obj@,os_shell@obj@,os_files@obj@,os_dyn@obj@,os_tty@obj@,os_io@obj@
+NORMAL_H = setup.h mem.h os.h os_base.h os_thread.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h dead.h
+NORMAL_O = main@obj@ setup@obj@ mem@obj@ c_intf@obj@ os@obj@ os_base@obj@ os_thread@obj@ os_time@obj@ os_shell@obj@ os_files@obj@ os_dyn@obj@ os_tty@obj@ os_io@obj@
+NORMAL_O_PLUS = +main@obj@ +setup@obj@ +mem@obj@ +c_intf@obj@ +os@obj@ +os_base@obj@ +os_thread@obj@ +os_time@obj@ +os_shell@obj@ +os_files@obj@ +os_dyn@obj@ +os_tty@obj@ +os_io@obj@
+NORMAL_O_COMMA = main@obj@,setup@obj@,mem@obj@,c_intf@obj@,os@obj@,os_base@obj@,os_thread@obj@,os_time@obj@,os_shell@obj@,os_files@obj@,os_dyn@obj@,os_tty@obj@,os_io@obj@
 NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
@@ -90,7 +90,7 @@ MODULES_O_COMMA = _kernel@obj@,_system@obj@,_num@obj@,_std@obj@,\
 +_eval@obj@,_io@obj@,_nonstd@obj@,_thread@obj@,_repl@obj@
 NORMAL_O_IN_COMPILE_ORDER = main@obj@ os_tty@obj@ c_intf@obj@ \
 os_io@obj@ setup@obj@ mem@obj@ os_files@obj@ os@obj@ os_base@obj@ \
-os_time@obj@ os_shell@obj@ os_dyn@obj@ 
+os_thread@obj@ os_time@obj@ os_shell@obj@ os_dyn@obj@ 
 MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
 _kernel@obj@ _nonstd@obj@ _repl@obj@ _eval@obj@ _thread@obj@ _system@obj@ 
 
@@ -158,9 +158,11 @@ mem@obj@: mem.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h mem.h 
 
 c_intf@obj@: c_intf.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h mem.h c_intf.h
 
-os@obj@: os.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+os@obj@: os.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_base.h os_thread.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
 
 os_base@obj@: os_base.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_base.h
+
+os_thread@obj@: os_thread.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_thread.h
 
 os_time@obj@: os_time.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_time.h
 

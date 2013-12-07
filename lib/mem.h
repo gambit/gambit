@@ -76,7 +76,8 @@
 
 
 extern ___SCMOBJ ___setup_mem_pstate
-   ___P((___processor_state ___ps),
+   ___P((___processor_state ___ps,
+         ___virtual_machine_state ___vms),
         ());
 
 extern ___SCMOBJ ___setup_mem_vmstate
@@ -101,7 +102,7 @@ extern void ___cleanup_mem ___PVOID;
 #define ___garbage_collect(ps,n) ___garbage_collect_debug (ps,n,__LINE__,__FILE__)
 
 extern ___BOOL ___garbage_collect_debug
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___SIZE_TS nonmovable_words_needed,
          int line,
          char *file),
@@ -110,7 +111,7 @@ extern ___BOOL ___garbage_collect_debug
 #else
 
 extern ___BOOL ___garbage_collect
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___SIZE_TS nonmovable_words_needed),
         ());
 
@@ -122,7 +123,7 @@ extern ___BOOL ___garbage_collect
 #define ___stack_limit(ps) ___stack_limit_debug (ps,__LINE__,__FILE__)
 
 extern ___BOOL ___stack_limit_debug
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          int line,
          char *file),
         ());
@@ -130,7 +131,7 @@ extern ___BOOL ___stack_limit_debug
 #else
 
 extern ___BOOL ___stack_limit
-   ___P((___processor_state ___ps),
+   ___P((___PSDNC),
         ());
 
 #endif
@@ -141,7 +142,7 @@ extern ___BOOL ___stack_limit
 #define ___heap_limit(ps) ___heap_limit_debug (ps,__LINE__,__FILE__)
 
 extern ___BOOL ___heap_limit_debug
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          int line,
          char *file),
         ());
@@ -149,7 +150,7 @@ extern ___BOOL ___heap_limit_debug
 #else
 
 extern ___BOOL ___heap_limit
-   ___P((___processor_state ___ps),
+   ___P((___PSDNC),
         ());
 
 #endif
@@ -211,7 +212,7 @@ extern ___SCMOBJ ___make_global_var
         ());
 
 extern ___F64 ___bytes_allocated
-   ___P((___processor_state ___ps),
+   ___P((___PSDNC),
         ());
 
 

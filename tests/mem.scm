@@ -1,4 +1,4 @@
-; File: "mem.scm", Time-stamp: <2009-05-14 14:21:50 feeley>
+; File: "mem.scm", Time-stamp: <2013-12-04 22:52:09 feeley>
 
 ; Copyright (c) 1996-2009 by Marc Feeley, All Rights Reserved.
 
@@ -247,11 +247,12 @@ static ___SCMOBJ obj1, obj2, obj3, obj4, obj5; /* some Scheme objects */
 
 void foo (double x, int n, int (*f)(char*))
 {
-  ___EXT(___DOUBLE_to_SCMOBJ) (___CLIBEXT(sqrt) (x), &obj1, 0);
-  obj2 = ___EXT(___make_vector) (n, obj1, ___STILL);
-  ___EXT(___CHARSTRING_to_SCMOBJ) (\"hello world!\", &obj3, 0);
-  ___EXT(___CHARSTRING_to_SCMOBJ) (\"another string\", &obj4, 0);
-  obj5 = ___EXT(___make_pair) (obj2, obj3, ___STILL);
+  ___processor_state ___ps = ___PSTATE;
+  ___EXT(___DOUBLE_to_SCMOBJ) (___ps, ___CLIBEXT(sqrt) (x), &obj1, 0);
+  obj2 = ___EXT(___make_vector) (___ps, n, obj1);
+  ___EXT(___CHARSTRING_to_SCMOBJ) (___ps, \"hello world!\", &obj3, 0);
+  ___EXT(___CHARSTRING_to_SCMOBJ) (___ps, \"another string\", &obj4, 0);
+  obj5 = ___EXT(___make_pair) (___ps, obj2, obj3);
   ___EXT(___still_obj_refcount_dec) (obj1); /* no direct need for obj1, etc */
   ___EXT(___still_obj_refcount_dec) (obj2);
   ___EXT(___still_obj_refcount_dec) (obj3);

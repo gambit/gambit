@@ -490,18 +490,31 @@ void *ptr;)
 
 /* Allocation of reference counted blocks of memory. */
 
-___HIDDEN void setup_rc ___PVOID
+___HIDDEN void setup_rc
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
   rc_head.prev = &rc_head;
   rc_head.next = &rc_head;
   rc_head.refcount = 1;
   rc_head.data = ___FAL;
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
 }
 
-___HIDDEN void cleanup_rc ___PVOID
+___HIDDEN void cleanup_rc
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
   ___rc_header *h = rc_head.next;
 
   rc_head.prev = &rc_head;
@@ -513,15 +526,21 @@ ___HIDDEN void cleanup_rc ___PVOID
       ___free_mem (h);
       h = next;
     }
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
 }
 
 
 ___EXP_FUNC(void*,___alloc_rc)
-   ___P((___SIZE_T bytes),
-        (bytes)
+   ___P((___PSD
+         ___SIZE_T bytes),
+        (___PSV
+         bytes)
+___PSDKR
 ___SIZE_T bytes;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   ___rc_header *h = ___CAST(___rc_header*,
                             ___alloc_mem (bytes + sizeof (___rc_header)));
 
@@ -550,7 +569,6 @@ ___EXP_FUNC(void,___release_rc)
         (ptr)
 void *ptr;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   if (ptr != 0)
     {
       ___rc_header *h = ___CAST(___rc_header*,ptr) - 1;
@@ -1053,7 +1071,7 @@ ___SCMOBJ ___find_global_var_bound_to
         (val)
 ___SCMOBJ val;)
 {
-  ___processor_state ___ps = ___PSTATE;
+  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   ___SCMOBJ sym = ___NUL;
   int i;
 
@@ -1115,19 +1133,19 @@ ___WORD obj;)
 /*---------------------------------------------------------------------------*/
 
 /*
- * '___alloc_scmobj (subtype, bytes, kind)' allocates a permanent or
- * still Scheme object (depending on 'kind') of subtype 'subtype' with
- * a body containing 'bytes' bytes, and returns it as an encoded
- * Scheme object.  A permanent object is allocated when 'kind' =
- * ___PERM and a still object is allocated when 'kind' = ___STILL.
- * The initialization of the object's body must be done by the caller.
- * In the case of still objects this initialization must be done
- * before the next allocation is requested.  The 'refcount' field of
- * still objects is initially 1.  A fixnum error code is returned when
- * there is an error.
+ * '___alloc_scmobj (___ps, subtype, bytes)' allocates a permanent or
+ * still Scheme object (depending on '___ps') of subtype 'subtype'
+ * with a body containing 'bytes' bytes, and returns it as an encoded
+ * Scheme object.  When '___ps' is NULL, a permanent object is
+ * allocated, and when '___ps' is not NULL, a still object is
+ * allocated in the heap of that processor.  The initialization of the
+ * object's body must be done by the caller.  In the case of still
+ * objects this initialization must be done before the next allocation
+ * is requested.  The 'refcount' field of still objects is initially
+ * 1.  A fixnum error code is returned when there is an error.
  */
 
-___EXP_FUNC(___WORD,___alloc_scmobj_perm)
+___HIDDEN ___WORD alloc_scmobj_perm
    ___P((int subtype,
          ___SIZE_TS bytes),
         (subtype,
@@ -1167,17 +1185,19 @@ ___SIZE_TS bytes;)
 }
 
 
-___EXP_FUNC(___WORD,___alloc_scmobj_still)
-   ___P((int subtype,
+___HIDDEN ___WORD alloc_scmobj_still
+   ___P((___processor_state ___ps,
+         int subtype,
          ___SIZE_TS bytes),
-        (subtype,
+        (___ps,
+         subtype,
          bytes)
+___processor_state ___ps;
 int subtype;
 ___SIZE_TS bytes;)
 {
   void *ptr;
   ___WORD *base;
-  ___processor_state ___ps = ___PSTATE;
   ___SIZE_TS words = ___STILL_BODY_OFS + ___WORDS(bytes);
 
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
@@ -1199,7 +1219,7 @@ ___SIZE_TS bytes;)
 
       words_nonmovable -= words;
 
-      overflow = ___garbage_collect (___ps, words);
+      overflow = ___garbage_collect (___PSP words);
 
       words_nonmovable += words;
 
@@ -1249,20 +1269,20 @@ ___SIZE_TS bytes;)
 
 
 ___EXP_FUNC(___WORD,___alloc_scmobj)
-   ___P((int subtype,
-         ___SIZE_TS bytes,
-         int kind),
-        (subtype,
-         bytes,
-         kind)
+   ___P((___processor_state ___ps,
+         int subtype,
+         ___SIZE_TS bytes),
+        (___ps,
+         subtype,
+         bytes)
+___processor_state ___ps;
 int subtype;
-___SIZE_TS bytes;
-int kind;)
+___SIZE_TS bytes;)
 {
-  if (kind == ___PERM)
-    return ___alloc_scmobj_perm (subtype, bytes);
+  if (___ps == NULL)
+    return alloc_scmobj_perm (subtype, bytes);
   else
-    return ___alloc_scmobj_still (subtype, bytes);
+    return alloc_scmobj_still (___ps, subtype, bytes);
 }
 
 
@@ -1278,27 +1298,29 @@ ___WORD obj;)
 
 
 /*
- * '___make_pair (car, cdr, kind)' creates a Scheme pair having the
+ * '___make_pair (___ps, car, cdr)' creates a Scheme pair having the
  * values 'car' and 'cdr' in its CAR and CDR fields.  The 'car' and
  * 'cdr' arguments must not be movable objects and any still object
  * must be reachable some other way or have a nonzero refcount.  A
- * permanent or still object is allocated, depending on 'kind'
- * (___PERM for permanent object, ___STILL for still object).  A
- * fixnum error code is returned when there is an error.
+ * permanent or still object is allocated, depending on '___ps'.  When
+ * '___ps' is NULL, a permanent object is allocated, and when '___ps'
+ * is not NULL, a still object is allocated in the heap of that
+ * processor.  The 'refcount' field of still objects is initially 1.
+ * A fixnum error code is returned when there is an error.
  */
 
 ___EXP_FUNC(___WORD,___make_pair)
-   ___P((___WORD car,
-         ___WORD cdr,
-         int kind),
-        (car,
-         cdr,
-         kind)
+   ___P((___processor_state ___ps,
+         ___WORD car,
+         ___WORD cdr),
+        (___ps,
+         car,
+         cdr)
+___processor_state ___ps;
 ___WORD car;
-___WORD cdr;
-int kind;)
+___WORD cdr;)
 {
-  ___WORD obj = ___alloc_scmobj (___sPAIR, ___PAIR_SIZE<<___LWS, kind);
+  ___WORD obj = ___alloc_scmobj (___ps, ___sPAIR, ___PAIR_SIZE<<___LWS);
 
   if (!___FIXNUMP(obj))
     {
@@ -1311,31 +1333,33 @@ int kind;)
 
 
 /*
- * '___make_vector (length, init, kind)' creates a Scheme vector of
+ * '___make_vector (___ps, length, init)' creates a Scheme vector of
  * length 'length' and initialized with the value 'init'.  The 'init'
  * argument must not be a movable object and if it is a still object
  * it must be reachable some other way or have a nonzero refcount.  A
- * permanent or still object is allocated, depending on 'kind'
- * (___PERM for permanent object, ___STILL for still object).  A
- * fixnum error code is returned when there is an error.
+ * permanent or still object is allocated, depending on '___ps'.  When
+ * '___ps' is NULL, a permanent object is allocated, and when '___ps'
+ * is not NULL, a still object is allocated in the heap of that
+ * processor.  The 'refcount' field of still objects is initially 1.
+ * A fixnum error code is returned when there is an error.
  */
 
 ___EXP_FUNC(___WORD,___make_vector)
-   ___P((___SIZE_TS length,
-         ___WORD init,
-         int kind),
-        (length,
-         init,
-         kind)
+   ___P((___processor_state ___ps,
+         ___SIZE_TS length,
+         ___WORD init),
+        (___ps,
+         length,
+         init)
+___processor_state ___ps;
 ___SIZE_TS length;
-___WORD init;
-int kind;)
+___WORD init;)
 {
   if (length > ___CAST(___WORD,___LMASK >> (___LF+___LWS)))
     return ___FIX(___HEAP_OVERFLOW_ERR);
   else
     {
-      ___WORD obj = ___alloc_scmobj (___sVECTOR, length<<___LWS, kind);
+      ___WORD obj = ___alloc_scmobj (___ps, ___sVECTOR, length<<___LWS);
 
       if (!___FIXNUMP(obj))
         {
@@ -1447,7 +1471,7 @@ ___HIDDEN ___SCMOBJ alloc_symkey_table
 unsigned int subtype;
 ___SIZE_TS length;)
 {
-  ___SCMOBJ tbl = ___make_vector (length+1, ___NUL, ___PERM);
+  ___SCMOBJ tbl = ___make_vector (NULL, length+1, ___NUL);
 
   if (!___FIXNUMP(tbl))
     ___FIELD(tbl,0) = ___FIX(0);
@@ -1525,10 +1549,10 @@ unsigned int subtype;)
   switch (subtype)
     {
     case ___sKEYWORD:
-      obj = ___alloc_scmobj_perm (___sKEYWORD, ___KEYWORD_SIZE<<___LWS);
+      obj = ___alloc_scmobj (NULL, ___sKEYWORD, ___KEYWORD_SIZE<<___LWS);
       break;
     default: /* assume ___sSYMBOL */
-      obj = ___alloc_scmobj_perm (___sSYMBOL, ___SYMBOL_SIZE<<___LWS);
+      obj = ___alloc_scmobj (NULL, ___sSYMBOL, ___SYMBOL_SIZE<<___LWS);
       break;
     }
 
@@ -1640,9 +1664,10 @@ unsigned int subtype;)
       ___SCMOBJ err;
 
       if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
-                   (str,
+                   (NULL, /* allocate as permanent object */
+                    str,
                     &name,
-                    -1)) /* allocate as permanent object */
+                    -1))
           != ___FIX(___NO_ERR))
         return err;
 
@@ -1666,7 +1691,7 @@ unsigned int subtype;)
   if (obj == ___FAL)
     {
       ___SIZE_T n = ___INT(___STRINGLENGTH(str));
-      ___SCMOBJ name = ___alloc_scmobj_perm (___sSTRING, n<<___LCS);
+      ___SCMOBJ name = ___alloc_scmobj (NULL, ___sSTRING, n<<___LCS);
 
       if (___FIXNUMP(name))
         return name;
@@ -1712,11 +1737,14 @@ void *data;)
 /*---------------------------------------------------------------------------*/
 
 ___HIDDEN ___WORD *start_of_fromspace
-   ___P((___msection *s),
-        (s)
+   ___P((___PSD
+         ___msection *s),
+        (___PSV
+         s)
+___PSDKR
 ___msection *s;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   if (tospace_at_top)
     return s->base;
   else
@@ -1725,11 +1753,14 @@ ___msection *s;)
 
 
 ___HIDDEN ___WORD *start_of_tospace
-   ___P((___msection *s),
-        (s)
+   ___P((___PSD
+         ___msection *s),
+        (___PSV
+         s)
+___PSDKR
 ___msection *s;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   if (tospace_at_top)
     return s->base + (___MSECTION_SIZE>>1);
   else
@@ -1747,13 +1778,14 @@ ___HIDDEN void fatal_heap_overflow ___PVOID
 
 
 ___HIDDEN ___msection *next_msection
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___msection *ms),
-        (___ps,
+        (___PSV
          ms)
-___processor_state ___ps;
+___PSDKR
 ___msection *ms;)
 {
+  ___PSGET
   ___msection *result;
 
   if (nb_msections_used == 0)
@@ -1778,33 +1810,37 @@ ___msection *ms;)
 
 
 ___HIDDEN void next_stack_msection
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
+
   if (stack_msection != 0)
     words_prev_msections += alloc_stack_start - alloc_stack_ptr;
 
-  stack_msection = next_msection (___ps, heap_msection);
-  alloc_stack_limit = start_of_tospace (stack_msection);
+  stack_msection = next_msection (___PSP heap_msection);
+  alloc_stack_limit = start_of_tospace (___PSP stack_msection);
   alloc_stack_start = alloc_stack_limit + (___MSECTION_SIZE>>1);
   alloc_stack_ptr = alloc_stack_start;
 }
 
 
 ___HIDDEN void next_heap_msection
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
+
   if (heap_msection != 0)
     {
       words_prev_msections += alloc_heap_ptr - alloc_heap_start;
       heap_msection->alloc = alloc_heap_ptr;
     }
 
-  heap_msection = next_msection (___ps, stack_msection);
-  alloc_heap_start = start_of_tospace (heap_msection);
+  heap_msection = next_msection (___PSP stack_msection);
+  alloc_heap_start = start_of_tospace (___PSP heap_msection);
   alloc_heap_limit = alloc_heap_start + (___MSECTION_SIZE>>1);
   alloc_heap_ptr = alloc_heap_start;
 }
@@ -2201,9 +2237,12 @@ ___glo_struct *glo;)
 }
 
 
-___HIDDEN void dump_memory_map ___PVOID
+___HIDDEN void dump_memory_map
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   int ns = the_msections->nb_sections;
   ___msection **sections = the_msections->sections;
   int i;
@@ -2230,14 +2269,19 @@ ___HIDDEN void dump_memory_map ___PVOID
 }
 
 ___HIDDEN void explain_problem
-   ___P((___WORD obj,
+   ___P((___PSD
+         ___WORD obj,
          char *msg),
-        (obj,
+        (___PSV
+         obj,
          msg)
+___PSDKR
 ___WORD obj;
 char *msg;)
 {
-  dump_memory_map ();
+  ___PSGET
+
+  dump_memory_map (___PSPNC);
 
   ___printf (">>> The object 0x%08x %s\n", obj, msg);
 
@@ -2324,18 +2368,22 @@ char *msg;)
 
 
 ___HIDDEN void bug
-   ___P((___WORD obj,
+   ___P((___PSD
+         ___WORD obj,
          char *msg),
-        (obj,
+        (___PSV
+         obj,
          msg)
+___PSDKR
 ___WORD obj;
 char *msg;)
 {
+  ___PSGET
   char *msgs[2];
   ___printf (">>> The GC has detected the following inconsistency\n");
   ___printf (">>> during call of mark_array on line %d of mem.c:\n",
              mark_array_call_line);
-  explain_problem (obj, msg);
+  explain_problem (___PSP obj, msg);
   msgs[0] = "GC inconsistency detected";
   msgs[1] = 0;
   ___fatal_error (msgs);
@@ -2343,11 +2391,14 @@ char *msg;)
 
 
 ___HIDDEN void validate_old_obj
-   ___P((___WORD obj),
-        (obj)
+   ___P((___PSD
+         ___WORD obj),
+        (___PSV
+         obj)
+___PSDKR
 ___WORD obj;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   ___WORD *hd_ptr = ___BODY(obj)-1;
   ___WORD head;
   int i = find_msection (the_msections, hd_ptr);
@@ -2369,27 +2420,27 @@ ___WORD obj;)
                          pos2 >= ___MSECTION_SIZE)
                       : (pos2 < 0 ||
                          pos2 >= ___MSECTION_SIZE>>1))
-                    bug (obj, "was copied outside of tospace");
+                    bug (___PSP obj, "was copied outside of tospace");
                   else if (___HD_TYP((*hd_ptr2)) != ___MOVABLE0)
-                    bug (obj, "was copied and copy is not ___MOVABLE0");
+                    bug (___PSP obj, "was copied and copy is not ___MOVABLE0");
                 }
               else
-                bug (obj, "was copied outside of tospace");
+                bug (___PSP obj, "was copied outside of tospace");
             }
           else if (___HD_TYP(head) != ___MOVABLE0)
-            bug (obj, "should be ___MOVABLE0");
+            bug (___PSP obj, "should be ___MOVABLE0");
           else if (tospace_at_top
                    ? (pos >= ___MSECTION_SIZE>>1 &&
                       pos < ___MSECTION_SIZE)
                    : (pos >= 0 &&
                       pos < ___MSECTION_SIZE>>1))
-            bug (obj, "is in tospace");
+            bug (___PSP obj, "is in tospace");
           return;
         }
     }
   head = *hd_ptr; /* this dereference will likely bomb if there is a bug */
   if (___HD_TYP(head) != ___PERM && ___HD_TYP(head) != ___STILL)
-    bug (obj, "is not ___PERM or ___STILL");
+    bug (___PSP obj, "is not ___PERM or ___STILL");
 }
 
 
@@ -2432,10 +2483,11 @@ ___HIDDEN int heap_fudge_used; /* space used in msection heap fudge */
 
 
 ___HIDDEN void check_fudge_used
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
   int n;
 
   n = unzapped_words (___ps->stack_limit - ___MSECTION_FUDGE,
@@ -2459,12 +2511,15 @@ ___processor_state ___ps;)
 }
 
 
-___HIDDEN void zap_fromspace ___PVOID
+___HIDDEN void zap_fromspace
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   int i;
   for (i=0; i<the_msections->nb_sections; i++)
-    zap_section (start_of_fromspace (the_msections->sections[i]),
+    zap_section (start_of_fromspace (___PSP the_msections->sections[i]),
                  ___MSECTION_SIZE>>1);
 }
 
@@ -2487,18 +2542,18 @@ ___HIDDEN ___SIZE_TS movable_subtyped_objs[MAX_STAT_SIZE+2];
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
 
-#define mark_array(ps,start,n) mark_array_debug (ps,start,n,__LINE__)
+#define mark_array(start,n) mark_array_debug (start,n,__LINE__)
 
 ___HIDDEN void mark_array_debug
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___WORD *start,
          ___WORD n,
          int line),
-        (___ps,
+        (___PSV
          start,
          n,
          line)
-___processor_state ___ps;
+___PSDKR
 ___WORD *start;
 ___WORD n;
 int line;)
@@ -2506,18 +2561,19 @@ int line;)
 #else
 
 ___HIDDEN void mark_array
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___WORD *start,
          ___WORD n),
-        (___ps,
+        (___PSV
          start,
          n)
-___processor_state ___ps;
+___PSDKR
 ___WORD *start;
 ___WORD n;)
 
 #endif
 {
+  ___PSGET
   ___WORD *alloc = alloc_heap_ptr;
   ___WORD *limit = alloc_heap_limit;
 
@@ -2538,7 +2594,7 @@ ___WORD n;)
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
           if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
-            validate_old_obj (obj);
+            validate_old_obj (___PSP obj);
 #endif
 
           body = ___UNTAG(obj) + ___BODY_OFS;
@@ -2615,7 +2671,7 @@ ___WORD n;)
 #ifdef ENABLE_CONSISTENCY_CHECKS
           else if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1 &&
                    head_typ != ___PERM)
-            bug (obj, "was not ___PERM, ___STILL, ___MOVABLE0 or ___FORW");
+            bug (___PSP obj, "was not ___PERM, ___STILL, ___MOVABLE0 or ___FORW");
 #endif
         }
 
@@ -2628,13 +2684,14 @@ ___WORD n;)
 
 
 ___HIDDEN void mark_captured_continuation
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___WORD *orig_ptr),
-        (___ps,
+        (___PSV
          orig_ptr)
-___processor_state ___ps;
+___PSDKR
 ___WORD *orig_ptr;)
 {
+  ___PSGET
   ___WORD *ptr = orig_ptr;
   int fs, link, i;
   ___WORD *fp;
@@ -2769,22 +2826,22 @@ fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
       alloc_heap_ptr = alloc;
     }
   else
-    mark_array (___ps, orig_ptr, 1);
+    mark_array (___PSP orig_ptr, 1);
 }
 
 
 ___HIDDEN void mark_frame
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___WORD *fp,
          int fs,
          ___WORD gcmap,
          ___WORD *nextgcmap),
-        (___ps,
+        (___PSV
          fp,
          fs,
          gcmap,
          nextgcmap)
-___processor_state ___ps;
+___PSDKR
 ___WORD *fp;
 int fs;
 ___WORD gcmap;
@@ -2830,7 +2887,7 @@ ___WORD *nextgcmap;)
                       }
                   }
 #endif
-                  mark_array (___ps, &___FP_STK(fp,i), i-j+1);
+                  mark_array (___PSP &___FP_STK(fp,i), i-j+1);
                   return;
                 }
               if ((i & (___WORD_WIDTH-1)) == 0)
@@ -2852,7 +2909,7 @@ ___WORD *nextgcmap;)
               }
           }
 #endif
-          mark_array (___ps, &___FP_STK(fp,i-1), i-j);
+          mark_array (___PSP &___FP_STK(fp,i-1), i-j);
         }
       if (i == fs)
         return;
@@ -2871,10 +2928,11 @@ ___WORD *nextgcmap;)
 
 
 ___HIDDEN void mark_continuation
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
   int fs, link;
   ___WORD *fp;
   ___WORD ra1;
@@ -2921,7 +2979,7 @@ ___processor_state ___ps;)
           ___printf (" (not first frame)\n");
 #endif
 
-        mark_frame (___ps, fp, fs, gcmap, nextgcmap);
+        mark_frame (___PSP fp, fs, gcmap, nextgcmap);
 
         if (fp == ___ps->stack_break)
           break;
@@ -2929,21 +2987,22 @@ ___processor_state ___ps;)
         ___FP_SET_STK(fp,-___FRAME_STACK_RA,ra2)
       }
 
-  mark_captured_continuation (___ps, &___FP_STK(fp,-___BREAK_FRAME_NEXT));
+  mark_captured_continuation (___PSP &___FP_STK(fp,-___BREAK_FRAME_NEXT));
 }
 
 
 ___HIDDEN void mark_rc
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
   ___rc_header *h = rc_head.next;
 
   while (h != &rc_head)
     {
       ___rc_header *next = h->next;
-      mark_array (___ps, &h->data, 1);
+      mark_array (___PSP &h->data, 1);
       h = next;
     }
 }
@@ -2961,13 +3020,14 @@ ___processor_state ___ps;)
 
 
 ___HIDDEN ___SIZE_TS scan
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___WORD *body),
-        (___ps,
+        (___PSV
          body)
-___processor_state ___ps;
+___PSDKR
 ___WORD *body;)
 {
+  ___PSGET
   ___WORD head = body[-1];
   ___SIZE_TS words = ___HD_WORDS(head);
   int subtype = ___HD_SUBTYPE(head);
@@ -3009,10 +3069,10 @@ ___WORD *body;)
            */
 
           if (traverse_weak_refs)
-            mark_array (___ps, body+1, 2); /* scan action and testator */
+            mark_array (___PSP body+1, 2); /* scan action and testator */
           else
             {
-              mark_array (___ps, body+2, 1); /* scan action only */
+              mark_array (___PSP body+2, 1); /* scan action only */
 
               /*
                * Remember that this will's testator object remains to
@@ -3033,13 +3093,13 @@ ___WORD *body;)
               (flags & ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS))
             {
               for (i=words-2; i>=___GCHASHTABLE_KEY0; i-=2)
-                mark_array (___ps, body+i, 1); /* mark objects in key fields */
+                mark_array (___PSP body+i, 1); /* mark objects in key fields */
             }
 
           if ((flags & ___GCHASHTABLE_FLAG_WEAK_VALS) == 0)
             {
               for (i=words-1; i>=___GCHASHTABLE_VAL0; i-=2)
-                mark_array (___ps, body+i, 1); /* mark objects in value fields */
+                mark_array (___PSP body+i, 1); /* mark objects in value fields */
             }
 
           body[0] = reached_gc_hash_tables;
@@ -3049,12 +3109,12 @@ ___WORD *body;)
 
     case ___sSYMBOL:
     case ___sKEYWORD:
-      mark_array (___ps, body, 1); /* only scan name of symbols & keywords */
+      mark_array (___PSP body, 1); /* only scan name of symbols & keywords */
       break;
 
     case ___sCONTINUATION:
-      mark_captured_continuation (___ps, &body[___CONTINUATION_FRAME]);
-      mark_array (___ps, body+1, words-1); /* skip the frame pointer */
+      mark_captured_continuation (___PSP &body[___CONTINUATION_FRAME]);
+      mark_array (___PSP body+1, words-1); /* skip the frame pointer */
       break;
 
     case ___sFRAME:
@@ -3095,22 +3155,22 @@ ___WORD *body;)
         if (___TYP(frame) == ___tFIXNUM && frame != ___FIX(0))
           ___FP_SET_STK(fp,link+1,___FAL)
 
-        mark_frame (___ps, fp, fs, gcmap, nextgcmap);
+        mark_frame (___PSP fp, fs, gcmap, nextgcmap);
 
         if (___TYP(frame) == ___tFIXNUM && frame != ___FIX(0))
           ___FP_SET_STK(fp,link+1,___TAG(___UNTAG_AS(frame, ___tFIXNUM), ___tSUBTYPED))
 
-            mark_array (___ps, &body[0], 1);
+            mark_array (___PSP &body[0], 1);
       }
       break;
 
     case ___sPROCEDURE:
       if (___HD_TYP(head) != ___PERM) /* only scan closures */
-        mark_array (___ps, body+1, words-1); /* only scan free variables */
+        mark_array (___PSP body+1, words-1); /* only scan free variables */
       break;
 
     default:
-      mark_array (___ps, body, words);
+      mark_array (___PSP body, words);
       break;
     }
 
@@ -3118,9 +3178,12 @@ ___WORD *body;)
 }
 
 
-___HIDDEN void init_still_objs_to_scan ___PVOID
+___HIDDEN void init_still_objs_to_scan
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   ___WORD *base = ___CAST(___WORD*,still_objs);
   ___WORD *to_scan = 0;
 
@@ -3141,25 +3204,27 @@ ___HIDDEN void init_still_objs_to_scan ___PVOID
 
 
 ___HIDDEN void scan_still_objs_to_scan
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
   ___WORD *base;
 
   while ((base = ___CAST(___WORD*,still_objs_to_scan)) != 0)
     {
       still_objs_to_scan = base[___STILL_MARK_OFS];
-      scan (___ps, base + ___STILL_BODY_OFS);
+      scan (___PSP base + ___STILL_BODY_OFS);
     };
 }
 
 
 ___HIDDEN void scan_movable_objs_to_scan
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
   ___WORD *body;
   ___SIZE_TS words;
 
@@ -3173,19 +3238,22 @@ ___processor_state ___ps;)
       else if (scan_ptr >= scan_msection->alloc)
         {
           scan_msection = scan_msection->next;
-          scan_ptr = start_of_tospace (scan_msection);
+          scan_ptr = start_of_tospace (___PSP scan_msection);
           continue;
         }
       body = scan_ptr + 1;
-      words = scan (___ps, body);
+      words = scan (___PSP body);
       scan_ptr = body + words;
     };
 }
 
 
-___HIDDEN void free_unmarked_still_objs ___PVOID
+___HIDDEN void free_unmarked_still_objs
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   ___WORD *last = &still_objs;
   ___WORD *base = ___CAST(___WORD*,*last);
 
@@ -3213,9 +3281,12 @@ ___HIDDEN void free_unmarked_still_objs ___PVOID
 }
 
 
-___HIDDEN void free_still_objs ___PVOID
+___HIDDEN void free_still_objs
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   ___WORD *base = ___CAST(___WORD*,still_objs);
 
   still_objs = 0;
@@ -3263,10 +3334,11 @@ ___SIZE_TS live;)
 
 
 ___HIDDEN void prepare_mem_pstate
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
   ___SIZE_TS avail;
   ___SIZE_TS stack_avail;
   ___SIZE_TS stack_left_before_fudge;
@@ -3303,8 +3375,8 @@ ___processor_state ___ps;)
                          ? heap_avail
                          : heap_left_before_fudge);
 
-  ___begin_interrupt_service ();
-  ___end_interrupt_service (0);
+  ___begin_interrupt_service_pstate (___PSPNC);
+  ___end_interrupt_service_pstate (___PSP 0);
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
@@ -3341,11 +3413,23 @@ ___processor_state ___ps;)
 
 
 ___SCMOBJ ___setup_mem_pstate
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___processor_state ___ps,
+         ___virtual_machine_state ___vms),
+        (___ps,
+         ___vms)
+___processor_state ___ps;
+___virtual_machine_state ___vms;)
 {
   int init_nb_sections;
+
+#ifndef ___SINGLE_THREADED_VMS
+
+  ___ps->prev = ___ps;
+  ___ps->next = ___ps;
+
+  ___ps->vmstate = ___vms;
+
+#endif
 
   /* Allocate heap */
 
@@ -3366,7 +3450,7 @@ ___processor_state ___ps;)
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
     {
-      zap_fromspace ();
+      zap_fromspace (___PSPNC);
       stack_fudge_used = 0;
       heap_fudge_used = 0;
     }
@@ -3380,8 +3464,8 @@ ___processor_state ___ps;)
   heap_msection = 0;
   nb_msections_used = 0;
 
-  next_stack_msection (___ps);
-  next_heap_msection (___ps);
+  next_stack_msection (___PSPNC);
+  next_heap_msection (___PSPNC);
 
   /*
    * Create "break frame" of initial top section.
@@ -3419,7 +3503,7 @@ ___processor_state ___ps;)
   ___ps->heartbeat_countdown = ___ps->heartbeat_interval;
 #endif
 
-  prepare_mem_pstate (___ps);
+  prepare_mem_pstate (___PSPNC);
 
   return ___FIX(___NO_ERR);
 }
@@ -3433,10 +3517,19 @@ ___virtual_machine_state ___vms;)
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___vms->mem.var
 
+#ifndef ___SINGLE_VM
+
+  /*
+   * Initialize circular queue of VMs.
+   */
+
+  ___vms->prev = ___vms;
+  ___vms->next = ___vms;
+
   /* TODO: implement expansion of glos array when number of globals grows beyond 20000 */
 
-#ifndef ___SINGLE_VM
   ___vms->glos = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
+
 #endif
 
   /*
@@ -3452,7 +3545,7 @@ ___virtual_machine_state ___vms;)
    * Setup reference counted memory management.
    */
 
-  setup_rc ();
+  setup_rc (___vms);
 
   /*
    * Set the overflow reserve so that the rest parameter handler can
@@ -3478,7 +3571,7 @@ ___virtual_machine_state ___vms;)
   last_gc_movable = 0.0;
   last_gc_nonmovable = 0.0;
 
-  return ___setup_mem_pstate (&___vms->pstate0);
+  return ___setup_mem_pstate (&___vms->pstate0, ___vms);
 
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
@@ -3568,8 +3661,8 @@ ___virtual_machine_state ___vms;)
   ___cleanup_mem_pstate (&___vms->pstate0);
 
   free_msections (&the_msections);
-  free_still_objs ();
-  cleanup_rc ();
+  free_still_objs (&___vms->pstate0);/*TODO: other processors?*/
+  cleanup_rc (___vms);
 
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
@@ -3619,10 +3712,11 @@ ___WORD list;)
 
 
 ___HIDDEN void process_wills
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
   ___WORD* tail_exec;
   ___WORD* tail_nonexec;
   ___WORD curr;
@@ -3648,13 +3742,13 @@ ___processor_state ___ps;)
     {
       ___WORD will = ___TAG(___UNTAG(curr),___tSUBTYPED);
 
-      mark_array (___ps, &will, 1);
+      mark_array (___PSP &will, 1);
 
       *tail_exec = ___TAG(___UNTAG(will),___EXECUTABLE_WILL);
       tail_exec = &___BODY_AS(will,___tSUBTYPED)[0];
       curr = *tail_exec;
       if (curr & ___UNMARKED_TESTATOR_WILL)
-        mark_array (___ps, tail_exec+1, 1); /* mark testator object */
+        mark_array (___PSP tail_exec+1, 1); /* mark testator object */
     }
 
   tail_nonexec = &___ps->nonexecutable_wills;
@@ -3664,7 +3758,7 @@ ___processor_state ___ps;)
     {
       ___WORD will = ___TAG(___UNTAG(curr),___tSUBTYPED);
 
-      mark_array (___ps, &will, 1);
+      mark_array (___PSP &will, 1);
 
       if (___BODY_AS(will,___tSUBTYPED)[0] & ___EXECUTABLE_WILL)
         {
@@ -3674,7 +3768,7 @@ ___processor_state ___ps;)
           tail_exec = &___BODY_AS(will,___tSUBTYPED)[0];
           curr = *tail_exec;
           if (curr & ___UNMARKED_TESTATOR_WILL)
-            mark_array (___ps, tail_exec+1, 1); /* mark testator object */
+            mark_array (___PSP tail_exec+1, 1); /* mark testator object */
         }
       else
         {
@@ -3684,7 +3778,7 @@ ___processor_state ___ps;)
           tail_nonexec = &___BODY_AS(will,___tSUBTYPED)[0];
           curr = *tail_nonexec;
           if (curr & ___UNMARKED_TESTATOR_WILL)
-            mark_array (___ps, tail_nonexec+1, 1); /* mark testator object */
+            mark_array (___PSP tail_nonexec+1, 1); /* mark testator object */
         }
     }
 
@@ -3693,9 +3787,12 @@ ___processor_state ___ps;)
 }
 
 
-___HIDDEN void process_gc_hash_tables ___PVOID
+___HIDDEN void process_gc_hash_tables
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
+  ___PSGET
   ___WORD curr = reached_gc_hash_tables;
 
   while (curr != ___TAG(0,0))
@@ -4413,15 +4510,15 @@ ___SCMOBJ ht_dst;)
 #ifdef ___DEBUG_GARBAGE_COLLECT
 
 ___BOOL ___garbage_collect_debug
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___SIZE_TS nonmovable_words_needed,
          int line,
          char *file),
-        (___ps,
+        (___PSV
          nonmovable_words_needed,
          line,
          file)
-___processor_state ___ps;
+___PSDKR
 ___SIZE_TS nonmovable_words_needed;
 int line;
 char *file;)
@@ -4429,15 +4526,16 @@ char *file;)
 #else
 
 ___BOOL ___garbage_collect
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          ___SIZE_TS nonmovable_words_needed),
-        (___ps,
+        (___PSV
          nonmovable_words_needed)
-___processor_state ___ps;
+___PSDKR
 ___SIZE_TS nonmovable_words_needed;)
 
 #endif
 {
+  ___PSGET
   ___SIZE_TS avail;
   int target_nb_sections;
   int stack_msection_index;
@@ -4498,7 +4596,7 @@ ___SIZE_TS nonmovable_words_needed;)
 
   /* trace externally referenced still objects */
 
-  init_still_objs_to_scan ();
+  init_still_objs_to_scan (___PSPNC);
 
   /* trace registers */
 
@@ -4506,13 +4604,13 @@ ___SIZE_TS nonmovable_words_needed;)
   reference_location = IN_REGISTER;
 #endif
 
-  mark_array (___ps, &___ps->current_thread, 1);
-  mark_array (___ps, &___ps->run_queue, 1);
+  mark_array (___PSP &___ps->current_thread, 1);
+  mark_array (___PSP &___ps->run_queue, 1);
 
-  mark_array (___ps, ___ps->r, ___NB_GVM_REGS);
+  mark_array (___PSP ___ps->r, ___NB_GVM_REGS);
 
-  mark_array (___ps, &___GSTATE->symbol_table, 1);
-  mark_array (___ps, &___GSTATE->keyword_table, 1);
+  mark_array (___PSP &___GSTATE->symbol_table, 1);
+  mark_array (___PSP &___GSTATE->keyword_table, 1);
 
   /* trace global variables */
 
@@ -4532,14 +4630,14 @@ ___SIZE_TS nonmovable_words_needed;)
 #ifdef ___DEBUG_GARBAGE_COLLECT
         print_global_var_name (p);
 #endif
-        mark_array (___ps, &___GLOCELL(p->val), 1);
+        mark_array (___PSP &___GLOCELL(p->val), 1);
         p = p->next;
       }
   }
 
 #else
 
-  mark_array (___ps,
+  mark_array (___PSP
               ___VMSTATE_FROM_PSTATE(___ps)->glos,
               ___GSTATE->mem.nb_glo_vars);
 
@@ -4568,12 +4666,12 @@ ___SIZE_TS nonmovable_words_needed;)
   again:
 
   if (___CAST(___WORD*,still_objs_to_scan) != 0)
-    scan_still_objs_to_scan (___ps);
+    scan_still_objs_to_scan (___PSPNC);
 
   if (scan_msection != heap_msection ||
       scan_ptr < alloc_heap_ptr)
     {
-      scan_movable_objs_to_scan (___ps);
+      scan_movable_objs_to_scan (___PSPNC);
       goto again;
     }
 
@@ -4592,9 +4690,9 @@ ___SIZE_TS nonmovable_words_needed;)
       goto again;
     }
 
-  process_gc_hash_tables ();
+  process_gc_hash_tables (___ps);
 
-  free_unmarked_still_objs ();
+  free_unmarked_still_objs (___ps);
 
   target_nb_sections = (adjust_heap (WORDS_AVAILABLE, WORDS_OCCUPIED)
                         - words_nonmovable
@@ -4632,7 +4730,7 @@ ___SIZE_TS nonmovable_words_needed;)
          */
 
         p1 = start + length;
-        p2 = start_of_fromspace (the_msections->head) + length;
+        p2 = start_of_fromspace (___PSP the_msections->head) + length;
 
         while (p1 != start)
           *--p2 = *--p1;
@@ -4642,7 +4740,7 @@ ___SIZE_TS nonmovable_words_needed;)
 
     adjust_msections (&the_msections, target_nb_sections);
 
-    next_stack_msection (___ps);
+    next_stack_msection (___PSPNC);
 
     p1 = start + length;
     p2 = alloc_stack_ptr;
@@ -4658,7 +4756,7 @@ ___SIZE_TS nonmovable_words_needed;)
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
-    zap_fromspace ();
+    zap_fromspace (___PSPNC);
 #endif
 
   if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
@@ -4684,7 +4782,7 @@ ___SIZE_TS nonmovable_words_needed;)
 
   heap_size = WORDS_AVAILABLE;
 
-  prepare_mem_pstate (___ps);
+  prepare_mem_pstate (___PSPNC);
 
   ___process_times (&user_time_end, &sys_time_end, &real_time_end);
 
@@ -4708,7 +4806,7 @@ ___SIZE_TS nonmovable_words_needed;)
   last_gc_movable = ___CAST(___F64,WORDS_MOVABLE) * ___WS;
   last_gc_nonmovable = ___CAST(___F64,words_nonmovable) * ___WS;
 
-  ___raise_interrupt (___INTR_GC); /* raise gc interrupt */
+  ___raise_interrupt_pstate (___ps, ___INTR_GC); /* raise gc interrupt */
 
   return overflow;
 }
@@ -4717,25 +4815,26 @@ ___SIZE_TS nonmovable_words_needed;)
 #ifdef ___DEBUG_STACK_LIMIT
 
 ___BOOL ___stack_limit_debug
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          int line,
          char *file),
-        (___ps,
+        (___PSV
          line,
          file)
-___processor_state ___ps;
+___PSDKR
 int line;
 char *file;)
 
 #else
 
 ___BOOL ___stack_limit
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 
 #endif
 {
+  ___PSGET
   ___SIZE_TS avail;
 
 #ifdef ___DEBUG_STACK_LIMIT
@@ -4748,7 +4847,7 @@ ___processor_state ___ps;)
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
-    check_fudge_used (___ps);
+    check_fudge_used (___PSPNC);
 #endif
 
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
@@ -4771,7 +4870,7 @@ ___processor_state ___ps;)
           else
             frame = ___FP_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT);
 
-          next_stack_msection (___ps);
+          next_stack_msection (___PSPNC);
 
           /*
            * Create a "break frame" in the new stack msection.
@@ -4786,7 +4885,7 @@ ___processor_state ___ps;)
           ___ps->stack_break = alloc_stack_ptr;
         }
 
-      prepare_mem_pstate (___ps);
+      prepare_mem_pstate (___PSPNC);
 
       return 0;
     }
@@ -4798,25 +4897,26 @@ ___processor_state ___ps;)
 #ifdef ___DEBUG_HEAP_LIMIT
 
 ___BOOL ___heap_limit_debug
-   ___P((___processor_state ___ps,
+   ___P((___PSD
          int line,
          char *file),
-        (___ps,
+        (___PSV
          line,
          file)
-___processor_state ___ps;
+___PSDKR
 int line;
 char *file;)
 
 #else
 
 ___BOOL ___heap_limit
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 
 #endif
 {
+  ___PSGET
   ___SIZE_TS avail;
 
 #ifdef ___DEBUG_HEAP_LIMIT
@@ -4826,7 +4926,7 @@ ___processor_state ___ps;)
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
-    check_fudge_used (___ps);
+    check_fudge_used (___PSPNC);
 #endif
 
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
@@ -4843,7 +4943,7 @@ ___processor_state ___ps;)
       if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
         next_heap_msection (___ps);
 
-      prepare_mem_pstate (___ps);
+      prepare_mem_pstate (___PSPNC);
 
       return 0;
     }
@@ -4856,10 +4956,12 @@ ___processor_state ___ps;)
 
 
 ___F64 ___bytes_allocated
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
+  ___PSGET
+
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
   alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
 
