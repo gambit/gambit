@@ -5264,7 +5264,8 @@ ___SCMOBJ *event;)
 #ifdef USE_WIN32
 
   {
-    MSG *msg = ___CAST(MSG*, ___alloc_rc (___PSTATE, sizeof (MSG)));
+    MSG *msg = ___CAST(MSG*, ___alloc_rc (___PSA(___PSTATE)
+                                          sizeof (MSG)));
 
     if (msg == 0)
       return ___FIX(___STOC_HEAP_OVERFLOW_ERR+___RETURN_POS);

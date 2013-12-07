@@ -2614,7 +2614,7 @@ ___WORD n;)
 #endif
                 {
                   alloc_heap_ptr = alloc;
-                  next_heap_msection (___ps);
+                  next_heap_msection (___PSPNC);
                   alloc = alloc_heap_ptr;
                   limit = alloc_heap_limit;
                 }
@@ -2774,7 +2774,7 @@ fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
           while (alloc + words + ___SUBTYPED_OVERHEAD > limit)
             {
               alloc_heap_ptr = alloc;
-              next_heap_msection (___ps);
+              next_heap_msection (___PSPNC);
               alloc = alloc_heap_ptr;
               limit = alloc_heap_limit;
             }
@@ -3661,7 +3661,7 @@ ___virtual_machine_state ___vms;)
   ___cleanup_mem_pstate (&___vms->pstate0);
 
   free_msections (&the_msections);
-  free_still_objs (&___vms->pstate0);/*TODO: other processors?*/
+  free_still_objs (___PSANC(&___vms->pstate0));/*TODO: other processors?*/
   cleanup_rc (___vms);
 
 #undef ___VMSTATE_MEM
@@ -4585,7 +4585,7 @@ ___SIZE_TS nonmovable_words_needed;)
   heap_msection = 0;
   nb_msections_used = 0;
 
-  next_heap_msection (___ps);
+  next_heap_msection (___PSPNC);
 
   scan_msection = heap_msection;
   scan_ptr = alloc_heap_ptr;
@@ -4649,7 +4649,7 @@ ___SIZE_TS nonmovable_words_needed;)
   reference_location = IN_CONTINUATION;
 #endif
 
-  mark_continuation (___ps);
+  mark_continuation (___PSPNC);
 
   /* trace reference counted objects */
 
@@ -4657,7 +4657,7 @@ ___SIZE_TS nonmovable_words_needed;)
   reference_location = IN_RC;
 #endif
 
-  mark_rc (___ps);
+  mark_rc (___PSPNC);
 
   /* mark objects reachable from marked objects */
 
@@ -4685,14 +4685,14 @@ ___SIZE_TS nonmovable_words_needed;)
 
       traverse_weak_refs = 1;
 
-      process_wills (___ps);
+      process_wills (___PSPNC);
 
       goto again;
     }
 
-  process_gc_hash_tables (___ps);
+  process_gc_hash_tables (___PSPNC);
 
-  free_unmarked_still_objs (___ps);
+  free_unmarked_still_objs (___PSPNC);
 
   target_nb_sections = (adjust_heap (WORDS_AVAILABLE, WORDS_OCCUPIED)
                         - words_nonmovable
@@ -4760,7 +4760,7 @@ ___SIZE_TS nonmovable_words_needed;)
 #endif
 
   if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
-    next_heap_msection (___ps);
+    next_heap_msection (___PSPNC);
 
   avail = WORDS_AVAILABLE + overflow_reserve - WORDS_OCCUPIED;
 
@@ -4941,7 +4941,7 @@ ___PSDKR)
      )
     {
       if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
-        next_heap_msection (___ps);
+        next_heap_msection (___PSPNC);
 
       prepare_mem_pstate (___PSPNC);
 

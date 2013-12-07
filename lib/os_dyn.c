@@ -758,7 +758,9 @@ void *converter;)
 
 #else
 
-  if ((c_closure = ___alloc_rc (___PSTATE, C_CLOSURE_CODE_SIZE)) == 0)
+  if ((c_closure = ___alloc_rc (___PSA(___PSTATE)
+                                C_CLOSURE_CODE_SIZE))
+      == 0)
     return 0;
 
   ___set_data_rc (c_closure, proc);

@@ -535,7 +535,8 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
             }
 
           gambcdir = ___CAST(___UCS_2STRING,
-                             ___alloc_rc (___PSTATE, (cch+1) * sizeof (___UCS_2)));
+                             ___alloc_rc (___PSA(___PSTATE)
+                                          (cch+1) * sizeof (___UCS_2)));
 
           if (gambcdir == 0)
             {
