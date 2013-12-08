@@ -1,11 +1,12 @@
 #ifdef ___LINKER_INFO
-; File: "_asm.c", produced by Gambit-C v4.7.0
+; File: "_asm.c", produced by Gambit-C v4.7.1
 (
-407000
+407001
 " _asm"
-(" _asm")
+((" _asm"))
 (
 "UTF-8"
+"_asm"
 "be"
 "code-block"
 "deferred"
@@ -147,25 +148,27 @@
 "with-output-to-u8vector"
 "write-char"
 )
- #f
+ 1
 )
 #else
-#define ___VERSION 407000
+#define ___VERSION 407001
 #define ___MODULE_NAME " _asm"
 #define ___LINKER_ID ____20___asm
 #define ___MH_PROC ___H__20___asm
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 6
+#define ___SYMCOUNT 7
 #define ___KEYCOUNT 1
 #define ___GLOCOUNT 126
 #define ___SUPCOUNT 62
 #define ___CNSCOUNT 2
-#define ___SUBCOUNT 21
+#define ___SUBCOUNT 22
 #define ___LBLCOUNT 1251
 #define ___OFDCOUNT 117
+#define ___MODDESCR ___REF_SUB(21)
 #include "gambit.h"
 
 ___NEED_SYM(___S_UTF_2d_8)
+___NEED_SYM(___S___asm)
 ___NEED_SYM(___S_be)
 ___NEED_SYM(___S_code_2d_block)
 ___NEED_SYM(___S_deferred)
@@ -301,25 +304,27 @@ ___NEED_GLO(___G_with_2d_output_2d_to_2d_file)
 ___NEED_GLO(___G_with_2d_output_2d_to_2d_u8vector)
 ___NEED_GLO(___G_write_2d_char)
 
-___BEGIN_SYM1
-___DEF_SYM1(0,___S_UTF_2d_8,"UTF-8")
-___DEF_SYM1(1,___S_be,"be")
-___DEF_SYM1(2,___S_code_2d_block,"code-block")
-___DEF_SYM1(3,___S_deferred,"deferred")
-___DEF_SYM1(4,___S_label,"label")
-___DEF_SYM1(5,___S_listing,"listing")
-___END_SYM1
+___BEGIN_SYM
+___DEF_SYM(0,___S_UTF_2d_8,"UTF-8")
+___DEF_SYM(1,___S___asm,"_asm")
+___DEF_SYM(2,___S_be,"be")
+___DEF_SYM(3,___S_code_2d_block,"code-block")
+___DEF_SYM(4,___S_deferred,"deferred")
+___DEF_SYM(5,___S_label,"label")
+___DEF_SYM(6,___S_listing,"listing")
+___END_SYM
 
 #define ___SYM_UTF_2d_8 ___SYM(0,___S_UTF_2d_8)
-#define ___SYM_be ___SYM(1,___S_be)
-#define ___SYM_code_2d_block ___SYM(2,___S_code_2d_block)
-#define ___SYM_deferred ___SYM(3,___S_deferred)
-#define ___SYM_label ___SYM(4,___S_label)
-#define ___SYM_listing ___SYM(5,___S_listing)
+#define ___SYM___asm ___SYM(1,___S___asm)
+#define ___SYM_be ___SYM(2,___S_be)
+#define ___SYM_code_2d_block ___SYM(3,___S_code_2d_block)
+#define ___SYM_deferred ___SYM(4,___S_deferred)
+#define ___SYM_label ___SYM(5,___S_label)
+#define ___SYM_listing ___SYM(6,___S_listing)
 
-___BEGIN_KEY1
-___DEF_KEY1(0,___K_char_2d_encoding,"char-encoding")
-___END_KEY1
+___BEGIN_KEY
+___DEF_KEY(0,___K_char_2d_encoding,"char-encoding")
+___END_KEY
 
 #define ___KEY_char_2d_encoding ___KEY(0,___K_char_2d_encoding)
 
@@ -800,6 +805,13 @@ ___DEF_SUB_STR(___X19,17)
 ___DEF_SUB_BIGFIX(___X20,2)
                ___BIGFIX2(0x0L,0x1L)
                ___BIGFIX0
+___DEF_SUB_VEC(___X21,5)
+               ___VEC1(___REF_SYM(1,___S___asm))
+               ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FAL)
+               ___VEC0
 
 ___BEGIN_SUB
  ___DEF_SUB(___X0)
@@ -823,6 +835,7 @@ ___BEGIN_SUB
 ,___DEF_SUB(___X18)
 ,___DEF_SUB(___X19)
 ,___DEF_SUB(___X20)
+,___DEF_SUB(___X21)
 ___END_SUB
 
 
@@ -20532,18 +20545,26 @@ ___BEGIN_OFD
                ___GCMAP1(0x3f05fL)
 ___END_OFD
 
-___BEGIN_MOD1
-___DEF_PRM(0,___G__20___asm,1)
-___END_MOD1
+___BEGIN_MOD_PRM
+___DEF_MOD_PRM(0,___G__20___asm,1)
+___END_MOD_PRM
 
-___BEGIN_MOD2
-___DEF_SYM2(0,___S_UTF_2d_8,"UTF-8")
-___DEF_SYM2(1,___S_be,"be")
-___DEF_SYM2(2,___S_code_2d_block,"code-block")
-___DEF_SYM2(3,___S_deferred,"deferred")
-___DEF_SYM2(4,___S_label,"label")
-___DEF_SYM2(5,___S_listing,"listing")
-___DEF_KEY2(0,___K_char_2d_encoding,"char-encoding")
-___END_MOD2
+___BEGIN_MOD_C_INIT
+___END_MOD_C_INIT
+
+___BEGIN_MOD_GLO
+___DEF_MOD_GLO(0,___G__20___asm,1)
+___END_MOD_GLO
+
+___BEGIN_MOD_SYM_KEY
+___DEF_MOD_SYM(0,___S_UTF_2d_8,"UTF-8")
+___DEF_MOD_SYM(1,___S___asm,"_asm")
+___DEF_MOD_SYM(2,___S_be,"be")
+___DEF_MOD_SYM(3,___S_code_2d_block,"code-block")
+___DEF_MOD_SYM(4,___S_deferred,"deferred")
+___DEF_MOD_SYM(5,___S_label,"label")
+___DEF_MOD_SYM(6,___S_listing,"listing")
+___DEF_MOD_KEY(0,___K_char_2d_encoding,"char-encoding")
+___END_MOD_SYM_KEY
 
 #endif

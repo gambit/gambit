@@ -10,7 +10,7 @@ then
   if [ $NEWVERSION -ge 400000 ]
   then
 
-    misc/changev1 $OLDVERSION $NEWVERSION lib/main.c lib/setup.c lib/mem.c lib/os.c lib/os_base.c lib/os_time.c lib/os_shell.c lib/os_files.c lib/os_dyn.c lib/os_tty.c lib/os_io.c lib/c_intf.c lib/setup.h lib/mem.h lib/os.h lib/os_base.h lib/os_time.h lib/os_shell.h lib/os_files.h lib/os_dyn.h lib/os_tty.h lib/os_io.h lib/c_intf.h
+    misc/changev1 $OLDVERSION $NEWVERSION lib/main.c lib/setup.c lib/mem.c lib/os.c lib/os_base.c lib/os_thread.c lib/os_time.c lib/os_shell.c lib/os_files.c lib/os_dyn.c lib/os_tty.c lib/os_io.c lib/c_intf.c lib/setup.h lib/mem.h lib/os.h lib/os_base.h lib/os_time.h lib/os_shell.h lib/os_files.h lib/os_dyn.h lib/os_tty.h lib/os_io.h lib/c_intf.h
     misc/changev1 $OLDVERSION $NEWVERSION lib/_*.scm gsi/_*.scm gsc/_*.scm
     misc/changev1 $OLDVERSION $NEWVERSION tests/*.ok tests/client.c
     misc/changev1 $OLDVERSION $NEWVERSION doc/gambit-c.txi

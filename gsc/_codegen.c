@@ -1,10 +1,11 @@
 #ifdef ___LINKER_INFO
-; File: "_codegen.c", produced by Gambit-C v4.7.0
+; File: "_codegen.c", produced by Gambit-C v4.7.1
 (
-407000
+407001
 " _codegen"
-(" _codegen")
+((" _codegen"))
 (
+"_codegen"
 "codegen-context"
 )
 (
@@ -33,20 +34,23 @@
 "vector-ref"
 "vector-set!"
 )
- #f
+ 1
 )
 #else
-#define ___VERSION 407000
+#define ___VERSION 407001
 #define ___MODULE_NAME " _codegen"
 #define ___LINKER_ID ____20___codegen
 #define ___MH_PROC ___H__20___codegen
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 1
+#define ___SYMCOUNT 2
 #define ___GLOCOUNT 18
 #define ___SUPCOUNT 14
+#define ___SUBCOUNT 1
 #define ___LBLCOUNT 87
+#define ___MODDESCR ___REF_SUB(0)
 #include "gambit.h"
 
+___NEED_SYM(___S___codegen)
 ___NEED_SYM(___S_codegen_2d_context)
 
 ___NEED_GLO(___G__20___codegen)
@@ -68,11 +72,13 @@ ___NEED_GLO(___G_make_2d_vector)
 ___NEED_GLO(___G_vector_2d_ref)
 ___NEED_GLO(___G_vector_2d_set_21_)
 
-___BEGIN_SYM1
-___DEF_SYM1(0,___S_codegen_2d_context,"codegen-context")
-___END_SYM1
+___BEGIN_SYM
+___DEF_SYM(0,___S___codegen,"_codegen")
+___DEF_SYM(1,___S_codegen_2d_context,"codegen-context")
+___END_SYM
 
-#define ___SYM_codegen_2d_context ___SYM(0,___S_codegen_2d_context)
+#define ___SYM___codegen ___SYM(0,___S___codegen)
+#define ___SYM_codegen_2d_context ___SYM(1,___S_codegen_2d_context)
 
 ___BEGIN_GLO
 ___DEF_GLO(0," _codegen")
@@ -140,6 +146,19 @@ ___END_GLO
 #define ___PRM_vector_2d_ref ___PRM(16,___G_vector_2d_ref)
 #define ___GLO_vector_2d_set_21_ ___GLO(17,___G_vector_2d_set_21_)
 #define ___PRM_vector_2d_set_21_ ___PRM(17,___G_vector_2d_set_21_)
+
+___DEF_SUB_VEC(___X0,5)
+               ___VEC1(___REF_SYM(0,___S___codegen))
+               ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FAL)
+               ___VEC0
+
+___BEGIN_SUB
+ ___DEF_SUB(___X0)
+___END_SUB
+
 
 
 #undef ___MD_ALL
@@ -1427,12 +1446,20 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___codegen_23_codegen_2d_context_2d_nargs_2d_set_21_,___IFD(___RETI,8,0,0x3f07L))
 ___END_LBL
 
-___BEGIN_MOD1
-___DEF_PRM(0,___G__20___codegen,1)
-___END_MOD1
+___BEGIN_MOD_PRM
+___DEF_MOD_PRM(0,___G__20___codegen,1)
+___END_MOD_PRM
 
-___BEGIN_MOD2
-___DEF_SYM2(0,___S_codegen_2d_context,"codegen-context")
-___END_MOD2
+___BEGIN_MOD_C_INIT
+___END_MOD_C_INIT
+
+___BEGIN_MOD_GLO
+___DEF_MOD_GLO(0,___G__20___codegen,1)
+___END_MOD_GLO
+
+___BEGIN_MOD_SYM_KEY
+___DEF_MOD_SYM(0,___S___codegen,"_codegen")
+___DEF_MOD_SYM(1,___S_codegen_2d_context,"codegen-context")
+___END_MOD_SYM_KEY
 
 #endif

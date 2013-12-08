@@ -1,10 +1,11 @@
 #ifdef ___LINKER_INFO
-; File: "_back.c", produced by Gambit-C v4.7.0
+; File: "_back.c", produced by Gambit-C v4.7.1
 (
-407000
+407001
 " _back"
-(" _back")
+((" _back"))
 (
+"_back"
 "arith"
 "mostly-arith"
 "target"
@@ -102,21 +103,23 @@
 "c#setup-prims"
 "make-vector"
 )
- #f
+ 1
 )
 #else
-#define ___VERSION 407000
+#define ___VERSION 407001
 #define ___MODULE_NAME " _back"
 #define ___LINKER_ID ____20___back
 #define ___MH_PROC ___H__20___back
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 3
+#define ___SYMCOUNT 4
 #define ___GLOCOUNT 85
 #define ___SUPCOUNT 63
-#define ___SUBCOUNT 3
+#define ___SUBCOUNT 4
 #define ___LBLCOUNT 127
+#define ___MODDESCR ___REF_SUB(3)
 #include "gambit.h"
 
+___NEED_SYM(___S___back)
 ___NEED_SYM(___S_arith)
 ___NEED_SYM(___S_mostly_2d_arith)
 ___NEED_SYM(___S_target)
@@ -207,15 +210,17 @@ ___NEED_GLO(___G_c_23_target_2e_task_2d_return)
 ___NEED_GLO(___G_c_23_targets_2d_loaded)
 ___NEED_GLO(___G_make_2d_vector)
 
-___BEGIN_SYM1
-___DEF_SYM1(0,___S_arith,"arith")
-___DEF_SYM1(1,___S_mostly_2d_arith,"mostly-arith")
-___DEF_SYM1(2,___S_target,"target")
-___END_SYM1
+___BEGIN_SYM
+___DEF_SYM(0,___S___back,"_back")
+___DEF_SYM(1,___S_arith,"arith")
+___DEF_SYM(2,___S_mostly_2d_arith,"mostly-arith")
+___DEF_SYM(3,___S_target,"target")
+___END_SYM
 
-#define ___SYM_arith ___SYM(0,___S_arith)
-#define ___SYM_mostly_2d_arith ___SYM(1,___S_mostly_2d_arith)
-#define ___SYM_target ___SYM(2,___S_target)
+#define ___SYM___back ___SYM(0,___S___back)
+#define ___SYM_arith ___SYM(1,___S_arith)
+#define ___SYM_mostly_2d_arith ___SYM(2,___S_mostly_2d_arith)
+#define ___SYM_target ___SYM(3,___S_target)
 
 ___BEGIN_GLO
 ___DEF_GLO(0," _back")
@@ -494,11 +499,19 @@ ___DEF_SUB_STR(___X2,29)
                ___STR8(116,32,109,111,100,117,108,101)
                ___STR8(32,105,115,32,97,118,97,105)
                ___STR5(108,97,98,108,101)
+___DEF_SUB_VEC(___X3,5)
+               ___VEC1(___REF_SYM(0,___S___back))
+               ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FAL)
+               ___VEC0
 
 ___BEGIN_SUB
  ___DEF_SUB(___X0)
 ,___DEF_SUB(___X1)
 ,___DEF_SUB(___X2)
+,___DEF_SUB(___X3)
 ___END_SUB
 
 
@@ -2198,54 +2211,102 @@ ___REF_FAL,1,0)
 ,___DEF_LBL_RET(___H_c_23_mostly_2d_arith_2d_implementation,___IFD(___RETI,1,4,0x3f1L))
 ___END_LBL
 
-___BEGIN_MOD1
-___DEF_PRM(0,___G__20___back,1)
-___DEF_PRM(14,___G_c_23_make_2d_target,13)
-___DEF_PRM(35,___G_c_23_target_2d_name,20)
-___DEF_PRM(18,___G_c_23_target_2d_begin_21_,22)
-___DEF_PRM(19,___G_c_23_target_2d_begin_21__2d_set_21_,24)
-___DEF_PRM(22,___G_c_23_target_2d_end_21_,26)
-___DEF_PRM(23,___G_c_23_target_2d_end_21__2d_set_21_,28)
-___DEF_PRM(20,___G_c_23_target_2d_dump,30)
-___DEF_PRM(21,___G_c_23_target_2d_dump_2d_set_21_,32)
-___DEF_PRM(36,___G_c_23_target_2d_nb_2d_regs,34)
-___DEF_PRM(37,___G_c_23_target_2d_nb_2d_regs_2d_set_21_,36)
-___DEF_PRM(40,___G_c_23_target_2d_prim_2d_info,38)
-___DEF_PRM(41,___G_c_23_target_2d_prim_2d_info_2d_set_21_,40)
-___DEF_PRM(33,___G_c_23_target_2d_label_2d_info,42)
-___DEF_PRM(34,___G_c_23_target_2d_label_2d_info_2d_set_21_,44)
-___DEF_PRM(31,___G_c_23_target_2d_jump_2d_info,46)
-___DEF_PRM(32,___G_c_23_target_2d_jump_2d_info_2d_set_21_,48)
-___DEF_PRM(28,___G_c_23_target_2d_frame_2d_constraints,50)
-___DEF_PRM(29,___G_c_23_target_2d_frame_2d_constraints_2d_set_21_,52)
-___DEF_PRM(42,___G_c_23_target_2d_proc_2d_result,54)
-___DEF_PRM(43,___G_c_23_target_2d_proc_2d_result_2d_set_21_,56)
-___DEF_PRM(47,___G_c_23_target_2d_task_2d_return,58)
-___DEF_PRM(48,___G_c_23_target_2d_task_2d_return_2d_set_21_,60)
-___DEF_PRM(45,___G_c_23_target_2d_switch_2d_testable_3f_,62)
-___DEF_PRM(46,___G_c_23_target_2d_switch_2d_testable_3f__2d_set_21_,64)
-___DEF_PRM(24,___G_c_23_target_2d_eq_2d_testable_3f_,66)
-___DEF_PRM(25,___G_c_23_target_2d_eq_2d_testable_3f__2d_set_21_,68)
-___DEF_PRM(38,___G_c_23_target_2d_object_2d_type,70)
-___DEF_PRM(39,___G_c_23_target_2d_object_2d_type_2d_set_21_,72)
-___DEF_PRM(26,___G_c_23_target_2d_file_2d_extension,74)
-___DEF_PRM(27,___G_c_23_target_2d_file_2d_extension_2d_set_21_,76)
-___DEF_PRM(13,___G_c_23_make_2d_frame_2d_constraints,78)
-___DEF_PRM(12,___G_c_23_frame_2d_constraints_2d_reserve,81)
-___DEF_PRM(11,___G_c_23_frame_2d_constraints_2d_align,83)
-___DEF_PRM(30,___G_c_23_target_2d_get,85)
-___DEF_PRM(17,___G_c_23_target_2d_add,92)
-___DEF_PRM(10,___G_c_23_default_2d_target,99)
-___DEF_PRM(44,___G_c_23_target_2d_select_21_,102)
-___DEF_PRM(49,___G_c_23_target_2d_unselect_21_,117)
-___DEF_PRM(9,___G_c_23_arith_2d_implementation,122)
-___DEF_PRM(15,___G_c_23_mostly_2d_arith_2d_implementation,125)
-___END_MOD1
+___BEGIN_MOD_PRM
+___DEF_MOD_PRM(0,___G__20___back,1)
+___DEF_MOD_PRM(14,___G_c_23_make_2d_target,13)
+___DEF_MOD_PRM(35,___G_c_23_target_2d_name,20)
+___DEF_MOD_PRM(18,___G_c_23_target_2d_begin_21_,22)
+___DEF_MOD_PRM(19,___G_c_23_target_2d_begin_21__2d_set_21_,24)
+___DEF_MOD_PRM(22,___G_c_23_target_2d_end_21_,26)
+___DEF_MOD_PRM(23,___G_c_23_target_2d_end_21__2d_set_21_,28)
+___DEF_MOD_PRM(20,___G_c_23_target_2d_dump,30)
+___DEF_MOD_PRM(21,___G_c_23_target_2d_dump_2d_set_21_,32)
+___DEF_MOD_PRM(36,___G_c_23_target_2d_nb_2d_regs,34)
+___DEF_MOD_PRM(37,___G_c_23_target_2d_nb_2d_regs_2d_set_21_,36)
+___DEF_MOD_PRM(40,___G_c_23_target_2d_prim_2d_info,38)
+___DEF_MOD_PRM(41,___G_c_23_target_2d_prim_2d_info_2d_set_21_,40)
+___DEF_MOD_PRM(33,___G_c_23_target_2d_label_2d_info,42)
+___DEF_MOD_PRM(34,___G_c_23_target_2d_label_2d_info_2d_set_21_,44)
+___DEF_MOD_PRM(31,___G_c_23_target_2d_jump_2d_info,46)
+___DEF_MOD_PRM(32,___G_c_23_target_2d_jump_2d_info_2d_set_21_,48)
+___DEF_MOD_PRM(28,___G_c_23_target_2d_frame_2d_constraints,50)
+___DEF_MOD_PRM(29,___G_c_23_target_2d_frame_2d_constraints_2d_set_21_,52)
+___DEF_MOD_PRM(42,___G_c_23_target_2d_proc_2d_result,54)
+___DEF_MOD_PRM(43,___G_c_23_target_2d_proc_2d_result_2d_set_21_,56)
+___DEF_MOD_PRM(47,___G_c_23_target_2d_task_2d_return,58)
+___DEF_MOD_PRM(48,___G_c_23_target_2d_task_2d_return_2d_set_21_,60)
+___DEF_MOD_PRM(45,___G_c_23_target_2d_switch_2d_testable_3f_,62)
+___DEF_MOD_PRM(46,___G_c_23_target_2d_switch_2d_testable_3f__2d_set_21_,64)
+___DEF_MOD_PRM(24,___G_c_23_target_2d_eq_2d_testable_3f_,66)
+___DEF_MOD_PRM(25,___G_c_23_target_2d_eq_2d_testable_3f__2d_set_21_,68)
+___DEF_MOD_PRM(38,___G_c_23_target_2d_object_2d_type,70)
+___DEF_MOD_PRM(39,___G_c_23_target_2d_object_2d_type_2d_set_21_,72)
+___DEF_MOD_PRM(26,___G_c_23_target_2d_file_2d_extension,74)
+___DEF_MOD_PRM(27,___G_c_23_target_2d_file_2d_extension_2d_set_21_,76)
+___DEF_MOD_PRM(13,___G_c_23_make_2d_frame_2d_constraints,78)
+___DEF_MOD_PRM(12,___G_c_23_frame_2d_constraints_2d_reserve,81)
+___DEF_MOD_PRM(11,___G_c_23_frame_2d_constraints_2d_align,83)
+___DEF_MOD_PRM(30,___G_c_23_target_2d_get,85)
+___DEF_MOD_PRM(17,___G_c_23_target_2d_add,92)
+___DEF_MOD_PRM(10,___G_c_23_default_2d_target,99)
+___DEF_MOD_PRM(44,___G_c_23_target_2d_select_21_,102)
+___DEF_MOD_PRM(49,___G_c_23_target_2d_unselect_21_,117)
+___DEF_MOD_PRM(9,___G_c_23_arith_2d_implementation,122)
+___DEF_MOD_PRM(15,___G_c_23_mostly_2d_arith_2d_implementation,125)
+___END_MOD_PRM
 
-___BEGIN_MOD2
-___DEF_SYM2(0,___S_arith,"arith")
-___DEF_SYM2(1,___S_mostly_2d_arith,"mostly-arith")
-___DEF_SYM2(2,___S_target,"target")
-___END_MOD2
+___BEGIN_MOD_C_INIT
+___END_MOD_C_INIT
+
+___BEGIN_MOD_GLO
+___DEF_MOD_GLO(0,___G__20___back,1)
+___DEF_MOD_GLO(14,___G_c_23_make_2d_target,13)
+___DEF_MOD_GLO(35,___G_c_23_target_2d_name,20)
+___DEF_MOD_GLO(18,___G_c_23_target_2d_begin_21_,22)
+___DEF_MOD_GLO(19,___G_c_23_target_2d_begin_21__2d_set_21_,24)
+___DEF_MOD_GLO(22,___G_c_23_target_2d_end_21_,26)
+___DEF_MOD_GLO(23,___G_c_23_target_2d_end_21__2d_set_21_,28)
+___DEF_MOD_GLO(20,___G_c_23_target_2d_dump,30)
+___DEF_MOD_GLO(21,___G_c_23_target_2d_dump_2d_set_21_,32)
+___DEF_MOD_GLO(36,___G_c_23_target_2d_nb_2d_regs,34)
+___DEF_MOD_GLO(37,___G_c_23_target_2d_nb_2d_regs_2d_set_21_,36)
+___DEF_MOD_GLO(40,___G_c_23_target_2d_prim_2d_info,38)
+___DEF_MOD_GLO(41,___G_c_23_target_2d_prim_2d_info_2d_set_21_,40)
+___DEF_MOD_GLO(33,___G_c_23_target_2d_label_2d_info,42)
+___DEF_MOD_GLO(34,___G_c_23_target_2d_label_2d_info_2d_set_21_,44)
+___DEF_MOD_GLO(31,___G_c_23_target_2d_jump_2d_info,46)
+___DEF_MOD_GLO(32,___G_c_23_target_2d_jump_2d_info_2d_set_21_,48)
+___DEF_MOD_GLO(28,___G_c_23_target_2d_frame_2d_constraints,50)
+___DEF_MOD_GLO(29,___G_c_23_target_2d_frame_2d_constraints_2d_set_21_,52)
+___DEF_MOD_GLO(42,___G_c_23_target_2d_proc_2d_result,54)
+___DEF_MOD_GLO(43,___G_c_23_target_2d_proc_2d_result_2d_set_21_,56)
+___DEF_MOD_GLO(47,___G_c_23_target_2d_task_2d_return,58)
+___DEF_MOD_GLO(48,___G_c_23_target_2d_task_2d_return_2d_set_21_,60)
+___DEF_MOD_GLO(45,___G_c_23_target_2d_switch_2d_testable_3f_,62)
+___DEF_MOD_GLO(46,___G_c_23_target_2d_switch_2d_testable_3f__2d_set_21_,64)
+___DEF_MOD_GLO(24,___G_c_23_target_2d_eq_2d_testable_3f_,66)
+___DEF_MOD_GLO(25,___G_c_23_target_2d_eq_2d_testable_3f__2d_set_21_,68)
+___DEF_MOD_GLO(38,___G_c_23_target_2d_object_2d_type,70)
+___DEF_MOD_GLO(39,___G_c_23_target_2d_object_2d_type_2d_set_21_,72)
+___DEF_MOD_GLO(26,___G_c_23_target_2d_file_2d_extension,74)
+___DEF_MOD_GLO(27,___G_c_23_target_2d_file_2d_extension_2d_set_21_,76)
+___DEF_MOD_GLO(13,___G_c_23_make_2d_frame_2d_constraints,78)
+___DEF_MOD_GLO(12,___G_c_23_frame_2d_constraints_2d_reserve,81)
+___DEF_MOD_GLO(11,___G_c_23_frame_2d_constraints_2d_align,83)
+___DEF_MOD_GLO(30,___G_c_23_target_2d_get,85)
+___DEF_MOD_GLO(17,___G_c_23_target_2d_add,92)
+___DEF_MOD_GLO(10,___G_c_23_default_2d_target,99)
+___DEF_MOD_GLO(44,___G_c_23_target_2d_select_21_,102)
+___DEF_MOD_GLO(49,___G_c_23_target_2d_unselect_21_,117)
+___DEF_MOD_GLO(9,___G_c_23_arith_2d_implementation,122)
+___DEF_MOD_GLO(15,___G_c_23_mostly_2d_arith_2d_implementation,125)
+___END_MOD_GLO
+
+___BEGIN_MOD_SYM_KEY
+___DEF_MOD_SYM(0,___S___back,"_back")
+___DEF_MOD_SYM(1,___S_arith,"arith")
+___DEF_MOD_SYM(2,___S_mostly_2d_arith,"mostly-arith")
+___DEF_MOD_SYM(3,___S_target,"target")
+___END_MOD_SYM_KEY
 
 #endif

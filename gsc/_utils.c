@@ -1,10 +1,11 @@
 #ifdef ___LINKER_INFO
-; File: "_utils.c", produced by Gambit-C v4.7.0
+; File: "_utils.c", produced by Gambit-C v4.7.1
 (
-407000
+407001
 " _utils"
-(" _utils")
+((" _utils"))
 (
+"_utils"
 )
 (
 "test"
@@ -122,21 +123,25 @@
 "table-set!"
 "write"
 )
- #f
+ 1
 )
 #else
-#define ___VERSION 407000
+#define ___VERSION 407001
 #define ___MODULE_NAME " _utils"
 #define ___LINKER_ID ____20___utils
 #define ___MH_PROC ___H__20___utils
 #define ___SCRIPT_LINE 0
+#define ___SYMCOUNT 1
 #define ___KEYCOUNT 1
 #define ___GLOCOUNT 107
 #define ___SUPCOUNT 91
-#define ___SUBCOUNT 19
+#define ___SUBCOUNT 20
 #define ___LBLCOUNT 593
 #define ___OFDCOUNT 10
+#define ___MODDESCR ___REF_SUB(19)
 #include "gambit.h"
+
+___NEED_SYM(___S___utils)
 
 ___NEED_KEY(___K_test)
 
@@ -248,9 +253,15 @@ ___NEED_GLO(___G_table_2d_ref)
 ___NEED_GLO(___G_table_2d_set_21_)
 ___NEED_GLO(___G_write)
 
-___BEGIN_KEY1
-___DEF_KEY1(0,___K_test,"test")
-___END_KEY1
+___BEGIN_SYM
+___DEF_SYM(0,___S___utils,"_utils")
+___END_SYM
+
+#define ___SYM___utils ___SYM(0,___S___utils)
+
+___BEGIN_KEY
+___DEF_KEY(0,___K_test,"test")
+___END_KEY
 
 #define ___KEY_test ___KEY(0,___K_test)
 
@@ -640,6 +651,13 @@ ___DEF_SUB_STR(___X18,50)
                ___STR8(100,108,101,114,32,97,116,32)
                ___STR8(116,104,105,115,32,112,111,105)
                ___STR2(110,116)
+___DEF_SUB_VEC(___X19,5)
+               ___VEC1(___REF_SYM(0,___S___utils))
+               ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FAL)
+               ___VEC0
 
 ___BEGIN_SUB
  ___DEF_SUB(___X0)
@@ -661,6 +679,7 @@ ___BEGIN_SUB
 ,___DEF_SUB(___X16)
 ,___DEF_SUB(___X17)
 ,___DEF_SUB(___X18)
+,___DEF_SUB(___X19)
 ___END_SUB
 
 
@@ -7518,99 +7537,194 @@ ___BEGIN_OFD
                ___GCMAP1(0x3f03fL)
 ___END_OFD
 
-___BEGIN_MOD1
-___DEF_PRM(0,___G__20___utils,1)
-___DEF_PRM(1,___G_c_23_append_2d_lists,4)
-___DEF_PRM(56,___G_c_23_reverse_2d_append_21_,15)
-___DEF_PRM(25,___G_c_23_list_2d_length,18)
-___DEF_PRM(26,___G_c_23_make_2d_counter,22)
-___DEF_PRM(14,___G_c_23_for_2d_each_2d_index,26)
-___DEF_PRM(38,___G_c_23_pos_2d_in_2d_list,32)
-___DEF_PRM(31,___G_c_23_object_2d_pos_2d_in_2d_list,36)
-___DEF_PRM(65,___G_c_23_string_2d_pos_2d_in_2d_list,43)
-___DEF_PRM(66,___G_c_23_take,50)
-___DEF_PRM(12,___G_c_23_drop,57)
-___DEF_PRM(37,___G_c_23_pair_2d_up,61)
-___DEF_PRM(20,___G_c_23_last_2d_pair,68)
-___DEF_PRM(19,___G_c_23_keep,72)
-___DEF_PRM(13,___G_c_23_every_3f_,81)
-___DEF_PRM(55,___G_c_23_remq,87)
-___DEF_PRM(57,___G_c_23_sort_2d_list,93)
-___DEF_PRM(24,___G_c_23_list_2d__3e_vect,114)
-___DEF_PRM(88,___G_c_23_vect_2d__3e_list,121)
-___DEF_PRM(22,___G_c_23_list_2d__3e_str,126)
-___DEF_PRM(58,___G_c_23_str_2d__3e_list,133)
-___DEF_PRM(29,___G_c_23_make_2d_stretchable_2d_vector,138)
-___DEF_PRM(62,___G_c_23_stretchable_2d_vector_2d_length,141)
-___DEF_PRM(63,___G_c_23_stretchable_2d_vector_2d_ref,143)
-___DEF_PRM(64,___G_c_23_stretchable_2d_vector_2d_set_21_,145)
-___DEF_PRM(59,___G_c_23_stretch_2d_vector,150)
-___DEF_PRM(60,___G_c_23_stretchable_2d_vector_2d_copy,159)
-___DEF_PRM(61,___G_c_23_stretchable_2d_vector_2d_for_2d_each,166)
-___DEF_PRM(28,___G_c_23_make_2d_ordered_2d_table,172)
-___DEF_PRM(35,___G_c_23_ordered_2d_table_2d_length,178)
-___DEF_PRM(34,___G_c_23_ordered_2d_table_2d_index,180)
-___DEF_PRM(36,___G_c_23_ordered_2d_table_2d_lookup,183)
-___DEF_PRM(33,___G_c_23_ordered_2d_table_2d_enter,190)
-___DEF_PRM(32,___G_c_23_ordered_2d_table_2d__3e_list,198)
-___DEF_PRM(2,___G_c_23_bits_2d_and,205)
-___DEF_PRM(3,___G_c_23_bits_2d_or,212)
-___DEF_PRM(4,___G_c_23_bits_2d_shl,219)
-___DEF_PRM(5,___G_c_23_bits_2d_shr,223)
-___DEF_PRM(90,___G_c_23_with_2d_exception_2d_handling,227)
-___DEF_PRM(7,___G_c_23_compiler_2d_error,234)
-___DEF_PRM(10,___G_c_23_compiler_2d_user_2d_error,246)
-___DEF_PRM(11,___G_c_23_compiler_2d_user_2d_warning,260)
-___DEF_PRM(8,___G_c_23_compiler_2d_internal_2d_error,273)
-___DEF_PRM(9,___G_c_23_compiler_2d_limitation_2d_error,287)
-___DEF_PRM(6,___G_c_23_compiler_2d_abort,301)
-___DEF_PRM(27,___G_c_23_make_2d_gnode,304)
-___DEF_PRM(17,___G_c_23_gnode_2d_var,307)
-___DEF_PRM(15,___G_c_23_gnode_2d_depvars,309)
-___DEF_PRM(69,___G_c_23_transitive_2d_closure,311)
-___DEF_PRM(16,___G_c_23_gnode_2d_find_2d_depvars,339)
-___DEF_PRM(18,___G_c_23_gnodes_2d_remove,347)
-___DEF_PRM(68,___G_c_23_topological_2d_sort,356)
-___DEF_PRM(54,___G_c_23_remove_2d_no_2d_depvars,375)
-___DEF_PRM(53,___G_c_23_remove_2d_cycle,383)
-___DEF_PRM(41,___G_c_23_ptset_2d_empty,397)
-___DEF_PRM(39,___G_c_23_ptset_2d__3e_list,400)
-___DEF_PRM(47,___G_c_23_ptset_2d_size,405)
-___DEF_PRM(43,___G_c_23_ptset_2d_empty_3f_,416)
-___DEF_PRM(45,___G_c_23_ptset_2d_member_3f_,419)
-___DEF_PRM(40,___G_c_23_ptset_2d_adjoin,423)
-___DEF_PRM(44,___G_c_23_ptset_2d_every_3f_,430)
-___DEF_PRM(46,___G_c_23_ptset_2d_remove,442)
-___DEF_PRM(81,___G_c_23_varset_2d_reverse_2d_append_21_,446)
-___DEF_PRM(87,___G_c_23_varset_2d_wrap,450)
-___DEF_PRM(86,___G_c_23_varset_2d_unwrap,453)
-___DEF_PRM(74,___G_c_23_varset_2d_empty,455)
-___DEF_PRM(82,___G_c_23_varset_2d_singleton,458)
-___DEF_PRM(23,___G_c_23_list_2d__3e_varset,461)
-___DEF_PRM(71,___G_c_23_varset_2d__3e_list,475)
-___DEF_PRM(83,___G_c_23_varset_2d_size,477)
-___DEF_PRM(75,___G_c_23_varset_2d_empty_3f_,480)
-___DEF_PRM(70,___G_c_23_varset_2d__3c_,482)
-___DEF_PRM(79,___G_c_23_varset_2d_member_3f_,484)
-___DEF_PRM(72,___G_c_23_varset_2d_adjoin,493)
-___DEF_PRM(80,___G_c_23_varset_2d_remove,503)
-___DEF_PRM(76,___G_c_23_varset_2d_equal_3f_,512)
-___DEF_PRM(73,___G_c_23_varset_2d_difference,516)
-___DEF_PRM(84,___G_c_23_varset_2d_union,526)
-___DEF_PRM(77,___G_c_23_varset_2d_intersection,539)
-___DEF_PRM(78,___G_c_23_varset_2d_intersects_3f_,549)
-___DEF_PRM(85,___G_c_23_varset_2d_union_2d_multi,556)
-___DEF_PRM(30,___G_c_23_n_2d_ary,567)
-___DEF_PRM(21,___G_c_23_list_2d__3e_queue,572)
-___DEF_PRM(48,___G_c_23_queue_2d__3e_list,578)
-___DEF_PRM(49,___G_c_23_queue_2d_empty,580)
-___DEF_PRM(50,___G_c_23_queue_2d_empty_3f_,583)
-___DEF_PRM(51,___G_c_23_queue_2d_get_21_,585)
-___DEF_PRM(52,___G_c_23_queue_2d_put_21_,588)
-___END_MOD1
+___BEGIN_MOD_PRM
+___DEF_MOD_PRM(0,___G__20___utils,1)
+___DEF_MOD_PRM(1,___G_c_23_append_2d_lists,4)
+___DEF_MOD_PRM(56,___G_c_23_reverse_2d_append_21_,15)
+___DEF_MOD_PRM(25,___G_c_23_list_2d_length,18)
+___DEF_MOD_PRM(26,___G_c_23_make_2d_counter,22)
+___DEF_MOD_PRM(14,___G_c_23_for_2d_each_2d_index,26)
+___DEF_MOD_PRM(38,___G_c_23_pos_2d_in_2d_list,32)
+___DEF_MOD_PRM(31,___G_c_23_object_2d_pos_2d_in_2d_list,36)
+___DEF_MOD_PRM(65,___G_c_23_string_2d_pos_2d_in_2d_list,43)
+___DEF_MOD_PRM(66,___G_c_23_take,50)
+___DEF_MOD_PRM(12,___G_c_23_drop,57)
+___DEF_MOD_PRM(37,___G_c_23_pair_2d_up,61)
+___DEF_MOD_PRM(20,___G_c_23_last_2d_pair,68)
+___DEF_MOD_PRM(19,___G_c_23_keep,72)
+___DEF_MOD_PRM(13,___G_c_23_every_3f_,81)
+___DEF_MOD_PRM(55,___G_c_23_remq,87)
+___DEF_MOD_PRM(57,___G_c_23_sort_2d_list,93)
+___DEF_MOD_PRM(24,___G_c_23_list_2d__3e_vect,114)
+___DEF_MOD_PRM(88,___G_c_23_vect_2d__3e_list,121)
+___DEF_MOD_PRM(22,___G_c_23_list_2d__3e_str,126)
+___DEF_MOD_PRM(58,___G_c_23_str_2d__3e_list,133)
+___DEF_MOD_PRM(29,___G_c_23_make_2d_stretchable_2d_vector,138)
+___DEF_MOD_PRM(62,___G_c_23_stretchable_2d_vector_2d_length,141)
+___DEF_MOD_PRM(63,___G_c_23_stretchable_2d_vector_2d_ref,143)
+___DEF_MOD_PRM(64,___G_c_23_stretchable_2d_vector_2d_set_21_,145)
+___DEF_MOD_PRM(59,___G_c_23_stretch_2d_vector,150)
+___DEF_MOD_PRM(60,___G_c_23_stretchable_2d_vector_2d_copy,159)
+___DEF_MOD_PRM(61,___G_c_23_stretchable_2d_vector_2d_for_2d_each,166)
+___DEF_MOD_PRM(28,___G_c_23_make_2d_ordered_2d_table,172)
+___DEF_MOD_PRM(35,___G_c_23_ordered_2d_table_2d_length,178)
+___DEF_MOD_PRM(34,___G_c_23_ordered_2d_table_2d_index,180)
+___DEF_MOD_PRM(36,___G_c_23_ordered_2d_table_2d_lookup,183)
+___DEF_MOD_PRM(33,___G_c_23_ordered_2d_table_2d_enter,190)
+___DEF_MOD_PRM(32,___G_c_23_ordered_2d_table_2d__3e_list,198)
+___DEF_MOD_PRM(2,___G_c_23_bits_2d_and,205)
+___DEF_MOD_PRM(3,___G_c_23_bits_2d_or,212)
+___DEF_MOD_PRM(4,___G_c_23_bits_2d_shl,219)
+___DEF_MOD_PRM(5,___G_c_23_bits_2d_shr,223)
+___DEF_MOD_PRM(90,___G_c_23_with_2d_exception_2d_handling,227)
+___DEF_MOD_PRM(7,___G_c_23_compiler_2d_error,234)
+___DEF_MOD_PRM(10,___G_c_23_compiler_2d_user_2d_error,246)
+___DEF_MOD_PRM(11,___G_c_23_compiler_2d_user_2d_warning,260)
+___DEF_MOD_PRM(8,___G_c_23_compiler_2d_internal_2d_error,273)
+___DEF_MOD_PRM(9,___G_c_23_compiler_2d_limitation_2d_error,287)
+___DEF_MOD_PRM(6,___G_c_23_compiler_2d_abort,301)
+___DEF_MOD_PRM(27,___G_c_23_make_2d_gnode,304)
+___DEF_MOD_PRM(17,___G_c_23_gnode_2d_var,307)
+___DEF_MOD_PRM(15,___G_c_23_gnode_2d_depvars,309)
+___DEF_MOD_PRM(69,___G_c_23_transitive_2d_closure,311)
+___DEF_MOD_PRM(16,___G_c_23_gnode_2d_find_2d_depvars,339)
+___DEF_MOD_PRM(18,___G_c_23_gnodes_2d_remove,347)
+___DEF_MOD_PRM(68,___G_c_23_topological_2d_sort,356)
+___DEF_MOD_PRM(54,___G_c_23_remove_2d_no_2d_depvars,375)
+___DEF_MOD_PRM(53,___G_c_23_remove_2d_cycle,383)
+___DEF_MOD_PRM(41,___G_c_23_ptset_2d_empty,397)
+___DEF_MOD_PRM(39,___G_c_23_ptset_2d__3e_list,400)
+___DEF_MOD_PRM(47,___G_c_23_ptset_2d_size,405)
+___DEF_MOD_PRM(43,___G_c_23_ptset_2d_empty_3f_,416)
+___DEF_MOD_PRM(45,___G_c_23_ptset_2d_member_3f_,419)
+___DEF_MOD_PRM(40,___G_c_23_ptset_2d_adjoin,423)
+___DEF_MOD_PRM(44,___G_c_23_ptset_2d_every_3f_,430)
+___DEF_MOD_PRM(46,___G_c_23_ptset_2d_remove,442)
+___DEF_MOD_PRM(81,___G_c_23_varset_2d_reverse_2d_append_21_,446)
+___DEF_MOD_PRM(87,___G_c_23_varset_2d_wrap,450)
+___DEF_MOD_PRM(86,___G_c_23_varset_2d_unwrap,453)
+___DEF_MOD_PRM(74,___G_c_23_varset_2d_empty,455)
+___DEF_MOD_PRM(82,___G_c_23_varset_2d_singleton,458)
+___DEF_MOD_PRM(23,___G_c_23_list_2d__3e_varset,461)
+___DEF_MOD_PRM(71,___G_c_23_varset_2d__3e_list,475)
+___DEF_MOD_PRM(83,___G_c_23_varset_2d_size,477)
+___DEF_MOD_PRM(75,___G_c_23_varset_2d_empty_3f_,480)
+___DEF_MOD_PRM(70,___G_c_23_varset_2d__3c_,482)
+___DEF_MOD_PRM(79,___G_c_23_varset_2d_member_3f_,484)
+___DEF_MOD_PRM(72,___G_c_23_varset_2d_adjoin,493)
+___DEF_MOD_PRM(80,___G_c_23_varset_2d_remove,503)
+___DEF_MOD_PRM(76,___G_c_23_varset_2d_equal_3f_,512)
+___DEF_MOD_PRM(73,___G_c_23_varset_2d_difference,516)
+___DEF_MOD_PRM(84,___G_c_23_varset_2d_union,526)
+___DEF_MOD_PRM(77,___G_c_23_varset_2d_intersection,539)
+___DEF_MOD_PRM(78,___G_c_23_varset_2d_intersects_3f_,549)
+___DEF_MOD_PRM(85,___G_c_23_varset_2d_union_2d_multi,556)
+___DEF_MOD_PRM(30,___G_c_23_n_2d_ary,567)
+___DEF_MOD_PRM(21,___G_c_23_list_2d__3e_queue,572)
+___DEF_MOD_PRM(48,___G_c_23_queue_2d__3e_list,578)
+___DEF_MOD_PRM(49,___G_c_23_queue_2d_empty,580)
+___DEF_MOD_PRM(50,___G_c_23_queue_2d_empty_3f_,583)
+___DEF_MOD_PRM(51,___G_c_23_queue_2d_get_21_,585)
+___DEF_MOD_PRM(52,___G_c_23_queue_2d_put_21_,588)
+___END_MOD_PRM
 
-___BEGIN_MOD2
-___DEF_KEY2(0,___K_test,"test")
-___END_MOD2
+___BEGIN_MOD_C_INIT
+___END_MOD_C_INIT
+
+___BEGIN_MOD_GLO
+___DEF_MOD_GLO(0,___G__20___utils,1)
+___DEF_MOD_GLO(1,___G_c_23_append_2d_lists,4)
+___DEF_MOD_GLO(56,___G_c_23_reverse_2d_append_21_,15)
+___DEF_MOD_GLO(25,___G_c_23_list_2d_length,18)
+___DEF_MOD_GLO(26,___G_c_23_make_2d_counter,22)
+___DEF_MOD_GLO(14,___G_c_23_for_2d_each_2d_index,26)
+___DEF_MOD_GLO(38,___G_c_23_pos_2d_in_2d_list,32)
+___DEF_MOD_GLO(31,___G_c_23_object_2d_pos_2d_in_2d_list,36)
+___DEF_MOD_GLO(65,___G_c_23_string_2d_pos_2d_in_2d_list,43)
+___DEF_MOD_GLO(66,___G_c_23_take,50)
+___DEF_MOD_GLO(12,___G_c_23_drop,57)
+___DEF_MOD_GLO(37,___G_c_23_pair_2d_up,61)
+___DEF_MOD_GLO(20,___G_c_23_last_2d_pair,68)
+___DEF_MOD_GLO(19,___G_c_23_keep,72)
+___DEF_MOD_GLO(13,___G_c_23_every_3f_,81)
+___DEF_MOD_GLO(55,___G_c_23_remq,87)
+___DEF_MOD_GLO(57,___G_c_23_sort_2d_list,93)
+___DEF_MOD_GLO(24,___G_c_23_list_2d__3e_vect,114)
+___DEF_MOD_GLO(88,___G_c_23_vect_2d__3e_list,121)
+___DEF_MOD_GLO(22,___G_c_23_list_2d__3e_str,126)
+___DEF_MOD_GLO(58,___G_c_23_str_2d__3e_list,133)
+___DEF_MOD_GLO(29,___G_c_23_make_2d_stretchable_2d_vector,138)
+___DEF_MOD_GLO(62,___G_c_23_stretchable_2d_vector_2d_length,141)
+___DEF_MOD_GLO(63,___G_c_23_stretchable_2d_vector_2d_ref,143)
+___DEF_MOD_GLO(64,___G_c_23_stretchable_2d_vector_2d_set_21_,145)
+___DEF_MOD_GLO(59,___G_c_23_stretch_2d_vector,150)
+___DEF_MOD_GLO(60,___G_c_23_stretchable_2d_vector_2d_copy,159)
+___DEF_MOD_GLO(61,___G_c_23_stretchable_2d_vector_2d_for_2d_each,166)
+___DEF_MOD_GLO(28,___G_c_23_make_2d_ordered_2d_table,172)
+___DEF_MOD_GLO(35,___G_c_23_ordered_2d_table_2d_length,178)
+___DEF_MOD_GLO(34,___G_c_23_ordered_2d_table_2d_index,180)
+___DEF_MOD_GLO(36,___G_c_23_ordered_2d_table_2d_lookup,183)
+___DEF_MOD_GLO(33,___G_c_23_ordered_2d_table_2d_enter,190)
+___DEF_MOD_GLO(32,___G_c_23_ordered_2d_table_2d__3e_list,198)
+___DEF_MOD_GLO(2,___G_c_23_bits_2d_and,205)
+___DEF_MOD_GLO(3,___G_c_23_bits_2d_or,212)
+___DEF_MOD_GLO(4,___G_c_23_bits_2d_shl,219)
+___DEF_MOD_GLO(5,___G_c_23_bits_2d_shr,223)
+___DEF_MOD_GLO(90,___G_c_23_with_2d_exception_2d_handling,227)
+___DEF_MOD_GLO(7,___G_c_23_compiler_2d_error,234)
+___DEF_MOD_GLO(10,___G_c_23_compiler_2d_user_2d_error,246)
+___DEF_MOD_GLO(11,___G_c_23_compiler_2d_user_2d_warning,260)
+___DEF_MOD_GLO(8,___G_c_23_compiler_2d_internal_2d_error,273)
+___DEF_MOD_GLO(9,___G_c_23_compiler_2d_limitation_2d_error,287)
+___DEF_MOD_GLO(6,___G_c_23_compiler_2d_abort,301)
+___DEF_MOD_GLO(27,___G_c_23_make_2d_gnode,304)
+___DEF_MOD_GLO(17,___G_c_23_gnode_2d_var,307)
+___DEF_MOD_GLO(15,___G_c_23_gnode_2d_depvars,309)
+___DEF_MOD_GLO(69,___G_c_23_transitive_2d_closure,311)
+___DEF_MOD_GLO(16,___G_c_23_gnode_2d_find_2d_depvars,339)
+___DEF_MOD_GLO(18,___G_c_23_gnodes_2d_remove,347)
+___DEF_MOD_GLO(68,___G_c_23_topological_2d_sort,356)
+___DEF_MOD_GLO(54,___G_c_23_remove_2d_no_2d_depvars,375)
+___DEF_MOD_GLO(53,___G_c_23_remove_2d_cycle,383)
+___DEF_MOD_GLO(41,___G_c_23_ptset_2d_empty,397)
+___DEF_MOD_GLO(39,___G_c_23_ptset_2d__3e_list,400)
+___DEF_MOD_GLO(47,___G_c_23_ptset_2d_size,405)
+___DEF_MOD_GLO(43,___G_c_23_ptset_2d_empty_3f_,416)
+___DEF_MOD_GLO(45,___G_c_23_ptset_2d_member_3f_,419)
+___DEF_MOD_GLO(40,___G_c_23_ptset_2d_adjoin,423)
+___DEF_MOD_GLO(44,___G_c_23_ptset_2d_every_3f_,430)
+___DEF_MOD_GLO(46,___G_c_23_ptset_2d_remove,442)
+___DEF_MOD_GLO(81,___G_c_23_varset_2d_reverse_2d_append_21_,446)
+___DEF_MOD_GLO(87,___G_c_23_varset_2d_wrap,450)
+___DEF_MOD_GLO(86,___G_c_23_varset_2d_unwrap,453)
+___DEF_MOD_GLO(74,___G_c_23_varset_2d_empty,455)
+___DEF_MOD_GLO(82,___G_c_23_varset_2d_singleton,458)
+___DEF_MOD_GLO(23,___G_c_23_list_2d__3e_varset,461)
+___DEF_MOD_GLO(71,___G_c_23_varset_2d__3e_list,475)
+___DEF_MOD_GLO(83,___G_c_23_varset_2d_size,477)
+___DEF_MOD_GLO(75,___G_c_23_varset_2d_empty_3f_,480)
+___DEF_MOD_GLO(70,___G_c_23_varset_2d__3c_,482)
+___DEF_MOD_GLO(79,___G_c_23_varset_2d_member_3f_,484)
+___DEF_MOD_GLO(72,___G_c_23_varset_2d_adjoin,493)
+___DEF_MOD_GLO(80,___G_c_23_varset_2d_remove,503)
+___DEF_MOD_GLO(76,___G_c_23_varset_2d_equal_3f_,512)
+___DEF_MOD_GLO(73,___G_c_23_varset_2d_difference,516)
+___DEF_MOD_GLO(84,___G_c_23_varset_2d_union,526)
+___DEF_MOD_GLO(77,___G_c_23_varset_2d_intersection,539)
+___DEF_MOD_GLO(78,___G_c_23_varset_2d_intersects_3f_,549)
+___DEF_MOD_GLO(85,___G_c_23_varset_2d_union_2d_multi,556)
+___DEF_MOD_GLO(30,___G_c_23_n_2d_ary,567)
+___DEF_MOD_GLO(21,___G_c_23_list_2d__3e_queue,572)
+___DEF_MOD_GLO(48,___G_c_23_queue_2d__3e_list,578)
+___DEF_MOD_GLO(49,___G_c_23_queue_2d_empty,580)
+___DEF_MOD_GLO(50,___G_c_23_queue_2d_empty_3f_,583)
+___DEF_MOD_GLO(51,___G_c_23_queue_2d_get_21_,585)
+___DEF_MOD_GLO(52,___G_c_23_queue_2d_put_21_,588)
+___END_MOD_GLO
+
+___BEGIN_MOD_SYM_KEY
+___DEF_MOD_SYM(0,___S___utils,"_utils")
+___DEF_MOD_KEY(0,___K_test,"test")
+___END_MOD_SYM_KEY
 
 #endif

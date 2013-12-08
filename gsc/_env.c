@@ -1,10 +1,11 @@
 #ifdef ___LINKER_INFO
-; File: "_env.c", produced by Gambit-C v4.7.0
+; File: "_env.c", produced by Gambit-C v4.7.1
 (
-407000
+407001
 " _env"
-(" _env")
+((" _env"))
 (
+"_env"
 "closure-env"
 "ret"
 "var-tag"
@@ -100,22 +101,24 @@
 "string-append"
 "symbol->string"
 )
- #f
+ 1
 )
 #else
-#define ___VERSION 407000
+#define ___VERSION 407001
 #define ___MODULE_NAME " _env"
 #define ___LINKER_ID ____20___env
 #define ___MH_PROC ___H__20___env
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 3
+#define ___SYMCOUNT 4
 #define ___GLOCOUNT 83
 #define ___SUPCOUNT 73
-#define ___SUBCOUNT 3
+#define ___SUBCOUNT 4
 #define ___LBLCOUNT 247
 #define ___OFDCOUNT 5
+#define ___MODDESCR ___REF_SUB(3)
 #include "gambit.h"
 
+___NEED_SYM(___S___env)
 ___NEED_SYM(___S_closure_2d_env)
 ___NEED_SYM(___S_ret)
 ___NEED_SYM(___S_var_2d_tag)
@@ -204,15 +207,17 @@ ___NEED_GLO(___G_string_2d__3e_symbol)
 ___NEED_GLO(___G_string_2d_append)
 ___NEED_GLO(___G_symbol_2d__3e_string)
 
-___BEGIN_SYM1
-___DEF_SYM1(0,___S_closure_2d_env,"closure-env")
-___DEF_SYM1(1,___S_ret,"ret")
-___DEF_SYM1(2,___S_var_2d_tag,"var-tag")
-___END_SYM1
+___BEGIN_SYM
+___DEF_SYM(0,___S___env,"_env")
+___DEF_SYM(1,___S_closure_2d_env,"closure-env")
+___DEF_SYM(2,___S_ret,"ret")
+___DEF_SYM(3,___S_var_2d_tag,"var-tag")
+___END_SYM
 
-#define ___SYM_closure_2d_env ___SYM(0,___S_closure_2d_env)
-#define ___SYM_ret ___SYM(1,___S_ret)
-#define ___SYM_var_2d_tag ___SYM(2,___S_var_2d_tag)
+#define ___SYM___env ___SYM(0,___S___env)
+#define ___SYM_closure_2d_env ___SYM(1,___S_closure_2d_env)
+#define ___SYM_ret ___SYM(2,___S_ret)
+#define ___SYM_var_2d_tag ___SYM(3,___S_var_2d_tag)
 
 ___BEGIN_GLO
 ___DEF_GLO(0," _env")
@@ -485,11 +490,19 @@ ___DEF_SUB_STR(___X2,34)
                ___STR8(116,105,111,110,32,111,102,32)
                ___STR8(97,32,118,97,114,105,97,98)
                ___STR2(108,101)
+___DEF_SUB_VEC(___X3,5)
+               ___VEC1(___REF_SYM(0,___S___env))
+               ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FAL)
+               ___VEC0
 
 ___BEGIN_SUB
  ___DEF_SUB(___X0)
 ,___DEF_SUB(___X1)
 ,___DEF_SUB(___X2)
+,___DEF_SUB(___X3)
 ___END_SUB
 
 
@@ -3662,74 +3675,142 @@ ___BEGIN_OFD
                ___GCMAP1(0x3f07dL)
 ___END_OFD
 
-___BEGIN_MOD1
-___DEF_PRM(0,___G__20___env,1)
-___DEF_PRM(38,___G_c_23_make_2d_var,6)
-___DEF_PRM(72,___G_c_23_var_3f_,12)
-___DEF_PRM(61,___G_c_23_var_2d_name,14)
-___DEF_PRM(50,___G_c_23_var_2d_bound,16)
-___DEF_PRM(63,___G_c_23_var_2d_refs,18)
-___DEF_PRM(65,___G_c_23_var_2d_sets,20)
-___DEF_PRM(67,___G_c_23_var_2d_source,22)
-___DEF_PRM(52,___G_c_23_var_2d_boxed_3f_,24)
-___DEF_PRM(58,___G_c_23_var_2d_info,26)
-___DEF_PRM(69,___G_c_23_var_2d_stamp,28)
-___DEF_PRM(56,___G_c_23_var_2d_constant,30)
-___DEF_PRM(54,___G_c_23_var_2d_clone,32)
-___DEF_PRM(62,___G_c_23_var_2d_name_2d_set_21_,34)
-___DEF_PRM(51,___G_c_23_var_2d_bound_2d_set_21_,36)
-___DEF_PRM(64,___G_c_23_var_2d_refs_2d_set_21_,38)
-___DEF_PRM(66,___G_c_23_var_2d_sets_2d_set_21_,40)
-___DEF_PRM(68,___G_c_23_var_2d_source_2d_set_21_,42)
-___DEF_PRM(53,___G_c_23_var_2d_boxed_3f__2d_set_21_,44)
-___DEF_PRM(59,___G_c_23_var_2d_info_2d_set_21_,46)
-___DEF_PRM(70,___G_c_23_var_2d_stamp_2d_set_21_,48)
-___DEF_PRM(57,___G_c_23_var_2d_constant_2d_set_21_,50)
-___DEF_PRM(55,___G_c_23_var_2d_clone_2d_set_21_,52)
-___DEF_PRM(60,___G_c_23_var_2d_lexical_2d_level,54)
-___DEF_PRM(37,___G_c_23_make_2d_temp_2d_var,64)
-___DEF_PRM(48,___G_c_23_temp_2d_var_3f_,70)
-___DEF_PRM(14,___G_c_23_env_2d_frame,72)
-___DEF_PRM(26,___G_c_23_env_2d_new_2d_var_21_,75)
-___DEF_PRM(21,___G_c_23_env_2d_macro,85)
-___DEF_PRM(12,___G_c_23_env_2d_declare,93)
-___DEF_PRM(23,___G_c_23_env_2d_namespace,96)
-___DEF_PRM(28,___G_c_23_env_2d_vars_2d_ref,99)
-___DEF_PRM(29,___G_c_23_env_2d_vars_2d_set_21_,101)
-___DEF_PRM(22,___G_c_23_env_2d_macros_2d_ref,103)
-___DEF_PRM(11,___G_c_23_env_2d_decl_2d_ref,105)
-___DEF_PRM(25,___G_c_23_env_2d_namespace_2d_ref,107)
-___DEF_PRM(27,___G_c_23_env_2d_parent_2d_ref,109)
-___DEF_PRM(24,___G_c_23_env_2d_namespace_2d_prefix,111)
-___DEF_PRM(17,___G_c_23_env_2d_lookup,119)
-___DEF_PRM(49,___G_c_23_valid_2d_prefix_3f_,140)
-___DEF_PRM(34,___G_c_23_full_2d_name_3f_,142)
-___DEF_PRM(35,___G_c_23_make_2d_full_2d_name,148)
-___DEF_PRM(20,___G_c_23_env_2d_lookup_2d_var,154)
-___DEF_PRM(13,___G_c_23_env_2d_define_2d_var,164)
-___DEF_PRM(18,___G_c_23_env_2d_lookup_2d_global_2d_var,174)
-___DEF_PRM(16,___G_c_23_env_2d_global_2d_variables,182)
-___DEF_PRM(15,___G_c_23_env_2d_global_2d_env,187)
-___DEF_PRM(19,___G_c_23_env_2d_lookup_2d_macro,191)
-___DEF_PRM(6,___G_c_23_define_2d_flag_2d_decl,199)
-___DEF_PRM(9,___G_c_23_define_2d_parameterized_2d_decl,202)
-___DEF_PRM(5,___G_c_23_define_2d_boolean_2d_decl,205)
-___DEF_PRM(8,___G_c_23_define_2d_namable_2d_decl,208)
-___DEF_PRM(7,___G_c_23_define_2d_namable_2d_boolean_2d_decl,211)
-___DEF_PRM(32,___G_c_23_flag_2d_decl,214)
-___DEF_PRM(44,___G_c_23_parameterized_2d_decl,217)
-___DEF_PRM(1,___G_c_23_boolean_2d_decl,220)
-___DEF_PRM(41,___G_c_23_namable_2d_decl,223)
-___DEF_PRM(39,___G_c_23_namable_2d_boolean_2d_decl,226)
-___DEF_PRM(4,___G_c_23_declaration_2d_value,229)
-___DEF_PRM(30,___G_c_23_env_2e_begin_21_,237)
-___DEF_PRM(31,___G_c_23_env_2e_end_21_,246)
-___END_MOD1
+___BEGIN_MOD_PRM
+___DEF_MOD_PRM(0,___G__20___env,1)
+___DEF_MOD_PRM(38,___G_c_23_make_2d_var,6)
+___DEF_MOD_PRM(72,___G_c_23_var_3f_,12)
+___DEF_MOD_PRM(61,___G_c_23_var_2d_name,14)
+___DEF_MOD_PRM(50,___G_c_23_var_2d_bound,16)
+___DEF_MOD_PRM(63,___G_c_23_var_2d_refs,18)
+___DEF_MOD_PRM(65,___G_c_23_var_2d_sets,20)
+___DEF_MOD_PRM(67,___G_c_23_var_2d_source,22)
+___DEF_MOD_PRM(52,___G_c_23_var_2d_boxed_3f_,24)
+___DEF_MOD_PRM(58,___G_c_23_var_2d_info,26)
+___DEF_MOD_PRM(69,___G_c_23_var_2d_stamp,28)
+___DEF_MOD_PRM(56,___G_c_23_var_2d_constant,30)
+___DEF_MOD_PRM(54,___G_c_23_var_2d_clone,32)
+___DEF_MOD_PRM(62,___G_c_23_var_2d_name_2d_set_21_,34)
+___DEF_MOD_PRM(51,___G_c_23_var_2d_bound_2d_set_21_,36)
+___DEF_MOD_PRM(64,___G_c_23_var_2d_refs_2d_set_21_,38)
+___DEF_MOD_PRM(66,___G_c_23_var_2d_sets_2d_set_21_,40)
+___DEF_MOD_PRM(68,___G_c_23_var_2d_source_2d_set_21_,42)
+___DEF_MOD_PRM(53,___G_c_23_var_2d_boxed_3f__2d_set_21_,44)
+___DEF_MOD_PRM(59,___G_c_23_var_2d_info_2d_set_21_,46)
+___DEF_MOD_PRM(70,___G_c_23_var_2d_stamp_2d_set_21_,48)
+___DEF_MOD_PRM(57,___G_c_23_var_2d_constant_2d_set_21_,50)
+___DEF_MOD_PRM(55,___G_c_23_var_2d_clone_2d_set_21_,52)
+___DEF_MOD_PRM(60,___G_c_23_var_2d_lexical_2d_level,54)
+___DEF_MOD_PRM(37,___G_c_23_make_2d_temp_2d_var,64)
+___DEF_MOD_PRM(48,___G_c_23_temp_2d_var_3f_,70)
+___DEF_MOD_PRM(14,___G_c_23_env_2d_frame,72)
+___DEF_MOD_PRM(26,___G_c_23_env_2d_new_2d_var_21_,75)
+___DEF_MOD_PRM(21,___G_c_23_env_2d_macro,85)
+___DEF_MOD_PRM(12,___G_c_23_env_2d_declare,93)
+___DEF_MOD_PRM(23,___G_c_23_env_2d_namespace,96)
+___DEF_MOD_PRM(28,___G_c_23_env_2d_vars_2d_ref,99)
+___DEF_MOD_PRM(29,___G_c_23_env_2d_vars_2d_set_21_,101)
+___DEF_MOD_PRM(22,___G_c_23_env_2d_macros_2d_ref,103)
+___DEF_MOD_PRM(11,___G_c_23_env_2d_decl_2d_ref,105)
+___DEF_MOD_PRM(25,___G_c_23_env_2d_namespace_2d_ref,107)
+___DEF_MOD_PRM(27,___G_c_23_env_2d_parent_2d_ref,109)
+___DEF_MOD_PRM(24,___G_c_23_env_2d_namespace_2d_prefix,111)
+___DEF_MOD_PRM(17,___G_c_23_env_2d_lookup,119)
+___DEF_MOD_PRM(49,___G_c_23_valid_2d_prefix_3f_,140)
+___DEF_MOD_PRM(34,___G_c_23_full_2d_name_3f_,142)
+___DEF_MOD_PRM(35,___G_c_23_make_2d_full_2d_name,148)
+___DEF_MOD_PRM(20,___G_c_23_env_2d_lookup_2d_var,154)
+___DEF_MOD_PRM(13,___G_c_23_env_2d_define_2d_var,164)
+___DEF_MOD_PRM(18,___G_c_23_env_2d_lookup_2d_global_2d_var,174)
+___DEF_MOD_PRM(16,___G_c_23_env_2d_global_2d_variables,182)
+___DEF_MOD_PRM(15,___G_c_23_env_2d_global_2d_env,187)
+___DEF_MOD_PRM(19,___G_c_23_env_2d_lookup_2d_macro,191)
+___DEF_MOD_PRM(6,___G_c_23_define_2d_flag_2d_decl,199)
+___DEF_MOD_PRM(9,___G_c_23_define_2d_parameterized_2d_decl,202)
+___DEF_MOD_PRM(5,___G_c_23_define_2d_boolean_2d_decl,205)
+___DEF_MOD_PRM(8,___G_c_23_define_2d_namable_2d_decl,208)
+___DEF_MOD_PRM(7,___G_c_23_define_2d_namable_2d_boolean_2d_decl,211)
+___DEF_MOD_PRM(32,___G_c_23_flag_2d_decl,214)
+___DEF_MOD_PRM(44,___G_c_23_parameterized_2d_decl,217)
+___DEF_MOD_PRM(1,___G_c_23_boolean_2d_decl,220)
+___DEF_MOD_PRM(41,___G_c_23_namable_2d_decl,223)
+___DEF_MOD_PRM(39,___G_c_23_namable_2d_boolean_2d_decl,226)
+___DEF_MOD_PRM(4,___G_c_23_declaration_2d_value,229)
+___DEF_MOD_PRM(30,___G_c_23_env_2e_begin_21_,237)
+___DEF_MOD_PRM(31,___G_c_23_env_2e_end_21_,246)
+___END_MOD_PRM
 
-___BEGIN_MOD2
-___DEF_SYM2(0,___S_closure_2d_env,"closure-env")
-___DEF_SYM2(1,___S_ret,"ret")
-___DEF_SYM2(2,___S_var_2d_tag,"var-tag")
-___END_MOD2
+___BEGIN_MOD_C_INIT
+___END_MOD_C_INIT
+
+___BEGIN_MOD_GLO
+___DEF_MOD_GLO(0,___G__20___env,1)
+___DEF_MOD_GLO(38,___G_c_23_make_2d_var,6)
+___DEF_MOD_GLO(72,___G_c_23_var_3f_,12)
+___DEF_MOD_GLO(61,___G_c_23_var_2d_name,14)
+___DEF_MOD_GLO(50,___G_c_23_var_2d_bound,16)
+___DEF_MOD_GLO(63,___G_c_23_var_2d_refs,18)
+___DEF_MOD_GLO(65,___G_c_23_var_2d_sets,20)
+___DEF_MOD_GLO(67,___G_c_23_var_2d_source,22)
+___DEF_MOD_GLO(52,___G_c_23_var_2d_boxed_3f_,24)
+___DEF_MOD_GLO(58,___G_c_23_var_2d_info,26)
+___DEF_MOD_GLO(69,___G_c_23_var_2d_stamp,28)
+___DEF_MOD_GLO(56,___G_c_23_var_2d_constant,30)
+___DEF_MOD_GLO(54,___G_c_23_var_2d_clone,32)
+___DEF_MOD_GLO(62,___G_c_23_var_2d_name_2d_set_21_,34)
+___DEF_MOD_GLO(51,___G_c_23_var_2d_bound_2d_set_21_,36)
+___DEF_MOD_GLO(64,___G_c_23_var_2d_refs_2d_set_21_,38)
+___DEF_MOD_GLO(66,___G_c_23_var_2d_sets_2d_set_21_,40)
+___DEF_MOD_GLO(68,___G_c_23_var_2d_source_2d_set_21_,42)
+___DEF_MOD_GLO(53,___G_c_23_var_2d_boxed_3f__2d_set_21_,44)
+___DEF_MOD_GLO(59,___G_c_23_var_2d_info_2d_set_21_,46)
+___DEF_MOD_GLO(70,___G_c_23_var_2d_stamp_2d_set_21_,48)
+___DEF_MOD_GLO(57,___G_c_23_var_2d_constant_2d_set_21_,50)
+___DEF_MOD_GLO(55,___G_c_23_var_2d_clone_2d_set_21_,52)
+___DEF_MOD_GLO(60,___G_c_23_var_2d_lexical_2d_level,54)
+___DEF_MOD_GLO(37,___G_c_23_make_2d_temp_2d_var,64)
+___DEF_MOD_GLO(48,___G_c_23_temp_2d_var_3f_,70)
+___DEF_MOD_GLO(14,___G_c_23_env_2d_frame,72)
+___DEF_MOD_GLO(26,___G_c_23_env_2d_new_2d_var_21_,75)
+___DEF_MOD_GLO(21,___G_c_23_env_2d_macro,85)
+___DEF_MOD_GLO(12,___G_c_23_env_2d_declare,93)
+___DEF_MOD_GLO(23,___G_c_23_env_2d_namespace,96)
+___DEF_MOD_GLO(28,___G_c_23_env_2d_vars_2d_ref,99)
+___DEF_MOD_GLO(29,___G_c_23_env_2d_vars_2d_set_21_,101)
+___DEF_MOD_GLO(22,___G_c_23_env_2d_macros_2d_ref,103)
+___DEF_MOD_GLO(11,___G_c_23_env_2d_decl_2d_ref,105)
+___DEF_MOD_GLO(25,___G_c_23_env_2d_namespace_2d_ref,107)
+___DEF_MOD_GLO(27,___G_c_23_env_2d_parent_2d_ref,109)
+___DEF_MOD_GLO(24,___G_c_23_env_2d_namespace_2d_prefix,111)
+___DEF_MOD_GLO(17,___G_c_23_env_2d_lookup,119)
+___DEF_MOD_GLO(49,___G_c_23_valid_2d_prefix_3f_,140)
+___DEF_MOD_GLO(34,___G_c_23_full_2d_name_3f_,142)
+___DEF_MOD_GLO(35,___G_c_23_make_2d_full_2d_name,148)
+___DEF_MOD_GLO(20,___G_c_23_env_2d_lookup_2d_var,154)
+___DEF_MOD_GLO(13,___G_c_23_env_2d_define_2d_var,164)
+___DEF_MOD_GLO(18,___G_c_23_env_2d_lookup_2d_global_2d_var,174)
+___DEF_MOD_GLO(16,___G_c_23_env_2d_global_2d_variables,182)
+___DEF_MOD_GLO(15,___G_c_23_env_2d_global_2d_env,187)
+___DEF_MOD_GLO(19,___G_c_23_env_2d_lookup_2d_macro,191)
+___DEF_MOD_GLO(6,___G_c_23_define_2d_flag_2d_decl,199)
+___DEF_MOD_GLO(9,___G_c_23_define_2d_parameterized_2d_decl,202)
+___DEF_MOD_GLO(5,___G_c_23_define_2d_boolean_2d_decl,205)
+___DEF_MOD_GLO(8,___G_c_23_define_2d_namable_2d_decl,208)
+___DEF_MOD_GLO(7,___G_c_23_define_2d_namable_2d_boolean_2d_decl,211)
+___DEF_MOD_GLO(32,___G_c_23_flag_2d_decl,214)
+___DEF_MOD_GLO(44,___G_c_23_parameterized_2d_decl,217)
+___DEF_MOD_GLO(1,___G_c_23_boolean_2d_decl,220)
+___DEF_MOD_GLO(41,___G_c_23_namable_2d_decl,223)
+___DEF_MOD_GLO(39,___G_c_23_namable_2d_boolean_2d_decl,226)
+___DEF_MOD_GLO(4,___G_c_23_declaration_2d_value,229)
+___DEF_MOD_GLO(30,___G_c_23_env_2e_begin_21_,237)
+___DEF_MOD_GLO(31,___G_c_23_env_2e_end_21_,246)
+___END_MOD_GLO
+
+___BEGIN_MOD_SYM_KEY
+___DEF_MOD_SYM(0,___S___env,"_env")
+___DEF_MOD_SYM(1,___S_closure_2d_env,"closure-env")
+___DEF_MOD_SYM(2,___S_ret,"ret")
+___DEF_MOD_SYM(3,___S_var_2d_tag,"var-tag")
+___END_MOD_SYM_KEY
 
 #endif

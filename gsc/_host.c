@@ -1,10 +1,11 @@
 #ifdef ___LINKER_INFO
-; File: "_host.c", produced by Gambit-C v4.7.0
+; File: "_host.c", produced by Gambit-C v4.7.1
 (
-407000
+407001
 " _host"
-(" _host")
+((" _host"))
 (
+"_host"
 "define"
 "quote"
 )
@@ -224,21 +225,23 @@
 "write"
 "write-char"
 )
- #f
+ 1
 )
 #else
-#define ___VERSION 407000
+#define ___VERSION 407001
 #define ___MODULE_NAME " _host"
 #define ___LINKER_ID ____20___host
 #define ___MH_PROC ___H__20___host
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 2
+#define ___SYMCOUNT 3
 #define ___GLOCOUNT 208
 #define ___SUPCOUNT 123
-#define ___SUBCOUNT 1
+#define ___SUBCOUNT 2
 #define ___LBLCOUNT 177
+#define ___MODDESCR ___REF_SUB(1)
 #include "gambit.h"
 
+___NEED_SYM(___S___host)
 ___NEED_SYM(___S_define)
 ___NEED_SYM(___S_quote)
 
@@ -451,13 +454,15 @@ ___NEED_GLO(___G_with_2d_output_2d_to_2d_string)
 ___NEED_GLO(___G_write)
 ___NEED_GLO(___G_write_2d_char)
 
-___BEGIN_SYM1
-___DEF_SYM1(0,___S_define,"define")
-___DEF_SYM1(1,___S_quote,"quote")
-___END_SYM1
+___BEGIN_SYM
+___DEF_SYM(0,___S___host,"_host")
+___DEF_SYM(1,___S_define,"define")
+___DEF_SYM(2,___S_quote,"quote")
+___END_SYM
 
-#define ___SYM_define ___SYM(0,___S_define)
-#define ___SYM_quote ___SYM(1,___S_quote)
+#define ___SYM___host ___SYM(0,___S___host)
+#define ___SYM_define ___SYM(1,___S_define)
+#define ___SYM_quote ___SYM(2,___S_quote)
 
 ___BEGIN_GLO
 ___DEF_GLO(0," _host")
@@ -1088,9 +1093,17 @@ ___END_GLO
 #define ___PRM_write_2d_char ___PRM(207,___G_write_2d_char)
 
 ___DEF_SUB_FLO(___X0,0x0L,0x0L)
+___DEF_SUB_VEC(___X1,5)
+               ___VEC1(___REF_SYM(0,___S___host))
+               ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FAL)
+               ___VEC0
 
 ___BEGIN_SUB
  ___DEF_SUB(___X0)
+,___DEF_SUB(___X1)
 ___END_SUB
 
 
@@ -3367,71 +3380,137 @@ ___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H_symbol_2d_hash,1,-1)
 ___END_LBL
 
-___BEGIN_MOD1
-___DEF_PRM(0,___G__20___host,1)
-___DEF_PRM(80,___G_c_23_string_2d__3e_keyword_2d_object,3)
-___DEF_PRM(33,___G_c_23_keyword_2d_object_2d__3e_string,6)
-___DEF_PRM(34,___G_c_23_keyword_2d_object_3f_,9)
-___DEF_PRM(25,___G_c_23_false_2d_object_3f_,11)
-___DEF_PRM(5,___G_c_23_absent_2d_object_3f_,13)
-___DEF_PRM(110,___G_c_23_unused_2d_object_3f_,15)
-___DEF_PRM(10,___G_c_23_deleted_2d_object_3f_,17)
-___DEF_PRM(113,___G_c_23_void_2d_object_3f_,19)
-___DEF_PRM(105,___G_c_23_unbound1_2d_object_3f_,21)
-___DEF_PRM(106,___G_c_23_unbound2_2d_object_3f_,23)
-___DEF_PRM(13,___G_c_23_end_2d_of_2d_file_2d_object_3f_,25)
-___DEF_PRM(49,___G_c_23_optional_2d_object_3f_,27)
-___DEF_PRM(32,___G_c_23_key_2d_object_3f_,29)
-___DEF_PRM(53,___G_c_23_rest_2d_object_3f_,31)
-___DEF_PRM(84,___G_c_23_symbol_2d_object_3f_,33)
-___DEF_PRM(7,___G_c_23_box_2d_object_3f_,35)
-___DEF_PRM(6,___G_c_23_box_2d_object,37)
-___DEF_PRM(107,___G_c_23_unbox_2d_object,40)
-___DEF_PRM(79,___G_c_23_set_2d_box_2d_object_21_,42)
-___DEF_PRM(82,___G_c_23_structure_2d_object_3f_,44)
-___DEF_PRM(81,___G_c_23_structure_2d__3e_list,46)
-___DEF_PRM(47,___G_c_23_open_2d_input_2d_file_2a_,49)
-___DEF_PRM(50,___G_c_23_pp_2d_expression,57)
-___DEF_PRM(114,___G_c_23_write_2d_returning_2d_len,60)
-___DEF_PRM(11,___G_c_23_display_2d_returning_2d_len,69)
-___DEF_PRM(115,___G_c_23_write_2d_word,78)
-___DEF_PRM(8,___G_c_23_character_2d__3e_unicode,83)
-___DEF_PRM(108,___G_c_23_unicode_2d__3e_character,85)
-___DEF_PRM(29,___G_c_23_in_2d_char_2d_range_3f_,87)
-___DEF_PRM(30,___G_c_23_in_2d_integer_2d_range_3f_,90)
-___DEF_PRM(26,___G_c_23_fatal_2d_err,98)
-___DEF_PRM(76,___G_c_23_scheme_2d_global_2d_var,101)
-___DEF_PRM(78,___G_c_23_scheme_2d_global_2d_var_2d_ref,103)
-___DEF_PRM(77,___G_c_23_scheme_2d_global_2d_var_2d_define_21_,108)
-___DEF_PRM(75,___G_c_23_scheme_2d_global_2d_eval,112)
-___DEF_PRM(28,___G_c_23_format_2d_filepos,115)
-___DEF_PRM(118,___G_path_2d_expand,118)
-___DEF_PRM(119,___G_path_2d_extension,122)
-___DEF_PRM(121,___G_path_2d_strip_2d_extension,125)
-___DEF_PRM(117,___G_path_2d_directory,128)
-___DEF_PRM(120,___G_path_2d_strip_2d_directory,131)
-___DEF_PRM(40,___G_c_23_make_2d_s8vect,134)
-___DEF_PRM(44,___G_c_23_make_2d_u8vect,137)
-___DEF_PRM(37,___G_c_23_make_2d_s16vect,140)
-___DEF_PRM(41,___G_c_23_make_2d_u16vect,143)
-___DEF_PRM(38,___G_c_23_make_2d_s32vect,146)
-___DEF_PRM(42,___G_c_23_make_2d_u32vect,149)
-___DEF_PRM(39,___G_c_23_make_2d_s64vect,152)
-___DEF_PRM(43,___G_c_23_make_2d_u64vect,155)
-___DEF_PRM(35,___G_c_23_make_2d_f32vect,158)
-___DEF_PRM(36,___G_c_23_make_2d_f64vect,161)
-___DEF_PRM(111,___G_c_23_vector_2d_object_3f_,164)
-___DEF_PRM(1,___G_c_23__2a__2a_comply_2d_to_2d_standard_2d_scheme_3f_,166)
-___DEF_PRM(3,___G_c_23__2a__2a_subtype_2d_set_21_,168)
-___DEF_PRM(46,___G_c_23_max_2d_lines,170)
-___DEF_PRM(45,___G_c_23_max_2d_fixnum32_2d_div_2d_max_2d_lines,172)
-___DEF_PRM(83,___G_c_23_subtype_2d_structure,174)
-___DEF_PRM(122,___G_symbol_2d_hash,176)
-___END_MOD1
+___BEGIN_MOD_PRM
+___DEF_MOD_PRM(0,___G__20___host,1)
+___DEF_MOD_PRM(80,___G_c_23_string_2d__3e_keyword_2d_object,3)
+___DEF_MOD_PRM(33,___G_c_23_keyword_2d_object_2d__3e_string,6)
+___DEF_MOD_PRM(34,___G_c_23_keyword_2d_object_3f_,9)
+___DEF_MOD_PRM(25,___G_c_23_false_2d_object_3f_,11)
+___DEF_MOD_PRM(5,___G_c_23_absent_2d_object_3f_,13)
+___DEF_MOD_PRM(110,___G_c_23_unused_2d_object_3f_,15)
+___DEF_MOD_PRM(10,___G_c_23_deleted_2d_object_3f_,17)
+___DEF_MOD_PRM(113,___G_c_23_void_2d_object_3f_,19)
+___DEF_MOD_PRM(105,___G_c_23_unbound1_2d_object_3f_,21)
+___DEF_MOD_PRM(106,___G_c_23_unbound2_2d_object_3f_,23)
+___DEF_MOD_PRM(13,___G_c_23_end_2d_of_2d_file_2d_object_3f_,25)
+___DEF_MOD_PRM(49,___G_c_23_optional_2d_object_3f_,27)
+___DEF_MOD_PRM(32,___G_c_23_key_2d_object_3f_,29)
+___DEF_MOD_PRM(53,___G_c_23_rest_2d_object_3f_,31)
+___DEF_MOD_PRM(84,___G_c_23_symbol_2d_object_3f_,33)
+___DEF_MOD_PRM(7,___G_c_23_box_2d_object_3f_,35)
+___DEF_MOD_PRM(6,___G_c_23_box_2d_object,37)
+___DEF_MOD_PRM(107,___G_c_23_unbox_2d_object,40)
+___DEF_MOD_PRM(79,___G_c_23_set_2d_box_2d_object_21_,42)
+___DEF_MOD_PRM(82,___G_c_23_structure_2d_object_3f_,44)
+___DEF_MOD_PRM(81,___G_c_23_structure_2d__3e_list,46)
+___DEF_MOD_PRM(47,___G_c_23_open_2d_input_2d_file_2a_,49)
+___DEF_MOD_PRM(50,___G_c_23_pp_2d_expression,57)
+___DEF_MOD_PRM(114,___G_c_23_write_2d_returning_2d_len,60)
+___DEF_MOD_PRM(11,___G_c_23_display_2d_returning_2d_len,69)
+___DEF_MOD_PRM(115,___G_c_23_write_2d_word,78)
+___DEF_MOD_PRM(8,___G_c_23_character_2d__3e_unicode,83)
+___DEF_MOD_PRM(108,___G_c_23_unicode_2d__3e_character,85)
+___DEF_MOD_PRM(29,___G_c_23_in_2d_char_2d_range_3f_,87)
+___DEF_MOD_PRM(30,___G_c_23_in_2d_integer_2d_range_3f_,90)
+___DEF_MOD_PRM(26,___G_c_23_fatal_2d_err,98)
+___DEF_MOD_PRM(76,___G_c_23_scheme_2d_global_2d_var,101)
+___DEF_MOD_PRM(78,___G_c_23_scheme_2d_global_2d_var_2d_ref,103)
+___DEF_MOD_PRM(77,___G_c_23_scheme_2d_global_2d_var_2d_define_21_,108)
+___DEF_MOD_PRM(75,___G_c_23_scheme_2d_global_2d_eval,112)
+___DEF_MOD_PRM(28,___G_c_23_format_2d_filepos,115)
+___DEF_MOD_PRM(118,___G_path_2d_expand,118)
+___DEF_MOD_PRM(119,___G_path_2d_extension,122)
+___DEF_MOD_PRM(121,___G_path_2d_strip_2d_extension,125)
+___DEF_MOD_PRM(117,___G_path_2d_directory,128)
+___DEF_MOD_PRM(120,___G_path_2d_strip_2d_directory,131)
+___DEF_MOD_PRM(40,___G_c_23_make_2d_s8vect,134)
+___DEF_MOD_PRM(44,___G_c_23_make_2d_u8vect,137)
+___DEF_MOD_PRM(37,___G_c_23_make_2d_s16vect,140)
+___DEF_MOD_PRM(41,___G_c_23_make_2d_u16vect,143)
+___DEF_MOD_PRM(38,___G_c_23_make_2d_s32vect,146)
+___DEF_MOD_PRM(42,___G_c_23_make_2d_u32vect,149)
+___DEF_MOD_PRM(39,___G_c_23_make_2d_s64vect,152)
+___DEF_MOD_PRM(43,___G_c_23_make_2d_u64vect,155)
+___DEF_MOD_PRM(35,___G_c_23_make_2d_f32vect,158)
+___DEF_MOD_PRM(36,___G_c_23_make_2d_f64vect,161)
+___DEF_MOD_PRM(111,___G_c_23_vector_2d_object_3f_,164)
+___DEF_MOD_PRM(1,___G_c_23__2a__2a_comply_2d_to_2d_standard_2d_scheme_3f_,166)
+___DEF_MOD_PRM(3,___G_c_23__2a__2a_subtype_2d_set_21_,168)
+___DEF_MOD_PRM(46,___G_c_23_max_2d_lines,170)
+___DEF_MOD_PRM(45,___G_c_23_max_2d_fixnum32_2d_div_2d_max_2d_lines,172)
+___DEF_MOD_PRM(83,___G_c_23_subtype_2d_structure,174)
+___DEF_MOD_PRM(122,___G_symbol_2d_hash,176)
+___END_MOD_PRM
 
-___BEGIN_MOD2
-___DEF_SYM2(0,___S_define,"define")
-___DEF_SYM2(1,___S_quote,"quote")
-___END_MOD2
+___BEGIN_MOD_C_INIT
+___END_MOD_C_INIT
+
+___BEGIN_MOD_GLO
+___DEF_MOD_GLO(0,___G__20___host,1)
+___DEF_MOD_GLO(80,___G_c_23_string_2d__3e_keyword_2d_object,3)
+___DEF_MOD_GLO(33,___G_c_23_keyword_2d_object_2d__3e_string,6)
+___DEF_MOD_GLO(34,___G_c_23_keyword_2d_object_3f_,9)
+___DEF_MOD_GLO(25,___G_c_23_false_2d_object_3f_,11)
+___DEF_MOD_GLO(5,___G_c_23_absent_2d_object_3f_,13)
+___DEF_MOD_GLO(110,___G_c_23_unused_2d_object_3f_,15)
+___DEF_MOD_GLO(10,___G_c_23_deleted_2d_object_3f_,17)
+___DEF_MOD_GLO(113,___G_c_23_void_2d_object_3f_,19)
+___DEF_MOD_GLO(105,___G_c_23_unbound1_2d_object_3f_,21)
+___DEF_MOD_GLO(106,___G_c_23_unbound2_2d_object_3f_,23)
+___DEF_MOD_GLO(13,___G_c_23_end_2d_of_2d_file_2d_object_3f_,25)
+___DEF_MOD_GLO(49,___G_c_23_optional_2d_object_3f_,27)
+___DEF_MOD_GLO(32,___G_c_23_key_2d_object_3f_,29)
+___DEF_MOD_GLO(53,___G_c_23_rest_2d_object_3f_,31)
+___DEF_MOD_GLO(84,___G_c_23_symbol_2d_object_3f_,33)
+___DEF_MOD_GLO(7,___G_c_23_box_2d_object_3f_,35)
+___DEF_MOD_GLO(6,___G_c_23_box_2d_object,37)
+___DEF_MOD_GLO(107,___G_c_23_unbox_2d_object,40)
+___DEF_MOD_GLO(79,___G_c_23_set_2d_box_2d_object_21_,42)
+___DEF_MOD_GLO(82,___G_c_23_structure_2d_object_3f_,44)
+___DEF_MOD_GLO(81,___G_c_23_structure_2d__3e_list,46)
+___DEF_MOD_GLO(47,___G_c_23_open_2d_input_2d_file_2a_,49)
+___DEF_MOD_GLO(50,___G_c_23_pp_2d_expression,57)
+___DEF_MOD_GLO(114,___G_c_23_write_2d_returning_2d_len,60)
+___DEF_MOD_GLO(11,___G_c_23_display_2d_returning_2d_len,69)
+___DEF_MOD_GLO(115,___G_c_23_write_2d_word,78)
+___DEF_MOD_GLO(8,___G_c_23_character_2d__3e_unicode,83)
+___DEF_MOD_GLO(108,___G_c_23_unicode_2d__3e_character,85)
+___DEF_MOD_GLO(29,___G_c_23_in_2d_char_2d_range_3f_,87)
+___DEF_MOD_GLO(30,___G_c_23_in_2d_integer_2d_range_3f_,90)
+___DEF_MOD_GLO(26,___G_c_23_fatal_2d_err,98)
+___DEF_MOD_GLO(76,___G_c_23_scheme_2d_global_2d_var,101)
+___DEF_MOD_GLO(78,___G_c_23_scheme_2d_global_2d_var_2d_ref,103)
+___DEF_MOD_GLO(77,___G_c_23_scheme_2d_global_2d_var_2d_define_21_,108)
+___DEF_MOD_GLO(75,___G_c_23_scheme_2d_global_2d_eval,112)
+___DEF_MOD_GLO(28,___G_c_23_format_2d_filepos,115)
+___DEF_MOD_GLO(118,___G_path_2d_expand,118)
+___DEF_MOD_GLO(119,___G_path_2d_extension,122)
+___DEF_MOD_GLO(121,___G_path_2d_strip_2d_extension,125)
+___DEF_MOD_GLO(117,___G_path_2d_directory,128)
+___DEF_MOD_GLO(120,___G_path_2d_strip_2d_directory,131)
+___DEF_MOD_GLO(40,___G_c_23_make_2d_s8vect,134)
+___DEF_MOD_GLO(44,___G_c_23_make_2d_u8vect,137)
+___DEF_MOD_GLO(37,___G_c_23_make_2d_s16vect,140)
+___DEF_MOD_GLO(41,___G_c_23_make_2d_u16vect,143)
+___DEF_MOD_GLO(38,___G_c_23_make_2d_s32vect,146)
+___DEF_MOD_GLO(42,___G_c_23_make_2d_u32vect,149)
+___DEF_MOD_GLO(39,___G_c_23_make_2d_s64vect,152)
+___DEF_MOD_GLO(43,___G_c_23_make_2d_u64vect,155)
+___DEF_MOD_GLO(35,___G_c_23_make_2d_f32vect,158)
+___DEF_MOD_GLO(36,___G_c_23_make_2d_f64vect,161)
+___DEF_MOD_GLO(111,___G_c_23_vector_2d_object_3f_,164)
+___DEF_MOD_GLO(1,___G_c_23__2a__2a_comply_2d_to_2d_standard_2d_scheme_3f_,166)
+___DEF_MOD_GLO(3,___G_c_23__2a__2a_subtype_2d_set_21_,168)
+___DEF_MOD_GLO(46,___G_c_23_max_2d_lines,170)
+___DEF_MOD_GLO(45,___G_c_23_max_2d_fixnum32_2d_div_2d_max_2d_lines,172)
+___DEF_MOD_GLO(83,___G_c_23_subtype_2d_structure,174)
+___DEF_MOD_GLO(122,___G_symbol_2d_hash,176)
+___END_MOD_GLO
+
+___BEGIN_MOD_SYM_KEY
+___DEF_MOD_SYM(0,___S___host,"_host")
+___DEF_MOD_SYM(1,___S_define,"define")
+___DEF_MOD_SYM(2,___S_quote,"quote")
+___END_MOD_SYM_KEY
 
 #endif

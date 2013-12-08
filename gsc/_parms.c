@@ -1,11 +1,12 @@
 #ifdef ___LINKER_INFO
-; File: "_parms.c", produced by Gambit-C v4.7.0
+; File: "_parms.c", produced by Gambit-C v4.7.1
 (
-407000
+407001
 " _parms"
-(" _parms")
+((" _parms"))
 (
 "VARIANT"
+"_parms"
 "c-type"
 )
 (
@@ -181,23 +182,25 @@
 "number->string"
 "string-append"
 )
- #f
+ 1
 )
 #else
-#define ___VERSION 407000
+#define ___VERSION 407001
 #define ___MODULE_NAME " _parms"
 #define ___LINKER_ID ____20___parms
 #define ___MH_PROC ___H__20___parms
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 2
+#define ___SYMCOUNT 3
 #define ___GLOCOUNT 165
 #define ___SUPCOUNT 162
-#define ___SUBCOUNT 322
+#define ___SUBCOUNT 323
 #define ___LBLCOUNT 248
 #define ___OFDCOUNT 62
+#define ___MODDESCR ___REF_SUB(322)
 #include "gambit.h"
 
 ___NEED_SYM(___S_VARIANT)
+___NEED_SYM(___S___parms)
 ___NEED_SYM(___S_c_2d_type)
 
 ___NEED_GLO(___G__20___parms)
@@ -366,13 +369,15 @@ ___NEED_GLO(___G_c_23_wchar__t_2d_sym)
 ___NEED_GLO(___G_number_2d__3e_string)
 ___NEED_GLO(___G_string_2d_append)
 
-___BEGIN_SYM1
-___DEF_SYM1(0,___S_VARIANT,"VARIANT")
-___DEF_SYM1(1,___S_c_2d_type,"c-type")
-___END_SYM1
+___BEGIN_SYM
+___DEF_SYM(0,___S_VARIANT,"VARIANT")
+___DEF_SYM(1,___S___parms,"_parms")
+___DEF_SYM(2,___S_c_2d_type,"c-type")
+___END_SYM
 
 #define ___SYM_VARIANT ___SYM(0,___S_VARIANT)
-#define ___SYM_c_2d_type ___SYM(1,___S_c_2d_type)
+#define ___SYM___parms ___SYM(1,___S___parms)
+#define ___SYM_c_2d_type ___SYM(2,___S_c_2d_type)
 
 ___BEGIN_GLO
 ___DEF_GLO(0," _parms")
@@ -1893,6 +1898,13 @@ ___DEF_SUB_STR(___X320,1)
                ___STR1(46)
 ___DEF_SUB_STR(___X321,1)
                ___STR1(46)
+___DEF_SUB_VEC(___X322,5)
+               ___VEC1(___REF_SYM(1,___S___parms))
+               ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FAL)
+               ___VEC0
 
 ___BEGIN_SUB
  ___DEF_SUB(___X0)
@@ -2217,6 +2229,7 @@ ___BEGIN_SUB
 ,___DEF_SUB(___X319)
 ,___DEF_SUB(___X320)
 ,___DEF_SUB(___X321)
+,___DEF_SUB(___X322)
 ___END_SUB
 
 
@@ -4431,7 +4444,7 @@ ___DEF_SLBL(0,___L0_c_23_compiler_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_compiler_2d_version)
-   ___SET_R1(___FIX(407000L))
+   ___SET_R1(___FIX(407001L))
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD
@@ -4461,10 +4474,10 @@ ___DEF_SLBL(0,___L0_c_23_compiler_2d_version_2d_string)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_compiler_2d_version_2d_string)
-   ___SET_R1(___FIXQUO(___FIX(407000L),___FIX(100000L)))
-   ___SET_R2(___FIXQUO(___FIX(407000L),___FIX(1000L)))
+   ___SET_R1(___FIXQUO(___FIX(407001L),___FIX(100000L)))
+   ___SET_R2(___FIXQUO(___FIX(407001L),___FIX(1000L)))
    ___SET_R2(___FIXMOD(___R2,___FIX(100L)))
-   ___SET_R3(___FIXMOD(___FIX(407000L),___FIX(1000L)))
+   ___SET_R3(___FIXMOD(___FIX(407001L),___FIX(1000L)))
    ___SET_STK(1,___SUB(318))
    ___SET_STK(2,___R0)
    ___SET_STK(3,___R2)
@@ -4920,15 +4933,25 @@ ___BEGIN_OFD
                ___GCMAP0
 ___END_OFD
 
-___BEGIN_MOD1
-___DEF_PRM(0,___G__20___parms,1)
-___DEF_PRM(58,___G_c_23_compiler_2d_version,240)
-___DEF_PRM(59,___G_c_23_compiler_2d_version_2d_string,242)
-___END_MOD1
+___BEGIN_MOD_PRM
+___DEF_MOD_PRM(0,___G__20___parms,1)
+___DEF_MOD_PRM(58,___G_c_23_compiler_2d_version,240)
+___DEF_MOD_PRM(59,___G_c_23_compiler_2d_version_2d_string,242)
+___END_MOD_PRM
 
-___BEGIN_MOD2
-___DEF_SYM2(0,___S_VARIANT,"VARIANT")
-___DEF_SYM2(1,___S_c_2d_type,"c-type")
-___END_MOD2
+___BEGIN_MOD_C_INIT
+___END_MOD_C_INIT
+
+___BEGIN_MOD_GLO
+___DEF_MOD_GLO(0,___G__20___parms,1)
+___DEF_MOD_GLO(58,___G_c_23_compiler_2d_version,240)
+___DEF_MOD_GLO(59,___G_c_23_compiler_2d_version_2d_string,242)
+___END_MOD_GLO
+
+___BEGIN_MOD_SYM_KEY
+___DEF_MOD_SYM(0,___S_VARIANT,"VARIANT")
+___DEF_MOD_SYM(1,___S___parms,"_parms")
+___DEF_MOD_SYM(2,___S_c_2d_type,"c-type")
+___END_MOD_SYM_KEY
 
 #endif

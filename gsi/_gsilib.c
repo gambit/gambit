@@ -1,10 +1,11 @@
 #ifdef ___LINKER_INFO
-; File: "_gsilib.c", produced by Gambit-C v4.7.0
+; File: "_gsilib.c", produced by Gambit-C v4.7.1
 (
-407000
+407001
 " _gsilib"
-(" _gsilib")
+((" _gsilib"))
 (
+"_gsilib"
 )
 (
 )
@@ -15,20 +16,31 @@
 )
 (
 )
- #f
+ 1
 )
 #else
-#define ___VERSION 407000
+#define ___VERSION 407001
 #define ___MODULE_NAME " _gsilib"
 #define ___LINKER_ID ____20___gsilib
 #define ___MH_PROC ___H__20___gsilib
 #define ___SCRIPT_LINE 0
+#define ___SYMCOUNT 1
 #define ___GLOCOUNT 1
 #define ___SUPCOUNT 1
+#define ___SUBCOUNT 1
 #define ___LBLCOUNT 2
+#define ___MODDESCR ___REF_SUB(0)
 #include "gambit.h"
 
+___NEED_SYM(___S___gsilib)
+
 ___NEED_GLO(___G__20___gsilib)
+
+___BEGIN_SYM
+___DEF_SYM(0,___S___gsilib,"_gsilib")
+___END_SYM
+
+#define ___SYM___gsilib ___SYM(0,___S___gsilib)
 
 ___BEGIN_GLO
 ___DEF_GLO(0," _gsilib")
@@ -36,6 +48,19 @@ ___END_GLO
 
 #define ___GLO__20___gsilib ___GLO(0,___G__20___gsilib)
 #define ___PRM__20___gsilib ___PRM(0,___G__20___gsilib)
+
+___DEF_SUB_VEC(___X0,5)
+               ___VEC1(___REF_SYM(0,___S___gsilib))
+               ___VEC1(___REF_PRC(1))
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FAL)
+               ___VEC0
+
+___BEGIN_SUB
+ ___DEF_SUB(___X0)
+___END_SUB
+
 
 
 #undef ___MD_ALL
@@ -85,11 +110,19 @@ ___BEGIN_LBL
 ,___DEF_LBL_PROC(___H__20___gsilib,0,-1)
 ___END_LBL
 
-___BEGIN_MOD1
-___DEF_PRM(0,___G__20___gsilib,1)
-___END_MOD1
+___BEGIN_MOD_PRM
+___DEF_MOD_PRM(0,___G__20___gsilib,1)
+___END_MOD_PRM
 
-___BEGIN_MOD2
-___END_MOD2
+___BEGIN_MOD_C_INIT
+___END_MOD_C_INIT
+
+___BEGIN_MOD_GLO
+___DEF_MOD_GLO(0,___G__20___gsilib,1)
+___END_MOD_GLO
+
+___BEGIN_MOD_SYM_KEY
+___DEF_MOD_SYM(0,___S___gsilib,"_gsilib")
+___END_MOD_SYM_KEY
 
 #endif
