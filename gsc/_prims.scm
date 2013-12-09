@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -298,14 +298,32 @@
 ("flceiling"                          (1)   #f 0     0    flonum  r6rs)
 ("fltruncate"                         (1)   #f 0     0    flonum  r6rs)
 ("flround"                            (1)   #f 0     0    flonum  r6rs)
+("flscalbn"                           (2)   #f 0     0    flonum  gambit)
+("flilogb"                            (1)   #f 0     0    fixnum  gambit)
 ("flexp"                              (1)   #f 0     0    flonum  r6rs)
+("flexpm1"                            (1)   #f 0     0    flonum  gambit)
+;("expm1"                              (1)   #f 0     0    number  gambit)
 ("fllog"                              (1)   #f 0     0    flonum  r6rs)
+("fllog1p"                            (1)   #f 0     0    flonum  gambit)
+;("log1p"                              (1)   #f 0     0    number  gambit)
 ("flsin"                              (1)   #f 0     0    flonum  r6rs)
 ("flcos"                              (1)   #f 0     0    flonum  r6rs)
 ("fltan"                              (1)   #f 0     0    flonum  r6rs)
 ("flasin"                             (1)   #f 0     0    flonum  r6rs)
 ("flacos"                             (1)   #f 0     0    flonum  r6rs)
 ("flatan"                             (1 2) #f 0     0    flonum  r6rs)
+("flsinh"                             (1)   #f 0     0    flonum  gambit)
+;("sinh"                               (1)   #f 0     0    number  gambit)
+("flcosh"                             (1)   #f 0     0    flonum  gambit)
+;("cosh"                               (1)   #f 0     0    number  gambit)
+("fltanh"                             (1)   #f 0     0    flonum  gambit)
+;("tanh"                               (1)   #f 0     0    number  gambit)
+("flasinh"                            (1)   #f 0     0    flonum  gambit)
+;("asinh"                              (1)   #f 0     0    number  gambit)
+("flacosh"                            (1)   #f 0     0    flonum  gambit)
+;("acosh"                              (1)   #f 0     0    number  gambit)
+("flatanh"                            (1)   #f 0     0    flonum  gambit)
+;("atanh"                              (1)   #f 0     0    number  gambit)
 ("flexpt"                             (2)   #f 0     0    flonum  r6rs)
 ("flsqrt"                             (1)   #f 0     0    flonum  r6rs)
 ("fixnum->flonum"                     (1)   #f 0     0    flonum  r6rs)
@@ -669,14 +687,24 @@
 ("##flceiling"                   (1)   #f ()    0    real    extended)
 ("##fltruncate"                  (1)   #f ()    0    real    extended)
 ("##flround"                     (1)   #f ()    0    real    extended)
+("##flscalbn"                    (2)   #f 0     0    real    extended)
+("##flilogb"                     (1)   #f 0     0    real    extended)
 ("##flexp"                       (1)   #f ()    0    real    extended)
+("##flexpm1"                     (1)   #f ()    0    real    extended)
 ("##fllog"                       (1)   #f ()    0    real    extended)
+("##fllog1p"                     (1)   #f ()    0    real    extended)
 ("##flsin"                       (1)   #f ()    0    real    extended)
 ("##flcos"                       (1)   #f ()    0    real    extended)
 ("##fltan"                       (1)   #f ()    0    real    extended)
 ("##flasin"                      (1)   #f ()    0    real    extended)
 ("##flacos"                      (1)   #f ()    0    real    extended)
 ("##flatan"                      (1 2) #f ()    0    real    extended)
+("##flsinh"                      (1)   #f ()    0    real    extended)
+("##flcosh"                      (1)   #f ()    0    real    extended)
+("##fltanh"                      (1)   #f ()    0    real    extended)
+("##flasinh"                     (1)   #f ()    0    real    extended)
+("##flacosh"                     (1)   #f ()    0    real    extended)
+("##flatanh"                     (1)   #f ()    0    real    extended)
 ("##flexpt"                      (2)   #f ()    0    real    extended)
 ("##flsqrt"                      (1)   #f ()    0    real    extended)
 ("##flcopysign"                  (2)   #f ()    0    real    extended)
@@ -1187,8 +1215,14 @@
 (def-spec "flexp" (spec-u "##flexp"))
 (def-spec "exp"   (spec-arith #f "flexp"))
 
+(def-spec "flexpm1" (spec-u "##flexpm1"))
+;(def-spec "expm1"   (spec-arith #f "flexpm1"))
+
 (def-spec "fllog" (spec-u "##fllog"))
 (def-spec "log"   (spec-arith #f "fllog"))
+
+(def-spec "fllog1p" (spec-u "##fllog1p"))
+;(def-spec "log1p"   (spec-arith #f "fllog1p"))
 
 (def-spec "flsin" (spec-u "##flsin"))
 (def-spec "sin"   (spec-arith #f "flsin"))
@@ -1207,6 +1241,24 @@
 
 (def-spec "flatan" (spec-u "##flatan"))
 (def-spec "atan"   (spec-arith #f "flatan"))
+
+(def-spec "flsinh" (spec-u "##flsin"))
+;(def-spec "sinh"   (spec-arith #f "flsinh"))
+
+(def-spec "flcosh" (spec-u "##flcosh"))
+;(def-spec "cosh"   (spec-arith #f "flcosh"))
+
+(def-spec "fltanh" (spec-u "##fltanh"))
+;(def-spec "tanh"   (spec-arith #f "fltanh"))
+
+(def-spec "flasinh" (spec-u "##flasinh"))
+;(def-spec "asinh"   (spec-arith #f "flasinh"))
+
+(def-spec "flacosh" (spec-u "##flacosh"))
+;(def-spec "acosh"   (spec-arith #f "flacosh"))
+
+(def-spec "flatanh" (spec-u "##flatanh"))
+;(def-spec "atanh"   (spec-arith #f "flatanh"))
 
 (def-spec "flexpt" (spec-u "##flexpt"))
 (def-spec "expt"   (spec-arith #f "flexpt"))

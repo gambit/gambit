@@ -10158,10 +10158,30 @@ ___RESULT = result;
       (##flround x)
       (##fail-check-finite-real 1 flround x)))
 
+(define-prim (##flscalbn x n))
+
+(define-prim (flscalbn x n)
+  (macro-force-vars (x n)
+    (macro-check-flonum x 1 (flscalbn x n)
+      (macro-check-fixnum n 2 (flscalbn x n)
+        (##flscalbn x n)))))
+
+(define-prim (##flilogb x))
+
+(define-prim (flilogb x)
+  (macro-force-vars (x)
+    (macro-check-flonum x 1 (flilogb x)
+      (##flilogb x))))
+
 (define-prim (##flexp x))
 
 (define-prim-flonum (flexp x)
   (##flexp x))
+
+(define-prim (##flexpm1 x))
+
+(define-prim-flonum (flexpm1 x)
+  (##flexpm1 x))
 
 (define-prim (##fllog x))
 
@@ -10171,6 +10191,14 @@ ___RESULT = result;
                   (##flcopysign (macro-inexact-+1) x))))
       (##fllog x)
       (##raise-range-exception 1 fllog x)))
+
+(define-prim (##fllog1p x))
+
+(define-prim-flonum (fllog1p x)
+  (if (or (##flnan? x)
+          (##not (##fl< x (macro-inexact-+1))))
+      (##fllog1p x)
+      (##raise-range-exception 1 fllog1p x)))
 
 (define-prim (##flsin x))
 
@@ -10216,6 +10244,36 @@ ___RESULT = result;
           (##flatan x)
           (macro-check-flonum y 2 (flatan x y)
             (##flatan x y))))))
+
+(define-prim (##flsinh x))
+
+(define-prim-flonum (flsinh x)
+  (##flsinh x))
+
+(define-prim (##flcosh x))
+
+(define-prim-flonum (flcosh x)
+  (##flcosh x))
+
+(define-prim (##fltanh x))
+
+(define-prim-flonum (fltanh x)
+  (##fltanh x))
+
+(define-prim (##flasinh x))
+
+(define-prim-flonum (flasinh x)
+  (##flasinh x))
+
+(define-prim (##flacosh x))
+
+(define-prim-flonum (flacosh x)
+  (##flacosh x))
+
+(define-prim (##flatanh x))
+
+(define-prim-flonum (flatanh x)
+  (##flatanh x))
 
 (define-prim (##flexpt x y))
 

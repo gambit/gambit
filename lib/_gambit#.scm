@@ -167,10 +167,10 @@
 ;;; ##fl+ ##fl- ##fl*  ##fl/
 ##flabs
 ##flfloor ##flceiling ##fltruncate ##flround
-##flexp ##fllog
-##flsin ##flcos ##fltan
-##flasin ##flacos
-;;; ##flatan
+##flscalbn ##flilogb
+##flexp ##flexpm1 ##fllog ##fllog1p
+##flsin ##flcos ##fltan ##flasin ##flacos ;;; ##flatan
+##flsinh ##flcosh ##fltanh ##flasinh ##flacosh ##flatanh
 ##flexpt ##flsqrt
 ##flcopysign
 ##flinteger? ##flzero? ##flpositive? ##flnegative?

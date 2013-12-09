@@ -3413,14 +3413,43 @@
 (targ-op "##flceiling"   (targ-apply-simpflo-u #t "F64CEILING"))
 (targ-op "##fltruncate"  (targ-apply-simpflo-u #t "F64TRUNCATE"))
 (targ-op "##flround"     (targ-apply-simpflo-u #t "F64ROUND"))
+
+(targ-op "##flscalbn"
+         (targ-apply-alloc
+          (lambda (n) 0) ; targ-apply-alloc accounts for space for flonum result
+          #f ;; proc-safe?
+          #f ;; side-effects?
+          #t
+          (lambda (opnds sn)
+            (let ((opnd1 (car opnds))
+                  (opnd2 (cadr opnds)))
+              (list "F64SCALBN" (targ-opnd-flo opnd1) (targ-opnd opnd2))))))
+
+(targ-op "##flilogb"
+         (targ-setup-inlinable-proc
+          #f ;; proc-safe?
+          #f ;; side-effects?
+          #f
+          (lambda (opnds sn)
+            (let ((opnd1 (car opnds)))
+              (list "F64ILOGB" (targ-opnd-flo opnd1))))))
+
 (targ-op "##flexp"       (targ-apply-simpflo-u #t "F64EXP"))
+(targ-op "##flexpm1"     (targ-apply-simpflo-u #t "F64EXPM1"))
 (targ-op "##fllog"       (targ-apply-simpflo-u #t "F64LOG"))
+(targ-op "##fllog1p"     (targ-apply-simpflo-u #t "F64LOG1P"))
 (targ-op "##flsin"       (targ-apply-simpflo-u #t "F64SIN"))
 (targ-op "##flcos"       (targ-apply-simpflo-u #t "F64COS"))
 (targ-op "##fltan"       (targ-apply-simpflo-u #t "F64TAN"))
 (targ-op "##flasin"      (targ-apply-simpflo-u #t "F64ASIN"))
 (targ-op "##flacos"      (targ-apply-simpflo-u #t "F64ACOS"))
 (targ-op "##flatan"      (targ-apply-simpflo2-u #t "F64ATAN" "F64ATAN2"))
+(targ-op "##flsinh"      (targ-apply-simpflo-u #t "F64SINH"))
+(targ-op "##flcosh"      (targ-apply-simpflo-u #t "F64COSH"))
+(targ-op "##fltanh"      (targ-apply-simpflo-u #t "F64TANH"))
+(targ-op "##flasinh"     (targ-apply-simpflo-u #t "F64ASINH"))
+(targ-op "##flacosh"     (targ-apply-simpflo-u #t "F64ACOSH"))
+(targ-op "##flatanh"     (targ-apply-simpflo-u #t "F64ATANH"))
 (targ-op "##flexpt"      (targ-apply-simpflo-u #t "F64EXPT"))
 (targ-op "##flsqrt"      (targ-apply-simpflo-u #t "F64SQRT"))
 (targ-op "##flcopysign"  (targ-apply-simpflo-u #t "F64COPYSIGN"))

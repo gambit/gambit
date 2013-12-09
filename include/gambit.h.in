@@ -2854,8 +2854,12 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___F64CEILING(x)___CLIBEXT(ceil)(x)
 #define ___F64TRUNCATE(x)___EXT(___trunc)(x)
 #define ___F64ROUND(x)___EXT(___round)(x)
+#define ___F64SCALBN(x,n)___CLIBEXT(scalbn)(x,___INT(n))
+#define ___F64ILOGB(x)___FIX(___CLIBEXT(ilogb)(x))
 #define ___F64EXP(x)___CLIBEXT(exp)(x)
+#define ___F64EXPM1(x)___CLIBEXT(expm1)(x)
 #define ___F64LOG(x)___CLIBEXT(log)(x)
+#define ___F64LOG1P(x)___CLIBEXT(log1p)(x)
 #define ___F64SIN(x)___CLIBEXT(sin)(x)
 #define ___F64COS(x)___CLIBEXT(cos)(x)
 #define ___F64TAN(x)___CLIBEXT(tan)(x)
@@ -2867,6 +2871,12 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #else
 #define ___F64ATAN2(y,x)___EXT(___atan2)(y,x)
 #endif
+#define ___F64SINH(x)___CLIBEXT(sinh)(x)
+#define ___F64COSH(x)___CLIBEXT(cosh)(x)
+#define ___F64TANH(x)___CLIBEXT(tanh)(x)
+#define ___F64ASINH(x)___CLIBEXT(asinh)(x)
+#define ___F64ACOSH(x)___CLIBEXT(acosh)(x)
+#define ___F64ATANH(x)___CLIBEXT(atanh)(x)
 #ifdef ___GOOD_POW
 #define ___F64EXPT(x,y)___CLIBEXT(pow)(x,y)
 #else
@@ -7704,10 +7714,23 @@ typedef struct ___global_state_struct
     double (*ceil)
        ___P((double x),
             ());
+    double (*scalbn)
+       ___P((double x,
+             int n),
+            ());
+    int (*ilogb)
+       ___P((double x),
+            ());
     double (*exp)
        ___P((double x),
             ());
+    double (*expm1)
+       ___P((double x),
+            ());
     double (*log)
+       ___P((double x),
+            ());
+    double (*log1p)
        ___P((double x),
             ());
     double (*sin)
@@ -7734,6 +7757,24 @@ typedef struct ___global_state_struct
              double x),
             ());
 #endif
+    double (*sinh)
+       ___P((double x),
+            ());
+    double (*cosh)
+       ___P((double x),
+            ());
+    double (*tanh)
+       ___P((double x),
+            ());
+    double (*asinh)
+       ___P((double x),
+            ());
+    double (*acosh)
+       ___P((double x),
+            ());
+    double (*atanh)
+       ___P((double x),
+            ());
 #ifdef ___GOOD_POW
     double (*pow)
        ___P((double x,
