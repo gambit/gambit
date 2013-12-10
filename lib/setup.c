@@ -2017,11 +2017,22 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
 #ifndef ___CAN_IMPORT_CLIB_DYNAMICALLY
 
+#define ___F64SCALBN(x,n)___CLIBEXT(scalbn)(x,___INT(n))
+#define ___F64ILOGB(x)___FIX(___CLIBEXT(ilogb)(x))
+#define ___F64EXP(x)___CLIBEXT(exp)(x)
+#define ___F64EXPM1(x)___CLIBEXT(expm1)(x)
+#define ___F64LOG(x)___CLIBEXT(log)(x)
+#define ___F64LOG1P(x)___CLIBEXT(log1p)(x)
+
   ___GSTATE->fabs  = fabs;
   ___GSTATE->floor = floor;
   ___GSTATE->ceil  = ceil;
+  ___GSTATE->scalbn= scalbn;
+  ___GSTATE->ilogb = ilogb;
   ___GSTATE->exp   = exp;
+  ___GSTATE->expm1 = expm1;
   ___GSTATE->log   = log;
+  ___GSTATE->log1p = log1p;
   ___GSTATE->sin   = sin;
   ___GSTATE->cos   = cos;
   ___GSTATE->tan   = tan;
@@ -2031,6 +2042,12 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 #ifdef ___GOOD_ATAN2
   ___GSTATE->atan2 = atan2;
 #endif
+  ___GSTATE->sinh  = sinh;
+  ___GSTATE->cosh  = cosh;
+  ___GSTATE->tanh  = tanh;
+  ___GSTATE->asinh = asinh;
+  ___GSTATE->acosh = acosh;
+  ___GSTATE->atanh = atanh;
 #ifdef ___GOOD_POW
   ___GSTATE->pow = pow;
 #endif
