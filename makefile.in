@@ -355,7 +355,7 @@ dist-pre:
 	done
 
 dist-post:
-	tar chof $(PACKAGE_TARNAME).tar $(PACKAGE_TARNAME)
+	COPYFILE_DISABLE=1 tar chof $(PACKAGE_TARNAME).tar $(PACKAGE_TARNAME)
 	gzip -9 $(PACKAGE_TARNAME).tar
 	mv $(PACKAGE_TARNAME).tar.gz $(PACKAGE_TARNAME).tgz
 	rm -rf $(PACKAGE_TARNAME)
@@ -393,7 +393,7 @@ dist-devel-pre:
 dist-devel-post:
 	rm -rf $(PACKAGE_TARNAME)-devel
 	mv $(PACKAGE_TARNAME) $(PACKAGE_TARNAME)-devel
-	tar chof $(PACKAGE_TARNAME)-devel.tar $(PACKAGE_TARNAME)-devel
+	COPYFILE_DISABLE=1 tar chof $(PACKAGE_TARNAME)-devel.tar $(PACKAGE_TARNAME)-devel
 	gzip -9 $(PACKAGE_TARNAME)-devel.tar
 	mv $(PACKAGE_TARNAME)-devel.tar.gz $(PACKAGE_TARNAME)-devel.tgz
 	rm -rf $(PACKAGE_TARNAME)-devel
