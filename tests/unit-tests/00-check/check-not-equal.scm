@@ -1,0 +1,12 @@
+(include "#.scm")
+
+(check-not-equal? 42 123)
+(check-not-equal? 0 0.0)
+(check-not-equal? 0.0 -0.0)
+(check-not-equal? #t #f)
+(check-not-equal? #f #t)
+(check-not-equal? #\x #\a)
+(check-not-equal? 'hello 'HELLO)
+(check-not-equal? '() '#())
+(check-not-equal? '(1 2 3) '(1 2 3.0))
+(check-not-equal? '#(1 2 3) '#(1 2 3.0))

@@ -68,7 +68,7 @@ mandir = @mandir@
 RCFILES = makefile.in \
 debug.scm error.scm r4rstest.scm mix.scm mem.scm client.c server.scm server.h \
 test1.ok test2.ok test3.ok test4.ok test5.ok test6.ok test7.ok \
-test8.ok test9.ok test10.scm input
+test8.ok test9.ok test10.scm input run-unit-tests.scm
 
 GENDISTFILES =
 
@@ -236,6 +236,8 @@ dist-pre dist-devel-pre:
 	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
 	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
 	done
+	@echo "    $(herefromroot)/unit-tests"
+	cp -rp $(srcdirpfx)unit-tests $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)
 
 dist-post dist-devel-post:
 
