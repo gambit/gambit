@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
 
 PROGRAMS="@PROGRAMS@"
 LIBRARIES="@LIBRARIES@"
@@ -24,6 +24,10 @@ install_safely() # dir, gambc_dir, files
   EXISTING_CORRECT=""
   EXISTING_INCORRECT=""
   MISSING=""
+
+  if [ ! -e "$DIR" ] ; then
+    mkdir -p -m 0755 "$DIR"
+  fi
 
   for f in $FILES ; do
 
