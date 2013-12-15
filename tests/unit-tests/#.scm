@@ -18,13 +18,30 @@
     (##newline port))
   (##add-exit-job! (lambda () (##exit-with-err-code-no-cleanup 2))))
 
-(define (##check-exc-proc exn? thunk msg)
-  (##with-exception-catcher
-   (lambda (e)
-     (if (##not (exn? e))
-         (##failed-check msg e)))
-   (lambda ()
-     (##failed-check msg (thunk)))))
+(define (##check-exn-proc exn? thunk msg tail-exn?)
+  (##continuation-capture
+   (lambda (return)
+     (with-exception-handler
+      (lambda (e)
+        (##continuation-capture
+         (lambda (cont)
+           (##continuation-graft
+            return
+            (lambda ()
+              (let ((creator (##continuation-creator cont)))
+                (cond ((##not (exn? e))
+                       (##failed-check msg e))
+                      ((and tail-exn?
+                            (##not (##eq? creator ##call-thunk)))
+                       (##failed-check
+                        msg
+                        (##list 'nontail-exception-raised-in creator))))))))))
+      (lambda ()
+        (##failed-check msg (##call-thunk thunk)))))))
+
+(define (##call-thunk thunk)
+  ;; make sure continuation of thunk has ##call-thunk as creator
+  (##first-argument (thunk)))
 
 (define (##check-=-proc n1 n2 tolerance msg)
   (if (or (##not (##number? n1))
@@ -75,17 +92,18 @@
                          (##sourcify msg src))
                    src)))))
 
-           (define (##expand-check-exc src)
+           (define (##expand-check-exn src tail-exn?)
              (##deconstruct-call
               src
               -3
               (lambda (exn? thunk #!optional comment)
                 (let ((msg (##failed-check-msg src)))
                   (##sourcify
-                   (list (##sourcify '##check-exc-proc src)
+                   (list (##sourcify '##check-exn-proc src)
                          (##sourcify exn? src)
                          (##sourcify thunk src)
-                         (##sourcify msg src))
+                         (##sourcify msg src)
+                         (##sourcify tail-exn? src))
                    src)))))
 
            (define (##expand-check src)
@@ -118,7 +136,9 @@
                       (##expand-check-value src #f '##eq? #f))
 
                      ((check-exn)
-                      (##expand-check-exc src))
+                      (##expand-check-exn src #f))
+                     ((check-tail-exn)
+                      (##expand-check-exn src #t))
 
                      (else
                       (##raise-expression-parsing-exception
@@ -163,5 +183,6 @@
 (##define-syntax check-not-false  (lambda (src) (##expand-check src)))
 
 (##define-syntax check-exn        (lambda (src) (##expand-check src)))
+(##define-syntax check-tail-exn   (lambda (src) (##expand-check src)))
 
 ;;;============================================================================
