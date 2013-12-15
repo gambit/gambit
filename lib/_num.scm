@@ -853,6 +853,35 @@
   macro-no-check
   (##pair? ##fail-check-number))
 
+(define-prim (##flsquare x)
+  (##fl* x x))
+
+(define-prim (##square x)
+
+  (define (type-error)
+    (##fail-check-number 1 square x))
+
+  (macro-number-dispatch x (type-error)
+    (cond ((##eq? x 0) 0)
+          ((##fixnum.*? x x) => values)
+          (else
+           (let ((x (##bignum.<-fixnum x)))
+             (##bignum.* x x))))
+    (##bignum.* x x)
+    (##ratnum.* x x)
+    (##flonum.* x x)
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (if (or (##eq? real 0)
+              (##exact? x))
+          (##make-rectangular (##* (##- real imag) (##+ real imag))
+                              (##* 2 (##* real imag)))
+          (##csquare (##exact->inexact x))))))
+
+(define-prim (square x)
+  (macro-force-vars (x)
+    (##square x)))
+
 (define-prim (##negate x)
 
   (##define-macro (type-error) `'(1))
@@ -1056,6 +1085,11 @@
 
 ;;; abs
 
+(define-prim (##exact-int.negative? x)
+  (if (##fixnum? x)
+      (##fixnum.negative? x)
+      (##bignum.negative? x)))
+
 (define-prim (##abs x)
 
   (define (type-error)
@@ -1064,8 +1098,10 @@
   (macro-number-dispatch x (type-error)
     (if (##fixnum.negative? x) (##negate x) x)
     (if (##bignum.negative? x) (##negate x) x)
-    (macro-ratnum-make (##abs (macro-ratnum-numerator x))
-                       (macro-ratnum-denominator x))
+    (if (##exact-int.negative? (macro-ratnum-numerator x))
+        (macro-ratnum-make (##negate (macro-ratnum-numerator x))
+                           (macro-ratnum-denominator x))
+        x)
     (##flonum.abs x)
     (if (macro-cpxnum-real? x)
         (##make-rectangular (##abs (macro-cpxnum-real x))
@@ -1998,6 +2034,284 @@
 
 ;;; trigonometry and complex numbers
 
+#|
+
+The next functions are from
+
+ Functions from
+ Branch Cuts for Complex Elementary Functions
+ or
+ Much Ado About Nothing's Sign Bit
+ by W. Kahan
+
+ Full reference:
+
+ Kahan, W: Branch cuts for complex elementary functions; or, Much ado about nothing’s sign bit. In Iserles, A., and Powell, M. (eds.), The state of the art in numerical analysis. Clarendon Press (1987) pp 165-211.
+
+Note that Kahan's paper contains two treatments of branch cuts---Section 4, which deals with arithmetic with signed zeros (like IEEE arithmetic) and Section 5, which deals with arithmetic with only unsigned zeros.  The codes in the paper are only for IEEE-style arithmetic.
+
+Gambit Scheme is in a funny position, as it allows mixed-exactness complex numbers.  We'll consider inexact real zeros (+0., -0.) as signed (of course), but we'll interpret exact zero (0) as unsigned.
+
+The branch cuts of all the functions considered here lie on the exact real axis or the exact imaginary axis.
+
+All of the inverse functions are defined in terms of log and sqrt, and the side of the continuity at the branch cuts is determined by the sides of continuity of those two functions.
+
+I believe that this is the same as the continuity rules that the CLHS gives for atan, asin, acos, etc., along branch cuts.
+
+Thanks to Raymond Toy for email discussions and for the code for cmucl, which gets this stuff right in the Common Lisp context.
+
+See
+
+http://140.177.205.23/InverseHyperbolicFunctions.html
+
+for a discussion of branch cuts.
+
+|#
+
+
+(define (##cabs z)
+
+  ;; As far as I can tell, this is just magic.  It works, and I'm not
+  ;; going to touch it.
+
+  #|
+  Code to compute the constants using my computable reals package.
+
+  (load "exact-reals")
+  (define r2-exact
+  (computable-sqrt (exact->computable 2)))
+  (define r2p1-exact
+  (computable-+ r2-exact (exact->computable 1)))
+  (define r2p1
+  (computable->inexact r2p1-exact))
+  (define t2p1-exact
+  (computable-- r2p1-exact (exact->computable (inexact->exact r2p1))))
+  (define r2
+  (computable->inexact r2-exact))
+  (define t2p1
+  (computable->inexact t2p1-exact))
+  (for-each pretty-print
+  `((define r2 ,r2) (define r2p1 ,r2p1) (define t2p1 ,t2p1)))
+  |#
+  (define r2 1.4142135623730951)
+  (define r2p1 2.414213562373095)
+  (define t2p1 1.2537167179050217e-16)
+
+  (let ((x (##flabs (macro-cpxnum-real z)))
+        (y (##flabs (macro-cpxnum-imag z))))
+
+    (define (continue x y)
+      (let* ((x (if (##flinfinite? y) y x))
+             (t (##fl- x y)))
+        (if (and (##not (##fl= x +inf.0))
+                 (##not (##fl= t x)))
+            (if (##fl> t y)
+                (let* ((s (##fl/ x y))
+                       (s (##fl+ s (##flsqrt (##fl+ 1.0 (##fl* s s))))))
+                  (##fl+ x (##fl/ y s)))
+                (let* ((s (##fl/ t y))
+                       (t (##fl* (##fl+ 2.0 s) s))
+                       (s (##fl+ r2p1
+                                 (##fl+ s
+                                        (##fl+ t2p1
+                                               (##fl/ t
+                                                      (##fl+ r2 (##flsqrt (##fl+ 2.0 t)))))))))
+                  (##fl+ x (##fl/ y s))))
+            x)))
+
+    (if (##fl< x y)
+        (continue y x)
+        (continue x y))))
+
+(define (##carg z)
+  (##angle z))
+
+(define (##csquare xi+ieta)
+  (let ((xi  (macro-cpxnum-real xi+ieta))
+        (eta (macro-cpxnum-imag xi+ieta)))
+    (let ((x (##fl* (##fl- xi eta) (##fl+ xi eta)))
+          (y (##fl* 2.0 xi eta)))
+      (cond ((##flnan? x)
+             (cond ((##flinfinite? y)
+                    (macro-cpxnum-make (##flcopysign (macro-inexact-+0) xi) y))
+                   ((##flinfinite? eta)
+                    (macro-cpxnum-make (macro-inexact--inf) y))
+                   ((##flinfinite? xi)
+                    (macro-cpxnum-make (macro-inexact-+inf) y))
+                   (else
+                    (macro-cpxnum-make x y))))
+            ((and (##flnan? y)
+                  (##flinfinite? x))
+             (macro-cpxnum-make x (##flcopysign (macro-inexact-+0) y)))
+            (else
+             (macro-cpxnum-make x y))))))
+
+(define (##cssqs x+iy)
+  (let ((x (macro-cpxnum-real x+iy))
+        (y (macro-cpxnum-imag x+iy)))
+    (cond ((or (##flinfinite? x)
+               (##flinfinite? y))
+           (##cons (macro-inexact-+inf) 0))
+          ((and (##flzero? x)
+                (##flzero? y))
+           (##cons 0. 0))
+          (else
+           ;; from now on, neither x nor y are infinite, and one is non-zero
+           (let* ((x^2 (##flsquare x))
+                  (y^2 (##flsquare y))
+                  (rho (##fl+ x^2 y^2)))
+             (if (or (##flinfinite? rho)                    ;; if rho is NaN, this is false
+                     (and (or (##fl< x^2 (macro-inexact-lambda))    ;; poor man's way to see whether underflow flag was set
+                              (##fl< y^2 (macro-inexact-lambda)))
+                          (##fl< rho (##fl/ (macro-inexact-lambda) (macro-inexact-epsilon))))) ;; if rho is NaN, this is false
+                 ;; rho is not NaN, so x and y are not NaN, and x and y are not infinite.  Whew.
+                 (let ((k (##flilogb (##flmax (##flabs x) (##flabs y)))))
+                   (##cons (##fl+ (##flsquare (##flscalbn x (##fx- k)))
+                                  (##flsquare (##flscalbn y (##fx- k))))
+                           k))
+                 (##cons rho 0)))))))
+
+(define (##csqrt x+iy)
+  (let* ((x (macro-cpxnum-real x+iy))
+         (y (macro-cpxnum-imag x+iy))
+         (rho+ik (##cssqs x+iy))
+         (rho (##car rho+ik))
+         (k   (##cdr rho+ik))
+         (rho (if (##flnan? x)
+                  rho
+                  (##fl+ (##flscalbn (##flabs x) (##fx- k))
+                         (##flsqrt rho))))
+         (rho (if (##fxodd? k)
+                  (##flscalbn (##flsqrt rho) (##fxquotient (##fx- k 1) 2))
+                  (##flscalbn (##flsqrt (##fl* 2.0 rho)) (##fx- (##fxquotient k 2) 1))))
+         (xi rho)
+         (eta y))
+    (if (##not (##fl= rho 0.0))
+        (let ((eta (if (##not (##flinfinite? (##flabs eta)))
+                       (##fl/ (##fl/ eta rho) 2.0)
+                       eta)))
+          (if (##flnegative? x)
+              (macro-cpxnum-make (##flabs eta) (##flcopysign rho y))
+              (macro-cpxnum-make xi eta)))
+        (macro-cpxnum-make xi eta))))
+
+(define (##cacos z)
+  (##- (macro-inexact-+pi/2) (##casin z)))
+
+(define (##cacosh z)
+  (let ((sqrt-z-1 (##sqrt (##- z 1)))
+        (sqrt-z+1 (##sqrt (##+ z 1))))
+
+    ;; if z is real and > 1, then the imaginary part of the next expression can be
+    ;; inexact 0, but that's OK because this routine is not called in this case.
+
+    (##make-rectangular (##asinh (##real-part (##* (##conjugate sqrt-z-1) sqrt-z+1)))
+                        (##* 2 (##atan2 (##imag-part sqrt-z-1) (##real-part sqrt-z+1))))))
+
+(define (##casin z)
+
+  ;; if (##real-part z) is exact zero, then there is a correlation of errors in sqrt-1-z and sqrt-1+z that
+  ;; allows the next substitution
+
+  (let ((x (##real-part z)))
+    (if (##eq? x 0)
+        (##make-rectangular 0 (##asinh (##imag-part z)))
+        (let ((sqrt-1-z (##sqrt (##- 1 z)))
+              (sqrt-1+z (##sqrt (##+ 1 z))))
+          (##make-rectangular (##atan2 x (##real-part (##* sqrt-1-z sqrt-1+z)))
+                              (##asinh (##imag-part (##* (##conjugate sqrt-1-z) sqrt-1+z))))))))
+
+(define (##casinh z)
+  (##* -i (##casin (##* +i z))))
+
+(define (##catanh x+iy)
+  (define (x/x^2+y^2 x y)
+    (if (##fl< (##flabs y) (##flabs x))
+        (##fl/ 1. (##fl+ x (##fl* (##fl/ y x) y)))
+        (let ((x/y (##fl/ x y)))
+          (##fl/ x/y (##fl+ (##fl* x x/y) y)))))
+
+  (define (##->exact-sign x)
+    ;; returns an exact number with the same sign as x, returns 1 if x is exact zero
+    (if (##flonum? x)
+        (##inexact->exact (##flcopysign 1. x))
+        (if (##negative? x) -1 1)))
+
+  (let* ((pi/2 (##* 2 (##atan 1)))
+         (theta (##fl/ (##flsqrt (macro-inexact-omega)) 4.))
+         (rho (##fl/ theta))
+         (beta (##->exact-sign (##real-part x+iy))) ;; beta is exact
+         (x+iy (##* beta (##conjugate x+iy)))
+         (x (##real-part x+iy))
+         (y (##imag-part x+iy))
+         (inexact-x (##exact->inexact x))
+         (inexact-y (##exact->inexact y))
+         (abs-y (##flabs inexact-y))
+         (zeta (cond ((or (##fl< theta inexact-x)
+                          (##fl< theta abs-y))
+                      (macro-cpxnum-make (##exact->inexact (x/x^2+y^2 inexact-x inexact-y))
+                                         (##flcopysign pi/2 inexact-y)))
+                     ((##fl= inexact-x 1.)
+                      (macro-cpxnum-make (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ 4. (##flsquare abs-y))))
+                                                         (##flsqrt (##fl+ abs-y rho))))
+                                         (##fl/ (##flcopysign (##fl+ pi/2 (##flatan (##fl/ (##fl+ abs-y rho) 2.0)))
+                                                              inexact-y)
+                                                2.)))
+                     (else
+                      (macro-cpxnum-make (if (##eq? x 0)
+                                             ;; if rho and abs-y were exact in the next expression (no matter their values)
+                                             ;; then the argument to fllog1p would be exact 0, so the result would be exact 0.
+                                             0
+                                             (##fl/ (##fllog1p (##fl/ (##fl* 4. inexact-x)                 ;; was (##* 4 x) originally
+                                                                      (##fl+ (##flsquare (##fl- 1. inexact-x))
+                                                                             (##flsquare (##fl+ abs-y rho)))))
+                                                    4.))
+                                         (##fl/ (##carg (macro-cpxnum-make (##fl- (##fl* (##fl- 1. inexact-x)
+                                                                                              (##fl+ 1. inexact-x))
+                                                                                       (##flsquare (##fl+ abs-y rho)))
+                                                                                (##fl* 2. inexact-y)))
+                                                2.0))))))
+    (##* beta (##conjugate zeta))))
+
+(define (##ctanh xi+ieta)
+  ;; we assume that neither xi nor eta can be exact 0
+  (let* ((xi  (macro-cpxnum-real xi+ieta))
+         (eta (macro-cpxnum-imag xi+ieta)))
+    (if (##< (##fl/ (##flasinh (macro-inexact-omega)) 4.)
+             (##abs xi))
+        (macro-cpxnum-make (##flcopysign 1. (##exact->inexact xi))     ; xi cannot be exact 0
+                           (##flcopysign 0. (##exact->inexact eta)))   ; eta cannot be exact 0
+        (let* ((t (##tan eta))                                  ; sin(eta)/cos(eta), can't be exact 0, so can't be exact
+               (beta (##fl+ 1. (##flsquare t)))                   ; 1/cos^2(eta), can't be exact
+               (s (##sinh xi))                                  ; sinh(xi), can't be exact zero, so can't be exact
+               (rho (##flsqrt (##fl+ 1. (##flsquare s)))))        ; cosh(xi), can't be exact
+          (if (##infinite? t)                                     ; if sin(eta)/cos(eta) = infinity (how, I don't know)
+              (macro-cpxnum-make (##fl/ rho s)
+                                 (##fl/ t))
+              (let ((one+beta*s^2 (##fl+ 1. (##fl* beta (##flsquare s)))))
+                (macro-cpxnum-make (##fl/ (##fl* beta (##fl* rho s))
+                                          one+beta*s^2)
+                                   (##fl/ t
+                                          one+beta*s^2))))))))
+
+(define (##ctan zeta)
+  (##* -i (##ctanh (##* +i zeta))))
+
+;;; End of Kahan's functions
+
+(define-prim (##conjugate x)
+
+  (define (type-error)
+    (##fail-check-number 1 conjugate x))
+
+  (macro-number-dispatch x (type-error)
+    x x x x (macro-cpxnum-make (macro-cpxnum-real x)
+                               (##negate (macro-cpxnum-imag x)))))
+
+(define-prim (conjugate x)
+  (macro-force-vars (x)
+    (##conjugate x)))
+
 (define-prim (##exp x)
 
   (define (type-error)
@@ -2075,33 +2389,9 @@
 
             (else
 
-             ;; for rational numbers near one, we use the taylor
-             ;; series for (log (/ (- x 1) (+ x 1))) by hand.
-             ;; we first approximate (/ (- x 1) (+ x 1)) by a dyadic
-             ;; rational with (macro-flonum-m-bits-plus-1*2) bits accuracy
+             ;; use ln1p for arguments near one.
 
-             (let* ((y (##/ (##- x 1) (##+ x 1)))
-                    (normalizer (##expt 2 (##fx+ (macro-flonum-m-bits-plus-1*2)
-                                                 (##fx- (##integer-length (##denominator y))
-                                                        (##integer-length (##numerator   y))))))
-                    (dyadic-y (##/ (##round (##* y normalizer))
-                                   normalizer))
-                    (dyadic-y^2 (##* dyadic-y dyadic-y))
-                    (bits-gained-per-loop (##fx- (##integer-length (##denominator dyadic-y^2))
-                                                 (##integer-length (##numerator   dyadic-y^2))
-                                                 1)))
-               (let loop ((k 0)
-                          (y^2k+1 dyadic-y)
-                          (result dyadic-y)
-                          (accuracy bits-gained-per-loop))
-                 (if (##fx< (macro-flonum-m-bits-plus-1*2) accuracy)
-                     (##flonum.<-ratnum (##* 2 result))
-                     (let ((y^2k+1 (##* dyadic-y^2 y^2k+1))
-                           (k (##fx+ k 1)))
-                       (loop k
-                             y^2k+1
-                             (##+ result (##/ y^2k+1 (##fx+ (##fx* 2 k) 1)))
-                             (##fx+ accuracy bits-gained-per-loop))))))))))
+             (##fllog1p (##exact->inexact (##- x 1)))))))
 
   (define (complex-log-magnitude x)
 
@@ -2186,13 +2476,15 @@
     (##flonum.sin (##flonum.<-exact-int x))
     (##flonum.sin (##flonum.<-ratnum x))
     (##flonum.sin x)
-    (##/ (##- (##exp (##make-rectangular
-                      (##negate (macro-cpxnum-imag x))
-                      (macro-cpxnum-real x)))
-              (##exp (##make-rectangular
-                      (macro-cpxnum-imag x)
-                      (##negate (macro-cpxnum-real x)))))
-         (macro-cpxnum-+2i))))
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (if (and (##flonum? real)
+               (##flonum? imag))
+          ;; fast path for flonums case
+          (macro-cpxnum-make  (##fl* (##flsin real) (##flcosh imag))
+                              (##fl* (##flcos real) (##flsinh imag)))
+          (##make-rectangular (##* (##sin real) (##cosh imag))
+                              (##* (##cos real) (##sinh imag)))))))
 
 (define-prim (sin x)
   (macro-force-vars (x)
@@ -2210,13 +2502,15 @@
     (##flonum.cos (##flonum.<-exact-int x))
     (##flonum.cos (##flonum.<-ratnum x))
     (##flonum.cos x)
-    (##/ (##+ (##exp (##make-rectangular
-                      (##negate (macro-cpxnum-imag x))
-                      (macro-cpxnum-real x)))
-              (##exp (##make-rectangular
-                      (macro-cpxnum-imag x)
-                      (##negate (macro-cpxnum-real x)))))
-         2)))
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (if (and (##flonum? real)
+               (##flonum? imag))
+          ;; fast path for flonums case
+          (macro-cpxnum-make        (##fl* (##flcos real) (##flcosh imag))
+                             (##fl- (##fl* (##flsin real) (##flsinh imag))))
+          (##make-rectangular           (##* (##cos real) (##cosh imag))
+                              (##negate (##* (##sin real) (##sinh imag))))))))
 
 (define-prim (cos x)
   (macro-force-vars (x)
@@ -2234,14 +2528,8 @@
     (##flonum.tan (##flonum.<-exact-int x))
     (##flonum.tan (##flonum.<-ratnum x))
     (##flonum.tan x)
-    (let ((a (##exp (##make-rectangular
-                     (##negate (macro-cpxnum-imag x))
-                     (macro-cpxnum-real x))))
-          (b (##exp (##make-rectangular
-                     (macro-cpxnum-imag x)
-                     (##negate (macro-cpxnum-real x))))))
-      (let ((c (##/ (##- a b) (##+ a b))))
-        (##make-rectangular (##imag-part c) (##negate (##real-part c)))))))
+    ;; complex ##tanh is the basic one here.
+    (##* -i (##tanh (##* +i x)))))
 
 (define-prim (tan x)
   (macro-force-vars (x)
@@ -2252,36 +2540,20 @@
   (define (type-error)
     (##fail-check-number 1 asin x))
 
-  (define (safe-case x)
-    (##* (macro-cpxnum--i)
-         (##log (##+ (##* (macro-cpxnum-+i) x)
-                     (##sqrt (##- 1 (##* x x)))))))
-
-  (define (unsafe-case x)
-    (##negate (safe-case (##negate x))))
-
   (define (real-case x)
-    (cond ((##< x -1)
-           (unsafe-case x))
-          ((##< 1 x)
-           (safe-case x))
-          (else
-           (##flonum.asin (##exact->inexact x)))))
+    (if (or (##< 1 x)
+            (##< x -1))
+        (##casin (macro-cpxnum-make x 0))
+        (##flasin (##exact->inexact x))))
 
   (macro-number-dispatch x (type-error)
-    (if (##fixnum.zero? x)
+    (if (##eq? x 0)
         0
         (real-case x))
     (real-case x)
     (real-case x)
     (real-case x)
-    (let ((imag (macro-cpxnum-imag x)))
-      (if (or (##positive? imag)
-              (and (##flonum? imag)
-                   (##flonum.zero? imag)
-                   (##negative? (macro-cpxnum-real x))))
-          (unsafe-case x)
-          (safe-case x)))))
+    (##casin x)))
 
 (define-prim (asin x)
   (macro-force-vars (x)
@@ -2292,22 +2564,20 @@
   (define (type-error)
     (##fail-check-number 1 acos x))
 
-  (define (complex-case x)
-    (##- (macro-inexact-+pi/2) (##asin x)))
-
   (define (real-case x)
-    (if (or (##< x -1) (##< 1 x))
-        (complex-case x)
-        (##flonum.acos (##exact->inexact x))))
+    (if (or (##< 1 x)
+            (##< x -1))
+        (##cacos (macro-cpxnum-make x 0))
+        (##flacos (##exact->inexact x))))
 
   (macro-number-dispatch x (type-error)
-    (if (##fixnum.zero? x)
-        (macro-inexact-+pi/2)
+    (if (##eq? x 1)
+        0
         (real-case x))
     (real-case x)
     (real-case x)
     (real-case x)
-    (complex-case x)))
+    (##cacos x)))
 
 (define-prim (acos x)
   (macro-force-vars (x)
@@ -2330,30 +2600,17 @@
     (##flonum.atan x)
     (let ((real (macro-cpxnum-real x))
           (imag (macro-cpxnum-imag x)))
-      (if (and (##eq? real 0) (##eq? imag 1))
+      (if (and (##eq? real 0)
+               (or (##eq? imag 1)
+                   (##eq? imag -1)))
           (range-error)
-          (let ((a (##make-rectangular (##negate imag) real)))
-            (##/ (##- (##log (##+ a 1)) (##log (##- 1 a)))
-                 (macro-cpxnum-+2i)))))))
+          (##* -i (##atanh (##* +i x)))))))
 
 (define-prim (##atan2 y x)
-
-  (define (flonum-substitute x)
-    (cond ((##flonum? x)
-           x)
-          ((##eq? x 0)
-           0.)
-          ((##positive? x)
-           1.)
-          (else
-           -1.)))
-
-  (define (irregular-flonum? x)
-    (and (##flonum? x)
-         (or (##flonum.zero? x)
-             (##not (##flfinite? x)))))
-
-  (cond ((##eq? 0 y)
+  (cond ((or (and (##flonum? x) (##flnan? x))
+             (and (##flonum? y) (##flnan? y)))
+         +nan.0)
+        ((##eq? 0 y)
          (if (##exact? x)
              (if (##negative? x)
                  (macro-inexact-+pi)
@@ -2361,10 +2618,11 @@
              (if (##negative? (##flonum.copysign (macro-inexact-+1) x))
                  (macro-inexact-+pi)
                  0.)))
-        ((or (irregular-flonum? x)
-             (irregular-flonum? y))
-         (##flonum.atan (flonum-substitute y)
-                        (flonum-substitute x)))
+        ((and (##not (##finite? x))
+              (##not (##finite? y)))
+         (if (##positive? x)
+             (##flonum.copysign (macro-inexact-+pi/4) y)
+             (##flonum.copysign (macro-inexact-+3pi/4) y)))
         (else
          (let ((inexact-x (##exact->inexact x))
                (inexact-y (##exact->inexact y)))
@@ -2374,7 +2632,7 @@
                     (or (##flonum? y)
                         (##flonum.full-precision? inexact-y)
                         (##= y inexact-y)))
-               (##flonum.atan inexact-y inexact-x)
+               (##flatan inexact-y inexact-x)
                ;; at least one of x or y is nonzero
                ;; and at least one of them is not a flonum
                (let* ((exact-x (##inexact->exact x))
@@ -2384,8 +2642,8 @@
                       (normalizer (##expt 2 (##- (##integer-length (##denominator max-arg))
                                                  (##integer-length (##numerator   max-arg))))))
                  ;; now the largest argument will be about 1.
-                 (##flonum.atan (##exact->inexact (##* normalizer exact-y))
-                                (##exact->inexact (##* normalizer exact-x)))))))))
+                 (##flatan (##exact->inexact (##* normalizer exact-y))
+                           (##exact->inexact (##* normalizer exact-x)))))))))
 
 (define-prim (atan x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x)
@@ -2398,6 +2656,161 @@
                  (##fail-check-real 2 atan x y))
                 (else
                  (##atan2 x y)))))))
+
+;;; Hyperbolic functions
+
+(define-prim (##sinh x)
+
+  (define (type-error)
+    (##fail-check-number 1 sinh x))
+
+  (macro-number-dispatch x (type-error)
+    (if (##fixnum.zero? x)
+        0
+        (##flsinh (##flonum.<-fixnum x)))
+    (##flsinh (##flonum.<-exact-int x))
+    (##flsinh (##flonum.<-ratnum x))
+    (##flsinh x)
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (if (and (##flonum? real) (##flonum? imag))
+          ;; fast path for flonum case
+          (macro-cpxnum-make (##fl* (##flsinh real) (##flcos imag))
+                             (##fl* (##flcosh real) (##flsin imag)))
+          (macro-cpxnum-make (##* (##sinh real) (##cos imag))
+                             (##* (##cosh real) (##sin imag)))))))
+
+(define-prim (sinh x)
+  (macro-force-vars (x)
+    (##sinh x)))
+
+(define-prim (##cosh x)
+
+  (define (type-error)
+    (##fail-check-number 1 cosh x))
+
+  (macro-number-dispatch x (type-error)
+    (if (##fixnum.zero? x)
+        1
+        (##flcosh (##flonum.<-fixnum x)))
+    (##flcosh (##flonum.<-exact-int x))
+    (##flcosh (##flonum.<-ratnum x))
+    (##flcosh x)
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (if (and (##flonum? real) (##flonum? imag))
+          ;; fast path for flonum case
+          (macro-cpxnum-make (##fl* (##flcosh real) (##flcos imag))
+                             (##fl* (##flsinh real) (##flsin imag)))
+          (macro-cpxnum-make (##* (##cosh real) (##cos imag))
+                             (##* (##sinh real) (##sin imag)))))))
+
+(define-prim (cosh x)
+  (macro-force-vars (x)
+    (##cosh x)))
+
+(define-prim (##tanh x)
+
+  (define (type-error)
+    (##fail-check-number 1 tanh x))
+
+  (macro-number-dispatch x (type-error)
+    (if (##fixnum.zero? x)
+        0
+        (##fltanh (##flonum.<-fixnum x)))
+    (##fltanh (##flonum.<-exact-int x))
+    (##fltanh (##flonum.<-ratnum x))
+    (##fltanh x)
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (if (##eq? real 0)
+          ;; the argument of the next ##tan is real
+          ;; (##* +i (##tan (##* -i x)))
+          (macro-cpxnum-make 0 (##tan imag))
+          (##ctanh x)))))
+
+(define-prim (tanh x)
+  (macro-force-vars (x)
+    (##tanh x)))
+
+;;; Inverse hyperbolic functions
+
+(define-prim (##asinh x)
+
+  (define (type-error)
+    (##fail-check-number 1 asinh x))
+
+  (macro-number-dispatch x (type-error)
+    (if (##fixnum.zero? x)
+        0
+        (##flasinh (##flonum.<-fixnum x)))
+    (##flasinh (##flonum.<-exact-int x))
+    (##flasinh (##flonum.<-ratnum x))
+    (##flasinh x)
+    (##casinh x)))
+
+(define-prim (asinh x)
+  (macro-force-vars (x)
+    (##asinh x)))
+
+(define-prim (##acosh x)
+
+  (define (type-error)
+    (##fail-check-number 1 acosh x))
+
+  (define (real-case x)
+    (if (##< x 1)
+        (##cacosh (macro-cpxnum-make x 0))
+        (##flacosh (##exact->inexact x))))
+
+  (macro-number-dispatch x (type-error)
+    (if (##fx= x 1)
+        0
+        (real-case x))
+    (real-case x)
+    (real-case x)
+    (real-case x)
+    (##cacosh x)))
+
+(define-prim (acosh x)
+  (macro-force-vars (x)
+    (##acosh x)))
+
+(define-prim (##atanh x)
+
+  (define (type-error)
+    (##fail-check-number 1 atanh x))
+
+  (define (range-error)
+    (##raise-range-exception 1 atanh x))
+
+  (define (real-case x)
+    (cond ((##< 1 x)
+           (##negate (real-case (##negate x))))
+          ((##< x -1)
+           (##make-rectangular (##fl/ (##fllog1p (##exact->inexact (##/ (##* 4 x)
+                                                                        (##square (##- x 1)))))
+                                      4.)
+                               (macro-inexact-+pi/2)))
+          (else
+           (##flatanh (##exact->inexact x)))))
+
+  (macro-number-dispatch x (type-error)
+    (case x
+      ((0)
+       0)
+      ((-1 1)
+       (range-error))
+      (else
+        (real-case x)))
+    (real-case x)
+    (real-case x)
+    (real-case x)
+    (##catanh x)))
+
+(define-prim (atanh x)
+  (macro-force-vars (x)
+    (##atanh x)))
 
 (define-prim (##sqrt x)
 
@@ -2495,47 +2908,6 @@
                         (##flonum.<-ratnum pre-rounded-result #t)
                         (##flonum.<-exact-int  pre-rounded-result #t)))))))))
 
-  (define (complex-sqrt-magnitude x)
-
-    (define (sqrt-mag a b)
-      ;; both are finite, 0 <= a <= b, b is nonzero
-      (let* ((c (##/ a b))
-             (d (##sqrt (##+ 1 (##* c c)))))
-        ;; the following may return an inexact result when the true
-        ;; result is exact, but we're just feeding it into make-polar
-        ;; with a non-exact-zero angle, anyway.
-        (##* (##sqrt b) (##sqrt d))))
-
-    (let ((abs-r (##abs (##real-part x)))
-          (abs-i (##abs (##imag-part x))))
-
-      ;; abs-i is not exact 0
-      (cond ((or (and (##flonum? abs-r)
-                      (##flonum.= abs-r (macro-inexact-+inf)))
-                 (and (##flonum? abs-i)
-                      (##flonum.= abs-i (macro-inexact-+inf))))
-             (macro-inexact-+inf))
-            ;; neither abs-r or abs-i is infinite
-            ((and (##flonum? abs-r)
-                  (##flonum.nan? abs-r))
-             abs-r)
-            ;; abs-r is not a NaN
-            ((and (##flonum? abs-i)
-                  (##flonum.nan? abs-i))
-             abs-i)
-            ;; abs-i is not a NaN
-            ((##eq? abs-r 0)
-             (##sqrt abs-i))
-            ;; abs-r is not exact 0
-            ((and (##zero? abs-r)
-                  (##zero? abs-i))
-             (macro-inexact-+0))
-            ;; abs-i and abs-r are not both zero
-            (else
-             (if (##< abs-r abs-i)
-                 (sqrt-mag abs-r abs-i)
-                 (sqrt-mag abs-i abs-r))))))
-
   (macro-number-dispatch x (type-error)
     (exact-int-sqrt x)
     (exact-int-sqrt x)
@@ -2545,33 +2917,10 @@
         (##flonum.sqrt x))
     (let ((real (##real-part x))
           (imag (##imag-part x)))
-      (cond ((and (##flonum? imag)
-                  (##flonum.zero? imag))
-             (if (##flonum.positive? (##flonum.copysign (macro-inexact-+1) imag))
-                 (cond ((##negative? real)
-                        (##make-rectangular (macro-inexact-+0)
-                                            (##exact->inexact
-                                             (##sqrt (##negate real)))))
-                       ((and (##flonum? real)
-                             (##flonum.nan? real))
-                        (##make-rectangular real real))
-                       (else
-                        (##make-rectangular (##exact->inexact (##sqrt real))
-                                            (macro-inexact-+0))))
-                 (cond ((##negative? real)
-                        (##make-rectangular (macro-inexact-+0)
-                                            (##exact->inexact
-                                             (##negate (##sqrt (##negate real))))))
-                       ((and (##flonum? real)
-                             (##flonum.nan? real))
-                        (##make-rectangular real real))
-                       (else
-                        (##make-rectangular (##exact->inexact (##sqrt real))
-                                            (macro-inexact--0))))))
-            ((and (##exact? real)
+      (cond ((and (##exact? real)
                   (##exact? imag)
                   (let ((discriminant (##sqrt (##+ (##* real real)
-                                                   (##* imag imag)))))
+                                                     (##* imag imag)))))
                     (and (##exact? discriminant)
                          (let ((result-real (##sqrt (##/ (##+ real discriminant) 2))))
                            (and (##exact? result-real)
@@ -2579,8 +2928,7 @@
              =>
              values)
             (else
-             (##make-polar (complex-sqrt-magnitude x)
-                           (##/ (##angle x) 2)))))))
+             (##csqrt (##exact->inexact x)))))))
 
 (define-prim (sqrt x)
   (macro-force-vars (x)
@@ -2896,34 +3244,26 @@
   (macro-number-dispatch x (type-error)
     (if (##fixnum.negative? x) (##negate x) x)
     (if (##bignum.negative? x) (##negate x) x)
-    (macro-ratnum-make (##abs (macro-ratnum-numerator x))
-                       (macro-ratnum-denominator x))
+    (if (##exact-int.negative? (macro-ratnum-numerator x))
+        (macro-ratnum-make (##negate (macro-ratnum-numerator x))
+                           (macro-ratnum-denominator x))
+        x)
     (##flonum.abs x)
-    (let ((abs-r (##abs (##real-part x)))
-          (abs-i (##abs (##imag-part x))))
-
-      (define (complex-magn a b)
-        (cond ((##eq? a 0)
-               b)
-              ((and (##flonum? a) (##flonum.zero? a))
-               (##exact->inexact b))
-              (else
-               (let ((c (##/ a b)))
-                 (##* b (##sqrt (##+ (##* c c) 1)))))))
-
-      (cond ((or (and (##flonum? abs-r)
-                      (##flonum.= abs-r (macro-inexact-+inf)))
-                 (and (##flonum? abs-i)
-                      (##flonum.= abs-i (macro-inexact-+inf))))
-             (macro-inexact-+inf))
-            ((and (##flonum? abs-r) (##flonum.nan? abs-r))
-             abs-r)
-            ((and (##flonum? abs-i) (##flonum.nan? abs-i))
-             abs-i)
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (cond ((and (##flonum? real) (##flonum? imag))
+             (##cabs x))
+            ;; at least one of real or imag is exact
+            ((and (##exact? real) (##exact? imag))
+             (##sqrt (##+ (##square real) (##square imag))))
+            ;; one is exact, other is inexact
+            ((and (##finite? real) (##finite? imag))
+             (##exact->inexact (##sqrt (##+ (##square (##inexact->exact real))
+                                              (##square (##inexact->exact imag))))))
+            ;; one is exact, other is not finite inexact
             (else
-             (if (##< abs-r abs-i)
-                 (complex-magn abs-r abs-i)
-                 (complex-magn abs-i abs-r)))))))
+             (##cabs (macro-cpxnum-make (##exact->inexact real)
+                                             (##exact->inexact imag))))))))
 
 (define-prim (magnitude x)
   (macro-force-vars (x)

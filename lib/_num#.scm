@@ -311,6 +311,8 @@
 (##define-macro (macro-inexact--pi)   -3.141592653589793)
 (##define-macro (macro-inexact-+pi/2)  1.5707963267948966)
 (##define-macro (macro-inexact--pi/2) -1.5707963267948966)
+(##define-macro (macro-inexact-+pi/4)   .7853981633974483)
+(##define-macro (macro-inexact-+3pi/4) 2.356194490192345)
 (##define-macro (macro-inexact-+inf)  (/ +1. 0.))
 (##define-macro (macro-inexact--inf)  (/ -1. 0.))
 (##define-macro (macro-inexact-+nan)  (/ 0. 0.))
@@ -345,6 +347,12 @@
 (##define-macro (macro-inexact-exp-+1/2) (exp +1/2))
 (##define-macro (macro-inexact-exp--1/2) (exp -1/2))
 (##define-macro (macro-inexact-log-2)    (log 2))
+
+;;; The next constants are for 64-bit, IEEE 754 binary arithmetic
+
+(##define-macro (macro-inexact-epsilon) 1.1102230246251565e-16)     ; (- 1 epsilon) <> 1, epsilon smallest
+(##define-macro (macro-inexact-lambda)  2.2250738585072014e-308)    ; smallest positive flonum
+(##define-macro (macro-inexact-omega)   1.7976931348623157e308)     ; largest finite flonum
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

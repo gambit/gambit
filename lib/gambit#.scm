@@ -41,6 +41,7 @@ default-random-source
 ;; procedures
 abandoned-mutex-exception?
 abort
+acosh
 address-info-family
 address-info-protocol
 address-info-socket-info
@@ -62,6 +63,8 @@ append-u64vectors
 append-u8vectors
 append-vectors
 arithmetic-shift
+asinh
+atanh
 bit-count
 bit-set?
 bitwise-and
@@ -98,6 +101,7 @@ condition-variable-specific
 condition-variable-specific-set!
 condition-variable?
 configure-command-string
+conjugate
 console-port
 continuation-capture
 continuation-graft
@@ -105,6 +109,7 @@ continuation-return
 continuation?
 copy-bit-field
 copy-file
+cosh
 cpu-time
 create-directory
 create-fifo
@@ -602,6 +607,7 @@ sfun-conversion-exception-message
 sfun-conversion-exception-procedure
 sfun-conversion-exception?
 shell-command
+sinh
 six.!
 six.!x
 six.&x
@@ -680,6 +686,7 @@ socket-info-address
 socket-info-family
 socket-info-port-number
 socket-info?
+square
 stack-overflow-exception?
 started-thread-exception-arguments
 started-thread-exception-procedure
@@ -741,6 +748,7 @@ table-ref
 table-search
 table-set!
 table?
+tanh
 tcp-client-peer-socket-info
 tcp-client-self-socket-info
 tcp-server-socket-info
