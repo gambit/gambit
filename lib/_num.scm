@@ -853,9 +853,6 @@
   macro-no-check
   (##pair? ##fail-check-number))
 
-(define-prim (##flsquare x)
-  (##fl* x x))
-
 (define-prim (##square x)
 
   (define (type-error)
@@ -10629,6 +10626,11 @@ ___RESULT = result;
   (if (##not (##flnegative? x))
       (##flsqrt x)
       (##raise-range-exception 1 flsqrt x)))
+
+(define-prim (##flsquare x))
+
+(define-prim-flonum (flsquare x)
+  (##flsquare x))
 
 (define-prim-fixnum (fixnum->flonum x)
   (##fixnum->flonum x))

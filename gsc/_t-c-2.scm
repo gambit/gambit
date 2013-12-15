@@ -3452,6 +3452,7 @@
 (targ-op "##flatanh"     (targ-apply-simpflo-u #t "F64ATANH"))
 (targ-op "##flexpt"      (targ-apply-simpflo-u #t "F64EXPT"))
 (targ-op "##flsqrt"      (targ-apply-simpflo-u #t "F64SQRT"))
+(targ-op "##flsquare"    (targ-apply-simpflo-u #t "F64SQUARE"))
 (targ-op "##flcopysign"  (targ-apply-simpflo-u #t "F64COPYSIGN"))
 
 (targ-op "##flinteger?"  (targ-ifjump-simp-u #t "F64INTEGERP"))

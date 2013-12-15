@@ -2845,6 +2845,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___F64ADD(x,y)((x)+(y))
 #define ___F64_1 1.0
 #define ___F64MUL(x,y)((x)*(y))
+#define ___F64SQUARE(x)((x)*(x))
 #define ___F64NEG(x)(-(x))
 #define ___F64SUB(x,y)((x)-(y))
 #define ___F64INV(x)(1.0/(x))

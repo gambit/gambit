@@ -171,7 +171,7 @@
 ##flexp ##flexpm1 ##fllog ##fllog1p
 ##flsin ##flcos ##fltan ##flasin ##flacos ;;; ##flatan
 ##flsinh ##flcosh ##fltanh ##flasinh ##flacosh ##flatanh
-##flexpt ##flsqrt
+##flexpt ##flsqrt ##flsquare
 ##flcopysign
 ##flinteger? ##flzero? ##flpositive? ##flnegative?
 ##flodd? ##fleven?

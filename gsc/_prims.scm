@@ -313,19 +313,21 @@
 ("flacos"                             (1)   #f 0     0    flonum  r6rs)
 ("flatan"                             (1 2) #f 0     0    flonum  r6rs)
 ("flsinh"                             (1)   #f 0     0    flonum  gambit)
-;("sinh"                               (1)   #f 0     0    number  gambit)
+("sinh"                               (1)   #f 0     0    number  gambit)
 ("flcosh"                             (1)   #f 0     0    flonum  gambit)
-;("cosh"                               (1)   #f 0     0    number  gambit)
+("cosh"                               (1)   #f 0     0    number  gambit)
 ("fltanh"                             (1)   #f 0     0    flonum  gambit)
-;("tanh"                               (1)   #f 0     0    number  gambit)
+("tanh"                               (1)   #f 0     0    number  gambit)
 ("flasinh"                            (1)   #f 0     0    flonum  gambit)
-;("asinh"                              (1)   #f 0     0    number  gambit)
+("asinh"                              (1)   #f 0     0    number  gambit)
 ("flacosh"                            (1)   #f 0     0    flonum  gambit)
-;("acosh"                              (1)   #f 0     0    number  gambit)
+("acosh"                              (1)   #f 0     0    number  gambit)
 ("flatanh"                            (1)   #f 0     0    flonum  gambit)
-;("atanh"                              (1)   #f 0     0    number  gambit)
+("atanh"                              (1)   #f 0     0    number  gambit)
 ("flexpt"                             (2)   #f 0     0    flonum  r6rs)
 ("flsqrt"                             (1)   #f 0     0    flonum  r6rs)
+("flsquare"                           (1)   #f 0     0    flonum  gambit)
+("square"                             (1)   #f 0     0    number  gambit)
 ("fixnum->flonum"                     (1)   #f 0     0    flonum  r6rs)
 
 ("finite?"                            (1)   #f 0     0    boolean r6rs)
@@ -707,6 +709,7 @@
 ("##flatanh"                     (1)   #f ()    0    real    extended)
 ("##flexpt"                      (2)   #f ()    0    real    extended)
 ("##flsqrt"                      (1)   #f ()    0    real    extended)
+("##flsquare"                    (1)   #f ()    0    real    extended)
 ("##flcopysign"                  (2)   #f ()    0    real    extended)
 ("##flinteger?"                  (1)   #f ()    0    boolean extended)
 ("##flzero?"                     (1)   #f ()    0    boolean extended)
@@ -1243,28 +1246,31 @@
 (def-spec "atan"   (spec-arith #f "flatan"))
 
 (def-spec "flsinh" (spec-u "##flsin"))
-;(def-spec "sinh"   (spec-arith #f "flsinh"))
+(def-spec "sinh"   (spec-arith #f "flsinh"))
 
 (def-spec "flcosh" (spec-u "##flcosh"))
-;(def-spec "cosh"   (spec-arith #f "flcosh"))
+(def-spec "cosh"   (spec-arith #f "flcosh"))
 
 (def-spec "fltanh" (spec-u "##fltanh"))
-;(def-spec "tanh"   (spec-arith #f "fltanh"))
+(def-spec "tanh"   (spec-arith #f "fltanh"))
 
 (def-spec "flasinh" (spec-u "##flasinh"))
-;(def-spec "asinh"   (spec-arith #f "flasinh"))
+(def-spec "asinh"   (spec-arith #f "flasinh"))
 
 (def-spec "flacosh" (spec-u "##flacosh"))
-;(def-spec "acosh"   (spec-arith #f "flacosh"))
+(def-spec "acosh"   (spec-arith #f "flacosh"))
 
 (def-spec "flatanh" (spec-u "##flatanh"))
-;(def-spec "atanh"   (spec-arith #f "flatanh"))
+(def-spec "atanh"   (spec-arith #f "flatanh"))
 
 (def-spec "flexpt" (spec-u "##flexpt"))
 (def-spec "expt"   (spec-arith #f "flexpt"))
 
 (def-spec "flsqrt" (spec-u "##flsqrt"))
 (def-spec "sqrt"   (spec-arith #f "flsqrt"))
+
+(def-spec "flsquare" (spec-u "##flsquare"))
+(def-spec "square"   (spec-arith #f "flsquare"))
 
 (def-spec "fixnum->flonum" (spec-u "##fixnum->flonum"))
 

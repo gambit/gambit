@@ -256,6 +256,7 @@ flscalbn
 flsin
 flsinh
 flsqrt
+flsquare
 fltan
 fltanh
 fltruncate
