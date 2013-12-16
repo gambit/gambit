@@ -269,7 +269,8 @@
 ("fxwraplogical-shift-right"          (2)   #f 0     0    fixnum  r6rs)
 ("fxwrapabs"                          (1)   #f 0     0    fixnum  gambit)
 ("fxabs"                              (1)   #f 0     0    fixnum  gambit)
-
+("fxwrapsquare"                       (1)   #f 0     0    fixnum  gambit)
+("fxsquare"                           (1)   #f 0     0    fixnum  gambit)
 ("flonum?"                            (1)   #f 0     0    boolean r6rs)
 ("fl="                                0     #f 0     0    boolean r6rs)
 ("fl<"                                0     #f 0     0    boolean r6rs)
@@ -657,6 +658,9 @@
 ("##fxwrapabs"                   (1)   #f ()    0    fixnum  extended)
 ("##fxabs"                       (1)   #f ()    0    fixnum  extended)
 ("##fxabs?"                      (1)   #f ()    0    #f      extended)
+("##fxwrapsquare"                (1)   #f ()    0    fixnum  extended)
+("##fxsquare"                    (1)   #f ()    0    fixnum  extended)
+("##fxsquare?"                   (1)   #f ()    0    #f      extended)
 ("##fxzero?"                     (1)   #f ()    0    boolean extended)
 ("##fxpositive?"                 (1)   #f ()    0    boolean extended)
 ("##fxnegative?"                 (1)   #f ()    0    boolean extended)
@@ -1198,10 +1202,15 @@
 (def-spec "fxarithmetic-shift-right"  (spec-u "##fxarithmetic-shift-right"))
 (def-spec "fxwraplogical-shift-right" (spec-u "##fxwraplogical-shift-right"))
 
-(def-spec "fxwrapabs" (spec-u "##fxwrapabs"))
-(def-spec "fxabs"     (spec-u "##fxabs"))
-(def-spec "flabs"     (spec-u "##flabs"))
-(def-spec "abs"       (spec-arith "fxabs" "flabs"))
+(def-spec "fxwrapabs"    (spec-u "##fxwrapabs"))
+(def-spec "fxabs"        (spec-u "##fxabs"))
+(def-spec "flabs"        (spec-u "##flabs"))
+(def-spec "abs"          (spec-arith "fxabs" "flabs"))
+
+(def-spec "fxwrapsquare" (spec-u "##fxwrapsquare"))
+(def-spec "fxsquare"     (spec-u "##fxsquare"))
+(def-spec "flsquare"     (spec-u "##flsquare"))
+(def-spec "square"       (spec-arith "fxsquare" "flsquare"))
 
 (def-spec "flfloor" (spec-u "##flfloor"))
 (def-spec "floor"   (spec-arith #f "flfloor"))
@@ -1270,7 +1279,6 @@
 (def-spec "sqrt"   (spec-arith #f "flsqrt"))
 
 (def-spec "flsquare" (spec-u "##flsquare"))
-(def-spec "square"   (spec-arith #f "flsquare"))
 
 (def-spec "fixnum->flonum" (spec-u "##fixnum->flonum"))
 
@@ -2038,6 +2046,10 @@
   (define **fxabs-sym (string->canonical-symbol "##fxabs"))
   (define **fxabs?-sym (string->canonical-symbol "##fxabs?"))
 
+  (define **fxwrapsquare-sym (string->canonical-symbol "##fxwrapsquare"))
+  (define **fxsquare-sym (string->canonical-symbol "##fxsquare"))
+  (define **fxsquare?-sym (string->canonical-symbol "##fxsquare?"))
+
   (define **fxnot-sym (string->canonical-symbol "##fxnot"))
   (define **fxand-sym (string->canonical-symbol "##fxand"))
   (define **fxior-sym (string->canonical-symbol "##fxior"))
@@ -2070,6 +2082,7 @@
   (define **fl/-sym (string->canonical-symbol "##fl/"))
 
   (define **flabs-sym (string->canonical-symbol "##flabs"))
+  (define **flsquare-sym (string->canonical-symbol "##flsquare"))
   (define **flfloor-sym (string->canonical-symbol "##flfloor"))
   (define **flceiling-sym (string->canonical-symbol "##flceiling"))
   (define **fltruncate-sym (string->canonical-symbol "##fltruncate"))
@@ -2496,6 +2509,22 @@
             conditional-op-sym
             (list var1 var2))))))
 
+  (define (make-conditional-unary-generator conditional-op-sym)
+    (lambda (source env vars invalid)
+      (let ((var (car (gen-temp-vars source '(#f)))))
+        (new-call source env
+          (gen-prc source env
+            (list var)
+            (new-tst source env
+              (new-ref source env
+                var)
+              (new-ref source env
+                var)
+              (invalid)))
+          (list (gen-call-prim-vars source env
+                  conditional-op-sym
+                  vars))))))
+
   (define case-fx=
     (gen-simple-case **fixnum?-sym **fx=-sym))
 
@@ -2618,20 +2647,7 @@
        **fixnum?-sym
        (make-nary-generator
         gen-fixnum-0 ; ignored
-        (lambda (source env vars invalid)
-          (let ((var (car (gen-temp-vars source '(#f)))))
-            (new-call source env
-              (gen-prc source env
-                (list var)
-                (new-tst source env
-                  (new-ref source env
-                    var)
-                  (new-ref source env
-                    var)
-                  (invalid)))
-              (list (gen-call-prim-vars source env
-                      **fx-?-sym
-                      vars)))))
+        (make-conditional-unary-generator **fx-?-sym)
         (lambda (source env vars invalid)
           (gen-conditional-fold source env
             vars
@@ -2676,20 +2692,14 @@
 
     (define case-fxabs
       (gen-fixnum-case
-       (lambda (source env vars invalid)
-         (let ((var (car (gen-temp-vars source '(#f)))))
-           (new-call source env
-             (gen-prc source env
-               (list var)
-               (new-tst source env
-                 (new-ref source env
-                   var)
-                 (new-ref source env
-                   var)
-                 (invalid)))
-             (list (gen-call-prim-vars source env
-                    **fxabs?-sym
-                    vars)))))))
+       (make-conditional-unary-generator **fxabs?-sym)))
+
+    (define case-fxwrapsquare
+      (gen-simple-case **fixnum?-sym **fxwrapsquare-sym))
+
+    (define case-fxsquare
+      (gen-fixnum-case
+       (make-conditional-unary-generator **fxsquare?-sym)))
 
     (define case-fxnot
       (gen-simple-case **fixnum?-sym **fxnot-sym))
@@ -2814,6 +2824,9 @@
 
     (define case-flabs
       (gen-simple-case **flonum?-sym **flabs-sym))
+
+    (define case-flsquare
+      (gen-simple-case **flonum?-sym **flsquare-sym))
 
     (define case-flfloor
       (gen-finite-flonum-case
@@ -3173,6 +3186,11 @@
     (def-exp "fxabs" (make-simple-expander case-fxabs))
     (def-exp "flabs" (make-simple-expander case-flabs))
     (def-exp "abs"   (make-fixflo-expander case-fxabs case-flabs))
+
+    (def-exp "fxwrapsquare" (make-simple-expander case-fxwrapsquare))
+    (def-exp "fxsquare" (make-simple-expander case-fxsquare))
+    (def-exp "flsquare" (make-simple-expander case-flsquare))
+    (def-exp "square"   (make-fixflo-expander case-fxsquare case-flsquare))
 
     (def-exp "flfloor" (make-simple-expander case-flfloor))
     (def-exp "floor"   (make-fixflo-expander no-case case-flfloor))
@@ -4045,9 +4063,17 @@
                                                         (cons flo?
                                                               (cons nz-flo?
                                                                     nz-flo?))))
-(def-simp "abs"              (constant-folder-gen abs        real?))
-(def-simp "##flabs"     (constant-folder-flo abs        flo?))
-(def-simp "##flonum.abs"     (constant-folder-flo abs        flo?))
+(def-simp "abs"              (constant-folder-gen abs          num?))
+(def-simp "##fxwrapabs" (constant-folder-fix abs          fix32?))
+(def-simp "##fxabs"     (constant-folder-fix abs          fix32?))
+(def-simp "##fxabs?"    (constant-folder-fix abs          fix32?))
+(def-simp "##flabs"     (constant-folder-flo abs          flo?))
+(def-simp "##flonum.abs"     (constant-folder-flo abs          flo?))
+(def-simp "square"              (constant-folder-gen square          num?))
+(def-simp "##fxwrapsquare" (constant-folder-fix square          fix32?))
+(def-simp "##fxsquare"     (constant-folder-fix square          fix32?))
+(def-simp "##fxsquare?"    (constant-folder-fix square          fix32?))
+(def-simp "##flsquare"     (constant-folder-flo square          flo?))
 (def-simp "quotient"         (constant-folder-gen quotient
                                                         (list int? nz-int?)))
 (def-simp "##fxwrapquotient"(constant-folder-fix quotient

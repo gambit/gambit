@@ -1,4 +1,4 @@
-; File: "mix.scm", Time-stamp: <2008-10-23 10:53:18 feeley>
+; File: "mix.scm", Time-stamp: <2013-12-16 10:42:20 feeley>
 
 ; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1650,8 +1650,8 @@
 (define (quartic-root x)
   (root x 4))
 
-(define (square x)
-  (* x x))
+;;(define (square x)
+;;  (* x x))
 
 ; Compute pi using the 'brent-salamin' method.
 

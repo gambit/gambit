@@ -296,6 +296,7 @@ fxodd?
 fxpositive?
 fxquotient
 fxremainder
+fxsquare
 fxwrap*
 fxwrap+
 fxwrap-
@@ -304,6 +305,7 @@ fxwraparithmetic-shift
 fxwraparithmetic-shift-left
 fxwraplogical-shift-right
 fxwrapquotient
+fxwrapsquare
 fxxor
 fxzero?
 gc-report-set!

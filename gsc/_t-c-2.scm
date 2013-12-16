@@ -3373,6 +3373,9 @@
 (targ-op "##fxwrapabs"      (targ-apply-simp-u #f #f #f "FIXABS"))
 (targ-op "##fxabs"          (targ-apply-simp-u #f #f #f "FIXABS"))
 (targ-op "##fxabs?"         (targ-apply-simp-u #f #f #f "FIXABSP"))
+(targ-op "##fxwrapsquare"   (targ-apply-simp-u #f #f #f "FIXSQUARE"))
+(targ-op "##fxsquare"       (targ-apply-simp-u #f #f #f "FIXSQUARE"))
+(targ-op "##fxsquare?"      (targ-apply-simp-u #f #f #f "FIXSQUAREP"))
 
 (targ-op "##fxzero?"     (targ-ifjump-simp-u #f "FIXZEROP"))
 (targ-op "##fxpositive?" (targ-ifjump-simp-u #f "FIXPOSITIVEP"))

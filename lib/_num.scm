@@ -5603,6 +5603,19 @@ for a discussion of branch cuts.
 
 (define-prim (##fxabs? x))
 
+(define-prim (##fxwrapsquare x))
+
+(define-prim-fixnum (fxwrapsquare x)
+  (##fxwrapsquare x))
+
+(define-prim (##fxsquare x))
+
+(define-prim-fixnum (fxsquare x)
+  (or (##fxsquare? x)
+      (##raise-fixnum-overflow-exception fxsquare x)))
+
+(define-prim (##fxsquare? x))
+
 (define-prim (##fx->char x))
 (define-prim (##fx<-char x))
 

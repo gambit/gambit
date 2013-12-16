@@ -157,6 +157,7 @@
 ##fxwraplogical-shift-right
 ##fxwraplogical-shift-right?
 ##fxwrapabs ##fxabs ##fxabs?
+##fxwrapsquare ##fxsquare ##fxsquare?
 ##fxzero? ##fxpositive? ##fxnegative?
 ##fxodd? ##fxeven?
 ;;; ##fx= ##fx< ##fx> ##fx<= ##fx>=
