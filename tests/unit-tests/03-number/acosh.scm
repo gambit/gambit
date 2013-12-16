@@ -9,3 +9,8 @@
 (check-= (acosh 0)    (test-acosh 0))
 (check-= (acosh +0.i) (test-acosh +0.i))
 (check-= (acosh -0.i) (test-acosh -0.i))
+
+;;; Test exceptions
+
+(check-tail-exn type-exception? (lambda () (acosh 'a)))
+

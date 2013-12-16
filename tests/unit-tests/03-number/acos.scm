@@ -12,3 +12,8 @@
 (check-= (acos -2)     (test-acos -2))
 (check-= (acos -2+0.i) (test-acos -2+0.i))
 (check-= (acos -2-0.i) (test-acos -2-0.i))
+
+;;; Test exceptions
+
+(check-tail-exn type-exception? (lambda () (acos 'a)))
+

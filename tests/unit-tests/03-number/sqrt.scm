@@ -11,3 +11,8 @@
 (check-eqv? (sqrt -1) +i)
 (check-eqv? (sqrt +2i) 1+i)
 (check-eqv? (sqrt -2i) 1-i)
+
+;;; Test exceptions
+
+(check-tail-exn type-exception? (lambda () (sqrt #\c)))
+

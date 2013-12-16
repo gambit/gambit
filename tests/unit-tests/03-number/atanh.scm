@@ -16,3 +16,11 @@
 ;;; Test for accuracy near 0
 
 (check-eqv? (atanh 1e-30+1e-40i) 1e-30+1e-40i)
+
+;;; Test exceptions
+
+(check-tail-exn type-exception? (lambda () (atanh 'a)))
+
+(check-tail-exn range-exception? (lambda () (atanh -1)))
+(check-tail-exn range-exception? (lambda () (atanh +1)))
+

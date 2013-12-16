@@ -16,3 +16,8 @@
 ;;; Test for accuracy near 0
 
 (check-eqv? (asinh 1e-30+1e-40i) 1e-30+1e-40i)
+
+;;; Test exceptions
+
+(check-tail-exn type-exception? (lambda () (asinh 'a)))
+
