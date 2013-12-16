@@ -23,7 +23,9 @@
 (check-eqv? (fx+ 11 22 33 44) 110)
 
 (check-tail-exn fixnum-overflow-exception? (lambda () (fx+ ##max-fixnum 1)))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fx+ 0 ##max-fixnum 1 0)))
 (check-tail-exn fixnum-overflow-exception? (lambda () (fx+ ##min-fixnum -1)))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fx+ 0 ##min-fixnum -1 0)))
 
 (check-tail-exn type-exception? (lambda () (fx+ 1/2)))
 (check-tail-exn type-exception? (lambda () (fx+ 1/2 9)))
