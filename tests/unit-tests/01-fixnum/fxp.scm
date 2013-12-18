@@ -2,7 +2,7 @@
 
 (check-true   (##fixnum? 0))
 (check-false  (##fixnum? 0.5))
-(chec-false   (##fixnum? 1+2i))
+(check-false   (##fixnum? 1+2i))
 
 (check-false  (##fixnum? +inf.0))
 (check-false  (##fixnum? -inf.0))
@@ -35,7 +35,7 @@
 
 (check-true   (fixnum? 0))
 (check-false  (fixnum? 0.5))
-(chec-false   (fixnum? 1+2i))
+(check-false   (fixnum? 1+2i))
 
 (check-false  (fixnum? +inf.0))
 (check-false  (fixnum? -inf.0))
