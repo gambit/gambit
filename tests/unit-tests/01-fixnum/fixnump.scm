@@ -25,8 +25,8 @@
 
 (check-false  (##fixnum? (lambda () #f)))
 
-(check-false  (##fixnum? (cons #t #t)))
-(check-false  (##fixnum? (vector)))
+(check-false  (##fixnum? '(1 . 2)))
+(check-false  (##fixnum? '#(1)))
 
 (check-false  (##fixnum? 'test))
 
@@ -58,8 +58,8 @@
 
 (check-false  (fixnum? (lambda () #f)))
 
-(check-false  (fixnum? (cons #t #t)))
-(check-false  (fixnum? (vector)))
+(check-false  (fixnum? '(1 . 2)))
+(check-false  (fixnum? '#(1)))
 
 (check-false  (fixnum? 'test))
 
