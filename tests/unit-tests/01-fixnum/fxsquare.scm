@@ -43,4 +43,4 @@
 (check-tail-exn fixnum-overflow-exception? (lambda () (fxsquare  1518500250)))
 (check-tail-exn fixnum-overflow-exception? (lambda () (fxsquare -1518500250)))
 
-(check-tail-exn type-exception? (lambda () (fxsquare 1/2)))
+(check-tail-exn type-exception? (lambda () (fxsquare 0.5)))

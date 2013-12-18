@@ -24,4 +24,4 @@
 (check-eqv? (fxwrapsquare  1518500249) (fixnum-wrap 2305843006213062001))
 (check-eqv? (fxwrapsquare -1518500249) (fixnum-wrap 2305843006213062001))
 
-(check-tail-exn type-exception? (lambda () (fxwrapsquare 1/2)))
+(check-tail-exn type-exception? (lambda () (fxwrapsquare 0.5)))
