@@ -620,7 +620,7 @@
         (loop (varset-adjoin set (car lst)) (cdr lst))
         set)))
 
-  (define (pass1) ; transform definitions in dependency order
+  (define (transform-defs-in-dependency-order! ptrees)
     (let* ((defs
             (keep def? ptrees))
            (defined-vars
@@ -652,25 +652,32 @@
           (varset->list vars)))
        order)))
 
-  (define (pass2) ; transform non-definitions from top to bottom
+  (define (transform-non-defs-from-top-to-bottom ptrees)
     (let loop ((lst1 ptrees) (lst2 '()))
       (if (pair? lst1)
         (let ((ptree (car lst1)))
-          (cond ((not (core? (node-env ptree)))
-                 (delete-ptree ptree)
-                 (loop (cdr lst1) lst2))
-                ((def? ptree)
-                 (loop (cdr lst1) (cons ptree lst2)))
-                (else
-                 (loop (cdr lst1) (cons (br ptree
-                                            '()
-                                            'need
-                                            #f)
-                                        lst2)))))
+          (loop (cdr lst1)
+                (cons (if (def? ptree)
+                          ptree
+                          (br ptree '() 'need #f))
+                      lst2)))
         (reverse lst2))))
 
-  (pass1)
-  (pass2))
+  (define (remove-non-core-ptrees ptrees)
+    (let loop ((lst1 ptrees) (lst2 '()))
+      (if (pair? lst1)
+        (let ((ptree (car lst1)))
+          (loop (cdr lst1)
+                (if (core? (node-env ptree))
+                    (cons ptree
+                          lst2)
+                    lst2)))
+        (reverse lst2))))
+
+  (transform-defs-in-dependency-order! ptrees)
+
+  (remove-non-core-ptrees
+   (transform-non-defs-from-top-to-bottom ptrees)))
 )
 
 (define (br ptree substs reason expansion-limit)
