@@ -4509,7 +4509,8 @@ $as_echo "$as_me:
 fi
 
 if test "$ENABLE_GUIDE" = yes; then
-  $as_echo "#define ___GUIDE 1" >>confdefs.h
+
+$as_echo "#define ___GUIDE /**/" >>confdefs.h
 
 
   RTLIBSUBSYS="$RTLIBSUBSYS guide"
@@ -4545,7 +4546,8 @@ fi
 
 
 if test "$ENABLE_DEBUG" = yes; then
-  $as_echo "#define ___DEBUG 1" >>confdefs.h
+
+$as_echo "#define ___DEBUG /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG"
 fi
@@ -4563,7 +4565,8 @@ fi
 
 
 if test "$ENABLE_PROFILE" = yes; then
-  $as_echo "#define ___PROFILE 1" >>confdefs.h
+
+$as_echo "#define ___PROFILE /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___PROFILE"
 fi
@@ -4615,7 +4618,8 @@ fi
 
 
 if test "$ENABLE_SINGLE_HOST" = yes; then
-  $as_echo "#define ___SINGLE_HOST 1" >>confdefs.h
+
+$as_echo "#define ___SINGLE_HOST /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___SINGLE_HOST"
 fi
@@ -4635,7 +4639,8 @@ fi
 
 
 if test "$ENABLE_INLINE_JUMPS" = yes; then
-  $as_echo "#define ___INLINE_JUMPS 1" >>confdefs.h
+
+$as_echo "#define ___INLINE_JUMPS /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___INLINE_JUMPS"
 fi
@@ -5052,7 +5057,8 @@ fi
 
 
 if test "$ENABLE_SHARED" = yes; then
-  $as_echo "#define ___SHARED 1" >>confdefs.h
+
+$as_echo "#define ___SHARED /**/" >>confdefs.h
 
   # don't add to DEFS_OBJ_DYN_LIB_EXE
 fi
@@ -5213,7 +5219,8 @@ fi
 
 
 if test "$ENABLE_POLL" = yes; then
-  $as_echo "#define USE_POLL_FOR_SELECT 1" >>confdefs.h
+
+$as_echo "#define USE_POLL_FOR_SELECT /**/" >>confdefs.h
 
 fi
 
@@ -5293,7 +5300,7 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER defines __GNUC__" >&5
 $as_echo_n "checking whether $C_COMPILER defines __GNUC__... " >&6; }
-if ${C_COMP_GNUC+:} false; then :
+if ${ac_cv_C_COMP_GNUC+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -5316,17 +5323,20 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  C_COMP_GNUC="yes"
+  ac_cv_C_COMP_GNUC="yes"
 else
-  C_COMP_GNUC=""
+  ac_cv_C_COMP_GNUC=""
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $C_COMP_GNUC" >&5
-$as_echo "$C_COMP_GNUC" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_C_COMP_GNUC" >&5
+$as_echo "$ac_cv_C_COMP_GNUC" >&6; }
+C_COMP_GNUC="$ac_cv_C_COMP_GNUC"
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER defines __clang__" >&5
 $as_echo_n "checking whether $C_COMPILER defines __clang__... " >&6; }
-if ${C_COMP_CLANG+:} false; then :
+if ${ac_cv_C_COMP_CLANG+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -5349,17 +5359,20 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  C_COMP_CLANG="yes"
+  ac_cv_C_COMP_CLANG="yes"
 else
-  C_COMP_CLANG=""
+  ac_cv_C_COMP_CLANG=""
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $C_COMP_CLANG" >&5
-$as_echo "$C_COMP_CLANG" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_C_COMP_CLANG" >&5
+$as_echo "$ac_cv_C_COMP_CLANG" >&6; }
+C_COMP_CLANG="$ac_cv_C_COMP_CLANG"
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER defines __llvm__" >&5
 $as_echo_n "checking whether $C_COMPILER defines __llvm__... " >&6; }
-if ${C_COMP_LLVM+:} false; then :
+if ${ac_cv_C_COMP_LLVM+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -5382,17 +5395,20 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  C_COMP_LLVM="yes"
+  ac_cv_C_COMP_LLVM="yes"
 else
-  C_COMP_LLVM=""
+  ac_cv_C_COMP_LLVM=""
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $C_COMP_LLVM" >&5
-$as_echo "$C_COMP_LLVM" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_C_COMP_LLVM" >&5
+$as_echo "$ac_cv_C_COMP_LLVM" >&6; }
+C_COMP_LLVM="$ac_cv_C_COMP_LLVM"
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER defines _MSC_VER" >&5
 $as_echo_n "checking whether $C_COMPILER defines _MSC_VER... " >&6; }
-if ${C_COMP_VISUALC+:} false; then :
+if ${ac_cv_C_COMP_VISUALC+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -5415,19 +5431,22 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  C_COMP_VISUALC="yes"
+  ac_cv_C_COMP_VISUALC="yes"
 else
-  C_COMP_VISUALC=""
+  ac_cv_C_COMP_VISUALC=""
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $C_COMP_VISUALC" >&5
-$as_echo "$C_COMP_VISUALC" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_C_COMP_VISUALC" >&5
+$as_echo "$ac_cv_C_COMP_VISUALC" >&6; }
+C_COMP_VISUALC="$ac_cv_C_COMP_VISUALC"
+
+
 #AC_CHECK_C_COMPILER_DEF(__WATCOMC__,C_COMP_WATCOMC)
 #AC_CHECK_C_COMPILER_DEF(__BORLANDC__,C_COMP_BORLANDC)
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER defines _WIN32" >&5
 $as_echo_n "checking whether $C_COMPILER defines _WIN32... " >&6; }
-if ${OS_WIN32+:} false; then :
+if ${ac_cv_OS_WIN32+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -5450,14 +5469,17 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  OS_WIN32="yes"
+  ac_cv_OS_WIN32="yes"
 else
-  OS_WIN32=""
+  ac_cv_OS_WIN32=""
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $OS_WIN32" >&5
-$as_echo "$OS_WIN32" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_OS_WIN32" >&5
+$as_echo "$ac_cv_OS_WIN32" >&6; }
+OS_WIN32="$ac_cv_OS_WIN32"
+
+
 
 ###############################################################################
 #
@@ -6256,7 +6278,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_type_socklen_t" >&5
 $as_echo "$ac_cv_type_socklen_t" >&6; }
       if test $ac_cv_type_socklen_t != yes; then
-        $as_echo "#define socklen_t int" >>confdefs.h
+
+$as_echo "#define socklen_t int" >>confdefs.h
 
       fi
 
@@ -7088,7 +7111,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_tcgetsetattr" >&5
 $as_echo "$ac_cv_func_tcgetsetattr" >&6; }
     if test $ac_cv_func_tcgetsetattr = yes; then
-      $as_echo "#define HAVE_TCGETSETATTR 1" >>confdefs.h
+
+$as_echo "#define HAVE_TCGETSETATTR /**/" >>confdefs.h
 
     fi
 
@@ -7129,7 +7153,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_sigaction" >&5
 $as_echo "$ac_cv_func_sigaction" >&6; }
     if test $ac_cv_func_sigaction = yes; then
-      $as_echo "#define HAVE_SIGACTION 1" >>confdefs.h
+
+$as_echo "#define HAVE_SIGACTION /**/" >>confdefs.h
 
     fi
 
@@ -7171,9 +7196,11 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_sigset" >&5
 $as_echo "$ac_cv_func_sigset" >&6; }
     if test $ac_cv_func_sigset = yes; then
-      $as_echo "#define HAVE_SIGEMPTYSET 1" >>confdefs.h
 
-      $as_echo "#define HAVE_SIGADDSET 1" >>confdefs.h
+$as_echo "#define HAVE_SIGEMPTYSET /**/" >>confdefs.h
+
+
+$as_echo "#define HAVE_SIGADDSET /**/" >>confdefs.h
 
     fi
 
@@ -7214,7 +7241,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_sigprocmask" >&5
 $as_echo "$ac_cv_func_sigprocmask" >&6; }
     if test $ac_cv_func_sigprocmask = yes; then
-      $as_echo "#define HAVE_SIGPROCMASK 1" >>confdefs.h
+
+$as_echo "#define HAVE_SIGPROCMASK /**/" >>confdefs.h
 
     fi
 
@@ -7255,7 +7283,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_signal" >&5
 $as_echo "$ac_cv_func_signal" >&6; }
     if test $ac_cv_func_signal = yes; then
-      $as_echo "#define HAVE_SIGNAL 1" >>confdefs.h
+
+$as_echo "#define HAVE_SIGNAL /**/" >>confdefs.h
 
     fi
 
@@ -7298,7 +7327,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_environ" >&5
 $as_echo "$ac_cv_environ" >&6; }
     if test $ac_cv_environ = yes; then
-      $as_echo "#define HAVE_ENVIRON 1" >>confdefs.h
+
+$as_echo "#define HAVE_ENVIRON /**/" >>confdefs.h
 
     fi
 
@@ -7337,7 +7367,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv__NSGetEnviron" >&5
 $as_echo "$ac_cv__NSGetEnviron" >&6; }
     if test $ac_cv__NSGetEnviron = yes; then
-      $as_echo "#define HAVE__NSGETENVIRON 1" >>confdefs.h
+
+$as_echo "#define HAVE__NSGETENVIRON /**/" >>confdefs.h
 
     fi
 
@@ -7824,7 +7855,8 @@ fi
 ac_fn_cxx_check_type "$LINENO" "struct stat64" "ac_cv_type_struct_stat64" "#include <sys/stat.h>
 "
 if test "x$ac_cv_type_struct_stat64" = xyes; then :
-  $as_echo "#define HAVE_STRUCT_STAT64 1" >>confdefs.h
+
+$as_echo "#define HAVE_STRUCT_STAT64 /**/" >>confdefs.h
 
 fi
 
@@ -8056,7 +8088,7 @@ if test "$C_COMP_GNUC" = yes; then
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking how $C_COMPILER's preprocessor evaluates (__GNUC__*1000+__GNUC_MINOR__)>=4002&&(__GNUC__*1000+__GNUC_MINOR__)<=4003" >&5
 $as_echo_n "checking how $C_COMPILER's preprocessor evaluates (__GNUC__*1000+__GNUC_MINOR__)>=4002&&(__GNUC__*1000+__GNUC_MINOR__)<=4003... " >&6; }
-if ${GCC_42_OR_43+:} false; then :
+if ${ac_cv_GCC_42_OR_43+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8080,17 +8112,20 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  GCC_42_OR_43="yes"
+  ac_cv_GCC_42_OR_43="yes"
 else
-  GCC_42_OR_43=""
+  ac_cv_GCC_42_OR_43=""
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $GCC_42_OR_43" >&5
-$as_echo "$GCC_42_OR_43" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_GCC_42_OR_43" >&5
+$as_echo "$ac_cv_GCC_42_OR_43" >&6; }
+GCC_42_OR_43="$ac_cv_GCC_42_OR_43"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking how $C_COMPILER's preprocessor evaluates __llvm__ && !__clang__ && (__GNUC__*1000+__GNUC_MINOR__)<4005" >&5
 $as_echo_n "checking how $C_COMPILER's preprocessor evaluates __llvm__ && !__clang__ && (__GNUC__*1000+__GNUC_MINOR__)<4005... " >&6; }
-if ${POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG+:} false; then :
+if ${ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8114,14 +8149,17 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG="yes"
+  ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG="yes"
 else
-  POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG=""
+  ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG=""
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" >&5
-$as_echo "$POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" >&5
+$as_echo "$ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" >&6; }
+POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG="$ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG"
+
+
 
   if test "$C_COMP_CLANG" = yes; then
 
@@ -8141,7 +8179,7 @@ $as_echo "$POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" >&6; }
     # preprocessor options:
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -no-cpp-precomp" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -no-cpp-precomp... " >&6; }
-if ${DASH_no_cpp_precomp+:} false; then :
+if ${ac_cv_DASH_no_cpp_precomp+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8165,9 +8203,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_no_cpp_precomp=" -no-cpp-precomp"
+  ac_cv_DASH_no_cpp_precomp=" -no-cpp-precomp"
 else
-  DASH_no_cpp_precomp=""
+  ac_cv_DASH_no_cpp_precomp=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8177,13 +8215,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_no_cpp_precomp" >&5
-$as_echo "$DASH_no_cpp_precomp" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_no_cpp_precomp" >&5
+$as_echo "$ac_cv_DASH_no_cpp_precomp" >&6; }
+DASH_no_cpp_precomp="$ac_cv_DASH_no_cpp_precomp"
+
+
 
     # optimization options:
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fschedule-insns2" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fschedule-insns2... " >&6; }
-if ${DASH_fschedule_insns2+:} false; then :
+if ${ac_cv_DASH_fschedule_insns2+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8207,9 +8248,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fschedule_insns2=" -fschedule-insns2"
+  ac_cv_DASH_fschedule_insns2=" -fschedule-insns2"
 else
-  DASH_fschedule_insns2=""
+  ac_cv_DASH_fschedule_insns2=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8219,11 +8260,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fschedule_insns2" >&5
-$as_echo "$DASH_fschedule_insns2" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fschedule_insns2" >&5
+$as_echo "$ac_cv_DASH_fschedule_insns2" >&6; }
+DASH_fschedule_insns2="$ac_cv_DASH_fschedule_insns2"
+
+
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-trapping-math" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fno-trapping-math... " >&6; }
-if ${DASH_fno_trapping_math+:} false; then :
+if ${ac_cv_DASH_fno_trapping_math+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8247,9 +8291,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fno_trapping_math=" -fno-trapping-math"
+  ac_cv_DASH_fno_trapping_math=" -fno-trapping-math"
 else
-  DASH_fno_trapping_math=""
+  ac_cv_DASH_fno_trapping_math=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8259,11 +8303,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fno_trapping_math" >&5
-$as_echo "$DASH_fno_trapping_math" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_trapping_math" >&5
+$as_echo "$ac_cv_DASH_fno_trapping_math" >&6; }
+DASH_fno_trapping_math="$ac_cv_DASH_fno_trapping_math"
+
+
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-move-loop-invariants" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fno-move-loop-invariants... " >&6; }
-if ${DASH_fno_move_loop_invariants+:} false; then :
+if ${ac_cv_DASH_fno_move_loop_invariants+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8287,9 +8334,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fno_move_loop_invariants=" -fno-move-loop-invariants"
+  ac_cv_DASH_fno_move_loop_invariants=" -fno-move-loop-invariants"
 else
-  DASH_fno_move_loop_invariants=""
+  ac_cv_DASH_fno_move_loop_invariants=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8299,11 +8346,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fno_move_loop_invariants" >&5
-$as_echo "$DASH_fno_move_loop_invariants" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_move_loop_invariants" >&5
+$as_echo "$ac_cv_DASH_fno_move_loop_invariants" >&6; }
+DASH_fno_move_loop_invariants="$ac_cv_DASH_fno_move_loop_invariants"
+
+
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-keep-inline-dllexport" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fno-keep-inline-dllexport... " >&6; }
-if ${DASH_fno_keep_inline_dllexport+:} false; then :
+if ${ac_cv_DASH_fno_keep_inline_dllexport+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8327,9 +8377,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fno_keep_inline_dllexport=" -fno-keep-inline-dllexport"
+  ac_cv_DASH_fno_keep_inline_dllexport=" -fno-keep-inline-dllexport"
 else
-  DASH_fno_keep_inline_dllexport=""
+  ac_cv_DASH_fno_keep_inline_dllexport=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8339,14 +8389,17 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fno_keep_inline_dllexport" >&5
-$as_echo "$DASH_fno_keep_inline_dllexport" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_keep_inline_dllexport" >&5
+$as_echo "$ac_cv_DASH_fno_keep_inline_dllexport" >&6; }
+DASH_fno_keep_inline_dllexport="$ac_cv_DASH_fno_keep_inline_dllexport"
+
+
     #AC_CHECK_C_COMPILER_OPT(-fpermissive,DASH_fpermissive)
 
     # machine specific options:
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -mieee" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -mieee... " >&6; }
-if ${DASH_mieee+:} false; then :
+if ${ac_cv_DASH_mieee+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8370,9 +8423,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_mieee=" -mieee"
+  ac_cv_DASH_mieee=" -mieee"
 else
-  DASH_mieee=""
+  ac_cv_DASH_mieee=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8382,11 +8435,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_mieee" >&5
-$as_echo "$DASH_mieee" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_mieee" >&5
+$as_echo "$ac_cv_DASH_mieee" >&6; }
+DASH_mieee="$ac_cv_DASH_mieee"
+
+
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -mieee-with-inexact" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -mieee-with-inexact... " >&6; }
-if ${DASH_mieee_with_inexact+:} false; then :
+if ${ac_cv_DASH_mieee_with_inexact+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8410,9 +8466,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_mieee_with_inexact=" -mieee-with-inexact"
+  ac_cv_DASH_mieee_with_inexact=" -mieee-with-inexact"
 else
-  DASH_mieee_with_inexact=""
+  ac_cv_DASH_mieee_with_inexact=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8422,11 +8478,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_mieee_with_inexact" >&5
-$as_echo "$DASH_mieee_with_inexact" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_mieee_with_inexact" >&5
+$as_echo "$ac_cv_DASH_mieee_with_inexact" >&6; }
+DASH_mieee_with_inexact="$ac_cv_DASH_mieee_with_inexact"
+
+
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -mieee-fp" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -mieee-fp... " >&6; }
-if ${DASH_mieee_fp+:} false; then :
+if ${ac_cv_DASH_mieee_fp+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8450,9 +8509,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_mieee_fp=" -mieee-fp"
+  ac_cv_DASH_mieee_fp=" -mieee-fp"
 else
-  DASH_mieee_fp=""
+  ac_cv_DASH_mieee_fp=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8462,14 +8521,17 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_mieee_fp" >&5
-$as_echo "$DASH_mieee_fp" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_mieee_fp" >&5
+$as_echo "$ac_cv_DASH_mieee_fp" >&6; }
+DASH_mieee_fp="$ac_cv_DASH_mieee_fp"
+
+
   fi
 
   # debugging options:
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -Wall" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -Wall... " >&6; }
-if ${DASH_Wall+:} false; then :
+if ${ac_cv_DASH_Wall+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8493,9 +8555,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_Wall=" -Wall"
+  ac_cv_DASH_Wall=" -Wall"
 else
-  DASH_Wall=""
+  ac_cv_DASH_Wall=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8505,11 +8567,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_Wall" >&5
-$as_echo "$DASH_Wall" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_Wall" >&5
+$as_echo "$ac_cv_DASH_Wall" >&6; }
+DASH_Wall="$ac_cv_DASH_Wall"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -W" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -W... " >&6; }
-if ${DASH_W+:} false; then :
+if ${ac_cv_DASH_W+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8533,9 +8598,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_W=" -W"
+  ac_cv_DASH_W=" -W"
 else
-  DASH_W=""
+  ac_cv_DASH_W=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8545,11 +8610,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_W" >&5
-$as_echo "$DASH_W" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_W" >&5
+$as_echo "$ac_cv_DASH_W" >&6; }
+DASH_W="$ac_cv_DASH_W"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -Wno-unused" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -Wno-unused... " >&6; }
-if ${DASH_Wno_unused+:} false; then :
+if ${ac_cv_DASH_Wno_unused+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8573,9 +8641,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_Wno_unused=" -Wno-unused"
+  ac_cv_DASH_Wno_unused=" -Wno-unused"
 else
-  DASH_Wno_unused=""
+  ac_cv_DASH_Wno_unused=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8585,11 +8653,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_Wno_unused" >&5
-$as_echo "$DASH_Wno_unused" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_Wno_unused" >&5
+$as_echo "$ac_cv_DASH_Wno_unused" >&6; }
+DASH_Wno_unused="$ac_cv_DASH_Wno_unused"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -Wno-write-strings" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -Wno-write-strings... " >&6; }
-if ${DASH_Wno_write_strings+:} false; then :
+if ${ac_cv_DASH_Wno_write_strings+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8613,9 +8684,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_Wno_write_strings=" -Wno-write-strings"
+  ac_cv_DASH_Wno_write_strings=" -Wno-write-strings"
 else
-  DASH_Wno_write_strings=""
+  ac_cv_DASH_Wno_write_strings=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8625,11 +8696,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_Wno_write_strings" >&5
-$as_echo "$DASH_Wno_write_strings" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_Wno_write_strings" >&5
+$as_echo "$ac_cv_DASH_Wno_write_strings" >&6; }
+DASH_Wno_write_strings="$ac_cv_DASH_Wno_write_strings"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -g" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -g... " >&6; }
-if ${DASH_g+:} false; then :
+if ${ac_cv_DASH_g+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8653,9 +8727,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_g=" -g"
+  ac_cv_DASH_g=" -g"
 else
-  DASH_g=""
+  ac_cv_DASH_g=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8665,13 +8739,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_g" >&5
-$as_echo "$DASH_g" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_g" >&5
+$as_echo "$ac_cv_DASH_g" >&6; }
+DASH_g="$ac_cv_DASH_g"
+
+
 
   # profiling options:
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -p" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -p... " >&6; }
-if ${DASH_p+:} false; then :
+if ${ac_cv_DASH_p+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8695,9 +8772,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_p=" -p"
+  ac_cv_DASH_p=" -p"
 else
-  DASH_p=""
+  ac_cv_DASH_p=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8707,11 +8784,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_p" >&5
-$as_echo "$DASH_p" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_p" >&5
+$as_echo "$ac_cv_DASH_p" >&6; }
+DASH_p="$ac_cv_DASH_p"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -pg" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -pg... " >&6; }
-if ${DASH_pg+:} false; then :
+if ${ac_cv_DASH_pg+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8735,9 +8815,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_pg=" -pg"
+  ac_cv_DASH_pg=" -pg"
 else
-  DASH_pg=""
+  ac_cv_DASH_pg=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8747,11 +8827,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_pg" >&5
-$as_echo "$DASH_pg" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_pg" >&5
+$as_echo "$ac_cv_DASH_pg" >&6; }
+DASH_pg="$ac_cv_DASH_pg"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftest-coverage" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -ftest-coverage... " >&6; }
-if ${DASH_ftest_coverage+:} false; then :
+if ${ac_cv_DASH_ftest_coverage+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8775,9 +8858,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_ftest_coverage=" -ftest-coverage"
+  ac_cv_DASH_ftest_coverage=" -ftest-coverage"
 else
-  DASH_ftest_coverage=""
+  ac_cv_DASH_ftest_coverage=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8787,11 +8870,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_ftest_coverage" >&5
-$as_echo "$DASH_ftest_coverage" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftest_coverage" >&5
+$as_echo "$ac_cv_DASH_ftest_coverage" >&6; }
+DASH_ftest_coverage="$ac_cv_DASH_ftest_coverage"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fprofile-arcs" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fprofile-arcs... " >&6; }
-if ${DASH_fprofile_arcs+:} false; then :
+if ${ac_cv_DASH_fprofile_arcs+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8815,9 +8901,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fprofile_arcs=" -fprofile-arcs"
+  ac_cv_DASH_fprofile_arcs=" -fprofile-arcs"
 else
-  DASH_fprofile_arcs=""
+  ac_cv_DASH_fprofile_arcs=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8827,11 +8913,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fprofile_arcs" >&5
-$as_echo "$DASH_fprofile_arcs" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fprofile_arcs" >&5
+$as_echo "$ac_cv_DASH_fprofile_arcs" >&6; }
+DASH_fprofile_arcs="$ac_cv_DASH_fprofile_arcs"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fbranch-probabilities" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fbranch-probabilities... " >&6; }
-if ${DASH_fbranch_probabilities+:} false; then :
+if ${ac_cv_DASH_fbranch_probabilities+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8855,9 +8944,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fbranch_probabilities=" -fbranch-probabilities"
+  ac_cv_DASH_fbranch_probabilities=" -fbranch-probabilities"
 else
-  DASH_fbranch_probabilities=""
+  ac_cv_DASH_fbranch_probabilities=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8867,13 +8956,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fbranch_probabilities" >&5
-$as_echo "$DASH_fbranch_probabilities" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fbranch_probabilities" >&5
+$as_echo "$ac_cv_DASH_fbranch_probabilities" >&6; }
+DASH_fbranch_probabilities="$ac_cv_DASH_fbranch_probabilities"
+
+
 
   # optimization options:
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -O1" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -O1... " >&6; }
-if ${DASH_O1+:} false; then :
+if ${ac_cv_DASH_O1+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8897,9 +8989,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_O1=" -O1"
+  ac_cv_DASH_O1=" -O1"
 else
-  DASH_O1=""
+  ac_cv_DASH_O1=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8909,11 +9001,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_O1" >&5
-$as_echo "$DASH_O1" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_O1" >&5
+$as_echo "$ac_cv_DASH_O1" >&6; }
+DASH_O1="$ac_cv_DASH_O1"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -O2" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -O2... " >&6; }
-if ${DASH_O2+:} false; then :
+if ${ac_cv_DASH_O2+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8937,9 +9032,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_O2=" -O2"
+  ac_cv_DASH_O2=" -O2"
 else
-  DASH_O2=""
+  ac_cv_DASH_O2=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8949,11 +9044,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_O2" >&5
-$as_echo "$DASH_O2" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_O2" >&5
+$as_echo "$ac_cv_DASH_O2" >&6; }
+DASH_O2="$ac_cv_DASH_O2"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-math-errno" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fno-math-errno... " >&6; }
-if ${DASH_fno_math_errno+:} false; then :
+if ${ac_cv_DASH_fno_math_errno+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -8977,9 +9075,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fno_math_errno=" -fno-math-errno"
+  ac_cv_DASH_fno_math_errno=" -fno-math-errno"
 else
-  DASH_fno_math_errno=""
+  ac_cv_DASH_fno_math_errno=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -8989,11 +9087,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fno_math_errno" >&5
-$as_echo "$DASH_fno_math_errno" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_math_errno" >&5
+$as_echo "$ac_cv_DASH_fno_math_errno" >&6; }
+DASH_fno_math_errno="$ac_cv_DASH_fno_math_errno"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-strict-aliasing" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fno-strict-aliasing... " >&6; }
-if ${DASH_fno_strict_aliasing+:} false; then :
+if ${ac_cv_DASH_fno_strict_aliasing+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9017,9 +9118,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fno_strict_aliasing=" -fno-strict-aliasing"
+  ac_cv_DASH_fno_strict_aliasing=" -fno-strict-aliasing"
 else
-  DASH_fno_strict_aliasing=""
+  ac_cv_DASH_fno_strict_aliasing=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9029,11 +9130,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fno_strict_aliasing" >&5
-$as_echo "$DASH_fno_strict_aliasing" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_strict_aliasing" >&5
+$as_echo "$ac_cv_DASH_fno_strict_aliasing" >&6; }
+DASH_fno_strict_aliasing="$ac_cv_DASH_fno_strict_aliasing"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fwrapv" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fwrapv... " >&6; }
-if ${DASH_fwrapv+:} false; then :
+if ${ac_cv_DASH_fwrapv+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9057,9 +9161,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fwrapv=" -fwrapv"
+  ac_cv_DASH_fwrapv=" -fwrapv"
 else
-  DASH_fwrapv=""
+  ac_cv_DASH_fwrapv=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9069,11 +9173,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fwrapv" >&5
-$as_echo "$DASH_fwrapv" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fwrapv" >&5
+$as_echo "$ac_cv_DASH_fwrapv" >&6; }
+DASH_fwrapv="$ac_cv_DASH_fwrapv"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fomit-frame-pointer" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fomit-frame-pointer... " >&6; }
-if ${DASH_fomit_frame_pointer+:} false; then :
+if ${ac_cv_DASH_fomit_frame_pointer+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9097,9 +9204,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fomit_frame_pointer=" -fomit-frame-pointer"
+  ac_cv_DASH_fomit_frame_pointer=" -fomit-frame-pointer"
 else
-  DASH_fomit_frame_pointer=""
+  ac_cv_DASH_fomit_frame_pointer=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9109,8 +9216,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fomit_frame_pointer" >&5
-$as_echo "$DASH_fomit_frame_pointer" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fomit_frame_pointer" >&5
+$as_echo "$ac_cv_DASH_fomit_frame_pointer" >&6; }
+DASH_fomit_frame_pointer="$ac_cv_DASH_fomit_frame_pointer"
+
+
 
   OPT_LEVEL_FLAG="$DASH_O1"
 
@@ -9152,7 +9262,7 @@ $as_echo "$DASH_fomit_frame_pointer" >&6; }
   if test "$ENABLE_GCC_OPTS" = yes; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fmodulo-sched" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fmodulo-sched... " >&6; }
-if ${DASH_fmodulo_sched+:} false; then :
+if ${ac_cv_DASH_fmodulo_sched+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9176,9 +9286,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fmodulo_sched=" -fmodulo-sched"
+  ac_cv_DASH_fmodulo_sched=" -fmodulo-sched"
 else
-  DASH_fmodulo_sched=""
+  ac_cv_DASH_fmodulo_sched=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9188,11 +9298,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fmodulo_sched" >&5
-$as_echo "$DASH_fmodulo_sched" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fmodulo_sched" >&5
+$as_echo "$ac_cv_DASH_fmodulo_sched" >&6; }
+DASH_fmodulo_sched="$ac_cv_DASH_fmodulo_sched"
+
+
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -freschedule-modulo-scheduled-loops" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -freschedule-modulo-scheduled-loops... " >&6; }
-if ${DASH_freschedule_modulo_scheduled_loops+:} false; then :
+if ${ac_cv_DASH_freschedule_modulo_scheduled_loops+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9216,9 +9329,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_freschedule_modulo_scheduled_loops=" -freschedule-modulo-scheduled-loops"
+  ac_cv_DASH_freschedule_modulo_scheduled_loops=" -freschedule-modulo-scheduled-loops"
 else
-  DASH_freschedule_modulo_scheduled_loops=""
+  ac_cv_DASH_freschedule_modulo_scheduled_loops=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9228,8 +9341,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_freschedule_modulo_scheduled_loops" >&5
-$as_echo "$DASH_freschedule_modulo_scheduled_loops" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_freschedule_modulo_scheduled_loops" >&5
+$as_echo "$ac_cv_DASH_freschedule_modulo_scheduled_loops" >&6; }
+DASH_freschedule_modulo_scheduled_loops="$ac_cv_DASH_freschedule_modulo_scheduled_loops"
+
+
 
   fi
 
@@ -9245,7 +9361,7 @@ $as_echo "$DASH_freschedule_modulo_scheduled_loops" >&6; }
           *) # check for code generation options for other systems
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fPIC" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fPIC... " >&6; }
-if ${DASH_fPIC+:} false; then :
+if ${ac_cv_DASH_fPIC+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9269,9 +9385,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fPIC=" -fPIC"
+  ac_cv_DASH_fPIC=" -fPIC"
 else
-  DASH_fPIC=""
+  ac_cv_DASH_fPIC=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9281,11 +9397,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fPIC" >&5
-$as_echo "$DASH_fPIC" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fPIC" >&5
+$as_echo "$ac_cv_DASH_fPIC" >&6; }
+DASH_fPIC="$ac_cv_DASH_fPIC"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fpic" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fpic... " >&6; }
-if ${DASH_fpic+:} false; then :
+if ${ac_cv_DASH_fpic+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9309,9 +9428,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fpic=" -fpic"
+  ac_cv_DASH_fpic=" -fpic"
 else
-  DASH_fpic=""
+  ac_cv_DASH_fpic=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9321,13 +9440,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fpic" >&5
-$as_echo "$DASH_fpic" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fpic" >&5
+$as_echo "$ac_cv_DASH_fpic" >&6; }
+DASH_fpic="$ac_cv_DASH_fpic"
+
+
              ;;
   esac
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-common" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fno-common... " >&6; }
-if ${DASH_fno_common+:} false; then :
+if ${ac_cv_DASH_fno_common+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9351,9 +9473,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fno_common=" -fno-common"
+  ac_cv_DASH_fno_common=" -fno-common"
 else
-  DASH_fno_common=""
+  ac_cv_DASH_fno_common=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9363,8 +9485,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fno_common" >&5
-$as_echo "$DASH_fno_common" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_common" >&5
+$as_echo "$ac_cv_DASH_fno_common" >&6; }
+DASH_fno_common="$ac_cv_DASH_fno_common"
+
+
 
   # linking options:
   case "$target_os" in
@@ -9372,7 +9497,7 @@ $as_echo "$DASH_fno_common" >&6; }
      mingw*) # no special options needed by MinGW
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${DASH_shared+:} false; then :
+if ${ac_cv_DASH_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9396,9 +9521,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_shared=" -shared"
+  ac_cv_DASH_shared=" -shared"
 else
-  DASH_shared=""
+  ac_cv_DASH_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9408,14 +9533,17 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_shared" >&5
-$as_echo "$DASH_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
+$as_echo "$ac_cv_DASH_shared" >&6; }
+DASH_shared="$ac_cv_DASH_shared"
+
+
              ;;
 
     cygwin*) # no special options needed by cygwin
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${DASH_shared+:} false; then :
+if ${ac_cv_DASH_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9439,9 +9567,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_shared=" -shared"
+  ac_cv_DASH_shared=" -shared"
 else
-  DASH_shared=""
+  ac_cv_DASH_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9451,14 +9579,17 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_shared" >&5
-$as_echo "$DASH_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
+$as_echo "$ac_cv_DASH_shared" >&6; }
+DASH_shared="$ac_cv_DASH_shared"
+
+
              ;;
 
    solaris*) # check for options needed by Solaris
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${DASH_shared+:} false; then :
+if ${ac_cv_DASH_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9482,9 +9613,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_shared=" -shared"
+  ac_cv_DASH_shared=" -shared"
 else
-  DASH_shared=""
+  ac_cv_DASH_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9494,14 +9625,17 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_shared" >&5
-$as_echo "$DASH_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
+$as_echo "$ac_cv_DASH_shared" >&6; }
+DASH_shared="$ac_cv_DASH_shared"
+
+
              ;;
 
       hpux*) # check for options needed by HP-UX
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${DASH_shared+:} false; then :
+if ${ac_cv_DASH_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9525,9 +9659,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_shared=" -shared"
+  ac_cv_DASH_shared=" -shared"
 else
-  DASH_shared=""
+  ac_cv_DASH_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9537,14 +9671,17 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_shared" >&5
-$as_echo "$DASH_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
+$as_echo "$ac_cv_DASH_shared" >&6; }
+DASH_shared="$ac_cv_DASH_shared"
+
+
              ;;
 
     darwin*) # check for special options added by Apple
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -dynamiclib" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -dynamiclib... " >&6; }
-if ${DASH_dynamiclib+:} false; then :
+if ${ac_cv_DASH_dynamiclib+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9568,9 +9705,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_dynamiclib=" -dynamiclib"
+  ac_cv_DASH_dynamiclib=" -dynamiclib"
 else
-  DASH_dynamiclib=""
+  ac_cv_DASH_dynamiclib=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9580,11 +9717,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_dynamiclib" >&5
-$as_echo "$DASH_dynamiclib" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_dynamiclib" >&5
+$as_echo "$ac_cv_DASH_dynamiclib" >&6; }
+DASH_dynamiclib="$ac_cv_DASH_dynamiclib"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -bundle" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -bundle... " >&6; }
-if ${DASH_bundle+:} false; then :
+if ${ac_cv_DASH_bundle+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9608,9 +9748,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_bundle=" -bundle"
+  ac_cv_DASH_bundle=" -bundle"
 else
-  DASH_bundle=""
+  ac_cv_DASH_bundle=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9620,11 +9760,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_bundle" >&5
-$as_echo "$DASH_bundle" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_bundle" >&5
+$as_echo "$ac_cv_DASH_bundle" >&6; }
+DASH_bundle="$ac_cv_DASH_bundle"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -flat_namespace -undefined suppress" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -flat_namespace -undefined suppress... " >&6; }
-if ${DASH_flat_namespace_undefined_suppress+:} false; then :
+if ${ac_cv_DASH_flat_namespace_undefined_suppress+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9648,9 +9791,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_flat_namespace_undefined_suppress=" -flat_namespace -undefined suppress"
+  ac_cv_DASH_flat_namespace_undefined_suppress=" -flat_namespace -undefined suppress"
 else
-  DASH_flat_namespace_undefined_suppress=""
+  ac_cv_DASH_flat_namespace_undefined_suppress=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9660,14 +9803,17 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_flat_namespace_undefined_suppress" >&5
-$as_echo "$DASH_flat_namespace_undefined_suppress" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_flat_namespace_undefined_suppress" >&5
+$as_echo "$ac_cv_DASH_flat_namespace_undefined_suppress" >&6; }
+DASH_flat_namespace_undefined_suppress="$ac_cv_DASH_flat_namespace_undefined_suppress"
+
+
              ;;
 
           *) # for other systems
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -rdynamic" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -rdynamic... " >&6; }
-if ${DASH_rdynamic+:} false; then :
+if ${ac_cv_DASH_rdynamic+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9691,9 +9837,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_rdynamic=" -rdynamic"
+  ac_cv_DASH_rdynamic=" -rdynamic"
 else
-  DASH_rdynamic=""
+  ac_cv_DASH_rdynamic=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9703,11 +9849,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_rdynamic" >&5
-$as_echo "$DASH_rdynamic" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_rdynamic" >&5
+$as_echo "$ac_cv_DASH_rdynamic" >&6; }
+DASH_rdynamic="$ac_cv_DASH_rdynamic"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${DASH_shared+:} false; then :
+if ${ac_cv_DASH_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9731,9 +9880,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_shared=" -shared"
+  ac_cv_DASH_shared=" -shared"
 else
-  DASH_shared=""
+  ac_cv_DASH_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9743,8 +9892,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_shared" >&5
-$as_echo "$DASH_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
+$as_echo "$ac_cv_DASH_shared" >&6; }
+DASH_shared="$ac_cv_DASH_shared"
+
+
              ;;
   esac
 
@@ -9816,7 +9968,8 @@ $as_echo "$DASH_shared" >&6; }
   fi
 
   if test "$ENABLE_FEEDBACK1" = yes -o "$ENABLE_COVERAGE" = yes; then
-    $as_echo "#define ___DONT_UNLOAD_DYN_CODE 1" >>confdefs.h
+
+$as_echo "#define ___DONT_UNLOAD_DYN_CODE /**/" >>confdefs.h
 
     FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_fprofile_arcs"
     if test "$ENABLE_COVERAGE" = yes; then
@@ -9825,7 +9978,8 @@ $as_echo "$DASH_shared" >&6; }
   fi
 
   if test "$ENABLE_FEEDBACK2" = yes; then
-    $as_echo "#define ___DONT_UNLOAD_DYN_CODE 1" >>confdefs.h
+
+$as_echo "#define ___DONT_UNLOAD_DYN_CODE /**/" >>confdefs.h
 
     FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_fbranch_probabilities"
   fi
@@ -9878,7 +10032,7 @@ else
              # debugging options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -g" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -g... " >&6; }
-if ${DASH_g+:} false; then :
+if ${ac_cv_DASH_g+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9902,9 +10056,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_g=" -g"
+  ac_cv_DASH_g=" -g"
 else
-  DASH_g=""
+  ac_cv_DASH_g=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9914,13 +10068,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_g" >&5
-$as_echo "$DASH_g" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_g" >&5
+$as_echo "$ac_cv_DASH_g" >&6; }
+DASH_g="$ac_cv_DASH_g"
+
+
 
              # profiling options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -p" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -p... " >&6; }
-if ${DASH_p+:} false; then :
+if ${ac_cv_DASH_p+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9944,9 +10101,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_p=" -p"
+  ac_cv_DASH_p=" -p"
 else
-  DASH_p=""
+  ac_cv_DASH_p=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9956,13 +10113,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_p" >&5
-$as_echo "$DASH_p" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_p" >&5
+$as_echo "$ac_cv_DASH_p" >&6; }
+DASH_p="$ac_cv_DASH_p"
+
+
 
              # optimization options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -xO2" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -xO2... " >&6; }
-if ${DASH_xO2+:} false; then :
+if ${ac_cv_DASH_xO2+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -9986,9 +10146,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_xO2=" -xO2"
+  ac_cv_DASH_xO2=" -xO2"
 else
-  DASH_xO2=""
+  ac_cv_DASH_xO2=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -9998,13 +10158,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_xO2" >&5
-$as_echo "$DASH_xO2" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_xO2" >&5
+$as_echo "$ac_cv_DASH_xO2" >&6; }
+DASH_xO2="$ac_cv_DASH_xO2"
+
+
 
              # code generation options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -KPIC" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -KPIC... " >&6; }
-if ${DASH_KPIC+:} false; then :
+if ${ac_cv_DASH_KPIC+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10028,9 +10191,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_KPIC=" -KPIC"
+  ac_cv_DASH_KPIC=" -KPIC"
 else
-  DASH_KPIC=""
+  ac_cv_DASH_KPIC=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10040,13 +10203,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_KPIC" >&5
-$as_echo "$DASH_KPIC" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_KPIC" >&5
+$as_echo "$ac_cv_DASH_KPIC" >&6; }
+DASH_KPIC="$ac_cv_DASH_KPIC"
+
+
 
              # linking options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -G" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -G... " >&6; }
-if ${DASH_G+:} false; then :
+if ${ac_cv_DASH_G+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10070,9 +10236,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_G=" -G"
+  ac_cv_DASH_G=" -G"
 else
-  DASH_G=""
+  ac_cv_DASH_G=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10082,8 +10248,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_G" >&5
-$as_echo "$DASH_G" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_G" >&5
+$as_echo "$ac_cv_DASH_G" >&6; }
+DASH_G="$ac_cv_DASH_G"
+
+
 
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
@@ -10109,7 +10278,7 @@ $as_echo "$DASH_G" >&6; }
              # debugging options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -g" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -g... " >&6; }
-if ${DASH_g+:} false; then :
+if ${ac_cv_DASH_g+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10133,9 +10302,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_g=" -g"
+  ac_cv_DASH_g=" -g"
 else
-  DASH_g=""
+  ac_cv_DASH_g=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10145,13 +10314,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_g" >&5
-$as_echo "$DASH_g" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_g" >&5
+$as_echo "$ac_cv_DASH_g" >&6; }
+DASH_g="$ac_cv_DASH_g"
+
+
 
              # profiling options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -p" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -p... " >&6; }
-if ${DASH_p+:} false; then :
+if ${ac_cv_DASH_p+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10175,9 +10347,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_p=" -p"
+  ac_cv_DASH_p=" -p"
 else
-  DASH_p=""
+  ac_cv_DASH_p=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10187,13 +10359,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_p" >&5
-$as_echo "$DASH_p" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_p" >&5
+$as_echo "$ac_cv_DASH_p" >&6; }
+DASH_p="$ac_cv_DASH_p"
+
+
 
              # optimization options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -O2" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -O2... " >&6; }
-if ${DASH_O2+:} false; then :
+if ${ac_cv_DASH_O2+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10217,9 +10392,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_O2=" -O2"
+  ac_cv_DASH_O2=" -O2"
 else
-  DASH_O2=""
+  ac_cv_DASH_O2=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10229,13 +10404,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_O2" >&5
-$as_echo "$DASH_O2" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_O2" >&5
+$as_echo "$ac_cv_DASH_O2" >&6; }
+DASH_O2="$ac_cv_DASH_O2"
+
+
 
              # code generation options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ieee" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -ieee... " >&6; }
-if ${DASH_ieee+:} false; then :
+if ${ac_cv_DASH_ieee+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10259,9 +10437,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_ieee=" -ieee"
+  ac_cv_DASH_ieee=" -ieee"
 else
-  DASH_ieee=""
+  ac_cv_DASH_ieee=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10271,11 +10449,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_ieee" >&5
-$as_echo "$DASH_ieee" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ieee" >&5
+$as_echo "$ac_cv_DASH_ieee" >&6; }
+DASH_ieee="$ac_cv_DASH_ieee"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -call_shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -call_shared... " >&6; }
-if ${DASH_call_shared+:} false; then :
+if ${ac_cv_DASH_call_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10299,9 +10480,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_call_shared=" -call_shared"
+  ac_cv_DASH_call_shared=" -call_shared"
 else
-  DASH_call_shared=""
+  ac_cv_DASH_call_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10311,14 +10492,17 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_call_shared" >&5
-$as_echo "$DASH_call_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_call_shared" >&5
+$as_echo "$ac_cv_DASH_call_shared" >&6; }
+DASH_call_shared="$ac_cv_DASH_call_shared"
+
+
              #AC_CHECK_C_COMPILER_OPT(-taso,DASH_taso)
 
              # linking options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${DASH_shared+:} false; then :
+if ${ac_cv_DASH_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10342,9 +10526,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_shared=" -shared"
+  ac_cv_DASH_shared=" -shared"
 else
-  DASH_shared=""
+  ac_cv_DASH_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10354,11 +10538,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_shared" >&5
-$as_echo "$DASH_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
+$as_echo "$ac_cv_DASH_shared" >&6; }
+DASH_shared="$ac_cv_DASH_shared"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -expect_unresolved" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -expect_unresolved... " >&6; }
-if ${DASH_expect_unresolved+:} false; then :
+if ${ac_cv_DASH_expect_unresolved+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10382,9 +10569,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_expect_unresolved=" -expect_unresolved"
+  ac_cv_DASH_expect_unresolved=" -expect_unresolved"
 else
-  DASH_expect_unresolved=""
+  ac_cv_DASH_expect_unresolved=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10394,8 +10581,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_expect_unresolved" >&5
-$as_echo "$DASH_expect_unresolved" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_expect_unresolved" >&5
+$as_echo "$ac_cv_DASH_expect_unresolved" >&6; }
+DASH_expect_unresolved="$ac_cv_DASH_expect_unresolved"
+
+
 
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
@@ -10421,7 +10611,7 @@ $as_echo "$DASH_expect_unresolved" >&6; }
              # debugging options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fullwarn" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fullwarn... " >&6; }
-if ${DASH_fullwarn+:} false; then :
+if ${ac_cv_DASH_fullwarn+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10445,9 +10635,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_fullwarn=" -fullwarn"
+  ac_cv_DASH_fullwarn=" -fullwarn"
 else
-  DASH_fullwarn=""
+  ac_cv_DASH_fullwarn=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10457,11 +10647,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_fullwarn" >&5
-$as_echo "$DASH_fullwarn" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fullwarn" >&5
+$as_echo "$ac_cv_DASH_fullwarn" >&6; }
+DASH_fullwarn="$ac_cv_DASH_fullwarn"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -woff 1110,1174,1209,1552,3201" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -woff 1110,1174,1209,1552,3201... " >&6; }
-if ${DASH_woff_1110_1174_1209_1552_3201+:} false; then :
+if ${ac_cv_DASH_woff_1110_1174_1209_1552_3201+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10485,9 +10678,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_woff_1110_1174_1209_1552_3201=" -woff 1110,1174,1209,1552,3201"
+  ac_cv_DASH_woff_1110_1174_1209_1552_3201=" -woff 1110,1174,1209,1552,3201"
 else
-  DASH_woff_1110_1174_1209_1552_3201=""
+  ac_cv_DASH_woff_1110_1174_1209_1552_3201=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10497,11 +10690,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_woff_1110_1174_1209_1552_3201" >&5
-$as_echo "$DASH_woff_1110_1174_1209_1552_3201" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_woff_1110_1174_1209_1552_3201" >&5
+$as_echo "$ac_cv_DASH_woff_1110_1174_1209_1552_3201" >&6; }
+DASH_woff_1110_1174_1209_1552_3201="$ac_cv_DASH_woff_1110_1174_1209_1552_3201"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -g" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -g... " >&6; }
-if ${DASH_g+:} false; then :
+if ${ac_cv_DASH_g+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10525,9 +10721,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_g=" -g"
+  ac_cv_DASH_g=" -g"
 else
-  DASH_g=""
+  ac_cv_DASH_g=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10537,13 +10733,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_g" >&5
-$as_echo "$DASH_g" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_g" >&5
+$as_echo "$ac_cv_DASH_g" >&6; }
+DASH_g="$ac_cv_DASH_g"
+
+
 
              # optimization options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -O1" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -O1... " >&6; }
-if ${DASH_O1+:} false; then :
+if ${ac_cv_DASH_O1+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10567,9 +10766,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_O1=" -O1"
+  ac_cv_DASH_O1=" -O1"
 else
-  DASH_O1=""
+  ac_cv_DASH_O1=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10579,11 +10778,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_O1" >&5
-$as_echo "$DASH_O1" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_O1" >&5
+$as_echo "$ac_cv_DASH_O1" >&6; }
+DASH_O1="$ac_cv_DASH_O1"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -OPT:Olimit=0" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -OPT:Olimit=0... " >&6; }
-if ${DASH_OPT_Olimit_0+:} false; then :
+if ${ac_cv_DASH_OPT_Olimit_0+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10607,9 +10809,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_OPT_Olimit_0=" -OPT:Olimit=0"
+  ac_cv_DASH_OPT_Olimit_0=" -OPT:Olimit=0"
 else
-  DASH_OPT_Olimit_0=""
+  ac_cv_DASH_OPT_Olimit_0=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10619,15 +10821,18 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_OPT_Olimit_0" >&5
-$as_echo "$DASH_OPT_Olimit_0" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_OPT_Olimit_0" >&5
+$as_echo "$ac_cv_DASH_OPT_Olimit_0" >&6; }
+DASH_OPT_Olimit_0="$ac_cv_DASH_OPT_Olimit_0"
+
+
 
              # code generation options:
              #AC_CHECK_C_COMPILER_OPT(-KPIC,DASH_KPIC)
              #AC_CHECK_C_COMPILER_OPT(-non_shared,DASH_non_shared)
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -TENV:large_GOT" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -TENV:large_GOT... " >&6; }
-if ${DASH_TENV_large_GOT+:} false; then :
+if ${ac_cv_DASH_TENV_large_GOT+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10651,9 +10856,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_TENV_large_GOT=" -TENV:large_GOT"
+  ac_cv_DASH_TENV_large_GOT=" -TENV:large_GOT"
 else
-  DASH_TENV_large_GOT=""
+  ac_cv_DASH_TENV_large_GOT=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10663,11 +10868,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_TENV_large_GOT" >&5
-$as_echo "$DASH_TENV_large_GOT" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_TENV_large_GOT" >&5
+$as_echo "$ac_cv_DASH_TENV_large_GOT" >&6; }
+DASH_TENV_large_GOT="$ac_cv_DASH_TENV_large_GOT"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -OPT:IEEE_comparisons=ON" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -OPT:IEEE_comparisons=ON... " >&6; }
-if ${DASH_OPT_IEEE_comparisons_ON+:} false; then :
+if ${ac_cv_DASH_OPT_IEEE_comparisons_ON+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10691,9 +10899,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_OPT_IEEE_comparisons_ON=" -OPT:IEEE_comparisons=ON"
+  ac_cv_DASH_OPT_IEEE_comparisons_ON=" -OPT:IEEE_comparisons=ON"
 else
-  DASH_OPT_IEEE_comparisons_ON=""
+  ac_cv_DASH_OPT_IEEE_comparisons_ON=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10703,11 +10911,14 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_OPT_IEEE_comparisons_ON" >&5
-$as_echo "$DASH_OPT_IEEE_comparisons_ON" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_OPT_IEEE_comparisons_ON" >&5
+$as_echo "$ac_cv_DASH_OPT_IEEE_comparisons_ON" >&6; }
+DASH_OPT_IEEE_comparisons_ON="$ac_cv_DASH_OPT_IEEE_comparisons_ON"
+
+
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -OPT:IEEE_NaN_inf=ON" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -OPT:IEEE_NaN_inf=ON... " >&6; }
-if ${DASH_OPT_IEEE_NaN_inf_ON+:} false; then :
+if ${ac_cv_DASH_OPT_IEEE_NaN_inf_ON+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10731,9 +10942,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_OPT_IEEE_NaN_inf_ON=" -OPT:IEEE_NaN_inf=ON"
+  ac_cv_DASH_OPT_IEEE_NaN_inf_ON=" -OPT:IEEE_NaN_inf=ON"
 else
-  DASH_OPT_IEEE_NaN_inf_ON=""
+  ac_cv_DASH_OPT_IEEE_NaN_inf_ON=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10743,13 +10954,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_OPT_IEEE_NaN_inf_ON" >&5
-$as_echo "$DASH_OPT_IEEE_NaN_inf_ON" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_OPT_IEEE_NaN_inf_ON" >&5
+$as_echo "$ac_cv_DASH_OPT_IEEE_NaN_inf_ON" >&6; }
+DASH_OPT_IEEE_NaN_inf_ON="$ac_cv_DASH_OPT_IEEE_NaN_inf_ON"
+
+
 
              # linking options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${DASH_shared+:} false; then :
+if ${ac_cv_DASH_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10773,9 +10987,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_shared=" -shared"
+  ac_cv_DASH_shared=" -shared"
 else
-  DASH_shared=""
+  ac_cv_DASH_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10785,8 +10999,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_shared" >&5
-$as_echo "$DASH_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
+$as_echo "$ac_cv_DASH_shared" >&6; }
+DASH_shared="$ac_cv_DASH_shared"
+
+
 
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
@@ -10810,7 +11027,7 @@ $as_echo "$DASH_shared" >&6; }
              # debugging options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -g" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -g... " >&6; }
-if ${DASH_g+:} false; then :
+if ${ac_cv_DASH_g+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10834,9 +11051,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_g=" -g"
+  ac_cv_DASH_g=" -g"
 else
-  DASH_g=""
+  ac_cv_DASH_g=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10846,13 +11063,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_g" >&5
-$as_echo "$DASH_g" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_g" >&5
+$as_echo "$ac_cv_DASH_g" >&6; }
+DASH_g="$ac_cv_DASH_g"
+
+
 
              # profiling options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -p" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -p... " >&6; }
-if ${DASH_p+:} false; then :
+if ${ac_cv_DASH_p+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10876,9 +11096,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_p=" -p"
+  ac_cv_DASH_p=" -p"
 else
-  DASH_p=""
+  ac_cv_DASH_p=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10888,13 +11108,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_p" >&5
-$as_echo "$DASH_p" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_p" >&5
+$as_echo "$ac_cv_DASH_p" >&6; }
+DASH_p="$ac_cv_DASH_p"
+
+
 
              # optimization options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -O1" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -O1... " >&6; }
-if ${DASH_O1+:} false; then :
+if ${ac_cv_DASH_O1+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10918,9 +11141,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_O1=" -O1"
+  ac_cv_DASH_O1=" -O1"
 else
-  DASH_O1=""
+  ac_cv_DASH_O1=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10930,13 +11153,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_O1" >&5
-$as_echo "$DASH_O1" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_O1" >&5
+$as_echo "$ac_cv_DASH_O1" >&6; }
+DASH_O1="$ac_cv_DASH_O1"
+
+
 
              # linking options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -b" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -b... " >&6; }
-if ${DASH_b+:} false; then :
+if ${ac_cv_DASH_b+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -10960,9 +11186,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_b=" -b"
+  ac_cv_DASH_b=" -b"
 else
-  DASH_b=""
+  ac_cv_DASH_b=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -10972,8 +11198,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_b" >&5
-$as_echo "$DASH_b" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_b" >&5
+$as_echo "$ac_cv_DASH_b" >&6; }
+DASH_b="$ac_cv_DASH_b"
+
+
 
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
@@ -10997,7 +11226,7 @@ $as_echo "$DASH_b" >&6; }
              # debugging options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -g" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -g... " >&6; }
-if ${DASH_g+:} false; then :
+if ${ac_cv_DASH_g+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -11021,9 +11250,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_g=" -g"
+  ac_cv_DASH_g=" -g"
 else
-  DASH_g=""
+  ac_cv_DASH_g=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -11033,13 +11262,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_g" >&5
-$as_echo "$DASH_g" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_g" >&5
+$as_echo "$ac_cv_DASH_g" >&6; }
+DASH_g="$ac_cv_DASH_g"
+
+
 
              # profiling options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -p" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -p... " >&6; }
-if ${DASH_p+:} false; then :
+if ${ac_cv_DASH_p+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -11063,9 +11295,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_p=" -p"
+  ac_cv_DASH_p=" -p"
 else
-  DASH_p=""
+  ac_cv_DASH_p=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -11075,13 +11307,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_p" >&5
-$as_echo "$DASH_p" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_p" >&5
+$as_echo "$ac_cv_DASH_p" >&6; }
+DASH_p="$ac_cv_DASH_p"
+
+
 
              # optimization options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -O1" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -O1... " >&6; }
-if ${DASH_O1+:} false; then :
+if ${ac_cv_DASH_O1+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -11105,9 +11340,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_O1=" -O1"
+  ac_cv_DASH_O1=" -O1"
 else
-  DASH_O1=""
+  ac_cv_DASH_O1=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -11117,13 +11352,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_O1" >&5
-$as_echo "$DASH_O1" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_O1" >&5
+$as_echo "$ac_cv_DASH_O1" >&6; }
+DASH_O1="$ac_cv_DASH_O1"
+
+
 
              # linking options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -G" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -G... " >&6; }
-if ${DASH_G+:} false; then :
+if ${ac_cv_DASH_G+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -11147,9 +11385,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_G=" -G"
+  ac_cv_DASH_G=" -G"
 else
-  DASH_G=""
+  ac_cv_DASH_G=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -11159,8 +11397,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_G" >&5
-$as_echo "$DASH_G" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_G" >&5
+$as_echo "$ac_cv_DASH_G" >&6; }
+DASH_G="$ac_cv_DASH_G"
+
+
 
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 
@@ -11211,7 +11452,7 @@ $as_echo "$as_me:
              # debugging options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -g" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -g... " >&6; }
-if ${DASH_g+:} false; then :
+if ${ac_cv_DASH_g+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -11235,9 +11476,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_g=" -g"
+  ac_cv_DASH_g=" -g"
 else
-  DASH_g=""
+  ac_cv_DASH_g=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -11247,13 +11488,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_g" >&5
-$as_echo "$DASH_g" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_g" >&5
+$as_echo "$ac_cv_DASH_g" >&6; }
+DASH_g="$ac_cv_DASH_g"
+
+
 
              # profiling options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -p" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -p... " >&6; }
-if ${DASH_p+:} false; then :
+if ${ac_cv_DASH_p+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -11277,9 +11521,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_p=" -p"
+  ac_cv_DASH_p=" -p"
 else
-  DASH_p=""
+  ac_cv_DASH_p=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -11289,13 +11533,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_p" >&5
-$as_echo "$DASH_p" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_p" >&5
+$as_echo "$ac_cv_DASH_p" >&6; }
+DASH_p="$ac_cv_DASH_p"
+
+
 
              # optimization options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -O1" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -O1... " >&6; }
-if ${DASH_O1+:} false; then :
+if ${ac_cv_DASH_O1+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -11319,9 +11566,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_O1=" -O1"
+  ac_cv_DASH_O1=" -O1"
 else
-  DASH_O1=""
+  ac_cv_DASH_O1=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -11331,13 +11578,16 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_O1" >&5
-$as_echo "$DASH_O1" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_O1" >&5
+$as_echo "$ac_cv_DASH_O1" >&6; }
+DASH_O1="$ac_cv_DASH_O1"
+
+
 
              # linking options:
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${DASH_shared+:} false; then :
+if ${ac_cv_DASH_shared+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -11361,9 +11611,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  DASH_shared=" -shared"
+  ac_cv_DASH_shared=" -shared"
 else
-  DASH_shared=""
+  ac_cv_DASH_shared=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -11373,8 +11623,11 @@ if test "$ac_test_CXXFLAGS" = set; then
 fi
 
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $DASH_shared" >&5
-$as_echo "$DASH_shared" >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
+$as_echo "$ac_cv_DASH_shared" >&6; }
+DASH_shared="$ac_cv_DASH_shared"
+
+
 
              # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
 

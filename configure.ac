@@ -220,7 +220,7 @@ if test "$ENABLE_GUIDE" = yes; then
 fi
 
 if test "$ENABLE_GUIDE" = yes; then
-  AC_DEFINE(___GUIDE)
+  AC_DEFINE([___GUIDE],[],[Enable GUIDE])
   AC_SUBST(QTINCPATH)
   RTLIBSUBSYS="$RTLIBSUBSYS guide"
   RTLIBMAKEFILES="$RTLIBMAKEFILES lib/guide/guidepro lib/guide/makefile lib/guide/images/makefile"
@@ -251,7 +251,7 @@ AC_ARG_ENABLE(debug,
               ENABLE_DEBUG=no)
 
 if test "$ENABLE_DEBUG" = yes; then
-  AC_DEFINE(___DEBUG)
+  AC_DEFINE([___DEBUG],[],[Enable debugging])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG"
 fi
 
@@ -266,7 +266,7 @@ AC_ARG_ENABLE(profile,
               ENABLE_PROFILE=no)
 
 if test "$ENABLE_PROFILE" = yes; then
-  AC_DEFINE(___PROFILE)
+  AC_DEFINE([___PROFILE],[],[Enable profiling])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___PROFILE"
 fi
 
@@ -309,7 +309,7 @@ AC_ARG_ENABLE(single-host,
               ENABLE_SINGLE_HOST=no)
 
 if test "$ENABLE_SINGLE_HOST" = yes; then
-  AC_DEFINE(___SINGLE_HOST)
+  AC_DEFINE([___SINGLE_HOST],[],[Enable single host mode])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___SINGLE_HOST"
 fi
 
@@ -326,7 +326,7 @@ AC_ARG_ENABLE(inline-jumps,
               ENABLE_INLINE_JUMPS=no)
 
 if test "$ENABLE_INLINE_JUMPS" = yes; then
-  AC_DEFINE(___INLINE_JUMPS)
+  AC_DEFINE([___INLINE_JUMPS],[],[Enable inlining of jumps])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___INLINE_JUMPS"
 fi
 
@@ -407,7 +407,7 @@ AC_ARG_ENABLE(shared,
               ENABLE_SHARED=no)
 
 if test "$ENABLE_SHARED" = yes; then
-  AC_DEFINE(___SHARED)
+  AC_DEFINE([___SHARED],[],[Enable shared libraries])
   # don't add to DEFS_OBJ_DYN_LIB_EXE
 fi
 
@@ -547,7 +547,7 @@ AC_ARG_ENABLE(poll,
               ENABLE_POLL=no)
 
 if test "$ENABLE_POLL" = yes; then
-  AC_DEFINE(USE_POLL_FOR_SELECT, 1)
+  AC_DEFINE([USE_POLL_FOR_SELECT],[],[Enable use of poll instead of select])
 fi
 
 ###############################################################################
@@ -612,9 +612,9 @@ fi
 #
 # Check for C compiler.
 
-AC_DEFUN(AC_CHECK_C_COMPILER_DEF,
-[AC_CACHE_CHECK(whether $C_COMPILER defines [$1], [$2],
-[AC_SUBST($2)
+AC_DEFUN([AC_CHECK_C_COMPILER_DEF],
+[AC_CACHE_CHECK([whether $C_COMPILER defines $1], [ac_cv_$2],
+[
 rm -f conftest.$ac_ext
 cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
@@ -634,15 +634,18 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  $2="yes"
+  ac_cv_$2="yes"
 else
-  $2=""
+  ac_cv_$2=""
 fi
-])])
+])
+$2="$ac_cv_$2"
+AC_SUBST($2)
+])
 
-AC_DEFUN(AC_CHECK_C_COMPILER_OPT,
-[AC_CACHE_CHECK(whether $C_COMPILER accepts [$1], [$2],
-[AC_SUBST($2)
+AC_DEFUN([AC_CHECK_C_COMPILER_OPT],
+[AC_CACHE_CHECK([whether $C_COMPILER accepts $1], [ac_cv_$2],
+[
 rm -f conftest.$ac_ext
 cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
@@ -663,9 +666,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  $2=" $1"
+  ac_cv_$2=" $1"
 else
-  $2=""
+  ac_cv_$2=""
 fi
 if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
@@ -673,11 +676,14 @@ fi
 if test "$ac_test_CXXFLAGS" = set; then
   CXXFLAGS=$ac_save_CXXFLAGS
 fi
-])])
+])
+$2="$ac_cv_$2"
+AC_SUBST($2)
+])
 
-AC_DEFUN(AC_CHECK_C_COMPILER_CPP_EXPR,
-[AC_CACHE_CHECK(how $C_COMPILER's preprocessor evaluates [$1], [$2],
-[AC_SUBST($2)
+AC_DEFUN([AC_CHECK_C_COMPILER_CPP_EXPR],
+[AC_CACHE_CHECK([how $C_COMPILER's preprocessor evaluates $1], [ac_cv_$2],
+[
 rm -f conftest.$ac_ext
 cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
@@ -698,11 +704,14 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; then
-  $2="yes"
+  ac_cv_$2="yes"
 else
-  $2=""
+  ac_cv_$2=""
 fi
-])])
+])
+$2="$ac_cv_$2"
+AC_SUBST($2)
+])
 
 AC_CHECK_C_COMPILER_DEF(__GNUC__,C_COMP_GNUC)
 AC_CHECK_C_COMPILER_DEF(__clang__,C_COMP_CLANG)
@@ -821,7 +830,7 @@ else
       ac_cv_type_socklen_t=no)
     ])
       if test $ac_cv_type_socklen_t != yes; then
-        AC_DEFINE(socklen_t, int)
+        AC_DEFINE([socklen_t],[int],[C type for socklen_t])
       fi
     ])
 
@@ -932,7 +941,7 @@ else
     ac_cv_func_tcgetsetattr=no)
   ])
     if test $ac_cv_func_tcgetsetattr = yes; then
-      AC_DEFINE(HAVE_TCGETSETATTR)
+      AC_DEFINE([HAVE_TCGETSETATTR],[],[Defined when tcgetattr and tcsetattr are available])
     fi
   ])
 
@@ -952,7 +961,7 @@ else
     ac_cv_func_sigaction=no)
   ])
     if test $ac_cv_func_sigaction = yes; then
-      AC_DEFINE(HAVE_SIGACTION)
+      AC_DEFINE([HAVE_SIGACTION],[],[Defined when sigaction is available])
     fi
   ])
 
@@ -973,8 +982,8 @@ else
     ac_cv_func_sigset=no)
   ])
     if test $ac_cv_func_sigset = yes; then
-      AC_DEFINE(HAVE_SIGEMPTYSET)
-      AC_DEFINE(HAVE_SIGADDSET)
+      AC_DEFINE([HAVE_SIGEMPTYSET],[],[Defined when sigemptyset is available])
+      AC_DEFINE([HAVE_SIGADDSET],[],[Defined when sigaddset is available])
     fi
   ])
 
@@ -994,7 +1003,7 @@ else
     ac_cv_func_sigprocmask=no)
   ])
     if test $ac_cv_func_sigprocmask = yes; then
-      AC_DEFINE(HAVE_SIGPROCMASK)
+      AC_DEFINE([HAVE_SIGPROCMASK],[],[Defined when sigprocmask is available])
     fi
   ])
 
@@ -1014,7 +1023,7 @@ else
     ac_cv_func_signal=no)
   ])
     if test $ac_cv_func_signal = yes; then
-      AC_DEFINE(HAVE_SIGNAL)
+      AC_DEFINE([HAVE_SIGNAL],[],[Defined when signal is available])
     fi
   ])
 
@@ -1036,7 +1045,7 @@ else
     ac_cv_environ=no)
   ])
     if test $ac_cv_environ = yes; then
-      AC_DEFINE(HAVE_ENVIRON)
+      AC_DEFINE([HAVE_ENVIRON],[],[Defined when environ is available])
     fi
   ])
 
@@ -1054,7 +1063,7 @@ else
     ac_cv__NSGetEnviron=no)
   ])
     if test $ac_cv__NSGetEnviron = yes; then
-      AC_DEFINE(HAVE__NSGETENVIRON)
+      AC_DEFINE([HAVE__NSGETENVIRON],[],[Defined when _NSGetEnviron is available])
     fi
   ])
 
@@ -1130,7 +1139,7 @@ else
 fi
 
 AC_CHECK_TYPE([struct stat64],
-              [AC_DEFINE(HAVE_STRUCT_STAT64, 1, [])],
+              [AC_DEFINE([HAVE_STRUCT_STAT64],[],[Defined when struct stat64 is available])],
               [],
               [#include <sys/stat.h>])
 
@@ -1512,7 +1521,7 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   if test "$ENABLE_FEEDBACK1" = yes -o "$ENABLE_COVERAGE" = yes; then
-    AC_DEFINE(___DONT_UNLOAD_DYN_CODE)
+    AC_DEFINE([___DONT_UNLOAD_DYN_CODE],[],[Disable unloading of dynamically loaded code])
     FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_fprofile_arcs"
     if test "$ENABLE_COVERAGE" = yes; then
       FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_ftest_coverage"
@@ -1520,7 +1529,7 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   if test "$ENABLE_FEEDBACK2" = yes; then
-    AC_DEFINE(___DONT_UNLOAD_DYN_CODE)
+    AC_DEFINE([___DONT_UNLOAD_DYN_CODE],[],[Disable unloading of dynamically loaded code])
     FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_fbranch_probabilities"
   fi
 
