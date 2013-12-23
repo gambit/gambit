@@ -162,7 +162,7 @@ OBJECTS = $(LIBRARY_OBJECTS) $(EXECUTABLE_OBJECTS)
 
 RCFILES = makefile.in fixnum.scm generic.scm igsc.scm $(MODULES_SCM) \
 $(LIBRARIES_SCM) _envadt.scm _gvmadt.scm _ptreeadt.scm _sourceadt.scm \
-runtests.scm
+runtests.scm _t-x86.scm
 
 GENDISTFILES = $(MODULES_C) _$(GAMBCGSCLIB).c _gsc_.c
 
@@ -358,6 +358,8 @@ dist-pre dist-devel-pre:
 	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
 	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
 	done
+	@echo "    $(herefromroot)/tests"
+	(cd $(srcdir) ; COPYFILE_DISABLE=1 tar cf - `find tests -name "README" -print` `find tests -name "*.scm" -print`) | (cd $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) ; tar xf -)
 
 dist-post dist-devel-post:
 

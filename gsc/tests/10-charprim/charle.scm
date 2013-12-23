@@ -1,0 +1,26 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define a #\C)
+(define b #\C)
+(define c #\X)
+
+(define (test2 x y)
+  (println (##char<=?))
+  (println (if (##char<=?) 11 22))
+  (println (##char<=? x))
+  (println (if (##char<=? x) 11 22))
+  (println (##char<=? x y))
+  (println (if (##char<=? x y) 11 22))
+  (println (##char<=? x y #\M))
+  (println (if (##char<=? x y #\M) 11 22))
+  (println (##char<=? x y #\A))
+  (println (if (##char<=? x y #\A) 11 22)))
+
+(define (test x)
+  (test2 x a)
+  (test2 x b)
+  (test2 x c))
+
+(test a)
+(test b)
+(test c)

@@ -237,7 +237,7 @@ dist-pre dist-devel-pre:
 	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
 	done
 	@echo "    $(herefromroot)/unit-tests"
-	cp -rp $(srcdirpfx)unit-tests $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)
+	(cd $(srcdir) ; COPYFILE_DISABLE=1 tar cf - `find unit-tests -name "*.scm" -print`) | (cd $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) ; tar xf -)
 
 dist-post dist-devel-post:
 

@@ -301,6 +301,8 @@ dist-pre dist-devel-pre:
 	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
 	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
 	done
+	@echo "    $(herefromroot)/guide"
+	(cd $(srcdir) ; COPYFILE_DISABLE=1 tar cf - guide) | (cd $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) ; tar xf -)
 
 dist-post dist-devel-post:
 
