@@ -4320,6 +4320,8 @@ For example:
 @deffnx procedure foreign-address @var{foreign}
 @deffnx procedure foreign-release! @var{foreign}
 @deffnx procedure foreign-released? @var{foreign}
+@deffnx procedure foreign-data @var{foreign}
+@deffnx procedure foreign-data-set! @var{foreign} @var{obj}
 @end deffn
 
 @deffn procedure invalid-hash-number-exception? @var{obj}
@@ -14866,9 +14868,11 @@ whether the foreign object @var{obj} has been released yet or not.
 The call @code{(foreign-address @var{obj})} returns the address
 denoted by the internal pointer of foreign object @var{obj} or 0 if it
 has been released.  The call @code{(foreign? @var{obj})} tests that
-@var{obj} is a foreign object.  Finally the call @code{(foreign-tags
+@var{obj} is a foreign object.  The call @code{(foreign-tags
 @var{obj})} returns the list of tags of foreign object @var{obj}, or
-@code{#f}.
+@code{#f}.  The call @code{(foreign-data-set! @var{obj})} stores
+a strong reference to Scheme value @var{obj}.  This reference can
+be retrieved with @code{(foreign-data @var{obj})}.
 
 The following table gives the C types to which each Scheme type
 can be converted:

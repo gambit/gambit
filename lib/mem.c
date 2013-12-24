@@ -3039,7 +3039,6 @@ ___WORD *body;)
 
   switch (subtype)
     {
-    case ___sFOREIGN:
     case ___sSTRING:
     case ___sS8VECTOR:
     case ___sU8VECTOR:
@@ -3167,6 +3166,10 @@ ___WORD *body;)
     case ___sPROCEDURE:
       if (___HD_TYP(head) != ___PERM) /* only scan closures */
         mark_array (___PSP body+1, words-1); /* only scan free variables */
+      break;
+
+    case ___sFOREIGN:
+      mark_array (___PSP body+___FOREIGN_DATA, 1); /* only scan data field */
       break;
 
     default:

@@ -3708,6 +3708,29 @@ end-of-code
     (macro-check-foreign f 1 (foreign-address f)
       (##foreign-address f))))
 
+(define-prim (##foreign-data f)
+  ((c-lambda (scheme-object)
+             scheme-object
+    "___result = ___FIELD(___arg1,___FOREIGN_DATA);")
+   f))
+
+(define-prim (foreign-data f)
+  (macro-force-vars (f)
+    (macro-check-foreign f 1 (foreign-data f)
+      (##foreign-data f))))
+
+(define-prim (##foreign-data-set! f o)
+  ((c-lambda (scheme-object scheme-object)
+             void
+    "___FIELD(___arg1,___FOREIGN_DATA) = ___arg2;")
+   f
+   o))
+
+(define-prim (foreign-data-set! f o)
+  (macro-force-vars (f o)
+    (macro-check-foreign f 2 (foreign-data-set! f o)
+      (##foreign-data-set! f o))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Version information.

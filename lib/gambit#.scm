@@ -263,6 +263,8 @@ fltruncate
 flzero?
 force-output
 foreign-address
+foreign-data
+foreign-data-set!
 foreign-release!
 foreign-released?
 foreign-tags
