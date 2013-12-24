@@ -5157,6 +5157,7 @@ int arg_num;)
       ___FIELD(r,___FOREIGN_TAGS) = tags;
       ___FIELD(r,___FOREIGN_RELEASE_FN) = ___CAST(___SCMOBJ,release_fn);
       ___FIELD(r,___FOREIGN_PTR) = ___CAST(___SCMOBJ,x);
+      ___FIELD(r,___FOREIGN_DATA) = ___FAL;
       *obj = r;
     }
   return ___FIX(___NO_ERR);

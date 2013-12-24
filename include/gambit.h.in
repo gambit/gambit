@@ -2147,10 +2147,11 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___CONTINUATION_SIZE 2
 #define ___THREAD_SIZE 26
 #define ___BOX_SIZE 1
-#define ___FOREIGN_SIZE 3
+#define ___FOREIGN_SIZE 4
 #define ___FOREIGN_TAGS 0
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
+#define ___FOREIGN_DATA 3
 
 /* Flonum boxing and unboxing */
 

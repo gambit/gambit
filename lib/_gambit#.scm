@@ -487,10 +487,11 @@
 
 ;; Foreign objects
 
-;; A foreign object is represented by an object vector of length 3
+;; A foreign object is represented by an object vector of length 4
 ;; slot 0 = tags
 ;; slot 1 = C pointer to release function
 ;; slot 2 = C pointer to foreign data
+;; slot 3 = Scheme strong reference
 
 (##define-macro (macro-foreign-tags f)         `(macro-slot 0 ,f))
 (##define-macro (macro-foreign-tags-set! f x)  `(macro-slot 0 ,f ,x))
