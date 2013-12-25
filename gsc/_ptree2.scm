@@ -1932,6 +1932,8 @@
                         (check #f "Ill-formed C TYPE type"))
                        ((eq? head pointer-sym)
                         (check #t "Ill-formed C POINTER type"))
+                       ((eq? head dep-pointer-sym)
+                        (check #t "Ill-formed C DEPENDENT POINTER type"))
                        ((eq? head nonnull-pointer-sym)
                         (check #t "Ill-formed C NONNULL POINTER type"))
                        ((eq? head function-sym)
@@ -2031,6 +2033,8 @@
                     (vector "TYPE" (source-code (cadr typ))))
                    ((eq? head pointer-sym)
                     '#("POINTER" #f))
+                   ((eq? head dep-pointer-sym)
+                    '#("DEPPOINTER" #f))
                    ((eq? head nonnull-pointer-sym)
                     '#("NONNULLPOINTER" #f))
                    ((eq? head function-sym)
@@ -2104,6 +2108,8 @@
         (string-append
          (cond ((eq? kind pointer-sym)
                 "POINTER_TO_SCMOBJ(")
+               ((eq? kind dep-pointer-sym)
+                "DEPPOINTER_TO_SCMOBJ(")
                ((eq? kind nonnull-pointer-sym)
                 "NONNULLPOINTER_TO_SCMOBJ(")
                (else
@@ -2119,6 +2125,7 @@
          from "_voidstar," tag-str ","
          (if (false-object? id)
            (if (or (eq? kind pointer-sym)
+                   (eq? kind dep-pointer-sym)
                    (eq? kind nonnull-pointer-sym))
              (string-append
               c-id-prefix
@@ -2161,6 +2168,8 @@
         (string-append
          (cond ((eq? kind pointer-sym)
                 "SCMOBJ_TO_POINTER(")
+               ((eq? kind dep-pointer-sym)
+                "SCMOBJ_TO_POINTER(")
                ((eq? kind nonnull-pointer-sym)
                 "SCMOBJ_TO_NONNULLPOINTER(")
                (else
@@ -2183,6 +2192,7 @@
                         (eq? head union-sym)
                         (eq? head type-sym)
                         (eq? head pointer-sym)
+                        (eq? head dep-pointer-sym)
                         (eq? head nonnull-pointer-sym))
                     (convert
                      head
@@ -2547,6 +2557,7 @@
                     (prefix-inner
                       (source-code (cadr t))))
                    ((or (eq? head pointer-sym)
+                        (eq? head dep-pointer-sym)
                         (eq? head nonnull-pointer-sym))
                     (c-type-decl (cadr t)
                                  (string-append "*" inner)))

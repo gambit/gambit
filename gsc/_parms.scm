@@ -167,6 +167,7 @@
 (define union-sym              (string->canonical-symbol "union"))
 (define type-sym               (string->canonical-symbol "type"))
 (define pointer-sym            (string->canonical-symbol "pointer"))
+(define dep-pointer-sym        (string->canonical-symbol "##dependent-pointer"))
 (define nonnull-pointer-sym    (string->canonical-symbol "nonnull-pointer"))
 (define function-sym           (string->canonical-symbol "function"))
 (define nonnull-function-sym   (string->canonical-symbol "nonnull-function"))

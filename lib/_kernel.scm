@@ -3708,6 +3708,19 @@ end-of-code
     (macro-check-foreign f 1 (foreign-address f)
       (##foreign-address f))))
 
+(define-prim (##foreign-dependencies f)
+  ((c-lambda (scheme-object)
+             scheme-object
+    "___result = ___FIELD(___arg1,___FOREIGN_DEP);")
+   f))
+
+(define-prim (##register-foreign-dependency! f o)
+  ((c-lambda (scheme-object scheme-object)
+             void
+    "___FIELD(___arg1,___FOREIGN_DEP) = ___arg2;")
+   f
+   (##cons o (##foreign-dependencies f))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Version information.

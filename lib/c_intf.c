@@ -5163,6 +5163,51 @@ int arg_num;)
 }
 
 
+/*
+ * Convert a C pointer to a Scheme foreign object that holds reference(s) to
+ * any scheme object(s) upon which it depends.
+ */
+
+___EXP_FUNC(___SCMOBJ,___DEPPOINTER_to_SCMOBJ)
+   ___P((___processor_state ___ps,
+         void *x,
+         ___SCMOBJ tags,
+         ___SCMOBJ (*release_fn) ___P((void *ptr),()),
+         ___SCMOBJ *obj,
+         int arg_num),
+        (___ps,
+         x,
+         tags,
+         release_fn,
+         obj,
+         arg_num)
+___processor_state ___ps;
+void *x;
+___SCMOBJ tags;
+___SCMOBJ (*release_fn) ___P((void *ptr),());
+___SCMOBJ *obj;
+int arg_num;)
+{
+  if (x == 0)
+    *obj = ___FAL; /* #f counts as NULL */
+  else
+    {
+      ___SCMOBJ r = ___alloc_scmobj (___ps, ___sFOREIGN, (___FOREIGN_SIZE+1)<<___LWS);
+      if (___FIXNUMP(r))
+        {
+          *obj = ___FAL;
+          return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
+        }
+      ___FIELD(r,___FOREIGN_TAGS) = tags;
+      ___FIELD(r,___FOREIGN_RELEASE_FN) = ___CAST(___SCMOBJ,release_fn);
+      ___FIELD(r,___FOREIGN_PTR) = ___CAST(___SCMOBJ,x);
+      ___FIELD(r,___FOREIGN_DEP) = ___NUL;
+      *obj = r;
+    }
+  return ___FIX(___NO_ERR);
+}
+
+
 /* Convert a nonnull C pointer to a Scheme foreign object. */
 
 ___EXP_FUNC(___SCMOBJ,___NONNULLPOINTER_to_SCMOBJ)

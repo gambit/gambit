@@ -2151,6 +2151,8 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___FOREIGN_TAGS 0
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
+/* Only used for dependent foreign objects. */
+#define ___FOREIGN_DEP 3
 
 /* Flonum boxing and unboxing */
 
@@ -6521,6 +6523,8 @@ void *___x;) \
 #define ___END_SFUN_TYPE_TO_SCMOBJ(n,c,t,r,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_POINTER_TO_SCMOBJ(c,t,r,s,i)___IF_CTOS5(___POINTER_to_SCMOBJ,(void*)c,t,r,&s,i){
 #define ___END_SFUN_POINTER_TO_SCMOBJ(c,t,r,s,i)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_SFUN_DEPPOINTER_TO_SCMOBJ(c,t,r,s,i)___IF_CTOS5(___DEPPOINTER_to_SCMOBJ,(void*)c,t,r,&s,i){
+#define ___END_SFUN_DEPPOINTER_TO_SCMOBJ(c,t,r,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_NONNULLPOINTER_TO_SCMOBJ(c,t,r,s,i)___IF_CTOS5(___NONNULLPOINTER_to_SCMOBJ,(void*)c,t,r,&s,i){
 #define ___END_SFUN_NONNULLPOINTER_TO_SCMOBJ(c,t,r,s,i)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_SFUN_FUNCTION_TO_SCMOBJ(c,s,i)___IF_CTOS3(___FUNCTION_to_SCMOBJ,___CAST(void*,c),&s,i){
@@ -6817,6 +6821,8 @@ void *___x;) \
 #define ___END_CFUN_TYPE_TO_SCMOBJ(n,c,t,r,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_POINTER_TO_SCMOBJ(c,t,r,s)___IF_CTOS5(___POINTER_to_SCMOBJ,(void*)c,t,r,&s,___RETURN_POS){
 #define ___END_CFUN_POINTER_TO_SCMOBJ(c,t,r,s)___EXT(___release_scmobj)(s);}
+#define ___BEGIN_CFUN_DEPPOINTER_TO_SCMOBJ(c,t,r,s)___IF_CTOS5(___DEPPOINTER_to_SCMOBJ,(void*)c,t,r,&s,___RETURN_POS){
+#define ___END_CFUN_DEPPOINTER_TO_SCMOBJ(c,t,r,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_NONNULLPOINTER_TO_SCMOBJ(c,t,r,s)___IF_CTOS5(___NONNULLPOINTER_to_SCMOBJ,(void*)c,t,r,&s,___RETURN_POS){
 #define ___END_CFUN_NONNULLPOINTER_TO_SCMOBJ(c,t,r,s)___EXT(___release_scmobj)(s);}
 #define ___BEGIN_CFUN_FUNCTION_TO_SCMOBJ(c,s)___IF_CTOS3(___FUNCTION_to_SCMOBJ,___CAST(void*,c),&s,___RETURN_POS){
@@ -8537,6 +8543,14 @@ typedef struct ___global_state_struct
              ___SCMOBJ *obj,
              int arg_num),
             ());
+    ___SCMOBJ (*___DEPPOINTER_to_SCMOBJ)
+       ___P((___processor_state ___ps,
+             void *x,
+             ___SCMOBJ tags,
+             ___SCMOBJ (*release_fn) ___P((void *ptr),()),
+             ___SCMOBJ *obj,
+             int arg_num),
+            ());
     ___SCMOBJ (*___NONNULLPOINTER_to_SCMOBJ)
        ___P((___processor_state ___ps,
              void *x,
@@ -9643,6 +9657,14 @@ ___IMP_FUNC(___SCMOBJ,___TYPE_to_SCMOBJ)
          int arg_num),
         ());
 ___IMP_FUNC(___SCMOBJ,___POINTER_to_SCMOBJ)
+   ___P((___processor_state ___ps,
+         void *x,
+         ___SCMOBJ tags,
+         ___SCMOBJ (*release_fn) ___P((void *ptr),()),
+         ___SCMOBJ *obj,
+         int arg_num),
+        ());
+___IMP_FUNC(___SCMOBJ,___DEPPOINTER_to_SCMOBJ)
    ___P((___processor_state ___ps,
          void *x,
          ___SCMOBJ tags,
