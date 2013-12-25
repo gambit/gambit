@@ -3039,7 +3039,6 @@ ___WORD *body;)
 
   switch (subtype)
     {
-    case ___sFOREIGN:
     case ___sSTRING:
     case ___sS8VECTOR:
     case ___sU8VECTOR:
@@ -3169,6 +3168,10 @@ ___WORD *body;)
         mark_array (___PSP body+1, words-1); /* only scan free variables */
       break;
 
+    case ___sFOREIGN:
+      if (words > ___FOREIGN_DEP) /* only scan foreign objects with dependency information */
+          mark_array (___PSP body+___FOREIGN_DEP, 1); /* only scan dependency information */
+      break;
     default:
       mark_array (___PSP body, words);
       break;
