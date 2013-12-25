@@ -188,3 +188,5 @@ gambc-v*.tgz
 *.idb
 *.o
 *.gvm
+*.swp
+*.swo
