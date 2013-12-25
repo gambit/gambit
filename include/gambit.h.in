@@ -2152,6 +2152,34 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
 
+/*
+ * If you create a foreign object with size larger than ___FOREIGN_SIZE[1],
+ * the field at ___FOREIGN_SIZE (== __FOREIGN_DEP) will be treated like
+ * a strong reference by the garbage collector.  This may be used in some
+ * extensions to let the garbage collector take care of lifecycle dependencies
+ * between foreign objects (for example, to achieve unlimited extent semantics
+ * for C-allocated objects in a manner transparent to the user and with zero
+ * copy.)
+ *
+ * A convention proposed for objects that you share with code written by
+ * others is:
+ *   - The field at ___FOREIGN_DEP starts out assigned to the empty
+ *     list.
+ *   - You are welcome to push, for whatever purpose, any scheme object to
+ *     this field by setting it to (cons your-new-object the-old-field-value),
+ *     but
+ *   - *Please* don't remove any objects you didn't add yourself.
+ *
+ * Thus, you can expect ___FIELD(your_object,___FOREIGN_DEP) to always be
+ * a proper list of Scheme values.
+ *
+ * [1] As of this writing, you can't create such objects or manage their
+ *     ___FOREIGN_DEP field from Scheme code.  This is meant to enable writers
+ *     of C extensions to isolate the users of their code from the
+ *     complexities and pitfalls of dealing with C-allocated objects.
+ */
+#define ___FOREIGN_DEP ___FOREIGN_SIZE
+
 /* Flonum boxing and unboxing */
 
 #define ___FLONUM_VAL(obj) *___CAST(___F64*,___BODY_AS(obj,___tSUBTYPED))
