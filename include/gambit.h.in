@@ -6145,7 +6145,7 @@ do { \
 
 #define ___C_ASSIGN_NEW(var,type) \
 do { \
-     var = ___CAST(type*,___EXT(___alloc_rc) (___PSP sizeof (type)); \
+     var = ___CAST(type*,___EXT(___alloc_rc) (___PSP sizeof (type))); \
    } while (0)
 #define ___C_ASSIGN_NEW_WITH_INIT(var,type,init) \
 do { \
@@ -6190,7 +6190,7 @@ do { \
 
 #define ___C_ASSIGN_NEW(var,type) \
 do { \
-     var = ___CAST(type*,___EXT(___alloc_mem) (sizeof (type)); \
+     var = ___CAST(type*,___EXT(___alloc_mem) (sizeof (type))); \
    } while (0)
 #define ___C_ASSIGN_NEW_WITH_INIT(var,type,init) \
 do { \
