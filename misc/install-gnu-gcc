@@ -7,18 +7,18 @@
 
 # After executing:
 #
-#    ./install-gnu-gcc-osx
+#    ./install-gnu-gcc
 #
 # you should add this line to your ~/.profile and ~/.bashrc files:
 #
 #    export PATH=/usr/local/gcc-4.8.1/bin:$PATH
 
-GCCVERSION=4.8.1
+GCCVERSION=4.8.2
 GMPVERSION=5.1.3
 MPFRVERSION=3.1.2
 MPCVERSION=1.0.1
 PREFIX=/usr/local/gcc-$GCCVERSION
-MAKE="make -j 4"
+MAKE="make -j 8"
 
 # Download & install the latest GCC and prerequisites
 
@@ -42,7 +42,7 @@ ln -s ../mpc-$MPCVERSION   gcc-$GCCVERSION/mpc
 mkdir build-dir
 cd build-dir
 ../gcc-$GCCVERSION/configure --prefix=$PREFIX
-time $MAKE bootstrap > build.log
+time $MAKE bootstrap &> build.log
 
 sudo mkdir -p $PREFIX
 sudo make install
