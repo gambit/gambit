@@ -3117,7 +3117,14 @@ for a discussion of branch cuts.
                  (complex-expt x y)))
             (else
              (##flonum.expt x (##flonum.<-ratnum y))))
-      (complex-expt x y))
+      (or (and (##eq? 2 (macro-ratnum-denominator y))
+	       (or (and (##eq? 1 (macro-ratnum-numerator y))
+			(##sqrt x))
+		   (and (##exact? x)
+			(let ((sqrt-x (##sqrt x)))
+			  (and (##exact? sqrt-x)
+			       (##* sqrt-x (##expt x (##quotient (##- (macro-ratnum-numerator y) 1) 2))))))))
+	  (complex-expt x y)))
 
     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a flonum
       (cond ((##flonum.nan? y)
