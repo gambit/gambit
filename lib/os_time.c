@@ -212,18 +212,11 @@ ___time *tim;)
 
 #ifdef USE_GetSystemTime
 
-  SYSTEMTIME st;
-  FILETIME ft;
-  GetSystemTime (&st);
-  if (SystemTimeToFileTime (&st, &ft))
-    {
-      LONGLONG x = *___CAST(LONGLONG*,&ft);
-      ___SM32 secs = x / 10000000 - JAN_1(1601LL);
-      ___SM32 nsecs = x % 10000000 * 100;
-      ___time_from_nsecs (tim, secs, nsecs);
-    }
-  else
-    *tim = ___time_mod.time_neg_infinity;
+  LONGLONG x;
+  GetSystemTimeAsFileTime (___CAST(FILETIME*,&x));
+  ___SM32 secs = x / 10000000 - JAN_1(1601LL);
+  ___SM32 nsecs = x % 10000000 * 100;
+  ___time_from_nsecs (tim, secs, nsecs);
 
 #endif
 
