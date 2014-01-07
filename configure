@@ -11,7 +11,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 #
-# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -931,6 +931,7 @@ enable_help_browser
 enable_type_checking
 enable_auto_forcing
 enable_poll
+enable_high_res_timing
 enable_multiple_vms
 enable_multiple_threaded_vms
 enable_thread_system
@@ -1606,6 +1607,8 @@ Optional Features:
   --enable-type-checking  perform type checking (default is YES)
   --enable-auto-forcing   automatically force promises (default is NO)
   --enable-poll           Enable poll as the select method (default is NO)
+  --enable-high-res-timing
+                          Enable high-resolution timing (default is NO)
   --enable-multiple-vms   support multiple Gambit VM instances (default is NO)
   --enable-multiple-threaded-vms
                           support multiple OS threads per Gambit VM instance
@@ -1705,7 +1708,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 _ACEOF
   exit
 fi
@@ -5226,6 +5229,24 @@ fi
 
 ###############################################################################
 #
+# Check whether to enable high-resolution timing
+
+# Check whether --enable-high-res-timing was given.
+if test "${enable_high_res_timing+set}" = set; then :
+  enableval=$enable_high_res_timing; ENABLE_HIGH_RES_TIMING=$enableval
+else
+  ENABLE_HIGH_RES_TIMING=no
+fi
+
+
+if test "$ENABLE_HIGH_RES_TIMING" = yes; then
+
+$as_echo "#define USE_HIGH_RES_TIMING /**/" >>confdefs.h
+
+fi
+
+###############################################################################
+#
 # Check if the runtime system must be compiled to support multiple
 # Gambit VM instances or not.  A Gambit VM instance has its own global
 # environment and heap, separate from other Gambit VM instances.
@@ -6309,6 +6330,11 @@ $as_echo "#define socklen_t int" >>confdefs.h
   if test "$C_COMP_VISUALC" = yes; then
 
     LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
+
+    if test "$ENABLE_HIGH_RES_TIMING" = yes; then
+      LIBS="$LIBS WinMM.Lib"
+    fi
+
     FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS"
 
   else
@@ -6316,11 +6342,18 @@ $as_echo "#define socklen_t int" >>confdefs.h
     case "$target_os" in
 
        mingw*) # add Windows libraries needed by MinGW
+
                LIBS="$LIBS -lws2_32"
+
+               if test "$ENABLE_HIGH_RES_TIMING" = yes; then
+                 LIBS="$LIBS -lwinmm"
+               fi
+
                FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS"
                ;;
 
             *) # check libraries for other systems
+
                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing asin" >&5
 $as_echo_n "checking for library containing asin... " >&6; }
 if ${ac_cv_search_asin+:} false; then :
@@ -6773,6 +6806,63 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_WSAStartup" >&5
 $as_echo "$ac_cv_search_WSAStartup" >&6; }
 ac_res=$ac_cv_search_WSAStartup
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+fi
+
+
+               { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing timeBeginPeriod" >&5
+$as_echo_n "checking for library containing timeBeginPeriod... " >&6; }
+if ${ac_cv_search_timeBeginPeriod+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char timeBeginPeriod ();
+int
+main ()
+{
+return timeBeginPeriod ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' winmm; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_search_timeBeginPeriod=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_timeBeginPeriod+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_timeBeginPeriod+:} false; then :
+
+else
+  ac_cv_search_timeBeginPeriod=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_timeBeginPeriod" >&5
+$as_echo "$ac_cv_search_timeBeginPeriod" >&6; }
+ac_res=$ac_cv_search_timeBeginPeriod
 if test "$ac_res" != no; then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
 

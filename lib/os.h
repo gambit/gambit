@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -293,7 +293,8 @@
 #define HAVE_CLOCK 1
 #define HAVE_CREATETHREAD 1
 #define HAVE_GETPROCESSTIMES 1
-#define HAVE_GETSYSTEMTIME 1
+#define HAVE_GETSYSTEMTIMEASFILETIME 1
+#define HAVE_TIMEBEGINPERIOD 1
 #define HAVE_GETSYSTEMINFO 1
 #define HAVE_LOADLIBRARY 1
 #define HAVE_MSGWAITFORMULTIPLEOBJECTS 1
@@ -346,8 +347,8 @@
 #ifdef HAVE_GETCLOCK
 #define USE_getclock
 #else
-#ifdef HAVE_GETSYSTEMTIME
-#define USE_GetSystemTime
+#ifdef HAVE_GETSYSTEMTIMEASFILETIME
+#define USE_GetSystemTimeAsFileTime
 #else
 #ifdef HAVE_GETTIMEOFDAY
 #define USE_gettimeofday

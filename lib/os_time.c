@@ -1,6 +1,6 @@
-/* File: "os_time.c", Time-stamp: <2011-03-22 14:38:49 feeley> */
+/* File: "os_time.c" */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -170,7 +170,7 @@ ___time *tim;)
 {
 #ifndef USE_clock_gettime
 #ifndef USE_getclock
-#ifndef USE_GetSystemTime
+#ifndef USE_GetSystemTimeAsFileTime
 #ifndef USE_gettimeofday
 #ifndef USE_ftime
 #ifndef USE_time
@@ -210,12 +210,14 @@ ___time *tim;)
 
 #endif
 
-#ifdef USE_GetSystemTime
+#ifdef USE_GetSystemTimeAsFileTime
 
   LONGLONG x;
+  ___SM32 secs;
+  ___SM32 nsecs;
   GetSystemTimeAsFileTime (___CAST(FILETIME*,&x));
-  ___SM32 secs = x / 10000000 - JAN_1(1601LL);
-  ___SM32 nsecs = x % 10000000 * 100;
+  secs = x / 10000000 - JAN_1(1601LL);
+  nsecs = x % 10000000 * 100;
   ___time_from_nsecs (tim, secs, nsecs);
 
 #endif
@@ -548,6 +550,38 @@ DWORD *ms;)
 
 
 #endif
+
+
+___HIDDEN void setup_time_management ___PVOID
+{
+#ifdef USE_HIGH_RES_TIMING
+#ifdef HAVE_TIMEBEGINPERIOD
+
+  /*
+   * On Windows, timers have a resolution that depends on the version
+   * of the OS.  A test program gives a resolution of 10 ms on Windows
+   * XP, 16 ms on Windows 7, and 1 ms on Windows 8.  Calling
+   * timeBeginPeriod (1) will set the resolution to 1 ms (at least
+   * according to the Windows documentation and documents found on the
+   * web).  However this seems to improve the resolution by very
+   * little, or not at all, in some environments.  So YMMV.
+   */
+
+  timeBeginPeriod (1); /* ignore error */
+
+#endif
+#endif
+}
+
+
+___HIDDEN void cleanup_time_management ___PVOID
+{
+#ifdef USE_HIGH_RES_TIMING
+#ifdef HAVE_TIMEBEGINPERIOD
+  timeEndPeriod (1); /* ignore error */
+#endif
+#endif
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -1367,6 +1401,7 @@ void (*heartbeat_interrupt_handler) ___PVOID;)
   if (!___time_mod.setup)
     {
       ___time_mod.heartbeat_interrupt_handler = heartbeat_interrupt_handler;
+      setup_time_management ();
       setup_process_times ();
       if ((e = ___setup_heartbeat_interrupt_handling ()) != ___FIX(___NO_ERR))
         return e;
@@ -1384,6 +1419,7 @@ void ___cleanup_time_module ___PVOID
     {
       ___cleanup_heartbeat_interrupt_handling ();
       cleanup_process_times ();
+      cleanup_time_management ();
       ___time_mod.setup = 0;
     }
 }

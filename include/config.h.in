@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -143,7 +143,8 @@
 
 #undef HAVE_CLOCK_GETTIME
 #undef HAVE_GETCLOCK
-#undef HAVE_GETSYSTEMTIME
+#undef HAVE_GETSYSTEMTIMEASFILETIME
+#undef HAVE_TIMEBEGINPERIOD
 #undef HAVE_GETTIMEOFDAY
 #undef HAVE_FTIME
 #undef HAVE_TIME
@@ -220,6 +221,9 @@
 
 /* Define as 1 if you want to enable poll support */
 #undef USE_POLL_FOR_SELECT
+
+/* Define as 1 if you want to enable high-resolution timing */
+#undef USE_HIGH_RES_TIMING
 
 /*---------------------------------------------------------------------------*/
 

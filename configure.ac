@@ -1,6 +1,6 @@
 # Configure template for Gambit-C system.
 
-# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -17,7 +17,7 @@ AC_SUBST(PACKAGE_STRING)
 AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
@@ -552,6 +552,20 @@ fi
 
 ###############################################################################
 #
+# Check whether to enable high-resolution timing
+
+AC_ARG_ENABLE(high-res-timing,
+              AC_HELP_STRING([--enable-high-res-timing],
+                             [Enable high-resolution timing (default is NO)]),
+              ENABLE_HIGH_RES_TIMING=$enableval,
+              ENABLE_HIGH_RES_TIMING=no)
+
+if test "$ENABLE_HIGH_RES_TIMING" = yes; then
+  AC_DEFINE([USE_HIGH_RES_TIMING],[],[Enable high-resolution timing])
+fi
+
+###############################################################################
+#
 # Check if the runtime system must be compiled to support multiple
 # Gambit VM instances or not.  A Gambit VM instance has its own global
 # environment and heap, separate from other Gambit VM instances.
@@ -861,6 +875,11 @@ else
   if test "$C_COMP_VISUALC" = yes; then
 
     LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
+
+    if test "$ENABLE_HIGH_RES_TIMING" = yes; then
+      LIBS="$LIBS WinMM.Lib"
+    fi
+
     FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS"
 
   else
@@ -868,11 +887,18 @@ else
     case "$target_os" in
 
        mingw*) # add Windows libraries needed by MinGW
+
                LIBS="$LIBS -lws2_32"
+
+               if test "$ENABLE_HIGH_RES_TIMING" = yes; then
+                 LIBS="$LIBS -lwinmm"
+               fi
+
                FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS"
                ;;
 
             *) # check libraries for other systems
+
                AC_SEARCH_LIBS(asin,m)
 
                AC_SEARCH_LIBS(dlopen,dl)
@@ -890,6 +916,8 @@ else
                AC_SEARCH_LIBS(openpty,util)
 
                AC_SEARCH_LIBS(WSAStartup,ws2_32)
+
+               AC_SEARCH_LIBS(timeBeginPeriod,winmm)
                ;;
     esac
 
