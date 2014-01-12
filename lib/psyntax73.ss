@@ -758,10 +758,10 @@
 (define-syntax build-dsssl-lambda
   (syntax-rules ()
     ;; vars is either symbol or (keyword . alpha-converted-keyword)
-    ((_ ae dssl-args-var alpha-vars dsssl-formals orig-vars exp)
+    ((_ ae dsssl-args-var alpha-vars dsssl-formals orig-vars exp)
      (build-source ae
                    `(,(build-source ae 'lambda)
-                     ,(build-source ae dssl-args-var)
+                     ,(build-source ae dsssl-args-var)
                      ,(build-source ae `(,(build-source ae 'receive)
                                          ,(build-params ae alpha-vars)
                                          ,(build-source ae `(,(build-source ae 'apply)
@@ -769,7 +769,7 @@
                                                                                  ,(build-params ae dsssl-formals)
                                                                                  ,(build-source ae (cons (build-source ae 'values)
                                                                                                          (annotation-expression (build-params ae orig-vars))))))
-                                                             ,(build-source ae dssl-args-var)))
+                                                             ,(build-source ae dsssl-args-var)))
                                          ,exp)))))))
 
 (define built-lambda?
@@ -2976,7 +2976,7 @@
                  (values
                   emitter
                   (and (eq? emitter 'keyword)
-                       (gen-var 'dssl-args))
+                       (gen-var 'dsssl-args))
                   new-vars
                   (emit-formals '() formals new-vars emitter)
                   ids
@@ -2996,7 +2996,7 @@
                  (values
                   emitter
                   (and (eq? emitter 'keyword)
-                       (gen-var 'dssl-args))
+                       (gen-var 'dsssl-args))
                   (if (eq? emitter 'rnrs)
                       (reverse* new-vars)
                       (reverse new-vars))

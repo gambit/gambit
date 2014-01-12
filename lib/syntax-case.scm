@@ -11940,7 +11940,7 @@ when)
 (if (eq? %%emitter1748
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 'keyword)
-(%%gen-var468 'dssl-args)
+(%%gen-var468 'dsssl-args)
 #f)
 %%new-vars1750
 (%%emit-formals1724
@@ -11987,7 +11987,7 @@ when)
 %%new-vars1761)
 (values %%emitter1759
 (if (eq? %%emitter1759 'keyword)
-(%%gen-var468 'dssl-args)
+(%%gen-var468 'dsssl-args)
 #f)
 (if (eq? %%emitter1759 'rnrs)
 (%%reverse*1722 %%new-vars1761)
