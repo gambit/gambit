@@ -336,276 +336,276 @@ v))
 ((lambda ()
 (letrec ((%%noexpand62 "noexpand")
 (%%make-syntax-object63
-(lambda (%%expression460 %%wrap461)
-(vector 'syntax-object %%expression460 %%wrap461)))
+(lambda (%%expression470 %%wrap471)
+(vector 'syntax-object %%expression470 %%wrap471)))
 (%%syntax-object?64
-(lambda (%%x462)
-(if (vector? %%x462)
-(if (= (vector-length %%x462) 3)
-(eq? (vector-ref %%x462 0) 'syntax-object)
+(lambda (%%x472)
+(if (vector? %%x472)
+(if (= (vector-length %%x472) 3)
+(eq? (vector-ref %%x472 0) 'syntax-object)
 #f)
 #f)))
 (%%syntax-object-expression65
-(lambda (%%x463) (vector-ref %%x463 1)))
-(%%syntax-object-wrap66 (lambda (%%x464) (vector-ref %%x464 2)))
+(lambda (%%x473) (vector-ref %%x473 1)))
+(%%syntax-object-wrap66 (lambda (%%x474) (vector-ref %%x474 2)))
 (%%set-syntax-object-expression!67
-(lambda (%%x465 %%update466)
-(vector-set! %%x465 1 %%update466)))
+(lambda (%%x475 %%update476)
+(vector-set! %%x475 1 %%update476)))
 (%%set-syntax-object-wrap!68
-(lambda (%%x467 %%update468)
-(vector-set! %%x467 2 %%update468)))
+(lambda (%%x477 %%update478)
+(vector-set! %%x477 2 %%update478)))
 (%%top-level-eval-hook69
-(lambda (%%x469) (eval (list %%noexpand62 %%x469))))
+(lambda (%%x479) (eval (list %%noexpand62 %%x479))))
 (%%local-eval-hook70
-(lambda (%%x470) (eval (list %%noexpand62 %%x470))))
+(lambda (%%x480) (eval (list %%noexpand62 %%x480))))
 (%%define-top-level-value-hook71
-(lambda (%%sym471 %%val472)
+(lambda (%%sym481 %%val482)
 (%%top-level-eval-hook69
 (build-source
 #f
 (list (build-source #f 'define)
-(build-source #f %%sym471)
-((lambda (%%x473)
-(if (self-eval? %%val472)
-%%x473
+(build-source #f %%sym481)
+((lambda (%%x483)
+(if (self-eval? %%val482)
+%%x483
 (build-source
 #f
-(list (build-source #f 'quote) %%x473))))
-(attach-source #f %%val472)))))))
+(list (build-source #f 'quote) %%x483))))
+(attach-source #f %%val482)))))))
 (%%put-cte-hook72
-(lambda (%%symbol474 %%val475)
-($sc-put-cte %%symbol474 %%val475 '*top*)))
+(lambda (%%symbol484 %%val485)
+($sc-put-cte %%symbol484 %%val485 '*top*)))
 (%%get-global-definition-hook73
-(lambda (%%symbol476) (getprop %%symbol476 '*sc-expander*)))
+(lambda (%%symbol486) (getprop %%symbol486 '*sc-expander*)))
 (%%put-global-definition-hook74
-(lambda (%%symbol477 %%x478)
-(if (not %%x478)
-(remprop %%symbol477 '*sc-expander*)
-(putprop %%symbol477 '*sc-expander* %%x478))))
-(%%read-only-binding?75 (lambda (%%symbol479) #f))
+(lambda (%%symbol487 %%x488)
+(if (not %%x488)
+(remprop %%symbol487 '*sc-expander*)
+(putprop %%symbol487 '*sc-expander* %%x488))))
+(%%read-only-binding?75 (lambda (%%symbol489) #f))
 (%%get-import-binding76
-(lambda (%%symbol480 %%token481)
-(getprop %%symbol480 %%token481)))
+(lambda (%%symbol490 %%token491)
+(getprop %%symbol490 %%token491)))
 (%%update-import-binding!77
-(lambda (%%symbol482 %%token483 %%p484)
-((lambda (%%x485)
-(if (not %%x485)
-(remprop %%symbol482 %%token483)
-(putprop %%symbol482 %%token483 %%x485)))
-(%%p484 (%%get-import-binding76 %%symbol482 %%token483)))))
+(lambda (%%symbol492 %%token493 %%p494)
+((lambda (%%x495)
+(if (not %%x495)
+(remprop %%symbol492 %%token493)
+(putprop %%symbol492 %%token493 %%x495)))
+(%%p494 (%%get-import-binding76 %%symbol492 %%token493)))))
 (%%generate-id78
-((lambda (%%digits486)
-((lambda (%%base487 %%session-key488)
-(letrec ((%%make-digit489
-(lambda (%%x491)
-(string-ref %%digits486 %%x491)))
-(%%fmt490
-(lambda (%%n492)
-((letrec ((%%fmt493
-(lambda (%%n494 %%a495)
-(if (< %%n494 %%base487)
+((lambda (%%digits496)
+((lambda (%%base497 %%session-key498)
+(letrec ((%%make-digit499
+(lambda (%%x501)
+(string-ref %%digits496 %%x501)))
+(%%fmt500
+(lambda (%%n502)
+((letrec ((%%fmt503
+(lambda (%%n504 %%a505)
+(if (< %%n504 %%base497)
 (list->string
-(cons (%%make-digit489
-%%n494)
-%%a495))
-((lambda (%%r496 %%rest497)
-(%%fmt493
-%%rest497
-(cons (%%make-digit489
-%%r496)
-%%a495)))
-(modulo %%n494 %%base487)
+(cons (%%make-digit499
+%%n504)
+%%a505))
+((lambda (%%r506 %%rest507)
+(%%fmt503
+%%rest507
+(cons (%%make-digit499
+%%r506)
+%%a505)))
+(modulo %%n504 %%base497)
 (quotient
-%%n494
-%%base487))))))
-%%fmt493)
-%%n492
+%%n504
+%%base497))))))
+%%fmt503)
+%%n502
 '()))))
-((lambda (%%n498)
-(lambda (%%name499)
+((lambda (%%n508)
+(lambda (%%name509)
 (begin
-(set! %%n498 (+ %%n498 1))
+(set! %%n508 (+ %%n508 1))
 (string->symbol
 (string-append
-%%session-key488
-(%%fmt490 %%n498)
-(if %%name499
+%%session-key498
+(%%fmt500 %%n508)
+(if %%name509
 (string-append
 "."
-(symbol->string %%name499))
+(symbol->string %%name509))
 ""))))))
 -1)))
-(string-length %%digits486)
+(string-length %%digits496)
 "_"))
 "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!$%&*/:<=>?~_^.+-"))
-(%%built-lambda?152
-(lambda (%%x500)
-((lambda (%%t501)
-(if %%t501
-%%t501
-(if (##source? %%x500)
-(if (pair? (##source-code %%x500))
-(if (##source? (car (##source-code %%x500)))
+(%%built-lambda?162
+(lambda (%%x510)
+((lambda (%%t511)
+(if %%t511
+%%t511
+(if (##source? %%x510)
+(if (pair? (##source-code %%x510))
+(if (##source? (car (##source-code %%x510)))
 (eq? (##source-code
-(car (##source-code %%x500)))
+(car (##source-code %%x510)))
 'lambda)
 #f)
 #f)
 #f)))
-(if (pair? %%x500) (eq? (car %%x500) 'lambda) #f))))
-(%%build-sequence170
-(lambda (%%ae502 %%exps503)
-((letrec ((%%loop504
-(lambda (%%exps505)
-(if (null? (cdr %%exps505))
-(car %%exps505)
-(if ((lambda (%%x506)
-((lambda (%%t507)
-(if %%t507
-%%t507
-(if (##source? %%x506)
+(if (pair? %%x510) (eq? (car %%x510) 'lambda) #f))))
+(%%build-sequence180
+(lambda (%%ae512 %%exps513)
+((letrec ((%%loop514
+(lambda (%%exps515)
+(if (null? (cdr %%exps515))
+(car %%exps515)
+(if ((lambda (%%x516)
+((lambda (%%t517)
+(if %%t517
+%%t517
+(if (##source? %%x516)
 (if (pair? (##source-code
-%%x506))
+%%x516))
 (if (##source?
 (car (##source-code
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%x506)))
-(if (eq? (##source-code (car (##source-code %%x506)))
+%%x516)))
+(if (eq? (##source-code (car (##source-code %%x516)))
 'void)
-(null? (cdr (##source-code %%x506)))
+(null? (cdr (##source-code %%x516)))
 #f)
 #f)
 #f)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #f)))
-(equal? %%x506 '(void))))
-(car %%exps505))
-(%%loop504 (cdr %%exps505))
+(equal? %%x516 '(void))))
+(car %%exps515))
+(%%loop514 (cdr %%exps515))
 (build-source
-%%ae502
-(cons (build-source %%ae502 'begin)
-%%exps505)))))))
-%%loop504)
-%%exps503)))
-(%%build-letrec171
-(lambda (%%ae508 %%vars509 %%val-exps510 %%body-exp511)
-(if (null? %%vars509)
-%%body-exp511
+%%ae512
+(cons (build-source %%ae512 'begin)
+%%exps515)))))))
+%%loop514)
+%%exps513)))
+(%%build-letrec181
+(lambda (%%ae518 %%vars519 %%val-exps520 %%body-exp521)
+(if (null? %%vars519)
+%%body-exp521
 (build-source
-%%ae508
-(list (build-source %%ae508 'letrec)
+%%ae518
+(list (build-source %%ae518 'letrec)
 (build-source
-%%ae508
-(map (lambda (%%var512 %%val513)
+%%ae518
+(map (lambda (%%var522 %%val523)
 (build-source
-%%ae508
-(list (build-source %%ae508 %%var512)
-%%val513)))
-%%vars509
-%%val-exps510))
-%%body-exp511)))))
-(%%build-body172
-(lambda (%%ae514 %%vars515 %%val-exps516 %%body-exp517)
-(%%build-letrec171
-%%ae514
-%%vars515
-%%val-exps516
-%%body-exp517)))
-(%%build-top-module173
-(lambda (%%ae518
-%%types519
-%%vars520
-%%val-exps521
-%%body-exp522)
+%%ae518
+(list (build-source %%ae518 %%var522)
+%%val523)))
+%%vars519
+%%val-exps520))
+%%body-exp521)))))
+(%%build-body182
+(lambda (%%ae524 %%vars525 %%val-exps526 %%body-exp527)
+(%%build-letrec181
+%%ae524
+%%vars525
+%%val-exps526
+%%body-exp527)))
+(%%build-top-module183
+(lambda (%%ae528
+%%types529
+%%vars530
+%%val-exps531
+%%body-exp532)
 (call-with-values
 (lambda ()
-((letrec ((%%f523 (lambda (%%types524 %%vars525)
-(if (null? %%types524)
+((letrec ((%%f533 (lambda (%%types534 %%vars535)
+(if (null? %%types534)
 (values '() '() '())
-((lambda (%%var526)
+((lambda (%%var536)
 (call-with-values
 (lambda ()
-(%%f523 (cdr %%types524)
-(cdr %%vars525)))
-(lambda (%%vars527
-%%defns528
-%%sets529)
-(if (eq? (car %%types524)
+(%%f533 (cdr %%types534)
+(cdr %%vars535)))
+(lambda (%%vars537
+%%defns538
+%%sets539)
+(if (eq? (car %%types534)
 'global)
-((lambda (%%x530)
-(values (cons %%x530
+((lambda (%%x540)
+(values (cons %%x540
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%vars527)
+%%vars537)
 (cons (build-source
 #f
 (list (build-source #f 'define)
-(build-source #f %%var526)
-(%%chi-void453)))
-%%defns528)
+(build-source #f %%var536)
+(%%chi-void463)))
+%%defns538)
 (cons (build-source
 #f
 (list (build-source #f 'set!)
-(build-source #f %%var526)
-(build-source #f %%x530)))
-%%sets529)))
-(gensym %%var526))
-(values (cons %%var526 %%vars527) %%defns528 %%sets529)))))
+(build-source #f %%var536)
+(build-source #f %%x540)))
+%%sets539)))
+(gensym %%var536))
+(values (cons %%var536 %%vars537) %%defns538 %%sets539)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(car %%vars525))))))
-%%f523)
-%%types519
-%%vars520))
-(lambda (%%vars531 %%defns532 %%sets533)
-(if (null? %%defns532)
-(%%build-letrec171
-%%ae518
-%%vars531
-%%val-exps521
-%%body-exp522)
-(%%build-sequence170
+(car %%vars535))))))
+%%f533)
+%%types529
+%%vars530))
+(lambda (%%vars541 %%defns542 %%sets543)
+(if (null? %%defns542)
+(%%build-letrec181
+%%ae528
+%%vars541
+%%val-exps531
+%%body-exp532)
+(%%build-sequence180
 #f
-(append %%defns532
-(list (%%build-letrec171
-%%ae518
-%%vars531
-%%val-exps521
-(%%build-sequence170
+(append %%defns542
+(list (%%build-letrec181
+%%ae528
+%%vars541
+%%val-exps531
+(%%build-sequence180
 #f
-(append %%sets533
-(list %%body-exp522))))))))))))
-(%%sanitize-binding206
-(lambda (%%b534)
-(if (procedure? %%b534)
-(cons 'macro %%b534)
-(if (%%binding?220 %%b534)
-(if ((lambda (%%t535)
-(if (memv %%t535 '(core macro macro! deferred))
-(procedure? (%%binding-value217 %%b534))
-(if (memv %%t535 '($module))
-(%%interface?387
-(%%binding-value217 %%b534))
-(if (memv %%t535 '(lexical))
+(append %%sets543
+(list %%body-exp532))))))))))))
+(%%sanitize-binding216
+(lambda (%%b544)
+(if (procedure? %%b544)
+(cons 'macro %%b544)
+(if (%%binding?230 %%b544)
+(if ((lambda (%%t545)
+(if (memv %%t545 '(core macro macro! deferred))
+(procedure? (%%binding-value227 %%b544))
+(if (memv %%t545 '($module))
+(%%interface?397
+(%%binding-value227 %%b544))
+(if (memv %%t545 '(lexical))
 #f
-(if (memv %%t535
+(if (memv %%t545
 '(global meta-variable))
-(symbol? (%%binding-value217
-%%b534))
-(if (memv %%t535 '(syntax))
-((lambda (%%x536)
-(if (pair? %%x536)
+(symbol? (%%binding-value227
+%%b544))
+(if (memv %%t545 '(syntax))
+((lambda (%%x546)
+(if (pair? %%x546)
 (if #f
-((lambda (%%n537)
+((lambda (%%n547)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if (integer? %%n537)
-(if (exact? %%n537) (>= %%n537 0) #f)
+(if (integer? %%n547)
+(if (exact? %%n547) (>= %%n547 0) #f)
 #f))
-(cdr %%x536))
+(cdr %%x546))
 #f)
 #f))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%binding-value217
-%%b534))
-(if (memv %%t535
+(%%binding-value227
+%%b544))
+(if (memv %%t545
 '(begin
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 define
@@ -615,1067 +615,1067 @@ $module-key
 $import
 eval-when
 meta))
-(null? (%%binding-value217 %%b534))
-(if (memv %%t535 '(local-syntax))
-(boolean? (%%binding-value217 %%b534))
-(if (memv %%t535 '(displaced-lexical))
-(eq? (%%binding-value217 %%b534) #f)
+(null? (%%binding-value227 %%b544))
+(if (memv %%t545 '(local-syntax))
+(boolean? (%%binding-value227 %%b544))
+(if (memv %%t545 '(displaced-lexical))
+(eq? (%%binding-value227 %%b544) #f)
 #t)))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%binding-type216 %%b534))
-%%b534
+(%%binding-type226 %%b544))
+%%b544
 #f)
 #f))))
-(%%binding-type216 car)
-(%%binding-value217 cdr)
-(%%set-binding-type!218 set-car!)
-(%%set-binding-value!219 set-cdr!)
-(%%binding?220
-(lambda (%%x538) (if (pair? %%x538) (symbol? (car %%x538)) #f)))
-(%%extend-env230
-(lambda (%%label539 %%binding540 %%r541)
-(cons (cons %%label539 %%binding540) %%r541)))
-(%%extend-env*231
-(lambda (%%labels542 %%bindings543 %%r544)
-(if (null? %%labels542)
-%%r544
-(%%extend-env*231
-(cdr %%labels542)
-(cdr %%bindings543)
-(%%extend-env230
-(car %%labels542)
-(car %%bindings543)
-%%r544)))))
-(%%extend-var-env*232
-(lambda (%%labels545 %%vars546 %%r547)
-(if (null? %%labels545)
-%%r547
-(%%extend-var-env*232
-(cdr %%labels545)
-(cdr %%vars546)
-(%%extend-env230
-(car %%labels545)
-(cons 'lexical (car %%vars546))
-%%r547)))))
-(%%displaced-lexical?233
-(lambda (%%id548 %%r549)
-((lambda (%%n550)
-(if %%n550
-((lambda (%%b551)
-(eq? (%%binding-type216 %%b551) 'displaced-lexical))
-(%%lookup236 %%n550 %%r549))
+(%%binding-type226 car)
+(%%binding-value227 cdr)
+(%%set-binding-type!228 set-car!)
+(%%set-binding-value!229 set-cdr!)
+(%%binding?230
+(lambda (%%x548) (if (pair? %%x548) (symbol? (car %%x548)) #f)))
+(%%extend-env240
+(lambda (%%label549 %%binding550 %%r551)
+(cons (cons %%label549 %%binding550) %%r551)))
+(%%extend-env*241
+(lambda (%%labels552 %%bindings553 %%r554)
+(if (null? %%labels552)
+%%r554
+(%%extend-env*241
+(cdr %%labels552)
+(cdr %%bindings553)
+(%%extend-env240
+(car %%labels552)
+(car %%bindings553)
+%%r554)))))
+(%%extend-var-env*242
+(lambda (%%labels555 %%vars556 %%r557)
+(if (null? %%labels555)
+%%r557
+(%%extend-var-env*242
+(cdr %%labels555)
+(cdr %%vars556)
+(%%extend-env240
+(car %%labels555)
+(cons 'lexical (car %%vars556))
+%%r557)))))
+(%%displaced-lexical?243
+(lambda (%%id558 %%r559)
+((lambda (%%n560)
+(if %%n560
+((lambda (%%b561)
+(eq? (%%binding-type226 %%b561) 'displaced-lexical))
+(%%lookup246 %%n560 %%r559))
 #f))
-(%%id-var-name369 %%id548 '(())))))
-(%%displaced-lexical-error234
-(lambda (%%id552)
+(%%id-var-name379 %%id558 '(())))))
+(%%displaced-lexical-error244
+(lambda (%%id562)
 (syntax-error
-%%id552
-(if (%%id-var-name369 %%id552 '(()))
+%%id562
+(if (%%id-var-name379 %%id562 '(()))
 "identifier out of context"
 "identifier not visible"))))
-(%%lookup*235
-(lambda (%%x553 %%r554)
-((lambda (%%t555)
-(if %%t555
-(cdr %%t555)
-(if (symbol? %%x553)
-((lambda (%%t556)
-(if %%t556 %%t556 (cons 'global %%x553)))
-(%%get-global-definition-hook73 %%x553))
+(%%lookup*245
+(lambda (%%x563 %%r564)
+((lambda (%%t565)
+(if %%t565
+(cdr %%t565)
+(if (symbol? %%x563)
+((lambda (%%t566)
+(if %%t566 %%t566 (cons 'global %%x563)))
+(%%get-global-definition-hook73 %%x563))
 '(displaced-lexical . #f))))
-(assq %%x553 %%r554))))
-(%%lookup236
-(lambda (%%x557 %%r558)
-(letrec ((%%whack-binding!559
-(lambda (%%b560 %%*b561)
+(assq %%x563 %%r564))))
+(%%lookup246
+(lambda (%%x567 %%r568)
+(letrec ((%%whack-binding!569
+(lambda (%%b570 %%*b571)
 (begin
-(%%set-binding-type!218
-%%b560
-(%%binding-type216 %%*b561))
-(%%set-binding-value!219
-%%b560
-(%%binding-value217 %%*b561))))))
-((lambda (%%b562)
+(%%set-binding-type!228
+%%b570
+(%%binding-type226 %%*b571))
+(%%set-binding-value!229
+%%b570
+(%%binding-value227 %%*b571))))))
+((lambda (%%b572)
 (begin
-(if (eq? (%%binding-type216 %%b562) 'deferred)
-(%%whack-binding!559
-%%b562
-(%%make-transformer-binding237
-((%%binding-value217 %%b562))))
+(if (eq? (%%binding-type226 %%b572) 'deferred)
+(%%whack-binding!569
+%%b572
+(%%make-transformer-binding247
+((%%binding-value227 %%b572))))
 (void))
-%%b562))
-(%%lookup*235 %%x557 %%r558)))))
-(%%make-transformer-binding237
-(lambda (%%b563)
-((lambda (%%t564)
-(if %%t564
-%%t564
-(syntax-error %%b563 "invalid transformer")))
-(%%sanitize-binding206 %%b563))))
-(%%defer-or-eval-transformer238
-(lambda (%%eval565 %%x566)
-(if (%%built-lambda?152 %%x566)
-(cons 'deferred (lambda () (%%eval565 %%x566)))
-(%%make-transformer-binding237 (%%eval565 %%x566)))))
-(%%global-extend239
-(lambda (%%type567 %%sym568 %%val569)
-(%%put-cte-hook72 %%sym568 (cons %%type567 %%val569))))
-(%%nonsymbol-id?240
-(lambda (%%x570)
-(if (%%syntax-object?64 %%x570)
-(symbol? ((lambda (%%e571)
-(if (annotation? %%e571)
-(annotation-expression %%e571)
-%%e571))
-(%%syntax-object-expression65 %%x570)))
+%%b572))
+(%%lookup*245 %%x567 %%r568)))))
+(%%make-transformer-binding247
+(lambda (%%b573)
+((lambda (%%t574)
+(if %%t574
+%%t574
+(syntax-error %%b573 "invalid transformer")))
+(%%sanitize-binding216 %%b573))))
+(%%defer-or-eval-transformer248
+(lambda (%%eval575 %%x576)
+(if (%%built-lambda?162 %%x576)
+(cons 'deferred (lambda () (%%eval575 %%x576)))
+(%%make-transformer-binding247 (%%eval575 %%x576)))))
+(%%global-extend249
+(lambda (%%type577 %%sym578 %%val579)
+(%%put-cte-hook72 %%sym578 (cons %%type577 %%val579))))
+(%%nonsymbol-id?250
+(lambda (%%x580)
+(if (%%syntax-object?64 %%x580)
+(symbol? ((lambda (%%e581)
+(if (annotation? %%e581)
+(annotation-expression %%e581)
+%%e581))
+(%%syntax-object-expression65 %%x580)))
 #f)))
-(%%id?241
-(lambda (%%x572)
-(if (symbol? %%x572)
+(%%id?251
+(lambda (%%x582)
+(if (symbol? %%x582)
 #t
-(if (%%syntax-object?64 %%x572)
-(symbol? ((lambda (%%e573)
-(if (annotation? %%e573)
-(annotation-expression %%e573)
-%%e573))
-(%%syntax-object-expression65 %%x572)))
-(if (annotation? %%x572)
-(symbol? (annotation-expression %%x572))
+(if (%%syntax-object?64 %%x582)
+(symbol? ((lambda (%%e583)
+(if (annotation? %%e583)
+(annotation-expression %%e583)
+%%e583))
+(%%syntax-object-expression65 %%x582)))
+(if (annotation? %%x582)
+(symbol? (annotation-expression %%x582))
 #f)))))
-(%%id-marks247
-(lambda (%%id574)
-(if (%%syntax-object?64 %%id574)
-(%%wrap-marks251 (%%syntax-object-wrap66 %%id574))
-(%%wrap-marks251 '((top))))))
-(%%id-subst248
-(lambda (%%id575)
-(if (%%syntax-object?64 %%id575)
-(%%wrap-subst252 (%%syntax-object-wrap66 %%id575))
-(%%wrap-marks251 '((top))))))
-(%%id-sym-name&marks249
-(lambda (%%x576 %%w577)
-(if (%%syntax-object?64 %%x576)
-(values ((lambda (%%e578)
-(if (annotation? %%e578)
-(annotation-expression %%e578)
-%%e578))
-(%%syntax-object-expression65 %%x576))
-(%%join-marks358
-(%%wrap-marks251 %%w577)
-(%%wrap-marks251
-(%%syntax-object-wrap66 %%x576))))
-(values ((lambda (%%e579)
-(if (annotation? %%e579)
-(annotation-expression %%e579)
-%%e579))
-%%x576)
-(%%wrap-marks251 %%w577)))))
-(%%make-wrap250 cons)
-(%%wrap-marks251 car)
-(%%wrap-subst252 cdr)
-(%%make-indirect-label290
-(lambda (%%label580) (vector 'indirect-label %%label580)))
-(%%indirect-label?291
-(lambda (%%x581)
-(if (vector? %%x581)
-(if (= (vector-length %%x581) 2)
-(eq? (vector-ref %%x581 0) 'indirect-label)
+(%%id-marks257
+(lambda (%%id584)
+(if (%%syntax-object?64 %%id584)
+(%%wrap-marks261 (%%syntax-object-wrap66 %%id584))
+(%%wrap-marks261 '((top))))))
+(%%id-subst258
+(lambda (%%id585)
+(if (%%syntax-object?64 %%id585)
+(%%wrap-subst262 (%%syntax-object-wrap66 %%id585))
+(%%wrap-marks261 '((top))))))
+(%%id-sym-name&marks259
+(lambda (%%x586 %%w587)
+(if (%%syntax-object?64 %%x586)
+(values ((lambda (%%e588)
+(if (annotation? %%e588)
+(annotation-expression %%e588)
+%%e588))
+(%%syntax-object-expression65 %%x586))
+(%%join-marks368
+(%%wrap-marks261 %%w587)
+(%%wrap-marks261
+(%%syntax-object-wrap66 %%x586))))
+(values ((lambda (%%e589)
+(if (annotation? %%e589)
+(annotation-expression %%e589)
+%%e589))
+%%x586)
+(%%wrap-marks261 %%w587)))))
+(%%make-wrap260 cons)
+(%%wrap-marks261 car)
+(%%wrap-subst262 cdr)
+(%%make-indirect-label300
+(lambda (%%label590) (vector 'indirect-label %%label590)))
+(%%indirect-label?301
+(lambda (%%x591)
+(if (vector? %%x591)
+(if (= (vector-length %%x591) 2)
+(eq? (vector-ref %%x591 0) 'indirect-label)
 #f)
 #f)))
-(%%indirect-label-label292
-(lambda (%%x582) (vector-ref %%x582 1)))
-(%%set-indirect-label-label!293
-(lambda (%%x583 %%update584)
-(vector-set! %%x583 1 %%update584)))
-(%%gen-indirect-label294
-(lambda () (%%make-indirect-label290 (%%gen-label297))))
-(%%get-indirect-label295
-(lambda (%%x585) (%%indirect-label-label292 %%x585)))
-(%%set-indirect-label!296
-(lambda (%%x586 %%v587)
-(%%set-indirect-label-label!293 %%x586 %%v587)))
-(%%gen-label297 (lambda () (string #\i)))
-(%%label?298
-(lambda (%%x588)
-((lambda (%%t589)
-(if %%t589
-%%t589
-((lambda (%%t590)
-(if %%t590 %%t590 (%%indirect-label?291 %%x588)))
-(symbol? %%x588))))
-(string? %%x588))))
-(%%gen-labels299
-(lambda (%%ls591)
-(if (null? %%ls591)
+(%%indirect-label-label302
+(lambda (%%x592) (vector-ref %%x592 1)))
+(%%set-indirect-label-label!303
+(lambda (%%x593 %%update594)
+(vector-set! %%x593 1 %%update594)))
+(%%gen-indirect-label304
+(lambda () (%%make-indirect-label300 (%%gen-label307))))
+(%%get-indirect-label305
+(lambda (%%x595) (%%indirect-label-label302 %%x595)))
+(%%set-indirect-label!306
+(lambda (%%x596 %%v597)
+(%%set-indirect-label-label!303 %%x596 %%v597)))
+(%%gen-label307 (lambda () (string #\i)))
+(%%label?308
+(lambda (%%x598)
+((lambda (%%t599)
+(if %%t599
+%%t599
+((lambda (%%t600)
+(if %%t600 %%t600 (%%indirect-label?301 %%x598)))
+(symbol? %%x598))))
+(string? %%x598))))
+(%%gen-labels309
+(lambda (%%ls601)
+(if (null? %%ls601)
 '()
-(cons (%%gen-label297) (%%gen-labels299 (cdr %%ls591))))))
-(%%make-ribcage300
-(lambda (%%symnames592 %%marks593 %%labels594)
-(vector 'ribcage %%symnames592 %%marks593 %%labels594)))
-(%%ribcage?301
-(lambda (%%x595)
-(if (vector? %%x595)
-(if (= (vector-length %%x595) 4)
-(eq? (vector-ref %%x595 0) 'ribcage)
+(cons (%%gen-label307) (%%gen-labels309 (cdr %%ls601))))))
+(%%make-ribcage310
+(lambda (%%symnames602 %%marks603 %%labels604)
+(vector 'ribcage %%symnames602 %%marks603 %%labels604)))
+(%%ribcage?311
+(lambda (%%x605)
+(if (vector? %%x605)
+(if (= (vector-length %%x605) 4)
+(eq? (vector-ref %%x605 0) 'ribcage)
 #f)
 #f)))
-(%%ribcage-symnames302 (lambda (%%x596) (vector-ref %%x596 1)))
-(%%ribcage-marks303 (lambda (%%x597) (vector-ref %%x597 2)))
-(%%ribcage-labels304 (lambda (%%x598) (vector-ref %%x598 3)))
-(%%set-ribcage-symnames!305
-(lambda (%%x599 %%update600)
-(vector-set! %%x599 1 %%update600)))
-(%%set-ribcage-marks!306
-(lambda (%%x601 %%update602)
-(vector-set! %%x601 2 %%update602)))
-(%%set-ribcage-labels!307
-(lambda (%%x603 %%update604)
-(vector-set! %%x603 3 %%update604)))
-(%%make-top-ribcage308
-(lambda (%%key605 %%mutable?606)
-(vector 'top-ribcage %%key605 %%mutable?606)))
-(%%top-ribcage?309
-(lambda (%%x607)
-(if (vector? %%x607)
-(if (= (vector-length %%x607) 3)
-(eq? (vector-ref %%x607 0) 'top-ribcage)
+(%%ribcage-symnames312 (lambda (%%x606) (vector-ref %%x606 1)))
+(%%ribcage-marks313 (lambda (%%x607) (vector-ref %%x607 2)))
+(%%ribcage-labels314 (lambda (%%x608) (vector-ref %%x608 3)))
+(%%set-ribcage-symnames!315
+(lambda (%%x609 %%update610)
+(vector-set! %%x609 1 %%update610)))
+(%%set-ribcage-marks!316
+(lambda (%%x611 %%update612)
+(vector-set! %%x611 2 %%update612)))
+(%%set-ribcage-labels!317
+(lambda (%%x613 %%update614)
+(vector-set! %%x613 3 %%update614)))
+(%%make-top-ribcage318
+(lambda (%%key615 %%mutable?616)
+(vector 'top-ribcage %%key615 %%mutable?616)))
+(%%top-ribcage?319
+(lambda (%%x617)
+(if (vector? %%x617)
+(if (= (vector-length %%x617) 3)
+(eq? (vector-ref %%x617 0) 'top-ribcage)
 #f)
 #f)))
-(%%top-ribcage-key310 (lambda (%%x608) (vector-ref %%x608 1)))
-(%%top-ribcage-mutable?311
-(lambda (%%x609) (vector-ref %%x609 2)))
-(%%set-top-ribcage-key!312
-(lambda (%%x610 %%update611)
-(vector-set! %%x610 1 %%update611)))
-(%%set-top-ribcage-mutable?!313
-(lambda (%%x612 %%update613)
-(vector-set! %%x612 2 %%update613)))
-(%%make-import-interface314
-(lambda (%%interface614 %%new-marks615)
-(vector 'import-interface %%interface614 %%new-marks615)))
-(%%import-interface?315
-(lambda (%%x616)
-(if (vector? %%x616)
-(if (= (vector-length %%x616) 3)
-(eq? (vector-ref %%x616 0) 'import-interface)
+(%%top-ribcage-key320 (lambda (%%x618) (vector-ref %%x618 1)))
+(%%top-ribcage-mutable?321
+(lambda (%%x619) (vector-ref %%x619 2)))
+(%%set-top-ribcage-key!322
+(lambda (%%x620 %%update621)
+(vector-set! %%x620 1 %%update621)))
+(%%set-top-ribcage-mutable?!323
+(lambda (%%x622 %%update623)
+(vector-set! %%x622 2 %%update623)))
+(%%make-import-interface324
+(lambda (%%interface624 %%new-marks625)
+(vector 'import-interface %%interface624 %%new-marks625)))
+(%%import-interface?325
+(lambda (%%x626)
+(if (vector? %%x626)
+(if (= (vector-length %%x626) 3)
+(eq? (vector-ref %%x626 0) 'import-interface)
 #f)
 #f)))
-(%%import-interface-interface316
-(lambda (%%x617) (vector-ref %%x617 1)))
-(%%import-interface-new-marks317
-(lambda (%%x618) (vector-ref %%x618 2)))
-(%%set-import-interface-interface!318
-(lambda (%%x619 %%update620)
-(vector-set! %%x619 1 %%update620)))
-(%%set-import-interface-new-marks!319
-(lambda (%%x621 %%update622)
-(vector-set! %%x621 2 %%update622)))
-(%%make-env320
-(lambda (%%top-ribcage623 %%wrap624)
-(vector 'env %%top-ribcage623 %%wrap624)))
-(%%env?321
-(lambda (%%x625)
-(if (vector? %%x625)
-(if (= (vector-length %%x625) 3)
-(eq? (vector-ref %%x625 0) 'env)
+(%%import-interface-interface326
+(lambda (%%x627) (vector-ref %%x627 1)))
+(%%import-interface-new-marks327
+(lambda (%%x628) (vector-ref %%x628 2)))
+(%%set-import-interface-interface!328
+(lambda (%%x629 %%update630)
+(vector-set! %%x629 1 %%update630)))
+(%%set-import-interface-new-marks!329
+(lambda (%%x631 %%update632)
+(vector-set! %%x631 2 %%update632)))
+(%%make-env330
+(lambda (%%top-ribcage633 %%wrap634)
+(vector 'env %%top-ribcage633 %%wrap634)))
+(%%env?331
+(lambda (%%x635)
+(if (vector? %%x635)
+(if (= (vector-length %%x635) 3)
+(eq? (vector-ref %%x635 0) 'env)
 #f)
 #f)))
-(%%env-top-ribcage322 (lambda (%%x626) (vector-ref %%x626 1)))
-(%%env-wrap323 (lambda (%%x627) (vector-ref %%x627 2)))
-(%%set-env-top-ribcage!324
-(lambda (%%x628 %%update629)
-(vector-set! %%x628 1 %%update629)))
-(%%set-env-wrap!325
-(lambda (%%x630 %%update631)
-(vector-set! %%x630 2 %%update631)))
-(%%anti-mark335
-(lambda (%%w632)
-(%%make-wrap250
-(cons #f (%%wrap-marks251 %%w632))
-(cons 'shift (%%wrap-subst252 %%w632)))))
-(%%barrier-marker340 #f)
-(%%extend-ribcage!345
-(lambda (%%ribcage633 %%id634 %%label635)
+(%%env-top-ribcage332 (lambda (%%x636) (vector-ref %%x636 1)))
+(%%env-wrap333 (lambda (%%x637) (vector-ref %%x637 2)))
+(%%set-env-top-ribcage!334
+(lambda (%%x638 %%update639)
+(vector-set! %%x638 1 %%update639)))
+(%%set-env-wrap!335
+(lambda (%%x640 %%update641)
+(vector-set! %%x640 2 %%update641)))
+(%%anti-mark345
+(lambda (%%w642)
+(%%make-wrap260
+(cons #f (%%wrap-marks261 %%w642))
+(cons 'shift (%%wrap-subst262 %%w642)))))
+(%%barrier-marker350 #f)
+(%%extend-ribcage!355
+(lambda (%%ribcage643 %%id644 %%label645)
 (begin
-(%%set-ribcage-symnames!305
-%%ribcage633
-(cons ((lambda (%%e636)
-(if (annotation? %%e636)
-(annotation-expression %%e636)
-%%e636))
-(%%syntax-object-expression65 %%id634))
-(%%ribcage-symnames302 %%ribcage633)))
-(%%set-ribcage-marks!306
-%%ribcage633
-(cons (%%wrap-marks251 (%%syntax-object-wrap66 %%id634))
-(%%ribcage-marks303 %%ribcage633)))
-(%%set-ribcage-labels!307
-%%ribcage633
-(cons %%label635 (%%ribcage-labels304 %%ribcage633))))))
-(%%import-extend-ribcage!346
-(lambda (%%ribcage637 %%new-marks638 %%id639 %%label640)
+(%%set-ribcage-symnames!315
+%%ribcage643
+(cons ((lambda (%%e646)
+(if (annotation? %%e646)
+(annotation-expression %%e646)
+%%e646))
+(%%syntax-object-expression65 %%id644))
+(%%ribcage-symnames312 %%ribcage643)))
+(%%set-ribcage-marks!316
+%%ribcage643
+(cons (%%wrap-marks261 (%%syntax-object-wrap66 %%id644))
+(%%ribcage-marks313 %%ribcage643)))
+(%%set-ribcage-labels!317
+%%ribcage643
+(cons %%label645 (%%ribcage-labels314 %%ribcage643))))))
+(%%import-extend-ribcage!356
+(lambda (%%ribcage647 %%new-marks648 %%id649 %%label650)
 (begin
-(%%set-ribcage-symnames!305
-%%ribcage637
-(cons ((lambda (%%e641)
-(if (annotation? %%e641)
-(annotation-expression %%e641)
-%%e641))
-(%%syntax-object-expression65 %%id639))
-(%%ribcage-symnames302 %%ribcage637)))
-(%%set-ribcage-marks!306
-%%ribcage637
-(cons (%%join-marks358
-%%new-marks638
-(%%wrap-marks251 (%%syntax-object-wrap66 %%id639)))
-(%%ribcage-marks303 %%ribcage637)))
-(%%set-ribcage-labels!307
-%%ribcage637
-(cons %%label640 (%%ribcage-labels304 %%ribcage637))))))
-(%%extend-ribcage-barrier!347
-(lambda (%%ribcage642 %%killer-id643)
-(%%extend-ribcage-barrier-help!348
-%%ribcage642
-(%%syntax-object-wrap66 %%killer-id643))))
-(%%extend-ribcage-barrier-help!348
-(lambda (%%ribcage644 %%wrap645)
+(%%set-ribcage-symnames!315
+%%ribcage647
+(cons ((lambda (%%e651)
+(if (annotation? %%e651)
+(annotation-expression %%e651)
+%%e651))
+(%%syntax-object-expression65 %%id649))
+(%%ribcage-symnames312 %%ribcage647)))
+(%%set-ribcage-marks!316
+%%ribcage647
+(cons (%%join-marks368
+%%new-marks648
+(%%wrap-marks261 (%%syntax-object-wrap66 %%id649)))
+(%%ribcage-marks313 %%ribcage647)))
+(%%set-ribcage-labels!317
+%%ribcage647
+(cons %%label650 (%%ribcage-labels314 %%ribcage647))))))
+(%%extend-ribcage-barrier!357
+(lambda (%%ribcage652 %%killer-id653)
+(%%extend-ribcage-barrier-help!358
+%%ribcage652
+(%%syntax-object-wrap66 %%killer-id653))))
+(%%extend-ribcage-barrier-help!358
+(lambda (%%ribcage654 %%wrap655)
 (begin
-(%%set-ribcage-symnames!305
-%%ribcage644
-(cons %%barrier-marker340
-(%%ribcage-symnames302 %%ribcage644)))
-(%%set-ribcage-marks!306
-%%ribcage644
-(cons (%%wrap-marks251 %%wrap645)
-(%%ribcage-marks303 %%ribcage644))))))
-(%%extend-ribcage-subst!349
-(lambda (%%ribcage646 %%import-iface647)
-(%%set-ribcage-symnames!305
-%%ribcage646
-(cons %%import-iface647
-(%%ribcage-symnames302 %%ribcage646)))))
-(%%lookup-import-binding-name350
-(lambda (%%sym648 %%marks649 %%token650 %%new-marks651)
-((lambda (%%new652)
-(if %%new652
-((letrec ((%%f653 (lambda (%%new654)
-(if (pair? %%new654)
-((lambda (%%t655)
-(if %%t655
-%%t655
-(%%f653 (cdr %%new654))))
-(%%f653 (car %%new654)))
-(if (symbol? %%new654)
-(if (%%same-marks?360
-%%marks649
-(%%join-marks358
-%%new-marks651
-(%%wrap-marks251
+(%%set-ribcage-symnames!315
+%%ribcage654
+(cons %%barrier-marker350
+(%%ribcage-symnames312 %%ribcage654)))
+(%%set-ribcage-marks!316
+%%ribcage654
+(cons (%%wrap-marks261 %%wrap655)
+(%%ribcage-marks313 %%ribcage654))))))
+(%%extend-ribcage-subst!359
+(lambda (%%ribcage656 %%import-iface657)
+(%%set-ribcage-symnames!315
+%%ribcage656
+(cons %%import-iface657
+(%%ribcage-symnames312 %%ribcage656)))))
+(%%lookup-import-binding-name360
+(lambda (%%sym658 %%marks659 %%token660 %%new-marks661)
+((lambda (%%new662)
+(if %%new662
+((letrec ((%%f663 (lambda (%%new664)
+(if (pair? %%new664)
+((lambda (%%t665)
+(if %%t665
+%%t665
+(%%f663 (cdr %%new664))))
+(%%f663 (car %%new664)))
+(if (symbol? %%new664)
+(if (%%same-marks?370
+%%marks659
+(%%join-marks368
+%%new-marks661
+(%%wrap-marks261
 '((top)))))
-%%new654
+%%new664
 #f)
-(if (%%same-marks?360
-%%marks649
-(%%join-marks358
-%%new-marks651
-(%%wrap-marks251
+(if (%%same-marks?370
+%%marks659
+(%%join-marks368
+%%new-marks661
+(%%wrap-marks261
 (%%syntax-object-wrap66
-%%new654))))
-%%new654
+%%new664))))
+%%new664
 #f))))))
-%%f653)
-%%new652)
+%%f663)
+%%new662)
 #f))
-(%%get-import-binding76 %%sym648 %%token650))))
-(%%store-import-binding351
-(lambda (%%id656 %%token657 %%new-marks658)
-(letrec ((%%cons-id659
-(lambda (%%id661 %%x662)
-(if (not %%x662) %%id661 (cons %%id661 %%x662))))
-(%%weed660
-(lambda (%%marks663 %%x664)
-(if (pair? %%x664)
-(if (%%same-marks?360
-(%%id-marks247 (car %%x664))
-%%marks663)
-(%%weed660 %%marks663 (cdr %%x664))
-(%%cons-id659
-(car %%x664)
-(%%weed660 %%marks663 (cdr %%x664))))
-(if %%x664
-(if (not (%%same-marks?360
-(%%id-marks247 %%x664)
-%%marks663))
-%%x664
+(%%get-import-binding76 %%sym658 %%token660))))
+(%%store-import-binding361
+(lambda (%%id666 %%token667 %%new-marks668)
+(letrec ((%%cons-id669
+(lambda (%%id671 %%x672)
+(if (not %%x672) %%id671 (cons %%id671 %%x672))))
+(%%weed670
+(lambda (%%marks673 %%x674)
+(if (pair? %%x674)
+(if (%%same-marks?370
+(%%id-marks257 (car %%x674))
+%%marks673)
+(%%weed670 %%marks673 (cdr %%x674))
+(%%cons-id669
+(car %%x674)
+(%%weed670 %%marks673 (cdr %%x674))))
+(if %%x674
+(if (not (%%same-marks?370
+(%%id-marks257 %%x674)
+%%marks673))
+%%x674
 #f)
 #f)))))
-((lambda (%%id665)
-((lambda (%%sym666)
-(if (not (eq? %%id665 %%sym666))
-((lambda (%%marks667)
+((lambda (%%id675)
+((lambda (%%sym676)
+(if (not (eq? %%id675 %%sym676))
+((lambda (%%marks677)
 (%%update-import-binding!77
-%%sym666
-%%token657
-(lambda (%%old-binding668)
-((lambda (%%x669)
-(%%cons-id659
-(if (%%same-marks?360
-%%marks667
-(%%wrap-marks251 '((top))))
-(%%resolved-id-var-name355 %%id665)
-%%id665)
-%%x669))
-(%%weed660 %%marks667 %%old-binding668)))))
-(%%id-marks247 %%id665))
+%%sym676
+%%token667
+(lambda (%%old-binding678)
+((lambda (%%x679)
+(%%cons-id669
+(if (%%same-marks?370
+%%marks677
+(%%wrap-marks261 '((top))))
+(%%resolved-id-var-name365 %%id675)
+%%id675)
+%%x679))
+(%%weed670 %%marks677 %%old-binding678)))))
+(%%id-marks257 %%id675))
 (void)))
-((lambda (%%x670)
-((lambda (%%e671)
-(if (annotation? %%e671)
-(annotation-expression %%e671)
-%%e671))
-(if (%%syntax-object?64 %%x670)
-(%%syntax-object-expression65 %%x670)
-%%x670)))
-%%id665)))
-(if (null? %%new-marks658)
-%%id656
+((lambda (%%x680)
+((lambda (%%e681)
+(if (annotation? %%e681)
+(annotation-expression %%e681)
+%%e681))
+(if (%%syntax-object?64 %%x680)
+(%%syntax-object-expression65 %%x680)
+%%x680)))
+%%id675)))
+(if (null? %%new-marks668)
+%%id666
 (%%make-syntax-object63
-((lambda (%%x672)
-((lambda (%%e673)
-(if (annotation? %%e673)
-(annotation-expression %%e673)
-%%e673))
-(if (%%syntax-object?64 %%x672)
-(%%syntax-object-expression65 %%x672)
-%%x672)))
-%%id656)
-(%%make-wrap250
-(%%join-marks358
-%%new-marks658
-(%%id-marks247 %%id656))
-(%%id-subst248 %%id656))))))))
-(%%make-binding-wrap352
-(lambda (%%ids674 %%labels675 %%w676)
-(if (null? %%ids674)
-%%w676
-(%%make-wrap250
-(%%wrap-marks251 %%w676)
-(cons ((lambda (%%labelvec677)
-((lambda (%%n678)
-((lambda (%%symnamevec679 %%marksvec680)
+((lambda (%%x682)
+((lambda (%%e683)
+(if (annotation? %%e683)
+(annotation-expression %%e683)
+%%e683))
+(if (%%syntax-object?64 %%x682)
+(%%syntax-object-expression65 %%x682)
+%%x682)))
+%%id666)
+(%%make-wrap260
+(%%join-marks368
+%%new-marks668
+(%%id-marks257 %%id666))
+(%%id-subst258 %%id666))))))))
+(%%make-binding-wrap362
+(lambda (%%ids684 %%labels685 %%w686)
+(if (null? %%ids684)
+%%w686
+(%%make-wrap260
+(%%wrap-marks261 %%w686)
+(cons ((lambda (%%labelvec687)
+((lambda (%%n688)
+((lambda (%%symnamevec689 %%marksvec690)
 (begin
-((letrec ((%%f681 (lambda (%%ids682
+((letrec ((%%f691 (lambda (%%ids692
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%i683)
-(if (not (null? %%ids682))
+%%i693)
+(if (not (null? %%ids692))
 (call-with-values
 (lambda ()
-(%%id-sym-name&marks249 (car %%ids682) %%w676))
-(lambda (%%symname684 %%marks685)
+(%%id-sym-name&marks259 (car %%ids692) %%w686))
+(lambda (%%symname694 %%marks695)
 (begin
-(vector-set! %%symnamevec679 %%i683 %%symname684)
-(vector-set! %%marksvec680 %%i683 %%marks685)
-(%%f681 (cdr %%ids682) (fx+ %%i683 1)))))
+(vector-set! %%symnamevec689 %%i693 %%symname694)
+(vector-set! %%marksvec690 %%i693 %%marks695)
+(%%f691 (cdr %%ids692) (fx+ %%i693 1)))))
 (void)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f681)
-%%ids674
+%%f691)
+%%ids684
 0)
-(%%make-ribcage300
-%%symnamevec679
-%%marksvec680
-%%labelvec677)))
-(make-vector %%n678)
-(make-vector %%n678)))
-(vector-length %%labelvec677)))
-(list->vector %%labels675))
-(%%wrap-subst252 %%w676))))))
-(%%make-resolved-id353
-(lambda (%%fromsym686 %%marks687 %%tosym688)
+(%%make-ribcage310
+%%symnamevec689
+%%marksvec690
+%%labelvec687)))
+(make-vector %%n688)
+(make-vector %%n688)))
+(vector-length %%labelvec687)))
+(list->vector %%labels685))
+(%%wrap-subst262 %%w686))))))
+(%%make-resolved-id363
+(lambda (%%fromsym696 %%marks697 %%tosym698)
 (%%make-syntax-object63
-%%fromsym686
-(%%make-wrap250
-%%marks687
-(list (%%make-ribcage300
-(vector %%fromsym686)
-(vector %%marks687)
-(vector %%tosym688)))))))
-(%%id->resolved-id354
-(lambda (%%id689)
+%%fromsym696
+(%%make-wrap260
+%%marks697
+(list (%%make-ribcage310
+(vector %%fromsym696)
+(vector %%marks697)
+(vector %%tosym698)))))))
+(%%id->resolved-id364
+(lambda (%%id699)
 (call-with-values
-(lambda () (%%id-var-name&marks367 %%id689 '(())))
-(lambda (%%tosym690 %%marks691)
+(lambda () (%%id-var-name&marks377 %%id699 '(())))
+(lambda (%%tosym700 %%marks701)
 (begin
-(if (not %%tosym690)
+(if (not %%tosym700)
 (syntax-error
-%%id689
+%%id699
 "identifier not visible for export")
 (void))
-(%%make-resolved-id353
-((lambda (%%x692)
-((lambda (%%e693)
-(if (annotation? %%e693)
-(annotation-expression %%e693)
-%%e693))
-(if (%%syntax-object?64 %%x692)
-(%%syntax-object-expression65 %%x692)
-%%x692)))
-%%id689)
-%%marks691
-%%tosym690))))))
-(%%resolved-id-var-name355
-(lambda (%%id694)
+(%%make-resolved-id363
+((lambda (%%x702)
+((lambda (%%e703)
+(if (annotation? %%e703)
+(annotation-expression %%e703)
+%%e703))
+(if (%%syntax-object?64 %%x702)
+(%%syntax-object-expression65 %%x702)
+%%x702)))
+%%id699)
+%%marks701
+%%tosym700))))))
+(%%resolved-id-var-name365
+(lambda (%%id704)
 (vector-ref
-(%%ribcage-labels304
-(car (%%wrap-subst252 (%%syntax-object-wrap66 %%id694))))
+(%%ribcage-labels314
+(car (%%wrap-subst262 (%%syntax-object-wrap66 %%id704))))
 0)))
-(%%smart-append356
-(lambda (%%m1695 %%m2696)
-(if (null? %%m2696) %%m1695 (append %%m1695 %%m2696))))
-(%%join-wraps357
-(lambda (%%w1697 %%w2698)
-((lambda (%%m1699 %%s1700)
-(if (null? %%m1699)
-(if (null? %%s1700)
-%%w2698
-(%%make-wrap250
-(%%wrap-marks251 %%w2698)
-(%%join-subst359
-%%s1700
-(%%wrap-subst252 %%w2698))))
-(%%make-wrap250
-(%%join-marks358 %%m1699 (%%wrap-marks251 %%w2698))
-(%%join-subst359 %%s1700 (%%wrap-subst252 %%w2698)))))
-(%%wrap-marks251 %%w1697)
-(%%wrap-subst252 %%w1697))))
-(%%join-marks358
-(lambda (%%m1701 %%m2702) (%%smart-append356 %%m1701 %%m2702)))
-(%%join-subst359
-(lambda (%%s1703 %%s2704) (%%smart-append356 %%s1703 %%s2704)))
-(%%same-marks?360
-(lambda (%%x705 %%y706)
-((lambda (%%t707)
-(if %%t707
-%%t707
-(if (not (null? %%x705))
-(if (not (null? %%y706))
-(if (eq? (car %%x705) (car %%y706))
-(%%same-marks?360
-(cdr %%x705)
-(cdr %%y706))
+(%%smart-append366
+(lambda (%%m1705 %%m2706)
+(if (null? %%m2706) %%m1705 (append %%m1705 %%m2706))))
+(%%join-wraps367
+(lambda (%%w1707 %%w2708)
+((lambda (%%m1709 %%s1710)
+(if (null? %%m1709)
+(if (null? %%s1710)
+%%w2708
+(%%make-wrap260
+(%%wrap-marks261 %%w2708)
+(%%join-subst369
+%%s1710
+(%%wrap-subst262 %%w2708))))
+(%%make-wrap260
+(%%join-marks368 %%m1709 (%%wrap-marks261 %%w2708))
+(%%join-subst369 %%s1710 (%%wrap-subst262 %%w2708)))))
+(%%wrap-marks261 %%w1707)
+(%%wrap-subst262 %%w1707))))
+(%%join-marks368
+(lambda (%%m1711 %%m2712) (%%smart-append366 %%m1711 %%m2712)))
+(%%join-subst369
+(lambda (%%s1713 %%s2714) (%%smart-append366 %%s1713 %%s2714)))
+(%%same-marks?370
+(lambda (%%x715 %%y716)
+((lambda (%%t717)
+(if %%t717
+%%t717
+(if (not (null? %%x715))
+(if (not (null? %%y716))
+(if (eq? (car %%x715) (car %%y716))
+(%%same-marks?370
+(cdr %%x715)
+(cdr %%y716))
 #f)
 #f)
 #f)))
-(eq? %%x705 %%y706))))
-(%%diff-marks361
-(lambda (%%m1708 %%m2709)
-((lambda (%%n1710 %%n2711)
-((letrec ((%%f712 (lambda (%%n1713 %%m1714)
-(if (> %%n1713 %%n2711)
-(cons (car %%m1714)
-(%%f712 (- %%n1713 1)
-(cdr %%m1714)))
-(if (equal? %%m1714 %%m2709)
+(eq? %%x715 %%y716))))
+(%%diff-marks371
+(lambda (%%m1718 %%m2719)
+((lambda (%%n1720 %%n2721)
+((letrec ((%%f722 (lambda (%%n1723 %%m1724)
+(if (> %%n1723 %%n2721)
+(cons (car %%m1724)
+(%%f722 (- %%n1723 1)
+(cdr %%m1724)))
+(if (equal? %%m1724 %%m2719)
 '()
 (error "internal error in diff-marks"
-%%m1714
-%%m2709))))))
-%%f712)
-%%n1710
-%%m1708))
-(length %%m1708)
-(length %%m2709))))
-(%%leave-implicit?362
-(lambda (%%token715) (eq? %%token715 '*top*)))
-(%%new-binding363
-(lambda (%%sym716 %%marks717 %%token718)
-((lambda (%%loc719)
-((lambda (%%id720)
+%%m1724
+%%m2719))))))
+%%f722)
+%%n1720
+%%m1718))
+(length %%m1718)
+(length %%m2719))))
+(%%leave-implicit?372
+(lambda (%%token725) (eq? %%token725 '*top*)))
+(%%new-binding373
+(lambda (%%sym726 %%marks727 %%token728)
+((lambda (%%loc729)
+((lambda (%%id730)
 (begin
-(%%store-import-binding351 %%id720 %%token718 '())
-(values %%loc719 %%id720)))
-(%%make-resolved-id353 %%sym716 %%marks717 %%loc719)))
-(if (if (%%leave-implicit?362 %%token718)
-(%%same-marks?360
-%%marks717
-(%%wrap-marks251 '((top))))
+(%%store-import-binding361 %%id730 %%token728 '())
+(values %%loc729 %%id730)))
+(%%make-resolved-id363 %%sym726 %%marks727 %%loc729)))
+(if (if (%%leave-implicit?372 %%token728)
+(%%same-marks?370
+%%marks727
+(%%wrap-marks261 '((top))))
 #f)
-%%sym716
-(%%generate-id78 %%sym716)))))
-(%%top-id-bound-var-name364
-(lambda (%%sym721 %%marks722 %%top-ribcage723)
-((lambda (%%token724)
-((lambda (%%t725)
-(if %%t725
-((lambda (%%id726)
-(if (symbol? %%id726)
-(if (%%read-only-binding?75 %%id726)
-(%%new-binding363
-%%sym721
-%%marks722
-%%token724)
-(values %%id726
-(%%make-resolved-id353
-%%sym721
-%%marks722
-%%id726)))
-(values (%%resolved-id-var-name355 %%id726)
-%%id726)))
-%%t725)
-(%%new-binding363 %%sym721 %%marks722 %%token724)))
-(%%lookup-import-binding-name350
-%%sym721
-%%marks722
-%%token724
+%%sym726
+(%%generate-id78 %%sym726)))))
+(%%top-id-bound-var-name374
+(lambda (%%sym731 %%marks732 %%top-ribcage733)
+((lambda (%%token734)
+((lambda (%%t735)
+(if %%t735
+((lambda (%%id736)
+(if (symbol? %%id736)
+(if (%%read-only-binding?75 %%id736)
+(%%new-binding373
+%%sym731
+%%marks732
+%%token734)
+(values %%id736
+(%%make-resolved-id363
+%%sym731
+%%marks732
+%%id736)))
+(values (%%resolved-id-var-name365 %%id736)
+%%id736)))
+%%t735)
+(%%new-binding373 %%sym731 %%marks732 %%token734)))
+(%%lookup-import-binding-name360
+%%sym731
+%%marks732
+%%token734
 '())))
-(%%top-ribcage-key310 %%top-ribcage723))))
-(%%top-id-free-var-name365
-(lambda (%%sym727 %%marks728 %%top-ribcage729)
-((lambda (%%token730)
-((lambda (%%t731)
-(if %%t731
-((lambda (%%id732)
-(if (symbol? %%id732)
-%%id732
-(%%resolved-id-var-name355 %%id732)))
-%%t731)
-(if (if (%%top-ribcage-mutable?311 %%top-ribcage729)
-(%%same-marks?360
-%%marks728
-(%%wrap-marks251 '((top))))
+(%%top-ribcage-key320 %%top-ribcage733))))
+(%%top-id-free-var-name375
+(lambda (%%sym737 %%marks738 %%top-ribcage739)
+((lambda (%%token740)
+((lambda (%%t741)
+(if %%t741
+((lambda (%%id742)
+(if (symbol? %%id742)
+%%id742
+(%%resolved-id-var-name365 %%id742)))
+%%t741)
+(if (if (%%top-ribcage-mutable?321 %%top-ribcage739)
+(%%same-marks?370
+%%marks738
+(%%wrap-marks261 '((top))))
 #f)
 (call-with-values
 (lambda ()
-(%%new-binding363
-%%sym727
-(%%wrap-marks251 '((top)))
-%%token730))
-(lambda (%%sym733 %%id734) %%sym733))
+(%%new-binding373
+%%sym737
+(%%wrap-marks261 '((top)))
+%%token740))
+(lambda (%%sym743 %%id744) %%sym743))
 #f)))
-(%%lookup-import-binding-name350
-%%sym727
-%%marks728
-%%token730
+(%%lookup-import-binding-name360
+%%sym737
+%%marks738
+%%token740
 '())))
-(%%top-ribcage-key310 %%top-ribcage729))))
-(%%id-var-name-loc&marks366
-(lambda (%%id735 %%w736)
-(letrec ((%%search737
-(lambda (%%sym740 %%subst741 %%marks742)
-(if (null? %%subst741)
-(values #f %%marks742)
-((lambda (%%fst743)
-(if (eq? %%fst743 'shift)
-(%%search737
-%%sym740
-(cdr %%subst741)
-(cdr %%marks742))
-(if (%%ribcage?301 %%fst743)
-((lambda (%%symnames744)
-(if (vector? %%symnames744)
-(%%search-vector-rib739
-%%sym740
-%%subst741
-%%marks742
-%%symnames744
-%%fst743)
-(%%search-list-rib738
-%%sym740
-%%subst741
-%%marks742
-%%symnames744
-%%fst743)))
-(%%ribcage-symnames302 %%fst743))
-(if (%%top-ribcage?309 %%fst743)
-((lambda (%%t745)
-(if %%t745
-((lambda (%%var-name746)
-(values %%var-name746
+(%%top-ribcage-key320 %%top-ribcage739))))
+(%%id-var-name-loc&marks376
+(lambda (%%id745 %%w746)
+(letrec ((%%search747
+(lambda (%%sym750 %%subst751 %%marks752)
+(if (null? %%subst751)
+(values #f %%marks752)
+((lambda (%%fst753)
+(if (eq? %%fst753 'shift)
+(%%search747
+%%sym750
+(cdr %%subst751)
+(cdr %%marks752))
+(if (%%ribcage?311 %%fst753)
+((lambda (%%symnames754)
+(if (vector? %%symnames754)
+(%%search-vector-rib749
+%%sym750
+%%subst751
+%%marks752
+%%symnames754
+%%fst753)
+(%%search-list-rib748
+%%sym750
+%%subst751
+%%marks752
+%%symnames754
+%%fst753)))
+(%%ribcage-symnames312 %%fst753))
+(if (%%top-ribcage?319 %%fst753)
+((lambda (%%t755)
+(if %%t755
+((lambda (%%var-name756)
+(values %%var-name756
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%marks742))
-%%t745)
-(%%search737 %%sym740 (cdr %%subst741) %%marks742)))
+%%marks752))
+%%t755)
+(%%search747 %%sym750 (cdr %%subst751) %%marks752)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%top-id-free-var-name365
-%%sym740
-%%marks742
-%%fst743))
+(%%top-id-free-var-name375
+%%sym750
+%%marks752
+%%fst753))
 (error "internal error in id-var-name-loc&marks: improper subst"
-%%subst741)))))
-(car %%subst741)))))
-(%%search-list-rib738
-(lambda (%%sym747
-%%subst748
-%%marks749
-%%symnames750
-%%ribcage751)
-((letrec ((%%f752 (lambda (%%symnames753 %%i754)
-(if (null? %%symnames753)
-(%%search737
-%%sym747
-(cdr %%subst748)
-%%marks749)
-((lambda (%%x755)
-(if (if (eq? %%x755
+%%subst751)))))
+(car %%subst751)))))
+(%%search-list-rib748
+(lambda (%%sym757
+%%subst758
+%%marks759
+%%symnames760
+%%ribcage761)
+((letrec ((%%f762 (lambda (%%symnames763 %%i764)
+(if (null? %%symnames763)
+(%%search747
+%%sym757
+(cdr %%subst758)
+%%marks759)
+((lambda (%%x765)
+(if (if (eq? %%x765
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%sym747)
-(%%same-marks?360
-%%marks749
-(list-ref (%%ribcage-marks303 %%ribcage751) %%i754))
+%%sym757)
+(%%same-marks?370
+%%marks759
+(list-ref (%%ribcage-marks313 %%ribcage761) %%i764))
 #f)
 (values (list-ref
-(%%ribcage-labels304 %%ribcage751)
-%%i754)
-%%marks749)
-(if (%%import-interface?315 %%x755)
-((lambda (%%iface756 %%new-marks757)
-((lambda (%%t758)
-(if %%t758
-((lambda (%%token759)
-((lambda (%%t760)
-(if %%t760
-((lambda (%%id761)
-(values (if (symbol? %%id761)
-%%id761
-(%%resolved-id-var-name355
-%%id761))
-%%marks749))
-%%t760)
-(%%f752 (cdr %%symnames753)
-%%i754)))
-(%%lookup-import-binding-name350
-%%sym747
-%%marks749
-%%token759
-%%new-marks757)))
-%%t758)
-((lambda (%%ie762)
-((lambda (%%n763)
+(%%ribcage-labels314 %%ribcage761)
+%%i764)
+%%marks759)
+(if (%%import-interface?325 %%x765)
+((lambda (%%iface766 %%new-marks767)
+((lambda (%%t768)
+(if %%t768
+((lambda (%%token769)
+((lambda (%%t770)
+(if %%t770
+((lambda (%%id771)
+(values (if (symbol? %%id771)
+%%id771
+(%%resolved-id-var-name365
+%%id771))
+%%marks759))
+%%t770)
+(%%f762 (cdr %%symnames763)
+%%i764)))
+(%%lookup-import-binding-name360
+%%sym757
+%%marks759
+%%token769
+%%new-marks767)))
+%%t768)
+((lambda (%%ie772)
+((lambda (%%n773)
 ((lambda ()
-((letrec ((%%g764 (lambda (%%j765)
-(if (fx= %%j765
+((letrec ((%%g774 (lambda (%%j775)
+(if (fx= %%j775
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%n763)
-(%%f752 (cdr %%symnames753) %%i754)
-((lambda (%%id766)
-((lambda (%%id.sym767 %%id.marks768)
-(if (%%help-bound-id=?372
-%%id.sym767
-%%id.marks768
-%%sym747
-%%marks749)
-(values (%%lookup-import-label441 %%id766)
-%%marks749)
-(%%g764 (fx+ %%j765 1))))
-((lambda (%%x769)
-((lambda (%%e770)
-(if (annotation? %%e770)
-(annotation-expression %%e770)
-%%e770))
-(if (%%syntax-object?64 %%x769)
-(%%syntax-object-expression65 %%x769)
-%%x769)))
-%%id766)
-(%%join-marks358
-%%new-marks757
-(%%id-marks247 %%id766))))
-(vector-ref %%ie762 %%j765))))))
+%%n773)
+(%%f762 (cdr %%symnames763) %%i764)
+((lambda (%%id776)
+((lambda (%%id.sym777 %%id.marks778)
+(if (%%help-bound-id=?382
+%%id.sym777
+%%id.marks778
+%%sym757
+%%marks759)
+(values (%%lookup-import-label451 %%id776)
+%%marks759)
+(%%g774 (fx+ %%j775 1))))
+((lambda (%%x779)
+((lambda (%%e780)
+(if (annotation? %%e780)
+(annotation-expression %%e780)
+%%e780))
+(if (%%syntax-object?64 %%x779)
+(%%syntax-object-expression65 %%x779)
+%%x779)))
+%%id776)
+(%%join-marks368
+%%new-marks767
+(%%id-marks257 %%id776))))
+(vector-ref %%ie772 %%j775))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%g764)
+%%g774)
 0))))
-(vector-length %%ie762)))
-(%%interface-exports389 %%iface756))))
-(%%interface-token390 %%iface756)))
-(%%import-interface-interface316 %%x755)
-(%%import-interface-new-marks317 %%x755))
-(if (if (eq? %%x755 %%barrier-marker340)
-(%%same-marks?360
-%%marks749
+(vector-length %%ie772)))
+(%%interface-exports399 %%iface766))))
+(%%interface-token400 %%iface766)))
+(%%import-interface-interface326 %%x765)
+(%%import-interface-new-marks327 %%x765))
+(if (if (eq? %%x765 %%barrier-marker350)
+(%%same-marks?370
+%%marks759
 (list-ref
-(%%ribcage-marks303 %%ribcage751)
-%%i754))
+(%%ribcage-marks313 %%ribcage761)
+%%i764))
 #f)
-(values #f %%marks749)
-(%%f752 (cdr %%symnames753) (fx+ %%i754 1))))))
-(car %%symnames753))))))
+(values #f %%marks759)
+(%%f762 (cdr %%symnames763) (fx+ %%i764 1))))))
+(car %%symnames763))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f752)
-%%symnames750
+%%f762)
+%%symnames760
 0)))
-(%%search-vector-rib739
-(lambda (%%sym771
-%%subst772
-%%marks773
-%%symnames774
-%%ribcage775)
-((lambda (%%n776)
-((letrec ((%%f777 (lambda (%%i778)
-(if (fx= %%i778 %%n776)
-(%%search737
-%%sym771
-(cdr %%subst772)
-%%marks773)
+(%%search-vector-rib749
+(lambda (%%sym781
+%%subst782
+%%marks783
+%%symnames784
+%%ribcage785)
+((lambda (%%n786)
+((letrec ((%%f787 (lambda (%%i788)
+(if (fx= %%i788 %%n786)
+(%%search747
+%%sym781
+(cdr %%subst782)
+%%marks783)
 (if (if (eq? (vector-ref
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%symnames774
-%%i778)
-%%sym771)
-(%%same-marks?360
-%%marks773
-(vector-ref (%%ribcage-marks303 %%ribcage775) %%i778))
+%%symnames784
+%%i788)
+%%sym781)
+(%%same-marks?370
+%%marks783
+(vector-ref (%%ribcage-marks313 %%ribcage785) %%i788))
 #f)
 (values (vector-ref
-(%%ribcage-labels304 %%ribcage775)
-%%i778)
-%%marks773)
-(%%f777 (fx+ %%i778 1)))))))
+(%%ribcage-labels314 %%ribcage785)
+%%i788)
+%%marks783)
+(%%f787 (fx+ %%i788 1)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f777)
+%%f787)
 0))
-(vector-length %%symnames774)))))
-(if (symbol? %%id735)
-(%%search737
-%%id735
-(%%wrap-subst252 %%w736)
-(%%wrap-marks251 %%w736))
-(if (%%syntax-object?64 %%id735)
-((lambda (%%sym779 %%w1780)
+(vector-length %%symnames784)))))
+(if (symbol? %%id745)
+(%%search747
+%%id745
+(%%wrap-subst262 %%w746)
+(%%wrap-marks261 %%w746))
+(if (%%syntax-object?64 %%id745)
+((lambda (%%sym789 %%w1790)
 (call-with-values
 (lambda ()
-(%%search737
-%%sym779
-(%%wrap-subst252 %%w736)
-(%%join-marks358
-(%%wrap-marks251 %%w736)
-(%%wrap-marks251 %%w1780))))
-(lambda (%%name781 %%marks782)
-(if %%name781
-(values %%name781 %%marks782)
-(%%search737
-%%sym779
-(%%wrap-subst252 %%w1780)
-%%marks782)))))
-((lambda (%%e783)
-(if (annotation? %%e783)
-(annotation-expression %%e783)
-%%e783))
-(%%syntax-object-expression65 %%id735))
-(%%syntax-object-wrap66 %%id735))
-(if (annotation? %%id735)
-(%%search737
-((lambda (%%e784)
-(if (annotation? %%e784)
-(annotation-expression %%e784)
-%%e784))
-%%id735)
-(%%wrap-subst252 %%w736)
-(%%wrap-marks251 %%w736))
+(%%search747
+%%sym789
+(%%wrap-subst262 %%w746)
+(%%join-marks368
+(%%wrap-marks261 %%w746)
+(%%wrap-marks261 %%w1790))))
+(lambda (%%name791 %%marks792)
+(if %%name791
+(values %%name791 %%marks792)
+(%%search747
+%%sym789
+(%%wrap-subst262 %%w1790)
+%%marks792)))))
+((lambda (%%e793)
+(if (annotation? %%e793)
+(annotation-expression %%e793)
+%%e793))
+(%%syntax-object-expression65 %%id745))
+(%%syntax-object-wrap66 %%id745))
+(if (annotation? %%id745)
+(%%search747
+((lambda (%%e794)
+(if (annotation? %%e794)
+(annotation-expression %%e794)
+%%e794))
+%%id745)
+(%%wrap-subst262 %%w746)
+(%%wrap-marks261 %%w746))
 (error "(in id-var-name) invalid id"
-%%id735)))))))
-(%%id-var-name&marks367
-(lambda (%%id785 %%w786)
+%%id745)))))))
+(%%id-var-name&marks377
+(lambda (%%id795 %%w796)
 (call-with-values
-(lambda () (%%id-var-name-loc&marks366 %%id785 %%w786))
-(lambda (%%label787 %%marks788)
-(values (if (%%indirect-label?291 %%label787)
-(%%get-indirect-label295 %%label787)
-%%label787)
-%%marks788)))))
-(%%id-var-name-loc368
-(lambda (%%id789 %%w790)
+(lambda () (%%id-var-name-loc&marks376 %%id795 %%w796))
+(lambda (%%label797 %%marks798)
+(values (if (%%indirect-label?301 %%label797)
+(%%get-indirect-label305 %%label797)
+%%label797)
+%%marks798)))))
+(%%id-var-name-loc378
+(lambda (%%id799 %%w800)
 (call-with-values
-(lambda () (%%id-var-name-loc&marks366 %%id789 %%w790))
-(lambda (%%label791 %%marks792) %%label791))))
-(%%id-var-name369
-(lambda (%%id793 %%w794)
+(lambda () (%%id-var-name-loc&marks376 %%id799 %%w800))
+(lambda (%%label801 %%marks802) %%label801))))
+(%%id-var-name379
+(lambda (%%id803 %%w804)
 (call-with-values
-(lambda () (%%id-var-name-loc&marks366 %%id793 %%w794))
-(lambda (%%label795 %%marks796)
-(if (%%indirect-label?291 %%label795)
-(%%get-indirect-label295 %%label795)
-%%label795)))))
-(%%free-id=?370
-(lambda (%%i797 %%j798)
-(if (eq? ((lambda (%%x799)
-((lambda (%%e800)
-(if (annotation? %%e800)
-(annotation-expression %%e800)
-%%e800))
-(if (%%syntax-object?64 %%x799)
-(%%syntax-object-expression65 %%x799)
-%%x799)))
-%%i797)
-((lambda (%%x801)
-((lambda (%%e802)
-(if (annotation? %%e802)
-(annotation-expression %%e802)
-%%e802))
-(if (%%syntax-object?64 %%x801)
-(%%syntax-object-expression65 %%x801)
-%%x801)))
-%%j798))
-(eq? (%%id-var-name369 %%i797 '(()))
-(%%id-var-name369 %%j798 '(())))
+(lambda () (%%id-var-name-loc&marks376 %%id803 %%w804))
+(lambda (%%label805 %%marks806)
+(if (%%indirect-label?301 %%label805)
+(%%get-indirect-label305 %%label805)
+%%label805)))))
+(%%free-id=?380
+(lambda (%%i807 %%j808)
+(if (eq? ((lambda (%%x809)
+((lambda (%%e810)
+(if (annotation? %%e810)
+(annotation-expression %%e810)
+%%e810))
+(if (%%syntax-object?64 %%x809)
+(%%syntax-object-expression65 %%x809)
+%%x809)))
+%%i807)
+((lambda (%%x811)
+((lambda (%%e812)
+(if (annotation? %%e812)
+(annotation-expression %%e812)
+%%e812))
+(if (%%syntax-object?64 %%x811)
+(%%syntax-object-expression65 %%x811)
+%%x811)))
+%%j808))
+(eq? (%%id-var-name379 %%i807 '(()))
+(%%id-var-name379 %%j808 '(())))
 #f)))
-(%%literal-id=?371
-(lambda (%%id803 %%literal804)
-(if (eq? ((lambda (%%x805)
-((lambda (%%e806)
-(if (annotation? %%e806)
-(annotation-expression %%e806)
-%%e806))
-(if (%%syntax-object?64 %%x805)
-(%%syntax-object-expression65 %%x805)
-%%x805)))
-%%id803)
-((lambda (%%x807)
-((lambda (%%e808)
-(if (annotation? %%e808)
-(annotation-expression %%e808)
-%%e808))
-(if (%%syntax-object?64 %%x807)
-(%%syntax-object-expression65 %%x807)
-%%x807)))
-%%literal804))
-((lambda (%%n-id809 %%n-literal810)
-((lambda (%%t811)
-(if %%t811
-%%t811
-(if ((lambda (%%t812)
-(if %%t812 %%t812 (symbol? %%n-id809)))
-(not %%n-id809))
-((lambda (%%t813)
-(if %%t813
-%%t813
-(symbol? %%n-literal810)))
-(not %%n-literal810))
+(%%literal-id=?381
+(lambda (%%id813 %%literal814)
+(if (eq? ((lambda (%%x815)
+((lambda (%%e816)
+(if (annotation? %%e816)
+(annotation-expression %%e816)
+%%e816))
+(if (%%syntax-object?64 %%x815)
+(%%syntax-object-expression65 %%x815)
+%%x815)))
+%%id813)
+((lambda (%%x817)
+((lambda (%%e818)
+(if (annotation? %%e818)
+(annotation-expression %%e818)
+%%e818))
+(if (%%syntax-object?64 %%x817)
+(%%syntax-object-expression65 %%x817)
+%%x817)))
+%%literal814))
+((lambda (%%n-id819 %%n-literal820)
+((lambda (%%t821)
+(if %%t821
+%%t821
+(if ((lambda (%%t822)
+(if %%t822 %%t822 (symbol? %%n-id819)))
+(not %%n-id819))
+((lambda (%%t823)
+(if %%t823
+%%t823
+(symbol? %%n-literal820)))
+(not %%n-literal820))
 #f)))
-(eq? %%n-id809 %%n-literal810)))
-(%%id-var-name369 %%id803 '(()))
-(%%id-var-name369 %%literal804 '(())))
+(eq? %%n-id819 %%n-literal820)))
+(%%id-var-name379 %%id813 '(()))
+(%%id-var-name379 %%literal814 '(())))
 #f)))
-(%%help-bound-id=?372
-(lambda (%%i.sym814 %%i.marks815 %%j.sym816 %%j.marks817)
-(if (eq? %%i.sym814 %%j.sym816)
-(%%same-marks?360 %%i.marks815 %%j.marks817)
+(%%help-bound-id=?382
+(lambda (%%i.sym824 %%i.marks825 %%j.sym826 %%j.marks827)
+(if (eq? %%i.sym824 %%j.sym826)
+(%%same-marks?370 %%i.marks825 %%j.marks827)
 #f)))
-(%%bound-id=?373
-(lambda (%%i818 %%j819)
-(%%help-bound-id=?372
-((lambda (%%x820)
-((lambda (%%e821)
-(if (annotation? %%e821)
-(annotation-expression %%e821)
-%%e821))
-(if (%%syntax-object?64 %%x820)
-(%%syntax-object-expression65 %%x820)
-%%x820)))
-%%i818)
-(%%id-marks247 %%i818)
-((lambda (%%x822)
-((lambda (%%e823)
-(if (annotation? %%e823)
-(annotation-expression %%e823)
-%%e823))
-(if (%%syntax-object?64 %%x822)
-(%%syntax-object-expression65 %%x822)
-%%x822)))
-%%j819)
-(%%id-marks247 %%j819))))
-(%%valid-bound-ids?374
-(lambda (%%ids824)
-(if ((letrec ((%%all-ids?825
-(lambda (%%ids826)
-((lambda (%%t827)
-(if %%t827
-%%t827
-(if (%%id?241 (car %%ids826))
-(%%all-ids?825 (cdr %%ids826))
+(%%bound-id=?383
+(lambda (%%i828 %%j829)
+(%%help-bound-id=?382
+((lambda (%%x830)
+((lambda (%%e831)
+(if (annotation? %%e831)
+(annotation-expression %%e831)
+%%e831))
+(if (%%syntax-object?64 %%x830)
+(%%syntax-object-expression65 %%x830)
+%%x830)))
+%%i828)
+(%%id-marks257 %%i828)
+((lambda (%%x832)
+((lambda (%%e833)
+(if (annotation? %%e833)
+(annotation-expression %%e833)
+%%e833))
+(if (%%syntax-object?64 %%x832)
+(%%syntax-object-expression65 %%x832)
+%%x832)))
+%%j829)
+(%%id-marks257 %%j829))))
+(%%valid-bound-ids?384
+(lambda (%%ids834)
+(if ((letrec ((%%all-ids?835
+(lambda (%%ids836)
+((lambda (%%t837)
+(if %%t837
+%%t837
+(if (%%id?251 (car %%ids836))
+(%%all-ids?835 (cdr %%ids836))
 #f)))
-(null? %%ids826)))))
-%%all-ids?825)
-%%ids824)
-(%%distinct-bound-ids?375 %%ids824)
+(null? %%ids836)))))
+%%all-ids?835)
+%%ids834)
+(%%distinct-bound-ids?385 %%ids834)
 #f)))
-(%%distinct-bound-ids?375
-(lambda (%%ids828)
-((letrec ((%%distinct?829
-(lambda (%%ids830)
-((lambda (%%t831)
-(if %%t831
-%%t831
-(if (not (%%bound-id-member?377
-(car %%ids830)
-(cdr %%ids830)))
-(%%distinct?829 (cdr %%ids830))
+(%%distinct-bound-ids?385
+(lambda (%%ids838)
+((letrec ((%%distinct?839
+(lambda (%%ids840)
+((lambda (%%t841)
+(if %%t841
+%%t841
+(if (not (%%bound-id-member?387
+(car %%ids840)
+(cdr %%ids840)))
+(%%distinct?839 (cdr %%ids840))
 #f)))
-(null? %%ids830)))))
-%%distinct?829)
-%%ids828)))
-(%%invalid-ids-error376
-(lambda (%%ids832 %%exp833 %%class834)
-((letrec ((%%find835
-(lambda (%%ids836 %%gooduns837)
-(if (null? %%ids836)
-(syntax-error %%exp833)
-(if (%%id?241 (car %%ids836))
-(if (%%bound-id-member?377
-(car %%ids836)
-%%gooduns837)
+(null? %%ids840)))))
+%%distinct?839)
+%%ids838)))
+(%%invalid-ids-error386
+(lambda (%%ids842 %%exp843 %%class844)
+((letrec ((%%find845
+(lambda (%%ids846 %%gooduns847)
+(if (null? %%ids846)
+(syntax-error %%exp843)
+(if (%%id?251 (car %%ids846))
+(if (%%bound-id-member?387
+(car %%ids846)
+%%gooduns847)
 (syntax-error
-(car %%ids836)
+(car %%ids846)
 "duplicate "
-%%class834)
-(%%find835
-(cdr %%ids836)
-(cons (car %%ids836) %%gooduns837)))
+%%class844)
+(%%find845
+(cdr %%ids846)
+(cons (car %%ids846) %%gooduns847)))
 (syntax-error
-(car %%ids836)
+(car %%ids846)
 "invalid "
-%%class834))))))
-%%find835)
-%%ids832
+%%class844))))))
+%%find845)
+%%ids842
 '())))
-(%%bound-id-member?377
-(lambda (%%x838 %%list839)
-(if (not (null? %%list839))
-((lambda (%%t840)
-(if %%t840
-%%t840
-(%%bound-id-member?377 %%x838 (cdr %%list839))))
-(%%bound-id=?373 %%x838 (car %%list839)))
+(%%bound-id-member?387
+(lambda (%%x848 %%list849)
+(if (not (null? %%list849))
+((lambda (%%t850)
+(if %%t850
+%%t850
+(%%bound-id-member?387 %%x848 (cdr %%list849))))
+(%%bound-id=?383 %%x848 (car %%list849)))
 #f)))
-(%%wrap378
-(lambda (%%x841 %%w842)
-(if (if (null? (%%wrap-marks251 %%w842))
-(null? (%%wrap-subst252 %%w842))
+(%%wrap388
+(lambda (%%x851 %%w852)
+(if (if (null? (%%wrap-marks261 %%w852))
+(null? (%%wrap-subst262 %%w852))
 #f)
-%%x841
-(if (%%syntax-object?64 %%x841)
+%%x851
+(if (%%syntax-object?64 %%x851)
 (%%make-syntax-object63
-(%%syntax-object-expression65 %%x841)
-(%%join-wraps357
-%%w842
-(%%syntax-object-wrap66 %%x841)))
-(if (null? %%x841)
-%%x841
-(%%make-syntax-object63 %%x841 %%w842))))))
-(%%source-wrap379
-(lambda (%%x843 %%w844 %%ae845)
-(%%wrap378
-(if (annotation? %%ae845)
+(%%syntax-object-expression65 %%x851)
+(%%join-wraps367
+%%w852
+(%%syntax-object-wrap66 %%x851)))
+(if (null? %%x851)
+%%x851
+(%%make-syntax-object63 %%x851 %%w852))))))
+(%%source-wrap389
+(lambda (%%x853 %%w854 %%ae855)
+(%%wrap388
+(if (annotation? %%ae855)
 (begin
-(if (not (eq? (annotation-expression %%ae845) %%x843))
+(if (not (eq? (annotation-expression %%ae855) %%x853))
 (error "internal error in source-wrap: ae/x mismatch")
 (void))
-%%ae845)
-%%x843)
-%%w844)))
-(%%chi-when-list380
-(lambda (%%when-list846 %%w847)
-(map (lambda (%%x848)
-(if (%%literal-id=?371
-%%x848
+%%ae855)
+%%x853)
+%%w854)))
+(%%chi-when-list390
+(lambda (%%when-list856 %%w857)
+(map (lambda (%%x858)
+(if (%%literal-id=?381
+%%x858
 '#(syntax-object
 compile
 ((top)
@@ -1885,6 +1885,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -2146,8 +2147,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -2379,8 +2382,8 @@ when)
 "i"))
 #(top-ribcage *top* #t))))
 'compile
-(if (%%literal-id=?371
-%%x848
+(if (%%literal-id=?381
+%%x858
 '#(syntax-object
 load
 ((top)
@@ -2590,6 +2593,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -2851,8 +2855,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -3084,8 +3090,8 @@ when)
 "i"))
 #(top-ribcage *top* #t))))
 'load
-(if (%%literal-id=?371
-%%x848
+(if (%%literal-id=?381
+%%x858
 '#(syntax-object
 visit
 ((top)
@@ -3295,6 +3301,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -3556,8 +3563,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -3789,8 +3798,8 @@ when)
 "i"))
 #(top-ribcage *top* #t))))
 'visit
-(if (%%literal-id=?371
-%%x848
+(if (%%literal-id=?381
+%%x858
 '#(syntax-object
 revisit
 ((top)
@@ -4000,6 +4009,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -4261,8 +4271,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -4494,8 +4506,8 @@ when)
 "i"))
 #(top-ribcage *top* #t))))
 'revisit
-(if (%%literal-id=?371
-%%x848
+(if (%%literal-id=?381
+%%x858
 '#(syntax-object
 eval
 ((top)
@@ -4708,6 +4720,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -4969,8 +4982,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -5203,377 +5218,377 @@ when)
 #(top-ribcage *top* #t))))
 'eval
 (syntax-error
-(%%wrap378 %%x848 %%w847)
+(%%wrap388 %%x858 %%w857)
 "invalid eval-when situation")))))))
-%%when-list846)))
-(%%syntax-type381
-(lambda (%%e849 %%r850 %%w851 %%ae852 %%rib853)
-(if (symbol? %%e849)
-((lambda (%%n854)
-((lambda (%%b855)
-((lambda (%%type856)
+%%when-list856)))
+(%%syntax-type391
+(lambda (%%e859 %%r860 %%w861 %%ae862 %%rib863)
+(if (symbol? %%e859)
+((lambda (%%n864)
+((lambda (%%b865)
+((lambda (%%type866)
 ((lambda ()
-((lambda (%%t857)
-(if (memv %%t857 '(macro macro!))
-(%%syntax-type381
-(%%chi-macro437
-(%%binding-value217 %%b855)
-%%e849
-%%r850
-%%w851
-%%ae852
-%%rib853)
-%%r850
+((lambda (%%t867)
+(if (memv %%t867 '(macro macro!))
+(%%syntax-type391
+(%%chi-macro447
+(%%binding-value227 %%b865)
+%%e859
+%%r860
+%%w861
+%%ae862
+%%rib863)
+%%r860
 '(())
 #f
-%%rib853)
-(values %%type856
-(%%binding-value217 %%b855)
-%%e849
-%%w851
-%%ae852)))
-%%type856))))
-(%%binding-type216 %%b855)))
-(%%lookup236 %%n854 %%r850)))
-(%%id-var-name369 %%e849 %%w851))
-(if (pair? %%e849)
-((lambda (%%first858)
-(if (%%id?241 %%first858)
-((lambda (%%n859)
-((lambda (%%b860)
-((lambda (%%type861)
+%%rib863)
+(values %%type866
+(%%binding-value227 %%b865)
+%%e859
+%%w861
+%%ae862)))
+%%type866))))
+(%%binding-type226 %%b865)))
+(%%lookup246 %%n864 %%r860)))
+(%%id-var-name379 %%e859 %%w861))
+(if (pair? %%e859)
+((lambda (%%first868)
+(if (%%id?251 %%first868)
+((lambda (%%n869)
+((lambda (%%b870)
+((lambda (%%type871)
 ((lambda ()
-((lambda (%%t862)
-(if (memv %%t862 '(lexical))
+((lambda (%%t872)
+(if (memv %%t872 '(lexical))
 (values 'lexical-call
-(%%binding-value217
-%%b860)
-%%e849
-%%w851
-%%ae852)
-(if (memv %%t862
+(%%binding-value227
+%%b870)
+%%e859
+%%w861
+%%ae862)
+(if (memv %%t872
 '(macro macro!))
-(%%syntax-type381
-(%%chi-macro437
-(%%binding-value217
-%%b860)
-%%e849
-%%r850
-%%w851
-%%ae852
-%%rib853)
-%%r850
+(%%syntax-type391
+(%%chi-macro447
+(%%binding-value227
+%%b870)
+%%e859
+%%r860
+%%w861
+%%ae862
+%%rib863)
+%%r860
 '(())
 #f
-%%rib853)
-(if (memv %%t862
+%%rib863)
+(if (memv %%t872
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 '(core))
-(values %%type861
-(%%binding-value217 %%b860)
-%%e849
-%%w851
-%%ae852)
-(if (memv %%t862 '(begin))
-(values 'begin-form #f %%e849 %%w851 %%ae852)
-(if (memv %%t862 '(alias))
-(values 'alias-form #f %%e849 %%w851 %%ae852)
-(if (memv %%t862 '(define))
-(values 'define-form #f %%e849 %%w851 %%ae852)
-(if (memv %%t862 '(define-syntax))
+(values %%type871
+(%%binding-value227 %%b870)
+%%e859
+%%w861
+%%ae862)
+(if (memv %%t872 '(begin))
+(values 'begin-form #f %%e859 %%w861 %%ae862)
+(if (memv %%t872 '(alias))
+(values 'alias-form #f %%e859 %%w861 %%ae862)
+(if (memv %%t872 '(define))
+(values 'define-form #f %%e859 %%w861 %%ae862)
+(if (memv %%t872 '(define-syntax))
 (values 'define-syntax-form
 #f
-%%e849
-%%w851
-%%ae852)
-(if (memv %%t862 '(set!))
-(%%chi-set!436
-%%e849
-%%r850
-%%w851
-%%ae852
-%%rib853)
-(if (memv %%t862 '($module-key))
+%%e859
+%%w861
+%%ae862)
+(if (memv %%t872 '(set!))
+(%%chi-set!446
+%%e859
+%%r860
+%%w861
+%%ae862
+%%rib863)
+(if (memv %%t872 '($module-key))
 (values '$module-form
 #f
-%%e849
-%%w851
-%%ae852)
-(if (memv %%t862 '($import))
+%%e859
+%%w861
+%%ae862)
+(if (memv %%t872 '($import))
 (values '$import-form
 #f
-%%e849
-%%w851
-%%ae852)
-(if (memv %%t862 '(eval-when))
+%%e859
+%%w861
+%%ae862)
+(if (memv %%t872 '(eval-when))
 (values 'eval-when-form
 #f
-%%e849
-%%w851
-%%ae852)
-(if (memv %%t862 '(meta))
+%%e859
+%%w861
+%%ae862)
+(if (memv %%t872 '(meta))
 (values 'meta-form
 #f
-%%e849
-%%w851
-%%ae852)
-(if (memv %%t862
+%%e859
+%%w861
+%%ae862)
+(if (memv %%t872
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 '(local-syntax))
 (values 'local-syntax-form
-(%%binding-value217 %%b860)
-%%e849
-%%w851
-%%ae852)
-(values 'call #f %%e849 %%w851 %%ae852)))))))))))))))
+(%%binding-value227 %%b870)
+%%e859
+%%w861
+%%ae862)
+(values 'call #f %%e859 %%w861 %%ae862)))))))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%type861))))
-(%%binding-type216 %%b860)))
-(%%lookup236 %%n859 %%r850)))
-(%%id-var-name369 %%first858 %%w851))
-(values 'call #f %%e849 %%w851 %%ae852)))
-(car %%e849))
-(if (%%syntax-object?64 %%e849)
-(%%syntax-type381
-(%%syntax-object-expression65 %%e849)
-%%r850
-(%%join-wraps357
-%%w851
-(%%syntax-object-wrap66 %%e849))
+%%type871))))
+(%%binding-type226 %%b870)))
+(%%lookup246 %%n869 %%r860)))
+(%%id-var-name379 %%first868 %%w861))
+(values 'call #f %%e859 %%w861 %%ae862)))
+(car %%e859))
+(if (%%syntax-object?64 %%e859)
+(%%syntax-type391
+(%%syntax-object-expression65 %%e859)
+%%r860
+(%%join-wraps367
+%%w861
+(%%syntax-object-wrap66 %%e859))
 #f
-%%rib853)
-(if (annotation? %%e849)
-(%%syntax-type381
-(annotation-expression %%e849)
-%%r850
-%%w851
-%%e849
-%%rib853)
-(if ((lambda (%%x863) (self-eval? %%x863))
-%%e849)
+%%rib863)
+(if (annotation? %%e859)
+(%%syntax-type391
+(annotation-expression %%e859)
+%%r860
+%%w861
+%%e859
+%%rib863)
+(if ((lambda (%%x873) (self-eval? %%x873))
+%%e859)
 (values 'constant
 #f
-%%e849
-%%w851
-%%ae852)
+%%e859
+%%w861
+%%ae862)
 (values 'other
 #f
-%%e849
-%%w851
-%%ae852))))))))
-(%%chi-top*382
-(lambda (%%e864
-%%r865
-%%w866
-%%ctem867
-%%rtem868
-%%meta?869
-%%top-ribcage870)
-((lambda (%%meta-residuals871)
-(letrec ((%%meta-residualize!872
-(lambda (%%x873)
-(set! %%meta-residuals871
-(cons %%x873 %%meta-residuals871)))))
-((lambda (%%e874)
-(%%build-sequence170
+%%e859
+%%w861
+%%ae862))))))))
+(%%chi-top*392
+(lambda (%%e874
+%%r875
+%%w876
+%%ctem877
+%%rtem878
+%%meta?879
+%%top-ribcage880)
+((lambda (%%meta-residuals881)
+(letrec ((%%meta-residualize!882
+(lambda (%%x883)
+(set! %%meta-residuals881
+(cons %%x883 %%meta-residuals881)))))
+((lambda (%%e884)
+(%%build-sequence180
 #f
-(reverse (cons %%e874 %%meta-residuals871))))
-(%%chi-top384
-%%e864
-%%r865
-%%w866
-%%ctem867
-%%rtem868
-%%meta?869
-%%top-ribcage870
-%%meta-residualize!872
+(reverse (cons %%e884 %%meta-residuals881))))
+(%%chi-top394
+%%e874
+%%r875
+%%w876
+%%ctem877
+%%rtem878
+%%meta?879
+%%top-ribcage880
+%%meta-residualize!882
 #f))))
 '())))
-(%%chi-top-sequence383
-(lambda (%%body875
-%%r876
-%%w877
-%%ae878
-%%ctem879
-%%rtem880
-%%meta?881
-%%ribcage882
-%%meta-residualize!883)
-(%%build-sequence170
-%%ae878
-((letrec ((%%dobody884
-(lambda (%%body885)
-(if (null? %%body885)
+(%%chi-top-sequence393
+(lambda (%%body885
+%%r886
+%%w887
+%%ae888
+%%ctem889
+%%rtem890
+%%meta?891
+%%ribcage892
+%%meta-residualize!893)
+(%%build-sequence180
+%%ae888
+((letrec ((%%dobody894
+(lambda (%%body895)
+(if (null? %%body895)
 '()
-((lambda (%%first886)
-(cons %%first886
-(%%dobody884 (cdr %%body885))))
-(%%chi-top384
-(car %%body885)
-%%r876
-%%w877
-%%ctem879
-%%rtem880
-%%meta?881
-%%ribcage882
-%%meta-residualize!883
+((lambda (%%first896)
+(cons %%first896
+(%%dobody894 (cdr %%body895))))
+(%%chi-top394
+(car %%body895)
+%%r886
+%%w887
+%%ctem889
+%%rtem890
+%%meta?891
+%%ribcage892
+%%meta-residualize!893
 #f))))))
-%%dobody884)
-%%body875))))
-(%%chi-top384
-(lambda (%%e887
-%%r888
-%%w889
-%%ctem890
-%%rtem891
-%%meta?892
-%%top-ribcage893
-%%meta-residualize!894
-%%meta-seen?895)
+%%dobody894)
+%%body885))))
+(%%chi-top394
+(lambda (%%e897
+%%r898
+%%w899
+%%ctem900
+%%rtem901
+%%meta?902
+%%top-ribcage903
+%%meta-residualize!904
+%%meta-seen?905)
 (call-with-values
 (lambda ()
-(%%syntax-type381
-%%e887
-%%r888
-%%w889
+(%%syntax-type391
+%%e897
+%%r898
+%%w899
 #f
-%%top-ribcage893))
-(lambda (%%type896 %%value897 %%e898 %%w899 %%ae900)
-((lambda (%%t901)
-(if (memv %%t901 '(begin-form))
-((lambda (%%forms902)
-(if (null? %%forms902)
-(%%chi-void453)
-(%%chi-top-sequence383
-%%forms902
-%%r888
-%%w899
-%%ae900
-%%ctem890
-%%rtem891
-%%meta?892
-%%top-ribcage893
-%%meta-residualize!894)))
-(%%parse-begin450 %%e898 %%w899 %%ae900 #t))
-(if (memv %%t901 '(local-syntax-form))
+%%top-ribcage903))
+(lambda (%%type906 %%value907 %%e908 %%w909 %%ae910)
+((lambda (%%t911)
+(if (memv %%t911 '(begin-form))
+((lambda (%%forms912)
+(if (null? %%forms912)
+(%%chi-void463)
+(%%chi-top-sequence393
+%%forms912
+%%r898
+%%w909
+%%ae910
+%%ctem900
+%%rtem901
+%%meta?902
+%%top-ribcage903
+%%meta-residualize!904)))
+(%%parse-begin460 %%e908 %%w909 %%ae910 #t))
+(if (memv %%t911 '(local-syntax-form))
 (call-with-values
 (lambda ()
-(%%chi-local-syntax452
-%%value897
-%%e898
-%%r888
-%%r888
-%%w899
-%%ae900))
-(lambda (%%forms903
-%%r904
-%%mr905
-%%w906
-%%ae907)
-(%%chi-top-sequence383
-%%forms903
-%%r904
-%%w906
-%%ae907
-%%ctem890
-%%rtem891
-%%meta?892
-%%top-ribcage893
-%%meta-residualize!894)))
-(if (memv %%t901 '(eval-when-form))
+(%%chi-local-syntax462
+%%value907
+%%e908
+%%r898
+%%r898
+%%w909
+%%ae910))
+(lambda (%%forms913
+%%r914
+%%mr915
+%%w916
+%%ae917)
+(%%chi-top-sequence393
+%%forms913
+%%r914
+%%w916
+%%ae917
+%%ctem900
+%%rtem901
+%%meta?902
+%%top-ribcage903
+%%meta-residualize!904)))
+(if (memv %%t911 '(eval-when-form))
 (call-with-values
 (lambda ()
-(%%parse-eval-when448
-%%e898
-%%w899
-%%ae900))
-(lambda (%%when-list908 %%forms909)
-((lambda (%%ctem910 %%rtem911)
-(if (if (null? %%ctem910)
-(null? %%rtem911)
+(%%parse-eval-when458
+%%e908
+%%w909
+%%ae910))
+(lambda (%%when-list918 %%forms919)
+((lambda (%%ctem920 %%rtem921)
+(if (if (null? %%ctem920)
+(null? %%rtem921)
 #f)
-(%%chi-void453)
-(%%chi-top-sequence383
-%%forms909
-%%r888
-%%w899
-%%ae900
-%%ctem910
-%%rtem911
-%%meta?892
-%%top-ribcage893
-%%meta-residualize!894)))
-(%%update-mode-set425
-%%when-list908
-%%ctem890)
-(%%update-mode-set425
-%%when-list908
-%%rtem891))))
-(if (memv %%t901 '(meta-form))
-(%%chi-top384
-(%%parse-meta447 %%e898 %%w899 %%ae900)
-%%r888
-%%w899
-%%ctem890
-%%rtem891
+(%%chi-void463)
+(%%chi-top-sequence393
+%%forms919
+%%r898
+%%w909
+%%ae910
+%%ctem920
+%%rtem921
+%%meta?902
+%%top-ribcage903
+%%meta-residualize!904)))
+(%%update-mode-set435
+%%when-list918
+%%ctem900)
+(%%update-mode-set435
+%%when-list918
+%%rtem901))))
+(if (memv %%t911 '(meta-form))
+(%%chi-top394
+(%%parse-meta457 %%e908 %%w909 %%ae910)
+%%r898
+%%w909
+%%ctem900
+%%rtem901
 #t
-%%top-ribcage893
-%%meta-residualize!894
+%%top-ribcage903
+%%meta-residualize!904
 #t)
-(if (memv %%t901 '(define-syntax-form))
+(if (memv %%t911 '(define-syntax-form))
 (call-with-values
 (lambda ()
-(%%parse-define-syntax446
-%%e898
-%%w899
-%%ae900))
-(lambda (%%id912 %%rhs913 %%w914)
-((lambda (%%id915)
+(%%parse-define-syntax456
+%%e908
+%%w909
+%%ae910))
+(lambda (%%id922 %%rhs923 %%w924)
+((lambda (%%id925)
 (begin
-(if (%%displaced-lexical?233
-%%id915
-%%r888)
-(%%displaced-lexical-error234
-%%id915)
+(if (%%displaced-lexical?243
+%%id925
+%%r898)
+(%%displaced-lexical-error244
+%%id925)
 (void))
-(if (not (%%top-ribcage-mutable?311
-%%top-ribcage893))
+(if (not (%%top-ribcage-mutable?321
+%%top-ribcage903))
 (syntax-error
-(%%source-wrap379
-%%e898
-%%w914
-%%ae900)
+(%%source-wrap389
+%%e908
+%%w924
+%%ae910)
 "invalid definition in read-only environment")
 (void))
-((lambda (%%sym916)
+((lambda (%%sym926)
 (call-with-values
 (lambda ()
-(%%top-id-bound-var-name364
-%%sym916
-(%%wrap-marks251
+(%%top-id-bound-var-name374
+%%sym926
+(%%wrap-marks261
 (%%syntax-object-wrap66
-%%id915))
-%%top-ribcage893))
-(lambda (%%valsym917
-%%bound-id918)
+%%id925))
+%%top-ribcage903))
+(lambda (%%valsym927
+%%bound-id928)
 (begin
-(if (not (eq? (%%id-var-name369
+(if (not (eq? (%%id-var-name379
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%id915
+%%id925
 '(()))
-%%valsym917))
+%%valsym927))
 (syntax-error
-(%%source-wrap379 %%e898 %%w914 %%ae900)
+(%%source-wrap389 %%e908 %%w924 %%ae910)
 "definition not permitted")
 (void))
-(if (%%read-only-binding?75 %%valsym917)
+(if (%%read-only-binding?75 %%valsym927)
 (syntax-error
-(%%source-wrap379 %%e898 %%w914 %%ae900)
+(%%source-wrap389 %%e908 %%w924 %%ae910)
 "invalid definition of read-only identifier")
 (void))
-(%%ct-eval/residualize2428
-%%ctem890
+(%%ct-eval/residualize2438
+%%ctem900
 (lambda ()
 (build-source
 #f
@@ -5581,78 +5596,78 @@ when)
 (build-source
 #f
 (list (build-source #f 'quote)
-(attach-source #f %%bound-id918)))
-(%%chi433 %%rhs913 %%r888 %%r888 %%w914 #t)
+(attach-source #f %%bound-id928)))
+(%%chi443 %%rhs923 %%r898 %%r898 %%w924 #t)
 (build-source
 #f
 (list (build-source #f 'quote)
-(%%top-ribcage-key310
-%%top-ribcage893)))))))))))
+(%%top-ribcage-key320
+%%top-ribcage903)))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%x919)
-((lambda (%%e920)
+((lambda (%%x929)
+((lambda (%%e930)
 (if (annotation?
-%%e920)
+%%e930)
 (annotation-expression
-%%e920)
-%%e920))
+%%e930)
+%%e930))
 (if (%%syntax-object?64
-%%x919)
+%%x929)
 (%%syntax-object-expression65
-%%x919)
-%%x919)))
-%%id915))))
-(%%wrap378 %%id912 %%w914))))
-(if (memv %%t901 '(define-form))
+%%x929)
+%%x929)))
+%%id925))))
+(%%wrap388 %%id922 %%w924))))
+(if (memv %%t911 '(define-form))
 (call-with-values
 (lambda ()
-(%%parse-define445
-%%e898
-%%w899
-%%ae900))
-(lambda (%%id921
-%%rhs922
-%%w923)
-((lambda (%%id924)
+(%%parse-define455
+%%e908
+%%w909
+%%ae910))
+(lambda (%%id931
+%%rhs932
+%%w933)
+((lambda (%%id934)
 (begin
-(if (%%displaced-lexical?233
-%%id924
-%%r888)
-(%%displaced-lexical-error234
-%%id924)
+(if (%%displaced-lexical?243
+%%id934
+%%r898)
+(%%displaced-lexical-error244
+%%id934)
 (void))
-(if (not (%%top-ribcage-mutable?311
+(if (not (%%top-ribcage-mutable?321
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%top-ribcage893))
+%%top-ribcage903))
 (syntax-error
-(%%source-wrap379 %%e898 %%w923 %%ae900)
+(%%source-wrap389 %%e908 %%w933 %%ae910)
 "invalid definition in read-only environment")
 (void))
-((lambda (%%sym925)
+((lambda (%%sym935)
 (call-with-values
 (lambda ()
-(%%top-id-bound-var-name364
-%%sym925
-(%%wrap-marks251 (%%syntax-object-wrap66 %%id924))
-%%top-ribcage893))
-(lambda (%%valsym926 %%bound-id927)
+(%%top-id-bound-var-name374
+%%sym935
+(%%wrap-marks261 (%%syntax-object-wrap66 %%id934))
+%%top-ribcage903))
+(lambda (%%valsym936 %%bound-id937)
 (begin
-(if (not (eq? (%%id-var-name369 %%id924 '(()))
-%%valsym926))
+(if (not (eq? (%%id-var-name379 %%id934 '(()))
+%%valsym936))
 (syntax-error
-(%%source-wrap379 %%e898 %%w923 %%ae900)
+(%%source-wrap389 %%e908 %%w933 %%ae910)
 "definition not permitted")
 (void))
-(if (%%read-only-binding?75 %%valsym926)
+(if (%%read-only-binding?75 %%valsym936)
 (syntax-error
-(%%source-wrap379 %%e898 %%w923 %%ae900)
+(%%source-wrap389 %%e908 %%w933 %%ae910)
 "invalid definition of read-only identifier")
 (void))
-(if %%meta?892
-(%%ct-eval/residualize2428
-%%ctem890
+(if %%meta?902
+(%%ct-eval/residualize2438
+%%ctem900
 (lambda ()
-(%%build-sequence170
+(%%build-sequence180
 #f
 (list (build-source
 #f
@@ -5662,58 +5677,58 @@ when)
 (list (build-source #f 'quote)
 (attach-source
 #f
-%%bound-id927)))
-((lambda (%%x928)
+%%bound-id937)))
+((lambda (%%x938)
 (if (self-eval?
 (cons 'meta-variable
-%%valsym926))
-%%x928
+%%valsym936))
+%%x938
 (build-source
 #f
 (list (build-source
 #f
 'quote)
-%%x928))))
+%%x938))))
 (attach-source
 #f
 (cons 'meta-variable
-%%valsym926)))
+%%valsym936)))
 (build-source
 #f
 (list (build-source #f 'quote)
-(%%top-ribcage-key310
-%%top-ribcage893)))))
+(%%top-ribcage-key320
+%%top-ribcage903)))))
 (build-source
-%%ae900
-(list (build-source %%ae900 'define)
-(build-source %%ae900 %%valsym926)
-(%%chi433
-%%rhs922
-%%r888
-%%r888
-%%w923
+%%ae910
+(list (build-source %%ae910 'define)
+(build-source %%ae910 %%valsym936)
+(%%chi443
+%%rhs932
+%%r898
+%%r898
+%%w933
 #t)))))))
-((lambda (%%x929)
-(%%build-sequence170
+((lambda (%%x939)
+(%%build-sequence180
 #f
-(list %%x929
-(%%rt-eval/residualize427
-%%rtem891
+(list %%x939
+(%%rt-eval/residualize437
+%%rtem901
 (lambda ()
 (build-source
-%%ae900
-(list (build-source %%ae900 'define)
+%%ae910
+(list (build-source %%ae910 'define)
 (build-source
-%%ae900
-%%valsym926)
-(%%chi433
-%%rhs922
-%%r888
-%%r888
-%%w923
+%%ae910
+%%valsym936)
+(%%chi443
+%%rhs932
+%%r898
+%%r898
+%%w933
 #f))))))))
-(%%ct-eval/residualize2428
-%%ctem890
+(%%ct-eval/residualize2438
+%%ctem900
 (lambda ()
 (build-source
 #f
@@ -5721,165 +5736,165 @@ when)
 (build-source
 #f
 (list (build-source #f 'quote)
-(attach-source #f %%bound-id927)))
-((lambda (%%x930)
+(attach-source #f %%bound-id937)))
+((lambda (%%x940)
 (if (self-eval?
-(cons 'global %%valsym926))
-%%x930
+(cons 'global %%valsym936))
+%%x940
 (build-source
 #f
 (list (build-source #f 'quote)
-%%x930))))
+%%x940))))
 (attach-source
 #f
-(cons 'global %%valsym926)))
+(cons 'global %%valsym936)))
 (build-source
 #f
 (list (build-source #f 'quote)
-(%%top-ribcage-key310
-%%top-ribcage893)))))))))))))
-((lambda (%%x931)
-((lambda (%%e932)
-(if (annotation? %%e932)
-(annotation-expression %%e932)
-%%e932))
-(if (%%syntax-object?64 %%x931)
-(%%syntax-object-expression65 %%x931)
-%%x931)))
-%%id924))))
+(%%top-ribcage-key320
+%%top-ribcage903)))))))))))))
+((lambda (%%x941)
+((lambda (%%e942)
+(if (annotation? %%e942)
+(annotation-expression %%e942)
+%%e942))
+(if (%%syntax-object?64 %%x941)
+(%%syntax-object-expression65 %%x941)
+%%x941)))
+%%id934))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%wrap378
-%%id921
-%%w923))))
-(if (memv %%t901
+(%%wrap388
+%%id931
+%%w933))))
+(if (memv %%t911
 '($module-form))
-((lambda (%%ribcage933)
+((lambda (%%ribcage943)
 (call-with-values
 (lambda ()
-(%%parse-module443
-%%e898
-%%w899
-%%ae900
-(%%make-wrap250
-(%%wrap-marks251
-%%w899)
-(cons %%ribcage933
+(%%parse-module453
+%%e908
+%%w909
+%%ae910
+(%%make-wrap260
+(%%wrap-marks261
+%%w909)
+(cons %%ribcage943
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(%%wrap-subst252 %%w899)))))
-(lambda (%%orig934 %%id935 %%exports936 %%forms937)
+(%%wrap-subst262 %%w909)))))
+(lambda (%%orig944 %%id945 %%exports946 %%forms947)
 (begin
-(if (%%displaced-lexical?233 %%id935 %%r888)
-(%%displaced-lexical-error234
-(%%wrap378 %%id935 %%w899))
+(if (%%displaced-lexical?243 %%id945 %%r898)
+(%%displaced-lexical-error244
+(%%wrap388 %%id945 %%w909))
 (void))
-(if (not (%%top-ribcage-mutable?311 %%top-ribcage893))
+(if (not (%%top-ribcage-mutable?321 %%top-ribcage903))
 (syntax-error
-%%orig934
+%%orig944
 "invalid definition in read-only environment")
 (void))
-(%%chi-top-module417
-%%orig934
-%%r888
-%%r888
-%%top-ribcage893
-%%ribcage933
-%%ctem890
-%%rtem891
-%%meta?892
-%%id935
-%%exports936
-%%forms937
-%%meta-residualize!894)))))
+(%%chi-top-module427
+%%orig944
+%%r898
+%%r898
+%%top-ribcage903
+%%ribcage943
+%%ctem900
+%%rtem901
+%%meta?902
+%%id945
+%%exports946
+%%forms947
+%%meta-residualize!904)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%make-ribcage300
+(%%make-ribcage310
 '()
 '()
 '()))
-(if (memv %%t901
+(if (memv %%t911
 '($import-form))
 (call-with-values
 (lambda ()
-(%%parse-import444
-%%e898
-%%w899
-%%ae900))
-(lambda (%%orig938
+(%%parse-import454
+%%e908
+%%w909
+%%ae910))
+(lambda (%%orig948
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%only?939
-%%mid940)
+%%only?949
+%%mid950)
 (begin
-(if (not (%%top-ribcage-mutable?311 %%top-ribcage893))
+(if (not (%%top-ribcage-mutable?321 %%top-ribcage903))
 (syntax-error
-%%orig938
+%%orig948
 "invalid definition in read-only environment")
 (void))
-(%%ct-eval/residualize2428
-%%ctem890
+(%%ct-eval/residualize2438
+%%ctem900
 (lambda ()
-((lambda (%%binding941)
-((lambda (%%t942)
-(if (memv %%t942 '($module))
-(%%do-top-import424
-%%only?939
-%%top-ribcage893
-%%mid940
-(%%interface-token390
-(%%binding-value217 %%binding941)))
-(if (memv %%t942 '(displaced-lexical))
-(%%displaced-lexical-error234 %%mid940)
+((lambda (%%binding951)
+((lambda (%%t952)
+(if (memv %%t952 '($module))
+(%%do-top-import434
+%%only?949
+%%top-ribcage903
+%%mid950
+(%%interface-token400
+(%%binding-value227 %%binding951)))
+(if (memv %%t952 '(displaced-lexical))
+(%%displaced-lexical-error244 %%mid950)
 (syntax-error
-%%mid940
+%%mid950
 "unknown module"))))
-(%%binding-type216 %%binding941)))
-(%%lookup236
-(%%id-var-name369 %%mid940 '(()))
+(%%binding-type226 %%binding951)))
+(%%lookup246
+(%%id-var-name379 %%mid950 '(()))
 '())))))))
-(if (memv %%t901 '(alias-form))
+(if (memv %%t911 '(alias-form))
 (call-with-values
-(lambda () (%%parse-alias449 %%e898 %%w899 %%ae900))
-(lambda (%%new-id943 %%old-id944)
-((lambda (%%new-id945)
+(lambda () (%%parse-alias459 %%e908 %%w909 %%ae910))
+(lambda (%%new-id953 %%old-id954)
+((lambda (%%new-id955)
 (begin
-(if (%%displaced-lexical?233 %%new-id945 %%r888)
-(%%displaced-lexical-error234 %%new-id945)
+(if (%%displaced-lexical?243 %%new-id955 %%r898)
+(%%displaced-lexical-error244 %%new-id955)
 (void))
-(if (not (%%top-ribcage-mutable?311
-%%top-ribcage893))
+(if (not (%%top-ribcage-mutable?321
+%%top-ribcage903))
 (syntax-error
-(%%source-wrap379 %%e898 %%w899 %%ae900)
+(%%source-wrap389 %%e908 %%w909 %%ae910)
 "invalid definition in read-only environment")
 (void))
-((lambda (%%sym946)
+((lambda (%%sym956)
 (call-with-values
 (lambda ()
-(%%top-id-bound-var-name364
-%%sym946
-(%%wrap-marks251
-(%%syntax-object-wrap66 %%new-id945))
-%%top-ribcage893))
-(lambda (%%valsym947 %%bound-id948)
+(%%top-id-bound-var-name374
+%%sym956
+(%%wrap-marks261
+(%%syntax-object-wrap66 %%new-id955))
+%%top-ribcage903))
+(lambda (%%valsym957 %%bound-id958)
 (begin
-(if (not (eq? (%%id-var-name369
-%%new-id945
+(if (not (eq? (%%id-var-name379
+%%new-id955
 '(()))
-%%valsym947))
+%%valsym957))
 (syntax-error
-(%%source-wrap379
-%%e898
-%%w899
-%%ae900)
+(%%source-wrap389
+%%e908
+%%w909
+%%ae910)
 "definition not permitted")
 (void))
-(if (%%read-only-binding?75 %%valsym947)
+(if (%%read-only-binding?75 %%valsym957)
 (syntax-error
-(%%source-wrap379
-%%e898
-%%w899
-%%ae900)
+(%%source-wrap389
+%%e908
+%%w909
+%%ae910)
 "invalid definition of read-only identifier")
 (void))
-(%%ct-eval/residualize2428
-%%ctem890
+(%%ct-eval/residualize2438
+%%ctem900
 (lambda ()
 (build-source
 #f
@@ -5889,283 +5904,283 @@ when)
 (list (build-source #f 'quote)
 (attach-source
 #f
-(%%make-resolved-id353
-%%sym946
-(%%wrap-marks251
+(%%make-resolved-id363
+%%sym956
+(%%wrap-marks261
 (%%syntax-object-wrap66
-%%new-id945))
-(%%id-var-name369
-%%old-id944
-%%w899)))))
-((lambda (%%x949)
+%%new-id955))
+(%%id-var-name379
+%%old-id954
+%%w909)))))
+((lambda (%%x959)
 (if (self-eval?
 '(do-alias . #f))
-%%x949
+%%x959
 (build-source
 #f
 (list (build-source
 #f
 'quote)
-%%x949))))
+%%x959))))
 (attach-source
 #f
 '(do-alias . #f)))
 (build-source
 #f
 (list (build-source #f 'quote)
-(%%top-ribcage-key310
-%%top-ribcage893)))))))))))
-((lambda (%%x950)
-((lambda (%%e951)
-(if (annotation? %%e951)
-(annotation-expression %%e951)
-%%e951))
-(if (%%syntax-object?64 %%x950)
-(%%syntax-object-expression65 %%x950)
-%%x950)))
-%%new-id945))))
-(%%wrap378 %%new-id943 %%w899))))
+(%%top-ribcage-key320
+%%top-ribcage903)))))))))))
+((lambda (%%x960)
+((lambda (%%e961)
+(if (annotation? %%e961)
+(annotation-expression %%e961)
+%%e961))
+(if (%%syntax-object?64 %%x960)
+(%%syntax-object-expression65 %%x960)
+%%x960)))
+%%new-id955))))
+(%%wrap388 %%new-id953 %%w909))))
 (begin
-(if %%meta-seen?895
+(if %%meta-seen?905
 (syntax-error
-(%%source-wrap379 %%e898 %%w899 %%ae900)
+(%%source-wrap389 %%e908 %%w909 %%ae910)
 "invalid meta definition")
 (void))
-(if %%meta?892
-((lambda (%%x952)
+(if %%meta?902
+((lambda (%%x962)
 (begin
-(%%top-level-eval-hook69 %%x952)
-(%%ct-eval/residualize3429
-%%ctem890
+(%%top-level-eval-hook69 %%x962)
+(%%ct-eval/residualize3439
+%%ctem900
 void
-(lambda () %%x952))))
-(%%chi-expr434
-%%type896
-%%value897
-%%e898
-%%r888
-%%r888
-%%w899
-%%ae900
+(lambda () %%x962))))
+(%%chi-expr444
+%%type906
+%%value907
+%%e908
+%%r898
+%%r898
+%%w909
+%%ae910
 #t))
-(%%rt-eval/residualize427
-%%rtem891
+(%%rt-eval/residualize437
+%%rtem901
 (lambda ()
-(%%chi-expr434
-%%type896
-%%value897
-%%e898
-%%r888
-%%r888
-%%w899
-%%ae900
+(%%chi-expr444
+%%type906
+%%value907
+%%e908
+%%r898
+%%r898
+%%w909
+%%ae910
 #f)))))))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%type896)))))
-(%%flatten-exports385
-(lambda (%%exports953)
-((letrec ((%%loop954
-(lambda (%%exports955 %%ls956)
-(if (null? %%exports955)
-%%ls956
-(%%loop954
-(cdr %%exports955)
-(if (pair? (car %%exports955))
-(%%loop954 (car %%exports955) %%ls956)
-(cons (car %%exports955) %%ls956)))))))
-%%loop954)
-%%exports953
+%%type906)))))
+(%%flatten-exports395
+(lambda (%%exports963)
+((letrec ((%%loop964
+(lambda (%%exports965 %%ls966)
+(if (null? %%exports965)
+%%ls966
+(%%loop964
+(cdr %%exports965)
+(if (pair? (car %%exports965))
+(%%loop964 (car %%exports965) %%ls966)
+(cons (car %%exports965) %%ls966)))))))
+%%loop964)
+%%exports963
 '())))
-(%%make-interface386
-(lambda (%%marks957 %%exports958 %%token959)
-(vector 'interface %%marks957 %%exports958 %%token959)))
-(%%interface?387
-(lambda (%%x960)
-(if (vector? %%x960)
-(if (= (vector-length %%x960) 4)
-(eq? (vector-ref %%x960 0) 'interface)
+(%%make-interface396
+(lambda (%%marks967 %%exports968 %%token969)
+(vector 'interface %%marks967 %%exports968 %%token969)))
+(%%interface?397
+(lambda (%%x970)
+(if (vector? %%x970)
+(if (= (vector-length %%x970) 4)
+(eq? (vector-ref %%x970 0) 'interface)
 #f)
 #f)))
-(%%interface-marks388 (lambda (%%x961) (vector-ref %%x961 1)))
-(%%interface-exports389 (lambda (%%x962) (vector-ref %%x962 2)))
-(%%interface-token390 (lambda (%%x963) (vector-ref %%x963 3)))
-(%%set-interface-marks!391
-(lambda (%%x964 %%update965)
-(vector-set! %%x964 1 %%update965)))
-(%%set-interface-exports!392
-(lambda (%%x966 %%update967)
-(vector-set! %%x966 2 %%update967)))
-(%%set-interface-token!393
-(lambda (%%x968 %%update969)
-(vector-set! %%x968 3 %%update969)))
-(%%make-unresolved-interface394
-(lambda (%%mid970 %%exports971)
-(%%make-interface386
-(%%wrap-marks251 (%%syntax-object-wrap66 %%mid970))
+(%%interface-marks398 (lambda (%%x971) (vector-ref %%x971 1)))
+(%%interface-exports399 (lambda (%%x972) (vector-ref %%x972 2)))
+(%%interface-token400 (lambda (%%x973) (vector-ref %%x973 3)))
+(%%set-interface-marks!401
+(lambda (%%x974 %%update975)
+(vector-set! %%x974 1 %%update975)))
+(%%set-interface-exports!402
+(lambda (%%x976 %%update977)
+(vector-set! %%x976 2 %%update977)))
+(%%set-interface-token!403
+(lambda (%%x978 %%update979)
+(vector-set! %%x978 3 %%update979)))
+(%%make-unresolved-interface404
+(lambda (%%mid980 %%exports981)
+(%%make-interface396
+(%%wrap-marks261 (%%syntax-object-wrap66 %%mid980))
 (list->vector
-(map (lambda (%%x972)
-(if (pair? %%x972) (car %%x972) %%x972))
-%%exports971))
+(map (lambda (%%x982)
+(if (pair? %%x982) (car %%x982) %%x982))
+%%exports981))
 #f)))
-(%%make-resolved-interface395
-(lambda (%%mid973 %%exports974 %%token975)
-(%%make-interface386
-(%%wrap-marks251 (%%syntax-object-wrap66 %%mid973))
+(%%make-resolved-interface405
+(lambda (%%mid983 %%exports984 %%token985)
+(%%make-interface396
+(%%wrap-marks261 (%%syntax-object-wrap66 %%mid983))
 (list->vector
-(map (lambda (%%x976)
-(%%id->resolved-id354
-(if (pair? %%x976) (car %%x976) %%x976)))
-%%exports974))
-%%token975)))
-(%%make-module-binding396
-(lambda (%%type977
-%%id978
-%%label979
-%%imps980
-%%val981
-%%exported982)
+(map (lambda (%%x986)
+(%%id->resolved-id364
+(if (pair? %%x986) (car %%x986) %%x986)))
+%%exports984))
+%%token985)))
+(%%make-module-binding406
+(lambda (%%type987
+%%id988
+%%label989
+%%imps990
+%%val991
+%%exported992)
 (vector 'module-binding
-%%type977
-%%id978
-%%label979
-%%imps980
-%%val981
-%%exported982)))
-(%%module-binding?397
-(lambda (%%x983)
-(if (vector? %%x983)
-(if (= (vector-length %%x983) 7)
-(eq? (vector-ref %%x983 0) 'module-binding)
+%%type987
+%%id988
+%%label989
+%%imps990
+%%val991
+%%exported992)))
+(%%module-binding?407
+(lambda (%%x993)
+(if (vector? %%x993)
+(if (= (vector-length %%x993) 7)
+(eq? (vector-ref %%x993 0) 'module-binding)
 #f)
 #f)))
-(%%module-binding-type398
-(lambda (%%x984) (vector-ref %%x984 1)))
-(%%module-binding-id399 (lambda (%%x985) (vector-ref %%x985 2)))
-(%%module-binding-label400
-(lambda (%%x986) (vector-ref %%x986 3)))
-(%%module-binding-imps401
-(lambda (%%x987) (vector-ref %%x987 4)))
-(%%module-binding-val402 (lambda (%%x988) (vector-ref %%x988 5)))
-(%%module-binding-exported403
-(lambda (%%x989) (vector-ref %%x989 6)))
-(%%set-module-binding-type!404
-(lambda (%%x990 %%update991)
-(vector-set! %%x990 1 %%update991)))
-(%%set-module-binding-id!405
-(lambda (%%x992 %%update993)
-(vector-set! %%x992 2 %%update993)))
-(%%set-module-binding-label!406
-(lambda (%%x994 %%update995)
-(vector-set! %%x994 3 %%update995)))
-(%%set-module-binding-imps!407
-(lambda (%%x996 %%update997)
-(vector-set! %%x996 4 %%update997)))
-(%%set-module-binding-val!408
-(lambda (%%x998 %%update999)
-(vector-set! %%x998 5 %%update999)))
-(%%set-module-binding-exported!409
+(%%module-binding-type408
+(lambda (%%x994) (vector-ref %%x994 1)))
+(%%module-binding-id409 (lambda (%%x995) (vector-ref %%x995 2)))
+(%%module-binding-label410
+(lambda (%%x996) (vector-ref %%x996 3)))
+(%%module-binding-imps411
+(lambda (%%x997) (vector-ref %%x997 4)))
+(%%module-binding-val412 (lambda (%%x998) (vector-ref %%x998 5)))
+(%%module-binding-exported413
+(lambda (%%x999) (vector-ref %%x999 6)))
+(%%set-module-binding-type!414
 (lambda (%%x1000 %%update1001)
-(vector-set! %%x1000 6 %%update1001)))
-(%%create-module-binding410
-(lambda (%%type1002 %%id1003 %%label1004 %%imps1005 %%val1006)
-(%%make-module-binding396
-%%type1002
-%%id1003
-%%label1004
-%%imps1005
-%%val1006
+(vector-set! %%x1000 1 %%update1001)))
+(%%set-module-binding-id!415
+(lambda (%%x1002 %%update1003)
+(vector-set! %%x1002 2 %%update1003)))
+(%%set-module-binding-label!416
+(lambda (%%x1004 %%update1005)
+(vector-set! %%x1004 3 %%update1005)))
+(%%set-module-binding-imps!417
+(lambda (%%x1006 %%update1007)
+(vector-set! %%x1006 4 %%update1007)))
+(%%set-module-binding-val!418
+(lambda (%%x1008 %%update1009)
+(vector-set! %%x1008 5 %%update1009)))
+(%%set-module-binding-exported!419
+(lambda (%%x1010 %%update1011)
+(vector-set! %%x1010 6 %%update1011)))
+(%%create-module-binding420
+(lambda (%%type1012 %%id1013 %%label1014 %%imps1015 %%val1016)
+(%%make-module-binding406
+%%type1012
+%%id1013
+%%label1014
+%%imps1015
+%%val1016
 #f)))
-(%%make-frob411
-(lambda (%%e1007 %%meta?1008)
-(vector 'frob %%e1007 %%meta?1008)))
-(%%frob?412
-(lambda (%%x1009)
-(if (vector? %%x1009)
-(if (= (vector-length %%x1009) 3)
-(eq? (vector-ref %%x1009 0) 'frob)
+(%%make-frob421
+(lambda (%%e1017 %%meta?1018)
+(vector 'frob %%e1017 %%meta?1018)))
+(%%frob?422
+(lambda (%%x1019)
+(if (vector? %%x1019)
+(if (= (vector-length %%x1019) 3)
+(eq? (vector-ref %%x1019 0) 'frob)
 #f)
 #f)))
-(%%frob-e413 (lambda (%%x1010) (vector-ref %%x1010 1)))
-(%%frob-meta?414 (lambda (%%x1011) (vector-ref %%x1011 2)))
-(%%set-frob-e!415
-(lambda (%%x1012 %%update1013)
-(vector-set! %%x1012 1 %%update1013)))
-(%%set-frob-meta?!416
-(lambda (%%x1014 %%update1015)
-(vector-set! %%x1014 2 %%update1015)))
-(%%chi-top-module417
-(lambda (%%orig1016
-%%r1017
-%%mr1018
-%%top-ribcage1019
-%%ribcage1020
-%%ctem1021
-%%rtem1022
-%%meta?1023
-%%id1024
-%%exports1025
-%%forms1026
-%%meta-residualize!1027)
-((lambda (%%fexports1028)
+(%%frob-e423 (lambda (%%x1020) (vector-ref %%x1020 1)))
+(%%frob-meta?424 (lambda (%%x1021) (vector-ref %%x1021 2)))
+(%%set-frob-e!425
+(lambda (%%x1022 %%update1023)
+(vector-set! %%x1022 1 %%update1023)))
+(%%set-frob-meta?!426
+(lambda (%%x1024 %%update1025)
+(vector-set! %%x1024 2 %%update1025)))
+(%%chi-top-module427
+(lambda (%%orig1026
+%%r1027
+%%mr1028
+%%top-ribcage1029
+%%ribcage1030
+%%ctem1031
+%%rtem1032
+%%meta?1033
+%%id1034
+%%exports1035
+%%forms1036
+%%meta-residualize!1037)
+((lambda (%%fexports1038)
 (call-with-values
 (lambda ()
-(%%chi-external421
-%%ribcage1020
-%%orig1016
-(map (lambda (%%d1029)
-(%%make-frob411 %%d1029 %%meta?1023))
-%%forms1026)
-%%r1017
-%%mr1018
-%%ctem1021
-%%exports1025
-%%fexports1028
-%%meta-residualize!1027))
-(lambda (%%r1030 %%mr1031 %%bindings1032 %%inits1033)
-((letrec ((%%process-exports1034
-(lambda (%%fexports1035 %%ctdefs1036)
-(if (null? %%fexports1035)
-((letrec ((%%process-locals1037
-(lambda (%%bs1038
-%%r1039
-%%dts1040
-%%dvs1041
-%%des1042)
-(if (null? %%bs1038)
-((lambda (%%des1043
+(%%chi-external431
+%%ribcage1030
+%%orig1026
+(map (lambda (%%d1039)
+(%%make-frob421 %%d1039 %%meta?1033))
+%%forms1036)
+%%r1027
+%%mr1028
+%%ctem1031
+%%exports1035
+%%fexports1038
+%%meta-residualize!1037))
+(lambda (%%r1040 %%mr1041 %%bindings1042 %%inits1043)
+((letrec ((%%process-exports1044
+(lambda (%%fexports1045 %%ctdefs1046)
+(if (null? %%fexports1045)
+((letrec ((%%process-locals1047
+(lambda (%%bs1048
+%%r1049
+%%dts1050
+%%dvs1051
+%%des1052)
+(if (null? %%bs1048)
+((lambda (%%des1053
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%inits1044)
-(%%build-sequence170
+%%inits1054)
+(%%build-sequence180
 #f
-(append (%%ctdefs1036)
-(list (%%ct-eval/residualize2428
-%%ctem1021
+(append (%%ctdefs1046)
+(list (%%ct-eval/residualize2438
+%%ctem1031
 (lambda ()
-((lambda (%%sym1045)
-((lambda (%%token1046)
-((lambda (%%b1047)
+((lambda (%%sym1055)
+((lambda (%%token1056)
+((lambda (%%b1057)
 ((lambda ()
 (call-with-values
 (lambda ()
-(%%top-id-bound-var-name364
-%%sym1045
-(%%wrap-marks251
+(%%top-id-bound-var-name374
+%%sym1055
+(%%wrap-marks261
 (%%syntax-object-wrap66
-%%id1024))
-%%top-ribcage1019))
-(lambda (%%valsym1048
-%%bound-id1049)
+%%id1034))
+%%top-ribcage1029))
+(lambda (%%valsym1058
+%%bound-id1059)
 (begin
-(if (not (eq? (%%id-var-name369
+(if (not (eq? (%%id-var-name379
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%id1024
+%%id1034
 '(()))
-%%valsym1048))
-(syntax-error %%orig1016 "definition not permitted")
+%%valsym1058))
+(syntax-error %%orig1026 "definition not permitted")
 (void))
-(if (%%read-only-binding?75 %%valsym1048)
+(if (%%read-only-binding?75 %%valsym1058)
 (syntax-error
-%%orig1016
+%%orig1026
 "invalid definition of read-only identifier")
 (void))
 (build-source
@@ -6174,179 +6189,179 @@ void
 (build-source
 #f
 (list (build-source #f 'quote)
-(attach-source #f %%bound-id1049)))
-%%b1047
+(attach-source #f %%bound-id1059)))
+%%b1057
 (build-source
 #f
 (list (build-source #f 'quote)
-(%%top-ribcage-key310 %%top-ribcage1019)))))))))))
+(%%top-ribcage-key320 %%top-ribcage1029)))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%x1050)
+((lambda (%%x1060)
 (if (self-eval?
 (cons '$module
-(%%make-resolved-interface395
-%%id1024
-%%exports1025
-%%token1046)))
-%%x1050
+(%%make-resolved-interface405
+%%id1034
+%%exports1035
+%%token1056)))
+%%x1060
 (build-source
 #f
 (list (build-source
 #f
 'quote)
-%%x1050))))
+%%x1060))))
 (attach-source
 #f
 (cons '$module
-(%%make-resolved-interface395
-%%id1024
-%%exports1025
-%%token1046))))))
-(%%generate-id78 %%sym1045)))
-((lambda (%%x1051)
-((lambda (%%e1052)
-(if (annotation? %%e1052)
+(%%make-resolved-interface405
+%%id1034
+%%exports1035
+%%token1056))))))
+(%%generate-id78 %%sym1055)))
+((lambda (%%x1061)
+((lambda (%%e1062)
+(if (annotation? %%e1062)
 (annotation-expression
-%%e1052)
-%%e1052))
-(if (%%syntax-object?64 %%x1051)
+%%e1062)
+%%e1062))
+(if (%%syntax-object?64 %%x1061)
 (%%syntax-object-expression65
-%%x1051)
-%%x1051)))
-%%id1024))))
-(%%rt-eval/residualize427
-%%rtem1022
+%%x1061)
+%%x1061)))
+%%id1034))))
+(%%rt-eval/residualize437
+%%rtem1032
 (lambda ()
-(%%build-top-module173
+(%%build-top-module183
 #f
-%%dts1040
-%%dvs1041
-%%des1043
-(if (null? %%inits1044)
-(%%chi-void453)
-(%%build-sequence170
+%%dts1050
+%%dvs1051
+%%des1053
+(if (null? %%inits1054)
+(%%chi-void463)
+(%%build-sequence180
 #f
-(append %%inits1044
-(list (%%chi-void453))))))))))))
-(%%chi-frobs430 %%des1042 %%r1039 %%mr1031 #f)
-(%%chi-frobs430 %%inits1033 %%r1039 %%mr1031 #f))
-((lambda (%%b1053 %%bs1054)
-((lambda (%%t1055)
-((lambda (%%t1056)
-(if (memv %%t1056 '(define-form))
-((lambda (%%label1057)
-(if (%%module-binding-exported403 %%b1053)
-((lambda (%%var1058)
-(%%process-locals1037
-%%bs1054
-%%r1039
-(cons 'global %%dts1040)
-(cons %%label1057 %%dvs1041)
-(cons (%%module-binding-val402
-%%b1053)
-%%des1042)))
-(%%module-binding-id399 %%b1053))
-((lambda (%%var1059)
-(%%process-locals1037
-%%bs1054
-(%%extend-env230
-%%label1057
-(cons 'lexical %%var1059)
-%%r1039)
-(cons 'local %%dts1040)
-(cons %%var1059 %%dvs1041)
-(cons (%%module-binding-val402
-%%b1053)
-%%des1042)))
-(%%gen-var458
-(%%module-binding-id399 %%b1053)))))
-(%%get-indirect-label295
-(%%module-binding-label400 %%b1053)))
-(if (memv %%t1056
+(append %%inits1054
+(list (%%chi-void463))))))))))))
+(%%chi-frobs440 %%des1052 %%r1049 %%mr1041 #f)
+(%%chi-frobs440 %%inits1043 %%r1049 %%mr1041 #f))
+((lambda (%%b1063 %%bs1064)
+((lambda (%%t1065)
+((lambda (%%t1066)
+(if (memv %%t1066 '(define-form))
+((lambda (%%label1067)
+(if (%%module-binding-exported413 %%b1063)
+((lambda (%%var1068)
+(%%process-locals1047
+%%bs1064
+%%r1049
+(cons 'global %%dts1050)
+(cons %%label1067 %%dvs1051)
+(cons (%%module-binding-val412
+%%b1063)
+%%des1052)))
+(%%module-binding-id409 %%b1063))
+((lambda (%%var1069)
+(%%process-locals1047
+%%bs1064
+(%%extend-env240
+%%label1067
+(cons 'lexical %%var1069)
+%%r1049)
+(cons 'local %%dts1050)
+(cons %%var1069 %%dvs1051)
+(cons (%%module-binding-val412
+%%b1063)
+%%des1052)))
+(%%gen-var468
+(%%module-binding-id409 %%b1063)))))
+(%%get-indirect-label305
+(%%module-binding-label410 %%b1063)))
+(if (memv %%t1066
 '(ctdefine-form
 define-syntax-form
 $module-form
 alias-form))
-(%%process-locals1037
-%%bs1054
-%%r1039
-%%dts1040
-%%dvs1041
-%%des1042)
+(%%process-locals1047
+%%bs1064
+%%r1049
+%%dts1050
+%%dvs1051
+%%des1052)
 (error "unexpected module binding type"
-%%t1055))))
-(%%module-binding-type398 %%b1053)))
-(%%module-binding-type398 %%b1053)))
-(car %%bs1038)
-(cdr %%bs1038))))))
+%%t1065))))
+(%%module-binding-type408 %%b1063)))
+(%%module-binding-type408 %%b1063)))
+(car %%bs1048)
+(cdr %%bs1048))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%process-locals1037)
-%%bindings1032
-%%r1030
+%%process-locals1047)
+%%bindings1042
+%%r1040
 '()
 '()
 '())
-((lambda (%%id1060 %%fexports1061)
-((letrec ((%%loop1062
-(lambda (%%bs1063)
-(if (null? %%bs1063)
-(%%process-exports1034
-%%fexports1061
-%%ctdefs1036)
-((lambda (%%b1064
+((lambda (%%id1070 %%fexports1071)
+((letrec ((%%loop1072
+(lambda (%%bs1073)
+(if (null? %%bs1073)
+(%%process-exports1044
+%%fexports1071
+%%ctdefs1046)
+((lambda (%%b1074
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%bs1065)
-(if (%%free-id=?370
-(%%module-binding-id399 %%b1064)
-%%id1060)
-(if (%%module-binding-exported403 %%b1064)
-(%%process-exports1034
-%%fexports1061
-%%ctdefs1036)
-((lambda (%%t1066)
-((lambda (%%label1067)
-((lambda (%%imps1068)
-((lambda (%%fexports1069)
+%%bs1075)
+(if (%%free-id=?380
+(%%module-binding-id409 %%b1074)
+%%id1070)
+(if (%%module-binding-exported413 %%b1074)
+(%%process-exports1044
+%%fexports1071
+%%ctdefs1046)
+((lambda (%%t1076)
+((lambda (%%label1077)
+((lambda (%%imps1078)
+((lambda (%%fexports1079)
 ((lambda ()
 (begin
-(%%set-module-binding-exported!409
-%%b1064
+(%%set-module-binding-exported!419
+%%b1074
 #t)
-((lambda (%%t1070)
-(if (memv %%t1070
+((lambda (%%t1080)
+(if (memv %%t1080
 '(define-form))
-((lambda (%%sym1071)
+((lambda (%%sym1081)
 (begin
-(%%set-indirect-label!296
-%%label1067
-%%sym1071)
-(%%process-exports1034
-%%fexports1069
-%%ctdefs1036)))
+(%%set-indirect-label!306
+%%label1077
+%%sym1081)
+(%%process-exports1044
+%%fexports1079
+%%ctdefs1046)))
 (%%generate-id78
-((lambda (%%x1072)
-((lambda (%%e1073)
+((lambda (%%x1082)
+((lambda (%%e1083)
 (if (annotation?
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%e1073)
-(annotation-expression %%e1073)
-%%e1073))
-(if (%%syntax-object?64 %%x1072)
-(%%syntax-object-expression65 %%x1072)
-%%x1072)))
-%%id1060)))
-(if (memv %%t1070 '(ctdefine-form))
-((lambda (%%b1074)
-(%%process-exports1034
-%%fexports1069
+%%e1083)
+(annotation-expression %%e1083)
+%%e1083))
+(if (%%syntax-object?64 %%x1082)
+(%%syntax-object-expression65 %%x1082)
+%%x1082)))
+%%id1070)))
+(if (memv %%t1080 '(ctdefine-form))
+((lambda (%%b1084)
+(%%process-exports1044
+%%fexports1079
 (lambda ()
-((lambda (%%sym1075)
+((lambda (%%sym1085)
 (begin
-(%%set-indirect-label!296 %%label1067 %%sym1075)
-(cons (%%ct-eval/residualize3429
-%%ctem1021
+(%%set-indirect-label!306 %%label1077 %%sym1085)
+(cons (%%ct-eval/residualize3439
+%%ctem1031
 (lambda ()
-(%%put-cte-hook72 %%sym1075 %%b1074))
+(%%put-cte-hook72 %%sym1085 %%b1084))
 (lambda ()
 (build-source
 #f
@@ -6356,41 +6371,41 @@ alias-form))
 (list (build-source #f 'quote)
 (attach-source
 #f
-%%sym1075)))
-((lambda (%%x1076)
-(if (self-eval? %%b1074)
-%%x1076
+%%sym1085)))
+((lambda (%%x1086)
+(if (self-eval? %%b1084)
+%%x1086
 (build-source
 #f
 (list (build-source
 #f
 'quote)
-%%x1076))))
-(attach-source #f %%b1074))
+%%x1086))))
+(attach-source #f %%b1084))
 (build-source
 #f
 (list (build-source #f 'quote)
 #f))))))
-(%%ctdefs1036))))
-(%%binding-value217 %%b1074)))))
-(%%module-binding-val402 %%b1064))
-(if (memv %%t1070 '(define-syntax-form))
-((lambda (%%sym1077)
-(%%process-exports1034
-%%fexports1069
+(%%ctdefs1046))))
+(%%binding-value227 %%b1084)))))
+(%%module-binding-val412 %%b1074))
+(if (memv %%t1080 '(define-syntax-form))
+((lambda (%%sym1087)
+(%%process-exports1044
+%%fexports1079
 (lambda ()
-((lambda (%%local-label1078)
+((lambda (%%local-label1088)
 (begin
-(%%set-indirect-label!296
-%%label1067
-%%sym1077)
-(cons (%%ct-eval/residualize3429
-%%ctem1021
+(%%set-indirect-label!306
+%%label1077
+%%sym1087)
+(cons (%%ct-eval/residualize3439
+%%ctem1031
 (lambda ()
 (%%put-cte-hook72
-%%sym1077
-(car (%%module-binding-val402
-%%b1064))))
+%%sym1087
+(car (%%module-binding-val412
+%%b1074))))
 (lambda ()
 (build-source
 #f
@@ -6404,45 +6419,45 @@ alias-form))
 'quote)
 (attach-source
 #f
-%%sym1077)))
-(cdr (%%module-binding-val402
-%%b1064))
+%%sym1087)))
+(cdr (%%module-binding-val412
+%%b1074))
 (build-source
 #f
 (list (build-source
 #f
 'quote)
 #f))))))
-(%%ctdefs1036))))
-(%%get-indirect-label295 %%label1067)))))
+(%%ctdefs1046))))
+(%%get-indirect-label305 %%label1077)))))
 (%%generate-id78
-((lambda (%%x1079)
-((lambda (%%e1080)
-(if (annotation? %%e1080)
-(annotation-expression %%e1080)
-%%e1080))
-(if (%%syntax-object?64 %%x1079)
-(%%syntax-object-expression65 %%x1079)
-%%x1079)))
-%%id1060)))
-(if (memv %%t1070 '($module-form))
-((lambda (%%sym1081 %%exports1082)
-(%%process-exports1034
-(append (%%flatten-exports385 %%exports1082)
-%%fexports1069)
+((lambda (%%x1089)
+((lambda (%%e1090)
+(if (annotation? %%e1090)
+(annotation-expression %%e1090)
+%%e1090))
+(if (%%syntax-object?64 %%x1089)
+(%%syntax-object-expression65 %%x1089)
+%%x1089)))
+%%id1070)))
+(if (memv %%t1080 '($module-form))
+((lambda (%%sym1091 %%exports1092)
+(%%process-exports1044
+(append (%%flatten-exports395 %%exports1092)
+%%fexports1079)
 (lambda ()
 (begin
-(%%set-indirect-label!296
-%%label1067
-%%sym1081)
-((lambda (%%rest1083)
-((lambda (%%x1084)
-(cons (%%ct-eval/residualize3429
-%%ctem1021
+(%%set-indirect-label!306
+%%label1077
+%%sym1091)
+((lambda (%%rest1093)
+((lambda (%%x1094)
+(cons (%%ct-eval/residualize3439
+%%ctem1031
 (lambda ()
 (%%put-cte-hook72
-%%sym1081
-%%x1084))
+%%sym1091
+%%x1094))
 (lambda ()
 (build-source
 #f
@@ -6455,495 +6470,495 @@ alias-form))
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #f
 'quote)
-(attach-source #f %%sym1081)))
-((lambda (%%x1085)
-(if (self-eval? %%x1084)
-%%x1085
+(attach-source #f %%sym1091)))
+((lambda (%%x1095)
+(if (self-eval? %%x1094)
+%%x1095
 (build-source
 #f
-(list (build-source #f 'quote) %%x1085))))
-(attach-source #f %%x1084))
+(list (build-source #f 'quote) %%x1095))))
+(attach-source #f %%x1094))
 (build-source #f (list (build-source #f 'quote) #f))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%rest1083))
+%%rest1093))
 (cons '$module
-(%%make-resolved-interface395
-%%id1060
-%%exports1082
-%%sym1081))))
-(%%ctdefs1036))))))
+(%%make-resolved-interface405
+%%id1070
+%%exports1092
+%%sym1091))))
+(%%ctdefs1046))))))
 (%%generate-id78
-((lambda (%%x1086)
-((lambda (%%e1087)
-(if (annotation? %%e1087)
-(annotation-expression %%e1087)
-%%e1087))
-(if (%%syntax-object?64 %%x1086)
-(%%syntax-object-expression65 %%x1086)
-%%x1086)))
-%%id1060))
-(%%module-binding-val402 %%b1064))
-(if (memv %%t1070 '(alias-form))
-(%%process-exports1034
-%%fexports1069
+((lambda (%%x1096)
+((lambda (%%e1097)
+(if (annotation? %%e1097)
+(annotation-expression %%e1097)
+%%e1097))
+(if (%%syntax-object?64 %%x1096)
+(%%syntax-object-expression65 %%x1096)
+%%x1096)))
+%%id1070))
+(%%module-binding-val412 %%b1074))
+(if (memv %%t1080 '(alias-form))
+(%%process-exports1044
+%%fexports1079
 (lambda ()
-((lambda (%%rest1088)
+((lambda (%%rest1098)
 (begin
-(if (%%indirect-label?291 %%label1067)
-(if (not (symbol? (%%get-indirect-label295
-%%label1067)))
+(if (%%indirect-label?301 %%label1077)
+(if (not (symbol? (%%get-indirect-label305
+%%label1077)))
 (syntax-error
-(%%module-binding-id399
-%%b1064)
+(%%module-binding-id409
+%%b1074)
 "unexported target of alias")
 (void))
 (void))
-%%rest1088))
-(%%ctdefs1036))))
+%%rest1098))
+(%%ctdefs1046))))
 (error "unexpected module binding type"
-%%t1066)))))))
+%%t1076)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%t1066)))))
-(append %%imps1068 %%fexports1061)))
-(%%module-binding-imps401 %%b1064)))
-(%%module-binding-label400 %%b1064)))
-(%%module-binding-type398 %%b1064)))
-(%%loop1062 %%bs1065)))
-(car %%bs1063)
-(cdr %%bs1063))))))
+%%t1076)))))
+(append %%imps1078 %%fexports1071)))
+(%%module-binding-imps411 %%b1074)))
+(%%module-binding-label410 %%b1074)))
+(%%module-binding-type408 %%b1074)))
+(%%loop1072 %%bs1075)))
+(car %%bs1073)
+(cdr %%bs1073))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%loop1062)
-%%bindings1032))
-(car %%fexports1035)
-(cdr %%fexports1035))))))
-%%process-exports1034)
-%%fexports1028
+%%loop1072)
+%%bindings1042))
+(car %%fexports1045)
+(cdr %%fexports1045))))))
+%%process-exports1044)
+%%fexports1038
 (lambda () '())))))
-(%%flatten-exports385 %%exports1025))))
-(%%id-set-diff418
-(lambda (%%exports1089 %%defs1090)
-(if (null? %%exports1089)
+(%%flatten-exports395 %%exports1035))))
+(%%id-set-diff428
+(lambda (%%exports1099 %%defs1100)
+(if (null? %%exports1099)
 '()
-(if (%%bound-id-member?377 (car %%exports1089) %%defs1090)
-(%%id-set-diff418 (cdr %%exports1089) %%defs1090)
-(cons (car %%exports1089)
-(%%id-set-diff418
-(cdr %%exports1089)
-%%defs1090))))))
-(%%check-module-exports419
-(lambda (%%source-exp1091 %%fexports1092 %%ids1093)
-(letrec ((%%defined?1094
-(lambda (%%e1095 %%ids1096)
-(ormap (lambda (%%x1097)
-(if (%%import-interface?315 %%x1097)
-((lambda (%%x.iface1098
-%%x.new-marks1099)
-((lambda (%%t1100)
-(if %%t1100
-((lambda (%%token1101)
-(%%lookup-import-binding-name350
-((lambda (%%x1102)
-((lambda (%%e1103)
+(if (%%bound-id-member?387 (car %%exports1099) %%defs1100)
+(%%id-set-diff428 (cdr %%exports1099) %%defs1100)
+(cons (car %%exports1099)
+(%%id-set-diff428
+(cdr %%exports1099)
+%%defs1100))))))
+(%%check-module-exports429
+(lambda (%%source-exp1101 %%fexports1102 %%ids1103)
+(letrec ((%%defined?1104
+(lambda (%%e1105 %%ids1106)
+(ormap (lambda (%%x1107)
+(if (%%import-interface?325 %%x1107)
+((lambda (%%x.iface1108
+%%x.new-marks1109)
+((lambda (%%t1110)
+(if %%t1110
+((lambda (%%token1111)
+(%%lookup-import-binding-name360
+((lambda (%%x1112)
+((lambda (%%e1113)
 (if (annotation?
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%e1103)
-(annotation-expression %%e1103)
-%%e1103))
-(if (%%syntax-object?64 %%x1102)
-(%%syntax-object-expression65 %%x1102)
-%%x1102)))
-%%e1095)
-(%%id-marks247 %%e1095)
-%%token1101
-%%x.new-marks1099))
+%%e1113)
+(annotation-expression %%e1113)
+%%e1113))
+(if (%%syntax-object?64 %%x1112)
+(%%syntax-object-expression65 %%x1112)
+%%x1112)))
+%%e1105)
+(%%id-marks257 %%e1105)
+%%token1111
+%%x.new-marks1109))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%t1100)
-((lambda (%%v1104)
-((letrec ((%%lp1105
+%%t1110)
+((lambda (%%v1114)
+((letrec ((%%lp1115
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(lambda (%%i1106)
-(if (fx>= %%i1106 0)
-((lambda (%%t1107)
-(if %%t1107
-%%t1107
-(%%lp1105 (fx- %%i1106 1))))
-((lambda (%%id1108)
-(%%help-bound-id=?372
-((lambda (%%x1109)
-((lambda (%%e1110)
-(if (annotation? %%e1110)
-(annotation-expression %%e1110)
-%%e1110))
-(if (%%syntax-object?64 %%x1109)
+(lambda (%%i1116)
+(if (fx>= %%i1116 0)
+((lambda (%%t1117)
+(if %%t1117
+%%t1117
+(%%lp1115 (fx- %%i1116 1))))
+((lambda (%%id1118)
+(%%help-bound-id=?382
+((lambda (%%x1119)
+((lambda (%%e1120)
+(if (annotation? %%e1120)
+(annotation-expression %%e1120)
+%%e1120))
+(if (%%syntax-object?64 %%x1119)
 (%%syntax-object-expression65
-%%x1109)
-%%x1109)))
-%%id1108)
-(%%join-marks358
-%%x.new-marks1099
-(%%id-marks247 %%id1108))
-((lambda (%%x1111)
-((lambda (%%e1112)
-(if (annotation? %%e1112)
-(annotation-expression %%e1112)
-%%e1112))
-(if (%%syntax-object?64 %%x1111)
+%%x1119)
+%%x1119)))
+%%id1118)
+(%%join-marks368
+%%x.new-marks1109
+(%%id-marks257 %%id1118))
+((lambda (%%x1121)
+((lambda (%%e1122)
+(if (annotation? %%e1122)
+(annotation-expression %%e1122)
+%%e1122))
+(if (%%syntax-object?64 %%x1121)
 (%%syntax-object-expression65
-%%x1111)
-%%x1111)))
-%%e1095)
-(%%id-marks247 %%e1095)))
-(vector-ref %%v1104 %%i1106)))
+%%x1121)
+%%x1121)))
+%%e1105)
+(%%id-marks257 %%e1105)))
+(vector-ref %%v1114 %%i1116)))
 #f))))
-%%lp1105)
-(fx- (vector-length %%v1104) 1)))
+%%lp1115)
+(fx- (vector-length %%v1114) 1)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%interface-exports389
-%%x.iface1098))))
-(%%interface-token390
-%%x.iface1098)))
-(%%import-interface-interface316
-%%x1097)
-(%%import-interface-new-marks317
-%%x1097))
-(%%bound-id=?373 %%e1095 %%x1097)))
-%%ids1096))))
-((letrec ((%%loop1113
-(lambda (%%fexports1114 %%missing1115)
-(if (null? %%fexports1114)
-(if (not (null? %%missing1115))
+(%%interface-exports399
+%%x.iface1108))))
+(%%interface-token400
+%%x.iface1108)))
+(%%import-interface-interface326
+%%x1107)
+(%%import-interface-new-marks327
+%%x1107))
+(%%bound-id=?383 %%e1105 %%x1107)))
+%%ids1106))))
+((letrec ((%%loop1123
+(lambda (%%fexports1124 %%missing1125)
+(if (null? %%fexports1124)
+(if (not (null? %%missing1125))
 (syntax-error
-(car %%missing1115)
-(if (= (length %%missing1115) 1)
+(car %%missing1125)
+(if (= (length %%missing1125) 1)
 "missing definition for export"
 "missing definition for multiple exports, including"))
 (void))
-((lambda (%%e1116 %%fexports1117)
-(if (%%defined?1094 %%e1116 %%ids1093)
-(%%loop1113
-%%fexports1117
-%%missing1115)
-(%%loop1113
-%%fexports1117
-(cons %%e1116 %%missing1115))))
-(car %%fexports1114)
-(cdr %%fexports1114))))))
-%%loop1113)
-%%fexports1092
+((lambda (%%e1126 %%fexports1127)
+(if (%%defined?1104 %%e1126 %%ids1103)
+(%%loop1123
+%%fexports1127
+%%missing1125)
+(%%loop1123
+%%fexports1127
+(cons %%e1126 %%missing1125))))
+(car %%fexports1124)
+(cdr %%fexports1124))))))
+%%loop1123)
+%%fexports1102
 '()))))
-(%%check-defined-ids420
-(lambda (%%source-exp1118 %%ls1119)
-(letrec ((%%vfold1120
-(lambda (%%v1123 %%p1124 %%cls1125)
-((lambda (%%len1126)
-((letrec ((%%lp1127
-(lambda (%%i1128 %%cls1129)
-(if (fx= %%i1128 %%len1126)
-%%cls1129
-(%%lp1127
-(fx+ %%i1128 1)
-(%%p1124 (vector-ref
-%%v1123
-%%i1128)
-%%cls1129))))))
-%%lp1127)
+(%%check-defined-ids430
+(lambda (%%source-exp1128 %%ls1129)
+(letrec ((%%vfold1130
+(lambda (%%v1133 %%p1134 %%cls1135)
+((lambda (%%len1136)
+((letrec ((%%lp1137
+(lambda (%%i1138 %%cls1139)
+(if (fx= %%i1138 %%len1136)
+%%cls1139
+(%%lp1137
+(fx+ %%i1138 1)
+(%%p1134 (vector-ref
+%%v1133
+%%i1138)
+%%cls1139))))))
+%%lp1137)
 0
-%%cls1125))
-(vector-length %%v1123))))
-(%%conflicts1121
-(lambda (%%x1130 %%y1131 %%cls1132)
-(if (%%import-interface?315 %%x1130)
-((lambda (%%x.iface1133 %%x.new-marks1134)
-(if (%%import-interface?315 %%y1131)
-((lambda (%%y.iface1135
-%%y.new-marks1136)
-((lambda (%%xe1137 %%ye1138)
-(if (fx> (vector-length %%xe1137)
+%%cls1135))
+(vector-length %%v1133))))
+(%%conflicts1131
+(lambda (%%x1140 %%y1141 %%cls1142)
+(if (%%import-interface?325 %%x1140)
+((lambda (%%x.iface1143 %%x.new-marks1144)
+(if (%%import-interface?325 %%y1141)
+((lambda (%%y.iface1145
+%%y.new-marks1146)
+((lambda (%%xe1147 %%ye1148)
+(if (fx> (vector-length %%xe1147)
 (vector-length
-%%ye1138))
-(%%vfold1120
-%%ye1138
-(lambda (%%id1139 %%cls1140)
-(%%id-iface-conflicts1122
-%%id1139
-%%y.new-marks1136
-%%x.iface1133
-%%x.new-marks1134
-%%cls1140))
-%%cls1132)
-(%%vfold1120
-%%xe1137
-(lambda (%%id1141 %%cls1142)
-(%%id-iface-conflicts1122
-%%id1141
-%%x.new-marks1134
-%%y.iface1135
-%%y.new-marks1136
+%%ye1148))
+(%%vfold1130
+%%ye1148
+(lambda (%%id1149 %%cls1150)
+(%%id-iface-conflicts1132
+%%id1149
+%%y.new-marks1146
+%%x.iface1143
+%%x.new-marks1144
+%%cls1150))
+%%cls1142)
+(%%vfold1130
+%%xe1147
+(lambda (%%id1151 %%cls1152)
+(%%id-iface-conflicts1132
+%%id1151
+%%x.new-marks1144
+%%y.iface1145
+%%y.new-marks1146
+%%cls1152))
+%%cls1142)))
+(%%interface-exports399
+%%x.iface1143)
+(%%interface-exports399
+%%y.iface1145)))
+(%%import-interface-interface326
+%%y1141)
+(%%import-interface-new-marks327
+%%y1141))
+(%%id-iface-conflicts1132
+%%y1141
+'()
+%%x.iface1143
+%%x.new-marks1144
+%%cls1142)))
+(%%import-interface-interface326 %%x1140)
+(%%import-interface-new-marks327 %%x1140))
+(if (%%import-interface?325 %%y1141)
+((lambda (%%y.iface1153 %%y.new-marks1154)
+(%%id-iface-conflicts1132
+%%x1140
+'()
+%%y.iface1153
+%%y.new-marks1154
 %%cls1142))
-%%cls1132)))
-(%%interface-exports389
-%%x.iface1133)
-(%%interface-exports389
-%%y.iface1135)))
-(%%import-interface-interface316
-%%y1131)
-(%%import-interface-new-marks317
-%%y1131))
-(%%id-iface-conflicts1122
-%%y1131
-'()
-%%x.iface1133
-%%x.new-marks1134
-%%cls1132)))
-(%%import-interface-interface316 %%x1130)
-(%%import-interface-new-marks317 %%x1130))
-(if (%%import-interface?315 %%y1131)
-((lambda (%%y.iface1143 %%y.new-marks1144)
-(%%id-iface-conflicts1122
-%%x1130
-'()
-%%y.iface1143
-%%y.new-marks1144
-%%cls1132))
-(%%import-interface-interface316 %%y1131)
-(%%import-interface-new-marks317
-%%y1131))
-(if (%%bound-id=?373 %%x1130 %%y1131)
-(cons %%x1130 %%cls1132)
-%%cls1132)))))
-(%%id-iface-conflicts1122
-(lambda (%%id1145
-%%id.new-marks1146
-%%iface1147
-%%iface.new-marks1148
-%%cls1149)
-((lambda (%%id.sym1150 %%id.marks1151)
-((lambda (%%t1152)
-(if %%t1152
-((lambda (%%token1153)
-(if (%%lookup-import-binding-name350
-%%id.sym1150
-%%id.marks1151
-%%token1153
-%%iface.new-marks1148)
-(cons %%id1145 %%cls1149)
-%%cls1149))
-%%t1152)
-(%%vfold1120
-(%%interface-exports389 %%iface1147)
-(lambda (%%*id1154 %%cls1155)
-((lambda (%%*id.sym1156
-%%*id.marks1157)
-(if (%%help-bound-id=?372
-%%*id.sym1156
-%%*id.marks1157
-%%id.sym1150
-%%id.marks1151)
-(cons %%*id1154 %%cls1155)
-%%cls1155))
-((lambda (%%x1158)
-((lambda (%%e1159)
-(if (annotation? %%e1159)
+(%%import-interface-interface326 %%y1141)
+(%%import-interface-new-marks327
+%%y1141))
+(if (%%bound-id=?383 %%x1140 %%y1141)
+(cons %%x1140 %%cls1142)
+%%cls1142)))))
+(%%id-iface-conflicts1132
+(lambda (%%id1155
+%%id.new-marks1156
+%%iface1157
+%%iface.new-marks1158
+%%cls1159)
+((lambda (%%id.sym1160 %%id.marks1161)
+((lambda (%%t1162)
+(if %%t1162
+((lambda (%%token1163)
+(if (%%lookup-import-binding-name360
+%%id.sym1160
+%%id.marks1161
+%%token1163
+%%iface.new-marks1158)
+(cons %%id1155 %%cls1159)
+%%cls1159))
+%%t1162)
+(%%vfold1130
+(%%interface-exports399 %%iface1157)
+(lambda (%%*id1164 %%cls1165)
+((lambda (%%*id.sym1166
+%%*id.marks1167)
+(if (%%help-bound-id=?382
+%%*id.sym1166
+%%*id.marks1167
+%%id.sym1160
+%%id.marks1161)
+(cons %%*id1164 %%cls1165)
+%%cls1165))
+((lambda (%%x1168)
+((lambda (%%e1169)
+(if (annotation? %%e1169)
 (annotation-expression
-%%e1159)
-%%e1159))
-(if (%%syntax-object?64 %%x1158)
+%%e1169)
+%%e1169))
+(if (%%syntax-object?64 %%x1168)
 (%%syntax-object-expression65
-%%x1158)
-%%x1158)))
-%%*id1154)
-(%%join-marks358
-%%iface.new-marks1148
-(%%id-marks247 %%*id1154))))
-%%cls1149)))
-(%%interface-token390 %%iface1147)))
-((lambda (%%x1160)
-((lambda (%%e1161)
-(if (annotation? %%e1161)
-(annotation-expression %%e1161)
-%%e1161))
-(if (%%syntax-object?64 %%x1160)
-(%%syntax-object-expression65 %%x1160)
-%%x1160)))
-%%id1145)
-(%%join-marks358
-%%id.new-marks1146
-(%%id-marks247 %%id1145))))))
-(if (not (null? %%ls1119))
-((letrec ((%%lp1162
-(lambda (%%x1163 %%ls1164 %%cls1165)
-(if (null? %%ls1164)
-(if (not (null? %%cls1165))
-((lambda (%%cls1166)
+%%x1168)
+%%x1168)))
+%%*id1164)
+(%%join-marks368
+%%iface.new-marks1158
+(%%id-marks257 %%*id1164))))
+%%cls1159)))
+(%%interface-token400 %%iface1157)))
+((lambda (%%x1170)
+((lambda (%%e1171)
+(if (annotation? %%e1171)
+(annotation-expression %%e1171)
+%%e1171))
+(if (%%syntax-object?64 %%x1170)
+(%%syntax-object-expression65 %%x1170)
+%%x1170)))
+%%id1155)
+(%%join-marks368
+%%id.new-marks1156
+(%%id-marks257 %%id1155))))))
+(if (not (null? %%ls1129))
+((letrec ((%%lp1172
+(lambda (%%x1173 %%ls1174 %%cls1175)
+(if (null? %%ls1174)
+(if (not (null? %%cls1175))
+((lambda (%%cls1176)
 (syntax-error
-%%source-exp1118
+%%source-exp1128
 "duplicate definition for "
 (symbol->string
-(car %%cls1166))
+(car %%cls1176))
 " in"))
-(syntax-object->datum %%cls1165))
+(syntax-object->datum %%cls1175))
 (void))
-((letrec ((%%lp21167
-(lambda (%%ls21168
-%%cls1169)
-(if (null? %%ls21168)
-(%%lp1162
-(car %%ls1164)
-(cdr %%ls1164)
-%%cls1169)
-(%%lp21167
-(cdr %%ls21168)
-(%%conflicts1121
-%%x1163
-(car %%ls21168)
-%%cls1169))))))
-%%lp21167)
-%%ls1164
-%%cls1165)))))
-%%lp1162)
-(car %%ls1119)
-(cdr %%ls1119)
+((letrec ((%%lp21177
+(lambda (%%ls21178
+%%cls1179)
+(if (null? %%ls21178)
+(%%lp1172
+(car %%ls1174)
+(cdr %%ls1174)
+%%cls1179)
+(%%lp21177
+(cdr %%ls21178)
+(%%conflicts1131
+%%x1173
+(car %%ls21178)
+%%cls1179))))))
+%%lp21177)
+%%ls1174
+%%cls1175)))))
+%%lp1172)
+(car %%ls1129)
+(cdr %%ls1129)
 '())
 (void)))))
-(%%chi-external421
-(lambda (%%ribcage1170
-%%source-exp1171
-%%body1172
-%%r1173
-%%mr1174
-%%ctem1175
-%%exports1176
-%%fexports1177
-%%meta-residualize!1178)
-(letrec ((%%return1179
-(lambda (%%r1182
-%%mr1183
-%%bindings1184
-%%ids1185
-%%inits1186)
+(%%chi-external431
+(lambda (%%ribcage1180
+%%source-exp1181
+%%body1182
+%%r1183
+%%mr1184
+%%ctem1185
+%%exports1186
+%%fexports1187
+%%meta-residualize!1188)
+(letrec ((%%return1189
+(lambda (%%r1192
+%%mr1193
+%%bindings1194
+%%ids1195
+%%inits1196)
 (begin
-(%%check-defined-ids420
-%%source-exp1171
-%%ids1185)
-(%%check-module-exports419
-%%source-exp1171
-%%fexports1177
-%%ids1185)
-(values %%r1182
-%%mr1183
-%%bindings1184
-%%inits1186))))
-(%%get-implicit-exports1180
-(lambda (%%id1187)
-((letrec ((%%f1188 (lambda (%%exports1189)
-(if (null? %%exports1189)
+(%%check-defined-ids430
+%%source-exp1181
+%%ids1195)
+(%%check-module-exports429
+%%source-exp1181
+%%fexports1187
+%%ids1195)
+(values %%r1192
+%%mr1193
+%%bindings1194
+%%inits1196))))
+(%%get-implicit-exports1190
+(lambda (%%id1197)
+((letrec ((%%f1198 (lambda (%%exports1199)
+(if (null? %%exports1199)
 '()
-(if (if (pair? (car %%exports1189))
-(%%bound-id=?373
-%%id1187
-(caar %%exports1189))
+(if (if (pair? (car %%exports1199))
+(%%bound-id=?383
+%%id1197
+(caar %%exports1199))
 #f)
-(%%flatten-exports385
-(cdar %%exports1189))
-(%%f1188 (cdr %%exports1189)))))))
-%%f1188)
-%%exports1176)))
-(%%update-imp-exports1181
-(lambda (%%bindings1190 %%exports1191)
-((lambda (%%exports1192)
-(map (lambda (%%b1193)
-((lambda (%%id1194)
-(if (not (%%bound-id-member?377
-%%id1194
-%%exports1192))
-%%b1193
-(%%create-module-binding410
-(%%module-binding-type398
-%%b1193)
-%%id1194
-(%%module-binding-label400
-%%b1193)
-(append (%%get-implicit-exports1180
-%%id1194)
-(%%module-binding-imps401
-%%b1193))
-(%%module-binding-val402
-%%b1193))))
-(%%module-binding-id399 %%b1193)))
-%%bindings1190))
-(map (lambda (%%x1195)
-(if (pair? %%x1195)
-(car %%x1195)
-%%x1195))
-%%exports1191)))))
-((letrec ((%%parse1196
-(lambda (%%body1197
-%%r1198
-%%mr1199
-%%ids1200
-%%bindings1201
-%%inits1202
-%%meta-seen?1203)
-(if (null? %%body1197)
-(%%return1179
-%%r1198
-%%mr1199
-%%bindings1201
-%%ids1200
-%%inits1202)
-((lambda (%%fr1204)
-((lambda (%%e1205)
-((lambda (%%meta?1206)
+(%%flatten-exports395
+(cdar %%exports1199))
+(%%f1198 (cdr %%exports1199)))))))
+%%f1198)
+%%exports1186)))
+(%%update-imp-exports1191
+(lambda (%%bindings1200 %%exports1201)
+((lambda (%%exports1202)
+(map (lambda (%%b1203)
+((lambda (%%id1204)
+(if (not (%%bound-id-member?387
+%%id1204
+%%exports1202))
+%%b1203
+(%%create-module-binding420
+(%%module-binding-type408
+%%b1203)
+%%id1204
+(%%module-binding-label410
+%%b1203)
+(append (%%get-implicit-exports1190
+%%id1204)
+(%%module-binding-imps411
+%%b1203))
+(%%module-binding-val412
+%%b1203))))
+(%%module-binding-id409 %%b1203)))
+%%bindings1200))
+(map (lambda (%%x1205)
+(if (pair? %%x1205)
+(car %%x1205)
+%%x1205))
+%%exports1201)))))
+((letrec ((%%parse1206
+(lambda (%%body1207
+%%r1208
+%%mr1209
+%%ids1210
+%%bindings1211
+%%inits1212
+%%meta-seen?1213)
+(if (null? %%body1207)
+(%%return1189
+%%r1208
+%%mr1209
+%%bindings1211
+%%ids1210
+%%inits1212)
+((lambda (%%fr1214)
+((lambda (%%e1215)
+((lambda (%%meta?1216)
 ((lambda ()
 (call-with-values
 (lambda ()
-(%%syntax-type381
-%%e1205
-%%r1198
+(%%syntax-type391
+%%e1215
+%%r1208
 '(())
 #f
-%%ribcage1170))
-(lambda (%%type1207
-%%value1208
-%%e1209
-%%w1210
-%%ae1211)
-((lambda (%%t1212)
-(if (memv %%t1212
+%%ribcage1180))
+(lambda (%%type1217
+%%value1218
+%%e1219
+%%w1220
+%%ae1221)
+((lambda (%%t1222)
+(if (memv %%t1222
 '(define-form))
 (call-with-values
 (lambda ()
-(%%parse-define445
-%%e1209
-%%w1210
-%%ae1211))
-(lambda (%%id1213
+(%%parse-define455
+%%e1219
+%%w1220
+%%ae1221))
+(lambda (%%id1223
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%rhs1214
-%%w1215)
-((lambda (%%id1216)
-((lambda (%%label1217)
-((lambda (%%imps1218)
+%%rhs1224
+%%w1225)
+((lambda (%%id1226)
+((lambda (%%label1227)
+((lambda (%%imps1228)
 ((lambda ()
 (begin
-(%%extend-ribcage!345
-%%ribcage1170
-%%id1216
-%%label1217)
-(if %%meta?1206
-((lambda (%%sym1219)
-((lambda (%%b1220)
+(%%extend-ribcage!355
+%%ribcage1180
+%%id1226
+%%label1227)
+(if %%meta?1216
+((lambda (%%sym1229)
+((lambda (%%b1230)
 ((lambda ()
-((lambda (%%mr1221)
-((lambda (%%exp1222)
+((lambda (%%mr1231)
+((lambda (%%exp1232)
 (begin
 (%%define-top-level-value-hook71
-%%sym1219
+%%sym1229
 (%%top-level-eval-hook69
-%%exp1222))
-(%%meta-residualize!1178
-(%%ct-eval/residualize3429
-%%ctem1175
+%%exp1232))
+(%%meta-residualize!1188
+(%%ct-eval/residualize3439
+%%ctem1185
 void
 (lambda ()
 (build-source
@@ -6952,524 +6967,524 @@ void
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #f
 'define)
-(build-source #f %%sym1219)
-%%exp1222)))))
-(%%parse1196
-(cdr %%body1197)
-%%r1198
-%%mr1221
-(cons %%id1216 %%ids1200)
-(cons (%%create-module-binding410
+(build-source #f %%sym1229)
+%%exp1232)))))
+(%%parse1206
+(cdr %%body1207)
+%%r1208
+%%mr1231
+(cons %%id1226 %%ids1210)
+(cons (%%create-module-binding420
 'ctdefine-form
-%%id1216
-%%label1217
-%%imps1218
-%%b1220)
-%%bindings1201)
-%%inits1202
+%%id1226
+%%label1227
+%%imps1228
+%%b1230)
+%%bindings1211)
+%%inits1212
 #f)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%chi433
-%%rhs1214
-%%mr1221
-%%mr1221
-%%w1215
+(%%chi443
+%%rhs1224
+%%mr1231
+%%mr1231
+%%w1225
 #t)))
-(%%extend-env230
-(%%get-indirect-label295
-%%label1217)
-%%b1220
-%%mr1199)))))
-(cons 'meta-variable %%sym1219)))
+(%%extend-env240
+(%%get-indirect-label305
+%%label1227)
+%%b1230
+%%mr1209)))))
+(cons 'meta-variable %%sym1229)))
 (%%generate-id78
-((lambda (%%x1223)
-((lambda (%%e1224)
-(if (annotation? %%e1224)
+((lambda (%%x1233)
+((lambda (%%e1234)
+(if (annotation? %%e1234)
 (annotation-expression
-%%e1224)
-%%e1224))
-(if (%%syntax-object?64 %%x1223)
+%%e1234)
+%%e1234))
+(if (%%syntax-object?64 %%x1233)
 (%%syntax-object-expression65
-%%x1223)
-%%x1223)))
-%%id1216)))
-(%%parse1196
-(cdr %%body1197)
-%%r1198
-%%mr1199
-(cons %%id1216 %%ids1200)
-(cons (%%create-module-binding410
-%%type1207
-%%id1216
-%%label1217
-%%imps1218
-(%%make-frob411
-(%%wrap378 %%rhs1214 %%w1215)
-%%meta?1206))
-%%bindings1201)
-%%inits1202
+%%x1233)
+%%x1233)))
+%%id1226)))
+(%%parse1206
+(cdr %%body1207)
+%%r1208
+%%mr1209
+(cons %%id1226 %%ids1210)
+(cons (%%create-module-binding420
+%%type1217
+%%id1226
+%%label1227
+%%imps1228
+(%%make-frob421
+(%%wrap388 %%rhs1224 %%w1225)
+%%meta?1216))
+%%bindings1211)
+%%inits1212
 #f))))))
-(%%get-implicit-exports1180 %%id1216)))
-(%%gen-indirect-label294)))
-(%%wrap378 %%id1213 %%w1215))))
-(if (memv %%t1212 '(define-syntax-form))
+(%%get-implicit-exports1190 %%id1226)))
+(%%gen-indirect-label304)))
+(%%wrap388 %%id1223 %%w1225))))
+(if (memv %%t1222 '(define-syntax-form))
 (call-with-values
 (lambda ()
-(%%parse-define-syntax446 %%e1209 %%w1210 %%ae1211))
-(lambda (%%id1225 %%rhs1226 %%w1227)
-((lambda (%%id1228)
-((lambda (%%label1229)
-((lambda (%%imps1230)
-((lambda (%%exp1231)
+(%%parse-define-syntax456 %%e1219 %%w1220 %%ae1221))
+(lambda (%%id1235 %%rhs1236 %%w1237)
+((lambda (%%id1238)
+((lambda (%%label1239)
+((lambda (%%imps1240)
+((lambda (%%exp1241)
 ((lambda ()
 (begin
-(%%extend-ribcage!345
-%%ribcage1170
-%%id1228
-%%label1229)
-((lambda (%%l1232 %%b1233)
-(%%parse1196
-(cdr %%body1197)
-(%%extend-env230
-%%l1232
-%%b1233
-%%r1198)
-(%%extend-env230
-%%l1232
-%%b1233
-%%mr1199)
-(cons %%id1228 %%ids1200)
-(cons (%%create-module-binding410
-%%type1207
-%%id1228
-%%label1229
-%%imps1230
-(cons %%b1233 %%exp1231))
-%%bindings1201)
-%%inits1202
+(%%extend-ribcage!355
+%%ribcage1180
+%%id1238
+%%label1239)
+((lambda (%%l1242 %%b1243)
+(%%parse1206
+(cdr %%body1207)
+(%%extend-env240
+%%l1242
+%%b1243
+%%r1208)
+(%%extend-env240
+%%l1242
+%%b1243
+%%mr1209)
+(cons %%id1238 %%ids1210)
+(cons (%%create-module-binding420
+%%type1217
+%%id1238
+%%label1239
+%%imps1240
+(cons %%b1243 %%exp1241))
+%%bindings1211)
+%%inits1212
 #f))
-(%%get-indirect-label295
-%%label1229)
-(%%defer-or-eval-transformer238
+(%%get-indirect-label305
+%%label1239)
+(%%defer-or-eval-transformer248
 %%top-level-eval-hook69
-%%exp1231))))))
-(%%chi433
-%%rhs1226
-%%mr1199
-%%mr1199
-%%w1227
+%%exp1241))))))
+(%%chi443
+%%rhs1236
+%%mr1209
+%%mr1209
+%%w1237
 #t)))
-(%%get-implicit-exports1180 %%id1228)))
-(%%gen-indirect-label294)))
-(%%wrap378 %%id1225 %%w1227))))
-(if (memv %%t1212 '($module-form))
-((lambda (%%*ribcage1234)
-((lambda (%%*w1235)
+(%%get-implicit-exports1190 %%id1238)))
+(%%gen-indirect-label304)))
+(%%wrap388 %%id1235 %%w1237))))
+(if (memv %%t1222 '($module-form))
+((lambda (%%*ribcage1244)
+((lambda (%%*w1245)
 ((lambda ()
 (call-with-values
 (lambda ()
-(%%parse-module443
-%%e1209
-%%w1210
-%%ae1211
-%%*w1235))
-(lambda (%%orig1236
-%%id1237
-%%*exports1238
-%%forms1239)
+(%%parse-module453
+%%e1219
+%%w1220
+%%ae1221
+%%*w1245))
+(lambda (%%orig1246
+%%id1247
+%%*exports1248
+%%forms1249)
 (call-with-values
 (lambda ()
-(%%chi-external421
-%%*ribcage1234
-%%orig1236
-(map (lambda (%%d1240)
-(%%make-frob411
-%%d1240
-%%meta?1206))
-%%forms1239)
-%%r1198
-%%mr1199
-%%ctem1175
-%%*exports1238
-(%%flatten-exports385 %%*exports1238)
-%%meta-residualize!1178))
-(lambda (%%r1241
-%%mr1242
-%%*bindings1243
-%%*inits1244)
-((lambda (%%iface1245
-%%bindings1246
-%%inits1247
-%%label1248
-%%imps1249)
+(%%chi-external431
+%%*ribcage1244
+%%orig1246
+(map (lambda (%%d1250)
+(%%make-frob421
+%%d1250
+%%meta?1216))
+%%forms1249)
+%%r1208
+%%mr1209
+%%ctem1185
+%%*exports1248
+(%%flatten-exports395 %%*exports1248)
+%%meta-residualize!1188))
+(lambda (%%r1251
+%%mr1252
+%%*bindings1253
+%%*inits1254)
+((lambda (%%iface1255
+%%bindings1256
+%%inits1257
+%%label1258
+%%imps1259)
 (begin
-(%%extend-ribcage!345
-%%ribcage1170
-%%id1237
-%%label1248)
-((lambda (%%l1250 %%b1251)
-(%%parse1196
-(cdr %%body1197)
-(%%extend-env230
-%%l1250
-%%b1251
-%%r1241)
-(%%extend-env230
-%%l1250
-%%b1251
-%%mr1242)
-(cons %%id1237 %%ids1200)
-(cons (%%create-module-binding410
-%%type1207
-%%id1237
-%%label1248
-%%imps1249
-%%*exports1238)
-%%bindings1246)
-%%inits1247
+(%%extend-ribcage!355
+%%ribcage1180
+%%id1247
+%%label1258)
+((lambda (%%l1260 %%b1261)
+(%%parse1206
+(cdr %%body1207)
+(%%extend-env240
+%%l1260
+%%b1261
+%%r1251)
+(%%extend-env240
+%%l1260
+%%b1261
+%%mr1252)
+(cons %%id1247 %%ids1210)
+(cons (%%create-module-binding420
+%%type1217
+%%id1247
+%%label1258
+%%imps1259
+%%*exports1248)
+%%bindings1256)
+%%inits1257
 #f))
-(%%get-indirect-label295
-%%label1248)
-(cons '$module %%iface1245))))
-(%%make-unresolved-interface394
-%%id1237
-%%*exports1238)
-(append %%*bindings1243
-%%bindings1201)
-(append %%inits1202 %%*inits1244)
-(%%gen-indirect-label294)
-(%%get-implicit-exports1180
-%%id1237)))))))))
-(%%make-wrap250
-(%%wrap-marks251 %%w1210)
-(cons %%*ribcage1234
-(%%wrap-subst252 %%w1210)))))
-(%%make-ribcage300 '() '() '()))
-(if (memv %%t1212 '($import-form))
+(%%get-indirect-label305
+%%label1258)
+(cons '$module %%iface1255))))
+(%%make-unresolved-interface404
+%%id1247
+%%*exports1248)
+(append %%*bindings1253
+%%bindings1211)
+(append %%inits1212 %%*inits1254)
+(%%gen-indirect-label304)
+(%%get-implicit-exports1190
+%%id1247)))))))))
+(%%make-wrap260
+(%%wrap-marks261 %%w1220)
+(cons %%*ribcage1244
+(%%wrap-subst262 %%w1220)))))
+(%%make-ribcage310 '() '() '()))
+(if (memv %%t1222 '($import-form))
 (call-with-values
 (lambda ()
-(%%parse-import444 %%e1209 %%w1210 %%ae1211))
-(lambda (%%orig1252 %%only?1253 %%mid1254)
-((lambda (%%mlabel1255)
-((lambda (%%binding1256)
-((lambda (%%t1257)
-(if (memv %%t1257 '($module))
-((lambda (%%iface1258)
-((lambda (%%import-iface1259)
+(%%parse-import454 %%e1219 %%w1220 %%ae1221))
+(lambda (%%orig1262 %%only?1263 %%mid1264)
+((lambda (%%mlabel1265)
+((lambda (%%binding1266)
+((lambda (%%t1267)
+(if (memv %%t1267 '($module))
+((lambda (%%iface1268)
+((lambda (%%import-iface1269)
 ((lambda ()
 (begin
-(if %%only?1253
-(%%extend-ribcage-barrier!347
-%%ribcage1170
-%%mid1254)
+(if %%only?1263
+(%%extend-ribcage-barrier!357
+%%ribcage1180
+%%mid1264)
 (void))
-(%%do-import!442
-%%import-iface1259
-%%ribcage1170)
-(%%parse1196
-(cdr %%body1197)
-%%r1198
-%%mr1199
-(cons %%import-iface1259
-%%ids1200)
-(%%update-imp-exports1181
-%%bindings1201
+(%%do-import!452
+%%import-iface1269
+%%ribcage1180)
+(%%parse1206
+(cdr %%body1207)
+%%r1208
+%%mr1209
+(cons %%import-iface1269
+%%ids1210)
+(%%update-imp-exports1191
+%%bindings1211
 (vector->list
-(%%interface-exports389
-%%iface1258)))
-%%inits1202
+(%%interface-exports399
+%%iface1268)))
+%%inits1212
 #f)))))
-(%%make-import-interface314
-%%iface1258
-(%%import-mark-delta440
-%%mid1254
-%%iface1258))))
-(%%binding-value217
-%%binding1256))
-(if (memv %%t1257
+(%%make-import-interface324
+%%iface1268
+(%%import-mark-delta450
+%%mid1264
+%%iface1268))))
+(%%binding-value227
+%%binding1266))
+(if (memv %%t1267
 '(displaced-lexical))
-(%%displaced-lexical-error234
-%%mid1254)
+(%%displaced-lexical-error244
+%%mid1264)
 (syntax-error
-%%mid1254
+%%mid1264
 "unknown module"))))
-(%%binding-type216 %%binding1256)))
-(%%lookup236 %%mlabel1255 %%r1198)))
-(%%id-var-name369 %%mid1254 '(())))))
-(if (memv %%t1212 '(alias-form))
+(%%binding-type226 %%binding1266)))
+(%%lookup246 %%mlabel1265 %%r1208)))
+(%%id-var-name379 %%mid1264 '(())))))
+(if (memv %%t1222 '(alias-form))
 (call-with-values
 (lambda ()
-(%%parse-alias449
-%%e1209
-%%w1210
-%%ae1211))
-(lambda (%%new-id1260 %%old-id1261)
-((lambda (%%new-id1262)
-((lambda (%%label1263)
-((lambda (%%imps1264)
+(%%parse-alias459
+%%e1219
+%%w1220
+%%ae1221))
+(lambda (%%new-id1270 %%old-id1271)
+((lambda (%%new-id1272)
+((lambda (%%label1273)
+((lambda (%%imps1274)
 ((lambda ()
 (begin
-(%%extend-ribcage!345
-%%ribcage1170
-%%new-id1262
-%%label1263)
-(%%parse1196
-(cdr %%body1197)
-%%r1198
-%%mr1199
-(cons %%new-id1262
-%%ids1200)
-(cons (%%create-module-binding410
-%%type1207
-%%new-id1262
-%%label1263
-%%imps1264
+(%%extend-ribcage!355
+%%ribcage1180
+%%new-id1272
+%%label1273)
+(%%parse1206
+(cdr %%body1207)
+%%r1208
+%%mr1209
+(cons %%new-id1272
+%%ids1210)
+(cons (%%create-module-binding420
+%%type1217
+%%new-id1272
+%%label1273
+%%imps1274
 #f)
-%%bindings1201)
-%%inits1202
+%%bindings1211)
+%%inits1212
 #f)))))
-(%%get-implicit-exports1180
-%%new-id1262)))
-(%%id-var-name-loc368
-%%old-id1261
-%%w1210)))
-(%%wrap378 %%new-id1260 %%w1210))))
-(if (memv %%t1212 '(begin-form))
-(%%parse1196
-((letrec ((%%f1265 (lambda (%%forms1266)
-(if (null? %%forms1266)
-(cdr %%body1197)
-(cons (%%make-frob411
+(%%get-implicit-exports1190
+%%new-id1272)))
+(%%id-var-name-loc378
+%%old-id1271
+%%w1220)))
+(%%wrap388 %%new-id1270 %%w1220))))
+(if (memv %%t1222 '(begin-form))
+(%%parse1206
+((letrec ((%%f1275 (lambda (%%forms1276)
+(if (null? %%forms1276)
+(cdr %%body1207)
+(cons (%%make-frob421
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(%%wrap378 (car %%forms1266) %%w1210)
-%%meta?1206)
-(%%f1265 (cdr %%forms1266)))))))
+(%%wrap388 (car %%forms1276) %%w1220)
+%%meta?1216)
+(%%f1275 (cdr %%forms1276)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f1265)
-(%%parse-begin450
-%%e1209
-%%w1210
-%%ae1211
+%%f1275)
+(%%parse-begin460
+%%e1219
+%%w1220
+%%ae1221
 #t))
-%%r1198
-%%mr1199
-%%ids1200
-%%bindings1201
-%%inits1202
+%%r1208
+%%mr1209
+%%ids1210
+%%bindings1211
+%%inits1212
 #f)
-(if (memv %%t1212 '(eval-when-form))
+(if (memv %%t1222 '(eval-when-form))
 (call-with-values
 (lambda ()
-(%%parse-eval-when448
-%%e1209
-%%w1210
-%%ae1211))
-(lambda (%%when-list1267
-%%forms1268)
-(%%parse1196
-(if (memq 'eval %%when-list1267)
-((letrec ((%%f1269 (lambda (%%forms1270)
+(%%parse-eval-when458
+%%e1219
+%%w1220
+%%ae1221))
+(lambda (%%when-list1277
+%%forms1278)
+(%%parse1206
+(if (memq 'eval %%when-list1277)
+((letrec ((%%f1279 (lambda (%%forms1280)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if (null? %%forms1270)
-(cdr %%body1197)
-(cons (%%make-frob411
-(%%wrap378 (car %%forms1270) %%w1210)
-%%meta?1206)
-(%%f1269 (cdr %%forms1270)))))))
+(if (null? %%forms1280)
+(cdr %%body1207)
+(cons (%%make-frob421
+(%%wrap388 (car %%forms1280) %%w1220)
+%%meta?1216)
+(%%f1279 (cdr %%forms1280)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f1269)
-%%forms1268)
-(cdr %%body1197))
-%%r1198
-%%mr1199
-%%ids1200
-%%bindings1201
-%%inits1202
+%%f1279)
+%%forms1278)
+(cdr %%body1207))
+%%r1208
+%%mr1209
+%%ids1210
+%%bindings1211
+%%inits1212
 #f)))
-(if (memv %%t1212 '(meta-form))
-(%%parse1196
-(cons (%%make-frob411
-(%%wrap378
-(%%parse-meta447
-%%e1209
-%%w1210
-%%ae1211)
-%%w1210)
+(if (memv %%t1222 '(meta-form))
+(%%parse1206
+(cons (%%make-frob421
+(%%wrap388
+(%%parse-meta457
+%%e1219
+%%w1220
+%%ae1221)
+%%w1220)
 #t)
-(cdr %%body1197))
-%%r1198
-%%mr1199
-%%ids1200
-%%bindings1201
-%%inits1202
+(cdr %%body1207))
+%%r1208
+%%mr1209
+%%ids1210
+%%bindings1211
+%%inits1212
 #t)
-(if (memv %%t1212
+(if (memv %%t1222
 '(local-syntax-form))
 (call-with-values
 (lambda ()
-(%%chi-local-syntax452
-%%value1208
-%%e1209
-%%r1198
-%%mr1199
-%%w1210
-%%ae1211))
-(lambda (%%forms1271
-%%r1272
-%%mr1273
-%%w1274
-%%ae1275)
-(%%parse1196
-((letrec ((%%f1276 (lambda (%%forms1277)
+(%%chi-local-syntax462
+%%value1218
+%%e1219
+%%r1208
+%%mr1209
+%%w1220
+%%ae1221))
+(lambda (%%forms1281
+%%r1282
+%%mr1283
+%%w1284
+%%ae1285)
+(%%parse1206
+((letrec ((%%f1286 (lambda (%%forms1287)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if (null? %%forms1277)
-(cdr %%body1197)
-(cons (%%make-frob411
-(%%wrap378
-(car %%forms1277)
-%%w1274)
-%%meta?1206)
-(%%f1276 (cdr %%forms1277)))))))
-%%f1276)
-%%forms1271)
-%%r1272
-%%mr1273
-%%ids1200
-%%bindings1201
-%%inits1202
+(if (null? %%forms1287)
+(cdr %%body1207)
+(cons (%%make-frob421
+(%%wrap388
+(car %%forms1287)
+%%w1284)
+%%meta?1216)
+(%%f1286 (cdr %%forms1287)))))))
+%%f1286)
+%%forms1281)
+%%r1282
+%%mr1283
+%%ids1210
+%%bindings1211
+%%inits1212
 #f)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (begin
-(if %%meta-seen?1203
+(if %%meta-seen?1213
 (syntax-error
-(%%source-wrap379
-%%e1209
-%%w1210
-%%ae1211)
+(%%source-wrap389
+%%e1219
+%%w1220
+%%ae1221)
 "invalid meta definition")
 (void))
-((letrec ((%%f1278 (lambda (%%body1279)
+((letrec ((%%f1288 (lambda (%%body1289)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if ((lambda (%%t1280)
-(if %%t1280
-%%t1280
-(not (%%frob-meta?414
-(car %%body1279)))))
-(null? %%body1279))
-(%%return1179
-%%r1198
-%%mr1199
-%%bindings1201
-%%ids1200
-(append %%inits1202 %%body1279))
+(if ((lambda (%%t1290)
+(if %%t1290
+%%t1290
+(not (%%frob-meta?424
+(car %%body1289)))))
+(null? %%body1289))
+(%%return1189
+%%r1208
+%%mr1209
+%%bindings1211
+%%ids1210
+(append %%inits1212 %%body1289))
 (begin
-((lambda (%%x1281)
+((lambda (%%x1291)
 (begin
-(%%top-level-eval-hook69 %%x1281)
-(%%meta-residualize!1178
-(%%ct-eval/residualize3429
-%%ctem1175
+(%%top-level-eval-hook69 %%x1291)
+(%%meta-residualize!1188
+(%%ct-eval/residualize3439
+%%ctem1185
 void
-(lambda () %%x1281)))))
-(%%chi-meta-frob431
-(car %%body1279)
-%%mr1199))
-(%%f1278 (cdr %%body1279)))))))
-%%f1278)
+(lambda () %%x1291)))))
+(%%chi-meta-frob441
+(car %%body1289)
+%%mr1209))
+(%%f1288 (cdr %%body1289)))))))
+%%f1288)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(cons (%%make-frob411
-(%%source-wrap379
-%%e1209
-%%w1210
-%%ae1211)
-%%meta?1206)
-(cdr %%body1197))))))))))))))
+(cons (%%make-frob421
+(%%source-wrap389
+%%e1219
+%%w1220
+%%ae1221)
+%%meta?1216)
+(cdr %%body1207))))))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%type1207))))))
-(%%frob-meta?414 %%fr1204)))
-(%%frob-e413 %%fr1204)))
-(car %%body1197))))))
-%%parse1196)
-%%body1172
-%%r1173
-%%mr1174
+%%type1217))))))
+(%%frob-meta?424 %%fr1214)))
+(%%frob-e423 %%fr1214)))
+(car %%body1207))))))
+%%parse1206)
+%%body1182
+%%r1183
+%%mr1184
 '()
 '()
 '()
 #f))))
-(%%vmap422
-(lambda (%%fn1282 %%v1283)
-((letrec ((%%do1284
-(lambda (%%i1285 %%ls1286)
-(if (fx< %%i1285 0)
-%%ls1286
-(%%do1284
-(fx- %%i1285 1)
-(cons (%%fn1282
-(vector-ref %%v1283 %%i1285))
-%%ls1286))))))
-%%do1284)
-(fx- (vector-length %%v1283) 1)
+(%%vmap432
+(lambda (%%fn1292 %%v1293)
+((letrec ((%%do1294
+(lambda (%%i1295 %%ls1296)
+(if (fx< %%i1295 0)
+%%ls1296
+(%%do1294
+(fx- %%i1295 1)
+(cons (%%fn1292
+(vector-ref %%v1293 %%i1295))
+%%ls1296))))))
+%%do1294)
+(fx- (vector-length %%v1293) 1)
 '())))
-(%%vfor-each423
-(lambda (%%fn1287 %%v1288)
-((lambda (%%len1289)
-((letrec ((%%do1290
-(lambda (%%i1291)
-(if (not (fx= %%i1291 %%len1289))
+(%%vfor-each433
+(lambda (%%fn1297 %%v1298)
+((lambda (%%len1299)
+((letrec ((%%do1300
+(lambda (%%i1301)
+(if (not (fx= %%i1301 %%len1299))
 (begin
-(%%fn1287 (vector-ref %%v1288 %%i1291))
-(%%do1290 (fx+ %%i1291 1)))
+(%%fn1297 (vector-ref %%v1298 %%i1301))
+(%%do1300 (fx+ %%i1301 1)))
 (void)))))
-%%do1290)
+%%do1300)
 0))
-(vector-length %%v1288))))
-(%%do-top-import424
-(lambda (%%import-only?1292
-%%top-ribcage1293
-%%mid1294
-%%token1295)
+(vector-length %%v1298))))
+(%%do-top-import434
+(lambda (%%import-only?1302
+%%top-ribcage1303
+%%mid1304
+%%token1305)
 (build-source
 #f
 (list (build-source #f '$sc-put-cte)
 (build-source
 #f
 (list (build-source #f 'quote)
-(attach-source #f %%mid1294)))
-((lambda (%%x1296)
-(if (self-eval? (cons 'do-import %%token1295))
-%%x1296
+(attach-source #f %%mid1304)))
+((lambda (%%x1306)
+(if (self-eval? (cons 'do-import %%token1305))
+%%x1306
 (build-source
 #f
-(list (build-source #f 'quote) %%x1296))))
-(attach-source #f (cons 'do-import %%token1295)))
+(list (build-source #f 'quote) %%x1306))))
+(attach-source #f (cons 'do-import %%token1305)))
 (build-source
 #f
 (list (build-source #f 'quote)
-(%%top-ribcage-key310 %%top-ribcage1293)))))))
-(%%update-mode-set425
-((lambda (%%table1297)
-(lambda (%%when-list1298 %%mode-set1299)
-(letrec ((%%remq1300
-(lambda (%%x1301 %%ls1302)
-(if (null? %%ls1302)
+(%%top-ribcage-key320 %%top-ribcage1303)))))))
+(%%update-mode-set435
+((lambda (%%table1307)
+(lambda (%%when-list1308 %%mode-set1309)
+(letrec ((%%remq1310
+(lambda (%%x1311 %%ls1312)
+(if (null? %%ls1312)
 '()
-(if (eq? (car %%ls1302) %%x1301)
-(%%remq1300 %%x1301 (cdr %%ls1302))
-(cons (car %%ls1302)
-(%%remq1300
-%%x1301
-(cdr %%ls1302))))))))
-(%%remq1300
+(if (eq? (car %%ls1312) %%x1311)
+(%%remq1310 %%x1311 (cdr %%ls1312))
+(cons (car %%ls1312)
+(%%remq1310
+%%x1311
+(cdr %%ls1312))))))))
+(%%remq1310
 '-
 (apply append
-(map (lambda (%%m1303)
-((lambda (%%row1304)
-(map (lambda (%%s1305)
-(cdr (assq %%s1305 %%row1304)))
-%%when-list1298))
-(cdr (assq %%m1303 %%table1297))))
-%%mode-set1299))))))
+(map (lambda (%%m1313)
+((lambda (%%row1314)
+(map (lambda (%%s1315)
+(cdr (assq %%s1315 %%row1314)))
+%%when-list1308))
+(cdr (assq %%m1313 %%table1307))))
+%%mode-set1309))))))
 '((L (load . L)
 (compile . C)
 (visit . V)
@@ -7495,390 +7510,390 @@ void
 (visit . -)
 (revisit . -)
 (eval . E)))))
-(%%initial-mode-set426
-(lambda (%%when-list1306 %%compiling-a-file1307)
+(%%initial-mode-set436
+(lambda (%%when-list1316 %%compiling-a-file1317)
 (apply append
-(map (lambda (%%s1308)
-(if %%compiling-a-file1307
-((lambda (%%t1309)
-(if (memv %%t1309 '(compile))
+(map (lambda (%%s1318)
+(if %%compiling-a-file1317
+((lambda (%%t1319)
+(if (memv %%t1319 '(compile))
 '(C)
-(if (memv %%t1309 '(load))
+(if (memv %%t1319 '(load))
 '(L)
-(if (memv %%t1309 '(visit))
+(if (memv %%t1319 '(visit))
 '(V)
-(if (memv %%t1309 '(revisit))
+(if (memv %%t1319 '(revisit))
 '(R)
 '())))))
-%%s1308)
-((lambda (%%t1310)
-(if (memv %%t1310 '(eval)) '(E) '()))
-%%s1308)))
-%%when-list1306))))
-(%%rt-eval/residualize427
-(lambda (%%rtem1311 %%thunk1312)
-(if (memq 'E %%rtem1311)
-(%%thunk1312)
-((lambda (%%thunk1313)
-(if (memq 'V %%rtem1311)
-(if ((lambda (%%t1314)
-(if %%t1314 %%t1314 (memq 'R %%rtem1311)))
-(memq 'L %%rtem1311))
-(%%thunk1313)
-(%%thunk1313))
-(if ((lambda (%%t1315)
-(if %%t1315 %%t1315 (memq 'R %%rtem1311)))
-(memq 'L %%rtem1311))
-(%%thunk1313)
-(%%chi-void453))))
-(if (memq 'C %%rtem1311)
-((lambda (%%x1316)
-(begin
-(%%top-level-eval-hook69 %%x1316)
-(lambda () %%x1316)))
-(%%thunk1312))
-%%thunk1312)))))
-(%%ct-eval/residualize2428
-(lambda (%%ctem1317 %%thunk1318)
-((lambda (%%t1319)
-(%%ct-eval/residualize3429
-%%ctem1317
-(lambda ()
-(begin
-(if (not %%t1319) (set! %%t1319 (%%thunk1318)) (void))
-(%%top-level-eval-hook69 %%t1319)))
-(lambda ()
-((lambda (%%t1320) (if %%t1320 %%t1320 (%%thunk1318)))
-%%t1319))))
-#f)))
-(%%ct-eval/residualize3429
-(lambda (%%ctem1321 %%eval-thunk1322 %%residualize-thunk1323)
-(if (memq 'E %%ctem1321)
-(begin (%%eval-thunk1322) (%%chi-void453))
-(begin
-(if (memq 'C %%ctem1321) (%%eval-thunk1322) (void))
-(if (memq 'R %%ctem1321)
+%%s1318)
+((lambda (%%t1320)
+(if (memv %%t1320 '(eval)) '(E) '()))
+%%s1318)))
+%%when-list1316))))
+(%%rt-eval/residualize437
+(lambda (%%rtem1321 %%thunk1322)
+(if (memq 'E %%rtem1321)
+(%%thunk1322)
+((lambda (%%thunk1323)
+(if (memq 'V %%rtem1321)
 (if ((lambda (%%t1324)
-(if %%t1324 %%t1324 (memq 'V %%ctem1321)))
-(memq 'L %%ctem1321))
-(%%residualize-thunk1323)
-(%%residualize-thunk1323))
+(if %%t1324 %%t1324 (memq 'R %%rtem1321)))
+(memq 'L %%rtem1321))
+(%%thunk1323)
+(%%thunk1323))
 (if ((lambda (%%t1325)
-(if %%t1325 %%t1325 (memq 'V %%ctem1321)))
-(memq 'L %%ctem1321))
-(%%residualize-thunk1323)
-(%%chi-void453)))))))
-(%%chi-frobs430
-(lambda (%%frob*1326 %%r1327 %%mr1328 %%m?1329)
-(map (lambda (%%x1330)
-(%%chi433
-(%%frob-e413 %%x1330)
-%%r1327
-%%mr1328
+(if %%t1325 %%t1325 (memq 'R %%rtem1321)))
+(memq 'L %%rtem1321))
+(%%thunk1323)
+(%%chi-void463))))
+(if (memq 'C %%rtem1321)
+((lambda (%%x1326)
+(begin
+(%%top-level-eval-hook69 %%x1326)
+(lambda () %%x1326)))
+(%%thunk1322))
+%%thunk1322)))))
+(%%ct-eval/residualize2438
+(lambda (%%ctem1327 %%thunk1328)
+((lambda (%%t1329)
+(%%ct-eval/residualize3439
+%%ctem1327
+(lambda ()
+(begin
+(if (not %%t1329) (set! %%t1329 (%%thunk1328)) (void))
+(%%top-level-eval-hook69 %%t1329)))
+(lambda ()
+((lambda (%%t1330) (if %%t1330 %%t1330 (%%thunk1328)))
+%%t1329))))
+#f)))
+(%%ct-eval/residualize3439
+(lambda (%%ctem1331 %%eval-thunk1332 %%residualize-thunk1333)
+(if (memq 'E %%ctem1331)
+(begin (%%eval-thunk1332) (%%chi-void463))
+(begin
+(if (memq 'C %%ctem1331) (%%eval-thunk1332) (void))
+(if (memq 'R %%ctem1331)
+(if ((lambda (%%t1334)
+(if %%t1334 %%t1334 (memq 'V %%ctem1331)))
+(memq 'L %%ctem1331))
+(%%residualize-thunk1333)
+(%%residualize-thunk1333))
+(if ((lambda (%%t1335)
+(if %%t1335 %%t1335 (memq 'V %%ctem1331)))
+(memq 'L %%ctem1331))
+(%%residualize-thunk1333)
+(%%chi-void463)))))))
+(%%chi-frobs440
+(lambda (%%frob*1336 %%r1337 %%mr1338 %%m?1339)
+(map (lambda (%%x1340)
+(%%chi443
+(%%frob-e423 %%x1340)
+%%r1337
+%%mr1338
 '(())
-%%m?1329))
-%%frob*1326)))
-(%%chi-meta-frob431
-(lambda (%%x1331 %%mr1332)
-(%%chi433 (%%frob-e413 %%x1331) %%mr1332 %%mr1332 '(()) #t)))
-(%%chi-sequence432
-(lambda (%%body1333 %%r1334 %%mr1335 %%w1336 %%ae1337 %%m?1338)
-(%%build-sequence170
-%%ae1337
-((letrec ((%%dobody1339
-(lambda (%%body1340)
-(if (null? %%body1340)
+%%m?1339))
+%%frob*1336)))
+(%%chi-meta-frob441
+(lambda (%%x1341 %%mr1342)
+(%%chi443 (%%frob-e423 %%x1341) %%mr1342 %%mr1342 '(()) #t)))
+(%%chi-sequence442
+(lambda (%%body1343 %%r1344 %%mr1345 %%w1346 %%ae1347 %%m?1348)
+(%%build-sequence180
+%%ae1347
+((letrec ((%%dobody1349
+(lambda (%%body1350)
+(if (null? %%body1350)
 '()
-((lambda (%%first1341)
-(cons %%first1341
-(%%dobody1339 (cdr %%body1340))))
-(%%chi433
-(car %%body1340)
-%%r1334
-%%mr1335
-%%w1336
-%%m?1338))))))
-%%dobody1339)
-%%body1333))))
-(%%chi433
-(lambda (%%e1342 %%r1343 %%mr1344 %%w1345 %%m?1346)
+((lambda (%%first1351)
+(cons %%first1351
+(%%dobody1349 (cdr %%body1350))))
+(%%chi443
+(car %%body1350)
+%%r1344
+%%mr1345
+%%w1346
+%%m?1348))))))
+%%dobody1349)
+%%body1343))))
+(%%chi443
+(lambda (%%e1352 %%r1353 %%mr1354 %%w1355 %%m?1356)
 (call-with-values
-(lambda () (%%syntax-type381 %%e1342 %%r1343 %%w1345 #f #f))
-(lambda (%%type1347 %%value1348 %%e1349 %%w1350 %%ae1351)
-(%%chi-expr434
-%%type1347
-%%value1348
-%%e1349
-%%r1343
-%%mr1344
-%%w1350
-%%ae1351
-%%m?1346)))))
-(%%chi-expr434
-(lambda (%%type1352
-%%value1353
-%%e1354
-%%r1355
-%%mr1356
-%%w1357
-%%ae1358
-%%m?1359)
-((lambda (%%t1360)
-(if (memv %%t1360 '(lexical))
-(build-source %%ae1358 %%value1353)
-(if (memv %%t1360 '(core))
-(%%value1353
-%%e1354
-%%r1355
-%%mr1356
-%%w1357
-%%ae1358
-%%m?1359)
-(if (memv %%t1360 '(lexical-call))
-(%%chi-application435
+(lambda () (%%syntax-type391 %%e1352 %%r1353 %%w1355 #f #f))
+(lambda (%%type1357 %%value1358 %%e1359 %%w1360 %%ae1361)
+(%%chi-expr444
+%%type1357
+%%value1358
+%%e1359
+%%r1353
+%%mr1354
+%%w1360
+%%ae1361
+%%m?1356)))))
+(%%chi-expr444
+(lambda (%%type1362
+%%value1363
+%%e1364
+%%r1365
+%%mr1366
+%%w1367
+%%ae1368
+%%m?1369)
+((lambda (%%t1370)
+(if (memv %%t1370 '(lexical))
+(build-source %%ae1368 %%value1363)
+(if (memv %%t1370 '(core))
+(%%value1363
+%%e1364
+%%r1365
+%%mr1366
+%%w1367
+%%ae1368
+%%m?1369)
+(if (memv %%t1370 '(lexical-call))
+(%%chi-application445
 (build-source
-((lambda (%%x1361)
-(if (%%syntax-object?64 %%x1361)
-(%%syntax-object-expression65 %%x1361)
-%%x1361))
-(car %%e1354))
-%%value1353)
-%%e1354
-%%r1355
-%%mr1356
-%%w1357
-%%ae1358
-%%m?1359)
-(if (memv %%t1360 '(constant))
-((lambda (%%x1362)
+((lambda (%%x1371)
+(if (%%syntax-object?64 %%x1371)
+(%%syntax-object-expression65 %%x1371)
+%%x1371))
+(car %%e1364))
+%%value1363)
+%%e1364
+%%r1365
+%%mr1366
+%%w1367
+%%ae1368
+%%m?1369)
+(if (memv %%t1370 '(constant))
+((lambda (%%x1372)
 (if (self-eval?
-(%%strip457
-(%%source-wrap379
-%%e1354
-%%w1357
-%%ae1358)
+(%%strip467
+(%%source-wrap389
+%%e1364
+%%w1367
+%%ae1368)
 '(())))
-%%x1362
+%%x1372
 (build-source
-%%ae1358
+%%ae1368
 (list (build-source
-%%ae1358
+%%ae1368
 'quote)
-%%x1362))))
+%%x1372))))
 (attach-source
-%%ae1358
-(%%strip457
-(%%source-wrap379
-%%e1354
-%%w1357
-%%ae1358)
+%%ae1368
+(%%strip467
+(%%source-wrap389
+%%e1364
+%%w1367
+%%ae1368)
 '(()))))
-(if (memv %%t1360 '(global))
-(build-source %%ae1358 %%value1353)
-(if (memv %%t1360 '(meta-variable))
-(if %%m?1359
+(if (memv %%t1370 '(global))
+(build-source %%ae1368 %%value1363)
+(if (memv %%t1370 '(meta-variable))
+(if %%m?1369
 (build-source
-%%ae1358
-%%value1353)
-(%%displaced-lexical-error234
-(%%source-wrap379
-%%e1354
-%%w1357
-%%ae1358)))
-(if (memv %%t1360 '(call))
-(%%chi-application435
-(%%chi433
-(car %%e1354)
-%%r1355
-%%mr1356
-%%w1357
-%%m?1359)
-%%e1354
-%%r1355
-%%mr1356
-%%w1357
-%%ae1358
-%%m?1359)
-(if (memv %%t1360
+%%ae1368
+%%value1363)
+(%%displaced-lexical-error244
+(%%source-wrap389
+%%e1364
+%%w1367
+%%ae1368)))
+(if (memv %%t1370 '(call))
+(%%chi-application445
+(%%chi443
+(car %%e1364)
+%%r1365
+%%mr1366
+%%w1367
+%%m?1369)
+%%e1364
+%%r1365
+%%mr1366
+%%w1367
+%%ae1368
+%%m?1369)
+(if (memv %%t1370
 '(begin-form))
-(%%chi-sequence432
-(%%parse-begin450
-%%e1354
-%%w1357
-%%ae1358
+(%%chi-sequence442
+(%%parse-begin460
+%%e1364
+%%w1367
+%%ae1368
 #f)
-%%r1355
-%%mr1356
-%%w1357
-%%ae1358
-%%m?1359)
-(if (memv %%t1360
+%%r1365
+%%mr1366
+%%w1367
+%%ae1368
+%%m?1369)
+(if (memv %%t1370
 '(local-syntax-form))
 (call-with-values
 (lambda ()
-(%%chi-local-syntax452
-%%value1353
-%%e1354
-%%r1355
-%%mr1356
-%%w1357
-%%ae1358))
-(lambda (%%forms1363
+(%%chi-local-syntax462
+%%value1363
+%%e1364
+%%r1365
+%%mr1366
+%%w1367
+%%ae1368))
+(lambda (%%forms1373
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%r1364
-%%mr1365
-%%w1366
-%%ae1367)
-(%%chi-sequence432
-%%forms1363
-%%r1364
-%%mr1365
-%%w1366
-%%ae1367
-%%m?1359)))
-(if (memv %%t1360 '(eval-when-form))
+%%r1374
+%%mr1375
+%%w1376
+%%ae1377)
+(%%chi-sequence442
+%%forms1373
+%%r1374
+%%mr1375
+%%w1376
+%%ae1377
+%%m?1369)))
+(if (memv %%t1370 '(eval-when-form))
 (call-with-values
 (lambda ()
-(%%parse-eval-when448 %%e1354 %%w1357 %%ae1358))
-(lambda (%%when-list1368 %%forms1369)
-(if (memq 'eval %%when-list1368)
-(%%chi-sequence432
-%%forms1369
-%%r1355
-%%mr1356
-%%w1357
-%%ae1358
-%%m?1359)
-(%%chi-void453))))
-(if (memv %%t1360 '(meta-form))
+(%%parse-eval-when458 %%e1364 %%w1367 %%ae1368))
+(lambda (%%when-list1378 %%forms1379)
+(if (memq 'eval %%when-list1378)
+(%%chi-sequence442
+%%forms1379
+%%r1365
+%%mr1366
+%%w1367
+%%ae1368
+%%m?1369)
+(%%chi-void463))))
+(if (memv %%t1370 '(meta-form))
 (syntax-error
-(%%source-wrap379 %%e1354 %%w1357 %%ae1358)
+(%%source-wrap389 %%e1364 %%w1367 %%ae1368)
 "invalid context for meta definition")
-(if (memv %%t1360 '(define-form))
+(if (memv %%t1370 '(define-form))
 (begin
-(%%parse-define445 %%e1354 %%w1357 %%ae1358)
+(%%parse-define455 %%e1364 %%w1367 %%ae1368)
 (syntax-error
-(%%source-wrap379 %%e1354 %%w1357 %%ae1358)
+(%%source-wrap389 %%e1364 %%w1367 %%ae1368)
 "invalid context for definition"))
-(if (memv %%t1360 '(define-syntax-form))
+(if (memv %%t1370 '(define-syntax-form))
 (begin
-(%%parse-define-syntax446
-%%e1354
-%%w1357
-%%ae1358)
+(%%parse-define-syntax456
+%%e1364
+%%w1367
+%%ae1368)
 (syntax-error
-(%%source-wrap379 %%e1354 %%w1357 %%ae1358)
+(%%source-wrap389 %%e1364 %%w1367 %%ae1368)
 "invalid context for definition"))
-(if (memv %%t1360 '($module-form))
+(if (memv %%t1370 '($module-form))
 (call-with-values
 (lambda ()
-(%%parse-module443
-%%e1354
-%%w1357
-%%ae1358
-%%w1357))
-(lambda (%%orig1370
-%%id1371
-%%exports1372
-%%forms1373)
+(%%parse-module453
+%%e1364
+%%w1367
+%%ae1368
+%%w1367))
+(lambda (%%orig1380
+%%id1381
+%%exports1382
+%%forms1383)
 (syntax-error
-%%orig1370
+%%orig1380
 "invalid context for definition")))
-(if (memv %%t1360 '($import-form))
+(if (memv %%t1370 '($import-form))
 (call-with-values
 (lambda ()
-(%%parse-import444
-%%e1354
-%%w1357
-%%ae1358))
-(lambda (%%orig1374
-%%only?1375
-%%mid1376)
+(%%parse-import454
+%%e1364
+%%w1367
+%%ae1368))
+(lambda (%%orig1384
+%%only?1385
+%%mid1386)
 (syntax-error
-%%orig1374
+%%orig1384
 "invalid context for definition")))
-(if (memv %%t1360 '(alias-form))
+(if (memv %%t1370 '(alias-form))
 (begin
-(%%parse-alias449
-%%e1354
-%%w1357
-%%ae1358)
+(%%parse-alias459
+%%e1364
+%%w1367
+%%ae1368)
 (syntax-error
-(%%source-wrap379
-%%e1354
-%%w1357
-%%ae1358)
+(%%source-wrap389
+%%e1364
+%%w1367
+%%ae1368)
 "invalid context for definition"))
-(if (memv %%t1360 '(syntax))
+(if (memv %%t1370 '(syntax))
 (syntax-error
-(%%source-wrap379
-%%e1354
-%%w1357
-%%ae1358)
+(%%source-wrap389
+%%e1364
+%%w1367
+%%ae1368)
 "reference to pattern variable outside syntax form")
-(if (memv %%t1360
+(if (memv %%t1370
 '(displaced-lexical))
-(%%displaced-lexical-error234
-(%%source-wrap379
-%%e1354
-%%w1357
-%%ae1358))
+(%%displaced-lexical-error244
+(%%source-wrap389
+%%e1364
+%%w1367
+%%ae1368))
 (syntax-error
-(%%source-wrap379
-%%e1354
-%%w1357
-%%ae1358)))))))))))))))))))))
+(%%source-wrap389
+%%e1364
+%%w1367
+%%ae1368)))))))))))))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%type1352)))
-(%%chi-application435
-(lambda (%%x1377
-%%e1378
-%%r1379
-%%mr1380
-%%w1381
-%%ae1382
-%%m?1383)
-((lambda (%%tmp1384)
-((lambda (%%tmp1385)
-(if %%tmp1385
-(apply (lambda (%%e01386 %%e11387)
-(build-source
-%%ae1382
-(cons %%x1377
-(map (lambda (%%e1388)
-(%%chi433
+%%type1362)))
+(%%chi-application445
+(lambda (%%x1387
 %%e1388
-%%r1379
-%%mr1380
-%%w1381
-%%m?1383))
-%%e11387))))
-%%tmp1385)
-((lambda (%%_1390)
+%%r1389
+%%mr1390
+%%w1391
+%%ae1392
+%%m?1393)
+((lambda (%%tmp1394)
+((lambda (%%tmp1395)
+(if %%tmp1395
+(apply (lambda (%%e01396 %%e11397)
+(build-source
+%%ae1392
+(cons %%x1387
+(map (lambda (%%e1398)
+(%%chi443
+%%e1398
+%%r1389
+%%mr1390
+%%w1391
+%%m?1393))
+%%e11397))))
+%%tmp1395)
+((lambda (%%_1400)
 (syntax-error
-(%%source-wrap379 %%e1378 %%w1381 %%ae1382)))
-%%tmp1384)))
-($syntax-dispatch %%tmp1384 '(any . each-any))))
-%%e1378)))
-(%%chi-set!436
-(lambda (%%e1391 %%r1392 %%w1393 %%ae1394 %%rib1395)
-((lambda (%%tmp1396)
-((lambda (%%tmp1397)
-(if (if %%tmp1397
-(apply (lambda (%%_1398 %%id1399 %%val1400)
-(%%id?241 %%id1399))
-%%tmp1397)
+(%%source-wrap389 %%e1388 %%w1391 %%ae1392)))
+%%tmp1394)))
+($syntax-dispatch %%tmp1394 '(any . each-any))))
+%%e1388)))
+(%%chi-set!446
+(lambda (%%e1401 %%r1402 %%w1403 %%ae1404 %%rib1405)
+((lambda (%%tmp1406)
+((lambda (%%tmp1407)
+(if (if %%tmp1407
+(apply (lambda (%%_1408 %%id1409 %%val1410)
+(%%id?251 %%id1409))
+%%tmp1407)
 #f)
-(apply (lambda (%%_1401 %%id1402 %%val1403)
-((lambda (%%n1404)
-((lambda (%%b1405)
-((lambda (%%t1406)
-(if (memv %%t1406 '(macro!))
-((lambda (%%id1407 %%val1408)
-(%%syntax-type381
-(%%chi-macro437
-(%%binding-value217
-%%b1405)
+(apply (lambda (%%_1411 %%id1412 %%val1413)
+((lambda (%%n1414)
+((lambda (%%b1415)
+((lambda (%%t1416)
+(if (memv %%t1416 '(macro!))
+((lambda (%%id1417 %%val1418)
+(%%syntax-type391
+(%%chi-macro447
+(%%binding-value227
+%%b1415)
 (list '#(syntax-object
 set!
 ((top)
@@ -8102,6 +8117,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -8287,6 +8303,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -8593,907 +8610,908 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%id1407
-%%val1408)
-%%r1392
+%%id1417
+%%val1418)
+%%r1402
 '(())
 #f
-%%rib1395)
+%%rib1405)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%r1392
+%%r1402
 '(())
 #f
-%%rib1395))
-(%%wrap378 %%id1402 %%w1393)
-(%%wrap378
-%%val1403
-%%w1393))
+%%rib1405))
+(%%wrap388 %%id1412 %%w1403)
+(%%wrap388
+%%val1413
+%%w1403))
 (values 'core
-(lambda (%%e1409
+(lambda (%%e1419
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%r1410
-%%mr1411
-%%w1412
-%%ae1413
-%%m?1414)
-((lambda (%%val1415 %%n1416)
-((lambda (%%b1417)
-((lambda (%%t1418)
-(if (memv %%t1418 '(lexical))
+%%r1420
+%%mr1421
+%%w1422
+%%ae1423
+%%m?1424)
+((lambda (%%val1425 %%n1426)
+((lambda (%%b1427)
+((lambda (%%t1428)
+(if (memv %%t1428 '(lexical))
 (build-source
-%%ae1413
-(list (build-source %%ae1413 'set!)
+%%ae1423
+(list (build-source %%ae1423 'set!)
 (build-source
-%%ae1413
-(%%binding-value217 %%b1417))
-%%val1415))
-(if (memv %%t1418 '(global))
-((lambda (%%sym1419)
+%%ae1423
+(%%binding-value227 %%b1427))
+%%val1425))
+(if (memv %%t1428 '(global))
+((lambda (%%sym1429)
 (begin
-(if (%%read-only-binding?75 %%n1416)
+(if (%%read-only-binding?75 %%n1426)
 (syntax-error
-(%%source-wrap379
-%%e1409
-%%w1412
-%%ae1413)
+(%%source-wrap389
+%%e1419
+%%w1422
+%%ae1423)
 "invalid assignment to read-only variable")
 (void))
 (build-source
-%%ae1413
-(list (build-source %%ae1413 'set!)
+%%ae1423
+(list (build-source %%ae1423 'set!)
 (build-source
-%%ae1413
-%%sym1419)
-%%val1415))))
-(%%binding-value217 %%b1417))
-(if (memv %%t1418 '(meta-variable))
-(if %%m?1414
+%%ae1423
+%%sym1429)
+%%val1425))))
+(%%binding-value227 %%b1427))
+(if (memv %%t1428 '(meta-variable))
+(if %%m?1424
 (build-source
-%%ae1413
+%%ae1423
 (list (build-source
-%%ae1413
+%%ae1423
 'set!)
 (build-source
-%%ae1413
-(%%binding-value217
-%%b1417))
-%%val1415))
-(%%displaced-lexical-error234
-(%%wrap378 %%id1402 %%w1412)))
-(if (memv %%t1418 '(displaced-lexical))
-(%%displaced-lexical-error234
-(%%wrap378 %%id1402 %%w1412))
+%%ae1423
+(%%binding-value227
+%%b1427))
+%%val1425))
+(%%displaced-lexical-error244
+(%%wrap388 %%id1412 %%w1422)))
+(if (memv %%t1428 '(displaced-lexical))
+(%%displaced-lexical-error244
+(%%wrap388 %%id1412 %%w1422))
 (syntax-error
-(%%source-wrap379
-%%e1409
-%%w1412
-%%ae1413)))))))
-(%%binding-type216 %%b1417)))
-(%%lookup236 %%n1416 %%r1410)))
-(%%chi433 %%val1403 %%r1410 %%mr1411 %%w1412 %%m?1414)
-(%%id-var-name369 %%id1402 %%w1412)))
-%%e1391
-%%w1393
-%%ae1394)))
+(%%source-wrap389
+%%e1419
+%%w1422
+%%ae1423)))))))
+(%%binding-type226 %%b1427)))
+(%%lookup246 %%n1426 %%r1420)))
+(%%chi443 %%val1413 %%r1420 %%mr1421 %%w1422 %%m?1424)
+(%%id-var-name379 %%id1412 %%w1422)))
+%%e1401
+%%w1403
+%%ae1404)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%binding-type216 %%b1405)))
-(%%lookup236 %%n1404 %%r1392)))
-(%%id-var-name369 %%id1402 %%w1393)))
-%%tmp1397)
-((lambda (%%_1420)
+(%%binding-type226 %%b1415)))
+(%%lookup246 %%n1414 %%r1402)))
+(%%id-var-name379 %%id1412 %%w1403)))
+%%tmp1407)
+((lambda (%%_1430)
 (syntax-error
-(%%source-wrap379 %%e1391 %%w1393 %%ae1394)))
-%%tmp1396)))
-($syntax-dispatch %%tmp1396 '(any any any))))
-%%e1391)))
-(%%chi-macro437
-(lambda (%%p1421 %%e1422 %%r1423 %%w1424 %%ae1425 %%rib1426)
-(letrec ((%%rebuild-macro-output1427
-(lambda (%%x1428 %%m1429)
-(if (pair? %%x1428)
-(cons (%%rebuild-macro-output1427
-(car %%x1428)
-%%m1429)
-(%%rebuild-macro-output1427
-(cdr %%x1428)
-%%m1429))
-(if (%%syntax-object?64 %%x1428)
-((lambda (%%w1430)
-((lambda (%%ms1431 %%s1432)
+(%%source-wrap389 %%e1401 %%w1403 %%ae1404)))
+%%tmp1406)))
+($syntax-dispatch %%tmp1406 '(any any any))))
+%%e1401)))
+(%%chi-macro447
+(lambda (%%p1431 %%e1432 %%r1433 %%w1434 %%ae1435 %%rib1436)
+(letrec ((%%rebuild-macro-output1437
+(lambda (%%x1438 %%m1439)
+(if (pair? %%x1438)
+(cons (%%rebuild-macro-output1437
+(car %%x1438)
+%%m1439)
+(%%rebuild-macro-output1437
+(cdr %%x1438)
+%%m1439))
+(if (%%syntax-object?64 %%x1438)
+((lambda (%%w1440)
+((lambda (%%ms1441 %%s1442)
 (%%make-syntax-object63
 (%%syntax-object-expression65
-%%x1428)
-(if (if (pair? %%ms1431)
-(eq? (car %%ms1431) #f)
+%%x1438)
+(if (if (pair? %%ms1441)
+(eq? (car %%ms1441) #f)
 #f)
-(%%make-wrap250
-(cdr %%ms1431)
-(cdr %%s1432))
-(%%make-wrap250
-(cons %%m1429 %%ms1431)
-(if %%rib1426
-(cons %%rib1426
+(%%make-wrap260
+(cdr %%ms1441)
+(cdr %%s1442))
+(%%make-wrap260
+(cons %%m1439 %%ms1441)
+(if %%rib1436
+(cons %%rib1436
 (cons 'shift
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%s1432))
+%%s1442))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(cons 'shift %%s1432))))))
-(%%wrap-marks251 %%w1430)
-(%%wrap-subst252 %%w1430)))
-(%%syntax-object-wrap66 %%x1428))
-(if (vector? %%x1428)
-((lambda (%%n1433)
-((lambda (%%v1434)
+(cons 'shift %%s1442))))))
+(%%wrap-marks261 %%w1440)
+(%%wrap-subst262 %%w1440)))
+(%%syntax-object-wrap66 %%x1438))
+(if (vector? %%x1438)
+((lambda (%%n1443)
+((lambda (%%v1444)
 ((lambda ()
-((letrec ((%%do1435
-(lambda (%%i1436)
-(if (fx= %%i1436
+((letrec ((%%do1445
+(lambda (%%i1446)
+(if (fx= %%i1446
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%n1433)
-%%v1434
+%%n1443)
+%%v1444
 (begin
 (vector-set!
-%%v1434
-%%i1436
-(%%rebuild-macro-output1427
-(vector-ref %%x1428 %%i1436)
-%%m1429))
-(%%do1435 (fx+ %%i1436 1)))))))
+%%v1444
+%%i1446
+(%%rebuild-macro-output1437
+(vector-ref %%x1438 %%i1446)
+%%m1439))
+(%%do1445 (fx+ %%i1446 1)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%do1435)
+%%do1445)
 0))))
-(make-vector %%n1433)))
-(vector-length %%x1428))
-(if (symbol? %%x1428)
+(make-vector %%n1443)))
+(vector-length %%x1438))
+(if (symbol? %%x1438)
 (syntax-error
-(%%source-wrap379
-%%e1422
-%%w1424
-%%ae1425)
+(%%source-wrap389
+%%e1432
+%%w1434
+%%ae1435)
 "encountered raw symbol "
-(symbol->string %%x1428)
+(symbol->string %%x1438)
 " in output of macro")
-%%x1428)))))))
-(%%rebuild-macro-output1427
-((lambda (%%out1437)
-(if (procedure? %%out1437)
-(%%out1437
-(lambda (%%id1438)
+%%x1438)))))))
+(%%rebuild-macro-output1437
+((lambda (%%out1447)
+(if (procedure? %%out1447)
+(%%out1447
+(lambda (%%id1448)
 (begin
-(if (not (identifier? %%id1438))
+(if (not (identifier? %%id1448))
 (syntax-error
-%%id1438
+%%id1448
 "environment argument is not an identifier")
 (void))
-(%%lookup236
-(%%id-var-name369 %%id1438 '(()))
-%%r1423))))
-%%out1437))
-(%%p1421 (%%source-wrap379
-%%e1422
-(%%anti-mark335 %%w1424)
-%%ae1425)))
+(%%lookup246
+(%%id-var-name379 %%id1448 '(()))
+%%r1433))))
+%%out1447))
+(%%p1431 (%%source-wrap389
+%%e1432
+(%%anti-mark345 %%w1434)
+%%ae1435)))
 (string #\m)))))
-(%%chi-body438
-(lambda (%%body1439
-%%outer-form1440
-%%r1441
-%%mr1442
-%%w1443
-%%m?1444)
-((lambda (%%ribcage1445)
-((lambda (%%w1446)
-((lambda (%%body1447)
+(%%chi-body448
+(lambda (%%body1449
+%%outer-form1450
+%%r1451
+%%mr1452
+%%w1453
+%%m?1454)
+((lambda (%%ribcage1455)
+((lambda (%%w1456)
+((lambda (%%body1457)
 ((lambda ()
 (call-with-values
 (lambda ()
-(%%chi-internal439
-%%ribcage1445
-%%outer-form1440
-%%body1447
-%%r1441
-%%mr1442
-%%m?1444))
-(lambda (%%r1448
-%%mr1449
-%%exprs1450
-%%ids1451
-%%vars1452
-%%vals1453
-%%inits1454)
+(%%chi-internal449
+%%ribcage1455
+%%outer-form1450
+%%body1457
+%%r1451
+%%mr1452
+%%m?1454))
+(lambda (%%r1458
+%%mr1459
+%%exprs1460
+%%ids1461
+%%vars1462
+%%vals1463
+%%inits1464)
 (begin
-(if (null? %%exprs1450)
+(if (null? %%exprs1460)
 (syntax-error
-%%outer-form1440
+%%outer-form1450
 "no expressions in body")
 (void))
-(%%build-body172
+(%%build-body182
 #f
-(reverse %%vars1452)
-(%%chi-frobs430
-(reverse %%vals1453)
-%%r1448
-%%mr1449
-%%m?1444)
-(%%build-sequence170
+(reverse %%vars1462)
+(%%chi-frobs440
+(reverse %%vals1463)
+%%r1458
+%%mr1459
+%%m?1454)
+(%%build-sequence180
 #f
-(%%chi-frobs430
-(append %%inits1454 %%exprs1450)
-%%r1448
-%%mr1449
-%%m?1444)))))))))
-(map (lambda (%%x1455)
-(%%make-frob411 (%%wrap378 %%x1455 %%w1446) #f))
-%%body1439)))
-(%%make-wrap250
-(%%wrap-marks251 %%w1443)
-(cons %%ribcage1445 (%%wrap-subst252 %%w1443)))))
-(%%make-ribcage300 '() '() '()))))
-(%%chi-internal439
-(lambda (%%ribcage1456
-%%source-exp1457
-%%body1458
-%%r1459
-%%mr1460
-%%m?1461)
-(letrec ((%%return1462
-(lambda (%%r1463
-%%mr1464
-%%exprs1465
-%%ids1466
-%%vars1467
-%%vals1468
-%%inits1469)
+(%%chi-frobs440
+(append %%inits1464 %%exprs1460)
+%%r1458
+%%mr1459
+%%m?1454)))))))))
+(map (lambda (%%x1465)
+(%%make-frob421 (%%wrap388 %%x1465 %%w1456) #f))
+%%body1449)))
+(%%make-wrap260
+(%%wrap-marks261 %%w1453)
+(cons %%ribcage1455 (%%wrap-subst262 %%w1453)))))
+(%%make-ribcage310 '() '() '()))))
+(%%chi-internal449
+(lambda (%%ribcage1466
+%%source-exp1467
+%%body1468
+%%r1469
+%%mr1470
+%%m?1471)
+(letrec ((%%return1472
+(lambda (%%r1473
+%%mr1474
+%%exprs1475
+%%ids1476
+%%vars1477
+%%vals1478
+%%inits1479)
 (begin
-(%%check-defined-ids420
-%%source-exp1457
-%%ids1466)
-(values %%r1463
-%%mr1464
-%%exprs1465
-%%ids1466
-%%vars1467
-%%vals1468
-%%inits1469)))))
-((letrec ((%%parse1470
-(lambda (%%body1471
-%%r1472
-%%mr1473
-%%ids1474
-%%vars1475
-%%vals1476
-%%inits1477
-%%meta-seen?1478)
-(if (null? %%body1471)
-(%%return1462
-%%r1472
-%%mr1473
-%%body1471
-%%ids1474
-%%vars1475
-%%vals1476
-%%inits1477)
-((lambda (%%fr1479)
-((lambda (%%e1480)
-((lambda (%%meta?1481)
+(%%check-defined-ids430
+%%source-exp1467
+%%ids1476)
+(values %%r1473
+%%mr1474
+%%exprs1475
+%%ids1476
+%%vars1477
+%%vals1478
+%%inits1479)))))
+((letrec ((%%parse1480
+(lambda (%%body1481
+%%r1482
+%%mr1483
+%%ids1484
+%%vars1485
+%%vals1486
+%%inits1487
+%%meta-seen?1488)
+(if (null? %%body1481)
+(%%return1472
+%%r1482
+%%mr1483
+%%body1481
+%%ids1484
+%%vars1485
+%%vals1486
+%%inits1487)
+((lambda (%%fr1489)
+((lambda (%%e1490)
+((lambda (%%meta?1491)
 ((lambda ()
 (call-with-values
 (lambda ()
-(%%syntax-type381
-%%e1480
-%%r1472
+(%%syntax-type391
+%%e1490
+%%r1482
 '(())
 #f
-%%ribcage1456))
-(lambda (%%type1482
-%%value1483
-%%e1484
-%%w1485
-%%ae1486)
-((lambda (%%t1487)
-(if (memv %%t1487
+%%ribcage1466))
+(lambda (%%type1492
+%%value1493
+%%e1494
+%%w1495
+%%ae1496)
+((lambda (%%t1497)
+(if (memv %%t1497
 '(define-form))
 (call-with-values
 (lambda ()
-(%%parse-define445
-%%e1484
-%%w1485
-%%ae1486))
-(lambda (%%id1488
+(%%parse-define455
+%%e1494
+%%w1495
+%%ae1496))
+(lambda (%%id1498
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%rhs1489
-%%w1490)
-((lambda (%%id1491 %%label1492)
-(if %%meta?1481
-((lambda (%%sym1493)
+%%rhs1499
+%%w1500)
+((lambda (%%id1501 %%label1502)
+(if %%meta?1491
+((lambda (%%sym1503)
 (begin
-(%%extend-ribcage!345
-%%ribcage1456
-%%id1491
-%%label1492)
-((lambda (%%mr1494)
-(begin
-(%%define-top-level-value-hook71
-%%sym1493
-(%%top-level-eval-hook69
-(%%chi433
-%%rhs1489
-%%mr1494
-%%mr1494
-%%w1490
-#t)))
-(%%parse1470
-(cdr %%body1471)
-%%r1472
-%%mr1494
-(cons %%id1491 %%ids1474)
-%%vars1475
-%%vals1476
-%%inits1477
-#f)))
-(%%extend-env230
-%%label1492
-(cons 'meta-variable %%sym1493)
-%%mr1473))))
-(%%generate-id78
-((lambda (%%x1495)
-((lambda (%%e1496)
-(if (annotation? %%e1496)
-(annotation-expression %%e1496)
-%%e1496))
-(if (%%syntax-object?64 %%x1495)
-(%%syntax-object-expression65 %%x1495)
-%%x1495)))
-%%id1491)))
-((lambda (%%var1497)
-(begin
-(%%extend-ribcage!345
-%%ribcage1456
-%%id1491
-%%label1492)
-(%%parse1470
-(cdr %%body1471)
-(%%extend-env230
-%%label1492
-(cons 'lexical %%var1497)
-%%r1472)
-%%mr1473
-(cons %%id1491 %%ids1474)
-(cons %%var1497 %%vars1475)
-(cons (%%make-frob411
-(%%wrap378 %%rhs1489 %%w1490)
-%%meta?1481)
-%%vals1476)
-%%inits1477
-#f)))
-(%%gen-var458 %%id1491))))
-(%%wrap378 %%id1488 %%w1490)
-(%%gen-label297))))
-(if (memv %%t1487 '(define-syntax-form))
-(call-with-values
-(lambda ()
-(%%parse-define-syntax446 %%e1484 %%w1485 %%ae1486))
-(lambda (%%id1498 %%rhs1499 %%w1500)
-((lambda (%%id1501 %%label1502 %%exp1503)
-(begin
-(%%extend-ribcage!345
-%%ribcage1456
+(%%extend-ribcage!355
+%%ribcage1466
 %%id1501
 %%label1502)
-((lambda (%%b1504)
-(%%parse1470
-(cdr %%body1471)
-(%%extend-env230 %%label1502 %%b1504 %%r1472)
-(%%extend-env230
+((lambda (%%mr1504)
+(begin
+(%%define-top-level-value-hook71
+%%sym1503
+(%%top-level-eval-hook69
+(%%chi443
+%%rhs1499
+%%mr1504
+%%mr1504
+%%w1500
+#t)))
+(%%parse1480
+(cdr %%body1481)
+%%r1482
+%%mr1504
+(cons %%id1501 %%ids1484)
+%%vars1485
+%%vals1486
+%%inits1487
+#f)))
+(%%extend-env240
 %%label1502
-%%b1504
-%%mr1473)
-(cons %%id1501 %%ids1474)
-%%vars1475
-%%vals1476
-%%inits1477
+(cons 'meta-variable %%sym1503)
+%%mr1483))))
+(%%generate-id78
+((lambda (%%x1505)
+((lambda (%%e1506)
+(if (annotation? %%e1506)
+(annotation-expression %%e1506)
+%%e1506))
+(if (%%syntax-object?64 %%x1505)
+(%%syntax-object-expression65 %%x1505)
+%%x1505)))
+%%id1501)))
+((lambda (%%var1507)
+(begin
+(%%extend-ribcage!355
+%%ribcage1466
+%%id1501
+%%label1502)
+(%%parse1480
+(cdr %%body1481)
+(%%extend-env240
+%%label1502
+(cons 'lexical %%var1507)
+%%r1482)
+%%mr1483
+(cons %%id1501 %%ids1484)
+(cons %%var1507 %%vars1485)
+(cons (%%make-frob421
+(%%wrap388 %%rhs1499 %%w1500)
+%%meta?1491)
+%%vals1486)
+%%inits1487
+#f)))
+(%%gen-var468 %%id1501))))
+(%%wrap388 %%id1498 %%w1500)
+(%%gen-label307))))
+(if (memv %%t1497 '(define-syntax-form))
+(call-with-values
+(lambda ()
+(%%parse-define-syntax456 %%e1494 %%w1495 %%ae1496))
+(lambda (%%id1508 %%rhs1509 %%w1510)
+((lambda (%%id1511 %%label1512 %%exp1513)
+(begin
+(%%extend-ribcage!355
+%%ribcage1466
+%%id1511
+%%label1512)
+((lambda (%%b1514)
+(%%parse1480
+(cdr %%body1481)
+(%%extend-env240 %%label1512 %%b1514 %%r1482)
+(%%extend-env240
+%%label1512
+%%b1514
+%%mr1483)
+(cons %%id1511 %%ids1484)
+%%vars1485
+%%vals1486
+%%inits1487
 #f))
-(%%defer-or-eval-transformer238
+(%%defer-or-eval-transformer248
 %%local-eval-hook70
-%%exp1503))))
-(%%wrap378 %%id1498 %%w1500)
-(%%gen-label297)
-(%%chi433 %%rhs1499 %%mr1473 %%mr1473 %%w1500 #t))))
-(if (memv %%t1487 '($module-form))
-((lambda (%%*ribcage1505)
-((lambda (%%*w1506)
+%%exp1513))))
+(%%wrap388 %%id1508 %%w1510)
+(%%gen-label307)
+(%%chi443 %%rhs1509 %%mr1483 %%mr1483 %%w1510 #t))))
+(if (memv %%t1497 '($module-form))
+((lambda (%%*ribcage1515)
+((lambda (%%*w1516)
 ((lambda ()
 (call-with-values
 (lambda ()
-(%%parse-module443
-%%e1484
-%%w1485
-%%ae1486
-%%*w1506))
-(lambda (%%orig1507
-%%id1508
-%%exports1509
-%%forms1510)
+(%%parse-module453
+%%e1494
+%%w1495
+%%ae1496
+%%*w1516))
+(lambda (%%orig1517
+%%id1518
+%%exports1519
+%%forms1520)
 (call-with-values
 (lambda ()
-(%%chi-internal439
-%%*ribcage1505
-%%orig1507
-(map (lambda (%%d1511)
-(%%make-frob411
-%%d1511
-%%meta?1481))
-%%forms1510)
-%%r1472
-%%mr1473
-%%m?1461))
-(lambda (%%r1512
-%%mr1513
-%%*body1514
-%%*ids1515
-%%*vars1516
-%%*vals1517
-%%*inits1518)
+(%%chi-internal449
+%%*ribcage1515
+%%orig1517
+(map (lambda (%%d1521)
+(%%make-frob421
+%%d1521
+%%meta?1491))
+%%forms1520)
+%%r1482
+%%mr1483
+%%m?1471))
+(lambda (%%r1522
+%%mr1523
+%%*body1524
+%%*ids1525
+%%*vars1526
+%%*vals1527
+%%*inits1528)
 (begin
-(%%check-module-exports419
-%%source-exp1457
-(%%flatten-exports385
-%%exports1509)
-%%*ids1515)
-((lambda (%%iface1519
-%%vars1520
-%%vals1521
-%%inits1522
-%%label1523)
+(%%check-module-exports429
+%%source-exp1467
+(%%flatten-exports395
+%%exports1519)
+%%*ids1525)
+((lambda (%%iface1529
+%%vars1530
+%%vals1531
+%%inits1532
+%%label1533)
 (begin
-(%%extend-ribcage!345
-%%ribcage1456
-%%id1508
-%%label1523)
-((lambda (%%b1524)
-(%%parse1470
-(cdr %%body1471)
-(%%extend-env230
-%%label1523
-%%b1524
-%%r1512)
-(%%extend-env230
-%%label1523
-%%b1524
-%%mr1513)
-(cons %%id1508 %%ids1474)
-%%vars1520
-%%vals1521
-%%inits1522
+(%%extend-ribcage!355
+%%ribcage1466
+%%id1518
+%%label1533)
+((lambda (%%b1534)
+(%%parse1480
+(cdr %%body1481)
+(%%extend-env240
+%%label1533
+%%b1534
+%%r1522)
+(%%extend-env240
+%%label1533
+%%b1534
+%%mr1523)
+(cons %%id1518 %%ids1484)
+%%vars1530
+%%vals1531
+%%inits1532
 #f))
-(cons '$module %%iface1519))))
-(%%make-resolved-interface395
-%%id1508
-%%exports1509
+(cons '$module %%iface1529))))
+(%%make-resolved-interface405
+%%id1518
+%%exports1519
 #f)
-(append %%*vars1516 %%vars1475)
-(append %%*vals1517 %%vals1476)
-(append %%inits1477
-%%*inits1518
-%%*body1514)
-(%%gen-label297))))))))))
-(%%make-wrap250
-(%%wrap-marks251 %%w1485)
-(cons %%*ribcage1505
-(%%wrap-subst252 %%w1485)))))
-(%%make-ribcage300 '() '() '()))
-(if (memv %%t1487 '($import-form))
+(append %%*vars1526 %%vars1485)
+(append %%*vals1527 %%vals1486)
+(append %%inits1487
+%%*inits1528
+%%*body1524)
+(%%gen-label307))))))))))
+(%%make-wrap260
+(%%wrap-marks261 %%w1495)
+(cons %%*ribcage1515
+(%%wrap-subst262 %%w1495)))))
+(%%make-ribcage310 '() '() '()))
+(if (memv %%t1497 '($import-form))
 (call-with-values
 (lambda ()
-(%%parse-import444 %%e1484 %%w1485 %%ae1486))
-(lambda (%%orig1525 %%only?1526 %%mid1527)
-((lambda (%%mlabel1528)
-((lambda (%%binding1529)
-((lambda (%%t1530)
-(if (memv %%t1530 '($module))
-((lambda (%%iface1531)
-((lambda (%%import-iface1532)
+(%%parse-import454 %%e1494 %%w1495 %%ae1496))
+(lambda (%%orig1535 %%only?1536 %%mid1537)
+((lambda (%%mlabel1538)
+((lambda (%%binding1539)
+((lambda (%%t1540)
+(if (memv %%t1540 '($module))
+((lambda (%%iface1541)
+((lambda (%%import-iface1542)
 ((lambda ()
 (begin
-(if %%only?1526
-(%%extend-ribcage-barrier!347
-%%ribcage1456
-%%mid1527)
+(if %%only?1536
+(%%extend-ribcage-barrier!357
+%%ribcage1466
+%%mid1537)
 (void))
-(%%do-import!442
-%%import-iface1532
-%%ribcage1456)
-(%%parse1470
-(cdr %%body1471)
-%%r1472
-%%mr1473
-(cons %%import-iface1532
-%%ids1474)
-%%vars1475
-%%vals1476
-%%inits1477
+(%%do-import!452
+%%import-iface1542
+%%ribcage1466)
+(%%parse1480
+(cdr %%body1481)
+%%r1482
+%%mr1483
+(cons %%import-iface1542
+%%ids1484)
+%%vars1485
+%%vals1486
+%%inits1487
 #f)))))
-(%%make-import-interface314
-%%iface1531
-(%%import-mark-delta440
-%%mid1527
-%%iface1531))))
-(%%binding-value217
-%%binding1529))
-(if (memv %%t1530
+(%%make-import-interface324
+%%iface1541
+(%%import-mark-delta450
+%%mid1537
+%%iface1541))))
+(%%binding-value227
+%%binding1539))
+(if (memv %%t1540
 '(displaced-lexical))
-(%%displaced-lexical-error234
-%%mid1527)
+(%%displaced-lexical-error244
+%%mid1537)
 (syntax-error
-%%mid1527
+%%mid1537
 "unknown module"))))
-(%%binding-type216 %%binding1529)))
-(%%lookup236 %%mlabel1528 %%r1472)))
-(%%id-var-name369 %%mid1527 '(())))))
-(if (memv %%t1487 '(alias-form))
+(%%binding-type226 %%binding1539)))
+(%%lookup246 %%mlabel1538 %%r1482)))
+(%%id-var-name379 %%mid1537 '(())))))
+(if (memv %%t1497 '(alias-form))
 (call-with-values
 (lambda ()
-(%%parse-alias449
-%%e1484
-%%w1485
-%%ae1486))
-(lambda (%%new-id1533 %%old-id1534)
-((lambda (%%new-id1535)
+(%%parse-alias459
+%%e1494
+%%w1495
+%%ae1496))
+(lambda (%%new-id1543 %%old-id1544)
+((lambda (%%new-id1545)
 (begin
-(%%extend-ribcage!345
-%%ribcage1456
-%%new-id1535
-(%%id-var-name-loc368
-%%old-id1534
-%%w1485))
-(%%parse1470
-(cdr %%body1471)
-%%r1472
-%%mr1473
-(cons %%new-id1535 %%ids1474)
-%%vars1475
-%%vals1476
-%%inits1477
+(%%extend-ribcage!355
+%%ribcage1466
+%%new-id1545
+(%%id-var-name-loc378
+%%old-id1544
+%%w1495))
+(%%parse1480
+(cdr %%body1481)
+%%r1482
+%%mr1483
+(cons %%new-id1545 %%ids1484)
+%%vars1485
+%%vals1486
+%%inits1487
 #f)))
-(%%wrap378 %%new-id1533 %%w1485))))
-(if (memv %%t1487 '(begin-form))
-(%%parse1470
-((letrec ((%%f1536 (lambda (%%forms1537)
-(if (null? %%forms1537)
-(cdr %%body1471)
-(cons (%%make-frob411
+(%%wrap388 %%new-id1543 %%w1495))))
+(if (memv %%t1497 '(begin-form))
+(%%parse1480
+((letrec ((%%f1546 (lambda (%%forms1547)
+(if (null? %%forms1547)
+(cdr %%body1481)
+(cons (%%make-frob421
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(%%wrap378 (car %%forms1537) %%w1485)
-%%meta?1481)
-(%%f1536 (cdr %%forms1537)))))))
+(%%wrap388 (car %%forms1547) %%w1495)
+%%meta?1491)
+(%%f1546 (cdr %%forms1547)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f1536)
-(%%parse-begin450
-%%e1484
-%%w1485
-%%ae1486
+%%f1546)
+(%%parse-begin460
+%%e1494
+%%w1495
+%%ae1496
 #t))
-%%r1472
-%%mr1473
-%%ids1474
-%%vars1475
-%%vals1476
-%%inits1477
+%%r1482
+%%mr1483
+%%ids1484
+%%vars1485
+%%vals1486
+%%inits1487
 #f)
-(if (memv %%t1487 '(eval-when-form))
+(if (memv %%t1497 '(eval-when-form))
 (call-with-values
 (lambda ()
-(%%parse-eval-when448
-%%e1484
-%%w1485
-%%ae1486))
-(lambda (%%when-list1538
-%%forms1539)
-(%%parse1470
-(if (memq 'eval %%when-list1538)
-((letrec ((%%f1540 (lambda (%%forms1541)
+(%%parse-eval-when458
+%%e1494
+%%w1495
+%%ae1496))
+(lambda (%%when-list1548
+%%forms1549)
+(%%parse1480
+(if (memq 'eval %%when-list1548)
+((letrec ((%%f1550 (lambda (%%forms1551)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if (null? %%forms1541)
-(cdr %%body1471)
-(cons (%%make-frob411
-(%%wrap378 (car %%forms1541) %%w1485)
-%%meta?1481)
-(%%f1540 (cdr %%forms1541)))))))
+(if (null? %%forms1551)
+(cdr %%body1481)
+(cons (%%make-frob421
+(%%wrap388 (car %%forms1551) %%w1495)
+%%meta?1491)
+(%%f1550 (cdr %%forms1551)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f1540)
-%%forms1539)
-(cdr %%body1471))
-%%r1472
-%%mr1473
-%%ids1474
-%%vars1475
-%%vals1476
-%%inits1477
+%%f1550)
+%%forms1549)
+(cdr %%body1481))
+%%r1482
+%%mr1483
+%%ids1484
+%%vars1485
+%%vals1486
+%%inits1487
 #f)))
-(if (memv %%t1487 '(meta-form))
-(%%parse1470
-(cons (%%make-frob411
-(%%wrap378
-(%%parse-meta447
-%%e1484
-%%w1485
-%%ae1486)
-%%w1485)
+(if (memv %%t1497 '(meta-form))
+(%%parse1480
+(cons (%%make-frob421
+(%%wrap388
+(%%parse-meta457
+%%e1494
+%%w1495
+%%ae1496)
+%%w1495)
 #t)
-(cdr %%body1471))
-%%r1472
-%%mr1473
-%%ids1474
-%%vars1475
-%%vals1476
-%%inits1477
+(cdr %%body1481))
+%%r1482
+%%mr1483
+%%ids1484
+%%vars1485
+%%vals1486
+%%inits1487
 #t)
-(if (memv %%t1487
+(if (memv %%t1497
 '(local-syntax-form))
 (call-with-values
 (lambda ()
-(%%chi-local-syntax452
-%%value1483
-%%e1484
-%%r1472
-%%mr1473
-%%w1485
-%%ae1486))
-(lambda (%%forms1542
-%%r1543
-%%mr1544
-%%w1545
-%%ae1546)
-(%%parse1470
-((letrec ((%%f1547 (lambda (%%forms1548)
+(%%chi-local-syntax462
+%%value1493
+%%e1494
+%%r1482
+%%mr1483
+%%w1495
+%%ae1496))
+(lambda (%%forms1552
+%%r1553
+%%mr1554
+%%w1555
+%%ae1556)
+(%%parse1480
+((letrec ((%%f1557 (lambda (%%forms1558)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if (null? %%forms1548)
-(cdr %%body1471)
-(cons (%%make-frob411
-(%%wrap378
-(car %%forms1548)
-%%w1545)
-%%meta?1481)
-(%%f1547 (cdr %%forms1548)))))))
-%%f1547)
-%%forms1542)
-%%r1543
-%%mr1544
-%%ids1474
-%%vars1475
-%%vals1476
-%%inits1477
+(if (null? %%forms1558)
+(cdr %%body1481)
+(cons (%%make-frob421
+(%%wrap388
+(car %%forms1558)
+%%w1555)
+%%meta?1491)
+(%%f1557 (cdr %%forms1558)))))))
+%%f1557)
+%%forms1552)
+%%r1553
+%%mr1554
+%%ids1484
+%%vars1485
+%%vals1486
+%%inits1487
 #f)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (begin
-(if %%meta-seen?1478
+(if %%meta-seen?1488
 (syntax-error
-(%%source-wrap379
-%%e1484
-%%w1485
-%%ae1486)
+(%%source-wrap389
+%%e1494
+%%w1495
+%%ae1496)
 "invalid meta definition")
 (void))
-((letrec ((%%f1549 (lambda (%%body1550)
+((letrec ((%%f1559 (lambda (%%body1560)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if ((lambda (%%t1551)
-(if %%t1551
-%%t1551
-(not (%%frob-meta?414
-(car %%body1550)))))
-(null? %%body1550))
-(%%return1462
-%%r1472
-%%mr1473
-%%body1550
-%%ids1474
-%%vars1475
-%%vals1476
-%%inits1477)
+(if ((lambda (%%t1561)
+(if %%t1561
+%%t1561
+(not (%%frob-meta?424
+(car %%body1560)))))
+(null? %%body1560))
+(%%return1472
+%%r1482
+%%mr1483
+%%body1560
+%%ids1484
+%%vars1485
+%%vals1486
+%%inits1487)
 (begin
 (%%top-level-eval-hook69
-(%%chi-meta-frob431
-(car %%body1550)
-%%mr1473))
-(%%f1549 (cdr %%body1550)))))))
-%%f1549)
+(%%chi-meta-frob441
+(car %%body1560)
+%%mr1483))
+(%%f1559 (cdr %%body1560)))))))
+%%f1559)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(cons (%%make-frob411
-(%%source-wrap379
-%%e1484
-%%w1485
-%%ae1486)
-%%meta?1481)
-(cdr %%body1471))))))))))))))
+(cons (%%make-frob421
+(%%source-wrap389
+%%e1494
+%%w1495
+%%ae1496)
+%%meta?1491)
+(cdr %%body1481))))))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%type1482))))))
-(%%frob-meta?414 %%fr1479)))
-(%%frob-e413 %%fr1479)))
-(car %%body1471))))))
-%%parse1470)
-%%body1458
-%%r1459
-%%mr1460
+%%type1492))))))
+(%%frob-meta?424 %%fr1489)))
+(%%frob-e423 %%fr1489)))
+(car %%body1481))))))
+%%parse1480)
+%%body1468
+%%r1469
+%%mr1470
 '()
 '()
 '()
 '()
 #f))))
-(%%import-mark-delta440
-(lambda (%%mid1552 %%iface1553)
-(%%diff-marks361
-(%%id-marks247 %%mid1552)
-(%%interface-marks388 %%iface1553))))
-(%%lookup-import-label441
-(lambda (%%id1554)
-((lambda (%%label1555)
+(%%import-mark-delta450
+(lambda (%%mid1562 %%iface1563)
+(%%diff-marks371
+(%%id-marks257 %%mid1562)
+(%%interface-marks398 %%iface1563))))
+(%%lookup-import-label451
+(lambda (%%id1564)
+((lambda (%%label1565)
 (begin
-(if (not %%label1555)
+(if (not %%label1565)
 (syntax-error
-%%id1554
+%%id1564
 "exported identifier not visible")
 (void))
-%%label1555))
-(%%id-var-name-loc368 %%id1554 '(())))))
-(%%do-import!442
-(lambda (%%import-iface1556 %%ribcage1557)
-((lambda (%%ie1558)
-(if (<= (vector-length %%ie1558) 20)
-((lambda (%%new-marks1559)
-(%%vfor-each423
-(lambda (%%id1560)
-(%%import-extend-ribcage!346
-%%ribcage1557
-%%new-marks1559
-%%id1560
-(%%lookup-import-label441 %%id1560)))
-%%ie1558))
-(%%import-interface-new-marks317 %%import-iface1556))
-(%%extend-ribcage-subst!349
-%%ribcage1557
-%%import-iface1556)))
-(%%interface-exports389
-(%%import-interface-interface316 %%import-iface1556)))))
-(%%parse-module443
-(lambda (%%e1561 %%w1562 %%ae1563 %%*w1564)
-(letrec ((%%listify1565
-(lambda (%%exports1566)
-(if (null? %%exports1566)
+%%label1565))
+(%%id-var-name-loc378 %%id1564 '(())))))
+(%%do-import!452
+(lambda (%%import-iface1566 %%ribcage1567)
+((lambda (%%ie1568)
+(if (<= (vector-length %%ie1568) 20)
+((lambda (%%new-marks1569)
+(%%vfor-each433
+(lambda (%%id1570)
+(%%import-extend-ribcage!356
+%%ribcage1567
+%%new-marks1569
+%%id1570
+(%%lookup-import-label451 %%id1570)))
+%%ie1568))
+(%%import-interface-new-marks327 %%import-iface1566))
+(%%extend-ribcage-subst!359
+%%ribcage1567
+%%import-iface1566)))
+(%%interface-exports399
+(%%import-interface-interface326 %%import-iface1566)))))
+(%%parse-module453
+(lambda (%%e1571 %%w1572 %%ae1573 %%*w1574)
+(letrec ((%%listify1575
+(lambda (%%exports1576)
+(if (null? %%exports1576)
 '()
-(cons ((lambda (%%tmp1567)
-((lambda (%%tmp1568)
-(if %%tmp1568
-(apply (lambda (%%ex1569)
-(%%listify1565
-%%ex1569))
-%%tmp1568)
-((lambda (%%x1571)
-(if (%%id?241 %%x1571)
-(%%wrap378
-%%x1571
-%%*w1564)
+(cons ((lambda (%%tmp1577)
+((lambda (%%tmp1578)
+(if %%tmp1578
+(apply (lambda (%%ex1579)
+(%%listify1575
+%%ex1579))
+%%tmp1578)
+((lambda (%%x1581)
+(if (%%id?251 %%x1581)
+(%%wrap388
+%%x1581
+%%*w1574)
 (syntax-error
-(%%source-wrap379
-%%e1561
-%%w1562
-%%ae1563)
+(%%source-wrap389
+%%e1571
+%%w1572
+%%ae1573)
 "invalid exports list in")))
-%%tmp1567)))
+%%tmp1577)))
 ($syntax-dispatch
-%%tmp1567
+%%tmp1577
 'each-any)))
-(car %%exports1566))
-(%%listify1565 (cdr %%exports1566)))))))
-((lambda (%%tmp1572)
-((lambda (%%tmp1573)
-(if (if %%tmp1573
-(apply (lambda (%%_1574
-%%orig1575
-%%mid1576
-%%ex1577
-%%form1578)
-(%%id?241 %%mid1576))
-%%tmp1573)
+(car %%exports1576))
+(%%listify1575 (cdr %%exports1576)))))))
+((lambda (%%tmp1582)
+((lambda (%%tmp1583)
+(if (if %%tmp1583
+(apply (lambda (%%_1584
+%%orig1585
+%%mid1586
+%%ex1587
+%%form1588)
+(%%id?251 %%mid1586))
+%%tmp1583)
 #f)
-(apply (lambda (%%_1579
-%%orig1580
-%%mid1581
-%%ex1582
-%%form1583)
-(values %%orig1580
-(%%wrap378 %%mid1581 %%w1562)
-(%%listify1565 %%ex1582)
-(map (lambda (%%x1585)
-(%%wrap378
-%%x1585
-%%*w1564))
-%%form1583)))
-%%tmp1573)
-((lambda (%%_1587)
+(apply (lambda (%%_1589
+%%orig1590
+%%mid1591
+%%ex1592
+%%form1593)
+(values %%orig1590
+(%%wrap388 %%mid1591 %%w1572)
+(%%listify1575 %%ex1592)
+(map (lambda (%%x1595)
+(%%wrap388
+%%x1595
+%%*w1574))
+%%form1593)))
+%%tmp1583)
+((lambda (%%_1597)
 (syntax-error
-(%%source-wrap379 %%e1561 %%w1562 %%ae1563)))
-%%tmp1572)))
+(%%source-wrap389 %%e1571 %%w1572 %%ae1573)))
+%%tmp1582)))
 ($syntax-dispatch
-%%tmp1572
+%%tmp1582
 '(any any any each-any . each-any))))
-%%e1561))))
-(%%parse-import444
-(lambda (%%e1588 %%w1589 %%ae1590)
-((lambda (%%tmp1591)
-((lambda (%%tmp1592)
-(if (if %%tmp1592
-(apply (lambda (%%_1593 %%orig1594 %%mid1595)
-(%%id?241 %%mid1595))
-%%tmp1592)
-#f)
-(apply (lambda (%%_1596 %%orig1597 %%mid1598)
-(values %%orig1597
-#t
-(%%wrap378 %%mid1598 %%w1589)))
-%%tmp1592)
-((lambda (%%tmp1599)
-(if (if %%tmp1599
-(apply (lambda (%%_1600
-%%orig1601
-%%mid1602)
-(%%id?241 %%mid1602))
-%%tmp1599)
-#f)
+%%e1571))))
+(%%parse-import454
+(lambda (%%e1598 %%w1599 %%ae1600)
+((lambda (%%tmp1601)
+((lambda (%%tmp1602)
+(if (if %%tmp1602
 (apply (lambda (%%_1603 %%orig1604 %%mid1605)
-(values %%orig1604
+(%%id?251 %%mid1605))
+%%tmp1602)
+#f)
+(apply (lambda (%%_1606 %%orig1607 %%mid1608)
+(values %%orig1607
+#t
+(%%wrap388 %%mid1608 %%w1599)))
+%%tmp1602)
+((lambda (%%tmp1609)
+(if (if %%tmp1609
+(apply (lambda (%%_1610
+%%orig1611
+%%mid1612)
+(%%id?251 %%mid1612))
+%%tmp1609)
+#f)
+(apply (lambda (%%_1613 %%orig1614 %%mid1615)
+(values %%orig1614
 #f
-(%%wrap378
-%%mid1605
-%%w1589)))
-%%tmp1599)
-((lambda (%%_1606)
+(%%wrap388
+%%mid1615
+%%w1599)))
+%%tmp1609)
+((lambda (%%_1616)
 (syntax-error
-(%%source-wrap379
-%%e1588
-%%w1589
-%%ae1590)))
-%%tmp1591)))
+(%%source-wrap389
+%%e1598
+%%w1599
+%%ae1600)))
+%%tmp1601)))
 ($syntax-dispatch
-%%tmp1591
+%%tmp1601
 '(any any #(atom #f) any)))))
-($syntax-dispatch %%tmp1591 '(any any #(atom #t) any))))
-%%e1588)))
-(%%parse-define445
-(lambda (%%e1607 %%w1608 %%ae1609)
-((lambda (%%tmp1610)
-((lambda (%%tmp1611)
-(if (if %%tmp1611
-(apply (lambda (%%_1612 %%name1613 %%val1614)
-(%%id?241 %%name1613))
-%%tmp1611)
+($syntax-dispatch %%tmp1601 '(any any #(atom #t) any))))
+%%e1598)))
+(%%parse-define455
+(lambda (%%e1617 %%w1618 %%ae1619)
+((lambda (%%tmp1620)
+((lambda (%%tmp1621)
+(if (if %%tmp1621
+(apply (lambda (%%_1622 %%name1623 %%val1624)
+(%%id?251 %%name1623))
+%%tmp1621)
 #f)
-(apply (lambda (%%_1615 %%name1616 %%val1617)
-(values %%name1616 %%val1617 %%w1608))
-%%tmp1611)
-((lambda (%%tmp1618)
-(if (if %%tmp1618
-(apply (lambda (%%_1619
-%%name1620
-%%args1621
-%%e11622
-%%e21623)
-(if (%%id?241 %%name1620)
-(%%valid-bound-ids?374
-(%%lambda-var-list459
-%%args1621))
+(apply (lambda (%%_1625 %%name1626 %%val1627)
+(values %%name1626 %%val1627 %%w1618))
+%%tmp1621)
+((lambda (%%tmp1628)
+(if (if %%tmp1628
+(apply (lambda (%%_1629
+%%name1630
+%%args1631
+%%e11632
+%%e21633)
+(if (%%id?251 %%name1630)
+(%%valid-bound-ids?384
+(%%lambda-var-list469
+%%args1631))
 #f))
-%%tmp1618)
+%%tmp1628)
 #f)
-(apply (lambda (%%_1624
-%%name1625
-%%args1626
-%%e11627
-%%e21628)
-(values (%%wrap378
-%%name1625
-%%w1608)
+(apply (lambda (%%_1634
+%%name1635
+%%args1636
+%%e11637
+%%e21638)
+(values (%%wrap388
+%%name1635
+%%w1618)
 (cons '#(syntax-object
 lambda
 ((top)
@@ -9707,6 +9725,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -9892,6 +9911,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -10198,25 +10218,26 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-(%%wrap378
-(cons %%args1626 (cons %%e11627 %%e21628))
-%%w1608))
+(%%wrap388
+(cons %%args1636 (cons %%e11637 %%e21638))
+%%w1618))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 '(())))
-%%tmp1618)
-((lambda (%%tmp1630)
-(if (if %%tmp1630
-(apply (lambda (%%_1631
-%%name1632)
-(%%id?241 %%name1632))
-%%tmp1630)
+%%tmp1628)
+((lambda (%%tmp1640)
+(if (if %%tmp1640
+(apply (lambda (%%_1641
+%%name1642)
+(%%id?251 %%name1642))
+%%tmp1640)
 #f)
-(apply (lambda (%%_1633 %%name1634)
-(values (%%wrap378
-%%name1634
-%%w1608)
+(apply (lambda (%%_1643 %%name1644)
+(values (%%wrap388
+%%name1644
+%%w1618)
 '#(syntax-object
 (void)
 ((top)
@@ -10434,6 +10455,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -10619,6 +10641,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -10925,45 +10948,46 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
 '(())))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp1630)
-((lambda (%%_1635)
-(syntax-error
-(%%source-wrap379
-%%e1607
-%%w1608
-%%ae1609)))
-%%tmp1610)))
-($syntax-dispatch %%tmp1610 '(any any)))))
-($syntax-dispatch
-%%tmp1610
-'(any (any . any) any . each-any)))))
-($syntax-dispatch %%tmp1610 '(any any any))))
-%%e1607)))
-(%%parse-define-syntax446
-(lambda (%%e1636 %%w1637 %%ae1638)
-((lambda (%%tmp1639)
-((lambda (%%tmp1640)
-(if (if %%tmp1640
-(apply (lambda (%%_1641
-%%name1642
-%%id1643
-%%e11644
-%%e21645)
-(if (%%id?241 %%name1642)
-(%%id?241 %%id1643)
-#f))
 %%tmp1640)
+((lambda (%%_1645)
+(syntax-error
+(%%source-wrap389
+%%e1617
+%%w1618
+%%ae1619)))
+%%tmp1620)))
+($syntax-dispatch %%tmp1620 '(any any)))))
+($syntax-dispatch
+%%tmp1620
+'(any (any . any) any . each-any)))))
+($syntax-dispatch %%tmp1620 '(any any any))))
+%%e1617)))
+(%%parse-define-syntax456
+(lambda (%%e1646 %%w1647 %%ae1648)
+((lambda (%%tmp1649)
+((lambda (%%tmp1650)
+(if (if %%tmp1650
+(apply (lambda (%%_1651
+%%name1652
+%%id1653
+%%e11654
+%%e21655)
+(if (%%id?251 %%name1652)
+(%%id?251 %%id1653)
+#f))
+%%tmp1650)
 #f)
-(apply (lambda (%%_1646
-%%name1647
-%%id1648
-%%e11649
-%%e21650)
-(values (%%wrap378 %%name1647 %%w1637)
+(apply (lambda (%%_1656
+%%name1657
+%%id1658
+%%e11659
+%%e21660)
+(values (%%wrap388 %%name1657 %%w1647)
 (cons '#(syntax-object
 lambda
 ((top)
@@ -11179,6 +11203,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -11440,8 +11465,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -11672,271 +11699,410 @@ when)
 "i"
 "i"))
 #(top-ribcage *top* #t)))
-(cons (%%wrap378
-(list %%id1648)
-%%w1637)
-(%%wrap378
-(cons %%e11649
-%%e21650)
-%%w1637)))
+(cons (%%wrap388
+(list %%id1658)
+%%w1647)
+(%%wrap388
+(cons %%e11659
+%%e21660)
+%%w1647)))
 '(())))
-%%tmp1640)
-((lambda (%%tmp1652)
-(if (if %%tmp1652
-(apply (lambda (%%_1653
-%%name1654
-%%val1655)
-(%%id?241 %%name1654))
-%%tmp1652)
+%%tmp1650)
+((lambda (%%tmp1662)
+(if (if %%tmp1662
+(apply (lambda (%%_1663
+%%name1664
+%%val1665)
+(%%id?251 %%name1664))
+%%tmp1662)
 #f)
-(apply (lambda (%%_1656 %%name1657 %%val1658)
-(values %%name1657
-%%val1658
-%%w1637))
-%%tmp1652)
-((lambda (%%_1659)
+(apply (lambda (%%_1666 %%name1667 %%val1668)
+(values %%name1667
+%%val1668
+%%w1647))
+%%tmp1662)
+((lambda (%%_1669)
 (syntax-error
-(%%source-wrap379
-%%e1636
-%%w1637
-%%ae1638)))
-%%tmp1639)))
-($syntax-dispatch %%tmp1639 '(any any any)))))
+(%%source-wrap389
+%%e1646
+%%w1647
+%%ae1648)))
+%%tmp1649)))
+($syntax-dispatch %%tmp1649 '(any any any)))))
 ($syntax-dispatch
-%%tmp1639
+%%tmp1649
 '(any (any any) any . each-any))))
-%%e1636)))
-(%%parse-meta447
-(lambda (%%e1660 %%w1661 %%ae1662)
-((lambda (%%tmp1663)
-((lambda (%%tmp1664)
-(if %%tmp1664
-(apply (lambda (%%_1665 %%form1666) %%form1666)
-%%tmp1664)
-((lambda (%%_1667)
+%%e1646)))
+(%%parse-meta457
+(lambda (%%e1670 %%w1671 %%ae1672)
+((lambda (%%tmp1673)
+((lambda (%%tmp1674)
+(if %%tmp1674
+(apply (lambda (%%_1675 %%form1676) %%form1676)
+%%tmp1674)
+((lambda (%%_1677)
 (syntax-error
-(%%source-wrap379 %%e1660 %%w1661 %%ae1662)))
-%%tmp1663)))
-($syntax-dispatch %%tmp1663 '(any . any))))
-%%e1660)))
-(%%parse-eval-when448
-(lambda (%%e1668 %%w1669 %%ae1670)
-((lambda (%%tmp1671)
-((lambda (%%tmp1672)
-(if %%tmp1672
-(apply (lambda (%%_1673 %%x1674 %%e11675 %%e21676)
-(values (%%chi-when-list380
-%%x1674
-%%w1669)
-(cons %%e11675 %%e21676)))
-%%tmp1672)
-((lambda (%%_1679)
+(%%source-wrap389 %%e1670 %%w1671 %%ae1672)))
+%%tmp1673)))
+($syntax-dispatch %%tmp1673 '(any . any))))
+%%e1670)))
+(%%parse-eval-when458
+(lambda (%%e1678 %%w1679 %%ae1680)
+((lambda (%%tmp1681)
+((lambda (%%tmp1682)
+(if %%tmp1682
+(apply (lambda (%%_1683 %%x1684 %%e11685 %%e21686)
+(values (%%chi-when-list390
+%%x1684
+%%w1679)
+(cons %%e11685 %%e21686)))
+%%tmp1682)
+((lambda (%%_1689)
 (syntax-error
-(%%source-wrap379 %%e1668 %%w1669 %%ae1670)))
-%%tmp1671)))
+(%%source-wrap389 %%e1678 %%w1679 %%ae1680)))
+%%tmp1681)))
 ($syntax-dispatch
-%%tmp1671
+%%tmp1681
 '(any each-any any . each-any))))
-%%e1668)))
-(%%parse-alias449
-(lambda (%%e1680 %%w1681 %%ae1682)
-((lambda (%%tmp1683)
-((lambda (%%tmp1684)
-(if (if %%tmp1684
-(apply (lambda (%%_1685
-%%new-id1686
-%%old-id1687)
-(if (%%id?241 %%new-id1686)
-(%%id?241 %%old-id1687)
+%%e1678)))
+(%%parse-alias459
+(lambda (%%e1690 %%w1691 %%ae1692)
+((lambda (%%tmp1693)
+((lambda (%%tmp1694)
+(if (if %%tmp1694
+(apply (lambda (%%_1695
+%%new-id1696
+%%old-id1697)
+(if (%%id?251 %%new-id1696)
+(%%id?251 %%old-id1697)
 #f))
-%%tmp1684)
+%%tmp1694)
 #f)
-(apply (lambda (%%_1688 %%new-id1689 %%old-id1690)
-(values %%new-id1689 %%old-id1690))
-%%tmp1684)
-((lambda (%%_1691)
+(apply (lambda (%%_1698 %%new-id1699 %%old-id1700)
+(values %%new-id1699 %%old-id1700))
+%%tmp1694)
+((lambda (%%_1701)
 (syntax-error
-(%%source-wrap379 %%e1680 %%w1681 %%ae1682)))
-%%tmp1683)))
-($syntax-dispatch %%tmp1683 '(any any any))))
-%%e1680)))
-(%%parse-begin450
-(lambda (%%e1692 %%w1693 %%ae1694 %%empty-okay?1695)
-((lambda (%%tmp1696)
-((lambda (%%tmp1697)
-(if (if %%tmp1697
-(apply (lambda (%%_1698) %%empty-okay?1695)
-%%tmp1697)
+(%%source-wrap389 %%e1690 %%w1691 %%ae1692)))
+%%tmp1693)))
+($syntax-dispatch %%tmp1693 '(any any any))))
+%%e1690)))
+(%%parse-begin460
+(lambda (%%e1702 %%w1703 %%ae1704 %%empty-okay?1705)
+((lambda (%%tmp1706)
+((lambda (%%tmp1707)
+(if (if %%tmp1707
+(apply (lambda (%%_1708) %%empty-okay?1705)
+%%tmp1707)
 #f)
-(apply (lambda (%%_1699) '()) %%tmp1697)
-((lambda (%%tmp1700)
-(if %%tmp1700
-(apply (lambda (%%_1701 %%e11702 %%e21703)
-(cons %%e11702 %%e21703))
-%%tmp1700)
-((lambda (%%_1705)
+(apply (lambda (%%_1709) '()) %%tmp1707)
+((lambda (%%tmp1710)
+(if %%tmp1710
+(apply (lambda (%%_1711 %%e11712 %%e21713)
+(cons %%e11712 %%e21713))
+%%tmp1710)
+((lambda (%%_1715)
 (syntax-error
-(%%source-wrap379
-%%e1692
-%%w1693
-%%ae1694)))
-%%tmp1696)))
+(%%source-wrap389
+%%e1702
+%%w1703
+%%ae1704)))
+%%tmp1706)))
 ($syntax-dispatch
-%%tmp1696
+%%tmp1706
 '(any any . each-any)))))
-($syntax-dispatch %%tmp1696 '(any))))
-%%e1692)))
-(%%chi-lambda-clause451
-(lambda (%%e1706 %%c1707 %%r1708 %%mr1709 %%w1710 %%m?1711)
-((lambda (%%tmp1712)
-((lambda (%%tmp1713)
-(if %%tmp1713
-(apply (lambda (%%id1714 %%e11715 %%e21716)
-((lambda (%%ids1717)
-(if (not (%%valid-bound-ids?374
-%%ids1717))
-(syntax-error
-%%e1706
-"invalid parameter list in")
-((lambda (%%labels1718
-%%new-vars1719)
-(values %%new-vars1719
-(%%chi-body438
-(cons %%e11715 %%e21716)
-%%e1706
-(%%extend-var-env*232
-%%labels1718
-%%new-vars1719
-%%r1708)
-%%mr1709
-(%%make-binding-wrap352
-%%ids1717
-%%labels1718
-%%w1710)
-%%m?1711)))
-(%%gen-labels299 %%ids1717)
-(map %%gen-var458 %%ids1717))))
-%%id1714))
-%%tmp1713)
-((lambda (%%tmp1722)
-(if %%tmp1722
-(apply (lambda (%%ids1723 %%e11724 %%e21725)
-((lambda (%%old-ids1726)
-(if (not (%%valid-bound-ids?374
-%%old-ids1726))
-(syntax-error
-%%e1706
-"invalid parameter list in")
-((lambda (%%labels1727
-%%new-vars1728)
-(values ((letrec ((%%f1729 (lambda (%%ls11730
+($syntax-dispatch %%tmp1706 '(any))))
+%%e1702)))
+(%%chi-lambda-clause461
+(lambda (%%e1716 %%c1717 %%r1718 %%mr1719 %%w1720 %%m?1721)
+(letrec ((%%reverse*1722
+(lambda (%%l1725)
+((letrec ((%%f1726 (lambda (%%ls11727 %%ls21728)
+(if (null? %%ls11727)
+%%ls21728
+(%%f1726 (cdr %%ls11727)
+(cons (car %%ls11727)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%ls21731)
-(if (null? %%ls11730)
-%%ls21731
-(%%f1729 (cdr %%ls11730)
-(cons (car %%ls11730)
-%%ls21731))))))
-%%f1729)
-(cdr %%new-vars1728)
-(car %%new-vars1728))
-(%%chi-body438
-(cons %%e11724 %%e21725)
-%%e1706
-(%%extend-var-env*232
-%%labels1727
-%%new-vars1728
-%%r1708)
-%%mr1709
-(%%make-binding-wrap352
-%%old-ids1726
-%%labels1727
-%%w1710)
-%%m?1711)))
+%%ls21728))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%gen-labels299
-%%old-ids1726)
-(map %%gen-var458
-%%old-ids1726))))
-(%%lambda-var-list459 %%ids1723)))
-%%tmp1722)
-((lambda (%%_1733) (syntax-error %%e1706))
-%%tmp1712)))
-($syntax-dispatch
-%%tmp1712
-'(any any . each-any)))))
-($syntax-dispatch %%tmp1712 '(each-any any . each-any))))
-%%c1707)))
-(%%chi-local-syntax452
-(lambda (%%rec?1734 %%e1735 %%r1736 %%mr1737 %%w1738 %%ae1739)
-((lambda (%%tmp1740)
+%%f1726)
+(cdr %%l1725)
+(car %%l1725))))
+(%%ids/emitter1723
+(lambda (%%formals1729 %%ids1730 %%emitter1731)
+(if (null? %%ids1730)
+(values (reverse %%formals1729) %%emitter1731)
+(if (eq? (car %%ids1730) #!key)
+(%%ids/emitter1723
+%%formals1729
+(cdr %%ids1730)
+'keyword)
+(if (memq (car %%ids1730)
+'(#!optional #!rest))
+(%%ids/emitter1723
+%%formals1729
+(cdr %%ids1730)
+((lambda (%%t1732)
+(if %%t1732
+%%t1732
+%%emitter1731))
+(if (eq? %%emitter1731 'rnrs)
+'optional/rest
+#f)))
+((lambda (%%id1733)
+(%%ids/emitter1723
+(cons %%id1733 %%formals1729)
+(cdr %%ids1730)
+%%emitter1731))
+(if (pair? (car %%ids1730))
+(car (car %%ids1730))
+(car %%ids1730))))))))
+(%%emit-formals1724
+(lambda (%%formals*1734
+%%formals1735
+%%vars1736
+%%emitter1737)
+(letrec ((%%formal1738
+(lambda ()
+((lambda (%%t1739)
+(if (memv %%t1739 '(optional/rest))
+%%vars1736
+(if (memv %%t1739
+'(rnrs keyword))
+%%formals1735
+(void))))
+%%emitter1737))))
+(if (null? %%formals1735)
+(reverse %%formals*1734)
+(if (%%id?251 %%formals1735)
+(%%reverse*1722
+(cons (%%formal1738) %%formals*1734))
+(if (memq (car %%formals1735)
+'(#!optional #!rest #!key))
+(%%emit-formals1724
+(cons (car %%formals1735)
+%%formals*1734)
+(cdr %%formals1735)
+%%vars1736
+%%emitter1737)
+(if (pair? (car %%formals1735))
+(%%emit-formals1724
+(cons (cons (car ((lambda (%%t1740)
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+(if (memv %%t1740 '(keyword))
+(car (%%formal1738))
+(if (memv %%t1740 '(optional/rest))
+(%%formal1738)
+(void))))
+%%emitter1737))
+(%%strip-annotation465
+(%%chi443
+(cdr (car %%formals1735))
+%%r1718
+%%mr1719
+%%w1720
+%%m?1721)))
+%%formals*1734)
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(cdr %%formals1735)
+(cdr %%vars1736)
+%%emitter1737)
+(if (%%id?251
+(car %%formals1735))
+(%%emit-formals1724
+(cons (car (%%formal1738))
+%%formals*1734)
+(cdr %%formals1735)
+(cdr %%vars1736)
+%%emitter1737)
+(error (list 'unexpected-formal
+(car %%formals1735))))))))))))
 ((lambda (%%tmp1741)
-(if %%tmp1741
-(apply (lambda (%%_1742
-%%id1743
-%%val1744
-%%e11745
-%%e21746)
-((lambda (%%ids1747)
-(if (not (%%valid-bound-ids?374
+((lambda (%%tmp1742)
+(if %%tmp1742
+(apply (lambda (%%id1743 %%e11744 %%e21745)
+((lambda (%%formals1746)
+(call-with-values
+(lambda ()
+(%%ids/emitter1723
+'()
+%%formals1746
+'rnrs))
+(lambda (%%ids1747 %%emitter1748)
+(if (not (%%valid-bound-ids?384
 %%ids1747))
-(%%invalid-ids-error376
-(map (lambda (%%x1748)
-(%%wrap378 %%x1748 %%w1738))
-%%ids1747)
-(%%source-wrap379
-%%e1735
-%%w1738
-%%ae1739)
-"keyword")
-((lambda (%%labels1749)
-((lambda (%%new-w1750)
-((lambda (%%b*1751)
-(values (cons %%e11745
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%e21746)
-(%%extend-env*231 %%labels1749 %%b*1751 %%r1736)
-(%%extend-env*231 %%labels1749 %%b*1751 %%mr1737)
-%%new-w1750
-%%ae1739))
-;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%w1753)
-(map (lambda (%%x1754)
-(%%defer-or-eval-transformer238
-%%local-eval-hook70
-(%%chi433
-%%x1754
-%%mr1737
-%%mr1737
-%%w1753
-#t)))
-%%val1744))
-(if %%rec?1734
-%%new-w1750
-%%w1738))))
-(%%make-binding-wrap352
-%%ids1747
-%%labels1749
-%%w1738)))
-(%%gen-labels299 %%ids1747))))
-%%id1743))
-%%tmp1741)
-((lambda (%%_1757)
 (syntax-error
-(%%source-wrap379 %%e1735 %%w1738 %%ae1739)))
-%%tmp1740)))
+%%e1716
+"invalid parameter list in")
+((lambda (%%labels1749
+%%new-vars1750)
+(values %%emitter1748
+(if (eq? %%emitter1748
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+'keyword)
+(%%gen-var468 'dssl-args)
+#f)
+%%new-vars1750
+(%%emit-formals1724
+'()
+%%formals1746
+%%new-vars1750
+%%emitter1748)
+%%ids1747
+(%%chi-body448
+(cons %%e11744 %%e21745)
+%%e1716
+(%%extend-var-env*242 %%labels1749 %%new-vars1750 %%r1718)
+%%mr1719
+(%%make-binding-wrap362 %%ids1747 %%labels1749 %%w1720)
+%%m?1721)))
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(%%gen-labels309 %%ids1747)
+(map %%gen-var468
+%%ids1747))))))
+(%%strip-annotation465 %%id1743)))
+%%tmp1742)
+((lambda (%%tmp1753)
+(if %%tmp1753
+(apply (lambda (%%ids1754
+%%e11755
+%%e21756)
+((lambda (%%formals1757)
+(call-with-values
+(lambda ()
+(%%ids/emitter1723
+'()
+(%%lambda-var-list469
+%%formals1757)
+'rnrs))
+(lambda (%%old-ids1758
+%%emitter1759)
+(if (not (%%valid-bound-ids?384
+%%old-ids1758))
+(syntax-error
+%%e1716
+"invalid parameter list in")
+((lambda (%%labels1760
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%%new-vars1761)
+(values %%emitter1759
+(if (eq? %%emitter1759 'keyword)
+(%%gen-var468 'dssl-args)
+#f)
+(if (eq? %%emitter1759 'rnrs)
+(%%reverse*1722 %%new-vars1761)
+(reverse %%new-vars1761))
+(%%emit-formals1724
+'()
+(%%strip-annotation465 %%formals1757)
+%%new-vars1761
+%%emitter1759)
+(reverse (map (lambda (%%id1762)
+((lambda (%%e1763)
+(if (annotation? %%e1763)
+(annotation-expression
+%%e1763)
+%%e1763))
+%%id1762))
+%%old-ids1758))
+(%%chi-body448
+(cons %%e11755 %%e21756)
+%%e1716
+(%%extend-var-env*242
+%%labels1760
+%%new-vars1761
+%%r1718)
+%%mr1719
+(%%make-binding-wrap362
+%%old-ids1758
+%%labels1760
+%%w1720)
+%%m?1721)))
+(%%gen-labels309 %%old-ids1758)
+(map %%gen-var468 %%old-ids1758))))))
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(%%strip-annotation465
+%%ids1754)))
+%%tmp1753)
+((lambda (%%_1765) (syntax-error %%e1716))
+%%tmp1741)))
 ($syntax-dispatch
-%%tmp1740
+%%tmp1741
+'(any any . each-any)))))
+($syntax-dispatch
+%%tmp1741
+'(each-any any . each-any))))
+%%c1717))))
+(%%chi-local-syntax462
+(lambda (%%rec?1766 %%e1767 %%r1768 %%mr1769 %%w1770 %%ae1771)
+((lambda (%%tmp1772)
+((lambda (%%tmp1773)
+(if %%tmp1773
+(apply (lambda (%%_1774
+%%id1775
+%%val1776
+%%e11777
+%%e21778)
+((lambda (%%ids1779)
+(if (not (%%valid-bound-ids?384
+%%ids1779))
+(%%invalid-ids-error386
+(map (lambda (%%x1780)
+(%%wrap388 %%x1780 %%w1770))
+%%ids1779)
+(%%source-wrap389
+%%e1767
+%%w1770
+%%ae1771)
+"keyword")
+((lambda (%%labels1781)
+((lambda (%%new-w1782)
+((lambda (%%b*1783)
+(values (cons %%e11777
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%%e21778)
+(%%extend-env*241 %%labels1781 %%b*1783 %%r1768)
+(%%extend-env*241 %%labels1781 %%b*1783 %%mr1769)
+%%new-w1782
+%%ae1771))
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+((lambda (%%w1785)
+(map (lambda (%%x1786)
+(%%defer-or-eval-transformer248
+%%local-eval-hook70
+(%%chi443
+%%x1786
+%%mr1769
+%%mr1769
+%%w1785
+#t)))
+%%val1776))
+(if %%rec?1766
+%%new-w1782
+%%w1770))))
+(%%make-binding-wrap362
+%%ids1779
+%%labels1781
+%%w1770)))
+(%%gen-labels309 %%ids1779))))
+%%id1775))
+%%tmp1773)
+((lambda (%%_1789)
+(syntax-error
+(%%source-wrap389 %%e1767 %%w1770 %%ae1771)))
+%%tmp1772)))
+($syntax-dispatch
+%%tmp1772
 '(any #(each (any any)) any . each-any))))
-%%e1735)))
-(%%chi-void453
+%%e1767)))
+(%%chi-void463
 (lambda ()
 (build-source #f (cons (build-source #f 'void) '()))))
-(%%ellipsis?454
-(lambda (%%x1758)
-(if (%%nonsymbol-id?240 %%x1758)
-(%%literal-id=?371
-%%x1758
+(%%ellipsis?464
+(lambda (%%x1790)
+(if (%%nonsymbol-id?250 %%x1790)
+(%%literal-id=?381
+%%x1790
 '#(syntax-object
 ...
 ((top)
@@ -12141,6 +12307,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -12402,8 +12569,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -12635,1049 +12804,1109 @@ when)
 "i"))
 #(top-ribcage *top* #t))))
 #f)))
-(%%strip-annotation455
-(lambda (%%x1759)
-(if (pair? %%x1759)
-(cons (%%strip-annotation455 (car %%x1759))
-(%%strip-annotation455 (cdr %%x1759)))
-(if (annotation? %%x1759)
-(annotation-stripped %%x1759)
-%%x1759))))
-(%%strip*456
-(lambda (%%x1760 %%w1761 %%fn1762)
-(if (memq 'top (%%wrap-marks251 %%w1761))
-(%%fn1762 %%x1760)
-((letrec ((%%f1763 (lambda (%%x1764)
-(if (%%syntax-object?64 %%x1764)
-(%%strip*456
+(%%strip-annotation465
+(lambda (%%x1791)
+(if (pair? %%x1791)
+(cons (%%strip-annotation465 (car %%x1791))
+(%%strip-annotation465 (cdr %%x1791)))
+(if (annotation? %%x1791)
+(annotation-stripped %%x1791)
+%%x1791))))
+(%%strip*466
+(lambda (%%x1792 %%w1793 %%fn1794)
+(if (memq 'top (%%wrap-marks261 %%w1793))
+(%%fn1794 %%x1792)
+((letrec ((%%f1795 (lambda (%%x1796)
+(if (%%syntax-object?64 %%x1796)
+(%%strip*466
 (%%syntax-object-expression65
-%%x1764)
-(%%syntax-object-wrap66 %%x1764)
-%%fn1762)
-(if (pair? %%x1764)
-((lambda (%%a1765 %%d1766)
-(if (if (eq? %%a1765
+%%x1796)
+(%%syntax-object-wrap66 %%x1796)
+%%fn1794)
+(if (pair? %%x1796)
+((lambda (%%a1797 %%d1798)
+(if (if (eq? %%a1797
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(car %%x1764))
-(eq? %%d1766 (cdr %%x1764))
+(car %%x1796))
+(eq? %%d1798 (cdr %%x1796))
 #f)
-%%x1764
-(cons %%a1765 %%d1766)))
+%%x1796
+(cons %%a1797 %%d1798)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%f1763 (car %%x1764))
-(%%f1763 (cdr %%x1764)))
-(if (vector? %%x1764)
-((lambda (%%old1767)
-((lambda (%%new1768)
+(%%f1795 (car %%x1796))
+(%%f1795 (cdr %%x1796)))
+(if (vector? %%x1796)
+((lambda (%%old1799)
+((lambda (%%new1800)
 (if (andmap eq?
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%old1767
-%%new1768)
-%%x1764
-(list->vector %%new1768)))
-(map %%f1763 %%old1767)))
-(vector->list %%x1764))
-%%x1764))))))
+%%old1799
+%%new1800)
+%%x1796
+(list->vector %%new1800)))
+(map %%f1795 %%old1799)))
+(vector->list %%x1796))
+%%x1796))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f1763)
-%%x1760))))
-(%%strip457
-(lambda (%%x1769 %%w1770)
-(%%strip*456
-%%x1769
-%%w1770
-(lambda (%%x1771)
-(if ((lambda (%%t1772)
-(if %%t1772
-%%t1772
-(if (pair? %%x1771)
-(annotation? (car %%x1771))
+%%f1795)
+%%x1792))))
+(%%strip467
+(lambda (%%x1801 %%w1802)
+(%%strip*466
+%%x1801
+%%w1802
+(lambda (%%x1803)
+(if ((lambda (%%t1804)
+(if %%t1804
+%%t1804
+(if (pair? %%x1803)
+(annotation? (car %%x1803))
 #f)))
-(annotation? %%x1771))
-(%%strip-annotation455 %%x1771)
-%%x1771)))))
-(%%gen-var458
-(lambda (%%id1773)
-((lambda (%%id1774)
-(if (annotation? %%id1774)
-(gensym (annotation-expression %%id1774))
-(gensym %%id1774)))
-(if (%%syntax-object?64 %%id1773)
-(%%syntax-object-expression65 %%id1773)
-%%id1773))))
-(%%lambda-var-list459
-(lambda (%%vars1775)
-((letrec ((%%lvl1776
-(lambda (%%vars1777 %%ls1778 %%w1779)
-(if (pair? %%vars1777)
-(%%lvl1776
-(cdr %%vars1777)
-(cons (%%wrap378 (car %%vars1777) %%w1779)
-%%ls1778)
-%%w1779)
-(if (%%id?241 %%vars1777)
-(cons (%%wrap378 %%vars1777 %%w1779)
-%%ls1778)
-(if (null? %%vars1777)
-%%ls1778
-(if (%%syntax-object?64 %%vars1777)
-(%%lvl1776
+(annotation? %%x1803))
+(%%strip-annotation465 %%x1803)
+%%x1803)))))
+(%%gen-var468
+(lambda (%%id1805)
+((lambda (%%id1806)
+(if (annotation? %%id1806)
+(gensym (annotation-expression %%id1806))
+(gensym %%id1806)))
+(if (%%syntax-object?64 %%id1805)
+(%%syntax-object-expression65 %%id1805)
+%%id1805))))
+(%%lambda-var-list469
+(lambda (%%vars1807)
+((letrec ((%%lvl1808
+(lambda (%%vars1809 %%ls1810 %%w1811)
+(if (pair? %%vars1809)
+(%%lvl1808
+(cdr %%vars1809)
+(cons (%%wrap388 (car %%vars1809) %%w1811)
+%%ls1810)
+%%w1811)
+(if (%%id?251 %%vars1809)
+(cons (%%wrap388 %%vars1809 %%w1811)
+%%ls1810)
+(if (null? %%vars1809)
+%%ls1810
+(if (%%syntax-object?64 %%vars1809)
+(%%lvl1808
 (%%syntax-object-expression65
-%%vars1777)
-%%ls1778
-(%%join-wraps357
-%%w1779
+%%vars1809)
+%%ls1810
+(%%join-wraps367
+%%w1811
 (%%syntax-object-wrap66
-%%vars1777)))
-(if (annotation? %%vars1777)
-(%%lvl1776
+%%vars1809)))
+(if (annotation? %%vars1809)
+(%%lvl1808
 (annotation-expression
-%%vars1777)
-%%ls1778
-%%w1779)
-(cons %%vars1777
-%%ls1778)))))))))
-%%lvl1776)
-%%vars1775
+%%vars1809)
+%%ls1810
+%%w1811)
+(cons %%vars1809
+%%ls1810)))))))))
+%%lvl1808)
+%%vars1807
 '()
 '(())))))
 (begin
 (set! $sc-put-cte
-(lambda (%%id1780 %%b1781 %%top-token1782)
-(letrec ((%%sc-put-module1783
-(lambda (%%exports1785 %%token1786 %%new-marks1787)
-(%%vfor-each423
-(lambda (%%id1788)
-(%%store-import-binding351
-%%id1788
-%%token1786
-%%new-marks1787))
-%%exports1785)))
-(%%put-cte1784
-(lambda (%%id1789 %%binding1790 %%token1791)
-((lambda (%%sym1792)
+(lambda (%%id1812 %%b1813 %%top-token1814)
+(letrec ((%%sc-put-module1815
+(lambda (%%exports1817 %%token1818 %%new-marks1819)
+(%%vfor-each433
+(lambda (%%id1820)
+(%%store-import-binding361
+%%id1820
+%%token1818
+%%new-marks1819))
+%%exports1817)))
+(%%put-cte1816
+(lambda (%%id1821 %%binding1822 %%token1823)
+((lambda (%%sym1824)
 (begin
-(%%store-import-binding351
-%%id1789
-%%token1791
+(%%store-import-binding361
+%%id1821
+%%token1823
 '())
 (%%put-global-definition-hook74
-%%sym1792
-(if (if (eq? (%%binding-type216
-%%binding1790)
+%%sym1824
+(if (if (eq? (%%binding-type226
+%%binding1822)
 'global)
-(eq? (%%binding-value217
-%%binding1790)
-%%sym1792)
+(eq? (%%binding-value227
+%%binding1822)
+%%sym1824)
 #f)
 #f
-%%binding1790))))
-(if (symbol? %%id1789)
-%%id1789
-(%%id-var-name369 %%id1789 '(())))))))
-((lambda (%%binding1793)
-((lambda (%%t1794)
-(if (memv %%t1794 '($module))
+%%binding1822))))
+(if (symbol? %%id1821)
+%%id1821
+(%%id-var-name379 %%id1821 '(())))))))
+((lambda (%%binding1825)
+((lambda (%%t1826)
+(if (memv %%t1826 '($module))
 (begin
-((lambda (%%iface1795)
-(%%sc-put-module1783
-(%%interface-exports389 %%iface1795)
-(%%interface-token390 %%iface1795)
+((lambda (%%iface1827)
+(%%sc-put-module1815
+(%%interface-exports399 %%iface1827)
+(%%interface-token400 %%iface1827)
 '()))
-(%%binding-value217 %%binding1793))
-(%%put-cte1784
-%%id1780
-%%binding1793
-%%top-token1782))
-(if (memv %%t1794 '(do-alias))
-(%%store-import-binding351
-%%id1780
-%%top-token1782
+(%%binding-value227 %%binding1825))
+(%%put-cte1816
+%%id1812
+%%binding1825
+%%top-token1814))
+(if (memv %%t1826 '(do-alias))
+(%%store-import-binding361
+%%id1812
+%%top-token1814
 '())
-(if (memv %%t1794 '(do-import))
-((lambda (%%token1796)
-((lambda (%%b1797)
-((lambda (%%t1798)
-(if (memv %%t1798 '($module))
-((lambda (%%iface1799)
-((lambda (%%exports1800)
+(if (memv %%t1826 '(do-import))
+((lambda (%%token1828)
+((lambda (%%b1829)
+((lambda (%%t1830)
+(if (memv %%t1830 '($module))
+((lambda (%%iface1831)
+((lambda (%%exports1832)
 ((lambda ()
 (begin
-(if (not (eq? (%%interface-token390
+(if (not (eq? (%%interface-token400
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%iface1799)
-%%token1796))
-(syntax-error %%id1780 "import mismatch for module")
+%%iface1831)
+%%token1828))
+(syntax-error %%id1812 "import mismatch for module")
 (void))
-(%%sc-put-module1783
-(%%interface-exports389 %%iface1799)
-%%top-token1782
-(%%import-mark-delta440 %%id1780 %%iface1799))))))
-(%%interface-exports389 %%iface1799)))
+(%%sc-put-module1815
+(%%interface-exports399 %%iface1831)
+%%top-token1814
+(%%import-mark-delta450 %%id1812 %%iface1831))))))
+(%%interface-exports399 %%iface1831)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%binding-value217
-%%b1797))
+(%%binding-value227
+%%b1829))
 (syntax-error
-%%id1780
+%%id1812
 "unknown module")))
-(%%binding-type216 %%b1797)))
-(%%lookup236
-(%%id-var-name369 %%id1780 '(()))
+(%%binding-type226 %%b1829)))
+(%%lookup246
+(%%id-var-name379 %%id1812 '(()))
 '())))
-(%%binding-value217 %%b1781))
-(%%put-cte1784
-%%id1780
-%%binding1793
-%%top-token1782)))))
-(%%binding-type216 %%binding1793)))
-(%%make-transformer-binding237 %%b1781)))))
-(%%global-extend239
+(%%binding-value227 %%b1813))
+(%%put-cte1816
+%%id1812
+%%binding1825
+%%top-token1814)))))
+(%%binding-type226 %%binding1825)))
+(%%make-transformer-binding247 %%b1813)))))
+(%%global-extend249
 'core
 '##c-define-type
-(lambda (%%e1801 %%r1802 %%mr1803 %%w1804 %%ae1805 %%m?1806)
-(attach-source %%ae1805 (%%strip457 %%e1801 %%w1804))))
-(%%global-extend239
+(lambda (%%e1833 %%r1834 %%mr1835 %%w1836 %%ae1837 %%m?1838)
+(attach-source %%ae1837 (%%strip467 %%e1833 %%w1836))))
+(%%global-extend249
 'core
 '##c-declare
-(lambda (%%e1807 %%r1808 %%mr1809 %%w1810 %%ae1811 %%m?1812)
-(attach-source %%ae1811 (%%strip457 %%e1807 %%w1810))))
-(%%global-extend239
+(lambda (%%e1839 %%r1840 %%mr1841 %%w1842 %%ae1843 %%m?1844)
+(attach-source %%ae1843 (%%strip467 %%e1839 %%w1842))))
+(%%global-extend249
 'core
 '##c-initialize
-(lambda (%%e1813 %%r1814 %%mr1815 %%w1816 %%ae1817 %%m?1818)
-(attach-source %%ae1817 (%%strip457 %%e1813 %%w1816))))
-(%%global-extend239
+(lambda (%%e1845 %%r1846 %%mr1847 %%w1848 %%ae1849 %%m?1850)
+(attach-source %%ae1849 (%%strip467 %%e1845 %%w1848))))
+(%%global-extend249
 'core
 '##c-lambda
-(lambda (%%e1819 %%r1820 %%mr1821 %%w1822 %%ae1823 %%m?1824)
-(attach-source %%ae1823 (%%strip457 %%e1819 %%w1822))))
-(%%global-extend239
+(lambda (%%e1851 %%r1852 %%mr1853 %%w1854 %%ae1855 %%m?1856)
+(attach-source %%ae1855 (%%strip467 %%e1851 %%w1854))))
+(%%global-extend249
 'core
 '##c-define
-(lambda (%%e1825 %%r1826 %%mr1827 %%w1828 %%ae1829 %%m?1830)
-(attach-source %%ae1829 (%%strip457 %%e1825 %%w1828))))
-(%%global-extend239
+(lambda (%%e1857 %%r1858 %%mr1859 %%w1860 %%ae1861 %%m?1862)
+(attach-source %%ae1861 (%%strip467 %%e1857 %%w1860))))
+(%%global-extend249
 'core
 '##define
-(lambda (%%e1831 %%r1832 %%mr1833 %%w1834 %%ae1835 %%m?1836)
-(attach-source %%ae1835 (%%strip457 %%e1831 %%w1834))))
-(%%global-extend239
+(lambda (%%e1863 %%r1864 %%mr1865 %%w1866 %%ae1867 %%m?1868)
+(attach-source %%ae1867 (%%strip467 %%e1863 %%w1866))))
+(%%global-extend249
 'core
 '##define-macro
-(lambda (%%e1837 %%r1838 %%mr1839 %%w1840 %%ae1841 %%m?1842)
-(attach-source %%ae1841 (%%strip457 %%e1837 %%w1840))))
-(%%global-extend239
+(lambda (%%e1869 %%r1870 %%mr1871 %%w1872 %%ae1873 %%m?1874)
+(attach-source %%ae1873 (%%strip467 %%e1869 %%w1872))))
+(%%global-extend249
 'core
 '##define-syntax
-(lambda (%%e1843 %%r1844 %%mr1845 %%w1846 %%ae1847 %%m?1848)
-(attach-source %%ae1847 (%%strip457 %%e1843 %%w1846))))
-(%%global-extend239
+(lambda (%%e1875 %%r1876 %%mr1877 %%w1878 %%ae1879 %%m?1880)
+(attach-source %%ae1879 (%%strip467 %%e1875 %%w1878))))
+(%%global-extend249
 'core
 '##include
-(lambda (%%e1849 %%r1850 %%mr1851 %%w1852 %%ae1853 %%m?1854)
-(attach-source %%ae1853 (%%strip457 %%e1849 %%w1852))))
-(%%global-extend239
+(lambda (%%e1881 %%r1882 %%mr1883 %%w1884 %%ae1885 %%m?1886)
+(attach-source %%ae1885 (%%strip467 %%e1881 %%w1884))))
+(%%global-extend249
 'core
 '##declare
-(lambda (%%e1855 %%r1856 %%mr1857 %%w1858 %%ae1859 %%m?1860)
-(attach-source %%ae1859 (%%strip457 %%e1855 %%w1858))))
-(%%global-extend239
+(lambda (%%e1887 %%r1888 %%mr1889 %%w1890 %%ae1891 %%m?1892)
+(attach-source %%ae1891 (%%strip467 %%e1887 %%w1890))))
+(%%global-extend249
 'core
 '##namespace
-(lambda (%%e1861 %%r1862 %%mr1863 %%w1864 %%ae1865 %%m?1866)
-(attach-source %%ae1865 (%%strip457 %%e1861 %%w1864))))
-(%%global-extend239 'local-syntax 'letrec-syntax #t)
-(%%global-extend239 'local-syntax 'let-syntax #f)
-(%%global-extend239
+(lambda (%%e1893 %%r1894 %%mr1895 %%w1896 %%ae1897 %%m?1898)
+(attach-source %%ae1897 (%%strip467 %%e1893 %%w1896))))
+(%%global-extend249 'local-syntax 'letrec-syntax #t)
+(%%global-extend249 'local-syntax 'let-syntax #f)
+(%%global-extend249
 'core
 'fluid-let-syntax
-(lambda (%%e1867 %%r1868 %%mr1869 %%w1870 %%ae1871 %%m?1872)
-((lambda (%%tmp1873)
-((lambda (%%tmp1874)
-(if (if %%tmp1874
-(apply (lambda (%%_1875
-%%var1876
-%%val1877
-%%e11878
-%%e21879)
-(%%valid-bound-ids?374 %%var1876))
-%%tmp1874)
+(lambda (%%e1899 %%r1900 %%mr1901 %%w1902 %%ae1903 %%m?1904)
+((lambda (%%tmp1905)
+((lambda (%%tmp1906)
+(if (if %%tmp1906
+(apply (lambda (%%_1907
+%%var1908
+%%val1909
+%%e11910
+%%e21911)
+(%%valid-bound-ids?384 %%var1908))
+%%tmp1906)
 #f)
-(apply (lambda (%%_1881
-%%var1882
-%%val1883
-%%e11884
-%%e21885)
-((lambda (%%names1886)
+(apply (lambda (%%_1913
+%%var1914
+%%val1915
+%%e11916
+%%e21917)
+((lambda (%%names1918)
 (begin
 (for-each
-(lambda (%%id1887 %%n1888)
-((lambda (%%t1889)
-(if (memv %%t1889
+(lambda (%%id1919 %%n1920)
+((lambda (%%t1921)
+(if (memv %%t1921
 '(displaced-lexical))
-(%%displaced-lexical-error234
-(%%wrap378 %%id1887 %%w1870))
+(%%displaced-lexical-error244
+(%%wrap388 %%id1919 %%w1902))
 (void)))
-(%%binding-type216
-(%%lookup236 %%n1888 %%r1868))))
-%%var1882
-%%names1886)
-((lambda (%%b*1891)
-(%%chi-body438
-(cons %%e11884 %%e21885)
-(%%source-wrap379
-%%e1867
-%%w1870
-%%ae1871)
-(%%extend-env*231
-%%names1886
-%%b*1891
-%%r1868)
-(%%extend-env*231
-%%names1886
-%%b*1891
-%%mr1869)
-%%w1870
-%%m?1872))
-(map (lambda (%%x1893)
-(%%defer-or-eval-transformer238
+(%%binding-type226
+(%%lookup246 %%n1920 %%r1900))))
+%%var1914
+%%names1918)
+((lambda (%%b*1923)
+(%%chi-body448
+(cons %%e11916 %%e21917)
+(%%source-wrap389
+%%e1899
+%%w1902
+%%ae1903)
+(%%extend-env*241
+%%names1918
+%%b*1923
+%%r1900)
+(%%extend-env*241
+%%names1918
+%%b*1923
+%%mr1901)
+%%w1902
+%%m?1904))
+(map (lambda (%%x1925)
+(%%defer-or-eval-transformer248
 %%local-eval-hook70
-(%%chi433
-%%x1893
-%%mr1869
-%%mr1869
-%%w1870
+(%%chi443
+%%x1925
+%%mr1901
+%%mr1901
+%%w1902
 #t)))
-%%val1883))))
-(map (lambda (%%x1895)
-(%%id-var-name369 %%x1895 %%w1870))
-%%var1882)))
-%%tmp1874)
-((lambda (%%_1897)
+%%val1915))))
+(map (lambda (%%x1927)
+(%%id-var-name379 %%x1927 %%w1902))
+%%var1914)))
+%%tmp1906)
+((lambda (%%_1929)
 (syntax-error
-(%%source-wrap379 %%e1867 %%w1870 %%ae1871)))
-%%tmp1873)))
+(%%source-wrap389 %%e1899 %%w1902 %%ae1903)))
+%%tmp1905)))
 ($syntax-dispatch
-%%tmp1873
+%%tmp1905
 '(any #(each (any any)) any . each-any))))
-%%e1867)))
-(%%global-extend239
+%%e1899)))
+(%%global-extend249
 'core
 'quote
-(lambda (%%e1898 %%r1899 %%mr1900 %%w1901 %%ae1902 %%m?1903)
-((lambda (%%tmp1904)
-((lambda (%%tmp1905)
-(if %%tmp1905
-(apply (lambda (%%_1906 %%e1907)
-((lambda (%%x1908)
-(if (self-eval? (%%strip457 %%e1907 %%w1901))
-%%x1908
+(lambda (%%e1930 %%r1931 %%mr1932 %%w1933 %%ae1934 %%m?1935)
+((lambda (%%tmp1936)
+((lambda (%%tmp1937)
+(if %%tmp1937
+(apply (lambda (%%_1938 %%e1939)
+((lambda (%%x1940)
+(if (self-eval? (%%strip467 %%e1939 %%w1933))
+%%x1940
 (build-source
-%%ae1902
-(list (build-source %%ae1902 'quote)
-%%x1908))))
+%%ae1934
+(list (build-source %%ae1934 'quote)
+%%x1940))))
 (attach-source
-%%ae1902
-(%%strip457 %%e1907 %%w1901))))
-%%tmp1905)
-((lambda (%%_1909)
+%%ae1934
+(%%strip467 %%e1939 %%w1933))))
+%%tmp1937)
+((lambda (%%_1941)
 (syntax-error
-(%%source-wrap379 %%e1898 %%w1901 %%ae1902)))
-%%tmp1904)))
-($syntax-dispatch %%tmp1904 '(any any))))
-%%e1898)))
-(%%global-extend239
+(%%source-wrap389 %%e1930 %%w1933 %%ae1934)))
+%%tmp1936)))
+($syntax-dispatch %%tmp1936 '(any any))))
+%%e1930)))
+(%%global-extend249
 'core
 'syntax
 ((lambda ()
-(letrec ((%%gen-syntax1910
-(lambda (%%src1918
-%%e1919
-%%r1920
-%%maps1921
-%%ellipsis?1922
-%%vec?1923)
-(if (%%id?241 %%e1919)
-((lambda (%%label1924)
-((lambda (%%b1925)
-(if (eq? (%%binding-type216 %%b1925)
+(letrec ((%%gen-syntax1942
+(lambda (%%src1950
+%%e1951
+%%r1952
+%%maps1953
+%%ellipsis?1954
+%%vec?1955)
+(if (%%id?251 %%e1951)
+((lambda (%%label1956)
+((lambda (%%b1957)
+(if (eq? (%%binding-type226 %%b1957)
 'syntax)
 (call-with-values
 (lambda ()
-((lambda (%%var.lev1926)
-(%%gen-ref1911
-%%src1918
-(car %%var.lev1926)
-(cdr %%var.lev1926)
-%%maps1921))
-(%%binding-value217 %%b1925)))
-(lambda (%%var1927 %%maps1928)
-(values (list 'ref %%var1927)
-%%maps1928)))
-(if (%%ellipsis?1922 %%e1919)
+((lambda (%%var.lev1958)
+(%%gen-ref1943
+%%src1950
+(car %%var.lev1958)
+(cdr %%var.lev1958)
+%%maps1953))
+(%%binding-value227 %%b1957)))
+(lambda (%%var1959 %%maps1960)
+(values (list 'ref %%var1959)
+%%maps1960)))
+(if (%%ellipsis?1954 %%e1951)
 (syntax-error
-%%src1918
+%%src1950
 "misplaced ellipsis in syntax form")
-(values (list 'quote %%e1919)
-%%maps1921))))
-(%%lookup236 %%label1924 %%r1920)))
-(%%id-var-name369 %%e1919 '(())))
-((lambda (%%tmp1929)
-((lambda (%%tmp1930)
-(if (if %%tmp1930
-(apply (lambda (%%dots1931 %%e1932)
-(%%ellipsis?1922
-%%dots1931))
-%%tmp1930)
+(values (list 'quote %%e1951)
+%%maps1953))))
+(%%lookup246 %%label1956 %%r1952)))
+(%%id-var-name379 %%e1951 '(())))
+((lambda (%%tmp1961)
+((lambda (%%tmp1962)
+(if (if %%tmp1962
+(apply (lambda (%%dots1963 %%e1964)
+(%%ellipsis?1954
+%%dots1963))
+%%tmp1962)
 #f)
-(apply (lambda (%%dots1933 %%e1934)
-(if %%vec?1923
+(apply (lambda (%%dots1965 %%e1966)
+(if %%vec?1955
 (syntax-error
-%%src1918
+%%src1950
 "misplaced ellipsis in syntax template")
-(%%gen-syntax1910
-%%src1918
-%%e1934
-%%r1920
-%%maps1921
-(lambda (%%x1935) #f)
+(%%gen-syntax1942
+%%src1950
+%%e1966
+%%r1952
+%%maps1953
+(lambda (%%x1967) #f)
 #f)))
-%%tmp1930)
-((lambda (%%tmp1936)
-(if (if %%tmp1936
-(apply (lambda (%%x1937
+%%tmp1962)
+((lambda (%%tmp1968)
+(if (if %%tmp1968
+(apply (lambda (%%x1969
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%dots1938
-%%y1939)
-(%%ellipsis?1922 %%dots1938))
-%%tmp1936)
+%%dots1970
+%%y1971)
+(%%ellipsis?1954 %%dots1970))
+%%tmp1968)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #f)
-(apply (lambda (%%x1940
-%%dots1941
-%%y1942)
-((letrec ((%%f1943 (lambda (%%y1944
+(apply (lambda (%%x1972
+%%dots1973
+%%y1974)
+((letrec ((%%f1975 (lambda (%%y1976
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%k1945)
-((lambda (%%tmp1946)
-((lambda (%%tmp1947)
-(if (if %%tmp1947
-(apply (lambda (%%dots1948
+%%k1977)
+((lambda (%%tmp1978)
+((lambda (%%tmp1979)
+(if (if %%tmp1979
+(apply (lambda (%%dots1980
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%y1949)
-(%%ellipsis?1922 %%dots1948))
-%%tmp1947)
+%%y1981)
+(%%ellipsis?1954 %%dots1980))
+%%tmp1979)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #f)
-(apply (lambda (%%dots1950
-%%y1951)
-(%%f1943 %%y1951
-(lambda (%%maps1952)
+(apply (lambda (%%dots1982
+%%y1983)
+(%%f1975 %%y1983
+(lambda (%%maps1984)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 (call-with-values
-(lambda () (%%k1945 (cons '() %%maps1952)))
-(lambda (%%x1953 %%maps1954)
-(if (null? (car %%maps1954))
+(lambda () (%%k1977 (cons '() %%maps1984)))
+(lambda (%%x1985 %%maps1986)
+(if (null? (car %%maps1986))
 (syntax-error
-%%src1918
+%%src1950
 "extra ellipsis in syntax form")
-(values (%%gen-mappend1913
-%%x1953
-(car %%maps1954))
-(cdr %%maps1954))))))))
+(values (%%gen-mappend1945
+%%x1985
+(car %%maps1986))
+(cdr %%maps1986))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp1947)
-((lambda (%%_1955)
+%%tmp1979)
+((lambda (%%_1987)
 (call-with-values
 (lambda ()
-(%%gen-syntax1910
-%%src1918
-%%y1944
-%%r1920
-%%maps1921
-%%ellipsis?1922
-%%vec?1923))
-(lambda (%%y1956 %%maps1957)
+(%%gen-syntax1942
+%%src1950
+%%y1976
+%%r1952
+%%maps1953
+%%ellipsis?1954
+%%vec?1955))
+(lambda (%%y1988 %%maps1989)
 (call-with-values
 (lambda ()
-(%%k1945 %%maps1957))
-(lambda (%%x1958
-%%maps1959)
-(values (%%gen-append1912
-%%x1958
-%%y1956)
-%%maps1959))))))
-%%tmp1946)))
+(%%k1977 %%maps1989))
+(lambda (%%x1990
+%%maps1991)
+(values (%%gen-append1944
+%%x1990
+%%y1988)
+%%maps1991))))))
+%%tmp1978)))
 ($syntax-dispatch
-%%tmp1946
+%%tmp1978
 '(any . any))))
-%%y1944))))
-%%f1943)
-%%y1942
-(lambda (%%maps1960)
+%%y1976))))
+%%f1975)
+%%y1974
+(lambda (%%maps1992)
 (call-with-values
 (lambda ()
-(%%gen-syntax1910
-%%src1918
-%%x1940
-%%r1920
-(cons '() %%maps1960)
-%%ellipsis?1922
+(%%gen-syntax1942
+%%src1950
+%%x1972
+%%r1952
+(cons '() %%maps1992)
+%%ellipsis?1954
 #f))
-(lambda (%%x1961 %%maps1962)
-(if (null? (car %%maps1962))
+(lambda (%%x1993 %%maps1994)
+(if (null? (car %%maps1994))
 (syntax-error
-%%src1918
+%%src1950
 "extra ellipsis in syntax form")
-(values (%%gen-map1914 %%x1961 (car %%maps1962))
-(cdr %%maps1962))))))))
+(values (%%gen-map1946 %%x1993 (car %%maps1994))
+(cdr %%maps1994))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp1936)
-((lambda (%%tmp1963)
-(if %%tmp1963
-(apply (lambda (%%x1964
+%%tmp1968)
+((lambda (%%tmp1995)
+(if %%tmp1995
+(apply (lambda (%%x1996
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%y1965)
+%%y1997)
 (call-with-values
 (lambda ()
-(%%gen-syntax1910
-%%src1918
-%%x1964
-%%r1920
-%%maps1921
-%%ellipsis?1922
+(%%gen-syntax1942
+%%src1950
+%%x1996
+%%r1952
+%%maps1953
+%%ellipsis?1954
 #f))
-(lambda (%%xnew1966 %%maps1967)
+(lambda (%%xnew1998 %%maps1999)
 (call-with-values
 (lambda ()
-(%%gen-syntax1910
-%%src1918
-%%y1965
-%%r1920
-%%maps1967
-%%ellipsis?1922
-%%vec?1923))
-(lambda (%%ynew1968 %%maps1969)
-(values (%%gen-cons1915
-%%e1919
-%%x1964
-%%y1965
-%%xnew1966
-%%ynew1968)
-%%maps1969))))))
-%%tmp1963)
+(%%gen-syntax1942
+%%src1950
+%%y1997
+%%r1952
+%%maps1999
+%%ellipsis?1954
+%%vec?1955))
+(lambda (%%ynew2000 %%maps2001)
+(values (%%gen-cons1947
+%%e1951
+%%x1996
+%%y1997
+%%xnew1998
+%%ynew2000)
+%%maps2001))))))
+%%tmp1995)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp1970)
-(if %%tmp1970
-(apply (lambda (%%x11971
+((lambda (%%tmp2002)
+(if %%tmp2002
+(apply (lambda (%%x12003
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%x21972)
-((lambda (%%ls1973)
+%%x22004)
+((lambda (%%ls2005)
 (call-with-values
 (lambda ()
-(%%gen-syntax1910
-%%src1918
-%%ls1973
-%%r1920
-%%maps1921
-%%ellipsis?1922
+(%%gen-syntax1942
+%%src1950
+%%ls2005
+%%r1952
+%%maps1953
+%%ellipsis?1954
 #t))
-(lambda (%%lsnew1974 %%maps1975)
-(values (%%gen-vector1916
-%%e1919
-%%ls1973
-%%lsnew1974)
-%%maps1975))))
-(cons %%x11971 %%x21972)))
-%%tmp1970)
-((lambda (%%_1977)
-(values (list 'quote %%e1919) %%maps1921))
-%%tmp1929)))
-($syntax-dispatch %%tmp1929 '#(vector (any . each-any))))))
+(lambda (%%lsnew2006 %%maps2007)
+(values (%%gen-vector1948
+%%e1951
+%%ls2005
+%%lsnew2006)
+%%maps2007))))
+(cons %%x12003 %%x22004)))
+%%tmp2002)
+((lambda (%%_2009)
+(values (list 'quote %%e1951) %%maps1953))
+%%tmp1961)))
+($syntax-dispatch %%tmp1961 '#(vector (any . each-any))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp1929
+%%tmp1961
 '(any . any)))))
 ($syntax-dispatch
-%%tmp1929
+%%tmp1961
 '(any any . any)))))
-($syntax-dispatch %%tmp1929 '(any any))))
-%%e1919))))
-(%%gen-ref1911
-(lambda (%%src1978 %%var1979 %%level1980 %%maps1981)
-(if (fx= %%level1980 0)
-(values %%var1979 %%maps1981)
-(if (null? %%maps1981)
+($syntax-dispatch %%tmp1961 '(any any))))
+%%e1951))))
+(%%gen-ref1943
+(lambda (%%src2010 %%var2011 %%level2012 %%maps2013)
+(if (fx= %%level2012 0)
+(values %%var2011 %%maps2013)
+(if (null? %%maps2013)
 (syntax-error
-%%src1978
+%%src2010
 "missing ellipsis in syntax form")
 (call-with-values
 (lambda ()
-(%%gen-ref1911
-%%src1978
-%%var1979
-(fx- %%level1980 1)
-(cdr %%maps1981)))
-(lambda (%%outer-var1982 %%outer-maps1983)
-((lambda (%%b1984)
-(if %%b1984
-(values (cdr %%b1984) %%maps1981)
-((lambda (%%inner-var1985)
-(values %%inner-var1985
-(cons (cons (cons %%outer-var1982
+(%%gen-ref1943
+%%src2010
+%%var2011
+(fx- %%level2012 1)
+(cdr %%maps2013)))
+(lambda (%%outer-var2014 %%outer-maps2015)
+((lambda (%%b2016)
+(if %%b2016
+(values (cdr %%b2016) %%maps2013)
+((lambda (%%inner-var2017)
+(values %%inner-var2017
+(cons (cons (cons %%outer-var2014
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%inner-var1985)
-(car %%maps1981))
-%%outer-maps1983)))
+%%inner-var2017)
+(car %%maps2013))
+%%outer-maps2015)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%gen-var458 'tmp))))
-(assq %%outer-var1982
-(car %%maps1981)))))))))
-(%%gen-append1912
-(lambda (%%x1986 %%y1987)
-(if (equal? %%y1987 ''())
-%%x1986
-(list 'append %%x1986 %%y1987))))
-(%%gen-mappend1913
-(lambda (%%e1988 %%map-env1989)
+(%%gen-var468 'tmp))))
+(assq %%outer-var2014
+(car %%maps2013)))))))))
+(%%gen-append1944
+(lambda (%%x2018 %%y2019)
+(if (equal? %%y2019 ''())
+%%x2018
+(list 'append %%x2018 %%y2019))))
+(%%gen-mappend1945
+(lambda (%%e2020 %%map-env2021)
 (list 'apply
 '(primitive append)
-(%%gen-map1914 %%e1988 %%map-env1989))))
-(%%gen-map1914
-(lambda (%%e1990 %%map-env1991)
-((lambda (%%formals1992 %%actuals1993)
-(if (eq? (car %%e1990) 'ref)
-(car %%actuals1993)
-(if (andmap (lambda (%%x1994)
-(if (eq? (car %%x1994) 'ref)
-(memq (cadr %%x1994)
-%%formals1992)
+(%%gen-map1946 %%e2020 %%map-env2021))))
+(%%gen-map1946
+(lambda (%%e2022 %%map-env2023)
+((lambda (%%formals2024 %%actuals2025)
+(if (eq? (car %%e2022) 'ref)
+(car %%actuals2025)
+(if (andmap (lambda (%%x2026)
+(if (eq? (car %%x2026) 'ref)
+(memq (cadr %%x2026)
+%%formals2024)
 #f))
-(cdr %%e1990))
+(cdr %%e2022))
 (cons 'map
-(cons (list 'primitive (car %%e1990))
-(map ((lambda (%%r1995)
-(lambda (%%x1996)
-(cdr (assq (cadr %%x1996)
+(cons (list 'primitive (car %%e2022))
+(map ((lambda (%%r2027)
+(lambda (%%x2028)
+(cdr (assq (cadr %%x2028)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%r1995))))
-(map cons %%formals1992 %%actuals1993))
+%%r2027))))
+(map cons %%formals2024 %%actuals2025))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(cdr %%e1990))))
+(cdr %%e2022))))
 (cons 'map
 (cons (list 'lambda
-%%formals1992
-%%e1990)
-%%actuals1993)))))
-(map cdr %%map-env1991)
-(map (lambda (%%x1997) (list 'ref (car %%x1997)))
-%%map-env1991))))
-(%%gen-cons1915
-(lambda (%%e1998 %%x1999 %%y2000 %%xnew2001 %%ynew2002)
-((lambda (%%t2003)
-(if (memv %%t2003 '(quote))
-(if (eq? (car %%xnew2001) 'quote)
-((lambda (%%xnew2004 %%ynew2005)
-(if (if (eq? %%xnew2004 %%x1999)
-(eq? %%ynew2005 %%y2000)
+%%formals2024
+%%e2022)
+%%actuals2025)))))
+(map cdr %%map-env2023)
+(map (lambda (%%x2029) (list 'ref (car %%x2029)))
+%%map-env2023))))
+(%%gen-cons1947
+(lambda (%%e2030 %%x2031 %%y2032 %%xnew2033 %%ynew2034)
+((lambda (%%t2035)
+(if (memv %%t2035 '(quote))
+(if (eq? (car %%xnew2033) 'quote)
+((lambda (%%xnew2036 %%ynew2037)
+(if (if (eq? %%xnew2036 %%x2031)
+(eq? %%ynew2037 %%y2032)
 #f)
-(list 'quote %%e1998)
+(list 'quote %%e2030)
 (list 'quote
-(cons %%xnew2004
-%%ynew2005))))
-(cadr %%xnew2001)
-(cadr %%ynew2002))
-(if (eq? (cadr %%ynew2002) '())
-(list 'list %%xnew2001)
-(list 'cons %%xnew2001 %%ynew2002)))
-(if (memv %%t2003 '(list))
+(cons %%xnew2036
+%%ynew2037))))
+(cadr %%xnew2033)
+(cadr %%ynew2034))
+(if (eq? (cadr %%ynew2034) '())
+(list 'list %%xnew2033)
+(list 'cons %%xnew2033 %%ynew2034)))
+(if (memv %%t2035 '(list))
 (cons 'list
-(cons %%xnew2001 (cdr %%ynew2002)))
-(list 'cons %%xnew2001 %%ynew2002))))
-(car %%ynew2002))))
-(%%gen-vector1916
-(lambda (%%e2006 %%ls2007 %%lsnew2008)
-(if (eq? (car %%lsnew2008) 'quote)
-(if (eq? (cadr %%lsnew2008) %%ls2007)
-(list 'quote %%e2006)
+(cons %%xnew2033 (cdr %%ynew2034)))
+(list 'cons %%xnew2033 %%ynew2034))))
+(car %%ynew2034))))
+(%%gen-vector1948
+(lambda (%%e2038 %%ls2039 %%lsnew2040)
+(if (eq? (car %%lsnew2040) 'quote)
+(if (eq? (cadr %%lsnew2040) %%ls2039)
+(list 'quote %%e2038)
 (list 'quote
-(list->vector (cadr %%lsnew2008))))
-(if (eq? (car %%lsnew2008) 'list)
-(cons 'vector (cdr %%lsnew2008))
-(list 'list->vector %%lsnew2008)))))
-(%%regen1917
-(lambda (%%x2009)
-((lambda (%%t2010)
-(if (memv %%t2010 '(ref))
-(build-source #f (cadr %%x2009))
-(if (memv %%t2010 '(primitive))
-(build-source #f (cadr %%x2009))
-(if (memv %%t2010 '(quote))
-((lambda (%%x2011)
-(if (self-eval? (cadr %%x2009))
-%%x2011
+(list->vector (cadr %%lsnew2040))))
+(if (eq? (car %%lsnew2040) 'list)
+(cons 'vector (cdr %%lsnew2040))
+(list 'list->vector %%lsnew2040)))))
+(%%regen1949
+(lambda (%%x2041)
+((lambda (%%t2042)
+(if (memv %%t2042 '(ref))
+(build-source #f (cadr %%x2041))
+(if (memv %%t2042 '(primitive))
+(build-source #f (cadr %%x2041))
+(if (memv %%t2042 '(quote))
+((lambda (%%x2043)
+(if (self-eval? (cadr %%x2041))
+%%x2043
 (build-source
 #f
 (list (build-source #f 'quote)
-%%x2011))))
-(attach-source #f (cadr %%x2009)))
-(if (memv %%t2010 '(lambda))
+%%x2043))))
+(attach-source #f (cadr %%x2041)))
+(if (memv %%t2042 '(lambda))
 (build-source
 #f
 (list (build-source #f 'lambda)
 (build-params
 #f
-(cadr %%x2009))
-(%%regen1917
-(caddr %%x2009))))
-(if (memv %%t2010 '(map))
-((lambda (%%ls2012)
+(cadr %%x2041))
+(%%regen1949
+(caddr %%x2041))))
+(if (memv %%t2042 '(map))
+((lambda (%%ls2044)
 (build-source
 #f
-(cons (if (fx= (length %%ls2012)
+(cons (if (fx= (length %%ls2044)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 2)
 (build-source #f 'map)
 (build-source #f 'map))
-%%ls2012)))
+%%ls2044)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(map %%regen1917
-(cdr %%x2009)))
+(map %%regen1949
+(cdr %%x2041)))
 (build-source
 #f
 (cons (build-source
 #f
-(car %%x2009))
-(map %%regen1917
-(cdr %%x2009))))))))))
-(car %%x2009)))))
-(lambda (%%e2013 %%r2014 %%mr2015 %%w2016 %%ae2017 %%m?2018)
-((lambda (%%e2019)
-((lambda (%%tmp2020)
-((lambda (%%tmp2021)
-(if %%tmp2021
-(apply (lambda (%%_2022 %%x2023)
+(car %%x2041))
+(map %%regen1949
+(cdr %%x2041))))))))))
+(car %%x2041)))))
+(lambda (%%e2045 %%r2046 %%mr2047 %%w2048 %%ae2049 %%m?2050)
+((lambda (%%e2051)
+((lambda (%%tmp2052)
+((lambda (%%tmp2053)
+(if %%tmp2053
+(apply (lambda (%%_2054 %%x2055)
 (call-with-values
 (lambda ()
-(%%gen-syntax1910
-%%e2019
-%%x2023
-%%r2014
+(%%gen-syntax1942
+%%e2051
+%%x2055
+%%r2046
 '()
-%%ellipsis?454
+%%ellipsis?464
 #f))
-(lambda (%%e2024 %%maps2025)
-(%%regen1917 %%e2024))))
-%%tmp2021)
-((lambda (%%_2026) (syntax-error %%e2019))
-%%tmp2020)))
-($syntax-dispatch %%tmp2020 '(any any))))
-%%e2019))
-(%%source-wrap379 %%e2013 %%w2016 %%ae2017)))))))
-(%%global-extend239
+(lambda (%%e2056 %%maps2057)
+(%%regen1949 %%e2056))))
+%%tmp2053)
+((lambda (%%_2058) (syntax-error %%e2051))
+%%tmp2052)))
+($syntax-dispatch %%tmp2052 '(any any))))
+%%e2051))
+(%%source-wrap389 %%e2045 %%w2048 %%ae2049)))))))
+(%%global-extend249
 'core
 'lambda
-(lambda (%%e2027 %%r2028 %%mr2029 %%w2030 %%ae2031 %%m?2032)
-((lambda (%%tmp2033)
-((lambda (%%tmp2034)
-(if %%tmp2034
-(apply (lambda (%%_2035 %%c2036)
+(lambda (%%e2059 %%r2060 %%mr2061 %%w2062 %%ae2063 %%m?2064)
+((lambda (%%tmp2065)
+((lambda (%%tmp2066)
+(if %%tmp2066
+(apply (lambda (%%_2067 %%c2068)
 (call-with-values
 (lambda ()
-(%%chi-lambda-clause451
-(%%source-wrap379 %%e2027 %%w2030 %%ae2031)
-%%c2036
-%%r2028
-%%mr2029
-%%w2030
-%%m?2032))
-(lambda (%%vars2037 %%body2038)
+(%%chi-lambda-clause461
+(%%source-wrap389 %%e2059 %%w2062 %%ae2063)
+%%c2068
+%%r2060
+%%mr2061
+%%w2062
+%%m?2064))
+(lambda (%%emitter2069
+%%dsssl-args2070
+%%vars2071
+%%dsssl-formals2072
+%%orig-vars2073
+%%body2074)
+((lambda (%%t2075)
+(if (memv %%t2075 '(keyword))
 (build-source
-%%ae2031
-(list (build-source %%ae2031 'lambda)
-(build-params %%ae2031 %%vars2037)
-%%body2038)))))
-%%tmp2034)
-(syntax-error %%tmp2033)))
-($syntax-dispatch %%tmp2033 '(any . any))))
-%%e2027)))
-(%%global-extend239
+%%ae2063
+(list (build-source %%ae2063 'lambda)
+(build-source
+%%ae2063
+%%dsssl-args2070)
+(build-source
+%%ae2063
+(list (build-source
+%%ae2063
+'receive)
+(build-params
+%%ae2063
+%%vars2071)
+(build-source
+%%ae2063
+(list (build-source
+%%ae2063
+'apply)
+(build-source
+%%ae2063
+(list (build-source
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%%ae2063
+'lambda)
+(build-params %%ae2063 %%dsssl-formals2072)
+(build-source
+%%ae2063
+(cons (build-source %%ae2063 'values)
+(annotation-expression
+(build-params
+%%ae2063
+%%orig-vars2073))))))
+(build-source %%ae2063 %%dsssl-args2070)))
+%%body2074))))
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(if (memv %%t2075 '(optional/rest))
+(build-source
+%%ae2063
+(list (build-source
+%%ae2063
+'lambda)
+(build-params
+%%ae2063
+%%dsssl-formals2072)
+%%body2074))
+(if (memv %%t2075 '(rnrs))
+(build-source
+%%ae2063
+(list (build-source
+%%ae2063
+'lambda)
+(build-params
+%%ae2063
+%%vars2071)
+%%body2074))
+(void)))))
+%%emitter2069))))
+%%tmp2066)
+(syntax-error %%tmp2065)))
+($syntax-dispatch %%tmp2065 '(any . any))))
+%%e2059)))
+(%%global-extend249
 'core
 'letrec
-(lambda (%%e2039 %%r2040 %%mr2041 %%w2042 %%ae2043 %%m?2044)
-((lambda (%%tmp2045)
-((lambda (%%tmp2046)
-(if %%tmp2046
-(apply (lambda (%%_2047
-%%id2048
-%%val2049
-%%e12050
-%%e22051)
-((lambda (%%ids2052)
-(if (not (%%valid-bound-ids?374 %%ids2052))
-(%%invalid-ids-error376
-(map (lambda (%%x2053)
-(%%wrap378 %%x2053 %%w2042))
-%%ids2052)
-(%%source-wrap379
-%%e2039
-%%w2042
-%%ae2043)
+(lambda (%%e2076 %%r2077 %%mr2078 %%w2079 %%ae2080 %%m?2081)
+((lambda (%%tmp2082)
+((lambda (%%tmp2083)
+(if %%tmp2083
+(apply (lambda (%%_2084
+%%id2085
+%%val2086
+%%e12087
+%%e22088)
+((lambda (%%ids2089)
+(if (not (%%valid-bound-ids?384 %%ids2089))
+(%%invalid-ids-error386
+(map (lambda (%%x2090)
+(%%wrap388 %%x2090 %%w2079))
+%%ids2089)
+(%%source-wrap389
+%%e2076
+%%w2079
+%%ae2080)
 "bound variable")
-((lambda (%%labels2054 %%new-vars2055)
-((lambda (%%w2056 %%r2057)
-(%%build-letrec171
-%%ae2043
-%%new-vars2055
-(map (lambda (%%x2058)
-(%%chi433
-%%x2058
-%%r2057
-%%mr2041
-%%w2056
-%%m?2044))
-%%val2049)
-(%%chi-body438
-(cons %%e12050 %%e22051)
-(%%source-wrap379
-%%e2039
-%%w2056
-%%ae2043)
-%%r2057
-%%mr2041
-%%w2056
-%%m?2044)))
-(%%make-binding-wrap352
-%%ids2052
-%%labels2054
-%%w2042)
-(%%extend-var-env*232
-%%labels2054
-%%new-vars2055
-%%r2040)))
-(%%gen-labels299 %%ids2052)
-(map %%gen-var458 %%ids2052))))
-%%id2048))
-%%tmp2046)
-((lambda (%%_2062)
+((lambda (%%labels2091 %%new-vars2092)
+((lambda (%%w2093 %%r2094)
+(%%build-letrec181
+%%ae2080
+%%new-vars2092
+(map (lambda (%%x2095)
+(%%chi443
+%%x2095
+%%r2094
+%%mr2078
+%%w2093
+%%m?2081))
+%%val2086)
+(%%chi-body448
+(cons %%e12087 %%e22088)
+(%%source-wrap389
+%%e2076
+%%w2093
+%%ae2080)
+%%r2094
+%%mr2078
+%%w2093
+%%m?2081)))
+(%%make-binding-wrap362
+%%ids2089
+%%labels2091
+%%w2079)
+(%%extend-var-env*242
+%%labels2091
+%%new-vars2092
+%%r2077)))
+(%%gen-labels309 %%ids2089)
+(map %%gen-var468 %%ids2089))))
+%%id2085))
+%%tmp2083)
+((lambda (%%_2099)
 (syntax-error
-(%%source-wrap379 %%e2039 %%w2042 %%ae2043)))
-%%tmp2045)))
+(%%source-wrap389 %%e2076 %%w2079 %%ae2080)))
+%%tmp2082)))
 ($syntax-dispatch
-%%tmp2045
+%%tmp2082
 '(any #(each (any any)) any . each-any))))
-%%e2039)))
-(%%global-extend239
+%%e2076)))
+(%%global-extend249
 'core
 'if
-(lambda (%%e2063 %%r2064 %%mr2065 %%w2066 %%ae2067 %%m?2068)
-((lambda (%%tmp2069)
-((lambda (%%tmp2070)
-(if %%tmp2070
-(apply (lambda (%%_2071 %%test2072 %%then2073)
+(lambda (%%e2100 %%r2101 %%mr2102 %%w2103 %%ae2104 %%m?2105)
+((lambda (%%tmp2106)
+((lambda (%%tmp2107)
+(if %%tmp2107
+(apply (lambda (%%_2108 %%test2109 %%then2110)
 (build-source
-%%ae2067
-(list (build-source %%ae2067 'if)
-(%%chi433
-%%test2072
-%%r2064
-%%mr2065
-%%w2066
-%%m?2068)
-(%%chi433
-%%then2073
-%%r2064
-%%mr2065
-%%w2066
-%%m?2068)
-(%%chi-void453))))
-%%tmp2070)
-((lambda (%%tmp2074)
-(if %%tmp2074
-(apply (lambda (%%_2075
-%%test2076
-%%then2077
-%%else2078)
+%%ae2104
+(list (build-source %%ae2104 'if)
+(%%chi443
+%%test2109
+%%r2101
+%%mr2102
+%%w2103
+%%m?2105)
+(%%chi443
+%%then2110
+%%r2101
+%%mr2102
+%%w2103
+%%m?2105)
+(%%chi-void463))))
+%%tmp2107)
+((lambda (%%tmp2111)
+(if %%tmp2111
+(apply (lambda (%%_2112
+%%test2113
+%%then2114
+%%else2115)
 (build-source
-%%ae2067
-(list (build-source %%ae2067 'if)
-(%%chi433
-%%test2076
-%%r2064
-%%mr2065
-%%w2066
-%%m?2068)
-(%%chi433
-%%then2077
-%%r2064
-%%mr2065
-%%w2066
-%%m?2068)
-(%%chi433
-%%else2078
-%%r2064
-%%mr2065
-%%w2066
-%%m?2068))))
-%%tmp2074)
-((lambda (%%_2079)
+%%ae2104
+(list (build-source %%ae2104 'if)
+(%%chi443
+%%test2113
+%%r2101
+%%mr2102
+%%w2103
+%%m?2105)
+(%%chi443
+%%then2114
+%%r2101
+%%mr2102
+%%w2103
+%%m?2105)
+(%%chi443
+%%else2115
+%%r2101
+%%mr2102
+%%w2103
+%%m?2105))))
+%%tmp2111)
+((lambda (%%_2116)
 (syntax-error
-(%%source-wrap379 %%e2063 %%w2066 %%ae2067)))
-%%tmp2069)))
-($syntax-dispatch %%tmp2069 '(any any any any)))))
-($syntax-dispatch %%tmp2069 '(any any any))))
-%%e2063)))
-(%%global-extend239 'set! 'set! '())
-(%%global-extend239 'alias 'alias '())
-(%%global-extend239 'begin 'begin '())
-(%%global-extend239 '$module-key '$module '())
-(%%global-extend239 '$import '$import '())
-(%%global-extend239 'define 'define '())
-(%%global-extend239 'define-syntax 'define-syntax '())
-(%%global-extend239 'eval-when 'eval-when '())
-(%%global-extend239 'meta 'meta '())
-(%%global-extend239
+(%%source-wrap389 %%e2100 %%w2103 %%ae2104)))
+%%tmp2106)))
+($syntax-dispatch %%tmp2106 '(any any any any)))))
+($syntax-dispatch %%tmp2106 '(any any any))))
+%%e2100)))
+(%%global-extend249 'set! 'set! '())
+(%%global-extend249 'alias 'alias '())
+(%%global-extend249 'begin 'begin '())
+(%%global-extend249 '$module-key '$module '())
+(%%global-extend249 '$import '$import '())
+(%%global-extend249 'define 'define '())
+(%%global-extend249 'define-syntax 'define-syntax '())
+(%%global-extend249 'eval-when 'eval-when '())
+(%%global-extend249 'meta 'meta '())
+(%%global-extend249
 'core
 'syntax-case
 ((lambda ()
-(letrec ((%%convert-pattern2080
-(lambda (%%pattern2084 %%keys2085)
-(letrec ((%%cvt*2086
-(lambda (%%p*2088 %%n2089 %%ids2090)
-(if (null? %%p*2088)
-(values '() %%ids2090)
+(letrec ((%%convert-pattern2117
+(lambda (%%pattern2121 %%keys2122)
+(letrec ((%%cvt*2123
+(lambda (%%p*2125 %%n2126 %%ids2127)
+(if (null? %%p*2125)
+(values '() %%ids2127)
 (call-with-values
 (lambda ()
-(%%cvt*2086
-(cdr %%p*2088)
-%%n2089
-%%ids2090))
-(lambda (%%y2091 %%ids2092)
+(%%cvt*2123
+(cdr %%p*2125)
+%%n2126
+%%ids2127))
+(lambda (%%y2128 %%ids2129)
 (call-with-values
 (lambda ()
-(%%cvt2087
-(car %%p*2088)
-%%n2089
-%%ids2092))
-(lambda (%%x2093 %%ids2094)
-(values (cons %%x2093 %%y2091)
-%%ids2094))))))))
-(%%cvt2087
-(lambda (%%p2095 %%n2096 %%ids2097)
-(if (%%id?241 %%p2095)
-(if (%%bound-id-member?377
-%%p2095
-%%keys2085)
-(values (vector 'free-id %%p2095)
-%%ids2097)
+(%%cvt2124
+(car %%p*2125)
+%%n2126
+%%ids2129))
+(lambda (%%x2130 %%ids2131)
+(values (cons %%x2130 %%y2128)
+%%ids2131))))))))
+(%%cvt2124
+(lambda (%%p2132 %%n2133 %%ids2134)
+(if (%%id?251 %%p2132)
+(if (%%bound-id-member?387
+%%p2132
+%%keys2122)
+(values (vector 'free-id %%p2132)
+%%ids2134)
 (values 'any
-(cons (cons %%p2095
+(cons (cons %%p2132
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%n2096)
-%%ids2097)))
+%%n2133)
+%%ids2134)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2098)
-((lambda (%%tmp2099)
-(if (if %%tmp2099
-(apply (lambda (%%x2100
+((lambda (%%tmp2135)
+((lambda (%%tmp2136)
+(if (if %%tmp2136
+(apply (lambda (%%x2137
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%dots2101)
-(%%ellipsis?454 %%dots2101))
-%%tmp2099)
+%%dots2138)
+(%%ellipsis?464 %%dots2138))
+%%tmp2136)
 #f)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(apply (lambda (%%x2102
+(apply (lambda (%%x2139
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%dots2103)
+%%dots2140)
 (call-with-values
-(lambda () (%%cvt2087 %%x2102 (fx+ %%n2096 1) %%ids2097))
-(lambda (%%p2104 %%ids2105)
-(values (if (eq? %%p2104 'any)
+(lambda () (%%cvt2124 %%x2139 (fx+ %%n2133 1) %%ids2134))
+(lambda (%%p2141 %%ids2142)
+(values (if (eq? %%p2141 'any)
 'each-any
-(vector 'each %%p2104))
-%%ids2105))))
-%%tmp2099)
+(vector 'each %%p2141))
+%%ids2142))))
+%%tmp2136)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2106)
-(if (if %%tmp2106
-(apply (lambda (%%x2107
+((lambda (%%tmp2143)
+(if (if %%tmp2143
+(apply (lambda (%%x2144
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%dots2108
-%%y2109
-%%z2110)
-(%%ellipsis?454 %%dots2108))
-%%tmp2106)
+%%dots2145
+%%y2146
+%%z2147)
+(%%ellipsis?464 %%dots2145))
+%%tmp2143)
 #f)
-(apply (lambda (%%x2111 %%dots2112 %%y2113 %%z2114)
+(apply (lambda (%%x2148 %%dots2149 %%y2150 %%z2151)
 (call-with-values
-(lambda () (%%cvt2087 %%z2114 %%n2096 %%ids2097))
-(lambda (%%z2115 %%ids2116)
-(call-with-values
-(lambda ()
-(%%cvt*2086 %%y2113 %%n2096 %%ids2116))
-(lambda (%%y2118 %%ids2119)
+(lambda () (%%cvt2124 %%z2151 %%n2133 %%ids2134))
+(lambda (%%z2152 %%ids2153)
 (call-with-values
 (lambda ()
-(%%cvt2087
-%%x2111
-(fx+ %%n2096 1)
-%%ids2119))
-(lambda (%%x2120 %%ids2121)
+(%%cvt*2123 %%y2150 %%n2133 %%ids2153))
+(lambda (%%y2155 %%ids2156)
+(call-with-values
+(lambda ()
+(%%cvt2124
+%%x2148
+(fx+ %%n2133 1)
+%%ids2156))
+(lambda (%%x2157 %%ids2158)
 (values (vector 'each+
-%%x2120
-(reverse %%y2118)
-%%z2115)
-%%ids2121))))))))
-%%tmp2106)
-((lambda (%%tmp2122)
-(if %%tmp2122
-(apply (lambda (%%x2123 %%y2124)
+%%x2157
+(reverse %%y2155)
+%%z2152)
+%%ids2158))))))))
+%%tmp2143)
+((lambda (%%tmp2159)
+(if %%tmp2159
+(apply (lambda (%%x2160 %%y2161)
 (call-with-values
 (lambda ()
-(%%cvt2087 %%y2124 %%n2096 %%ids2097))
-(lambda (%%y2125 %%ids2126)
+(%%cvt2124 %%y2161 %%n2133 %%ids2134))
+(lambda (%%y2162 %%ids2163)
 (call-with-values
 (lambda ()
-(%%cvt2087 %%x2123 %%n2096 %%ids2126))
-(lambda (%%x2127 %%ids2128)
-(values (cons %%x2127 %%y2125)
-%%ids2128))))))
-%%tmp2122)
-((lambda (%%tmp2129)
-(if %%tmp2129
-(apply (lambda () (values '() %%ids2097))
-%%tmp2129)
-((lambda (%%tmp2130)
-(if %%tmp2130
-(apply (lambda (%%x2131)
+(%%cvt2124 %%x2160 %%n2133 %%ids2163))
+(lambda (%%x2164 %%ids2165)
+(values (cons %%x2164 %%y2162)
+%%ids2165))))))
+%%tmp2159)
+((lambda (%%tmp2166)
+(if %%tmp2166
+(apply (lambda () (values '() %%ids2134))
+%%tmp2166)
+((lambda (%%tmp2167)
+(if %%tmp2167
+(apply (lambda (%%x2168)
 (call-with-values
 (lambda ()
-(%%cvt2087
-%%x2131
-%%n2096
-%%ids2097))
-(lambda (%%p2133 %%ids2134)
+(%%cvt2124
+%%x2168
+%%n2133
+%%ids2134))
+(lambda (%%p2170 %%ids2171)
 (values (vector 'vector
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%p2133)
-%%ids2134))))
+%%p2170)
+%%ids2171))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2130)
-((lambda (%%x2135)
+%%tmp2167)
+((lambda (%%x2172)
 (values (vector 'atom
-(%%strip457
-%%p2095
+(%%strip467
+%%p2132
 '(())))
-%%ids2097))
-%%tmp2098)))
+%%ids2134))
+%%tmp2135)))
 ($syntax-dispatch
-%%tmp2098
+%%tmp2135
 '#(vector each-any)))))
-($syntax-dispatch %%tmp2098 '()))))
-($syntax-dispatch %%tmp2098 '(any . any)))))
+($syntax-dispatch %%tmp2135 '()))))
+($syntax-dispatch %%tmp2135 '(any . any)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2098
+%%tmp2135
 '(any any
 .
 #(each+
@@ -13685,19 +13914,19 @@ any
 ()
 any))))))
 ($syntax-dispatch
-%%tmp2098
+%%tmp2135
 '(any any))))
-%%p2095)))))
-(%%cvt2087 %%pattern2084 0 '()))))
-(%%build-dispatch-call2081
-(lambda (%%pvars2136
-%%exp2137
-%%y2138
-%%r2139
-%%mr2140
-%%m?2141)
-((lambda (%%ids2142 %%levels2143)
-((lambda (%%labels2144 %%new-vars2145)
+%%p2132)))))
+(%%cvt2124 %%pattern2121 0 '()))))
+(%%build-dispatch-call2118
+(lambda (%%pvars2173
+%%exp2174
+%%y2175
+%%r2176
+%%mr2177
+%%m?2178)
+((lambda (%%ids2179 %%levels2180)
+((lambda (%%labels2181 %%new-vars2182)
 (build-source
 #f
 (cons (build-source #f 'apply)
@@ -13706,58 +13935,58 @@ any))))))
 (list (build-source #f 'lambda)
 (build-params
 #f
-%%new-vars2145)
-(%%chi433
-%%exp2137
-(%%extend-env*231
-%%labels2144
-(map (lambda (%%var2146
+%%new-vars2182)
+(%%chi443
+%%exp2174
+(%%extend-env*241
+%%labels2181
+(map (lambda (%%var2183
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%level2147)
-(cons 'syntax (cons %%var2146 %%level2147)))
-%%new-vars2145
-(map cdr %%pvars2136))
+%%level2184)
+(cons 'syntax (cons %%var2183 %%level2184)))
+%%new-vars2182
+(map cdr %%pvars2173))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%r2139)
-%%mr2140
-(%%make-binding-wrap352
-%%ids2142
-%%labels2144
+%%r2176)
+%%mr2177
+(%%make-binding-wrap362
+%%ids2179
+%%labels2181
 '(()))
-%%m?2141)))
-%%y2138))))
-(%%gen-labels299 %%ids2142)
-(map %%gen-var458 %%ids2142)))
-(map car %%pvars2136)
-(map cdr %%pvars2136))))
-(%%gen-clause2082
-(lambda (%%x2148
-%%keys2149
-%%clauses2150
-%%r2151
-%%mr2152
-%%m?2153
-%%pat2154
-%%fender2155
-%%exp2156)
+%%m?2178)))
+%%y2175))))
+(%%gen-labels309 %%ids2179)
+(map %%gen-var468 %%ids2179)))
+(map car %%pvars2173)
+(map cdr %%pvars2173))))
+(%%gen-clause2119
+(lambda (%%x2185
+%%keys2186
+%%clauses2187
+%%r2188
+%%mr2189
+%%m?2190
+%%pat2191
+%%fender2192
+%%exp2193)
 (call-with-values
 (lambda ()
-(%%convert-pattern2080 %%pat2154 %%keys2149))
-(lambda (%%p2157 %%pvars2158)
-(if (not (%%distinct-bound-ids?375
-(map car %%pvars2158)))
-(%%invalid-ids-error376
-(map car %%pvars2158)
-%%pat2154
+(%%convert-pattern2117 %%pat2191 %%keys2186))
+(lambda (%%p2194 %%pvars2195)
+(if (not (%%distinct-bound-ids?385
+(map car %%pvars2195)))
+(%%invalid-ids-error386
+(map car %%pvars2195)
+%%pat2191
 "pattern variable")
-(if (not (andmap (lambda (%%x2159)
-(not (%%ellipsis?454
-(car %%x2159))))
-%%pvars2158))
+(if (not (andmap (lambda (%%x2196)
+(not (%%ellipsis?464
+(car %%x2196))))
+%%pvars2195))
 (syntax-error
-%%pat2154
+%%pat2191
 "misplaced ellipsis in syntax-case pattern")
-((lambda (%%y2160)
+((lambda (%%y2197)
 (build-source
 #f
 (cons (build-source
@@ -13765,57 +13994,57 @@ any))))))
 (list (build-source #f 'lambda)
 (build-params
 #f
-(list %%y2160))
+(list %%y2197))
 (build-source
 #f
 (list (build-source
 #f
 'if)
-((lambda (%%tmp2170)
-((lambda (%%tmp2171)
+((lambda (%%tmp2207)
+((lambda (%%tmp2208)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if %%tmp2171
-(apply (lambda () (build-source #f %%y2160))
-%%tmp2171)
-((lambda (%%_2172)
+(if %%tmp2208
+(apply (lambda () (build-source #f %%y2197))
+%%tmp2208)
+((lambda (%%_2209)
 (build-source
 #f
 (list (build-source #f 'if)
-(build-source #f %%y2160)
-(%%build-dispatch-call2081
-%%pvars2158
-%%fender2155
-(build-source #f %%y2160)
-%%r2151
-%%mr2152
-%%m?2153)
-((lambda (%%x2173)
+(build-source #f %%y2197)
+(%%build-dispatch-call2118
+%%pvars2195
+%%fender2192
+(build-source #f %%y2197)
+%%r2188
+%%mr2189
+%%m?2190)
+((lambda (%%x2210)
 (if (self-eval? #f)
-%%x2173
+%%x2210
 (build-source
 #f
 (list (build-source #f 'quote)
-%%x2173))))
+%%x2210))))
 (attach-source #f #f)))))
-%%tmp2170)))
-($syntax-dispatch %%tmp2170 '#(atom #t))))
-%%fender2155)
-(%%build-dispatch-call2081
-%%pvars2158
-%%exp2156
-(build-source #f %%y2160)
-%%r2151
-%%mr2152
-%%m?2153)
-(%%gen-syntax-case2083
-%%x2148
-%%keys2149
-%%clauses2150
-%%r2151
-%%mr2152
-%%m?2153)))))
+%%tmp2207)))
+($syntax-dispatch %%tmp2207 '#(atom #t))))
+%%fender2192)
+(%%build-dispatch-call2118
+%%pvars2195
+%%exp2193
+(build-source #f %%y2197)
+%%r2188
+%%mr2189
+%%m?2190)
+(%%gen-syntax-case2120
+%%x2185
+%%keys2186
+%%clauses2187
+%%r2188
+%%mr2189
+%%m?2190)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(list (if (eq? %%p2157 'any)
+(list (if (eq? %%p2194 'any)
 (build-source
 #f
 (cons (build-source
@@ -13824,47 +14053,47 @@ any))))))
 (list (build-source
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 'value
-%%x2148))))
+%%x2185))))
 (build-source
 #f
 (cons (build-source #f '$syntax-dispatch)
-(list (build-source 'value %%x2148)
-((lambda (%%x2174)
-(if (self-eval? %%p2157)
-%%x2174
+(list (build-source 'value %%x2185)
+((lambda (%%x2211)
+(if (self-eval? %%p2194)
+%%x2211
 (build-source
 #f
-(list (build-source #f 'quote) %%x2174))))
-(attach-source #f %%p2157))))))))))
+(list (build-source #f 'quote) %%x2211))))
+(attach-source #f %%p2194))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%gen-var458 'tmp))))))))
-(%%gen-syntax-case2083
-(lambda (%%x2175
-%%keys2176
-%%clauses2177
-%%r2178
-%%mr2179
-%%m?2180)
-(if (null? %%clauses2177)
+(%%gen-var468 'tmp))))))))
+(%%gen-syntax-case2120
+(lambda (%%x2212
+%%keys2213
+%%clauses2214
+%%r2215
+%%mr2216
+%%m?2217)
+(if (null? %%clauses2214)
 (build-source
 #f
 (cons (build-source #f 'syntax-error)
-(list (build-source #f %%x2175))))
-((lambda (%%tmp2181)
-((lambda (%%tmp2182)
-(if %%tmp2182
-(apply (lambda (%%pat2183 %%exp2184)
-(if (if (%%id?241 %%pat2183)
-(if (not (%%bound-id-member?377
+(list (build-source #f %%x2212))))
+((lambda (%%tmp2218)
+((lambda (%%tmp2219)
+(if %%tmp2219
+(apply (lambda (%%pat2220 %%exp2221)
+(if (if (%%id?251 %%pat2220)
+(if (not (%%bound-id-member?387
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%pat2183
-%%keys2176))
-(not (%%ellipsis?454 %%pat2183))
+%%pat2220
+%%keys2213))
+(not (%%ellipsis?464 %%pat2220))
 #f)
 #f)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%label2185
-%%var2186)
+((lambda (%%label2222
+%%var2223)
 (build-source
 #f
 (cons (build-source
@@ -13873,78 +14102,78 @@ any))))))
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #f
 'lambda)
-(build-params #f (list %%var2186))
-(%%chi433
-%%exp2184
-(%%extend-env230
-%%label2185
-(cons 'syntax (cons %%var2186 0))
-%%r2178)
-%%mr2179
-(%%make-binding-wrap352
-(list %%pat2183)
-(list %%label2185)
+(build-params #f (list %%var2223))
+(%%chi443
+%%exp2221
+(%%extend-env240
+%%label2222
+(cons 'syntax (cons %%var2223 0))
+%%r2215)
+%%mr2216
+(%%make-binding-wrap362
+(list %%pat2220)
+(list %%label2222)
 '(()))
-%%m?2180)))
-(list (build-source #f %%x2175)))))
+%%m?2217)))
+(list (build-source #f %%x2212)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%gen-label297)
-(%%gen-var458 %%pat2183))
-(%%gen-clause2082
-%%x2175
-%%keys2176
-(cdr %%clauses2177)
-%%r2178
-%%mr2179
-%%m?2180
-%%pat2183
+(%%gen-label307)
+(%%gen-var468 %%pat2220))
+(%%gen-clause2119
+%%x2212
+%%keys2213
+(cdr %%clauses2214)
+%%r2215
+%%mr2216
+%%m?2217
+%%pat2220
 #t
-%%exp2184)))
-%%tmp2182)
-((lambda (%%tmp2187)
-(if %%tmp2187
-(apply (lambda (%%pat2188
-%%fender2189
-%%exp2190)
-(%%gen-clause2082
-%%x2175
-%%keys2176
-(cdr %%clauses2177)
-%%r2178
-%%mr2179
-%%m?2180
-%%pat2188
-%%fender2189
-%%exp2190))
-%%tmp2187)
-((lambda (%%_2191)
+%%exp2221)))
+%%tmp2219)
+((lambda (%%tmp2224)
+(if %%tmp2224
+(apply (lambda (%%pat2225
+%%fender2226
+%%exp2227)
+(%%gen-clause2119
+%%x2212
+%%keys2213
+(cdr %%clauses2214)
+%%r2215
+%%mr2216
+%%m?2217
+%%pat2225
+%%fender2226
+%%exp2227))
+%%tmp2224)
+((lambda (%%_2228)
 (syntax-error
-(car %%clauses2177)
+(car %%clauses2214)
 "invalid syntax-case clause"))
-%%tmp2181)))
+%%tmp2218)))
 ($syntax-dispatch
-%%tmp2181
+%%tmp2218
 '(any any any)))))
-($syntax-dispatch %%tmp2181 '(any any))))
-(car %%clauses2177))))))
-(lambda (%%e2192 %%r2193 %%mr2194 %%w2195 %%ae2196 %%m?2197)
-((lambda (%%e2198)
-((lambda (%%tmp2199)
-((lambda (%%tmp2200)
-(if %%tmp2200
-(apply (lambda (%%_2201
-%%val2202
-%%key2203
-%%m2204)
-(if (andmap (lambda (%%x2205)
-(if (%%id?241 %%x2205)
-(not (%%ellipsis?454
-%%x2205))
+($syntax-dispatch %%tmp2218 '(any any))))
+(car %%clauses2214))))))
+(lambda (%%e2229 %%r2230 %%mr2231 %%w2232 %%ae2233 %%m?2234)
+((lambda (%%e2235)
+((lambda (%%tmp2236)
+((lambda (%%tmp2237)
+(if %%tmp2237
+(apply (lambda (%%_2238
+%%val2239
+%%key2240
+%%m2241)
+(if (andmap (lambda (%%x2242)
+(if (%%id?251 %%x2242)
+(not (%%ellipsis?464
+%%x2242))
 #f))
-%%key2203)
-((lambda (%%x2207)
+%%key2240)
+((lambda (%%x2244)
 (build-source
-%%ae2196
+%%ae2233
 (cons (build-source
 #f
 (list (build-source
@@ -13952,57 +14181,57 @@ any))))))
 'lambda)
 (build-params
 #f
-(list %%x2207))
-(%%gen-syntax-case2083
-%%x2207
-%%key2203
-%%m2204
-%%r2193
-%%mr2194
-%%m?2197)))
-(list (%%chi433
-%%val2202
-%%r2193
-%%mr2194
+(list %%x2244))
+(%%gen-syntax-case2120
+%%x2244
+%%key2240
+%%m2241
+%%r2230
+%%mr2231
+%%m?2234)))
+(list (%%chi443
+%%val2239
+%%r2230
+%%mr2231
 '(())
-%%m?2197)))))
-(%%gen-var458 'tmp))
+%%m?2234)))))
+(%%gen-var468 'tmp))
 (syntax-error
-%%e2198
+%%e2235
 "invalid literals list in")))
-%%tmp2200)
-(syntax-error %%tmp2199)))
+%%tmp2237)
+(syntax-error %%tmp2236)))
 ($syntax-dispatch
-%%tmp2199
+%%tmp2236
 '(any any each-any . each-any))))
-%%e2198))
-(%%source-wrap379 %%e2192 %%w2195 %%ae2196)))))))
+%%e2235))
+(%%source-wrap389 %%e2229 %%w2232 %%ae2233)))))))
 (%%put-cte-hook72
 'module
-(lambda (%%x2210)
-(letrec ((%%proper-export?2211
-(lambda (%%e2212)
-((lambda (%%tmp2213)
-((lambda (%%tmp2214)
-(if %%tmp2214
-(apply (lambda (%%id2215 %%e2216)
-(if (identifier? %%id2215)
-(andmap %%proper-export?2211
-%%e2216)
+(lambda (%%x2247)
+(letrec ((%%proper-export?2248
+(lambda (%%e2249)
+((lambda (%%tmp2250)
+((lambda (%%tmp2251)
+(if %%tmp2251
+(apply (lambda (%%id2252 %%e2253)
+(if (identifier? %%id2252)
+(andmap %%proper-export?2248
+%%e2253)
 #f))
-%%tmp2214)
-((lambda (%%id2218) (identifier? %%id2218))
-%%tmp2213)))
-($syntax-dispatch %%tmp2213 '(any . each-any))))
-%%e2212))))
-((lambda (%%tmp2219)
-((lambda (%%orig2220)
-((lambda (%%tmp2221)
-((lambda (%%tmp2222)
-(if %%tmp2222
-(apply (lambda (%%_2223 %%e2224 %%d2225)
-(if (andmap %%proper-export?2211
-%%e2224)
+%%tmp2251)
+((lambda (%%id2255) (identifier? %%id2255))
+%%tmp2250)))
+($syntax-dispatch %%tmp2250 '(any . each-any))))
+%%e2249))))
+((lambda (%%tmp2256)
+((lambda (%%orig2257)
+((lambda (%%tmp2258)
+((lambda (%%tmp2259)
+(if %%tmp2259
+(apply (lambda (%%_2260 %%e2261 %%d2262)
+(if (andmap %%proper-export?2248
+%%e2261)
 (list '#(syntax-object
 begin
 ((top)
@@ -14221,6 +14450,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -14482,8 +14712,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -14934,6 +15166,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -15195,8 +15428,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -15429,7 +15664,7 @@ when)
 #(top-ribcage
 *top*
 #t)))
-(cons %%orig2220
+(cons %%orig2257
 (cons '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 anon
@@ -15640,6 +15875,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -15901,8 +16137,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -16133,7 +16371,7 @@ when)
 "i"
 "i"))
 #(top-ribcage *top* #t)))
-(cons %%e2224 %%d2225))))
+(cons %%e2261 %%d2262))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (cons '#(syntax-object
 $import
@@ -16355,6 +16593,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -16616,8 +16855,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -16850,7 +17091,7 @@ when)
 #(top-ribcage
 *top*
 #t)))
-(cons %%orig2220
+(cons %%orig2257
 '#(syntax-object
 (#f anon)
 ((top)
@@ -17061,6 +17302,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -17322,8 +17564,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -17556,24 +17800,24 @@ when)
 #(top-ribcage *top* #t))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (syntax-error
-%%x2210
+%%x2247
 "invalid exports list in")))
-%%tmp2222)
-((lambda (%%tmp2229)
-(if (if %%tmp2229
-(apply (lambda (%%_2230
-%%m2231
-%%e2232
-%%d2233)
-(identifier? %%m2231))
-%%tmp2229)
+%%tmp2259)
+((lambda (%%tmp2266)
+(if (if %%tmp2266
+(apply (lambda (%%_2267
+%%m2268
+%%e2269
+%%d2270)
+(identifier? %%m2268))
+%%tmp2266)
 #f)
-(apply (lambda (%%_2234
-%%m2235
-%%e2236
-%%d2237)
-(if (andmap %%proper-export?2211
-%%e2236)
+(apply (lambda (%%_2271
+%%m2272
+%%e2273
+%%d2274)
+(if (andmap %%proper-export?2248
+%%e2273)
 (cons '#(syntax-object
 $module
 ((top)
@@ -17798,6 +18042,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -17983,6 +18228,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -18289,4717 +18535,4736 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage
 *top*
 #t)))
-(cons %%orig2220
-(cons %%m2235
+(cons %%orig2257
+(cons %%m2272
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(cons %%e2236 %%d2237))))
+(cons %%e2273 %%d2274))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (syntax-error
-%%x2210
+%%x2247
 "invalid exports list in")))
-%%tmp2229)
-(syntax-error %%tmp2221)))
+%%tmp2266)
+(syntax-error %%tmp2258)))
 ($syntax-dispatch
-%%tmp2221
+%%tmp2258
 '(any any each-any . each-any)))))
 ($syntax-dispatch
-%%tmp2221
+%%tmp2258
 '(any each-any . each-any))))
-%%x2210))
-%%tmp2219))
-%%x2210))))
+%%x2247))
+%%tmp2256))
+%%x2247))))
 ((lambda ()
-(letrec ((%%$module-exports2241
-(lambda (%%m2243 %%r2244)
-((lambda (%%b2245)
-((lambda (%%t2246)
-(if (memv %%t2246 '($module))
-((lambda (%%interface2247)
-((lambda (%%new-marks2248)
+(letrec ((%%$module-exports2278
+(lambda (%%m2280 %%r2281)
+((lambda (%%b2282)
+((lambda (%%t2283)
+(if (memv %%t2283 '($module))
+((lambda (%%interface2284)
+((lambda (%%new-marks2285)
 ((lambda ()
-(%%vmap422
-(lambda (%%x2249)
-((lambda (%%id2250)
+(%%vmap432
+(lambda (%%x2286)
+((lambda (%%id2287)
 (%%make-syntax-object63
 (syntax-object->datum
-%%id2250)
-((lambda (%%marks2251)
-(%%make-wrap250
-%%marks2251
-(if (eq? (car %%marks2251)
+%%id2287)
+((lambda (%%marks2288)
+(%%make-wrap260
+%%marks2288
+(if (eq? (car %%marks2288)
 #f)
 (cons 'shift
-(%%wrap-subst252
+(%%wrap-subst262
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 '((top))))
-(%%wrap-subst252 '((top))))))
+(%%wrap-subst262 '((top))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%join-marks358
-%%new-marks2248
-(%%wrap-marks251
+(%%join-marks368
+%%new-marks2285
+(%%wrap-marks261
 (%%syntax-object-wrap66
-%%id2250))))))
-(if (pair? %%x2249)
-(car %%x2249)
-%%x2249)))
-(%%interface-exports389
-%%interface2247)))))
-(%%import-mark-delta440
-%%m2243
-%%interface2247)))
-(%%binding-value217 %%b2245))
-(if (memv %%t2246 '(displaced-lexical))
-(%%displaced-lexical-error234 %%m2243)
+%%id2287))))))
+(if (pair? %%x2286)
+(car %%x2286)
+%%x2286)))
+(%%interface-exports399
+%%interface2284)))))
+(%%import-mark-delta450
+%%m2280
+%%interface2284)))
+(%%binding-value227 %%b2282))
+(if (memv %%t2283 '(displaced-lexical))
+(%%displaced-lexical-error244 %%m2280)
 (syntax-error
-%%m2243
+%%m2280
 "unknown module"))))
-(%%binding-type216 %%b2245)))
-(%%r2244 %%m2243))))
-(%%$import-help2242
-(lambda (%%orig2252 %%import-only?2253)
-(lambda (%%r2254)
-(letrec ((%%difference2255
-(lambda (%%ls12261 %%ls22262)
-(if (null? %%ls12261)
-%%ls12261
-(if (%%bound-id-member?377
-(car %%ls12261)
-%%ls22262)
-(%%difference2255
-(cdr %%ls12261)
-%%ls22262)
-(cons (car %%ls12261)
-(%%difference2255
-(cdr %%ls12261)
-%%ls22262))))))
-(%%prefix-add2256
-(lambda (%%prefix-id2263)
-((lambda (%%prefix2264)
-(lambda (%%id2265)
+(%%binding-type226 %%b2282)))
+(%%r2281 %%m2280))))
+(%%$import-help2279
+(lambda (%%orig2289 %%import-only?2290)
+(lambda (%%r2291)
+(letrec ((%%difference2292
+(lambda (%%ls12298 %%ls22299)
+(if (null? %%ls12298)
+%%ls12298
+(if (%%bound-id-member?387
+(car %%ls12298)
+%%ls22299)
+(%%difference2292
+(cdr %%ls12298)
+%%ls22299)
+(cons (car %%ls12298)
+(%%difference2292
+(cdr %%ls12298)
+%%ls22299))))))
+(%%prefix-add2293
+(lambda (%%prefix-id2300)
+((lambda (%%prefix2301)
+(lambda (%%id2302)
 (datum->syntax-object
-%%id2265
+%%id2302
 (string->symbol
 (string-append
-%%prefix2264
+%%prefix2301
 (symbol->string
 (syntax-object->datum
-%%id2265)))))))
+%%id2302)))))))
 (symbol->string
 (syntax-object->datum
-%%prefix-id2263)))))
-(%%prefix-drop2257
-(lambda (%%prefix-id2266)
-((lambda (%%prefix2267)
-(lambda (%%id2268)
-((lambda (%%s2269)
-((lambda (%%np2270 %%ns2271)
+%%prefix-id2300)))))
+(%%prefix-drop2294
+(lambda (%%prefix-id2303)
+((lambda (%%prefix2304)
+(lambda (%%id2305)
+((lambda (%%s2306)
+((lambda (%%np2307 %%ns2308)
 (begin
-(if (not (if (>= %%ns2271
+(if (not (if (>= %%ns2308
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%np2270)
-(string=? (substring %%s2269 0 %%np2270) %%prefix2267)
+%%np2307)
+(string=? (substring %%s2306 0 %%np2307) %%prefix2304)
 #f))
 (syntax-error
-%%id2268
-(string-append "missing expected prefix " %%prefix2267))
+%%id2305
+(string-append "missing expected prefix " %%prefix2304))
 (void))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (datum->syntax-object
-%%id2268
+%%id2305
 (string->symbol
 (substring
-%%s2269
-%%np2270
-%%ns2271)))))
-(string-length %%prefix2267)
-(string-length %%s2269)))
+%%s2306
+%%np2307
+%%ns2308)))))
+(string-length %%prefix2304)
+(string-length %%s2306)))
 (symbol->string
 (syntax-object->datum
-%%id2268)))))
+%%id2305)))))
 (symbol->string
 (syntax-object->datum
-%%prefix-id2266)))))
-(%%gen-mid2258
-(lambda (%%mid2272)
+%%prefix-id2303)))))
+(%%gen-mid2295
+(lambda (%%mid2309)
 (datum->syntax-object
-%%mid2272
+%%mid2309
 (%%generate-id78
-((lambda (%%x2273)
-((lambda (%%e2274)
-(if (annotation? %%e2274)
+((lambda (%%x2310)
+((lambda (%%e2311)
+(if (annotation? %%e2311)
 (annotation-expression
-%%e2274)
-%%e2274))
-(if (%%syntax-object?64 %%x2273)
+%%e2311)
+%%e2311))
+(if (%%syntax-object?64 %%x2310)
 (%%syntax-object-expression65
-%%x2273)
-%%x2273)))
-%%mid2272)))))
-(%%modspec2259
-(lambda (%%m2275 %%exports?2276)
-((lambda (%%tmp2277)
-((lambda (%%tmp2278)
-(if %%tmp2278
-(apply (lambda (%%orig2279
-%%import-only?2280)
-((lambda (%%tmp2281)
-((lambda (%%tmp2282)
-(if (if %%tmp2282
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(apply (lambda (%%m2283 %%id2284)
-(andmap identifier? %%id2284))
-%%tmp2282)
-#f)
-(apply (lambda (%%m2286 %%id2287)
-(call-with-values
-(lambda () (%%modspec2259 %%m2286 #f))
-(lambda (%%mid2288 %%d2289 %%exports2290)
-((lambda (%%tmp2291)
-((lambda (%%tmp2292)
-(if %%tmp2292
-(apply (lambda (%%d2293
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%tmid2294)
-(values %%mid2288
-(list '#(syntax-object
-begin
-((top)
-#(ribcage
-#(d tmid)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top) (top) (top) (top) (top) (top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage #(r) #((top)) #("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help $module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-(list '#(syntax-object
-$module
-((top)
-#(ribcage
-#(d tmid)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage #(r) #((top)) #("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help $module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-%%orig2279
-%%tmid2294
-%%id2287
-%%d2293)
-(list '#(syntax-object
-$import
-((top)
-#(ribcage
-#(d tmid)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage #(r) #((top)) #("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help $module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-%%orig2279
-%%import-only?2280
-%%tmid2294))
-(if %%exports?2276 %%id2287 #f)))
-%%tmp2292)
-;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(syntax-error %%tmp2291)))
-($syntax-dispatch
-%%tmp2291
-'(any any))))
-(list %%d2289
-(%%gen-mid2258 %%mid2288))))))
-%%tmp2282)
-((lambda (%%tmp2297)
-(if (if %%tmp2297
-(apply (lambda (%%m2298 %%id2299)
-(andmap identifier? %%id2299))
-%%tmp2297)
-#f)
-(apply (lambda (%%m2301 %%id2302)
-(call-with-values
-(lambda ()
-(%%modspec2259 %%m2301 #t))
-(lambda (%%mid2303
-%%d2304
-%%exports2305)
-((lambda (%%tmp2306)
-((lambda (%%tmp2307)
-(if %%tmp2307
-(apply (lambda (%%d2308
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%tmid2309
-%%id2310)
-(values %%mid2303
-(list '#(syntax-object
-begin
-((top)
-#(ribcage
-#(d tmid id)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage #(r) #((top)) #("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help $module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-(list '#(syntax-object
-$module
-((top)
-#(ribcage
-#(d tmid id)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage
-#(r)
-#((top))
-#("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help
-$module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-%%orig2279
-%%tmid2309
-%%id2310
-%%d2308)
-(list '#(syntax-object
-$import
-((top)
-#(ribcage
-#(d tmid id)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage
-#(r)
-#((top))
-#("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help
-$module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-%%orig2279
-%%import-only?2280
-%%tmid2309))
-(if %%exports?2276 %%id2310 #f)))
-%%tmp2307)
-(syntax-error %%tmp2306)))
-;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-($syntax-dispatch
-%%tmp2306
-'(any any each-any))))
-(list %%d2304
-(%%gen-mid2258 %%mid2303)
-(%%difference2255
-%%exports2305
-%%id2302))))))
-%%tmp2297)
+%%x2310)
+%%x2310)))
+%%mid2309)))))
+(%%modspec2296
+(lambda (%%m2312 %%exports?2313)
 ((lambda (%%tmp2314)
-(if (if %%tmp2314
-(apply (lambda (%%m2315
-%%prefix-id2316)
+((lambda (%%tmp2315)
+(if %%tmp2315
+(apply (lambda (%%orig2316
+%%import-only?2317)
+((lambda (%%tmp2318)
+((lambda (%%tmp2319)
+(if (if %%tmp2319
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+(apply (lambda (%%m2320 %%id2321)
+(andmap identifier? %%id2321))
+%%tmp2319)
+#f)
+(apply (lambda (%%m2323 %%id2324)
+(call-with-values
+(lambda () (%%modspec2296 %%m2323 #f))
+(lambda (%%mid2325 %%d2326 %%exports2327)
+((lambda (%%tmp2328)
+((lambda (%%tmp2329)
+(if %%tmp2329
+(apply (lambda (%%d2330
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%%tmid2331)
+(values %%mid2325
+(list '#(syntax-object
+begin
+((top)
+#(ribcage
+#(d tmid)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage
+#(m id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top) (top) (top) (top) (top) (top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage #(r) #((top)) #("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help $module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+(list '#(syntax-object
+$module
+((top)
+#(ribcage
+#(d tmid)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage
+#(m id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage #(r) #((top)) #("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help $module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+%%orig2316
+%%tmid2331
+%%id2324
+%%d2330)
+(list '#(syntax-object
+$import
+((top)
+#(ribcage
+#(d tmid)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage
+#(m id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage #(r) #((top)) #("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help $module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+%%orig2316
+%%import-only?2317
+%%tmid2331))
+(if %%exports?2313 %%id2324 #f)))
+%%tmp2329)
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(syntax-error %%tmp2328)))
+($syntax-dispatch
+%%tmp2328
+'(any any))))
+(list %%d2326
+(%%gen-mid2295 %%mid2325))))))
+%%tmp2319)
+((lambda (%%tmp2334)
+(if (if %%tmp2334
+(apply (lambda (%%m2335 %%id2336)
+(andmap identifier? %%id2336))
+%%tmp2334)
+#f)
+(apply (lambda (%%m2338 %%id2339)
+(call-with-values
+(lambda ()
+(%%modspec2296 %%m2338 #t))
+(lambda (%%mid2340
+%%d2341
+%%exports2342)
+((lambda (%%tmp2343)
+((lambda (%%tmp2344)
+(if %%tmp2344
+(apply (lambda (%%d2345
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%%tmid2346
+%%id2347)
+(values %%mid2340
+(list '#(syntax-object
+begin
+((top)
+#(ribcage
+#(d tmid id)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage
+#(m id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage #(r) #((top)) #("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help $module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+(list '#(syntax-object
+$module
+((top)
+#(ribcage
+#(d tmid id)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage
+#(m id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage
+#(r)
+#((top))
+#("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help
+$module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+%%orig2316
+%%tmid2346
+%%id2347
+%%d2345)
+(list '#(syntax-object
+$import
+((top)
+#(ribcage
+#(d tmid id)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage
+#(m id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage
+#(r)
+#((top))
+#("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help
+$module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+%%orig2316
+%%import-only?2317
+%%tmid2346))
+(if %%exports?2313 %%id2347 #f)))
+%%tmp2344)
+(syntax-error %%tmp2343)))
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+($syntax-dispatch
+%%tmp2343
+'(any any each-any))))
+(list %%d2341
+(%%gen-mid2295 %%mid2340)
+(%%difference2292
+%%exports2342
+%%id2339))))))
+%%tmp2334)
+((lambda (%%tmp2351)
+(if (if %%tmp2351
+(apply (lambda (%%m2352
+%%prefix-id2353)
 (identifier?
-%%prefix-id2316))
-%%tmp2314)
+%%prefix-id2353))
+%%tmp2351)
 #f)
-(apply (lambda (%%m2317
-%%prefix-id2318)
+(apply (lambda (%%m2354
+%%prefix-id2355)
 (call-with-values
 (lambda ()
-(%%modspec2259
-%%m2317
+(%%modspec2296
+%%m2354
 #t))
-(lambda (%%mid2319
-%%d2320
-%%exports2321)
-((lambda (%%tmp2322)
-((lambda (%%tmp2323)
-(if %%tmp2323
-(apply (lambda (%%d2324
+(lambda (%%mid2356
+%%d2357
+%%exports2358)
+((lambda (%%tmp2359)
+((lambda (%%tmp2360)
+(if %%tmp2360
+(apply (lambda (%%d2361
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%tmid2325
-%%old-id2326
-%%tmp2327
-%%id2328)
-(values %%mid2319
+%%tmid2362
+%%old-id2363
+%%tmp2364
+%%id2365)
+(values %%mid2356
 (list '#(syntax-object
 begin
 ((top)
@@ -23256,6 +23521,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -23517,8 +23783,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -24018,6 +24286,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -24203,6 +24472,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -24509,16 +24779,17 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage
 *top*
 #t)))
-(cons %%orig2279
-(cons %%tmid2325
+(cons %%orig2316
+(cons %%tmid2362
 (cons (map list
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%id2328
-%%tmp2327)
+%%id2365
+%%tmp2364)
 (cons (cons '#(syntax-object
 $module
 ((top)
@@ -24771,6 +25042,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -24956,6 +25228,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -25262,16 +25535,17 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-(cons %%orig2279
-(cons %%tmid2325
+(cons %%orig2316
+(cons %%tmid2362
 (cons (map list
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%tmp2327
-%%old-id2326)
-(cons %%d2324
-(map (lambda (%%tmp2334 %%tmp2333)
+%%tmp2364
+%%old-id2363)
+(cons %%d2361
+(map (lambda (%%tmp2371 %%tmp2370)
 (list '#(syntax-object
 alias
 ((top)
@@ -25520,6 +25794,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -25705,6 +25980,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -26011,12 +26287,13 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%tmp2333
-%%tmp2334))
-%%old-id2326
-%%tmp2327))))))
+%%tmp2370
+%%tmp2371))
+%%old-id2363
+%%tmp2364))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (cons (list '#(syntax-object
 $import
@@ -26279,6 +26556,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -26464,6 +26742,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -26770,12 +27049,13 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%orig2279
-%%import-only?2280
-%%tmid2325)
-(map (lambda (%%tmp2336 %%tmp2335)
+%%orig2316
+%%import-only?2317
+%%tmid2362)
+(map (lambda (%%tmp2373 %%tmp2372)
 (list '#(syntax-object
 alias
 ((top)
@@ -27049,6 +27329,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -27234,6 +27515,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -27540,14 +27822,15 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage
 *top*
 #t)))
-%%tmp2335
-%%tmp2336))
-%%tmp2327
-%%id2328)))))))
+%%tmp2372
+%%tmp2373))
+%%tmp2364
+%%id2365)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (list '#(syntax-object
 $import
@@ -27818,6 +28101,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -28003,6 +28287,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -28309,4599 +28594,93 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage
 *top*
 #t)))
-%%orig2279
-%%import-only?2280
-%%tmid2325))
-(if %%exports?2276 %%id2328 #f)))
-%%tmp2323)
-(syntax-error %%tmp2322)))
+%%orig2316
+%%import-only?2317
+%%tmid2362))
+(if %%exports?2313 %%id2365 #f)))
+%%tmp2360)
+(syntax-error %%tmp2359)))
 ($syntax-dispatch
-%%tmp2322
-'(any any each-any each-any each-any))))
-(list %%d2320
-(%%gen-mid2258 %%mid2319)
-%%exports2321
-(generate-temporaries %%exports2321)
-(map (%%prefix-add2256 %%prefix-id2318) %%exports2321))))))
-;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2314)
-((lambda (%%tmp2338)
-(if (if %%tmp2338
-(apply (lambda (%%m2339
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%prefix-id2340)
-(identifier? %%prefix-id2340))
-%%tmp2338)
-;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-#f)
-(apply (lambda (%%m2341
-%%prefix-id2342)
-(call-with-values
-(lambda ()
-(%%modspec2259
-%%m2341
-#t))
-(lambda (%%mid2343
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%d2344
-%%exports2345)
-((lambda (%%tmp2346)
-((lambda (%%tmp2347)
-(if %%tmp2347
-(apply (lambda (%%d2348
-%%tmid2349
-%%old-id2350
-%%tmp2351
-%%id2352)
-(values %%mid2343
-(list '#(syntax-object
-begin
-((top)
-#(ribcage
-#(d
-tmid
-old-id
-tmp
-id)
-#((top)
-(top)
-(top)
-(top)
-(top))
-#("i"
-"i"
-"i"
-"i"
-"i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m prefix-id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(ribcage
-#(r)
-#((top))
-#("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help
-$module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage
-*top*
-#t)))
-(cons '#(syntax-object
-$module
-((top)
-#(ribcage
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#(d tmid old-id tmp id)
-#((top) (top) (top) (top) (top))
-#("i" "i" "i" "i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage #(m prefix-id) #((top) (top)) #("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage #(m exports?) #((top) (top)) #("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top) (top) (top) (top) (top) (top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage #(r) #((top)) #("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help $module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-(cons %%orig2279
-(cons %%tmid2349
-(cons (map list %%id2352 %%tmp2351)
-(cons (cons '#(syntax-object
-$module
-((top)
-#(ribcage
-#(d tmid old-id tmp id)
-#((top)
-(top)
-(top)
-(top)
-(top))
-#("i" "i" "i" "i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m prefix-id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(ribcage
-#(r)
-#((top))
-#("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help
-$module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-(cons %%orig2279
-(cons %%tmid2349
-(cons (map list
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%tmp2351
-%%old-id2350)
-(cons %%d2348
-(map (lambda (%%tmp2358 %%tmp2357)
-(list '#(syntax-object
-alias
-((top)
-#(ribcage
-#(d tmid old-id tmp id)
-#((top)
-(top)
-(top)
-(top)
-(top))
-#("i" "i" "i" "i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage
-#(m prefix-id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage
-#(r)
-#((top))
-#("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help
-$module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
-%%tmp2357
-%%tmp2358))
-%%old-id2350
-%%tmp2351))))))
-;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(cons (list '#(syntax-object
-$import
-((top)
-#(ribcage
-#(d
-tmid
-old-id
-tmp
-id)
-#((top)
-(top)
-(top)
-(top)
-(top))
-#("i"
-"i"
-"i"
-"i"
-"i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top)
-(top)
-(top))
-#("i" "i" "i"))
-#(ribcage
-#(m prefix-id)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-#(orig
-import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(m exports?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(ribcage
-#(r)
-#((top))
-#("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig
-import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help
-$module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage
-*top*
-#t)))
-%%orig2279
-%%import-only?2280
-%%tmid2349)
-(map (lambda (%%tmp2360
-%%tmp2359)
-(list '#(syntax-object
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-alias
-((top)
-#(ribcage
-#(d tmid old-id tmp id)
-#((top) (top) (top) (top) (top))
-#("i" "i" "i" "i" "i"))
-#(ribcage () () ())
-#(ribcage
-#(mid d exports)
-#((top) (top) (top))
-#("i" "i" "i"))
-#(ribcage #(m prefix-id) #((top) (top)) #("i" "i"))
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage () () ())
-#(ribcage #(m exports?) #((top) (top)) #("i" "i"))
-#(ribcage
-(modspec*
-modspec
-gen-mid
-prefix-drop
-prefix-add
-difference)
-((top) (top) (top) (top) (top) (top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage #(r) #((top)) #("i"))
-#(ribcage () () ())
-#(ribcage
-#(orig import-only?)
-#((top) (top))
-#("i" "i"))
-#(ribcage
-($import-help $module-exports)
-((top) (top))
-("i" "i"))
-#(ribcage
-(lambda-var-list
-gen-var
-strip
-strip*
-strip-annotation
-ellipsis?
-chi-void
-chi-local-syntax
-chi-lambda-clause
-parse-begin
-parse-alias
-parse-eval-when
-parse-meta
-parse-define-syntax
-parse-define
-parse-import
-parse-module
-do-import!
-lookup-import-label
-import-mark-delta
-chi-internal
-chi-body
-chi-macro
-chi-set!
-chi-application
-chi-expr
-chi
-chi-sequence
-chi-meta-frob
-chi-frobs
-ct-eval/residualize3
-ct-eval/residualize2
-rt-eval/residualize
-initial-mode-set
-update-mode-set
-do-top-import
-vfor-each
-vmap
-chi-external
-check-defined-ids
-check-module-exports
-id-set-diff
-chi-top-module
-set-frob-meta?!
-set-frob-e!
-frob-meta?
-frob-e
-frob?
-make-frob
-create-module-binding
-set-module-binding-exported!
-set-module-binding-val!
-set-module-binding-imps!
-set-module-binding-label!
-set-module-binding-id!
-set-module-binding-type!
-module-binding-exported
-module-binding-val
-module-binding-imps
-module-binding-label
-module-binding-id
-module-binding-type
-module-binding?
-make-module-binding
-make-resolved-interface
-make-unresolved-interface
-set-interface-token!
-set-interface-exports!
-set-interface-marks!
-interface-token
-interface-exports
-interface-marks
-interface?
-make-interface
-flatten-exports
-chi-top
-chi-top-sequence
-chi-top*
-syntax-type
-chi-when-list
-source-wrap
-wrap
-bound-id-member?
-invalid-ids-error
-distinct-bound-ids?
-valid-bound-ids?
-bound-id=?
-help-bound-id=?
-literal-id=?
-free-id=?
-id-var-name
-id-var-name-loc
-id-var-name&marks
-id-var-name-loc&marks
-top-id-free-var-name
-top-id-bound-var-name
-anon
-diff-marks
-same-marks?
-join-subst
-join-marks
-join-wraps
-smart-append
-resolved-id-var-name
-id->resolved-id
-make-resolved-id
-make-binding-wrap
-store-import-binding
-lookup-import-binding-name
-extend-ribcage-subst!
-extend-ribcage-barrier-help!
-extend-ribcage-barrier!
-import-extend-ribcage!
-extend-ribcage!
-make-empty-ribcage
-barrier-marker
-new-mark
-anti-mark
-the-anti-mark
-set-env-wrap!
-set-env-top-ribcage!
-env-wrap
-env-top-ribcage
-env?
-make-env
-set-import-interface-new-marks!
-set-import-interface-interface!
-import-interface-new-marks
-import-interface-interface
-import-interface?
-make-import-interface
-set-top-ribcage-mutable?!
-set-top-ribcage-key!
-top-ribcage-mutable?
-top-ribcage-key
-top-ribcage?
-make-top-ribcage
-set-ribcage-labels!
-set-ribcage-marks!
-set-ribcage-symnames!
-ribcage-labels
-ribcage-marks
-ribcage-symnames
-ribcage?
-make-ribcage
-gen-labels
-label?
-gen-label
-set-indirect-label!
-get-indirect-label
-indirect-label?
-gen-indirect-label
-anon
-only-top-marked?
-top-marked?
-tmp-wrap
-top-wrap
-empty-wrap
-wrap-subst
-wrap-marks
-make-wrap
-id-sym-name&marks
-id-subst
-id-marks
-id-sym-name
-id?
-nonsymbol-id?
-global-extend
-defer-or-eval-transformer
-make-transformer-binding
-lookup
-lookup*
-displaced-lexical-error
-displaced-lexical?
-extend-var-env*
-extend-env*
-extend-env
-null-env
-binding?
-set-binding-value!
-set-binding-type!
-binding-value
-binding-type
-make-binding
-sanitize-binding
-arg-check
-no-source
-unannotate
-self-evaluating?
-lexical-var?
-build-lexical-var
-build-top-module
-build-body
-build-letrec
-build-sequence
-build-data
-build-primref
-built-lambda?
-build-lambda
-build-revisit-only
-build-visit-only
-build-cte-install
-build-global-definition
-build-global-assignment
-build-global-reference
-build-lexical-assignment
-build-lexical-reference
-build-conditional
-build-application
-generate-id
-update-import-binding!
-get-import-binding
-read-only-binding?
-put-global-definition-hook
-get-global-definition-hook
-put-cte-hook
-define-top-level-value-hook
-local-eval-hook
-top-level-eval-hook
-set-syntax-object-wrap!
-set-syntax-object-expression!
-syntax-object-wrap
-syntax-object-expression
-syntax-object?
-make-syntax-object
-noexpand
-let-values
-define-structure
-unless
-when)
-((top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-("m" top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top)
-(top))
-("i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"
-"i"))
-#(top-ribcage *top* #t)))
 %%tmp2359
-%%tmp2360))
-%%tmp2351
-%%id2352)))))))
+'(any any each-any each-any each-any))))
+(list %%d2357
+(%%gen-mid2295 %%mid2356)
+%%exports2358
+(generate-temporaries %%exports2358)
+(map (%%prefix-add2293 %%prefix-id2355) %%exports2358))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+%%tmp2351)
+((lambda (%%tmp2375)
+(if (if %%tmp2375
+(apply (lambda (%%m2376
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%%prefix-id2377)
+(identifier? %%prefix-id2377))
+%%tmp2375)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#f)
+(apply (lambda (%%m2378
+%%prefix-id2379)
+(call-with-values
+(lambda ()
+(%%modspec2296
+%%m2378
+#t))
+(lambda (%%mid2380
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%%d2381
+%%exports2382)
+((lambda (%%tmp2383)
+((lambda (%%tmp2384)
+(if %%tmp2384
+(apply (lambda (%%d2385
+%%tmid2386
+%%old-id2387
+%%tmp2388
+%%id2389)
+(values %%mid2380
 (list '#(syntax-object
-$import
+begin
 ((top)
 #(ribcage
-;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#(d tmid old-id tmp id)
-#((top) (top) (top) (top) (top))
-#("i" "i" "i" "i" "i"))
+#(d
+tmid
+old-id
+tmp
+id)
+#((top)
+(top)
+(top)
+(top)
+(top))
+#("i"
+"i"
+"i"
+"i"
+"i"))
 #(ribcage () () ())
 #(ribcage
 #(mid d exports)
 #((top) (top) (top))
 #("i" "i" "i"))
-#(ribcage #(m prefix-id) #((top) (top)) #("i" "i"))
+#(ribcage
+#(m prefix-id)
+#((top) (top))
+#("i" "i"))
 #(ribcage
 #(orig import-only?)
 #((top) (top))
 #("i" "i"))
 #(ribcage () () ())
-#(ribcage #(m exports?) #((top) (top)) #("i" "i"))
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
 #(ribcage
 (modspec*
 modspec
@@ -32909,16 +28688,30 @@ gen-mid
 prefix-drop
 prefix-add
 difference)
-((top) (top) (top) (top) (top) (top))
-("i" "i" "i" "i" "i" "i"))
-#(ribcage #(r) #((top)) #("i"))
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(ribcage
+#(r)
+#((top))
+#("i"))
 #(ribcage () () ())
 #(ribcage
 #(orig import-only?)
 #((top) (top))
 #("i" "i"))
 #(ribcage
-($import-help $module-exports)
+($import-help
+$module-exports)
 ((top) (top))
 ("i" "i"))
 #(ribcage
@@ -33120,6 +28913,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -33305,6 +29099,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -33611,51 +29406,4563 @@ when)
 "i"
 "i"
 "i"
+"i"
+"i"))
+#(top-ribcage
+*top*
+#t)))
+(cons '#(syntax-object
+$module
+((top)
+#(ribcage
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#(d tmid old-id tmp id)
+#((top) (top) (top) (top) (top))
+#("i" "i" "i" "i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage #(m prefix-id) #((top) (top)) #("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(m exports?) #((top) (top)) #("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top) (top) (top) (top) (top) (top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage #(r) #((top)) #("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help $module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%orig2279
-%%import-only?2280
-%%tmid2349))
-;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(if %%exports?2276
-%%id2352
-#f)))
-%%tmp2347)
-(syntax-error %%tmp2346)))
-($syntax-dispatch
-%%tmp2346
-'(any any each-any each-any each-any))))
-(list %%d2344
-(%%gen-mid2258 %%mid2343)
-%%exports2345
-(generate-temporaries %%exports2345)
-(map (%%prefix-drop2257 %%prefix-id2342)
-%%exports2345))))))
-%%tmp2338)
-;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2362)
-(if (if %%tmp2362
-(apply (lambda (%%m2363
+(cons %%orig2316
+(cons %%tmid2386
+(cons (map list %%id2389 %%tmp2388)
+(cons (cons '#(syntax-object
+$module
+((top)
+#(ribcage
+#(d tmid old-id tmp id)
+#((top)
+(top)
+(top)
+(top)
+(top))
+#("i" "i" "i" "i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage
+#(m prefix-id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(ribcage
+#(r)
+#((top))
+#("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help
+$module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+(cons %%orig2316
+(cons %%tmid2386
+(cons (map list
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%new-id2364
-%%old-id2365)
-(if (andmap identifier? %%new-id2364)
-(andmap identifier? %%old-id2365)
+%%tmp2388
+%%old-id2387)
+(cons %%d2385
+(map (lambda (%%tmp2395 %%tmp2394)
+(list '#(syntax-object
+alias
+((top)
+#(ribcage
+#(d tmid old-id tmp id)
+#((top)
+(top)
+(top)
+(top)
+(top))
+#("i" "i" "i" "i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage
+#(m prefix-id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage
+#(r)
+#((top))
+#("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help
+$module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+%%tmp2394
+%%tmp2395))
+%%old-id2387
+%%tmp2388))))))
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(cons (list '#(syntax-object
+$import
+((top)
+#(ribcage
+#(d
+tmid
+old-id
+tmp
+id)
+#((top)
+(top)
+(top)
+(top)
+(top))
+#("i"
+"i"
+"i"
+"i"
+"i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top)
+(top)
+(top))
+#("i" "i" "i"))
+#(ribcage
+#(m prefix-id)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+#(orig
+import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(m exports?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(ribcage
+#(r)
+#((top))
+#("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig
+import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help
+$module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage
+*top*
+#t)))
+%%orig2316
+%%import-only?2317
+%%tmid2386)
+(map (lambda (%%tmp2397
+%%tmp2396)
+(list '#(syntax-object
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+alias
+((top)
+#(ribcage
+#(d tmid old-id tmp id)
+#((top) (top) (top) (top) (top))
+#("i" "i" "i" "i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage #(m prefix-id) #((top) (top)) #("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(m exports?) #((top) (top)) #("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top) (top) (top) (top) (top) (top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage #(r) #((top)) #("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help $module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+%%tmp2396
+%%tmp2397))
+%%tmp2388
+%%id2389)))))))
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(list '#(syntax-object
+$import
+((top)
+#(ribcage
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#(d tmid old-id tmp id)
+#((top) (top) (top) (top) (top))
+#("i" "i" "i" "i" "i"))
+#(ribcage () () ())
+#(ribcage
+#(mid d exports)
+#((top) (top) (top))
+#("i" "i" "i"))
+#(ribcage #(m prefix-id) #((top) (top)) #("i" "i"))
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage () () ())
+#(ribcage #(m exports?) #((top) (top)) #("i" "i"))
+#(ribcage
+(modspec*
+modspec
+gen-mid
+prefix-drop
+prefix-add
+difference)
+((top) (top) (top) (top) (top) (top))
+("i" "i" "i" "i" "i" "i"))
+#(ribcage #(r) #((top)) #("i"))
+#(ribcage () () ())
+#(ribcage
+#(orig import-only?)
+#((top) (top))
+#("i" "i"))
+#(ribcage
+($import-help $module-exports)
+((top) (top))
+("i" "i"))
+#(ribcage
+(lambda-var-list
+gen-var
+strip
+strip*
+strip-annotation
+ellipsis?
+chi-void
+chi-local-syntax
+chi-lambda-clause
+parse-begin
+parse-alias
+parse-eval-when
+parse-meta
+parse-define-syntax
+parse-define
+parse-import
+parse-module
+do-import!
+lookup-import-label
+import-mark-delta
+chi-internal
+chi-body
+chi-macro
+chi-set!
+chi-application
+chi-expr
+chi
+chi-sequence
+chi-meta-frob
+chi-frobs
+ct-eval/residualize3
+ct-eval/residualize2
+rt-eval/residualize
+initial-mode-set
+update-mode-set
+do-top-import
+vfor-each
+vmap
+chi-external
+check-defined-ids
+check-module-exports
+id-set-diff
+chi-top-module
+set-frob-meta?!
+set-frob-e!
+frob-meta?
+frob-e
+frob?
+make-frob
+create-module-binding
+set-module-binding-exported!
+set-module-binding-val!
+set-module-binding-imps!
+set-module-binding-label!
+set-module-binding-id!
+set-module-binding-type!
+module-binding-exported
+module-binding-val
+module-binding-imps
+module-binding-label
+module-binding-id
+module-binding-type
+module-binding?
+make-module-binding
+make-resolved-interface
+make-unresolved-interface
+set-interface-token!
+set-interface-exports!
+set-interface-marks!
+interface-token
+interface-exports
+interface-marks
+interface?
+make-interface
+flatten-exports
+chi-top
+chi-top-sequence
+chi-top*
+syntax-type
+chi-when-list
+source-wrap
+wrap
+bound-id-member?
+invalid-ids-error
+distinct-bound-ids?
+valid-bound-ids?
+bound-id=?
+help-bound-id=?
+literal-id=?
+free-id=?
+id-var-name
+id-var-name-loc
+id-var-name&marks
+id-var-name-loc&marks
+top-id-free-var-name
+top-id-bound-var-name
+anon
+diff-marks
+same-marks?
+join-subst
+join-marks
+join-wraps
+smart-append
+resolved-id-var-name
+id->resolved-id
+make-resolved-id
+make-binding-wrap
+store-import-binding
+lookup-import-binding-name
+extend-ribcage-subst!
+extend-ribcage-barrier-help!
+extend-ribcage-barrier!
+import-extend-ribcage!
+extend-ribcage!
+make-empty-ribcage
+barrier-marker
+new-mark
+anti-mark
+the-anti-mark
+set-env-wrap!
+set-env-top-ribcage!
+env-wrap
+env-top-ribcage
+env?
+make-env
+set-import-interface-new-marks!
+set-import-interface-interface!
+import-interface-new-marks
+import-interface-interface
+import-interface?
+make-import-interface
+set-top-ribcage-mutable?!
+set-top-ribcage-key!
+top-ribcage-mutable?
+top-ribcage-key
+top-ribcage?
+make-top-ribcage
+set-ribcage-labels!
+set-ribcage-marks!
+set-ribcage-symnames!
+ribcage-labels
+ribcage-marks
+ribcage-symnames
+ribcage?
+make-ribcage
+gen-labels
+label?
+gen-label
+set-indirect-label!
+get-indirect-label
+indirect-label?
+gen-indirect-label
+anon
+only-top-marked?
+top-marked?
+tmp-wrap
+top-wrap
+empty-wrap
+wrap-subst
+wrap-marks
+make-wrap
+id-sym-name&marks
+id-subst
+id-marks
+id-sym-name
+id?
+nonsymbol-id?
+global-extend
+defer-or-eval-transformer
+make-transformer-binding
+lookup
+lookup*
+displaced-lexical-error
+displaced-lexical?
+extend-var-env*
+extend-env*
+extend-env
+null-env
+binding?
+set-binding-value!
+set-binding-type!
+binding-value
+binding-type
+make-binding
+sanitize-binding
+arg-check
+no-source
+unannotate
+self-evaluating?
+lexical-var?
+build-lexical-var
+build-top-module
+build-body
+build-letrec
+build-sequence
+build-data
+build-primref
+built-lambda?
+build-dsssl-lambda
+build-lambda
+build-revisit-only
+build-visit-only
+build-cte-install
+build-global-definition
+build-global-assignment
+build-global-reference
+build-lexical-assignment
+build-lexical-reference
+build-conditional
+build-application
+generate-id
+update-import-binding!
+get-import-binding
+read-only-binding?
+put-global-definition-hook
+get-global-definition-hook
+put-cte-hook
+define-top-level-value-hook
+local-eval-hook
+top-level-eval-hook
+set-syntax-object-wrap!
+set-syntax-object-expression!
+syntax-object-wrap
+syntax-object-expression
+syntax-object?
+make-syntax-object
+noexpand
+let-values
+define-structure
+unless
+when)
+((top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+("m" top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top)
+(top))
+("i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"
+"i"))
+#(top-ribcage *top* #t)))
+%%orig2316
+%%import-only?2317
+%%tmid2386))
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(if %%exports?2313
+%%id2389
+#f)))
+%%tmp2384)
+(syntax-error %%tmp2383)))
+($syntax-dispatch
+%%tmp2383
+'(any any each-any each-any each-any))))
+(list %%d2381
+(%%gen-mid2295 %%mid2380)
+%%exports2382
+(generate-temporaries %%exports2382)
+(map (%%prefix-drop2294 %%prefix-id2379)
+%%exports2382))))))
+%%tmp2375)
+;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+((lambda (%%tmp2399)
+(if (if %%tmp2399
+(apply (lambda (%%m2400
+;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+%%new-id2401
+%%old-id2402)
+(if (andmap identifier? %%new-id2401)
+(andmap identifier? %%old-id2402)
 #f))
-%%tmp2362)
+%%tmp2399)
 #f)
-(apply (lambda (%%m2368 %%new-id2369 %%old-id2370)
+(apply (lambda (%%m2405 %%new-id2406 %%old-id2407)
 (call-with-values
-(lambda () (%%modspec2259 %%m2368 #t))
-(lambda (%%mid2371 %%d2372 %%exports2373)
-((lambda (%%tmp2374)
-((lambda (%%tmp2375)
-(if %%tmp2375
-(apply (lambda (%%d2376
-%%tmid2377
-%%tmp2378
-%%other-id2379)
-(values %%mid2371
+(lambda () (%%modspec2296 %%m2405 #t))
+(lambda (%%mid2408 %%d2409 %%exports2410)
+((lambda (%%tmp2411)
+((lambda (%%tmp2412)
+(if %%tmp2412
+(apply (lambda (%%d2413
+%%tmid2414
+%%tmp2415
+%%other-id2416)
+(values %%mid2408
 (list '#(syntax-object
 begin
 ((top)
@@ -33897,6 +34204,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -34158,8 +34466,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -34633,6 +34943,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -34818,6 +35129,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -35124,14 +35436,15 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-(cons %%orig2279
-(cons %%tmid2377
+(cons %%orig2316
+(cons %%tmid2414
 (cons (append (map list
-%%new-id2369
-%%tmp2378)
-%%other-id2379)
+%%new-id2406
+%%tmp2415)
+%%other-id2416)
 (cons (cons '#(syntax-object
 $module
 ((top)
@@ -35406,6 +35719,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -35591,6 +35905,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -35897,17 +36212,18 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage
 *top*
 #t)))
-(cons %%orig2279
-(cons %%tmid2377
+(cons %%orig2316
+(cons %%tmid2414
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(cons (append %%other-id2379
-(map list %%tmp2378 %%old-id2370))
-(cons %%d2376
-(map (lambda (%%tmp2387 %%tmp2386)
+(cons (append %%other-id2416
+(map list %%tmp2415 %%old-id2407))
+(cons %%d2413
+(map (lambda (%%tmp2424 %%tmp2423)
 (list '#(syntax-object
 alias
 ((top)
@@ -36171,6 +36487,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -36356,6 +36673,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -36662,14 +36980,15 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage
 *top*
 #t)))
-%%tmp2386
-%%tmp2387))
-%%old-id2370
-%%tmp2378))))))
+%%tmp2423
+%%tmp2424))
+%%old-id2407
+%%tmp2415))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (cons (list '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -36912,6 +37231,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -37097,6 +37417,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -37403,12 +37724,13 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%orig2279
-%%import-only?2280
-%%tmid2377)
-(map (lambda (%%tmp2389 %%tmp2388)
+%%orig2316
+%%import-only?2317
+%%tmid2414)
+(map (lambda (%%tmp2426 %%tmp2425)
 (list '#(syntax-object
 alias
 ((top)
@@ -37652,6 +37974,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -37837,6 +38160,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -38143,12 +38467,13 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%tmp2388
-%%tmp2389))
-%%tmp2378
-%%new-id2369)))))))
+%%tmp2425
+%%tmp2426))
+%%tmp2415
+%%new-id2406)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (list '#(syntax-object
 $import
@@ -38393,6 +38718,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -38578,6 +38904,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -38884,44 +39211,45 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%orig2279
-%%import-only?2280
-%%tmid2377))
-(if %%exports?2276 (append %%new-id2369 %%other-id2379) #f)))
+%%orig2316
+%%import-only?2317
+%%tmid2414))
+(if %%exports?2313 (append %%new-id2406 %%other-id2416) #f)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2375)
-(syntax-error %%tmp2374)))
+%%tmp2412)
+(syntax-error %%tmp2411)))
 ($syntax-dispatch
-%%tmp2374
+%%tmp2411
 '(any any each-any each-any))))
-(list %%d2372
-(%%gen-mid2258 %%mid2371)
-(generate-temporaries %%old-id2370)
-(%%difference2255
-%%exports2373
-%%old-id2370))))))
-%%tmp2362)
-((lambda (%%tmp2394)
-(if (if %%tmp2394
-(apply (lambda (%%m2395 %%new-id2396 %%old-id2397)
-(if (andmap identifier? %%new-id2396)
-(andmap identifier? %%old-id2397)
+(list %%d2409
+(%%gen-mid2295 %%mid2408)
+(generate-temporaries %%old-id2407)
+(%%difference2292
+%%exports2410
+%%old-id2407))))))
+%%tmp2399)
+((lambda (%%tmp2431)
+(if (if %%tmp2431
+(apply (lambda (%%m2432 %%new-id2433 %%old-id2434)
+(if (andmap identifier? %%new-id2433)
+(andmap identifier? %%old-id2434)
 #f))
-%%tmp2394)
+%%tmp2431)
 #f)
-(apply (lambda (%%m2400 %%new-id2401 %%old-id2402)
+(apply (lambda (%%m2437 %%new-id2438 %%old-id2439)
 (call-with-values
-(lambda () (%%modspec2259 %%m2400 #t))
-(lambda (%%mid2403 %%d2404 %%exports2405)
-((lambda (%%tmp2406)
-((lambda (%%tmp2407)
-(if %%tmp2407
-(apply (lambda (%%d2408
-%%tmid2409
-%%other-id2410)
-(values %%mid2403
+(lambda () (%%modspec2296 %%m2437 #t))
+(lambda (%%mid2440 %%d2441 %%exports2442)
+((lambda (%%tmp2443)
+((lambda (%%tmp2444)
+(if %%tmp2444
+(apply (lambda (%%d2445
+%%tmid2446
+%%other-id2447)
+(values %%mid2440
 (list '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 begin
@@ -39166,6 +39494,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -39427,8 +39756,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -39902,6 +40233,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -40087,6 +40419,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -40393,18 +40726,19 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-(cons %%orig2279
-(cons %%tmid2409
+(cons %%orig2316
+(cons %%tmid2446
 (cons (append (map list
-%%new-id2401
-%%old-id2402)
-%%other-id2410)
-(cons %%d2408
-(map (lambda (%%tmp2415
+%%new-id2438
+%%old-id2439)
+%%other-id2447)
+(cons %%d2445
+(map (lambda (%%tmp2452
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%tmp2414)
+%%tmp2451)
 (list '#(syntax-object
 alias
 ((top)
@@ -40648,6 +40982,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -40833,6 +41168,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -41139,12 +41475,13 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%tmp2414
-%%tmp2415))
-%%old-id2402
-%%new-id2401))))))
+%%tmp2451
+%%tmp2452))
+%%old-id2439
+%%new-id2438))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (list '#(syntax-object
 $import
@@ -41389,6 +41726,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -41574,6 +41912,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -41880,32 +42219,33 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%orig2279
-%%import-only?2280
-%%tmid2409))
-(if %%exports?2276
-(append %%new-id2401 %%other-id2410)
+%%orig2316
+%%import-only?2317
+%%tmid2446))
+(if %%exports?2313
+(append %%new-id2438 %%other-id2447)
 #f)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2407)
-(syntax-error %%tmp2406)))
+%%tmp2444)
+(syntax-error %%tmp2443)))
 ($syntax-dispatch
-%%tmp2406
+%%tmp2443
 '(any any each-any))))
-(list %%d2404
-(%%gen-mid2258 %%mid2403)
-%%exports2405)))))
-%%tmp2394)
-((lambda (%%tmp2418)
-(if (if %%tmp2418
-(apply (lambda (%%mid2419)
-(identifier? %%mid2419))
-%%tmp2418)
+(list %%d2441
+(%%gen-mid2295 %%mid2440)
+%%exports2442)))))
+%%tmp2431)
+((lambda (%%tmp2455)
+(if (if %%tmp2455
+(apply (lambda (%%mid2456)
+(identifier? %%mid2456))
+%%tmp2455)
 #f)
-(apply (lambda (%%mid2420)
-(values %%mid2420
+(apply (lambda (%%mid2457)
+(values %%mid2457
 (list '#(syntax-object
 $import
 ((top)
@@ -42154,6 +42494,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -42415,8 +42756,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -42649,23 +42992,23 @@ when)
 #(top-ribcage
 *top*
 #t)))
-%%orig2279
-%%import-only?2280
-%%mid2420)
-(if %%exports?2276
-(%%$module-exports2241
-%%mid2420
-%%r2254)
+%%orig2316
+%%import-only?2317
+%%mid2457)
+(if %%exports?2313
+(%%$module-exports2278
+%%mid2457
+%%r2291)
 #f)))
-%%tmp2418)
-((lambda (%%tmp2421)
-(if (if %%tmp2421
-(apply (lambda (%%mid2422)
-(identifier? %%mid2422))
-%%tmp2421)
+%%tmp2455)
+((lambda (%%tmp2458)
+(if (if %%tmp2458
+(apply (lambda (%%mid2459)
+(identifier? %%mid2459))
+%%tmp2458)
 #f)
-(apply (lambda (%%mid2423)
-(values %%mid2423
+(apply (lambda (%%mid2460)
+(values %%mid2460
 (list '#(syntax-object
 $import
 ((top)
@@ -42898,6 +43241,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -43159,8 +43503,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -43391,25 +43737,25 @@ when)
 "i"
 "i"))
 #(top-ribcage *top* #t)))
-%%orig2279
-%%import-only?2280
-%%mid2423)
+%%orig2316
+%%import-only?2317
+%%mid2460)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(if %%exports?2276
-(%%$module-exports2241
-%%mid2423
-%%r2254)
+(if %%exports?2313
+(%%$module-exports2278
+%%mid2460
+%%r2291)
 #f)))
-%%tmp2421)
-((lambda (%%_2424)
+%%tmp2458)
+((lambda (%%_2461)
 (syntax-error
-%%m2275
+%%m2312
 "invalid module specifier"))
-%%tmp2281)))
-($syntax-dispatch %%tmp2281 '(any)))))
-(list %%tmp2281))))
+%%tmp2318)))
+($syntax-dispatch %%tmp2318 '(any)))))
+(list %%tmp2318))))
 ($syntax-dispatch
-%%tmp2281
+%%tmp2318
 '(#(free-id
 #(syntax-object
 alias
@@ -43638,6 +43984,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -43899,8 +44246,10 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
+"i"
 "i"
 "i"
 "i"
@@ -44136,7 +44485,7 @@ any
 #(each (any any)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2281
+%%tmp2318
 '(#(free-id
 #(syntax-object
 rename
@@ -44382,6 +44731,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -44567,6 +44917,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -44873,6 +45224,7 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage
 *top*
@@ -44881,7 +45233,7 @@ any
 .
 #(each (any any)))))))
 ($syntax-dispatch
-%%tmp2281
+%%tmp2318
 '(#(free-id
 #(syntax-object
 drop-prefix
@@ -45122,6 +45474,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -45307,6 +45660,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -45613,12 +45967,13 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t))))
 any
 any)))))
 ($syntax-dispatch
-%%tmp2281
+%%tmp2318
 '(#(free-id
 #(syntax-object
 add-prefix
@@ -45855,6 +46210,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -46040,6 +46396,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -46346,12 +46703,13 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t))))
 any
 any)))))
 ($syntax-dispatch
-%%tmp2281
+%%tmp2318
 '(#(free-id
 #(syntax-object
 except
@@ -46583,6 +46941,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -46768,6 +47127,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -47074,13 +47434,14 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t))))
 any
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp2281
+%%tmp2318
 '(#(free-id
 #(syntax-object
 only
@@ -47309,6 +47670,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -47494,6 +47856,7 @@ when)
 (top)
 (top)
 ("m" top)
+(top)
 (top)
 (top)
 (top)
@@ -47800,35 +48163,36 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t))))
 any
 .
 each-any))))
-%%m2275))
-%%tmp2278)
+%%m2312))
+%%tmp2315)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(syntax-error %%tmp2277)))
+(syntax-error %%tmp2314)))
 ($syntax-dispatch
-%%tmp2277
+%%tmp2314
 '(any any))))
-(list %%orig2252 %%import-only?2253))))
-(%%modspec*2260
-(lambda (%%m2425)
+(list %%orig2289 %%import-only?2290))))
+(%%modspec*2297
+(lambda (%%m2462)
 (call-with-values
-(lambda () (%%modspec2259 %%m2425 #f))
-(lambda (%%mid2426
-%%d2427
-%%exports2428)
-%%d2427)))))
-((lambda (%%tmp2429)
-((lambda (%%tmp2430)
-(if %%tmp2430
-(apply (lambda (%%_2431 %%m2432)
-((lambda (%%tmp2433)
-((lambda (%%tmp2434)
-(if %%tmp2434
-(apply (lambda (%%d2435)
+(lambda () (%%modspec2296 %%m2462 #f))
+(lambda (%%mid2463
+%%d2464
+%%exports2465)
+%%d2464)))))
+((lambda (%%tmp2466)
+((lambda (%%tmp2467)
+(if %%tmp2467
+(apply (lambda (%%_2468 %%m2469)
+((lambda (%%tmp2470)
+((lambda (%%tmp2471)
+(if %%tmp2471
+(apply (lambda (%%d2472)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 (cons '#(syntax-object
 begin
@@ -48053,6 +48417,7 @@ build-sequence
 build-data
 build-primref
 built-lambda?
+build-dsssl-lambda
 build-lambda
 build-revisit-only
 build-visit-only
@@ -48314,6 +48679,7 @@ when)
 (top)
 (top)
 (top)
+(top)
 (top))
 ("i"
 "i"
@@ -48544,543 +48910,544 @@ when)
 "i"
 "i"
 "i"
+"i"
 "i"))
 #(top-ribcage *top* #t)))
-%%d2435))
-%%tmp2434)
-(syntax-error %%tmp2433)))
+%%d2472))
+%%tmp2471)
+(syntax-error %%tmp2470)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2433
+%%tmp2470
 'each-any)))
-(map %%modspec*2260 %%m2432)))
-%%tmp2430)
-(syntax-error %%tmp2429)))
+(map %%modspec*2297 %%m2469)))
+%%tmp2467)
+(syntax-error %%tmp2466)))
 ($syntax-dispatch
-%%tmp2429
+%%tmp2466
 '(any . each-any))))
-%%orig2252))))))
+%%orig2289))))))
 (begin
 (%%put-cte-hook72
 'import
-(lambda (%%orig2438) (%%$import-help2242 %%orig2438 #f)))
+(lambda (%%orig2475) (%%$import-help2279 %%orig2475 #f)))
 (%%put-cte-hook72
 'import-only
-(lambda (%%orig2439) (%%$import-help2242 %%orig2439 #t)))))))
+(lambda (%%orig2476) (%%$import-help2279 %%orig2476 #t)))))))
 ((lambda ()
-(letrec ((%%make-sc-expander2440
-(lambda (%%ctem2441 %%rtem2442)
-(lambda (%%x2443)
-((lambda (%%env2444)
-(if (if (pair? %%x2443)
-(equal? (car %%x2443) %%noexpand62)
+(letrec ((%%make-sc-expander2477
+(lambda (%%ctem2478 %%rtem2479)
+(lambda (%%x2480)
+((lambda (%%env2481)
+(if (if (pair? %%x2480)
+(equal? (car %%x2480) %%noexpand62)
 #f)
-(cadr %%x2443)
-(%%chi-top*382
-%%x2443
+(cadr %%x2480)
+(%%chi-top*392
+%%x2480
 '()
-(%%env-wrap323 %%env2444)
-%%ctem2441
-%%rtem2442
+(%%env-wrap333 %%env2481)
+%%ctem2478
+%%rtem2479
 #f
-(%%env-top-ribcage322 %%env2444))))
+(%%env-top-ribcage332 %%env2481))))
 (interaction-environment))))))
 (begin
 (set! sc-expand
-((lambda (%%ctem2445 %%rtem2446)
-(%%make-sc-expander2440 %%ctem2445 %%rtem2446))
+((lambda (%%ctem2482 %%rtem2483)
+(%%make-sc-expander2477 %%ctem2482 %%rtem2483))
 '(E)
 '(E)))
 (set! sc-compile-expand
-((lambda (%%ctem2447 %%rtem2448)
-(%%make-sc-expander2440 %%ctem2447 %%rtem2448))
+((lambda (%%ctem2484 %%rtem2485)
+(%%make-sc-expander2477 %%ctem2484 %%rtem2485))
 '(L C)
 '(L)))))))
 (set! $make-environment
-(lambda (%%token2449 %%mutable?2450)
-((lambda (%%top-ribcage2451)
-(%%make-env320
-%%top-ribcage2451
-(%%make-wrap250
-(%%wrap-marks251 '((top)))
-(cons %%top-ribcage2451 (%%wrap-subst252 '((top)))))))
-(%%make-top-ribcage308 %%token2449 %%mutable?2450))))
-(set! environment? (lambda (%%x2452) (%%env?321 %%x2452)))
+(lambda (%%token2486 %%mutable?2487)
+((lambda (%%top-ribcage2488)
+(%%make-env330
+%%top-ribcage2488
+(%%make-wrap260
+(%%wrap-marks261 '((top)))
+(cons %%top-ribcage2488 (%%wrap-subst262 '((top)))))))
+(%%make-top-ribcage318 %%token2486 %%mutable?2487))))
+(set! environment? (lambda (%%x2489) (%%env?331 %%x2489)))
 (set! interaction-environment
-((lambda (%%e2453) (lambda () %%e2453))
+((lambda (%%e2490) (lambda () %%e2490))
 ($make-environment '*top* #t)))
-(set! identifier? (lambda (%%x2454) (%%nonsymbol-id?240 %%x2454)))
+(set! identifier? (lambda (%%x2491) (%%nonsymbol-id?250 %%x2491)))
 (set! datum->syntax-object
-(lambda (%%id2455 %%datum2456)
+(lambda (%%id2492 %%datum2493)
 (begin
-((lambda (%%x2457)
-(if (not (%%nonsymbol-id?240 %%x2457))
+((lambda (%%x2494)
+(if (not (%%nonsymbol-id?250 %%x2494))
 (error (string-append
 "(in "
 (symbol->string 'datum->syntax-object)
 ") invalid argument")
-%%x2457)
+%%x2494)
 (void)))
-%%id2455)
+%%id2492)
 (%%make-syntax-object63
-%%datum2456
-(%%syntax-object-wrap66 %%id2455)))))
+%%datum2493
+(%%syntax-object-wrap66 %%id2492)))))
 (set! syntax->list
-(lambda (%%orig-ls2458)
-((letrec ((%%f2459 (lambda (%%ls2460)
-((lambda (%%tmp2461)
-((lambda (%%tmp2462)
-(if %%tmp2462
+(lambda (%%orig-ls2495)
+((letrec ((%%f2496 (lambda (%%ls2497)
+((lambda (%%tmp2498)
+((lambda (%%tmp2499)
+(if %%tmp2499
 (apply (lambda () '())
-%%tmp2462)
-((lambda (%%tmp2463)
-(if %%tmp2463
-(apply (lambda (%%x2464
+%%tmp2499)
+((lambda (%%tmp2500)
+(if %%tmp2500
+(apply (lambda (%%x2501
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%r2465)
-(cons %%x2464 (%%f2459 %%r2465)))
-%%tmp2463)
-((lambda (%%_2466)
-(error "(in syntax->list) invalid argument" %%orig-ls2458))
-%%tmp2461)))
+%%r2502)
+(cons %%x2501 (%%f2496 %%r2502)))
+%%tmp2500)
+((lambda (%%_2503)
+(error "(in syntax->list) invalid argument" %%orig-ls2495))
+%%tmp2498)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2461
+%%tmp2498
 '(any . any)))))
-($syntax-dispatch %%tmp2461 '())))
-%%ls2460))))
-%%f2459)
-%%orig-ls2458)))
+($syntax-dispatch %%tmp2498 '())))
+%%ls2497))))
+%%f2496)
+%%orig-ls2495)))
 (set! syntax->vector
-(lambda (%%v2467)
-((lambda (%%tmp2468)
-((lambda (%%tmp2469)
-(if %%tmp2469
-(apply (lambda (%%x2470)
-(list->vector (syntax->list %%x2470)))
-%%tmp2469)
-((lambda (%%_2472)
+(lambda (%%v2504)
+((lambda (%%tmp2505)
+((lambda (%%tmp2506)
+(if %%tmp2506
+(apply (lambda (%%x2507)
+(list->vector (syntax->list %%x2507)))
+%%tmp2506)
+((lambda (%%_2509)
 (error "(in syntax->vector) invalid argument"
-%%v2467))
-%%tmp2468)))
-($syntax-dispatch %%tmp2468 '#(vector each-any))))
-%%v2467)))
+%%v2504))
+%%tmp2505)))
+($syntax-dispatch %%tmp2505 '#(vector each-any))))
+%%v2504)))
 (set! syntax-object->datum
-(lambda (%%x2473) (%%strip457 %%x2473 '(()))))
+(lambda (%%x2510) (%%strip467 %%x2510 '(()))))
 (set! generate-temporaries
-((lambda (%%n2474)
-(lambda (%%ls2475)
+((lambda (%%n2511)
+(lambda (%%ls2512)
 (begin
-((lambda (%%x2476)
-(if (not (list? %%x2476))
+((lambda (%%x2513)
+(if (not (list? %%x2513))
 (error (string-append
 "(in "
 (symbol->string 'generate-temporaries)
 ") invalid argument")
-%%x2476)
+%%x2513)
 (void)))
-%%ls2475)
-(map (lambda (%%x2477)
+%%ls2512)
+(map (lambda (%%x2514)
 (begin
-(set! %%n2474 (+ %%n2474 1))
-(%%wrap378
+(set! %%n2511 (+ %%n2511 1))
+(%%wrap388
 (string->symbol
-(string-append "t" (number->string %%n2474)))
+(string-append "t" (number->string %%n2511)))
 '((tmp)))))
-%%ls2475))))
+%%ls2512))))
 0))
 (set! free-identifier=?
-(lambda (%%x2478 %%y2479)
+(lambda (%%x2515 %%y2516)
 (begin
-((lambda (%%x2480)
-(if (not (%%nonsymbol-id?240 %%x2480))
+((lambda (%%x2517)
+(if (not (%%nonsymbol-id?250 %%x2517))
 (error (string-append
 "(in "
 (symbol->string 'free-identifier=?)
 ") invalid argument")
-%%x2480)
+%%x2517)
 (void)))
-%%x2478)
-((lambda (%%x2481)
-(if (not (%%nonsymbol-id?240 %%x2481))
+%%x2515)
+((lambda (%%x2518)
+(if (not (%%nonsymbol-id?250 %%x2518))
 (error (string-append
 "(in "
 (symbol->string 'free-identifier=?)
 ") invalid argument")
-%%x2481)
+%%x2518)
 (void)))
-%%y2479)
-(%%free-id=?370 %%x2478 %%y2479))))
+%%y2516)
+(%%free-id=?380 %%x2515 %%y2516))))
 (set! bound-identifier=?
-(lambda (%%x2482 %%y2483)
+(lambda (%%x2519 %%y2520)
 (begin
-((lambda (%%x2484)
-(if (not (%%nonsymbol-id?240 %%x2484))
+((lambda (%%x2521)
+(if (not (%%nonsymbol-id?250 %%x2521))
 (error (string-append
 "(in "
 (symbol->string 'bound-identifier=?)
 ") invalid argument")
-%%x2484)
+%%x2521)
 (void)))
-%%x2482)
-((lambda (%%x2485)
-(if (not (%%nonsymbol-id?240 %%x2485))
+%%x2519)
+((lambda (%%x2522)
+(if (not (%%nonsymbol-id?250 %%x2522))
 (error (string-append
 "(in "
 (symbol->string 'bound-identifier=?)
 ") invalid argument")
-%%x2485)
+%%x2522)
 (void)))
-%%y2483)
-(%%bound-id=?373 %%x2482 %%y2483))))
+%%y2520)
+(%%bound-id=?383 %%x2519 %%y2520))))
 (set! literal-identifier=?
-(lambda (%%x2486 %%y2487)
+(lambda (%%x2523 %%y2524)
 (begin
-((lambda (%%x2488)
-(if (not (%%nonsymbol-id?240 %%x2488))
+((lambda (%%x2525)
+(if (not (%%nonsymbol-id?250 %%x2525))
 (error (string-append
 "(in "
 (symbol->string 'literal-identifier=?)
 ") invalid argument")
-%%x2488)
+%%x2525)
 (void)))
-%%x2486)
-((lambda (%%x2489)
-(if (not (%%nonsymbol-id?240 %%x2489))
+%%x2523)
+((lambda (%%x2526)
+(if (not (%%nonsymbol-id?250 %%x2526))
 (error (string-append
 "(in "
 (symbol->string 'literal-identifier=?)
 ") invalid argument")
-%%x2489)
+%%x2526)
 (void)))
-%%y2487)
-(%%literal-id=?371 %%x2486 %%y2487))))
+%%y2524)
+(%%literal-id=?381 %%x2523 %%y2524))))
 (set! syntax-error
-(lambda (%%object2491 . %%messages2490)
+(lambda (%%object2528 . %%messages2527)
 (begin
 (for-each
-(lambda (%%x2492)
-((lambda (%%x2493)
-(if (not (string? %%x2493))
+(lambda (%%x2529)
+((lambda (%%x2530)
+(if (not (string? %%x2530))
 (error (string-append
 "(in "
 (symbol->string 'syntax-error)
 ") invalid argument")
-%%x2493)
+%%x2530)
 (void)))
-%%x2492))
-%%messages2490)
-((lambda (%%message2494)
-(error %%message2494 (%%strip457 %%object2491 '(()))))
-(if (null? %%messages2490)
+%%x2529))
+%%messages2527)
+((lambda (%%message2531)
+(error %%message2531 (%%strip467 %%object2528 '(()))))
+(if (null? %%messages2527)
 "invalid syntax"
-(apply string-append %%messages2490))))))
+(apply string-append %%messages2527))))))
 ((lambda ()
-(letrec ((%%match-each2495
-(lambda (%%e2502 %%p2503 %%w2504)
-(if (annotation? %%e2502)
-(%%match-each2495
-(annotation-expression %%e2502)
-%%p2503
-%%w2504)
-(if (pair? %%e2502)
-((lambda (%%first2505)
-(if %%first2505
-((lambda (%%rest2506)
-(if %%rest2506
-(cons %%first2505 %%rest2506)
+(letrec ((%%match-each2532
+(lambda (%%e2539 %%p2540 %%w2541)
+(if (annotation? %%e2539)
+(%%match-each2532
+(annotation-expression %%e2539)
+%%p2540
+%%w2541)
+(if (pair? %%e2539)
+((lambda (%%first2542)
+(if %%first2542
+((lambda (%%rest2543)
+(if %%rest2543
+(cons %%first2542 %%rest2543)
 #f))
-(%%match-each2495
-(cdr %%e2502)
-%%p2503
-%%w2504))
+(%%match-each2532
+(cdr %%e2539)
+%%p2540
+%%w2541))
 #f))
-(%%match2501
-(car %%e2502)
-%%p2503
-%%w2504
+(%%match2538
+(car %%e2539)
+%%p2540
+%%w2541
 '()))
-(if (null? %%e2502)
+(if (null? %%e2539)
 '()
-(if (%%syntax-object?64 %%e2502)
-(%%match-each2495
-(%%syntax-object-expression65 %%e2502)
-%%p2503
-(%%join-wraps357
-%%w2504
-(%%syntax-object-wrap66 %%e2502)))
+(if (%%syntax-object?64 %%e2539)
+(%%match-each2532
+(%%syntax-object-expression65 %%e2539)
+%%p2540
+(%%join-wraps367
+%%w2541
+(%%syntax-object-wrap66 %%e2539)))
 #f))))))
-(%%match-each+2496
-(lambda (%%e2507
-%%x-pat2508
-%%y-pat2509
-%%z-pat2510
-%%w2511
-%%r2512)
-((letrec ((%%f2513 (lambda (%%e2514 %%w2515)
-(if (pair? %%e2514)
+(%%match-each+2533
+(lambda (%%e2544
+%%x-pat2545
+%%y-pat2546
+%%z-pat2547
+%%w2548
+%%r2549)
+((letrec ((%%f2550 (lambda (%%e2551 %%w2552)
+(if (pair? %%e2551)
 (call-with-values
 (lambda ()
-(%%f2513 (cdr %%e2514)
-%%w2515))
-(lambda (%%xr*2516
-%%y-pat2517
-%%r2518)
-(if %%r2518
-(if (null? %%y-pat2517)
-((lambda (%%xr2519)
-(if %%xr2519
+(%%f2550 (cdr %%e2551)
+%%w2552))
+(lambda (%%xr*2553
+%%y-pat2554
+%%r2555)
+(if %%r2555
+(if (null? %%y-pat2554)
+((lambda (%%xr2556)
+(if %%xr2556
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(values (cons %%xr2519 %%xr*2516)
-%%y-pat2517
-%%r2518)
+(values (cons %%xr2556 %%xr*2553)
+%%y-pat2554
+%%r2555)
 (values #f #f #f)))
-(%%match2501 (car %%e2514) %%x-pat2508 %%w2515 '()))
+(%%match2538 (car %%e2551) %%x-pat2545 %%w2552 '()))
 (values '()
-(cdr %%y-pat2517)
-(%%match2501
-(car %%e2514)
-(car %%y-pat2517)
-%%w2515
-%%r2518)))
+(cdr %%y-pat2554)
+(%%match2538
+(car %%e2551)
+(car %%y-pat2554)
+%%w2552
+%%r2555)))
 (values #f #f #f))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(if (annotation? %%e2514)
-(%%f2513 (annotation-expression
-%%e2514)
-%%w2515)
+(if (annotation? %%e2551)
+(%%f2550 (annotation-expression
+%%e2551)
+%%w2552)
 (if (%%syntax-object?64
-%%e2514)
-(%%f2513 (%%syntax-object-expression65
+%%e2551)
+(%%f2550 (%%syntax-object-expression65
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%e2514)
-(%%join-wraps357
-%%w2515
-(%%syntax-object-wrap66 %%e2514)))
+%%e2551)
+(%%join-wraps367
+%%w2552
+(%%syntax-object-wrap66 %%e2551)))
 (values '()
-%%y-pat2509
-(%%match2501
-%%e2514
-%%z-pat2510
-%%w2515
-%%r2512))))))))
+%%y-pat2546
+(%%match2538
+%%e2551
+%%z-pat2547
+%%w2552
+%%r2549))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f2513)
-%%e2507
-%%w2511)))
-(%%match-each-any2497
-(lambda (%%e2520 %%w2521)
-(if (annotation? %%e2520)
-(%%match-each-any2497
-(annotation-expression %%e2520)
-%%w2521)
-(if (pair? %%e2520)
-((lambda (%%l2522)
-(if %%l2522
-(cons (%%wrap378 (car %%e2520) %%w2521)
-%%l2522)
+%%f2550)
+%%e2544
+%%w2548)))
+(%%match-each-any2534
+(lambda (%%e2557 %%w2558)
+(if (annotation? %%e2557)
+(%%match-each-any2534
+(annotation-expression %%e2557)
+%%w2558)
+(if (pair? %%e2557)
+((lambda (%%l2559)
+(if %%l2559
+(cons (%%wrap388 (car %%e2557) %%w2558)
+%%l2559)
 #f))
-(%%match-each-any2497 (cdr %%e2520) %%w2521))
-(if (null? %%e2520)
+(%%match-each-any2534 (cdr %%e2557) %%w2558))
+(if (null? %%e2557)
 '()
-(if (%%syntax-object?64 %%e2520)
-(%%match-each-any2497
-(%%syntax-object-expression65 %%e2520)
-(%%join-wraps357
-%%w2521
-(%%syntax-object-wrap66 %%e2520)))
+(if (%%syntax-object?64 %%e2557)
+(%%match-each-any2534
+(%%syntax-object-expression65 %%e2557)
+(%%join-wraps367
+%%w2558
+(%%syntax-object-wrap66 %%e2557)))
 #f))))))
-(%%match-empty2498
-(lambda (%%p2523 %%r2524)
-(if (null? %%p2523)
-%%r2524
-(if (eq? %%p2523 'any)
-(cons '() %%r2524)
-(if (pair? %%p2523)
-(%%match-empty2498
-(car %%p2523)
-(%%match-empty2498 (cdr %%p2523) %%r2524))
-(if (eq? %%p2523 'each-any)
-(cons '() %%r2524)
-((lambda (%%t2525)
-(if (memv %%t2525 '(each))
-(%%match-empty2498
-(vector-ref %%p2523 1)
-%%r2524)
-(if (memv %%t2525 '(each+))
-(%%match-empty2498
-(vector-ref %%p2523 1)
-(%%match-empty2498
+(%%match-empty2535
+(lambda (%%p2560 %%r2561)
+(if (null? %%p2560)
+%%r2561
+(if (eq? %%p2560 'any)
+(cons '() %%r2561)
+(if (pair? %%p2560)
+(%%match-empty2535
+(car %%p2560)
+(%%match-empty2535 (cdr %%p2560) %%r2561))
+(if (eq? %%p2560 'each-any)
+(cons '() %%r2561)
+((lambda (%%t2562)
+(if (memv %%t2562 '(each))
+(%%match-empty2535
+(vector-ref %%p2560 1)
+%%r2561)
+(if (memv %%t2562 '(each+))
+(%%match-empty2535
+(vector-ref %%p2560 1)
+(%%match-empty2535
 (reverse (vector-ref
-%%p2523
+%%p2560
 2))
-(%%match-empty2498
-(vector-ref %%p2523 3)
-%%r2524)))
-(if (memv %%t2525
+(%%match-empty2535
+(vector-ref %%p2560 3)
+%%r2561)))
+(if (memv %%t2562
 '(free-id atom))
-%%r2524
-(if (memv %%t2525
+%%r2561
+(if (memv %%t2562
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 '(vector))
-(%%match-empty2498 (vector-ref %%p2523 1) %%r2524)
+(%%match-empty2535 (vector-ref %%p2560 1) %%r2561)
 (void))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(vector-ref %%p2523 0))))))))
-(%%combine2499
-(lambda (%%r*2526 %%r2527)
-(if (null? (car %%r*2526))
-%%r2527
-(cons (map car %%r*2526)
-(%%combine2499
-(map cdr %%r*2526)
-%%r2527)))))
-(%%match*2500
-(lambda (%%e2528 %%p2529 %%w2530 %%r2531)
-(if (null? %%p2529)
-(if (null? %%e2528) %%r2531 #f)
-(if (pair? %%p2529)
-(if (pair? %%e2528)
-(%%match2501
-(car %%e2528)
-(car %%p2529)
-%%w2530
-(%%match2501
-(cdr %%e2528)
-(cdr %%p2529)
-%%w2530
-%%r2531))
+(vector-ref %%p2560 0))))))))
+(%%combine2536
+(lambda (%%r*2563 %%r2564)
+(if (null? (car %%r*2563))
+%%r2564
+(cons (map car %%r*2563)
+(%%combine2536
+(map cdr %%r*2563)
+%%r2564)))))
+(%%match*2537
+(lambda (%%e2565 %%p2566 %%w2567 %%r2568)
+(if (null? %%p2566)
+(if (null? %%e2565) %%r2568 #f)
+(if (pair? %%p2566)
+(if (pair? %%e2565)
+(%%match2538
+(car %%e2565)
+(car %%p2566)
+%%w2567
+(%%match2538
+(cdr %%e2565)
+(cdr %%p2566)
+%%w2567
+%%r2568))
 #f)
-(if (eq? %%p2529 'each-any)
-((lambda (%%l2532)
-(if %%l2532 (cons %%l2532 %%r2531) #f))
-(%%match-each-any2497 %%e2528 %%w2530))
-((lambda (%%t2533)
-(if (memv %%t2533 '(each))
-(if (null? %%e2528)
-(%%match-empty2498
-(vector-ref %%p2529 1)
-%%r2531)
-((lambda (%%r*2534)
-(if %%r*2534
-(%%combine2499
-%%r*2534
-%%r2531)
+(if (eq? %%p2566 'each-any)
+((lambda (%%l2569)
+(if %%l2569 (cons %%l2569 %%r2568) #f))
+(%%match-each-any2534 %%e2565 %%w2567))
+((lambda (%%t2570)
+(if (memv %%t2570 '(each))
+(if (null? %%e2565)
+(%%match-empty2535
+(vector-ref %%p2566 1)
+%%r2568)
+((lambda (%%r*2571)
+(if %%r*2571
+(%%combine2536
+%%r*2571
+%%r2568)
 #f))
-(%%match-each2495
-%%e2528
-(vector-ref %%p2529 1)
-%%w2530)))
-(if (memv %%t2533 '(free-id))
-(if (%%id?241 %%e2528)
-(if (%%literal-id=?371
-(%%wrap378
-%%e2528
-%%w2530)
-(vector-ref %%p2529 1))
-%%r2531
+(%%match-each2532
+%%e2565
+(vector-ref %%p2566 1)
+%%w2567)))
+(if (memv %%t2570 '(free-id))
+(if (%%id?251 %%e2565)
+(if (%%literal-id=?381
+(%%wrap388
+%%e2565
+%%w2567)
+(vector-ref %%p2566 1))
+%%r2568
 #f)
 #f)
-(if (memv %%t2533 '(each+))
+(if (memv %%t2570 '(each+))
 (call-with-values
 (lambda ()
-(%%match-each+2496
-%%e2528
-(vector-ref %%p2529 1)
-(vector-ref %%p2529 2)
-(vector-ref %%p2529 3)
-%%w2530
-%%r2531))
-(lambda (%%xr*2535
-%%y-pat2536
-%%r2537)
-(if %%r2537
-(if (null? %%y-pat2536)
-(if (null? %%xr*2535)
+(%%match-each+2533
+%%e2565
+(vector-ref %%p2566 1)
+(vector-ref %%p2566 2)
+(vector-ref %%p2566 3)
+%%w2567
+%%r2568))
+(lambda (%%xr*2572
+%%y-pat2573
+%%r2574)
+(if %%r2574
+(if (null? %%y-pat2573)
+(if (null? %%xr*2572)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(%%match-empty2498 (vector-ref %%p2529 1) %%r2537)
-(%%combine2499 %%xr*2535 %%r2537))
+(%%match-empty2535 (vector-ref %%p2566 1) %%r2574)
+(%%combine2536 %%xr*2572 %%r2574))
 #f)
 #f)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(if (memv %%t2533 '(atom))
+(if (memv %%t2570 '(atom))
 (if (equal? (vector-ref
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%p2529
+%%p2566
 1)
-(%%strip457 %%e2528 %%w2530))
-%%r2531
+(%%strip467 %%e2565 %%w2567))
+%%r2568
 #f)
-(if (memv %%t2533 '(vector))
-(if (vector? %%e2528)
-(%%match2501
-(vector->list %%e2528)
-(vector-ref %%p2529 1)
-%%w2530
-%%r2531)
+(if (memv %%t2570 '(vector))
+(if (vector? %%e2565)
+(%%match2538
+(vector->list %%e2565)
+(vector-ref %%p2566 1)
+%%w2567
+%%r2568)
 #f)
 (void)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(vector-ref %%p2529 0)))))))
-(%%match2501
-(lambda (%%e2538 %%p2539 %%w2540 %%r2541)
-(if (not %%r2541)
+(vector-ref %%p2566 0)))))))
+(%%match2538
+(lambda (%%e2575 %%p2576 %%w2577 %%r2578)
+(if (not %%r2578)
 #f
-(if (eq? %%p2539 'any)
-(cons (%%wrap378 %%e2538 %%w2540) %%r2541)
-(if (%%syntax-object?64 %%e2538)
-(%%match*2500
-((lambda (%%e2542)
-(if (annotation? %%e2542)
-(annotation-expression %%e2542)
-%%e2542))
-(%%syntax-object-expression65 %%e2538))
-%%p2539
-(%%join-wraps357
-%%w2540
-(%%syntax-object-wrap66 %%e2538))
-%%r2541)
-(%%match*2500
-((lambda (%%e2543)
-(if (annotation? %%e2543)
-(annotation-expression %%e2543)
-%%e2543))
-%%e2538)
-%%p2539
-%%w2540
-%%r2541)))))))
+(if (eq? %%p2576 'any)
+(cons (%%wrap388 %%e2575 %%w2577) %%r2578)
+(if (%%syntax-object?64 %%e2575)
+(%%match*2537
+((lambda (%%e2579)
+(if (annotation? %%e2579)
+(annotation-expression %%e2579)
+%%e2579))
+(%%syntax-object-expression65 %%e2575))
+%%p2576
+(%%join-wraps367
+%%w2577
+(%%syntax-object-wrap66 %%e2575))
+%%r2578)
+(%%match*2537
+((lambda (%%e2580)
+(if (annotation? %%e2580)
+(annotation-expression %%e2580)
+%%e2580))
+%%e2575)
+%%p2576
+%%w2577
+%%r2578)))))))
 (set! $syntax-dispatch
-(lambda (%%e2544 %%p2545)
-(if (eq? %%p2545 'any)
-(list %%e2544)
-(if (%%syntax-object?64 %%e2544)
-(%%match*2500
-((lambda (%%e2546)
-(if (annotation? %%e2546)
-(annotation-expression %%e2546)
-%%e2546))
-(%%syntax-object-expression65 %%e2544))
-%%p2545
-(%%syntax-object-wrap66 %%e2544)
+(lambda (%%e2581 %%p2582)
+(if (eq? %%p2582 'any)
+(list %%e2581)
+(if (%%syntax-object?64 %%e2581)
+(%%match*2537
+((lambda (%%e2583)
+(if (annotation? %%e2583)
+(annotation-expression %%e2583)
+%%e2583))
+(%%syntax-object-expression65 %%e2581))
+%%p2582
+(%%syntax-object-wrap66 %%e2581)
 '())
-(%%match*2500
-((lambda (%%e2547)
-(if (annotation? %%e2547)
-(annotation-expression %%e2547)
-%%e2547))
-%%e2544)
-%%p2545
+(%%match*2537
+((lambda (%%e2584)
+(if (annotation? %%e2584)
+(annotation-expression %%e2584)
+%%e2584))
+%%e2581)
+%%p2582
 '(())
 '()))))))))))))
 ($sc-put-cte
 '#(syntax-object
 with-syntax
 ((top) #(ribcage #(with-syntax) #((top)) #(with-syntax))))
-(lambda (%%x2548)
-((lambda (%%tmp2549)
-((lambda (%%tmp2550)
-(if %%tmp2550
-(apply (lambda (%%_2551 %%e12552 %%e22553)
+(lambda (%%x2585)
+((lambda (%%tmp2586)
+((lambda (%%tmp2587)
+(if %%tmp2587
+(apply (lambda (%%_2588 %%e12589 %%e22590)
 (cons '#(syntax-object
 begin
 ((top)
@@ -49091,15 +49458,15 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e12552 %%e22553)))
-%%tmp2550)
-((lambda (%%tmp2555)
-(if %%tmp2555
-(apply (lambda (%%_2556
-%%out2557
-%%in2558
-%%e12559
-%%e22560)
+(cons %%e12589 %%e22590)))
+%%tmp2587)
+((lambda (%%tmp2592)
+(if %%tmp2592
+(apply (lambda (%%_2593
+%%out2594
+%%in2595
+%%e12596
+%%e22597)
 (list '#(syntax-object
 syntax-case
 ((top)
@@ -49110,9 +49477,9 @@ syntax-case
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%in2558
+%%in2595
 '()
-(list %%out2557
+(list %%out2594
 (cons '#(syntax-object
 begin
 ((top)
@@ -49130,15 +49497,15 @@ begin
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e12559 %%e22560)))))
-%%tmp2555)
-((lambda (%%tmp2562)
-(if %%tmp2562
-(apply (lambda (%%_2563
-%%out2564
-%%in2565
-%%e12566
-%%e22567)
+(cons %%e12596 %%e22597)))))
+%%tmp2592)
+((lambda (%%tmp2599)
+(if %%tmp2599
+(apply (lambda (%%_2600
+%%out2601
+%%in2602
+%%e12603
+%%e22604)
 (list '#(syntax-object
 syntax-case
 ((top)
@@ -49170,9 +49537,9 @@ list
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%in2565)
+%%in2602)
 '()
-(list %%out2564
+(list %%out2601
 (cons '#(syntax-object
 begin
 ((top)
@@ -49196,40 +49563,40 @@ begin
 #(top-ribcage
 *top*
 #t)))
-(cons %%e12566
-%%e22567)))))
-%%tmp2562)
-(syntax-error %%tmp2549)))
+(cons %%e12603
+%%e22604)))))
+%%tmp2599)
+(syntax-error %%tmp2586)))
 ($syntax-dispatch
-%%tmp2549
+%%tmp2586
 '(any #(each (any any)) any . each-any)))))
 ($syntax-dispatch
-%%tmp2549
+%%tmp2586
 '(any ((any any)) any . each-any)))))
-($syntax-dispatch %%tmp2549 '(any () any . each-any))))
-%%x2548))
+($syntax-dispatch %%tmp2586 '(any () any . each-any))))
+%%x2585))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 with-implicit
 ((top) #(ribcage #(with-implicit) #((top)) #(with-implicit))))
-(lambda (%%x2571)
-((lambda (%%tmp2572)
-((lambda (%%tmp2573)
-(if (if %%tmp2573
-(apply (lambda (%%dummy2574
-%%tid2575
-%%id2576
-%%e12577
-%%e22578)
-(andmap identifier? (cons %%tid2575 %%id2576)))
-%%tmp2573)
+(lambda (%%x2608)
+((lambda (%%tmp2609)
+((lambda (%%tmp2610)
+(if (if %%tmp2610
+(apply (lambda (%%dummy2611
+%%tid2612
+%%id2613
+%%e12614
+%%e22615)
+(andmap identifier? (cons %%tid2612 %%id2613)))
+%%tmp2610)
 #f)
-(apply (lambda (%%dummy2580
-%%tid2581
-%%id2582
-%%e12583
-%%e22584)
+(apply (lambda (%%dummy2617
+%%tid2618
+%%id2619
+%%e12620
+%%e22621)
 (list '#(syntax-object
 begin
 ((top)
@@ -49284,7 +49651,7 @@ syntax
 #(("m" top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%tid2581))
+%%tid2618))
 (cons '#(syntax-object
 syntax-error
 ((top)
@@ -49329,7 +49696,7 @@ e2)
 #(top-ribcage
 *top*
 #t)))
-%%tid2581)
+%%tid2618)
 '#(syntax-object
 ("non-identifier with-implicit template")
 ((top)
@@ -49359,8 +49726,8 @@ with-syntax
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons (map (lambda (%%tmp2585)
-(list %%tmp2585
+(cons (map (lambda (%%tmp2622)
+(list %%tmp2622
 (list '#(syntax-object
 datum->syntax-object
 ((top)
@@ -49382,7 +49749,7 @@ syntax
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%tid2581)
+%%tid2618)
 (list '#(syntax-object
 quote
 ((top)
@@ -49393,22 +49760,22 @@ quote
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%tmp2585))))
+%%tmp2622))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%id2582)
-(cons %%e12583 %%e22584)))))
-%%tmp2573)
-(syntax-error %%tmp2572)))
-($syntax-dispatch %%tmp2572 '(any (any . each-any) any . each-any))))
-%%x2571))
+%%id2619)
+(cons %%e12620 %%e22621)))))
+%%tmp2610)
+(syntax-error %%tmp2609)))
+($syntax-dispatch %%tmp2609 '(any (any . each-any) any . each-any))))
+%%x2608))
 '*top*)
 ($sc-put-cte
 '#(syntax-object datum ((top) #(ribcage #(datum) #((top)) #(datum))))
-(lambda (%%x2587)
-((lambda (%%tmp2588)
-((lambda (%%tmp2589)
-(if %%tmp2589
-(apply (lambda (%%dummy2590 %%x2591)
+(lambda (%%x2624)
+((lambda (%%tmp2625)
+((lambda (%%tmp2626)
+(if %%tmp2626
+(apply (lambda (%%dummy2627 %%x2628)
 (list '#(syntax-object
 syntax-object->datum
 ((top)
@@ -49429,25 +49796,25 @@ syntax
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%x2591)))
-%%tmp2589)
-(syntax-error %%tmp2588)))
-($syntax-dispatch %%tmp2588 '(any any))))
-%%x2587))
+%%x2628)))
+%%tmp2626)
+(syntax-error %%tmp2625)))
+($syntax-dispatch %%tmp2625 '(any any))))
+%%x2624))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 syntax-rules
 ((top) #(ribcage #(syntax-rules) #((top)) #(syntax-rules))))
-(lambda (%%x2592)
-(letrec ((%%clause2593
-(lambda (%%y2594)
-((lambda (%%tmp2595)
-((lambda (%%tmp2596)
-(if %%tmp2596
-(apply (lambda (%%keyword2597
-%%pattern2598
-%%template2599)
+(lambda (%%x2629)
+(letrec ((%%clause2630
+(lambda (%%y2631)
+((lambda (%%tmp2632)
+((lambda (%%tmp2633)
+(if %%tmp2633
+(apply (lambda (%%keyword2634
+%%pattern2635
+%%template2636)
 (list (cons '#(syntax-object
 dummy
 ((top)
@@ -49471,7 +49838,7 @@ template)
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%pattern2598)
+%%pattern2635)
 (list '#(syntax-object
 syntax
 ((top)
@@ -49495,14 +49862,14 @@ template)
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%template2599)))
-%%tmp2596)
-((lambda (%%tmp2600)
-(if %%tmp2600
-(apply (lambda (%%keyword2601
-%%pattern2602
-%%fender2603
-%%template2604)
+%%template2636)))
+%%tmp2633)
+((lambda (%%tmp2637)
+(if %%tmp2637
+(apply (lambda (%%keyword2638
+%%pattern2639
+%%fender2640
+%%template2641)
 (list (cons '#(syntax-object
 dummy
 ((top)
@@ -49535,8 +49902,8 @@ template)
 #(top-ribcage
 *top*
 #t)))
-%%pattern2602)
-%%fender2603
+%%pattern2639)
+%%fender2640
 (list '#(syntax-object
 syntax
 ((top)
@@ -49569,27 +49936,27 @@ template)
 #(top-ribcage
 *top*
 #t)))
-%%template2604)))
-%%tmp2600)
-((lambda (%%_2605) (syntax-error %%x2592))
-%%tmp2595)))
+%%template2641)))
+%%tmp2637)
+((lambda (%%_2642) (syntax-error %%x2629))
+%%tmp2632)))
 ($syntax-dispatch
-%%tmp2595
+%%tmp2632
 '((any . any) any any)))))
-($syntax-dispatch %%tmp2595 '((any . any) any))))
-%%y2594))))
-((lambda (%%tmp2606)
-((lambda (%%tmp2607)
-(if (if %%tmp2607
-(apply (lambda (%%_2608 %%k2609 %%cl2610)
-(andmap identifier? %%k2609))
-%%tmp2607)
+($syntax-dispatch %%tmp2632 '((any . any) any))))
+%%y2631))))
+((lambda (%%tmp2643)
+((lambda (%%tmp2644)
+(if (if %%tmp2644
+(apply (lambda (%%_2645 %%k2646 %%cl2647)
+(andmap identifier? %%k2646))
+%%tmp2644)
 #f)
-(apply (lambda (%%_2612 %%k2613 %%cl2614)
-((lambda (%%tmp2615)
-((lambda (%%tmp2616)
-(if %%tmp2616
-(apply (lambda (%%cl2617)
+(apply (lambda (%%_2649 %%k2650 %%cl2651)
+((lambda (%%tmp2652)
+((lambda (%%tmp2653)
+(if %%tmp2653
+(apply (lambda (%%cl2654)
 (list '#(syntax-object
 lambda
 ((top)
@@ -49662,24 +50029,24 @@ x
 #(ribcage (clause) ((top)) ("i"))
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%k2613 %%cl2617)))))
+(cons %%k2650 %%cl2654)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2616)
-(syntax-error %%tmp2615)))
-($syntax-dispatch %%tmp2615 'each-any)))
-(map %%clause2593 %%cl2614)))
-%%tmp2607)
-(syntax-error %%tmp2606)))
-($syntax-dispatch %%tmp2606 '(any each-any . each-any))))
-%%x2592)))
+%%tmp2653)
+(syntax-error %%tmp2652)))
+($syntax-dispatch %%tmp2652 'each-any)))
+(map %%clause2630 %%cl2651)))
+%%tmp2644)
+(syntax-error %%tmp2643)))
+($syntax-dispatch %%tmp2643 '(any each-any . each-any))))
+%%x2629)))
 '*top*)
 ($sc-put-cte
 '#(syntax-object or ((top) #(ribcage #(or) #((top)) #(or))))
-(lambda (%%x2621)
-((lambda (%%tmp2622)
-((lambda (%%tmp2623)
-(if %%tmp2623
-(apply (lambda (%%_2624)
+(lambda (%%x2658)
+((lambda (%%tmp2659)
+((lambda (%%tmp2660)
+(if %%tmp2660
+(apply (lambda (%%_2661)
 '#(syntax-object
 #f
 ((top)
@@ -49687,16 +50054,16 @@ x
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t))))
-%%tmp2623)
-((lambda (%%tmp2625)
-(if %%tmp2625
-(apply (lambda (%%_2626 %%e2627) %%e2627) %%tmp2625)
-((lambda (%%tmp2628)
-(if %%tmp2628
-(apply (lambda (%%_2629
-%%e12630
-%%e22631
-%%e32632)
+%%tmp2660)
+((lambda (%%tmp2662)
+(if %%tmp2662
+(apply (lambda (%%_2663 %%e2664) %%e2664) %%tmp2662)
+((lambda (%%tmp2665)
+(if %%tmp2665
+(apply (lambda (%%_2666
+%%e12667
+%%e22668
+%%e32669)
 (list '#(syntax-object
 let
 ((top)
@@ -49728,7 +50095,7 @@ t
 #(top-ribcage
 *top*
 #t)))
-%%e12630))
+%%e12667))
 (list '#(syntax-object
 if
 ((top)
@@ -49798,24 +50165,24 @@ or
 #(top-ribcage
 *top*
 #t)))
-(cons %%e22631
-%%e32632)))))
-%%tmp2628)
-(syntax-error %%tmp2622)))
+(cons %%e22668
+%%e32669)))))
+%%tmp2665)
+(syntax-error %%tmp2659)))
 ($syntax-dispatch
-%%tmp2622
+%%tmp2659
 '(any any any . each-any)))))
-($syntax-dispatch %%tmp2622 '(any any)))))
-($syntax-dispatch %%tmp2622 '(any))))
-%%x2621))
+($syntax-dispatch %%tmp2659 '(any any)))))
+($syntax-dispatch %%tmp2659 '(any))))
+%%x2658))
 '*top*)
 ($sc-put-cte
 '#(syntax-object and ((top) #(ribcage #(and) #((top)) #(and))))
-(lambda (%%x2634)
-((lambda (%%tmp2635)
-((lambda (%%tmp2636)
-(if %%tmp2636
-(apply (lambda (%%_2637 %%e12638 %%e22639 %%e32640)
+(lambda (%%x2671)
+((lambda (%%tmp2672)
+((lambda (%%tmp2673)
+(if %%tmp2673
+(apply (lambda (%%_2674 %%e12675 %%e22676 %%e32677)
 (cons '#(syntax-object
 if
 ((top)
@@ -49826,7 +50193,7 @@ if
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e12638
+(cons %%e12675
 (cons (cons '#(syntax-object
 and
 ((top)
@@ -49843,7 +50210,7 @@ and
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e22639 %%e32640))
+(cons %%e22676 %%e32677))
 '#(syntax-object
 (#f)
 ((top)
@@ -49854,13 +50221,13 @@ and
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))))))
-%%tmp2636)
-((lambda (%%tmp2642)
-(if %%tmp2642
-(apply (lambda (%%_2643 %%e2644) %%e2644) %%tmp2642)
-((lambda (%%tmp2645)
-(if %%tmp2645
-(apply (lambda (%%_2646)
+%%tmp2673)
+((lambda (%%tmp2679)
+(if %%tmp2679
+(apply (lambda (%%_2680 %%e2681) %%e2681) %%tmp2679)
+((lambda (%%tmp2682)
+(if %%tmp2682
+(apply (lambda (%%_2683)
 '#(syntax-object
 #t
 ((top)
@@ -49868,24 +50235,24 @@ and
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t))))
-%%tmp2645)
-(syntax-error %%tmp2635)))
-($syntax-dispatch %%tmp2635 '(any)))))
-($syntax-dispatch %%tmp2635 '(any any)))))
-($syntax-dispatch %%tmp2635 '(any any any . each-any))))
-%%x2634))
+%%tmp2682)
+(syntax-error %%tmp2672)))
+($syntax-dispatch %%tmp2672 '(any)))))
+($syntax-dispatch %%tmp2672 '(any any)))))
+($syntax-dispatch %%tmp2672 '(any any any . each-any))))
+%%x2671))
 '*top*)
 ($sc-put-cte
 '#(syntax-object let ((top) #(ribcage #(let) #((top)) #(let))))
-(lambda (%%x2647)
-((lambda (%%tmp2648)
-((lambda (%%tmp2649)
-(if (if %%tmp2649
-(apply (lambda (%%_2650 %%x2651 %%v2652 %%e12653 %%e22654)
-(andmap identifier? %%x2651))
-%%tmp2649)
+(lambda (%%x2684)
+((lambda (%%tmp2685)
+((lambda (%%tmp2686)
+(if (if %%tmp2686
+(apply (lambda (%%_2687 %%x2688 %%v2689 %%e12690 %%e22691)
+(andmap identifier? %%x2688))
+%%tmp2686)
 #f)
-(apply (lambda (%%_2656 %%x2657 %%v2658 %%e12659 %%e22660)
+(apply (lambda (%%_2693 %%x2694 %%v2695 %%e12696 %%e22697)
 (cons (cons '#(syntax-object
 lambda
 ((top)
@@ -49896,26 +50263,26 @@ lambda
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%x2657 (cons %%e12659 %%e22660)))
-%%v2658))
-%%tmp2649)
-((lambda (%%tmp2664)
-(if (if %%tmp2664
-(apply (lambda (%%_2665
-%%f2666
-%%x2667
-%%v2668
-%%e12669
-%%e22670)
-(andmap identifier? (cons %%f2666 %%x2667)))
-%%tmp2664)
+(cons %%x2694 (cons %%e12696 %%e22697)))
+%%v2695))
+%%tmp2686)
+((lambda (%%tmp2701)
+(if (if %%tmp2701
+(apply (lambda (%%_2702
+%%f2703
+%%x2704
+%%v2705
+%%e12706
+%%e22707)
+(andmap identifier? (cons %%f2703 %%x2704)))
+%%tmp2701)
 #f)
-(apply (lambda (%%_2672
-%%f2673
-%%x2674
-%%v2675
-%%e12676
-%%e22677)
+(apply (lambda (%%_2709
+%%f2710
+%%x2711
+%%v2712
+%%e12713
+%%e22714)
 (cons (list '#(syntax-object
 letrec
 ((top)
@@ -49931,7 +50298,7 @@ letrec
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(list (list %%f2673
+(list (list %%f2710
 (cons '#(syntax-object
 lambda
 ((top)
@@ -49943,35 +50310,35 @@ lambda
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%x2674 (cons %%e12676 %%e22677)))))
+(cons %%x2711 (cons %%e12713 %%e22714)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%f2673)
-%%v2675))
-%%tmp2664)
-(syntax-error %%tmp2648)))
+%%f2710)
+%%v2712))
+%%tmp2701)
+(syntax-error %%tmp2685)))
 ($syntax-dispatch
-%%tmp2648
+%%tmp2685
 '(any any #(each (any any)) any . each-any)))))
-($syntax-dispatch %%tmp2648 '(any #(each (any any)) any . each-any))))
-%%x2647))
+($syntax-dispatch %%tmp2685 '(any #(each (any any)) any . each-any))))
+%%x2684))
 '*top*)
 ($sc-put-cte
 '#(syntax-object let* ((top) #(ribcage #(let*) #((top)) #(let*))))
-(lambda (%%x2681)
-((lambda (%%tmp2682)
-((lambda (%%tmp2683)
-(if (if %%tmp2683
-(apply (lambda (%%let*2684
-%%x2685
-%%v2686
-%%e12687
-%%e22688)
-(andmap identifier? %%x2685))
-%%tmp2683)
+(lambda (%%x2718)
+((lambda (%%tmp2719)
+((lambda (%%tmp2720)
+(if (if %%tmp2720
+(apply (lambda (%%let*2721
+%%x2722
+%%v2723
+%%e12724
+%%e22725)
+(andmap identifier? %%x2722))
+%%tmp2720)
 #f)
-(apply (lambda (%%let*2690 %%x2691 %%v2692 %%e12693 %%e22694)
-((letrec ((%%f2695 (lambda (%%bindings2696)
-(if (null? %%bindings2696)
+(apply (lambda (%%let*2727 %%x2728 %%v2729 %%e12730 %%e22731)
+((letrec ((%%f2732 (lambda (%%bindings2733)
+(if (null? %%bindings2733)
 (cons '#(syntax-object
 let
 ((top)
@@ -50005,16 +50372,16 @@ let
 *top*
 #t)))
 (cons '()
-(cons %%e12693
+(cons %%e12730
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%e22694)))
+%%e22731)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2698)
-((lambda (%%tmp2699)
-(if %%tmp2699
-(apply (lambda (%%body2700
+((lambda (%%tmp2735)
+((lambda (%%tmp2736)
+(if %%tmp2736
+(apply (lambda (%%body2737
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%binding2701)
+%%binding2738)
 (list '#(syntax-object
 let
 ((top)
@@ -50032,38 +50399,38 @@ let
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(list %%binding2701)
-%%body2700))
-%%tmp2699)
-(syntax-error %%tmp2698)))
+(list %%binding2738)
+%%body2737))
+%%tmp2736)
+(syntax-error %%tmp2735)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2698
+%%tmp2735
 '(any any))))
-(list (%%f2695 (cdr %%bindings2696))
-(car %%bindings2696)))))))
-%%f2695)
-(map list %%x2691 %%v2692)))
-%%tmp2683)
-(syntax-error %%tmp2682)))
-($syntax-dispatch %%tmp2682 '(any #(each (any any)) any . each-any))))
-%%x2681))
+(list (%%f2732 (cdr %%bindings2733))
+(car %%bindings2733)))))))
+%%f2732)
+(map list %%x2728 %%v2729)))
+%%tmp2720)
+(syntax-error %%tmp2719)))
+($syntax-dispatch %%tmp2719 '(any #(each (any any)) any . each-any))))
+%%x2718))
 '*top*)
 ($sc-put-cte
 '#(syntax-object cond ((top) #(ribcage #(cond) #((top)) #(cond))))
-(lambda (%%x2704)
-((lambda (%%tmp2705)
-((lambda (%%tmp2706)
-(if %%tmp2706
-(apply (lambda (%%_2707 %%m12708 %%m22709)
-((letrec ((%%f2710 (lambda (%%clause2711 %%clauses2712)
-(if (null? %%clauses2712)
-((lambda (%%tmp2713)
-((lambda (%%tmp2714)
-(if %%tmp2714
-(apply (lambda (%%e12715
+(lambda (%%x2741)
+((lambda (%%tmp2742)
+((lambda (%%tmp2743)
+(if %%tmp2743
+(apply (lambda (%%_2744 %%m12745 %%m22746)
+((letrec ((%%f2747 (lambda (%%clause2748 %%clauses2749)
+(if (null? %%clauses2749)
+((lambda (%%tmp2750)
+((lambda (%%tmp2751)
+(if %%tmp2751
+(apply (lambda (%%e12752
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%e22716)
+%%e22753)
 (cons '#(syntax-object
 begin
 ((top)
@@ -50084,11 +50451,11 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e12715 %%e22716)))
-%%tmp2714)
-((lambda (%%tmp2718)
-(if %%tmp2718
-(apply (lambda (%%e02719)
+(cons %%e12752 %%e22753)))
+%%tmp2751)
+((lambda (%%tmp2755)
+(if %%tmp2755
+(apply (lambda (%%e02756)
 (cons '#(syntax-object
 let
 ((top)
@@ -50124,7 +50491,7 @@ t
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%e02719))
+%%e02756))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 '#(syntax-object
 ((if t t))
@@ -50152,10 +50519,10 @@ t
 #((top))
 #("i"))
 #(top-ribcage *top* #t))))))
-%%tmp2718)
-((lambda (%%tmp2720)
-(if %%tmp2720
-(apply (lambda (%%e02721 %%e12722)
+%%tmp2755)
+((lambda (%%tmp2757)
+(if %%tmp2757
+(apply (lambda (%%e02758 %%e12759)
 (list '#(syntax-object
 let
 ((top)
@@ -50200,7 +50567,7 @@ t
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%e02721))
+%%e02758))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (list '#(syntax-object
 if
@@ -50262,7 +50629,7 @@ t
 #(top-ribcage
 *top*
 #t)))
-(cons %%e12722
+(cons %%e12759
 '#(syntax-object
 (t)
 ((top)
@@ -50282,12 +50649,12 @@ t
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2720)
-((lambda (%%tmp2723)
-(if %%tmp2723
-(apply (lambda (%%e02724
-%%e12725
-%%e22726)
+%%tmp2757)
+((lambda (%%tmp2760)
+(if %%tmp2760
+(apply (lambda (%%e02761
+%%e12762
+%%e22763)
 (list '#(syntax-object
 if
 ((top)
@@ -50320,7 +50687,7 @@ if
 #(top-ribcage
 *top*
 #t)))
-%%e02724
+%%e02761
 (cons '#(syntax-object
 begin
 ((top)
@@ -50339,17 +50706,17 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e12725 %%e22726))))
+(cons %%e12762 %%e22763))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2723)
-((lambda (%%_2728)
-(syntax-error %%x2704))
-%%tmp2713)))
+%%tmp2760)
+((lambda (%%_2765)
+(syntax-error %%x2741))
+%%tmp2750)))
 ($syntax-dispatch
-%%tmp2713
+%%tmp2750
 '(any any . each-any)))))
 ($syntax-dispatch
-%%tmp2713
+%%tmp2750
 '(any #(free-id
 #(syntax-object
 =>
@@ -50368,10 +50735,10 @@ begin
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t))))
 any)))))
-($syntax-dispatch %%tmp2713 '(any)))))
+($syntax-dispatch %%tmp2750 '(any)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2713
+%%tmp2750
 '(#(free-id
 #(syntax-object
 else
@@ -50395,14 +50762,14 @@ any
 .
 each-any))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%clause2711)
-((lambda (%%tmp2729)
-((lambda (%%rest2730)
-((lambda (%%tmp2731)
-((lambda (%%tmp2732)
-(if %%tmp2732
+%%clause2748)
+((lambda (%%tmp2766)
+((lambda (%%rest2767)
+((lambda (%%tmp2768)
+((lambda (%%tmp2769)
+(if %%tmp2769
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(apply (lambda (%%e02733)
+(apply (lambda (%%e02770)
 (list '#(syntax-object
 let
 ((top)
@@ -50453,7 +50820,7 @@ t
 #(top-ribcage
 *top*
 #t)))
-%%e02733))
+%%e02770))
 (list '#(syntax-object
 if
 ((top)
@@ -50544,11 +50911,11 @@ t
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%rest2730)))
-%%tmp2732)
-((lambda (%%tmp2734)
-(if %%tmp2734
-(apply (lambda (%%e02735 %%e12736)
+%%rest2767)))
+%%tmp2769)
+((lambda (%%tmp2771)
+(if %%tmp2771
+(apply (lambda (%%e02772 %%e12773)
 (list '#(syntax-object
 let
 ((top)
@@ -50598,7 +50965,7 @@ t
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%e02735))
+%%e02772))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (list '#(syntax-object
 if
@@ -50664,7 +51031,7 @@ t
 #(top-ribcage
 *top*
 #t)))
-(cons %%e12736
+(cons %%e12773
 '#(syntax-object
 (t)
 ((top)
@@ -50685,13 +51052,13 @@ t
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%rest2730)))
-%%tmp2734)
-((lambda (%%tmp2737)
-(if %%tmp2737
-(apply (lambda (%%e02738
-%%e12739
-%%e22740)
+%%rest2767)))
+%%tmp2771)
+((lambda (%%tmp2774)
+(if %%tmp2774
+(apply (lambda (%%e02775
+%%e12776
+%%e22777)
 (list '#(syntax-object
 if
 ((top)
@@ -50728,7 +51095,7 @@ if
 #(top-ribcage
 *top*
 #t)))
-%%e02738
+%%e02775
 (cons '#(syntax-object
 begin
 ((top)
@@ -50748,18 +51115,18 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e12739 %%e22740))
-%%rest2730))
+(cons %%e12776 %%e22777))
+%%rest2767))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2737)
-((lambda (%%_2742)
-(syntax-error %%x2704))
-%%tmp2731)))
+%%tmp2774)
+((lambda (%%_2779)
+(syntax-error %%x2741))
+%%tmp2768)))
 ($syntax-dispatch
-%%tmp2731
+%%tmp2768
 '(any any . each-any)))))
 ($syntax-dispatch
-%%tmp2731
+%%tmp2768
 '(any #(free-id
 #(syntax-object
 =>
@@ -50779,40 +51146,40 @@ begin
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t))))
 any)))))
-($syntax-dispatch %%tmp2731 '(any))))
-%%clause2711))
+($syntax-dispatch %%tmp2768 '(any))))
+%%clause2748))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2729))
-(%%f2710 (car %%clauses2712)
-(cdr %%clauses2712)))))))
-%%f2710)
-%%m12708
-%%m22709))
-%%tmp2706)
-(syntax-error %%tmp2705)))
-($syntax-dispatch %%tmp2705 '(any any . each-any))))
-%%x2704))
+%%tmp2766))
+(%%f2747 (car %%clauses2749)
+(cdr %%clauses2749)))))))
+%%f2747)
+%%m12745
+%%m22746))
+%%tmp2743)
+(syntax-error %%tmp2742)))
+($syntax-dispatch %%tmp2742 '(any any . each-any))))
+%%x2741))
 '*top*)
 ($sc-put-cte
 '#(syntax-object do ((top) #(ribcage #(do) #((top)) #(do))))
-(lambda (%%orig-x2744)
-((lambda (%%tmp2745)
-((lambda (%%tmp2746)
-(if %%tmp2746
-(apply (lambda (%%_2747
-%%var2748
-%%init2749
-%%step2750
-%%e02751
-%%e12752
-%%c2753)
-((lambda (%%tmp2754)
-((lambda (%%tmp2755)
-(if %%tmp2755
-(apply (lambda (%%step2756)
-((lambda (%%tmp2757)
-((lambda (%%tmp2758)
-(if %%tmp2758
+(lambda (%%orig-x2781)
+((lambda (%%tmp2782)
+((lambda (%%tmp2783)
+(if %%tmp2783
+(apply (lambda (%%_2784
+%%var2785
+%%init2786
+%%step2787
+%%e02788
+%%e12789
+%%c2790)
+((lambda (%%tmp2791)
+((lambda (%%tmp2792)
+(if %%tmp2792
+(apply (lambda (%%step2793)
+((lambda (%%tmp2794)
+((lambda (%%tmp2795)
+(if %%tmp2795
 (apply (lambda ()
 (list '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -50837,7 +51204,7 @@ do
 #(ribcage () () ())
 #(ribcage #(orig-x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(map list %%var2748 %%init2749)
+(map list %%var2785 %%init2786)
 (list '#(syntax-object
 if
 ((top)
@@ -50875,7 +51242,7 @@ not
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%e02751)
+%%e02788)
 (cons '#(syntax-object
 begin
 ((top)
@@ -50896,7 +51263,7 @@ begin
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-(append %%c2753
+(append %%c2790
 (list (cons '#(syntax-object
 do
 ((top)
@@ -50912,15 +51279,15 @@ do
 #(ribcage () () ())
 #(ribcage #(orig-x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%step2756)))))))
+%%step2793)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2758)
+%%tmp2795)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2763)
-(if %%tmp2763
-(apply (lambda (%%e12764
+((lambda (%%tmp2800)
+(if %%tmp2800
+(apply (lambda (%%e12801
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%e22765)
+%%e22802)
 (list '#(syntax-object
 let
 ((top)
@@ -50963,7 +51330,7 @@ do
 #(ribcage () () ())
 #(ribcage #(orig-x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(map list %%var2748 %%init2749)
+(map list %%var2785 %%init2786)
 (list '#(syntax-object
 if
 ((top)
@@ -50988,7 +51355,7 @@ if
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%e02751
+%%e02788
 (cons '#(syntax-object
 begin
 ((top)
@@ -51022,7 +51389,7 @@ begin
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e12764 %%e22765))
+(cons %%e12801 %%e22802))
 (cons '#(syntax-object
 begin
 ((top)
@@ -51056,7 +51423,7 @@ begin
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-(append %%c2753
+(append %%c2790
 (list (cons '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 do
@@ -51070,59 +51437,59 @@ do
 #(ribcage () () ())
 #(ribcage #(orig-x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%step2756)))))))
+%%step2793)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2763)
-(syntax-error %%tmp2757)))
-($syntax-dispatch %%tmp2757 '(any . each-any)))))
+%%tmp2800)
+(syntax-error %%tmp2794)))
+($syntax-dispatch %%tmp2794 '(any . each-any)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2757
+%%tmp2794
 '())))
-%%e12752))
-%%tmp2755)
-(syntax-error %%tmp2754)))
-($syntax-dispatch %%tmp2754 'each-any)))
-(map (lambda (%%v2772 %%s2773)
-((lambda (%%tmp2774)
-((lambda (%%tmp2775)
-(if %%tmp2775
-(apply (lambda () %%v2772) %%tmp2775)
-((lambda (%%tmp2776)
-(if %%tmp2776
-(apply (lambda (%%e2777)
-%%e2777)
-%%tmp2776)
-((lambda (%%_2778)
+%%e12789))
+%%tmp2792)
+(syntax-error %%tmp2791)))
+($syntax-dispatch %%tmp2791 'each-any)))
+(map (lambda (%%v2809 %%s2810)
+((lambda (%%tmp2811)
+((lambda (%%tmp2812)
+(if %%tmp2812
+(apply (lambda () %%v2809) %%tmp2812)
+((lambda (%%tmp2813)
+(if %%tmp2813
+(apply (lambda (%%e2814)
+%%e2814)
+%%tmp2813)
+((lambda (%%_2815)
 (syntax-error
-%%orig-x2744))
-%%tmp2774)))
+%%orig-x2781))
+%%tmp2811)))
 ($syntax-dispatch
-%%tmp2774
+%%tmp2811
 '(any)))))
-($syntax-dispatch %%tmp2774 '())))
-%%s2773))
-%%var2748
-%%step2750)))
-%%tmp2746)
-(syntax-error %%tmp2745)))
+($syntax-dispatch %%tmp2811 '())))
+%%s2810))
+%%var2785
+%%step2787)))
+%%tmp2783)
+(syntax-error %%tmp2782)))
 ($syntax-dispatch
-%%tmp2745
+%%tmp2782
 '(any #(each (any any . any)) (any . each-any) . each-any))))
-%%orig-x2744))
+%%orig-x2781))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 quasiquote
 ((top) #(ribcage #(quasiquote) #((top)) #(quasiquote))))
 ((lambda ()
-(letrec ((%%quasi2781
-(lambda (%%p2788 %%lev2789)
-((lambda (%%tmp2790)
-((lambda (%%tmp2791)
-(if %%tmp2791
-(apply (lambda (%%p2792)
-(if (= %%lev2789 0)
+(letrec ((%%quasi2818
+(lambda (%%p2825 %%lev2826)
+((lambda (%%tmp2827)
+((lambda (%%tmp2828)
+(if %%tmp2828
+(apply (lambda (%%p2829)
+(if (= %%lev2826 0)
 (list '#(syntax-object
 "value"
 ((top)
@@ -51157,8 +51524,8 @@ quasi)
 "i"
 "i"))
 #(top-ribcage *top* #t)))
-%%p2792)
-(%%quasicons2783
+%%p2829)
+(%%quasicons2820
 '#(syntax-object
 ("quote" unquote)
 ((top)
@@ -51184,14 +51551,14 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(%%quasi2781
-(list %%p2792)
-(- %%lev2789 1)))))
-%%tmp2791)
-((lambda (%%tmp2793)
-(if %%tmp2793
-(apply (lambda (%%p2794)
-(%%quasicons2783
+(%%quasi2818
+(list %%p2829)
+(- %%lev2826 1)))))
+%%tmp2828)
+((lambda (%%tmp2830)
+(if %%tmp2830
+(apply (lambda (%%p2831)
+(%%quasicons2820
 '#(syntax-object
 ("quote" quasiquote)
 ((top)
@@ -51226,21 +51593,21 @@ quasi)
 "i"
 "i"))
 #(top-ribcage *top* #t)))
-(%%quasi2781
-(list %%p2794)
-(+ %%lev2789 1))))
-%%tmp2793)
-((lambda (%%tmp2795)
-(if %%tmp2795
-(apply (lambda (%%p2796 %%q2797)
-((lambda (%%tmp2798)
-((lambda (%%tmp2799)
-(if %%tmp2799
-(apply (lambda (%%p2800)
+(%%quasi2818
+(list %%p2831)
+(+ %%lev2826 1))))
+%%tmp2830)
+((lambda (%%tmp2832)
+(if %%tmp2832
+(apply (lambda (%%p2833 %%q2834)
+((lambda (%%tmp2835)
+((lambda (%%tmp2836)
+(if %%tmp2836
+(apply (lambda (%%p2837)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if (= %%lev2789 0)
-(%%quasilist*2785
-(map (lambda (%%tmp2801)
+(if (= %%lev2826 0)
+(%%quasilist*2822
+(map (lambda (%%tmp2838)
 (list '#(syntax-object
 "value"
 ((top)
@@ -51279,11 +51646,11 @@ quasi)
 "i"
 "i"))
 #(top-ribcage *top* #t)))
-%%tmp2801))
-%%p2800)
-(%%quasi2781 %%q2797 %%lev2789))
-(%%quasicons2783
-(%%quasicons2783
+%%tmp2838))
+%%p2837)
+(%%quasi2818 %%q2834 %%lev2826))
+(%%quasicons2820
+(%%quasicons2820
 '#(syntax-object
 ("quote" unquote)
 ((top)
@@ -51313,15 +51680,15 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(%%quasi2781 %%p2800 (- %%lev2789 1)))
-(%%quasi2781 %%q2797 %%lev2789))))
-%%tmp2799)
-((lambda (%%tmp2803)
-(if %%tmp2803
-(apply (lambda (%%p2804)
-(if (= %%lev2789 0)
-(%%quasiappend2784
-(map (lambda (%%tmp2805)
+(%%quasi2818 %%p2837 (- %%lev2826 1)))
+(%%quasi2818 %%q2834 %%lev2826))))
+%%tmp2836)
+((lambda (%%tmp2840)
+(if %%tmp2840
+(apply (lambda (%%p2841)
+(if (= %%lev2826 0)
+(%%quasiappend2821
+(map (lambda (%%tmp2842)
 (list '#(syntax-object
 "value"
 ((top)
@@ -51349,12 +51716,12 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%tmp2805))
+%%tmp2842))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%p2804)
-(%%quasi2781 %%q2797 %%lev2789))
-(%%quasicons2783
-(%%quasicons2783
+%%p2841)
+(%%quasi2818 %%q2834 %%lev2826))
+(%%quasicons2820
+(%%quasicons2820
 '#(syntax-object
 ("quote" unquote-splicing)
 ((top)
@@ -51384,18 +51751,18 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(%%quasi2781
-%%p2804
-(- %%lev2789 1)))
-(%%quasi2781 %%q2797 %%lev2789))))
-%%tmp2803)
-((lambda (%%_2807)
-(%%quasicons2783
-(%%quasi2781 %%p2796 %%lev2789)
-(%%quasi2781 %%q2797 %%lev2789)))
-%%tmp2798)))
+(%%quasi2818
+%%p2841
+(- %%lev2826 1)))
+(%%quasi2818 %%q2834 %%lev2826))))
+%%tmp2840)
+((lambda (%%_2844)
+(%%quasicons2820
+(%%quasi2818 %%p2833 %%lev2826)
+(%%quasi2818 %%q2834 %%lev2826)))
+%%tmp2835)))
 ($syntax-dispatch
-%%tmp2798
+%%tmp2835
 '(#(free-id
 #(syntax-object
 unquote-splicing
@@ -51416,7 +51783,7 @@ quasi)
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp2798
+%%tmp2835
 '(#(free-id
 #(syntax-object
 unquote
@@ -51437,17 +51804,17 @@ quasi)
 .
 each-any))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%p2796))
-%%tmp2795)
-((lambda (%%tmp2808)
-(if %%tmp2808
-(apply (lambda (%%x2809)
-(%%quasivector2786
-(%%vquasi2782
-%%x2809
-%%lev2789)))
-%%tmp2808)
-((lambda (%%p2811)
+%%p2833))
+%%tmp2832)
+((lambda (%%tmp2845)
+(if %%tmp2845
+(apply (lambda (%%x2846)
+(%%quasivector2823
+(%%vquasi2819
+%%x2846
+%%lev2826)))
+%%tmp2845)
+((lambda (%%p2848)
 (list '#(syntax-object
 "quote"
 ((top)
@@ -51474,17 +51841,17 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%p2811))
+%%p2848))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2790)))
+%%tmp2827)))
 ($syntax-dispatch
-%%tmp2790
+%%tmp2827
 '#(vector each-any)))))
 ($syntax-dispatch
-%%tmp2790
+%%tmp2827
 '(any . any)))))
 ($syntax-dispatch
-%%tmp2790
+%%tmp2827
 '(#(free-id
 #(syntax-object
 quasiquote
@@ -51512,7 +51879,7 @@ quasi)
 #(top-ribcage *top* #t))))
 any)))))
 ($syntax-dispatch
-%%tmp2790
+%%tmp2827
 '(#(free-id
 #(syntax-object
 unquote
@@ -51530,20 +51897,20 @@ quasi)
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t))))
 any))))
-%%p2788)))
-(%%vquasi2782
-(lambda (%%p2812 %%lev2813)
-((lambda (%%tmp2814)
-((lambda (%%tmp2815)
-(if %%tmp2815
-(apply (lambda (%%p2816 %%q2817)
-((lambda (%%tmp2818)
-((lambda (%%tmp2819)
-(if %%tmp2819
-(apply (lambda (%%p2820)
-(if (= %%lev2813 0)
-(%%quasilist*2785
-(map (lambda (%%tmp2821)
+%%p2825)))
+(%%vquasi2819
+(lambda (%%p2849 %%lev2850)
+((lambda (%%tmp2851)
+((lambda (%%tmp2852)
+(if %%tmp2852
+(apply (lambda (%%p2853 %%q2854)
+((lambda (%%tmp2855)
+((lambda (%%tmp2856)
+(if %%tmp2856
+(apply (lambda (%%p2857)
+(if (= %%lev2850 0)
+(%%quasilist*2822
+(map (lambda (%%tmp2858)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 (list '#(syntax-object
 "value"
@@ -51574,11 +51941,11 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%tmp2821))
-%%p2820)
-(%%vquasi2782 %%q2817 %%lev2813))
-(%%quasicons2783
-(%%quasicons2783
+%%tmp2858))
+%%p2857)
+(%%vquasi2819 %%q2854 %%lev2850))
+(%%quasicons2820
+(%%quasicons2820
 '#(syntax-object
 ("quote" unquote)
 ((top)
@@ -51596,18 +51963,18 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(%%quasi2781 %%p2820 (- %%lev2813 1)))
-(%%vquasi2782 %%q2817 %%lev2813))))
-%%tmp2819)
+(%%quasi2818 %%p2857 (- %%lev2850 1)))
+(%%vquasi2819 %%q2854 %%lev2850))))
+%%tmp2856)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2823)
-(if %%tmp2823
-(apply (lambda (%%p2824)
-(if (= %%lev2813
+((lambda (%%tmp2860)
+(if %%tmp2860
+(apply (lambda (%%p2861)
+(if (= %%lev2850
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 0)
-(%%quasiappend2784
-(map (lambda (%%tmp2825)
+(%%quasiappend2821
+(map (lambda (%%tmp2862)
 (list '#(syntax-object
 "value"
 ((top)
@@ -51637,11 +52004,11 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%tmp2825))
-%%p2824)
-(%%vquasi2782 %%q2817 %%lev2813))
-(%%quasicons2783
-(%%quasicons2783
+%%tmp2862))
+%%p2861)
+(%%vquasi2819 %%q2854 %%lev2850))
+(%%quasicons2820
+(%%quasicons2820
 '#(syntax-object
 ("quote" unquote-splicing)
 ((top)
@@ -51659,17 +52026,17 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(%%quasi2781 %%p2824 (- %%lev2813 1)))
-(%%vquasi2782 %%q2817 %%lev2813))))
-%%tmp2823)
-((lambda (%%_2827)
-(%%quasicons2783
-(%%quasi2781 %%p2816 %%lev2813)
-(%%vquasi2782 %%q2817 %%lev2813)))
-%%tmp2818)))
+(%%quasi2818 %%p2861 (- %%lev2850 1)))
+(%%vquasi2819 %%q2854 %%lev2850))))
+%%tmp2860)
+((lambda (%%_2864)
+(%%quasicons2820
+(%%quasi2818 %%p2853 %%lev2850)
+(%%vquasi2819 %%q2854 %%lev2850)))
+%%tmp2855)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2818
+%%tmp2855
 '(#(free-id
 #(syntax-object
 unquote-splicing
@@ -51710,7 +52077,7 @@ quasi)
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp2818
+%%tmp2855
 '(#(free-id
 #(syntax-object
 unquote
@@ -51748,10 +52115,10 @@ quasi)
 #(top-ribcage *top* #t))))
 .
 each-any))))
-%%p2816))
-%%tmp2815)
-((lambda (%%tmp2828)
-(if %%tmp2828
+%%p2853))
+%%tmp2852)
+((lambda (%%tmp2865)
+(if %%tmp2865
 (apply (lambda ()
 '#(syntax-object
 ("quote" ())
@@ -51783,26 +52150,26 @@ quasi)
 "i"
 "i"))
 #(top-ribcage *top* #t))))
-%%tmp2828)
-(syntax-error %%tmp2814)))
-($syntax-dispatch %%tmp2814 '()))))
-($syntax-dispatch %%tmp2814 '(any . any))))
-%%p2812)))
-(%%quasicons2783
-(lambda (%%x2829 %%y2830)
-((lambda (%%tmp2831)
-((lambda (%%tmp2832)
-(if %%tmp2832
-(apply (lambda (%%x2833 %%y2834)
-((lambda (%%tmp2835)
-((lambda (%%tmp2836)
-(if %%tmp2836
-(apply (lambda (%%dy2837)
-((lambda (%%tmp2838)
-((lambda (%%tmp2839)
-(if %%tmp2839
+%%tmp2865)
+(syntax-error %%tmp2851)))
+($syntax-dispatch %%tmp2851 '()))))
+($syntax-dispatch %%tmp2851 '(any . any))))
+%%p2849)))
+(%%quasicons2820
+(lambda (%%x2866 %%y2867)
+((lambda (%%tmp2868)
+((lambda (%%tmp2869)
+(if %%tmp2869
+(apply (lambda (%%x2870 %%y2871)
+((lambda (%%tmp2872)
+((lambda (%%tmp2873)
+(if %%tmp2873
+(apply (lambda (%%dy2874)
+((lambda (%%tmp2875)
+((lambda (%%tmp2876)
+(if %%tmp2876
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(apply (lambda (%%dx2840)
+(apply (lambda (%%dx2877)
 (list '#(syntax-object
 "quote"
 ((top)
@@ -51833,10 +52200,10 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(cons %%dx2840 %%dy2837)))
-%%tmp2839)
-((lambda (%%_2841)
-(if (null? %%dy2837)
+(cons %%dx2877 %%dy2874)))
+%%tmp2876)
+((lambda (%%_2878)
+(if (null? %%dy2874)
 (list '#(syntax-object
 "list"
 ((top)
@@ -51867,7 +52234,7 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%x2833)
+%%x2870)
 (list '#(syntax-object
 "list*"
 ((top)
@@ -51898,16 +52265,16 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%x2833
-%%y2834)))
-%%tmp2838)))
-($syntax-dispatch %%tmp2838 '(#(atom "quote") any))))
-%%x2833))
-%%tmp2836)
+%%x2870
+%%y2871)))
+%%tmp2875)))
+($syntax-dispatch %%tmp2875 '(#(atom "quote") any))))
+%%x2870))
+%%tmp2873)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2842)
-(if %%tmp2842
-(apply (lambda (%%stuff2843)
+((lambda (%%tmp2879)
+(if %%tmp2879
+(apply (lambda (%%stuff2880)
 (cons '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 "list"
@@ -51926,11 +52293,11 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(cons %%x2833 %%stuff2843)))
-%%tmp2842)
-((lambda (%%tmp2844)
-(if %%tmp2844
-(apply (lambda (%%stuff2845)
+(cons %%x2870 %%stuff2880)))
+%%tmp2879)
+((lambda (%%tmp2881)
+(if %%tmp2881
+(apply (lambda (%%stuff2882)
 (cons '#(syntax-object
 "list*"
 ((top)
@@ -51960,9 +52327,9 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(cons %%x2833 %%stuff2845)))
-%%tmp2844)
-((lambda (%%_2846)
+(cons %%x2870 %%stuff2882)))
+%%tmp2881)
+((lambda (%%_2883)
 (list '#(syntax-object
 "list*"
 ((top)
@@ -51980,29 +52347,29 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%x2833
-%%y2834))
-%%tmp2835)))
-($syntax-dispatch %%tmp2835 '(#(atom "list*") . any)))))
+%%x2870
+%%y2871))
+%%tmp2872)))
+($syntax-dispatch %%tmp2872 '(#(atom "list*") . any)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2835
+%%tmp2872
 '(#(atom "list") . any)))))
 ($syntax-dispatch
-%%tmp2835
+%%tmp2872
 '(#(atom "quote") any))))
-%%y2834))
-%%tmp2832)
-(syntax-error %%tmp2831)))
-($syntax-dispatch %%tmp2831 '(any any))))
-(list %%x2829 %%y2830))))
-(%%quasiappend2784
-(lambda (%%x2847 %%y2848)
-((lambda (%%tmp2849)
-((lambda (%%tmp2850)
-(if %%tmp2850
+%%y2871))
+%%tmp2869)
+(syntax-error %%tmp2868)))
+($syntax-dispatch %%tmp2868 '(any any))))
+(list %%x2866 %%y2867))))
+(%%quasiappend2821
+(lambda (%%x2884 %%y2885)
+((lambda (%%tmp2886)
+((lambda (%%tmp2887)
+(if %%tmp2887
 (apply (lambda ()
-(if (null? %%x2847)
+(if (null? %%x2884)
 '#(syntax-object
 ("quote" ())
 ((top)
@@ -52027,12 +52394,12 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(if (null? (cdr %%x2847))
-(car %%x2847)
-((lambda (%%tmp2851)
-((lambda (%%tmp2852)
-(if %%tmp2852
-(apply (lambda (%%p2853)
+(if (null? (cdr %%x2884))
+(car %%x2884)
+((lambda (%%tmp2888)
+((lambda (%%tmp2889)
+(if %%tmp2889
+(apply (lambda (%%p2890)
 (cons '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 "append"
@@ -52050,22 +52417,22 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%p2853))
-%%tmp2852)
-(syntax-error %%tmp2851)))
+%%p2890))
+%%tmp2889)
+(syntax-error %%tmp2888)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2851
+%%tmp2888
 'each-any)))
-%%x2847))))
-%%tmp2850)
-((lambda (%%_2855)
-(if (null? %%x2847)
-%%y2848
-((lambda (%%tmp2856)
-((lambda (%%tmp2857)
-(if %%tmp2857
-(apply (lambda (%%p2858 %%y2859)
+%%x2884))))
+%%tmp2887)
+((lambda (%%_2892)
+(if (null? %%x2884)
+%%y2885
+((lambda (%%tmp2893)
+((lambda (%%tmp2894)
+(if %%tmp2894
+(apply (lambda (%%p2895 %%y2896)
 (cons '#(syntax-object
 "append"
 ((top)
@@ -52087,33 +52454,33 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(append %%p2858 (list %%y2859))))
+(append %%p2895 (list %%y2896))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2857)
-(syntax-error %%tmp2856)))
+%%tmp2894)
+(syntax-error %%tmp2893)))
 ($syntax-dispatch
-%%tmp2856
+%%tmp2893
 '(each-any any))))
-(list %%x2847 %%y2848))))
-%%tmp2849)))
-($syntax-dispatch %%tmp2849 '(#(atom "quote") ()))))
-%%y2848)))
-(%%quasilist*2785
-(lambda (%%x2861 %%y2862)
-((letrec ((%%f2863 (lambda (%%x2864)
-(if (null? %%x2864)
-%%y2862
-(%%quasicons2783
-(car %%x2864)
-(%%f2863 (cdr %%x2864)))))))
-%%f2863)
-%%x2861)))
-(%%quasivector2786
-(lambda (%%x2865)
-((lambda (%%tmp2866)
-((lambda (%%tmp2867)
-(if %%tmp2867
-(apply (lambda (%%x2868)
+(list %%x2884 %%y2885))))
+%%tmp2886)))
+($syntax-dispatch %%tmp2886 '(#(atom "quote") ()))))
+%%y2885)))
+(%%quasilist*2822
+(lambda (%%x2898 %%y2899)
+((letrec ((%%f2900 (lambda (%%x2901)
+(if (null? %%x2901)
+%%y2899
+(%%quasicons2820
+(car %%x2901)
+(%%f2900 (cdr %%x2901)))))))
+%%f2900)
+%%x2898)))
+(%%quasivector2823
+(lambda (%%x2902)
+((lambda (%%tmp2903)
+((lambda (%%tmp2904)
+(if %%tmp2904
+(apply (lambda (%%x2905)
 (list '#(syntax-object
 "quote"
 ((top)
@@ -52136,16 +52503,16 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-(list->vector %%x2868)))
-%%tmp2867)
-((lambda (%%_2870)
-((letrec ((%%f2871 (lambda (%%y2872 %%k2873)
-((lambda (%%tmp2874)
-((lambda (%%tmp2875)
-(if %%tmp2875
-(apply (lambda (%%y2876)
+(list->vector %%x2905)))
+%%tmp2904)
+((lambda (%%_2907)
+((letrec ((%%f2908 (lambda (%%y2909 %%k2910)
+((lambda (%%tmp2911)
+((lambda (%%tmp2912)
+(if %%tmp2912
+(apply (lambda (%%y2913)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(%%k2873 (map (lambda (%%tmp2877)
+(%%k2910 (map (lambda (%%tmp2914)
 (list '#(syntax-object
 "quote"
 ((top)
@@ -52183,26 +52550,26 @@ quasi)
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2877))
-%%y2876)))
-%%tmp2875)
-((lambda (%%tmp2878)
-(if %%tmp2878
-(apply (lambda (%%y2879) (%%k2873 %%y2879))
-%%tmp2878)
-((lambda (%%tmp2881)
-(if %%tmp2881
-(apply (lambda (%%y2882 %%z2883)
-(%%f2871 %%z2883
-(lambda (%%ls2884)
-(%%k2873 (append %%y2882
+%%tmp2914))
+%%y2913)))
+%%tmp2912)
+((lambda (%%tmp2915)
+(if %%tmp2915
+(apply (lambda (%%y2916) (%%k2910 %%y2916))
+%%tmp2915)
+((lambda (%%tmp2918)
+(if %%tmp2918
+(apply (lambda (%%y2919 %%z2920)
+(%%f2908 %%z2920
+(lambda (%%ls2921)
+(%%k2910 (append %%y2919
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%ls2884)))))
+%%ls2921)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2881)
-((lambda (%%else2886)
-((lambda (%%tmp2887)
-((lambda (%%t12888)
+%%tmp2918)
+((lambda (%%else2923)
+((lambda (%%tmp2924)
+((lambda (%%t12925)
 (list '#(syntax-object
 "list->vector"
 ((top)
@@ -52256,26 +52623,26 @@ quasi)
 #(top-ribcage
 *top*
 #t)))
-%%t12888))
-%%tmp2887))
-%%x2865))
-%%tmp2874)))
+%%t12925))
+%%tmp2924))
+%%x2902))
+%%tmp2911)))
 ($syntax-dispatch
-%%tmp2874
+%%tmp2911
 '(#(atom "list*") . #(each+ any (any) ()))))))
 ($syntax-dispatch
-%%tmp2874
+%%tmp2911
 '(#(atom "list") . each-any)))))
-($syntax-dispatch %%tmp2874 '(#(atom "quote") each-any))))
+($syntax-dispatch %%tmp2911 '(#(atom "quote") each-any))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%y2872))))
-%%f2871)
-%%x2865
-(lambda (%%ls2889)
-((lambda (%%tmp2890)
-((lambda (%%tmp2891)
-(if %%tmp2891
-(apply (lambda (%%t22892)
+%%y2909))))
+%%f2908)
+%%x2902
+(lambda (%%ls2926)
+((lambda (%%tmp2927)
+((lambda (%%tmp2928)
+(if %%tmp2928
+(apply (lambda (%%t22929)
 (cons '#(syntax-object
 "vector"
 ((top)
@@ -52299,23 +52666,23 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%t22892))
+%%t22929))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2891)
-(syntax-error %%tmp2890)))
-($syntax-dispatch %%tmp2890 'each-any)))
-%%ls2889))))
-%%tmp2866)))
+%%tmp2928)
+(syntax-error %%tmp2927)))
+($syntax-dispatch %%tmp2927 'each-any)))
+%%ls2926))))
+%%tmp2903)))
 ($syntax-dispatch
-%%tmp2866
+%%tmp2903
 '(#(atom "quote") each-any))))
-%%x2865)))
-(%%emit2787
-(lambda (%%x2894)
-((lambda (%%tmp2895)
-((lambda (%%tmp2896)
-(if %%tmp2896
-(apply (lambda (%%x2897)
+%%x2902)))
+(%%emit2824
+(lambda (%%x2931)
+((lambda (%%tmp2932)
+((lambda (%%tmp2933)
+(if %%tmp2933
+(apply (lambda (%%x2934)
 (list '#(syntax-object
 quote
 ((top)
@@ -52338,15 +52705,15 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%x2897))
-%%tmp2896)
-((lambda (%%tmp2898)
-(if %%tmp2898
-(apply (lambda (%%x2899)
-((lambda (%%tmp2900)
-((lambda (%%tmp2901)
-(if %%tmp2901
-(apply (lambda (%%t32902)
+%%x2934))
+%%tmp2933)
+((lambda (%%tmp2935)
+(if %%tmp2935
+(apply (lambda (%%x2936)
+((lambda (%%tmp2937)
+((lambda (%%tmp2938)
+(if %%tmp2938
+(apply (lambda (%%t32939)
 (cons '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 list
@@ -52365,27 +52732,27 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%t32902))
-%%tmp2901)
-(syntax-error %%tmp2900)))
+%%t32939))
+%%tmp2938)
+(syntax-error %%tmp2937)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2900
+%%tmp2937
 'each-any)))
-(map %%emit2787 %%x2899)))
-%%tmp2898)
-((lambda (%%tmp2905)
-(if %%tmp2905
-(apply (lambda (%%x2906 %%y2907)
-((letrec ((%%f2908 (lambda (%%x*2909)
+(map %%emit2824 %%x2936)))
+%%tmp2935)
+((lambda (%%tmp2942)
+(if %%tmp2942
+(apply (lambda (%%x2943 %%y2944)
+((letrec ((%%f2945 (lambda (%%x*2946)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(if (null? %%x*2909)
-(%%emit2787 %%y2907)
-((lambda (%%tmp2910)
-((lambda (%%tmp2911)
-(if %%tmp2911
-(apply (lambda (%%t52912
-%%t42913)
+(if (null? %%x*2946)
+(%%emit2824 %%y2944)
+((lambda (%%tmp2947)
+((lambda (%%tmp2948)
+(if %%tmp2948
+(apply (lambda (%%t52949
+%%t42950)
 (list '#(syntax-object
 cons
 ((top)
@@ -52407,28 +52774,28 @@ quasi)
 ((top) (top) (top) (top) (top) (top) (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%t52912
-%%t42913))
+%%t52949
+%%t42950))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2911)
-(syntax-error %%tmp2910)))
+%%tmp2948)
+(syntax-error %%tmp2947)))
 ($syntax-dispatch
-%%tmp2910
+%%tmp2947
 '(any any))))
-(list (%%emit2787 (car %%x*2909))
-(%%f2908 (cdr %%x*2909))))))))
-%%f2908)
+(list (%%emit2824 (car %%x*2946))
+(%%f2945 (cdr %%x*2946))))))))
+%%f2945)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%x2906))
-%%tmp2905)
-((lambda (%%tmp2915)
-(if %%tmp2915
-(apply (lambda (%%x2916)
-((lambda (%%tmp2917)
-((lambda (%%tmp2918)
-(if %%tmp2918
+%%x2943))
+%%tmp2942)
+((lambda (%%tmp2952)
+(if %%tmp2952
+(apply (lambda (%%x2953)
+((lambda (%%tmp2954)
+((lambda (%%tmp2955)
+(if %%tmp2955
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(apply (lambda (%%t62919)
+(apply (lambda (%%t62956)
 (cons '#(syntax-object
 append
 ((top)
@@ -52455,21 +52822,21 @@ quasi)
 (top))
 ("i" "i" "i" "i" "i" "i" "i"))
 #(top-ribcage *top* #t)))
-%%t62919))
-%%tmp2918)
-(syntax-error %%tmp2917)))
-($syntax-dispatch %%tmp2917 'each-any)))
-(map %%emit2787 %%x2916)))
-%%tmp2915)
+%%t62956))
+%%tmp2955)
+(syntax-error %%tmp2954)))
+($syntax-dispatch %%tmp2954 'each-any)))
+(map %%emit2824 %%x2953)))
+%%tmp2952)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2922)
-(if %%tmp2922
-(apply (lambda (%%x2923)
+((lambda (%%tmp2959)
+(if %%tmp2959
+(apply (lambda (%%x2960)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-((lambda (%%tmp2924)
-((lambda (%%tmp2925)
-(if %%tmp2925
-(apply (lambda (%%t72926)
+((lambda (%%tmp2961)
+((lambda (%%tmp2962)
+(if %%tmp2962
+(apply (lambda (%%t72963)
 (cons '#(syntax-object
 vector
 ((top)
@@ -52508,17 +52875,17 @@ quasi)
 "i"
 "i"))
 #(top-ribcage *top* #t)))
-%%t72926))
-%%tmp2925)
-(syntax-error %%tmp2924)))
-($syntax-dispatch %%tmp2924 'each-any)))
-(map %%emit2787 %%x2923)))
-%%tmp2922)
-((lambda (%%tmp2929)
-(if %%tmp2929
-(apply (lambda (%%x2930)
-((lambda (%%tmp2931)
-((lambda (%%t82932)
+%%t72963))
+%%tmp2962)
+(syntax-error %%tmp2961)))
+($syntax-dispatch %%tmp2961 'each-any)))
+(map %%emit2824 %%x2960)))
+%%tmp2959)
+((lambda (%%tmp2966)
+(if %%tmp2966
+(apply (lambda (%%x2967)
+((lambda (%%tmp2968)
+((lambda (%%t82969)
 (list '#(syntax-object
 list->vector
 ((top)
@@ -52551,67 +52918,67 @@ quasi)
 "i"
 "i"))
 #(top-ribcage *top* #t)))
-%%t82932))
-%%tmp2931))
-(%%emit2787 %%x2930)))
-%%tmp2929)
-((lambda (%%tmp2933)
-(if %%tmp2933
-(apply (lambda (%%x2934) %%x2934) %%tmp2933)
-(syntax-error %%tmp2895)))
-($syntax-dispatch %%tmp2895 '(#(atom "value") any)))))
-($syntax-dispatch %%tmp2895 '(#(atom "list->vector") any)))))
+%%t82969))
+%%tmp2968))
+(%%emit2824 %%x2967)))
+%%tmp2966)
+((lambda (%%tmp2970)
+(if %%tmp2970
+(apply (lambda (%%x2971) %%x2971) %%tmp2970)
+(syntax-error %%tmp2932)))
+($syntax-dispatch %%tmp2932 '(#(atom "value") any)))))
+($syntax-dispatch %%tmp2932 '(#(atom "list->vector") any)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2895
+%%tmp2932
 '(#(atom "vector")
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp2895
+%%tmp2932
 '(#(atom "append") . each-any)))))
 ($syntax-dispatch
-%%tmp2895
+%%tmp2932
 '(#(atom "list*")
 .
 #(each+ any (any) ()))))))
 ($syntax-dispatch
-%%tmp2895
+%%tmp2932
 '(#(atom "list") . each-any)))))
-($syntax-dispatch %%tmp2895 '(#(atom "quote") any))))
-%%x2894))))
-(lambda (%%x2935)
-((lambda (%%tmp2936)
-((lambda (%%tmp2937)
-(if %%tmp2937
-(apply (lambda (%%_2938 %%e2939)
-(%%emit2787 (%%quasi2781 %%e2939 0)))
-%%tmp2937)
-(syntax-error %%tmp2936)))
-($syntax-dispatch %%tmp2936 '(any any))))
-%%x2935)))))
+($syntax-dispatch %%tmp2932 '(#(atom "quote") any))))
+%%x2931))))
+(lambda (%%x2972)
+((lambda (%%tmp2973)
+((lambda (%%tmp2974)
+(if %%tmp2974
+(apply (lambda (%%_2975 %%e2976)
+(%%emit2824 (%%quasi2818 %%e2976 0)))
+%%tmp2974)
+(syntax-error %%tmp2973)))
+($syntax-dispatch %%tmp2973 '(any any))))
+%%x2972)))))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 quasisyntax
 ((top) #(ribcage #(quasisyntax) #((top)) #(quasisyntax))))
-(lambda (%%x2940)
-(letrec ((%%qs2941
-(lambda (%%q2943 %%n2944 %%b*2945 %%k2946)
-((lambda (%%tmp2947)
-((lambda (%%tmp2948)
-(if %%tmp2948
-(apply (lambda (%%d2949)
-(%%qs2941
-%%d2949
-(+ %%n2944 1)
-%%b*2945
-(lambda (%%b*2950 %%dnew2951)
-(%%k2946 %%b*2950
-(if (eq? %%dnew2951 %%d2949)
-%%q2943
-((lambda (%%tmp2952)
-((lambda (%%d2953)
+(lambda (%%x2977)
+(letrec ((%%qs2978
+(lambda (%%q2980 %%n2981 %%b*2982 %%k2983)
+((lambda (%%tmp2984)
+((lambda (%%tmp2985)
+(if %%tmp2985
+(apply (lambda (%%d2986)
+(%%qs2978
+%%d2986
+(+ %%n2981 1)
+%%b*2982
+(lambda (%%b*2987 %%dnew2988)
+(%%k2983 %%b*2987
+(if (eq? %%dnew2988 %%d2986)
+%%q2980
+((lambda (%%tmp2989)
+((lambda (%%d2990)
 (cons '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 quasisyntax
@@ -52628,29 +52995,29 @@ quasisyntax
 #(ribcage (vqs qs) ((top) (top)) ("i" "i"))
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%d2953))
-%%tmp2952))
+%%d2990))
+%%tmp2989))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%dnew2951))))))
-%%tmp2948)
-((lambda (%%tmp2954)
-(if (if %%tmp2954
-(apply (lambda (%%d2955)
-(not (= %%n2944 0)))
-%%tmp2954)
+%%dnew2988))))))
+%%tmp2985)
+((lambda (%%tmp2991)
+(if (if %%tmp2991
+(apply (lambda (%%d2992)
+(not (= %%n2981 0)))
+%%tmp2991)
 #f)
-(apply (lambda (%%d2956)
-(%%qs2941
-%%d2956
-(- %%n2944 1)
-%%b*2945
-(lambda (%%b*2957 %%dnew2958)
-(%%k2946 %%b*2957
-(if (eq? %%dnew2958
-%%d2956)
-%%q2943
-((lambda (%%tmp2959)
-((lambda (%%d2960)
+(apply (lambda (%%d2993)
+(%%qs2978
+%%d2993
+(- %%n2981 1)
+%%b*2982
+(lambda (%%b*2994 %%dnew2995)
+(%%k2983 %%b*2994
+(if (eq? %%dnew2995
+%%d2993)
+%%q2980
+((lambda (%%tmp2996)
+((lambda (%%d2997)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 (cons '#(syntax-object
 unsyntax
@@ -52670,31 +53037,31 @@ unsyntax
 #(ribcage (vqs qs) ((top) (top)) ("i" "i"))
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%d2960))
-%%tmp2959))
-%%dnew2958))))))
+%%d2997))
+%%tmp2996))
+%%dnew2995))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2954)
-((lambda (%%tmp2961)
-(if (if %%tmp2961
-(apply (lambda (%%d2962)
-(not (= %%n2944 0)))
-%%tmp2961)
+%%tmp2991)
+((lambda (%%tmp2998)
+(if (if %%tmp2998
+(apply (lambda (%%d2999)
+(not (= %%n2981 0)))
+%%tmp2998)
 #f)
-(apply (lambda (%%d2963)
-(%%qs2941
-%%d2963
-(- %%n2944 1)
-%%b*2945
-(lambda (%%b*2964
-%%dnew2965)
-(%%k2946 %%b*2964
-(if (eq? %%dnew2965
+(apply (lambda (%%d3000)
+(%%qs2978
+%%d3000
+(- %%n2981 1)
+%%b*2982
+(lambda (%%b*3001
+%%dnew3002)
+(%%k2983 %%b*3001
+(if (eq? %%dnew3002
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%d2963)
-%%q2943
-((lambda (%%tmp2966)
-((lambda (%%d2967)
+%%d3000)
+%%q2980
+((lambda (%%tmp3003)
+((lambda (%%d3004)
 (cons '#(syntax-object
 unsyntax-splicing
 ((top)
@@ -52716,83 +53083,83 @@ unsyntax-splicing
 ("i" "i"))
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%d2967))
-%%tmp2966))
-%%dnew2965))))))
+%%d3004))
+%%tmp3003))
+%%dnew3002))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2961)
-((lambda (%%tmp2968)
-(if (if %%tmp2968
-(apply (lambda (%%q2969)
-(= %%n2944 0))
-%%tmp2968)
+%%tmp2998)
+((lambda (%%tmp3005)
+(if (if %%tmp3005
+(apply (lambda (%%q3006)
+(= %%n2981 0))
+%%tmp3005)
 #f)
-(apply (lambda (%%q2970)
-((lambda (%%tmp2971)
-((lambda (%%tmp2972)
-(if %%tmp2972
+(apply (lambda (%%q3007)
+((lambda (%%tmp3008)
+((lambda (%%tmp3009)
+(if %%tmp3009
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(apply (lambda (%%t2973)
-(%%k2946 (cons (list %%t2973 %%q2970)
-%%b*2945)
-%%t2973))
-%%tmp2972)
-(syntax-error %%tmp2971)))
-($syntax-dispatch %%tmp2971 '(any))))
-(generate-temporaries (list %%q2970))))
-%%tmp2968)
+(apply (lambda (%%t3010)
+(%%k2983 (cons (list %%t3010 %%q3007)
+%%b*2982)
+%%t3010))
+%%tmp3009)
+(syntax-error %%tmp3008)))
+($syntax-dispatch %%tmp3008 '(any))))
+(generate-temporaries (list %%q3007))))
+%%tmp3005)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp2974)
-(if (if %%tmp2974
-(apply (lambda (%%q2975
+((lambda (%%tmp3011)
+(if (if %%tmp3011
+(apply (lambda (%%q3012
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%d2976)
-(= %%n2944 0))
-%%tmp2974)
+%%d3013)
+(= %%n2981 0))
+%%tmp3011)
 #f)
-(apply (lambda (%%q2977 %%d2978)
-(%%qs2941
-%%d2978
-%%n2944
-%%b*2945
-(lambda (%%b*2979 %%dnew2980)
-((lambda (%%tmp2981)
-((lambda (%%tmp2982)
-(if %%tmp2982
-(apply (lambda (%%t2983)
-(%%k2946 (append (map list
+(apply (lambda (%%q3014 %%d3015)
+(%%qs2978
+%%d3015
+%%n2981
+%%b*2982
+(lambda (%%b*3016 %%dnew3017)
+((lambda (%%tmp3018)
+((lambda (%%tmp3019)
+(if %%tmp3019
+(apply (lambda (%%t3020)
+(%%k2983 (append (map list
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%t2983
-%%q2977)
-%%b*2979)
-((lambda (%%tmp2986)
-((lambda (%%d2987) (append %%t2983 %%d2987)) %%tmp2986))
-%%dnew2980)))
+%%t3020
+%%q3014)
+%%b*3016)
+((lambda (%%tmp3023)
+((lambda (%%d3024) (append %%t3020 %%d3024)) %%tmp3023))
+%%dnew3017)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2982)
-(syntax-error %%tmp2981)))
-($syntax-dispatch %%tmp2981 'each-any)))
-(generate-temporaries %%q2977)))))
-%%tmp2974)
-((lambda (%%tmp2990)
-(if (if %%tmp2990
-(apply (lambda (%%q2991 %%d2992) (= %%n2944 0))
-%%tmp2990)
+%%tmp3019)
+(syntax-error %%tmp3018)))
+($syntax-dispatch %%tmp3018 'each-any)))
+(generate-temporaries %%q3014)))))
+%%tmp3011)
+((lambda (%%tmp3027)
+(if (if %%tmp3027
+(apply (lambda (%%q3028 %%d3029) (= %%n2981 0))
+%%tmp3027)
 #f)
-(apply (lambda (%%q2993 %%d2994)
-(%%qs2941
-%%d2994
-%%n2944
-%%b*2945
-(lambda (%%b*2995 %%dnew2996)
-((lambda (%%tmp2997)
-((lambda (%%tmp2998)
-(if %%tmp2998
-(apply (lambda (%%t2999)
-(%%k2946 (append (map (lambda (%%tmp3001
+(apply (lambda (%%q3030 %%d3031)
+(%%qs2978
+%%d3031
+%%n2981
+%%b*2982
+(lambda (%%b*3032 %%dnew3033)
+((lambda (%%tmp3034)
+((lambda (%%tmp3035)
+(if %%tmp3035
+(apply (lambda (%%t3036)
+(%%k2983 (append (map (lambda (%%tmp3038
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%tmp3000)
-(list (cons %%tmp3000
+%%tmp3037)
+(list (cons %%tmp3037
 '(#(syntax-object
 ...
 ((top)
@@ -52828,25 +53195,25 @@ unsyntax-splicing
 #(top-ribcage
 *top*
 #t)))))
-%%tmp3001))
-%%q2993
-%%t2999)
-%%b*2995)
-((lambda (%%tmp3002)
-((lambda (%%tmp3003)
-(if %%tmp3003
-(apply (lambda (%%m3004)
-((lambda (%%tmp3005)
-((lambda (%%d3006)
-(append (apply append %%m3004)
-%%d3006))
-%%tmp3005))
-%%dnew2996))
-%%tmp3003)
-(syntax-error %%tmp3002)))
-($syntax-dispatch %%tmp3002 '#(each each-any))))
-(map (lambda (%%tmp3009)
-(cons %%tmp3009
+%%tmp3038))
+%%q3030
+%%t3036)
+%%b*3032)
+((lambda (%%tmp3039)
+((lambda (%%tmp3040)
+(if %%tmp3040
+(apply (lambda (%%m3041)
+((lambda (%%tmp3042)
+((lambda (%%d3043)
+(append (apply append %%m3041)
+%%d3043))
+%%tmp3042))
+%%dnew3033))
+%%tmp3040)
+(syntax-error %%tmp3039)))
+($syntax-dispatch %%tmp3039 '#(each each-any))))
+(map (lambda (%%tmp3046)
+(cons %%tmp3046
 '(#(syntax-object
 ...
 ((top)
@@ -52871,89 +53238,89 @@ unsyntax-splicing
 ("i" "i"))
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t))))))
-%%t2999))))
+%%t3036))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp2998)
-(syntax-error %%tmp2997)))
-($syntax-dispatch %%tmp2997 'each-any)))
-(generate-temporaries %%q2993)))))
-%%tmp2990)
-((lambda (%%tmp3011)
-(if %%tmp3011
-(apply (lambda (%%a3012 %%d3013)
-(%%qs2941
-%%a3012
-%%n2944
-%%b*2945
-(lambda (%%b*3014 %%anew3015)
-(%%qs2941
-%%d3013
-%%n2944
-%%b*3014
-(lambda (%%b*3016 %%dnew3017)
-(%%k2946 %%b*3016
-(if (if (eq? %%anew3015
+%%tmp3035)
+(syntax-error %%tmp3034)))
+($syntax-dispatch %%tmp3034 'each-any)))
+(generate-temporaries %%q3030)))))
+%%tmp3027)
+((lambda (%%tmp3048)
+(if %%tmp3048
+(apply (lambda (%%a3049 %%d3050)
+(%%qs2978
+%%a3049
+%%n2981
+%%b*2982
+(lambda (%%b*3051 %%anew3052)
+(%%qs2978
+%%d3050
+%%n2981
+%%b*3051
+(lambda (%%b*3053 %%dnew3054)
+(%%k2983 %%b*3053
+(if (if (eq? %%anew3052
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%a3012)
-(eq? %%dnew3017 %%d3013)
+%%a3049)
+(eq? %%dnew3054 %%d3050)
 #f)
-%%q2943
-((lambda (%%tmp3018)
-((lambda (%%tmp3019)
-(if %%tmp3019
-(apply (lambda (%%a3020 %%d3021)
-(cons %%a3020 %%d3021))
-%%tmp3019)
-(syntax-error %%tmp3018)))
-($syntax-dispatch %%tmp3018 '(any any))))
-(list %%anew3015 %%dnew3017)))))))))
+%%q2980
+((lambda (%%tmp3055)
+((lambda (%%tmp3056)
+(if %%tmp3056
+(apply (lambda (%%a3057 %%d3058)
+(cons %%a3057 %%d3058))
+%%tmp3056)
+(syntax-error %%tmp3055)))
+($syntax-dispatch %%tmp3055 '(any any))))
+(list %%anew3052 %%dnew3054)))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp3011)
-((lambda (%%tmp3022)
-(if %%tmp3022
-(apply (lambda (%%x3023)
-(%%vqs2942
-%%x3023
-%%n2944
-%%b*2945
-(lambda (%%b*3025 %%xnew*3026)
-(%%k2946 %%b*3025
-(if ((letrec ((%%same?3027
+%%tmp3048)
+((lambda (%%tmp3059)
+(if %%tmp3059
+(apply (lambda (%%x3060)
+(%%vqs2979
+%%x3060
+%%n2981
+%%b*2982
+(lambda (%%b*3062 %%xnew*3063)
+(%%k2983 %%b*3062
+(if ((letrec ((%%same?3064
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(lambda (%%x*3028 %%xnew*3029)
-(if (null? %%x*3028)
-(null? %%xnew*3029)
-(if (not (null? %%xnew*3029))
-(if (eq? (car %%x*3028)
-(car %%xnew*3029))
-(%%same?3027
-(cdr %%x*3028)
-(cdr %%xnew*3029))
+(lambda (%%x*3065 %%xnew*3066)
+(if (null? %%x*3065)
+(null? %%xnew*3066)
+(if (not (null? %%xnew*3066))
+(if (eq? (car %%x*3065)
+(car %%xnew*3066))
+(%%same?3064
+(cdr %%x*3065)
+(cdr %%xnew*3066))
 #f)
 #f)))))
-%%same?3027)
-%%x3023
-%%xnew*3026)
-%%q2943
-((lambda (%%tmp3031)
-((lambda (%%tmp3032)
-(if %%tmp3032
-(apply (lambda (%%x3033) (list->vector %%x3033))
-%%tmp3032)
-(syntax-error %%tmp3031)))
-($syntax-dispatch %%tmp3031 'each-any)))
-%%xnew*3026))))))
+%%same?3064)
+%%x3060
+%%xnew*3063)
+%%q2980
+((lambda (%%tmp3068)
+((lambda (%%tmp3069)
+(if %%tmp3069
+(apply (lambda (%%x3070) (list->vector %%x3070))
+%%tmp3069)
+(syntax-error %%tmp3068)))
+($syntax-dispatch %%tmp3068 'each-any)))
+%%xnew*3063))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp3022)
-((lambda (%%_3035)
-(%%k2946 %%b*2945 %%q2943))
-%%tmp2947)))
+%%tmp3059)
+((lambda (%%_3072)
+(%%k2983 %%b*2982 %%q2980))
+%%tmp2984)))
 ($syntax-dispatch
-%%tmp2947
+%%tmp2984
 '#(vector each-any)))))
-($syntax-dispatch %%tmp2947 '(any . any)))))
+($syntax-dispatch %%tmp2984 '(any . any)))))
 ($syntax-dispatch
-%%tmp2947
+%%tmp2984
 '((#(free-id
 #(syntax-object
 unsyntax-splicing
@@ -52972,7 +53339,7 @@ each-any)
 any)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp2947
+%%tmp2984
 '((#(free-id
 #(syntax-object
 unsyntax
@@ -53001,7 +53368,7 @@ each-any)
 .
 any)))))
 ($syntax-dispatch
-%%tmp2947
+%%tmp2984
 '(#(free-id
 #(syntax-object
 unsyntax
@@ -53022,7 +53389,7 @@ unsyntax
 #(top-ribcage *top* #t))))
 any)))))
 ($syntax-dispatch
-%%tmp2947
+%%tmp2984
 '(#(free-id
 #(syntax-object
 unsyntax-splicing
@@ -53041,7 +53408,7 @@ unsyntax-splicing
 .
 any)))))
 ($syntax-dispatch
-%%tmp2947
+%%tmp2984
 '(#(free-id
 #(syntax-object
 unsyntax
@@ -53057,7 +53424,7 @@ unsyntax
 .
 any)))))
 ($syntax-dispatch
-%%tmp2947
+%%tmp2984
 '(#(free-id
 #(syntax-object
 quasisyntax
@@ -53072,56 +53439,56 @@ quasisyntax
 #(top-ribcage *top* #t))))
 .
 any))))
-%%q2943)))
-(%%vqs2942
-(lambda (%%x*3036 %%n3037 %%b*3038 %%k3039)
-(if (null? %%x*3036)
-(%%k3039 %%b*3038 '())
-(%%vqs2942
-(cdr %%x*3036)
-%%n3037
-%%b*3038
-(lambda (%%b*3040 %%xnew*3041)
-((lambda (%%tmp3042)
-((lambda (%%tmp3043)
-(if (if %%tmp3043
-(apply (lambda (%%q3044) (= %%n3037 0))
-%%tmp3043)
+%%q2980)))
+(%%vqs2979
+(lambda (%%x*3073 %%n3074 %%b*3075 %%k3076)
+(if (null? %%x*3073)
+(%%k3076 %%b*3075 '())
+(%%vqs2979
+(cdr %%x*3073)
+%%n3074
+%%b*3075
+(lambda (%%b*3077 %%xnew*3078)
+((lambda (%%tmp3079)
+((lambda (%%tmp3080)
+(if (if %%tmp3080
+(apply (lambda (%%q3081) (= %%n3074 0))
+%%tmp3080)
 #f)
-(apply (lambda (%%q3045)
-((lambda (%%tmp3046)
-((lambda (%%tmp3047)
-(if %%tmp3047
-(apply (lambda (%%t3048)
-(%%k3039 (append (map list
+(apply (lambda (%%q3082)
+((lambda (%%tmp3083)
+((lambda (%%tmp3084)
+(if %%tmp3084
+(apply (lambda (%%t3085)
+(%%k3076 (append (map list
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%t3048
-%%q3045)
-%%b*3040)
-(append %%t3048 %%xnew*3041)))
-%%tmp3047)
+%%t3085
+%%q3082)
+%%b*3077)
+(append %%t3085 %%xnew*3078)))
+%%tmp3084)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(syntax-error %%tmp3046)))
+(syntax-error %%tmp3083)))
 ($syntax-dispatch
-%%tmp3046
+%%tmp3083
 'each-any)))
-(generate-temporaries %%q3045)))
-%%tmp3043)
-((lambda (%%tmp3053)
-(if (if %%tmp3053
-(apply (lambda (%%q3054)
-(= %%n3037 0))
-%%tmp3053)
+(generate-temporaries %%q3082)))
+%%tmp3080)
+((lambda (%%tmp3090)
+(if (if %%tmp3090
+(apply (lambda (%%q3091)
+(= %%n3074 0))
+%%tmp3090)
 #f)
-(apply (lambda (%%q3055)
-((lambda (%%tmp3056)
-((lambda (%%tmp3057)
-(if %%tmp3057
-(apply (lambda (%%t3058)
+(apply (lambda (%%q3092)
+((lambda (%%tmp3093)
+((lambda (%%tmp3094)
+(if %%tmp3094
+(apply (lambda (%%t3095)
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(%%k3039 (append (map (lambda (%%tmp3060
-%%tmp3059)
-(list (cons %%tmp3059
+(%%k3076 (append (map (lambda (%%tmp3097
+%%tmp3096)
+(list (cons %%tmp3096
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 '(#(syntax-object
 ...
@@ -53138,27 +53505,27 @@ any))))
 #(ribcage (vqs qs) ((top) (top)) ("i" "i"))
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))))
-%%tmp3060))
+%%tmp3097))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%q3055
-%%t3058)
-%%b*3040)
-((lambda (%%tmp3061)
-((lambda (%%tmp3062)
-(if %%tmp3062
-(apply (lambda (%%m3063)
+%%q3092
+%%t3095)
+%%b*3077)
+((lambda (%%tmp3098)
+((lambda (%%tmp3099)
+(if %%tmp3099
+(apply (lambda (%%m3100)
 (append (apply append
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%m3063)
-%%xnew*3041))
-%%tmp3062)
+%%m3100)
+%%xnew*3078))
+%%tmp3099)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(syntax-error %%tmp3061)))
+(syntax-error %%tmp3098)))
 ($syntax-dispatch
-%%tmp3061
+%%tmp3098
 '#(each each-any))))
-(map (lambda (%%tmp3066)
-(cons %%tmp3066
+(map (lambda (%%tmp3103)
+(cons %%tmp3103
 '(#(syntax-object
 ...
 ((top)
@@ -53194,26 +53561,26 @@ any))))
 #(top-ribcage
 *top*
 #t))))))
-%%t3058))))
-%%tmp3057)
-(syntax-error %%tmp3056)))
-($syntax-dispatch %%tmp3056 'each-any)))
+%%t3095))))
+%%tmp3094)
+(syntax-error %%tmp3093)))
+($syntax-dispatch %%tmp3093 'each-any)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 (generate-temporaries
-%%q3055)))
-%%tmp3053)
-((lambda (%%_3068)
-(%%qs2941
-(car %%x*3036)
-%%n3037
-%%b*3040
-(lambda (%%b*3069 %%xnew3070)
-(%%k3039 %%b*3069
-(cons %%xnew3070
-%%xnew*3041)))))
-%%tmp3042)))
+%%q3092)))
+%%tmp3090)
+((lambda (%%_3105)
+(%%qs2978
+(car %%x*3073)
+%%n3074
+%%b*3077
+(lambda (%%b*3106 %%xnew3107)
+(%%k3076 %%b*3106
+(cons %%xnew3107
+%%xnew*3078)))))
+%%tmp3079)))
 ($syntax-dispatch
-%%tmp3042
+%%tmp3079
 '(#(free-id
 #(syntax-object
 unsyntax-splicing
@@ -53237,7 +53604,7 @@ unsyntax-splicing
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp3042
+%%tmp3079
 '(#(free-id
 #(syntax-object
 unsyntax
@@ -53257,17 +53624,17 @@ unsyntax
 #(top-ribcage *top* #t))))
 .
 each-any))))
-(car %%x*3036))))))))
-((lambda (%%tmp3071)
-((lambda (%%tmp3072)
-(if %%tmp3072
-(apply (lambda (%%_3073 %%x3074)
-(%%qs2941
-%%x3074
+(car %%x*3073))))))))
+((lambda (%%tmp3108)
+((lambda (%%tmp3109)
+(if %%tmp3109
+(apply (lambda (%%_3110 %%x3111)
+(%%qs2978
+%%x3111
 0
 '()
-(lambda (%%b*3075 %%xnew3076)
-(if (eq? %%xnew3076 %%x3074)
+(lambda (%%b*3112 %%xnew3113)
+(if (eq? %%xnew3113 %%x3111)
 (list '#(syntax-object
 syntax
 ((top)
@@ -53286,11 +53653,11 @@ syntax
 ("i" "i"))
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%x3074)
-((lambda (%%tmp3077)
-((lambda (%%tmp3078)
-(if %%tmp3078
-(apply (lambda (%%b3079 %%x3080)
+%%x3111)
+((lambda (%%tmp3114)
+((lambda (%%tmp3115)
+(if %%tmp3115
+(apply (lambda (%%b3116 %%x3117)
 (list '#(syntax-object
 with-syntax
 ((top)
@@ -53321,7 +53688,7 @@ with-syntax
 #(top-ribcage
 *top*
 #t)))
-%%b3079
+%%b3116
 (list '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 syntax
@@ -53333,70 +53700,70 @@ syntax
 #(ribcage (vqs qs) ((top) (top)) ("i" "i"))
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%x3080)))
+%%x3117)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp3078)
-(syntax-error %%tmp3077)))
+%%tmp3115)
+(syntax-error %%tmp3114)))
 ($syntax-dispatch
-%%tmp3077
+%%tmp3114
 '(each-any any))))
-(list %%b*3075 %%xnew3076))))))
-%%tmp3072)
-(syntax-error %%tmp3071)))
-($syntax-dispatch %%tmp3071 '(any any))))
-%%x2940)))
+(list %%b*3112 %%xnew3113))))))
+%%tmp3109)
+(syntax-error %%tmp3108)))
+($syntax-dispatch %%tmp3108 '(any any))))
+%%x2977)))
 '*top*)
 ($sc-put-cte
 '#(syntax-object include ((top) #(ribcage #(include) #((top)) #(include))))
-(lambda (%%x3082)
-(letrec ((%%read-file3083
-(lambda (%%fn3084 %%k3085)
-((lambda (%%p3086)
-((letrec ((%%f3087 (lambda ()
-((lambda (%%x3088)
-(if (eof-object? %%x3088)
+(lambda (%%x3119)
+(letrec ((%%read-file3120
+(lambda (%%fn3121 %%k3122)
+((lambda (%%p3123)
+((letrec ((%%f3124 (lambda ()
+((lambda (%%x3125)
+(if (eof-object? %%x3125)
 (begin
-(close-input-port %%p3086)
+(close-input-port %%p3123)
 '())
 (cons (datum->syntax-object
-%%k3085
-%%x3088)
-(%%f3087))))
-(read %%p3086)))))
-%%f3087)))
-(open-input-file %%fn3084)))))
-((lambda (%%tmp3089)
-((lambda (%%tmp3090)
-(if %%tmp3090
-(apply (lambda (%%k3091 %%filename3092)
-((lambda (%%fn3093)
+%%k3122
+%%x3125)
+(%%f3124))))
+(read %%p3123)))))
+%%f3124)))
+(open-input-file %%fn3121)))))
+((lambda (%%tmp3126)
+((lambda (%%tmp3127)
+(if %%tmp3127
+(apply (lambda (%%k3128 %%filename3129)
+((lambda (%%fn3130)
 (datum->syntax-object
-%%k3091
-((lambda (%%src3094)
-((lambda (%%locat3095)
-((lambda () %%src3094)))
-(##source-locat %%src3094)))
+%%k3128
+((lambda (%%src3131)
+((lambda (%%locat3132)
+((lambda () %%src3131)))
+(##source-locat %%src3131)))
 (##include-file-as-a-begin-expr
-((lambda (%%y3096)
-(if (##source? %%y3096)
-%%y3096
-(##make-source %%y3096 #f)))
-(vector-ref %%x3082 1))))))
-(syntax-object->datum %%filename3092)))
-%%tmp3090)
-(syntax-error %%tmp3089)))
-($syntax-dispatch %%tmp3089 '(any any))))
-%%x3082)))
+((lambda (%%y3133)
+(if (##source? %%y3133)
+%%y3133
+(##make-source %%y3133 #f)))
+(vector-ref %%x3119 1))))))
+(syntax-object->datum %%filename3129)))
+%%tmp3127)
+(syntax-error %%tmp3126)))
+($syntax-dispatch %%tmp3126 '(any any))))
+%%x3119)))
 '*top*)
 ($sc-put-cte
 '#(syntax-object case ((top) #(ribcage #(case) #((top)) #(case))))
-(lambda (%%x3097)
-((lambda (%%tmp3098)
-((lambda (%%tmp3099)
-(if %%tmp3099
-(apply (lambda (%%_3100 %%e3101 %%m13102 %%m23103)
-((lambda (%%tmp3104)
-((lambda (%%body3105)
+(lambda (%%x3134)
+((lambda (%%tmp3135)
+((lambda (%%tmp3136)
+(if %%tmp3136
+(apply (lambda (%%_3137 %%e3138 %%m13139 %%m23140)
+((lambda (%%tmp3141)
+((lambda (%%body3142)
 (list '#(syntax-object
 let
 ((top)
@@ -53428,18 +53795,18 @@ t
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%e3101))
-%%body3105))
-%%tmp3104))
-((letrec ((%%f3106 (lambda (%%clause3107
-%%clauses3108)
-(if (null? %%clauses3108)
-((lambda (%%tmp3109)
-((lambda (%%tmp3110)
-(if %%tmp3110
-(apply (lambda (%%e13111
+%%e3138))
+%%body3142))
+%%tmp3141))
+((letrec ((%%f3143 (lambda (%%clause3144
+%%clauses3145)
+(if (null? %%clauses3145)
+((lambda (%%tmp3146)
+((lambda (%%tmp3147)
+(if %%tmp3147
+(apply (lambda (%%e13148
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%e23112)
+%%e23149)
 (cons '#(syntax-object
 begin
 ((top)
@@ -53460,11 +53827,11 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e13111 %%e23112)))
-%%tmp3110)
-((lambda (%%tmp3114)
-(if %%tmp3114
-(apply (lambda (%%k3115 %%e13116 %%e23117)
+(cons %%e13148 %%e23149)))
+%%tmp3147)
+((lambda (%%tmp3151)
+(if %%tmp3151
+(apply (lambda (%%k3152 %%e13153 %%e23154)
 (list '#(syntax-object
 if
 ((top)
@@ -53576,7 +53943,7 @@ quote
 #(top-ribcage
 *top*
 #t)))
-%%k3115))
+%%k3152))
 (cons '#(syntax-object
 begin
 ((top)
@@ -53606,13 +53973,13 @@ begin
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e13116 %%e23117))))
-%%tmp3114)
-((lambda (%%_3120) (syntax-error %%x3097))
-%%tmp3109)))
-($syntax-dispatch %%tmp3109 '(each-any any . each-any)))))
+(cons %%e13153 %%e23154))))
+%%tmp3151)
+((lambda (%%_3157) (syntax-error %%x3134))
+%%tmp3146)))
+($syntax-dispatch %%tmp3146 '(each-any any . each-any)))))
 ($syntax-dispatch
-%%tmp3109
+%%tmp3146
 '(#(free-id
 #(syntax-object
 else
@@ -53631,14 +53998,14 @@ any
 .
 each-any))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%clause3107)
-((lambda (%%tmp3121)
-((lambda (%%rest3122)
-((lambda (%%tmp3123)
-((lambda (%%tmp3124)
-(if %%tmp3124
+%%clause3144)
+((lambda (%%tmp3158)
+((lambda (%%rest3159)
+((lambda (%%tmp3160)
+((lambda (%%tmp3161)
+(if %%tmp3161
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-(apply (lambda (%%k3125 %%e13126 %%e23127)
+(apply (lambda (%%k3162 %%e13163 %%e23164)
 (list '#(syntax-object
 if
 ((top)
@@ -53755,7 +54122,7 @@ quote
 #(top-ribcage
 *top*
 #t)))
-%%k3125))
+%%k3162))
 (cons '#(syntax-object
 begin
 ((top)
@@ -53786,34 +54153,34 @@ begin
 #((top))
 #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e13126 %%e23127))
-%%rest3122))
-%%tmp3124)
-((lambda (%%_3130) (syntax-error %%x3097))
-%%tmp3123)))
-($syntax-dispatch %%tmp3123 '(each-any any . each-any))))
-%%clause3107))
-%%tmp3121))
+(cons %%e13163 %%e23164))
+%%rest3159))
+%%tmp3161)
+((lambda (%%_3167) (syntax-error %%x3134))
+%%tmp3160)))
+($syntax-dispatch %%tmp3160 '(each-any any . each-any))))
+%%clause3144))
+%%tmp3158))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(%%f3106 (car %%clauses3108)
-(cdr %%clauses3108)))))))
-%%f3106)
-%%m13102
-%%m23103)))
-%%tmp3099)
-(syntax-error %%tmp3098)))
-($syntax-dispatch %%tmp3098 '(any any any . each-any))))
-%%x3097))
+(%%f3143 (car %%clauses3145)
+(cdr %%clauses3145)))))))
+%%f3143)
+%%m13139
+%%m23140)))
+%%tmp3136)
+(syntax-error %%tmp3135)))
+($syntax-dispatch %%tmp3135 '(any any any . each-any))))
+%%x3134))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 identifier-syntax
 ((top) #(ribcage #(identifier-syntax) #((top)) #(identifier-syntax))))
-(lambda (%%x3132)
-((lambda (%%tmp3133)
-((lambda (%%tmp3134)
-(if %%tmp3134
-(apply (lambda (%%dummy3135 %%e3136)
+(lambda (%%x3169)
+((lambda (%%tmp3170)
+((lambda (%%tmp3171)
+(if %%tmp3171
+(apply (lambda (%%dummy3172 %%e3173)
 (list '#(syntax-object
 lambda
 ((top)
@@ -53894,7 +54261,7 @@ syntax
 #(("m" top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%e3136))
+%%e3173))
 (list '(#(syntax-object
 _
 ((top)
@@ -53947,7 +54314,7 @@ syntax
 #(("m" top))
 #("i"))
 #(top-ribcage *top* #t)))
-(cons %%e3136
+(cons %%e3173
 '(#(syntax-object
 x
 ((top)
@@ -53978,26 +54345,26 @@ x
 #(top-ribcage
 *top*
 #t))))))))))
-%%tmp3134)
-((lambda (%%tmp3137)
-(if (if %%tmp3137
-(apply (lambda (%%dummy3138
-%%id3139
-%%exp13140
-%%var3141
-%%val3142
-%%exp23143)
-(if (identifier? %%id3139)
-(identifier? %%var3141)
+%%tmp3171)
+((lambda (%%tmp3174)
+(if (if %%tmp3174
+(apply (lambda (%%dummy3175
+%%id3176
+%%exp13177
+%%var3178
+%%val3179
+%%exp23180)
+(if (identifier? %%id3176)
+(identifier? %%var3178)
 #f))
-%%tmp3137)
+%%tmp3174)
 #f)
-(apply (lambda (%%dummy3144
-%%id3145
-%%exp13146
-%%var3147
-%%val3148
-%%exp23149)
+(apply (lambda (%%dummy3181
+%%id3182
+%%exp13183
+%%var3184
+%%val3185
+%%exp23186)
 (list '#(syntax-object
 cons
 ((top)
@@ -54159,8 +54526,8 @@ set!
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%var3147
-%%val3148)
+%%var3184
+%%val3185)
 (list '#(syntax-object
 syntax
 ((top)
@@ -54171,9 +54538,9 @@ syntax
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%exp23149))
+%%exp23186))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(list (cons %%id3145
+(list (cons %%id3182
 '(#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 x
@@ -54205,7 +54572,7 @@ syntax
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%exp13146
+(cons %%exp13183
 '(#(syntax-object
 x
 ((top)
@@ -54227,7 +54594,7 @@ x
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-(list %%id3145
+(list %%id3182
 (list '#(syntax-object
 identifier?
 ((top)
@@ -54249,7 +54616,7 @@ syntax
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%id3145))
+%%id3182))
 (list '#(syntax-object
 syntax
 ((top)
@@ -54260,12 +54627,12 @@ syntax
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%exp13146))))))
+%%exp13183))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp3137)
-(syntax-error %%tmp3133)))
+%%tmp3174)
+(syntax-error %%tmp3170)))
 ($syntax-dispatch
-%%tmp3133
+%%tmp3170
 '(any (any any)
 ((#(free-id
 #(syntax-object
@@ -54277,18 +54644,18 @@ set!
 any
 any)
 any))))))
-($syntax-dispatch %%tmp3133 '(any any))))
-%%x3132))
+($syntax-dispatch %%tmp3170 '(any any))))
+%%x3169))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 cond-expand
 ((top) #(ribcage #(cond-expand) #((top)) #(cond-expand))))
-(lambda (%%x3150)
-((lambda (%%tmp3151)
-((lambda (%%tmp3152)
-(if %%tmp3152
-(apply (lambda (%%dummy3153)
+(lambda (%%x3187)
+((lambda (%%tmp3188)
+((lambda (%%tmp3189)
+(if %%tmp3189
+(apply (lambda (%%dummy3190)
 '#(syntax-object
 (syntax-error "Unfulfilled cond-expand")
 ((top)
@@ -54296,10 +54663,10 @@ cond-expand
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t))))
-%%tmp3152)
-((lambda (%%tmp3154)
-(if %%tmp3154
-(apply (lambda (%%dummy3155 %%body3156)
+%%tmp3189)
+((lambda (%%tmp3191)
+(if %%tmp3191
+(apply (lambda (%%dummy3192 %%body3193)
 (cons '#(syntax-object
 begin
 ((top)
@@ -54310,13 +54677,13 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%body3156))
-%%tmp3154)
-((lambda (%%tmp3158)
-(if %%tmp3158
-(apply (lambda (%%dummy3159
-%%body3160
-%%more-clauses3161)
+%%body3193))
+%%tmp3191)
+((lambda (%%tmp3195)
+(if %%tmp3195
+(apply (lambda (%%dummy3196
+%%body3197
+%%more-clauses3198)
 (cons '#(syntax-object
 begin
 ((top)
@@ -54330,15 +54697,15 @@ begin
 #(("m" top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%body3160))
-%%tmp3158)
-((lambda (%%tmp3163)
-(if %%tmp3163
-(apply (lambda (%%dummy3164
-%%req13165
-%%req23166
-%%body3167
-%%more-clauses3168)
+%%body3197))
+%%tmp3195)
+((lambda (%%tmp3200)
+(if %%tmp3200
+(apply (lambda (%%dummy3201
+%%req13202
+%%req23203
+%%body3204
+%%more-clauses3205)
 (cons '#(syntax-object
 cond-expand
 ((top)
@@ -54366,7 +54733,7 @@ more-clauses)
 #(top-ribcage
 *top*
 #t)))
-(cons (list %%req13165
+(cons (list %%req13202
 (cons '#(syntax-object
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 cond-expand
@@ -54399,17 +54766,17 @@ more-clauses)
 #(("m" top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%req23166)
-%%body3167)
-%%more-clauses3168)))
-%%more-clauses3168)))
+%%req23203)
+%%body3204)
+%%more-clauses3205)))
+%%more-clauses3205)))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp3163)
-((lambda (%%tmp3173)
-(if %%tmp3173
-(apply (lambda (%%dummy3174
-%%body3175
-%%more-clauses3176)
+%%tmp3200)
+((lambda (%%tmp3210)
+(if %%tmp3210
+(apply (lambda (%%dummy3211
+%%body3212
+%%more-clauses3213)
 (cons '#(syntax-object
 cond-expand
 ((top)
@@ -54423,17 +54790,17 @@ more-clauses)
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%more-clauses3176))
+%%more-clauses3213))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp3173)
-((lambda (%%tmp3178)
-(if %%tmp3178
-(apply (lambda (%%dummy3179
+%%tmp3210)
+((lambda (%%tmp3215)
+(if %%tmp3215
+(apply (lambda (%%dummy3216
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%req13180
-%%req23181
-%%body3182
-%%more-clauses3183)
+%%req13217
+%%req23218
+%%body3219
+%%more-clauses3220)
 (list '#(syntax-object
 cond-expand
 ((top)
@@ -54444,7 +54811,7 @@ cond-expand
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-(list %%req13180
+(list %%req13217
 (cons '#(syntax-object
 begin
 ((top)
@@ -54455,7 +54822,7 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%body3182))
+%%body3219))
 (list '#(syntax-object
 else
 ((top)
@@ -54503,18 +54870,18 @@ more-clauses)
 #(top-ribcage
 *top*
 #t)))
-%%req23181)
-%%body3182)
-%%more-clauses3183)))))
-%%tmp3178)
+%%req23218)
+%%body3219)
+%%more-clauses3220)))))
+%%tmp3215)
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-((lambda (%%tmp3188)
-(if %%tmp3188
-(apply (lambda (%%dummy3189
+((lambda (%%tmp3225)
+(if %%tmp3225
+(apply (lambda (%%dummy3226
 ;;<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-%%req3190
-%%body3191
-%%more-clauses3192)
+%%req3227
+%%body3228
+%%more-clauses3229)
 (list '#(syntax-object
 cond-expand
 ((top)
@@ -54525,7 +54892,7 @@ cond-expand
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-(list %%req3190
+(list %%req3227
 (cons '#(syntax-object
 cond-expand
 ((top)
@@ -54545,7 +54912,7 @@ more-clauses)
 #(("m" top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%more-clauses3192))
+%%more-clauses3229))
 (cons '#(syntax-object
 else
 ((top)
@@ -54556,13 +54923,13 @@ else
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%body3191)))
-%%tmp3188)
-((lambda (%%tmp3195)
-(if %%tmp3195
-(apply (lambda (%%dummy3196
-%%body3197
-%%more-clauses3198)
+%%body3228)))
+%%tmp3225)
+((lambda (%%tmp3232)
+(if %%tmp3232
+(apply (lambda (%%dummy3233
+%%body3234
+%%more-clauses3235)
 (cons '#(syntax-object
 begin
 ((top)
@@ -54573,13 +54940,13 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%body3197))
-%%tmp3195)
-((lambda (%%tmp3200)
-(if %%tmp3200
-(apply (lambda (%%dummy3201
-%%body3202
-%%more-clauses3203)
+%%body3234))
+%%tmp3232)
+((lambda (%%tmp3237)
+(if %%tmp3237
+(apply (lambda (%%dummy3238
+%%body3239
+%%more-clauses3240)
 (cons '#(syntax-object
 begin
 ((top)
@@ -54593,14 +54960,14 @@ begin
 #(("m" top))
 #("i"))
 #(top-ribcage *top* #t)))
-%%body3202))
-%%tmp3200)
-((lambda (%%tmp3205)
-(if %%tmp3205
-(apply (lambda (%%dummy3206
-%%feature-id3207
-%%body3208
-%%more-clauses3209)
+%%body3239))
+%%tmp3237)
+((lambda (%%tmp3242)
+(if %%tmp3242
+(apply (lambda (%%dummy3243
+%%feature-id3244
+%%body3245
+%%more-clauses3246)
 (cons '#(syntax-object
 cond-expand
 ((top)
@@ -54622,14 +54989,14 @@ more-clauses)
 #(top-ribcage
 *top*
 #t)))
-%%more-clauses3209))
-%%tmp3205)
-(syntax-error %%tmp3151)))
+%%more-clauses3246))
+%%tmp3242)
+(syntax-error %%tmp3188)))
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any (any . each-any) . each-any)))))
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any (#(free-id
 #(syntax-object
 gambit
@@ -54642,7 +55009,7 @@ each-any)
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any (#(free-id
 #(syntax-object
 srfi-0
@@ -54656,7 +55023,7 @@ each-any)
 each-any)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any ((#(free-id
 #(syntax-object
 not
@@ -54672,7 +55039,7 @@ each-any)
 each-any)))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any ((#(free-id
 #(syntax-object
 or
@@ -54693,7 +55060,7 @@ each-any)
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any ((#(free-id
 #(syntax-object
 or
@@ -54709,7 +55076,7 @@ each-any)
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any ((#(free-id
 #(syntax-object
 and
@@ -54725,7 +55092,7 @@ each-any)
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any ((#(free-id
 #(syntax-object
 and
@@ -54738,7 +55105,7 @@ each-any)
 .
 each-any)))))
 ($syntax-dispatch
-%%tmp3151
+%%tmp3188
 '(any (#(free-id
 #(syntax-object
 else
@@ -54748,22 +55115,22 @@ else
 #(top-ribcage *top* #t))))
 .
 each-any))))))
-($syntax-dispatch %%tmp3151 '(any))))
-%%x3150))
+($syntax-dispatch %%tmp3188 '(any))))
+%%x3187))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 define-macro
 ((top) #(ribcage #(define-macro) #((top)) #(define-macro))))
-(lambda (%%x3211)
-((lambda (%%tmp3212)
-((lambda (%%tmp3213)
-(if %%tmp3213
-(apply (lambda (%%_3214
-%%name3215
-%%params3216
-%%body13217
-%%body23218)
+(lambda (%%x3248)
+((lambda (%%tmp3249)
+((lambda (%%tmp3250)
+(if %%tmp3250
+(apply (lambda (%%_3251
+%%name3252
+%%params3253
+%%body13254
+%%body23255)
 (list '#(syntax-object
 define-macro
 ((top)
@@ -54774,7 +55141,7 @@ define-macro
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%name3215
+%%name3252
 (cons '#(syntax-object
 lambda
 ((top)
@@ -54785,12 +55152,12 @@ lambda
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%params3216
-(cons %%body13217 %%body23218)))))
-%%tmp3213)
-((lambda (%%tmp3220)
-(if %%tmp3220
-(apply (lambda (%%_3221 %%name3222 %%expander3223)
+(cons %%params3253
+(cons %%body13254 %%body23255)))))
+%%tmp3250)
+((lambda (%%tmp3257)
+(if %%tmp3257
+(apply (lambda (%%_3258 %%name3259 %%expander3260)
 (list '#(syntax-object
 define-syntax
 ((top)
@@ -54801,7 +55168,7 @@ define-syntax
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%name3222
+%%name3259
 (list '#(syntax-object
 lambda
 ((top)
@@ -54917,7 +55284,7 @@ apply
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-(cons %%expander3223
+(cons %%expander3260
 '#(syntax-object
 (lst)
 ((top)
@@ -54929,19 +55296,19 @@ apply
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t))))))))))))
 ;;>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%%tmp3220)
-(syntax-error %%tmp3212)))
-($syntax-dispatch %%tmp3212 '(any any any)))))
-($syntax-dispatch %%tmp3212 '(any (any . any) any . each-any))))
-%%x3211))
+%%tmp3257)
+(syntax-error %%tmp3249)))
+($syntax-dispatch %%tmp3249 '(any any any)))))
+($syntax-dispatch %%tmp3249 '(any (any . any) any . each-any))))
+%%x3248))
 '*top*)
 ($sc-put-cte
 '#(syntax-object ##begin ((top) #(ribcage #(##begin) #((top)) #(##begin))))
-(lambda (%%x3224)
-((lambda (%%tmp3225)
-((lambda (%%tmp3226)
-(if %%tmp3226
-(apply (lambda (%%_3227 %%body13228)
+(lambda (%%x3261)
+((lambda (%%tmp3262)
+((lambda (%%tmp3263)
+(if %%tmp3263
+(apply (lambda (%%_3264 %%body13265)
 (cons '#(syntax-object
 begin
 ((top)
@@ -54952,19 +55319,19 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #((top)) #("i"))
 #(top-ribcage *top* #t)))
-%%body13228))
-%%tmp3226)
-(syntax-error %%tmp3225)))
-($syntax-dispatch %%tmp3225 '(any . each-any))))
-%%x3224))
+%%body13265))
+%%tmp3263)
+(syntax-error %%tmp3262)))
+($syntax-dispatch %%tmp3262 '(any . each-any))))
+%%x3261))
 '*top*)
 ($sc-put-cte
 '#(syntax-object future ((top) #(ribcage #(future) #((top)) #(future))))
-(lambda (%%x3230)
-((lambda (%%tmp3231)
-((lambda (%%tmp3232)
-(if %%tmp3232
-(apply (lambda (%%dummy3233 %%rest3234)
+(lambda (%%x3267)
+((lambda (%%tmp3268)
+((lambda (%%tmp3269)
+(if %%tmp3269
+(apply (lambda (%%dummy3270 %%rest3271)
 (cons '#(syntax-object
 ##future
 ((top)
@@ -54975,21 +55342,21 @@ begin
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%rest3234))
-%%tmp3232)
-(syntax-error %%tmp3231)))
-($syntax-dispatch %%tmp3231 '(any . each-any))))
-%%x3230))
+%%rest3271))
+%%tmp3269)
+(syntax-error %%tmp3268)))
+($syntax-dispatch %%tmp3268 '(any . each-any))))
+%%x3267))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 c-define-type
 ((top) #(ribcage #(c-define-type) #((top)) #(c-define-type))))
-(lambda (%%x3236)
-((lambda (%%tmp3237)
-((lambda (%%tmp3238)
-(if %%tmp3238
-(apply (lambda (%%dummy3239 %%rest3240)
+(lambda (%%x3273)
+((lambda (%%tmp3274)
+((lambda (%%tmp3275)
+(if %%tmp3275
+(apply (lambda (%%dummy3276 %%rest3277)
 (cons '#(syntax-object
 ##c-define-type
 ((top)
@@ -55000,21 +55367,21 @@ c-define-type
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%rest3240))
-%%tmp3238)
-(syntax-error %%tmp3237)))
-($syntax-dispatch %%tmp3237 '(any . each-any))))
-%%x3236))
+%%rest3277))
+%%tmp3275)
+(syntax-error %%tmp3274)))
+($syntax-dispatch %%tmp3274 '(any . each-any))))
+%%x3273))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 c-declare
 ((top) #(ribcage #(c-declare) #((top)) #(c-declare))))
-(lambda (%%x3242)
-((lambda (%%tmp3243)
-((lambda (%%tmp3244)
-(if %%tmp3244
-(apply (lambda (%%dummy3245 %%rest3246)
+(lambda (%%x3279)
+((lambda (%%tmp3280)
+((lambda (%%tmp3281)
+(if %%tmp3281
+(apply (lambda (%%dummy3282 %%rest3283)
 (cons '#(syntax-object
 ##c-declare
 ((top)
@@ -55025,21 +55392,21 @@ c-declare
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%rest3246))
-%%tmp3244)
-(syntax-error %%tmp3243)))
-($syntax-dispatch %%tmp3243 '(any . each-any))))
-%%x3242))
+%%rest3283))
+%%tmp3281)
+(syntax-error %%tmp3280)))
+($syntax-dispatch %%tmp3280 '(any . each-any))))
+%%x3279))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 c-initialize
 ((top) #(ribcage #(c-initialize) #((top)) #(c-initialize))))
-(lambda (%%x3248)
-((lambda (%%tmp3249)
-((lambda (%%tmp3250)
-(if %%tmp3250
-(apply (lambda (%%dummy3251 %%rest3252)
+(lambda (%%x3285)
+((lambda (%%tmp3286)
+((lambda (%%tmp3287)
+(if %%tmp3287
+(apply (lambda (%%dummy3288 %%rest3289)
 (cons '#(syntax-object
 ##c-initialize
 ((top)
@@ -55050,21 +55417,21 @@ c-initialize
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%rest3252))
-%%tmp3250)
-(syntax-error %%tmp3249)))
-($syntax-dispatch %%tmp3249 '(any . each-any))))
-%%x3248))
+%%rest3289))
+%%tmp3287)
+(syntax-error %%tmp3286)))
+($syntax-dispatch %%tmp3286 '(any . each-any))))
+%%x3285))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 c-lambda
 ((top) #(ribcage #(c-lambda) #((top)) #(c-lambda))))
-(lambda (%%x3254)
-((lambda (%%tmp3255)
-((lambda (%%tmp3256)
-(if %%tmp3256
-(apply (lambda (%%dummy3257 %%rest3258)
+(lambda (%%x3291)
+((lambda (%%tmp3292)
+((lambda (%%tmp3293)
+(if %%tmp3293
+(apply (lambda (%%dummy3294 %%rest3295)
 (cons '#(syntax-object
 ##c-lambda
 ((top)
@@ -55075,21 +55442,21 @@ c-lambda
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%rest3258))
-%%tmp3256)
-(syntax-error %%tmp3255)))
-($syntax-dispatch %%tmp3255 '(any . each-any))))
-%%x3254))
+%%rest3295))
+%%tmp3293)
+(syntax-error %%tmp3292)))
+($syntax-dispatch %%tmp3292 '(any . each-any))))
+%%x3291))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 c-define
 ((top) #(ribcage #(c-define) #((top)) #(c-define))))
-(lambda (%%x3260)
-((lambda (%%tmp3261)
-((lambda (%%tmp3262)
-(if %%tmp3262
-(apply (lambda (%%dummy3263 %%rest3264)
+(lambda (%%x3297)
+((lambda (%%tmp3298)
+((lambda (%%tmp3299)
+(if %%tmp3299
+(apply (lambda (%%dummy3300 %%rest3301)
 (cons '#(syntax-object
 ##c-define
 ((top)
@@ -55100,19 +55467,19 @@ c-define
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%rest3264))
-%%tmp3262)
-(syntax-error %%tmp3261)))
-($syntax-dispatch %%tmp3261 '(any . each-any))))
-%%x3260))
+%%rest3301))
+%%tmp3299)
+(syntax-error %%tmp3298)))
+($syntax-dispatch %%tmp3298 '(any . each-any))))
+%%x3297))
 '*top*)
 ($sc-put-cte
 '#(syntax-object declare ((top) #(ribcage #(declare) #((top)) #(declare))))
-(lambda (%%x3266)
-((lambda (%%tmp3267)
-((lambda (%%tmp3268)
-(if %%tmp3268
-(apply (lambda (%%dummy3269 %%rest3270)
+(lambda (%%x3303)
+((lambda (%%tmp3304)
+((lambda (%%tmp3305)
+(if %%tmp3305
+(apply (lambda (%%dummy3306 %%rest3307)
 (cons '#(syntax-object
 ##declare
 ((top)
@@ -55123,21 +55490,21 @@ c-define
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%rest3270))
-%%tmp3268)
-(syntax-error %%tmp3267)))
-($syntax-dispatch %%tmp3267 '(any . each-any))))
-%%x3266))
+%%rest3307))
+%%tmp3305)
+(syntax-error %%tmp3304)))
+($syntax-dispatch %%tmp3304 '(any . each-any))))
+%%x3303))
 '*top*)
 ($sc-put-cte
 '#(syntax-object
 namespace
 ((top) #(ribcage #(namespace) #((top)) #(namespace))))
-(lambda (%%x3272)
-((lambda (%%tmp3273)
-((lambda (%%tmp3274)
-(if %%tmp3274
-(apply (lambda (%%dummy3275 %%rest3276)
+(lambda (%%x3309)
+((lambda (%%tmp3310)
+((lambda (%%tmp3311)
+(if %%tmp3311
+(apply (lambda (%%dummy3312 %%rest3313)
 (cons '#(syntax-object
 ##namespace
 ((top)
@@ -55148,11 +55515,11 @@ namespace
 #(ribcage () () ())
 #(ribcage #(x) #(("m" top)) #("i"))
 #(top-ribcage *top* #t)))
-%%rest3276))
-%%tmp3274)
-(syntax-error %%tmp3273)))
-($syntax-dispatch %%tmp3273 '(any . each-any))))
-%%x3272))
+%%rest3313))
+%%tmp3311)
+(syntax-error %%tmp3310)))
+($syntax-dispatch %%tmp3310 '(any . each-any))))
+%%x3309))
 '*top*))
 ;;;============================================================================
 

@@ -737,6 +737,41 @@
                      ,(build-params ae vars)
                      ,exp)))))
 
+;; mdh: to provide alpha-conversion of all symbols, but also support
+;; non-alpha converted keyword arguments, the following pattern is
+;; used to convert dsssl style formals:
+
+#;
+(lambda (#!key a b) <body>)
+   
+;; ultimately maps to something like this:
+
+#;
+(lambda %%args32
+  (receive (%%a12 %%b13) (apply (lambda (#!key a b) (values a b)) %%args32)
+           <body>))
+  
+;; the dsssl parameter assignment occurs within a closure, where
+;; %%args32 is a generated gensym, and %%a12 and %%b13 are the
+;; alpha-converted a and b.
+
+(define-syntax build-dsssl-lambda
+  (syntax-rules ()
+    ;; vars is either symbol or (keyword . alpha-converted-keyword)
+    ((_ ae dssl-args-var alpha-vars dsssl-formals orig-vars exp)
+     (build-source ae
+                   `(,(build-source ae 'lambda)
+                     ,(build-source ae dssl-args-var)
+                     ,(build-source ae `(,(build-source ae 'receive)
+                                         ,(build-params ae alpha-vars)
+                                         ,(build-source ae `(,(build-source ae 'apply)
+                                                             ,(build-source ae `(,(build-source ae 'lambda)
+                                                                                 ,(build-params ae dsssl-formals)
+                                                                                 ,(build-source ae (cons (build-source ae 'values)
+                                                                                                         (annotation-expression (build-params ae orig-vars))))))
+                                                             ,(build-source ae dssl-args-var)))
+                                         ,exp)))))))
+
 (define built-lambda?
   (lambda (x)
 ;***     (and (pair? x) (eq? (car x) 'lambda))))
@@ -2879,38 +2914,100 @@
 
 (define chi-lambda-clause
   (lambda (e c r mr w m?)
+
+    (define reverse*
+      (lambda (l)
+        (let f ((ls1 (cdr l)) (ls2 (car l)))
+          (if (null? ls1)
+              ls2
+              (f (cdr ls1) (cons (car ls1) ls2))))))
+
+    (define ids/emitter
+      (lambda (formals ids emitter)
+        (cond ((null? ids) (values (reverse formals) emitter))
+              ((eq? (car ids) '#!key)
+               (ids/emitter formals (cdr ids) 'keyword))
+              ((memq (car ids) '(#!optional #!rest))
+               (ids/emitter formals (cdr ids) (or (and (eq? emitter 'rnrs) 'optional/rest)
+                                                  emitter)))
+              (else
+               (let ((id (if (pair? (car ids))
+                             (car (car ids))
+                             (car ids))))
+                 (ids/emitter (cons id formals) (cdr ids) emitter))))))
+
+    (define emit-formals
+      (lambda (formals* formals vars emitter)
+        (define formal
+          (lambda ()
+            (case emitter
+              ((optional/rest) vars)
+              ((rnrs keyword) formals))))
+        (cond ((null? formals)
+               (reverse formals*))
+
+              ((id? formals)
+               (reverse* (cons (formal) formals*)))
+
+              ((memq (car formals) '(#!optional #!rest #!key))
+               (emit-formals (cons (car formals) formals*) (cdr formals) vars emitter))
+
+              ((pair? (car formals))
+               (emit-formals (cons (cons (car (case emitter
+                                                ((keyword) (car (formal)))
+                                                ((optional/rest) (formal))))
+                                         (strip-annotation (chi (cdr (car formals)) r mr w m?)))
+                                   formals*)
+                             (cdr formals) (cdr vars) emitter))
+
+              ((id? (car formals))
+               (emit-formals (cons (car (formal)) formals*) (cdr formals) (cdr vars) emitter))
+
+              (else (error `(unexpected-formal ,(car formals)))))))
+
     (syntax-case c ()
       (((id ...) e1 e2 ...)
-       (let ((ids (syntax (id ...))))
-         (if (not (valid-bound-ids? ids))
-             (syntax-error e "invalid parameter list in")
-             (let ((labels (gen-labels ids))
-                   (new-vars (map gen-var ids)))
-               (values
-                 new-vars
-                 (chi-body (syntax (e1 e2 ...))
-                           e
-                           (extend-var-env* labels new-vars r)
-                           mr
-                           (make-binding-wrap ids labels w)
-                           m?))))))
+       (let ((formals (strip-annotation (syntax (id ...)))))
+         (let-values (((ids emitter) (ids/emitter '() formals 'rnrs)))
+           (if (not (valid-bound-ids? ids))
+               (syntax-error e "invalid parameter list in")
+               (let ((labels (gen-labels ids))
+                     (new-vars (map gen-var ids)))
+                 (values
+                  emitter
+                  (and (eq? emitter 'keyword)
+                       (gen-var 'dssl-args))
+                  new-vars
+                  (emit-formals '() formals new-vars emitter)
+                  ids
+                  (chi-body (syntax (e1 e2 ...))
+                            e
+                            (extend-var-env* labels new-vars r)
+                            mr
+                            (make-binding-wrap ids labels w)
+                            m?)))))))
       ((ids e1 e2 ...)
-       (let ((old-ids (lambda-var-list (syntax ids))))
-         (if (not (valid-bound-ids? old-ids))
-             (syntax-error e "invalid parameter list in")
-             (let ((labels (gen-labels old-ids))
-                   (new-vars (map gen-var old-ids)))
-               (values
-                 (let f ((ls1 (cdr new-vars)) (ls2 (car new-vars)))
-                   (if (null? ls1)
-                       ls2
-                       (f (cdr ls1) (cons (car ls1) ls2))))
-                 (chi-body (syntax (e1 e2 ...))
-                           e
-                           (extend-var-env* labels new-vars r)
-                           mr
-                           (make-binding-wrap old-ids labels w)
-                           m?))))))
+       (let ((formals (strip-annotation (syntax ids))))
+         (let-values (((old-ids emitter) (ids/emitter '() (lambda-var-list formals) 'rnrs)))
+           (if (not (valid-bound-ids? old-ids))
+               (syntax-error e "invalid parameter list in")
+               (let ((labels (gen-labels old-ids))
+                     (new-vars (map gen-var old-ids)))
+                 (values
+                  emitter
+                  (and (eq? emitter 'keyword)
+                       (gen-var 'dssl-args))
+                  (if (eq? emitter 'rnrs)
+                      (reverse* new-vars)
+                      (reverse new-vars))
+                  (emit-formals '() (strip-annotation formals) new-vars emitter)
+                  (reverse (map (lambda (id) (unannotate id)) old-ids))
+                  (chi-body (syntax (e1 e2 ...))
+                            e
+                            (extend-var-env* labels new-vars r)
+                            mr
+                            (make-binding-wrap old-ids labels w)
+                            m?)))))))
       (_ (syntax-error e)))))
 
 (define chi-local-syntax
@@ -3313,8 +3410,12 @@
   (lambda (e r mr w ae m?)
     (syntax-case e ()
       ((_ . c)
-       (let-values (((vars body) (chi-lambda-clause (source-wrap e w ae) (syntax c) r mr w m?)))
-         (build-lambda ae vars body))))))
+       (let-values (((emitter dsssl-args vars dsssl-formals orig-vars body)
+                     (chi-lambda-clause (source-wrap e w ae) (syntax c) r mr w m?)))
+         (case emitter
+           ((keyword) (build-dsssl-lambda ae dsssl-args vars dsssl-formals orig-vars body))
+           ((optional/rest) (build-lambda ae dsssl-formals body))
+           ((rnrs) (build-lambda ae vars body))))))))
 
 
 (global-extend 'core 'letrec
