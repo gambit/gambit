@@ -476,11 +476,11 @@ fi
 #
 # Check if library names should contain a version number suffix.
 
-AC_ARG_ENABLE(versionned-shared-libs,
-              AC_HELP_STRING([--enable-versionned-shared-libs],
+AC_ARG_ENABLE(versioned-shared-libs,
+              AC_HELP_STRING([--enable-versioned-shared-libs],
                              [library names should contain a version number suffix (default is NO)]),
-              ENABLE_VERSIONNED_SHARED_LIBS=$enableval,
-              ENABLE_VERSIONNED_SHARED_LIBS=no)
+              ENABLE_VERSIONED_SHARED_LIBS=$enableval,
+              ENABLE_VERSIONED_SHARED_LIBS=no)
 
 ###############################################################################
 #
@@ -1964,7 +1964,7 @@ if test "$ENABLE_SHARED" = yes; then
              SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LD_LIBRARY_PATH}"
              SETDLPATHBOOT="LD_LIBRARY_PATH=\$(rootfromhere):\${LD_LIBRARY_PATH}"
 
-             if test "$ENABLE_VERSIONNED_SHARED_LIBS" = yes; then
+             if test "$ENABLE_VERSIONED_SHARED_LIBS" = yes; then
                LIB_VERSION_SUFFIX=".`echo $PACKAGE_VERSION | sed -e 's/v//g'`"
                LIB_MAJOR_VERSION_SUFFIX=".`echo $PACKAGE_VERSION | sed -e 's/v//g' -e 's/\\.[[^.]]*\\.[[^.]]*//g'`"
              fi
@@ -2450,7 +2450,7 @@ AC_SUBST(ENABLE_COMPILER_NAME)
 AC_SUBST(ENABLE_MULTIPLE_VERSIONS)
 AC_SUBST(ENABLE_SHARED)
 AC_SUBST(ENABLE_ABSOLUTE_SHARED_LIBS)
-AC_SUBST(ENABLE_VERSIONNED_SHARED_LIBS)
+AC_SUBST(ENABLE_VERSIONED_SHARED_LIBS)
 AC_SUBST(emacsdir)
 AC_SUBST(HELP_BROWSER)
 AC_SUBST(COMPILATION_OPTIONS)

@@ -234,7 +234,7 @@ The configure options which are specific to the Gambit-C system are:
   --enable-absolute-shared-libs
                           shared libraries should be linked to using an
                           absolute path
-  --enable-versionned-shared-libs
+  --enable-versioned-shared-libs
                           add version numbers to the shared libraries
   --enable-lib-suffix[=<suffix>]
                           add a suffix to the library names
@@ -330,7 +330,7 @@ Note that this option is incompatible with the use of DESTDIR because
 the executables can only be linked after the Gambit shared libraries
 are installed in their final destination.
 
-When --enable-shared is used, the option --enable-versionned-shared-libs
+When --enable-shared is used, the option --enable-versioned-shared-libs
 will add a version number after the shared library extension.  For
 example the Gambit v4.7.1 runtime shared library which is normally
 libgambc.so will be named libgambc.so.4.7.1 .  This also creates

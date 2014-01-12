@@ -631,7 +631,7 @@ SET_MAKE
 COMPILATION_OPTIONS
 HELP_BROWSER
 emacsdir
-ENABLE_VERSIONNED_SHARED_LIBS
+ENABLE_VERSIONED_SHARED_LIBS
 ENABLE_ABSOLUTE_SHARED_LIBS
 ENABLE_SHARED
 ENABLE_MULTIPLE_VERSIONS
@@ -929,7 +929,7 @@ enable_interpreter_name
 enable_compiler_name
 enable_multiple_versions
 enable_absolute_shared_libs
-enable_versionned_shared_libs
+enable_versioned_shared_libs
 enable_lib_suffix
 enable_help_browser
 enable_type_checking
@@ -1606,7 +1606,7 @@ Optional Features:
   --enable-absolute-shared-libs
                           shared libraries should be linked to using an
                           absolute path (default is YES)
-  --enable-versionned-shared-libs
+  --enable-versioned-shared-libs
                           library names should contain a version number suffix
                           (default is NO)
   --enable-lib-suffix     library names should contain a suffix before the
@@ -5152,11 +5152,11 @@ fi
 #
 # Check if library names should contain a version number suffix.
 
-# Check whether --enable-versionned-shared-libs was given.
-if test "${enable_versionned_shared_libs+set}" = set; then :
-  enableval=$enable_versionned_shared_libs; ENABLE_VERSIONNED_SHARED_LIBS=$enableval
+# Check whether --enable-versioned-shared-libs was given.
+if test "${enable_versioned_shared_libs+set}" = set; then :
+  enableval=$enable_versioned_shared_libs; ENABLE_VERSIONED_SHARED_LIBS=$enableval
 else
-  ENABLE_VERSIONNED_SHARED_LIBS=no
+  ENABLE_VERSIONED_SHARED_LIBS=no
 fi
 
 
@@ -12763,7 +12763,7 @@ if test "$ENABLE_SHARED" = yes; then
              SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LD_LIBRARY_PATH}"
              SETDLPATHBOOT="LD_LIBRARY_PATH=\$(rootfromhere):\${LD_LIBRARY_PATH}"
 
-             if test "$ENABLE_VERSIONNED_SHARED_LIBS" = yes; then
+             if test "$ENABLE_VERSIONED_SHARED_LIBS" = yes; then
                LIB_VERSION_SUFFIX=".`echo $PACKAGE_VERSION | sed -e 's/v//g'`"
                LIB_MAJOR_VERSION_SUFFIX=".`echo $PACKAGE_VERSION | sed -e 's/v//g' -e 's/\\.[^.]*\\.[^.]*//g'`"
              fi
