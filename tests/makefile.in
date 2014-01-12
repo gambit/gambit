@@ -173,6 +173,9 @@ test10:
 	rm -rf mem@obj@ mem.o*
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -i test10.scm
 
+ut:
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
+
 bootstrap-pre:
 
 bootstrap-post:

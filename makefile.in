@@ -119,20 +119,20 @@ gsc-boot@exe@:
 fake_target:
 
 doc info pdf html txt: fake_target
-	cd doc && $(MAKE) $(MDEFINES) $@
+	@cd doc && $(MAKE) $(MDEFINES) $@
 
-check: fake_target all
-	cd tests && $(MAKE) $(MDEFINES) $@
+check ut: fake_target all
+	@cd tests && $(MAKE) $(MDEFINES) $@
 
 examples: fake_target all
-	cd examples && $(MAKE) $(MDEFINES) $@
+	@cd examples && $(MAKE) $(MDEFINES) $@
 
 prebuilt:  dist dist-devel
 	PATH="gsi:$$PATH" prebuilt/remote-connect $(BUILD_FARM) "" "(define tmpdir \"gambtmp0\")(define gambc-dist \"$(PACKAGE_TARNAME)\")(define timeout 3000)(ssh timeout (string-append \"rm -rf \" tmpdir \";mkdir \" tmpdir \";echo \\\"logged in on:\\\";hostname\"))(scp-to timeout (string-append gambc-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"ssh $(BUILD_HOST) \\\"cd \" tmpdir \";tar zxf \" gambc-dist \".tgz;cd \" gambc-dist \";./configure;make -j 4;mv ../\" gambc-dist \".tgz .;cd prebuilt;make prebuilt\\\"\"))(scp-from timeout (string-append tmpdir \"/\" gambc-dist \"/$(PACKAGE_TARNAME)-*\") \".\")"
 	@# cd prebuilt && $(MAKE) $(MDEFINES) $@
 
 stamp: fake_target
-	cd include && $(MAKE) $(MDEFINES) $@
+	@cd include && $(MAKE) $(MDEFINES) $@
 
 commit: stamp deselect-gen-for-commit
 	$(RC) commit

@@ -4,7 +4,7 @@
 
 ;;; File: "run-unit-tests.scm"
 
-;;; Copyright (c) 2012-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -37,23 +37,29 @@
   (define (ratio n)
     (quotient (* n (+ nb-good nb-fail nb-other)) nb-total))
 
-  (let* ((bar-width 42)
-         (bar-length (ratio bar-width)))
-    (print "\r"
-           "["
-           "\33[32;1m" (num->string nb-good 4 0) "\33[0m"
-           "|"
-           "\33[31;1m" (num->string nb-fail 4 0) "\33[0m"
-           "|"
-           "\33[34;1m" (num->string nb-other 4 0) "\33[0m"
-           "] "
-           (num->string (ratio 100) 3 0)
-           "% "
-           (make-string bar-length #\#)
-           (make-string (- bar-width bar-length) #\.)
-           (num->string elapsed 6 1)
-           "s"
-           "\33[K")))
+  (if (tty? (current-output-port))
+
+      (let* ((bar-width 42)
+             (bar-length (ratio bar-width)))
+
+        (define (esc x)
+          x)
+
+        (print "\r"
+               "["
+               (esc "\33[32;1m") (num->string nb-good 4 0) (esc "\33[0m")
+               "|"
+               (esc "\33[31;1m") (num->string nb-fail 4 0) (esc "\33[0m")
+               "|"
+               (esc "\33[34;1m") (num->string nb-other 4 0) (esc "\33[0m")
+               "] "
+               (num->string (ratio 100) 3 0)
+               "% "
+               (make-string bar-length #\#)
+               (make-string (- bar-width bar-length) #\.)
+               (num->string elapsed 6 1)
+               "s"
+               (esc "\33[K")))))
 
 (define (run path . args)
   (let* ((port
@@ -108,10 +114,10 @@
 
   (if (= nb-good nb-total)
       (begin
-        (print "PASSED ALL\n")
+        (print "PASSED ALL " nb-total " UNIT TESTS\n")
         (exit 0))
       (begin
-        (print "FAILED " nb-fail " OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
+        (print "FAILED " nb-fail " UNIT TESTS OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
         (exit 1))))
 
 (define (find-files file-or-dir filter)

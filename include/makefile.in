@@ -77,7 +77,7 @@ DISTFILES = $(RCFILES) $(GENDISTFILES)
 all:
 
 all-pre:
-	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	@major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
 	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
