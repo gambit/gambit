@@ -460,28 +460,6 @@ AC_ARG_ENABLE(multiple-versions,
 
 ###############################################################################
 #
-# Check if libraries should contain a version number suffix.
-
-ENABLE_VERSIONNED_LIBS=no
-
-# This option does not currently work.  Some work is needed to make it
-# work properly.  Here is the documentation that should go in INSTALL.txt:
-
-#The option --enable-versionned-libs will add a version number suffix
-#to the libraries.  For example the Gambit v4.3.2 runtime library which
-#is normally libgambc.a will be named libgambc-v4_3_2.a and it must be
-#linked to with the C compiler option -lgambc-v4_3_2 .  If you give
-#this option a value, as in --enable-versionned-libs=<suffix> then
-#<suffix> will be appended to the name of the libraries.
-
-#AC_ARG_ENABLE(versionned-libs,
-#              AC_HELP_STRING([--enable-versionned-libs],
-#                             [libraries should contain a version number suffix (default is NO)]),
-#              ENABLE_VERSIONNED_LIBS=$enableval,
-#              ENABLE_VERSIONNED_LIBS=no)
-
-###############################################################################
-#
 # Check if shared libraries should be linked to using an absolute path.
 
 AC_ARG_ENABLE(absolute-shared-libs,
@@ -492,6 +470,34 @@ AC_ARG_ENABLE(absolute-shared-libs,
 
 if test "$ENABLE_SHARED" != yes; then
   ENABLE_ABSOLUTE_SHARED_LIBS=no
+fi
+
+###############################################################################
+#
+# Check if library names should contain a version number suffix.
+
+AC_ARG_ENABLE(versionned-shared-libs,
+              AC_HELP_STRING([--enable-versionned-shared-libs],
+                             [library names should contain a version number suffix (default is NO)]),
+              ENABLE_VERSIONNED_SHARED_LIBS=$enableval,
+              ENABLE_VERSIONNED_SHARED_LIBS=no)
+
+###############################################################################
+#
+# Check if library names should contain a special suffix.
+
+AC_ARG_ENABLE(lib-suffix,
+              AC_HELP_STRING([--enable-lib-suffix],
+                             [library names should contain a suffix before the extension (default is NO)]),
+              LIB_SUFFIX=$enableval,
+              LIB_SUFFIX=no)
+
+if test "$LIB_SUFFIX" = no; then
+  LIB_SUFFIX=""
+else
+  if test "$LIB_SUFFIX" = yes; then
+    LIB_SUFFIX="-`echo $PACKAGE_VERSION | sed -e 's/\./_/g'`"
+  fi
 fi
 
 ###############################################################################
@@ -1577,7 +1583,7 @@ if test "$C_COMP_GNUC" = yes; then
 
     darwin*) # check for special options added by Apple
              FLAGS_DYN="$FLAGS_DYN$DASH_bundle"
-             FLAGS_LIB="$FLAGS_LIB$DASH_dynamiclib -install_name \$(libdir)/\$(LIBRARY)"
+             FLAGS_LIB="$FLAGS_LIB$DASH_dynamiclib -install_name \$(libdir)/\$(LIBRARY)$(LIB_VERSION_SUFFIX)"
              FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_flat_namespace_undefined_suppress"
              ;;
 
@@ -1918,6 +1924,12 @@ case "$target_os" in
            ;;
 esac
 
+LIB_VERSION_SUFFIX=""
+LIB_MAJOR_VERSION_SUFFIX=""
+
+AC_SUBST(LIB_VERSION_SUFFIX)
+AC_SUBST(LIB_MAJOR_VERSION_SUFFIX)
+
 if test "$ENABLE_SHARED" = yes; then
 
   case "$target_os" in
@@ -1951,12 +1963,18 @@ if test "$ENABLE_SHARED" = yes; then
              LIB_EXTENSION=".so"
              SETDLPATH="LD_LIBRARY_PATH=\$(rootfromhere)/lib:\$(rootfromhere)/gsi:\$(rootfromhere)/gsc:\${LD_LIBRARY_PATH}"
              SETDLPATHBOOT="LD_LIBRARY_PATH=\$(rootfromhere):\${LD_LIBRARY_PATH}"
-             FLAGS_LIB="$FLAGS_LIB -Wl,-soname,\$(LIBRARY)"
+
+             if test "$ENABLE_VERSIONNED_SHARED_LIBS" = yes; then
+               LIB_VERSION_SUFFIX=".`echo $PACKAGE_VERSION | sed -e 's/v//g'`"
+               LIB_MAJOR_VERSION_SUFFIX=".`echo $PACKAGE_VERSION | sed -e 's/v//g' -e 's/\\.[[^.]]*\\.[[^.]]*//g'`"
+             fi
+
+             FLAGS_LIB="$FLAGS_LIB -Wl,-soname,\$(LIBRARY)\$(LIB_MAJOR_VERSION_SUFFIX)"
              ;;
   esac
 
-  MAKE_LIBRARY='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_LIBS) $(LIBS)'
-  MAKE_LIBRARY_FOR_INSTALL='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_FOR_INSTALL_LIBS) $(LIBS)'
+  MAKE_LIBRARY='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_LIBS) $(LIBS)'
+  MAKE_LIBRARY_FOR_INSTALL='$(C_COMPILER) $(FLAGS_LIB) -o $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS) $(MAKE_LIBRARY_FOR_INSTALL_LIBS) $(LIBS)'
   FIXLIB=':'
   LINK_FOR_INSTALL='$(C_COMPILER) $(FLAGS_EXE) $(EXECUTABLE_OBJECTS) $(LINK_FOR_INSTALL_LIBS) $(LIBS) -o $(EXECUTABLE)'
 
@@ -1971,7 +1989,7 @@ else
 
     LIB_PREFIX="lib"
     LIB_EXTENSION=".lib"
-    MAKE_LIBRARY='lib -out:$(LIBRARY) $(LIBRARY_OBJECTS)'
+    MAKE_LIBRARY='lib -out:$(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB=':'
     LINK_FOR_INSTALL=':'
@@ -1985,28 +2003,10 @@ else
 
     LIB_PREFIX="lib"
     LIB_EXTENSION=".a"
-    MAKE_LIBRARY='$(AR) rc $(LIBRARY) $(LIBRARY_OBJECTS) && $(RANLIB) $(LIBRARY)'
+    MAKE_LIBRARY='$(AR) rc $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS) && $(RANLIB) $(LIBRARY)$(LIB_VERSION_SUFFIX)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB='$(RANLIB)'
     LINK_FOR_INSTALL=':'
-
-  fi
-
-fi
-
-if test "$ENABLE_VERSIONNED_LIBS" = no; then
-
-  LIB_SUFFIX=""
-
-else
-
-  if test "$ENABLE_VERSIONNED_LIBS" = yes; then
-
-    LIB_SUFFIX=`echo -$PACKAGE_VERSION | sed -e 's/\./_/g'`
-
-  else
-
-    LIB_SUFFIX="$ENABLE_VERSIONNED_LIBS"
 
   fi
 
@@ -2019,13 +2019,13 @@ GAMBCGSILIB="gambcgsi$LIB_SUFFIX"
 if test "yes" = yes; then
 
   GAMBCLIB_LOC=""
-  GAMBCLIB_LINK="\"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION\""
+  GAMBCLIB_LINK="\"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
 
   GAMBCGSILIB_LOC=""
-  GAMBCGSILIB_LINK="\"\${GAMBCDIR_LIB_GSI}/$LIB_PREFIX$GAMBCGSILIB$LIB_EXTENSION\" \"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION\""
+  GAMBCGSILIB_LINK="\"\${GAMBCDIR_LIB_GSI}/$LIB_PREFIX$GAMBCGSILIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\" \"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
 
   GAMBCGSCLIB_LOC=""
-  GAMBCGSCLIB_LINK="\"\${GAMBCDIR_LIB_GSC}/$LIB_PREFIX$GAMBCGSCLIB$LIB_EXTENSION\" \"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION\""
+  GAMBCGSCLIB_LINK="\"\${GAMBCDIR_LIB_GSC}/$LIB_PREFIX$GAMBCGSCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\" \"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
 
 else
 
@@ -2069,9 +2069,9 @@ fi
 
 if test "$ENABLE_ABSOLUTE_SHARED_LIBS" = yes; then
 
-  MAKE_LIBRARY_FOR_INSTALL_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)'
-  LINK_FOR_INSTALL_GSI_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSILIB)$(LIB_EXTENSION) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)'
-  LINK_FOR_INSTALL_GSC_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSCLIB)$(LIB_EXTENSION) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)'
+  MAKE_LIBRARY_FOR_INSTALL_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
+  LINK_FOR_INSTALL_GSI_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSILIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
+  LINK_FOR_INSTALL_GSC_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
 
 else
 
@@ -2450,7 +2450,7 @@ AC_SUBST(ENABLE_COMPILER_NAME)
 AC_SUBST(ENABLE_MULTIPLE_VERSIONS)
 AC_SUBST(ENABLE_SHARED)
 AC_SUBST(ENABLE_ABSOLUTE_SHARED_LIBS)
-AC_SUBST(ENABLE_VERSIONNED_LIBS)
+AC_SUBST(ENABLE_VERSIONNED_SHARED_LIBS)
 AC_SUBST(emacsdir)
 AC_SUBST(HELP_BROWSER)
 AC_SUBST(COMPILATION_OPTIONS)

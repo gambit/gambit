@@ -1,6 +1,6 @@
 # makefile for web-server example.
 
-# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/web-server
 rootfromhere = ../..
@@ -30,6 +30,9 @@ LIBS = @LIBS@
 
 GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
+LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
+LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
+
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
 GAMBCGSCLIB = @GAMBCGSCLIB@

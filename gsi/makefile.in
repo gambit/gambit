@@ -1,6 +1,6 @@
 # makefile for Gambit-C interpreter.
 
-# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsi
 rootfromhere = ..
@@ -30,6 +30,9 @@ LIBS = @LIBS@
 
 GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
+LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
+LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
+
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBCLIB = @GAMBCLIB@
 GAMBCGSCLIB = @GAMBCGSCLIB@
@@ -93,6 +96,8 @@ $(LIBRARY_MODULES_O_COMMA),_$(GAMBCGSILIB)@obj@
 LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(LIBRARY_MODULES_O_IN_COMPILE_ORDER) \
 $(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _$(GAMBCGSILIB)@obj@
 
+LIBRARIES = $(LIBRARY)$(LIB_VERSION_SUFFIX)
+
 MAKE_LIBRARY_LIBS = $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)
 MAKE_LIBRARY_FOR_INSTALL_LIBS = @MAKE_LIBRARY_FOR_INSTALL_LIBS@
 
@@ -135,6 +140,8 @@ GENDISTFILES = $(MODULES_C) _$(GAMBCGSILIB).c _gsi_.c
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
+INSTFILES_LIB_DATA = _$(GAMBCGSILIB).c $(LIBRARIES_SCM)
+
 GAMBCDIR_INCLUDE = $(srcdirpfx)$(rootfromhere)/include
 GAMBCDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
 GAMBCDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
@@ -157,8 +164,12 @@ all-pre:
 all-post: $(LIBRARY) $(EXECUTABLE)
 
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
-	rm -f $(LIBRARY)
+	rm -f $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY)
 	@MAKE_LIBRARY@
+	if test "$(LIB_VERSION_SUFFIX)" != ""; then \
+	  $(LN_S) $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX); \
+	  $(LN_S) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); \
+	fi
 
 _$(GAMBCGSILIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambc.c
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambc -o $@ -preload $(LIBRARY_MODULES_C)
@@ -193,7 +204,12 @@ bootstrap-pre:
 
 bootstrap-post:
 	if test "@ENABLE_SHARED@" = "yes"; then \
-	  cp $(LIBRARY) $(rootfromhere)/$(LIBRARY); \
+	  cp $(LIBRARY)$(LIB_VERSION_SUFFIX) $(rootfromhere)/$(LIBRARY)$(LIB_VERSION_SUFFIX); \
+	  if test "$(LIB_VERSION_SUFFIX)" != ""; then \
+	    cd $(rootfromhere); \
+	    $(LN_S) $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX); \
+	    $(LN_S) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); \
+	  fi \
 	fi
 
 install-pre:
@@ -213,13 +229,18 @@ install-post: all
 	fi; \
 	$(INSTALL_DATA) $(srcdirpfx)_$(GAMBCGSILIB).c $$t_libdir/_$(GAMBCGSILIB).c; \
 	@MAKE_LIBRARY_FOR_INSTALL@; \
-	$(INSTALL_LIB) $(LIBRARY) $$t_libdir/$(LIBRARY); \
-	@FIXLIB@ $$t_libdir/$(LIBRARY); \
+	for file in $(LIBRARIES); do \
+	  $(INSTALL_LIB) $$file $$t_libdir/$$file; \
+	  @FIXLIB@ $$t_libdir/$$file; \
+	done; \
+	if test "$(LIB_VERSION_SUFFIX)" != ""; then \
+	  (cd $$t_libdir && $(LN_S) $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) && $(LN_S) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY)); \
+	fi; \
 	@LINK_FOR_INSTALL@; \
 	$(INSTALL_PROGRAM) $(EXECUTABLE) $$t_bindir/$(EXECUTABLE_INSTALLED); \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
-	  for file in _$(GAMBCGSILIB).c $(LIBRARY); do \
+	  for file in _$(GAMBCGSILIB).c $(LIBRARY)$(LIB_VERSION_SUFFIX); do \
 	    (cd $$i_libdir && $(LN_S) $$r_libdir$$file $$file); \
 	  done; \
 	fi; \
@@ -243,14 +264,15 @@ uninstall-post:
 	  t_bindir=$$c_bindir; \
 	  t_libdir=$$c_libdir; \
 	fi; \
-	rm -f $$t_libdir/_$(GAMBCGSILIB).c \
-	  $$t_libdir/$(LIBRARY) \
-	  $$t_bindir/$(EXECUTABLE_INSTALLED); \
+	for file in $(INSTFILES_LIB_DATA) $(LIBRARIES) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); do \
+	  rm -f $$t_libdir/$$file; \
+	done; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
-	  for file in _$(GAMBCGSILIB).c $(LIBRARY); do \
+	  for file in $(INSTFILES_LIB_DATA) $(LIBRARIES) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); do \
 	    rm -f $$i_libdir/$$file; \
 	  done; \
 	fi; \
+	rm -f $$t_bindir/$(EXECUTABLE_INSTALLED); \
 	if test "$$t_bindir" != "$$i_bindir"; then \
 	  for file in $(EXECUTABLE_INSTALLED); do \
 	    rm -f $$i_bindir/$$file; \
@@ -278,7 +300,7 @@ deselect-gen-for-commit-post:
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f $(OBJECTS) $(LIBRARY) $(EXECUTABLE)
+	rm -f $(OBJECTS) $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY) $(EXECUTABLE)
 
 clean-pre: mostlyclean-pre
 
