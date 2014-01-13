@@ -3546,6 +3546,7 @@ void **x;
 int arg_num;
 int char_encoding;)
 {
+  ___SCMOBJ ___temp;
   ___SCMOBJ e;
   void **string_list;
   ___SCMOBJ list1;
