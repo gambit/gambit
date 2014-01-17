@@ -4441,7 +4441,7 @@ end-of-code
 
 (define (##module-init module-descr)
   (##c-code
-   "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___ps);"
+   "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___PSPNC);"
    (##vector-ref module-descr 4)))
 
 (define-prim (##main)
