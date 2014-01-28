@@ -3655,8 +3655,10 @@
 (targ-op "##bignum.adigit-<"         (targ-ifjump-simp-u #f "BIGALESSP"))
 (targ-op "##bignum.adigit-zero?"     (targ-ifjump-simp-u #f "BIGAZEROP"))
 (targ-op "##bignum.adigit-negative?" (targ-ifjump-simp-u #f "BIGANEGATIVEP"))
-(targ-op "##bignum.->fixnum"         (targ-apply-simp-u #f #f #f "BIGTOFIX"))
-(targ-op "##bignum.<-fixnum"         (targ-apply-simpbig-u "BIGFROMFIX"))
+(targ-op "##bignum.->fixnum"         (targ-apply-simp-u #f #f #f "BIGTOFIX"));;deprecated
+(targ-op "##bignum.<-fixnum"         (targ-apply-simpbig-u "BIGFROMFIX"));;deprecated
+(targ-op "##bignum->fixnum"          (targ-apply-simp-u #f #f #f "BIGTOFIX"))
+(targ-op "##fixnum->bignum"          (targ-apply-simpbig-u "BIGFROMFIX"))
 (targ-op "##bignum.adigit-shrink!"   (targ-apply-simp-u #f #t #f "BIGASHRINK"))
 (targ-op "##bignum.adigit-copy!"     (targ-apply-simp-u #f #t #f "BIGACOPY"))
 (targ-op "##bignum.adigit-cat!"      (targ-apply-simp-u #f #t #f "BIGACAT"))

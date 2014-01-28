@@ -970,8 +970,10 @@
 ("##bignum.adigit-negative?"          (2)   #f ()    0    boolean extended)
 ("##bignum.adigit-="                  (3)   #f ()    0    boolean extended)
 ("##bignum.adigit-<"                  (3)   #f ()    0    boolean extended)
-("##bignum.->fixnum"                  (1)   #f ()    0    integer extended)
-("##bignum.<-fixnum"                  (1)   #f ()    0    integer extended)
+("##bignum.->fixnum"                  (1)   #f ()    0    integer extended);;deprecated
+("##bignum.<-fixnum"                  (1)   #f ()    0    integer extended);;deprecated
+("##bignum->fixnum"                   (1)   #f ()    0    integer extended)
+("##fixnum->bignum"                   (1)   #f ()    0    integer extended)
 ("##bignum.adigit-shrink!"            (2)   #t ()    0    #f      extended)
 ("##bignum.adigit-copy!"              (4)   #t ()    0    #f      extended)
 ("##bignum.adigit-cat!"               (7)   #t ()    0    #f      extended)
