@@ -870,7 +870,7 @@
 (define (vector-object? obj)
   (vector? obj))
 
-(define float-copysign ##flonum.copysign)
+(define float-copysign ##flcopysign)
 
 (define (**comply-to-standard-scheme?) #f);;;;;;;;;;;;;;;;;;;;;;
 (define **main-readtable #f);;;;;;;

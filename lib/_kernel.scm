@@ -1327,8 +1327,6 @@ end-of-code
 end-of-code
 
    seconds
-   0.0 ;; hack to reproduce old behavior, should really be replaced with:
-#;
    (let ()
      (##declare (not constant-fold)) ;; force allocation of a flonum
      (##fixnum->flonum 0))))

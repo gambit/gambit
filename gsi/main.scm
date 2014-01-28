@@ -123,7 +123,7 @@
            (exe-opt?     (##assq 'exe options))
            (obj-opt?     (##assq 'obj options))
            (dynamic-opt? (##assq 'dynamic options)))
-      (if (##fixnum.< 1 (##fixnum.+
+      (if (##fx< 1 (##fx+
                          (if c-opt? 1 0)
                          (if link-opt? 1 0)
                          (if exe-opt? 1 0)
@@ -166,21 +166,21 @@
                            (loop1 rest
                                   (if (and (##eq? type 'obj)
                                            (c#targ-generated-c-file? file))
-                                      (##fixnum.+ nb-output-files 1)
+                                      (##fx+ nb-output-files 1)
                                       nb-output-files)))
                           ((obj-file? file)
                            (loop1 rest
                                   nb-output-files))
                           (else
                            (loop1 rest
-                                  (##fixnum.+ nb-output-files 1)))))
+                                  (##fx+ nb-output-files 1)))))
 
                   (let* ((output
                           (let ((x (##assq 'o options)))
                             (cond ((##not x)
                                    #f)
                                   ((and (##not (##memq type '(link exe)))
-                                        (##fixnum.< 1 nb-output-files)
+                                        (##fx< 1 nb-output-files)
                                         (let ((outdir (##path-normalize (##cadr x))))
                                           (##equal?
                                            outdir
@@ -273,7 +273,7 @@
                         (##exit-abnormally))
 
                       (define (handling file)
-                        (if (##fixnum.< 1 nb-output-files)
+                        (if (##fx< 1 nb-output-files)
                             (##repl
                              (lambda (first output-port)
                                (##write-string file output-port)
@@ -546,7 +546,7 @@
        #t)))
 
   (define (option? arg)
-    (and (##fixnum.< 0 (##string-length arg))
+    (and (##fx< 0 (##string-length arg))
          (##char=? (##string-ref arg 0) #\-)))
 
   (define (convert-option arg)

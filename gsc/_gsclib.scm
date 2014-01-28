@@ -179,7 +179,7 @@
         (let ((root-with-ext
                (##string-append root ".o" (##number->string version 10))))
           (if (##file-exists? root-with-ext)
-              (loop (##fixnum.+ version 1))
+              (loop (##fx+ version 1))
               root-with-ext))))
 
     (define (generate-output-filename root input-is-c-file?)
@@ -242,7 +242,7 @@
              (if (and (##not (##assq 'keep-c options))
                       (##not (##string=? filename c-filename)))
                  (##delete-file c-filename))
-             (if (##fixnum.= exit-status 0)
+             (if (##fx= exit-status 0)
                  output-filename
                  (##raise-error-exception
                   "C compilation or link failed while compiling"
@@ -271,7 +271,7 @@
            ld-options-prelude
            ld-options
            (##assq 'verbose options))))
-    (if (##fixnum.= exit-status 0)
+    (if (##fx= exit-status 0)
         output-filename
         (##raise-error-exception
          "C link failed while linking"

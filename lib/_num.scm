@@ -2382,7 +2382,7 @@ for a discussion of branch cuts.
              ;; here the absolute value of the logarithm is at least 0.5,
              ;; so there is less rounding error in the final result.
 
-             (##flonum.log float-x))
+             (##fllog float-x))
 
             (else
 
@@ -10668,7 +10668,7 @@ ___RESULT = result;
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;; old procedures
+(begin ;;; TODO: remove this begin (the definitions it contains are redundant)
 
 (define-prim-nary-bool (##flonum.= x y)
   #t
@@ -10804,6 +10804,8 @@ ___RESULT = result;
 (define-prim (##flonum.<-fixnum-exact? x))
 
 (define-prim (##flonum.copysign x y))
+
+)
 
 (define-prim (##flonum.<-ratnum x #!optional (nonzero-fractional-part? #f))
   (let* ((num (macro-ratnum-numerator x))
