@@ -250,8 +250,8 @@
 ##bignum.adigit-negative?
 ##bignum.adigit-=
 ##bignum.adigit-<
-##bignum.->fixnum
-##bignum.<-fixnum
+##bignum->fixnum
+##fixnum->bignum
 ##bignum.adigit-shrink!
 ##bignum.adigit-copy!
 ##bignum.adigit-cat!

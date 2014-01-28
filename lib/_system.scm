@@ -2400,12 +2400,12 @@
 
   (define (serialize-flonum-32! n)
     (serialize-exact-int-of-length!
-     (##flonum.->ieee754-32 n)
+     (##flonum->ieee754-32 n)
      4))
 
   (define (serialize-flonum-64! n)
     (serialize-exact-int-of-length!
-     (##flonum.->ieee754-64 n)
+     (##flonum->ieee754-64 n)
      8))
 
   (define (serialize-exact-int-of-length! n len)
@@ -3479,11 +3479,11 @@
 
   (define (deserialize-flonum-32!)
     (let ((n (deserialize-nonneg-exact-int-of-length! 4)))
-      (##flonum.<-ieee754-32 n)))
+      (##ieee754-32->flonum n)))
 
   (define (deserialize-flonum-64!)
     (let ((n (deserialize-nonneg-exact-int-of-length! 8)))
-      (##flonum.<-ieee754-64 n)))
+      (##ieee754-64->flonum n)))
 
   (define (deserialize-nonneg-exact-int-of-length! len)
     (if (<= len 3) ;; result fits in a 32 bit fixnum?

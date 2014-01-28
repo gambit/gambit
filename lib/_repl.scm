@@ -4066,19 +4066,19 @@
           (##- (##f64vector-ref at-end 5)
                (##f64vector-ref at-start 5)))
          (nb-gcs
-          (##flonum.->exact-int
+          (##flonum->exact-int
            (##- (##f64vector-ref at-end 6)
                 (##f64vector-ref at-start 6))))
          (minflt
-          (##flonum.->exact-int
+          (##flonum->exact-int
            (##- (##f64vector-ref at-end 10)
                 (##f64vector-ref at-start 10))))
          (majflt
-          (##flonum.->exact-int
+          (##flonum->exact-int
            (##- (##f64vector-ref at-end 11)
                 (##f64vector-ref at-start 11))))
          (bytes-allocated
-          (##flonum.->exact-int
+          (##flonum->exact-int
            (##- (##- (##f64vector-ref at-end 7)
                      (##f64vector-ref at-start 7))
                 (##+ (if (##interp-procedure? thunk)

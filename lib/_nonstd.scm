@@ -1150,7 +1150,7 @@
             (##repl-output-port)))
 
       (define (scale x m)
-        (##flonum.->exact-int (##flround (##fl* x m))))
+        (##flonum->exact-int (##flround (##fl* x m))))
 
       (define (mem bytes suffix)
 
@@ -1201,9 +1201,9 @@
       (mem last-gc-live " live (")
       (##write (scale (##fl/ last-gc-live last-gc-heap-size) 100.0) output-port)
       (##write-string "% " output-port)
-      (##write (##flonum.->exact-int last-gc-movable) output-port)
+      (##write (##flonum->exact-int last-gc-movable) output-port)
       (##write-string "+" output-port)
-      (##write (##flonum.->exact-int last-gc-nonmovable) output-port)
+      (##write (##flonum->exact-int last-gc-nonmovable) output-port)
       (##write-string ")" output-port)
       (##newline output-port)
       #t)))
