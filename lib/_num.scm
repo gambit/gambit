@@ -10591,8 +10591,7 @@ ___RESULT = result;
 (define-prim (##flatan x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
       (##flatan x)
-      (macro-check-flonum y 2 (##flatan x y)
-        (##flatan x y))))
+      (##flatan x y)))
 
 (define-prim (flatan x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x y)
@@ -10792,8 +10791,7 @@ ___RESULT = result;
 (define-prim (##flonum.atan x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
       (##flatan x)
-      (macro-check-flonum y 2 (##flonum.atan x y)
-        (##flatan x y))))
+      (##flatan x y)))
 
 (define-prim (##flonum.expt x y))
 
