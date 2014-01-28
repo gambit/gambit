@@ -859,11 +859,9 @@
     (##fail-check-number 1 square x))
 
   (macro-number-dispatch x (type-error)
-    (cond ((##eq? x 0) 0)
-          ((##fx*? x x) => values)
-          (else
-           (let ((x (##fixnum->bignum x)))
-             (##bignum.* x x))))
+    (or (##fxsquare? x)
+        (let ((x (##fixnum->bignum x)))
+          (##bignum.* x x)))
     (##bignum.* x x)
     (##ratnum.* x x)
     (##fl* x x)
