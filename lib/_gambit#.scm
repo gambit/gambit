@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -62,8 +62,8 @@
 (##define-macro (macro-subtype-flonum)       30)
 (##define-macro (macro-subtype-bignum)       31)
 
-(##define-macro (macro-subtype-ovector? x) `(##fixnum.< ,x 8))
-(##define-macro (macro-subtype-bvector? x) `(##fixnum.< 16 ,x))
+(##define-macro (macro-subtype-ovector? x) `(##fx< ,x 8))
+(##define-macro (macro-subtype-bvector? x) `(##fx< 16 ,x))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -385,8 +385,8 @@
 ;; slot 5 = value of entry #0
 
 (##define-macro (macro-gc-hash-table-nb-entries ht)
-  `(##fixnum.arithmetic-shift-right
-    (##fixnum.- (##vector-length ,ht) (macro-gc-hash-table-key0))
+  `(##fxarithmetic-shift-right
+    (##fx- (##vector-length ,ht) (macro-gc-hash-table-key0))
     1))
 
 (##define-macro (macro-gc-hash-table-minimal-nb-entries) 5)
@@ -410,8 +410,8 @@
 (##define-macro (macro-make-gc-hash-table flags count min-count free length)
   `(let ((ht
           (##make-vector
-           (##fixnum.+ (##fixnum.arithmetic-shift-left ,length 1)
-                       (macro-gc-hash-table-key0))
+           (##fx+ (##fxarithmetic-shift-left ,length 1)
+                  (macro-gc-hash-table-key0))
            (macro-unused-obj))))
      (macro-gc-hash-table-flags-set! ht ,flags)
      (macro-gc-hash-table-count-set! ht ,count)
@@ -440,14 +440,14 @@
 (##define-macro (macro-gc-hash-table-flag-need-rehash)    32)
 
 (##define-macro (macro-gc-hash-table-key-ref ht i*2)
-  `(##vector-ref ,ht (##fixnum.+ ,i*2 (macro-gc-hash-table-key0))))
+  `(##vector-ref ,ht (##fx+ ,i*2 (macro-gc-hash-table-key0))))
 (##define-macro (macro-gc-hash-table-key-set! ht i*2 x)
-  `(##vector-set! ,ht (##fixnum.+ ,i*2 (macro-gc-hash-table-key0)) ,x))
+  `(##vector-set! ,ht (##fx+ ,i*2 (macro-gc-hash-table-key0)) ,x))
 
 (##define-macro (macro-gc-hash-table-val-ref ht i*2)
-  `(##vector-ref ,ht (##fixnum.+ ,i*2 (macro-gc-hash-table-val0))))
+  `(##vector-ref ,ht (##fx+ ,i*2 (macro-gc-hash-table-val0))))
 (##define-macro (macro-gc-hash-table-val-set! ht i*2 x)
-  `(##vector-set! ,ht (##fixnum.+ ,i*2 (macro-gc-hash-table-val0)) ,x))
+  `(##vector-set! ,ht (##fx+ ,i*2 (macro-gc-hash-table-val0)) ,x))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -594,7 +594,7 @@
                           (if (eq? (car check) '##pair?)
                             (let ((x (list '##car name-result)))
                               (list (if arg-num
-                                        (list '##fixnum.+ arg-num x)
+                                        (list '##fx+ arg-num x)
                                         x)))
                             '())
                           (list ''()
@@ -674,7 +674,7 @@
                             '(next)
                             (add-pre-check
                              'next
-                             '(##fixnum.+ arg-num 3)
+                             '(##fx+ arg-num 3)
                              (if bool?
                                (list 'loop
                                      (list 'and
@@ -683,12 +683,12 @@
                                      name-param2
                                      'next
                                      '(##cdr lst)
-                                     '(##fixnum.+ arg-num 1))
+                                     '(##fx+ arg-num 1))
                                (list 'loop
                                      result
                                      'next
                                      '(##cdr lst)
-                                     '(##fixnum.+ arg-num 1)))))))))))
+                                     '(##fx+ arg-num 1)))))))))))
 
     (define (body)
       (cons 'cond
@@ -984,7 +984,7 @@
            ,@(if id
                `(id: ,id)
                `())
-           ,@(if (##fixnum.= (##fixnum.bitwise-and flags 1) 0)
+           ,@(if (##fx= (##fxand flags 1) 0)
                `()
                `(opaque:))
            ,@(if extender
@@ -1016,13 +1016,13 @@
                           ,@(if (##symbol? setter)
                               `(,setter)
                               `())
-                          ,@(if (##fixnum.= (##fixnum.bitwise-and options 1) 0)
+                          ,@(if (##fx= (##fxand options 1) 0)
                               `()
                               `(unprintable:))
-                          ,@(if (##fixnum.= (##fixnum.bitwise-and options 2) 0)
+                          ,@(if (##fx= (##fxand options 2) 0)
                               `()
                               `(read-only:))
-                          ,@(if (##fixnum.= (##fixnum.bitwise-and options 4) 0)
+                          ,@(if (##fx= (##fxand options 4) 0)
                               `()
                               `(equality-skip:))
                           ,@(let loop ((lst1 attributes)

@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -81,7 +81,7 @@
    (lambda (procedure arguments message code port)
      (##raise-io-exception
       port
-      (if (##fixnum.= code ##err-code-ENOENT)
+      (if (##fx= code ##err-code-ENOENT)
           (macro-make-no-such-file-or-directory-exception procedure arguments)
           (macro-make-os-exception procedure arguments message code))))))
 
@@ -162,11 +162,11 @@
          (line
           (macro-character-port-rlines port))
          (char-count
-          (##fixnum.- (##fixnum.+ (macro-character-port-rchars port)
+          (##fx- (##fx+ (macro-character-port-rchars port)
                                   (macro-character-port-rlo port))
                       offset))
          (col
-          (##fixnum.- char-count
+          (##fx- char-count
                       (macro-character-port-rcurline port))))
     (##make-filepos line col char-count)))
 
@@ -393,8 +393,8 @@
                   (macro-direction-in))
            #f)
           ((and (##fixnum? value)
-                (##not (##fixnum.< value 0))
-                (##fixnum.< value #o1000))
+                (##not (##fx< value 0))
+                (##fx< value #o1000))
            value)
           (else
            #f)))
@@ -404,7 +404,7 @@
                   (macro-direction-in))
            #f)
           ((and (##fixnum? value)
-                (##fixnum.< 0 value))
+                (##fx< 0 value))
            value)
           (else
            #f)))
@@ -451,8 +451,8 @@
 
   (define (port-number value)
     (cond ((and (##fixnum? value)
-                (##fixnum.<= 0 value)
-                (##fixnum.<= value 65535))
+                (##fx<= 0 value)
+                (##fx<= value 65535))
            value)
           (else
            #f)))
@@ -485,7 +485,7 @@
 
   (define (backlog value)
     (if (and (##fixnum? value)
-             (##not (##fixnum.< value 0)))
+             (##not (##fx< value 0)))
       value
       #f))
 
@@ -1036,12 +1036,12 @@
 (define-prim (##psettings->roptions psettings default-options)
   (##psettings-options->options
    (macro-psettings-roptions psettings)
-   (##fixnum.modulo default-options (macro-stream-options-output-shift))))
+   (##fxmodulo default-options (macro-stream-options-output-shift))))
 
 (define-prim (##psettings->woptions psettings default-options)
   (##psettings-options->options
    (macro-psettings-woptions psettings)
-   (##fixnum.quotient default-options (macro-stream-options-output-shift))))
+   (##fxquotient default-options (macro-stream-options-output-shift))))
 
 (define-prim (##psettings->input-readtable psettings)
   (or (macro-psettings-options-readtable
@@ -1064,44 +1064,44 @@
          (macro-psettings-options-char-encoding options))
         (char-encoding-errors
          (macro-psettings-options-char-encoding-errors options)))
-    (##fixnum.+
-     (##fixnum.+
-      (##fixnum.* (macro-char-encoding-shift)
-                  (if (##fixnum.= char-encoding (macro-default-char-encoding))
-                      (##fixnum.modulo
-                       (##fixnum.quotient default-options
+    (##fx+
+     (##fx+
+      (##fx* (macro-char-encoding-shift)
+                  (if (##fx= char-encoding (macro-default-char-encoding))
+                      (##fxmodulo
+                       (##fxquotient default-options
                                           (macro-char-encoding-shift))
                        (macro-char-encoding-range))
                       char-encoding))
-      (##fixnum.* (macro-char-encoding-errors-shift)
-                  (if (##fixnum.= char-encoding-errors (macro-default-char-encoding-errors))
-                      (##fixnum.modulo
-                       (##fixnum.quotient default-options
+      (##fx* (macro-char-encoding-errors-shift)
+                  (if (##fx= char-encoding-errors (macro-default-char-encoding-errors))
+                      (##fxmodulo
+                       (##fxquotient default-options
                                           (macro-char-encoding-errors-shift))
                        (macro-char-encoding-errors-range))
                       char-encoding-errors))
-      (##fixnum.+
-       (##fixnum.+
-        (##fixnum.* (macro-eol-encoding-shift)
-                    (if (##fixnum.= eol-encoding (macro-default-eol-encoding))
-                        (##fixnum.modulo
-                         (##fixnum.quotient default-options
+      (##fx+
+       (##fx+
+        (##fx* (macro-eol-encoding-shift)
+                    (if (##fx= eol-encoding (macro-default-eol-encoding))
+                        (##fxmodulo
+                         (##fxquotient default-options
                                             (macro-eol-encoding-shift))
                          (macro-eol-encoding-range))
                         eol-encoding))
-        (##fixnum.+
-         (##fixnum.* (macro-open-state-shift)
-                     (##fixnum.modulo
-                      (##fixnum.quotient default-options
+        (##fx+
+         (##fx* (macro-open-state-shift)
+                     (##fxmodulo
+                      (##fxquotient default-options
                                          (macro-open-state-shift))
                       (macro-open-state-range)))
-         (##fixnum.+
-          (##fixnum.* (macro-permanent-close-shift)
+         (##fx+
+          (##fx* (macro-permanent-close-shift)
                       permanent-close)
-          (##fixnum.* (macro-buffering-shift)
-                      (if (##fixnum.= buffering (macro-default-buffering))
-                          (##fixnum.modulo
-                           (##fixnum.quotient default-options
+          (##fx* (macro-buffering-shift)
+                      (if (##fx= buffering (macro-default-buffering))
+                          (##fxmodulo
+                           (##fxquotient default-options
                                               (macro-buffering-shift))
                            (macro-buffering-range))
                           buffering))))))))))
@@ -1115,27 +1115,27 @@
          (macro-psettings-create psettings))
         (truncate
          (macro-psettings-truncate psettings)))
-  (##fixnum.+
-   (##fixnum.* (macro-direction-shift)
+  (##fx+
+   (##fx* (macro-direction-shift)
                direction)
-   (##fixnum.+
-    (##fixnum.* (macro-append-shift)
-                (if (##not (##fixnum.= append (macro-default-append)))
+   (##fx+
+    (##fx* (macro-append-shift)
+                (if (##not (##fx= append (macro-default-append)))
                   append
                   (macro-no-append)))
-    (##fixnum.+
-     (##fixnum.* (macro-create-shift)
-                 (cond ((##not (##fixnum.= create (macro-default-create)))
+    (##fx+
+     (##fx* (macro-create-shift)
+                 (cond ((##not (##fx= create (macro-default-create)))
                         create)
-                       ((##fixnum.= direction (macro-direction-out))
+                       ((##fx= direction (macro-direction-out))
                         (macro-maybe-create))
                        (else
                         (macro-no-create))))
-     (##fixnum.* (macro-truncate-shift)
-                 (cond ((##not (##fixnum.= truncate (macro-default-truncate)))
+     (##fx* (macro-truncate-shift)
+                 (cond ((##not (##fx= truncate (macro-default-truncate)))
                         truncate)
-                       ((##fixnum.= direction (macro-direction-out))
-                        (if (##fixnum.= append (macro-append))
+                       ((##fx= direction (macro-direction-out))
+                        (if (##fx= append (macro-append))
                           (macro-no-truncate)
                           (macro-truncate)))
                        (else
@@ -1143,13 +1143,13 @@
 
 (define-prim (##psettings->permissions psettings default-permissions)
   (let ((permissions (macro-psettings-permissions psettings)))
-    (if (##not (##fixnum.= permissions (macro-default-permissions)))
+    (if (##not (##fx= permissions (macro-default-permissions)))
       permissions
       default-permissions)))
 
 (define-prim (##psettings->output-width psettings #!optional (default 80))
   (let ((output-width (macro-psettings-output-width psettings)))
-    (if (##fixnum.= output-width (macro-default-output-width))
+    (if (##fx= output-width (macro-default-output-width))
       default
       output-width)))
 
@@ -1202,7 +1202,7 @@
   (##fixnum? (macro-btq-owner cv)))
 
 (define-prim (##io-condvar-for-writing? cv)
-  (##not (##fixnum.= 0 (##fixnum.bitwise-and 2 (macro-btq-owner cv)))))
+  (##not (##fx= 0 (##fxand 2 (macro-btq-owner cv)))))
 
 (define-prim (##io-condvar-port cv)
   (macro-condvar-specific cv))
@@ -1302,7 +1302,7 @@
             (##os-device-kind wdevice)
             (macro-none-kind)))
          (roptions
-          (if (##fixnum.= rkind (macro-none-kind))
+          (if (##fx= rkind (macro-none-kind))
             0
             (##psettings->roptions
              psettings
@@ -1312,7 +1312,7 @@
          (rtimeout-thunk
           #f)
          (woptions
-          (if (##fixnum.= wkind (macro-none-kind))
+          (if (##fx= wkind (macro-none-kind))
             0
             (##psettings->woptions
              psettings
@@ -1322,7 +1322,7 @@
          (wtimeout-thunk
           #f)
          (char-rbuf
-          (and (##not (##fixnum.= rkind (macro-none-kind)))
+          (and (##not (##fx= rkind (macro-none-kind)))
                (##make-string (if (macro-unbuffered? roptions)
                                 1
                                 char-buf-len))))
@@ -1341,7 +1341,7 @@
          (char-peek-eof?
           #f)
          (char-wbuf
-          (and (##not (##fixnum.= wkind (macro-none-kind)))
+          (and (##not (##fx= wkind (macro-none-kind)))
                (##make-string (if (macro-unbuffered? woptions)
                                 1
                                 char-buf-len))))
@@ -1362,7 +1362,7 @@
          (output-readtable
           (##psettings->output-readtable psettings))
          (byte-rbuf
-          (and (##not (##fixnum.= rkind (macro-none-kind)))
+          (and (##not (##fx= rkind (macro-none-kind)))
                (##make-u8vector byte-buf-len)))
          (byte-rlo
           0)
@@ -1371,7 +1371,7 @@
          (byte-rbuf-fill
           ##byte-rbuf-fill)
          (byte-wbuf
-          (and (##not (##fixnum.= wkind (macro-none-kind)))
+          (and (##not (##fx= wkind (macro-none-kind)))
                (##make-u8vector byte-buf-len)))
          (byte-wlo
           0)
@@ -1380,10 +1380,10 @@
          (byte-wbuf-drain
           ##byte-wbuf-drain)
          (rdevice-condvar
-          (and (##not (##fixnum.= rkind (macro-none-kind)))
+          (and (##not (##fx= rkind (macro-none-kind)))
                (##make-rdevice-condvar rdevice)))
          (wdevice-condvar
-          (and (##not (##fixnum.= wkind (macro-none-kind)))
+          (and (##not (##fx= wkind (macro-none-kind)))
                (##make-wdevice-condvar wdevice))))
 
      (define (name port)
@@ -1433,7 +1433,7 @@
 
        (let ((code (force-output-aux port level #t)))
          (macro-port-mutex-unlock! port)
-         (if (##fixnum.< code 0)
+         (if (##fx< code 0)
            (##raise-os-io-exception port #f code prim arg1 arg2 arg3 arg4)
            (##void))))
 
@@ -1449,14 +1449,14 @@
            (let* ((wdevice-condvar (macro-device-port-wdevice-condvar port))
                   (wdevice (macro-condvar-name wdevice-condvar))
                   (code2 (##os-device-force-output wdevice level)))
-             (cond ((##fixnum.= code2 ##err-code-EINTR)
+             (cond ((##fx= code2 ##err-code-EINTR)
 
                     ;; the force was interrupted, so try again
 
                     (force-output-aux port level block?))
 
                    ((and block?
-                         (##fixnum.= code2 ##err-code-EAGAIN))
+                         (##fx= code2 ##err-code-EAGAIN))
 
                     ;; the force would block, so wait and then try again
 
@@ -1506,12 +1506,12 @@
 
        (##declare (not interrupts-enabled))
 
-       (if (or (##fixnum.= (macro-port-wkind port) (macro-none-kind))
+       (if (or (##fx= (macro-port-wkind port) (macro-none-kind))
                (##eq? prim close-input-port))
          (close-aux2 port prim)
          (let ((code (force-output-aux port 0 #f)))
-           (if (and (##fixnum.< code 0)
-                    (##not (##fixnum.= code ##err-code-EAGAIN)))
+           (if (and (##fx< code 0)
+                    (##not (##fx= code ##err-code-EAGAIN)))
 
              code
 
@@ -1582,7 +1582,7 @@
               (wdevice (macro-condvar-name wdevice-condvar))
               (result (##os-device-stream-width wdevice)))
          (macro-port-mutex-unlock! port)
-         (if (##fixnum.< result 0)
+         (if (##fx< result 0)
            (##raise-os-io-exception port #f result output-port-width port)
            result)))
 
@@ -1655,12 +1655,12 @@
               device
               psettings)
   (let ((direction (macro-psettings-direction psettings)))
-    (cond ((##fixnum.= direction (macro-direction-in))
+    (cond ((##fx= direction (macro-direction-in))
            (##make-device-port device-name
                                device
                                #f
                                psettings))
-          ((##fixnum.= direction (macro-direction-out))
+          ((##fx= direction (macro-direction-out))
            (##make-device-port device-name
                                #f
                                device
@@ -1676,18 +1676,18 @@
   (##declare (not interrupts-enabled))
 
   (let ((rdevice
-         (if (##fixnum.= (macro-port-rkind port) (macro-none-kind))
+         (if (##fx= (macro-port-rkind port) (macro-none-kind))
            #f
            (macro-condvar-name rdevice-condvar)))
         (wdevice
-         (if (##fixnum.= (macro-port-wkind port) (macro-none-kind))
+         (if (##fx= (macro-port-wkind port) (macro-none-kind))
            #f
            (macro-condvar-name wdevice-condvar))))
     (if (and (##eq? rdevice wdevice)
              (##eq? prim close-port))
       (let ((code1
              (##os-device-close rdevice (macro-direction-inout))))
-        (if (##fixnum.< code1 0)
+        (if (##fx< code1 0)
           code1
           (##void)))
       (let ((code2
@@ -1695,14 +1695,14 @@
                       (##not (##eq? prim close-output-port)))
                (##os-device-close rdevice (macro-direction-in))
                0)))
-        (if (##fixnum.< code2 0)
+        (if (##fx< code2 0)
           code2
           (let ((code3
                  (if (and wdevice
                           (##not (##eq? prim close-input-port)))
                    (##os-device-close wdevice (macro-direction-out))
                    0)))
-            (if (##fixnum.< code3 0)
+            (if (##fx< code3 0)
               code3
               (##void))))))))
 
@@ -1725,9 +1725,9 @@
                 position
                 (if (##eq? whence (macro-absent-obj)) 0 whence))))))
       (if (and (##fixnum? result)
-               (##fixnum.< result 0))
-        (if (or (##fixnum.= result ##err-code-EINTR)
-                (##fixnum.= result ##err-code-EAGAIN))
+               (##fx< result 0))
+        (if (or (##fx= result ##err-code-EINTR)
+                (##fx= result ##err-code-EAGAIN))
           (loop)
           (##raise-os-io-exception
            port
@@ -1783,9 +1783,9 @@
                 position
                 (if (##eq? whence (macro-absent-obj)) 0 whence))))))
       (if (and (##fixnum? result)
-               (##fixnum.< result 0))
-        (if (or (##fixnum.= result ##err-code-EINTR)
-                (##fixnum.= result ##err-code-EAGAIN))
+               (##fx< result 0))
+        (if (or (##fx= result ##err-code-EINTR)
+                (##fx= result ##err-code-EAGAIN))
           (loop)
           (##raise-os-io-exception
            port
@@ -1896,7 +1896,7 @@
 
     (macro-character-port-rchars-set!
      port
-     (##fixnum.+ (macro-character-port-rchars port)
+     (##fx+ (macro-character-port-rchars port)
                  (macro-character-port-rhi port)))
 
     (macro-character-port-rlo-set! port 0)
@@ -1911,13 +1911,13 @@
            (code1
             (##os-port-decode-chars! port want #f)))
 
-      (cond ((##not (##fixnum.= code1 0))
+      (cond ((##not (##fx= code1 0))
 
              ;; an error occurred, return the error code to caller
 
              code1)
 
-            ((##fixnum.< (macro-character-port-rlo port)
+            ((##fx< (macro-character-port-rlo port)
                          (macro-character-port-rhi port))
 
              ;; characters were added to char buffer
@@ -1959,7 +1959,7 @@
                       ;; form a character, otherwise #f is returned.
 
                       (let ((code3 (##os-port-decode-chars! port want #t)))
-                        (if (##fixnum.= code3 0)
+                        (if (##fx= code3 0)
                             #f
                             code3))))))))))
 
@@ -1988,11 +1988,11 @@
 
     (let ((byte-rlo (macro-byte-port-rlo port))
           (byte-rhi (macro-byte-port-rhi port)))
-      (if (##fixnum.< byte-rlo byte-rhi)
+      (if (##fx< byte-rlo byte-rhi)
           (let ((byte-rbuf (macro-byte-port-rbuf port)))
             (##subu8vector-move! byte-rbuf byte-rlo byte-rhi byte-rbuf 0)))
       (macro-byte-port-rlo-set! port 0)
-      (macro-byte-port-rhi-set! port (##fixnum.- byte-rhi byte-rlo)))
+      (macro-byte-port-rhi-set! port (##fx- byte-rhi byte-rlo)))
 
     ;; read into byte buffer at rhi
 
@@ -2007,21 +2007,21 @@
              byte-rhi
              (let ((rbuf-len (##u8vector-length byte-rbuf)))
                (if (and want (macro-unbuffered? (macro-port-roptions port)))
-                 (##fixnum.min (##fixnum.+ byte-rhi want) rbuf-len)
+                 (##fxmin (##fx+ byte-rhi want) rbuf-len)
                  rbuf-len)))))
 
-      (if (##fixnum.< n 0)
+      (if (##fx< n 0)
 
         ;; the read caused an error
 
-        (cond ((##fixnum.= n ##err-code-EINTR)
+        (cond ((##fx= n ##err-code-EINTR)
 
                ;; the read was interrupted, so try again
 
                (loop))
 
               ((and block?
-                    (##fixnum.= n ##err-code-EAGAIN))
+                    (##fx= n ##err-code-EAGAIN))
 
                ;; the read would block and it is OK to block so wait
                ;; and then try again
@@ -2045,11 +2045,11 @@
 
         ;; the read completed successfully
 
-        (if (##fixnum.= n 0) ;; was end-of-file reached?
+        (if (##fx= n 0) ;; was end-of-file reached?
           #f
           (begin
             (macro-byte-port-rhi-set! port
-              (##fixnum.+ (macro-byte-port-rhi port) n))
+              (##fx+ (macro-byte-port-rhi port) n))
             #t))))))
 
 (define-prim (##char-wbuf-drain-no-reset port)
@@ -2070,13 +2070,13 @@
 
     (let ((code1 (##os-port-encode-chars! port)))
 
-      (cond ((##not (##fixnum.= code1 0))
+      (cond ((##not (##fx= code1 0))
 
              ;; an error occurred, return the error code to caller
 
              code1)
 
-            ((##fixnum.< (macro-character-port-wlo port)
+            ((##fx< (macro-character-port-wlo port)
                          (macro-character-port-whi port))
 
              ;; the byte buffer is full, so drain it and continue
@@ -2111,7 +2111,7 @@
       (begin
         (macro-character-port-wchars-set!
          port
-         (##fixnum.+ (macro-character-port-wchars port)
+         (##fx+ (macro-character-port-wchars port)
                      (macro-character-port-whi port)))
         (macro-character-port-wlo-set! port 0)
         (macro-character-port-whi-set! port 0)
@@ -2133,7 +2133,7 @@
 
     (let ((byte-wlo (macro-byte-port-wlo port))
           (byte-whi (macro-byte-port-whi port)))
-      (if (##fixnum.< byte-wlo byte-whi)
+      (if (##fx< byte-wlo byte-whi)
 
         ;; the byte buffer is not empty, write content of byte buffer
         ;; from wlo to whi
@@ -2145,17 +2145,17 @@
                 byte-wlo
                 byte-whi)))
 
-          (if (##fixnum.< n 0)
+          (if (##fx< n 0)
 
             ;; the write caused an error
 
-            (cond ((##fixnum.= n ##err-code-EINTR)
+            (cond ((##fx= n ##err-code-EINTR)
 
                    ;; the write was interrupted, so try again
 
                    (loop))
 
-                  ((##fixnum.= n ##err-code-EAGAIN)
+                  ((##fx= n ##err-code-EAGAIN)
 
                    ;; the write would block, so wait and then try again
 
@@ -2181,7 +2181,7 @@
 
             (begin
               (macro-byte-port-wlo-set! port
-                (##fixnum.+ (macro-byte-port-wlo port) n))
+                (##fx+ (macro-byte-port-wlo port) n))
               (loop))))
 
         ;; the byte buffer is empty
@@ -2382,7 +2382,7 @@
                   (if (##not (##eq? vect-rbuf vect-wbuf))
                     (let ((vect-rhi (,',macro-vect-port-rhi port))
                           (len (,',##vect-length vect-rbuf)))
-                      (cond ((##fixnum.< vect-rhi len)
+                      (cond ((##fx< vect-rhi len)
                              (,',macro-vect-port-rhi-set! port len)
                              #t)
                             (else
@@ -2391,7 +2391,7 @@
                                      (,',macro-vect-port-fifo port))))
                                (,',macro-vect-port-wlo-set!
                                 port
-                                (##fixnum.- (,',macro-vect-port-wlo port) len))
+                                (##fx- (,',macro-vect-port-wlo port) len))
                                (,',macro-vect-port-rbuf-set!
                                 port
                                 new-vect-rbuf)
@@ -2403,7 +2403,7 @@
 
                                          (macro-character-port-rchars-set!
                                           port
-                                          (##fixnum.+ (macro-character-port-rchars port)
+                                          (##fx+ (macro-character-port-rchars port)
                                                       (macro-character-port-rhi port))))
 
                                       #f)
@@ -2416,7 +2416,7 @@
                                (loop)))))
                     (let* ((vect-rhi (,',macro-vect-port-rhi port))
                            (vect-whi (,',macro-vect-port-whi peer)))
-                      (cond ((##fixnum.< vect-rhi vect-whi)
+                      (cond ((##fx< vect-rhi vect-whi)
                              (,',macro-vect-port-rhi-set! port vect-whi)
                              #t)
                             ((macro-closed? (macro-port-woptions peer))
@@ -2462,9 +2462,9 @@
                         (,',macro-vect-port-buffering-limit port)))
                   (if (and buffering-limit
                            (let ((unread
-                                  (##fixnum.- (,',macro-vect-port-wlo peer)
+                                  (##fx- (,',macro-vect-port-wlo peer)
                                               (,',macro-vect-port-rlo peer))))
-                             (##fixnum.< buffering-limit unread)))
+                             (##fx< buffering-limit unread)))
                     (let ((continue?
                            (or (##mutex-signal-and-condvar-wait!
                                 (macro-port-mutex port)
@@ -2483,12 +2483,12 @@
                             (,',macro-vect-port-whi port)))
                       (,',macro-vect-port-wlo-set!
                        peer
-                       (##fixnum.+ (,',macro-vect-port-wlo peer) vect-whi))
+                       (##fx+ (,',macro-vect-port-wlo peer) vect-whi))
                       ,',(if (eq? name 'vector)
                            #f
                            `(macro-character-port-wchars-set!
                              port
-                             (##fixnum.+
+                             (##fx+
                               (macro-character-port-wchars port)
                               vect-whi)))
                       (,',##vect-shrink! vect-wbuf vect-whi)
@@ -2530,7 +2530,7 @@
                      `(let ((code (,drain-output port)))
                         (macro-port-mutex-unlock! port)
                         (if (##fixnum? code)
-                          (if (##fixnum.= code ##err-code-EAGAIN)
+                          (if (##fx= code ##err-code-EAGAIN)
                             #f;;;;;;;;;;;this doesn't appear to be right!
                             (##raise-os-io-exception port #f code prim arg1 arg2 arg3 arg4))
                           (##void)))
@@ -2617,8 +2617,8 @@
        (define-prim (,##subvect->fifo vect start end chunk-size)
          (let ((fifo (macro-make-fifo)))
            (let loop ((lo start))
-             (let ((hi (##fixnum.+ lo chunk-size)))
-               (if (##fixnum.< hi end)
+             (let ((hi (##fx+ lo chunk-size)))
+               (if (##fx< hi end)
                  (begin
                    (macro-fifo-insert-at-tail! fifo (,##subvect vect lo hi))
                    (loop hi))
@@ -2627,25 +2627,25 @@
                    fifo))))))
 
        (define-prim (,##fifo->vect fifo start end)
-         (let* ((len (##fixnum.max (##fixnum.- end start) 0))
+         (let* ((len (##fxmax (##fx- end start) 0))
                 (vect (,##make-vect len)))
            (let loop ((elems (macro-fifo-next fifo))
                       (hi end)
                       (lo start)
                       (i 0))
-             (if (##fixnum.< lo hi)
+             (if (##fx< lo hi)
                (let* ((chunk
                        (macro-fifo-elem elems))
                       (chunk-len
                        (,##vect-length chunk))
                       (n
-                       (##fixnum.min (##fixnum.- chunk-len lo)
-                                     (##fixnum.- hi lo))))
-                 (,##subvect-move! chunk lo (##fixnum.+ lo n) vect i)
+                       (##fxmin (##fx- chunk-len lo)
+                                     (##fx- hi lo))))
+                 (,##subvect-move! chunk lo (##fx+ lo n) vect i)
                  (loop (macro-fifo-next elems)
-                       (##fixnum.- hi chunk-len)
-                       (##fixnum.- (##fixnum.+ lo n) chunk-len)
-                       (##fixnum.+ i n)))
+                       (##fx- hi chunk-len)
+                       (##fx- (##fx+ lo n) chunk-len)
+                       (##fx+ i n)))
                vect))))
 
        (define-prim (,##open-vect-generic
@@ -2720,12 +2720,12 @@
                           (woptions (macro-psettings-woptions psettings1)))
                       (macro-psettings-roptions-set! psettings1 woptions)
                       (macro-psettings-woptions-set! psettings1 roptions)
-                      (cond ((##fixnum.= (macro-psettings-direction psettings1)
+                      (cond ((##fx= (macro-psettings-direction psettings1)
                                          (macro-direction-in))
                              (macro-psettings-direction-set!
                               psettings1
                               (macro-direction-out)))
-                            ((##fixnum.= (macro-psettings-direction psettings1)
+                            ((##fx= (macro-psettings-direction psettings1)
                                          (macro-direction-out))
                              (macro-psettings-direction-set!
                               psettings1
@@ -2871,7 +2871,7 @@
                    (,##fifo->vect
                     vect-fifo
                     (,macro-vect-port-rlo peer)
-                    (##fixnum.+ (,macro-vect-port-wlo peer)
+                    (##fx+ (,macro-vect-port-wlo peer)
                                 (,macro-vect-port-whi port))))
                   (new-vect-buf
                    (macro-fifo-advance-to-tail! vect-fifo)))
@@ -2885,10 +2885,10 @@
                                 new-vect-buf)
                                  (,macro-vect-port-rlo peer)
                                  0)))
-                   (if (##fixnum.< i (,macro-vect-port-whi port))
+                   (if (##fx< i (,macro-vect-port-whi port))
                      (begin
                        (,vect-zap! new-vect-buf i)
-                       (loop (##fixnum.+ i 1)))))
+                       (loop (##fx+ i 1)))))
                 #f)
 
              (,macro-vect-port-rbuf-set! peer new-vect-buf)
@@ -2984,12 +2984,12 @@
 (define-prim (##vect-port-options options kind buffering)
   (##psettings-options->options
    options
-   (##fixnum.+
-    (##fixnum.* (macro-open-state-shift)
-                (if (##fixnum.= kind (macro-none-kind))
+   (##fx+
+    (##fx* (macro-open-state-shift)
+                (if (##fx= kind (macro-none-kind))
                   (macro-open-state-closed)
                   (macro-open-state-open)))
-    (##fixnum.* (macro-buffering-shift)
+    (##fx* (macro-buffering-shift)
                 buffering))))
 
 ;;;----------------------------------------------------------------------------
@@ -3015,17 +3015,17 @@
   (let* ((direction
           (macro-psettings-direction psettings))
          (len
-          (##fixnum.max (##fixnum.- end start) 0))
+          (##fxmax (##fx- end start) 0))
          (vector-fifo
           (##subvector->fifo src start end chunk-size))
          (mutex
           (macro-make-port-mutex))
          (rkind
-          (if (##fixnum.= direction (macro-direction-out))
+          (if (##fx= direction (macro-direction-out))
             (macro-none-kind)
             (macro-vector-kind)))
          (wkind
-          (if (##fixnum.= direction (macro-direction-in))
+          (if (##fx= direction (macro-direction-in))
             (macro-none-kind)
             (macro-vector-kind)))
          (roptions
@@ -3057,7 +3057,7 @@
          (vector-whi
           (##vector-length vector-wbuf))
          (vector-wlo
-          (##fixnum.- len vector-whi))
+          (##fx- len vector-whi))
          (vector-rcondvar
           (##make-io-condvar #f #f))
          (vector-wcondvar
@@ -3078,7 +3078,7 @@
 
          (let ((vector-rlo (macro-vector-port-rlo port))
                (vector-rhi (macro-vector-port-rhi port)))
-           (if (##fixnum.< vector-rlo vector-rhi)
+           (if (##fx< vector-rlo vector-rhi)
 
              ;; the next object is in the object read buffer
 
@@ -3091,7 +3091,7 @@
                ;; to avoid retaining objects uselessly
 
                (##vector-set! vector-rbuf vector-rlo #f)
-               (macro-vector-port-rlo-set! port (##fixnum.+ vector-rlo 1))
+               (macro-vector-port-rlo-set! port (##fx+ vector-rlo 1))
                (macro-port-mutex-unlock! port)
                obj)
 
@@ -3109,7 +3109,7 @@
                       ;; the conversion or read caused an error
 
                       (macro-port-mutex-unlock! port)
-                      (if (##fixnum.= code ##err-code-EAGAIN)
+                      (if (##fx= code ##err-code-EAGAIN)
                         #!eof ;; the read timeout thunk returned #f
                         (##raise-os-io-exception port #f code read port)))
 
@@ -3138,15 +3138,15 @@
        (let loop ()
 
          (let ((vector-wbuf (macro-vector-port-wbuf port))
-               (vector-whi+1 (##fixnum.+ (macro-vector-port-whi port) 1)))
-           (if (##not (##fixnum.< (##vector-length vector-wbuf) vector-whi+1))
+               (vector-whi+1 (##fx+ (macro-vector-port-whi port) 1)))
+           (if (##not (##fx< (##vector-length vector-wbuf) vector-whi+1))
 
              ;; there is enough space in the object write buffer, so add
              ;; object and increment whi
 
              (let ()
 
-               (##vector-set! vector-wbuf (##fixnum.- vector-whi+1 1) obj)
+               (##vector-set! vector-wbuf (##fx- vector-whi+1 1) obj)
 
                ;; advance whi
 
@@ -3175,7 +3175,7 @@
                (if (##fixnum? code)
                  (begin
                    (macro-port-mutex-unlock! port)
-                   (if (##fixnum.= code ##err-code-EAGAIN)
+                   (if (##fx= code ##err-code-EAGAIN)
                      #f
                      (##raise-os-io-exception port #f code write obj port)))
                  (loop)))))))
@@ -3256,17 +3256,17 @@
   (let* ((direction
           (macro-psettings-direction psettings))
          (len
-          (##fixnum.max (##fixnum.- end start) 0))
+          (##fxmax (##fx- end start) 0))
          (string-fifo
           (##substring->fifo src start end chunk-size))
          (mutex
           (macro-make-port-mutex))
          (rkind
-          (if (##fixnum.= direction (macro-direction-out))
+          (if (##fx= direction (macro-direction-out))
             (macro-none-kind)
             (macro-string-kind)))
          (wkind
-          (if (##fixnum.= direction (macro-direction-in))
+          (if (##fx= direction (macro-direction-in))
             (macro-none-kind)
             (macro-string-kind)))
          (roptions
@@ -3306,7 +3306,7 @@
          (string-whi
           (##string-length string-wbuf))
          (string-wlo
-          (##fixnum.- len string-whi))
+          (##fx- len string-whi))
          (char-wchars
           0)
          (char-wlines
@@ -3452,17 +3452,17 @@
   (let* ((direction
           (macro-psettings-direction psettings))
          (len
-          (##fixnum.max (##fixnum.- end start) 0))
+          (##fxmax (##fx- end start) 0))
          (u8vector-fifo
           (##subu8vector->fifo src start end chunk-size))
          (mutex
           (macro-make-port-mutex))
          (rkind
-          (if (##fixnum.= direction (macro-direction-out))
+          (if (##fx= direction (macro-direction-out))
             (macro-none-kind)
             (macro-u8vector-kind)))
          (wkind
-          (if (##fixnum.= direction (macro-direction-in))
+          (if (##fx= direction (macro-direction-in))
             (macro-none-kind)
             (macro-u8vector-kind)))
          (roptions
@@ -3484,7 +3484,7 @@
          (wtimeout-thunk
           #f)
          (char-rbuf
-          (and (##not (##fixnum.= rkind (macro-none-kind)))
+          (and (##not (##fx= rkind (macro-none-kind)))
                (##make-string (if (macro-unbuffered? roptions)
                                 1
                                 char-buf-len))))
@@ -3503,7 +3503,7 @@
          (char-peek-eof?
           #f)
          (char-wbuf
-          (and (##not (##fixnum.= wkind (macro-none-kind)))
+          (and (##not (##fx= wkind (macro-none-kind)))
                (##make-string (if (macro-unbuffered? woptions)
                                 1
                                 char-buf-len))))
@@ -3526,7 +3526,7 @@
 #|
 ;;;;;;;;;;;;;;;;;;;;;;;;
          (byte-rbuf
-          (and (##not (##fixnum.= rkind (macro-none-kind)))
+          (and (##not (##fx= rkind (macro-none-kind)))
                (##make-u8vector byte-buf-len)))
          (byte-rlo
           0)
@@ -3535,7 +3535,7 @@
          (byte-rbuf-fill
           ##byte-rbuf-fill)
          (byte-wbuf
-          (and (##not (##fixnum.= wkind (macro-none-kind)))
+          (and (##not (##fx= wkind (macro-none-kind)))
                (##make-u8vector byte-buf-len)))
          (byte-wlo
           0)
@@ -3556,7 +3556,7 @@
          (u8vector-whi
           (##u8vector-length u8vector-wbuf))
          (u8vector-wlo
-          (##fixnum.- len u8vector-whi))
+          (##fx- len u8vector-whi))
          (u8vector-rcondvar
           (##make-io-condvar #f #f))
          (u8vector-wcondvar
@@ -3684,18 +3684,18 @@
 (define-prim (##port-of-kind? obj kind)
   (##declare (not interrupts-enabled))
   (and (macro-port? obj)
-       (##fixnum.= (##fixnum.bitwise-and (##port-kind obj) kind) kind)))
+       (##fx= (##fxand (##port-kind obj) kind) kind)))
 
 (define-prim (##port-kind port)
   (##declare (not interrupts-enabled))
   (let ((rkind (macro-port-rkind port)))
-    (if (##fixnum.= rkind (macro-none-kind))
+    (if (##fx= rkind (macro-none-kind))
       (macro-port-wkind port)
       rkind)))
 
 (define-prim (##port-device port)
   (##declare (not interrupts-enabled))
-  (if (##fixnum.= (macro-port-rkind port) (macro-none-kind))
+  (if (##fx= (macro-port-rkind port) (macro-none-kind))
     (let ((wdevice-condvar (macro-device-port-wdevice-condvar port)))
       (macro-condvar-name wdevice-condvar))
     (let ((rdevice-condvar (macro-device-port-rdevice-condvar port)))
@@ -3762,7 +3762,7 @@
 
     (let ((we2 (##make-writeenv style port rt mt force? width 0 0 0 limit)))
       ((macro-port-write-datum port) port obj we2)
-      (##fixnum.- limit (macro-writeenv-limit we2)))))
+      (##fx- limit (macro-writeenv-limit we2)))))
 
 (define-prim (##write
               obj
@@ -4085,7 +4085,7 @@
       (##port-io-exception-handler-set! port handler)))))
 
 (define-prim (##input-port-char-position port)
-  (##fixnum.+ (macro-character-port-rchars port)
+  (##fx+ (macro-character-port-rchars port)
               (macro-character-port-rlo port)))
 
 (define-prim (input-port-char-position port)
@@ -4097,7 +4097,7 @@
      (##input-port-char-position port))))
 
 (define-prim (##output-port-char-position port)
-  (##fixnum.+ (macro-character-port-wchars port)
+  (##fx+ (macro-character-port-wchars port)
               (macro-character-port-whi port)))
 
 (define-prim (output-port-char-position port)
@@ -4110,11 +4110,11 @@
 
 (define-prim (##input-port-line-set! port line)
   (##declare (not interrupts-enabled))
-  (macro-character-port-rlines-set! port (##fixnum.- line 1)))
+  (macro-character-port-rlines-set! port (##fx- line 1)))
 
 (define-prim (##input-port-line port)
   (##declare (not interrupts-enabled))
-  (##fixnum.+ (macro-character-port-rlines port) 1))
+  (##fx+ (macro-character-port-rlines port) 1))
 
 (define-prim (input-port-line port)
   (macro-force-vars (port)
@@ -4125,14 +4125,14 @@
   (##declare (not interrupts-enabled))
   (macro-character-port-rcurline-set!
    port
-   (##fixnum.+ (##fixnum.- (##fixnum.+ (macro-character-port-rchars port)
+   (##fx+ (##fx- (##fx+ (macro-character-port-rchars port)
                                        (macro-character-port-rlo port))
                            col)
                1)))
 
 (define-prim (##input-port-column port)
   (##declare (not interrupts-enabled))
-  (##fixnum.+ (##fixnum.- (##fixnum.+ (macro-character-port-rchars port)
+  (##fx+ (##fx- (##fx+ (macro-character-port-rchars port)
                                       (macro-character-port-rlo port))
                           (macro-character-port-rcurline port))
               1))
@@ -4144,11 +4144,11 @@
 
 (define-prim (##output-port-line-set! port line)
   (##declare (not interrupts-enabled))
-  (macro-character-port-wlines-set! port (##fixnum.- line 1)))
+  (macro-character-port-wlines-set! port (##fx- line 1)))
 
 (define-prim (##output-port-line port)
   (##declare (not interrupts-enabled))
-  (##fixnum.+ (macro-character-port-wlines port) 1))
+  (##fx+ (macro-character-port-wlines port) 1))
 
 (define-prim (output-port-line port)
   (macro-force-vars (port)
@@ -4159,14 +4159,14 @@
   (##declare (not interrupts-enabled))
   (macro-character-port-wcurline-set!
    port
-   (##fixnum.+ (##fixnum.- (##fixnum.+ (macro-character-port-wchars port)
+   (##fx+ (##fx- (##fx+ (macro-character-port-wchars port)
                                        (macro-character-port-whi port))
                            col)
                1)))
 
 (define-prim (##output-port-column port)
   (##declare (not interrupts-enabled))
-  (##fixnum.+ (##fixnum.- (##fixnum.+ (macro-character-port-wchars port)
+  (##fx+ (##fx- (##fx+ (macro-character-port-wchars port)
                                       (macro-character-port-whi port))
                           (macro-character-port-wcurline port))
               1))
@@ -4204,12 +4204,12 @@
     (##get-output-string port)))
 
 (define-prim (##object->string obj #!optional (max-length ##max-fixnum))
-  (if (##fixnum.< 0 max-length)
+  (if (##fx< 0 max-length)
     (let ((str
            (##object->truncated-string
             obj
-            (if (##fixnum.< max-length ##max-fixnum)
-              (##fixnum.+ max-length 1)
+            (if (##fx< max-length ##max-fixnum)
+              (##fx+ max-length 1)
               ##max-fixnum))))
       (##string->limited-string str max-length))
     (##string)))
@@ -4227,25 +4227,25 @@
           (##raise-range-exception 2 object->string obj m))
 
         (if (macro-exact-int? m)
-          (if (or (##not (##fixnum? m)) (##fixnum.negative? m))
+          (if (or (##not (##fixnum? m)) (##fxnegative? m))
             (range-error)
             (##object->string obj m))
           (type-error))))))
 
 (define-prim (##string->limited-string str max-length)
-  (if (##fixnum.< max-length (##string-length str))
+  (if (##fx< max-length (##string-length str))
     (##force-limited-string! (##substring str 0 max-length) max-length)
     str))
 
 (define-prim (##force-limited-string! str max-length)
-  (if (##fixnum.< 0 max-length)
+  (if (##fx< 0 max-length)
     (begin
-      (##string-set! str (##fixnum.- max-length 1) #\.)
-      (if (##fixnum.< 1 max-length)
+      (##string-set! str (##fx- max-length 1) #\.)
+      (if (##fx< 1 max-length)
         (begin
-          (##string-set! str (##fixnum.- max-length 2) #\.)
-          (if (##fixnum.< 2 max-length)
-            (##string-set! str (##fixnum.- max-length 3) #\.))))))
+          (##string-set! str (##fx- max-length 2) #\.)
+          (if (##fx< 2 max-length)
+            (##string-set! str (##fx- max-length 3) #\.))))))
   (##string-shrink! str max-length)
   str)
 
@@ -4266,7 +4266,7 @@
          (characters-buffered
           (if (macro-character-port-peek-eof? port)
             1
-            (##fixnum.- char-rhi char-rlo))))
+            (##fx- char-rhi char-rlo))))
     (macro-port-mutex-unlock! port)
     characters-buffered))
 
@@ -4292,7 +4292,7 @@
 
     (let ((char-rlo (macro-character-port-rlo port))
           (char-rhi (macro-character-port-rhi port)))
-      (if (##fixnum.< char-rlo char-rhi)
+      (if (##fx< char-rlo char-rhi)
         (begin
           (macro-port-mutex-unlock! port)
           #t)
@@ -4301,7 +4301,7 @@
                      1
                      #f)))
           (if (##fixnum? code)
-            (if (##fixnum.= code ##err-code-EAGAIN)
+            (if (##fx= code ##err-code-EAGAIN)
               (begin
                 (macro-port-mutex-unlock! port)
                 #f) ;; a call to read-char would block
@@ -4335,7 +4335,7 @@
 
     (let ((char-rlo (macro-character-port-rlo port))
           (char-rhi (macro-character-port-rhi port)))
-      (if (##fixnum.< char-rlo char-rhi)
+      (if (##fx< char-rlo char-rhi)
 
         ;; the next character is in the character read buffer
 
@@ -4362,7 +4362,7 @@
 
                    ;; the conversion or read caused an error
 
-                   (if (##fixnum.= code ##err-code-EAGAIN)
+                   (if (##fx= code ##err-code-EAGAIN)
                      (begin
                        (macro-character-port-peek-eof?-set! port #t)
                        (macro-port-mutex-unlock! port)
@@ -4406,7 +4406,7 @@
 
     (let ((char-rlo (macro-character-port-rlo port))
           (char-rhi (macro-character-port-rhi port)))
-      (if (##fixnum.< char-rlo char-rhi)
+      (if (##fx< char-rlo char-rhi)
 
         ;; the next character is in the character read buffer
 
@@ -4416,13 +4416,13 @@
             ;; frequent simple case, just advance rlo
 
             (begin
-              (macro-character-port-rlo-set! port (##fixnum.+ char-rlo 1))
+              (macro-character-port-rlo-set! port (##fx+ char-rlo 1))
               (macro-port-mutex-unlock! port)
               c)
 
             ;; end-of-line processing requires updating counters
 
-            (let ((char-rlo+1 (##fixnum.+ char-rlo 1)))
+            (let ((char-rlo+1 (##fx+ char-rlo 1)))
 
               ;; advance rlo
 
@@ -4432,13 +4432,13 @@
 
               (let ((char-rchars (macro-character-port-rchars port)))
                 (macro-character-port-rcurline-set! port
-                  (##fixnum.+ char-rchars char-rlo+1)))
+                  (##fx+ char-rchars char-rlo+1)))
 
               ;; keep track of number of lines read
 
               (let ((char-rlines (macro-character-port-rlines port)))
                 (macro-character-port-rlines-set! port
-                  (##fixnum.+ char-rlines 1)))
+                  (##fx+ char-rlines 1)))
 
               (macro-port-mutex-unlock! port)
               #\newline)))
@@ -4464,7 +4464,7 @@
                    ;; the conversion or read caused an error
 
                    (macro-port-mutex-unlock! port)
-                   (if (##fixnum.= code ##err-code-EAGAIN)
+                   (if (##fx= code ##err-code-EAGAIN)
                      #!eof ;; the read timeout thunk returned #f
                      (##raise-os-io-exception port #f code read-char port)))
 
@@ -4503,8 +4503,8 @@
   (##declare (not interrupts-enabled))
 
   (let loop ((n 0))
-    (let ((remaining (##fixnum.- end (##fixnum.+ start n))))
-      (if (##not (##fixnum.< 0 remaining))
+    (let ((remaining (##fx- end (##fx+ start n))))
+      (if (##not (##fx< 0 remaining))
           (begin
             (macro-port-mutex-unlock! port)
             n)
@@ -4513,13 +4513,13 @@
                  (char-rhi
                   (macro-character-port-rhi port))
                  (chars-buffered
-                  (##fixnum.- char-rhi char-rlo)))
-            (if (##fixnum.< 0 chars-buffered)
+                  (##fx- char-rhi char-rlo)))
+            (if (##fx< 0 chars-buffered)
 
                 (let* ((to-transfer
-                        (##fixnum.min remaining chars-buffered))
+                        (##fxmin remaining chars-buffered))
                        (limit
-                        (##fixnum.+ char-rlo to-transfer))
+                        (##fx+ char-rlo to-transfer))
                        (char-rbuf
                         (macro-character-port-rbuf port)))
                   (macro-character-port-rlo-set! port limit)
@@ -4528,11 +4528,11 @@
                    char-rlo
                    limit
                    str
-                   (##fixnum.+ start n))
+                   (##fx+ start n))
                   (let loop2 ((rlo char-rlo))
-                    (if (##fixnum.< rlo limit)
+                    (if (##fx< rlo limit)
                         (let ((c (##string-ref char-rbuf rlo))
-                              (rlo+1 (##fixnum.+ rlo 1)))
+                              (rlo+1 (##fx+ rlo 1)))
 
                           (if (##char=? c #\newline)
                               (begin
@@ -4542,24 +4542,24 @@
                                 (let ((char-rchars
                                        (macro-character-port-rchars port)))
                                   (macro-character-port-rcurline-set! port
-                                    (##fixnum.+ char-rchars rlo+1)))
+                                    (##fx+ char-rchars rlo+1)))
 
                                 ;; keep track of number of lines read
 
                                 (let ((char-rlines
                                        (macro-character-port-rlines port)))
                                   (macro-character-port-rlines-set! port
-                                    (##fixnum.+ char-rlines 1)))))
+                                    (##fx+ char-rlines 1)))))
 
                           (loop2 rlo+1))))
-                  (loop (##fixnum.+ n to-transfer)))
+                  (loop (##fx+ n to-transfer)))
 
                 (let ((code
                        ((macro-character-port-rbuf-fill port)
                         port
                         remaining
                         (or (##not (##fixnum? need))
-                            (##fixnum.< n need)))))
+                            (##fx< n need)))))
                   (cond ((##fixnum? code)
 
                          ;; an error occurred, signal an error if no
@@ -4569,8 +4569,8 @@
 
                          (macro-port-mutex-unlock! port)
 
-                         (if (or (##fixnum.< 0 n)
-                                 (##fixnum.= code ##err-code-EAGAIN))
+                         (if (or (##fx< 0 n)
+                                 (##fx= code ##err-code-EAGAIN))
                              n
                              (##raise-os-io-exception
                               port
@@ -4645,49 +4645,49 @@
   (define (read-chunk i ml)
     (if (##char? separator)
         (let loop ((i i))
-          (if (##fixnum.< i ml)
+          (if (##fx< i ml)
               (let ((c (macro-read-char port)))
                 (if (##char? c)
                     (if (##eq? c separator)
                         (if include-separator?
-                            (let ((s (##make-string (##fixnum.+ i 1))))
+                            (let ((s (##make-string (##fx+ i 1))))
                               (##string-set! s i c)
                               s)
                             (##make-string i))
-                        (let ((s (loop (##fixnum.+ i 1))))
+                        (let ((s (loop (##fx+ i 1))))
                           (##string-set! s i c)
                           s))
                     (##make-string i)))
               (##make-string i)))
         (let ((s (##make-string ml)))
           (let ((n (##read-substring s i ml port #f)))
-            (##string-shrink! s (##fixnum.+ i n))
+            (##string-shrink! s (##fx+ i n))
             s))))
 
-  (if (##fixnum.< 0 max-length)
+  (if (##fx< 0 max-length)
       (let ((first (macro-read-char port)))
 
         (define (start)
           (let* ((ml max-length)
-                 (m1 (##fixnum.min ml max-chunk-length))
+                 (m1 (##fxmin ml max-chunk-length))
                  (chunk1 (read-chunk 1 m1)))
             (##string-set! chunk1 0 first)
-            (if (or (##fixnum.< (##string-length chunk1) m1)
-                    (##eq? (##string-ref chunk1 (##fixnum.- m1 1))
+            (if (or (##fx< (##string-length chunk1) m1)
+                    (##eq? (##string-ref chunk1 (##fx- m1 1))
                            separator)
-                    (##fixnum.= ml m1))
+                    (##fx= ml m1))
                 chunk1
-                (let loop ((ml (##fixnum.- ml m1))
+                (let loop ((ml (##fx- ml m1))
                            (chunks (##list chunk1)))
-                  (let* ((m2 (##fixnum.min ml max-chunk-length))
+                  (let* ((m2 (##fxmin ml max-chunk-length))
                          (new-chunk (read-chunk 0 m2))
                          (new-chunks (##cons new-chunk chunks)))
-                    (if (or (##fixnum.< (##string-length new-chunk) m2)
-                            (##eq? (##string-ref new-chunk (##fixnum.- m2 1))
+                    (if (or (##fx< (##string-length new-chunk) m2)
+                            (##eq? (##string-ref new-chunk (##fx- m2 1))
                                    separator)
-                            (##fixnum.= ml m2))
+                            (##fx= ml m2))
                         (##append-strings (##reverse new-chunks))
-                        (loop (##fixnum.- ml m2)
+                        (loop (##fx- ml m2)
                               new-chunks)))))))
 
         (if (##char? first)
@@ -4877,15 +4877,15 @@
   (let loop ()
 
     (let ((char-wbuf (macro-character-port-wbuf port))
-          (char-whi+1 (##fixnum.+ (macro-character-port-whi port) 1)))
-      (if (##not (##fixnum.< (##string-length char-wbuf) char-whi+1))
+          (char-whi+1 (##fx+ (macro-character-port-whi port) 1)))
+      (if (##not (##fx< (##string-length char-wbuf) char-whi+1))
 
         ;; there is enough space in the character write buffer, so add
         ;; character and increment whi
 
         (let ()
 
-          (##string-set! char-wbuf (##fixnum.- char-whi+1 1) c)
+          (##string-set! char-wbuf (##fx- char-whi+1 1) c)
 
           ;; advance whi
 
@@ -4918,13 +4918,13 @@
 
               (let ((char-wchars (macro-character-port-wchars port)))
                 (macro-character-port-wcurline-set! port
-                  (##fixnum.+ char-wchars char-whi+1)))
+                  (##fx+ char-wchars char-whi+1)))
 
               ;; keep track of number of lines written
 
               (let ((char-wlines (macro-character-port-wlines port)))
                 (macro-character-port-wlines-set! port
-                  (##fixnum.+ char-wlines 1)))
+                  (##fx+ char-wlines 1)))
 
               ;; force output if port is not fully buffered
 
@@ -4950,7 +4950,7 @@
           (if (##fixnum? code3)
             (begin
               (macro-port-mutex-unlock! port)
-              (if (##fixnum.= code3 ##err-code-EAGAIN)
+              (if (##fx= code3 ##err-code-EAGAIN)
                 #f
                 (##raise-os-io-exception port #f code3 write-char c port)))
             (loop)))))))
@@ -4971,12 +4971,12 @@
 (define-prim (##write-substring str start end port)
   (##declare (not interrupts-enabled))
   (let loop ((i start))
-    (if (##fixnum.< i end)
+    (if (##fx< i end)
       (begin
         (macro-write-char (##string-ref str i) port)
         (let ()
           (##declare (interrupts-enabled))
-          (loop (##fixnum.+ i 1)))))))
+          (loop (##fx+ i 1)))))))
 
 (define-prim (write-substring
               str
@@ -5024,7 +5024,7 @@
 
      (macro-port-mutex-lock! ,port) ;; get exclusive access to port
 
-     (if (or (##fixnum.< (macro-character-port-rlo ,port)
+     (if (or (##fx< (macro-character-port-rlo ,port)
                          (macro-character-port-rhi ,port))
              (macro-character-port-peek-eof? ,port))
 
@@ -5045,7 +5045,7 @@
          (byte-rhi
           (macro-byte-port-rhi port))
          (bytes-buffered
-          (##fixnum.- byte-rhi byte-rlo)))
+          (##fx- byte-rhi byte-rlo)))
     (macro-port-mutex-unlock! port)
     bytes-buffered))
 
@@ -5069,12 +5069,12 @@
              (macro-byte-port-rlo port))
             (byte-rhi
              (macro-byte-port-rhi port)))
-       (if (##fixnum.< byte-rlo byte-rhi)
+       (if (##fx< byte-rlo byte-rhi)
            (let* ((byte-rbuf
                    (macro-byte-port-rbuf port))
                   (result
                    (##u8vector-ref byte-rbuf byte-rlo)))
-             (macro-byte-port-rlo-set! port (##fixnum.+ byte-rlo 1))
+             (macro-byte-port-rlo-set! port (##fx+ byte-rlo 1))
              (macro-port-mutex-unlock! port)
              result)
            (let ((code
@@ -5088,7 +5088,7 @@
 
                     (macro-port-mutex-unlock! port)
 
-                    (if (##fixnum.= code ##err-code-EAGAIN)
+                    (if (##fx= code ##err-code-EAGAIN)
                         #!eof ;; the read timeout thunk returned #f
                         (##raise-os-io-exception
                          port
@@ -5140,8 +5140,8 @@
    port
    (read-subu8vector u8vect start end port need)
    (let loop ((n 0))
-     (let ((remaining (##fixnum.- end (##fixnum.+ start n))))
-       (if (##not (##fixnum.< 0 remaining))
+     (let ((remaining (##fx- end (##fx+ start n))))
+       (if (##not (##fx< 0 remaining))
            (begin
              (macro-port-mutex-unlock! port)
              n)
@@ -5150,13 +5150,13 @@
                   (byte-rhi
                    (macro-byte-port-rhi port))
                   (bytes-buffered
-                   (##fixnum.- byte-rhi byte-rlo)))
-             (if (##fixnum.< 0 bytes-buffered)
+                   (##fx- byte-rhi byte-rlo)))
+             (if (##fx< 0 bytes-buffered)
 
                  (let* ((to-transfer
-                         (##fixnum.min remaining bytes-buffered))
+                         (##fxmin remaining bytes-buffered))
                         (limit
-                         (##fixnum.+ byte-rlo to-transfer))
+                         (##fx+ byte-rlo to-transfer))
                         (byte-rbuf
                          (macro-byte-port-rbuf port)))
                    (macro-byte-port-rlo-set! port limit)
@@ -5165,15 +5165,15 @@
                     byte-rlo
                     limit
                     u8vect
-                    (##fixnum.+ start n))
-                   (loop (##fixnum.+ n to-transfer)))
+                    (##fx+ start n))
+                   (loop (##fx+ n to-transfer)))
 
                  (let ((code
                         ((macro-byte-port-rbuf-fill port)
                          port
                          remaining
                          (or (##not (##fixnum? need))
-                             (##fixnum.< n need)))))
+                             (##fx< n need)))))
                    (cond ((##fixnum? code)
 
                           ;; an error occurred, signal an error if no
@@ -5183,8 +5183,8 @@
 
                           (macro-port-mutex-unlock! port)
 
-                          (if (or (##fixnum.< 0 n)
-                                  (##fixnum.= code ##err-code-EAGAIN))
+                          (if (or (##fx< 0 n)
+                                  (##fx= code ##err-code-EAGAIN))
                               n
                               (##raise-os-io-exception
                                port
@@ -5259,7 +5259,7 @@
   (macro-port-mutex-lock! port) ;; get exclusive access to port
 
   (let ((code
-         (and (##fixnum.< (macro-character-port-wlo port)
+         (and (##fx< (macro-character-port-wlo port)
                           (macro-character-port-whi port))
               ((macro-character-port-wbuf-drain port) port))))
     (if (##fixnum? code)
@@ -5280,10 +5280,10 @@
                (byte-wbuf
                 (macro-byte-port-wbuf port))
                (bytes-free
-                (##fixnum.- (##u8vector-length byte-wbuf) byte-whi)))
-          (if (##fixnum.< 0 bytes-free)
+                (##fx- (##u8vector-length byte-wbuf) byte-whi)))
+          (if (##fx< 0 bytes-free)
             (begin
-              (macro-byte-port-whi-set! port (##fixnum.+ byte-whi 1))
+              (macro-byte-port-whi-set! port (##fx+ byte-whi 1))
               (##u8vector-set! byte-wbuf byte-whi b)
 
               ;; force output if port is set for unbuffered output
@@ -5343,14 +5343,14 @@
   (macro-port-mutex-lock! port) ;; get exclusive access to port
 
   (let ((code
-         (and (##fixnum.< (macro-character-port-wlo port)
+         (and (##fx< (macro-character-port-wlo port)
                           (macro-character-port-whi port))
               ((macro-character-port-wbuf-drain port) port))))
     (if (##fixnum? code)
 
       (begin
         (macro-port-mutex-unlock! port)
-        (if (##fixnum.= code ##err-code-EAGAIN)
+        (if (##fx= code ##err-code-EAGAIN)
           0
           (##raise-os-io-exception
            port
@@ -5363,13 +5363,13 @@
            port)))
 
       (let loop1 ((n 0))
-        (let ((remaining (##fixnum.- end (##fixnum.+ start n))))
-          (if (##not (##fixnum.< 0 remaining))
+        (let ((remaining (##fx- end (##fx+ start n))))
+          (if (##not (##fx< 0 remaining))
             (begin
 
               ;; force output if port is set for unbuffered output
 
-              (if (and (##fixnum.< start end)
+              (if (and (##fx< start end)
                        (macro-unbuffered? (macro-port-woptions port)))
                 (begin
                   (macro-port-mutex-unlock! port)
@@ -5389,21 +5389,21 @@
                    (byte-wbuf
                     (macro-byte-port-wbuf port))
                    (bytes-free
-                    (##fixnum.- (##u8vector-length byte-wbuf) byte-whi)))
-              (if (##fixnum.< 0 bytes-free)
+                    (##fx- (##u8vector-length byte-wbuf) byte-whi)))
+              (if (##fx< 0 bytes-free)
                 (let* ((to-transfer
-                        (##fixnum.min remaining bytes-free))
+                        (##fxmin remaining bytes-free))
                        (limit
-                        (##fixnum.+ byte-whi to-transfer)))
+                        (##fx+ byte-whi to-transfer)))
                   (macro-byte-port-whi-set! port limit)
-                  (let loop2 ((i (##fixnum.+ start n))
+                  (let loop2 ((i (##fx+ start n))
                               (j byte-whi))
-                    (if (##fixnum.< j limit)
+                    (if (##fx< j limit)
                       (begin
                         (##u8vector-set! byte-wbuf j (##u8vector-ref u8vect i))
-                        (loop2 (##fixnum.+ i 1)
-                               (##fixnum.+ j 1)))))
-                  (loop1 (##fixnum.+ n to-transfer)))
+                        (loop2 (##fx+ i 1)
+                               (##fx+ j 1)))))
+                  (loop1 (##fx+ n to-transfer)))
                 (let ((code ((macro-byte-port-wbuf-drain port) port)))
                   (if (##fixnum? code)
                     (begin
@@ -5415,8 +5415,8 @@
 
                       (macro-port-mutex-unlock! port)
 
-                      (if (or (##fixnum.< 0 n)
-                              (##fixnum.= code ##err-code-EAGAIN))
+                      (if (or (##fx< 0 n)
+                              (##fx= code ##err-code-EAGAIN))
                         n
                         (##raise-os-io-exception
                          port
@@ -5468,30 +5468,30 @@
   (##declare (not interrupts-enabled))
 
   (let* ((rdevice
-          (if (##fixnum.= (macro-port-rkind port) (macro-none-kind))
+          (if (##fx= (macro-port-rkind port) (macro-none-kind))
             #f
             (macro-condvar-name (macro-device-port-rdevice-condvar port))))
          (wdevice
-          (if (##fixnum.= (macro-port-wkind port) (macro-none-kind))
+          (if (##fx= (macro-port-wkind port) (macro-none-kind))
             #f
             (macro-condvar-name (macro-device-port-wdevice-condvar port)))))
     (if (##eq? rdevice wdevice)
       (let ((code1
              (##os-device-stream-options-set! rdevice options)))
-        (if (##fixnum.< code1 0)
+        (if (##fx< code1 0)
           code1
           (##void)))
       (let ((code2
              (if rdevice
                (##os-device-stream-options-set! rdevice options)
                0)))
-        (if (##fixnum.< code2 0)
+        (if (##fx< code2 0)
           code2
           (let ((code3
                  (if wdevice
                    (##os-device-stream-options-set! wdevice options)
                    0)))
-            (if (##fixnum.< code3 0)
+            (if (##fx< code3 0)
               code3
               (##void))))))))
 
@@ -5531,12 +5531,12 @@
               (macro-port-woptions port))
              (woptions
               (##psettings->woptions psettings
-                                     (##fixnum.* old-woptions
+                                     (##fx* old-woptions
                                                  (macro-stream-options-output-shift)))))
         (let ((code
                (and (macro-output-port? port)
-                    (##not (##fixnum.= woptions old-woptions))
-                    (##fixnum.< (macro-character-port-wlo port)
+                    (##not (##fx= woptions old-woptions))
+                    (##fx< (macro-character-port-wlo port)
                                 (macro-character-port-whi port))
                     ((macro-character-port-wbuf-drain port) port))))
           (if (##fixnum? code)
@@ -5554,8 +5554,8 @@
             (let ((result
                    (##options-set!
                     port
-                    (##fixnum.+ roptions
-                                (##fixnum.* woptions
+                    (##fx+ roptions
+                                (##fx* woptions
                                             (macro-stream-options-output-shift))))))
               (if (##fixnum? result)
                 (begin
@@ -5579,12 +5579,12 @@
                              (if (macro-unbuffered? roptions)
                                1
                                512)))
-                        (if (##not (##fixnum.= (##string-length rbuf)
+                        (if (##not (##fx= (##string-length rbuf)
                                                new-char-buf-len))
                           (let ((new-rbuf (##make-string new-char-buf-len)))
                             (macro-character-port-rchars-set!
                              port
-                             (##fixnum.+ (macro-character-port-rchars port)
+                             (##fx+ (macro-character-port-rchars port)
                                          (macro-character-port-rlo port)))
                             (macro-character-port-rlo-set! port 0)
                             (macro-character-port-rhi-set! port 0)
@@ -5596,12 +5596,12 @@
                              (if (macro-unbuffered? woptions)
                                1
                                512)))
-                        (if (##not (##fixnum.= (##string-length wbuf)
+                        (if (##not (##fx= (##string-length wbuf)
                                                new-char-buf-len))
                           (let ((new-wbuf (##make-string new-char-buf-len)))
                             (macro-character-port-rchars-set!
                              port
-                             (##fixnum.+ (macro-character-port-wchars port)
+                             (##fx+ (macro-character-port-wchars port)
                                          (macro-character-port-whi port)))
                             (macro-character-port-wlo-set! port 0)
                             (macro-character-port-whi-set! port 0)
@@ -5638,7 +5638,7 @@
           (##port-device port)
           term-type
           emacs-bindings)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
         (##raise-os-io-exception port #f code tty-type-set! port term-type emacs-bindings)
         (##void))))
 
@@ -5693,7 +5693,7 @@
 
 (define-prim (##tty-history-set! port history)
   (let ((code (##os-device-tty-history-set! (##port-device port) history)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
         (##raise-os-io-exception port #f code tty-history-set! port history)
         (##void))))
 
@@ -5756,7 +5756,7 @@
           input-raw
           output-raw
           speed)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
         (##raise-os-io-exception
          port
          #f
@@ -5867,15 +5867,15 @@
            (macro-psettings-pseudo-term psettings))
           (show-console
            (macro-psettings-show-console psettings)))
-      (##fixnum.+
+      (##fx+
        stdin-redir
-       (##fixnum.+
-        (##fixnum.* 2 stdout-redir)
-        (##fixnum.+
-         (##fixnum.* 4 stderr-redir)
-         (##fixnum.+
-          (##fixnum.* 8 pseudo-term)
-          (##fixnum.* 16 show-console)))))))
+       (##fx+
+        (##fx* 2 stdout-redir)
+        (##fx+
+         (##fx* 4 stderr-redir)
+         (##fx+
+          (##fx* 8 pseudo-term)
+          (##fx* 16 show-console)))))))
 
   (define (fail)
     (##fail-check-string-or-settings 1 prim path-or-settings arg2))
@@ -5933,9 +5933,9 @@
                             psettings)))
 
                       ;; close unused direction
-                      (cond ((##fixnum.= direction (macro-direction-in))
+                      (cond ((##fx= direction (macro-direction-in))
                              (##close-output-port port))
-                            ((##fixnum.= direction (macro-direction-out))
+                            ((##fx= direction (macro-direction-out))
                              (##close-input-port port)))
 
                       (cont port)))))))))))
@@ -6080,13 +6080,13 @@
       (let ((result (##os-device-process-status (##port-device port))))
         (cond ((##not result)
                (let ((now (##current-time-point)))
-                 (if (##flonum.< now timeout)
+                 (if (##fl< now timeout)
                    (begin
                      ;; Polling is evil but fixing this would require
                      ;; substantial changes to the I/O subsystem.  We'll
                      ;; tackle that in a future release.
                      (##thread-sleep! poll-interval)
-                     (loop (##flonum.min 0.2 (##flonum.* 1.2 poll-interval))))
+                     (loop (##flmin 0.2 (##fl* 1.2 poll-interval))))
                    (if (##eq? timeout-val (macro-absent-obj))
                      (##raise-unterminated-process-exception
                       port
@@ -6094,7 +6094,7 @@
                       port
                       timeout-val)
                      timeout-val))))
-              ((##fixnum.< result 0)
+              ((##fx< result 0)
                (##raise-os-io-exception port #f result process-status port))
               (else
                result))))))
@@ -6154,9 +6154,9 @@
 
 (define-prim (##ip-address? obj)
   (cond ((##u8vector? obj)
-         (##fixnum.= (##u8vector-length obj) 4))
+         (##fx= (##u8vector-length obj) 4))
         ((##u16vector? obj)
-         (##fixnum.= (##u16vector-length obj) 8))
+         (##fx= (##u16vector-length obj) 8))
         (else
          #f)))
 
@@ -6341,8 +6341,8 @@
            (macro-psettings-coalesce psettings))
           (keep-alive
            (macro-psettings-keep-alive psettings)))
-      (##fixnum.+
-       (##fixnum.* 2 coalesce)
+      (##fx+
+       (##fx* 2 coalesce)
        keep-alive)))
 
   (define (fail)
@@ -6422,7 +6422,7 @@
             (##eq? prim tcp-client-peer-socket-info))))
       (if (##fixnum? result)
 
-        (if (and (##fixnum.= result ##err-code-EAGAIN)
+        (if (and (##fx= result ##err-code-EAGAIN)
                  (or (##wait-for-io!
                       (macro-device-port-wdevice-condvar port)
                       (macro-port-wtimeout port))
@@ -6513,7 +6513,7 @@
       (define (check-host arg-num)
         (if (##eq? host (macro-absent-obj))
             (check-service arg-num "")
-            (let ((arg-num (##fixnum.+ arg-num 2)))
+            (let ((arg-num (##fx+ arg-num 2)))
               (macro-check-string
                 host
                 arg-num
@@ -6528,7 +6528,7 @@
       (define (check-service arg-num h)
         (if (##eq? service (macro-absent-obj))
             (check-flags arg-num h "")
-            (let ((arg-num (##fixnum.+ arg-num 2)))
+            (let ((arg-num (##fx+ arg-num 2)))
               (macro-check-string
                 service
                 arg-num
@@ -6543,7 +6543,7 @@
       (define (check-flags arg-num h s)
         (if (##eq? flags (macro-absent-obj))
             (check-family arg-num h s 0)
-            (let ((arg-num (##fixnum.+ arg-num 2)))
+            (let ((arg-num (##fx+ arg-num 2)))
               (macro-check-fixnum-range-incl
                 flags
                 arg-num
@@ -6560,7 +6560,7 @@
       (define (check-family arg-num h s f)
         (if (##eq? family (macro-absent-obj))
             (check-socket-type arg-num h s f 0)
-            (let ((arg-num (##fixnum.+ arg-num 2)))
+            (let ((arg-num (##fx+ arg-num 2)))
               (let ((x (##net-family-encode family)))
                 (if (##eq? x family)
                     (##raise-type-exception
@@ -6579,7 +6579,7 @@
       (define (check-socket-type arg-num h s f fam)
         (if (##eq? socket-type (macro-absent-obj))
             (check-protocol arg-num h s f fam 0)
-            (let ((arg-num (##fixnum.+ arg-num 2)))
+            (let ((arg-num (##fx+ arg-num 2)))
               (let ((x (##net-socket-type-encode socket-type)))
                 (if (##eq? x socket-type)
                     (##raise-type-exception
@@ -6598,7 +6598,7 @@
       (define (check-protocol arg-num h s f fam st)
         (if (##eq? protocol (macro-absent-obj))
             (checks-done h s f fam st 0)
-            (let ((arg-num (##fixnum.+ arg-num 2)))
+            (let ((arg-num (##fx+ arg-num 2)))
               (let ((x (##net-protocol-encode protocol)))
                 (if (##eq? x protocol)
                     (##raise-type-exception
@@ -6731,13 +6731,13 @@
                      (macro-tcp-server-port-rdevice-condvar port)))))
               (if (##fixnum? client-device)
 
-                (cond ((##fixnum.= client-device ##err-code-EINTR)
+                (cond ((##fx= client-device ##err-code-EINTR)
 
                        ;; the read was interrupted, so try again
 
                        (loop))
 
-                      ((##fixnum.= client-device ##err-code-EAGAIN)
+                      ((##fx= client-device ##err-code-EAGAIN)
 
                        ;; the read would block, so wait and then try again
 
@@ -6900,10 +6900,10 @@
            (macro-psettings-coalesce psettings))
           (keep-alive
            (macro-psettings-keep-alive psettings)))
-      (##fixnum.+
-       (##fixnum.* 2048 reuse-address)
-       (##fixnum.+
-        (##fixnum.* 2 coalesce)
+      (##fx+
+       (##fx* 2048 reuse-address)
+       (##fx+
+        (##fx* 2 coalesce)
         keep-alive))))
 
   (let* ((psettings
@@ -7087,13 +7087,13 @@
                      (macro-directory-port-rdevice-condvar port)))))
               (if (##fixnum? datum)
 
-                (cond ((##fixnum.= datum ##err-code-EINTR)
+                (cond ((##fx= datum ##err-code-EINTR)
 
                        ;; the read was interrupted, so try again
 
                        (loop))
 
-                      ((##fixnum.= datum ##err-code-EAGAIN)
+                      ((##fx= datum ##err-code-EAGAIN)
 
                        ;; the read would block, so wait and then try again
 
@@ -7290,13 +7290,13 @@
                      (macro-event-queue-port-rdevice-condvar port)))))
               (if (##fixnum? datum)
 
-                (cond ((##fixnum.= datum ##err-code-EINTR)
+                (cond ((##fx= datum ##err-code-EINTR)
 
                        ;; the read was interrupted, so try again
 
                        (loop))
 
-                      ((##fixnum.= datum ##err-code-EAGAIN)
+                      ((##fx= datum ##err-code-EAGAIN)
 
                        ;; the read would block, so wait and then try again
 
@@ -7724,20 +7724,20 @@
   `(macro-read-char (macro-readenv-port ,re)))
 
 (define-prim (##make-filepos line col char-count)
-  (if (and (##fixnum.< line (macro-max-lines))
-           (##not (##fixnum.< (macro-max-fixnum32-div-max-lines) col)))
-    (##fixnum.+ line (##fixnum.* col (macro-max-lines)))
-    (##fixnum.- 0 char-count)))
+  (if (and (##fx< line (macro-max-lines))
+           (##not (##fx< (macro-max-fixnum32-div-max-lines) col)))
+    (##fx+ line (##fx* col (macro-max-lines)))
+    (##fx- 0 char-count)))
 
 (define-prim (##filepos-line filepos)
-  (if (##fixnum.< filepos 0)
+  (if (##fx< filepos 0)
     0
-    (##fixnum.modulo filepos (macro-max-lines))))
+    (##fxmodulo filepos (macro-max-lines))))
 
 (define-prim (##filepos-col filepos)
-  (if (##fixnum.< filepos 0)
-    (##fixnum.- 0 filepos)
-    (##fixnum.quotient filepos (macro-max-lines))))
+  (if (##fx< filepos 0)
+    (##fx- 0 filepos)
+    (##fxquotient filepos (macro-max-lines))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -7938,37 +7938,37 @@
          (let loop2 ((end start))
 
          (define (next)
-           (if (##fixnum.< end
+           (if (##fx< end
                            (##string-length script-line-or-program-path))
-             (loop1 (##fixnum.+ end 1))
+             (loop1 (##fx+ end 1))
              #f))
 
-           (if (and (##fixnum.<
+           (if (and (##fx<
                      end
                      (##string-length script-line-or-program-path))
                     (let ((c (##string-ref script-line-or-program-path end)))
                       (constituent? c)))
-             (loop2 (##fixnum.+ end 1))
-             (if (##fixnum.= start end)
+             (loop2 (##fx+ end 1))
+             (if (##fx= start end)
                (next)
                (let loop3 ((lst ##language-specs))
                  (if (##pair? lst)
                    (let* ((language (##car lst))
                           (name (macro-language-name language))
                           (len (##string-length name)))
-                     (if (##not (##fixnum.= (##fixnum.- end start) len))
+                     (if (##not (##fx= (##fx- end start) len))
                        (loop3 (##cdr lst))
                        (let loop4 ((j start) (k 0))
-                         (if (##fixnum.< j end)
+                         (if (##fx< j end)
                            (if (##char=? (##string-ref
                                           script-line-or-program-path
                                           j)
                                          (##string-ref name k))
-                             (loop4 (##fixnum.+ j 1)
-                                    (##fixnum.+ k 1))
+                             (loop4 (##fx+ j 1)
+                                    (##fx+ k 1))
                              (loop3 (##cdr lst)))
                            (let loop5 ((end end))
-                             (if (##fixnum.< (##fixnum.+ end 2)
+                             (if (##fx< (##fx+ end 2)
                                              (##string-length
                                               script-line-or-program-path))
                                (if (and (##char=? (##string-ref
@@ -7977,19 +7977,19 @@
                                                   #\space)
                                         (##char=? (##string-ref
                                                    script-line-or-program-path
-                                                   (##fixnum.+ end 1))
+                                                   (##fx+ end 1))
                                                   #\-)
                                         (##char=? (##string-ref
                                                    script-line-or-program-path
-                                                   (##fixnum.+ end 2))
+                                                   (##fx+ end 2))
                                                   #\:))
                                  (##cons language
                                          (##substring
                                           script-line-or-program-path
-                                          (##fixnum.+ end 1)
+                                          (##fx+ end 1)
                                           (##string-length
                                            script-line-or-program-path)))
-                                 (loop5 (##fixnum.+ end 1)))
+                                 (loop5 (##fx+ end 1)))
                                (##cons language
                                        "")))))))
                    (next)))))))))
@@ -8008,10 +8008,10 @@
 
 (define-prim (##readtable-setup-for-standard-level! rt)
   (let ((standard-level (##get-standard-level)))
-    (cond ((##fixnum.= 1 standard-level)
+    (cond ((##fx= 1 standard-level)
            (macro-readtable-case-conversion?-set! rt #f)
            (macro-readtable-keywords-allowed?-set! rt #t))
-          ((##fixnum.< 1 standard-level)
+          ((##fx< 1 standard-level)
            (macro-readtable-case-conversion?-set! rt #t)
            (macro-readtable-keywords-allowed?-set! rt #f)))))
 
@@ -8077,7 +8077,7 @@
       (if x
         (let ((id (##cdr x)))
           (if (and stamp? (##eq? id #t))
-            (let ((n (##fixnum.+ (##vector-ref table 0) 1)))
+            (let ((n (##fx+ (##vector-ref table 0) 1)))
               (##vector-set! table 0 n)
               (##set-cdr! x n)
               x)
@@ -8097,7 +8097,7 @@
         (let* ((x (##car lst))
                (id (##cdr x)))
           (if (and (##fixnum? id)
-                   (##fixnum.< n id))
+                   (##fx< n id))
             (##set-cdr! x #t))
           (loop (##cdr lst)))))))
 )
@@ -8121,7 +8121,7 @@
 
 (define-prim (##default-wr we obj)
   (let ((limit (macro-writeenv-limit we)))
-    (if (##fixnum.< 0 limit)
+    (if (##fx< 0 limit)
       (cond ((##symbol? obj)
              (##wr-symbol we obj))
             ((##keyword? obj)
@@ -8191,31 +8191,31 @@
 
 (define-prim (##wr-substr we s i j)
   (let ((limit (macro-writeenv-limit we)))
-    (if (##fixnum.< 0 limit)
-      (let ((len (##fixnum.- j i))
+    (if (##fx< 0 limit)
+      (let ((len (##fx- j i))
             (port (macro-writeenv-port we)))
-        (if (##fixnum.< limit len)
+        (if (##fx< limit len)
           (begin
-            (##write-substring s i (##fixnum.+ i limit) port)
+            (##write-substring s i (##fx+ i limit) port)
             (macro-writeenv-limit-set! we 0))
           (begin
             (##write-substring s i j port)
-            (macro-writeenv-limit-set! we (##fixnum.- limit len))))))))
+            (macro-writeenv-limit-set! we (##fx- limit len))))))))
 
 (define-prim (##wr-ch we c)
   (let ((limit (macro-writeenv-limit we)))
-    (if (##fixnum.< 0 limit)
+    (if (##fx< 0 limit)
       (begin
         (##write-char c (macro-writeenv-port we))
-        (macro-writeenv-limit-set! we (##fixnum.- limit 1))))))
+        (macro-writeenv-limit-set! we (##fx- limit 1))))))
 
 (define-prim (##wr-filler we n str)
   (let ((len (##string-length str)))
     (let loop ((i n))
-      (if (##fixnum.< 0 i)
-          (let ((x (if (##fixnum.< len i) len i)))
+      (if (##fx< 0 i)
+          (let ((x (if (##fx< len i) len i)))
             (##wr-substr we str 0 x)
-            (loop (##fixnum.- i x)))))))
+            (loop (##fx- i x)))))))
 
 (define-prim (##wr-spaces we n)
   (##wr-filler we n "                                        "))
@@ -8224,7 +8224,7 @@
 (set! ##pretty-print-shifting-allowed? #t)
 
 (define-prim (##wr-indent we shifted-col)
-  (if (##fixnum.> (##output-port-column (macro-writeenv-port we)) 1)
+  (if (##fx> (##output-port-column (macro-writeenv-port we)) 1)
       (##wr-ch we #\newline))
   (let ((col
          (if ##pretty-print-shifting-allowed?
@@ -8235,33 +8235,33 @@
                       (width
                        (macro-writeenv-width we))
                       (width/2
-                       (##fixnum.quotient width 2))
+                       (##fxquotient width 2))
                       (lo-lim
-                       (##fixnum.min
+                       (##fxmin
                         margin-width
-                        (##fixnum.quotient width 5)))
+                        (##fxquotient width 5)))
                       (hi-lim
-                       (##fixnum.max
-                        (##fixnum.- width margin-width)
-                        (##fixnum.quotient (##fixnum.* width 4) 5)))
+                       (##fxmax
+                        (##fx- width margin-width)
+                        (##fxquotient (##fx* width 4) 5)))
                       (col
-                       (##fixnum.- shifted-col shift)))
-                 (cond ((##fixnum.< col lo-lim)
-                        (if (##fixnum.= shift 0)
+                       (##fx- shifted-col shift)))
+                 (cond ((##fx< col lo-lim)
+                        (if (##fx= shift 0)
                             col
-                            (let ((s (##fixnum.min shift width/2)))
+                            (let ((s (##fxmin shift width/2)))
                               (macro-writeenv-shift-set!
                                we
-                               (##fixnum.- shift s))
+                               (##fx- shift s))
                               (##wr-str we ";;")
                               (##wr-filler we s ">>>>>>>>")
                               (##wr-ch we #\newline)
                               (loop))))
-                       ((##fixnum.> col hi-lim)
+                       ((##fx> col hi-lim)
                         (let ((s width/2))
                           (macro-writeenv-shift-set!
                            we
-                           (##fixnum.+ shift s))
+                           (##fx+ shift s))
                           (##wr-str we ";;")
                           (##wr-filler we s "<<<<<<<<")
                           (##wr-ch we #\newline)
@@ -8269,10 +8269,10 @@
                        (else
                         col))))
              shifted-col)))
-    (##wr-spaces we (##fixnum.- col 1))))
+    (##wr-spaces we (##fx- col 1))))
 
 (define-prim (##shifted-column we)
-  (##fixnum.+ (macro-writeenv-shift we)
+  (##fx+ (macro-writeenv-shift we)
               (##output-port-column (macro-writeenv-port we))))
 
 (define-prim (##wr-sn we obj type name)
@@ -8356,16 +8356,16 @@
 
 (define-prim (##escape-symbol? we str)
   (let ((n (##string-length str)))
-    (or (##fixnum.= n 0)
-        (and (##fixnum.= n 1)
+    (or (##fx= n 0)
+        (and (##fx= n 1)
              (##char=? (##string-ref str 0) #\.))
         (and (##char=? (##string-ref str 0) #\#)
-             (or (##fixnum.= n 1)
+             (or (##fx= n 1)
                  (let ((next (##string-ref str 1)))
                    (and (##not (##char=? next #\#))
                         (##not (##char=? next #\%))))))
         (##string->number str 10 #t)
-        (and (##fixnum.< 1 n)
+        (and (##fx< 1 n)
              (let ((keywords-allowed?
                     (macro-readtable-keywords-allowed?
                      (macro-writeenv-readtable we))))
@@ -8374,21 +8374,21 @@
                                str
                                (if (##eq? keywords-allowed? 'prefix)
                                  0
-                                 (##fixnum.- n 1)))
+                                 (##fx- n 1)))
                               #\:))))
         (##escape-symkey? we str))))
 
 (define-prim (##escape-symkey? we str);;;;;;;;;;;;;;;;;;;;;;;;;;
   (let ((n (##string-length str)))
-    (let loop ((i (##fixnum.- n 1)))
-      (if (##fixnum.< i 0)
+    (let loop ((i (##fx- n 1)))
+      (if (##fx< i 0)
         #f
         (let ((c (##string-ref str i))
               (rt (macro-writeenv-readtable we)))
           (or (macro-must-escape-char? rt c)
               (##readtable-char-delimiter? rt c)
               (##not (##char=? c (##readtable-convert-case rt c)))
-              (loop (##fixnum.- i 1))))))))
+              (loop (##fx- i 1))))))))
 
 (define-prim (##wr-keyword we obj)
   (let ((uninterned? (##uninterned-keyword? obj)))
@@ -8419,9 +8419,9 @@
 
 (define-prim (##escape-keyword? we str)
   (let ((n (##string-length str)))
-    (or (##fixnum.= n 0)
+    (or (##fx= n 0)
         (and (##char=? (##string-ref str 0) #\#)
-             (or (##fixnum.= n 1)
+             (or (##fx= n 1)
                  (let ((next (##string-ref str 1)))
                    (and (##not (##char=? next #\#))
                         (##not (##char=? next #\%)))))
@@ -8448,7 +8448,7 @@
       ;; correct and modular.
 
       (let ((limit (macro-writeenv-limit we)))
-        (if (##fixnum.< 1 limit) ;; speed up ",,,,,,xxx" case
+        (if (##fx< 1 limit) ;; speed up ",,,,,,xxx" case
           (let* ((mt
                   (macro-writeenv-marktable we))
                  (state
@@ -8470,7 +8470,7 @@
             (##wr we2 (##car tail))
             (if mt (##marktable-restore! mt state))
             (let ((str (##get-output-string port)))
-              (if (or (##fixnum.< (##string-length str) 1)
+              (if (or (##fx< (##string-length str) 1)
                       (##char=? (##string-ref str 0) #\@))
                 str2 ;; force a space after the comma
                 str1)))
@@ -8589,7 +8589,7 @@
                         (##symbol? (force-if-required we (##car tail))))
                  '#(2 #t 3 #f 1)
                  (##cdr x)))
-              ((##fixnum.< (##string-length (##symbol->string head))
+              ((##fx< (##string-length (##symbol->string head))
                            ##list-max-head)
                '#(1 #f 0 #f 1))
               (else
@@ -8602,15 +8602,15 @@
 
     (let ((level
            (macro-writeenv-level we)))
-      (if (##not (##fixnum.< level
+      (if (##not (##fx< level
                              (macro-readtable-max-write-level
                               (macro-writeenv-readtable we))))
         (##wr-str we "...")
         (let* ((close-parens
                 (macro-writeenv-close-parens we))
                (new-close-parens
-                (##fixnum.+ close-parens 1)))
-          (macro-writeenv-level-set! we (##fixnum.+ level 1))
+                (##fx+ close-parens 1)))
+          (macro-writeenv-level-set! we (##fx+ level 1))
           (let ((start-col (##shifted-column we)))
             (let loop ((lst obj)
                        (i 0)
@@ -8618,18 +8618,18 @@
 
               (define (wr-elem elem)
                 (let ((new-col
-                       (cond ((##fixnum.= i 0)
+                       (cond ((##fx= i 0)
                               col)
-                             ((or (##fixnum.< (##vector-ref format 4) 0)
-                                  (##fixnum.< i (##vector-ref format 0)))
+                             ((or (##fx< (##vector-ref format 4) 0)
+                                  (##fx< i (##vector-ref format 0)))
                               (##wr-ch we #\space)
                               col)
-                             ((##fixnum.= i (##vector-ref format 0))
+                             ((##fx= i (##vector-ref format 0))
                               (##wr-ch we #\space)
                               (##shifted-column we))
-                             ((##fixnum.= i (##vector-ref format 2))
+                             ((##fx= i (##vector-ref format 2))
                               (let ((new-col
-                                     (##fixnum.+ start-col
+                                     (##fx+ start-col
                                                  (##vector-ref format 4))))
                                 (##wr-indent we new-col)
                                 new-col))
@@ -8640,7 +8640,7 @@
                     (wr-list
                      we
                      elem
-                     (if (##fixnum.< i (##vector-ref format 2))
+                     (if (##fx< i (##vector-ref format 2))
                        (##vector-ref format 1)
                        (##vector-ref format 3)))
                     (##wr we elem))
@@ -8652,14 +8652,14 @@
                   (wr-elem str)
                   (macro-writeenv-style-set! we style)))
 
-              (if (##fixnum.< 0 (macro-writeenv-limit we))
+              (if (##fx< 0 (macro-writeenv-limit we))
                 (cond ((##pair? lst)
-                       (if (##not (##fixnum.< i
+                       (if (##not (##fx< i
                                               (macro-readtable-max-write-length
                                                (macro-writeenv-readtable we))))
                          (wr-str "...")
                          (let ((mt (macro-writeenv-marktable we)))
-                           (if (and (##fixnum.< 0 i)
+                           (if (and (##fx< 0 i)
                                     mt
                                     (##marktable-lookup! mt lst #f))
                              (begin
@@ -8691,7 +8691,7 @@
                                       new-close-parens
                                       0))
                                    (loop tail
-                                         (##fixnum.+ i 1)
+                                         (##fx+ i 1)
                                          (wr-elem head)))))))))
                       ((##not (##null? lst))
                        (wr-str ".")
@@ -8739,9 +8739,9 @@
   (let* ((col
           (##shifted-column we))
          (available-space-for-obj
-          (##fixnum.-
-           (##fixnum.-
-            (##fixnum.+
+          (##fx-
+           (##fx-
+            (##fx+
              (macro-writeenv-shift we)
              (macro-writeenv-width we))
             (macro-writeenv-close-parens we))
@@ -8775,10 +8775,10 @@
            (macro-writeenv-shift we)
            (macro-writeenv-close-parens we)
            (macro-writeenv-level we)
-           (##fixnum.+ available-space-for-obj 1))))
+           (##fx+ available-space-for-obj 1))))
     (wr-obj we2 obj)
     (let ((str (##get-output-string port)))
-      (if (##fixnum.< available-space-for-obj (##string-length str))
+      (if (##fx< available-space-for-obj (##string-length str))
         (begin
           (if mt (##marktable-restore! mt state))
           #f)
@@ -8810,11 +8810,11 @@
                       obj))
               (##wr-ch we obj))
              (else
-              (let ((n (##fixnum.<-char obj)))
-                (cond ((##fixnum.< #xffff n)
+              (let ((n (##fx<-char obj)))
+                (cond ((##fx< #xffff n)
                        (##wr-ch we #\U)
                        (##wr-hex we n 8))
-                      ((##fixnum.< #xff n)
+                      ((##fx< #xff n)
                        (##wr-ch we #\u)
                        (##wr-hex we n 4))
                       (else
@@ -8823,23 +8823,23 @@
 
 (define-prim (##wr-hex we n nb-digits)
   (if (if nb-digits
-        (##fixnum.< 1 nb-digits)
-        (##fixnum.< 15 n))
+        (##fx< 1 nb-digits)
+        (##fx< 15 n))
     (##wr-hex we
-              (##fixnum.arithmetic-shift-right n 4)
-              (and nb-digits (##fixnum.- nb-digits 1))))
+              (##fxarithmetic-shift-right n 4)
+              (and nb-digits (##fx- nb-digits 1))))
   (##wr-ch we
-           (##string-ref ##digit-to-char-table (##fixnum.bitwise-and n 15))))
+           (##string-ref ##digit-to-char-table (##fxand n 15))))
 
 (define-prim (##wr-oct we n nb-digits)
   (if (if nb-digits
-        (##fixnum.< 1 nb-digits)
-        (##fixnum.< 7 n))
+        (##fx< 1 nb-digits)
+        (##fx< 7 n))
     (##wr-oct we
-              (##fixnum.arithmetic-shift-right n 3)
-              (and nb-digits (##fixnum.- nb-digits 1))))
+              (##fxarithmetic-shift-right n 3)
+              (and nb-digits (##fx- nb-digits 1))))
   (##wr-ch we
-           (##string-ref ##digit-to-char-table (##fixnum.bitwise-and n 7))))
+           (##string-ref ##digit-to-char-table (##fxand n 7))))
 
 (define-prim (##wr-string we obj)
   (case (macro-writeenv-style we)
@@ -8854,11 +8854,11 @@
 (define-prim (##wr-escaped-string we s special-escape)
   (##wr-ch we special-escape)
   (let loop ((i 0) (j 0) (escape-digit-limit #f))
-    (if (##fixnum.< j (##string-length s))
+    (if (##fx< j (##string-length s))
       (let* ((c
               (##string-ref s j))
              (n
-              (##fixnum.<-char c))
+              (##fx<-char c))
              (ctrl-char?
               (macro-ctrl-char? c))
              (x
@@ -8874,16 +8874,16 @@
                     (else
                      #f)))
              (j+1
-              (##fixnum.+ j 1)))
+              (##fx+ j 1)))
         (if (if ctrl-char?
               (macro-readtable-escape-ctrl-chars?
                (macro-writeenv-readtable we))
               (or x
                   (macro-gt-max-unescaped-char? (macro-writeenv-readtable we) c)
                   (and escape-digit-limit
-                       (##fixnum.< n 128)
+                       (##fx< n 128)
                        (##not (##char=? c #\#)) ;; avoid treating "#" like "0"
-                       (##fixnum.< (##u8vector-ref ##char-to-digit-table n)
+                       (##fx< (##u8vector-ref ##char-to-digit-table n)
                                    escape-digit-limit))))
           (begin
             (##wr-substr we s i j)
@@ -8891,11 +8891,11 @@
             (cond (x
                    (##wr-ch we x)
                    (loop j+1 j+1 #f))
-                  ((##fixnum.< #xffff n)
+                  ((##fx< #xffff n)
                    (##wr-ch we #\U)
                    (##wr-hex we n 8)
                    (loop j+1 j+1 #f))
-                  ((##fixnum.< #xff n)
+                  ((##fx< #xff n)
                    (##wr-ch we #\u)
                    (##wr-hex we n 4)
                    (loop j+1 j+1 #f))
@@ -8906,7 +8906,7 @@
                    (loop j+1 j+1 16))
                   (else
                    (##wr-oct we n #f)
-                   (loop j+1 j+1 (if (##fixnum.< n 32) 8 #f)))))
+                   (loop j+1 j+1 (if (##fx< n 32) 8 #f)))))
           (loop i j+1 #f)))
       (begin
         (##wr-substr we s i j)
@@ -8952,19 +8952,19 @@
 (define-prim (##wr-vector-aux2 we obj len vect-ref)
   (let ((level
          (macro-writeenv-level we)))
-    (if (##fixnum.< level
+    (if (##fx< level
                     (macro-readtable-max-write-level
                      (macro-writeenv-readtable we)))
       (begin
-        (macro-writeenv-level-set! we (##fixnum.+ level 1))
+        (macro-writeenv-level-set! we (##fx+ level 1))
         (let loop ((i 0))
-          (if (##fixnum.< i len)
-            (if (##fixnum.< i
+          (if (##fx< i len)
+            (if (##fx< i
                             (macro-readtable-max-write-length
                              (macro-writeenv-readtable we)))
               (begin
                 (##wr we (vect-ref obj i))
-                (loop (##fixnum.+ i 1))))))
+                (loop (##fx+ i 1))))))
         (macro-writeenv-level-set! we level)))))
 
 (define-prim (##wr-vector-aux3 we obj len vect-ref open-close)
@@ -8975,36 +8975,36 @@
 
     (let ((level
            (macro-writeenv-level we)))
-      (if (##not (##fixnum.< level
+      (if (##not (##fx< level
                              (macro-readtable-max-write-level
                               (macro-writeenv-readtable we))))
         (##wr-str we "...")
         (let* ((close-parens
                 (macro-writeenv-close-parens we))
                (new-close-parens
-                (##fixnum.+ close-parens 1)))
-          (macro-writeenv-level-set! we (##fixnum.+ level 1))
+                (##fx+ close-parens 1)))
+          (macro-writeenv-level-set! we (##fx+ level 1))
           (let ((start-col
                  (##shifted-column we)))
             (let loop ((i 0))
-              (if (##fixnum.< 0 (macro-writeenv-limit we))
-                (if (##fixnum.< i len)
+              (if (##fx< 0 (macro-writeenv-limit we))
+                (if (##fx< i len)
                   (let ()
-                    (if (##fixnum.< 0 i)
+                    (if (##fx< 0 i)
                         (case (macro-writeenv-style we)
                           ((pretty-print) (##wr-indent we start-col))
                           (else           (##wr-ch we #\space))))
-                    (if (##not (##fixnum.< i
+                    (if (##not (##fx< i
                                            (macro-readtable-max-write-length
                                             (macro-writeenv-readtable we))))
                       (##wr-str we "...")
                       (let ((elem
                              (vect-ref obj i))
                             (new-i
-                             (##fixnum.+ i 1)))
+                             (##fx+ i 1)))
                         (macro-writeenv-close-parens-set!
                          we
-                         (if (##fixnum.= new-i len)
+                         (if (##fx= new-i len)
                            new-close-parens
                            0))
                         (##wr we elem)
@@ -9048,8 +9048,8 @@
   (let* ((n (##vector-length fields))
          (v (##make-vector n)))
     (##subtype-set! v subtype)
-    (let loop ((i (##fixnum.- n 1)))
-      (if (##fixnum.< i 0)
+    (let loop ((i (##fx- n 1)))
+      (if (##fx< i 0)
         v
         (let ((obj (##vector-ref fields i)))
           (if (##label-marker? obj)
@@ -9059,7 +9059,7 @@
              (lambda (resolved-obj)
                (##vector-set! v i resolved-obj)))
             (##vector-set! v i obj))
-          (loop (##fixnum.- i 1)))))))
+          (loop (##fx- i 1)))))))
 
 (define-prim (##explode-structure obj)
   (##explode-object obj))
@@ -9070,22 +9070,22 @@
 ';old version... more type checks but incomplete type checks so why bother?
 (define-prim (##implode-structure re fields)
   (let ((nb-fields (##vector-length fields)))
-    (if (##fixnum.< 0 nb-fields)
+    (if (##fx< 0 nb-fields)
       (let ((n (##vector-length fields)))
         (let ((s (##make-vector n)))
 
           (define (set-element! i obj)
             (##vector-set! s i obj)
-            (if (##fixnum.= i 0)
+            (if (##fx= i 0)
               (let ((n (##vector-length s)))
                 (##subtype-set! s (macro-subtype-structure))
                 (if (##not (and (##type? obj)
-                                (##fixnum.= (##type-field-count obj)
-                                            (##fixnum.- n 1))))
+                                (##fx= (##type-field-count obj)
+                                            (##fx- n 1))))
                   (##subtype-set! s (macro-subtype-vector))))))
 
-          (let loop ((i (##fixnum.- n 1)))
-            (if (##fixnum.< i 0)
+          (let loop ((i (##fx- n 1)))
+            (if (##fx< i 0)
               s
               (let ((obj (##vector-ref fields i)))
                 (if (##label-marker? obj)
@@ -9095,7 +9095,7 @@
                    (lambda (resolved-obj)
                      (set-element! i resolved-obj)))
                   (set-element! i obj))
-                (loop (##fixnum.- i 1)))))))
+                (loop (##fx- i 1)))))))
       #f)))
 
 (define-prim (##implode-frame re fields)
@@ -9111,11 +9111,11 @@
          (##explode-subprocedure proc '()))))
 
 (define-prim (##explode-closure closure)
-  (let loop ((i (##fixnum.- (##closure-length closure) 1))
+  (let loop ((i (##fx- (##closure-length closure) 1))
              (lst '()))
-    (if (##fixnum.< i 1)
+    (if (##fx< i 1)
       (##explode-subprocedure (##closure-code closure) lst)
-      (loop (##fixnum.- i 1)
+      (loop (##fx- i 1)
             (##cons (##closure-ref closure i) lst)))))
 
 (define-prim (##explode-subprocedure subproc lst)
@@ -9125,7 +9125,7 @@
       (##list->vector
        (##cons parent-name
                (let ((id (##subprocedure-id subproc)))
-                 (if (and (##fixnum.= id 0) (##null? lst))
+                 (if (and (##fx= id 0) (##null? lst))
                      '()
                      (##cons id lst)))))
       '#())))
@@ -9139,7 +9139,7 @@
 (define-prim (##implode-procedure-or-return re fields)
   ;;;;; why bother with all these checks if they are incomplete?
   (let ((nb-fields (##vector-length fields)))
-    (if (##fixnum.= nb-fields 0)
+    (if (##fx= nb-fields 0)
       #f
       (let ((proc-identifier (##vector-ref fields 0)))
         (if (##symbol? proc-identifier)
@@ -9148,26 +9148,26 @@
             (if (and (##procedure? proc)
                      (##not (##subprocedure? proc))
                      (##not (##closure? proc)))
-              (if (##fixnum.= nb-fields 1)
+              (if (##fx= nb-fields 1)
                 proc
                 (let ((subproc-id (##vector-ref fields 1)))
                   (if (and (##fixnum? subproc-id)
-                           (##fixnum.< 0 subproc-id))
+                           (##fx< 0 subproc-id))
                     (let ((subproc (##make-subprocedure proc subproc-id)))
                       (if subproc
                         (let* ((nb-closed (##subprocedure-nb-closed subproc))
-                               (n (##fixnum.- (##vector-length fields) 1)))
-                          (if (##fixnum.= (##fixnum.+ nb-closed 1) n)
-                            (if (##fixnum.= nb-closed 0)
+                               (n (##fx- (##vector-length fields) 1)))
+                          (if (##fx= (##fx+ nb-closed 1) n)
+                            (if (##fx= nb-closed 0)
                               subproc
                               (let ((c (##make-vector n subproc)))
                                 (##subtype-set! c (macro-subtype-procedure))
-                                (let loop ((i (##fixnum.- n 1)))
-                                  (if (##fixnum.< i 1)
+                                (let loop ((i (##fx- n 1)))
+                                  (if (##fx< i 1)
                                     c
                                     (let ((obj
                                            (##vector-ref fields
-                                                         (##fixnum.+ i 1))))
+                                                         (##fx+ i 1))))
                                       (if (##label-marker? obj)
                                         (##label-marker-fixup-handler-add!
                                          re
@@ -9175,7 +9175,7 @@
                                          (lambda (resolved-obj)
                                            (##closure-set! c i resolved-obj)))
                                         (##closure-set! c i obj))
-                                      (loop (##fixnum.- i 1)))))))
+                                      (loop (##fx- i 1)))))))
                             #f))
                         #f))
                     #f)))
@@ -9261,17 +9261,17 @@
         (let loop1 ((i 0)
                     (first #f)
                     (last -1))
-          (let ((i*3 (##fixnum.* i 3)))
-            (if (##fixnum.< i*3 (##vector-length fields))
+          (let ((i*3 (##fx* i 3)))
+            (if (##fx< i*3 (##vector-length fields))
               (let ((field-attributes
-                     (##vector-ref fields (##fixnum.+ i*3 1))))
-                (if (##fixnum.=
-                     (##fixnum.bitwise-and field-attributes 1)
+                     (##vector-ref fields (##fx+ i*3 1))))
+                (if (##fx=
+                     (##fxand field-attributes 1)
                      0)
-                  (loop1 (##fixnum.+ i 1)
+                  (loop1 (##fx+ i 1)
                          (or first i)
                          i)
-                  (loop1 (##fixnum.+ i 1)
+                  (loop1 (##fx+ i 1)
                          first
                          last)))
               (let ((start
@@ -9281,13 +9281,13 @@
                       (##type-super type)
                       (if first #f last?))))
                 (let loop2 ((i (or first 0)))
-                  (if (##not (##fixnum.< last i))
+                  (if (##not (##fx< last i))
                     (let* ((i*3
-                            (##fixnum.* i 3))
+                            (##fx* i 3))
                            (field-attributes
-                            (##vector-ref fields (##fixnum.+ i*3 1))))
-                      (if (##fixnum.=
-                           (##fixnum.bitwise-and field-attributes 1)
+                            (##vector-ref fields (##fx+ i*3 1))))
+                      (if (##fx=
+                           (##fxand field-attributes 1)
                            0)
                         (let ((field-name
                                (##vector-ref fields i*3)))
@@ -9295,14 +9295,14 @@
                                  (##symbol->string field-name))
                                 (##unchecked-structure-ref
                                  obj
-                                 (##fixnum.+ start i)
+                                 (##fx+ start i)
                                  type
                                  #f)
                                 (and last?
-                                     (##fixnum.= i last)))))
-                      (loop2 (##fixnum.+ i 1)))))
-                (##fixnum.+ start
-                            (##fixnum.quotient
+                                     (##fx= i last)))))
+                      (loop2 (##fx+ i 1)))))
+                (##fx+ start
+                            (##fxquotient
                              (##vector-length fields)
                              3)))))))))
 
@@ -9310,7 +9310,7 @@
     (##wr-str we "#<")
     (let ((level
            (macro-writeenv-level we)))
-      (if (##not (##fixnum.< level
+      (if (##not (##fx< level
                              (macro-readtable-max-write-level
                               (macro-writeenv-readtable we))))
         (##wr-str we "...")
@@ -9321,16 +9321,16 @@
                (close-parens
                 (macro-writeenv-close-parens we))
                (new-close-parens
-                (##fixnum.+ close-parens 1)))
-          (macro-writeenv-level-set! we (##fixnum.+ level 1))
+                (##fx+ close-parens 1)))
+          (macro-writeenv-level-set! we (##fx+ level 1))
           (##wr-no-display we (##type-name type))
           (##wr-str we " ")
           (let* ((col
                   (##shifted-column we))
                  (start-col
-                  (if (##fixnum.< ##structure-max-head
-                                  (##fixnum.- col type-col))
-                    (##fixnum.+ type-col ##structure-indent)
+                  (if (##fx< ##structure-max-head
+                                  (##fx- col type-col))
+                    (##fx+ type-col ##structure-indent)
                     col)))
             (##wr-str we "#")
             (##wr-str we (##number->string (##object->serial-number obj) 10))
@@ -9346,16 +9346,16 @@
                   (##wr-indent we start-col)
                   (##wr-no-display we field-name)
                   (let ((col (##shifted-column we)))
-                    (if (##fixnum.< (##fixnum.- col start-col)
+                    (if (##fx< (##fx- col start-col)
                                     ##structure-max-field)
                         (begin
                           (##wr-ch we #\space)
                           (##wr-no-display we value))
                         (let* ((available-space-for-obj
-                                (##fixnum.-
-                                 (##fixnum.-
-                                  (##fixnum.-
-                                   (##fixnum.+
+                                (##fx-
+                                 (##fx-
+                                  (##fx-
+                                   (##fx+
                                     (macro-writeenv-shift we)
                                     (macro-writeenv-width we))
                                    (macro-writeenv-close-parens we))
@@ -9374,7 +9374,7 @@
                               (begin
                                 (##wr-indent
                                  we
-                                 (##fixnum.+ start-col ##structure-indent))
+                                 (##fx+ start-col ##structure-indent))
                                 (##wr-no-display we value)))))))
                  (else
                   (##wr-ch we #\space)
@@ -9469,17 +9469,17 @@
   (let loop ((i (macro-gc-hash-table-key0))
              (key-vals '()))
     (let ((len (##vector-length gcht)))
-      (if (##fixnum.< i len)
+      (if (##fx< i len)
           (let ((key (##vector-ref gcht i)))
             (if (and (##not (##eq? key (macro-unused-obj)))
                      (##not (##eq? key (macro-deleted-obj))))
-                (let ((val (##vector-ref gcht (##fixnum.+ i 1))))
+                (let ((val (##vector-ref gcht (##fx+ i 1))))
                   (let ((new-key-vals (##cons (##cons key val) key-vals)))
                     (##declare (interrupts-enabled))
-                    (loop (##fixnum.+ i 2) new-key-vals)))
+                    (loop (##fx+ i 2) new-key-vals)))
                 (let ()
                   (##declare (interrupts-enabled))
-                  (loop (##fixnum.+ i 2) key-vals))))
+                  (loop (##fx+ i 2) key-vals))))
           (let ((flags
                  (macro-gc-hash-table-flags gcht))
                 (count
@@ -9501,9 +9501,9 @@
     (let ((gcht (##make-vector len (macro-unused-obj))))
       (macro-gc-hash-table-flags-set!
        gcht
-       (##fixnum.bitwise-ior ;; force rehash at next access!
+       (##fxior ;; force rehash at next access!
         flags
-        (##fixnum.+ (macro-gc-hash-table-flag-key-moved)
+        (##fx+ (macro-gc-hash-table-flag-key-moved)
                     (macro-gc-hash-table-flag-need-rehash))))
       (macro-gc-hash-table-count-set! gcht count)
       (macro-gc-hash-table-min-count-set! gcht min-count)
@@ -9511,13 +9511,13 @@
       (let loop ((i (macro-gc-hash-table-key0))
                  (key-vals key-vals))
         (if (##pair? key-vals)
-            (if (##fixnum.< i (##vector-length gcht))
+            (if (##fx< i (##vector-length gcht))
                 (let ((key-val (##car key-vals)))
                   (let ((key (##car key-val))
                         (val (##cdr key-val)))
                     (##vector-set! gcht i key)
-                    (##vector-set! gcht (##fixnum.+ i 1) val)
-                    (loop (##fixnum.+ i 2) (##cdr key-vals))))
+                    (##vector-set! gcht (##fx+ i 1) val)
+                    (loop (##fx+ i 2) (##cdr key-vals))))
                 #f)
             (begin
               (##subtype-set!
@@ -9685,11 +9685,11 @@
 
 (##declare (inlining-limit 300))
 
-(##define-macro (* . args)                `(##fixnum.* ,@args))
-(##define-macro (+ . args)                `(##fixnum.+ ,@args))
-(##define-macro (- . args)                `(##fixnum.- ,@args))
-(##define-macro (< . args)                `(##fixnum.< ,@args))
-(##define-macro (= . args)                `(##fixnum.= ,@args))
+(##define-macro (* . args)                `(##fx* ,@args))
+(##define-macro (+ . args)                `(##fx+ ,@args))
+(##define-macro (- . args)                `(##fx- ,@args))
+(##define-macro (< . args)                `(##fx< ,@args))
+(##define-macro (= . args)                `(##fx= ,@args))
 (##define-macro (assoc . args)            `(##assoc ,@args))
 (##define-macro (assq . args)             `(##assq ,@args))
 (##define-macro (car . args)              `(##car ,@args))
@@ -9763,12 +9763,12 @@
 (##define-macro (make-f64vect n)          `(##make-f64vector ,n))
 (##define-macro (f64vect-set! . args)     `(##f64vector-set! ,@args))
 
-(##define-macro (UCS-4->character . args) `(##fixnum.->char ,@args))
-(##define-macro (character->UCS-4 . args) `(##fixnum.<-char ,@args))
+(##define-macro (UCS-4->character . args) `(##fx->char ,@args))
+(##define-macro (character->UCS-4 . args) `(##fx<-char ,@args))
 (##define-macro (in-char-range? n)
   `(and (##not (##< ##max-char ,n))
-        (or (##fixnum.< ,n #xd800)
-            (##fixnum.< #xdfff ,n))))
+        (or (##fx< ,n #xd800)
+            (##fx< #xdfff ,n))))
 
 (##define-macro (string->keyword-object . args) `(##make-interned-symkey ,@args #f))
 (##define-macro (string->uninterned-keyword-object . args) `(##make-uninterned-keyword ,@args))
@@ -12760,7 +12760,7 @@
           (##make-chartable #f) ;; all chars are non-delimiters
           (##make-chartable ##read-number/keyword/symbol)
           (##make-chartable ##read-sharp-other)
-          (##fixnum.->char 127) ;; max-unescaped-char
+          (##fx->char 127) ;; max-unescaped-char
           #t                 ;; escape-ctrl-chars?
           #f                 ;; sharing-allowed?
           #f                 ;; eval-allowed?

@@ -2,7 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -195,7 +195,7 @@
       (let* ((val
               (filter init))
              (new-count
-              (##fixnum.+ ##parameter-counter 1)))
+              (##fx+ ##parameter-counter 1)))
         ;; Note: it is unimportant if the increment of
         ;; ##parameter-counter is not atomic; it simply means a
         ;; possible close repetition of the same hash code
@@ -485,12 +485,12 @@
                (hash-param-x
                 (macro-parameter-descr-hash
                  (macro-parameter-descr param-x))))
-          (cond ((##fixnum.< hash-param hash-param-x)
+          (cond ((##fx< hash-param hash-param-x)
                  (macro-make-env
                   x
                   (insert (macro-env-left env))
                   (macro-env-right env)))
-                ((or (##fixnum.< hash-param-x hash-param)
+                ((or (##fx< hash-param-x hash-param)
                      (##not (##eq? param-x param)))
                  (macro-make-env
                   x
@@ -518,14 +518,14 @@
              (hash-param-x
               (macro-parameter-descr-hash
                (macro-parameter-descr param-x))))
-        (cond ((##fixnum.< hash-param hash-param-x)
+        (cond ((##fx< hash-param hash-param-x)
                (let ((branch (macro-env-left env)))
                  (if (##null? branch)
                    (let ((y (##cons param val)))
                      (macro-env-left-set! env (macro-make-env y '() '()))
                      (##void))
                    (insert! branch))))
-              ((or (##fixnum.< hash-param-x hash-param)
+              ((or (##fx< hash-param-x hash-param)
                    (##not (##eq? param-x param)))
                (let ((branch (macro-env-right env)))
                  (if (##null? branch)
@@ -555,9 +555,9 @@
                (hash-param-x
                 (macro-parameter-descr-hash
                  (macro-parameter-descr param-x))))
-          (cond ((##fixnum.< hash-param hash-param-x)
+          (cond ((##fx< hash-param hash-param-x)
                  (lookup (macro-env-left env)))
-                ((or (##fixnum.< hash-param-x hash-param)
+                ((or (##fx< hash-param-x hash-param)
                      (##not (##eq? param-x param)))
                  (lookup (macro-env-right env)))
                 (else
@@ -591,21 +591,21 @@
                  (macro-thread-floats (macro-run-queue))))
                (point
                 (macro-time-point absrel-timeout)))
-           (and (##flonum.< current-time point)
+           (and (##fl< current-time point)
                 point)))
         ((and (##fixnum? absrel-timeout)
-              (##not (##fixnum.< 0 absrel-timeout)))
+              (##not (##fx< 0 absrel-timeout)))
          #f)
         (else
          (let ((flonum-absrel-timeout
                 (macro-real->inexact absrel-timeout)))
-           (and (##flonum.positive? flonum-absrel-timeout)
+           (and (##flpositive? flonum-absrel-timeout)
                 (begin
                   (macro-update-current-time!)
                   (let ((current-time
                          (macro-current-time
                           (macro-thread-floats (macro-run-queue)))))
-                    (##flonum.+ current-time
+                    (##fl+ current-time
                                 flonum-absrel-timeout))))))))
 
 (define-prim (##timeout->time absrel-timeout)
@@ -621,7 +621,7 @@
                   (macro-current-time
                    (macro-thread-floats (macro-run-queue)))))
              (macro-make-time
-              (##flonum.+ current-time flonum-absrel-timeout)
+              (##fl+ current-time flonum-absrel-timeout)
               #f
               #f
               #f))))
@@ -735,14 +735,14 @@
      (macro-thread-floats (macro-run-queue))
      (macro-boosted-priority floats))
 
-    (if (##flonum.= (macro-base-priority floats)
+    (if (##fl= (macro-base-priority floats)
                     (macro-boosted-priority floats))
       (macro-boosted-priority-set!
        floats
        base-priority)
       (macro-boosted-priority-set!
        floats
-       (##flonum.+ base-priority
+       (##fl+ base-priority
                    (macro-priority-boost floats))))
 
     (macro-base-priority-set! floats base-priority)
@@ -763,7 +763,7 @@
   ;; check if the current thread's quantum is now over
 
   (if (and (##eq? thread (macro-current-thread))
-           (##not (##flonum.< (macro-thread-quantum-used thread) quantum)))
+           (##not (##fl< (macro-thread-quantum-used thread) quantum)))
     (##thread-yield!)
     (##void)))
 
@@ -775,7 +775,7 @@
 
     (macro-priority-boost-set! floats priority-boost)
 
-    (if (##flonum.= (macro-base-priority floats)
+    (if (##fl= (macro-base-priority floats)
                     (macro-boosted-priority floats))
 
       (##void)
@@ -790,7 +790,7 @@
 
         (macro-boosted-priority-set!
          floats
-         (##flonum.+ (macro-base-priority floats)
+         (##fl+ (macro-base-priority floats)
                      priority-boost))
 
         (thread-trace 2 (##thread-boosted-priority-changed! thread))
@@ -805,14 +805,14 @@
   (##declare (not interrupts-enabled))
 
   (let ((floats (macro-thread-floats thread)))
-    (cond ((##flonum.<
+    (cond ((##fl<
             (macro-effective-priority floats)
             (macro-boosted-priority floats))
            (macro-effective-priority-set!
             floats
             (macro-boosted-priority floats))
            (thread-trace 3 (##thread-effective-priority-changed! thread #t)))
-          ((##flonum.=
+          ((##fl=
             (macro-effective-priority floats)
             (macro-temp (macro-thread-floats (macro-run-queue))))
            (thread-trace 4 (##thread-effective-priority-downgrade! thread))))))
@@ -868,14 +868,14 @@
         (let ((leftmost (macro-btq-leftmost btq)))
           (if (##not (##eq? leftmost btq))
             (let ((leftmost-floats (macro-thread-floats leftmost)))
-              (if (##flonum.< (macro-effective-priority floats)
+              (if (##fl< (macro-effective-priority floats)
                               (macro-effective-priority leftmost-floats))
                 (macro-effective-priority-set!
                  floats
                  (macro-effective-priority leftmost-floats)))))
           (loop (macro-btq-deq-next btq)))))
 
-    (if (##not (##flonum.=
+    (if (##not (##fl=
                 (macro-temp (macro-thread-floats (macro-run-queue)))
                 (macro-effective-priority floats)))
       (thread-trace 6 (##thread-effective-priority-changed! thread #f)))))
@@ -894,7 +894,7 @@
   (let ((owner (macro-btq-owner (macro-thread->btq thread))))
     (##btq-remove! thread)
     (if (macro-thread? owner)
-      (if (##flonum.= (macro-thread-effective-priority thread)
+      (if (##fl= (macro-thread-effective-priority thread)
                       (macro-thread-effective-priority owner))
         (thread-trace 7 (##thread-effective-priority-downgrade! owner))))))
 
@@ -933,7 +933,7 @@
       (if (##eq? condvar run-queue)
         code
         (let ((next (macro-btq-deq-next condvar)))
-          (if (##fixnum.odd? (macro-btq-owner condvar))
+          (if (##fxodd? (macro-btq-owner condvar))
             (##device-condvar-broadcast-no-reschedule! condvar))
           (loop next))))))
 
@@ -954,8 +954,8 @@
 
     (##thread-check-timeouts!)
 
-    (if (and (##fixnum.< code 0)
-             (##not (##fixnum.= code ##err-code-EINTR)))
+    (if (and (##fx< code 0)
+             (##not (##fx= code ##err-code-EINTR)))
 
       ;; there was an error that cannot be handled, so force the
       ;; primordial thread to wakeup and raise a "scheduler
@@ -972,12 +972,12 @@
            (current-thread-floats
             (macro-thread-floats current-thread))
            (quantum-used
-            (##flonum.+ (macro-quantum-used current-thread-floats)
+            (##fl+ (macro-quantum-used current-thread-floats)
                         (macro-heartbeat-interval run-queue-floats))))
 
       (macro-quantum-used-set! current-thread-floats quantum-used)
 
-      (if (##flonum.< quantum-used
+      (if (##fl< quantum-used
                       (macro-quantum current-thread-floats))
         (macro-thread-reschedule-if-needed!)
         (##thread-yield!)))))
@@ -1080,10 +1080,10 @@
 
               (##thread-check-timeouts!)
 
-              (cond ((##not (##fixnum.< code 0)) ;; no error?
+              (cond ((##not (##fx< code 0)) ;; no error?
                      #f)
 
-                    ((##fixnum.= code ##err-code-EINTR)
+                    ((##fx= code ##err-code-EINTR)
 
                      ;; an interrupt may need to be serviced, so make
                      ;; sure at least one thread is runnable
@@ -1995,16 +1995,16 @@
     (let loop1 ((probe deq) (n 0))
       (let ((next (macro-tgroup-tgroups-deq-next probe)))
         (if (##not (##eq? next deq))
-            (loop1 next (##fixnum.+ n 1))
+            (loop1 next (##fx+ n 1))
             (let ((v (##make-vector n)))
               (let loop2 ((probe deq) (i 0))
                 (let ((next (macro-tgroup-tgroups-deq-next probe)))
                   (if (##not (##eq? next deq))
-                      (if (##fixnum.= i n) ;; more elements this time around?
-                          (loop1 next (##fixnum.+ i 1))
+                      (if (##fx= i n) ;; more elements this time around?
+                          (loop1 next (##fx+ i 1))
                           (begin
                             (##vector-set! v i next)
-                            (loop2 next (##fixnum.+ i 1))))
+                            (loop2 next (##fx+ i 1))))
                       (begin
                         (##vector-shrink! v i) ;; there may be fewer elements!
                         v))))))))))
@@ -2019,16 +2019,16 @@
     (let loop1 ((probe deq) (n 0))
       (let ((next (macro-tgroup-threads-deq-next probe)))
         (if (##not (##eq? next deq))
-            (loop1 next (##fixnum.+ n 1))
+            (loop1 next (##fx+ n 1))
             (let ((v (##make-vector n)))
               (let loop2 ((probe deq) (i 0))
                 (let ((next (macro-tgroup-threads-deq-next probe)))
                   (if (##not (##eq? next deq))
-                      (if (##fixnum.= i n) ;; more elements this time around?
-                          (loop1 next (##fixnum.+ i 1))
+                      (if (##fx= i n) ;; more elements this time around?
+                          (loop1 next (##fx+ i 1))
                           (begin
                             (##vector-set! v i next)
-                            (loop2 next (##fixnum.+ i 1))))
+                            (loop2 next (##fx+ i 1))))
                       (begin
                         (##vector-shrink! v i) ;; there may be fewer elements!
                         v))))))))))
@@ -2180,7 +2180,7 @@
        2
        (thread-quantum-set! thread quantum)
        (let ((q (macro-real->inexact quantum)))
-         (if (##flonum.negative? q)
+         (if (##flnegative? q)
            (##raise-range-exception 2 thread-quantum-set! thread quantum)
            (macro-check-initialized-thread
             thread
@@ -2204,7 +2204,7 @@
       2
       (thread-priority-boost-set! thread priority-boost)
       (let ((b (macro-real->inexact priority-boost)))
-        (if (##flonum.negative? b)
+        (if (##flnegative? b)
           (##raise-range-exception 2
                                    thread-priority-boost-set!
                                    thread
@@ -2731,14 +2731,14 @@
     (if (##not (##values? results))
       (consumer results)
       (let ((len (##vector-length results)))
-        (cond ((##fixnum.= len 2)
+        (cond ((##fx= len 2)
                (consumer (##vector-ref results 0)
                          (##vector-ref results 1)))
-              ((##fixnum.= len 3)
+              ((##fx= len 3)
                (consumer (##vector-ref results 0)
                          (##vector-ref results 1)
                          (##vector-ref results 2)))
-              ((##fixnum.= len 0)
+              ((##fx= len 0)
                (consumer))
               (else
                (##apply consumer (##vector->list results))))))))
@@ -2758,7 +2758,7 @@
               (macro-thread-denv (macro-current-thread))))
             (new-dynwind
              (macro-make-dynwind
-              (##fixnum.+ (macro-dynwind-level dynwind) 1)
+              (##fx+ (macro-dynwind-level dynwind) 1)
               before
               after
               cont))
@@ -2879,11 +2879,11 @@
        (let ((new-src
               (macro-denv-dynwind
                (macro-continuation-denv (macro-dynwind-cont src)))))
-         (cond ((##fixnum.< (macro-dynwind-level dst)
+         (cond ((##fx< (macro-dynwind-level dst)
                             (macro-dynwind-level new-src))
                 (unwind-src new-src dst continue))
                ((and (##not (##eq? new-src dst))
-                     (##fixnum.< 0 (macro-dynwind-level new-src)))
+                     (##fx< 0 (macro-dynwind-level new-src)))
                 (unwind-src-wind-dst new-src dst continue))
                (else
                 (continue)))))))
@@ -2899,11 +2899,11 @@
                (lambda ()
                  ((macro-dynwind-before dst))
                  (continue))))))
-      (cond ((##fixnum.< (macro-dynwind-level src)
+      (cond ((##fx< (macro-dynwind-level src)
                          (macro-dynwind-level new-dst))
              (wind-dst src new-dst new-continue))
             ((and (##not (##eq? src new-dst))
-                  (##fixnum.< 0 (macro-dynwind-level new-dst)))
+                  (##fx< 0 (macro-dynwind-level new-dst)))
              (unwind-src-wind-dst src new-dst new-continue))
             (else
              (new-continue)))))
@@ -2927,7 +2927,7 @@
                     ((macro-dynwind-before dst))
                     (continue))))))
          (if (and (##not (##eq? new-src new-dst))
-                  (##not (##fixnum.= (macro-dynwind-level new-src) 0)))
+                  (##not (##fx= (macro-dynwind-level new-src) 0)))
            (unwind-src-wind-dst
             new-src
             new-dst
@@ -2938,9 +2938,9 @@
          (macro-dynwind-level src))
         (dst-level
          (macro-dynwind-level dst)))
-    (cond ((##fixnum.< dst-level src-level)
+    (cond ((##fx< dst-level src-level)
            (unwind-src src dst continue))
-          ((##fixnum.< src-level dst-level)
+          ((##fx< src-level dst-level)
            (wind-dst src dst continue))
           (else
            (unwind-src-wind-dst src dst continue)))))
@@ -2973,8 +2973,8 @@
           (macro-denv-dynwind
            (macro-continuation-denv cont))))
     (if (or (##eq? src dst) ;; check common case (same dynamic-wind context)
-            (and (##fixnum.= (macro-dynwind-level src) 0)
-                 (##fixnum.= (macro-dynwind-level dst) 0)))
+            (and (##fx= (macro-dynwind-level src) 0)
+                 (##fx= (macro-dynwind-level dst) 0)))
         (continue)
         (##continuation-unwind-wind src dst (lambda () (continue))))))
 
@@ -3033,8 +3033,8 @@
           (macro-denv-dynwind
            (macro-continuation-denv cont))))
     (if (or (##eq? src dst) ;; check common case (same dynamic-wind context)
-            (and (##fixnum.= (macro-dynwind-level src) 0)
-                 (##fixnum.= (macro-dynwind-level dst) 0)))
+            (and (##fx= (macro-dynwind-level src) 0)
+                 (##fx= (macro-dynwind-level dst) 0)))
         (continue)
         (##continuation-unwind-wind src dst (lambda () (continue))))))
 
@@ -3109,7 +3109,7 @@
 
     (if (##pair? other-args)
       (let ((tail
-             (build-arg-list (##fixnum.+ i 1)
+             (build-arg-list (##fx+ i 1)
                              (##car other-args)
                              (##cdr other-args))))
         (macro-if-checks

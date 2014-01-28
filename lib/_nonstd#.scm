@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_nonstd#.scm", Time-stamp: <2009-01-29 14:51:49 feeley>
+;;; File: "_nonstd#.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -37,7 +37,7 @@
   `(let ((obj ,obj))
      (or (##string? obj)
          (and (##fixnum? obj)
-              (##not (##fixnum.negative? obj))))))
+              (##not (##fxnegative? obj))))))
 
 ;;;----------------------------------------------------------------------------
 

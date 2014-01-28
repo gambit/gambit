@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_eval#.scm", Time-stamp: <2009-09-03 16:40:20 feeley>
+;;; File: "_eval#.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -72,13 +72,13 @@
   `(##vector-ref ,c 4))
 
 (##define-macro (macro-code-length c)
-  `(##fixnum.- (##vector-length ,c) 5))
+  `(##fx- (##vector-length ,c) 5))
 
 (##define-macro (macro-code-ref c n)
-  `(##vector-ref ,c (##fixnum.+ ,n 5)))
+  `(##vector-ref ,c (##fx+ ,n 5)))
 
 (##define-macro (macro-code-set! c n x)
-  `(##vector-set! ,c (##fixnum.+ ,n 5) ,x))
+  `(##vector-set! ,c (##fx+ ,n 5) ,x))
 
 (##define-macro (^ n)
   `(##vector-ref $code ,(+ n 5)))
@@ -87,7 +87,7 @@
   `(let ((child ,child)
          (parent ,parent))
      (and (##vector? child)
-          (##fixnum.< 3 (##vector-length child))
+          (##fx< 3 (##vector-length child))
           (##eq? (macro-code-link child) parent))))
 
 (##define-macro (macro-code-run c)
@@ -192,7 +192,7 @@
   `(##list->vector (##cons ,rte ,lst)))
 
 (##define-macro (macro-make-rte* rte ns)
-  `(let (($rte (##make-vector (##fixnum.+ ,ns 1) '#!unbound)))
+  `(let (($rte (##make-vector (##fx+ ,ns 1) '#!unbound)))
      (##vector-set! $rte 0 ,rte)
      $rte))
 

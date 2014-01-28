@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -343,8 +343,8 @@
 (define-prim (##type-field-count type)
   (if type
     (let ((fields (##type-fields type)))
-      (##fixnum.+ (##type-field-count (##type-super type))
-                  (##fixnum.quotient (##vector-length fields) 3)))
+      (##fx+ (##type-field-count (##type-super type))
+                  (##fxquotient (##vector-length fields) 3)))
     0))
 
 (define-prim (##type-all-fields type)
@@ -418,7 +418,7 @@
                   (##car rest2))
                  (rest3
                   (##cdr rest2)))
-            (loop (##fixnum.+ i 1)
+            (loop (##fx+ i 1)
                   rest3
                   (##cons (##cons field-name
                                   (##vector i
@@ -447,7 +447,7 @@
                     (let* ((options
                             (##vector-ref (##cdr x) 1))
                            (has-init?
-                            (##not (##fixnum.= (##fixnum.bitwise-and options 8)
+                            (##not (##fx= (##fxand options 8)
                                                0))))
                       (if has-init?
                         parameters
@@ -473,7 +473,7 @@
       (##list 'quote x))
 
     (let* ((macros?
-            (##not (##fixnum.= (##fixnum.bitwise-and flags 4) 0)))
+            (##not (##fx= (##fxand flags 4) 0)))
            (generative?
             (##not id))
            (augmented-id-str
@@ -758,7 +758,7 @@
         (let* ((x (##cdr opt))
                (m (##car x))
                (b (##cdr x)))
-          (##fixnum.bitwise-ior (##fixnum.bitwise-and options m) b)))
+          (##fxior (##fxand options m) b)))
 
       (define (parse-field-attributes
                field-name
@@ -798,19 +798,19 @@
                 ((##null? lst2)
                  (let ((read-only?
                         (##not
-                         (##fixnum.= (##fixnum.bitwise-and local-options 2)
+                         (##fx= (##fxand local-options 2)
                                      0))))
                    (if (and (##symbol? setter)
                             read-only?)
                      (err)
                      (loop1 (##cdr lst)
-                            (##fixnum.+ field-index 1)
+                            (##fx+ field-index 1)
                             options
                             flags
                             (##cons (##cons field-name
                                             (##vector
                                              field-name
-                                             (##fixnum.+ field-index 1)
+                                             (##fx+ field-index 1)
                                              getter
                                              (if read-only? #f setter)
                                              local-options
@@ -846,19 +846,19 @@
                                          field-name
                                          getter
                                          setter
-                                         (##fixnum.bitwise-and options -3)
+                                         (##fxand options -3)
                                          (##cdr rest))
                                         (parse-field-attributes
                                          field-name
                                          getter
                                          #f
-                                         (##fixnum.bitwise-ior options 2)
+                                         (##fxior options 2)
                                          rest)))
                                     (parse-field-attributes
                                      field-name
                                      getter
                                      #f
-                                     (##fixnum.bitwise-ior options 2)
+                                     (##fxior options 2)
                                      rest)))
                                 (parse-field-attributes
                                  field-name
@@ -1011,19 +1011,19 @@
                                 (##not id)))
                        (and id
                             super-type-static
-                            (##fixnum.=
-                             (##fixnum.bitwise-and
+                            (##fx=
+                             (##fxand
                               (##type-flags super-type-static)
                               16)
                              0)))
                  (err)
                  (cont
                   name
-                  (##fixnum.+ (if (or (##assq 'opaque: flags)
+                  (##fx+ (if (or (##assq 'opaque: flags)
                                       (and super-type-static
                                            (##not
-                                            (##fixnum.=
-                                             (##fixnum.bitwise-and
+                                            (##fx=
+                                             (##fxand
                                               (##type-flags super-type-static)
                                               1)
                                              0))))
@@ -1130,7 +1130,7 @@
               (##set-debug-settings! 0 0))
              (level
               (macro-debug-settings-level settings)))
-        (or (##fixnum.< 1 level)
+        (or (##fx< 1 level)
             ##gc-report?))
     (let* ((stats
             (##process-statistics))
@@ -1150,25 +1150,25 @@
             (##repl-output-port)))
 
       (define (scale x m)
-        (##flonum.->exact-int (##flonum.round (##flonum.* x m))))
+        (##flonum.->exact-int (##flround (##fl* x m))))
 
       (define (mem bytes suffix)
 
         (define (show x*1000 unit)
 
           (define (decimals d)
-            (let* ((n (##round (##/ x*1000 (##expt 10 (##fixnum.- 3 d)))))
+            (let* ((n (##round (##/ x*1000 (##expt 10 (##fx- 3 d)))))
                    (n-str (##number->string n 10))
                    (n-str-len (##string-length n-str))
-                   (str (if (##fixnum.< n-str-len d)
+                   (str (if (##fx< n-str-len d)
                           (##string-append
-                           (##make-string (##fixnum.- d n-str-len) #\0)
+                           (##make-string (##fx- d n-str-len) #\0)
                            n-str)
                           n-str))
                    (len (##string-length str))
-                   (split (##fixnum.- len d)))
+                   (split (##fx- len d)))
               (##write-string
-               (if (##fixnum.= d 0)
+               (if (##fx= d 0)
                  str
                  (##string-append (##substring str 0 split)
                                   "."
@@ -1199,7 +1199,7 @@
       (mem last-gc-alloc " alloc, ")
       (mem last-gc-heap-size " heap, ")
       (mem last-gc-live " live (")
-      (##write (scale (##flonum./ last-gc-live last-gc-heap-size) 100.0) output-port)
+      (##write (scale (##fl/ last-gc-live last-gc-heap-size) 100.0) output-port)
       (##write-string "% " output-port)
       (##write (##flonum.->exact-int last-gc-movable) output-port)
       (##write-string "+" output-port)
@@ -1241,8 +1241,8 @@
            p)))
     (macro-check-symbol prefix 1 (gensym p)
       (let ((new-count
-             (##fixnum.modulo
-              (##fixnum.+ ##gensym-counter 1)
+             (##fxmodulo
+              (##fx+ ##gensym-counter 1)
               1000000)))
         ;; Note: it is unimportant if the increment of ##gensym-counter
         ;; is not atomic; it simply means a possible close repetition
@@ -1265,7 +1265,7 @@
 (define-prim (##will? obj)
   (and (##subtyped? obj)
        (##eq? (##subtype obj) (macro-subtype-weak))
-       (##fixnum.= (##vector-length obj) (macro-will-size))))
+       (##fx= (##vector-length obj) (macro-will-size))))
 
 (define-prim (will? x)
   (macro-force-vars (x)
@@ -1300,7 +1300,7 @@
 (define-prim (##box? obj)
   (and (##subtyped? obj)
        (##eq? (##subtype obj) (macro-subtype-boxvalues))
-       (##fixnum.= (##vector-length obj) 1)))
+       (##fx= (##vector-length obj) 1)))
 
 (define-prim (box? obj)
   (macro-force-vars (obj)
@@ -1359,7 +1359,7 @@
 
 (define-prim (##setenv name #!optional (value (macro-absent-obj)))
   (let ((code (##os-setenv name value)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
       (##raise-os-exception #f code setenv name value)
       (##void))))
 
@@ -1377,7 +1377,7 @@
 (define-prim (##shell-command-blocking cmd)
   ;; DEPRECATED
   (let ((code (##os-shell-command cmd (##current-directory))))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
       (##raise-os-exception #f code ##shell-command-blocking cmd)
       code)))
 
@@ -1428,33 +1428,33 @@
   (let* ((len
           (##string-length str))
          (nb-escapes
-          (let loop1 ((i (##fixnum.- len 1))
+          (let loop1 ((i (##fx- len 1))
                       (n 0))
-            (if (##fixnum.< i 0)
+            (if (##fx< i 0)
                 n
                 (let ((c (##string-ref str i)))
-                  (loop1 (##fixnum.- i 1)
+                  (loop1 (##fx- i 1)
                          (if (##memq c to-escape)
-                             (##fixnum.+ n 1)
+                             (##fx+ n 1)
                              n))))))
          (escaped-len
-          (##fixnum.+ len nb-escapes))
+          (##fx+ len nb-escapes))
          (escaped-str
           (##make-string escaped-len 0)))
-    (let loop2 ((i (##fixnum.- len 1))
-                (j (##fixnum.- escaped-len 1)))
-      (if (and (##not (##fixnum.< i 0)) (##not (##fixnum.< j 0)))
+    (let loop2 ((i (##fx- len 1))
+                (j (##fx- escaped-len 1)))
+      (if (and (##not (##fx< i 0)) (##not (##fx< j 0)))
           (let ((c (##string-ref str i)))
             (##string-set! escaped-str j c)
-            (loop2 (##fixnum.- i 1)
-                   (if (and (##fixnum.< 0 j)
+            (loop2 (##fx- i 1)
+                   (if (and (##fx< 0 j)
                             (##memq c to-escape))
                        (let ()
                          (##string-set! escaped-str
-                                        (##fixnum.- j 1)
+                                        (##fx- j 1)
                                         escape-char)
-                         (##fixnum.- j 2))
-                       (##fixnum.- j 1))))
+                         (##fx- j 2))
+                       (##fx- j 1))))
           escaped-str))))
 
 (define-prim (shell-command cmd)
@@ -1699,37 +1699,37 @@
 (define-prim (##path-volume-end-using-dir-sep path directory-separator)
   (cond ((##char=? #\: directory-separator)
          (let loop1 ((i 0))
-           (if (##fixnum.< i (##string-length path))
+           (if (##fx< i (##string-length path))
              (let ((c (##string-ref path i)))
                (if (##char=? #\: c)
                  i
-                 (loop1 (##fixnum.+ i 1))))
+                 (loop1 (##fx+ i 1))))
              0)))
         ((##char=? #\\ directory-separator)
-         (if (##fixnum.= 0 (##string-length path))
+         (if (##fx= 0 (##string-length path))
            0
            (let ((c (##string-ref path 0)))
              (cond ((or (and (##char<=? #\a c)
                              (##char<=? c #\z))
                         (and (##char<=? #\A c)
                              (##char<=? c #\Z)))
-                    (if (and (##fixnum.< 1 (##string-length path))
+                    (if (and (##fx< 1 (##string-length path))
                              (##char=? #\: (##string-ref path 1)))
                       2
                       0))
                    ((or (##char=? #\\ c)
                         (##char=? #\/ c))
-                    (if (and (##fixnum.< 1 (##string-length path))
+                    (if (and (##fx< 1 (##string-length path))
                              (let ((c (##string-ref path 1)))
                                (or (##char=? #\\ c)
                                    (##char=? #\/ c))))
                       (let loop2 ((i 2))
-                        (if (##fixnum.< i (##string-length path))
+                        (if (##fx< i (##string-length path))
                           (let ((c (##string-ref path i)))
                             (if (or (##char=? #\\ c)
                                     (##char=? #\/ c))
                                 i
-                                (loop2 (##fixnum.+ i 1))))
+                                (loop2 (##fx+ i 1))))
                           0))
                       0))
                    (else
@@ -1785,8 +1785,8 @@
   (let* ((cd
           (##current-directory))
          (directory-separator
-          (if (##fixnum.< 0 (##string-length cd))
-              (##string-ref cd (##fixnum.- (##string-length cd) 1))
+          (if (##fx< 0 (##string-length cd))
+              (##string-ref cd (##fx- (##string-length cd) 1))
               #\/)))
 
     (define (expand p orig)
@@ -1797,9 +1797,9 @@
                     cd
                     (let* ((d orig) ;; (expand orig #f)
                            (len (##string-length d)))
-                      (if (or (##fixnum.= len 0)
+                      (if (or (##fx= len 0)
                               (##char=? (##string-ref d
-                                                      (##fixnum.- len 1))
+                                                      (##fx- len 1))
                                         directory-separator))
                           d
                           (##string-append
@@ -1808,16 +1808,16 @@
                (len
                 (if dir-sep?
                     (if (##char=? #\: directory-separator)
-                        (##fixnum.- (##string-length dir) 1)
+                        (##fx- (##string-length dir) 1)
                         (##path-volume-end-using-dir-sep
                          dir
                          directory-separator))
                     (##string-length dir))))
-          (if (##fixnum.= len 0)
+          (if (##fx= len 0)
               p
               (let ((result
                      (##make-string
-                      (##fixnum.+ len (##string-length p)))))
+                      (##fx+ len (##string-length p)))))
                 (##substring-move! dir 0 len result 0)
                 (##substring-move! p 0 (##string-length p) result len)
                 result))))
@@ -1826,25 +1826,25 @@
         (if dir-sep?
             p
             (let ((result
-                   (##make-string (##fixnum.+ 1 (##string-length p)))))
+                   (##make-string (##fx+ 1 (##string-length p)))))
               (##substring-move! p 0 vol-end result 0)
               (##string-set! result vol-end directory-separator)
-              (##substring-move! p vol-end (##string-length p) result (##fixnum.+ vol-end 1))
+              (##substring-move! p vol-end (##string-length p) result (##fx+ vol-end 1))
               result)))
 
       (define (tilde-end)
-        (if (##fixnum.= 0 (##string-length p))
+        (if (##fx= 0 (##string-length p))
             0
             (if (##char=? #\~ (##string-ref p 0))
                 (let loop ((i 1))
-                  (if (##fixnum.< i (##string-length p))
+                  (if (##fx< i (##string-length p))
                       (let ((c (##string-ref p i)))
                         (cond ((or (##char=? c directory-separator)
                                    (and (##char=? #\\ directory-separator)
                                         (##char=? #\/ c)))
                                i)
                               (else
-                               (loop (##fixnum.+ i 1)))))
+                               (loop (##fx+ i 1)))))
                       i))
                 0)))
 
@@ -1854,19 +1854,19 @@
             (let* ((dir-len
                     (##string-length dir))
                    (ends-with-dir-sep?
-                    (and (##fixnum.< 0 dir-len)
+                    (and (##fx< 0 dir-len)
                          (##char=? directory-separator
-                                   (##string-ref dir (##fixnum.- dir-len 1)))))
+                                   (##string-ref dir (##fx- dir-len 1)))))
                    (dir-end
-                    (if ends-with-dir-sep? (##fixnum.- dir-len 1) dir-len))
+                    (if ends-with-dir-sep? (##fx- dir-len 1) dir-len))
                    (rest-len
-                    (##fixnum.- (##string-length p)
+                    (##fx- (##string-length p)
                                 start))
                    (len
-                    (##fixnum.+ dir-end
+                    (##fx+ dir-end
                                 1 ;; for directory separator
-                                (if (##fixnum.< 0 rest-len)
-                                    (##fixnum.- rest-len 1)
+                                (if (##fx< 0 rest-len)
+                                    (##fx- rest-len 1)
                                     0)))
                    (result
                     (##make-string len)))
@@ -1888,16 +1888,16 @@
                  (let ((dir (##os-path-gambcdir)))
                    (cond ((##fixnum? dir)
                           (err dir))
-                         ((##fixnum.= 0 (##string-length instdir-name))
+                         ((##fx= 0 (##string-length instdir-name))
                           (expand relpath dir))
                          (else
                           (expand relpath
                                   (expand instdir-name dir)))))))))
 
       (let ((t-end (tilde-end)))
-        (if (##fixnum.< 0 t-end)
+        (if (##fx< 0 t-end)
 
-            (cond ((##fixnum.= 1 t-end)
+            (cond ((##fx= 1 t-end)
                    (let ((homedir (##os-path-homedir)))
                      (cond ((##fixnum? homedir)
                             (err homedir))
@@ -1912,9 +1912,9 @@
                            (##substring p 2 t-end))
                           (relpath
                            (##substring p
-                                        (if (##fixnum.= t-end len)
+                                        (if (##fx= t-end len)
                                             t-end
-                                            (##fixnum.+ t-end 1))
+                                            (##fx+ t-end 1))
                                         len)))
                      (expand-in-instdir
                       relpath
@@ -1930,12 +1930,12 @@
             (let* ((vol-end
                     (##path-volume-end-using-dir-sep p directory-separator))
                    (dir-sep?
-                    (and (##fixnum.< vol-end (##string-length p))
+                    (and (##fx< vol-end (##string-length p))
                          (let ((c (##string-ref p vol-end)))
                            (or (##char=? c directory-separator)
                                (and (##char=? #\\ directory-separator)
                                     (##char=? #\/ c)))))))
-              (if (##fixnum.= vol-end 0)
+              (if (##fx= vol-end 0)
                   (relative dir-sep?)
                   (absolute vol-end dir-sep?))))))
 
@@ -1973,7 +1973,7 @@
   (let* ((cd
           (##current-directory))
          (directory-separator
-          (##string-ref cd (##fixnum.- (##string-length cd) 1)))
+          (##string-ref cd (##fx- (##string-length cd) 1)))
          (dir
           (if (or (##not origin) (##eq? origin (macro-absent-obj)))
             cd
@@ -1996,45 +1996,45 @@
         p
         (let* ((first-diff
                 (let loop1 ((i 0))
-                  (if (and (##fixnum.< i (##string-length dir))
-                           (##fixnum.< i (##string-length p))
+                  (if (and (##fx< i (##string-length dir))
+                           (##fx< i (##string-length p))
                            (##char=? (##string-ref dir i) (##string-ref p i)))
-                    (loop1 (##fixnum.+ i 1))
+                    (loop1 (##fx+ i 1))
                     i)))
                (vol-end
                 (##path-volume-end-using-dir-sep dir directory-separator)))
-          (if (##fixnum.< first-diff vol-end)
+          (if (##fx< first-diff vol-end)
             p
             (let* ((common-dir-end
-                    (let loop2 ((i (##fixnum.- first-diff 1)))
-                      (if (##fixnum.< i vol-end)
+                    (let loop2 ((i (##fx- first-diff 1)))
+                      (if (##fx< i vol-end)
                         0
                         (let ((c (##string-ref dir i)))
                           (if (or (##char=? c directory-separator)
                                   (and (##char=? #\\ directory-separator)
                                        (##char=? #\/ c)))
-                            (##fixnum.+ i 1)
-                            (loop2 (##fixnum.- i 1)))))))
+                            (##fx+ i 1)
+                            (loop2 (##fx- i 1)))))))
                    (nb-hops
                     (let loop3 ((i first-diff) (nb-hops 0))
-                      (if (##fixnum.< i (##string-length dir))
-                        (loop3 (##fixnum.+ i 1)
+                      (if (##fx< i (##string-length dir))
+                        (loop3 (##fx+ i 1)
                                (let ((c (##string-ref dir i)))
                                  (if (or (##char=? c directory-separator)
                                          (and (##char=? #\\ directory-separator)
                                               (##char=? #\/ c)))
-                                   (##fixnum.+ nb-hops 1)
+                                   (##fx+ nb-hops 1)
                                    nb-hops)))
                         (if (and (##char=? #\: directory-separator)
-                                 (or (##fixnum.< 0 nb-hops)
+                                 (or (##fx< 0 nb-hops)
                                      (let loop4 ((i first-diff))
-                                       (if (##fixnum.< i (##string-length p))
+                                       (if (##fx< i (##string-length p))
                                          (if (##char=? #\:
                                                        (##string-ref p i))
                                            #t
-                                           (loop4 (##fixnum.+ i 1)))
+                                           (loop4 (##fx+ i 1)))
                                          #f))))
-                          (##fixnum.+ nb-hops 1)
+                          (##fx+ nb-hops 1)
                           nb-hops))))
                    (hop
                     (cond ((##char=? #\: directory-separator)
@@ -2044,24 +2044,24 @@
                           (else
                            "../")))
                    (hop-len
-                    (##fixnum.* (##string-length hop) nb-hops))
+                    (##fx* (##string-length hop) nb-hops))
                    (length-reduction
-                    (##fixnum.- common-dir-end hop-len)))
+                    (##fx- common-dir-end hop-len)))
 
-              (if (and (##fixnum.< length-reduction (##string-length p))
+              (if (and (##fx< length-reduction (##string-length p))
                        (or (##not (##eq? allow-relative? 'shortest))
-                           (##fixnum.< 0 length-reduction)))
+                           (##fx< 0 length-reduction)))
                 (let ((result
                        (##make-string
-                        (##fixnum.- (##string-length p) length-reduction))))
+                        (##fx- (##string-length p) length-reduction))))
                   (##substring-move!
                    p
                    common-dir-end
                    (##string-length p)
                    result
                    hop-len)
-                  (let loop5 ((i (##fixnum.- nb-hops 1)))
-                    (if (##fixnum.< i 0)
+                  (let loop5 ((i (##fx- nb-hops 1)))
+                    (if (##fx< i 0)
                       result
                       (begin
                         (##substring-move!
@@ -2069,8 +2069,8 @@
                          0
                          (##string-length hop)
                          result
-                         (##fixnum.* i (##string-length hop)))
-                        (loop5 (##fixnum.- i 1))))))
+                         (##fx* i (##string-length hop)))
+                        (loop5 (##fx- i 1))))))
                 p))))))))
 
 (define-prim (path-normalize
@@ -2094,12 +2094,12 @@
   (let* ((cd
           (##current-directory))
          (directory-separator
-          (##string-ref cd (##fixnum.- (##string-length cd) 1)))
+          (##string-ref cd (##fx- (##string-length cd) 1)))
          (vol-end
           (##path-volume-end-using-dir-sep path directory-separator)))
-    (let loop ((i (##fixnum.- (##string-length path) 1)))
-      (if (##fixnum.< vol-end i)
-        (let ((c (##string-ref path (##fixnum.- i 1))))
+    (let loop ((i (##fx- (##string-length path) 1)))
+      (if (##fx< vol-end i)
+        (let ((c (##string-ref path (##fx- i 1))))
           (cond ((or (##char=? c directory-separator)
                      (and (##char=? #\\ directory-separator)
                           (##char=? #\/ c)))
@@ -2107,7 +2107,7 @@
                 ((##char=? (##string-ref path i) #\.)
                  i)
                 (else
-                 (loop (##fixnum.- i 1)))))
+                 (loop (##fx- i 1)))))
         (##string-length path)))))
 
 (define-prim (##path-extension path)
@@ -2130,19 +2130,19 @@
   (let* ((cd
           (##current-directory))
          (directory-separator
-          (##string-ref cd (##fixnum.- (##string-length cd) 1)))
+          (##string-ref cd (##fx- (##string-length cd) 1)))
          (vol-end
           (##path-volume-end-using-dir-sep path directory-separator)))
-    (let loop ((i (##fixnum.- (##string-length path) 1)))
-      (if (##fixnum.< i vol-end)
+    (let loop ((i (##fx- (##string-length path) 1)))
+      (if (##fx< i vol-end)
         vol-end
         (let ((c (##string-ref path i)))
           (cond ((or (##char=? c directory-separator)
                      (and (##char=? #\\ directory-separator)
                           (##char=? #\/ c)))
-                 (##fixnum.+ i 1))
+                 (##fx+ i 1))
                 (else
-                 (loop (##fixnum.- i 1)))))))))
+                 (loop (##fx- i 1)))))))))
 
 (define-prim (##path-directory path)
   (##substring path 0 (##path-directory-end path)))
@@ -2164,15 +2164,15 @@
   (let* ((cd
           (##current-directory))
          (directory-separator
-          (##string-ref cd (##fixnum.- (##string-length cd) 1)))
+          (##string-ref cd (##fx- (##string-length cd) 1)))
          (len
           (##string-length path)))
-    (if (and (##fixnum.< 0 len)
-             (let ((c (##string-ref path (##fixnum.- len 1))))
+    (if (and (##fx< 0 len)
+             (let ((c (##string-ref path (##fx- len 1))))
                (or (##char=? c directory-separator)
                    (and (##char=? #\\ directory-separator)
                         (##char=? #\/ c)))))
-      (##substring path 0 (##fixnum.- len 1))
+      (##substring path 0 (##fx- len 1))
       path)))
 
 (define-prim (path-strip-trailing-directory-separator path)
@@ -2184,7 +2184,7 @@
   (let* ((cd
           (##current-directory))
          (directory-separator
-          (##string-ref cd (##fixnum.- (##string-length cd) 1)))
+          (##string-ref cd (##fx- (##string-length cd) 1)))
          (vol-end
           (##path-volume-end-using-dir-sep path directory-separator)))
     vol-end))
@@ -2240,7 +2240,7 @@
                  (if (##eq? prim create-directory)
                    (##os-create-directory resolved-path permissions)
                    (##os-create-fifo resolved-path permissions))))
-           (if (##fixnum.< code 0)
+           (if (##fx< code 0)
              (##raise-os-exception #f code prim path-or-settings)
              (##void))))))))
 
@@ -2259,7 +2259,7 @@
           (##path-resolve new-path))
          (code
           (##os-create-link resolved-old-path resolved-new-path)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
       (##raise-os-exception #f code create-link old-path new-path)
       (##void))))
 
@@ -2276,7 +2276,7 @@
           (##path-resolve new-path))
          (code
           (##os-create-symbolic-link resolved-old-path resolved-new-path)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
       (##raise-os-exception #f code create-symbolic-link old-path new-path)
       (##void))))
 
@@ -2291,7 +2291,7 @@
           (##path-resolve path))
          (code
           (##os-delete-directory resolved-path)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
       (##raise-os-exception
        #f
        code
@@ -2313,7 +2313,7 @@
           (##os-rename-file
            resolved-old-path
            resolved-new-path)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
       (##raise-os-exception
        #f
        code
@@ -2337,7 +2337,7 @@
           (##os-copy-file
            resolved-old-path
            resolved-new-path)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
       (##raise-os-exception
        #f
        code
@@ -2357,7 +2357,7 @@
           (##path-resolve path))
          (code
           (##os-delete-file resolved-path)))
-    (if (##fixnum.< code 0)
+    (if (##fx< code 0)
       (##raise-os-exception
        #f
        code
@@ -2845,12 +2845,12 @@
           (let* ((array (##make-vector dim1 init))
                  (rest (##cdr lst)))
             (if (##pair? rest)
-              (let loop2 ((j (##fixnum.- dim1 1)))
-                (if (##fixnum.< j 0)
+              (let loop2 ((j (##fx- dim1 1)))
+                (if (##fx< j 0)
                   array
                   (begin
-                    (##vector-set! array j (loop1 rest (##fixnum.+ i 1)))
-                    (loop2 (##fixnum.- j 1)))))
+                    (##vector-set! array j (loop1 rest (##fx+ i 1)))
+                    (loop2 (##fx- j 1)))))
               array)))))
 
     init))
@@ -2901,7 +2901,7 @@
 (define-prim (##object->encoding obj)
   (let* ((hi (##type-cast obj (macro-type-fixnum)))
          (lo (##type obj)))
-    (##+ (##* (if (##fixnum.< hi 0) (##- hi ##bignum.2*min-fixnum) hi)
+    (##+ (##* (if (##fx< hi 0) (##- hi ##bignum.2*min-fixnum) hi)
               4)
          lo)))
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -29,7 +29,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define (##make-code* code-prc cte src stepper lst n)
-  (let ((code (##make-vector (##fixnum.+ (##length lst) (##fixnum.+ n 5)) #f)))
+  (let ((code (##make-vector (##fx+ (##length lst) (##fx+ n 5)) #f)))
     (##vector-set! code 0 #f)
     (##vector-set! code 1 code-prc)
     (##vector-set! code 2 cte)
@@ -40,7 +40,7 @@
         (let ((child (##car l)))
           (##vector-set! child 0 code)
           (macro-code-set! code i child)
-          (loop (##fixnum.+ i 1) (##cdr l)))
+          (loop (##fx+ i 1) (##cdr l)))
         code))))
 
 (define (##no-stepper) (macro-make-no-stepper))
@@ -91,14 +91,14 @@
     (let* ((len (##vector-length vect))
            (x (##make-vector len 0))
            (same? #t))
-      (let loop ((i (##fixnum.- len 1)))
-        (if (##fixnum.< i 0)
+      (let loop ((i (##fx- len 1)))
+        (if (##fx< i 0)
             (if same? vect x)
             (let ((s (sourcify-deep (##vector-ref vect i) src)))
               (if (##not (##eq? s (##vector-ref vect i)))
                   (set! same? #f))
               (##vector-set! x i s)
-              (loop (##fixnum.- i 1)))))))
+              (loop (##fx- i 1)))))))
 
   (define (sourcify-deep-box b src)
     (let ((val (sourcify-deep (##unbox b) src)))
@@ -127,10 +127,10 @@
 
 (define (##source? x)
   (and (##vector? x)
-       (##fixnum.< 0 (##vector-length x))
+       (##fx< 0 (##vector-length x))
        (let ((y (##vector-ref x 0)))
          (and (##vector? y)
-              (##fixnum.= 1 (##vector-length y))
+              (##fx= 1 (##vector-length y))
               (let ((z (##vector-ref y 0)))
                 (or (##eq? z 'source1)
                     (##eq? z 'source2)))))))
@@ -159,12 +159,12 @@
   (define (desourcify-vector vect)
     (let* ((len (##vector-length vect))
            (x (##make-vector len 0)))
-      (let loop ((i (##fixnum.- len 1)))
-        (if (##fixnum.< i 0)
+      (let loop ((i (##fx- len 1)))
+        (if (##fx< i 0)
           x
           (begin
             (##vector-set! x i (##desourcify (##vector-ref vect i)))
-            (loop (##fixnum.- i 1)))))))
+            (loop (##fx- i 1)))))))
 
   (if (##source? src)
     (let ((code (##source-code src)))
@@ -330,7 +330,7 @@
   (##vector top-cte))
 
 (define (##cte-top? cte)
-  (##fixnum.= (##vector-length cte) 1))
+  (##fx= (##vector-length cte) 1))
 
 (define (##cte-top-cte cte)
   (##vector-ref cte 0))
@@ -345,7 +345,7 @@
   (##vector parent-cte vars))
 
 (define (##cte-frame? cte)
-  (##fixnum.= (##vector-length cte) 2))
+  (##fx= (##vector-length cte) 2))
 
 (define (##cte-frame-vars cte)
   (##vector-ref cte 1))
@@ -379,7 +379,7 @@
   (##vector parent-cte name descr))
 
 (define (##cte-macro? cte)
-  (and (##fixnum.= (##vector-length cte) 3)
+  (and (##fx= (##vector-length cte) 3)
        (##not (##string? (##vector-ref cte 1))))) ;; distinguish from namespace
 
 (define (##cte-macro-name cte)
@@ -392,7 +392,7 @@
   (##vector parent-cte name value #f))
 
 (define (##cte-decl? cte)
-  (##fixnum.= (##vector-length cte) 4))
+  (##fx= (##vector-length cte) 4))
 
 (define (##cte-decl-name cte)
   (##vector-ref cte 1))
@@ -404,7 +404,7 @@
   (##vector parent-cte prefix vars))
 
 (define (##cte-namespace? cte)
-  (and (##fixnum.= (##vector-length cte) 3)
+  (and (##fx= (##vector-length cte) 3)
        (##string? (##vector-ref cte 1)))) ;; distinguish from macro
 
 (define (##cte-namespace-prefix cte)
@@ -594,8 +594,8 @@
                                            (##var-c-name var)))
                            (##vector 'var var up over)
                            (loop2 (##cdr vars)
-                                  (##fixnum.+ over 1))))
-                     (loop1 name full? parent-cte (##fixnum.+ up 1)))))
+                                  (##fx+ over 1))))
+                     (loop1 name full? parent-cte (##fx+ up 1)))))
               ((##cte-macro? cte)
                (if (##eq? name (##cte-macro-name cte))
                  (##vector 'macro name (##cte-macro-descr cte))
@@ -631,15 +631,15 @@
 
 (define (##full-name? sym) ;; full name if it contains a namespace separator
   (let ((str (##symbol->string sym)))
-    (let loop ((i (##fixnum.- (##string-length str) 1)))
-      (if (##fixnum.< i 0)
+    (let loop ((i (##fx- (##string-length str) 1)))
+      (if (##fx< i 0)
         #f
         (if (##memq (##string-ref str i) ##namespace-separators)
           #t
-          (loop (##fixnum.- i 1)))))))
+          (loop (##fx- i 1)))))))
 
 (define (##make-full-name prefix sym)
-  (if (##fixnum.= (##string-length prefix) 0)
+  (if (##fx= (##string-length prefix) 0)
     sym
     (##string->symbol (##string-append prefix (##symbol->string sym)))))
 
@@ -649,9 +649,9 @@
   ;; valid as is the special prefix ""
 
   (let ((l (##string-length str)))
-    (or (##fixnum.= l 0)
-        (and (##not (##fixnum.< l 2))
-             (##memq (##string-ref str (##fixnum.- l 1))
+    (or (##fx= l 0)
+        (and (##not (##fx< l 2))
+             (##memq (##string-ref str (##fx- l 1))
                      ##namespace-separators)))))
 
 (define (##var-lookup cte src)
@@ -741,13 +741,13 @@
       (cond ((##pair? lst)
              (let ((parm (##source-code (##sourcify (##car lst) parms-src))))
                (if (##memq parm '(#!optional #!key #!rest))
-                 (##fixnum.- 0 n)
+                 (##fx- 0 n)
                  (loop (##cdr lst)
-                       (##fixnum.+ n 1)))))
+                       (##fx+ n 1)))))
             ((##null? lst)
              n)
             (else
-             (##fixnum.- 0 n))))))
+             (##fx- 0 n))))))
 
 (define (##cte-lookup-decl cte name default-value)
   (##declare (inlining-limit 500)) ;; inline CTE access procedures
@@ -799,9 +799,9 @@
   (let* ((code (##source-code x))
          (n (##proper-length code)))
     (if (or (##not n)
-            (if (##fixnum.< 0 size)
-              (##not (##fixnum.= n size))
-              (##fixnum.< n (##fixnum.- 0 size))))
+            (if (##fx< 0 size)
+              (##not (##fx= n size))
+              (##fx< n (##fx- 0 size))))
       (##raise-expression-parsing-exception
        'ill-formed-special-form
        src
@@ -809,7 +809,7 @@
               (head (##source-code (##sourcify (##car code) src)))
               (name (##symbol->string head))
               (len (##string-length name)))
-         (if (and (##fixnum.< 2 len)
+         (if (and (##fx< 2 len)
                   (##char=? #\# (##string-ref name 0))
                   (##char=? #\# (##string-ref name 1)))
            (##string->symbol (##substring name 2 len))
@@ -817,7 +817,7 @@
 
 (define (##proper-length lst)
   (let loop ((lst lst) (n 0))
-    (cond ((##pair? lst) (loop (##cdr lst) (##fixnum.+ n 1)))
+    (cond ((##pair? lst) (loop (##cdr lst) (##fx+ n 1)))
           ((##null? lst) n)
           (else          #f))))
 
@@ -918,12 +918,12 @@
     (macro-code-locat-set! code locat-or-position)
     (let ((n (macro-code-length code)))
       (let loop ((i 0))
-        (if (##fixnum.< i n)
+        (if (##fx< i n)
           (let ((x (macro-code-ref code i)))
             (if (macro-is-child-code? x code)
               (begin
                 (convert! container x)
-                (loop (##fixnum.+ i 1)))))))))
+                (loop (##fx+ i 1)))))))))
 
   (convert! #f code)
   code)
@@ -1425,7 +1425,7 @@
                                     src
                                     #f
                                     first-src
-                                    (##fixnum.- depth 1))
+                                    (##fx- depth 1))
                    (##comp-list-template cte
                                          src
                                          #f
@@ -1454,7 +1454,7 @@
                                         src
                                         #f
                                         (##cdr lst)
-                                        (##fixnum.+ depth 1))))
+                                        (##fx+ depth 1))))
                ((unquote)
                 (if (##eq? depth 1)
                   (##comp-subexpr cte (##sourcify (##cadr lst) first-src) tail?)
@@ -1465,7 +1465,7 @@
                                           src
                                           #f
                                           (##cdr lst)
-                                          (##fixnum.- depth 1)))))
+                                          (##fx- depth 1)))))
                (else
                 (non-special-list)))
              (non-special-list))))
@@ -1650,7 +1650,7 @@
       (##vector (##reverse rev-required-parms)
                 (and rev-optional-parms (##reverse rev-optional-parms))
                 rest-parm2
-                (and rest-parm (##fixnum.= state 4))
+                (and rest-parm (##fx= state 4))
                 (if (or (##not rev-key-parms)
                         (and (##null? rev-key-parms) (##not rest-parm2)))
                   #f
@@ -1670,7 +1670,7 @@
            (let* ((parm-src (##sourcify (##car lst) src))
                   (parm (##source-code parm-src)))
              (cond ((##eq? #!optional parm)
-                    (if (##not (##fixnum.= 1 state))
+                    (if (##not (##fx= 1 state))
                       (optional-illegal-err parm-src))
                     (loop (##cdr lst)
                           rev-required-parms
@@ -1686,7 +1686,7 @@
                              (parm (##source-code parm-src)))
                         (##variable parm-src)
                         (check-if-duplicate parm-src)
-                        (if (##fixnum.= state 4)
+                        (if (##fx= state 4)
                           (if (##null? (##cddr lst))
                             (done parm)
                             (rest-parm-must-be-last-err parm-src))
@@ -1698,7 +1698,7 @@
                                 3)))
                       (rest-parm-expected-err parm-src)))
                    ((##eq? #!key parm)
-                    (if (##fixnum.= 4 state)
+                    (if (##fx= 4 state)
                       (key-illegal-err parm-src))
                     (loop (##cdr lst)
                           rev-required-parms
@@ -1706,7 +1706,7 @@
                           rest-parm
                           '()
                           4))
-                   ((##fixnum.= state 3)
+                   ((##fx= state 3)
                     (key-expected-err parm-src))
                    ((##symbol? parm)
                     (##variable parm-src)
@@ -1739,7 +1739,7 @@
                                      rev-key-parms)
                              state))))
                    ((##pair? parm)
-                    (if (##not (or (##fixnum.= state 2) (##fixnum.= state 4)))
+                    (if (##not (or (##fx= state 2) (##fx= state 4)))
                       (default-binding-illegal-err parm-src))
                     (let ((len (##proper-length parm)))
                       (if (##not (##eq? len 2))
@@ -1767,7 +1767,7 @@
                                        rev-key-parms)
                                state)))))
                    (else
-                    (if (##not (##fixnum.= 1 state))
+                    (if (##not (##fx= 1 state))
                       (parm-or-default-binding-expected-err parm-src)
                       (parm-expected-err parm-src))))))
           (else
@@ -2414,8 +2414,8 @@
    (macro-reference-step! ()
     (let ((up (^ 0)))
       (let loop ((e rte) (i up))
-        (if (##fixnum.< 0 i)
-          (loop (macro-rte-up e) (##fixnum.- i 1))
+        (if (##fx< 0 i)
+          (loop (macro-rte-up e) (##fx- i 1))
           (macro-rte-ref e (^ 1))))))))
 
 (define ##gen-loc-ref-aux
@@ -2455,8 +2455,8 @@
    (macro-reference-step! ()
     (let ((up (^ 0)))
       (let loop ((e rte) (i up))
-        (if (##fixnum.< 0 i)
-          (loop (macro-rte-up e) (##fixnum.- i 1))
+        (if (##fx< 0 i)
+          (loop (macro-rte-up e) (##fx- i 1))
           (##unbox (macro-rte-ref e (^ 1)))))))))
 
 (define ##gen-loc-ref-box
@@ -2504,8 +2504,8 @@
      (macro-set!-step! (val)
       (let ((up (^ 1)))
         (let loop ((e rte) (i up))
-          (if (##fixnum.< 0 i)
-            (loop (macro-rte-up e) (##fixnum.- i 1))
+          (if (##fx< 0 i)
+            (loop (macro-rte-up e) (##fx- i 1))
             (begin
               (macro-rte-set! e (^ 2) val)
               (##void)))))))))
@@ -2516,8 +2516,8 @@
      (macro-set!-step! (val)
       (let ((up (^ 1)))
         (let loop ((e rte) (i up))
-          (if (##fixnum.< 0 i)
-            (loop (macro-rte-up e) (##fixnum.- i 1))
+          (if (##fx< 0 i)
+            (loop (macro-rte-up e) (##fx- i 1))
             (begin
               (##set-box! (macro-rte-ref e (^ 2)) val)
               (##void)))))))))
@@ -2796,16 +2796,16 @@
 
 (define ##cprc-let
   (macro-make-cprc
-   (let ((ns (##fixnum.- (macro-code-length $code) 2)))
+   (let ((ns (##fx- (macro-code-length $code) 2)))
      (let loop1 ((i 1) (args '()))
-       (if (##fixnum.< ns i)
+       (if (##fx< ns i)
          (let ((inner-rte (macro-make-rte* rte ns)))
            (##check-heap-limit)
            (let loop2 ((i ns) (args args))
-             (if (##fixnum.< 0 i)
+             (if (##fx< 0 i)
                (begin
                  (macro-rte-set! inner-rte i (##car args))
-                 (loop2 (##fixnum.- i 1) (##cdr args)))
+                 (loop2 (##fx- i 1) (##cdr args)))
                (let* (($code
                        (^ 0))
                       (rte
@@ -2816,7 +2816,7 @@
          (let ((new-args
                 (##cons (macro-code-run (macro-code-ref $code i)) args)))
            (##check-heap-limit)
-           (loop1 (##fixnum.+ i 1) new-args)))))))
+           (loop1 (##fx+ i 1) new-args)))))))
 
 (define ##gen-let
   (macro-make-gen (vars vals body)
@@ -2824,18 +2824,18 @@
             (##no-stepper))
            (c
             (##make-code* ##cprc-let cte src stepper (##cons body vals) 1)))
-      (macro-code-set! c (##fixnum.+ (##length vals) 1) vars)
+      (macro-code-set! c (##fx+ (##length vals) 1) vars)
       c)))
 
 (define ##cprc-letrec
   (macro-make-cprc
-   (let ((ns (##fixnum.- (macro-code-length $code) 2)))
+   (let ((ns (##fx- (macro-code-length $code) 2)))
      (let ((inner-rte (macro-make-rte* rte ns)))
        (let loop1 ((i 1) (rev-vals '()))
-         (if (##fixnum.< ns i)
+         (if (##fx< ns i)
            (let loop2 ((i i) (rev-vals rev-vals))
-             (if (##fixnum.< 1 i)
-               (let ((new-i (##fixnum.- i 1)))
+             (if (##fx< 1 i)
+               (let ((new-i (##fx- i 1)))
                  (macro-rte-set! inner-rte new-i (##car rev-vals))
                  (loop2 new-i (##cdr rev-vals)))
                (let* (($code (^ 0))
@@ -2847,7 +2847,7 @@
                             (macro-code-run $code))
                           rev-vals)))
              (##check-heap-limit)
-             (loop1 (##fixnum.+ i 1) new-rev-vals))))))))
+             (loop1 (##fx+ i 1) new-rev-vals))))))))
 
 (define ##gen-letrec
   (macro-make-gen (vars vals body)
@@ -2855,7 +2855,7 @@
             (##no-stepper))
            (c
             (##make-code* ##cprc-letrec cte src stepper (##cons body vals) 1)))
-      (macro-code-set! c (##fixnum.+ (##length vals) 1) vars)
+      (macro-code-set! c (##fx+ (##length vals) 1) vars)
       c)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3047,7 +3047,7 @@
                        (##check-heap-limit)
                        (macro-rte-set! inner-rte 1 proc)
                        (let loop ((i 2) (lst args))
-                         (if (##fixnum.< ns i)
+                         (if (##fx< ns i)
                            (if (##pair? lst)
                              (##raise-wrong-number-of-arguments-exception
                               proc
@@ -3058,7 +3058,7 @@
                            (if (##pair? lst)
                              (begin
                                (macro-rte-set! inner-rte i (##car lst))
-                               (loop (##fixnum.+ i 1) (##cdr lst)))
+                               (loop (##fx+ i 1) (##cdr lst)))
                              (##raise-wrong-number-of-arguments-exception
                               proc
                               args)))))))
@@ -3099,7 +3099,7 @@
            #f
            frame))
         (else
-         (let ((n+1 (##fixnum.+ n 1)))
+         (let ((n+1 (##fx+ n 1)))
            (macro-make-code ##cprc-prc-req  cte src stepper (body)
              n+1
              #f
@@ -3127,11 +3127,11 @@
                        (##check-heap-limit)
                        (macro-rte-set! inner-rte 1 proc)
                        (let loop ((i 2) (lst args))
-                         (if (##fixnum.< i ns)
+                         (if (##fx< i ns)
                            (if (##pair? lst)
                              (begin
                                (macro-rte-set! inner-rte i (##car lst))
-                               (loop (##fixnum.+ i 1) (##cdr lst)))
+                               (loop (##fx+ i 1) (##cdr lst)))
                              (##raise-wrong-number-of-arguments-exception
                               proc
                               args))
@@ -3159,7 +3159,7 @@
 (define ##gen-prc-rest
   (macro-make-gen (frame body)
     (let ((stepper (##current-stepper))
-          (n+1 (##fixnum.+ (##length frame) 1)))
+          (n+1 (##fx+ (##length frame) 1)))
       (macro-make-code ##cprc-prc-rest cte src stepper (body)
         n+1
         #f
@@ -3177,7 +3177,7 @@
                           (inner-rte
                            (macro-make-rte*
                             rte
-                            (macro-code-ref $code (##fixnum.- n 7)))))
+                            (macro-code-ref $code (##fx- n 7)))))
 
                      (define reject-illegal-dsssl-parameter-list? #f)
 
@@ -3186,7 +3186,7 @@
 
                          (define (keys-ok)
                            (let loop3 ((i i) (j j) (k 0))
-                             (if (##fixnum.< k (##vector-length keys))
+                             (if (##fx< k (##vector-length keys))
                                (let ((key (##vector-ref keys k)))
                                  (let loop4 ((lst left))
                                    (if (##eq? lst end)
@@ -3197,16 +3197,16 @@
                                                 (rte
                                                  inner-rte))
                                            (macro-code-run $code)))
-                                       (loop3 (##fixnum.+ i 1)
-                                              (##fixnum.+ j 1)
-                                              (##fixnum.+ k 1)))
+                                       (loop3 (##fx+ i 1)
+                                              (##fx+ j 1)
+                                              (##fx+ k 1)))
                                      (if (##eq? (##car lst) key)
                                        (begin
                                          (macro-rte-set! inner-rte i
                                            (##cadr lst))
-                                         (loop3 (##fixnum.+ i 1)
-                                                (##fixnum.+ j 1)
-                                                (##fixnum.+ k 1)))
+                                         (loop3 (##fx+ i 1)
+                                                (##fx+ j 1)
+                                                (##fx+ k 1)))
                                        (loop4 (##cddr lst))))))
                                (begin
                                  (if (##eq? rest? #t)
@@ -3229,17 +3229,17 @@
                                    ((##keyword? key)
                                     (if (##eq? rest? 'dsssl)
                                       (loop1 (##cdr lst))
-                                      (let loop2 ((k (##fixnum.-
+                                      (let loop2 ((k (##fx-
                                                       (##vector-length keys)
                                                       1)))
-                                        (cond ((##fixnum.< k 0)
+                                        (cond ((##fx< k 0)
                                                (##raise-unknown-keyword-argument-exception
                                                 proc
                                                 args))
                                               ((##eq? key (##vector-ref keys k))
                                                (loop1 (##cdr lst)))
                                               (else
-                                               (loop2 (##fixnum.- k 1)))))))
+                                               (loop2 (##fx- k 1)))))))
                                    (else
                                     (if (or (##not rest?)
                                             (and reject-illegal-dsssl-parameter-list?
@@ -3253,45 +3253,45 @@
                      (##check-heap-limit)
                      (macro-rte-set! inner-rte 1 proc)
                      (let loop1 ((i 2) (lst args))
-                       (if (##fixnum.<
+                       (if (##fx<
                             i
-                            (macro-code-ref $code (##fixnum.- n 6)))
+                            (macro-code-ref $code (##fx- n 6)))
                          (if (##pair? lst)
                            (begin
                              (macro-rte-set! inner-rte i (##car lst))
-                             (loop1 (##fixnum.+ i 1) (##cdr lst)))
+                             (loop1 (##fx+ i 1) (##cdr lst)))
                            (##raise-wrong-number-of-arguments-exception
                             proc
                             args))
                          (let loop2 ((i i) (j 1) (lst lst))
-                           (if (##fixnum.<
+                           (if (##fx<
                                 i
-                                (macro-code-ref $code (##fixnum.- n 5)))
+                                (macro-code-ref $code (##fx- n 5)))
                              (if (##pair? lst)
                                (begin
                                  (macro-rte-set! inner-rte i (##car lst))
-                                 (loop2 (##fixnum.+ i 1)
-                                        (##fixnum.+ j 1)
+                                 (loop2 (##fx+ i 1)
+                                        (##fx+ j 1)
                                         (##cdr lst)))
                                (begin
                                  (macro-rte-set! inner-rte i
                                    (let* (($code (macro-code-ref $code j))
                                           (rte inner-rte))
                                      (macro-code-run $code)))
-                                 (loop2 (##fixnum.+ i 1)
-                                        (##fixnum.+ j 1)
+                                 (loop2 (##fx+ i 1)
+                                        (##fx+ j 1)
                                         '())))
                              (let ((keys
-                                    (macro-code-ref $code (##fixnum.- n 3)))
+                                    (macro-code-ref $code (##fx- n 3)))
                                    (rest?
-                                    (macro-code-ref $code (##fixnum.- n 4))))
+                                    (macro-code-ref $code (##fx- n 4))))
                                (cond (rest?
                                       (if keys
                                         (get-keys
                                          (if (##eq? rest? 'dsssl)
                                            (begin
                                              (macro-rte-set! inner-rte i lst)
-                                             (##fixnum.+ i 1))
+                                             (##fx+ i 1))
                                            i)
                                          j
                                          lst
@@ -3327,7 +3327,7 @@
 
                  (let ((entry-hook
                         (macro-code-ref $code
-                                        (##fixnum.- (macro-code-length $code) 2))))
+                                        (##fx- (macro-code-length $code) 2))))
                    (if entry-hook
                      (let ((exec
                             (lambda () (execute))))
@@ -3351,18 +3351,18 @@
            (ni
             (##length inits))
            (nr
-            (##fixnum.- (##fixnum.- n ni) (if rest? 1 0)))
+            (##fx- (##fx- n ni) (if rest? 1 0)))
            (no
-            (##fixnum.- ni (if keys (##vector-length keys) 0)))
+            (##fx- ni (if keys (##vector-length keys) 0)))
            (c
             (##make-code* ##cprc-prc cte src stepper (##cons body inits) 7)))
-      (macro-code-set! c (##fixnum.+ ni 1) (##fixnum.+ n 1))
-      (macro-code-set! c (##fixnum.+ ni 2) (##fixnum.+ nr 2))
-      (macro-code-set! c (##fixnum.+ ni 3) (##fixnum.+ (##fixnum.+ nr 2) no))
-      (macro-code-set! c (##fixnum.+ ni 4) rest?)
-      (macro-code-set! c (##fixnum.+ ni 5) keys)
-      (macro-code-set! c (##fixnum.+ ni 6) #f)
-      (macro-code-set! c (##fixnum.+ ni 7) frame)
+      (macro-code-set! c (##fx+ ni 1) (##fx+ n 1))
+      (macro-code-set! c (##fx+ ni 2) (##fx+ nr 2))
+      (macro-code-set! c (##fx+ ni 3) (##fx+ (##fx+ nr 2) no))
+      (macro-code-set! c (##fx+ ni 4) rest?)
+      (macro-code-set! c (##fx+ ni 5) keys)
+      (macro-code-set! c (##fx+ ni 6) #f)
+      (macro-code-set! c (##fx+ ni 7) frame)
       c)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3449,11 +3449,11 @@
   (macro-make-cprc
    (let ((oper (macro-code-run (^ 0))))
      (let loop ((i 1) (rev-args '()))
-       (if (##fixnum.< i (macro-code-length $code))
+       (if (##fx< i (macro-code-length $code))
          (let ((new-rev-args
                 (##cons (macro-code-run (macro-code-ref $code i)) rev-args)))
            (##check-heap-limit)
-           (loop (##fixnum.+ i 1) new-rev-args))
+           (loop (##fx+ i 1) new-rev-args))
          (let ((args (##reverse rev-args)))
            (macro-force-vars (oper)
              (if (##not (##procedure? oper))
@@ -3543,11 +3543,11 @@
   (macro-make-cprc
    (let ((oper (macro-code-run (^ 0))))
      (let loop ((i 1) (rev-args '()))
-       (if (##fixnum.< i (macro-code-length $code))
+       (if (##fx< i (macro-code-length $code))
          (let ((new-rev-args
                 (##cons (macro-code-run (macro-code-ref $code i)) rev-args)))
            (##check-heap-limit)
-           (loop (##fixnum.+ i 1) new-rev-args))
+           (loop (##fx+ i 1) new-rev-args))
          (let ((args (##reverse rev-args)))
            (macro-force-vars (oper)
              (if (##not (##procedure? oper))
@@ -3843,7 +3843,7 @@
 
       (cond ((##not (##vector? result))
              (raise-error result))
-            ((##fixnum.= 2 (##vector-length result))
+            ((##fx= 2 (##vector-length result))
              (raise-error (##vector-ref result 0)))
             (else
              (let ((module-descrs (##vector-ref result 0))
@@ -3870,7 +3870,7 @@
                    (resolved-path-exists?
                     (##not (##fixnum? resolved-info))))
               (if resolved-path-exists?
-                  (loop1 (##fixnum.+ version 1)
+                  (loop1 (##fx+ version 1)
                          resolved-path
                          resolved-info)
                   (if (and last-obj-file-path
@@ -3890,7 +3890,7 @@
                               (if (##not src-file-path-exists?)
                                   (loop2 (##cdr lst))
                                   (if (or (##not last-obj-file-path)
-                                          (##flonum.<
+                                          (##fl<
                                            (macro-time-point
                                             (macro-file-info-last-modification-time
                                              last-obj-file-info))
@@ -3908,17 +3908,17 @@
 
   (define (binary-extension? ext)
     (let ((len (##string-length ext)))
-      (and (##fixnum.< 2 len)
+      (and (##fx< 2 len)
            (##char=? (##string-ref ext 0) #\.)
            (##char=? (##string-ref ext 1) #\o)
            (let ((c (##string-ref ext 2)))
              (and (##char>=? c #\1) (##char<=? c #\9)
-                  (let loop ((i (##fixnum.- len 1)))
-                    (if (##fixnum.< i 3)
+                  (let loop ((i (##fx- len 1)))
+                    (if (##fx< i 3)
                       #t
                       (let ((c (##string-ref ext i)))
                         (and (##char>=? c #\0) (##char<=? c #\9)
-                             (loop (##fixnum.- i 1)))))))))))
+                             (loop (##fx- i 1)))))))))))
 
   (define (fail)
     (##fail-check-string-or-settings 1 load path-or-settings))
@@ -3958,7 +3958,7 @@
           (##os-load-object-file abs-path module-name)))
     (cond ((##not (##vector? result))
            result)
-          ((##fixnum.= 2 (##vector-length result))
+          ((##fx= 2 (##vector-length result))
            (if (##not quiet?)
                (##repl
                 (lambda (first output-port)
@@ -4014,7 +4014,7 @@
           #f)
 
   (let ((standard-level (##get-standard-level)))
-    (if (##fixnum.<= 4 standard-level)
+    (if (##fx<= 4 standard-level)
         (##load (macro-syntax-case-file)
                 (lambda (script-line script-path) #f)
                 #t

@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -130,14 +130,14 @@
 (##define-macro (macro-port-of-rkind? obj kind)
   `(let ((obj ,obj))
      (and (macro-port? obj)
-          (##fixnum.= (##fixnum.bitwise-and (macro-port-rkind obj) ,kind)
-                      ,kind))))
+          (##fx= (##fxand (macro-port-rkind obj) ,kind)
+                 ,kind))))
 
 (##define-macro (macro-port-of-wkind? obj kind)
   `(let ((obj ,obj))
      (and (macro-port? obj)
-          (##fixnum.= (##fixnum.bitwise-and (macro-port-wkind obj) ,kind)
-                      ,kind))))
+          (##fx= (##fxand (macro-port-wkind obj) ,kind)
+                 ,kind))))
 
 (##define-macro (macro-none-kind)      0) ;; allows nothing
 (##define-macro (macro-object-kind)    1) ;; can read and write objects
@@ -764,10 +764,10 @@
 (##define-macro (macro-full-buffering)    3)
 
 (##define-macro (macro-unbuffered? options)
-  `(##fixnum.< (##fixnum.bitwise-and ,options 2047) 1024))
+  `(##fx< (##fxand ,options 2047) 1024))
 
 (##define-macro (macro-fully-buffered? options)
-  `(##not (##fixnum.< (##fixnum.bitwise-and ,options 2047) 1536)))
+  `(##not (##fx< (##fxand ,options 2047) 1536)))
 
 (##define-macro (macro-decode-state-shift)  2048)
 (##define-macro (macro-decode-state-range)  4)
@@ -781,13 +781,13 @@
 (##define-macro (macro-open-state-closed) 1)
 
 (##define-macro (macro-closed? options)
-  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 8192) 0)))
+  `(##not (##fx= (##fxand ,options 8192) 0)))
 
 (##define-macro (macro-close! options)
-  `(##fixnum.bitwise-ior ,options 8192))
+  `(##fxior ,options 8192))
 
 (##define-macro (macro-unclose! options)
-  `(##fixnum.bitwise-and ,options -8193))
+  `(##fxand ,options -8193))
 
 (##define-macro (macro-permanent-close-shift)  16384)
 (##define-macro (macro-permanent-close-range)  2)
@@ -795,7 +795,7 @@
 (##define-macro (macro-permanent-close-yes)    1)
 
 (##define-macro (macro-perm-close? options)
-  `(##not (##fixnum.= (##fixnum.bitwise-and ,options 16384) 0)))
+  `(##not (##fx= (##fxand ,options 16384) 0)))
 
 (##define-macro (macro-direction-shift) 16)
 (##define-macro (macro-direction-in)    1)
@@ -978,7 +978,7 @@
 
        (let ((char-rlo (macro-character-port-rlo port))
              (char-rhi (macro-character-port-rhi port)))
-         (if (##fixnum.< char-rlo char-rhi)
+         (if (##fx< char-rlo char-rhi)
 
            ;; the next character is in the character read buffer
 
@@ -1008,7 +1008,7 @@
 
        (let ((char-rlo (macro-character-port-rlo port))
              (char-rhi (macro-character-port-rhi port)))
-         (if (##fixnum.< char-rlo char-rhi)
+         (if (##fx< char-rlo char-rhi)
 
            ;; the next character is in the character read buffer
 
@@ -1018,7 +1018,7 @@
                ;; frequent simple case, just advance rlo
 
                (begin
-                 (macro-character-port-rlo-set! port (##fixnum.+ char-rlo 1))
+                 (macro-character-port-rlo-set! port (##fx+ char-rlo 1))
                  c)
 
                ;; end-of-line processing is complex, so do it out-of-line
@@ -1052,14 +1052,14 @@
               (macro-port-mutex-unlocked-not-abandoned-and-not-multiprocessor? port))
 
        (let ((char-wbuf (macro-character-port-wbuf port))
-             (char-whi+1 (##fixnum.+ (macro-character-port-whi port) 1)))
-         (if (##fixnum.< char-whi+1 (##string-length char-wbuf))
+             (char-whi+1 (##fx+ (macro-character-port-whi port) 1)))
+         (if (##fx< char-whi+1 (##string-length char-wbuf))
 
            ;; adding this character would not make the character write
            ;; buffer full, so add character and increment whi
 
            (begin
-             (##string-set! char-wbuf (##fixnum.- char-whi+1 1) c)
+             (##string-set! char-wbuf (##fx- char-whi+1 1) c)
              (macro-character-port-whi-set! port char-whi+1)
              (##void))
 

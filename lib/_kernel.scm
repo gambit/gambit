@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1327,7 +1327,11 @@ end-of-code
 end-of-code
 
    seconds
-   (##flonum.<-fixnum 0)))
+   0.0 ;; hack to reproduce old behavior, should really be replaced with:
+#;
+   (let ()
+     (##declare (not constant-fold)) ;; force allocation of a flonum
+     (##fixnum->flonum 0))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1458,7 +1462,7 @@ end-of-code
    #f
    (lambda (procedure arguments message code dummy)
      (macro-raise
-      (if (##fixnum.= code ##err-code-ENOENT)
+      (if (##fx= code ##err-code-ENOENT)
         (macro-make-no-such-file-or-directory-exception procedure arguments)
         (macro-make-os-exception procedure arguments message code))))))
 
@@ -2932,17 +2936,17 @@ end-of-code
 
 (define-prim (##explode-frame frame)
   (let ((fs (##frame-fs frame)))
-    (let ((v (##make-vector (##fixnum.+ fs 1))))
+    (let ((v (##make-vector (##fx+ fs 1))))
       (##vector-set! v 0 (##frame-ret frame))
       (let loop ((i fs))
-        (if (##fixnum.< 0 i)
+        (if (##fx< 0 i)
           (begin
             (if (##frame-slot-live? frame i)
               (##vector-set!
                v
-               (##fixnum.+ (##fixnum.- fs i) 1)
+               (##fx+ (##fx- fs i) 1)
                (##frame-ref frame i)))
-            (loop (##fixnum.- i 1)))
+            (loop (##fx- i 1)))
           v)))))
 
 (define-prim (##frame-ret frame)
@@ -3476,7 +3480,7 @@ end-of-code
 
   (define (make-struct fields i)
     (if (##pair? fields)
-      (let ((s (make-struct (##cdr fields) (##fixnum.+ i 1))))
+      (let ((s (make-struct (##cdr fields) (##fx+ i 1))))
         (##unchecked-structure-set! s (##car fields) i type #f)
         s)
       (let ((s (##make-vector i type)))
@@ -3822,7 +3826,7 @@ end-of-code
 (define ##fixnum-width
   (##c-code "___RESULT = ___FIX(___FIX_WIDTH);"))
 
-(define ##fixnum-width-neg (##fixnum.- ##fixnum-width))
+(define ##fixnum-width-neg (##fx- ##fixnum-width))
 
 (define ##bignum.adigit-width
   (##c-code "___RESULT = ___FIX(___BIG_ABASE_WIDTH);"))
@@ -4414,7 +4418,7 @@ end-of-code
   (##exit-with-err-code-no-cleanup err-code))
 
 (define-prim (##exit #!optional (status (macro-EXIT-CODE-OK)))
-  (##exit-with-err-code (##fixnum.+ status 1)))
+  (##exit-with-err-code (##fx+ status 1)))
 
 (define-prim (##exit-abnormally)
   (##exit (macro-EXIT-CODE-SOFTWARE)))

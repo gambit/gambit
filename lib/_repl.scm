@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -67,15 +67,15 @@
   (mk-degen (up over)
     (let loop1 ((c (macro-code-cte $code)) (up up))
       (cond ((##cte-frame? c)
-             (if (##fixnum.= up 0)
+             (if (##fx= up 0)
                  (let loop2 ((vars (##cte-frame-vars c)) (i over))
-                   (if (##fixnum.< i 2)
+                   (if (##fx< i 2)
                        (let ((var (##car vars)))
                          (if (##var-i? var)
                              (##var-i-name var)
                              (##var-c-name var)))
-                       (loop2 (##cdr vars) (##fixnum.- i 1))))
-                 (loop1 (##cte-parent-cte c) (##fixnum.- up 1))))
+                       (loop2 (##cdr vars) (##fx- i 1))))
+                 (loop1 (##cte-parent-cte c) (##fx- up 1))))
             (else
              (loop1 (##cte-parent-cte c) up))))))
 
@@ -255,14 +255,14 @@
 (define-prim ##degen-let
   (mk-degen ()
     (let ((n (macro-code-length $code)))
-      (let loop ((i (##fixnum.- n 2)) (vals '()))
-        (if (##fixnum.< 0 i)
-          (loop (##fixnum.- i 1)
+      (let loop ((i (##fx- n 2)) (vals '()))
+        (if (##fx< 0 i)
+          (loop (##fx- i 1)
                 (##cons (##decomp (macro-code-ref $code i)) vals))
           (let ((body
                  (##decomp (^ 0)))
                 (bindings
-                 (##make-bindings (macro-code-ref $code (##fixnum.- n 1))
+                 (##make-bindings (macro-code-ref $code (##fx- n 1))
                                   vals)))
             (if (##begin? body)
               (##cons 'let (##cons bindings (##cdr body)))
@@ -277,14 +277,14 @@
 (define-prim ##degen-letrec
   (mk-degen ()
     (let ((n (macro-code-length $code)))
-      (let loop ((i (##fixnum.- n 2)) (vals '()))
-        (if (##fixnum.< 0 i)
-          (loop (##fixnum.- i 1)
+      (let loop ((i (##fx- n 2)) (vals '()))
+        (if (##fx< 0 i)
+          (loop (##fx- i 1)
                 (##cons (##decomp (macro-code-ref $code i)) vals))
           (let ((body
                  (##decomp (^ 0)))
                 (bindings
-                 (##make-bindings (macro-code-ref $code (##fixnum.- n 1))
+                 (##make-bindings (macro-code-ref $code (##fx- n 1))
                                   vals)))
             (if (##begin? body)
               (##cons 'letrec (##cons bindings (##cdr body)))
@@ -294,7 +294,7 @@
   (mk-degen ()
     (let* ((n (macro-code-length $code))
            (body (##decomp (^ 0)))
-           (params (macro-code-ref $code (##fixnum.- n 1))))
+           (params (macro-code-ref $code (##fx- n 1))))
       (if (##begin? body)
         (##cons 'lambda (##cons params (##cdr body)))
         (##list 'lambda params body)))))
@@ -310,17 +310,17 @@
 (define-prim ##degen-prc
   (mk-degen ()
     (let ((n (macro-code-length $code)))
-      (let loop ((i (##fixnum.- n 8)) (inits '()))
-        (if (##not (##fixnum.< i 1))
-          (loop (##fixnum.- i 1)
+      (let loop ((i (##fx- n 8)) (inits '()))
+        (if (##not (##fx< i 1))
+          (loop (##fx- i 1)
                 (##cons (##decomp (macro-code-ref $code i)) inits))
           (let ((body
                  (##decomp (^ 0)))
                 (params
                  (##make-params
-                   (macro-code-ref $code (##fixnum.- n 1))
-                   (macro-code-ref $code (##fixnum.- n 4))
-                   (macro-code-ref $code (##fixnum.- n 3))
+                   (macro-code-ref $code (##fx- n 1))
+                   (macro-code-ref $code (##fx- n 4))
+                   (macro-code-ref $code (##fx- n 3))
                    inits)))
             (if (##begin? body)
               (##cons 'lambda (##cons params (##cdr body)))
@@ -332,34 +332,34 @@
          (nb-inits
           (##length inits))
          (nb-reqs
-          (##fixnum.- nb-parms (##fixnum.+ nb-inits (if rest? 1 0))))
+          (##fx- nb-parms (##fx+ nb-inits (if rest? 1 0))))
          (nb-opts
-          (##fixnum.- nb-inits (if keys (##vector-length keys) 0))))
+          (##fx- nb-inits (if keys (##vector-length keys) 0))))
 
     (define (build-reqs)
       (let loop ((parms parms)
                  (i nb-reqs))
-        (if (##fixnum.= i 0)
+        (if (##fx= i 0)
           (build-opts parms)
           (let ((parm (##car parms)))
             (##cons parm
                     (loop (##cdr parms)
-                          (##fixnum.- i 1)))))))
+                          (##fx- i 1)))))))
 
     (define (build-opts parms)
-      (if (##fixnum.= nb-opts 0)
+      (if (##fx= nb-opts 0)
         (build-rest-and-keys parms inits)
         (##cons #!optional
                 (let loop ((parms parms)
                            (i nb-opts)
                            (inits inits))
-                  (if (##fixnum.= i 0)
+                  (if (##fx= i 0)
                     (build-rest-and-keys parms inits)
                     (let ((parm (##car parms))
                           (init (##car inits)))
                       (##cons (if (##eq? init #f) parm (##list parm init))
                               (loop (##cdr parms)
-                                    (##fixnum.- i 1)
+                                    (##fx- i 1)
                                     (##cdr inits)))))))))
 
     (define (build-rest-and-keys parms inits)
@@ -376,13 +376,13 @@
                 (let loop ((parms parms)
                            (i (##vector-length keys))
                            (inits inits))
-                  (if (##fixnum.= i 0)
+                  (if (##fx= i 0)
                     (build-rest-at-end parms)
                     (let ((parm (##car parms))
                           (init (##car inits)))
                       (##cons (if (##eq? init #f) parm (##list parm init))
                               (loop (##cdr parms)
-                                    (##fixnum.- i 1)
+                                    (##fx- i 1)
                                     (##cdr inits)))))))))
 
     (define use-dotted-rest-parameter-when-possible? #t)
@@ -429,9 +429,9 @@
 (define-prim ##degen-app
   (mk-degen ()
     (let ((n (macro-code-length $code)))
-      (let loop ((i (##fixnum.- n 1)) (vals '()))
-        (if (##not (##fixnum.< i 0))
-          (loop (##fixnum.- i 1)
+      (let loop ((i (##fx- n 1)) (vals '()))
+        (if (##not (##fx< i 0))
+          (loop (##fx- i 1)
                 (##cons (##decomp (macro-code-ref $code i)) vals))
           vals)))))
 
@@ -576,11 +576,11 @@
     (define (vector->expression v)
       (let* ((len (##vector-length v))
              (x (##make-vector len 0)))
-        (let loop ((i (##fixnum.- len 1)))
-          (if (##not (##fixnum.< i 0))
+        (let loop ((i (##fx- len 1)))
+          (if (##not (##fx< i 0))
             (begin
               (##vector-set! x i (source->expression (##vector-ref v i)))
-              (loop (##fixnum.- i 1)))))
+              (loop (##fx- i 1)))))
         x))
 
     (let ((code (compiler-source-code src)))
@@ -650,13 +650,13 @@
          (parent-info (##subprocedure-parent-info proc)))
     (if parent-info
       (let ((v (##vector-ref parent-info 0)))
-        (let loop ((i (##fixnum.- (##vector-length v) 1)))
-          (if (##fixnum.< i 0)
+        (let loop ((i (##fx- (##vector-length v) 1)))
+          (if (##fx< i 0)
             #f
             (let ((x (##vector-ref v i)))
-              (if (##fixnum.= id (##vector-ref x 0))
+              (if (##fx= id (##vector-ref x 0))
                 x
-                (loop (##fixnum.- i 1)))))))
+                (loop (##fx- i 1)))))))
       #f)))
 
 ;;;============================================================================
@@ -699,7 +699,7 @@
                                          val-or-box))))
                        var
                        (loop2 (##cdr vars)
-                              (##fixnum.+ i 1))))
+                              (##fx+ i 1))))
                  (loop1 (##cte-parent-cte c)
                         (macro-rte-up r)))))
           (else
@@ -861,7 +861,7 @@
         (loop (##continuation-next cont)
               (if (or all-frames?
                       (##interesting-continuation? cont))
-                  (##fixnum.+ n 1)
+                  (##fx+ n 1)
                   n))
         n)))
 
@@ -878,14 +878,14 @@
     (if (and parent-info info)
         (let ((var-descrs (##vector-ref parent-info 1)))
           (let loop1 ((j 2) (result '()))
-            (if (##fixnum.< j (##vector-length info))
+            (if (##fx< j (##vector-length info))
                 (let* ((descr
                         (##vector-ref info j))
                        (slot-index
-                        (##fixnum.quotient descr 32768))
+                        (##fxquotient descr 32768))
                        (var-descr-index
-                        (##fixnum.quotient
-                         (##fixnum.modulo descr 32768)
+                        (##fxquotient
+                         (##fxmodulo descr 32768)
                          2))
                        (var-descr
                         (##vector-ref var-descrs var-descr-index))
@@ -896,8 +896,8 @@
 
                   (define (get-var1)
                     (##cons (##var-c var-descr
-                                     (##fixnum.=
-                                      (##fixnum.modulo descr 2)
+                                     (##fx=
+                                      (##fxmodulo descr 2)
                                       1))
                             val-or-box1))
 
@@ -908,18 +908,18 @@
                             (let* ((descr
                                     (##car lst))
                                    (slot-index
-                                    (##fixnum.quotient descr 32768))
+                                    (##fxquotient descr 32768))
                                    (var-descr-index
-                                    (##fixnum.quotient
-                                     (##fixnum.modulo descr 32768)
+                                    (##fxquotient
+                                     (##fxmodulo descr 32768)
                                      2))
                                    (var-descr
                                     (##vector-ref var-descrs var-descr-index)))
 
                               (define (get-var2)
                                 (##cons (##var-c var-descr
-                                                 (##fixnum.=
-                                                  (##fixnum.modulo descr 2)
+                                                 (##fx=
+                                                  (##fxmodulo descr 2)
                                                   1))
                                         (##closure-ref val-or-box1
                                                        slot-index)))
@@ -937,21 +937,21 @@
                                          (get-var2)
                                          (loop2 (##cdr lst)
                                                 result)))))
-                            (loop1 (##fixnum.+ j 1)
+                            (loop1 (##fx+ j 1)
                                    result)))
 
                       (cond ((##eq? cont (macro-absent-obj))
-                             (loop1 (##fixnum.+ j 1)
+                             (loop1 (##fx+ j 1)
                                     (##cons var-descr
                                             result)))
                             ((##eq? var (macro-absent-obj))
-                             (loop1 (##fixnum.+ j 1)
+                             (loop1 (##fx+ j 1)
                                     (##cons (get-var1)
                                             result)))
                             (else
                              (if (##eq? var var-descr)
                                  (get-var1)
-                                 (loop1 (##fixnum.+ j 1)
+                                 (loop1 (##fx+ j 1)
                                         result))))))
                 result)))
         #f)))
@@ -1019,23 +1019,23 @@
               max-tail
               depth)
   (let loop ((i 0)
-             (j (##fixnum.- (##continuation-count-frames cont all-frames?) 1))
+             (j (##fx- (##continuation-count-frames cont all-frames?) 1))
              (cont (##continuation-first-frame cont all-frames?)))
     (and cont
          (begin
-           (cond ((or (##fixnum.< i max-head) (##fixnum.< j max-tail)
-                      (and (##fixnum.= i max-head) (##fixnum.= j max-tail)))
+           (cond ((or (##fx< i max-head) (##fx< j max-tail)
+                      (and (##fx= i max-head) (##fx= j max-tail)))
                   (##display-continuation-frame
                    cont
                    port
                    display-env?
                    #f
-                   (##fixnum.+ depth i)))
-                 ((##fixnum.= i max-head)
+                   (##fx+ depth i)))
+                 ((##fx= i max-head)
                   (##write-string "..." port)
                   (##newline port)))
-           (loop (##fixnum.+ i 1)
-                 (##fixnum.- j 1)
+           (loop (##fx+ i 1)
+                 (##fx- j 1)
                  (##continuation-next-frame cont all-frames?))))))
 
 (define-prim (display-continuation-backtrace
@@ -1098,8 +1098,8 @@
 
   (define (tab col)
     (let* ((current (##output-port-column port))
-           (n (##fixnum.- col current)))
-      (##display-spaces (##fixnum.max n 1) port)))
+           (n (##fx- col current)))
+      (##display-spaces (##fxmax n 1) port)))
 
   (and cont
        (let ((port-width (##output-port-width port)))
@@ -1110,22 +1110,22 @@
          (define call-width    27)
 
          (let* ((extra
-                 (##fixnum.max
+                 (##fxmax
                   0
-                  (##fixnum.quotient
-                   (##fixnum.- port-width
-                               (##fixnum.+
+                  (##fxquotient
+                   (##fx- port-width
+                               (##fx+
                                 depth-width
                                 creator-width
                                 locat-width
                                 call-width))
                    3)))
                 (col3
-                 (##fixnum.+ depth-width
+                 (##fx+ depth-width
                              creator-width
                              extra))
                 (col4
-                 (##fixnum.+ col3
+                 (##fx+ col3
                              locat-width
                              extra))
                 (locat-display?
@@ -1162,21 +1162,21 @@
                        (##write-string
                         (##object->string
                          call
-                         (##fixnum.- port-width
+                         (##fx- port-width
                                      (##output-port-column port)))
                         port)))))
            (##newline port)
            (##display-continuation-env
             cont
             port
-            (##fixnum.+ 4 depth-width)
+            (##fx+ 4 depth-width)
             display-env?)))))
 
 (define-prim (##display-spaces n port)
-  (if (##fixnum.< 0 n)
-    (let ((m (if (##fixnum.< 40 n) 40 n)))
+  (if (##fx< 0 n)
+    (let ((m (if (##fx< 40 n) 40 n)))
       (##write-substring "                                        " 0 m port)
-      (##display-spaces (##fixnum.- n m) port)
+      (##display-spaces (##fx- n m) port)
       n)))
 
 (define-prim (##display-locat locat pinpoint? port)
@@ -1191,8 +1191,8 @@
                  port)
         (##write-string (##container->id container) port))
       (let* ((filepos (##position->filepos (##locat-position locat)))
-             (line (##fixnum.+ (##filepos-line filepos) 1))
-             (col (##fixnum.+ (##filepos-col filepos) 1)))
+             (line (##fx+ (##filepos-line filepos) 1))
+             (col (##fx+ (##filepos-col filepos) 1)))
         (##write-string "@" port)
         (##write line port)
         (##write-string (if pinpoint? "." ":") port)
@@ -1262,7 +1262,7 @@
     (if (##cte-top? cte)
         (##inverse-eval-in-env val cte)
         (##inverse-eval-in-env val (##cte-parent-cte cte)))
-    (##fixnum.- (##output-port-width port)
+    (##fx- (##output-port-width port)
                 (##output-port-column port)))
    port)
   (##newline port))
@@ -1456,13 +1456,13 @@
 
   (define (tab col)
     (let* ((current (##output-port-column port))
-           (n (##fixnum.- col current)))
-      (##display-spaces (##fixnum.max n 1) port)))
+           (n (##fx- col current)))
+      (##display-spaces (##fxmax n 1) port)))
 
   (define (write-timeout to)
     (##write-string " " port)
-    (let ((expiry (##flonum.- (macro-time-point to) time-point)))
-      (##write (##flonum./ (##flonum.round (##flonum.* 10.0 expiry)) 10.0)
+    (let ((expiry (##fl- (macro-time-point to) time-point)))
+      (##write (##fl/ (##flround (##fl* 10.0 expiry)) 10.0)
                port))
     (##write-string "s" port))
 
@@ -1471,13 +1471,13 @@
     (define thread-width 14)
 
     (let ((extra
-           (##fixnum.max
+           (##fxmax
             0
-            (##fixnum.quotient
-             (##fixnum.- port-width thread-width)
+            (##fxquotient
+             (##fx- port-width thread-width)
              5))))
       (##write thread port)
-      (tab (##fixnum.+ thread-width extra))
+      (tab (##fx+ thread-width extra))
       (let ((ts (##thread-state thread)))
         (cond ((macro-thread-state-uninitialized? ts)
                (##write-string "UNINITIALIZED" port))
@@ -1508,10 +1508,10 @@
   (let* ((threads (##tgroup->thread-vector tgroup))
          (now (##current-time-point)))
     (let loop ((i 0))
-      (if (##fixnum.< i (##vector-length threads))
+      (if (##fx< i (##vector-length threads))
           (let ((thread (##vector-ref threads i)))
             (##display-thread-state-relative thread port now)
-            (loop (##fixnum.+ i 1)))
+            (loop (##fx+ i 1)))
           i))))
 
 (define-prim (##top tgroup port)
@@ -1526,11 +1526,11 @@
   (let ((start-time-point (##current-time-point)))
     (let loop ((last start-time-point))
       (##write-string "*** THREAD LIST:\n" port)
-      (let* ((n (##fixnum.+ 1 (##display-thread-group-state tgroup port)))
-             (next (##flonum.+ last interval))
+      (let* ((n (##fx+ 1 (##display-thread-group-state tgroup port)))
+             (next (##fl+ last interval))
              (now (##current-time-point))
-             (diff (##flonum.- next now)))
-        (if (##flonum.negative? diff)
+             (diff (##fl- next now)))
+        (if (##flnegative? diff)
             (begin
               (up n)
               (loop now))
@@ -1562,11 +1562,11 @@
 
 (define-prim (##interp-procedure-entry-hook proc)
   (let (($code (##interp-procedure-code proc)))
-    (macro-code-ref $code (##fixnum.- (macro-code-length $code) 2))))
+    (macro-code-ref $code (##fx- (macro-code-length $code) 2))))
 
 (define-prim (##interp-procedure-entry-hook-set! proc hook)
   (let (($code (##interp-procedure-code proc)))
-    (macro-code-set! $code (##fixnum.- (macro-code-length $code) 2) hook)))
+    (macro-code-set! $code (##fx- (macro-code-length $code) 2) hook)))
 
 (define-prim (##interp-procedure-default-entry-hook proc)
   (let ((hook (##interp-procedure-entry-hook proc)))
@@ -1595,10 +1595,10 @@
 
   (define (inverse-eval-args i lst)
     (if (##pair? lst)
-      (if (##fixnum.< max-args i)
+      (if (##fx< max-args i)
         '(...)
         (##cons (##inverse-eval (##car lst))
-                (inverse-eval-args (##fixnum.+ i 1) (##cdr lst))))
+                (inverse-eval-args (##fx+ i 1) (##cdr lst))))
       '()))
 
   (##cons (##procedure-friendly-name proc)
@@ -1612,22 +1612,22 @@
 
   (define (bars width output-port)
     (let loop ((i 0))
-      (if (##fixnum.< i width)
+      (if (##fx< i width)
         (begin
           (##write-string
-            (if (##fixnum.= (##fixnum.remainder i 2) 0) "|" " ")
+            (if (##fx= (##fxremainder i 2) 0) "|" " ")
             output-port)
-          (loop (##fixnum.+ i 1))))))
+          (loop (##fx+ i 1))))))
 
   (define (bars-width depth)
-    (let ((d (if (##fixnum.< max-depth depth) max-depth depth)))
-      (if (##fixnum.< 0 d) (##fixnum.- (##fixnum.* d 2) 1) 0)))
+    (let ((d (if (##fx< max-depth depth) max-depth depth)))
+      (if (##fx< 0 d) (##fx- (##fx* d 2) 1) 0)))
 
   (define (indent depth output-port)
     (let ((w (bars-width depth)))
-      (if (##fixnum.< max-depth depth)
+      (if (##fx< max-depth depth)
         (let ((depth-str (##number->string depth 10)))
-          (bars (##fixnum.- w (##fixnum.+ (##string-length depth-str) 2))
+          (bars (##fx- w (##fx+ (##string-length depth-str) 2))
                 output-port)
           (##write-string "[" output-port)
           (##write-string depth-str output-port)
@@ -1655,7 +1655,7 @@
              (##trace-depth))
             (depth
              (if increase-depth?
-               (##fixnum.+ current-depth 1)
+               (##fx+ current-depth 1)
                current-depth)))
 
        (define (nest wrapper)
@@ -1668,12 +1668,12 @@
            (output-to-repl
             (lambda (first output-port)
               (let ((width
-                     (##fixnum.+ (indent depth output-port) 1)))
+                     (##fx+ (indent depth output-port) 1)))
                 (##write-string " " output-port)
                 (##write-string
                  (##object->string
                   result
-                  (##fixnum.- (##output-port-width output-port) width))
+                  (##fx- (##output-port-width output-port) width))
                  output-port)
                 (##newline output-port)
                 #t)))
@@ -1683,12 +1683,12 @@
        (output-to-repl
         (lambda (first output-port)
           (let ((width
-                 (##fixnum.+ (indent depth output-port) 3)))
+                 (##fx+ (indent depth output-port) 3)))
             (##write-string " > " output-port)
             (##write-string
              (##object->string
               form
-              (##fixnum.- (##output-port-width output-port) width))
+              (##fx- (##output-port-width output-port) width))
              output-port)
             (##newline output-port)
             #t)))
@@ -1804,8 +1804,8 @@
   (let* ((stepper (##current-stepper))
          (handlers (##vector-ref stepper 0)))
     (let loop ((i (##vector-length handlers)))
-      (if (##not (##fixnum.< i 1))
-        (let ((i-1 (##fixnum.- i 1)))
+      (if (##not (##fx< i 1))
+        (let ((i-1 (##fx- i 1)))
           (##vector-set! stepper i (##vector-ref handlers i-1))
           (loop i-1))))
     (##void)))
@@ -1815,8 +1815,8 @@
   (let* ((stepper (##current-stepper))
          (handlers (##vector-ref stepper 0)))
     (let loop ((i (##vector-length handlers)))
-      (if (##not (##fixnum.< i 1))
-        (let ((i-1 (##fixnum.- i 1)))
+      (if (##not (##fx< i 1))
+        (let ((i-1 (##fx- i 1)))
           (##vector-set! stepper i #f)
           (loop i-1))))
     (##void)))
@@ -1829,10 +1829,10 @@
   (let* ((stepper (##current-stepper))
          (handlers (##vector-ref stepper 0)))
     (let loop ((i (##vector-length handlers)))
-      (if (##not (##fixnum.< i 1))
-        (let ((i-1 (##fixnum.- i 1)))
+      (if (##not (##fx< i 1))
+        (let ((i-1 (##fx- i 1)))
           (##vector-set! handlers i-1
-            (if (##fixnum.< i-1 n)
+            (if (##fx< i-1 n)
               (##vector-ref ##step-handlers i-1)
               #f))
           (loop i-1))))
@@ -1914,7 +1914,7 @@
           (if (##interp-procedure? proc)
             (loop (##cdr lst1)
                   (##cons proc lst2)
-                  (##fixnum.+ arg-num 1))
+                  (##fx+ arg-num 1))
             (let ((id (##object->global-var->identifier proc)))
               (if id ;; procedure is bound to a global variable
                 (begin
@@ -1933,7 +1933,7 @@
                     (##global-var-set! (##make-global-var id) new-proc)
                     (loop (##cdr lst1)
                           (##cons new-proc lst2)
-                          (##fixnum.+ arg-num 1))))
+                          (##fx+ arg-num 1))))
                 (##fail-check-interpreted-procedure arg-num '() prim args))))
           (##fail-check-interpreted-procedure arg-num '() prim args)))
       (begin
@@ -2008,12 +2008,12 @@
   (let* ((settings
           (##set-debug-settings! 0 0))
          (x
-          (##fixnum.arithmetic-shift-right
-           (##fixnum.bitwise-and
+          (##fxarithmetic-shift-right
+           (##fxand
             settings
             (macro-debug-settings-repl-mask))
            (macro-debug-settings-repl-shift))))
-    (cond ((##fixnum.= x (macro-debug-settings-repl-stdio))
+    (cond ((##fx= x (macro-debug-settings-repl-stdio))
            (##make-repl-channel-ports ##stdin-port ##stdout-port))
           (else
            (##make-repl-channel-ports ##console-port ##console-port)))))
@@ -2103,22 +2103,22 @@
   (##vector (macro-repl-result-history-default-max-length)))
 
 (##define-macro (macro-repl-result-history-length result-history)
-  `(##fixnum.- (##vector-length ,result-history) 1))
+  `(##fx- (##vector-length ,result-history) 1))
 
 (##define-macro (macro-repl-result-history-max-length result-history)
   `(##vector-ref ,result-history 0))
 
 (##define-macro (macro-repl-result-history-ref result-history i)
-  `(##vector-ref ,result-history (##fixnum.+ ,i 1)))
+  `(##vector-ref ,result-history (##fx+ ,i 1)))
 
 (define-prim (##repl-channel-result-history-add channel result)
   (let loop ()
     (let* ((result-history (macro-repl-channel-result-history channel))
            (len (macro-repl-result-history-length result-history))
            (max-len (macro-repl-result-history-max-length result-history))
-           (new-len (##fixnum.min (##fixnum.+ len 1) max-len)))
-      (if (##fixnum.< 0 new-len)
-          (let ((v (##make-vector (##fixnum.+ new-len 1) max-len)))
+           (new-len (##fxmin (##fx+ len 1) max-len)))
+      (if (##fx< 0 new-len)
+          (let ((v (##make-vector (##fx+ new-len 1) max-len)))
             (##subvector-move! result-history 1 new-len v 2)
             (##vector-set! v 1 result)
             (let ()
@@ -2135,9 +2135,9 @@
   (let loop ()
     (let* ((result-history (macro-repl-channel-result-history channel))
            (len (macro-repl-result-history-length result-history))
-           (new-len (##fixnum.min len max-len))
-           (v (##make-vector (##fixnum.+ new-len 1) max-len)))
-      (##subvector-move! result-history 1 (##fixnum.+ new-len 1) v 1)
+           (new-len (##fxmin len max-len))
+           (v (##make-vector (##fx+ new-len 1) max-len)))
+      (##subvector-move! result-history 1 (##fx+ new-len 1) v 1)
       (let ()
         (##declare (not interrupts-enabled))
         (if (##not (##eq? (macro-repl-channel-result-history channel)
@@ -2251,9 +2251,9 @@
   (define prompt "> ")
 
   (let ((output-port (macro-repl-channel-output-port channel)))
-    (if (##fixnum.< 0 level)
+    (if (##fx< 0 level)
         (##write level output-port))
-    (if (##fixnum.< 0 depth)
+    (if (##fx< 0 depth)
         (begin
           (##write-string "\\" output-port)
           (##write depth output-port)))
@@ -2338,9 +2338,9 @@
 (define-prim (##repl-debug #!optional (write-reason #f) (toplevel? #f))
   (let* ((old-setting
           (##set-debug-settings!
-           (##fixnum.+ (macro-debug-settings-error-mask)
+           (##fx+ (macro-debug-settings-error-mask)
                        (macro-debug-settings-user-intr-mask))
-           (##fixnum.+ (macro-debug-settings-error-repl)
+           (##fx+ (macro-debug-settings-error-repl)
                        (macro-debug-settings-user-intr-repl))))
          (results
           (##repl write-reason #f toplevel?)))
@@ -2412,7 +2412,7 @@
           (##thread-repl-context-get!))
          (repl-context
           (macro-make-repl-context
-           (##fixnum.+ (macro-repl-context-level prev-repl-context) 1)
+           (##fx+ (macro-repl-context-level prev-repl-context) 1)
            0
            cont
            cont
@@ -2509,7 +2509,7 @@
 (define-prim (##default-repl-context-command repl-context src)
   (cond ((##eof-object? src)
          (##repl-channel-newline)
-         (if (##fixnum.< 0 (macro-repl-context-level repl-context))
+         (if (##fx< 0 (macro-repl-context-level repl-context))
              (##repl-cmd-d repl-context))
          (if (##repl-channel-really-exit?)
              (##repl-cmd-q repl-context))
@@ -2528,7 +2528,7 @@
                   (handler
                    (handler repl-context))
                   ((and (##fixnum? cmd)
-                        (##not (##fixnum.< cmd 0)))
+                        (##not (##fx< cmd 0)))
                    (##repl-context-goto-depth repl-context cmd))
                   ((and (##pair? cmd)
                         (##pair? (##cdr cmd))
@@ -2545,33 +2545,33 @@
                   ((##symbol? cmd)
                    (let* ((s (##symbol->string cmd))
                           (len (##string-length s))
-                          (c (and (##fixnum.< 0 len)
-                                  (##string-ref s (##fixnum.- len 1)))))
+                          (c (and (##fx< 0 len)
+                                  (##string-ref s (##fx- len 1)))))
 
                      (define (move-frame n)
                        (##repl-context-goto-depth
                         repl-context
-                        (##fixnum.+
+                        (##fx+
                          (macro-repl-context-depth repl-context)
                          (if (##char=? c #\+)
                              n
-                             (##fixnum.- 0 n)))))
+                             (##fx- 0 n)))))
 
                      (if (or (##char=? c #\+)
                              (##char=? c #\-))
-                         (cond ((##fixnum.= len 1)
+                         (cond ((##fx= len 1)
                                 (move-frame 1))
-                               ((and (##fixnum.= len 2)
+                               ((and (##fx= len 2)
                                      (##char=? c (##string-ref s 0)))
                                 (move-frame ##backtrace-default-max-head))
                                (else
                                 (let ((n (##string->number
                                           (##substring s
                                                        0
-                                                       (##fixnum.- len 1))
+                                                       (##fx- len 1))
                                           10)))
                                   (if (and (##fixnum? n)
-                                           (##not (##fixnum.< n 0)))
+                                           (##not (##fx< n 0)))
                                       (move-frame n)
                                       (##repl-cmd-unknown src repl-context)))))
                          (##repl-cmd-unknown src repl-context))))
@@ -2590,12 +2590,12 @@
 (define-prim (##repl-context-get-context repl-context n)
   (let loop ((context repl-context))
     (let ((depth (macro-repl-context-depth context)))
-      (cond ((##fixnum.< n depth)
+      (cond ((##fx< n depth)
              (let ((prev-depth (macro-repl-context-prev-depth context)))
                (if prev-depth
                    (loop prev-depth)
                    context)))
-            ((##fixnum.< depth n)
+            ((##fx< depth n)
              (let* ((cont
                      (##repl-first-interesting
                       (macro-repl-context-cont context)))
@@ -2604,7 +2604,7 @@
                (if next
                    (loop (macro-make-repl-context
                           (macro-repl-context-level context)
-                          (##fixnum.+ depth 1)
+                          (##fx+ depth 1)
                           next
                           (macro-repl-context-initial-cont context)
                           (macro-repl-context-reason context)
@@ -2695,13 +2695,13 @@
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-d repl-context)
-  (if (##fixnum.< 0 (macro-repl-context-level repl-context))
+  (if (##fx< 0 (macro-repl-context-level repl-context))
       (##repl-context-restart (macro-repl-context-prev-level repl-context))
       (##repl-context-prompt repl-context)))
 
 (define-prim (##repl-cmd-t repl-context)
   (let loop ((context repl-context))
-    (if (##fixnum.< 0 (macro-repl-context-level context))
+    (if (##fx< 0 (macro-repl-context-level context))
         (loop (macro-repl-context-prev-level context))
         (##repl-context-restart context))))
 
@@ -2914,7 +2914,7 @@
                (##repl-context-prompt repl-context))))
 
        (cond ((and (##fixnum? val)
-                   (##not (##fixnum.< val 0)))
+                   (##not (##fx< val 0)))
               (let* ((rc
                       (##repl-context-get-context
                        repl-context
@@ -3056,15 +3056,15 @@
   (##declare (not interrupts-enabled))
   (let ((settings (##set-debug-settings! 0 0)))
     (if (and (##not (##eq? (macro-current-thread) (macro-primordial-thread)))
-             (##fixnum.= (macro-debug-settings-uncaught-primordial)
+             (##fx= (macro-debug-settings-uncaught-primordial)
                          (macro-debug-settings-uncaught settings)))
       (other-handler exc)
       (##repl
        (lambda (first output-port)
-         (let ((quit? (##fixnum.= (macro-debug-settings-error settings)
+         (let ((quit? (##fx= (macro-debug-settings-error settings)
                                   (macro-debug-settings-error-quit))))
            (if (and quit?
-                    (##fixnum.= (macro-debug-settings-level settings) 0))
+                    (##fx= (macro-debug-settings-level settings) 0))
              (##exit-with-exception exc)
              (begin
                (##display-exception-in-context exc first output-port)
@@ -3076,14 +3076,14 @@
 (define-prim (##default-user-interrupt-handler)
   (let* ((settings (##set-debug-settings! 0 0))
          (settings-user-intr (macro-debug-settings-user-intr settings))
-         (defer? (##fixnum.= settings-user-intr
+         (defer? (##fx= settings-user-intr
                              (macro-debug-settings-user-intr-defer))))
     (if defer?
         (set! ##deferred-user-interrupt? #t)
-        (let ((quit? (##fixnum.= settings-user-intr
+        (let ((quit? (##fx= settings-user-intr
                                  (macro-debug-settings-user-intr-quit))))
           (if (and quit?
-                   (##fixnum.= (macro-debug-settings-level settings) 0))
+                   (##fx= (macro-debug-settings-level settings) 0))
               (##exit-abnormally)
               (##handle-interrupt quit?))))))
 
@@ -3104,7 +3104,7 @@
 
 (set! ##primordial-exception-handler-hook ##repl-exception-handler-hook)
 
-(if (##fixnum.= (macro-debug-settings-error (##set-debug-settings! 0 0))
+(if (##fx= (macro-debug-settings-error (##set-debug-settings! 0 0))
                 (macro-debug-settings-error-single-step))
   (##step-on))
 
@@ -3204,27 +3204,27 @@
             (##output-port-width port))
            (str
             (##object->string call width)))
-      (if (##fixnum.< (##string-length str) width)
+      (if (##fx< (##string-length str) width)
         (begin
           (##write-string str port)
           (##newline port))
         (let loop ((i 0) (lst call))
-          (##write-string (if (##fixnum.= i 0) "(" " ") port)
+          (##write-string (if (##fx= i 0) "(" " ") port)
           (let* ((last?
                   (##null? (##cdr lst)))
                  (w
-                  (##fixnum.- width 2))
+                  (##fx- width 2))
                  (s
                   (##object->string (##car lst) w)))
             (##write-string s port)
             (if last?
               (begin
-                (if (##fixnum.= (##string-length s) w) (##newline port))
+                (if (##fx= (##string-length s) w) (##newline port))
                 (##write-string ")" port)
                 (##newline port))
               (begin
                 (##newline port)
-                (loop (##fixnum.+ i 1) (##cdr lst)))))))))
+                (loop (##fx+ i 1) (##cdr lst)))))))))
 
   (define-prim (write-items items)
     (let loop ((lst items))
@@ -3235,7 +3235,7 @@
           (loop (##cdr lst))))))
 
   (define-prim (display-arg-num arg-num)
-    (if (##fixnum.< 0 arg-num)
+    (if (##fx< 0 arg-num)
       (begin
         (##write-string "(Argument " port)
         (##write arg-num port)
@@ -3304,12 +3304,12 @@
                   (params
                    (##map (lambda (p)
                             (let ((s (##object->truncated-string p width)))
-                              (if (##fixnum.= (##string-length s) width)
+                              (if (##fx= (##string-length s) width)
                                 (begin
                                   (set! sep "\n")
                                   (##string->limited-string
                                    s
-                                   (##fixnum.- width 1)))
+                                   (##fx- width 1)))
                                 s)))
                           (macro-error-exception-parameters exc))))
              (##for-each
@@ -3933,7 +3933,7 @@
           '()
           (##cons (arg (##string-append "ARG" (##number->string i 10))
                        (##car args))
-                  (gen-args (##cdr args) (##fixnum.+ i 1)))))
+                  (gen-args (##cdr args) (##fx+ i 1)))))
 
     (define (arg name val)
       (##string-append "GAMBC_DOC_" name "=" val))
@@ -3978,7 +3978,7 @@
                stderr-redirection: #f))))
 
   (let ((exit-status (gambc-doc args)))
-    (if (##fixnum.= exit-status 0)
+    (if (##fx= exit-status 0)
         (##void)
         (##raise-error-exception
          "failed to display the document"

@@ -2,7 +2,7 @@
 
 ;;; File: "_std.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -139,7 +139,7 @@
                                                      (n 4))
                                            (if (##pair? x)
                                              (loop1 (##cdr x)
-                                                    (##fixnum.+ n 1))
+                                                    (##fx+ n 1))
                                              (let ((vect (,##make-vect n)))
                                                (,##vect-set! vect 0 elem1)
                                                (,##vect-set! vect 1 elem2)
@@ -150,25 +150,25 @@
                                                  (if (##pair? x)
                                                    (let ((elem (##car x)))
                                                      (,macro-force-elem (elem)
-                                                       (,macro-check-elem elem (##fixnum.+ i 1) (,vect elem1 elem2 elem3 elem4 . others)
+                                                       (,macro-check-elem elem (##fx+ i 1) (,vect elem1 elem2 elem3 elem4 . others)
                                                          (begin
                                                            (,##vect-set! vect i elem)
                                                            (loop2 (##cdr x)
-                                                                  (##fixnum.+ i 1))))))
+                                                                  (##fx+ i 1))))))
                                                    vect))))))))))))))))))))
            `((define-prim (,vect . others)
                (let loop1 ((x others) (n 0))
                  (if (##pair? x)
-                   (loop1 (##cdr x) (##fixnum.+ n 1))
+                   (loop1 (##cdr x) (##fx+ n 1))
                    (let ((vect (,##make-vect n)))
                      (let loop2 ((x others) (i 0))
                        (if (##pair? x)
                          (let ((elem (##car x)))
                            (,macro-force-elem (elem)
-                             (,macro-check-elem elem (##fixnum.+ i 1) (,vect . others)
+                             (,macro-check-elem elem (##fx+ i 1) (,vect . others)
                                (begin
                                  (,##vect-set! vect i elem)
-                                 (loop2 (##cdr x) (##fixnum.+ i 1))))))
+                                 (loop2 (##cdr x) (##fx+ i 1))))))
                          vect))))))))
 
        (define-prim (,##vect-length vect))
@@ -210,48 +210,48 @@
                       (##void)))))))))
 
        (define-prim (,##vect->list vect)
-         (let loop ((lst '()) (i (##fixnum.- (,##vect-length vect) 1)))
-           (if (##fixnum.< i 0)
+         (let loop ((lst '()) (i (##fx- (,##vect-length vect) 1)))
+           (if (##fx< i 0)
              lst
-             (loop (##cons (,##vect-ref vect i) lst) (##fixnum.- i 1)))))
+             (loop (##cons (,##vect-ref vect i) lst) (##fx- i 1)))))
 
        (define-prim (,vect->list vect)
          (macro-force-vars (vect)
            (,macro-check-vect vect 1 (,vect->list vect)
-             (let loop ((lst '()) (i (##fixnum.- (,##vect-length vect) 1)))
-               (if (##fixnum.< i 0)
+             (let loop ((lst '()) (i (##fx- (,##vect-length vect) 1)))
+               (if (##fx< i 0)
                  lst
-                 (loop (##cons (,##vect-ref vect i) lst) (##fixnum.- i 1)))))))
+                 (loop (##cons (,##vect-ref vect i) lst) (##fx- i 1)))))))
 
        (define-prim (,##list->vect lst)
          (let loop1 ((x lst) (n 0))
            (if (##pair? x)
-             (loop1 (##cdr x) (##fixnum.+ n 1))
+             (loop1 (##cdr x) (##fx+ n 1))
              (let ((vect (,##make-vect n ,default-elem-value)))
                (let loop2 ((x lst) (i 0))
                  (if (and (##pair? x)      ;; double check in case another
-                          (##fixnum.< i n));; thread mutates the list
+                          (##fx< i n));; thread mutates the list
                    (let ((elem (##car x)))
                      (,##vect-set! vect i elem)
-                     (loop2 (##cdr x) (##fixnum.+ i 1)))
+                     (loop2 (##cdr x) (##fx+ i 1)))
                    vect))))))
 
        (define-prim (,list->vect lst)
          (let loop1 ((x lst) (n 0))
            (macro-force-vars (x)
              (if (##pair? x)
-               (loop1 (##cdr x) (##fixnum.+ n 1))
+               (loop1 (##cdr x) (##fx+ n 1))
                (macro-check-list x 1 (,list->vect lst)
                  (let ((vect (,##make-vect n ,default-elem-value)))
                    (let loop2 ((x lst) (i 0))
                      (macro-force-vars (x)
                        (if (and (##pair? x)      ;; double check in case another
-                                (##fixnum.< i n));; thread mutates the list
+                                (##fx< i n));; thread mutates the list
                          (let ((elem (##car x)))
                            (,macro-check-elem-list elem 1 (,list->vect lst)
                              (begin
                                (,##vect-set! vect i elem)
-                               (loop2 (##cdr x) (##fixnum.+ i 1)))))
+                               (loop2 (##cdr x) (##fx+ i 1)))))
                          vect)))))))))
 
        (define-prim (,##vect-fill! vect fill)
@@ -279,7 +279,7 @@
           vect
           start
           end
-          (,##make-vect (##fixnum.max (##fixnum.- end start) 0))
+          (,##make-vect (##fxmax (##fx- end start) 0))
           0))
 
        (define-prim (,subvect vect start end)
@@ -311,10 +311,10 @@
                           (if vect-append?
                               (,##fail-check-vect arg-num '() ,vect-append lst)
                               (,##fail-check-vect-list 1 ,append-vects lst))
-                          (loop1 (##fixnum.+ n (,##vect-length vect))
+                          (loop1 (##fx+ n (,##vect-length vect))
                                  (##cdr lst1)
                                  (##cons vect lst2)
-                                 (##fixnum.+ arg-num 1))))))
+                                 (##fx+ arg-num 1))))))
                  ((##null? lst1)
                   (let ((result (,##make-vect n)))
                     (let loop2 ((n n)
@@ -322,7 +322,7 @@
                       (if (##pair? lst2)
                           (let* ((vect (##car lst2))
                                  (len (,##vect-length vect))
-                                 (new-n (##fixnum.- n len)))
+                                 (new-n (##fx- n len)))
                             (,##subvect-move! vect 0 len result new-n)
                             (loop2 new-n (##cdr lst2)))
                           result))))
@@ -342,25 +342,25 @@
        (define-prim (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
          ;; Copy direction must be selected in case src-vect and
          ;; dst-vect are the same object.
-         (if (##fixnum.< src-start dst-start)
-           (let loop1 ((i (##fixnum.- src-end 1))
-                       (j (##fixnum.-
-                           (##fixnum.+ dst-start
-                                       (##fixnum.- src-end src-start))
+         (if (##fx< src-start dst-start)
+           (let loop1 ((i (##fx- src-end 1))
+                       (j (##fx-
+                           (##fx+ dst-start
+                                       (##fx- src-end src-start))
                            1)))
-             (if (##fixnum.< i src-start)
+             (if (##fx< i src-start)
                dst-vect
                (begin
                  (,##vect-set! dst-vect j (,##vect-ref src-vect i))
-                 (loop1 (##fixnum.- i 1)
-                        (##fixnum.- j 1)))))
+                 (loop1 (##fx- i 1)
+                        (##fx- j 1)))))
            (let loop2 ((i src-start)
                        (j dst-start))
-             (if (##fixnum.< i src-end)
+             (if (##fx< i src-end)
                (begin
                  (,##vect-set! dst-vect j (,##vect-ref src-vect i))
-                 (loop2 (##fixnum.+ i 1)
-                        (##fixnum.+ j 1)))
+                 (loop2 (##fx+ i 1)
+                        (##fx+ j 1)))
                dst-vect))))
 
        (define-prim (,subvect-move! src-vect src-start src-end dst-vect dst-start)
@@ -393,20 +393,20 @@
                  dst-start
                  5
                  0
-                 (##fixnum.- (,##vect-length dst-vect)
-                             (##fixnum.- src-end src-start))
+                 (##fx- (,##vect-length dst-vect)
+                             (##fx- src-end src-start))
                  (,subvect-move! src-vect src-start src-end dst-vect dst-start)
                  (begin
                    (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
                    (##void))))))))))
 
        (define-prim (,##subvect-fill! vect start end fill)
-         (let loop ((i (##fixnum.- end 1)))
-           (if (##fixnum.< i start)
+         (let loop ((i (##fx- end 1)))
+           (if (##fx< i start)
              (##void)
              (begin
                (,##vect-set! vect i fill)
-               (loop (##fixnum.- i 1))))))
+               (loop (##fx- i 1))))))
 
        (define-prim (,subvect-fill! vect start end fill)
          (macro-force-vars (vect start end)
@@ -929,14 +929,14 @@ end-of-code
 (define-prim (##length lst)
   (let loop ((x lst) (n 0))
     (if (##pair? x)
-      (loop (##cdr x) (##fixnum.+ n 1))
+      (loop (##cdr x) (##fx+ n 1))
       n)))
 
 (define-prim (length lst)
   (let loop ((x lst) (n 0))
     (macro-force-vars (x)
       (if (##pair? x)
-        (loop (##cdr x) (##fixnum.+ n 1))
+        (loop (##cdr x) (##fx+ n 1))
         (macro-check-list x 1 (length lst)
           n)))))
 
@@ -957,12 +957,12 @@ end-of-code
       head
       (macro-force-vars (head)
         (if (##null? head)
-          (append-multiple (##car tail) (##cdr tail) (##fixnum.+ arg-num 1))
+          (append-multiple (##car tail) (##cdr tail) (##fx+ arg-num 1))
           (list-expected-check
            (append-multiple-non-null head
                                      tail
                                      arg-num
-                                     (##fixnum.+ arg-num 1)))))))
+                                     (##fx+ arg-num 1)))))))
 
   (define (append-multiple-non-null x lsts arg-num1 arg-num2)
     ;; x!=(), returns fixnum on error
@@ -975,12 +975,12 @@ end-of-code
             (append-multiple-non-null x
                                       tail
                                       arg-num1
-                                      (##fixnum.+ arg-num2 1))
+                                      (##fx+ arg-num2 1))
             (let ((result
                    (append-multiple-non-null head
                                              tail
                                              arg-num2
-                                             (##fixnum.+ arg-num2 1))))
+                                             (##fx+ arg-num2 1))))
               (macro-if-checks
                 (if (##fixnum? result)
                   result
@@ -1044,8 +1044,8 @@ end-of-code
       (let loop ((x lst) (i k))
         (macro-force-vars (x)
           (macro-check-pair x 1 (list-ref lst k);;;;;;;error message confusing?
-            (if (##fixnum.< 0 i)
-              (loop (##cdr x) (##fixnum.- i 1))
+            (if (##fx< 0 i)
+              (loop (##cdr x) (##fx- i 1))
               (##car x))))))))
 
 (define-prim (##memq obj lst)
@@ -1216,7 +1216,7 @@ end-of-code
   ;; str must be a nonmutable string
 
   (if (##eq? hash (macro-absent-obj))
-    (let ((n (##fixnum.+ ##symbol-counter 1)))
+    (let ((n (##fx+ ##symbol-counter 1)))
       ;; Note: it is unimportant if the increment of ##symbol-counter
       ;; is not atomic; it simply means a possible close repetition
       ;; of the same hash code
@@ -1430,14 +1430,14 @@ end-of-code
 (define-prim (char->integer c)
   (macro-force-vars (c)
     (macro-check-char c 1 (char->integer c)
-      (##fixnum.<-char c))))
+      (##fx<-char c))))
 
 (define-prim (integer->char n)
   (macro-force-vars (n)
     (macro-check-fixnum-range-incl n 1 0 ##max-char (integer->char n)
-      (if (or (##fixnum.< n #xd800)
-              (##fixnum.< #xdfff n))
-        (##fixnum.->char n)
+      (if (or (##fx< n #xd800)
+              (##fx< #xdfff n))
+        (##fx->char n)
         (##raise-range-exception 1 integer->char n)))))
 
 (define-prim (##char-upcase c))
@@ -1458,11 +1458,11 @@ end-of-code
   (or (##eq? str1 str2)
       (let ((len1 (##string-length str1)))
         (if (##eq? len1 (##string-length str2))
-          (let loop ((i (##fixnum.- len1 1)))
-            (cond ((##fixnum.< i 0)
+          (let loop ((i (##fx- len1 1)))
+            (cond ((##fx< i 0)
                    #t)
                   ((##char=? (##string-ref str1 i) (##string-ref str2 i))
-                   (loop (##fixnum.- i 1)))
+                   (loop (##fx- i 1)))
                   (else
                    #f)))
           #f))))
@@ -1478,15 +1478,15 @@ end-of-code
   (and (##not (##eq? str1 str2))
        (let ((len1 (##string-length str1))
              (len2 (##string-length str2)))
-         (let ((n (##fixnum.min len1 len2)))
+         (let ((n (##fxmin len1 len2)))
            (let loop ((i 0))
-             (if (##fixnum.< i n)
+             (if (##fx< i n)
                (let ((c1 (##string-ref str1 i))
                      (c2 (##string-ref str2 i)))
                  (if (##char=? c1 c2)
-                   (loop (##fixnum.+ i 1))
+                   (loop (##fx+ i 1))
                    (##char<? c1 c2)))
-               (##fixnum.< n len2)))))))
+               (##fx< n len2)))))))
 
 (define-prim-nary-bool (string<? str1 str2)
   #t
@@ -1520,12 +1520,12 @@ end-of-code
   (or (##eq? str1 str2)
       (let ((len1 (##string-length str1)))
         (if (##eq? len1 (##string-length str2))
-          (let loop ((i (##fixnum.- len1 1)))
-            (cond ((##fixnum.< i 0)
+          (let loop ((i (##fx- len1 1)))
+            (cond ((##fx< i 0)
                    #t)
                   ((##char=? (##char-downcase (##string-ref str1 i))
                              (##char-downcase (##string-ref str2 i)))
-                   (loop (##fixnum.- i 1)))
+                   (loop (##fx- i 1)))
                   (else
                    #f)))
           #f))))
@@ -1541,15 +1541,15 @@ end-of-code
   (and (##not (##eq? str1 str2))
        (let ((len1 (##string-length str1))
              (len2 (##string-length str2)))
-         (let ((n (##fixnum.min len1 len2)))
+         (let ((n (##fxmin len1 len2)))
            (let loop ((i 0))
-             (if (##fixnum.< i n)
+             (if (##fx< i n)
                (let ((c1 (##char-downcase (##string-ref str1 i)))
                      (c2 (##char-downcase (##string-ref str2 i))))
                  (if (##char=? c1 c2)
-                   (loop (##fixnum.+ i 1))
+                   (loop (##fx+ i 1))
                    (##char<? c1 c2)))
-               (##fixnum.< n len2)))))))
+               (##fx< n len2)))))))
 
 (define-prim-nary-bool (string-ci<? str1 str2)
   #t
@@ -1587,7 +1587,7 @@ end-of-code
              (let ((str (##car lst)))
                (macro-force-vars (str)
                  (if (##string? str)
-                   (let ((x (copy (##cdr lst) (##fixnum.+ i 1))))
+                   (let ((x (copy (##cdr lst) (##fx+ i 1))))
                      (if (##fixnum? x)
                        x
                        (##cons str x)))
@@ -1626,7 +1626,7 @@ end-of-code
           (let loop ((lst lst) (n 0))
             (macro-force-vars (lst)
               (cond ((##pair? lst)
-                     (loop (##cdr lst) (##fixnum.+ n 1)))
+                     (loop (##cdr lst) (##fx+ n 1)))
                     ((##null? lst)
                      n)
                     (else
@@ -1684,7 +1684,7 @@ end-of-code
                            (map-n (##cons x y)))
                          (let ((len2 (proper-list-length (##car lsts))))
                            (if (##eq? len1 len2)
-                             (loop (##cdr lsts) (##fixnum.+ arg-num 1))
+                             (loop (##cdr lsts) (##fx+ arg-num 1))
                              (if len2
                                (##raise-improper-length-list-exception
                                 arg-num
@@ -1718,7 +1718,7 @@ end-of-code
           (let loop ((lst lst) (n 0))
             (macro-force-vars (lst)
               (cond ((##pair? lst)
-                     (loop (##cdr lst) (##fixnum.+ n 1)))
+                     (loop (##cdr lst) (##fx+ n 1)))
                     ((##null? lst)
                      n)
                     (else
@@ -1778,7 +1778,7 @@ end-of-code
                            (##void))
                          (let ((len2 (proper-list-length (##car lsts))))
                            (if (##eq? len1 len2)
-                             (loop (##cdr lsts) (##fixnum.+ arg-num 1))
+                             (loop (##cdr lsts) (##fx+ arg-num 1))
                              (if len2
                                (##raise-improper-length-list-exception
                                 arg-num
@@ -1807,10 +1807,10 @@ end-of-code
   (macro-force-vars (k)
     (macro-check-index k 2 (list-tail lst k)
       (let loop ((x lst) (i k))
-        (if (##fixnum.< 0 i)
+        (if (##fx< 0 i)
           (macro-force-vars (x)
             (macro-check-pair x 1 (list-tail lst k);;;;;;;;;;error message confusing?
-              (loop (##cdr x) (##fixnum.- i 1))))
+              (loop (##cdr x) (##fx- i 1))))
           x)))))
 
 (define-prim (##make-promise thunk)
@@ -1900,7 +1900,7 @@ end-of-code
   ;; str must be a nonmutable string
 
   (if (##eq? hash (macro-absent-obj))
-    (let ((n (##fixnum.+ ##keyword-counter 1)))
+    (let ((n (##fx+ ##keyword-counter 1)))
       ;; Note: it is unimportant if the increment of ##keyword-counter
       ;; is not atomic; it simply means a possible close repetition
       ;; of the same hash code
@@ -1922,36 +1922,36 @@ end-of-code
 (define-prim (##partial-bit-reverse i)
 
   (##define-macro (bit n)
-    `(##fixnum.arithmetic-shift-left
-      (##fixnum.bitwise-and i ,(expt 2 n)) ,(- 28 (* 2 n))))
+    `(##fxarithmetic-shift-left
+      (##fxand i ,(expt 2 n)) ,(- 28 (* 2 n))))
 
-  (##fixnum.+
+  (##fx+
    (bit 0)
-   (##fixnum.+
+   (##fx+
     (bit 1)
-    (##fixnum.+
+    (##fx+
      (bit 2)
-     (##fixnum.+
+     (##fx+
       (bit 3)
-      (##fixnum.+
+      (##fx+
        (bit 4)
-       (##fixnum.+
+       (##fx+
         (bit 5)
-        (##fixnum.+
+        (##fx+
          (bit 6)
-         (##fixnum.+
+         (##fx+
           (bit 7)
-          (##fixnum.+
+          (##fx+
            (bit 8)
-           (##fixnum.+
+           (##fx+
             (bit 9)
-            (##fixnum.+
+            (##fx+
              (bit 10)
-             (##fixnum.+
+             (##fx+
               (bit 11)
-              (##fixnum.+
+              (##fx+
                (bit 12)
-               (##fixnum.+
+               (##fx+
                 (bit 13)
                 (bit 14))))))))))))))))
 

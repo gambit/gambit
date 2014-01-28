@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -65,7 +65,7 @@
 (define-prim (##values? obj)
   (and (##subtyped? obj)
        (##eq? (##subtype obj) (macro-subtype-boxvalues))
-       (##not (##fixnum.= (##vector-length obj) 1))))
+       (##not (##fx= (##vector-length obj) 1))))
 
 (define-prim (##meroon? obj)
   (and (##subtyped? obj)
@@ -147,15 +147,15 @@
   (let loop1 ((x lst) (n 0))
     (macro-force-vars (x)
       (if (##pair? x)
-        (loop1 (##cdr x) (##fixnum.+ n 1))
+        (loop1 (##cdr x) (##fx+ n 1))
         (let ((vect (##make-vector n 0)))
           (let loop2 ((x lst) (i 0))
             (macro-force-vars (x)
               (if (and (##pair? x)      ;; double check in case another
-                       (##fixnum.< i n));; thread mutates the list
+                       (##fx< i n));; thread mutates the list
                 (begin
                   (##vector-set! vect i (##car x))
-                  (loop2 (##cdr x) (##fixnum.+ i 1)))
+                  (loop2 (##cdr x) (##fx+ i 1)))
                 vect))))))))
 
 (define-prim (##quasi-vector . lst)
@@ -176,7 +176,7 @@
 
 (define-prim (##eqv? obj1 obj2)
   (macro-number-dispatch obj1 (##eq? obj1 obj2)
-    (and (##fixnum? obj2) (##fixnum.= obj1 obj2)) ;; obj1 = fixnum
+    (and (##fixnum? obj2) (##fx= obj1 obj2)) ;; obj1 = fixnum
     (and (##bignum? obj2) (##bignum.= obj1 obj2)) ;; obj1 = bignum
     (and (##ratnum? obj2) (##ratnum.= obj1 obj2)) ;; obj1 = ratnum
     (and (##flonum? obj2) (##bvector-equal? obj1 obj2)) ;; obj1 = flonum
@@ -199,24 +199,24 @@
 (define-prim (##bvector-equal? obj1 obj2)
 
   (define (equal obj1 obj2 len)
-    (let loop ((i (##fixnum.- len 1)))
-      (or (##fixnum.< i 0)
-          (and (##fixnum.= (##u16vector-ref obj1 i)
+    (let loop ((i (##fx- len 1)))
+      (or (##fx< i 0)
+          (and (##fx= (##u16vector-ref obj1 i)
                            (##u16vector-ref obj2 i))
-               (loop (##fixnum.- i 1))))))
+               (loop (##fx- i 1))))))
 
   (let ((len-obj1 (##u8vector-length obj1)))
-    (and (##fixnum.= len-obj1 (##u8vector-length obj2))
-         (if (##fixnum.odd? len-obj1)
-           (let ((i (##fixnum.- len-obj1 1)))
-             (and (##fixnum.= (##u8vector-ref obj1 i)
+    (and (##fx= len-obj1 (##u8vector-length obj2))
+         (if (##fxodd? len-obj1)
+           (let ((i (##fx- len-obj1 1)))
+             (and (##fx= (##u8vector-ref obj1 i)
                               (##u8vector-ref obj2 i))
                   (equal obj1
                          obj2
-                         (##fixnum.arithmetic-shift-right len-obj1 1))))
+                         (##fxarithmetic-shift-right len-obj1 1))))
            (equal obj1
                   obj2
-                  (##fixnum.arithmetic-shift-right len-obj1 1))))))
+                  (##fxarithmetic-shift-right len-obj1 1))))))
 
 (define-prim (##equal? obj1 obj2)
 
@@ -227,16 +227,16 @@
   (define (structure-equal obj1 obj2 type len)
     (or (##not type) ;; have we reached root of inheritance chain?
         (let ((fields (##type-fields type)))
-          (let loop ((i*3 (##fixnum.- (##vector-length fields) 3))
+          (let loop ((i*3 (##fx- (##vector-length fields) 3))
                      (len len))
-            (if (##fixnum.< i*3 0)
+            (if (##fx< i*3 0)
               (structure-equal obj1 obj2 (##type-super type) len)
               (let ((field-attributes
-                     (##vector-ref fields (##fixnum.+ i*3 1)))
+                     (##vector-ref fields (##fx+ i*3 1)))
                     (len-1
-                     (##fixnum.- len 1)))
-                (and (or (##not (##fixnum.=
-                                 (##fixnum.bitwise-and field-attributes 4)
+                     (##fx- len 1)))
+                (and (or (##not (##fx=
+                                 (##fxand field-attributes 4)
                                  0))
                          (equal (##unchecked-structure-ref
                                  obj1
@@ -248,7 +248,7 @@
                                  len-1
                                  type
                                  #f)))
-                     (loop (##fixnum.- i*3 3)
+                     (loop (##fx- i*3 3)
                            len-1))))))))
 
   (define (equal obj1 obj2)
@@ -262,18 +262,18 @@
             ((##subtyped? obj1)
              (and (##subtyped? obj2)
                   (let ((subtype-obj1 (##subtype obj1)))
-                    (and (##fixnum.= subtype-obj1 (##subtype obj2))
+                    (and (##fx= subtype-obj1 (##subtype obj2))
                          (cond ((macro-subtype-bvector? subtype-obj1)
                                 (##bvector-equal? obj1 obj2))
                                ((##vector? obj1)
                                 (let ((len-obj1 (##vector-length obj1)))
-                                  (and (##fixnum.= len-obj1
+                                  (and (##fx= len-obj1
                                                    (##vector-length obj2))
-                                       (let loop ((i (##fixnum.- len-obj1 1)))
-                                         (or (##fixnum.< i 0)
+                                       (let loop ((i (##fx- len-obj1 1)))
+                                         (or (##fx< i 0)
                                              (and (equal (##vector-ref obj1 i)
                                                          (##vector-ref obj2 i))
-                                                  (loop (##fixnum.- i 1))))))))
+                                                  (loop (##fx- i 1))))))))
                                ((macro-table? obj1)
                                 (and (macro-table? obj2)
                                      (##table-equal? obj1 obj2)))
@@ -291,11 +291,11 @@
                                                    type-id-obj2)
                                             (let ((len-obj1
                                                    (##vector-length obj1)))
-                                              (and (##fixnum.=
+                                              (and (##fx=
                                                     len-obj1
                                                     (##vector-length obj2))
-                                                   (##fixnum.= ;; not opaque?
-                                                    (##fixnum.bitwise-and
+                                                   (##fx= ;; not opaque?
+                                                    (##fxand
                                                      (##type-flags type-obj1)
                                                      1)
                                                     0)
@@ -344,7 +344,7 @@
   ;; (= (##eq?-hash obj) (##eq?-hash obj2))
 
   (cond ((##not (##mem-allocated? obj))
-         (##fixnum.bitwise-and
+         (##fxand
           (##type-cast obj (macro-type-fixnum))
           (macro-max-fixnum32)))
         ((##symbol? obj)
@@ -352,11 +352,11 @@
         ((##keyword? obj)
          (##keyword-hash obj))
         (else
-         (##fixnum.bitwise-and
+         (##fxand
           (let ((sn (##object->serial-number obj)))
             (if (##fixnum? sn)
               sn
-              (##fixnum.arithmetic-shift-left
+              (##fxarithmetic-shift-left
                (##bignum.mdigit-ref sn 0)
                10)))
           (macro-max-fixnum32)))))
@@ -371,15 +371,15 @@
   ;; (= (##eqv?-hash obj) (##eqv?-hash obj2))
 
   (define (combine a b)
-    (##fixnum.bitwise-and
-     (##fixnum.* (##fixnum.+ a (##fixnum.arithmetic-shift-left b 1))
+    (##fxand
+     (##fx* (##fx+ a (##fxarithmetic-shift-left b 1))
                  331804471)
      (macro-max-fixnum32)))
 
   (define (hash obj)
     (macro-number-dispatch obj
       (##eq?-hash obj) ;; obj = not a number
-      (##fixnum.bitwise-and obj (macro-max-fixnum32)) ;; obj = fixnum
+      (##fxand obj (macro-max-fixnum32)) ;; obj = fixnum
       (##modulo obj 331804481) ;; obj = bignum
       (combine (hash (macro-ratnum-numerator obj)) ;; obj = ratnum
                (hash (macro-ratnum-denominator obj)))
@@ -402,27 +402,27 @@
   ;; (= (##equal?-hash obj) (##equal?-hash obj2))
 
   (define (combine a b)
-    (##fixnum.bitwise-and
-     (##fixnum.* (##fixnum.+ a (##fixnum.arithmetic-shift-left b 1))
+    (##fxand
+     (##fx* (##fx+ a (##fxarithmetic-shift-left b 1))
                  331804471)
      (macro-max-fixnum32)))
 
   (define (bvector-hash obj)
 
     (define (u16vect-hash i h)
-      (if (##fixnum.< i 0)
+      (if (##fx< i 0)
         h
-        (u16vect-hash (##fixnum.- i 1)
+        (u16vect-hash (##fx- i 1)
                       (combine (##u16vector-ref obj i) h))))
 
     (let ((len (##u8vector-length obj)))
-      (u16vect-hash (##fixnum.- (##fixnum.arithmetic-shift-right len 1) 1)
-                    (##fixnum.bitwise-xor
-                     (if (##fixnum.odd? len)
-                       (##u8vector-ref obj (##fixnum.- len 1))
+      (u16vect-hash (##fx- (##fxarithmetic-shift-right len 1) 1)
+                    (##fxxor
+                     (if (##fxodd? len)
+                       (##u8vector-ref obj (##fx- len 1))
                        256)
-                     (##fixnum.+ len
-                                 (##fixnum.arithmetic-shift-left
+                     (##fx+ len
+                                 (##fxarithmetic-shift-left
                                   (##subtype obj)
                                   20))))))
 
@@ -431,16 +431,16 @@
       h
       (let ((fields (##type-fields type)))
         (let loop ((h 0)
-                   (i*3 (##fixnum.- (##vector-length fields) 3))
+                   (i*3 (##fx- (##vector-length fields) 3))
                    (len len))
-          (if (##fixnum.< i*3 0)
+          (if (##fx< i*3 0)
             (structure-hash obj (##type-super type) len h)
             (let ((field-attributes
-                   (##vector-ref fields (##fixnum.+ i*3 1)))
+                   (##vector-ref fields (##fx+ i*3 1)))
                   (len-1
-                   (##fixnum.- len 1)))
-              (loop (if (##fixnum.=
-                         (##fixnum.bitwise-and field-attributes 4)
+                   (##fx- len 1)))
+              (loop (if (##fx=
+                         (##fxand field-attributes 4)
                          0)
                       (combine (hash (##unchecked-structure-ref
                                       obj
@@ -449,7 +449,7 @@
                                       #f))
                                h)
                       h)
-                    (##fixnum.- i*3 3)
+                    (##fx- i*3 3)
                     len-1)))))))
 
   (define (hash obj)
@@ -471,11 +471,11 @@
                    ((##keyword? obj)
                     (##keyword-hash obj))
                    ((##vector? obj)
-                    (let loop ((i (##fixnum.- (##vector-length obj) 1))
+                    (let loop ((i (##fx- (##vector-length obj) 1))
                                (h 383479237))
-                      (if (##fixnum.< i 0)
+                      (if (##fx< i 0)
                         h
-                        (loop (##fixnum.- i 1)
+                        (loop (##fx- i 1)
                               (combine (hash (##vector-ref obj i))
                                        h)))))
                    ((macro-table? obj)
@@ -485,8 +485,8 @@
                             (##structure-type obj))
                            (type-id
                             (##type-id type)))
-                      (if (##fixnum.= ;; not opaque?
-                           (##fixnum.bitwise-and
+                      (if (##fx= ;; not opaque?
+                           (##fxand
                             (##type-flags type)
                             1)
                            0)
@@ -516,14 +516,14 @@
 
   (let ((len (##string-length str)))
     (let loop ((h 0) (i 0))
-      (if (##fixnum.< i len)
-        (loop (##fixnum.bitwise-and
-               (##fixnum.* (##fixnum.+
-                            (##fixnum.arithmetic-shift-right h 8)
-                            (##fixnum.<-char (##string-ref str i)))
+      (if (##fx< i len)
+        (loop (##fxand
+               (##fx* (##fx+
+                            (##fxarithmetic-shift-right h 8)
+                            (##fx<-char (##string-ref str i)))
                            331804471)
                (macro-max-fixnum32))
-              (##fixnum.+ i 1))
+              (##fx+ i 1))
         h))))
 
 (define-prim (string=?-hash str)
@@ -538,15 +538,15 @@
 
   (let ((len (##string-length str)))
     (let loop ((h 0) (i 0))
-      (if (##fixnum.< i len)
-        (loop (##fixnum.bitwise-and
-               (##fixnum.* (##fixnum.+
-                            (##fixnum.arithmetic-shift-right h 8)
-                            (##fixnum.<-char
+      (if (##fx< i len)
+        (loop (##fxand
+               (##fx* (##fx+
+                            (##fxarithmetic-shift-right h 8)
+                            (##fx<-char
                              (##char-downcase (##string-ref str i))))
                            331804471)
                (macro-max-fixnum32))
-              (##fixnum.+ i 1))
+              (##fx+ i 1))
         h))))
 
 (define-prim (string-ci=?-hash str)
@@ -594,55 +594,55 @@
 (define-prim (##gc-hash-table? obj)
   (and (##subtyped? obj)
        (##eq? (##subtype obj) (macro-subtype-weak))
-       (##not (##fixnum.= (##vector-length obj) (macro-will-size)))))
+       (##not (##fx= (##vector-length obj) (macro-will-size)))))
 
 (define-prim (##gc-hash-table-ref gcht key))
 (define-prim (##gc-hash-table-set! gcht key val))
 (define-prim (##gc-hash-table-rehash! gcht-src gcht-dst))
 
 (define-prim (##smallest-prime-no-less-than n) ;; n >= 3
-  (let loop1 ((n (if (##fixnum.even? n) (##fixnum.+ n 1) n)))
+  (let loop1 ((n (if (##fxeven? n) (##fx+ n 1) n)))
     (let loop2 ((d 3))
-      (cond ((##fixnum.< n (##fixnum.* d d))
+      (cond ((##fx< n (##fx* d d))
              n)
-            ((##fixnum.zero? (##fixnum.modulo n d))
-             (loop1 (##fixnum.+ n 2)))
+            ((##fxzero? (##fxmodulo n d))
+             (loop1 (##fx+ n 2)))
             (else
-             (loop2 (##fixnum.+ d 2)))))))
+             (loop2 (##fx+ d 2)))))))
 
 (define-prim (##gc-hash-table-resize! table gcht loads)
   (let* ((count
           (macro-gc-hash-table-count gcht))
          (n
-          (##fixnum.+ 1
-                      (##flonum.->fixnum
-                       (##flonum./ (##flonum.<-fixnum count)
+          (##fx+ 1
+                      (##flonum->fixnum
+                       (##fl/ (##fixnum->flonum count)
                                    (##f64vector-ref loads 1))))))
     (##gc-hash-table-allocate
      n
-     (##fixnum.bitwise-and
+     (##fxand
       (macro-gc-hash-table-flags gcht)
-      (##fixnum.bitwise-not
-       (##fixnum.bitwise-ior
+      (##fxnot
+       (##fxior
         (macro-gc-hash-table-flag-key-moved)
-        (##fixnum.bitwise-ior
+        (##fxior
          (macro-gc-hash-table-flag-entry-deleted)
          (macro-gc-hash-table-flag-need-rehash)))))
      loads)))
 
 (define-prim (##gc-hash-table-allocate n flags loads)
-  (if (##fixnum.< (macro-gc-hash-table-minimal-nb-entries) n)
+  (if (##fx< (macro-gc-hash-table-minimal-nb-entries) n)
     (let* ((nb-entries
-            (##smallest-prime-no-less-than (##fixnum.+ n 1)))
+            (##smallest-prime-no-less-than (##fx+ n 1)))
            (min-count
-            (##flonum.->fixnum
-             (##flonum.* (##flonum.<-fixnum n)
+            (##flonum->fixnum
+             (##fl* (##fixnum->flonum n)
                          (##f64vector-ref loads 0))))
            (free
-            (##fixnum.+ 1
-                        (##flonum.->fixnum
-                         (##flonum.* (##flonum.<-fixnum
-                                      (##fixnum.- nb-entries 1))
+            (##fx+ 1
+                        (##flonum->fixnum
+                         (##fl* (##fixnum->flonum
+                                      (##fx- nb-entries 1))
                                      (##f64vector-ref loads 2))))))
       (macro-make-gc-hash-table
        flags
@@ -658,14 +658,14 @@
   (##declare (not interrupts-enabled))
   (if (##gc-hash-table? ht)
     (let loop ((i (macro-gc-hash-table-key0)))
-      (if (##fixnum.< i (##vector-length ht))
+      (if (##fx< i (##vector-length ht))
         (let ((key (##vector-ref ht i)))
           (if (and (##not (##eq? key (macro-unused-obj)))
                    (##not (##eq? key (macro-deleted-obj))))
-            (proc key (##vector-ref ht (##fixnum.+ i 1))))
+            (proc key (##vector-ref ht (##fx+ i 1))))
           (let ()
             (##declare (interrupts-enabled))
-            (loop (##fixnum.+ i 2))))
+            (loop (##fx+ i 2))))
         (##void)))
     (##void)))
 
@@ -673,14 +673,14 @@
   (##declare (not interrupts-enabled))
   (if (##gc-hash-table? ht)
     (let loop ((i (macro-gc-hash-table-key0)))
-      (if (##fixnum.< i (##vector-length ht))
+      (if (##fx< i (##vector-length ht))
         (let ((key (##vector-ref ht i)))
           (or (and (##not (##eq? key (macro-unused-obj)))
                    (##not (##eq? key (macro-deleted-obj)))
-                   (proc key (##vector-ref ht (##fixnum.+ i 1))))
+                   (proc key (##vector-ref ht (##fx+ i 1))))
               (let ()
                 (##declare (interrupts-enabled))
-                (loop (##fixnum.+ i 2)))))
+                (loop (##fx+ i 2)))))
         #f))
     #f))
 
@@ -688,24 +688,24 @@
   (##declare (not interrupts-enabled))
   (if (##gc-hash-table? ht)
     (let loop ((i (macro-gc-hash-table-key0)) (base base))
-      (if (##fixnum.< i (##vector-length ht))
+      (if (##fx< i (##vector-length ht))
         (let ((key (##vector-ref ht i)))
           (if (and (##not (##eq? key (macro-unused-obj)))
                    (##not (##eq? key (macro-deleted-obj))))
             (let ((new-base
-                   (f base (proc key (##vector-ref ht (##fixnum.+ i 1))))))
+                   (f base (proc key (##vector-ref ht (##fx+ i 1))))))
               (##declare (interrupts-enabled))
-              (loop (##fixnum.+ i 2) new-base))
+              (loop (##fx+ i 2) new-base))
             (let ()
               (##declare (interrupts-enabled))
-              (loop (##fixnum.+ i 2) base))))
+              (loop (##fx+ i 2) base))))
         base))
     base))
 
 (define-prim (##mem-allocated? obj)
   (let ((type (##type obj)))
-    (or (##fixnum.= type (macro-type-mem1))
-        (##fixnum.= type (macro-type-mem2)))))
+    (or (##fx= type (macro-type-mem1))
+        (##fx= type (macro-type-mem2)))))
 
 (implement-type-table)
 
@@ -742,7 +742,7 @@
     (if (##eq? size (macro-absent-obj))
       (check-weak-keys 0
                        arg-num)
-      (let ((arg-num (##fixnum.+ arg-num 2)))
+      (let ((arg-num (##fx+ arg-num 2)))
         (macro-check-index
          size
          arg-num
@@ -754,7 +754,7 @@
                      hash: hash
                      min-load: min-load
                      max-load: max-load)
-         (check-weak-keys (##fixnum.min size 2000000) ;; avoid fixnum overflows
+         (check-weak-keys (##fxmin size 2000000) ;; avoid fixnum overflows
                           arg-num)))))
 
   (define (check-weak-keys siz arg-num)
@@ -762,7 +762,7 @@
       (check-weak-values siz
                          (macro-default-weak-keys)
                          arg-num)
-      (let ((arg-num (##fixnum.+ arg-num 2)))
+      (let ((arg-num (##fx+ arg-num 2)))
         (check-weak-values siz
                            (if weak-keys
                              (macro-gc-hash-table-flag-weak-keys)
@@ -772,12 +772,12 @@
   (define (check-weak-values siz flags arg-num)
     (if (##eq? weak-values (macro-absent-obj))
       (check-test siz
-                  (##fixnum.+ flags
+                  (##fx+ flags
                               (macro-default-weak-values))
                   arg-num)
-      (let ((arg-num (##fixnum.+ arg-num 2)))
+      (let ((arg-num (##fx+ arg-num 2)))
         (check-test siz
-                    (##fixnum.+ flags
+                    (##fx+ flags
                                 (if weak-values
                                   (macro-gc-hash-table-flag-weak-vals)
                                   0))
@@ -789,7 +789,7 @@
                   flags
                   ##equal?
                   arg-num)
-      (let ((arg-num (##fixnum.+ arg-num 2)))
+      (let ((arg-num (##fx+ arg-num 2)))
         (macro-check-procedure
          test
          arg-num
@@ -844,7 +844,7 @@
                           test-fn
                           ##generic-hash
                           arg-num)))
-      (let ((arg-num (##fixnum.+ arg-num 2)))
+      (let ((arg-num (##fx+ arg-num 2)))
         (macro-check-procedure
          hash
          arg-num
@@ -888,7 +888,7 @@
                       hash-fn
                       loads
                       arg-num)
-      (let ((arg-num (##fixnum.+ arg-num 2)))
+      (let ((arg-num (##fx+ arg-num 2)))
         (if (##not (##real? min-load))
           (##fail-check-real
            arg-num
@@ -918,7 +918,7 @@
                         hash-fn
                         loads
                         arg-num)
-      (let ((arg-num (##fixnum.+ arg-num 2)))
+      (let ((arg-num (##fx+ arg-num 2)))
         (if (##not (##real? max-load))
           (##fail-check-real
            arg-num
@@ -944,21 +944,21 @@
     (##f64vector-set!
      loads
      0
-     (##flonum.min (##flonum.- (macro-load-range-hi)
+     (##flmin (##fl- (macro-load-range-hi)
                                (macro-load-min-max-gap))
-                   (##flonum.max (macro-load-range-lo)
+                   (##flmax (macro-load-range-lo)
                                  (##f64vector-ref loads 0))))
     (##f64vector-set!
      loads
      2
-     (##flonum.min (macro-load-range-hi)
-                   (##flonum.max (##flonum.+ (##f64vector-ref loads 0)
+     (##flmin (macro-load-range-hi)
+                   (##flmax (##fl+ (##f64vector-ref loads 0)
                                              (macro-load-min-max-gap))
                                  (##f64vector-ref loads 2))))
     (##f64vector-set!
      loads
      1
-     (##flonum.sqrt (##flonum.* (##f64vector-ref loads 0)
+     (##flsqrt (##fl* (##f64vector-ref loads 0)
                                 (##f64vector-ref loads 2))))
     (checks-done siz
                  flags
@@ -971,7 +971,7 @@
     (macro-make-table (if (and #f ;; don't make a special case for eq? tables
                                (##not test-fn)
                                (##eq? weak-keys (macro-absent-obj)))
-                        (##fixnum.bitwise-ior
+                        (##fxior
                          flags
                          (macro-gc-hash-table-flag-weak-keys))
                         flags)
@@ -1034,7 +1034,7 @@
              (gcht
               (##gc-hash-table-allocate
                n
-               (##fixnum.bitwise-ior
+               (##fxior
                 (macro-gc-hash-table-flag-mem-alloc-keys)
                 (macro-table-flags table))
                (macro-table-loads table))))
@@ -1053,7 +1053,7 @@
 
   (if (macro-table-test table)
     (count (macro-table-gcht table))
-    (##fixnum.+ (count (macro-table-hash table))
+    (##fx+ (count (macro-table-hash table))
                 (count (macro-table-gcht table)))))
 
 (define-prim (table-length table)
@@ -1071,25 +1071,25 @@
                 (let* ((gcht (##table-get-gcht table))
                        (flags (macro-gc-hash-table-flags gcht)))
                   (if (or (##not
-                           (##fixnum.=
+                           (##fx=
                             0
-                            (##fixnum.bitwise-and
+                            (##fxand
                              flags
                              (macro-gc-hash-table-flag-need-rehash))))
                           (and (##not
-                                (##fixnum.=
+                                (##fx=
                                  0
-                                 (##fixnum.bitwise-and
+                                 (##fxand
                                   flags
                                   (macro-gc-hash-table-flag-entry-deleted))))
                                (begin
                                  (macro-gc-hash-table-flags-set!
                                   gcht
-                                  (##fixnum.bitwise-and
+                                  (##fxand
                                    (macro-gc-hash-table-flags gcht)
-                                   (##fixnum.bitwise-not
+                                   (##fxnot
                                     (macro-gc-hash-table-flag-entry-deleted))))
-                                 (##fixnum.<
+                                 (##fx<
                                   (macro-gc-hash-table-count gcht)
                                   (macro-gc-hash-table-min-count gcht)))))
                       (begin
@@ -1099,15 +1099,15 @@
                (size
                 (macro-gc-hash-table-nb-entries gcht))
                (probe2
-                (##fixnum.arithmetic-shift-left
-                 (##fixnum.modulo h size)
+                (##fxarithmetic-shift-left
+                 (##fxmodulo h size)
                  1))
                (step2
-                (##fixnum.arithmetic-shift-left
-                 (##fixnum.+ (##fixnum.modulo h (##fixnum.- size 1)) 1)
+                (##fxarithmetic-shift-left
+                 (##fx+ (##fxmodulo h (##fx- size 1)) 1)
                  1))
                (size2
-                (##fixnum.arithmetic-shift-left size 1))
+                (##fxarithmetic-shift-left size 1))
                (test
                 (macro-table-test table)))
           (let loop2 ((probe2 probe2)
@@ -1116,17 +1116,17 @@
               (cond ((##eq? k (macro-unused-obj))
                      (not-found table key gcht probe2 deleted2 val))
                     ((##eq? k (macro-deleted-obj))
-                     (let ((next-probe2 (##fixnum.- probe2 step2)))
-                       (loop2 (if (##fixnum.< next-probe2 0)
-                                (##fixnum.+ next-probe2 size2)
+                     (let ((next-probe2 (##fx- probe2 step2)))
+                       (loop2 (if (##fx< next-probe2 0)
+                                (##fx+ next-probe2 size2)
                                 next-probe2)
                               (or deleted2 probe2))))
                     ((test key k)
                      (found table key gcht probe2 val))
                     (else
-                     (let ((next-probe2 (##fixnum.- probe2 step2)))
-                       (loop2 (if (##fixnum.< next-probe2 0)
-                                (##fixnum.+ next-probe2 size2)
+                     (let ((next-probe2 (##fx- probe2 step2)))
+                       (loop2 (if (##fx< next-probe2 0)
+                                (##fx+ next-probe2 size2)
                                 next-probe2)
                               deleted2)))))))))))
 
@@ -1189,15 +1189,15 @@
            (##gc-hash-table-resize! table gcht (macro-table-loads table))))
       (macro-table-gcht-set! table new-gcht)
       (let loop ((i (macro-gc-hash-table-key0)))
-        (if (##fixnum.< i (##vector-length gcht))
+        (if (##fx< i (##vector-length gcht))
           (let ((key (##vector-ref gcht i)))
             (if (and (##not (##eq? key (macro-unused-obj)))
                      (##not (##eq? key (macro-deleted-obj))))
-              (let ((val (##vector-ref gcht (##fixnum.+ i 1))))
+              (let ((val (##vector-ref gcht (##fx+ i 1))))
                 (##table-set! table key val)))
             (let ()
               (##declare (interrupts-enabled))
-              (loop (##fixnum.+ i 2))))
+              (loop (##fx+ i 2))))
           (##void))))))
   
 (define-prim (##table-set!
@@ -1215,11 +1215,11 @@
        (lambda (table key gcht probe2 val)
          ;; key was found at position "probe2"
          (if (##eq? val (macro-absent-obj))
-           (let ((count (##fixnum.- (macro-gc-hash-table-count gcht) 1)))
+           (let ((count (##fx- (macro-gc-hash-table-count gcht) 1)))
              (macro-gc-hash-table-count-set! gcht count)
              (macro-gc-hash-table-key-set! gcht probe2 (macro-deleted-obj))
              (macro-gc-hash-table-val-set! gcht probe2 (macro-unused-obj))
-             (if (##fixnum.< count (macro-gc-hash-table-min-count gcht))
+             (if (##fx< count (macro-gc-hash-table-min-count gcht))
                (##table-resize! table)
                (##void)))
            (begin
@@ -1231,18 +1231,18 @@
          (if (##eq? val (macro-absent-obj))
            (##void)
            (if deleted2
-             (let ((count (##fixnum.+ (macro-gc-hash-table-count gcht) 1)))
+             (let ((count (##fx+ (macro-gc-hash-table-count gcht) 1)))
                (macro-gc-hash-table-count-set! gcht count)
                (macro-gc-hash-table-key-set! gcht deleted2 key)
                (macro-gc-hash-table-val-set! gcht deleted2 val)
                (##void))
-             (let ((count (##fixnum.+ (macro-gc-hash-table-count gcht) 1))
-                   (free (##fixnum.- (macro-gc-hash-table-free gcht) 1)))
+             (let ((count (##fx+ (macro-gc-hash-table-count gcht) 1))
+                   (free (##fx- (macro-gc-hash-table-free gcht) 1)))
                (macro-gc-hash-table-count-set! gcht count)
                (macro-gc-hash-table-free-set! gcht free)
                (macro-gc-hash-table-key-set! gcht probe2 key)
                (macro-gc-hash-table-val-set! gcht probe2 val)
-               (if (##fixnum.< free 0)
+               (if (##fx< free 0)
                  (##table-resize! table)
                  (##void))))))
        val)
@@ -1391,11 +1391,11 @@
          (flags
           (macro-table-flags table))
          (weak-keys
-          (##not (##fixnum.= 0 (##fixnum.bitwise-and
+          (##not (##fx= 0 (##fxand
                                 flags
                                 (macro-gc-hash-table-flag-weak-keys)))))
          (weak-values
-          (##not (##fixnum.= 0 (##fixnum.bitwise-and
+          (##not (##fx= 0 (##fxand
                                 flags
                                 (macro-gc-hash-table-flag-weak-vals)))))
          (test-field
@@ -1495,7 +1495,7 @@
 
   (##declare (not interrupts-enabled))
 
-  (and (##fixnum.= (macro-table-flags table1)
+  (and (##fx= (macro-table-flags table1)
                    (macro-table-flags table2))
        (##eq? (macro-table-test table1)
               (macro-table-test table2))
@@ -1505,7 +1505,7 @@
          #t)
        (let* ((len1 (##table-length table1))
               (len2 (##table-length table2)))
-         (and (##fixnum.= len1 len2)
+         (and (##fx= len1 len2)
               (##not (##table-search
                       (lambda (key1 val1)
                         (let ((val2
@@ -1516,14 +1516,14 @@
 (define-prim (##table-equal?-hash table)
 
   (define (combine a b)
-    (##fixnum.bitwise-and
-     (##fixnum.* (##fixnum.+ a (##fixnum.arithmetic-shift-left b 1))
+    (##fxand
+     (##fx* (##fx+ a (##fxarithmetic-shift-left b 1))
                  331804471)
      (macro-max-fixnum32)))
 
   (##table-foldl
    (lambda (a b) ;; must be associative and commutative
-     (##fixnum.bitwise-xor a b))
+     (##fxxor a b))
    (combine
     (macro-table-flags table)
     (combine
@@ -1571,7 +1571,7 @@
     (##declare (not interrupts-enabled))
     (or (##table-ref ##object-to-serial-number-table obj #f)
         (let* ((n ##last-serial-number)
-               (n+1 (or (##fixnum.+? n 1) 0)))
+               (n+1 (or (##fx+? n 1) 0)))
           (set! ##last-serial-number n+1)
           (if (##table-ref ##serial-number-to-object-table n+1 #f)
             (loop)
@@ -1877,7 +1877,7 @@
   `(##cpxnum? ,obj))
 
 (##define-macro (boxvalues? obj)
-  `(##fixnum.= (##subtype ,obj) (macro-subtype-boxvalues)))
+  `(##fx= (##subtype ,obj) (macro-subtype-boxvalues)))
 
 (##define-macro (promise? obj)
   `(##promise? ,obj))
@@ -2123,40 +2123,40 @@
 
 
 (##define-macro (+ . args)
-  `(##fixnum.+ ,@args))
+  `(##fx+ ,@args))
 
 (##define-macro (- . args)
-  `(##fixnum.- ,@args))
+  `(##fx- ,@args))
 
 (##define-macro (* . args)
-  `(##fixnum.* ,@args))
+  `(##fx* ,@args))
 
 (##define-macro (< . args)
-  `(##fixnum.< ,@args))
+  `(##fx< ,@args))
 
 (##define-macro (> . args)
-  `(##fixnum.> ,@args))
+  `(##fx> ,@args))
 
 (##define-macro (= . args)
-  `(##fixnum.= ,@args))
+  `(##fx= ,@args))
 
 (##define-macro (>= . args)
-  `(##fixnum.>= ,@args))
+  `(##fx>= ,@args))
 
 (##define-macro (<= . args)
-  `(##fixnum.<= ,@args))
+  `(##fx<= ,@args))
 
 (##define-macro (bitwise-and . args)
-  `(##fixnum.bitwise-and ,@args))
+  `(##fxand ,@args))
 
 (##define-macro (bitwise-ior . args)
-  `(##fixnum.bitwise-ior ,@args))
+  `(##fxior ,@args))
 
 (##define-macro (arithmetic-shift-left . args)
-  `(##fixnum.arithmetic-shift-left ,@args))
+  `(##fxarithmetic-shift-left ,@args))
 
 (##define-macro (arithmetic-shift-right . args)
-  `(##fixnum.arithmetic-shift-right ,@args))
+  `(##fxarithmetic-shift-right ,@args))
 
 (##define-macro (generic.+ . args)
   `(##+ ,@args))
@@ -2199,10 +2199,10 @@
 
 
 (##define-macro (char->integer . args)
-  `(##fixnum.<-char ,@args))
+  `(##fx<-char ,@args))
 
 (##define-macro (integer->char . args)
-  `(##fixnum.->char ,@args))
+  `(##fx->char ,@args))
 
 
 (##define-macro (vector . args)
@@ -2665,16 +2665,16 @@
                           (serialize-subprocedure! subproc 0 #x7f)
                           (alloc! (##cons 11 22))
                           (let loop ((i fs))
-                            (if (##fixnum.> i 0)
+                            (if (##fx> i 0)
                                 (begin
                                   (serialize-cont-frame-ref! cont i)
-                                  (loop (##fixnum.- i 1)))))))
+                                  (loop (##fx- i 1)))))))
 
                       (define (serialize-cont-frame-ref! cont i)
                         (let* ((fs (##continuation-fs cont))
-                               (j (##fixnum.+ (##fixnum.- fs i) 1)))
+                               (j (##fx+ (##fx- fs i) 1)))
                           (if (##continuation-slot-live? cont j)
-                              (if (##fixnum.= j (##fixnum.+ (##continuation-link cont) 1))
+                              (if (##fx= j (##fx+ (##continuation-link cont) 1))
                                   (let ((next (##continuation-next cont)))
                                     (if next
                                         (serialize-cont-frame! next)
@@ -2959,7 +2959,7 @@
   `(##cpxnum? ,obj))
 
 (##define-macro (boxvalues? obj)
-  `(##fixnum.= (##subtype ,obj) (macro-subtype-boxvalues)))
+  `(##fx= (##subtype ,obj) (macro-subtype-boxvalues)))
 
 
 (##define-macro (make-string . args)
@@ -3202,40 +3202,40 @@
 
 
 (##define-macro (+ . args)
-  `(##fixnum.+ ,@args))
+  `(##fx+ ,@args))
 
 (##define-macro (- . args)
-  `(##fixnum.- ,@args))
+  `(##fx- ,@args))
 
 (##define-macro (* . args)
-  `(##fixnum.* ,@args))
+  `(##fx* ,@args))
 
 (##define-macro (< . args)
-  `(##fixnum.< ,@args))
+  `(##fx< ,@args))
 
 (##define-macro (> . args)
-  `(##fixnum.> ,@args))
+  `(##fx> ,@args))
 
 (##define-macro (= . args)
-  `(##fixnum.= ,@args))
+  `(##fx= ,@args))
 
 (##define-macro (>= . args)
-  `(##fixnum.>= ,@args))
+  `(##fx>= ,@args))
 
 (##define-macro (<= . args)
-  `(##fixnum.<= ,@args))
+  `(##fx<= ,@args))
 
 (##define-macro (bitwise-and . args)
-  `(##fixnum.bitwise-and ,@args))
+  `(##fxand ,@args))
 
 (##define-macro (bitwise-ior . args)
-  `(##fixnum.bitwise-ior ,@args))
+  `(##fxior ,@args))
 
 (##define-macro (arithmetic-shift-left . args)
-  `(##fixnum.arithmetic-shift-left ,@args))
+  `(##fxarithmetic-shift-left ,@args))
 
 (##define-macro (arithmetic-shift-right . args)
-  `(##fixnum.arithmetic-shift-right ,@args))
+  `(##fxarithmetic-shift-right ,@args))
 
 (##define-macro (generic.+ . args)
   `(##+ ,@args))
@@ -3278,10 +3278,10 @@
 
 
 (##define-macro (char->integer . args)
-  `(##fixnum.<-char ,@args))
+  `(##fx<-char ,@args))
 
 (##define-macro (integer->char . args)
-  `(##fixnum.->char ,@args))
+  `(##fx->char ,@args))
 
 
 (##define-macro (vector . args)

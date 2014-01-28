@@ -2,7 +2,7 @@
 
 ;;; File: "_thread#.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1150,26 +1150,26 @@
   `(let ((t1 ,t1) (t2 ,t2))
      (let ((floats1 (macro-thread-floats t1))
            (floats2 (macro-thread-floats t2)))
-       (##flonum.< (macro-effective-priority floats2) ;; high priority first
-                   (macro-effective-priority floats1)))))
+       (##fl< (macro-effective-priority floats2) ;; high priority first
+              (macro-effective-priority floats1)))))
 
 (##define-macro (macro-thread-sooner? t1 t2)
   `(let ((t1 ,t1) (t2 ,t2))
      (let ((floats1 (macro-thread-floats t1))
            (floats2 (macro-thread-floats t2)))
-       (##flonum.< (macro-timeout floats1)
-                   (macro-timeout floats2)))))
+       (##fl< (macro-timeout floats1)
+              (macro-timeout floats2)))))
 
 (##define-macro (macro-thread-sooner-or-simultaneous-and-higher-prio? t1 t2)
   `(let ((t1 ,t1) (t2 ,t2))
      (let ((floats1 (macro-thread-floats t1))
            (floats2 (macro-thread-floats t2)))
-       (if (##not (##flonum.= (macro-timeout floats1)
-                              (macro-timeout floats2)))
-         (##flonum.< (macro-timeout floats1)
-                     (macro-timeout floats2))
-         (##flonum.< (macro-effective-priority floats2) ;; high priority first
-                     (macro-effective-priority floats1))))))
+       (if (##not (##fl= (macro-timeout floats1)
+                         (macro-timeout floats2)))
+         (##fl< (macro-timeout floats1)
+                (macro-timeout floats2))
+         (##fl< (macro-effective-priority floats2) ;; high priority first
+                (macro-effective-priority floats1))))))
 
 (##define-macro (macro-thread-boost-and-clear-quantum-used! thread)
   `(let ((thread ,thread))
@@ -1178,9 +1178,9 @@
 
      (let ((floats (macro-thread-floats thread)))
        (macro-quantum-used-set! floats (macro-inexact-+0))
-       (if (##not (##flonum.= (##flonum.+ (macro-base-priority floats)
-                                          (macro-priority-boost floats))
-                              (macro-boosted-priority floats)))
+       (if (##not (##fl= (##fl+ (macro-base-priority floats)
+                                (macro-priority-boost floats))
+                         (macro-boosted-priority floats)))
          (begin
 
            ;; save old boosted priority for ##thread-boosted-priority-changed!
@@ -1191,8 +1191,8 @@
 
            (macro-boosted-priority-set!
             floats
-            (##flonum.+ (macro-base-priority floats)
-                        (macro-priority-boost floats)))
+            (##fl+ (macro-base-priority floats)
+                   (macro-priority-boost floats)))
 
             (##thread-boosted-priority-changed! thread))))))
 
@@ -1203,8 +1203,8 @@
 
      (let ((floats (macro-thread-floats thread)))
        (macro-quantum-used-set! floats (macro-inexact-+0))
-       (if (##not (##flonum.= (macro-base-priority floats)
-                              (macro-boosted-priority floats)))
+       (if (##not (##fl= (macro-base-priority floats)
+                         (macro-boosted-priority floats)))
          (begin
 
            ;; save old boosted priority for ##thread-boosted-priority-changed!
@@ -1226,8 +1226,8 @@
 
      (let ((thread-floats (macro-thread-floats thread))
            (parent-floats (macro-thread-floats parent)))
-       (if (##flonum.< (macro-effective-priority thread-floats)
-                       (macro-effective-priority parent-floats))
+       (if (##fl< (macro-effective-priority thread-floats)
+                  (macro-effective-priority parent-floats))
          (begin
            (macro-effective-priority-set!
             thread-floats
