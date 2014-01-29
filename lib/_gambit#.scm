@@ -132,10 +132,11 @@
 ##flonum.<-fixnum-exact?
 ;;; ##flonum.= ##flonum.< ##flonum.> ##flonum.<= ##flonum.>=
 
-##fx->char ##fx<-char
-##fl->fx ##fl<-fx
-##fl<-fx-exact?
+##fx->char ##fx<-char;;deprecated
+##fl->fx ##fl<-fx;;deprecated
+##fl<-fx-exact?;;deprecated
 
+##integer->char ##char->integer
 
 ;;; ##fxmax ##fxmin
 ;;; ##fxwrap+ ##fx+
@@ -161,7 +162,7 @@
 ##fxzero? ##fxpositive? ##fxnegative?
 ##fxodd? ##fxeven?
 ;;; ##fx= ##fx< ##fx> ##fx<= ##fx>=
-##fixnum->char ##char->fixnum
+##fixnum->char ##char->fixnum;;deprecated
 
 ##flonum->fixnum ##fixnum->flonum ##fixnum->flonum-exact?
 ;;; ##flmax ##flmin

@@ -520,7 +520,7 @@
         (loop (##fxand
                (##fx* (##fx+
                             (##fxarithmetic-shift-right h 8)
-                            (##fx<-char (##string-ref str i)))
+                            (##char->integer (##string-ref str i)))
                            331804471)
                (macro-max-fixnum32))
               (##fx+ i 1))
@@ -542,7 +542,7 @@
         (loop (##fxand
                (##fx* (##fx+
                             (##fxarithmetic-shift-right h 8)
-                            (##fx<-char
+                            (##char->integer
                              (##char-downcase (##string-ref str i))))
                            331804471)
                (macro-max-fixnum32))
@@ -2199,10 +2199,10 @@
 
 
 (##define-macro (char->integer . args)
-  `(##fx<-char ,@args))
+  `(##char->integer ,@args))
 
 (##define-macro (integer->char . args)
-  `(##fx->char ,@args))
+  `(##integer->char ,@args))
 
 
 (##define-macro (vector . args)
@@ -3278,10 +3278,10 @@
 
 
 (##define-macro (char->integer . args)
-  `(##fx<-char ,@args))
+  `(##char->integer ,@args))
 
 (##define-macro (integer->char . args)
-  `(##fx->char ,@args))
+  `(##integer->char ,@args))
 
 
 (##define-macro (vector . args)

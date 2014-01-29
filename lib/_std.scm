@@ -1430,14 +1430,14 @@ end-of-code
 (define-prim (char->integer c)
   (macro-force-vars (c)
     (macro-check-char c 1 (char->integer c)
-      (##fx<-char c))))
+      (##char->integer c))))
 
 (define-prim (integer->char n)
   (macro-force-vars (n)
     (macro-check-fixnum-range-incl n 1 0 ##max-char (integer->char n)
       (if (or (##fx< n #xd800)
               (##fx< #xdfff n))
-        (##fx->char n)
+        (##integer->char n)
         (##raise-range-exception 1 integer->char n)))))
 
 (define-prim (##char-upcase c))

@@ -3388,11 +3388,13 @@
 (targ-op "##fx<="        (targ-ifjump-fold-u #f "FIXLE"))
 (targ-op "##fx>="        (targ-ifjump-fold-u #f "FIXGE"))
 
-(targ-op "##fx->char"    (targ-apply-simp-u #f #f #f "FIXTOCHR"))
-(targ-op "##fx<-char"    (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
+(targ-op "##fx->char"    (targ-apply-simp-u #f #f #f "FIXTOCHR"));;deprecated
+(targ-op "##fx<-char"    (targ-apply-simp-u #f #f #f "FIXFROMCHR"));;deprecated
+(targ-op "##fixnum->char"   (targ-apply-simp-u #f #f #f "FIXTOCHR"));;deprecated
+(targ-op "##char->fixnum"   (targ-apply-simp-u #f #f #f "FIXFROMCHR"));;deprecated
 
-(targ-op "##fixnum->char"   (targ-apply-simp-u #f #f #f "FIXTOCHR"))
-(targ-op "##char->fixnum"   (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
+(targ-op "##integer->char"  (targ-apply-simp-u #f #f #f "FIXTOCHR"))
+(targ-op "##char->integer"  (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
 (targ-op "##flonum->fixnum" (targ-apply-simp-u #t #f #f "F64TOFIX"))
 (targ-op "##fixnum->flonum" (targ-apply-simpflo-u #f "F64FROMFIX"))
 (targ-op "##fixnum->flonum-exact?" (targ-ifjump-simp-u #f "F64FROMFIXEXACTP"))

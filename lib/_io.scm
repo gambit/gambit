@@ -8810,7 +8810,7 @@
                       obj))
               (##wr-ch we obj))
              (else
-              (let ((n (##fx<-char obj)))
+              (let ((n (##char->integer obj)))
                 (cond ((##fx< #xffff n)
                        (##wr-ch we #\U)
                        (##wr-hex we n 8))
@@ -8858,7 +8858,7 @@
       (let* ((c
               (##string-ref s j))
              (n
-              (##fx<-char c))
+              (##char->integer c))
              (ctrl-char?
               (macro-ctrl-char? c))
              (x
@@ -9763,8 +9763,8 @@
 (##define-macro (make-f64vect n)          `(##make-f64vector ,n))
 (##define-macro (f64vect-set! . args)     `(##f64vector-set! ,@args))
 
-(##define-macro (UCS-4->character . args) `(##fx->char ,@args))
-(##define-macro (character->UCS-4 . args) `(##fx<-char ,@args))
+(##define-macro (UCS-4->character . args) `(##integer->char ,@args))
+(##define-macro (character->UCS-4 . args) `(##char->integer ,@args))
 (##define-macro (in-char-range? n)
   `(and (##not (##< ##max-char ,n))
         (or (##fx< ,n #xd800)
@@ -12760,7 +12760,7 @@
           (##make-chartable #f) ;; all chars are non-delimiters
           (##make-chartable ##read-number/keyword/symbol)
           (##make-chartable ##read-sharp-other)
-          (##fx->char 127) ;; max-unescaped-char
+          (##integer->char 127) ;; max-unescaped-char
           #t                 ;; escape-ctrl-chars?
           #f                 ;; sharing-allowed?
           #f                 ;; eval-allowed?

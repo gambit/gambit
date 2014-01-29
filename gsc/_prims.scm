@@ -671,17 +671,19 @@
 ("##fx>"                         0     #f ()    0    boolean extended)
 ("##fx<="                        0     #f ()    0    boolean extended)
 ("##fx>="                        0     #f ()    0    boolean extended)
-("##fx->char"                    (1)   #f ()    0    char    extended)
-("##fx<-char"                    (1)   #f ()    0    fixnum  extended)
+("##fx->char"                    (1)   #f ()    0    char    extended);;deprecated
+("##fx<-char"                    (1)   #f ()    0    fixnum  extended);;deprecated
 
-("##fixnum->char"                (1)   #f ()    0    char    extended)
-("##char->fixnum"                (1)   #f ()    0    fixnum  extended)
+("##fixnum->char"                (1)   #f ()    0    char    extended);;deprecated
+("##char->fixnum"                (1)   #f ()    0    fixnum  extended);;deprecated
+("##integer->char"               (1)   #f ()    0    char    extended)
+("##char->integer"               (1)   #f ()    0    fixnum  extended)
 ("##flonum->fixnum"              (1)   #f ()    0    fixnum  extended)
 ("##fixnum->flonum"              (1)   #f ()    0    real    extended)
 ("##fixnum->flonum-exact?"       (1)   #f ()    0    boolean extended)
 
-("##fl->fx"                      (1)   #f ()    0    fixnum  extended)
-("##fl<-fx"                      (1)   #f ()    0    real    extended)
+("##fl->fx"                      (1)   #f ()    0    fixnum  extended);;deprecated
+("##fl<-fx"                      (1)   #f ()    0    real    extended);;deprecated
 ("##flmax"                       1     #f ()    0    real    extended)
 ("##flmin"                       1     #f ()    0    real    extended)
 ("##fl+"                         0     #f ()    0    real    extended)
@@ -724,7 +726,7 @@
 ("##flfinite?"                   (1)   #f ()    0    boolean extended)
 ("##flinfinite?"                 (1)   #f ()    0    boolean extended)
 ("##flnan?"                      (1)   #f ()    0    boolean extended)
-("##fl<-fx-exact?"               (1)   #f ()    0    boolean extended)
+("##fl<-fx-exact?"               (1)   #f ()    0    boolean extended);;deprecated
 ("##fl="                         0     #f ()    0    boolean extended)
 ("##fl<"                         0     #f ()    0    boolean extended)
 ("##fl>"                         0     #f ()    0    boolean extended)
@@ -1300,8 +1302,8 @@
 (def-spec "char-whitespace?" (spec-u "##char-whitespace?"))
 (def-spec "char-upper-case?" (spec-u "##char-upper-case?"))
 (def-spec "char-lower-case?" (spec-u "##char-lower-case?"))
-(def-spec "char->integer"    (spec-u "##char->fixnum"))
-(def-spec "integer->char"    (spec-u "##fixnum->char"))
+(def-spec "char->integer"    (spec-u "##char->integer"))
+(def-spec "integer->char"    (spec-u "##integer->char"))
 (def-spec "char-upcase"      (spec-u "##char-upcase"))
 (def-spec "char-downcase"    (spec-u "##char-downcase"))
 
@@ -2101,7 +2103,7 @@
   (define **flsqrt-sym (string->canonical-symbol "##flsqrt"))
   (define **flcopysign-sym (string->canonical-symbol "##flcopysign"))
 
-  (define **fl<-fx-sym (string->canonical-symbol "##fl<-fx"))
+  (define **fixnum->flonum-sym (string->canonical-symbol "##fixnum->flonum"))
 
   (define **char?-sym (string->canonical-symbol "##char?"))
 
@@ -2724,11 +2726,11 @@
 
     (define case-fixnum->flonum
       (gen-fixnum-case
-       (make-prim-generator **fl<-fx-sym)))
+       (make-prim-generator **fixnum->flonum-sym)))
 
     (define case-fixnum-exact->inexact
       (gen-fixnum-case
-       (make-prim-generator **fl<-fx-sym)))
+       (make-prim-generator **fixnum->flonum-sym)))
 
     (define case-fixnum-inexact->exact
       (gen-fixnum-case

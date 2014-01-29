@@ -5621,15 +5621,17 @@ for a discussion of branch cuts.
 
 (define-prim (##fxsquare? x))
 
-(define-prim (##fx->char x))
-(define-prim (##fx<-char x))
-
-(define-prim (##fixnum->char x))
-(define-prim (##char->fixnum x))
+(define-prim (##integer->char x))
+(define-prim (##char->integer x))
 
 
 
 (begin ;;; TODO: remove this begin (the definitions it contains are redundant)
+
+(define-prim (##fx->char x));;deprecated
+(define-prim (##fx<-char x));;deprecated
+(define-prim (##fixnum->char x));;deprecated
+(define-prim (##char->fixnum x));;deprecated
 
 (define-prim-nary-bool (##fixnum.= x y)
   #t
@@ -9105,7 +9107,7 @@ ___RESULT = result;
                                   (##fl+ (##fl* bj aj+1) (##fl* aj   bj+1)))
                 (loop (##fx+ j 2)))))))
 
-    (define (bignum<-f64vector-rac a result result-length)
+    (define (f64vector-rac->bignum a result result-length)
 
       ;; result-length is > the number of complex entries in a, because
       ;; otherwise the length of a would be cut in half.
@@ -9170,7 +9172,7 @@ ___RESULT = result;
               (componentwise-complex-multiply a b)))
         (inverse-fft-recursive-4 a table)
         (componentwise-rac-multiply-conjugate a rac-table)
-        (bignum<-f64vector-rac a result result-length)
+        (f64vector-rac->bignum a result result-length)
         (cleanup x y result))))
 
 
@@ -10652,12 +10654,7 @@ ___RESULT = result;
 (define-prim-fixnum (fixnum->flonum x)
   (##fixnum->flonum x))
 
-(define-prim (##fl<-fx x))
-(define-prim (##fl->fx x))
-(define-prim (##fl<-fx-exact? x))
-
 (define-prim (##flcopysign x y))
-
 
 (define-prim (##flonum->fixnum x))
 (define-prim (##fixnum->flonum x))
@@ -10665,6 +10662,10 @@ ___RESULT = result;
 
 
 (begin ;;; TODO: remove this begin (the definitions it contains are redundant)
+
+(define-prim (##fl<-fx x));;deprecated
+(define-prim (##fl->fx x));;deprecated
+(define-prim (##fl<-fx-exact? x));;deprecated
 
 (define-prim-nary-bool (##flonum.= x y)
   #t
