@@ -8328,7 +8328,7 @@ ___RESULT = result;
                            (##fxarithmetic-shift-left 1 (##fx- (##fx* 2 log-lut-table-size) log-n))
                            lut-table-size
                            n))
-              ((##fx<= n lut-table-size^3)
+              (else ;; (##fx<= n lut-table-size^3)
                (copy-low-lut)
                (extend-lut med-lut
                            log-lut-table-size
@@ -8339,9 +8339,7 @@ ___RESULT = result;
                            (##fx- log-n (##fx* 2 log-lut-table-size))
                            (##fxarithmetic-shift-left 1 (##fx- (##fx* 3 log-lut-table-size) log-n))
                            lut-table-size^2
-                           n))
-              (else
-               (error "asking for too large a table")))))
+                           n)))))
 
     (define (two^p>=m m)
       ;; returns smallest p, assumes fixnum m >= 0
