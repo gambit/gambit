@@ -968,7 +968,7 @@
            (current-thread
             (macro-current-thread))
            (run-queue-floats
-            (macro-thread-floats run-queue))
+            (macro-run-queue-floats run-queue))
            (current-thread-floats
             (macro-thread-floats current-thread))
            (quantum-used
