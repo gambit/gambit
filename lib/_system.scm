@@ -202,21 +202,21 @@
     (let loop ((i (##fx- len 1)))
       (or (##fx< i 0)
           (and (##fx= (##u16vector-ref obj1 i)
-                           (##u16vector-ref obj2 i))
+                      (##u16vector-ref obj2 i))
                (loop (##fx- i 1))))))
 
   (let ((len-obj1 (##u8vector-length obj1)))
     (and (##fx= len-obj1 (##u8vector-length obj2))
          (if (##fxodd? len-obj1)
-           (let ((i (##fx- len-obj1 1)))
-             (and (##fx= (##u8vector-ref obj1 i)
-                              (##u8vector-ref obj2 i))
-                  (equal obj1
-                         obj2
-                         (##fxarithmetic-shift-right len-obj1 1))))
-           (equal obj1
-                  obj2
-                  (##fxarithmetic-shift-right len-obj1 1))))))
+             (let ((i (##fx- len-obj1 1)))
+               (and (##fx= (##u8vector-ref obj1 i)
+                           (##u8vector-ref obj2 i))
+                    (equal obj1
+                           obj2
+                           (##fxarithmetic-shift-right len-obj1 1))))
+             (equal obj1
+                    obj2
+                    (##fxarithmetic-shift-right len-obj1 1))))))
 
 (define-prim (##equal? obj1 obj2)
 
@@ -373,7 +373,7 @@
   (define (combine a b)
     (##fxand
      (##fx* (##fx+ a (##fxarithmetic-shift-left b 1))
-                 331804471)
+            331804471)
      (macro-max-fixnum32)))
 
   (define (hash obj)
@@ -404,27 +404,27 @@
   (define (combine a b)
     (##fxand
      (##fx* (##fx+ a (##fxarithmetic-shift-left b 1))
-                 331804471)
+            331804471)
      (macro-max-fixnum32)))
 
   (define (bvector-hash obj)
 
     (define (u16vect-hash i h)
       (if (##fx< i 0)
-        h
-        (u16vect-hash (##fx- i 1)
-                      (combine (##u16vector-ref obj i) h))))
+          h
+          (u16vect-hash (##fx- i 1)
+                        (combine (##u16vector-ref obj i) h))))
 
     (let ((len (##u8vector-length obj)))
       (u16vect-hash (##fx- (##fxarithmetic-shift-right len 1) 1)
                     (##fxxor
                      (if (##fxodd? len)
-                       (##u8vector-ref obj (##fx- len 1))
-                       256)
+                         (##u8vector-ref obj (##fx- len 1))
+                         256)
                      (##fx+ len
-                                 (##fxarithmetic-shift-left
-                                  (##subtype obj)
-                                  20))))))
+                            (##fxarithmetic-shift-left
+                             (##subtype obj)
+                             20))))))
 
   (define (structure-hash obj type len h)
     (if (##not type) ;; have we reached root of inheritance chain?
@@ -474,10 +474,10 @@
                     (let loop ((i (##fx- (##vector-length obj) 1))
                                (h 383479237))
                       (if (##fx< i 0)
-                        h
-                        (loop (##fx- i 1)
-                              (combine (hash (##vector-ref obj i))
-                                       h)))))
+                          h
+                          (loop (##fx- i 1)
+                                (combine (hash (##vector-ref obj i))
+                                         h)))))
                    ((macro-table? obj)
                     (##table-equal?-hash obj))
                    ((##structure? obj)
@@ -490,11 +490,11 @@
                             (##type-flags type)
                             1)
                            0)
-                        (structure-hash obj
-                                        type
-                                        (##vector-length obj)
-                                        (hash type-id))
-                        (##eq?-hash obj))))
+                          (structure-hash obj
+                                          type
+                                          (##vector-length obj)
+                                          (hash type-id))
+                          (##eq?-hash obj))))
                    ((##box? obj)
                     (combine (hash (##unbox obj))
                              153391703))
@@ -517,14 +517,14 @@
   (let ((len (##string-length str)))
     (let loop ((h 0) (i 0))
       (if (##fx< i len)
-        (loop (##fxand
-               (##fx* (##fx+
-                            (##fxarithmetic-shift-right h 8)
-                            (##char->integer (##string-ref str i)))
-                           331804471)
-               (macro-max-fixnum32))
-              (##fx+ i 1))
-        h))))
+          (loop (##fxand
+                 (##fx* (##fx+
+                         (##fxarithmetic-shift-right h 8)
+                         (##char->integer (##string-ref str i)))
+                        331804471)
+                 (macro-max-fixnum32))
+                (##fx+ i 1))
+          h))))
 
 (define-prim (string=?-hash str)
   (macro-force-vars (str)
@@ -539,15 +539,15 @@
   (let ((len (##string-length str)))
     (let loop ((h 0) (i 0))
       (if (##fx< i len)
-        (loop (##fxand
-               (##fx* (##fx+
-                            (##fxarithmetic-shift-right h 8)
-                            (##char->integer
-                             (##char-downcase (##string-ref str i))))
-                           331804471)
-               (macro-max-fixnum32))
-              (##fx+ i 1))
-        h))))
+          (loop (##fxand
+                 (##fx* (##fx+
+                         (##fxarithmetic-shift-right h 8)
+                         (##char->integer
+                          (##char-downcase (##string-ref str i))))
+                        331804471)
+                 (macro-max-fixnum32))
+                (##fx+ i 1))
+          h))))
 
 (define-prim (string-ci=?-hash str)
   (macro-force-vars (str)
@@ -615,9 +615,9 @@
           (macro-gc-hash-table-count gcht))
          (n
           (##fx+ 1
-                      (##flonum->fixnum
-                       (##fl/ (##fixnum->flonum count)
-                                   (##f64vector-ref loads 1))))))
+                 (##flonum->fixnum
+                  (##fl/ (##fixnum->flonum count)
+                         (##f64vector-ref loads 1))))))
     (##gc-hash-table-allocate
      n
      (##fxand
@@ -632,27 +632,27 @@
 
 (define-prim (##gc-hash-table-allocate n flags loads)
   (if (##fx< (macro-gc-hash-table-minimal-nb-entries) n)
-    (let* ((nb-entries
-            (##smallest-prime-no-less-than (##fx+ n 1)))
-           (min-count
-            (##flonum->fixnum
-             (##fl* (##fixnum->flonum n)
-                         (##f64vector-ref loads 0))))
-           (free
-            (##fx+ 1
-                        (##flonum->fixnum
-                         (##fl* (##fixnum->flonum
-                                      (##fx- nb-entries 1))
-                                     (##f64vector-ref loads 2))))))
-      (macro-make-gc-hash-table
+      (let* ((nb-entries
+              (##smallest-prime-no-less-than (##fx+ n 1)))
+             (min-count
+              (##flonum->fixnum
+               (##fl* (##fixnum->flonum n)
+                      (##f64vector-ref loads 0))))
+             (free
+              (##fx+ 1
+                     (##flonum->fixnum
+                      (##fl* (##fixnum->flonum
+                              (##fx- nb-entries 1))
+                             (##f64vector-ref loads 2))))))
+        (macro-make-gc-hash-table
+         flags
+         0
+         min-count
+         free
+         nb-entries))
+      (macro-make-minimal-gc-hash-table
        flags
-       0
-       min-count
-       free
-       nb-entries))
-    (macro-make-minimal-gc-hash-table
-     flags
-     0)))
+       0)))
 
 (define-prim (##gc-hash-table-for-each proc ht)
   (##declare (not interrupts-enabled))
@@ -771,17 +771,17 @@
 
   (define (check-weak-values siz flags arg-num)
     (if (##eq? weak-values (macro-absent-obj))
-      (check-test siz
-                  (##fx+ flags
-                              (macro-default-weak-values))
-                  arg-num)
-      (let ((arg-num (##fx+ arg-num 2)))
         (check-test siz
                     (##fx+ flags
-                                (if weak-values
-                                  (macro-gc-hash-table-flag-weak-vals)
-                                  0))
-                    arg-num))))
+                           (macro-default-weak-values))
+                    arg-num)
+        (let ((arg-num (##fx+ arg-num 2)))
+          (check-test siz
+                      (##fx+ flags
+                             (if weak-values
+                                 (macro-gc-hash-table-flag-weak-vals)
+                                 0))
+                      arg-num))))
 
   (define (check-test siz flags arg-num)
     (if (##eq? test (macro-absent-obj))
@@ -945,21 +945,21 @@
      loads
      0
      (##flmin (##fl- (macro-load-range-hi)
-                               (macro-load-min-max-gap))
-                   (##flmax (macro-load-range-lo)
-                                 (##f64vector-ref loads 0))))
+                     (macro-load-min-max-gap))
+              (##flmax (macro-load-range-lo)
+                       (##f64vector-ref loads 0))))
     (##f64vector-set!
      loads
      2
      (##flmin (macro-load-range-hi)
-                   (##flmax (##fl+ (##f64vector-ref loads 0)
-                                             (macro-load-min-max-gap))
-                                 (##f64vector-ref loads 2))))
+              (##flmax (##fl+ (##f64vector-ref loads 0)
+                              (macro-load-min-max-gap))
+                       (##f64vector-ref loads 2))))
     (##f64vector-set!
      loads
      1
      (##flsqrt (##fl* (##f64vector-ref loads 0)
-                                (##f64vector-ref loads 2))))
+                      (##f64vector-ref loads 2))))
     (checks-done siz
                  flags
                  test-fn
@@ -1052,9 +1052,9 @@
       0))
 
   (if (macro-table-test table)
-    (count (macro-table-gcht table))
-    (##fx+ (count (macro-table-hash table))
-                (count (macro-table-gcht table)))))
+      (count (macro-table-gcht table))
+      (##fx+ (count (macro-table-hash table))
+             (count (macro-table-gcht table)))))
 
 (define-prim (table-length table)
   (macro-force-vars (table)
@@ -1392,12 +1392,12 @@
           (macro-table-flags table))
          (weak-keys
           (##not (##fx= 0 (##fxand
-                                flags
-                                (macro-gc-hash-table-flag-weak-keys)))))
+                           flags
+                           (macro-gc-hash-table-flag-weak-keys)))))
          (weak-values
           (##not (##fx= 0 (##fxand
-                                flags
-                                (macro-gc-hash-table-flag-weak-vals)))))
+                           flags
+                           (macro-gc-hash-table-flag-weak-vals)))))
          (test-field
           (macro-table-test table))
          (test
@@ -1405,8 +1405,8 @@
               ##eq?)) ;; test-field = #f means test function = ##eq?
          (hash
           (if test-field
-            (macro-table-hash table)
-            (macro-absent-obj))) ;; test-field = #f means special hash function
+              (macro-table-hash table)
+              (macro-absent-obj))) ;; test-field = #f means special hash function
          (loads
           (macro-table-loads table))
          (min-load
@@ -1496,13 +1496,13 @@
   (##declare (not interrupts-enabled))
 
   (and (##fx= (macro-table-flags table1)
-                   (macro-table-flags table2))
+              (macro-table-flags table2))
        (##eq? (macro-table-test table1)
               (macro-table-test table2))
        (if (macro-table-test table1)
-         (##eq? (macro-table-hash table1)
-                (macro-table-hash table2))
-         #t)
+           (##eq? (macro-table-hash table1)
+                  (macro-table-hash table2))
+           #t)
        (let* ((len1 (##table-length table1))
               (len2 (##table-length table2)))
          (and (##fx= len1 len2)
@@ -1518,7 +1518,7 @@
   (define (combine a b)
     (##fxand
      (##fx* (##fx+ a (##fxarithmetic-shift-left b 1))
-                 331804471)
+            331804471)
      (macro-max-fixnum32)))
 
   (##table-foldl

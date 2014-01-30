@@ -606,7 +606,7 @@
                          (macro-current-time
                           (macro-thread-floats (macro-run-queue)))))
                     (##fl+ current-time
-                                flonum-absrel-timeout))))))))
+                           flonum-absrel-timeout))))))))
 
 (define-prim (##timeout->time absrel-timeout)
   (cond ((##not absrel-timeout)
@@ -736,14 +736,14 @@
      (macro-boosted-priority floats))
 
     (if (##fl= (macro-base-priority floats)
-                    (macro-boosted-priority floats))
+               (macro-boosted-priority floats))
       (macro-boosted-priority-set!
        floats
        base-priority)
       (macro-boosted-priority-set!
        floats
        (##fl+ base-priority
-                   (macro-priority-boost floats))))
+              (macro-priority-boost floats))))
 
     (macro-base-priority-set! floats base-priority)
 
@@ -776,7 +776,7 @@
     (macro-priority-boost-set! floats priority-boost)
 
     (if (##fl= (macro-base-priority floats)
-                    (macro-boosted-priority floats))
+               (macro-boosted-priority floats))
 
       (##void)
 
@@ -791,7 +791,7 @@
         (macro-boosted-priority-set!
          floats
          (##fl+ (macro-base-priority floats)
-                     priority-boost))
+                priority-boost))
 
         (thread-trace 2 (##thread-boosted-priority-changed! thread))
 
@@ -869,7 +869,7 @@
           (if (##not (##eq? leftmost btq))
             (let ((leftmost-floats (macro-thread-floats leftmost)))
               (if (##fl< (macro-effective-priority floats)
-                              (macro-effective-priority leftmost-floats))
+                         (macro-effective-priority leftmost-floats))
                 (macro-effective-priority-set!
                  floats
                  (macro-effective-priority leftmost-floats)))))
@@ -895,7 +895,7 @@
     (##btq-remove! thread)
     (if (macro-thread? owner)
       (if (##fl= (macro-thread-effective-priority thread)
-                      (macro-thread-effective-priority owner))
+                 (macro-thread-effective-priority owner))
         (thread-trace 7 (##thread-effective-priority-downgrade! owner))))))
 
 (define-prim (##thread-toq-remove! thread)
@@ -973,12 +973,12 @@
             (macro-thread-floats current-thread))
            (quantum-used
             (##fl+ (macro-quantum-used current-thread-floats)
-                        (macro-heartbeat-interval run-queue-floats))))
+                   (macro-heartbeat-interval run-queue-floats))))
 
       (macro-quantum-used-set! current-thread-floats quantum-used)
 
       (if (##fl< quantum-used
-                      (macro-quantum current-thread-floats))
+                 (macro-quantum current-thread-floats))
         (macro-thread-reschedule-if-needed!)
         (##thread-yield!)))))
 
@@ -2880,7 +2880,7 @@
               (macro-denv-dynwind
                (macro-continuation-denv (macro-dynwind-cont src)))))
          (cond ((##fx< (macro-dynwind-level dst)
-                            (macro-dynwind-level new-src))
+                       (macro-dynwind-level new-src))
                 (unwind-src new-src dst continue))
                ((and (##not (##eq? new-src dst))
                      (##fx< 0 (macro-dynwind-level new-src)))
@@ -2900,7 +2900,7 @@
                  ((macro-dynwind-before dst))
                  (continue))))))
       (cond ((##fx< (macro-dynwind-level src)
-                         (macro-dynwind-level new-dst))
+                    (macro-dynwind-level new-dst))
              (wind-dst src new-dst new-continue))
             ((and (##not (##eq? src new-dst))
                   (##fx< 0 (macro-dynwind-level new-dst)))
