@@ -3347,7 +3347,7 @@ for a discussion of branch cuts.
 
 ;;; number->string, string->number
 
-(define-prim (##exact-int.number->string x rad force-sign?)
+(define-prim (##exact-int->string x rad force-sign?)
 
   (##define-macro (macro-make-block-size)
     (let* ((max-rad 16)
@@ -3521,11 +3521,11 @@ for a discussion of branch cuts.
 
 (define ##digit-to-char-table "0123456789abcdefghijklmnopqrstuvwxyz")
 
-(define-prim (##ratnum.number->string x rad force-sign?)
+(define-prim (##ratnum->string x rad force-sign?)
   (##string-append
-   (##exact-int.number->string (macro-ratnum-numerator x) rad force-sign?)
+   (##exact-int->string (macro-ratnum-numerator x) rad force-sign?)
    "/"
-   (##exact-int.number->string (macro-ratnum-denominator x) rad #f)))
+   (##exact-int->string (macro-ratnum-denominator x) rad #f)))
 
 (##define-macro (macro-r6rs-fp-syntax) #t)
 (##define-macro (macro-chez-fp-syntax) #f)
@@ -3793,7 +3793,7 @@ for a discussion of branch cuts.
                (else
                 (non-neg-num->str x rad ""))))))
 
-(define-prim (##cpxnum.number->string x rad force-sign?)
+(define-prim (##cpxnum->string x rad force-sign?)
   (let* ((real
           (macro-cpxnum-real x))
          (real-str
@@ -3810,11 +3810,11 @@ for a discussion of branch cuts.
 
 (define-prim (##number->string x #!optional (rad 10) (force-sign? #f))
   (macro-number-dispatch x '()
-    (##exact-int.number->string x rad force-sign?)
-    (##exact-int.number->string x rad force-sign?)
-    (##ratnum.number->string x rad force-sign?)
+    (##exact-int->string x rad force-sign?)
+    (##exact-int->string x rad force-sign?)
+    (##ratnum->string x rad force-sign?)
     (##flonum->string x rad force-sign?)
-    (##cpxnum.number->string x rad force-sign?)))
+    (##cpxnum->string x rad force-sign?)))
 
 (define-prim (number->string n #!optional (r (macro-absent-obj)))
   (macro-force-vars (n r)
