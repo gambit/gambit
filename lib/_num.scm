@@ -4054,10 +4054,10 @@ for a discussion of branch cuts.
                                   (let* ((ic
                                           (##char->integer c))
                                          (new-n
-                                          (##fx+ (##* n 10)
-                                                 (if (##fx< ic 128)
-                                                     (##u8vector-ref ##char-to-digit-table ic)
-                                                     0))))
+                                          (##+ (##* n 10)
+                                               (if (##fx< ic 128)
+                                                   (##u8vector-ref ##char-to-digit-table ic)
+                                                   0))))
                                     (loop2 (##fx+ i 1) new-n)))))))))))))
 
   (define (uinteger str rad i)
