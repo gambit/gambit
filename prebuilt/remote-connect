@@ -17,7 +17,7 @@
 ;;
 ;; Usage: ./remote-connect <host> <password> <commands>
 
-(define debug? #f)
+(define debug? #t)
 
 (define (main host pw commands)
   (remote-connect host pw commands))
