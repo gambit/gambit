@@ -22,11 +22,11 @@ for VARIANT in intel32 intel64; do
 
   case "$VARIANT" in
       intel32) CONFIG_ARCH="-arch i386"
-               CONFIG_BUILD="--build=i386-apple-darwin9"
+               CONFIG_BUILD="--build=i386-apple-darwin13.0.2"
                RUN_TESTS=1
                ;;
       intel64) CONFIG_ARCH="-arch x86_64 -m64"
-               CONFIG_BUILD="--build=i386-apple-darwin9"
+               CONFIG_BUILD="--build=x86_64-apple-darwin13.0.2"
                RUN_TESTS=1
                ;;
            G3) CONFIG_ARCH="-arch ppc750"
@@ -49,9 +49,14 @@ for VARIANT in intel32 intel64; do
 
   #SYSROOT="/Developer/SDKs/MacOSX10.6.sdk"
   #SYSROOT="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk"
-  SYSROOT="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk"
+  #SYSROOT="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk"
 
-  CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-mmacosx-version-min=10.5 -Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host CC="gcc"
+  #CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-mmacosx-version-min=10.5 -Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host CC="gcc"
+
+  # use GNU gcc
+  export PATH="/usr/local/gcc-4.8.1/bin:$PATH"
+
+  CFLAGS="$CONFIG_ARCH" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host CC="gcc"
 
   cd "$herefromroot"
 
