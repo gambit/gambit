@@ -1287,6 +1287,15 @@ ___SCMOBJ str2;)
 #endif
 
 
+typedef union
+  {
+    ___U16 u16[4];
+    ___U32 u32[2];
+    ___U64 u64;
+    ___F64 f64;
+  } f64_parts;
+
+
 ___EXP_FUNC(double,___copysign)
    ___P((double x,
          double y),
@@ -1314,11 +1323,7 @@ double x;)
 
 #else
 
-  union
-    {
-      ___U16 u16[4];
-      ___F64 f64;
-    } y;
+  f64_parts y;
 
   y.f64 = x;
 
@@ -1340,12 +1345,7 @@ double x;)
 #else
 
   ___UM32 tmp;
-
-  union
-    {
-      ___U32 u32[2];
-      ___F64 f64;
-    } y;
+  f64_parts y;
 
   y.f64 = x;
 
@@ -1397,7 +1397,308 @@ double x;)
 }
 
 
-#ifndef ___GOOD_ATAN2
+#ifdef ___DEFINE_SCALBN
+
+___EXP_FUNC(double,___scalbn)
+   ___P((double x,
+         int n),
+        (x,
+         n)
+double x;
+int n;)
+{
+#ifdef ___HAVE_GOOD_SCALBN
+
+  return scalbn (x, n);
+
+#else
+
+  return ldexp (x, n);
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_ILOGB
+
+___EXP_FUNC(int,___ilogb)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_ILOGB
+
+  return ilogb (x);
+
+#else
+
+  if (___isfinite (x))
+    {
+      if (x == 0.0)
+        return INT_MIN;
+      else
+        {
+          int e;
+          frexp (x, &e);
+          return e-1;
+        }
+    }
+  else if (___isnan (x))
+    return INT_MIN; /* x == NaN */
+  else
+    return INT_MAX; /* x == +inf or x == -inf */
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_EXPM1
+
+___EXP_FUNC(double,___expm1)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_EXPM1
+
+  return expm1 (x);
+
+#else
+
+#ifdef ___USE_NAIVE_MATH_ALGO
+
+  return exp (x) - 1.0;
+
+#else
+
+  /* TODO: replace with more accurate algorithm */
+  return exp (x) - 1.0;
+
+#endif
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_LOG1P
+
+___EXP_FUNC(double,___log1p)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_LOG1P
+
+  return log1p (x);
+
+#else
+
+#ifdef ___USE_NAIVE_MATH_ALGO
+
+  return log (x + 1.0);
+
+#else
+
+  /* TODO: replace with more accurate algorithm */
+  return log (x + 1.0);
+
+#endif
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_SINH
+
+___EXP_FUNC(double,___sinh)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_SINH
+
+  return sinh (x);
+
+#else
+
+#ifdef ___USE_NAIVE_MATH_ALGO
+
+  return (exp (x) - exp (-x)) / 2.0;
+
+#else
+
+  /* TODO: replace with more accurate algorithm */
+  return (exp (x) - exp (-x)) / 2.0;
+
+#endif
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_COSH
+
+___EXP_FUNC(double,___cosh)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_COSH
+
+  return cosh (x);
+
+#else
+
+#ifdef ___USE_NAIVE_MATH_ALGO
+
+  return (exp (x) + exp (-x)) / 2.0;
+
+#else
+
+  /* TODO: replace with more accurate algorithm */
+  return (exp (x) + exp (-x)) / 2.0;
+
+#endif
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_TANH
+
+___EXP_FUNC(double,___tanh)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_TANH
+
+  return tanh (x);
+
+#else
+
+#ifdef ___USE_NAIVE_MATH_ALGO
+
+  double t = exp (2.0*x);
+  return (t - 1.0) / (t + 1.0);
+
+#else
+
+  /* TODO: replace with more accurate algorithm */
+  double t = exp (2.0*x);
+  return (t - 1.0) / (t + 1.0);
+
+#endif
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_ASINH
+
+___EXP_FUNC(double,___asinh)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_ASINH
+
+  return asinh (x);
+
+#else
+
+#ifdef ___USE_NAIVE_MATH_ALGO
+
+  return log (x + sqrt (x*x + 1.0));
+
+#else
+
+  /* TODO: replace with more accurate algorithm */
+  return log (x + sqrt (x*x + 1.0));
+
+#endif
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_ACOSH
+
+___EXP_FUNC(double,___acosh)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_ACOSH
+
+  return acosh (x);
+
+#else
+
+#ifdef ___USE_NAIVE_MATH_ALGO
+
+  return log (x + sqrt (x - 1.0) * sqrt (x + 1.0));
+
+#else
+
+  /* TODO: replace with more accurate algorithm */
+  return log (x + sqrt (x - 1.0) * sqrt (x + 1.0));
+
+#endif
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_ATANH
+
+___EXP_FUNC(double,___atanh)
+   ___P((double x),
+        (x)
+double x;)
+{
+#ifdef ___HAVE_GOOD_ATANH
+
+  return atanh (x);
+
+#else
+
+#ifdef ___USE_NAIVE_MATH_ALGO
+
+  return (log (1.0 + x) - log (1.0 - x)) / 2.0;
+
+#else
+
+  /* TODO: replace with more accurate algorithm */
+  return (log (1.0 + x) - log (1.0 - x)) / 2.0;
+
+#endif
+
+#endif
+}
+
+#endif
+
+
+#ifdef ___DEFINE_ATAN2
 
 ___EXP_FUNC(double,___atan2)
    ___P((double y,
@@ -1407,6 +1708,12 @@ ___EXP_FUNC(double,___atan2)
 double y;
 double x;)
 {
+#ifdef ___HAVE_GOOD_ATAN2
+
+  return atan2 (y, x);
+
+#else
+
   if (___isnan (x))
     return x;
   else if (___isnan (y))
@@ -1432,12 +1739,14 @@ double x;)
     return atan2 (y, x);
   else
     return ___copysign (x/y, x*y); /* returns NAN with appropriate sign */
+
+#endif
 }
 
 #endif
 
 
-#ifndef ___GOOD_POW
+#ifdef ___DEFINE_POW
 
 ___EXP_FUNC(double,___pow)
    ___P((double x,
@@ -1447,6 +1756,12 @@ ___EXP_FUNC(double,___pow)
 double x;
 double y;)
 {
+#ifdef ___HAVE_GOOD_POW
+
+  return pow (x, y);
+
+#else
+
   if (y == 0.0)
     return 1.0;
   else if (___isnan (x))
@@ -1455,6 +1770,8 @@ double y;)
     return y;
   else
     return pow (x, y);
+
+#endif
 }
 
 #endif
@@ -2020,29 +2337,73 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->fabs  = fabs;
   ___GSTATE->floor = floor;
   ___GSTATE->ceil  = ceil;
+#ifdef ___HAVE_GOOD_SCALBN
   ___GSTATE->scalbn= scalbn;
+#else
+  ___GSTATE->scalbn= ___scalbn;
+#endif
+#ifdef ___HAVE_GOOD_ILOGB
   ___GSTATE->ilogb = ilogb;
+#else
+  ___GSTATE->ilogb = ___ilogb;
+#endif
   ___GSTATE->exp   = exp;
+#ifdef ___HAVE_GOOD_EXPM1
   ___GSTATE->expm1 = expm1;
+#else
+  ___GSTATE->expm1 = ___expm1;
+#endif
   ___GSTATE->log   = log;
+#ifdef ___HAVE_GOOD_LOG1P
   ___GSTATE->log1p = log1p;
+#else
+  ___GSTATE->log1p = ___log1p;
+#endif
   ___GSTATE->sin   = sin;
   ___GSTATE->cos   = cos;
   ___GSTATE->tan   = tan;
   ___GSTATE->asin  = asin;
   ___GSTATE->acos  = acos;
   ___GSTATE->atan  = atan;
-#ifdef ___GOOD_ATAN2
-  ___GSTATE->atan2 = atan2;
-#endif
+#ifdef ___HAVE_GOOD_SINH
   ___GSTATE->sinh  = sinh;
+#else
+  ___GSTATE->sinh  = ___sinh;
+#endif
+#ifdef ___HAVE_GOOD_COSH
   ___GSTATE->cosh  = cosh;
+#else
+  ___GSTATE->cosh  = ___cosh;
+#endif
+#ifdef ___HAVE_GOOD_TANH
   ___GSTATE->tanh  = tanh;
+#else
+  ___GSTATE->tanh  = ___tanh;
+#endif
+#ifdef ___HAVE_GOOD_ASINH
   ___GSTATE->asinh = asinh;
+#else
+  ___GSTATE->asinh = ___asinh;
+#endif
+#ifdef ___HAVE_GOOD_ACOSH
   ___GSTATE->acosh = acosh;
+#else
+  ___GSTATE->acosh = ___acosh;
+#endif
+#ifdef ___HAVE_GOOD_ATANH
   ___GSTATE->atanh = atanh;
-#ifdef ___GOOD_POW
+#else
+  ___GSTATE->atanh = ___atanh;
+#endif
+#ifdef ___HAVE_GOOD_ATAN2
+  ___GSTATE->atan2 = atan2;
+#else
+  ___GSTATE->atan2 = ___atan2;
+#endif
+#ifdef ___HAVE_GOOD_POW
   ___GSTATE->pow = pow;
+#else
+  ___GSTATE->pow = ___pow;
 #endif
   ___GSTATE->sqrt  = sqrt;
 
@@ -2100,12 +2461,62 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___round
     = ___round;
 
-#ifndef ___GOOD_ATAN2
+#ifdef ___DEFINE_SCALBN
+  ___GSTATE->___scalbn
+    = ___scalbn;
+#endif
+
+#ifdef ___DEFINE_ILOGB
+  ___GSTATE->___ilogb
+    = ___ilogb;
+#endif
+
+#ifdef ___DEFINE_EXPM1
+  ___GSTATE->___expm1
+    = ___expm1;
+#endif
+
+#ifdef ___DEFINE_LOG1P
+  ___GSTATE->___log1p
+    = ___log1p;
+#endif
+
+#ifdef ___DEFINE_SINH
+  ___GSTATE->___sinh
+    = ___sinh;
+#endif
+
+#ifdef ___DEFINE_COSH
+  ___GSTATE->___cosh
+    = ___cosh;
+#endif
+
+#ifdef ___DEFINE_TANH
+  ___GSTATE->___tanh
+    = ___tanh;
+#endif
+
+#ifdef ___DEFINE_ASINH
+  ___GSTATE->___asinh
+    = ___asinh;
+#endif
+
+#ifdef ___DEFINE_ACOSH
+  ___GSTATE->___acosh
+    = ___acosh;
+#endif
+
+#ifdef ___DEFINE_ATANH
+  ___GSTATE->___atanh
+    = ___atanh;
+#endif
+
+#ifdef ___DEFINE_ATAN2
   ___GSTATE->___atan2
     = ___atan2;
 #endif
 
-#ifndef ___GOOD_POW
+#ifdef ___DEFINE_POW
   ___GSTATE->___pow
     = ___pow;
 #endif
