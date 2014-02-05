@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_host.c", produced by Gambit-C v4.7.1
+; File: "_host.c", produced by Gambit-C v4.7.2
 (
-407001
+407002
 " _host"
 ((" _host"))
 (
@@ -149,7 +149,7 @@
 "##f64vector-ref"
 "##f64vector-set!"
 "##f64vector?"
-"##flonum.copysign"
+"##flcopysign"
 "##format-filepos"
 "##keyword->string"
 "##make-f32vector"
@@ -228,7 +228,7 @@
  1
 )
 #else
-#define ___VERSION 407001
+#define ___VERSION 407002
 #define ___MODULE_NAME " _host"
 #define ___LINKER_ID ____20___host
 #define ___MH_PROC ___H__20___host
@@ -256,7 +256,7 @@ ___NEED_GLO(___G__23__23_f64vector_2d_length)
 ___NEED_GLO(___G__23__23_f64vector_2d_ref)
 ___NEED_GLO(___G__23__23_f64vector_2d_set_21_)
 ___NEED_GLO(___G__23__23_f64vector_3f_)
-___NEED_GLO(___G__23__23_flonum_2e_copysign)
+___NEED_GLO(___G__23__23_flcopysign)
 ___NEED_GLO(___G__23__23_format_2d_filepos)
 ___NEED_GLO(___G__23__23_keyword_2d__3e_string)
 ___NEED_GLO(___G__23__23_make_2d_f32vector)
@@ -598,7 +598,7 @@ ___DEF_GLO(129,"##f64vector-length")
 ___DEF_GLO(130,"##f64vector-ref")
 ___DEF_GLO(131,"##f64vector-set!")
 ___DEF_GLO(132,"##f64vector?")
-___DEF_GLO(133,"##flonum.copysign")
+___DEF_GLO(133,"##flcopysign")
 ___DEF_GLO(134,"##format-filepos")
 ___DEF_GLO(135,"##keyword->string")
 ___DEF_GLO(136,"##make-f32vector")
@@ -941,8 +941,8 @@ ___END_GLO
 #define ___PRM__23__23_f64vector_2d_set_21_ ___PRM(131,___G__23__23_f64vector_2d_set_21_)
 #define ___GLO__23__23_f64vector_3f_ ___GLO(132,___G__23__23_f64vector_3f_)
 #define ___PRM__23__23_f64vector_3f_ ___PRM(132,___G__23__23_f64vector_3f_)
-#define ___GLO__23__23_flonum_2e_copysign ___GLO(133,___G__23__23_flonum_2e_copysign)
-#define ___PRM__23__23_flonum_2e_copysign ___PRM(133,___G__23__23_flonum_2e_copysign)
+#define ___GLO__23__23_flcopysign ___GLO(133,___G__23__23_flcopysign)
+#define ___PRM__23__23_flcopysign ___PRM(133,___G__23__23_flcopysign)
 #define ___GLO__23__23_format_2d_filepos ___GLO(134,___G__23__23_format_2d_filepos)
 #define ___PRM__23__23_format_2d_filepos ___PRM(134,___G__23__23_format_2d_filepos)
 #define ___GLO__23__23_keyword_2d__3e_string ___GLO(135,___G__23__23_keyword_2d__3e_string)
@@ -1381,7 +1381,7 @@ ___DEF_GLBL(___L__20___host)
    ___SET_GLO(20,___G_c_23_f64vect_2d_length,___PRM__23__23_f64vector_2d_length)
    ___SET_GLO(21,___G_c_23_f64vect_2d_ref,___PRM__23__23_f64vector_2d_ref)
    ___SET_GLO(22,___G_c_23_f64vect_2d_set_21_,___PRM__23__23_f64vector_2d_set_21_)
-   ___SET_GLO(27,___G_c_23_float_2d_copysign,___PRM__23__23_flonum_2e_copysign)
+   ___SET_GLO(27,___G_c_23_float_2d_copysign,___PRM__23__23_flcopysign)
    ___SET_GLO(2,___G_c_23__2a__2a_main_2d_readtable,___FAL)
    ___SET_GLO(51,___G_c_23_read_2d_datum_2d_or_2d_eof,___FAL)
    ___SET_R1(___VOID)

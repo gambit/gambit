@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_assert.c", produced by Gambit-C v4.7.1
+; File: "_assert.c", produced by Gambit-C v4.7.2
 (
-407001
+407002
 " _assert"
 ((" _assert"))
 (
@@ -19,7 +19,7 @@
  1
 )
 #else
-#define ___VERSION 407001
+#define ___VERSION 407002
 #define ___MODULE_NAME " _assert"
 #define ___LINKER_ID ____20___assert
 #define ___MH_PROC ___H__20___assert

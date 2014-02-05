@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_thread.c", produced by Gambit-C v4.7.1
+; File: "_thread.c", produced by Gambit-C v4.7.2
 (
-407001
+407002
 " _thread"
 ((" _thread"))
 (
@@ -531,7 +531,7 @@
  1
 )
 #else
-#define ___VERSION 407001
+#define ___VERSION 407002
 #define ___MODULE_NAME " _thread"
 #define ___LINKER_ID ____20___thread
 #define ___MH_PROC ___H__20___thread
@@ -11789,7 +11789,7 @@ ___DEF_SLBL(3,___L3__23__23_thread_2d_heartbeat_21_)
 ___DEF_GLBL(___L5__23__23_thread_2d_heartbeat_21_)
    ___SET_R1(___RUNQUEUE)
    ___SET_R2(___CURRENTTHREAD)
-   ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(14L),___SUB(22),___FAL))
+   ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(14L),___SUB(55),___FAL))
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R2,___FIX(14L),___SUB(22),___FAL))
    ___SET_F64(___F64V1,___F64VECTORREF(___R1,___FIX(1L)))
    ___SET_F64(___F64V2,___F64VECTORREF(___R2,___FIX(3L)))

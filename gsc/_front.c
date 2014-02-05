@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_front.c", produced by Gambit-C v4.7.1
+; File: "_front.c", produced by Gambit-C v4.7.2
 (
-407001
+407002
 " _front"
 ((" _front"))
 (
@@ -465,7 +465,7 @@
  1
 )
 #else
-#define ___VERSION 407001
+#define ___VERSION 407002
 #define ___MODULE_NAME " _front"
 #define ___LINKER_ID ____20___front
 #define ___MH_PROC ___H__20___front

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_nonstd.c", produced by Gambit-C v4.7.1
+; File: "_nonstd.c", produced by Gambit-C v4.7.2
 (
-407001
+407002
 " _nonstd"
 ((" _nonstd"))
 (
@@ -534,7 +534,7 @@
 "##fail-check-string"
 "##fail-check-string-or-settings"
 "##fail-check-symbol"
-"##flonum.->exact-int"
+"##flonum->exact-int"
 "##for-each"
 "##interaction-cte"
 "##list->vector"
@@ -616,7 +616,7 @@
  1
 )
 #else
-#define ___VERSION 407001
+#define ___VERSION 407002
 #define ___MODULE_NAME " _nonstd"
 #define ___LINKER_ID ____20___nonstd
 #define ___MH_PROC ___H__20___nonstd
@@ -1016,7 +1016,7 @@ ___NEED_GLO(___G__23__23_fail_2d_check_2d_user_2d_info)
 ___NEED_GLO(___G__23__23_fail_2d_check_2d_will)
 ___NEED_GLO(___G__23__23_file_2d_exists_3f_)
 ___NEED_GLO(___G__23__23_file_2d_info)
-___NEED_GLO(___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+___NEED_GLO(___G__23__23_flonum_2d__3e_exact_2d_int)
 ___NEED_GLO(___G__23__23_for_2d_each)
 ___NEED_GLO(___G__23__23_gc_2d_report_2d_set_21_)
 ___NEED_GLO(___G__23__23_gc_2d_report_3f_)
@@ -2108,7 +2108,7 @@ ___DEF_GLO(195,"##fail-check-procedure")
 ___DEF_GLO(196,"##fail-check-string")
 ___DEF_GLO(197,"##fail-check-string-or-settings")
 ___DEF_GLO(198,"##fail-check-symbol")
-___DEF_GLO(199,"##flonum.->exact-int")
+___DEF_GLO(199,"##flonum->exact-int")
 ___DEF_GLO(200,"##for-each")
 ___DEF_GLO(201,"##interaction-cte")
 ___DEF_GLO(202,"##list->vector")
@@ -2587,8 +2587,8 @@ ___END_GLO
 #define ___PRM__23__23_fail_2d_check_2d_string_2d_or_2d_settings ___PRM(197,___G__23__23_fail_2d_check_2d_string_2d_or_2d_settings)
 #define ___GLO__23__23_fail_2d_check_2d_symbol ___GLO(198,___G__23__23_fail_2d_check_2d_symbol)
 #define ___PRM__23__23_fail_2d_check_2d_symbol ___PRM(198,___G__23__23_fail_2d_check_2d_symbol)
-#define ___GLO__23__23_flonum_2e__2d__3e_exact_2d_int ___GLO(199,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
-#define ___PRM__23__23_flonum_2e__2d__3e_exact_2d_int ___PRM(199,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+#define ___GLO__23__23_flonum_2d__3e_exact_2d_int ___GLO(199,___G__23__23_flonum_2d__3e_exact_2d_int)
+#define ___PRM__23__23_flonum_2d__3e_exact_2d_int ___PRM(199,___G__23__23_flonum_2d__3e_exact_2d_int)
 #define ___GLO__23__23_for_2d_each ___GLO(200,___G__23__23_for_2d_each)
 #define ___PRM__23__23_for_2d_each ___PRM(200,___G__23__23_for_2d_each)
 #define ___GLO__23__23_interaction_2d_cte ___GLO(201,___G__23__23_interaction_2d_cte)
@@ -12389,7 +12389,7 @@ ___DEF_GLBL(___L56__23__23_display_2d_gc_2d_report)
 ___DEF_SLBL(11,___L11__23__23_display_2d_gc_2d_report)
    ___POLL(12)
 ___DEF_SLBL(12,___L12__23__23_display_2d_gc_2d_report)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),199,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),199,___G__23__23_flonum_2d__3e_exact_2d_int)
 ___DEF_GLBL(___L57__23__23_display_2d_gc_2d_report)
    ___SET_R2(___STK(-3))
    ___SET_R1(___STK(-6))
@@ -12623,7 +12623,7 @@ ___DEF_SLBL(45,___L45__23__23_display_2d_gc_2d_report)
 ___DEF_SLBL(46,___L46__23__23_display_2d_gc_2d_report)
    ___SET_R1(___STK(-10))
    ___SET_R0(___LBL(47))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),199,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),199,___G__23__23_flonum_2d__3e_exact_2d_int)
 ___DEF_SLBL(47,___L47__23__23_display_2d_gc_2d_report)
    ___SET_R2(___STK(-4))
    ___SET_R0(___LBL(48))
@@ -12636,7 +12636,7 @@ ___DEF_SLBL(48,___L48__23__23_display_2d_gc_2d_report)
 ___DEF_SLBL(49,___L49__23__23_display_2d_gc_2d_report)
    ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(50))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),199,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),199,___G__23__23_flonum_2d__3e_exact_2d_int)
 ___DEF_SLBL(50,___L50__23__23_display_2d_gc_2d_report)
    ___SET_R2(___STK(-4))
    ___SET_R0(___LBL(51))

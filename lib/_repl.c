@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_repl.c", produced by Gambit-C v4.7.1
+; File: "_repl.c", produced by Gambit-C v4.7.2
 (
-407001
+407002
 " _repl"
 ((" _repl"))
 (
@@ -857,7 +857,7 @@
 "##fail-check-tgroup"
 "##filepos-col"
 "##filepos-line"
-"##flonum.->exact-int"
+"##flonum->exact-int"
 "##for-each"
 "##force-output"
 "##global-var->identifier"
@@ -979,7 +979,7 @@
  1
 )
 #else
-#define ___VERSION 407001
+#define ___VERSION 407002
 #define ___MODULE_NAME " _repl"
 #define ___LINKER_ID ____20___repl
 #define ___MH_PROC ___H__20___repl
@@ -1655,7 +1655,7 @@ ___NEED_GLO(___G__23__23_fail_2d_check_2d_string)
 ___NEED_GLO(___G__23__23_fail_2d_check_2d_tgroup)
 ___NEED_GLO(___G__23__23_filepos_2d_col)
 ___NEED_GLO(___G__23__23_filepos_2d_line)
-___NEED_GLO(___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+___NEED_GLO(___G__23__23_flonum_2d__3e_exact_2d_int)
 ___NEED_GLO(___G__23__23_for_2d_each)
 ___NEED_GLO(___G__23__23_for_2d_each_2d_interp_2d_procedure)
 ___NEED_GLO(___G__23__23_force_2d_output)
@@ -3360,7 +3360,7 @@ ___DEF_GLO(405,"##fail-check-string")
 ___DEF_GLO(406,"##fail-check-tgroup")
 ___DEF_GLO(407,"##filepos-col")
 ___DEF_GLO(408,"##filepos-line")
-___DEF_GLO(409,"##flonum.->exact-int")
+___DEF_GLO(409,"##flonum->exact-int")
 ___DEF_GLO(410,"##for-each")
 ___DEF_GLO(411,"##force-output")
 ___DEF_GLO(412,"##global-var->identifier")
@@ -4300,8 +4300,8 @@ ___END_GLO
 #define ___PRM__23__23_filepos_2d_col ___PRM(407,___G__23__23_filepos_2d_col)
 #define ___GLO__23__23_filepos_2d_line ___GLO(408,___G__23__23_filepos_2d_line)
 #define ___PRM__23__23_filepos_2d_line ___PRM(408,___G__23__23_filepos_2d_line)
-#define ___GLO__23__23_flonum_2e__2d__3e_exact_2d_int ___GLO(409,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
-#define ___PRM__23__23_flonum_2e__2d__3e_exact_2d_int ___PRM(409,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+#define ___GLO__23__23_flonum_2d__3e_exact_2d_int ___GLO(409,___G__23__23_flonum_2d__3e_exact_2d_int)
+#define ___PRM__23__23_flonum_2d__3e_exact_2d_int ___PRM(409,___G__23__23_flonum_2d__3e_exact_2d_int)
 #define ___GLO__23__23_for_2d_each ___GLO(410,___G__23__23_for_2d_each)
 #define ___PRM__23__23_for_2d_each ___PRM(410,___G__23__23_for_2d_each)
 #define ___GLO__23__23_force_2d_output ___GLO(411,___G__23__23_force_2d_output)
@@ -32705,7 +32705,7 @@ ___DEF_SLBL(17,___L17__23__23_exec_2d_stats)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),296,___G__23__23__2d_)
 ___DEF_SLBL(18,___L18__23__23_exec_2d_stats)
    ___SET_R0(___LBL(19))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),409,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),409,___G__23__23_flonum_2d__3e_exact_2d_int)
 ___DEF_SLBL(19,___L19__23__23_exec_2d_stats)
    ___SET_STK(-4,___R1)
    ___SET_F64(___F64V1,___F64VECTORREF(___STK(-13),___FIX(10L)))
@@ -32718,7 +32718,7 @@ ___DEF_SLBL(20,___L20__23__23_exec_2d_stats)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),296,___G__23__23__2d_)
 ___DEF_SLBL(21,___L21__23__23_exec_2d_stats)
    ___SET_R0(___LBL(22))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),409,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),409,___G__23__23_flonum_2d__3e_exact_2d_int)
 ___DEF_SLBL(22,___L22__23__23_exec_2d_stats)
    ___SET_STK(-3,___R1)
    ___SET_F64(___F64V1,___F64VECTORREF(___STK(-13),___FIX(11L)))
@@ -32731,7 +32731,7 @@ ___DEF_SLBL(23,___L23__23__23_exec_2d_stats)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),296,___G__23__23__2d_)
 ___DEF_SLBL(24,___L24__23__23_exec_2d_stats)
    ___SET_R0(___LBL(25))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),409,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),409,___G__23__23_flonum_2d__3e_exact_2d_int)
 ___DEF_SLBL(25,___L25__23__23_exec_2d_stats)
    ___SET_STK(-2,___R1)
    ___SET_F64(___F64V1,___F64VECTORREF(___STK(-13),___FIX(7L)))
@@ -32773,7 +32773,7 @@ ___DEF_SLBL(31,___L31__23__23_exec_2d_stats)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),296,___G__23__23__2d_)
 ___DEF_SLBL(32,___L32__23__23_exec_2d_stats)
    ___SET_R0(___LBL(33))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),409,___G__23__23_flonum_2e__2d__3e_exact_2d_int)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),409,___G__23__23_flonum_2d__3e_exact_2d_int)
 ___DEF_SLBL(33,___L33__23__23_exec_2d_stats)
    ___SET_R1(___CONS(___SYM_bytes_2d_allocated,___R1))
    ___SET_R2(___CONS(___SYM_majflt,___STK(-6)))
