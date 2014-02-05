@@ -102,7 +102,7 @@ all-post:
 	  touch server.rm; \
 	fi
 
-check: all test1 test2 test3 test4 test5 test6 test7 test8 test9 test10
+check: all test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
 	@echo "============ ALL TESTS SUCCESSFUL"
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
 	  mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@ \
@@ -172,6 +172,10 @@ test10:
 	@echo "------------ TEST 10 (consistency of lib/gambit#.scm)"
 	rm -rf mem@obj@ mem.o*
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -i test10.scm
+
+test11:
+	@echo "------------ TEST 11 (run unit tests)"
+	$(MAKE) ut
 
 ut:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
