@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -14,6 +14,7 @@ PACKAGE_TARNAME="@PACKAGE_TARNAME@"
 PACKAGE_SUBDIR="@PACKAGE_SUBDIR@"
 
 MAKENSIS="/c/Program Files (x86)/NSIS/makensis.exe"
+#MAKENSIS="/c/Program Files/NSIS/makensis.exe"
 
 VARIANT="$1"
 RUN_TESTS="$2"

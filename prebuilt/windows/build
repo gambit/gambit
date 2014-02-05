@@ -10,14 +10,25 @@ rootfromhere="../.."
 #  exit 1
 #fi
 
+PFDIR="/Program Files (x86)"
+
+VCDIR="$PFDIR/Microsoft Visual Studio 12.0/VC"
+WKDIR="$PFDIR/Windows Kits/8.1"
+
+MSYS="/msys"
+
+ADDPATHMINGW32="/c/mingw32/bin:"
+ADDPATHMINGW64="/c/mingw64/bin:"
+
+ADDPATHVC32="/c$VCDIR/bin:"
+ADDPATHVC64="/c$VCDIR/bin/x86_amd64:"
+
+COMMONPATH="/c$MSYS/bin:"
+
 export INSTALL_PREFIX="/c/Gambit-C/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././."
 export DOS_INSTALL_PREFIX="`echo \"$INSTALL_PREFIX\" | sed -e \"s|^/c|C:|g\"`"
 
 cd "`dirname $0`"
-
-PATHMINGW32="/c/mingw32/bin:$PATH"
-PATHMINGW64="/c/mingw64/bin:$PATH"
-PATHVC="$PATH"
 
 for VARIANT in mingw32 mingw64 visualc32 visualc64; do
 
@@ -25,34 +36,42 @@ for VARIANT in mingw32 mingw64 visualc32 visualc64; do
 
   case "$VARIANT" in
     mingw32) CONFIG_CC="gcc -m32 -static-libgcc"
-             RUN_TESTS=0
-             VCARCH=""
-             export PATH="$PATHMINGW32"
+             RUN_TESTS=1
+             ADDPATH="$COMMONPATH$ADDPATHMINGW32"
              ;;
     mingw64) CONFIG_CC="gcc -m64 -static-libgcc"
-             RUN_TESTS=0
-             VCARCH=""
-             export PATH="$PATHMINGW64"
+             RUN_TESTS=1
+             ADDPATH="$COMMONPATH$ADDPATHMINGW64"
              ;;
   visualc32) CONFIG_CC="cl.exe"
-             RUN_TESTS=0
-             VCARCH="x86"
-             export PATH="$PATHVC"
+             RUN_TESTS=1
+             ADDPATH="$COMMONPATH$ADDPATHVC32"
+             export LIB="C:$WKDIR/Lib/winv6.3/um/x86;C:$VCDIR/lib"
+             export INCLUDE="C:$WKDIR/Include/um;C:$WKDIR/Include/shared;C:$VCDIR/include"
              ;;
   visualc64) CONFIG_CC="cl.exe"
-             RUN_TESTS=0
-             VCARCH="x86_amd64"
-             export PATH="$PATHVC"
+             RUN_TESTS=1
+             ADDPATH="$COMMONPATH$ADDPATHVC64$ADDPATHVC32"
+             export LIB="C:$WKDIR/Lib/winv6.3/um/x64;C:$VCDIR/lib/amd64"
+             export INCLUDE="C:$WKDIR/Include/um;C:$WKDIR/Include/shared;C:$VCDIR/include"
              ;;
   esac
 
-  cmd /c "C:\PROGRA~2\MICROS~1.0\VC\VCVARS~1.BAT $VCARCH && c:/msys/bin/sh -c \"./configure --prefix=\\\"$DOS_INSTALL_PREFIX\\\" --enable-multiple-versions --enable-symlinks --enable-single-host CC=\\\"$CONFIG_CC\\\"\""
+  echo "export PATH=\"$ADDPATH\$PATH\";./configure --prefix=\"$DOS_INSTALL_PREFIX\" --enable-multiple-versions --enable-symlinks --enable-single-host CC=\"$CONFIG_CC\"" > build-cmds
+
+  cat build-cmds
+
+  "c:$MSYS/bin/sh" build-cmds
 
   cd "$herefromroot"
 
   chmod +x build-phase2
 
-  cmd /c "C:\PROGRA~2\MICROS~1.0\VC\VCVARS~1.BAT $VCARCH && c:/msys/bin/sh -c \"./build-phase2 \\\"$VARIANT\\\" \\\"$RUN_TESTS\\\"\"" > build-phase2.out
+  echo "export PATH=\"$ADDPATH\$PATH\";./build-phase2 \"$VARIANT\" \"$RUN_TESTS\" > build-phase2.out" > build-cmds
+
+  cat build-cmds
+
+  "c:$MSYS/bin/sh" build-cmds
 
   cat build-phase2.out
 
