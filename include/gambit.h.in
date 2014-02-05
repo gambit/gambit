@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -2812,7 +2812,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXMUL(x,y)((___WORD)((x)*___INT(y)))
 #define ___FIXMULP(x,y)(___EXPECT_FALSE(___FIXQUO((___temp=___FIXMUL(x,y)),y)!=(x))?___FAL:___temp)
 #define ___FIXSQUARE(x)___FIXMUL(x,x)
-#define ___FIXSQUAREP(x)(___EXPECT_FALSE(___CAST(unsigned ___WORD,___FIXADD(x,___FIX(___SQRT_MAX_FIX)))>___FIX(2*___SQRT_MAX_FIX))?___FAL:___FIXSQUARE(x))
+#define ___FIXSQUAREP(x)(___EXPECT_FALSE(___CAST(unsigned ___WORD,___FIXADD(x,___FIX(___SQRT_MAX_FIX)))>(___CAST(unsigned ___WORD,___FIX(___SQRT_MAX_FIX))<<1))?___FAL:___FIXSQUARE(x))
 #define ___FIXNEG(x)((___WORD)(-(x)))
 #define ___FIXNEGP(x)(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x))
 #define ___FIXSUB(x,y)((___WORD)((x)-(y)))

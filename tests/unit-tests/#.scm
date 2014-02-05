@@ -8,6 +8,20 @@
 
 (define epsilon 0)
 
+(define ##failed-check? #f)
+
+;; When there is a unit test failure, we want to exit with an error status.
+;; However, this must be done after the stdout is forced.  By creating a
+;; final will, the exit will happen after the automatic forcing of stdout
+;; by the runtime system.
+
+(define ##ut-final-will
+  (##make-final-will
+   0 ;; never GCed
+   (lambda (obj)
+     (if ##failed-check?
+         (##exit-with-err-code-no-cleanup 2)))))
+
 (define (##failed-check msg #!optional (actual-result (##type-cast -6 2)))
   (let ((port (##repl-output-port)))
     (##display msg port)
@@ -16,7 +30,7 @@
           (##display " GOT " port)
           (##write actual-result port)))
     (##newline port))
-  (##add-exit-job! (lambda () (##exit-with-err-code-no-cleanup 2))))
+  (set! ##failed-check? #t))
 
 (define (##check-exn-proc exn? thunk msg tail-exn?)
   (##continuation-capture
