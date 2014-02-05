@@ -1,6 +1,6 @@
 /* File: "client.c" */
 
-/* Copyright (c) 1996-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1996-2014 by Marc Feeley, All Rights Reserved. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@ ___BEGIN_C_LINKAGE
 extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state);
 ___END_C_LINKAGE
 
-int main (int argc, char **argv)
+int common_main ()
 {
   char *temp;
 
@@ -86,3 +86,28 @@ int main (int argc, char **argv)
 
   return 0;
 }
+
+#ifdef ___OS_WIN32
+#ifdef _WINDOWS
+
+#define DEFINED_WinMain
+
+int WINAPI WinMain (HINSTANCE hInstance,
+                    HINSTANCE hPrevInstance,
+                    LPSTR lpCmdLine,
+                    int nCmdShow)
+{
+  return common_main ();
+}
+
+#endif
+#endif
+
+#ifndef DEFINED_WinMain
+
+int main (int argc, char **argv)
+{
+  return common_main ();
+}
+
+#endif
