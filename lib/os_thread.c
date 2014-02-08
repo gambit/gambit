@@ -112,6 +112,8 @@ ___thread *thread;)
 
   thread->thread_id = thread_id;
 
+  return thread_init_common (thread);
+
 #endif
 
 #ifdef ___USE_WIN32_THREAD_SYSTEM
@@ -132,9 +134,17 @@ ___thread *thread;)
   thread->thread_handle = thread_handle;
   thread->thread_id = thread_id;
 
+  return thread_init_common (thread);
+
 #endif
 
-  return thread_init_common (thread);
+#ifndef ___USE_POSIX_THREAD_SYSTEM
+#ifndef ___USE_WIN32_THREAD_SYSTEM
+
+  return ___FIX(___UNIMPL_ERR);
+
+#endif
+#endif
 }
 
 
@@ -148,6 +158,8 @@ ___thread *thread;)
   if (pthread_join (thread->thread_id, NULL) != 0)
     return err_code_from_errno ();
 
+  return ___FIX(___NO_ERR);
+
 #endif
 
 #ifdef ___USE_WIN32_THREAD_SYSTEM
@@ -155,9 +167,17 @@ ___thread *thread;)
   if (WaitForSingleObject (thread->thread_handle, INFINITE) == WAIT_FAILED)
     return err_code_from_GetLastError ();
 
+  return ___FIX(___NO_ERR);
+
 #endif
 
-  return ___FIX(___NO_ERR);
+#ifndef ___USE_POSIX_THREAD_SYSTEM
+#ifndef ___USE_WIN32_THREAD_SYSTEM
+
+  return ___FIX(___UNIMPL_ERR);
+
+#endif
+#endif
 }
 
 
