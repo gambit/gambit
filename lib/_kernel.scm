@@ -4545,12 +4545,17 @@ end-of-code
       (if (##pair? modules)
           (let* ((module (##car modules))
                  (module-descr (macro-module-descr module))
-                 (rest (##cdr modules)))
+                 (rest (##cdr modules))
+                 (last? (##not (##pair? rest))))
             ;; load module if the preload flag is set or we force the loading
             (if (or (##fx= (##fxand 1 (##vector-ref module-descr 2)) 1)
-                    (and force-load-last? (##not (##pair? rest))))
-                (proc module))
-            (loop rest)))))
+                    (and force-load-last? last?))
+                (if last?
+                    (proc module)
+                    (begin
+                      (proc module)
+                      (loop rest)))
+                (loop rest))))))
 
   (for-each-module init)
   (for-each-module run))
