@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -984,6 +984,20 @@ ___time timeout;)
 
 #ifdef USE_select
 
+  /*
+   * Heartbeat interrupts must be disabled in case they are based on the
+   * real-time timer.  This is needed to bypass issues in two buggy
+   * operating systems:
+   *
+   * - On MacOS X, the virtual-time timer does not fire at the correct
+   *   rate (apparently this happens only on machines with more than
+   *   one core).
+   *
+   * - On CYGWIN, the select system call can be interrupted by the
+   *   timer and in some cases the error "No child processes" will
+   *   be returned by select.
+   */
+
   {
     struct timeval delta_tv_struct;
     struct timeval *delta_tv = &delta_tv_struct;
@@ -1031,26 +1045,17 @@ ___time timeout;)
             struct timespec delta_ts_struct;
             delta_ts_struct.tv_sec = delta_tv->tv_sec;
             delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
+
+            ___disable_heartbeat_interrupts ();
+
             result = nanosleep (&delta_ts_struct, NULL);
+
+            ___enable_heartbeat_interrupts ();
 
             goto select_done;
           }
 #endif
       }
-
-    /*
-     * Heartbeat interrupts must be disabled in case they are based on the
-     * real-time timer.  This is needed to bypass issues in two buggy
-     * operating systems:
-     *
-     * - On MacOS X, the virtual-time timer does not fire at the correct
-     *   rate (apparently this happens only on machines with more than
-     *   one core).
-     *
-     * - On CYGWIN, the select system call can be interrupted by the
-     *   timer and in some cases the error "No child processes" will
-     *   be returned by select.
-     */
 
     ___disable_heartbeat_interrupts ();
 
@@ -1105,7 +1110,11 @@ ___time timeout;)
             delta_ts_struct.tv_sec = delta_tv->tv_sec;
             delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
 
+            ___disable_heartbeat_interrupts ();
+
             result = nanosleep (&delta_ts_struct, NULL);
+
+            ___enable_heartbeat_interrupts ();
 
             goto poll_done;
           }
