@@ -8953,6 +8953,23 @@ typedef struct ___global_state_struct
        ___P((___SCMOBJ ht_src,
              ___SCMOBJ ht_dst),
             ());
+    void (*___cleanup) ___PVOID;
+    void (*___cleanup_and_exit_process)
+       ___P((int status),
+            ());
+    ___SCMOBJ (*___setup_vmstate)
+       ___P((___virtual_machine_state ___vms),
+            ());
+    void (*___cleanup_vmstate)
+       ___P((___virtual_machine_state ___vms),
+            ());
+    ___SCMOBJ (*___setup_pstate)
+       ___P((___processor_state ___ps,
+             ___virtual_machine_state ___vms),
+            ());
+    void (*___cleanup_pstate)
+       ___P((___processor_state ___ps),
+            ());
     ___SIZE_T (*___get_min_heap) ___PVOID;
     void (*___set_min_heap)
        ___P((___SIZE_T bytes),
@@ -8977,10 +8994,6 @@ typedef struct ___global_state_struct
              int new_settings),
             ());
     ___program_startup_info_struct *(*___get_program_startup_info) ___PVOID;
-    void (*___cleanup) ___PVOID;
-    void (*___cleanup_and_exit_process)
-       ___P((int status),
-            ());
     ___SCMOBJ (*___call)
        ___P((___PSD
              int nargs,
@@ -10187,6 +10200,23 @@ ___IMP_FUNC(void,___setup_params_reset)
 ___IMP_FUNC(___SCMOBJ,___setup)
    ___P((struct ___setup_params_struct *setup_params),
         ());
+___IMP_FUNC(void,___cleanup) ___PVOID;
+___IMP_FUNC(void,___cleanup_and_exit_process)
+   ___P((int status),
+        ());
+___IMP_FUNC(___SCMOBJ,___setup_vmstate)
+   ___P((___virtual_machine_state ___vms),
+        ());
+___IMP_FUNC(void,___cleanup_vmstate)
+   ___P((___virtual_machine_state ___vms),
+        ());
+___IMP_FUNC(___SCMOBJ,___setup_pstate)
+   ___P((___processor_state ___ps,
+         ___virtual_machine_state ___vms),
+        ());
+___IMP_FUNC(void,___cleanup_pstate)
+   ___P((___processor_state ___ps),
+        ());
 ___IMP_FUNC(___SIZE_T,___get_min_heap) ___PVOID;
 ___IMP_FUNC(void,___set_min_heap)
    ___P((___SIZE_T bytes),
@@ -10212,10 +10242,6 @@ ___IMP_FUNC(int,___set_debug_settings)
         ());
 ___IMP_FUNC(___program_startup_info_struct*,___get_program_startup_info)
    ___PVOID;
-___IMP_FUNC(void,___cleanup) ___PVOID;
-___IMP_FUNC(void,___cleanup_and_exit_process)
-   ___P((int status),
-        ());
 ___IMP_FUNC(___SCMOBJ,___call)
    ___P((___PSD
          int nargs,

@@ -1027,26 +1027,25 @@ ___SCMOBJ ___make_global_var
         (sym)
 ___SCMOBJ sym;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
-
   if (___GLOBALVARSTRUCT(sym) == 0)
     {
       ___glo_struct *g = ___CAST(___glo_struct*,
                                  alloc_mem_aligned_perm
-                                 (___WORDS(sizeof (___glo_struct)),
-                                  1,
-                                  0));
+                                   (___WORDS(sizeof (___glo_struct)),
+                                    1,
+                                    0));
 
       if (g == 0)
         return ___FIX(___HEAP_OVERFLOW_ERR);
 
-#ifndef ___SINGLE_VM
+#ifdef ___SINGLE_VM
+      g->val = ___UNB1;
+#else
       g->val = ___GSTATE->mem.nb_glo_vars;
 #endif
 
       ___GSTATE->mem.nb_glo_vars++;
 
-      ___GLOCELL(g->val) = ___UNB1;
       ___PRMCELL(g->prm) = ___FAL;
 
       g->next = 0;
@@ -1737,14 +1736,13 @@ void *data;)
 /*---------------------------------------------------------------------------*/
 
 ___HIDDEN ___WORD *start_of_fromspace
-   ___P((___PSD
+   ___P((___processor_state ___ps,
          ___msection *s),
-        (___PSV
+        (___ps,
          s)
-___PSDKR
+___processor_state ___ps;
 ___msection *s;)
 {
-  ___PSGET
   if (tospace_at_top)
     return s->base;
   else
@@ -1753,14 +1751,13 @@ ___msection *s;)
 
 
 ___HIDDEN ___WORD *start_of_tospace
-   ___P((___PSD
+   ___P((___processor_state ___ps,
          ___msection *s),
-        (___PSV
+        (___ps,
          s)
-___PSDKR
+___processor_state ___ps;
 ___msection *s;)
 {
-  ___PSGET
   if (tospace_at_top)
     return s->base + (___MSECTION_SIZE>>1);
   else
@@ -1778,14 +1775,13 @@ ___HIDDEN void fatal_heap_overflow ___PVOID
 
 
 ___HIDDEN ___msection *next_msection
-   ___P((___PSD
+   ___P((___processor_state ___ps,
          ___msection *ms),
-        (___PSV
+        (___ps,
          ms)
-___PSDKR
+___processor_state ___ps;
 ___msection *ms;)
 {
-  ___PSGET
   ___msection *result;
 
   if (nb_msections_used == 0)
@@ -1810,37 +1806,33 @@ ___msection *ms;)
 
 
 ___HIDDEN void next_stack_msection
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
-
   if (stack_msection != 0)
     words_prev_msections += alloc_stack_start - alloc_stack_ptr;
 
-  stack_msection = next_msection (___PSP heap_msection);
-  alloc_stack_limit = start_of_tospace (___PSP stack_msection);
+  stack_msection = next_msection (___ps, heap_msection);
+  alloc_stack_limit = start_of_tospace (___ps, stack_msection);
   alloc_stack_start = alloc_stack_limit + (___MSECTION_SIZE>>1);
   alloc_stack_ptr = alloc_stack_start;
 }
 
 
 ___HIDDEN void next_heap_msection
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
-
   if (heap_msection != 0)
     {
       words_prev_msections += alloc_heap_ptr - alloc_heap_start;
       heap_msection->alloc = alloc_heap_ptr;
     }
 
-  heap_msection = next_msection (___PSP stack_msection);
-  alloc_heap_start = start_of_tospace (___PSP heap_msection);
+  heap_msection = next_msection (___ps, stack_msection);
+  alloc_heap_start = start_of_tospace (___ps, heap_msection);
   alloc_heap_limit = alloc_heap_start + (___MSECTION_SIZE>>1);
   alloc_heap_ptr = alloc_heap_start;
 }
@@ -2512,14 +2504,13 @@ ___PSDKR)
 
 
 ___HIDDEN void zap_fromspace
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
   int i;
   for (i=0; i<the_msections->nb_sections; i++)
-    zap_section (start_of_fromspace (___PSP the_msections->sections[i]),
+    zap_section (start_of_fromspace (___ps, the_msections->sections[i]),
                  ___MSECTION_SIZE>>1);
 }
 
@@ -2614,7 +2605,7 @@ ___WORD n;)
 #endif
                 {
                   alloc_heap_ptr = alloc;
-                  next_heap_msection (___PSPNC);
+                  next_heap_msection (___ps);
                   alloc = alloc_heap_ptr;
                   limit = alloc_heap_limit;
                 }
@@ -2774,7 +2765,7 @@ fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
           while (alloc + words + ___SUBTYPED_OVERHEAD > limit)
             {
               alloc_heap_ptr = alloc;
-              next_heap_msection (___PSPNC);
+              next_heap_msection (___ps);
               alloc = alloc_heap_ptr;
               limit = alloc_heap_limit;
             }
@@ -3238,7 +3229,7 @@ ___PSDKR)
       else if (scan_ptr >= scan_msection->alloc)
         {
           scan_msection = scan_msection->next;
-          scan_ptr = start_of_tospace (___PSP scan_msection);
+          scan_ptr = start_of_tospace (___ps, scan_msection);
           continue;
         }
       body = scan_ptr + 1;
@@ -3334,11 +3325,10 @@ ___SIZE_TS live;)
 
 
 ___HIDDEN void prepare_mem_pstate
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
   ___SIZE_TS avail;
   ___SIZE_TS stack_avail;
   ___SIZE_TS stack_left_before_fudge;
@@ -3374,9 +3364,6 @@ ___PSDKR)
                       + ((heap_avail < heap_left_before_fudge)
                          ? heap_avail
                          : heap_left_before_fudge);
-
-  ___begin_interrupt_service_pstate (___PSPNC);
-  ___end_interrupt_service_pstate (___PSP 0);
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
@@ -3450,7 +3437,7 @@ ___virtual_machine_state ___vms;)
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
     {
-      zap_fromspace (___PSPNC);
+      zap_fromspace (___ps);
       stack_fudge_used = 0;
       heap_fudge_used = 0;
     }
@@ -3464,8 +3451,8 @@ ___virtual_machine_state ___vms;)
   heap_msection = 0;
   nb_msections_used = 0;
 
-  next_stack_msection (___PSPNC);
-  next_heap_msection (___PSPNC);
+  next_stack_msection (___ps);
+  next_heap_msection (___ps);
 
   /*
    * Create "break frame" of initial top section.
@@ -3503,7 +3490,7 @@ ___virtual_machine_state ___vms;)
   ___ps->heartbeat_countdown = ___ps->heartbeat_interval;
 #endif
 
-  prepare_mem_pstate (___PSPNC);
+  prepare_mem_pstate (___ps);
 
   return ___FIX(___NO_ERR);
 }
@@ -3528,7 +3515,10 @@ ___virtual_machine_state ___vms;)
 
   /* TODO: implement expansion of glos array when number of globals grows beyond 20000 */
 
-  ___vms->glos = ___CAST(___SCMOBJ*,___alloc_mem (20000 * sizeof (___SCMOBJ)));
+  { int n = 20000;
+    ___vms->glos = ___CAST(___SCMOBJ*,___alloc_mem (n * sizeof (___SCMOBJ)));
+    while (--n>=0) { ___vms->glos[n] = ___UNB1; }
+  }
 
 #endif
 
@@ -3571,7 +3561,7 @@ ___virtual_machine_state ___vms;)
   last_gc_movable = 0.0;
   last_gc_nonmovable = 0.0;
 
-  return ___setup_mem_pstate (&___vms->pstate0, ___vms);
+  return ___FIX(___NO_ERR);
 
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
@@ -3638,7 +3628,7 @@ ___SCMOBJ ___setup_mem ___PVOID
     ___GSTATE->keyword_table = t;
   }
 
-  return ___setup_mem_vmstate (&___GSTATE->vmstate0);
+  return ___FIX(___NO_ERR);
 }
 
 
@@ -4585,7 +4575,7 @@ ___SIZE_TS nonmovable_words_needed;)
   heap_msection = 0;
   nb_msections_used = 0;
 
-  next_heap_msection (___PSPNC);
+  next_heap_msection (___ps);
 
   scan_msection = heap_msection;
   scan_ptr = alloc_heap_ptr;
@@ -4730,7 +4720,7 @@ ___SIZE_TS nonmovable_words_needed;)
          */
 
         p1 = start + length;
-        p2 = start_of_fromspace (___PSP the_msections->head) + length;
+        p2 = start_of_fromspace (___ps, the_msections->head) + length;
 
         while (p1 != start)
           *--p2 = *--p1;
@@ -4740,7 +4730,7 @@ ___SIZE_TS nonmovable_words_needed;)
 
     adjust_msections (&the_msections, target_nb_sections);
 
-    next_stack_msection (___PSPNC);
+    next_stack_msection (___ps);
 
     p1 = start + length;
     p2 = alloc_stack_ptr;
@@ -4756,11 +4746,11 @@ ___SIZE_TS nonmovable_words_needed;)
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
-    zap_fromspace (___PSPNC);
+    zap_fromspace (___ps);
 #endif
 
   if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
-    next_heap_msection (___PSPNC);
+    next_heap_msection (___ps);
 
   avail = WORDS_AVAILABLE + overflow_reserve - WORDS_OCCUPIED;
 
@@ -4782,7 +4772,7 @@ ___SIZE_TS nonmovable_words_needed;)
 
   heap_size = WORDS_AVAILABLE;
 
-  prepare_mem_pstate (___PSPNC);
+  prepare_mem_pstate (___ps);
 
   ___process_times (&user_time_end, &sys_time_end, &real_time_end);
 
@@ -4870,7 +4860,7 @@ ___PSDKR)
           else
             frame = ___FP_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT);
 
-          next_stack_msection (___PSPNC);
+          next_stack_msection (___ps);
 
           /*
            * Create a "break frame" in the new stack msection.
@@ -4885,7 +4875,7 @@ ___PSDKR)
           ___ps->stack_break = alloc_stack_ptr;
         }
 
-      prepare_mem_pstate (___PSPNC);
+      prepare_mem_pstate (___ps);
 
       return 0;
     }
@@ -4941,9 +4931,9 @@ ___PSDKR)
      )
     {
       if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
-        next_heap_msection (___PSPNC);
+        next_heap_msection (___ps);
 
-      prepare_mem_pstate (___PSPNC);
+      prepare_mem_pstate (___ps);
 
       return 0;
     }

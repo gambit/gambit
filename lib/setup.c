@@ -188,6 +188,26 @@ ___PSDKR)
 }
 
 
+___HIDDEN void setup_interrupts_pstate
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+  int i;
+
+  ___disable_interrupts_pstate (___PSPNC); /* disable all interrupts */
+
+  ___ps->intr_mask = ___FIX(0); /* None of the interrupts are ignored */
+
+  for (i=0; i<___NB_INTRS; i++) /* None of the interrupts are requested */
+    ___ps->intr_flag[i] = ___FIX(0);
+
+  ___begin_interrupt_service_pstate (___PSPNC);
+  ___end_interrupt_service_pstate (___PSP 0);
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -347,17 +367,19 @@ ___SCMOBJ *p;)
 
 
 ___HIDDEN ___SCMOBJ make_global
-   ___P((___UTF_8STRING str,
+   ___P((___processor_state ___ps,
+         ___UTF_8STRING str,
          int supply,
          ___glo_struct **glo),
-        (str,
+        (___ps,
+         str,
          supply,
          glo)
+___processor_state ___ps;
 ___UTF_8STRING str;
 int supply;
 ___glo_struct **glo;)
 {
-  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___PSTATE);/* TODO: remove and fix ___GLOCELL_IN_VM*/
   ___glo_struct *g;
   ___SCMOBJ sym = ___make_symkey_from_UTF_8_string (str, ___sSYMBOL);
 
@@ -371,8 +393,16 @@ ___glo_struct **glo;)
 
   g = ___GLOBALVARSTRUCT(sym);
 
-  if (supply && ___GLOCELL_IN_VM(___vms,g->val) == ___UNB1)
-    ___GLOCELL_IN_VM(___vms,g->val) = ___UNB2;
+  if (___ps != NULL)
+    {
+      /*
+       * If the variable is supplied by the module, mark it specially
+       * so that it won't be flagged as an undefined variable.
+       */
+
+      if (supply)
+        ___GLOCELL(g->val) = ___UNB2;
+    }
 
   *glo = g;
 
@@ -470,13 +500,16 @@ ___module_struct *module;)
        * Create global variables in reverse order so that global
        * variables bound to c-lambdas are created last.
        */
+
+      ___processor_state ___ps = ctx->ps;
+
       i = 0;
       while (glo_names[i] != 0)
         i++;
       while (i-- > 0)
         {
           ___glo_struct *glo = 0;
-          ___SCMOBJ e = make_global (glo_names[i], i<supcount, &glo);
+          ___SCMOBJ e = make_global (___ps, glo_names[i], i<supcount, &glo);
           if (e != ___FIX(___NO_ERR))
             return e;
           glotbl[i] = ___CAST(___FAKEWORD,glo);
@@ -685,9 +718,8 @@ ___HIDDEN ___SCMOBJ setup_module_collect_undef_globals
 fem_context *ctx;
 ___module_struct *module;)
 {
-/* TODO: remove */
-  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(ctx->ps);/* TODO: remove and fix ___GLOCELL_IN_VM*/
-
+  ___processor_state ___ps = ctx->ps;
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   ___UTF_8STRING *glo_names = module->glo_names;
 
   if (glo_names != 0)
@@ -767,28 +799,6 @@ ___module_struct *module;)
       ___SCMOBJ err;
       ___SCMOBJ descr = module->moddescr;
 
-      /* TODO: obsolete code */
-      if (descr == ___FAL)
-        {
-          ___SCMOBJ mod_name;
-
-          descr = ___make_vector (NULL, 3, ___FAL);
-
-          if (___FIXNUMP(descr))
-            return descr;
-
-          if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
-                       (NULL, /* allocate as permanent object */
-                        module->name+1,
-                        &mod_name,
-                        -1))
-              != ___FIX(___NO_ERR))
-            return err;
-
-          ___FIELD(descr,0) = mod_name;
-          ___FIELD(descr,1) = *module->lp+___LS*___WS;
-        }
-
       ___FIELD(descr,2) = ctx->flags;
 
       if ((err = ___NONNULLPOINTER_to_SCMOBJ
@@ -842,14 +852,13 @@ ___mod_or_lnk mol;)
 
 
 ___HIDDEN ___SCMOBJ setup_modules
-   ___P((___PSD
+   ___P((___processor_state ___ps,
          ___mod_or_lnk mol),
-        (___PSV
+        (___ps,
          mol)
-___PSDKR
+___processor_state ___ps;
 ___mod_or_lnk mol;)
 {
-  ___PSGET
   ___SCMOBJ result;
   ___SCMOBJ script_line;
   fem_context fem_ctx;
@@ -872,13 +881,16 @@ ___mod_or_lnk mol;)
       != ___FIX(___NO_ERR))
     return result;
 
-  /* Collect undefined globals */
+  if (___ps != NULL)
+    {
+      /* Collect undefined globals */
 
-  if ((result = for_each_module (ctx,
-                                 mol,
-                                 setup_module_collect_undef_globals))
-      != ___FIX(___NO_ERR))
-    return result;
+      if ((result = for_each_module (ctx,
+                                     mol,
+                                     setup_module_collect_undef_globals))
+          != ___FIX(___NO_ERR))
+        return result;
+    }
 
   /* Create vector of module descriptors */
 
@@ -932,7 +944,7 @@ ___SCMOBJ modname;)
         result = ___FIX(___MODULE_ALREADY_LOADED_ERR);
       else
         {
-          result = setup_modules (___PSA(___PSTATE) mol);
+          result = setup_modules (___PSTATE, mol);
           mol->linkfile.version = -1; /* mark link file as 'setup' */
         }
     }
@@ -1826,9 +1838,6 @@ ___mod_or_lnk mol;)
       ___FAKEWORD *p2 = mol->linkfile.sym_list;
       ___FAKEWORD *p3 = mol->linkfile.key_list;
 
-/* TODO: remove */
-      ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___PSTATE);/* TODO: remove and fix ___GLOCELL_IN_VM*/
-
       while (p1->mol != 0)
         {
           init_symkey_glo2 (p1->mol);
@@ -1849,12 +1858,9 @@ ___mod_or_lnk mol;)
           glo = ___CAST(___glo_struct*,sym_ptr[1+___SYMBOL_GLOBAL]);
 
 #ifndef ___SINGLE_VM
-          {
-            ___SCMOBJ tmp = glo->val;
-            glo->val = ___GSTATE->mem.nb_glo_vars;
-            ___GLOCELL_IN_VM(___vms,glo->val) = tmp;
-            ___GSTATE->mem.nb_glo_vars++;
-          }
+
+          glo->val = ___GSTATE->mem.nb_glo_vars++;
+
 #endif
 
           glo->next = 0;
@@ -2313,6 +2319,140 @@ ___HIDDEN void setup_kernel_handlers ___PVOID
   ___GSTATE->dynamic_env_bind_return = ___LBL(1);
 
 #undef ___PH_LBL0
+}
+
+
+___EXP_FUNC(void,___cleanup_pstate)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+}
+
+
+___EXP_FUNC(___SCMOBJ,___setup_pstate)
+   ___P((___processor_state ___ps,
+         ___virtual_machine_state ___vms),
+        (___ps)
+___processor_state ___ps;)
+{
+  int i;
+  ___SCMOBJ ___err;
+  ___SCMOBJ marker;
+
+  /*
+   * Setup current OS thread so that it can find the processor state
+   * it is running.
+   */
+
+  ___SET_PSTATE(___ps);
+
+  /*
+   * Setup processor's memory management.
+   */
+
+  ___setup_mem_pstate (___ps, ___vms);
+
+  /*
+   * Setup green thread structures.
+   */
+
+  ___ps->current_thread = ___FAL;
+  ___ps->run_queue = ___FAL;
+
+  /*
+   * Setup registers.
+   */
+
+  for (i=0; i<___NB_GVM_REGS; i++)
+    ___ps->r[i] = ___VOID;
+
+  /*
+   * Setup exception handling.
+   */
+
+#ifdef ___USE_SETJMP
+
+  ___ps->catcher = 0;
+
+#endif
+
+  /*
+   * Setup interrupt system of this processor.
+   */
+
+  setup_interrupts_pstate (___PSPNC);
+
+  /*
+   * Start program execution by loading _kernel module.
+   */
+
+  ___ps->r[0] = ___GSTATE->handler_break;
+
+  ___BEGIN_TRY
+
+  if ((___err = ___make_sfun_stack_marker
+                  (___ps,
+                   &marker,
+                   ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1)))
+      == ___FIX(___NO_ERR))
+    {
+      ___err = ___call (___PSP 0, ___FIELD(marker,0), marker);
+      ___kill_sfun_stack_marker (marker);
+    }
+
+  ___END_TRY
+
+  return ___err;
+}
+
+
+___EXP_FUNC(void,___cleanup_vmstate)
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+}
+
+
+___EXP_FUNC(___SCMOBJ,___setup_vmstate)
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  /*
+   * Setup virtual machine's memory management.
+   */
+
+  ___setup_mem_vmstate (___vms);
+
+  /*
+   * Start the main processor of the virtual machine.
+   */
+
+  return ___setup_pstate (&___vms->pstate0, ___vms);
+}
+
+
+___HIDDEN ___SCMOBJ setup_os_and_mem ___PVOID
+{
+  ___SCMOBJ err;
+
+  /*
+   * Setup the operating system module.
+   */
+
+  if ((err = ___setup_os ()) == ___FIX(___NO_ERR))
+    {
+      /*
+       * Setup memory management.
+       */
+
+      if ((err = ___setup_mem ()) != ___FIX(___NO_ERR))
+        ___cleanup_os ();
+    }
+
+  return err;
 }
 
 
@@ -3025,6 +3165,24 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___gc_hash_table_rehash
     = ___gc_hash_table_rehash;
 
+  ___GSTATE->___cleanup
+    = ___cleanup;
+
+  ___GSTATE->___cleanup_and_exit_process
+    = ___cleanup_and_exit_process;
+
+  ___GSTATE->___setup_vmstate
+    = ___setup_vmstate;
+
+  ___GSTATE->___cleanup_vmstate
+    = ___cleanup_vmstate;
+
+  ___GSTATE->___setup_pstate
+    = ___setup_pstate;
+
+  ___GSTATE->___cleanup_pstate
+    = ___cleanup_pstate;
+
   ___GSTATE->___get_min_heap
     = ___get_min_heap;
 
@@ -3054,12 +3212,6 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___get_program_startup_info
     = ___get_program_startup_info;
-
-  ___GSTATE->___cleanup
-    = ___cleanup;
-
-  ___GSTATE->___cleanup_and_exit_process
-    = ___cleanup_and_exit_process;
 
   ___GSTATE->___call
     = ___call;
@@ -3135,121 +3287,13 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 }
 
 
-___HIDDEN void setup_pstate
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
-{
-  int i;
-
-  /*
-   * Setup multithreading structures.
-   */
-
-  ___ps->current_thread = ___FAL;
-  ___ps->run_queue = ___FAL;
-
-  /*
-   * Setup registers.
-   */
-
-  for (i=0; i<___NB_GVM_REGS; i++)
-    ___ps->r[i] = ___VOID;
-
-  /*
-   * Setup exception handling.
-   */
-
-#ifdef ___USE_SETJMP
-
-  ___ps->catcher = 0;
-
-#endif
-
-  /*
-   * Setup interrupt system of this processor.
-   */
-
-  ___disable_interrupts_pstate (___PSPNC); /* disable all interrupts */
-
-  ___ps->intr_mask = ___FIX(0); /* None of the interrupts are ignored */
-
-  for (i=0; i<___NB_INTRS; i++) /* None of the interrupts are requested */
-    ___ps->intr_flag[i] = ___FIX(0);
-
-  ___begin_interrupt_service_pstate (___PSPNC);
-  ___end_interrupt_service_pstate (___PSP 0);
-}
-
-
-/* TODO: really need to EXP_FUNC ___setup_vm and ___cleanup_vm? */
-
-___EXP_FUNC(void,___setup_pstate)
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
-{
-}
-
-
-___EXP_FUNC(void,___cleanup_pstate)
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
-{
-}
-
-
-___EXP_FUNC(void,___setup_vmstate)
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
-{
-}
-
-
-___EXP_FUNC(void,___cleanup_vmstate)
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
-{
-}
-
-
-___HIDDEN ___SCMOBJ setup_os_and_mem ___PVOID
-{
-  ___SCMOBJ err;
-
-  /*
-   * Setup the operating system module.
-   */
-
-  if ((err = ___setup_os ()) == ___FIX(___NO_ERR))
-    {
-      /*
-       * Setup memory management.
-       */
-
-      if ((err = ___setup_mem ()) != ___FIX(___NO_ERR))
-        ___cleanup_os ();
-    }
-
-  return err;
-}
-
-
 ___EXP_FUNC(___SCMOBJ,___setup)
    ___P((___setup_params_struct *setup_params),
         (setup_params)
 ___setup_params_struct *setup_params;)
 {
-  ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
-  ___processor_state ___ps = &___vms->pstate0;
-  ___SCMOBJ ___err;
+  ___SCMOBJ err;
   ___mod_or_lnk mol;
-  ___SCMOBJ marker;
-
-  ___SET_PSTATE(___ps);
 
   /*
    * Check for valid setup_params structure.
@@ -3275,8 +3319,8 @@ ___setup_params_struct *setup_params;)
    * Setup the operating system and memory management modules.
    */
 
-  if ((___err = setup_os_and_mem ()) != ___FIX(___NO_ERR))
-    return ___err;
+  if ((err = setup_os_and_mem ()) != ___FIX(___NO_ERR))
+    return err;
 
   /*
    * Allow cleanup.
@@ -3308,27 +3352,13 @@ ___setup_params_struct *setup_params;)
    * Setup each module.
    */
 
-  ___GSTATE->program_descr = setup_modules (___PSP mol);
+  ___GSTATE->program_descr = setup_modules (NULL, mol);
 
   if (___FIXNUMP(___GSTATE->program_descr))
     {
       ___cleanup ();
       return ___GSTATE->program_descr;
     }
-
-  {
-    /*
-     * By convention, the main module is the last one in the module
-     * descriptors.
-     */
-
-    ___SCMOBJ module_descrs = ___FIELD(___GSTATE->program_descr,0);
-
-    ___vms->main_module_id =
-      ___FIELD(___FIELD(module_descrs,
-                        ___INT(___VECTORLENGTH(module_descrs))-1),
-               0);
-  }
 
   /*
    * Setup kernel handlers.
@@ -3340,42 +3370,42 @@ ___setup_params_struct *setup_params;)
    * Create list of command line arguments (accessible through ##command-line).
    */
 
-  if ((___err = setup_command_line_arguments ()) != ___FIX(___NO_ERR))
+  if ((err = setup_command_line_arguments ()) != ___FIX(___NO_ERR))
     {
       ___cleanup;
-      return ___err;
+      return err;
     }
 
+  {
+    /*
+     * By convention, the main module is the last one in the module
+     * descriptors.
+     */
+
+    ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+
+    ___SCMOBJ module_descrs = ___FIELD(___GSTATE->program_descr,0);
+
+    ___vms->main_module_id =
+      ___FIELD(___FIELD(module_descrs,
+                        ___INT(___VECTORLENGTH(module_descrs))-1),
+               0);
+
+    /*
+     * Start the main virtual machine.
+     */
+
+    err = ___setup_vmstate (___vms);
+  }
+
   /*
-   * Setup processor state.
+   * Cleanup if there are any errors.
    */
 
-  setup_pstate (___ps);
-
-  /*
-   * Start program execution by loading _kernel module.
-   */
-
-  ___ps->r[0] = ___GSTATE->handler_break;
-
-  ___BEGIN_TRY
-
-  if ((___err = ___make_sfun_stack_marker
-                  (___ps,
-                   &marker,
-                   ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1)))
-      == ___FIX(___NO_ERR))
-    {
-      ___err = ___call (___PSP 0, ___FIELD(marker,0), marker);
-      ___kill_sfun_stack_marker (marker);
-    }
-
-  ___END_TRY
-
-  if (___err != ___FIX(___NO_ERR))
+  if (err != ___FIX(___NO_ERR))
     ___cleanup ();
 
-  return ___err;
+  return err;
 }
 
 
