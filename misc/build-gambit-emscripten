@@ -1,0 +1,781 @@
+#! /bin/sh
+
+# This script assumes that LLVM3.2 is installed.  LLVM3.2 can be
+# downloaded from http://www.llvm.org/releases/download.html#3.2 .
+# We assume it was installed in /usr/local/clang+llvm-3.2-x86_64-apple-darwin11
+
+LLVM_DIR="/usr/local/clang+llvm-3.2-x86_64-apple-darwin11"
+export LLVM="$LLVM_DIR/bin"
+export PATH="$LLVM:$PATH"
+
+# Which JavaScript shells to use:
+#JS1=node
+JS2=d8
+#JS2=/Users/feeley/mozilla/v8/out/x64.release/d8
+#JS3=js
+#JS3=/Users/feeley/mozilla/mozilla-central/obj-x86_64-apple-darwin13.0.2/dist/bin/js
+
+get_emscripten()
+{
+  if [ -e $EMSCRIPTEN_DIR ] ; then
+    echo "### pulling latest sources from emscripten repo"
+    cd $EMSCRIPTEN_DIR
+    git reset --hard
+    git checkout incoming
+    git pull
+    cd ..
+  else
+    echo "### downloading emscripten using git..."
+    time git clone https://github.com/kripken/emscripten.git
+    mv emscripten $EMSCRIPTEN_DIR
+  fi
+}
+
+checkout_emscripten()
+{
+  get_emscripten
+  cd $EMSCRIPTEN_DIR
+  echo "### checkout of emscripten $1"
+  git checkout $1
+  cd ..
+}
+
+patch_emscripten()
+{
+  echo "### patching emscripten's src/library.js"
+
+  sed -e "s#assert(\!exceptfds#exceptfds=0;//***patched*** was: assert(\!exceptfds//#g" -e "s#// sys/time.h#getaddrinfo: function () { return 0; }, freeaddrinfo: function () { return 0; }, gethostbyaddr: function () { return 0; }, getgrgid: function () { return 0; }, getgrnam: function () { return 0; }, gai_strerror: function () { return 0; }, hstrerror: function () { return 0; }, getsockname: function () { return 0; }, getpeername: function () { return 0; }, cfsetispeed: function () { return 0; }, cfsetospeed: function () { return 0; }, /***patched***/#g" -e "s#setitimer: function() { throw 'setitimer not implemented yet' },#setitimer: function() { return 0; }, /***patched***/#g" -e "s#getitimer: function() { throw 'getitimer not implemented yet' },#getitimer: function() { return 0; }, /***patched***/#g" $EMSCRIPTEN_DIR/src/library.js > $EMSCRIPTEN_DIR/src/library.js-new
+
+  diff $EMSCRIPTEN_DIR/src/library.js-new $EMSCRIPTEN_DIR/src/library.js
+
+  mv $EMSCRIPTEN_DIR/src/library.js-new $EMSCRIPTEN_DIR/src/library.js
+}
+
+get_gambit()
+{
+  if [ -e $GAMBIT_DIR ] ; then
+    echo "### pulling latest sources from gambit repo"
+    cd $GAMBIT_DIR
+    git reset --hard
+    git pull
+    cd ..
+  else
+    echo "### downloading gambit using git..."
+    time git clone https://github.com/feeley/gambit.git
+    mv gambit $GAMBIT_DIR
+  fi
+}
+
+build_host_gambit()
+{
+  cd $GAMBIT_DIR
+
+  if [ -e gsc-boot ] ; then
+
+    echo "### using existing host gambit"
+
+  else
+
+    echo "### building host gambit"
+
+    ./configure
+
+    # remove any existing .o files and libraries
+    make clean
+
+    # make gsc-boot
+    make -j8 from-scratch
+
+  fi
+
+  cd ..
+}
+
+build_emscripten_gambit_runtime_lib()
+{
+  cd $GAMBIT_DIR
+
+  echo "### building emscripten gambit runtime library"
+
+  $EMSCRIPTEN_DIR/emconfigure ./configure $GAMBIT_CONFIGURE_OPTIONS CFLAGS="$GAMBIT_CFLAGS"
+
+  echo "#undef HAVE_IOCTL" >> include/config.h
+
+  echo "#undef HAVE_GETSERVBYNAME" >> include/config.h
+  echo "#undef HAVE_GETSERVBYPORT" >> include/config.h
+  echo "#undef HAVE_GETPROTOBYNAME" >> include/config.h
+  echo "#undef HAVE_GETPROTOBYNUMBER" >> include/config.h
+
+  echo "#define NETDB_INTERNAL -1" >> include/config.h
+  echo "#define NETDB_SUCCESS 0" >> include/config.h
+
+  echo "#ifndef NO_ADDRESS" >> include/config.h
+  echo "#define NO_ADDRESS NO_DATA" >> include/config.h
+  echo "#endif" >> include/config.h
+
+#  echo "#undef HAVE_TCGETSETATTR" >> include/config.h
+
+#  echo "#define ___DEBUG 1" >> include/config.h
+#  echo "#define ___DEBUG_TTY 1" >> include/config.h
+#  echo "#define ___DEBUG_HOST_CHANGES 1" >> include/config.h
+
+  make clean
+  make -j8
+
+  cd ..
+}
+
+get_emscripten_gambit_interpreter_sources()
+{
+  cd $GAMBIT_DIR
+
+  #rm -rf emscripten-gsi
+
+  if [ -e emscripten-gsi ] ; then
+    echo "### using existing emscripten gambit interpreter sources"
+  else
+    echo "### getting emscripten gambit interpreter sources"
+
+    mkdir emscripten-gsi
+
+    cd emscripten-gsi
+
+    cat <<EOF > gsi.scm
+;;;============================================================================
+
+;;; File: "gsi.scm"
+
+;;; Copyright (c) 2013 by Marc Feeley, All Rights Reserved.
+
+(##include "../gsi/_gsi.scm")
+
+;;;============================================================================
+
+(##c-declare #<<end-of-c-declare
+
+#include <stdio.h>
+#include <emscripten/emscripten.h>
+
+#define SCHEME_LIBRARY_LINKER ____20_gsi__
+
+___BEGIN_C_LINKAGE
+extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state_struct*);
+___END_C_LINKAGE
+
+extern void setup() {
+
+  /*
+   * Setup the Scheme library by calling "___setup" with appropriate
+   * parameters.  The call to "___setup_params_reset" sets all parameters
+   * to their default setting.
+   */
+
+  ___setup_params_struct setup_params;
+
+  ___setup_params_reset(&setup_params);
+
+  setup_params.version = ___VERSION;
+  setup_params.linker  = SCHEME_LIBRARY_LINKER;
+
+  ___ON_THROW(___setup(&setup_params);,);
+}
+
+extern void cleanup() {
+
+  /* Cleanup the Scheme library */
+
+  ___cleanup();
+}
+
+extern void user_interrupt() {
+  ___raise_interrupt(___INTR_USER);
+}
+
+extern void heartbeat_interrupt() {
+  ___raise_interrupt(___INTR_HEARTBEAT);
+}
+
+extern ___SCMOBJ scheme_idle() {
+#define ___NARGS 0
+  ___BEGIN_SFUN_SCMOBJ(___GLO__23__23_idle)
+  ___BEGIN_SFUN_BODY
+  ___SFUN_CALL_SCMOBJ
+  ___SFUN_SET_RESULT_SCMOBJ
+  ___END_SFUN_BODY
+  ___SFUN_ERROR_SCMOBJ
+  ___SFUN_SET_RESULT_SCMOBJ
+  ___END_SFUN_SCMOBJ
+  return ___result;
+#undef ___NARGS
+}
+
+extern double idle() {
+
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ result = ___FIX(0);
+
+  ___ON_THROW(result = scheme_idle();,);
+
+  if (___FIXNUMP(result))
+    return -1.0; /* signal program termination */
+  else
+    return ___FLONUM_VAL(result);
+}
+
+end-of-c-declare
+)
+
+(define (##idle)
+
+  ;; interrupts must be checked here to avoid overflowing the stack
+  ;; when there is continuous context-switching to threads which are
+  ;; idle (not checking stack overflows)
+
+  ;; return interval until next heartbeat
+  (##next-heartbeat-interval))
+
+(define (##next-heartbeat-interval)
+
+  (##declare (not interrupts-enabled))
+
+  (let* ((run-queue
+          (macro-run-queue))
+         (runnable-threads?
+          (##not
+           (let ((root (macro-btq-left run-queue)))
+             (and (##not (##eq? root run-queue))
+                  (##eq? (macro-btq-left root) run-queue)
+                  (##eq? (macro-btq-right root) run-queue))))))
+    (if runnable-threads?
+
+        (begin
+          ;; There are other threads that can run, so request
+          ;; to call "heartbeat" real soon to run those threads.
+          interval-runnable)
+
+        (let* ((next-sleeper
+                (macro-toq-leftmost run-queue))
+               (sleep-interval
+                (if (##eq? next-sleeper run-queue)
+                    +inf.0
+                    (begin
+                      ;; There is a sleeping thread, so figure out in
+                      ;; how much time it needs to wake up.
+                      (##flmax
+                       (##fl- (macro-thread-timeout next-sleeper)
+                              (##current-time-point))
+                       interval-min-wait))))
+               (next-condvar
+                (macro-btq-deq-next run-queue))
+               (io-interval
+                (if (##eq? next-condvar run-queue)
+                    interval-no-io-pending ;; I/O is not pending, just relax
+                    interval-io-pending))) ;; I/O is pending, so come back soon
+          (##flmin sleep-interval io-interval)))))
+
+(define interval-runnable 0.0)
+(set! interval-runnable 0.0)
+
+(define interval-io-pending 0.0)
+(set! interval-io-pending 0.001)
+
+(define interval-no-io-pending 0.0)
+(set! interval-no-io-pending 1.0)
+
+(define interval-min-wait 0.0)
+(set! interval-min-wait 0.0001)
+
+;;;----------------------------------------------------------------------------
+
+(define ##jseval
+  (c-lambda (char-string) char-string "emscripten_run_script_string"))
+
+(define jseval ##jseval)
+
+(define (##show-definition-of subject)
+  (let ((s
+         (cond ((##procedure? subject)
+                (##object->string (##procedure-name subject)))
+               (else
+                (##object->string subject)))))
+    (##jseval
+     (##string-append "open(\"http://www.iro.umontreal.ca/~gambit/doc/gambit-c.html#"
+                      (##escape-link (##string-append "Definition of " s))
+                      "\")")))
+    (##void))
+
+(set! ##help-hook ##show-definition-of)
+
+;;;----------------------------------------------------------------------------
+
+(define (term-esc cmd) ;; Terminus escape sequence
+  (let ((port (repl-output-port)))
+    (tty-mode-set! port #t #t #t #t) ;; Gambit's tty driver needs to pass the escapes as-is
+    (print port: port "\x1B[?0y" cmd)
+    (tty-mode-set! port #t #t #f #f)))
+
+;;;----------------------------------------------------------------------------
+
+;; use line buffering for REPL output
+
+;;(port-settings-set! (repl-output-port) '(output-buffering: line))
+
+;;;----------------------------------------------------------------------------
+
+;; Remember REPL history from one run of Gambit to the next.
+
+#;
+(define (##setup-repl-history)
+  (let ((input-port (repl-input-port)))
+    (if (##tty? input-port)
+        (let ((history
+               (##jseval "var history;
+                          history = sessionStorage.getItem('gambit-repl-history');
+                          if (typeof history !== 'string') history = '';
+                          history;")))
+
+          (if (##string? history)
+              (##tty-history-set! input-port history))
+
+          (##add-exit-job!
+           (lambda ()
+             (let ((history (##tty-history input-port)))
+
+               (##jseval (##string-append "sessionStorage.setItem('gambit-repl-history',"
+                                          (##object->string history)
+                                          "); '';")))))))))
+
+;;;----------------------------------------------------------------------------
+
+;; Start the main REPL in the primordial thread, and create a service
+;; thread which executes the rest of the program (returning back from
+;; the C call to ___setup).
+
+(define (run-service-thread denv)
+
+  ;; disable user interrupts in service thread so that
+  ;; the idle function won't start a REPL of its own.
+  (##thread-save!
+   (lambda (thread)
+     (macro-denv-interrupt-mask-set! denv 1)
+     (macro-thread-denv-set! thread denv)
+     (##thread-restore! thread (lambda () #f)))))
+
+(define (run-primordial-thread)
+  (##main-gsi/gsc))
+
+(##main-set!
+ (lambda ()
+   (continuation-capture
+    (lambda (cont)
+
+      (thread-start!
+       (make-root-thread
+        (lambda ()
+          (let ((denv (macro-thread-denv (current-thread))))
+            (continuation-graft cont run-service-thread denv)))))
+
+      (continuation-graft cont run-primordial-thread)))))
+
+;;;============================================================================
+
+EOF
+
+    cat <<EOF > bench.scm
+(load "fib")
+
+(println (time (fib 25)))
+EOF
+
+    cat <<EOF > fib.scm
+(define (fib n)
+  (if (< n 2)
+      n
+      (+ (fib (- n 1))
+         (fib (- n 2)))))
+EOF
+
+    cat <<EOF > fact.scm
+(define (fact n)
+  (if (< n 2)
+      1
+      (* n (fact (- n 1)))))
+EOF
+
+    cat <<EOF > pi.scm
+(define (pi digits)
+
+  (define A 13591409)
+  (define B 545140134)
+  (define C 640320)
+  (define C^3 (expt 640320 3))
+  (define D 12)
+
+  (define (split a b)
+    (if (= 1 (- b a))
+        (let ((g (* (- (* 6 b) 5) (- (* 2 b) 1) (- (* 6 b) 1))))
+          (list g
+                (floor (/ (* C^3 (expt b 3)) 24))
+                (* (expt -1 b) g (+ (* b B) A))))
+      (let* ((mid (floor (/ (+ a b) 2)))
+             (gpq1 (split a mid))
+             (gpq2 (split mid b))
+             (g1 (car gpq1)) (p1 (cadr gpq1)) (q1 (caddr gpq1))
+             (g2 (car gpq2)) (p2 (cadr gpq2)) (q2 (caddr gpq2)))
+        (list (* g1 g2)
+              (* p1 p2)
+              (+ (* q1 p2) (* q2 g1))))))
+
+  (let* ((num-terms (inexact->exact (floor (+ 2 (/ digits 14.181647462)))))
+         (sqrt-C (integer-sqrt (* C (expt 100 digits)))))
+    (let* ((gpq (split 0 num-terms))
+           (g (car gpq)) (p (cadr gpq)) (q (caddr gpq)))
+      (floor (/ (* p C sqrt-C) (* D (+ q (* p A))))))))
+EOF
+
+    cat <<EOF > maze.scm
+(define wall (string-ref "#" 0))
+
+(define foldr
+  (lambda (f base lst)
+
+    (define foldr-aux
+      (lambda (lst)
+        (if (null? lst)
+            base
+            (f (car lst) (foldr-aux (cdr lst))))))
+
+    (foldr-aux lst)))
+
+(define foldl
+  (lambda (f base lst)
+
+    (define foldl-aux
+      (lambda (base lst)
+        (if (null? lst)
+          base
+          (foldl-aux (f base (car lst)) (cdr lst)))))
+
+    (foldl-aux base lst)))
+
+(define for
+  (lambda (lo hi f)
+
+    (define for-aux
+      (lambda (lo)
+        (if (< lo hi)
+            (cons (f lo) (for-aux (+ lo 1)))
+            '())))
+
+    (for-aux lo)))
+
+(define concat
+  (lambda (lists)
+    (foldr append '() lists)))
+
+(define list-read
+  (lambda (lst i)
+    (if (= i 0)
+        (car lst)
+        (list-read (cdr lst) (- i 1)))))
+
+(define list-write
+  (lambda (lst i val)
+    (if (= i 0)
+        (cons val (cdr lst))
+        (cons (car lst) (list-write (cdr lst) (- i 1) val)))))
+
+(define list-remove-pos
+  (lambda (lst i)
+    (if (= i 0)
+        (cdr lst)
+        (cons (car lst) (list-remove-pos (cdr lst) (- i 1))))))
+
+(define duplicates?
+  (lambda (lst)
+    (if (null? lst)
+        #f
+        (or (member (car lst) (cdr lst))
+            (duplicates? (cdr lst))))))
+
+(define make-matrix
+  (lambda (n m init)
+    (for 0 n (lambda (i) (for 0 m (lambda (j) (init i j)))))))
+
+(define matrix-read
+  (lambda (mat i j)
+    (list-read (list-read mat i) j)))
+
+(define matrix-write
+  (lambda (mat i j val)
+    (list-write mat i (list-write (list-read mat i) j val))))
+
+(define matrix-size
+  (lambda (mat)
+    (cons (length mat) (length (car mat)))))
+
+(define matrix-map
+  (lambda (f mat)
+    (map (lambda (lst) (map f lst)) mat)))
+
+(define initial-random 0)
+
+(random-source-randomize! default-random-source)
+
+(define next-random
+  (lambda (current-random)
+    (random-integer 1000000000)))
+
+(define shuffle
+  (lambda (lst)
+    (shuffle-aux lst initial-random)))
+
+(define shuffle-aux
+  (lambda (lst current-random)
+    (if (null? lst)
+        '()
+        (let ((new-random (next-random current-random)))
+          (let ((i (modulo new-random (length lst))))
+            (cons (list-read lst i)
+                  (shuffle-aux (list-remove-pos lst i)
+                               new-random)))))))
+
+(define make-maze
+  (lambda (n m) ; n and m must be odd
+    (if (not (and (odd? n) (odd? m)))
+        'error
+        (let ((cave
+               (make-matrix n m (lambda (i j)
+                                  (if (and (even? i) (even? j))
+                                      (cons i j)
+                                      #f))))
+              (possible-holes
+               (concat
+                (for 0 n (lambda (i)
+                           (concat
+                            (for 0 m (lambda (j)
+                                       (if (equal? (even? i) (even? j))
+                                           '()
+                                           (list (cons i j)))))))))))
+          (cave-to-maze (pierce-randomly (shuffle possible-holes) cave))))))
+
+(define cave-to-maze
+  (lambda (cave)
+    (matrix-map (lambda (x) (if x " " wall)) cave)))
+
+(define pierce
+  (lambda (pos cave)
+    (let ((i (car pos)) (j (cdr pos)))
+      (matrix-write cave i j pos))))
+
+(define pierce-randomly
+  (lambda (possible-holes cave)
+    (if (null? possible-holes)
+        cave
+        (let ((hole (car possible-holes)))
+          (pierce-randomly (cdr possible-holes)
+                           (try-to-pierce hole cave))))))
+
+(define try-to-pierce
+  (lambda (pos cave)
+    (let ((i (car pos)) (j (cdr pos)))
+      (let ((ncs (neighboring-cavities pos cave)))
+        (if (duplicates?
+             (map (lambda (nc) (matrix-read cave (car nc) (cdr nc))) ncs))
+            cave
+            (pierce pos
+                    (foldl (lambda (c nc) (change-cavity c nc pos))
+                           cave
+                           ncs)))))))
+
+(define change-cavity
+  (lambda (cave pos new-cavity-id)
+    (let ((i (car pos)) (j (cdr pos)))
+      (change-cavity-aux cave pos new-cavity-id (matrix-read cave i j)))))
+
+(define change-cavity-aux
+  (lambda (cave pos new-cavity-id old-cavity-id)
+    (let ((i (car pos)) (j (cdr pos)))
+      (let ((cavity-id (matrix-read cave i j)))
+        (if (equal? cavity-id old-cavity-id)
+            (foldl (lambda (c nc)
+                     (change-cavity-aux c nc new-cavity-id old-cavity-id))
+                   (matrix-write cave i j new-cavity-id)
+                   (neighboring-cavities pos cave))
+            cave)))))
+
+(define neighboring-cavities
+  (lambda (pos cave)
+    (let ((size (matrix-size cave)))
+      (let ((n (car size)) (m (cdr size)))
+        (let ((i (car pos)) (j (cdr pos)))
+          (append (if (and (> i 0) (matrix-read cave (- i 1) j))
+                      (list (cons (- i 1) j))
+                      '())
+                  (if (and (< i (- n 1)) (matrix-read cave (+ i 1) j))
+                      (list (cons (+ i 1) j))
+                      '())
+                  (if (and (> j 0) (matrix-read cave i (- j 1)))
+                      (list (cons i (- j 1)))
+                      '())
+                  (if (and (< j (- m 1)) (matrix-read cave i (+ j 1)))
+                      (list (cons i (+ j 1)))
+                      '())))))))
+
+(define (maze n m)
+  (let ((mat (make-maze n m)))
+    (println wall " " (make-string m wall))
+    (for-each (lambda (row) (println wall row wall)) mat)
+    (println (make-string m wall) " " wall)))
+EOF
+
+    mkdir home
+    mkdir home/emscripten
+
+    cat <<EOF > home/emscripten/.gambcini.scm
+;; File: ".gambcini.scm"
+
+(print "% gsi\n") ;; pretend gsi was started from a UNIX prompt
+(force-output)
+EOF
+
+    cd ..
+
+  fi
+
+  cd ..
+}
+
+build_emscripten_gambit_interpreter()
+{
+  cd $GAMBIT_DIR/emscripten-gsi
+
+  echo "### building emscripten gambit interpreter"
+
+  ../gsc-boot -:=.. -c gsi.scm
+  ../gsc-boot -:=.. -link gsi.c
+
+#  echo emcc `../bin/gambc-cc FLAGS_OBJ` `../bin/gambc-cc DEFS_OBJ` -c -I ../include gsi.c gsi_.c
+#  emcc `../bin/gambc-cc FLAGS_OBJ` `../bin/gambc-cc DEFS_OBJ` -c -I ../include gsi.c gsi_.c
+#  emcc -g -O2 --save-bc gsi.bc -s ASM_JS=1 -s VERBOSE=1 -s WARN_ON_UNDEFINED_SYMBOLS=1 -s PRECISE_I32_MUL=1 -s EXPORTED_FUNCTIONS="['_setup', '_cleanup', '_idle', '_user_interrupt', '_heartbeat_interrupt']" --embed-file bench.scm --embed-file fib.scm --embed-file fact.scm --embed-file pi.scm --embed-file maze.scm --embed-file home/emscripten/.gambcini.scm -o gsi.js gsi.o gsi_.o ../lib/*.o
+
+  emcc `../bin/gambc-cc FLAGS_OBJ` `../bin/gambc-cc DEFS_OBJ` -D___LIBRARY -c -I ../include gsi.c gsi_.c
+  emcc $GAMBIT_CFLAGS -D___LIBRARY -g -O2 --save-bc gsi.bc -s SAFE_DYNCALLS=1 -s SAFE_HEAP=0 -s ASM_JS=1 -s VERBOSE=1 -s WARN_ON_UNDEFINED_SYMBOLS=1 -s PRECISE_I32_MUL=1 -s EXPORTED_FUNCTIONS="['_setup', '_cleanup', '_idle', '_user_interrupt', '_heartbeat_interrupt']" --embed-file bench.scm --embed-file fib.scm --embed-file fact.scm --embed-file pi.scm --embed-file maze.scm --embed-file home/emscripten/.gambcini.scm -o gsi.js gsi.o gsi_.o ../lib/*.o
+
+  # add the Scheme code execution driver
+
+  cat <<EOF >> gsi.js
+
+if (Module.schemeStart === void 0) {
+
+    function web_trampoline() {
+        _heartbeat_interrupt();
+        var wait = _idle();
+        if (wait < 0) {
+            _cleanup();
+        } else {
+            //console.log("wait=" + wait);
+            setTimeout(web_trampoline, Math.max(1, Math.round(1000*wait)));
+        }
+    };
+
+    function shell_trampoline() {
+        do {
+            _heartbeat_interrupt();
+        } while (_idle() >= 0);
+        _cleanup();
+    };
+
+    _setup();
+
+    if (ENVIRONMENT_IS_WEB) {
+        web_trampoline();
+    } else if (ENVIRONMENT_IS_SHELL || ENVIRONMENT_IS_NODE) {
+        shell_trampoline();
+    }
+}
+
+EOF
+
+  cd ../..
+}
+
+build_one()
+{
+  # build everything and run a benchmark:
+
+  get_gambit
+  build_host_gambit
+
+  get_emscripten_gambit_interpreter_sources
+  build_emscripten_gambit_runtime_lib
+  build_emscripten_gambit_interpreter
+
+  if [ "$JS1" != "" ] ; then
+    echo "### running the interpreter on a small benchmark using the JavaScript shell $JS1"
+    echo "(load \"fib\") (pp (time (fib 20))) ,q" | /usr/bin/time $JS1 $GAMBIT_DIR/emscripten-gsi/gsi.js
+  fi
+
+  if [ "$JS2" != "" ] ; then
+    echo "### running the interpreter on a small benchmark using the JavaScript shell $JS2"
+    echo "(load \"fib\") (pp (time (fib 20))) ,q" | /usr/bin/time $JS2 $GAMBIT_DIR/emscripten-gsi/gsi.js
+  fi
+
+  if [ "$JS3" != "" ] ; then
+    echo "### running the interpreter on a small benchmark using the JavaScript shell $JS3"
+    echo "(load \"fib\") (pp (time (fib 20))) ,q" | /usr/bin/time $JS3 $GAMBIT_DIR/emscripten-gsi/gsi.js
+  fi
+}
+
+build_with_emscripten_checkout()
+{
+  EMSCRIPTEN_DIR="`pwd`/emscripten-$1"
+
+  get_emscripten
+  checkout_emscripten $1
+  patch_emscripten
+
+  export EMCC_DEBUG=1
+
+  export PATH="$EMSCRIPTEN_DIR:$PATH"
+
+  GAMBIT_CFLAGS_COMMON="-g -fno-strict-aliasing -D___HEARTBEAT_USING_POLL_COUNTDOWN=20000 -D___CAN_IMPORT_SETJMP_DYNAMICALLY=1"
+
+
+  GAMBIT_CFLAGS="$GAMBIT_CFLAGS_COMMON -D___NOT_USE_LABEL_VALUES=1"
+
+  GAMBIT_DIR="gambit-mh-switch-$1"
+  GAMBIT_CONFIGURE_OPTIONS=""
+  build_one
+
+#  Don't build this variant.  Emscripten gives the error:
+#  AssertionError: Error in js optimizer:
+  GAMBIT_DIR="gambit-sh-switch-$1"
+  GAMBIT_CONFIGURE_OPTIONS="--enable-single-host"
+#  build_one
+
+
+  GAMBIT_CFLAGS="$GAMBIT_CFLAGS_COMMON"
+
+#  Don't build this variant.  It is about 2x slower than gambit-mh-switch.
+  GAMBIT_DIR="gambit-mh-indirectbr-$1"
+  GAMBIT_CONFIGURE_OPTIONS=""
+#  build_one
+
+#  Don't build this variant.  At run time the following error happens:
+#  gsi.js:6411: TypeError: Property '424' of object [object Array] is not a function
+  GAMBIT_DIR="gambit-sh-indirectbr-$1"
+  GAMBIT_CONFIGURE_OPTIONS="--enable-single-host"
+#  build_one
+}
+
+go()
+{
+  # build with emscripten of Jan 16 2014 (other versions may
+  # work, but use this version to be sure)
+
+  build_with_emscripten_checkout 3c4f29d187ce68f6e0b21a59eb8399a7c6e6eb16
+
+}
+
+go
