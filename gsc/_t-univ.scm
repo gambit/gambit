@@ -2741,6 +2741,7 @@ EOF
               (^call-prim
                (^global-prim-function (^prefix (univ-use-rtlib ctx 'tostr)))
                (^getreg 1))))
+            (^setreg 1 (^void))
             (^return (^getreg 0))))
 
         "\n"
@@ -2933,6 +2934,128 @@ EOF
          (compiler-internal-error
           "univ-rtlib-feature, unknown target")))))
 
+    ((ffi)
+     (case (target-name (ctx-target ctx))
+
+       ((js)
+        (^
+
+#<<EOF
+function Gambit_js2scm(obj) {
+  if (obj === void 0) {
+    return obj;
+  } else if (typeof obj === "boolean") {
+    return obj;
+  } else if (obj === null) {
+    return obj;
+  } else if (typeof obj === "number") {
+    if ((obj|0) === obj && obj>=-536870912 && obj<=536870911)
+      return obj
+    else
+      return new Gambit_Flonum(obj);
+  } else if (typeof obj === "function") {
+    return function () { return Gambit_scm2js_call(obj); };
+  } else if (typeof obj === "string") {
+    return new Gambit_String(Gambit_strtocodes(obj));
+  } else if (typeof obj === "object") {
+    if (obj instanceof Array) {
+      return obj.map(Gambit_js2scm);
+    } else {
+      throw "Gambit_js2scm error";
+    }
+  } else {
+    throw "Gambit_js2scm error";
+  }
+}
+
+function Gambit_scm2js(obj) {
+  if (obj === void 0) {
+    return obj;
+  } else if (typeof obj === "boolean") {
+    return obj;
+  } else if (obj === null) {
+    return obj;
+  } else if (typeof obj === "number") {
+    return obj
+  } else if (typeof obj === "function") {
+    return function () { return Gambit_js2scm_call(obj, arguments); };
+  } else if (typeof obj === "object") {
+    if (obj instanceof Array) {
+      return obj.map(Gambit_scm2js);
+    } else if (obj instanceof Gambit_String) {
+      return obj.toString();
+    } else if (obj instanceof Gambit_Flonum) {
+      return obj.val;
+    } else {
+      throw "Gambit_scm2js error";
+    }
+  } else {
+    throw "Gambit_scm2js error";
+  }
+}
+
+function Gambit_scm2js_call(fn) {
+
+  var dest = Gambit_r0;
+
+  if (Gambit_nargs > 0) {
+    Gambit_stack[++Gambit_sp] = Gambit_r1;
+    if (Gambit_nargs > 1) {
+      Gambit_stack[++Gambit_sp] = Gambit_r2;
+      if (Gambit_nargs > 2) {
+        Gambit_stack[++Gambit_sp] = Gambit_r3;
+      }
+    }
+  }
+
+  var args = Gambit_stack.slice(Gambit_sp+1-Gambit_nargs, Gambit_sp+1);
+
+  Gambit_sp -= Gambit_nargs;
+
+  Gambit_r1 = Gambit_js2scm(fn.apply(null, args.map(Gambit_scm2js)));
+
+  return dest;
+}
+
+function Gambit_js2scm_call(proc, args) {
+
+  var pc = proc;
+  var call_done = false;
+
+  Gambit_nargs = args.length;
+
+  for (var i=0; i<Gambit_nargs; i++) {
+    Gambit_stack[++Gambit_sp] = Gambit_js2scm(args[i]);
+  }
+
+  if (Gambit_nargs > 0) {
+    if (Gambit_nargs > 1) {
+      if (Gambit_nargs > 2) {
+        Gambit_r3 = Gambit_stack[Gambit_sp];
+        --Gambit_sp;
+      }
+      Gambit_r2 = Gambit_stack[Gambit_sp];
+      --Gambit_sp;
+    }
+    Gambit_r1 = Gambit_stack[Gambit_sp];
+    --Gambit_sp;
+  }
+
+  Gambit_r0 = function () { call_done = true; return false; };
+
+  while (!call_done) {
+    pc = pc();
+  }
+
+  return Gambit_scm2js(Gambit_r1);
+}
+
+EOF
+))
+
+       (else
+        (^))))
+
     (else
      (compiler-internal-error
       "univ-rtlib-feature, unknown runtime library function" feature))))
@@ -2952,6 +3075,12 @@ EOF
                 (set! changed? #t)
                 (let ((c (univ-rtlib-feature ctx feature)))
                   (set! code (^ code c "\n"))))))
+
+        ;;TODO: make inclusion of these features optional
+        (need-feature 'strtocodes)
+        (need-feature 'String)
+        (need-feature 'Flonum)
+        (need-feature 'ffi)
 
         (for-each need-feature
                   (resource-set->list (ctx-rtlib-features-used ctx)))
