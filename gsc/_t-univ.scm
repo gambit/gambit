@@ -2961,7 +2961,13 @@ function Gambit_js2scm(obj) {
     if (obj instanceof Array) {
       return obj.map(Gambit_js2scm);
     } else {
-      throw "Gambit_js2scm error";
+      var alist = null;
+      for (var key in obj) {
+        alist = new Gambit_Pair(new Gambit_Pair(Gambit_js2scm(key),
+                                                Gambit_js2scm(obj[key])),
+                                alist);
+      }
+      return alist;
     }
   } else {
     throw "Gambit_js2scm error";
@@ -2986,6 +2992,20 @@ function Gambit_scm2js(obj) {
       return obj.toString();
     } else if (obj instanceof Gambit_Flonum) {
       return obj.val;
+    } else if (obj instanceof Gambit_Pair) {
+      var jsobj = {};
+      var i = 0;
+      while (obj instanceof Gambit_Pair) {
+        var elem = obj.car;
+        if (elem instanceof Gambit_Pair) {
+          jsobj[Gambit_scm2js(elem.car)] = Gambit_scm2js(elem.cdr);
+        } else {
+          jsobj[i] = Gambit_scm2js(elem);
+        }
+        ++i;
+        obj = obj.cdr;
+      }
+      return jsobj;
     } else {
       throw "Gambit_scm2js error";
     }
@@ -3080,6 +3100,7 @@ EOF
         (need-feature 'strtocodes)
         (need-feature 'String)
         (need-feature 'Flonum)
+        (need-feature 'Pair)
         (need-feature 'ffi)
 
         (for-each need-feature
