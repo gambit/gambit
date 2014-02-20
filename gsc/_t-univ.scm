@@ -560,6 +560,18 @@
 (define-macro (^setglo name val)
   `(univ-emit-setglo ctx ,name ,val))
 
+(define-macro (^glo-var-ref sym)
+  `(univ-emit-glo-var-ref ctx ,sym))
+
+(define-macro (^glo-var-primitive-ref sym)
+  `(univ-emit-glo-var-primitive-ref ctx ,sym))
+
+(define-macro (^glo-var-set! sym val)
+  `(univ-emit-glo-var-set! ctx ,sym ,val))
+
+(define-macro (^glo-var-primitive-set! sym val)
+  `(univ-emit-glo-var-primitive-set! ctx ,sym ,val))
+
 (define-macro (^return expr)
   `(univ-emit-return ctx ,expr))
 
@@ -2180,6 +2192,32 @@
     (univ-glo-location ctx name)
     val)))
 
+(define (univ-glo-location-dynamic ctx sym)
+  (^prop-index
+   (gvm-state-glo-use ctx 'rd)
+   (^symbol-unbox sym)))
+
+(define (univ-glo-primitive-location-dynamic ctx sym)
+  (univ-glo-location-dynamic ctx sym))
+
+(define (univ-emit-glo-var-ref ctx sym)
+  (univ-glo-location-dynamic ctx sym))
+
+(define (univ-emit-glo-var-primitive-ref ctx sym)
+  (univ-glo-primitive-location-dynamic ctx sym))
+
+(define (univ-emit-glo-var-set! ctx sym val)
+  (^expr-statement
+   (^assign
+    (univ-glo-location-dynamic ctx sym)
+    val)))
+
+(define (univ-emit-glo-var-primitive-set! ctx sym val)
+  (^expr-statement
+   (^assign
+    (univ-glo-primitive-location-dynamic ctx sym)
+    val)))
+
 (define (univ-emit-getopnd ctx gvm-opnd)
 
   (cond ((reg? gvm-opnd)
@@ -2933,6 +2971,55 @@ EOF
         (else
          (compiler-internal-error
           "univ-rtlib-feature, unknown target")))))
+
+    ((make_glo_var)
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "make_glo_var"))
+      (list (cons (^local-var "sym") #f))
+      "\n"
+      '()
+      (^ ;;(^glo-var-set! (^local-var "sym") (^void))
+         ;;(^glo-var-primitive-set! (^local-var "sym") (^void))
+         (^return (^local-var "sym")))))
+
+    ((apply2)
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "apply2"))
+      '()
+      "\n"
+      '()
+      (^
+
+#<<EOF
+
+  var proc = Gambit_r1;
+  var args = Gambit_r2;
+
+  Gambit_nargs = 0;
+
+  while (args instanceof Gambit_Pair) {
+    Gambit_stack[++Gambit_sp] = args.car;
+    args = args.cdr;
+    ++Gambit_nargs;
+  }
+
+  if (Gambit_nargs > 0) {
+    if (Gambit_nargs > 1) {
+      if (Gambit_nargs > 2) {
+        Gambit_r3 = Gambit_stack[Gambit_sp];
+        --Gambit_sp;
+      }
+      Gambit_r2 = Gambit_stack[Gambit_sp];
+      --Gambit_sp;
+    }
+    Gambit_r1 = Gambit_stack[Gambit_sp];
+    --Gambit_sp;
+  }
+
+  return proc;
+
+EOF
+)))
 
     ((ffi)
      (case (target-name (ctx-target ctx))
@@ -7790,12 +7877,53 @@ tanh
 ;;TODO: ("##continuation-return-no-winding"(2)   #t ()    0    #f      extended)
 
 ;;TODO: ("##apply"                         (2)   #t ()    0    (#f)    extended)
+
+(univ-define-prim "##apply" #f
+
+  #f
+  #f
+
+  (lambda (ctx nb-args poll? safe? fs)
+    (univ-jump-inline ctx
+                      nb-args
+                      2
+                      2
+                      poll?
+                      safe?
+                      fs
+                      "apply")))
+
 ;;TODO: ("##call-with-current-continuation"1     #t ()    1113 (#f)    extended)
-;;TODO: ("##make-global-var"               (1)   #t ()    0    #f      extended)
-;;TODO: ("##global-var-ref"                (1)   #f ()    0    (#f)    extended)
-;;TODO: ("##global-var-primitive-ref"      (1)   #f ()    0    (#f)    extended)
-;;TODO: ("##global-var-set!"               (2)   #t ()    0    #f      extended)
-;;TODO: ("##global-var-primitive-set!"     (2)   #t ()    0    #f      extended)
+
+(univ-define-prim "##make-global-var" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return
+      (^call-prim
+       (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_glo_var)))
+       arg1)))))
+
+(univ-define-prim "##global-var-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^glo-var-ref arg1)))))
+
+(univ-define-prim "##global-var-primitive-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^glo-var-primitive-ref arg1)))))
+
+(univ-define-prim "##global-var-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^glo-var-set! arg1 arg2)
+        (return arg1)))))
+
+(univ-define-prim "##global-var-primitive-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^glo-var-primitive-set! arg1 arg2)
+        (return arg1)))))
 
 ;;TODO: ("##first-argument"                1     #f ()    0    (#f)    extended)
 ;;TODO: ("##check-heap-limit"              (0)   #t ()    0    (#f)    extended)
@@ -7920,13 +8048,13 @@ tanh
         (+ fs
            (ctx-stack-base-offset ctx))
         (lambda (ctx)
-          (univ-emit-return-poll
-           ctx
-           (^ (^prefix
-               (string-append name
-                              (number->string nb-args)))
-              "()")
-           poll?
-           #t)))))
+          (let ((rtlib-name
+                 (string->symbol
+                  (string-append name (number->string nb-args)))))
+            (univ-emit-return-poll
+             ctx
+             (^prefix (univ-use-rtlib ctx rtlib-name))
+             poll?
+             #t))))))
 
 ;;;============================================================================
