@@ -7839,12 +7839,17 @@ tanh
 ;;TODO: ("##type-super"                   (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-fields"                  (1)   #f ()    0    #f      extended)
 
-;; TODO: test ##symbol->string primitive
+;; TODO: test ##symbol->string primitive and ##string->symbol primitive
 
 (univ-define-prim "##symbol->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^string-box (^symtostr (^symbol-unbox arg1)))))))
+
+(univ-define-prim "##string->symbol" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^symbol-box (^tostr arg1))))))
 
 ;;TODO: ("##keyword->string"              (1)   #f ()    0    string  extended)
 
