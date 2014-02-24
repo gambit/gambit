@@ -1,0 +1,282 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define (f00)
+  #f)
+
+(define (f10 w)
+  (println w))
+
+(define (f20 w x)
+  (println w)
+  (println x))
+
+(define (f30 w x y)
+  (println w)
+  (println x)
+  (println y))
+
+(define (f40 w x y z)
+  (println w)
+  (println x)
+  (println y)
+  (println z))
+
+(define (f01 #!optional (a 11))
+  (println a))
+
+(define (f11 w #!optional (a 11))
+  (println w)
+  (println a))
+
+(define (f21 w x #!optional (a 11))
+  (println w)
+  (println x)
+  (println a))
+
+(define (f31 w x y #!optional (a 11))
+  (println w)
+  (println x)
+  (println y)
+  (println a))
+
+(define (f41 w x y z #!optional (a 11))
+  (println w)
+  (println x)
+  (println y)
+  (println z)
+  (println a))
+
+(define (f02 #!optional (a 11) (b 22))
+  (println a)
+  (println b))
+
+(define (f12 w #!optional (a 11) (b 22))
+  (println w)
+  (println a)
+  (println b))
+
+(define (f22 w x #!optional (a 11) (b 22))
+  (println w)
+  (println x)
+  (println a)
+  (println b))
+
+(define (f32 w x y #!optional (a 11) (b 22))
+  (println w)
+  (println x)
+  (println y)
+  (println a)
+  (println b))
+
+(define (f42 w x y z #!optional (a 11) (b 22))
+  (println w)
+  (println x)
+  (println y)
+  (println z)
+  (println a)
+  (println b))
+
+(define (f03 #!optional (a 11) (b 22) (c 33))
+  (println a)
+  (println b)
+  (println c))
+
+(define (f13 w #!optional (a 11) (b 22) (c 33))
+  (println w)
+  (println a)
+  (println b)
+  (println c))
+
+(define (f23 w x #!optional (a 11) (b 22) (c 33))
+  (println w)
+  (println x)
+  (println a)
+  (println b)
+  (println c))
+
+(define (f33 w x y #!optional (a 11) (b 22) (c 33))
+  (println w)
+  (println x)
+  (println y)
+  (println a)
+  (println b)
+  (println c))
+
+(define (f43 w x y z #!optional (a 11) (b 22) (c 33))
+  (println w)
+  (println x)
+  (println y)
+  (println z)
+  (println a)
+  (println b)
+  (println c))
+
+(define (f04 #!optional (a 11) (b 22) (c 33) (d 44))
+  (println a)
+  (println b)
+  (println c)
+  (println d))
+
+(define (f14 w #!optional (a 11) (b 22) (c 33) (d 44))
+  (println w)
+  (println a)
+  (println b)
+  (println c)
+  (println d))
+
+(define (f24 w x #!optional (a 11) (b 22) (c 33) (d 44))
+  (println w)
+  (println x)
+  (println a)
+  (println b)
+  (println c)
+  (println d))
+
+(define (f34 w x y #!optional (a 11) (b 22) (c 33) (d 44))
+  (println w)
+  (println x)
+  (println y)
+  (println a)
+  (println b)
+  (println c)
+  (println d))
+
+(define (f44 w x y z #!optional (a 11) (b 22) (c 33) (d 44))
+  (println w)
+  (println x)
+  (println y)
+  (println z)
+  (println a)
+  (println b)
+  (println c)
+  (println d))
+
+
+(println "f00")
+(f00)
+
+(println "f10")
+(f10 1)
+
+(println "f20")
+(f20 1 2)
+
+(println "f30")
+(f30 1 2 3)
+
+(println "f40")
+(f40 1 2 3 4)
+
+
+(println "f01")
+(f01)
+(f01 1)
+
+(println "f11")
+(f11 1)
+(f11 1 2)
+
+(println "f21")
+(f21 1 2)
+(f21 1 2 3)
+
+(println "f31")
+(f31 1 2 3)
+(f31 1 2 3 4)
+
+(println "f41")
+(f41 1 2 3 4)
+(f41 1 2 3 4 5)
+
+
+(println "f02")
+(f02)
+(f02 1)
+(f02 1 2)
+
+(println "f12")
+(f12 1)
+(f12 1 2)
+(f12 1 2 3)
+
+(println "f22")
+(f22 1 2)
+(f22 1 2 3)
+(f22 1 2 3 4)
+
+(println "f32")
+(f32 1 2 3)
+(f32 1 2 3 4)
+(f32 1 2 3 4 5)
+
+(println "f42")
+(f42 1 2 3 4)
+(f42 1 2 3 4 5)
+(f42 1 2 3 4 5 6)
+
+
+(println "f03")
+(f03)
+(f03 1)
+(f03 1 2)
+(f03 1 2 3)
+
+(println "f13")
+(f13 1)
+(f13 1 2)
+(f13 1 2 3)
+(f13 1 2 3 4)
+
+(println "f23")
+(f23 1 2)
+(f23 1 2 3)
+(f23 1 2 3 4)
+(f23 1 2 3 4 5)
+
+(println "f33")
+(f33 1 2 3)
+(f33 1 2 3 4)
+(f33 1 2 3 4 5)
+(f33 1 2 3 4 5 6)
+
+(println "f43")
+(f43 1 2 3 4)
+(f43 1 2 3 4 5)
+(f43 1 2 3 4 5 6)
+(f43 1 2 3 4 5 6 7)
+
+
+(println "f04")
+(f04)
+(f04 1)
+(f04 1 2)
+(f04 1 2 3)
+(f04 1 2 3 4)
+
+(println "f14")
+(f14 1)
+(f14 1 2)
+(f14 1 2 3)
+(f14 1 2 3 4)
+(f14 1 2 3 4 5)
+
+(println "f24")
+(f24 1 2)
+(f24 1 2 3)
+(f24 1 2 3 4)
+(f24 1 2 3 4 5)
+(f24 1 2 3 4 5 6)
+
+(println "f34")
+(f34 1 2 3)
+(f34 1 2 3 4)
+(f34 1 2 3 4 5)
+(f34 1 2 3 4 5 6)
+(f34 1 2 3 4 5 6 7)
+
+(println "f44")
+(f44 1 2 3 4)
+(f44 1 2 3 4 5)
+(f44 1 2 3 4 5 6)
+(f44 1 2 3 4 5 6 7)
+(f44 1 2 3 4 5 6 7 8)

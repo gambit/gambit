@@ -1586,20 +1586,7 @@
                      (^ (case (label-type gvm-instr)
 
                           ((entry)
-                           (^if (if (label-entry-rest? gvm-instr)
-                                    (^not (^call-prim
-                                           (^global-prim-function
-                                            (^prefix (univ-use-rtlib ctx 'build_rest)))
-                                           (- (label-entry-nb-parms gvm-instr) 1)))
-                                    (^!= (gvm-state-nargs-use ctx 'rd)
-                                         (label-entry-nb-parms gvm-instr)))
-                                (univ-emit-return-call-prim
-                                 ctx
-                                 (^global-prim-function
-                                  (^prefix (univ-use-rtlib ctx 'wrong_nargs)))
-                                 (if (label-entry-closed? gvm-instr)
-                                     (^getreg (+ univ-nb-arg-regs 1))
-                                     id))))
+                           (univ-label-entry ctx gvm-instr id))
 
                           (else
                            (^)))
@@ -1912,6 +1899,88 @@
 
           (loop (cons (dump-proc (queue-get! proc-left))
                       rev-res))))))
+
+(define (univ-label-entry ctx gvm-instr id)
+  (let* ((nb-parms (label-entry-nb-parms gvm-instr))
+         (opts (label-entry-opts gvm-instr))
+         (keys (label-entry-keys gvm-instr))
+         (rest? (label-entry-rest? gvm-instr))
+         (closed? (label-entry-closed? gvm-instr))
+         (nb-parms-except-rest
+          (- nb-parms (if rest? 1 0)))
+         (nb-keys
+          (if keys (length keys) 0))
+         (nb-req-and-opt
+          (- nb-parms-except-rest nb-keys))
+         (nb-opts
+          (length opts))
+         (nb-req
+          (- nb-req-and-opt nb-opts))
+         (defaults
+           (append opts (map cdr (or keys '())))))
+
+    (define (dispatch-on-nb-args nb-args)
+      (if (> nb-args (- nb-req-and-opt (if rest? 0 1)))
+
+          (if keys
+              (compiler-internal-error
+               "univ-label-entry, keyword parameters not supported")
+              (^if (if rest?
+                       (^not (^call-prim
+                              (^global-prim-function
+                               (^prefix (univ-use-rtlib ctx 'build_rest)))
+                              nb-parms-except-rest))
+                       (^!= (gvm-state-nargs-use ctx 'rd)
+                            nb-parms-except-rest))
+                   (univ-emit-return-call-prim
+                    ctx
+                    (^global-prim-function
+                     (^prefix (univ-use-rtlib ctx 'wrong_nargs)))
+                    (if closed?
+                        (^getreg (+ univ-nb-arg-regs 1))
+                        id))))
+
+          (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs)))
+                (nb-stacked* (max 0 (- nb-parms univ-nb-arg-regs))))
+
+            (define (setup-parameter i)
+              (if (<= i nb-parms)
+                  (let* ((rest (setup-parameter (+ i 1)))
+                         (src-reg (- i nb-stacked))
+                         (src (cond ((<= i nb-args)
+                                     (^getreg src-reg))
+                                    ((and rest? (= i nb-parms))
+                                     (^obj '()))
+                                    (else
+                                     (^obj
+                                      (obj-val (list-ref defaults (- i nb-req 1))))))))
+                    (if (<= i nb-stacked*)
+                        (^inc-by (begin
+                                   (gvm-state-sp-use ctx 'rd)
+                                   (gvm-state-sp-use ctx 'wr))
+                                 1
+                                 (lambda (x)
+                                   (^ (^expr-statement
+                                       (^assign
+                                        (^array-index
+                                         (gvm-state-stack-use ctx 'rd)
+                                         x)
+                                        src))
+                                      rest)))
+                        (if (and (<= i nb-args) (= nb-stacked nb-stacked*))
+                            rest
+                            (let ((dst-reg (- i nb-stacked*)))
+                              (^ (^setreg dst-reg src)
+                                 rest)))))
+                  (^)))
+
+            (let ((x (setup-parameter (+ nb-stacked 1))))
+              (^if (^= (gvm-state-nargs-use ctx 'rd)
+                       nb-args)
+                   x
+                   (dispatch-on-nb-args (+ nb-args 1)))))))
+
+    (dispatch-on-nb-args nb-req)))
 
 (define closure-count 0)
 
