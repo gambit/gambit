@@ -2801,6 +2801,9 @@ EOF
                 (^if (^eq? (^local-var "obj")
                            (^obj '()))
                      (^return (^str ""))
+                     (^if (^eq? (^local-var "obj")
+                                (^void))
+                          (^return (^str "#!void"))
                      (^if (^pair? (^local-var "obj"))
                           (^return (^concat
                                     (^call-prim
@@ -2818,7 +2821,7 @@ EOF
                                          (^return (^tostr (^local-var "obj")))))))))
 ;;)
 ;;)
-)
+))
 
     ((println)
      (^prim-function-declaration
