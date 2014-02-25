@@ -245,7 +245,7 @@
 
   (define (satisfied? feature-requirement)
     (cond ((##symbol? feature-requirement)
-           (if (##member feature-requirement ##cond-expand-features)
+           (if (##member feature-requirement (##cond-expand-features))
                #t
                #f))
           ((##pair? feature-requirement)
@@ -317,11 +317,11 @@
 ;;;     srfi-91 SRFI-91
      ))
 
-(define ##cond-expand-features #f)
-(set! ##cond-expand-features (generate-cond-expand-features))
+(define ##cond-expand-features
+  (##make-parameter (generate-cond-expand-features)))
 
 (define-runtime-macro (define-cond-expand-feature feature)
-  (set! ##cond-expand-features (##cons feature ##cond-expand-features))
+  (##cond-expand-features (##cons feature (##cond-expand-features)))
   `(begin))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
