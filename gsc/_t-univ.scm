@@ -47,6 +47,9 @@
     (else
      'host)))
 
+(define (univ-structure-representation ctx)
+  'class)
+
 (define (univ-string-representation ctx)
   'class)
 
@@ -763,6 +766,21 @@
 
 (define-macro (^vector-set! val1 val2 val3)
   `(univ-emit-vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^structure-box val)
+  `(univ-emit-structure-box ctx ,val))
+
+(define-macro (^structure-unbox structure)
+  `(univ-emit-structure-unbox ctx ,structure))
+
+(define-macro (^structure? val)
+  `(univ-emit-structure? ctx ,val))
+
+(define-macro (^structure-ref val1 val2)
+  `(univ-emit-structure-ref ctx ,val1 ,val2))
+
+(define-macro (^structure-set! val1 val2 val3)
+  `(univ-emit-structure-set! ctx ,val1 ,val2 ,val3))
 
 (define-macro (^str val)
   `(univ-emit-str ctx ,val))
@@ -2476,16 +2494,27 @@
                      (vector->list obj)))))))
 
           ((structure-object? obj)
-(pp obj)
            (univ-obj-use
             ctx
             obj
             force-var?
             (lambda ()
-              (^vector-box
-               (^array-literal
-                (map (lambda (x) (emit-obj x #f))
-                     (vector->list (##vector-copy obj))))))))
+              (let* ((slots
+                      (##vector-copy obj));;;;;;;;replace call of ##vector-copy
+                     (cyclic?
+                      (eq? (vector-ref slots 0) obj)))
+                ;; the root type descriptor is cyclic, handle this specially
+                (if cyclic?
+                    (vector-set! slots 0 #f))
+                (let ((expr
+                       (^structure-box
+                        (^array-literal
+                         (map (lambda (x) (emit-obj x #f))
+                              (vector->list slots))))))
+                  (if cyclic?
+                      (^call-prim
+                       (^member (^parens expr) "cyclic"))
+                      expr))))))
 
           (else
            (^ "UNIMPLEMENTED_OBJECT("
@@ -2773,6 +2802,17 @@ EOF
       (^prefix "Vector")
       '((elems #f))
       '()))
+
+    ((Structure)
+     (^class-declaration
+      (^prefix "Structure")
+      '((slots #f))
+      (list
+       (list 'cyclic
+             '()
+             (^ (^expr-statement
+                 (^assign (^array-index (^this-member "slots") 0) (^this)))
+                (^return (^this)))))))
 
     ((Symbol)
      (^class-declaration
@@ -6330,6 +6370,43 @@ tanh
   (^expr-statement
    (^assign (^array-index (^vector-unbox expr1) expr2) expr3)))
 
+(define (univ-emit-structure-box ctx expr)
+  (case (univ-structure-representation ctx)
+
+    ((class)
+     (^new (^prefix (univ-use-rtlib ctx 'Structure)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-structure-box, host representation not implemented"))))
+
+(define (univ-emit-structure-unbox ctx expr)
+  (case (univ-structure-representation ctx)
+
+    ((class)
+     (^member expr "slots"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-structure-unbox, host representation not implemented"))))
+
+(define (univ-emit-structure? ctx expr)
+  (case (univ-structure-representation ctx)
+
+    ((class)
+     (^instanceof (^prefix (univ-use-rtlib ctx 'Structure)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-structure?, host representation not implemented"))))
+
+(define (univ-emit-structure-ref ctx expr1 expr2)
+  (^array-index (^structure-unbox expr1) expr2))
+
+(define (univ-emit-structure-set! ctx expr1 expr2 expr3)
+  (^expr-statement
+   (^assign (^array-index (^structure-unbox expr1) expr2) expr3)))
+
 (define (univ-emit-str ctx val)
   ;; TODO: generate correct escapes for the target language
   (^ "'" val "'"))
@@ -7030,7 +7107,11 @@ tanh
 
 ;;TODO: ("##ratnum?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##cpxnum?"                  (1)   #f ()    0    boolean extended)
-;;TODO: ("##structure?"               (1)   #f ()    0    boolean extended)
+
+(univ-define-prim-bool "##structure?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^structure? arg1)))))
 
 ;; TODO: test box? primitive
 
@@ -8040,16 +8121,40 @@ tanh
 ;;TODO: ("##f64vector-shrink!"            (2)   #t ()    0    #f      extended)
 
 ;;TODO: ("##structure-direct-instance-of?"(2)   #f ()    0    boolean extended)
+
+(univ-define-prim-bool "##structure-direct-instance-of?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^&& (^structure? arg1)
+                  (^eq? (^structure-ref (^structure-ref arg1 0) 1) arg2))))))
+
 ;;TODO: ("##structure-instance-of?"       (2)   #f ()    0    boolean extended)
 ;;TODO: ("##structure-type"               (1)   #f ()    0    (#f)    extended)
 ;;TODO: ("##structure-type-set!"          (2)   #t ()    0    (#f)    extended)
-;;TODO: ("##structure"                    1     #f ()    0    (#f)    extended)
+
+(univ-define-prim "##structure" #f
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return (^structure-box (^array-literal args))))))
+
 ;;TODO: ("##structure-ref"                (4)   #f ()    0    (#f)    extended)
 ;;TODO: ("##structure-set!"               (5)   #t ()    0    (#f)    extended)
 ;;TODO: ("##direct-structure-ref"         (4)   #f ()    0    (#f)    extended)
 ;;TODO: ("##direct-structure-set!"        (5)   #t ()    0    (#f)    extended)
-;;TODO: ("##unchecked-structure-ref"      (4)   #f ()    0    (#f)    extended)
-;;TODO: ("##unchecked-structure-set!"     (5)   #t ()    0    (#f)    extended)
+
+(univ-define-prim "##unchecked-structure-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     (return (^structure-ref arg1
+                             (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##unchecked-structure-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4 arg5)
+     (^ (^structure-set! arg1
+                         (^fixnum-unbox arg2)
+                         arg3)
+        (return arg1)))))
 
 ;;TODO: ("##type-id"                      (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-name"                    (1)   #f ()    0    #f      extended)
