@@ -78,218 +78,44 @@
 ;; System procedure classes.
 
 (##define-macro (define-prim form . exprs)
+  (let* ((name
+          (if (symbol? form)
+              form
+              (car form)))
+         (val
+          (if (symbol? form)
 
-  (define inlinable-procs '(
+              (if (and (pair? exprs) (null? (cdr exprs)))
+                  (car exprs)
+                  (error "Incorrect define-prim"))
 
-##type ##type-cast ##subtype ##subtype-set!
-##not ##boolean? ##null? ##unbound? ##eq? ##eof-object?
-##fixnum? ##flonum? ##special? ##pair? ##pair-mutable? ##subtyped? ##subtyped-mutable?
-##subtyped.vector? ##subtyped.symbol? ##subtyped.flonum? ##subtyped.bignum?
-##procedure? ##promise? ##vector? ##symbol? ##keyword? ##ratnum? ##cpxnum?
-##string? ##structure? ##values? ##bignum?
-##char? ;;;  ##closure? ##subprocedure?
+              (let* ((pi
+                      (c#target.prim-info name))
+                     (inlinable?
+                      (and pi
+                           (c#proc-obj-inline pi)
+                           (let loop ((lst (cdr form)))
+                             (if (pair? lst)
+                                 (if (memq (car lst) '(#!optional #!key #!rest))
+                                     #f
+                                     (loop (cdr lst)))
+                                 (null? lst))))))
 
-##number? ##complex?
+                (if inlinable?
+                    `(lambda ,(cdr form)
+                       ,form)
+                    (if (null? exprs)
+                        (error "define-prim can't inline" name)
+                        `(lambda ,(cdr form)
+                           ,@exprs)))))))
 
-;;; ##fixnum.max ##fixnum.min
-;;; ##fixnum.wrap+ ##fixnum.+
-##fixnum.+?
-;;; ##fixnum.wrap* ##fixnum.*
-##fixnum.*?
-;;; ##fixnum.wrap- ##fixnum.- ##fixnum.-?
-##fixnum.wrapquotient ##fixnum.quotient
-##fixnum.remainder ##fixnum.modulo
-;;; ##fixnum.bitwise-ior ##fixnum.bitwise-xor
-;;; ##fixnum.bitwise-and ##fixnum.bitwise-not
-##fixnum.wraparithmetic-shift ##fixnum.arithmetic-shift
-##fixnum.arithmetic-shift?
-##fixnum.wraparithmetic-shift-left ##fixnum.arithmetic-shift-left
-##fixnum.arithmetic-shift-left?
-##fixnum.arithmetic-shift-right
-##fixnum.arithmetic-shift-right?
-##fixnum.wraplogical-shift-right
-##fixnum.wraplogical-shift-right?
-##fixnum.wrapabs ##fixnum.abs ##fixnum.abs?
-##fixnum.zero? ##fixnum.positive? ##fixnum.negative?
-##fixnum.odd? ##fixnum.even?
-;;; ##fixnum.= ##fixnum.< ##fixnum.> ##fixnum.<= ##fixnum.>=
-##fixnum.->char ##fixnum.<-char
-
-##flonum.->fixnum ##flonum.<-fixnum
-;;; ##flonum.max ##flonum.min
-;;; ##flonum.+ ##flonum.- ##flonum.*  ##flonum./
-##flonum.abs
-##flonum.floor ##flonum.ceiling ##flonum.truncate ##flonum.round
-##flonum.exp ##flonum.log
-##flonum.sin ##flonum.cos ##flonum.tan
-##flonum.asin ##flonum.acos
-;;; ##flonum.atan
-##flonum.expt ##flonum.sqrt
-##flonum.copysign
-##flonum.integer? ##flonum.zero? ##flonum.positive? ##flonum.negative?
-##flonum.odd? ##flonum.even?
-##flonum.finite? ##flonum.infinite? ##flonum.nan?
-##flonum.<-fixnum-exact?
-;;; ##flonum.= ##flonum.< ##flonum.> ##flonum.<= ##flonum.>=
-
-##fx->char ##fx<-char;;deprecated
-##fl->fx ##fl<-fx;;deprecated
-##fl<-fx-exact?;;deprecated
-
-##integer->char ##char->integer
-
-;;; ##fxmax ##fxmin
-;;; ##fxwrap+ ##fx+
-##fx+?
-;;; ##fxwrap* ##fx*
-##fx*?
-;;; ##fxwrap- ##fx- ##fx-?
-##fxwrapquotient ##fxquotient
-##fxremainder ##fxmodulo
-;;; ##fxnot ##fxand
-;;; ##fxior ##fxxor
-##fxif ##fxbit-count ##fxlength ##fxfirst-bit-set ##fxbit-set?
-##fxwraparithmetic-shift ##fxarithmetic-shift
-##fxarithmetic-shift?
-##fxwraparithmetic-shift-left ##fxarithmetic-shift-left
-##fxarithmetic-shift-left?
-##fxarithmetic-shift-right
-##fxarithmetic-shift-right?
-##fxwraplogical-shift-right
-##fxwraplogical-shift-right?
-##fxwrapabs ##fxabs ##fxabs?
-##fxwrapsquare ##fxsquare ##fxsquare?
-##fxzero? ##fxpositive? ##fxnegative?
-##fxodd? ##fxeven?
-;;; ##fx= ##fx< ##fx> ##fx<= ##fx>=
-##fixnum->char ##char->fixnum;;deprecated
-
-##flonum->fixnum ##fixnum->flonum ##fixnum->flonum-exact?
-;;; ##flmax ##flmin
-;;; ##fl+ ##fl- ##fl*  ##fl/
-##flabs
-##flfloor ##flceiling ##fltruncate ##flround
-##flscalbn ##flilogb
-##flexp ##flexpm1 ##fllog ##fllog1p
-##flsin ##flcos ##fltan ##flasin ##flacos ;;; ##flatan
-##flsinh ##flcosh ##fltanh ##flasinh ##flacosh ##flatanh
-##flexpt ##flsqrt ##flsquare
-##flcopysign
-##flinteger? ##flzero? ##flpositive? ##flnegative?
-##flodd? ##fleven?
-##flfinite? ##flinfinite? ##flnan?
-;;; ##fl= ##fl< ##fl> ##fl<= ##fl>=
-
-
-
-##char=? ##char<? ##char>? ##char<=? ##char>=?
-##char-alphabetic? ##char-numeric? ##char-whitespace?
-##char-upper-case? ##char-lower-case? ##char-upcase ##char-downcase
-##cons ##set-car! ##set-cdr! ##car ##cdr
-##caar ##cadr ##cdar ##cddr
-##caaar ##caadr ##cadar ##caddr ##cdaar ##cdadr ##cddar ##cdddr
-##caaaar ##caaadr ##caadar ##caaddr ##cadaar ##cadadr ##caddar ##cadddr
-##cdaaar ##cdaadr ##cdadar ##cdaddr ##cddaar ##cddadr ##cdddar ##cddddr
-;;; ##list
-##box? ##box ##unbox ##set-box!
-;;; ##vector
-##vector-length ##vector-ref ##vector-set! ##vector-shrink!
-;;; ##string
-##string-length ##string-ref ##string-set! ##string-shrink!
-##s8vector? ;;; ##s8vector
-##s8vector-length ##s8vector-ref ##s8vector-set! ##s8vector-shrink!
-##u8vector? ;;; ##u8vector
-##u8vector-length ##u8vector-ref ##u8vector-set! ##u8vector-shrink!
-##s16vector? ;;; ##s16vector
-##s16vector-length ##s16vector-ref ##s16vector-set! ##s16vector-shrink!
-##u16vector? ;;; ##u16vector
-##u16vector-length ##u16vector-ref ##u16vector-set! ##u16vector-shrink!
-##s32vector? ;;; ##s32vector
-##s32vector-length ##s32vector-ref ##s32vector-set! ##s32vector-shrink!
-##u32vector? ;;; ##u32vector
-##u32vector-length ##u32vector-ref ##u32vector-set! ##u32vector-shrink!
-##s64vector? ;;; ##s64vector
-##s64vector-length ##s64vector-ref ##s64vector-set! ##s64vector-shrink!
-##u64vector? ;;; ##u64vector
-##u64vector-length ##u64vector-ref ##u64vector-set! ##u64vector-shrink!
-##f32vector? ;;; ##f32vector
-##f32vector-length ##f32vector-ref ##f32vector-set! ##f32vector-shrink!
-##f64vector? ;;; ##f64vector
-##f64vector-length ##f64vector-ref ##f64vector-set! ##f64vector-shrink!
-;;; ##symbol->string ##keyword->string
-##closure-length ##closure-code ##closure-ref ##closure-set!
-;;; ##subprocedure-id ##subprocedure-parent
-;;; ##subprocedure-parent-info ##subprocedure-parent-name
-##make-promise ##force ##void
-
-##unchecked-structure-ref ##unchecked-structure-set!
-
-##will? ##make-will ##will-testator
-##mem-allocated? ##gc-hash-table?
-##gc-hash-table-ref ##gc-hash-table-set! ##gc-hash-table-rehash!
-
-##global-var-ref ##global-var-primitive-ref
-##global-var-set! ##global-var-primitive-set!
-
-##bignum.negative?
-##bignum.adigit-length
-##bignum.adigit-inc!
-##bignum.adigit-dec!
-##bignum.adigit-add!
-##bignum.adigit-sub!
-##bignum.mdigit-length
-##bignum.mdigit-ref
-##bignum.mdigit-set!
-##bignum.mdigit-mul!
-##bignum.mdigit-div!
-##bignum.mdigit-quotient
-##bignum.mdigit-remainder
-##bignum.mdigit-test?
-
-##bignum.adigit-ones?
-##bignum.adigit-zero?
-##bignum.adigit-negative?
-##bignum.adigit-=
-##bignum.adigit-<
-##bignum->fixnum
-##fixnum->bignum
-##bignum.adigit-shrink!
-##bignum.adigit-copy!
-##bignum.adigit-cat!
-##bignum.adigit-bitwise-and!
-##bignum.adigit-bitwise-ior!
-##bignum.adigit-bitwise-xor!
-##bignum.adigit-bitwise-not!
-
-##bignum.fdigit-length
-##bignum.fdigit-ref
-##bignum.fdigit-set!
-
-))
-
-  (let ((name
-         (if (symbol? form)
-           form
-           (car form))))
-    (let ((val
-           (if (symbol? form)
-             (if (and (pair? exprs) (null? (cdr exprs)))
-               (car exprs)
-               (error "Incorrect define-prim"))
-             (if (memq name inlinable-procs)
-               `(lambda ,(cdr form)
-                  ,form)
-               (if (null? exprs)
-                 (error "define-prim can't inline" name)
-                 `(lambda ,(cdr form)
-                    ,@exprs))))))
-      `(define ,name
-         (let ()
-           (##declare
-            (not inline)
-            (standard-bindings)
-            (extended-bindings))
-           ,val)))))
+    `(define ,name
+       (let ()
+         (##declare
+           (not inline)
+           (standard-bindings)
+           (extended-bindings))
+         ,val))))
 
 ;;;----------------------------------------------------------------------------
 
