@@ -498,6 +498,22 @@
 
 ;;;----------------------------------------------------------------------------
 
+(##define-macro (macro-case-target . clauses)
+  (let ((target (if (and (pair? ##compilation-options)
+                         (pair? (car ##compilation-options)))
+                    (let ((t (assq 'target ##compilation-options)))
+                      (if t (cadr t) 'c))
+                    'c)))
+    (let loop ((clauses clauses))
+      (if (pair? clauses)
+          (let* ((clause (car clauses))
+                 (cases (car clause)))
+            (if (or (eq? cases 'else)
+                    (memq target cases))
+                `(begin ,@(cdr clause))
+                (loop (cdr clauses))))
+          `(begin)))))
+
 (##define-macro (macro-if-forces forces noforces)
   (if ((if (and (pair? ##compilation-options)
                 (pair? (car ##compilation-options)))

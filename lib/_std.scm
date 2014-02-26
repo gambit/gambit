@@ -29,6 +29,10 @@
 
 ;; Definition of vector-like data types (i.e. string, vector, s8vector, ...).
 
+(macro-case-target
+ ((c)
+  (c-declare "#include \"os.h\"")))
+
 (##define-macro (define-prim-vector-procedures
                   name
                   default-elem-value
@@ -338,30 +342,141 @@
        (define-prim (,vect-append . lst)
          (,##append-vects lst #t))
 
-       #;
-       (define-prim (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
-         ;; Copy direction must be selected in case src-vect and
-         ;; dst-vect are the same object.
-         (if (##fx< src-start dst-start)
-             (let loop1 ((i (##fx- src-end 1))
-                         (j (##fx-
-                             (##fx+ dst-start
-                                    (##fx- src-end src-start))
-                             1)))
-               (if (##fx< i src-start)
-                   dst-vect
-                   (begin
-                     (,##vect-set! dst-vect j (,##vect-ref src-vect i))
-                     (loop1 (##fx- i 1)
-                            (##fx- j 1)))))
-             (let loop2 ((i src-start)
-                         (j dst-start))
-               (if (##fx< i src-end)
-                   (begin
-                     (,##vect-set! dst-vect j (,##vect-ref src-vect i))
-                     (loop2 (##fx+ i 1)
-                            (##fx+ j 1)))
-                   dst-vect))))
+       (macro-case-target
+
+        ((c)
+         (define-prim ,##subvect-move!
+           (c-lambda (scheme-object  ;; src-vect
+                      scheme-object  ;; src-start
+                      scheme-object  ;; src-end
+                      scheme-object  ;; dst-vect
+                      scheme-object) ;; dst-start
+                     scheme-object
+                     ,(string-append
+                       (case ##subvect-move!
+                         ((##subvector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FIELD(___arg1,___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FIELD(___arg4,___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * ___WS;
+end-of-code
+)
+                         ((##substring-move!)
+#<<end-of-code
+  void *src =
+        ___CAST(void*,
+                ___CS_SELECT(&___FETCH_U8(___BODY(___arg1),___INT(___arg2)),
+                             &___FETCH_U16(___BODY(___arg1),___INT(___arg2)),
+                             &___FETCH_U32(___BODY(___arg1),___INT(___arg2))));
+  void *dst =
+        ___CAST(void*,
+                ___CS_SELECT(&___FETCH_U8(___BODY(___arg4),___INT(___arg5)),
+                             &___FETCH_U16(___BODY(___arg4),___INT(___arg5)),
+                             &___FETCH_U32(___BODY(___arg4),___INT(___arg5))));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * ___CS;
+end-of-code
+)
+                         ((##subs8vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FETCH_S8(___BODY(___arg1),___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FETCH_S8(___BODY(___arg4),___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S8);
+end-of-code
+)
+                         ((##subu8vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FETCH_U8(___BODY(___arg1),___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FETCH_U8(___BODY(___arg4),___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U8);
+end-of-code
+)
+                         ((##subs16vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FETCH_S16(___BODY(___arg1),___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FETCH_S16(___BODY(___arg4),___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S16);
+end-of-code
+)
+                         ((##subu16vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FETCH_U16(___BODY(___arg1),___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FETCH_U16(___BODY(___arg4),___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U16);
+end-of-code
+)
+                         ((##subs32vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FETCH_S32(___BODY(___arg1),___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FETCH_S32(___BODY(___arg4),___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S32);
+end-of-code
+)
+                         ((##subu32vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FETCH_U32(___BODY(___arg1),___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FETCH_U32(___BODY(___arg4),___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U32);
+end-of-code
+)
+                         ((##subs64vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FETCH_S64(___BODY(___arg1),___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FETCH_S64(___BODY(___arg4),___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S64);
+end-of-code
+)
+                         ((##subu64vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FETCH_U64(___BODY(___arg1),___INT(___arg2)));
+  void *dst = ___CAST(void*,&___FETCH_U64(___BODY(___arg4),___INT(___arg5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U64);
+end-of-code
+)
+                         ((##subf32vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,___CAST(___F32*,___BODY(___arg1))+___INT(___arg2));
+  void *dst = ___CAST(void*,___CAST(___F32*,___BODY(___arg4))+___INT(___arg5));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F32);
+end-of-code
+)
+                         ((##subf64vector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,___CAST(___F64*,___BODY(___arg1))+___INT(___arg2));
+  void *dst = ___CAST(void*,___CAST(___F64*,___BODY(___arg4))+___INT(___arg5));
+  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F64);
+end-of-code
+))
+
+#<<end-of-code
+  memmove (dst, src, len);
+  ___result = ___arg4;
+end-of-code
+))))
+
+        (else
+         (define-prim (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
+           ;; Copy direction must be selected in case src-vect and
+           ;; dst-vect are the same object.
+           (if (##fx< src-start dst-start)
+               (let loop1 ((i (##fx- src-end 1))
+                           (j (##fx-
+                               (##fx+ dst-start
+                                      (##fx- src-end src-start))
+                               1)))
+                 (if (##fx< i src-start)
+                     dst-vect
+                     (begin
+                       (,##vect-set! dst-vect j (,##vect-ref src-vect i))
+                       (loop1 (##fx- i 1)
+                              (##fx- j 1)))))
+               (let loop2 ((i src-start)
+                           (j dst-start))
+                 (if (##fx< i src-end)
+                     (begin
+                       (,##vect-set! dst-vect j (,##vect-ref src-vect i))
+                       (loop2 (##fx+ i 1)
+                              (##fx+ j 1)))
+                     dst-vect))))))
 
        (define-prim (,subvect-move! src-vect src-start src-end dst-vect dst-start)
          (macro-force-vars (src-vect src-start src-end dst-vect dst-start)
@@ -461,332 +576,80 @@
   macro-no-check
   macro-no-check)
 
-(define-prim-vector-procedures
-  s8vector
-  0
-  macro-force-vars
-  macro-check-exact-signed-int8
-  macro-check-exact-signed-int8-list)
-
-(define-prim-vector-procedures
-  u8vector
-  0
-  macro-force-vars
-  macro-check-exact-unsigned-int8
-  macro-check-exact-unsigned-int8-list)
-
-(define-prim-vector-procedures
-  s16vector
-  0
-  macro-force-vars
-  macro-check-exact-signed-int16
-  macro-check-exact-signed-int16-list)
-
-(define-prim-vector-procedures
-  u16vector
-  0
-  macro-force-vars
-  macro-check-exact-unsigned-int16
-  macro-check-exact-unsigned-int16-list)
-
-(define-prim-vector-procedures
-  s32vector
-  0
-  macro-force-vars
-  macro-check-exact-signed-int32
-  macro-check-exact-signed-int32-list)
-
-(define-prim-vector-procedures
-  u32vector
-  0
-  macro-force-vars
-  macro-check-exact-unsigned-int32
-  macro-check-exact-unsigned-int32-list)
-
-(define-prim-vector-procedures
-  s64vector
-  0
-  macro-force-vars
-  macro-check-exact-signed-int64
-  macro-check-exact-signed-int64-list)
-
-(define-prim-vector-procedures
-  u64vector
-  0
-  macro-force-vars
-  macro-check-exact-unsigned-int64
-  macro-check-exact-unsigned-int64-list)
-
-(define-prim-vector-procedures
-  f32vector
-  0.
-  macro-force-vars
-  macro-check-inexact-real
-  macro-check-inexact-real-list)
-
-(define-prim-vector-procedures
-  f64vector
-  0.
-  macro-force-vars
-  macro-check-inexact-real
-  macro-check-inexact-real-list)
-
-;;;----------------------------------------------------------------------------
-
-(c-declare #<<c-declare-end
-
-#include "os.h"
-
-c-declare-end
-)
-
-(define-prim ##subvector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FIELD(___arg1,___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FIELD(___arg4,___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * ___WS;
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##substring-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src =
-        ___CAST(void*,
-                ___CS_SELECT(&___FETCH_U8(___BODY(___arg1),___INT(___arg2)),
-                             &___FETCH_U16(___BODY(___arg1),___INT(___arg2)),
-                             &___FETCH_U32(___BODY(___arg1),___INT(___arg2))));
-  void *dst =
-        ___CAST(void*,
-                ___CS_SELECT(&___FETCH_U8(___BODY(___arg4),___INT(___arg5)),
-                             &___FETCH_U16(___BODY(___arg4),___INT(___arg5)),
-                             &___FETCH_U32(___BODY(___arg4),___INT(___arg5))));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * ___CS;
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subs8vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FETCH_S8(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_S8(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S8);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subu8vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FETCH_U8(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_U8(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U8);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subs16vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FETCH_S16(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_S16(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S16);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subu16vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FETCH_U16(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_U16(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U16);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subs32vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FETCH_S32(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_S32(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S32);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subu32vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FETCH_U32(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_U32(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U32);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subs64vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FETCH_S64(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_S64(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S64);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subu64vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,&___FETCH_U64(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_U64(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U64);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subf32vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,___CAST(___F32*,___BODY(___arg1))+___INT(___arg2));
-  void *dst = ___CAST(void*,___CAST(___F32*,___BODY(___arg4))+___INT(___arg5));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F32);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
-
-(define-prim ##subf64vector-move!
-  (c-lambda (scheme-object  ;; src-vect
-             scheme-object  ;; src-start
-             scheme-object  ;; src-end
-             scheme-object  ;; dst-vect
-             scheme-object) ;; dst-start
-            scheme-object
-#<<end-of-code
-
-  void *src = ___CAST(void*,___CAST(___F64*,___BODY(___arg1))+___INT(___arg2));
-  void *dst = ___CAST(void*,___CAST(___F64*,___BODY(___arg4))+___INT(___arg5));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F64);
-
-  memmove (dst, src, len);
-
-  ___result = ___arg4;
-
-end-of-code
-))
+(macro-case-target
+ ((c)
+
+  (define-prim-vector-procedures
+    s8vector
+    0
+    macro-force-vars
+    macro-check-exact-signed-int8
+    macro-check-exact-signed-int8-list)
+
+  (define-prim-vector-procedures
+    u8vector
+    0
+    macro-force-vars
+    macro-check-exact-unsigned-int8
+    macro-check-exact-unsigned-int8-list)
+
+  (define-prim-vector-procedures
+    s16vector
+    0
+    macro-force-vars
+    macro-check-exact-signed-int16
+    macro-check-exact-signed-int16-list)
+
+  (define-prim-vector-procedures
+    u16vector
+    0
+    macro-force-vars
+    macro-check-exact-unsigned-int16
+    macro-check-exact-unsigned-int16-list)
+
+  (define-prim-vector-procedures
+    s32vector
+    0
+    macro-force-vars
+    macro-check-exact-signed-int32
+    macro-check-exact-signed-int32-list)
+
+  (define-prim-vector-procedures
+    u32vector
+    0
+    macro-force-vars
+    macro-check-exact-unsigned-int32
+    macro-check-exact-unsigned-int32-list)
+
+  (define-prim-vector-procedures
+    s64vector
+    0
+    macro-force-vars
+    macro-check-exact-signed-int64
+    macro-check-exact-signed-int64-list)
+
+  (define-prim-vector-procedures
+    u64vector
+    0
+    macro-force-vars
+    macro-check-exact-unsigned-int64
+    macro-check-exact-unsigned-int64-list)
+
+  (define-prim-vector-procedures
+    f32vector
+    0.
+    macro-force-vars
+    macro-check-inexact-real
+    macro-check-inexact-real-list)
+
+  (define-prim-vector-procedures
+    f64vector
+    0.
+    macro-force-vars
+    macro-check-inexact-real
+    macro-check-inexact-real-list)
+
+  ))
 
 ;;;----------------------------------------------------------------------------
 
@@ -799,15 +662,15 @@ end-of-code
   (macro-force-vars (obj)
     (##not obj)))
 
+(define-prim (##boolean? obj)
+  (or (##eq? obj #t) (##eq? obj #f)))
+
 (define-prim (boolean? obj)
   (macro-force-vars (obj)
     (##boolean? obj)))
 
-(define-prim (##boolean? obj)
-  (or (##eq? obj #t) (##eq? obj #f)))
-
 ;; eqv? is defined in "_num.scm"
-;; eq? and equal? are defined in "_kernel.scm"
+;; eq? and equal? are defined in "_system.scm"
 
 (define-fail-check-type pair-mutable 'mutable)
 (define-fail-check-type subtyped-mutable 'mutable)
