@@ -25,6 +25,9 @@
 (define (univ-void-representation ctx)
   'natural)
 
+(define (univ-absent-representation ctx)
+  'class)
+
 (define (univ-boolean-representation ctx)
   'natural)
 
@@ -580,6 +583,9 @@
 
 (define-macro (^void)
   `(univ-emit-void ctx))
+
+(define-macro (^absent)
+  `(univ-emit-absent ctx))
 
 (define-macro (^bool val)
   `(univ-emit-bool ctx ,val))
@@ -2369,6 +2375,9 @@
         ((void-object? obj)
          (^void))
 
+        ((absent-object? obj)
+         (^absent))
+
         ((undefined? obj)
          (univ-undefined ctx))
 
@@ -2384,6 +2393,9 @@
           (^array-literal
            (map (lambda (x) (^obj x))
                 (vector->list obj)))))
+
+;;        ((structure-object? obj)
+;;         ...)
 
         (else
          (^ "UNIMPLEMENTED_OBJECT("
@@ -2700,6 +2712,16 @@ EOF
         (^var-declaration
          (^global-var (^prefix "void_val"))
          (^new (^prefix (univ-use-rtlib ctx 'Void))))))
+
+    ((Absent)
+     (^ (^class-declaration
+         (^prefix "Absent")
+         '()
+         '())
+        "\n"
+        (^var-declaration
+         (^global-var (^prefix "absent_val"))
+         (^new (^prefix (univ-use-rtlib ctx 'Absent))))))
 
     ((Boolean)
      (^class-declaration
@@ -5312,6 +5334,19 @@ function Gambit_trampoline(pc) {
         (compiler-internal-error
          "univ-emit-void, unknown target"))))))
 
+(define (univ-emit-absent ctx)
+  (case (univ-absent-representation ctx)
+
+    ((class)
+     (let ((absent-val (^global-var (^prefix "absent_val"))))
+       (univ-use-rtlib ctx 'Absent)
+       (use-global ctx absent-val)
+       absent-val))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-absent, unknown target"))))
+
 (define (univ-emit-bool ctx val)
   (case (target-name (ctx-target ctx))
 
@@ -7339,18 +7374,16 @@ tanh
    (lambda (ctx arg1 arg2) (^>= arg1 arg2))
    univ-emit-fixnum-unbox))
 
-(univ-define-prim "##fx->char" #f
+(univ-define-prim "##integer->char" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^char-box (^chr-fromint (^fixnum-unbox arg)))))))
 
-(univ-define-prim "##fx<-char" #f
+(univ-define-prim "##char->integer" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^fixnum-box (^chr-toint (^char-unbox arg)))))))
 
-;;TODO: ("##fixnum->char"                (1)   #f ()    0    char    extended)
-;;TODO: ("##char->fixnum"                (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##flonum->fixnum"              (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##fixnum->flonum"              (1)   #f ()    0    real    extended)
 ;;TODO: ("##fixnum->flonum-exact?"       (1)   #f ()    0    boolean extended)
