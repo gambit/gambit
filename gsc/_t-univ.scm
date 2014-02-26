@@ -18,24 +18,24 @@
 (define (univ-null-representation ctx)
   (case (target-name (ctx-target ctx))
     ((js)
-     'natural)
+     'host)
     (else
      'class)))
 
 (define (univ-void-representation ctx)
-  'natural)
+  'host)
 
 (define (univ-absent-representation ctx)
   'class)
 
 (define (univ-boolean-representation ctx)
-  'natural)
+  'host)
 
 (define (univ-char-representation ctx)
   'class)
 
 (define (univ-fixnum-representation ctx)
-  'natural)
+  'host)
 
 (define (univ-flonum-representation ctx)
   'class)
@@ -45,7 +45,7 @@
     ((php)
      'class)
     (else
-     'natural)))
+     'host)))
 
 (define (univ-string-representation ctx)
   'class)
@@ -590,6 +590,9 @@
 (define-macro (^bool val)
   `(univ-emit-bool ctx ,val))
 
+(define-macro (^boolean-obj obj)
+  `(univ-emit-boolean-obj ctx ,obj))
+
 (define-macro (^boolean-box val)
   `(univ-emit-boolean-box ctx ,val))
 
@@ -829,7 +832,7 @@
 
     (else
      (compiler-internal-error
-      "univ-emit-expr-statement, unknown target"))))
+      "univ-emit-var-declaration, unknown target"))))
 
 (define (univ-emit-expr-statement ctx expr)
   (case (target-name (ctx-target ctx))
@@ -1456,15 +1459,66 @@
   (call-with-output-file
       output
     (lambda (port)
-      (let* ((rtlib-features-used (make-resource-set))
-             (ctx (make-ctx targ rtlib-features-used #f))
+      (let* ((objs-used (make-objs-used))
+             (rtlib-features-used (make-resource-set))
+             (ctx (make-ctx targ objs-used rtlib-features-used #f))
              (code-procs (univ-dump-procs ctx procs))
              (code-entry (univ-entry-point ctx (list-ref procs 0)))
-             (code-rtlib (univ-rtlib ctx)))
+             (code-rtlib (univ-rtlib ctx))
+             (code-objs (univ-dump-objs ctx)))
 
-        (univ-display (^ code-rtlib code-procs code-entry) port))))
+        (univ-display (^ code-rtlib code-objs code-procs code-entry) port))))
 
   #f)
+
+(define (univ-dump-objs ctx)
+  (let* ((objs-used (ctx-objs-used ctx))
+         (stack (objs-used-stack objs-used))
+         (table (objs-used-table objs-used)))
+    (let loop ((count 0) (lst stack) (code (^)))
+      (if (pair? lst)
+          (loop (+ count 1)
+                (cdr lst)
+                (let ((obj (car lst)))
+                  (if (proc-obj? obj)
+                      code
+                      (let ((state (table-ref table obj)))
+                        (if (> (vector-ref state 0) 1) ;; use a variable?
+                            (let ((var (^global-var (^prefix (^ "cst" count))))
+                                  (val (car (vector-ref state 1))))
+                              (set-car! (vector-ref state 1) var)
+                              (^ code
+                                 (^var-declaration var val)))
+                            code)))))
+          code))))
+
+(define (univ-obj-use ctx obj force-var? gen-expr)
+  (let* ((objs-used (ctx-objs-used ctx))
+         (table (objs-used-table objs-used))
+         (state (table-ref table obj #f)))
+    (if state ;; don't add to table if obj was added before
+
+        (begin
+          (vector-set! state 0 (+ (vector-ref state 0) 1)) ;; increment reference count
+          (vector-ref state 1))
+
+        (let* ((stack (objs-used-stack objs-used))
+               (code (list #f))
+               (state (vector (if force-var? 2 1) code)))
+          (objs-used-stack-set! objs-used (cons obj stack))
+          (table-set! table obj state)
+          (set-car! code (gen-expr))
+          code))))
+
+(define (make-objs-used)
+  (vector '()
+          (make-table test: eq?)))
+
+(define (objs-used-stack ou)        (vector-ref ou 0))
+(define (objs-used-stack-set! ou x) (vector-set! ou 0 x))
+
+(define (objs-used-table ou)        (vector-ref ou 1))
+(define (objs-used-table-set! ou x) (vector-set! ou 1 x))
 
 (define (univ-dump-procs global-ctx procs)
 
@@ -1879,6 +1933,7 @@
 
       (let ((ctx (make-ctx
                   (ctx-target global-ctx)
+                  (ctx-objs-used global-ctx)
                   (ctx-rtlib-features-used global-ctx)
                   (proc-obj-name p))))
         (^ "\n"
@@ -2047,7 +2102,7 @@
                                   exprs)))))
          (cont name)))))
 
-(define (make-ctx target rtlib-features-used ns)
+(define (make-ctx target objs-used rtlib-features-used ns)
   (vector target
           ns
           0
@@ -2056,6 +2111,7 @@
           (make-resource-set)
           (make-resource-set)
           (make-resource-set)
+          objs-used
           rtlib-features-used))
 
 (define (ctx-target ctx)                   (vector-ref ctx 0))
@@ -2082,8 +2138,11 @@
 (define (ctx-globals-used ctx)             (vector-ref ctx 7))
 (define (ctx-globals-used-set! ctx x)      (vector-set! ctx 7 x))
 
-(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 8))
-(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 8 x))
+(define (ctx-objs-used ctx)                (vector-ref ctx 8))
+(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 8 x))
+
+(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 9))
+(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 9 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -2349,58 +2408,91 @@
 
 (define (univ-emit-obj ctx obj)
 
-  (^parens;;TODO: remove (only needed in cases like new Gambit_Char(33)->code in PHP)
+  (define (emit-obj obj force-var?)
 
-  (cond ((boolean? obj)
-         (^boolean-box (^bool obj)))
+    (^parens;;TODO: remove (only needed in cases like new Gambit_Char(33)->code in PHP)
 
-        ((number? obj)
-         (univ-emit-number ctx obj))
+    (cond ((boolean? obj)
+           (^boolean-obj obj))
 
-        ((char? obj)
-         (^char-box (^chr obj)))
+          ((number? obj)
+           (univ-emit-number ctx obj))
 
-        ((string? obj)
-         (^string-box
-          (^array-literal
-           (map (lambda (c) (^int (char->integer c)))
-                (string->list obj)))))
+          ((char? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^char-box (^chr obj)))))
 
-        ((symbol? obj)
-         (^symbol-box (^sym obj)))
+          ((string? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^string-box
+               (^array-literal
+                (map (lambda (c) (^int (char->integer c)))
+                     (string->list obj)))))))
 
-        ((null? obj)
-         (^null))
+          ((symbol-object? obj)
+           (^symbol-box (^sym obj)))
 
-        ((void-object? obj)
-         (^void))
+          ((null? obj)
+           (^null))
 
-        ((absent-object? obj)
-         (^absent))
+          ((void-object? obj)
+           (^void))
 
-        ((undefined? obj)
-         (univ-undefined ctx))
+          ((absent-object? obj)
+           (^absent))
 
-        ((proc-obj? obj)
-         (gvm-proc-use ctx (proc-obj-name obj)))
+          ((undefined? obj)
+           (univ-undefined ctx))
 
-        ((pair? obj)
-         (^cons (^obj (car obj))
-                (^obj (cdr obj))))
+          ((proc-obj? obj)
+           (gvm-proc-use ctx (proc-obj-name obj)))
 
-        ((vector? obj)
-         (^vector-box
-          (^array-literal
-           (map (lambda (x) (^obj x))
-                (vector->list obj)))))
+          ((pair? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^cons (emit-obj (car obj) #f)
+                     (emit-obj (cdr obj) #f)))))
 
-;;        ((structure-object? obj)
-;;         ...)
+          ((vector-object? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^vector-box
+               (^array-literal
+                (map (lambda (x) (emit-obj x #f))
+                     (vector->list obj)))))))
 
-        (else
-         (^ "UNIMPLEMENTED_OBJECT("
-            (object->string obj)
-            ")")))))
+          ((structure-object? obj)
+(pp obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^vector-box
+               (^array-literal
+                (map (lambda (x) (emit-obj x #f))
+                     (vector->list (##vector-copy obj))))))))
+
+          (else
+           (^ "UNIMPLEMENTED_OBJECT("
+              (object->string obj)
+              ")")))))
+
+  (emit-obj obj #t))
 
 (define (univ-emit-number ctx obj)
   (if (exact? obj)
@@ -2433,7 +2525,7 @@
 
 ;;==================================================================
 
-(define *constants* '())
+(define *constants* '());;;TODO: remove
 
 ;; =============================================================================
 
@@ -2724,10 +2816,17 @@ EOF
          (^new (^prefix (univ-use-rtlib ctx 'Absent))))))
 
     ((Boolean)
-     (^class-declaration
-      (^prefix "Boolean")
-      '((val #f))
-      '()))
+     (^ (^class-declaration
+         (^prefix "Boolean")
+         '((val #f))
+         '())
+        "\n"
+        (^var-declaration
+         (^global-var (^prefix "false_val"))
+         (^new (^prefix (univ-use-rtlib ctx 'Boolean)) (^bool #f)))
+        (^var-declaration
+         (^global-var (^prefix "true_val"))
+         (^new (^prefix (univ-use-rtlib ctx 'Boolean)) (^bool #t)))))
 
     ((Char)
      (^class-declaration
@@ -5360,11 +5459,25 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-emit-bool, unknown target"))))
 
+(define (univ-emit-boolean-obj ctx obj)
+  (case (univ-boolean-representation ctx)
+
+    ((class)
+     (let ((val (^global-var (^prefix (if obj "true_val" "false_val")))))
+       (univ-use-rtlib ctx 'Boolean)
+       (use-global ctx val)
+       val))
+
+    (else
+     (^bool obj))))
+
 (define (univ-emit-boolean-box ctx expr)
   (case (univ-boolean-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'Boolean)) expr))
+     (^if-expr expr
+               (^boolean-obj #t)
+               (^boolean-obj #f)))
 
     (else
      expr)))
