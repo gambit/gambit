@@ -4,10 +4,10 @@
   (println (##char=? x y))
   (println (if (##char=? x y) 11 22)))
 
-(println (##fx<-char #\*))
+(println (##char->integer #\*))
 
-(println (##fx<-char (##fx->char 33)))
+(println (##char->integer (##integer->char 33)))
 
-(chareq #\! (##fx->char 33))
+(chareq #\! (##integer->char 33))
 
 (chareq #\x #\X)
