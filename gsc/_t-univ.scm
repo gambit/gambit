@@ -1502,15 +1502,22 @@
                       code
                       (let ((state (table-ref table obj)))
                         (if (> (vector-ref state 0) 1) ;; use a variable?
-                            (let ((var (^global-var (^prefix (^ "cst" count))))
-                                  (val (car (vector-ref state 1))))
-                              (set-car! (vector-ref state 1) var)
+                            (let ((cst
+                                   (^array-index
+                                    (gvm-state-cst ctx)
+                                    count))
+                                  (val
+                                   (car (vector-ref state 1))))
+                              (set-car! (vector-ref state 1) cst)
                               (^ code
-                                 (^var-declaration var val)))
+                                 (^expr-statement
+                                  (^assign cst val))))
                             code)))))
           code))))
 
 (define (univ-obj-use ctx obj force-var? gen-expr)
+  (if force-var?
+      (use-resource ctx 'rd 'cst))
   (let* ((objs-used (ctx-objs-used ctx))
          (table (objs-used-table objs-used))
          (state (table-ref table obj #f)))
@@ -2246,6 +2253,9 @@
 (define (gvm-state-sp ctx)
   (^global-var (^prefix "sp")))
 
+(define (gvm-state-cst ctx)
+  (^global-var (^prefix "cst")))
+
 (define (gvm-state-glo ctx)
   (^global-var (^prefix "glo")))
 
@@ -2428,13 +2438,29 @@
 
   (define (emit-obj obj force-var?)
 
-    (^parens;;TODO: remove (only needed in cases like new Gambit_Char(33)->code in PHP)
-
     (cond ((boolean? obj)
            (^boolean-obj obj))
 
           ((number? obj)
-           (univ-emit-number ctx obj))
+           (if (exact? obj)
+               (cond ((integer? obj)
+                      ;; TODO: bignums
+                      (^fixnum-box (^int obj)))
+                     (else
+                      ;; TODO: exact rationals and complex
+                      (compiler-internal-error
+                       "univ-emit-obj, unsupported exact number:" obj)))
+               (cond ((real? obj)
+                      (univ-obj-use
+                       ctx
+                       obj
+                       force-var?
+                       (lambda ()
+                         (^flonum-box (^float obj)))))
+                     (else
+                      ;; TODO: inexact complex
+                      (compiler-internal-error
+                       "univ-emit-obj, unsupported inexact number:" obj)))))
 
           ((char? obj)
            (univ-obj-use
@@ -2519,25 +2545,9 @@
           (else
            (^ "UNIMPLEMENTED_OBJECT("
               (object->string obj)
-              ")")))))
+              ")"))))
 
   (emit-obj obj #t))
-
-(define (univ-emit-number ctx obj)
-  (if (exact? obj)
-      (cond ((integer? obj)
-             ;; TODO: bignums
-             (^fixnum-box (^int obj)))
-            (else
-             ;; TODO: exact rationals and complex
-             (compiler-internal-error
-              "univ-emit-number, unsupported exact number:" obj)))
-      (cond ((real? obj)
-             (^flonum-box (^float obj)))
-            (else
-             ;; TODO: inexact complex
-             (compiler-internal-error
-              "univ-emit-number, unsupported inexact number:" obj)))))
 
 (define (univ-emit-array-literal ctx elems)
   (case (target-name (ctx-target ctx))
@@ -3215,6 +3225,15 @@ EOF
          ;;(^glo-var-primitive-set! (^local-var "sym") (^void))
          (^return (^local-var "sym")))))
 
+    ((underflow)
+     (^function-declaration
+      (^global-function (^prefix "underflow"))
+      ""
+      "\n"
+      '()
+      (univ-indent
+       (^return (^obj #f)))))
+
     ((apply2)
      (^prim-function-declaration
       (^global-prim-function (^prefix "apply2"))
@@ -3417,6 +3436,7 @@ EOF
                   (set! code (^ code c "\n"))))))
 
         ;;TODO: make inclusion of these features optional
+        (need-feature 'underflow)
         (need-feature 'strtocodes)
         (need-feature 'String)
         (need-feature 'Flonum)
@@ -3459,17 +3479,18 @@ EOF
           (compiler-internal-error
            "univ-rtlib-header, unknown target")))
 
-       (^var-declaration (^global-var (^prefix "glo")) (univ-emit-empty-dict ctx));;;;;;;;;;;;;;;;;;;;;
-       (^var-declaration (^global-var (^prefix "r0")) (^obj #f))
+       (^var-declaration (^global-var (^prefix "r0")))
        (^var-declaration (^global-var (^prefix "r1")))
        (^var-declaration (^global-var (^prefix "r2")))
        (^var-declaration (^global-var (^prefix "r3")))
        (^var-declaration (^global-var (^prefix "r4")))
+       (^var-declaration (^global-var (^prefix "cst")) (univ-emit-empty-extensible-array ctx));;;;;;;;;;;;;;;;;;;;;;;
+       (^var-declaration (^global-var (^prefix "glo")) (univ-emit-empty-dict ctx));;;;;;;;;;;;;;;;;;;;;
        (^var-declaration (^global-var (^prefix "stack")) (univ-emit-empty-extensible-array ctx));;;;;;;;;;;;;;;;;;;;;;;
        (^var-declaration (^global-var (^prefix "sp")) -1)
-       (^var-declaration (^global-var (^prefix "nargs")) 0)
-       (^var-declaration (^global-var (^prefix "temp1")) (^obj #f))
-       (^var-declaration (^global-var (^prefix "temp2")) (^obj #f))
+       (^var-declaration (^global-var (^prefix "nargs")))
+       (^var-declaration (^global-var (^prefix "temp1")))
+       (^var-declaration (^global-var (^prefix "temp2")))
        (^var-declaration (^global-var (^prefix "pollcount")) 100)
 
        "\n"
@@ -5092,6 +5113,26 @@ function Gambit_trampoline(pc) {
        (univ-comment ctx "--------------------------------\n")
        "\n"
 
+       (^inc-by (begin
+                  (gvm-state-sp-use ctx 'rd)
+                  (gvm-state-sp-use ctx 'wr))
+                1
+                (lambda (x)
+                  (^expr-statement
+                   (^assign
+                    (^array-index
+                     (gvm-state-stack-use ctx 'rd)
+                     x)
+                    (^obj #f)))))
+
+       (^expr-statement
+        (^assign (^global-var (^prefix "r0"))
+                 (^global-function (^prefix "underflow"))))
+
+       (^expr-statement
+        (^assign (^global-var (^prefix "nargs"))
+                 0))
+
        (case (target-name (ctx-target ctx))
 
          ((js php python ruby)
@@ -5131,6 +5172,7 @@ function Gambit_trampoline(pc) {
        (if (used? 'sp)        (add! (gvm-state-sp ctx)))
        (if (used? 'stack)     (add! (gvm-state-stack ctx)))
        (if (used? 'glo)       (add! (gvm-state-glo ctx)))
+       (if (used? 'cst)       (add! (gvm-state-cst ctx)))
        (if (used? 'nargs)     (add! (gvm-state-nargs ctx)))
        (if (used? 'pollcount) (add! (gvm-state-pollcount ctx)))
 
