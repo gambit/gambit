@@ -447,6 +447,9 @@
 (define-macro (^global-var name)
   `(univ-emit-global-var ctx ,name))
 
+(define-macro (^gvar name)
+  `(univ-emit-gvar ctx ,name))
+
 (define-macro (^global-prim-function name)
   `(univ-emit-global-prim-function ctx ,name))
 
@@ -456,17 +459,29 @@
 (define-macro (^prefix name)
   `(univ-emit-prefix ctx ,name))
 
+(define-macro (^assign-expr loc expr)
+  `(univ-emit-assign-expr ctx ,loc ,expr))
+
 (define-macro (^assign loc expr)
   `(univ-emit-assign ctx ,loc ,expr))
 
 (define-macro (^inc-by loc expr #!optional (embed #f))
   `(univ-emit-inc-by ctx ,loc ,expr ,embed))
 
+(define-macro (^alias expr)
+  `(univ-emit-alias ctx ,expr))
+
+(define-macro (^unalias expr)
+  `(univ-emit-unalias ctx ,expr))
+
 (define-macro (^array-length expr)
   `(univ-emit-array-length ctx ,expr))
 
 (define-macro (^array-shrink! expr1 expr2)
   `(univ-emit-array-shrink! ctx ,expr1 ,expr2))
+
+(define-macro (^subarray expr1 expr2 expr3)
+  `(univ-emit-subarray ctx ,expr1 ,expr2 ,expr3))
 
 (define-macro (^array-index expr1 expr2)
   `(univ-emit-array-index ctx ,expr1 ,expr2))
@@ -542,6 +557,18 @@
     ,fields
     ,methods))
 
+(define-macro (^tos)
+  `(univ-emit-tos ctx))
+
+(define-macro (^pop receiver)
+  `(univ-emit-pop ctx ,receiver))
+
+(define-macro (^push val)
+  `(univ-emit-push ctx ,val))
+
+(define-macro (^setnargs nb-args)
+  `(univ-emit-setnargs ctx ,nb-args))
+
 (define-macro (^getreg num)
   `(univ-emit-getreg ctx ,num))
 
@@ -577,6 +604,15 @@
 
 (define-macro (^glo-var-primitive-set! sym val)
   `(univ-emit-glo-var-primitive-set! ctx ,sym ,val))
+
+(define-macro (^return-poll expr poll? call?)
+  `(univ-emit-return-poll ctx ,expr ,poll? ,call?))
+
+(define-macro (^return-call-prim expr . params)
+  `(univ-emit-return-call-prim ctx ,expr ,@params))
+
+(define-macro (^return-call expr . params)
+  `(univ-emit-return-call ctx ,expr ,@params))
 
 (define-macro (^return expr)
   `(univ-emit-return ctx ,expr))
@@ -1324,6 +1360,11 @@
      (compiler-internal-error
       "univ-emit-global-var, unknown target"))))
 
+(define (univ-emit-gvar ctx name)
+  (let ((var (^global-var (^prefix name))))
+    (use-global ctx var)
+    var))
+
 (define (univ-emit-global-prim-function ctx name)
   (case (target-name (ctx-target ctx))
 
@@ -1350,8 +1391,12 @@
 (define (univ-emit-prefix ctx name)
   (^ "Gambit_" name))
 
-(define (univ-emit-assign ctx loc expr)
+(define (univ-emit-assign-expr ctx loc expr)
   (^ loc " = " expr))
+
+(define (univ-emit-assign ctx loc expr)
+  (^expr-statement
+   (^assign-expr loc expr)))
 
 (define (univ-emit-inc-by ctx loc expr #!optional (embed #f))
 
@@ -1395,6 +1440,33 @@
          (compiler-internal-error
           "univ-emit-inc-by, unknown target")))))
 
+(define (univ-emit-alias ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     expr)
+
+    ((php)
+     (^ "&" expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-alias, unknown target"))))
+
+(define (univ-emit-unalias ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^))
+
+    ((php)
+     (^expr-statement
+      (^ "unset(" expr ")")))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-unalias, unknown target"))))
+
 (define (univ-emit-array-length ctx expr)
   (case (target-name (ctx-target ctx))
 
@@ -1418,13 +1490,35 @@
      (^assign (^ expr1 ".length") expr2))
 
     ((php)
-     (^ "array_splice(" expr1 "," expr2 ")"))
+     (^expr-statement
+      (^ "array_splice(" expr1 "," expr2 ")")))
 
     ((python)
-     (^ expr1 "[" expr2 ":len(" expr1 ")] = []"))
+     (^expr-statement
+      (^ expr1 "[" expr2 ":len(" expr1 ")] = []")))
 
     ((ruby)
-     (^ expr1 ".slice!(" expr2 "," expr1 ".length)"))
+     (^expr-statement
+      (^ expr1 ".slice!(" expr2 "," expr1 ".length)")))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-array-shrink!, unknown target"))))
+
+(define (univ-emit-subarray ctx expr1 expr2 expr3)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ expr1 ".slice(" expr2 "," (if (equal? expr2 0) expr3 (^+ expr2 expr3)) ")"))
+
+    ((php)
+     (^ "array_slice(" expr1 "," expr2 "," expr3 ")"))
+
+    ((python)
+     (^ expr1 "[" expr2 ":" (if (equal? expr2 0) expr3 (^+ expr2 expr3)) "]"))
+
+    ((ruby)
+     (^ expr1 ".slice(" expr2 "," (if (equal? expr2 0) expr3 (^+ expr2 expr3))))
 
     (else
      (compiler-internal-error
@@ -1456,7 +1550,7 @@
   (case (target-name (ctx-target ctx))
 
     ((js python ruby)
-     (^assign (^prop-index obj (^str name)) val))
+     (^assign-expr (^prop-index obj (^str name)) val))
 
     ((php)
      (^call-prim
@@ -1510,8 +1604,7 @@
                                    (car (vector-ref state 1))))
                               (set-car! (vector-ref state 1) cst)
                               (^ code
-                                 (^expr-statement
-                                  (^assign cst val))))
+                                 (^assign cst val)))
                             code)))))
           code))))
 
@@ -1869,8 +1962,7 @@
                                  (jump-inliner ctx nb-args poll? safe? fs))))
 
                      (^ (if nb-args
-                            (^expr-statement
-                             (^assign (gvm-state-nargs-use ctx 'wr) nb-args))
+                            (^setnargs nb-args)
                             (^))
 
                         (or (and (lbl? opnd)
@@ -1882,8 +1974,7 @@
                              (+ fs
                                 (ctx-stack-base-offset ctx))
                              (lambda (ctx)
-                               (univ-emit-return-poll
-                                ctx
+                               (^return-poll
                                 (scan-gvm-opnd ctx opnd)
                                 poll?
                                 (case (target-name (ctx-target ctx))
@@ -1939,8 +2030,7 @@
                     (+ jump-fs
                        (ctx-stack-base-offset ctx))
                     (lambda (ctx)
-                      (univ-emit-return-call
-                       ctx
+                      (^return-call
                        (scan-gvm-opnd ctx (make-lbl n))))))))
 
           (define (scan-gvm-opnd ctx gvm-opnd)
@@ -2018,8 +2108,7 @@
                               nb-parms-except-rest))
                        (^!= (gvm-state-nargs-use ctx 'rd)
                             nb-parms-except-rest))
-                   (univ-emit-return-call-prim
-                    ctx
+                   (^return-call-prim
                     (^global-prim-function
                      (^prefix (univ-use-rtlib ctx 'wrong_nargs)))
                     (if closed?
@@ -2041,18 +2130,8 @@
                                      (^obj
                                       (obj-val (list-ref defaults (- i nb-req 1))))))))
                     (if (<= i nb-stacked*)
-                        (^inc-by (begin
-                                   (gvm-state-sp-use ctx 'rd)
-                                   (gvm-state-sp-use ctx 'wr))
-                                 1
-                                 (lambda (x)
-                                   (^ (^expr-statement
-                                       (^assign
-                                        (^array-index
-                                         (gvm-state-stack-use ctx 'rd)
-                                         x)
-                                        src))
-                                      rest)))
+                        (^ (^push src)
+                           rest)
                         (if (and (<= i nb-args) (= nb-stacked nb-stacked*))
                             rest
                             (let ((dst-reg (- i nb-stacked*)))
@@ -2082,10 +2161,10 @@
            '()
            "\n"
            '()
-           (^ (univ-emit-assign ctx
-                                (^getopnd (make-reg (+ univ-nb-arg-regs 1)))
-                                name)
-              (univ-emit-return-call ctx (gvm-lbl-use ctx (make-lbl lbl)))))
+           (^ (^assign
+               (^getopnd (make-reg (+ univ-nb-arg-regs 1)))
+               name)
+              (^return-call (gvm-lbl-use ctx (make-lbl lbl)))))
           (cont name))))
 
     (else
@@ -2179,9 +2258,7 @@
 (define (with-stack-pointer-adjust ctx n proc)
   (^ (if (equal? n 0)
          (^)
-         (^inc-by (begin
-                    (gvm-state-sp-use ctx 'rd)
-                    (gvm-state-sp-use ctx 'wr))
+         (^inc-by (gvm-state-sp-use ctx 'rdwr)
                   n))
      (with-stack-base-offset
       ctx
@@ -2234,8 +2311,9 @@
   (symbol->string feature))
 
 (define (use-resource ctx dir resource)
-  (if (eq? dir 'rd)
-      (use-resource-rd ctx resource)
+  (if (or (eq? dir 'rd) (eq? dir 'rdwr))
+      (use-resource-rd ctx resource))
+  (if (or (eq? dir 'wr) (eq? dir 'rdwr))
       (use-resource-wr ctx resource)))
 
 (define (gvm-state-pollcount ctx)
@@ -2283,14 +2361,38 @@
   (use-resource ctx dir 'glo)
   (gvm-state-glo ctx))
 
+(define (univ-emit-tos ctx)
+  (^array-index
+   (gvm-state-stack-use ctx 'rd)
+   (gvm-state-sp-use ctx 'rd)))
+
+(define (univ-emit-pop ctx receiver)
+  (^ (receiver (^tos))
+     (^inc-by (gvm-state-sp-use ctx 'rdwr)
+              -1)))
+
+(define (univ-emit-push ctx val)
+  (^inc-by (gvm-state-sp-use ctx 'rdwr)
+           1
+           (lambda (x)
+             (^assign
+              (^array-index
+               (gvm-state-stack-use ctx 'rd)
+               x)
+              val))))
+
+(define (univ-emit-setnargs ctx nb-args)
+  (^assign
+   (gvm-state-nargs-use ctx 'wr)
+   nb-args))
+
 (define (univ-emit-getreg ctx num)
   (gvm-state-reg-use ctx 'rd num))
 
 (define (univ-emit-setreg ctx num val)
-  (^expr-statement
-   (^assign
-    (gvm-state-reg-use ctx 'wr num)
-    val)))
+  (^assign
+   (gvm-state-reg-use ctx 'wr num)
+   val))
 
 (define (univ-stk-location ctx offset)
   (^array-index
@@ -2307,10 +2409,9 @@
   (univ-stk-location ctx offset))
 
 (define (univ-emit-setstk ctx offset val)
-  (^expr-statement
-   (^assign
-    (univ-stk-location ctx offset)
-    val)))
+  (^assign
+   (univ-stk-location ctx offset)
+   val))
 
 (define (univ-clo-obj-name ctx closure index)
   (cons (case (target-name (ctx-target ctx))
@@ -2349,10 +2450,9 @@
   (univ-glo-location ctx name))
 
 (define (univ-emit-setglo ctx name val)
-  (^expr-statement
-   (^assign
-    (univ-glo-location ctx name)
-    val)))
+  (^assign
+   (univ-glo-location ctx name)
+   val))
 
 (define (univ-glo-location-dynamic ctx sym)
   (^prop-index
@@ -2369,16 +2469,14 @@
   (univ-glo-primitive-location-dynamic ctx sym))
 
 (define (univ-emit-glo-var-set! ctx sym val)
-  (^expr-statement
-   (^assign
-    (univ-glo-location-dynamic ctx sym)
-    val)))
+  (^assign
+   (univ-glo-location-dynamic ctx sym)
+   val))
 
 (define (univ-emit-glo-var-primitive-set! ctx sym val)
-  (^expr-statement
-   (^assign
-    (univ-glo-primitive-location-dynamic ctx sym)
-    val)))
+  (^assign
+   (univ-glo-primitive-location-dynamic ctx sym)
+   val))
 
 (define (univ-emit-getopnd ctx gvm-opnd)
 
@@ -2613,6 +2711,149 @@
        fn)
       rest))
 
+(define (univ-emit-continuation-capture-function ctx nb-args)
+  (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+    (^prim-function-declaration
+     (^global-prim-function (^prefix (^ "continuation_capture" nb-args)))
+     '()
+     "\n"
+     '()
+     (^ (if (= nb-stacked 0)
+            (^var-declaration (^local-var (^ "arg" 1)) (^getreg 1))
+            (univ-foldr-range
+             1
+             nb-stacked
+             (^)
+             (lambda (i rest)
+               (^ rest
+                  (^pop (lambda (expr)
+                          (^var-declaration (^local-var (^ "arg" i))
+                                            expr)))))))
+
+        (^setreg 0
+                 (^call-prim
+                  (^global-prim-function
+                   (^prefix (univ-use-rtlib ctx 'heapify)))
+                  (^getreg 0)))
+
+        (let ((cont
+               (^new (^prefix (univ-use-rtlib ctx 'Continuation))
+                     (^array-index
+                      (gvm-state-stack-use ctx 'rd)
+                      0)
+                     (^obj #f))))
+          (if (= nb-stacked 0)
+              (^setreg 1 cont)
+              (univ-foldr-range
+               1
+               nb-stacked
+               (^)
+               (lambda (i rest)
+                 (^ (^push (if (= i 1) cont (^local-var (^ "arg" i))))
+                    rest)))))
+
+        (^setnargs nb-args)
+
+        (^return-call (^local-var (^ "arg" 1)))))))
+
+(define (univ-emit-continuation-graft-no-winding-function ctx nb-args)
+  (^prim-function-declaration
+   (^global-prim-function
+    (^prefix (^ "continuation_graft_no_winding" nb-args)))
+   '()
+   "\n"
+   '()
+   (let* ((nb-stacked
+           (max 0 (- nb-args univ-nb-arg-regs)))
+          (new-nb-args
+           (- nb-args 2))
+          (new-nb-stacked
+           (max 0 (- new-nb-args univ-nb-arg-regs)))
+          (underflow
+           (^gvar (univ-use-rtlib ctx 'underflow))))
+     (^ (univ-foldr-range
+         1
+         (max 2 (- nb-args univ-nb-arg-regs))
+         (^)
+         (lambda (i rest)
+           (^ rest
+              (^var-declaration
+               (^local-var (^ "arg" i))
+               (let ((x (- i nb-stacked)))
+                 (if (>= x 1)
+                     (^getreg x)
+                     (^getstk x)))))))
+
+        (^assign
+         (gvm-state-sp-use ctx 'wr)
+         0)
+
+        (^assign
+         (^array-index
+          (gvm-state-stack-use ctx 'rd)
+          0)
+         (^member (^local-var (^ "arg" 1)) "frame"))
+
+        (^setreg 0 underflow)
+
+        (univ-foldr-range
+         1
+         new-nb-stacked
+         (^)
+         (lambda (i rest)
+           (^ (^push (^local-var (^ "arg" (+ i 2))))
+              rest)))
+
+        (if (= new-nb-stacked (- nb-stacked 2))
+            (^)
+            (univ-foldr-range
+             (+ new-nb-stacked 1)
+             new-nb-args
+             (^)
+             (lambda (i rest)
+               (^ (^setreg (- i new-nb-stacked)
+                           (^getreg (- i (- nb-stacked 2))))
+                  rest))))
+
+        (^setnargs new-nb-args)
+
+        (^return (^local-var (^ "arg" 2)))))))
+
+(define (univ-emit-continuation-return-no-winding-function ctx nb-args)
+  (^prim-function-declaration
+   (^global-prim-function
+    (^global-prim-function (^prefix (^ "continuation_return_no_winding" nb-args))))
+   '()
+   "\n"
+   '()
+   (let* ((nb-stacked
+           (max 0 (- nb-args univ-nb-arg-regs)))
+          (underflow
+           (^gvar (univ-use-rtlib ctx 'underflow)))
+          (arg1
+           (let ((x (- 1 nb-stacked)))
+             (if (>= x 1)
+                 (^getreg x)
+                 (^getstk x)))))
+     (^ (^assign
+         (^array-index
+          (gvm-state-stack-use ctx 'rd)
+          0)
+         (^member arg1 "frame"))
+
+        (^assign
+         (gvm-state-sp-use ctx 'wr)
+         0)
+
+        (^setreg 0 underflow)
+
+        (let ((x (- 2 nb-stacked)))
+          (if (= x 1)
+              (^)
+              (^setreg 1 (^getreg x))))
+
+        (^return underflow)))))
+
 (define (univ-rtlib-feature ctx feature)
   (case feature
 
@@ -2623,9 +2864,273 @@
       "\n"
       '()
       (^while (^!= (^local-var "pc") (^obj #f))
-              (^expr-statement
-               (^assign (^local-var "pc")
-                        (^call (^local-var "pc")))))))
+              (^assign (^local-var "pc")
+                       (^call (^local-var "pc"))))))
+
+    ((heapify)
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "heapify"))
+      (list (cons (^local-var "ra") #f))
+      "\n"
+      '()
+      (^ (^if (^> (gvm-state-sp-use ctx 'rd) 0)
+              (^ (^var-declaration
+                  (^local-var "chain")
+                  (gvm-state-stack-use ctx 'rd))
+                 (univ-with-function-attribs
+                  ctx
+                  #f
+                  "ra"
+                  (lambda ()
+
+                    (^ (^var-declaration
+                        (^local-var "fs")
+                        (univ-get-function-attrib ctx "ra" "fs"))
+
+                       (^var-declaration
+                        (^local-var "link")
+                        (univ-get-function-attrib ctx "ra" "link"))
+
+                       (^var-declaration
+                        (^local-var "base")
+                        (^- (gvm-state-sp-use ctx 'rd)
+                            (^local-var "fs")))
+
+                       (^if (^> (^local-var "base") 0)
+                            (^ (^assign (^local-var "chain")
+                                        (^subarray
+                                         (gvm-state-stack-use ctx 'rd)
+                                         (^local-var "base")
+                                         (^+ (^local-var "fs") 1)))
+
+                               (^assign (^array-index
+                                         (^local-var "chain")
+                                         0)
+                                        (^local-var "ra"))
+
+                               (^assign (gvm-state-sp-use ctx 'wr)
+                                        (^local-var "base"))
+
+                               (^var-declaration
+                                (^local-var "prev_frame")
+                                (^alias (^local-var "chain")))
+
+                               (^var-declaration
+                                (^local-var "prev_link")
+                                (^local-var "link"))
+
+                               (^assign (^local-var "ra")
+                                        (^array-index
+                                         (^local-var "prev_frame")
+                                         (^local-var "prev_link")))
+
+                               (univ-with-function-attribs
+                                ctx
+                                #t
+                                "ra"
+                                (lambda ()
+
+                                  (^ (^assign
+                                      (^local-var "fs")
+                                      (univ-get-function-attrib ctx "ra" "fs"))
+
+                                     (^assign
+                                      (^local-var "link")
+                                      (univ-get-function-attrib ctx "ra" "link"))
+
+                                     (^assign
+                                      (^local-var "base")
+                                      (^- (gvm-state-sp-use ctx 'rd)
+                                          (^local-var "fs")))
+
+                                     (^while (^> (^local-var "base") 0)
+                                             (^ (^var-declaration
+                                                 (^local-var "frame")
+                                                 (^subarray
+                                                  (gvm-state-stack-use ctx 'rd)
+                                                  (^local-var "base")
+                                                  (^+ (^local-var "fs") 1)))
+
+                                                (^assign
+                                                 (^array-index
+                                                  (^local-var "frame")
+                                                  0)
+                                                 (^local-var "ra"))
+
+                                                (^assign
+                                                 (gvm-state-sp-use ctx 'wr)
+                                                 (^local-var "base"))
+
+                                                (^assign
+                                                 (^array-index
+                                                  (^local-var "prev_frame")
+                                                  (^local-var "prev_link"))
+                                                 (^alias (^local-var "frame")))
+
+                                                (^assign
+                                                 (^local-var "prev_frame")
+                                                 (^alias (^local-var "frame")))
+
+                                                (^unalias (^local-var "frame"))
+
+                                                (^assign
+                                                 (^local-var "prev_link")
+                                                 (^local-var "link"))
+
+                                                (^assign
+                                                 (^local-var "ra")
+                                                 (^array-index
+                                                  (^local-var "prev_frame")
+                                                  (^local-var "prev_link")))
+
+                                                (univ-with-function-attribs
+                                                 ctx
+                                                 #t
+                                                 "ra"
+                                                 (lambda ()
+
+                                                   (^ (^assign
+                                                       (^local-var "fs")
+                                                       (univ-get-function-attrib ctx "ra" "fs"))
+
+                                                      (^assign
+                                                       (^local-var "link")
+                                                       (univ-get-function-attrib ctx "ra" "link"))
+
+                                                      (^assign
+                                                       (^local-var "base")
+                                                       (^- (gvm-state-sp-use ctx 'rd)
+                                                           (^local-var "fs"))))))))
+
+                                     (^assign
+                                      (^array-index
+                                       (gvm-state-stack-use ctx 'rd)
+                                       (^local-var "link"))
+                                      (^array-index
+                                       (gvm-state-stack-use ctx 'rd)
+                                       0))
+
+                                     (^assign
+                                      (^array-index
+                                       (gvm-state-stack-use ctx 'rd)
+                                       0)
+                                      (^local-var "ra"))
+
+                                     (^array-shrink!
+                                      (gvm-state-stack-use ctx 'rd)
+                                      (^+ (^local-var "fs") 1))
+
+                                     (^assign
+                                      (^array-index
+                                       (^local-var "prev_frame")
+                                       (^local-var "prev_link"))
+                                      (gvm-state-stack-use ctx 'rd))))))
+
+                            (^ (^assign
+                                (^array-index
+                                 (^local-var "chain")
+                                 (^local-var "link"))
+                                (^array-index
+                                 (^local-var "chain")
+                                 0))
+
+                               (^assign
+                                (^array-index
+                                 (^local-var "chain")
+                                 0)
+                                (^local-var "ra"))))
+
+                       (^assign
+                        (gvm-state-stack-use ctx 'rd)
+                        (^array-literal (list (^local-var "chain"))))
+
+                       (^assign
+                        (gvm-state-sp-use ctx 'wr)
+                        0))))))
+
+         (^return
+          (^gvar (univ-use-rtlib ctx 'underflow))))))
+
+    ((underflow)
+     (^function-declaration
+      (^global-function (^prefix "underflow"))
+      '()
+      "\n"
+      (list (cons "fs" 0))
+      (^ (^var-declaration (^local-var "frame")
+                           (^array-index
+                            (gvm-state-stack-use ctx 'rd)
+                            0))
+
+         (^if (^eq? (^local-var "frame") (^obj #f))
+              (^return (^obj #f)))
+
+         (^var-declaration (^local-var "ra")
+                           (^array-index
+                            (^local-var "frame")
+                            0))
+
+         (univ-with-function-attribs
+          ctx
+          #f
+          "ra"
+          (lambda ()
+
+            (^ (^var-declaration (^local-var "fs")
+                                 (univ-get-function-attrib ctx "ra" "fs"))
+
+               (^var-declaration (^local-var "link")
+                                 (univ-get-function-attrib ctx "ra" "link"))
+
+               (^assign (gvm-state-stack-use ctx 'wr)
+                        (^subarray (^local-var "frame")
+                                   0
+                                   (^+ (^local-var "fs") 1)))
+
+               (^assign (gvm-state-sp-use ctx 'wr)
+                        (^local-var "fs"))
+
+               (^assign (^array-index
+                         (gvm-state-stack-use ctx 'rd)
+                         0)
+                        (^alias
+                         (^array-index
+                          (^local-var "frame")
+                          (^local-var "link"))))
+
+               (^assign (^array-index
+                         (gvm-state-stack-use ctx 'rd)
+                         (^local-var "link"))
+                        (^gvar (univ-use-rtlib ctx 'underflow))))))
+
+         (^return (^local-var "ra")))))
+
+    ((continuation_capture1)
+     (univ-emit-continuation-capture-function ctx 1))
+
+    ((continuation_capture2)
+     (univ-emit-continuation-capture-function ctx 2))
+
+    ((continuation_capture3)
+     (univ-emit-continuation-capture-function ctx 3))
+
+    ((continuation_capture4)
+     (univ-emit-continuation-capture-function ctx 4))
+
+    ((continuation_graft_no_winding2)
+     (univ-emit-continuation-graft-no-winding-function ctx 2))
+
+    ((continuation_graft_no_winding3)
+     (univ-emit-continuation-graft-no-winding-function ctx 3))
+
+    ((continuation_graft_no_winding4)
+     (univ-emit-continuation-graft-no-winding-function ctx 4))
+
+    ((continuation_graft_no_winding5)
+     (univ-emit-continuation-graft-no-winding-function ctx 5))
+
+    ((continuation_return_no_winding2)
+     (univ-emit-continuation-return-no-winding-function ctx 2))
 
     ((poll)
      (^prim-function-declaration
@@ -2633,9 +3138,8 @@
       (list (cons (^local-var "dest") #f))
       "\n"
       '()
-      (^ (^expr-statement
-          (^assign (gvm-state-pollcount-use ctx 'wr)
-                   100))
+      (^ (^assign (gvm-state-pollcount-use ctx 'wr)
+                  100)
          (^return (^local-var "dest")))))
 
     ((build_rest)
@@ -2654,45 +3158,17 @@
           (^)
           (lambda (i rest)
             (^if (^> (gvm-state-nargs-use ctx 'rd) i)
-                 (^inc-by (begin
-                            (gvm-state-sp-use ctx 'rd)
-                            (gvm-state-sp-use ctx 'wr))
-                          1
-                          (lambda (x)
-                            (^ (^expr-statement
-                                (^assign
-                                 (^array-index
-                                  (gvm-state-stack-use ctx 'rd)
-                                  x)
-                                 (^getreg (+ i 1))))
-                               rest))))))
+                 (^ (^push (^getreg (+ i 1)))
+                    rest))))
          (^while (^> (gvm-state-nargs-use ctx 'rd)
                      (^local-var "nrp"))
-                 (^ (^expr-statement
-                     (^assign (^local-var "rest")
-                              (^cons (^array-index
-                                      (gvm-state-stack-use ctx 'rd)
-                                      (gvm-state-sp-use ctx 'rd))
-                                     (^local-var "rest"))))
-                    (^inc-by (begin
-                               (gvm-state-sp-use ctx 'rd)
-                               (gvm-state-sp-use ctx 'wr))
-                             -1)
-                    (^inc-by (begin
-                               (gvm-state-nargs-use ctx 'rd)
-                               (gvm-state-nargs-use ctx 'wr))
+                 (^ (^pop (lambda (expr)
+                            (^assign (^local-var "rest")
+                                     (^cons expr
+                                            (^local-var "rest")))))
+                    (^inc-by (gvm-state-nargs-use ctx 'rdwr)
                              -1)))
-         (^inc-by (begin
-                    (gvm-state-sp-use ctx 'rd)
-                    (gvm-state-sp-use ctx 'wr))
-                  1
-                  (lambda (x)
-                    (^expr-statement
-                     (^assign
-                      (^array-index
-                       (gvm-state-stack-use ctx 'rd)
-                       x)
-                      (^local-var "rest")))))
+         (^push (^local-var "rest"))
          (univ-foldr-range
           1
           univ-nb-arg-regs
@@ -2702,14 +3178,8 @@
                    (^if (^> (gvm-state-nargs-use ctx 'rd) (- i 1))
                         rest)
                    (^))
-               (^setreg i
-                        (^array-index
-                         (gvm-state-stack-use ctx 'rd)
-                         (gvm-state-sp-use ctx 'rd)))
-               (^inc-by (begin
-                          (gvm-state-sp-use ctx 'rd)
-                          (gvm-state-sp-use ctx 'wr))
-                        -1))))
+               (^pop (lambda (expr)
+                       (^setreg i expr))))))
          (^return (^bool #t)))))
 
     ((wrong_nargs)
@@ -2725,8 +3195,7 @@
            0))
          (^setreg 2 (^getreg 1))
          (^setreg 1 (^local-var "proc"))
-         (^expr-statement
-          (^assign (gvm-state-nargs-use ctx 'wr) 2))
+         (^setnargs 2)
          (^return (^getglo '##raise-wrong-number-of-arguments-exception)))))
 
     ((get)
@@ -2820,9 +3289,14 @@ EOF
       (list
        (list 'cyclic
              '()
-             (^ (^expr-statement
-                 (^assign (^array-index (^this-member "slots") 0) (^this)))
+             (^ (^assign (^array-index (^this-member "slots") 0) (^this))
                 (^return (^this)))))))
+
+    ((Continuation)
+     (^class-declaration
+      (^prefix "Continuation")
+      '((frame #f) (denv #f))
+      '()))
 
     ((Symbol)
      (^class-declaration
@@ -3062,16 +3536,15 @@ EOF
 
               ((js)
                (^setreg 1 (^- (^call-prim (^member (^new "Date") "getTime"))
-                              (^global-var (^prefix "start_time")))))
+                              (^gvar "start_time"))))
 
               ((php)
-               (^ "global " (^global-var (^prefix "start_time")) ";\n"
-                  (^setreg 1 (^ "(int)"
-                                (^parens
-                                 (^* 1000
-                                     (^parens
-                                      (^- (^call-prim "microtime" (^bool #t))
-                                          (^global-var (^prefix "start_time"))))))))))
+               (^setreg 1 (^ "(int)"
+                             (^parens
+                              (^* 1000
+                                  (^parens
+                                   (^- (^call-prim "microtime" (^bool #t))
+                                       (^gvar "start_time"))))))))
 
               ((python)
                (^setreg 1 (^call-prim
@@ -3079,7 +3552,7 @@ EOF
                            (^* 1000
                                (^parens
                                 (^- (^call-prim (^member "time" "time"))
-                                    (^global-var (^prefix "start_time"))))))))
+                                    (^gvar "start_time")))))))
 
               ((ruby)
                (^setreg 1 (^call-prim
@@ -3088,7 +3561,7 @@ EOF
                              (^* 1000
                                  (^parens
                                   (^- (^new "Time")
-                                      (^global-var (^prefix "start_time"))))))
+                                      (^gvar "start_time")))))
                             "floor"))))
 
               (else
@@ -3224,15 +3697,6 @@ EOF
       (^ ;;(^glo-var-set! (^local-var "sym") (^void))
          ;;(^glo-var-primitive-set! (^local-var "sym") (^void))
          (^return (^local-var "sym")))))
-
-    ((underflow)
-     (^function-declaration
-      (^global-function (^prefix "underflow"))
-      ""
-      "\n"
-      '()
-      (univ-indent
-       (^return (^obj #f)))))
 
     ((apply2)
      (^prim-function-declaration
@@ -3436,11 +3900,13 @@ EOF
                   (set! code (^ code c "\n"))))))
 
         ;;TODO: make inclusion of these features optional
+        (need-feature 'heapify)
         (need-feature 'underflow)
         (need-feature 'strtocodes)
         (need-feature 'String)
         (need-feature 'Flonum)
         (need-feature 'Pair)
+        (need-feature 'Continuation)
         (need-feature 'ffi)
 
         (for-each need-feature
@@ -3484,8 +3950,8 @@ EOF
        (^var-declaration (^global-var (^prefix "r2")))
        (^var-declaration (^global-var (^prefix "r3")))
        (^var-declaration (^global-var (^prefix "r4")))
-       (^var-declaration (^global-var (^prefix "cst")) (univ-emit-empty-extensible-array ctx));;;;;;;;;;;;;;;;;;;;;;;
        (^var-declaration (^global-var (^prefix "glo")) (univ-emit-empty-dict ctx));;;;;;;;;;;;;;;;;;;;;
+       (^var-declaration (^global-var (^prefix "cst")) (univ-emit-empty-extensible-array ctx));;;;;;;;;;;;;;;;;;;;;;;
        (^var-declaration (^global-var (^prefix "stack")) (univ-emit-empty-extensible-array ctx));;;;;;;;;;;;;;;;;;;;;;;
        (^var-declaration (^global-var (^prefix "sp")) -1)
        (^var-declaration (^global-var (^prefix "nargs")))
@@ -3557,40 +4023,36 @@ import ctypes
          "pc"
          "\n"
          '()
-         (univ-indent
-          (^while (^!= "pc" (^obj #f))
-                  (^expr-statement
-                   (^assign "pc" (^call "pc"))))))
+         (^while (^!= "pc" (^obj #f))
+                 (^assign "pc" (^call "pc"))))
 
         (^prim-function-declaration
          (^global-prim-function (^prefix "println"))
          "obj"
          "\n"
          '()
-         (univ-indent
-          (^expr-statement (^call "print" "obj"))))
+         (^expr-statement (^call "print" "obj")))
 
         (^function-declaration
          (gvm-proc-use ctx "println")
          ""
          "\n"
          '()
-         (univ-indent
-          (^ (^if (^eq? R1 (^obj #f))
-                  (^expr-statement
-                   (^call-prim
-                    (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
-                    (^str "#f")))
-                  (^if (^eq? R1 (^obj #t))
-                       (^expr-statement
-                        (^call-prim
-                         (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
-                         (^str "#t")))
-                       (^expr-statement
-                        (^call-prim
-                         (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
-                         R1))))
-             (^return R0))))
+         (^ (^if (^eq? R1 (^obj #f))
+                 (^expr-statement
+                  (^call-prim
+                   (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
+                   (^str "#f")))
+                 (^if (^eq? R1 (^obj #t))
+                      (^expr-statement
+                       (^call-prim
+                        (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
+                        (^str "#t")))
+                      (^expr-statement
+                       (^call-prim
+                        (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
+                        R1))))
+            (^return R0)))
 
         (^setglo 'println
                  (gvm-proc-use ctx "println"))
@@ -5113,25 +5575,16 @@ function Gambit_trampoline(pc) {
        (univ-comment ctx "--------------------------------\n")
        "\n"
 
-       (^inc-by (begin
-                  (gvm-state-sp-use ctx 'rd)
-                  (gvm-state-sp-use ctx 'wr))
-                1
-                (lambda (x)
-                  (^expr-statement
-                   (^assign
-                    (^array-index
-                     (gvm-state-stack-use ctx 'rd)
-                     x)
-                    (^obj #f)))))
+       (^push (^obj #f))
 
-       (^expr-statement
-        (^assign (^global-var (^prefix "r0"))
-                 (^global-function (^prefix "underflow"))))
+       (^assign (^gvar "r0")
+                (^gvar (univ-use-rtlib ctx 'underflow)))
+#;
+       (^assign (^gvar "r0")
+                (^obj #f))
 
-       (^expr-statement
-        (^assign (^global-var (^prefix "nargs"))
-                 0))
+       (^assign (^gvar "nargs")
+                0)
 
        (case (target-name (ctx-target ctx))
 
@@ -5196,9 +5649,8 @@ function Gambit_trampoline(pc) {
          (map car params))
         ") {" (univ-indent (^ header body)) "}\n"
         (map (lambda (attrib)
-               (^expr-statement
-                (^assign (^ name "." (car attrib))
-                         (cdr attrib))))
+               (^assign (^ name "." (car attrib))
+                        (cdr attrib)))
              attribs)))
 
     ((php)
@@ -5214,9 +5666,8 @@ function Gambit_trampoline(pc) {
                 (^ header
                    (map (lambda (attrib)
                           (^ "static "
-                             (^expr-statement
-                              (^assign (^local-var (car attrib))
-                                       (cdr attrib)))))
+                             (^assign (^local-var (car attrib))
+                                      (cdr attrib))))
                         attribs)
 
                    (if (null? globals)
@@ -5230,7 +5681,7 @@ function Gambit_trampoline(pc) {
                "}")))
        (if prim?
            (^ decl "\n")
-           (^expr-statement (^assign name decl)))))
+           (^assign name decl))))
 
 
     ((python)
@@ -5252,9 +5703,8 @@ function Gambit_trampoline(pc) {
                    "\n"))
             body))
         (map (lambda (attrib)
-               (^expr-statement
-                (^assign (^ name "." (car attrib))
-                         (cdr attrib))))
+               (^assign (^ name "." (car attrib))
+                        (cdr attrib)))
              attribs)))
 
     ((ruby)
@@ -5271,15 +5721,14 @@ function Gambit_trampoline(pc) {
                  (univ-indent (^ header body))
                  "end\n")
 
-              (^expr-statement
-               (^assign
-                name
-                (^ "lambda {"
-                   (if (null? params)
-                       (^)
-                       (^ "|" parameters "|"))
-                   (univ-indent (^ header body))
-                   "}"))))
+              (^assign
+               name
+               (^ "lambda {"
+                  (if (null? params)
+                      (^)
+                      (^ "|" parameters "|"))
+                  (univ-indent (^ header body))
+                  "}")))
 
           (if (pair? attribs)
               (^ "class << " name "; attr_accessor :" (car (car attribs))
@@ -5288,9 +5737,8 @@ function Gambit_trampoline(pc) {
                       (cdr attribs))
                  "; end\n"
                  (map (lambda (attrib)
-                        (^expr-statement
-                         (^assign (^ name "." (car attrib))
-                                  (cdr attrib))))
+                        (^assign (^ name "." (car attrib))
+                                 (cdr attrib)))
                       attribs))
               (^)))))
 
@@ -5311,9 +5759,8 @@ function Gambit_trampoline(pc) {
          (map (lambda (field)
                 (let ((field-name (car field))
                       (field-init (cadr field)))
-                  (^expr-statement
-                   (^assign (^this-member field-name)
-                            (or field-init (^local-var field-name))))))
+                  (^assign (^this-member field-name)
+                           (or field-init (^local-var field-name)))))
               fields))
         "}\n"
         (map (lambda (method)
@@ -5342,9 +5789,8 @@ function Gambit_trampoline(pc) {
              (map (lambda (field)
                     (let ((field-name (car field))
                           (field-init (cadr field)))
-                      (^expr-statement
-                       (^assign (^this-member field-name)
-                                (or field-init (^local-var field-name))))))
+                      (^assign (^this-member field-name)
+                               (or field-init (^local-var field-name)))))
                   fields))
             "}\n"))
         (map (lambda (method)
@@ -5373,9 +5819,8 @@ function Gambit_trampoline(pc) {
                  (map (lambda (field)
                         (let ((field-name (car field))
                               (field-init (cadr field)))
-                          (^expr-statement
-                           (^assign (^this-member field-name)
-                                    (or field-init (^local-var field-name))))))
+                          (^assign (^this-member field-name)
+                                   (or field-init (^local-var field-name)))))
                       fields)))))
         (map (lambda (method)
                (^ "\n"
@@ -5407,9 +5852,8 @@ function Gambit_trampoline(pc) {
              (map (lambda (field)
                     (let ((field-name (car field))
                           (field-init (cadr field)))
-                      (^expr-statement
-                       (^assign (^this-member field-name)
-                                (or field-init (^local-var field-name))))))
+                      (^assign (^this-member field-name)
+                               (or field-init (^local-var field-name)))))
                   fields))
             "end\n"))
         (map (lambda (method)
@@ -5440,11 +5884,32 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-comment, unknown target"))))
 
+(define (univ-emit-return-poll ctx expr poll? call?)
+  (if poll?
+
+      (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
+               -1
+               (lambda (inc)
+                 (^if (^= inc 0)
+                      (^return-call-prim
+                       (^global-prim-function
+                        (^prefix (univ-use-rtlib ctx 'poll)))
+                       expr)
+                      (if call?
+                          (^return-call expr)
+                          (^return expr)))))
+
+      (if call?
+          (^return-call expr)
+          (^return expr))))
+
 (define (univ-emit-return-call-prim ctx expr . params)
-  (univ-emit-return ctx (apply univ-emit-call-prim (cons ctx (cons expr params)))))
+  (^return
+   (apply univ-emit-call-prim (cons ctx (cons expr params)))))
 
 (define (univ-emit-return-call ctx expr . params)
-  (univ-emit-return ctx (apply univ-emit-call (cons ctx (cons expr params)))))
+  (^return
+   (apply univ-emit-call (cons ctx (cons expr params)))))
 
 (define (univ-emit-return ctx expr)
   (case (target-name (ctx-target ctx))
@@ -5463,10 +5928,8 @@ function Gambit_trampoline(pc) {
   (case (univ-null-representation ctx)
 
     ((class)
-     (let ((null-val (^global-var (^prefix "null_val"))))
-       (univ-use-rtlib ctx 'Null)
-       (use-global ctx null-val)
-       null-val))
+     (univ-use-rtlib ctx 'Null)
+     (^gvar "null_val"))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -5491,10 +5954,8 @@ function Gambit_trampoline(pc) {
   (case (univ-void-representation ctx)
 
     ((class)
-     (let ((void-val (^global-var (^prefix "void_val"))))
-       (univ-use-rtlib ctx 'Void)
-       (use-global ctx void-val)
-       void-val))
+     (univ-use-rtlib ctx 'Void)
+     (^gvar "void_val"))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -5519,10 +5980,8 @@ function Gambit_trampoline(pc) {
   (case (univ-absent-representation ctx)
 
     ((class)
-     (let ((absent-val (^global-var (^prefix "absent_val"))))
-       (univ-use-rtlib ctx 'Absent)
-       (use-global ctx absent-val)
-       absent-val))
+     (univ-use-rtlib ctx 'Absent)
+     (^gvar "absent_val"))
 
     (else
      (compiler-internal-error
@@ -5545,10 +6004,8 @@ function Gambit_trampoline(pc) {
   (case (univ-boolean-representation ctx)
 
     ((class)
-     (let ((val (^global-var (^prefix (if obj "true_val" "false_val")))))
-       (univ-use-rtlib ctx 'Boolean)
-       (use-global ctx val)
-       val))
+     (univ-use-rtlib ctx 'Boolean)
+     (^gvar (if obj "true_val" "false_val")))
 
     (else
      (^bool obj))))
@@ -5755,6 +6212,41 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-emit-member, unknown target"))))
 
+(define (univ-with-function-attribs ctx assign? fn thunk)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (thunk))
+
+    ((php)
+     (let ((attribs-var
+            (^local-var (^ fn "_attribs")))
+           (attribs-array
+            (^ "(new ReflectionFunction(" (^local-var fn) "))->getStaticVariables()")))
+       (^ (if assign?
+              (^assign attribs-var attribs-array)
+              (^var-declaration attribs-var attribs-array))
+          (thunk))))
+
+    (else
+     (compiler-internal-error
+      "univ-with-function-attribs, unknown target"))))
+
+(define (univ-get-function-attrib ctx fn attrib)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^member (^local-var fn) attrib))
+
+    ((php)
+     (let ((attribs-var
+            (^local-var (^ fn "_attribs"))))
+       (^prop-index attribs-var (^str attrib))))
+
+    (else
+     (compiler-internal-error
+      "univ-get-function-attrib, unknown target"))))
+
 (define (univ-emit-pair? ctx expr)
   (^instanceof (^prefix (univ-use-rtlib ctx 'Pair)) expr))
 
@@ -5768,12 +6260,10 @@ function Gambit_trampoline(pc) {
   (^member expr "cdr"))
 
 (define (univ-emit-setcar ctx expr1 expr2)
-  (^expr-statement
-   (^assign (^member expr1 "car") expr2)))
+  (^assign (^member expr1 "car") expr2))
 
 (define (univ-emit-setcdr ctx expr1 expr2)
-  (^expr-statement
-   (^assign (^member expr1 "cdr") expr2)))
+  (^assign (^member expr1 "cdr") expr2))
 
 (define (univ-emit-float ctx val)
   ;; TODO: generate correct syntax
@@ -6402,15 +6892,13 @@ tanh
   (^array-length (^vector-unbox expr)))
 
 (define (univ-emit-vector-shrink! ctx expr1 expr2)
-  (^expr-statement
-   (^array-shrink! (^vector-unbox expr1) expr2)))
+  (^array-shrink! (^vector-unbox expr1) expr2))
 
 (define (univ-emit-vector-ref ctx expr1 expr2)
   (^array-index (^vector-unbox expr1) expr2))
 
 (define (univ-emit-vector-set! ctx expr1 expr2 expr3)
-  (^expr-statement
-   (^assign (^array-index (^vector-unbox expr1) expr2) expr3)))
+  (^assign (^array-index (^vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-structure-box ctx expr)
   (case (univ-structure-representation ctx)
@@ -6446,8 +6934,7 @@ tanh
   (^array-index (^structure-unbox expr1) expr2))
 
 (define (univ-emit-structure-set! ctx expr1 expr2 expr3)
-  (^expr-statement
-   (^assign (^array-index (^structure-unbox expr1) expr2) expr3)))
+  (^assign (^array-index (^structure-unbox expr1) expr2) expr3))
 
 (define (univ-emit-str ctx val)
   ;; TODO: generate correct escapes for the target language
@@ -6510,8 +6997,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^expr-statement
-      (^array-shrink! (^string-unbox expr1) (^fixnum-unbox expr2))))
+     (^array-shrink! (^string-unbox expr1) (^fixnum-unbox expr2)))
 
     (else
      (compiler-internal-error
@@ -6546,8 +7032,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^expr-statement
-      (^assign (^array-index expr1 expr2) expr3)))
+     (^assign (^array-index expr1 expr2) expr3))
 
     (else
      ;; mutable strings do not exist in js, php, python and ruby
@@ -6616,8 +7101,7 @@ tanh
   (^member expr "val"))
 
 (define (univ-emit-setbox ctx expr1 expr2)
-  (^expr-statement
-   (^assign (^member expr1 "val") expr2)))
+  (^assign (^member expr1 "val") expr2))
 
 (define (univ-emit-procedure? ctx expr)
   (case (target-name (ctx-target ctx))
@@ -6724,27 +7208,6 @@ tanh
     (else
      (compiler-internal-error
       "unit-emit-instanceof, unknown target"))))
-
-(define (univ-emit-return-poll ctx expr poll? call?)
-  (if poll?
-
-      (^inc-by (begin
-                 (gvm-state-pollcount-use ctx 'rd)
-                 (gvm-state-pollcount-use ctx 'wr))
-               -1
-               (lambda (inc)
-                 (^if (^= inc 0)
-                      (univ-emit-return-call-prim
-                       ctx
-                       (^global-prim-function (^prefix (univ-use-rtlib ctx 'poll)))
-                       expr)
-                      (if call?
-                          (univ-emit-return-call ctx expr)
-                          (univ-emit-return ctx expr)))))
-
-      (if call?
-          (univ-emit-return-call ctx expr)
-          (univ-emit-return ctx expr))))
 
 (define (univ-throw ctx expr)
   (case (target-name (ctx-target ctx))
@@ -7268,7 +7731,7 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+         (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
             arg1
             " + "
             arg2
@@ -7276,7 +7739,7 @@ tanh
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+            ") === " (^gvar "temp1") " && " (^gvar "temp2")))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
@@ -7292,21 +7755,23 @@ tanh
         ((php ruby)
          (^and (^parens
                 (^= (^parens
-                     (^assign (^global-var (^prefix "temp2"))
-                              (^-
-                               (^parens
-                                (^bitand
-                                 (^parens
-                                  (^+
-                                   (^parens
-                                    (^assign (^global-var (^prefix "temp1"))
-                                             (^+ arg1
-                                                 arg2)))
-                                   (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                                 (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                               (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
-                    (^global-var (^prefix "temp1"))))
-               (^global-var (^prefix "temp2"))))
+                     (^assign-expr
+                      (^gvar "temp2")
+                      (^-
+                       (^parens
+                        (^bitand
+                         (^parens
+                          (^+
+                           (^parens
+                            (^assign-expr
+                             (^gvar "temp1")
+                             (^+ arg1
+                                 arg2)))
+                           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                         (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                       (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                    (^gvar "temp1")))
+               (^gvar "temp2")))
 
         (else
          (compiler-internal-error
@@ -7336,7 +7801,7 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+         (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
             arg1
             " * "
             arg2
@@ -7344,7 +7809,7 @@ tanh
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+            ") === " (^gvar "temp1") " && " (^gvar "temp2")))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
@@ -7360,21 +7825,23 @@ tanh
         ((php ruby)
          (^and (^parens
                 (^= (^parens
-                     (^assign (^global-var (^prefix "temp2"))
-                              (^-
-                               (^parens
-                                (^bitand
-                                 (^parens
-                                  (^+
-                                   (^parens
-                                    (^assign (^global-var (^prefix "temp1"))
-                                             (^* arg1
-                                                 arg2)))
-                                   (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                                 (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                               (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
-                    (^global-var (^prefix "temp1"))))
-               (^global-var (^prefix "temp2"))))
+                     (^assign-expr
+                      (^gvar "temp2")
+                      (^-
+                       (^parens
+                        (^bitand
+                         (^parens
+                          (^+
+                           (^parens
+                            (^assign-expr
+                             (^gvar "temp1")
+                             (^* arg1
+                                 arg2)))
+                           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
+                         (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
+                       (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                    (^gvar "temp1")))
+               (^gvar "temp2")))
 
         (else
          (compiler-internal-error
@@ -7405,7 +7872,7 @@ tanh
 
         ((js)
          (if arg2
-             (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+             (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
                 arg1
                 " - "
                 arg2
@@ -7413,15 +7880,15 @@ tanh
                 univ-tag-bits
                 ">>"
                 univ-tag-bits
-                ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2")))
-             (^ "(" (^global-var (^prefix "temp2")) " = (" (^global-var (^prefix "temp1")) " = "
+                ") === " (^gvar "temp1") " && " (^gvar "temp2"))
+             (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
                 "- "
                 arg1
                 ")<<"
                 univ-tag-bits
                 ">>"
                 univ-tag-bits
-                ") === " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2")))))
+                ") === " (^gvar "temp1") " && " (^gvar "temp2"))))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
@@ -7435,7 +7902,7 @@ tanh
             ")"))
 
         ((ruby)
-         (^ "(" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
+         (^ "(" (^gvar "temp2") " = (((" (^gvar "temp1") " = "
             arg1
             " - "
             arg2
@@ -7445,10 +7912,10 @@ tanh
             (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
             ") - "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-            ") == " (^global-var (^prefix "temp1")) " && " (^global-var (^prefix "temp2"))))
+            ") == " (^gvar "temp1") " && " (^gvar "temp2")))
 
         ((php)
-         (^ "((" (^global-var (^prefix "temp2")) " = (((" (^global-var (^prefix "temp1")) " = "
+         (^ "((" (^gvar "temp2") " = (((" (^gvar "temp1") " = "
             arg1
             " - "
             arg2
@@ -7458,7 +7925,7 @@ tanh
             (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
             ") - "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-            ") === " (^global-var (^prefix "temp1")) ") ? " (^global-var (^prefix "temp2")) " : False"))
+            ") === " (^gvar "temp1") ") ? " (^gvar "temp2") " : False"))
 
         (else
          (compiler-internal-error
@@ -8389,7 +8856,7 @@ tanh
     (univ-jump-inline ctx
                       nb-args
                       2
-                      6
+                      5
                       poll?
                       safe?
                       fs
@@ -8421,8 +8888,7 @@ tanh
           (let ((rtlib-name
                  (string->symbol
                   (string-append name (number->string nb-args)))))
-            (univ-emit-return-poll
-             ctx
+            (^return-poll
              (^prefix (univ-use-rtlib ctx rtlib-name))
              poll?
              #t))))))

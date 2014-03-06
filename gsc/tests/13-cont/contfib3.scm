@@ -20,4 +20,4 @@
 
   (fib n))
 
-(println (fib 25))
+(println (fib 20))
