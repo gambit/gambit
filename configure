@@ -934,6 +934,10 @@ enable_lib_suffix
 enable_help_browser
 enable_type_checking
 enable_auto_forcing
+enable_rtlib_debug
+enable_rtlib_debug_location
+enable_rtlib_debug_source
+enable_rtlib_debug_environments
 enable_poll
 enable_high_res_timing
 enable_multiple_vms
@@ -1615,6 +1619,21 @@ Optional Features:
                           Browser to use for help (default is to search)
   --enable-type-checking  perform type checking (default is YES)
   --enable-auto-forcing   automatically force promises (default is NO)
+  --enable-rtlib-debug    Include all debugging information in the code
+                          generated for the Scheme runtime library (default is
+                          NO)
+  --enable-rtlib-debug-location
+                          Include source code location debugging information
+                          in the code generated for the Scheme runtime library
+                          (default is NO)
+  --enable-rtlib-debug-source
+                          Include the source code debugging information in the
+                          code generated for the Scheme runtime library
+                          (default is NO)
+  --enable-rtlib-debug-environments
+                          Include environment debugging information in the
+                          code generated for the Scheme runtime library
+                          (default is NO)
   --enable-poll           Enable poll as the select method (default is NO)
   --enable-high-res-timing
                           Enable high-resolution timing (default is NO)
@@ -5225,6 +5244,68 @@ fi
 if test "$ENABLE_AUTO_FORCING" = yes; then
 
   COMPILATION_OPTIONS="$COMPILATION_OPTIONS -force"
+
+fi
+
+###############################################################################
+#
+# Check if debugging information for the Scheme runtime library is to
+# be generated when the system is bootstrapped (with
+# "make bootstrap; make bootclean; make").
+
+# Check whether --enable-rtlib-debug was given.
+if test "${enable_rtlib_debug+set}" = set; then :
+  enableval=$enable_rtlib_debug; ENABLE_RTLIB_DEBUG=$enableval
+else
+  ENABLE_RTLIB_DEBUG=no
+fi
+
+
+if test "$ENABLE_RTLIB_DEBUG" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug"
+
+fi
+
+# Check whether --enable-rtlib-debug-location was given.
+if test "${enable_rtlib_debug_location+set}" = set; then :
+  enableval=$enable_rtlib_debug_location; ENABLE_RTLIB_DEBUG_LOCATION=$enableval
+else
+  ENABLE_RTLIB_DEBUG_LOCATION=no
+fi
+
+
+if test "$ENABLE_RTLIB_DEBUG_LOCATION" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug-location"
+
+fi
+
+# Check whether --enable-rtlib-debug-source was given.
+if test "${enable_rtlib_debug_source+set}" = set; then :
+  enableval=$enable_rtlib_debug_source; ENABLE_RTLIB_DEBUG_SOURCE=$enableval
+else
+  ENABLE_RTLIB_DEBUG_SOURCE=no
+fi
+
+
+if test "$ENABLE_RTLIB_DEBUG_SOURCE" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug-source"
+
+fi
+
+# Check whether --enable-rtlib-debug-environments was given.
+if test "${enable_rtlib_debug_environments+set}" = set; then :
+  enableval=$enable_rtlib_debug_environments; ENABLE_RTLIB_DEBUG_ENVIRONMENTS=$enableval
+else
+  ENABLE_RTLIB_DEBUG_ENVIRONMENTS=no
+fi
+
+
+if test "$ENABLE_RTLIB_DEBUG_ENVIRONMENTS" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug-environments"
 
 fi
 

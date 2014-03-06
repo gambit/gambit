@@ -249,6 +249,25 @@ The configure options which are specific to the Gambit-C system are:
                           cause strict operations such as car, but not
                           cons, to automatically force their arguments
                           (requires: make bootstrap; make bootclean; make)
+  --enable-rtlib-debug
+                          cause the inclusion of all debugging information
+                          in the code generated for the Scheme runtime library
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-rtlib-debug-location
+                          cause the inclusion of source code location
+                          debugging information in the code generated
+                          for the Scheme runtime library
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-rtlib-debug-source
+                          cause the inclusion of source code debugging
+                          information in the code generated for the
+                          Scheme runtime library
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-rtlib-debug-environments
+                          cause the inclusion of environment debugging
+                          information in the code generated for the
+                          Scheme runtime library
+                          (requires: make bootstrap; make bootclean; make)
   --enable-thread-system[=thread-system]
                           cause the selection of a specific thread system
                           (either posix or win32)

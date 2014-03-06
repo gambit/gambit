@@ -544,6 +544,60 @@ fi
 
 ###############################################################################
 #
+# Check if debugging information for the Scheme runtime library is to
+# be generated when the system is bootstrapped (with
+# "make bootstrap; make bootclean; make").
+
+AC_ARG_ENABLE(rtlib-debug,
+              AC_HELP_STRING([--enable-rtlib-debug],
+                             [Include all debugging information in the code generated for the Scheme runtime library (default is NO)]),
+              ENABLE_RTLIB_DEBUG=$enableval,
+              ENABLE_RTLIB_DEBUG=no)
+
+if test "$ENABLE_RTLIB_DEBUG" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug"
+
+fi
+
+AC_ARG_ENABLE(rtlib-debug-location,
+              AC_HELP_STRING([--enable-rtlib-debug-location],
+                             [Include source code location debugging information in the code generated for the Scheme runtime library (default is NO)]),
+              ENABLE_RTLIB_DEBUG_LOCATION=$enableval,
+              ENABLE_RTLIB_DEBUG_LOCATION=no)
+
+if test "$ENABLE_RTLIB_DEBUG_LOCATION" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug-location"
+
+fi
+
+AC_ARG_ENABLE(rtlib-debug-source,
+              AC_HELP_STRING([--enable-rtlib-debug-source],
+                             [Include the source code debugging information in the code generated for the Scheme runtime library (default is NO)]),
+              ENABLE_RTLIB_DEBUG_SOURCE=$enableval,
+              ENABLE_RTLIB_DEBUG_SOURCE=no)
+
+if test "$ENABLE_RTLIB_DEBUG_SOURCE" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug-source"
+
+fi
+
+AC_ARG_ENABLE(rtlib-debug-environments,
+              AC_HELP_STRING([--enable-rtlib-debug-environments],
+                             [Include environment debugging information in the code generated for the Scheme runtime library (default is NO)]),
+              ENABLE_RTLIB_DEBUG_ENVIRONMENTS=$enableval,
+              ENABLE_RTLIB_DEBUG_ENVIRONMENTS=no)
+
+if test "$ENABLE_RTLIB_DEBUG_ENVIRONMENTS" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug-environments"
+
+fi
+
+###############################################################################
+#
 # Check whether to enable poll as the select method
 
 AC_ARG_ENABLE(poll,
