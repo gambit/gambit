@@ -239,23 +239,6 @@ gensym
         (##make-source x (##source-locat ae))
         (##make-source x #f))))
 
-(define build-params
-  (lambda (ae vars)
-
-    (define fix
-      (lambda (vars)
-        (cond ((null? vars)
-               '())
-              ((pair? vars)
-               (cons (build-source ae (car vars))
-                     (fix (cdr vars))))
-              (else
-               (build-source ae vars)))))
-
-    (if (or (null? vars) (pair? vars))
-        (build-source ae (fix vars))
-        (fix vars))))
-
 (define attach-source
   (lambda (ae datum)
 ;;    (pp `(attach-source ,ae ,datum))
