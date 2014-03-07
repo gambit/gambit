@@ -3719,6 +3719,12 @@
                    (list (chi (syntax val) r mr empty-wrap m?))))
                (syntax-error e "invalid literals list in"))))))))
 
+(global-extend 'macro 'include
+  (lambda (x)
+    (syntax-case x ()
+      ((include filename)
+       (datum->syntax-object (syntax include) (##include-file-as-a-begin-expr (syntax-object-expression x)))))))
+
 (put-cte-hook 'module
   (lambda (x)
     (define proper-export?
@@ -4577,37 +4583,6 @@
 ;*** (define-syntax unsyntax-splicing
 ;***   (lambda (x)
 ;***     (syntax-error x "misplaced")))
-
-(define-syntax include
-  (lambda (x)
-    (define read-file
-      (lambda (fn k)
-        (let ((p (open-input-file fn)))
-          (let f ()
-            (let ((x (read p)))
-              (if (eof-object? x)
-                  (begin (close-input-port p) '())
-                  (cons (datum->syntax-object k x) (f))))))))
-    (syntax-case x ()
-      ((k filename)
-       (let ((fn (syntax-object->datum (syntax filename))))
-;***          (with-syntax (((exp ...) (read-file fn (syntax k))))
-;***            (syntax (begin exp ...))))))))
-         (datum->syntax-object
-          (syntax k)
-          (let* ((src
-                  (##include-file-as-a-begin-expr
-                   (let ((y (vector-ref x 1)))
-                     (if (##source? y)
-                         y
-                         (##make-source y #f)))))
-                 (locat
-                  (##source-locat src)))
-            src
-            #;
-            (##make-source (cons (##make-source 'begin locat)
-                                 (cdr (##source-code src)))
-                           locat))))))))
 
 (define-syntax case
   (lambda (x)
