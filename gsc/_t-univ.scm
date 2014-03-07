@@ -54,7 +54,14 @@
   'class)
 
 (define (univ-symbol-representation ctx)
-  'host)
+  (case (target-name (ctx-target ctx))
+    ((js)
+     'host)
+    (else
+     'class)))
+
+(define (univ-keyword-representation ctx)
+  'class)
 
 (define (univ-tostr-method-name ctx)
   (case (target-name (ctx-target ctx))
@@ -656,6 +663,9 @@
 (define-macro (^chr val)
   `(univ-emit-chr ctx ,val))
 
+(define-macro (^char-obj obj force-var?)
+  `(univ-emit-char-obj ctx ,obj ,force-var?))
+
 (define-macro (^char-box val)
   `(univ-emit-char-box ctx ,val))
 
@@ -833,6 +843,12 @@
 (define-macro (^str val)
   `(univ-emit-str ctx ,val))
 
+(define-macro (^strtocodes val)
+  `(univ-emit-strtocodes ctx ,val))
+
+(define-macro (^string-obj obj force-var?)
+  `(univ-emit-string-obj ctx ,obj ,force-var?))
+
 (define-macro (^string-box val)
   `(univ-emit-string-box ctx ,val))
 
@@ -854,8 +870,8 @@
 (define-macro (^string-set! val1 val2 val3)
   `(univ-emit-string-set! ctx ,val1 ,val2 ,val3))
 
-(define-macro (^sym val)
-  `(univ-emit-sym ctx ,val))
+(define-macro (^symbol-obj obj force-var?)
+  `(univ-emit-symbol-obj ctx ,obj ,force-var?))
 
 (define-macro (^symbol-box val)
   `(univ-emit-symbol-box ctx ,val))
@@ -866,8 +882,17 @@
 (define-macro (^symbol? val)
   `(univ-emit-symbol? ctx ,val))
 
-(define-macro (^symtostr val)
-  `(univ-emit-symtostr ctx ,val))
+(define-macro (^keyword-obj obj force-var?)
+  `(univ-emit-keyword-obj ctx ,obj ,force-var?))
+
+(define-macro (^keyword-box val)
+  `(univ-emit-keyword-box ctx ,val))
+
+(define-macro (^keyword-unbox keyword)
+  `(univ-emit-keyword-unbox ctx ,keyword))
+
+(define-macro (^keyword? val)
+  `(univ-emit-keyword? ctx ,val))
 
 (define-macro (^box? val)
   `(univ-emit-box? ctx ,val))
@@ -880,6 +905,12 @@
 
 (define-macro (^setbox val1 val2)
   `(univ-emit-setbox ctx ,val1 ,val2))
+
+(define-macro (^frame? val)
+  `(univ-emit-frame? ctx ,val))
+
+(define-macro (^continuation? val)
+  `(univ-emit-continuation? ctx ,val))
 
 (define-macro (^procedure? val)
   `(univ-emit-procedure? ctx ,val))
@@ -2599,26 +2630,16 @@
                        "univ-emit-obj, unsupported inexact number:" obj)))))
 
           ((char? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^char-box (^chr obj)))))
+           (^char-obj obj force-var?))
 
           ((string? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^string-box
-               (^array-literal
-                (map (lambda (c) (^int (char->integer c)))
-                     (string->list obj)))))))
+           (^string-obj obj force-var?))
 
           ((symbol-object? obj)
-           (^symbol-box (^sym obj)))
+           (^symbol-obj obj force-var?))
+
+          ((keyword-object? obj)
+           (^keyword-obj obj force-var?))
 
           ((null? obj)
            (^null))
@@ -3351,6 +3372,12 @@ EOF
              (^ (^assign (^array-index (^this-member "slots") 0) (^this))
                 (^return (^this)))))))
 
+    ((Frame)
+     (^class-declaration
+      (^prefix "Frame")
+      '((slots #f))
+      '()))
+
     ((Continuation)
      (^class-declaration
       (^prefix "Continuation")
@@ -3361,7 +3388,21 @@ EOF
      (^class-declaration
       (^prefix "Symbol")
       '((str #f))
-      '()))
+      (list
+       (list (univ-tostr-method-name ctx)
+             '()
+             (^return
+              (^this-member "str"))))))
+
+    ((Keyword)
+     (^class-declaration
+      (^prefix "Keyword")
+      '((str #f))
+      (list
+       (list (univ-tostr-method-name ctx)
+             '()
+             (^return
+              (^this-member "str"))))))
 
     ((Box)
      (^class-declaration
@@ -3640,17 +3681,27 @@ EOF
       "\n"
       '()
       (case (target-name (ctx-target ctx))
+
         ((js)
+         (^
 ;;TODO: clean up
 "
     var codes = [];
-    for (var i=0; i < str.length; i++) {
-        codes.push(str.charCodeAt(i));
+    for (var i=0; i < " (^local-var "str") ".length; i++) {
+        codes.push(" (^local-var "str") ".charCodeAt(i));
     }
     return codes;
-")
-        ((php python ruby)
-         (^return (^array-literal '(67 68 69)))) ;; TODO: implement
+"))
+
+        ((php)
+         (^return (^ "array_slice(unpack('c*'," (^local-var "str") "),0)")))
+
+        ((python)
+         (^return (^ "[ord(c) for c in " (^local-var "str") "]")))
+
+        ((ruby)
+         (^return (^ (^local-var "str") ".unpack('U*')")))
+
         (else
          (compiler-internal-error
           "univ-rtlib-feature, unknown target")))))
@@ -3965,6 +4016,7 @@ EOF
         (need-feature 'String)
         (need-feature 'Flonum)
         (need-feature 'Pair)
+        (need-feature 'Frame)
         (need-feature 'Continuation)
         (need-feature 'ffi)
 
@@ -6118,6 +6170,21 @@ function Gambit_trampoline(pc) {
 (define (univ-emit-chr ctx val)
   (^ (char->integer val)))
 
+(define (univ-emit-char-obj ctx obj force-var?)
+  (case (univ-char-representation ctx)
+
+    ((class)
+     (univ-obj-use
+      ctx
+      obj
+      force-var?
+      (lambda ()
+        (^char-box (^chr obj)))))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-char-obj, host representation not implemented"))))
+
 (define (univ-emit-char-box ctx expr)
   (case (univ-char-representation ctx)
 
@@ -6125,7 +6192,8 @@ function Gambit_trampoline(pc) {
      (^new (^prefix (univ-use-rtlib ctx 'Char)) expr))
 
     (else
-     expr)))
+     (compiler-internal-error
+      "univ-emit-char-box, host representation not implemented"))))
 
 (define (univ-emit-char-unbox ctx expr)
   (case (univ-char-representation ctx)
@@ -6134,7 +6202,8 @@ function Gambit_trampoline(pc) {
      (^member expr "code"))
 
     (else
-     expr)))
+     (compiler-internal-error
+      "univ-emit-char-unbox, host representation not implemented"))))
 
 (define (univ-emit-chr-fromint ctx expr)
   (case (target-name (ctx-target ctx))
@@ -6182,10 +6251,8 @@ function Gambit_trampoline(pc) {
      (^instanceof (^prefix (univ-use-rtlib ctx 'Char)) expr))
 
     (else
-     (case (target-name (ctx-target ctx))
-       (else
-        (compiler-internal-error
-         "univ-emit-char?, unknown target"))))))
+     (compiler-internal-error
+      "univ-emit-char?, host representation not implemented"))))
 
 (define (univ-emit-int ctx val)
   (^ val))
@@ -6999,6 +7066,34 @@ tanh
   ;; TODO: generate correct escapes for the target language
   (^ "'" val "'"))
 
+(define (univ-emit-strtocodes ctx expr)
+  (case (univ-string-representation ctx)
+
+    ((class)
+     (^call-prim
+      (^global-prim-function (^prefix (univ-use-rtlib ctx 'strtocodes)))
+      expr))
+
+    (else
+     expr)))
+
+(define (univ-emit-string-obj ctx obj force-var?)
+  (case (univ-string-representation ctx)
+
+    ((class)
+     (univ-obj-use
+      ctx
+      obj
+      force-var?
+      (lambda ()
+        (^string-box
+         (^array-literal
+          (map (lambda (c) (^int (char->integer c)))
+               (string->list obj)))))))
+
+    (else
+     (^str obj))))
+
 (define (univ-emit-string-box ctx expr)
   (case (univ-string-representation ctx)
 
@@ -7098,18 +7193,49 @@ tanh
      (compiler-internal-error
       "univ-emit-string-set!, unknown target"))))
 
-(define (univ-emit-sym ctx val)
-  ;; TODO: generate correct escapes for the target language
-  (^ "'" val "'"))
+(define (univ-emit-symbol-obj ctx obj force-var?)
+  (case (univ-symbol-representation ctx)
+
+    ((class)
+     (univ-obj-use
+      ctx
+      obj
+      force-var?
+      (lambda ()
+        (^symbol-box (^str (symbol->string obj))))))
+
+    (else
+     (case (target-name (ctx-target ctx))
+
+       ((js php python)
+        (^str (symbol->string obj)))
+
+       ((ruby)
+        (^ ":" (^str (symbol->string obj))))
+
+       (else
+        (compiler-internal-error
+         "univ-emit-symbol-obj, unknown target"))))))
 
 (define (univ-emit-symbol-box ctx expr)
   (case (univ-symbol-representation ctx)
 
     ((class)
+     ;;TODO: intern the symbol
      (^new (^prefix (univ-use-rtlib ctx 'Symbol)) expr))
 
     (else
-     expr)))
+     (case (target-name (ctx-target ctx))
+
+       ((js php python)
+        expr)
+
+       ((ruby)
+        (^ expr ".to_sym"))
+
+       (else
+        (compiler-internal-error
+         "univ-emit-symbol-box, unknown target"))))))
 
 (define (univ-emit-symbol-unbox ctx expr)
   (case (univ-symbol-representation ctx)
@@ -7118,7 +7244,17 @@ tanh
      (^member expr "str"))
 
     (else
-     expr)))
+     (case (target-name (ctx-target ctx))
+
+       ((js php python)
+        expr)
+
+       ((ruby)
+        (^ expr ".to_s"))
+
+       (else
+        (compiler-internal-error
+         "univ-emit-symbol-unbox, unknown target"))))))
 
 (define (univ-emit-symbol? ctx expr)
   (case (univ-symbol-representation ctx)
@@ -7145,10 +7281,50 @@ tanh
         (compiler-internal-error
          "univ-emit-symbol?, unknown target"))))))
 
-(define (univ-emit-symtostr ctx expr)
-  (^call-prim
-   (^global-prim-function (^prefix (univ-use-rtlib ctx 'strtocodes)))
-   expr))
+(define (univ-emit-keyword-obj ctx obj force-var?)
+  (case (univ-keyword-representation ctx)
+
+    ((class)
+     (univ-obj-use
+      ctx
+      obj
+      force-var?
+      (lambda ()
+        (^keyword-box (^str (keyword->string obj))))))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-keyword-box, host representation not implemented"))))
+
+(define (univ-emit-keyword-box ctx expr)
+  (case (univ-keyword-representation ctx)
+
+    ((class)
+     (^new (^prefix (univ-use-rtlib ctx 'Keyword)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-keyword-box, host representation not implemented"))))
+
+(define (univ-emit-keyword-unbox ctx expr)
+  (case (univ-keyword-representation ctx)
+
+    ((class)
+     (^member expr "str"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-keyword-unbox, host representation not implemented"))))
+
+(define (univ-emit-keyword? ctx expr)
+  (case (univ-keyword-representation ctx)
+
+    ((class)
+     (^instanceof (^prefix (univ-use-rtlib ctx 'Keyword)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-keyword?, host representation not implemented"))))
 
 (define (univ-emit-box? ctx expr)
   (^instanceof (^prefix (univ-use-rtlib ctx 'Box)) expr))
@@ -7161,6 +7337,12 @@ tanh
 
 (define (univ-emit-setbox ctx expr1 expr2)
   (^assign (^member expr1 "val") expr2))
+
+(define (univ-emit-frame? ctx expr)
+  (^instanceof (^prefix (univ-use-rtlib ctx 'Frame)) expr))
+
+(define (univ-emit-continuation? ctx expr)
+  (^instanceof (^prefix (univ-use-rtlib ctx 'Continuation)) expr))
 
 (define (univ-emit-procedure? ctx expr)
   (case (target-name (ctx-target ctx))
@@ -7693,9 +7875,21 @@ tanh
    (lambda (ctx return arg1)
      (return (^symbol? arg1)))))
 
-;;TODO: ("##keyword?"                 (1)   #f ()    0    boolean extended)
-;;TODO: ("##frame?"                   (1)   #f ()    0    boolean extended)
-;;TODO: ("##continuation?"            (1)   #f ()    0    boolean extended)
+(univ-define-prim-bool "##keyword?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^keyword? arg1)))))
+
+(univ-define-prim-bool "##frame?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^frame? arg1)))))
+
+(univ-define-prim-bool "##continuation?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^continuation? arg1)))))
+
 ;;TODO: ("##promise?"                 (1)   #f ()    0    boolean extended)
 ;;TODO: ("##will?"                    (1)   #f ()    0    boolean extended)
 ;;TODO: ("##gc-hash-table?"           (1)   #f ()    0    boolean extended)
@@ -8533,7 +8727,7 @@ tanh
 
 ;;TODO: ("##values"                       0     #f ()    0    (#f)    extended)
 
-(univ-define-prim "##vector" #f
+(univ-define-prim "##vector" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
      (return (^vector-box (^array-literal args))))))
@@ -8735,14 +8929,24 @@ tanh
 (univ-define-prim "##symbol->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^symtostr (^symbol-unbox arg1)))))))
+     (return (^string-box (^strtocodes (^symbol-unbox arg1)))))))
 
 (univ-define-prim "##string->symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^symbol-box (^tostr arg1))))))
 
-;;TODO: ("##keyword->string"              (1)   #f ()    0    string  extended)
+;; TODO: test ##keyword->string primitive and ##string->keyword primitive
+
+(univ-define-prim "##keyword->string" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^string-box (^strtocodes (^keyword-unbox arg1)))))))
+
+(univ-define-prim "##string->keyword" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^keyword-box (^tostr arg1))))))
 
 ;;TODO: ("##closure-length"               (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
@@ -8757,7 +8961,10 @@ tanh
 ;;TODO: ("##make-promise"                 (1)   #f 0     0    (#f)    extended)
 ;;TODO: ("##force"                        (1)   #t 0     0    #f      extended)
 
-;;TODO: ("##void"                         (0)   #f ()    0    #f      extended)
+(univ-define-prim "##void" #t
+  (make-translated-operand-generator
+   (lambda (ctx return)
+     (return (^void)))))
 
 ;;TODO: ("current-thread"                 (0)   #f ()    0    #f      extended)
 ;;TODO: ("##current-thread"               (0)   #f ()    0    #f      extended)
