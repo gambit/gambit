@@ -8346,15 +8346,16 @@
       (else
        (if (or (##not uninterned?)
                (##wr-stamp we obj))
-           (begin
-             (if uninterned?
-                 (##wr-str we "#:"))
-             (let ((str (##symbol->string obj)))
-               (if (case (macro-writeenv-style we)
-                     ((display print) #t)
-                     (else            (##not (##escape-symbol? we str))))
-                   (##wr-str we str)
-                   (##wr-escaped-string we str #\|)))))))))
+           (let ((str (##symbol->string obj)))
+             (case (macro-writeenv-style we)
+               ((display print)
+                (##wr-str we str))
+               (else
+                (if uninterned?
+                    (##wr-str we "#:"))
+                (if (##not (##escape-symbol? we str))
+                    (##wr-str we str)
+                    (##wr-escaped-string we str #\|))))))))))
 
 (define-prim (##escape-symbol? we str)
   (let ((n (##string-length str)))
@@ -8401,23 +8402,25 @@
       (else
        (if (or (##not uninterned?)
                (##wr-stamp we obj))
-           (begin
-             (if uninterned?
-                 (##wr-str we "#:"))
-             (let* ((str
-                     (##keyword->string obj))
-                    (keywords-allowed?
-                     (macro-readtable-keywords-allowed?
-                      (macro-writeenv-readtable we))))
-               (if (##eq? keywords-allowed? 'prefix)
-                   (##wr-ch we #\:))
-               (if (case (macro-writeenv-style we)
-                     ((display) #t)
-                     (else      (##not (##escape-keyword? we str))))
-                   (##wr-str we str)
-                   (##wr-escaped-string we str #\|))
-               (if (##not (##eq? keywords-allowed? 'prefix))
-                   (##wr-ch we #\:)))))))))
+           (let* ((str
+                   (##keyword->string obj))
+                  (keywords-allowed?
+                   (macro-readtable-keywords-allowed?
+                    (macro-writeenv-readtable we))))
+             (case (macro-writeenv-style we)
+               ((display print)
+                (##wr-str we str))
+               (else
+                (if uninterned?
+                    (##wr-str we "#:"))
+                (if (##eq? keywords-allowed? 'prefix)
+                    (##wr-ch we #\:))
+                (if (##not (##escape-keyword? we str))
+                    (##wr-str we str)
+                    (begin
+                      (##wr-escaped-string we str #\|)
+                      (if (##not (##eq? keywords-allowed? 'prefix))
+                          (##wr-ch we #\:))))))))))))
 
 (define-prim (##escape-keyword? we str)
   (let ((n (##string-length str)))
