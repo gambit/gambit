@@ -4082,12 +4082,13 @@
           #f)
 
   (let ((standard-level (##get-standard-level)))
-    (if (##fx<= 4 standard-level)
-        (##load (macro-syntax-case-file)
-                (lambda (script-line script-path) #f)
-                #t
-                #t
-                #f))))
+    (if (##fixnum.<= 4 standard-level)
+        (parameterize ((current-readtable (readtable-sharing-allowed?-set (current-readtable) 'serialize)))
+          (##load (macro-syntax-case-file)
+                  (lambda (script-line script-path) #f)
+                  #t
+                  #t
+                  #f)))))
 
 ;;;----------------------------------------------------------------------------
 
