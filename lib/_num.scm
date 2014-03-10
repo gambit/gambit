@@ -1214,7 +1214,10 @@
     (##raise-divide-by-zero-exception remainder x y))
 
   (define (exact-remainder x y)
-    (##cdr (##exact-int.div x y)))
+    (##cdr (##exact-int.div x y 
+			    #f   ; need-quotient?
+			    #t   ; keep-dividend?
+			    )))
 
   (define (inexact-remainder x y)
     (let ((exact-y (##inexact->exact y)))
@@ -1303,7 +1306,11 @@
     (##raise-divide-by-zero-exception modulo x y))
 
   (define (exact-modulo x y)
-    (let ((r (##cdr (##exact-int.div x y))))
+    (let ((r (##cdr (##exact-int.div x
+				     y
+				     #f      ; need-quotient?
+				     #t      ; keep-dividend?
+				     ))))
       (if (##eq? r 0)
           0
           (if (##eq? (##negative? x) (##negative? y))
@@ -9559,7 +9566,7 @@ ___RESULT = result;
 (define ##bignum.mdigit-base*16
   (##fx* ##bignum.mdigit-base 16))
 
-(define-prim (##bignum.div u v)
+(define-prim (##bignum.div u v #!optional (need-quotient? #t) (keep-dividend? #t))
 
   ;; u is an unnormalized bignum, v is a normalized exact-int
   ;; 0 < v <= u
@@ -9691,9 +9698,7 @@ ___RESULT = result;
                       q-hat))))))
 
 
-    (let ((need-quotient? #t)    ;; will be made an optional argument later
-          (keep-dividend? #t)    ;; will be made an optional argument later
-          (u-bits
+    (let ((u-bits
            (##integer-length u))
           (v-bits
            (##integer-length v)))
@@ -9756,7 +9761,7 @@ ___RESULT = result;
                             (estimate-q-hat top-bits-of-u v_n-1 v_n-2))
                            (q-hat
                             (subtract-multiple-of-v u v q-hat-estimate n j)))
-                      (##bignum.mdigit-set! q j q-hat)
+                      (and need-quotient? (##bignum.mdigit-set! q j q-hat))
                       (loop3 (##fx- j 1)))
                     (##cons (and need-quotient? (##bignum.normalize! q))
                             (##bignum.normalize! u)))))))))
@@ -9768,7 +9773,7 @@ ___RESULT = result;
                  (##fx+ i 1)
                  (loop6 (##fx- i 1))))))
       (let ((work-u (##bignum.make 1 #f #f))
-            (q (##bignum.make (##bignum.adigit-length u) #f #f)))
+            (q (and need-quotient? (##bignum.make (##bignum.adigit-length u) #f #f))))
 
         (##declare (not interrupts-enabled))
 
@@ -9784,13 +9789,13 @@ ___RESULT = result;
            (##bignum.mdigit-ref u (##fx- i 1)))
           (let ((q-hat (##bignum.mdigit-quotient work-u 1 v)))
             (let ((r-hat (##bignum.mdigit-remainder work-u 1 v q-hat)))
-              (##bignum.mdigit-set! q (##fx- i 1) q-hat)
+              (and need-quotient? (##bignum.mdigit-set! q (##fx- i 1) q-hat))
               (if (##fx< 1 i)
                   (loop7 (##fx- i 1)
                          r-hat)
                   (let ()
                     (##declare (interrupts-enabled))
-                    (##cons (##bignum.normalize! q)
+                    (##cons (and need-quotient? (##bignum.normalize! q))
                             r-hat)))))))))
 
   (define (small-quotient-or-divisor-divide u v)
@@ -9824,7 +9829,10 @@ ___RESULT = result;
           (let ((reduced-quotient
                  (##exact-int.div
                   (##bignum.arithmetic-shift u (##fx- v-first-bit-set))
-                  (##bignum.arithmetic-shift v (##fx- v-first-bit-set))))
+                  (##bignum.arithmetic-shift v (##fx- v-first-bit-set))
+		  #t          ; need-quotient?
+		  #f          ; keep-dividend?
+		  ))
                 (extra-remainder
                  (##extract-bit-field v-first-bit-set 0 u)))
             (##cons (##car reduced-quotient)
@@ -9901,22 +9909,29 @@ ___RESULT = result;
       (##ratnum.normalize x (##arithmetic-shift 1 (##fx- y)))
       (##arithmetic-shift x y)))
 
-(define-prim (##exact-int.div x y)
+(define-prim (##exact-int.div x y #!optional (need-quotient? #t) (keep-dividend? #t))
 
   (define (big-quotient x y)
     (let* ((x-negative? (##negative? x))
-           (abs-x (if x-negative? (##negate x) x))
+           (abs-x (if x-negative?
+		      (##negate x)
+		      x))
            (y-negative? (##negative? y))
-           (abs-y (if y-negative? (##negate y) y)))
+           (abs-y (if y-negative?
+		      (begin
+			(set! keep-dividend? #f)
+			(##negate y))
+		      y)))
       (if (##< abs-x abs-y)
           (##cons 0 x)
 
           ;; at least one of x and y is a bignum, so
           ;; here abs-x must be a bignum
 
-          (let ((result (##bignum.div abs-x abs-y)))
+          (let ((result (##bignum.div abs-x abs-y need-quotient? keep-dividend?)))
 
-            (if (##not (##eq? x-negative? y-negative?))
+            (if (and need-quotient?
+		     (##not (##eq? x-negative? y-negative?)))
                 (##set-car! result (##negate (##car result))))
 
             (if x-negative?
@@ -10077,7 +10092,9 @@ ___RESULT = result;
                   (##exact-int.div
                    (##+ (##arithmetic-shift r-prime length/4)
                         (##extract-bit-field length/4 length/4 x))
-                   (##arithmetic-shift s-prime 1)))
+                   (##arithmetic-shift s-prime 1)
+		   #t           ; need-quotient?
+		   #f))         ; keep-dividend?
                  (q
                   (##car qu))
                  (u
