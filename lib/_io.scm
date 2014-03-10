@@ -8417,10 +8417,9 @@
                     (##wr-ch we #\:))
                 (if (##not (##escape-keyword? we str))
                     (##wr-str we str)
-                    (begin
-                      (##wr-escaped-string we str #\|)
-                      (if (##not (##eq? keywords-allowed? 'prefix))
-                          (##wr-ch we #\:))))))))))))
+                    (##wr-escaped-string we str #\|))
+                (if (##not (##eq? keywords-allowed? 'prefix))
+                    (##wr-ch we #\:))))))))))
 
 (define-prim (##escape-keyword? we str)
   (let ((n (##string-length str)))
