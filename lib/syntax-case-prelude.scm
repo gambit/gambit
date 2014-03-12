@@ -315,3 +315,10 @@ gensym
                 #!key)))))
 
 ;;;============================================================================
+
+(set! ##expression-parsing-exception-names
+      (cons '(psyntax-error . "Syntax expansion failure:")
+            ##expression-parsing-exception-names))
+
+;;;============================================================================
+

@@ -5757,6 +5757,7 @@
 "create-link"
 "create-symbolic-link"
 "current-output-port"
+"current-readtable"
 "default-random-source"
 "delete-directory"
 "delete-file"
@@ -6011,6 +6012,7 @@
 "read-substring"
 "read-subu8vector"
 "read-u8"
+"readtable-sharing-allowed?-set"
 "real-part"
 "real?"
 "remainder"
@@ -7268,7 +7270,6 @@
 "current-error-port"
 "current-exception-handler"
 "current-input-port"
-"current-readtable"
 "current-thread"
 "current-time"
 "current-user-interrupt-handler"
@@ -7495,7 +7496,6 @@
 "readtable-max-write-level"
 "readtable-max-write-level-set"
 "readtable-sharing-allowed?"
-"readtable-sharing-allowed?-set"
 "readtable-start-syntax"
 "readtable-start-syntax-set"
 "readtable-write-cdr-read-macros?"
@@ -7741,6 +7741,7 @@
 "wrong-number-of-arguments-exception?"
 )
 (
+"square"
 )
  #f
 )

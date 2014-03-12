@@ -4084,11 +4084,15 @@
 (set! syntax-error
   (lambda (object . messages)
     (for-each (lambda (x) (arg-check string? x 'syntax-error)) messages)
-    (let ((message (if (null? messages)
-                       "invalid syntax"
-                       (apply string-append messages))))
-;***       (error-hook #f message (strip object empty-wrap)))))
-      (error message (strip object empty-wrap)))))
+    (let ((messages (if (null? messages)
+                        '(invalid syntax)
+                        messages))
+          (locat (cond ((annotation? object))
+                       ((and (syntax-object? object)
+                             (annotation? (syntax-object-expression object)))
+                        (syntax-object-expression object))
+                       (else #f))))
+      (apply ##raise-expression-parsing-exception `(psyntax-error ,locat  ,@messages ',(strip object empty-wrap))))))
 
 ;;; syntax-dispatch expects an expression and a pattern.  If the expression
 ;;; matches the pattern a list of the matching expressions for each
