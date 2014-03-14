@@ -379,12 +379,13 @@
   (define (hash obj)
     (macro-number-dispatch obj
       (##eq?-hash obj) ;; obj = not a number
-      (##fxand obj (macro-max-fixnum32)) ;; obj = fixnum
-      (let loop ((i (##fx- (##bignum.mdigit-length obj) 1)) (h 0)) ;; obj = bignum
-        (if (##fx< i 0)
-            h
-            (loop (##fx- i 1)
-                  (combine (##bignum.mdigit-ref obj i) h))))
+      (##fxmodulo obj 331804471) ;; obj = fixnum
+      (let ((len (##u16vector-length obj))) ;; obj = bignum
+        (let loop ((i (##fx- len 1)) (h 0))
+          (if (##fx< i 0)
+              h
+              (loop (##fx- i 1)
+                    (combine h (##u16vector-ref obj i))))))
       (combine (hash (macro-ratnum-numerator obj)) ;; obj = ratnum
                (hash (macro-ratnum-denominator obj)))
       (combine (##u16vector-ref obj 0) ;; obj = flonum
