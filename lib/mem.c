@@ -1971,6 +1971,12 @@ ___SCMOBJ val;)
                 ___printf ("%c", ___INT(___STRINGREF(str,___FIX(i))));
               ___printf ("\"");
             }
+          else if (subtype == ___sSYMBOL)
+            {
+              ___printf ("#<symbol ");
+              print_value (body[___SYMKEY_NAME]);
+              ___printf (">");
+            }
           else
             {
               ___printf ("#<%s>", subtype_to_string (subtype));
