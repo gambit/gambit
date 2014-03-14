@@ -56,7 +56,7 @@
 (define (univ-symbol-representation ctx)
   (case (target-name (ctx-target ctx))
     ((js)
-     'host)
+     'host) ;; TODO: must be 'class to support uninterned symbols
     (else
      'class)))
 
@@ -499,8 +499,11 @@
 (define-macro (^array-index expr1 expr2)
   `(univ-emit-array-index ctx ,expr1 ,expr2))
 
-(define-macro (^prop-index expr1 expr2)
-  `(univ-emit-prop-index ctx ,expr1 ,expr2))
+(define-macro (^prop-index expr1 expr2 #!optional (expr3 #f))
+  `(univ-emit-prop-index ctx ,expr1 ,expr2 ,expr3))
+
+(define-macro (^prop-index-exists? expr1 expr2)
+  `(univ-emit-prop-index-exists? ctx ,expr1 ,expr2))
 
 (define-macro (^get obj name)
   `(univ-emit-get ctx ,obj ,name))
@@ -605,6 +608,12 @@
 
 (define-macro (^setclo closure index val)
   `(univ-emit-setclo ctx ,closure ,index ,val))
+
+(define-macro (^getprm name)
+  `(univ-emit-getprm ctx ,name))
+
+(define-macro (^setprm name val)
+  `(univ-emit-setprm ctx ,name ,val))
 
 (define-macro (^getglo name)
   `(univ-emit-getglo ctx ,name))
@@ -876,6 +885,9 @@
 (define-macro (^symbol-box val)
   `(univ-emit-symbol-box ctx ,val))
 
+(define-macro (^symbol-box-noninterned val)
+  `(univ-emit-symbol-box-noninterned ctx ,val))
+
 (define-macro (^symbol-unbox symbol)
   `(univ-emit-symbol-unbox ctx ,symbol))
 
@@ -887,6 +899,9 @@
 
 (define-macro (^keyword-box val)
   `(univ-emit-keyword-box ctx ,val))
+
+(define-macro (^keyword-box-noninterned val)
+  `(univ-emit-keyword-box-noninterned ctx ,val))
 
 (define-macro (^keyword-unbox keyword)
   `(univ-emit-keyword-unbox ctx ,keyword))
@@ -1596,8 +1611,31 @@
 (define (univ-emit-array-index ctx expr1 expr2)
   (^ expr1 "[" expr2 "]"))
 
-(define (univ-emit-prop-index ctx expr1 expr2)
-  (^ expr1 "[" expr2 "]"))
+(define (univ-emit-prop-index ctx expr1 expr2 expr3)
+  (if expr3
+      (^if-expr (^prop-index-exists? expr1 expr2)
+                (^prop-index expr1 expr2)
+                expr3)
+      (^ expr1 "[" expr2 "]")))
+
+(define (univ-emit-prop-index-exists? ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ expr1 ".hasOwnProperty(" expr2 ")"))
+
+    ((php)
+     (^ "array_key_exists(" expr2 "," expr1 ")"))
+
+    ((python)
+     (^ expr2 " in " expr1))
+
+    ((ruby)
+     (^ expr1 ".has_key?(" expr2 ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-prop-index-exists?, unknown target"))))
 
 (define (univ-emit-get ctx obj name)
   (case (target-name (ctx-target ctx))
@@ -2109,11 +2147,19 @@
 
           (todo-lbl-num! (bbs-entry-lbl-num bbs))
 
-          (let loop ((rev-res '()))
-            (if (queue-empty? bb-todo)
-                (reverse rev-res)
-                (loop (cons (scan-bb ctx (queue-get! bb-todo))
-                            rev-res))))))
+          (let ((bbs-code
+                 (let loop ((rev-res '()))
+                   (if (queue-empty? bb-todo)
+                       (reverse rev-res)
+                       (loop (cons (scan-bb ctx (queue-get! bb-todo))
+                                   rev-res))))))
+            (^ bbs-code
+               (if (proc-obj-primitive? p)
+                   (let ((name (string->symbol (proc-obj-name p))))
+                     (^ "\n"
+                        (^setprm name (^obj p))
+                        (^setglo name (^obj p))))
+                   (^))))))
 
       (let ((ctx (make-ctx
                   (ctx-target global-ctx)
@@ -2403,6 +2449,9 @@
 (define (gvm-state-cst ctx)
   (^global-var (^prefix "cst")))
 
+(define (gvm-state-prm ctx)
+  (^global-var (^prefix "prm")))
+
 (define (gvm-state-glo ctx)
   (^global-var (^prefix "glo")))
 
@@ -2425,6 +2474,10 @@
 (define (gvm-state-sp-use ctx dir)
   (use-resource ctx dir 'sp)
   (gvm-state-sp ctx))
+
+(define (gvm-state-prm-use ctx dir)
+  (use-resource ctx dir 'prm)
+  (gvm-state-prm ctx))
 
 (define (gvm-state-glo-use ctx dir)
   (use-resource ctx dir 'glo)
@@ -2502,6 +2555,11 @@
            (cdr obj-name)
            val))))
 
+(define (univ-prm-location ctx name)
+  (^prop-index
+   (gvm-state-prm-use ctx 'rd)
+   (^str (symbol->string name))))
+
 (define (univ-glo-location ctx name)
 
   (if (member name
@@ -2514,6 +2572,14 @@
   (^prop-index
    (gvm-state-glo-use ctx 'rd)
    (^str (symbol->string name))))
+
+(define (univ-emit-getprm ctx name)
+  (univ-prm-location ctx name))
+
+(define (univ-emit-setprm ctx name val)
+  (^assign
+   (univ-prm-location ctx name)
+   val))
 
 (define (univ-emit-getglo ctx name)
   (univ-glo-location ctx name))
@@ -2529,7 +2595,9 @@
    (^symbol-unbox sym)))
 
 (define (univ-glo-primitive-location-dynamic ctx sym)
-  (univ-glo-location-dynamic ctx sym))
+  (^prop-index
+   (gvm-state-prm-use ctx 'rd)
+   (^symbol-unbox sym)))
 
 (define (univ-emit-glo-var-ref ctx sym)
   (univ-glo-location-dynamic ctx sym))
@@ -3385,14 +3453,34 @@ EOF
       '()))
 
     ((Symbol)
-     (^class-declaration
-      (^prefix "Symbol")
-      '((str #f))
-      (list
-       (list (univ-tostr-method-name ctx)
-             '()
-             (^return
-              (^this-member "str"))))))
+     (^ (^class-declaration
+         (^prefix "Symbol")
+         '((str #f))
+         (list
+          (list (univ-tostr-method-name ctx)
+                '()
+                (^return
+                 (^this-member "str")))))))
+
+    ((make_interned_symbol)
+     (^ (^var-declaration (^gvar "symbol_table") (^empty-dict))
+        "\n"
+        (^prim-function-declaration
+         (^global-prim-function (^prefix "make_interned_symbol"))
+         (list (cons (^local-var "str") #f))
+         "\n"
+         '()
+         (^ (^var-declaration (^local-var "sym")
+                              (^prop-index (^gvar "symbol_table")
+                                           (^local-var "str")
+                                           (^bool #f)))
+            (^if (^not (^local-var "sym"))
+                 (^ (^assign (^local-var "sym")
+                             (^symbol-box-noninterned (^local-var "str")))
+                    (^assign (^prop-index (^gvar "symbol_table")
+                                          (^local-var "str"))
+                             (^local-var "sym"))))
+            (^return (^local-var "sym"))))))
 
     ((Keyword)
      (^class-declaration
@@ -3403,6 +3491,26 @@ EOF
              '()
              (^return
               (^this-member "str"))))))
+
+    ((make_interned_keyword)
+     (^ (^var-declaration (^gvar "keyword_table") (^empty-dict))
+        "\n"
+        (^prim-function-declaration
+         (^global-prim-function (^prefix "make_interned_keyword"))
+         (list (cons (^local-var "str") #f))
+         "\n"
+         '()
+         (^ (^var-declaration (^local-var "key")
+                              (^prop-index (^gvar "keyword_table")
+                                           (^local-var "str")
+                                           (^bool #f)))
+            (^if (^not (^local-var "key"))
+                 (^ (^assign (^local-var "key")
+                             (^keyword-box-noninterned (^local-var "str")))
+                    (^assign (^prop-index (^gvar "keyword_table")
+                                          (^local-var "str"))
+                             (^local-var "key"))))
+            (^return (^local-var "key"))))))
 
     ((Box)
      (^class-declaration
@@ -3415,7 +3523,6 @@ EOF
          (^prefix "Null")
          '()
          '())
-        "\n"
         (^var-declaration
          (^gvar "null_val")
          (^new (^prefix (univ-use-rtlib ctx 'Null))))))
@@ -4056,11 +4163,15 @@ EOF
           (compiler-internal-error
            "univ-rtlib-header, unknown target")))
 
-       (^var-declaration (^gvar "r0"))
-       (^var-declaration (^gvar "r1"))
-       (^var-declaration (^gvar "r2"))
-       (^var-declaration (^gvar "r3"))
-       (^var-declaration (^gvar "r4"))
+       (univ-foldr-range
+        0
+        (- univ-nb-gvm-regs 1)
+        (^)
+        (lambda (i rest)
+          (^ (^var-declaration (gvm-state-reg-use ctx 'wr i))
+             rest)))
+
+       (^var-declaration (^gvar "prm") (^empty-dict))
        (^var-declaration (^gvar "glo") (^empty-dict))
        (^var-declaration (^gvar "cst") (^extensible-array-literal '()))
        (^var-declaration (^gvar "stack") (^extensible-array-literal '()))
@@ -5735,6 +5846,7 @@ function Gambit_trampoline(pc) {
 
        (if (used? 'sp)        (add! (gvm-state-sp ctx)))
        (if (used? 'stack)     (add! (gvm-state-stack ctx)))
+       (if (used? 'prm)       (add! (gvm-state-prm ctx)))
        (if (used? 'glo)       (add! (gvm-state-glo ctx)))
        (if (used? 'cst)       (add! (gvm-state-cst ctx)))
        (if (used? 'nargs)     (add! (gvm-state-nargs ctx)))
@@ -7221,7 +7333,17 @@ tanh
   (case (univ-symbol-representation ctx)
 
     ((class)
-     ;;TODO: intern the symbol
+     (^call-prim
+      (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_interned_symbol)))
+      expr))
+
+    (else
+     (^symbol-box-noninterned expr))))
+
+(define (univ-emit-symbol-box-noninterned ctx expr)
+  (case (univ-symbol-representation ctx)
+
+    ((class)
      (^new (^prefix (univ-use-rtlib ctx 'Symbol)) expr))
 
     (else
@@ -7235,7 +7357,7 @@ tanh
 
        (else
         (compiler-internal-error
-         "univ-emit-symbol-box, unknown target"))))))
+         "univ-emit-symbol-box-noninterned, unknown target"))))))
 
 (define (univ-emit-symbol-unbox ctx expr)
   (case (univ-symbol-representation ctx)
@@ -7300,11 +7422,31 @@ tanh
   (case (univ-keyword-representation ctx)
 
     ((class)
+     (^call-prim
+      (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_interned_keyword)))
+      expr))
+
+    (else
+     (^keyword-box-noninterned expr))))
+
+(define (univ-emit-keyword-box-noninterned ctx expr)
+  (case (univ-keyword-representation ctx)
+
+    ((class)
      (^new (^prefix (univ-use-rtlib ctx 'Keyword)) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-keyword-box, host representation not implemented"))))
+     (case (target-name (ctx-target ctx))
+
+       ((js php python)
+        expr)
+
+       ((ruby)
+        (^ expr ".to_sym"))
+
+       (else
+        (compiler-internal-error
+         "univ-emit-keyword-box-noninterned, unknown target"))))))
 
 (define (univ-emit-keyword-unbox ctx expr)
   (case (univ-keyword-representation ctx)
@@ -8979,7 +9121,51 @@ tanh
 ;;TODO: ("##continuation-return"           (2)   #t ()    0    #f      extended)
 ;;TODO: ("##continuation-return-no-winding"(2)   #t ()    0    #f      extended)
 
-;;TODO: ("##apply"                         (2)   #t ()    0    (#f)    extended)
+(univ-define-prim "##continuation-frame" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^member arg1 "frame")))))
+
+(univ-define-prim "##continuation-denv" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^member arg1 "denv")))))
+
+(univ-define-prim "##frame-ret" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^array-index arg1 0)))))
+
+(define (univ-get-frame-field name)
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (^ (^var-declaration
+         (^local-var "frame")
+         (^array-index arg1 0))
+        (univ-with-function-attribs
+         ctx
+         #f
+         "frame"
+         (lambda ()
+           (return
+            (^fixnum-box (univ-get-function-attrib ctx "frame" name)))))))))
+
+(univ-define-prim "##frame-fs"   #f (univ-get-frame-field "fs"))
+(univ-define-prim "##frame-link" #f (univ-get-frame-field "link"))
+
+(univ-define-prim "##frame-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^array-index arg1
+                           (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##frame-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^assign
+         (^array-index arg1 (^fixnum-unbox arg2))
+         arg3)
+        (return arg1)))))
 
 (univ-define-prim "##apply" #f
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -933,6 +933,13 @@
 ("##continuation-graft-no-winding"    2     #t ()    2203 #f      extended)
 ("##continuation-return"              (2)   #t ()    0    #f      extended)
 ("##continuation-return-no-winding"   (2)   #t ()    0    #f      extended)
+("##continuation-frame"               (1)   #f ()    0    #f      extended)
+("##continuation-denv"                (1)   #f ()    0    #f      extended)
+("##frame-ret"                        (1)   #f ()    0    #f      extended)
+("##frame-fs"                         (1)   #f ()    0    fixnum  extended)
+("##frame-link"                       (1)   #f ()    0    #f      extended)
+("##frame-ref"                        (2)   #f ()    0    (#f)    extended)
+("##frame-set!"                       (3)   #t ()    0    #f      extended)
 
 ("##apply"                            (2)   #t ()    0    (#f)    extended)
 ("##call-with-current-continuation"   1     #t ()    1113 (#f)    extended)
