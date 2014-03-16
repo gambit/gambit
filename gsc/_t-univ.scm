@@ -678,6 +678,9 @@
 (define-macro (^char-box val)
   `(univ-emit-char-box ctx ,val))
 
+(define-macro (^char-box-uninterned val)
+  `(univ-emit-char-box-uninterned ctx ,val))
+
 (define-macro (^char-unbox char)
   `(univ-emit-char-unbox ctx ,char))
 
@@ -885,8 +888,8 @@
 (define-macro (^symbol-box val)
   `(univ-emit-symbol-box ctx ,val))
 
-(define-macro (^symbol-box-noninterned val)
-  `(univ-emit-symbol-box-noninterned ctx ,val))
+(define-macro (^symbol-box-uninterned val)
+  `(univ-emit-symbol-box-uninterned ctx ,val))
 
 (define-macro (^symbol-unbox symbol)
   `(univ-emit-symbol-unbox ctx ,symbol))
@@ -900,8 +903,8 @@
 (define-macro (^keyword-box val)
   `(univ-emit-keyword-box ctx ,val))
 
-(define-macro (^keyword-box-noninterned val)
-  `(univ-emit-keyword-box-noninterned ctx ,val))
+(define-macro (^keyword-box-uninterned val)
+  `(univ-emit-keyword-box-uninterned ctx ,val))
 
 (define-macro (^keyword-unbox keyword)
   `(univ-emit-keyword-unbox ctx ,keyword))
@@ -1692,7 +1695,7 @@
 
 (define (univ-dump-objs ctx)
   (let* ((objs-used (ctx-objs-used ctx))
-         (stack (objs-used-stack objs-used))
+         (stack (reverse (objs-used-stack objs-used)))
          (table (objs-used-table objs-used)))
     (let loop ((count 0) (lst stack) (code (^)))
       (if (pair? lst)
@@ -1727,12 +1730,12 @@
           (vector-set! state 0 (+ (vector-ref state 0) 1)) ;; increment reference count
           (vector-ref state 1))
 
-        (let* ((stack (objs-used-stack objs-used))
-               (code (list #f))
+        (let* ((code (list #f))
                (state (vector (if force-var? 2 1) code)))
-          (objs-used-stack-set! objs-used (cons obj stack))
           (table-set! table obj state)
           (set-car! code (gen-expr))
+          (let ((stack (objs-used-stack objs-used)))
+            (objs-used-stack-set! objs-used (cons obj stack)))
           code))))
 
 (define (make-objs-used)
@@ -3476,7 +3479,7 @@ EOF
                                            (^bool #f)))
             (^if (^not (^local-var "sym"))
                  (^ (^assign (^local-var "sym")
-                             (^symbol-box-noninterned (^local-var "str")))
+                             (^symbol-box-uninterned (^local-var "str")))
                     (^assign (^prop-index (^gvar "symbol_table")
                                           (^local-var "str"))
                              (^local-var "sym"))))
@@ -3506,7 +3509,7 @@ EOF
                                            (^bool #f)))
             (^if (^not (^local-var "key"))
                  (^ (^assign (^local-var "key")
-                             (^keyword-box-noninterned (^local-var "str")))
+                             (^keyword-box-uninterned (^local-var "str")))
                     (^assign (^prop-index (^gvar "keyword_table")
                                           (^local-var "str"))
                              (^local-var "key"))))
@@ -3590,6 +3593,26 @@ EOF
                (else
                 (compiler-internal-error
                  "univ-rtlib-feature, unknown target")))))))
+
+    ((make_interned_char)
+     (^ (^var-declaration (^gvar "char_table") (^empty-dict))
+        "\n"
+        (^prim-function-declaration
+         (^global-prim-function (^prefix "make_interned_char"))
+         (list (cons (^local-var "code") #f))
+         "\n"
+         '()
+         (^ (^var-declaration (^local-var "chr")
+                              (^prop-index (^gvar "char_table")
+                                           (^local-var "code")
+                                           (^bool #f)))
+            (^if (^not (^local-var "chr"))
+                 (^ (^assign (^local-var "chr")
+                             (^char-box-uninterned (^local-var "code")))
+                    (^assign (^prop-index (^gvar "char_table")
+                                          (^local-var "code"))
+                             (^local-var "chr"))))
+            (^return (^local-var "chr"))))))
 
     ((String)
      (^class-declaration
@@ -6301,11 +6324,22 @@ function Gambit_trampoline(pc) {
   (case (univ-char-representation ctx)
 
     ((class)
+     (^call-prim
+      (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_interned_char)))
+      expr))
+
+    (else
+     (^char-box-uninterned expr))))
+
+(define (univ-emit-char-box-uninterned ctx expr)
+  (case (univ-char-representation ctx)
+
+    ((class)
      (^new (^prefix (univ-use-rtlib ctx 'Char)) expr))
 
     (else
      (compiler-internal-error
-      "univ-emit-char-box, host representation not implemented"))))
+      "univ-emit-char-box-uninterned, host representation not implemented"))))
 
 (define (univ-emit-char-unbox ctx expr)
   (case (univ-char-representation ctx)
@@ -7338,9 +7372,9 @@ tanh
       expr))
 
     (else
-     (^symbol-box-noninterned expr))))
+     (^symbol-box-uninterned expr))))
 
-(define (univ-emit-symbol-box-noninterned ctx expr)
+(define (univ-emit-symbol-box-uninterned ctx expr)
   (case (univ-symbol-representation ctx)
 
     ((class)
@@ -7357,7 +7391,7 @@ tanh
 
        (else
         (compiler-internal-error
-         "univ-emit-symbol-box-noninterned, unknown target"))))))
+         "univ-emit-symbol-box-uninterned, unknown target"))))))
 
 (define (univ-emit-symbol-unbox ctx expr)
   (case (univ-symbol-representation ctx)
@@ -7427,9 +7461,9 @@ tanh
       expr))
 
     (else
-     (^keyword-box-noninterned expr))))
+     (^keyword-box-uninterned expr))))
 
-(define (univ-emit-keyword-box-noninterned ctx expr)
+(define (univ-emit-keyword-box-uninterned ctx expr)
   (case (univ-keyword-representation ctx)
 
     ((class)
@@ -7446,7 +7480,7 @@ tanh
 
        (else
         (compiler-internal-error
-         "univ-emit-keyword-box-noninterned, unknown target"))))))
+         "univ-emit-keyword-box-uninterned, unknown target"))))))
 
 (define (univ-emit-keyword-unbox ctx expr)
   (case (univ-keyword-representation ctx)
@@ -9026,7 +9060,7 @@ tanh
 
 ;;TODO: ("##structure-direct-instance-of?"(2)   #f ()    0    boolean extended)
 
-(univ-define-prim-bool "##structure-direct-instance-of?" #f
+(univ-define-prim-bool "##structure-direct-instance-of?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return (^&& (^structure? arg1)
@@ -9036,7 +9070,7 @@ tanh
 ;;TODO: ("##structure-type"               (1)   #f ()    0    (#f)    extended)
 ;;TODO: ("##structure-type-set!"          (2)   #t ()    0    (#f)    extended)
 
-(univ-define-prim "##structure" #f
+(univ-define-prim "##structure" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
      (return (^structure-box (^array-literal args))))))
