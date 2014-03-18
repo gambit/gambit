@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -259,7 +259,8 @@ ___device_tty *self;)
 #ifdef USE_WIN32
 
   if (!GetConsoleMode (d->hin, &d->hin_initial_mode) ||
-      !GetConsoleMode (d->hout, &d->hout_initial_mode))
+      !GetConsoleMode (d->hout, &d->hout_initial_mode) ||
+      !GetConsoleScreenBufferInfo (d->hout, &d->hout_initial_info))
     return err_code_from_GetLastError ();
 
 #endif
@@ -3196,14 +3197,14 @@ ___U8 *text_arg;)
                   rect.Bottom = info.dwSize.Y - 1;
                   rect.Left = 0;
                   rect.Right = info.dwSize.X - 1;
- 
+
                   dest.X = 0;
                   dest.Y = -1;
-  
+
                   fill.Attributes = info.wAttributes;
                   TTY_CHAR_SELECT(fill.Char.AsciiChar = ' ',
                                   fill.Char.UnicodeChar = ' ');
- 
+
                   if (!ScrollConsoleScreenBuffer (d->hout,
                                                   &rect,
                                                   &rect,
@@ -3284,18 +3285,31 @@ ___U8 *text_arg;)
           int style = GET_STYLE(arg);
           int fg = GET_FOREGROUND_COLOR(arg);
           int bg = GET_BACKGROUND_COLOR(arg);
+          WORD default_attr = d->hout_initial_info.wAttributes;
           WORD attr = 0;
 
           if (fg == DEFAULT_TEXT_COLOR)
-            fg = NORMAL_FOREGROUND;
+            {
+              fg = (default_attr & FOREGROUND_BLUE  ? 4 : 0) +
+                   (default_attr & FOREGROUND_GREEN ? 2 : 0) +
+                   (default_attr & FOREGROUND_RED   ? 1 : 0);
+              if ((default_attr & FOREGROUND_INTENSITY) == 0)
+                style ^= TEXT_STYLE_BOLD;
+            }
 
           if (bg == DEFAULT_TEXT_COLOR)
-            bg = NORMAL_BACKGROUND;
+            {
+              bg = (default_attr & BACKGROUND_BLUE  ? 4 : 0) +
+                   (default_attr & BACKGROUND_GREEN ? 2 : 0) +
+                   (default_attr & BACKGROUND_RED   ? 1 : 0);
+              if ((default_attr & BACKGROUND_INTENSITY) == 0)
+                style ^= TEXT_STYLE_UNDERLINE;
+            }
 
-          if (style & TEXT_STYLE_BOLD)
+          if ((style & TEXT_STYLE_BOLD) == 0)
             attr |= FOREGROUND_INTENSITY;
 
-          if (style & TEXT_STYLE_UNDERLINE)
+          if ((style & TEXT_STYLE_UNDERLINE) == 0)
             attr |= BACKGROUND_INTENSITY;
 
           if (style & TEXT_STYLE_REVERSE)
@@ -3345,7 +3359,7 @@ ___U8 *text_arg;)
                 if (!SetConsoleCursorPosition (d->hout, pos))
                   return err_code_from_GetLastError ();
               }
-            else 
+            else
               pos = info.dwCursorPosition;
 
             if (arg == 0)
@@ -3374,19 +3388,19 @@ ___U8 *text_arg;)
               }
 
             if (!FillConsoleOutputAttribute
-                       (d->hout,
-                        info.wAttributes,
-                        n,
-                        pos,
-                        &written) ||
-                    !FillConsoleOutputCharacter
-                       (d->hout,
-                        ' ',
-                        n,
-                        pos,
-                        &written))
-                  e = err_code_from_GetLastError ();
-              }
+                   (d->hout,
+                    info.wAttributes,
+                    n,
+                    pos,
+                    &written) ||
+                !FillConsoleOutputCharacter
+                   (d->hout,
+                    ' ',
+                    n,
+                    pos,
+                    &written))
+              e = err_code_from_GetLastError ();
+          }
 
         break;
       }
@@ -3480,7 +3494,7 @@ ___U8 *text_arg;)
           }
         break;
       }
-          
+
     case TERMINAL_ERASE_LINE:
       {
         switch (arg)
@@ -3859,7 +3873,7 @@ int len;)
                     int bg;
 
                     op = TERMINAL_SET_ATTRS;
-                    arg = d->terminal_attrs;
+                    arg = d->current.attrs;
                     style = GET_STYLE(arg);
                     fg = GET_FOREGROUND_COLOR(arg);
                     bg = GET_BACKGROUND_COLOR(arg);
@@ -4036,13 +4050,8 @@ ___device_tty *self;)
    */
 
   ___device_tty *d = self;
-  tty_text_attrs output_attrs = d->output_attrs;
-  int output_style = GET_STYLE(output_attrs);
-  int current_style = GET_STYLE(d->current.attrs);
 
-  return MAKE_TEXT_ATTRS(output_style & TEXT_STYLE_REVERSE,
-                         GET_FOREGROUND_COLOR(output_attrs),
-                         GET_BACKGROUND_COLOR(output_attrs));
+  return d->output_attrs;
 }
 
 
@@ -4291,7 +4300,7 @@ int screen_pos;)
         }
     }
 
-  /* 
+  /*
    * Move the cursor to the target row using cursor movement commands,
    * if the terminal supports this.
    */
@@ -4516,7 +4525,7 @@ int len;)
                   locked_copy[len] = 0;
 
                   GlobalUnlock (global_copy);
-  
+
                   EmptyClipboard ();
 
                   if (!SetClipboardData (CF_UNICODETEXT, global_copy))
@@ -5268,6 +5277,12 @@ ___device_tty *self;)
 {
   ___device_tty *d = self;
 
+  lineeditor_output_set_attrs
+    (d,
+     INITIAL_TEXT_ATTRS); /* ignore error */
+
+  lineeditor_output_drain (d); /* ignore error */
+
 #ifdef USE_CURSES
   {
     int i;
@@ -5294,12 +5309,6 @@ ___device_tty *self;)
 
   if (d->input_line.buffer != NULL)
     extensible_string_cleanup (&d->input_line);
-
-  lineeditor_output_set_attrs
-    (d,
-     INITIAL_TEXT_ATTRS); /* ignore error */
-
-  lineeditor_output_drain (d); /* ignore error */
 
   if (d->paste_text != NULL)
     ___free_mem (d->paste_text); /* discard paste text */
@@ -5368,9 +5377,9 @@ ___device_tty *self;)
  * it contains 65 characters).
  *
  *
- *         P   R   O   M   P   T   >       0   1  
+ *         P   R   O   M   P   T   >       0   1
  *
- *         2   3   4   5   6   7   8   9  10  11  
+ *         2   3   4   5   6   7   8   9  10  11
  *
  *        12  13  14  15  16  17  18  19  20  21
  *                                                 OFF SCREEN
@@ -7604,7 +7613,7 @@ ___stream_index *len_done;)
 
         byte_avail = ___NBELEMS(d->lineeditor_input_byte);
         byte_buf_end = d->lineeditor_input_byte + byte_avail;
-                                 
+
         while (chars_to_bytes (char_buf_end - char_avail,
                                &char_avail,
                                byte_buf_end - byte_avail,
@@ -8373,7 +8382,7 @@ ___SCMOBJ duration;)
 
   if (duration_nsecs < 0)
     duration_nsecs = 0;
-  
+
   d->paren_balance_duration_nsecs = duration_nsecs;
 
   return ___VOID;
