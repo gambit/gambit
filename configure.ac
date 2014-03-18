@@ -1637,7 +1637,7 @@ if test "$C_COMP_GNUC" = yes; then
 
     darwin*) # check for special options added by Apple
              FLAGS_DYN="$FLAGS_DYN$DASH_bundle"
-             FLAGS_LIB="$FLAGS_LIB$DASH_dynamiclib -install_name \$(libdir)/\$(LIBRARY)$(LIB_VERSION_SUFFIX)"
+             FLAGS_LIB="$FLAGS_LIB$DASH_dynamiclib -install_name \$(libdir)/\$(LIBRARY)\$(LIB_VERSION_SUFFIX)"
              FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_flat_namespace_undefined_suppress"
              ;;
 
