@@ -619,7 +619,6 @@ int arg_num;)
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
 
-
       ___U8VECTORSET(result,___FIX(0),___FIX((a>>24) & 0xff))
       ___U8VECTORSET(result,___FIX(1),___FIX((a>>16) & 0xff))
       ___U8VECTORSET(result,___FIX(2),___FIX((a>>8)  & 0xff))
@@ -809,8 +808,6 @@ int arg_num;)
   else
     result = ___FAL;
 
-  ___release_scmobj (result);
-
   return result;
 }
 
@@ -865,8 +862,6 @@ int arg_num;)
 #endif
   else
     result = ___FAL;
-
-  ___release_scmobj (result);
 
   return result;
 }
