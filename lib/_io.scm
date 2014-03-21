@@ -5667,13 +5667,13 @@
         input
         2
         0
-        1024
+        #x800
         (tty-text-attributes-set! port input output)
         (macro-check-fixnum-range
           output
           3
           0
-          1024
+          #x800
           (tty-text-attributes-set! port input output)
           (##tty-text-attributes-set! port input output))))))
 
