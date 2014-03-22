@@ -933,6 +933,21 @@
 (define-macro (^procedure? val)
   `(univ-emit-procedure? ctx ,val))
 
+(define-macro (^closure? val)
+  `(univ-emit-closure? ctx ,val))
+
+(define-macro (^closure-length val)
+  `(univ-emit-closure-length ctx ,val))
+
+(define-macro (^closure-code val)
+  `(univ-emit-closure-code ctx ,val))
+
+(define-macro (^closure-ref val1 val2)
+  `(univ-emit-closure-ref ctx ,val1 ,val2))
+
+(define-macro (^closure-set! val1 val2 val3)
+  `(univ-emit-closure-set! ctx ,val1 ,val2 ,val3))
+
 (define (univ-emit-var-declaration ctx name #!optional (expr #f))
   (case (target-name (ctx-target ctx))
 
@@ -2267,28 +2282,6 @@
 
 (define closure-count 0)
 
-#;
-(define (univ-closure-alloc ctx lbl nb-closed-vars cont)
-  (case (target-name (ctx-target ctx))
-
-    ((js python ruby)
-     (set! closure-count (+ closure-count 1))
-     (let ((name (string-append "closure" (number->string closure-count))))
-       (^ (^function-declaration
-           name
-           '()
-           "\n"
-           '()
-           (^ (^assign
-               (^getopnd (make-reg (+ univ-nb-arg-regs 1)))
-               name)
-              (^return-call (gvm-lbl-use ctx (make-lbl lbl)))))
-          (cont name))))
-
-    (else
-     (compiler-internal-error
-      "univ-closure-alloc, unknown target"))))
-
 (define (univ-separated-list sep lst)
   (if (pair? lst)
       (if (pair? (cdr lst))
@@ -2315,13 +2308,9 @@
           name
           (^call-prim
            (^global-prim-function (^prefix (univ-use-rtlib ctx 'closure_alloc)))
-           (^dict
-            (univ-map-index (lambda (x i)
-                              (cons (string-append "v"
-                                                   (number->string i))
-                                    x))
-                            (cons (gvm-lbl-use ctx (make-lbl lbl))
-                                  exprs)))))
+           (^array-literal
+            (cons (gvm-lbl-use ctx (make-lbl lbl))
+                  exprs))))
          (cont name)))))
 
 (define (make-ctx target objs-used rtlib-features-used ns)
@@ -2538,25 +2527,18 @@
    (univ-stk-location ctx offset)
    val))
 
-(define (univ-clo-obj-name ctx closure index)
-  (cons (case (target-name (ctx-target ctx))
-          ((php)
-           (^member closure "slots"))
-          (else
-           (^call closure (^bool #t))))
-        (string-append "v" (number->string index))))
+(define (univ-clo-slots ctx closure)
+  (case (target-name (ctx-target ctx))
+    ((php)
+     (^member closure "slots"))
+    (else
+     (^call closure (^bool #t)))))
 
 (define (univ-emit-getclo ctx closure index)
-  (let ((obj-name (univ-clo-obj-name ctx closure index)))
-    (^get (car obj-name)
-          (cdr obj-name))))
+  (^closure-ref closure index))
 
 (define (univ-emit-setclo ctx closure index val)
-  (let ((obj-name (univ-clo-obj-name ctx closure index)))
-    (^expr-statement
-     (^set (car obj-name)
-           (cdr obj-name)
-           val))))
+  (^closure-set! closure index val))
 
 (define (univ-prm-location ctx name)
   (^prop-index
@@ -3381,7 +3363,7 @@ class Gambit_closure {
   function __invoke() {
     global $Gambit_r4;
     $Gambit_r4 = $this;
-    return $this->slots["v0"];
+    return $this->slots[0];
   }
 }
 
@@ -3406,7 +3388,7 @@ EOF
                      (^return (^local-var "slots")))
                 (^setreg (+ univ-nb-arg-regs 1)
                          (^local-var "closure"))
-                (^return (^get (^local-var "slots") "v0"))))
+                (^return (^array-index (^local-var "slots") 0))))
             (^return (^local-var "closure")))))))
 
     ((Fixnum)
@@ -7533,6 +7515,42 @@ tanh
      (compiler-internal-error
       "univ-emit-procedure?, unknown target"))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;TODO: implement closure?
+#;
+(define (univ-emit-closure? ctx expr)
+  (case (univ-closure-representation ctx)
+
+    ((class)
+     (^instanceof (^prefix (univ-use-rtlib ctx 'Closure)) expr))
+
+    (else
+     (case (target-name (ctx-target ctx))
+
+       ((js ruby)
+        (^instanceof "Array" expr))
+
+       ((php)
+        (^call-prim "is_array" expr))
+
+       ((python)
+        (^instanceof "list" expr))
+
+       (else
+        (compiler-internal-error
+         "univ-emit-closure?, unknown target"))))))
+
+(define (univ-emit-closure-length ctx expr)
+  (^array-length (univ-clo-slots ctx expr)))
+
+(define (univ-emit-closure-code ctx expr)
+  (^array-index (univ-clo-slots ctx expr) 0))
+
+(define (univ-emit-closure-ref ctx expr1 expr2)
+  (^array-index (univ-clo-slots ctx expr1) expr2))
+
+(define (univ-emit-closure-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (univ-clo-slots ctx expr1) expr2) expr3))
+
 (define (univ-emit-call-prim ctx name . params)
   (univ-emit-apply ctx name params))
 
@@ -9128,6 +9146,31 @@ tanh
 ;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
 ;;TODO: ("##closure-ref"                  (2)   #f ()    0    (#f)    extended)
 ;;TODO: ("##closure-set!"                 (3)   #t ()    0    #f      extended)
+
+(univ-define-prim "##closure-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^fixnum-box (^closure-length arg))))))
+
+(univ-define-prim "##closure-code" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^closure-code arg)))))
+
+(univ-define-prim "##closure-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^closure-ref arg1
+                           (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##closure-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^closure-set! arg1
+                       (^fixnum-unbox arg2)
+                       arg3)
+        (return arg1)))))
+
 
 ;;TODO: ("##subprocedure-id"              (1)   #f ()    0    #f      extended)
 ;;TODO: ("##subprocedure-parent"          (1)   #f ()    0    #f      extended)
