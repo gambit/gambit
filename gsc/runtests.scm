@@ -4,11 +4,11 @@
 
 ;;; File: "runtests.scm"
 
-;;; Copyright (c) 2012-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
-(define cleanup? #f)
+(define cleanup? #t)
 
 (define nb-good 0)
 (define nb-fail 0)
@@ -147,7 +147,7 @@
                          result))
                      (apply run (append (cddr t) (list file)))))))
        (keep (lambda (t)
-               (member (car t) (cons "gambit" back-ends)))
+               (member (car t) (cons "c" back-ends)))
              targets)))
 
 (define (compile file target)
