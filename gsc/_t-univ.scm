@@ -25,6 +25,9 @@
 (define (univ-void-representation ctx)
   'host)
 
+(define (univ-eof-representation ctx)
+  'class)
+
 (define (univ-absent-representation ctx)
   'class)
 
@@ -653,6 +656,9 @@
 
 (define-macro (^void)
   `(univ-emit-void ctx))
+
+(define-macro (^eof)
+  `(univ-emit-eof ctx))
 
 (define-macro (^absent)
   `(univ-emit-absent ctx))
@@ -2703,6 +2709,9 @@
           ((void-object? obj)
            (^void))
 
+          ((end-of-file-object? obj)
+           (^eof))
+
           ((absent-object? obj)
            (^absent))
 
@@ -3606,6 +3615,15 @@ EOF
          (^gvar "void_val")
          (^new (^prefix (univ-use-rtlib ctx 'Void))))))
 
+    ((Eof)
+     (^ (^class-declaration
+         (^prefix "Eof")
+         '()
+         '())
+        (^var-declaration
+         (^gvar "eof_val")
+         (^new (^prefix (univ-use-rtlib ctx 'Eof))))))
+
     ((Absent)
      (^ (^class-declaration
          (^prefix "Absent")
@@ -3746,6 +3764,9 @@ EOF
                      (^if (^eq? (^local-var "obj")
                                 (^void))
                           (^return (^str "#!void"))
+                     (^if (^eq? (^local-var "obj")
+                                (^eof))
+                          (^return (^str "#!eof"))
                      (^if (^pair? (^local-var "obj"))
                           (^return (^concat
                                     (^call-prim
@@ -3763,7 +3784,7 @@ EOF
                                          (^return (^tostr (^local-var "obj")))))))))
 ;;)
 ;;)
-))
+)))
 
     ((println)
      (^prim-function-declaration
@@ -6301,6 +6322,17 @@ function Gambit_trampoline(pc) {
        (else
         (compiler-internal-error
          "univ-emit-void, unknown target"))))))
+
+(define (univ-emit-eof ctx)
+  (case (univ-eof-representation ctx)
+
+    ((class)
+     (univ-use-rtlib ctx 'Eof)
+     (^gvar "eof_val"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-eof, unknown target"))))
 
 (define (univ-emit-absent ctx)
   (case (univ-absent-representation ctx)
