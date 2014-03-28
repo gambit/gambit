@@ -82,6 +82,9 @@
      (compiler-internal-error
       "univ-tostr-method-name, unknown target"))))
 
+(define univ-thread-cont-slot 5)
+(define univ-thread-denv-slot 6)
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; "Universal" back-end.
@@ -487,8 +490,8 @@
 (define-macro (^array-shrink! expr1 expr2)
   `(univ-emit-array-shrink! ctx ,expr1 ,expr2))
 
-(define-macro (^array-to-extensible-array expr)
-  `(univ-emit-array-to-extensible-array ctx ,expr))
+(define-macro (^copy-array-to-extensible-array expr len)
+  `(univ-emit-copy-array-to-extensible-array ctx ,expr ,len))
 
 (define-macro (^extensible-array-to-array! var len)
   `(univ-emit-extensible-array-to-array! ctx ,var ,len))
@@ -1581,14 +1584,14 @@
      (compiler-internal-error
       "univ-emit-array-shrink!, unknown target"))))
 
-(define (univ-emit-array-to-extensible-array ctx expr)
+(define (univ-emit-copy-array-to-extensible-array ctx expr len)
   (case (target-name (ctx-target ctx))
 
     ((js php ruby)
-     expr)
+     (^subarray expr 0 len))
 
     ((python)
-     (^ "dict(zip(range(len(" expr "))," expr "))"))
+     (^ "dict(zip(range(" len ")," expr "))"))
 
     (else
      (compiler-internal-error
@@ -2837,10 +2840,14 @@
        fn)
       rest))
 
-(define (univ-emit-continuation-capture-function ctx nb-args)
+(define (univ-emit-continuation-capture-function ctx nb-args thread-save?)
   (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
     (^function-declaration
-     (^global-function (^prefix (^ "continuation_capture" nb-args)))
+     (^global-function
+      (^prefix (^ (if thread-save?
+                      "thread_save"
+                      "continuation_capture")
+                  nb-args)))
      '()
      "\n"
      '()
@@ -2862,29 +2869,45 @@
                    (^prefix (univ-use-rtlib ctx 'heapify)))
                   (^getreg 0)))
 
-        (let ((cont
-               (^new (^prefix (univ-use-rtlib ctx 'Continuation))
-                     (^array-index
-                      (gvm-state-stack-use ctx 'rd)
-                      0)
-                     (^obj #f))))
-          (if (= nb-stacked 0)
-              (^setreg 1 cont)
-              (univ-foldr-range
-               1
-               nb-stacked
-               (^)
-               (lambda (i rest)
-                 (^ (^push (if (= i 1) cont (^local-var (^ "arg" i))))
-                    rest)))))
+        (let* ((cont
+                (^new (^prefix (univ-use-rtlib ctx 'Continuation))
+                      (^array-index
+                       (gvm-state-stack-use ctx 'rd)
+                       0)
+                      (^structure-ref (^gvar "current_thread")
+                                      univ-thread-denv-slot)))
+               (result
+                (if thread-save?
+                    (^gvar "current_thread")
+                    cont)))
+
+          (^ (if thread-save?
+                 (^structure-set! (^gvar "current_thread")
+                                  univ-thread-cont-slot
+                                  cont)
+                 (^))
+
+             (if (= nb-stacked 0)
+                 (^setreg 1 result)
+                 (univ-foldr-range
+                  1
+                  nb-stacked
+                  (^)
+                  (lambda (i rest)
+                    (^ (^push (if (= i 1) result (^local-var (^ "arg" i))))
+                       rest))))))
 
         (^setnargs nb-args)
 
         (^return-call (^local-var (^ "arg" 1)))))))
 
-(define (univ-emit-continuation-graft-no-winding-function ctx nb-args)
+(define (univ-emit-continuation-graft-no-winding-function ctx nb-args thread-restore?)
   (^function-declaration
-   (^global-function (^prefix (^ "continuation_graft_no_winding" nb-args)))
+   (^global-function
+    (^prefix (^ (if thread-restore?
+                    "thread_restore"
+                    "continuation_graft_no_winding")
+                nb-args)))
    '()
    "\n"
    '()
@@ -2909,15 +2932,27 @@
                      (^getreg x)
                      (^getstk x)))))))
 
-        (^assign
-         (gvm-state-sp-use ctx 'wr)
-         0)
+        (if thread-restore?
+            (^ (^assign (^gvar "current_thread")
+                        (^local-var (^ "arg" 1)))
+               (^assign (^local-var (^ "arg" 1))
+                        (^structure-ref (^local-var (^ "arg" 1))
+                                        univ-thread-cont-slot)))
+            (^))
 
         (^assign
          (^array-index
           (gvm-state-stack-use ctx 'rd)
           0)
          (^member (^local-var (^ "arg" 1)) "frame"))
+
+        (^structure-set! (^gvar "current_thread")
+                         univ-thread-denv-slot
+                         (^member (^local-var (^ "arg" 1)) "denv"))
+
+        (^assign
+         (gvm-state-sp-use ctx 'wr)
+         0)
 
         (^setreg 0 underflow)
 
@@ -2964,6 +2999,10 @@
           (gvm-state-stack-use ctx 'rd)
           0)
          (^member arg1 "frame"))
+
+        (^structure-set! (^gvar "current_thread")
+                         univ-thread-denv-slot
+                         (^member arg1 "denv"))
 
         (^assign
          (gvm-state-sp-use ctx 'wr)
@@ -3213,12 +3252,9 @@
                                  (univ-get-function-attrib ctx "ra" "link"))
 
                (^assign (gvm-state-stack-use ctx 'wr)
-                        (^array-to-extensible-array (^local-var "frame")))
-#;
-               (^assign (gvm-state-stack-use ctx 'wr)
-                        (^subarray (^local-var "frame")
-                                   0
-                                   (^+ (^local-var "fs") 1)))
+                        (^copy-array-to-extensible-array
+                         (^local-var "frame")
+                         (^+ (^local-var "fs") 1)))
 
                (^assign (gvm-state-sp-use ctx 'wr)
                         (^local-var "fs"))
@@ -3239,28 +3275,52 @@
          (^return (^local-var "ra")))))
 
     ((continuation_capture1)
-     (univ-emit-continuation-capture-function ctx 1))
+     (univ-emit-continuation-capture-function ctx 1 #f))
 
     ((continuation_capture2)
-     (univ-emit-continuation-capture-function ctx 2))
+     (univ-emit-continuation-capture-function ctx 2 #f))
 
     ((continuation_capture3)
-     (univ-emit-continuation-capture-function ctx 3))
+     (univ-emit-continuation-capture-function ctx 3 #f))
 
     ((continuation_capture4)
-     (univ-emit-continuation-capture-function ctx 4))
+     (univ-emit-continuation-capture-function ctx 4 #f))
+
+    ((thread_save1)
+     (univ-emit-continuation-capture-function ctx 1 #t))
+
+    ((thread_save2)
+     (univ-emit-continuation-capture-function ctx 2 #t))
+
+    ((thread_save3)
+     (univ-emit-continuation-capture-function ctx 3 #t))
+
+    ((thread_save4)
+     (univ-emit-continuation-capture-function ctx 4 #t))
 
     ((continuation_graft_no_winding2)
-     (univ-emit-continuation-graft-no-winding-function ctx 2))
+     (univ-emit-continuation-graft-no-winding-function ctx 2 #f))
 
     ((continuation_graft_no_winding3)
-     (univ-emit-continuation-graft-no-winding-function ctx 3))
+     (univ-emit-continuation-graft-no-winding-function ctx 3 #f))
 
     ((continuation_graft_no_winding4)
-     (univ-emit-continuation-graft-no-winding-function ctx 4))
+     (univ-emit-continuation-graft-no-winding-function ctx 4 #f))
 
     ((continuation_graft_no_winding5)
-     (univ-emit-continuation-graft-no-winding-function ctx 5))
+     (univ-emit-continuation-graft-no-winding-function ctx 5 #f))
+
+    ((thread_restore2)
+     (univ-emit-continuation-graft-no-winding-function ctx 2 #t))
+
+    ((thread_restore3)
+     (univ-emit-continuation-graft-no-winding-function ctx 3 #t))
+
+    ((thread_restore4)
+     (univ-emit-continuation-graft-no-winding-function ctx 4 #t))
+
+    ((thread_restore5)
+     (univ-emit-continuation-graft-no-winding-function ctx 5 #t))
 
     ((continuation_return_no_winding2)
      (univ-emit-continuation-return-no-winding-function ctx 2))
@@ -3436,6 +3496,31 @@ EOF
       (^prefix "Continuation")
       '((frame #f) (denv #f))
       '()))
+
+    ((continuation_next)
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "continuation_next"))
+      (list (cons (^local-var "cont") #f))
+      "\n"
+      '()
+      (^ (^var-declaration (^local-var "frame")
+                           (^member (^local-var "cont") "frame"))
+         (^var-declaration (^local-var "denv")
+                           (^member (^local-var "cont") "denv"))
+         (^var-declaration (^local-var "ra")
+                           (^array-index (^local-var "frame") 0))
+         (^var-declaration (^local-var "link")
+                           (univ-get-function-attrib
+                            ctx
+                            (^local-var "ra")
+                            "link"))
+         (^var-declaration (^local-var "next_frame")
+                           (^array-index (^local-var "frame")
+                                         (^local-var "link")))
+         (^return
+          (^new (^prefix (univ-use-rtlib ctx 'Continuation))
+                (^local-var "next_frame")
+                (^local-var "denv"))))))
 
     ((Symbol)
      (^ (^class-declaration
@@ -4185,6 +4270,7 @@ EOF
        (^var-declaration (^gvar "temp1"))
        (^var-declaration (^gvar "temp2"))
        (^var-declaration (^gvar "pollcount") 100)
+       (^var-declaration (^gvar "current_thread"))
 
        "\n"
 
@@ -5802,13 +5888,25 @@ function Gambit_trampoline(pc) {
        (univ-comment ctx "--------------------------------\n")
        "\n"
 
+       (^assign (^gvar "current_thread")
+                (^structure-box
+                 (^array-literal
+                  (list (^obj #f)  ;; type descriptor (filled in later)
+                        (^obj #f)  ;; btq-next
+                        (^obj #f)  ;; btq-prev
+                        (^obj #f)  ;; toq-next
+                        (^obj #f)  ;; toq-prev
+                        (^obj #f)  ;; continuation
+                        (^obj '()) ;; dynamic environment
+                        (^obj #f)  ;; state
+                        (^obj #f)  ;; thunk
+                        (^obj 0)   ;; id
+                        ))))
+
        (^push (^obj #f))
 
        (^assign (^gvar "r0")
                 (^gvar (univ-use-rtlib ctx 'underflow)))
-#;
-       (^assign (^gvar "r0")
-                (^obj #f))
 
        (^assign (^gvar "nargs")
                 0)
@@ -7582,7 +7680,7 @@ tanh
     ((js php)
      (^ "this"))
 
-    ((python)
+    ((python ruby)
      (^ "self"))
 
     (else
@@ -9088,6 +9186,17 @@ tanh
 ;;TODO: ("##structure-type"               (1)   #f ()    0    (#f)    extended)
 ;;TODO: ("##structure-type-set!"          (2)   #t ()    0    (#f)    extended)
 
+(univ-define-prim "##structure-type" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^structure-ref arg1 0)))))
+
+(univ-define-prim "##structure-type-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^structure-set! arg1 0 arg2)
+        (return arg1)))))
+
 (univ-define-prim "##structure" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
@@ -9108,8 +9217,8 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5)
      (^ (^structure-set! arg1
-                         (^fixnum-unbox arg2)
-                         arg3)
+                         (^fixnum-unbox arg3)
+                         arg2)
         (return arg1)))))
 
 ;;TODO: ("##type-id"                      (1)   #f ()    0    #f      extended)
@@ -9185,8 +9294,11 @@ tanh
    (lambda (ctx return)
      (return (^void)))))
 
-;;TODO: ("current-thread"                 (0)   #f ()    0    #f      extended)
-;;TODO: ("##current-thread"               (0)   #f ()    0    #f      extended)
+(univ-define-prim "##current-thread" #t
+  (make-translated-operand-generator
+   (lambda (ctx return)
+     (return (^gvar "current_thread")))))
+
 ;;TODO: ("##run-queue"                    (0)   #f ()    0    #f      extended)
 
 ;;TODO: ("##thread-save!"                 1     #t ()    1113 (#f)    extended)
@@ -9207,6 +9319,14 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^member arg1 "denv")))))
+
+(univ-define-prim "##continuation-next" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return
+      (^call-prim
+       (^global-prim-function (^prefix (univ-use-rtlib ctx 'continuation_next)))
+       arg1)))))
 
 (univ-define-prim "##frame-ret" #f
   (make-translated-operand-generator
@@ -9421,5 +9541,35 @@ tanh
              (^gvar (univ-use-rtlib ctx rtlib-name))
              poll?
              #t))))))
+
+(univ-define-prim "##thread-save!" #f
+
+  #f
+  #f
+
+  (lambda (ctx nb-args poll? safe? fs)
+    (univ-jump-inline ctx
+                      nb-args
+                      1
+                      4
+                      poll?
+                      safe?
+                      fs
+                      "thread_save")))
+
+(univ-define-prim "##thread-restore!" #f
+
+  #f
+  #f
+
+  (lambda (ctx nb-args poll? safe? fs)
+    (univ-jump-inline ctx
+                      nb-args
+                      2
+                      5
+                      poll?
+                      safe?
+                      fs
+                      "thread_restore")))
 
 ;;;============================================================================

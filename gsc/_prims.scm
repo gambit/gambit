@@ -935,6 +935,7 @@
 ("##continuation-return-no-winding"   (2)   #t ()    0    #f      extended)
 ("##continuation-frame"               (1)   #f ()    0    #f      extended)
 ("##continuation-denv"                (1)   #f ()    0    #f      extended)
+("##continuation-next"                (1)   #f ()    0    #f      extended)
 ("##frame-ret"                        (1)   #f ()    0    #f      extended)
 ("##frame-fs"                         (1)   #f ()    0    fixnum  extended)
 ("##frame-link"                       (1)   #f ()    0    #f      extended)
