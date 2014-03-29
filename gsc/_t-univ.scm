@@ -5921,6 +5921,9 @@ function Gambit_trampoline(pc) {
                         (^obj '()) ;; dynamic environment
                         (^obj #f)  ;; state
                         (^obj #f)  ;; thunk
+                        (^obj #f)  ;; result
+                        (^obj #f)  ;; mutex
+                        (^obj #f)  ;; condvar
                         (^obj 0)   ;; id
                         ))))
 
