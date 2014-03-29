@@ -594,6 +594,9 @@
 (define-macro (^push val)
   `(univ-emit-push ctx ,val))
 
+(define-macro (^getnargs)
+  `(univ-emit-getnargs ctx))
+
 (define-macro (^setnargs nb-args)
   `(univ-emit-setnargs ctx ,nb-args))
 
@@ -2196,13 +2199,13 @@
         (^ "\n"
            (univ-comment
             ctx
-            (^ "-------------------------------- #<"
+            (^ "-------------------------------- "
                (if (proc-obj-primitive? p)
                    "primitive"
                    "procedure")
                " "
                (object->string (string->canonical-symbol (proc-obj-name p)))
-               "> =\n"))
+               " =\n"))
            (let ((x (proc-obj-code p)))
              (if (bbs? x)
                  (scan-bbs ctx x)
@@ -2248,7 +2251,7 @@
                               (^global-prim-function
                                (^prefix (univ-use-rtlib ctx 'build_rest)))
                               nb-parms-except-rest))
-                       (^!= (gvm-state-nargs-use ctx 'rd)
+                       (^!= (^getnargs)
                             nb-parms-except-rest))
                    (^return-call-prim
                     (^global-prim-function
@@ -2282,7 +2285,7 @@
                   (^)))
 
             (let ((x (setup-parameter (+ nb-stacked 1))))
-              (^if (^= (gvm-state-nargs-use ctx 'rd)
+              (^if (^= (^getnargs)
                        nb-args)
                    x
                    (dispatch-on-nb-args (+ nb-args 1)))))))
@@ -2503,6 +2506,9 @@
                (gvm-state-stack-use ctx 'rd)
                x)
               val))))
+
+(define (univ-emit-getnargs ctx)
+  (gvm-state-nargs-use ctx 'rd))
 
 (define (univ-emit-setnargs ctx nb-args)
   (^assign
@@ -3026,6 +3032,66 @@
 
         (^return underflow)))))
 
+(define (univ-emit-apply-function ctx nb-args)
+  (^function-declaration
+   (^global-function (^prefix (^ "apply" nb-args)))
+   '()
+   "\n"
+   '()
+   (^ (univ-pop-args-to-vars ctx nb-args)
+
+      (univ-foldr-range
+       2
+       (- nb-args 1)
+       (^)
+       (lambda (i rest)
+         (^ (^push (^local-var (^ "arg" i)))
+            rest)))
+
+      (^setnargs (- nb-args 2))
+
+      (let ((args (^local-var (^ "arg" nb-args))))
+        (^while (^pair? args)
+                (^ (^push (^getcar args))
+                   (^assign args (^getcdr args))
+                   (^inc-by (gvm-state-nargs-use ctx 'rdwr)
+                            1))))
+
+      (univ-pop-args-to-regs ctx 0)
+
+      (^return (^local-var (^ "arg" 1))))))
+
+(define (univ-pop-args-to-vars ctx nb-args)
+  (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+    (univ-foldr-range
+     1
+     nb-args
+     (^)
+     (lambda (i rest)
+       (^ rest
+          (let ((x (- i nb-stacked)))
+            (if (>= x 1)
+                (^var-declaration (^local-var (^ "arg" i))
+                                  (^getreg x))
+                (^pop (lambda (expr)
+                        (^var-declaration (^local-var (^ "arg" i))
+                                          expr))))))))))
+
+(define (univ-pop-args-to-regs ctx lo)
+  (univ-foldr-range
+   0
+   (- univ-nb-arg-regs 1)
+   (^)
+   (lambda (i rest)
+     (let ((x
+            (^ rest
+               (^pop (lambda (expr)
+                       (^setreg (+ i 1) expr))))))
+       (if (< i lo)
+           x
+           (^if (^> (^getnargs) (- i lo))
+                x))))))
+
 (define (univ-rtlib-feature ctx feature)
   (case feature
 
@@ -3351,7 +3417,7 @@
       "\n"
       '()
       (^ (^var-declaration (^local-var "rest") (^null))
-         (^if (^< (gvm-state-nargs-use ctx 'rd)
+         (^if (^< (^getnargs)
                   (^local-var "nrp"))
               (^return (^bool #f)))
          (univ-foldr-range
@@ -3359,10 +3425,10 @@
           (- univ-nb-arg-regs 1)
           (^)
           (lambda (i rest)
-            (^if (^> (gvm-state-nargs-use ctx 'rd) i)
+            (^if (^> (^getnargs) i)
                  (^ (^push (^getreg (+ i 1)))
                     rest))))
-         (^while (^> (gvm-state-nargs-use ctx 'rd)
+         (^while (^> (^getnargs)
                      (^local-var "nrp"))
                  (^ (^pop (lambda (expr)
                             (^assign (^local-var "rest")
@@ -3371,17 +3437,7 @@
                     (^inc-by (gvm-state-nargs-use ctx 'rdwr)
                              -1)))
          (^push (^local-var "rest"))
-         (univ-foldr-range
-          1
-          univ-nb-arg-regs
-          #f
-          (lambda (i rest)
-            (^ (if rest
-                   (^if (^> (gvm-state-nargs-use ctx 'rd) (- i 1))
-                        rest)
-                   (^))
-               (^pop (lambda (expr)
-                       (^setreg i expr))))))
+         (univ-pop-args-to-regs ctx 1)
          (^return (^bool #t)))))
 
     ((wrong_nargs)
@@ -3491,8 +3547,9 @@ EOF
       (list
        (list 'cyclic
              '()
-             (^ (^assign (^array-index (^this-member "slots") 0) (^this))
-                (^return (^this)))))))
+             (^ (^assign (^array-index (^this-member "slots") 0)
+                         (^local-var (^this)))
+                (^return (^local-var (^this))))))))
 
     ((Frame)
      (^class-declaration
@@ -3518,11 +3575,13 @@ EOF
                            (^member (^local-var "cont") "denv"))
          (^var-declaration (^local-var "ra")
                            (^array-index (^local-var "frame") 0))
-         (^var-declaration (^local-var "link")
-                           (univ-get-function-attrib
-                            ctx
-                            (^local-var "ra")
-                            "link"))
+         (univ-with-function-attribs
+          ctx
+          #f
+          "ra"
+          (lambda ()
+            (^var-declaration (^local-var "link")
+                              (univ-get-function-attrib ctx "ra" "link"))))
          (^var-declaration (^local-var "next_frame")
                            (^array-index (^local-var "frame")
                                          (^local-var "link")))
@@ -4027,43 +4086,16 @@ EOF
          (^return (^local-var "sym")))))
 
     ((apply2)
-     (^prim-function-declaration
-      (^global-prim-function (^prefix "apply2"))
-      '()
-      "\n"
-      '()
-      (^
+     (univ-emit-apply-function ctx 2))
 
-#<<EOF
+    ((apply3)
+     (univ-emit-apply-function ctx 3))
 
-  var proc = Gambit_r1;
-  var args = Gambit_r2;
+    ((apply4)
+     (univ-emit-apply-function ctx 4))
 
-  Gambit_nargs = 0;
-
-  while (args instanceof Gambit_Pair) {
-    Gambit_stack[++Gambit_sp] = args.car;
-    args = args.cdr;
-    ++Gambit_nargs;
-  }
-
-  if (Gambit_nargs > 0) {
-    if (Gambit_nargs > 1) {
-      if (Gambit_nargs > 2) {
-        Gambit_r3 = Gambit_stack[Gambit_sp];
-        --Gambit_sp;
-      }
-      Gambit_r2 = Gambit_stack[Gambit_sp];
-      --Gambit_sp;
-    }
-    Gambit_r1 = Gambit_stack[Gambit_sp];
-    --Gambit_sp;
-  }
-
-  return proc;
-
-EOF
-)))
+    ((apply5)
+     (univ-emit-apply-function ctx 5))
 
     ((ffi)
      (case (target-name (ctx-target ctx))
@@ -8457,24 +8489,15 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (if arg2
-             (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
-                arg1
-                " - "
-                arg2
-                ")<<"
-                univ-tag-bits
-                ">>"
-                univ-tag-bits
-                ") === " (^gvar "temp1") " && " (^gvar "temp2"))
-             (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
-                "- "
-                arg1
-                ")<<"
-                univ-tag-bits
-                ">>"
-                univ-tag-bits
-                ") === " (^gvar "temp1") " && " (^gvar "temp2"))))
+         (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
+            (if arg2
+                (^ arg1 " - " arg2)
+                (^ "- " arg1))
+            ")<<"
+            univ-tag-bits
+            ">>"
+            univ-tag-bits
+            ") === " (^gvar "temp1") " && " (^gvar "temp2")))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
@@ -8482,16 +8505,16 @@ tanh
             ").value>>"
             univ-tag-bits
             "))("
-            arg1
-            " - "
-            arg2
+            (if arg2
+                (^ arg1 " - " arg2)
+                (^ "- " arg1))
             ")"))
 
         ((ruby)
          (^ "(" (^gvar "temp2") " = (((" (^gvar "temp1") " = "
-            arg1
-            " - "
-            arg2
+            (if arg2
+                (^ arg1 " - " arg2)
+                (^ "- " arg1))
             ") + "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
             ") & "
@@ -8502,16 +8525,16 @@ tanh
 
         ((php)
          (^ "((" (^gvar "temp2") " = (((" (^gvar "temp1") " = "
-            arg1
-            " - "
-            arg2
+            (if arg2
+                (^ arg1 " - " arg2)
+                (^ "- " arg1))
             ") + "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
             ") & "
             (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
             ") - "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-            ") === " (^gvar "temp1") ") ? " (^gvar "temp2") " : False"))
+            ") === " (^gvar "temp1") ") ? " (^gvar "temp2") " : false"))
 
         (else
          (compiler-internal-error
@@ -9414,7 +9437,7 @@ tanh
     (univ-jump-inline ctx
                       nb-args
                       2
-                      2
+                      5
                       poll?
                       safe?
                       fs
