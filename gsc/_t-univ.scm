@@ -7641,8 +7641,14 @@ tanh
     ((js)
      (^typeof "function" expr))
 
+    ((php)
+     (^call-prim "is_callable" expr))
+
     ((python)
      (^ "hasattr(" expr ", '__call__')"))
+
+    ((ruby)
+     (^instanceof "Proc" expr))
 
     (else
      (compiler-internal-error
