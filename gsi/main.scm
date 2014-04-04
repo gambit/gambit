@@ -2,14 +2,14 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
 (##define-macro (macro-initialization-file)
   ".gambcini")
 
-(define-prim (##main-gsi/gsc)
+(define (##main-gsi/gsc)
 
   (define (in-homedir filename)
     (let ((homedir (##path-expand "~")))
@@ -649,7 +649,7 @@
 
 (##main-set! ##main-gsi/gsc)
 
-(define-prim (main . args) ;; predefine main procedure so scripts don't have to
+(define (main . args) ;; predefine main procedure so scripts don't have to
   0)
 
 (##namespace (""))

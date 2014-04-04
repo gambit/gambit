@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -505,7 +505,7 @@
                    c-filename
                    warnings?)))
 
-(define-prim (##c-code . args) ;; avoid errors when using -expansion
+(define (##c-code . args) ;; avoid errors when using -expansion
   (error "##c-code is not callable dynamically"))
 
 ;;;============================================================================
