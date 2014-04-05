@@ -994,7 +994,7 @@
          (ofd-count
           (targ-get-ofd-count prc-list))
          (module-meta-info
-          (vector-ref module-descr 2))
+          (vector-ref module-descr 3))
          (script-line
           (cond ((assq 'script-line module-meta-info) => cdr)
                 (else #f))))

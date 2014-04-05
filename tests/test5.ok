@@ -395,7 +395,7 @@
 "with-exception-handler"
 "write"
 )
- 1
+ ()
 )
 #else
 #define ___VERSION 407002
