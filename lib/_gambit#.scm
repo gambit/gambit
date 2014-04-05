@@ -69,7 +69,7 @@
 
 ;; Special objects.
 
-(##define-macro (macro-absent-obj)  `',(##type-cast -6 2))
+(##define-macro (macro-absent-obj)  `',c#absent-object) ;;(##type-cast -6 2))
 (##define-macro (macro-unused-obj)  `',(##type-cast -14 2))
 (##define-macro (macro-deleted-obj) `',(##type-cast -15 2))
 

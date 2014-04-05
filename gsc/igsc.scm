@@ -1,22 +1,29 @@
 #! /bin/sh
-":";exec ../gsi/gsi -:dar -f $0 $*
+":";exec ../gsi/gsi -:dar,=.. -f $0 $*
 
 ;;;============================================================================
 
-;;; File: "igsc.scm", Time-stamp: <2009-11-04 13:14:42 feeley>
+;;; File: "igsc.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
-(define c#absent-object
-  (string->symbol "#<absent>")) ; (##type-cast -6 2)
-
-(define ##compilation-options '(check))
-
 (##include "../gsc/fixnum.scm")
 
-(define root "")
+;; use custom absent object otherwise the interpreter gets confused
+
+(define c#absent-object (string->symbol "#<absent>")) ;; (##type-cast -6 2)
+
+;; remove runtime options if any
+
+(let* ((cl ##processed-command-line)
+       (args (cdr cl)))
+  (if (and (pair? args)
+           (string? (car args))
+           (>= (string-length (car args)) 2)
+           (string=? (substring (car args) 0 2) "-:"))
+      (set! ##processed-command-line (cons (car cl) (cdr args)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -31,6 +38,11 @@
 "_back"
 "_front"
 "_prims"
+"_assert"
+"_asm"
+"_x86"
+"_codegen"
+"_t-univ"
 "_t-c-1"
 "_t-c-3"
 "_t-c-2"
@@ -38,15 +50,14 @@
 "_gsc"
 ))
 
+(define root "")
+
 (define (load-from-gsc file)
   (##namespace ("" load))
   (display "loading ")
   (write file)
   (load (string-append root "../gsc/" file ".scm"))
   (newline))
-
-(eval '(##define-macro (include file)
-        `(##include ,(string-append "../gsc/" file))))
 
 ;;;----------------------------------------------------------------------------
 
