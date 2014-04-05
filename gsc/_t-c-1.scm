@@ -1023,7 +1023,7 @@
     (targ-define-count "SUBCOUNT" (length sub-list))
     (targ-define-count "LBLCOUNT" targ-lbl-alloc)
     (targ-define-count "OFDCOUNT" ofd-count)
-    (targ-define-count "MODDESCR" (targ-heap-ref-obj module-descr))
+    (targ-macro-definition '("MODDESCR") (targ-heap-ref-obj module-descr))
     (targ-display "#include \"gambit.h\"")
     (targ-line)
 
