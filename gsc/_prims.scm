@@ -2539,37 +2539,37 @@
                   conditional-op-sym
                   vars))))))
 
-  (define case-fx=
-    (gen-simple-case **fixnum?-sym **fx=-sym))
-
-  (define case-fx<
-    (gen-simple-case **fixnum?-sym **fx<-sym))
-
-  (define case-fx>
-    (gen-simple-case **fixnum?-sym **fx>-sym))
-
-  (define case-fx<=
-    (gen-simple-case **fixnum?-sym **fx<=-sym))
-
-  (define case-fx>=
-    (gen-simple-case **fixnum?-sym **fx>=-sym))
-
-  (define case-fxzero?
-    (gen-simple-case **fixnum?-sym **fxzero?-sym))
-
-  (define case-fxpositive?
-    (gen-simple-case **fixnum?-sym **fxpositive?-sym))
-
-  (define case-fxnegative?
-    (gen-simple-case **fixnum?-sym **fxnegative?-sym))
-
-  (define case-fxodd?
-    (gen-simple-case **fixnum?-sym **fxodd?-sym))
-
-  (define case-fxeven?
-    (gen-simple-case **fixnum?-sym **fxeven?-sym))
-
   (let ()
+
+    (define case-fx=
+      (gen-simple-case **fixnum?-sym **fx=-sym))
+
+    (define case-fx<
+      (gen-simple-case **fixnum?-sym **fx<-sym))
+
+    (define case-fx>
+      (gen-simple-case **fixnum?-sym **fx>-sym))
+
+    (define case-fx<=
+      (gen-simple-case **fixnum?-sym **fx<=-sym))
+
+    (define case-fx>=
+      (gen-simple-case **fixnum?-sym **fx>=-sym))
+
+    (define case-fxzero?
+      (gen-simple-case **fixnum?-sym **fxzero?-sym))
+
+    (define case-fxpositive?
+      (gen-simple-case **fixnum?-sym **fxpositive?-sym))
+
+    (define case-fxnegative?
+      (gen-simple-case **fixnum?-sym **fxnegative?-sym))
+
+    (define case-fxodd?
+      (gen-simple-case **fixnum?-sym **fxodd?-sym))
+
+    (define case-fxeven?
+      (gen-simple-case **fixnum?-sym **fxeven?-sym))
 
     (define case-fxmax
       (gen-validating-case
@@ -3797,7 +3797,8 @@
          result)))
    type-patterns))
 
-(define constant-folder-gen constant-folder)
+(define (constant-folder-gen op . type-patterns)
+  (apply constant-folder (cons op type-patterns)))
 
 (define (constant-folder-fix op . type-patterns)
   (constant-folder-with-ptree-maker
