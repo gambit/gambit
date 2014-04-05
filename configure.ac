@@ -954,7 +954,7 @@ else
                  LIBS="$LIBS -lwinmm"
                fi
 
-               FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS"
+               FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS -D_WIN32_WINNT=0x0502"
                ;;
 
             *) # check libraries for other systems
