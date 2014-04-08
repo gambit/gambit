@@ -644,12 +644,6 @@
 (define (absent-object? obj)
   (eq? obj absent-object))
 
-(##define-macro (macro-unused-obj)
-  `(##type-cast -14 (macro-type-special)))
-
-(##define-macro (macro-deleted-obj)
-  `(##type-cast -15 (macro-type-special)))
-
 (define unused-object (macro-unused-obj))
 
 (define (unused-object? obj)
@@ -666,10 +660,10 @@
   (eq? obj void-object))
 
 (define (unbound1-object? obj)
-  (eq? obj (##type-cast -7 2)));;;;;;;;;;;;;
+  (eq? obj (macro-unbound1-obj)))
 
 (define (unbound2-object? obj)
-  (eq? obj (##type-cast -8 2)));;;;;;;;;;;;
+  (eq? obj (macro-unbound2-obj)))
 
 (define end-of-file-object #!eof)
 
@@ -778,22 +772,12 @@
 (define (format-filepos path filepos pinpoint?)
   (##format-filepos path filepos pinpoint?))
 
-(define (path-expand path . dir)
-  (if (##null? dir)
-    (##path-expand path)
-    (##path-expand path (##car dir))))
-
-(define (path-extension path)
-  (##path-extension path))
-
-(define (path-strip-extension path)
-  (##path-strip-extension path))
-
-(define (path-directory path)
-  (##path-directory path))
-
-(define (path-strip-directory path)
-  (##path-strip-directory path))
+;; The path functions are already defined by Gambit
+;;(define path-expand path-expand)
+;;(define path-extension path-extension)
+;;(define path-strip-extension path-strip-extension)
+;;(define path-directory path-directory)
+;;(define path-strip-directory path-strip-directory)
 
 (define scheme-file-extensions ##scheme-file-extensions)
 
