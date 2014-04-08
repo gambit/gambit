@@ -312,10 +312,13 @@ ___SCMOBJ (*proc) ();)
       while (p->mol != 0)
         {
           ___SCMOBJ e;
+          ___SCMOBJ save = ctx->flags;
 
           ctx->flags = p->flags;
 
           e = for_each_module (ctx, p->mol, proc);
+
+          ctx->flags = save;
 
           if (e != ___FIX(___NO_ERR))
             return e;
@@ -799,7 +802,8 @@ ___module_struct *module;)
       ___SCMOBJ err;
       ___SCMOBJ descr = module->moddescr;
 
-      ___FIELD(descr,2) = ctx->flags;
+      if (ctx->flags != ___FAL) /* override compiler flags */
+        ___FIELD(descr,2) = ctx->flags;
 
       if ((err = ___NONNULLPOINTER_to_SCMOBJ
                    (NULL, /* allocate as permanent object */
@@ -900,7 +904,7 @@ ___mod_or_lnk mol;)
   ___FIELD(ctx->program_descr,0) = result;
 
   ctx->module_count = 0;
-  ctx->flags = ___FIX(0); /* preload flag */
+  ctx->flags = ___FAL; /* default to compiler flags */
 
   if ((result = for_each_module (ctx,
                                  mol,

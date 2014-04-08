@@ -4580,9 +4580,9 @@ end-of-code
 (define ##load-required-module #f)
 (set! ##load-required-module ##default-load-required-module)
 
-(define-prim (##register-module-descrs-and-load-last! module-descrs)
+(define-prim (##register-module-descrs-and-load! module-descrs)
   (let ((modules (##register-module-descrs! module-descrs)))
-    (##load-required-module-structs modules #t)))
+    (##load-required-module-structs modules #f)))
 
 (define-prim (##load-vm)
   (let ((module-descrs (##vector-ref ##program-descr 0)))
