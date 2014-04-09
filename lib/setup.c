@@ -403,7 +403,7 @@ ___glo_struct **glo;)
        * so that it won't be flagged as an undefined variable.
        */
 
-      if (supply)
+      if (supply && ___GLOCELL(g->val) == ___UNB1)
         ___GLOCELL(g->val) = ___UNB2;
     }
 
