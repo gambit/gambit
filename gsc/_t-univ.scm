@@ -31,6 +31,21 @@
 (define (univ-absent-representation ctx)
   'class)
 
+(define (univ-unbound1-representation ctx)
+  'class)
+
+(define (univ-unbound2-representation ctx)
+  'class)
+
+(define (univ-optional-representation ctx)
+  'class)
+
+(define (univ-key-representation ctx)
+  'class)
+
+(define (univ-rest-representation ctx)
+  'class)
+
 (define (univ-boolean-representation ctx)
   'host)
 
@@ -665,6 +680,21 @@
 
 (define-macro (^absent)
   `(univ-emit-absent ctx))
+
+(define-macro (^unbound1)
+  `(univ-emit-unbound1 ctx))
+
+(define-macro (^unbound2)
+  `(univ-emit-unbound2 ctx))
+
+(define-macro (^optional)
+  `(univ-emit-optional ctx))
+
+(define-macro (^key)
+  `(univ-emit-key ctx))
+
+(define-macro (^rest)
+  `(univ-emit-rest ctx))
 
 (define-macro (^bool val)
   `(univ-emit-bool ctx ,val))
@@ -2673,7 +2703,8 @@
 
   (define (emit-obj obj force-var?)
 
-    (cond ((boolean? obj)
+    (cond ((or (false-object? obj)
+               (boolean? obj))
            (^boolean-obj obj))
 
           ((number? obj)
@@ -2721,8 +2752,20 @@
           ((absent-object? obj)
            (^absent))
 
-          ((undefined? obj)
-           (univ-undefined ctx))
+          ((unbound1-object? obj)
+           (^unbound1))
+
+          ((unbound2-object? obj)
+           (^unbound2))
+
+          ((optional-object? obj)
+           (^optional))
+
+          ((key-object? obj)
+           (^key))
+
+          ((rest-object? obj)
+           (^rest))
 
           ((proc-obj? obj)
            (gvm-proc-use ctx (proc-obj-name obj)))
@@ -3693,6 +3736,56 @@ EOF
          (^gvar "absent_val")
          (^new (^prefix (univ-use-rtlib ctx 'Absent))))))
 
+    ((Unbound1)
+     (^ (^class-declaration
+         (^prefix "Unbound1")
+         '()
+         '())
+        "\n"
+        (^var-declaration
+         (^gvar "unbound1_val")
+         (^new (^prefix (univ-use-rtlib ctx 'Unbound1))))))
+
+    ((Unbound2)
+     (^ (^class-declaration
+         (^prefix "Unbound2")
+         '()
+         '())
+        "\n"
+        (^var-declaration
+         (^gvar "unbound2_val")
+         (^new (^prefix (univ-use-rtlib ctx 'Unbound2))))))
+
+    ((Optional)
+     (^ (^class-declaration
+         (^prefix "Optional")
+         '()
+         '())
+        "\n"
+        (^var-declaration
+         (^gvar "optional_val")
+         (^new (^prefix (univ-use-rtlib ctx 'Optional))))))
+
+    ((Key)
+     (^ (^class-declaration
+         (^prefix "Key")
+         '()
+         '())
+        "\n"
+        (^var-declaration
+         (^gvar "key_val")
+         (^new (^prefix (univ-use-rtlib ctx 'Key))))))
+
+    ((Rest)
+     (^ (^class-declaration
+         (^prefix "Rest")
+         '()
+         '())
+        "\n"
+        (^var-declaration
+         (^gvar "rest_val")
+         (^new (^prefix (univ-use-rtlib ctx 'Rest))))))
+
     ((Boolean)
      (^ (^class-declaration
          (^prefix "Boolean")
@@ -4081,8 +4174,10 @@ EOF
       (list (cons (^local-var "sym") #f))
       "\n"
       '()
-      (^ ;;(^glo-var-set! (^local-var "sym") (^void))
-         ;;(^glo-var-primitive-set! (^local-var "sym") (^void))
+      (^ (^if (^not (^prop-index-exists? (gvm-state-glo-use ctx 'rd)
+                                         (^symbol-unbox (^local-var "sym"))))
+              (^ (^glo-var-set! (^local-var "sym") (^unbound1))
+                 (^glo-var-primitive-set! (^local-var "sym") (^unbound1))))
          (^return (^local-var "sym")))))
 
     ((apply2)
@@ -6380,6 +6475,61 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-emit-absent, unknown target"))))
 
+(define (univ-emit-unbound1 ctx)
+  (case (univ-unbound1-representation ctx)
+
+    ((class)
+     (univ-use-rtlib ctx 'Unbound1)
+     (^gvar "unbound1_val"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-unbound1, unknown target"))))
+
+(define (univ-emit-unbound2 ctx)
+  (case (univ-unbound2-representation ctx)
+
+    ((class)
+     (univ-use-rtlib ctx 'Unbound2)
+     (^gvar "unbound2_val"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-unbound2, unknown target"))))
+
+(define (univ-emit-optional ctx)
+  (case (univ-optional-representation ctx)
+
+    ((class)
+     (univ-use-rtlib ctx 'Optional)
+     (^gvar "optional_val"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-optional, unknown target"))))
+
+(define (univ-emit-key ctx)
+  (case (univ-key-representation ctx)
+
+    ((class)
+     (univ-use-rtlib ctx 'Key)
+     (^gvar "key_val"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-key, unknown target"))))
+
+(define (univ-emit-rest ctx)
+  (case (univ-rest-representation ctx)
+
+    ((class)
+     (univ-use-rtlib ctx 'Rest)
+     (^gvar "rest_val"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-rest, unknown target"))))
+
 (define (univ-emit-bool ctx val)
   (case (target-name (ctx-target ctx))
 
@@ -7985,9 +8135,6 @@ tanh
      (compiler-internal-error
       "univ-symbol, unknown target"))))
 
-(define (undefined? obj)
-  (eq? obj 'undefined))
-
 (define (univ-undefined ctx)
 
   (case (target-name (ctx-target ctx))
@@ -9475,8 +9622,15 @@ tanh
      (^ (^glo-var-primitive-set! arg1 arg2)
         (return arg1)))))
 
-;;TODO: ("##first-argument"                1     #f ()    0    (#f)    extended)
-;;TODO: ("##check-heap-limit"              (0)   #t ()    0    (#f)    extended)
+(univ-define-prim "##first-argument" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 . rest)
+     (return arg1))))
+
+(univ-define-prim "##check-heap-limit" #t
+  (make-translated-operand-generator
+   (lambda (ctx return)
+     (return (^void)))))
 
 ;;TODO: ("##quasi-append"                  0     #f 0     0    list    extended)
 ;;TODO: ("##quasi-list"                    0     #f ()    0    list    extended)
