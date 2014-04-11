@@ -2857,6 +2857,45 @@
      (compiler-internal-error
       "univ-emit-extensible-array-literal, unknown target"))))
 
+(define (univ-make-array ctx return len init)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     ;; TODO: add for loop constructor
+     (^ (^var-declaration (^local-var "elems")
+                          (^new "Array" (^local-var "len")))
+        "
+          for (var i=0; i<len; i++) {
+            elems[i] = init;
+          }
+        "
+        (return (^local-var "elems"))))
+
+    ((php)
+     (return
+      (^if-expr (^= (^local-var "len") (^int 0)) ;; array_fill does not like len=0
+                (^array-literal '())
+                (^call-prim
+                 (^global-prim-function "array_fill")
+                 (^int 0)
+                 (^local-var "len")
+                 (^local-var "init")))))
+
+    ((python)
+     ;; TODO: add literal array constructor
+     (return
+      (^* (^ "[" (^local-var "init") "]") (^local-var "len"))))
+
+    ((ruby)
+     (return
+      (^call-prim (^member "Array" "new")
+                  (^local-var "len")
+                  (^local-var "init"))))
+
+    (else
+     (compiler-internal-error
+      "univ-make-array, unknown target"))))
+
 (define (univ-emit-empty-dict ctx)
   (case (target-name (ctx-target ctx))
 
@@ -4077,44 +4116,11 @@ EOF
             (cons (^local-var "init") #f))
       "\n"
       '()
-      (case (target-name (ctx-target ctx))
-
-        ((js)
-         ;; TODO: add for loop constructor
-         (^ (^var-declaration (^local-var "elems")
-                              (^new "Array" (^local-var "len")))
-            "
-               for (var i=0; i<len; i++) {
-                 elems[i] = init;
-               }
-              "
-            (^return (^vector-box (^local-var "elems")))))
-
-        ((php)
-         (^return
-          (^vector-box
-           (^call-prim
-            (^global-prim-function "array_fill")
-            (^int 0)
-            (^local-var "len")
-            (^local-var "init")))))
-
-        ((python)
-         ;; TODO: add literal array constructor
-         (^return
-          (^vector-box
-           (^* (^ "[" (^local-var "init") "]") (^local-var "len")))))
-
-        ((ruby)
-         (^return
-          (^vector-box
-           (^call-prim (^member "Array" "new")
-                       (^local-var "len")
-                       (^local-var "init")))))
-
-        (else
-         (compiler-internal-error
-          "univ-rtlib-feature, unknown target")))))
+      (univ-make-array
+       ctx
+       (lambda (result) (^return (^vector-box result)))
+       (^local-var "len")
+       (^local-var "init"))))
 
     ((make_string)
      (^prim-function-declaration
@@ -4123,44 +4129,11 @@ EOF
             (cons (^local-var "init") #f))
       "\n"
       '()
-      (case (target-name (ctx-target ctx))
-
-        ((js)
-         ;; TODO: add for loop constructor
-         (^ (^var-declaration (^local-var "codes")
-                              (^new "Array" (^local-var "len")))
-            "
-               for (var i=0; i<len; i++) {
-                 codes[i] = init;
-               }
-              "
-            (^return (^string-box (^local-var "codes")))))
-
-        ((php)
-         (^return
-          (^string-box
-           (^call-prim
-            (^global-prim-function "array_fill")
-            (^int 0)
-            (^local-var "len")
-            (^local-var "init")))))
-
-        ((python)
-         ;; TODO: add literal array constructor
-         (^return
-          (^string-box
-           (^* (^ "[" (^local-var "init") "]") (^local-var "len")))))
-
-        ((ruby)
-         (^return
-          (^string-box
-           (^call-prim (^member "Array" "new")
-                       (^local-var "len")
-                       (^local-var "init")))))
-
-        (else
-         (compiler-internal-error
-          "univ-rtlib-feature, unknown target")))))
+      (univ-make-array
+       ctx
+       (lambda (result) (^return (^string-box result)))
+       (^local-var "len")
+       (^local-var "init"))))
 
     ((make_glo_var)
      (^prim-function-declaration
