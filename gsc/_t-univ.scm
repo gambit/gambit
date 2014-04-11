@@ -31,10 +31,7 @@
 (define (univ-absent-representation ctx)
   'class)
 
-(define (univ-unbound1-representation ctx)
-  'class)
-
-(define (univ-unbound2-representation ctx)
+(define (univ-unbound-representation ctx)
   'class)
 
 (define (univ-optional-representation ctx)
@@ -686,6 +683,9 @@
 
 (define-macro (^unbound2)
   `(univ-emit-unbound2 ctx))
+
+(define-macro (^unbound? val)
+  `(univ-emit-unbound? ctx ,val))
 
 (define-macro (^optional)
   `(univ-emit-optional ctx))
@@ -3737,25 +3737,18 @@ EOF
          (^gvar "absent_val")
          (^new (^prefix (univ-use-rtlib ctx 'Absent))))))
 
-    ((Unbound1)
+    ((Unbound)
      (^ (^class-declaration
-         (^prefix "Unbound1")
+         (^prefix "Unbound")
          '()
          '())
         "\n"
         (^var-declaration
          (^gvar "unbound1_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Unbound1))))))
-
-    ((Unbound2)
-     (^ (^class-declaration
-         (^prefix "Unbound2")
-         '()
-         '())
-        "\n"
+         (^new (^prefix (univ-use-rtlib ctx 'Unbound))))
         (^var-declaration
          (^gvar "unbound2_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Unbound2))))))
+         (^new (^prefix (univ-use-rtlib ctx 'Unbound))))))
 
     ((Optional)
      (^ (^class-declaration
@@ -6474,29 +6467,39 @@ function Gambit_trampoline(pc) {
 
     (else
      (compiler-internal-error
-      "univ-emit-absent, unknown target"))))
+      "univ-emit-absent, host representation not implemented"))))
 
 (define (univ-emit-unbound1 ctx)
-  (case (univ-unbound1-representation ctx)
+  (case (univ-unbound-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'Unbound1)
+     (univ-use-rtlib ctx 'Unbound)
      (^gvar "unbound1_val"))
 
     (else
      (compiler-internal-error
-      "univ-emit-unbound1, unknown target"))))
+      "univ-emit-unbound1, host representation not implemented"))))
 
 (define (univ-emit-unbound2 ctx)
-  (case (univ-unbound2-representation ctx)
+  (case (univ-unbound-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'Unbound2)
+     (univ-use-rtlib ctx 'Unbound)
      (^gvar "unbound2_val"))
 
     (else
      (compiler-internal-error
-      "univ-emit-unbound2, unknown target"))))
+      "univ-emit-unbound2, host representation not implemented"))))
+
+(define (univ-emit-unbound? ctx expr)
+  (case (univ-unbound-representation ctx)
+
+    ((class)
+     (^instanceof (^prefix (univ-use-rtlib ctx 'Unbound)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-unbound?, host representation not implemented"))))
 
 (define (univ-emit-optional ctx)
   (case (univ-optional-representation ctx)
@@ -6507,7 +6510,7 @@ function Gambit_trampoline(pc) {
 
     (else
      (compiler-internal-error
-      "univ-emit-optional, unknown target"))))
+      "univ-emit-optional, host representation not implemented"))))
 
 (define (univ-emit-key ctx)
   (case (univ-key-representation ctx)
@@ -6518,7 +6521,7 @@ function Gambit_trampoline(pc) {
 
     (else
      (compiler-internal-error
-      "univ-emit-key, unknown target"))))
+      "univ-emit-key, host representation not implemented"))))
 
 (define (univ-emit-rest ctx)
   (case (univ-rest-representation ctx)
@@ -6529,7 +6532,7 @@ function Gambit_trampoline(pc) {
 
     (else
      (compiler-internal-error
-      "univ-emit-rest, unknown target"))))
+      "univ-emit-rest, host representation not implemented"))))
 
 (define (univ-emit-bool ctx val)
   (case (target-name (ctx-target ctx))
@@ -8315,7 +8318,7 @@ tanh
 (univ-define-prim-bool "##unbound?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^bool #f)))));;TODO: implement
+     (return (^unbound? arg1)))))
 
 (univ-define-prim-bool "##eq?" #t
   (make-translated-operand-generator
