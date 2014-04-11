@@ -1762,7 +1762,8 @@
                   (if (proc-obj? obj)
                       code
                       (let ((state (table-ref table obj)))
-                        (if (> (vector-ref state 0) 1) ;; use a variable?
+                        (if (or (> (vector-ref state 0) 1) ;; use a variable?
+                                (eq? (target-name (ctx-target ctx)) 'python)) ;; Python can't handle deep nestings
                             (let ((cst
                                    (^array-index
                                     (gvm-state-cst ctx)
