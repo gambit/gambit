@@ -1557,7 +1557,7 @@
                                  rev-inits)
                          (##cons (##string->keyword (##symbol->string (##car x)))
                                  rev-keys)))
-                (let* ((frame (if (and rest-parameter (not dsssl-style-rest?))
+                (let* ((frame (if (and rest-parameter (##not dsssl-style-rest?))
                                   (##append frame (##list rest-parameter))
                                   frame))
                        (new-cte (##cte-frame-i cte (##cons (macro-self-var) frame)))
