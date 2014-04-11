@@ -6334,7 +6334,7 @@ function Gambit_trampoline(pc) {
       (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
                -1
                (lambda (inc)
-                 (^if (^= inc 0)
+                 (^if (^= inc (^int 0))
                       (^return-call-prim
                        (^global-prim-function
                         (^prefix (univ-use-rtlib ctx 'poll)))
@@ -6429,7 +6429,7 @@ function Gambit_trampoline(pc) {
 
     (else
      (compiler-internal-error
-      "univ-emit-eof, unknown target"))))
+      "univ-emit-eof, host representation not implemented"))))
 
 (define (univ-emit-absent ctx)
   (case (univ-absent-representation ctx)
@@ -6865,7 +6865,7 @@ function Gambit_trampoline(pc) {
 
     (else
      (compiler-internal-error
-      "univ-emit-float-fromint, unknown target"))))
+      "univ-emit-float-toint, unknown target"))))
 
 (define (univ-emit-float-abs ctx expr)
   (case (target-name (ctx-target ctx))
@@ -7575,7 +7575,7 @@ tanh
 
     (else
      (compiler-internal-error
-      "univ-emit-string-shrink!, unknown target"))))
+      "univ-emit-string-shrink!, host representation not implemented"))))
 
 (define (univ-emit-string-ref ctx expr1 expr2)
   (case (univ-string-representation ctx)
@@ -7611,7 +7611,7 @@ tanh
     (else
      ;; mutable strings do not exist in js, php, python and ruby
      (compiler-internal-error
-      "univ-emit-string-set!, unknown target"))))
+      "univ-emit-string-set!, host representation not implemented"))))
 
 (define (univ-emit-symbol-obj ctx obj force-var?)
   (case (univ-symbol-representation ctx)
@@ -8263,25 +8263,7 @@ tanh
 (univ-define-prim-bool "##boolean?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return
-      (case (target-name (ctx-target ctx))
-
-        ((js)
-         (^typeof "boolean" arg1))
-
-        ((php)
-         (^call-prim "is_bool" arg1))
-
-        ((python)
-         (^instanceof "bool" arg1))
-
-        ((ruby)
-         (^or (^instanceof "FalseClass" arg1)
-              (^instanceof "TrueClass" arg1)))
-
-        (else
-         (compiler-internal-error
-          "##boolean?, unknown target")))))))
+     (return (^boolean? arg1)))))
 
 (univ-define-prim-bool "##null?" #t
   (make-translated-operand-generator
