@@ -7813,29 +7813,28 @@ tanh
      (compiler-internal-error
       "univ-emit-procedure?, unknown target"))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;TODO: implement closure?
-#;
 (define (univ-emit-closure? ctx expr)
-  (case (univ-closure-representation ctx)
+  (case (target-name (ctx-target ctx))
 
-    ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Closure)) expr))
+    ((js)
+     (^not (^prop-index-exists? expr (^str "id"))))
+
+    ((php)
+     (^instanceof (^prefix "closure") expr))
+
+    ((python)
+     (^not
+      (^call-prim
+       (^global-prim-function "hasattr")
+       expr
+       (^str "id"))))
+
+    ((ruby)
+     (^= (^ expr ".instance_variables.length") (^int 0)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js ruby)
-        (^instanceof "Array" expr))
-
-       ((php)
-        (^call-prim "is_array" expr))
-
-       ((python)
-        (^instanceof "list" expr))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-closure?, unknown target"))))))
+     (compiler-internal-error
+      "univ-emit-closure?, unknown target"))))
 
 (define (univ-emit-closure-length ctx expr)
   (^array-length (univ-clo-slots ctx expr)))
@@ -8404,7 +8403,11 @@ tanh
    (lambda (ctx return arg1)
      (return (^char? arg1)))))
 
-;;TODO: ("##closure?"                 (1)   #f ()    0    boolean extended)
+(univ-define-prim-bool "##closure?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^closure? arg1)))))
+
 ;;TODO: ("##subprocedure?"            (1)   #f ()    0    boolean extended)
 ;;TODO: ("##return-dynamic-env-bind?" (1)   #f ()    0    boolean extended)
 ;;TODO: ("##number?"                  (1)   #f ()    0    boolean extended)
