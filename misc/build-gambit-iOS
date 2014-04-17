@@ -184,7 +184,7 @@ build_all_ios()
 
   build_one_ios iPhoneSimulator i386
 
-  for arch in armv6 armv7 ; do
+  for arch in armv7 armv7s ; do
     build_one_ios iPhoneOS "$arch"
   done
 
