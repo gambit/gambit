@@ -219,7 +219,6 @@ while [ $# -ne 0 ]; do
     *)
       printf 'Unknown option: %s\n' "$1" >&2
       exit 1
-      shift
       ;;
   esac
 done
