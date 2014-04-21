@@ -134,10 +134,12 @@ make_gambit()
   dir="$1"
   cd "$dir"
   make clean
-  make -j $num_simultaneous_jobs
   if [ "$update_with_latest_changes" == "yes" ]; then
-    make update
-    make -j $num_simultaneous_jobs
+     echo "Updating to latest from master"
+     make update
+     make -j $num_simultaneous_jobs || exit 1
+  else
+     make -j $num_simultaneous_jobs || exit 1
   fi
   make install
   cd ..
