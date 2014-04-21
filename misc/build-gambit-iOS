@@ -133,6 +133,7 @@ make_gambit()
 {
   dir="$1"
   cd "$dir"
+  cd "lib"
   make clean
   if [ "$update_with_latest_changes" == "yes" ]; then
      echo "Updating to latest from master"
@@ -142,6 +143,7 @@ make_gambit()
      make -j $num_simultaneous_jobs || exit 1
   fi
   make install
+  cd ..
   cd ..
 }
 
