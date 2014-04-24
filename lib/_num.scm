@@ -10510,30 +10510,22 @@ ___RESULT = result;
 (define-prim (##flfloor x))
 
 (define-prim-flonum (flfloor x)
-  (if (##flfinite? x)
-      (##flfloor x)
-      (##fail-check-finite-real 1 flfloor x)))
+  (##flfloor x))
 
 (define-prim (##flceiling x))
 
 (define-prim-flonum (flceiling x)
-  (if (##flfinite? x)
-      (##flceiling x)
-      (##fail-check-finite-real 1 flceiling x)))
+  (##flceiling x))
 
 (define-prim (##fltruncate x))
 
 (define-prim-flonum (fltruncate x)
-  (if (##flfinite? x)
-      (##fltruncate x)
-      (##fail-check-finite-real 1 fltruncate x)))
+  (##fltruncate x))
 
 (define-prim (##flround x))
 
 (define-prim-flonum (flround x)
-  (if (##flfinite? x)
-      (##flround x)
-      (##fail-check-finite-real 1 flround x)))
+  (##flround x))
 
 (define-prim (##flscalbn x n))
 
@@ -10545,10 +10537,8 @@ ___RESULT = result;
 
 (define-prim (##flilogb x))
 
-(define-prim (flilogb x)
-  (macro-force-vars (x)
-    (macro-check-flonum x 1 (flilogb x)
-      (##flilogb x))))
+(define-prim-flonum (flilogb x)
+  (##flilogb x))
 
 (define-prim (##flexp x))
 
@@ -10563,19 +10553,12 @@ ___RESULT = result;
 (define-prim (##fllog x))
 
 (define-prim-flonum (fllog x)
-  (if (or (##flnan? x)
-          (##not (##flnegative?
-                  (##flcopysign (macro-inexact-+1) x))))
-      (##fllog x)
-      (##raise-range-exception 1 fllog x)))
+  (##fllog x))
 
 (define-prim (##fllog1p x))
 
 (define-prim-flonum (fllog1p x)
-  (if (or (##flnan? x)
-          (##not (##fl< x (macro-inexact-+1))))
-      (##fllog1p x)
-      (##raise-range-exception 1 fllog1p x)))
+  (##fllog1p x))
 
 (define-prim (##flsin x))
 
@@ -10595,18 +10578,12 @@ ___RESULT = result;
 (define-prim (##flasin x))
 
 (define-prim-flonum (flasin x)
-  (if (and (##not (##fl< (macro-inexact-+1) x))
-           (##not (##fl< x (macro-inexact--1))))
-      (##flasin x)
-      (##raise-range-exception 1 flasin x)))
+  (##flasin x))
 
 (define-prim (##flacos x))
 
 (define-prim-flonum (flacos x)
-  (if (and (##not (##fl< (macro-inexact-+1) x))
-           (##not (##fl< x (macro-inexact--1))))
-      (##flacos x)
-      (##raise-range-exception 1 flacos x)))
+  (##flacos x))
 
 (define-prim (##flatan x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
@@ -10654,17 +10631,12 @@ ___RESULT = result;
 (define-prim (##flexpt x y))
 
 (define-prim-flonum (flexpt x y)
-  (if (or (##not (##flnegative? x))
-          (macro-flonum-int? y))
-      (##flexpt x y)
-      (##raise-range-exception 2 flexpt x y)))
+  (##flexpt x y))
 
 (define-prim (##flsqrt x))
 
 (define-prim-flonum (flsqrt x)
-  (if (##not (##flnegative? x))
-      (##flsqrt x)
-      (##raise-range-exception 1 flsqrt x)))
+  (##flsqrt x))
 
 (define-prim (##flsquare x))
 
