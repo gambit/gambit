@@ -1744,12 +1744,15 @@
        (general-base a b))))
 
   (define (general-base a b)
-    (##declare (not interrupts-enabled))
     (if (##eq? b 0)
         a
-        (if (##fixnum? b)
-            (fixnum-base b (##remainder a b))
-            (general-base b (##remainder a b)))))
+	(let ((rem (cdr (##exact-int.div a b   ; calculate (remainder a b)
+					 #f    ; need-quotient?
+					 #f    ; keep-dividend?
+					 ))))
+	  (if (##fixnum? b)
+	      (fixnum-base b rem)
+	      (general-base b rem)))))
 
   (define (fixnum-base a b)
     (##declare (not interrupts-enabled))
@@ -1762,8 +1765,25 @@
               (fixnum-base b (##fxremainder a b))))))
 
   (define (exact-gcd x y)
-    (let ((x (##abs x))
-          (y (##abs y)))
+    ;; always returns an exact result, even with inexact arguments.
+    (let ((x (cond ((##inexact? x)
+		    (##inexact->exact (##flabs x)))
+		   ((##negative? x)
+		    (##negate x))
+		   ((##bignum? x)
+		    (##bignum.copy x))
+		   (else ; nonnegative fixnum
+		    x)))
+	  (y (cond ((##inexact? y)
+		    (##inexact->exact (##flabs y)))
+		   ((##negative? y)
+		    (##negate y))
+		   ((##bignum? y)
+		    (##bignum.copy y))
+		   (else ; nonnegative fixnum
+		    y))))
+      ;; now x and y are newly allocated, so we can overwrite them if
+      ;; necessary in general-base
       (cond ((##eq? x 0)
              y)
             ((##eq? y 0)
@@ -1771,17 +1791,7 @@
             ((and (##fixnum? x) (##fixnum? y))
              (fixnum-base x y))
             (else
-             (let ((x-first-bit (##first-bit-set x))
-                   (y-first-bit (##first-bit-set y)))
-               (##arithmetic-shift
-                (##fast-gcd (##arithmetic-shift x (##fx- x-first-bit))
-                            (##arithmetic-shift y (##fx- y-first-bit)))
-                (##fxmin x-first-bit y-first-bit)))))))
-
-  (define (inexact-gcd x y)
-    (##exact->inexact
-     (exact-gcd (##inexact->exact x)
-                (##inexact->exact y))))
+	     (##fast-gcd x y)))))
 
   (cond ((##not (##integer? x))
          (type-error-on-x))
@@ -1792,7 +1802,7 @@
         (else
          (if (and (##exact? x) (##exact? y))
              (exact-gcd x y)
-             (inexact-gcd x y)))))
+             (##exact->inexact (exact-gcd x y))))))
 
 (define-prim-nary (gcd x y)
   0
@@ -4507,7 +4517,7 @@ for a discussion of branch cuts.
 
   (define (bignum-bitwise-ior x x-length y y-length)
     (if (##bignum.negative? x)
-        (let ((result (##bignum.make x-length x #f)))
+        (let ((result (##bignum.copy x)))
           (##declare (not interrupts-enabled))
           (let loop1 ((i 0))
             (if (##fx< i x-length)
@@ -4515,7 +4525,7 @@ for a discussion of branch cuts.
                   (##bignum.adigit-bitwise-ior! result i y i)
                   (loop1 (##fx+ i 1)))
                 (##bignum.normalize! result))))
-        (let ((result (##bignum.make y-length y #f)))
+        (let ((result (##bignum.copy y)))
           (##declare (not interrupts-enabled))
           (let loop2 ((i 0))
             (if (##fx< i x-length)
@@ -4564,7 +4574,7 @@ for a discussion of branch cuts.
   (##define-macro (type-error-on-y) `'(2))
 
   (define (bignum-bitwise-xor x x-length y y-length)
-    (let ((result (##bignum.make y-length y #f)))
+    (let ((result (##bignum.copy y)))
       (##declare (not interrupts-enabled))
       (let loop1 ((i 0))
         (if (##fx< i x-length)
@@ -4621,7 +4631,7 @@ for a discussion of branch cuts.
 
   (define (bignum-bitwise-and x x-length y y-length)
     (if (##bignum.negative? x)
-        (let ((result (##bignum.make y-length y #f)))
+        (let ((result (##bignum.copy y)))
           (##declare (not interrupts-enabled))
           (let loop1 ((i 0))
             (if (##fx< i x-length)
@@ -4629,7 +4639,7 @@ for a discussion of branch cuts.
                   (##bignum.adigit-bitwise-and! result i x i)
                   (loop1 (##fx+ i 1)))
                 (##bignum.normalize! result))))
-        (let ((result (##bignum.make x-length x #f)))
+        (let ((result (##bignum.copy x)))
           (##declare (not interrupts-enabled))
           (let loop2 ((i 0))
             (if (##fx< i x-length)
@@ -4680,7 +4690,7 @@ for a discussion of branch cuts.
   (cond ((##fixnum? x)
          (##fxnot x))
         ((##bignum? x)
-         (##bignum.make (##bignum.adigit-length x) x #t))
+         (##bignum.make (##bignum.adigit-length x) x #t))  ;; don't copy, bitwise invert
         (else
          (type-error))))
 
@@ -6068,6 +6078,9 @@ ___RESULT = result;
           (##raise-heap-overflow-exception)
           (##bignum.make k x complement?))
         v)))
+
+(define-prim (##bignum.copy x)
+  (##bignum.make (##bignum.adigit-length x) x #f))
 
 ;;; Bignum comparison.
 
@@ -9739,7 +9752,7 @@ ___RESULT = result;
                (u
                 (if keep-dividend?
                     ;; copy u
-                    (##bignum.make (##bignum.adigit-length u) u #f)
+                    (##bignum.copy u)
                     ;; overwrite u with remainder
                     u)))
           (if (##fx= q-mdigits 1)
@@ -9798,24 +9811,6 @@ ___RESULT = result;
                     (##cons (and need-quotient? (##bignum.normalize! q))
                             r-hat)))))))))
 
-  (define (small-quotient-or-divisor-divide u v)
-    ;; Here we do a quick check to catch most cases where the quotient will
-    ;; be 1 and do a subtraction.  This comes up a lot in gcd calculations.
-    ;; Otherwise, we just call naive-div.
-    (let ((u-mlength (##bignum.mdigit-length u))
-          (v-mlength (##bignum.mdigit-length v)))
-      (if (and (##fx= u-mlength v-mlength)
-               (let loop ((i (##fx- u-mlength 1)))
-                 (let ((udigit (##bignum.mdigit-ref u i)))
-                   (if (##eq? udigit 0)
-                       (loop (##fx- i 1))
-                       (##fx< udigit
-                              (##fxarithmetic-shift-left
-                               (##bignum.mdigit-ref v i)
-                               1))))))
-          (##cons 1 (##- u v))
-          (naive-div u v))))
-
   (define (big-divide u v)
 
     ;; u and v are positive bignums
@@ -9840,11 +9835,11 @@ ___RESULT = result;
                                              v-first-bit-set)
                          extra-remainder)))
           (if (##fx< v-length ##bignum.fft-mul-min-width)
-              (small-quotient-or-divisor-divide u v)
+              (naive-div u v)
               (let* ((u-length (##integer-length u))
                      (length-difference (##fx- u-length v-length)))
                 (if (##fx< length-difference ##bignum.fft-mul-min-width)
-                    (small-quotient-or-divisor-divide u v)
+                    (naive-div u v)
                     (let* ((z-bits (##exact-int.reciprocal v length-difference))
                            (z (##car z-bits))
                            (bits (##cdr z-bits)))
