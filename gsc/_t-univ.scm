@@ -3894,11 +3894,35 @@ EOF
              (case (target-name (ctx-target ctx))
 
                ((js)
-                (^return
-                 (^call-prim
-                  (^member (^member "String" "fromCharCode") "apply")
-                  "null"
-                  (^this-member "codes"))))
+                (let ((codes (^this-member "codes"))
+                      (limit (^local-var "limit"))
+                      (chunks (^local-var "chunks"))
+                      (i (^local-var "i")))
+                  (^ (^var-declaration limit (^int 32768))
+                     (^if (^< (^array-length codes) limit)
+                          (^return
+                           (^call-prim
+                            (^member (^member "String" "fromCharCode") "apply")
+                            "null"
+                            codes))
+                          (^ (^var-declaration chunks (^array-literal '()))
+                             (^var-declaration i (^int 0))
+                             (^while (^< i (^array-length codes))
+                                     (^ (^expr-statement
+                                         (^call-prim
+                                          (^member chunks "push")
+                                          (^call-prim
+                                           (^member (^member "String" "fromCharCode") "apply")
+                                           "null"
+                                           (^call-prim
+                                            (^member codes "slice")
+                                            i
+                                            (^+ i limit)))))
+                                        (^inc-by i limit)))
+                             (^return
+                              (^call-prim
+                               (^member chunks "join")
+                               (^str ""))))))))
 
                ((php)
                 (^return
