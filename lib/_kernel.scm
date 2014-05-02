@@ -3860,12 +3860,16 @@ end-of-code
    ___F64 user, sys, real;
    ___SIZE_TS minflt, majflt;
    ___F64 n = ___bytes_allocated (___PSPNC);
-   ___SCMOBJ result = ___EXT(___alloc_scmobj) (___ps, ___sF64VECTOR, 20<<3);
+   ___SCMOBJ result;
+
+   ___FRAME_STORE_RA(___R0)
+   ___W_ALL
+   result = ___EXT(___alloc_scmobj) (___ps, ___sF64VECTOR, 20<<3);
+   ___R_ALL
+   ___SET_R0(___FRAME_FETCH_RA)
 
     if (!___FIXNUMP(result))
     {
-      ___W_ALL
-
       n = ___bytes_allocated (___PSPNC) - n;
 
       ___process_times (&user, &sys, &real);
@@ -3891,8 +3895,6 @@ end-of-code
       ___F64VECTORSET(result,___FIX(17),___vms->mem.last_gc_live_)
       ___F64VECTORSET(result,___FIX(18),___vms->mem.last_gc_movable_)
       ___F64VECTORSET(result,___FIX(19),___vms->mem.last_gc_nonmovable_)
-
-      ___R_ALL
 
       ___still_obj_refcount_dec (result);
    }
