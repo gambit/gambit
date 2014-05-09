@@ -3376,7 +3376,7 @@ ___setup_params_struct *setup_params;)
 
   if ((err = setup_command_line_arguments ()) != ___FIX(___NO_ERR))
     {
-      ___cleanup;
+      ___cleanup ();
       return err;
     }
 
