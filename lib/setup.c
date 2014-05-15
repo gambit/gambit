@@ -2337,8 +2337,10 @@ ___processor_state ___ps;)
 ___EXP_FUNC(___SCMOBJ,___setup_pstate)
    ___P((___processor_state ___ps,
          ___virtual_machine_state ___vms),
-        (___ps)
-___processor_state ___ps;)
+        (___ps,
+         ___vms)
+___processor_state ___ps;
+___virtual_machine_state ___vms;)
 {
   int i;
   ___SCMOBJ ___err;
