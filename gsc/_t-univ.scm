@@ -359,6 +359,7 @@
 
 (univ-prim-proc-add! '("##inline-host-statement" (1) #t 0 0 (#f) extended))
 (univ-prim-proc-add! '("##inline-host-expression" (1) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##inline-host-declaration" (1) #t 0 0 (#f) extended))
 
 (define (univ-switch-testable? targ obj)
   ;;(pretty-print (list 'univ-switch-testable? 'targ obj))
@@ -1740,13 +1741,19 @@
     (lambda (port)
       (let* ((objs-used (make-objs-used))
              (rtlib-features-used (make-resource-set))
-             (ctx (make-ctx targ objs-used rtlib-features-used #f))
+             (ctx (make-ctx targ objs-used rtlib-features-used (queue-empty) #f))
              (code-procs (univ-dump-procs ctx procs))
              (code-entry (univ-entry-point ctx (list-ref procs 0)))
              (code-rtlib (univ-rtlib ctx))
-             (code-objs (univ-dump-objs ctx)))
+             (code-objs (univ-dump-objs ctx))
+             (code-decls (queue->list (ctx-decls ctx))))
 
-        (univ-display (^ code-rtlib code-objs code-procs code-entry) port))))
+        (univ-display (^ code-rtlib
+                         code-decls
+                         code-objs
+                         code-procs
+                         code-entry)
+                      port))))
 
   #f)
 
@@ -1999,7 +2006,7 @@
                         ctx
                         (lambda (result)
                           (cond (loc ;; result is needed?
-                                 (^setloc loc (or result (^obj #f)))) ;;TODO: use void
+                                 (^setloc loc (or result (^void))))
                                 ;; if result is not needed, don't generate expression
                                 ;;(result
                                 ;; (^expr-statement result))
@@ -2226,6 +2233,7 @@
                   (ctx-target global-ctx)
                   (ctx-objs-used global-ctx)
                   (ctx-rtlib-features-used global-ctx)
+                  (ctx-decls global-ctx)
                   (proc-obj-name p))))
         (^ "\n"
            (univ-comment
@@ -2356,7 +2364,7 @@
                   exprs))))
          (cont name)))))
 
-(define (make-ctx target objs-used rtlib-features-used ns)
+(define (make-ctx target objs-used rtlib-features-used decls ns)
   (vector target
           ns
           0
@@ -2366,7 +2374,8 @@
           (make-resource-set)
           (make-resource-set)
           objs-used
-          rtlib-features-used))
+          rtlib-features-used
+          decls))
 
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
@@ -2397,6 +2406,9 @@
 
 (define (ctx-rtlib-features-used ctx)        (vector-ref ctx 9))
 (define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 9 x))
+
+(define (ctx-decls ctx)                      (vector-ref ctx 10))
+(define (ctx-decls-set! ctx x)               (vector-set! ctx 10 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -9681,6 +9693,17 @@ tanh
              (string? (obj-val (car opnds))))
         (return (obj-val (car opnds)))
         (compiler-internal-error "##inline-host-expression requires a constant string argument"))))
+
+(univ-define-prim "##inline-host-declaration" #t
+
+  (lambda (ctx return opnds)
+    (if (and (= (length opnds) 1)
+             (obj? (car opnds))
+             (string? (obj-val (car opnds))))
+        (let ((decl (obj-val (car opnds))))
+          (queue-put! (ctx-decls ctx) (^ decl "\n"))
+          (return (^void)))
+        (compiler-internal-error "##inline-host-declaration requires a constant string argument"))))
 
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
