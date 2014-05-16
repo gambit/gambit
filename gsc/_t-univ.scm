@@ -9663,7 +9663,7 @@ tanh
 
 ;;TODO: clean up and integrate to above
 
-(univ-define-prim "##inline-host-statement" #f
+(univ-define-prim "##inline-host-statement" #t
 
   (lambda (ctx return opnds)
     (if (and (= (length opnds) 1)
@@ -9673,7 +9673,7 @@ tanh
            (return #f))
         (compiler-internal-error "##inline-host-statement requires a constant string argument"))))
 
-(univ-define-prim "##inline-host-expression" #f
+(univ-define-prim "##inline-host-expression" #t
 
   (lambda (ctx return opnds)
     (if (and (= (length opnds) 1)
