@@ -4350,7 +4350,7 @@ function Gambit_scm2js(obj) {
 
 function Gambit_scm2js_call(fn) {
 
-  var dest = Gambit_r0;
+  var cont = Gambit_heapify(Gambit_r0);
 
   if (Gambit_nargs > 0) {
     Gambit_stack[++Gambit_sp] = Gambit_r1;
@@ -4368,13 +4368,20 @@ function Gambit_scm2js_call(fn) {
 
   Gambit_r1 = Gambit_js2scm(fn.apply(null, args.map(Gambit_scm2js)));
 
-  return dest;
+  Gambit_r0 = cont;
+
+  return Gambit_r0;
 }
 
 function Gambit_js2scm_call(proc, args) {
 
-  var pc = proc;
-  var call_done = false;
+  var ra = function () { return false; };
+  ra.id = 'Gambit_js2scm_call';
+  ra.fs = 1;
+  ra.link = 1;
+
+  Gambit_sp = 0;
+  Gambit_stack[++Gambit_sp] = [ra,false];
 
   Gambit_nargs = args.length;
 
@@ -4395,11 +4402,9 @@ function Gambit_js2scm_call(proc, args) {
     --Gambit_sp;
   }
 
-  Gambit_r0 = function () { call_done = true; return false; };
+  Gambit_r0 = ra;
 
-  while (!call_done) {
-    pc = pc();
-  }
+  Gambit_trampoline(proc);
 
   return Gambit_scm2js(Gambit_r1);
 }
