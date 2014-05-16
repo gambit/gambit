@@ -357,8 +357,8 @@
 
 (for-each univ-prim-proc-add! prim-procs)
 
-(univ-prim-proc-add! '("##inline-host-statement" (1) #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##inline-host-expression" (1) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##inline-host-statement" 1 #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##inline-host-expression" 1 #t 0 0 (#f) extended))
 (univ-prim-proc-add! '("##inline-host-declaration" (1) #t 0 0 (#f) extended))
 
 (define (univ-switch-testable? targ obj)
@@ -9675,23 +9675,56 @@ tanh
 
 ;;TODO: clean up and integrate to above
 
+(define (univ-expand-inline-host-code ctx str args)
+  (let ((nb-args (length args))
+        (len (string-length str)))
+    (let loop1 ((start 0) (i 0))
+
+      (define (done)
+        (^ (substring str start len)))
+
+      (if (< i len)
+          (let ((c (string-ref str i)))
+            (if (not (char=? c #\@))
+                (loop1 start (+ i 1))
+                (let loop2 ((j (+ i 1)))
+                  (if (< j len)
+                      (let ((c (string-ref str j)))
+                        (cond ((char-numeric? c)
+                               (loop2 (+ j 1)))
+                              ((and (char=? c #\@)
+                                    (> j (+ i 1)))
+                               (let ((n
+                                      (string->number
+                                       (substring str (+ i 1) j))))
+                                 (if (and (>= n 1) (<= n nb-args))
+                                     (^ (substring str start i)
+                                        (^getopnd (list-ref args (- n 1)))
+                                        (loop1 (+ j 1) (+ j 1)))
+                                     (loop1 start (+ j 1)))))
+                              (else
+                               (loop1 start (+ j 1)))))
+                      (done)))))
+          (done)))))
+
 (univ-define-prim "##inline-host-statement" #t
 
   (lambda (ctx return opnds)
-    (if (and (= (length opnds) 1)
+    (if (and (> (length opnds) 0)
              (obj? (car opnds))
              (string? (obj-val (car opnds))))
-        (^ (obj-val (car opnds))
+        (^ (univ-expand-inline-host-code ctx (obj-val (car opnds)) (cdr opnds))
            (return #f))
         (compiler-internal-error "##inline-host-statement requires a constant string argument"))))
 
 (univ-define-prim "##inline-host-expression" #t
 
   (lambda (ctx return opnds)
-    (if (and (= (length opnds) 1)
+    (if (and (> (length opnds) 0)
              (obj? (car opnds))
              (string? (obj-val (car opnds))))
-        (return (obj-val (car opnds)))
+        (return
+         (univ-expand-inline-host-code ctx (obj-val (car opnds)) (cdr opnds)))
         (compiler-internal-error "##inline-host-expression requires a constant string argument"))))
 
 (univ-define-prim "##inline-host-declaration" #t
@@ -9702,7 +9735,7 @@ tanh
              (string? (obj-val (car opnds))))
         (let ((decl (obj-val (car opnds))))
           (queue-put! (ctx-decls ctx) (^ decl "\n"))
-          (return (^void)))
+          (return #f))
         (compiler-internal-error "##inline-host-declaration requires a constant string argument"))))
 
 (define univ-tag-bits 2)
