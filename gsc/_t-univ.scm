@@ -2150,7 +2150,18 @@
                                 (ctx-stack-base-offset ctx))
                              (lambda (ctx)
                                (^return-poll
-                                (scan-gvm-opnd ctx opnd)
+                                (if (jump-safe? gvm-instr)
+                                    (if (glo? opnd)
+                                        (^call-prim
+                                         (^global-prim-function
+                                          (^prefix (univ-use-rtlib ctx 'check_procedure_glo)))
+                                         (scan-gvm-opnd ctx opnd)
+                                         (^obj (glo-name opnd)))
+                                        (^call-prim
+                                         (^global-prim-function
+                                          (^prefix (univ-use-rtlib ctx 'check_procedure)))
+                                         (scan-gvm-opnd ctx opnd)))
+                                    (scan-gvm-opnd ctx opnd))
                                 poll?
                                 (case (target-name (ctx-target ctx))
                                   ((js)
@@ -2565,6 +2576,12 @@
   (^assign
    (gvm-state-reg-use ctx 'wr num)
    val))
+
+(define (univ-stk-slot-from-tos ctx offset)
+  (^array-index
+   (gvm-state-stack-use ctx 'rd)
+   (^- (gvm-state-sp-use ctx 'rd)
+       offset)))
 
 (define (univ-stk-location ctx offset)
   (^array-index
@@ -3172,6 +3189,16 @@
                         (^var-declaration (^local-var (^ "arg" i))
                                           expr))))))))))
 
+(define (univ-push-args ctx)
+  (univ-foldr-range
+   0
+   (- univ-nb-arg-regs 1)
+   (^)
+   (lambda (i rest)
+     (^if (^> (^getnargs) i)
+          (^ (^push (^getreg (+ i 1)))
+             rest)))))
+
 (define (univ-pop-args-to-regs ctx lo)
   (univ-foldr-range
    0
@@ -3515,14 +3542,7 @@
          (^if (^< (^getnargs)
                   (^local-var "nrp"))
               (^return (^bool #f)))
-         (univ-foldr-range
-          0
-          (- univ-nb-arg-regs 1)
-          (^)
-          (lambda (i rest)
-            (^if (^> (^getnargs) i)
-                 (^ (^push (^getreg (+ i 1)))
-                    rest))))
+         (univ-push-args ctx)
          (^while (^> (^getnargs)
                      (^local-var "nrp"))
                  (^ (^pop (lambda (expr)
@@ -3568,6 +3588,59 @@ function Gambit_set(&$obj,$name,$val) {
 
 EOF
 )
+
+    ((prepend_arg1)
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "prepend_arg1"))
+      (list (cons (^local-var "arg1") #f))
+      "\n"
+      '()
+      (^ (^var-declaration (^local-var "i") (^int 0))
+         (univ-push-args ctx)
+         (^push (^void))
+         (^while (^< (^local-var "i") (^getnargs))
+                 (^ (^assign (univ-stk-slot-from-tos ctx (^local-var "i"))
+                             (univ-stk-slot-from-tos ctx (^parens (^+ (^local-var "i") (^int 1)))))
+                    (^inc-by (^local-var "i")
+                             1)))
+         (^assign (univ-stk-slot-from-tos ctx (^local-var "i"))
+                  (^local-var "arg1"))
+         (^inc-by (gvm-state-nargs-use ctx 'rdwr)
+                  1)
+         (univ-pop-args-to-regs ctx 0))))
+
+    ((check_procedure_glo)
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "check_procedure_glo"))
+      (list (cons (^local-var "dest") #f)
+            (cons (^local-var "gv") #f))
+      "\n"
+      '()
+      (^ (^if (^not (^parens (^procedure? (^local-var "dest"))))
+              (^ (^expr-statement
+                  (^call-prim
+                   (^global-prim-function
+                    (^prefix (univ-use-rtlib ctx 'prepend_arg1)))
+                   (^local-var "gv")))
+                 (^assign (^local-var "dest")
+                          (^getglo '##apply-global-with-procedure-check-nary))))
+         (^return (^local-var "dest")))))
+
+    ((check_procedure)
+     (^prim-function-declaration
+      (^global-prim-function (^prefix "check_procedure"))
+      (list (cons (^local-var "dest") #f))
+      "\n"
+      '()
+      (^ (^if (^not (^parens (^procedure? (^local-var "dest"))))
+              (^ (^expr-statement
+                  (^call-prim
+                   (^global-prim-function
+                    (^prefix (univ-use-rtlib ctx 'prepend_arg1)))
+                   (^local-var "dest")))
+                 (^assign (^local-var "dest")
+                          (^getglo '##apply-with-procedure-check-nary))))
+         (^return (^local-var "dest")))))
 
     ((closure_alloc)
      (case (target-name (ctx-target ctx))
