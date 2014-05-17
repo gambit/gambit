@@ -546,9 +546,9 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
           else
             {
 #ifdef _UNICODE
-              _tcscpy (gambcdir, temp);
+              _tcscpy (___CAST(wchar_t*,gambcdir), temp);
 #else
-              mbstowcs (gambcdir, temp, cch);
+              mbstowcs (___CAST(wchar_t*,gambcdir), temp, cch);
               gambcdir[cch] = '\0';
 #endif
               ___GSTATE->setup_params.gambcdir = gambcdir;
