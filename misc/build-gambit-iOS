@@ -16,6 +16,9 @@ prefix_subdir="current"
 gambit_dist_if_downloaded="gambc-v4_7_2-devel"
 update_with_latest_changes_if_downloaded="yes"
 
+# The following options can be set from the command line.
+num_simultaneous_jobs=2
+
 select_macosx()
 {
   gambit_dir="`pwd`/gambit-macosx"
@@ -43,7 +46,8 @@ select_ios()
 
   ios_platform="$platform_type.platform"
 
-  platforms_dir="`xcode-select --print-path`/Platforms"
+  developer_dir="`xcode-select --print-path`"
+  platforms_dir="$developer_dir/Platforms"
   ios_platform_dir="$platforms_dir/$ios_platform"
   ios_sdks="$ios_platform_dir/Developer/SDKs"
 
@@ -57,16 +61,17 @@ select_ios()
   case "$platform_type" in
 
            iPhoneOS) config_options_extras=--host=arm-apple-darwin
+                     sdk_name="iphoneos"
                      ;;
 
     iPhoneSimulator) config_options_extras=
+                     sdk_name="iphonesimulator"
                      ;;
 
   esac
 
-  export PATH="$ios_platform_dir/Developer/usr/bin:$PATH"
-  export CC="gcc -isysroot $ios_sdk_dir -arch $arch"
-  export CXX="g++ -isysroot $ios_sdk_dir -arch $arch"
+  export CC="xcrun -sdk $sdk_name gcc -isysroot $ios_sdk_dir -arch $arch -miphoneos-version-min=5.0"
+  export CXX="xcrun -sdk $sdk_name g++ -isysroot $ios_sdk_dir -arch $arch -miphoneos-version-min=5.0"
   export CFLAGS="-Wno-trigraphs -Wreturn-type -Wunused-variable -I$gambit_prefix/include -L$gambit_prefix/lib"
   export CXXFLAGS="$CFLAGS"
   export LD="ld -arch $arch"
@@ -128,13 +133,17 @@ make_gambit()
 {
   dir="$1"
   cd "$dir"
+  cd "lib"
   make clean
-  make -j 2
   if [ "$update_with_latest_changes" == "yes" ]; then
-    make update
-    make -j 2
+     echo "Updating to latest from master"
+     make update
+     make -j $num_simultaneous_jobs || exit 1
+  else
+     make -j $num_simultaneous_jobs || exit 1
   fi
   make install
+  cd ..
   cd ..
 }
 
@@ -181,24 +190,43 @@ build_all_ios()
 
   build_one_ios iPhoneSimulator i386
 
-  for arch in armv6 armv7 ; do
+  for arch in armv7 armv7s ; do
     build_one_ios iPhoneOS "$arch"
   done
 
   rm -rf temp-lib
 }
 
+script_name="build-gambit-iOS"
+
 while [ $# -ne 0 ]; do
   case "$1" in
+    -h|--help)
+       echo "$script_name - build gambit library for iOS"
+       echo " "
+       echo "$script_name [options]"
+       echo " "
+       echo "options:"
+       echo "-h, --help                Show help"
+       echo "-j, --jobs <number>       Number of simultaneous jobs for make to use."
+       echo "                          Should be equal to number of CPU cores."
+       echo "--no-update               Don't update downloaded Gambit distribution"
+       exit 0
+       ;;
     --no-update)
       update_with_latest_changes_if_downloaded=no
+      shift
       ;;
+    -j|--jobs)
+       shift
+       num_simultaneous_jobs=$1
+       shift
+       ;;
     *)
       printf 'Unknown option: %s\n' "$1" >&2
       exit 1
       ;;
   esac
-  shift
 done
 
 get_gambit_dist_tgz
