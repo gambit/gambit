@@ -78,8 +78,6 @@ if test "${LDFLAGS+set}" != set; then
   LDFLAGS=""
 fi
 
-AVOID_UNCOMMON_GCC_OPTIONS=no
-
 case "$target_os" in
 
   darwin*) if test "$CC" = ""; then
@@ -105,8 +103,6 @@ case "$target_os" in
                unset ac_cv_prog_HAVE_SPECIAL_CXX
              done
            fi
-
-           AVOID_UNCOMMON_GCC_OPTIONS=yes
            ;;
 
 esac
@@ -345,6 +341,21 @@ AC_ARG_ENABLE(gcc-opts,
                              [use expensive GCC optimizations (default is NO)]),
               ENABLE_GCC_OPTS=$enableval,
               ENABLE_GCC_OPTS=no)
+
+###############################################################################
+#
+# Check if GCC specific options should be used.  When the system is to
+# be built in a setting where the target C compiler is unknown, it is
+# best to avoid using GCC specific options that may not be accepted by
+# all the possible target C compilers (for example on OS X, the
+# program "gcc" may be the LLVM gcc which is part of Xcode, or the GNU
+# gcc if it was installed manually).
+
+AC_ARG_ENABLE(gcc-specific-options,
+              AC_HELP_STRING([--enable-gcc-specific-options],
+                             [use GCC specific options (default is YES)]),
+              ENABLE_GCC_SPECIFIC_OPTIONS=$enableval,
+              ENABLE_GCC_SPECIFIC_OPTIONS=yes)
 
 ###############################################################################
 #
@@ -1402,7 +1413,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*1000+__GNUC_MINOR__)>=4002&&(__GNUC__*1000+__GNUC_MINOR__)<=4003,GCC_42_OR_43)
   AC_CHECK_C_COMPILER_CPP_EXPR(__llvm__ && !__clang__ && (__GNUC__*1000+__GNUC_MINOR__)<4005,POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG)
 
-  if test "$C_COMP_CLANG" = yes -o "$AVOID_UNCOMMON_GCC_OPTIONS" = yes; then
+  if test "$C_COMP_CLANG" = yes -o "$ENABLE_GCC_SPECIFIC_OPTIONS" != yes; then
 
     # clang does not support these options:
     DASH_no_cpp_precomp=""
