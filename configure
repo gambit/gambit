@@ -2975,6 +2975,8 @@ if test "${LDFLAGS+set}" != set; then
   LDFLAGS=""
 fi
 
+AVOID_UNCOMMON_GCC_OPTIONS=no
+
 case "$target_os" in
 
   darwin*) if test "$CC" = ""; then
@@ -3072,6 +3074,8 @@ fi
                unset ac_cv_prog_HAVE_SPECIAL_CXX
              done
            fi
+
+           AVOID_UNCOMMON_GCC_OPTIONS=yes
            ;;
 
 esac
@@ -8351,7 +8355,7 @@ POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG="$ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG"
 
 
 
-  if test "$C_COMP_CLANG" = yes; then
+  if test "$C_COMP_CLANG" = yes -o "$AVOID_UNCOMMON_GCC_OPTIONS" = yes; then
 
     # clang does not support these options:
     DASH_no_cpp_precomp=""

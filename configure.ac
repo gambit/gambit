@@ -78,6 +78,8 @@ if test "${LDFLAGS+set}" != set; then
   LDFLAGS=""
 fi
 
+AVOID_UNCOMMON_GCC_OPTIONS=no
+
 case "$target_os" in
 
   darwin*) if test "$CC" = ""; then
@@ -103,6 +105,8 @@ case "$target_os" in
                unset ac_cv_prog_HAVE_SPECIAL_CXX
              done
            fi
+
+           AVOID_UNCOMMON_GCC_OPTIONS=yes
            ;;
 
 esac
@@ -1398,7 +1402,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*1000+__GNUC_MINOR__)>=4002&&(__GNUC__*1000+__GNUC_MINOR__)<=4003,GCC_42_OR_43)
   AC_CHECK_C_COMPILER_CPP_EXPR(__llvm__ && !__clang__ && (__GNUC__*1000+__GNUC_MINOR__)<4005,POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG)
 
-  if test "$C_COMP_CLANG" = yes; then
+  if test "$C_COMP_CLANG" = yes -o "$AVOID_UNCOMMON_GCC_OPTIONS" = yes; then
 
     # clang does not support these options:
     DASH_no_cpp_precomp=""
