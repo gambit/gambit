@@ -4769,7 +4769,8 @@
     (##fail-check-string 1 open-input-file path))
 
   (##make-input-path-psettings
-   (##list 'path: path)
+   (##list 'path: path
+           'eol-encoding: 'cr-lf)
    fail
    (lambda (psettings)
      (let ((path (macro-psettings-path psettings)))

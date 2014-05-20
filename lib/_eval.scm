@@ -3925,7 +3925,8 @@
 
   (##make-input-path-psettings
    (if (##string? path-or-settings)
-       (##list 'path: path-or-settings)
+       (##list 'path: path-or-settings
+               'eol-encoding: 'cr-lf)
        path-or-settings)
    fail
    (lambda (psettings)
