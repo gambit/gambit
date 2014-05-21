@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -56,7 +56,7 @@ for VARIANT in intel32 intel64; do
   # use GNU gcc
   export PATH="/usr/local/gcc-4.8.1/bin:$PATH"
 
-  CFLAGS="$CONFIG_ARCH" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host CC="gcc"
+  CFLAGS="$CONFIG_ARCH" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --disable-gcc-specific-options CC="gcc"
 
   cd "$herefromroot"
 
