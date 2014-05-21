@@ -921,7 +921,7 @@ enable_feedback2
 enable_single_host
 enable_inline_jumps
 enable_gcc_opts
-enable_gcc_specific_options
+enable_gnu_gcc_specific_options
 enable_char_size
 enable_shared
 enable_ansi_c
@@ -1595,8 +1595,8 @@ Optional Features:
                           (default is NO)
   --enable-inline-jumps   generate inline code for jumps (default is NO)
   --enable-gcc-opts       use expensive GCC optimizations (default is NO)
-  --enable-gcc-specific-options
-                          use GCC specific options (default is YES)
+  --enable-gnu-gcc-specific-options
+                          use GNU GCC specific options (default is YES)
   --enable-char-size=N    Scheme character size in bytes (default is 4)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
@@ -4695,18 +4695,19 @@ fi
 
 ###############################################################################
 #
-# Check if GCC specific options should be used.  When the system is to
-# be built in a setting where the target C compiler is unknown, it is
-# best to avoid using GCC specific options that may not be accepted by
-# all the possible target C compilers (for example on OS X, the
-# program "gcc" may be the LLVM gcc which is part of Xcode, or the GNU
-# gcc if it was installed manually).
+# Check if GNU GCC specific options should be used.  When the system
+# is to be built in a setting where the target C compiler is either
+# the GNU GCC or the LLVM GCC it is advisable to avoid using GNU GCC
+# specific options that are not accepted by the LLVM GCC compiler
+# (this is the case on OS X, where the program "gcc" may be the LLVM
+# GCC which is part of Xcode, or the GNU GCC if it was installed
+# manually).
 
-# Check whether --enable-gcc-specific-options was given.
-if test "${enable_gcc_specific_options+set}" = set; then :
-  enableval=$enable_gcc_specific_options; ENABLE_GCC_SPECIFIC_OPTIONS=$enableval
+# Check whether --enable-gnu-gcc-specific-options was given.
+if test "${enable_gnu_gcc_specific_options+set}" = set; then :
+  enableval=$enable_gnu_gcc_specific_options; ENABLE_GNU_GCC_SPECIFIC_OPTIONS=$enableval
 else
-  ENABLE_GCC_SPECIFIC_OPTIONS=yes
+  ENABLE_GNU_GCC_SPECIFIC_OPTIONS=yes
 fi
 
 
@@ -8371,7 +8372,7 @@ POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG="$ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG"
 
 
 
-  if test "$C_COMP_CLANG" = yes -o "$ENABLE_GCC_SPECIFIC_OPTIONS" != yes; then
+  if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
     # clang does not support these options:
     DASH_no_cpp_precomp=""

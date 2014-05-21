@@ -344,18 +344,19 @@ AC_ARG_ENABLE(gcc-opts,
 
 ###############################################################################
 #
-# Check if GCC specific options should be used.  When the system is to
-# be built in a setting where the target C compiler is unknown, it is
-# best to avoid using GCC specific options that may not be accepted by
-# all the possible target C compilers (for example on OS X, the
-# program "gcc" may be the LLVM gcc which is part of Xcode, or the GNU
-# gcc if it was installed manually).
+# Check if GNU GCC specific options should be used.  When the system
+# is to be built in a setting where the target C compiler is either
+# the GNU GCC or the LLVM GCC it is advisable to avoid using GNU GCC
+# specific options that are not accepted by the LLVM GCC compiler
+# (this is the case on OS X, where the program "gcc" may be the LLVM
+# GCC which is part of Xcode, or the GNU GCC if it was installed
+# manually).
 
-AC_ARG_ENABLE(gcc-specific-options,
-              AC_HELP_STRING([--enable-gcc-specific-options],
-                             [use GCC specific options (default is YES)]),
-              ENABLE_GCC_SPECIFIC_OPTIONS=$enableval,
-              ENABLE_GCC_SPECIFIC_OPTIONS=yes)
+AC_ARG_ENABLE(gnu-gcc-specific-options,
+              AC_HELP_STRING([--enable-gnu-gcc-specific-options],
+                             [use GNU GCC specific options (default is YES)]),
+              ENABLE_GNU_GCC_SPECIFIC_OPTIONS=$enableval,
+              ENABLE_GNU_GCC_SPECIFIC_OPTIONS=yes)
 
 ###############################################################################
 #
@@ -1413,7 +1414,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*1000+__GNUC_MINOR__)>=4002&&(__GNUC__*1000+__GNUC_MINOR__)<=4003,GCC_42_OR_43)
   AC_CHECK_C_COMPILER_CPP_EXPR(__llvm__ && !__clang__ && (__GNUC__*1000+__GNUC_MINOR__)<4005,POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG)
 
-  if test "$C_COMP_CLANG" = yes -o "$ENABLE_GCC_SPECIFIC_OPTIONS" != yes; then
+  if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
     # clang does not support these options:
     DASH_no_cpp_precomp=""
