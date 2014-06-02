@@ -103,6 +103,8 @@
 (define univ-thread-cont-slot 5)
 (define univ-thread-denv-slot 6)
 
+(define (univ-php-version ctx) 530) ;; TODO allow user to specify this
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; "Universal" back-end.
@@ -479,9 +481,6 @@
 (define-macro (^gvar name)
   `(univ-emit-gvar ctx ,name))
 
-(define-macro (^global-prim-function name)
-  `(univ-emit-global-prim-function ctx ,name))
-
 (define-macro (^global-function name)
   `(univ-emit-global-function ctx ,name))
 
@@ -594,12 +593,13 @@
     (lambda (ctx) ,body)
     ,prim?))
 
-(define-macro (^class-declaration name fields methods)
+(define-macro (^class-declaration name fields methods #!optional (constructor #f))
   `(univ-emit-class-declaration
     ctx
     ,name
     ,fields
-    ,methods))
+    ,methods
+    ,constructor))
 
 (define-macro (^tos)
   `(univ-emit-tos ctx))
@@ -1508,16 +1508,6 @@
     (use-global ctx var)
     var))
 
-(define (univ-emit-global-prim-function ctx name)
-  (case (target-name (ctx-target ctx))
-
-    ((js php python ruby)
-     name)
-
-    (else
-     (compiler-internal-error
-      "univ-emit-global-prim-function, unknown target"))))
-
 (define (univ-emit-global-function ctx name)
   (case (target-name (ctx-target ctx))
 
@@ -1730,7 +1720,7 @@
 
     ((php)
      (^call-prim
-      (^global-prim-function (^prefix (univ-use-rtlib ctx 'get)))
+      (^prefix (univ-use-rtlib ctx 'get))
       obj
       (^str name)))
 
@@ -1746,7 +1736,7 @@
 
     ((php)
      (^call-prim
-      (^global-prim-function (^prefix (univ-use-rtlib ctx 'set)))
+      (^prefix (univ-use-rtlib ctx 'set))
       obj
       (^str name)
       val))
@@ -1963,7 +1953,7 @@
                      (^ (case (label-type gvm-instr)
 
                           ((entry)
-                           (univ-label-entry ctx gvm-instr id))
+                           (univ-label-entry ctx gvm-instr (^global-function id)))
 
                           (else
                            (^)))
@@ -2177,13 +2167,11 @@
                                 (if (jump-safe? gvm-instr)
                                     (if (glo? opnd)
                                         (^call-prim
-                                         (^global-prim-function
-                                          (^prefix (univ-use-rtlib ctx 'check_procedure_glo)))
+                                         (^prefix (univ-use-rtlib ctx 'check_procedure_glo))
                                          (scan-gvm-opnd ctx opnd)
                                          (^obj (glo-name opnd)))
                                         (^call-prim
-                                         (^global-prim-function
-                                          (^prefix (univ-use-rtlib ctx 'check_procedure)))
+                                         (^prefix (univ-use-rtlib ctx 'check_procedure))
                                          (scan-gvm-opnd ctx opnd)))
                                     (scan-gvm-opnd ctx opnd))
                                 poll?
@@ -2322,14 +2310,12 @@
                "univ-label-entry, keyword parameters not supported")
               (^if (if rest?
                        (^not (^call-prim
-                              (^global-prim-function
-                               (^prefix (univ-use-rtlib ctx 'build_rest)))
+                              (^prefix (univ-use-rtlib ctx 'build_rest))
                               nb-parms-except-rest))
                        (^!= (^getnargs)
                             nb-parms-except-rest))
                    (^return-call-prim
-                    (^global-prim-function
-                     (^prefix (univ-use-rtlib ctx 'wrong_nargs)))
+                    (^prefix (univ-use-rtlib ctx 'wrong_nargs))
                     (if closed?
                         (^getreg (+ univ-nb-arg-regs 1))
                         id))))
@@ -2393,7 +2379,7 @@
       (^ (^var-declaration
           name
           (^call-prim
-           (^global-prim-function (^prefix (univ-use-rtlib ctx 'closure_alloc)))
+           (^prefix (univ-use-rtlib ctx 'closure_alloc))
            (^array-literal
             (cons (gvm-lbl-use ctx (make-lbl lbl))
                   exprs))))
@@ -2822,7 +2808,7 @@
            (^rest))
 
           ((proc-obj? obj)
-           (gvm-proc-use ctx (proc-obj-name obj)))
+           (^global-function (gvm-proc-use ctx (proc-obj-name obj))))
 
           ((pair? obj)
            (univ-obj-use
@@ -2862,21 +2848,16 @@
             force-var?
             (lambda ()
               (let* ((slots
-                      (##vector-copy obj));;;;;;;;replace call of ##vector-copy
+                      (##vector-copy obj));;TODO: replace call of ##vector-copy
                      (cyclic?
                       (eq? (vector-ref slots 0) obj)))
                 ;; the root type descriptor is cyclic, handle this specially
                 (if cyclic?
                     (vector-set! slots 0 #f))
-                (let ((expr
-                       (^structure-box
-                        (^array-literal
-                         (map (lambda (x) (emit-obj x #f))
-                              (vector->list slots))))))
-                  (if cyclic?
-                      (^call-prim
-                       (^member (^parens expr) "cyclic"))
-                      expr))))))
+                (^structure-box
+                 (^array-literal
+                  (map (lambda (x) (emit-obj x #f))
+                       (vector->list slots))))))))
 
           (else
            (^ "UNIMPLEMENTED_OBJECT("
@@ -2892,7 +2873,7 @@
      (^ "[" (univ-separated-list "," elems) "]"))
 
     ((php)
-     (^apply (^global-prim-function "array") elems))
+     (^apply "array" elems))
 
     (else
      (compiler-internal-error
@@ -2905,7 +2886,7 @@
      (^ "[" (univ-separated-list "," elems) "]"))
 
     ((php)
-     (^apply (^global-prim-function "array") elems))
+     (^apply "array" elems))
 
     ((python)
      (let ((key-vals
@@ -2940,7 +2921,7 @@
       (^if-expr (^= (^local-var "len") (^int 0)) ;; array_fill does not like len=0
                 (^array-literal '())
                 (^call-prim
-                 (^global-prim-function "array_fill")
+                 "array_fill"
                  (^int 0)
                  (^local-var "len")
                  (^local-var "init")))))
@@ -2980,18 +2961,18 @@
 ;; =============================================================================
 
 (define (gvm-lbl-use ctx lbl)
-  (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx)))
+  (^global-function (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx))))
 
 (define (gvm-proc-use ctx name)
   (gvm-bb-use ctx 1 name))
 
 (define (gvm-bb-use ctx num ns)
-  (let ((global (lbl->id ctx num ns)))
-    (use-global ctx global)
-    global))
+  (let ((id (lbl->id ctx num ns)))
+    (use-global ctx (^global-function id))
+    id))
 
 (define (lbl->id ctx num ns)
-  (^global-function (^prefix (^ "bb" num "_" (scheme-id->c-id ns)))))
+  (^prefix (^ "bb" num "_" (scheme-id->c-id ns))))
 
 (define (univ-foldr-range lo hi rest fn)
   (if (<= lo hi)
@@ -3005,11 +2986,10 @@
 (define (univ-emit-continuation-capture-function ctx nb-args thread-save?)
   (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
     (^function-declaration
-     (^global-function
-      (^prefix (^ (if thread-save?
-                      "thread_save"
-                      "continuation_capture")
-                  nb-args)))
+     (^prefix (^ (if thread-save?
+                     "thread_save"
+                     "continuation_capture")
+                 nb-args))
      '()
      "\n"
      '()
@@ -3027,8 +3007,7 @@
 
         (^setreg 0
                  (^call-prim
-                  (^global-prim-function
-                   (^prefix (univ-use-rtlib ctx 'heapify)))
+                  (^prefix (univ-use-rtlib ctx 'heapify))
                   (^getreg 0)))
 
         (let* ((cont
@@ -3065,11 +3044,10 @@
 
 (define (univ-emit-continuation-graft-no-winding-function ctx nb-args thread-restore?)
   (^function-declaration
-   (^global-function
-    (^prefix (^ (if thread-restore?
-                    "thread_restore"
-                    "continuation_graft_no_winding")
-                nb-args)))
+   (^prefix (^ (if thread-restore?
+                   "thread_restore"
+                   "continuation_graft_no_winding")
+               nb-args))
    '()
    "\n"
    '()
@@ -3143,7 +3121,7 @@
 
 (define (univ-emit-continuation-return-no-winding-function ctx nb-args)
   (^function-declaration
-   (^global-function (^prefix (^ "continuation_return_no_winding" nb-args)))
+   (^prefix (^ "continuation_return_no_winding" nb-args))
    '()
    "\n"
    '()
@@ -3181,7 +3159,7 @@
 
 (define (univ-emit-apply-function ctx nb-args)
   (^function-declaration
-   (^global-function (^prefix (^ "apply" nb-args)))
+   (^prefix (^ "apply" nb-args))
    '()
    "\n"
    '()
@@ -3254,7 +3232,7 @@
 
     ((trampoline)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "trampoline"))
+      (^prefix "trampoline")
       (list (cons (^local-var "pc") #f))
       "\n"
       '()
@@ -3264,7 +3242,7 @@
 
     ((heapify)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "heapify"))
+      (^prefix "heapify")
       (list (cons (^local-var "ra") #f))
       "\n"
       '()
@@ -3454,7 +3432,7 @@
 
     ((underflow)
      (^function-declaration
-      (^global-function (^prefix "underflow"))
+      (^prefix "underflow")
       '()
       "\n"
       (list (cons "fs" 0))
@@ -3559,7 +3537,7 @@
 
     ((poll)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "poll"))
+      (^prefix "poll")
       (list (cons (^local-var "dest") #f))
       "\n"
       '()
@@ -3569,7 +3547,7 @@
 
     ((build_rest)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "build_rest"))
+      (^prefix "build_rest")
       (list (cons (^local-var "nrp") #f))
       "\n"
       '()
@@ -3592,14 +3570,13 @@
 
     ((wrong_nargs)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "wrong_nargs"))
+      (^prefix "wrong_nargs")
       (list (cons (^local-var "proc") #f))
       "\n"
       '()
       (^ (^expr-statement
           (^call-prim
-           (^global-prim-function
-            (^prefix (univ-use-rtlib ctx 'build_rest)))
+           (^prefix (univ-use-rtlib ctx 'build_rest))
            0))
          (^setreg 2 (^getreg 1))
          (^setreg 1 (^local-var "proc"))
@@ -3626,7 +3603,7 @@ EOF
 
     ((prepend_arg1)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "prepend_arg1"))
+      (^prefix "prepend_arg1")
       (list (cons (^local-var "arg1") #f))
       "\n"
       '()
@@ -3646,7 +3623,7 @@ EOF
 
     ((check_procedure_glo)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "check_procedure_glo"))
+      (^prefix "check_procedure_glo")
       (list (cons (^local-var "dest") #f)
             (cons (^local-var "gv") #f))
       "\n"
@@ -3654,8 +3631,7 @@ EOF
       (^ (^if (^not (^parens (^procedure? (^local-var "dest"))))
               (^ (^expr-statement
                   (^call-prim
-                   (^global-prim-function
-                    (^prefix (univ-use-rtlib ctx 'prepend_arg1)))
+                   (^prefix (univ-use-rtlib ctx 'prepend_arg1))
                    (^local-var "gv")))
                  (^assign (^local-var "dest")
                           (^getglo '##apply-global-with-procedure-check-nary))))
@@ -3663,15 +3639,14 @@ EOF
 
     ((check_procedure)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "check_procedure"))
+      (^prefix "check_procedure")
       (list (cons (^local-var "dest") #f))
       "\n"
       '()
       (^ (^if (^not (^parens (^procedure? (^local-var "dest"))))
               (^ (^expr-statement
                   (^call-prim
-                   (^global-prim-function
-                    (^prefix (univ-use-rtlib ctx 'prepend_arg1)))
+                   (^prefix (univ-use-rtlib ctx 'prepend_arg1))
                    (^local-var "dest")))
                  (^assign (^local-var "dest")
                           (^getglo '##apply-with-procedure-check-nary))))
@@ -3703,7 +3678,7 @@ EOF
 
        (else
         (^prim-function-declaration
-         (^global-prim-function (^prefix "closure_alloc"))
+         (^prefix "closure_alloc")
          (list (cons (^local-var "slots") #f))
          "\n"
          '()
@@ -3753,12 +3728,10 @@ EOF
      (^class-declaration
       (^prefix "Structure")
       '((slots #f))
-      (list
-       (list 'cyclic
-             '()
-             (^ (^assign (^array-index (^this-member "slots") 0)
-                         (^local-var (^this)))
-                (^return (^local-var (^this))))))))
+      '()
+      (^if (^not (^array-index (^this-member "slots") 0))
+           (^assign (^array-index (^this-member "slots") 0)
+                    (^local-var (^this))))))
 
     ((Frame)
      (^class-declaration
@@ -3774,7 +3747,7 @@ EOF
 
     ((continuation_next)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "continuation_next"))
+      (^prefix "continuation_next")
       (list (cons (^local-var "cont") #f))
       "\n"
       '()
@@ -3813,7 +3786,7 @@ EOF
      (^ (^var-declaration (^gvar "symbol_table") (^empty-dict))
         "\n"
         (^prim-function-declaration
-         (^global-prim-function (^prefix "make_interned_symbol"))
+         (^prefix "make_interned_symbol")
          (list (cons (^local-var "str") #f))
          "\n"
          '()
@@ -3843,7 +3816,7 @@ EOF
      (^ (^var-declaration (^gvar "keyword_table") (^empty-dict))
         "\n"
         (^prim-function-declaration
-         (^global-prim-function (^prefix "make_interned_keyword"))
+         (^prefix "make_interned_keyword")
          (list (cons (^local-var "str") #f))
          "\n"
          '()
@@ -3976,7 +3949,7 @@ EOF
                ((php python)
                 (^return
                  (^call-prim
-                  (^global-prim-function "chr")
+                  "chr"
                   (^this-member "code"))))
 
                ((ruby)
@@ -3994,7 +3967,7 @@ EOF
      (^ (^var-declaration (^gvar "char_table") (^empty-dict))
         "\n"
         (^prim-function-declaration
-         (^global-prim-function (^prefix "make_interned_char"))
+         (^prefix "make_interned_char")
          (list (cons (^local-var "code") #f))
          "\n"
          '()
@@ -4053,9 +4026,9 @@ EOF
                ((php)
                 (^return
                  (^call-prim
-                  (^global-prim-function "join")
+                  "join"
                   (^call-prim
-                   (^global-prim-function "array_map")
+                   "array_map"
                    (^str "chr")
                    (^this-member "codes")))))
 
@@ -4064,8 +4037,8 @@ EOF
                  (^call-prim
                   (^member (^str "") "join")
                   (^call-prim
-                   (^global-prim-function "map")
-                   (^global-prim-function "chr")
+                   "map"
+                   "chr"
                    (^this-member "codes")))))
 
                ((ruby)
@@ -4083,7 +4056,7 @@ EOF
 
     ((tostr)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "tostr"))
+      (^prefix "tostr")
       (list (cons (^local-var "obj") #f))
       "\n"
       '()
@@ -4105,10 +4078,10 @@ EOF
                      (^if (^pair? (^local-var "obj"))
                           (^return (^concat
                                     (^call-prim
-                                     (^global-prim-function (^prefix (univ-use-rtlib ctx 'tostr)))
+                                     (^prefix (univ-use-rtlib ctx 'tostr))
                                      (^member (^local-var "obj") "car"))
                                     (^call-prim
-                                     (^global-prim-function (^prefix (univ-use-rtlib ctx 'tostr)))
+                                     (^prefix (univ-use-rtlib ctx 'tostr))
                                      (^member (^local-var "obj") "cdr"))))
 ;;                          (^if (^char? (^local-var "obj"))
 ;;                               (^return (^chr-tostr (^char-unbox (^local-var "obj"))))
@@ -4123,7 +4096,7 @@ EOF
 
     ((println)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "println"))
+      (^prefix "println")
       (list (cons (^local-var "obj") #f))
       "\n"
       '()
@@ -4145,9 +4118,9 @@ EOF
          '()
          (^ (^expr-statement
              (^call-prim
-              (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
+              (^prefix (univ-use-rtlib ctx 'println))
               (^call-prim
-               (^global-prim-function (^prefix (univ-use-rtlib ctx 'tostr)))
+               (^prefix (univ-use-rtlib ctx 'tostr))
                (^getreg 1))))
             (^setreg 1 (^void))
             (^return (^getreg 0))))
@@ -4155,7 +4128,7 @@ EOF
         "\n"
 
         (^setglo 'println
-                 (gvm-proc-use ctx "println"))))
+                 (^global-function (gvm-proc-use ctx "println")))))
 
     ((glo-real-time-milliseconds)
      (^ (^var-declaration
@@ -4225,11 +4198,11 @@ EOF
         "\n"
 
         (^setglo 'real-time-milliseconds
-                 (gvm-proc-use ctx "real-time-milliseconds"))))
+                 (^global-function (gvm-proc-use ctx "real-time-milliseconds")))))
 
     ((strtocodes)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "strtocodes"))
+      (^prefix "strtocodes")
       (list (cons (^local-var "str") #f))
       "\n"
       '()
@@ -4261,7 +4234,7 @@ EOF
 
     ((make_vector)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "make_vector"))
+      (^prefix "make_vector")
       (list (cons (^local-var "len") #f)
             (cons (^local-var "init") #f))
       "\n"
@@ -4274,7 +4247,7 @@ EOF
 
     ((make_u8vector)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "make_u8vector"))
+      (^prefix "make_u8vector")
       (list (cons (^local-var "len") #f)
             (cons (^local-var "init") #f))
       "\n"
@@ -4287,7 +4260,7 @@ EOF
 
     ((make_string)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "make_string"))
+      (^prefix "make_string")
       (list (cons (^local-var "len") #f)
             (cons (^local-var "init") #f))
       "\n"
@@ -4300,7 +4273,7 @@ EOF
 
     ((make_glo_var)
      (^prim-function-declaration
-      (^global-prim-function (^prefix "make_glo_var"))
+      (^prefix "make_glo_var")
       (list (cons (^local-var "sym") #f))
       "\n"
       '()
@@ -4618,7 +4591,7 @@ import ctypes
         "\n"
 
         (^prim-function-declaration
-         (^global-prim-function (^prefix "trampoline"))
+         (^prefix "trampoline")
          "pc"
          "\n"
          '()
@@ -4626,7 +4599,7 @@ import ctypes
                  (^assign "pc" (^call "pc"))))
 
         (^prim-function-declaration
-         (^global-prim-function (^prefix "println"))
+         (^prefix "println")
          "obj"
          "\n"
          '()
@@ -4640,21 +4613,21 @@ import ctypes
          (^ (^if (^eq? R1 (^obj #f))
                  (^expr-statement
                   (^call-prim
-                   (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
+                   (^prefix (univ-use-rtlib ctx 'println))
                    (^str "#f")))
                  (^if (^eq? R1 (^obj #t))
                       (^expr-statement
                        (^call-prim
-                        (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
+                        (^prefix (univ-use-rtlib ctx 'println))
                         (^str "#t")))
                       (^expr-statement
                        (^call-prim
-                        (^global-prim-function (^prefix (univ-use-rtlib ctx 'println)))
+                        (^prefix (univ-use-rtlib ctx 'println))
                         R1))))
             (^return R0)))
 
         (^setglo 'println
-                 (gvm-proc-use ctx "println"))
+                 (^global-function (gvm-proc-use ctx "println")))
 
 )))
 
@@ -6169,7 +6142,7 @@ function Gambit_trampoline(pc) {
       "runtime-system, unknown target"))))
 
 (define (univ-entry-point ctx main-proc)
-  (let ((entry (gvm-proc-use ctx (proc-obj-name main-proc))))
+  (let ((entry (^global-function (gvm-proc-use ctx (proc-obj-name main-proc)))))
     (^ "\n"
        (univ-comment ctx "--------------------------------\n")
        "\n"
@@ -6205,7 +6178,7 @@ function Gambit_trampoline(pc) {
          ((js php python ruby)
           (^expr-statement
            (^call-prim
-            (^global-prim-function (^prefix (univ-use-rtlib ctx 'trampoline)))
+            (^prefix (univ-use-rtlib ctx 'trampoline))
             entry)))
 
          (else
@@ -6269,35 +6242,71 @@ function Gambit_trampoline(pc) {
              attribs)))
 
     ((php)
-     (let ((decl
-            (^ "function " (if prim? name "") "("
-               (univ-separated-list
-                ","
-                (map (lambda (x)
-                       (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
-                     params))
-               ") {"
-               (univ-indent
-                (^ header
-                   (map (lambda (attrib)
-                          (^ "static "
-                             (^assign (^local-var (car attrib))
-                                      (cdr attrib))))
-                        attribs)
-
-                   (if (null? globals)
-                       (^)
-                       (^ "global "
-                          (univ-separated-list
-                           ", "
-                           globals)
-                          ";\n"))
-                   body))
-               "}")))
-       (if prim?
-           (^ decl "\n")
-           (^assign name decl))))
-
+     (let* ((formals
+             (univ-separated-list
+              ","
+              (map (lambda (x)
+                     (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+                   params)))
+            (decl
+             (^ "function " (if (or prim? (< (univ-php-version ctx) 530))
+                                name
+                                "")
+                "(" formals ") {"
+                (univ-indent
+                 (^ header
+                    (if (or (< (univ-php-version ctx) 530) (null? attribs))
+                        (^)
+                        (^ "static "
+                           (univ-separated-list
+                            ", "
+                            (map (lambda (attrib)
+                                   (^assign-expr
+                                    (^local-var (car attrib))
+                                    (cdr attrib)))
+                                 attribs))
+                           ";\n"))
+                    (if (null? globals)
+                        (^)
+                        (^ "global "
+                           (univ-separated-list
+                            ", "
+                            globals)
+                           ";\n"))
+                    body))
+                "}")))
+       (cond (prim?
+              (^ decl "\n"))
+             ((< (univ-php-version ctx) 530)
+              (^ (^ decl "\n")
+                 (^assign (^global-function name)
+                          (^ "create_function('"
+                             formals
+                             "','"
+                             (if (null? attribs)
+                                 (^)
+                                 (^ "static "
+                                    (univ-separated-list
+                                     ", "
+                                     (map (lambda (attrib)
+                                            (^assign-expr
+                                             (^local-var (car attrib))
+                                             (let ((a (cdr attrib)))
+                                               (if (and (list? a)
+                                                        (= (length a) 3)
+                                                        (equal? (car a) "'")
+                                                        (equal? (caddr a) "'"))
+                                                   (^ "\\'" (cadr a) "\\'")
+                                                   a))))
+                                          attribs))
+                                    "; "))
+                             "return "
+                             name
+                             "("
+                             (univ-separated-list "," (map car params))
+                             ");')"))))
+             (else
+              (^assign (^global-function name) decl)))))
 
     ((python)
      (^ "def " name "("
@@ -6361,7 +6370,7 @@ function Gambit_trampoline(pc) {
      (compiler-internal-error
       "univ-emit-function-declaration*, unknown target"))))
 
-(define (univ-emit-class-declaration ctx name fields methods)
+(define (univ-emit-class-declaration ctx name fields methods #!optional (constructor #f))
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -6371,12 +6380,13 @@ function Gambit_trampoline(pc) {
          (map car (keep (lambda (field) (not (cadr field))) fields)))
         ") {\n"
         (univ-indent
-         (map (lambda (field)
-                (let ((field-name (car field))
-                      (field-init (cadr field)))
-                  (^assign (^this-member field-name)
-                           (or field-init (^local-var field-name)))))
-              fields))
+         (^ (map (lambda (field)
+                   (let ((field-name (car field))
+                         (field-init (cadr field)))
+                     (^assign (^this-member field-name)
+                              (or field-init (^local-var field-name)))))
+                 fields)
+            (or constructor (^))))
         "}\n"
         (map (lambda (method)
                (^ "\n"
@@ -6401,12 +6411,13 @@ function Gambit_trampoline(pc) {
              (map (lambda (x) (^local-var x)) (map car (keep (lambda (field) (not (cadr field))) fields))))
             ") {\n"
             (univ-indent
-             (map (lambda (field)
-                    (let ((field-name (car field))
-                          (field-init (cadr field)))
-                      (^assign (^this-member field-name)
-                               (or field-init (^local-var field-name)))))
-                  fields))
+             (^ (map (lambda (field)
+                       (let ((field-name (car field))
+                             (field-init (cadr field)))
+                         (^assign (^this-member field-name)
+                                  (or field-init (^local-var field-name)))))
+                     fields)
+                (or constructor (^))))
             "}\n"))
         (map (lambda (method)
                (^ "\n"
@@ -6429,14 +6440,15 @@ function Gambit_trampoline(pc) {
                    (map car (keep (lambda (field) (not (cadr field))) fields))))
             "):\n"
             (univ-indent
-             (if (null? fields)
+             (if (and (null? fields) (not constructor))
                  "pass\n"
-                 (map (lambda (field)
-                        (let ((field-name (car field))
-                              (field-init (cadr field)))
-                          (^assign (^this-member field-name)
-                                   (or field-init (^local-var field-name)))))
-                      fields)))))
+                 (^ (map (lambda (field)
+                           (let ((field-name (car field))
+                                 (field-init (cadr field)))
+                             (^assign (^this-member field-name)
+                                      (or field-init (^local-var field-name)))))
+                         fields)
+                    (or constructor (^)))))))
         (map (lambda (method)
                (^ "\n"
                   (univ-indent
@@ -6464,12 +6476,13 @@ function Gambit_trampoline(pc) {
              (map car (keep (lambda (field) (not (cadr field))) fields)))
             ")\n"
             (univ-indent
-             (map (lambda (field)
-                    (let ((field-name (car field))
-                          (field-init (cadr field)))
-                      (^assign (^this-member field-name)
-                               (or field-init (^local-var field-name)))))
-                  fields))
+             (^ (map (lambda (field)
+                       (let ((field-name (car field))
+                             (field-init (cadr field)))
+                         (^assign (^this-member field-name)
+                                  (or field-init (^local-var field-name)))))
+                     fields)
+                (or constructor (^))))
             "end\n"))
         (map (lambda (method)
                (^ "\n"
@@ -6507,8 +6520,7 @@ function Gambit_trampoline(pc) {
                (lambda (inc)
                  (^if (^= inc (^int 0))
                       (^return-call-prim
-                       (^global-prim-function
-                        (^prefix (univ-use-rtlib ctx 'poll)))
+                       (^prefix (univ-use-rtlib ctx 'poll))
                        expr)
                       (if call?
                           (^return-call expr)
@@ -6770,7 +6782,7 @@ function Gambit_trampoline(pc) {
 
     ((class)
      (^call-prim
-      (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_interned_char)))
+      (^prefix (univ-use-rtlib ctx 'make_interned_char))
       expr))
 
     (else
@@ -6939,10 +6951,11 @@ function Gambit_trampoline(pc) {
      (let ((attribs-var
             (^local-var (^ fn "_attribs")))
            (attribs-array
-            (^ "(new ReflectionFunction(" (^local-var fn) "))->getStaticVariables()")))
+            (^ "new ReflectionFunction(" (^local-var fn) ")")))
        (^ (if assign?
               (^assign attribs-var attribs-array)
               (^var-declaration attribs-var attribs-array))
+          (^assign attribs-var (^ attribs-var "->getStaticVariables()"))
           (thunk))))
 
     (else
@@ -7704,7 +7717,7 @@ tanh
 
     ((class)
      (^call-prim
-      (^global-prim-function (^prefix (univ-use-rtlib ctx 'strtocodes)))
+      (^prefix (univ-use-rtlib ctx 'strtocodes))
       expr))
 
     (else
@@ -7855,7 +7868,7 @@ tanh
 
     ((class)
      (^call-prim
-      (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_interned_symbol)))
+      (^prefix (univ-use-rtlib ctx 'make_interned_symbol))
       expr))
 
     (else
@@ -7944,7 +7957,7 @@ tanh
 
     ((class)
      (^call-prim
-      (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_interned_keyword)))
+      (^prefix (univ-use-rtlib ctx 'make_interned_keyword))
       expr))
 
     (else
@@ -8038,7 +8051,7 @@ tanh
     ((python)
      (^not
       (^call-prim
-       (^global-prim-function "hasattr")
+       "hasattr"
        expr
        (^str "id"))))
 
@@ -9420,7 +9433,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_vector)))
+       (^prefix (univ-use-rtlib ctx 'make_vector))
        (^fixnum-unbox arg1)
        (if arg2
            arg2
@@ -9462,7 +9475,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_u8vector)))
+       (^prefix (univ-use-rtlib ctx 'make_u8vector))
        (^fixnum-unbox arg1)
        (if arg2
            arg2
@@ -9505,7 +9518,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_string)))
+       (^prefix (univ-use-rtlib ctx 'make_string))
        (^fixnum-unbox arg1)
        (if arg2
            (^char-unbox arg2)
@@ -9758,7 +9771,7 @@ tanh
    (lambda (ctx return arg1)
      (return
       (^call-prim
-       (^global-prim-function (^prefix (univ-use-rtlib ctx 'continuation_next)))
+       (^prefix (univ-use-rtlib ctx 'continuation_next))
        arg1)))))
 
 (univ-define-prim "##frame-ret" #f
@@ -9819,7 +9832,7 @@ tanh
    (lambda (ctx return arg1)
      (return
       (^call-prim
-       (^global-prim-function (^prefix (univ-use-rtlib ctx 'make_glo_var)))
+       (^prefix (univ-use-rtlib ctx 'make_glo_var))
        arg1)))))
 
 (univ-define-prim "##global-var-ref" #f
