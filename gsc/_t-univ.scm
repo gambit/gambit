@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ.scm"
 
-;;; Copyright (c) 2011-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -14,6 +14,14 @@
 
 (define univ-enable-jump-destination-inlining? #f)
 (set! univ-enable-jump-destination-inlining? #t)
+
+(define (univ-procedure-representation ctx)
+  (case (target-name (ctx-target ctx))
+#;
+    ((php)
+     'class)
+    (else
+     'host)))
 
 (define (univ-null-representation ctx)
   (case (target-name (ctx-target ctx))
@@ -103,7 +111,8 @@
 (define univ-thread-cont-slot 5)
 (define univ-thread-denv-slot 6)
 
-(define (univ-php-version ctx) 530) ;; TODO allow user to specify this
+(define (univ-php-version ctx) 53) ;; TODO allow user to specify this
+;;(define (univ-php-version ctx) 52) ;; TODO allow user to specify this
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -544,14 +553,14 @@
 (define-macro (^empty-dict)
   `(univ-emit-empty-dict ctx))
 
-(define-macro (^call-prim name . params)
-  `(univ-emit-call-prim ctx ,name ,@params))
+(define-macro (^call-prim expr . params)
+  `(univ-emit-call-prim ctx ,expr ,@params))
 
-(define-macro (^call name . params)
-  `(univ-emit-call ctx ,name ,@params))
+(define-macro (^call expr . params)
+  `(univ-emit-call ctx ,expr ,@params))
 
-(define-macro (^apply name params)
-  `(univ-emit-apply ctx ,name ,params))
+(define-macro (^apply expr params)
+  `(univ-emit-apply ctx ,expr ,params))
 
 (define-macro (^this)
   `(univ-emit-this ctx))
@@ -576,6 +585,7 @@
 
 (define-macro (^prim-function-declaration name params header attribs body)
   `(^function-declaration
+    #f
     ,name
     ,params
     ,header
@@ -583,9 +593,10 @@
     ,body
     #t))
 
-(define-macro (^function-declaration name params header attribs body #!optional (prim? #f))
+(define-macro (^function-declaration global? name params header attribs body #!optional (prim? #f))
   `(univ-emit-function-declaration
     ctx
+    ,global?
     ,name
     ,params
     (lambda (ctx) ,header)
@@ -593,10 +604,11 @@
     (lambda (ctx) ,body)
     ,prim?))
 
-(define-macro (^class-declaration name fields methods #!optional (constructor #f))
+(define-macro (^class-declaration name extends fields methods #!optional (constructor #f))
   `(univ-emit-class-declaration
     ctx
     ,name
+    ,extends
     ,fields
     ,methods
     ,constructor))
@@ -1893,7 +1905,10 @@
              (lambda (ctx)
                (let ((id (gvm-bb-use ctx (label-lbl-num gvm-instr) (ctx-ns ctx))))
                  (^ "\n"
-                    (^function-declaration
+                    (^function-declaration;;TODO: method declaration
+
+                     ;; global?
+                     #t
 
                      ;; name
                      id
@@ -2615,7 +2630,7 @@
 (define (univ-clo-slots ctx closure)
   (case (target-name (ctx-target ctx))
     ((php)
-     (^member closure "slots"))
+     (^member closure "slots"));;TODO: make dependent on procedure representation
     (else
      (^call closure (^bool #t)))))
 
@@ -2986,6 +3001,7 @@
 (define (univ-emit-continuation-capture-function ctx nb-args thread-save?)
   (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
     (^function-declaration
+     #t
      (^prefix (^ (if thread-save?
                      "thread_save"
                      "continuation_capture")
@@ -3044,6 +3060,7 @@
 
 (define (univ-emit-continuation-graft-no-winding-function ctx nb-args thread-restore?)
   (^function-declaration
+   #t
    (^prefix (^ (if thread-restore?
                    "thread_restore"
                    "continuation_graft_no_winding")
@@ -3121,6 +3138,7 @@
 
 (define (univ-emit-continuation-return-no-winding-function ctx nb-args)
   (^function-declaration
+   #t
    (^prefix (^ "continuation_return_no_winding" nb-args))
    '()
    "\n"
@@ -3159,6 +3177,7 @@
 
 (define (univ-emit-apply-function ctx nb-args)
   (^function-declaration
+   #t
    (^prefix (^ "apply" nb-args))
    '()
    "\n"
@@ -3432,6 +3451,7 @@
 
     ((underflow)
      (^function-declaration
+      #t
       (^prefix "underflow")
       '()
       "\n"
@@ -3683,6 +3703,7 @@ EOF
          "\n"
          '()
          (^ (^function-declaration
+             #f
              (^local-var "closure")
              (list (cons (^local-var "msg") #t))
              "\n"
@@ -3694,39 +3715,52 @@ EOF
                 (^return (^array-index (^local-var "slots") 0))))
             (^return (^local-var "closure")))))))
 
+    ((Procedure)
+     (^class-declaration
+      (^prefix "Procedure")
+      #f
+      '()
+      '()))
+
     ((Fixnum)
      (^class-declaration
       (^prefix "Fixnum")
+      #f
       '((val #f))
       '()))
 
     ((Flonum)
      (^class-declaration
       (^prefix "Flonum")
+      #f
       '((val #f))
       '()))
 
     ((Pair)
      (^class-declaration
       (^prefix "Pair")
+      #f
       '((car #f) (cdr #f))
       '()))
 
     ((Vector)
      (^class-declaration
       (^prefix "Vector")
+      #f
       '((elems #f))
       '()))
 
     ((U8Vector)
      (^class-declaration
       (^prefix "U8Vector")
+      #f
       '((elems #f))
       '()))
 
     ((Structure)
      (^class-declaration
       (^prefix "Structure")
+      #f
       '((slots #f))
       '()
       (^if (^not (^array-index (^this-member "slots") 0))
@@ -3736,12 +3770,14 @@ EOF
     ((Frame)
      (^class-declaration
       (^prefix "Frame")
+      #f
       '((slots #f))
       '()))
 
     ((Continuation)
      (^class-declaration
       (^prefix "Continuation")
+      #f
       '((frame #f) (denv #f))
       '()))
 
@@ -3773,14 +3809,15 @@ EOF
                 (^local-var "denv"))))))
 
     ((Symbol)
-     (^ (^class-declaration
-         (^prefix "Symbol")
-         '((str #f))
-         (list
-          (list (univ-tostr-method-name ctx)
-                '()
-                (^return
-                 (^this-member "str")))))))
+     (^class-declaration
+      (^prefix "Symbol")
+      #f
+      '((str #f))
+      (list
+       (list (univ-tostr-method-name ctx)
+             '()
+             (^return
+              (^this-member "str"))))))
 
     ((make_interned_symbol)
      (^ (^var-declaration (^gvar "symbol_table") (^empty-dict))
@@ -3805,6 +3842,7 @@ EOF
     ((Keyword)
      (^class-declaration
       (^prefix "Keyword")
+      #f
       '((str #f))
       (list
        (list (univ-tostr-method-name ctx)
@@ -3835,12 +3873,14 @@ EOF
     ((Box)
      (^class-declaration
       (^prefix "Box")
+      #f
       '((val #f))
       '()))
 
     ((Null)
      (^ (^class-declaration
          (^prefix "Null")
+         #f
          '()
          '())
         (^var-declaration
@@ -3850,6 +3890,7 @@ EOF
     ((Void)
      (^ (^class-declaration
          (^prefix "Void")
+         #f
          '()
          '())
         (^var-declaration
@@ -3859,6 +3900,7 @@ EOF
     ((Eof)
      (^ (^class-declaration
          (^prefix "Eof")
+         #f
          '()
          '())
         (^var-declaration
@@ -3868,6 +3910,7 @@ EOF
     ((Absent)
      (^ (^class-declaration
          (^prefix "Absent")
+         #f
          '()
          '())
         "\n"
@@ -3878,6 +3921,7 @@ EOF
     ((Unbound)
      (^ (^class-declaration
          (^prefix "Unbound")
+         #f
          '()
          '())
         "\n"
@@ -3891,6 +3935,7 @@ EOF
     ((Optional)
      (^ (^class-declaration
          (^prefix "Optional")
+         #f
          '()
          '())
         "\n"
@@ -3901,6 +3946,7 @@ EOF
     ((Key)
      (^ (^class-declaration
          (^prefix "Key")
+         #f
          '()
          '())
         "\n"
@@ -3911,6 +3957,7 @@ EOF
     ((Rest)
      (^ (^class-declaration
          (^prefix "Rest")
+         #f
          '()
          '())
         "\n"
@@ -3921,6 +3968,7 @@ EOF
     ((Boolean)
      (^ (^class-declaration
          (^prefix "Boolean")
+         #f
          '((val #f))
          '())
         "\n"
@@ -3934,6 +3982,7 @@ EOF
     ((Char)
      (^class-declaration
       (^prefix "Char")
+      #f
       '((code #f))
       (list
        (list (univ-tostr-method-name ctx)
@@ -3986,6 +4035,7 @@ EOF
     ((String)
      (^class-declaration
       (^prefix "String")
+      #f
       '((codes #f))
       (list
        (list (univ-tostr-method-name ctx)
@@ -4112,6 +4162,7 @@ EOF
 
     ((glo-println)
      (^ (^function-declaration
+         #t
          (gvm-proc-use ctx "println")
          '()
          "\n"
@@ -4154,6 +4205,7 @@ EOF
         "\n"
 
         (^function-declaration
+         #t
          (gvm-proc-use ctx "real-time-milliseconds")
          '()
          "\n"
@@ -4466,6 +4518,10 @@ EOF
                   (set! code (^ code c "\n"))))))
 
         ;;TODO: make inclusion of these features optional
+
+        (if (equal? (univ-procedure-representation ctx) 'class)
+            (need-feature 'Procedure))
+
         (need-feature 'heapify)
         (need-feature 'underflow)
         (need-feature 'strtocodes)
@@ -4606,6 +4662,7 @@ import ctypes
          (^expr-statement (^call "print" "obj")))
 
         (^function-declaration
+         #t
          (gvm-proc-use ctx "println")
          ""
          "\n"
@@ -6187,7 +6244,7 @@ function Gambit_trampoline(pc) {
 
 ;;;----------------------------------------------------------------------------
 
-(define (univ-emit-function-declaration ctx name params gen-header gen-attribs gen-body #!optional (prim? #f))
+(define (univ-emit-function-declaration ctx global? name params gen-header gen-attribs gen-body #!optional (prim? #f))
   (with-new-resources-used
    ctx
    (lambda (ctx)
@@ -6219,6 +6276,7 @@ function Gambit_trampoline(pc) {
 
        (univ-emit-function-declaration*
         ctx
+        global?
         name
         params
         header
@@ -6227,150 +6285,151 @@ function Gambit_trampoline(pc) {
         body
         prim?)))))
 
-(define (univ-emit-function-declaration* ctx name params header attribs globals body prim?)
-  (case (target-name (ctx-target ctx))
+(define (univ-emit-function-declaration* ctx global? root-name params header attribs globals body prim?)
+  (let ((name (if global? (^global-function root-name) root-name)))
+    (case (target-name (ctx-target ctx))
 
-    ((js)
-     (^ "function " name "("
-        (univ-separated-list
-         ","
-         (map car params))
-        ") {" (univ-indent (^ header body)) "}\n"
-        (map (lambda (attrib)
-               (^assign (^ name "." (car attrib))
-                        (cdr attrib)))
-             attribs)))
+      ((js)
+       (^ "function " name "("
+          (univ-separated-list
+           ","
+           (map car params))
+          ") {" (univ-indent (^ header body)) "}\n"
+          (map (lambda (attrib)
+                 (^assign (^member name (car attrib))
+                          (cdr attrib)))
+               attribs)))
 
-    ((php)
-     (let* ((formals
-             (univ-separated-list
-              ","
-              (map (lambda (x)
-                     (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
-                   params)))
-            (decl
-             (^ "function " (if (or prim? (< (univ-php-version ctx) 530))
-                                name
-                                "")
-                "(" formals ") {"
-                (univ-indent
-                 (^ header
-                    (if (or (< (univ-php-version ctx) 530) (null? attribs))
-                        (^)
-                        (^ "static "
-                           (univ-separated-list
-                            ", "
-                            (map (lambda (attrib)
-                                   (^assign-expr
-                                    (^local-var (car attrib))
-                                    (cdr attrib)))
-                                 attribs))
-                           ";\n"))
-                    (if (null? globals)
-                        (^)
-                        (^ "global "
-                           (univ-separated-list
-                            ", "
-                            globals)
-                           ";\n"))
-                    body))
-                "}")))
-       (cond (prim?
-              (^ decl "\n"))
-             ((< (univ-php-version ctx) 530)
-              (^ (^ decl "\n")
-                 (^assign (^global-function name)
-                          (^ "create_function('"
-                             formals
-                             "','"
-                             (if (null? attribs)
-                                 (^)
-                                 (^ "static "
-                                    (univ-separated-list
-                                     ", "
-                                     (map (lambda (attrib)
-                                            (^assign-expr
-                                             (^local-var (car attrib))
-                                             (let ((a (cdr attrib)))
-                                               (if (and (list? a)
-                                                        (= (length a) 3)
-                                                        (equal? (car a) "'")
-                                                        (equal? (caddr a) "'"))
-                                                   (^ "\\'" (cadr a) "\\'")
-                                                   a))))
-                                          attribs))
-                                    "; "))
-                             "return "
-                             name
-                             "("
-                             (univ-separated-list "," (map car params))
-                             ");')"))))
-             (else
-              (^assign (^global-function name) decl)))))
-
-    ((python)
-     (^ "def " name "("
-        (univ-separated-list
-         ","
-         (map (lambda (x)
-                (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
-              params))
-        "):"
-        (univ-indent
-         (^ header
-            (if (null? globals)
-                (^)
-                (^ "global "
-                   (univ-separated-list
-                    ", "
-                    globals)
-                   "\n"))
-            body))
-        (map (lambda (attrib)
-               (^assign (^ name "." (car attrib))
-                        (cdr attrib)))
-             attribs)))
-
-    ((ruby)
-     (let ((parameters
-            (univ-separated-list
-             ","
-             (map (lambda (x)
-                    (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
-                  params))))
-
-       (^ (if prim?
-
-              (^ "def " name "(" parameters ")"
-                 (univ-indent (^ header body))
-                 "end\n")
-
-              (^assign
-               name
-               (^ "lambda {"
-                  (if (null? params)
-                      (^)
-                      (^ "|" parameters "|"))
-                  (univ-indent (^ header body))
+      ((php)
+       (let* ((formals
+               (univ-separated-list
+                ","
+                (map (lambda (x)
+                       (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+                     params)))
+              (decl
+               (^ "function " (if (or prim? (< (univ-php-version ctx) 53))
+                                  root-name
+                                  "")
+                  "(" formals ") {"
+                  (univ-indent
+                   (^ header
+                      (if (or (< (univ-php-version ctx) 53) (null? attribs))
+                          (^)
+                          (^ "static "
+                             (univ-separated-list
+                              ", "
+                              (map (lambda (attrib)
+                                     (^assign-expr
+                                      (^local-var (car attrib))
+                                      (cdr attrib)))
+                                   attribs))
+                             ";\n"))
+                      (if (null? globals)
+                          (^)
+                          (^ "global "
+                             (univ-separated-list
+                              ", "
+                              globals)
+                             ";\n"))
+                      body))
                   "}")))
+         (cond (prim?
+                (^ decl "\n"))
+               ((< (univ-php-version ctx) 53)
+                (^ (^ decl "\n")
+                   (^assign name
+                            (^ "create_function('"
+                               formals
+                               "','"
+                               (if (null? attribs)
+                                   (^)
+                                   (^ "static "
+                                      (univ-separated-list
+                                       ", "
+                                       (map (lambda (attrib)
+                                              (^assign-expr
+                                               (^local-var (car attrib))
+                                               (let ((a (cdr attrib)))
+                                                 (if (and (list? a)
+                                                          (= (length a) 3)
+                                                          (equal? (car a) "'")
+                                                          (equal? (caddr a) "'"))
+                                                     (^ "\\'" (cadr a) "\\'")
+                                                     a))))
+                                            attribs))
+                                      "; "))
+                               "return "
+                               root-name
+                               "("
+                               (univ-separated-list "," (map car params))
+                               ");')"))))
+               (else
+                (^assign name decl)))))
 
-          (if (pair? attribs)
-              (^ "class << " name "; attr_accessor :" (car (car attribs))
-                 (map (lambda (attrib)
-                        (^ ", :" (car attrib)))
-                      (cdr attribs))
-                 "; end\n"
-                 (map (lambda (attrib)
-                        (^assign (^ name "." (car attrib))
-                                 (cdr attrib)))
-                      attribs))
-              (^)))))
+      ((python)
+       (^ "def " name "("
+          (univ-separated-list
+           ","
+           (map (lambda (x)
+                  (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+                params))
+          "):"
+          (univ-indent
+           (^ header
+              (if (null? globals)
+                  (^)
+                  (^ "global "
+                     (univ-separated-list
+                      ", "
+                      globals)
+                     "\n"))
+              body))
+          (map (lambda (attrib)
+                 (^assign (^member name (car attrib))
+                          (cdr attrib)))
+               attribs)))
 
-    (else
-     (compiler-internal-error
-      "univ-emit-function-declaration*, unknown target"))))
+      ((ruby)
+       (let ((parameters
+              (univ-separated-list
+               ","
+               (map (lambda (x)
+                      (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+                    params))))
 
-(define (univ-emit-class-declaration ctx name fields methods #!optional (constructor #f))
+         (^ (if prim?
+
+                (^ "def " name "(" parameters ")"
+                   (univ-indent (^ header body))
+                   "end\n")
+
+                (^assign
+                 name
+                 (^ "lambda {"
+                    (if (null? params)
+                        (^)
+                        (^ "|" parameters "|"))
+                    (univ-indent (^ header body))
+                    "}")))
+
+            (if (pair? attribs)
+                (^ "class << " name "; attr_accessor :" (car (car attribs))
+                   (map (lambda (attrib)
+                          (^ ", :" (car attrib)))
+                        (cdr attribs))
+                   "; end\n"
+                   (map (lambda (attrib)
+                          (^assign (^member name (car attrib))
+                                   (cdr attrib)))
+                        attribs))
+                (^)))))
+
+      (else
+       (compiler-internal-error
+        "univ-emit-function-declaration*, unknown target")))))
+
+(define (univ-emit-class-declaration ctx name extends fields methods #!optional (constructor #f))
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -6388,6 +6447,11 @@ function Gambit_trampoline(pc) {
                  fields)
             (or constructor (^))))
         "}\n"
+        (if extends
+            (^assign-expr (^member name "prototype")
+                          (^call-prim (^member "Object" "create")
+                                      (^member extends "prototype")))
+            "")
         (map (lambda (method)
                (^ "\n"
                   name ".prototype." (car method) " = function ("
@@ -6398,7 +6462,9 @@ function Gambit_trampoline(pc) {
              methods)))
 
     ((php)
-     (^ "class " name " {\n\n"
+     (^ "class " name
+        (if extends (^ " extends " extends) "")
+        " {\n\n"
         (if (pair? fields)
             (^ (univ-indent
                 (map (lambda (field) (^ "public $" (car field) ";\n")) fields))
@@ -6431,7 +6497,9 @@ function Gambit_trampoline(pc) {
         "}\n"))
 
     ((python)
-     (^ "class " name ":\n\n"
+     (^ "class " name
+        (if extends (^ "(" extends ")") "")
+        ":\n\n"
         (univ-indent
          (^ "def __init__("
             (univ-separated-list
@@ -6459,7 +6527,9 @@ function Gambit_trampoline(pc) {
              methods)))
 
     ((ruby)
-     (^ "class " name "\n\n"
+     (^ "class " name
+        (if extends (^ " < " extends) "")
+        "\n\n"
         (if (pair? fields)
             (^ (univ-indent
                 (^ "attr_accessor "
@@ -8074,27 +8144,38 @@ tanh
 (define (univ-emit-closure-set! ctx expr1 expr2 expr3)
   (^assign (^array-index (univ-clo-slots ctx expr1) expr2) expr3))
 
-(define (univ-emit-call-prim ctx name . params)
-  (univ-emit-apply ctx name params))
+(define (univ-emit-call-prim ctx expr . params)
+  (univ-emit-apply ctx expr params))
 
-(define (univ-emit-call ctx name . params)
+(define (univ-emit-call ctx proc . params)
+  (case (univ-procedure-representation ctx)
+
+    ((class)
+     (apply univ-emit-call-proc
+            (cons ctx (cons (^member proc "call") params))))
+
+    (else
+     (apply univ-emit-call-proc
+            (cons ctx (cons proc params))))))
+
+(define (univ-emit-call-proc ctx expr . params)
   (case (target-name (ctx-target ctx))
 
     ((js python php)
-     (univ-emit-apply-aux ctx name params "(" ")"))
+     (univ-emit-apply-aux ctx expr params "(" ")"))
 
     ((ruby)
-     (univ-emit-apply-aux ctx name params "[" "]"))
+     (univ-emit-apply-aux ctx expr params "[" "]"))
 
     (else
      (compiler-internal-error
-      "univ-emit-call, unknown target"))))
+      "univ-emit-call-proc, unknown target"))))
 
-(define (univ-emit-apply ctx name params)
-  (univ-emit-apply-aux ctx name params "(" ")"))
+(define (univ-emit-apply ctx expr params)
+  (univ-emit-apply-aux ctx expr params "(" ")"))
 
-(define (univ-emit-apply-aux ctx name params open close)
-  (^ name
+(define (univ-emit-apply-aux ctx expr params open close)
+  (^ expr
      open
      (univ-separated-list "," params)
      close))
