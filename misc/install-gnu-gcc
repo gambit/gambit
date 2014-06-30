@@ -15,10 +15,13 @@
 #
 #    export PATH=/usr/local/gcc-4.8.2/bin:$PATH
 
-GCCVERSION=4.8.2
+GCCVERSION=4.9.0
 GMPVERSION=5.1.3
 MPFRVERSION=3.1.2
 MPCVERSION=1.0.1
+ISLVERSION=0.12.2
+CLOOGVERSION=0.18.1
+
 PREFIX=/usr/local/gcc-$GCCVERSION
 MAKE="make -j 8"
 
@@ -40,6 +43,20 @@ tar zxf mpc-$MPCVERSION.tar.gz
 ln -s ../gmp-$GMPVERSION   gcc-$GCCVERSION/gmp
 ln -s ../mpfr-$MPFRVERSION gcc-$GCCVERSION/mpfr
 ln -s ../mpc-$MPCVERSION   gcc-$GCCVERSION/mpc
+
+# The following packages are not absolutely necessary, but they enable
+# the Graphite loop optimizations in gcc.
+
+wget ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-$ISLVERSION.tar.bz2
+wget ftp://gcc.gnu.org/pub/gcc/infrastructure/cloog-$CLOOGVERSION.tar.gz
+
+tar jxf isl-$ISLVERSION.tar.bz2
+tar zxf cloog-$CLOOGVERSION.tar.gz
+
+ln -s ../isl-$ISLVERSION   gcc-$GCCVERSION/isl
+ln -s ../cloog-$CLOOGVERSION gcc-$GCCVERSION/cloog
+
+# Do the actual build
 
 mkdir build-dir
 cd build-dir
