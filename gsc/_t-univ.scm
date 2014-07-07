@@ -17,10 +17,11 @@
 
 (define (univ-procedure-representation ctx)
   (case (target-name (ctx-target ctx))
-#;
     ((php)
      'class)
     (else
+#;
+     'class
      'host)))
 
 (define (univ-null-representation ctx)
@@ -496,6 +497,9 @@
 (define-macro (^prefix name)
   `(univ-emit-prefix ctx ,name))
 
+(define-macro (^prefix-class name)
+  `(univ-emit-prefix-class ctx ,name))
+
 (define-macro (^assign-expr loc expr)
   `(univ-emit-assign-expr ctx ,loc ,expr))
 
@@ -583,31 +587,31 @@
 (define-macro (^setloc loc val)
   `(univ-emit-setloc ctx ,loc ,val))
 
-(define-macro (^prim-function-declaration name params header attribs body)
+(define-macro (^prim-function-declaration root-name params header attribs body)
   `(^function-declaration
     #f
-    ,name
+    ,root-name
     ,params
     ,header
     ,attribs
     ,body
     #t))
 
-(define-macro (^function-declaration global? name params header attribs body #!optional (prim? #f))
+(define-macro (^function-declaration global? root-name params header attribs body #!optional (prim? #f))
   `(univ-emit-function-declaration
     ctx
     ,global?
-    ,name
+    ,root-name
     ,params
-    (lambda (ctx) ,header)
-    (lambda (ctx) ,attribs)
+    ,header
+    ,attribs
     (lambda (ctx) ,body)
     ,prim?))
 
-(define-macro (^class-declaration name extends fields methods #!optional (constructor #f))
+(define-macro (^class-declaration root-name extends fields methods #!optional (constructor #f))
   `(univ-emit-class-declaration
     ctx
-    ,name
+    ,root-name
     ,extends
     ,fields
     ,methods
@@ -1534,6 +1538,9 @@
       "univ-emit-global-function, unknown target"))))
 
 (define (univ-emit-prefix ctx name)
+  (^ "gambit_" name))
+
+(define (univ-emit-prefix-class ctx name)
   (^ "Gambit_" name))
 
 (define (univ-emit-assign-expr ctx loc expr)
@@ -1903,9 +1910,60 @@
              ctx
              (- (frame-size (gvm-instr-frame gvm-instr)))
              (lambda (ctx)
-               (let ((id (gvm-bb-use ctx (label-lbl-num gvm-instr) (ctx-ns ctx))))
+               (let* ((id
+                       (gvm-bb-use ctx (label-lbl-num gvm-instr) (ctx-ns ctx)))
+                      (header
+                       (case (label-type gvm-instr)
+
+                         ((simple)
+                          (^ "\n"))
+
+                         ((entry)
+                          (if (label-entry-rest? gvm-instr)
+                              (^ " "
+                                 (univ-comment
+                                  ctx
+                                  (if (label-entry-closed? gvm-instr)
+                                      "closure-entry-point (+rest)\n"
+                                      "entry-point (+rest)\n")))
+                              (^ " "
+                                 (univ-comment
+                                  ctx
+                                  (if (label-entry-closed? gvm-instr)
+                                      "closure-entry-point\n"
+                                      "entry-point\n")))))
+
+                         ((return)
+                          (^ " "
+                             (univ-comment ctx "return-point\n")))
+
+                         ((task-entry)
+                          (^ " "
+                             (univ-comment ctx "task-entry-point\n")))
+
+                         ((task-return)
+                          (^ " "
+                             (univ-comment ctx "task-return-point\n")))
+
+                         (else
+                          (compiler-internal-error
+                           "scan-gvm-label, unknown label type"))))
+                      (gen-body
+                       (lambda (ctx)
+                         (^ (case (label-type gvm-instr)
+
+                              ((entry)
+                               (univ-label-entry ctx
+                                                 gvm-instr
+                                                 (^global-function (^prefix id))))
+
+                              (else
+                               (^)))
+
+                            (proc ctx)))))
+
                  (^ "\n"
-                    (^function-declaration;;TODO: method declaration
+                    (^function-declaration ;;TODO: method declaration
 
                      ;; global?
                      #t
@@ -1917,41 +1975,7 @@
                      '()
 
                      ;; header
-                     (case (label-type gvm-instr)
-
-                       ((simple)
-                        (^ "\n"))
-
-                       ((entry)
-                        (if (label-entry-rest? gvm-instr)
-                            (^ " "
-                               (univ-comment
-                                ctx
-                                (if (label-entry-closed? gvm-instr)
-                                    "closure-entry-point (+rest)\n"
-                                    "entry-point (+rest)\n")))
-                            (^ " "
-                               (univ-comment
-                                ctx
-                                (if (label-entry-closed? gvm-instr)
-                                    "closure-entry-point\n"
-                                    "entry-point\n")))))
-
-                       ((return)
-                        (^ " "
-                           (univ-comment ctx "return-point\n")))
-
-                       ((task-entry)
-                        (^ " "
-                           (univ-comment ctx "task-entry-point\n")))
-
-                       ((task-return)
-                        (^ " "
-                           (univ-comment ctx "task-return-point\n")))
-
-                       (else
-                        (compiler-internal-error
-                         "scan-gvm-label, unknown label type")))
+                     header
 
                      ;; attribs
                      (append
@@ -1964,16 +1988,8 @@
                                   (cons "link" (+ (vector-ref info 1) 1))))
                           '()))
 
-                     ;; body
-                     (^ (case (label-type gvm-instr)
-
-                          ((entry)
-                           (univ-label-entry ctx gvm-instr (^global-function id)))
-
-                          (else
-                           (^)))
-
-                        (proc ctx))))))))
+                     ;; gen-body
+                     (gen-body ctx)))))))
 
           (define (scan-gvm-instr ctx gvm-instr)
 
@@ -2628,11 +2644,17 @@
    val))
 
 (define (univ-clo-slots ctx closure)
-  (case (target-name (ctx-target ctx))
-    ((php)
-     (^member closure "slots"));;TODO: make dependent on procedure representation
+  (case (univ-procedure-representation ctx)
+
+    ((class)
+     (^member closure "slots"))
+
     (else
-     (^call closure (^bool #t)))))
+     (case (target-name (ctx-target ctx))
+       ((php)
+        (^member closure "slots"))
+       (else
+        (^call closure (^bool #t)))))))
 
 (define (univ-emit-getclo ctx closure index)
   (^closure-ref closure index))
@@ -2823,7 +2845,7 @@
            (^rest))
 
           ((proc-obj? obj)
-           (^global-function (gvm-proc-use ctx (proc-obj-name obj))))
+           (^global-function (^prefix (gvm-proc-use ctx (proc-obj-name obj)))))
 
           ((pair? obj)
            (univ-obj-use
@@ -2976,18 +2998,18 @@
 ;; =============================================================================
 
 (define (gvm-lbl-use ctx lbl)
-  (^global-function (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx))))
+  (^global-function (^prefix (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx)))))
 
 (define (gvm-proc-use ctx name)
   (gvm-bb-use ctx 1 name))
 
 (define (gvm-bb-use ctx num ns)
   (let ((id (lbl->id ctx num ns)))
-    (use-global ctx (^global-function id))
+    (use-global ctx (^global-function (^prefix id)))
     id))
 
 (define (lbl->id ctx num ns)
-  (^prefix (^ "bb" num "_" (scheme-id->c-id ns))))
+  (^ "bb" num "_" (scheme-id->c-id ns)))
 
 (define (univ-foldr-range lo hi rest fn)
   (if (<= lo hi)
@@ -3002,10 +3024,10 @@
   (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
     (^function-declaration
      #t
-     (^prefix (^ (if thread-save?
-                     "thread_save"
-                     "continuation_capture")
-                 nb-args))
+     (^ (if thread-save?
+            "thread_save"
+            "continuation_capture")
+        nb-args)
      '()
      "\n"
      '()
@@ -3027,7 +3049,7 @@
                   (^getreg 0)))
 
         (let* ((cont
-                (^new (^prefix (univ-use-rtlib ctx 'Continuation))
+                (^new (^prefix-class (univ-use-rtlib ctx 'Continuation))
                       (^array-index
                        (gvm-state-stack-use ctx 'rd)
                        0)
@@ -3061,10 +3083,10 @@
 (define (univ-emit-continuation-graft-no-winding-function ctx nb-args thread-restore?)
   (^function-declaration
    #t
-   (^prefix (^ (if thread-restore?
-                   "thread_restore"
-                   "continuation_graft_no_winding")
-               nb-args))
+   (^ (if thread-restore?
+          "thread_restore"
+          "continuation_graft_no_winding")
+      nb-args)
    '()
    "\n"
    '()
@@ -3139,7 +3161,7 @@
 (define (univ-emit-continuation-return-no-winding-function ctx nb-args)
   (^function-declaration
    #t
-   (^prefix (^ "continuation_return_no_winding" nb-args))
+   (^ "continuation_return_no_winding" nb-args)
    '()
    "\n"
    '()
@@ -3178,7 +3200,7 @@
 (define (univ-emit-apply-function ctx nb-args)
   (^function-declaration
    #t
-   (^prefix (^ "apply" nb-args))
+   (^ "apply" nb-args)
    '()
    "\n"
    '()
@@ -3251,7 +3273,7 @@
 
     ((trampoline)
      (^prim-function-declaration
-      (^prefix "trampoline")
+      "trampoline"
       (list (cons (^local-var "pc") #f))
       "\n"
       '()
@@ -3261,7 +3283,7 @@
 
     ((heapify)
      (^prim-function-declaration
-      (^prefix "heapify")
+      "heapify"
       (list (cons (^local-var "ra") #f))
       "\n"
       '()
@@ -3452,7 +3474,7 @@
     ((underflow)
      (^function-declaration
       #t
-      (^prefix "underflow")
+      "underflow"
       '()
       "\n"
       (list (cons "fs" 0))
@@ -3557,7 +3579,7 @@
 
     ((poll)
      (^prim-function-declaration
-      (^prefix "poll")
+      "poll"
       (list (cons (^local-var "dest") #f))
       "\n"
       '()
@@ -3567,7 +3589,7 @@
 
     ((build_rest)
      (^prim-function-declaration
-      (^prefix "build_rest")
+      "build_rest"
       (list (cons (^local-var "nrp") #f))
       "\n"
       '()
@@ -3590,7 +3612,7 @@
 
     ((wrong_nargs)
      (^prim-function-declaration
-      (^prefix "wrong_nargs")
+      "wrong_nargs"
       (list (cons (^local-var "proc") #f))
       "\n"
       '()
@@ -3605,7 +3627,7 @@
 
     ((get)
 #<<EOF
-function Gambit_get($obj,$name) {
+function gambit_get($obj,$name) {
   return $obj[$name];
 }
 
@@ -3614,7 +3636,7 @@ EOF
 
     ((set)
 #<<EOF
-function Gambit_set(&$obj,$name,$val) {
+function gambit_set(&$obj,$name,$val) {
   $obj[$name] = $val;
 }
 
@@ -3623,7 +3645,7 @@ EOF
 
     ((prepend_arg1)
      (^prim-function-declaration
-      (^prefix "prepend_arg1")
+      "prepend_arg1"
       (list (cons (^local-var "arg1") #f))
       "\n"
       '()
@@ -3643,7 +3665,7 @@ EOF
 
     ((check_procedure_glo)
      (^prim-function-declaration
-      (^prefix "check_procedure_glo")
+      "check_procedure_glo"
       (list (cons (^local-var "dest") #f)
             (cons (^local-var "gv") #f))
       "\n"
@@ -3659,7 +3681,7 @@ EOF
 
     ((check_procedure)
      (^prim-function-declaration
-      (^prefix "check_procedure")
+      "check_procedure"
       (list (cons (^local-var "dest") #f))
       "\n"
       '()
@@ -3673,117 +3695,146 @@ EOF
          (^return (^local-var "dest")))))
 
     ((closure_alloc)
-     (case (target-name (ctx-target ctx))
+     (case (univ-procedure-representation ctx)
 
-       ((php)
+       ((class)
+        (^ (^class-declaration
+            "Closure"
+            (^prefix-class (univ-use-rtlib ctx 'Procedure))
+            '((slots . #f))
+            (list
+             (list 'call
+                   '()
+                   (lambda (ctx)
+                     (^ (^setreg (+ univ-nb-arg-regs 1) (^local-var (^this)))
+                        (^return (^array-index (^this-member "slots") 0)))))))
+           "\n"
+           (^prim-function-declaration
+            "closure_alloc"
+            (list (cons (^local-var "slots") #f))
+            "\n"
+            '()
+            (^return (^new (^prefix-class "Closure") (^local-var "slots"))))))
+
+       (else
+        (case (target-name (ctx-target ctx))
+
+          ((php);;TODO: select call or __invoke
 #<<EOF
-class Gambit_closure {
+class Gambit_closure extends Gambit_Procedure {
 
-  function __construct($slots) {
+  public function __construct($slots) {
     $this->slots = $slots;
   }
 
-  function __invoke() {
-    global $Gambit_r4;
-    $Gambit_r4 = $this;
+  public function call() {
+    global $gambit_r4;
+    $gambit_r4 = $this;
+    return $this->slots[0];
+  }
+
+  public function __invoke() {
+    global $gambit_r4;
+    $gambit_r4 = $this;
     return $this->slots[0];
   }
 }
 
-function Gambit_closure_alloc($slots) {
+function gambit_closure_alloc($slots) {
   return new Gambit_closure($slots);
 }
 EOF
 )
 
-       (else
-        (^prim-function-declaration
-         (^prefix "closure_alloc")
-         (list (cons (^local-var "slots") #f))
-         "\n"
-         '()
-         (^ (^function-declaration
-             #f
-             (^local-var "closure")
-             (list (cons (^local-var "msg") #t))
-             "\n"
-             '()
-             (^ (^if (^= (^local-var "msg") (^bool #t))
-                     (^return (^local-var "slots")))
-                (^setreg (+ univ-nb-arg-regs 1)
-                         (^local-var "closure"))
-                (^return (^array-index (^local-var "slots") 0))))
-            (^return (^local-var "closure")))))))
+          (else
+           (^prim-function-declaration
+            "closure_alloc"
+            (list (cons (^local-var "slots") #f))
+            "\n"
+            '()
+            (^ (^function-declaration
+                #f
+                (^local-var "closure")
+                (list (cons (^local-var "msg") #t))
+                "\n"
+                '()
+                (^ (^if (^= (^local-var "msg") (^bool #t))
+                        (^return (^local-var "slots")))
+                   (^setreg (+ univ-nb-arg-regs 1)
+                            (^prefix (^local-var "closure")))
+                   (^return (^array-index (^local-var "slots") 0))))
+               (^return (^prefix (^local-var "closure"))))))))))
 
     ((Procedure)
      (^class-declaration
-      (^prefix "Procedure")
+      "Procedure"
       #f
       '()
       '()))
 
     ((Fixnum)
      (^class-declaration
-      (^prefix "Fixnum")
+      "Fixnum"
       #f
-      '((val #f))
+      '((val . #f))
       '()))
 
     ((Flonum)
      (^class-declaration
-      (^prefix "Flonum")
+      "Flonum"
       #f
-      '((val #f))
+      '((val . #f))
       '()))
 
     ((Pair)
      (^class-declaration
-      (^prefix "Pair")
+      "Pair"
       #f
-      '((car #f) (cdr #f))
+      '((car . #f) (cdr . #f))
       '()))
 
     ((Vector)
      (^class-declaration
-      (^prefix "Vector")
+      "Vector"
       #f
-      '((elems #f))
+      '((elems . #f))
       '()))
 
     ((U8Vector)
      (^class-declaration
-      (^prefix "U8Vector")
+      "U8Vector"
       #f
-      '((elems #f))
+      '((elems . #f))
       '()))
 
     ((Structure)
      (^class-declaration
-      (^prefix "Structure")
+      "Structure"
       #f
-      '((slots #f))
+      '((slots . #f))
       '()
-      (^if (^not (^array-index (^this-member "slots") 0))
-           (^assign (^array-index (^this-member "slots") 0)
-                    (^local-var (^this))))))
+      (lambda (ctx)
+        (^if (^not (^array-index (^this-member "slots") 0))
+             (^assign (^array-index (^this-member "slots") 0)
+                      (^local-var (^this)))))))
 
     ((Frame)
      (^class-declaration
-      (^prefix "Frame")
+      "Frame"
       #f
-      '((slots #f))
+      '((slots . #f))
       '()))
 
     ((Continuation)
      (^class-declaration
-      (^prefix "Continuation")
+      "Continuation"
       #f
-      '((frame #f) (denv #f))
+      '((frame . #f) (denv . #f))
       '()))
 
     ((continuation_next)
      (^prim-function-declaration
-      (^prefix "continuation_next")
+      "continuation_next"
       (list (cons (^local-var "cont") #f))
       "\n"
       '()
@@ -3804,26 +3855,27 @@ EOF
                            (^array-index (^local-var "frame")
                                          (^local-var "link")))
          (^return
-          (^new (^prefix (univ-use-rtlib ctx 'Continuation))
+          (^new (^prefix-class (univ-use-rtlib ctx 'Continuation))
                 (^local-var "next_frame")
                 (^local-var "denv"))))))
 
     ((Symbol)
      (^class-declaration
-      (^prefix "Symbol")
+      "Symbol"
       #f
-      '((str #f))
+      '((str . #f))
       (list
        (list (univ-tostr-method-name ctx)
              '()
-             (^return
-              (^this-member "str"))))))
+             (lambda (ctx)
+               (^return
+                (^this-member "str")))))))
 
     ((make_interned_symbol)
      (^ (^var-declaration (^gvar "symbol_table") (^empty-dict))
         "\n"
         (^prim-function-declaration
-         (^prefix "make_interned_symbol")
+         "make_interned_symbol"
          (list (cons (^local-var "str") #f))
          "\n"
          '()
@@ -3841,20 +3893,21 @@ EOF
 
     ((Keyword)
      (^class-declaration
-      (^prefix "Keyword")
+      "Keyword"
       #f
-      '((str #f))
+      '((str . #f))
       (list
        (list (univ-tostr-method-name ctx)
              '()
-             (^return
-              (^this-member "str"))))))
+             (lambda (ctx)
+               (^return
+                (^this-member "str")))))))
 
     ((make_interned_keyword)
      (^ (^var-declaration (^gvar "keyword_table") (^empty-dict))
         "\n"
         (^prim-function-declaration
-         (^prefix "make_interned_keyword")
+         "make_interned_keyword"
          (list (cons (^local-var "str") #f))
          "\n"
          '()
@@ -3872,141 +3925,144 @@ EOF
 
     ((Box)
      (^class-declaration
-      (^prefix "Box")
+      "Box"
       #f
-      '((val #f))
+      '((val . #f))
       '()))
 
     ((Null)
      (^ (^class-declaration
-         (^prefix "Null")
+         "Null"
          #f
          '()
          '())
         (^var-declaration
          (^gvar "null_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Null))))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Null))))))
 
     ((Void)
      (^ (^class-declaration
-         (^prefix "Void")
+         "Void"
          #f
          '()
          '())
         (^var-declaration
          (^gvar "void_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Void))))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Void))))))
 
     ((Eof)
      (^ (^class-declaration
-         (^prefix "Eof")
+         "Eof"
          #f
          '()
          '())
         (^var-declaration
          (^gvar "eof_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Eof))))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Eof))))))
 
     ((Absent)
      (^ (^class-declaration
-         (^prefix "Absent")
+         "Absent"
          #f
          '()
          '())
         "\n"
         (^var-declaration
          (^gvar "absent_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Absent))))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Absent))))))
 
     ((Unbound)
      (^ (^class-declaration
-         (^prefix "Unbound")
+         "Unbound"
          #f
          '()
          '())
         "\n"
         (^var-declaration
          (^gvar "unbound1_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Unbound))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Unbound))))
         (^var-declaration
          (^gvar "unbound2_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Unbound))))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Unbound))))))
 
     ((Optional)
      (^ (^class-declaration
-         (^prefix "Optional")
+         "Optional"
          #f
          '()
          '())
         "\n"
         (^var-declaration
          (^gvar "optional_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Optional))))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Optional))))))
 
     ((Key)
      (^ (^class-declaration
-         (^prefix "Key")
+         "Key"
          #f
          '()
          '())
         "\n"
         (^var-declaration
          (^gvar "key_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Key))))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Key))))))
 
     ((Rest)
      (^ (^class-declaration
-         (^prefix "Rest")
+         "Rest"
          #f
          '()
          '())
         "\n"
         (^var-declaration
          (^gvar "rest_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Rest))))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Rest))))))
 
     ((Boolean)
      (^ (^class-declaration
-         (^prefix "Boolean")
+         "Boolean"
          #f
-         '((val #f))
+         '((val . #f))
          '())
         "\n"
         (^var-declaration
          (^gvar "false_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Boolean)) (^bool #f)))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Boolean)) (^bool #f)))
         (^var-declaration
          (^gvar "true_val")
-         (^new (^prefix (univ-use-rtlib ctx 'Boolean)) (^bool #t)))))
+         (^new (^prefix-class (univ-use-rtlib ctx 'Boolean)) (^bool #t)))))
 
     ((Char)
      (^class-declaration
-      (^prefix "Char")
+      "Char"
       #f
-      '((code #f))
+      '((code . #f))
       (list
        (list (univ-tostr-method-name ctx)
              '()
              (case (target-name (ctx-target ctx))
 
                ((js)
-                (^return
-                 (^call-prim
-                  (^member "String" "fromCharCode")
-                  (^this-member "code"))))
+                (lambda (ctx)
+                  (^return
+                   (^call-prim
+                    (^member "String" "fromCharCode")
+                    (^this-member "code")))))
 
                ((php python)
-                (^return
-                 (^call-prim
-                  "chr"
-                  (^this-member "code"))))
+                (lambda (ctx)
+                  (^return
+                   (^call-prim
+                    "chr"
+                    (^this-member "code")))))
 
                ((ruby)
-                (^return
-                 (^call-prim
-                  (^member
-                   (^this-member "code")
-                   "chr"))))
+                (lambda (ctx)
+                  (^return
+                   (^call-prim
+                    (^member
+                     (^this-member "code")
+                     "chr")))))
 
                (else
                 (compiler-internal-error
@@ -4016,7 +4072,7 @@ EOF
      (^ (^var-declaration (^gvar "char_table") (^empty-dict))
         "\n"
         (^prim-function-declaration
-         (^prefix "make_interned_char")
+         "make_interned_char"
          (list (cons (^local-var "code") #f))
          "\n"
          '()
@@ -4034,71 +4090,75 @@ EOF
 
     ((String)
      (^class-declaration
-      (^prefix "String")
+      "String"
       #f
-      '((codes #f))
+      '((codes . #f))
       (list
        (list (univ-tostr-method-name ctx)
              '()
              (case (target-name (ctx-target ctx))
 
                ((js)
-                (let ((codes (^this-member "codes"))
-                      (limit (^local-var "limit"))
-                      (chunks (^local-var "chunks"))
-                      (i (^local-var "i")))
-                  (^ (^var-declaration limit (^int 32768))
-                     (^if (^< (^array-length codes) limit)
-                          (^return
-                           (^call-prim
-                            (^member (^member "String" "fromCharCode") "apply")
-                            "null"
-                            codes))
-                          (^ (^var-declaration chunks (^array-literal '()))
-                             (^var-declaration i (^int 0))
-                             (^while (^< i (^array-length codes))
-                                     (^ (^expr-statement
-                                         (^call-prim
-                                          (^member chunks "push")
-                                          (^call-prim
-                                           (^member (^member "String" "fromCharCode") "apply")
-                                           "null"
+                (lambda (ctx)
+                  (let ((codes (^this-member "codes"))
+                        (limit (^local-var "limit"))
+                        (chunks (^local-var "chunks"))
+                        (i (^local-var "i")))
+                    (^ (^var-declaration limit (^int 32768))
+                       (^if (^< (^array-length codes) limit)
+                            (^return
+                             (^call-prim
+                              (^member (^member "String" "fromCharCode") "apply")
+                              "null"
+                              codes))
+                            (^ (^var-declaration chunks (^array-literal '()))
+                               (^var-declaration i (^int 0))
+                               (^while (^< i (^array-length codes))
+                                       (^ (^expr-statement
                                            (^call-prim
-                                            (^member codes "slice")
-                                            i
-                                            (^+ i limit)))))
-                                        (^inc-by i limit)))
-                             (^return
-                              (^call-prim
-                               (^member chunks "join")
-                               (^str ""))))))))
+                                            (^member chunks "push")
+                                            (^call-prim
+                                             (^member (^member "String" "fromCharCode") "apply")
+                                             "null"
+                                             (^call-prim
+                                              (^member codes "slice")
+                                              i
+                                              (^+ i limit)))))
+                                          (^inc-by i limit)))
+                               (^return
+                                (^call-prim
+                                 (^member chunks "join")
+                                 (^str "")))))))))
 
                ((php)
-                (^return
-                 (^call-prim
-                  "join"
-                  (^call-prim
-                   "array_map"
-                   (^str "chr")
-                   (^this-member "codes")))))
+                (lambda (ctx)
+                  (^return
+                   (^call-prim
+                    "join"
+                    (^call-prim
+                     "array_map"
+                     (^str "chr")
+                     (^this-member "codes"))))))
 
                ((python)
-                (^return
-                 (^call-prim
-                  (^member (^str "") "join")
-                  (^call-prim
-                   "map"
-                   "chr"
-                   (^this-member "codes")))))
+                (lambda (ctx)
+                  (^return
+                   (^call-prim
+                    (^member (^str "") "join")
+                    (^call-prim
+                     "map"
+                     "chr"
+                     (^this-member "codes"))))))
 
                ((ruby)
                 ;;TODO: add anonymous function
-                (^return
-                 (^call-prim
-                  (^member
-                   (^ (^member (^this-member "codes") "map")
-                      " {|x| x.chr}")
-                   "join"))))
+                (lambda (ctx)
+                  (^return
+                   (^call-prim
+                    (^member
+                     (^ (^member (^this-member "codes") "map")
+                        " {|x| x.chr}")
+                     "join")))))
 
                (else
                 (compiler-internal-error
@@ -4106,47 +4166,47 @@ EOF
 
     ((tostr)
      (^prim-function-declaration
-      (^prefix "tostr")
+      "tostr"
       (list (cons (^local-var "obj") #f))
       "\n"
       '()
       (^if (^eq? (^local-var "obj")
-                 (^obj #f))
-           (^return (^str "#f"))
-           (^if (^eq? (^local-var "obj")
-                      (^obj #t))
-                (^return (^str "#t"))
-                (^if (^eq? (^local-var "obj")
-                           (^obj '()))
-                     (^return (^str ""))
-                     (^if (^eq? (^local-var "obj")
-                                (^void))
-                          (^return (^str "#!void"))
-                     (^if (^eq? (^local-var "obj")
-                                (^eof))
-                          (^return (^str "#!eof"))
-                     (^if (^pair? (^local-var "obj"))
-                          (^return (^concat
-                                    (^call-prim
-                                     (^prefix (univ-use-rtlib ctx 'tostr))
-                                     (^member (^local-var "obj") "car"))
-                                    (^call-prim
-                                     (^prefix (univ-use-rtlib ctx 'tostr))
-                                     (^member (^local-var "obj") "cdr"))))
-;;                          (^if (^char? (^local-var "obj"))
-;;                               (^return (^chr-tostr (^char-unbox (^local-var "obj"))))
-                               (^if (^flonum? (^local-var "obj"))
-                                    (^return (^tostr (^flonum-unbox (^local-var "obj"))))
-;;                                    (^if (^string? (^local-var "obj"))
-;;                                         (^return (^tostr (^string-unbox (^local-var "obj"))))
-                                         (^return (^tostr (^local-var "obj")))))))))
+                   (^obj #f))
+             (^return (^str "#f"))
+             (^if (^eq? (^local-var "obj")
+                        (^obj #t))
+                  (^return (^str "#t"))
+                  (^if (^eq? (^local-var "obj")
+                             (^obj '()))
+                       (^return (^str ""))
+                       (^if (^eq? (^local-var "obj")
+                                  (^void))
+                            (^return (^str "#!void"))
+                       (^if (^eq? (^local-var "obj")
+                                  (^eof))
+                            (^return (^str "#!eof"))
+                       (^if (^pair? (^local-var "obj"))
+                            (^return (^concat
+                                      (^call-prim
+                                       (^prefix (univ-use-rtlib ctx 'tostr))
+                                       (^member (^local-var "obj") "car"))
+                                      (^call-prim
+                                       (^prefix (univ-use-rtlib ctx 'tostr))
+                                       (^member (^local-var "obj") "cdr"))))
+;;                            (^if (^char? (^local-var "obj"))
+;;                                 (^return (^chr-tostr (^char-unbox (^local-var "obj"))))
+                                 (^if (^flonum? (^local-var "obj"))
+                                      (^return (^tostr (^flonum-unbox (^local-var "obj"))))
+;;                                      (^if (^string? (^local-var "obj"))
+;;                                           (^return (^tostr (^string-unbox (^local-var "obj"))))
+                                           (^return (^tostr (^local-var "obj")))))))))
 ;;)
 ;;)
 )))
 
     ((println)
      (^prim-function-declaration
-      (^prefix "println")
+      "println"
       (list (cons (^local-var "obj") #f))
       "\n"
       '()
@@ -4179,7 +4239,7 @@ EOF
         "\n"
 
         (^setglo 'println
-                 (^global-function (gvm-proc-use ctx "println")))))
+                 (^global-function (^prefix (gvm-proc-use ctx "println"))))))
 
     ((glo-real-time-milliseconds)
      (^ (^var-declaration
@@ -4250,11 +4310,11 @@ EOF
         "\n"
 
         (^setglo 'real-time-milliseconds
-                 (^global-function (gvm-proc-use ctx "real-time-milliseconds")))))
+                 (^global-function (^prefix (gvm-proc-use ctx "real-time-milliseconds"))))))
 
     ((strtocodes)
      (^prim-function-declaration
-      (^prefix "strtocodes")
+      "strtocodes"
       (list (cons (^local-var "str") #f))
       "\n"
       '()
@@ -4286,7 +4346,7 @@ EOF
 
     ((make_vector)
      (^prim-function-declaration
-      (^prefix "make_vector")
+      "make_vector"
       (list (cons (^local-var "len") #f)
             (cons (^local-var "init") #f))
       "\n"
@@ -4299,7 +4359,7 @@ EOF
 
     ((make_u8vector)
      (^prim-function-declaration
-      (^prefix "make_u8vector")
+      "make_u8vector"
       (list (cons (^local-var "len") #f)
             (cons (^local-var "init") #f))
       "\n"
@@ -4312,7 +4372,7 @@ EOF
 
     ((make_string)
      (^prim-function-declaration
-      (^prefix "make_string")
+      "make_string"
       (list (cons (^local-var "len") #f)
             (cons (^local-var "init") #f))
       "\n"
@@ -4325,7 +4385,7 @@ EOF
 
     ((make_glo_var)
      (^prim-function-declaration
-      (^prefix "make_glo_var")
+      "make_glo_var"
       (list (cons (^local-var "sym") #f))
       "\n"
       '()
@@ -4354,7 +4414,7 @@ EOF
         (^
 
 #<<EOF
-function Gambit_js2scm(obj) {
+function gambit_js2scm(obj) {
   if (obj === void 0) {
     return obj;
   } else if (typeof obj === "boolean") {
@@ -4367,27 +4427,27 @@ function Gambit_js2scm(obj) {
     else
       return new Gambit_Flonum(obj);
   } else if (typeof obj === "function") {
-    return function () { return Gambit_scm2js_call(obj); };
+    return function () { return gambit_scm2js_call(obj); };
   } else if (typeof obj === "string") {
-    return new Gambit_String(Gambit_strtocodes(obj));
+    return new Gambit_String(gambit_strtocodes(obj));
   } else if (typeof obj === "object") {
     if (obj instanceof Array) {
-      return obj.map(Gambit_js2scm);
+      return obj.map(gambit_js2scm);
     } else {
       var alist = null;
       for (var key in obj) {
-        alist = new Gambit_Pair(new Gambit_Pair(Gambit_js2scm(key),
-                                                Gambit_js2scm(obj[key])),
+        alist = new Gambit_Pair(new Gambit_Pair(gambit_js2scm(key),
+                                                gambit_js2scm(obj[key])),
                                 alist);
       }
       return alist;
     }
   } else {
-    throw "Gambit_js2scm error";
+    throw "gambit_js2scm error " + obj;
   }
 }
 
-function Gambit_scm2js(obj) {
+function gambit_scm2js(obj) {
   if (obj === void 0) {
     return obj;
   } else if (typeof obj === "boolean") {
@@ -4397,10 +4457,10 @@ function Gambit_scm2js(obj) {
   } else if (typeof obj === "number") {
     return obj
   } else if (typeof obj === "function") {
-    return function () { return Gambit_js2scm_call(obj, arguments); };
+    return function () { return gambit_js2scm_call(obj, arguments); };
   } else if (typeof obj === "object") {
     if (obj instanceof Array) {
-      return obj.map(Gambit_scm2js);
+      return obj.map(gambit_scm2js);
     } else if (obj instanceof Gambit_String) {
       return obj.toString();
     } else if (obj instanceof Gambit_Flonum) {
@@ -4411,84 +4471,88 @@ function Gambit_scm2js(obj) {
       while (obj instanceof Gambit_Pair) {
         var elem = obj.car;
         if (elem instanceof Gambit_Pair) {
-          jsobj[Gambit_scm2js(elem.car)] = Gambit_scm2js(elem.cdr);
+          jsobj[gambit_scm2js(elem.car)] = gambit_scm2js(elem.cdr);
         } else {
-          jsobj[i] = Gambit_scm2js(elem);
+          jsobj[i] = gambit_scm2js(elem);
         }
         ++i;
         obj = obj.cdr;
       }
       return jsobj;
+    } else if (obj instanceof Gambit_Structure) {
+      throw "gambit_scm2js error (can't convert Structure)";
+    } else if (obj instanceof Gambit_Frame) {
+      throw "gambit_scm2js error (can't convert Frame)";
     } else {
-      throw "Gambit_scm2js error";
+      throw "gambit_scm2js error " + obj;
     }
   } else {
-    throw "Gambit_scm2js error";
+    throw "gambit_scm2js error " + obj;
   }
 }
 
-function Gambit_scm2js_call(fn) {
+function gambit_scm2js_call(fn) {
 
-  if (Gambit_nargs > 0) {
-    Gambit_stack[++Gambit_sp] = Gambit_r1;
-    if (Gambit_nargs > 1) {
-      Gambit_stack[++Gambit_sp] = Gambit_r2;
-      if (Gambit_nargs > 2) {
-        Gambit_stack[++Gambit_sp] = Gambit_r3;
+  if (gambit_nargs > 0) {
+    gambit_stack[++gambit_sp] = gambit_r1;
+    if (gambit_nargs > 1) {
+      gambit_stack[++gambit_sp] = gambit_r2;
+      if (gambit_nargs > 2) {
+        gambit_stack[++gambit_sp] = gambit_r3;
       }
     }
   }
 
-  var args = Gambit_stack.slice(Gambit_sp+1-Gambit_nargs, Gambit_sp+1);
+  var args = gambit_stack.slice(gambit_sp+1-gambit_nargs, gambit_sp+1);
 
-  Gambit_sp -= Gambit_nargs;
+  gambit_sp -= gambit_nargs;
 
-  var ra = Gambit_heapify(Gambit_r0);
-  var frame = Gambit_stack[0];
+  var ra = gambit_heapify(gambit_r0);
+  var frame = gambit_stack[0];
 
-  Gambit_r1 = Gambit_js2scm(fn.apply(null, args.map(Gambit_scm2js)));
+  gambit_r1 = gambit_js2scm(fn.apply(null, args.map(gambit_scm2js)));
 
-  Gambit_sp = -1;
-  Gambit_stack[++Gambit_sp] = frame;
+  gambit_sp = -1;
+  gambit_stack[++gambit_sp] = frame;
 
   return ra;
 }
 
-function Gambit_js2scm_call(proc, args) {
+function gambit_js2scm_call(proc, args) {
 
   var ra = function () { return false; };
 
-  ra.id = 'Gambit_js2scm_call';
+  ra.id = 'gambit_js2scm_call';
   ra.fs = 1;
   ra.link = 1;
 
-  Gambit_sp = -1;
-  Gambit_stack[++Gambit_sp] = [ra,false];
+  gambit_sp = -1;
+  gambit_stack[++gambit_sp] = [ra,false];
 
-  Gambit_nargs = args.length;
+  gambit_nargs = args.length;
 
-  for (var i=0; i<Gambit_nargs; i++) {
-    Gambit_stack[++Gambit_sp] = Gambit_js2scm(args[i]);
+  for (var i=0; i<gambit_nargs; i++) {
+    gambit_stack[++gambit_sp] = gambit_js2scm(args[i]);
   }
 
-  if (Gambit_nargs > 0) {
-    if (Gambit_nargs > 1) {
-      if (Gambit_nargs > 2) {
-        Gambit_r3 = Gambit_stack[Gambit_sp];
-        --Gambit_sp;
+  if (gambit_nargs > 0) {
+    if (gambit_nargs > 1) {
+      if (gambit_nargs > 2) {
+        gambit_r3 = gambit_stack[gambit_sp];
+        --gambit_sp;
       }
-      Gambit_r2 = Gambit_stack[Gambit_sp];
-      --Gambit_sp;
+      gambit_r2 = gambit_stack[gambit_sp];
+      --gambit_sp;
     }
-    Gambit_r1 = Gambit_stack[Gambit_sp];
-    --Gambit_sp;
+    gambit_r1 = gambit_stack[gambit_sp];
+    --gambit_sp;
   }
 
-  Gambit_r0 = ra;
+  gambit_r0 = ra;
 
-  Gambit_trampoline(proc);
+  gambit_trampoline(proc);
 
-  return Gambit_scm2js(Gambit_r1);
+  return gambit_scm2js(gambit_r1);
 }
 
 EOF
@@ -4593,7 +4657,7 @@ EOF
 
 #|
 //JavaScript toString method:
-Gambit_Pair.prototype.toString = function () {
+gambit_Pair.prototype.toString = function () {
   return this.car.toString() + this.car.toString();
 };
 
@@ -4647,7 +4711,7 @@ import ctypes
         "\n"
 
         (^prim-function-declaration
-         (^prefix "trampoline")
+         "trampoline"
          "pc"
          "\n"
          '()
@@ -4655,7 +4719,7 @@ import ctypes
                  (^assign "pc" (^call "pc"))))
 
         (^prim-function-declaration
-         (^prefix "println")
+         "println"
          "obj"
          "\n"
          '()
@@ -4684,7 +4748,7 @@ import ctypes
             (^return R0)))
 
         (^setglo 'println
-                 (^global-function (gvm-proc-use ctx "println")))
+                 (^global-function (^prefix (gvm-proc-use ctx "println"))))
 
 )))
 
@@ -4695,96 +4759,96 @@ import ctypes
            (R3 (^operand (make-reg 3)))
            (R4 (^operand (make-reg 4))))
        (^ "
-function Gambit_heapify(ra) {
+function gambit_heapify(ra) {
 
-  if (Gambit_sp > 0) { // stack contains at least one frame
+  if (gambit_sp > 0) { // stack contains at least one frame
 
     var fs = ra.fs, link = ra.link;
-    var chain = Gambit_stack;
+    var chain = gambit_stack;
 
-    if (Gambit_sp > fs) { // stack contains at least two frames
-      chain = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
+    if (gambit_sp > fs) { // stack contains at least two frames
+      chain = gambit_stack.slice(gambit_sp - fs, gambit_sp + 1);
       chain[0] = ra;
-      Gambit_sp = Gambit_sp - fs;
+      gambit_sp = gambit_sp - fs;
       var prev_frame = chain, prev_link = link;
       ra = prev_frame[prev_link]; fs = ra.fs; link = ra.link;
 
-      while (Gambit_sp > fs) {
-        var frame = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
+      while (gambit_sp > fs) {
+        var frame = gambit_stack.slice(gambit_sp - fs, gambit_sp + 1);
         frame[0] = ra;
-        Gambit_sp = Gambit_sp - fs;
+        gambit_sp = gambit_sp - fs;
         prev_frame[prev_link] = frame;
         prev_frame = frame; prev_link = link;
         ra = prev_frame[prev_link]; fs = ra.fs; link = ra.link;
       }
 
-      prev_frame[prev_link] = Gambit_stack;
+      prev_frame[prev_link] = gambit_stack;
     }
 
-    Gambit_stack.length = fs + 1;
-    Gambit_stack[link] = Gambit_stack[0];
-    Gambit_stack[0] = ra;
+    gambit_stack.length = fs + 1;
+    gambit_stack[link] = gambit_stack[0];
+    gambit_stack[0] = ra;
 
-    Gambit_stack = [chain];
-    Gambit_sp = 0;
+    gambit_stack = [chain];
+    gambit_sp = 0;
   }
 
-  return Gambit_underflow;
+  return gambit_underflow;
 }
 
-function Gambit_underflow() {
+function gambit_underflow() {
 
-  var frame = Gambit_stack[0];
+  var frame = gambit_stack[0];
 
   if (frame === false) // end of continuation?
     return false; // terminate trampoline
 
   var ra = frame[0], fs = ra.fs, link = ra.link;
-  Gambit_stack = frame.slice(0, fs + 1);
-  Gambit_sp = fs;
-  Gambit_stack[0] = frame[link];
-  Gambit_stack[link] = Gambit_underflow;
+  gambit_stack = frame.slice(0, fs + 1);
+  gambit_sp = fs;
+  gambit_stack[0] = frame[link];
+  gambit_stack[link] = gambit_underflow;
 
   return ra;
 }
-Gambit_underflow.fs = 0;
+gambit_underflow.fs = 0;
 
-var Gambit_glo = {};
-var " R0 " = Gambit_underflow;
+var gambit_glo = {};
+var " R0 " = gambit_underflow;
 var " R1 " = false;
 var " R2 " = false;
 var " R3 " = false;
 var " R4 " = false;
-var Gambit_stack = [];
-var Gambit_sp = 0;
-var Gambit_nargs = 0;
-var Gambit_temp1 = false;
-var Gambit_temp2 = false;
-var Gambit_poll;
-var Gambit_printout;
+var gambit_stack = [];
+var gambit_sp = 0;
+var gambit_nargs = 0;
+var gambit_temp1 = false;
+var gambit_temp2 = false;
+var gambit_poll;
+var gambit_printout;
 
-Gambit_stack[0] = false;
+gambit_stack[0] = false;
 
-var Gambit_pollcount = 1;
+var gambit_pollcount = 1;
 
 //if (this.hasOwnProperty('setTimeout')) {
-//  Gambit_poll = function (dest) {
-//                  Gambit_pollcount = 100;
-//                  Gambit_stack.length = Gambit_sp + 1;
-//                  setTimeout(function () { Gambit_trampoline(dest); }, 1);
+//  gambit_poll = function (dest) {
+//                  gambit_pollcount = 100;
+//                  gambit_stack.length = gambit_sp + 1;
+//                  setTimeout(function () { gambit_trampoline(dest); }, 1);
 //                  return false;
 //                };
 //} else {
-  Gambit_poll = function (dest) {
-                  Gambit_pollcount = 100;
-                  Gambit_stack.length = Gambit_sp + 1;
+  gambit_poll = function (dest) {
+                  gambit_pollcount = 100;
+                  gambit_stack.length = gambit_sp + 1;
                   return dest;
                 };
 //}
 
 var iobuffer = \"\";
 
-function Gambit_printout(text) {
+function gambit_printout(text) {
   if (text === \"\\n\") {
     print(iobuffer);
     iobuffer = \"\";
@@ -4797,94 +4861,94 @@ function Gambit_printout(text) {
 //    document.write(text);
 }
 
-function Gambit_buildrest ( f ) {    // nb formal args
+function gambit_buildrest ( f ) {    // nb formal args
                                      // *** assume (= univ-nb-arg-regs 3) for now ***
     var nb_static_args = f - 1;
-    var nb_rest_args = Gambit_nargs - nb_static_args;
+    var nb_rest_args = gambit_nargs - nb_static_args;
     var rest = null;
-    var Gambit_reg = [];
-    Gambit_reg[1] = " R1 ";
-    Gambit_reg[2] = " R2 ";
-    Gambit_reg[3] = " R3 ";
+    var gambit_reg = [];
+    gambit_reg[1] = " R1 ";
+    gambit_reg[2] = " R2 ";
+    gambit_reg[3] = " R3 ";
 
 
-    if (Gambit_nargs < nb_static_args)  // Wrong number of args
+    if (gambit_nargs < nb_static_args)  // Wrong number of args
         return false;
 
     // simple case, all in reg
-    if ((Gambit_nargs <= 3) && (nb_static_args < 3)) {
+    if ((gambit_nargs <= 3) && (nb_static_args < 3)) {
         for (var i = nb_static_args + 1; i < nb_static_args + nb_rest_args + 1; i++) {
-            rest = Gambit_cons(Gambit_reg[i], rest);
+            rest = gambit_cons(gambit_reg[i], rest);
         }
 
-        Gambit_reg[nb_static_args + 1] = rest;
-        Gambit_nargs -= (nb_rest_args - 1);
+        gambit_reg[nb_static_args + 1] = rest;
+        gambit_nargs -= (nb_rest_args - 1);
 
-        " R1 " = Gambit_reg[1];
-        " R2 " = Gambit_reg[2];
-        " R3 " = Gambit_reg[3];
+        " R1 " = gambit_reg[1];
+        " R2 " = gambit_reg[2];
+        " R3 " = gambit_reg[3];
 
         return true;
     }
 
     // rest is empty
-    if ((Gambit_nargs >= 3) && (nb_rest_args === 0)) { // only append '()
+    if ((gambit_nargs >= 3) && (nb_rest_args === 0)) { // only append '()
         var spill_loc = nb_static_args - 2;        // univ-nb-arg-regs - 1
-        Gambit_sp += 1;
-        Gambit_stack[Gambit_sp] = Gambit_reg[1];
-        Gambit_reg[1] = Gambit_reg[2];
-        Gambit_reg[2] = Gambit_reg[3];
-        Gambit_reg[3] = null;
-        Gambit_nargs += 1;
+        gambit_sp += 1;
+        gambit_stack[gambit_sp] = gambit_reg[1];
+        gambit_reg[1] = gambit_reg[2];
+        gambit_reg[2] = gambit_reg[3];
+        gambit_reg[3] = null;
+        gambit_nargs += 1;
 
-        " R1 " = Gambit_reg[1];
-        " R2 " = Gambit_reg[2];
-        " R3 " = Gambit_reg[3];
+        " R1 " = gambit_reg[1];
+        " R2 " = gambit_reg[2];
+        " R3 " = gambit_reg[3];
 
         return true;
     }
 
     // general case
     for (var i = 1; i <= 3; i++) {
-        Gambit_stack[Gambit_sp + i] = Gambit_reg[i];
+        gambit_stack[gambit_sp + i] = gambit_reg[i];
     }
-    Gambit_sp += 3;
+    gambit_sp += 3;
     for (var i = 0; i < nb_rest_args; i++) {
-        rest = Gambit_cons(Gambit_stack[Gambit_sp - i], rest);
+        rest = gambit_cons(gambit_stack[gambit_sp - i], rest);
     }
-    Gambit_sp -= nb_rest_args;
-    Gambit_stack[Gambit_sp + 1] = rest;
-    Gambit_sp += 1;
+    gambit_sp -= nb_rest_args;
+    gambit_stack[gambit_sp + 1] = rest;
+    gambit_sp += 1;
 
     switch (nb_static_args) {
     case 0:
-        Gambit_reg[1] = Gambit_stack[Gambit_sp];
-        Gambit_sp -= 1;
+        gambit_reg[1] = gambit_stack[gambit_sp];
+        gambit_sp -= 1;
         break;
     case 1:
-        Gambit_reg[2] = Gambit_stack[Gambit_sp];
-        Gambit_reg[1] = Gambit_stack[Gambit_sp - 1];
-        Gambit_sp -= 2;
+        gambit_reg[2] = gambit_stack[gambit_sp];
+        gambit_reg[1] = gambit_stack[gambit_sp - 1];
+        gambit_sp -= 2;
         break;
     default:
         for (var i = 3; i > 0; i--) {
-            Gambit_reg[i] = Gambit_stack[Gambit_sp - 3 + i];
+            gambit_reg[i] = gambit_stack[gambit_sp - 3 + i];
         }
-        Gambit_sp -= 3;
+        gambit_sp -= 3;
         break;
     }
-    Gambit_nargs = f;
+    gambit_nargs = f;
 
-    " R1 " = Gambit_reg[1];
-    " R2 " = Gambit_reg[2];
-    " R3 " = Gambit_reg[3];
+    " R1 " = gambit_reg[1];
+    " R2 " = gambit_reg[2];
+    " R3 " = gambit_reg[3];
 
     return true;
 }
 
-function Gambit_wrong_nargs(fn) {
-    Gambit_printout(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
-    Gambit_printout(fn);
+function gambit_wrong_nargs(fn) {
+    gambit_printout(\"*** wrong number of arguments (\"+gambit_nargs+\") when calling\");
+    gambit_printout(fn);
     return false;
 }
 
@@ -4900,11 +4964,11 @@ function closure_alloc(slots) {
 }
 
 // Flonum
-function Gambit_Flonum(val) {
+function gambit_Flonum(val) {
     this.val = val;
 }
 
-Gambit_Flonum.prototype.toString = function ( ) {
+gambit_Flonum.prototype.toString = function ( ) {
     if (parseFloat(this.val) == parseInt(this.val)) {
         return this.val + \".\";
     } else {
@@ -4913,200 +4977,200 @@ Gambit_Flonum.prototype.toString = function ( ) {
 }
 
 // Pair, List
-function Gambit_Pair ( car, cdr ) {
+function gambit_Pair ( car, cdr ) {
     this.car = car;
     this.cdr = cdr;
 }
 
-function Gambit_pairp ( p ) {
+function gambit_pairp ( p ) {
     return (p instanceof Gambit_Pair);
 }
 
-Gambit_Pair.prototype.toString = function ( ) {
-    return Gambit_write(this);
-//    return (\"(\" + Gambit_println(this.car) + \" . \" +  Gambit_println(this.cdr) + \")\");
+gambit_Pair.prototype.toString = function ( ) {
+    return gambit_write(this);
+//    return (\"(\" + gambit_println(this.car) + \" . \" +  gambit_println(this.cdr) + \")\");
 }
 
-Gambit_Pair.prototype.println = function ( ) {
-    return Gambit_println(this.car) + Gambit_println(this.cdr);
+gambit_Pair.prototype.println = function ( ) {
+    return gambit_println(this.car) + gambit_println(this.cdr);
 }
 
-function Gambit_nullp ( o ) {
+function gambit_nullp ( o ) {
     return o === null;
 }
 
 // cons
-function Gambit_cons ( a, b ) {
+function gambit_cons ( a, b ) {
     return new Gambit_Pair(a, b);
 }
 
 // car
-function Gambit_car ( p ) {
+function gambit_car ( p ) {
     return p.car;
 }
 
 // cdr
-function Gambit_cdr ( p ) {
+function gambit_cdr ( p ) {
     return p.cdr;
 }
 
 // caar
-function Gambit_caar ( p ) {
+function gambit_caar ( p ) {
     return p.car.car;
 }
 
 // cadr
-function Gambit_cadr ( p ) {
+function gambit_cadr ( p ) {
     return p.cdr.car;
 }
 
 // cdar
-function Gambit_cdar ( p ) {
+function gambit_cdar ( p ) {
     return p.car.cdr;
 }
 
 // cddr
-function Gambit_cddr ( p ) {
+function gambit_cddr ( p ) {
     return p.cdr.cdr;
 }
 
 // caaar
-function Gambit_caaar ( p ) {
+function gambit_caaar ( p ) {
     return p.car.car.car;
 }
 
 // caadr
-function Gambit_caadr ( p ) {
+function gambit_caadr ( p ) {
     return p.cdr.car.car;
 }
 
 // cadar
-function Gambit_cadar ( p ) {
+function gambit_cadar ( p ) {
     return p.car.cdr.car;
 }
 
 // caddr
-function Gambit_caddr ( p ) {
+function gambit_caddr ( p ) {
     return p.cdr.cdr.car;
 }
 
 // cdaar
-function Gambit_cdaar ( p ) {
+function gambit_cdaar ( p ) {
     return p.car.car.cdr;
 }
 
 // cdadr
-function Gambit_cdadr ( p ) {
+function gambit_cdadr ( p ) {
     return p.cdr.car.cdr;
 }
 
 // cddar
-function Gambit_cddar ( p ) {
+function gambit_cddar ( p ) {
     return p.car.cdr.cdr;
 }
 
 // cdddr
-function Gambit_cdddr ( p ) {
+function gambit_cdddr ( p ) {
     return p.cdr.cdr.cdr;
 }
 
 // caaaar
-function Gambit_caaaar ( p ) {
+function gambit_caaaar ( p ) {
     return p.car.car.car.car;
 }
 
 // caaadr
-function Gambit_caaadr ( p ) {
+function gambit_caaadr ( p ) {
     return p.cdr.car.car.car;
 }
 
 // caadar
-function Gambit_caadar ( p ) {
+function gambit_caadar ( p ) {
     return p.car.cdr.car.car;
 }
 
 // caaddr
-function Gambit_caaddr ( p ) {
+function gambit_caaddr ( p ) {
     return p.cdr.cdr.car.car;
 }
 
 // cadaar
-function Gambit_cadaar ( p ) {
+function gambit_cadaar ( p ) {
     return p.car.car.cdr.car;
 }
 
 // cadadr
-function Gambit_cadadr ( p ) {
+function gambit_cadadr ( p ) {
     return p.cdr.car.cdr.car;
 }
 
 // caddar
-function Gambit_caddar ( p ) {
+function gambit_caddar ( p ) {
     return p.car.cdr.cdr.car;
 }
 
 // cadddr
-function Gambit_cadddr ( p ) {
+function gambit_cadddr ( p ) {
     return p.cdr.cdr.cdr.car;
 }
 
 // cdaaar
-function Gambit_cdaaar ( p ) {
+function gambit_cdaaar ( p ) {
     return p.car.car.car.cdr;
 }
 
 // cdaadr
-function Gambit_cdaadr ( p ) {
+function gambit_cdaadr ( p ) {
     return p.cdr.car.car.cdr;
 }
 
 // cdadar
-function Gambit_cdadar ( p ) {
+function gambit_cdadar ( p ) {
     return p.car.cdr.car.cdr;
 }
 
 // cdaddr
-function Gambit_cdaddr ( p ) {
+function gambit_cdaddr ( p ) {
     return p.cdr.cdr.car.cdr;
 }
 
 // cddaar
-function Gambit_cddaar ( p ) {
+function gambit_cddaar ( p ) {
     return p.car.car.cdr.cdr;
 }
 
 // cddadr
-function Gambit_cddadr ( p ) {
+function gambit_cddadr ( p ) {
     return p.cdr.car.cdr.cdr;
 }
 
 // cdddar
-function Gambit_cdddar ( p ) {
+function gambit_cdddar ( p ) {
     return p.car.cdr.cdr.cdr;
 }
 
 // cddddr
-function Gambit_cddddr ( p ) {
+function gambit_cddddr ( p ) {
     return p.cdr.cdr.cdr.cdr;
 }
 
 // set-car!
-function Gambit_setcar ( p, a ) {
+function gambit_setcar ( p, a ) {
     p.car = a;
 }
 
 // set-cdr!
-function Gambit_setcdr ( p, b ) {
+function gambit_setcdr ( p, b ) {
     p.cdr = b;
 }
 
 
-Gambit_list = function ( ) {
+gambit_list = function ( ) {
     var listaux = function (a, n, lst) {
         if (n === 0) {
-            return Gambit_cons(a[0], lst);
+            return gambit_cons(a[0], lst);
         } else {
-            return listaux(a, n-1, Gambit_cons(a[n], lst));
+            return listaux(a, n-1, gambit_cons(a[n], lst));
         }
     }
 
@@ -5115,7 +5179,7 @@ Gambit_list = function ( ) {
     return listaux(arguments, arguments.length - 1, null);
 }
 
-Gambit_length = function ( h ) {
+gambit_length = function ( h ) {
     var len = 0;
 //    var h = this;
 
@@ -5129,43 +5193,43 @@ Gambit_length = function ( h ) {
 
 
 // Char
-var Gambit_chars = {}
-function Gambit_Char(charcode) {
+var gambit_chars = {}
+function gambit_Char(charcode) {
     this.charcode = charcode;
 }
 
-Gambit_Char.fxToChar = function ( charcode ) {
-    var ch = Gambit_chars[charcode];
+gambit_Char.fxToChar = function ( charcode ) {
+    var ch = gambit_chars[charcode];
 
     if (!ch) {
-        Gambit_chars[charcode] = new Gambit_Char(charcode);
-        ch = Gambit_chars[charcode];
+        gambit_chars[charcode] = new Gambit_Char(charcode);
+        ch = gambit_chars[charcode];
     }
 
     return ch;
 }
 
-Gambit_Char.charToFx = function ( c ) {
+gambit_Char.charToFx = function ( c ) {
     return c.charcode;
 }
 
-Gambit_Char.prototype.toString = function ( ) {
+gambit_Char.prototype.toString = function ( ) {
     return \"#\\\\\"  + String.fromCharCode(this.charcode);
 }
 
-Gambit_Char.prototype.print = function ( ) {
+gambit_Char.prototype.print = function ( ) {
     return String.fromCharCode(this.charcode);
 }
 
 // String
-var Gambit_String = function ( ) {
+var gambit_String = function ( ) {
     this.chars = new Array(arguments.length);
     for (i = 0; i < arguments.length; i++) {
         this.chars[i] = arguments[i];
     }
 }
 
-Gambit_String.makestring = function ( n, ch ) {
+gambit_String.makestring = function ( n, ch ) {
     var s = new Gambit_String();
     for (i = 0; i < n; i++) {
         s.chars[i] = ch;
@@ -5174,9 +5238,9 @@ Gambit_String.makestring = function ( n, ch ) {
     return s;
 }
 
-Gambit_String.listToString = function ( lst ) {
-    var len = Gambit_length(lst);
-    var s = Gambit_String.makestring(len);
+gambit_String.listToString = function ( lst ) {
+    var len = gambit_length(lst);
+    var s = gambit_String.makestring(len);
     var h = lst;
     for (i = 0; i < len; i++) {
         s.chars[i] = h.car;
@@ -5186,45 +5250,45 @@ Gambit_String.listToString = function ( lst ) {
     return s;
 }
 
-Gambit_String.stringToList = function ( s ) {
+gambit_String.stringToList = function ( s ) {
     var len = s.stringlength();
 
     var listaux = function (a, n, lst) {
         if (n === 0) {
-            return Gambit_cons(a[0], lst);
+            return gambit_cons(a[0], lst);
         } else {
-            return listaux(a, n-1, Gambit_cons(a[n], lst));
+            return listaux(a, n-1, gambit_cons(a[n], lst));
         }
     }
 
     return listaux(s.chars, len - 1, null);
 }
 
-Gambit_String.jsstringToString = function ( s ) {
+gambit_String.jsstringToString = function ( s ) {
     var len = s.length;
-    var s2 = Gambit_String.makestring(len, Gambit_Char.fxToChar(0));
+    var s2 = gambit_String.makestring(len, gambit_Char.fxToChar(0));
     for (i = 0; i < len; i++) {
-        s2.chars[i] = Gambit_Char.fxToChar(s.charCodeAt(i));
+        s2.chars[i] = gambit_Char.fxToChar(s.charCodeAt(i));
     }
 
     return s2;
 }
 
-Gambit_String.prototype.stringlength = function ( ) {
+gambit_String.prototype.stringlength = function ( ) {
     return this.chars.length;
 }
 
 // string-ref
-Gambit_String.prototype.stringref = function ( n ) {
+gambit_String.prototype.stringref = function ( n ) {
     return this.chars[n];
 }
 
 // string-set!
-Gambit_String.prototype.stringset = function ( n, ch ) {  // ch: Char
+gambit_String.prototype.stringset = function ( n, ch ) {  // ch: Char
     this.chars[n] = ch;
 }
 
-Gambit_String.prototype.toString = function ( ) {
+gambit_String.prototype.toString = function ( ) {
     var s = \"\\\"\";
     for (i = 0; i < this.stringlength(); i++) {
         s = s.concat(this.stringref(i).print());
@@ -5234,7 +5298,7 @@ Gambit_String.prototype.toString = function ( ) {
     return s;
 }
 
-Gambit_String.prototype.print = function ( ) {
+gambit_String.prototype.print = function ( ) {
     var s = \"\";
     for (i = 0; i < this.stringlength(); i++) {
         s = s.concat(this.stringref(i).print());
@@ -5243,7 +5307,7 @@ Gambit_String.prototype.print = function ( ) {
     return s;
 }
 
-var Gambit_stringappend = function ( ) {
+var gambit_stringappend = function ( ) {
     var totallen = 0;
     var lens = [];
 
@@ -5252,7 +5316,7 @@ var Gambit_stringappend = function ( ) {
         totallen += lens[i];
     }
 
-    var s = Gambit_String.makestring(totallen);
+    var s = gambit_String.makestring(totallen);
     var partlen = 0;
     for (i = 0; i < lens.length; i++) {
         var len = lens[i];
@@ -5264,10 +5328,10 @@ var Gambit_stringappend = function ( ) {
 
     return s;
 }
-" (univ-emit-getglo ctx 'string-append) " = Gambit_stringappend;
+" (univ-emit-getglo ctx 'string-append) " = gambit_stringappend;
 
 // Vector
-var Gambit_Vector = function ( ) {
+var gambit_Vector = function ( ) {
     this.a = new Array(arguments.length);
     for (i = 0; i < arguments.length; i++) {
         this.a[i] = arguments[i];
@@ -5275,7 +5339,7 @@ var Gambit_Vector = function ( ) {
 }
 
 // make-vector
-Gambit_Vector.makevector = function ( n, val ) {
+gambit_Vector.makevector = function ( n, val ) {
     var v = new Gambit_Vector();
 
     for (var i = 0; i < n; i++) {
@@ -5286,76 +5350,76 @@ Gambit_Vector.makevector = function ( n, val ) {
 }
 
 // vector-length
-Gambit_Vector.prototype.vectorlength = function ( ) {
+gambit_Vector.prototype.vectorlength = function ( ) {
     return this.a.length;
 }
 
 // vector-ref
-Gambit_Vector.prototype.vectorref = function ( n ) {
+gambit_Vector.prototype.vectorref = function ( n ) {
     return this.a[n];
 }
 
 // vector-set!
-Gambit_Vector.prototype.vectorset = function ( n, v ) {
+gambit_Vector.prototype.vectorset = function ( n, v ) {
     this.a[n] = v;
 }
 
-Gambit_Vector.prototype.toString = function ( ) {
+gambit_Vector.prototype.toString = function ( ) {
     var res = \"#(\";
 
     if (this.vectorlength() > 0) {
-        res += Gambit_toString(this.a[0]);
+        res += gambit_toString(this.a[0]);
     }
 
     for (var i = 1; i<this.a.length; i++) {
         res += \", \";
-        res += Gambit_toString(this.a[i]);
+        res += gambit_toString(this.a[i]);
     }
     res += \")\"
     return res;
 }
 
-Gambit_Vector.prototype.println = function ( ) {
+gambit_Vector.prototype.println = function ( ) {
     var res = \"\";
     for (var i = 0; i<this.a.length; i++) {
-        res += Gambit_println(this.a[i]);
+        res += gambit_println(this.a[i]);
     }
 
     return res;
 }
 
 // Symbol
-var Gambit_syms = {};
-function Gambit_Symbol(s) {
+var gambit_syms = {};
+function gambit_Symbol(s) {
     this.symbolToString = function ( ) { return s; }
     this.toString = function ( ) { return s; }
 }
 
-Gambit_Symbol.stringToSymbol = function ( s ) {
-    var sym = Gambit_syms[s];
+gambit_Symbol.stringToSymbol = function ( s ) {
+    var sym = gambit_syms[s];
 
     if (!sym) {
-        Gambit_syms[s] = new Gambit_Symbol(s);
-        sym = Gambit_syms[s];
+        gambit_syms[s] = new Gambit_Symbol(s);
+        sym = gambit_syms[s];
     }
 
     return sym;
 }
 
-var Gambit_kwds = {};
-function Gambit_Keyword(s) {
+var gambit_kwds = {};
+function gambit_Keyword(s) {
     s = s + \":\";
 
     this.keywordToString = function( ) { return s.substring(0, s.length-1); }
     this.toString = function( ) { return s; }
 }
 
-Gambit_Keyword.stringToKeyword = function(s) {
-    var kwd = Gambit_kwds[s];
+gambit_Keyword.stringToKeyword = function(s) {
+    var kwd = gambit_kwds[s];
 
     if (!kwd) {
-        Gambit_kwds[s] = new Gambit_Keyword(s);
-        kwd = Gambit_kwds[s];
+        gambit_kwds[s] = new Gambit_Keyword(s);
+        kwd = gambit_kwds[s];
     }
 
     return kwd;
@@ -5363,186 +5427,186 @@ Gambit_Keyword.stringToKeyword = function(s) {
 
 // Primitives
 
-function Gambit_write ( obj ) {
+function gambit_write ( obj ) {
     if (obj === false)
-        Gambit_printout(\"#f\");
+        gambit_printout(\"#f\");
     else if (obj === true)
-        Gambit_printout(\"#t\");
+        gambit_printout(\"#t\");
     else if (obj === null)
-        Gambit_printout(\"()\");
+        gambit_printout(\"()\");
     else if (obj instanceof Gambit_Flonum)
-        Gambit_printout(obj.toString());
+        gambit_printout(obj.toString());
     else if (obj instanceof Gambit_String)
-        Gambit_printout(\"\\\"\" + obj.toString() + \"\\\"\");
+        gambit_printout(\"\\\"\" + obj.toString() + \"\\\"\");
     else if (obj instanceof Gambit_Char)
-        Gambit_printout(obj.toString());
+        gambit_printout(obj.toString());
     else if (obj instanceof Gambit_Pair) {
-        Gambit_printout(\"(\");
-        Gambit_write(obj.car);
-        Gambit_writelist(obj.cdr);
+        gambit_printout(\"(\");
+        gambit_write(obj.car);
+        gambit_writelist(obj.cdr);
     }
     else if (obj instanceof Array)
-        Gambit_printout(obj.toString());
+        gambit_printout(obj.toString());
     else if (obj instanceof Gambit_Symbol)
-        Gambit_printout(obj.symbolToString());
+        gambit_printout(obj.symbolToString());
     else if (obj instanceof Gambit_Keyword)
-        Gambit_printout(obj.keywordToString());
+        gambit_printout(obj.keywordToString());
     else
-        Gambit_printout(obj);
+        gambit_printout(obj);
 }
 
-function Gambit_bb1_write ( ) { // write
-    if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_bb1_write);
+function gambit_bb1_write ( ) { // write
+    if (gambit_nargs !== 1) {
+        return gambit_wrong_nargs(gambit_bb1_write);
     }
 
-    Gambit_write(Gambit_reg1);
+    gambit_write(gambit_reg1);
 
-    return Gambit_reg0;
+    return gambit_reg0;
 }
 
-" (univ-emit-getglo ctx 'write) " = Gambit_bb1_write;
+" (univ-emit-getglo ctx 'write) " = gambit_bb1_write;
 
-function Gambit_writelist ( obj ) {
+function gambit_writelist ( obj ) {
     if (obj === null) {
-        Gambit_printout(\")\");
+        gambit_printout(\")\");
     } else {
         if (obj instanceof Gambit_Pair) {
-            Gambit_printout(\" \");
-            Gambit_write(obj.car);
-            Gambit_writelist(obj.cdr);
+            gambit_printout(\" \");
+            gambit_write(obj.car);
+            gambit_writelist(obj.cdr);
         } else {
-            Gambit_printout(\" . \");
-            Gambit_write(obj);
-            Gambit_printout(\")\");
+            gambit_printout(\" . \");
+            gambit_write(obj);
+            gambit_printout(\")\");
         }
     }
 }
 
-function Gambit_bb1_writelist ( ) { // write-list
-    if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_bb1_writelist);
+function gambit_bb1_writelist ( ) { // write-list
+    if (gambit_nargs !== 1) {
+        return gambit_wrong_nargs(gambit_bb1_writelist);
     }
 
-    Gambit_writelist(Gambit_reg1);
+    gambit_writelist(gambit_reg1);
 
-    return Gambit_reg0;
+    return gambit_reg0;
 }
 
-" (univ-emit-getglo ctx 'write-list) " = Gambit_bb1_writelist;
+" (univ-emit-getglo ctx 'write-list) " = gambit_bb1_writelist;
 
-function Gambit_print ( obj ) {
+function gambit_print ( obj ) {
     if (obj === false)
-        Gambit_printout(\"#f\");
+        gambit_printout(\"#f\");
     else if (obj === true)
-        Gambit_printout(\"#t\");
+        gambit_printout(\"#t\");
     else if (obj === null)
-        Gambit_printout(\"\");
+        gambit_printout(\"\");
     else if (obj instanceof Gambit_Flonum)
-        Gambit_printout(obj.toString());
+        gambit_printout(obj.toString());
     else if (obj instanceof Gambit_String)
-        Gambit_printout(obj.print());
+        gambit_printout(obj.print());
     else if (obj instanceof Gambit_Char)
-        Gambit_printout(obj.print());
+        gambit_printout(obj.print());
     else if (obj instanceof Gambit_Pair) {
-        Gambit_print(obj.car);
-        Gambit_print(obj.cdr);
+        gambit_print(obj.car);
+        gambit_print(obj.cdr);
     }
     else if (obj instanceof Array) {
         for (i = 0; i < obj.length; i++) {
-            Gambit_print(obj[i]);
+            gambit_print(obj[i]);
         }
     }
     else if (obj instanceof Gambit_Symbol)
-        Gambit_printout(obj.symbolToString());
+        gambit_printout(obj.symbolToString());
     else if (obj instanceof Gambit_Keyword)
-        Gambit_printout(obj.keywordToString());
+        gambit_printout(obj.keywordToString());
     else
-        Gambit_printout(obj);
+        gambit_printout(obj);
 }
 
-function Gambit_bb1_print ( ) { // print
-    if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_bb1_print);
+function gambit_bb1_print ( ) { // print
+    if (gambit_nargs !== 1) {
+        return gambit_wrong_nargs(gambit_bb1_print);
     }
 
-    Gambit_print(" R1 ");
+    gambit_print(" R1 ");
 
     return " R0 ";
 }
 
-" (univ-emit-getglo ctx 'print) " = Gambit_bb1_print;
+" (univ-emit-getglo ctx 'print) " = gambit_bb1_print;
 
-function Gambit_println ( obj ) {
-    Gambit_print(obj);
-    Gambit_printout(\"\\n\");
+function gambit_println ( obj ) {
+    gambit_print(obj);
+    gambit_printout(\"\\n\");
 }
 
-function Gambit_bb1_println ( ) { // println
-    if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_bb1_println);
+function gambit_bb1_println ( ) { // println
+    if (gambit_nargs !== 1) {
+        return gambit_wrong_nargs(gambit_bb1_println);
     }
 
-    Gambit_println(" R1 ");
+    gambit_println(" R1 ");
 
     return " R0 ";
 }
 
-" (univ-emit-getglo ctx 'println) " = Gambit_bb1_println;
+" (univ-emit-getglo ctx 'println) " = gambit_bb1_println;
 
-function Gambit_bb1_newline ( ) { // newline
-    if (Gambit_nargs !== 0) {
-        return Gambit_wrong_nargs(Gambit_bb1_newline);
+function gambit_bb1_newline ( ) { // newline
+    if (gambit_nargs !== 0) {
+        return gambit_wrong_nargs(gambit_bb1_newline);
     }
 
-    Gambit_printout(\"\\n\");
+    gambit_printout(\"\\n\");
 
     return " R0 ";
 }
 
-" (univ-emit-getglo ctx 'newline) " = Gambit_bb1_newline;
+" (univ-emit-getglo ctx 'newline) " = gambit_bb1_newline;
 
-function Gambit_bb1_display ( ) { // display
-    if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_bb1_display);
+function gambit_bb1_display ( ) { // display
+    if (gambit_nargs !== 1) {
+        return gambit_wrong_nargs(gambit_bb1_display);
     }
 
-    Gambit_write(" R1 ");
+    gambit_write(" R1 ");
 
     return " R0 ";
 }
 
-" (univ-emit-getglo ctx 'display) " = Gambit_bb1_display;
+" (univ-emit-getglo ctx 'display) " = gambit_bb1_display;
 
-function Gambit_bb1_prettyprint ( ) { // prettyprint
-    if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_bb1_prettyprint);
+function gambit_bb1_prettyprint ( ) { // prettyprint
+    if (gambit_nargs !== 1) {
+        return gambit_wrong_nargs(gambit_bb1_prettyprint);
     }
 
-    Gambit_write(" R1 ");
-    Gambit_printout(\"\\n\");
+    gambit_write(" R1 ");
+    gambit_printout(\"\\n\");
 
     return " R0 ";
 }
 
-" (univ-emit-getglo ctx 'prettyprint) " = Gambit_bb1_prettyprint;
+" (univ-emit-getglo ctx 'prettyprint) " = gambit_bb1_prettyprint;
 
-function Gambit_bb1_pp ( ) { // pp
-    if (Gambit_nargs !== 1) {
-        return Gambit_wrong_nargs(Gambit_bb1_pp);
+function gambit_bb1_pp ( ) { // pp
+    if (gambit_nargs !== 1) {
+        return gambit_wrong_nargs(gambit_bb1_pp);
     }
 
-    Gambit_write(" R1 ");
-    Gambit_printout(\"\\n\");
+    gambit_write(" R1 ");
+    gambit_printout(\"\\n\");
 
     return " R0 ";
 }
 
-" (univ-emit-getglo ctx 'pp) " = Gambit_bb1_pp;
+" (univ-emit-getglo ctx 'pp) " = gambit_bb1_pp;
 
-function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
-    if (Gambit_nargs !== 0) {
-        return Gambit_wrong_nargs(Gambit_bb1_display);
+function gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
+    if (gambit_nargs !== 0) {
+        return gambit_wrong_nargs(gambit_bb1_display);
     }
 
     " R1 " = new Date();
@@ -5550,288 +5614,288 @@ function Gambit_bb1_real_2d_time_2d_milliseconds ( ) { // real-time-milliseconds
     return " R0 ";
 }
 
-" (univ-emit-getglo ctx 'real-time-milliseconds) " = Gambit_bb1_real_2d_time_2d_milliseconds;
+" (univ-emit-getglo ctx 'real-time-milliseconds) " = gambit_bb1_real_2d_time_2d_milliseconds;
 
 
 // Continuations
-function Gambit_Continuation(frame, denv) {
+function gambit_Continuation(frame, denv) {
     this.frame = frame;
     this.denv = denv;
 }
 
 
 // Obsolete
-function Gambit_dump_cont(sp, ra) {
-    Gambit_printout(\"------------------------\");
+function gambit_dump_cont(sp, ra) {
+    gambit_printout(\"------------------------\");
     while (ra !== false) {
-        Gambit_printout(\"sp=\"+Gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
-        Gambit_sp = Gambit_sp-ra.fs;
-        ra = Gambit_stack[Gambit_sp+ra.link+1];
+        gambit_printout(\"sp=\"+gambit_sp + \" fs=\"+ra.fs + \" link=\"+ra.link);
+        gambit_sp = gambit_sp-ra.fs;
+        ra = gambit_stack[gambit_sp+ra.link+1];
     }
-    Gambit_printout(\"------------------------\");
+    gambit_printout(\"------------------------\");
 }
 
-function Gambit_continuation_capture1() {
+function gambit_continuation_capture1() {
   var receiver = " R1 ";
-  " R0 " = Gambit_heapify(" R0 ");
-  " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
-  Gambit_nargs = 1;
+  " R0 " = gambit_heapify(" R0 ");
+  " R1 " = new Gambit_Continuation(gambit_stack[0], false);
+  gambit_nargs = 1;
   return receiver;
 }
 
-function Gambit_continuation_capture2() {
+function gambit_continuation_capture2() {
   var receiver = " R1 ";
-  " R0 " = Gambit_heapify(" R0 ");
-  " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
-  Gambit_nargs = 2;
+  " R0 " = gambit_heapify(" R0 ");
+  " R1 " = new Gambit_Continuation(gambit_stack[0], false);
+  gambit_nargs = 2;
   return receiver;
 }
 
-function Gambit_continuation_capture3() {
+function gambit_continuation_capture3() {
   var receiver = " R1 ";
-  " R0 " = Gambit_heapify(" R0 ");
-  " R1 " = new Gambit_Continuation(Gambit_stack[0], false);
-  Gambit_nargs = 3;
+  " R0 " = gambit_heapify(" R0 ");
+  " R1 " = new Gambit_Continuation(gambit_stack[0], false);
+  gambit_nargs = 3;
   return receiver;
 }
 
-function Gambit_continuation_capture4() {
-  var receiver = Gambit_stack[Gambit_sp--];
-  " R0 " = Gambit_heapify(" R0 ");
-  Gambit_stack[++Gambit_sp] = new Gambit_Continuation(Gambit_stack[0], false);
-  Gambit_nargs = 4;
+function gambit_continuation_capture4() {
+  var receiver = gambit_stack[gambit_sp--];
+  " R0 " = gambit_heapify(" R0 ");
+  gambit_stack[++gambit_sp] = new Gambit_Continuation(gambit_stack[0], false);
+  gambit_nargs = 4;
   return receiver;
 }
 
-function Gambit_continuation_graft_no_winding2() {
+function gambit_continuation_graft_no_winding2() {
   var proc = " R2 ";
   var cont = " R1 ";
-  Gambit_sp = 0;
-  Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow;
-  Gambit_nargs = 0;
+  gambit_sp = 0;
+  gambit_stack[0] = cont.frame;
+  " R0 " = gambit_underflow;
+  gambit_nargs = 0;
   return proc;
 }
 
-function Gambit_continuation_graft_no_winding3() {
+function gambit_continuation_graft_no_winding3() {
   var proc = " R2 ";
   var cont = " R1 ";
-  Gambit_sp = 0;
-  Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow;
+  gambit_sp = 0;
+  gambit_stack[0] = cont.frame;
+  " R0 " = gambit_underflow;
   " R1 " = " R3 ";
-  Gambit_nargs = 1;
+  gambit_nargs = 1;
   return proc;
 }
 
-function Gambit_continuation_graft_no_winding4() {
+function gambit_continuation_graft_no_winding4() {
   var proc = " R1 ";
-  var cont = Gambit_stack[Gambit_sp];
-  Gambit_sp = 0;
-  Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow;
+  var cont = gambit_stack[gambit_sp];
+  gambit_sp = 0;
+  gambit_stack[0] = cont.frame;
+  " R0 " = gambit_underflow;
   " R1 " = " R2 ";
   " R2 " = " R3 ";
-  Gambit_nargs = 2;
+  gambit_nargs = 2;
   return proc;
 }
 
-function Gambit_continuation_graft_no_winding5() {
-  var proc = Gambit_stack[Gambit_sp];
-  var cont = Gambit_stack[Gambit_sp-1];
-  Gambit_sp = 0;
-  Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow;
-  Gambit_nargs = 3;
+function gambit_continuation_graft_no_winding5() {
+  var proc = gambit_stack[gambit_sp];
+  var cont = gambit_stack[gambit_sp-1];
+  gambit_sp = 0;
+  gambit_stack[0] = cont.frame;
+  " R0 " = gambit_underflow;
+  gambit_nargs = 3;
   return proc;
 }
 
-function Gambit_continuation_return_no_winding2() {
+function gambit_continuation_return_no_winding2() {
   var cont = " R1 ";
-  Gambit_sp = 0;
-  Gambit_stack[0] = cont.frame;
-  " R0 " = Gambit_underflow;
+  gambit_sp = 0;
+  gambit_stack[0] = cont.frame;
+  " R0 " = gambit_underflow;
   " R1 " = " R2 ";
   return " R0 ";
 }
 
-function Gambit_bb1__23__23_continuation_3f_() { // ##continuation?
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_3f_);
+function gambit_bb1__23__23_continuation_3f_() { // ##continuation?
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_3f_);
   }
   " R1 " = " R1 " instanceof Gambit_Continuation;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation?) " = Gambit_bb1__23__23_continuation_3f_;
+" (univ-emit-getglo ctx '##continuation?) " = gambit_bb1__23__23_continuation_3f_;
 
 
-function Gambit_bb1__23__23_continuation_2d_frame() { // ##continuation-frame
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_frame);
+function gambit_bb1__23__23_continuation_2d_frame() { // ##continuation-frame
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_2d_frame);
   }
   " R1 " = " R1 ".frame;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation-frame) " = Gambit_bb1__23__23_continuation_2d_frame;
+" (univ-emit-getglo ctx '##continuation-frame) " = gambit_bb1__23__23_continuation_2d_frame;
 
 
-function Gambit_bb1__23__23_continuation_2d_denv() { // ##continuation-denv
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_denv);
+function gambit_bb1__23__23_continuation_2d_denv() { // ##continuation-denv
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_2d_denv);
   }
   " R1 " = " R1 ".denv;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation-denv) " = Gambit_bb1__23__23_continuation_2d_denv;
+" (univ-emit-getglo ctx '##continuation-denv) " = gambit_bb1__23__23_continuation_2d_denv;
 
 
-function Gambit_bb1__23__23_continuation_2d_fs() { // ##continuation-fs
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_fs);
+function gambit_bb1__23__23_continuation_2d_fs() { // ##continuation-fs
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_2d_fs);
   }
   " R1 " = " R1 ".frame[0].fs;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation-fs) " = Gambit_bb1__23__23_continuation_2d_fs;
+" (univ-emit-getglo ctx '##continuation-fs) " = gambit_bb1__23__23_continuation_2d_fs;
 
 
-function Gambit_bb1__23__23_frame_2d_fs() { // ##frame-fs
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_fs);
+function gambit_bb1__23__23_frame_2d_fs() { // ##frame-fs
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_frame_2d_fs);
   }
   " R1 " = " R1 "[0].fs;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##frame-fs) " = Gambit_bb1__23__23_frame_2d_fs;
+" (univ-emit-getglo ctx '##frame-fs) " = gambit_bb1__23__23_frame_2d_fs;
 
 
-function Gambit_bb1__23__23_return_2d_fs() { // ##return-fs
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_return_2d_fs);
+function gambit_bb1__23__23_return_2d_fs() { // ##return-fs
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_return_2d_fs);
   }
   " R1 " = " R1 ".fs;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##return-fs) " = Gambit_bb1__23__23_return_2d_fs;
+" (univ-emit-getglo ctx '##return-fs) " = gambit_bb1__23__23_return_2d_fs;
 
 
-function Gambit_bb1__23__23_return_2d_link() { // ##return-link
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_return_2d_link);
+function gambit_bb1__23__23_return_2d_link() { // ##return-link
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_return_2d_link);
   }
   " R1 " = " R1 ".link-1;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##return-link) " = Gambit_bb1__23__23_return_2d_link;
+" (univ-emit-getglo ctx '##return-link) " = gambit_bb1__23__23_return_2d_link;
 
 
-function Gambit_bb1__23__23_return_2d_id() { // ##return-id
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_return_2d_id);
+function gambit_bb1__23__23_return_2d_id() { // ##return-id
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_return_2d_id);
   }
   " R1 " = " R1 ".id;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##return-id) " = Gambit_bb1__23__23_return_2d_id;
+" (univ-emit-getglo ctx '##return-id) " = gambit_bb1__23__23_return_2d_id;
 
 
-function Gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_link);
+function gambit_bb1__23__23_continuation_2d_link() { // ##continuation-link
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_2d_link);
   }
   " R1 " = " R1 ".frame[0].link-1;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation-link) " = Gambit_bb1__23__23_continuation_2d_link;
+" (univ-emit-getglo ctx '##continuation-link) " = gambit_bb1__23__23_continuation_2d_link;
 
 
-function Gambit_bb1__23__23_frame_2d_link() { // ##frame-link
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_link);
+function gambit_bb1__23__23_frame_2d_link() { // ##frame-link
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_frame_2d_link);
   }
   " R1 " = " R1 "[0].link-1;
   return " R0 ";
 }
-" (univ-emit-getglo ctx '##frame-link) " = Gambit_bb1__23__23_frame_2d_link;
+" (univ-emit-getglo ctx '##frame-link) " = gambit_bb1__23__23_frame_2d_link;
 
-function Gambit_bb1__23__23_continuation_2d_ret() { // ##continuation-ret
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_ret);
+function gambit_bb1__23__23_continuation_2d_ret() { // ##continuation-ret
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_2d_ret);
   }
   " R1 " = " R1 ".frame[0];
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation-ret) " = Gambit_bb1__23__23_continuation_2d_ret;
+" (univ-emit-getglo ctx '##continuation-ret) " = gambit_bb1__23__23_continuation_2d_ret;
 
 
-function Gambit_bb1__23__23_frame_2d_ret() { // ##frame-ret
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_ret);
+function gambit_bb1__23__23_frame_2d_ret() { // ##frame-ret
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_frame_2d_ret);
   }
   " R1 " = " R1 "[0];
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##frame-ret) " = Gambit_bb1__23__23_frame_2d_ret;
+" (univ-emit-getglo ctx '##frame-ret) " = gambit_bb1__23__23_frame_2d_ret;
 
 
-function Gambit_bb1__23__23_continuation_2d_ref() { // ##continuation-ref
-  if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_ref);
+function gambit_bb1__23__23_continuation_2d_ref() { // ##continuation-ref
+  if (gambit_nargs !== 2) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_2d_ref);
   }
   " R1 " = " R1 ".frame[" R2 "];
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation-ref) " = Gambit_bb1__23__23_continuation_2d_ref;
+" (univ-emit-getglo ctx '##continuation-ref) " = gambit_bb1__23__23_continuation_2d_ref;
 
 
-function Gambit_bb1__23__23_frame_2d_ref() { // ##frame-ref
-  if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_ref);
+function gambit_bb1__23__23_frame_2d_ref() { // ##frame-ref
+  if (gambit_nargs !== 2) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_frame_2d_ref);
   }
   " R1 " = " R1 "[" R2 "];
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##frame-ref) " = Gambit_bb1__23__23_frame_2d_ref;
+" (univ-emit-getglo ctx '##frame-ref) " = gambit_bb1__23__23_frame_2d_ref;
 
 
-function Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
-  if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_);
+function gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_() { // ##continuation-slot-live?
+  if (gambit_nargs !== 2) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_);
   }
   " R1 " = true;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation-slot-live?) " = Gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_;
+" (univ-emit-getglo ctx '##continuation-slot-live?) " = gambit_bb1__23__23_continuation_2d_slot_2d_live_3f_;
 
 
-function Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
-  if (Gambit_nargs !== 2) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_);
+function gambit_bb1__23__23_frame_2d_slot_2d_live_3f_() { // ##frame-slot-live?
+  if (gambit_nargs !== 2) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_frame_2d_slot_2d_live_3f_);
   }
   " R1 " = true;
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##frame-slot-live?) " = Gambit_bb1__23__23_frame_2d_slot_2d_live_3f_;
+" (univ-emit-getglo ctx '##frame-slot-live?) " = gambit_bb1__23__23_frame_2d_slot_2d_live_3f_;
 
 
-function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
-  if (Gambit_nargs !== 1) {
-    return Gambit_wrong_nargs(Gambit_bb1__23__23_continuation_2d_next);
+function gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
+  if (gambit_nargs !== 1) {
+    return gambit_wrong_nargs(gambit_bb1__23__23_continuation_2d_next);
   }
   var frame = " R1 ".frame;
   var denv = " R1 ".denv;
@@ -5843,10 +5907,10 @@ function Gambit_bb1__23__23_continuation_2d_next() { // ##continuation-next
   return " R0 ";
 }
 
-" (univ-emit-getglo ctx '##continuation-next) " = Gambit_bb1__23__23_continuation_2d_next;
+" (univ-emit-getglo ctx '##continuation-next) " = gambit_bb1__23__23_continuation_2d_next;
 
 
-function Gambit_trampoline(pc) {
+function gambit_trampoline(pc) {
   while (pc !== false) {
     pc = pc();
   }
@@ -5863,18 +5927,18 @@ function Gambit_trampoline(pc) {
 from array import array
 import ctypes
 
-Gambit_glo = {}
-Gambit_reg = {0:False}
-Gambit_stack = {}
-Gambit_sp = -1
-Gambit_nargs = 0
-Gambit_temp1 = False
-Gambit_temp2 = False
+gambit_glo = {}
+gambit_reg = {0:False}
+gambit_stack = {}
+gambit_sp = -1
+gambit_nargs = 0
+gambit_temp1 = False
+gambit_temp2 = False
 
 #
 # char
 #
-class Gambit_Char:
+class gambit_Char:
   chars = {}
   def __init__ ( self,  c ):
     self.c = c
@@ -5883,25 +5947,25 @@ class Gambit_Char:
     return self.c
 
 # ##fx->char
-def Gambit_fxToChar ( i ):
-  if Gambit_Char.chars.has_key(i):
-    return Gambit_Char.chars[i]
+def gambit_fxToChar ( i ):
+  if gambit_Char.chars.has_key(i):
+    return gambit_Char.chars[i]
   else:
-    Gambit_Char.chars[i] = Gambit_Char(unichr(i))
-    return Gambit_Char.chars[i]
+    gambit_Char.chars[i] = gambit_Char(unichr(i))
+    return gambit_Char.chars[i]
 
 # ##fx<-char
-def Gambit_charToFx ( c ):
+def gambit_charToFx ( c ):
   return ord(c.c)
 
 # char?
-def Gambit_charp ( c ):
+def gambit_charp ( c ):
   return (isinstance(c, Char))
 
 #
 # Pair
 #
-class Gambit_Pair:
+class gambit_Pair:
   def __init__ ( self, car, cdr ):
     self.car = car
     self.cdr = cdr
@@ -5929,15 +5993,15 @@ class Gambit_Pair:
   def setcdr ( self, newcdr ):
     self.cdr = newcdr
 
-def Gambit_cons ( a, b ):
-  return Gambit_Pair(a, b)
+def gambit_cons ( a, b ):
+  return gambit_Pair(a, b)
 
-def Gambit_list ( *args ):
+def gambit_list ( *args ):
   n = len(args)
   lst = None
 
   while n > 0:
-    lst = Gambit_cons(args[n-1], lst)
+    lst = gambit_cons(args[n-1], lst)
     n -= 1
 
   return lst
@@ -5945,7 +6009,7 @@ def Gambit_list ( *args ):
 #
 # String
 #
-class Gambit_String:
+class gambit_String:
   def __init__ ( self, *args ):
     self.chars = array('u', list(args))
 
@@ -5964,36 +6028,36 @@ class Gambit_String:
   def __str__ ( self ):
     return "".join(self.chars)
 
-def Gambit_makestring ( n, c ):
+def gambit_makestring ( n, c ):
   args = [c.c]*n
-  return Gambit_String(*args)
+  return gambit_String(*args)
 
-def Gambit_stringp ( s ):
+def gambit_stringp ( s ):
   return isinstance(s, String)
 
 
-def Gambit_bb1_println(): # println
-  global Gambit_glo, Gambit_reg, Gambit_stack, Gambit_sp, Gambit_nargs, Gambit_temp1, Gambit_temp2
-  if Gambit_nargs != 1:
+def gambit_bb1_println(): # println
+  global gambit_glo, gambit_reg, gambit_stack, gambit_sp, gambit_nargs, gambit_temp1, gambit_temp2
+  if gambit_nargs != 1:
     raise "wrong number of arguments"
-  if Gambit_reg[1] is False:
+  if gambit_reg[1] is False:
     print("#f")
-  elif Gambit_reg[1] is True:
+  elif gambit_reg[1] is True:
     print("#t")
-  elif isinstance(Gambit_reg[1], float) and (int(Gambit_reg[1]) == round(Gambit_reg[1])):
-    print(str(int(Gambit_reg[1])) + '.')
+  elif isinstance(gambit_reg[1], float) and (int(gambit_reg[1]) == round(gambit_reg[1])):
+    print(str(int(gambit_reg[1])) + '.')
   else:
-    print(Gambit_reg[1])
+    print(gambit_reg[1])
   return " R0 ";
 
-Gambit_glo["println"] = Gambit_bb1_println
+gambit_glo["println"] = gambit_bb1_println
 
 
-def Gambit_poll(wakeup):
+def gambit_poll(wakeup):
   return wakeup
 
 
-def Gambit_trampoline(pc):
+def gambit_trampoline(pc):
   while pc != False:
     pc = pc()
 
@@ -6004,16 +6068,16 @@ EOF
 #<<EOF
 # encoding: utf-8
 
-$Gambit_glo = {}
-$Gambit_reg = {0=>false}
-$Gambit_stack = {}
-$Gambit_sp = -1
-$Gambit_nargs = 0
-$Gambit_temp1 = false
-$Gambit_temp2 = false
+$gambit_glo = {}
+$gambit_reg = {0=>false}
+$gambit_stack = {}
+$gambit_sp = -1
+$gambit_nargs = 0
+$gambit_temp1 = false
+$gambit_temp2 = false
 
-$Gambit_chars = {}
-class Gambit_Char
+$gambit_chars = {}
+class gambit_Char
   def initialize ( code )
     @code = code
   end
@@ -6025,50 +6089,50 @@ class Gambit_Char
   end
 end
 
-def Gambit_fxToChar ( i )
-  if $Gambit_chars.has_key?(i)
-    return $Gambit_chars[i]
+def gambit_fxToChar ( i )
+  if $gambit_chars.has_key?(i)
+    return $gambit_chars[i]
   else
-    c = Gambit_Char.new(i)
-    $Gambit_chars[i] = c
+    c = gambit_Char.new(i)
+    $gambit_chars[i] = c
     return c
   end
 end
 
-def Gambit_charToFx ( c )
+def gambit_charToFx ( c )
   return c.code
 end
 
-$Gambit_bb1_println = lambda { # println
-  if $Gambit_nargs != 1
+$gambit_bb1_println = lambda { # println
+  if $gambit_nargs != 1
     raise "wrong number of arguments"
   end
 
-  if $Gambit_reg[1] == false
+  if $gambit_reg[1] == false
     print("#f")
-  elsif $Gambit_reg[1] == true
+  elsif $gambit_reg[1] == true
     print("#t")
-  elsif $Gambit_reg[1].equal?(nil)
+  elsif $gambit_reg[1].equal?(nil)
     print("")
-  elsif $Gambit_reg[1].class == Float && $Gambit_reg[1] == $Gambit_reg[1].round
-    print($Gambit_reg[1].round.to_s() + ".")
+  elsif $gambit_reg[1].class == Float && $gambit_reg[1] == $gambit_reg[1].round
+    print($gambit_reg[1].round.to_s() + ".")
   else
-    print($Gambit_reg[1])
+    print($gambit_reg[1])
   end
 
   print("\n")
-  return $Gambit_reg[0]
+  return $gambit_reg[0]
 }
 
-$Gambit_glo["println"] = $Gambit_bb1_println
+$gambit_glo["println"] = $gambit_bb1_println
 
 
-def Gambit_poll(wakeup)
+def gambit_poll(wakeup)
   return wakeup
 end
 
 
-def Gambit_trampoline(pc)
+def gambit_trampoline(pc)
   while pc != false
     pc = pc.call
   end
@@ -6090,86 +6154,86 @@ EOF
            (R3 (^operand (make-reg 3)))
            (R4 (^operand (make-reg 4))))
        (^ "
-function Gambit_heapify(ra) {
+function gambit_heapify(ra) {
 
-  if (Gambit_sp > 0) { // stack contains at least one frame
+  if (gambit_sp > 0) { // stack contains at least one frame
 
     var fs = ra.fs, link = ra.link;
-    var chain = Gambit_stack;
+    var chain = gambit_stack;
 
-    if (Gambit_sp > fs) { // stack contains at least two frames
-      chain = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
+    if (gambit_sp > fs) { // stack contains at least two frames
+      chain = gambit_stack.slice(gambit_sp - fs, gambit_sp + 1);
       chain[0] = ra;
-      Gambit_sp = Gambit_sp - fs;
+      gambit_sp = gambit_sp - fs;
       var prev_frame = chain, prev_link = link;
       ra = prev_frame[prev_link]; fs = ra.fs; link = ra.link;
 
-      while (Gambit_sp > fs) {
-        var frame = Gambit_stack.slice(Gambit_sp - fs, Gambit_sp + 1);
+      while (gambit_sp > fs) {
+        var frame = gambit_stack.slice(gambit_sp - fs, gambit_sp + 1);
         frame[0] = ra;
-        Gambit_sp = Gambit_sp - fs;
+        gambit_sp = gambit_sp - fs;
         prev_frame[prev_link] = frame;
         prev_frame = frame; prev_link = link;
         ra = prev_frame[prev_link]; fs = ra.fs; link = ra.link;
       }
 
-      prev_frame[prev_link] = Gambit_stack;
+      prev_frame[prev_link] = gambit_stack;
     }
 
-    Gambit_stack.length = fs + 1;
-    Gambit_stack[link] = Gambit_stack[0];
-    Gambit_stack[0] = ra;
+    gambit_stack.length = fs + 1;
+    gambit_stack[link] = gambit_stack[0];
+    gambit_stack[0] = ra;
 
-    Gambit_stack = [chain];
-    Gambit_sp = 0;
+    gambit_stack = [chain];
+    gambit_sp = 0;
   }
 
-  return Gambit_underflow;
+  return gambit_underflow;
 }
 
-function Gambit_underflow() {
+function gambit_underflow() {
 
-  var frame = Gambit_stack[0];
+  var frame = gambit_stack[0];
 
   if (frame == false) // end of continuation?
     return false; // terminate trampoline
 
   var ra = frame[0], fs = ra.fs, link = ra.link;
-  Gambit_stack = frame.slice(0, fs + 1);
-  Gambit_sp = fs;
-  Gambit_stack[0] = frame[link];
-  Gambit_stack[link] = Gambit_underflow;
+  gambit_stack = frame.slice(0, fs + 1);
+  gambit_sp = fs;
+  gambit_stack[0] = frame[link];
+  gambit_stack[link] = gambit_underflow;
 
   return ra;
 }
 
-var Gambit_glo;
-var Gambit_stack;
-var Gambit_sp = 0;
-var " R0 " = Gambit_underflow;
+var gambit_glo;
+var gambit_stack;
+var gambit_sp = 0;
+var " R0 " = gambit_underflow;
 var " R1 " = false;
 var " R2 " = false;
 var " R3 " = false;
 var " R4 " = false;
-var Gambit_nargs = 0;
-var Gambit_temp1 = false;
-var Gambit_temp2 = false;
-var Gambit_pollcount = 1;
+var gambit_nargs = 0;
+var gambit_temp1 = false;
+var gambit_temp2 = false;
+var gambit_pollcount = 1;
 
-function Gambit_poll(dest) {
-  Gambit_pollcount = 100;
-//  Gambit_stack.length = Gambit_sp + 1;
+function gambit_poll(dest) {
+  gambit_pollcount = 100;
+//  gambit_stack.length = gambit_sp + 1;
   return dest;
 }
 
-function Gambit_printout(text) {
+function gambit_printout(text) {
   if (text != \"\\n\")
     print(text);
 }
 
-function Gambit_wrong_nargs(fn) {
-    Gambit_printout(\"*** wrong number of arguments (\"+Gambit_nargs+\") when calling\");
-    Gambit_printout(fn);
+function gambit_wrong_nargs(fn) {
+    gambit_printout(\"*** wrong number of arguments (\"+gambit_nargs+\") when calling\");
+    gambit_printout(fn);
     return false;
 }
 
@@ -6184,7 +6248,7 @@ function closure_alloc(slots) {
   return self;
 }
 
-function Gambit_trampoline(pc) {
+function gambit_trampoline(pc) {
   while (pc != false) {
     pc = pc();
   }
@@ -6199,7 +6263,9 @@ function Gambit_trampoline(pc) {
       "runtime-system, unknown target"))))
 
 (define (univ-entry-point ctx main-proc)
-  (let ((entry (^global-function (gvm-proc-use ctx (proc-obj-name main-proc)))))
+  (let ((entry
+         (^global-function
+          (^prefix (gvm-proc-use ctx (proc-obj-name main-proc))))))
     (^ "\n"
        (univ-comment ctx "--------------------------------\n")
        "\n"
@@ -6244,13 +6310,50 @@ function Gambit_trampoline(pc) {
 
 ;;;----------------------------------------------------------------------------
 
-(define (univ-emit-function-declaration ctx global? name params gen-header gen-attribs gen-body #!optional (prim? #f))
+(define (univ-emit-function-declaration ctx global? root-name params header attribs gen-body #!optional (prim? #f))
+  (univ-call-with-globals
+   ctx
+   gen-body
+   (lambda (ctx body globals)
+     (if (and (not prim?)
+              (equal? (univ-procedure-representation ctx) 'class))
+
+         (let* ((prn
+                 (^prefix root-name))
+                (name
+                 (if global? (^global-function prn) prn)))
+
+           (^ (^class-declaration
+               root-name
+               (^prefix-class (univ-use-rtlib ctx 'Procedure))
+               attribs
+               (list
+                (list 'call
+                      '()
+                      (lambda (ctx)
+                        (^ header
+                           globals
+                           body)))))
+              (^var-declaration
+               name
+               (^new (^prefix-class root-name)))))
+
+         (univ-emit-function-declaration*
+          ctx
+          global?
+          root-name
+          params
+          header
+          attribs
+          globals
+          body
+          prim?)))))
+
+(define (univ-call-with-globals ctx gen cont)
   (with-new-resources-used
    ctx
    (lambda (ctx)
-     (let* ((header (gen-header ctx))
-            (attribs (gen-attribs ctx))
-            (body (gen-body ctx))
+     (let* ((result (gen ctx))
             (globals (resource-set->list (ctx-globals-used ctx))))
 
        (define (used? x)
@@ -6259,6 +6362,14 @@ function Gambit_trampoline(pc) {
 
        (define (add! x)
          (set! globals (cons x globals)))
+
+       (define (global-decl globals)
+         (if (null? globals)
+             (^)
+             (^ "global "
+                (univ-separated-list
+                 ", "
+                 globals))))
 
        (let loop ((num (- univ-nb-gvm-regs 1)))
          (if (>= num 0)
@@ -6274,19 +6385,21 @@ function Gambit_trampoline(pc) {
        (if (used? 'nargs)     (add! (gvm-state-nargs ctx)))
        (if (used? 'pollcount) (add! (gvm-state-pollcount ctx)))
 
-       (univ-emit-function-declaration*
-        ctx
-        global?
-        name
-        params
-        header
-        attribs
-        globals
-        body
-        prim?)))))
+       (cont ctx
+             result
+             (if (null? globals)
+                 (^)
+                 (case (target-name (ctx-target ctx))
+                   ((php)
+                    (^ (global-decl globals) ";\n"))
+                   ((python)
+                    (^ (global-decl globals) "\n"))
+                   (else
+                    (^)))))))))
 
 (define (univ-emit-function-declaration* ctx global? root-name params header attribs globals body prim?)
-  (let ((name (if global? (^global-function root-name) root-name)))
+  (let* ((prn (^prefix root-name))
+         (name (if global? (^global-function prn) prn)))
     (case (target-name (ctx-target ctx))
 
       ((js)
@@ -6294,7 +6407,7 @@ function Gambit_trampoline(pc) {
           (univ-separated-list
            ","
            (map car params))
-          ") {" (univ-indent (^ header body)) "}\n"
+          ") {" (univ-indent (^ header globals body)) "}\n"
           (map (lambda (attrib)
                  (^assign (^member name (car attrib))
                           (cdr attrib)))
@@ -6309,7 +6422,7 @@ function Gambit_trampoline(pc) {
                      params)))
               (decl
                (^ "function " (if (or prim? (< (univ-php-version ctx) 53))
-                                  root-name
+                                  prn
                                   "")
                   "(" formals ") {"
                   (univ-indent
@@ -6325,13 +6438,7 @@ function Gambit_trampoline(pc) {
                                       (cdr attrib)))
                                    attribs))
                              ";\n"))
-                      (if (null? globals)
-                          (^)
-                          (^ "global "
-                             (univ-separated-list
-                              ", "
-                              globals)
-                             ";\n"))
+                      globals
                       body))
                   "}")))
          (cond (prim?
@@ -6360,7 +6467,7 @@ function Gambit_trampoline(pc) {
                                             attribs))
                                       "; "))
                                "return "
-                               root-name
+                               prn
                                "("
                                (univ-separated-list "," (map car params))
                                ");')"))))
@@ -6375,16 +6482,7 @@ function Gambit_trampoline(pc) {
                   (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
                 params))
           "):"
-          (univ-indent
-           (^ header
-              (if (null? globals)
-                  (^)
-                  (^ "global "
-                     (univ-separated-list
-                      ", "
-                      globals)
-                     "\n"))
-              body))
+          (univ-indent (^ header globals body))
           (map (lambda (attrib)
                  (^assign (^member name (car attrib))
                           (cdr attrib)))
@@ -6401,7 +6499,7 @@ function Gambit_trampoline(pc) {
          (^ (if prim?
 
                 (^ "def " name "(" parameters ")"
-                   (univ-indent (^ header body))
+                   (univ-indent (^ header globals body))
                    "end\n")
 
                 (^assign
@@ -6410,7 +6508,7 @@ function Gambit_trampoline(pc) {
                     (if (null? params)
                         (^)
                         (^ "|" parameters "|"))
-                    (univ-indent (^ header body))
+                    (univ-indent (^ header globals body))
                     "}")))
 
             (if (pair? attribs)
@@ -6429,145 +6527,285 @@ function Gambit_trampoline(pc) {
        (compiler-internal-error
         "univ-emit-function-declaration*, unknown target")))))
 
-(define (univ-emit-class-declaration ctx name extends fields methods #!optional (constructor #f))
+#;
+(define (univ-emit-fn-meth ctx params header attribs globals body)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^ "function " name "("
+     (^ "("
         (univ-separated-list
          ","
-         (map car (keep (lambda (field) (not (cadr field))) fields)))
-        ") {\n"
-        (univ-indent
-         (^ (map (lambda (field)
-                   (let ((field-name (car field))
-                         (field-init (cadr field)))
-                     (^assign (^this-member field-name)
-                              (or field-init (^local-var field-name)))))
-                 fields)
-            (or constructor (^))))
-        "}\n"
-        (if extends
-            (^assign-expr (^member name "prototype")
-                          (^call-prim (^member "Object" "create")
-                                      (^member extends "prototype")))
-            "")
-        (map (lambda (method)
-               (^ "\n"
-                  name ".prototype." (car method) " = function ("
-                  (univ-separated-list "," (cadr method))
-                  ") {\n"
-                  (univ-indent (caddr method))
-                  "}\n"))
-             methods)))
+         (map car params))
+        ") {" (univ-indent (^ header globals body)) "}"))
 
     ((php)
-     (^ "class " name
-        (if extends (^ " extends " extends) "")
-        " {\n\n"
-        (if (pair? fields)
-            (^ (univ-indent
-                (map (lambda (field) (^ "public $" (car field) ";\n")) fields))
-               "\n")
-            (^))
-        (univ-indent
-         (^ "public function __construct("
-            (univ-separated-list
-             ","
-             (map (lambda (x) (^local-var x)) (map car (keep (lambda (field) (not (cadr field))) fields))))
-            ") {\n"
-            (univ-indent
-             (^ (map (lambda (field)
-                       (let ((field-name (car field))
-                             (field-init (cadr field)))
-                         (^assign (^this-member field-name)
-                                  (or field-init (^local-var field-name)))))
-                     fields)
-                (or constructor (^))))
-            "}\n"))
-        (map (lambda (method)
-               (^ "\n"
-                  (univ-indent
-                   (^ "public function " (car method) "("
-                      (univ-separated-list "," (map (lambda (x) (^local-var x)) (cadr method)))
-                      ") {\n"
-                      (univ-indent (caddr method))
-                      "}\n"))))
-             methods)
-        "}\n"))
+     (let* ((formals
+             (univ-separated-list
+              ","
+              (map (lambda (x)
+                     (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+                   params)))
+            (decl
+             (^ "function " (if (or prim? (< (univ-php-version ctx) 53))
+                                prn
+                                "")
+                "(" formals ") {"
+                (univ-indent
+                 (^ header
+                    (if (or (< (univ-php-version ctx) 53) (null? attribs))
+                        (^)
+                        (^ "static "
+                           (univ-separated-list
+                            ", "
+                            (map (lambda (attrib)
+                                   (^assign-expr
+                                    (^local-var (car attrib))
+                                    (cdr attrib)))
+                                 attribs))
+                           ";\n"))
+                    globals
+                    body))
+                "}")))
+       (cond (prim?
+              (^ decl "\n"))
+             ((< (univ-php-version ctx) 53)
+              (^ (^ decl "\n")
+                 (^assign name
+                          (^ "create_function('"
+                             formals
+                             "','"
+                             (if (null? attribs)
+                                 (^)
+                                 (^ "static "
+                                    (univ-separated-list
+                                     ", "
+                                     (map (lambda (attrib)
+                                            (^assign-expr
+                                             (^local-var (car attrib))
+                                             (let ((a (cdr attrib)))
+                                               (if (and (list? a)
+                                                        (= (length a) 3)
+                                                        (equal? (car a) "'")
+                                                        (equal? (caddr a) "'"))
+                                                   (^ "\\'" (cadr a) "\\'")
+                                                   a))))
+                                          attribs))
+                                    "; "))
+                             "return "
+                             prn
+                             "("
+                             (univ-separated-list "," (map car params))
+                             ");')"))))
+             (else
+              (^assign name decl)))))
 
     ((python)
-     (^ "class " name
-        (if extends (^ "(" extends ")") "")
-        ":\n\n"
-        (univ-indent
-         (^ "def __init__("
-            (univ-separated-list
-             ","
-             (cons (^this)
-                   (map car (keep (lambda (field) (not (cadr field))) fields))))
-            "):\n"
-            (univ-indent
-             (if (and (null? fields) (not constructor))
-                 "pass\n"
-                 (^ (map (lambda (field)
-                           (let ((field-name (car field))
-                                 (field-init (cadr field)))
-                             (^assign (^this-member field-name)
-                                      (or field-init (^local-var field-name)))))
-                         fields)
-                    (or constructor (^)))))))
-        (map (lambda (method)
-               (^ "\n"
-                  (univ-indent
-                   (^ "def " (car method) "("
-                      (univ-separated-list "," (cons 'self (cadr method)))
-                      "):\n"
-                      (univ-indent (caddr method))))))
-             methods)))
+     (^ "("
+        (univ-separated-list
+         ","
+         (map (lambda (x)
+                (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+              params))
+        "):"
+        (univ-indent (^ header globals body))
+        (map (lambda (attrib)
+               (^assign (^member name (car attrib))
+                        (cdr attrib)))
+             attribs)))
 
     ((ruby)
-     (^ "class " name
-        (if extends (^ " < " extends) "")
-        "\n\n"
-        (if (pair? fields)
-            (^ (univ-indent
-                (^ "attr_accessor "
-                   (univ-separated-list
-                    ","
-                    (map (lambda (field) (^ ":" (car field))) fields))
-                   "\n"))
-               "\n")
-            (^))
-        (univ-indent
-         (^ "def initialize("
+     (let ((parameters
             (univ-separated-list
              ","
-             (map car (keep (lambda (field) (not (cadr field))) fields)))
-            ")\n"
-            (univ-indent
-             (^ (map (lambda (field)
-                       (let ((field-name (car field))
-                             (field-init (cadr field)))
-                         (^assign (^this-member field-name)
-                                  (or field-init (^local-var field-name)))))
-                     fields)
-                (or constructor (^))))
-            "end\n"))
-        (map (lambda (method)
-               (^ "\n"
-                  (univ-indent
-                   (^ "def " (car method) "(" ;; TODO: no parameter list when no parameters
-                      (univ-separated-list "," (cadr method))
-                      ")\n"
-                      (univ-indent (caddr method))
-                      "end\n"))))
-             methods)
-        "\nend\n"))
+             (map (lambda (x)
+                    (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
+                  params))))
+
+       (^ (if prim?
+
+              (^ "def " name "(" parameters ")"
+                 (univ-indent (^ header globals body))
+                 "end\n")
+
+              (^assign
+               name
+               (^ "lambda {"
+                  (if (null? params)
+                      (^)
+                      (^ "|" parameters "|"))
+                  (univ-indent (^ header globals body))
+                  "}")))
+
+          (if (pair? attribs)
+              (^ "class << " name "; attr_accessor :" (car (car attribs))
+                 (map (lambda (attrib)
+                        (^ ", :" (car attrib)))
+                      (cdr attribs))
+                 "; end\n"
+                 (map (lambda (attrib)
+                        (^assign (^member name (car attrib))
+                                 (cdr attrib)))
+                      attribs))
+              (^)))))
 
     (else
      (compiler-internal-error
-      "univ-emit-class-declaration, unknown target"))))
+      "univ-emit-fn-meth, unknown target"))))
+
+(define (univ-emit-class-declaration ctx root-name extends fields methods #!optional (constructor #f))
+  (let ((name (^prefix-class root-name)))
+    (case (target-name (ctx-target ctx))
+
+      ((js)
+       (^ "function " name "("
+          (univ-separated-list
+           ","
+           (map car (keep (lambda (field) (not (cdr field))) fields)))
+          ") {"
+          (if (or constructor (not (null? fields)))
+              (^ "\n"
+                 (univ-indent
+                  (^ (map (lambda (field)
+                            (let ((field-name (car field))
+                                  (field-init (cdr field)))
+                              (^assign (^this-member field-name)
+                                       (or field-init (^local-var field-name)))))
+                          fields)
+                     (if constructor (constructor ctx) (^)))))
+              (^))
+          "}\n"
+          (if extends
+              (^assign-expr (^member name "prototype")
+                            (^call-prim (^member "Object" "create")
+                                        (^member extends "prototype")))
+              "")
+          (map (lambda (method)
+                 (^ "\n"
+                    name ".prototype." (car method) " = function ("
+                    (univ-separated-list "," (cadr method))
+                    ") {\n"
+                    (univ-indent ((caddr method) ctx))
+                    "}\n"))
+               methods)))
+
+      ((php)
+       (^ "class " name
+          (if extends (^ " extends " extends) "")
+          " {"
+          (univ-indent
+           (if (or constructor (not (null? fields)) (not (null? methods)))
+               (^ "\n"
+                  (if (pair? fields)
+                      (^ "\n"
+                         (map (lambda (field) (^ "public $" (car field) ";\n")) fields))
+                      (^))
+                  (if (or constructor (not (null? fields)))
+                      (^ "\n"
+                         "public function __construct("
+                         (univ-separated-list
+                          ","
+                          (map (lambda (x) (^local-var x)) (map car (keep (lambda (field) (not (cdr field))) fields))))
+                         ") {\n"
+                         (univ-indent
+                          (^ (map (lambda (field)
+                                    (let ((field-name (car field))
+                                          (field-init (cdr field)))
+                                      (^assign (^this-member field-name)
+                                               (or field-init (^local-var field-name)))))
+                                  fields)
+                             (if constructor (constructor ctx) (^))))
+                         "}\n")
+                      (^))
+                  (map (lambda (method)
+                         (^ "\n"
+                            "public function " (car method) "("
+                            (univ-separated-list "," (map (lambda (x) (^local-var x)) (cadr method)))
+                            ") {\n"
+                            (univ-indent ((caddr method) ctx))
+                            "}\n"))
+                       methods))
+               (^)))
+          "}\n"))
+
+      ((python)
+       (^ "class " name
+          (if extends (^ "(" extends ")") "")
+          ":\n"
+          (univ-indent
+           (if (or constructor (not (null? fields)) (not (null? methods)))
+               (^ "\n"
+                  (if (or constructor (not (null? fields)))
+                      (^ "def __init__("
+                         (univ-separated-list
+                          ","
+                          (cons (^this)
+                                (map car (keep (lambda (field) (not (cdr field))) fields))))
+                         "):\n"
+                         (univ-indent
+                          (if (and (null? fields) (not constructor))
+                              "pass\n"
+                              (^ (map (lambda (field)
+                                        (let ((field-name (car field))
+                                              (field-init (cdr field)))
+                                          (^assign (^this-member field-name)
+                                                   (or field-init (^local-var field-name)))))
+                                      fields)
+                                 (if constructor (constructor ctx) (^))))))
+                      (^))
+                  (map (lambda (method)
+                         (^ "\n"
+                            "def " (car method) "("
+                            (univ-separated-list "," (cons 'self (cadr method)))
+                            "):\n"
+                            (univ-indent ((caddr method) ctx))))
+                       methods))
+               "pass\n"))))
+
+      ((ruby)
+       (^ "class " name
+          (if extends (^ " < " extends) "")
+          (univ-indent
+           (if (or constructor (not (null? fields)) (not (null? methods)))
+               (^ "\n"
+                  (if (pair? fields)
+                      (^ "\n"
+                         "attr_accessor "
+                         (univ-separated-list
+                          ","
+                          (map (lambda (field) (^ ":" (car field))) fields))
+                         "\n")
+                      (^))
+                  (if (or constructor (not (null? fields)))
+                      (^ "\n"
+                         "def initialize("
+                         (univ-separated-list
+                          ","
+                          (map car (keep (lambda (field) (not (cdr field))) fields)))
+                         ")\n"
+                         (univ-indent
+                          (^ (map (lambda (field)
+                                    (let ((field-name (car field))
+                                          (field-init (cdr field)))
+                                      (^assign (^this-member field-name)
+                                               (or field-init (^local-var field-name)))))
+                                  fields)
+                             (if constructor (constructor ctx) (^))))
+                         "end\n")
+                      (^))
+                  (map (lambda (method)
+                         (^ "\n"
+                            "def " (car method) "(" ;; TODO: no parameter list when no parameters
+                            (univ-separated-list "," (cadr method))
+                            ")\n"
+                            (univ-indent ((caddr method) ctx))
+                            "end\n"))
+                       methods))
+               (^)))
+          "\nend\n"))
+
+      (else
+       (compiler-internal-error
+        "univ-emit-class-declaration, unknown target")))))
 
 (define (univ-comment ctx comment)
   (case (target-name (ctx-target ctx))
@@ -6721,7 +6959,7 @@ function Gambit_trampoline(pc) {
   (case (univ-unbound-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Unbound)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Unbound)) expr))
 
     (else
      (compiler-internal-error
@@ -6807,7 +7045,7 @@ function Gambit_trampoline(pc) {
   (case (univ-boolean-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Boolean)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Boolean)) expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -6862,7 +7100,7 @@ function Gambit_trampoline(pc) {
   (case (univ-char-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'Char)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Char)) expr))
 
     (else
      (compiler-internal-error
@@ -6921,7 +7159,7 @@ function Gambit_trampoline(pc) {
   (case (univ-char-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Char)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Char)) expr))
 
     (else
      (compiler-internal-error
@@ -6934,7 +7172,7 @@ function Gambit_trampoline(pc) {
   (case (univ-fixnum-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'Fixnum)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Fixnum)) expr))
 
     (else
      expr)))
@@ -6952,7 +7190,7 @@ function Gambit_trampoline(pc) {
   (case (univ-fixnum-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Fixnum)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Fixnum)) expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -7012,46 +7250,58 @@ function Gambit_trampoline(pc) {
       "univ-emit-member, unknown target"))))
 
 (define (univ-with-function-attribs ctx assign? fn thunk)
-  (case (target-name (ctx-target ctx))
+  (case (univ-procedure-representation ctx)
 
-    ((js python ruby)
+    ((class)
      (thunk))
 
-    ((php)
-     (let ((attribs-var
-            (^local-var (^ fn "_attribs")))
-           (attribs-array
-            (^ "new ReflectionFunction(" (^local-var fn) ")")))
-       (^ (if assign?
-              (^assign attribs-var attribs-array)
-              (^var-declaration attribs-var attribs-array))
-          (^assign attribs-var (^ attribs-var "->getStaticVariables()"))
-          (thunk))))
-
     (else
-     (compiler-internal-error
-      "univ-with-function-attribs, unknown target"))))
+     (case (target-name (ctx-target ctx))
+
+       ((js python ruby)
+        (thunk))
+
+       ((php)
+        (let ((attribs-var
+               (^local-var (^ fn "_attribs")))
+              (attribs-array
+               (^ "new ReflectionFunction(" (^local-var fn) ")")))
+          (^ (if assign?
+                 (^assign attribs-var attribs-array)
+                 (^var-declaration attribs-var attribs-array))
+             (^assign attribs-var (^ attribs-var "->getStaticVariables()"))
+             (thunk))))
+
+       (else
+        (compiler-internal-error
+         "univ-with-function-attribs, unknown target"))))))
 
 (define (univ-get-function-attrib ctx fn attrib)
-  (case (target-name (ctx-target ctx))
+  (case (univ-procedure-representation ctx)
 
-    ((js python ruby)
+    ((class)
      (^member (^local-var fn) attrib))
 
-    ((php)
-     (let ((attribs-var
-            (^local-var (^ fn "_attribs"))))
-       (^prop-index attribs-var (^str attrib))))
-
     (else
-     (compiler-internal-error
-      "univ-get-function-attrib, unknown target"))))
+     (case (target-name (ctx-target ctx))
+
+       ((js python ruby)
+        (^member (^local-var fn) attrib))
+
+       ((php)
+        (let ((attribs-var
+               (^local-var (^ fn "_attribs"))))
+          (^prop-index attribs-var (^str attrib))))
+
+       (else
+        (compiler-internal-error
+         "univ-get-function-attrib, unknown target"))))))
 
 (define (univ-emit-pair? ctx expr)
-  (^instanceof (^prefix (univ-use-rtlib ctx 'Pair)) expr))
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Pair)) expr))
 
 (define (univ-emit-cons ctx expr1 expr2)
-  (^new (^prefix (univ-use-rtlib ctx 'Pair)) expr1 expr2))
+  (^new (^prefix-class (univ-use-rtlib ctx 'Pair)) expr1 expr2))
 
 (define (univ-emit-getcar ctx expr)
   (^member expr "car"))
@@ -7609,7 +7859,7 @@ tanh
   (case (univ-flonum-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'Flonum)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Flonum)) expr))
 
     (else
      expr)))
@@ -7627,7 +7877,7 @@ tanh
   (case (univ-flonum-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Flonum)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Flonum)) expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -7652,7 +7902,7 @@ tanh
   (case (univ-vector-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'Vector)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Vector)) expr))
 
     (else
      expr)))
@@ -7670,7 +7920,7 @@ tanh
   (case (univ-vector-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Vector)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Vector)) expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -7704,7 +7954,7 @@ tanh
   (case (univ-u8vector-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'U8Vector)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'U8Vector)) expr))
 
     (else
      (compiler-internal-error
@@ -7724,7 +7974,7 @@ tanh
   (case (univ-u8vector-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'U8Vector)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'U8Vector)) expr))
 
     (else
      (compiler-internal-error
@@ -7746,7 +7996,7 @@ tanh
   (case (univ-structure-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'Structure)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Structure)) expr))
 
     (else
      (compiler-internal-error
@@ -7766,7 +8016,7 @@ tanh
   (case (univ-structure-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Structure)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Structure)) expr))
 
     (else
      (compiler-internal-error
@@ -7814,7 +8064,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'String)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'String)) expr))
 
     (else
      expr)))
@@ -7832,7 +8082,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'String)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'String)) expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -7948,7 +8198,7 @@ tanh
   (case (univ-symbol-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'Symbol)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Symbol)) expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -7986,7 +8236,7 @@ tanh
   (case (univ-symbol-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Symbol)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Symbol)) expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -8037,7 +8287,7 @@ tanh
   (case (univ-keyword-representation ctx)
 
     ((class)
-     (^new (^prefix (univ-use-rtlib ctx 'Keyword)) expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Keyword)) expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -8066,17 +8316,17 @@ tanh
   (case (univ-keyword-representation ctx)
 
     ((class)
-     (^instanceof (^prefix (univ-use-rtlib ctx 'Keyword)) expr))
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Keyword)) expr))
 
     (else
      (compiler-internal-error
       "univ-emit-keyword?, host representation not implemented"))))
 
 (define (univ-emit-box? ctx expr)
-  (^instanceof (^prefix (univ-use-rtlib ctx 'Box)) expr))
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Box)) expr))
 
 (define (univ-emit-box ctx expr)
-  (^new (^prefix (univ-use-rtlib ctx 'Box)) expr))
+  (^new (^prefix-class (univ-use-rtlib ctx 'Box)) expr))
 
 (define (univ-emit-unbox ctx expr)
   (^member expr "val"))
@@ -8085,29 +8335,35 @@ tanh
   (^assign (^member expr1 "val") expr2))
 
 (define (univ-emit-frame? ctx expr)
-  (^instanceof (^prefix (univ-use-rtlib ctx 'Frame)) expr))
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Frame)) expr))
 
 (define (univ-emit-continuation? ctx expr)
-  (^instanceof (^prefix (univ-use-rtlib ctx 'Continuation)) expr))
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Continuation)) expr))
 
 (define (univ-emit-procedure? ctx expr)
-  (case (target-name (ctx-target ctx))
+  (case (univ-procedure-representation ctx)
 
-    ((js)
-     (^typeof "function" expr))
-
-    ((php)
-     (^call-prim "is_callable" expr))
-
-    ((python)
-     (^ "hasattr(" expr ", '__call__')"))
-
-    ((ruby)
-     (^instanceof "Proc" expr))
+    ((class)
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Procedure)) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-procedure?, unknown target"))))
+     (case (target-name (ctx-target ctx))
+
+       ((js)
+        (^typeof "function" expr))
+
+       ((php)
+        (^call-prim "is_callable" expr))
+
+       ((python)
+        (^ "hasattr(" expr ", '__call__')"))
+
+       ((ruby)
+        (^instanceof "Proc" expr))
+
+       (else
+        (compiler-internal-error
+         "univ-emit-procedure?, unknown target"))))))
 
 (define (univ-emit-closure? ctx expr)
   (case (target-name (ctx-target ctx))
@@ -8116,7 +8372,7 @@ tanh
      (^not (^prop-index-exists? expr (^str "id"))))
 
     ((php)
-     (^instanceof (^prefix "closure") expr))
+     (^instanceof (^prefix-class "closure") expr))
 
     ((python)
      (^not
