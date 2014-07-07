@@ -15,6 +15,9 @@
 (define univ-enable-jump-destination-inlining? #f)
 (set! univ-enable-jump-destination-inlining? #t)
 
+(define univ-dyn-load? #f)
+(set! univ-dyn-load? #f)
+
 (define (univ-procedure-representation ctx)
   (case (target-name (ctx-target ctx))
     ((php)
@@ -1774,14 +1777,24 @@
     (lambda (port)
       (let* ((objs-used (make-objs-used))
              (rtlib-features-used (make-resource-set))
-             (ctx (make-ctx targ objs-used rtlib-features-used (queue-empty) #f))
+             (main-proc (list-ref procs 0))
+             (ctx (make-ctx targ
+                            (proc-obj-name main-proc)
+                            #f
+                            objs-used
+                            rtlib-features-used
+                            (queue-empty)))
              (code-procs (univ-dump-procs ctx procs))
-             (code-entry (univ-entry-point ctx (list-ref procs 0)))
-             (code-rtlib (univ-rtlib ctx))
+             (code-entry (univ-entry-point ctx main-proc))
+             (code-rtlib (if univ-dyn-load?
+                             (^)
+                             (univ-rtlib ctx)))
+             (code-header (univ-module-header ctx))
              (code-objs (univ-dump-objs ctx))
              (code-decls (queue->list (ctx-decls ctx))))
 
         (univ-display (^ code-rtlib
+                         code-header
                          code-decls
                          code-objs
                          code-procs
@@ -2285,10 +2298,11 @@
 
       (let ((ctx (make-ctx
                   (ctx-target global-ctx)
+                  (ctx-module-ns global-ctx)
+                  (proc-obj-name p)
                   (ctx-objs-used global-ctx)
                   (ctx-rtlib-features-used global-ctx)
-                  (ctx-decls global-ctx)
-                  (proc-obj-name p))))
+                  (ctx-decls global-ctx))))
         (^ "\n"
            (univ-comment
             ctx
@@ -2416,8 +2430,9 @@
                   exprs))))
          (cont name)))))
 
-(define (make-ctx target objs-used rtlib-features-used decls ns)
+(define (make-ctx target module-ns ns objs-used rtlib-features-used decls)
   (vector target
+          module-ns
           ns
           0
           0
@@ -2432,35 +2447,38 @@
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
 
-(define (ctx-ns ctx)                       (vector-ref ctx 1))
-(define (ctx-ns-set! ctx x)                (vector-set! ctx 1 x))
+(define (ctx-module-ns ctx)                (vector-ref ctx 1))
+(define (ctx-module-ns-set! ctx x)         (vector-set! ctx 1 x))
 
-(define (ctx-stack-base-offset ctx)        (vector-ref ctx 2))
-(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 2 x))
+(define (ctx-ns ctx)                       (vector-ref ctx 2))
+(define (ctx-ns-set! ctx x)                (vector-set! ctx 2 x))
 
-(define (ctx-serial-num ctx)               (vector-ref ctx 3))
-(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 3 x))
+(define (ctx-stack-base-offset ctx)        (vector-ref ctx 3))
+(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 3 x))
 
-(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 4))
-(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 4 x))
+(define (ctx-serial-num ctx)               (vector-ref ctx 4))
+(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 4 x))
 
-(define (ctx-resources-used-rd ctx)        (vector-ref ctx 5))
-(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 5 x))
+(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 5))
+(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 5 x))
 
-(define (ctx-resources-used-wr ctx)        (vector-ref ctx 6))
-(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 6 x))
+(define (ctx-resources-used-rd ctx)        (vector-ref ctx 6))
+(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 6 x))
 
-(define (ctx-globals-used ctx)             (vector-ref ctx 7))
-(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 7 x))
+(define (ctx-resources-used-wr ctx)        (vector-ref ctx 7))
+(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 7 x))
 
-(define (ctx-objs-used ctx)                (vector-ref ctx 8))
-(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 8 x))
+(define (ctx-globals-used ctx)             (vector-ref ctx 8))
+(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 8 x))
 
-(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 9))
-(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 9 x))
+(define (ctx-objs-used ctx)                (vector-ref ctx 9))
+(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 9 x))
 
-(define (ctx-decls ctx)                      (vector-ref ctx 10))
-(define (ctx-decls-set! ctx x)               (vector-set! ctx 10 x))
+(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 10))
+(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 10 x))
+
+(define (ctx-decls ctx)                      (vector-ref ctx 11))
+(define (ctx-decls-set! ctx x)               (vector-set! ctx 11 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -2546,7 +2564,7 @@
   (^global-var (^prefix "sp")))
 
 (define (gvm-state-cst ctx)
-  (^global-var (^prefix "cst")))
+  (^global-var (^prefix (^ "cst_" (scheme-id->c-id (ctx-module-ns ctx))))))
 
 (define (gvm-state-prm ctx)
   (^global-var (^prefix "prm")))
@@ -4642,7 +4660,6 @@ EOF
 
        (^var-declaration (^gvar "prm") (^empty-dict))
        (^var-declaration (^gvar "glo") (^empty-dict))
-       (^var-declaration (^gvar "cst") (^extensible-array-literal '()))
        (^var-declaration (^gvar "stack") (^extensible-array-literal '()))
        (^var-declaration (^gvar "sp") -1)
        (^var-declaration (^gvar "nargs"))
@@ -4654,6 +4671,11 @@ EOF
        "\n"
 
        )))
+
+(define (univ-module-header ctx)
+  (^ (^var-declaration (gvm-state-cst ctx) (^extensible-array-literal '()))
+     "\n"))
+
 
 #|
 //JavaScript toString method:
@@ -6270,25 +6292,27 @@ function gambit_trampoline(pc) {
        (univ-comment ctx "--------------------------------\n")
        "\n"
 
-       (^assign (^gvar "current_thread")
-                (^structure-box
-                 (^array-literal
-                  (list (^obj #f)  ;; type descriptor (filled in later)
-                        (^obj #f)  ;; btq-next
-                        (^obj #f)  ;; btq-prev
-                        (^obj #f)  ;; toq-next
-                        (^obj #f)  ;; toq-prev
-                        (^obj #f)  ;; continuation
-                        (^obj '()) ;; dynamic environment
-                        (^obj #f)  ;; state
-                        (^obj #f)  ;; thunk
-                        (^obj #f)  ;; result
-                        (^obj #f)  ;; mutex
-                        (^obj #f)  ;; condvar
-                        (^obj 0)   ;; id
-                        ))))
+       (if univ-dyn-load?
+           (^)
+           (^ (^assign (^gvar "current_thread")
+                       (^structure-box
+                        (^array-literal
+                         (list (^obj #f) ;; type descriptor (filled in later)
+                               (^obj #f) ;; btq-next
+                               (^obj #f) ;; btq-prev
+                               (^obj #f) ;; toq-next
+                               (^obj #f) ;; toq-prev
+                               (^obj #f) ;; continuation
+                               (^obj '()) ;; dynamic environment
+                               (^obj #f)  ;; state
+                               (^obj #f)  ;; thunk
+                               (^obj #f)  ;; result
+                               (^obj #f)  ;; mutex
+                               (^obj #f)  ;; condvar
+                               (^obj 0)   ;; id
+                               ))))
 
-       (^push (^obj #f))
+              (^push (^obj #f))))
 
        (^assign (^gvar "r0")
                 (^gvar (univ-use-rtlib ctx 'underflow)))
