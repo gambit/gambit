@@ -57,11 +57,11 @@
                (##cdr lst)))
           (if (option? file)
             (let ((option-name (convert-option file)))
-              (cond ((##string=? option-name "")
+              (cond ((##eq? option-name '||)
                      (##repl-debug #f #t)
                      (loop rest
                            #t))
-                    ((##string=? option-name "e")
+                    ((##eq? option-name 'e)
                      (if (##pair? rest)
                        (let ((src (read-source-from-string
                                    (##car rest)
@@ -70,7 +70,7 @@
                          (loop (##cdr rest)
                                #t))
                        (begin
-                         (warn-missing-argument-for-option "e")
+                         (warn-missing-argument-for-option option-name)
                          (loop rest
                                #t))))
                     (else
@@ -113,7 +113,8 @@
   (define (compiler-batch-mode options arguments)
 
     (define (c-file? file)
-      (##assoc (##path-extension file) c#targ-c-file-extensions))
+      (##assoc (##path-extension file)
+               (c#target-file-extensions (c#target-get 'c))))
 
     (define (obj-file? file)
       (##string=? (##path-extension file) ##os-obj-extension-string-saved))
@@ -144,16 +145,16 @@
                         (rest (##cdr lst)))
                     (cond ((option? file)
                            (let ((option-name (convert-option file)))
-                             (cond ((##string=? option-name "e")
+                             (cond ((##eq? option-name 'e)
                                     (loop1 (if (##pair? rest)
                                                (##cdr rest)
                                                rest)
                                            nb-output-files))
-                                   ((##string=? option-name "")
+                                   ((##eq? option-name '||)
                                     (loop1 rest
                                            nb-output-files))
-                                   ((or (##string=? option-name "preload")
-                                        (##string=? option-name "nopreload"))
+                                   ((or (##eq? option-name 'preload)
+                                        (##eq? option-name 'nopreload))
                                     (if (##not (##memq type '(link exe)))
                                         (warn-invalid-preload-options))
                                     (loop1 rest
@@ -327,7 +328,7 @@
                                   (rest (##cdr lst)))
                               (if (option? file)
                                   (let ((option-name (convert-option file)))
-                                    (cond ((##string=? option-name "e")
+                                    (cond ((##eq? option-name 'e)
                                            (if (##pair? rest)
                                                (let ((src (read-source-from-string
                                                            (##car rest)
@@ -335,13 +336,13 @@
                                                  (##eval-top src ##interaction-cte)
                                                  (loop2 (##cdr rest)))
                                                (loop2 rest)))
-                                          ((##string=? option-name "")
+                                          ((##eq? option-name '||)
                                            (##repl-debug #f #t)
                                            (loop2 rest))
-                                          ((##string=? option-name "preload")
+                                          ((##eq? option-name 'preload)
                                            (set! flags '((preload . #t)))
                                            (loop2 rest))
-                                          ((##string=? option-name "nopreload")
+                                          ((##eq? option-name 'nopreload)
                                            (set! flags '((preload . #f)))
                                            (loop2 rest))
                                           (else
@@ -485,23 +486,23 @@
                               (cleanup)
                               (##exit))))))))))))
 
-  (define (warn-missing-argument-for-option opt)
+  (define (warn-missing-argument-for-option opt-sym)
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- Missing argument for option \""
+        "*** WARNING -- Missing argument for option "
         output-port)
-       (##write-string opt output-port)
-       (##write-string "\"\n" output-port)
+       (##write (##symbol->string opt-sym) output-port)
+       (##write-string "\n" output-port)
        #t)))
 
-  (define (warn-unknown-option opt)
+  (define (warn-unknown-option opt-sym)
     (##repl
      (lambda (first output-port)
        (##write-string
         "*** WARNING -- Unknown or improperly placed option: "
         output-port)
-       (##write opt output-port)
+       (##write (##symbol->string opt-sym) output-port)
        (##newline output-port)
        #t)))
 
@@ -550,43 +551,44 @@
          (##char=? (##string-ref arg 0) #\-)))
 
   (define (convert-option arg)
-    (##substring arg 1 (##string-length arg)))
+    (##string->symbol (##substring arg 1 (##string-length arg))))
 
   (define (split-command-line
            arguments
            allowed-options
+           warn?
            cont)
     (let loop1 ((args arguments)
                 (rev-options '()))
       (if (and (##pair? args)
                (option? (##car args)))
 
-        (let* ((opt (convert-option (##car args)))
+        (let* ((opt-sym (convert-option (##car args)))
                (rest (##cdr args))
-               (x (##assoc opt allowed-options)))
+               (x (##assq opt-sym allowed-options)))
           (if x
-              (let ((opt-sym (##string->symbol opt)))
-                (cond ((##not (##pair? (##cdr x)))
-                       (loop1 rest
-                              (##cons (##cons opt-sym
-                                              '())
-                                      rev-options)))
-                      ((##not (##pair? rest))
-                       (warn-missing-argument-for-option opt)
-                       (loop1 rest rev-options))
-                      (else
-                       (let ((opt-val (##car rest)))
-                         (case (##cadr x)
-                           ((symbol)
-                            (loop1 (##cdr rest)
-                                   (##cons (##list opt-sym
-                                                   (##string->symbol opt-val))
-                                           rev-options)))
-                           (else
-                            (loop1 (##cdr rest)
-                                   (##cons (##list opt-sym
-                                                   opt-val)
-                                           rev-options))))))))
+              (cond ((##not (##pair? (##cdr x)))
+                     (loop1 rest
+                            (##cons (##cons opt-sym
+                                            '())
+                                    rev-options)))
+                    ((##not (##pair? rest))
+                     (if warn?
+                         (warn-missing-argument-for-option opt-sym))
+                     (loop1 rest rev-options))
+                    (else
+                     (let ((opt-val (##car rest)))
+                       (case (##cadr x)
+                         ((symbol)
+                          (loop1 (##cdr rest)
+                                 (##cons (##list opt-sym
+                                                 (##string->symbol opt-val))
+                                         rev-options)))
+                         (else
+                          (loop1 (##cdr rest)
+                                 (##cons (##list opt-sym
+                                                 opt-val)
+                                         rev-options)))))))
               (cont (##reverse rev-options) args)))
 
         (cont (##reverse rev-options) args))))
@@ -602,7 +604,8 @@
 
     (split-command-line
       (##cdr ##processed-command-line)
-      '(("f") ("i") ("v"))
+      '((f) (i) (v))
+      #t
       (lambda (main-options arguments)
         (let ((skip-initialization-file?
                (##assq 'f main-options))
@@ -611,41 +614,79 @@
                    (##assq 'i main-options)))
               (version?
                (##assq 'v main-options)))
-          (if version?
-            (begin
-              (##write-string (##system-version-string) ##stdout-port)
-              (##write-string " " ##stdout-port)
-              (##write (##system-stamp) ##stdout-port)
-              (##write-string " " ##stdout-port)
-              (##write-string ##os-system-type-string-saved ##stdout-port)
-              (##write-string " " ##stdout-port)
-              (##write ##os-configure-command-string-saved ##stdout-port)
-              (##newline ##stdout-port)
-              (##exit))
-            (split-command-line
-              arguments
-              (if (interpreter-or force-interpreter?)
-                '()
-                '(("c") ("dynamic") ("exe") ("obj") ("link") ("flat")
-                  ("warnings") ("verbose") ("report")
-                  ("expansion") ("gvm") ("asm")
-                  ("check") ("force") ("keep-c")
-                  ("debug") ("debug-location") ("debug-source") ("debug-environments")
-                  ("track-scheme")
-                  ("o" string) ("l" string)
-                  ("prelude" string) ("postlude" string)
-                  ("cc-options" string)
-                  ("ld-options-prelude" string) ("ld-options" string)
-                  ("target" symbol)))
-              (lambda (known-options arguments)
 
-                (if (##not skip-initialization-file?)
-                  (process-initialization-file))
+          (define (run-interpreter-or-compiler known-options arguments)
 
-                (if (or (##null? arguments)
-                        (interpreter-or force-interpreter?))
-                 (interpreter-interactive-or-batch-mode arguments)
-                 (compiler-batch-mode known-options arguments))))))))))
+            (if (##not skip-initialization-file?)
+                (process-initialization-file))
+
+            (if (or (##null? arguments)
+                    (interpreter-or force-interpreter?))
+                (interpreter-interactive-or-batch-mode arguments)
+                (compiler-batch-mode known-options arguments)))
+
+          (cond (version?
+                 (##write-string (##system-version-string) ##stdout-port)
+                 (##write-string " " ##stdout-port)
+                 (##write (##system-stamp) ##stdout-port)
+                 (##write-string " " ##stdout-port)
+                 (##write-string ##os-system-type-string-saved ##stdout-port)
+                 (##write-string " " ##stdout-port)
+                 (##write ##os-configure-command-string-saved ##stdout-port)
+                 (##newline ##stdout-port)
+                 (##exit))
+
+                ((interpreter-or force-interpreter?)
+                 (split-command-line
+                  arguments
+                  '()
+                  #t
+                  run-interpreter-or-compiler))
+
+                (else
+                 (let* ((common-compiler-options
+                         '((target symbol)
+                           (c) (dynamic) (exe) (obj) (link) (flat)
+                           (warnings) (verbose) (report)
+                           (expansion) (gvm) (asm)
+                           (check) (force) (keep-c)
+                           (debug) (debug-location) (debug-source) (debug-environments)
+                           (track-scheme)
+                           (o string) (l string)
+                           (prelude string) (postlude string)
+                           (cc-options string)
+                           (ld-options-prelude string) (ld-options string))))
+
+                   ;; parse command line to try to find the -target option
+                   (split-command-line
+                    arguments
+                    (##append common-compiler-options
+                              (##append-lists ;; allow all target options
+                               (##map c#target-options
+                                      (c#targets-loaded))))
+                    #f
+                    (lambda (known-options dummy-arguments)
+                      (let* ((t
+                              (##assq 'target known-options))
+                             (target
+                              (c#with-exception-handling
+                               (lambda ()
+                                 (c#target-get
+                                  (if t
+                                      (##cadr t)
+                                      (c#default-target)))))))
+                        (if (##not target)
+
+                            (##exit)
+
+                            ;; parse command line again, but with the target
+                            ;; specific options
+                            (split-command-line
+                             arguments
+                             (##append common-compiler-options
+                                       (c#target-options target))
+                             #t
+                             run-interpreter-or-compiler)))))))))))))
 
 (##main-set! ##main-gsi/gsc)
 

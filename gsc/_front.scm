@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -53,37 +53,44 @@
 
 (set! cf
   (lambda (input opts output-filename-gen module-name unique-name)
-    (let ((remaining-opts
-           (handle-options opts)))
+    (with-exception-handling
+     (lambda ()
+       (let* ((t
+               (assq 'target opts))
+              (unhandled-opts
+               (handle-options
+                opts
+                (target-options
+                 (target-get
+                  (if (and t (pair? (cdr t)))
+                      (cadr t)
+                      (default-target)))))))
 
-      (set! warnings-requested? compiler-option-warnings)
+         (set! warnings-requested? compiler-option-warnings)
 
-      (let* ((info-port
-              (if compiler-option-verbose
-                  (current-output-port)
-                  #f))
-             (result
-              (with-exception-handling
-               (lambda ()
-                 (if (not (null? remaining-opts))
+         (let* ((info-port
+                 (if compiler-option-verbose
+                     (current-output-port)
+                     #f))
+                (result
+                 (if (not (null? unhandled-opts))
                      (compiler-error
-                      "Unhandled compiler options:" remaining-opts))
-                 (compile-program
-                  input
-                  (if compiler-option-target
-                      opts
-                      (cons (list 'target (default-target)) opts))
-                  remaining-opts
-                  output-filename-gen
-                  module-name
-                  unique-name
-                  info-port)))))
+                      "Unhandled compiler options:" unhandled-opts)
+                     (compile-program
+                      input
+                      (if t
+                          opts
+                          (cons (list 'target (default-target)) opts))
+                      output-filename-gen
+                      module-name
+                      unique-name
+                      info-port))))
 
-        result))))
+           result))))))
 
-(define (handle-options opts)
+(define (handle-options opts target-specific-options)
   (reset-options)
-  (let ((rev-remaining-opts '()))
+  (let ((rev-unhandled-opts '()))
 
     (for-each
      (lambda (opt)
@@ -91,30 +98,37 @@
               (and (pair? opt)
                    (case (car opt)
                      ((target)
-                      (and (pair? (cdr opt))
-                           (begin
-                             (set! compiler-option-target (cadr opt))
-                             #t)))
+                      #t) ;; target option handled previously
                      ((warnings)
-                      (set! compiler-option-warnings           #t))
+                      (set! compiler-option-warnings           #t)
+                      #t)
                      ((verbose)
-                      (set! compiler-option-verbose            #t))
+                      (set! compiler-option-verbose            #t)
+                      #t)
                      ((report)
-                      (set! compiler-option-report             #t))
+                      (set! compiler-option-report             #t)
+                      #t)
                      ((expansion)
-                      (set! compiler-option-expansion          #t))
+                      (set! compiler-option-expansion          #t)
+                      #t)
                      ((gvm)
-                      (set! compiler-option-gvm                #t))
+                      (set! compiler-option-gvm                #t)
+                      #t)
                      ((debug)
-                      (set! compiler-option-debug              #t))
+                      (set! compiler-option-debug              #t)
+                      #t)
                      ((debug-location)
-                      (set! compiler-option-debug-location     #t))
+                      (set! compiler-option-debug-location     #t)
+                      #t)
                      ((debug-source)
-                      (set! compiler-option-debug-source       #t))
+                      (set! compiler-option-debug-source       #t)
+                      #t)
                      ((debug-environments)
-                      (set! compiler-option-debug-environments #t))
+                      (set! compiler-option-debug-environments #t)
+                      #t)
                      ((track-scheme)
-                      (set! compiler-option-track-scheme       #t))
+                      (set! compiler-option-track-scheme       #t)
+                      #t)
                      ((c dynamic exe obj link flat
                          check force keep-c
                          o l prelude postlude
@@ -122,10 +136,12 @@
                          asm)
                       #t) ;; these options are innocuous
                      (else
-                      #f)))))
+                      ;; OK if the option is a target specific option
+                      (assq (car opt) target-specific-options))))))
+
          (if (not handled?)
-             (set! rev-remaining-opts
-                   (cons opt rev-remaining-opts)))))
+             (set! rev-unhandled-opts
+                   (cons opt rev-unhandled-opts)))))
      opts)
 
     (if (or compiler-option-debug-location
@@ -137,10 +153,9 @@
           (set! compiler-option-debug-source       #t)
           (set! compiler-option-debug-environments #t)))
 
-    (reverse rev-remaining-opts)))
+    (reverse rev-unhandled-opts)))
 
 (define (reset-options)
-  (set! compiler-option-target             #f)
   (set! compiler-option-warnings           #f)
   (set! compiler-option-verbose            #f)
   (set! compiler-option-report             #f)
@@ -152,7 +167,6 @@
   (set! compiler-option-debug-environments #f)
   (set! compiler-option-track-scheme       #f))
 
-(define compiler-option-target             #f)
 (define compiler-option-warnings           #f)
 (define compiler-option-verbose            #f)
 (define compiler-option-report             #f)
@@ -183,7 +197,6 @@
 (define (compile-program
          input
          opts
-         remaining-opts
          output-filename-gen
          module-name
          unique-name
@@ -213,7 +226,7 @@
            (output
             (if output-filename
                 output-filename
-                (string-append root target.file-extension)))
+                (string-append root (caar target.file-extensions))))
            (module-name
             (or module-name
                 (path-strip-directory root)))

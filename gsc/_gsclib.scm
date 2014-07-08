@@ -85,7 +85,7 @@
                   (##path-strip-directory
                    (##path-strip-extension filename))
                   expanded-output)
-                 target.file-extension)
+                 (##caar target.file-extensions))
                 expanded-output)))
          (module-name
           (or mod-name
@@ -192,12 +192,14 @@
              (generate-next-version-of-object-file root)))))
 
     (let* ((input-is-c-file?
-            (##assoc (##path-extension filename) c#targ-c-file-extensions))
+            (##assoc (##path-extension filename)
+                     (c#target-file-extensions (c#target-get 'c))))
            (c-filename
             (if input-is-c-file?
                 filename
-                (##string-append (##path-strip-extension filename)
-                                 (c#targ-preferred-c-file-extension))))
+                (##string-append
+                 (##path-strip-extension filename)
+                 (##caar (c#target-file-extensions (c#target-get 'c))))))
            (expanded-output
             (##path-normalize output))
            (output-directory?
@@ -436,7 +438,7 @@
                 (##string-append
                  (##path-strip-extension (##car (##car rev-mods)))
                  "_"
-                 (c#targ-preferred-c-file-extension)))
+                 (##caar (c#target-file-extensions (c#target-get 'c)))))
                expanded-output)))
          (base-and-mods
           (##cons (##list base) (##reverse rev-mods))))
@@ -496,7 +498,7 @@
                 (##string-append
                  (##path-strip-extension (##car (##car rev-mods)))
                  "_"
-                 (c#targ-preferred-c-file-extension)))
+                 (##caar (c#target-file-extensions (c#target-get 'c)))))
                expanded-output)))
          (mods
           (##reverse rev-mods)))

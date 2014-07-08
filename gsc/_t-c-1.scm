@@ -209,7 +209,22 @@
 ;; Initialization/finalization of back-end
 
 (define (targ-make-target)
-  (let ((targ (make-target 9 'c 1)))
+  (let ((targ
+         (make-target 10
+                      'c
+                      '((".c"    . C)
+                        (".C"    . C++)
+                        (".cc"   . C++)
+                        (".cp"   . C++)
+                        (".cpp"  . C++)
+                        (".CPP"  . C++)
+                        (".cxx"  . C++)
+                        (".c++"  . C++)
+                        (".m"    . Objective-C)
+                        (".M"    . Objective-C++)
+                        (".mm"   . Objective-C++))
+                      '()
+                      1)))
 
     (define (begin! info-port)
 
@@ -228,7 +243,6 @@
       (target-switch-testable?-set!  targ targ-switch-testable?)
       (target-eq-testable?-set!      targ targ-eq-testable?)
       (target-object-type-set!       targ targ-object-type)
-      (target-file-extension-set!    targ (targ-preferred-c-file-extension))
 
       #f)
 
@@ -242,8 +256,8 @@
 
     targ))
 
-(define (targ-prim-proc-table x)        (vector-ref x 16))
-(define (targ-prim-proc-table-set! x y) (vector-set! x 16 y))
+(define (targ-prim-proc-table x)        (vector-ref x 17))
+(define (targ-prim-proc-table-set! x y) (vector-set! x 17 y))
 
 (define targ-target (targ-make-target))
 
@@ -808,7 +822,7 @@
                         (cons (if (string=? (path-extension name) "")
                                   (string-append
                                    name
-                                   (targ-preferred-c-file-extension))
+                                   (caar (target-file-extensions targ-target)))
                                   name)
                               flags)))
                     inputs))
@@ -2344,22 +2358,5 @@
 
 (define (targ-name->c-id s)
   (scheme-id->c-id s))
-
-(define targ-c-file-extensions #f)
-(set! targ-c-file-extensions
-  '((".c"    . C)
-    (".C"    . C++)
-    (".cc"   . C++)
-    (".cp"   . C++)
-    (".cpp"  . C++)
-    (".CPP"  . C++)
-    (".cxx"  . C++)
-    (".c++"  . C++)
-    (".m"    . Objective-C)
-    (".M"    . Objective-C++)
-    (".mm"   . Objective-C++)))
-
-(define (targ-preferred-c-file-extension)
-  (caar targ-c-file-extensions))
 
 ;;;----------------------------------------------------------------------------

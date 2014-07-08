@@ -809,6 +809,16 @@ end-of-code
       (##cons (##car lst1) (##append (##cdr lst1) lst2))
       lst2))
 
+(define-prim (##append-lists lst)
+  (if (##pair? lst)
+      (let ((rev-lst (##reverse lst)))
+        (let loop ((rev-lst (##cdr rev-lst)) (result (##car rev-lst)))
+          (if (##pair? rev-lst)
+              (loop (##cdr rev-lst)
+                    (##append (##car rev-lst) result))
+              result)))
+      '()))
+
 (define-prim (append
               #!optional
               (lst1 (macro-absent-obj))

@@ -2,7 +2,7 @@
 
 ;;; File: "_back.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -31,6 +31,11 @@
 ;;
 ;; field        value
 ;; -----        ------
+;;
+;; file-extensions  The file extensions for generated files (the first
+;;                  is the preferred file extension).
+;;
+;; options      The options allowed for this target.
 ;;
 ;; begin!       Procedure (lambda (info-port) ...)
 ;;              This procedure must be called to initialize the module
@@ -114,57 +119,57 @@
 ;;              argument.  For exact integers the return value is
 ;;              either fixnum, bignum, or bigfixnum (when the integer
 ;;              could be a fixnum or bignum).
-;;
-;; file-extension  The file extension for generated files.
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;;; Target description object manipulation
 
-(define (make-target version name extra)
+(define (make-target version name file-extensions options extra)
 
-  (define current-target-version 9) ; number for this version of the module
+  (define current-target-version 10) ;; number for this version of the module
 
   (if (not (= version current-target-version))
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((x (make-vector (+ 16 extra))))
+  (let ((x (make-vector (+ 17 extra))))
     (vector-set! x 0 'target)
     (vector-set! x 1 name)
+    (vector-set! x 2 file-extensions)
+    (vector-set! x 3 options)
     x))
 
 (define (target-name x)                     (vector-ref x 1))
+(define (target-file-extensions x)          (vector-ref x 2))
+(define (target-options x)                  (vector-ref x 3))
 
-(define (target-begin! x)                   (vector-ref x 2))
-(define (target-begin!-set! x y)            (vector-set! x 2 y))
-(define (target-end! x)                     (vector-ref x 3))
-(define (target-end!-set! x y)              (vector-set! x 3 y))
+(define (target-begin! x)                   (vector-ref x 4))
+(define (target-begin!-set! x y)            (vector-set! x 4 y))
+(define (target-end! x)                     (vector-ref x 5))
+(define (target-end!-set! x y)              (vector-set! x 5 y))
 
-(define (target-dump x)                     (vector-ref x 4))
-(define (target-dump-set! x y)              (vector-set! x 4 y))
-(define (target-nb-regs x)                  (vector-ref x 5))
-(define (target-nb-regs-set! x y)           (vector-set! x 5 y))
-(define (target-prim-info x)                (vector-ref x 6))
-(define (target-prim-info-set! x y)         (vector-set! x 6 y))
-(define (target-label-info x)               (vector-ref x 7))
-(define (target-label-info-set! x y)        (vector-set! x 7 y))
-(define (target-jump-info x)                (vector-ref x 8))
-(define (target-jump-info-set! x y)         (vector-set! x 8 y))
-(define (target-frame-constraints x)        (vector-ref x 9))
-(define (target-frame-constraints-set! x y) (vector-set! x 9 y))
-(define (target-proc-result x)              (vector-ref x 10))
-(define (target-proc-result-set! x y)       (vector-set! x 10 y))
-(define (target-task-return x)              (vector-ref x 11))
-(define (target-task-return-set! x y)       (vector-set! x 11 y))
-(define (target-switch-testable? x)         (vector-ref x 12))
-(define (target-switch-testable?-set! x y)  (vector-set! x 12 y))
-(define (target-eq-testable? x)             (vector-ref x 13))
-(define (target-eq-testable?-set! x y)      (vector-set! x 13 y))
-(define (target-object-type x)              (vector-ref x 14))
-(define (target-object-type-set! x y)       (vector-set! x 14 y))
-(define (target-file-extension x)           (vector-ref x 15))
-(define (target-file-extension-set! x y)    (vector-set! x 15 y))
+(define (target-dump x)                     (vector-ref x 6))
+(define (target-dump-set! x y)              (vector-set! x 6 y))
+(define (target-nb-regs x)                  (vector-ref x 7))
+(define (target-nb-regs-set! x y)           (vector-set! x 7 y))
+(define (target-prim-info x)                (vector-ref x 8))
+(define (target-prim-info-set! x y)         (vector-set! x 8 y))
+(define (target-label-info x)               (vector-ref x 9))
+(define (target-label-info-set! x y)        (vector-set! x 9 y))
+(define (target-jump-info x)                (vector-ref x 10))
+(define (target-jump-info-set! x y)         (vector-set! x 10 y))
+(define (target-frame-constraints x)        (vector-ref x 11))
+(define (target-frame-constraints-set! x y) (vector-set! x 11 y))
+(define (target-proc-result x)              (vector-ref x 12))
+(define (target-proc-result-set! x y)       (vector-set! x 12 y))
+(define (target-task-return x)              (vector-ref x 13))
+(define (target-task-return-set! x y)       (vector-set! x 13 y))
+(define (target-switch-testable? x)         (vector-ref x 14))
+(define (target-switch-testable?-set! x y)  (vector-set! x 14 y))
+(define (target-eq-testable? x)             (vector-ref x 15))
+(define (target-eq-testable?-set! x y)      (vector-set! x 15 y))
+(define (target-object-type x)              (vector-ref x 16))
+(define (target-object-type-set! x y)       (vector-set! x 16 y))
 
 ;;;; Frame constraints structure
 
@@ -174,27 +179,30 @@
 
 ;;;; Database of all target modules loaded
 
-(define targets-loaded '())
+(define targets-alist '())
 
 (define (target-get name)
-  (let ((x (assq name targets-loaded)))
+  (let ((x (assq name targets-alist)))
     (if x
         (cdr x)
         (compiler-error
          "Target module is not available:" name))))
 
+(define (targets-loaded)
+  (map cdr targets-alist))
+
 (define (target-add targ)
   (let* ((name (target-name targ))
-         (x (assq name targets-loaded)))
+         (x (assq name targets-alist)))
     (if x
         (set-cdr! x targ)
-        (set! targets-loaded (cons (cons name targ) targets-loaded)))
+        (set! targets-alist (cons (cons name targ) targets-alist)))
     #f))
 
 (define (default-target)
-  (if (null? targets-loaded)
+  (if (null? targets-alist)
       (compiler-error "No target module is available")
-      (car (car targets-loaded))))
+      (car (car targets-alist))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -219,7 +227,7 @@
   (set! target.switch-testable?  (target-switch-testable? target))
   (set! target.eq-testable?      (target-eq-testable? target))
   (set! target.object-type       (target-object-type target))
-  (set! target.file-extension    (target-file-extension target))
+  (set! target.file-extensions   (target-file-extensions target))
 
   (set! **not-proc-obj
         (target.prim-info **not-sym))
@@ -274,7 +282,7 @@
 (define target.switch-testable?  #f)
 (define target.eq-testable?      #f)
 (define target.object-type       #f)
-(define target.file-extension    #f)
+(define target.file-extensions   #f)
 
 ;; procedures defined in back-end:
 

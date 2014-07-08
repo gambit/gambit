@@ -115,8 +115,8 @@
 (define univ-thread-cont-slot 5)
 (define univ-thread-denv-slot 6)
 
-(define (univ-php-version ctx) 53) ;; TODO allow user to specify this
-;;(define (univ-php-version ctx) 52) ;; TODO allow user to specify this
+(define (univ-php-version-53? ctx)
+  (assq 'php53 (ctx-options ctx)))
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -124,8 +124,13 @@
 
 ;; Initialization/finalization of back-end.
 
-(define (univ-setup target-language file-extension)
-  (let ((targ (make-target 9 target-language 0)))
+(define (univ-setup target-language file-extensions options)
+  (let ((targ
+         (make-target 10
+                      target-language
+                      file-extensions
+                      options
+                      0)))
 
     (define (begin! info-port)
 
@@ -178,10 +183,6 @@
        (lambda (obj)
          (univ-object-type targ obj)))
 
-      (target-file-extension-set!
-       targ
-       file-extension)
-
       #f)
 
     (define (end!)
@@ -191,10 +192,10 @@
     (target-end!-set! targ end!)
     (target-add targ)))
 
-(univ-setup 'js     ".js")
-(univ-setup 'python ".py")
-(univ-setup 'ruby   ".rb")
-(univ-setup 'php    ".php")
+(univ-setup 'js     '((".js"  . JavaScript)) '())
+(univ-setup 'python '((".py"  . Python))     '())
+(univ-setup 'ruby   '((".rb"  . Ruby))       '())
+(univ-setup 'php    '((".php" . PHP))        '((php53)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1779,6 +1780,7 @@
              (rtlib-features-used (make-resource-set))
              (main-proc (list-ref procs 0))
              (ctx (make-ctx targ
+                            options
                             (proc-obj-name main-proc)
                             #f
                             objs-used
@@ -2298,6 +2300,7 @@
 
       (let ((ctx (make-ctx
                   (ctx-target global-ctx)
+                  (ctx-options global-ctx)
                   (ctx-module-ns global-ctx)
                   (proc-obj-name p)
                   (ctx-objs-used global-ctx)
@@ -2430,8 +2433,9 @@
                   exprs))))
          (cont name)))))
 
-(define (make-ctx target module-ns ns objs-used rtlib-features-used decls)
+(define (make-ctx target options module-ns ns objs-used rtlib-features-used decls)
   (vector target
+          options
           module-ns
           ns
           0
@@ -2447,38 +2451,41 @@
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
 
-(define (ctx-module-ns ctx)                (vector-ref ctx 1))
-(define (ctx-module-ns-set! ctx x)         (vector-set! ctx 1 x))
+(define (ctx-options ctx)                  (vector-ref ctx 1))
+(define (ctx-options-set! ctx x)           (vector-set! ctx 1 x))
 
-(define (ctx-ns ctx)                       (vector-ref ctx 2))
-(define (ctx-ns-set! ctx x)                (vector-set! ctx 2 x))
+(define (ctx-module-ns ctx)                (vector-ref ctx 2))
+(define (ctx-module-ns-set! ctx x)         (vector-set! ctx 2 x))
 
-(define (ctx-stack-base-offset ctx)        (vector-ref ctx 3))
-(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 3 x))
+(define (ctx-ns ctx)                       (vector-ref ctx 3))
+(define (ctx-ns-set! ctx x)                (vector-set! ctx 3 x))
 
-(define (ctx-serial-num ctx)               (vector-ref ctx 4))
-(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 4 x))
+(define (ctx-stack-base-offset ctx)        (vector-ref ctx 4))
+(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 4 x))
 
-(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 5))
-(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 5 x))
+(define (ctx-serial-num ctx)               (vector-ref ctx 5))
+(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 5 x))
 
-(define (ctx-resources-used-rd ctx)        (vector-ref ctx 6))
-(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 6 x))
+(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 6))
+(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 6 x))
 
-(define (ctx-resources-used-wr ctx)        (vector-ref ctx 7))
-(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 7 x))
+(define (ctx-resources-used-rd ctx)        (vector-ref ctx 7))
+(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 7 x))
 
-(define (ctx-globals-used ctx)             (vector-ref ctx 8))
-(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 8 x))
+(define (ctx-resources-used-wr ctx)        (vector-ref ctx 8))
+(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 8 x))
 
-(define (ctx-objs-used ctx)                (vector-ref ctx 9))
-(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 9 x))
+(define (ctx-globals-used ctx)             (vector-ref ctx 9))
+(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 9 x))
 
-(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 10))
-(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 10 x))
+(define (ctx-objs-used ctx)                (vector-ref ctx 10))
+(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 10 x))
 
-(define (ctx-decls ctx)                      (vector-ref ctx 11))
-(define (ctx-decls-set! ctx x)               (vector-set! ctx 11 x))
+(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 11))
+(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 11 x))
+
+(define (ctx-decls ctx)                      (vector-ref ctx 12))
+(define (ctx-decls-set! ctx x)               (vector-set! ctx 12 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -6445,13 +6452,13 @@ function gambit_trampoline(pc) {
                        (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
                      params)))
               (decl
-               (^ "function " (if (or prim? (< (univ-php-version ctx) 53))
+               (^ "function " (if (or prim? (not (univ-php-version-53? ctx)))
                                   prn
                                   "")
                   "(" formals ") {"
                   (univ-indent
                    (^ header
-                      (if (or (< (univ-php-version ctx) 53) (null? attribs))
+                      (if (or (not (univ-php-version-53? ctx)) (null? attribs))
                           (^)
                           (^ "static "
                              (univ-separated-list
@@ -6467,7 +6474,7 @@ function gambit_trampoline(pc) {
                   "}")))
          (cond (prim?
                 (^ decl "\n"))
-               ((< (univ-php-version ctx) 53)
+               ((not (univ-php-version-53? ctx))
                 (^ (^ decl "\n")
                    (^assign name
                             (^ "create_function('"
@@ -6570,13 +6577,13 @@ function gambit_trampoline(pc) {
                      (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
                    params)))
             (decl
-             (^ "function " (if (or prim? (< (univ-php-version ctx) 53))
+             (^ "function " (if (or prim? (not (univ-php-version-53? ctx)))
                                 prn
                                 "")
                 "(" formals ") {"
                 (univ-indent
                  (^ header
-                    (if (or (< (univ-php-version ctx) 53) (null? attribs))
+                    (if (or (not (univ-php-version-53? ctx)) (null? attribs))
                         (^)
                         (^ "static "
                            (univ-separated-list
@@ -6592,7 +6599,7 @@ function gambit_trampoline(pc) {
                 "}")))
        (cond (prim?
               (^ decl "\n"))
-             ((< (univ-php-version ctx) 53)
+             ((not (univ-php-version-53? ctx))
               (^ (^ decl "\n")
                  (^assign name
                           (^ "create_function('"
