@@ -286,15 +286,12 @@
 ;; Dispatch for number representation
 
 (##define-macro (macro-number-dispatch num err fix big rat flo cpx)
-  `(cond ((##fixnum? ,num)                            ,fix)
-         ((##flonum? ,num)                            ,flo)
-         ((##subtyped? ,num)
-          (let ((##s (##subtype ,num)))
-            (cond ((##fx= ##s (macro-subtype-bignum)) ,big)
-                  ((##fx= ##s (macro-subtype-ratnum)) ,rat)
-                  ((##fx= ##s (macro-subtype-cpxnum)) ,cpx)
-                  (else                               ,err))))
-         (else                                        ,err)))
+  `(cond ((##fixnum? ,num) ,fix)
+         ((##flonum? ,num) ,flo)
+         ((##bignum? ,num) ,big)
+         ((##ratnum? ,num) ,rat)
+         ((##cpxnum? ,num) ,cpx)
+         (else             ,err)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
