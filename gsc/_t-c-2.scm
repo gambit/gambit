@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2693,6 +2693,22 @@
     #f
     (targ-apply-simp-generator #f #f "MAKEPROMISE")))
 
+(define (targ-apply-ratnum-make)
+  (targ-apply-alloc
+    (lambda (n) targ-ratnum-space)
+    #t
+    #f
+    #f
+    (targ-apply-simp-generator #f #f "RATNUMMAKE")))
+
+(define (targ-apply-cpxnum-make)
+  (targ-apply-alloc
+    (lambda (n) targ-cpxnum-space)
+    #t
+    #f
+    #f
+    (targ-apply-simp-generator #f #f "CPXNUMMAKE")))
+
 (define (targ-apply-vector-s kind)
   (targ-apply-vector #t kind))
 
@@ -3672,6 +3688,18 @@
 (targ-op "##bignum.fdigit-length"    (targ-apply-simp-u #f #f #f "BIGFLENGTH"))
 (targ-op "##bignum.fdigit-ref"       (targ-apply-simp-u #f #f #f "BIGFREF"))
 (targ-op "##bignum.fdigit-set!"      (targ-apply-simp-u #f #t #f "BIGFSET"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(targ-op "##ratnum-make"        (targ-apply-ratnum-make))
+(targ-op "##ratnum-numerator"   (targ-ifjump-apply-u "RATNUMNUMERATOR"))
+(targ-op "##ratnum-denominator" (targ-ifjump-apply-u "RATNUMDENOMINATOR"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(targ-op "##cpxnum-make"        (targ-apply-cpxnum-make))
+(targ-op "##cpxnum-real"        (targ-ifjump-apply-u "CPXNUMREAL"))
+(targ-op "##cpxnum-imag"        (targ-ifjump-apply-u "CPXNUMIMAG"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -882,6 +882,14 @@
 ("##f64vector-set!"                   (3)   #t ()    0    #f      extended)
 ("##f64vector-shrink!"                (2)   #t ()    0    #f      extended)
 
+("##ratnum-make"                      (2)   #f ()    0    number  extended)
+("##ratnum-numerator"                 (1)   #f ()    0    integer extended)
+("##ratnum-denominator"               (1)   #f ()    0    integer extended)
+
+("##cpxnum-make"                      (2)   #f ()    0    number  extended)
+("##cpxnum-real"                      (1)   #f ()    0    number  extended)
+("##cpxnum-imag"                      (1)   #f ()    0    number  extended)
+
 ("##structure-direct-instance-of?"    (2)   #f ()    0    boolean extended)
 ("##structure-instance-of?"           (2)   #f ()    0    boolean extended)
 ("##structure-type"                   (1)   #f ()    0    (#f)    extended)

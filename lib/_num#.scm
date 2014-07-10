@@ -441,15 +441,15 @@
 ;; slot 0 = numerator
 ;; slot 1 = denominator
 
+;;TODO: replace with ##ratnum-make
+
 (##define-macro (macro-ratnum-make num den)
   `(##subtype-set!
     (##vector ,num ,den)
     (macro-subtype-ratnum)))
 
 (##define-macro (macro-ratnum-numerator r)          `(macro-slot 0 ,r))
-(##define-macro (macro-ratnum-numerator-set! r x)   `(macro-slot 0 ,r ,x))
 (##define-macro (macro-ratnum-denominator r)        `(macro-slot 1 ,r))
-(##define-macro (macro-ratnum-denominator-set! r x) `(macro-slot 1 ,r ,x))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -459,15 +459,15 @@
 ;; slot 0 = real
 ;; slot 1 = imag
 
+;;TODO: replace with ##cpxnum-make
+
 (##define-macro (macro-cpxnum-make r i)
   `(##subtype-set!
     (##vector ,r ,i)
     (macro-subtype-cpxnum)))
 
 (##define-macro (macro-cpxnum-real c)        `(macro-slot 0 ,c))
-(##define-macro (macro-cpxnum-real-set! c x) `(macro-slot 0 ,c ,x))
 (##define-macro (macro-cpxnum-imag c)        `(macro-slot 1 ,c))
-(##define-macro (macro-cpxnum-imag-set! c x) `(macro-slot 1 ,c ,x))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
