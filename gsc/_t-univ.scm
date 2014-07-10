@@ -77,6 +77,9 @@
 (define (univ-u8vector-representation ctx)
   'class)
 
+(define (univ-u16vector-representation ctx)
+  'class)
+
 (define (univ-structure-representation ctx)
   'class)
 
@@ -923,6 +926,27 @@
 
 (define-macro (^u8vector-set! val1 val2 val3)
   `(univ-emit-u8vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^u16vector-box val)
+  `(univ-emit-u16vector-box ctx ,val))
+
+(define-macro (^u16vector-unbox u16vector)
+  `(univ-emit-u16vector-unbox ctx ,u16vector))
+
+(define-macro (^u16vector? val)
+  `(univ-emit-u16vector? ctx ,val))
+
+(define-macro (^u16vector-length val)
+  `(univ-emit-u16vector-length ctx ,val))
+
+(define-macro (^u16vector-shrink! val1 val2)
+  `(univ-emit-u16vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^u16vector-ref val1 val2)
+  `(univ-emit-u16vector-ref ctx ,val1 ,val2))
+
+(define-macro (^u16vector-set! val1 val2 val3)
+  `(univ-emit-u16vector-set! ctx ,val1 ,val2 ,val3))
 
 (define-macro (^structure-box val)
   `(univ-emit-structure-box ctx ,val))
@@ -2903,6 +2927,17 @@
                 (map (lambda (x) (emit-obj x #f))
                      (u8vect->list obj)))))))
 
+          ((u16vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^u16vector-box
+               (^array-literal
+                (map (lambda (x) (emit-obj x #f))
+                     (u16vect->list obj)))))))
+
           ((structure-object? obj)
            (univ-obj-use
             ctx
@@ -3832,6 +3867,13 @@ EOF
       '((elems . #f))
       '()))
 
+    ((U16Vector)
+     (^class-declaration
+      "U16Vector"
+      #f
+      '((elems . #f))
+      '()))
+
     ((Structure)
      (^class-declaration
       "Structure"
@@ -4392,6 +4434,19 @@ EOF
       (univ-make-array
        ctx
        (lambda (result) (^return (^u8vector-box result)))
+       (^local-var "len")
+       (^local-var "init"))))
+
+    ((make_u16vector)
+     (^prim-function-declaration
+      "make_u16vector"
+      (list (cons (^local-var "len") #f)
+            (cons (^local-var "init") #f))
+      "\n"
+      '()
+      (univ-make-array
+       ctx
+       (lambda (result) (^return (^u16vector-box result)))
        (^local-var "len")
        (^local-var "init"))))
 
@@ -8023,6 +8078,48 @@ tanh
 (define (univ-emit-u8vector-set! ctx expr1 expr2 expr3)
   (^assign (^array-index (^u8vector-unbox expr1) expr2) expr3))
 
+(define (univ-emit-u16vector-box ctx expr)
+  (case (univ-u16vector-representation ctx)
+
+    ((class)
+     (^new (^prefix-class (univ-use-rtlib ctx 'U16Vector)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u16vector-box, host representation not implemented"))))
+
+(define (univ-emit-u16vector-unbox ctx expr)
+  (case (univ-u16vector-representation ctx)
+
+    ((class)
+     (^member expr "elems"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u16vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-u16vector? ctx expr)
+  (case (univ-u16vector-representation ctx)
+
+    ((class)
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'U16Vector)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u16vector?, host representation not implemented"))))
+
+(define (univ-emit-u16vector-length ctx expr)
+  (^array-length (^u16vector-unbox expr)))
+
+(define (univ-emit-u16vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^u16vector-unbox expr1) expr2))
+
+(define (univ-emit-u16vector-ref ctx expr1 expr2)
+  (^array-index (^u16vector-unbox expr1) expr2))
+
+(define (univ-emit-u16vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^u16vector-unbox expr1) expr2) expr3))
+
 (define (univ-emit-structure-box ctx expr)
   (case (univ-structure-representation ctx)
 
@@ -8919,6 +9016,11 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^u8vector? arg1)))))
+
+(univ-define-prim-bool "##u16vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^u16vector? arg1)))))
 
 ;;TODO: ("##ratnum?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##cpxnum?"                  (1)   #f ()    0    boolean extended)
@@ -9873,6 +9975,48 @@ tanh
    (lambda (ctx return arg1 arg2)
      (^ (^u8vector-shrink! arg1
                            (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##u16vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return (^u16vector-box (^array-literal args))))))
+
+(univ-define-prim "##make-u16vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'make_u16vector))
+       (^fixnum-unbox arg1)
+       (if arg2
+           arg2
+           (^fixnum-box (^int 0))))))))
+
+(univ-define-prim "##u16vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^fixnum-box (^u16vector-length arg))))))
+
+(univ-define-prim "##u16vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^u16vector-ref arg1
+                             (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##u16vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^u16vector-set! arg1
+                         (^fixnum-unbox arg2)
+                         arg3)
+        (return arg1)))))
+
+(univ-define-prim "##u16vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^u16vector-shrink! arg1
+                            (^fixnum-unbox arg2))
         (return arg1)))))
 
 (univ-define-prim "##string" #f
