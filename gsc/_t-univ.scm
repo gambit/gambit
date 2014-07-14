@@ -80,6 +80,9 @@
 (define (univ-u16vector-representation ctx)
   'class)
 
+(define (univ-f64vector-representation ctx)
+  'class)
+
 (define (univ-structure-representation ctx)
   'class)
 
@@ -858,6 +861,9 @@
 (define-macro (^float-atan val)
   `(univ-emit-float-atan ctx ,val))
 
+(define-macro (^float-atan2 val1 val2)
+  `(univ-emit-float-atan2 ctx ,val1 ,val2))
+
 (define-macro (^float-expt val1 val2)
   `(univ-emit-float-expt ctx ,val1 ,val2))
 
@@ -884,6 +890,24 @@
 
 (define-macro (^flonum? val)
   `(univ-emit-flonum? ctx ,val))
+
+(define-macro (^cpxnum-make expr1 expr2)
+  `(univ-emit-cpxnum-make ctx ,expr1 ,expr2))
+
+(define-macro (^cpxnum? val)
+  `(univ-emit-cpxnum? ctx ,val))
+
+(define-macro (^ratnum-make expr1 expr2)
+  `(univ-emit-ratnum-make ctx ,expr1 ,expr2))
+
+(define-macro (^ratnum? val)
+  `(univ-emit-ratnum? ctx ,val))
+
+(define-macro (^bignum expr1 expr2)
+  `(univ-emit-bignum ctx ,expr1 ,expr2))
+
+(define-macro (^bignum? val)
+  `(univ-emit-bignum? ctx ,val))
 
 (define-macro (^vector-box val)
   `(univ-emit-vector-box ctx ,val))
@@ -947,6 +971,27 @@
 
 (define-macro (^u16vector-set! val1 val2 val3)
   `(univ-emit-u16vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^f64vector-box val)
+  `(univ-emit-f64vector-box ctx ,val))
+
+(define-macro (^f64vector-unbox f64vector)
+  `(univ-emit-f64vector-unbox ctx ,f64vector))
+
+(define-macro (^f64vector? val)
+  `(univ-emit-f64vector? ctx ,val))
+
+(define-macro (^f64vector-length val)
+  `(univ-emit-f64vector-length ctx ,val))
+
+(define-macro (^f64vector-shrink! val1 val2)
+  `(univ-emit-f64vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^f64vector-ref val1 val2)
+  `(univ-emit-f64vector-ref ctx ,val1 ,val2))
+
+(define-macro (^f64vector-set! val1 val2 val3)
+  `(univ-emit-f64vector-set! ctx ,val1 ,val2 ,val3))
 
 (define-macro (^structure-box val)
   `(univ-emit-structure-box ctx ,val))
@@ -2834,25 +2879,35 @@
            (^boolean-obj obj))
 
           ((number? obj)
-           (if (exact? obj)
-               (cond ((integer? obj)
-                      ;; TODO: bignums
-                      (^fixnum-box (^int obj)))
-                     (else
-                      ;; TODO: exact rationals and complex
-                      (compiler-internal-error
-                       "univ-emit-obj, unsupported exact number:" obj)))
-               (cond ((real? obj)
-                      (univ-obj-use
-                       ctx
-                       obj
-                       force-var?
-                       (lambda ()
-                         (^flonum-box (^float obj)))))
-                     (else
-                      ;; TODO: inexact complex
-                      (compiler-internal-error
-                       "univ-emit-obj, unsupported inexact number:" obj)))))
+           (cond ((not (real? obj)) ;; non-real complex number
+                  (univ-obj-use
+                   ctx
+                   obj
+                   force-var?
+                   (lambda ()
+                     (^cpxnum-make (emit-obj (real-part obj) #f)
+                                   (emit-obj (imag-part obj) #f)))))
+
+                 ((not (exact? obj)) ;; floating-point number
+                  (univ-obj-use
+                   ctx
+                   obj
+                   force-var?
+                   (lambda ()
+                     (^flonum-box (^float obj)))))
+
+                 ((not (integer? obj)) ;; non-integer rational number
+                  (univ-obj-use
+                   ctx
+                   obj
+                   force-var?
+                   (lambda ()
+                     (^ratnum-make (emit-obj (numerator obj) #f)
+                                   (emit-obj (denominator obj) #f)))))
+
+                 (else ;; exact integer
+                  ;; TODO: bignums
+                  (^fixnum-box (^int obj)))))
 
           ((char? obj)
            (^char-obj obj force-var?))
@@ -2937,6 +2992,17 @@
                (^array-literal
                 (map (lambda (x) (emit-obj x #f))
                      (u16vect->list obj)))))))
+
+          ((f64vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^f64vector-box
+               (^array-literal
+                (map (lambda (x) (emit-obj x #f))
+                     (f64vect->list obj)))))))
 
           ((structure-object? obj)
            (univ-obj-use
@@ -3846,6 +3912,27 @@ EOF
       '((val . #f))
       '()))
 
+    ((Bignum)
+     (^class-declaration
+      "Bignum"
+      #f
+      '((digits . #f))
+      '()))
+
+    ((Ratnum)
+     (^class-declaration
+      "Ratnum"
+      #f
+      '((num . #f) (den . #f))
+      '()))
+
+    ((Cpxnum)
+     (^class-declaration
+      "Cpxnum"
+      #f
+      '((real . #f) (imag . #f))
+      '()))
+
     ((Pair)
      (^class-declaration
       "Pair"
@@ -3870,6 +3957,13 @@ EOF
     ((U16Vector)
      (^class-declaration
       "U16Vector"
+      #f
+      '((elems . #f))
+      '()))
+
+    ((F64Vector)
+     (^class-declaration
+      "F64Vector"
       #f
       '((elems . #f))
       '()))
@@ -4450,6 +4544,19 @@ EOF
        (^local-var "len")
        (^local-var "init"))))
 
+    ((make_f64vector)
+     (^prim-function-declaration
+      "make_f64vector"
+      (list (cons (^local-var "len") #f)
+            (cons (^local-var "init") #f))
+      "\n"
+      '()
+      (univ-make-array
+       ctx
+       (lambda (result) (^return (^f64vector-box result)))
+       (^local-var "len")
+       (^local-var "init"))))
+
     ((make_string)
      (^prim-function-declaration
       "make_string"
@@ -4672,6 +4779,9 @@ EOF
         (need-feature 'String)
         (need-feature 'Flonum)
         (need-feature 'Pair)
+        (need-feature 'Cpxnum)
+        (need-feature 'Ratnum)
+        (need-feature 'Bignum)
         (need-feature 'Frame)
         (need-feature 'Continuation)
         (need-feature 'ffi)
@@ -7405,17 +7515,52 @@ function gambit_trampoline(pc) {
   ;; TODO: generate correct syntax
   (^
    (let ((str (number->string val)))
-     (cond ((and (string=? str "-0.")
+
+     (cond ((string=? str "+nan.0")
+            (case (target-name (ctx-target ctx))
+              ((js)     "Number.NaN")
+              ((php)    "NAN")
+              ((python) "float('nan')")
+              ((ruby)   "Float::NAN")
+              (else
+               (compiler-internal-error
+                "univ-emit-float, unknown target"))))
+
+           ((string=? str "+inf.0")
+            (case (target-name (ctx-target ctx))
+              ((js)     "Number.POSITIVE_INFINITY")
+              ((php)    "INF")
+              ((python) "float('inf')")
+              ((ruby)   "Float::INFINITY")
+              (else
+               (compiler-internal-error
+                "univ-emit-float, unknown target"))))
+
+           ((string=? str "-inf.0")
+            (case (target-name (ctx-target ctx))
+              ((js)     "Number.NEGATIVE_INFINITY")
+              ((php)    "(-INF)")
+              ((python) "(-float('inf'))")
+              ((ruby)   "(-Float::INFINITY)")
+              (else
+               (compiler-internal-error
+                "univ-emit-float, unknown target"))))
+
+           ((and (string=? str "-0.")
                  (eq? (target-name (ctx-target ctx)) 'php))
             ;; it is strange that in PHP -0.0 is the same as 0.0
             "0.0*-1")
+
            ((char=? (string-ref str 0) #\.)
             (string-append "0" str))
+
            ((and (char=? (string-ref str 0) #\-)
                  (char=? (string-ref str 1) #\.))
             (string-append "-0" (substring str 1 (string-length str))))
+
            ((char=? (string-ref str (- (string-length str) 1)) #\.)
             (string-append str "0"))
+
            (else
             str)))))
 
@@ -7818,6 +7963,22 @@ Ruby:
      (compiler-internal-error
       "univ-emit-float-atan, unknown target"))))
 
+(define (univ-emit-float-atan2 ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby)
+     (^ "Math.atan2(" expr1 "," expr2 ")"))
+
+    ((php)
+     (^ "atan2(" expr1 "," expr2 ")"))
+
+    ((python)
+     (^ "math.atan2(" expr1 "," expr2 ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-atan2, unknown target"))))
+
 (define (univ-emit-float-expt ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -7984,6 +8145,24 @@ tanh
         (compiler-internal-error
          "univ-emit-flonum?, unknown target"))))))
 
+(define (univ-emit-cpxnum-make ctx expr1 expr2)
+  (^new (^prefix-class (univ-use-rtlib ctx 'Cpxnum)) expr1 expr2))
+
+(define (univ-emit-cpxnum? ctx expr)
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Cpxnum)) expr))
+
+(define (univ-emit-ratnum-make ctx expr1 expr2)
+  (^new (^prefix-class (univ-use-rtlib ctx 'Ratnum)) expr1 expr2))
+
+(define (univ-emit-ratnum? ctx expr)
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Ratnum)) expr))
+
+(define (univ-emit-bignum ctx expr1)
+  (^new (^prefix-class (univ-use-rtlib ctx 'Bignum)) expr1))
+
+(define (univ-emit-bignum? ctx expr)
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Bignum)) expr))
+
 (define (univ-emit-vector-box ctx expr)
   (case (univ-vector-representation ctx)
 
@@ -8119,6 +8298,48 @@ tanh
 
 (define (univ-emit-u16vector-set! ctx expr1 expr2 expr3)
   (^assign (^array-index (^u16vector-unbox expr1) expr2) expr3))
+
+(define (univ-emit-f64vector-box ctx expr)
+  (case (univ-f64vector-representation ctx)
+
+    ((class)
+     (^new (^prefix-class (univ-use-rtlib ctx 'F64Vector)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-f64vector-box, host representation not implemented"))))
+
+(define (univ-emit-f64vector-unbox ctx expr)
+  (case (univ-f64vector-representation ctx)
+
+    ((class)
+     (^member expr "elems"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-f64vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-f64vector? ctx expr)
+  (case (univ-f64vector-representation ctx)
+
+    ((class)
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'F64Vector)) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-f64vector?, host representation not implemented"))))
+
+(define (univ-emit-f64vector-length ctx expr)
+  (^array-length (^f64vector-unbox expr)))
+
+(define (univ-emit-f64vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^f64vector-unbox expr1) expr2))
+
+(define (univ-emit-f64vector-ref ctx expr1 expr2)
+  (^array-index (^f64vector-unbox expr1) expr2))
+
+(define (univ-emit-f64vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^f64vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-structure-box ctx expr)
   (case (univ-structure-representation ctx)
@@ -9022,6 +9243,11 @@ tanh
    (lambda (ctx return arg1)
      (return (^u16vector? arg1)))))
 
+(univ-define-prim-bool "##f64vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^f64vector? arg1)))))
+
 ;;TODO: ("##ratnum?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##cpxnum?"                  (1)   #f ()    0    boolean extended)
 
@@ -9096,6 +9322,51 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^flonum? arg1)))))
+
+(univ-define-prim "##cpxnum-make" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^cpxnum-make arg1 arg2)))))
+
+(univ-define-prim "##cpxnum-real" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^member arg1 "real")))))
+
+(univ-define-prim "##cpxnum-imag" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^member arg1 "imag")))))
+
+(univ-define-prim-bool "##cpxnum?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^cpxnum? arg1)))))
+
+(univ-define-prim "##ratnum-make" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^ratnum-make arg1 arg2)))))
+
+(univ-define-prim "##ratnum-numerator" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^member arg1 "num")))))
+
+(univ-define-prim "##ratnum-denominator" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^member arg1 "den")))))
+
+(univ-define-prim-bool "##ratnum?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^ratnum? arg1)))))
+
+(univ-define-prim-bool "##bignum?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^bignum? arg1)))))
 
 ;;TODO: ("##bignum?"                  (1)   #f ()    0    boolean extended)
 
@@ -9434,6 +9705,24 @@ tanh
 ;;TODO: ("##fxabs"                       (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##fxabs?"                      (1)   #f ()    0    #f      extended)
 
+(univ-define-prim "##fxarithmetic-shift-left" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^ ;;TODO: implement for all targets
+                    (^fixnum-unbox arg1)
+                    " << "
+                    (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##fxarithmetic-shift-right" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^ ;;TODO: implement for all targets
+                    (^fixnum-unbox arg1)
+                    " >> "
+                    (^fixnum-unbox arg2)))))))
+
 (univ-define-prim-bool "##fxzero?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
@@ -9510,12 +9799,12 @@ tanh
 ;;TODO: ("##fixnum->flonum"              (1)   #f ()    0    real    extended)
 ;;TODO: ("##fixnum->flonum-exact?"       (1)   #f ()    0    boolean extended)
 
-(univ-define-prim "##fl->fx" #f
+(univ-define-prim "##flonum->fixnum" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^fixnum-box (^float-toint (^flonum-unbox arg)))))))
 
-(univ-define-prim "##fl<-fx" #f
+(univ-define-prim "##fixnum->flonum" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-fromint (^fixnum-unbox arg)))))))
@@ -9655,8 +9944,12 @@ tanh
 
 (univ-define-prim "##flatan" #f
   (make-translated-operand-generator
-   (lambda (ctx return arg)
-     (return (^flonum-box (^float-atan (^flonum-unbox arg)))))))
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^flonum-box
+       (if arg2
+           (^float-atan2 (^flonum-unbox arg1) (^flonum-unbox arg2))
+           (^float-atan (^flonum-unbox arg1))))))))
 
 (univ-define-prim "##flexpt" #f
   (make-translated-operand-generator
@@ -9668,7 +9961,16 @@ tanh
    (lambda (ctx return arg)
      (return (^flonum-box (^float-sqrt (^flonum-unbox arg)))))))
 
-;;TODO: ("##flcopysign"                  (2)   #f ()    0    real    extended)
+(univ-define-prim "##flcopysign" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     ;;TODO: implement for other languages
+     (return
+      (^if-expr (^ "((" (^flonum-unbox arg1) "<0) || ((1/" (^flonum-unbox arg1) ")<0))"
+                   "==="
+                   "((" (^flonum-unbox arg2) "<0) || ((1/" (^flonum-unbox arg2) ")<0))")
+                arg1
+                (^flonum-box (^- (^flonum-unbox arg1))))))))
 
 (univ-define-prim-bool "##flinteger?" #t
   (make-translated-operand-generator
@@ -10016,6 +10318,48 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (^ (^u16vector-shrink! arg1
+                            (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##f64vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return (^f64vector-box (^array-literal args))))))
+
+(univ-define-prim "##make-f64vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'make_f64vector))
+       (^fixnum-unbox arg1)
+       (if arg2
+           arg2
+           (^fixnum-box (^int 0))))))))
+
+(univ-define-prim "##f64vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^fixnum-box (^f64vector-length arg))))))
+
+(univ-define-prim "##f64vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^f64vector-ref arg1
+                             (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##f64vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^f64vector-set! arg1
+                         (^fixnum-unbox arg2)
+                         arg3)
+        (return arg1)))))
+
+(univ-define-prim "##f64vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^f64vector-shrink! arg1
                             (^fixnum-unbox arg2))
         (return arg1)))))
 
