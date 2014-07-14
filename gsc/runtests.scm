@@ -89,9 +89,12 @@
                      (print "*********************** FAILED TEST " file "\n")
                      (print "======================= EXPECTED:\n" (cdr (cdar results)))))
                (set! diff? #t)
-               (print "======================= " (car target) ":\n" (cdr result))
-'
-               (print "======================= " (car target) ":\n" (diff (car target) (cdr (cdar results)) (cdr result)))))))
+               (print "======================= ")
+               (write (cons (car target) (caddr target)))
+               (print ":\n")
+               (print (cdr result))
+               #;(print (diff (car target) (cdr (cdar results)) (cdr result)))
+               ))))
      (cdr results))
 
     (if diff?
@@ -140,37 +143,153 @@
                  (if ext
                      (let ((out (string-append (path-strip-extension file) ext)))
                        (if (not (equal? target "gambit"))
-                           (compile file target))
-                       (let ((result (apply run (append (cddr t) (list out)))))
+                           (compile file target (caddr t )))
+                       (let ((result (apply run (append (cdddr t) (list out)))))
                          (if (not (equal? target "gambit"))
                              (if cleanup? (delete-file out)))
                          result))
-                     (apply run (append (cddr t) (list file)))))))
+                     (apply run (append (cdddr t) (list file)))))))
        (keep (lambda (t)
                (member (car t) (cons "c" back-ends)))
              targets)))
 
-(define (compile file target)
+(define (compile file target options)
   (let ((x
          (if (equal? target "c")
              (run "./gsc" "-:=.."                      file)
-             (run "./gsc" "-:=.." "-c" "-target" target file))))
+             (apply run
+                    (append (list "./gsc" "-:=.." "-c" "-target" target)
+                            options
+                            (list file))))))
     (if (not (= (car x) 0))
         (error "couldn't compile" file target))))
 
 (define targets
   '(
-    ("gambit" ".scm"  "./gsc" "-i")
-    ("c"      ".o1"   "./gsc" "-i")
-    ("x86"    #f      "./gsc32" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
-    ("x86-64" #f      "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
-    ("js"     ".js"   "d8")
-    ("python" ".py"   "python")
-;;    ("ruby"   ".rb"   "/usr/bin/ruby")
-    ("ruby"   ".rb"   "/usr/local/bin/ruby") ;; ruby 1.9.3p392
-;;    ("php"   ".php"   "/usr/bin/php")
-    ("php"   ".php"   "/usr/local/bin/php") ;; PHP 5.4.11
-;;    ("dart"   ".dart" "/Users/feeley/dart/dart-sdk/bin/dart")
+    ("gambit" ".scm"  ()
+                      "./gsc" "-i")
+
+    ("c"      ".o1"   ()
+                      "./gsc" "-i")
+
+    ("x86"    #f      ()
+                      "./gsc32" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+
+    ("x86-64" #f      ()
+                      "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+
+#;
+    ("js"     ".js"   ()
+                      "d8")
+    ("js"     ".js"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "d8")
+    ("js"     ".js"   ("-repr-procedure" "class"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "d8")
+    ("js"     ".js"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "class"
+                      )
+                      "d8")
+    ("js"     ".js"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "host"
+                      )
+                      "d8")
+
+#;
+    ("python" ".py"   ()
+                      "python")
+    ("python" ".py"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "python")
+    ("python" ".py"   ("-repr-procedure" "class"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "python")
+    ("python" ".py"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "class"
+                      )
+                      "python")
+    ("python" ".py"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "host"
+                      )
+                      "python")
+
+#;
+    ("ruby"   ".rb"   ()
+                      "/usr/bin/ruby") ;; ruby 2.0.0p451
+
+    ("ruby"   ".rb"   ()
+                      "/usr/local/bin/ruby") ;; ruby 1.9.3p392
+#|
+    ("ruby"   ".rb"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "/usr/local/bin/ruby") ;; ruby 1.9.3p392
+    ("ruby"   ".rb"   ("-repr-procedure" "class"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "/usr/local/bin/ruby") ;; ruby 1.9.3p392
+    ("ruby"   ".rb"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "class"
+                      )
+                      "/usr/local/bin/ruby") ;; ruby 1.9.3p392
+    ("ruby"   ".rb"   ("-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "host"
+                      )
+                      "/usr/local/bin/ruby") ;; ruby 1.9.3p392
+
+    ("ruby"   ".rb"   ()
+                      "/usr/local/bin/ruby") ;; ruby 1.9.3p392
+|#
+
+#;
+    ("php"   ".php"   ()
+                      "/usr/bin/php") ;; php 5.4.24
+
+    ("php"   ".php"   ()
+                      "/usr/local/bin/php") ;; PHP 5.4.11
+#|
+    ("php"    ".php"  ("-repr-procedure" "host"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "/usr/local/bin/php") ;; PHP 5.4.11
+    ("php"    ".php"  ("-repr-procedure" "class"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "/usr/local/bin/php") ;; PHP 5.4.11
+    ("php"    ".php"  ("-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "class"
+                      )
+                      "/usr/local/bin/php") ;; PHP 5.4.11
+    ("php"    ".php"  ("-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "host"
+                      )
+                      "/usr/local/bin/php") ;; PHP 5.4.11
+|#
+
+#;
+    ("dart"   ".dart" ()
+                      "/Users/feeley/dart/dart-sdk/bin/dart")
    ))
 
 (define (list-of-files-with-extension file-or-dir extension)

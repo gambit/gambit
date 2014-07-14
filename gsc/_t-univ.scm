@@ -4378,16 +4378,17 @@ EOF
                                       (^call-prim
                                        (^prefix (univ-use-rtlib ctx 'tostr))
                                        (^member (^local-var "obj") "cdr"))))
-;;                            (^if (^char? (^local-var "obj"))
-;;                                 (^return (^chr-tostr (^char-unbox (^local-var "obj"))))
-                                 (^if (^flonum? (^local-var "obj"))
-                                      (^return (^tostr (^flonum-unbox (^local-var "obj"))))
-;;                                      (^if (^string? (^local-var "obj"))
-;;                                           (^return (^tostr (^string-unbox (^local-var "obj"))))
-                                           (^return (^tostr (^local-var "obj")))))))))
-;;)
-;;)
-)))
+                            (^if (^char? (^local-var "obj"))
+                                 (^return (^chr-tostr (^char-unbox (^local-var "obj"))))
+                                 (^if (^fixnum? (^local-var "obj"))
+                                      (^return (^tostr (^fixnum-unbox (^local-var "obj"))))
+                                      (^if (^flonum? (^local-var "obj"))
+                                           (^return (^tostr (^flonum-unbox (^local-var "obj"))))
+;                                           (^if (^string? (^local-var "obj"))
+;                                                (^return (^tostr (^string-unbox (^local-var "obj"))))
+                                                (^return (^tostr (^local-var "obj")))
+;)
+)))))))))))
 
     ((println)
      (^prim-function-declaration
@@ -8368,7 +8369,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^array-shrink! (^string-unbox expr1) (^fixnum-unbox expr2)))
+     (^array-shrink! (^string-unbox expr1) expr2))
 
     (else
      (compiler-internal-error
