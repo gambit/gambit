@@ -1,12 +1,12 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
 (define (test1 i f)
-  (let ((x (##fl<-fx i)))
+  (let ((x (##fixnum->flonum i)))
     (println (##flonum? x))
     (println (##fl= x f))))
 
 (define (test2 i f)
-  (let ((x (##fl->fx f)))
+  (let ((x (##flonum->fixnum f)))
     (println (##fixnum? x))
     (println (##fx= x i))))
 

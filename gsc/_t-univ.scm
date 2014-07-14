@@ -623,7 +623,7 @@
 
 (define-macro (^prim-function-declaration root-name params header attribs body)
   `(^function-declaration
-    #f
+    #t
     ,root-name
     ,params
     ,header
@@ -3911,9 +3911,9 @@ EOF
                 (^ (^if (^= (^local-var "msg") (^bool #t))
                         (^return (^local-var "slots")))
                    (^setreg (+ univ-nb-arg-regs 1)
-                            (^prefix (^local-var "closure")))
+                            (^local-var "closure"))
                    (^return (^array-index (^local-var "slots") 0))))
-               (^return (^prefix (^local-var "closure"))))))))))
+               (^return (^local-var "closure")))))))))
 
     ((Procedure)
      (^class-declaration
@@ -6538,25 +6538,22 @@ function gambit_trampoline(pc) {
      (if (and (not prim?)
               (equal? (univ-procedure-representation ctx) 'class))
 
-         (let* ((prn
-                 (^prefix root-name))
-                (name
-                 (if global? (^global-function prn) prn)))
-
-           (^ (^class-declaration
-               root-name
-               (^prefix-class (univ-use-rtlib ctx 'Procedure))
-               attribs
-               (list
-                (list 'call
-                      '()
-                      (lambda (ctx)
-                        (^ header
-                           globals
-                           body)))))
-              (^var-declaration
-               name
-               (^new (^prefix-class root-name)))))
+         (^ (^class-declaration
+             root-name
+             (^prefix-class (univ-use-rtlib ctx 'Procedure))
+             attribs
+             (list
+              (list 'call
+                    '()
+                    (lambda (ctx)
+                      (^ header
+                         globals
+                         body)))))
+            (^var-declaration
+             (if global?
+                 (^global-function (^prefix root-name))
+                 (^local-var root-name))
+             (^new (^prefix-class root-name))))
 
          (univ-emit-function-declaration*
           ctx
@@ -6618,8 +6615,14 @@ function gambit_trampoline(pc) {
                     (^)))))))))
 
 (define (univ-emit-function-declaration* ctx global? root-name params header attribs globals body prim?)
-  (let* ((prn (^prefix root-name))
-         (name (if global? (^global-function prn) prn)))
+  (let* ((prn
+          (^prefix root-name))
+         (name
+          (if prim?
+              prn
+              (if global?
+                  (^global-var prn)
+                  (^local-var root-name)))))
     (case (target-name (ctx-target ctx))
 
       ((js)
@@ -6746,131 +6749,6 @@ function gambit_trampoline(pc) {
       (else
        (compiler-internal-error
         "univ-emit-function-declaration*, unknown target")))))
-
-#;
-(define (univ-emit-fn-meth ctx params header attribs globals body)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (^ "("
-        (univ-separated-list
-         ","
-         (map car params))
-        ") {" (univ-indent (^ header globals body)) "}"))
-
-    ((php)
-     (let* ((formals
-             (univ-separated-list
-              ","
-              (map (lambda (x)
-                     (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
-                   params)))
-            (decl
-             (^ "function " (if (or prim? (not (univ-php-version-53? ctx)))
-                                prn
-                                "")
-                "(" formals ") {"
-                (univ-indent
-                 (^ header
-                    (if (or (not (univ-php-version-53? ctx)) (null? attribs))
-                        (^)
-                        (^ "static "
-                           (univ-separated-list
-                            ", "
-                            (map (lambda (attrib)
-                                   (^assign-expr
-                                    (^local-var (car attrib))
-                                    (cdr attrib)))
-                                 attribs))
-                           ";\n"))
-                    globals
-                    body))
-                "}")))
-       (cond (prim?
-              (^ decl "\n"))
-             ((not (univ-php-version-53? ctx))
-              (^ (^ decl "\n")
-                 (^assign name
-                          (^ "create_function('"
-                             formals
-                             "','"
-                             (if (null? attribs)
-                                 (^)
-                                 (^ "static "
-                                    (univ-separated-list
-                                     ", "
-                                     (map (lambda (attrib)
-                                            (^assign-expr
-                                             (^local-var (car attrib))
-                                             (let ((a (cdr attrib)))
-                                               (if (and (list? a)
-                                                        (= (length a) 3)
-                                                        (equal? (car a) "'")
-                                                        (equal? (caddr a) "'"))
-                                                   (^ "\\'" (cadr a) "\\'")
-                                                   a))))
-                                          attribs))
-                                    "; "))
-                             "return "
-                             prn
-                             "("
-                             (univ-separated-list "," (map car params))
-                             ");')"))))
-             (else
-              (^assign name decl)))))
-
-    ((python)
-     (^ "("
-        (univ-separated-list
-         ","
-         (map (lambda (x)
-                (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
-              params))
-        "):"
-        (univ-indent (^ header globals body))
-        (map (lambda (attrib)
-               (^assign (^member name (car attrib))
-                        (cdr attrib)))
-             attribs)))
-
-    ((ruby)
-     (let ((parameters
-            (univ-separated-list
-             ","
-             (map (lambda (x)
-                    (^ (car x) (if (cdr x) (^ "=" (^bool #f)) (^))))
-                  params))))
-
-       (^ (if prim?
-
-              (^ "def " name "(" parameters ")"
-                 (univ-indent (^ header globals body))
-                 "end\n")
-
-              (^assign
-               name
-               (^ "lambda {"
-                  (if (null? params)
-                      (^)
-                      (^ "|" parameters "|"))
-                  (univ-indent (^ header globals body))
-                  "}")))
-
-          (if (pair? attribs)
-              (^ "class << " name "; attr_accessor :" (car (car attribs))
-                 (map (lambda (attrib)
-                        (^ ", :" (car attrib)))
-                      (cdr attribs))
-                 "; end\n"
-                 (map (lambda (attrib)
-                        (^assign (^member name (car attrib))
-                                 (cdr attrib)))
-                      attribs))
-              (^)))))
-
-    (else
-     (compiler-internal-error
-      "univ-emit-fn-meth, unknown target"))))
 
 (define (univ-emit-class-declaration ctx root-name extends fields methods #!optional (constructor #f))
   (let ((name (^prefix-class root-name)))
