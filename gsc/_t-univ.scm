@@ -18,24 +18,29 @@
 (define univ-dyn-load? #f)
 (set! univ-dyn-load? #f)
 
+(define (univ-get-representation-option ctx name)
+  (let ((x (assq name (ctx-options ctx))))
+    (and x (pair? (cdr x)) (cadr x))))
+
 (define (univ-procedure-representation ctx)
-  (case (target-name (ctx-target ctx))
-    ((php)
-     'class)
-    (else
-#;
-     'class
-     'host)))
+  (or (univ-get-representation-option ctx 'repr-procedure)
+      (case (target-name (ctx-target ctx))
+        ((php)
+         'class)
+        (else
+         'host))))
 
 (define (univ-null-representation ctx)
-  (case (target-name (ctx-target ctx))
-    ((js)
-     'host)
-    (else
-     'class)))
+  (or (univ-get-representation-option ctx 'repr-null)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-void-representation ctx)
-  'host)
+  (or (univ-get-representation-option ctx 'repr-void)
+      'host))
 
 (define (univ-eof-representation ctx)
   'class)
@@ -56,23 +61,27 @@
   'class)
 
 (define (univ-boolean-representation ctx)
-  'host)
+  (or (univ-get-representation-option ctx 'repr-boolean)
+      'host))
 
 (define (univ-char-representation ctx)
   'class)
 
 (define (univ-fixnum-representation ctx)
-  'host)
+  (or (univ-get-representation-option ctx 'repr-fixnum)
+      'host))
 
 (define (univ-flonum-representation ctx)
-  'class)
+  (or (univ-get-representation-option ctx 'repr-flonum)
+      'class))
 
 (define (univ-vector-representation ctx)
-  (case (target-name (ctx-target ctx))
-    ((php)
-     'class)
-    (else
-     'host)))
+  (or (univ-get-representation-option ctx 'repr-vector)
+      (case (target-name (ctx-target ctx))
+        ((php)
+         'class)
+        (else
+         'host))))
 
 (define (univ-u8vector-representation ctx)
   'class)
@@ -87,14 +96,17 @@
   'class)
 
 (define (univ-string-representation ctx)
-  'class)
+  (or (univ-get-representation-option ctx 'repr-string)
+
+      'class))
 
 (define (univ-symbol-representation ctx)
-  (case (target-name (ctx-target ctx))
-    ((js)
-     'host) ;; TODO: must be 'class to support uninterned symbols
-    (else
-     'class)))
+  (or (univ-get-representation-option ctx 'repr-symbol)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host) ;; TODO: must be 'class to support uninterned symbols
+        (else
+         'class))))
 
 (define (univ-keyword-representation ctx)
   'class)
@@ -131,11 +143,23 @@
 ;; Initialization/finalization of back-end.
 
 (define (univ-setup target-language file-extensions options)
+
+  (define common-options
+    '((repr-procedure symbol)
+      (repr-null      symbol)
+      (repr-void      symbol)
+      (repr-boolean   symbol)
+      (repr-fixnum    symbol)
+      (repr-flonum    symbol)
+      (repr-vector    symbol)
+      (repr-string    symbol)
+      (repr-symbol    symbol)))
+
   (let ((targ
          (make-target 10
                       target-language
                       file-extensions
-                      options
+                      (append options common-options)
                       0)))
 
     (define (begin! info-port)
