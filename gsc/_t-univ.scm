@@ -234,6 +234,14 @@
 (define (univ-indent . rest)
   (cons '$$indent$$ rest))
 
+(define (univ-box boxed unboxed)
+  (list '$$box$$ boxed unboxed))
+
+(define (univ-unbox x)
+  (and (pair? x)
+       (eq? (car x) '$$box$$)
+       (caddr x)))
+
 (define (univ-display x port)
 
   (define indent-level 0)
@@ -281,14 +289,16 @@
           ((null? x))
 
           ((pair? x)
-           (if (eq? (car x) '$$indent$$)
-               (begin
-                 (set! indent-level (+ indent-level 1))
-                 (disp (cdr x))
-                 (set! indent-level (- indent-level 1)))
-               (begin
-                 (disp (car x))
-                 (disp (cdr x)))))
+           (case (car x)
+             (($$indent$$)
+              (set! indent-level (+ indent-level 1))
+              (disp (cdr x))
+              (set! indent-level (- indent-level 1)))
+             (($$box$$)
+              (disp (cadr x)))
+             (else
+              (disp (car x))
+              (disp (cdr x)))))
 
           ((vector? x)
            (disp (vector->list x)))
@@ -2931,12 +2941,15 @@
                                    (emit-obj (imag-part obj) #f)))))
 
                  ((not (exact? obj)) ;; floating-point number
-                  (univ-obj-use
-                   ctx
-                   obj
-                   force-var?
-                   (lambda ()
-                     (^flonum-box (^float obj)))))
+                  (let ((x (^float obj)))
+                    (univ-box
+                     (univ-obj-use
+                      ctx
+                      obj
+                      force-var?
+                      (lambda ()
+                        (^flonum-box x)))
+                     x)))
 
                  ((not (integer? obj)) ;; non-integer rational number
                   (univ-obj-use
@@ -5616,7 +5629,9 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Boolean)
-     (^gvar (if obj "true_val" "false_val")))
+     (univ-box
+      (^gvar (if obj "true_val" "false_val"))
+      (^bool obj)))
 
     (else
      (^bool obj))))
@@ -5625,9 +5640,11 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-boolean-representation ctx)
 
     ((class)
-     (^if-expr expr
-               (^boolean-obj #t)
-               (^boolean-obj #f)))
+     (univ-box
+      (^if-expr expr
+                (^boolean-obj #t)
+                (^boolean-obj #f))
+      expr))
 
     (else
      expr)))
@@ -5636,7 +5653,8 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-boolean-representation ctx)
 
     ((class)
-     (^member expr "val"))
+     (or (univ-unbox expr)
+         (^member expr "val")))
 
     (else
      expr)))
@@ -5674,12 +5692,15 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-char-representation ctx)
 
     ((class)
-     (univ-obj-use
-      ctx
-      obj
-      force-var?
-      (lambda ()
-        (^char-box (^chr obj)))))
+     (let ((x (^chr obj)))
+       (univ-box
+        (univ-obj-use
+         ctx
+         obj
+         force-var?
+         (lambda ()
+           (^char-box x)))
+        x)))
 
     (else
      (compiler-internal-error
@@ -5689,8 +5710,10 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-char-representation ctx)
 
     ((class)
-     (^call-prim
-      (^prefix (univ-use-rtlib ctx 'make_interned_char))
+     (univ-box
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'make_interned_char))
+       expr)
       expr))
 
     (else
@@ -5710,7 +5733,8 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-char-representation ctx)
 
     ((class)
-     (^member expr "code"))
+     (or (univ-unbox expr)
+         (^member expr "code")))
 
     (else
      (compiler-internal-error
@@ -5772,7 +5796,9 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-fixnum-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'Fixnum)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'Fixnum)) expr)
+      expr))
 
     (else
      expr)))
@@ -5781,7 +5807,8 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-fixnum-representation ctx)
 
     ((class)
-     (^member expr "val"))
+     (or (univ-unbox expr)
+         (^member expr "val")))
 
     (else
      expr)))
@@ -6510,7 +6537,9 @@ tanh
   (case (univ-flonum-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'Flonum)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'Flonum)) expr)
+      expr))
 
     (else
      expr)))
@@ -6519,7 +6548,8 @@ tanh
   (case (univ-flonum-representation ctx)
 
     ((class)
-     (^member expr "val"))
+     (or (univ-unbox expr)
+         (^member expr "val")))
 
     (else
      expr)))
@@ -6571,7 +6601,9 @@ tanh
   (case (univ-vector-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'Vector)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'Vector)) expr)
+      expr))
 
     (else
      expr)))
@@ -6580,7 +6612,8 @@ tanh
   (case (univ-vector-representation ctx)
 
     ((class)
-     (^member expr "elems"))
+     (or (univ-unbox expr)
+         (^member expr "elems")))
 
     (else
      expr)))
@@ -6623,7 +6656,9 @@ tanh
   (case (univ-u8vector-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'U8Vector)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'U8Vector)) expr)
+      expr))
 
     (else
      (compiler-internal-error
@@ -6633,7 +6668,8 @@ tanh
   (case (univ-u8vector-representation ctx)
 
     ((class)
-     (^member expr "elems"))
+     (or (univ-unbox expr)
+         (^member expr "elems")))
 
     (else
      (compiler-internal-error
@@ -6665,7 +6701,9 @@ tanh
   (case (univ-u16vector-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'U16Vector)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'U16Vector)) expr)
+      expr))
 
     (else
      (compiler-internal-error
@@ -6675,7 +6713,8 @@ tanh
   (case (univ-u16vector-representation ctx)
 
     ((class)
-     (^member expr "elems"))
+     (or (univ-unbox expr)
+         (^member expr "elems")))
 
     (else
      (compiler-internal-error
@@ -6707,7 +6746,9 @@ tanh
   (case (univ-f64vector-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'F64Vector)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'F64Vector)) expr)
+      expr))
 
     (else
      (compiler-internal-error
@@ -6717,7 +6758,8 @@ tanh
   (case (univ-f64vector-representation ctx)
 
     ((class)
-     (^member expr "elems"))
+     (or (univ-unbox expr)
+         (^member expr "elems")))
 
     (else
      (compiler-internal-error
@@ -6749,7 +6791,9 @@ tanh
   (case (univ-structure-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'Structure)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'Structure)) expr)
+      expr))
 
     (else
      (compiler-internal-error
@@ -6759,7 +6803,8 @@ tanh
   (case (univ-structure-representation ctx)
 
     ((class)
-     (^member expr "slots"))
+     (or (univ-unbox expr)
+         (^member expr "slots")))
 
     (else
      (compiler-internal-error
@@ -6800,15 +6845,18 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (univ-obj-use
-      ctx
-      obj
-      force-var?
-      (lambda ()
-        (^string-box
-         (^array-literal
-          (map (lambda (c) (^int (char->integer c)))
-               (string->list obj)))))))
+     (let ((x
+            (^array-literal
+             (map (lambda (c) (^int (char->integer c)))
+                  (string->list obj)))))
+       (univ-box
+        (univ-obj-use
+         ctx
+         obj
+         force-var?
+         (lambda ()
+           (^string-box x)))
+        x)))
 
     (else
      (^str obj))))
@@ -6817,7 +6865,9 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'String)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'String)) expr)
+      expr))
 
     (else
      expr)))
@@ -6826,7 +6876,8 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^member expr "codes"))
+     (or (univ-unbox expr)
+         (^member expr "codes")))
 
     (else
      expr)))
@@ -6916,12 +6967,15 @@ tanh
   (case (univ-symbol-representation ctx)
 
     ((class)
-     (univ-obj-use
-      ctx
-      obj
-      force-var?
-      (lambda ()
-        (^symbol-box (^str (symbol->string obj))))))
+     (let ((x (^str (symbol->string obj))))
+       (univ-box
+        (univ-obj-use
+         ctx
+         obj
+         force-var?
+         (lambda ()
+           (^symbol-box x)))
+        x)))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -6940,8 +6994,10 @@ tanh
   (case (univ-symbol-representation ctx)
 
     ((class)
-     (^call-prim
-      (^prefix (univ-use-rtlib ctx 'make_interned_symbol))
+     (univ-box
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'make_interned_symbol))
+       expr)
       expr))
 
     (else
@@ -6951,7 +7007,9 @@ tanh
   (case (univ-symbol-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'Symbol)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'Symbol)) expr)
+      expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -6970,7 +7028,8 @@ tanh
   (case (univ-symbol-representation ctx)
 
     ((class)
-     (^member expr "str"))
+     (or (univ-unbox expr)
+         (^member expr "str")))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -7014,12 +7073,15 @@ tanh
   (case (univ-keyword-representation ctx)
 
     ((class)
-     (univ-obj-use
-      ctx
-      obj
-      force-var?
-      (lambda ()
-        (^keyword-box (^str (keyword->string obj))))))
+     (let ((x (^str (keyword->string obj))))
+       (univ-box
+        (univ-obj-use
+         ctx
+         obj
+         force-var?
+         (lambda ()
+           (^keyword-box x)))
+        x)))
 
     (else
      (compiler-internal-error
@@ -7029,8 +7091,10 @@ tanh
   (case (univ-keyword-representation ctx)
 
     ((class)
-     (^call-prim
-      (^prefix (univ-use-rtlib ctx 'make_interned_keyword))
+     (univ-box
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'make_interned_keyword))
+       expr)
       expr))
 
     (else
@@ -7040,7 +7104,9 @@ tanh
   (case (univ-keyword-representation ctx)
 
     ((class)
-     (^new (^prefix-class (univ-use-rtlib ctx 'Keyword)) expr))
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'Keyword)) expr)
+      expr))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -7059,7 +7125,8 @@ tanh
   (case (univ-keyword-representation ctx)
 
     ((class)
-     (^member expr "str"))
+     (or (univ-unbox expr)
+         (^member expr "str")))
 
     (else
      (compiler-internal-error
