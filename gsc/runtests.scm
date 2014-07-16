@@ -282,26 +282,28 @@
                       )
                       "/usr/bin/php") ;; PHP 5.4.11
 
+#|
     ("php"    ".php"  ("-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/Users/feeley/php5.2.17/bin/php")
     ("php"    ".php"  ("-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/Users/feeley/php5.2.17/bin/php")
     ("php"    ".php"  ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/Users/feeley/php5.2.17/bin/php")
     ("php"    ".php"  ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/Users/feeley/php5.2.17/bin/php")
+|#
 
 #;
     ("dart"   ".dart" ()
