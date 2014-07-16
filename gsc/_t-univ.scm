@@ -516,6 +516,9 @@
 (define-macro (^parens expr)
   `(univ-emit-parens ctx ,expr))
 
+(define-macro (^parens-php expr)
+  `(univ-emit-parens-php ctx ,expr))
+
 (define-macro (^local-var name)
   `(univ-emit-local-var ctx ,name))
 
@@ -1599,6 +1602,11 @@
     (else
      (compiler-internal-error
       "univ-emit-parens, unknown target"))))
+
+(define (univ-emit-parens-php ctx expr)
+  (if (eq? (target-name (ctx-target ctx)) 'php)
+      (^parens expr)
+      expr))
 
 (define (univ-emit-local-var ctx name)
   (case (target-name (ctx-target ctx))
@@ -3902,18 +3910,20 @@ EOF
             (list (cons 'slots #f))
             "\n"
             '()
-            (^ (^procedure-declaration
-                #f
-                (^local-var "closure")
-                (list (cons (^local-var "msg") #t))
-                "\n"
-                '()
-                (^ (^if (^= (^local-var "msg") (^bool #t))
-                        (^return (^local-var "slots")))
-                   (^setreg (+ univ-nb-arg-regs 1)
-                            (^local-var "closure"))
-                   (^return (^array-index (^local-var "slots") 0))))
-               (^return (^local-var "closure")))))))))
+            (let ((msg (^local-var 'msg))
+                  (slots (^local-var 'slots))
+                  (closure (^local-var 'closure)))
+              (^ (^procedure-declaration
+                  #f
+                  closure
+                  (list (cons 'msg #t))
+                  "\n"
+                  '()
+                  (^ (^if (^= msg (^bool #t))
+                          (^return slots))
+                     (^setreg (+ univ-nb-arg-regs 1) closure)
+                     (^return (^array-index slots 0))))
+               (^return closure)))))))))
 
     ((Procedure)
      (^class-declaration
@@ -7211,7 +7221,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((js php)
-     (^ "new " (^apply class params)))
+     (^parens-php (^ "new " (^apply class params))))
 
     ((python)
      (^apply class params))
@@ -7827,24 +7837,24 @@ tanh
 
         ((js)
          (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
-            arg1
+            (^fixnum-unbox arg1)
             " + "
-            arg2
+            (^fixnum-unbox arg2)
             ")<<"
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^gvar "temp1") " && " (^gvar "temp2")))
+            ") === " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
 
         ((python)
-         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
             univ-tag-bits
             ").value>>"
             univ-tag-bits
             "))("
-            arg1
+            (^fixnum-unbox arg1)
             " + "
-            arg2
+            (^fixnum-unbox arg2)
             ")"))
 
         ((php ruby)
@@ -7860,13 +7870,13 @@ tanh
                            (^parens
                             (^assign-expr
                              (^gvar "temp1")
-                             (^+ arg1
-                                 arg2)))
+                             (^+ (^fixnum-unbox arg1)
+                                 (^fixnum-unbox arg2))))
                            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
                          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
                        (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
                     (^gvar "temp1")))
-               (^gvar "temp2")))
+               (^fixnum-box (^gvar "temp2"))))
 
         (else
          (compiler-internal-error
@@ -7897,24 +7907,24 @@ tanh
 
         ((js)
          (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
-            arg1
+            (^fixnum-unbox arg1)
             " * "
-            arg2
+            (^fixnum-unbox arg2)
             ")<<"
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^gvar "temp1") " && " (^gvar "temp2")))
+            ") === " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
 
         ((python)
-         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
             univ-tag-bits
             ").value>>"
             univ-tag-bits
             "))("
-            arg1
+            (^fixnum-unbox arg1)
             " * "
-            arg2
+            (^fixnum-unbox arg2)
             ")"))
 
         ((php ruby)
@@ -7930,13 +7940,13 @@ tanh
                            (^parens
                             (^assign-expr
                              (^gvar "temp1")
-                             (^* arg1
-                                 arg2)))
+                             (^* (^fixnum-unbox arg1)
+                                 (^fixnum-unbox arg2))))
                            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
                          (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
                        (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
                     (^gvar "temp1")))
-               (^gvar "temp2")))
+               (^fixnum-box (^gvar "temp2"))))
 
         (else
          (compiler-internal-error
@@ -7968,50 +7978,50 @@ tanh
         ((js)
          (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
             (if arg2
-                (^ arg1 " - " arg2)
-                (^ "- " arg1))
+                (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
+                (^ "- " (^fixnum-unbox arg1)))
             ")<<"
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^gvar "temp1") " && " (^gvar "temp2")))
+            ") === " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
 
         ((python)
-         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and temp2)(ctypes.c_int32(temp1<<"
+         (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
             univ-tag-bits
             ").value>>"
             univ-tag-bits
             "))("
             (if arg2
-                (^ arg1 " - " arg2)
-                (^ "- " arg1))
+                (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
+                (^ "- " (^fixnum-unbox arg1)))
             ")"))
 
         ((ruby)
          (^ "(" (^gvar "temp2") " = (((" (^gvar "temp1") " = "
             (if arg2
-                (^ arg1 " - " arg2)
-                (^ "- " arg1))
+                (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
+                (^ "- " (^fixnum-unbox arg1)))
             ") + "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
             ") & "
             (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
             ") - "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-            ") == " (^gvar "temp1") " && " (^gvar "temp2")))
+            ") == " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
 
         ((php)
          (^ "((" (^gvar "temp2") " = (((" (^gvar "temp1") " = "
             (if arg2
-                (^ arg1 " - " arg2)
-                (^ "- " arg1))
+                (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
+                (^ "- " (^fixnum-unbox arg1)))
             ") + "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
             ") & "
             (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
             ") - "
             (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
-            ") === " (^gvar "temp1") ") ? " (^gvar "temp2") " : false"))
+            ") === " (^gvar "temp1") ") ? " (^fixnum-box (^gvar "temp2")) " : false"))
 
         (else
          (compiler-internal-error

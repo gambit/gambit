@@ -191,13 +191,11 @@
                        "-repr-flonum"    "class"
                       )
                       "d8")
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
     ("js"     ".js"   ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "d8")
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
     ("js"     ".js"   ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
@@ -217,13 +215,11 @@
                        "-repr-flonum"    "class"
                       )
                       "python")
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
     ("python" ".py"   ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "python")
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
     ("python" ".py"   ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
@@ -247,13 +243,11 @@
                        "-repr-flonum"    "class"
                       )
                       "/usr/local/bin/ruby") ;; ruby 1.9.3p392
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
     ("ruby"   ".rb"   ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "/usr/local/bin/ruby") ;; ruby 1.9.3p392
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
     ("ruby"   ".rb"   ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
@@ -262,59 +256,52 @@
 
 #;
     ("php"   ".php"   ("-php53")
-                      "/usr/bin/php") ;; php 5.4.24
-#;
-    ("php"   ".php"   ("-php53")
-                      "/usr/local/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.4.11
     ("php"    ".php"  ("-php53"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/local/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.4.11
     ("php"    ".php"  ("-php53"
                        "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/local/bin/php") ;; PHP 5.4.11
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
+                      "/usr/bin/php") ;; PHP 5.4.11
     ("php"    ".php"  ("-php53"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/local/bin/php") ;; PHP 5.4.11
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
+                      "/usr/bin/php") ;; PHP 5.4.11
     ("php"    ".php"  ("-php53"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
-                      "/usr/local/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.4.11
 
     ("php"    ".php"  ("-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/local/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.4.11
     ("php"    ".php"  ("-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/local/bin/php") ;; PHP 5.4.11
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
+                      "/usr/bin/php") ;; PHP 5.4.11
     ("php"    ".php"  ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/local/bin/php") ;; PHP 5.4.11
-    #; ;; class representation of fixnum breaks fx+?, fx-?, fx*?
+                      "/usr/bin/php") ;; PHP 5.4.11
     ("php"    ".php"  ("-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
-                      "/usr/local/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.4.11
 
 #;
     ("dart"   ".dart" ()
