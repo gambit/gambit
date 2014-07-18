@@ -737,8 +737,8 @@
 (define-macro (^return-call-prim expr . params)
   `(univ-emit-return-call-prim ctx ,expr ,@params))
 
-(define-macro (^return-call expr . params)
-  `(univ-emit-return-call ctx ,expr ,@params))
+(define-macro (^return-call expr)
+  `(univ-emit-return-call ctx ,expr))
 
 (define-macro (^return expr)
   `(univ-emit-return ctx ,expr))
@@ -3120,45 +3120,63 @@
      (compiler-internal-error
       "univ-emit-extensible-array-literal, unknown target"))))
 
+(define (univ-new-array ctx len)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^new "Array" len))
+
+    ((php)
+     (^if-expr (^= len (^int 0)) ;; array_fill does not like len=0
+               (^array-literal '())
+               (^call-prim
+                "array_fill"
+                (^int 0)
+                len
+                (^int 0))))
+
+    ((python)
+     (^* (^ "[" (^int 0) "]") len))
+
+    ((ruby)
+     (^call-prim (^member "Array" "new") len))
+
+    (else
+     (compiler-internal-error
+      "univ-new-array, unknown target"))))
+
 (define (univ-make-array ctx return len init)
   (case (target-name (ctx-target ctx))
 
     ((js)
      ;; TODO: add for loop constructor
-     (let ((elems (^local-var 'elems))
-           (len (^local-var 'len)))
+     (let ((elems (^local-var 'elems)))
        (^ (^var-declaration elems (^new "Array" len))
           "
-          for (var i=0; i<len; i++) {
-            elems[i] = init;
+          for (var i=0; i<" len "; i++) {
+            " elems "[i] = " init ";
           }
-        "
+          "
           (return elems))))
 
     ((php)
-     (let ((init (^local-var 'init))
-           (len (^local-var 'len)))
-       (return
-        (^if-expr (^= len (^int 0)) ;; array_fill does not like len=0
-                  (^array-literal '())
-                  (^call-prim
-                   "array_fill"
-                   (^int 0)
-                   len
-                   init)))))
+     (return
+      (^if-expr (^= len (^int 0)) ;; array_fill does not like len=0
+                (^array-literal '())
+                (^call-prim
+                 "array_fill"
+                 (^int 0)
+                 len
+                 init))))
 
     ((python)
      ;; TODO: add literal array constructor
-     (let ((init (^local-var 'init))
-           (len (^local-var 'len)))
-       (return
-        (^* (^ "[" init "]") len))))
+     (return
+      (^* (^ "[" init "]") len)))
 
     ((ruby)
-     (let ((init (^local-var 'init))
-           (len (^local-var 'len)))
-       (return
-        (^call-prim (^member "Array" "new") len init))))
+     (return
+      (^call-prim (^member "Array" "new") len init)))
 
     (else
      (compiler-internal-error
@@ -3979,6 +3997,120 @@ EOF
       '((digits . #f))
       '()))
 
+    ((bitcount)
+     (^prim-function-declaration
+      "bitcount"
+      (list (cons 'n #f))
+      "\n"
+      '()
+      (let ((n (^local-var 'n)))
+        (^ (^assign n (^+ (^parens (^bitand n
+                                            (^int #x55555555)))
+                          (^parens (^bitand (^parens (^>> n (^int 1)))
+                                            (^int #x55555555)))))
+           (^assign n (^+ (^parens (^bitand n
+                                            (^int #x33333333)))
+                          (^parens (^bitand (^parens (^>> n (^int 2)))
+                                            (^int #x33333333)))))
+           (^assign n (^bitand (^parens (^+ n (^parens (^>> n (^int 4)))))
+                               (^int #x0f0f0f0f)))
+           (^assign n (^+ n (^parens (^>> n (^int 8)))))
+           (^assign n (^+ n (^parens (^>> n (^int 16)))))
+           (^return (^bitand n (^int #xff)))))))
+
+    ((intlength)
+     (^prim-function-declaration
+      "intlength"
+      (list (cons 'n #f))
+      "\n"
+      '()
+      (let ((n (^local-var 'n)))
+        (^ (^if (^< n (^int 0)) (^assign n (^bitnot n)))
+           (^assign n (^bitior n (^parens (^>> n 1))))
+           (^assign n (^bitior n (^parens (^>> n 2))))
+           (^assign n (^bitior n (^parens (^>> n 4))))
+           (^assign n (^bitior n (^parens (^>> n 8))))
+           (^assign n (^bitior n (^parens (^>> n 16))))
+           (^return (^call-prim
+                     (^prefix (univ-use-rtlib ctx 'bitcount))
+                     n))))))
+
+    ((bignum_make)
+     (^prim-function-declaration
+      "bignum_make"
+      (list (cons 'n #f) (cons 'x #f) (cons 'complement #f))
+      "\n"
+      '()
+      (let ((n (^local-var 'n))
+            (x (^local-var 'x))
+            (complement (^local-var 'complement))
+            (flip (^local-var 'flip))
+            (nbdig (^local-var 'nbdig))
+            (digits (^local-var 'digits))
+            (i (^local-var 'i)))
+        (^ (^var-declaration i
+                             (^int 0))
+           (^var-declaration digits
+                             (univ-new-array ctx n))
+           (^var-declaration nbdig
+                             (^if-expr
+                              (^eq? x (^obj #f))
+                              (^int 0)
+                              (^array-length (^member x "digits"))))
+           (^var-declaration flip
+                             (^if-expr complement (^int 16383) (^int 0)))
+           (^if (^< n nbdig)
+                (^assign nbdig n))
+           (^while (^< i nbdig)
+                   (^ (^assign (^array-index digits i)
+                               (^bitxor (^array-index (^member x "digits") i)
+                                        flip))
+                      (^inc-by i 1)))
+           (^if (^and (^not (^parens (^eq? x (^obj #f))))
+                      (^> (^array-index (^member x "digits") (^- i (^int 1)))
+                          (^int 8191)))
+                (^assign flip (^bitxor flip (^int 16383))))
+           (^while (^< i n)
+                   (^ (^assign (^array-index digits i)
+                               flip)
+                      (^inc-by i 1)))
+           (^return
+            (^new (^prefix-class (univ-use-rtlib ctx 'Bignum))
+                  digits))))))
+
+    ((int2bignum)
+     (^prim-function-declaration
+      "int2bignum"
+      (list (cons 'n #f))
+      "\n"
+      '()
+      (let ((n (^local-var 'n))
+            (nbdig (^local-var 'nbdig))
+            (digits (^local-var 'digits))
+            (i (^local-var 'i)))
+        (^ (^var-declaration nbdig
+                             (^+ (^parens
+                                  (univ-fxquotient
+                                   ctx
+                                   (^call-prim
+                                    (^prefix (univ-use-rtlib ctx 'intlength))
+                                    n)
+                                   (^int 14)))
+                                 (^int 1)))
+           (^var-declaration digits
+                             (univ-new-array ctx nbdig))
+           (^var-declaration i
+                             (^int 0))
+           (^while (^< i nbdig)
+                   (^ (^assign (^array-index digits i)
+                               (^bitand n (^int 16383)))
+                      (^assign n
+                               (^>> n (^int 14)))
+                      (^inc-by i 1)))
+           (^return
+            (^new (^prefix-class (univ-use-rtlib ctx 'Bignum))
+                  digits))))))
+
     ((Ratnum)
      (^class-declaration
       "Ratnum"
@@ -4583,8 +4715,8 @@ EOF
       (univ-make-array
        ctx
        (lambda (result) (^return (^vector-box result)))
-       (^local-var "len")
-       (^local-var "init"))))
+       (^local-var 'len)
+       (^local-var 'init))))
 
     ((make_u8vector)
      (^prim-function-declaration
@@ -4596,8 +4728,8 @@ EOF
       (univ-make-array
        ctx
        (lambda (result) (^return (^u8vector-box result)))
-       (^local-var "len")
-       (^local-var "init"))))
+       (^local-var 'len)
+       (^local-var 'init))))
 
     ((make_u16vector)
      (^prim-function-declaration
@@ -4609,8 +4741,8 @@ EOF
       (univ-make-array
        ctx
        (lambda (result) (^return (^u16vector-box result)))
-       (^local-var "len")
-       (^local-var "init"))))
+       (^local-var 'len)
+       (^local-var 'init))))
 
     ((make_f64vector)
      (^prim-function-declaration
@@ -4622,8 +4754,8 @@ EOF
       (univ-make-array
        ctx
        (lambda (result) (^return (^f64vector-box result)))
-       (^local-var "len")
-       (^local-var "init"))))
+       (^local-var 'len)
+       (^local-var 'init))))
 
     ((make_string)
      (^prim-function-declaration
@@ -4635,8 +4767,8 @@ EOF
       (univ-make-array
        ctx
        (lambda (result) (^return (^string-box result)))
-       (^local-var "len")
-       (^local-var "init"))))
+       (^local-var 'len)
+       (^local-var 'init))))
 
     ((make_glo_var)
      (^prim-function-declaration
@@ -4853,6 +4985,10 @@ EOF
         (need-feature 'Frame)
         (need-feature 'Continuation)
         (need-feature 'ffi)
+
+        (need-feature 'intlength)
+        (need-feature 'bignum_make)
+        (need-feature 'int2bignum)
 
         (for-each need-feature
                   (resource-set->list (ctx-rtlib-features-used ctx)))
@@ -5434,6 +5570,12 @@ gambit_Pair.prototype.toString = function () {
       "univ-comment, unknown target"))))
 
 (define (univ-emit-return-poll ctx expr poll? call?)
+
+  (define (ret)
+    (if call?
+        (^return-call expr)
+        (^return expr)))
+
   (if poll?
 
       (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
@@ -5443,21 +5585,21 @@ gambit_Pair.prototype.toString = function () {
                       (^return-call-prim
                        (^prefix (univ-use-rtlib ctx 'poll))
                        expr)
-                      (if call?
-                          (^return-call expr)
-                          (^return expr)))))
+                      (ret))))
 
-      (if call?
-          (^return-call expr)
-          (^return expr))))
+      (ret)))
 
 (define (univ-emit-return-call-prim ctx expr . params)
   (^return
    (apply univ-emit-call-prim (cons ctx (cons expr params)))))
 
-(define (univ-emit-return-call ctx expr . params)
+(define univ-return-call-optimization? #f)
+
+(define (univ-emit-return-call ctx expr)
   (^return
-   (apply univ-emit-call (cons ctx (cons expr params)))))
+   (if univ-return-call-optimization?
+       (^call expr)
+       expr)))
 
 (define (univ-emit-return ctx expr)
   (case (target-name (ctx-target ctx))
@@ -6601,9 +6743,7 @@ tanh
   (case (univ-vector-representation ctx)
 
     ((class)
-     (univ-box
-      (^new (^prefix-class (univ-use-rtlib ctx 'Vector)) expr)
-      expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Vector)) expr))
 
     (else
      expr)))
@@ -6612,8 +6752,7 @@ tanh
   (case (univ-vector-representation ctx)
 
     ((class)
-     (or (univ-unbox expr)
-         (^member expr "elems")))
+     (^member expr "elems"))
 
     (else
      expr)))
@@ -6656,9 +6795,7 @@ tanh
   (case (univ-u8vector-representation ctx)
 
     ((class)
-     (univ-box
-      (^new (^prefix-class (univ-use-rtlib ctx 'U8Vector)) expr)
-      expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'U8Vector)) expr))
 
     (else
      (compiler-internal-error
@@ -6668,8 +6805,7 @@ tanh
   (case (univ-u8vector-representation ctx)
 
     ((class)
-     (or (univ-unbox expr)
-         (^member expr "elems")))
+     (^member expr "elems"))
 
     (else
      (compiler-internal-error
@@ -6701,9 +6837,7 @@ tanh
   (case (univ-u16vector-representation ctx)
 
     ((class)
-     (univ-box
-      (^new (^prefix-class (univ-use-rtlib ctx 'U16Vector)) expr)
-      expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'U16Vector)) expr))
 
     (else
      (compiler-internal-error
@@ -6713,8 +6847,7 @@ tanh
   (case (univ-u16vector-representation ctx)
 
     ((class)
-     (or (univ-unbox expr)
-         (^member expr "elems")))
+     (^member expr "elems"))
 
     (else
      (compiler-internal-error
@@ -6746,9 +6879,7 @@ tanh
   (case (univ-f64vector-representation ctx)
 
     ((class)
-     (univ-box
-      (^new (^prefix-class (univ-use-rtlib ctx 'F64Vector)) expr)
-      expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'F64Vector)) expr))
 
     (else
      (compiler-internal-error
@@ -6758,8 +6889,7 @@ tanh
   (case (univ-f64vector-representation ctx)
 
     ((class)
-     (or (univ-unbox expr)
-         (^member expr "elems")))
+     (^member expr "elems"))
 
     (else
      (compiler-internal-error
@@ -6791,9 +6921,7 @@ tanh
   (case (univ-structure-representation ctx)
 
     ((class)
-     (univ-box
-      (^new (^prefix-class (univ-use-rtlib ctx 'Structure)) expr)
-      expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'Structure)) expr))
 
     (else
      (compiler-internal-error
@@ -6803,8 +6931,7 @@ tanh
   (case (univ-structure-representation ctx)
 
     ((class)
-     (or (univ-unbox expr)
-         (^member expr "slots")))
+     (^member expr "slots"))
 
     (else
      (compiler-internal-error
@@ -6849,14 +6976,12 @@ tanh
             (^array-literal
              (map (lambda (c) (^int (char->integer c)))
                   (string->list obj)))))
-       (univ-box
-        (univ-obj-use
-         ctx
-         obj
-         force-var?
-         (lambda ()
-           (^string-box x)))
-        x)))
+       (univ-obj-use
+        ctx
+        obj
+        force-var?
+        (lambda ()
+          (^string-box x)))))
 
     (else
      (^str obj))))
@@ -6865,9 +6990,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (univ-box
-      (^new (^prefix-class (univ-use-rtlib ctx 'String)) expr)
-      expr))
+     (^new (^prefix-class (univ-use-rtlib ctx 'String)) expr))
 
     (else
      expr)))
@@ -6876,8 +6999,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (or (univ-unbox expr)
-         (^member expr "codes")))
+     (^member expr "codes"))
 
     (else
      expr)))
@@ -8439,9 +8561,16 @@ tanh
    (lambda (ctx return arg1 arg2)
      ;;TODO: implement for other languages
      (return
-      (^if-expr (^ "((" (^flonum-unbox arg1) "<0) || ((1/" (^flonum-unbox arg1) ")<0))"
-                   "==="
-                   "((" (^flonum-unbox arg2) "<0) || ((1/" (^flonum-unbox arg2) ")<0))")
+      (^if-expr (^eq? (^parens
+                       (^or (^parens (^< (^flonum-unbox arg1)
+                                         (^float 0.0)))
+                            (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg1))
+                                         (^float 0.0)))))
+                      (^parens
+                       (^or (^parens (^< (^flonum-unbox arg2)
+                                         (^float 0.0)))
+                            (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg2))
+                                         (^float 0.0))))))
                 arg1
                 (^flonum-box (^- (^flonum-unbox arg1))))))))
 
@@ -9203,39 +9332,332 @@ tanh
 ;;TODO: ("##quasi-vector"                  0     #f ()    0    vector  extended)
 ;;TODO: ("##case-memv"                     (2)   #f 0     0    list    extended)
 
-;;TODO: ("##bignum.negative?"              (1)   #f ()    0    boolean extended)
-;;TODO: ("##bignum.adigit-length"          (1)   #f ()    0    integer extended)
-;;TODO: ("##bignum.adigit-inc!"            (2)   #t ()    0    integer extended)
-;;TODO: ("##bignum.adigit-dec!"            (2)   #t ()    0    integer extended)
-;;TODO: ("##bignum.adigit-add!"            (5)   #t ()    0    integer extended)
-;;TODO: ("##bignum.adigit-sub!"            (5)   #t ()    0    integer extended)
-;;TODO: ("##bignum.mdigit-length"          (1)   #f ()    0    integer extended)
-;;TODO: ("##bignum.mdigit-ref"             (2)   #f ()    0    integer extended)
-;;TODO: ("##bignum.mdigit-set!"            (3)   #t ()    0    #f      extended)
-;;TODO: ("##bignum.mdigit-mul!"            (6)   #t ()    0    integer extended)
-;;TODO: ("##bignum.mdigit-div!"            (6)   #t ()    0    integer extended)
-;;TODO: ("##bignum.mdigit-quotient"        (3)   #f ()    0    integer extended)
-;;TODO: ("##bignum.mdigit-remainder"       (4)   #f ()    0    integer extended)
-;;TODO: ("##bignum.mdigit-test?"           (4)   #f ()    0    boolean extended)
+(univ-define-prim-bool "##bignum.negative?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return
+      (^> (^array-index (^member arg1 "digits")
+                        (^- (^array-length (^member arg1 "digits")) (^int 1)))
+          (^int 8191)))))) ;;TODO: adjust for digit size
 
-;;TODO: ("##bignum.adigit-ones?"           (2)   #f ()    0    boolean extended)
-;;TODO: ("##bignum.adigit-zero?"           (2)   #f ()    0    boolean extended)
-;;TODO: ("##bignum.adigit-negative?"       (2)   #f ()    0    boolean extended)
-;;TODO: ("##bignum.adigit-="               (3)   #f ()    0    boolean extended)
-;;TODO: ("##bignum.adigit-<"               (3)   #f ()    0    boolean extended)
-;;TODO: ("##bignum.->fixnum"               (1)   #f ()    0    integer extended)
-;;TODO: ("##bignum.<-fixnum"               (1)   #f ()    0    integer extended)
-;;TODO: ("##bignum.adigit-shrink!"         (2)   #t ()    0    #f      extended)
-;;TODO: ("##bignum.adigit-copy!"           (4)   #t ()    0    #f      extended)
-;;TODO: ("##bignum.adigit-cat!"            (7)   #t ()    0    #f      extended)
-;;TODO: ("##bignum.adigit-bitwise-and!"    (4)   #t ()    0    #f      extended)
-;;TODO: ("##bignum.adigit-bitwise-ior!"    (4)   #t ()    0    #f      extended)
-;;TODO: ("##bignum.adigit-bitwise-xor!"    (4)   #t ()    0    #f      extended)
-;;TODO: ("##bignum.adigit-bitwise-not!"    (2)   #t ()    0    #f      extended)
+(univ-define-prim "##bignum.adigit-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return
+      (^fixnum-box (^array-length (^member arg1 "digits")))))))
 
-;;TODO: ("##bignum.fdigit-length"          (1)   #f ()    0    integer extended)
-;;TODO: ("##bignum.fdigit-ref"             (2)   #f ()    0    integer extended)
-;;TODO: ("##bignum.fdigit-set!"            (3)   #t ()    0    #f      extended)
+(univ-define-prim "##bignum.adigit-inc!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^assign (^gvar "temp1")
+                 (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2)))
+        (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitand (^parens (^+ (^gvar "temp1") (^int 1)))
+                          (^int 16383)))
+        (return
+         (^if-expr (^= (^gvar "temp1")
+                       (^int 16383))
+                   (^obj 1)
+                   (^obj 0)))))))
+
+(univ-define-prim "##bignum.adigit-dec!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^assign (^gvar "temp1")
+                 (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2)))
+        (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitand (^parens (^- (^gvar "temp1") (^int 1)))
+                          (^int 16383)))
+        (return
+         (^if-expr (^= (^gvar "temp1")
+                       (^int 0))
+                   (^obj 1)
+                   (^obj 0)))))))
+
+(univ-define-prim "##bignum.adigit-add!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4 arg5)
+     (^ (^assign (^gvar "temp1")
+                 (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2)))
+        (^assign (^gvar "temp2")
+                 (^bitand (^parens (^+ (^+ (^gvar "temp1")
+                                           (^array-index (^member arg3 "digits")
+                                                         (^fixnum-unbox arg4)))
+                                       (^fixnum-unbox arg5)))
+                          (^int 16383)))
+        (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^gvar "temp2"))
+        (return
+         (^if-expr (^< (^gvar "temp2")
+                       (^+ (^gvar "temp1") (^fixnum-unbox arg5)))
+                   (^obj 1)
+                   (^obj 0)))))))
+
+(univ-define-prim "##bignum.adigit-sub!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4 arg5)
+     (^ (^assign (^gvar "temp1")
+                 (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2)))
+        (^assign (^gvar "temp2")
+                 (^bitand (^parens (^- (^- (^gvar "temp1")
+                                           (^array-index (^member arg3 "digits")
+                                                         (^fixnum-unbox arg4)))
+                                       (^fixnum-unbox arg5)))
+                          (^int 16383)))
+        (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^gvar "temp2"))
+        (return
+         (^if-expr (^> (^gvar "temp2")
+                       (^- (^gvar "temp1") (^fixnum-unbox arg5)))
+                   (^obj 1)
+                   (^obj 0)))))))
+
+(univ-define-prim "##bignum.mdigit-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return
+      (^fixnum-box (^array-length (^member arg1 "digits")))))))
+
+(univ-define-prim "##bignum.mdigit-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^array-index (^member arg1 "digits")
+                                 (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##bignum.mdigit-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^fixnum-unbox arg3))
+        (return arg1)))))
+
+(univ-define-prim "##bignum.mdigit-mul!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6)
+     (^ (^assign (^gvar "temp1")
+                 (^+ (^+ (^array-index (^member arg1 "digits")
+                                       (^fixnum-unbox arg2))
+                         (^* (^array-index (^member arg3 "digits")
+                                           (^fixnum-unbox arg4))
+                             (^fixnum-unbox arg5)))
+                     (^fixnum-unbox arg6)))
+        (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitand (^gvar "temp1")
+                          (^int 16383)))
+        (return
+         (^fixnum-box (^>> (^gvar "temp1") (^int 14))))))))
+
+(univ-define-prim "##bignum.mdigit-div!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6)
+     (^ (^assign (^gvar "temp1")
+                 (^+ (^- (^array-index (^member arg1 "digits")
+                                       (^fixnum-unbox arg2))
+                         (^* (^array-index (^member arg3 "digits")
+                                           (^fixnum-unbox arg4))
+                             (^fixnum-unbox arg5)))
+                     (^fixnum-unbox arg6)))
+        (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitand (^gvar "temp1")
+                          (^int 16383)))
+        (^assign (^gvar "temp1")
+                 (^>> (^gvar "temp1") (^int 14)))
+        (return
+         (^fixnum-box
+          (^if-expr (^> (^gvar "temp1") (^int 0))
+                    (^- (^gvar "temp1") (^int 16384))
+                    (^gvar "temp1"))))))))
+
+(univ-define-prim "##bignum.mdigit-quotient" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (return
+      (^fixnum-box (univ-fxquotient
+                    ctx
+                    (^parens
+                     (^+ (^parens
+                          (^<< (^array-index (^member arg1 "digits")
+                                             (^fixnum-unbox arg2))
+                               (^int 14)))
+                         (^array-index (^member arg1 "digits")
+                                       (^- (^fixnum-unbox arg2)
+                                           (^int 1)))))
+                    (^fixnum-unbox arg3)))))))
+
+(univ-define-prim "##bignum.mdigit-remainder" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     (return
+      (^fixnum-box (^- (^parens
+                        (^+ (^parens
+                             (^<< (^array-index (^member arg1 "digits")
+                                                (^fixnum-unbox arg2))
+                                  (^int 14)))
+                            (^array-index (^member arg1 "digits")
+                                          (^- (^fixnum-unbox arg2)
+                                              (^int 1)))))
+                       (^* (^fixnum-unbox arg3)
+                           (^fixnum-unbox arg4))))))))
+
+(univ-define-prim-bool "##bignum.mdigit-test?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     (return
+      (^> (^* (^fixnum-unbox arg1)
+              (^fixnum-unbox arg2))
+          (^+ (^parens
+               (^<< (^fixnum-unbox arg3)
+                    (^int 14)))
+              (^fixnum-unbox arg4)))))))
+
+(univ-define-prim-bool "##bignum.adigit-ones?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^= (^array-index (^member arg1 "digits")
+                        (^fixnum-unbox arg2))
+          (^int 16383))))))
+
+(univ-define-prim-bool "##bignum.adigit-zero?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^= (^array-index (^member arg1 "digits")
+                        (^fixnum-unbox arg2))
+          (^int 0))))))
+
+(univ-define-prim-bool "##bignum.adigit-negative?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^> (^array-index (^member arg1 "digits")
+                        (^fixnum-unbox arg2))
+          (^int 8191))))))
+
+(univ-define-prim-bool "##bignum.adigit-=" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (return
+      (^= (^array-index (^member arg1 "digits")
+                        (^fixnum-unbox arg3))
+          (^array-index (^member arg2 "digits")
+                        (^fixnum-unbox arg3)))))))
+
+(univ-define-prim-bool "##bignum.adigit-<" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (return
+      (^< (^array-index (^member arg1 "digits")
+                        (^fixnum-unbox arg3))
+          (^array-index (^member arg2 "digits")
+                        (^fixnum-unbox arg3)))))))
+
+(univ-define-prim "##bignum.make" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (return
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'bignum_make))
+       arg1
+       arg2
+       arg3)))))
+
+(univ-define-prim "##fixnum->bignum" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'int2bignum))
+       (^fixnum-unbox arg1))))))
+
+(univ-define-prim "##bignum.adigit-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^array-shrink! (^member arg1 "digits")
+                        (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##bignum.adigit-copy!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     (^ (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^array-index (^member arg3 "digits")
+                               (^fixnum-unbox arg4)))
+        (return arg1)))))
+
+(univ-define-prim "##bignum.adigit-cat!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6 arg7)
+     (^ (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitand
+                  (^parens
+                   (^+ (^parens
+                        (^<< (^array-index (^member arg3 "digits")
+                                           (^fixnum-unbox arg4))
+                             (^fixnum-unbox arg7)))
+                       (^parens
+                        (^>> (^array-index (^member arg5 "digits")
+                                           (^fixnum-unbox arg6))
+                             (^- (^int 14)
+                                 (^fixnum-unbox arg7))))))
+                  16383))
+        (return arg1)))))
+
+(univ-define-prim "##bignum.adigit-bitwise-and!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     (^ (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitand (^array-index (^member arg1 "digits")
+                                        (^fixnum-unbox arg2))
+                          (^array-index (^member arg3 "digits")
+                                        (^fixnum-unbox arg4))))
+        (return arg1)))))
+
+(univ-define-prim "##bignum.adigit-bitwise-ior!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     (^ (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitior (^array-index (^member arg1 "digits")
+                                        (^fixnum-unbox arg2))
+                          (^array-index (^member arg3 "digits")
+                                        (^fixnum-unbox arg4))))
+        (return arg1)))))
+
+(univ-define-prim "##bignum.adigit-bitwise-xor!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     (^ (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitxor (^array-index (^member arg1 "digits")
+                                        (^fixnum-unbox arg2))
+                          (^array-index (^member arg3 "digits")
+                                        (^fixnum-unbox arg4))))
+        (return arg1)))))
+
+(univ-define-prim "##bignum.adigit-bitwise-not!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^assign (^array-index (^member arg1 "digits")
+                               (^fixnum-unbox arg2))
+                 (^bitnot (^array-index (^member arg1 "digits")
+                                        (^fixnum-unbox arg2))))
+        (return arg1)))))
 
 ;;----------------------------------------------------------------------------
 
