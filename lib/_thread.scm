@@ -1926,9 +1926,10 @@
               (##thread-schedule!))
             condvar
             timeout)))
+      (##thread-check-interrupts!) ;; catch any user interrupts
       (if (##eq? result (##void))
-        #t ;; abort wait when interrupted
-        result))
+          #t
+          result))
     (begin
       (macro-thread-reschedule-if-needed!)
       #f)))
