@@ -1577,19 +1577,7 @@ ___SCMOBJ ___setup_base_module ___PVOID
 
 #ifdef ___DEBUG
 
-      ___base_mod.debug = NULL;
-
-#ifdef USE_POSIX
-#if 1
-      ___base_mod.debug = ___fopen ("console", "w");
-#else
-      ___base_mod.debug = ___fopen ("/dev/console", "w");
-#endif
-#endif
-
-#ifdef USE_WIN32
-      ___base_mod.debug = ___fopen ("con:", "w");
-#endif
+      ___base_mod.debug = ___fopen ("gambc.log", "w");
 
       if (___base_mod.debug == NULL)
         ___base_mod.debug = ___stderr;
@@ -1625,7 +1613,7 @@ void ___cleanup_base_module ___PVOID
                      ___base_mod.free_mem_calls);
         }
 
-      if (___base_mod.debug != ___stdout)
+      if (___base_mod.debug != ___stderr)
         ___fclose (___base_mod.debug);
 
 #endif
