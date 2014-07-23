@@ -1921,12 +1921,6 @@ DEFS_DYN="$DEFS_OBJ_DYN_LIB_EXE $DEFS_DYN"
 DEFS_LIB="$DEFS_OBJ_DYN_LIB_EXE $DEFS_LIB"
 DEFS_EXE="$DEFS_OBJ_DYN_LIB_EXE $DEFS_EXE"
 
-echo "xxxxxxxxxxxxxxxxxxxxxxx $DEFS_OBJ_DYN_LIB_EXE"
-echo "xxxxxxxxxxxxxxxxxxxxxxx $DEFS_OBJ"
-echo "xxxxxxxxxxxxxxxxxxxxxxx $DEFS_DYN"
-echo "xxxxxxxxxxxxxxxxxxxxxxx $DEFS_LIB"
-echo "xxxxxxxxxxxxxxxxxxxxxxx $DEFS_EXE"
-
 AC_SUBST(FLAGS_OBJ)
 AC_SUBST(FLAGS_DYN)
 AC_SUBST(FLAGS_LIB)
