@@ -1578,13 +1578,18 @@
 
       (macro-port-mutex-lock! port) ;; get exclusive access to port
 
-      (let* ((wdevice-condvar (macro-device-port-wdevice-condvar port))
-             (wdevice (macro-condvar-name wdevice-condvar))
-             (result (##os-device-stream-width wdevice)))
-        (macro-port-mutex-unlock! port)
-        (if (##fx< result 0)
-            (##raise-os-io-exception port #f result output-port-width port)
-            result)))
+      (let loop ()
+
+        (let* ((wdevice-condvar (macro-device-port-wdevice-condvar port))
+               (wdevice (macro-condvar-name wdevice-condvar))
+               (result (##os-device-stream-width wdevice)))
+          (if (##fx= result ##err-code-EINTR)
+              (loop)
+              (begin
+                (macro-port-mutex-unlock! port)
+                (if (##fx< result 0)
+                    (##raise-os-io-exception port #f result output-port-width port)
+                    result))))))
 
     (let ((port
            (macro-make-device-port
