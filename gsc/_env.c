@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_env.c", produced by Gambit-C v4.7.2
+; File: "_env.c", produced by Gambit-C v4.7.3
 (
-407002
+407003
 " _env"
 ((" _env"))
 (
@@ -101,10 +101,10 @@
 "string-append"
 "symbol->string"
 )
- 1
+ ()
 )
 #else
-#define ___VERSION 407002
+#define ___VERSION 407003
 #define ___MODULE_NAME " _env"
 #define ___LINKER_ID ____20___env
 #define ___MH_PROC ___H__20___env

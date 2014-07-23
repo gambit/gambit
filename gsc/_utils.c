@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_utils.c", produced by Gambit-C v4.7.2
+; File: "_utils.c", produced by Gambit-C v4.7.3
 (
-407002
+407003
 " _utils"
 ((" _utils"))
 (
@@ -123,10 +123,10 @@
 "table-set!"
 "write"
 )
- 1
+ ()
 )
 #else
-#define ___VERSION 407002
+#define ___VERSION 407003
 #define ___MODULE_NAME " _utils"
 #define ___LINKER_ID ____20___utils
 #define ___MH_PROC ___H__20___utils

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_repl.c", produced by Gambit-C v4.7.2
+; File: "_repl.c", produced by Gambit-C v4.7.3
 (
-407002
+407003
 " _repl"
 ((" _repl"))
 (
@@ -976,10 +976,10 @@
 "open-output-file"
 "open-process"
 )
- 1
+ ()
 )
 #else
-#define ___VERSION 407002
+#define ___VERSION 407003
 #define ___MODULE_NAME " _repl"
 #define ___LINKER_ID ____20___repl
 #define ___MH_PROC ___H__20___repl
@@ -16687,11 +16687,11 @@ ___END_P_COD
 #undef ___PH_LBL0
 #define ___PH_LBL0 705
 #undef ___PD_ALL
-#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
-#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2
 #undef ___PW_ALL
-#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R4
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
@@ -16739,7 +16739,7 @@ ___DEF_GLBL(___L8__23__23_continuation_2d_next_2d_frame)
    ___ADJFP(8)
    ___POLL(4)
 ___DEF_SLBL(4,___L4__23__23_continuation_2d_next_2d_frame)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),315,___G__23__23_continuation_2d_next)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_continuation_2d_next)
 ___DEF_SLBL(5,___L5__23__23_continuation_2d_next_2d_frame)
    ___SET_STK(-5,___R1)
    ___IF(___NOT(___FALSEP(___R1)))
@@ -16774,11 +16774,11 @@ ___END_P_COD
 #undef ___PH_LBL0
 #define ___PH_LBL0 714
 #undef ___PD_ALL
-#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
-#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3
 #undef ___PW_ALL
-#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
@@ -16827,7 +16827,7 @@ ___DEF_GLBL(___L7__23__23_continuation_2d_count_2d_frames)
    ___ADJFP(8)
    ___POLL(4)
 ___DEF_SLBL(4,___L4__23__23_continuation_2d_count_2d_frames)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),315,___G__23__23_continuation_2d_next)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_continuation_2d_next)
 ___DEF_SLBL(5,___L5__23__23_continuation_2d_count_2d_frames)
    ___SET_STK(-3,___R1)
    ___IF(___FALSEP(___STK(-6)))

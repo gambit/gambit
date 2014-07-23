@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_x86.c", produced by Gambit-C v4.7.2
+; File: "_x86.c", produced by Gambit-C v4.7.3
 (
-407002
+407003
 " _x86"
 ((" _x86"))
 (
@@ -337,10 +337,10 @@
 "vector-ref"
 "vector?"
 )
- 1
+ ()
 )
 #else
-#define ___VERSION 407002
+#define ___VERSION 407003
 #define ___MODULE_NAME " _x86"
 #define ___LINKER_ID ____20___x86
 #define ___MH_PROC ___H__20___x86

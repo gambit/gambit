@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit-C v4.7.2
+; File: "_gsi_.c", produced by Gambit-C v4.7.3
 (
-407002
+407003
 " _gsi_"
 ((" _kernel" (preload . #t)) (" _system" (preload . #t)) (" _num" (preload . #t)) (" _std" (preload . #t)) (" _eval" (preload . #t)) (" _io" (preload . #t)) (" _nonstd" (preload . #t)) (" _thread" (preload . #t)) (" _repl" (preload . #t)) (" _gsilib" (preload . #t)) (" _gsi" (preload . #t)))
 (
@@ -1241,6 +1241,7 @@
 "##bignum.adigit-width"
 "##bignum.arithmetic-shift"
 "##bignum.arithmetic-shift-into!"
+"##bignum.copy"
 "##bignum.div"
 "##bignum.fast-gcd-size"
 "##bignum.fdigit-base"
@@ -1980,6 +1981,7 @@
 "##in-new-compilation-scope"
 "##include-file-as-a-begin-expr"
 "##inexact->exact"
+"##inexact?"
 "##infinite?"
 "##infix-compound-expand"
 "##infix-id"
@@ -2479,7 +2481,7 @@
 "##reciprocal-cache"
 "##register-module-descr!"
 "##register-module-descrs!"
-"##register-module-descrs-and-load-last!"
+"##register-module-descrs-and-load!"
 "##registered-modules"
 "##remainder"
 "##remove"
@@ -2819,11 +2821,6 @@
 "##type-all-fields"
 "##type-exception-names"
 "##type-field-count"
-"##type-fields"
-"##type-flags"
-"##type-id"
-"##type-name"
-"##type-super"
 "##type-type"
 "##type?"
 "##u16vector-copy"
@@ -3238,7 +3235,6 @@
 "negative?"
 "network-info"
 "newline"
-"not"
 "number->string"
 "numerator"
 "odd?"
@@ -3409,6 +3405,7 @@
 (
 "##10^-constants"
 "##add-job-at-tail!"
+"##append-lists"
 "##apply-global-with-procedure-check-nary"
 "##apply-with-procedure-check-nary"
 "##bignum->fixnum"
@@ -3776,7 +3773,6 @@
 "##global-var-primitive-set!"
 "##global-var-ref"
 "##global-var-set!"
-"##inexact?"
 "##initial-dynwind"
 "##input-port-column-set!"
 "##input-port-line-set!"
@@ -3939,6 +3935,11 @@
 "##time"
 "##type"
 "##type-cast"
+"##type-fields"
+"##type-flags"
+"##type-id"
+"##type-name"
+"##type-super"
 "##u16vector"
 "##u16vector->list"
 "##u16vector-append"
@@ -4200,6 +4201,7 @@
 "nonprocedure-operator-exception-operator"
 "nonprocedure-operator-exception-rte"
 "nonprocedure-operator-exception?"
+"not"
 "null-environment"
 "null?"
 "number-of-arguments-limit-exception-arguments"
@@ -4537,7 +4539,7 @@
  #f
 )
 #else
-#define ___VERSION 407002
+#define ___VERSION 407003
 #define ___LINKFILE_NAME " _gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
@@ -4763,6 +4765,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_any_2d_bits_2d_set_3f_,___G__23__23_any_2d_bits_
 ___DEF_OLD_SYM_GLO(___S__23__23_append,___G__23__23_append)
 ___DEF_OLD_SYM_GLO(___S__23__23_append_2d_f32vectors,___G__23__23_append_2d_f32vectors)
 ___DEF_OLD_SYM_GLO(___S__23__23_append_2d_f64vectors,___G__23__23_append_2d_f64vectors)
+___DEF_OLD_SYM_GLO(___S__23__23_append_2d_lists,___G__23__23_append_2d_lists)
 ___DEF_OLD_SYM_GLO(___S__23__23_append_2d_s16vectors,___G__23__23_append_2d_s16vectors)
 ___DEF_OLD_SYM_GLO(___S__23__23_append_2d_s32vectors,___G__23__23_append_2d_s32vectors)
 ___DEF_OLD_SYM_GLO(___S__23__23_append_2d_s64vectors,___G__23__23_append_2d_s64vectors)
@@ -4822,6 +4825,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_bignum_2e_adigit_2d_zero_3f_,___G__23__23_bignum
 ___DEF_OLD_SYM_GLO(___S__23__23_bignum_2e_adigit_2d_zeros,___G__23__23_bignum_2e_adigit_2d_zeros)
 ___DEF_OLD_SYM_GLO(___S__23__23_bignum_2e_arithmetic_2d_shift,___G__23__23_bignum_2e_arithmetic_2d_shift)
 ___DEF_OLD_SYM_GLO(___S__23__23_bignum_2e_arithmetic_2d_shift_2d_into_21_,___G__23__23_bignum_2e_arithmetic_2d_shift_2d_into_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_bignum_2e_copy,___G__23__23_bignum_2e_copy)
 ___DEF_OLD_SYM_GLO(___S__23__23_bignum_2e_div,___G__23__23_bignum_2e_div)
 ___DEF_OLD_SYM_GLO(___S__23__23_bignum_2e_fast_2d_gcd_2d_size,___G__23__23_bignum_2e_fast_2d_gcd_2d_size)
 ___DEF_OLD_SYM_GLO(___S__23__23_bignum_2e_fdigit_2d_base,___G__23__23_bignum_2e_fdigit_2d_base)
@@ -6499,7 +6503,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_real_3f_,___G__23__23_real_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_reciprocal_2d_cache,___G__23__23_reciprocal_2d_cache)
 ___DEF_OLD_SYM_GLO(___S__23__23_register_2d_module_2d_descr_21_,___G__23__23_register_2d_module_2d_descr_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_register_2d_module_2d_descrs_21_,___G__23__23_register_2d_module_2d_descrs_21_)
-___DEF_OLD_SYM_GLO(___S__23__23_register_2d_module_2d_descrs_2d_and_2d_load_2d_last_21_,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_2d_last_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_registered_2d_modules,___G__23__23_registered_2d_modules)
 ___DEF_OLD_SYM_GLO(___S__23__23_remainder,___G__23__23_remainder)
 ___DEF_OLD_SYM_GLO(___S__23__23_remote_2d_dbg_2d_addr,___G__23__23_remote_2d_dbg_2d_addr)
