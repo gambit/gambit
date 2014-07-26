@@ -6,6 +6,7 @@
 
 AC_INIT(Gambit-C,v4.7.2,gambit@iro.umontreal.ca,gambc-v4_7_2)
 
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS(include/config.h)
 
 PACKAGE_SHORTNAME="gambc"
@@ -1254,94 +1255,48 @@ AC_CHECK_TYPE([struct stat64],
 # Check for threading system early, in case this has an impact on
 # other functionality.
 
-CONF_THREAD_SYSTEM="___USE_NO_THREAD_SYSTEM"
-CONF_THREAD_LOCAL_STORAGE_CLASS="___NO_THREAD_LOCAL_STORAGE_CLASS"
+if test "x$ENABLE_THREAD_SYSTEM" = xno; then
 
-if test "$ENABLE_THREAD_SYSTEM" != no; then
+  CONF_THREAD_SYSTEM=___USE_NO_THREAD_SYSTEM
+  CONF_THREAD_LOCAL_STORAGE_CLASS=___NO_THREAD_LOCAL_STORAGE_CLASS
 
-  FOUND_THREAD_SYSTEM="no"
+else
 
-  if test "$FOUND_THREAD_SYSTEM" = no -a \( "$ENABLE_THREAD_SYSTEM" = yes -o "$ENABLE_THREAD_SYSTEM" = posix -o "$ENABLE_THREAD_SYSTEM" = pthreads \); then
+  case $ENABLE_THREAD_SYSTEM in
+    posix|pthreads|yes|'')
+      AX_PTHREAD([LIBS="$PTHREAD_LIBS $LIBS"
 
-    # check if posix thread system is available
+                  if test "x$ENABLE_CPLUSPLUS" = xyes; then
+                    CXXFLAGS="$PTHREAD_CFLAGS $CXXFLAGS"
+                  fi
 
-    ORIG_CFLAGS="$CFLAGS"
-    ORIG_LIBS="$LIBS"
+                  CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
+                  CC="$PTHREAD_CC"
+                  CONF_THREAD_SYSTEM=___USE_POSIX_THREAD_SYSTEM],
+                 [AC_MSG_ERROR([Pthread API support is required.])])
+      ;;
 
-    for opt in "" "OPT_CFLAGS=\"-mt\"" "OPT_CFLAGS=\"-pthread\"" "OPT_LIBS=\"-lpthread\""; do
+    win32)
+      AC_MSG_CHECKING([for win32 threads])
 
-      OPT_CFLAGS=""
-      OPT_LIBS=""
+      if test "x$OS_WIN32" = xyes; then
+        AC_MSG_RESULT([yes])
+        CONF_THREAD_SYSTEM=___USE_WIN32_THREAD_SYSTEM
+      else
+        AC_MSG_RESULT([no])
+        AC_MSG_ERROR([Win32 API support is required.])
+      fi
+      ;;
 
-      eval "$opt"
-
-      CFLAGS="$ORIG_CFLAGS $OPT_CFLAGS"
-      LIBS="$ORIG_LIBS $OPT_LIBS"
-
-      AC_MSG_CHECKING([for posix threads with CFLAGS='$CFLAGS' and LIBS='$LIBS'])
-
-      AC_LINK_IFELSE(
-        [AC_LANG_PROGRAM([
-           #include <pthread.h>
-           void *start_fn (void *ptr) { return ptr; }
-        ],[
-           pthread_t thread;
-           pthread_mutex_t mut;
-           if (pthread_mutex_init (&mut, NULL) == 0 &&
-               pthread_mutex_lock (&mut) == 0 &&
-               pthread_mutex_unlock (&mut) == 0 &&
-               pthread_mutex_destroy (&mut) == 0) {
-             pthread_create (&thread, NULL, start_fn, NULL);
-             pthread_join (&thread, NULL);
-           }
-        ])],[
-         AC_MSG_RESULT([yes])
-         FOUND_THREAD_SYSTEM="posix"
-         FLAGS_OBJ="$FLAGS_OBJ $OPT_CFLAGS"
-         break
-        ],[
-         AC_MSG_RESULT([no])
-         LIBS="$ORIG_LIBS"
-        ])
-
-      CFLAGS="$ORIG_CFLAGS"
-
-    done
-
-  fi
-
-  if test "$FOUND_THREAD_SYSTEM" = no -a \( "$ENABLE_THREAD_SYSTEM" = yes -o "$ENABLE_THREAD_SYSTEM" = win32 \); then
-
-    # check if win32 thread system is available
-
-    AC_MSG_CHECKING([for win32 threads])
-
-    if test "$OS_WIN32" = yes; then
-      AC_MSG_RESULT([yes])
-      FOUND_THREAD_SYSTEM="win32"
-    else
-      AC_MSG_RESULT([no])
-    fi
-
-  fi
-
-  if test "$FOUND_THREAD_SYSTEM" != no; then
-
-    case "$FOUND_THREAD_SYSTEM" in
-
-      posix)
-        CONF_THREAD_SYSTEM="___USE_POSIX_THREAD_SYSTEM"
-        ;;
-
-      win32)
-        CONF_THREAD_SYSTEM="___USE_WIN32_THREAD_SYSTEM"
-        ;;
+    *)
+      AC_MSG_ERROR([The unknown thread interface "${ENABLE_THREAD_SYSTEM}" was requested.])
+      ;;
 
     esac
 
     AC_MSG_CHECKING([for thread local storage class])
 
-    TLS_CLASS="none"
+    TLS_CLASS=none
 
     for tls_class in "__thread" "__declspec(thread)"; do
       AC_TRY_COMPILE([
@@ -1352,49 +1307,13 @@ if test "$ENABLE_THREAD_SYSTEM" != no; then
        ],[TLS_CLASS="$tls_class"; break])
     done
 
-    AC_MSG_RESULT($TLS_CLASS)
+    AC_MSG_RESULT([$TLS_CLASS])
 
-    if test "$TLS_CLASS" != none; then
+    if test "$TLS_CLASS" = none; then
+      CONF_THREAD_LOCAL_STORAGE_CLASS=___NO_THREAD_LOCAL_STORAGE_CLASS
+    else
       CONF_THREAD_LOCAL_STORAGE_CLASS="___THREAD_LOCAL_STORAGE_CLASS $TLS_CLASS"
     fi
-
-  else
-
-    if test "$ENABLE_THREAD_SYSTEM" = yes; then
-
-      AC_MSG_NOTICE([
-*********************************************************************
-***                                                               ***
-*** A thread system is required for this configuration but none   ***
-*** of the supported thread systems (posix threads and win32      ***
-*** threads) are available on this platform. The configuration    ***
-*** will proceed as though --disable-thread-system,               ***
-*** --disable-multiple-vms, and --disable-multiple-threaded-vms   ***
-*** were specified.                                               ***
-***                                                               ***
-*********************************************************************
-])
-
-    else
-
-      AC_MSG_NOTICE([
-*********************************************************************
-***                                                               ***
-*** The thread system selected with --enable-thread-system=XXX    ***
-*** is not available on this platform. The configuration will     ***
-*** proceed as though --disable-thread-system,                    ***
-*** --disable-multiple-vms, and --disable-multiple-threaded-vms   ***
-*** were specified.                                               ***
-***                                                               ***
-*********************************************************************
-])
-
-    fi
-
-    CONF_SINGLE_MULTIPLE_VMS="___SINGLE_VM"
-    CONF_SINGLE_MULTIPLE_THREADED_VMS="___SINGLE_THREADED_VMS"
-
-  fi
 
 fi
 
