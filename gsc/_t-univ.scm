@@ -3078,9 +3078,11 @@
                        (vector->list slots))))))))
 
           (else
-           (^ "UNIMPLEMENTED_OBJECT("
-              (object->string obj)
-              ")"))))
+           (compiler-user-warning #f "UNIMPLEMENTED OBJECT:" obj)
+           (^str
+            (string-append
+             "UNIMPLEMENTED OBJECT: "
+             (object->string obj))))))
 
   (emit-obj obj #t))
 
