@@ -8290,8 +8290,7 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return
-      (^fixnum-box (^bitand (^bitnot (^fixnum-unbox arg))
-                            (- (expt 2 univ-tag-bits))))))))
+      (^fixnum-box (^bitnot (^fixnum-unbox arg)))))))
 
 (univ-define-prim "##fxand" #f
   (univ-fold-left
