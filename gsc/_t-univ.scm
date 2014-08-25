@@ -136,6 +136,16 @@
 (define (univ-php-version-53? ctx)
   (assq 'php53 (ctx-options ctx)))
 
+(define univ-tag-bits 2)
+(define univ-word-bits 32)
+
+(define univ-fixnum-max+1
+  (arithmetic-shift 1 (- univ-word-bits (+ 1 univ-tag-bits))))
+
+(define univ-fixnum-max (- univ-fixnum-max+1 1))
+(define univ-fixnum-min (- -1 univ-fixnum-max))
+(define univ-fixnum-max*2+1 (+ (* univ-fixnum-max 2) 1))
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; "Universal" back-end.
@@ -1327,13 +1337,10 @@
           univ-tag-bits))
 
     ((ruby php)
-     (let ((maxfix+1
-            (arithmetic-shift 1
-                              (- univ-word-bits (+ 1 univ-tag-bits)))))
-       (^- (^parens (^bitand (^parens (^+ (^+ expr1 expr2)
-                                          maxfix+1))
-                             (- (* 2 maxfix+1) 1)))
-           maxfix+1)))
+     (^- (^parens (^bitand (^parens (^+ (^+ expr1 expr2)
+                                        univ-fixnum-max+1))
+                           univ-fixnum-max*2+1))
+         univ-fixnum-max+1))
 
     (else
      (compiler-internal-error
@@ -1360,15 +1367,12 @@
           univ-tag-bits))
 
     ((ruby php)
-     (let ((maxfix+1
-            (arithmetic-shift 1
-                              (- univ-word-bits (+ 1 univ-tag-bits)))))
-       (^- (^parens (^bitand (^parens (^+ (if expr2
-                                              (^- expr1 expr2)
-                                              (^- expr1))
-                                          maxfix+1))
-                             (- (* 2 maxfix+1) 1)))
-           maxfix+1)))
+     (^- (^parens (^bitand (^parens (^+ (if expr2
+                                            (^- expr1 expr2)
+                                            (^- expr1))
+                                        univ-fixnum-max+1))
+                           univ-fixnum-max*2+1))
+         univ-fixnum-max+1))
 
     (else
      (compiler-internal-error
@@ -1396,13 +1400,10 @@
           univ-tag-bits))
 
     ((ruby php)
-     (let ((maxfix+1
-            (arithmetic-shift 1
-                              (- univ-word-bits (+ 1 univ-tag-bits)))))
-       (^- (^parens (^bitand (^parens (^+ (^* expr1 expr2)
-                                          maxfix+1))
-                             (- (* 2 maxfix+1) 1)))
-           maxfix+1)))
+     (^- (^parens (^bitand (^parens (^+ (^* expr1 expr2)
+                                        univ-fixnum-max+1))
+                           univ-fixnum-max*2+1))
+         univ-fixnum-max+1))
 
     (else
      (compiler-internal-error
@@ -2961,8 +2962,19 @@
                                    (emit-obj (denominator obj) #f)))))
 
                  (else ;; exact integer
-                  ;; TODO: bignums
-                  (^fixnum-box (^int obj)))))
+                  (if (and (>= obj univ-fixnum-min)
+                           (<= obj univ-fixnum-max))
+
+                      (^fixnum-box (^int obj))
+
+                      (univ-obj-use
+                       ctx
+                       obj
+                       force-var?
+                       (lambda ()
+                         (^new (^prefix-class (univ-use-rtlib ctx 'Bignum))
+                               (^array-literal
+                                (univ-bignum-digits obj)))))))))
 
           ((char? obj)
            (^char-obj obj force-var?))
@@ -3085,6 +3097,33 @@
              (object->string obj))))))
 
   (emit-obj obj #t))
+
+(define univ-adigit-width 14)
+
+(define (univ-bignum-digits obj)
+
+  (define (dig n len rest)
+    (cond ((= len 1)
+           (cons n rest))
+          (else
+           (let* ((hi-len (quotient len 2))
+                  (lo-len (- len hi-len))
+                  (lo-len-bits (* univ-adigit-width lo-len)))
+             (let* ((hi (arithmetic-shift n (- lo-len-bits)))
+                    (lo (- n (arithmetic-shift hi lo-len-bits))))
+               (dig lo
+                    lo-len
+                    (dig hi
+                         hi-len
+                         rest)))))))
+
+  (let* ((width (integer-length obj))
+         (len (+ (quotient width univ-adigit-width) 1)))
+    (dig (if (< obj 0)
+           (+ (arithmetic-shift 1 (* univ-adigit-width len)) obj)
+           obj)
+         len
+         '())))
 
 (define (univ-emit-array-literal ctx elems)
   (case (target-name (ctx-target ctx))
@@ -8063,9 +8102,9 @@ tanh
                              (^gvar "temp1")
                              (^+ (^fixnum-unbox arg1)
                                  (^fixnum-unbox arg2))))
-                           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                         (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                       (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                           univ-fixnum-max+1))
+                         univ-fixnum-max*2+1))
+                       univ-fixnum-max+1)))
                     (^gvar "temp1")))
                (^fixnum-box (^gvar "temp2"))))
 
@@ -8133,9 +8172,9 @@ tanh
                              (^gvar "temp1")
                              (^* (^fixnum-unbox arg1)
                                  (^fixnum-unbox arg2))))
-                           (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))))
-                         (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)))
-                       (expt 2 (- univ-word-bits (+ 1 univ-tag-bits))))))
+                           univ-fixnum-max+1))
+                         univ-fixnum-max*2+1))
+                       univ-fixnum-max+1)))
                     (^gvar "temp1")))
                (^fixnum-box (^gvar "temp2"))))
 
@@ -8194,11 +8233,11 @@ tanh
                 (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                 (^ "- " (^fixnum-unbox arg1)))
             ") + "
-            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            univ-fixnum-max+1
             ") & "
-            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            univ-fixnum-max*2+1
             ") - "
-            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            univ-fixnum-max+1
             ") == " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
 
         ((php)
@@ -8207,11 +8246,11 @@ tanh
                 (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                 (^ "- " (^fixnum-unbox arg1)))
             ") + "
-            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            univ-fixnum-max+1
             ") & "
-            (- (expt 2 (- univ-word-bits univ-tag-bits)) 1)
+            univ-fixnum-max*2+1
             ") - "
-            (expt 2 (- univ-word-bits (+ 1 univ-tag-bits)))
+            univ-fixnum-max+1
             ") === " (^gvar "temp1") ") ? " (^fixnum-box (^gvar "temp2")) " : false"))
 
         (else
@@ -9727,9 +9766,6 @@ tanh
           (queue-put! (ctx-decls ctx) (^ decl "\n"))
           (return #f))
         (compiler-internal-error "##inline-host-declaration requires a constant string argument"))))
-
-(define univ-tag-bits 2)
-(define univ-word-bits 32)
 
 (univ-define-prim "##continuation-capture" #f
 
