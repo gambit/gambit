@@ -2340,11 +2340,22 @@
 
                        (define (extract lst)
                          (cond ((pair? lst)
-                                (let* ((name-source (car lst))
-                                       (name (source-code name-source)))
-                                  (if (symbol-object? name)
-                                    (cons name (extract (cdr lst)))
-                                    (pt-syntax-error name-source "Identifier expected"))))
+                                (let* ((alias-source (car lst))
+                                       (alias (source-code alias-source)))
+                                  (if (not (or (symbol-object? alias)
+                                               (and (pair? alias)
+                                                    (pair? (cdr alias))
+                                                    (null? (cddr alias))
+                                                    (symbol-object?
+                                                     (source-code (car alias)))
+                                                    (symbol-object?
+                                                     (source-code (cadr alias))))))
+                                      (pt-syntax-error source "Ill-formed namespace")
+                                      (cons (if (symbol-object? alias)
+                                                (cons alias alias)
+                                                (cons (source-code (car alias))
+                                                      (source-code (cadr alias))))
+                                            (extract (cdr lst))))))
                                ((null? lst)
                                 '())
                                (else

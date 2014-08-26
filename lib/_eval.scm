@@ -400,8 +400,8 @@
 (define (##cte-decl-value cte)
   (##vector-ref cte 2))
 
-(define (##cte-namespace parent-cte prefix vars)
-  (##vector parent-cte prefix vars))
+(define (##cte-namespace parent-cte prefix aliases)
+  (##vector parent-cte prefix aliases))
 
 (define (##cte-namespace? cte)
   (and (##fx= (##vector-length cte) 3)
@@ -410,7 +410,7 @@
 (define (##cte-namespace-prefix cte)
   (##vector-ref cte 1))
 
-(define (##cte-namespace-vars cte)
+(define (##cte-namespace-aliases cte)
   (##vector-ref cte 2))
 
 (define (##cte-relink cte new-parent-cte)
@@ -429,7 +429,7 @@
             ((##cte-namespace? cte)
              (##cte-namespace new-parent-cte
                               (##cte-namespace-prefix cte)
-                              (##cte-namespace-vars cte))))
+                              (##cte-namespace-aliases cte))))
       #f))
 
 (define (##cte-add-macro parent-cte name descr)
@@ -444,22 +444,22 @@
 
   (replace parent-cte))
 
-(define (##cte-add-namespace parent-cte prefix vars)
+(define (##cte-add-namespace parent-cte prefix aliases)
 
   (define (replace cte)
     (cond ((##cte-top? cte)
            #f)
           ((##cte-namespace? cte)
-           (if (##pair? (##cte-namespace-vars cte))
+           (if (##pair? (##cte-namespace-aliases cte))
                (replace (##cte-parent-cte cte))
-               (##cte-namespace (##cte-parent-cte cte) prefix vars)))
+               (##cte-namespace (##cte-parent-cte cte) prefix aliases)))
           (else
            #f))) ;; don't go beyond a frame, macro definition or declaration
 
-  (if (##pair? vars)
-      (##cte-namespace parent-cte prefix vars)
+  (if (##pair? aliases)
+      (##cte-namespace parent-cte prefix aliases)
       (or (replace parent-cte)
-          (##cte-namespace parent-cte prefix vars))))
+          (##cte-namespace parent-cte prefix aliases))))
 
 (define (##check-namespace src)
   (let ((code (##source-code src)))
@@ -467,37 +467,48 @@
       (cond ((##pair? forms)
              (let* ((form-src (##sourcify (##car forms) src))
                     (form (##source-code form-src)))
-               (if (##pair? form)
+               (if (##not (##pair? form))
+                   (##raise-expression-parsing-exception
+                    'ill-formed-namespace
+                    form-src)
                    (let* ((space-src (##sourcify (##car form) form-src))
                           (space (##source-code space-src)))
-                     (if (##string? space)
-                         (if (##valid-prefix? space)
+                     (if (##not (##string? space))
+                         (##raise-expression-parsing-exception
+                          'namespace-prefix-must-be-string
+                          space-src)
+                         (if (##not (##valid-prefix? space))
+                             (##raise-expression-parsing-exception
+                              'ill-formed-namespace-prefix
+                              space-src)
                              (let loop2 ((lst (##cdr form)))
                                (cond ((##pair? lst)
-                                      (let* ((id-src
+                                      (let* ((alias-src
                                               (##sourcify (##car lst) form-src))
-                                             (id
-                                              (##source-code id-src)))
-                                        (if (##not (##symbol? id))
+                                             (alias
+                                              (##source-code alias-src)))
+                                        (if (##not (or (##symbol? alias)
+                                                       (and (##pair? alias)
+                                                            (##pair? (##cdr alias))
+                                                            (##null? (##cddr alias))
+                                                            (##symbol?
+                                                             (##source-code
+                                                              (##sourcify (##car alias) form-src)))
+                                                            (##symbol?
+                                                             (##source-code
+                                                              (##sourcify (##cadr alias) form-src))))))
+
                                             (##raise-expression-parsing-exception
-                                             'id-expected
-                                             id-src))
+
+                                             'ill-formed-namespace
+                                             form-src))
                                         (loop2 (##cdr lst))))
                                      ((##not (##null? lst))
                                       (##raise-expression-parsing-exception
                                        'ill-formed-namespace
                                        form-src))
                                      (else
-                                      (loop1 (##cdr forms)))))
-                             (##raise-expression-parsing-exception
-                              'ill-formed-namespace-prefix
-                              space-src))
-                         (##raise-expression-parsing-exception
-                          'namespace-prefix-must-be-string
-                          space-src)))
-                   (##raise-expression-parsing-exception
-                    'ill-formed-namespace
-                    form-src))))
+                                      (loop1 (##cdr forms)))))))))))
             ((##not (##null? forms))
              (##raise-expression-parsing-exception
               'ill-formed-namespace
@@ -533,7 +544,14 @@
     (let loop ((cte parent-cte) (forms forms))
       (if (##pair? forms)
           (let ((form (##car forms)))
-            (loop (##cte-add-namespace cte (##car form) (##cdr form))
+            (loop (##cte-add-namespace
+                   cte
+                   (##car form)
+                   (##map (lambda (x)
+                            (if (##symbol? x)
+                                (##cons x x)
+                                (##cons (##car x) (##cadr x))))
+                          (##cdr form)))
                   (##cdr forms)))
           cte))))
 
@@ -601,9 +619,11 @@
                      (##vector 'macro name (##cte-macro-descr cte))
                      (loop1 name full? parent-cte up)))
                 ((and (##not full?) (##cte-namespace? cte))
-                 (let ((vars (##cte-namespace-vars cte)))
-                   (if (or (##not (##pair? vars)) (##memq name vars))
-                       (loop1 (##make-full-name (##cte-namespace-prefix cte) name)
+                 (let* ((aliases (##cte-namespace-aliases cte))
+                        (a (and (##pair? aliases) (##assq name aliases))))
+                   (if a
+                       (loop1 (##make-full-name (##cte-namespace-prefix cte)
+                                                (##cdr a))
                               #t
                               parent-cte
                               up)
@@ -619,9 +639,11 @@
             name
             (let ((parent-cte (##cte-parent-cte cte)))
               (cond ((##cte-namespace? cte)
-                     (let ((vars (##cte-namespace-vars cte)))
-                       (if (or (##not (##pair? vars)) (##memq name vars))
-                           (##make-full-name (##cte-namespace-prefix cte) name)
+                     (let* ((aliases (##cte-namespace-aliases cte))
+                            (a (and (##pair? aliases) (##assq name aliases))))
+                       (if a
+                           (##make-full-name (##cte-namespace-prefix cte)
+                                             (##cdr a))
                            (loop parent-cte))))
                     (else
                      (loop parent-cte))))))))

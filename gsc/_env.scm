@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_env.scm", Time-stamp: <2007-06-28 18:50:52 feeley>
+;;; File: "_env.scm"
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -72,10 +72,9 @@
     var))
 
 (define (env-macro env name def)
-  (let ((name* (if (full-name? name)
-                   name
-                   (let ((prefix (env-namespace-prefix env name)))
-                     (if prefix (make-full-name prefix name) name)))))
+  (let ((name* (or (and (not (full-name? name))
+                        (env-namespace-lookup env name))
+                   name)))
     (vector (vector-ref env 0)
             (cons (cons name* def) (env-macros-ref env))
             (env-decl-ref env)
@@ -103,15 +102,18 @@
 (define (env-namespace-ref env)  (vector-ref env 3))
 (define (env-parent-ref env)     (vector-ref env 4))
 
-(define (env-namespace-prefix env name)
+(define (env-namespace-lookup env name)
   (let loop ((lst (env-namespace-ref env)))
     (if (pair? lst)
         (let* ((x (car lst))
                (space (car x))
-               (syms (cdr x)))
-          (if (or (null? syms) (memq name syms))
-              space
-              (loop (cdr lst))))
+               (aliases (cdr x)))
+          (if (null? aliases)
+              (make-full-name space name)
+              (let ((a (assq name aliases)))
+                (if a
+                    (make-full-name space (cdr a))
+                    (loop (cdr lst))))))
         #f)))
 
 (define (env-lookup env name stop-at-first-frame? proc)
@@ -119,10 +121,9 @@
   (define (search env name full?)
     (if full?
         (search* env name #t)
-        (let ((prefix (and ;(pair? (env-namespace-ref env));**********brad
-                       (env-namespace-prefix env name))))
-          (if prefix
-              (search* env (make-full-name prefix name) #t)
+        (let ((full-name (env-namespace-lookup env name)))
+          (if full-name
+              (search* env full-name #t)
               (search* env name #f)))))
 
   (define (search* env name full?)
