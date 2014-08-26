@@ -619,15 +619,10 @@
                      (##vector 'macro name (##cte-macro-descr cte))
                      (loop1 name full? parent-cte up)))
                 ((and (##not full?) (##cte-namespace? cte))
-                 (let* ((aliases (##cte-namespace-aliases cte))
-                        (a (and (##pair? aliases) (##assq name aliases))))
-                   (if a
-                       (loop1 (##make-full-name (##cte-namespace-prefix cte)
-                                                (##cdr a))
-                              #t
-                              parent-cte
-                              up)
-                       (loop1 name full? parent-cte up))))
+                 (let ((full-name (##cte-namespace-lookup cte name)))
+                   (if full-name
+                       (loop1 full-name #t parent-cte up)
+                       (loop1 name #f parent-cte up))))
                 (else
                  (loop1 name full? parent-cte up)))))))
 
@@ -639,14 +634,20 @@
             name
             (let ((parent-cte (##cte-parent-cte cte)))
               (cond ((##cte-namespace? cte)
-                     (let* ((aliases (##cte-namespace-aliases cte))
-                            (a (and (##pair? aliases) (##assq name aliases))))
-                       (if a
-                           (##make-full-name (##cte-namespace-prefix cte)
-                                             (##cdr a))
+                     (let ((full-name (##cte-namespace-lookup cte name)))
+                       (or full-name
                            (loop parent-cte))))
                     (else
                      (loop parent-cte))))))))
+
+(define (##cte-namespace-lookup cte name)
+  (let ((aliases (##cte-namespace-aliases cte)))
+    (if (##null? aliases)
+        (##make-full-name (##cte-namespace-prefix cte) name)
+        (let ((a (##assq name aliases)))
+          (if a
+              (##make-full-name (##cte-namespace-prefix cte) (##cdr a))
+              #f)))))
 
 (define ##namespace-separators '(#\#))
 (set! ##namespace-separators ##namespace-separators)
