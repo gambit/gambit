@@ -1,0 +1,23 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define a 0)
+(define b 536870911)
+(define c -536870912)
+(define d 1)
+(define e -1)
+(define f 357913941)
+
+(define (test x)
+  (println (##fxbit-set? 0 x))
+  (println (##fxbit-set? 1 x))
+  (println (##fxbit-set? 9 x))
+  (println (##fxbit-set? 13 x))
+  (println (##fxbit-set? 24 x))
+  (println (##fxbit-set? 29 x)))
+
+(test a)
+(test b)
+(test c)
+(test d)
+(test e)
+(test f)

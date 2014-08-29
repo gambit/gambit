@@ -1,0 +1,23 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define a 0)
+(define b 536870911)
+(define c -536870912)
+(define d 1)
+(define e -1)
+(define f 357913941)
+
+(define (test x)
+  (println (##fxxor x a))
+  (println (##fxxor x b))
+  (println (##fxxor x c))
+  (println (##fxxor x d))
+  (println (##fxxor x e))
+  (println (##fxxor x f)))
+
+(test a)
+(test b)
+(test c)
+(test d)
+(test e)
+(test f)

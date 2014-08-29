@@ -1,0 +1,20 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define a 0)
+(define b 16)
+(define c -16)
+(define d 1)
+(define e -1)
+
+(define (test x)
+  (println (##fxarithmetic-shift-left x 1))
+  (println (##fxarithmetic-shift-left x 2))
+  (println (##fxarithmetic-shift-left x 3))
+  (println (##fxarithmetic-shift-left x 5))
+  (println (##fxarithmetic-shift-left x 10)))
+
+(test a)
+(test b)
+(test c)
+(test d)
+(test e)
