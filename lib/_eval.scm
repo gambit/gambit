@@ -66,10 +66,19 @@
 (define (##sourcify x src)
   (if (##source? x)
       x
-      (##vector ##source2-marker
-                x
-                (##vector-ref src 2)
-                (##vector-ref src 3))))
+      (##sourcify-aux2 x src)))
+
+(define (##sourcify-aux1 code src)
+  (##vector ##source1-marker
+            code
+            (##vector-ref src 2)
+            (##vector-ref src 3)))
+
+(define (##sourcify-aux2 code src)
+  (##vector ##source2-marker
+            code
+            (##vector-ref src 2)
+            (##vector-ref src 3)))
 
 (define (##sourcify-deep x src)
 
@@ -120,8 +129,8 @@
     (if (##source? x)
         (let* ((code (##source-code x))
                (code2 (sourcify-deep-aux code x)))
-          (if (##eq? code code2) x (##sourcify code2 x)))
-        (##sourcify (sourcify-deep-aux x src) src)))
+          (if (##eq? code code2) x (##sourcify-aux1 code2 x)))
+        (##sourcify-aux1 (sourcify-deep-aux x src) src)))
 
   (sourcify-deep x src))
 
@@ -168,7 +177,7 @@
 
   (if (##source? src)
       (let ((code (##source-code src)))
-        (if (##eq? (##vector-ref src 0) ##source2-marker)
+        (if (##eq? (##vector-ref (##vector-ref src 0) 0) 'source2)
             code
             (cond ((##pair? code)
                    (desourcify-list code))
