@@ -2,6 +2,5 @@ language: c
 
 compiler:
   - gcc
-  - clang
 
 script: ./configure --enable-single-host && make -j4 from-scratch && make check
