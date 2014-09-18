@@ -4,4 +4,4 @@ compiler:
   - gcc
   - clang
 
-script: ./configure && make && make check
+script: ./configure && make -j 4 && make check
