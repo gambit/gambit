@@ -2,12 +2,15 @@
 
 ### File: "build-gambit-iOS"
 
-### Copyright (c) 2010-2012 by Marc Feeley, All Rights Reserved.
+### Copyright (c) 2010-2014 by Marc Feeley, All Rights Reserved.
 
 # The following definitions should be adjusted to your context.
 
 # Which ./configure options are to be used?
-config_options="--enable-single-host"
+# Strangely, when using clang (which is now the only option for iOS), the
+# executable is 30% faster when *not* using --enable-single-host.
+#config_options="--enable-single-host"
+config_options=""
 prefix_subdir="current"
 
 # The following two settings are only relevant when this script is used
@@ -30,7 +33,7 @@ select_macosx()
 
   export CC="gcc"
   export CXX="g++"
-  export CFLAGS="-I$gambit_prefix/include -L$gambit_prefix/lib"
+  export CFLAGS=""
   export CXXFLAGS="$CFLAGS"
   export LD="ld"
   export LDFLAGS=""
@@ -70,9 +73,12 @@ select_ios()
 
   esac
 
-  export CC="xcrun -sdk $sdk_name gcc -isysroot $ios_sdk_dir -arch $arch -miphoneos-version-min=5.0"
-  export CXX="xcrun -sdk $sdk_name g++ -isysroot $ios_sdk_dir -arch $arch -miphoneos-version-min=5.0"
-  export CFLAGS="-Wno-trigraphs -Wreturn-type -Wunused-variable -I$gambit_prefix/include -L$gambit_prefix/lib"
+  # this needs to be updated when a new Xcode is released
+  iphoneos_version_min="6.0"
+
+  export CC="xcrun -sdk $sdk_name gcc -isysroot $ios_sdk_dir -arch $arch -miphoneos-version-min=$iphoneos_version_min"
+  export CXX="xcrun -sdk $sdk_name g++ -isysroot $ios_sdk_dir -arch $arch -miphoneos-version-min=$iphoneos_version_min"
+  export CFLAGS="-Wno-trigraphs -Wreturn-type -Wunused-variable"
   export CXXFLAGS="$CFLAGS"
   export LD="ld -arch $arch"
   export LDFLAGS=""
@@ -132,18 +138,37 @@ configure_gambit()
 make_gambit()
 {
   dir="$1"
+  what="$2"
   cd "$dir"
-  cd "lib"
-  make clean
+
   if [ "$update_with_latest_changes" == "yes" ]; then
      echo "Updating to latest from master"
      make update
-     make -j $num_simultaneous_jobs || exit 1
-  else
-     make -j $num_simultaneous_jobs || exit 1
   fi
+
+  make clean
+
+  if [ "$what" == "skip-gsi-gsc" ]; then
+
+    # we only care about the Gambit runtime library so avoid building gsi and gsc
+
+    cd lib
+    make -j $num_simultaneous_jobs || exit 1
+    cd ..
+
+    for f in $gambit_dir/gsi/*.c $gambit_dir/gsc/*.c ; do
+      touch ${f%.c}.o
+    done
+
+    touch $gambit_dir/gsi/libgambcgsi.a $gambit_dir/gsc/libgambcgsc.a
+    touch $gambit_dir/gsi/gsi $gambit_dir/gsc/gsc
+
+  fi
+
+  make -j $num_simultaneous_jobs || exit 1
+
   make install
-  cd ..
+
   cd ..
 }
 
@@ -153,7 +178,7 @@ build_macosx()
 
   configure_gambit "$gambit_dir"
 
-  make_gambit "$gambit_dir"
+  make_gambit "$gambit_dir" "all"
 }
 
 build_one_ios()
@@ -165,7 +190,7 @@ build_one_ios()
 
   configure_gambit "$gambit_dir"
 
-  make_gambit "$gambit_dir"
+  make_gambit "$gambit_dir" "skip-gsi-gsc"
 
   for library in `(cd $gambit_prefix/lib; ls *.a)` ; do
 
@@ -188,9 +213,11 @@ build_all_ios()
   rm -rf temp-lib
   mkdir temp-lib
 
-  build_one_ios iPhoneSimulator i386
+  for arch in i386 x86_64 ; do
+    build_one_ios iPhoneSimulator "$arch"
+  done
 
-  for arch in armv7 armv7s ; do
+  for arch in armv7 armv7s arm64 ; do
     build_one_ios iPhoneOS "$arch"
   done
 
