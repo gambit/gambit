@@ -2,7 +2,7 @@
 //  AppDelegate.m
 //
 //  Created by Marc Feeley on 11-03-06.
-//  Copyright 2011 Université de Montréal. All rights reserved.
+//  Copyright 2011-2014 Université de Montréal. All rights reserved.
 //
 
 #import "AppDelegate.h"
@@ -17,13 +17,47 @@
 #pragma mark -
 #pragma mark Application lifecycle
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {    
-    
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+ 
+#if 0
+  UINavigationController *rootNavigationController = (UINavigationController *)self.window.rootViewController;
+  ViewController *myViewController = (ViewController *)[rootNavigationController topViewController];
+    // Configure myViewController.
+#endif
+
+#if 0
+  [[UITabBar appearance] setShadowImage:[[UIImage alloc] init]];
+
+  [[UINavigationBar appearance] setTranslucent:NO];
+  [[UINavigationBar appearance] setBackgroundImage:[[UIImage alloc] init] forBarMetrics:UIBarMetricsDefault];
+  [[UINavigationBar appearance] setShadowImage:[[UIImage alloc] init]];
+
+  //[[UINavigationBar appearance] setShadowImage:[[UIImage alloc] init]];
+#endif
+
+  return YES;
+
+#if 0
+
+#if 1
+
   // Add the view controller's view to the window and display.
   [window addSubview:viewController.view];
   [window makeKeyAndVisible];
 
   return YES;
+
+#else
+
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    // Override point for customization after application launch.
+	self.viewController = [[KOViewController alloc] init];
+	self.window.rootViewController = self.viewController;
+    [self.window makeKeyAndVisible];
+    return YES;
+
+#endif
+#endif
 }
 
 
@@ -96,9 +130,12 @@
 
 
 - (void)dealloc {
+
+#if !__has_feature(objc_arc)
   [viewController release];
   [window release];
   [super dealloc];
+#endif
 }
 
 

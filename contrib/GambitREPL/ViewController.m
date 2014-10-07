@@ -2,20 +2,58 @@
 //  ViewController.m
 //
 //  Created by Marc Feeley on 11-03-06.
-//  Copyright 2011-2012 Université de Montréal. All rights reserved.
+//  Copyright 2011-2012 UniversitÃ© de MontrÃ©al. All rights reserved.
 //
 
-// Note: some of this code comes from the KeyboardAccessory
-// sample application written by Apple.
-
 #import <UIKit/UIKit.h>
-#import <AudioToolbox/AudioToolbox.h>
 #import "ViewController.h"
+#import "WView.h"
+#import "TView.h"
+#import "KOKeyboardRow.h"
 
+
+ViewController *theViewController = nil;
+
+
+
+
+#if 1
+
+@interface UIWebBrowserView : UIView
+@end
+ 
+@implementation UIWebBrowserView (CustomToolbar)
+ 
+//- (id)inputView {
+//  NSLog(@"my inputView");
+//  return nil;
+//}
+
+
+#if 1
+- (id)inputAccessoryView {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      //NSLog(@"keyboardShowingView = %d",vc.keyboardShowingView);
+      if (vc.keyboardShowingView == vc.currentView)
+        return vc.kov;
+    }
+
+  return nil;
+}
+#endif
+
+@end
+
+#endif
+
+//-----------------------------------------------------------------------------
 
 @implementation ViewController
 
-@synthesize segmCtrl, webView0, webView1, webView2, webView3, textView0, textView1, imageView0, imageView1, cancelButton, accessoryView, toolbar, keyboardSounds, timer, queuedActions, locationManager;
+@synthesize segmCtrl, currentView, keyboardShowingView, cancelButton, navToolbar, timer, queuedActions, locationManager, kov;
 
 //-----------------------------------------------------------------------------
 
@@ -118,29 +156,109 @@ void gambit_cleanup()
 
 //-----------------------------------------------------------------------------
 
+KOKeyboardRow *setup_ext_kbd() {
 
-static ViewController *theViewController = nil;
+  KOKeyboardRow *kov = [[KOKeyboardRow alloc] init];
+
+#if 0
+
+  kov.portraitKeysSmall  = @"=,.<>2406835179/-(\\_*+)?#";
+  kov.landscapeKeysSmall = @"S:;!@`'λ\"~=,.<>2406835179/-(\\_*+)?#";
+  kov.portraitKeysLarge  = @"bcade%^$&|<<<<<[]={}>>>>>S:;!@`'λ\"~2406835179/-(\\_*+)?#";
+  kov.landscapeKeysLarge = @"bcade%^$&|<<<<<[]={}>>>>>S:;!@`'λ\"~2406835179/-(\\_*+)?#";
+
+#else
+
+  kov.portraitKeysSmall =  @"*=+<>/\\-#λ2406835179`'(.\":;)!?";
+  kov.landscapeKeysSmall = @"~@,S_*=+<>/\\-#λ2406835179`'(.\":;)!?";
+  kov.portraitKeysLarge  = @"SSSSSbcade<<<@$[]={}>>>&|*^+%_/\\-#λ2406835179`'(~\":;)!?";
+  kov.landscapeKeysLarge = @"SSSSSbcade<<<@$[]={}>>>&|*^+%_/\\-#λ2406835179`'(~\":;)!?";
+
+#endif
+
+  kov.animation = koTraditinalAnimation; //koNoAnimation koTraditinalAnimation;
+
+  [kov setup];
+
+  return kov;
+}
 
 - (void)viewDidLoad {
 
   [super viewDidLoad];
 
-  webViews[0] = webView0;
-  webViews[1] = webView1;
-  webViews[2] = webView2;
-  webViews[3] = webView3;
-
-  textViews[0] = textView0;
-  textViews[1] = textView1;
-
-  imageViews[0] = imageView0;
-  imageViews[1] = imageView1;
-
   theViewController = self;
 
-  set_textView_font(0, @"Courier-Bold", 16);
+  self.currentView = -1;
+  self.keyboardShowingView = -1;
+
+  kov = setup_ext_kbd();
+
+  CGRect screenRect = [[UIScreen mainScreen] bounds];
+  CGFloat screen_w = screenRect.size.width;
+  CGFloat screen_h = screenRect.size.height;
+  CGFloat bar_y = self.navToolbar.bounds.origin.y;
+  CGFloat bar_h = self.navToolbar.bounds.size.height;
+
+  //NSLog(@"%f %f %f %f",bar_y, bar_h,self.view.bounds.size.width, self.view.bounds.size.height);
+  bar_y = 0;
+  bar_h = 0;
+
+  CGRect viewRect = CGRectMake(0, bar_y+bar_h, screen_w, screen_h-(bar_y+bar_h));
+
+  for (int i=NB_WEBVIEWS-1; i>=0; i--) {
+    UIWebView *webView = [[WView alloc] initWithFrame:viewRect];
+
+    // automatic capitalization et al. are turned off in the HTML code
+
+    webView.backgroundColor = [UIColor clearColor];
+    webView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    webView.scalesPageToFit = NO;
+    webView.hidden = YES;
+    webView.delegate = self;
+    [self.view insertSubview:webView atIndex:0];
+    webViews[i] = webView;
+  }
+
+  for (int i=NB_TEXTVIEWS-1; i>=0; i--) {
+    UITextView *textview = [[TView alloc] initWithFrame:viewRect];
+
+    // turn off automatic capitalization, correction and spell checking
+    textview.autocapitalizationType = UITextAutocapitalizationTypeNone;
+    textview.autocorrectionType = UITextAutocorrectionTypeNo;
+    textview.spellCheckingType = UITextSpellCheckingTypeNo;
+
+    textview.backgroundColor = [UIColor clearColor];
+    textview.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    textview.hidden = YES;
+    textview.delegate = self;
+    textview.inputAccessoryView = kov;
+    [self.view insertSubview:textview atIndex:0];
+    textViews[i] = textview;
+  }
+
+  for (int i=NB_IMAGEVIEWS-1; i>=0; i--) {
+    UIImageView *imageview = [[UIImageView alloc] initWithFrame:viewRect];
+    imageview.backgroundColor = [UIColor clearColor];
+    imageview.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    imageview.hidden = YES;
+    [self.view insertSubview:imageview atIndex:0];
+    imageViews[i] = imageview;
+  }
+
+  set_textView_font(0, @"Courier", 16);
 
   segmCtrl.selectedSegmentIndex = UISegmentedControlNoSegment;
+  [segmCtrl sizeToFit];
+
+  // get rid of shadow line at top of toolbar
+  navToolbar.backgroundColor = [UIColor clearColor];
+  if ([navToolbar respondsToSelector:@selector(setBackgroundImage:forToolbarPosition:barMetrics:)]) {
+    [navToolbar setBackgroundImage:[UIImage new] forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsDefault];
+  }
+  if ([navToolbar respondsToSelector:@selector(setShadowImage:forToolbarPosition:)]) {
+    [navToolbar setShadowImage:[UIImage new] forToolbarPosition:UIToolbarPositionAny];
+  }
 
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
@@ -166,21 +284,9 @@ static ViewController *theViewController = nil;
 
   segmCtrl = nil;
 
-  webView0 = nil;
-  webView1 = nil;
-  webView2 = nil;
-  webView3 = nil;
-
-  textView0 = nil;
-  textView1 = nil;
-
-  imageView0 = nil;
-  imageView1 = nil;
-
   cancelButton = nil;
 
-  accessoryView = nil;
-  toolbar = nil;
+  navToolbar = nil;
 
   theViewController = nil;
 
@@ -200,6 +306,27 @@ static ViewController *theViewController = nil;
 }
 
 
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
+{
+	[super willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:duration];
+	
+	//NSLog(@"WILL ANIMATE!");
+	
+	[kov switchToOrientation:interfaceOrientation];
+
+	//UIView *sv = [kov.subviews lastObject];
+	//[sv removeFromSuperview];
+}
+
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+{
+	[super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+	
+	//NSLog(@"DID: %@", NSStringFromCGRect(kov.frame));
+}
+
+
 - (void)didReceiveMemoryWarning {
 
   [super didReceiveMemoryWarning];
@@ -210,17 +337,6 @@ static ViewController *theViewController = nil;
 #pragma mark Text view delegate methods
 
 - (BOOL)textViewShouldBeginEditing:(UITextView *)aTextView {
-
-  if (textViews[0].inputAccessoryView == nil)
-    {
-      [[NSBundle mainBundle] loadNibNamed:@"AccessoryView" owner:self options:nil];
-
-      textViews[0].inputAccessoryView = accessoryView;
-
-      accessoryView = nil;
-
-      show_textView(0);
-    }
 
   return YES;
 }
@@ -238,62 +354,89 @@ static ViewController *theViewController = nil;
 
 - (void)keyboardWillShow:(NSNotification *)notification {
 
-  /*
-    Reduce the size of the text view so that it's not obscured by the keyboard.
-    Animate the resize so that it's in sync with the appearance of the keyboard.
-  */
+  int view = currentView;
 
-  NSDictionary *userInfo = [notification userInfo];
+  if (view >= 0) {
+    if (view < NB_WEBVIEWS) {
+      //NSLog(@"ViewController keyboardWillShow WEBVIEW");
+    } else if (view < NB_WEBVIEWS+NB_TEXTVIEWS) {
 
-  // Get the origin of the keyboard when it's displayed.
-  NSValue* aValue = [userInfo objectForKey:UIKeyboardFrameEndUserInfoKey];
+      //NSLog(@"ViewController keyboardWillShow TEXTVIEW");
 
-  // Get the top of the keyboard as the y coordinate of its origin in
-  // self's view's coordinate system. The bottom of the text view's
-  // frame should align with the top of the keyboard's final position.
-  CGRect keyboardRect = [aValue CGRectValue];
-  keyboardRect = [self.view convertRect:keyboardRect fromView:nil];
+      /*
+        Reduce the size of the text view so that it's not obscured by
+        the keyboard.  Animate the resize so that it's in sync with
+        the appearance of the keyboard.
+      */
 
-  CGFloat keyboardTop = keyboardRect.origin.y;
-  CGRect newTextViewFrame = self.view.bounds;
-  newTextViewFrame.size.height = keyboardTop - self.view.bounds.origin.y;
+      NSDictionary *userInfo = [notification userInfo];
 
-  // Get the duration of the animation.
-  NSValue *animationDurationValue = [userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
-  NSTimeInterval animationDuration;
-  [animationDurationValue getValue:&animationDuration];
+      // Get the origin of the keyboard when it's displayed.
+      NSValue* aValue = [userInfo objectForKey:UIKeyboardFrameEndUserInfoKey];
 
-  // Animate the resize of the text view's frame in sync with the
-  // keyboard's appearance.
-  [UIView beginAnimations:nil context:NULL];
-  [UIView setAnimationDuration:animationDuration];
+      // Get the top of the keyboard as the y coordinate of its origin in
+      // self's view's coordinate system. The bottom of the text view's
+      // frame should align with the top of the keyboard's final position.
+      CGRect keyboardRect = [aValue CGRectValue];
+      keyboardRect = [self.view convertRect:keyboardRect fromView:nil];
 
-  textViews[0].frame = newTextViewFrame;
+      CGFloat keyboardTop = keyboardRect.origin.y;
+      CGRect newTextViewFrame = self.view.bounds;
+      newTextViewFrame.size.height = keyboardTop - self.view.bounds.origin.y;
 
-  [UIView commitAnimations];
+      // Get the duration of the animation.
+      NSValue *animationDurationValue = [userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+      NSTimeInterval animationDuration;
+      [animationDurationValue getValue:&animationDuration];
+
+      // Animate the resize of the text view's frame in sync with the
+      // keyboard's appearance.
+      [UIView beginAnimations:nil context:NULL];
+      [UIView setAnimationDuration:animationDuration];
+
+      textViews[view-NB_WEBVIEWS].frame = newTextViewFrame;
+
+      [UIView commitAnimations];
+    }
+  }
+
+  self.keyboardShowingView = view;
 }
 
 
 - (void)keyboardWillHide:(NSNotification *)notification {
 
-  NSDictionary* userInfo = [notification userInfo];
+  int view = currentView;
 
-  /*
-    Restore the size of the text view (fill self's view).  Animate the
-    resize so that it's in sync with the disappearance of the
-    keyboard.
-  */
+  if (view >= 0) {
+    if (view < NB_WEBVIEWS) {
+      //NSLog(@"ViewController keyboardWillHide WEBVIEW");
+    } else if (view < NB_WEBVIEWS+NB_TEXTVIEWS) {
 
-  NSValue *animationDurationValue = [userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
-  NSTimeInterval animationDuration;
-  [animationDurationValue getValue:&animationDuration];
+      //NSLog(@"ViewController keyboardWillHide TEXTVIEW");
 
-  [UIView beginAnimations:nil context:NULL];
-  [UIView setAnimationDuration:animationDuration];
+      NSDictionary* userInfo = [notification userInfo];
 
-  textViews[0].frame = self.view.bounds;
+      /*
+        Restore the size of the text view (fill self's view).  Animate
+        the resize so that it's in sync with the disappearance of the
+        keyboard.
+      */
 
-  [UIView commitAnimations];
+      NSValue *animationDurationValue = [userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey];
+      NSTimeInterval animationDuration;
+      [animationDurationValue getValue:&animationDuration];
+
+      [UIView beginAnimations:nil context:NULL];
+      [UIView setAnimationDuration:animationDuration];
+
+      textViews[view-NB_WEBVIEWS].frame = self.view.bounds;
+
+      [UIView commitAnimations];
+    }
+  }
+
+  self.keyboardShowingView = -1;
 }
 
 
@@ -368,17 +511,22 @@ void set_navigation(int n) {
       if (timer != nil)
         {
           [timer invalidate];
+
+#if !__has_feature(objc_arc)
           [timer release];
+#endif
         }
 
-      timer = [[NSTimer scheduledTimerWithTimeInterval:interval target:self selector:@selector(heartbeat_tick) userInfo:nil repeats:NO] retain];
+      timer = [NSTimer scheduledTimerWithTimeInterval:interval target:self selector:@selector(heartbeat_tick) userInfo:nil repeats:NO];
+
+#if !__has_feature(objc_arc)
+      [timer retain];
+#endif
     }
 }
 
 
 - (void)app_become_active {
-
-  theViewController.keyboardSounds = -1; // delay check of user preferences
 
   [self send_event:@"app-become-active"];
 }
@@ -404,99 +552,86 @@ void hide_cancelButton() {
 }
 
 
-void show_webView(int view) {
+void preload_kbd() {
+
+  static BOOL preloaded = false;
+
+  if (!preloaded) {
+    UITextField *field = [UITextField new];
+    [[[[UIApplication sharedApplication] windows] lastObject] addSubview:field];
+    [field becomeFirstResponder];
+    [field resignFirstResponder];
+    [field removeFromSuperview];
+    preloaded = true;
+  }
+}
+
+
+void show_view(int view, BOOL become_first_responder) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
       int i;
 
+      vc.currentView = view;
+
+      //[[UIApplication sharedApplication] sendAction:@selector(resignFirstResponder) to:nil from:nil forEvent:nil];
+
       for (int i=0; i<NB_WEBVIEWS; i++)
         if (i != view)
           {
-            [vc->webViews[i] resignFirstResponder];
+            [vc->webViews[i] endEditing:YES];
             vc->webViews[i].hidden = YES;
           }
 
       for (int i=0; i<NB_TEXTVIEWS; i++)
-        {
-          [vc->textViews[i] resignFirstResponder];
-          vc->textViews[i].hidden = YES;
-        }
-
-      for (int i=0; i<NB_IMAGEVIEWS; i++)
-        {
-          [vc->imageViews[i] resignFirstResponder];
-          vc->imageViews[i].hidden = YES;
-        }
-
-      [vc->webViews[view] becomeFirstResponder];
-      vc->webViews[view].hidden = NO;
-    }
-}
-
-
-void show_textView(int view) {
-
-  ViewController *vc = theViewController;
-  if (vc != nil)
-    {
-      int i;
-
-      for (int i=0; i<NB_WEBVIEWS; i++)
-        {
-          [vc->webViews[i] resignFirstResponder];
-          vc->webViews[i].hidden = YES;
-        }
-
-      for (int i=0; i<NB_TEXTVIEWS; i++)
-        if (i != view)
+        if (i+NB_WEBVIEWS != view)
           {
-            [vc->textViews[i] resignFirstResponder];
+            [vc->textViews[i] endEditing:YES];
             vc->textViews[i].hidden = YES;
           }
 
       for (int i=0; i<NB_IMAGEVIEWS; i++)
-        {
-          [vc->imageViews[i] resignFirstResponder];
-          vc->imageViews[i].hidden = YES;
-        }
-
-      [vc->textViews[view] becomeFirstResponder];
-      vc->textViews[view].hidden = NO;
-    }
-}
-
-
-void show_imageView(int view) {
-
-  ViewController *vc = theViewController;
-  if (vc != nil)
-    {
-      int i;
-
-      for (int i=0; i<NB_WEBVIEWS; i++)
-        {
-          [vc->webViews[i] resignFirstResponder];
-          vc->webViews[i].hidden = YES;
-        }
-
-      for (int i=0; i<NB_TEXTVIEWS; i++)
-        {
-          [vc->textViews[i] resignFirstResponder];
-          vc->textViews[i].hidden = YES;
-        }
-
-      for (int i=0; i<NB_IMAGEVIEWS; i++)
-        if (i != view)
+        if (i+(NB_WEBVIEWS+NB_TEXTVIEWS) != view)
           {
-            [vc->imageViews[i] resignFirstResponder];
+            [vc->imageViews[i] endEditing:YES];
             vc->imageViews[i].hidden = YES;
           }
 
-      [vc->imageViews[view] becomeFirstResponder];
-      vc->imageViews[view].hidden = NO;
+      if (view >= 0) {
+        if (view < NB_WEBVIEWS) {
+          if (become_first_responder)
+            [vc->webViews[view] becomeFirstResponder];
+          vc->webViews[view].hidden = NO;
+        } else if (view < NB_WEBVIEWS+NB_TEXTVIEWS) {
+          if (become_first_responder)
+            [vc->textViews[view-NB_WEBVIEWS] becomeFirstResponder];
+          vc->textViews[view-NB_WEBVIEWS].hidden = NO;
+        } else {
+          if (become_first_responder)
+            [vc->imageViews[view-(NB_WEBVIEWS+NB_TEXTVIEWS)] becomeFirstResponder];
+          vc->imageViews[view-(NB_WEBVIEWS+NB_TEXTVIEWS)].hidden = NO;
+        }
+      }
     }
+
+  preload_kbd();
+}
+
+
+void show_webView(int view, BOOL become_first_responder) {
+  show_view(view, become_first_responder);
+}
+
+
+void show_textView(int view, BOOL become_first_responder) {
+  show_view(view+NB_WEBVIEWS, become_first_responder);
+}
+
+
+void show_imageView(int view, BOOL become_first_responder) {
+  show_view(view+NB_WEBVIEWS+NB_IMAGEVIEWS, become_first_responder);
 }
 
 
@@ -532,22 +667,35 @@ NSString *get_textView_content(int view) {
 }
 
 
+void ensure_visible_cursor(UITextView *textView) {
+  [textView scrollRangeToVisible:textView.selectedRange];
+}
+
+
 void add_to_textView(int view, NSString *str) {
 
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      NSMutableString *new_text = [vc->textViews[view].text mutableCopy];
-      [new_text appendString:str];
-      vc->textViews[view].text = new_text;
-      [new_text release];
+      UITextView *textView = vc->textViews[view];
+      textView.selectedRange = NSMakeRange([textView.text length], 0);
+      [textView insertText:str];
+      ensure_visible_cursor(textView);
     }
 }
 
 
 void add_output_to_textView(int view, NSString *str) {
 
-  add_to_textView(view, [str stringByReplacingOccurrencesOfString:@" " withString:@"\u2007"]);
+#ifdef USE_NON_BREAKING_SPACE
+
+   add_to_textView(view, [str stringByReplacingOccurrencesOfString:@" " withString:@"\u2007"]);
+
+#else
+
+  add_to_textView(view, str);
+
+#endif
 }
 
 
@@ -556,13 +704,36 @@ void add_input_to_textView(int view, NSString *str) {
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      NSMutableString *new_text = [vc->textViews[view].text mutableCopy];
-      NSRange selectedRange = vc->textViews[view].selectedRange;
+      UITextView *textView = vc->textViews[view];
+      //NSLog(@"add_input_to_textView %d %@",view,str);
+
+#if 0
+
+      NSMutableString *new_text = [textView.text mutableCopy];
+      NSRange selectedRange = textView.selectedRange;
 
       [new_text replaceCharactersInRange:selectedRange withString:str];
 
-      vc->textViews[view].text = new_text;
+      textView.text = new_text;
+#if !__has_feature(objc_arc)
       [new_text release];
+#endif
+
+#else
+
+      if ([textView.delegate respondsToSelector:@selector(textView:shouldChangeTextInRange:replacementText:)]) {
+        NSRange selectedRange = textView.selectedRange;
+        BOOL shouldInsert = [textView.delegate textView:textView shouldChangeTextInRange:selectedRange replacementText:str];
+        if (shouldInsert) {
+          [textView insertText:str];
+          [[NSNotificationCenter defaultCenter] postNotificationName:UITextViewTextDidChangeNotification object:textView];
+        }
+      } else {
+        [textView insertText:str];
+      }
+
+#endif
+
     }
 }
 
@@ -578,7 +749,7 @@ void set_webView_content(int view, NSString *str, NSString *base_url_path, BOOL 
           textEncodingName:@"UTF-8"
           baseURL:[NSURL fileURLWithPath:(base_url_path != nil) ? base_url_path : [[NSBundle mainBundle] bundlePath]]
       ];
-      vc->webViews[0].scalesPageToFit = enable_scaling;
+      vc->webViews[view].scalesPageToFit = enable_scaling;
     }
 }
 
@@ -599,6 +770,41 @@ void set_webView_content_from_file(int view, NSString *path, NSString *base_url_
            ];
           vc->webViews[view].scalesPageToFit = enable_scaling;
         }
+    }
+}
+
+
+void add_input_to_webView(int view, NSString *str) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      NSString *script;
+      if ([str isEqualToString:@"'"]) {
+        script = [NSString stringWithFormat:@"add_input(\"%@\");", str];
+      } else {
+        script = [NSString stringWithFormat:@"add_input('%@');", str];
+      }
+      //NSLog(@"add_input_to_webView %d script=%@",view,script);
+      eval_js_in_webView(view, script);
+    }
+}
+
+
+void add_input_to_currentView(NSString *str) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      int view = vc.currentView;
+      //NSLog(@"add_input_to_currentView %d %@",view,str);
+      if (view >= 0) {
+        if (view < NB_WEBVIEWS) {
+          add_input_to_webView(view, str);
+        } else if (view < NB_WEBVIEWS+NB_TEXTVIEWS) {
+          add_input_to_textView(view-NB_WEBVIEWS, str);
+        }
+      }
     }
 }
 
@@ -628,12 +834,16 @@ BOOL send_SMS(NSString *recipient, NSString *message) {
     {
       if ([MFMessageComposeViewController canSendText])
         {
-          MFMessageComposeViewController *controller = [[[MFMessageComposeViewController alloc] init] autorelease];
+          MFMessageComposeViewController *controller = [[MFMessageComposeViewController alloc] init];
+
+#if !__has_feature(objc_arc)
+          [controller autorelease];
+#endif
 
           controller.body = message;
           controller.recipients = [NSArray arrayWithObjects:recipient,nil];
           controller.messageComposeDelegate = vc;
-          [vc presentModalViewController:controller animated:YES];
+          [vc presentViewController:controller animated:YES completion:nil];
 
           return YES;
         }
@@ -647,7 +857,7 @@ BOOL send_SMS(NSString *recipient, NSString *message) {
 {
   NSString *event;
 
-  [self dismissModalViewControllerAnimated:YES];
+  [self dismissViewControllerAnimated:YES completion:nil];
 
   switch (result) {
 
@@ -677,7 +887,11 @@ BOOL pick_image() {
       if ([UIImagePickerController isCameraDeviceAvailable: UIImagePickerControllerCameraDeviceRear] ||
           [UIImagePickerController isCameraDeviceAvailable: UIImagePickerControllerCameraDeviceFront])
         {
-          UIImagePickerController *controller = [[[UIImagePickerController alloc] init] autorelease];
+          UIImagePickerController *controller = [[UIImagePickerController alloc] init];
+
+#if !__has_feature(objc_arc)
+          [controller autorelease];
+#endif
 
           controller.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType: UIImagePickerControllerSourceTypeCamera];
 
@@ -685,7 +899,7 @@ BOOL pick_image() {
 
           controller.delegate = vc;
 
-          [vc presentModalViewController:controller animated:YES];
+          [vc presentViewController:controller animated:YES completion:nil];
 
           return YES;
         }
@@ -697,7 +911,7 @@ BOOL pick_image() {
 
 - (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
 {
-  [picker dismissModalViewControllerAnimated:YES];
+  [picker dismissViewControllerAnimated:YES completion:nil];
 
   [self send_event:@"pick-image:"];
 }
@@ -714,7 +928,7 @@ void set_toolbar_alpha(double alpha) {
   ViewController *vc = theViewController;
   if (vc != nil)
     {
-      [vc->toolbar setAlpha: alpha];
+      [vc->navToolbar setAlpha: alpha];
     }
 }
 
@@ -803,7 +1017,9 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
                         cancelButtonTitle: cancel_button
                         otherButtonTitles: accept_button, nil];
   [alert show];
+#if !__has_feature(objc_arc)
   [alert release];
+#endif
 }
 
 
@@ -851,28 +1067,51 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
   if ([text hasSuffix:@"\n"])
     {
       unichar c;
-      int end = [textViews[0].text length];
+      UITextView *textView = textViews[0];
+      int end = [textView.text length];
 
       int line_start = range.location+range.length;
 
       while (line_start > 0 &&
-             (c = [textViews[0].text characterAtIndex:line_start-1]) != '\n' &&
-             c != 0x2007) // non breaking space
+             (c = [textView.text characterAtIndex:line_start-1]) != '\n'
+#ifdef USE_NON_BREAKING_SPACE
+             && c != 0x2007 // non breaking space
+#endif
+             )
         line_start--;
 
       int line_end = range.location+range.length;
 
       while (line_end < end &&
-             [textViews[0].text characterAtIndex:line_end] != '\n')
+             [textView.text characterAtIndex:line_end] != '\n')
         line_end++;
+
+#ifndef USE_NON_BREAKING_SPACE
+
+      // discard prompt at start of line
+
+      int start = line_start;
+      while (line_end-start >= 2) {
+        int c = [textView.text characterAtIndex:start];
+        if (c == '>' &&
+            [textView.text characterAtIndex:start+1] == ' ') {
+          line_start = start+2;
+          break;
+        } else if (!(c == '\\' || (c >= '0' && c <= '9')))
+          break;
+        start++;
+      }
+
+#endif
 
       if (line_start == line_end)
         {
-          [textViews[0] resignFirstResponder]; // Hide the keyboard after "return" key is pressed on empty line
+          [textView resignFirstResponder]; // Hide the keyboard after "return" key is pressed on empty line
+          ensure_visible_cursor(textView);
         }
       else
         {
-          NSString *line = [textViews[0].text substringWithRange:NSMakeRange(line_start, line_end-line_start)];
+          NSString *line = [textView.text substringWithRange:NSMakeRange(line_start, line_end-line_start)];
 
           if (line_end == end)
             {
@@ -890,220 +1129,6 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
     }
 
   return YES;
-}
-
-
-- (IBAction)touch_up_Char:(id)sender withString:(NSString *)aString {
-
-  add_input_to_textView(0, aString);
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_down:(id)sender {
-
-  if (keyboardSounds != 0)
-    {
-      if (keyboardSounds == -1) // delayed check of user preferences?
-        {
-          Boolean exists_and_valid;
-          keyboardSounds =
-            CFPreferencesGetAppBooleanValue(CFSTR("keyboard"),
-                                            CFSTR("/var/mobile/Library/Preferences/com.apple.preferences.sounds"),
-                                            &exists_and_valid);
-          if (!exists_and_valid)
-            keyboardSounds = true; // by default turn on keyboard clicks
-        }
-
-      if (keyboardSounds != 0)
-        AudioServicesPlaySystemSound(1104); // keyboard "tock" sound
-    }
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F1:(id)sender {
-  [self send_key:@"F1"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F2:(id)sender {
-  [self send_key:@"F2"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F3:(id)sender {
-  [self send_key:@"F3"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F4:(id)sender {
-  [self send_key:@"F4"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F5:(id)sender {
-  [self send_key:@"F5"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F6:(id)sender {
-  [self send_key:@"F6"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F7:(id)sender {
-  [self send_key:@"F7"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F8:(id)sender {
-  [self send_key:@"F8"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F9:(id)sender {
-  [self send_key:@"F9"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F10:(id)sender {
-  [self send_key:@"F10"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F11:(id)sender {
-  [self send_key:@"F11"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F12:(id)sender {
-  [self send_key:@"F12"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_F13:(id)sender {
-  [self send_key:@"F13"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_SHARP:(id)sender {
-  [self send_key:@"#"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_DQUOTE:(id)sender {
-  [self send_key:@"\""];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_QUOTE:(id)sender {
-  [self send_key:@"'"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_COMMA:(id)sender {
-  [self send_key:@","];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_PLUS:(id)sender {
-  [self send_key:@"+"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_MINUS:(id)sender {
-  [self send_key:@"-"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_STAR:(id)sender {
-  [self send_key:@"*"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_SLASH:(id)sender {
-  [self send_key:@"/"];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_LPAREN:(id)sender {
-  [self send_key:@"("];
-}
-
-
-#pragma mark -
-#pragma mark Accessory view action
-
-- (IBAction)touch_up_RPAREN:(id)sender {
-  [self send_key:@")"];
 }
 
 
@@ -1184,6 +1209,8 @@ void setup_location_updates(double desired_accuracy, double distance_filter)
 
   [[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:nil];
 
+#if !__has_feature(objc_arc)
+
   [segmCtrl release];
 
   for (i=0; i<NB_WEBVIEWS; i++)
@@ -1198,7 +1225,104 @@ void setup_location_updates(double desired_accuracy, double distance_filter)
   [cancelButton release];
 
   [super dealloc];
+
+#endif
 }
 
+//-----------------------------------------------------------------------------
+
+#if 0
+
+// UIKeyInput protocol methods
+
+- (void) insertText:(NSString* )text
+{
+    NSLog(@"ViewController insertText: %@", text);
+}
+
+- (void)deleteBackward {
+    NSLog(@"ViewController deleteBackward");
+}
+
+- (BOOL) canBecomeFirstResponder
+{
+    NSLog(@"ViewController canBecomeFirstResponder");
+    //return NO;
+    return YES;
+}
+
+- (BOOL) resignFirstResponder
+{
+    NSLog(@"ViewController resignFirstResponder");
+    //return NO;
+    return YES;
+}
+
+- (BOOL) hasText
+{
+    NSLog(@"ViewController hasText");
+    return YES;
+}
+
+#endif
+
+#if 0
+
+@implementation RAEditorView
+
+- (instancetype) initWithCoder:(NSCoder *)aDecoder {
+	self = [super initWithCoder:aDecoder];
+	if (self) {
+        [self setup];
+    }
+	return self;
+}
+
+- (instancetype) initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+	if (self) {
+    	[self setup];
+    }
+	return self;
+}
+
+- (void) setup {
+	[self hideKeyboardBar];
+}
+
+- (void) hideKeyboardBar {
+	static NSString * uniqueSuffix;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		uniqueSuffix = (__bridge_transfer NSString *)CFUUIDCreateString(NULL, CFUUIDCreate(NULL));
+	});
+	
+	for (UIView *aView in self.scrollView.subviews) {
+		Class ownClass = [aView class];
+		NSString *className = NSStringFromClass(ownClass);
+		if (![className hasSuffix:uniqueSuffix]) {
+			NSString *newClassName = [className stringByAppendingString:uniqueSuffix];
+			Class newClass = objc_allocateClassPair(ownClass, [newClassName UTF8String], 0);
+			if (newClass) {
+				IMP nilImp = [self methodForSelector:@selector(methodReturningNil)];
+				class_addMethod(newClass, @selector(inputAccessoryView), nilImp, "@@:");
+				objc_registerClassPair(newClass);
+			}
+			object_setClass(aView, (newClass ?: NSClassFromString(newClassName)));
+		}
+	}
+}
+
+- (id) methodReturningNil {
+	return nil;
+}
+
+@end
+
+
+#endif
+
+
+//-----------------------------------------------------------------------------
 
 @end

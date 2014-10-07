@@ -2,7 +2,7 @@
 
 ;;; File: "program.scm"
 
-;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
 
 ;; This program implements the "Gambit REPL" application for iOS
 ;; devices.  It is a simple development environment for Scheme.  The
@@ -29,6 +29,8 @@
 
 (##namespace (""
               splash
+              set-page
+              set-page-content
               repl
               repl-eval
               repl-server
@@ -60,6 +62,9 @@
                   (cons 'Gambit-REPL-v4.0
                         ##cond-expand-features))))
 
+(define-runtime-syntax |\u03bb| ;; greek lowercase lambda
+  (##make-alias-syntax '##lambda))
+
 ;;;----------------------------------------------------------------------------
 
 ;; Common HTML header.
@@ -83,6 +88,15 @@ function gestureStart() {
 }
 
 document.addEventListener("gesturestart", gestureStart, false);
+
+function add_input(str) {
+  var ta = document.activeElement;
+  if (ta instanceof HTMLTextAreaElement) {
+    var ev = document.createEvent('TextEvent');
+    ev.initTextEvent('textInput', true, true, window, str);
+    ta.dispatchEvent(ev);
+  }
+}
 
 </script>
 
@@ -272,6 +286,9 @@ common-html-header-end
 
 <body class="splash">
 
+<br/>
+<br/>
+
 <p>
 Welcome to <strong>
 splash-page-content-part1-end
@@ -328,6 +345,17 @@ splash-page-content-part2-end
    (lambda (old-event-handler)
      generic-event-handler))
   (show-view 0))
+
+(define (set-page content handler #!optional (enable-scaling #f) (mime-type "text/html"))
+  (set-view-content 0 content #f enable-scaling mime-type)
+  (set-navigation -1)
+  (set-event-handler
+   (lambda (old-event-handler)
+     handler))
+  (show-view 0))
+
+(define (set-page-content content #!optional (enable-scaling #f) (mime-type "text/html"))
+  (set-page content generic-event-handler enable-scaling mime-type))
 
 
 ;;;----------------------------------------------------------------------------
@@ -400,7 +428,7 @@ splash-page-content-part2-end
   (set-event-handler
    (lambda (old-event-handler)
      generic-event-handler))
-  (show-textView 0))
+  (show-textView 0 #t))
 
 (define (repl-eval str)
   (if (string? str)
@@ -498,6 +526,8 @@ function lose_focus()
 
 <body class="editor">
 
+<br/>
+
 <span class="editorhead">
 <div class="button3" onClick="click_new();">+</div>
 </span>
@@ -527,7 +557,7 @@ edit-page-content-part5-end
     (list "<br/>\n"
           "<textarea class=\"script\" id=\"script" index "\" rows="
           edit-page-script-rows
-          ">"
+          " autocomplete=\"off\" autocorrect=\"off\" autocapitalize=\"off\" spellcheck=\"false\">"
           (html-escape script)
           "</textarea>\n"
           "<center>\n"
@@ -595,7 +625,7 @@ edit-page-content-part5-end
                      new-event
                      (lambda ()
                        #f)))))))))))
-  (show-view 3))
+  (show-view 3 #t))
 
 (define (get-index-and-update-script-db rest)
   (let ((x (get-event-parameters rest)))
@@ -789,7 +819,7 @@ edit-page-content-part5-end
         (wiki-script-remove name)
         (back))
       ""
-      (list "<h3>Removing script</h3>" (html-escape name) "<br/>")
+      (list "<br/><h3>Removing script</h3>" (html-escape name) "<br/>")
       "The script has been removed from the Gambit wiki"
       "Could not remove script!"
       back))
@@ -812,7 +842,7 @@ edit-page-content-part5-end
         (wiki-script-store name script)
         (back))
       ""
-      (list "<h3>Storing script</h3>" (html-escape name) "<br/>")
+      (list "<br/><h3>Storing script</h3>" (html-escape name) "<br/>")
       "The script has been stored on the Gambit wiki"
       "Could not store script!"
       back))
@@ -840,7 +870,7 @@ edit-page-content-part5-end
           (set-edit-view)
           (back)))
       ""
-      (list "<h3>Fetching script</h3>" (html-escape name) "<br/>")
+      (list "<br/><h3>Fetching script</h3>" (html-escape name) "<br/>")
       "The script has been fetched from the Gambit wiki"
       "Could not fetch script!"
       back))
@@ -894,6 +924,8 @@ edit-page-content-part5-end
 (define repo-page-content-part1 #<<repo-page-content-part1-end
 
 <body class="repo">
+
+<br/>
 
 repo-page-content-part1-end
 )
@@ -985,7 +1017,7 @@ repo-page-content-part5-end
          (let ((scripts (wiki-script-list)))
            (repo-browse #f (script-list->tree scripts))))
        repo-page-content-part3
-       (list "<h3>Accessing Gambit wiki</h3><br/>")
+       (list "<br/><h3>Accessing Gambit wiki</h3><br/>")
        #f
        "Could not get list of scripts!"
        repl)))
@@ -1228,8 +1260,11 @@ repo-transaction-page-content-part3-end
 
 <body class="login">
 
+<br/>
+<br/>
+
 <center>
-<h1>Log in to Gambit wiki</h1>
+<h2>Log in to Gambit wiki</h2>
 
 <form onSubmit="window.location='event:login:'+encodeURIComponent(document.getElementById('username').value)+':'+encodeURIComponent(document.getElementById('password').value)+':'+encodeURIComponent(document.getElementById('rememberpass').value)+':'; return false;">
 
@@ -1241,7 +1276,7 @@ login-page-content-part1-end
 )
 
 (define login-page-content-part2 #<<login-page-content-part2-end
-" /></td>
+" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/></td>
 </tr><tr>
   <td class="label">Password:</td>
   <td class="login"><input class="login" id="password" type="password" value="
@@ -1249,7 +1284,7 @@ login-page-content-part2-end
 )
 
 (define login-page-content-part3 #<<login-page-content-part3-end
-" /></td>
+" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/></td>
 <tr>
   <td></td>
   <td><input type="checkbox" id="rememberpass" 
@@ -1421,9 +1456,9 @@ login-page-content-part5-end
               (let ((n (string->number (substring str 1 (string-length str)))))
                 (cond ((eqv? n 12)
                        (##thread-interrupt! (macro-primordial-thread)))
-                      ((and n (<= n 10))
-                       (add-input-to-textView 0 (number->string (modulo n 10))))))))
-        (add-input-to-textView 0 str))))
+                      (else
+                       (add-input-to-currentView str))))))
+        (add-input-to-currentView str))))
 
 
 ;;;----------------------------------------------------------------------------
@@ -1445,11 +1480,13 @@ login-page-content-part5-end
 
    (set-navigation-bar '("REPL" "Wiki" "Help" "Edit"))
 
+   (if (equal? CFBundleDisplayName "Gambit REPL dev")
+       (repo-enable!))
+
    (set-splash-view) ;; init the splash view
    (set-edit-view) ;; init the edit view
 
-   (if (equal? CFBundleDisplayName "Gambit REPL dev")
-       (repo-enable!))
+   (add-output-to-textView 0 "\n\n\n\n") ;; leave space at top of REPL view
 
    (if (get-pref "run-main-script")
 

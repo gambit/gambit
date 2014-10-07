@@ -6,13 +6,15 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "AppDelegate.h"
 
 char **main_argv;
 
 int main(int argc, char *argv[]) {
+
   main_argv = argv;
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  int retVal = UIApplicationMain(argc, argv, nil, nil);
-  [pool release];
-  return retVal;
+
+  @autoreleasepool {
+    return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+  }
 }

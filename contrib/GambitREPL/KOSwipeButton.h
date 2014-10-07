@@ -1,5 +1,5 @@
 //
-//  SwipeButton.h
+//  KOSwipeButton.h
 //  KeyboardTest
 //
 //  Created by Kuba on 28.06.12.
@@ -35,10 +35,13 @@
 @protocol KOProtocol;
 
 @interface KOSwipeButton : UIView
+#if !__has_feature(objc_arc)
+@property (nonatomic, assign) id <KOProtocol> delegate;
+#else
 @property (nonatomic, weak) id <KOProtocol> delegate;
+#endif
 @property (nonatomic, strong) NSString *keys;
 
 - (void)selectLabel:(NSInteger)idx;
-- (BOOL)isTrackingPoint;
 
 @end

@@ -2,7 +2,7 @@
 
 ;;; File: "script.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -58,14 +58,14 @@ EOF
 EOF
 )
 
-("F11" .
+("F1" .
 #<<EOF
-;;; F11
+;;; F1
 
 ;; Visit Gambit wiki.
 
 (open-URL
- "http://www.iro.umontreal.ca/~gambit")
+ "http://gambitscheme.org")
 EOF
 )
 

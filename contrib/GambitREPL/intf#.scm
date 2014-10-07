@@ -2,7 +2,7 @@
 
 ;;; File: "intf#.scm"
 
-;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -70,6 +70,8 @@ add-output-to-textView
 add-input-to-textView
 set-webView-content
 set-webView-content-from-file
+add-input-to-webView
+add-input-to-currentView
 eval-js-in-webView
 
 open-URL
@@ -109,14 +111,11 @@ set-event-handler
 set-location-update-event-handler
 show-view
 set-view-content
-set-page
-set-page-content
 
 has-prefix?
 get-event-parameters
 
 contained-path-resolve
-app-dir
 
 ))
 

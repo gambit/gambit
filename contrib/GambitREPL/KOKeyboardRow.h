@@ -7,7 +7,7 @@
 //
 //  Website: http://www.becomekodiak.com/
 //  github: http://github.com/adamhoracek/KOKeyboard
-//	Twitter: http://twitter.com/becomekodiak
+//  Twitter: http://twitter.com/becomekodiak
 //  Mail: adam@becomekodiak.com, kuba@becomekodiak.com
 //
 //  Permission is hereby granted, free of charge, to any person
@@ -35,13 +35,25 @@
 typedef enum {koNoAnimation, koSnapbackAnimation, koTraditinalAnimation } koAnimation;
 
 @interface KOKeyboardRow : UIInputView
-@property (nonatomic, weak) id <UITextInput> koDelegate;		// may change it in real time
-@property (nonatomic, assign) koAnimation animation;			// animate swiping the button
-@property (nonatomic, copy) NSString *keys;						// 5 characters per button
-@property (nonatomic, copy) NSIndexSet *portraitSet;			// which buttons to ues in portrait mode
-@property (nonatomic, copy) NSIndexSet *landscapeSet;			// which buttons to ues in portrait mode
+#if !__has_feature(objc_arc)
+@property (nonatomic, assign) koAnimation animation;      // animate swiping the button
+@property (nonatomic, retain) NSString *portraitKeysSmall;  // 5 characters per button
+@property (nonatomic, retain) NSString *landscapeKeysSmall; // 5 characters per button
+@property (nonatomic, retain) NSString *portraitKeysLarge;  // 5 characters per button
+@property (nonatomic, retain) NSString *landscapeKeysLarge; // 5 characters per button
+@property (nonatomic, retain) NSIndexSet *portraitSet;      // which buttons to use in portrait mode
+@property (nonatomic, retain) NSIndexSet *landscapeSet;     // which buttons to use in landscape mode
+#else
+@property (nonatomic, assign) koAnimation animation;      // animate swiping the button
+@property (nonatomic, copy) NSString *portraitKeysSmall;  // 5 characters per button
+@property (nonatomic, copy) NSString *landscapeKeysSmall; // 5 characters per button
+@property (nonatomic, copy) NSString *portraitKeysLarge;  // 5 characters per button
+@property (nonatomic, copy) NSString *landscapeKeysLarge; // 5 characters per button
+@property (nonatomic, copy) NSIndexSet *portraitSet;      // which buttons to use in portrait mode
+@property (nonatomic, copy) NSIndexSet *landscapeSet;     // which buttons to use in landscape mode
+#endif
 
-- (instancetype)initWithDelegate:(id <UITextInput>) delegate;	// initial delegate
+- (instancetype)init;
 
 - (void)switchToOrientation:(UIInterfaceOrientation)interfaceOrientation;
 - (void)setup;

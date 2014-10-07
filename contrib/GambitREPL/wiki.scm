@@ -2,7 +2,7 @@
 
 ;;; File: "wiki.scm"
 
-;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -336,7 +336,7 @@
 (define wiki-script-tags    #f)
 
 (set! wiki-timeout        15)
-(set! wiki-server-address "dynamo.iro.umontreal.ca:80")
+(set! wiki-server-address "gambitscheme.org:80")
 (set! wiki-root           "/~gambit/wiki")
 (set! wiki-api            "/api.php")
 (set! wiki-script-ns      "102")

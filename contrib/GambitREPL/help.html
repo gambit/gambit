@@ -23,6 +23,9 @@ document.addEventListener("gesturestart", gestureStart, false);
 
 <body>
 
+<br/>
+<br/>
+
 <p>
 Gambit REPL is an interpreter for the Scheme programming language which closely conforms to the Scheme standard and also provides a large number of extensions. The following documents define the R5RS Scheme language and the extensions specific to the Gambit system, on which Gambit REPL is based.
 </p>
@@ -36,13 +39,13 @@ Gambit REPL is an interpreter for the Scheme programming language which closely 
 </ul>
 
 <p>
-Gambit REPL's user interface provides 4 views which are selectable with the tabs at the bottom of the screen. The views can be switched from portrait to landscape by turning the device. The landscape layout is recommended on iPhone, as it gives a keyboard with wider keys and text output with fewer line breaks.
+Gambit REPL's user interface provides 4 views which are selectable with the tabs at the top of the screen. The views can be switched from portrait to landscape by turning the device. The landscape layout is recommended on iPhone, as it gives a keyboard with more keys and text output with fewer line breaks.
 </p>
 
 <ul>
 
 <li><strong>REPL</strong><br/>
-This is the Read-Eval-Print-Loop with which the user can interact with the interpreter. Enter an expression to evaluate or a command, tap <strong>return</strong> and the interpreter will execute the command and display the resulting value(s) if there are any. Tap <strong>return</strong> on an empty line to dismiss the keyboard. Place the insertion point on a previous line and tap <strong>return</strong> to copy that line at the bottom. Tap the <strong>STOP</strong> key to interrupt a long computation (this key is available in landscape layout on small devices). The list of special <i>comma</i> commands can be listed by entering <strong>,?</strong> (comma and question mark). On iPad, the keyboard function keys can be assigned scripts by naming the script with the name of the function key, for example <strong>F1</strong>.
+This is the Read-Eval-Print-Loop with which the user interacts with the interpreter. Enter an expression to evaluate or a command, tap <strong>return</strong> and the interpreter will execute the command and display the resulting value(s) if there are any. Tap <strong>return</strong> on an empty line to dismiss the keyboard. Place the insertion point on a previous line and tap <strong>return</strong> to copy that line at the bottom. Tap the <strong>STOP</strong> key to interrupt a long computation (this key is available in landscape layout on small devices). The list of special <i>comma</i> commands can be listed by entering <strong>,?</strong> (comma and question mark). On iPad, the keyboard function keys can be assigned scripts by naming the script with the name of the function key, for example <strong>F1</strong>.
 
 <li><strong>Wiki</strong><br/>
 This view visits the Gambit wiki in the web browser. Internet access is required. The Gambit wiki contains useful information for using Gambit REPL and Gambit in general. The wiki can be edited by any user with an account (if you don't have an account you should <a href="event:create-account"><strong>create an account</strong></a>; it is free). Please contribute!
@@ -51,7 +54,7 @@ This view visits the Gambit wiki in the web browser. Internet access is required
 This view gives access to the documentation. It contains the <a href="event:r5rs"><strong>R5RS document</strong></a> and the <a href="event:gambit-c"><strong>Gambit manual</strong></a>, in HTML and PDF formats. The HTML formats include navigation buttons (move to previous/next section, table-of-contents, index, etc). Tap the <strong>x</strong> button in the upper right to return to the main help view.
 
 <li><strong>Edit</strong><br/>
-This view contains the set of editable scripts. The first line of the script can be a comment containing the name of the script (three semicolons, a space, and the name of the script, such as <strong>main</strong>, <strong>F12</strong>, <strong>test.scm</strong>). Giving names to scripts improves the usefulness of debugging messages, and it is necessary when saving scripts to the Documents folder. The <strong>main</strong> script is useful for customizing Gambit REPL; it is executed when the app is launched (by default it simply shows the splash screen). Tap the <strong>+</strong> button to create a new empty script. Tap the <strong>Run</strong> button to execute the script. Tap the <strong>Save</strong> button to save the script to the Documents folder (the name of the script must start with a letter, and end in <strong>.scm</strong>, and contain only letters, digits, '<strong>.</strong>', and '<strong>-</strong>'). Saving a script which only contains the script name will remove the script from the Documents folder. Tap the <strong>Delete</strong> button to delete the script from the Edit view.
+This view contains the set of editable scripts. The first line of the script can be a comment containing the name of the script (three semicolons, a space, and the name of the script, such as <strong>main</strong>, <strong>F5</strong>, <strong>test.scm</strong>). Giving names to scripts improves the usefulness of debugging messages, and it is necessary when saving scripts to the Documents folder. The <strong>main</strong> script is useful for customizing Gambit REPL; it is executed when the app is launched (by default it simply shows the splash screen). Tap the <strong>+</strong> button to create a new empty script. Tap the <strong>Run</strong> button to execute the script. Tap the <strong>Save</strong> button to save the script to the Documents folder (the name of the script must start with a letter, and end in <strong>.scm</strong>, and contain only letters, digits, '<strong>.</strong>', and '<strong>-</strong>'). Saving a script which only contains the script name will remove the script from the Documents folder. Tap the <strong>Delete</strong> button to delete the script from the Edit view.
 
 </ul>
 
