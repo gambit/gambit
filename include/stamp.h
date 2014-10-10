@@ -3,4 +3,4 @@
  */
 
 #define ___STAMP_YMD 20141010
-#define ___STAMP_HMS 4524
+#define ___STAMP_HMS 10701

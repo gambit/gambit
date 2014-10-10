@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/feeley/gambit.svg?branch=master)](https://travis-ci.org/feeley/gambit)
-
+[![tip for next commit](http://prime4commit.com/projects/121.svg)](http://prime4commit.com/projects/121)
 
 The Gambit Scheme system is a complete, portable, efficient and
 reliable implementation of the Scheme programming language.
