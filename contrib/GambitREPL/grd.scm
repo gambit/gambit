@@ -4,7 +4,7 @@
 
 ;;; File: "grd.scm"
 
-;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
 
 ;; This program allows remote interaction with the "Gambit REPL dev"
 ;; app for iOS devices.  The "Gambit REPL dev" app must have started a
@@ -345,16 +345,27 @@ EOF
   (remote-eval addr `(load ,filename)))
 
 (define (grd-push filename #!key (addr (default-addr)))
-  (let ((u8vect (tar-pack-u8vector (tar-read filename) #t)))
+  (let* ((fn (path-strip-trailing-directory-separator filename))
+         (dir (path-directory fn))
+         (base (path-strip-directory fn))
+         (x
+          (parameterize ((current-directory (path-expand dir)))
+            (tar-read base)))
+         (u8vect
+          (tar-pack-u8vector x #t)))
     (pp `(sending ,(u8vector-length u8vect) bytes))
     (remote-eval addr `(tar#tar-write-unchecked
                         (tar#tar-unpack-u8vector ',u8vect #t)))))
 
 (define (grd-pull filename #!key (addr (default-addr)))
-  (let ((u8vect
-         (remote-eval addr `(tar#tar-pack-u8vector
-                             (tar#tar-read ,filename)
-                             #t))))
+  (let* ((fn (path-strip-trailing-directory-separator filename))
+         (dir (path-directory fn))
+         (base (path-strip-directory fn))
+         (u8vect
+          (remote-eval addr `(tar#tar-pack-u8vector
+                              (parameterize ((current-directory (path-expand ,dir)))
+                                (tar#tar-read ,base))
+                              #t))))
     (pp `(received ,(u8vector-length u8vect) bytes))
     (tar-write-unchecked
      (tar-unpack-u8vector u8vect #t))))
