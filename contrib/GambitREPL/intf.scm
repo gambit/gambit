@@ -409,6 +409,18 @@ c-declare-end
 
 ;; C functions callable from Scheme.
 
+(define (set-ext-keys
+         portrait-small
+         #!optional
+         (landscape-small portrait-small)
+         (portrait-large portrait-small)
+         (landscape-large portrait-large))
+  ((c-lambda (NSString* NSString* NSString* NSString*) void "set_ext_keys")
+   portrait-small
+   landscape-small
+   portrait-large
+   landscape-large))
+
 (define set-navigation
   (c-lambda (int) void "set_navigation"))
 

@@ -1,15 +1,15 @@
 //
-//  WView.h
+//  IView.h
 //
 //  Created by Marc Feeley
 //  Copyright 2014 Université de Montréal. All rights reserved.
 //
 
-#import <UIKit/UIWebView.h>
+#import <UIKit/UIImageView.h>
 
 //-----------------------------------------------------------------------------
 
-@interface WView : UIWebView
+@interface IView : UIImageView
 {
 }
 

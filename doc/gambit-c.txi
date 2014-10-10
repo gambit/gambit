@@ -146,7 +146,7 @@ the compiler run roughly as fast as equivalent C programs.
 
 For the most up to date information on Gambit and add-on packages
 please check the Gambit web page at
-@uref{http://gambit.iro.umontreal.ca}.  The web page has links to the
+@uref{http://gambitscheme.org}.  The web page has links to the
 Gambit mailing list, the bug reporting system, and the source code
 repository.
 

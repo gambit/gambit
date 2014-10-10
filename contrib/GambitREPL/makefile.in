@@ -78,23 +78,19 @@ repo.scm "repo\#.scm" help.scm "help\#.scm" program.scm \
 Prefix.pch main.m \
 grd.scm \
 AppDelegate.m AppDelegate.h ViewController.m ViewController.h \
-AccessoryView.xib MainWindow.xib ViewController.xib \
-Icon-72.png Icon-Small-50.png Icon-Small.png Icon-Small@2x.png Icon-512.png \
-Icon.png Icon@2x.png Icon-unscaled.key Icon-unscaled.tiff \
-Icon-unscaled-alpha.tiff \
-8ball.png edit.png f1.png f10.png f11.png f12.png f2.png f3.png \
-f4.png f5.png f6.png f7.png f8.png f9.png heart.png note.png rocket.png \
+KOCreateButton.h KOCreateButton.m KOKeyboardRow.h KOKeyboardRow.m \
+KOProtocol.h KOSwipeButton.h KOSwipeButton.m \
+TView.h TView.m WView.h WView.m IView.h IView.m \
+Storyboard.storyboard \
+Icon-29.png Icon-40.png Icon-57.png Icon-72.png Icon-76.png Icon-87.png \
+Icon-120.png Icon-152.png Icon-180.png Icon-512.png Icon-1024.png \
+Icon-unscaled.png Default-568h@2x.png \
+edit.png f1.png f10.png f11.png f12.png f2.png f3.png \
+f4.png f5.png f6.png f7.png f8.png f9.png note.png rocket.png \
 stop.png user.png \
-button-abc.png button-cancel.png button-compass.png button-empty.png button-left-left.png button-left.png button-question.png button-right-right.png button-right.png button-up.png button-up-arrow.png \
-key-8ball-46x42.png key-comma-46x42.png key-doublequote-46x42.png \
-key-edit-46x42.png key-empty-46x42.png key-f1-46x42.png \
-key-f10-46x42.png key-f11-46x42.png key-f12-46x42.png key-f2-46x42.png \
-key-f3-46x42.png key-f4-46x42.png key-f5-46x42.png key-f6-46x42.png \
-key-f7-46x42.png key-f8-46x42.png key-f9-46x42.png key-heart-46x42.png \
-key-lambda-46x42.png key-lparen-46x42.png key-minus-46x42.png \
-key-note-46x42.png key-plus-46x42.png key-quote-46x42.png \
-key-rocket-46x42.png key-rparen-46x42.png key-sharp-46x42.png \
-key-star-46x42.png key-stop-46x42.png key-user-46x42.png \
+button-abc.png button-cancel.png button-compass.png button-empty.png \
+button-left-left.png button-left.png button-question.png button-right-right.png \
+button-right.png button-up.png button-up-arrow.png \
 make-appstore-screenshots make-keys make-scaled-icons \
 Info.plist \
 help.html r5rs.html r5rs.pdf gambit-c.html

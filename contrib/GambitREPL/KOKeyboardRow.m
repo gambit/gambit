@@ -134,6 +134,27 @@ static NSInteger buttonSpacing;
     landscapeKeys = self.landscapeKeysLarge;
   }
 
+  if (portraitKeys == nil || [portraitKeys length] == 0)
+    portraitKeys = @"S";
+
+  if (landscapeKeys == nil || [landscapeKeys length] == 0)
+    landscapeKeys = @"S";
+
+  int len;
+
+  len = [portraitKeys length];
+  portraitKeys = [portraitKeys
+                   stringByPaddingToLength:(len+4)/5*5
+                                withString:[portraitKeys substringWithRange:NSMakeRange(len-1,1)]
+                           startingAtIndex:0];
+
+
+  len = [landscapeKeys length];
+  landscapeKeys = [landscapeKeys
+                    stringByPaddingToLength:(len+4)/5*5
+                                 withString:[landscapeKeys substringWithRange:NSMakeRange(len-1,1)]
+                            startingAtIndex:0];
+
   pButtonCount = ([portraitKeys length]+4)/5;
   lButtonCount = ([landscapeKeys length]+4)/5;
 

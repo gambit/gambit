@@ -9,7 +9,7 @@
 
 //-----------------------------------------------------------------------------
 
-@interface TView : UITextView // <UIKeyInput>
+@interface TView : UITextView
 {
 }
 

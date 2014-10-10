@@ -7,47 +7,13 @@
 
 #import <UIKit/UIKit.h>
 #import "ViewController.h"
+#import "KOKeyboardRow.h"
 #import "WView.h"
 #import "TView.h"
-#import "KOKeyboardRow.h"
+#import "IView.h"
 
 
 ViewController *theViewController = nil;
-
-
-
-
-#if 1
-
-@interface UIWebBrowserView : UIView
-@end
- 
-@implementation UIWebBrowserView (CustomToolbar)
- 
-//- (id)inputView {
-//  NSLog(@"my inputView");
-//  return nil;
-//}
-
-
-#if 1
-- (id)inputAccessoryView {
-
-  ViewController *vc = theViewController;
-  if (vc != nil)
-    {
-      //NSLog(@"keyboardShowingView = %d",vc.keyboardShowingView);
-      if (vc.keyboardShowingView == vc.currentView)
-        return vc.kov;
-    }
-
-  return nil;
-}
-#endif
-
-@end
-
-#endif
 
 //-----------------------------------------------------------------------------
 
@@ -156,51 +122,40 @@ void gambit_cleanup()
 
 //-----------------------------------------------------------------------------
 
-KOKeyboardRow *setup_ext_kbd() {
-
-  KOKeyboardRow *kov = [[KOKeyboardRow alloc] init];
-
-#if 0
-
-  kov.portraitKeysSmall  = @"=,.<>2406835179/-(\\_*+)?#";
-  kov.landscapeKeysSmall = @"S:;!@`'λ\"~=,.<>2406835179/-(\\_*+)?#";
-  kov.portraitKeysLarge  = @"bcade%^$&|<<<<<[]={}>>>>>S:;!@`'λ\"~2406835179/-(\\_*+)?#";
-  kov.landscapeKeysLarge = @"bcade%^$&|<<<<<[]={}>>>>>S:;!@`'λ\"~2406835179/-(\\_*+)?#";
-
-#else
-
-  kov.portraitKeysSmall =  @"*=+<>/\\-#λ2406835179`'(.\":;)!?";
-  kov.landscapeKeysSmall = @"~@,S_*=+<>/\\-#λ2406835179`'(.\":;)!?";
-  kov.portraitKeysLarge  = @"SSSSSbcade<<<@$[]={}>>>&|*^+%_/\\-#λ2406835179`'(~\":;)!?";
-  kov.landscapeKeysLarge = @"SSSSSbcade<<<@$[]={}>>>&|*^+%_/\\-#λ2406835179`'(~\":;)!?";
-
-#endif
-
-  kov.animation = koTraditinalAnimation; //koNoAnimation koTraditinalAnimation;
-
-  [kov setup];
-
-  return kov;
-}
-
 - (void)viewDidLoad {
 
   [super viewDidLoad];
 
   theViewController = self;
 
-  self.currentView = -1;
-  self.keyboardShowingView = -1;
+  currentView = -1;
+  keyboardShowingView = -1;
 
-  kov = setup_ext_kbd();
+  kov = nil;
+
+#if 0
+
+  set_ext_keys(@"=,.<>2406835179/-(\\_*+)?#",
+               @"S:;!@`'λ\"~=,.<>2406835179/-(\\_*+)?#",
+               @"bcade%^$&|<<<<<[]={}>>>>>S:;!@`'λ\"~2406835179/-(\\_*+)?#",
+               @"bcade%^$&|<<<<<[]={}>>>>>S:;!@`'λ\"~2406835179/-(\\_*+)?#");
+
+#else
+
+  set_ext_keys(@"*=+<>/\\-#λ2406835179`'(.\":;)!?",
+               @"~@,S_*=+<>/\\-#λ2406835179`'(.\":;)!?",
+               @"SSSSSbcade<<<@$[]={}>>>&|*^+%_/\\-#λ2406835179`'(~\":;)!?",
+               @"SSSSSbcade<<<@$[]={}>>>&|*^+%_/\\-#λ2406835179`'(~\":;)!?");
+
+#endif
 
   CGRect screenRect = [[UIScreen mainScreen] bounds];
   CGFloat screen_w = screenRect.size.width;
   CGFloat screen_h = screenRect.size.height;
-  CGFloat bar_y = self.navToolbar.bounds.origin.y;
-  CGFloat bar_h = self.navToolbar.bounds.size.height;
+  CGFloat bar_y = navToolbar.bounds.origin.y;
+  CGFloat bar_h = navToolbar.bounds.size.height;
 
-  //NSLog(@"%f %f %f %f",bar_y, bar_h,self.view.bounds.size.width, self.view.bounds.size.height);
+  //NSLog(@"%f %f %f %f",bar_y, bar_h,view.bounds.size.width, view.bounds.size.height);
   bar_y = 0;
   bar_h = 0;
 
@@ -232,13 +187,12 @@ KOKeyboardRow *setup_ext_kbd() {
     textview.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     textview.hidden = YES;
     textview.delegate = self;
-    textview.inputAccessoryView = kov;
     [self.view insertSubview:textview atIndex:0];
     textViews[i] = textview;
   }
 
   for (int i=NB_IMAGEVIEWS-1; i>=0; i--) {
-    UIImageView *imageview = [[UIImageView alloc] initWithFrame:viewRect];
+    UIImageView *imageview = [[IView alloc] initWithFrame:viewRect];
     imageview.backgroundColor = [UIColor clearColor];
     imageview.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     imageview.hidden = YES;
@@ -308,22 +262,22 @@ KOKeyboardRow *setup_ext_kbd() {
 
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
 {
-	[super willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:duration];
-	
-	//NSLog(@"WILL ANIMATE!");
-	
-	[kov switchToOrientation:interfaceOrientation];
+  [super willAnimateRotationToInterfaceOrientation:interfaceOrientation duration:duration];
 
-	//UIView *sv = [kov.subviews lastObject];
-	//[sv removeFromSuperview];
+  //NSLog(@"WILL ANIMATE!");
+
+  [kov switchToOrientation:interfaceOrientation];
+
+  //UIView *sv = [kov.subviews lastObject];
+  //[sv removeFromSuperview];
 }
 
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
-	[super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-	
-	//NSLog(@"DID: %@", NSStringFromCGRect(kov.frame));
+  [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+
+  //NSLog(@"DID: %@", NSStringFromCGRect(kov.frame));
 }
 
 
@@ -400,7 +354,7 @@ KOKeyboardRow *setup_ext_kbd() {
     }
   }
 
-  self.keyboardShowingView = view;
+  keyboardShowingView = view;
 }
 
 
@@ -436,11 +390,32 @@ KOKeyboardRow *setup_ext_kbd() {
     }
   }
 
-  self.keyboardShowingView = -1;
+  keyboardShowingView = -1;
 }
 
 
 #include "intf.h"
+
+
+void set_ext_keys(NSString *portrait_small, NSString *landscape_small, NSString *portrait_large, NSString *landscape_large) {
+
+  ViewController *vc = theViewController;
+  if (vc != nil)
+    {
+      KOKeyboardRow *kov = [[KOKeyboardRow alloc] init];
+
+      kov.portraitKeysSmall  = portrait_small;
+      kov.landscapeKeysSmall = landscape_small;
+      kov.portraitKeysLarge  = portrait_large;
+      kov.landscapeKeysLarge = landscape_large;
+
+      kov.animation = koTraditinalAnimation;
+
+      [kov setup];
+
+      vc.kov = kov;
+    }
+}
 
 
 void set_navigation(int n) {
@@ -552,17 +527,28 @@ void hide_cancelButton() {
 }
 
 
+void preload_kbd_now() {
+
+  UITextField *field = [UITextField new];
+  [[[[UIApplication sharedApplication] windows] lastObject] addSubview:field];
+  [field becomeFirstResponder];
+  [field resignFirstResponder];
+  [field removeFromSuperview];
+}
+
 void preload_kbd() {
 
   static BOOL preloaded = false;
 
   if (!preloaded) {
-    UITextField *field = [UITextField new];
-    [[[[UIApplication sharedApplication] windows] lastObject] addSubview:field];
-    [field becomeFirstResponder];
-    [field resignFirstResponder];
-    [field removeFromSuperview];
     preloaded = true;
+#if 0
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.0),
+                   dispatch_get_main_queue(),
+                   ^(void){ preload_kbd_now(); });
+#else
+    preload_kbd_now();
+#endif
   }
 }
 
@@ -1134,14 +1120,13 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
 
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
 
-  NSString *url = [[request URL] relativeString];
+  NSURL *url = [request URL];
+  NSString *relurl = [url relativeString];
 
-  if ([url hasPrefix:@"event:"])
-    {
-      [self send_event:url];
-
-      return NO;
-    }
+  if ([relurl hasPrefix:@"event:"]) {
+    [self send_event:relurl];
+    return NO;
+  }
 
   return YES;
 }
@@ -1271,50 +1256,50 @@ void setup_location_updates(double desired_accuracy, double distance_filter)
 @implementation RAEditorView
 
 - (instancetype) initWithCoder:(NSCoder *)aDecoder {
-	self = [super initWithCoder:aDecoder];
-	if (self) {
-        [self setup];
-    }
-	return self;
+  self = [super initWithCoder:aDecoder];
+  if (self) {
+    [self setup];
+  }
+  return self;
 }
 
 - (instancetype) initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-	if (self) {
-    	[self setup];
-    }
-	return self;
+  self = [super initWithFrame:frame];
+  if (self) {
+    [self setup];
+  }
+  return self;
 }
 
 - (void) setup {
-	[self hideKeyboardBar];
+  [self hideKeyboardBar];
 }
 
 - (void) hideKeyboardBar {
-	static NSString * uniqueSuffix;
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		uniqueSuffix = (__bridge_transfer NSString *)CFUUIDCreateString(NULL, CFUUIDCreate(NULL));
-	});
-	
-	for (UIView *aView in self.scrollView.subviews) {
-		Class ownClass = [aView class];
-		NSString *className = NSStringFromClass(ownClass);
-		if (![className hasSuffix:uniqueSuffix]) {
-			NSString *newClassName = [className stringByAppendingString:uniqueSuffix];
-			Class newClass = objc_allocateClassPair(ownClass, [newClassName UTF8String], 0);
-			if (newClass) {
-				IMP nilImp = [self methodForSelector:@selector(methodReturningNil)];
-				class_addMethod(newClass, @selector(inputAccessoryView), nilImp, "@@:");
-				objc_registerClassPair(newClass);
-			}
-			object_setClass(aView, (newClass ?: NSClassFromString(newClassName)));
-		}
-	}
+  static NSString * uniqueSuffix;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+      uniqueSuffix = (__bridge_transfer NSString *)CFUUIDCreateString(NULL, CFUUIDCreate(NULL));
+    });
+
+  for (UIView *aView in scrollView.subviews) {
+    Class ownClass = [aView class];
+    NSString *className = NSStringFromClass(ownClass);
+    if (![className hasSuffix:uniqueSuffix]) {
+      NSString *newClassName = [className stringByAppendingString:uniqueSuffix];
+      Class newClass = objc_allocateClassPair(ownClass, [newClassName UTF8String], 0);
+      if (newClass) {
+        IMP nilImp = [self methodForSelector:@selector(methodReturningNil)];
+        class_addMethod(newClass, @selector(inputAccessoryView), nilImp, "@@:");
+        objc_registerClassPair(newClass);
+      }
+      object_setClass(aView, (newClass ?: NSClassFromString(newClassName)));
+    }
+  }
 }
 
 - (id) methodReturningNil {
-	return nil;
+  return nil;
 }
 
 @end

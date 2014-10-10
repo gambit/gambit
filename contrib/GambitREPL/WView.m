@@ -6,41 +6,92 @@
 //
 
 #import "WView.h"
+#import "ViewController.h"
+
+//-----------------------------------------------------------------------------
+
+
+id get_inputAccessoryView() {
+
+  ViewController *vc = theViewController;
+
+  if (vc.keyboardShowingView == vc.currentView)
+    return vc.kov;
+
+  return nil;
+}
+
+
+#ifdef USE_PRIVATE_API
+
+@interface UIWebBrowserView : UIView
+@end
+
+@implementation UIWebBrowserView (CustomToolbar)
+
+- (id)inputAccessoryView {
+  return get_inputAccessoryView();
+}
+
+@end
+
+#else
+
+#import "objc/runtime.h"    
+
+@interface _GambitREPLHelper : NSObject
+@end
+
+@implementation _GambitREPLHelper
+
+- (id)inputAccessoryView {
+  return get_inputAccessoryView();
+}
+
+@end
+
+#endif
 
 //-----------------------------------------------------------------------------
 
 @implementation WView
 
-#if 0
+#ifndef USE_PRIVATE_API
 
-// UIKeyInput protocol methods
-
-- (void) insertText:(NSString* )text
-{
-  NSLog(@"WView insertText: %@", text);
+- (instancetype) initWithFrame:(CGRect)frame {
+  self = [super initWithFrame:frame];
+  if (self) {
+    [self setup];
+  }
+  return self;
 }
 
-- (void)deleteBackward {
-  NSLog(@"WView deleteBackward");
-}
+- (void) setup {
 
-- (BOOL) canBecomeFirstResponder
-{
-  NSLog(@"WView canBecomeFirstResponder");
-  //  return YES;
-  return NO;
-}
+  UIView *subview = nil;
 
-- (BOOL) resignFirstResponder
-{
-  NSLog(@"WView resignFirstResponder");
-  return YES;
-}
+  for (UIView *v in self.scrollView.subviews) {
+    if ([[v.class description] hasPrefix:@"UIWeb"])
+      subview = v;
+  }
 
-- (BOOL) hasText
-{
-  NSLog(@"WView hasText");
-  return YES;
+  if (subview == nil) return;
+
+  NSString *name = [NSString stringWithFormat:@"%@_GambitREPLHelper", subview.class.superclass];
+  Class newClass = NSClassFromString(name);
+
+  if (newClass == nil) {
+
+    newClass = objc_allocateClassPair(subview.class, [name cStringUsingEncoding:NSASCIIStringEncoding], 0);
+    if (newClass == nil) return;
+
+    Method method = class_getInstanceMethod([_GambitREPLHelper class], @selector(inputAccessoryView));
+    class_addMethod(newClass, @selector(inputAccessoryView), method_getImplementation(method), method_getTypeEncoding(method));
+
+    objc_registerClassPair(newClass);
+  }
+
+  object_setClass(subview, newClass);
 }
 
 #endif

@@ -396,6 +396,10 @@ splash-page-content-part2-end
                 (hide-cancelButton)
                 (show-help-document main-help-document #f))
 
+               ((has-prefix? event "event:browse:") =>
+                (lambda (rest)
+                  (open-URL rest)))
+
                ((wiki-event-handler event))
 
                ((handle-create-account-event event))
@@ -1502,9 +1506,7 @@ login-page-content-part5-end
 
        (splash)) ;; show splash screen if main script did not work last time
 
-   (##repl-debug-main)
-
-   (exit)))
+   (##repl-debug-main)))
 
 
 ;;;============================================================================

@@ -7,7 +7,7 @@
 //
 //  Website: http://www.becomekodiak.com/
 //  github: http://github.com/adamhoracek/KOKeyboard
-//	Twitter: http://twitter.com/becomekodiak
+//  Twitter: http://twitter.com/becomekodiak
 //  Mail: adam@becomekodiak.com, kuba@becomekodiak.com
 //
 //  Permission is hereby granted, free of charge, to any person
@@ -66,27 +66,25 @@ extern ViewController *theViewController;
 
 @implementation KOSwipeButton
 {
-	BOOL			didSetup;
-	
-	NSMutableArray	*labels;
-	CGPoint			touchBeginPoint;
-	UILabelWithAction	*selectedLabel;
-	UIImageView		*bgView;
-	UIImageView		*foregroundView;
-	NSDate			*firstTapDate;
-	BOOL			selecting;
-	UIImage			*blueImage;
-	UIImage			*pressedImage;
-	UIImage			*blueFgImage;
-	UIImage			*pressedFgImage;
+  BOOL  didSetup;
+
+  NSMutableArray *labels;
+  CGPoint touchBeginPoint;
+  UILabelWithAction *selectedLabel;
+  UIImageView *bgView;
+  UIImageView *foregroundView;
+  NSDate *firstTapDate;
+  BOOL selecting;
+  UIImage *blueImage;
+  UIImage *pressedImage;
 }
 
 - (instancetype)init
 {
-	if((self = [super init])) {
-		[self setup];
-	}
-	return self;
+  if ((self = [super init])) {
+    [self setup];
+  }
+  return self;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -105,15 +103,12 @@ extern ViewController *theViewController;
   }
   didSetup = YES;
 
-  blueFgImage		= [UIImage imageNamed:@"hal-white.png"];
-  pressedFgImage	= [UIImage imageNamed:@"hal-blue.png"];
-
   KOCreateButton *b = [KOCreateButton new];
   UIImage *b2 = [b buttonImage:CGSizeMake(41, 41) color:[UIColor colorWithWhite:0.66 alpha:1]];
   UIImage *b3 = [b buttonImage:CGSizeMake(41, 41) color:[UIColor blueColor]];
-	
-  pressedImage	= [b2 resizableImageWithCapInsets:UIEdgeInsetsMake(20, 20, 20, 20)];
-  blueImage		= [b3 resizableImageWithCapInsets:UIEdgeInsetsMake(20, 20, 20, 20)];
+
+  pressedImage = [b2 resizableImageWithCapInsets:UIEdgeInsetsMake(20, 20, 20, 20)];
+  blueImage    = [b3 resizableImageWithCapInsets:UIEdgeInsetsMake(20, 20, 20, 20)];
 
   //UIImage *bgImg1 = [[UIImage imageNamed:@"key.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(9, 9, 9, 9)];
   //UIImage *bgImg2 = [[UIImage imageNamed:@"key-pressed.png"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 9, 9, 9)];
@@ -123,7 +118,7 @@ extern ViewController *theViewController;
   bgView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
   [self addSubview:bgView];
   // NSLog(@"IMAGE FRAME: %@", NSStringFromCGRect(bgView.frame));
-    
+
   int middleLabelWidth = 29;
   int middleLabelHeight = 29;
   int labelWidth = 20;
@@ -132,11 +127,11 @@ extern ViewController *theViewController;
   int rightInset = 4;
   int topInset = 3;
   int bottomInset = 3;
-    
+
   labels = [[NSMutableArray alloc] init];
-    
+
   UIFont *f = [UIFont systemFontOfSize:15];
-    
+
   UILabelWithAction *l = [[UILabelWithAction alloc] initWithFrame:CGRectMake(leftInset, topInset, labelWidth, labelHeight)];
   l->action = @"";
   l.textAlignment = NSTextAlignmentLeft;
@@ -146,7 +141,7 @@ extern ViewController *theViewController;
   [l setHighlightedTextColor:[UIColor blueColor]];
   l.backgroundColor = [UIColor clearColor];
   [labels addObject:l];
-    
+
   l = [[UILabelWithAction alloc] initWithFrame:CGRectMake(self.frame.size.width - labelWidth - rightInset, topInset, labelWidth, labelHeight)];
   l->action = @"";
   l.textAlignment = NSTextAlignmentRight;
@@ -210,6 +205,7 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
 
     UILabelWithAction *lab = [labels objectAtIndex:i];
     NSString *chr = [newKeys substringWithRange:NSMakeRange(i, 1)];
+    unichar c = [chr characterAtIndex:0];
 #if !__has_feature(objc_arc)
     [chr retain];
 #endif
@@ -221,7 +217,15 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
 
     NSString *imgFilename = nil;
 
-    if ([chr isEqualToString:STOP_ACTION])
+    if (c < 32) {
+      if (c == 9) {
+        chr = @"tab";
+      } else if (c == 27) {
+        chr = @"esc";
+      } else {
+        chr = [NSString stringWithFormat:@"^%c", c+64];
+      }
+    } else if ([chr isEqualToString:STOP_ACTION])
       imgFilename = @"stop.png";
     else if ([chr isEqualToString:RUN_ACTION])
       imgFilename = @"rocket.png";
@@ -259,25 +263,25 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
 
       [lab setText:chr];
 
-      if (i == 2) {
-        [[labels objectAtIndex:i] setFont:[UIFont boldSystemFontOfSize:28]];
-      } else {
-        [[labels objectAtIndex:i] setFont:[UIFont systemFontOfSize:18]];
-      }
+      int size = (i == 2) ? 28 : 18;
+
+      if ([chr length] > 1) size = size*2/3;
+
+      [[labels objectAtIndex:i] setFont:[UIFont boldSystemFontOfSize:size]];
     }
   }
-	
+
   UIKeyboardAppearance app = UIKeyboardAppearanceLight;
   KOCreateButton *b = [KOCreateButton new];
   UIImage *b1 = [b buttonImage:CGSizeMake(41, 41) type:app];
-  UIImage *bgImg1	= [b1 resizableImageWithCapInsets:UIEdgeInsetsMake(20, 20, 20, 20)];
+  UIImage *bgImg1 = [b1 resizableImageWithCapInsets:UIEdgeInsetsMake(20, 20, 20, 20)];
   [bgView setImage:bgImg1];
 }
 
 - (void)selectLabel:(NSInteger)idx
 {
   selectedLabel = nil;
-    
+
   for (NSInteger i = 0; i < labels.count; i++) {
     UILabelWithAction *l = [labels objectAtIndex:i];
     l.highlighted = (idx == i);
@@ -285,7 +289,7 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
     if (idx == i)
       selectedLabel = l;
   }
-    
+
   bgView.highlighted = selectedLabel != nil;
   foregroundView.highlighted = selectedLabel != nil;
 }
@@ -294,7 +298,7 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
 {
   UITouch *t = [touches anyObject];
   touchBeginPoint = [t locationInView:self];
-    
+
   [self selectLabel:2];
 }
 
@@ -302,15 +306,15 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
 {
   UITouch *t = [touches anyObject];
   CGPoint touchMovePoint = [t locationInView:self];
-    
+
   CGFloat xdiff = touchBeginPoint.x - touchMovePoint.x;
   CGFloat ydiff = touchBeginPoint.y - touchMovePoint.y;
   CGFloat distance = sqrt(xdiff * xdiff + ydiff * ydiff);
-    
+
   NSInteger idx = 2;
-  if (distance > 250) {
+  if (distance > 120) {
     idx = -1;
-  } else if (distance > 20) {
+  } else if (distance > 25) {
     CGFloat angle = atan2(xdiff, ydiff);
 
     if (angle >= 0 && angle < M_PI_2) {

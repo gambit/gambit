@@ -2,18 +2,19 @@
 
 scale_icon()
 {
-  pngtopnm Icon-unscaled-alpha.png | pamscale -xsize=$1 -ysize=$1 > $2.alpha.pnm
-  pngtopnm Icon-unscaled.png | pamscale -xsize=$1 -ysize=$1 | pnmtopng -alpha $2.alpha.pnm > $2
-  rm -f $2.alpha.pnm
+  convert Icon-unscaled.png -resize $1x$1 -alpha remove $2
 }
 
-tifftopnm Icon-unscaled-alpha.tiff | pnmtopng > Icon-unscaled-alpha.png
-tifftopnm Icon-unscaled.tiff | pnmtopng > Icon-unscaled.png
+tiff2png -force Icon-unscaled.tiff
 
-scale_icon 57  Icon.png
-scale_icon 114 Icon@2x.png
-scale_icon 72  Icon-72.png
-scale_icon 29  Icon-Small.png
-scale_icon 58  Icon-Small@2x.png
-scale_icon 50  Icon-Small-50.png
-scale_icon 512 Icon-512.png
+scale_icon 29   Icon-29.png
+scale_icon 40   Icon-40.png
+scale_icon 57   Icon-57.png
+scale_icon 72   Icon-72.png
+scale_icon 76   Icon-76.png
+scale_icon 87   Icon-87.png
+scale_icon 120  Icon-120.png
+scale_icon 152  Icon-152.png
+scale_icon 180  Icon-180.png
+scale_icon 512  Icon-512.png
+scale_icon 1024 Icon-1024.png

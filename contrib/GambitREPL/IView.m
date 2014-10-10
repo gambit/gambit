@@ -1,17 +1,16 @@
 //
-//  WView.h
+//  IView.m
 //
 //  Created by Marc Feeley
-//  Copyright 2014 Université de Montréal. All rights reserved.
+//  Copyright 2014 UniversitÃ© de MontrÃ©al. All rights reserved.
 //
 
-#import <UIKit/UIWebView.h>
+#import "IView.h"
 
 //-----------------------------------------------------------------------------
 
-@interface WView : UIWebView
-{
-}
+@implementation IView
+
 
 @end
 

@@ -13,6 +13,7 @@
 
 // ViewController methods callable from Scheme.
 
+void set_ext_keys(NSString *portrait_small, NSString *landscape_small, NSString *portrait_large, NSString *landscape_large);
 void set_navigation(int n);
 void show_cancelButton();
 void hide_cancelButton();
@@ -50,7 +51,7 @@ void setup_location_updates(double desired_accuracy, double distance_filter);
 #define NB_TEXTVIEWS  2
 #define NB_IMAGEVIEWS 2
 
-@interface ViewController : UIViewController <UITextViewDelegate,UIWebViewDelegate,UIAlertViewDelegate,CLLocationManagerDelegate,MFMessageComposeViewControllerDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate> { //,UIKeyInput
+@interface ViewController : UIViewController <UITextViewDelegate,UIWebViewDelegate,UIAlertViewDelegate,CLLocationManagerDelegate,MFMessageComposeViewControllerDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate> {
 
 @public
 
@@ -91,3 +92,5 @@ void setup_location_updates(double desired_accuracy, double distance_filter);
 - (IBAction)touch_up_cancel:(id)sender;
 
 @end
+
+extern ViewController *theViewController;

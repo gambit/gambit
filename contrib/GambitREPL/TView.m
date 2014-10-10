@@ -6,11 +6,16 @@
 //
 
 #import "TView.h"
+#import "ViewController.h"
 
 //-----------------------------------------------------------------------------
 
 @implementation TView
 
+- (id)inputAccessoryView {
+
+  return theViewController.kov;
+}
 
 @end
 
