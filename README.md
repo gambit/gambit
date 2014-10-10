@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/feeley/gambit.svg?branch=master)](https://travis-ci.org/feeley/gambit)
+[![tip for next commit](https://tip4commit.com/projects/1015.svg)](https://tip4commit.com/github/feeley/gambit)
 [![tip for next commit](http://prime4commit.com/projects/121.svg)](http://prime4commit.com/projects/121)
 
 The Gambit Scheme system is a complete, portable, efficient and
