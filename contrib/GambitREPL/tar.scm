@@ -2,7 +2,7 @@
 
 ;;; File: "tar.scm"
 
-;;; Copyright (c) 2006-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2006-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -586,11 +586,11 @@
      #t)))
 
 (define (exists? path)
-  (##not (##fixnum? (##os-file-info path #t))))
+  (##vector? (##os-file-info path #t)))
 
 (define (create-dir-recursive dir)
   (let ((d (path-strip-trailing-directory-separator dir)))
-    (if (not (exists? d))
+    (if (and (not (string=? dir "")) (not (exists? d)))
         (begin
           (create-dir-recursive (path-directory d))
           (create-dir d)))))
