@@ -15453,7 +15453,7 @@ c-declare-end
 
 Below is a more complex example that requires memory allocation when
 converting from C to Scheme.  It is an interface to a 2D @samp{point}
-type which is represented in Scheme by a pair of integers.  The
+type which is represented in Scheme by a pair of integers. The
 conversion of the @code{x} and @code{y} components is done by calls to
 the conversion macros for the @code{int} type (defined in
 @samp{gambit.h}).  Note that no cleanup is necessary when converting
@@ -15469,7 +15469,7 @@ void line_to (point p) @{ ... @}
 point get_mouse (void) @{ ... @}
 point add_points (point p1, point p2) @{ ... @}
 
-___SCMOBJ SCMOBJ_to_POINT (___SCMOBJ src, point *dst, int arg_num)
+___SCMOBJ SCMOBJ_to_POINT (___PSD ___SCMOBJ src, point *dst, int arg_num)
 @{
   ___SCMOBJ ___err = ___FIX(___NO_ERR);
   if (!___PAIRP(src))
@@ -15486,14 +15486,14 @@ ___SCMOBJ SCMOBJ_to_POINT (___SCMOBJ src, point *dst, int arg_num)
   return ___err;
 @}
 
-___SCMOBJ POINT_to_SCMOBJ (point src, ___SCMOBJ *dst, int arg_num)
+___SCMOBJ POINT_to_SCMOBJ (___processor_state ___ps, point src, ___SCMOBJ *dst, int arg_num)
 @{
   ___SCMOBJ ___err = ___FIX(___NO_ERR);
   ___SCMOBJ x_scmobj;
   ___SCMOBJ y_scmobj;
   ___BEGIN_SFUN_INT_TO_SCMOBJ(src.x,x_scmobj,arg_num)
   ___BEGIN_SFUN_INT_TO_SCMOBJ(src.y,y_scmobj,arg_num)
-  *dst = ___EXT(___make_pair) (x_scmobj, y_scmobj, ___STILL);
+  *dst = ___EXT(___make_pair) (___ps, x_scmobj, y_scmobj);
   if (___FIXNUMP(*dst))
     ___err = *dst; /* return allocation error */
   ___END_SFUN_INT_TO_SCMOBJ(src.y,y_scmobj,arg_num)
@@ -15502,21 +15502,21 @@ ___SCMOBJ POINT_to_SCMOBJ (point src, ___SCMOBJ *dst, int arg_num)
 @}
 
 #define ___BEGIN_CFUN_SCMOBJ_to_POINT(src,dst,i) \
-if ((___err = SCMOBJ_to_POINT (src, &dst, i)) == ___FIX(___NO_ERR)) @{
+if ((___err = SCMOBJ_to_POINT (___PSP src, &dst, i)) == ___FIX(___NO_ERR)) @{
 #define ___END_CFUN_SCMOBJ_to_POINT(src,dst,i) @}
 
 #define ___BEGIN_CFUN_POINT_to_SCMOBJ(src,dst) \
-if ((___err = POINT_to_SCMOBJ (src, &dst, ___RETURN_POS)) == ___FIX(___NO_ERR)) @{
+if ((___err = POINT_to_SCMOBJ (___ps, src, &dst, ___RETURN_POS)) == ___FIX(___NO_ERR)) @{
 #define ___END_CFUN_POINT_to_SCMOBJ(src,dst) \
 ___EXT(___release_scmobj) (dst); @}
 
 #define ___BEGIN_SFUN_POINT_to_SCMOBJ(src,dst,i) \
-if ((___err = POINT_to_SCMOBJ (src, &dst, i)) == ___FIX(___NO_ERR)) @{
+if ((___err = POINT_to_SCMOBJ (___ps, src, &dst, i)) == ___FIX(___NO_ERR)) @{
 #define ___END_SFUN_POINT_to_SCMOBJ(src,dst,i) \
 ___EXT(___release_scmobj) (dst); @}
 
 #define ___BEGIN_SFUN_SCMOBJ_to_POINT(src,dst) \
-@{ ___err = SCMOBJ_to_POINT (src, &dst, ___RETURN_POS);
+@{ ___err = SCMOBJ_to_POINT (___PSP src, &dst, ___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_to_POINT(src,dst) @}
 
 c-declare-end
@@ -15534,6 +15534,31 @@ c-declare-end
 (c-define (read-point) () point "read_point" ""
   (read))
 @end smallexample
+
+Note that the pair is allocated using the @code{___make_pair} runtime
+library function.  The prototype of this function is
+
+@smallexample
+@b{}___SCMOBJ ___make_pair(___processor_state ___ps, ___SCMOBJ car, ___SCMOBJ cdr);
+@end smallexample
+
+The fields of the pair are initialized to the @code{car} and
+@code{cdr} parameters.  The @code{___ps} parameter indicates how the
+pair is allocated.  A @code{NULL} @code{___ps} parameter will allocate
+the pair permanently (i.e. the pair will only be deallocated when
+@code{___cleanup} is called).  Otherwise a ``still'' object is
+allocated and the @code{___ps} parameter indicates the processor in
+whose heap the object is allocated (this is to support multithreaded
+execution).  Still objects are reference counted and initially have a
+reference count equal to 1.  The call to @code{___release_scmobj} in
+the macros @code{___END_CFUN_POINT_to_SCMOBJ} and
+@code{___END_SFUN_POINT_to_SCMOBJ} decrement this reference count.  A
+still object whose reference count is zero will be deallocated when a
+garbage collection is performed and there are no references to it from
+the Scheme world.  Note that the use of the @code{___PSD} macro
+in the parameter list of @code{SCMOBJ_to_POINT} and the @code{___PSP} macro
+in the calls of @code{SCMOBJ_to_POINT}, are necessary to propagate the
+current processor state to that function.
 
 An example that requires memory allocation when converting from C to
 Scheme and Scheme to C is shown below.  It is an interface to a
@@ -15562,7 +15587,7 @@ void free_strings (char **strings)
   free (strings);
 @}
 
-___SCMOBJ SCMOBJ_to_STRINGS (___SCMOBJ src, char ***dst, int arg_num)
+___SCMOBJ SCMOBJ_to_STRINGS (___PSD ___SCMOBJ src, char ***dst, int arg_num)
 @{
   /*
    * Src is a list of Scheme strings.  Dst will be a null terminated
@@ -15604,7 +15629,7 @@ ___SCMOBJ SCMOBJ_to_STRINGS (___SCMOBJ src, char ***dst, int arg_num)
           result = new_result;
         @}
 
-      ___err = ___EXT(___SCMOBJ_to_CHARSTRING) (scm_str, &c_str, arg_num);
+      ___err = ___EXT(___SCMOBJ_to_CHARSTRING) (___PSP scm_str, &c_str, arg_num);
 
       if (___err != ___FIX(___NO_ERR))
         @{
@@ -15632,7 +15657,7 @@ ___SCMOBJ SCMOBJ_to_STRINGS (___SCMOBJ src, char ***dst, int arg_num)
   return ___FIX(___NO_ERR);
 @}
 
-___SCMOBJ STRINGS_to_SCMOBJ (char **src, ___SCMOBJ *dst, int arg_num)
+___SCMOBJ STRINGS_to_SCMOBJ (___processor_state ___ps, char **src, ___SCMOBJ *dst, int arg_num)
 @{
   ___SCMOBJ ___err = ___FIX(___NO_ERR);
   ___SCMOBJ result = ___NUL; /* start with the empty list */
@@ -15658,7 +15683,7 @@ ___SCMOBJ STRINGS_to_SCMOBJ (char **src, ___SCMOBJ *dst, int arg_num)
        * reference count).
        */
 
-      ___err = ___EXT(___CHARSTRING_to_SCMOBJ) (src[i], &scm_str, arg_num);
+      ___err = ___EXT(___CHARSTRING_to_SCMOBJ) (___ps, src[i], &scm_str, arg_num);
 
       if (___err != ___FIX(___NO_ERR))
         @{
@@ -15673,7 +15698,7 @@ ___SCMOBJ STRINGS_to_SCMOBJ (char **src, ___SCMOBJ *dst, int arg_num)
        * collector.
        */
 
-      new_result = ___EXT(___make_pair) (scm_str, result, ___STILL);
+      new_result = ___EXT(___make_pair) (___ps, scm_str, result);
 
       /*
        * We can zero the reference count of scm_str and result (if
@@ -15705,28 +15730,28 @@ ___SCMOBJ STRINGS_to_SCMOBJ (char **src, ___SCMOBJ *dst, int arg_num)
 @}
 
 #define ___BEGIN_CFUN_SCMOBJ_to_STRINGS(src,dst,i) \
-if ((___err = SCMOBJ_to_STRINGS (src, &dst, i)) == ___FIX(___NO_ERR)) @{
+if ((___err = SCMOBJ_to_STRINGS (___PSP src, &dst, i)) == ___FIX(___NO_ERR)) @{
 #define ___END_CFUN_SCMOBJ_to_STRINGS(src,dst,i) \
 free_strings (dst); @}
 
 #define ___BEGIN_CFUN_STRINGS_to_SCMOBJ(src,dst) \
-if ((___err = STRINGS_to_SCMOBJ (src, &dst, ___RETURN_POS)) == ___FIX(___NO_ERR)) @{
+if ((___err = STRINGS_to_SCMOBJ (___ps, src, &dst, ___RETURN_POS)) == ___FIX(___NO_ERR)) @{
 #define ___END_CFUN_STRINGS_to_SCMOBJ(src,dst) \
 ___EXT(___release_scmobj) (dst); @}
 
 #define ___BEGIN_SFUN_STRINGS_to_SCMOBJ(src,dst,i) \
-if ((___err = STRINGS_to_SCMOBJ (src, &dst, i)) == ___FIX(___NO_ERR)) @{
+if ((___err = STRINGS_to_SCMOBJ (___ps, src, &dst, i)) == ___FIX(___NO_ERR)) @{
 #define ___END_SFUN_STRINGS_to_SCMOBJ(src,dst,i) \
 ___EXT(___release_scmobj) (dst); @}
 
 #define ___BEGIN_SFUN_SCMOBJ_to_STRINGS(src,dst) \
-@{ ___err = SCMOBJ_to_STRINGS (src, &dst, ___RETURN_POS);
+@{ ___err = SCMOBJ_to_STRINGS (___PSP src, &dst, ___RETURN_POS);
 #define ___END_SFUN_SCMOBJ_to_STRINGS(src,dst) @}
 
 c-declare-end
 )
 
-(c-define-type char** "char**" "STRINGS_to_SCMOBJ" "SCMOBJ_to_STRINGS")
+(c-define-type char** "char**" "STRINGS_to_SCMOBJ" "SCMOBJ_to_STRINGS" #t)
 
 (define execv (c-lambda (char-string char**) int "execv"))
 (define get-environ (c-lambda () char** "get_environ"))
