@@ -93,9 +93,9 @@ MODULES_O_COMMA = _kernel@obj@,_system@obj@,_num@obj@,_std@obj@,\
 +_eval@obj@,_io@obj@,_nonstd@obj@,_thread@obj@,_repl@obj@
 NORMAL_O_IN_COMPILE_ORDER = main@obj@ os_tty@obj@ c_intf@obj@ \
 os_io@obj@ setup@obj@ mem@obj@ os_files@obj@ os@obj@ os_base@obj@ \
-os_thread@obj@ os_time@obj@ os_shell@obj@ os_dyn@obj@ 
+os_thread@obj@ os_time@obj@ os_shell@obj@ os_dyn@obj@
 MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
-_kernel@obj@ _nonstd@obj@ _repl@obj@ _eval@obj@ _thread@obj@ _system@obj@ 
+_repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _system@obj@
 
 LIBRARIES_SCM = $(HEADERS_SCM) "_gambit\#.scm" "gambit\#.scm" \
 "r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" digest.scm syntax-case.scm
