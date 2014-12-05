@@ -2081,7 +2081,7 @@ for a discussion of branch cuts.
 |#
 
 
-(define (##cabs z)
+(define-prim (##cabs z)
 
   ;; As far as I can tell, this is just magic.  It works, and I'm not
   ;; going to touch it.
@@ -2135,10 +2135,10 @@ for a discussion of branch cuts.
         (continue y x)
         (continue x y))))
 
-(define (##carg z)
+(define-prim (##carg z)
   (##angle z))
 
-(define (##csquare xi+ieta)
+(define-prim (##csquare xi+ieta)
   (let ((xi  (macro-cpxnum-real xi+ieta))
         (eta (macro-cpxnum-imag xi+ieta)))
     (let ((x (##fl* (##fl- xi eta) (##fl+ xi eta)))
@@ -2158,7 +2158,7 @@ for a discussion of branch cuts.
             (else
              (macro-cpxnum-make x y))))))
 
-(define (##cssqs x+iy)
+(define-prim (##cssqs x+iy)
   (let ((x (macro-cpxnum-real x+iy))
         (y (macro-cpxnum-imag x+iy)))
     (cond ((or (##flinfinite? x)
@@ -2183,7 +2183,7 @@ for a discussion of branch cuts.
                            k))
                  (##cons rho 0)))))))
 
-(define (##csqrt x+iy)
+(define-prim (##csqrt x+iy)
   (let* ((x (macro-cpxnum-real x+iy))
          (y (macro-cpxnum-imag x+iy))
          (rho+ik (##cssqs x+iy))
@@ -2207,10 +2207,10 @@ for a discussion of branch cuts.
               (macro-cpxnum-make xi eta)))
         (macro-cpxnum-make xi eta))))
 
-(define (##cacos z)
+(define-prim (##cacos z)
   (##- (macro-inexact-+pi/2) (##casin z)))
 
-(define (##cacosh z)
+(define-prim (##cacosh z)
   (let ((sqrt-z-1 (##sqrt (##- z 1)))
         (sqrt-z+1 (##sqrt (##+ z 1))))
 
@@ -2220,7 +2220,7 @@ for a discussion of branch cuts.
     (##make-rectangular (##asinh (##real-part (##* (##conjugate sqrt-z-1) sqrt-z+1)))
                         (##* 2 (##atan2 (##imag-part sqrt-z-1) (##real-part sqrt-z+1))))))
 
-(define (##casin z)
+(define-prim (##casin z)
 
   ;; if (##real-part z) is exact zero, then there is a correlation of errors in sqrt-1-z and sqrt-1+z that
   ;; allows the next substitution
@@ -2233,10 +2233,10 @@ for a discussion of branch cuts.
           (##make-rectangular (##atan2 x (##real-part (##* sqrt-1-z sqrt-1+z)))
                               (##asinh (##imag-part (##* (##conjugate sqrt-1-z) sqrt-1+z))))))))
 
-(define (##casinh z)
+(define-prim (##casinh z)
   (##* -i (##casin (##* +i z))))
 
-(define (##catanh x+iy)
+(define-prim (##catanh x+iy)
   (define (x/x^2+y^2 x y)
     (if (##fl< (##flabs y) (##flabs x))
         (##fl/ 1. (##fl+ x (##fl* (##fl/ y x) y)))
@@ -2285,7 +2285,7 @@ for a discussion of branch cuts.
                                                 2.0))))))
     (##* beta (##conjugate zeta))))
 
-(define (##ctanh xi+ieta)
+(define-prim (##ctanh xi+ieta)
   ;; we assume that neither xi nor eta can be exact 0
   (let* ((xi  (macro-cpxnum-real xi+ieta))
          (eta (macro-cpxnum-imag xi+ieta)))
@@ -2306,7 +2306,7 @@ for a discussion of branch cuts.
                                    (##fl/ t
                                           one+beta*s^2))))))))
 
-(define (##ctan zeta)
+(define-prim (##ctan zeta)
   (##* -i (##ctanh (##* +i zeta))))
 
 ;;; End of Kahan's functions
