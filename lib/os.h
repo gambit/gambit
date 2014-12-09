@@ -913,6 +913,11 @@ ___END_C_LINKAGE
 #define INCLUDE_netdb_h
 #endif
 
+#ifdef USE_OPENSSL
+#undef INCLUDE_openssl_ssl_h
+#define INCLUDE_openssl_ssl_h
+#endif
+
 #ifdef USE_getnetbyname
 #undef INCLUDE_sys_socket_h
 #define INCLUDE_sys_socket_h
@@ -1467,6 +1472,10 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #ifdef HAVE_POLL_H
 #include <poll.h>
 #endif
+#endif
+
+#ifdef INCLUDE_openssl_ssl_h
+#include <openssl/ssl.h>
 #endif
 
 /*
