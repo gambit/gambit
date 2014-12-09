@@ -25,6 +25,8 @@ AC_PREFIX_DEFAULT(/usr/local/$PACKAGE_NAME)
 
 AC_CANONICAL_SYSTEM
 
+PKG_PROG_PKG_CONFIG
+
 ###############################################################################
 #
 # Accumulate subsystems to include in runtime library.
@@ -714,6 +716,22 @@ if test "$ENABLE_THREAD_SYSTEM" = no; then
   if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
     ENABLE_THREAD_SYSTEM=yes
   fi
+fi
+
+###############################################################################
+#
+# Check if SSL support should be added using OpenSSL.
+
+AC_ARG_ENABLE(openssl,
+              AC_HELP_STRING([--enable-openssl@<:@=thread-system@:>@],
+                             [compile with SSL support using OpenSSL (default is NO)]),
+              ENABLE_OPENSSL=$enableval,
+              ENABLE_OPENSSL=no)
+
+if test "$ENABLE_OPENSSL" = yes; then
+  PKG_CHECK_MODULES([OpenSSL], [openssl >= 0.9.8], [have_openssl=yes], [have_openssl=no])
+  AC_DEFINE([USE_OPENSSL],[],[Enable SSL support using OpenSSL])
+  LIBS="$LIBS $OpenSSL_LIBS"
 fi
 
 ###############################################################################
