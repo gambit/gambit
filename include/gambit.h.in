@@ -6112,6 +6112,9 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 #define ___DYNAMIC_LOADING_LOOKUP_ERR           (___ERR_BASE+12)
 #define ___KILL_PUMP                            (___ERR_BASE+13)
 #define ___SELECT_SETUP_DONE                    (___ERR_BASE+14)
+#ifdef USE_OPENSSL
+#define ___SSL_ERR                              (___ERR_BASE+15)
+#endif
 #define ___STOC_BASE ___STOC_S8_ERR
 #define ___STOC_S8_ERR                          (___ERR_BASE+(1<<7))
 #define ___STOC_U8_ERR                          (___ERR_BASE+(2<<7))
