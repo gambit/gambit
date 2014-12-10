@@ -3741,6 +3741,17 @@ int direction;)
 #define SOCKET_LEN_TYPE int
 #endif
 
+#ifdef USE_OPENSSL
+#define SSL_CHECK_ERROR(ssl_ret)                \
+  do {                                          \
+    if (!ssl_ret)                               \
+      {                                         \
+        ERR_print_errors_fp (stderr);           \
+        return ___FIX(___SSL_ERR);              \
+      }                                         \
+  } while(0)
+#endif
+
 #ifdef SHUT_RD
 #define SHUTDOWN_RD SHUT_RD
 #else
@@ -3791,8 +3802,68 @@ typedef struct ___device_tcp_client_struct
     HANDLE io_event;  /* used by ___device_tcp_client_select_raw_virt */
 
 #endif
+
+#ifdef USE_OPENSSL
+
+    SSL_METHOD *ssl_method;
+    SSL_CTX *ssl_ctx;
+    SSL *ssl;
+    int try_ssl_connect_again;
+
+#endif
   } ___device_tcp_client;
 
+#ifdef USE_OPENSSL
+
+#define SSL_TRY_AGAIN_CONNECT 2
+#define SSL_TRY_AGAIN_GET_CERTIFICATE 4
+
+___HIDDEN int try_ssl_connect
+   ___P((___device_tcp_client *dev),
+        (dev)
+___device_tcp_client *dev;)
+{
+  int err;
+  if (dev->try_ssl_connect_again == SSL_TRY_AGAIN_CONNECT)
+    err = SSL_connect (dev->ssl);
+  else if (dev->try_ssl_connect_again == SSL_TRY_AGAIN_GET_CERTIFICATE)
+    err = SSL_connect (dev->ssl);
+  /* TODO: get certificate (if required) */
+  else
+    {
+      printf("Unknown SSL_TRY_AGAIN code\n");
+      return -1;
+    }
+  
+  switch ( SSL_get_error(dev->ssl, err) )
+    {
+    case SSL_ERROR_NONE:
+      /* we're done waiting */
+      dev->try_ssl_connect_again = 0;
+      dev->try_connect_again = 0;
+      printf ("DONE WAITING\n");
+      printf ("SSL connection using %s\n", SSL_get_cipher (dev->ssl));
+      break;
+    case SSL_ERROR_WANT_READ:
+      printf ("SSL_ERROR_WANT_READ\n");
+      break;
+    case SSL_ERROR_WANT_WRITE:
+      printf ("SSL_ERROR_WANT_WRITE\n");
+      break;
+    case SSL_ERROR_ZERO_RETURN:
+      printf ("SSL_ERROR_ZERO_RETURN");
+      return -1;
+    case SSL_ERROR_SYSCALL:
+    case SSL_ERROR_SSL:
+      printf ("OpenSSL error in try_ssl_connect\n");
+    default:
+      printf ("Unhandled SSL error\n");
+      return -1;
+    }
+  return 0;
+}
+
+#endif
 
 typedef struct ___device_tcp_client_vtbl_struct
   {
@@ -3805,6 +3876,26 @@ ___HIDDEN int try_connect
         (dev)
 ___device_tcp_client *dev;)
 {
+#ifdef USE_OPENSSL
+
+  printf("TRY_CONNECT\n");
+
+  if (dev->try_ssl_connect_again)
+    {
+      return try_ssl_connect (dev);
+    }
+  else if (!SOCKET_CALL_ERROR(connect (dev->s,
+                                       &dev->server_addr,
+                                       dev->server_addrlen)) ||
+           CONNECT_IN_PROGRESS || /* establishing connection in background */
+           dev->try_connect_again == 2) /* last connect attempt? */
+    {
+      dev->try_ssl_connect_again = SSL_TRY_AGAIN_CONNECT; /* we will wait for SSL now */
+      return try_ssl_connect (dev);
+    }
+
+#else
+
   if (!SOCKET_CALL_ERROR(connect (dev->s,
                                   &dev->server_addr,
                                   dev->server_addrlen)) ||
@@ -3814,6 +3905,8 @@ ___device_tcp_client *dev;)
       dev->try_connect_again = 0; /* we're done waiting */
       return 0;
     }
+
+#endif
 
   if (CONNECT_WOULD_BLOCK) /* connect can't be performed now */
     return 0;
@@ -4406,6 +4499,32 @@ int direction;)
   SOCKET_TYPE s;
   ___device_tcp_client *d;
 
+#ifdef USE_OPENSSL
+
+  /* TODO: this initialization and configuration still
+   * needs to find the right place
+   */
+#define CERTF "foo-cert.pem"
+#define KEYF "foo-cert.pem"
+
+  static int initialized = 0;
+
+  int err;
+
+  if (!initialized)
+    {      
+      if (!SSL_library_init())
+        {
+          fprintf(stderr, "** OpenSSL initialization failed!\n");
+          return ___FIX(___SSL_ERR);
+        }
+      SSL_load_error_strings();
+
+      initialized = 1;
+    }
+
+#endif
+
   if ((e = create_tcp_socket (&s, options)) != ___FIX(___NO_ERR))
     return e;
 
@@ -4426,6 +4545,21 @@ int direction;)
   device_transfer_close_responsibility (___CAST(___device*,d));
 
   *dev = d;
+
+#ifdef USE_OPENSSL
+
+  d->ssl_method = SSLv3_client_method();
+
+  d->ssl_ctx = SSL_CTX_new (d->ssl_method);
+  SSL_CHECK_ERROR (d->ssl_ctx);
+
+  d->ssl  = SSL_new (d->ssl_ctx);
+  SSL_set_fd (d->ssl, d->s);
+
+  SSL_set_mode (d->ssl,
+    SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+
+#endif
 
   if (try_connect (d) != 0)
     {
