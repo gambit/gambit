@@ -2160,15 +2160,32 @@
                      header
 
                      ;; attribs
-                     (append
-                      (if (memq (label-type gvm-instr) '(entry return))
-                          (list (cons "id" (^str id)))
-                          '())
-                      (if (eq? (label-type gvm-instr) 'return)
-                          (let ((info (frame-info gvm-instr)))
-                            (list (cons "fs" (vector-ref info 0))
-                                  (cons "link" (+ (vector-ref info 1) 1))))
-                          '()))
+                     (if (memq (label-type gvm-instr) '(entry return))
+
+                         (append
+
+                          (let ((entry (bbs-entry-lbl-num bbs)))
+                            (list (cons "id" (^int (label-lbl-num gvm-instr)))
+                                  (cons "parent" (gvm-lbl-use ctx (make-lbl entry)))))
+
+                          (if (eq? (label-type gvm-instr) 'return)
+
+                              (let ((info (frame-info gvm-instr)))
+                                (list (cons "fs" (vector-ref info 0))
+                                      (cons "link" (+ (vector-ref info 1) 1))))
+
+                              (list (cons "proc_name"
+                                          (^str (proc-obj-name p)))
+                                    (cons "nb_closed"
+                                          (if (label-entry-closed? gvm-instr)
+                                              (let* ((frame (gvm-instr-frame gvm-instr))
+                                                     (nb-closed (length (frame-closed frame))))
+                                                (^int nb-closed))
+                                              (^int -1)))
+                                    (cons "info"
+                                          (^obj #f))))) ;; TODO
+
+                         '())
 
                      ;; gen-body
                      (gen-body ctx)))))))
@@ -6152,6 +6169,18 @@ gambit_Pair.prototype.toString = function () {
         (compiler-internal-error
          "univ-get-function-attrib, unknown target"))))))
 
+(define (univ-call-with-fn-attrib ctx fn attrib return)
+  (^ (^var-declaration
+      (^local-var "fn")
+      fn)
+     (univ-with-function-attribs
+      ctx
+      #f
+      "func"
+      (lambda ()
+        (return
+         (univ-get-function-attrib ctx "fn" attrib))))))
+
 (define (univ-emit-pair? ctx expr)
   (^instanceof (^prefix-class (univ-use-rtlib ctx 'Pair)) expr))
 
@@ -9479,11 +9508,72 @@ tanh
                        arg3)
         (return arg1)))))
 
+(univ-define-prim "##make-subprocedure" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (univ-call-with-fn-attrib
+      ctx
+      arg1
+      "subprocedures"
+      (lambda (subprocs)
+        (return (^array-index subprocs (^fixnum-unbox arg2))))))))
 
-;;TODO: ("##subprocedure-id"              (1)   #f ()    0    #f      extended)
-;;TODO: ("##subprocedure-parent"          (1)   #f ()    0    #f      extended)
+(univ-define-prim "##subprocedure-id" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (univ-call-with-fn-attrib
+      ctx
+      arg1
+      "id"
+      (lambda (result)
+        (return (^fixnum-box result)))))))
 
-;;TODO: ("##procedure-info"               (1)   #f ()    0    #f      extended)
+(univ-define-prim "##subprocedure-parent" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (univ-call-with-fn-attrib
+      ctx
+      arg1
+      "parent"
+      return))))
+
+(univ-define-prim "##subprocedure-nb-parameters" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (univ-call-with-fn-attrib
+      ctx
+      arg1
+      "nb_parameters"
+      (lambda (result)
+        (return (^fixnum-box result)))))))
+
+(univ-define-prim "##subprocedure-nb-closed" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (univ-call-with-fn-attrib
+      ctx
+      arg1
+      "nb_closed"
+      (lambda (result)
+        (return (^fixnum-box result)))))))
+
+(univ-define-prim "##subprocedure-parent-name" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (univ-call-with-fn-attrib
+      ctx
+      arg1
+      "proc_name"
+      return))))
+
+(univ-define-prim "##subprocedure-parent-info" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (univ-call-with-fn-attrib
+      ctx
+      arg1
+      "info"
+      return))))
 
 ;;TODO: ("##make-promise"                 (1)   #f 0     0    (#f)    extended)
 ;;TODO: ("##force"                        (1)   #t 0     0    #f      extended)

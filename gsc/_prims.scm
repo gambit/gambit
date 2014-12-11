@@ -919,10 +919,13 @@
 ("##closure-ref"                      (2)   #f ()    0    (#f)    extended)
 ("##closure-set!"                     (3)   #t ()    0    #f      extended)
 
+("##make-subprocedure"                (2)   #f ()    0    #f      extended)
 ("##subprocedure-id"                  (1)   #f ()    0    #f      extended)
+("##subprocedure-nb-parameters"       (1)   #f ()    0    #f      extended)
+("##subprocedure-nb-closed"           (1)   #f ()    0    #f      extended)
 ("##subprocedure-parent"              (1)   #f ()    0    #f      extended)
-
-("##procedure-info"                   (1)   #f ()    0    #f      extended)
+("##subprocedure-parent-name"         (1)   #f ()    0    #f      extended)
+("##subprocedure-parent-info"         (1)   #f ()    0    #f      extended)
 
 ("##make-promise"                     (1)   #f 0     0    (#f)    extended)
 ("##force"                            (1)   #t 0     0    #f      extended)
