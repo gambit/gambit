@@ -2,7 +2,7 @@
 
 ;;; File: "json.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -22,10 +22,32 @@
 
 ;;;============================================================================
 
+(define use-symbols? #f) ;; how to encode JS true, false and null
+(define use-tables? #t)  ;; how to encode JS objects
+
+(define debug? #f)
+
+(if debug?
+    (set! ##wr
+          (lambda (we obj)
+            (##default-wr
+             we
+             (if (table? obj)
+                 (cons 'TABLE (table->list obj))
+                 obj)))))
+
+(define (json-decode str)
+  (call-with-input-string str json-read))
+
+(define (json-encode obj)
+  (call-with-output-string "" (lambda (port) (json-write obj port))))
+
 (define (json-read port)
 
   (define (create-object props)
-    (list->table props))
+    (if use-tables?
+        (list->table props)
+        props))
 
   (define (create-array elements)
     (list->vector elements))
@@ -43,10 +65,10 @@
 
   (define (digit? c radix)
     (and (char? c)
-         (let ((n 
+         (let ((n
                 (cond ((and (char>=? c #\0) (char<=? c #\9))
                        (- (char->integer c) (char->integer #\0)))
-                      ((and (char>=? c #\a) (char<=? c #\Z))
+                      ((and (char>=? c #\a) (char<=? c #\z))
                        (+ 10 (- (char->integer c) (char->integer #\a))))
                       ((and (char>=? c #\A) (char<=? c #\Z))
                        (+ 10 (- (char->integer c) (char->integer #\A))))
@@ -81,21 +103,27 @@
                                (eqv? (rd) #\s)
                                (eqv? (rd) #\e)))
                      json-error
-                     #f))
+                     (if use-symbols?
+                         'false
+                         #f)))
                 ((eqv? c #\t)
                  (rd)
                  (if (not (and (eqv? (rd) #\r)
                                (eqv? (rd) #\u)
                                (eqv? (rd) #\e)))
                      json-error
-                     #t))
+                     (if use-symbols?
+                         'true
+                         #t)))
                 ((eqv? c #\n)
                  (rd)
                  (if (not (and (eqv? (rd) #\u)
                                (eqv? (rd) #\l)
                                (eqv? (rd) #\l)))
                      json-error
-                     '()))
+                     (if use-symbols?
+                         'null
+                         '())))
                 (else
                  json-error)))))
 
@@ -156,17 +184,6 @@
                         (else
                          json-error))))))))
 
-  (define string-escapes
-    '((#\" . #\")
-      (#\\ . #\\)
-      (#\/ . #\/)
-      (#\b . #\x08)
-      (#\t . #\x09)
-      (#\n . #\x0A)
-      (#\v . #\x0B)
-      (#\f . #\x0C)
-      (#\r . #\x0D)))
-
   (define (parse-string)
 
     (define (parse-str pos)
@@ -188,7 +205,7 @@
                                    (else
                                     json-error)))
                            (accum (integer->char n) pos (parse-str (+ pos 1)))))
-                     (let ((e (assv x string-escapes)))
+                     (let ((e (assv x json-string-escapes)))
                        (if e
                            (accum (cdr e) pos (parse-str (+ pos 1)))
                            json-error)))))
@@ -259,6 +276,134 @@
           (string->number str))))
 
   (parse-value))
+
+(define (json-write obj port)
+
+  (define (wr-string s)
+    (display #\" port)
+    (let loop ((i 0) (j 0))
+      (if (< j (string-length s))
+          (let* ((c
+                  (string-ref s j))
+                 (n
+                  (char->integer c))
+                 (ctrl-char?
+                  (or (<= n 31) (>= n 127)))
+                 (x
+                  (cond ((or (char=? c #\\)
+                             (char=? c #\"))
+                         c)
+                        ((and ctrl-char?
+                              (##assq-cdr c json-string-escapes))
+                         =>
+                         car)
+                        (else
+                         #f)))
+                 (j+1
+                  (+ j 1)))
+            (if (or x ctrl-char?)
+                (begin
+                  (display (substring s i j) port)
+                  (display #\\ port)
+                  (if x
+                      (begin
+                        (display x port)
+                        (loop j+1 j+1))
+                      (begin
+                        (display #\u port)
+                        (display (substring (number->string (+ n #x10000) 16)
+                                            1
+                                            5)
+                                 port)
+                        (loop j+1 j+1))))
+                (loop i j+1)))
+          (begin
+            (display (substring s i j) port)
+            (display #\" port)))))
+
+  (define (wr-prop prop)
+    (wr-string (car prop))
+    (display ":" port)
+    (wr (cdr prop)))
+
+  (define (wr-object obj)
+    (wr-props (table->list obj)))
+
+  (define (wr-props lst)
+    (display "{" port)
+    (if (pair? lst)
+        (begin
+          (wr-prop (car lst))
+          (let loop ((lst (cdr lst)))
+            (if (pair? lst)
+                (begin
+                  (display "," port)
+                  (wr-prop (car lst))
+                  (loop (cdr lst)))))))
+    (display "}" port))
+
+  (define (wr-array obj)
+    (display "[" port)
+    (let loop ((i 0))
+      (if (< i (vector-length obj))
+          (begin
+            (if (> i 0) (display "," port))
+            (wr (vector-ref obj i))
+            (loop (+ i 1)))))
+    (display "]" port))
+
+  (define (wr-time obj)
+    ;; this works when using JavaScript's eval to decode the object
+    (display "new Date(" port)
+    (display (* 1000 (time->seconds obj)) port)
+    (display ")" port))
+
+  (define (wr obj)
+
+    (cond ((number? obj)
+           (write (if (integer? obj) obj (exact->inexact obj)) port))
+
+          ((string? obj)
+           (wr-string obj))
+
+          ((symbol? obj)
+           (display (symbol->string obj) port))
+
+          ((boolean? obj)
+           (display (if obj "true" "false") port))
+
+          ((and (not use-symbols?)
+                (null? obj))
+           (display "null" port))
+
+          ((or (null? obj)
+               (pair? obj))
+           (wr-props obj))
+
+          ((vector? obj)
+           (wr-array obj))
+
+          ((table? obj)
+           (wr-object obj))
+
+          ((time? obj)
+           (wr-time obj))
+
+          (else
+           (error "unwritable object" obj))))
+
+  (wr obj))
+
+(define json-string-escapes
+  '((#\" . #\")
+    (#\\ . #\\)
+    (#\/ . #\/)
+    (#\b . #\x08)
+    (#\t . #\x09)
+    (#\n . #\x0A)
+    (#\v . #\x0B)
+    (#\f . #\x0C)
+    (#\r . #\x0D)))
 
 (define json-error
   'json-error)

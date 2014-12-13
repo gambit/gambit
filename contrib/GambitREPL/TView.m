@@ -12,9 +12,26 @@
 
 @implementation TView
 
-- (id)inputAccessoryView {
+@synthesize kov, kbdShouldShrinkView, kbdEnabled;
 
-  return theViewController.kov;
+- (instancetype) initWithFrame:(CGRect)frame {
+  self = [super initWithFrame:frame];
+  if (self) {
+    [self setup];
+  }
+  return self;
+}
+
+
+- (void) setup {
+
+  kbdShouldShrinkView = NO;
+  kbdEnabled = NO;
+}
+
+
+- (id)inputAccessoryView {
+  return [theViewController get_inputAccessoryView];
 }
 
 @end

@@ -6,6 +6,8 @@
 //  Copyright (c) 2013 David Hoerl. All rights reserved.
 //
 
+#import <UIKit/UIKit.h>
+#import <Availability.h>
 
 @interface KOCreateButton : NSObject
 
@@ -17,3 +19,8 @@
 - (UIImage *)buttonImage:(CGSize)size color:(UIColor *)color;
 
 @end
+
+#ifndef __IPHONE_7_0
+#define UIKeyboardAppearanceDark UIKeyboardAppearanceAlert // 1
+#define UIKeyboardAppearanceLight ((UIKeyboardAppearance)2)
+#endif

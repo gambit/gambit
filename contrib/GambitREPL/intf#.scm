@@ -58,6 +58,7 @@ kSystemSoundID_FlashScreen
 kSystemSoundID_Vibrate
 kSystemSoundID_UserPreferredAlert
 
+set-ext-keys
 set-navigation
 show-cancelButton
 hide-cancelButton
@@ -67,11 +68,14 @@ set-textView-font
 set-textView-content
 get-textView-content
 add-output-to-textView
-add-input-to-textView
+add-text-input-to-textView
+add-key-input-to-textView
 set-webView-content
 set-webView-content-from-file
-add-input-to-webView
-add-input-to-currentView
+add-text-input-to-webView
+add-key-input-to-webView
+add-text-input-to-currentView
+add-key-input-to-currentView
 eval-js-in-webView
 
 open-URL
@@ -79,12 +83,17 @@ send-SMS
 pick-image
 set-idle-timer
 set-toolbar-alpha
+show-toolbar
+hide-toolbar
+toggle-toolbar
 segm-ctrl-set-title
 segm-ctrl-insert
 set-pref
 get-pref
 set-pasteboard
 get-pasteboard
+get-documents-dir
+get-icloud-container-dir
 popup-alert
 setup-location-updates
 
@@ -92,8 +101,10 @@ set-navigation-bar
 
 send-input
 send-event
-send-key
-handle-key
+send-text-input
+send-key-input
+handle-text-input
+handle-key-input
 heartbeat
 next-heartbeat-interval
 interval-runnable
@@ -116,6 +127,8 @@ has-prefix?
 get-event-parameters
 
 contained-path-resolve
+
+iCloudAccountAvailabilityChanged
 
 ))
 

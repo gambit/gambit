@@ -10,38 +10,38 @@
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIconFiles</key>
 	<array>
-		<string>Icon-29.png</string>
-		<string>Icon-40.png</string>
-		<string>Icon-57.png</string>
-		<string>Icon-72.png</string>
-		<string>Icon-76.png</string>
-		<string>Icon-87.png</string>
-		<string>Icon-120.png</string>
-		<string>Icon-152.png</string>
-		<string>Icon-180.png</string>
-		<string>Icon-512.png</string>
-		<string>Icon-1024.png</string>
+		<string>GambitREPL-29.png</string>
+		<string>GambitREPL-40.png</string>
+		<string>GambitREPL-57.png</string>
+		<string>GambitREPL-72.png</string>
+		<string>GambitREPL-76.png</string>
+		<string>GambitREPL-87.png</string>
+		<string>GambitREPL-120.png</string>
+		<string>GambitREPL-152.png</string>
+		<string>GambitREPL-180.png</string>
+		<string>GambitREPL-512.png</string>
+		<string>GambitREPL-1024.png</string>
 	</array>
 	<key>CFBundleIdentifier</key>
 	<string>GambitREPL</string>
 	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
+	<string>6.3</string>
 	<key>CFBundleName</key>
 	<string>${PRODUCT_NAME}</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>6.2</string>
+	<string>7.0</string>
 	<key>CFBundleSignature</key>
 	<string>GamC</string>
 	<key>CFBundleVersion</key>
-	<string>6.2</string>
+	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UIMainStoryboardFile</key>
-	<string>Storyboard</string>
+	<string>GambitREPL</string>
 	<key>UIStatusBarHidden</key>
 	<true/>
 	<key>UISupportedInterfaceOrientations</key>

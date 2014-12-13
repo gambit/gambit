@@ -48,11 +48,27 @@ extern ViewController *theViewController;
 {
 @public
   NSString *action;
+#define CTRL_ACTION @"C"
 #define STOP_ACTION @"S"
 #define RUN_ACTION  @"R"
 #define EDIT_ACTION @"E"
 #define NOTE_ACTION @"N"
 #define USER_ACTION @"U"
+#define EXIT_ACTION @"X"
+#define LOAD_ACTION @"L"
+#define STEP_ACTION @"s"
+#define LEAP_ACTION @"l"
+#define CONT_ACTION @"k"
+
+#define LEFT_ACTION  @"\u2190"
+#define UP_ACTION    @"\u2191"
+#define RIGHT_ACTION @"\u2192"
+#define DOWN_ACTION  @"\u2193"
+
+#define BOL_ACTION @"\u219E"
+#define BOD_ACTION @"\u219F"
+#define EOL_ACTION @"\u21A0"
+#define EOD_ACTION @"\u21A1"
 }
 @end
 
@@ -121,11 +137,11 @@ extern ViewController *theViewController;
 
   int middleLabelWidth = 29;
   int middleLabelHeight = 29;
-  int labelWidth = 20;
+  int labelWidth = 28;
   int labelHeight = 20;
   int leftInset = 4;
   int rightInset = 4;
-  int topInset = 3;
+  int topInset = 1;
   int bottomInset = 3;
 
   labels = [[NSMutableArray alloc] init];
@@ -225,7 +241,19 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
       } else {
         chr = [NSString stringWithFormat:@"^%c", c+64];
       }
-    } else if ([chr isEqualToString:STOP_ACTION])
+    } else if ([chr isEqualToString:CTRL_ACTION])
+      chr = @"ctrl";
+    else if ([chr isEqualToString:EXIT_ACTION])
+      chr = @"exit";
+    else if ([chr isEqualToString:LOAD_ACTION])
+      chr = @"load";
+    else if ([chr isEqualToString:STEP_ACTION])
+      chr = @"step";
+    else if ([chr isEqualToString:LEAP_ACTION])
+      chr = @"leap";
+    else if ([chr isEqualToString:CONT_ACTION])
+      chr = @"cont";
+    else if ([chr isEqualToString:STOP_ACTION])
       imgFilename = @"stop.png";
     else if ([chr isEqualToString:RUN_ACTION])
       imgFilename = @"rocket.png";
@@ -263,11 +291,14 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
 
       [lab setText:chr];
 
-      int size = (i == 2) ? 28 : 18;
+      int size = (i == 2) ? 26 : 18;
 
-      if ([chr length] > 1) size = size*2/3;
+      if ([chr length] > 1) size = ([chr length] > 2) ? size*2/3 : size*4/5;
 
-      [[labels objectAtIndex:i] setFont:[UIFont boldSystemFontOfSize:size]];
+      if (i == 2)
+        [[labels objectAtIndex:i] setFont:[UIFont boldSystemFontOfSize:size]];
+      else
+        [[labels objectAtIndex:i] setFont:[UIFont systemFontOfSize:size]];
     }
   }
 
@@ -359,33 +390,61 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
       }
 
     if ([action isEqualToString:@"a"]) {
-      [theViewController send_key:@"F1"];
+      [theViewController send_key_input:@"F1"];
     } else if ([action isEqualToString:@"b"]) {
-      [theViewController send_key:@"F2"];
+      [theViewController send_key_input:@"F2"];
     } else if ([action isEqualToString:@"c"]) {
-      [theViewController send_key:@"F3"];
+      [theViewController send_key_input:@"F3"];
     } else if ([action isEqualToString:@"d"]) {
-      [theViewController send_key:@"F4"];
+      [theViewController send_key_input:@"F4"];
     } else if ([action isEqualToString:@"e"]) {
-      [theViewController send_key:@"F5"];
+      [theViewController send_key_input:@"F5"];
     } else if ([action isEqualToString:@"f"]) {
-      [theViewController send_key:@"F6"];
+      [theViewController send_key_input:@"F6"];
     } else if ([action isEqualToString:@"g"]) {
-      [theViewController send_key:@"F7"];
+      [theViewController send_key_input:@"F7"];
     } else if ([action isEqualToString:@"h"]) {
-      [theViewController send_key:@"F8"];
+      [theViewController send_key_input:@"F8"];
     } else if ([action isEqualToString:@"i"]) {
-      [theViewController send_key:@"F9"];
+      [theViewController send_key_input:@"F9"];
     } else if ([action isEqualToString:@"j"]) {
-      [theViewController send_key:@"F10"];
+      [theViewController send_key_input:@"F10"];
     } else if ([action isEqualToString:RUN_ACTION]) {
-      [theViewController send_key:@"F11"];
+      [theViewController send_key_input:@"F11"];
     } else if ([action isEqualToString:STOP_ACTION]) {
-      [theViewController send_key:@"F12"];
+      [theViewController send_key_input:@"F12"];
     } else if ([action isEqualToString:EDIT_ACTION]) {
-      [theViewController send_key:@"F13"];
+      [theViewController send_key_input:@"F13"];
+    } else if ([action isEqualToString:CTRL_ACTION]) {
+      [theViewController keyCtrl];
+    } else if ([action isEqualToString:EXIT_ACTION]) {
+      [theViewController send_key_input:@"F6"];
+    } else if ([action isEqualToString:LOAD_ACTION]) {
+      [theViewController send_key_input:@"F7"];
+    } else if ([action isEqualToString:STEP_ACTION]) {
+      [theViewController send_key_input:@"F8"];
+    } else if ([action isEqualToString:LEAP_ACTION]) {
+      [theViewController send_key_input:@"F9"];
+    } else if ([action isEqualToString:CONT_ACTION]) {
+      [theViewController send_key_input:@"F10"];
+    } else if ([action isEqualToString:LEFT_ACTION]) {
+      [theViewController keyLeftArrow];
+    } else if ([action isEqualToString:UP_ACTION]) {
+      [theViewController keyUpArrow];
+    } else if ([action isEqualToString:RIGHT_ACTION]) {
+      [theViewController keyRightArrow];
+    } else if ([action isEqualToString:DOWN_ACTION]) {
+      [theViewController keyDownArrow];
+    } else if ([action isEqualToString:BOL_ACTION]) {
+      [theViewController keyCmdLeftArrow];
+    } else if ([action isEqualToString:BOD_ACTION]) {
+      [theViewController keyCmdUpArrow];
+    } else if ([action isEqualToString:EOL_ACTION]) {
+      [theViewController keyCmdRightArrow];
+    } else if ([action isEqualToString:EOD_ACTION]) {
+      [theViewController keyCmdDownArrow];
     } else {
-      [theViewController send_key:action];
+      [theViewController send_key_input:action];
     }
   }
 

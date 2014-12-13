@@ -68,23 +68,32 @@ mandir = @mandir@
 
 .SUFFIXES: .scm .m @obj@
 
-RCFILES = makefile.in README GambitREPL.xcodeproj.tgz \
+MODULES_M = digest.m genport.m zlib.m tar.m json.m url.m html.m \
+wiki.m repl-server.m intf.m script.m repo.m help.m emacs.m \
+program.m program_.m
+
+RCFILES = makefile.in README GambitREPL.xcodeproj.tgz emacs.tgz \
+GambitREPL-icon-unscaled.key NotEmacs-icon-unscaled.key \
 digest.scm "digest\#.scm" genport.scm "genport\#.scm" \
 zlib.scm "zlib\#.scm" tar.scm "tar\#.scm" \
 json.scm "json\#.scm" url.scm "url\#.scm" html.scm "html\#.scm" \
 wiki.scm "wiki\#.scm" repl-server.scm "repl-server\#.scm" \
 intf.scm "intf\#.scm" intf.h script.scm "script\#.scm" \
-repo.scm "repo\#.scm" help.scm "help\#.scm" program.scm \
-Prefix.pch main.m \
-grd.scm \
+repo.scm "repo\#.scm" help.scm "help\#.scm" emacs.scm "emacs\#.scm" program.scm \
+main.m grd.scm Prefix.pch \
 AppDelegate.m AppDelegate.h ViewController.m ViewController.h \
 KOCreateButton.h KOCreateButton.m KOKeyboardRow.h KOKeyboardRow.m \
 KOProtocol.h KOSwipeButton.h KOSwipeButton.m \
-TView.h TView.m WView.h WView.m IView.h IView.m \
-Storyboard.storyboard \
-Icon-29.png Icon-40.png Icon-57.png Icon-72.png Icon-76.png Icon-87.png \
-Icon-120.png Icon-152.png Icon-180.png Icon-512.png Icon-1024.png \
-Icon-unscaled.png Default-568h@2x.png \
+TView.h TView.m WView.h WView.m IView.h IView.m ITView.h ITView.m \
+GambitREPL.entitlements GambitREPL.plist GambitREPL.storyboard \
+GambitREPL-29.png GambitREPL-40.png GambitREPL-57.png GambitREPL-72.png \
+GambitREPL-76.png GambitREPL-87.png GambitREPL-120.png GambitREPL-152.png \
+GambitREPL-180.png GambitREPL-512.png GambitREPL-1024.png \
+NotEmacs.entitlements NotEmacs.plist NotEmacs.storyboard \
+NotEmacs-29.png NotEmacs-40.png NotEmacs-57.png NotEmacs-72.png \
+NotEmacs-76.png NotEmacs-87.png NotEmacs-120.png NotEmacs-152.png \
+NotEmacs-180.png NotEmacs-512.png NotEmacs-1024.png \
+Default-568h@2x.png \
 edit.png f1.png f10.png f11.png f12.png f2.png f3.png \
 f4.png f5.png f6.png f7.png f8.png f9.png note.png rocket.png \
 stop.png user.png \
@@ -92,10 +101,9 @@ button-abc.png button-cancel.png button-compass.png button-empty.png \
 button-left-left.png button-left.png button-question.png button-right-right.png \
 button-right.png button-up.png button-up-arrow.png \
 make-appstore-screenshots make-keys make-scaled-icons \
-Info.plist \
 help.html r5rs.html r5rs.pdf gambit-c.html
 
-GENDISTFILES =
+GENDISTFILES = $(MODULES_M)
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
@@ -118,7 +126,7 @@ gambit-iOS:
 	@echo "*************************************************************"
 	$(rootfromhere)/misc/build-gambit-iOS
 
-prepare-for-xcode: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m GambitREPL.xcodeproj gambit-iOS
+prepare-for-xcode: $(MODULES_M) GambitREPL.xcodeproj gambit-iOS
 	rm -rf lib
 	mkdir lib
 	cp gambit-iOS/current/lib/*.scm lib
@@ -139,17 +147,24 @@ prepare-for-xcode: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m re
 .scm.m:
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -check -o $*.m $(srcdirpfx)$*.scm
 
-program_.m: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m
+program_.m: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m emacs.m program.m
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -o $@ $^
 
 GambitREPL.xcodeproj: GambitREPL.xcodeproj.tgz
 	rm -rf GambitREPL.xcodeproj
 	tar zxf GambitREPL.xcodeproj.tgz
 
-xcodeproj:
-	tar cf GambitREPL.xcodeproj.tar GambitREPL.xcodeproj/project.pbxproj
+tgz-for-GambitREPL.xcodeproj: GambitREPL.xcodeproj/project.pbxproj
+	COPYFILE_DISABLE=1 tar cf GambitREPL.xcodeproj.tar GambitREPL.xcodeproj/project.pbxproj
 	gzip -9 GambitREPL.xcodeproj.tar
 	mv GambitREPL.xcodeproj.tar.gz GambitREPL.xcodeproj.tgz
+
+tgz-for-emacs: emacs/GambitREPL.html emacs/GambitREPL.js emacs/GambitREPL.css emacs/common.js emacs/v1
+	COPYFILE_DISABLE=1 tar cf emacs.tar emacs/GambitREPL.css emacs/GambitREPL.html emacs/GambitREPL.js emacs/common.js emacs/v1 emacs/ymacs/*
+	gzip -9 emacs.tar
+	mv emacs.tar.gz emacs.tgz
+
+tgz-files: tgz-for-GambitREPL.xcodeproj tgz-for-emacs
 
 grd@exe@: grd.scm
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -o grd@exe@ -exe grd.scm
@@ -169,15 +184,17 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post:
+	$(RC) update-index --no-assume-unchanged $(MODULES_M)
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post:
+	$(RC) update-index --assume-unchanged $(MODULES_M)
 
 mostlyclean-pre:
 
 mostlyclean-post:
-	rm -f digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m program.m program_.m grd@exe@
+	rm -f $(MODULES_M) grd@exe@
 
 clean-pre: mostlyclean-pre
 

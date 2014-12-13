@@ -410,12 +410,14 @@ c-declare-end
 ;; C functions callable from Scheme.
 
 (define (set-ext-keys
+         view
          portrait-small
          #!optional
          (landscape-small portrait-small)
          (portrait-large portrait-small)
          (landscape-large portrait-large))
-  ((c-lambda (NSString* NSString* NSString* NSString*) void "set_ext_keys")
+  ((c-lambda (int NSString* NSString* NSString* NSString*) void "set_ext_keys")
+   view
    portrait-small
    landscape-small
    portrait-large
@@ -430,14 +432,23 @@ c-declare-end
 (define hide-cancelButton
   (c-lambda () void "hide_cancelButton"))
 
-(define show-webView
-  (c-lambda (int bool) void "show_webView"))
+(define (show-webView view #!optional (kbd-enabled #f)  (kbd-should-shrink-view #f))
+  ((c-lambda (int bool bool) void "show_webView")
+   view
+   kbd-enabled
+   kbd-should-shrink-view))
 
-(define show-textView
-  (c-lambda (int bool) void "show_textView"))
+(define (show-textView view #!optional (kbd-enabled #f)  (kbd-should-shrink-view #f))
+  ((c-lambda (int bool bool) void "show_textView")
+   view
+   kbd-enabled
+   kbd-should-shrink-view))
 
-(define show-imageView
-  (c-lambda (int bool) void "show_imageView"))
+(define (show-imageView view #!optional (kbd-enabled #f)  (kbd-should-shrink-view #f))
+  ((c-lambda (int bool bool) void "show_imageView")
+   view
+   kbd-enabled
+   kbd-should-shrink-view))
 
 (define set-textView-font
   (c-lambda (int NSString* int) void "set_textView_font"))
@@ -451,8 +462,11 @@ c-declare-end
 (define add-output-to-textView
   (c-lambda (int NSString*) void "add_output_to_textView"))
 
-(define add-input-to-textView
-  (c-lambda (int NSString*) void "add_input_to_textView"))
+(define add-text-input-to-textView
+  (c-lambda (int NSString*) void "add_text_input_to_textView"))
+
+(define add-key-input-to-textView
+  (c-lambda (int NSString*) void "add_key_input_to_textView"))
 
 (define (set-webView-content view str #!optional (base-url-path #f) (enable-scaling #f) (mime-type "text/html"))
   ((c-lambda (int NSString* NSString* bool NSString*) void "set_webView_content") view str base-url-path enable-scaling mime-type))
@@ -460,11 +474,17 @@ c-declare-end
 (define (set-webView-content-from-file view path #!optional (base-url-path (path-directory path)) (enable-scaling #f) (mime-type "text/html"))
   ((c-lambda (int NSString* NSString* bool NSString*) void "set_webView_content_from_file") view path base-url-path enable-scaling mime-type))
 
-(define add-input-to-webView
-  (c-lambda (int NSString*) void "add_input_to_webView"))
+(define add-text-input-to-webView
+  (c-lambda (int NSString*) void "add_text_input_to_webView"))
 
-(define add-input-to-currentView
-  (c-lambda (NSString*) void "add_input_to_currentView"))
+(define add-key-input-to-webView
+  (c-lambda (int NSString*) void "add_key_input_to_webView"))
+
+(define add-text-input-to-currentView
+  (c-lambda (NSString*) void "add_text_input_to_currentView"))
+
+(define add-key-input-to-currentView
+  (c-lambda (NSString*) void "add_key_input_to_currentView"))
 
 (define eval-js-in-webView
   (c-lambda (int NSString*) NSString* "eval_js_in_webView"))
@@ -483,6 +503,15 @@ c-declare-end
 
 (define set-toolbar-alpha
   (c-lambda (double) void "set_toolbar_alpha"))
+
+(define show-toolbar
+  (c-lambda () void "show_toolbar"))
+
+(define hide-toolbar
+  (c-lambda () void "hide_toolbar"))
+
+(define toggle-toolbar
+  (c-lambda () void "toggle_toolbar"))
 
 (define segm-ctrl-set-title
   (c-lambda (int NSString*) void "segm_ctrl_set_title"))
@@ -507,6 +536,12 @@ c-declare-end
 
 (define get-pasteboard
   (c-lambda () NSString* "get_pasteboard"))
+
+(define get-documents-dir
+  (c-lambda () NSString* "get_documents_dir"))
+
+(define get-icloud-container-dir
+  (c-lambda () NSString* "get_icloud_container_dir"))
 
 (define popup-alert
   (c-lambda (NSString* NSString* NSString* NSString*) void "popup_alert"))
@@ -540,17 +575,29 @@ c-declare-end
           (write str ep)
           (force-output ep)))))
 
-(c-define (send-key str) (NSString*) void "send_key" "extern"
+(c-define (send-text-input input) (NSString*) void "send_text_input" "extern"
 
-  (let ((hk handle-key))
+  (let ((ht handle-text-input))
+    (if (procedure? ht)
+        (ht input))))
+
+(define handle-text-input #f)
+
+(set! handle-text-input
+  (lambda (input)
+    (add-text-input-to-currentView input)))
+
+(c-define (send-key-input input) (NSString*) void "send_key_input" "extern"
+
+  (let ((hk handle-key-input))
     (if (procedure? hk)
-        (hk str))))
+        (hk input))))
 
-(define handle-key #f)
+(define handle-key-input #f)
 
-(set! handle-key
-  (lambda (str)
-    (add-input-to-currentView str)))
+(set! handle-key-input
+  (lambda (input)
+    (add-key-input-to-currentView input)))
 
 (c-define (heartbeat) () double "heartbeat" "extern"
 
@@ -699,8 +746,8 @@ c-declare-end
 (define (set-location-update-event-handler proc)
   (set! location-update-event-handler proc))
 
-(define (show-view view #!optional (become-first-responder #f))
-  (show-webView view become-first-responder))
+(define (show-view view #!optional (kbd-enabled #f)  (kbd-should-shrink-view #f))
+  (show-webView view kbd-enabled kbd-should-shrink-view))
 
 (define (set-view-content view content #!optional (base-url-path #f) (enable-scaling #f) (mime-type "text/html"))
   (set-webView-content
@@ -734,6 +781,7 @@ c-declare-end
 ;; Developer Program License Agreement (I don't know which section
 ;; but I remember it had to do with the iOS human interface design).
 
+#;
 (set! ##exit
       (lambda (#!optional (status 0))
         (error "To exit, press the sleep button for 5 seconds then the home button for 10 seconds")))
@@ -748,34 +796,86 @@ c-declare-end
 ;; Application's designated container area on the device, except as
 ;; otherwise specified by Apple.
 
-;; The "~~" path will be equal to the app's bundle directory.
+;; "/" will be equal to the app's iCloud Documents directory (if available).
+;; "~/" will be equal to the app's Documents directory.
+;; "~~/" will be equal to the app's bundle directory.
 
-(define app-bundle-dir
-  (##path-normalize "~~"))
+(define app-icloud-dir
+  (string-append "/private/var/mobile/Library/Mobile Documents/iCloud~"
+                 CFBundleName
+                 "/"))
+
+(define app-icloud-docs-dir
+  (string-append app-icloud-dir "Documents/"))
+
+(define app-root-dir app-icloud-docs-dir) ;; root of FS (i.e. /) is app's iCloud dir
+
+(define app-documents-dir (##path-normalize (get-documents-dir)))
+
+(define app-bundle-dir (##path-normalize "~~"))
+
+(set! ##os-path-homedir (lambda () app-documents-dir))
 
 (define (contained-path-resolve path)
   (let loop ()
-    (let* ((str (##path-expand path))
-           (norm (##path-normalize str)))
-      (if (or (has-prefix? norm app-bundle-dir)
-              (has-prefix? norm app-documents-dir))
-          str ;; only allow files in app directory and documents directory
-          (begin
-            (error "App container violation")
-            (loop))))))
+    (let ((xpath (##path-normalize (##path-expand path))))
+      (cond ((has-prefix? xpath "~/") =>
+             (lambda (rest)
+               (##path-expand rest app-documents-dir)))
+            ((equal? xpath "~")
+             app-documents-dir)
+            ((or (has-prefix? xpath app-bundle-dir)
+                 (has-prefix? xpath app-documents-dir)
+                 (has-prefix? xpath app-icloud-dir))
+             xpath) ;; OK if path is in sandbox
+            ((has-prefix? xpath "/") =>
+             (lambda (rest)
+               (##path-expand rest app-root-dir)))
+            (else
+             (##path-expand xpath app-root-dir))))))
 
 (set! ##path-resolve-hook contained-path-resolve)
 
-;; Make the current-directory and the "~" path equal to the app's
-;; Documents directory.  This directory is backed-up by iTunes.
+(get-icloud-container-dir) ;; connect to iCloud
 
-(set! ##os-path-homedir
-      (c-lambda () NSString* "get_documents_dir"))
+(define (iCloudAccountAvailabilityChanged)
+  #f)
 
-(define app-documents-dir
-  (##path-normalize "~"))
+#;
+(define (update-icloud-dir)
+  (let ((dir (get-icloud-container-dir)))
+    (if dir
+        (let ((ndir (##path-normalize dir)))
+          (set! app-icloud-docs-dir ndir)
+          (let ((link (##string-append app-documents-dir "iCloud"))
+                (cont (##string-append ndir "Documents")))
+            (##os-delete-file link)
+            (##os-create-symbolic-link cont link)))
+        (set! app-icloud-docs-dir #f))))
 
-(current-directory app-documents-dir)
+
+;; Make the current-directory equal to the root directory.
+
+(##define-macro (macro-parameter-descr param)
+  `(##closure-ref ,param 1))
+
+(macro-parameter-descr-filter-set!
+ (macro-parameter-descr ##current-directory)
+ (lambda (val)
+   (let ((path (##path-normalize (##path-expand val))))
+     (cond ((has-prefix? path app-bundle-dir) =>
+            (lambda (rest)
+              (string-append "~~/" rest)))
+           ((has-prefix? path app-documents-dir) =>
+            (lambda (rest)
+              (string-append "~/" rest)))
+           ((has-prefix? path app-icloud-docs-dir) =>
+            (lambda (rest)
+              (string-append "/" rest)))
+           (else
+            path)))))
+
+(##current-directory "/")
 
 
 ;;;============================================================================

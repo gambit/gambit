@@ -50,7 +50,7 @@
 
 @end
 
-@interface KOKeyboardRow () <KOProtocol, UIInputViewAudioFeedback, UIDynamicAnimatorDelegate>
+@interface KOKeyboardRow () <KOProtocol, UIInputViewAudioFeedback>
 @end
 
 static BOOL isPhone;
@@ -77,9 +77,6 @@ static NSInteger buttonSpacing;
   CGFloat              minX, maxX, minY, maxY; // defines where the button can move
   CGPoint              originalTouchPt;  // finger hit this spot originally
   CGPoint              originalViewPt;   // view frame origin
-
-  UIDynamicAnimator    *animator;
-  UIAttachmentBehavior *aBehavior;
 }
 
 + (BOOL)requiresConstraintBasedLayout
@@ -95,9 +92,9 @@ static NSInteger buttonSpacing;
   barWidth = [UIScreen mainScreen].bounds.size.width;
 
   if (isPhone) {
-    barHeight = 56;
+    barHeight = 48;
 
-    buttonHeight = 50;
+    buttonHeight = 44;
     horzMargin = 6;
     buttonSpacing = 6;
   } else {
@@ -118,7 +115,21 @@ static NSInteger buttonSpacing;
 
 - (instancetype)init
 {
-  return [super initWithFrame:[KOKeyboardRow bounds] inputViewStyle:UIInputViewStyleKeyboard];
+  KOKeyboardRow *r;
+
+#ifndef __IPHONE_7_0
+#define UIInputViewStyleKeyboard 1
+#endif
+
+  if ([super respondsToSelector:@selector(initWithFrame:inputViewStyle:)]) {
+    r = [super initWithFrame:[KOKeyboardRow bounds]
+              inputViewStyle:UIInputViewStyleKeyboard];
+  } else {
+    r = [super initWithFrame:[KOKeyboardRow bounds]];
+    r.backgroundColor = [UIColor colorWithRed:0.6 green:0.6 blue:0.6 alpha:1.0];
+  }
+
+  return r;
 }
 
 - (void)setup
@@ -162,11 +173,6 @@ static NSInteger buttonSpacing;
 
   NSString *keys = [portraitKeys stringByAppendingString:landscapeKeys];
 
-  if (_animation == koSnapbackAnimation) {
-    animator = [[UIDynamicAnimator alloc] initWithReferenceView:self];
-    animator.delegate = self;
-  }
-
   NSUInteger firstIdx = [self.subviews count];
 
   buttonViews = [NSMutableArray arrayWithCapacity:buttonCount];
@@ -196,7 +202,6 @@ static NSInteger buttonSpacing;
     UIView *lv = c;
 
     c = [UIView new];
-    //c.backgroundColor = [UIColor yellowColor];
 
     [c setTranslatesAutoresizingMaskIntoConstraints:NO];
     c.clipsToBounds = YES;
@@ -481,15 +486,13 @@ static NSInteger buttonSpacing;
   return YES;
 }
 
-extern ViewController *theViewController;
-
 - (void)insertText:(NSString *)text
 {
   [[UIDevice currentDevice] playInputClick];
 
   //NSLog(@"KOKeyboardRow insertText:%@",text);
 
-  [theViewController send_key:text];
+  [theViewController send_text_input:text];
 
 #if 0
 

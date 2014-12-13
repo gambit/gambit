@@ -11,6 +11,8 @@ extern void send_input(NSString *);
 
 extern void send_event(NSString *);
 
-extern void send_key(NSString *);
+extern void send_text_input(NSString *);
+
+extern void send_key_input(NSString *);
 
 extern double heartbeat();

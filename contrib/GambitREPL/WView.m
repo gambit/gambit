@@ -11,17 +11,6 @@
 //-----------------------------------------------------------------------------
 
 
-id get_inputAccessoryView() {
-
-  ViewController *vc = theViewController;
-
-  if (vc.keyboardShowingView == vc.currentView)
-    return vc.kov;
-
-  return nil;
-}
-
-
 #ifdef USE_PRIVATE_API
 
 @interface UIWebBrowserView : UIView
@@ -30,7 +19,7 @@ id get_inputAccessoryView() {
 @implementation UIWebBrowserView (CustomToolbar)
 
 - (id)inputAccessoryView {
-  return get_inputAccessoryView();
+  return [theViewController get_inputAccessoryView];
 }
 
 @end
@@ -45,7 +34,7 @@ id get_inputAccessoryView() {
 @implementation _GambitREPLHelper
 
 - (id)inputAccessoryView {
-  return get_inputAccessoryView();
+  return [theViewController get_inputAccessoryView];
 }
 
 @end
@@ -56,7 +45,7 @@ id get_inputAccessoryView() {
 
 @implementation WView
 
-#ifndef USE_PRIVATE_API
+@synthesize kov, kbdShouldShrinkView, kbdEnabled;
 
 - (instancetype) initWithFrame:(CGRect)frame {
   self = [super initWithFrame:frame];
@@ -66,7 +55,13 @@ id get_inputAccessoryView() {
   return self;
 }
 
+
 - (void) setup {
+
+  kbdShouldShrinkView = NO;
+  kbdEnabled = NO;
+
+#ifndef USE_PRIVATE_API
 
   UIView *subview = nil;
 
@@ -92,9 +87,10 @@ id get_inputAccessoryView() {
   }
 
   object_setClass(subview, newClass);
-}
 
 #endif
+}
+
 
 @end
 

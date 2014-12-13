@@ -32,11 +32,17 @@
 //  OTHER DEALINGS IN THE SOFTWARE.
 //
 
-typedef enum {koNoAnimation, koSnapbackAnimation, koTraditinalAnimation } koAnimation;
+#import <UIKit/UIKit.h>
+#import <Availability.h>
 
-@interface KOKeyboardRow : UIInputView
+@interface KOKeyboardRow :
+#ifndef __IPHONE_7_0
+UIView
+#else
+UIInputView
+#endif
+
 #if !__has_feature(objc_arc)
-@property (nonatomic, assign) koAnimation animation;      // animate swiping the button
 @property (nonatomic, retain) NSString *portraitKeysSmall;  // 5 characters per button
 @property (nonatomic, retain) NSString *landscapeKeysSmall; // 5 characters per button
 @property (nonatomic, retain) NSString *portraitKeysLarge;  // 5 characters per button
@@ -44,7 +50,6 @@ typedef enum {koNoAnimation, koSnapbackAnimation, koTraditinalAnimation } koAnim
 @property (nonatomic, retain) NSIndexSet *portraitSet;      // which buttons to use in portrait mode
 @property (nonatomic, retain) NSIndexSet *landscapeSet;     // which buttons to use in landscape mode
 #else
-@property (nonatomic, assign) koAnimation animation;      // animate swiping the button
 @property (nonatomic, copy) NSString *portraitKeysSmall;  // 5 characters per button
 @property (nonatomic, copy) NSString *landscapeKeysSmall; // 5 characters per button
 @property (nonatomic, copy) NSString *portraitKeysLarge;  // 5 characters per button

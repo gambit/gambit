@@ -26,6 +26,7 @@
 (##include "script#.scm")
 (##include "repo#.scm")
 (##include "help#.scm")
+(##include "emacs#.scm")
 
 (##namespace (""
               splash
@@ -42,6 +43,7 @@
               store-script
               fetch-script
               view-script
+              emacs
              ))
 
 (declare
@@ -57,9 +59,9 @@
 ;; Add cond-expand features to identify Gambit-REPL.
 
 (set! ##cond-expand-features
-      (cons 'Gambit-REPL
-            (cons 'Gambit-REPL-iOS
-                  (cons 'Gambit-REPL-v4.0
+      (cons 'GambitREPL
+            (cons 'GambitREPL-iOS
+                  (cons 'GambitREPL-v4.0
                         ##cond-expand-features))))
 
 (define-runtime-syntax |\u03bb| ;; greek lowercase lambda
@@ -74,27 +76,53 @@
 <html>
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=1.6">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=0.25, maximum-scale=1.6">
 
 <script>
 
-function gestureStart() {
+function handle_gestureStart() {
   var metas = document.getElementsByTagName('meta');
   for (var i=0; i<metas.length; i++) {
-    if (metas[i].name === "viewport") {
-      metas[i].content = "width=device-width, initial-scale=1.0, minimum-scale=0.25, maximum-scale=1.6";
+    if (metas[i].name === 'viewport') {
+      metas[i].content = 'width=device-width, height=device-height, initial-scale=1.0, minimum-scale=0.25, maximum-scale=1.6';
     }
   }
 }
 
-document.addEventListener("gesturestart", gestureStart, false);
+document.addEventListener('gesturestart', handle_gestureStart, false);
 
-function add_input(str) {
-  var ta = document.activeElement;
-  if (ta instanceof HTMLTextAreaElement) {
-    var ev = document.createEvent('TextEvent');
-    ev.initTextEvent('textInput', true, true, window, str);
-    ta.dispatchEvent(ev);
+var last_key_esc = false;
+
+function add_text_input(input) {
+  var ev = document.createEvent('TextEvent');
+  ev.initTextEvent('textInput', true, true, window, input);
+  document.activeElement.dispatchEvent(ev);
+  last_key_esc = false;
+}
+
+function add_key_input(input) {
+  if (input.length === 1) {
+    if (last_key_esc) {
+      if (input === '\015' || input === '\012')
+        cmd_return();
+      last_key_esc = false;
+    } else if (input === '\033') {
+      last_key_esc = true;
+    } else if (input.charCodeAt(0) >= 32) {
+      add_text_input(input);
+    }
+  } else if (input === 'M\015') {
+    cmd_return();
+    last_key_esc = false;
+  }
+}
+
+function cmd_return() {
+  var script_id = document.activeElement.id;
+  var index = script_id.replace(/^script/, '');
+  if (index !== script_id) {
+    last_focus_id = script_id;
+    send_event_with_scripts('run',index);
   }
 }
 
@@ -286,6 +314,16 @@ common-html-header-end
 
 <body class="splash">
 
+<script language="JavaScript">
+
+function send_event(e)
+{ window.location = "event:" + e; }
+
+function test()
+{ alert('111'); send_event('foo'); alert('222'); }
+
+</script>
+
 <br/>
 <br/>
 
@@ -322,7 +360,6 @@ In the REPL view, enter your command after the <strong><code>&gt;</code></strong
 </code>
 </strong>
 </p>
-
 </body>
 </html>
 
@@ -343,7 +380,13 @@ splash-page-content-part2-end
   (set-navigation -1)
   (set-event-handler
    (lambda (old-event-handler)
-     generic-event-handler))
+     (lambda (event)
+       (cond ((equal? event "event:foo")
+              (eval-js-in-webView
+               0
+               (string-append "alert('handler')")))
+             (else
+              (generic-event-handler event))))))
   (show-view 0))
 
 (define (set-page content handler #!optional (enable-scaling #f) (mime-type "text/html"))
@@ -432,7 +475,7 @@ splash-page-content-part2-end
   (set-event-handler
    (lambda (old-event-handler)
      generic-event-handler))
-  (show-textView 0 #t))
+  (show-textView 0 #t #t))
 
 (define (repl-eval str)
   (if (string? str)
@@ -446,7 +489,9 @@ splash-page-content-part2-end
 
 (set! ##primordial-exception-handler-hook
       (lambda (exc other-handler)
-        (repl) ;; switch to REPL view on errors
+        (if (##eq? (##thread-repl-channel-get! (macro-primordial-thread))
+                   (##thread-repl-channel-get! (macro-current-thread)))
+            (repl)) ;; switch to REPL view on errors
         (##repl-exception-handler-hook exc other-handler)))
 
 
@@ -523,8 +568,17 @@ function click_delete(index)
     send_event_with_scripts("delete",index);
 }
 
+var last_focus_id = "script0";
+
+function gain_focus()
+{ if (last_focus_id !== null)
+    document.getElementById(last_focus_id).focus();
+}
+
 function lose_focus()
-{ return event_with_scripts("exit",0); }
+{ last_focus_id = document.activeElement.id;
+  return event_with_scripts("exit",0);
+}
 
 </script>
 
@@ -629,7 +683,8 @@ edit-page-content-part5-end
                      new-event
                      (lambda ()
                        #f)))))))))))
-  (show-view 3 #t))
+  (show-view 3 #t)
+  (eval-js-in-webView 3 "gain_focus()"))
 
 (define (get-index-and-update-script-db rest)
   (let ((x (get-event-parameters rest)))
@@ -777,9 +832,16 @@ edit-page-content-part5-end
            "/index.php/Special:RequestAccount"))
          #t)))
 
+(define (handle-icloud-event event)
+  (and (equal? event "event:iCloudAccountAvailabilityChanged")
+       (begin
+         (iCloudAccountAvailabilityChanged)
+         #t)))
+
 (define (generic-event-handler event)
   (or (wiki-event-handler event)
       (handle-app-become-active-event event)
+      (handle-icloud-event event)
       (handle-create-account-event event)
       (handle-navigation-event event (lambda () #f))))
 
@@ -1099,7 +1161,7 @@ repo-page-content-part5-end
          repo-page-content-part5)
    #f
    #t)
-  (show-view 1))
+  (show-view 1 #t))
 
 (define (view-script name)
   (open-URL
@@ -1163,7 +1225,7 @@ repo-transaction-page-content-part3-end
     (let ((content (make-repo-transaction-page header msg spinner-html)))
       (set-navigation 1)
       (set-view-content 1 content #f #t)
-      (show-view 1))
+      (show-view 1 #t))
 
     (guard-repo-transaction
      (lambda ()
@@ -1280,7 +1342,7 @@ login-page-content-part1-end
 )
 
 (define login-page-content-part2 #<<login-page-content-part2-end
-" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/></td>
+" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus/></td>
 </tr><tr>
   <td class="label">Password:</td>
   <td class="login"><input class="login" id="password" type="password" value="
@@ -1381,7 +1443,7 @@ login-page-content-part5-end
              (else
               (generic-event-handler event))))))
   (set-view-content 1 page #f #t)
-  (show-view 1))
+  (show-view 1 #t))
 
 (define (attempt-login success fail username password remember-pass?)
 
@@ -1449,20 +1511,42 @@ login-page-content-part5-end
 
 ;;;----------------------------------------------------------------------------
 
-;; Key handler.
+;; Emacs.
 
-(set! handle-key
-  (lambda (str)
-    (if (char=? #\F (string-ref str 0))
-        (let ((script (get-script-by-name str)))
-          (if script
-              (run-script str script)
-              (let ((n (string->number (substring str 1 (string-length str)))))
-                (cond ((eqv? n 12)
-                       (##thread-interrupt! (macro-primordial-thread)))
-                      (else
-                       (add-input-to-currentView str))))))
-        (add-input-to-currentView str))))
+(##namespace ("" emacs))
+
+(define (emacs . files-to-visit)
+  (apply emacs#emacs files-to-visit))
+
+;;;----------------------------------------------------------------------------
+
+;; Input handlers.
+
+(set! handle-text-input
+      (lambda (str)
+        (add-text-input-to-currentView str)))
+
+(set! handle-key-input
+      (lambda (str)
+        (cond ((char=? #\F (string-ref str 0))
+               (let ((script (get-script-by-name str)))
+                 (if script
+                     (run-script str script)
+                     (cond ((string=? str "F12")
+                            (##thread-interrupt! (macro-primordial-thread)))
+                           (else
+                            (add-key-input-to-currentView str))))))
+              ((and (char=? #\M (string-ref str 0))
+                    (not (equal? CFBundleDisplayName "Not Emacs")))
+               (let ((n (string->number (substring str 1 (string-length str)))))
+                 (cond (n
+                        (if (> n 0)
+                            (send-event (string-append "NAV" (number->string (- n 1))))
+                            (toggle-toolbar)))
+                       (else
+                        (add-key-input-to-currentView str)))))
+              (else
+               (add-key-input-to-currentView str)))))
 
 
 ;;;----------------------------------------------------------------------------
@@ -1484,27 +1568,32 @@ login-page-content-part5-end
 
    (set-navigation-bar '("REPL" "Wiki" "Help" "Edit"))
 
-   (if (equal? CFBundleDisplayName "Gambit REPL dev")
+   (if (not (equal? CFBundleDisplayName "Gambit REPL"))
        (repo-enable!))
 
    (set-splash-view) ;; init the splash view
    (set-edit-view) ;; init the edit view
 
-   (add-output-to-textView 0 "\n\n\n\n") ;; leave space at top of REPL view
+   (add-output-to-textView 0 "\n\n\n") ;; leave space at top of REPL view
 
-   (if (get-pref "run-main-script")
+   (if (equal? CFBundleDisplayName "Not Emacs")
+
+       (emacs)
 
        (begin
-         (set-pref "run-main-script" #f)
-         (let* ((main-script-name "main")
-                (main-script (get-script-by-name main-script-name)))
-           (if main-script
-               (begin
-                 (load-script main-script-name main-script)
-                 (set-pref "run-main-script" "yes"))
-               (splash))))
+         (show-toolbar)
+         (cond ((get-pref "run-main-script")
+                (set-pref "run-main-script" #f)
+                (let* ((main-script-name "main")
+                       (main-script (get-script-by-name main-script-name)))
+                  (if main-script
+                      (begin
+                        (load-script main-script-name main-script)
+                        (set-pref "run-main-script" "yes"))
+                      (splash))))
 
-       (splash)) ;; show splash screen if main script did not work last time
+               (else
+                (splash))))) ;; show splash screen if main script did not work last time
 
    (##repl-debug-main)))
 
