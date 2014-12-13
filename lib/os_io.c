@@ -3808,7 +3808,7 @@ typedef struct ___device_tcp_client_struct
     SSL_METHOD *ssl_method;
     SSL_CTX *ssl_ctx;
     SSL *ssl;
-    int try_ssl_connect_again;
+    int ssl_try_again;
 
 #endif
   } ___device_tcp_client;
@@ -3816,7 +3816,8 @@ typedef struct ___device_tcp_client_struct
 #ifdef USE_OPENSSL
 
 #define SSL_TRY_AGAIN_CONNECT 2
-#define SSL_TRY_AGAIN_GET_CERTIFICATE 4
+#define SSL_TRY_AGAIN_SHUTDOWN 4
+#define SSL_TRY_AGAIN_SHUTDOWN_DONE 8
 
 ___HIDDEN int try_ssl_connect
    ___P((___device_tcp_client *dev),
@@ -3824,22 +3825,17 @@ ___HIDDEN int try_ssl_connect
 ___device_tcp_client *dev;)
 {
   int err;
-  if (dev->try_ssl_connect_again == SSL_TRY_AGAIN_CONNECT)
+
+  if (dev->ssl_try_again == SSL_TRY_AGAIN_CONNECT)
     err = SSL_connect (dev->ssl);
-  else if (dev->try_ssl_connect_again == SSL_TRY_AGAIN_GET_CERTIFICATE)
-    err = SSL_connect (dev->ssl);
-  /* TODO: get certificate (if required) */
   else
-    {
-      printf("Unknown SSL_TRY_AGAIN code\n");
-      return -1;
-    }
-  
-  switch ( SSL_get_error(dev->ssl, err) )
+    return 0;
+    
+  switch (SSL_get_error(dev->ssl, err))
     {
     case SSL_ERROR_NONE:
       /* we're done waiting */
-      dev->try_ssl_connect_again = 0;
+      dev->ssl_try_again = 0;
       dev->try_connect_again = 0;
       printf ("DONE WAITING\n");
       printf ("SSL connection using %s\n", SSL_get_cipher (dev->ssl));
@@ -3852,13 +3848,16 @@ ___device_tcp_client *dev;)
       break;
     case SSL_ERROR_ZERO_RETURN:
       printf ("SSL_ERROR_ZERO_RETURN");
-      return -1;
+      return ___FIX(___SSL_ERR);
     case SSL_ERROR_SYSCALL:
     case SSL_ERROR_SSL:
       printf ("OpenSSL error in try_ssl_connect\n");
+      ERR_print_errors_fp(stderr);
+      return ___FIX(___SSL_ERR);
     default:
       printf ("Unhandled SSL error\n");
-      return -1;
+      ERR_print_errors_fp(stderr);
+      return ___FIX(___SSL_ERR);
     }
   return 0;
 }
@@ -3880,7 +3879,7 @@ ___device_tcp_client *dev;)
 
   printf("TRY_CONNECT\n");
 
-  if (dev->try_ssl_connect_again)
+  if (dev->ssl_try_again)
     {
       return try_ssl_connect (dev);
     }
@@ -3890,7 +3889,7 @@ ___device_tcp_client *dev;)
            CONNECT_IN_PROGRESS || /* establishing connection in background */
            dev->try_connect_again == 2) /* last connect attempt? */
     {
-      dev->try_ssl_connect_again = SSL_TRY_AGAIN_CONNECT; /* we will wait for SSL now */
+      dev->ssl_try_again = SSL_TRY_AGAIN_CONNECT; /* we will wait for SSL now */
       return try_ssl_connect (dev);
     }
 
@@ -3933,6 +3932,9 @@ int direction;)
 {
   ___device_tcp_client *d = ___CAST(___device_tcp_client*,self);
   int is_not_closed = 0;
+#ifdef USE_OPENSSL
+  int err;
+#endif
 
   if (d->base.base.read_stage != ___STAGE_CLOSED)
     is_not_closed |= ___DIRECTION_RD;
@@ -3942,6 +3944,35 @@ int direction;)
 
   if (is_not_closed == 0)
     return ___FIX(___NO_ERR);
+
+#ifdef USE_OPENSSL
+
+  if (d->ssl &&
+      d->ssl_try_again != SSL_TRY_AGAIN_SHUTDOWN_DONE)
+    {
+      err = SSL_shutdown (d->ssl);
+      if (err > 0)
+        {
+          d->ssl_try_again = SSL_TRY_AGAIN_SHUTDOWN;
+          return ___FIX(___NO_ERR);
+        }
+      else if (err == 0)
+        d->ssl_try_again = SSL_TRY_AGAIN_SHUTDOWN_DONE;
+      else
+        {
+          switch (SSL_get_error(d->ssl,err))
+            {
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE:
+              d->ssl_try_again = SSL_TRY_AGAIN_SHUTDOWN;
+              return ___FIX(___NO_ERR);
+            default:
+              return ___FIX(___SSL_ERR);
+            }
+        }
+    }
+
+#endif
 
   if ((is_not_closed & ~direction) == 0)
     {
@@ -4130,6 +4161,16 @@ ___HIDDEN ___SCMOBJ ___device_tcp_client_release_raw_virt
         (self)
 ___device_stream *self;)
 {
+  ___device_tcp_client *d = ___CAST(___device_tcp_client*,self);
+
+#ifdef USE_OPENSSL
+
+  if (d->ssl)
+    SSL_free (d->ssl);
+  if (d->ssl_ctx)
+    SSL_CTX_free (d->ssl_ctx);
+
+#endif
   return ___FIX(___NO_ERR);
 }
 
@@ -4189,6 +4230,39 @@ ___stream_index *len_done;)
         return ERR_CODE_FROM_SOCKET_CALL;
     }
 
+#ifdef USE_OPENSSL
+
+  if ( d->ssl && (n = SSL_read (d->ssl, ___CAST(char*,buf), len)))
+    {
+      if (n > 0)
+        *len_done = n;
+      else
+        {
+          switch (SSL_get_error(d->ssl,n))
+            {
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE:
+              return ___ERR_CODE_EAGAIN;
+            default:
+              ___printf("Unhandled SSL error in ___device_tcp_client_read_raw_virt");
+              break;
+            }
+        }
+    }
+  else
+    {
+      if (SOCKET_CALL_ERROR(n = recv (d->s, ___CAST(char*,buf), len, 0)))
+        {
+          ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
+          if (NOT_CONNECTED(e) && !d->connect_done)
+            e = ___ERR_CODE_EAGAIN;
+          return e;
+        }
+      *len_done = n;
+    }
+    
+#else
+
   if (SOCKET_CALL_ERROR(n = recv (d->s, ___CAST(char*,buf), len, 0)))
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
@@ -4198,6 +4272,8 @@ ___stream_index *len_done;)
     }
 
   *len_done = n;
+
+#endif
 
   return ___FIX(___NO_ERR);
 }
@@ -4234,6 +4310,39 @@ ___stream_index *len_done;)
         return ERR_CODE_FROM_SOCKET_CALL;
     }
 
+#ifdef USE_OPENSSL
+
+  if ( d->ssl && (n = SSL_write (d->ssl, ___CAST(char*,buf), len)))
+    {
+      if (n > 0)
+        *len_done = n;
+      else
+        {
+          switch (SSL_get_error(d->ssl,n))
+            {
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE:
+              return ___ERR_CODE_EAGAIN;
+            default:
+              ___printf("Unhandled SSL error in ___device_tcp_client_write_raw_virt");
+              break;
+            }
+        }
+    }
+  else
+    {
+      if (SOCKET_CALL_ERROR(n = send (d->s, ___CAST(char*,buf), len, 0)))
+        {
+          ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
+          if (NOT_CONNECTED(e) && !d->connect_done)
+            e = ___ERR_CODE_EAGAIN;
+          return e;
+        }
+      *len_done = n;
+    }
+    
+#else
+
   if (SOCKET_CALL_ERROR(n = send (d->s, ___CAST(char*,buf), len, 0)))
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
@@ -4243,6 +4352,8 @@ ___stream_index *len_done;)
     }
 
   *len_done = n;
+
+#endif
 
   return ___FIX(___NO_ERR);
 }
@@ -4475,6 +4586,53 @@ int direction;)
 }
 
 
+#ifdef USE_OPENSSL
+
+___HIDDEN int setup_ssl_connection
+   ___P((___device_tcp_client *dev),
+        (dev)
+___device_tcp_client *dev;)
+{
+
+  /* TODO: this initialization and configuration still
+   * needs to find the right place
+   */
+#define CERTF "foo-cert.pem"
+#define KEYF "foo-cert.pem"
+
+  static int initialized = 0;
+
+  int err;
+
+  if (!initialized)
+    {      
+      if (!SSL_library_init())
+        {
+          fprintf(stderr, "** OpenSSL initialization failed!\n");
+          return ___FIX(___SSL_ERR);
+        }
+      SSL_load_error_strings();
+
+      initialized = 1;
+    }
+  /* END of initialization */
+
+  dev->ssl_method = TLSv1_client_method();
+
+  dev->ssl_ctx = SSL_CTX_new (dev->ssl_method);
+  SSL_CHECK_ERROR (dev->ssl_ctx);
+
+  dev->ssl  = SSL_new (dev->ssl_ctx);
+  SSL_set_fd (dev->ssl, dev->s);
+
+  SSL_set_mode (dev->ssl,
+    SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+
+  return 0;
+}
+
+#endif
+
 ___SCMOBJ ___device_tcp_client_setup_from_sockaddr
    ___P((___device_tcp_client **dev,
          ___device_group *dgroup,
@@ -4499,30 +4657,9 @@ int direction;)
   SOCKET_TYPE s;
   ___device_tcp_client *d;
 
-#ifdef USE_OPENSSL
-
-  /* TODO: this initialization and configuration still
-   * needs to find the right place
-   */
-#define CERTF "foo-cert.pem"
-#define KEYF "foo-cert.pem"
-
-  static int initialized = 0;
-
-  int err;
-
-  if (!initialized)
-    {      
-      if (!SSL_library_init())
-        {
-          fprintf(stderr, "** OpenSSL initialization failed!\n");
-          return ___FIX(___SSL_ERR);
-        }
-      SSL_load_error_strings();
-
-      initialized = 1;
-    }
-
+#ifndef USE_OPENSSL
+  /* TODO: Check if SSL connection has been requested */
+  /* return ___FIX(___UNIMPL_ERR); */
 #endif
 
   if ((e = create_tcp_socket (&s, options)) != ___FIX(___NO_ERR))
@@ -4547,18 +4684,7 @@ int direction;)
   *dev = d;
 
 #ifdef USE_OPENSSL
-
-  d->ssl_method = SSLv3_client_method();
-
-  d->ssl_ctx = SSL_CTX_new (d->ssl_method);
-  SSL_CHECK_ERROR (d->ssl_ctx);
-
-  d->ssl  = SSL_new (d->ssl_ctx);
-  SSL_set_fd (d->ssl, d->s);
-
-  SSL_set_mode (d->ssl,
-    SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
-
+  setup_ssl_connection (d);
 #endif
 
   if (try_connect (d) != 0)
