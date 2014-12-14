@@ -4636,7 +4636,9 @@ ___device_tcp_client *dev;)
   SSL_set_fd (dev->ssl, dev->s);
 
   SSL_set_mode (dev->ssl,
-    SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+                SSL_MODE_ENABLE_PARTIAL_WRITE |
+                SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER |
+                SSL_MODE_RELEASE_BUFFERS);
 
   return 0;
 }
