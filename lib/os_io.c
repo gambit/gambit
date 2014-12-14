@@ -3829,7 +3829,10 @@ ___device_tcp_client *dev;)
     err = SSL_connect (dev->ssl);
   else
     return 0;
-    
+  
+  if (!err)
+    return 0;
+  
   switch (SSL_get_error(dev->ssl, err))
     {
     case SSL_ERROR_NONE:
