@@ -3805,7 +3805,6 @@ typedef struct ___device_tcp_client_struct
 
 #ifdef USE_OPENSSL
 
-    SSL_METHOD *ssl_method;
     SSL_CTX *ssl_ctx;
     SSL *ssl;
     int ssl_try_again;
@@ -4243,8 +4242,7 @@ ___stream_index *len_done;)
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
               return ___ERR_CODE_EAGAIN;
-            default:
-              ___printf("Unhandled SSL error in ___device_tcp_client_read_raw_virt");
+              printf("Unhandled SSL error in ___device_tcp_client_read_raw_virt");
               break;
             }
         }
@@ -4324,7 +4322,7 @@ ___stream_index *len_done;)
             case SSL_ERROR_WANT_WRITE:
               return ___ERR_CODE_EAGAIN;
             default:
-              ___printf("Unhandled SSL error in ___device_tcp_client_write_raw_virt");
+              printf("Unhandled SSL error in ___device_tcp_client_write_raw_virt");
               break;
             }
         }
@@ -4553,6 +4551,14 @@ int direction;)
   d->try_connect_again = try_connect_again;
   d->connect_done = 0;
 
+#ifdef USE_OPENSSL
+
+  d->ssl = NULL;
+  d->ssl_ctx = NULL;
+  d->ssl_try_again = 0;
+
+#endif
+
 #ifdef USE_POSIX
 
   d->try_connect_interval_nsecs = 1000000; /* 0.001 secs */
@@ -4603,6 +4609,7 @@ ___device_tcp_client *dev;)
   static int initialized = 0;
 
   int err;
+  SSL_METHOD *ssl_method;
 
   if (!initialized)
     {      
@@ -4617,9 +4624,9 @@ ___device_tcp_client *dev;)
     }
   /* END of initialization */
 
-  dev->ssl_method = TLSv1_client_method();
+  ssl_method = TLSv1_client_method();
 
-  dev->ssl_ctx = SSL_CTX_new (dev->ssl_method);
+  dev->ssl_ctx = SSL_CTX_new (ssl_method);
   SSL_CHECK_ERROR (dev->ssl_ctx);
 
   dev->ssl  = SSL_new (dev->ssl_ctx);
