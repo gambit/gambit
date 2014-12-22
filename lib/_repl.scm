@@ -1189,11 +1189,7 @@
       (let* ((container (##locat-container locat))
              (path (##container->path container)))
         (if path
-            (##write (##path-normalize path
-                                       ##repl-location-relative
-                                       ##repl-location-origin
-                                       #f)
-                     port)
+            (##write (##repl-path-normalize path) port)
             (##write-string (##container->id container) port))
         (let* ((filepos (##position->filepos (##locat-position locat)))
                (line (##fx+ (##filepos-line filepos) 1))
@@ -1202,6 +1198,21 @@
           (##write line port)
           (##write-string (if pinpoint? "." ":") port)
           (##write col port)))))
+
+(define ##repl-path-normalize-hook #f)
+(set! ##repl-path-normalize-hook #f)
+
+(define-prim (##repl-path-normalize path)
+  (let ((rpn-hook ##repl-path-normalize-hook))
+    (if (##procedure? rpn-hook)
+        (rpn-hook path)
+        (##default-repl-path-normalize path))))
+
+(define-prim (##default-repl-path-normalize path)
+  (##path-normalize path
+                    ##repl-location-relative
+                    ##repl-location-origin
+                    #f))
 
 (define ##repl-location-relative #f)
 (set! ##repl-location-relative 'shortest)

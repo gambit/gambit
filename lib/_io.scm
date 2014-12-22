@@ -7535,7 +7535,7 @@
             (cont device))
         (cont
          (##make-device-port-from-single-device
-          resolved-path
+          (##path-unresolve resolved-path)
           device
           psettings)))))
 

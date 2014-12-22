@@ -1756,6 +1756,24 @@
 (define-prim (##default-path-resolve path)
   (##path-expand path))
 
+(define ##path-unresolve-hook #f)
+(set! ##path-unresolve-hook #f)
+
+(define-prim (##path-unresolve path)
+  (let ((pu-hook ##path-unresolve-hook))
+    (if (##procedure? pu-hook)
+        (let ((result
+               (pu-hook path)))
+          (if (##string? result)
+              result
+              (##raise-error-exception
+               "STRING result expected but got"
+               (##list result))))
+        (##default-path-unresolve path))))
+
+(define-prim (##default-path-unresolve path)
+  path)
+
 (define ##path-expand-hook #f)
 (set! ##path-expand-hook #f)
 

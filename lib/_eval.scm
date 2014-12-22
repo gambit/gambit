@@ -3882,11 +3882,10 @@
                    (script-line (##vector-ref result 2)))
                (script-callback script-line abs-path)
                (##register-module-descrs-and-load! module-descrs)
-               abs-path)))))
+               (##path-unresolve abs-path))))))
 
   (define (load-no-ext psettings path)
-    (let* ((src-path (##path-resolve path))
-           (result (load-source psettings src-path)))
+    (let ((result (load-source psettings path)))
       (if (##not (##fixnum? result))
           result
           (let loop1 ((version 1)
@@ -3911,8 +3910,7 @@
                       (let loop2 ((lst ##scheme-file-extensions))
                         (if (##pair? lst)
                             (let* ((src-file-path
-                                    (##path-resolve
-                                     (##string-append path (##caar lst))))
+                                    (##string-append path (##caar lst)))
                                    (src-file-info
                                     (if (##string? src-file-path)
                                         (##file-info src-file-path)
