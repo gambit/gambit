@@ -916,6 +916,10 @@ ___END_C_LINKAGE
 #ifdef USE_OPENSSL
 #undef INCLUDE_openssl_ssl_h
 #define INCLUDE_openssl_ssl_h
+#undef INCLUDE_openssl_dh_h
+#define INCLUDE_openssl_dh_h
+#undef INCLUDE_openssl_ecdh_h
+#define INCLUDE_openssl_ecdh_h
 #endif
 
 #ifdef USE_getnetbyname
@@ -1477,6 +1481,21 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #ifdef INCLUDE_openssl_ssl_h
 #include <openssl/ssl.h>
 #endif
+
+#ifdef INCLUDE_openssl_dh_h
+#ifndef OPENSSL_NO_DH
+#include <openssl/dh.h>
+#endif
+#endif
+
+#ifdef INCLUDE_openssl_ecdh_h
+#if OPENSSL_VERSION_NUMBER >= 0x0090800fL
+#ifndef OPENSSL_NO_ECDH
+#include <openssl/ecdh.h>
+#endif
+#endif
+#endif
+
 
 /*
  * Use the process-time timer unless only the real-time timer is
