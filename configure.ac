@@ -732,6 +732,11 @@ if test "$ENABLE_OPENSSL" = yes; then
   PKG_CHECK_MODULES([OpenSSL], [openssl >= 0.9.8], [have_openssl=yes], [have_openssl=no])
   AC_DEFINE([USE_OPENSSL],[],[Enable SSL support using OpenSSL])
   LIBS="$LIBS $OpenSSL_LIBS"
+  case "$target_os" in
+    darwin*) # avoid the default C preprocessor which is setup for Objective-C
+             CFLAGS="$CFLAGS -Wno-deprecated-declarations"      
+             ;;
+  esac
 fi
 
 ###############################################################################
