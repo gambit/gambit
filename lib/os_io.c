@@ -3807,16 +3807,16 @@ typedef struct ___device_tcp_client_struct
 
     SSL_CTX *ssl_ctx;
     SSL *ssl;
-    int ssl_try_again;
+    int ssl_status;
 
 #endif
   } ___device_tcp_client;
 
 #ifdef USE_OPENSSL
 
-#define SSL_TRY_AGAIN_CONNECT 2
-#define SSL_TRY_AGAIN_SHUTDOWN 4
-#define SSL_TRY_AGAIN_SHUTDOWN_DONE 8
+#define SSL_STATUS_TRY_AGAIN_CONNECT 2
+#define SSL_STATUS_TRY_AGAIN_SHUTDOWN 3
+#define SSL_STATUS_SHUTDOWN_DONE 4
 
 ___HIDDEN int try_ssl_connect
    ___P((___device_tcp_client *dev),
@@ -3825,7 +3825,7 @@ ___device_tcp_client *dev;)
 {
   int err;
 
-  if (dev->ssl_try_again == SSL_TRY_AGAIN_CONNECT)
+  if (dev->ssl_status == SSL_STATUS_TRY_AGAIN_CONNECT)
     err = SSL_connect (dev->ssl);
   else
     return 0;
@@ -3837,7 +3837,7 @@ ___device_tcp_client *dev;)
     {
     case SSL_ERROR_NONE:
       /* we're done waiting */
-      dev->ssl_try_again = 0;
+      dev->ssl_status = 0;
       dev->try_connect_again = 0;
       printf ("DONE WAITING\n");
       printf ("SSL connection using %s\n", SSL_get_cipher (dev->ssl));
@@ -3881,7 +3881,7 @@ ___device_tcp_client *dev;)
 
   printf("TRY_CONNECT\n");
 
-  if (dev->ssl_try_again)
+  if (dev->ssl_status)
     {
       return try_ssl_connect (dev);
     }
@@ -3891,7 +3891,7 @@ ___device_tcp_client *dev;)
            CONNECT_IN_PROGRESS || /* establishing connection in background */
            dev->try_connect_again == 2) /* last connect attempt? */
     {
-      dev->ssl_try_again = SSL_TRY_AGAIN_CONNECT; /* we will wait for SSL now */
+      dev->ssl_status = SSL_STATUS_TRY_AGAIN_CONNECT; /* we will wait for SSL now */
       return try_ssl_connect (dev);
     }
 
@@ -3950,23 +3950,23 @@ int direction;)
 #ifdef USE_OPENSSL
 
   if (d->ssl &&
-      d->ssl_try_again != SSL_TRY_AGAIN_SHUTDOWN_DONE)
+      d->ssl_status != SSL_STATUS_SHUTDOWN_DONE)
     {
       err = SSL_shutdown (d->ssl);
       if (err > 0)
         {
-          d->ssl_try_again = SSL_TRY_AGAIN_SHUTDOWN;
+          d->ssl_status = SSL_STATUS_TRY_AGAIN_SHUTDOWN;
           return ___FIX(___NO_ERR);
         }
       else if (err == 0)
-        d->ssl_try_again = SSL_TRY_AGAIN_SHUTDOWN_DONE;
+        d->ssl_status = SSL_STATUS_SHUTDOWN_DONE;
       else
         {
           switch (SSL_get_error(d->ssl,err))
             {
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
-              d->ssl_try_again = SSL_TRY_AGAIN_SHUTDOWN;
+              d->ssl_status = SSL_STATUS_TRY_AGAIN_SHUTDOWN;
               return ___FIX(___NO_ERR);
             default:
               return ___FIX(___SSL_ERR);
@@ -4558,7 +4558,7 @@ int direction;)
 
   d->ssl = NULL;
   d->ssl_ctx = NULL;
-  d->ssl_try_again = 0;
+  d->ssl_status = 0;
 
 #endif
 
