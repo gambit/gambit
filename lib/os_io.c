@@ -4657,14 +4657,19 @@ ___device_tcp_client *dev;)
   DH *dh;
 #endif
 
+  /* TODO: Scheme parameters */
+  const char* certificate_file = "server.pem";
+  const char* private_key_file = "server.pem";
+  const char* dh_parameters_file = "dh_param_1024.pem";
+  
   /* Reference:
      https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
 
   /**********************/
   /* SSL Initialization */
-  static int SSL_initialized = 0;
+  static int ssl_initialized = 0;
 
-  if (!SSL_initialized)
+  if (!ssl_initialized)
     {      
       if (!SSL_library_init())
         {
@@ -4676,7 +4681,7 @@ ___device_tcp_client *dev;)
       /* TODO: find the right place for application cleanup */
       /* EVP_cleanup(); */
 
-      SSL_initialized = 1;
+      ssl_initialized = 1;
     }
   
   /* Check Entropy */
@@ -4702,15 +4707,15 @@ ___device_tcp_client *dev;)
   dev->ssl_ctx = SSL_CTX_new (SSLv23_client_method());
   SSL_CHECK_ERROR (dev->ssl_ctx);
 
-  /* Public certificate and private key files and verification */
-  if (0 /* certificate */)
+  /* OPTION (TODO): Public certificate and private key files and verification */
+  if (1 /* certificate */)
     {
-      if (SSL_CTX_use_certificate_file (dev->ssl_ctx, "server.pem", SSL_FILETYPE_PEM) <= 0)
+      if (SSL_CTX_use_certificate_file (dev->ssl_ctx, certificate_file, SSL_FILETYPE_PEM) <= 0)
         {
           ERR_print_errors_fp(stderr);
           return ___FIX(___SSL_ERR);
         }
-      if (SSL_CTX_use_PrivateKey_file (dev->ssl_ctx, "server.pem", SSL_FILETYPE_PEM) <= 0)
+      if (SSL_CTX_use_PrivateKey_file (dev->ssl_ctx, private_key_file, SSL_FILETYPE_PEM) <= 0)
         {
           ERR_print_errors_fp(stderr);
           return ___FIX(___SSL_ERR);
@@ -4725,18 +4730,18 @@ ___device_tcp_client *dev;)
   /* Required identifier for client certificate verification to work with sessions */
   SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, "gambit", 6));
 
-  /* Option: re-activate empty fragments (countermeasure against BEAST attack) */
-  if (/*s->ssl_empty_fragments*/ 0 ) {
+  /* OPTION (TODO): re-activate empty fragments (countermeasure against BEAST attack) */
+  if (/*s->ssl_empty_fragments*/ 1 ) {
 #ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
     ssl_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
 #else
-    ssl_options &= ~0x00000800L; /* hardcode constant */
     fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
     return ___FIX(___SSL_ERR);
 #endif
   }
 
   SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
+
   /* No info callback */
   SSL_CTX_set_info_callback (dev->ssl_ctx, NULL);
 
@@ -4744,10 +4749,63 @@ ___device_tcp_client *dev;)
   SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
   SSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv3)));
 
+  /* OPTION (TODO): Diffie-Hellman key exchange algorithm support */
+  if (1 /* */)
+    {
+#ifndef OPENSSL_NO_DH
+      if ( 0 /* OPTION (TODO): Provided DH parameters file*/ ) {
+        /* DH parameters from file */
+        FILE *dh_fp;
+        int err;
+        dh_fp = fopen (dh_parameters_file, "r");
+        printf("HERE 1\n");
+        if (!dh_fp)
+          {
+            fprintf (stderr, "** SSL: Error Reading DH parameters file\n");
+            return ___FIX(___SSL_ERR);
+          }
+        dh = PEM_read_DHparams (dh_fp, NULL, NULL, NULL);
+        printf("HERE 2\n");
+        fclose (dh_fp);
+        if (!dh)
+          {
+            fprintf (stderr, "** SSL: Reading Diffie-Hellman parameters failed\n");
+            return ___FIX(___SSL_ERR);
+          }
+        DH_check (dh, &err);
+        if (err)
+          {
+            fprintf (stderr, "** SSL: Diffie-Hellman parameters failed validation\n");
+            return ___FIX(___SSL_ERR);
+          }
+      } else {
+        /* Default DH parameters from RFC5114 */
+        dh = DH_new();
+        if (!dh)
+          {
+            fprintf (stderr, "** SSL: Error allocating Diffie-Hellman parameters\n");
+            return ___FIX(___SSL_ERR);
+          }
+        dh->p = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
+        dh->g = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
+        dh->length = 160;
+        if (!dh->p || !dh->g)
+          {
+            DH_free(dh);
+            fprintf (stderr, "** SSL: Error processing Diffie-Hellman parameters\n");
+            return ___FIX(___SSL_ERR);
+          }
+      }
+      SSL_CTX_set_tmp_dh (dev->ssl_ctx, dh);
+      SSL_CHECK_ERROR (SSL_OP_SINGLE_DH_USE & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_SINGLE_DH_USE));
+      printf("Successfull Diffie-Hellman parameters\n");
+      DH_free (dh);
+#else
+      fprintf (stderr, "** SSL: Diffie-Hellman parameters not supported by OpenSSL version\n");
+      return ___FIX(___SSL_ERR);
+#endif
+    }
 
-  SSL_CTX_set_mode (dev->ssl_ctx,
-                      SSL_MODE_ENABLE_PARTIAL_WRITE |
-                      SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
 
   /*********************************/
   /* SSL Connection Initialization */
