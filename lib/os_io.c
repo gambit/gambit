@@ -3842,6 +3842,12 @@ ___device_tcp_client *dev;)
       printf ("DONE WAITING\n");
       printf ("SSL connection using %s\n", SSL_get_cipher (dev->ssl));
       break;
+    case SSL_ERROR_WANT_CONNECT:
+      printf ("SSL_ERROR_WANT_CONNECT\n");
+      break;
+    case SSL_ERROR_WANT_ACCEPT:
+      printf ("SSL_ERROR_WANT_ACCEPT\n");
+      break;
     case SSL_ERROR_WANT_READ:
       printf ("SSL_ERROR_WANT_READ\n");
       break;
@@ -4245,7 +4251,28 @@ ___stream_index *len_done;)
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
               return ___ERR_CODE_EAGAIN;
-              printf("Unhandled SSL error in ___device_tcp_client_read_raw_virt");
+            case SSL_ERROR_WANT_ACCEPT:
+              printf("SSL_WANT_ACCEPT\n");
+              return ___ERR_CODE_EAGAIN;
+              break;
+            case SSL_ERROR_WANT_CONNECT:
+              printf("Unhandled SSL_WANT_CONNECT\n");
+              return ___ERR_CODE_EAGAIN;
+              break;
+            case SSL_ERROR_SYSCALL:
+              printf("SSL_ERROR_SYSCALL\n");
+              break;
+            case SSL_ERROR_ZERO_RETURN:
+              printf("SSL_ERROR_ZERO_RETURN\n");
+              break;
+            case SSL_ERROR_WANT_X509_LOOKUP:
+              printf("SSL_ERROR_WANT_X509_LOOKUP\n");
+              break;
+            case SSL_ERROR_SSL:
+              printf("SSL_ERROR_SSL\n");
+              break;
+            default:
+              printf("Unhandled SSL error in ___device_tcp_client_read_raw_virt\n");
               break;
             }
         }
@@ -4324,8 +4351,28 @@ ___stream_index *len_done;)
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
               return ___ERR_CODE_EAGAIN;
+            case SSL_ERROR_WANT_ACCEPT:
+              printf("SSL_WANT_ACCEPT\n");
+              return ___ERR_CODE_EAGAIN;
+              break;
+            case SSL_ERROR_WANT_CONNECT:
+              printf("Unhandled SSL_WANT_CONNECT\n");
+              return ___ERR_CODE_EAGAIN;
+              break;
+            case SSL_ERROR_SYSCALL:
+              printf("SSL_ERROR_SYSCALL\n");
+              break;
+            case SSL_ERROR_ZERO_RETURN:
+              printf("SSL_ERROR_ZERO_RETURN\n");
+              break;
+            case SSL_ERROR_WANT_X509_LOOKUP:
+              printf("SSL_ERROR_WANT_X509_LOOKUP\n");
+              break;
+            case SSL_ERROR_SSL:
+              printf("SSL_ERROR_SSL\n");
+              break;
             default:
-              printf("Unhandled SSL error in ___device_tcp_client_write_raw_virt");
+              printf("Unhandled SSL error in ___device_tcp_client_write_raw_virt\n");
               break;
             }
         }
@@ -4597,6 +4644,8 @@ int direction;)
 
 #ifdef USE_OPENSSL
 
+___HIDDEN int ssl_initialized = 0;
+
 ___HIDDEN int setup_client_ssl_connection
    ___P((___device_tcp_client *dev),
         (dev)
@@ -4614,8 +4663,7 @@ ___device_tcp_client *dev;)
 
   /**********************/
   /* SSL Initialization */
-  static int ssl_initialized = 0;
-
+  
   if (!ssl_initialized)
     {      
       if (!SSL_library_init())
@@ -4946,6 +4994,121 @@ ___HIDDEN ___device_tcp_server_vtbl ___device_tcp_server_table =
   }
 };
 
+#ifdef USE_OPENSSL
+
+___HIDDEN int setup_server_ssl_connection
+   ___P((___device_tcp_client *dev),
+        (dev)
+___device_tcp_client *dev;)
+{
+  int err;
+  long ssl_options;
+
+  /* TODO: Scheme parameters */
+  const char* certificate_file = "server.pem";
+  const char* private_key_file = "server.pem";
+
+  /* Reference:
+     https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
+
+  /**********************/
+  /* SSL Initialization */
+  
+  if (!ssl_initialized)
+    {
+      fprintf (stderr, "** Initializing OpenSSL\n");
+      if (!SSL_library_init())
+        {
+          fprintf (stderr, "** OpenSSL initialization failed!\n");
+          return ___FIX(___SSL_ERR);
+        }
+      SSL_load_error_strings();
+      OpenSSL_add_all_algorithms();
+      /* TODO: find the right place for application cleanup */
+      /* EVP_cleanup(); */
+
+      ssl_initialized = 1;
+    }
+  
+  /* Check Entropy */
+  if (!RAND_status())
+    {
+      fprintf(stderr, "** SSL: not enough entropy in the pool!\n");
+      return ___FIX(___SSL_ERR);
+    }
+
+  /******************************/
+  /* SSL Context Initialization */
+
+/* SSL protocol bugs: workaround options
+   Ref: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html */
+#ifndef SSL_OP_NO_COMPRESSION
+#define SSL_OP_NO_COMPRESSION 0
+#endif
+  ssl_options = 
+    SSL_OP_ALL |
+    SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION |
+    SSL_OP_NO_COMPRESSION;
+    
+  dev->ssl_ctx = SSL_CTX_new (SSLv23_server_method());
+  SSL_CHECK_ERROR (dev->ssl_ctx);
+
+  /* OPTION (TODO): Public certificate and private key files and verification */
+  if (1 /* certificate */)
+    {
+      if (SSL_CTX_use_certificate_file (dev->ssl_ctx, certificate_file, SSL_FILETYPE_PEM) <= 0)
+        {
+          ERR_print_errors_fp(stderr);
+          return ___FIX(___SSL_ERR);
+        }
+      if (SSL_CTX_use_PrivateKey_file (dev->ssl_ctx, private_key_file, SSL_FILETYPE_PEM) <= 0)
+        {
+          ERR_print_errors_fp(stderr);
+          return ___FIX(___SSL_ERR);
+        }
+      if (SSL_CTX_check_private_key (dev->ssl_ctx) <= 0)
+        {
+          fprintf (stderr,"** SSL: Private key does not match the certificate public key\n");
+          return ___FIX(___SSL_ERR);
+        }
+    }
+
+  /* Required identifier for client certificate verification to work with sessions */
+  SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, "gambit", 6));
+
+  /* OPTION (TODO): re-activate empty fragments (countermeasure against BEAST attack) */
+  if (1 /*s->ssl_empty_fragments*/ ) {
+#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
+    ssl_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
+#else
+    fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
+    return ___FIX(___SSL_ERR);
+#endif
+  }
+
+  SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
+
+  /* No info callback */
+  SSL_CTX_set_info_callback (dev->ssl_ctx, NULL);
+
+  /* Force version >= TLS 1.0 */
+  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
+  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv3)));
+
+  SSL_CTX_set_mode (dev->ssl_ctx,
+                    SSL_MODE_ENABLE_PARTIAL_WRITE |
+                    SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+
+  /*********************************/
+  /* SSL Connection Initialization */
+
+  dev->ssl  = SSL_new (dev->ssl_ctx);
+  SSL_set_fd (dev->ssl, dev->s);
+  
+  return 0;
+}
+
+#endif
 
 ___SCMOBJ ___device_tcp_server_setup
    ___P((___device_tcp_server **dev,
@@ -4998,7 +5161,7 @@ int options;)
   d->base.close_direction = 0; /* prevent closing on errors */
   d->base.read_stage = ___STAGE_OPEN;
   d->base.write_stage = ___STAGE_CLOSED;
-
+  
 #ifdef USE_WIN32
 
   d->io_event =
@@ -5054,7 +5217,7 @@ ___device_tcp_client **client;)
                                      ___CAST(struct sockaddr*,&addr),
                                      &addrlen)))
     return ERR_CODE_FROM_SOCKET_CALL;
-
+  
   if ((e = ___device_tcp_client_setup_from_socket
              (client,
               dgroup,
@@ -5069,8 +5232,20 @@ ___device_tcp_client **client;)
       return e;
     }
 
-  device_transfer_close_responsibility (___CAST(___device*,*client));
+#ifdef USE_OPENSSL
 
+  if (1 /* OPTION: if use SSL */)
+    {
+      setup_server_ssl_connection (*client);
+      /* Non-blocking. We don't need to loop over its status, since OpenSSL
+         handles that automatically in SSL_read/write, executing handshake */
+      SSL_accept ((*client)->ssl);
+    }
+
+#endif
+
+  device_transfer_close_responsibility (___CAST(___device*,*client));
+  
   return ___FIX(___NO_ERR);
 }
 
