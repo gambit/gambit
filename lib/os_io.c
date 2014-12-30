@@ -4966,16 +4966,19 @@ ___device_tcp_client *dev;)
   EC_KEY *ecdh;
   int nid;
   
-  /* TODO: Scheme parameters */
+  /* OPTION: Scheme parameters */
   const char* dh_parameters_file = "dh_param_1024.pem";
   const char* elliptic_curve_name = "secp521r1";
 
 #endif
-
   
-  /* TODO: Scheme parameters */
+  /* OPTION: Scheme parameters */
   const char* certificate_file = "server.pem";
   const char* private_key_file = "server.pem";
+  const char* client_ca_file = "server.pem";
+
+  STACK_OF(X509_NAME) *client_ca_list;
+
 
   /* Reference:
      https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
@@ -5018,8 +5021,6 @@ ___device_tcp_client *dev;)
     SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION |
     /* Fix against CRIME attack */
     SSL_OP_NO_COMPRESSION;
-
-  printf ("No compressoin: %d\n", SSL_OP_NO_COMPRESSION);
     
   dev->ssl_ctx = SSL_CTX_new (SSLv23_server_method());
   SSL_CHECK_ERROR (dev->ssl_ctx);
@@ -5046,7 +5047,7 @@ ___device_tcp_client *dev;)
   SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
 
   /* No info callback */
-  SSL_CTX_set_info_callback (dev->ssl_ctx, NULL);
+  //SSL_CTX_set_info_callback (dev->ssl_ctx, server_set_info_callback);
 
   /* Force version >= TLS 1.0 */
   SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
@@ -5150,6 +5151,24 @@ ___device_tcp_client *dev;)
       return ___FIX(___SSL_ERR);
         
 #endif 
+    }
+
+  /* OPTION: Authenticate client. This requires a PEM file with accepted CAs */
+  if (1 /* Verify client */)
+    {
+      client_ca_list = SSL_load_client_CA_file (client_ca_file);
+      if (client_ca_list)
+        {
+          SSL_CTX_set_client_CA_list(dev->ssl_ctx, client_ca_list);
+          SSL_CTX_set_verify (dev->ssl_ctx,
+                              SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                              NULL);
+        }
+      else
+        {
+          fprintf (stderr, "** SSL: Error loading CAs file\n");
+          return ___FIX(___SSL_ERR);
+        }
     }
 
   /* OPTION (TODO): Public certificate and private key files and verification */
