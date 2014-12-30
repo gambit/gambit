@@ -3807,70 +3807,9 @@ typedef struct ___device_tcp_client_struct
 
     SSL_CTX *ssl_ctx;
     SSL *ssl;
-    int ssl_status;
 
 #endif
   } ___device_tcp_client;
-
-#ifdef USE_OPENSSL
-
-#define SSL_STATUS_TRY_AGAIN_CONNECT 2
-#define SSL_STATUS_TRY_AGAIN_SHUTDOWN 3
-#define SSL_STATUS_SHUTDOWN_DONE 4
-
-___HIDDEN int try_ssl_connect
-   ___P((___device_tcp_client *dev),
-        (dev)
-___device_tcp_client *dev;)
-{
-  int err;
-
-  if (dev->ssl_status == SSL_STATUS_TRY_AGAIN_CONNECT)
-    err = SSL_connect (dev->ssl);
-  else
-    return 0;
-  
-  if (!err)
-    return 0;
-  
-  switch (SSL_get_error(dev->ssl, err))
-    {
-    case SSL_ERROR_NONE:
-      /* we're done waiting */
-      dev->ssl_status = 0;
-      dev->try_connect_again = 0;
-      printf ("DONE WAITING\n");
-      printf ("SSL connection using %s\n", SSL_get_cipher (dev->ssl));
-      break;
-    case SSL_ERROR_WANT_CONNECT:
-      printf ("SSL_ERROR_WANT_CONNECT\n");
-      break;
-    case SSL_ERROR_WANT_ACCEPT:
-      printf ("SSL_ERROR_WANT_ACCEPT\n");
-      break;
-    case SSL_ERROR_WANT_READ:
-      printf ("SSL_ERROR_WANT_READ\n");
-      break;
-    case SSL_ERROR_WANT_WRITE:
-      printf ("SSL_ERROR_WANT_WRITE\n");
-      break;
-    case SSL_ERROR_ZERO_RETURN:
-      printf ("SSL_ERROR_ZERO_RETURN");
-      return ___FIX(___SSL_ERR);
-    case SSL_ERROR_SYSCALL:
-    case SSL_ERROR_SSL:
-      printf ("OpenSSL error in try_ssl_connect\n");
-      ERR_print_errors_fp(stderr);
-      return ___FIX(___SSL_ERR);
-    default:
-      printf ("Unhandled SSL error\n");
-      ERR_print_errors_fp(stderr);
-      return ___FIX(___SSL_ERR);
-    }
-  return 0;
-}
-
-#endif
 
 typedef struct ___device_tcp_client_vtbl_struct
   {
@@ -3883,26 +3822,6 @@ ___HIDDEN int try_connect
         (dev)
 ___device_tcp_client *dev;)
 {
-#ifdef USE_OPENSSL
-
-  printf("TRY_CONNECT\n");
-
-  if (dev->ssl_status)
-    {
-      return try_ssl_connect (dev);
-    }
-  else if (!SOCKET_CALL_ERROR(connect (dev->s,
-                                       &dev->server_addr,
-                                       dev->server_addrlen)) ||
-           CONNECT_IN_PROGRESS || /* establishing connection in background */
-           dev->try_connect_again == 2) /* last connect attempt? */
-    {
-      dev->ssl_status = SSL_STATUS_TRY_AGAIN_CONNECT; /* we will wait for SSL now */
-      return try_ssl_connect (dev);
-    }
-
-#else
-
   if (!SOCKET_CALL_ERROR(connect (dev->s,
                                   &dev->server_addr,
                                   dev->server_addrlen)) ||
@@ -3910,10 +3829,16 @@ ___device_tcp_client *dev;)
       dev->try_connect_again == 2) /* last connect attempt? */
     {
       dev->try_connect_again = 0; /* we're done waiting */
+        
+#ifdef USE_OPENSSL
+
+      if (1 /* if SSL connection */)
+        SSL_connect (dev->ssl);
+  
+#endif
+
       return 0;
     }
-
-#endif
 
   if (CONNECT_WOULD_BLOCK) /* connect can't be performed now */
     return 0;
@@ -3955,28 +3880,30 @@ int direction;)
 
 #ifdef USE_OPENSSL
 
-  if (d->ssl &&
-      d->ssl_status != SSL_STATUS_SHUTDOWN_DONE)
+  if (d->ssl && d->ssl_ctx)
     {
       err = SSL_shutdown (d->ssl);
       if (err > 0)
-        {
-          d->ssl_status = SSL_STATUS_TRY_AGAIN_SHUTDOWN;
-          return ___FIX(___NO_ERR);
-        }
-      else if (err == 0)
-        d->ssl_status = SSL_STATUS_SHUTDOWN_DONE;
-      else
+        return ___FIX(___NO_ERR);
+      else if (err < 0)
         {
           switch (SSL_get_error(d->ssl,err))
             {
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
-              d->ssl_status = SSL_STATUS_TRY_AGAIN_SHUTDOWN;
               return ___FIX(___NO_ERR);
-            default:
-              return ___FIX(___SSL_ERR);
+              /* discard any error in SSL shutdown */
             }
+        }
+      if (d->ssl)
+        {
+          SSL_free (d->ssl);
+          d->ssl = NULL;
+        }
+      if (d->ssl_ctx)
+        {
+          SSL_CTX_free (d->ssl_ctx);
+          d->ssl_ctx = NULL;
         }
     }
 
@@ -4252,27 +4179,17 @@ ___stream_index *len_done;)
             case SSL_ERROR_WANT_WRITE:
               return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_ACCEPT:
-              printf("SSL_WANT_ACCEPT\n");
-              return ___ERR_CODE_EAGAIN;
-              break;
             case SSL_ERROR_WANT_CONNECT:
-              printf("Unhandled SSL_WANT_CONNECT\n");
-              return ___ERR_CODE_EAGAIN;
-              break;
-            case SSL_ERROR_SYSCALL:
-              printf("SSL_ERROR_SYSCALL\n");
-              break;
-            case SSL_ERROR_ZERO_RETURN:
-              printf("SSL_ERROR_ZERO_RETURN\n");
-              break;
             case SSL_ERROR_WANT_X509_LOOKUP:
-              printf("SSL_ERROR_WANT_X509_LOOKUP\n");
-              break;
+              return ___ERR_CODE_EAGAIN;
+            case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              printf("SSL_ERROR_SSL\n");
+              ERR_print_errors_fp (stderr);
+              return ___FIX(___SSL_ERR);
+            case SSL_ERROR_ZERO_RETURN:
               break;
             default:
-              printf("Unhandled SSL error in ___device_tcp_client_read_raw_virt\n");
+              fprintf (stderr, "** SSL: Unhandled SSL error in ___device_tcp_client_read_raw_virt\n");
               break;
             }
         }
@@ -4352,27 +4269,17 @@ ___stream_index *len_done;)
             case SSL_ERROR_WANT_WRITE:
               return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_ACCEPT:
-              printf("SSL_WANT_ACCEPT\n");
-              return ___ERR_CODE_EAGAIN;
-              break;
             case SSL_ERROR_WANT_CONNECT:
-              printf("Unhandled SSL_WANT_CONNECT\n");
-              return ___ERR_CODE_EAGAIN;
-              break;
-            case SSL_ERROR_SYSCALL:
-              printf("SSL_ERROR_SYSCALL\n");
-              break;
-            case SSL_ERROR_ZERO_RETURN:
-              printf("SSL_ERROR_ZERO_RETURN\n");
-              break;
             case SSL_ERROR_WANT_X509_LOOKUP:
-              printf("SSL_ERROR_WANT_X509_LOOKUP\n");
-              break;
+              return ___ERR_CODE_EAGAIN;
+            case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              printf("SSL_ERROR_SSL\n");
+              ERR_print_errors_fp (stderr);
+              return ___FIX(___SSL_ERR);
+            case SSL_ERROR_ZERO_RETURN:
               break;
             default:
-              printf("Unhandled SSL error in ___device_tcp_client_write_raw_virt\n");
+              fprintf (stderr, "** SSL: Unhandled SSL error in ___device_tcp_client_write_raw_virt\n");
               break;
             }
         }
@@ -4605,8 +4512,7 @@ int direction;)
 
   d->ssl = NULL;
   d->ssl_ctx = NULL;
-  d->ssl_status = 0;
-
+  
 #endif
 
 #ifdef USE_POSIX
@@ -4644,7 +4550,13 @@ int direction;)
 
 #ifdef USE_OPENSSL
 
+/* This option was introduced in OpenSSL v0.9.9 */
+#if OPENSSL_VERSION_NUMBER >= 0x00909000L && !defined SSL_OP_NO_COMPRESSION
+#define SSL_OP_NO_COMPRESSION 0
+#endif
+
 ___HIDDEN int ssl_initialized = 0;
+
 
 ___HIDDEN int setup_client_ssl_connection
    ___P((___device_tcp_client *dev),
@@ -4682,7 +4594,7 @@ ___device_tcp_client *dev;)
   /* Check Entropy */
   if (!RAND_status())
     {
-      fprintf(stderr, "** SSL: not enough entropy in the pool!\n");
+      fprintf(stderr, "** SSL: not enough entropy in the pool\n");
       return ___FIX(___SSL_ERR);
     }
 
@@ -4691,9 +4603,7 @@ ___device_tcp_client *dev;)
 
 /* SSL protocol bugs: workaround options
    Ref: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html */
-#ifndef SSL_OP_NO_COMPRESSION
-#define SSL_OP_NO_COMPRESSION 0
-#endif
+
   ssl_options =
     SSL_OP_ALL |
     SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION |
@@ -4702,7 +4612,33 @@ ___device_tcp_client *dev;)
   dev->ssl_ctx = SSL_CTX_new (SSLv23_client_method());
   SSL_CHECK_ERROR (dev->ssl_ctx);
 
-  /* OPTION (TODO): Public certificate and private key files and verification */
+  /* Required identifier for client certificate verification to work with sessions */
+  /* TODO: should this ID be unique per Gambit instance? */
+  SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, "gambit", 6));
+
+  /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
+     The countermeasure breaks some SSL implementations, so it is deactivated by
+     default by SSL_OP_ALL */
+  if (1 /* Use empty fragments */) {
+#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
+    
+    ssl_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
+    
+#else
+    
+    fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
+    return ___FIX(___SSL_ERR);
+    
+#endif
+  }
+
+  SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
+
+  /* Force version >= TLS 1.0 */
+  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
+  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv3)));
+
+  /* OPTION: Public certificate and private key files and verification */
   if (1 /* certificate */)
     {
       if (SSL_CTX_use_certificate_file (dev->ssl_ctx, certificate_file, SSL_FILETYPE_PEM) <= 0)
@@ -4721,29 +4657,7 @@ ___device_tcp_client *dev;)
           return ___FIX(___SSL_ERR);
         }
     }
-
-  /* Required identifier for client certificate verification to work with sessions */
-  SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, "gambit", 6));
-
-  /* OPTION (TODO): re-activate empty fragments (countermeasure against BEAST attack) */
-  if (/*s->ssl_empty_fragments*/ 1 ) {
-#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
-    ssl_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
-#else
-    fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
-    return ___FIX(___SSL_ERR);
-#endif
-  }
-
-  SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
-
-  /* No info callback */
-  SSL_CTX_set_info_callback (dev->ssl_ctx, NULL);
-
-  /* Force version >= TLS 1.0 */
-  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
-  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv3)));
-
+  
   SSL_CTX_set_mode (dev->ssl_ctx,
                     SSL_MODE_ENABLE_PARTIAL_WRITE |
                     SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
@@ -5004,6 +4918,61 @@ ___device_tcp_client *dev;)
   int err;
   long ssl_options;
 
+#ifndef OPENSSL_NO_DH
+
+  DH *dh;
+
+  /* 1024-bit MODP Group with 160-bit prime order subgroup (RFC5114)
+   * -----BEGIN DH PARAMETERS-----
+   * MIIBDAKBgQCxC4+WoIDgHd6S3l6uXVTsUsmfvPsGo8aaap3KUtI7YWBz4oZ1oj0Y
+   * mDjvHi7mUsAT7LSuqQYRIySXXDzUm4O/rMvdfZDEvXCYSI6cIZpzck7/1vrlZEc4
+   * +qMaT/VbzMChUa9fDci0vUW/N982XBpl5oz9p21NpwjfH7K8LkpDcQKBgQCk0cvV
+   * w/00EmdlpELvuZkF+BBN0lisUH/WQGz/FCZtMSZv6h5cQVZLd35pD1UE8hMWAhe0
+   * sBuIal6RVH+eJ0n01/vX07mpLuGQnQ0iY/gKdqaiTAh6CR9THb8KAWm2oorWYqTR
+   * jnOvoy13nVkY0IvIhY9Nzvl8KiSFXm7rIrOy5QICAKA=
+   * -----END DH PARAMETERS-----
+   */
+  static const unsigned char dh1024_p[]={
+    0xB1,0x0B,0x8F,0x96,0xA0,0x80,0xE0,0x1D,0xDE,0x92,0xDE,0x5E,
+    0xAE,0x5D,0x54,0xEC,0x52,0xC9,0x9F,0xBC,0xFB,0x06,0xA3,0xC6,
+    0x9A,0x6A,0x9D,0xCA,0x52,0xD2,0x3B,0x61,0x60,0x73,0xE2,0x86,
+    0x75,0xA2,0x3D,0x18,0x98,0x38,0xEF,0x1E,0x2E,0xE6,0x52,0xC0,
+    0x13,0xEC,0xB4,0xAE,0xA9,0x06,0x11,0x23,0x24,0x97,0x5C,0x3C,
+    0xD4,0x9B,0x83,0xBF,0xAC,0xCB,0xDD,0x7D,0x90,0xC4,0xBD,0x70,
+    0x98,0x48,0x8E,0x9C,0x21,0x9A,0x73,0x72,0x4E,0xFF,0xD6,0xFA,
+    0xE5,0x64,0x47,0x38,0xFA,0xA3,0x1A,0x4F,0xF5,0x5B,0xCC,0xC0,
+    0xA1,0x51,0xAF,0x5F,0x0D,0xC8,0xB4,0xBD,0x45,0xBF,0x37,0xDF,
+    0x36,0x5C,0x1A,0x65,0xE6,0x8C,0xFD,0xA7,0x6D,0x4D,0xA7,0x08,
+    0xDF,0x1F,0xB2,0xBC,0x2E,0x4A,0x43,0x71,
+  };
+  static const unsigned char dh1024_g[]={
+    0xA4,0xD1,0xCB,0xD5,0xC3,0xFD,0x34,0x12,0x67,0x65,0xA4,0x42,
+    0xEF,0xB9,0x99,0x05,0xF8,0x10,0x4D,0xD2,0x58,0xAC,0x50,0x7F,
+    0xD6,0x40,0x6C,0xFF,0x14,0x26,0x6D,0x31,0x26,0x6F,0xEA,0x1E,
+    0x5C,0x41,0x56,0x4B,0x77,0x7E,0x69,0x0F,0x55,0x04,0xF2,0x13,
+    0x16,0x02,0x17,0xB4,0xB0,0x1B,0x88,0x6A,0x5E,0x91,0x54,0x7F,
+    0x9E,0x27,0x49,0xF4,0xD7,0xFB,0xD7,0xD3,0xB9,0xA9,0x2E,0xE1,
+    0x90,0x9D,0x0D,0x22,0x63,0xF8,0x0A,0x76,0xA6,0xA2,0x4C,0x08,
+    0x7A,0x09,0x1F,0x53,0x1D,0xBF,0x0A,0x01,0x69,0xB6,0xA2,0x8A,
+    0xD6,0x62,0xA4,0xD1,0x8E,0x73,0xAF,0xA3,0x2D,0x77,0x9D,0x59,
+    0x18,0xD0,0x8B,0xC8,0x85,0x8F,0x4D,0xCE,0xF9,0x7C,0x2A,0x24,
+    0x85,0x5E,0x6E,0xEB,0x22,0xB3,0xB2,0xE5,
+  };
+
+#endif
+  
+#if OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined OPENSSL_NO_ECDH
+  
+  EC_KEY *ecdh;
+  int nid;
+  
+  /* TODO: Scheme parameters */
+  const char* dh_parameters_file = "dh_param_1024.pem";
+  const char* elliptic_curve_name = "secp521r1";
+
+#endif
+
+  
   /* TODO: Scheme parameters */
   const char* certificate_file = "server.pem";
   const char* private_key_file = "server.pem";
@@ -5042,16 +5011,146 @@ ___device_tcp_client *dev;)
 
 /* SSL protocol bugs: workaround options
    Ref: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html */
-#ifndef SSL_OP_NO_COMPRESSION
-#define SSL_OP_NO_COMPRESSION 0
-#endif
+
   ssl_options = 
     SSL_OP_ALL |
+    /* Fix against CVE-2009-3555 (part of it) */
     SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION |
+    /* Fix against CRIME attack */
     SSL_OP_NO_COMPRESSION;
+
+  printf ("No compressoin: %d\n", SSL_OP_NO_COMPRESSION);
     
   dev->ssl_ctx = SSL_CTX_new (SSLv23_server_method());
   SSL_CHECK_ERROR (dev->ssl_ctx);
+
+  /* Required identifier for client certificate verification to work with sessions */
+  SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, "gambit", 6));
+
+  /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
+     The countermeasure breaks some SSL implementations, so it is deactivated by
+     default by SSL_OP_ALL */
+  if (1 /* Use empty fragments */) {
+#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
+    
+    ssl_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
+    
+#else
+    
+    fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
+    return ___FIX(___SSL_ERR);
+    
+#endif
+  }
+  
+  SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
+
+  /* No info callback */
+  SSL_CTX_set_info_callback (dev->ssl_ctx, NULL);
+
+  /* Force version >= TLS 1.0 */
+  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
+  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv3)));
+
+  /* OPTION (TODO): Diffie-Hellman key exchange algorithm support */
+  if (1 /* */)
+    {
+#ifndef OPENSSL_NO_DH
+
+      if ( 0 /* OPTION (TODO): Provided DH parameters file*/ )
+        {
+        /* DH parameters from file */
+        FILE *dh_fp;
+        int err;
+        dh_fp = fopen (dh_parameters_file, "r");
+        printf("HERE 1\n");
+        if (!dh_fp)
+          {
+            fprintf (stderr, "** SSL: Error Reading DH parameters file\n");
+            return ___FIX(___SSL_ERR);
+          }
+        dh = PEM_read_DHparams (dh_fp, NULL, NULL, NULL);
+        printf("HERE 2\n");
+        fclose (dh_fp);
+        if (!dh)
+          {
+            fprintf (stderr, "** SSL: Reading Diffie-Hellman parameters failed\n");
+            return ___FIX(___SSL_ERR);
+          }
+        DH_check (dh, &err);
+        if (err)
+          {
+            fprintf (stderr, "** SSL: Diffie-Hellman parameters failed validation\n");
+            return ___FIX(___SSL_ERR);
+          }
+        }
+      else
+        {
+          /* Default DH parameters from RFC5114 */
+          dh = DH_new();
+          if (!dh)
+            {
+              fprintf (stderr, "** SSL: Error allocating Diffie-Hellman parameters\n");
+              return ___FIX(___SSL_ERR);
+            }
+          dh->p = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
+          dh->g = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
+          dh->length = 160;
+          if (!dh->p || !dh->g)
+            {
+              DH_free(dh);
+              fprintf (stderr, "** SSL: Error processing Diffie-Hellman parameters\n");
+              return ___FIX(___SSL_ERR);
+            }
+        }
+      SSL_CTX_set_tmp_dh (dev->ssl_ctx, dh);
+      SSL_CHECK_ERROR (SSL_OP_SINGLE_DH_USE & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_SINGLE_DH_USE));
+      DH_free (dh);
+#else
+
+      fprintf (stderr, "** SSL: Diffie-Hellman parameters not supported by OpenSSL version\n");
+      return ___FIX(___SSL_ERR);
+
+#endif
+    }
+
+  /* OPTION: Support for Elliptic-Curve Diffie-Hellman key exchange */
+  if ( 1 /* Use Elliptic Curves */ )
+    {
+#if OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined OPENSSL_NO_ECDH
+    
+      
+      if ( 1 /* OPTION: Pick elliptic curve */)
+        {
+            /* OpenSSL only supports the "named curves" from RFC 4492, section 5.1.1. */
+          nid = OBJ_sn2nid (elliptic_curve_name);
+          if (!nid)
+            {
+              fprintf (stderr, "** SSL: Unknown elliptic curve name\n");
+              return ___FIX(___SSL_ERR);
+            }
+        }
+      else
+        {
+          nid = OBJ_sn2nid("prime256v1");
+        }
+      ecdh = EC_KEY_new_by_curve_name(nid);
+      if (!ecdh)
+        {
+          fprintf (stderr, "** SSL: Unable to create curve\n");
+          return ___FIX(___SSL_ERR);
+        }
+      SSL_CTX_set_tmp_ecdh (dev->ssl_ctx,ecdh);
+      SSL_CHECK_ERROR (SSL_OP_SINGLE_ECDH_USE & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_SINGLE_ECDH_USE));
+      EC_KEY_free (ecdh); 
+
+#else
+        
+      fprintf (stderr, "** SSL: Diffie-Hellman parameters not supported by OpenSSL version\n");
+      return ___FIX(___SSL_ERR);
+        
+#endif 
+    }
 
   /* OPTION (TODO): Public certificate and private key files and verification */
   if (1 /* certificate */)
@@ -5072,28 +5171,6 @@ ___device_tcp_client *dev;)
           return ___FIX(___SSL_ERR);
         }
     }
-
-  /* Required identifier for client certificate verification to work with sessions */
-  SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, "gambit", 6));
-
-  /* OPTION (TODO): re-activate empty fragments (countermeasure against BEAST attack) */
-  if (1 /*s->ssl_empty_fragments*/ ) {
-#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
-    ssl_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
-#else
-    fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
-    return ___FIX(___SSL_ERR);
-#endif
-  }
-
-  SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
-
-  /* No info callback */
-  SSL_CTX_set_info_callback (dev->ssl_ctx, NULL);
-
-  /* Force version >= TLS 1.0 */
-  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
-  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv3)));
 
   SSL_CTX_set_mode (dev->ssl_ctx,
                     SSL_MODE_ENABLE_PARTIAL_WRITE |
