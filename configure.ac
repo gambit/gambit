@@ -733,8 +733,8 @@ if test "$ENABLE_OPENSSL" = yes; then
   AC_DEFINE([USE_OPENSSL],[],[Enable SSL support using OpenSSL])
   LIBS="$LIBS $OpenSSL_LIBS"
   case "$target_os" in
-    darwin*) # avoid the default C preprocessor which is setup for Objective-C
-             CFLAGS="$CFLAGS -Wno-deprecated-declarations"      
+    darwin*) # OS X ships a very old version and considers OpenSSL deprecated
+             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
              ;;
   esac
 fi
