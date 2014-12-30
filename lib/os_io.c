@@ -5192,8 +5192,12 @@ ___device_tcp_client *dev;)
     }
 
   SSL_CTX_set_mode (dev->ssl_ctx,
-                    SSL_MODE_ENABLE_PARTIAL_WRITE |
-                    SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+                    SSL_MODE_ENABLE_PARTIAL_WRITE
+                    | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER
+#ifdef SSL_MODE_RELEASE_BUFFERS
+                    | SSL_MODE_RELEASE_BUFFERS
+#endif
+                    );
 
   /*********************************/
   /* SSL Connection Initialization */
