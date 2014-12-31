@@ -3808,6 +3808,12 @@ typedef struct ___device_tcp_client_struct
     SSL_CTX *ssl_ctx;
     SSL *ssl;
 
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+    /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+    int renegotiations = 0;
+
+#endif
 #endif
   } ___device_tcp_client;
 
@@ -4167,6 +4173,16 @@ ___stream_index *len_done;)
 
 #ifdef USE_OPENSSL
 
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+  /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+  if (d->renegotiations > 0)
+    {
+      return ___FIX(___SSL_ERR);
+    }
+
+#endif
+  
   if ( d->ssl && (n = SSL_read (d->ssl, ___CAST(char*,buf), len)))
     {
       if (n > 0)
@@ -4257,6 +4273,16 @@ ___stream_index *len_done;)
 
 #ifdef USE_OPENSSL
 
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+  /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+  if (d->renegotiations > 0)
+    {
+      return ___FIX(___SSL_ERR);
+    }
+
+#endif
+  
   if ( d->ssl && (n = SSL_write (d->ssl, ___CAST(char*,buf), len)))
     {
       if (n > 0)
@@ -4512,7 +4538,13 @@ int direction;)
 
   d->ssl = NULL;
   d->ssl_ctx = NULL;
-  
+
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+  /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+  d->renegotiations = 0;
+
+#endif  
 #endif
 
 #ifdef USE_POSIX
@@ -4910,6 +4942,26 @@ ___HIDDEN ___device_tcp_server_vtbl ___device_tcp_server_table =
 
 #ifdef USE_OPENSSL
 
+/* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+___HIDDEN void server_ssl_info_callback
+   ___P((const SSL *ssl, int where, int ret),
+        (ssl, where, ret)
+const SSL *ssl;
+int where;
+int ret;)
+{
+  
+  if (0 != (where & SSL_CB_HANDSHAKE_START))
+    {
+      ___device_tcp_client *dev = SSL_get_app_data(ssl);
+      ++dev->renegotiations;
+    }
+}
+
+#endif
+
 ___HIDDEN int setup_server_ssl_connection
    ___P((___device_tcp_client *dev),
         (dev)
@@ -5016,11 +5068,11 @@ ___device_tcp_client *dev;)
    Ref: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html */
 
   ssl_options = 
-    SSL_OP_ALL |
-    /* Fix against CVE-2009-3555 (part of it) */
-    SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION |
+    SSL_OP_ALL
+    /* Fix for http://www.cvedetails.com/cve/CVE-2009-3555/ (use in all versions) */
+    | SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION
     /* Fix against CRIME attack */
-    SSL_OP_NO_COMPRESSION;
+    | SSL_OP_NO_COMPRESSION;
     
   dev->ssl_ctx = SSL_CTX_new (SSLv23_server_method());
   SSL_CHECK_ERROR (dev->ssl_ctx);
@@ -5045,9 +5097,6 @@ ___device_tcp_client *dev;)
   }
   
   SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
-
-  /* No info callback */
-  //SSL_CTX_set_info_callback (dev->ssl_ctx, server_set_info_callback);
 
   /* Force version >= TLS 1.0 */
   SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
@@ -5204,7 +5253,16 @@ ___device_tcp_client *dev;)
 
   dev->ssl  = SSL_new (dev->ssl_ctx);
   SSL_set_fd (dev->ssl, dev->s);
-  
+
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+  /* Link back device state to SSL state (used in info callback)
+     Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+  SSL_set_app_data (dev->ssl, dev);
+  SSL_CTX_set_info_callback (dev->ssl_ctx, server_ssl_info_callback);
+
+#endif
+
   return 0;
 }
 
