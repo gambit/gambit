@@ -1,0 +1,27 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define f (##not 123))
+(define t (##not f))
+(define s "")
+(define x 1.5)
+(define y (##u8vector 111 222))
+(define z (##list 1 2 3))
+
+(define (test x)
+  (println (##u8vector? x))
+  (println (if (##u8vector? x) 11 22)))
+
+(test 0)
+(test 1)
+(test f)
+(test t)
+(test s)
+(test x)
+(test y)
+(test z)
+(test (##cdr z))
+
+(println (##u8vector-ref y 0))
+(println (##u8vector-ref y 1))
+(##u8vector-set! y 1 88)
+(println (##u8vector-ref y 1))
