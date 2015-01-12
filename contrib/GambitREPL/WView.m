@@ -47,6 +47,7 @@
 
 @synthesize kov, kbdShouldShrinkView, kbdEnabled;
 
+
 - (instancetype) initWithFrame:(CGRect)frame {
   self = [super initWithFrame:frame];
   if (self) {
@@ -90,6 +91,13 @@
 
 #endif
 }
+
+
+#if 0
+- (BOOL)canBecomeFirstResponder {
+  return NO;
+}
+#endif
 
 
 @end

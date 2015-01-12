@@ -25,7 +25,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>GambitREPL</string>
 	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.3</string>
+	<string>7.0</string>
 	<key>CFBundleName</key>
 	<string>${PRODUCT_NAME}</string>
 	<key>CFBundlePackageType</key>

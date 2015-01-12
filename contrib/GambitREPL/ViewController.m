@@ -4,7 +4,7 @@
 //  Created by Marc Feeley on 11-03-06.
 //  Copyright 2011-2012 UniversitÃ© de MontrÃ©al. All rights reserved.
 //
-#define DEBUG_UI
+#define DEBUG_UI_not
 
 #import <UIKit/UIKit.h>
 #import "ViewController.h"
@@ -21,7 +21,7 @@ ViewController *theViewController = nil;
 
 @implementation ViewController
 
-@synthesize segmCtrl, currentView, haveSoftKeyboard, inShowView, inputTextView, inputTextViewEnable, cancelButton, navToolbar, timer, queuedActions, locationManager;
+@synthesize segmCtrl, currentView, haveExtKeyboard, haveVisibleSoftKeyboard, inShowView, inCheckExtKeyboard, inputTextView, inputTextViewEnable, cancelButton, navToolbar, timer, queuedActions, locationManager, metadataQuery;
 
 //-----------------------------------------------------------------------------
 
@@ -133,7 +133,9 @@ void gambit_cleanup()
   //[self xtrace];//trace all methods
 
   currentView = -1;
-  haveSoftKeyboard = NO;
+  haveExtKeyboard = NO;
+  haveVisibleSoftKeyboard = NO;
+  inCheckExtKeyboard = NO;
   inShowView = NO;
 
   CGRect screenRect = [[UIScreen mainScreen] bounds];
@@ -176,6 +178,7 @@ void gambit_cleanup()
 
     webView.backgroundColor = [UIColor clearColor];
     webView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
+    webView.dataDetectorTypes = UIDataDetectorTypeNone;
     webView.scalesPageToFit = NO;
     webView.scrollView.bounces = NO;
     webView.keyboardDisplayRequiresUserAction = NO;
@@ -260,7 +263,17 @@ void gambit_cleanup()
            name:UIKeyboardWillHideNotification
          object:nil];
 
+  timer = nil;
+
+  queuedActions = [[NSMutableArray alloc] init];
+
+  locationManager = nil;
+
+  gambit_setup();
+
 #ifdef USE_ICLOUD
+
+  self.metadataQuery = nil;
 
   [[NSNotificationCenter defaultCenter]
     addObserver:self
@@ -269,14 +282,6 @@ void gambit_cleanup()
          object:nil];
 
 #endif
-
-  timer = nil;
-
-  queuedActions = [[NSMutableArray alloc] init];
-
-  locationManager = nil;
-
-  gambit_setup();
 
   [self heartbeat_tick];
 }
@@ -366,6 +371,10 @@ void gambit_cleanup()
 
 - (BOOL)textViewShouldBeginEditing:(UITextView *)aTextView {
 
+#ifdef DEBUG_UI
+  NSLog(@"textViewShouldBeginEditing");
+#endif
+
   return YES;
 }
 
@@ -375,7 +384,7 @@ void gambit_cleanup()
 #if 1
 
 #ifdef DEBUG_UI
-  NSLog(@"[aTextView resignFirstResponder];");
+  NSLog(@"textViewShouldEndEditing");
 #endif
 
   [aTextView resignFirstResponder];
@@ -389,10 +398,66 @@ void gambit_cleanup()
 }
 
 
+void checkExtKeyboard_tail(UIView *v, BOOL become_first_responder) {
+
+  ViewController *vc = theViewController;
+
+  [v resignFirstResponder];
+
+  vc.inCheckExtKeyboard = NO;
+
+  if (become_first_responder) {
+    [v becomeFirstResponder];
+  }
+}
+
+
+void checkExtKeyboard(UIView *v, BOOL become_first_responder) {
+
+  ViewController *vc = theViewController;
+
+  // Check for the external keyboard (which disables soft keyboard).
+
+  vc.inCheckExtKeyboard = YES;
+  vc.haveExtKeyboard = YES;
+
+#ifdef DEBUG_UI
+  NSLog(@"checkExtKeyboard [v becomeFirstResponder];");
+#endif
+
+  [v becomeFirstResponder];
+
+#ifdef DEBUG_UI
+  if (vc.haveExtKeyboard) {
+    NSLog(@"checkExtKeyboard haveExtKeyboard = YES");
+  } else {
+    NSLog(@"checkExtKeyboard haveExtKeyboard = NO");
+  }
+#endif
+
+#ifdef DEBUG_UI
+  NSLog(@"checkExtKeyboard [v resignFirstResponder];");
+#endif
+
+  // avoid bug on old iOS
+  if ([[[UIDevice currentDevice] systemVersion] floatValue] < 7.1) {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.0),
+                   dispatch_get_main_queue(),
+                   ^(void){ checkExtKeyboard_tail(v, become_first_responder); });
+  } else {
+    checkExtKeyboard_tail(v, become_first_responder);
+  }
+}
+
+
 #pragma mark -
 #pragma mark Responding to keyboard events
 
 - (void)keyboardWillShow:(NSNotification *)notification {
+
+  haveVisibleSoftKeyboard = YES;
+
+  if (inCheckExtKeyboard) haveExtKeyboard = NO;
 
   int view = currentView;
 
@@ -412,11 +477,16 @@ void gambit_cleanup()
   kbdFrameEnd = [self.view convertRect:kbdFrameEnd fromView:nil];
 
 #ifdef DEBUG_UI
-  NSLog(@"%0.0f %0.0f %0.0f",kbdFrameEnd.origin.y,kbdFrameEnd.size.height,self.view.bounds.size.height);
+  //  NSLog(@"%0.0f %0.0f %0.0f",kbdFrameEnd.origin.y,kbdFrameEnd.size.height,self.view.bounds.size.height);
 #endif
 
-  if (kbdFrameEnd.origin.y + kbdFrameEnd.size.height == self.view.bounds.size.height)
-    haveSoftKeyboard = YES;
+  if (kbdFrameEnd.origin.y + kbdFrameEnd.size.height == self.view.bounds.size.height) {
+    haveVisibleSoftKeyboard = YES;
+    haveExtKeyboard = NO;
+    //NSLog(@".... showing main soft keyboard");
+  } else {
+    //NSLog(@".... only showing accessory view");
+  }
 
   if (view >= 0) {
 
@@ -426,10 +496,8 @@ void gambit_cleanup()
     if (view < NB_WEBVIEWS) {
       WView *wv = webViews[view];
       kbdEnabled = wv.kbdEnabled;
-      { CGRect f = wv.frame; NSLog(@"webview frame %0.0f %0.0f %0.0f %0.0f",f.origin.x,f.origin.y,f.size.width,f.size.height);
-      if (wv.kbdShouldShrinkView) //// && f.size.height == self.view.bounds.size.height)
+      if (wv.kbdShouldShrinkView)
         v = wv;
-}
     } else if (view < NB_WEBVIEWS+NB_TEXTVIEWS) {
       TView *tv = textViews[view-NB_WEBVIEWS];
       kbdEnabled = tv.kbdEnabled;
@@ -464,22 +532,26 @@ void gambit_cleanup()
       [UIView commitAnimations];
     }
 
-#if 0
-    if (kbdEnabled && !inShowView) {
+    if (kbdEnabled && !inShowView && !inCheckExtKeyboard) {
+#if 1
+      //[self send_event:@"soft-keyboard-show"];
+#else
 #if 1
       show_view(view, YES);
 #else
       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2.0),
                      dispatch_get_main_queue(),
-                     ^(void){ show_view(theViewController.currentView); });
+                     ^(void){ show_view(theViewController.currentView, YES); });
+#endif
 #endif
     }
-#endif
   }
 }
 
 
 - (void)keyboardWillHide:(NSNotification *)notification {
+
+  haveVisibleSoftKeyboard = NO;
 
   int view = currentView;
 
@@ -524,17 +596,19 @@ void gambit_cleanup()
       [UIView commitAnimations];
     }
 
-#if 0
-    if (kbdEnabled && !inShowView) {
+    if (kbdEnabled && !inShowView && !inCheckExtKeyboard) {
+#if 1
+      //[self send_event:@"soft-keyboard-hide"];
+#else
 #if 1
       show_view(view, NO);
 #else
       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2.0),
                      dispatch_get_main_queue(),
-                     ^(void){ show_view(theViewController.currentView); });
+                     ^(void){ show_view(theViewController.currentView, NO); });
+#endif
 #endif
     }
-#endif
   }
 }
 
@@ -674,7 +748,7 @@ void set_navigation(int n) {
 
   int view = currentView;
 
-  if (haveSoftKeyboard) {
+  if (!haveExtKeyboard) {
     if (view >= 0) {
       if (view < NB_WEBVIEWS) {
         WView *wv = webViews[view];
@@ -754,33 +828,6 @@ void preload_kbd() {
 #endif
 
 
-void check_ext_keyboard(UIView *v, BOOL become_first_responder) {
-
-  ViewController *vc = theViewController;
-
-  // Check for the external keyboard (which disables soft keyboard).
-
-  vc.haveSoftKeyboard = NO;
-
-#ifdef DEBUG_UI
-  NSLog(@"[v becomeFirstResponder];");
-#endif
-
-  [v becomeFirstResponder];
-
-#if 1
-  if (!become_first_responder)
-    {
-#ifdef DEBUG_UI
-      NSLog(@"[v resignFirstResponder];");
-#endif
-
-      [v resignFirstResponder];
-    }
-#endif
-}
-
-
 void show_view(int view, BOOL become_first_responder) {
 
 #ifdef DEBUG_UI
@@ -833,19 +880,9 @@ void show_view(int view, BOOL become_first_responder) {
 
           [vc resetInputTextView];
 
-          if (wv->kbdEnabled)
-            {
-              //check_ext_keyboard(vc->inputTextView, NO);
-#if 1
-              if (become_first_responder)
-                {
-#ifdef DEBUG_UI
-                  NSLog(@"[vc->inputTextView becomeFirstResponder];");
-#endif
-                  [vc->inputTextView becomeFirstResponder];
-                }
-#endif
-            }
+          if (wv->kbdEnabled) {
+            checkExtKeyboard(vc->inputTextView, become_first_responder);
+          }
 
           wv.hidden = NO;
 
@@ -853,19 +890,9 @@ void show_view(int view, BOOL become_first_responder) {
 
           TView *tv = vc->textViews[view-NB_WEBVIEWS];
 
-          if (tv->kbdEnabled)
-            {
-              check_ext_keyboard(tv, NO);
-#if 1
-              if (become_first_responder)
-                {
-#ifdef DEBUG_UI
-                  NSLog(@"[tv becomeFirstResponder];");
-#endif
-                  [tv becomeFirstResponder];
-                }
-#endif
-            }
+          if (tv->kbdEnabled) {
+            checkExtKeyboard(tv, become_first_responder);
+          }
 
           tv.hidden = NO;
 
@@ -911,6 +938,11 @@ void show_imageView(int view, BOOL kbdEnabled, BOOL kbdShouldShrinkView) {
   iv.kbdEnabled = kbdEnabled;
   iv.kbdShouldShrinkView = kbdShouldShrinkView;
   show_view(view+NB_WEBVIEWS+NB_IMAGEVIEWS, YES);
+}
+
+
+void show_currentView() {
+  show_view(theViewController->currentView, YES);
 }
 
 
@@ -1362,36 +1394,88 @@ NSString *get_documents_dir() {
 }
 
 
-NSString *get_icloud_container_dir() {
-
-  NSString *icloud_container_dir = nil;
-
 #ifdef USE_ICLOUD
 
-  static NSString *prefix = @"file://";
-  NSURL *ubiq_url = [[NSFileManager defaultManager] URLForUbiquityContainerIdentifier:nil];
+void setup_icloud_query() {
 
-  if (ubiq_url != nil) {
-    NSString *relurl = [ubiq_url relativeString];
-    icloud_container_dir = [relurl stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-    if ([icloud_container_dir hasPrefix:prefix]) {
-      icloud_container_dir = [icloud_container_dir substringFromIndex:[prefix length]];
-    }
-  }
+  ViewController *vc = theViewController;
 
-#endif
+  if (vc.metadataQuery == nil) {
 
-  return icloud_container_dir;
+    vc.metadataQuery = [[NSMetadataQuery alloc] init];
+
+    [vc.metadataQuery
+        setSearchScopes:[NSArray arrayWithObject:NSMetadataQueryUbiquitousDocumentsScope]];
+
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K like '*'", NSMetadataItemFSNameKey]; 
+    [vc.metadataQuery setPredicate:predicate]; 
+          
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter]; 
+    [nc addObserver:vc selector:@selector(queryFileList:) name:NSMetadataQueryDidFinishGatheringNotification object:vc.metadataQuery]; 
+    [nc addObserver:vc selector:@selector(queryFileList:) name:NSMetadataQueryDidUpdateNotification object:vc.metadataQuery]; 
+
+    [vc.metadataQuery startQuery]; 
+  } 
 }
-
-
-#ifdef USE_ICLOUD
 
 - (void)iCloudAccountAvailabilityChanged:(NSNotification*)notification {
   [self send_event:@"iCloudAccountAvailabilityChanged"];
 }
 
+void downloadFileIfNotDownloaded(NSURL *url) {
+
+  NSNumber *is_in_iCloud = nil;
+ 
+  if ([url getResourceValue:&is_in_iCloud forKey:NSURLIsUbiquitousItemKey error:nil]) {
+    if ([is_in_iCloud boolValue]) {
+      NSNumber *isDownloaded = nil;
+      if ([url getResourceValue:&isDownloaded forKey:NSURLUbiquitousItemIsDownloadedKey error:nil]) {
+        if (![isDownloaded boolValue]) {
+          NSFileManager *fm = [NSFileManager defaultManager];
+          [fm startDownloadingUbiquitousItemAtURL:url error:nil];
+        }
+      }
+    }
+  }
+}
+
+- (void)queryFileList:(NSNotification *)notification {
+  NSArray *queryResults = [self.metadataQuery results];
+  for (NSMetadataItem* result in queryResults) {
+    NSURL *url = [result valueForAttribute:NSMetadataItemURLKey];
+    downloadFileIfNotDownloaded(url);
+  }
+}
+
 #endif
+
+
+void request_icloud_container_dir() {
+
+#ifdef USE_ICLOUD
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+
+    static NSString *prefix = @"file://";
+    NSString *icloud_container_dir = @"";
+    NSURL *ubiq_url = [[NSFileManager defaultManager]
+                        URLForUbiquityContainerIdentifier:nil];
+
+    if (ubiq_url != nil) {
+      NSString *relurl = [ubiq_url relativeString];
+      icloud_container_dir = [relurl stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+      if ([icloud_container_dir hasPrefix:prefix]) {
+        icloud_container_dir = [icloud_container_dir substringFromIndex:[prefix length]];
+      }
+      setup_icloud_query();
+    }
+
+    [theViewController send_event:[@"iCloudContainerDirChanged:"
+                                      stringByAppendingString:icloud_container_dir]];
+  });
+
+#endif
+}
 
 
 void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSString *accept_button) {
@@ -1668,12 +1752,12 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
                 }
 
               if (!handled) {
-                [self show_alert:@"textViewDidChangeSelection: did not handle location/length=%d" num:r.location*100+r.length];
+                //[self show_alert:@"textViewDidChangeSelection: did not handle location/length=%d" num:r.location*100+r.length];
               }
             }
           else
             {
-              [self show_alert:inputTextView.text];
+              //[self show_alert:inputTextView.text];
               [self resetInputTextView];
             }
         }
@@ -1721,7 +1805,7 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
             handled = NO;
 
           if (!handled) {
-            [self show_alert:@"textView:shouldChangeTextInRange:replacementText: did not handle location/length=%d" num:range.location*100+range.length];
+            //[self show_alert:@"textView:shouldChangeTextInRange:replacementText: did not handle location/length=%d" num:range.location*100+range.length];
           }
         }
 
@@ -1770,7 +1854,7 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
 
       if (line_start == line_end)
         {
-          if (vc.haveSoftKeyboard)
+          if (!vc.haveExtKeyboard)
             {
               // Hide the soft keyboard after "return" key is pressed on empty line
 #ifdef DEBUG_UI
@@ -2397,7 +2481,7 @@ NSMutableArray *keyCommandsArray = nil;
 
   NSURL *url = [request URL];
   NSString *relurl = [url relativeString];
-  NSString *str = [relurl stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+  NSString *str = [[relurl stringByReplacingOccurrencesOfString:@"+" withString:@" "] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 
   if ([str hasPrefix:@"event:"]) {
     [self send_event:str];

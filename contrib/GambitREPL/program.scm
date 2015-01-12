@@ -2,7 +2,7 @@
 
 ;;; File: "program.scm"
 
-;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
 
 ;; This program implements the "Gambit REPL" application for iOS
 ;; devices.  It is a simple development environment for Scheme.  The
@@ -91,6 +91,14 @@ function handle_gestureStart() {
 
 document.addEventListener('gesturestart', handle_gestureStart, false);
 
+function URL_encode(x) {
+  return encodeURIComponent(x);
+}
+
+function send_scheme_request(uri) {
+  window.location = encodeURI(uri);
+}
+
 var last_key_esc = false;
 
 function add_text_input(input) {
@@ -122,7 +130,7 @@ function cmd_return() {
   var index = script_id.replace(/^script/, '');
   if (index !== script_id) {
     last_focus_id = script_id;
-    send_event_with_scripts('run',index);
+    send_scheme_event_with_scripts('run', index);
   }
 }
 
@@ -316,11 +324,9 @@ common-html-header-end
 
 <script language="JavaScript">
 
-function send_event(e)
-{ window.location = "event:" + e; }
-
-function test()
-{ alert('111'); send_event('foo'); alert('222'); }
+function send_scheme_event(e) {
+  send_scheme_request("event:" + e);
+}
 
 </script>
 
@@ -508,75 +514,78 @@ edit-page-content-part1-end
 
 (define edit-page-content-part2 #<<edit-page-content-part2-end
 
-function send_event(e)
-{ window.location = "event:" + e; }
+function send_scheme_event(e) {
+  send_scheme_request("event:" + e);
+}
 
-function send_event_with_scripts(e,index)
-{ window.location = event_with_scripts(e,index); }
+function send_scheme_event_with_scripts(e, index) {
+  send_scheme_request(event_with_scripts(e, index));
+}
 
-function event_with_scripts(e,index)
-{
-  var strings = ["event:"+e,index];
-  for (var i = 0; i<nb_scripts; i++)
-  {
-    strings.push(encodeURIComponent(document.getElementById("script"+i).value));
+function event_with_scripts(e, index) {
+  var strings = ["event:"+e, index];
+  for (var i = 0; i<nb_scripts; i++) {
+    strings.push(URL_encode(document.getElementById("script"+i).value));
   }
   strings.push("");
   return strings.join(":");
 }
 
-function click_new()
-{ send_event_with_scripts("new",0); }
+function click_new() {
+  send_scheme_event_with_scripts("new", 0);
+}
 
-function click_run(index)
-{ send_event_with_scripts("run",index); }
+function click_run(index) {
+  send_scheme_event_with_scripts("run", index);
+}
 
-function click_save(index)
-{ var script = document.getElementById("script"+index).value;
+function click_save(index) {
+  var script = document.getElementById("script"+index).value;
   var lines = script.split(/\n/);
   var line1 = lines[0];
   var name = line1.replace(/^;;; /,"");
   var event = (/^[^\n]*\s*$/.exec(script)) ? "remove" : "save";
-  if (name.length < line1.length && /^[A-Za-z][-\.A-Za-z0-9]*\.scm$/.exec(name))
-  {
-    if (confirm((event==="remove")?('Are you sure you want to remove\n\n'+name+'\n\nfrom the Documents folder?'):('Are you sure you want to save\n\n'+name+'\n\nto the Documents folder?')))
-      send_event_with_scripts(event,index);
+  if (name.length < line1.length && /^(~\/|)[A-Za-z][-\.A-Za-z0-9]*\.scm$/.exec(name)) {
+    if (confirm((event==="remove")?('Are you sure you want to remove\n\n'+name+'\n\nfrom the Documents folder?'):('Are you sure you want to save\n\n'+name+'\n\nto the Documents folder?'))) {
+      send_scheme_event_with_scripts(event, index);
+    }
   }
 
 edit-page-content-part2-end
 )
 
 (define edit-page-content-part3 #<<edit-page-content-part3-end
-  else if (name.length < line1.length && /^[A-Z][-\. A-Za-z0-9]*:[-\. A-Za-z0-9:]*\.scm$/.exec(name))
-  {
-    if (confirm((event==="remove")?('Are you sure you want to remove\n\n'+name+'\n\nfrom the Gambit wiki?'):('Are you sure you want to save\n\n'+name+'\n\nto the Gambit wiki? It will replace the current script by that name if it exists. Note that previous versions of the script will still be available in the Gambit wiki page history.')))
-      send_event_with_scripts(event,index);
+  else if (name.length < line1.length && /^[A-Z][-\. A-Za-z0-9]*:[-\. A-Za-z0-9:]*\.scm$/.exec(name)) {
+    if (confirm((event==="remove")?('Are you sure you want to remove\n\n'+name+'\n\nfrom the Gambit wiki?'):('Are you sure you want to save\n\n'+name+'\n\nto the Gambit wiki? It will replace the current script by that name if it exists. Note that previous versions of the script will still be available in the Gambit wiki page history.'))) {
+      send_scheme_event_with_scripts(event, index);
+    }
   }
 
 edit-page-content-part3-end
 )
 
 (define edit-page-content-part4 #<<edit-page-content-part4-end
-  else
-  {
-    alert("The script cannot be saved because it is improperly named.  The first line must be the name of the script preceded by three semicolons and a space, for example:\n\n;;; test.scm\n\nMoreover, the name must start with a letter, and end in '.scm', and contain only letters, digits, '.', and '-'.");
+  else {
+    alert("The script cannot be saved because it is improperly named.  The first line must be the name of the script preceded by three semicolons and a space, for example:\n\n;;; ~/test.scm\n\nMoreover, the name must start with '~/' followed by a letter, and end in '.scm', and contain only letters, digits, '.', and '-'.");
   }
 }
 
-function click_delete(index)
-{ if (confirm('Are you sure you want to delete this script from the Edit view?'))
-    send_event_with_scripts("delete",index);
+function click_delete(index) {
+  if (confirm('Are you sure you want to delete this script from the Edit view?')) {
+    send_scheme_event_with_scripts("delete", index);
+  }
 }
 
 var last_focus_id = "script0";
 
-function gain_focus()
-{ if (last_focus_id !== null)
+function gain_focus() {
+  if (last_focus_id !== null) {
     document.getElementById(last_focus_id).focus();
+  }
 }
 
-function lose_focus()
-{ last_focus_id = document.activeElement.id;
+function lose_focus() {
+  last_focus_id = document.activeElement.id;
   return event_with_scripts("exit",0);
 }
 
@@ -674,7 +683,7 @@ edit-page-content-part5-end
        (handle-edit-event
         event
         (lambda ()
-          (handle-navigation-event
+          (generic-event-handler
            event
            (lambda ()
              (let ((new-event (eval-js-in-webView 3 "lose_focus()")))
@@ -833,17 +842,33 @@ edit-page-content-part5-end
          #t)))
 
 (define (handle-icloud-event event)
-  (and (equal? event "event:iCloudAccountAvailabilityChanged")
-       (begin
+  (cond ((equal? event "iCloudAccountAvailabilityChanged")
          (iCloudAccountAvailabilityChanged)
+         #t)
+        ((has-prefix? event "iCloudContainerDirChanged:") =>
+         (lambda (rest)
+           (iCloudContainerDirChanged rest)
+           #t))
+        (else
+         #f)))
+
+(define (handle-soft-keyboard-event event)
+  (and (or (equal? event "soft-keyboard-show")
+           (equal? event "soft-keyboard-hide"))
+       (begin
+         (popup-alert (string-append CFBundleName ".app")
+                      "The keyboard has changed"
+                      "OK"
+                      #f)
          #t)))
 
-(define (generic-event-handler event)
+(define (generic-event-handler event #!optional (lose-focus-handler (lambda () #f)))
   (or (wiki-event-handler event)
       (handle-app-become-active-event event)
       (handle-icloud-event event)
+      (handle-soft-keyboard-event event)
       (handle-create-account-event event)
-      (handle-navigation-event event (lambda () #f))))
+      (handle-navigation-event event lose-focus-handler)))
 
 (define run-script-event #f)
 (set! run-script-event
@@ -999,7 +1024,7 @@ repo-page-content-part1-end
 (define repo-page-content-part2 #<<repo-page-content-part2-end
 
 <div class="repohead">
-<div class="button1" onClick="window.location='event:back';">&#9664;</div>
+<div class="button1" onClick="send_scheme_request('event:back');">&#9664;</div>
 </div>
 
 repo-page-content-part2-end
@@ -1041,15 +1066,15 @@ repo-page-content-part5-end
       (list "<tr>"
             (if (pair? subtree)
                 (list "<td class=\"repoget\"></td>\n"
-                      "<td><div class=\"button1\" onClick=\"window.location='event:view:"
+                      "<td><div class=\"button1\" onClick=\"send_scheme_request('event:view:"
                       (url-encode name)
-                      "';\">&#9654;</div></td>\n")
-                (list "<td class=\"repoget\"><div class=\"button0\" onClick=\"window.location='event:get:"
+                      "');\">&#9654;</div></td>\n")
+                (list "<td class=\"repoget\"><div class=\"button0\" onClick=\"send_scheme_request('event:get:"
                       (url-encode name)
-                      "';\">Get</div></td>\n"
-                      "<td><div class=\"button1\" onClick=\"window.location='event:view:"
+                      "');\">Get</div></td>\n"
+                      "<td><div class=\"button1\" onClick=\"send_scheme_request('event:view:"
                       (url-encode name)
-                      "';\">View</div></td>\n"))
+                      "');\">View</div></td>\n"))
             "<td class=\"repoentry\">"
             (html-escape name)
             "</td>\n"
@@ -1332,7 +1357,7 @@ repo-transaction-page-content-part3-end
 <center>
 <h2>Log in to Gambit wiki</h2>
 
-<form onSubmit="window.location='event:login:'+encodeURIComponent(document.getElementById('username').value)+':'+encodeURIComponent(document.getElementById('password').value)+':'+encodeURIComponent(document.getElementById('rememberpass').value)+':'; return false;">
+<form onSubmit="send_scheme_request('event:login:'+URL_encode(document.getElementById('username').value)+':'+URL_encode(document.getElementById('password').value)+':'+URL_encode(document.getElementById('rememberpass').value)+':'); return false;">
 
 <table>
 <tr>
@@ -1366,7 +1391,7 @@ login-page-content-part3-end
 
 <input type="submit" class="bigbutton" value="Log in" />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<input type="button" class="bigbutton" value="Cancel" onClick="window.location='event:cancel';" />
+<input type="button" class="bigbutton" value="Cancel" onClick="send_scheme_request('event:cancel');" />
 
 </form>
 
@@ -1382,7 +1407,7 @@ login-page-content-part4-end
 
 <center>
 If you don't have an account, you should<br/>
-<div class="widebutton" onClick="window.location='event:create-account';">Create an account</div><br/>
+<div class="widebutton" onClick="send_scheme_request('event:create-account');">Create an account</div><br/>
 It's free!
 </center>
 

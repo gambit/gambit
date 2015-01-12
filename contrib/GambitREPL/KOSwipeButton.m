@@ -204,10 +204,13 @@ extern ViewController *theViewController;
   firstTapDate = [[NSDate date] dateByAddingTimeInterval:-1];
 }
 
-UIImage *scaleToSize(UIImage *img, CGSize size)
+UIImage *scaleToSize(UIImage *img, CGSize size, char align)
 {
+  int m = MIN(size.height, size.width);
+  int o = size.width - m;
+  if (align == 'c') o = o/2; else if (align == 'l') o = 0;
   UIGraphicsBeginImageContext(size);
-  [img drawInRect:CGRectMake(0, 0, size.width, size.height)];
+  [img drawInRect:CGRectMake(o, 0, m, m)];
   UIImage *scaledImage = UIGraphicsGetImageFromCurrentImageContext();
   UIGraphicsEndImageContext();
   return scaledImage;
@@ -285,7 +288,9 @@ UIImage *scaleToSize(UIImage *img, CGSize size)
       imgFilename = @"f10.png";
 
     if (imgFilename != nil) {
-      UIImage *img = scaleToSize([UIImage imageNamed:imgFilename], lab.frame.size);
+      UIImage *img = scaleToSize([UIImage imageNamed:imgFilename],
+                                 lab.frame.size,
+                                 (i==0||i==3)?'l':(i==1||i==4)?'r':'c');
       lab.backgroundColor = [UIColor colorWithPatternImage:img];
     } else {
 

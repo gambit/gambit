@@ -2,7 +2,7 @@
 
 ;;; File: "intf.scm"
 
-;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -450,6 +450,9 @@ c-declare-end
    kbd-enabled
    kbd-should-shrink-view))
 
+(define show-currentView
+  (c-lambda () void "show_currentView"))
+
 (define set-textView-font
   (c-lambda (int NSString* int) void "set_textView_font"))
 
@@ -540,8 +543,8 @@ c-declare-end
 (define get-documents-dir
   (c-lambda () NSString* "get_documents_dir"))
 
-(define get-icloud-container-dir
-  (c-lambda () NSString* "get_icloud_container_dir"))
+(define request-icloud-container-dir
+  (c-lambda () void "request_icloud_container_dir"))
 
 (define popup-alert
   (c-lambda (NSString* NSString* NSString* NSString*) void "popup_alert"))
@@ -746,7 +749,7 @@ c-declare-end
 (define (set-location-update-event-handler proc)
   (set! location-update-event-handler proc))
 
-(define (show-view view #!optional (kbd-enabled #f)  (kbd-should-shrink-view #f))
+(define (show-view view #!optional (kbd-enabled #f) (kbd-should-shrink-view #f))
   (show-webView view kbd-enabled kbd-should-shrink-view))
 
 (define (set-view-content view content #!optional (base-url-path #f) (enable-scaling #f) (mime-type "text/html"))
@@ -781,7 +784,6 @@ c-declare-end
 ;; Developer Program License Agreement (I don't know which section
 ;; but I remember it had to do with the iOS human interface design).
 
-#;
 (set! ##exit
       (lambda (#!optional (status 0))
         (error "To exit, press the sleep button for 5 seconds then the home button for 10 seconds")))
@@ -805,10 +807,10 @@ c-declare-end
                  CFBundleName
                  "/"))
 
-(define app-icloud-docs-dir
+(define app-icloud-documents-dir
   (string-append app-icloud-dir "Documents/"))
 
-(define app-root-dir app-icloud-docs-dir) ;; root of FS (i.e. /) is app's iCloud dir
+(define app-root-dir app-icloud-documents-dir) ;; root of FS (i.e. /) is app's iCloud dir
 
 (define app-documents-dir (##path-normalize (get-documents-dir)))
 
@@ -836,23 +838,35 @@ c-declare-end
 
 (set! ##path-resolve-hook contained-path-resolve)
 
-(get-icloud-container-dir) ;; connect to iCloud
+(define (contained-path-unresolve path)
+  (cond ((has-prefix? path app-bundle-dir) =>
+         (lambda (rest)
+           (string-append "~~/" rest)))
+        ((has-prefix? path app-documents-dir) =>
+         (lambda (rest)
+           (string-append "~/" rest)))
+        ((has-prefix? path app-icloud-documents-dir) =>
+         (lambda (rest)
+           rest))
+        (else
+         path)))
+
+(set! ##path-unresolve-hook contained-path-unresolve)
+
+(set! ##repl-path-normalize-hook (lambda (path) path))
+
+(define app-icloud-container-dir #f)
 
 (define (iCloudAccountAvailabilityChanged)
+  (request-icloud-container-dir) ;; check iCloud availability
   #f)
 
-#;
-(define (update-icloud-dir)
-  (let ((dir (get-icloud-container-dir)))
-    (if dir
-        (let ((ndir (##path-normalize dir)))
-          (set! app-icloud-docs-dir ndir)
-          (let ((link (##string-append app-documents-dir "iCloud"))
-                (cont (##string-append ndir "Documents")))
-            (##os-delete-file link)
-            (##os-create-symbolic-link cont link)))
-        (set! app-icloud-docs-dir #f))))
+(define (iCloudContainerDirChanged dir)
+  (set! app-icloud-container-dir (if (equal? dir "") #f dir))
+  (emacs#setup-iCloudStatus)
+  #f)
 
+(iCloudAccountAvailabilityChanged)
 
 ;; Make the current-directory equal to the root directory.
 
@@ -862,18 +876,13 @@ c-declare-end
 (macro-parameter-descr-filter-set!
  (macro-parameter-descr ##current-directory)
  (lambda (val)
-   (let ((path (##path-normalize (##path-expand val))))
-     (cond ((has-prefix? path app-bundle-dir) =>
-            (lambda (rest)
-              (string-append "~~/" rest)))
-           ((has-prefix? path app-documents-dir) =>
-            (lambda (rest)
-              (string-append "~/" rest)))
-           ((has-prefix? path app-icloud-docs-dir) =>
-            (lambda (rest)
-              (string-append "/" rest)))
-           (else
-            path)))))
+   (macro-check-string val 1 (##current-directory val)
+     (let ((normalized-dir
+            (##os-path-normalize-directory
+             (##path-normalize (##path-expand val)))))
+       (if (##fixnum? normalized-dir)
+         (##raise-os-exception #f normalized-dir ##current-directory val)
+         (contained-path-unresolve normalized-dir))))))
 
 (##current-directory "/")
 

@@ -38,6 +38,8 @@ Gambit REPL is an interpreter for the Scheme programming language which closely 
 <li><a href="event:gambit-c"><strong>Gambit extensions to R5RS</strong></a>
 </ul>
 
+<h2>Views</h2>
+
 <p>
 Gambit REPL's user interface provides 4 views which are selectable with the tabs at the top of the screen. The views can be switched from portrait to landscape by turning the device. The landscape layout is recommended on iPhone, as it gives a keyboard with more keys and text output with fewer line breaks.
 </p>
@@ -54,9 +56,11 @@ This view visits the Gambit wiki in the web browser. Internet access is required
 This view gives access to the documentation. It contains the <a href="event:r5rs"><strong>R5RS document</strong></a> and the <a href="event:gambit-c"><strong>Gambit manual</strong></a>, in HTML and PDF formats. The HTML formats include navigation buttons (move to previous/next section, table-of-contents, index, etc). Tap the <strong>x</strong> button in the upper right to return to the main help view.
 
 <li><strong>Edit</strong><br/>
-This view contains the set of editable scripts. The first line of the script can be a comment containing the name of the script (three semicolons, a space, and the name of the script, such as <strong>main</strong>, <strong>F5</strong>, <strong>test.scm</strong>). Giving names to scripts improves the usefulness of debugging messages, and it is necessary when saving scripts to the Documents folder. The <strong>main</strong> script is useful for customizing Gambit REPL; it is executed when the app is launched (by default it simply shows the splash screen). Tap the <strong>+</strong> button to create a new empty script. Tap the <strong>Run</strong> button to execute the script. Tap the <strong>Save</strong> button to save the script to the Documents folder (the name of the script must start with a letter, and end in <strong>.scm</strong>, and contain only letters, digits, '<strong>.</strong>', and '<strong>-</strong>'). Saving a script which only contains the script name will remove the script from the Documents folder. Tap the <strong>Delete</strong> button to delete the script from the Edit view.
+This view contains a set of editable scripts. The first line of the script can be a comment containing the name of the script (three semicolons, a space, and the name of the script, such as <strong>main</strong>, <strong>F1</strong>, <strong>~/test.scm</strong>). Giving names to scripts improves the usefulness of debugging messages, and it is necessary when saving scripts to the app's Documents folder. The <strong>main</strong> script is useful for customizing Gambit REPL; it is executed when the app is launched. By default the <strong>main</strong> script simply shows the splash screen, but this can be changed, for example, replacing the call <code>(splash)</code> by <code>(emacs)</code> will directly enter the emacs-like editor when the app is launched. Tap the <strong>+</strong> button to create a new empty script. Tap the <strong>Run</strong> button to execute the script. Tap the <strong>Save</strong> button to save the script to the Documents folder. The name of the script must start with <strong>~/</strong> followed by a letter, and end in <strong>.scm</strong>, and contain only letters, digits, '<strong>.</strong>', and '<strong>-</strong>'. Saving a script which only contains the script name will remove the script from the Documents folder. Tap the <strong>Delete</strong> button to delete the script from the Edit view.
 
 </ul>
+
+<h2>Specific Predefined Procedures</h2>
 
 <p>
 The following predefined procedures are specific to Gambit REPL.
@@ -92,10 +96,23 @@ Resets the scripts in the Edit view to the factory default. It does not remove a
 Starts the REPL server, which accepts password protected telnet connections on port 7000. This allows interacting with Gambit REPL from a remote computer, for example a desktop computer. It will be necessary to enter the <strong><i>password</i></strong> to authenticate the telnet connection. Assuming the device's address is 192.168.0.100, the following shell command on the remote computer (on the same LAN) will start a new REPL:<br/><br/>
 <center><code>telnet 192.168.0.100 7000</code></center>
 
+<li><strong><code>(emacs</code> <i>[filename]</i><code>)</code></strong><br/>
+Starts an emacs-like editor. If file <strong><i>filename</i></strong> is specified (a string) it will be visited, otherwise a REPL is automatically started inside the editor. Exiting the editor with the command <code>C-x C-c</code> returns to the normal REPL view. The use of an external Bluetooth keyboard is recommended as it simplifies typing editing commands. More documentation on the editor is available in its help menu.
+
 </ul>
 
+<h2>File System</h2>
+
 <p>
-The Scheme file I/O procedures will read and write files in an area specific to the Gambit REPL app. The path "~" refers to the Documents folder. It is a convenient place to store files. This folder is initially empty. The content of the folder will be preserved when you update Gambit REPL to a newer version. The path "~~" refers to the Gambit REPL app bundle.
+The Scheme file I/O procedures and the emacs-like editor can read and write files in a variety of locations. Paths not starting with "~" refer to files in the iCloud Documents folder which is kept in sync across devices. The path "~/" refers to the local Documents folder of the Gambit REPL app. This folder can be accessed with iTunes and its content is preserved when Gambit REPL is updated to a newer version. The path "~~/" refers to the Gambit REPL app bundle.
+</p>
+
+<h2>Reporting Problems</h2>
+
+<p>
+If you encounter problems with Gambit REPL, please submit
+a new issue on the
+<a href="event:browse:https://github.com/feeley/gambit/issues">Gambit issue tracker</a>.
 </p>
 
 </body>

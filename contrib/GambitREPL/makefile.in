@@ -155,12 +155,12 @@ GambitREPL.xcodeproj: GambitREPL.xcodeproj.tgz
 	tar zxf GambitREPL.xcodeproj.tgz
 
 tgz-for-GambitREPL.xcodeproj: GambitREPL.xcodeproj/project.pbxproj
-	COPYFILE_DISABLE=1 tar cf GambitREPL.xcodeproj.tar GambitREPL.xcodeproj/project.pbxproj
+	COPYFILE_DISABLE=1 tar cf GambitREPL.xcodeproj.tar GambitREPL.xcodeproj
 	gzip -9 GambitREPL.xcodeproj.tar
 	mv GambitREPL.xcodeproj.tar.gz GambitREPL.xcodeproj.tgz
 
 tgz-for-emacs: emacs/GambitREPL.html emacs/GambitREPL.js emacs/GambitREPL.css emacs/common.js emacs/v1
-	COPYFILE_DISABLE=1 tar cf emacs.tar emacs/GambitREPL.css emacs/GambitREPL.html emacs/GambitREPL.js emacs/common.js emacs/v1 emacs/ymacs/*
+	COPYFILE_DISABLE=1 tar cf emacs.tar emacs/GambitREPL.css emacs/GambitREPL.html emacs/GambitREPL.js emacs/common.js emacs/v1 emacs/icon.png emacs/ymacs/*
 	gzip -9 emacs.tar
 	mv emacs.tar.gz emacs.tgz
 

@@ -2,7 +2,7 @@
 
 ;;; File: "intf#.scm"
 
-;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -64,6 +64,8 @@ show-cancelButton
 hide-cancelButton
 show-textView
 show-webView
+show-imageView
+show-currentView
 set-textView-font
 set-textView-content
 get-textView-content
@@ -93,7 +95,7 @@ get-pref
 set-pasteboard
 get-pasteboard
 get-documents-dir
-get-icloud-container-dir
+request-icloud-container-dir
 popup-alert
 setup-location-updates
 
@@ -129,6 +131,8 @@ get-event-parameters
 contained-path-resolve
 
 iCloudAccountAvailabilityChanged
+iCloudContainerDirChanged
+app-icloud-container-dir
 
 ))
 

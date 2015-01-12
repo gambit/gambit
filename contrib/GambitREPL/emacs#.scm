@@ -2,13 +2,14 @@
 
 ;;; File: "emacs#.scm"
 
-;;; Copyright (c) 2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2014-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 (##namespace ("emacs#"
 
 emacs
+setup-iCloudStatus
 
 ))
 

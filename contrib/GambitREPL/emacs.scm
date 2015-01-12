@@ -2,7 +2,7 @@
 
 ;;; File: "emacs.scm"
 
-;;; Copyright (c) 2012-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2014-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -15,6 +15,7 @@
 (##include "intf#.scm")
 (##include "json#.scm")
 (##include "tar#.scm")
+(##include "url#.scm")
 
 (##namespace
  (""
@@ -35,7 +36,7 @@
 ;;;============================================================================
 
 (define emacs-root-dir (path-expand "~/emacs"))
-(define emacs-version-file (path-expand "v0" emacs-root-dir))
+(define emacs-version-file (path-expand "v1" emacs-root-dir))
 (define emacs-root-html-file (path-expand "GambitREPL.html" emacs-root-dir))
 (define emacs-tar-file (##path-normalize (path-expand "~~/emacs.tgz")))
 
@@ -71,8 +72,8 @@
   (set-ext-keys
    emacs-webView
    "*^C+?/\\-,.2406835179'\"(`~:;)@#"
-   "s\u2191\u2190L\u2193lk\u2192\u03bb\003<>C=_*^+!?/\\-,.2406835179'\"(`~:;)@#"
-   "s\u2191\u2190L\u2193lk\u2192\u03bb\003{}\t\004\007[]\033\023\030<>C=_*^+&$/\\-|%2406835179'\"(`~:;)@#"))
+   "s\u2191\u2190L\u2193l\u03bb\u2192k\003<>C=_*^+!?/\\-,.2406835179'\"(`~:;)@#"
+   "s\u2191\u2190L\u2193l\u03bb\u2192k\003{}\t\004\007[]\033\023\030<>C=_*^+&$/\\-|%2406835179'\"(`~:;)@#"))
 
 (define (emacs-init files-to-visit)
 
@@ -117,7 +118,7 @@
 
   (cond ((has-prefix? event "event:") =>
          (lambda (rest)
-           (let ((request (json-decode rest)))
+           (let ((request (json-decode (url-decode rest))))
              (let ((method (table-ref request "method")))
                (respond
                 request
@@ -154,6 +155,9 @@
 
                          ((equal? method "killTerminal")
                           (do-killTerminal request))
+
+                         ((equal? method "resetKeyboard")
+                          (do-resetKeyboard request))
 
                          ((equal? method "makeProcess")
                           (do-makeProcess request))
@@ -282,6 +286,10 @@
         (repl)))
   '())
 
+(define (do-resetKeyboard request)
+  (show-currentView)
+  '())
+
 (define (do-makeProcess request)
   (let ((process (table-ref request "process" "")))
     (let ((thunk (eval (with-input-from-string process read))))
@@ -320,6 +328,7 @@
     '()))
 
 (define (do-finishSetupEmacs request)
+  (setup-iCloudStatus)
   (let ((splash (table-ref request "splash" #f)))
     (if splash
         (eval-js-in-webView
@@ -333,6 +342,13 @@
              "ymacs.getActiveBuffer().signalInfo('<center>For help please use the Help menu</center>', true, 5000);
               withSchemeBuffer(function (buf) { });"))))
   '())
+
+(define (setup-iCloudStatus)
+  (eval-js-in-webView
+   emacs-webView
+   (if app-icloud-container-dir
+       "iCloudStatus_set(undefined);"
+       "iCloudStatus_set('iCloud unavailable');")))
 
 ;;;----------------------------------------------------------------------------
 

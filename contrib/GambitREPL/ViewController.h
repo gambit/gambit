@@ -2,7 +2,7 @@
 //  ViewController.h
 //
 //  Created by Marc Feeley on 11-03-06.
-//  Copyright 2011-2014 Université de Montréal. All rights reserved.
+//  Copyright 2011-2015 Université de Montréal. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -24,6 +24,7 @@ void hide_cancelButton();
 void show_webView(int view, BOOL kbdEnabled, BOOL kbdShouldShrinkView);
 void show_textView(int view, BOOL kbdEnabled, BOOL kbdShouldShrinkView);
 void show_imageView(int view, BOOL kbdEnabled, BOOL kbdShouldShrinkView);
+void show_currentView();
 void set_textView_font(int view, NSString *name, int size);
 void set_textView_content(int view, NSString *str);
 NSString *get_textView_content(int view);
@@ -54,7 +55,7 @@ NSString *get_pref(NSString *key);
 void set_pasteboard(NSString *value);
 NSString *get_pasteboard();
 NSString *get_documents_dir();
-NSString *get_icloud_container_dir();
+void request_icloud_container_dir();
 void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSString *accept_button);
 void setup_location_updates(double desired_accuracy, double distance_filter);
 
@@ -68,8 +69,10 @@ void setup_location_updates(double desired_accuracy, double distance_filter);
 
   UISegmentedControl *segmCtrl;
   int currentView;
-  BOOL haveSoftKeyboard;
+  BOOL haveExtKeyboard;
+  BOOL haveVisibleSoftKeyboard;
   BOOL inShowView;
+  BOOL inCheckExtKeyboard;
   ITView *inputTextView;
   BOOL inputTextViewEnable;
   WView *webViews[NB_WEBVIEWS];
@@ -80,12 +83,17 @@ void setup_location_updates(double desired_accuracy, double distance_filter);
   NSTimer *timer;
   NSMutableArray *queuedActions;
   CLLocationManager *locationManager;
+#ifdef USE_ICLOUD
+  NSMetadataQuery *metadataQuery;
+#endif
 }
 
 @property (nonatomic, strong) IBOutlet UISegmentedControl *segmCtrl;
 @property (assign) int currentView;
-@property (assign) BOOL haveSoftKeyboard;
+@property (assign) BOOL haveExtKeyboard;
+@property (assign) BOOL haveVisibleSoftKeyboard;
 @property (assign) BOOL inShowView;
+@property (assign) BOOL inCheckExtKeyboard;
 @property (nonatomic, strong) IBOutlet UITextView *inputTextView;
 @property (assign) BOOL inputTextViewEnable;
 @property (nonatomic, strong) IBOutlet UIButton *cancelButton;
@@ -93,6 +101,9 @@ void setup_location_updates(double desired_accuracy, double distance_filter);
 @property (strong) NSTimer *timer;
 @property (strong) NSMutableArray *queuedActions;
 @property (strong) CLLocationManager *locationManager;
+#ifdef USE_ICLOUD
+@property (strong) NSMetadataQuery *metadataQuery;
+#endif
 
 - (void)queue_action:(void(^)())action;
 - (void)send_event:(NSString*)name;
