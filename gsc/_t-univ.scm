@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ.scm"
 
-;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -7903,7 +7903,11 @@ tanh
 
 ;;TODO: ("##eqv?"               (2)   #f ()    0    boolean extended)
 ;;TODO: ("##equal?"             (2)   #f ()    0    boolean extended)
-;;TODO: ("##eof-object?"        (1)   #f ()    0    boolean extended)
+
+(univ-define-prim-bool "##eof-object?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^eq? arg1 (^eof))))))
 
 (univ-define-prim-bool "##fixnum?" #t
   (make-translated-operand-generator
