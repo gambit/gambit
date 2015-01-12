@@ -7962,7 +7962,6 @@ tanh
    (lambda (ctx return arg1)
      (return (^f64vector? arg1)))))
 
-;;TODO: ("##ratnum?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##cpxnum?"                  (1)   #f ()    0    boolean extended)
 
 (univ-define-prim-bool "##structure?" #t
@@ -8081,8 +8080,6 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^bignum? arg1)))))
-
-;;TODO: ("##bignum?"                  (1)   #f ()    0    boolean extended)
 
 (univ-define-prim-bool "##char?" #t
   (make-translated-operand-generator
@@ -9959,7 +9956,7 @@ tanh
      (return
       (^call-prim
        (^prefix (univ-use-rtlib ctx 'bignum_make))
-       arg1
+       (^fixnum-unbox arg1)
        arg2
        arg3)))))
 
