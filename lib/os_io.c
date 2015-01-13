@@ -3823,6 +3823,19 @@ typedef struct ___device_tcp_client_vtbl_struct
   } ___device_tcp_client_vtbl;
 
 
+#ifdef USE_OPENSSL
+
+___HIDDEN void clear_ssl_error_queue(void)    
+{
+  while (ERR_peek_error())
+    {
+      fprintf (stderr, "ignoring stale global SSL error");
+    }
+  ERR_clear_error();
+}
+
+#endif
+
 ___HIDDEN int try_connect
    ___P((___device_tcp_client *dev),
         (dev)
@@ -4182,7 +4195,10 @@ ___stream_index *len_done;)
     }
 
 #endif
-  
+
+  /* The current thread's error queue must be empty before the TLS/SSL I/O
+     operation is attempted, or SSL_get_error() will not work reliably. */
+  clear_ssl_error_queue();
   if ( d->ssl && (n = SSL_read (d->ssl, ___CAST(char*,buf), len)))
     {
       if (n > 0)
@@ -4282,7 +4298,10 @@ ___stream_index *len_done;)
     }
 
 #endif
-  
+
+  /* The current thread's error queue must be empty before the TLS/SSL I/O
+     operation is attempted, or SSL_get_error() will not work reliably. */
+  clear_ssl_error_queue();
   if ( d->ssl && (n = SSL_write (d->ssl, ___CAST(char*,buf), len)))
     {
       if (n > 0)
@@ -4617,8 +4636,12 @@ ___device_tcp_client *dev;)
         }
       SSL_load_error_strings();
       OpenSSL_add_all_algorithms();
-      /* TODO: find the right place for application cleanup */
-      /* EVP_cleanup(); */
+      /*
+        TODO: find the right place for application cleanup
+        ERR_free_strings()
+        EVP_cleanup();
+        CRYPTO_cleanup_all_ex_data()
+      */
 
       ssl_initialized = 1;
     }
@@ -5029,11 +5052,13 @@ ___device_tcp_client *dev;)
   const char* private_key_file = "server.pem";
   const char* client_ca_file = "server.pem";
 
-  STACK_OF(X509_NAME) *client_ca_list;
+  STACK_OF(X509_NAME) *client_ca_list = NULL;
 
 
-  /* Reference:
-     https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
+  /* References:
+     https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c
+     https://github.com/git-mirror/nginx/commit/10e9cec1feca191ea0b00ca729be534e372bdd66#diff-0584d16332cf0d6dd9adb990a3c76a0cR566
+  */
 
   /**********************/
   /* SSL Initialization */
