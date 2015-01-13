@@ -3823,9 +3823,12 @@ typedef struct ___device_tcp_client_vtbl_struct
   } ___device_tcp_client_vtbl;
 
 
+/* SSL support functions */
+
 #ifdef USE_OPENSSL
 
-___HIDDEN void clear_ssl_error_queue(void)    
+___HIDDEN void clear_ssl_error_queue
+   ___PVOID
 {
   while (ERR_peek_error())
     {
@@ -3834,6 +3837,68 @@ ___HIDDEN void clear_ssl_error_queue(void)
   ERR_clear_error();
 }
 
+#ifdef ___MULTIPLE_THREADED_VMS
+
+___HIDDEN ___MUTEX *ssl_mutex_buf = NULL;
+
+___HIDDEN void ssl_locking_function
+___P((int mode, int n, const char * file, int line),
+     (mode, n, file, line)
+int mode;
+int n;
+const char *file;
+int line;)
+{
+  if (mode & CRYPTO_LOCK)
+    ___MUTEX_LOCK (ssl_mutex_buf[n]);
+  else
+    ___MUTEX_UNLOCK (ssl_mutex_buf[n]);
+}
+
+___HIDDEN  unsigned long ssl_id_function
+   ___PVOID
+{
+  return ((unsigned long)___THREAD_ID);
+}
+
+___HIDDEN int ssl_threading_setup
+   ___PVOID
+{
+  int i;
+  ssl_mutex_buf = (___MUTEX*)malloc(CRYPTO_num_locks() * sizeof(___MUTEX));
+  
+  if (!ssl_mutex_buf)
+    return 0;
+  
+  for (i = 0;  i < CRYPTO_num_locks();  i++)
+    ___MUTEX_INIT (ssl_mutex_buf[i]);
+  
+  CRYPTO_set_id_callback (ssl_id_function);
+  CRYPTO_set_locking_callback (ssl_locking_function);
+  return 1;
+}
+
+___HIDDEN int ssl_threading_cleanup
+   ___PVOID
+{
+  int i;
+
+  if (!ssl_mutex_buf)
+    return 0;
+
+  CRYPTO_set_id_callback(NULL);
+  CRYPTO_set_locking_callback(NULL);
+
+  for (i = 0; i < CRYPTO_num_locks(); i++)
+    ___MUTEX_DESTROY(ssl_mutex_buf[i]);
+
+  free (ssl_mutex_buf);
+  ssl_mutex_buf = NULL;
+
+  return 1;
+}
+
+#endif
 #endif
 
 ___HIDDEN int try_connect
@@ -4199,7 +4264,7 @@ ___stream_index *len_done;)
   /* The current thread's error queue must be empty before the TLS/SSL I/O
      operation is attempted, or SSL_get_error() will not work reliably. */
   clear_ssl_error_queue();
-  if ( d->ssl && (n = SSL_read (d->ssl, ___CAST(char*,buf), len)))
+  if (d->ssl && (n = SSL_read (d->ssl, ___CAST(char*,buf), len)))
     {
       if (n > 0)
         *len_done = n;

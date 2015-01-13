@@ -7223,6 +7223,7 @@ typedef struct ___glo_struct
 #define ___MUTEX_DESTROY(mut) (pthread_mutex_destroy (&mut) == 0)
 #define ___MUTEX_LOCK(mut) (pthread_mutex_lock (&mut) == 0)
 #define ___MUTEX_UNLOCK(mut) (pthread_mutex_unlock (&mut) == 0)
+#define ___THREAD_ID (pthread_self())
 
 #endif
 
@@ -7235,6 +7236,7 @@ typedef struct ___glo_struct
 #define ___MUTEX_DESTROY(mut) CloseHandle (mut)
 #define ___MUTEX_LOCK(mut) (WaitForSingleObject (mut, INFINITE) != WAIT_FAILED)
 #define ___MUTEX_UNLOCK(mut) ReleaseMutex (mut)
+#define ___THREAD_ID (GetCurrentThreadId())
 
 #endif
 
