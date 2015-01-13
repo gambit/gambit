@@ -3842,8 +3842,8 @@ ___HIDDEN void clear_ssl_error_queue
 ___HIDDEN ___MUTEX *ssl_mutex_buf = NULL;
 
 ___HIDDEN void ssl_locking_function
-___P((int mode, int n, const char * file, int line),
-     (mode, n, file, line)
+   ___P((int mode, int n, const char * file, int line),
+        (mode, n, file, line)
 int mode;
 int n;
 const char *file;
@@ -3861,20 +3861,82 @@ ___HIDDEN  unsigned long ssl_id_function
   return ((unsigned long)___THREAD_ID);
 }
 
+struct CRYPTO_dynlock_value
+{
+  ___MUTEX mutex;
+};
+
+___HIDDEN struct CRYPTO_dynlock_value *ssl_dyn_create_function
+   ___P((const char *file, int line),
+        (file, line)
+const char *file;
+int line;)
+{
+  struct CRYPTO_dynlock_value *value;
+  value = (struct CRYPTO_dynlock_value*)
+    malloc(sizeof(struct CRYPTO_dynlock_value));
+    
+  if (!value)
+    return NULL;
+    
+  ___MUTEX_INIT (value->mutex);
+  return value;
+}
+
+___HIDDEN void ssl_dyn_lock_function
+   ___P((int mode,
+         struct CRYPTO_dynlock_value *l,
+         const char *file,
+         int line),
+        (mode, l, file, line)
+int mode;
+struct CRYPTO_dynlock_value *l;
+const char *file;
+int line;)
+{
+  if (mode & CRYPTO_LOCK)
+    ___MUTEX_LOCK (l->mutex);
+  else
+    ___MUTEX_UNLOCK (l->mutex);
+}
+
+___HIDDEN void ssl_dyn_destroy_function
+   ___P((struct CRYPTO_dynlock_value *l,
+         const char *file,
+         int line),
+        (l, file, line)
+struct CRYPTO_dynlock_value *l;
+const char *file;
+int line;)
+{
+  ___MUTEX_DESTROY (l->mutex);
+  free (l);
+}
+
 ___HIDDEN int ssl_threading_setup
    ___PVOID
 {
   int i;
-  ssl_mutex_buf = (___MUTEX*)malloc(CRYPTO_num_locks() * sizeof(___MUTEX));
+  ssl_mutex_buf = (___MUTEX*)malloc (CRYPTO_num_locks() * sizeof(___MUTEX));
   
   if (!ssl_mutex_buf)
     return 0;
   
   for (i = 0;  i < CRYPTO_num_locks();  i++)
     ___MUTEX_INIT (ssl_mutex_buf[i]);
+
   
+#if OPENSSL_VERSION_NUMBER < 0x10001000L
   CRYPTO_set_id_callback (ssl_id_function);
+#elseif
+  CRYPTO_THREADID_set_callback (ssl_id_function);
+#endif
   CRYPTO_set_locking_callback (ssl_locking_function);
+
+  CRYPTO_set_dynlock_create_callback (ssl_dyn_create_function);
+  CRYPTO_set_dynlock_lock_callback (ssl_dyn_lock_function);
+  CRYPTO_set_dynlock_destroy_callback (ssl_dyn_destroy_function);
+
   return 1;
 }
 
@@ -3886,11 +3948,19 @@ ___HIDDEN int ssl_threading_cleanup
   if (!ssl_mutex_buf)
     return 0;
 
-  CRYPTO_set_id_callback(NULL);
-  CRYPTO_set_locking_callback(NULL);
+#if OPENSSL_VERSION_NUMBER < 0x10001000L
+  CRYPTO_set_id_callback (NULL);
+#elseif
+  CRYPTO_THREADID_set_callback (NULL);
+#endif
+  CRYPTO_set_locking_callback (NULL);
+
+  CRYPTO_set_dynlock_create_callback (NULL);
+  CRYPTO_set_dynlock_lock_callback (NULL);
+  CRYPTO_set_dynlock_destroy_callback (NULL);
 
   for (i = 0; i < CRYPTO_num_locks(); i++)
-    ___MUTEX_DESTROY(ssl_mutex_buf[i]);
+    ___MUTEX_DESTROY (ssl_mutex_buf[i]);
 
   free (ssl_mutex_buf);
   ssl_mutex_buf = NULL;
