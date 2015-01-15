@@ -231,6 +231,9 @@
                       "/usr/bin/ruby") ;; ruby 2.0.0p451
 #;
     ("ruby"   ".rb"   ()
+                      "/usr/local/Cellar/ruby/2.1.5/bin/ruby") ;; ruby 2.1.5
+#;
+    ("ruby"   ".rb"   ()
                       "/usr/local/bin/ruby") ;; ruby 1.9.3p392
 
     ("ruby"   ".rb"   ("-repr-procedure" "host"

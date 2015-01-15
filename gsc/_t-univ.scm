@@ -2171,12 +2171,10 @@
                                         (if (= lbl-num entry)
                                             (^bool #f)
                                             (lambda (ctx)
-                                              (if (and (eq? (target-name (ctx-target ctx))
-                                                            'php)
-                                                       (eq? (univ-procedure-representation ctx)
-                                                            'host))
-                                                  (^str (gvm-lbl-use-function ctx (make-lbl entry)))
-                                                  (gvm-lbl-use ctx (make-lbl entry))))))))
+                                              (let ((lbl (make-lbl entry)))
+                                                (if (univ-subprocedure-parent-as-string? ctx)
+                                                    (^str (gvm-lbl-use-function ctx lbl))
+                                                    (gvm-lbl-use ctx lbl))))))))
 
                           (if (eq? (label-type gvm-instr) 'return)
 
@@ -5063,6 +5061,59 @@ EOF
 
        (else
         (^))))
+
+    ((get_host_global_var)
+     (^ (case (target-name (ctx-target ctx))
+
+          ((js)
+           (^ (^var-declaration (^gvar "globals")
+                                (^local-var (^this)))
+              "\n"))
+
+          ((php)
+           (^ (^var-declaration (^gvar "globals")
+                                (^local-var "GLOBALS"))
+              "\n"))
+
+          ((python)
+           (^ (^var-declaration (^gvar "globals")
+                                (^call-prim "locals"))
+              "\n"))
+
+          ((ruby)
+           (^ (^var-declaration (^gvar "globals")
+                                "binding")
+              "\n"))
+
+          (else
+           (compiler-internal-error
+            "univ-rtlib-feature, unknown target")))
+
+        (^prim-function-declaration
+         "get_host_global_var"
+         (list (cons 'name #f))
+         "\n"
+         '()
+         (case (target-name (ctx-target ctx))
+
+           ((js php python)
+            (^return (^prop-index (^gvar "globals")
+                                  (^local-var "name"))))
+
+           ((ruby)
+            #; ;; this code only works on newer versions of ruby
+            (^return (^call-prim (^member (^gvar "globals")
+                                          "local_variable_get")
+                                 (^ (^local-var "name") ".to_sym")))
+
+            ;; this code uses eval but works on all versions of ruby
+            (^return (^call-prim "eval"
+                                 (^+ (^str "$") (^local-var "name"))
+                                 (^gvar "globals"))))
+
+           (else
+            (compiler-internal-error
+             "univ-rtlib-feature, unknown target"))))))
 
     (else
      (compiler-internal-error
@@ -9569,6 +9620,10 @@ tanh
       (lambda (result)
         (return (^fixnum-box result)))))))
 
+(define (univ-subprocedure-parent-as-string? ctx)
+  (and (eq? (target-name (ctx-target ctx)) 'php)
+       (eq? (univ-procedure-representation ctx) 'host)))
+
 (univ-define-prim "##subprocedure-parent" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
@@ -9578,11 +9633,10 @@ tanh
       "parent"
       (lambda (result)
         (return (^if-expr result
-                          (if (and (eq? (target-name (ctx-target ctx))
-                                        'php)
-                                   (eq? (univ-procedure-representation ctx)
-                                        'host))
-                              (^array-index "$GLOBALS" result)
+                          (if (univ-subprocedure-parent-as-string? ctx)
+                              (^call-prim
+                               (^prefix (univ-use-rtlib ctx 'get_host_global_var))
+                               result)
                               result)
                           arg1)))))))
 
