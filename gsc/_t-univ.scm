@@ -2164,9 +2164,19 @@
 
                          (append
 
-                          (let ((entry (bbs-entry-lbl-num bbs)))
-                            (list (cons "id" (^int (label-lbl-num gvm-instr)))
-                                  (cons "parent" (gvm-lbl-use ctx (make-lbl entry)))))
+                          (let ((entry (bbs-entry-lbl-num bbs))
+                                (lbl-num (label-lbl-num gvm-instr)))
+                            (list (cons "id" (^int lbl-num))
+                                  (cons "parent"
+                                        (if (= lbl-num entry)
+                                            (^bool #f)
+                                            (lambda (ctx)
+                                              (if (and (eq? (target-name (ctx-target ctx))
+                                                            'php)
+                                                       (eq? (univ-procedure-representation ctx)
+                                                            'host))
+                                                  (^str (gvm-lbl-use-function ctx (make-lbl entry)))
+                                                  (gvm-lbl-use ctx (make-lbl entry))))))))
 
                           (if (eq? (label-type gvm-instr) 'return)
 
@@ -2187,7 +2197,7 @@
 
                          '())
 
-                     ;; gen-body
+                     ;; body
                      (gen-body ctx)))))))
 
           (define (scan-gvm-instr ctx gvm-instr)
@@ -3305,7 +3315,10 @@
 ;; =============================================================================
 
 (define (gvm-lbl-use ctx lbl)
-  (^global-function (^prefix (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx)))))
+  (^global-function (gvm-lbl-use-function ctx lbl)))
+
+(define (gvm-lbl-use-function ctx lbl)
+  (^prefix (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx))))
 
 (define (gvm-proc-use ctx name)
   (gvm-bb-use ctx 1 name))
@@ -5274,8 +5287,13 @@ gambit_Pair.prototype.toString = function () {
               (^)
               (^ "\n"
                  (map (lambda (attrib)
-                        (^assign (^member name (car attrib))
-                                 (cdr attrib)))
+                        (let* ((val* (cdr attrib))
+                               (val (if (procedure? val*)
+                                        (val* ctx)
+                                        val*)))
+                          (^assign
+                           (^member name (car attrib))
+                           val)))
                       attribs)))))
 
       ((php)
@@ -5292,9 +5310,13 @@ gambit_Pair.prototype.toString = function () {
                             (univ-separated-list
                              ", "
                              (map (lambda (attrib)
-                                    (^assign-expr
-                                     (^local-var (car attrib))
-                                     (cdr attrib)))
+                                    (let* ((val* (cdr attrib))
+                                           (val (if (procedure? val*)
+                                                    (val* ctx)
+                                                    val*)))
+                                      (^assign-expr
+                                       (^local-var (car attrib))
+                                       val)))
                                   attribs))
                             ";\n")))
                   gen-body)
@@ -5319,15 +5341,18 @@ gambit_Pair.prototype.toString = function () {
                                       (univ-separated-list
                                        ", "
                                        (map (lambda (attrib)
-                                              (^assign-expr
-                                               (^local-var (car attrib))
-                                               (let ((a (cdr attrib)))
-                                                 (if (and (list? a)
-                                                          (= (length a) 3)
-                                                          (equal? (car a) "'")
-                                                          (equal? (caddr a) "'"))
-                                                     (^ "\\'" (cadr a) "\\'")
-                                                     a))))
+                                              (let* ((val* (cdr attrib))
+                                                     (val (if (procedure? val*)
+                                                              (val* ctx)
+                                                              val*)))
+                                                (^assign-expr
+                                                 (^local-var (car attrib))
+                                                 (if (and (list? val)
+                                                          (= (length val) 3)
+                                                          (equal? (car val) "'")
+                                                          (equal? (caddr val) "'"))
+                                                     (^ "\\'" (cadr val) "\\'")
+                                                     val))))
                                             attribs))
                                       "; "))
                                "return "
@@ -5345,8 +5370,12 @@ gambit_Pair.prototype.toString = function () {
               (^)
               (^ "\n"
                  (map (lambda (attrib)
-                        (^assign (^member name (car attrib))
-                                 (cdr attrib)))
+                        (let* ((val* (cdr attrib))
+                               (val (if (procedure? val*)
+                                        (val* ctx)
+                                        val*)))
+                          (^assign (^member name (car attrib))
+                                   val)))
                       attribs)))))
 
       ((ruby)
@@ -5373,8 +5402,12 @@ gambit_Pair.prototype.toString = function () {
                         (cdr attribs))
                    "; end\n"
                    (map (lambda (attrib)
-                          (^assign (^member name (car attrib))
-                                   (cdr attrib)))
+                          (let* ((val* (cdr attrib))
+                                 (val (if (procedure? val*)
+                                          (val* ctx)
+                                          val*)))
+                            (^assign (^member name (car attrib))
+                                     val)))
                         attribs))
                 (^))))
 
@@ -5504,10 +5537,13 @@ gambit_Pair.prototype.toString = function () {
            (lambda (ctx)
              (if (or constructor (not (null? fields)))
                  (^ (map (lambda (field)
-                           (let ((field-name (car field))
-                                 (field-init (cdr field)))
+                           (let* ((field-name (car field))
+                                  (field-init (cdr field))
+                                  (init (if (procedure? field-init)
+                                            (field-init ctx)
+                                            field-init)))
                              (^assign (^this-member field-name)
-                                      (or field-init (^local-var field-name)))))
+                                      (or init (^local-var field-name)))))
                          fields)
                     (if constructor (constructor ctx) (^)))
                  (^))))
@@ -5553,10 +5589,13 @@ gambit_Pair.prototype.toString = function () {
                           "\n"
                           (lambda (ctx)
                             (^ (map (lambda (field)
-                                      (let ((field-name (car field))
-                                            (field-init (cdr field)))
+                                      (let* ((field-name (car field))
+                                             (field-init (cdr field))
+                                             (init (if (procedure? field-init)
+                                                       (field-init ctx)
+                                                       field-init)))
                                         (^assign (^this-member field-name)
-                                                 (or field-init (^local-var field-name)))))
+                                                 (or init (^local-var field-name)))))
                                     fields)
                                (if constructor (constructor ctx) (^)))))
                          "\n")
@@ -5594,10 +5633,13 @@ gambit_Pair.prototype.toString = function () {
                             (if (and (null? fields) (not constructor))
                                 "pass\n"
                                 (^ (map (lambda (field)
-                                          (let ((field-name (car field))
-                                                (field-init (cdr field)))
+                                          (let* ((field-name (car field))
+                                                 (field-init (cdr field))
+                                                 (init (if (procedure? field-init)
+                                                           (field-init ctx)
+                                                           field-init)))
                                             (^assign (^this-member field-name)
-                                                     (or field-init (^local-var field-name)))))
+                                                     (or init (^local-var field-name)))))
                                         fields)
                                    (if constructor (constructor ctx) (^)))))))
                       (^))
@@ -5635,10 +5677,13 @@ gambit_Pair.prototype.toString = function () {
                          ")\n"
                          (univ-indent
                           (^ (map (lambda (field)
-                                    (let ((field-name (car field))
-                                          (field-init (cdr field)))
+                                    (let* ((field-name (car field))
+                                           (field-init (cdr field))
+                                           (init (if (procedure? field-init)
+                                                     (field-init ctx)
+                                                     field-init)))
                                       (^assign (^this-member field-name)
-                                               (or field-init (^local-var field-name)))))
+                                               (or init (^local-var field-name)))))
                                   fields)
                              (if constructor (constructor ctx) (^))))
                          "end\n")
@@ -6176,7 +6221,7 @@ gambit_Pair.prototype.toString = function () {
      (univ-with-function-attribs
       ctx
       #f
-      "func"
+      "fn"
       (lambda ()
         (return
          (univ-get-function-attrib ctx "fn" attrib))))))
@@ -7962,8 +8007,6 @@ tanh
    (lambda (ctx return arg1)
      (return (^f64vector? arg1)))))
 
-;;TODO: ("##cpxnum?"                  (1)   #f ()    0    boolean extended)
-
 (univ-define-prim-bool "##structure?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
@@ -8021,15 +8064,12 @@ tanh
      (return (^string? arg1)))))
 
 ;;TODO: ("##s8vector?"                (1)   #f ()    0    boolean extended)
-;;TODO: ("##u8vector?"                (1)   #f ()    0    boolean extended)
 ;;TODO: ("##s16vector?"               (1)   #f ()    0    boolean extended)
-;;TODO: ("##u16vector?"               (1)   #f ()    0    boolean extended)
 ;;TODO: ("##s32vector?"               (1)   #f ()    0    boolean extended)
 ;;TODO: ("##u32vector?"               (1)   #f ()    0    boolean extended)
 ;;TODO: ("##s64vector?"               (1)   #f ()    0    boolean extended)
 ;;TODO: ("##u64vector?"               (1)   #f ()    0    boolean extended)
 ;;TODO: ("##f32vector?"               (1)   #f ()    0    boolean extended)
-;;TODO: ("##f64vector?"               (1)   #f ()    0    boolean extended)
 
 (univ-define-prim-bool "##flonum?" #t
   (make-translated-operand-generator
@@ -9536,7 +9576,15 @@ tanh
       ctx
       arg1
       "parent"
-      return))))
+      (lambda (result)
+        (return (^if-expr result
+                          (if (and (eq? (target-name (ctx-target ctx))
+                                        'php)
+                                   (eq? (univ-procedure-representation ctx)
+                                        'host))
+                              (^array-index "$GLOBALS" result)
+                              result)
+                          arg1)))))))
 
 (univ-define-prim "##subprocedure-nb-parameters" #f
   (make-translated-operand-generator
