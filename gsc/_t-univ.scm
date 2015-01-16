@@ -244,13 +244,19 @@
 (define (univ-indent . rest)
   (cons '$$indent$$ rest))
 
+(define (univ-constant val)
+  (univ-box val val))
+
 (define (univ-box boxed unboxed)
   (list '$$box$$ boxed unboxed))
 
-(define (univ-unbox x)
+(define (univ-box? x)
   (and (pair? x)
-       (eq? (car x) '$$box$$)
-       (caddr x)))
+       (eq? (car x) '$$box$$)))
+
+(define (univ-unbox x)
+  (and (univ-box? x)
+       (cddr x)))
 
 (define (univ-display x port)
 
@@ -5824,16 +5830,16 @@ gambit_Pair.prototype.toString = function () {
      (case (target-name (ctx-target ctx))
 
        ((js)
-        (^ "null"))
+        (univ-constant "null"))
 
        ((python)
-        (^ "None"))
+        (univ-constant "None"))
 
        ((ruby)
-        (^ "nil"))
+        (univ-constant "nil"))
 
        ((php)
-        (^ "NULL"))
+        (univ-constant "NULL"))
 
        (else
         (compiler-internal-error
@@ -5850,16 +5856,16 @@ gambit_Pair.prototype.toString = function () {
      (case (target-name (ctx-target ctx))
 
        ((js)
-        (^ "undefined"))
+        (univ-constant "undefined"))
 
        ((python)
-        (^ "None"))
+        (univ-constant "None"))
 
        ((ruby)
-        (^ "nil"))
+        (univ-constant "nil"))
 
        ((php)
-        (^ "NULL"))
+        (univ-constant "NULL"))
 
        (else
         (compiler-internal-error
@@ -5956,10 +5962,10 @@ gambit_Pair.prototype.toString = function () {
   (case (target-name (ctx-target ctx))
 
     ((js ruby php)
-     (^ (if val "true" "false")))
+     (univ-constant (if val "true" "false")))
 
     ((python)
-     (^ (if val "True" "False")))
+     (univ-constant (if val "True" "False")))
 
     (else
      (compiler-internal-error
@@ -6027,7 +6033,7 @@ gambit_Pair.prototype.toString = function () {
          "univ-emit-boolean?, unknown target"))))))
 
 (define (univ-emit-chr ctx val)
-  (^ (char->integer val)))
+  (univ-constant (char->integer val)))
 
 (define (univ-emit-char-obj ctx obj force-var?)
   (case (univ-char-representation ctx)
@@ -6131,7 +6137,7 @@ gambit_Pair.prototype.toString = function () {
       "univ-emit-char?, host representation not implemented"))))
 
 (define (univ-emit-int ctx val)
-  (^ val))
+  (univ-constant val))
 
 (define (univ-emit-fixnum-box ctx expr)
   (case (univ-fixnum-representation ctx)
@@ -6297,7 +6303,7 @@ gambit_Pair.prototype.toString = function () {
 
 (define (univ-emit-float ctx val)
   ;; TODO: generate correct syntax
-  (^
+  (univ-constant
    (let ((str (number->string val)))
 
      (cond ((string=? str "+nan.0")
@@ -7166,7 +7172,7 @@ tanh
 
 (define (univ-emit-str ctx val)
   ;; TODO: generate correct escapes for the target language
-  (^ "'" val "'"))
+  (univ-constant (^ "'" val "'")))
 
 (define (univ-emit-strtocodes ctx expr)
   (case (univ-string-representation ctx)
@@ -7317,7 +7323,7 @@ tanh
         (^str (symbol->string obj)))
 
        ((ruby)
-        (^ ":" (^str (symbol->string obj))))
+        (univ-constant (^ ":" (^str (symbol->string obj)))))
 
        (else
         (compiler-internal-error
@@ -7646,8 +7652,17 @@ tanh
 (define (univ-emit-instanceof ctx class expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php)
+    ((js)
      (^ expr " instanceof " class))
+
+    ((php)
+     ;; PHP raises a syntax error when expr is a constant, so this case
+     ;; is handled specially by generating (0?0:expr) which fools the compiler
+     (^ (if (univ-box? expr)
+            (^if-expr (^int 0) (^int 0) expr)
+            expr)
+        " instanceof "
+        class))
 
     ((python)
      (^call-prim "isinstance" expr class))
