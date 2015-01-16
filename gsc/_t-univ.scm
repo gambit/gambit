@@ -97,7 +97,6 @@
 
 (define (univ-string-representation ctx)
   (or (univ-get-representation-option ctx 'repr-string)
-
       'class))
 
 (define (univ-symbol-representation ctx)
@@ -5408,6 +5407,7 @@ gambit_Pair.prototype.toString = function () {
                                                           (= (length val) 3)
                                                           (equal? (car val) "'")
                                                           (equal? (caddr val) "'"))
+                                                     ;; TODO: fixme
                                                      (^ "\\'" (cadr val) "\\'")
                                                      val))))
                                             attribs))
@@ -7171,8 +7171,86 @@ tanh
   (^assign (^array-index (^structure-unbox expr1) expr2) expr3))
 
 (define (univ-emit-str ctx val)
-  ;; TODO: generate correct escapes for the target language
-  (univ-constant (^ "'" val "'")))
+  (univ-constant
+   (case (target-name (ctx-target ctx))
+
+     ((js)
+      (cdr (univ-convert-string val #\" #\")))
+
+     ((php)
+      (let ((val-utf8
+             (list->string
+              (map integer->char
+                   (u8vector->list
+                    (call-with-output-u8vector
+                     (list init: '#u8() char-encoding: 'UTF-8)
+                     (lambda (port) (univ-display val port))))))))
+        (cdr (univ-convert-string val-utf8 #\" #\$))))
+
+     ((python)
+      (let ((x (univ-convert-string val #\" #\")))
+        (if (car x) (cons "u" (cdr x)) (cdr x))))
+
+     ((ruby)
+      (cdr (univ-convert-string val #\" #\#)))
+
+     (else
+      (compiler-internal-error
+       "univ-emit-str, unknown target")))))
+
+(define (univ-convert-string str delim special)
+  (let ((unicode? #f))
+    (let loop ((i 0) (j 0) (rev-chunks (list (string delim))))
+
+      (define (done rev-chunks)
+        (cons unicode? (reverse (cons (string delim) rev-chunks))))
+
+      (define (add i j)
+        (if (= i j)
+            rev-chunks
+            (cons (substring str i j) rev-chunks)))
+
+      (if (= j (string-length str))
+          (done (add i j))
+          (let ((next-j (+ j 1))
+                (c (string-ref str j)))
+            (if (or (char=? c #\\)
+                    (char=? c delim)
+                    (char=? c special))
+                (loop next-j
+                      next-j
+                      (cons (string #\\ c)
+                            (add i j)))
+                (let ((n (char->integer c)))
+                  (cond ((< n #x100)
+                         (if (or (< n 32) (>= n 127))
+                             (let ((x (number->string (+ #x100 n) 16)))
+                               (loop next-j
+                                     next-j
+                                     (cons (string-append "\\x"
+                                                          (substring x 1 3))
+                                           (add i j))))
+                             (loop i
+                                   (+ j 1)
+                                   rev-chunks)))
+                        ((< n #x10000)
+                         (let ((x (number->string (+ #x10000 n) 16)))
+                           (set! unicode? #t)
+                           (loop next-j
+                                 next-j
+                                 (cons (string-append "\\u"
+                                                      (substring x 1 5))
+                                       (add i j)))))
+                        (else
+                         (let* ((hi (quotient (- n #x10000) #x400))
+                                (lo (modulo n #x400))
+                                (hi-x (number->string (+ #xd800 hi) 16))
+                                (lo-x (number->string (+ #xdc00 lo) 16)))
+                           (set! unicode? #t)
+                           (loop next-j
+                                 next-j
+                                 (cons (string-append "\\u" hi-x "\\u" lo-x)
+                                       (add i j)))))))))))))
 
 (define (univ-emit-strtocodes ctx expr)
   (case (univ-string-representation ctx)
