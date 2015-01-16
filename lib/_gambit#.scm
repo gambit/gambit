@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -79,45 +79,64 @@
 
 ;; System procedure classes.
 
-(##define-macro (define-prim form . exprs)
-  (let* ((name
-          (if (symbol? form)
-              form
-              (car form)))
-         (val
-          (if (symbol? form)
+(##define-syntax define-prim
+  (lambda (source)
+    (let* ((src (##sourcify source (##make-source #f #f)))
+           (exprs (##source-code src)))
 
-              (if (and (pair? exprs) (null? (cdr exprs)))
-                  (car exprs)
-                  (error "Incorrect define-prim"))
+      (define (err)
+        (##raise-expression-parsing-exception
+         'ill-formed-special-form
+         src
+         'define-prim))
 
-              (let* ((pi
-                      (c#target.prim-info name))
-                     (inlinable?
-                      (and pi
-                           (c#proc-obj-inline pi)
-                           (let loop ((lst (cdr form)))
-                             (if (pair? lst)
-                                 (if (memq (car lst) '(#!optional #!key #!rest))
-                                     #f
-                                     (loop (cdr lst)))
-                                 (null? lst))))))
+      (if (not (and (pair? exprs)
+                    (pair? (cdr exprs))))
+          (err)
+          (let* ((form
+                  (##source-code (##sourcify (cadr exprs) src)))
+                 (name
+                  (cond ((symbol? form)
+                         form)
+                        ((pair? form)
+                         (##source-code (##sourcify (car form) form)))
+                        (else
+                         (err))))
+                 (val
+                  (if (symbol? form)
 
-                (if inlinable?
-                    `(lambda ,(cdr form)
-                       ,form)
-                    (if (null? exprs)
-                        (error "define-prim can't inline" name)
-                        `(lambda ,(cdr form)
-                           ,@exprs)))))))
+                      (if (and (pair? (cddr exprs)) (null? (cdddr exprs)))
+                          (caddr exprs)
+                          (err))
 
-    `(define ,name
-       (let ()
-         (##declare
-           (not inline)
-           (standard-bindings)
-           (extended-bindings))
-         ,val))))
+                      (let* ((pi
+                              (c#target.prim-info name))
+                             (inlinable?
+                              (and pi
+                                   (c#proc-obj-inline pi)
+                                   (let loop ((lst (cdr form)))
+                                     (if (pair? lst)
+                                         (if (memq (##source-code (##sourcify (car lst) form))
+                                                   '(#!optional #!key #!rest))
+                                             #f
+                                             (loop (cdr lst)))
+                                         (null? lst))))))
+
+                        (if inlinable?
+                            `(lambda ,(cdr form)
+                               ,form)
+                            (if (null? (cddr exprs))
+                                (error "define-prim can't inline" name)
+                                `(lambda ,(cdr form)
+                                   ,@(cddr exprs))))))))
+
+        `(define ,name
+           (let ()
+             (##declare
+               (not inline)
+               (standard-bindings)
+               (extended-bindings))
+             ,val)))))))
 
 ;;;----------------------------------------------------------------------------
 
