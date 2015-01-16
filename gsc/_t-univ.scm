@@ -5403,13 +5403,7 @@ gambit_Pair.prototype.toString = function () {
                                                               val*)))
                                                 (^assign-expr
                                                  (^local-var (car attrib))
-                                                 (if (and (list? val)
-                                                          (= (length val) 3)
-                                                          (equal? (car val) "'")
-                                                          (equal? (caddr val) "'"))
-                                                     ;; TODO: fixme
-                                                     (^ "\\'" (cadr val) "\\'")
-                                                     val))))
+                                                 val)))
                                             attribs))
                                       "; "))
                                "return "
