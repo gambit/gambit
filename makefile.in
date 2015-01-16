@@ -148,6 +148,7 @@ status: fake_target
 
 push: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
+	  $(GIT) push git@github.com:feeley/gambit.git; \
 	  $(GIT) push --tags git@github.com:feeley/gambit.git; \
 	else \
 	  $(HG) push; \
