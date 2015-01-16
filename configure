@@ -939,6 +939,7 @@ enable_rtlib_debug
 enable_rtlib_debug_location
 enable_rtlib_debug_source
 enable_rtlib_debug_environments
+enable_track_scheme
 enable_poll
 enable_high_res_timing
 enable_multiple_vms
@@ -1636,6 +1637,8 @@ Optional Features:
   --enable-rtlib-debug-environments
                           Include environment debugging information in the
                           code generated for the Scheme runtime library
+                          (default is NO)
+  --enable-track-scheme   Include Scheme code location in C code generated
                           (default is NO)
   --enable-poll           Enable poll as the select method (default is NO)
   --enable-high-res-timing
@@ -5327,6 +5330,20 @@ fi
 if test "$ENABLE_RTLIB_DEBUG_ENVIRONMENTS" = yes; then
 
   COMPILATION_OPTIONS="$COMPILATION_OPTIONS -debug-environments"
+
+fi
+
+# Check whether --enable-track-scheme was given.
+if test "${enable_track_scheme+set}" = set; then :
+  enableval=$enable_track_scheme; ENABLE_TRACK_SCHEME=$enableval
+else
+  ENABLE_TRACK_SCHEME=no
+fi
+
+
+if test "$ENABLE_TRACK_SCHEME" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -track-scheme"
 
 fi
 

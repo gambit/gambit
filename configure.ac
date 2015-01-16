@@ -612,6 +612,18 @@ if test "$ENABLE_RTLIB_DEBUG_ENVIRONMENTS" = yes; then
 
 fi
 
+AC_ARG_ENABLE(track-scheme,
+              AC_HELP_STRING([--enable-track-scheme],
+                             [Include Scheme code location in C code generated (default is NO)]),
+              ENABLE_TRACK_SCHEME=$enableval,
+              ENABLE_TRACK_SCHEME=no)
+
+if test "$ENABLE_TRACK_SCHEME" = yes; then
+
+  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -track-scheme"
+
+fi
+
 ###############################################################################
 #
 # Check whether to enable poll as the select method

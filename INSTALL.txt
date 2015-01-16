@@ -269,6 +269,9 @@ The configure options which are specific to the Gambit-C system are:
                           information in the code generated for the
                           Scheme runtime library
                           (requires: make bootstrap; make bootclean; make)
+  --enable-track-scheme   cause the inclusion of Scheme code location in
+                          C code generated
+                          (requires: make bootstrap; make bootclean; make)
   --enable-thread-system[=thread-system]
                           cause the selection of a specific thread system
                           (either posix or win32)
