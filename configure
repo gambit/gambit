@@ -922,6 +922,7 @@ enable_single_host
 enable_inline_jumps
 enable_gcc_opts
 enable_gnu_gcc_specific_options
+enable_gnu_gcc_no_strict_aliasing
 enable_char_size
 enable_shared
 enable_ansi_c
@@ -1598,6 +1599,9 @@ Optional Features:
   --enable-gcc-opts       use expensive GCC optimizations (default is NO)
   --enable-gnu-gcc-specific-options
                           use GNU GCC specific options (default is YES)
+  --enable-gnu-gcc-no-strict-aliasing
+                          use GNU GCC -fno-strict-aliasing option (default is
+                          YES)
   --enable-char-size=N    Scheme character size in bytes (default is 4)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
@@ -4711,6 +4715,14 @@ if test "${enable_gnu_gcc_specific_options+set}" = set; then :
   enableval=$enable_gnu_gcc_specific_options; ENABLE_GNU_GCC_SPECIFIC_OPTIONS=$enableval
 else
   ENABLE_GNU_GCC_SPECIFIC_OPTIONS=yes
+fi
+
+
+# Check whether --enable-gnu-gcc-no-strict-aliasing was given.
+if test "${enable_gnu_gcc_no_strict_aliasing+set}" = set; then :
+  enableval=$enable_gnu_gcc_no_strict_aliasing; ENABLE_GNU_GCC_NO_STRICT_ALIASING=$enableval
+else
+  ENABLE_GNU_GCC_NO_STRICT_ALIASING=yes
 fi
 
 
@@ -10157,8 +10169,11 @@ DASH_shared="$ac_cv_DASH_shared"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   fi
 
+  if test "$ENABLE_GNU_GCC_NO_STRICT_ALIASING" == yes; then
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
+  fi
+
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math"
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
 

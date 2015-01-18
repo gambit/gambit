@@ -213,7 +213,10 @@ The configure options which are specific to the Gambit-C system are:
   --enable-single-host    compile each Scheme module as a single C function
   --enable-c-opt[=level]  use higher C optimization level
   --enable-gcc-opts       use expensive GCC optimizations
-  --enable-gnu-gcc-specific-options  use GNU GCC specific options (default=YES)
+  --enable-gnu-gcc-specific-options
+                          use GNU GCC specific options (default=YES)
+  --enable-gnu-gcc-no-strict-aliasing
+                          use GNU GCC -fno-strict-aliasing option (default=YES)
   --enable-cplusplus      compile using C++ compiler
   --enable-shared         build the Scheme runtime system as a shared library
   --enable-debug          build system so that it can be debugged

@@ -358,6 +358,12 @@ AC_ARG_ENABLE(gnu-gcc-specific-options,
               ENABLE_GNU_GCC_SPECIFIC_OPTIONS=$enableval,
               ENABLE_GNU_GCC_SPECIFIC_OPTIONS=yes)
 
+AC_ARG_ENABLE(gnu-gcc-no-strict-aliasing,
+              AC_HELP_STRING([--enable-gnu-gcc-no-strict-aliasing],
+                             [use GNU GCC -fno-strict-aliasing option (default is YES)]),
+              ENABLE_GNU_GCC_NO_STRICT_ALIASING=$enableval,
+              ENABLE_GNU_GCC_NO_STRICT_ALIASING=yes)
+
 ###############################################################################
 #
 # Check the width of Scheme characters.
@@ -1598,8 +1604,11 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   fi
 
+  if test "$ENABLE_GNU_GCC_NO_STRICT_ALIASING" == yes; then
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
+  fi
+
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math"
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
 
