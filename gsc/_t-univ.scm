@@ -4018,6 +4018,14 @@ EOF
                           (^getglo '##apply-with-procedure-check-nary))))
          (^return (^local-var "dest")))))
 
+    ((make_subprocedure)
+     (^prim-function-declaration
+      "make_subprocedure"
+      (list (cons 'parent #f) (cons 'id #f))
+      "\n"
+      '()
+      (^return (^local-var "parent"))))
+
     ((closure_alloc)
      (case (univ-procedure-representation ctx)
 
@@ -5360,7 +5368,9 @@ gambit_Pair.prototype.toString = function () {
                        prn)
                   params
                   (^ header
-                     (if (null? attribs)
+                     (if (or (null? attribs)
+                             (and (not prim?)
+                                  (not (univ-php-version-53? ctx))))
                          (^)
                          (^ "static "
                             (univ-separated-list
@@ -9690,12 +9700,10 @@ tanh
 (univ-define-prim "##make-subprocedure" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (univ-call-with-fn-attrib
-      ctx
-      arg1
-      "subprocedures"
-      (lambda (subprocs)
-        (return (^array-index subprocs (^fixnum-unbox arg2))))))))
+     (return (^call-prim
+              (^prefix (univ-use-rtlib ctx 'make_subprocedure))
+              arg1
+              (^fixnum-unbox arg2))))))
 
 (univ-define-prim "##subprocedure-id" #f
   (make-translated-operand-generator
