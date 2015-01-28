@@ -3744,7 +3744,7 @@ int direction;)
 #ifdef USE_OPENSSL
 #define SSL_CHECK_ERROR(ssl_ret)                \
   do {                                          \
-    if (!ssl_ret)                               \
+    if (ssl_ret == 0)                           \
       {                                         \
         ERR_print_errors_fp (stderr);           \
         return ___FIX(___SSL_ERR);              \
@@ -3830,7 +3830,7 @@ typedef struct ___device_tcp_client_vtbl_struct
 ___HIDDEN void clear_ssl_error_queue
    ___PVOID
 {
-  while (ERR_peek_error())
+  while (ERR_peek_error() != 0)
     {
       fprintf (stderr, "ignoring stale global SSL error");
     }
@@ -4034,7 +4034,7 @@ int direction;)
 
 #ifdef USE_OPENSSL
 
-  if (d->ssl && d->ssl_ctx)
+  if (d->ssl != NULL && d->ssl_ctx != NULL)
     {
       err = SSL_shutdown (d->ssl);
       if (err > 0)
@@ -4049,12 +4049,12 @@ int direction;)
               /* discard any error in SSL shutdown */
             }
         }
-      if (d->ssl)
+      if (d->ssl != NULL)
         {
           SSL_free (d->ssl);
           d->ssl = NULL;
         }
-      if (d->ssl_ctx)
+      if (d->ssl_ctx != NULL)
         {
           SSL_CTX_free (d->ssl_ctx);
           d->ssl_ctx = NULL;
@@ -4254,9 +4254,9 @@ ___device_stream *self;)
 
 #ifdef USE_OPENSSL
 
-  if (d->ssl)
+  if (d->ssl != NULL)
     SSL_free (d->ssl);
-  if (d->ssl_ctx)
+  if (d->ssl_ctx != NULL)
     SSL_CTX_free (d->ssl_ctx);
 
 #endif
@@ -4326,6 +4326,7 @@ ___stream_index *len_done;)
   /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
   if (d->renegotiations > 0)
     {
+      /* TODO: Drop connection */
       return ___FIX(___SSL_ERR);
     }
 
@@ -4429,6 +4430,7 @@ ___stream_index *len_done;)
   /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
   if (d->renegotiations > 0)
     {
+      /* TODO: Drop connection */
       return ___FIX(___SSL_ERR);
     }
 
@@ -4762,7 +4764,7 @@ ___device_tcp_client *dev;)
   /**********************/
   /* SSL Initialization */
   
-  if (!ssl_initialized)
+  if (ssl_initialized == 0)
     {      
       if (!SSL_library_init())
         {
@@ -5198,7 +5200,7 @@ ___device_tcp_client *dev;)
   /**********************/
   /* SSL Initialization */
   
-  if (!ssl_initialized)
+  if (ssl_initialized == 0)
     {
       fprintf (stderr, "** Initializing OpenSSL\n");
       if (!SSL_library_init())
@@ -5215,7 +5217,7 @@ ___device_tcp_client *dev;)
     }
   
   /* Check Entropy */
-  if (!RAND_status())
+  if (RAND_status() == 0)
     {
       fprintf(stderr, "** SSL: not enough entropy in the pool!\n");
       return ___FIX(___SSL_ERR);
@@ -5274,7 +5276,7 @@ ___device_tcp_client *dev;)
         int err;
         dh_fp = fopen (dh_parameters_file, "r");
         printf("HERE 1\n");
-        if (!dh_fp)
+        if (dh_fp == NULL)
           {
             fprintf (stderr, "** SSL: Error Reading DH parameters file\n");
             return ___FIX(___SSL_ERR);
@@ -5282,13 +5284,13 @@ ___device_tcp_client *dev;)
         dh = PEM_read_DHparams (dh_fp, NULL, NULL, NULL);
         printf("HERE 2\n");
         fclose (dh_fp);
-        if (!dh)
+        if (dh == NULL)
           {
             fprintf (stderr, "** SSL: Reading Diffie-Hellman parameters failed\n");
             return ___FIX(___SSL_ERR);
           }
         DH_check (dh, &err);
-        if (err)
+        if (err != 0)
           {
             fprintf (stderr, "** SSL: Diffie-Hellman parameters failed validation\n");
             return ___FIX(___SSL_ERR);
@@ -5298,7 +5300,7 @@ ___device_tcp_client *dev;)
         {
           /* Default DH parameters from RFC5114 */
           dh = DH_new();
-          if (!dh)
+          if (dh == NULL)
             {
               fprintf (stderr, "** SSL: Error allocating Diffie-Hellman parameters\n");
               return ___FIX(___SSL_ERR);
@@ -5306,7 +5308,7 @@ ___device_tcp_client *dev;)
           dh->p = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
           dh->g = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
           dh->length = 160;
-          if (!dh->p || !dh->g)
+          if (dh->p == NULL || dh->g == NULL)
             {
               DH_free(dh);
               fprintf (stderr, "** SSL: Error processing Diffie-Hellman parameters\n");
@@ -5334,7 +5336,7 @@ ___device_tcp_client *dev;)
         {
             /* OpenSSL only supports the "named curves" from RFC 4492, section 5.1.1. */
           nid = OBJ_sn2nid (elliptic_curve_name);
-          if (!nid)
+          if (nid == 0)
             {
               fprintf (stderr, "** SSL: Unknown elliptic curve name\n");
               return ___FIX(___SSL_ERR);
@@ -5345,7 +5347,7 @@ ___device_tcp_client *dev;)
           nid = OBJ_sn2nid("prime256v1");
         }
       ecdh = EC_KEY_new_by_curve_name(nid);
-      if (!ecdh)
+      if (ecdh == NULL)
         {
           fprintf (stderr, "** SSL: Unable to create curve\n");
           return ___FIX(___SSL_ERR);
@@ -5366,7 +5368,7 @@ ___device_tcp_client *dev;)
   if (1 /* Verify client */)
     {
       client_ca_list = SSL_load_client_CA_file (client_ca_file);
-      if (client_ca_list)
+      if (client_ca_list != NULL)
         {
           SSL_CTX_set_client_CA_list(dev->ssl_ctx, client_ca_list);
           SSL_CTX_set_verify (dev->ssl_ctx,
