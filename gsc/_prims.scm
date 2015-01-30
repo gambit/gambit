@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2081,6 +2081,23 @@
   (define **fxior-sym (string->canonical-symbol "##fxior"))
   (define **fxxor-sym (string->canonical-symbol "##fxxor"))
 
+  (define **fxwraparithmetic-shift-sym
+    (string->canonical-symbol "##fxwraparithmetic-shift"))
+  (define **fxwraparithmetic-shift?-sym
+    (string->canonical-symbol "##fxwraparithmetic-shift?"))
+  (define **fxarithmetic-shift?-sym
+    (string->canonical-symbol "##fxarithmetic-shift?"))
+  (define **fxwraparithmetic-shift-left-sym
+    (string->canonical-symbol "##fxwraparithmetic-shift-left"))
+  (define **fxwraparithmetic-shift-left?-sym
+    (string->canonical-symbol "##fxwraparithmetic-shift-left?"))
+  (define **fxarithmetic-shift-left?-sym
+    (string->canonical-symbol "##fxarithmetic-shift-left?"))
+  (define **fxarithmetic-shift-right?-sym
+    (string->canonical-symbol "##fxarithmetic-shift-right?"))
+  (define **fxwraplogical-shift-right?-sym
+    (string->canonical-symbol "##fxwraplogical-shift-right?"))
+
   (define **flonum?-sym (string->canonical-symbol "##flonum?"))
 
   (define **fl=-sym (string->canonical-symbol "##fl="))
@@ -2535,7 +2552,7 @@
             conditional-op-sym
             (list var1 var2))))))
 
-  (define (make-conditional-unary-generator conditional-op-sym)
+  (define (make-conditional-fixed-arity-generator conditional-op-sym)
     (lambda (source env vars invalid)
       (let ((var (car (gen-temp-vars source '(#f)))))
         (new-call source env
@@ -2673,7 +2690,7 @@
        **fixnum?-sym
        (make-nary-generator
         gen-fixnum-0 ; ignored
-        (make-conditional-unary-generator **fx-?-sym)
+        (make-conditional-fixed-arity-generator **fx-?-sym)
         (lambda (source env vars invalid)
           (gen-conditional-fold source env
             vars
@@ -2718,14 +2735,14 @@
 
     (define case-fxabs
       (gen-fixnum-case
-       (make-conditional-unary-generator **fxabs?-sym)))
+       (make-conditional-fixed-arity-generator **fxabs?-sym)))
 
     (define case-fxwrapsquare
       (gen-simple-case **fixnum?-sym **fxwrapsquare-sym))
 
     (define case-fxsquare
       (gen-fixnum-case
-       (make-conditional-unary-generator **fxsquare?-sym)))
+       (make-conditional-fixed-arity-generator **fxsquare?-sym)))
 
     (define case-fxnot
       (gen-simple-case **fixnum?-sym **fxnot-sym))
@@ -2739,12 +2756,35 @@
     (define case-fxxor
       (gen-simple-case **fixnum?-sym **fxxor-sym))
 
-    ; fxwraparithmetic-shift
-    ; fxarithmetic-shift
-    ; fxwraparithmetic-shift-left
-    ; fxarithmetic-shift-left
-    ; fxarithmetic-shift-right
-    ; fxwraplogical-shift-right
+    (define case-fxwraparithmetic-shift
+      (gen-simple-case **fixnum?-sym **fxwraparithmetic-shift-sym))
+
+    (define case-fxarithmetic-shift
+      (gen-validating-case
+       **fixnum?-sym
+       (make-conditional-fixed-arity-generator
+        **fxarithmetic-shift?-sym)))
+
+    (define case-fxwraparithmetic-shift-left
+      (gen-simple-case **fixnum?-sym **fxwraparithmetic-shift-left-sym))
+
+    (define case-fxarithmetic-shift-left
+      (gen-validating-case
+       **fixnum?-sym
+       (make-conditional-fixed-arity-generator
+        **fxarithmetic-shift-left?-sym)))
+
+    (define case-fxarithmetic-shift-right
+      (gen-validating-case
+       **fixnum?-sym
+       (make-conditional-fixed-arity-generator
+        **fxarithmetic-shift-right?-sym)))
+
+    (define case-fxwraplogical-shift-right
+      (gen-validating-case
+       **fixnum?-sym
+       (make-conditional-fixed-arity-generator
+        **fxwraplogical-shift-right?-sym)))
 
     (define case-fixnum->flonum
       (gen-fixnum-case
@@ -3199,14 +3239,18 @@
 
     (def-exp "fxxor" (make-simple-expander case-fxxor))
 
-;;  (def-exp "fxwraparithmetic-shift" (make-simple-expander case-fxwraparithmetic-shift))
-;;  (def-exp "fxarithmetic-shift" (make-simple-expander case-fxarithmetic-shift))
-
-;;  (def-exp "fxwraparithmetic-shift-left" (make-simple-expander case-fxwraparithmetic-shift-left))
-;;  (def-exp "fxarithmetic-shift-left" (make-simple-expander case-fxarithmetic-shift-left))
-
-;;  (def-exp "fxarithmetic-shift-right" (make-simple-expander case-fxarithmetic-shift-right))
-;;  (def-exp "fxwraplogical-shift-right" (make-simple-expander case-fxwraplogical-shift-right))
+    (def-exp "fxwraparithmetic-shift"
+      (make-simple-expander case-fxwraparithmetic-shift))
+    (def-exp "fxarithmetic-shift"
+      (make-simple-expander case-fxarithmetic-shift))
+    (def-exp "fxwraparithmetic-shift-left"
+      (make-simple-expander case-fxwraparithmetic-shift-left))
+    (def-exp "fxarithmetic-shift-left"
+      (make-simple-expander case-fxarithmetic-shift-left))
+    (def-exp "fxarithmetic-shift-right"
+      (make-simple-expander case-fxarithmetic-shift-right))
+    (def-exp "fxwraplogical-shift-right"
+      (make-simple-expander case-fxwraplogical-shift-right))
 
     (def-exp "fxwrapabs" (make-simple-expander case-fxwrapabs))
     (def-exp "fxabs" (make-simple-expander case-fxabs))
