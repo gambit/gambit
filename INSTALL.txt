@@ -27,7 +27,7 @@ The Gambit source code can be obtained in different ways.
 
  - You can get a specific release, preferably the latest, in the form
    of a compressed tar ball (.tgz extension).  The simplest is to use
-   a browser to visit the Gambit wiki (http://gambit.iro.umontreal.ca)
+   a browser to visit the Gambit wiki (http://gambitscheme.org)
    and click on "Development Sources" to download the compressed tar
    ball.  Alternatively, use wget or curl from the command line,
    for example:
@@ -314,12 +314,12 @@ one or more sample executions of the system should be performed, and
 then finally the system should be built with --enable-feedback2.  For
 example:
 
-  % ./configure --single-host --enable-feedback1
+  % ./configure --enable-single-host --enable-feedback1
   % make
   % gsc/gsc -:=. my-favorite-program.scm
   % gsi/gsi -:=. my-favorite-program.o1
   % make mostlyclean
-  % ./configure --single-host --enable-feedback2
+  % ./configure --enable-single-host --enable-feedback2
   % make
 
 The option --enable-symlinks is useful when the --bindir, --libdir,
