@@ -2163,22 +2163,7 @@
   (define **subtype-sym (string->canonical-symbol "##subtype"))
 
   (define (gen-fixnum-case gen)
-    (lambda (source
-             env
-             vars
-             check-run-time-binding
-             invalid
-             fail)
-      (gen-type-checks
-       source
-       env
-       vars
-       check-run-time-binding
-       **fixnum?-sym
-       #f
-       (lambda ()
-         (gen source env vars invalid))
-       fail)))
+    (gen-validating-case **fixnum?-sym gen))
 
   (define (gen-fixnum-division-case gen)
     (lambda (source
@@ -2206,22 +2191,7 @@
        fail)))
 
   (define (gen-flonum-case gen)
-    (lambda (source
-             env
-             vars
-             check-run-time-binding
-             invalid
-             fail)
-      (gen-type-checks
-       source
-       env
-       vars
-       check-run-time-binding
-       **flonum?-sym
-       #f
-       (lambda ()
-         (gen source env vars invalid))
-       fail)))
+    (gen-validating-case **flonum?-sym gen))
 
   (define (gen-log-flonum-case gen)
     (lambda (source
@@ -2601,48 +2571,42 @@
       (gen-simple-case **fixnum?-sym **fxeven?-sym))
 
     (define case-fxmax
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0 ; ignored
         gen-first-arg
         (make-fold-generator **fxmax-sym))))
 
     (define case-fxmin
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0 ; ignored
         gen-first-arg
         (make-fold-generator **fxmin-sym))))
 
     (define case-fxwrap+
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0
         gen-first-arg
         (make-fold-generator **fxwrap+-sym))))
 
     (define case-fx+
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0
         gen-first-arg
         (make-conditional-fold-generator **fx+?-sym))))
 
     (define case-fxwrap*
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-1
         gen-first-arg
         (make-fold-generator **fxwrap*-sym))))
 
     (define case-fx*
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-1
         gen-first-arg
@@ -2678,16 +2642,14 @@
                     (list var1 var2))))))))))
 
     (define case-fxwrap-
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0 ; ignored
         (make-prim-generator **fxwrap--sym)
         (make-fold-generator **fxwrap--sym))))
 
     (define case-fx-
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0 ; ignored
         (make-conditional-fixed-arity-generator **fx-?-sym)
@@ -2760,8 +2722,7 @@
       (gen-simple-case **fixnum?-sym **fxwraparithmetic-shift-sym))
 
     (define case-fxarithmetic-shift
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-conditional-fixed-arity-generator
         **fxarithmetic-shift?-sym)))
 
@@ -2769,20 +2730,17 @@
       (gen-simple-case **fixnum?-sym **fxwraparithmetic-shift-left-sym))
 
     (define case-fxarithmetic-shift-left
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-conditional-fixed-arity-generator
         **fxarithmetic-shift-left?-sym)))
 
     (define case-fxarithmetic-shift-right
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-conditional-fixed-arity-generator
         **fxarithmetic-shift-right?-sym)))
 
     (define case-fxwraplogical-shift-right
-      (gen-validating-case
-       **fixnum?-sym
+      (gen-fixnum-case
        (make-conditional-fixed-arity-generator
         **fxwraplogical-shift-right?-sym)))
 
@@ -2841,48 +2799,42 @@
       (gen-simple-case **flonum?-sym **flnan?-sym))
 
     (define case-flmax
-      (gen-validating-case
-       **flonum?-sym
+      (gen-flonum-case
        (make-nary-generator
         gen-flonum-0 ; ignored
         gen-first-arg
         (make-fold-generator **flmax-sym))))
 
     (define case-flmin
-      (gen-validating-case
-       **flonum?-sym
+      (gen-flonum-case
        (make-nary-generator
         gen-flonum-0 ; ignored
         gen-first-arg
         (make-fold-generator **flmin-sym))))
 
     (define case-fl+
-      (gen-validating-case
-       **flonum?-sym
+      (gen-flonum-case
        (make-nary-generator
         gen-flonum-0
         gen-first-arg
         (make-fold-generator **fl+-sym))))
 
     (define case-fl*
-      (gen-validating-case
-       **flonum?-sym
+      (gen-flonum-case
        (make-nary-generator
         gen-flonum-1
         gen-first-arg
         (make-fold-generator **fl*-sym))))
 
     (define case-fl-
-      (gen-validating-case
-       **flonum?-sym
+      (gen-flonum-case
        (make-nary-generator
         gen-flonum-0 ; ignored
         (make-prim-generator **fl--sym)
         (make-fold-generator **fl--sym))))
 
     (define case-fl/
-      (gen-validating-case
-       **flonum?-sym
+      (gen-flonum-case
        (make-nary-generator
         gen-flonum-0 ; ignored
         (make-prim-generator **fl/-sym)
@@ -3194,8 +3146,7 @@
     (def-exp "fl+"     (make-simple-expander case-fl+))
     (def-exp "+"       (make-fixflo-expander
                          case-fx+
-                         (gen-validating-case
-                          **flonum?-sym
+                         (gen-flonum-case
                           (make-nary-generator
                            gen-fixnum-0
                            gen-first-arg
@@ -3206,8 +3157,7 @@
     (def-exp "fl*"     (make-simple-expander case-fl*))
     (def-exp "*"       (make-fixflo-expander
                          case-fx*
-                         (gen-validating-case
-                          **flonum?-sym
+                         (gen-flonum-case
                           (make-nary-generator
                            gen-fixnum-1
                            gen-first-arg
