@@ -4699,7 +4699,15 @@ EOF
       "\n"
       '()
       (case (target-name (ctx-target ctx))
-        ((js python)
+        ((js)
+         (^if (^prop-index-exists? (^local-var (^this)) (^str "console"))
+              (^expr-statement
+               (^call-prim (^member (^global-var "console") "log")
+                           (^local-var "obj")))
+              (^expr-statement
+               (^call-prim "print"
+                           (^local-var "obj")))))
+        ((python)
          (^expr-statement (^call-prim "print" (^local-var "obj"))))
         ((ruby php)
          (^ (^expr-statement (^call-prim "print" (^local-var "obj")))
