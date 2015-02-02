@@ -3823,9 +3823,66 @@ typedef struct ___device_tcp_client_vtbl_struct
   } ___device_tcp_client_vtbl;
 
 
-/* SSL support functions */
 
 #ifdef USE_OPENSSL
+
+/* SSL context */
+
+typedef struct ___ssl_context
+  {
+    /* SSL protocol options */
+    ___U16 min_ssl_version;
+    ___BOOL insert_empty_fragments;
+
+    /* Client and Server options */
+    ___SCMOBJ certificate_path;
+    ___SCMOBJ private_key_path;
+    
+    /* Server-only options */
+    ___BOOL use_dh;
+    ___SCMOBJ dh_params_path;
+    
+    ___BOOL use_elliptic_curves;
+    ___SCMOBJ elliptic_curve_name;
+    
+    ___BOOL use_client_authentication;
+    ___SCMOBJ client_ca_path;
+    
+    /* OpenSSL context */
+    SSL_CTX *ctx;
+  } ___ssl_context;
+
+___ssl_context *___os_make_ssl_context
+   ___P((___U16 min_ssl_version),
+        (min_ssl_version)
+___U16 min_ssl_version;)
+{
+  ___ssl_context *c = ___EXT(___alloc_rc) (sizeof (___ssl_context));
+
+  if (c != NULL)
+    {
+    }
+
+  printf ("SSL version: %x\n", min_ssl_version);
+  fflush (stdout);
+  
+  return c;
+}
+
+___SCMOBJ ___release_rc_ssl_context( void* ptr )
+  {
+    ___ssl_context* c = ptr;
+
+    printf( "release_rc_sslctx(%p)\n", c );
+    fflush( stdout );
+    
+    ___EXT(___release_rc)(c);
+    
+    return ___FIX(___NO_ERR);
+  }
+
+
+/* SSL support functions */
 
 ___HIDDEN void clear_ssl_error_queue
    ___PVOID
@@ -3836,6 +3893,8 @@ ___HIDDEN void clear_ssl_error_queue
     }
   ERR_clear_error();
 }
+
+/* SSL multithreading support */
 
 #ifdef ___MULTIPLE_THREADED_VMS
 
@@ -4784,7 +4843,7 @@ ___device_tcp_client *dev;)
     }
   
   /* Check Entropy */
-  if (!RAND_status())
+  if (RAND_status() == 0)
     {
       fprintf(stderr, "** SSL: not enough entropy in the pool\n");
       return ___FIX(___SSL_ERR);
