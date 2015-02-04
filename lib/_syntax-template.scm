@@ -209,11 +209,14 @@
           ((= tag (syn#template-improper-list))
            (cons (##make-source
                   (build-list (- len 2)
-                              (car (syn#et
-                                    (vector-ref ctemplate (- len 1))
-                                    bindings
-                                    loop-nests
-                                    '())))
+                              (let ((t (car (syn#et
+                                             (vector-ref ctemplate (- len 1))
+                                             bindings
+                                             loop-nests
+                                             '()))))
+                                (if (##source? t)
+                                    (##source-code t)
+                                    t)))
                   (vector-ref ctemplate 1))
                  tail))
 

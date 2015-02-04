@@ -284,7 +284,9 @@
 
                     (syn#mp
                      sub-cpattern
-                     (##sourcify lst input)
+                     (if (##source? lst)
+                         lst
+                         (##sourcify-aux1 lst input))
                      bs))))))))
 
 (define (syn#mp cpattern input bindings)
