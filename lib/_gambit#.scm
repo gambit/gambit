@@ -138,24 +138,21 @@
 
 ;; A symbol is represented by an object vector of length 4
 ;; slot 0 = symbol name (a string or a fixnum <n> for a symbol named "g<n>")
-;; slot 1 = prefix (a symbol or #f)
-;; slot 2 = hash code (non-negative fixnum)
-;; slot 3 = link to next symbol in symbol table (#f for uninterned)
-;; slot 4 = pointer to corresponding global variable (0 if none exists)
+;; slot 1 = hash code (non-negative fixnum)
+;; slot 2 = link to next symbol in symbol table (#f for uninterned)
+;; slot 3 = pointer to corresponding global variable (0 if none exists)
 
 (##define-macro (macro-make-uninterned-symbol name hash)
   `(##subtype-set!
-    (##vector ,name #f ,hash #f 0)
+    (##vector ,name ,hash #f 0)
     (macro-subtype-symbol)))
 
-(##define-macro (macro-symbol-name s)          `(macro-slot 0 ,s))
-(##define-macro (macro-symbol-name-set! s x)   `(macro-slot 0 ,s ,x))
-(##define-macro (macro-symbol-prefix s)        `(macro-slot 1 ,s))
-(##define-macro (macro-symbol-prefix-set! s x) `(macro-slot 1 ,s ,x))
-(##define-macro (macro-symbol-hash s)          `(macro-slot 2 ,s))
-(##define-macro (macro-symbol-hash-set! s x)   `(macro-slot 2 ,s ,x))
-(##define-macro (macro-symbol-next s)          `(macro-slot 3 ,s))
-(##define-macro (macro-symbol-next-set! s x)   `(macro-slot 3 ,s ,x))
+(##define-macro (macro-symbol-name s)        `(macro-slot 0 ,s))
+(##define-macro (macro-symbol-name-set! s x) `(macro-slot 0 ,s ,x))
+(##define-macro (macro-symbol-hash s)        `(macro-slot 1 ,s))
+(##define-macro (macro-symbol-hash-set! s x) `(macro-slot 1 ,s ,x))
+(##define-macro (macro-symbol-next s)        `(macro-slot 2 ,s))
+(##define-macro (macro-symbol-next-set! s x) `(macro-slot 2 ,s ,x))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -163,23 +160,20 @@
 
 ;; A keyword is represented by an object vector of length 3
 ;; slot 0 = keyword name (a string or a fixnum <n> for a keyword named "g<n>")
-;; slot 1 = prefix (a symbol or #f)
-;; slot 2 = hash code (non-negative fixnum)
-;; slot 3 = link to next keyword in keyword table (#f for uninterned)
+;; slot 1 = hash code (non-negative fixnum)
+;; slot 2 = link to next keyword in keyword table (#f for uninterned)
 
 (##define-macro (macro-make-uninterned-keyword name hash)
   `(##subtype-set!
-    (##vector ,name #f ,hash #f)
+    (##vector ,name ,hash #f)
     (macro-subtype-keyword)))
 
-(##define-macro (macro-keyword-name k)          `(macro-slot 0 ,k))
-(##define-macro (macro-keyword-name-set! k x)   `(macro-slot 0 ,k ,x))
-(##define-macro (macro-keyword-prefix k)        `(macro-slot 1 ,k))
-(##define-macro (macro-keyword-prefix-set! k x) `(macro-slot 1 ,k ,x))
-(##define-macro (macro-keyword-hash k)          `(macro-slot 2 ,k))
-(##define-macro (macro-keyword-hash-set! k x)   `(macro-slot 2 ,k ,x))
-(##define-macro (macro-keyword-next k)          `(macro-slot 3 ,k))
-(##define-macro (macro-keyword-next-set! k x)   `(macro-slot 3 ,k ,x))
+(##define-macro (macro-keyword-name k)        `(macro-slot 0 ,k))
+(##define-macro (macro-keyword-name-set! k x) `(macro-slot 0 ,k ,x))
+(##define-macro (macro-keyword-hash k)        `(macro-slot 1 ,k))
+(##define-macro (macro-keyword-hash-set! k x) `(macro-slot 1 ,k ,x))
+(##define-macro (macro-keyword-next k)        `(macro-slot 2 ,k))
+(##define-macro (macro-keyword-next-set! k x) `(macro-slot 2 ,k ,x))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
