@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit-C v4.7.3
+; File: "_gsi_.c", produced by Gambit-C v4.7.4
 (
-407003
+407004
 " _gsi_"
 ((" _kernel" (preload . #t)) (" _system" (preload . #t)) (" _num" (preload . #t)) (" _std" (preload . #t)) (" _eval" (preload . #t)) (" _io" (preload . #t)) (" _nonstd" (preload . #t)) (" _thread" (preload . #t)) (" _repl" (preload . #t)) (" _gsilib" (preload . #t)) (" _gsi" (preload . #t)))
 (
@@ -1293,6 +1293,7 @@
 "##call-with-current-continuation"
 "##call-with-values"
 "##car"
+"##carg"
 "##case-memv"
 "##casin"
 "##casinh"
@@ -1504,7 +1505,8 @@
 "##cte-macro-descr"
 "##cte-macro?"
 "##cte-mutate-top-cte!"
-"##cte-namespace-vars"
+"##cte-namespace-aliases"
+"##cte-namespace-lookup"
 "##cte-namespace?"
 "##cte-parent-cte"
 "##cte-process-declare"
@@ -1533,8 +1535,10 @@
 "##default-load-required-module"
 "##default-path-expand"
 "##default-path-resolve"
+"##default-path-unresolve"
 "##default-repl-context-command"
 "##default-repl-context-prompt"
+"##default-repl-path-normalize"
 "##default-thread-make-repl-channel"
 "##default-user-interrupt-handler"
 "##default-wr"
@@ -2068,6 +2072,7 @@
 "##lookup-module"
 "##lookup-registered-module"
 "##macro-descr"
+"##macro-descr-expander"
 "##macro-expand"
 "##macro-lookup"
 "##magnitude"
@@ -2323,6 +2328,8 @@
 "##path-strip-extension"
 "##path-strip-trailing-directory-separator"
 "##path-strip-volume"
+"##path-unresolve"
+"##path-unresolve-hook"
 "##path-volume"
 "##path-volume-end"
 "##path-volume-end-using-dir-sep"
@@ -2566,6 +2573,8 @@
 "##repl-location-origin"
 "##repl-location-relative"
 "##repl-output-port"
+"##repl-path-normalize"
+"##repl-path-normalize-hook"
 "##repl-result-history-max-length-set!"
 "##repl-result-history-ref"
 "##repl-within"
@@ -2616,6 +2625,8 @@
 "##source-strip"
 "##source?"
 "##sourcify"
+"##sourcify-aux1"
+"##sourcify-aux2"
 "##sqrt"
 "##square"
 "##start-main"
@@ -3461,7 +3472,6 @@
 "##cadddr"
 "##caddr"
 "##cadr"
-"##carg"
 "##cdaaar"
 "##cdaadr"
 "##cdaar"
@@ -3788,7 +3798,6 @@
 "##machine-code-block-ref"
 "##machine-code-block-set!"
 "##macro-descr-def-syntax?"
-"##macro-descr-expander"
 "##macro-descr-expander-src"
 "##macro-descr-size"
 "##make-chartable"
@@ -4539,7 +4548,7 @@
  #f
 )
 #else
-#define ___VERSION 407003
+#define ___VERSION 407004
 #define ___LINKFILE_NAME " _gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
@@ -5190,8 +5199,9 @@ ___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_macro_2d_name,___G__23__23_cte_2d_macro_2
 ___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_macro_3f_,___G__23__23_cte_2d_macro_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_mutate_2d_top_2d_cte_21_,___G__23__23_cte_2d_mutate_2d_top_2d_cte_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_namespace,___G__23__23_cte_2d_namespace)
+___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_namespace_2d_aliases,___G__23__23_cte_2d_namespace_2d_aliases)
+___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_namespace_2d_lookup,___G__23__23_cte_2d_namespace_2d_lookup)
 ___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_namespace_2d_prefix,___G__23__23_cte_2d_namespace_2d_prefix)
-___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_namespace_2d_vars,___G__23__23_cte_2d_namespace_2d_vars)
 ___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_namespace_3f_,___G__23__23_cte_2d_namespace_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_parent_2d_cte,___G__23__23_cte_2d_parent_2d_cte)
 ___DEF_OLD_SYM_GLO(___S__23__23_cte_2d_process_2d_declare,___G__23__23_cte_2d_process_2d_declare)
@@ -5224,8 +5234,10 @@ ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_help,___G__23__23_default_2d_help)
 ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_load_2d_required_2d_module,___G__23__23_default_2d_load_2d_required_2d_module)
 ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_path_2d_expand,___G__23__23_default_2d_path_2d_expand)
 ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_path_2d_resolve,___G__23__23_default_2d_path_2d_resolve)
+___DEF_OLD_SYM_GLO(___S__23__23_default_2d_path_2d_unresolve,___G__23__23_default_2d_path_2d_unresolve)
 ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_repl_2d_context_2d_command,___G__23__23_default_2d_repl_2d_context_2d_command)
 ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_repl_2d_context_2d_prompt,___G__23__23_default_2d_repl_2d_context_2d_prompt)
+___DEF_OLD_SYM_GLO(___S__23__23_default_2d_repl_2d_path_2d_normalize,___G__23__23_default_2d_repl_2d_path_2d_normalize)
 ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_thread_2d_make_2d_repl_2d_channel,___G__23__23_default_2d_thread_2d_make_2d_repl_2d_channel)
 ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_user_2d_interrupt_2d_handler,___G__23__23_default_2d_user_2d_interrupt_2d_handler)
 ___DEF_OLD_SYM_GLO(___S__23__23_default_2d_wr,___G__23__23_default_2d_wr)
@@ -6315,6 +6327,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_path_2d_strip_2d_directory,___G__23__23_path_2d_
 ___DEF_OLD_SYM_GLO(___S__23__23_path_2d_strip_2d_extension,___G__23__23_path_2d_strip_2d_extension)
 ___DEF_OLD_SYM_GLO(___S__23__23_path_2d_strip_2d_trailing_2d_directory_2d_separator,___G__23__23_path_2d_strip_2d_trailing_2d_directory_2d_separator)
 ___DEF_OLD_SYM_GLO(___S__23__23_path_2d_strip_2d_volume,___G__23__23_path_2d_strip_2d_volume)
+___DEF_OLD_SYM_GLO(___S__23__23_path_2d_unresolve,___G__23__23_path_2d_unresolve)
+___DEF_OLD_SYM_GLO(___S__23__23_path_2d_unresolve_2d_hook,___G__23__23_path_2d_unresolve_2d_hook)
 ___DEF_OLD_SYM_GLO(___S__23__23_path_2d_volume,___G__23__23_path_2d_volume)
 ___DEF_OLD_SYM_GLO(___S__23__23_path_2d_volume_2d_end,___G__23__23_path_2d_volume_2d_end)
 ___DEF_OLD_SYM_GLO(___S__23__23_path_2d_volume_2d_end_2d_using_2d_dir_2d_sep,___G__23__23_path_2d_volume_2d_end_2d_using_2d_dir_2d_sep)
@@ -6591,6 +6605,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_input_2d_port,___G__23__23_repl_2d_input
 ___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_location_2d_origin,___G__23__23_repl_2d_location_2d_origin)
 ___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_location_2d_relative,___G__23__23_repl_2d_location_2d_relative)
 ___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_output_2d_port,___G__23__23_repl_2d_output_2d_port)
+___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_path_2d_normalize,___G__23__23_repl_2d_path_2d_normalize)
+___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_path_2d_normalize_2d_hook,___G__23__23_repl_2d_path_2d_normalize_2d_hook)
 ___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_result_2d_history_2d_max_2d_length_2d_set_21_,___G__23__23_repl_2d_result_2d_history_2d_max_2d_length_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_result_2d_history_2d_ref,___G__23__23_repl_2d_result_2d_history_2d_ref)
 ___DEF_OLD_SYM_GLO(___S__23__23_repl_2d_within,___G__23__23_repl_2d_within)
@@ -6691,6 +6707,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_source1_2d_marker,___G__23__23_source1_2d_marker
 ___DEF_OLD_SYM_GLO(___S__23__23_source2_2d_marker,___G__23__23_source2_2d_marker)
 ___DEF_OLD_SYM_GLO(___S__23__23_source_3f_,___G__23__23_source_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_sourcify,___G__23__23_sourcify)
+___DEF_OLD_SYM_GLO(___S__23__23_sourcify_2d_aux1,___G__23__23_sourcify_2d_aux1)
+___DEF_OLD_SYM_GLO(___S__23__23_sourcify_2d_aux2,___G__23__23_sourcify_2d_aux2)
 ___DEF_OLD_SYM_GLO(___S__23__23_sourcify_2d_deep,___G__23__23_sourcify_2d_deep)
 ___DEF_OLD_SYM_GLO(___S__23__23_special_3f_,___G__23__23_special_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_sqrt,___G__23__23_sqrt)

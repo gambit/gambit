@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_system.c", produced by Gambit-C v4.7.3
+; File: "_system.c", produced by Gambit-C v4.7.4
 (
-407003
+407004
 " _system"
 ((" _system"))
 (
@@ -280,7 +280,7 @@
  ()
 )
 #else
-#define ___VERSION 407003
+#define ___VERSION 407004
 #define ___MODULE_NAME " _system"
 #define ___LINKER_ID ____20___system
 #define ___MH_PROC ___H__20___system
@@ -11202,7 +11202,7 @@ ___DEF_SLBL(146,___L146__23__23_object_2d__3e_u8vector)
 ___DEF_GLBL(___L397__23__23_object_2d__3e_u8vector)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(147))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),191,___G__23__23_subprocedure_2d_parent_2d_name)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_subprocedure_2d_parent_2d_name)
 ___DEF_SLBL(147,___L147__23__23_object_2d__3e_u8vector)
    ___IF(___NOT(___FALSEP(___R1)))
    ___GOTO(___L398__23__23_object_2d__3e_u8vector)
@@ -11448,7 +11448,7 @@ ___DEF_SLBL(185,___L185__23__23_object_2d__3e_u8vector)
    ___SET_R1(___CLOSURECODE(___STK(-5)))
    ___SET_STK(-4,___R1)
    ___SET_R0(___LBL(186))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),190,___G__23__23_subprocedure_2d_nb_2d_closed)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_subprocedure_2d_nb_2d_closed)
 ___DEF_SLBL(186,___L186__23__23_object_2d__3e_u8vector)
    ___SET_STK(-3,___R1)
    ___SET_STK(1,___STK(-6))
@@ -13567,7 +13567,7 @@ ___DEF_SLBL(103,___L103__23__23_u8vector_2d__3e_object)
 ___DEF_GLBL(___L351__23__23_u8vector_2d__3e_object)
    ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(104))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),170,___G__23__23_make_2d_subprocedure)
+   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_make_2d_subprocedure)
 ___DEF_SLBL(104,___L104__23__23_u8vector_2d__3e_object)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -14213,7 +14213,7 @@ ___DEF_GLBL(___L396__23__23_u8vector_2d__3e_object)
 ___DEF_SLBL(194,___L194__23__23_u8vector_2d__3e_object)
    ___SET_STK(-5,___R1)
    ___SET_R0(___LBL(195))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),190,___G__23__23_subprocedure_2d_nb_2d_closed)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_subprocedure_2d_nb_2d_closed)
 ___DEF_SLBL(195,___L195__23__23_u8vector_2d__3e_object)
    ___SET_STK(-4,___R1)
    ___SET_R1(___FIXADD(___R1,___FIX(1L)))

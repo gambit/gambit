@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsclib.c", produced by Gambit-C v4.7.3
+; File: "_gsclib.c", produced by Gambit-C v4.7.4
 (
-407003
+407004
 " _gsclib"
 ((" _gsclib"))
 (
@@ -99,7 +99,7 @@
  ()
 )
 #else
-#define ___VERSION 407003
+#define ___VERSION 407004
 #define ___MODULE_NAME " _gsclib"
 #define ___LINKER_ID ____20___gsclib
 #define ___MH_PROC ___H__20___gsclib
