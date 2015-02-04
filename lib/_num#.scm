@@ -285,13 +285,35 @@
 
 ;; Dispatch for number representation
 
-(##define-macro (macro-number-dispatch num err fix big rat flo cpx)
+#;(##define-macro (macro-number-dispatch num err fix big rat flo cpx)
   `(cond ((##fixnum? ,num) ,fix)
          ((##flonum? ,num) ,flo)
          ((##bignum? ,num) ,big)
          ((##ratnum? ,num) ,rat)
          ((##cpxnum? ,num) ,cpx)
          (else             ,err)))
+
+;; The next macro is constructed following
+;; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2008-November/002828.html
+
+(##define-syntax macro-number-dispatch
+  (lambda (form-src)
+    (let* ((code (##source-code form-src))
+	   (num  (list-ref code 1))
+	   (err  (list-ref code 2))
+	   (fix  (list-ref code 3))
+	   (big  (list-ref code 4))
+	   (rat  (list-ref code 5))
+	   (flo  (list-ref code 6))
+	   (cpx  (list-ref code 7)))
+      (##sourcify
+       `(cond ((##fixnum? ,num) ,fix)
+	      ((##flonum? ,num) ,flo)
+	      ((##bignum? ,num) ,big)
+	      ((##ratnum? ,num) ,rat)
+	      ((##cpxnum? ,num) ,cpx)
+	      (else             ,err))
+       form-src))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
