@@ -1,6 +1,6 @@
 # makefile for Gambit-C library.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
@@ -78,7 +78,14 @@ NORMAL_O_COMMA = main@obj@,setup@obj@,mem@obj@,c_intf@obj@,os@obj@,os_base@obj@,
 NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
-"_eval\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" "_repl\#.scm"
+"_eval\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" "_repl\#.scm" \
+"_gambit\#.scm" "gambit\#.scm" \
+"r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" \
+_define-syntax.scm _syntax-boot.scm _syntax-case-xform-boot.scm \
+_syntax-case-xform.scm _syntax-common.scm _syntax-pattern.scm \
+_syntax-rules-xform.scm _syntax-template.scm \
+_syntax-xform-boot.scm _syntax-xform.scm \
+_syntax.scm _with-syntax-boot.scm
 MODULES = _kernel _system _num _std \
 _eval _io _nonstd _thread _repl
 MODULES_SCM = _kernel.scm _system.scm _num.scm _std.scm \
@@ -97,8 +104,7 @@ os_thread@obj@ os_time@obj@ os_shell@obj@ os_dyn@obj@
 MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
 _repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _system@obj@
 
-LIBRARIES_SCM = $(HEADERS_SCM) "_gambit\#.scm" "gambit\#.scm" \
-"r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" digest.scm syntax-case.scm
+LIBRARIES_SCM = $(HEADERS_SCM) digest.scm syntax-case.scm
 
 LIBRARY = $(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)
 LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) _$(GAMBCLIB)@obj@
@@ -183,9 +189,8 @@ os_tty@obj@: os_tty.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_tty.h
 
 os_io@obj@: os_io.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_io.h
 
-$(MODULES_C): $(srcdirpfx)$(rootfromhere)/lib/header.scm \
-$(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
+$(MODULES_C): \
+$(srcdirpfx)$(rootfromhere)/lib/header.scm \
 $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_kernel\#.scm \
@@ -196,7 +201,19 @@ $(srcdirpfx)$(rootfromhere)/lib/_eval\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_io\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_nonstd\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm
+$(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_define-syntax.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-boot.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform-boot.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-common.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-pattern.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-rules-xform.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-template.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-xform-boot.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-xform.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_with-syntax-boot.scm
 
 $(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 

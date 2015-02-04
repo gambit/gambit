@@ -1,6 +1,6 @@
 # makefile for Gambit-C compiler.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsc
 rootfromhere = ..
@@ -226,12 +226,37 @@ _gsc_@obj@: _gsc_.c
 
 _gsc.c: $(srcdirpfx)$(rootfromhere)/gsi/main.scm
 
-$(MODULES_C): $(srcdirpfx)$(rootfromhere)/lib/header.scm \
+$(MODULES_C): \
+$(srcdirpfx)$(rootfromhere)/lib/header.scm \
 $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
-$(srcdirpfx)_assert\#.scm $(srcdirpfx)_asm\#.scm \
-$(srcdirpfx)_x86\#.scm $(srcdirpfx)_codegen\#.scm \
-$(srcdirpfx)fixnum.scm $(srcdirpfx)generic.scm
+$(srcdirpfx)$(rootfromhere)/lib/_kernel\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_system\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_num\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_std\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_eval\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_io\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_nonstd\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_define-syntax.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-boot.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform-boot.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-common.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-pattern.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-rules-xform.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-template.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-xform-boot.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-xform.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_with-syntax-boot.scm \
+$(srcdirpfx)_assert\#.scm \
+$(srcdirpfx)_asm\#.scm \
+$(srcdirpfx)_x86\#.scm \
+$(srcdirpfx)_codegen\#.scm \
+$(srcdirpfx)fixnum.scm \
+$(srcdirpfx)generic.scm
 
 $(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 

@@ -6,6 +6,12 @@
 
 ;;;============================================================================
 
+;; Define macro-define-syntax.
+
+(##include "~~lib/_define-syntax.scm")
+
+;;;----------------------------------------------------------------------------
+
 ;; General object representation.
 
 ;; IMPORTANT: These definitions need to be consistent with the
