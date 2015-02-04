@@ -330,57 +330,86 @@
 
 ;;;----------------------------------------------------------------------------
 
-(##define-macro (macro-case-target . clauses)
-  (let ((target (if (and (pair? ##compilation-options)
-                         (pair? (car ##compilation-options)))
-                    (let ((t (assq 'target ##compilation-options)))
-                      (if t (cadr t) 'c))
-                    'c)))
-    (let loop ((clauses clauses))
-      (if (pair? clauses)
-          (let* ((clause (car clauses))
-                 (cases (car clause)))
-            (if (or (eq? cases 'else)
-                    (memq target cases))
-                `(begin ,@(cdr clause))
-                (loop (cdr clauses))))
-          `(begin)))))
+(macro-define-syntax macro-case-target
+  (lambda (stx)
+    (syntax-case stx (else)
+      ((_ . clauses)
+       (let ((target (if (and (pair? ##compilation-options)
+                              (pair? (car ##compilation-options)))
+                         (let ((t (assq 'target ##compilation-options)))
+                           (if t (cadr t) 'c))
+                         'c)))
+         (let loop ((clauses (syntax->list #'clauses)))
+           (if (pair? clauses)
+               (syntax-case (car clauses) (else)
+                 ((else . body)
+                  body)
+                 ((cases . body)
+                  (if (memq target (syntax->datum #'cases))
+                      #'(begin . body)
+                      (loop (cdr clauses)))))
+               #'(begin))))))))
 
-(##define-macro (macro-if-forces forces noforces)
-  (if ((if (and (pair? ##compilation-options)
-                (pair? (car ##compilation-options)))
-           assq
-           memq)
-       'force
-       ##compilation-options)
-      forces
-      noforces))
+(macro-define-syntax macro-if-forces
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ forces noforces)
+       (if ((if (and (pair? ##compilation-options)
+                     (pair? (car ##compilation-options)))
+                assq
+                memq)
+            'force
+            ##compilation-options)
 
-(##define-macro (macro-force-vars vars expr)
-  (if ((if (and (pair? ##compilation-options)
-                (pair? (car ##compilation-options)))
-           assq
-           memq)
-       'force
-       ##compilation-options)
-      `(let ,(map (lambda (x) `(,x (##force ,x))) vars) ,expr)
-      expr))
+           #'forces
 
-(##define-macro (macro-if-checks checks nochecks)
-  (if ((if (and (pair? ##compilation-options)
-                (pair? (car ##compilation-options)))
-           assq
-           memq)
-       'check
-       ##compilation-options)
-      checks
-      nochecks))
+           #'noforces)))))
 
-(##define-macro (macro-no-force vars expr)
-  expr)
+(macro-define-syntax macro-force-vars
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ vars expr)
+       (if ((if (and (pair? ##compilation-options)
+                     (pair? (car ##compilation-options)))
+                assq
+                memq)
+            'force
+            ##compilation-options)
 
-(##define-macro (macro-no-check var arg-num form expr)
-  expr)
+           (with-syntax ((bindings
+                          (datum->syntax
+                           (map (lambda (x) #'(x (##force x)))
+                                (syntax->list vars)))))
+             #'(let bindings expr))
+
+           #'expr)))))
+
+(macro-define-syntax macro-if-checks
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ checks nochecks)
+       (if ((if (and (pair? ##compilation-options)
+                     (pair? (car ##compilation-options)))
+                assq
+                memq)
+            'check
+            ##compilation-options)
+
+           #'checks
+
+           #'nochecks)))))
+
+(macro-define-syntax macro-no-force
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ vars expr)
+       #'expr))))
+
+(macro-define-syntax macro-no-check
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ var arg-num form expr)
+       #'expr))))
 
 (##define-macro
   (define-prim-fold bool? form zero one two forcing pre-check . post-checks)
