@@ -103,7 +103,7 @@ button-right.png button-up.png button-up-arrow.png \
 make-appstore-screenshots make-keys make-scaled-icons \
 help.html r5rs.html r5rs.pdf gambit-c.html
 
-GENDISTFILES = $(MODULES_M)
+GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
@@ -187,12 +187,10 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post:
-	$(RC) update-index --no-assume-unchanged $(MODULES_M)
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post:
-	$(RC) update-index --assume-unchanged $(MODULES_M)
 
 mostlyclean-pre:
 
