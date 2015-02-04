@@ -276,7 +276,7 @@
 
 (pp 'test-*)
 
-(check-eqv? (expt 15 10000000) (* (expt 3 10000000) (expt 5 10000000)))
+(check-eqv? (expt 15 1000000) (* (expt 3 1000000) (expt 5 1000000)))
 
 (pp 'test-round)
 
