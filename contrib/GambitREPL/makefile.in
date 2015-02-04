@@ -1,6 +1,6 @@
 # makefile for Gambit REPL app.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot = contrib/GambitREPL
 rootfromhere = ../..
@@ -131,6 +131,9 @@ prepare-for-xcode: $(MODULES_M) GambitREPL.xcodeproj gambit-iOS
 	mkdir lib
 	cp gambit-iOS/current/lib/*.scm lib
 	cp gambit-iOS/current/doc/gambit-c.pdf .
+	if test ! -e "emacs"; then \
+	  tar zxf emacs.tgz; \
+	fi
 	@echo "*************************************************************"
 	@echo "*                                                           *"
 	@echo "* To complete the iOS example the following steps must be   *"

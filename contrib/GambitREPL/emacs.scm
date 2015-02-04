@@ -35,7 +35,14 @@
 
 ;;;============================================================================
 
-(define emacs-root-dir (path-expand "~/emacs"))
+;; emacs code (in JavaScript) must be in the app bundle otherwise
+;; the app violates clause 2.8 of the App Store Review Guidelines:
+;; "Apps that install or launch other executable code will be rejected".
+
+(define emacs-in-bundle? #f)
+(set! emacs-in-bundle? #t)
+
+(define emacs-root-dir (path-expand (if emacs-in-bundle? "~~/emacs" "~/emacs")))
 (define emacs-version-file (path-expand "v1" emacs-root-dir))
 (define emacs-root-html-file (path-expand "GambitREPL.html" emacs-root-dir))
 (define emacs-tar-file (##path-normalize (path-expand "~~/emacs.tgz")))
@@ -81,10 +88,11 @@
       (set-generic-keys)
       (set-scheme-keys))
 
-  (if (not (eq? 'regular
-                (with-exception-catcher
-                 (lambda (e) #f)
-                 (lambda () (file-type emacs-version-file)))))
+  (if (and (not emacs-in-bundle?)
+           (not (eq? 'regular
+                     (with-exception-catcher
+                      (lambda (e) #f)
+                      (lambda () (file-type emacs-version-file))))))
       (parameterize ((current-directory (path-directory emacs-root-dir)))
         (tar-write-unchecked (tar-unpack-file emacs-tar-file #t))))
 
