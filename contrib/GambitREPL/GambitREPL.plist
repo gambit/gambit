@@ -35,11 +35,11 @@
 	<key>CFBundleSignature</key>
 	<string>GamC</string>
 	<key>CFBundleVersion</key>
-	<string>5</string>
+	<string>6</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIFileSharingEnabled</key>
-	<true/>
+	<false/>
 	<key>UIMainStoryboardFile</key>
 	<string>GambitREPL</string>
 	<key>UIStatusBarHidden</key>
