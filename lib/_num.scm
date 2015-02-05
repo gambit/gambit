@@ -702,7 +702,9 @@
       (if (and (macro-special-case-exact-zero?) (##fxzero? x))
           y
           (##fl+ (##fixnum->flonum x) y))
-      (##cpxnum.+ (##noncpxnum->cpxnum x) y))
+      (if (and (macro-special-case-exact-zero?) (##fxzero? x))
+	  y
+	  (##cpxnum.+ (##noncpxnum->cpxnum x) y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (if (##fxzero? y)
@@ -732,7 +734,9 @@
       (##cpxnum.+ (##noncpxnum->cpxnum x) y))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = cpxnum
-      (##cpxnum.+ x (##noncpxnum->cpxnum y))
+      (if (and (macro-special-case-exact-zero?) (##fxzero? y))
+          x
+	  (##cpxnum.+ x (##noncpxnum->cpxnum y)))
       (##cpxnum.+ x (##noncpxnum->cpxnum y))
       (##cpxnum.+ x (##noncpxnum->cpxnum y))
       (##cpxnum.+ x (##noncpxnum->cpxnum y))
