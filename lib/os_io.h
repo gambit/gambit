@@ -59,6 +59,13 @@ typedef struct ___device_group_struct
 #define ___STREAM_OPTIONS_INPUT(options) ((options)&((1<<15)-1))
 #define ___STREAM_OPTIONS_OUTPUT(options) (((options)>>15)&((1<<15)-1))
 
+#ifdef USE_OPENSSL
+#define ___SSL_OPTION_SERVER_MODE 1
+#define ___SSL_OPTION_USE_DIFFIE_HELLMAN 1<<1
+#define ___SSL_OPTION_USE_ELLIPTIC_CURVES 1<<2
+#define ___SSL_OPTION_REQUEST_CLIENT_AUTHENTICATION 1<<3
+#define ___SSL_OPTION_INSERT_EMPTY_FRAGMENTS 1<<8
+#endif
 
 typedef struct ___device_struct
   {
@@ -827,6 +834,22 @@ extern ___SCMOBJ ___os_device_tcp_server_read
 
 extern ___SCMOBJ ___os_device_tcp_server_socket_info
    ___P((___SCMOBJ dev),
+        ());
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
+
+/* SSL context. */
+
+typedef struct ___ssl_context ___ssl_context;
+
+extern ___SCMOBJ ___os_make_ssl_context
+   ___P((___U16 min_ssl_version,
+         ___U16 options,
+         ___SCMOBJ certificate_path,
+         ___SCMOBJ private_key_path,
+         ___SCMOBJ dh_params_path,
+         ___SCMOBJ elliptic_curve_name,
+         ___SCMOBJ client_ca_path),
         ());
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */

@@ -3826,61 +3826,278 @@ typedef struct ___device_tcp_client_vtbl_struct
 
 #ifdef USE_OPENSSL
 
+___HIDDEN int ssl_initialized = 0;
+
 /* SSL context */
 
 typedef struct ___ssl_context
-  {
-    /* SSL protocol options */
-    ___U16 min_ssl_version;
-    ___BOOL insert_empty_fragments;
-
-    /* Client and Server options */
-    ___SCMOBJ certificate_path;
-    ___SCMOBJ private_key_path;
-    
-    /* Server-only options */
-    ___BOOL use_dh;
-    ___SCMOBJ dh_params_path;
-    
-    ___BOOL use_elliptic_curves;
-    ___SCMOBJ elliptic_curve_name;
-    
-    ___BOOL use_client_authentication;
-    ___SCMOBJ client_ca_path;
-    
-    /* OpenSSL context */
-    SSL_CTX *ctx;
-  } ___ssl_context;
-
-___ssl_context *___os_make_ssl_context
-   ___P((___U16 min_ssl_version),
-        (min_ssl_version)
-___U16 min_ssl_version;)
 {
-  ___ssl_context *c = ___EXT(___alloc_rc) (sizeof (___ssl_context));
+  /* SSL protocol options */
+  ___U16 min_ssl_version;
+  ___U16 options;
 
-  if (c != NULL)
-    {
-    }
+  /* Client and Server options */
+  char *certificate_path;
+  char *private_key_path;
+    
+  /* Server-only options */
+  char *dh_params_path;
+  char *elliptic_curve_name;
+  char *client_ca_path;
+    
+  /* OpenSSL context */
+  SSL_CTX *ssl_ctx;
+} ___ssl_context;
 
-  printf ("SSL version: %x\n", min_ssl_version);
-  fflush (stdout);
-  
-  return c;
+___SCMOBJ ___release_rc_ssl_context
+   ___P((void *x),
+        (x)
+void *x;)
+{
+  ___ssl_context *c = x;
+
+  printf( "releasing: %p\n", c );
+  fflush( stdout );
+        
+  if (c->certificate_path != NULL)
+    ___EXT(___release_string) (c->certificate_path);
+  if (c->private_key_path != NULL)
+    ___EXT(___release_string) (c->private_key_path);
+  if (c->dh_params_path != NULL)
+    ___EXT(___release_string) (c->dh_params_path);
+  if (c->elliptic_curve_name != NULL)
+    ___EXT(___release_string) (c->elliptic_curve_name);
+  if (c->client_ca_path != NULL)
+    ___EXT(___release_string) (c->client_ca_path);
+
+  if (c->ssl_ctx != NULL)
+    SSL_CTX_free (c->ssl_ctx);
+      
+  ___release_rc(c);
+
+  printf( "release finished: %p\n", c );
+  fflush( stdout );
+        
+  return ___FIX(___NO_ERR);
 }
 
-___SCMOBJ ___release_rc_ssl_context( void* ptr )
-  {
-    ___ssl_context* c = ptr;
+___SCMOBJ ___os_make_ssl_context
+   ___P((___U16 min_ssl_version,
+         ___U16 options,
+         ___SCMOBJ certificate_path,
+         ___SCMOBJ private_key_path,
+         ___SCMOBJ dh_params_path,
+         ___SCMOBJ elliptic_curve_name,
+         ___SCMOBJ client_ca_path),
+        (min_ssl_version,
+         options,
+         certificate_path,
+         private_key_path,
+         dh_params_path,
+         elliptic_curve_name,
+         client_ca_path)
+___U16 min_ssl_version;
+___U16 options;
+___SCMOBJ certificate_path;
+___SCMOBJ private_key_path;
+___SCMOBJ dh_params_path;
+___SCMOBJ elliptic_curve_name;
+___SCMOBJ client_ca_path;)
+{
+  ___SCMOBJ scm_e;
+  ___SCMOBJ scm_ctx;
+  int err;
+  long ssl_options;
 
-    printf( "release_rc_sslctx(%p)\n", c );
-    fflush( stdout );
-    
-    ___EXT(___release_rc)(c);
-    
-    return ___FIX(___NO_ERR);
+  ___ssl_context *c = ___CAST(___ssl_context*,
+                              ___alloc_rc ( ___PSA(___PSTATE)
+                                           sizeof (___ssl_context)));
+  
+  if (c == NULL)
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+  
+  c->min_ssl_version = min_ssl_version;
+  c->options = options;
+  
+  c->certificate_path = NULL;
+  c->private_key_path = NULL;
+  c->dh_params_path = NULL;
+  c->elliptic_curve_name = NULL;
+  c->client_ca_path = NULL;
+  c->ssl_ctx = NULL;
+
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) certificate_path,
+                                        &c->certificate_path,
+                                        3))
+      != ___FIX(___NO_ERR))
+    return scm_e;
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) private_key_path,
+                                        &c->private_key_path,
+                                        4))
+      != ___FIX(___NO_ERR))
+    return scm_e;
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) dh_params_path,
+                                        &c->dh_params_path,
+                                        5))
+      != ___FIX(___NO_ERR))
+    return scm_e;
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) elliptic_curve_name,
+                                        &c->elliptic_curve_name,
+                                        6))
+      != ___FIX(___NO_ERR))
+    return scm_e;
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) client_ca_path,
+                                        &c->client_ca_path,
+                                        7))
+      != ___FIX(___NO_ERR))
+    return scm_e;
+  
+  /* Reference:
+     https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
+
+  /**********************/
+  /* SSL Initialization */
+  
+  if (ssl_initialized == 0)
+    {      
+      if (!SSL_library_init())
+        {
+          fprintf (stderr, "** OpenSSL initialization failed!\n");
+          return ___FIX(___SSL_ERR);
+        }
+      SSL_load_error_strings();
+      OpenSSL_add_all_algorithms();
+      /*
+        TODO: find the right place for application cleanup
+        ERR_free_strings()
+        EVP_cleanup();
+        CRYPTO_cleanup_all_ex_data()
+      */
+
+      ssl_initialized = 1;
+    }
+  
+  /* Check Entropy */
+  if (RAND_status() == 0)
+    {
+      fprintf(stderr, "** SSL: not enough entropy in the pool\n");
+      return ___FIX(___SSL_ERR);
+    }
+
+  /******************************/
+  /* SSL Context Initialization */
+
+  /* Server configuration */
+  if (options & ___SSL_OPTION_SERVER_MODE)
+    {
+      /* TODO */
+      return ___FIX(___SSL_ERR);
+    }
+  /* Client configuration */
+  else
+    {
+
+      /* SSL protocol bugs: workaround options
+         Ref: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html */
+
+      ssl_options =
+        SSL_OP_ALL |
+        SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION |
+        SSL_OP_NO_COMPRESSION;
+
+      c->ssl_ctx = SSL_CTX_new (SSLv23_client_method());
+      SSL_CHECK_ERROR (c->ssl_ctx);
+
+      /* Required identifier for client certificate verification to work with sessions */
+      /* TODO: should this ID be unique per Gambit instance? */
+      SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (c->ssl_ctx, "gambit", 6));
+
+      /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
+         The countermeasure breaks some SSL implementations, so it is deactivated by
+         default by SSL_OP_ALL */
+      if (options & ___SSL_OPTION_INSERT_EMPTY_FRAGMENTS)
+        {
+#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
+        
+          ssl_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
+        
+#else
+        
+          fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
+          return ___FIX(___SSL_ERR);
+          
+#endif
+        }
+
+      SSL_CHECK_ERROR (ssl_options &
+                       SSL_CTX_set_options (c->ssl_ctx, ssl_options));
+
+      switch (min_ssl_version)
+        {
+        case 0x0303:
+          SSL_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
+                            SSL_CTX_set_options (c->ssl_ctx, SSL_OP_NO_TLSv1_1)));
+        case 0x302:
+          SSL_CHECK_ERROR ((SSL_OP_NO_TLSv1 &
+                            SSL_CTX_set_options (c->ssl_ctx, SSL_OP_NO_TLSv1)));
+        case 0x301:
+          SSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
+                            SSL_CTX_set_options (c->ssl_ctx, SSL_OP_NO_SSLv3)));
+        case 0x300:
+          SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
+                            SSL_CTX_set_options (c->ssl_ctx, SSL_OP_NO_SSLv2)));
+        case 0x200:
+          break;
+        default:
+          fprintf (stderr, "** SSL: Wrong SSL version requested: %x\n", min_ssl_version);
+          return ___FIX(___SSL_ERR);
+        }
+
+      /* OPTION: Public certificate and private key files and verification */
+      if (c->certificate_path != NULL && c->private_key_path != NULL)
+        {
+          if (SSL_CTX_use_certificate_file (c->ssl_ctx,
+                                            c->certificate_path,
+                                            SSL_FILETYPE_PEM) <= 0)
+            {
+              ERR_print_errors_fp(stderr);
+              return ___FIX(___SSL_ERR);
+            }
+          if (SSL_CTX_use_PrivateKey_file (c->ssl_ctx,
+                                           c->private_key_path,
+                                           SSL_FILETYPE_PEM) <= 0)
+            {
+              ERR_print_errors_fp(stderr);
+              return ___FIX(___SSL_ERR);
+            }
+          if (SSL_CTX_check_private_key (c->ssl_ctx) <= 0)
+            {
+              fprintf (stderr,"** SSL: Private key does not match the certificate public key\n");
+              return ___FIX(___SSL_ERR);
+            }
+        }
+      
+      SSL_CTX_set_mode (c->ssl_ctx,
+                        SSL_MODE_ENABLE_PARTIAL_WRITE |
+                        SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
   }
 
+  printf( "created %p\n", c );
+  
+  if ((scm_e =___NONNULLPOINTER_to_SCMOBJ
+               (___PSTATE,
+                ___CAST(void*,c),
+                ___FAL,
+                ___release_rc_ssl_context,
+                &scm_ctx,
+                ___RETURN_POS)) != ___FIX(___NO_ERR))
+    {
+      ___release_rc_ssl_context (c);
+      return scm_e;
+    }
+  
+  return scm_ctx;
+}
 
 /* SSL support functions */
 
@@ -4802,117 +5019,12 @@ int direction;)
 #define SSL_OP_NO_COMPRESSION 0
 #endif
 
-___HIDDEN int ssl_initialized = 0;
-
 
 ___HIDDEN int setup_client_ssl_connection
    ___P((___device_tcp_client *dev),
         (dev)
 ___device_tcp_client *dev;)
 {
-  int err;
-  long ssl_options;
-
-  /* TODO: Scheme parameters */
-  const char* certificate_file = "server.pem";
-  const char* private_key_file = "server.pem";
-
-  /* Reference:
-     https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
-
-  /**********************/
-  /* SSL Initialization */
-  
-  if (ssl_initialized == 0)
-    {      
-      if (!SSL_library_init())
-        {
-          fprintf (stderr, "** OpenSSL initialization failed!\n");
-          return ___FIX(___SSL_ERR);
-        }
-      SSL_load_error_strings();
-      OpenSSL_add_all_algorithms();
-      /*
-        TODO: find the right place for application cleanup
-        ERR_free_strings()
-        EVP_cleanup();
-        CRYPTO_cleanup_all_ex_data()
-      */
-
-      ssl_initialized = 1;
-    }
-  
-  /* Check Entropy */
-  if (RAND_status() == 0)
-    {
-      fprintf(stderr, "** SSL: not enough entropy in the pool\n");
-      return ___FIX(___SSL_ERR);
-    }
-
-  /******************************/
-  /* SSL Context Initialization */
-
-/* SSL protocol bugs: workaround options
-   Ref: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html */
-
-  ssl_options =
-    SSL_OP_ALL |
-    SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION |
-    SSL_OP_NO_COMPRESSION;
-
-  dev->ssl_ctx = SSL_CTX_new (SSLv23_client_method());
-  SSL_CHECK_ERROR (dev->ssl_ctx);
-
-  /* Required identifier for client certificate verification to work with sessions */
-  /* TODO: should this ID be unique per Gambit instance? */
-  SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, "gambit", 6));
-
-  /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
-     The countermeasure breaks some SSL implementations, so it is deactivated by
-     default by SSL_OP_ALL */
-  if (1 /* Use empty fragments */) {
-#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
-    
-    ssl_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
-    
-#else
-    
-    fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
-    return ___FIX(___SSL_ERR);
-    
-#endif
-  }
-
-  SSL_CHECK_ERROR (ssl_options & SSL_CTX_set_options (dev->ssl_ctx, ssl_options));
-
-  /* Force version >= TLS 1.0 */
-  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv2)));
-  SSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 & SSL_CTX_set_options (dev->ssl_ctx, SSL_OP_NO_SSLv3)));
-
-  /* OPTION: Public certificate and private key files and verification */
-  if (1 /* certificate */)
-    {
-      if (SSL_CTX_use_certificate_file (dev->ssl_ctx, certificate_file, SSL_FILETYPE_PEM) <= 0)
-        {
-          ERR_print_errors_fp(stderr);
-          return ___FIX(___SSL_ERR);
-        }
-      if (SSL_CTX_use_PrivateKey_file (dev->ssl_ctx, private_key_file, SSL_FILETYPE_PEM) <= 0)
-        {
-          ERR_print_errors_fp(stderr);
-          return ___FIX(___SSL_ERR);
-        }
-      if (SSL_CTX_check_private_key (dev->ssl_ctx) <= 0)
-        {
-          fprintf (stderr,"** SSL: Private key does not match the certificate public key\n");
-          return ___FIX(___SSL_ERR);
-        }
-    }
-  
-  SSL_CTX_set_mode (dev->ssl_ctx,
-                    SSL_MODE_ENABLE_PARTIAL_WRITE |
-                    SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
-
   /*********************************/
   /* SSL Connection Initialization */
 
