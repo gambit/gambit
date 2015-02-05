@@ -284,15 +284,9 @@
 
                     (syn#mp
                      sub-cpattern
-                     (let () ;; TODO: remove this local def at next release (needed for bootstrap)
-                       (define (##sourcify-aux1 code src)
-                         (##vector ##source1-marker
-                                   code
-                                   (##vector-ref src 2)
-                                   (##vector-ref src 3)))
-                       (if (##source? lst)
-                           lst
-                           (##sourcify-aux1 lst input)))
+                     (if (##source? lst)
+                         lst
+                         (##sourcify-aux1 lst input))
                      bs))))))))
 
 (define (syn#mp cpattern input bindings)
