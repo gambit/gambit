@@ -327,6 +327,18 @@
 #else
 #ifdef __arm__
 #define ___CPU_arm
+#else
+#ifdef arm64
+#define ___CPU_arm
+#else
+#ifdef __arm64
+#define ___CPU_arm
+#else
+#ifdef __arm64__
+#define ___CPU_arm
+#endif
+#endif
+#endif
 #endif
 #endif
 #endif
