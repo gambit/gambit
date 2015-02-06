@@ -220,7 +220,8 @@
           (macro-default-backlog)
           (macro-default-reuse-address)
           (macro-default-broadcast)
-          (macro-default-ignore-hidden))))
+          (macro-default-ignore-hidden)
+          (macro-default-ssl-context))))
     (##parse-psettings!
      allowed-settings
      settings
@@ -517,6 +518,11 @@
            (macro-ignore-dot-and-dot-dot))
           (else
            #f)))
+
+  (define (ssl-context value)
+    (if (##foreign? value)
+        value
+        #f))
 
   (let loop ((lst settings))
     (macro-force-vars (lst)
@@ -1019,6 +1025,11 @@
                                          x)
                                         (loop rest2))
                                       (error name))))
+                               ((##eq? name 'ssl-context:)
+                                (macro-psettings-ssl-context-set!
+                                 psettings
+                                 (ssl-context value))
+                                (loop rest2))
 
                                (else
                                 (error name)))))
@@ -6294,7 +6305,8 @@
       buffering:
       input-readtable:
       output-readtable:
-      readtable:))
+      readtable:
+      ssl-context:))
 
   (define allowed-server-settings
     '(reuse-address:
@@ -6319,7 +6331,8 @@
       buffering:
       input-readtable:
       output-readtable:
-      readtable:))
+      readtable:
+      ssl-context:))
 
   (##make-psettings
    (macro-direction-inout)
@@ -6377,7 +6390,8 @@
                       (##os-device-tcp-client-open
                        server-address
                        port-number
-                       (psettings->options psettings))))
+                       (psettings->options psettings)
+                       (macro-psettings-ssl-context psettings))))
                  (if (##fixnum? device)
                      (if raise-os-exception?
                          (##raise-os-exception #f device prim port-number-or-address-or-settings)
@@ -7031,7 +7045,7 @@
 ;;; Implementation of SSL objects.
 
 (define-prim (make-ssl-context #!key
-                               (min-version 'tls-v1.2)
+                               (min-version 'tls-v1)
                                (options '())
                                (certificate #f)
                                (private-key certificate)

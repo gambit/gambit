@@ -809,7 +809,8 @@ extern ___SCMOBJ ___os_device_process_status
 extern ___SCMOBJ ___os_device_tcp_client_open
    ___P((___SCMOBJ server_addr,
          ___SCMOBJ port_num,
-         ___SCMOBJ options),
+         ___SCMOBJ options,
+         ___SCMOBJ ssl_context),
         ());
 
 extern ___SCMOBJ ___os_device_tcp_client_socket_info

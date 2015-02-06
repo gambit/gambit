@@ -4141,6 +4141,7 @@ end-of-code
 (define-prim ##os-device-tcp-client-open
   (c-lambda (scheme-object
              scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_device_tcp_client_open"))
