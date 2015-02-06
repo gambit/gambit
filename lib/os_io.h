@@ -840,8 +840,6 @@ extern ___SCMOBJ ___os_device_tcp_server_socket_info
 
 /* SSL context. */
 
-typedef struct ___ssl_context ___ssl_context;
-
 extern ___SCMOBJ ___os_make_ssl_context
    ___P((___U16 min_ssl_version,
          ___U16 options,

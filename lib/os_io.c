@@ -3744,7 +3744,7 @@ int direction;)
 #ifdef USE_OPENSSL
 #define SSL_CHECK_ERROR(ssl_ret)                \
   do {                                          \
-    if (ssl_ret == 0)                           \
+    if ((ssl_ret) == 0)                         \
       {                                         \
         ERR_print_errors_fp (stderr);           \
         return ___FIX(___SSL_ERR);              \
@@ -4010,7 +4010,7 @@ ___SCMOBJ client_ca_path;)
 
       /* Required identifier for client certificate verification to work with sessions */
       /* TODO: should this ID be unique per Gambit instance? */
-      SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (c->ssl_ctx, "gambit", 6));
+      SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (c->ssl_ctx, ___CAST(const unsigned char*,"gambit"), 6));
 
       /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
          The countermeasure breaks some SSL implementations, so it is deactivated by
@@ -5411,7 +5411,7 @@ ___device_tcp_client *dev;)
   SSL_CHECK_ERROR (dev->ssl_ctx);
 
   /* Required identifier for client certificate verification to work with sessions */
-  SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, "gambit", 6));
+  SSL_CHECK_ERROR (SSL_CTX_set_session_id_context (dev->ssl_ctx, ___CAST(const unsigned char*,"gambit"), 6));
 
   /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
      The countermeasure breaks some SSL implementations, so it is deactivated by
