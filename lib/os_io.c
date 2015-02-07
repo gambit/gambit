@@ -3997,12 +3997,6 @@ ___SCMOBJ client_ca_path;)
         }
       SSL_load_error_strings();
       OpenSSL_add_all_algorithms();
-      /*
-        TODO: find the right place for application cleanup
-        ERR_free_strings()
-        EVP_cleanup();
-        CRYPTO_cleanup_all_ex_data()
-      */
 
       ssl_initialized = 1;
     }
@@ -4084,7 +4078,6 @@ ___SCMOBJ client_ca_path;)
         {
 #ifndef OPENSSL_NO_DH
           /* OPTION: Provided DH parameters file*/
-          printf ("Diffie-Hellman parameters file: %s\n", c->dh_params_path);
           if (c->dh_params_path != NULL)
             {
               /* DH parameters from file */
@@ -4152,7 +4145,6 @@ ___SCMOBJ client_ca_path;)
         {
 #if OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined OPENSSL_NO_ECDH
 
-          printf ("Elliptic curve name: %s\n", c->elliptic_curve_name);
           if (c->elliptic_curve_name != NULL)
             {
               /* OpenSSL only supports the "named curves" from RFC 4492,
@@ -4193,7 +4185,6 @@ ___SCMOBJ client_ca_path;)
       if ((c->options & ___SSL_OPTION_REQUEST_CLIENT_AUTHENTICATION) &&
           (c->client_ca_path != NULL))
         {
-          printf ("CA file: %s\n", c->client_ca_path);
           client_ca_list = SSL_load_client_CA_file (c->client_ca_path);
           if (client_ca_list != NULL)
             {
@@ -4213,8 +4204,6 @@ ___SCMOBJ client_ca_path;)
       if ((c->certificate_path != NULL) &&
           (c->private_key_path != NULL))
         {
-          printf ("Certificate path: %s\n", c->certificate_path);
-          printf ("Private key path: %s\n", c->private_key_path);
           if (SSL_CTX_use_certificate_file
               (c->ssl_ctx, c->certificate_path, SSL_FILETYPE_PEM) <= 0)
             {
@@ -10248,6 +10237,12 @@ void ___cleanup_io_module ___PVOID
 #ifdef USE_WIN32
       CloseHandle (___io_mod.abort_select); /* ignore error */
       CloseHandle (___io_mod.always_signaled); /* ignore error */
+#endif
+
+#ifdef USE_OPENSSL
+      ERR_free_strings();
+      EVP_cleanup();
+      CRYPTO_cleanup_all_ex_data();
 #endif
       ___io_mod.setup = 0;
     }
