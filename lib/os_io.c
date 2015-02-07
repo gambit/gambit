@@ -3781,13 +3781,43 @@ int direction;)
 
 /* SSL support */
 
-#ifdef USE_OPENSSL
+#ifndef USE_OPENSSL
+
+typedef void ___ssl_context;
+
+___SCMOBJ ___os_make_ssl_context
+   ___P((___U16 min_ssl_version,
+         ___U16 options,
+         ___SCMOBJ certificate_path,
+         ___SCMOBJ private_key_path,
+         ___SCMOBJ dh_params_path,
+         ___SCMOBJ elliptic_curve_name,
+         ___SCMOBJ client_ca_path),
+        (min_ssl_version,
+         options,
+         certificate_path,
+         private_key_path,
+         dh_params_path,
+         elliptic_curve_name,
+         client_ca_path)
+___U16 min_ssl_version;
+___U16 options;
+___SCMOBJ certificate_path;
+___SCMOBJ private_key_path;
+___SCMOBJ dh_params_path;
+___SCMOBJ elliptic_curve_name;
+___SCMOBJ client_ca_path;)
+{
+  return ___FIX(___UNIMPL_ERR);
+}
+
+#else
 
 ___HIDDEN int ssl_initialized = 0;
 
 /* SSL context */
 
-typedef struct ___ssl_context
+typedef struct ___ssl_context_t
 {
   /* SSL protocol options */
   ___U16 min_ssl_version;

@@ -6313,20 +6313,23 @@
     (if (##not min-version-hex)
         (##fail-check-ssl-context-version
          1 make-ssl-context min-version: min-version))
-    (##os-make-ssl-context
-     min-version-hex
-     (bitwise-ior
-      #x0
-      (if (##memq 'server-mode options) #x1 #x0)
-      (if (##memq 'use-diffie-hellman options) #x2 #x0)
-      (if (##memq 'use-elliptic-curves options) #x4 #x0)
-      (if (##memq 'request-client-authentication options) #x8 #x0)
-      (if (##memq 'insert-empty-fragments options) #x256 #x0))
-     certificate
-     private-key
-     diffie-hellman-parameters
-     elliptic-curve
-     client-ca)))
+    (let ((ctx (##os-make-ssl-context
+                min-version-hex
+                (bitwise-ior
+                 #x0
+                 (if (##memq 'server-mode options) #x1 #x0)
+                 (if (##memq 'use-diffie-hellman options) #x2 #x0)
+                 (if (##memq 'use-elliptic-curves options) #x4 #x0)
+                 (if (##memq 'request-client-authentication options) #x8 #x0)
+                 (if (##memq 'insert-empty-fragments options) #x256 #x0))
+                certificate
+                private-key
+                diffie-hellman-parameters
+                elliptic-curve
+                client-ca)))
+      (if (##fixnum? ctx) ;; If not implemented, or any other error
+          #f
+          ctx))))
 
 ;;;----------------------------------------------------------------------------
 
