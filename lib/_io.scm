@@ -98,6 +98,9 @@
 (define-fail-check-type settings
   'settings)
 
+(define-fail-check-type ssl-context-version
+  'ssl-context-version)
+
 (define-fail-check-type exact-integer-or-string-or-settings
   'exact-integer-or-string-or-settings)
 
@@ -6283,29 +6286,47 @@
                                (diffie-hellman-parameters #f)
                                (elliptic-curve #f)
                                (client-ca #f))
-  ;; TODO: check args
-  ;; TODO: check file existence
-  (##os-make-ssl-context (case min-version
+  (if (##and certificate (##not (##file-exists? certificate)))
+      (##raise-no-such-file-or-directory-exception
+       make-ssl-context
+       certificate: certificate))
+  (if (##and private-key (##not (##file-exists? private-key)))
+      (##raise-no-such-file-or-directory-exception
+       make-ssl-context
+       private-key: private-key))
+  (if (##and diffie-hellman-parameters
+             (##not (##file-exists? diffie-hellman-parameters)))
+      (##raise-no-such-file-or-directory-exception
+       make-ssl-context
+       diffie-hellman-parameters: diffie-hellman-parameters))
+  (if (##and client-ca (##not (##file-exists? client-ca)))
+      (##raise-no-such-file-or-directory-exception
+       make-ssl-context
+       client-ca: client-ca))
+  (let ((min-version-hex (case min-version
                            ((ssl-v2) #x0200)
                            ((ssl-v3) #x0300)
                            ((tls-v1) #x0301)
                            ((tls-v1.1) #x0302)
                            ((tls-v1.2) #x0303)
-                           (else "TODO"))
-                         (bitwise-ior
-                          #x0
-                          (if (memq 'server-mode options) #x1 #x0)
-                          (if (memq 'use-diffie-hellman options) #x2 #x0)
-                          (if (memq 'use-elliptic-curves options) #x4 #x0)
-                          (if (memq 'request-client-authentication options)
-                              #x8
-                              #x0)
-                          (if (memq 'insert-empty-fragments options) #x256 #x0))
-                         certificate
-                         private-key
-                         diffie-hellman-parameters
-                         elliptic-curve
-                         client-ca))
+                           (else #f))))
+    (if (##not min-version-hex)
+        (##fail-check-ssl-context-version
+         1 make-ssl-context min-version: min-version))
+    (##os-make-ssl-context
+     min-version-hex
+     (bitwise-ior
+      #x0
+      (if (##memq 'server-mode options) #x1 #x0)
+      (if (##memq 'use-diffie-hellman options) #x2 #x0)
+      (if (##memq 'use-elliptic-curves options) #x4 #x0)
+      (if (##memq 'request-client-authentication options) #x8 #x0)
+      (if (##memq 'insert-empty-fragments options) #x256 #x0))
+     certificate
+     private-key
+     diffie-hellman-parameters
+     elliptic-curve
+     client-ca)))
 
 ;;;----------------------------------------------------------------------------
 
