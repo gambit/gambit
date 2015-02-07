@@ -826,7 +826,8 @@ extern ___SCMOBJ ___os_device_tcp_server_open
    ___P((___SCMOBJ server_addr,
          ___SCMOBJ port_num,
          ___SCMOBJ backlog,
-         ___SCMOBJ options),
+         ___SCMOBJ options,
+         ___SCMOBJ ssl_context),
         ());
 
 extern ___SCMOBJ ___os_device_tcp_server_read

@@ -6273,6 +6273,42 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; Implementation of SSL objects.
+
+(define-prim (make-ssl-context #!key
+                               (min-version 'tls-v1)
+                               (options '())
+                               (certificate #f)
+                               (private-key certificate)
+                               (diffie-hellman-parameters #f)
+                               (elliptic-curve #f)
+                               (client-ca #f))
+  ;; TODO: check args
+  ;; TODO: check file existence
+  (##os-make-ssl-context (case min-version
+                           ((ssl-v2) #x0200)
+                           ((ssl-v3) #x0300)
+                           ((tls-v1) #x0301)
+                           ((tls-v1.1) #x0302)
+                           ((tls-v1.2) #x0303)
+                           (else "TODO"))
+                         (bitwise-ior
+                          #x0
+                          (if (memq 'server-mode options) #x1 #x0)
+                          (if (memq 'use-diffie-hellman options) #x2 #x0)
+                          (if (memq 'use-elliptic-curves options) #x4 #x0)
+                          (if (memq 'request-client-authentication options)
+                              #x8
+                              #x0)
+                          (if (memq 'insert-empty-fragments options) #x256 #x0))
+                         certificate
+                         private-key
+                         diffie-hellman-parameters
+                         elliptic-curve
+                         client-ca))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of TCP client device ports.
 
 (implement-check-type-tcp-client-port)
@@ -6932,12 +6968,15 @@
           (##cdr psettings-and-server-address))
          (port-number
           (macro-psettings-port-number psettings))
+         (ssl-context
+          (macro-psettings-ssl-context psettings))
          (rdevice
           (##os-device-tcp-server-open
            server-address
            port-number
            (macro-psettings-backlog psettings)
-           (psettings->options psettings))))
+           (psettings->options psettings)
+           ssl-context)))
     (if (##fixnum? rdevice)
         (if raise-os-exception?
             (##raise-os-exception #f rdevice prim port-number-or-address-or-settings arg2 arg3 arg4)
@@ -7039,42 +7078,6 @@
                                 (addr (##substring str 0 colon)))
                             port-num)
                     (err))))))))
-
-;;;----------------------------------------------------------------------------
-
-;;; Implementation of SSL objects.
-
-(define-prim (make-ssl-context #!key
-                               (min-version 'tls-v1)
-                               (options '())
-                               (certificate #f)
-                               (private-key certificate)
-                               (diffie-hellman-parameters #f)
-                               (elliptic-curve #f)
-                               (client-ca #f))
-  ;; TODO: check args
-  ;; TODO: check file existence
-  (##os-make-ssl-context (case min-version
-                           ((ssl-v2) #x0200)
-                           ((ssl-v3) #x0300)
-                           ((tls-v1) #x0301)
-                           ((tls-v1.1) #x0302)
-                           ((tls-v1.2) #x0303)
-                           (else "TODO"))
-                         (bitwise-ior
-                          #x0
-                          (if (memq 'server-mode options) #x1 #x0)
-                          (if (memq 'use-diffie-hellman options) #x2 #x0)
-                          (if (memq 'use-elliptic-curves options) #x4 #x0)
-                          (if (memq 'request-client-authentication options)
-                              #x8
-                              #x0)
-                          (if (memq 'insert-empty-fragments options) #x256 #x0))
-                         certificate
-                         private-key
-                         diffie-hellman-parameters
-                         elliptic-curve
-                         client-ca))
 
 ;;;----------------------------------------------------------------------------
 

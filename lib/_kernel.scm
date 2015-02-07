@@ -4138,6 +4138,17 @@ end-of-code
             scheme-object
    "___os_device_process_status"))
 
+(define-prim ##os-make-ssl-context
+  (c-lambda (unsigned-int16
+             unsigned-int16
+             scheme-object
+             scheme-object
+             scheme-object
+             scheme-object
+             scheme-object)
+            scheme-object
+            "___os_make_ssl_context"))
+
 (define-prim ##os-device-tcp-client-open
   (c-lambda (scheme-object
              scheme-object
@@ -4156,6 +4167,7 @@ end-of-code
   (c-lambda (scheme-object
              scheme-object
              scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_device_tcp_server_open"))
@@ -4169,17 +4181,6 @@ end-of-code
   (c-lambda (scheme-object)
             scheme-object
    "___os_device_tcp_server_socket_info"))
-
-(define-prim ##os-make-ssl-context
-  (c-lambda (unsigned-int16
-             unsigned-int16
-             scheme-object
-             scheme-object
-             scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
-            "___os_make_ssl_context"))
 
 (define-prim ##os-device-directory-open-path
   (c-lambda (scheme-object
