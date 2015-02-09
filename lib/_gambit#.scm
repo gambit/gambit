@@ -343,7 +343,7 @@
            (if (pair? clauses)
                (syntax-case (car clauses) (else)
                  ((else . body)
-                  body)
+                  #'(begin . body))
                  ((cases . body)
                   (if (memq target (syntax->datum #'cases))
                       #'(begin . body)
