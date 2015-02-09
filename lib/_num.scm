@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2014 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2015 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3999,7 +3999,7 @@ for a discussion of branch cuts.
             (loop (##fx+ i 1)
                   (##fx+ (##fx* n rad)
                          (if (##fx< ic 128)
-                             (##u8vector-ref ##char-to-digit-table c)
+                             (##u8vector-ref ##char-to-digit-table ic)
                              0))))
           n)))
 
