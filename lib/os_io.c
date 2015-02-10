@@ -3741,17 +3741,6 @@ int direction;)
 #define SOCKET_LEN_TYPE int
 #endif
 
-#ifdef USE_OPENSSL
-#define SSL_CHECK_ERROR(ssl_ret)                \
-  do {                                          \
-    if ((ssl_ret) == 0)                         \
-      {                                         \
-        ERR_print_errors_fp (stderr);           \
-        return ___FIX(___SSL_ERR);              \
-      }                                         \
-  } while(0)
-#endif
-
 #ifdef SHUT_RD
 #define SHUTDOWN_RD SHUT_RD
 #else
@@ -3844,15 +3833,15 @@ void *x;)
   ___ssl_context *c = x;
 
   if (c->certificate_path != NULL)
-    ___EXT(___release_string) (c->certificate_path);
+    ___release_string (c->certificate_path);
   if (c->private_key_path != NULL)
-    ___EXT(___release_string) (c->private_key_path);
+    ___release_string (c->private_key_path);
   if (c->dh_params_path != NULL)
-    ___EXT(___release_string) (c->dh_params_path);
+    ___release_string (c->dh_params_path);
   if (c->elliptic_curve_name != NULL)
-    ___EXT(___release_string) (c->elliptic_curve_name);
+    ___release_string (c->elliptic_curve_name);
   if (c->client_ca_path != NULL)
-    ___EXT(___release_string) (c->client_ca_path);
+    ___release_string (c->client_ca_path);
 
   if (c->ssl_ctx != NULL)
     SSL_CTX_free (c->ssl_ctx);
@@ -3972,48 +3961,14 @@ ___SCMOBJ client_ca_path;)
 
   STACK_OF(X509_NAME) *client_ca_list = NULL;
 
-  ___ssl_context *c = ___CAST(___ssl_context*,
-                              ___alloc_rc ( ___PSA(___PSTATE)
-                                           sizeof (___ssl_context)));
-
-  if (c == NULL)
-    return ___FIX(___HEAP_OVERFLOW_ERR);
-
-  c->min_ssl_version = min_ssl_version;
-  c->options = options;
-
-  c->certificate_path = NULL;
-  c->private_key_path = NULL;
-  c->dh_params_path = NULL;
-  c->elliptic_curve_name = NULL;
-  c->client_ca_path = NULL;
-  c->ssl_ctx = NULL;
-
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) certificate_path,
-                                        &(c->certificate_path),
-                                        3))
-      != ___FIX(___NO_ERR))
-    return scm_e;
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) private_key_path,
-                                        &(c->private_key_path),
-                                        4))
-      != ___FIX(___NO_ERR))
-    return scm_e;
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) dh_params_path,
-                                        &(c->dh_params_path),
-                                        5))
-      != ___FIX(___NO_ERR))
-    return scm_e;
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) elliptic_curve_name,
-                                        &(c->elliptic_curve_name),
-                                        6))
-      != ___FIX(___NO_ERR))
-    return scm_e;
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) client_ca_path,
-                                        &(c->client_ca_path),
-                                        7))
-      != ___FIX(___NO_ERR))
-    return scm_e;
+#define SSL_CHECK_ERROR(ssl_ret)                \
+  do {                                          \
+    if ((ssl_ret) == 0)                         \
+      {                                         \
+        ERR_print_errors_fp (stderr);           \
+        goto error;                             \
+      }                                         \
+  } while(0)
 
   /* SSL library Initialization */
   /* Reference for SSL initialization:
@@ -4035,6 +3990,65 @@ ___SCMOBJ client_ca_path;)
     {
       fprintf(stderr, "** SSL: not enough entropy in the pool\n");
       return ___FIX(___SSL_ERR);
+    }
+
+  /* Context initialization */
+  ___ssl_context *c = ___CAST(___ssl_context*,
+                              ___alloc_rc ( ___PSA(___PSTATE)
+                                           sizeof (___ssl_context)));
+
+  if (c == NULL)
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+  c->min_ssl_version = min_ssl_version;
+  c->options = options;
+
+  c->certificate_path = NULL;
+  c->private_key_path = NULL;
+  c->dh_params_path = NULL;
+  c->elliptic_curve_name = NULL;
+  c->client_ca_path = NULL;
+  c->ssl_ctx = NULL;
+
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) certificate_path,
+                                        &(c->certificate_path),
+                                        3))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_ssl_context (c);
+      return scm_e;
+    }
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) private_key_path,
+                                        &(c->private_key_path),
+                                        4))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_ssl_context (c);
+      return scm_e;
+    }
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) dh_params_path,
+                                        &(c->dh_params_path),
+                                        5))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_ssl_context (c);
+      return scm_e;
+    }
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) elliptic_curve_name,
+                                        &(c->elliptic_curve_name),
+                                        6))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_ssl_context (c);
+      return scm_e;
+    }
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) client_ca_path,
+                                        &(c->client_ca_path),
+                                        7))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_ssl_context (c);
+      return scm_e;
     }
 
   /* SSL Context */
@@ -4073,7 +4087,7 @@ ___SCMOBJ client_ca_path;)
 #else
 
         fprintf (stderr, "** SSL: SSL version doesn't support empty fragments\n");
-        return ___FIX(___SSL_ERR);
+        goto error;
 
 #endif
       }
@@ -4100,14 +4114,14 @@ ___SCMOBJ client_ca_path;)
         default:
           fprintf (stderr, "** SSL: Wrong SSL version requested: %x\n",
                    min_ssl_version);
-          return ___FIX(___SSL_ERR);
+          goto error;
         }
 
       /* OPTION: Diffie-Hellman key exchange algorithm support */
       if (c->options & ___SSL_OPTION_USE_DIFFIE_HELLMAN)
         {
 #ifndef OPENSSL_NO_DH
-          /* OPTION: Provided DH parameters file*/
+          /* OPTION: Provided DH parameters file */
           if (c->dh_params_path != NULL)
             {
               /* DH parameters from file */
@@ -4116,23 +4130,27 @@ ___SCMOBJ client_ca_path;)
               dh_fp = fopen (c->dh_params_path, "r");
               if (dh_fp == NULL)
                 {
-                  fprintf (stderr, "** SSL: Error Reading DH parameters file\n");
-                  return ___FIX(___SSL_ERR);
+                  fprintf (stderr,
+                           "** SSL: Error reading Diffie-Hellman "
+                           "parameters file\n");
+                  goto error;
                 }
               dh = PEM_read_DHparams (dh_fp, NULL, NULL, NULL);
               fclose (dh_fp);
               if (dh == NULL)
                 {
                   fprintf (stderr,
-                           "** SSL: Reading Diffie-Hellman parameters failed\n");
-                  return ___FIX(___SSL_ERR);
+                           "** SSL: Error reading Diffie-Hellman "
+                           "parameters from file\n");
+                  goto error;
                 }
               DH_check (dh, &err);
               if (err != 0)
                 {
                   fprintf (stderr,
-                           "** SSL: Diffie-Hellman parameters failed validation\n");
-                  return ___FIX(___SSL_ERR);
+                           "** SSL: Diffie-Hellman "
+                           "parameters failed validation\n");
+                  goto error;
                 }
             }
           else
@@ -4142,29 +4160,33 @@ ___SCMOBJ client_ca_path;)
               if (dh == NULL)
                 {
                   fprintf (stderr,
-                           "** SSL: Error allocating Diffie-Hellman parameters\n");
-                  return ___FIX(___SSL_ERR);
+                           "** SSL: Error allocating Diffie-Hellman "
+                           "parameters\n");
+                  goto error;
                 }
               dh->p = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
               dh->g = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
               dh->length = 160;
               if (dh->p == NULL || dh->g == NULL)
                 {
-                  DH_free(dh);
+                  DH_free (dh);
                   fprintf (stderr,
-                           "** SSL: Error processing Diffie-Hellman parameters\n");
-                  return ___FIX(___SSL_ERR);
+                           "** SSL: Error processing Diffie-Hellman "
+                           "parameters\n");
+                  goto error;
                 }
             }
           SSL_CTX_set_tmp_dh (c->ssl_ctx, dh);
           SSL_CHECK_ERROR (SSL_OP_SINGLE_DH_USE &
-                           SSL_CTX_set_options (c->ssl_ctx, SSL_OP_SINGLE_DH_USE));
-          DH_free (dh);
+                           SSL_CTX_set_options (c->ssl_ctx,
+                                                SSL_OP_SINGLE_DH_USE));
+          if (dh != NULL)
+            DH_free (dh);
 #else
 
           fprintf (stderr,
                    "** SSL: Diffie-Hellman not supported by OpenSSL version\n");
-          return ___FIX(___SSL_ERR);
+          goto error;
 
 #endif
         }
@@ -4183,7 +4205,7 @@ ___SCMOBJ client_ca_path;)
               if (nid == 0)
                 {
                   fprintf (stderr, "** SSL: Unknown elliptic curve name\n");
-                  return ___FIX(___SSL_ERR);
+                  goto error;
                 }
             }
           else
@@ -4194,7 +4216,7 @@ ___SCMOBJ client_ca_path;)
           if (ecdh == NULL)
             {
               fprintf (stderr, "** SSL: Unable to create curve\n");
-              return ___FIX(___SSL_ERR);
+              goto error;
             }
           SSL_CTX_set_tmp_ecdh (c->ssl_ctx,ecdh);
           SSL_CHECK_ERROR (SSL_OP_SINGLE_ECDH_USE &
@@ -4206,7 +4228,7 @@ ___SCMOBJ client_ca_path;)
 
           fprintf (stderr,
                    "** SSL: Diffie-Hellman not supported by OpenSSL version\n");
-          return ___FIX(___SSL_ERR);
+          goto error;
 
 #endif
         }
@@ -4216,18 +4238,15 @@ ___SCMOBJ client_ca_path;)
           (c->client_ca_path != NULL))
         {
           client_ca_list = SSL_load_client_CA_file (c->client_ca_path);
-          if (client_ca_list != NULL)
-            {
-              SSL_CTX_set_client_CA_list(c->ssl_ctx, client_ca_list);
-              SSL_CTX_set_verify (c->ssl_ctx,
-                                  SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
-                                  NULL);
-            }
-          else
+          if (client_ca_list == NULL)
             {
               fprintf (stderr, "** SSL: Error loading CAs file\n");
-              return ___FIX(___SSL_ERR);
+              goto error;
             }
+          SSL_CTX_set_client_CA_list(c->ssl_ctx, client_ca_list);
+          SSL_CTX_set_verify (c->ssl_ctx,
+                              SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                              NULL);
         }
 
       /* OPTION: Public certificate and private key files and verification */
@@ -4238,20 +4257,20 @@ ___SCMOBJ client_ca_path;)
               (c->ssl_ctx, c->certificate_path, SSL_FILETYPE_PEM) <= 0)
             {
               ERR_print_errors_fp(stderr);
-              return ___FIX(___SSL_ERR);
+              goto error;
             }
           if (SSL_CTX_use_PrivateKey_file
               (c->ssl_ctx, c->private_key_path, SSL_FILETYPE_PEM) <= 0)
             {
               ERR_print_errors_fp(stderr);
-              return ___FIX(___SSL_ERR);
+              goto error;
             }
           if (SSL_CTX_check_private_key (c->ssl_ctx) <= 0)
             {
               fprintf (stderr,
                        "** SSL: Private key does not match "
-                       "the certificate public key\n");
-              return ___FIX(___SSL_ERR);
+                       "certificate public key\n");
+              goto error;
             }
         }
 
@@ -4291,9 +4310,9 @@ ___SCMOBJ client_ca_path;)
       SSL_CHECK_ERROR (SSL_CTX_set_session_id_context
                        (c->ssl_ctx, ___CAST(const unsigned char*,"gambit"), 6));
 
-      /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
-         The countermeasure breaks some SSL implementations, so it is deactivated by
-         default by SSL_OP_ALL */
+      /* OPTION: re-activate empty fragments (countermeasure against BEAST
+         attack). The countermeasure breaks some SSL implementations, so it is
+         deactivated by default by the SSL_OP_ALL flag */
       if (options & ___SSL_OPTION_INSERT_EMPTY_FRAGMENTS)
         {
 #ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
@@ -4304,7 +4323,7 @@ ___SCMOBJ client_ca_path;)
 
           fprintf (stderr,
                    "** SSL: SSL version doesn't support empty fragments\n");
-          return ___FIX(___SSL_ERR);
+          goto error;
 
 #endif
         }
@@ -4331,7 +4350,7 @@ ___SCMOBJ client_ca_path;)
         default:
           fprintf (stderr, "** SSL: Wrong SSL version requested: %x\n",
                    min_ssl_version);
-          return ___FIX(___SSL_ERR);
+          goto error;
         }
 
       /* OPTION: Public certificate and private key files and verification */
@@ -4343,20 +4362,20 @@ ___SCMOBJ client_ca_path;)
                                             SSL_FILETYPE_PEM) <= 0)
             {
               ERR_print_errors_fp(stderr);
-              return ___FIX(___SSL_ERR);
+              goto error;
             }
           if (SSL_CTX_use_PrivateKey_file (c->ssl_ctx,
                                            c->private_key_path,
                                            SSL_FILETYPE_PEM) <= 0)
             {
               ERR_print_errors_fp(stderr);
-              return ___FIX(___SSL_ERR);
+              goto error;
             }
           if (SSL_CTX_check_private_key (c->ssl_ctx) <= 0)
             {
               fprintf (stderr,"** SSL: Private key does not match "
                        "the certificate public key\n");
-              return ___FIX(___SSL_ERR);
+              goto error;
             }
         }
 
@@ -4378,6 +4397,10 @@ ___SCMOBJ client_ca_path;)
     }
 
   return scm_ctx;
+
+ error:
+  ___release_rc_ssl_context (c);
+  return ___FIX(___SSL_ERR);
 }
 
 /* SSL support functions */
