@@ -4670,17 +4670,23 @@ int direction;)
     {
       err = SSL_shutdown (d->ssl);
       if (err > 0)
-        return ___FIX(___NO_ERR);
+        {
+          return ___ERR_CODE_EAGAIN;
+        }
       else if (err < 0)
         {
           switch (SSL_get_error(d->ssl,err))
             {
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
-              return ___FIX(___NO_ERR);
+              /* SSL_shutdown must be called again */
+              return ___ERR_CODE_EAGAIN;
+            default:
               /* discard any error in SSL shutdown */
+              break;
             }
         }
+
       if (d->ssl != NULL)
         {
           SSL_free (d->ssl);
