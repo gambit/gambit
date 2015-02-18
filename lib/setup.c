@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -2483,26 +2483,18 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->fabs  = fabs;
   ___GSTATE->floor = floor;
   ___GSTATE->ceil  = ceil;
-#ifdef ___HAVE_GOOD_SCALBN
-  ___GSTATE->scalbn= scalbn;
-#else
+#ifdef ___DEFINE_SCALBN
   ___GSTATE->scalbn= ___scalbn;
 #endif
-#ifdef ___HAVE_GOOD_ILOGB
-  ___GSTATE->ilogb = ilogb;
-#else
+#ifdef ___DEFINE_ILOGB
   ___GSTATE->ilogb = ___ilogb;
 #endif
   ___GSTATE->exp   = exp;
-#ifdef ___HAVE_GOOD_EXPM1
-  ___GSTATE->expm1 = expm1;
-#else
+#ifdef ___DEFINE_EXPM1
   ___GSTATE->expm1 = ___expm1;
 #endif
   ___GSTATE->log   = log;
-#ifdef ___HAVE_GOOD_LOG1P
-  ___GSTATE->log1p = log1p;
-#else
+#ifdef ___DEFINE_LOG1P
   ___GSTATE->log1p = ___log1p;
 #endif
   ___GSTATE->sin   = sin;
@@ -2511,44 +2503,28 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->asin  = asin;
   ___GSTATE->acos  = acos;
   ___GSTATE->atan  = atan;
-#ifdef ___HAVE_GOOD_SINH
-  ___GSTATE->sinh  = sinh;
-#else
+#ifdef ___DEFINE_SINH
   ___GSTATE->sinh  = ___sinh;
 #endif
-#ifdef ___HAVE_GOOD_COSH
-  ___GSTATE->cosh  = cosh;
-#else
+#ifdef ___DEFINE_COSH
   ___GSTATE->cosh  = ___cosh;
 #endif
-#ifdef ___HAVE_GOOD_TANH
-  ___GSTATE->tanh  = tanh;
-#else
+#ifdef ___DEFINE_TANH
   ___GSTATE->tanh  = ___tanh;
 #endif
-#ifdef ___HAVE_GOOD_ASINH
-  ___GSTATE->asinh = asinh;
-#else
+#ifdef ___DEFINE_ASINH
   ___GSTATE->asinh = ___asinh;
 #endif
-#ifdef ___HAVE_GOOD_ACOSH
-  ___GSTATE->acosh = acosh;
-#else
+#ifdef ___DEFINE_ACOSH
   ___GSTATE->acosh = ___acosh;
 #endif
-#ifdef ___HAVE_GOOD_ATANH
-  ___GSTATE->atanh = atanh;
-#else
+#ifdef ___DEFINE_ATANH
   ___GSTATE->atanh = ___atanh;
 #endif
-#ifdef ___HAVE_GOOD_ATAN2
-  ___GSTATE->atan2 = atan2;
-#else
+#ifdef ___DEFINE_ATAN2
   ___GSTATE->atan2 = ___atan2;
 #endif
-#ifdef ___HAVE_GOOD_POW
-  ___GSTATE->pow = pow;
-#else
+#ifdef ___DEFINE_POW
   ___GSTATE->pow = ___pow;
 #endif
   ___GSTATE->sqrt  = sqrt;

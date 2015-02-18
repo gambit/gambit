@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -1405,12 +1405,25 @@
 #include <math.h>
 #endif
 
-#ifdef _MSC_VER
+/*
+ * We assume that no C compiler has good implementations of atan2 and
+ * pow.  So we need to define them in the Gambit runtime system.
+ */
+
+#define ___DEFINE_ATAN2
+#define ___DEFINE_POW
+
+#ifdef ___OS_WIN32
 
 /*
  * Older versions of the Microsoft Visual C compilers did not
  * implement some important math functions.  So we need to define them
- * in the Gambit runtime system.
+ * in the Gambit runtime system.  We do this even if using another
+ * C compiler, such as gcc, in order to allow dynamically compiled
+ * Scheme files to be compiled with a C compiler different from the
+ * C compiler used for compiling the Gambit runtime system.  If this
+ * wasn't done, the offsets of the fields in ___global_state_struct
+ * would be different, causing calls to the wrong conversion functions.
  */
 
 #define ___DEFINE_SCALBN
@@ -1420,6 +1433,10 @@
 #define ___DEFINE_ASINH
 #define ___DEFINE_ACOSH
 #define ___DEFINE_ATANH
+
+#endif
+
+#ifdef _MSC_VER
 
 #if _MSC_VER >= 1800
 
@@ -1450,7 +1467,7 @@
 
 /*
  * On other C compilers, we assume that the following math functions
- * were implemented.
+ * are implemented.
  */
 
 #define ___HAVE_GOOD_SCALBN
@@ -1465,14 +1482,6 @@
 #define ___HAVE_GOOD_TANH
 
 #endif
-
-/*
- * We assume that no C compiler has good implementations of atan2 and
- * pow.  So we need to define them in the Gambit runtime system.
- */
-
-#define ___DEFINE_ATAN2
-#define ___DEFINE_POW
 
 
 /*---------------------------------------------------------------------------*/
@@ -7552,10 +7561,6 @@ typedef struct ___processor_state_struct
 
 #endif
 
-#ifdef ___USE_SETJMP
-    ___jmpbuf_struct *catcher;
-#endif
-
 #ifdef ___DEBUG_STACK_LIMIT
     int poll_line;
     char *poll_file;
@@ -7573,6 +7578,10 @@ typedef struct ___processor_state_struct
 #ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
     int heartbeat_interval;
     int heartbeat_countdown;
+#endif
+
+#ifdef ___USE_SETJMP
+    ___jmpbuf_struct *catcher;
 #endif
   } ___processor_state_struct;
 
@@ -7938,14 +7947,6 @@ typedef struct ___global_state_struct
     double (*sqrt)
        ___P((double x),
             ());
-#endif
-
-#ifdef ___USE_SETJMP
-#ifndef ___CAN_IMPORT_SETJMP_DYNAMICALLY
-    int (*setjmp)
-       ___P((jmp_buf env),
-            ());
-#endif
 #endif
 
 #ifndef ___CAN_IMPORT_DYNAMICALLY
@@ -9099,6 +9100,14 @@ typedef struct ___global_state_struct
 #endif
     void (*___disable_heartbeat_interrupts) ___PVOID;
     void (*___enable_heartbeat_interrupts) ___PVOID;
+#endif
+
+#ifdef ___USE_SETJMP
+#ifndef ___CAN_IMPORT_SETJMP_DYNAMICALLY
+    int (*setjmp)
+       ___P((jmp_buf env),
+            ());
+#endif
 #endif
   } ___global_state_struct;
 
