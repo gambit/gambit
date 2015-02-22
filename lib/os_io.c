@@ -5082,6 +5082,7 @@ ___stream_index *len_done;)
   if (d->renegotiations > 0)
     {
       /* TODO: Drop connection */
+      fprintf (stderr, "** SSL: TODO: connection should be shut down!\n");
       return ___FIX(___SSL_ERR);
     }
 
@@ -5427,7 +5428,7 @@ struct sockaddr *server_addr;
 SOCKET_LEN_TYPE server_addrlen;
 int options;
 int direction;
-___ssl_context *ssl_context_obj;)
+___ssl_context *ssl_context;)
 {
   ___SCMOBJ e;
   SOCKET_TYPE s;
