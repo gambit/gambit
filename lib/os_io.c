@@ -4666,7 +4666,7 @@ int direction;)
 
 #ifdef USE_OPENSSL
 
-  if (d->ssl != NULL)
+  if (d->ssl != NULL && SSL_is_init_finished(d->ssl))
     {
       err = SSL_shutdown (d->ssl);
       if (err > 0)
