@@ -4941,112 +4941,39 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##first-bit-set x)))
 
-(define ##extract-bit-field-fixnum-limit
-  (##fx- ##fixnum-width 1))
-
 (define-prim (##extract-bit-field size position n)
 
-  ;; size and position must be nonnegative
+  (define (ceiling a b)
+    ;; computes (ceiling (/ a b)) with a b fixnums
+    (##fxquotient (##fx+ a b -1) b))
 
-  (define (fixup-top-word result size)
-    (##declare (not interrupts-enabled))
+  ;; I've decided to be brutally simple and not optimize
+  ;; for special cases, fixnums, etc.
+  
+  (let* ((result-length
+	  (ceiling (##fx+ 1 size) ##bignum.adigit-width))  ;  top bit is always 0
+	 (bignum-n
+	  (if (##bignum? n) n (##fixnum->bignum n)))
+	 (result
+	  (##bignum.arithmetic-shift-into!
+	   bignum-n (##fx- position) (##bignum.make result-length #f #f))))
+
+    ;; zero top bits of result and normalize
+
     (let ((size-words (##fxquotient  size ##bignum.mdigit-width))
           (size-bits  (##fxremainder size ##bignum.mdigit-width)))
+      (##declare (not interrupts-enabled))
       (let loop ((i (##fx- (##bignum.mdigit-length result) 1)))
-        (cond ((##fx< size-words i)
-               (##bignum.mdigit-set! result i 0)
-               (loop (##fx- i 1)))
-              ((##eqv? size-words i)
-               (##bignum.mdigit-set!
-                result i
-                (##fxand
-                 (##bignum.mdigit-ref result i)
-                 (##fxnot (##fxarithmetic-shift-left -1 size-bits))))
-               (##bignum.normalize! result))
-              (else
-               (##bignum.normalize! result))))))
-
-  (cond ((and (##fixnum? n)
-              (##fx< size ##extract-bit-field-fixnum-limit))
-         (##fxand (##fxarithmetic-shift-right
-                   n
-                   (##fxmin position ##extract-bit-field-fixnum-limit))
-                  (##fxnot (##fxarithmetic-shift-left -1 size))))
-        (else
-         (let* ((n (if (##fixnum? n)
-                       (##fixnum->bignum n)
-                       n))
-                (n-length (##bignum.adigit-length n))
-                (n-negative? (##bignum.negative? n))
-                (result-bit-size
-                 (if n-negative?
-                     size
-                     (##fxmin
-                      (##fx- (##fx* ##bignum.adigit-width
-                                    n-length)
-                             position
-                             1) ;; the top bit of a nonnegative bignum is always 0
-                      size))))
-           (if (##fx<= result-bit-size 0)
-               0
-               (let* ((result-word-size
-                       (##fx+ (##fxquotient result-bit-size
-                                            ##bignum.adigit-width)
-                              1))
-                      (result (if (##eqv? position 0)
-                                  ;; copy lowest result-word-size
-                                  ;; words of n to result
-                                  (##bignum.make result-word-size n #f)
-                                  (##bignum.make result-word-size #f n-negative?)))
-                      (word-shift (##fxquotient position ##bignum.adigit-width))
-                      (bit-shift (##fxremainder position ##bignum.adigit-width))
-                      (divider (##fx- ##bignum.adigit-width bit-shift))
-                      )
-                 (cond ((##eqv? position 0)
-                        (fixup-top-word result size))
-                       ((##eqv? bit-shift 0)
-                        (let ((word-limit (##fxmin (##fx+ word-shift result-word-size)
-                                                   n-length)))
-                          (##declare (not interrupts-enabled))
-                          (let loop ((i 0)
-                                     (j word-shift))
-                            (if (##fx< j word-limit)
-                                (begin
-                                  (##bignum.adigit-copy! result i n j)
-                                  (loop (##fx+ i 1)
-                                        (##fx+ j 1)))
-                                (fixup-top-word result size)))))
-                       (else
-                        (let ((left-fill (if n-negative?
-                                             ##bignum.adigit-ones
-                                             ##bignum.adigit-zeros))
-                              (word-limit (##fx- (##fxmin (##fx+ word-shift result-word-size)
-                                                          n-length)
-                                                 1)))
-                          (##declare (not interrupts-enabled))
-                          (let loop ((i 0)
-                                     (j word-shift))
-                            (cond ((##fx< j word-limit)
-                                   (##bignum.adigit-cat! result i
-                                                         n (##fx+ j 1)
-                                                         n j
-                                                         divider)
-                                   (loop (##fx+ i 1)
-                                         (##fx+ j 1)))
-                                  ((##fx< j (##fx- n-length 1))
-                                   (##bignum.adigit-cat! result i
-                                                         n (##fx+ j 1)
-                                                         n j
-                                                         divider)
-                                   (fixup-top-word result size))
-                                  ((##fx= j (##fx- n-length 1))
-                                   (##bignum.adigit-cat! result i
-                                                         left-fill 0
-                                                         n j
-                                                         divider)
-                                   (fixup-top-word result size))
-                                  (else
-                                   (fixup-top-word result size)))))))))))))
+        (if (##fx< size-words i)
+	    (begin
+	      (##bignum.mdigit-set! result i 0)
+	      (loop (##fx- i 1)))
+	    (##bignum.mdigit-set!
+	     result i
+	     (##fxand
+	      (##bignum.mdigit-ref result i)
+	      (##fxnot (##fxarithmetic-shift-left -1 size-bits)))))
+	(##bignum.normalize! result)))))
 
 (define-prim (extract-bit-field size position n)
   (macro-force-vars (size position n)
