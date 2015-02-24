@@ -4993,8 +4993,7 @@ ___stream_index *len_done;)
             {
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
-              *len_done = 0;
-              return ___FIX(___NO_ERR);
+              return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_ACCEPT:
             case SSL_ERROR_WANT_CONNECT:
             case SSL_ERROR_WANT_X509_LOOKUP:
@@ -5119,8 +5118,7 @@ ___stream_index *len_done;)
             {
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
-              *len_done = 0;
-              return ___FIX(___NO_ERR);
+              return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_ACCEPT:
             case SSL_ERROR_WANT_CONNECT:
             case SSL_ERROR_WANT_X509_LOOKUP:
