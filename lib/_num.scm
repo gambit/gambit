@@ -4527,24 +4527,20 @@ for a discussion of branch cuts.
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
 
+  (define (bignum-bitwise-ior-loop x result n)
+    (##declare (not interrupts-enabled))
+    (let loop ((i (fx- n 1)))
+      (if (##fx< i 0)
+	  (##bignum.normalize! result)
+	  (begin
+	    (##bignum.adigit-bitwise-ior! result i x i)
+	    (loop (##fx- i 1))))))
+
   (define (bignum-bitwise-ior x x-length y y-length)
+    ;; x-length <= y-length
     (if (##bignum.negative? x)
-        (let ((result (##bignum.copy x)))
-          (##declare (not interrupts-enabled))
-          (let loop1 ((i 0))
-            (if (##fx< i x-length)
-                (begin
-                  (##bignum.adigit-bitwise-ior! result i y i)
-                  (loop1 (##fx+ i 1)))
-                (##bignum.normalize! result))))
-        (let ((result (##bignum.copy y)))
-          (##declare (not interrupts-enabled))
-          (let loop2 ((i 0))
-            (if (##fx< i x-length)
-                (begin
-                  (##bignum.adigit-bitwise-ior! result i x i)
-                  (loop2 (##fx+ i 1)))
-                (##bignum.normalize! result))))))
+	(bignum-bitwise-ior-loop y (##bignum.copy x) x-length)
+	(bignum-bitwise-ior-loop x (##bignum.copy y) x-length)))
 
   (cond ((##fixnum? x)
          (cond ((##fixnum? y)
@@ -4641,24 +4637,20 @@ for a discussion of branch cuts.
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
 
+  (define (bignum-bitwise-and-loop x result n)
+    (##declare (not interrupts-enabled))
+    (let loop ((i (##fx- n 1)))
+      (if (##fx< i 0)
+	  (##bignum.normalize! result)
+	  (begin
+	    (##bignum.adigit-bitwise-and! result i x i)
+	    (loop (##fx- i 1))))))
+
   (define (bignum-bitwise-and x x-length y y-length)
+    ;; x-length <= y-length
     (if (##bignum.negative? x)
-        (let ((result (##bignum.copy y)))
-          (##declare (not interrupts-enabled))
-          (let loop1 ((i 0))
-            (if (##fx< i x-length)
-                (begin
-                  (##bignum.adigit-bitwise-and! result i x i)
-                  (loop1 (##fx+ i 1)))
-                (##bignum.normalize! result))))
-        (let ((result (##bignum.copy x)))
-          (##declare (not interrupts-enabled))
-          (let loop2 ((i 0))
-            (if (##fx< i x-length)
-                (begin
-                  (##bignum.adigit-bitwise-and! result i y i)
-                  (loop2 (##fx+ i 1)))
-                (##bignum.normalize! result))))))
+	(bignum-bitwise-and-loop x (##bignum.copy y) x-length)
+	(bignum-bitwise-and-loop y (##bignum.copy x) x-length)))
 
   (cond ((##fixnum? x)
          (cond ((##fixnum? y)
