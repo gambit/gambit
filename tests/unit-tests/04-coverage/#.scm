@@ -102,9 +102,9 @@
 
 (define (test-arithmetic-shift x n)
   (if (negative? n)
-      (if (negative? x)
-	  (- (quotient (- x) (expt 2 (- n))))
-	  (quotient x (expt 2 (- n))))
+      (let* ((q (expt 2 (- n)))
+	     (bits (modulo x q)))
+	(quotient (- x bits) q))
       (* x (expt 2 n))))
 
 (define (test-extract-bit-field size position n)
