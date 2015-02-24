@@ -9221,7 +9221,7 @@ ___RESULT = result;
       (let loop1 ((k 0))
 	(if (##fx< k y-length)
             (let ((multiplier (##bignum.mdigit-ref y k)))
-              (if (##eq? multiplier 0)
+              (if (##eqv? multiplier 0)
 		  (loop1 (##fx+ k 1))
 		  (let loop2 ((i 0)
 			      (j k)
