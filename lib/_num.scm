@@ -4966,15 +4966,7 @@ for a discussion of branch cuts.
               (else
                (##bignum.normalize! result))))))
 
-  (cond ((##bignum? size)
-         (if (##negative? n)
-             (##bignum.make ##max-fixnum #f #f) ;; generates heap overflow
-             (##arithmetic-shift n (##- position))))
-        ((##bignum? position)
-         (if (##negative? n)
-             (##extract-bit-field size 0 -1)
-             0))
-        ((and (##fixnum? n)
+  (cond ((and (##fixnum? n)
               (##fx< size ##extract-bit-field-fixnum-limit))
          (##fxand (##fxarithmetic-shift-right
                    n
