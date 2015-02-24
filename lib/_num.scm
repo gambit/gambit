@@ -9286,70 +9286,22 @@ ___RESULT = result;
                   (##fx+ x-low-bits y-low-bits))))))))
 
 (define-prim (##bignum.arithmetic-shift x shift)
-  (let* ((digit-shift
-          (if (##fx< shift 0)
-              (##fx- (##fxquotient (##fx+ shift 1)
-                                   ##bignum.adigit-width)
-                     1)
-              (##fxquotient shift ##bignum.adigit-width)))
-         (bit-shift
+  (let* ((bit-shift
           (##fxmodulo shift ##bignum.adigit-width))
-         (x-length
+         (digit-shift
+	  (##fxquotient (##fx- shift bit-shift) ##bignum.adigit-width))
+	 (x-length
           (##bignum.adigit-length x))
          (result-length
           (##fx+ (##fx+ x-length digit-shift)
                  (if (##fxzero? bit-shift) 0 1))))
-    (if (##fx< 0 result-length)
-
-        (let ((result (##bignum.make result-length #f #f)))
-
-          (##declare (not interrupts-enabled))
-
-          (if (##fxzero? bit-shift)
-              (let ((smallest-i (##fxmax 0 digit-shift)))
-                (let loop1 ((i (##fx- result-length 1))
-                            (j (##fx- x-length 1)))
-                  (if (##fx< i smallest-i)
-                      (##bignum.normalize! result)
-                      (begin
-                        (##bignum.adigit-copy! result i x j)
-                        (loop1 (##fx- i 1)
-                               (##fx- j 1))))))
-              (let ((left-fill (if (##bignum.negative? x)
-                                   ##bignum.adigit-ones
-                                   ##bignum.adigit-zeros))
-                    (i (##fx- result-length 1))
-                    (j (##fx- x-length 1))
-                    (divider bit-shift)
-                    (smallest-i (##fxmax 0 (##fx+ digit-shift 1))))
-                (##bignum.adigit-cat! result i left-fill 0 x j divider)
-                (let loop2 ((i (##fx- i 1))
-                            (j (##fx- j 1)))
-                  (if (##fx< i smallest-i)
-                      (begin
-                        (if (##not (##fx< i 0))
-                            (##bignum.adigit-cat! result
-                                                  i
-                                                  x
-                                                  (##fx+ j 1)
-                                                  ##bignum.adigit-zeros
-                                                  0
-                                                  divider))
-                        (##bignum.normalize! result))
-                      (begin
-                        (##bignum.adigit-cat! result
-                                              i
-                                              x
-                                              (##fx+ j 1)
-                                              x
-                                              j
-                                              divider)
-                        (loop2 (##fx- i 1)
-                               (##fx- j 1))))))))
-
-        (if (##bignum.negative? x)
-            -1
-            0))))
+    (cond ((##fx< 0 result-length)
+	   (##bignum.normalize!
+	    (##bignum.arithmetic-shift-into! x shift (##bignum.make result-length #f #f))))
+	  ((##bignum.negative? x)
+            -1)
+	  (else
+	   0))))
 
 (define-prim (##bignum.arithmetic-shift-into! x shift result)
 
