@@ -135,6 +135,12 @@
 (define (univ-php-version-53? ctx)
   (assq 'php53 (ctx-options ctx)))
 
+(define (univ-always-return-call? ctx)
+  (assq 'always-return-call (ctx-options ctx)))
+
+(define (univ-never-return-call? ctx)
+  (assq 'never-return-call (ctx-options ctx)))
+
 (define univ-tag-bits 2)
 (define univ-word-bits 32)
 
@@ -162,7 +168,9 @@
       (repr-flonum    symbol)
       (repr-vector    symbol)
       (repr-string    symbol)
-      (repr-symbol    symbol)))
+      (repr-symbol    symbol)
+      (always-return-call)
+      (never-return-call)))
 
   (let ((targ
          (make-target 10
@@ -1966,7 +1974,6 @@
              (code-header (univ-module-header ctx))
              (code-objs (univ-dump-objs ctx))
              (code-decls (queue->list (ctx-decls ctx))))
-
         (univ-display (^ code-rtlib
                          code-header
                          code-decls
@@ -2418,21 +2425,23 @@
                                          (scan-gvm-opnd ctx opnd)))
                                     (scan-gvm-opnd ctx opnd))
                                 poll?
-                                (case (target-name (ctx-target ctx))
-                                  ((js)
-                                   ;; avoid call optimization on JavaScript
-                                   ;; globals, because the underlying
-                                   ;; JavaScript VM uses a counterproductive
-                                   ;; speculative optimization (which slows
-                                   ;; down fib by a factor of 10!)
-                                   (not (reg? opnd)))
-                                  ((php)
-                                   ;; avoid call optimization on PHP
-                                   ;; because it generates syntactically
-                                   ;; incorrect code (PHP grammar issue)
-                                   #f)
-                                  (else
-                                   #t))))))))))
+                                (and
+
+                                 ;; avoid call optimization on globals
+                                 ;; because some VMs, such as V8 and PyPy,
+                                 ;; use a counterproductive speculative
+                                 ;; optimization (which slows
+                                 ;; down fib by an order of magnitude!)
+                                 (not (reg? opnd))
+
+                                 (case (target-name (ctx-target ctx))
+                                   ((php)
+                                    ;; avoid call optimization on PHP
+                                    ;; because it generates syntactically
+                                    ;; incorrect code (PHP grammar issue)
+                                    #f)
+                                   (else
+                                    #t)))))))))))
 
               (else
                (compiler-internal-error
@@ -5789,7 +5798,7 @@ gambit_Pair.prototype.toString = function () {
 (define (univ-emit-return-poll ctx expr poll? call?)
 
   (define (ret)
-    (if call?
+    (if (or call? (univ-always-return-call? ctx))
         (^return-call expr)
         (^return expr)))
 
@@ -5810,11 +5819,9 @@ gambit_Pair.prototype.toString = function () {
   (^return
    (apply univ-emit-call-prim (cons ctx (cons expr params)))))
 
-(define univ-return-call-optimization? #f)
-
 (define (univ-emit-return-call ctx expr)
   (^return
-   (if univ-return-call-optimization?
+   (if (not (univ-never-return-call? ctx))
        (^call expr)
        expr)))
 
