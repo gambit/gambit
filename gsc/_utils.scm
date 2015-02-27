@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_utils.scm", Time-stamp: <2008-01-10 15:50:42 feeley>
+;;; File: "_utils.scm"
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -759,10 +759,10 @@
 ;; ------------------
 
 (define (make-stretchable-vector init)
-  (vector '#() init))
+  (vector '#() init 0))
 
 (define (stretchable-vector-length sv)
-  (vector-length (vector-ref sv 0)))
+  (vector-ref sv 2))
 
 (define (stretchable-vector-ref sv i)
   (let* ((v (vector-ref sv 0))
@@ -774,6 +774,8 @@
 (define (stretchable-vector-set! sv i x)
   (let* ((v (vector-ref sv 0))
          (len (vector-length v)))
+    (if (not (< i (vector-ref sv 2)))
+        (vector-set! sv 2 (+ i 1)))
     (if (< i len)
       (vector-set! v i x)
       (let ((new-v
@@ -811,13 +813,22 @@
         (vector v2 (vector-ref sv 1))))))
 
 (define (stretchable-vector-for-each proc sv)
-  (let* ((v (vector-ref sv 0))
-         (n (vector-length v)))
+  (let ((v (vector-ref sv 0))
+        (n (vector-ref sv 2)))
     (let loop ((i 0))
       (if (< i n)
         (begin
           (proc (vector-ref v i) i)
           (loop (+ i 1)))))))
+
+(define (stretchable-vector->list sv)
+  (let ((v (vector-ref sv 0))
+        (n (vector-ref sv 2)))
+    (let loop ((i (- n 1)) (lst '()))
+      (if (< i 0)
+          lst
+          (loop (- i 1)
+                (cons (vector-ref v i) lst))))))
 
 ;;;----------------------------------------------------------------------------
 
