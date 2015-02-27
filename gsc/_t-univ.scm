@@ -9830,15 +9830,18 @@ tanh
 (univ-define-prim "##subprocedure-parent" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (univ-call-with-fn-attrib
-      ctx
-      arg1
-      'parent
-      (lambda (result)
-        (return
-         (^if-expr result
-                   (univ-subproc-reference-to-subproc ctx result)
-                   arg1)))))))
+     (univ-subprocedure-parent ctx return arg1))))
+
+(define (univ-subprocedure-parent ctx return arg1)
+  (univ-call-with-fn-attrib
+   ctx
+   arg1
+   'parent
+   (lambda (result)
+     (return
+      (^if-expr result
+                (univ-subproc-reference-to-subproc ctx result)
+                arg1)))))
 
 (univ-define-prim "##subprocedure-nb-parameters" #f
   (make-translated-operand-generator
@@ -9863,24 +9866,32 @@ tanh
 (univ-define-prim "##subprocedure-parent-name" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (univ-call-with-fn-attrib
+     (univ-subprocedure-parent
       ctx
-      arg1
-      'prm_name
       (lambda (result)
-        (return
-         (if (univ-subproc-reference-as-string? ctx)
-             (^symbol-box result)
-             result)))))))
+        (univ-call-with-fn-attrib
+         ctx
+         result
+         'prm_name
+         (lambda (result)
+           (return
+            (if (univ-subproc-reference-as-string? ctx)
+                (^symbol-box result)
+                result)))))
+      arg1))))
 
 (univ-define-prim "##subprocedure-parent-info" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (univ-call-with-fn-attrib
+     (univ-subprocedure-parent
       ctx
-      arg1
-      'info
-      return))))
+      (lambda (result)
+        (univ-call-with-fn-attrib
+         ctx
+         result
+         'info
+         return))
+      arg1))))
 
 ;;TODO: ("##make-promise"                 (1)   #f 0     0    (#f)    extended)
 ;;TODO: ("##force"                        (1)   #t 0     0    #f      extended)
