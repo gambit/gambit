@@ -1381,7 +1381,7 @@
                     "ctypes.c_int32"
                     (^<< (^parens (^+ expr1 expr2))
                          univ-tag-bits))
-                   "value")
+                   'value)
           univ-tag-bits))
 
     ((ruby php)
@@ -1411,7 +1411,7 @@
                                       (^- expr1 expr2)
                                       (^- expr1)))
                          univ-tag-bits))
-                   "value")
+                   'value)
           univ-tag-bits))
 
     ((ruby php)
@@ -1444,7 +1444,7 @@
                     "ctypes.c_int32"
                     (^<< (^parens (^* expr1 expr2))
                          univ-tag-bits))
-                   "value")
+                   'value)
           univ-tag-bits))
 
     ((ruby php)
@@ -2055,6 +2055,12 @@
 
     (define (dump-proc p)
 
+      (define subprocs
+        (make-stretchable-vector #f))
+
+      (define subprocs-init
+        (list #f))
+
       (define (scan-bbs ctx bbs)
         (let* ((bb-done (make-stretchable-vector #f))
                (bb-todo (queue-empty)))
@@ -2174,36 +2180,47 @@
                      ;; attribs
                      (if (memq (label-type gvm-instr) '(entry return))
 
-                         (append
+                         (let ((entry (bbs-entry-lbl-num bbs))
+                               (lbl-num (label-lbl-num gvm-instr)))
+                           (append
 
-                          (let ((entry (bbs-entry-lbl-num bbs))
-                                (lbl-num (label-lbl-num gvm-instr)))
-                            (list (cons "id" (^int lbl-num))
-                                  (cons "parent"
-                                        (if (= lbl-num entry)
-                                            (^bool #f)
-                                            (lambda (ctx)
-                                              (let ((lbl (make-lbl entry)))
-                                                (if (univ-subprocedure-parent-as-string? ctx)
-                                                    (^str (gvm-lbl-use-function ctx lbl))
-                                                    (gvm-lbl-use ctx lbl))))))))
+                            (let ((subproc-id
+                                   (stretchable-vector-length subprocs)))
+                              (stretchable-vector-set!
+                               subprocs
+                               subproc-id
+                               lbl-num)
+                              (list (cons "id" (^int subproc-id))
+                                    (cons "parent"
+                                          (if (= lbl-num entry)
+                                              (^bool #f)
+                                              (lambda (ctx)
+                                                (univ-subproc-reference
+                                                 ctx
+                                                 entry))))))
 
-                          (if (eq? (label-type gvm-instr) 'return)
+                            (if (eq? (label-type gvm-instr) 'return)
 
-                              (let ((info (frame-info gvm-instr)))
-                                (list (cons "fs" (vector-ref info 0))
-                                      (cons "link" (+ (vector-ref info 1) 1))))
+                                (let ((info (frame-info gvm-instr)))
+                                  (list (cons "fs" (vector-ref info 0))
+                                        (cons "link" (+ (vector-ref info 1) 1))))
 
-                              (list (cons "proc_name"
-                                          (^str (proc-obj-name p)))
-                                    (cons "nb_closed"
-                                          (if (label-entry-closed? gvm-instr)
-                                              (let* ((frame (gvm-instr-frame gvm-instr))
-                                                     (nb-closed (length (frame-closed frame))))
-                                                (^int nb-closed))
-                                              (^int -1)))
-                                    (cons "info"
-                                          (^obj #f))))) ;; TODO
+                                (append
+                                 (list (cons "nb_closed"
+                                             (if (label-entry-closed? gvm-instr)
+                                                 (let* ((frame (gvm-instr-frame gvm-instr))
+                                                        (nb-closed (length (frame-closed frame))))
+                                                   (^int nb-closed))
+                                                 (^int -1))))
+                                 (if (= lbl-num entry)
+                                     (list (cons "prm_name"
+                                                 (lambda (ctx)
+                                                   (univ-prm-name ctx (proc-obj-name p))))
+                                           (cons "subprocs"
+                                                 subprocs-init)
+                                           (cons "info"
+                                                 (^obj #f))) ;; TODO
+                                     '())))))
 
                          '())
 
@@ -2496,13 +2513,44 @@
                        (reverse rev-res)
                        (loop (cons (scan-bb ctx (queue-get! bb-todo))
                                    rev-res))))))
+
             (^ bbs-code
-               (if (proc-obj-primitive? p)
-                   (let ((name (string->symbol (proc-obj-name p))))
-                     (^ "\n"
-                        (^setprm name (^obj p))
-                        (^setglo name (^obj p))))
-                   (^))))))
+
+               (let* ((lbl
+                       (make-lbl (bbs-entry-lbl-num bbs)))
+                      (entry-id
+                       (gvm-lbl-use ctx lbl))
+                      (subprocs-array
+                       (^array-literal
+                        (map (lambda (n)
+                               (univ-subproc-reference ctx n))
+                             (stretchable-vector->list subprocs)))))
+                 (if (univ-subproc-reference-as-string? ctx)
+
+                     (begin
+                       (set-car! subprocs-init subprocs-array)
+                       (^))
+
+                     (begin
+                       (set-car! subprocs-init (^bool #f))
+                       (^ "\n"
+                          (univ-with-function-attribs
+                           ctx
+                           #f
+                           entry-id
+                           (lambda ()
+                             (univ-set-function-attrib
+                              ctx
+                              entry-id
+                              "subprocs"
+                              subprocs-array)))))))
+
+               (let ((name (string->symbol (proc-obj-name p))))
+                 (^ "\n"
+                    (^setprm name (^obj p))
+                    (if (proc-obj-primitive? p)
+                        (^setglo name (^obj p))
+                        (^))))))))
 
       (let ((ctx (make-ctx
                   (ctx-target global-ctx)
@@ -2628,8 +2676,7 @@
 (define (univ-closure-alloc ctx lbl exprs cont)
   (let ((count (ctx-serial-num ctx)))
     (ctx-serial-num-set! ctx (+ count 1))
-    (let ((name
-           (^local-var (string-append "closure" (number->string count)))))
+    (let ((name (^local-var (^ "closure" count))))
       (^ (^var-declaration
           name
           (^call-prim
@@ -2762,28 +2809,28 @@
       (use-resource-wr ctx resource)))
 
 (define (gvm-state-pollcount ctx)
-  (^global-var (^prefix "pollcount")))
+  (^global-var (^prefix 'pollcount)))
 
 (define (gvm-state-nargs ctx)
-  (^global-var (^prefix "nargs")))
+  (^global-var (^prefix 'nargs)))
 
 (define (gvm-state-reg ctx num)
-  (^global-var (^prefix (^ "r" num))))
+  (^global-var (^prefix (^ 'r num))))
 
 (define (gvm-state-stack ctx)
-  (^global-var (^prefix "stack")))
+  (^global-var (^prefix 'stack)))
 
 (define (gvm-state-sp ctx)
-  (^global-var (^prefix "sp")))
+  (^global-var (^prefix 'sp)))
 
 (define (gvm-state-cst ctx)
-  (^global-var (^prefix (^ "cst_" (scheme-id->c-id (ctx-module-ns ctx))))))
+  (^global-var (^prefix (^ 'cst_ (scheme-id->c-id (ctx-module-ns ctx))))))
 
 (define (gvm-state-prm ctx)
-  (^global-var (^prefix "prm")))
+  (^global-var (^prefix 'prm)))
 
 (define (gvm-state-glo ctx)
-  (^global-var (^prefix "glo")))
+  (^global-var (^prefix 'glo)))
 
 (define (gvm-state-pollcount-use ctx dir)
   (use-resource ctx dir 'pollcount)
@@ -2878,12 +2925,12 @@
   (case (univ-procedure-representation ctx)
 
     ((class)
-     (^member closure "slots"))
+     (^member closure 'slots))
 
     (else
      (case (target-name (ctx-target ctx))
        ((php)
-        (^member closure "slots"))
+        (^member closure 'slots))
        (else
         (^call closure (^bool #t)))))))
 
@@ -3264,7 +3311,7 @@
      (^* (^ "[" (^int 0) "]") len))
 
     ((ruby)
-     (^call-prim (^member "Array" "new") len))
+     (^call-prim (^member "Array" 'new) len))
 
     (else
      (compiler-internal-error
@@ -3301,7 +3348,7 @@
 
     ((ruby)
      (return
-      (^call-prim (^member "Array" "new") len init)))
+      (^call-prim (^member "Array" 'new) len init)))
 
     (else
      (compiler-internal-error
@@ -3385,15 +3432,15 @@
                       (^array-index
                        (gvm-state-stack-use ctx 'rd)
                        0)
-                      (^structure-ref (^gvar "current_thread")
+                      (^structure-ref (^gvar 'current_thread)
                                       univ-thread-denv-slot)))
                (result
                 (if thread-save?
-                    (^gvar "current_thread")
+                    (^gvar 'current_thread)
                     cont)))
 
           (^ (if thread-save?
-                 (^structure-set! (^gvar "current_thread")
+                 (^structure-set! (^gvar 'current_thread)
                                   univ-thread-cont-slot
                                   cont)
                  (^))
@@ -3444,7 +3491,7 @@
                      (^getstk x)))))))
 
         (if thread-restore?
-            (^ (^assign (^gvar "current_thread")
+            (^ (^assign (^gvar 'current_thread)
                         (^local-var (^ 'arg 1)))
                (^assign (^local-var (^ 'arg 1))
                         (^structure-ref (^local-var (^ 'arg 1))
@@ -3455,11 +3502,11 @@
          (^array-index
           (gvm-state-stack-use ctx 'rd)
           0)
-         (^member (^local-var (^ 'arg 1)) "frame"))
+         (^member (^local-var (^ 'arg 1)) 'frame))
 
-        (^structure-set! (^gvar "current_thread")
+        (^structure-set! (^gvar 'current_thread)
                          univ-thread-denv-slot
-                         (^member (^local-var (^ 'arg 1)) "denv"))
+                         (^member (^local-var (^ 'arg 1)) 'denv))
 
         (^assign
          (gvm-state-sp-use ctx 'wr)
@@ -3510,11 +3557,11 @@
          (^array-index
           (gvm-state-stack-use ctx 'rd)
           0)
-         (^member arg1 "frame"))
+         (^member arg1 'frame))
 
-        (^structure-set! (^gvar "current_thread")
+        (^structure-set! (^gvar 'current_thread)
                          univ-thread-denv-slot
-                         (^member arg1 "denv"))
+                         (^member arg1 'denv))
 
         (^assign
          (gvm-state-sp-use ctx 'wr)
@@ -3624,16 +3671,16 @@
               (univ-with-function-attribs
                ctx
                #f
-               'ra
+               (^local-var 'ra)
                (lambda ()
 
                  (^ (^var-declaration
                      (^local-var 'fs)
-                     (univ-get-function-attrib ctx 'ra 'fs))
+                     (univ-get-function-attrib ctx (^local-var 'ra) 'fs))
 
                     (^var-declaration
                      (^local-var 'link)
-                     (univ-get-function-attrib ctx 'ra 'link))
+                     (univ-get-function-attrib ctx (^local-var 'ra) 'link))
 
                     (^var-declaration
                      (^local-var 'base)
@@ -3679,16 +3726,16 @@
                             (univ-with-function-attribs
                              ctx
                              #t
-                             'ra
+                             (^local-var 'ra)
                              (lambda ()
 
                                (^ (^assign
                                    (^local-var 'fs)
-                                   (univ-get-function-attrib ctx 'ra 'fs))
+                                   (univ-get-function-attrib ctx (^local-var 'ra) 'fs))
 
                                   (^assign
                                    (^local-var 'link)
-                                   (univ-get-function-attrib ctx 'ra 'link))
+                                   (univ-get-function-attrib ctx (^local-var 'ra) 'link))
 
                                   (^assign
                                    (^local-var 'base)
@@ -3738,16 +3785,16 @@
                                              (univ-with-function-attribs
                                               ctx
                                               #t
-                                              'ra
+                                              (^local-var 'ra)
                                               (lambda ()
 
                                                 (^ (^assign
                                                     (^local-var 'fs)
-                                                    (univ-get-function-attrib ctx 'ra 'fs))
+                                                    (univ-get-function-attrib ctx (^local-var 'ra) 'fs))
 
                                                    (^assign
                                                     (^local-var 'link)
-                                                    (univ-get-function-attrib ctx 'ra 'link))
+                                                    (univ-get-function-attrib ctx (^local-var 'ra) 'link))
 
                                                    (^assign
                                                     (^local-var 'base)
@@ -3811,53 +3858,53 @@
       '()
       "\n"
       (list (cons "fs" 0))
-      (^ (^var-declaration (^local-var "frame")
+      (^ (^var-declaration (^local-var 'frame)
                            (^array-index
                             (gvm-state-stack-use ctx 'rd)
                             0))
 
-         (^if (^eq? (^local-var "frame") (^obj #f))
+         (^if (^eq? (^local-var 'frame) (^obj #f))
               (^return (^obj #f)))
 
-         (^var-declaration (^local-var "ra")
+         (^var-declaration (^local-var 'ra)
                            (^array-index
-                            (^local-var "frame")
+                            (^local-var 'frame)
                             0))
 
          (univ-with-function-attribs
           ctx
           #f
-          "ra"
+          (^local-var 'ra)
           (lambda ()
 
-            (^ (^var-declaration (^local-var "fs")
-                                 (univ-get-function-attrib ctx "ra" "fs"))
+            (^ (^var-declaration (^local-var 'fs)
+                                 (univ-get-function-attrib ctx (^local-var 'ra) 'fs))
 
-               (^var-declaration (^local-var "link")
-                                 (univ-get-function-attrib ctx "ra" "link"))
+               (^var-declaration (^local-var 'link)
+                                 (univ-get-function-attrib ctx (^local-var 'ra) 'link))
 
                (^assign (gvm-state-stack-use ctx 'wr)
                         (^copy-array-to-extensible-array
-                         (^local-var "frame")
-                         (^+ (^local-var "fs") 1)))
+                         (^local-var 'frame)
+                         (^+ (^local-var 'fs) 1)))
 
                (^assign (gvm-state-sp-use ctx 'wr)
-                        (^local-var "fs"))
+                        (^local-var 'fs))
 
                (^assign (^array-index
                          (gvm-state-stack-use ctx 'rd)
                          0)
                         (^alias
                          (^array-index
-                          (^local-var "frame")
-                          (^local-var "link"))))
+                          (^local-var 'frame)
+                          (^local-var 'link))))
 
                (^assign (^array-index
                          (gvm-state-stack-use ctx 'rd)
-                         (^local-var "link"))
+                         (^local-var 'link))
                         (^gvar (univ-use-rtlib ctx 'underflow))))))
 
-         (^return (^local-var "ra")))))
+         (^return (^local-var 'ra)))))
 
     ((continuation_capture1)
      (univ-emit-continuation-capture-function ctx 1 #f))
@@ -3918,7 +3965,7 @@
       '()
       (^ (^assign (gvm-state-pollcount-use ctx 'wr)
                   100)
-         (^return (^local-var "dest")))))
+         (^return (^local-var 'dest)))))
 
     ((build_rest)
      (^prim-function-declaration
@@ -3926,20 +3973,20 @@
       (list (cons 'nrp #f))
       "\n"
       '()
-      (^ (^var-declaration (^local-var "rest") (^null))
+      (^ (^var-declaration (^local-var 'rest) (^null))
          (^if (^< (^getnargs)
-                  (^local-var "nrp"))
+                  (^local-var 'nrp))
               (^return (^bool #f)))
          (univ-push-args ctx)
          (^while (^> (^getnargs)
-                     (^local-var "nrp"))
+                     (^local-var 'nrp))
                  (^ (^pop (lambda (expr)
-                            (^assign (^local-var "rest")
+                            (^assign (^local-var 'rest)
                                      (^cons expr
-                                            (^local-var "rest")))))
+                                            (^local-var 'rest)))))
                     (^inc-by (gvm-state-nargs-use ctx 'rdwr)
                              -1)))
-         (^push (^local-var "rest"))
+         (^push (^local-var 'rest))
          (univ-pop-args-to-regs ctx 1)
          (^return (^bool #t)))))
 
@@ -3954,7 +4001,7 @@
            (^prefix (univ-use-rtlib ctx 'build_rest))
            0))
          (^setreg 2 (^getreg 1))
-         (^setreg 1 (^local-var "proc"))
+         (^setreg 1 (^local-var 'proc))
          (^setnargs 2)
          (^return (^getglo '##raise-wrong-number-of-arguments-exception)))))
 
@@ -3982,16 +4029,16 @@ EOF
       (list (cons 'arg1 #f))
       "\n"
       '()
-      (^ (^var-declaration (^local-var "i") (^int 0))
+      (^ (^var-declaration (^local-var 'i) (^int 0))
          (univ-push-args ctx)
          (^push (^void))
-         (^while (^< (^local-var "i") (^getnargs))
-                 (^ (^assign (univ-stk-slot-from-tos ctx (^local-var "i"))
-                             (univ-stk-slot-from-tos ctx (^parens (^+ (^local-var "i") (^int 1)))))
-                    (^inc-by (^local-var "i")
+         (^while (^< (^local-var 'i) (^getnargs))
+                 (^ (^assign (univ-stk-slot-from-tos ctx (^local-var 'i))
+                             (univ-stk-slot-from-tos ctx (^parens (^+ (^local-var 'i) (^int 1)))))
+                    (^inc-by (^local-var 'i)
                              1)))
-         (^assign (univ-stk-slot-from-tos ctx (^local-var "i"))
-                  (^local-var "arg1"))
+         (^assign (univ-stk-slot-from-tos ctx (^local-var 'i))
+                  (^local-var 'arg1))
          (^inc-by (gvm-state-nargs-use ctx 'rdwr)
                   1)
          (univ-pop-args-to-regs ctx 0))))
@@ -4003,14 +4050,14 @@ EOF
             (cons 'gv #f))
       "\n"
       '()
-      (^ (^if (^not (^parens (^procedure? (^local-var "dest"))))
+      (^ (^if (^not (^parens (^procedure? (^local-var 'dest))))
               (^ (^expr-statement
                   (^call-prim
                    (^prefix (univ-use-rtlib ctx 'prepend_arg1))
-                   (^local-var "gv")))
-                 (^assign (^local-var "dest")
+                   (^local-var 'gv)))
+                 (^assign (^local-var 'dest)
                           (^getglo '##apply-global-with-procedure-check-nary))))
-         (^return (^local-var "dest")))))
+         (^return (^local-var 'dest)))))
 
     ((check_procedure)
      (^prim-function-declaration
@@ -4018,14 +4065,14 @@ EOF
       (list (cons 'dest #f))
       "\n"
       '()
-      (^ (^if (^not (^parens (^procedure? (^local-var "dest"))))
+      (^ (^if (^not (^parens (^procedure? (^local-var 'dest))))
               (^ (^expr-statement
                   (^call-prim
                    (^prefix (univ-use-rtlib ctx 'prepend_arg1))
-                   (^local-var "dest")))
-                 (^assign (^local-var "dest")
+                   (^local-var 'dest)))
+                 (^assign (^local-var 'dest)
                           (^getglo '##apply-with-procedure-check-nary))))
-         (^return (^local-var "dest")))))
+         (^return (^local-var 'dest)))))
 
     ((make_subprocedure)
      (^prim-function-declaration
@@ -4033,7 +4080,16 @@ EOF
       (list (cons 'parent #f) (cons 'id #f))
       "\n"
       '()
-      (^return (^local-var "parent"))))
+      (univ-with-function-attribs
+       ctx
+       #f
+       (^local-var 'parent)
+       (lambda ()
+         (^return
+          (univ-subproc-reference-to-subproc
+           ctx
+           (^array-index (univ-get-function-attrib ctx (^local-var 'parent) 'subprocs)
+                         (^local-var 'id))))))))
 
     ((closure_alloc)
      (case (univ-procedure-representation ctx)
@@ -4045,7 +4101,7 @@ EOF
          "\n"
          '()
          (^return (^new (^prefix-class (univ-use-rtlib ctx 'Closure))
-                        (^local-var "slots")))))
+                        (^local-var 'slots)))))
 
        (else
         (case (target-name (ctx-target ctx))
@@ -4110,7 +4166,7 @@ EOF
              "\n"
              (lambda (ctx)
                (^ (^setreg (+ univ-nb-arg-regs 1) (^local-var (^this)))
-                  (^return (^array-index (^this-member "slots") 0))))))))
+                  (^return (^array-index (^this-member 'slots) 0))))))))
 
     ((Fixnum)
      (^class-declaration
@@ -4192,18 +4248,18 @@ EOF
                              (^if-expr
                               (^eq? x (^obj #f))
                               (^int 0)
-                              (^array-length (^member x "digits"))))
+                              (^array-length (^member x 'digits))))
            (^var-declaration flip
                              (^if-expr complement (^int 16383) (^int 0)))
            (^if (^< n nbdig)
                 (^assign nbdig n))
            (^while (^< i nbdig)
                    (^ (^assign (^array-index digits i)
-                               (^bitxor (^array-index (^member x "digits") i)
+                               (^bitxor (^array-index (^member x 'digits) i)
                                         flip))
                       (^inc-by i 1)))
            (^if (^and (^not (^parens (^eq? x (^obj #f))))
-                      (^> (^array-index (^member x "digits") (^- i (^int 1)))
+                      (^> (^array-index (^member x 'digits) (^- i (^int 1)))
                           (^int 8191)))
                 (^assign flip (^bitxor flip (^int 16383))))
            (^while (^< i n)
@@ -4303,8 +4359,8 @@ EOF
       '((slots . #f))
       '()
       (lambda (ctx)
-        (^if (^not (^array-index (^this-member "slots") 0))
-             (^assign (^array-index (^this-member "slots") 0)
+        (^if (^not (^array-index (^this-member 'slots) 0))
+             (^assign (^array-index (^this-member 'slots) 0)
                       (^local-var (^this)))))))
 
     ((Frame)
@@ -4327,26 +4383,26 @@ EOF
       (list (cons 'cont #f))
       "\n"
       '()
-      (^ (^var-declaration (^local-var "frame")
-                           (^member (^local-var "cont") "frame"))
-         (^var-declaration (^local-var "denv")
-                           (^member (^local-var "cont") "denv"))
-         (^var-declaration (^local-var "ra")
-                           (^array-index (^local-var "frame") 0))
+      (^ (^var-declaration (^local-var 'frame)
+                           (^member (^local-var 'cont) 'frame))
+         (^var-declaration (^local-var 'denv)
+                           (^member (^local-var 'cont) 'denv))
+         (^var-declaration (^local-var 'ra)
+                           (^array-index (^local-var 'frame) 0))
          (univ-with-function-attribs
           ctx
           #f
-          "ra"
+          (^local-var 'ra)
           (lambda ()
-            (^var-declaration (^local-var "link")
-                              (univ-get-function-attrib ctx "ra" "link"))))
-         (^var-declaration (^local-var "next_frame")
-                           (^array-index (^local-var "frame")
-                                         (^local-var "link")))
+            (^var-declaration (^local-var 'link)
+                              (univ-get-function-attrib ctx (^local-var 'ra) 'link))))
+         (^var-declaration (^local-var 'next_frame)
+                           (^array-index (^local-var 'frame)
+                                         (^local-var 'link)))
          (^return
           (^new (^prefix-class (univ-use-rtlib ctx 'Continuation))
-                (^local-var "next_frame")
-                (^local-var "denv"))))))
+                (^local-var 'next_frame)
+                (^local-var 'denv))))))
 
     ((Symbol)
      (^class-declaration
@@ -4359,27 +4415,27 @@ EOF
              "\n"
              (lambda (ctx)
                (^return
-                (^this-member "str")))))))
+                (^this-member 'str)))))))
 
     ((make_interned_symbol)
-     (^ (^var-declaration (^gvar "symbol_table") (^empty-dict))
+     (^ (^var-declaration (^gvar 'symbol_table) (^empty-dict))
         "\n"
         (^prim-function-declaration
          "make_interned_symbol"
          (list (cons 'str #f))
          "\n"
          '()
-         (^ (^var-declaration (^local-var "sym")
-                              (^prop-index (^gvar "symbol_table")
-                                           (^local-var "str")
+         (^ (^var-declaration (^local-var 'sym)
+                              (^prop-index (^gvar 'symbol_table)
+                                           (^local-var 'str)
                                            (^bool #f)))
-            (^if (^not (^local-var "sym"))
-                 (^ (^assign (^local-var "sym")
-                             (^symbol-box-uninterned (^local-var "str")))
-                    (^assign (^prop-index (^gvar "symbol_table")
-                                          (^local-var "str"))
-                             (^local-var "sym"))))
-            (^return (^local-var "sym"))))))
+            (^if (^not (^local-var 'sym))
+                 (^ (^assign (^local-var 'sym)
+                             (^symbol-box-uninterned (^local-var 'str)))
+                    (^assign (^prop-index (^gvar 'symbol_table)
+                                          (^local-var 'str))
+                             (^local-var 'sym))))
+            (^return (^local-var 'sym))))))
 
     ((Keyword)
      (^class-declaration
@@ -4392,27 +4448,27 @@ EOF
              "\n"
              (lambda (ctx)
                (^return
-                (^this-member "str")))))))
+                (^this-member 'str)))))))
 
     ((make_interned_keyword)
-     (^ (^var-declaration (^gvar "keyword_table") (^empty-dict))
+     (^ (^var-declaration (^gvar 'keyword_table) (^empty-dict))
         "\n"
         (^prim-function-declaration
          "make_interned_keyword"
          (list (cons 'str #f))
          "\n"
          '()
-         (^ (^var-declaration (^local-var "key")
-                              (^prop-index (^gvar "keyword_table")
-                                           (^local-var "str")
+         (^ (^var-declaration (^local-var 'key)
+                              (^prop-index (^gvar 'keyword_table)
+                                           (^local-var 'str)
                                            (^bool #f)))
-            (^if (^not (^local-var "key"))
-                 (^ (^assign (^local-var "key")
-                             (^keyword-box-uninterned (^local-var "str")))
-                    (^assign (^prop-index (^gvar "keyword_table")
-                                          (^local-var "str"))
-                             (^local-var "key"))))
-            (^return (^local-var "key"))))))
+            (^if (^not (^local-var 'key))
+                 (^ (^assign (^local-var 'key)
+                             (^keyword-box-uninterned (^local-var 'str)))
+                    (^assign (^prop-index (^gvar 'keyword_table)
+                                          (^local-var 'str))
+                             (^local-var 'key))))
+            (^return (^local-var 'key))))))
 
     ((Box)
      (^class-declaration
@@ -4429,7 +4485,7 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "null_val")
+         (^gvar 'null_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Null))))))
 
     ((Void)
@@ -4440,7 +4496,7 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "void_val")
+         (^gvar 'void_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Void))))))
 
     ((Eof)
@@ -4451,7 +4507,7 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "eof_val")
+         (^gvar 'eof_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Eof))))))
 
     ((Absent)
@@ -4462,7 +4518,7 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "absent_val")
+         (^gvar 'absent_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Absent))))))
 
     ((Unbound)
@@ -4473,10 +4529,10 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "unbound1_val")
+         (^gvar 'unbound1_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Unbound))))
         (^var-declaration
-         (^gvar "unbound2_val")
+         (^gvar 'unbound2_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Unbound))))))
 
     ((Optional)
@@ -4487,7 +4543,7 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "optional_val")
+         (^gvar 'optional_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Optional))))))
 
     ((Key)
@@ -4498,7 +4554,7 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "key_val")
+         (^gvar 'key_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Key))))))
 
     ((Rest)
@@ -4509,7 +4565,7 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "rest_val")
+         (^gvar 'rest_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Rest))))))
 
     ((Boolean)
@@ -4520,10 +4576,10 @@ EOF
          '())
         "\n"
         (^var-declaration
-         (^gvar "false_val")
+         (^gvar 'false_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Boolean)) (^bool #f)))
         (^var-declaration
-         (^gvar "true_val")
+         (^gvar 'true_val)
          (^new (^prefix-class (univ-use-rtlib ctx 'Boolean)) (^bool #t)))))
 
     ((Char)
@@ -4541,47 +4597,47 @@ EOF
                 (lambda (ctx)
                   (^return
                    (^call-prim
-                    (^member "String" "fromCharCode")
-                    (^this-member "code")))))
+                    (^member "String" 'fromCharCode)
+                    (^this-member 'code)))))
 
                ((php python)
                 (lambda (ctx)
                   (^return
                    (^call-prim
                     "chr"
-                    (^this-member "code")))))
+                    (^this-member 'code)))))
 
                ((ruby)
                 (lambda (ctx)
                   (^return
                    (^call-prim
                     (^member
-                     (^this-member "code")
-                     "chr")))))
+                     (^this-member 'code)
+                     'chr)))))
 
                (else
                 (compiler-internal-error
                  "univ-rtlib-feature, unknown target")))))))
 
     ((make_interned_char)
-     (^ (^var-declaration (^gvar "char_table") (^empty-dict))
+     (^ (^var-declaration (^gvar 'char_table) (^empty-dict))
         "\n"
         (^prim-function-declaration
          "make_interned_char"
          (list (cons 'code #f))
          "\n"
          '()
-         (^ (^var-declaration (^local-var "chr")
-                              (^prop-index (^gvar "char_table")
-                                           (^local-var "code")
+         (^ (^var-declaration (^local-var 'chr)
+                              (^prop-index (^gvar 'char_table)
+                                           (^local-var 'code)
                                            (^bool #f)))
-            (^if (^not (^local-var "chr"))
-                 (^ (^assign (^local-var "chr")
-                             (^char-box-uninterned (^local-var "code")))
-                    (^assign (^prop-index (^gvar "char_table")
-                                          (^local-var "code"))
-                             (^local-var "chr"))))
-            (^return (^local-var "chr"))))))
+            (^if (^not (^local-var 'chr))
+                 (^ (^assign (^local-var 'chr)
+                             (^char-box-uninterned (^local-var 'code)))
+                    (^assign (^prop-index (^gvar 'char_table)
+                                          (^local-var 'code))
+                             (^local-var 'chr))))
+            (^return (^local-var 'chr))))))
 
     ((String)
      (^class-declaration
@@ -4596,15 +4652,15 @@ EOF
 
                ((js)
                 (lambda (ctx)
-                  (let ((codes (^this-member "codes"))
-                        (limit (^local-var "limit"))
-                        (chunks (^local-var "chunks"))
-                        (i (^local-var "i")))
+                  (let ((codes (^this-member 'codes))
+                        (limit (^local-var 'limit))
+                        (chunks (^local-var 'chunks))
+                        (i (^local-var 'i)))
                     (^ (^var-declaration limit (^int 32768))
                        (^if (^< (^array-length codes) limit)
                             (^return
                              (^call-prim
-                              (^member (^member "String" "fromCharCode") "apply")
+                              (^member (^member "String" 'fromCharCode) 'apply)
                               "null"
                               codes))
                             (^ (^var-declaration chunks (^array-literal '()))
@@ -4612,18 +4668,18 @@ EOF
                                (^while (^< i (^array-length codes))
                                        (^ (^expr-statement
                                            (^call-prim
-                                            (^member chunks "push")
+                                            (^member chunks 'push)
                                             (^call-prim
-                                             (^member (^member "String" "fromCharCode") "apply")
+                                             (^member (^member "String" 'fromCharCode) 'apply)
                                              "null"
                                              (^call-prim
-                                              (^member codes "slice")
+                                              (^member codes 'slice)
                                               i
                                               (^+ i limit)))))
                                           (^inc-by i limit)))
                                (^return
                                 (^call-prim
-                                 (^member chunks "join")
+                                 (^member chunks 'join)
                                  (^str "")))))))))
 
                ((php)
@@ -4634,17 +4690,17 @@ EOF
                     (^call-prim
                      "array_map"
                      (^str "chr")
-                     (^this-member "codes"))))))
+                     (^this-member 'codes))))))
 
                ((python)
                 (lambda (ctx)
                   (^return
                    (^call-prim
-                    (^member (^str "") "join")
+                    (^member (^str "") 'join)
                     (^call-prim
                      "map"
                      "chr"
-                     (^this-member "codes"))))))
+                     (^this-member 'codes))))))
 
                ((ruby)
                 ;;TODO: add anonymous function
@@ -4652,9 +4708,9 @@ EOF
                   (^return
                    (^call-prim
                     (^member
-                     (^ (^member (^this-member "codes") "map")
+                     (^ (^member (^this-member 'codes) 'map)
                         " {|x| x.chr}")
-                     "join")))))
+                     'join)))))
 
                (else
                 (compiler-internal-error
@@ -4666,38 +4722,38 @@ EOF
       (list (cons 'obj #f))
       "\n"
       '()
-      (^if (^eq? (^local-var "obj")
+      (^if (^eq? (^local-var 'obj)
                  (^obj #f))
            (^return (^str "#f"))
-           (^if (^eq? (^local-var "obj")
+           (^if (^eq? (^local-var 'obj)
                       (^obj #t))
                 (^return (^str "#t"))
-                (^if (^eq? (^local-var "obj")
+                (^if (^eq? (^local-var 'obj)
                            (^obj '()))
                      (^return (^str ""))
-                     (^if (^eq? (^local-var "obj")
+                     (^if (^eq? (^local-var 'obj)
                                 (^void))
                           (^return (^str "#!void"))
-                          (^if (^eq? (^local-var "obj")
+                          (^if (^eq? (^local-var 'obj)
                                      (^eof))
                                (^return (^str "#!eof"))
-                               (^if (^pair? (^local-var "obj"))
+                               (^if (^pair? (^local-var 'obj))
                                     (^return (^concat
                                               (^call-prim
                                                (^prefix (univ-use-rtlib ctx 'tostr))
-                                               (^member (^local-var "obj") "car"))
+                                               (^member (^local-var 'obj) 'car))
                                               (^call-prim
                                                (^prefix (univ-use-rtlib ctx 'tostr))
-                                               (^member (^local-var "obj") "cdr"))))
-                                    (^if (^char? (^local-var "obj"))
-                                         (^return (^chr-tostr (^char-unbox (^local-var "obj"))))
-                                         (^if (^fixnum? (^local-var "obj"))
-                                              (^return (^tostr (^fixnum-unbox (^local-var "obj"))))
-                                              (^if (^flonum? (^local-var "obj"))
-                                                   (^return (^tostr (^flonum-unbox (^local-var "obj"))))
-                                        ;                                           (^if (^string? (^local-var "obj"))
-                                        ;                                                (^return (^tostr (^string-unbox (^local-var "obj"))))
-                                                   (^return (^tostr (^local-var "obj")))
+                                               (^member (^local-var 'obj) 'cdr))))
+                                    (^if (^char? (^local-var 'obj))
+                                         (^return (^chr-tostr (^char-unbox (^local-var 'obj))))
+                                         (^if (^fixnum? (^local-var 'obj))
+                                              (^return (^tostr (^fixnum-unbox (^local-var 'obj))))
+                                              (^if (^flonum? (^local-var 'obj))
+                                                   (^return (^tostr (^flonum-unbox (^local-var 'obj))))
+                                        ;                                           (^if (^string? (^local-var 'obj))
+                                        ;                                                (^return (^tostr (^string-unbox (^local-var 'obj))))
+                                                   (^return (^tostr (^local-var 'obj)))
                                         ;)
                                                    )))))))))))
 
@@ -4711,15 +4767,15 @@ EOF
         ((js)
          (^if (^prop-index-exists? (^local-var (^this)) (^str "console"))
               (^expr-statement
-               (^call-prim (^member (^global-var "console") "log")
-                           (^local-var "obj")))
+               (^call-prim (^member (^global-var 'console) 'log)
+                           (^local-var 'obj)))
               (^expr-statement
                (^call-prim "print"
-                           (^local-var "obj")))))
+                           (^local-var 'obj)))))
         ((python)
-         (^expr-statement (^call-prim "print" (^local-var "obj"))))
+         (^expr-statement (^call-prim "print" (^local-var 'obj))))
         ((ruby php)
-         (^ (^expr-statement (^call-prim "print" (^local-var "obj")))
+         (^ (^expr-statement (^call-prim "print" (^local-var 'obj)))
             (^expr-statement (^call-prim "print" "\"\\n\""))))
         (else
          (compiler-internal-error
@@ -4748,17 +4804,17 @@ EOF
 
     ((glo-real-time-milliseconds)
      (^ (^var-declaration
-         (^gvar "start_time")
+         (^gvar 'start_time)
          (case (target-name (ctx-target ctx))
 
            ((js)
-            (^call-prim (^member (^new "Date") "getTime")))
+            (^call-prim (^member (^new "Date") 'getTime)))
 
            ((php)
             (^call-prim "microtime" (^bool #t)))
 
            ((python)
-            (^call-prim (^member "time" "time")))
+            (^call-prim (^member "time" 'time)))
 
            ((ruby)
             (^new "Time"))
@@ -4778,8 +4834,8 @@ EOF
          (^ (case (target-name (ctx-target ctx))
 
               ((js)
-               (^setreg 1 (^- (^call-prim (^member (^new "Date") "getTime"))
-                              (^gvar "start_time"))))
+               (^setreg 1 (^- (^call-prim (^member (^new "Date") 'getTime))
+                              (^gvar 'start_time))))
 
               ((php)
                (^setreg 1 (^ "(int)"
@@ -4787,15 +4843,15 @@ EOF
                               (^* 1000
                                   (^parens
                                    (^- (^call-prim "microtime" (^bool #t))
-                                       (^gvar "start_time"))))))))
+                                       (^gvar 'start_time))))))))
 
               ((python)
                (^setreg 1 (^call-prim
                            "int"
                            (^* 1000
                                (^parens
-                                (^- (^call-prim (^member "time" "time"))
-                                    (^gvar "start_time")))))))
+                                (^- (^call-prim (^member "time" 'time))
+                                    (^gvar 'start_time)))))))
 
               ((ruby)
                (^setreg 1 (^call-prim
@@ -4804,8 +4860,8 @@ EOF
                              (^* 1000
                                  (^parens
                                   (^- (^new "Time")
-                                      (^gvar "start_time")))))
-                            "floor"))))
+                                      (^gvar 'start_time)))))
+                            'floor))))
 
               (else
                (compiler-internal-error
@@ -4830,20 +4886,20 @@ EOF
 ;;TODO: clean up
 "
     var codes = [];
-    for (var i=0; i < " (^local-var "str") ".length; i++) {
-        codes.push(" (^local-var "str") ".charCodeAt(i));
+    for (var i=0; i < " (^local-var 'str) ".length; i++) {
+        codes.push(" (^local-var 'str) ".charCodeAt(i));
     }
     return codes;
 "))
 
         ((php)
-         (^return (^ "array_slice(unpack('c*'," (^local-var "str") "),0)")))
+         (^return (^ "array_slice(unpack('c*'," (^local-var 'str) "),0)")))
 
         ((python)
-         (^return (^ "[ord(c) for c in " (^local-var "str") "]")))
+         (^return (^ "[ord(c) for c in " (^local-var 'str) "]")))
 
         ((ruby)
-         (^return (^ (^local-var "str") ".unpack('U*')")))
+         (^return (^ (^local-var 'str) ".unpack('U*')")))
 
         (else
          (compiler-internal-error
@@ -4921,10 +4977,10 @@ EOF
       "\n"
       '()
       (^ (^if (^not (^prop-index-exists? (gvm-state-glo-use ctx 'rd)
-                                         (^symbol-unbox (^local-var "sym"))))
-              (^ (^glo-var-set! (^local-var "sym") (^unbound1))
-                 (^glo-var-primitive-set! (^local-var "sym") (^unbound1))))
-         (^return (^local-var "sym")))))
+                                         (^symbol-unbox (^local-var 'sym))))
+              (^ (^glo-var-set! (^local-var 'sym) (^unbound1))
+                 (^glo-var-primitive-set! (^local-var 'sym) (^unbound1))))
+         (^return (^local-var 'sym)))))
 
     ((apply2)
      (univ-emit-apply-function ctx 2))
@@ -5096,22 +5152,22 @@ EOF
      (^ (case (target-name (ctx-target ctx))
 
           ((js)
-           (^ (^var-declaration (^gvar "globals")
+           (^ (^var-declaration (^gvar 'globals)
                                 (^local-var (^this)))
               "\n"))
 
           ((php)
-           (^ (^var-declaration (^gvar "globals")
-                                (^local-var "GLOBALS"))
+           (^ (^var-declaration (^gvar 'globals)
+                                (^local-var 'GLOBALS))
               "\n"))
 
           ((python)
-           (^ (^var-declaration (^gvar "globals")
+           (^ (^var-declaration (^gvar 'globals)
                                 (^call-prim "locals"))
               "\n"))
 
           ((ruby)
-           (^ (^var-declaration (^gvar "globals")
+           (^ (^var-declaration (^gvar 'globals)
                                 "binding")
               "\n"))
 
@@ -5127,19 +5183,19 @@ EOF
          (case (target-name (ctx-target ctx))
 
            ((js php python)
-            (^return (^prop-index (^gvar "globals")
-                                  (^local-var "name"))))
+            (^return (^prop-index (^gvar 'globals)
+                                  (^local-var 'name))))
 
            ((ruby)
             #; ;; this code only works on newer versions of ruby
-            (^return (^call-prim (^member (^gvar "globals")
-                                          "local_variable_get")
-                                 (^ (^local-var "name") ".to_sym")))
+            (^return (^call-prim (^member (^gvar 'globals)
+                                          'local_variable_get)
+                                 (^ (^local-var 'name) ".to_sym")))
 
             ;; this code uses eval but works on all versions of ruby
             (^return (^call-prim "eval"
-                                 (^+ (^str "$") (^local-var "name"))
-                                 (^gvar "globals"))))
+                                 (^+ (^str "$") (^local-var 'name))
+                                 (^gvar 'globals))))
 
            (else
             (compiler-internal-error
@@ -5231,15 +5287,15 @@ EOF
           (^ (^var-declaration (gvm-state-reg-use ctx 'wr i))
              rest)))
 
-       (^var-declaration (^gvar "prm") (^empty-dict))
-       (^var-declaration (^gvar "glo") (^empty-dict))
-       (^var-declaration (^gvar "stack") (^extensible-array-literal '()))
-       (^var-declaration (^gvar "sp") -1)
-       (^var-declaration (^gvar "nargs"))
-       (^var-declaration (^gvar "temp1"))
-       (^var-declaration (^gvar "temp2"))
-       (^var-declaration (^gvar "pollcount") 100)
-       (^var-declaration (^gvar "current_thread"))
+       (^var-declaration (^gvar 'prm) (^empty-dict))
+       (^var-declaration (^gvar 'glo) (^empty-dict))
+       (^var-declaration (^gvar 'stack) (^extensible-array-literal '()))
+       (^var-declaration (^gvar 'sp) -1)
+       (^var-declaration (^gvar 'nargs))
+       (^var-declaration (^gvar 'temp1))
+       (^var-declaration (^gvar 'temp2))
+       (^var-declaration (^gvar 'pollcount) 100)
+       (^var-declaration (^gvar 'current_thread))
 
        "\n"
 
@@ -5281,7 +5337,7 @@ gambit_Pair.prototype.toString = function () {
 
        (if univ-dyn-load?
            (^)
-           (^ (^assign (^gvar "current_thread")
+           (^ (^assign (^gvar 'current_thread)
                        (^structure-box
                         (^array-literal
                          (list (^obj #f) ;; type descriptor (filled in later)
@@ -5301,10 +5357,10 @@ gambit_Pair.prototype.toString = function () {
 
               (^push (^obj #f))))
 
-       (^assign (^gvar "r0")
+       (^assign (^gvar 'r0)
                 (^gvar (univ-use-rtlib ctx 'underflow)))
 
-       (^assign (^gvar "nargs")
+       (^assign (^gvar 'nargs)
                 0)
 
        (case (target-name (ctx-target ctx))
@@ -5628,13 +5684,13 @@ gambit_Pair.prototype.toString = function () {
           "\n"
           (if extends
               (^ "\n"
-                 (^assign (^member name "prototype")
-                          (^call-prim (^member "Object" "create")
-                                      (^member extends "prototype"))))
+                 (^assign (^member name 'prototype)
+                          (^call-prim (^member "Object" 'create)
+                                      (^member extends 'prototype))))
               (^))
           (map (lambda (method)
                  (^ "\n"
-                    (^assign (^member (^member name "prototype") (car method))
+                    (^assign (^member (^member name 'prototype) (car method))
                              (univ-emit-fn-decl
                               ctx
                               #f
@@ -5843,7 +5899,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Null)
-     (^gvar "null_val"))
+     (^gvar 'null_val))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -5869,7 +5925,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Void)
-     (^gvar "void_val"))
+     (^gvar 'void_val))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -5895,7 +5951,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Eof)
-     (^gvar "eof_val"))
+     (^gvar 'eof_val))
 
     (else
      (compiler-internal-error
@@ -5906,7 +5962,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Absent)
-     (^gvar "absent_val"))
+     (^gvar 'absent_val))
 
     (else
      (compiler-internal-error
@@ -5917,7 +5973,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Unbound)
-     (^gvar "unbound1_val"))
+     (^gvar 'unbound1_val))
 
     (else
      (compiler-internal-error
@@ -5928,7 +5984,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Unbound)
-     (^gvar "unbound2_val"))
+     (^gvar 'unbound2_val))
 
     (else
      (compiler-internal-error
@@ -5949,7 +6005,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Optional)
-     (^gvar "optional_val"))
+     (^gvar 'optional_val))
 
     (else
      (compiler-internal-error
@@ -5960,7 +6016,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Key)
-     (^gvar "key_val"))
+     (^gvar 'key_val))
 
     (else
      (compiler-internal-error
@@ -5971,7 +6027,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (univ-use-rtlib ctx 'Rest)
-     (^gvar "rest_val"))
+     (^gvar 'rest_val))
 
     (else
      (compiler-internal-error
@@ -5996,7 +6052,7 @@ gambit_Pair.prototype.toString = function () {
     ((class)
      (univ-use-rtlib ctx 'Boolean)
      (univ-box
-      (^gvar (if obj "true_val" "false_val"))
+      (^gvar (if obj 'true_val 'false_val))
       (^bool obj)))
 
     (else
@@ -6020,7 +6076,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (or (univ-unbox expr)
-         (^member expr "val")))
+         (^member expr 'val)))
 
     (else
      expr)))
@@ -6100,7 +6156,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (or (univ-unbox expr)
-         (^member expr "code")))
+         (^member expr 'code)))
 
     (else
      (compiler-internal-error
@@ -6130,7 +6186,7 @@ gambit_Pair.prototype.toString = function () {
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^call-prim (^member "String" "fromCharCode") expr))
+     (^call-prim (^member "String" 'fromCharCode) expr))
 
     ((php)
      (^call-prim "chr" expr))
@@ -6174,7 +6230,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (or (univ-unbox expr)
-         (^member expr "val")))
+         (^member expr 'val)))
 
     (else
      expr)))
@@ -6256,9 +6312,9 @@ gambit_Pair.prototype.toString = function () {
 
        ((php)
         (let ((attribs-var
-               (^local-var (^ fn "_attribs")))
+               (^ fn "_attribs"))
               (attribs-array
-               (^ "new ReflectionFunction(" (^local-var fn) ")")))
+               (^ "new ReflectionFunction(" fn ")")))
           (^ (if assign?
                  (^assign attribs-var attribs-array)
                  (^var-declaration attribs-var attribs-array))
@@ -6273,34 +6329,53 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-procedure-representation ctx)
 
     ((class)
-     (^member (^local-var fn) attrib))
+     (^member fn attrib))
 
     (else
      (case (target-name (ctx-target ctx))
 
        ((js python ruby)
-        (^member (^local-var fn) attrib))
+        (^member fn attrib))
 
        ((php)
-        (let ((attribs-var
-               (^local-var (^ fn "_attribs"))))
+        (let ((attribs-var (^ fn "_attribs")))
           (^prop-index attribs-var (^str attrib))))
 
        (else
         (compiler-internal-error
          "univ-get-function-attrib, unknown target"))))))
 
+(define (univ-set-function-attrib ctx fn attrib val)
+  (case (univ-procedure-representation ctx)
+
+    ((class)
+     (^assign (^member fn attrib) val))
+
+    (else
+     (case (target-name (ctx-target ctx))
+
+       ((js python ruby)
+        (^assign (^member fn attrib) val))
+
+       ((php)
+        (let ((attribs-var (^ fn "_attribs")))
+          (^assign (^prop-index attribs-var (^str attrib)) val)))
+
+       (else
+        (compiler-internal-error
+         "univ-set-function-attrib, unknown target"))))))
+
 (define (univ-call-with-fn-attrib ctx fn attrib return)
   (^ (^var-declaration
-      (^local-var "fn")
+      (^local-var 'fn)
       fn)
      (univ-with-function-attribs
       ctx
       #f
-      "fn"
+      (^local-var 'fn)
       (lambda ()
         (return
-         (univ-get-function-attrib ctx "fn" attrib))))))
+         (univ-get-function-attrib ctx (^local-var 'fn) attrib))))))
 
 (define (univ-emit-pair? ctx expr)
   (^instanceof (^prefix-class (univ-use-rtlib ctx 'Pair)) expr))
@@ -6309,16 +6384,16 @@ gambit_Pair.prototype.toString = function () {
   (^new (^prefix-class (univ-use-rtlib ctx 'Pair)) expr1 expr2))
 
 (define (univ-emit-getcar ctx expr)
-  (^member expr "car"))
+  (^member expr 'car))
 
 (define (univ-emit-getcdr ctx expr)
-  (^member expr "cdr"))
+  (^member expr 'cdr))
 
 (define (univ-emit-setcar ctx expr1 expr2)
-  (^assign (^member expr1 "car") expr2))
+  (^assign (^member expr1 'car) expr2))
 
 (define (univ-emit-setcdr ctx expr1 expr2)
-  (^assign (^member expr1 "cdr") expr2))
+  (^assign (^member expr1 'cdr) expr2))
 
 (define (univ-emit-float ctx val)
   ;; TODO: generate correct syntax
@@ -6927,7 +7002,7 @@ tanh
 
     ((class)
      (or (univ-unbox expr)
-         (^member expr "val")))
+         (^member expr 'val)))
 
     (else
      expr)))
@@ -6988,7 +7063,7 @@ tanh
   (case (univ-vector-representation ctx)
 
     ((class)
-     (^member expr "elems"))
+     (^member expr 'elems))
 
     (else
      expr)))
@@ -7041,7 +7116,7 @@ tanh
   (case (univ-u8vector-representation ctx)
 
     ((class)
-     (^member expr "elems"))
+     (^member expr 'elems))
 
     (else
      (compiler-internal-error
@@ -7083,7 +7158,7 @@ tanh
   (case (univ-u16vector-representation ctx)
 
     ((class)
-     (^member expr "elems"))
+     (^member expr 'elems))
 
     (else
      (compiler-internal-error
@@ -7125,7 +7200,7 @@ tanh
   (case (univ-f64vector-representation ctx)
 
     ((class)
-     (^member expr "elems"))
+     (^member expr 'elems))
 
     (else
      (compiler-internal-error
@@ -7167,7 +7242,7 @@ tanh
   (case (univ-structure-representation ctx)
 
     ((class)
-     (^member expr "slots"))
+     (^member expr 'slots))
 
     (else
      (compiler-internal-error
@@ -7313,7 +7388,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^member expr "codes"))
+     (^member expr 'codes))
 
     (else
      expr)))
@@ -7373,7 +7448,7 @@ tanh
      (case (target-name (ctx-target ctx))
 
        ((js)
-        (^call-prim (^member expr1 "charCodeAt") expr2))
+        (^call-prim (^member expr1 'charCodeAt) expr2))
 
        ((php)
         (^call-prim "uniord" (^call-prim "substr" expr1 expr2 (^int 1))))
@@ -7465,7 +7540,7 @@ tanh
 
     ((class)
      (or (univ-unbox expr)
-         (^member expr "str")))
+         (^member expr 'str)))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -7562,7 +7637,7 @@ tanh
 
     ((class)
      (or (univ-unbox expr)
-         (^member expr "str")))
+         (^member expr 'str)))
 
     (else
      (compiler-internal-error
@@ -7585,10 +7660,10 @@ tanh
   (^new (^prefix-class (univ-use-rtlib ctx 'Box)) expr))
 
 (define (univ-emit-unbox ctx expr)
-  (^member expr "val"))
+  (^member expr 'val))
 
 (define (univ-emit-setbox ctx expr1 expr2)
-  (^assign (^member expr1 "val") expr2))
+  (^assign (^member expr1 'val) expr2))
 
 (define (univ-emit-frame? ctx expr)
   (^instanceof (^prefix-class (univ-use-rtlib ctx 'Frame)) expr))
@@ -7675,7 +7750,7 @@ tanh
   (case (univ-procedure-representation ctx)
 
     ((class)
-     (univ-emit-call-prim-aux ctx (^member proc "call") params))
+     (univ-emit-call-prim-aux ctx (^member proc 'call) params))
 
     (else
      (univ-emit-call-aux ctx proc params))))
@@ -8247,12 +8322,12 @@ tanh
 (univ-define-prim "##cpxnum-real" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member arg1 "real")))))
+     (return (^member arg1 'real)))))
 
 (univ-define-prim "##cpxnum-imag" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member arg1 "imag")))))
+     (return (^member arg1 'imag)))))
 
 (univ-define-prim-bool "##cpxnum?" #t
   (make-translated-operand-generator
@@ -8267,12 +8342,12 @@ tanh
 (univ-define-prim "##ratnum-numerator" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member arg1 "num")))))
+     (return (^member arg1 'num)))))
 
 (univ-define-prim "##ratnum-denominator" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member arg1 "den")))))
+     (return (^member arg1 'den)))))
 
 (univ-define-prim-bool "##ratnum?" #t
   (make-translated-operand-generator
@@ -8344,7 +8419,7 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
+         (^ "(" (^gvar 'temp2) " = (" (^gvar 'temp1) " = "
             (^fixnum-unbox arg1)
             " + "
             (^fixnum-unbox arg2)
@@ -8352,7 +8427,7 @@ tanh
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
+            ") === " (^gvar 'temp1) " && " (^fixnum-box (^gvar 'temp2))))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
@@ -8369,7 +8444,7 @@ tanh
          (^and (^parens
                 (^= (^parens
                      (^assign-expr
-                      (^gvar "temp2")
+                      (^gvar 'temp2)
                       (^-
                        (^parens
                         (^bitand
@@ -8377,14 +8452,14 @@ tanh
                           (^+
                            (^parens
                             (^assign-expr
-                             (^gvar "temp1")
+                             (^gvar 'temp1)
                              (^+ (^fixnum-unbox arg1)
                                  (^fixnum-unbox arg2))))
                            univ-fixnum-max+1))
                          univ-fixnum-max*2+1))
                        univ-fixnum-max+1)))
-                    (^gvar "temp1")))
-               (^fixnum-box (^gvar "temp2"))))
+                    (^gvar 'temp1)))
+               (^fixnum-box (^gvar 'temp2))))
 
         (else
          (compiler-internal-error
@@ -8414,7 +8489,7 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
+         (^ "(" (^gvar 'temp2) " = (" (^gvar 'temp1) " = "
             (^fixnum-unbox arg1)
             " * "
             (^fixnum-unbox arg2)
@@ -8422,7 +8497,7 @@ tanh
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
+            ") === " (^gvar 'temp1) " && " (^fixnum-box (^gvar 'temp2))))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
@@ -8439,7 +8514,7 @@ tanh
          (^and (^parens
                 (^= (^parens
                      (^assign-expr
-                      (^gvar "temp2")
+                      (^gvar 'temp2)
                       (^-
                        (^parens
                         (^bitand
@@ -8447,14 +8522,14 @@ tanh
                           (^+
                            (^parens
                             (^assign-expr
-                             (^gvar "temp1")
+                             (^gvar 'temp1)
                              (^* (^fixnum-unbox arg1)
                                  (^fixnum-unbox arg2))))
                            univ-fixnum-max+1))
                          univ-fixnum-max*2+1))
                        univ-fixnum-max+1)))
-                    (^gvar "temp1")))
-               (^fixnum-box (^gvar "temp2"))))
+                    (^gvar 'temp1)))
+               (^fixnum-box (^gvar 'temp2))))
 
         (else
          (compiler-internal-error
@@ -8484,7 +8559,7 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ "(" (^gvar "temp2") " = (" (^gvar "temp1") " = "
+         (^ "(" (^gvar 'temp2) " = (" (^gvar 'temp1) " = "
             (if arg2
                 (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                 (^ "- " (^fixnum-unbox arg1)))
@@ -8492,7 +8567,7 @@ tanh
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
+            ") === " (^gvar 'temp1) " && " (^fixnum-box (^gvar 'temp2))))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
@@ -8506,7 +8581,7 @@ tanh
             ")"))
 
         ((ruby)
-         (^ "(" (^gvar "temp2") " = (((" (^gvar "temp1") " = "
+         (^ "(" (^gvar 'temp2) " = (((" (^gvar 'temp1) " = "
             (if arg2
                 (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                 (^ "- " (^fixnum-unbox arg1)))
@@ -8516,10 +8591,10 @@ tanh
             univ-fixnum-max*2+1
             ") - "
             univ-fixnum-max+1
-            ") == " (^gvar "temp1") " && " (^fixnum-box (^gvar "temp2"))))
+            ") == " (^gvar 'temp1) " && " (^fixnum-box (^gvar 'temp2))))
 
         ((php)
-         (^ "((" (^gvar "temp2") " = (((" (^gvar "temp1") " = "
+         (^ "((" (^gvar 'temp2) " = (((" (^gvar 'temp1) " = "
             (if arg2
                 (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                 (^ "- " (^fixnum-unbox arg1)))
@@ -8529,7 +8604,7 @@ tanh
             univ-fixnum-max*2+1
             ") - "
             univ-fixnum-max+1
-            ") === " (^gvar "temp1") ") ? " (^fixnum-box (^gvar "temp2")) " : false"))
+            ") === " (^gvar 'temp1) ") ? " (^fixnum-box (^gvar 'temp2)) " : false"))
 
         (else
          (compiler-internal-error
@@ -8607,7 +8682,7 @@ tanh
 (univ-define-prim "##fxbit-count" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (let ((tmp (^local-var "tmp")))
+     (let ((tmp (^local-var 'tmp)))
        (^ (^var-declaration tmp (^fixnum-unbox arg))
           (^assign tmp (^if-expr (^< tmp (^int 0)) (^bitnot tmp) tmp))
           (^popcount! tmp)
@@ -8616,7 +8691,7 @@ tanh
 (univ-define-prim "##fxlength" #f
   (make-translated-operand-generator
     (lambda (ctx return arg)
-      (let ((tmp (^local-var "tmp")))
+      (let ((tmp (^local-var 'tmp)))
         (^ (^var-declaration tmp (^fixnum-unbox arg))
            (^assign tmp (^if-expr (^< tmp (^int 0)) (^bitnot tmp) tmp))
            (let gen-shift ((s 1) (acc (^)))
@@ -8632,7 +8707,7 @@ tanh
 (univ-define-prim "##fxfirst-bit-set" #f
   (make-translated-operand-generator
     (lambda (ctx return arg)
-      (let ((tmp (^local-var "tmp")))
+      (let ((tmp (^local-var 'tmp)))
         (^ (^var-declaration tmp (^fixnum-unbox arg))
            (^assign tmp (^bitxor tmp (^- tmp (^int 1))))
            (^assign tmp (^if-expr (^< tmp (^int 0)) (^bitnot tmp) tmp))
@@ -8695,26 +8770,26 @@ tanh
 (univ-define-prim "##fxarithmetic-shift?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^gvar "temp1") (^<< (^fixnum-unbox arg1)
-                                      (^fixnum-unbox arg2)))
+     (^ (^assign (^gvar 'temp1) (^<< (^fixnum-unbox arg1)
+                                     (^fixnum-unbox arg2)))
         (return
          (^if-expr (case (target-name (ctx-target ctx))
                     ((js)
-                     (^= (^>> (^>> (^<< (^gvar "temp1") univ-tag-bits)
+                     (^= (^>> (^>> (^<< (^gvar 'temp1) univ-tag-bits)
                                    univ-tag-bits)
                               (^fixnum-unbox arg2))
                          (^fixnum-unbox arg1)))
                     ((php python ruby)
                      (let ((sign-bit (- (- univ-word-bits univ-tag-bits)
                                         1)))
-                        (^= (^gvar "temp1")
+                        (^= (^gvar 'temp1)
                             (^-
                              (^parens
-                               (^bitand (^parens (^+ (^gvar "temp1")
+                               (^bitand (^parens (^+ (^gvar 'temp1)
                                                      (expt 2 sign-bit)))
                                         (- (expt 2 (+ 1 sign-bit)) 1)))
                              (expt 2 sign-bit))))))
-                   (^fixnum-box (^gvar "temp1"))
+                   (^fixnum-box (^gvar 'temp1))
                    (^boolean-box (^bool #f))))))))
 
 (univ-define-prim "##fxwraparithmetic-shift-left" #f
@@ -8749,26 +8824,26 @@ tanh
 (univ-define-prim "##fxarithmetic-shift-left?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^gvar "temp1") (^<< (^fixnum-unbox arg1)
-                                      (^fixnum-unbox arg2)))
+     (^ (^assign (^gvar 'temp1) (^<< (^fixnum-unbox arg1)
+                                     (^fixnum-unbox arg2)))
         (return
          (^if-expr (case (target-name (ctx-target ctx))
                     ((js)
-                     (^= (^>> (^>> (^<< (^gvar "temp1") univ-tag-bits)
+                     (^= (^>> (^>> (^<< (^gvar 'temp1) univ-tag-bits)
                                    univ-tag-bits)
                               (^fixnum-unbox arg2))
                          (^fixnum-unbox arg1)))
                     ((php python ruby)
                      (let ((sign-bit (- (- univ-word-bits univ-tag-bits)
                                         1)))
-                        (^= (^gvar "temp1")
+                        (^= (^gvar 'temp1)
                             (^-
                              (^parens
-                               (^bitand (^parens (^+ (^gvar "temp1")
+                               (^bitand (^parens (^+ (^gvar 'temp1)
                                                      (expt 2 sign-bit)))
                                         (- (expt 2 (+ 1 sign-bit)) 1)))
                              (expt 2 sign-bit))))))
-                   (^fixnum-box (^gvar "temp1"))
+                   (^fixnum-box (^gvar 'temp1))
                    (^boolean-box (^bool #f))))))))
 
 (univ-define-prim "##fxarithmetic-shift-right" #f
@@ -9726,13 +9801,31 @@ tanh
      (univ-call-with-fn-attrib
       ctx
       arg1
-      "id"
+      'id
       (lambda (result)
         (return (^fixnum-box result)))))))
 
-(define (univ-subprocedure-parent-as-string? ctx)
+(define (univ-subproc-reference-as-string? ctx)
   (and (eq? (target-name (ctx-target ctx)) 'php)
        (eq? (univ-procedure-representation ctx) 'host)))
+
+(define (univ-subproc-reference ctx lbl-num)
+  (let ((lbl (make-lbl lbl-num)))
+    (if (univ-subproc-reference-as-string? ctx)
+        (^str (gvm-lbl-use-function ctx lbl))
+        (gvm-lbl-use ctx lbl))))
+
+(define (univ-prm-name ctx name)
+  (if (univ-subproc-reference-as-string? ctx)
+      (^str name)
+      (^obj (string->symbol name))))
+
+(define (univ-subproc-reference-to-subproc ctx ref)
+  (if (univ-subproc-reference-as-string? ctx)
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'get_host_global_var))
+       ref)
+      ref))
 
 (univ-define-prim "##subprocedure-parent" #f
   (make-translated-operand-generator
@@ -9740,15 +9833,12 @@ tanh
      (univ-call-with-fn-attrib
       ctx
       arg1
-      "parent"
+      'parent
       (lambda (result)
-        (return (^if-expr result
-                          (if (univ-subprocedure-parent-as-string? ctx)
-                              (^call-prim
-                               (^prefix (univ-use-rtlib ctx 'get_host_global_var))
-                               result)
-                              result)
-                          arg1)))))))
+        (return
+         (^if-expr result
+                   (univ-subproc-reference-to-subproc ctx result)
+                   arg1)))))))
 
 (univ-define-prim "##subprocedure-nb-parameters" #f
   (make-translated-operand-generator
@@ -9756,7 +9846,7 @@ tanh
      (univ-call-with-fn-attrib
       ctx
       arg1
-      "nb_parameters"
+      'nb_parameters
       (lambda (result)
         (return (^fixnum-box result)))))))
 
@@ -9766,7 +9856,7 @@ tanh
      (univ-call-with-fn-attrib
       ctx
       arg1
-      "nb_closed"
+      'nb_closed
       (lambda (result)
         (return (^fixnum-box result)))))))
 
@@ -9776,8 +9866,12 @@ tanh
      (univ-call-with-fn-attrib
       ctx
       arg1
-      "proc_name"
-      return))))
+      'prm_name
+      (lambda (result)
+        (return
+         (if (univ-subproc-reference-as-string? ctx)
+             (^symbol-box result)
+             result)))))))
 
 (univ-define-prim "##subprocedure-parent-info" #f
   (make-translated-operand-generator
@@ -9785,7 +9879,7 @@ tanh
      (univ-call-with-fn-attrib
       ctx
       arg1
-      "info"
+      'info
       return))))
 
 ;;TODO: ("##make-promise"                 (1)   #f 0     0    (#f)    extended)
@@ -9799,7 +9893,7 @@ tanh
 (univ-define-prim "##current-thread" #t
   (make-translated-operand-generator
    (lambda (ctx return)
-     (return (^gvar "current_thread")))))
+     (return (^gvar 'current_thread)))))
 
 ;;TODO: ("##run-queue"                    (0)   #f ()    0    #f      extended)
 
@@ -9815,12 +9909,12 @@ tanh
 (univ-define-prim "##continuation-frame" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member arg1 "frame")))))
+     (return (^member arg1 'frame)))))
 
 (univ-define-prim "##continuation-denv" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member arg1 "denv")))))
+     (return (^member arg1 'denv)))))
 
 (univ-define-prim "##continuation-next" #f
   (make-translated-operand-generator
@@ -9839,15 +9933,15 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (^ (^var-declaration
-         (^local-var "frame")
+         (^local-var 'frame)
          (^array-index arg1 0))
         (univ-with-function-attribs
          ctx
          #f
-         "frame"
+         (^local-var 'frame)
          (lambda ()
            (return
-            (^fixnum-box (univ-get-function-attrib ctx "frame" name)))))))))
+            (^fixnum-box (univ-get-function-attrib ctx (^local-var 'frame) name)))))))))
 
 (univ-define-prim "##frame-fs"   #f (univ-get-frame-field "fs"))
 (univ-define-prim "##frame-link" #f (univ-get-frame-field "link"))
@@ -9934,28 +10028,28 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return
-      (^> (^array-index (^member arg1 "digits")
-                        (^- (^array-length (^member arg1 "digits")) (^int 1)))
+      (^> (^array-index (^member arg1 'digits)
+                        (^- (^array-length (^member arg1 'digits)) (^int 1)))
           (^int 8191)))))) ;;TODO: adjust for digit size
 
 (univ-define-prim "##bignum.adigit-length" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return
-      (^fixnum-box (^array-length (^member arg1 "digits")))))))
+      (^fixnum-box (^array-length (^member arg1 'digits)))))))
 
 (univ-define-prim "##bignum.adigit-inc!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^gvar "temp1")
-                 (^array-index (^member arg1 "digits")
+     (^ (^assign (^gvar 'temp1)
+                 (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2)))
-        (^assign (^array-index (^member arg1 "digits")
+        (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^bitand (^parens (^+ (^gvar "temp1") (^int 1)))
+                 (^bitand (^parens (^+ (^gvar 'temp1) (^int 1)))
                           (^int 16383)))
         (return
-         (^if-expr (^= (^gvar "temp1")
+         (^if-expr (^= (^gvar 'temp1)
                        (^int 16383))
                    (^obj 1)
                    (^obj 0)))))))
@@ -9963,15 +10057,15 @@ tanh
 (univ-define-prim "##bignum.adigit-dec!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^gvar "temp1")
-                 (^array-index (^member arg1 "digits")
+     (^ (^assign (^gvar 'temp1)
+                 (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2)))
-        (^assign (^array-index (^member arg1 "digits")
+        (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^bitand (^parens (^- (^gvar "temp1") (^int 1)))
+                 (^bitand (^parens (^- (^gvar 'temp1) (^int 1)))
                           (^int 16383)))
         (return
-         (^if-expr (^= (^gvar "temp1")
+         (^if-expr (^= (^gvar 'temp1)
                        (^int 0))
                    (^obj 1)
                    (^obj 0)))))))
@@ -9979,42 +10073,42 @@ tanh
 (univ-define-prim "##bignum.adigit-add!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5)
-     (^ (^assign (^gvar "temp1")
-                 (^array-index (^member arg1 "digits")
+     (^ (^assign (^gvar 'temp1)
+                 (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2)))
-        (^assign (^gvar "temp2")
-                 (^bitand (^parens (^+ (^+ (^gvar "temp1")
-                                           (^array-index (^member arg3 "digits")
+        (^assign (^gvar 'temp2)
+                 (^bitand (^parens (^+ (^+ (^gvar 'temp1)
+                                           (^array-index (^member arg3 'digits)
                                                          (^fixnum-unbox arg4)))
                                        (^fixnum-unbox arg5)))
                           (^int 16383)))
-        (^assign (^array-index (^member arg1 "digits")
+        (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^gvar "temp2"))
+                 (^gvar 'temp2))
         (return
-         (^if-expr (^< (^gvar "temp2")
-                       (^+ (^gvar "temp1") (^fixnum-unbox arg5)))
+         (^if-expr (^< (^gvar 'temp2)
+                       (^+ (^gvar 'temp1) (^fixnum-unbox arg5)))
                    (^obj 1)
                    (^obj 0)))))))
 
 (univ-define-prim "##bignum.adigit-sub!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5)
-     (^ (^assign (^gvar "temp1")
-                 (^array-index (^member arg1 "digits")
+     (^ (^assign (^gvar 'temp1)
+                 (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2)))
-        (^assign (^gvar "temp2")
-                 (^bitand (^parens (^- (^- (^gvar "temp1")
-                                           (^array-index (^member arg3 "digits")
+        (^assign (^gvar 'temp2)
+                 (^bitand (^parens (^- (^- (^gvar 'temp1)
+                                           (^array-index (^member arg3 'digits)
                                                          (^fixnum-unbox arg4)))
                                        (^fixnum-unbox arg5)))
                           (^int 16383)))
-        (^assign (^array-index (^member arg1 "digits")
+        (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^gvar "temp2"))
+                 (^gvar 'temp2))
         (return
-         (^if-expr (^> (^gvar "temp2")
-                       (^- (^gvar "temp1") (^fixnum-unbox arg5)))
+         (^if-expr (^> (^gvar 'temp2)
+                       (^- (^gvar 'temp1) (^fixnum-unbox arg5)))
                    (^obj 1)
                    (^obj 0)))))))
 
@@ -10022,19 +10116,19 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return
-      (^fixnum-box (^array-length (^member arg1 "digits")))))))
+      (^fixnum-box (^array-length (^member arg1 'digits)))))))
 
 (univ-define-prim "##bignum.mdigit-ref" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^fixnum-box (^array-index (^member arg1 "digits")
+      (^fixnum-box (^array-index (^member arg1 'digits)
                                  (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##bignum.mdigit-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3)
-     (^ (^assign (^array-index (^member arg1 "digits")
+     (^ (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
                  (^fixnum-unbox arg3))
         (return arg1)))))
@@ -10042,41 +10136,41 @@ tanh
 (univ-define-prim "##bignum.mdigit-mul!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6)
-     (^ (^assign (^gvar "temp1")
-                 (^+ (^+ (^array-index (^member arg1 "digits")
+     (^ (^assign (^gvar 'temp1)
+                 (^+ (^+ (^array-index (^member arg1 'digits)
                                        (^fixnum-unbox arg2))
-                         (^* (^array-index (^member arg3 "digits")
+                         (^* (^array-index (^member arg3 'digits)
                                            (^fixnum-unbox arg4))
                              (^fixnum-unbox arg5)))
                      (^fixnum-unbox arg6)))
-        (^assign (^array-index (^member arg1 "digits")
+        (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^bitand (^gvar "temp1")
+                 (^bitand (^gvar 'temp1)
                           (^int 16383)))
         (return
-         (^fixnum-box (^>> (^gvar "temp1") (^int 14))))))))
+         (^fixnum-box (^>> (^gvar 'temp1) (^int 14))))))))
 
 (univ-define-prim "##bignum.mdigit-div!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6)
-     (^ (^assign (^gvar "temp1")
-                 (^+ (^- (^array-index (^member arg1 "digits")
+     (^ (^assign (^gvar 'temp1)
+                 (^+ (^- (^array-index (^member arg1 'digits)
                                        (^fixnum-unbox arg2))
-                         (^* (^array-index (^member arg3 "digits")
+                         (^* (^array-index (^member arg3 'digits)
                                            (^fixnum-unbox arg4))
                              (^fixnum-unbox arg5)))
                      (^fixnum-unbox arg6)))
-        (^assign (^array-index (^member arg1 "digits")
+        (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^bitand (^gvar "temp1")
+                 (^bitand (^gvar 'temp1)
                           (^int 16383)))
-        (^assign (^gvar "temp1")
-                 (^>> (^gvar "temp1") (^int 14)))
+        (^assign (^gvar 'temp1)
+                 (^>> (^gvar 'temp1) (^int 14)))
         (return
          (^fixnum-box
-          (^if-expr (^> (^gvar "temp1") (^int 0))
-                    (^- (^gvar "temp1") (^int 16384))
-                    (^gvar "temp1"))))))))
+          (^if-expr (^> (^gvar 'temp1) (^int 0))
+                    (^- (^gvar 'temp1) (^int 16384))
+                    (^gvar 'temp1))))))))
 
 (univ-define-prim "##bignum.mdigit-quotient" #f
   (make-translated-operand-generator
@@ -10086,10 +10180,10 @@ tanh
                     ctx
                     (^parens
                      (^+ (^parens
-                          (^<< (^array-index (^member arg1 "digits")
+                          (^<< (^array-index (^member arg1 'digits)
                                              (^fixnum-unbox arg2))
                                (^int 14)))
-                         (^array-index (^member arg1 "digits")
+                         (^array-index (^member arg1 'digits)
                                        (^- (^fixnum-unbox arg2)
                                            (^int 1)))))
                     (^fixnum-unbox arg3)))))))
@@ -10100,10 +10194,10 @@ tanh
      (return
       (^fixnum-box (^- (^parens
                         (^+ (^parens
-                             (^<< (^array-index (^member arg1 "digits")
+                             (^<< (^array-index (^member arg1 'digits)
                                                 (^fixnum-unbox arg2))
                                   (^int 14)))
-                            (^array-index (^member arg1 "digits")
+                            (^array-index (^member arg1 'digits)
                                           (^- (^fixnum-unbox arg2)
                                               (^int 1)))))
                        (^* (^fixnum-unbox arg3)
@@ -10124,7 +10218,7 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^= (^array-index (^member arg1 "digits")
+      (^= (^array-index (^member arg1 'digits)
                         (^fixnum-unbox arg2))
           (^int 16383))))))
 
@@ -10132,7 +10226,7 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^= (^array-index (^member arg1 "digits")
+      (^= (^array-index (^member arg1 'digits)
                         (^fixnum-unbox arg2))
           (^int 0))))))
 
@@ -10140,7 +10234,7 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^> (^array-index (^member arg1 "digits")
+      (^> (^array-index (^member arg1 'digits)
                         (^fixnum-unbox arg2))
           (^int 8191))))))
 
@@ -10148,18 +10242,18 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3)
      (return
-      (^= (^array-index (^member arg1 "digits")
+      (^= (^array-index (^member arg1 'digits)
                         (^fixnum-unbox arg3))
-          (^array-index (^member arg2 "digits")
+          (^array-index (^member arg2 'digits)
                         (^fixnum-unbox arg3)))))))
 
 (univ-define-prim-bool "##bignum.adigit-<" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3)
      (return
-      (^< (^array-index (^member arg1 "digits")
+      (^< (^array-index (^member arg1 'digits)
                         (^fixnum-unbox arg3))
-          (^array-index (^member arg2 "digits")
+          (^array-index (^member arg2 'digits)
                         (^fixnum-unbox arg3)))))))
 
 (univ-define-prim "##bignum.make" #f
@@ -10183,32 +10277,32 @@ tanh
 (univ-define-prim "##bignum.adigit-shrink!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^array-shrink! (^member arg1 "digits")
+     (^ (^array-shrink! (^member arg1 'digits)
                         (^fixnum-unbox arg2))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-copy!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     (^ (^assign (^array-index (^member arg1 "digits")
+     (^ (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^array-index (^member arg3 "digits")
+                 (^array-index (^member arg3 'digits)
                                (^fixnum-unbox arg4)))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-cat!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6 arg7)
-     (^ (^assign (^array-index (^member arg1 "digits")
+     (^ (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
                  (^bitand
                   (^parens
                    (^+ (^parens
-                        (^<< (^array-index (^member arg3 "digits")
+                        (^<< (^array-index (^member arg3 'digits)
                                            (^fixnum-unbox arg4))
                              (^fixnum-unbox arg7)))
                        (^parens
-                        (^>> (^array-index (^member arg5 "digits")
+                        (^>> (^array-index (^member arg5 'digits)
                                            (^fixnum-unbox arg6))
                              (^- (^int 14)
                                  (^fixnum-unbox arg7))))))
@@ -10218,42 +10312,42 @@ tanh
 (univ-define-prim "##bignum.adigit-bitwise-and!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     (^ (^assign (^array-index (^member arg1 "digits")
+     (^ (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^bitand (^array-index (^member arg1 "digits")
+                 (^bitand (^array-index (^member arg1 'digits)
                                         (^fixnum-unbox arg2))
-                          (^array-index (^member arg3 "digits")
+                          (^array-index (^member arg3 'digits)
                                         (^fixnum-unbox arg4))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-ior!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     (^ (^assign (^array-index (^member arg1 "digits")
+     (^ (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^bitior (^array-index (^member arg1 "digits")
+                 (^bitior (^array-index (^member arg1 'digits)
                                         (^fixnum-unbox arg2))
-                          (^array-index (^member arg3 "digits")
+                          (^array-index (^member arg3 'digits)
                                         (^fixnum-unbox arg4))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-xor!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     (^ (^assign (^array-index (^member arg1 "digits")
+     (^ (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^bitxor (^array-index (^member arg1 "digits")
+                 (^bitxor (^array-index (^member arg1 'digits)
                                         (^fixnum-unbox arg2))
-                          (^array-index (^member arg3 "digits")
+                          (^array-index (^member arg3 'digits)
                                         (^fixnum-unbox arg4))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-not!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^array-index (^member arg1 "digits")
+     (^ (^assign (^array-index (^member arg1 'digits)
                                (^fixnum-unbox arg2))
-                 (^bitnot (^array-index (^member arg1 "digits")
+                 (^bitnot (^array-index (^member arg1 'digits)
                                         (^fixnum-unbox arg2))))
         (return arg1)))))
 
