@@ -914,6 +914,7 @@
 ("##keyword->string"                  (1)   #f ()    0    string  extended)
 ("##string->keyword"                  (1)   #f ()    0    keyword extended)
 
+("##make-closure"                     (2)   #f ()    0    #f      extended)
 ("##closure-length"                   (1)   #f ()    0    fixnum  extended)
 ("##closure-code"                     (1)   #f ()    0    #f      extended)
 ("##closure-ref"                      (2)   #f ()    0    (#f)    extended)
