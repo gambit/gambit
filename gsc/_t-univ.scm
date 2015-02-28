@@ -4148,6 +4148,24 @@ EOF
                      (^return (^array-index slots 0))))
                (^return closure)))))))))
 
+    ((make_closure)
+     (^prim-function-declaration
+      "make_closure"
+      (list (cons 'code #f)
+            (cons 'len #f))
+      "\n"
+      '()
+      (let ((code (^local-var 'code))
+            (len (^local-var 'len))
+            (slots (^local-var 'slots)))
+        (^ (^var-declaration slots
+                             (univ-new-array ctx (^+ len (^int 1))))
+           (^assign (^array-index slots (^int 0)) code)
+           (^return
+            (^call-prim
+             (^prefix (univ-use-rtlib ctx 'closure_alloc))
+             slots))))))
+
     ((Procedure)
      (^class-declaration
       "Procedure"
@@ -9762,6 +9780,15 @@ tanh
 ;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
 ;;TODO: ("##closure-ref"                  (2)   #f ()    0    (#f)    extended)
 ;;TODO: ("##closure-set!"                 (3)   #t ()    0    #f      extended)
+
+(univ-define-prim "##make-closure" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'make_closure))
+       arg1
+       (^fixnum-unbox arg2))))))
 
 (univ-define-prim "##closure-length" #f
   (make-translated-operand-generator
