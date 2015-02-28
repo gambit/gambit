@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2772,6 +2772,12 @@ end-of-code
   (##c-code
    "___RESULT = ___BOOLEAN(___HD_TYP(___HEADER(___ARG1)) != ___PERM);"
    proc))
+
+(define-prim (##make-closure code nb-closed)
+  (let ((closure (##make-vector (##fx+ nb-closed 1))))
+    (##vector-set! closure 0 code)
+    (##subtype-set! closure (macro-subtype-procedure))
+    closure))
 
 (define-prim (##closure-length closure))
 (define-prim (##closure-code closure))
