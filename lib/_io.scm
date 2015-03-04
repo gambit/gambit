@@ -9619,12 +9619,16 @@
    'meroon
    (##void)))
 
+(set! ##wr-meroon ##wr-meroon)
+
 (define-prim (##wr-jazz we obj)
   (##wr-sn
    we
    obj
    'jazz
    (##void)))
+
+(set! ##wr-jazz ##wr-jazz)
 
 (define-prim (##wr-frame we obj)
   (if (##eq? (macro-readtable-sharing-allowed?
