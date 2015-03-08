@@ -4935,15 +4935,11 @@ for a discussion of branch cuts.
 
 (define-prim (##extract-bit-field size position n)
 
-  (define (ceiling a b)
-    ;; computes (ceiling (/ a b)) with a b fixnums
-    (##fxquotient (##fx+ a b -1) b))
-
   ;; I've decided to be brutally simple and not optimize
   ;; for special cases, fixnums, etc.
   
   (let* ((result-length
-	  (ceiling (##fx+ 1 size) ##bignum.adigit-width))  ;  top bit is always 0
+	  (##fxceiling-ratio (##fx+ 1 size) ##bignum.adigit-width))  ;  top bit is always 0
 	 (bignum-n
 	  (if (##bignum? n) n (##fixnum->bignum n)))
 	 (result
@@ -5788,7 +5784,7 @@ for a discussion of branch cuts.
 (define-prim (##bignum.adigit-negative? x i))
 (define-prim (##bignum.adigit-= x y i))
 (define-prim (##bignum.adigit-< x y i))
-(define-prim (##bignum->fixnum x))
+;(define-prim (##bignum->fixnum x))
 (define-prim (##fixnum->bignum x))
 (define-prim (##bignum.adigit-shrink! x n))
 (define-prim (##bignum.adigit-copy! x i y j))
@@ -6170,45 +6166,60 @@ ___RESULT = result;
 
       (##bignum.normalize! result)))
 
+(define-prim (##bignum->fixnum? bn)
+  (let* ((i
+          (##fx- (##bignum.mdigit-length bn) 1))
+         (n
+          (##bignum.mdigit-ref bn i))
+         (bias
+          (if (##fx< (##fx* 2 n) ##bignum.mdigit-base)
+              0
+              ##bignum.mdigit-base-minus-1)))
+    (let loop ((n (##fx- n bias))
+               (i (##fx- i 1)))
+      (if (##fx< i 0)
+          (if (##fx= 0 bias)
+              n
+              (##fx+? n -1))
+          (let ((n1 (##fx*? n ##bignum.mdigit-base)))
+            (and n1
+                 (let ((n2 (##fx+? n1 (##fx- (##bignum.mdigit-ref bn i) bias))))
+                   (and n2
+                        (loop n2
+                              (##fx- i 1))))))))))
+
 (define-prim (##bignum.normalize! result)
 
   (##declare (not interrupts-enabled))
 
-  (let ((n (##fx- (##bignum.adigit-length result) 1)))
+  (or (##bignum->fixnum? result)
 
-    (cond ((##bignum.adigit-zero? result n)
-           (let loop1 ((i (##fx- n 1)))
-             (cond ((##fx< i 0)
-                    0)
-                   ((##bignum.adigit-zero? result i)
-                    (loop1 (##fx- i 1)))
-                   ((##bignum.adigit-negative? result i)
-                    (##bignum.adigit-shrink! result (##fx+ i 2)))
-                   (else
-                    (or (and (##fx= i 0)
-                             (##bignum->fixnum result))
-                        (##bignum.adigit-shrink! result (##fx+ i 1)))))))
+      (let ((n (##fx- (##bignum.adigit-length result) 1)))
 
-          ((##bignum.adigit-ones? result n)
-           (let loop2 ((i (##fx- n 1)))
-             (cond ((##fx< i 0)
-                    -1)
-                   ((##bignum.adigit-ones? result i)
-                    (loop2 (##fx- i 1)))
-                   ((##not (##bignum.adigit-negative? result i))
-                    (##bignum.adigit-shrink! result (##fx+ i 2)))
-                   (else
-                    (or (and (##fx= i 0)
-                             (##bignum->fixnum result))
-                        (##bignum.adigit-shrink! result (##fx+ i 1)))))))
+        (cond ((##bignum.adigit-zero? result n)
+               (let loop1 ((i (##fx- n 1)))
+                 (cond ((##fx< i 0)
+                        0)
+                       ((##bignum.adigit-zero? result i)
+                        (loop1 (##fx- i 1)))
+                       ((##bignum.adigit-negative? result i)
+                        (##bignum.adigit-shrink! result (##fx+ i 2)))
+                       (else
+                        (##bignum.adigit-shrink! result (##fx+ i 1))))))
 
-          ((and (##fx= n 0)
-                (##bignum->fixnum result))
-           =>
-           (lambda (x) x))
+              ((##bignum.adigit-ones? result n)
+               (let loop2 ((i (##fx- n 1)))
+                 (cond ((##fx< i 0)
+                        -1)
+                       ((##bignum.adigit-ones? result i)
+                        (loop2 (##fx- i 1)))
+                       ((##not (##bignum.adigit-negative? result i))
+                        (##bignum.adigit-shrink! result (##fx+ i 2)))
+                       (else
+                        (##bignum.adigit-shrink! result (##fx+ i 1))))))
 
-          (else
-           result))))
+              (else
+               result)))))
 
 ;;; Bignum multiplication.
 
@@ -9134,29 +9145,23 @@ ___RESULT = result;
       (let loop1 ((k 0))
 	(if (##fx< k y-length)
             (let ((multiplier (##bignum.mdigit-ref y k)))
-              (if (##eqv? multiplier 0)
-		  (loop1 (##fx+ k 1))
-		  (let loop2 ((i 0)
-			      (j k)
-			      (carry 0))
-		    (if (##fx< i x-length)
-			(loop2 (##fx+ i 2)
-			       (##fx+ j 2)
-			       (##bignum.mdigit-mul!
-				result
-				(##fx+ j 1)
-				x
-				(##fx+ i 1)
-				multiplier
-				(##bignum.mdigit-mul! result
-						      j
-						      x
-						      i
-						      multiplier
-						      carry)))
-			(begin
-			  (##bignum.mdigit-set! result j carry)
-			  (loop1 (##fx+ k 1)))))))
+              (if (##fx= multiplier 0)
+                (loop1 (##fx+ k 1))
+                (let loop2 ((i 0)
+                            (j k)
+                            (carry 0))
+		  (if (##fx< i x-length)
+		    (loop2 (##fx+ i 1)
+			   (##fx+ j 1)
+			   (##bignum.mdigit-mul! result
+						 j
+						 x
+						 i
+						 multiplier
+						 carry))
+		    (begin
+		      (##bignum.mdigit-set! result j carry)
+		      (loop1 (##fx+ k 1)))))))
             (cleanup x y result)))))
 
   (define (cleanup x y result)
