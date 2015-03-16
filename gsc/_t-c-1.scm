@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -109,6 +109,8 @@
 (define targ-promise-space     (targ-max-words (* 3 targ-min-word-size)))
 (define targ-ratnum-space      (targ-max-words (* 3 targ-min-word-size)))
 (define targ-cpxnum-space      (targ-max-words (* 3 targ-min-word-size)))
+(define targ-symbol-space      (targ-max-words (* 5 targ-min-word-size)))
+(define targ-keyword-space     (targ-max-words (* 4 targ-min-word-size)))
 (define (targ-closure-space n) (targ-max-words (* (+ n 2) targ-min-word-size)))
 (define (targ-string-space n)  (targ-max-words (* (+ n 1) targ-min-word-size)))
 (define (targ-s8vector-space n)(targ-max-words (+ n targ-min-word-size)))

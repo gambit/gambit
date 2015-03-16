@@ -3263,6 +3263,31 @@ ___hp[-2]=real,___hp[-1]=imag,___TAG((___hp-___CPXNUM_SIZE-1),___tSUBTYPED))
 ___hp[-3]=___MAKE_HD_WORDS(___PROMISE_SIZE,___sPROMISE), \
 ___hp[-2]=x, ___hp[-1]=___TAG((___hp-___PROMISE_SIZE-1),___tSUBTYPED))
 
+#define ___PROMISETHUNK(obj)___FIELD(obj,___PROMISE_THUNK)
+#define ___PROMISETHUNKSET(obj,val)___FIELD(obj,___PROMISE_THUNK) = val;
+#define ___PROMISERESULT(obj)___FIELD(obj,___PROMISE_RESULT)
+#define ___PROMISERESULTSET(obj,val)___FIELD(obj,___PROMISE_RESULT) = val;
+
+#define ___MAKESYMBOL(name,hash)  \
+(___ALLOC(___SYMBOL_SIZE+1), \
+___hp[-5]=___MAKE_HD_WORDS(___SYMBOL_SIZE,___sSYMBOL), \
+___hp[-4]=name,___hp[-3]=hash,___hp[-2]=___FAL,___hp[-1]=0,___TAG((___hp-___SYMBOL_SIZE-1),___tSUBTYPED))
+
+#define ___SYMBOLNAME(obj)___FIELD(obj,___SYMKEY_NAME)
+#define ___SYMBOLNAMESET(obj,val)___FIELD(obj,___SYMKEY_NAME) = val;
+#define ___SYMBOLHASH(obj)___FIELD(obj,___SYMKEY_HASH)
+#define ___SYMBOLHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
+
+#define ___MAKEKEYWORD(name,hash)  \
+(___ALLOC(___KEYWORD_SIZE+1), \
+___hp[-4]=___MAKE_HD_WORDS(___KEYWORD_SIZE,___sKEYWORD), \
+___hp[-3]=name,___hp[-2]=hash,___hp[-1]=___FAL,___TAG((___hp-___KEYWORD_SIZE-1),___tSUBTYPED))
+
+#define ___KEYWORDNAME(obj)___FIELD(obj,___SYMKEY_NAME)
+#define ___KEYWORDNAMESET(obj,val)___FIELD(obj,___SYMKEY_NAME) = val;
+#define ___KEYWORDHASH(obj)___FIELD(obj,___SYMKEY_HASH)
+#define ___KEYWORDHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
+
 #define ___MAKEWILL(testator,action) \
 (___hp[0]=___MAKE_HD_WORDS(___WILL_SIZE,___sWEAK), \
 ___hp[1]=___ps->nonexecutable_wills, \
