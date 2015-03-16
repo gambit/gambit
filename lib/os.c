@@ -1,6 +1,6 @@
 /* File: "os.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -33,6 +33,7 @@
 #define ___VERSION 407004
 #include "gambit.h"
 
+#include "os_thread.h"
 #include "os_base.h"
 #include "os_time.h"
 #include "os_shell.h"
@@ -2472,37 +2473,33 @@ ___SCMOBJ ___setup_os ___PVOID
    * "___cleanup" does not access dangling pointers.
    */
 
-  if ((e = ___setup_base_module ()) == ___FIX(___NO_ERR))
-    {
-      if ((e = ___setup_time_module (heartbeat_intr)) == ___FIX(___NO_ERR))
-        {
-          if ((e = ___setup_shell_module ()) == ___FIX(___NO_ERR))
-            {
-              if ((e = ___setup_files_module ()) == ___FIX(___NO_ERR))
-                {
-                  if ((e = ___setup_dyn_module ()) == ___FIX(___NO_ERR))
-                    {
-                      if ((e = ___setup_tty_module (user_intr, terminate_intr)) == ___FIX(___NO_ERR))
-                        {
-                          if ((e = ___setup_io_module ()) == ___FIX(___NO_ERR))
-                            {
+  if ((e = ___setup_base_module ()) == ___FIX(___NO_ERR)) {
+    if ((e = ___setup_thread_module ()) == ___FIX(___NO_ERR)) {
+      if ((e = ___setup_time_module (heartbeat_intr)) == ___FIX(___NO_ERR)) {
+        if ((e = ___setup_shell_module ()) == ___FIX(___NO_ERR)) {
+          if ((e = ___setup_files_module ()) == ___FIX(___NO_ERR)) {
+            if ((e = ___setup_dyn_module ()) == ___FIX(___NO_ERR)) {
+              if ((e = ___setup_tty_module (user_intr, terminate_intr)) == ___FIX(___NO_ERR)) {
+                if ((e = ___setup_io_module ()) == ___FIX(___NO_ERR)) {
 #ifdef USE_POSIX
-                              ___set_signal_handler (SIGPIPE, SIG_IGN); /***** belongs elsewhere */
+                  ___set_signal_handler (SIGPIPE, SIG_IGN); /***** belongs elsewhere */
 #endif
-                              return ___FIX(___NO_ERR);
-                            }
-                          ___cleanup_tty_module ();
-                        }
-                      ___cleanup_dyn_module ();
-                    }
-                  ___cleanup_files_module ();
+                  return ___FIX(___NO_ERR);
                 }
-              ___cleanup_shell_module ();
+                ___cleanup_tty_module ();
+              }
+              ___cleanup_dyn_module ();
             }
-          ___cleanup_time_module ();
+            ___cleanup_files_module ();
+          }
+          ___cleanup_shell_module ();
         }
-      ___cleanup_base_module ();
+        ___cleanup_time_module ();
+      }
+      ___cleanup_thread_module ();
     }
+    ___cleanup_base_module ();
+  }
 
   return e;
 }
@@ -2516,6 +2513,7 @@ void ___cleanup_os ___PVOID
   ___cleanup_files_module ();
   ___cleanup_shell_module ();
   ___cleanup_time_module ();
+  ___cleanup_thread_module ();
   ___cleanup_base_module ();
 }
 
