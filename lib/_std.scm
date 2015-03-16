@@ -2,7 +2,7 @@
 
 ;;; File: "_std.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1082,7 +1082,7 @@ end-of-code
 
 (define ##symbol-counter 0)
 
-(define-prim (##make-uninterned-symbol
+(define-prim (##string->uninterned-symbol
               str
               #!optional
               (hash (macro-absent-obj)))
@@ -1098,16 +1098,16 @@ end-of-code
         (macro-make-uninterned-symbol str (##partial-bit-reverse n)))
       (macro-make-uninterned-symbol str hash)))
 
-(define-prim (make-uninterned-symbol
+(define-prim (string->uninterned-symbol
               str
               #!optional
               (hash (macro-absent-obj)))
   (macro-force-vars (str hash)
-    (macro-check-string str 1 (make-uninterned-symbol str hash)
+    (macro-check-string str 1 (string->uninterned-symbol str hash)
       (if (##eq? hash (macro-absent-obj))
-          (##make-uninterned-symbol str)
-          (macro-check-fixnum-range-incl hash 2 0 536870911 (make-uninterned-symbol str hash)
-            (##make-uninterned-symbol str hash))))))
+          (##string->uninterned-symbol str)
+          (macro-check-fixnum-range-incl hash 2 0 536870911 (string->uninterned-symbol str hash)
+            (##string->uninterned-symbol str hash))))))
 
 ;; Number related procedures are in "_num.scm"
 
@@ -1766,7 +1766,7 @@ end-of-code
 
 (define ##keyword-counter 0)
 
-(define-prim (##make-uninterned-keyword
+(define-prim (##string->uninterned-keyword
               str
               #!optional
               (hash (macro-absent-obj)))
@@ -1782,16 +1782,16 @@ end-of-code
         (macro-make-uninterned-keyword str (##partial-bit-reverse n)))
       (macro-make-uninterned-keyword str hash)))
 
-(define-prim (make-uninterned-keyword
+(define-prim (string->uninterned-keyword
               str
               #!optional
               (hash (macro-absent-obj)))
   (macro-force-vars (str hash)
-    (macro-check-string str 1 (make-uninterned-keyword str hash)
+    (macro-check-string str 1 (string->uninterned-keyword str hash)
       (if (##eq? hash (macro-absent-obj))
-          (##make-uninterned-keyword str)
-          (macro-check-fixnum-range-incl hash 2 0 536870911 (make-uninterned-keyword str hash)
-            (##make-uninterned-keyword str hash))))))
+          (##string->uninterned-keyword str)
+          (macro-check-fixnum-range-incl hash 2 0 536870911 (string->uninterned-keyword str hash)
+            (##string->uninterned-keyword str hash))))))
 
 (define-prim (##partial-bit-reverse i)
 
