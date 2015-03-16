@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -9814,8 +9814,8 @@
 (##define-macro (string . args)           `(##string ,@args))
 (##define-macro (list->string . args)     `(##list->string ,@args))
 (##define-macro (string->number . args)   `(##string->number ,@args))
-(##define-macro (string->symbol-object . args)   `(##make-interned-symkey ,@args #t))
-(##define-macro (string->uninterned-symbol-object . args)   `(##make-uninterned-symbol ,@args))
+(##define-macro (string->symbol-object . args) `(##string->symbol ,@args))
+(##define-macro (string->uninterned-symbol-object . args) `(##string->uninterned-symbol ,@args))
 (##define-macro (string? . args)          `(##string? ,@args))
 (##define-macro (string-length . args)    `(##string-length ,@args))
 (##define-macro (string-append . args)    `(##string-append ,@args))
@@ -9861,8 +9861,8 @@
         (or (##fx< ,n #xd800)
             (##fx< #xdfff ,n))))
 
-(##define-macro (string->keyword-object . args) `(##make-interned-symkey ,@args #f))
-(##define-macro (string->uninterned-keyword-object . args) `(##make-uninterned-keyword ,@args))
+(##define-macro (string->keyword-object . args) `(##string->keyword ,@args))
+(##define-macro (string->uninterned-keyword-object . args) `(##string->uninterned-keyword ,@args))
 
 (##define-macro (in-integer-range? n lo hi)
   `(and (##not (##< ,n ,lo)) (##not (##< ,hi ,n))))

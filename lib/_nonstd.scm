@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -488,7 +488,7 @@
             (##structure
              ##type-type
              (if generative?
-                 (##make-uninterned-symbol augmented-id-str)
+                 (##string->uninterned-symbol augmented-id-str)
                  (##string->symbol augmented-id-str))
              name
              flags
@@ -599,7 +599,7 @@
             ##type-type
             ((let ()
                (##declare (extended-bindings))
-               ##make-uninterned-symbol)
+               ##string->uninterned-symbol)
              ,augmented-id-str)
             ',name
             ',(##type-flags type-static)
@@ -1248,7 +1248,7 @@
         ;; is not atomic; it simply means a possible close repetition
         ;; of the same name
         (set! ##gensym-counter new-count)
-        (##make-uninterned-symbol
+        (##string->uninterned-symbol
          (if (##eq? prefix 'g)
              new-count ;; ##symbol->string will create the string
              (##string-append (##symbol->string prefix)

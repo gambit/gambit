@@ -3606,10 +3606,10 @@ For example:
 
 @end deffn
 
-@deffn procedure make-uninterned-symbol @var{name} @r{[}@var{hash}@r{]}
+@deffn procedure string->uninterned-symbol @var{name} @r{[}@var{hash}@r{]}
 @deffnx procedure uninterned-symbol? @var{obj}
 
-The procedure @code{make-uninterned-symbol} returns a new uninterned
+The procedure @code{string->uninterned-symbol} returns a new uninterned
 symbol whose name is @var{name} and hash is @var{hash}.  The name must
 be a string and the hash must be a nonnegative fixnum.
 
@@ -3621,9 +3621,9 @@ For example:
 @smallexample
 > @b{(uninterned-symbol? (gensym))}
 #t
-> @b{(make-uninterned-symbol "foo")}
+> @b{(string->uninterned-symbol "foo")}
 #:foo:
-> @b{(uninterned-symbol? (make-uninterned-symbol "foo"))}
+> @b{(uninterned-symbol? (string->uninterned-symbol "foo"))}
 #t
 > @b{(uninterned-symbol? 'hello)}
 #f
@@ -3633,10 +3633,10 @@ For example:
 
 @end deffn
 
-@deffn procedure make-uninterned-keyword @var{name} @r{[}@var{hash}@r{]}
+@deffn procedure string->uninterned-keyword @var{name} @r{[}@var{hash}@r{]}
 @deffnx procedure uninterned-keyword? @var{obj}
 
-The procedure @code{make-uninterned-keyword} returns a new uninterned
+The procedure @code{string->uninterned-keyword} returns a new uninterned
 keyword whose name is @var{name} and hash is @var{hash}.  The name must
 be a string and the hash must be a nonnegative fixnum.
 
@@ -3646,9 +3646,9 @@ The procedure @code{uninterned-keyword?} returns @code{#t} when
 For example:
 
 @smallexample
-> @b{(make-uninterned-keyword "foo")}
+> @b{(string->uninterned-keyword "foo")}
 #:foo:
-> @b{(uninterned-keyword? (make-uninterned-keyword "foo"))}
+> @b{(uninterned-keyword? (string->uninterned-keyword "foo"))}
 #t
 > @b{(uninterned-keyword? hello:)}
 #f

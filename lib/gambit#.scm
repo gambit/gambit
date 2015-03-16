@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -399,8 +399,6 @@ make-u16vector
 make-u32vector
 make-u64vector
 make-u8vector
-make-uninterned-keyword
-make-uninterned-symbol
 make-will
 multiple-c-return-exception?
 mutex-lock!
@@ -697,6 +695,8 @@ started-thread-exception?
 step
 step-level-set!
 string->keyword
+string->uninterned-keyword
+string->uninterned-symbol
 string-ci=?-hash
 string-shrink!
 string=?-hash
