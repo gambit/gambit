@@ -910,9 +910,21 @@
 
 ("##symbol->string"                   (1)   #f ()    0    string  extended)
 ("##string->symbol"                   (1)   #f ()    0    symbol  extended)
+("##string->uninterned-symbol"        (1 2) #f ()    0    symbol  extended)
+("##make-uninterned-symbol"           (2)   #f ()    0    symbol  extended)
+("##symbol-name"                      (1)   #f ()    0    string  extended)
+("##symbol-name-set!"                 (2)   #t ()    0    #f      extended)
+("##symbol-hash"                      (1)   #f ()    0    fixnum  extended)
+("##symbol-hash-set!"                 (2)   #t ()    0    #f      extended)
 
 ("##keyword->string"                  (1)   #f ()    0    string  extended)
 ("##string->keyword"                  (1)   #f ()    0    keyword extended)
+("##string->uninterned-keyword"       (1 2) #f ()    0    keyword extended)
+("##make-uninterned-keyword"          (2)   #f ()    0    keyword extended)
+("##keyword-name"                     (1)   #f ()    0    string  extended)
+("##keyword-name-set!"                (2)   #t ()    0    #f      extended)
+("##keyword-hash"                     (1)   #f ()    0    fixnum  extended)
+("##keyword-hash-set!"                (2)   #t ()    0    #f      extended)
 
 ("##make-closure"                     (2)   #f ()    0    #f      extended)
 ("##closure-length"                   (1)   #f ()    0    fixnum  extended)
@@ -929,6 +941,11 @@
 ("##subprocedure-parent-info"         (1)   #f ()    0    #f      extended)
 
 ("##make-promise"                     (1)   #f 0     0    (#f)    extended)
+("##promise-thunk"                    (1)   #f ()    0    #f      extended)
+("##promise-thunk-set!"               (2)   #t ()    0    #f      extended)
+("##promise-result"                   (1)   #f ()    0    #f      extended)
+("##promise-result-set!"              (2)   #t ()    0    #f      extended)
+
 ("##force"                            (1)   #t 0     0    #f      extended)
 
 ("##void"                             (0)   #f ()    0    #f      extended)

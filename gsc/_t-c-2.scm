@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2709,6 +2709,22 @@
     #f
     (targ-apply-simp-generator #f #f "CPXNUMMAKE")))
 
+(define (targ-apply-make-symbol)
+  (targ-apply-alloc
+    (lambda (n) targ-symbol-space)
+    #t
+    #f
+    #f
+    (targ-apply-simp-generator #f #f "MAKESYMBOL")))
+
+(define (targ-apply-make-keyword)
+  (targ-apply-alloc
+    (lambda (n) targ-keyword-space)
+    #t
+    #f
+    #f
+    (targ-apply-simp-generator #f #f "MAKEKEYWORD")))
+
 (define (targ-apply-vector-s kind)
   (targ-apply-vector #t kind))
 
@@ -3703,6 +3719,22 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(targ-op "##make-uninterned-symbol" (targ-apply-make-symbol))
+(targ-op "##symbol-name"        (targ-ifjump-apply-u "SYMBOLNAME"))
+(targ-op "##symbol-name-set!"   (targ-apply-simp-u #f #t 1 "SYMBOLNAMESET"))
+(targ-op "##symbol-hash"        (targ-ifjump-apply-u "SYMBOLHASH"))
+(targ-op "##symbol-hash-set!"   (targ-apply-simp-u #f #t 1 "SYMBOLHASHSET"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(targ-op "##make-uninterned-keyword" (targ-apply-make-keyword))
+(targ-op "##keyword-name"       (targ-ifjump-apply-u "KEYWORDNAME"))
+(targ-op "##keyword-name-set!"  (targ-apply-simp-u #f #t 1 "KEYWORDNAMESET"))
+(targ-op "##keyword-hash"       (targ-ifjump-apply-u "KEYWORDHASH"))
+(targ-op "##keyword-hash-set!"  (targ-apply-simp-u #f #t 1 "KEYWORDHASHSET"))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (targ-op "##structure-direct-instance-of?"
          (targ-ifjump-simp-s #f "STRUCTUREDIOP"))
 (targ-op "##structure-type"
@@ -3742,7 +3774,12 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(targ-op "##make-promise"     (targ-apply-make-promise))
+(targ-op "##make-promise"        (targ-apply-make-promise))
+(targ-op "##promise-thunk"       (targ-ifjump-apply-u "PROMISETHUNK"))
+(targ-op "##promise-thunk-set!"  (targ-apply-simp-u #f #t 1 "PROMISETHUNKSET"))
+(targ-op "##promise-result"      (targ-ifjump-apply-u "PROMISERESULT"))
+(targ-op "##promise-result-set!" (targ-apply-simp-u #f #t 1 "PROMISERESULTSET"))
+
 (targ-op "##force"            (targ-apply-force))
 (targ-op "##void"             (targ-apply-simp-s #f #f #f "VOID"))
 
