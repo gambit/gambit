@@ -791,6 +791,9 @@
 
 ("##make-will"                        (2)   #t ()    0    #f      extended)
 ("##will-testator"                    (1)   #f ()    0    (#f)    extended)
+("##will-testator-set!"               (2)   #t ()    0    #f      extended)
+("##will-action"                      (1)   #f ()    0    (#f)    extended)
+("##will-action-set!"                 (2)   #t ()    0    #f      extended)
 
 ("##gc-hash-table-ref"                (2)   #f ()    0    (#f)    extended)
 ("##gc-hash-table-set!"               (3)   #t ()    0    (#f)    extended)
@@ -959,14 +962,19 @@
 ("##thread-save!"                     1     #t ()    1113 (#f)    extended)
 ("##thread-restore!"                  2     #t ()    2203 #f      extended)
 
+("##make-continuation"                (2)   #f 0     0    #f      extended)
 ("##continuation-capture"             1     #t ()    1113 (#f)    extended)
 ("##continuation-graft"               2     #t ()    2203 #f      extended)
 ("##continuation-graft-no-winding"    2     #t ()    2203 #f      extended)
 ("##continuation-return"              (2)   #t ()    0    #f      extended)
 ("##continuation-return-no-winding"   (2)   #t ()    0    #f      extended)
 ("##continuation-frame"               (1)   #f ()    0    #f      extended)
+("##continuation-frame-set!"          (2)   #t ()    0    #f      extended)
 ("##continuation-denv"                (1)   #f ()    0    #f      extended)
+("##continuation-denv-set!"           (2)   #t ()    0    #f      extended)
 ("##continuation-next"                (1)   #f ()    0    #f      extended)
+
+("##make-frame"                       (2)   #f 0     0    #f      extended)
 ("##frame-ret"                        (1)   #f ()    0    #f      extended)
 ("##frame-fs"                         (1)   #f ()    0    fixnum  extended)
 ("##frame-link"                       (1)   #f ()    0    #f      extended)
