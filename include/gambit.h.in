@@ -3277,6 +3277,7 @@ ___hp[-4]=name,___hp[-3]=hash,___hp[-2]=___FAL,___hp[-1]=0,___TAG((___hp-___SYMB
 #define ___SYMBOLNAMESET(obj,val)___FIELD(obj,___SYMKEY_NAME) = val;
 #define ___SYMBOLHASH(obj)___FIELD(obj,___SYMKEY_HASH)
 #define ___SYMBOLHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
+#define ___SYMBOLINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
 
 #define ___MAKEKEYWORD(name,hash)  \
 (___ALLOC(___KEYWORD_SIZE+1), \
@@ -3287,6 +3288,7 @@ ___hp[-3]=name,___hp[-2]=hash,___hp[-1]=___FAL,___TAG((___hp-___KEYWORD_SIZE-1),
 #define ___KEYWORDNAMESET(obj,val)___FIELD(obj,___SYMKEY_NAME) = val;
 #define ___KEYWORDHASH(obj)___FIELD(obj,___SYMKEY_HASH)
 #define ___KEYWORDHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
+#define ___KEYWORDINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
 
 #define ___MAKEWILL(testator,action) \
 (___hp[0]=___MAKE_HD_WORDS(___WILL_SIZE,___sWEAK), \

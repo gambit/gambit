@@ -916,6 +916,7 @@
 ("##symbol-name-set!"                 (2)   #t ()    0    #f      extended)
 ("##symbol-hash"                      (1)   #f ()    0    fixnum  extended)
 ("##symbol-hash-set!"                 (2)   #t ()    0    #f      extended)
+("##symbol-interned?"                 (1)   #f ()    0    #f      extended)
 
 ("##keyword->string"                  (1)   #f ()    0    string  extended)
 ("##string->keyword"                  (1)   #f ()    0    keyword extended)
@@ -925,6 +926,7 @@
 ("##keyword-name-set!"                (2)   #t ()    0    #f      extended)
 ("##keyword-hash"                     (1)   #f ()    0    fixnum  extended)
 ("##keyword-hash-set!"                (2)   #t ()    0    #f      extended)
+("##keyword-interned?"                (1)   #f ()    0    #f      extended)
 
 ("##make-closure"                     (2)   #f ()    0    #f      extended)
 ("##closure-length"                   (1)   #f ()    0    fixnum  extended)
