@@ -3268,7 +3268,17 @@ ___hp[-2]=x, ___hp[-1]=___TAG((___hp-___PROMISE_SIZE-1),___tSUBTYPED))
 #define ___PROMISERESULT(obj)___FIELD(obj,___PROMISE_RESULT)
 #define ___PROMISERESULTSET(obj,val)___FIELD(obj,___PROMISE_RESULT) = val;
 
-#define ___MAKESYMBOL(name,hash)  \
+#define ___MAKECONTINUATION(frame,denv) \
+(___ALLOC(___CONTINUATION_SIZE+1), \
+___hp[-3]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION), \
+___hp[-2]=frame,___hp[-1]=denv,___TAG((___hp-___CONTINUATION_SIZE-1),___tSUBTYPED))
+
+#define ___CONTINUATIONFRAME(obj)___FIELD(obj,___CONTINUATION_FRAME)
+#define ___CONTINUATIONFRAMESET(obj,val)___FIELD(obj,___CONTINUATION_FRAME) = val;
+#define ___CONTINUATIONDENV(obj)___FIELD(obj,___CONTINUATION_DENV)
+#define ___CONTINUATIONDENVSET(obj,val)___FIELD(obj,___CONTINUATION_DENV) = val;
+
+#define ___MAKESYMBOL(name,hash) \
 (___ALLOC(___SYMBOL_SIZE+1), \
 ___hp[-5]=___MAKE_HD_WORDS(___SYMBOL_SIZE,___sSYMBOL), \
 ___hp[-4]=name,___hp[-3]=hash,___hp[-2]=___FAL,___hp[-1]=0,___TAG((___hp-___SYMBOL_SIZE-1),___tSUBTYPED))
@@ -3279,7 +3289,7 @@ ___hp[-4]=name,___hp[-3]=hash,___hp[-2]=___FAL,___hp[-1]=0,___TAG((___hp-___SYMB
 #define ___SYMBOLHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
 #define ___SYMBOLINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
 
-#define ___MAKEKEYWORD(name,hash)  \
+#define ___MAKEKEYWORD(name,hash) \
 (___ALLOC(___KEYWORD_SIZE+1), \
 ___hp[-4]=___MAKE_HD_WORDS(___KEYWORD_SIZE,___sKEYWORD), \
 ___hp[-3]=name,___hp[-2]=hash,___hp[-1]=___FAL,___TAG((___hp-___KEYWORD_SIZE-1),___tSUBTYPED))
@@ -3298,7 +3308,11 @@ ___hp[3]=action, \
 ___ps->nonexecutable_wills=___TAG(___hp,0), \
 ___ALLOC(___WILL_SIZE+1), \
 ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
-#define ___WILLTESTATOR(x)___BODY_AS(x,___tSUBTYPED)[1]
+
+#define ___WILLTESTATOR(obj)___FIELD(obj,___WILL_TESTATOR)
+#define ___WILLTESTATORSET(obj,val)___FIELD(obj,___WILL_TESTATOR) = val;
+#define ___WILLACTION(obj)___FIELD(obj,___WILL_ACTION)
+#define ___WILLACTIONSET(obj,val)___FIELD(obj,___WILL_ACTION) = val;
 
 #define ___EXECUTABLE_WILL        1
 #define ___UNMARKED_TESTATOR_WILL 2
@@ -3452,6 +3466,8 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___PROMISE_RESULT 1
 #define ___CONTINUATION_FRAME 0
 #define ___CONTINUATION_DENV  1
+#define ___WILL_TESTATOR 1
+#define ___WILL_ACTION   2
 #define ___THREAD_CONT        19
 #define ___THREAD_DENV        20
 #define ___THREAD_DENV_CACHE1 21

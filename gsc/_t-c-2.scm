@@ -2693,6 +2693,14 @@
     #f
     (targ-apply-simp-generator #f #f "MAKEPROMISE")))
 
+(define (targ-apply-make-continuation)
+  (targ-apply-alloc
+    (lambda (n) targ-continuation-space)
+    #t
+    #f
+    #f
+    (targ-apply-simp-generator #f #f "MAKECONTINUATION")))
+
 (define (targ-apply-ratnum-make)
   (targ-apply-alloc
     (lambda (n) targ-ratnum-space)
@@ -3576,8 +3584,11 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(targ-op "##make-will"        (targ-apply-make-will))
-(targ-op "##will-testator"    (targ-ifjump-apply-u "WILLTESTATOR"))
+(targ-op "##make-will"          (targ-apply-make-will))
+(targ-op "##will-testator"      (targ-ifjump-apply-u "WILLTESTATOR"))
+(targ-op "##will-testator-set!" (targ-apply-simp-u #f #t 1 "WILLTESTATORSET"))
+(targ-op "##will-action"        (targ-ifjump-apply-u "WILLACTION"))
+(targ-op "##will-action-set!"   (targ-apply-simp-u #f #t 1 "WILLACTIONSET"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3881,6 +3892,17 @@
            (targ-wr-reg 0)
            (targ-wr-reg (+ targ-nb-arg-regs 1))
            #t))))
+
+(targ-op "##make-continuation"
+         (targ-apply-make-continuation))
+;;(targ-op "##continuation-frame"
+;;         (targ-ifjump-apply-u "CONTINUATIONFRAME"))
+(targ-op "##continuation-frame-set!"
+         (targ-apply-simp-u #f #t 1 "CONTINUATIONFRAMESET"))
+(targ-op "##continuation-denv"
+         (targ-ifjump-apply-u "CONTINUATIONDENV"))
+(targ-op "##continuation-denv-set!"
+         (targ-apply-simp-u #f #t 1 "CONTINUATIONDENVSET"))
 
 (targ-jump-inline "##continuation-capture"
   (lambda (nb-args poll? safe?)
