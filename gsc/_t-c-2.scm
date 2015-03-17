@@ -3724,6 +3724,7 @@
 (targ-op "##symbol-name-set!"   (targ-apply-simp-u #f #t 1 "SYMBOLNAMESET"))
 (targ-op "##symbol-hash"        (targ-ifjump-apply-u "SYMBOLHASH"))
 (targ-op "##symbol-hash-set!"   (targ-apply-simp-u #f #t 1 "SYMBOLHASHSET"))
+(targ-op "##symbol-interned?"   (targ-ifjump-apply-u "SYMBOLINTERNEDP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3732,6 +3733,7 @@
 (targ-op "##keyword-name-set!"  (targ-apply-simp-u #f #t 1 "KEYWORDNAMESET"))
 (targ-op "##keyword-hash"       (targ-ifjump-apply-u "KEYWORDHASH"))
 (targ-op "##keyword-hash-set!"  (targ-apply-simp-u #f #t 1 "KEYWORDHASHSET"))
+(targ-op "##keyword-interned?"  (targ-ifjump-apply-u "KEYWORDINTERNEDP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
