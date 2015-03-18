@@ -1,8 +1,8 @@
 ;==============================================================================
 
-; File: "tcltk.scm", Time-stamp: <2008-12-15 11:52:55 feeley>
+; File: "tcltk.scm"
 
-; Copyright (c) 1997-2008 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1997-2015 by Marc Feeley, All Rights Reserved.
 
 ; This is the Gambit interface for Tcl/Tk.
 
@@ -462,25 +462,25 @@ c-lambda-end
   (let ((lst (##car cmd-line)))
     (let loop1 ((n 0) (x lst))
       (if (##pair? x)
-          (loop1 (##fixnum.+ n (##string-length (##car x))) (##cdr x))
+          (loop1 (##fx+ n (##string-length (##car x))) (##cdr x))
           (let ((result (##make-string n #\space)))
-            (let loop2 ((k (##fixnum.- n 1)) (x lst))
+            (let loop2 ((k (##fx- n 1)) (x lst))
               (if (##pair? x)
                   (let ((s (##car x)))
-                    (let loop3 ((i k) (j (##fixnum.- (##string-length s) 1)))
-                      (if (##fixnum.< j 0)
+                    (let loop3 ((i k) (j (##fx- (##string-length s) 1)))
+                      (if (##fx< j 0)
                           (loop2 i (##cdr x))
                           (begin
                             (##string-set! result i (##string-ref s j))
-                            (loop3 (##fixnum.- i 1) (##fixnum.- j 1))))))
+                            (loop3 (##fx- i 1) (##fx- j 1))))))
                   result)))))))
 
 (define (##tcltk-cmd-line-add-string! str cmd-line)
   (##set-car! cmd-line (##cons str (##car cmd-line))))
 
 (define (##tcltk-cmd-line-add-substring! str start end cmd-line)
-  (if (##fixnum.< start end)
-    (if (and (##fixnum.= start 0) (##fixnum.= end (##string-length str)))
+  (if (##fx< start end)
+    (if (and (##fx= start 0) (##fx= end (##string-length str)))
         (##tcltk-cmd-line-add-string! str cmd-line)
         (##tcltk-cmd-line-add-string! (##substring str start end) cmd-line))))
 
@@ -491,21 +491,21 @@ c-lambda-end
   (let ((n (##string-length str)))
     (let loop ((i 0)
                (j 0)
-               (force-quotes? (##fixnum.= (##string-length str) 0))
+               (force-quotes? (##fx= (##string-length str) 0))
                (quote-written? #f))
 
       (define (add-quoted-substring!)
         (if (##not quote-written?)
             (##tcltk-cmd-line-add-string! "\"" cmd-line))
-        (if (and (##fixnum.= i 0) (##fixnum.= j n))
+        (if (and (##fx= i 0) (##fx= j n))
             (##tcltk-cmd-line-add-string! str cmd-line)
             (##tcltk-cmd-line-add-string! (##substring str i j) cmd-line)))
 
-      (if (##fixnum.< j n)
+      (if (##fx< j n)
           (let ((c (##string-ref str j)))
             (cond ((##char=? c #\space)
                    (loop i
-                         (##fixnum.+ j 1)
+                         (##fx+ j 1)
                          #t
                          quote-written?))
                   ((or (##char=? c #\") ; characters which need escaping
@@ -518,25 +518,25 @@ c-lambda-end
                    (add-quoted-substring!)
                    (##tcltk-cmd-line-add-string! "\\" cmd-line)
                    (loop j
-                         (##fixnum.+ j 1)
+                         (##fx+ j 1)
                          #t
                          #t))
                   (else
-                   (let ((x (##fixnum.<-char c)))
-                     (cond ((##fixnum.< x 32) ; escape control characters
+                   (let ((x (##char->integer c)))
+                     (cond ((##fx< x 32) ; escape control characters
                             (add-quoted-substring!)
                             (##tcltk-cmd-line-add-string!
                              (##string
                               #\\
                               #\0
-                              (##string-ref hex-digits (##fixnum.quotient x 8))
-                              (##string-ref hex-digits (##fixnum.modulo x 8)))
+                              (##string-ref hex-digits (##fxquotient x 8))
+                              (##string-ref hex-digits (##fxmodulo x 8)))
                              cmd-line)
-                            (loop (##fixnum.+ j 1)
-                                  (##fixnum.+ j 1)
+                            (loop (##fx+ j 1)
+                                  (##fx+ j 1)
                                   #t
                                   #t))
-                           ((##fixnum.< 255 x) ; escape non-ISO-8859-1 chars
+                           ((##fx< 255 x) ; escape non-ISO-8859-1 chars
                             (add-quoted-substring!)
                             (##tcltk-cmd-line-add-string!
                              (##string
@@ -544,24 +544,24 @@ c-lambda-end
                               #\u
                               (##string-ref
                                hex-digits
-                               (##fixnum.modulo (##fixnum.quotient x 4096) 16))
+                               (##fxmodulo (##fxquotient x 4096) 16))
                               (##string-ref
                                hex-digits
-                               (##fixnum.modulo (##fixnum.quotient x 256) 16))
+                               (##fxmodulo (##fxquotient x 256) 16))
                               (##string-ref
                                hex-digits
-                               (##fixnum.modulo (##fixnum.quotient x 16) 16))
+                               (##fxmodulo (##fxquotient x 16) 16))
                               (##string-ref
                                hex-digits
-                               (##fixnum.modulo x 16)))
+                               (##fxmodulo x 16)))
                              cmd-line)
-                            (loop (##fixnum.+ j 1)
-                                  (##fixnum.+ j 1)
+                            (loop (##fx+ j 1)
+                                  (##fx+ j 1)
                                   #t
                                   #t))
                            (else
                             (loop i
-                                  (##fixnum.+ j 1)
+                                  (##fx+ j 1)
                                   force-quotes?
                                   quote-written?)))))))
           (if (or force-quotes? quote-written?)

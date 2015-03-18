@@ -2,7 +2,7 @@
 
 ;;; File: "Xlib.scm"
 
-;;; Copyright (c) 2006-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2006-2015 by Marc Feeley, All Rights Reserved.
 
 ;;; A simple interface to the X Window System Xlib library.
 
@@ -1042,10 +1042,10 @@ end-of-c-lambda
   (and ev
        (let ((type (XAnyEvent-type ev)))
 
-         (cond ((or (##fixnum.= type KeyPress)
-                    (##fixnum.= type KeyRelease))
+         (cond ((or (##fx= type KeyPress)
+                    (##fx= type KeyRelease))
                 (##list
-                 (if (##fixnum.= type KeyPress)
+                 (if (##fx= type KeyPress)
                      'XKeyPressedEvent
                      'XKeyReleasedEvent)
                  type
@@ -1065,10 +1065,10 @@ end-of-c-lambda
                  (XKeyEvent-same-screen ev)
                  (XLookupString ev)))
 
-               ((or (##fixnum.= type ButtonPress)
-                    (##fixnum.= type ButtonRelease))
+               ((or (##fx= type ButtonPress)
+                    (##fx= type ButtonRelease))
                 (##list
-                 (if (##fixnum.= type ButtonPress)
+                 (if (##fx= type ButtonPress)
                      'XButtonPressedEvent
                      'XButtonReleasedEvent)
                  type
@@ -1087,7 +1087,7 @@ end-of-c-lambda
                  (XButtonEvent-button ev)
                  (XButtonEvent-same-screen ev)))
 
-               ((##fixnum.= type MotionNotify)
+               ((##fx= type MotionNotify)
                 (##list
                  'XPointerMovedEvent
                  type
@@ -1106,10 +1106,10 @@ end-of-c-lambda
                  (XMotionEvent-is-hint ev)
                  (XMotionEvent-same-screen ev)))
 
-               ((or (##fixnum.= type EnterNotify)
-                    (##fixnum.= type LeaveNotify))
+               ((or (##fx= type EnterNotify)
+                    (##fx= type LeaveNotify))
                 (##list
-                 (if (##fixnum.= type EnterNotify)
+                 (if (##fx= type EnterNotify)
                      'XEnterWindowEvent
                      'XLeaveWindowEvent)
                  type
@@ -1130,7 +1130,7 @@ end-of-c-lambda
                  (XCrossingEvent-focus ev)
                  (XCrossingEvent-state ev)))
 
-               ((##fixnum.= type ConfigureNotify)
+               ((##fx= type ConfigureNotify)
                 (##list
                  'XConfigureEvent
                  type
@@ -1144,7 +1144,7 @@ end-of-c-lambda
                  (XConfigureEvent-height ev)
                  (XConfigureEvent-border-width ev)))
 
-               ((##fixnum.= type ResizeRequest)
+               ((##fx= type ResizeRequest)
                 (##list
                  'XResizeRequestEvent
                  type
