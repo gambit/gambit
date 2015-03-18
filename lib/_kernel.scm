@@ -1828,13 +1828,13 @@ end-of-code
   (##c-code
    "___set_standard_level (___INT(___ARG1)); ___RESULT = ___VOID;"
    level))
- 
+
 (define-prim (##set-gambcdir! dir)
   (##declare (not interrupts-enabled))
   ((##c-lambda (UCS-2-string) void
                "___addref_string (___arg1); ___set_gambcdir (___arg1);")
    dir))
-   
+
 (define-prim (##set-debug-settings! mask new-settings)
   (##declare (not interrupts-enabled))
   (##c-code
@@ -2934,9 +2934,15 @@ end-of-code
         (##gc)
         (##continuation-frame cont)))))
 
+(define-prim (##continuation-frame-set! cont frame)
+  (macro-continuation-frame-set! cont frame))
+
 (define-prim (##continuation-denv cont)
   (##declare (not interrupts-enabled))
   (macro-continuation-denv cont))
+
+(define-prim (##continuation-denv-set! cont denv)
+  (macro-continuation-denv-set! cont denv))
 
 (define-prim (##explode-frame frame)
   (let ((fs (##frame-fs frame)))
@@ -3256,8 +3262,9 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___SCMOBJ frame = ___FIELD(___ARG1,___CONTINUATION_FRAME);
+   ___SCMOBJ cont = ___ARG1;
    int i = ___INT(___ARG2);
+   ___SCMOBJ frame = ___FIELD(cont,___CONTINUATION_FRAME);
    ___SCMOBJ ra;
    int fs;
    int link;
@@ -3300,6 +3307,83 @@ end-of-code
    cont
    i))
 
+(define-prim (##continuation-set! cont i val)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   ___SCMOBJ cont = ___ARG1;
+   int i = ___INT(___ARG2);
+   ___SCMOBJ val = ___ARG3;
+   ___SCMOBJ frame = ___FIELD(cont,___CONTINUATION_FRAME);
+   ___SCMOBJ ra;
+   int fs;
+   int link;
+
+   if (___TYP(frame) == ___tSUBTYPED)
+     {
+       /* continuation frame is in the heap */
+
+       ra = ___FIELD(frame,0);
+
+       if (ra == ___GSTATE->internal_return)
+         ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
+       else
+         ___RETN_GET_FS_LINK(ra,fs,link)
+
+       ___BODY_AS(frame,___tSUBTYPED)[fs-i+1] = val;  /* what if i==link and frame is first in section???? */
+     }
+   else
+     {
+       /* continuation frame is in the stack */
+
+       ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
+
+       if (ra == ___GSTATE->internal_return)
+         ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
+       else
+         ___RETN_GET_FS_LINK(ra,fs,link)
+
+       ___CAST(___SCMOBJ*,frame)[___FRAME_SPACE(fs)-i] = val;  /* what if i==link and frame is first in section???? */
+#if 0
+      if (i == link) ___RESULT = ___FIX(999999);/***********/
+#endif
+     }
+
+   ___RESULT = cont;
+end-of-code
+
+   cont
+   i
+   val))
+
+(define-prim (##make-frame ret)
+  (let ((fs (##return-fs ret)))
+    (let ((frame (##make-vector (##fx+ fs 1) 0)))
+      (##vector-set! frame 0 ret)
+      (##subtype-set! frame (macro-subtype-frame))
+      frame)))
+
+(define-prim (##make-continuation frame denv)
+  (##declare (not interrupts-enabled))
+  (let ((cont
+         (##c-code #<<end-of-code
+
+          ___SCMOBJ frame = ___ARG1;
+          ___SCMOBJ denv  = ___ARG2;
+
+          ___hp[0]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION);
+          ___ADD_VECTOR_ELEM(0,frame);
+          ___ADD_VECTOR_ELEM(1,denv);
+          ___hp+=___CONTINUATION_SIZE+1;
+          ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
+
+end-of-code
+
+          frame
+          denv)))
+    (##check-heap)
+    cont))
+
 (define-prim (##continuation-copy cont)
   (##declare (not interrupts-enabled))
   (let ((cont-copy
@@ -3314,7 +3398,7 @@ end-of-code
           ___ADD_VECTOR_ELEM(1,denv);
           ___hp+=___CONTINUATION_SIZE+1;
           ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
-       
+
 end-of-code
 
           cont)))
@@ -3404,7 +3488,7 @@ end-of-code
            ___RESULT = cont;
          }
      }
-       
+
 end-of-code
 
    cont))
@@ -3705,7 +3789,7 @@ end-of-code
 (define-prim (##foreign-address f)
   ((c-lambda (scheme-object)
              size_t
-    " 
+    "
     ___result = ___CAST(___SIZE_T,
                         ___CAST(void*,___FIELD(___arg1,___FOREIGN_PTR)));
     ")
@@ -3931,7 +4015,7 @@ end-of-code
      ___F64VECTORSET(result,___FIX(1),sys)
      ___F64VECTORSET(result,___FIX(2),real)
      ___RESULT = result;
-  
+
 end-of-code
 
      v)))

@@ -1036,6 +1036,24 @@ end-of-code
 
 (define-fail-check-type symbol 'symbol)
 
+(define-prim (##make-uninterned-symbol name hash)
+  (macro-make-uninterned-symbol name hash))
+
+(define-prim (##symbol-name sym)
+  (macro-symbol-name sym))
+
+(define-prim (##symbol-name-set! sym name)
+  (macro-symbol-name-set! sym name))
+
+(define-prim (##symbol-hash sym)
+  (macro-symbol-hash sym))
+
+(define-prim (##symbol-hash-set! sym hash)
+  (macro-symbol-hash-set! sym hash))
+
+(define-prim (##symbol-interned? sym)
+  (macro-symbol-next sym))
+
 (define-prim (##symbol? obj)
   (and (##subtyped? obj)
        (##eq? (##subtype obj) (macro-subtype-symbol))))
@@ -1690,6 +1708,18 @@ end-of-code
 (define-prim (##make-promise thunk)
   (macro-make-promise thunk))
 
+(define-prim (##promise-thunk promise)
+  (macro-promise-thunk promise))
+
+(define-prim (##promise-thunk-set! promise thunk)
+  (macro-promise-thunk-set! promise thunk))
+
+(define-prim (##promise-result promise)
+  (macro-promise-result promise))
+
+(define-prim (##promise-result-set! promise result)
+  (macro-promise-result-set! promise result))
+
 (define-prim (##force obj))
 
 (define-prim (force obj)
@@ -1720,6 +1750,24 @@ end-of-code
 ;; DSSSL procedures:
 
 (define-fail-check-type keyword 'keyword)
+
+(define-prim (##make-uninterned-keyword name hash)
+  (macro-make-uninterned-keyword name hash))
+
+(define-prim (##keyword-name key)
+  (macro-keyword-name key))
+
+(define-prim (##keyword-name-set! key name)
+  (macro-keyword-name-set! key name))
+
+(define-prim (##keyword-hash key)
+  (macro-keyword-hash key))
+
+(define-prim (##keyword-hash-set! key hash)
+  (macro-keyword-hash-set! key hash))
+
+(define-prim (##keyword-interned? key)
+  (macro-keyword-next key))
 
 (define-prim (##keyword? obj)
   (and (##subtyped? obj)

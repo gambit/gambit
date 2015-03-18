@@ -522,7 +522,6 @@
 ("##char?"                            (1)   #f ()    0    boolean extended)
 ("##closure?"                         (1)   #f ()    0    boolean extended)
 ("##subprocedure?"                    (1)   #f ()    0    boolean extended)
-("##return-dynamic-env-bind?"         (1)   #f ()    0    boolean extended)
 ("##number?"                          (1)   #f ()    0    boolean extended)
 ("##complex?"                         (1)   #f ()    0    boolean extended)
 ("##real?"                            (1)   #f ()    0    boolean extended)
@@ -531,8 +530,9 @@
 ("##exact?"                           (1)   #f ()    0    boolean extended)
 ("##inexact?"                         (1)   #f ()    0    boolean extended)
 
-;; old fixnum/flonum procedures
+;; deprecated fixnum/flonum procedures
 
+;;TODO: REMOVE
 ("##fixnum.max"                       1     #f ()    0    fixnum  extended)
 ("##fixnum.min"                       1     #f ()    0    fixnum  extended)
 ("##fixnum.wrap+"                     0     #f ()    0    fixnum  extended)
@@ -578,6 +578,7 @@
 ("##fixnum.->char"                    (1)   #f ()    0    char    extended)
 ("##fixnum.<-char"                    (1)   #f ()    0    fixnum  extended)
 
+;;TODO: REMOVE
 ("##flonum.->fixnum"                  (1)   #f ()    0    fixnum  extended)
 ("##flonum.<-fixnum"                  (1)   #f ()    0    real    extended)
 ("##flonum.max"                       1     #f ()    0    real    extended)
@@ -617,7 +618,6 @@
 ("##flonum.>"                         0     #f ()    0    boolean extended)
 ("##flonum.<="                        0     #f ()    0    boolean extended)
 ("##flonum.>="                        0     #f ()    0    boolean extended)
-
 
 ;; new fixnum/flonum procedures
 
@@ -671,19 +671,19 @@
 ("##fx>"                         0     #f ()    0    boolean extended)
 ("##fx<="                        0     #f ()    0    boolean extended)
 ("##fx>="                        0     #f ()    0    boolean extended)
-("##fx->char"                    (1)   #f ()    0    char    extended);;deprecated
-("##fx<-char"                    (1)   #f ()    0    fixnum  extended);;deprecated
+("##fx->char"                    (1)   #f ()    0    char    extended);;TODO: REMOVE
+("##fx<-char"                    (1)   #f ()    0    fixnum  extended);;TODO: REMOVE
 
-("##fixnum->char"                (1)   #f ()    0    char    extended);;deprecated
-("##char->fixnum"                (1)   #f ()    0    fixnum  extended);;deprecated
+("##fixnum->char"                (1)   #f ()    0    char    extended);;TODO: REMOVE
+("##char->fixnum"                (1)   #f ()    0    fixnum  extended);;TODO: REMOVE
 ("##integer->char"               (1)   #f ()    0    char    extended)
 ("##char->integer"               (1)   #f ()    0    fixnum  extended)
 ("##flonum->fixnum"              (1)   #f ()    0    fixnum  extended)
 ("##fixnum->flonum"              (1)   #f ()    0    real    extended)
 ("##fixnum->flonum-exact?"       (1)   #f ()    0    boolean extended)
 
-("##fl->fx"                      (1)   #f ()    0    fixnum  extended);;deprecated
-("##fl<-fx"                      (1)   #f ()    0    real    extended);;deprecated
+("##fl->fx"                      (1)   #f ()    0    fixnum  extended);;TODO: REMOVE
+("##fl<-fx"                      (1)   #f ()    0    real    extended);;TODO: REMOVE
 ("##flmax"                       1     #f ()    0    real    extended)
 ("##flmin"                       1     #f ()    0    real    extended)
 ("##fl+"                         0     #f ()    0    real    extended)
@@ -726,7 +726,7 @@
 ("##flfinite?"                   (1)   #f ()    0    boolean extended)
 ("##flinfinite?"                 (1)   #f ()    0    boolean extended)
 ("##flnan?"                      (1)   #f ()    0    boolean extended)
-("##fl<-fx-exact?"               (1)   #f ()    0    boolean extended);;deprecated
+("##fl<-fx-exact?"               (1)   #f ()    0    boolean extended);;TODO: REMOVE
 ("##fl="                         0     #f ()    0    boolean extended)
 ("##fl<"                         0     #f ()    0    boolean extended)
 ("##fl>"                         0     #f ()    0    boolean extended)
@@ -962,24 +962,32 @@
 ("##thread-save!"                     1     #t ()    1113 (#f)    extended)
 ("##thread-restore!"                  2     #t ()    2203 #f      extended)
 
-("##make-continuation"                (2)   #f 0     0    #f      extended)
 ("##continuation-capture"             1     #t ()    1113 (#f)    extended)
 ("##continuation-graft"               2     #t ()    2203 #f      extended)
 ("##continuation-graft-no-winding"    2     #t ()    2203 #f      extended)
 ("##continuation-return"              (2)   #t ()    0    #f      extended)
 ("##continuation-return-no-winding"   (2)   #t ()    0    #f      extended)
+
+("##make-continuation"                (2)   #f ()    0    #f      extended)
 ("##continuation-frame"               (1)   #f ()    0    #f      extended)
 ("##continuation-frame-set!"          (2)   #t ()    0    #f      extended)
 ("##continuation-denv"                (1)   #f ()    0    #f      extended)
 ("##continuation-denv-set!"           (2)   #t ()    0    #f      extended)
 ("##continuation-next"                (1)   #f ()    0    #f      extended)
+("##continuation-ret"                 (1)   #f ()    0    #f      extended)
+("##continuation-fs"                  (1)   #f ()    0    fixnum  extended)
+("##continuation-link"                (1)   #f ()    0    #f      extended)
+("##continuation-ref"                 (2)   #f ()    0    (#f)    extended)
+("##continuation-set!"                (3)   #t ()    0    #f      extended)
+("##continuation-slot-live?"          (2)   #f ()    0    boolean extended)
 
-("##make-frame"                       (2)   #f 0     0    #f      extended)
+("##make-frame"                       (1)   #f ()    0    #f      extended)
 ("##frame-ret"                        (1)   #f ()    0    #f      extended)
 ("##frame-fs"                         (1)   #f ()    0    fixnum  extended)
 ("##frame-link"                       (1)   #f ()    0    #f      extended)
 ("##frame-ref"                        (2)   #f ()    0    (#f)    extended)
 ("##frame-set!"                       (3)   #t ()    0    #f      extended)
+("##frame-slot-live?"                 (2)   #f ()    0    boolean extended)
 
 ("##apply"                            (2)   #t ()    0    (#f)    extended)
 ("##call-with-current-continuation"   1     #t ()    1113 (#f)    extended)
@@ -1021,9 +1029,9 @@
 ("##bignum.adigit-negative?"          (2)   #f ()    0    boolean extended)
 ("##bignum.adigit-="                  (3)   #f ()    0    boolean extended)
 ("##bignum.adigit-<"                  (3)   #f ()    0    boolean extended)
-("##bignum.->fixnum"                  (1)   #f ()    0    integer extended);;deprecated
-("##bignum.<-fixnum"                  (1)   #f ()    0    integer extended);;deprecated
-("##bignum->fixnum"                   (1)   #f ()    0    integer extended);;deprecated
+("##bignum.->fixnum"                  (1)   #f ()    0    integer extended);;TODO: REMOVE
+("##bignum.<-fixnum"                  (1)   #f ()    0    integer extended);;TODO: REMOVE
+("##bignum->fixnum"                   (1)   #f ()    0    integer extended);;TODO: REMOVE
 ("##bignum.make"                      (3)   #f ()    0    integer extended)
 ("##fixnum->bignum"                   (1)   #f ()    0    integer extended)
 ("##bignum.adigit-shrink!"            (2)   #t ()    0    #f      extended)
@@ -4012,91 +4020,91 @@
 (def-simp "inexact?"         (constant-folder inexact?       num?))
 (def-simp "="                (constant-folder =              num?))
 (def-simp "##fx="       (constant-folder =              fix32?))
-(def-simp "##fixnum.="       (constant-folder =              fix32?))
+(def-simp "##fixnum.="       (constant-folder =              fix32?));;TODO: REMOVE
 (def-simp "##fl="       (constant-folder =              flo?))
-(def-simp "##flonum.="       (constant-folder =              flo?))
+(def-simp "##flonum.="       (constant-folder =              flo?));;TODO: REMOVE
 (def-simp "<"                (constant-folder <              real?))
 (def-simp "##fx<"       (constant-folder <              fix32?))
-(def-simp "##fixnum.<"       (constant-folder <              fix32?))
+(def-simp "##fixnum.<"       (constant-folder <              fix32?));;TODO: REMOVE
 (def-simp "##fl<"       (constant-folder <              flo?))
-(def-simp "##flonum.<"       (constant-folder <              flo?))
+(def-simp "##flonum.<"       (constant-folder <              flo?));;TODO: REMOVE
 (def-simp ">"                (constant-folder >              real?))
 (def-simp "##fx>"       (constant-folder >              fix32?))
-(def-simp "##fixnum.>"       (constant-folder >              fix32?))
+(def-simp "##fixnum.>"       (constant-folder >              fix32?));;TODO: REMOVE
 (def-simp "##fl>"       (constant-folder >              flo?))
-(def-simp "##flonum.>"       (constant-folder >              flo?))
+(def-simp "##flonum.>"       (constant-folder >              flo?));;TODO: REMOVE
 (def-simp "<="               (constant-folder <=             real?))
 (def-simp "##fx<="      (constant-folder <=             fix32?))
-(def-simp "##fixnum.<="      (constant-folder <=             fix32?))
+(def-simp "##fixnum.<="      (constant-folder <=             fix32?));;TODO: REMOVE
 (def-simp "##fl<="      (constant-folder <=             flo?))
-(def-simp "##flonum.<="      (constant-folder <=             flo?))
+(def-simp "##flonum.<="      (constant-folder <=             flo?));;TODO: REMOVE
 (def-simp ">="               (constant-folder >=             real?))
 (def-simp "##fx>="      (constant-folder >=             fix32?))
-(def-simp "##fixnum.>="      (constant-folder >=             fix32?))
+(def-simp "##fixnum.>="      (constant-folder >=             fix32?));;TODO: REMOVE
 (def-simp "##fl>="      (constant-folder >=             flo?))
-(def-simp "##flonum.>="      (constant-folder >=             flo?))
+(def-simp "##flonum.>="      (constant-folder >=             flo?));;TODO: REMOVE
 (def-simp "zero?"            (constant-folder zero?          num?))
 (def-simp "##fxzero?"   (constant-folder zero?          fix32?))
-(def-simp "##fixnum.zero?"   (constant-folder zero?          fix32?))
+(def-simp "##fixnum.zero?"   (constant-folder zero?          fix32?));;TODO: REMOVE
 (def-simp "##flzero?"   (constant-folder zero?          flo?))
-(def-simp "##flonum.zero?"   (constant-folder zero?          flo?))
+(def-simp "##flonum.zero?"   (constant-folder zero?          flo?));;TODO: REMOVE
 (def-simp "positive?"         (constant-folder positive?     real?))
 (def-simp "##fxpositive?"(constant-folder positive?     fix32?))
-(def-simp "##fixnum.positive?"(constant-folder positive?     fix32?))
+(def-simp "##fixnum.positive?"(constant-folder positive?     fix32?));;TODO: REMOVE
 (def-simp "##flpositive?"(constant-folder positive?     flo?))
-(def-simp "##flonum.positive?"(constant-folder positive?     flo?))
+(def-simp "##flonum.positive?"(constant-folder positive?     flo?));;TODO: REMOVE
 (def-simp "negative?"         (constant-folder negative?     real?))
 (def-simp "##fxnegative?"(constant-folder negative?     fix32?))
-(def-simp "##fixnum.negative?"(constant-folder negative?     fix32?))
+(def-simp "##fixnum.negative?"(constant-folder negative?     fix32?));;TODO: REMOVE
 (def-simp "##flnegative?"(constant-folder negative?     flo?))
-(def-simp "##flonum.negative?"(constant-folder negative?     flo?))
+(def-simp "##flonum.negative?"(constant-folder negative?     flo?));;TODO: REMOVE
 (def-simp "odd?"             (constant-folder odd?           int?))
 (def-simp "##fxodd?"    (constant-folder odd?           fix32?))
-(def-simp "##fixnum.odd?"    (constant-folder odd?           fix32?))
+(def-simp "##fixnum.odd?"    (constant-folder odd?           fix32?));;TODO: REMOVE
 (def-simp "##flodd?"    (constant-folder odd?           flo?))
-(def-simp "##flonum.odd?"    (constant-folder odd?           flo?))
+(def-simp "##flonum.odd?"    (constant-folder odd?           flo?));;TODO: REMOVE
 (def-simp "even?"            (constant-folder even?          int?))
 (def-simp "##fxeven?"   (constant-folder even?          fix32?))
-(def-simp "##fixnum.even?"   (constant-folder even?          fix32?))
+(def-simp "##fixnum.even?"   (constant-folder even?          fix32?));;TODO: REMOVE
 (def-simp "##fleven?"   (constant-folder even?          flo?))
-(def-simp "##flonum.even?"   (constant-folder even?          flo?))
+(def-simp "##flonum.even?"   (constant-folder even?          flo?));;TODO: REMOVE
 (def-simp "max"              (constant-folder-gen max        real?))
 (def-simp "##fxmax"     (constant-folder-fix max        fix32?))
-(def-simp "##fixnum.max"     (constant-folder-fix max        fix32?))
+(def-simp "##fixnum.max"     (constant-folder-fix max        fix32?));;TODO: REMOVE
 (def-simp "##flmax"     (constant-folder-flo max        flo?))
-(def-simp "##flonum.max"     (constant-folder-flo max        flo?))
+(def-simp "##flonum.max"     (constant-folder-flo max        flo?));;TODO: REMOVE
 (def-simp "min"              (constant-folder-gen min        real?))
 (def-simp "##fxmin"     (constant-folder-fix min        fix32?))
-(def-simp "##fixnum.min"     (constant-folder-fix min        fix32?))
+(def-simp "##fixnum.min"     (constant-folder-fix min        fix32?));;TODO: REMOVE
 (def-simp "##flmin"     (constant-folder-flo min        flo?))
-(def-simp "##flonum.min"     (constant-folder-flo min        flo?))
+(def-simp "##flonum.min"     (constant-folder-flo min        flo?));;TODO: REMOVE
 (def-simp "+"                (constant-folder-gen +          num?))
 (def-simp "##fxwrap+"   (constant-folder-fix +          fix32?))
-(def-simp "##fixnum.wrap+"   (constant-folder-fix +          fix32?))
+(def-simp "##fixnum.wrap+"   (constant-folder-fix +          fix32?));;TODO: REMOVE
 (def-simp "##fx+"       (constant-folder-fix +          fix32?))
-(def-simp "##fixnum.+"       (constant-folder-fix +          fix32?))
+(def-simp "##fixnum.+"       (constant-folder-fix +          fix32?));;TODO: REMOVE
 (def-simp "##fx+?"      (constant-folder-fix +          fix32?))
-(def-simp "##fixnum.+?"      (constant-folder-fix +          fix32?))
+(def-simp "##fixnum.+?"      (constant-folder-fix +          fix32?));;TODO: REMOVE
 (def-simp "##fl+"       (constant-folder-flo +          flo?));;;;;;;;;;must return 0.0 when 0 args
-(def-simp "##flonum.+"       (constant-folder-flo +          flo?));;;;;;;;;;must return 0.0 when 0 args
+(def-simp "##flonum.+"       (constant-folder-flo +          flo?));;TODO: REMOVE
 (def-simp "*"                (constant-folder-gen *          num?))
 (def-simp "##fxwrap*"   (constant-folder-fix *          fix32?))
-(def-simp "##fixnum.wrap*"   (constant-folder-fix *          fix32?))
+;;(def-simp "##fixnum.wrap*"   (constant-folder-fix *          fix32?));;TODO: REMOVE
 (def-simp "##fx*"       (constant-folder-fix *          fix32?))
-(def-simp "##fixnum.*"       (constant-folder-fix *          fix32?))
+(def-simp "##fixnum.*"       (constant-folder-fix *          fix32?));;TODO: REMOVE
 (def-simp "##fx*?"      (constant-folder-fix *          fix32?))
-(def-simp "##fixnum.*?"      (constant-folder-fix *          fix32?))
+(def-simp "##fixnum.*?"      (constant-folder-fix *          fix32?));;TODO: REMOVE
 (def-simp "##fl*"       (constant-folder-flo *          flo?));;;;;;;;;;must return 1.0 when 0 args
-(def-simp "##flonum.*"       (constant-folder-flo *          flo?));;;;;;;;;;must return 1.0 when 0 args
+(def-simp "##flonum.*"       (constant-folder-flo *          flo?));;TODO: REMOVE
 (def-simp "-"                (constant-folder-gen -          num?))
 (def-simp "##fxwrap-"   (constant-folder-fix -          fix32?))
-(def-simp "##fixnum.wrap-"   (constant-folder-fix -          fix32?))
+(def-simp "##fixnum.wrap-"   (constant-folder-fix -          fix32?));;TODO: REMOVE
 (def-simp "##fx-"       (constant-folder-fix -          fix32?))
-(def-simp "##fixnum.-"       (constant-folder-fix -          fix32?))
+(def-simp "##fixnum.-"       (constant-folder-fix -          fix32?));;TODO: REMOVE
 (def-simp "##fx-?"      (constant-folder-fix -          fix32?))
-(def-simp "##fixnum.-?"      (constant-folder-fix -          fix32?))
+(def-simp "##fixnum.-?"      (constant-folder-fix -          fix32?));;TODO: REMOVE
 (def-simp "##fl-"       (constant-folder-flo -          flo?))
-(def-simp "##flonum.-"       (constant-folder-flo -          flo?))
+(def-simp "##flonum.-"       (constant-folder-flo -          flo?));;TODO: REMOVE
 (def-simp "/"                (constant-folder-gen /
                                                         (list nz-num?)
                                                         (cons num?
@@ -4107,7 +4115,7 @@
                                                         (cons flo?
                                                               (cons nz-flo?
                                                                     nz-flo?))))
-(def-simp "##flonum./"       (constant-folder-flo /
+(def-simp "##flonum./"       (constant-folder-flo /;;TODO: REMOVE
                                                         (list nz-flo?)
                                                         (cons flo?
                                                               (cons nz-flo?
@@ -4117,7 +4125,7 @@
 (def-simp "##fxabs"     (constant-folder-fix abs          fix32?))
 (def-simp "##fxabs?"    (constant-folder-fix abs          fix32?))
 (def-simp "##flabs"     (constant-folder-flo abs          flo?))
-(def-simp "##flonum.abs"     (constant-folder-flo abs          flo?))
+(def-simp "##flonum.abs"     (constant-folder-flo abs          flo?));;TODO: REMOVE
 (def-simp "square"              (constant-folder-gen square          num?))
 (def-simp "##fxwrapsquare" (constant-folder-fix square          fix32?))
 (def-simp "##fxsquare"     (constant-folder-fix square          fix32?))
@@ -4127,23 +4135,23 @@
                                                         (list int? nz-int?)))
 (def-simp "##fxwrapquotient"(constant-folder-fix quotient
                                                             (list fix32? nz-fix32?)))
-(def-simp "##fixnum.wrapquotient"(constant-folder-fix quotient
+(def-simp "##fixnum.wrapquotient"(constant-folder-fix quotient;;TODO: REMOVE
                                                             (list fix32? nz-fix32?)))
 (def-simp "##fxquotient"(constant-folder-fix quotient
                                                         (list fix32? nz-fix32?)))
-(def-simp "##fixnum.quotient"(constant-folder-fix quotient
+(def-simp "##fixnum.quotient"(constant-folder-fix quotient;;TODO: REMOVE
                                                         (list fix32? nz-fix32?)))
 (def-simp "remainder"        (constant-folder-gen remainder
                                                         (list int? nz-int?)))
 (def-simp "##fxremainder"(constant-folder-fix remainder
                                                         (list fix32? nz-fix32?)))
-(def-simp "##fixnum.remainder"(constant-folder-fix remainder
+(def-simp "##fixnum.remainder"(constant-folder-fix remainder;;TODO: REMOVE
                                                         (list fix32? nz-fix32?)))
 (def-simp "modulo"           (constant-folder-gen modulo
                                                         (list int? nz-int?)))
 (def-simp "##fxmodulo"  (constant-folder-fix modulo
                                                         (list fix32? nz-fix32?)))
-(def-simp "##fixnum.modulo"  (constant-folder-fix modulo
+(def-simp "##fixnum.modulo"  (constant-folder-fix modulo;;TODO: REMOVE
                                                         (list fix32? nz-fix32?)))
 (def-simp "gcd"              (constant-folder-gen gcd        int?))
 (def-simp "lcm"              (constant-folder-gen lcm        int?))
@@ -4151,50 +4159,50 @@
 (def-simp "denominator"      (constant-folder-gen denominator rational?))
 (def-simp "floor"            (constant-folder-gen floor      real?))
 (def-simp "##flfloor"   (constant-folder-flo floor      flo?))
-(def-simp "##flonum.floor"   (constant-folder-flo floor      flo?))
+(def-simp "##flonum.floor"   (constant-folder-flo floor      flo?));;TODO: REMOVE
 (def-simp "ceiling"          (constant-folder-gen ceiling    real?))
 (def-simp "##flceiling" (constant-folder-flo ceiling    flo?))
-(def-simp "##flonum.ceiling" (constant-folder-flo ceiling    flo?))
+(def-simp "##flonum.ceiling" (constant-folder-flo ceiling    flo?));;TODO: REMOVE
 (def-simp "truncate"         (constant-folder-gen truncate   real?))
 (def-simp "##fltruncate"(constant-folder-flo truncate   flo?))
-(def-simp "##flonum.truncate"(constant-folder-flo truncate   flo?))
+(def-simp "##flonum.truncate"(constant-folder-flo truncate   flo?));;TODO: REMOVE
 (def-simp "round"            (constant-folder-gen round      real?))
 (def-simp "##flround"   (constant-folder-flo round      flo?))
-(def-simp "##flonum.round"   (constant-folder-flo round      flo?))
+(def-simp "##flonum.round"   (constant-folder-flo round      flo?));;TODO: REMOVE
 (def-simp "rationalize"      (constant-folder-gen rationalize real?))
 (def-simp "exp"              (constant-folder-gen exp        num?))
 (def-simp "##flexp"     (constant-folder-flo exp        flo?))
-(def-simp "##flonum.exp"     (constant-folder-flo exp        flo?))
+(def-simp "##flonum.exp"     (constant-folder-flo exp        flo?));;TODO: REMOVE
 (def-simp "log"              (constant-folder-gen log        nz-num?))
 (def-simp "##fllog"     (constant-folder-flo log        nz-flo?))
-(def-simp "##flonum.log"     (constant-folder-flo log        nz-flo?))
+(def-simp "##flonum.log"     (constant-folder-flo log        nz-flo?));;TODO: REMOVE
 (def-simp "sin"              (constant-folder-gen sin        num?))
 (def-simp "##flsin"     (constant-folder-flo sin        flo?))
-(def-simp "##flonum.sin"     (constant-folder-flo sin        flo?))
+(def-simp "##flonum.sin"     (constant-folder-flo sin        flo?));;TODO: REMOVE
 (def-simp "cos"              (constant-folder-gen cos        num?))
 (def-simp "##flcos"     (constant-folder-flo cos        flo?))
-(def-simp "##flonum.cos"     (constant-folder-flo cos        flo?))
+(def-simp "##flonum.cos"     (constant-folder-flo cos        flo?));;TODO: REMOVE
 (def-simp "tan"              (constant-folder-gen tan        num?))
 (def-simp "##fltan"     (constant-folder-flo tan        flo?))
-(def-simp "##flonum.tan"     (constant-folder-flo tan        flo?))
+(def-simp "##flonum.tan"     (constant-folder-flo tan        flo?));;TODO: REMOVE
 (def-simp "asin"             (constant-folder-gen asin       num?))
 (def-simp "##flasin"    (constant-folder-flo asin       flo?))
-(def-simp "##flonum.asin"    (constant-folder-flo asin       flo?))
+(def-simp "##flonum.asin"    (constant-folder-flo asin       flo?));;TODO: REMOVE
 (def-simp "acos"             (constant-folder-gen acos       num?))
 (def-simp "##flacos"    (constant-folder-flo acos       flo?))
-(def-simp "##flonum.acos"    (constant-folder-flo acos       flo?))
+(def-simp "##flonum.acos"    (constant-folder-flo acos       flo?));;TODO: REMOVE
 (def-simp "atan"             (constant-folder-gen atan       num?))
 (def-simp "##flatan"    (constant-folder-flo atan       flo?))
-(def-simp "##flonum.atan"    (constant-folder-flo atan       flo?))
+(def-simp "##flonum.atan"    (constant-folder-flo atan       flo?));;TODO: REMOVE
 (def-simp "expt"             (constant-folder-gen expt       num?))
 (def-simp "##flexpt"    (constant-folder-flo expt       flo?))
-(def-simp "##flonum.expt"    (constant-folder-flo expt       flo?))
+(def-simp "##flonum.expt"    (constant-folder-flo expt       flo?));;TODO: REMOVE
 (def-simp "sqrt"             (constant-folder-gen sqrt       num?))
 (def-simp "##flsqrt"    (constant-folder-flo sqrt       flo?))
-(def-simp "##flonum.sqrt"    (constant-folder-flo sqrt       flo?))
+(def-simp "##flonum.sqrt"    (constant-folder-flo sqrt       flo?));;TODO: REMOVE
 (def-simp "expt"             (constant-folder-gen expt       num?))
-(def-simp "##flonum->fixnum"(constant-folder-flo exact->inexact fix32?))
-(def-simp "##flonum.<-fixnum"(constant-folder-flo exact->inexact fix32?))
+(def-simp "##flonum->fixnum"(constant-folder-fix inexact->exact flo?))
+(def-simp "##flonum.<-fixnum"(constant-folder-flo exact->inexact fix32?));;TODO: REMOVE
 
 (def-simp "make-rectangular" (constant-folder-gen make-rectangular real?))
 (def-simp "make-polar"       (constant-folder-gen make-polar     real?))
