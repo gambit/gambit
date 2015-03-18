@@ -13,7 +13,7 @@
   (println ""))
 
 (define (test2 n)
-  (println (##fl<-fx-exact? n)))
+  (println (##fixnum->flonum-exact? n)))
 
 (test1   0.0)
 (test1  -0.0)
