@@ -5784,7 +5784,7 @@ for a discussion of branch cuts.
 (define-prim (##bignum.adigit-negative? x i))
 (define-prim (##bignum.adigit-= x y i))
 (define-prim (##bignum.adigit-< x y i))
-;(define-prim (##bignum->fixnum x))
+;;(define-prim (##bignum->fixnum x));;TODO: REMOVE
 (define-prim (##fixnum->bignum x))
 (define-prim (##bignum.adigit-shrink! x n))
 (define-prim (##bignum.adigit-copy! x i y j))
@@ -9957,6 +9957,15 @@ ___RESULT = result;
 ;;; Ratnum operations
 ;;; -----------------
 
+(define-prim (##ratnum-make num den)
+  (macro-ratnum-make num den))
+
+(define-prim (##ratnum-numerator x)
+  (macro-ratnum-numerator x))
+
+(define-prim (##ratnum-denominator x)
+  (macro-ratnum-denominator x))
+
 (define-prim (##ratnum.= x y)
   (and (##= (macro-ratnum-numerator x)
             (macro-ratnum-numerator y))
@@ -10828,6 +10837,15 @@ ___RESULT = result;
 
 ;;; Cpxnum operations
 ;;; -----------------
+
+(define-prim (##cpxnum-make real imag)
+  (macro-cpxnum-make real imag))
+
+(define-prim (##cpxnum-real x)
+  (macro-cpxnum-real x))
+
+(define-prim (##cpxnum-imag x)
+  (macro-cpxnum-imag x))
 
 (define-prim (##cpxnum.= x y)
   (and (##= (macro-cpxnum-real x) (macro-cpxnum-real y))

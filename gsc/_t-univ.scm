@@ -9011,10 +9011,6 @@ tanh
    (lambda (ctx return arg)
      (return (^fixnum-box (^chr-toint (^char-unbox arg)))))))
 
-;;TODO: ("##flonum->fixnum"              (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##fixnum->flonum"              (1)   #f ()    0    real    extended)
-;;TODO: ("##fixnum->flonum-exact?"       (1)   #f ()    0    boolean extended)
-
 (univ-define-prim "##flonum->fixnum" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
@@ -9024,6 +9020,11 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-fromint (^fixnum-unbox arg)))))))
+
+(univ-define-prim-bool "##fixnum->flonum-exact?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^bool #t)))))
 
 ;;TODO: make variadic, complete, clean up and test
 (univ-define-prim "##flmax" #t
@@ -9249,11 +9250,6 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^float-nan? (^flonum-unbox arg))))))
-
-(univ-define-prim-bool "##fl<-fx-exact?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg)
-     (return (^bool #t)))))
 
 (univ-define-prim-bool "##fl=" #f
   (univ-fold-left-compare

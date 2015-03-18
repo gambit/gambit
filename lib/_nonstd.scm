@@ -1287,6 +1287,15 @@
     (macro-check-will will 1 (will-testator will)
       (macro-will-testator will))))
 
+(define-prim (##will-testator-set! will testator)
+  (macro-will-testator-set! will testator))
+
+(define-prim (##will-action will)
+  (macro-will-action will))
+
+(define-prim (##will-action-set! will action)
+  (macro-will-action-set! will action))
+
 (define-prim (##will-execute! will)
   (macro-will-execute! will))
 
