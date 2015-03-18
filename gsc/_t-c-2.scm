@@ -3280,7 +3280,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#;(
+;;TODO: REMOVE
 (targ-op "##fixnum.max"       (targ-apply-fold-u #f #f       "FIXPOS" "FIXMAX"))
 (targ-op "##fixnum.min"       (targ-apply-fold-u #f #f       "FIXPOS" "FIXMIN"))
 
@@ -3331,8 +3331,9 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(targ-op "##flonum.->fixnum"  (targ-apply-simp-u #t #f #f "F64TOFIX"));;deprecated
-(targ-op "##flonum.<-fixnum"  (targ-apply-simpflo-u #f "F64FROMFIX"));;deprecated
+;;TODO: REMOVE
+(targ-op "##flonum.->fixnum"  (targ-apply-simp-u #t #f #f "F64TOFIX"));;TODO: REMOVE
+(targ-op "##flonum.<-fixnum"  (targ-apply-simpflo-u #f "F64FROMFIX"));;TODO: REMOVE
 
 (targ-op "##flonum.max"       (targ-apply-fold-u #t #f      "F64POS" "F64MAX"))
 (targ-op "##flonum.min"       (targ-apply-fold-u #t #f      "F64POS" "F64MIN"))
@@ -3373,7 +3374,6 @@
 (targ-op "##flonum.>"         (targ-ifjump-fold-u #t "F64GT"))
 (targ-op "##flonum.<="        (targ-ifjump-fold-u #t "F64LE"))
 (targ-op "##flonum.>="        (targ-ifjump-fold-u #t "F64GE"))
-)
 
 ;; new fixnum primitives
 
@@ -3430,10 +3430,10 @@
 (targ-op "##fx<="        (targ-ifjump-fold-u #f "FIXLE"))
 (targ-op "##fx>="        (targ-ifjump-fold-u #f "FIXGE"))
 
-;(targ-op "##fx->char"    (targ-apply-simp-u #f #f #f "FIXTOCHR"));;deprecated
-;(targ-op "##fx<-char"    (targ-apply-simp-u #f #f #f "FIXFROMCHR"));;deprecated
-;(targ-op "##fixnum->char"   (targ-apply-simp-u #f #f #f "FIXTOCHR"));;deprecated
-;(targ-op "##char->fixnum"   (targ-apply-simp-u #f #f #f "FIXFROMCHR"));;deprecated
+(targ-op "##fx->char"    (targ-apply-simp-u #f #f #f "FIXTOCHR"));;TODO: REMOVE
+(targ-op "##fx<-char"    (targ-apply-simp-u #f #f #f "FIXFROMCHR"));;TODO: REMOVE
+(targ-op "##fixnum->char"   (targ-apply-simp-u #f #f #f "FIXTOCHR"));;TODO: REMOVE
+(targ-op "##char->fixnum"   (targ-apply-simp-u #f #f #f "FIXFROMCHR"));;TODO: REMOVE
 
 (targ-op "##integer->char"  (targ-apply-simp-u #f #f #f "FIXTOCHR"))
 (targ-op "##char->integer"  (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
@@ -3445,8 +3445,8 @@
 
 ;; new flonum primitives
 
-;(targ-op "##fl->fx"  (targ-apply-simp-u #t #f #f "F64TOFIX"))
-;(targ-op "##fl<-fx"  (targ-apply-simpflo-u #f "F64FROMFIX"))
+(targ-op "##fl->fx"  (targ-apply-simp-u #t #f #f "F64TOFIX"));;TODO: REMOVE
+(targ-op "##fl<-fx"  (targ-apply-simpflo-u #f "F64FROMFIX"));;TODO: REMOVE
 
 (targ-op "##flmax"       (targ-apply-fold-u #t #f      "F64POS" "F64MAX"))
 (targ-op "##flmin"       (targ-apply-fold-u #t #f      "F64POS" "F64MIN"))
@@ -3511,7 +3511,7 @@
 (targ-op "##flfinite?"   (targ-ifjump-simp-u #t "F64FINITEP"))
 (targ-op "##flinfinite?" (targ-ifjump-simp-u #t "F64INFINITEP"))
 (targ-op "##flnan?"      (targ-ifjump-simp-u #t "F64NANP"))
-;(targ-op "##fl<-fx-exact?" (targ-ifjump-simp-u #f "F64FROMFIXEXACTP"))
+(targ-op "##fl<-fx-exact?" (targ-ifjump-simp-u #f "F64FROMFIXEXACTP"));;TODO: REMOVE
 (targ-op "##fl="         (targ-ifjump-fold-u #t "F64EQ"))
 (targ-op "##fl<"         (targ-ifjump-fold-u #t "F64LT"))
 (targ-op "##fl>"         (targ-ifjump-fold-u #t "F64GT"))
@@ -3702,9 +3702,9 @@
 (targ-op "##bignum.adigit-<"         (targ-ifjump-simp-u #f "BIGALESSP"))
 (targ-op "##bignum.adigit-zero?"     (targ-ifjump-simp-u #f "BIGAZEROP"))
 (targ-op "##bignum.adigit-negative?" (targ-ifjump-simp-u #f "BIGANEGATIVEP"))
-;(targ-op "##bignum.->fixnum"         (targ-apply-simp-u #f #f #f "BIGTOFIX"));;deprecated
-;(targ-op "##bignum.<-fixnum"         (targ-apply-simpbig-u "BIGFROMFIX"));;deprecated
-;(targ-op "##bignum->fixnum"          (targ-apply-simp-u #f #f #f "BIGTOFIX"))
+(targ-op "##bignum.->fixnum"         (targ-apply-simp-u #f #f #f "BIGTOFIX"));;TODO: REMOVE
+(targ-op "##bignum.<-fixnum"         (targ-apply-simpbig-u "BIGFROMFIX"));;TODO: REMOVE
+(targ-op "##bignum->fixnum"          (targ-apply-simp-u #f #f #f "BIGTOFIX"));;TODO: REMOVE
 (targ-op "##fixnum->bignum"          (targ-apply-simpbig-u "BIGFROMFIX"))
 (targ-op "##bignum.adigit-shrink!"   (targ-apply-simp-u #f #t #f "BIGASHRINK"))
 (targ-op "##bignum.adigit-copy!"     (targ-apply-simp-u #f #t #f "BIGACOPY"))
