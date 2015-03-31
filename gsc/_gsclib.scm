@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -193,13 +193,13 @@
 
     (let* ((input-is-c-file?
             (##assoc (##path-extension filename)
-                     (c#target-file-extensions (c#target-get 'c))))
+                     (c#target-file-extensions (c#target-get 'C))))
            (c-filename
             (if input-is-c-file?
                 filename
                 (##string-append
                  (##path-strip-extension filename)
-                 (##caar (c#target-file-extensions (c#target-get 'c))))))
+                 (##caar (c#target-file-extensions (c#target-get 'C))))))
            (expanded-output
             (##path-normalize output))
            (output-directory?
@@ -438,7 +438,7 @@
                 (##string-append
                  (##path-strip-extension (##car (##car rev-mods)))
                  "_"
-                 (##caar (c#target-file-extensions (c#target-get 'c)))))
+                 (##caar (c#target-file-extensions (c#target-get 'C)))))
                expanded-output)))
          (base-and-mods
           (##cons (##list base) (##reverse rev-mods))))
@@ -498,7 +498,7 @@
                 (##string-append
                  (##path-strip-extension (##car (##car rev-mods)))
                  "_"
-                 (##caar (c#target-file-extensions (c#target-get 'c)))))
+                 (##caar (c#target-file-extensions (c#target-get 'C)))))
                expanded-output)))
          (mods
           (##reverse rev-mods)))
