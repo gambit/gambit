@@ -30,7 +30,7 @@
 ;; Definition of vector-like data types (i.e. string, vector, s8vector, ...).
 
 (macro-case-target
- ((c)
+ ((c C)
   (c-declare "#include \"os.h\"")))
 
 (##define-macro (define-prim-vector-procedures
@@ -344,7 +344,7 @@
 
        (macro-case-target
 
-        ((c)
+        ((c C)
          (define-prim ,##subvect-move!
            (c-lambda (scheme-object  ;; src-vect
                       scheme-object  ;; src-start
@@ -577,7 +577,7 @@ end-of-code
   macro-no-check)
 
 (macro-case-target
- ((c)
+ ((c C)
 
   (define-prim-vector-procedures
     s8vector
