@@ -110,7 +110,7 @@
                ((not (null? (syntax->datum #'(body ...))))
                 #'(define-prim id
                     (lambda params
-		      (##declare (inline))
+                      (##declare (inline))
                       body ...)))
                (else
                 (error "define-prim can't inline" name)))))
