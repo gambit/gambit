@@ -30,6 +30,10 @@
         (else
          'host))))
 
+(define (univ-frame-representation ctx)
+  (or (univ-get-representation-option ctx 'repr-frame)
+      'host))
+
 (define (univ-null-representation ctx)
   (or (univ-get-representation-option ctx 'repr-null)
       (case (target-name (ctx-target ctx))
@@ -161,6 +165,7 @@
 
   (define common-options
     '((repr-procedure symbol)
+      (repr-frame     symbol)
       (repr-null      symbol)
       (repr-void      symbol)
       (repr-boolean   symbol)
@@ -587,6 +592,9 @@
 
 (define-macro (^unalias expr)
   `(univ-emit-unalias ctx ,expr))
+
+(define-macro (^array? expr)
+  `(univ-emit-array? ctx ,expr))
 
 (define-macro (^array-length expr)
   `(univ-emit-array-length ctx ,expr))
@@ -1084,8 +1092,14 @@
 (define-macro (^str val)
   `(univ-emit-str ctx ,val))
 
-(define-macro (^strtocodes val)
-  `(univ-emit-strtocodes ctx ,val))
+(define-macro (^str-to-codes str)
+  `(univ-emit-str-to-codes ctx ,str))
+
+(define-macro (^str-length str)
+  `(univ-emit-str-length ctx ,str))
+
+(define-macro (^str-index-code str i)
+  `(univ-emit-str-index-code ctx ,str ,i))
 
 (define-macro (^string-obj obj force-var?)
   `(univ-emit-string-obj ctx ,obj ,force-var?))
@@ -1153,8 +1167,17 @@
 (define-macro (^setbox val1 val2)
   `(univ-emit-setbox ctx ,val1 ,val2))
 
+(define-macro (^frame-box expr)
+  `(univ-emit-frame-box ctx ,expr))
+
+(define-macro (^frame-unbox expr)
+  `(univ-emit-frame-unbox ctx ,expr))
+
 (define-macro (^frame? val)
   `(univ-emit-frame? ctx ,val))
+
+(define-macro (^new-continuation expr1 expr2)
+  `(univ-emit-new-continuation ctx ,expr1 ,expr2))
 
 (define-macro (^continuation? val)
   `(univ-emit-continuation? ctx ,val))
@@ -1176,6 +1199,18 @@
 
 (define-macro (^closure-set! val1 val2 val3)
   `(univ-emit-closure-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^new-promise expr)
+  `(univ-emit-new-promise ctx ,expr))
+
+(define-macro (^promise? val)
+  `(univ-emit-promise? ctx ,val))
+
+(define-macro (^new-will expr1 expr2)
+  `(univ-emit-new-will ctx ,expr1 ,expr2))
+
+(define-macro (^will? val)
+  `(univ-emit-will? ctx ,val))
 
 (define-macro (^popcount! arg)
   `(univ-emit-popcount! ctx ,arg))
@@ -1802,6 +1837,22 @@
     (else
      (compiler-internal-error
       "univ-emit-unalias, unknown target"))))
+
+(define (univ-emit-array? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby)
+     (^instanceof "Array" expr))
+
+    ((php)
+     (^call-prim "is_array" expr))
+
+    ((python)
+     (^instanceof "list" expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-array?, unknown target"))))
 
 (define (univ-emit-array-length ctx expr)
   (case (target-name (ctx-target ctx))
@@ -2673,18 +2724,21 @@
 
   (mp f lst 0))
 
-(define (univ-closure-alloc ctx lbl exprs cont)
+(define (univ-gensym ctx name)
   (let ((count (ctx-serial-num ctx)))
     (ctx-serial-num-set! ctx (+ count 1))
-    (let ((name (^local-var (^ "closure" count))))
-      (^ (^var-declaration
-          name
-          (^call-prim
-           (^prefix (univ-use-rtlib ctx 'closure_alloc))
-           (^array-literal
-            (cons (gvm-lbl-use ctx (make-lbl lbl))
-                  exprs))))
-         (cont name)))))
+    (^ name count)))
+
+(define (univ-closure-alloc ctx lbl exprs cont)
+  (let ((closure-var (^local-var (univ-gensym ctx "closure"))))
+    (^ (^var-declaration
+        closure-var
+        (^call-prim
+         (^prefix (univ-use-rtlib ctx 'closure_alloc))
+         (^array-literal
+          (cons (gvm-lbl-use ctx (make-lbl lbl))
+                exprs))))
+       (cont closure-var))))
 
 (define (make-ctx target options module-ns ns objs-used rtlib-features-used decls)
   (vector target
@@ -3700,18 +3754,18 @@
                        (^+ (gvm-state-sp-use ctx 'rd) 1))
 
                       (^var-declaration
-                       chain
-                       (gvm-state-stack-use ctx 'rd))
+                       chain)
 
                       (^if (^> base 0)
                            (^ (^assign chain
-                                       (^subarray
-                                        (gvm-state-stack-use ctx 'rd)
-                                        base
-                                        (^+ fs 1)))
+                                       (^frame-box
+                                        (^subarray
+                                         (gvm-state-stack-use ctx 'rd)
+                                         base
+                                         (^+ fs 1))))
 
                               (^assign (^array-index
-                                        chain
+                                        (^frame-unbox chain)
                                         0)
                                        ra)
 
@@ -3728,7 +3782,7 @@
 
                               (^assign ra
                                        (^array-index
-                                        prev_frame
+                                        (^frame-unbox prev_frame)
                                         prev_link))
 
                               (univ-with-function-attribs
@@ -3753,14 +3807,15 @@
                                     (^while (^> base 0)
                                             (^ (^var-declaration
                                                 frame
-                                                (^subarray
-                                                 (gvm-state-stack-use ctx 'rd)
-                                                 base
-                                                 (^+ fs 1)))
+                                                (^frame-box
+                                                 (^subarray
+                                                  (gvm-state-stack-use ctx 'rd)
+                                                  base
+                                                  (^+ fs 1))))
 
                                                (^assign
                                                 (^array-index
-                                                 frame
+                                                 (^frame-unbox frame)
                                                  0)
                                                 ra)
 
@@ -3770,7 +3825,7 @@
 
                                                (^assign
                                                 (^array-index
-                                                 prev_frame
+                                                 (^frame-unbox prev_frame)
                                                  prev_link)
                                                 (^alias frame))
 
@@ -3787,7 +3842,7 @@
                                                (^assign
                                                 ra
                                                 (^array-index
-                                                 prev_frame
+                                                 (^frame-unbox prev_frame)
                                                  prev_link))
 
                                                (univ-with-function-attribs
@@ -3829,23 +3884,29 @@
 
                                     (^assign
                                      (^array-index
-                                      prev_frame
+                                      (^frame-unbox prev_frame)
                                       prev_link)
-                                     (gvm-state-stack-use ctx 'rd))))))
+                                     (^frame-box
+                                      (gvm-state-stack-use ctx 'rd)))))))
 
                            (^ (^assign
                                (^array-index
-                                chain
+                                (gvm-state-stack-use ctx 'rd)
                                 link)
                                (^array-index
-                                chain
+                                (gvm-state-stack-use ctx 'rd)
                                 0))
 
                               (^assign
                                (^array-index
-                                chain
+                                (gvm-state-stack-use ctx 'rd)
                                 0)
-                               ra)))
+                               ra)
+
+                              (^assign
+                               chain
+                               (^frame-box
+                                (gvm-state-stack-use ctx 'rd)))))
 
                       (^assign
                        (gvm-state-stack-use ctx 'rd)
@@ -3881,7 +3942,7 @@
 
            (^var-declaration ra
                              (^array-index
-                              frame
+                              (^frame-unbox frame)
                               0))
 
            (univ-with-function-attribs
@@ -3898,7 +3959,7 @@
 
                  (^assign (gvm-state-stack-use ctx 'wr)
                           (^copy-array-to-extensible-array
-                           frame
+                           (^frame-unbox frame)
                            (^+ fs 1)))
 
                  (^assign (gvm-state-sp-use ctx 'wr)
@@ -3909,7 +3970,7 @@
                            0)
                           (^alias
                            (^array-index
-                            frame
+                            (^frame-unbox frame)
                             link)))
 
                  (^assign (^array-index
@@ -4178,14 +4239,14 @@ EOF
      (^prim-function-declaration
       "make_closure"
       '((code . #f)
-        (len . #f))
+        (leng . #f))
       "\n"
       '()
       (let ((code (^local-var 'code))
-            (len (^local-var 'len))
+            (leng (^local-var 'leng))
             (slots (^local-var 'slots)))
         (^ (^var-declaration slots
-                             (univ-new-array ctx (^+ len (^int 1))))
+                             (univ-new-array ctx (^+ leng (^int 1))))
            (^assign (^array-index slots (^int 0)) code)
            (^return
             (^call-prim
@@ -4211,6 +4272,22 @@ EOF
              (lambda (ctx)
                (^ (^setreg (+ univ-nb-arg-regs 1) (^local-var (^this)))
                   (^return (^array-index (^this-member 'slots) 0))))))))
+
+    ((Promise)
+     (^class-declaration
+      "Promise"
+      #f
+      (list (cons 'thunk #f)
+            (cons 'result (^local-var (^this))))
+      '()))
+
+    ((Will)
+     (^class-declaration
+      "Will"
+      #f
+      '((testator . #f)
+        (action . #f))
+      '()))
 
     ((Fixnum)
      (^class-declaration
@@ -4353,21 +4430,24 @@ EOF
      (^class-declaration
       "Ratnum"
       #f
-      '((num . #f) (den . #f))
+      '((num . #f)
+        (den . #f))
       '()))
 
     ((Cpxnum)
      (^class-declaration
       "Cpxnum"
       #f
-      '((real . #f) (imag . #f))
+      '((real . #f)
+        (imag . #f))
       '()))
 
     ((Pair)
      (^class-declaration
       "Pair"
       #f
-      '((car . #f) (cdr . #f))
+      '((car . #f)
+        (cdr . #f))
       '()))
 
     ((Vector)
@@ -4416,6 +4496,25 @@ EOF
       '((slots . #f))
       '()))
 
+    ((make_frame)
+     (^prim-function-declaration
+      "make_frame"
+      '((ra . #f))
+      "\n"
+      '()
+      (let ((ra (^local-var 'ra))
+            (fs (^local-var 'fs)))
+        (^ (univ-with-function-attribs
+            ctx
+            #f
+            ra
+            (lambda ()
+              (^var-declaration fs
+                                (univ-get-function-attrib ctx ra 'fs))
+              (^return
+               (^frame-box
+                (univ-new-array ctx (^+ fs (^int 1)))))))))))
+
     ((Continuation)
      (^class-declaration
       "Continuation"
@@ -4441,7 +4540,7 @@ EOF
            (^var-declaration denv
                              (^member cont 'denv))
            (^var-declaration ra
-                             (^array-index frame 0))
+                             (^array-index (^frame-unbox frame) 0))
            (univ-with-function-attribs
             ctx
             #f
@@ -4450,19 +4549,42 @@ EOF
               (^var-declaration link
                                 (univ-get-function-attrib ctx ra 'link))))
            (^var-declaration next_frame
-                             (^array-index frame
+                             (^array-index (^frame-unbox frame)
                                            link))
            (^return
-            (^new (^prefix-class (univ-use-rtlib ctx 'Continuation))
-                  next_frame
-                  denv))))))
+            (^new-continuation next_frame denv))))))
+
+    ((str_hash)
+     (^prim-function-declaration
+      "str_hash"
+      '((strng . #f))
+      "\n"
+      '()
+      (let ((strng (^local-var 'strng))
+            (h (^local-var 'h))
+            (i (^local-var 'i))
+            (leng (^local-var 'leng)))
+        (^ (^var-declaration h (^int 0))
+           (^var-declaration i (^int 0))
+           (^var-declaration leng (^str-length strng))
+           (^while (^< i leng)
+                   (^ (^assign h
+                               (^bitand
+                                (^parens
+                                 (^* (^parens (^+ (^parens (^>> h 8))
+                                                  (^str-index-code strng i)))
+                                     (^int 331804471)))
+                                (^int univ-fixnum-max)))
+                      (^inc-by i 1)))
+           (^return h)))))
 
     ((Symbol)
      (^class-declaration
       "Symbol"
       #f
-      '((name . #f)
-        (hash . #f))
+      (list (cons 'name #f)
+            (cons 'hash #f)
+            (cons 'interned (^obj #f)))
       (list
        (list (univ-tostr-method-name ctx)
              '()
@@ -4479,17 +4601,25 @@ EOF
          '((name . #f))
          "\n"
          '()
-         (let ((sym (^local-var 'sym))
-               (name (^local-var 'name)))
-           (^ (^var-declaration sym
+         (let ((name (^local-var 'name))
+               (strng (^local-var 'strng))
+               (sym (^local-var 'sym)))
+           (^ (^var-declaration strng
+                                (^tostr name))
+              (^var-declaration sym
                                 (^prop-index (^gvar 'symbol_table)
-                                             name
+                                             strng
                                              (^bool #f)))
               (^if (^not sym)
                    (^ (^assign sym
-                               (^symbol-box-uninterned name (^obj 0))) ;;FIXME: compute hash
+                               (^symbol-box-uninterned
+                                name
+                                (^fixnum-box
+                                 (^call-prim
+                                  (^prefix (univ-use-rtlib ctx 'str_hash))
+                                  strng))))
                       (^assign (^prop-index (^gvar 'symbol_table)
-                                            name)
+                                            strng)
                                sym)))
               (^return sym))))))
 
@@ -4497,8 +4627,9 @@ EOF
      (^class-declaration
       "Keyword"
       #f
-      '((name . #f)
-        (hash . #f))
+      (list (cons 'name #f)
+            (cons 'hash #f)
+            (cons 'interned (^obj #f)))
       (list
        (list (univ-tostr-method-name ctx)
              '()
@@ -4515,17 +4646,25 @@ EOF
          '((name . #f))
          "\n"
          '()
-         (let ((key (^local-var 'key))
-               (name (^local-var 'name)))
-           (^ (^var-declaration key
+         (let ((name (^local-var 'name))
+               (strng (^local-var 'strng))
+               (key (^local-var 'key)))
+           (^ (^var-declaration strng
+                                (^tostr name))
+              (^var-declaration key
                                 (^prop-index (^gvar 'keyword_table)
-                                             name
+                                             strng
                                              (^bool #f)))
               (^if (^not key)
                    (^ (^assign key
-                               (^keyword-box-uninterned name (^obj 0))) ;;FIXME: compute hash
+                               (^keyword-box-uninterned
+                                name
+                                (^fixnum-box
+                                 (^call-prim
+                                  (^prefix (univ-use-rtlib ctx 'str_hash))
+                                  strng))))
                       (^assign (^prop-index (^gvar 'keyword_table)
-                                            name)
+                                            strng)
                                key)))
               (^return key))))))
 
@@ -4936,13 +5075,13 @@ EOF
         (^setglo 'real-time-milliseconds
                  (^global-function (^prefix (gvm-proc-use ctx "real-time-milliseconds"))))))
 
-    ((strtocodes)
+    ((str2codes)
      (^prim-function-declaration
-      "strtocodes"
-      '((str . #f))
+      "str2codes"
+      '((strng . #f))
       "\n"
       '()
-      (let ((str (^local-var 'str)))
+      (let ((strng (^local-var 'strng)))
         (case (target-name (ctx-target ctx))
 
           ((js)
@@ -4950,20 +5089,20 @@ EOF
 ;;TODO: clean up
 "
     var codes = [];
-    for (var i=0; i < " str ".length; i++) {
-        codes.push(" str ".charCodeAt(i));
+    for (var i=0; i < " strng ".length; i++) {
+        codes.push(" strng ".charCodeAt(i));
     }
     return codes;
 "))
 
           ((php)
-           (^return (^ "array_slice(unpack('c*'," str "),0)")))
+           (^return (^ "array_slice(unpack('c*'," strng "),0)")))
 
           ((python)
-           (^return (^ "[ord(c) for c in " str "]")))
+           (^return (^ "[ord(c) for c in " strng "]")))
 
           ((ruby)
-           (^return (^ str ".unpack('U*')")))
+           (^return (^ strng ".unpack('U*')")))
 
           (else
            (compiler-internal-error
@@ -4972,66 +5111,66 @@ EOF
     ((make_vector)
      (^prim-function-declaration
       "make_vector"
-      '((len . #f)
+      '((leng . #f)
         (init . #f))
       "\n"
       '()
       (univ-make-array
        ctx
        (lambda (result) (^return (^vector-box result)))
-       (^local-var 'len)
+       (^local-var 'leng)
        (^local-var 'init))))
 
     ((make_u8vector)
      (^prim-function-declaration
       "make_u8vector"
-      '((len . #f)
+      '((leng . #f)
         (init . #f))
       "\n"
       '()
       (univ-make-array
        ctx
        (lambda (result) (^return (^u8vector-box result)))
-       (^local-var 'len)
+       (^local-var 'leng)
        (^local-var 'init))))
 
     ((make_u16vector)
      (^prim-function-declaration
       "make_u16vector"
-      '((len . #f)
+      '((leng . #f)
         (init . #f))
       "\n"
       '()
       (univ-make-array
        ctx
        (lambda (result) (^return (^u16vector-box result)))
-       (^local-var 'len)
+       (^local-var 'leng)
        (^local-var 'init))))
 
     ((make_f64vector)
      (^prim-function-declaration
       "make_f64vector"
-      '((len . #f)
+      '((leng . #f)
         (init . #f))
       "\n"
       '()
       (univ-make-array
        ctx
        (lambda (result) (^return (^f64vector-box result)))
-       (^local-var 'len)
+       (^local-var 'leng)
        (^local-var 'init))))
 
     ((make_string)
      (^prim-function-declaration
       "make_string"
-      '((len . #f)
+      '((leng . #f)
         (init . #f))
       "\n"
       '()
       (univ-make-array
        ctx
        (lambda (result) (^return (^string-box result)))
-       (^local-var 'len)
+       (^local-var 'leng)
        (^local-var 'init))))
 
     ((make_glo_var)
@@ -5081,7 +5220,7 @@ function gambit_js2scm(obj) {
   } else if (typeof obj === "function") {
     return function () { return gambit_scm2js_call(obj); };
   } else if (typeof obj === "string") {
-    return new Gambit_String(gambit_strtocodes(obj));
+    return new Gambit_String(gambit_str2codes(obj));
   } else if (typeof obj === "object") {
     if (obj instanceof Array) {
       return obj.map(gambit_js2scm);
@@ -5293,7 +5432,7 @@ EOF
 
         (need-feature 'heapify)
         (need-feature 'underflow)
-        (need-feature 'strtocodes)
+        (need-feature 'str2codes)
         (need-feature 'String)
         (need-feature 'Flonum)
         (need-feature 'Pair)
@@ -7141,20 +7280,7 @@ tanh
      (^instanceof (^prefix-class (univ-use-rtlib ctx 'Vector)) expr))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js ruby)
-        (^instanceof "Array" expr))
-
-       ((php)
-        (^call-prim "is_array" expr))
-
-       ((python)
-        (^instanceof "list" expr))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-vector?, unknown target"))))))
+     (^array? expr))))
 
 (define (univ-emit-vector-length ctx expr)
   (^array-length (^vector-unbox expr)))
@@ -7412,16 +7538,51 @@ tanh
                                  (cons (string-append "\\u" hi-x "\\u" lo-x)
                                        (add i j)))))))))))))
 
-(define (univ-emit-strtocodes ctx expr)
+(define (univ-emit-str-to-codes ctx str)
   (case (univ-string-representation ctx)
 
     ((class)
      (^call-prim
-      (^prefix (univ-use-rtlib ctx 'strtocodes))
-      expr))
+      (^prefix (univ-use-rtlib ctx 'str2codes))
+      str))
 
     (else
-     expr)))
+     str)))
+
+(define (univ-emit-str-length ctx str)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby)
+     (^ str ".length"))
+
+    ((php)
+     (^ "strlen(" str ")"))
+
+    ((python)
+     (^ "len(" str ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-str-length, unknown target"))))
+
+(define (univ-emit-str-index-code ctx str i)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^call-prim (^member str 'charCodeAt) i))
+
+    ((php)
+     (^call-prim "ord" (^call-prim "substr" str i (^int 1))));;TODO fix for unicode characters
+
+    ((python)
+     (^call-prim "ord" (^ str "[" i "]")))
+
+    ((ruby)
+     (^ str "[" i "]" ".ord"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-str-index-code, unknown target"))))
 
 (define (univ-emit-string-obj ctx obj force-var?)
   (case (univ-string-representation ctx)
@@ -7511,23 +7672,7 @@ tanh
      (^array-index expr1 expr2))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^call-prim (^member expr1 'charCodeAt) expr2))
-
-       ((php)
-        (^call-prim "uniord" (^call-prim "substr" expr1 expr2 (^int 1))))
-
-       ((python)
-        (^call-prim "ord" (^ expr1 "[" expr2 "]")))
-
-       ((ruby)
-        (^ expr1 "[" expr2 "]" ".ord"))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-string-ref, unknown target"))))))
+     (^str-index-code expr1 expr2))))
 
 (define (univ-emit-string-set! ctx expr1 expr2 expr3)
   (case (univ-string-representation ctx)
@@ -7731,8 +7876,38 @@ tanh
 (define (univ-emit-setbox ctx expr1 expr2)
   (^assign (^member expr1 'val) expr2))
 
+(define (univ-emit-frame-box ctx expr)
+  (case (univ-frame-representation ctx)
+
+    ((class)
+     (univ-box
+      (^new (^prefix-class (univ-use-rtlib ctx 'Frame)) expr)
+      expr))
+
+    (else
+     expr)))
+
+(define (univ-emit-frame-unbox ctx expr)
+  (case (univ-frame-representation ctx)
+
+    ((class)
+     (or (univ-unbox expr)
+         (^member expr 'slots)))
+
+    (else
+     expr)))
+
 (define (univ-emit-frame? ctx expr)
-  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Frame)) expr))
+  (case (univ-frame-representation ctx)
+
+    ((class)
+     (^instanceof (^prefix-class (univ-use-rtlib ctx 'Frame)) expr))
+
+    (else
+     (^array? expr))))
+
+(define (univ-emit-new-continuation ctx expr1 expr2)
+  (^new (^prefix-class (univ-use-rtlib ctx 'Continuation)) expr1 expr2))
 
 (define (univ-emit-continuation? ctx expr)
   (^instanceof (^prefix-class (univ-use-rtlib ctx 'Continuation)) expr))
@@ -7802,6 +7977,18 @@ tanh
 
 (define (univ-emit-closure-set! ctx expr1 expr2 expr3)
   (^assign (^array-index (univ-clo-slots ctx expr1) expr2) expr3))
+
+(define (univ-emit-new-promise ctx expr)
+  (^new (^prefix-class (univ-use-rtlib ctx 'Promise)) expr))
+
+(define (univ-emit-promise? ctx expr)
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Promise)) expr))
+
+(define (univ-emit-new-will ctx expr1 expr2)
+  (^new (^prefix-class (univ-use-rtlib ctx 'Will)) expr1 expr2))
+
+(define (univ-emit-will? ctx expr)
+  (^instanceof (^prefix-class (univ-use-rtlib ctx 'Will)) expr))
 
 (define (univ-emit-call-prim ctx expr . params)
   (univ-emit-call-prim-aux ctx expr params))
@@ -8337,18 +8524,16 @@ tanh
    (lambda (ctx return arg1)
      (return (^keyword? arg1)))))
 
-(univ-define-prim-bool "##frame?" #t
+(univ-define-prim-bool "##promise?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^frame? arg1)))))
+     (return (^promise? arg1)))))
 
-(univ-define-prim-bool "##continuation?" #t
+(univ-define-prim-bool "##will?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^continuation? arg1)))))
+     (return (^will? arg1)))))
 
-;;TODO: ("##promise?"                 (1)   #f ()    0    boolean extended)
-;;TODO: ("##will?"                    (1)   #f ()    0    boolean extended)
 ;;TODO: ("##gc-hash-table?"           (1)   #f ()    0    boolean extended)
 ;;TODO: ("##mem-allocated?"           (1)   #f ()    0    boolean extended)
 
@@ -9801,24 +9986,88 @@ tanh
 (univ-define-prim "##symbol->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^strtocodes (^symbol-unbox arg1)))))))
+     (return (^string-box (^str-to-codes (^symbol-unbox arg1)))))))
 
 (univ-define-prim "##string->symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^symbol-box (^tostr arg1))))))
 
+(univ-define-prim "##make-uninterned-symbol" #f
+  (make-translated-operand-generator
+   (lambda (ctx return name hash)
+     (return (^symbol-box-uninterned name hash)))))
+
+(univ-define-prim "##symbol-name" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym)
+     (return (^member sym 'name)))));;;;FIXME for host representation
+
+(univ-define-prim "##symbol-name-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym name)
+     (^ (^assign (^member sym 'name) name)
+        (return sym)))))
+
+(univ-define-prim "##symbol-hash" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym)
+     (return (^member sym 'hash)))));;;;FIXME for host representation
+
+(univ-define-prim "##symbol-hash-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym hash)
+     (^ (^assign (^member sym 'hash) hash)
+        (return sym)))))
+
+(univ-define-prim "##symbol-interned?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym)
+     (return (^member sym 'interned)))));;;;FIXME for host representation
+
 ;; TODO: test ##keyword->string primitive and ##string->keyword primitive
 
 (univ-define-prim "##keyword->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^strtocodes (^keyword-unbox arg1)))))))
+     (return (^string-box (^str-to-codes (^keyword-unbox arg1)))))))
 
 (univ-define-prim "##string->keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^keyword-box (^tostr arg1))))))
+
+(univ-define-prim "##make-uninterned-keyword" #f
+  (make-translated-operand-generator
+   (lambda (ctx return name hash)
+     (return (^keyword-box-uninterned name hash)))))
+
+(univ-define-prim "##keyword-name" #f
+  (make-translated-operand-generator
+   (lambda (ctx return key)
+     (return (^member key 'name)))));;;;FIXME for host representation
+
+(univ-define-prim "##keyword-name-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return key name)
+     (^ (^assign (^member key 'name) name)
+        (return key)))))
+
+(univ-define-prim "##keyword-hash" #f
+  (make-translated-operand-generator
+   (lambda (ctx return key)
+     (return (^member key 'hash)))));;;;FIXME for host representation
+
+(univ-define-prim "##keyword-hash-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return key hash)
+     (^ (^assign (^member key 'hash) hash)
+        (return key)))))
+
+(univ-define-prim "##keyword-interned?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return key)
+     (return (^member key 'interned)))));;;;FIXME for host representation
 
 ;;TODO: ("##closure-length"               (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
@@ -9964,7 +10213,33 @@ tanh
          return))
       arg1))))
 
-;;TODO: ("##make-promise"                 (1)   #f 0     0    (#f)    extended)
+(univ-define-prim "##make-promise" #t
+  (make-translated-operand-generator
+   (lambda (ctx return thunk)
+     (return (^new-promise thunk)))))
+
+(univ-define-prim "##promise-thunk" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym)
+     (return (^member sym 'thunk)))))
+
+(univ-define-prim "##promise-thunk-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym thunk)
+     (^ (^assign (^member sym 'thunk) thunk)
+        (return sym)))))
+
+(univ-define-prim "##promise-result" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym)
+     (return (^member sym 'result)))))
+
+(univ-define-prim "##promise-result-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return sym result)
+     (^ (^assign (^member sym 'result) result)
+        (return sym)))))
+
 ;;TODO: ("##force"                        (1)   #t 0     0    #f      extended)
 
 (univ-define-prim "##void" #t
@@ -9988,60 +10263,199 @@ tanh
 ;;TODO: ("##continuation-return"           (2)   #t ()    0    #f      extended)
 ;;TODO: ("##continuation-return-no-winding"(2)   #t ()    0    #f      extended)
 
-(univ-define-prim "##continuation-frame" #f
+(univ-define-prim-bool "##continuation?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member arg1 'frame)))))
+     (return (^continuation? arg1)))))
 
-(univ-define-prim "##continuation-denv" #f
+(univ-define-prim "##make-continuation" #t
   (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^member arg1 'denv)))))
+   (lambda (ctx return frame denv)
+     (return (^new-continuation frame denv)))))
 
-(univ-define-prim "##continuation-next" #f
+(univ-define-prim "##continuation-frame" #t
   (make-translated-operand-generator
-   (lambda (ctx return arg1)
+   (lambda (ctx return cont)
+     (return (^member cont 'frame)))))
+
+(univ-define-prim "##continuation-frame-set!" #t
+  (make-translated-operand-generator
+   (lambda (ctx return cont frame)
+     (^ (^assign (^member cont 'frame) frame)
+        (return cont)))))
+
+(univ-define-prim "##continuation-denv" #t
+  (make-translated-operand-generator
+   (lambda (ctx return cont)
+     (return (^member cont 'denv)))))
+
+(univ-define-prim "##continuation-denv-set!" #t
+  (make-translated-operand-generator
+   (lambda (ctx return cont denv)
+     (^ (^assign (^member cont 'denv) denv)
+        (return cont)))))
+
+(univ-define-prim "##continuation-next" #t
+  (make-translated-operand-generator
+   (lambda (ctx return cont)
      (return
       (^call-prim
        (^prefix (univ-use-rtlib ctx 'continuation_next))
-       arg1)))))
+       cont)))))
 
-(univ-define-prim "##frame-ret" #f
+(univ-define-prim "##continuation-ret" #t
+  (make-translated-operand-generator
+   (lambda (ctx return cont)
+     (return (univ-frame-ra ctx (^member cont 'frame))))))
+
+(define (univ-get-cont-ra-field attrib)
+  (make-translated-operand-generator
+   (lambda (ctx return cont)
+     (univ-get-ra-field
+      ctx
+      return
+      (univ-frame-ra ctx (^member cont 'frame))
+      attrib))))
+
+(univ-define-prim "##continuation-fs"   #f (univ-get-cont-ra-field 'fs))
+(univ-define-prim "##continuation-link" #f (univ-get-cont-ra-field 'link))
+
+(univ-define-prim "##continuation-ref" #t
+  (make-translated-operand-generator
+   (lambda (ctx return cont index)
+     (return
+      (univ-frame-ref
+       ctx
+       (^frame-unbox (^member cont 'frame))
+       (^fixnum-unbox index))))))
+
+(univ-define-prim "##continuation-set!" #t
+  (make-translated-operand-generator
+   (lambda (ctx return cont index val)
+     (^ (univ-frame-set!
+         ctx
+         (^frame-unbox (^member cont 'frame))
+         (^fixnum-unbox index)
+         val)
+        (return cont)))))
+
+(univ-define-prim "##continuation-slot-live?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return cont index)
+     (return
+      (^boolean-box
+       (univ-frame-slot-live? ctx (^member cont 'frame) index))))))
+
+(univ-define-prim-bool "##frame?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^array-index arg1 0)))))
+     (return (^frame? arg1)))))
 
-(define (univ-get-frame-field name)
+(univ-define-prim "##make-frame" #t
   (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (let ((frame (^local-var 'frame)))
-       (^ (^var-declaration
-           frame
-           (^array-index arg1 0))
-          (univ-with-function-attribs
-           ctx
-           #f
-           frame
-           (lambda ()
-             (return
-              (^fixnum-box (univ-get-function-attrib ctx frame name))))))))))
+   (lambda (ctx return ra)
+     (return
+      (^call-prim
+       (^prefix (univ-use-rtlib ctx 'make_frame))
+       ra)))))
 
-(univ-define-prim "##frame-fs"   #f (univ-get-frame-field "fs"))
-(univ-define-prim "##frame-link" #f (univ-get-frame-field "link"))
+(univ-define-prim "##frame-ret" #t
+  (make-translated-operand-generator
+   (lambda (ctx return frame)
+     (return (univ-frame-ra ctx frame)))))
+
+(define (univ-frame-ra ctx frame)
+  (^array-index (^frame-unbox frame) 0))
+
+(define (univ-get-frame-ra-field attrib)
+  (make-translated-operand-generator
+   (lambda (ctx return frame)
+     (univ-get-ra-field
+      ctx
+      return
+      (univ-frame-ra ctx frame)
+      attrib))))
+
+(define (univ-get-ra-field ctx return ra attrib)
+  (let ((ra-var (^local-var (univ-gensym ctx 'ra))))
+    (^ (^var-declaration ra-var ra)
+       (univ-with-function-attribs
+        ctx
+        #f
+        ra-var
+        (lambda ()
+          (return
+           (^fixnum-box (univ-get-function-attrib ctx ra-var attrib))))))))
+
+(univ-define-prim "##frame-fs"   #f (univ-get-frame-ra-field 'fs))
+(univ-define-prim "##frame-link" #f (univ-get-frame-ra-field 'link))
 
 (univ-define-prim "##frame-ref" #f
   (make-translated-operand-generator
-   (lambda (ctx return arg1 arg2)
-     (return (^array-index arg1
-                           (^fixnum-unbox arg2))))))
+   (lambda (ctx return frame index)
+     (return
+      (univ-frame-ref
+       ctx
+       (^frame-unbox frame)
+       (^fixnum-unbox index))))))
 
 (univ-define-prim "##frame-set!" #f
   (make-translated-operand-generator
-   (lambda (ctx return arg1 arg2 arg3)
-     (^ (^assign
-         (^array-index arg1 (^fixnum-unbox arg2))
-         arg3)
-        (return arg1)))))
+   (lambda (ctx return frame index val)
+     (^ (univ-frame-set!
+         ctx
+         (^frame-unbox frame)
+         (^fixnum-unbox index)
+         val)
+        (return frame)))))
+
+(univ-define-prim "##frame-slot-live?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return frame index)
+     (return
+      (^boolean-box
+       (univ-frame-slot-live? ctx frame index))))))
+
+(define (univ-frame-ref ctx frame index)
+  (^array-index frame index))
+
+(define (univ-frame-set! ctx frame index val)
+  (^assign (^array-index frame index) val))
+
+(define (univ-frame-slot-live? ctx frame index)
+  (^bool #t));;TODO implement
+
+(univ-define-prim-bool "##will?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^will? arg1)))))
+
+(univ-define-prim "##make-will" #t
+  (make-translated-operand-generator
+   (lambda (ctx return testator action)
+     (return (^new-will testator action)))))
+
+(univ-define-prim "##will-testator" #t
+  (make-translated-operand-generator
+   (lambda (ctx return will)
+     (return (^member will 'testator)))))
+
+(univ-define-prim "##will-testator-set!" #t
+  (make-translated-operand-generator
+   (lambda (ctx return will testator)
+     (^ (^assign (^member will 'testator) testator)
+        (return will)))))
+
+(univ-define-prim "##will-action" #t
+  (make-translated-operand-generator
+   (lambda (ctx return will)
+     (return (^member will 'action)))))
+
+(univ-define-prim "##will-action-set!" #t
+  (make-translated-operand-generator
+   (lambda (ctx return will action)
+     (^ (^assign (^member will 'action) action)
+        (return will)))))
 
 (univ-define-prim "##apply" #f
 
