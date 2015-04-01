@@ -15,7 +15,7 @@
   (not safe)
   (block)
 ;;  (fixnum)
-  (inlining-limit 300)
+  (inlining-limit 134)
   (not run-time-bindings)
 )
 
