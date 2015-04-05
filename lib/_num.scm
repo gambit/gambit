@@ -226,7 +226,7 @@
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       #f
       (or (##eq? x y)
-          (##eqv? 0 (##exact-int.compare x y)))
+          (##bignum.= x y))
       #f
       (and (##flfinite? y)
            (##ratnum.= (##exact-int->ratnum x) (##flonum->ratnum y)))
@@ -293,7 +293,7 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (##bignum.negative? x)
-      (##eqv? -1 (##exact-int.compare x y))
+      (##bignum.< x y)
       (##ratnum.< (##exact-int->ratnum x) y)
       (cond ((##flfinite? y)
              (##ratnum.< (##exact-int->ratnum x) (##flonum->ratnum y)))
@@ -5999,6 +5999,14 @@ ___RESULT = result;
 (define-prim (##bignum.copy x)
   (##bignum.make (##bignum.adigit-length x) x #f))
 
+;;; Bignum comparison
+
+(define (##bignum.= x y)
+  (##eqv? 0 (##exact-int.compare x y)))
+
+(define (##bignum.< x y)
+  (##eqv? -1 (##exact-int.compare x y)))
+
 ;;; Bignum addition and subtraction.
 
 (define-prim (##bignum.+ x y)
@@ -9680,15 +9688,19 @@ ___RESULT = result;
 
   ;; returns -1 if x < y, 0 if x = y, or 1 if x > y
 
-  (define (compare x y x-digits)
+  (define (compare x y x-smaller)
     (##declare (not interrupts-enabled))
-    (let loop ((i (##fx- x-digits 1)))
-      (cond ((##fx< i 0) 0)
-	    ((##bignum.adigit-< x y i) -1)
-	    ((##bignum.adigit-< y x i) 1)
+    (let ((x-digits (##bignum.adigit-length x))
+	  (y-digits (##bignum.adigit-length y)))
+      (cond ((##fx< x-digits y-digits) x-smaller)
+	    ((##fx< y-digits x-digits) (##fx- x-smaller))
 	    (else
-	     (loop (##fx- i 1))))))
-
+	     (let loop ((i (##fx- x-digits 1)))
+	       (cond ((##fx< i 0) 0)
+		     ((##bignum.adigit-< x y i) -1)
+		     ((##bignum.adigit-< y x i) 1)
+		     (else
+		      (loop (##fx- i 1)))))))))
   (if (##fixnum? x)
       (if (##fixnum? y)
 	  (cond ((##fx< x y) -1)
@@ -9697,16 +9709,9 @@ ___RESULT = result;
 	  (if (##bignum.negative? y) 1 -1))
       (if (##fixnum? y)
 	  (if (##bignum.negative? x) -1 1)
-	  (if (##eq? (##bignum.negative? x)
-		     (##bignum.negative? y))
-	      (let ((x-digits (##bignum.adigit-length x))
-		    (y-digits (##bignum.adigit-length y)))
-		(if (##fx= x-digits y-digits)
-		    (compare x y x-digits)
-		    (if (##eq? (##bignum.negative? x)
-			       (##fx< x-digits y-digits))
-			1 -1)))
-	      (if (##bignum.negative? x) -1 1)))))
+	  (if (##bignum.negative? x)
+	      (if (##bignum.negative? y) (compare x y 1) -1)
+	      (if (##bignum.negative? y) 1 (compare x y -1))))))
 
 (define-prim (##exact-int.*-expt2 x y)
   (if (##fxnegative? y)
