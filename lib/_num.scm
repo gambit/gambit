@@ -226,7 +226,7 @@
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       #f
       (or (##eq? x y)
-          (##bignum.= x y))
+          (##eqv? 0 (##exact-int.compare x y)))
       #f
       (and (##flfinite? y)
            (##ratnum.= (##exact-int->ratnum x) (##flonum->ratnum y)))
@@ -293,7 +293,7 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (##bignum.negative? x)
-      (##bignum.< x y)
+      (##eqv? -1 (##exact-int.compare x y))
       (##ratnum.< (##exact-int->ratnum x) y)
       (cond ((##flfinite? y)
              (##ratnum.< (##exact-int->ratnum x) (##flonum->ratnum y)))
@@ -2847,14 +2847,10 @@ for a discussion of branch cuts.
         (let ((y (##exact-int.sqrt x)))
           (cond ((##eqv? (##cdr y) 0)
                  (##car y))
-                ((if (##fixnum? x)
-                     (or (##not (##fixnum? (macro-flonum-+m-max-plus-1)))
-                         (##fx<= x (macro-flonum-+m-max-plus-1)))
-                     (and (##not (##fixnum? (macro-flonum-+m-max-plus-1)))
-                          (##not (##bignum.< (macro-flonum-+m-max-plus-1) x))))
+                ((##not (##eqv? 1 (##exact-int.compare x (macro-flonum-+m-max-plus-1))))
                  ;; 0 <= x <= (macro-flonum-+m-max-plus-1), can be
                  ;; converted to flonum exactly so avoids double
-                 ;; rounding in next expression this has a relatively
+                 ;; rounding in next expression. This has a relatively
                  ;; fast path for small integers.
                  (##flsqrt
                   (if (##fixnum? x)
@@ -6002,49 +5998,6 @@ ___RESULT = result;
 
 (define-prim (##bignum.copy x)
   (##bignum.make (##bignum.adigit-length x) x #f))
-
-;;; Bignum comparison.
-
-(define-prim (##bignum.= x y)
-
-  ;; x is a normalized bignum, y is a normalized bignum
-
-  (##declare (not interrupts-enabled))
-
-  (let ((x-length (##bignum.adigit-length x)))
-    (and (##fx= x-length (##bignum.adigit-length y))
-         (let loop ((i (##fx- x-length 1)))
-           (or (##fx< i 0)
-               (and (##bignum.adigit-= x y i)
-                    (loop (##fx- i 1))))))))
-
-(define-prim (##bignum.< x y)
-
-  ;; x is a normalized bignum, y is a normalized bignum
-
-  (##declare (not interrupts-enabled))
-
-  (define (loop i)
-    (and (##not (##fx< i 0))
-         (or (##bignum.adigit-< x y i)
-             (and (##bignum.adigit-= x y i)
-                  (loop (##fx- i 1))))))
-
-  (if (##bignum.negative? x)
-      (if (##bignum.negative? y)
-          (let ((x-length (##bignum.adigit-length x))
-                (y-length (##bignum.adigit-length y)))
-            (or (##fx< y-length x-length)
-                (and (##fx= x-length y-length)
-                     (loop (##fx- x-length 1)))))
-          #t)
-      (if (##bignum.negative? y)
-          #f
-          (let ((x-length (##bignum.adigit-length x))
-                (y-length (##bignum.adigit-length y)))
-            (or (##fx< x-length y-length)
-                (and (##fx= x-length y-length)
-                     (loop (##fx- x-length 1))))))))
 
 ;;; Bignum addition and subtraction.
 
@@ -9727,19 +9680,15 @@ ___RESULT = result;
 
   ;; returns -1 if x < y, 0 if x = y, or 1 if x > y
 
-  (define (compare x y x-smaller)
+  (define (compare x y x-digits)
     (##declare (not interrupts-enabled))
-    (let ((x-digits (##bignum.adigit-length x))
-	  (y-digits (##bignum.adigit-length y)))
-      (cond ((##fx< x-digits y-digits) x-smaller)
-	    ((##fx< y-digits x-digits) (##fx- x-smaller))
+    (let loop ((i (##fx- x-digits 1)))
+      (cond ((##fx< i 0) 0)
+	    ((##bignum.adigit-< x y i) -1)
+	    ((##bignum.adigit-< y x i) 1)
 	    (else
-	     (let loop ((i (##fx- x-digits 1)))
-	       (cond ((##fx< i 0) 0)
-		     ((##bignum.adigit-< x y i) x-smaller)
-		     ((##bignum.adigit-< y x i) (##fx- x-smaller))
-		     (else
-		      (loop (##fx- i 1)))))))))
+	     (loop (##fx- i 1))))))
+
   (if (##fixnum? x)
       (if (##fixnum? y)
 	  (cond ((##fx< x y) -1)
@@ -9748,9 +9697,16 @@ ___RESULT = result;
 	  (if (##bignum.negative? y) 1 -1))
       (if (##fixnum? y)
 	  (if (##bignum.negative? x) -1 1)
-	  (if (##bignum.negative? x)
-	      (if (##bignum.negative? y) (compare x y 1) -1)
-	      (if (##bignum.negative? y) 1 (compare x y -1))))))
+	  (if (##eq? (##bignum.negative? x)
+		     (##bignum.negative? y))
+	      (let ((x-digits (##bignum.adigit-length x))
+		    (y-digits (##bignum.adigit-length y)))
+		(if (##fx= x-digits y-digits)
+		    (compare x y x-digits)
+		    (if (##eq? (##bignum.negative? x)
+			       (##fx< x-digits y-digits))
+			1 -1)))
+	      (if (##bignum.negative? x) -1 1)))))
 
 (define-prim (##exact-int.*-expt2 x y)
   (if (##fxnegative? y)
