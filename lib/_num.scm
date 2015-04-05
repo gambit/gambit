@@ -9723,6 +9723,35 @@ ___RESULT = result;
 ;;; Exact integer operations
 ;;; ------------------------
 
+(define (##exact-int.compare x y)
+
+  ;; returns -1 if x < y, 0 if x = y, or 1 if x > y
+
+  (define (compare x y x-smaller)
+    (##declare (not interrupts-enabled))
+    (let ((x-digits (##bignum.adigit-length x))
+	  (y-digits (##bignum.adigit-length y)))
+      (cond ((##fx< x-digits y-digits) x-smaller)
+	    ((##fx< y-digits x-digits) (##fx- x-smaller))
+	    (else
+	     (let loop ((i (##fx- x-digits 1)))
+	       (cond ((##fx< i 0) 0)
+		     ((##bignum.adigit-< x y i) x-smaller)
+		     ((##bignum.adigit-< y x i) (##fx- x-smaller))
+		     (else
+		      (loop (##fx- i 1)))))))))
+  (if (##fixnum? x)
+      (if (##fixnum? y)
+	  (cond ((##fx< x y) -1)
+		((##fx= x y)  0)
+		(else         1))
+	  (if (##bignum.negative? y) 1 -1))
+      (if (##fixnum? y)
+	  (if (##bignum.negative? x) -1 1)
+	  (if (##bignum.negative? x)
+	      (if (##bignum.negative? y) (compare x y 1) -1)
+	      (if (##bignum.negative? y) 1 (compare x y -1))))))
+
 (define-prim (##exact-int.*-expt2 x y)
   (if (##fxnegative? y)
       (##ratnum.normalize x (##arithmetic-shift 1 (##fx- y)))
