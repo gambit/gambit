@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -114,7 +114,7 @@
 
     (define (c-file? file)
       (##assoc (##path-extension file)
-               (c#target-file-extensions (c#target-get 'c))))
+               (c#target-file-extensions (c#target-get 'C))))
 
     (define (obj-file? file)
       (##string=? (##path-extension file) ##os-obj-extension-string-saved))

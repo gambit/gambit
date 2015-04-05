@@ -216,7 +216,7 @@
 (define (targ-make-target)
   (let ((targ
          (make-target 10
-                      'c
+                      'C
                       '((".c"    . C)
                         (".C"    . C++)
                         (".cc"   . C++)
