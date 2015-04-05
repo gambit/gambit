@@ -177,7 +177,7 @@
 (define-prim (##eqv? obj1 obj2)
   (macro-number-dispatch obj1 (##eq? obj1 obj2)
     (and (##fixnum? obj2) (##fx= obj1 obj2)) ;; obj1 = fixnum
-    (and (##bignum? obj2) (##eqv? 0 (##exact-int.compare obj1 obj2))) ;; obj1 = bignum
+    (and (##bignum? obj2) (##bignum.= x y)) ;; obj1 = bignum
     (and (##ratnum? obj2) (##ratnum.= obj1 obj2)) ;; obj1 = ratnum
     (and (##flonum? obj2) (##bvector-equal? obj1 obj2)) ;; obj1 = flonum
     (and (##cpxnum? obj2) ;; obj1 = cpxnum
