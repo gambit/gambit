@@ -9806,6 +9806,7 @@
     (let            . #(1 #t 2 #f 1)) ;; named let is handled in pretty printer
     (let*           . #(1 #t 2 #f 1))
     (letrec         . #(1 #t 2 #f 1))
+    (letrec*        . #(1 #t 2 #f 1))
     (begin          . #(0 #f 1 #f 1))
     (do             . #(1 #t 3 #f 1))
     (define         . #(1 #f 2 #f 1))

@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -281,19 +281,26 @@
 
 (define-prim ##degen-letrec
   (mk-degen ()
-    (let ((n (macro-code-length $code)))
-      (let loop ((i (##fx- n 2)) (vals '()))
-        (if (##fx< 0 i)
-            (loop (##fx- i 1)
-                  (##cons (##decomp (macro-code-ref $code i)) vals))
-            (let ((body
-                   (##decomp (^ 0)))
-                  (bindings
-                   (##make-bindings (macro-code-ref $code (##fx- n 1))
-                                    vals)))
-              (if (##begin? body)
-                  (##cons 'letrec (##cons bindings (##cdr body)))
-                  (##list 'letrec bindings body))))))))
+    (##degen-letrec-aux $code 'letrec)))
+
+(define-prim ##degen-letrec*
+  (mk-degen ()
+    (##degen-letrec-aux $code 'letrec*)))
+
+(define-prim (##degen-letrec-aux $code sym)
+  (let ((n (macro-code-length $code)))
+    (let loop ((i (##fx- n 2)) (vals '()))
+      (if (##fx< 0 i)
+          (loop (##fx- i 1)
+                (##cons (##decomp (macro-code-ref $code i)) vals))
+          (let ((body
+                 (##decomp (^ 0)))
+                (bindings
+                 (##make-bindings (macro-code-ref $code (##fx- n 1))
+                                  vals)))
+            (if (##begin? body)
+                (##cons sym (##cons bindings (##cdr body)))
+                (##list sym bindings body)))))))
 
 (define-prim ##degen-prc-req
   (mk-degen ()
@@ -497,6 +504,7 @@
 
          (##cons ##cprc-let         ##degen-let)
          (##cons ##cprc-letrec      ##degen-letrec)
+         (##cons ##cprc-letrec*     ##degen-letrec*)
 
          (##cons ##cprc-prc-req0    ##degen-prc-req)
          (##cons ##cprc-prc-req1    ##degen-prc-req)

@@ -158,6 +158,11 @@
 #return(##cprc-letrec 3) : ($code rte ns inner-rte i rev-vals)
 #return(##cprc-letrec 4) : ($code rte ns inner-rte i)
 
+#procedure(##cprc-letrec*)
+#return(##cprc-letrec* 1) : ($code rte)
+#return(##cprc-letrec* 2) : ($code rte ns)
+#return(##cprc-letrec* 3) : ($code rte ns inner-rte i)
+
 #procedure(##cprc-prc-req0)
 #return(##cprc-prc-req0 1) : ($code rte)
 #procedure(##cprc-prc-req0 2)
