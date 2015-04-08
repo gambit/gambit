@@ -803,14 +803,14 @@
 
 (define (stretchable-vector-copy sv)
   (let* ((v1 (vector-ref sv 0))
-         (n (vector-length v1))
+         (n (vector-ref sv 2))
          (v2 (make-vector n)))
     (let loop ((i (- n 1)))
       (if (>= i 0)
         (begin
           (vector-set! v2 i (vector-ref v1 i))
           (loop (- i 1)))
-        (vector v2 (vector-ref sv 1))))))
+        (vector v2 (vector-ref sv 1) n)))))
 
 (define (stretchable-vector-for-each proc sv)
   (let ((v (vector-ref sv 0))
