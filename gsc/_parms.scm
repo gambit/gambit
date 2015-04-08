@@ -2,7 +2,7 @@
 
 ;;; File: "_parms.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -30,6 +30,7 @@
 (define **let-sym              (string->canonical-symbol "##let"))
 (define **let*-sym             (string->canonical-symbol "##let*"))
 (define **letrec-sym           (string->canonical-symbol "##letrec"))
+(define **letrec*-sym          (string->canonical-symbol "##letrec*"))
 (define **do-sym               (string->canonical-symbol "##do"))
 (define **delay-sym            (string->canonical-symbol "##delay"))
 (define **future-sym           (string->canonical-symbol "##future"))
@@ -57,6 +58,7 @@
 (define lambda-sym             (string->canonical-symbol "lambda"))
 (define let-sym                (string->canonical-symbol "let"))
 (define letrec-sym             (string->canonical-symbol "letrec"))
+(define letrec*-sym            (string->canonical-symbol "letrec*"))
 (define future-sym             (string->canonical-symbol "future"))
 
 (define =>-sym                 (string->canonical-symbol "=>"))

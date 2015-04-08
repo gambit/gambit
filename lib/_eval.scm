@@ -1348,6 +1348,8 @@
      (##comp-let* cte src tail?))
     ((##letrec)
      (##comp-letrec cte src tail?))
+    ((##letrec*)
+     (##comp-letrec* cte src tail?))
     ((##do)
      (##comp-do cte src tail?))
     ((##delay)
@@ -1816,30 +1818,30 @@
 
 (define (##comp-body cte src tail? body)
 
-  (define (letrec-defines cte rev-vars rev-vals body)
+  (define (internal-defs cte rev-vars rev-vals body)
     (if (##pair? body)
 
         (let* ((src (##sourcify (##car body) src))
                (code (##source-code src)))
           (if (##not (##pair? code))
-              (letrec-defines* cte rev-vars rev-vals body)
+              (internal-defs-done cte rev-vars rev-vals body)
               (let* ((first-src (##sourcify (##car code) src))
                      (first (##source-code first-src))
                      (descr (##macro-lookup cte first)))
                 (if descr
-                    (letrec-defines cte
-                                    rev-vars
-                                    rev-vals
-                                    (##cons
-                                     (##macro-expand cte src descr)
-                                     (##cdr body)))
+                    (internal-defs cte
+                                   rev-vars
+                                   rev-vals
+                                   (##cons
+                                    (##macro-expand cte src descr)
+                                    (##cdr body)))
                     (case first
                       ((##begin)
                        (##shape src src -1)
-                       (letrec-defines cte
-                                       rev-vars
-                                       rev-vals
-                                       (##append (##cdr code) (##cdr body))))
+                       (internal-defs cte
+                                      rev-vars
+                                      rev-vals
+                                      (##append (##cdr code) (##cdr body))))
                       ((##define)
                        (let* ((name-src (##definition-name src))
                               (name (##source-code name-src)))
@@ -1849,42 +1851,42 @@
                               'duplicate-variable-definition
                               name-src))
                          (let ((val (##definition-value src)))
-                           (letrec-defines cte
-                                           (##cons name rev-vars)
-                                           (##cons val rev-vals)
-                                           (##cdr body)))))
+                           (internal-defs cte
+                                          (##cons name rev-vars)
+                                          (##cons val rev-vals)
+                                          (##cdr body)))))
                       ((##define-macro ##define-syntax)
                        (let* ((def-syntax? (##eq? first '##define-syntax))
                               (name-src (##definition-name src))
                               (name (##source-code name-src))
                               (val (##definition-value src)))
-                         (letrec-defines (##cte-macro
-                                          cte
-                                          name
-                                          (##macro-descr val def-syntax?))
-                                         rev-vars
-                                         rev-vals
-                                         (##cdr body))))
+                         (internal-defs (##cte-macro
+                                         cte
+                                         name
+                                         (##macro-descr val def-syntax?))
+                                        rev-vars
+                                        rev-vals
+                                        (##cdr body))))
                       ((##include)
                        (##shape src src 2)
-                       (letrec-defines cte
-                                       rev-vars
-                                       rev-vals
-                                       (##cons
-                                        (##include-file-as-a-begin-expr src)
-                                        (##cdr body))))
+                       (internal-defs cte
+                                      rev-vars
+                                      rev-vals
+                                      (##cons
+                                       (##include-file-as-a-begin-expr src)
+                                       (##cdr body))))
                       ((##declare)
                        (##shape src src -1)
-                       (letrec-defines (##cte-process-declare cte src)
-                                       rev-vars
-                                       rev-vals
-                                       (##cdr body)))
+                       (internal-defs (##cte-process-declare cte src)
+                                      rev-vars
+                                      rev-vals
+                                      (##cdr body)))
                       ((##namespace)
                        (##shape src src -1)
-                       (letrec-defines (##cte-process-namespace cte src)
-                                       rev-vars
-                                       rev-vals
-                                       (##cdr body)))
+                       (internal-defs (##cte-process-namespace cte src)
+                                      rev-vars
+                                      rev-vals
+                                      (##cdr body)))
 ;;;                      ((library ##library)
 ;;;                       (##raise-expression-parsing-exception
 ;;;                        'ill-placed-library
@@ -1895,29 +1897,30 @@
 ;;;                        src))
 ;;;                      ((import ##import)
 ;;;                       (##shape src src 2)
-;;;                       (letrec-defines cte
-;;;                                       rev-vars
-;;;                                       rev-vals
-;;;                                       (##cons (##cte-process-import cte src)
-;;;                                               (##cdr body))))
+;;;                       (internal-defs cte
+;;;                                      rev-vars
+;;;                                      rev-vals
+;;;                                      (##cons (##cte-process-import cte src)
+;;;                                              (##cdr body))))
                       (else
-                       (letrec-defines* cte rev-vars rev-vals body)))))))
+                       (internal-defs-done cte rev-vars rev-vals body)))))))
 
         (##raise-expression-parsing-exception
          'empty-body
          src)))
 
-  (define (letrec-defines* cte rev-vars rev-vals body)
+  (define (internal-defs-done cte rev-vars rev-vals body)
     (if (##null? rev-vars)
         (##comp-seq cte src tail? #t body)
-        (##comp-letrec-aux cte
-                           src
-                           tail?
-                           (##reverse rev-vars)
-                           (##reverse rev-vals)
-                           body)))
+        (##comp-letrec-aux2 cte
+                            src
+                            tail?
+                            #t
+                            (##reverse rev-vars)
+                            (##reverse rev-vals)
+                            body)))
 
-  (letrec-defines cte '() '() body))
+  (internal-defs cte '() '() body))
 
 (define (##definition-name src)
   (##shape src src -2)
@@ -2260,17 +2263,24 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (##comp-letrec cte src tail?)
+  (##comp-letrec-aux cte src tail? #f))
+
+(define (##comp-letrec* cte src tail?)
+  (##comp-letrec-aux cte src tail? #t))
+
+(define (##comp-letrec-aux cte src tail? *?)
   (##shape src src -3)
   (let* ((code (##source-code src))
          (bindings-src (##sourcify (##cadr code) src))
          (vars (##bindings->vars src bindings-src #t #f))
          (vals (##bindings->vals src bindings-src)))
-    (##comp-letrec-aux cte src tail? vars vals (##cddr code))))
+    (##comp-letrec-aux2 cte src tail? *? vars vals (##cddr code))))
 
-(define (##comp-letrec-aux cte src tail? vars vals body)
+(define (##comp-letrec-aux2 cte src tail? *? vars vals body)
   (if (##pair? vars)
-      (let ((inner-cte (##cte-frame-i cte vars)))
-        (macro-gen ##gen-letrec src
+      (let ((inner-cte (##cte-frame-i cte vars))
+            (gen-letrec (if *? ##gen-letrec* ##gen-letrec)))
+        (macro-gen gen-letrec src
           vars
           (##comp-vals inner-cte src vals)
           (##comp-body inner-cte src tail? body)))
@@ -2887,6 +2897,33 @@
             (##no-stepper))
            (c
             (##make-code* ##cprc-letrec cte src stepper (##cons body vals) 1)))
+      (macro-code-set! c (##fx+ (##length vals) 1) vars)
+      c)))
+
+(define ##cprc-letrec*
+  (macro-make-cprc
+   (let ((ns (##fx- (macro-code-length $code) 2)))
+     (let ((inner-rte (macro-make-rte* rte ns)))
+       (let loop ((i 1))
+         (if (##fx< ns i)
+             (let* (($code (^ 0))
+                    (rte (##first-argument inner-rte rte)))
+               (macro-code-run $code))
+             (begin
+               (macro-rte-set!
+                inner-rte
+                i
+                (let* (($code (macro-code-ref $code i))
+                       (rte inner-rte))
+                  (macro-code-run $code)))
+               (loop (##fx+ i 1)))))))))
+
+(define ##gen-letrec*
+  (macro-make-gen (vars vals body)
+    (let* ((stepper
+            (##no-stepper))
+           (c
+            (##make-code* ##cprc-letrec* cte src stepper (##cons body vals) 1)))
       (macro-code-set! c (##fx+ (##length vals) 1) vars)
       c)))
 
@@ -4091,6 +4128,9 @@
 
 (define-runtime-syntax letrec
   (##make-alias-syntax '##letrec))
+
+(define-runtime-syntax letrec*
+  (##make-alias-syntax '##letrec*))
 
 (define-runtime-syntax do
   (##make-alias-syntax '##do))

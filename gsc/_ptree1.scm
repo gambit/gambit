@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -862,7 +862,8 @@
         ((**case-expr? source)           (pt-case source env use))
         ((**let-expr? source env)        (pt-let source env use))
         ((**let*-expr? source env)       (pt-let* source env use))
-        ((**letrec-expr? source env)     (pt-letrec source env use))
+        ((**letrec-expr? source env)     (pt-letrec source env use #f))
+        ((**letrec*-expr? source env)    (pt-letrec source env use #t))
         ((**begin-expr? source)          (pt-begin source env use))
         ((**do-expr? source env)         (pt-do source env use))
         ((**delay-expr? source env)      (pt-delay source env use))
@@ -1379,70 +1380,70 @@
 
 (define (pt-body source body env use)
 
-  (define (letrec-defines vars vals envs body env)
+  (define (internal-defs vars vals envs body env)
     (cond ((null? body)
            (pt-syntax-error
              source
              "Body must contain at least one expression"))
           ((macro-expr? (car body) env)
-           (letrec-defines vars
-                           vals
-                           envs
-                           (cons (macro-expand (car body) env)
-                                 (cdr body))
-                           env))
+           (internal-defs vars
+                          vals
+                          envs
+                          (cons (macro-expand (car body) env)
+                                (cdr body))
+                          env))
           ((**begin-cmd-or-expr? (car body))
-           (letrec-defines vars
-                           vals
-                           envs
-                           (append (begin-body (car body))
-                                   (cdr body))
-                           env))
+           (internal-defs vars
+                          vals
+                          envs
+                          (append (begin-body (car body))
+                                  (cdr body))
+                          env))
           ((**define-expr? (car body) env)
            (let* ((var-source (definition-name (car body) env))
                   (var (source-code var-source))
                   (v (env-define-var env var var-source)))
-             (letrec-defines (cons v vars)
-                             (cons (definition-value (car body)) vals)
-                             (cons env envs)
-                             (cdr body)
-                             env)))
+             (internal-defs (cons v vars)
+                            (cons (definition-value (car body)) vals)
+                            (cons env envs)
+                            (cdr body)
+                            env)))
           ((or (**define-macro-expr? (car body) env)
                (**define-syntax-expr? (car body) env))
-           (letrec-defines vars
-                           vals
-                           envs
-                           (cdr body)
-                           (add-macro (car body) env)))
+           (internal-defs vars
+                          vals
+                          envs
+                          (cdr body)
+                          (add-macro (car body) env)))
           ((**include-expr? (car body))
            (if *ptree-port*
              (display "  " *ptree-port*))
            (let ((x (include-expr->source (car body) *ptree-port*)))
              (if *ptree-port*
                (newline *ptree-port*))
-             (letrec-defines vars
-                             vals
-                             envs
-                             (cons x (cdr body))
-                             env)))
+             (internal-defs vars
+                            vals
+                            envs
+                            (cons x (cdr body))
+                            env)))
           ((**declare-expr? (car body))
-           (letrec-defines vars
-                           vals
-                           envs
-                           (cdr body)
-                           (add-declarations (car body) env)))
+           (internal-defs vars
+                          vals
+                          envs
+                          (cdr body)
+                          (add-declarations (car body) env)))
           ((**namespace-expr? (car body))
-           (letrec-defines vars
-                           vals
-                           envs
-                           (cdr body)
-                           (add-namespace (car body) env)))
+           (internal-defs vars
+                          vals
+                          envs
+                          (cdr body)
+                          (add-namespace (car body) env)))
 ;;          ((**require-expr? (car body))
-;;           (letrec-defines vars
-;;                           vals
-;;                           envs
-;;                           (cdr body)
-;;                           env))
+;;           (internal-defs vars
+;;                          vals
+;;                          envs
+;;                          (cdr body)
+;;                          env))
           ((null? vars)
            (pt-sequence source body env use))
           (else
@@ -1452,9 +1453,9 @@
                  (loop (cons (pt (car l1) (car l2) 'true) vals*)
                        (cdr l1)
                        (cdr l2))
-                 (pt-recursive-let source vars* vals* body env use)))))))
+                 (pt-recursive-let source vars* vals* body env use #t)))))))
 
-  (letrec-defines '() '() '() body (env-frame env '())))
+  (internal-defs '() '() '() body (env-frame env '())))
 
 (define (pt-sequence source seq env use)
   (cond ;; ((length? seq 0)
@@ -1647,7 +1648,7 @@
 
     (pt-bindings (source-code (cadr code)) env use)))
 
-(define (pt-letrec source env use)
+(define (pt-letrec source env use *?)
   (let* ((code
           (source-code source))
          (bindings
@@ -1662,9 +1663,10 @@
       (map (lambda (x) (pt (cadr x) env* 'true)) bindings)
       (cddr code)
       env*
-      use)))
+      use
+      *?)))
 
-(define (pt-recursive-let source vars vals body env use)
+(define (pt-recursive-let source vars vals body env use *?)
 
   (define (dependency-graph vars vals)
     (let ((var-set (list->varset vars)))
@@ -1689,8 +1691,8 @@
 
       ; get vars to be bound and vars to be assigned
 
-      (let* ((vars-set (car order))
-             (vars (varset->list vars-set)))
+      (let* ((vars (car order))
+             (vars-set (list->varset vars)))
         (let loop1 ((l (reverse vars)) (vars-b '()) (vals-b '()) (vars-a '()))
           (if (not (null? l))
 
@@ -1755,10 +1757,14 @@
 
   (set-prc-names! vars vals)
 
-  (bind-in-order
-    (topological-sort
-      (transitive-closure
-        (dependency-graph vars vals)))))
+  (let ((order
+         (if *?
+             (list vars)
+             (map varset->list
+                  (topological-sort
+                   (transitive-closure
+                    (dependency-graph vars vals)))))))
+    (bind-in-order order)))
 
 (define (pt-begin source env use)
   (pt-sequence source (cdr (source-code source)) env use))
@@ -1923,6 +1929,10 @@
 
 (define (**letrec-expr? source env)
   (and (match **letrec-sym -3 source)
+       (proper-bindings? (cadr (source-code source)) #t env)))
+
+(define (**letrec*-expr? source env)
+  (and (match **letrec*-sym -3 source)
        (proper-bindings? (cadr (source-code source)) #t env)))
 
 (define (**do-expr? source env)
