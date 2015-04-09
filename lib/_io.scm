@@ -8107,11 +8107,8 @@
      (macro-check-readtable val 1 (##make-readtable-parameter val)
        val))))
 
-;;(define main #f)
-;;(set! main #f)
-;;
-;;(define-prim (main . args) ;; predefine main procedure so scripts don't have to
-;;  0)
+(define main #f)
+(set! main (lambda args 0)) ;; predefine main so scripts don't have to
 
 (define-prim (##start-main language)
   (cond ((macro-language-srfi-22? language)
