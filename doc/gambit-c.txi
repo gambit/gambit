@@ -1992,9 +1992,10 @@ Disable line-editing (applies to terminals only).
 @opindex -::
 @cindex GAMBCOPT, environment variable
 When a program's execution starts, the runtime system obtains the
-runtime options by processing in turn four sources of runtime options:
+runtime options by processing in turn various sources of runtime options:
 the defaults, the environment variable @samp{GAMBCOPT}, the script
-line of the source code, and the first command line argument of the
+line of the source code, and, unless the program is an interpreted
+script, the first command line argument of the
 program.  Any runtime option can be overriden by a subsequent source
 of runtime options.  It is sometimes useful to prevent overriding
 the runtime options of the script line.  This can be achieved by
@@ -2002,7 +2003,7 @@ starting the script line runtime options with @samp{-::}.  In
 this case the environment variable @samp{GAMBCOPT} is ignored,
 and the first command line argument of the program is
 not used for runtime options (it is treated like a normal
-command line argument).
+command line argument even if it starts with @samp{-:}).
 
 For example:
 

@@ -1,6 +1,6 @@
 /* File: "main.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit-C system */
 
@@ -250,8 +250,18 @@ ___mod_or_lnk (*linker)();)
         }
     }
 
-  if (script_line != 0)
+  if (script_line != 0 &&
+      script_line[0] == ':')
     {
+      /*
+       * When the script line runtime options is of the form -::XXX
+       * (i.e. the colon is followed by a colon) it is the sole source
+       * of runtime options (i.e. the command line and environment
+       * variable GAMBCOPT are not used as a source of other runtime
+       * options).
+       */
+      
+      script_line++;
       runtime_options = 0;
       options_source_min = 1;
       options_source_max = 1;
