@@ -250,10 +250,8 @@ ___mod_or_lnk (*linker)();)
         }
     }
 
-  if (script_line != 0 &&
-      script_line[0] == ':')
+  if (script_line != 0)
     {
-      script_line++;
       runtime_options = 0;
       options_source_min = 1;
       options_source_max = 1;
