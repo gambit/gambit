@@ -742,11 +742,11 @@ char **msgs;)
 
 
  ___SIZE_T ___write_console_fallback
-   ___P((char *buf,
+   ___P((void *buf,
          ___SIZE_T size),
         (buf,
          size)
-char *buf;
+void *buf;
 ___SIZE_T size;)
 {
 #ifdef USE_syslog
@@ -754,11 +754,13 @@ ___SIZE_T size;)
   static char line_buf[128];
   static int line_len = 0;
   int i = 0;
+  char *b = ___CAST(char*,buf);
+
   while (i < size)
     {
       char c;
       if (line_len == sizeof(line_buf)-1 ||
-          (c = buf[i++]) == '\n')
+          (c = b[i++]) == '\n')
         {
           line_buf[line_len] = '\0';
           syslog (LOG_ERR, "%s", line_buf);
