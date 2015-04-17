@@ -1,0 +1,57 @@
+environment:
+  matrix:
+    - arch: "x86"
+      tools: "mingw"
+    
+    - arch: "x64"
+      tools: "mingw"
+
+#    - arch: "x86"
+#      tools: "msvc12"
+    
+#    - arch: "x64"
+#      tools: "msvc12"
+    
+
+
+install:
+  - ps: if($env:arch -eq 'x64') {
+          $env:vcvar_arg = 'x86_amd64';
+        }
+        elseif($env:arch -eq 'x86') {
+          $env:vcvar_arg = 'x86';
+        }
+  
+  # get mingw-w64 (C:\mingw64)
+  # copy of http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.1/threads-posix/seh/x86_64-4.9.1-release-posix-seh-rt_v3-rev1.7z
+  - ps: if($env:tools -eq 'mingw' -and $env:arch -eq 'x64')
+        {
+          curl -outfile mw64.7z "http://libgd.blob.core.windows.net/mingw/x86_64-4.9.1-release-posix-seh-rt_v3-rev1.7z";
+          if((Get-FileHash mw64.7z -Algorithm SHA1).Hash -ne "91A35AE296C1A71802AB0C7228EE57F9AAC5D7C7")
+          {
+            echo "Invalid file hash";
+            exit 1;
+          };
+          7z x -oC:\ mw64.7z | out-null;
+        }
+
+
+
+build_script:
+  - '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall" %vcvar_arg%'
+  - if [%tools%]==[mingw] if [%arch%]==[x86] SET PATH=C:\MinGW\bin;%PATH%
+  - if [%tools%]==[mingw] if [%arch%]==[x64] SET PATH=C:\mingw64\bin;%PATH%
+  
+  - ps: if($env:tools -eq 'mingw')
+        {
+          ./configure --enable-single-host || exit 1;
+          make -j4 from-scratch || exit 1;
+        }
+
+
+
+test_script:
+  - ps: if($env:tools -eq 'mingw')
+        {
+          make check || exit 1;
+        }
