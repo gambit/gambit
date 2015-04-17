@@ -222,7 +222,7 @@ extern void ___display_error
  */
 
 extern ___SIZE_T ___write_console_fallback
-   ___P((char *buf,
+   ___P((void *buf,
          ___SIZE_T size),
         ());
 
