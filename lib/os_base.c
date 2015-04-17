@@ -1,6 +1,6 @@
 /* File: "os_base.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.
@@ -738,6 +738,45 @@ char **msgs;)
           ___fwrite (msg, 1, len, ___stderr); /* ignore error */
         }
     }
+}
+
+
+ ___SIZE_T ___write_console_fallback
+   ___P((char *buf,
+         ___SIZE_T size),
+        (buf,
+         size)
+char *buf;
+___SIZE_T size;)
+{
+#ifdef USE_syslog
+
+  static char line_buf[128];
+  static int line_len = 0;
+  int i = 0;
+  while (i < size)
+    {
+      char c;
+      if (line_len == sizeof(line_buf)-1 ||
+          (c = buf[i++]) == '\n')
+        {
+          line_buf[line_len] = '\0';
+          syslog (LOG_ERR, "%s", line_buf);
+          line_len = 0;
+        }
+      else
+        line_buf[line_len++] = c;
+    }
+
+#endif
+
+#ifndef USE_syslog
+
+  ___fwrite (buf, 1, size, ___stderr); /* ignore error */
+
+#endif
+
+  return size;
 }
 
 

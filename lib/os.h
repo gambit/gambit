@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -209,6 +209,10 @@
 
 #ifdef HAVE_SYSCTL
 #define USE_sysctl
+#endif
+
+#ifdef HAVE_SYSLOG
+#define USE_syslog
 #endif
 
 #ifdef HAVE_TCGETSETATTR
@@ -1003,6 +1007,11 @@ ___END_C_LINKAGE
 #define INCLUDE_sys_sysctl_h
 #endif
 
+#ifdef USE_syslog
+#undef INCLUDE_syslog_h
+#define INCLUDE_syslog_h
+#endif
+
 #ifdef USE_tcgetsetattr
 #undef INCLUDE_termios_h
 #define INCLUDE_termios_h
@@ -1143,6 +1152,12 @@ ___END_C_LINKAGE
 #ifdef INCLUDE_sys_mman_h
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
+#endif
+
+#ifdef INCLUDE_syslog_h
+#ifdef HAVE_SYSLOG_H
+#include <syslog.h>
 #endif
 #endif
 

@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -240,6 +240,9 @@ ___device_tty *self;)
 
 #endif
 
+  if (d->fd < 0)
+    return ___FIX(___NO_ERR);
+
   if (tcgetattr (d->fd, &d->initial_termios) < 0 ||
       (d->initial_flags = fcntl (d->fd, F_GETFL, 0)) < 0)
     return err_code_from_errno ();
@@ -302,6 +305,9 @@ ___BOOL current;)
 
 #ifdef USE_tcgetsetattr
 #ifdef USE_fcntl
+
+  if (d->fd < 0)
+    return ___FIX(___NO_ERR);
 
   {
     struct termios new_termios = d->initial_termios;
@@ -687,7 +693,12 @@ ___device_tty *self;)
 
       struct winsize size;
 
-      if (ioctl (d->fd, TIOCGWINSZ, &size) < 0)
+      if (d->fd < 0)
+        {
+          size.ws_row = 24;
+          size.ws_col = 80;
+        }
+      else if (ioctl (d->fd, TIOCGWINSZ, &size) < 0)
         return err_code_from_errno ();
 
       if (size.ws_col > 0)
@@ -812,20 +823,20 @@ ___device_tty *self;)
             if (errno == ENXIO)
               {
                 /*
-                 * There is no controlling terminal!  This is a fatal
-                 * error, because trying to display an error message
-                 * will just cause the open to be tried again to
-                 * report the problem, and this will lead to an
-                 * infinite loop.
+                 * There is no controlling terminal, so console output
+                 * has to be redirected.  This is done by calling
+                 * ___write_console_fallback which will send the output
+                 * to stderr, a log file, etc.
                  */
 
-                static char *msgs[] =
-                { "No controlling terminal (try using the -:d- runtime option)",
-                  NULL
-                };
+                static char msg[] =
+                  "*** No controlling terminal (try using the -:d- runtime option)\n";
 
-                ___fatal_error (msgs);
+                ___write_console_fallback (msg, sizeof(msg)-1);
+
+                fd = -1; /* redirect subsequent console output */
               }
+            else
 #endif
             return fnf_or_err_code_from_errno ();
           }
@@ -978,7 +989,9 @@ ___stream_index *len_done;)
   {
     int n;
 
-    if ((n = write (d->fd, buf, len)) < 0)
+    if (d->fd < 0)
+      n = ___write_console_fallback (buf, len);
+    else if ((n = write (d->fd, buf, len)) < 0)
       return err_code_from_errno ();
 
     *len_done = n;
@@ -1060,7 +1073,9 @@ ___stream_index *len_done;)
     ___printf ("read len=%d\n", len);
 #endif
 
-    if ((n = read (d->fd, buf, len)) < 0)
+    if (d->fd < 0)
+      n = 0;
+    else if ((n = read (d->fd, buf, len)) < 0)
       return err_code_from_errno ();
 
 #ifdef ___DEBUG
@@ -7417,7 +7432,15 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      ___device_select_add_fd (state, d->fd, for_writing);
+      if (d->fd < 0)
+        {
+          ___device_select_add_timeout
+            (state,
+             i,
+             ___time_mod.time_neg_infinity);
+        }
+      else
+        ___device_select_add_fd (state, d->fd, for_writing);
 
 #endif
 
@@ -7461,7 +7484,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (___FD_ISSET(d->fd, &state->writefds))
+      if (d->fd < 0 || ___FD_ISSET(d->fd, &state->writefds))
         state->devs[i] = NULL;
 
 #endif
@@ -7477,7 +7500,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (___FD_ISSET(d->fd, &state->readfds))
+      if (d->fd < 0 || ___FD_ISSET(d->fd, &state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -7964,7 +7987,7 @@ ___device_tty *self;)
           == d->base.base.direction)
         {
 #ifdef USE_POSIX
-          if (close_no_EINTR (d->fd) < 0)
+          if (d->fd >= 0 && close_no_EINTR (d->fd) < 0)
             return err_code_from_errno ();
 #endif
 
