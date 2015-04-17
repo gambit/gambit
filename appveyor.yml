@@ -39,19 +39,12 @@ install:
 
 build_script:
   - '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall" %vcvar_arg%'
-  - if [%tools%]==[mingw] if [%arch%]==[x86] SET PATH=C:\MinGW\bin;%PATH%
-  - if [%tools%]==[mingw] if [%arch%]==[x64] SET PATH=C:\mingw64\bin;%PATH%
-  
-  - ps: if($env:tools -eq 'mingw')
-        {
-          ./configure --enable-single-host || exit 1;
-          make -j4 from-scratch || exit 1;
-        }
+  - DIR C:\
+  - DIR C:\msys\bin
+  - c:\msys\bin\sh.exe -e "export PATH=/c/MinGW/bin:$PATH;./configure --enable-single-host CC=gcc"
+  - c:\msys\bin\sh.exe -e "export PATH=/c/MinGW/bin:$PATH;make -j4 from-scratch"
 
 
 
 test_script:
-  - ps: if($env:tools -eq 'mingw')
-        {
-          make check || exit 1;
-        }
+  - c:\msys\bin\sh.exe -e "export PATH=/c/MinGW/bin:$PATH;make check"
