@@ -1,6 +1,6 @@
 /* File: "os_base.h" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_BASE_H
 #define ___OS_BASE_H
@@ -212,6 +212,18 @@ extern void ___fatal_error
 
 extern void ___display_error
    ___P((char **msgs),
+        ());
+
+
+/* 
+ * The procedure "___write_console_fallback" is called by the runtime
+ * system when it needs to send output to the console, but the console
+ * can't be opened (on Unix, when the process has no controlling terminal).
+ */
+
+extern ___SIZE_T ___write_console_fallback
+   ___P((char *buf,
+         ___SIZE_T size),
         ());
 
 
