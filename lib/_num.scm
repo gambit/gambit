@@ -226,7 +226,7 @@
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       #f
       (or (##eq? x y)
-          (##bignum.= x y))
+          (##exact-int.= x y))
       #f
       (and (##flfinite? y)
            (##ratnum.= (##exact-int->ratnum x) (##flonum->ratnum y)))
@@ -293,7 +293,7 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (##bignum.negative? x)
-      (##bignum.< x y)
+      (##exact-int.< x y)
       (##ratnum.< (##exact-int->ratnum x) y)
       (cond ((##flfinite? y)
              (##ratnum.< (##exact-int->ratnum x) (##flonum->ratnum y)))
@@ -1702,9 +1702,9 @@
                   (let ((h (##fx+ m-prime (##fxquotient n 2))))
                     (if (##fx< 0 p)
                         (let ((a   (##arithmetic-shift a (##fx- p)))
-                              (b   (##arithmetic-shift b (##fx- p)))
-                              (a_0 (##extract-bit-field p 0 a))
-                              (b_0 (##extract-bit-field p 0 b)))
+			      (b   (##arithmetic-shift b (##fx- p)))
+			      (a_0 (##extract-bit-field p 0 a))
+			      (b_0 (##extract-bit-field p 0 b)))
                           ((lambda (cont)
                              (gcd-middle-step cont a b h m-prime #t))
                            (lambda (M alpha beta)
@@ -2830,15 +2830,12 @@ for a discussion of branch cuts.
         (let ((y (##exact-int.sqrt x)))
           (cond ((##eqv? (##cdr y) 0)
                  (##car y))
-                ((##not (##eqv? 1 (##exact-int.compare x (macro-flonum-+m-max-plus-1))))
+                ((##not (##exact-int.< (macro-flonum-+m-max-plus-1) x))
                  ;; 0 <= x <= (macro-flonum-+m-max-plus-1), can be
                  ;; converted to flonum exactly so avoids double
                  ;; rounding in next expression. This has a relatively
                  ;; fast path for small integers.
-                 (##flsqrt
-                  (if (##fixnum? x)
-                      (##fixnum->flonum x)
-                      (##exact-int->flonum x))))
+                 (##flsqrt (##exact-int->flonum x)))
                 ((##not (##< (##car y) (macro-flonum-+m-max-plus-1)))
                  ;; ##exact-int->flonum uses second argument correctly
                  (##exact-int->flonum (##car y) #t))
@@ -5981,14 +5978,6 @@ ___RESULT = result;
 
 (define-prim (##bignum.copy x)
   (##bignum.make (##bignum.adigit-length x) x #f))
-
-;;; Bignum comparison
-
-(define (##bignum.= x y)
-  (##eqv? 0 (##exact-int.compare x y)))
-
-(define (##bignum.< x y)
-  (##eqv? -1 (##exact-int.compare x y)))
 
 ;;; Bignum addition and subtraction.
 
@@ -9666,6 +9655,12 @@ ___RESULT = result;
 
 ;;; Exact integer operations
 ;;; ------------------------
+
+(define (##exact-int.= x y)
+  (##eqv? 0 (##exact-int.compare x y)))
+
+(define (##exact-int.< x y)
+  (##eqv? -1 (##exact-int.compare x y)))
 
 (define (##exact-int.compare x y)
 
