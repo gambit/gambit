@@ -1511,24 +1511,7 @@
                               (##* y_1 (gcd-matrix_21 A))))))
 
     (define (x>=2^n x n)
-      (cond ((##eqv? x 0)
-             #f)
-            ((and (##fixnum? x)
-                  (##fx<= n ##bignum.mdigit-width))
-             (##fx>= x (##fxarithmetic-shift-left 1 n)))
-            (else
-             (let ((x (if (##fixnum? x) (##fixnum->bignum x) x)))
-               (let loop ((i (##fx- (##bignum.mdigit-length x) 1)))
-                 (let ((digit (##bignum.mdigit-ref x i)))
-                   (if (##fxzero? digit)
-                       (loop (##fx- i 1))
-                       (let ((words (##fxquotient n ##bignum.mdigit-width)))
-                         (or (##fx> i words)
-                             (and (##fx= i words)
-                                  (##fx>= digit
-                                          (##fxarithmetic-shift-left
-                                           1
-                                           (##fxremainder n ##bignum.mdigit-width)))))))))))))
+      (##fx< n (##integer-length x)))
 
     (define (determined-minimal? u v s)
       ;; assumes  2^s <= u , v; s>= 0 fixnum
