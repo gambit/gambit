@@ -172,6 +172,12 @@
 (check-eqv? (expt -64 11/6) (* 2048 (macro-cpxnum-+sqrt3/2-1/2i)))
 (check-eqv? (expt 100 -1/4) (/ (sqrt (sqrt 100))))
 (check-eqv? (expt 100/81 -1/4) (/ 3 (sqrt (sqrt 100))))
+(check-eqv? (expt -1. (expt 3 1000)) -1.)
+(check-eqv? (expt 27/8 1/3) 3/2)
+(check-eqv? (expt +2i 3/2) -2+2i)
+(check-eqv? (expt +2i 1/2) 1+i)
+(check-tail-exn range-exception? (lambda () (expt 0 -1+i)))
+(check-tail-exn range-exception? (lambda () (expt 0 -3/4)))
 
 (check-tail-exn type-exception? (lambda () (bitwise-ior 1 'a)))
 (check-tail-exn type-exception? (lambda () (bitwise-ior 'a 1)))
