@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1003,7 +1003,7 @@ ___time timeout;)
     struct timeval *delta_tv = &delta_tv_struct;
     int result;
 
-    ___absolute_time_to_nonnegative_timeval (delta, &delta_tv);
+    ___absolute_time_to_nonnegative_timeval_maybe_NULL (delta, &delta_tv);
 
     if (delta_tv != NULL &&
         state.highest_fd_plus_1 == 0)
@@ -1091,7 +1091,7 @@ ___time timeout;)
 #endif
     int result;
 
-    ___absolute_time_to_nonnegative_timeval (delta, &delta_tv);
+    ___absolute_time_to_nonnegative_timeval_maybe_NULL (delta, &delta_tv);
 
     /* pure sleep optimizations */
     if (state.pollfd_count == 0 && delta_tv != NULL)

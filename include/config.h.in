@@ -123,6 +123,7 @@
 #undef HAVE_RENAME
 #undef HAVE_RMDIR
 #undef HAVE_SOCKET
+#undef HAVE_UTIMES
 #undef HAVE_STAT
 #undef HAVE_STAT64
 #undef HAVE_STRERROR

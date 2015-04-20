@@ -317,6 +317,8 @@
 #define HAVE_GETPROTOBYNUMBER 1
 #define HAVE_GETNETBYNAME 1
 
+#define HAVE_UTIMES 1
+
 #define HAVE_WINDOWS_H 1
 #define INCLUDE_windows_h
 #define HAVE_WINSOCK2_H 1
@@ -557,6 +559,37 @@
 #define USE_select
 #endif
 #endif
+#endif
+
+
+/* Determine which file time changing interface should be used.  */
+
+#ifdef HAVE_UTIMES
+#define USE_utimes
+#endif
+
+
+#ifdef USE_utimes
+#undef USE_timeval
+#define USE_timeval
+#endif
+
+
+#ifdef USE_ppoll
+#undef USE_timespec
+#define USE_timespec
+#endif
+
+
+#ifdef USE_poll
+#undef USE_timeval
+#define USE_timeval
+#endif
+
+
+#ifdef USE_select
+#undef USE_timeval
+#define USE_timeval
 #endif
 
 
@@ -929,6 +962,16 @@ ___END_C_LINKAGE
 #ifdef USE_getgrnam
 #undef INCLUDE_grp_h
 #define INCLUDE_grp_h
+#endif
+
+#ifdef USE_timeval
+#undef INCLUDE_sys_time_h
+#define INCLUDE_sys_time_h
+#endif
+
+#ifdef USE_timespec
+#undef INCLUDE_time_h
+#define INCLUDE_time_h
 #endif
 
 #ifdef USE_fullpath

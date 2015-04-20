@@ -1,6 +1,6 @@
 /* File: "os_time.c" */
 
-/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -439,19 +439,39 @@ ___time tim;)
 #endif
 
 
-#ifdef USE_POSIX
+#ifdef USE_timeval
 
 
-#ifdef ___TIMEVAL_NOT_LIMITED
-#define ___TIMEVAL_SEC_LIMIT 2147483647 /* in seconds = 68 years */
-#else
-/* Mac OS X gives an error when the seconds > 100000000 (3.2 years) */
-/* We'll be conservative in case other systems have limits */
-#define ___TIMEVAL_SEC_LIMIT 9999999 /* in seconds = 118 days */
+void ___absolute_time_to_timeval
+   ___P((___time tim,
+         struct timeval *tv),
+        (tim,
+         tv)
+___time tim;
+struct timeval *tv;)
+{
+#ifdef ___FLOAT_TIME_REPRESENTATION
+
+  if (tim < -2147483648.0)
+    tim = -2147483648.0;
+  else if (tim > 2147483647.999999)
+    tim = 2147483647.999999;
+
+  tv->tv_sec = ___CAST(int,tim);
+  tv->tv_usec = ___CAST(int,(tim - tv->tv_sec) * 1000000.0);
+
 #endif
 
+#ifdef ___INT_TIME_REPRESENTATION
 
-void ___absolute_time_to_nonnegative_timeval
+  tv->tv_sec = tim.secs;
+  tv->tv_usec = tim.nsecs / 1000;
+
+#endif
+}
+
+
+void ___absolute_time_to_nonnegative_timeval_maybe_NULL
    ___P((___time tim,
          struct timeval **tv),
         (tim,
@@ -465,34 +485,26 @@ struct timeval **tv;)
 
       if (___time_positive (tim))
         {
-#ifdef ___FLOAT_TIME_REPRESENTATION
-          if (tim >= (___TIMEVAL_SEC_LIMIT+1.0))
-            {
-              t->tv_sec = ___TIMEVAL_SEC_LIMIT;
-              t->tv_usec = 999999;
-            }
-          else
-            {
-              t->tv_sec = ___CAST(int,tim);
-              t->tv_usec = ___CAST(int,(tim - t->tv_sec) * 1000000.0);
-            }
-#endif
+          ___absolute_time_to_timeval (tim, t);
 
-#ifdef ___INT_TIME_REPRESENTATION
-          if (tim.secs > ___TIMEVAL_SEC_LIMIT)
+#ifndef ___TIMEVAL_NOT_LIMITED
+
+/* Mac OS X gives an error when the seconds > 100000000 (3.2 years) */
+/* We'll be conservative in case other systems have limits */
+
+#define ___TIMEVAL_SEC_LIMIT 9999999 /* in seconds = 118 days */
+
+          if (t->tv_sec > ___TIMEVAL_SEC_LIMIT)
             {
               t->tv_sec = ___TIMEVAL_SEC_LIMIT;
               t->tv_usec = 999999;
             }
-          else
-            {
-              t->tv_sec = tim.secs;
-              t->tv_usec = tim.nsecs / 1000;
-            }
+
 #endif
         }
       else
         {
+          /* prevent negative timeval */
           t->tv_sec = 0;
           t->tv_usec = 0;
         }
@@ -542,7 +554,7 @@ DWORD *ms;)
 #endif
         }
       else
-        *ms = 0;
+        *ms = 0; /* prevent negative msecs */
     }
   else
     *ms = INFINITE;
