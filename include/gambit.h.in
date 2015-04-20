@@ -8,11 +8,11 @@
 #define ___GAMBIT_H
 
 #ifndef ___VERSION
-#define ___VERSION 407004
+#define ___VERSION 407005
 #endif
 
-#if ___VERSION != 407004
-#include "gambit-not407004.h"
+#if ___VERSION != 407005
+#include "gambit-not407005.h"
 #else
 
 #ifdef HAVE_CONFIG_H
