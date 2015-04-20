@@ -199,6 +199,7 @@ file-info-type
 file-info?
 file-inode
 file-last-access-time
+file-last-access-and-modification-times-set!
 file-last-change-time
 file-last-modification-time
 file-mode

@@ -1676,9 +1676,11 @@ ___SCMOBJ modification_time;)
   ___time_from_seconds (&mtime, ___F64UNBOX(modification_time));
 
 #ifndef USE_utimes
+#ifndef USE_SetFileTime
 
   e = ___FIX(___UNIMPL_ERR);
 
+#endif
 #endif
 
 #ifdef USE_utimes
@@ -1708,6 +1710,59 @@ ___SCMOBJ modification_time;)
         }
 
       ___release_string (cpath);
+    }
+
+#endif
+
+#ifdef USE_SetFileTime
+
+#ifdef _UNICODE
+#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#else
+#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#endif
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRING
+             (___PSA(___PSTATE)
+              path,
+              &cpath,
+              1,
+              ___CE(___TIMES_PATH_CE_SELECT),
+              0))
+      == ___FIX(___NO_ERR))
+    {
+      HANDLE h;
+      FILETIME ft[2];
+
+      ___time_to_FILETIME (atime, &ft[0]);
+      ___time_to_FILETIME (mtime, &ft[1]);
+
+      h = CreateFile (___CAST(___STRING_TYPE(___TIMES_PATH_CE_SELECT),cpath),
+                      FILE_WRITE_ATTRIBUTES,
+                      0,
+                      NULL,
+                      OPEN_EXISTING,
+                      0,
+                      NULL);
+
+      if (h == INVALID_HANDLE_VALUE)
+        {
+          e = fnf_or_err_code_from_GetLastError ();
+          ___release_string (cpath);
+          return e;
+        }
+
+      if (!SetFileTime (h, NULL, &ft[0], &ft[1]))
+        {
+          e = err_code_from_GetLastError ();
+          CloseHandle (h); /* ignore error */
+          ___release_string (cpath);
+          return e;
+        }
+
+      CloseHandle (h); /* ignore error */
+      ___release_string (cpath);
+
     }
 
 #endif
@@ -1993,6 +2048,9 @@ ___SCMOBJ chase;)
       == ___FIX(___NO_ERR))
     {
       WIN32_FILE_ATTRIBUTE_DATA fad;
+      ___time atime;
+      ___time wtime;
+      ___time ctime;
 
       if (!GetFileAttributesEx
              (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath),
@@ -2042,9 +2100,11 @@ ___SCMOBJ chase;)
       ___FIELD(result,8) = x;
       ___release_scmobj (x);
 
+      ___time_from_FILETIME (&atime, fad.ftLastAccessTime);
+
       if ((e = ___F64_to_SCMOBJ
                  (___PSTATE,
-                  ___CAST(___F64,FILETIME_TO_TIME(fad.ftLastAccessTime)),
+                  ___time_to_seconds (atime),
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2056,9 +2116,11 @@ ___SCMOBJ chase;)
       ___FIELD(result,9) = x;
       ___release_scmobj (x);
 
+      ___time_from_FILETIME (&wtime, fad.ftLastWriteTime);
+
       if ((e = ___F64_to_SCMOBJ
                  (___PSTATE,
-                  ___CAST(___F64,FILETIME_TO_TIME(fad.ftLastWriteTime)),
+                  ___time_to_seconds (wtime),
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -2073,9 +2135,11 @@ ___SCMOBJ chase;)
 
       ___FIELD(result,12) = ___FIX(fad.dwFileAttributes);
 
+      ___time_from_FILETIME (&ctime, fad.ftCreationTime);
+
       if ((e = ___F64_to_SCMOBJ
                  (___PSTATE,
-                  ___CAST(___F64,FILETIME_TO_TIME(fad.ftCreationTime)),
+                  ___time_to_seconds (ctime),
                   &x,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))

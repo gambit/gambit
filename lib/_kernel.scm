@@ -4025,11 +4025,10 @@ end-of-code
   (##c-code #<<end-of-code
 
    ___time t;
-   ___F64 ft;
 
    ___time_get_current_time (&t);
-   ___time_to_seconds (t, &ft);
-   ___F64VECTORSET(___ARG1,___ARG2,ft)
+
+   ___F64VECTORSET(___ARG1,___ARG2,___time_to_seconds (t))
 
    ___RESULT = ___VOID;
 

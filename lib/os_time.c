@@ -212,13 +212,9 @@ ___time *tim;)
 
 #ifdef USE_GetSystemTimeAsFileTime
 
-  LONGLONG x;
-  ___SM32 secs;
-  ___SM32 nsecs;
-  GetSystemTimeAsFileTime (___CAST(FILETIME*,&x));
-  secs = x / 10000000 - JAN_1(1601LL);
-  nsecs = x % 10000000 * 100;
-  ___time_from_nsecs (tim, secs, nsecs);
+  FILETIME ft;
+  GetSystemTimeAsFileTime (&ft);
+  ___time_from_FILETIME (tim, ft);
 
 #endif
 
@@ -291,20 +287,17 @@ ___time *tim;)
 }
 
 
-void ___time_to_seconds
-   ___P((___time tim,
-         ___F64 *seconds),
-        (tim,
-         seconds)
-___time tim;
-___F64 *seconds;)
+___F64 ___time_to_seconds
+   ___P((___time tim),
+        (tim)
+___time tim;)
 {
 #ifdef ___FLOAT_TIME_REPRESENTATION
-  *seconds = tim;
+  return tim;
 #endif
 
 #ifdef ___INT_TIME_REPRESENTATION
-  *seconds = tim.secs + tim.nsecs / 1000000000.0;
+  return tim.secs + tim.nsecs / 1000000000.0;
 #endif
 }
 
@@ -564,6 +557,49 @@ DWORD *ms;)
 #endif
 
 
+#ifdef USE_FILETIME
+
+
+void ___time_to_FILETIME
+   ___P((___time tim,
+         FILETIME *ft),
+        (tim,
+         ft)
+___time tim;
+FILETIME *ft;)
+{
+  *___CAST(LONGLONG*,ft) = (___time_to_seconds (tim) + JAN_1(1601LL)) * 1.0e7;
+}
+
+
+void ___time_from_FILETIME
+   ___P((___time *tim,
+         FILETIME ft),
+        (tim,
+         ft)
+___time *tim;
+FILETIME ft;)
+{
+  LONGLONG x = *___CAST(LONGLONG*,&ft);
+  ___time_from_nsecs (tim,
+                      x / 10000000 - JAN_1(1601LL),
+                      x % 10000000 * 100);
+}
+
+
+___F64 ___FILETIME_to_seconds
+   ___P((FILETIME ft),
+        (ft)
+FILETIME ft;)
+{
+  return *___CAST(LONGLONG*,&ft) / 1.0e7;
+}
+
+
+#endif
+
+
+
 ___HIDDEN void setup_time_management ___PVOID
 {
 #ifdef USE_HIGH_RES_TIMING
@@ -638,8 +674,8 @@ ___F64 *real;)
 
   if (GetProcessTimes (p, &creation_time, &exit_time, &sys_time, &user_time))
     {
-      *user = FILETIME_TO_SECONDS(user_time);
-      *sys = FILETIME_TO_SECONDS(sys_time);;
+      *user = ___FILETIME_to_seconds (user_time);
+      *sys = ___FILETIME_to_seconds (sys_time);
     }
   else
     {
@@ -739,12 +775,10 @@ ___F64 *real;)
 
   {
     ___time now;
-    ___F64 seconds;
 
     ___time_get_current_time (&now);
-    ___time_to_seconds (now, &seconds);
 
-    *real = seconds - ___time_mod.process_start_seconds;
+    *real = ___time_to_seconds (now) - ___time_mod.process_start_seconds;
   }
 }
 
