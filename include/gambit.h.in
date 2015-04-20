@@ -9077,6 +9077,10 @@ typedef struct ___global_state_struct
              ___SCMOBJ proc,
              ___SCMOBJ marker),
             ());
+    void (*___throw_error)
+       ___P((___PSD
+             ___SCMOBJ err),
+            ());
     void (*___propagate_error)
        ___P((___PSD
              ___SCMOBJ err),
@@ -10332,6 +10336,10 @@ ___IMP_FUNC(___SCMOBJ,___call)
          int nargs,
          ___SCMOBJ proc,
          ___SCMOBJ marker),
+        ());
+___IMP_FUNC(void,___throw_error)
+   ___P((___PSD
+         ___SCMOBJ err),
         ());
 ___IMP_FUNC(void,___propagate_error)
    ___P((___PSD

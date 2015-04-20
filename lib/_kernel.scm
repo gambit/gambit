@@ -965,7 +965,7 @@ end-of-code
          ___COVER_RETURN_TO_C_HANDLER_FIRST_RETURN;
          ___FRAME_STORE_RA(___GSTATE->handler_return_to_c)
          ___W_ALL
-         ___THROW(___FIX(___UNWIND_C_STACK));  /* jump back inside ___call */
+         ___throw_error (___PSP ___FIX(___UNWIND_C_STACK));  /* jump back inside ___call */
        }
      else
        {

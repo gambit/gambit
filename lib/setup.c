@@ -1948,6 +1948,37 @@ ___processor_state ___ps;)
 }
 
 
+___EXP_FUNC(void,___throw_error)
+   ___P((___PSD
+         ___SCMOBJ err),
+        (___PSV
+         err)
+___PSDKR
+___SCMOBJ err;)
+{
+  ___PSGET
+
+  ___THROW (err);
+}
+
+
+___EXP_FUNC(void,___propagate_error)
+   ___P((___PSD
+         ___SCMOBJ err),
+        (___PSV
+         err)
+___PSDKR
+___SCMOBJ err;)
+{
+  ___PSGET
+
+  if (err != ___FIX(___NO_ERR))
+    {
+      ___throw_error (___PSP err);
+    }
+}
+
+
 ___EXP_FUNC(___SCMOBJ,___call)
    ___P((___PSD
          int nargs,
@@ -2032,29 +2063,12 @@ ___SCMOBJ stack_marker;)
 
   if (___err != ___FIX(___UNWIND_C_STACK) ||
       stack_marker != ___ps->fp[___FRAME_SPACE(2)-2]) /*need more unwinding?*/
-    ___THROW(___err);
+    ___throw_error (___PSP ___err);
 
   ___ps->fp += ___FRAME_SPACE(2);
   ___PSR0 = ___ps->fp[-1];
 
   return ___FIX(___NO_ERR);
-}
-
-
-___EXP_FUNC(void,___propagate_error)
-   ___P((___PSD
-         ___SCMOBJ err),
-        (___PSV
-         err)
-___PSDKR
-___SCMOBJ err;)
-{
-  ___PSGET
-
-  if (err != ___FIX(___NO_ERR))
-    {
-      ___THROW (err);
-    }
 }
 
 
@@ -3197,6 +3211,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___call
     = ___call;
+
+  ___GSTATE->___throw_error
+    = ___throw_error;
 
   ___GSTATE->___propagate_error
     = ___propagate_error;
