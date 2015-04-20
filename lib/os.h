@@ -298,6 +298,7 @@
 #define HAVE_CREATETHREAD 1
 #define HAVE_GETPROCESSTIMES 1
 #define HAVE_GETSYSTEMTIMEASFILETIME 1
+#define HAVE_SETFILETIME 1
 #define HAVE_TIMEBEGINPERIOD 1
 #define HAVE_GETSYSTEMINFO 1
 #define HAVE_LOADLIBRARY 1
@@ -316,8 +317,6 @@
 #define HAVE_GETPROTOBYNAME 1
 #define HAVE_GETPROTOBYNUMBER 1
 #define HAVE_GETNETBYNAME 1
-
-#define HAVE_UTIMES 1
 
 #define HAVE_WINDOWS_H 1
 #define INCLUDE_windows_h
@@ -566,6 +565,10 @@
 
 #ifdef HAVE_UTIMES
 #define USE_utimes
+#else
+#ifdef HAVE_SETFILETIME
+#define USE_SetFileTime
+#endif
 #endif
 
 
@@ -590,6 +593,24 @@
 #ifdef USE_select
 #undef USE_timeval
 #define USE_timeval
+#endif
+
+
+#ifdef USE_SetFileTime
+#undef USE_FILETIME
+#define USE_FILETIME
+#endif
+
+
+#ifdef USE_GetSystemTimeAsFileTime
+#undef USE_FILETIME
+#define USE_FILETIME
+#endif
+
+
+#ifdef USE_GetFileAttributesEx
+#undef USE_FILETIME
+#define USE_FILETIME
 #endif
 
 
