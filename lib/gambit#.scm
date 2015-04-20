@@ -198,6 +198,7 @@ file-info-size
 file-info-type
 file-info?
 file-inode
+file-last-access-and-modification-times-set!
 file-last-access-time
 file-last-access-and-modification-times-set!
 file-last-change-time
