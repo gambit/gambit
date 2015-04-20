@@ -4359,6 +4359,13 @@ end-of-code
             scheme-object
    "___os_port_encode_chars"))
 
+(define-prim ##os-file-times-set!
+  (c-lambda (scheme-object
+             scheme-object
+             scheme-object)
+            scheme-object
+   "___os_file_times_set"))
+
 (define-prim ##os-file-info
   (c-lambda (scheme-object
              scheme-object)

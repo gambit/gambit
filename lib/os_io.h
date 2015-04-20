@@ -1,6 +1,6 @@
 /* File: "os_io.h" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -901,6 +901,16 @@ extern ___SCMOBJ ___os_port_decode_chars
 
 extern ___SCMOBJ ___os_port_encode_chars
    ___P((___SCMOBJ port),
+        ());
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
+
+/* Change file times. */
+
+extern ___SCMOBJ ___os_file_times_set
+   ___P((___SCMOBJ path,
+         ___SCMOBJ modification_time,
+         ___SCMOBJ access_time),
         ());
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */

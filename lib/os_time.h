@@ -1,6 +1,6 @@
 /* File: "os_time.h" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TIME_H
 #define ___OS_TIME_H
@@ -205,9 +205,14 @@ extern void ___absolute_time_sleep
 
 #endif
 
-#ifdef USE_select
+#ifdef USE_timeval
 
-extern void ___absolute_time_to_nonnegative_timeval
+extern void ___absolute_time_to_timeval
+   ___P((___time tim,
+         struct timeval *tv),
+        ());
+
+extern void ___absolute_time_to_nonnegative_timeval_maybe_NULL
    ___P((___time tim,
          struct timeval **tv),
         ());

@@ -1654,6 +1654,70 @@ ___SCMOBJ network;)
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
+/* Change file times. */
+
+___SCMOBJ ___os_file_times_set
+   ___P((___SCMOBJ path,
+         ___SCMOBJ access_time,
+         ___SCMOBJ modification_time),
+        (path,
+         access_time,
+         modification_time)
+___SCMOBJ path;
+___SCMOBJ access_time;
+___SCMOBJ modification_time;)
+{
+  ___SCMOBJ e;
+  void *cpath;
+  ___time atime;
+  ___time mtime;
+
+  ___time_from_seconds (&atime, ___F64UNBOX(access_time));
+  ___time_from_seconds (&mtime, ___F64UNBOX(modification_time));
+
+#ifndef USE_utimes
+
+  e = ___FIX(___UNIMPL_ERR);
+
+#endif
+
+#ifdef USE_utimes
+
+#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRING
+             (___PSA(___PSTATE)
+              path,
+              &cpath,
+              1,
+              ___CE(___TIMES_PATH_CE_SELECT),
+              0))
+      == ___FIX(___NO_ERR))
+    {
+      struct timeval tv[2];
+
+      ___absolute_time_to_timeval (atime, &tv[0]);
+      ___absolute_time_to_timeval (mtime, &tv[1]);
+
+      if (utimes (___CAST(___STRING_TYPE(___TIMES_PATH_CE_SELECT),cpath), tv)
+          < 0)
+        {
+          e = fnf_or_err_code_from_errno ();
+          ___release_string (cpath);
+          return e;
+        }
+
+      ___release_string (cpath);
+    }
+
+#endif
+
+  return e;
+}
+
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
+
 /* Access to file information. */
 
 ___SCMOBJ ___os_file_info

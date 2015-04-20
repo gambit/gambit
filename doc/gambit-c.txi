@@ -10424,6 +10424,43 @@ a call to a file-information record field accessor.  For instance
 
 @end deffn
 
+@deffn procedure file-last-access-and-modification-times-set! @var{path} @r{[}@var{atime} @r{[}@var{mtime}@r{]}@r{]}
+
+This procedure changes the last-access and last-modification times of
+the file whose location is given by the string @var{path}.  Time is
+specified either with a time object indicating an absolute point in
+time or a real number indicating the number of seconds relative to the
+moment the procedure is called.  When @var{atime} and @var{mtime} are
+not specified, the last-access and last-modification times are set to
+the current time.  When @var{mtime} is not specified, the last-access
+and last-modification times are set to @var{atime}.  Otherwise the
+last-access time is set to @var{atime} and the last-modification time
+is set to @var{mtime}.
+
+For example:
+
+@smallexample
+> @b{(define (t path)
+    (list (time->seconds (file-last-access-time path))
+          (time->seconds (file-last-modification-time path))))}
+> @b{(with-output-to-file "nl.txt" newline)}
+> @b{(t "nl.txt")}
+(1429547027. 1429547027.)
+> @b{(t "nl.txt")}
+(1429547027. 1429547027.)
+> @b{(file-last-access-and-modification-times-set! "nl.txt")}
+> @b{(t "nl.txt")}
+(1429547039. 1429547039.)
+> @b{(file-last-access-and-modification-times-set! "nl.txt" -60)}
+> @b{(t "nl.txt")}
+(1429547006. 1429547006.)
+> @b{(file-last-access-and-modification-times-set! "nl.txt" -60 0)}
+> @b{(t "nl.txt")}
+(1429547049. 1429547109.)
+@end smallexample
+
+@end deffn
+
 @node Group information, User information, File information, Host environment
 @section Group information
 

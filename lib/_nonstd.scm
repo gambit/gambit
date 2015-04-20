@@ -1629,6 +1629,46 @@
             (##raise-os-exception #f info file-creation-time path)
             (macro-file-info-creation-time info))))))
 
+(define-prim (file-last-access-and-modification-times-set!
+              path
+              #!optional
+              (a-absrel-timeout (macro-absent-obj))
+              (m-absrel-timeout (macro-absent-obj)))
+
+  (define (change a m)
+    (let* ((a-time
+            (##timeout->time a))
+           (m-time
+            (if m (##timeout->time m) a-time))
+           (resolved-path
+            (##path-resolve path))
+           (code
+            (##os-file-times-set!
+             resolved-path
+             (macro-time-point a-time)
+             (macro-time-point m-time))))
+      (if (##fx< code 0)
+          (##raise-os-exception #f code file-last-access-and-modification-times-set! a-absrel-timeout m-absrel-timeout)
+          (##void))))
+
+  (macro-force-vars (path a-absrel-timeout m-absrel-timeout)
+    (macro-check-string path
+      1
+      (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
+      (if (##eq? a-absrel-timeout (macro-absent-obj))
+          (change 0 #f)
+          (macro-check-absrel-time
+            a-absrel-timeout
+            2
+            (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
+            (if (##eq? m-absrel-timeout (macro-absent-obj))
+                (change a-absrel-timeout #f)
+                (macro-check-absrel-time
+                  m-absrel-timeout
+                  3
+                  (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
+                  (change a-absrel-timeout m-absrel-timeout))))))))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##file-exists?
