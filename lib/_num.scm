@@ -703,8 +703,8 @@
           y
           (##fl+ (##fixnum->flonum x) y))
       (if (and (macro-special-case-exact-zero?) (##fxzero? x))
-	  y
-	  (##cpxnum.+ (##noncpxnum->cpxnum x) y)))
+          y
+          (##cpxnum.+ (##noncpxnum->cpxnum x) y)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (if (##fxzero? y)
@@ -736,7 +736,7 @@
     (macro-number-dispatch y (type-error-on-y) ;; x = cpxnum
       (if (and (macro-special-case-exact-zero?) (##fxzero? y))
           x
-	  (##cpxnum.+ x (##noncpxnum->cpxnum y)))
+          (##cpxnum.+ x (##noncpxnum->cpxnum y)))
       (##cpxnum.+ x (##noncpxnum->cpxnum y))
       (##cpxnum.+ x (##noncpxnum->cpxnum y))
       (##cpxnum.+ x (##noncpxnum->cpxnum y))
@@ -943,8 +943,8 @@
 
     (macro-number-dispatch y (type-error-on-y) ;; x = cpxnum
       (if (and (macro-special-case-exact-zero?) (##fxzero? y))
-	  x
-	  (##cpxnum.- x (##noncpxnum->cpxnum y)))
+          x
+          (##cpxnum.- x (##noncpxnum->cpxnum y)))
       (##cpxnum.- x (##noncpxnum->cpxnum y))
       (##cpxnum.- x (##noncpxnum->cpxnum y))
       (##cpxnum.- x (##noncpxnum->cpxnum y))
@@ -1029,17 +1029,17 @@
             (else
              (##ratnum./ x (##exact-int->ratnum y))))
       (cond ((##fxzero? y)
-	     (divide-by-zero-error))
-	    ((##fx= y 1)
-	     x)
-	    (else
-	     (##fl/ x (##fixnum->flonum y))))
+             (divide-by-zero-error))
+            ((##fx= y 1)
+             x)
+            (else
+             (##fl/ x (##fixnum->flonum y))))
       (cond ((##fxzero? y)
-	     (divide-by-zero-error))
-	    ((##fx= y 1)
-	     x)
-	    (else
-	     (##cpxnum./ x (##noncpxnum->cpxnum y)))))
+             (divide-by-zero-error))
+            ((##fx= y 1)
+             x)
+            (else
+             (##cpxnum./ x (##noncpxnum->cpxnum y)))))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = bignum
       (cond ((##fxzero? x)
@@ -1227,9 +1227,9 @@
 
   (define (exact-remainder x y)
     (##cdr (##exact-int.div x y 
-			    #f   ; need-quotient?
-			    #t   ; keep-dividend?
-			    )))
+                            #f   ; need-quotient?
+                            #t   ; keep-dividend?
+                            )))
 
   (define (inexact-remainder x y)
     (let ((exact-y (##inexact->exact y)))
@@ -1319,10 +1319,10 @@
 
   (define (exact-modulo x y)
     (let ((r (##cdr (##exact-int.div x
-				     y
-				     #f      ; need-quotient?
-				     #t      ; keep-dividend?
-				     ))))
+                                     y
+                                     #f      ; need-quotient?
+                                     #t      ; keep-dividend?
+                                     ))))
       (if (##eqv? r 0)
           0
           (if (##eq? (##negative? x) (##negative? y))
@@ -1702,9 +1702,9 @@
                   (let ((h (##fx+ m-prime (##fxquotient n 2))))
                     (if (##fx< 0 p)
                         (let ((a   (##arithmetic-shift a (##fx- p)))
-			      (b   (##arithmetic-shift b (##fx- p)))
-			      (a_0 (##extract-bit-field p 0 a))
-			      (b_0 (##extract-bit-field p 0 b)))
+                              (b   (##arithmetic-shift b (##fx- p)))
+                              (a_0 (##extract-bit-field p 0 a))
+                              (b_0 (##extract-bit-field p 0 b)))
                           ((lambda (cont)
                              (gcd-middle-step cont a b h m-prime #t))
                            (lambda (M alpha beta)
@@ -1741,13 +1741,13 @@
   (define (general-base a b)
     (if (##eqv? b 0)
         a
-	(let ((rem (cdr (##exact-int.div a b   ; calculate (remainder a b)
-					 #f    ; need-quotient?
-					 #f    ; keep-dividend?
-					 ))))
-	  (if (##fixnum? b)
-	      (fixnum-base b rem)
-	      (general-base b rem)))))
+        (let ((rem (cdr (##exact-int.div a b   ; calculate (remainder a b)
+                                         #f    ; need-quotient?
+                                         #f    ; keep-dividend?
+                                         ))))
+          (if (##fixnum? b)
+              (fixnum-base b rem)
+              (general-base b rem)))))
 
   (define (fixnum-base a b)
     (##declare (not interrupts-enabled))
@@ -1762,21 +1762,21 @@
   (define (exact-gcd x y)
     ;; always returns an exact result, even with inexact arguments.
     (let ((x (cond ((##inexact? x)
-		    (##inexact->exact (##flabs x)))
-		   ((##negative? x)
-		    (##negate x))
-		   ((##bignum? x)
-		    (##bignum.copy x))
-		   (else ; nonnegative fixnum
-		    x)))
-	  (y (cond ((##inexact? y)
-		    (##inexact->exact (##flabs y)))
-		   ((##negative? y)
-		    (##negate y))
-		   ((##bignum? y)
-		    (##bignum.copy y))
-		   (else ; nonnegative fixnum
-		    y))))
+                    (##inexact->exact (##flabs x)))
+                   ((##negative? x)
+                    (##negate x))
+                   ((##bignum? x)
+                    (##bignum.copy x))
+                   (else ; nonnegative fixnum
+                    x)))
+          (y (cond ((##inexact? y)
+                    (##inexact->exact (##flabs y)))
+                   ((##negative? y)
+                    (##negate y))
+                   ((##bignum? y)
+                    (##bignum.copy y))
+                   (else ; nonnegative fixnum
+                    y))))
       ;; now x and y are newly allocated, so we can overwrite them if
       ;; necessary in general-base
       (cond ((##eqv? x 0)
@@ -1786,7 +1786,7 @@
             ((and (##fixnum? x) (##fixnum? y))
              (fixnum-base x y))
             (else
-	     (##fast-gcd x y)))))
+             (##fast-gcd x y)))))
 
   (cond ((##not (##integer? x))
          (type-error-on-x))
@@ -3051,16 +3051,16 @@ for a discussion of branch cuts.
   (macro-number-dispatch y (##fail-check-number 2 expt x y)
 
     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a fixnum
-      (if (##eqv? y 0)
+      (if (##fx= y 0)
           1
           (exact-int-expt x y))
-      (if (##eqv? y 0)
+      (if (##fx= y 0)
           1
           (exact-int-expt x y))
-      (if (##eqv? y 0)
+      (if (##fx= y 0)
           1
           (exact-int-expt x y))
-      (cond ((##eqv? y 0)
+      (cond ((##fx= y 0)
              1)
             ((##flnan? x)
              x)
@@ -3074,9 +3074,9 @@ for a discussion of branch cuts.
                    abs-result)))
             (else
              (##flexpt x (##fixnum->flonum y))))
-      (cond ((##eqv? y 0)
+      (cond ((##fx= y 0)
              1)
-            ((##eqv? y 1)
+            ((##fx= y 1)
              x)
             ((##exact? x)
              (exact-int-expt x y))
@@ -4138,11 +4138,11 @@ for a discussion of branch cuts.
                                                             #\#))))))
                                 (if (and (##not inexact-num?)
                                          (##eqv? (substring->uinteger
-						  str
-						  rad
-						  (##fx+ i2 1)
-						  i3)
-						 0))
+                                                  str
+                                                  rad
+                                                  (##fx+ i2 1)
+                                                  i3)
+                                                 0))
                                     #f
                                     (##vector i3 i2))))))
                       ((##fx= rad 10)
@@ -4507,16 +4507,16 @@ for a discussion of branch cuts.
     (##declare (not interrupts-enabled))
     (let loop ((i (fx- n 1)))
       (if (##fx< i 0)
-	  (##bignum.normalize! result)
-	  (begin
-	    (##bignum.adigit-bitwise-ior! result i x i)
-	    (loop (##fx- i 1))))))
+          (##bignum.normalize! result)
+          (begin
+            (##bignum.adigit-bitwise-ior! result i x i)
+            (loop (##fx- i 1))))))
 
   (define (bignum-bitwise-ior x x-length y y-length)
     ;; x-length <= y-length
     (if (##bignum.negative? x)
-	(bignum-bitwise-ior-loop y (##bignum.copy x) x-length)
-	(bignum-bitwise-ior-loop x (##bignum.copy y) x-length)))
+        (bignum-bitwise-ior-loop y (##bignum.copy x) x-length)
+        (bignum-bitwise-ior-loop x (##bignum.copy y) x-length)))
 
   (cond ((##fixnum? x)
          (cond ((##fixnum? y)
@@ -4617,16 +4617,16 @@ for a discussion of branch cuts.
     (##declare (not interrupts-enabled))
     (let loop ((i (##fx- n 1)))
       (if (##fx< i 0)
-	  (##bignum.normalize! result)
-	  (begin
-	    (##bignum.adigit-bitwise-and! result i x i)
-	    (loop (##fx- i 1))))))
+          (##bignum.normalize! result)
+          (begin
+            (##bignum.adigit-bitwise-and! result i x i)
+            (loop (##fx- i 1))))))
 
   (define (bignum-bitwise-and x x-length y y-length)
     ;; x-length <= y-length
     (if (##bignum.negative? x)
-	(bignum-bitwise-and-loop x (##bignum.copy y) x-length)
-	(bignum-bitwise-and-loop y (##bignum.copy x) x-length)))
+        (bignum-bitwise-and-loop x (##bignum.copy y) x-length)
+        (bignum-bitwise-and-loop y (##bignum.copy x) x-length)))
 
   (cond ((##fixnum? x)
          (cond ((##fixnum? y)
@@ -4915,12 +4915,12 @@ for a discussion of branch cuts.
   ;; for special cases, fixnums, etc.
   
   (let* ((result-length
-	  (##fxceiling-ratio (##fx+ 1 size) ##bignum.adigit-width))  ;  top bit is always 0
-	 (bignum-n
-	  (if (##bignum? n) n (##fixnum->bignum n)))
-	 (result
-	  (##bignum.arithmetic-shift-into!
-	   bignum-n (##fx- position) (##bignum.make result-length #f #f))))
+          (##fxceiling-ratio (##fx+ 1 size) ##bignum.adigit-width))  ;  top bit is always 0
+         (bignum-n
+          (if (##bignum? n) n (##fixnum->bignum n)))
+         (result
+          (##bignum.arithmetic-shift-into!
+           bignum-n (##fx- position) (##bignum.make result-length #f #f))))
 
     ;; zero top bits of result and normalize
 
@@ -4929,15 +4929,15 @@ for a discussion of branch cuts.
       (##declare (not interrupts-enabled))
       (let loop ((i (##fx- (##bignum.mdigit-length result) 1)))
         (if (##fx< size-words i)
-	    (begin
-	      (##bignum.mdigit-set! result i 0)
-	      (loop (##fx- i 1)))
-	    (##bignum.mdigit-set!
-	     result i
-	     (##fxand
-	      (##bignum.mdigit-ref result i)
-	      (##fxnot (##fxarithmetic-shift-left -1 size-bits)))))
-	(##bignum.normalize! result)))))
+            (begin
+              (##bignum.mdigit-set! result i 0)
+              (loop (##fx- i 1)))
+            (##bignum.mdigit-set!
+             result i
+             (##fxand
+              (##bignum.mdigit-ref result i)
+              (##fxnot (##fxarithmetic-shift-left -1 size-bits)))))
+        (##bignum.normalize! result)))))
 
 (define-prim (extract-bit-field size position n)
   (macro-force-vars (size position n)
@@ -4955,7 +4955,7 @@ for a discussion of branch cuts.
 
 (define-prim (##test-bit-field? size position n)
   (##not (##eqv? (##extract-bit-field size position n)
-		 0)))
+                 0)))
 
 (define-prim (test-bit-field? size position n)
   (macro-force-vars (size position n)
@@ -5255,9 +5255,9 @@ for a discussion of branch cuts.
   1
   x
   ((lambda (x y)
-     (cond ((##eqv? y 0)
+     (cond ((##fx= y 0)
             0)
-           ((##eqv? y -1)
+           ((##fx= y -1)
             (##fx-? x))
            (else
             (##fx*? x y))))
@@ -5306,16 +5306,16 @@ for a discussion of branch cuts.
 (define-prim (##fxwrapquotient x y))
 
 (define-prim-fixnum (fxwrapquotient x y)
-  (if (##eqv? y 0)
+  (if (##fx= y 0)
       (##raise-divide-by-zero-exception fxwrapquotient x y)
       (##fxwrapquotient x y)))
 
 (define-prim (##fxquotient x y))
 
 (define-prim-fixnum (fxquotient x y)
-  (if (##eqv? y 0)
+  (if (##fx= y 0)
       (##raise-divide-by-zero-exception fxquotient x y)
-      (if (##eqv? y -1)
+      (if (##fx= y -1)
           (or (##fx-? x)
               (##raise-fixnum-overflow-exception fxquotient x y))
           (##fxquotient x y))))
@@ -5323,14 +5323,14 @@ for a discussion of branch cuts.
 (define-prim (##fxremainder x y))
 
 (define-prim-fixnum (fxremainder x y)
-  (if (##eqv? y 0)
+  (if (##fx= y 0)
       (##raise-divide-by-zero-exception fxremainder x y)
       (##fxremainder x y)))
 
 (define-prim (##fxmodulo x y))
 
 (define-prim-fixnum (fxmodulo x y)
-  (if (##eqv? y 0)
+  (if (##fx= y 0)
       (##raise-divide-by-zero-exception fxmodulo x y)
       (##fxmodulo x y)))
 
@@ -9076,25 +9076,25 @@ ___RESULT = result;
             #f)))
       (##declare (not interrupts-enabled))
       (let loop1 ((k 0))
-	(if (##fx< k y-length)
+        (if (##fx< k y-length)
             (let ((multiplier (##bignum.mdigit-ref y k)))
               (if (##fx= multiplier 0)
                 (loop1 (##fx+ k 1))
                 (let loop2 ((i 0)
                             (j k)
                             (carry 0))
-		  (if (##fx< i x-length)
-		    (loop2 (##fx+ i 1)
-			   (##fx+ j 1)
-			   (##bignum.mdigit-mul! result
-						 j
-						 x
-						 i
-						 multiplier
-						 carry))
-		    (begin
-		      (##bignum.mdigit-set! result j carry)
-		      (loop1 (##fx+ k 1)))))))
+                  (if (##fx< i x-length)
+                    (loop2 (##fx+ i 1)
+                           (##fx+ j 1)
+                           (##bignum.mdigit-mul! result
+                                                 j
+                                                 x
+                                                 i
+                                                 multiplier
+                                                 carry))
+                    (begin
+                      (##bignum.mdigit-set! result j carry)
+                      (loop1 (##fx+ k 1)))))))
             (cleanup x y result)))))
 
   (define (cleanup x y result)
@@ -9229,19 +9229,19 @@ ___RESULT = result;
   (let* ((bit-shift
           (##fxmodulo shift ##bignum.adigit-width))
          (digit-shift
-	  (##fxquotient (##fx- shift bit-shift) ##bignum.adigit-width))
-	 (x-length
+          (##fxquotient (##fx- shift bit-shift) ##bignum.adigit-width))
+         (x-length
           (##bignum.adigit-length x))
          (result-length
           (##fx+ (##fx+ x-length digit-shift)
                  (if (##fxzero? bit-shift) 0 1))))
     (cond ((##fx< 0 result-length)
-	   (##bignum.normalize!
-	    (##bignum.arithmetic-shift-into! x shift (##bignum.make result-length #f #f))))
-	  ((##bignum.negative? x)
+           (##bignum.normalize!
+            (##bignum.arithmetic-shift-into! x shift (##bignum.make result-length #f #f))))
+          ((##bignum.negative? x)
             -1)
-	  (else
-	   0))))
+          (else
+           0))))
 
 (define-prim (##bignum.arithmetic-shift-into! x shift result)
 
@@ -9582,9 +9582,9 @@ ___RESULT = result;
                  (##exact-int.div
                   (##bignum.arithmetic-shift u (##fx- v-first-bit-set))
                   (##bignum.arithmetic-shift v (##fx- v-first-bit-set))
-		  #t          ; need-quotient?
-		  #f          ; keep-dividend?
-		  ))
+                  #t          ; need-quotient?
+                  #f          ; keep-dividend?
+                  ))
                 (extra-remainder
                  (##extract-bit-field v-first-bit-set 0 u)))
             (##cons (##car reduced-quotient)
@@ -9657,10 +9657,10 @@ ___RESULT = result;
 ;;; ------------------------
 
 (define (##exact-int.= x y)
-  (##eqv? 0 (##exact-int.compare x y)))
+  (##fx= 0 (##exact-int.compare x y)))
 
 (define (##exact-int.< x y)
-  (##eqv? -1 (##exact-int.compare x y)))
+  (##fx= -1 (##exact-int.compare x y)))
 
 (define (##exact-int.compare x y)
 
@@ -9669,27 +9669,27 @@ ___RESULT = result;
   (define (compare x y x-smaller)
     (##declare (not interrupts-enabled))
     (let ((x-digits (##bignum.adigit-length x))
-	  (y-digits (##bignum.adigit-length y)))
+          (y-digits (##bignum.adigit-length y)))
       (cond ((##fx< x-digits y-digits) x-smaller)
-	    ((##fx< y-digits x-digits) (##fx- x-smaller))
-	    (else
-	     (let loop ((i (##fx- x-digits 1)))
-	       (cond ((##fx< i 0) 0)
-		     ((##bignum.adigit-< x y i) -1)
-		     ((##bignum.adigit-< y x i) 1)
-		     (else
-		      (loop (##fx- i 1)))))))))
+            ((##fx< y-digits x-digits) (##fx- x-smaller))
+            (else
+             (let loop ((i (##fx- x-digits 1)))
+               (cond ((##fx< i 0) 0)
+                     ((##bignum.adigit-< x y i) -1)
+                     ((##bignum.adigit-< y x i) 1)
+                     (else
+                      (loop (##fx- i 1)))))))))
   (if (##fixnum? x)
       (if (##fixnum? y)
-	  (cond ((##fx< x y) -1)
-		((##fx= x y)  0)
-		(else         1))
-	  (if (##bignum.negative? y) 1 -1))
+          (cond ((##fx< x y) -1)
+                ((##fx= x y)  0)
+                (else         1))
+          (if (##bignum.negative? y) 1 -1))
       (if (##fixnum? y)
-	  (if (##bignum.negative? x) -1 1)
-	  (if (##bignum.negative? x)
-	      (if (##bignum.negative? y) (compare x y 1) -1)
-	      (if (##bignum.negative? y) 1 (compare x y -1))))))
+          (if (##bignum.negative? x) -1 1)
+          (if (##bignum.negative? x)
+              (if (##bignum.negative? y) (compare x y 1) -1)
+              (if (##bignum.negative? y) 1 (compare x y -1))))))
 
 (define-prim (##exact-int.*-expt2 x y)
   (if (##fxnegative? y)
@@ -9701,14 +9701,14 @@ ___RESULT = result;
   (define (big-quotient x y)
     (let* ((x-negative? (##negative? x))
            (abs-x (if x-negative?
-		      (##negate x)
-		      x))
+                      (##negate x)
+                      x))
            (y-negative? (##negative? y))
            (abs-y (if y-negative?
-		      (begin
-			(set! keep-dividend? #f)
-			(##negate y))
-		      y)))
+                      (begin
+                        (set! keep-dividend? #f)
+                        (##negate y))
+                      y)))
       (if (##< abs-x abs-y)
           (##cons 0 x)
 
@@ -9718,7 +9718,7 @@ ___RESULT = result;
           (let ((result (##bignum.div abs-x abs-y need-quotient? keep-dividend?)))
 
             (if (and need-quotient?
-		     (##not (##eq? x-negative? y-negative?)))
+                     (##not (##eq? x-negative? y-negative?)))
                 (##set-car! result (##negate (##car result))))
 
             (if x-negative?
@@ -9880,8 +9880,8 @@ ___RESULT = result;
                    (##+ (##arithmetic-shift r-prime length/4)
                         (##extract-bit-field length/4 length/4 x))
                    (##arithmetic-shift s-prime 1)
-		   #t           ; need-quotient?
-		   #f))         ; keep-dividend?
+                   #t           ; need-quotient?
+                   #f))         ; keep-dividend?
                  (q
                   (##car qu))
                  (u
