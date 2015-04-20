@@ -1,12 +1,12 @@
 #ifdef ___LINKER_INFO
-; File: "_gsclib.c", produced by Gambit-C v4.7.4
+; File: "_gsclib.c", produced by Gambit-C v4.7.5
 (
-407004
+407005
 " _gsclib"
 ((" _gsclib"))
 (
+"C"
 "_gsclib"
-"c"
 "dyn"
 "exe"
 "keep-c"
@@ -99,7 +99,7 @@
  ()
 )
 #else
-#define ___VERSION 407004
+#define ___VERSION 407005
 #define ___MODULE_NAME " _gsclib"
 #define ___LINKER_ID ____20___gsclib
 #define ___MH_PROC ___H__20___gsclib
@@ -114,8 +114,8 @@
 #define ___MODDESCR ___REF_SUB(48)
 #include "gambit.h"
 
+___NEED_SYM(___S_C)
 ___NEED_SYM(___S___gsclib)
-___NEED_SYM(___S_c)
 ___NEED_SYM(___S_dyn)
 ___NEED_SYM(___S_exe)
 ___NEED_SYM(___S_keep_2d_c)
@@ -200,8 +200,8 @@ ___NEED_GLO(___G_link_2d_incremental)
 ___NEED_GLO(___G_open_2d_process)
 
 ___BEGIN_SYM
-___DEF_SYM(0,___S___gsclib,"_gsclib")
-___DEF_SYM(1,___S_c,"c")
+___DEF_SYM(0,___S_C,"C")
+___DEF_SYM(1,___S___gsclib,"_gsclib")
 ___DEF_SYM(2,___S_dyn,"dyn")
 ___DEF_SYM(3,___S_exe,"exe")
 ___DEF_SYM(4,___S_keep_2d_c,"keep-c")
@@ -209,8 +209,8 @@ ___DEF_SYM(5,___S_obj,"obj")
 ___DEF_SYM(6,___S_verbose,"verbose")
 ___END_SYM
 
-#define ___SYM___gsclib ___SYM(0,___S___gsclib)
-#define ___SYM_c ___SYM(1,___S_c)
+#define ___SYM_C ___SYM(0,___S_C)
+#define ___SYM___gsclib ___SYM(1,___S___gsclib)
 #define ___SYM_dyn ___SYM(2,___S_dyn)
 #define ___SYM_exe ___SYM(3,___S_exe)
 #define ___SYM_keep_2d_c ___SYM(4,___S_keep_2d_c)
@@ -643,7 +643,7 @@ ___DEF_SUB_STR(___X47,36)
                ___STR8(32,100,121,110,97,109,105,99)
                ___STR4(97,108,108,121)
 ___DEF_SUB_VEC(___X48,5)
-               ___VEC1(___REF_SYM(0,___S___gsclib))
+               ___VEC1(___REF_SYM(1,___S___gsclib))
                ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FIX(1))
                ___VEC1(___REF_NUL)
@@ -1650,7 +1650,7 @@ ___DEF_GLBL(___L42__23__23_compile_2d_file)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),40,___G__23__23_path_2d_extension)
 ___DEF_SLBL(5,___L5__23__23_compile_2d_file)
    ___SET_STK(-3,___R1)
-   ___SET_R1(___SYM_c)
+   ___SET_R1(___SYM_C)
    ___SET_R0(___LBL(6))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),56,___G_c_23_target_2d_get)
 ___DEF_SLBL(6,___L6__23__23_compile_2d_file)
@@ -1893,7 +1893,7 @@ ___DEF_GLBL(___L59__23__23_compile_2d_file)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),43,___G__23__23_path_2d_strip_2d_extension)
 ___DEF_SLBL(39,___L39__23__23_compile_2d_file)
    ___SET_STK(-2,___R1)
-   ___SET_R1(___SYM_c)
+   ___SET_R1(___SYM_C)
    ___SET_R0(___LBL(40))
    ___ADJFP(4)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),56,___G_c_23_target_2d_get)
@@ -2699,7 +2699,7 @@ ___DEF_GLBL(___L15__23__23_link_2d_incremental)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),43,___G__23__23_path_2d_strip_2d_extension)
 ___DEF_SLBL(9,___L9__23__23_link_2d_incremental)
    ___SET_STK(-2,___R1)
-   ___SET_R1(___SYM_c)
+   ___SET_R1(___SYM_C)
    ___SET_R0(___LBL(10))
    ___ADJFP(4)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),56,___G_c_23_target_2d_get)
@@ -2942,7 +2942,7 @@ ___DEF_GLBL(___L14__23__23_link_2d_flat)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),43,___G__23__23_path_2d_strip_2d_extension)
 ___DEF_SLBL(8,___L8__23__23_link_2d_flat)
    ___SET_STK(-3,___R1)
-   ___SET_R1(___SYM_c)
+   ___SET_R1(___SYM_C)
    ___SET_R0(___LBL(9))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),56,___G_c_23_target_2d_get)
 ___DEF_SLBL(9,___L9__23__23_link_2d_flat)
@@ -3300,8 +3300,8 @@ ___DEF_MOD_GLO(2,___G__23__23_c_2d_code,230)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
-___DEF_MOD_SYM(0,___S___gsclib,"_gsclib")
-___DEF_MOD_SYM(1,___S_c,"c")
+___DEF_MOD_SYM(0,___S_C,"C")
+___DEF_MOD_SYM(1,___S___gsclib,"_gsclib")
 ___DEF_MOD_SYM(2,___S_dyn,"dyn")
 ___DEF_MOD_SYM(3,___S_exe,"exe")
 ___DEF_MOD_SYM(4,___S_keep_2d_c,"keep-c")
