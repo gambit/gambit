@@ -851,7 +851,8 @@
                   (let* ((module-meta-info
                           (targ-mod-meta-info (car lst)))
                          (script-line
-                          (cond ((assq 'script-line module-meta-info) => cdr)
+                          (cond ((and (pair? module-meta-info)
+                                      (assq 'script-line module-meta-info)) => cdr)
                                 (else #f))))
                     (loop (cdr lst)
                           (or script-line
