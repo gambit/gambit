@@ -1,15 +1,32 @@
 #! /bin/sh
-":";exec ../gsi/gsi -:dar,=.. -f $0 $*
+":";exec /usr/bin/env gsi -:dar,=.. -f $0 $*
 
 ;;;============================================================================
 
 ;;; File: "igsc.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
-(##include "../gsc/fixnum.scm")
+;; This is a drop-in replacement for gsc-boot, which is the Gambit
+;; Scheme compiler used to compile the Gambit system.  It has the
+;; advantage of executing the whole compiler with all type checking
+;; turned on, which is useful to debug the compiler.  Also, it only
+;; requires a working Gambit interpreter (gsi), preferably a recent
+;; version.
+;;
+;; To bootstrap Gambit using igsc.scm, from the root directory do:
+;;
+;;   cp gsc/igsc.scm gsc-boot
+;;   make bootclean
+;;   make
+
+;;;----------------------------------------------------------------------------
+
+(include "gsc/fixnum.scm")
+
+(define root "../") ;; the Gambit root directory is always one level up
 
 ;; use custom absent object otherwise the interpreter gets confused
 
@@ -25,9 +42,14 @@
            (string=? (substring (car args) 0 2) "-:"))
       (set! ##processed-command-line (cons (car cl) (cdr args)))))
 
+;; normalize program name
+
+(set-car! ##processed-command-line
+          (path-normalize (car ##processed-command-line)))
+
 ;;;----------------------------------------------------------------------------
 
-(define modules '(
+(define gsc-modules '(
 "_utils"
 "_source"
 "_parms"
@@ -50,24 +72,26 @@
 "_gsc"
 ))
 
-(define root "")
-
-(define (load-from-gsc file)
-  (##namespace ("" load))
-  (display "loading ")
-  (write file)
-  (load (string-append root "../gsc/" file ".scm"))
-  (newline))
+(define (load-from-root dir)
+  (lambda (base)
+    (with-output-to-port
+        (current-error-port)
+      (lambda ()
+        (let ((file (string-append root dir base ".scm")))
+          (display "loading ")
+          (write file)
+          (load file)
+          (newline))))))
 
 ;;;----------------------------------------------------------------------------
 
-(load-from-gsc "_host")
+((load-from-root "gsc/") "_host")
 
 (set! **main-readtable
   (and **main-readtable
        (##list->vector (##vector->list **main-readtable))))
 
-(for-each load-from-gsc modules)
+(for-each (load-from-root "gsc/") gsc-modules)
 
 (##main-gsi/gsc)
 
