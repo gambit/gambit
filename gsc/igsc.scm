@@ -1,5 +1,5 @@
 #! /bin/sh
-":";exec /usr/bin/env gsi -:dar,=.. -f $0 $*
+":";if test "`basename $0`" == "igsc.scm" ; then exec /usr/bin/env gsi -:dar,=`dirname $0`/.. -f $0 $*; else exec /usr/bin/env gsi -:dar,=`dirname $0` -f $0 $*; fi
 
 ;;;============================================================================
 
@@ -24,9 +24,22 @@
 
 ;;;----------------------------------------------------------------------------
 
-(include "gsc/fixnum.scm")
+#;
+(define-macro (set-root-dir)
+  (let* ((script-path (path-normalize (car ##processed-command-line)))
+         (dir (path-directory script-path)))
+    (if (equal? (path-strip-directory script-path) "igsc.scm")
+        `(begin
+           (include "fixnum.scm")
+           (define root ,(path-directory
+                          (path-strip-trailing-directory-separator dir))))
+        `(begin
+           (include "gsc/fixnum.scm")
+           (define root ,dir)))))
+#;
+(set-root-dir)
 
-(define root "../") ;; the Gambit root directory is always one level up
+(include "~~/gsc/fixnum.scm")
 
 ;; use custom absent object otherwise the interpreter gets confused
 
@@ -77,7 +90,7 @@
     (with-output-to-port
         (current-error-port)
       (lambda ()
-        (let ((file (string-append root dir base ".scm")))
+        (let ((file (string-append "~~/" dir base ".scm")))
           (display "loading ")
           (write file)
           (load file)
