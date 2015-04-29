@@ -3748,7 +3748,7 @@ goto *___LABEL_HOST_LABEL(___pc);
 
 #define ___DEF_SW(n)
 
-#ifdef ___USE_INLINE_JUMPS
+#ifdef ___INLINE_JUMPS
 
 #define ___END_SW \
 ___jumpext:
