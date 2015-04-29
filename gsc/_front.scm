@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1611,7 +1611,7 @@
      node
      (lambda (case-var branches nb-cases)
        (if (and (>= nb-cases min-cases-for-switch)
-                (reason-tail? reason));;;;;;;;;;;;;;;;;;
+                (reason-tail? reason));;TODO: also optimize when not in tail pos
          (gen-switch node live reason case-var branches)
          (gen-tst node live reason))))
     (gen-tst node live reason)))
@@ -1687,22 +1687,25 @@
                   (and (eq? case-var var)
                        (list val)))))))
 
-  (define (extract-cases pre)
+  (define (extract-cases pre cs)
     (cond ((disj? pre)
-           (let ((x1 (extract-cases (disj-pre pre))))
-             (and x1
-                  (let ((x2 (extract-cases (disj-alt pre))))
-                    (and x2
-                         (append x1 x2))))))
+           (let ((cs2 (extract-cases (disj-pre pre) cs)))
+             (and cs2
+                  (extract-cases (disj-alt pre) cs2))))
           ((app? pre)
            (let ((proc (app->specialized-proc pre))
                  (args (app-args pre)))
              (and (eq? proc **eq?-proc-obj)
                   (= (length args) 2)
-                  (let ((arg1 (car args))
-                        (arg2 (cadr args)))
-                    (or (try-ref-cst arg1 arg2)
-                        (try-ref-cst arg2 arg1))))))
+                  (let* ((arg1 (car args))
+                         (arg2 (cadr args))
+                         (x (or (try-ref-cst arg1 arg2)
+                                (try-ref-cst arg2 arg1))))
+                    (and x
+                         (let ((val (car x)))
+                           (if (memq val cs) ;; avoid repeated eq? cases
+                               cs
+                               (cons val cs))))))))
           (else
            #f)))
 
@@ -1711,7 +1714,7 @@
       (let ((pre (tst-pre node))
             (con (tst-con node))
             (alt (tst-alt node)))
-        (let ((cs (extract-cases pre)))
+        (let ((cs (extract-cases pre '())))
           (if cs
             (extract-case
              alt
