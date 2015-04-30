@@ -1006,18 +1006,16 @@ ___SCMOBJ mode;)
 
 #ifdef USE_mkdir
 
-#define ___CREATE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___CREATE_DIRECTORY_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
-      if (mkdir (___CAST(___STRING_TYPE(___CREATE_DIRECTORY_PATH_CE_SELECT),cpath), ___INT(mode)) < 0)
+      if (mkdir (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath), ___INT(mode)) < 0)
         e = fnf_or_err_code_from_errno ();
       ___release_string (cpath);
     }
@@ -1026,23 +1024,17 @@ ___SCMOBJ mode;)
 
 #ifdef USE_CreateDirectory
 
-#ifdef _UNICODE
-#define ___CREATE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___CREATE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___CREATE_DIRECTORY_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
       if (!CreateDirectory
-            (___CAST(___STRING_TYPE(___CREATE_DIRECTORY_PATH_CE_SELECT),
+            (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                      cpath),
              NULL))
         e = fnf_or_err_code_from_GetLastError ();
@@ -1074,18 +1066,16 @@ ___SCMOBJ mode;)
 
 #ifdef USE_mkfifo
 
-#define ___CREATE_FIFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___CREATE_FIFO_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
-      if (mkfifo (___CAST(___STRING_TYPE(___CREATE_FIFO_PATH_CE_SELECT),cpath), ___INT(mode)) < 0)
+      if (mkfifo (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath), ___INT(mode)) < 0)
         e = fnf_or_err_code_from_errno ();
       ___release_string (cpath);
     }
@@ -1116,14 +1106,12 @@ ___SCMOBJ path2;)
 
 #ifdef USE_link
 
-#define ___CREATE_LINK_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
               &cpath1,
               1,
-              ___CE(___CREATE_LINK_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1132,12 +1120,12 @@ ___SCMOBJ path2;)
                   path2,
                   &cpath2,
                   2,
-                  ___CE(___CREATE_LINK_PATH_CE_SELECT),
+                  ___CE(___PATH_CE_SELECT),
                   0))
           == ___FIX(___NO_ERR))
         {
-          if (link (___CAST(___STRING_TYPE(___CREATE_LINK_PATH_CE_SELECT),cpath1),
-                    ___CAST(___STRING_TYPE(___CREATE_LINK_PATH_CE_SELECT),cpath2))
+          if (link (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath1),
+                    ___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath2))
               < 0)
             e = fnf_or_err_code_from_errno ();
           ___release_string (cpath2);
@@ -1171,14 +1159,12 @@ ___SCMOBJ path2;)
 
 #ifdef USE_symlink
 
-#define ___CREATE_SYMLINK_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
               &cpath1,
               1,
-              ___CE(___CREATE_SYMLINK_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1187,12 +1173,12 @@ ___SCMOBJ path2;)
                   path2,
                   &cpath2,
                   2,
-                  ___CE(___CREATE_SYMLINK_PATH_CE_SELECT),
+                  ___CE(___PATH_CE_SELECT),
                   0))
           == ___FIX(___NO_ERR))
         {
-          if (symlink (___CAST(___STRING_TYPE(___CREATE_SYMLINK_PATH_CE_SELECT),cpath1),
-                       ___CAST(___STRING_TYPE(___CREATE_SYMLINK_PATH_CE_SELECT),cpath2))
+          if (symlink (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath1),
+                       ___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath2))
               < 0)
             e = fnf_or_err_code_from_errno ();
           ___release_string (cpath2);
@@ -1224,18 +1210,16 @@ ___SCMOBJ path;)
 
 #ifdef USE_rmdir
 
-#define ___DELETE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___DELETE_DIRECTORY_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
-      if (rmdir (___CAST(___STRING_TYPE(___DELETE_DIRECTORY_PATH_CE_SELECT),cpath)) < 0)
+      if (rmdir (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath)) < 0)
         e = fnf_or_err_code_from_errno ();
       ___release_string (cpath);
     }
@@ -1244,23 +1228,17 @@ ___SCMOBJ path;)
 
 #ifdef USE_RemoveDirectory
 
-#ifdef _UNICODE
-#define ___DELETE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___DELETE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___DELETE_DIRECTORY_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
       if (!RemoveDirectory
-            (___CAST(___STRING_TYPE(___DELETE_DIRECTORY_PATH_CE_SELECT),
+            (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                      cpath)))
         e = fnf_or_err_code_from_GetLastError ();
       ___release_string (cpath);
@@ -1290,18 +1268,16 @@ ___SCMOBJ path;)
 
 #ifdef USE_chdir
 
-#define ___SET_CURRENT_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
-      if (chdir (___CAST(___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),cpath)) < 0)
+      if (chdir (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath)) < 0)
         e = fnf_or_err_code_from_errno ();
       ___release_string (cpath);
     }
@@ -1310,23 +1286,17 @@ ___SCMOBJ path;)
 
 #ifdef USE_SetCurrentDirectory
 
-#ifdef _UNICODE
-#define ___SET_CURRENT_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___SET_CURRENT_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
       if (!SetCurrentDirectory
-            (___CAST(___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),
+            (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                      cpath)))
         e = fnf_or_err_code_from_GetLastError ();
       ___release_string (cpath);
@@ -1360,14 +1330,12 @@ ___SCMOBJ path2;)
 
 #ifdef USE_rename
 
-#define ___RENAME_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
               &cpath1,
               1,
-              ___CE(___RENAME_FILE_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1376,12 +1344,12 @@ ___SCMOBJ path2;)
                   path2,
                   &cpath2,
                   2,
-                  ___CE(___RENAME_FILE_PATH_CE_SELECT),
+                  ___CE(___PATH_CE_SELECT),
                   0))
           == ___FIX(___NO_ERR))
         {
-          if (rename (___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),cpath1),
-                      ___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),cpath2))
+          if (rename (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath1),
+                      ___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath2))
               < 0)
             e = fnf_or_err_code_from_errno ();
           ___release_string (cpath2);
@@ -1393,18 +1361,12 @@ ___SCMOBJ path2;)
 
 #ifdef USE_MoveFile
 
-#ifdef _UNICODE
-#define ___RENAME_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___RENAME_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
               &cpath1,
               1,
-              ___CE(___RENAME_FILE_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1413,14 +1375,14 @@ ___SCMOBJ path2;)
                   path2,
                   &cpath2,
                   2,
-                  ___CE(___RENAME_FILE_PATH_CE_SELECT),
+                  ___CE(___PATH_CE_SELECT),
                   0))
           == ___FIX(___NO_ERR))
         {
           if (!MoveFile
-                (___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),
+                (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                          cpath1),
-                 ___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),
+                 ___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                          cpath2)))
             e = fnf_or_err_code_from_GetLastError ();
           ___release_string (cpath2);
@@ -1456,14 +1418,12 @@ ___SCMOBJ path2;)
 
 #ifdef USE_POSIX
 
-#define ___COPY_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
               &cpath1,
               1,
-              ___CE(___COPY_FILE_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1472,14 +1432,14 @@ ___SCMOBJ path2;)
                   path2,
                   &cpath2,
                   2,
-                  ___CE(___COPY_FILE_PATH_CE_SELECT),
+                  ___CE(___PATH_CE_SELECT),
                   0))
           == ___FIX(___NO_ERR))
         {
           int fd1;
           int fd2;
 
-          if ((fd1 = open (___CAST(___STRING_TYPE(___COPY_FILE_PATH_CE_SELECT),
+          if ((fd1 = open (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                                    cpath1),
 #ifdef O_BINARY
                            O_BINARY|
@@ -1489,7 +1449,7 @@ ___SCMOBJ path2;)
             e = fnf_or_err_code_from_errno ();
           else
             {
-              if ((fd2 = open (___CAST(___STRING_TYPE(___COPY_FILE_PATH_CE_SELECT),
+              if ((fd2 = open (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                                        cpath2),
 #ifdef O_BINARY
                                O_BINARY|
@@ -1530,7 +1490,7 @@ ___SCMOBJ path2;)
               if (close (fd1) < 0 && e != ___FIX(___NO_ERR))
                 {
                   e = err_code_from_errno ();
-                  unlink (___CAST(___STRING_TYPE(___COPY_FILE_PATH_CE_SELECT),
+                  unlink (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                                   cpath2));
                 }
             }
@@ -1543,18 +1503,12 @@ ___SCMOBJ path2;)
 
 #ifdef USE_CopyFile
 
-#ifdef _UNICODE
-#define ___COPY_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___COPY_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
               &cpath1,
               1,
-              ___CE(___COPY_FILE_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1563,14 +1517,14 @@ ___SCMOBJ path2;)
                   path2,
                   &cpath2,
                   2,
-                  ___CE(___COPY_FILE_PATH_CE_SELECT),
+                  ___CE(___PATH_CE_SELECT),
                   0))
           == ___FIX(___NO_ERR))
         {
           if (!CopyFile
-                (___CAST(___STRING_TYPE(___COPY_FILE_PATH_CE_SELECT),
+                (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                          cpath1),
-                 ___CAST(___STRING_TYPE(___COPY_FILE_PATH_CE_SELECT),
+                 ___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                          cpath2),
                  1))
             e = fnf_or_err_code_from_GetLastError ();
@@ -1603,18 +1557,16 @@ ___SCMOBJ path;)
 
 #ifdef USE_unlink
 
-#define ___DELETE_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___DELETE_FILE_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
-      if (unlink (___CAST(___STRING_TYPE(___DELETE_FILE_PATH_CE_SELECT),cpath))
+      if (unlink (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath))
           < 0)
         e = fnf_or_err_code_from_errno ();
       ___release_string (cpath);
@@ -1624,23 +1576,17 @@ ___SCMOBJ path;)
 
 #ifdef USE_DeleteFile
 
-#ifdef _UNICODE
-#define ___DELETE_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___DELETE_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___DELETE_FILE_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
       if (!DeleteFile
-            (___CAST(___STRING_TYPE(___DELETE_FILE_PATH_CE_SELECT),
+            (___CAST(___STRING_TYPE(___PATH_CE_SELECT),
                      cpath)))
         e = fnf_or_err_code_from_GetLastError ();
       ___release_string (cpath);
