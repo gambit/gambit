@@ -3797,12 +3797,13 @@ ___SCMOBJ dh_params_path;
 ___SCMOBJ elliptic_curve_name;
 ___SCMOBJ client_ca_path;)
 {
-  return ___FIX(___UNIMPL_ERR);
+  return ___FIX(___TLS_UNSUPPORTED_ERR);
 }
 
 #else
 
-___HIDDEN int tls_initialized = 0;
+___HIDDEN int openssl_initialized = FALSE;
+
 
 /* TLS context */
 
@@ -3944,6 +3945,7 @@ ___SCMOBJ client_ca_path;)
   ___SCMOBJ scm_ctx;
   int err;
   long tls_options;
+  long openssl_version = 0;
 
   /* Server mode parameters */
 #ifndef OPENSSL_NO_DH
@@ -3965,32 +3967,38 @@ ___SCMOBJ client_ca_path;)
   do {                                          \
     if ((tls_ret) == 0)                         \
       {                                         \
-        ERR_print_errors_fp (stderr);           \
-        goto error;                             \
+        return ___FIX(___TLS_OPENSSL_ERR);      \
       }                                         \
   } while(0)
 
   /* TLS library Initialization */
   /* Reference for TLS initialization:
      https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
-  if (tls_initialized == 0)
+  if (openssl_initialized == FALSE)
     {
       if (!SSL_library_init())
-        {
-          fprintf (stderr, "** OpenSSL initialization failed!\n");
-          return ___FIX(___TLS_ERR);
-        }
+        return ___FIX(___TLS_OPENSSL_LOAD_ERR);
+
       SSL_load_error_strings();
       OpenSSL_add_all_algorithms();
 
-      tls_initialized = 1;
+      /* OpenSSL version format after 0.9.3:
+         MMNNFFPPS: major minor fix patch status
+         The status nibble has one of the values 0 for development, 1 to e for
+         betas; 1 to 14, and f for release.
+         The loaded OpenSSL library must be equal or newer than the one used
+         during compilation. Also, it needs to have the same Major, Minor and
+         Fix parts. */
+      openssl_version = SSLeay();
+      if (openssl_version < OPENSSL_VERSION_NUMBER ||
+          (openssl_version>>12) != (OPENSSL_VERSION_NUMBER>>12) )
+        return ___FIX(___TLS_OPENSSL_LIBRARY_VERSION_ERR);
+
+      openssl_initialized = TRUE;
     }
   /* Check Entropy */
   if (RAND_status() == 0)
-    {
-      fprintf(stderr, "** TLS: not enough entropy in the pool\n");
-      return ___FIX(___TLS_ERR);
-    }
+    return ___FIX(___TLS_OPENSSL_NOT_ENOUGH_ENTROPY_ERR);
 
   /* Context initialization */
   ___tls_context *c = ___CAST(___tls_context*,
@@ -4079,18 +4087,19 @@ ___SCMOBJ client_ca_path;)
       /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
          The countermeasure breaks some TLS implementations, so it is deactivated by
          default by SSL_OP_ALL */
-      if (1 /* Use empty fragments */) {
+      if (options & ___TLS_OPTION_INSERT_EMPTY_FRAGMENTS)
+        {
 #ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
 
         tls_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
 
 #else
 
-        fprintf (stderr, "** TLS: TLS version doesn't support empty fragments\n");
-        goto error;
+        ___release_rc_tls_context (c);
+        return ___FIX(___TLS_UNSUPPORTED_EMPTY_FRAGS_ERR);
 
 #endif
-      }
+        }
 
       TLS_CHECK_ERROR (tls_options &
                        SSL_CTX_set_options (c->tls_ctx, tls_options));
@@ -4112,9 +4121,7 @@ ___SCMOBJ client_ca_path;)
         case 0x200:
           break;
         default:
-          fprintf (stderr, "** TLS: Wrong TLS version requested: %x\n",
-                   min_tls_version);
-          goto error;
+          return ___FIX(___TLS_WRONG_TLS_VERSION_ERR);
         }
 
       /* OPTION: Diffie-Hellman key exchange algorithm support */
@@ -4130,27 +4137,21 @@ ___SCMOBJ client_ca_path;)
               dh_fp = fopen (c->dh_params_path, "r");
               if (dh_fp == NULL)
                 {
-                  fprintf (stderr,
-                           "** TLS: Error reading Diffie-Hellman "
-                           "parameters file\n");
-                  goto error;
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_READ_DH_PARAMS_ERR);
                 }
               dh = PEM_read_DHparams (dh_fp, NULL, NULL, NULL);
               fclose (dh_fp);
               if (dh == NULL)
                 {
-                  fprintf (stderr,
-                           "** TLS: Error reading Diffie-Hellman "
-                           "parameters from file\n");
-                  goto error;
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_READ_DH_PARAMS_ERR);
                 }
               DH_check (dh, &err);
               if (err != 0)
                 {
-                  fprintf (stderr,
-                           "** TLS: Diffie-Hellman "
-                           "parameters failed validation\n");
-                  goto error;
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_READ_DH_PARAMS_ERR);
                 }
             }
           else
@@ -4159,10 +4160,8 @@ ___SCMOBJ client_ca_path;)
               dh = DH_new();
               if (dh == NULL)
                 {
-                  fprintf (stderr,
-                           "** TLS: Error allocating Diffie-Hellman "
-                           "parameters\n");
-                  goto error;
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_OPENSSL_ERR);
                 }
               dh->p = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
               dh->g = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
@@ -4170,10 +4169,8 @@ ___SCMOBJ client_ca_path;)
               if (dh->p == NULL || dh->g == NULL)
                 {
                   DH_free (dh);
-                  fprintf (stderr,
-                           "** TLS: Error processing Diffie-Hellman "
-                           "parameters\n");
-                  goto error;
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_OPENSSL_ERR);
                 }
             }
           SSL_CTX_set_tmp_dh (c->tls_ctx, dh);
@@ -4184,9 +4181,8 @@ ___SCMOBJ client_ca_path;)
             DH_free (dh);
 #else
 
-          fprintf (stderr,
-                   "** TLS: Diffie-Hellman not supported by OpenSSL version\n");
-          goto error;
+          ___release_rc_tls_context (c);
+          return ___FIX(___TLS_UNSUPPORTED_DH_ERR);
 
 #endif
         }
@@ -4204,8 +4200,8 @@ ___SCMOBJ client_ca_path;)
               nid = OBJ_sn2nid (c->elliptic_curve_name);
               if (nid == 0)
                 {
-                  fprintf (stderr, "** TLS: Unknown elliptic curve name\n");
-                  goto error;
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_UNKNOWN_ELLIPTIC_CURVE_ERR);
                 }
             }
           else
@@ -4215,8 +4211,8 @@ ___SCMOBJ client_ca_path;)
           ecdh = EC_KEY_new_by_curve_name(nid);
           if (ecdh == NULL)
             {
-              fprintf (stderr, "** TLS: Unable to create curve\n");
-              goto error;
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_OPENSSL_ERR);
             }
           SSL_CTX_set_tmp_ecdh (c->tls_ctx,ecdh);
           TLS_CHECK_ERROR (SSL_OP_SINGLE_ECDH_USE &
@@ -4226,9 +4222,8 @@ ___SCMOBJ client_ca_path;)
 
 #else
 
-          fprintf (stderr,
-                   "** TLS: Diffie-Hellman not supported by OpenSSL version\n");
-          goto error;
+          ___release_rc_tls_context (c);
+          return ___FIX(___TLS_UNSUPPORTED_ELLIPTIC_CURVES_ERR);
 
 #endif
         }
@@ -4240,8 +4235,8 @@ ___SCMOBJ client_ca_path;)
           client_ca_list = SSL_load_client_CA_file (c->client_ca_path);
           if (client_ca_list == NULL)
             {
-              fprintf (stderr, "** TLS: Error loading CAs file\n");
-              goto error;
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_READ_CA_FILE_ERR);
             }
           SSL_CTX_set_client_CA_list(c->tls_ctx, client_ca_list);
           SSL_CTX_set_verify (c->tls_ctx,
@@ -4253,24 +4248,23 @@ ___SCMOBJ client_ca_path;)
       if ((c->certificate_path != NULL) &&
           (c->private_key_path != NULL))
         {
-          if (SSL_CTX_use_certificate_file
-              (c->tls_ctx, c->certificate_path, SSL_FILETYPE_PEM) <= 0)
+          if (SSL_CTX_use_certificate_file (c->tls_ctx,
+                                            c->certificate_path,
+                                            SSL_FILETYPE_PEM) <= 0)
             {
-              ERR_print_errors_fp(stderr);
-              goto error;
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_OPENSSL_ERR);
             }
           if (SSL_CTX_use_PrivateKey_file
               (c->tls_ctx, c->private_key_path, SSL_FILETYPE_PEM) <= 0)
             {
-              ERR_print_errors_fp(stderr);
-              goto error;
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_OPENSSL_ERR);
             }
           if (SSL_CTX_check_private_key (c->tls_ctx) <= 0)
             {
-              fprintf (stderr,
-                       "** TLS: Private key does not match "
-                       "certificate public key\n");
-              goto error;
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_PRIVATE_KEY_CERT_MISMATCH_ERR);
             }
         }
 
@@ -4321,9 +4315,8 @@ ___SCMOBJ client_ca_path;)
 
 #else
 
-          fprintf (stderr,
-                   "** TLS: TLS version doesn't support empty fragments\n");
-          goto error;
+          ___release_rc_tls_context (c);
+          return ___FIX(___TLS_UNSUPPORTED_EMPTY_FRAGS_ERR);
 
 #endif
         }
@@ -4348,9 +4341,8 @@ ___SCMOBJ client_ca_path;)
         case 0x200:
           break;
         default:
-          fprintf (stderr, "** TLS: Wrong TLS version requested: %x\n",
-                   min_tls_version);
-          goto error;
+          ___release_rc_tls_context (c);
+          return ___FIX(___TLS_WRONG_TLS_VERSION_ERR);
         }
 
       /* OPTION: Public certificate and private key files and verification */
@@ -4361,21 +4353,20 @@ ___SCMOBJ client_ca_path;)
                                             c->certificate_path,
                                             SSL_FILETYPE_PEM) <= 0)
             {
-              ERR_print_errors_fp(stderr);
-              goto error;
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_OPENSSL_ERR);
             }
           if (SSL_CTX_use_PrivateKey_file (c->tls_ctx,
                                            c->private_key_path,
                                            SSL_FILETYPE_PEM) <= 0)
             {
-              ERR_print_errors_fp(stderr);
-              goto error;
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_OPENSSL_ERR);
             }
           if (SSL_CTX_check_private_key (c->tls_ctx) <= 0)
             {
-              fprintf (stderr,"** TLS: Private key does not match "
-                       "the certificate public key\n");
-              goto error;
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_PRIVATE_KEY_CERT_MISMATCH_ERR);
             }
         }
 
@@ -4397,10 +4388,6 @@ ___SCMOBJ client_ca_path;)
     }
 
   return scm_ctx;
-
- error:
-  ___release_rc_tls_context (c);
-  return ___FIX(___TLS_ERR);
 }
 
 /* TLS support functions */
@@ -4410,8 +4397,7 @@ ___HIDDEN void clear_tls_error_queue
 {
   while (ERR_peek_error() != 0)
     {
-      ERR_print_errors_fp (stderr);
-      /* fprintf (stderr, "ignoring stale global TLS error\n"); */
+      /* ERR_print_errors_fp (stderr); */
     }
   ERR_clear_error();
 }
@@ -4673,27 +4659,32 @@ int direction;)
     {
       if (SSL_is_init_finished(d->tls))
         {
+          /* Make for_writing in select have the natural meaning (read for read,
+             write for write). Note that this is not strictly necessary, since
+             we are resetting to this state after each ___device_select_add_fd
+             call on TLS-enabled sockets. */
+          d->want_write[0] = FALSE;
+          d->want_write[1] = TRUE;
+
+          clear_tls_error_queue();
           err = SSL_shutdown (d->tls);
-          if (err > 0)
+
+          if (err == 1)
             {
-              return ___ERR_CODE_EAGAIN;
             }
+          else if (err > 0)
+            return ___ERR_CODE_EAGAIN;
           else if (err < 0)
             {
-              /* make for_writing in select have the natural meaning (read for read,
-                 write for write). Note that this is not strictly necessary, since
-                 we are resetting to this state after each ___device_select_add_fd
-                 call on TLS-enabled sockets. */
-              d->want_write[0] = FALSE;
-              d->want_write[1] = TRUE;
-
               switch (SSL_get_error(d->tls,err))
                 {
                 case SSL_ERROR_WANT_READ:
                 case SSL_ERROR_WANT_WRITE:
                   return ___ERR_CODE_EAGAIN;
                 default:
-                  /* discard any error in TLS shutdown */
+                  /* Discard any other error in TLS shutdown: once the shutdown
+                     notification has been sent, TLS allows the other part to
+                     avoid responding, so we can assume the connection is closed */
                   break;
                 }
             }
@@ -4986,7 +4977,6 @@ ___stream_index *len_done;)
   /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
   if (d->renegotiations > 0)
     {
-      /* TODO: Drop connection */
       return ___FIX(___TLS_ERR);
     }
 
@@ -5003,16 +4993,26 @@ ___stream_index *len_done;)
         *len_done = n;
       else if (n == 0)
         {
-          /* Clean shutdown? */
-          if (SSL_get_shutdown (d->tls) & SSL_RECEIVED_SHUTDOWN)
+          /* Check if the other part initiated a shutdown and we didn't reply */
+          if (SSL_get_shutdown (d->tls)
+              & SSL_RECEIVED_SHUTDOWN
+              ^ SSL_SENT_SHUTDOWN)
             {
-              *len_done = 0;
-              return ___FIX(___NO_ERR);
+              clear_tls_error_queue();
+              SSL_shutdown (d->tls);
             }
-          else
+
+          switch (SSL_get_error(d->tls,n))
             {
-              ERR_print_errors_fp (stderr);
-              return ___FIX(___TLS_ERR);
+            /* The SSL connection is closed: nothing to do */
+            case SSL_ERROR_ZERO_RETURN:
+              return ___FIX(___NO_ERR);
+              /* Internal/protocol error */
+            case SSL_ERROR_SYSCALL:
+            case SSL_ERROR_SSL:
+              return ___FIX(___TLS_OPENSSL_ERR);
+            default:
+              return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
             }
         }
       else
@@ -5020,28 +5020,24 @@ ___stream_index *len_done;)
           switch (SSL_get_error(d->tls,n))
             {
             case SSL_ERROR_WANT_READ:
-              d->want_write[0] = FALSE; /* want read, (not) for_writing */
+              /* want read, not for_writing (that is, for reading) */
+              d->want_write[0] = FALSE;
               return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_WRITE:
-              d->want_write[0] = TRUE; /* want write, (not) for_writing */
+              /* want write, not for_writing (that is, for reading) */
+              d->want_write[0] = TRUE;
               return ___ERR_CODE_EAGAIN;
+            /* These errors require straight repetition */
             case SSL_ERROR_WANT_ACCEPT:
-              return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_CONNECT:
-              return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_X509_LOOKUP:
               return ___ERR_CODE_EAGAIN;
+            /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              ERR_print_errors_fp (stderr);
-              return ___FIX(___TLS_ERR);
-            case SSL_ERROR_ZERO_RETURN:
-              fprintf (stderr, "** TLS: TODO: connection should be shut down!\n");
-              break;
+              return ___FIX(___TLS_OPENSSL_ERR);
             default:
-              fprintf (stderr, "** TLS: Unhandled TLS error in "
-                       "___device_tcp_client_read_raw_virt\n");
-              break;
+              return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
             }
         }
     }
@@ -5113,8 +5109,6 @@ ___stream_index *len_done;)
   /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
   if (d->renegotiations > 0)
     {
-      /* TODO: Drop connection */
-      fprintf (stderr, "** TLS: TODO: connection should be shut down!\n");
       return ___FIX(___TLS_ERR);
     }
 
@@ -5132,16 +5126,27 @@ ___stream_index *len_done;)
         *len_done = n;
       else if (n == 0)
         {
-          /* Clean shutdown? */
-          if ((SSL_get_error(d->tls, n)) == SSL_ERROR_ZERO_RETURN)
+          /* Check if the other part initiated a shutdown and we didn't reply */
+          if (SSL_get_shutdown (d->tls)
+              & SSL_RECEIVED_SHUTDOWN
+              ^ SSL_SENT_SHUTDOWN)
             {
-              *len_done = 0;
-              return ___FIX(___NO_ERR);
+              clear_tls_error_queue();
+              SSL_shutdown (d->tls);
             }
-          else
+
+          /* Then look into what actually happened */
+          switch (SSL_get_error(d->tls,n))
             {
-              ERR_print_errors_fp (stderr);
-              return ___FIX(___TLS_ERR);
+            /* The SSL connection is closed: nothing to do */
+            case SSL_ERROR_ZERO_RETURN:
+              return ___FIX(___NO_ERR);
+            /* Internal/protocol error */
+            case SSL_ERROR_SYSCALL:
+            case SSL_ERROR_SSL:
+              return ___FIX(___TLS_OPENSSL_ERR);
+            default:
+              return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
             }
         }
       else
@@ -5149,28 +5154,24 @@ ___stream_index *len_done;)
           switch (SSL_get_error(d->tls,n))
             {
             case SSL_ERROR_WANT_READ:
-              d->want_write[1] = FALSE; /* want read, for_writing */
+              /* want read, for_writing */
+              d->want_write[1] = FALSE;
               return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_WRITE:
-              d->want_write[1] = TRUE; /* want write, for_writing */
+              /* want write, for_writing */
+              d->want_write[1] = TRUE;
               return ___ERR_CODE_EAGAIN;
+            /* These errors require straight repetition */
             case SSL_ERROR_WANT_ACCEPT:
-              return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_CONNECT:
-              return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_X509_LOOKUP:
               return ___ERR_CODE_EAGAIN;
+            /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              ERR_print_errors_fp (stderr);
-              return ___FIX(___TLS_ERR);
-            case SSL_ERROR_ZERO_RETURN:
-              fprintf (stderr, "** TLS: TODO: connection should be shut down!\n");
-              break;
+              return ___FIX(___TLS_OPENSSL_ERR);
             default:
-              fprintf (stderr, "** TLS: Unhandled TLS error in "
-                       "___device_tcp_client_write_raw_virt\n");
-              break;
+              return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
             }
         }
     }
@@ -9579,10 +9580,7 @@ ___SCMOBJ tls_context;)
         return e;
 
       if ((tls_context_p->options & ___TLS_OPTION_SERVER_MODE) == 0)
-        {
-          fprintf (stderr, "TLS: Context is not in server mode\n");
-          return ___FIX(___TLS_ERR);
-        }
+        return ___FIX(___TLS_SERVER_CONTEXT_EXPECTED_ERR);
     }
 
 #else

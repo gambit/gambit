@@ -6313,23 +6313,30 @@
     (if (##not min-version-hex)
         (##fail-check-tls-context-version
          1 make-tls-context min-version: min-version))
-    (let ((ctx (##os-make-tls-context
-                min-version-hex
-                (bitwise-ior
-                 #x0
-                 (if (##memq 'server-mode options) #x1 #x0)
-                 (if (##memq 'use-diffie-hellman options) #x2 #x0)
-                 (if (##memq 'use-elliptic-curves options) #x4 #x0)
-                 (if (##memq 'request-client-authentication options) #x8 #x0)
-                 (if (##memq 'insert-empty-fragments options) #x256 #x0))
-                certificate
-                private-key
-                diffie-hellman-parameters
-                elliptic-curve
-                client-ca)))
-      (if (##fixnum? ctx) ;; If not implemented, or any other error
-          #f
-          ctx))))
+    (let ((result (##os-make-tls-context
+                   min-version-hex
+                   (bitwise-ior
+                    #x0
+                    (if (##memq 'server-mode options) 1 0)
+                    (if (##memq 'use-diffie-hellman options) 2 0)
+                    (if (##memq 'use-elliptic-curves options) 4 0)
+                    (if (##memq 'request-client-authentication options) 8 0)
+                    (if (##memq 'insert-empty-fragments options) 256 0))
+                   certificate
+                   private-key
+                   diffie-hellman-parameters
+                   elliptic-curve
+                   client-ca)))
+      (if (##fixnum? result)
+          (##raise-os-exception #f result make-tls-context
+                                (##list min-version: min-version
+                                        options: options
+                                        certificate: certificate
+                                        private-key: private-key
+                                        diffie-hellman-parameters: diffie-hellman-parameters
+                                        elliptic-curve: elliptic-curve
+                                        client-ca: client-ca))
+          result))))
 
 ;;;----------------------------------------------------------------------------
 

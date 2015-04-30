@@ -6114,6 +6114,7 @@ ___P((___global_state ___gs),()); ___END_C_LINKAGE
 #define ___ERR_CODE_FACILITY_ERRNO    320
 #define ___ERR_CODE_FACILITY_H_ERRNO  319
 #define ___ERR_CODE_FACILITY_GAI_CODE 318
+#define ___ERR_CODE_FACILITY_TLS      317
 
 #define ___ERR_CODE_BUILD(facility,code) \
 ((___CAST(___ERR_CODE,-1)<<29)+(___CAST(___ERR_CODE,facility)<<16)+(code))
@@ -6176,9 +6177,6 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 #define ___DYNAMIC_LOADING_LOOKUP_ERR           (___ERR_BASE+12)
 #define ___KILL_PUMP                            (___ERR_BASE+13)
 #define ___SELECT_SETUP_DONE                    (___ERR_BASE+14)
-#ifdef USE_OPENSSL
-#define ___TLS_ERR                              (___ERR_BASE+15)
-#endif
 #define ___STOC_BASE ___STOC_S8_ERR
 #define ___STOC_S8_ERR                          (___ERR_BASE+(1<<7))
 #define ___STOC_U8_ERR                          (___ERR_BASE+(2<<7))
@@ -6307,6 +6305,27 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 #define ___CTOS_MAX                             (___ERR_BASE+(126<<7)-1)
 
 #define ___RETURN_POS 127
+
+
+#define ___TLS_ERR_BASE ___ERR_CODE_BUILD(___ERR_CODE_FACILITY_TLS,0)
+
+#define ___TLS_ERR                              (___TLS_ERR_BASE+0)
+#define ___TLS_UNSUPPORTED_ERR                  (___TLS_ERR_BASE+1)
+#define ___TLS_WRONG_TLS_VERSION_ERR            (___TLS_ERR_BASE+2)
+#define ___TLS_SERVER_CONTEXT_EXPECTED_ERR      (___TLS_ERR_BASE+3)
+#define ___TLS_UNSUPPORTED_EMPTY_FRAGS_ERR      (___TLS_ERR_BASE+4)
+#define ___TLS_UNSUPPORTED_DH_ERR               (___TLS_ERR_BASE+5)
+#define ___TLS_READ_DH_PARAMS_ERR               (___TLS_ERR_BASE+6)
+#define ___TLS_UNKNOWN_ELLIPTIC_CURVE_ERR       (___TLS_ERR_BASE+7)
+#define ___TLS_READ_CA_FILE_ERR                 (___TLS_ERR_BASE+8)
+#define ___TLS_PRIVATE_KEY_CERT_MISMATCH_ERR    (___TLS_ERR_BASE+9)
+
+#define ___TLS_OPENSSL_ERR                      (___TLS_ERR_BASE+(1<<7))
+#define ___TLS_OPENSSL_LOAD_ERR                 (___TLS_ERR_BASE+(2<<7))
+#define ___TLS_OPENSSL_LIBRARY_VERSION_ERR      (___TLS_ERR_BASE+(3<<7))
+#define ___TLS_OPENSSL_NOT_ENOUGH_ENTROPY_ERR   (___TLS_ERR_BASE+(4<<7))
+#define ___TLS_OPENSSL_UNHANDLED_CASE_ERR       (___TLS_ERR_BASE+(5<<7))
+
 
 /*---------------------------------------------------------------------------*/
 
