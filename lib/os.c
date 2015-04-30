@@ -1685,14 +1685,12 @@ ___SCMOBJ modification_time;)
 
 #ifdef USE_utimes
 
-#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___TIMES_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1701,7 +1699,7 @@ ___SCMOBJ modification_time;)
       ___absolute_time_to_timeval (atime, &tv[0]);
       ___absolute_time_to_timeval (mtime, &tv[1]);
 
-      if (utimes (___CAST(___STRING_TYPE(___TIMES_PATH_CE_SELECT),cpath), tv)
+      if (utimes (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath), tv)
           < 0)
         {
           e = fnf_or_err_code_from_errno ();
@@ -1716,18 +1714,12 @@ ___SCMOBJ modification_time;)
 
 #ifdef USE_SetFileTime
 
-#ifdef _UNICODE
-#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___TIMES_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1737,7 +1729,7 @@ ___SCMOBJ modification_time;)
       ___time_to_FILETIME (atime, &ft[0]);
       ___time_to_FILETIME (mtime, &ft[1]);
 
-      h = CreateFile (___CAST(___STRING_TYPE(___TIMES_PATH_CE_SELECT),cpath),
+      h = CreateFile (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath),
                       FILE_WRITE_ATTRIBUTES,
                       0,
                       NULL,
@@ -1791,14 +1783,12 @@ ___SCMOBJ chase;)
 #ifndef USE_stat
 #ifndef USE_GetFileAttributesEx
 
-#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___INFO_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -1857,22 +1847,20 @@ ___SCMOBJ chase;)
 
 #ifdef USE_stat
 
-#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___INFO_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
       ___struct_stat s;
 
       if (((chase == ___FAL)
-           ? ___lstat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s)
-           : ___stat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s))
+           ? ___lstat (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath), &s)
+           : ___stat (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath), &s))
           < 0)
         {
           e = fnf_or_err_code_from_errno ();
@@ -2032,18 +2020,12 @@ ___SCMOBJ chase;)
 
 #ifdef USE_GetFileAttributesEx
 
-#ifdef _UNICODE
-#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
               &cpath,
               1,
-              ___CE(___INFO_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       == ___FIX(___NO_ERR))
     {
@@ -2053,7 +2035,7 @@ ___SCMOBJ chase;)
       ___time ctime;
 
       if (!GetFileAttributesEx
-             (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath),
+             (___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath),
               GetFileExInfoStandard,
               &fad))
         {

@@ -40,7 +40,7 @@ extern ___files_module ___files_mod;
 #endif
 
 #ifndef ___PATH_CE_SELECT
-#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) utf8
 #endif
 
 

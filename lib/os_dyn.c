@@ -14,6 +14,7 @@
 #include "os_base.h"
 #include "os_dyn.h"
 #include "os_shell.h"
+#include "os_files.h"
 
 
 /*---------------------------------------------------------------------------*/

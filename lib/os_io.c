@@ -4871,15 +4871,11 @@ ___HIDDEN ___device_directory_vtbl ___device_directory_table =
 
 
 #ifdef USE_opendir
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define ___DIR_OPEN_PATH_CE_SELECT
 #endif
 
 #ifdef USE_FindFirstFile
-#ifdef _UNICODE
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
+#define ___DIR_OPEN_PATH_CE_SELECT
 #endif
 
 
@@ -4888,7 +4884,7 @@ ___HIDDEN ___device_directory_vtbl ___device_directory_table =
 ___SCMOBJ ___device_directory_setup
    ___P((___device_directory **dev,
          ___device_group *dgroup,
-         ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) path,
+         ___STRING_TYPE(___PATH_CE_SELECT) path,
          int ignore_hidden),
         (dev,
          dgroup,
@@ -4896,7 +4892,7 @@ ___SCMOBJ ___device_directory_setup
          ignore_hidden)
 ___device_directory **dev;
 ___device_group *dgroup;
-___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) path;
+___STRING_TYPE(___PATH_CE_SELECT) path;
 int ignore_hidden;)
 {
   ___device_directory *d;
@@ -4932,7 +4928,7 @@ int ignore_hidden;)
 #ifdef USE_FindFirstFile
 
   {
-    ___CHAR_TYPE(___DIR_OPEN_PATH_CE_SELECT) dir[___PATH_MAX_LENGTH+2+1];
+    ___CHAR_TYPE(___PATH_CE_SELECT) dir[___PATH_MAX_LENGTH+2+1];
     int i = 0;
 
     while (path[i] != '\0' && i < ___PATH_MAX_LENGTH)
@@ -4973,11 +4969,11 @@ int ignore_hidden;)
 
 ___SCMOBJ ___device_directory_read
    ___P((___device_directory *dev,
-         ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) *name),
+         ___STRING_TYPE(___PATH_CE_SELECT) *name),
         (dev,
          name)
 ___device_directory *dev;
-___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) *name;)
+___STRING_TYPE(___PATH_CE_SELECT) *name;)
 {
   ___SCMOBJ e;
 
@@ -4986,7 +4982,7 @@ ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) *name;)
 
   for (;;)
     {
-      ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) temp;
+      ___STRING_TYPE(___PATH_CE_SELECT) temp;
 
 #ifdef USE_opendir
 
@@ -7492,22 +7488,12 @@ ___SCMOBJ dev;)
 
 /*---------------------------------------------------------------------------*/
 
-#ifndef USE_POSIX
-#ifndef USE_WIN32
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-#endif
-
 #ifdef USE_POSIX
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define ___STREAM_OPEN_PATH_CE_SELECT
 #endif
 
 #ifdef USE_WIN32
-#ifdef _UNICODE
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
+#define ___STREAM_OPEN_PATH_CE_SELECT
 #endif
 
 
@@ -7516,7 +7502,7 @@ ___SCMOBJ dev;)
 ___SCMOBJ ___device_stream_setup_from_path
    ___P((___device_stream **dev,
          ___device_group *dgroup,
-         ___STRING_TYPE(___STREAM_OPEN_PATH_CE_SELECT) path,
+         ___STRING_TYPE(___PATH_CE_SELECT) path,
          int flags,
          int mode),
         (dev,
@@ -7526,7 +7512,7 @@ ___SCMOBJ ___device_stream_setup_from_path
          mode)
 ___device_stream **dev;
 ___device_group *dgroup;
-___STRING_TYPE(___STREAM_OPEN_PATH_CE_SELECT) path;
+___STRING_TYPE(___PATH_CE_SELECT) path;
 int flags;
 int mode;)
 {
@@ -8554,14 +8540,14 @@ ___SCMOBJ ignore_hidden;)
               path,
               &cpath,
               1,
-              ___CE(___DIR_OPEN_PATH_CE_SELECT),
+              ___CE(___PATH_CE_SELECT),
               0))
       != ___FIX(___NO_ERR))
     result = e;
   else
     {
-      ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) p =
-        ___CAST(___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT),cpath);
+      ___STRING_TYPE(___PATH_CE_SELECT) p =
+        ___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath);
 
       if ((e = ___device_directory_setup
                  (&dev,
@@ -8611,7 +8597,7 @@ ___SCMOBJ dev;)
   ___device_directory *d =
     ___CAST(___device_directory*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
-  ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) name;
+  ___STRING_TYPE(___PATH_CE_SELECT) name;
   ___SCMOBJ result;
 
   if ((e = ___device_directory_read (d, &name)) != ___FIX(___NO_ERR))
@@ -8620,7 +8606,7 @@ ___SCMOBJ dev;)
   if (name == NULL)
     return ___EOF;
 
-  if ((e = ___STRING_to_SCMOBJ (___PSTATE, name, &result, ___RETURN_POS, ___CE(___DIR_OPEN_PATH_CE_SELECT) ))
+  if ((e = ___STRING_to_SCMOBJ (___PSTATE, name, &result, ___RETURN_POS, ___CE(___PATH_CE_SELECT) ))
       != ___FIX(___NO_ERR))
     return e;
 
