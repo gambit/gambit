@@ -4227,7 +4227,7 @@ end-of-code
             scheme-object
    "___os_device_process_status"))
 
-(define-prim ##os-make-ssl-context
+(define-prim ##os-make-tls-context
   (c-lambda (unsigned-int16
              unsigned-int16
              scheme-object
@@ -4236,7 +4236,7 @@ end-of-code
              scheme-object
              scheme-object)
             scheme-object
-            "___os_make_ssl_context"))
+            "___os_make_tls_context"))
 
 (define-prim ##os-device-tcp-client-open
   (c-lambda (scheme-object

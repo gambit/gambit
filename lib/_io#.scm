@@ -694,7 +694,7 @@
   reuse-address
   broadcast
   ignore-hidden
-  ssl-context
+  tls-context
 )
 
 (define-type psettings-options
@@ -889,7 +889,7 @@
 (##define-macro (macro-ignore-nothing) 0)
 (##define-macro (macro-default-ignore-hidden) `(macro-ignore-hidden))
 
-(##define-macro (macro-default-ssl-context) #f)
+(##define-macro (macro-default-tls-context) #f)
 
 ;;;----------------------------------------------------------------------------
 

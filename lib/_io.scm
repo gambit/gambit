@@ -98,8 +98,8 @@
 (define-fail-check-type settings
   'settings)
 
-(define-fail-check-type ssl-context-version
-  'ssl-context-version)
+(define-fail-check-type tls-context-version
+  'tls-context-version)
 
 (define-fail-check-type exact-integer-or-string-or-settings
   'exact-integer-or-string-or-settings)
@@ -224,7 +224,7 @@
           (macro-default-reuse-address)
           (macro-default-broadcast)
           (macro-default-ignore-hidden)
-          (macro-default-ssl-context))))
+          (macro-default-tls-context))))
     (##parse-psettings!
      allowed-settings
      settings
@@ -522,7 +522,7 @@
           (else
            #f)))
 
-  (define (ssl-context value)
+  (define (tls-context value)
     (if (##foreign? value)
         value
         #f))
@@ -1028,10 +1028,10 @@
                                          x)
                                         (loop rest2))
                                       (error name))))
-                               ((##eq? name 'ssl-context:)
-                                (macro-psettings-ssl-context-set!
+                               ((##eq? name 'tls-context:)
+                                (macro-psettings-tls-context-set!
                                  psettings
-                                 (ssl-context value))
+                                 (tls-context value))
                                 (loop rest2))
 
                                (else
@@ -6276,9 +6276,9 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; Implementation of SSL objects.
+;;; Implementation of TLS objects.
 
-(define-prim (make-ssl-context #!key
+(define-prim (make-tls-context #!key
                                (min-version 'tls-v1)
                                (options '())
                                (certificate #f)
@@ -6288,20 +6288,20 @@
                                (client-ca #f))
   (if (##and certificate (##not (##file-exists? certificate)))
       (##raise-no-such-file-or-directory-exception
-       make-ssl-context
+       make-tls-context
        certificate: certificate))
   (if (##and private-key (##not (##file-exists? private-key)))
       (##raise-no-such-file-or-directory-exception
-       make-ssl-context
+       make-tls-context
        private-key: private-key))
   (if (##and diffie-hellman-parameters
              (##not (##file-exists? diffie-hellman-parameters)))
       (##raise-no-such-file-or-directory-exception
-       make-ssl-context
+       make-tls-context
        diffie-hellman-parameters: diffie-hellman-parameters))
   (if (##and client-ca (##not (##file-exists? client-ca)))
       (##raise-no-such-file-or-directory-exception
-       make-ssl-context
+       make-tls-context
        client-ca: client-ca))
   (let ((min-version-hex (case min-version
                            ((ssl-v2) #x0200)
@@ -6311,9 +6311,9 @@
                            ((tls-v1.2) #x0303)
                            (else #f))))
     (if (##not min-version-hex)
-        (##fail-check-ssl-context-version
-         1 make-ssl-context min-version: min-version))
-    (let ((ctx (##os-make-ssl-context
+        (##fail-check-tls-context-version
+         1 make-tls-context min-version: min-version))
+    (let ((ctx (##os-make-tls-context
                 min-version-hex
                 (bitwise-ior
                  #x0
@@ -6366,7 +6366,7 @@
       input-readtable:
       output-readtable:
       readtable:
-      ssl-context:))
+      tls-context:))
 
   (define allowed-server-settings
     '(reuse-address:
@@ -6392,7 +6392,7 @@
       input-readtable:
       output-readtable:
       readtable:
-      ssl-context:))
+      tls-context:))
 
   (##make-psettings
    (macro-direction-inout)
@@ -6451,7 +6451,7 @@
                        server-address
                        port-number
                        (psettings->options psettings)
-                       (macro-psettings-ssl-context psettings))))
+                       (macro-psettings-tls-context psettings))))
                  (if (##fixnum? device)
                      (if raise-os-exception?
                          (##raise-os-exception #f device prim port-number-or-address-or-settings)
@@ -6992,15 +6992,15 @@
           (##cdr psettings-and-server-address))
          (port-number
           (macro-psettings-port-number psettings))
-         (ssl-context
-          (macro-psettings-ssl-context psettings))
+         (tls-context
+          (macro-psettings-tls-context psettings))
          (rdevice
           (##os-device-tcp-server-open
            server-address
            port-number
            (macro-psettings-backlog psettings)
            (psettings->options psettings)
-           ssl-context)))
+           tls-context)))
     (if (##fixnum? rdevice)
         (if raise-os-exception?
             (##raise-os-exception #f rdevice prim port-number-or-address-or-settings arg2 arg3 arg4)

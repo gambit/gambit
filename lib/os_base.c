@@ -1304,8 +1304,8 @@ ___SCMOBJ err;)
       else if (err_code == ___DYNAMIC_LOADING_LOOKUP_ERR)
         append_charstring (buf, &pos, "The object file did not contain the required function");
 #ifdef USE_OPENSSL
-      else if (err_code == ___SSL_ERR)
-        append_charstring (buf, &pos, "Error in SSL library");
+      else if (err_code == ___TLS_ERR)
+        append_charstring (buf, &pos, "Error in TLS library");
 #endif
       else if ((err_code >= ___STOC_BASE && err_code <= ___STOC_MAX) ||
                (err_code >= ___CTOS_BASE && err_code <= ___CTOS_MAX))
