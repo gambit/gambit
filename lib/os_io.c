@@ -3963,7 +3963,7 @@ ___SCMOBJ client_ca_path;)
 
   STACK_OF(X509_NAME) *client_ca_list = NULL;
 
-#define TLS_CHECK_ERROR(tls_ret)                \
+#define OPENSSL_CHECK_ERROR(tls_ret)            \
   do {                                          \
     if ((tls_ret) == 0)                         \
       {                                         \
@@ -4078,11 +4078,13 @@ ___SCMOBJ client_ca_path;)
         | SSL_OP_NO_COMPRESSION;
 
       c->tls_ctx = SSL_CTX_new (SSLv23_server_method());
-      TLS_CHECK_ERROR (c->tls_ctx);
+      OPENSSL_CHECK_ERROR (c->tls_ctx);
 
       /* Required identifier for client certificate verification to work with sessions */
-      TLS_CHECK_ERROR (SSL_CTX_set_session_id_context
-                       (c->tls_ctx, ___CAST(const unsigned char*,"gambit"), 6));
+      OPENSSL_CHECK_ERROR (SSL_CTX_set_session_id_context
+                           (c->tls_ctx,
+                            ___CAST(const unsigned char*,"gambit"),
+                            6));
 
       /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
          The countermeasure breaks some TLS implementations, so it is deactivated by
@@ -4101,23 +4103,27 @@ ___SCMOBJ client_ca_path;)
 #endif
         }
 
-      TLS_CHECK_ERROR (tls_options &
-                       SSL_CTX_set_options (c->tls_ctx, tls_options));
+      OPENSSL_CHECK_ERROR (tls_options &
+                           SSL_CTX_set_options (c->tls_ctx, tls_options));
 
       switch (min_tls_version)
         {
         case 0x0303:
-          TLS_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
-                            SSL_CTX_set_options (c->tls_ctx, SSL_OP_NO_TLSv1_1)));
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_TLSv1_1)));
         case 0x302:
-          TLS_CHECK_ERROR ((SSL_OP_NO_TLSv1 &
-                            SSL_CTX_set_options (c->tls_ctx, SSL_OP_NO_TLSv1)));
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_TLSv1)));
         case 0x301:
-          TLS_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
-                            SSL_CTX_set_options (c->tls_ctx, SSL_OP_NO_SSLv3)));
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_SSLv3)));
         case 0x300:
-          TLS_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
-                            SSL_CTX_set_options (c->tls_ctx, SSL_OP_NO_SSLv2)));
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_SSLv2)));
         case 0x200:
           break;
         default:
@@ -4174,9 +4180,9 @@ ___SCMOBJ client_ca_path;)
                 }
             }
           SSL_CTX_set_tmp_dh (c->tls_ctx, dh);
-          TLS_CHECK_ERROR (SSL_OP_SINGLE_DH_USE &
-                           SSL_CTX_set_options (c->tls_ctx,
-                                                SSL_OP_SINGLE_DH_USE));
+          OPENSSL_CHECK_ERROR (SSL_OP_SINGLE_DH_USE &
+                               SSL_CTX_set_options (c->tls_ctx,
+                                                    SSL_OP_SINGLE_DH_USE));
           if (dh != NULL)
             DH_free (dh);
 #else
@@ -4215,9 +4221,9 @@ ___SCMOBJ client_ca_path;)
               return ___FIX(___TLS_OPENSSL_ERR);
             }
           SSL_CTX_set_tmp_ecdh (c->tls_ctx,ecdh);
-          TLS_CHECK_ERROR (SSL_OP_SINGLE_ECDH_USE &
-                           SSL_CTX_set_options (c->tls_ctx,
-                                                SSL_OP_SINGLE_ECDH_USE));
+          OPENSSL_CHECK_ERROR (SSL_OP_SINGLE_ECDH_USE &
+                               SSL_CTX_set_options (c->tls_ctx,
+                                                    SSL_OP_SINGLE_ECDH_USE));
           EC_KEY_free (ecdh);
 
 #else
@@ -4296,13 +4302,15 @@ ___SCMOBJ client_ca_path;)
         SSL_OP_NO_COMPRESSION;
 
       c->tls_ctx = SSL_CTX_new (SSLv23_client_method());
-      TLS_CHECK_ERROR (c->tls_ctx);
+      OPENSSL_CHECK_ERROR (c->tls_ctx);
 
       /* Required identifier for client certificate verification to work with
          sessions. */
       /* TODO: should this ID be unique per Gambit instance? */
-      TLS_CHECK_ERROR (SSL_CTX_set_session_id_context
-                       (c->tls_ctx, ___CAST(const unsigned char*,"gambit"), 6));
+      OPENSSL_CHECK_ERROR (SSL_CTX_set_session_id_context
+                           (c->tls_ctx,
+                            ___CAST(const unsigned char*,"gambit"),
+                            6));
 
       /* OPTION: re-activate empty fragments (countermeasure against BEAST
          attack). The countermeasure breaks some TLS implementations, so it is
@@ -4321,23 +4329,27 @@ ___SCMOBJ client_ca_path;)
 #endif
         }
 
-      TLS_CHECK_ERROR (tls_options &
-                       SSL_CTX_set_options (c->tls_ctx, tls_options));
+      OPENSSL_CHECK_ERROR (tls_options &
+                           SSL_CTX_set_options (c->tls_ctx, tls_options));
 
       switch (min_tls_version)
         {
         case 0x0303:
-          TLS_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
-                            SSL_CTX_set_options (c->tls_ctx, SSL_OP_NO_TLSv1_1)));
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_TLSv1_1)));
         case 0x302:
-          TLS_CHECK_ERROR ((SSL_OP_NO_TLSv1 &
-                            SSL_CTX_set_options (c->tls_ctx, SSL_OP_NO_TLSv1)));
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_TLSv1)));
         case 0x301:
-          TLS_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
-                            SSL_CTX_set_options (c->tls_ctx, SSL_OP_NO_SSLv3)));
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_SSLv3)));
         case 0x300:
-          TLS_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
-                            SSL_CTX_set_options (c->tls_ctx, SSL_OP_NO_SSLv2)));
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_SSLv2)));
         case 0x200:
           break;
         default:
@@ -5010,7 +5022,7 @@ ___stream_index *len_done;)
               /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_ERR);
             default:
               return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
             }
@@ -5035,7 +5047,7 @@ ___stream_index *len_done;)
             /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_ERR);
             default:
               return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
             }
@@ -5144,7 +5156,7 @@ ___stream_index *len_done;)
             /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_ERR);
             default:
               return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
             }
@@ -5169,7 +5181,7 @@ ___stream_index *len_done;)
             /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_ERR);
             default:
               return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
             }

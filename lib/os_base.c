@@ -1406,7 +1406,7 @@ ___SCMOBJ err;)
     {
 
       if (err_code == ___TLS_ERR)
-        append_charstring (buf, &pos, "TLS: Internal error");
+        append_charstring (buf, &pos, "TLS: Internal or protocol error");
       else if (err_code == ___TLS_UNSUPPORTED_ERR)
         append_charstring (buf, &pos, "TLS: Gambit was compiled without TLS support");
       else if (err_code == ___TLS_WRONG_TLS_VERSION_ERR)
