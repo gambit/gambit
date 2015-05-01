@@ -4852,6 +4852,31 @@ ___device_select_state *state;)
     {
       if (d->try_connect_again != 0)
         d->io_events = (FD_CONNECT | FD_CLOSE);
+
+#ifdef USE_OPENSSL
+
+      else if (d->tls != NULL)
+        {
+      /* If the connection uses TLS, choose the direction of add_fd
+         according to previous WANT_WRITE/WANT_READ. This will, in
+         some cases (during TLS handshake), invert the naturally
+         expected operation (a write requiring a select for read,
+         and viceversa). */
+          if (d->want_write[for_writing])
+            d->io_events |= (FD_WRITE | FD_CLOSE);
+          else
+            d->io_events |= (FD_READ | FD_CLOSE);
+       /* Once the the select is done, return the for_writing to
+          its regular meaning (read for read, write for write) */
+          d->want_write[for_writing] = for_writing;
+        }
+      else if (for_writing)
+        d->io_events |= (FD_WRITE | FD_CLOSE);
+      else
+        d->io_events |= (FD_READ | FD_CLOSE);
+
+#endif
+
       else if (for_writing)
         d->io_events |= (FD_WRITE | FD_CLOSE);
       else
