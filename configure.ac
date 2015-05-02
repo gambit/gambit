@@ -25,8 +25,6 @@ AC_PREFIX_DEFAULT(/usr/local/$PACKAGE_NAME)
 
 AC_CANONICAL_SYSTEM
 
-PKG_PROG_PKG_CONFIG
-
 ###############################################################################
 #
 # Accumulate subsystems to include in runtime library.
@@ -723,20 +721,25 @@ fi
 # Check if SSL support should be added using OpenSSL.
 
 AC_ARG_ENABLE(openssl,
-              AC_HELP_STRING([--enable-openssl@<:@=thread-system@:>@],
+              AC_HELP_STRING([--enable-openssl],
                              [compile with SSL support using OpenSSL (default is NO)]),
               ENABLE_OPENSSL=$enableval,
               ENABLE_OPENSSL=no)
 
 if test "$ENABLE_OPENSSL" = yes; then
-  PKG_CHECK_MODULES([OpenSSL], [openssl >= 0.9.8], [have_openssl=yes], [have_openssl=no])
   AC_DEFINE([USE_OPENSSL],[],[Enable SSL support using OpenSSL])
-  LIBS="$LIBS $OpenSSL_LIBS"
+               CFLAGS="$CFLAGS -I\"/usr/local/include\""
   case "$target_os" in
     darwin*) # OS X ships a very old version and considers OpenSSL deprecated
              CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
              ;;
+    mingw*)  # Search in typical locations
+             LIBS="$LIBS -L\"/C/OpenSSL-x64\" -L\"/c/OpenSSL\" -L\"/usr/local/\""
+             ;;
+         *)
+             ;;
   esac
+  LIBS="$LIBS -lssl -lcrypto"
 fi
 
 ###############################################################################

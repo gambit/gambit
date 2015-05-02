@@ -3802,7 +3802,7 @@ ___SCMOBJ client_ca_path;)
 
 #else
 
-___HIDDEN int openssl_initialized = FALSE;
+___HIDDEN int openssl_initialized = 0;
 
 
 /* TLS context */
@@ -3974,7 +3974,7 @@ ___SCMOBJ client_ca_path;)
   /* TLS library Initialization */
   /* Reference for TLS initialization:
      https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
-  if (openssl_initialized == FALSE)
+  if (openssl_initialized == 0)
     {
       if (!SSL_library_init())
         return ___FIX(___TLS_OPENSSL_LOAD_ERR);
@@ -3994,7 +3994,7 @@ ___SCMOBJ client_ca_path;)
           (openssl_version>>12) != (OPENSSL_VERSION_NUMBER>>12) )
         return ___FIX(___TLS_OPENSSL_LIBRARY_VERSION_ERR);
 
-      openssl_initialized = TRUE;
+      openssl_initialized = 1;
     }
   /* Check Entropy */
   if (RAND_status() == 0)
@@ -4675,8 +4675,8 @@ int direction;)
              write for write). Note that this is not strictly necessary, since
              we are resetting to this state after each ___device_select_add_fd
              call on TLS-enabled sockets. */
-          d->want_write[0] = FALSE;
-          d->want_write[1] = TRUE;
+          d->want_write[0] = 0;
+          d->want_write[1] = 1;
 
           clear_tls_error_queue();
           err = SSL_shutdown (d->tls);
@@ -5058,11 +5058,11 @@ ___stream_index *len_done;)
             {
             case SSL_ERROR_WANT_READ:
               /* want read, not for_writing (that is, for reading) */
-              d->want_write[0] = FALSE;
+              d->want_write[0] = 0;
               return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_WRITE:
               /* want write, not for_writing (that is, for reading) */
-              d->want_write[0] = TRUE;
+              d->want_write[0] = 1;
               return ___ERR_CODE_EAGAIN;
             /* These errors require straight repetition */
             case SSL_ERROR_WANT_ACCEPT:
@@ -5192,11 +5192,11 @@ ___stream_index *len_done;)
             {
             case SSL_ERROR_WANT_READ:
               /* want read, for_writing */
-              d->want_write[1] = FALSE;
+              d->want_write[1] = 0;
               return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_WRITE:
               /* want write, for_writing */
-              d->want_write[1] = TRUE;
+              d->want_write[1] = 1;
               return ___ERR_CODE_EAGAIN;
             /* These errors require straight repetition */
             case SSL_ERROR_WANT_ACCEPT:
