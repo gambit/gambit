@@ -4871,19 +4871,15 @@ ___HIDDEN ___device_directory_vtbl ___device_directory_table =
 
 
 #ifdef USE_opendir
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
-#ifdef USE_FindFirstFile
-#ifdef _UNICODE
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#define ___DIR_OPEN_PATH_SUPPORTED
 #else
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#ifdef USE_FindFirstFile
+#define ___DIR_OPEN_PATH_SUPPORTED
 #endif
 #endif
 
 
-#ifdef ___DIR_OPEN_PATH_CE_SELECT
+#ifdef ___DIR_OPEN_PATH_SUPPORTED
 
 ___SCMOBJ ___device_directory_setup
    ___P((___device_directory **dev,
@@ -6620,6 +6616,8 @@ int *direction;)
 
 /*---------------------------------------------------------------------------*/
 
+#ifndef ___STREAM_OPEN_PROCESS_CE_SELECT
+
 #ifdef USE_execvp
 #define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #ifndef USE_openpty
@@ -6637,6 +6635,8 @@ int *direction;)
 #define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #define CP_ENV_FLAGS 0
 #endif
+#endif
+
 #endif
 
 
@@ -7492,26 +7492,9 @@ ___SCMOBJ dev;)
 
 /*---------------------------------------------------------------------------*/
 
-#ifndef USE_POSIX
-#ifndef USE_WIN32
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-#endif
+#define ___STREAM_OPEN_PATH_SUPPORTED
 
-#ifdef USE_POSIX
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
-#ifdef USE_WIN32
-#ifdef _UNICODE
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-#endif
-
-
-#ifdef ___STREAM_OPEN_PATH_CE_SELECT
+#ifdef ___STREAM_OPEN_PATH_SUPPORTED
 
 ___SCMOBJ ___device_stream_setup_from_path
    ___P((___device_stream **dev,
@@ -8064,7 +8047,7 @@ ___SCMOBJ path;
 ___SCMOBJ flags;
 ___SCMOBJ mode;)
 {
-#ifndef ___STREAM_OPEN_PATH_CE_SELECT
+#ifndef ___STREAM_OPEN_PATH_SUPPORTED
 
   return ___FIX(___UNIMPL_ERR);
 
@@ -8538,7 +8521,7 @@ ___SCMOBJ ___os_device_directory_open_path
 ___SCMOBJ path;
 ___SCMOBJ ignore_hidden;)
 {
-#ifndef ___DIR_OPEN_PATH_CE_SELECT
+#ifndef ___DIR_OPEN_PATH_SUPPORTED
 
   return ___FIX(___UNIMPL_ERR);
 
@@ -8602,7 +8585,7 @@ ___SCMOBJ ___os_device_directory_read
         (dev)
 ___SCMOBJ dev;)
 {
-#ifndef ___DIR_OPEN_PATH_CE_SELECT
+#ifndef ___DIR_OPEN_PATH_SUPPORTED
 
   return ___FIX(___UNIMPL_ERR);
 

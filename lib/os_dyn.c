@@ -1,6 +1,6 @@
 /* File: "os_dyn.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -12,8 +12,9 @@
 #include "gambit.h"
 
 #include "os_base.h"
-#include "os_dyn.h"
 #include "os_shell.h"
+#include "os_files.h"
+#include "os_dyn.h"
 
 
 /*---------------------------------------------------------------------------*/
