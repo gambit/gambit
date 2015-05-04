@@ -51,7 +51,7 @@ build_script:
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-32] SET PATH=C:\MinGW\bin;%PATH%
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-64] SET PATH=C:\mingw64\bin;%PATH%
 
-  - sh -c "./configure --enable-single-host CC=%c_comp%;make from-scratch"
+  - sh -c "./configure CC=%c_comp%;make -j2 from-scratch"
 
 
 
