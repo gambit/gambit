@@ -4875,12 +4875,14 @@ ___device_select_state *state;)
       else
         d->io_events |= (FD_READ | FD_CLOSE);
 
-#endif
+#else
 
       else if (for_writing)
         d->io_events |= (FD_WRITE | FD_CLOSE);
       else
         d->io_events |= (FD_READ | FD_CLOSE);
+
+#endif
 
       return ___FIX(___NO_ERR);
     }
