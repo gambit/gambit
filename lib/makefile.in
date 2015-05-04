@@ -163,32 +163,6 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 _$(GAMBCLIB).c: $(MODULES_C)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o _$(GAMBCLIB).c -preload $(MODULES_C)
 
-main@obj@: main.c $(srcdirpfx)$(rootfromhere)/include/gambit.h
-
-setup@obj@: setup.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h mem.h c_intf.h
-
-mem@obj@: mem.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h mem.h c_intf.h
-
-c_intf@obj@: c_intf.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h setup.h mem.h c_intf.h
-
-os@obj@: os.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_base.h os_thread.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
-
-os_base@obj@: os_base.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_base.h
-
-os_thread@obj@: os_thread.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_thread.h
-
-os_time@obj@: os_time.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_time.h
-
-os_shell@obj@: os_shell.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_shell.h os_files.h
-
-os_files@obj@: os_files.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_files.h
-
-os_dyn@obj@: os_dyn.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_dyn.h
-
-os_tty@obj@: os_tty.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_tty.h
-
-os_io@obj@: os_io.c $(srcdirpfx)$(rootfromhere)/include/gambit.h os.h os_io.h
-
 $(MODULES_C): \
 $(srcdirpfx)$(rootfromhere)/lib/header.scm \
 $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
@@ -215,9 +189,39 @@ $(srcdirpfx)$(rootfromhere)/lib/_syntax-xform.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_syntax.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_with-syntax-boot.scm
 
-$(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
+$(MODULES_O) $(NORMAL_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
-_kernel.o: $(srcdirpfx)$(rootfromhere)/include/stamp.h
+_kernel@obj@: $(srcdirpfx)$(rootfromhere)/include/stamp.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+
+_std@obj@: os.h
+
+_num@obj@: mem.h
+
+main@obj@: main.c os.h os_base.h os_shell.h setup.h
+
+setup@obj@: setup.c os.h os_base.h os_dyn.h setup.h mem.h c_intf.h
+
+mem@obj@: mem.c os.h os_base.h os_time.h setup.h mem.h c_intf.h
+
+c_intf@obj@: c_intf.c os.h os_base.h os_dyn.h setup.h mem.h c_intf.h
+
+os@obj@: os.c os.h os_thread.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+
+os_base@obj@: os_base.c os.h os_base.h setup.h
+
+os_thread@obj@: os_thread.c os.h os_base.h os_thread.h
+
+os_time@obj@: os_time.c os.h os_base.h os_time.h
+
+os_shell@obj@: os_shell.c os.h os_base.h os_shell.h os_files.h
+
+os_files@obj@: os_files.c os.h os_base.h os_shell.h os_files.h setup.h
+
+os_dyn@obj@: os_dyn.c os.h os_base.h os_shell.h os_files.h os_dyn.h
+
+os_tty@obj@: os_tty.c os.h os_base.h os_tty.h os_shell.h os_io.h mem.h c_intf.h
+
+os_io@obj@: os_io.c os.h os_base.h os_io.h os_tty.h os_files.h setup.h c_intf.h
 
 bootstrap-pre:
 

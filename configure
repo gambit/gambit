@@ -929,6 +929,7 @@ enable_gcc_opts
 enable_gnu_gcc_specific_options
 enable_gnu_gcc_no_strict_aliasing
 enable_char_size
+enable_path_encoding
 enable_shared
 enable_ansi_c
 enable_symlinks
@@ -1614,6 +1615,9 @@ Optional Features:
                           use GNU GCC -fno-strict-aliasing option (default is
                           YES)
   --enable-char-size=N    Scheme character size in bytes (default is 4)
+  --enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native
+                          Filesystem path encoding (default is ucs2 on Windows
+                          and utf8 on other OSes)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
   --enable-ansi-c         link only with ANSI C libraries (default is NO)
@@ -4893,6 +4897,54 @@ fi
 fi
 
 
+
+###############################################################################
+#
+# Check the encoding of filesystem paths.
+
+# Check whether --enable-path-encoding was given.
+if test "${enable_path_encoding+set}" = set; then :
+  enableval=$enable_path_encoding; ENABLE_PATH_ENCODING=$enableval
+else
+  ENABLE_PATH_ENCODING=no
+fi
+
+
+if test "$ENABLE_PATH_ENCODING" = utf8; then
+
+$as_echo "#define ___PATH_ENCODING_UTF8 /**/" >>confdefs.h
+
+else
+  if test "$ENABLE_PATH_ENCODING" = latin1; then
+
+$as_echo "#define ___PATH_ENCODING_LATIN1 /**/" >>confdefs.h
+
+  else
+    if test "$ENABLE_PATH_ENCODING" = ucs2; then
+
+$as_echo "#define ___PATH_ENCODING_UCS2 /**/" >>confdefs.h
+
+    else
+      if test "$ENABLE_PATH_ENCODING" = ucs4; then
+
+$as_echo "#define ___PATH_ENCODING_UCS4 /**/" >>confdefs.h
+
+      else
+        if test "$ENABLE_PATH_ENCODING" = wchar; then
+
+$as_echo "#define ___PATH_ENCODING_WCHAR /**/" >>confdefs.h
+
+        else
+          if test "$ENABLE_PATH_ENCODING" = native; then
+
+$as_echo "#define ___PATH_ENCODING_NATIVE /**/" >>confdefs.h
+
+          fi
+        fi
+      fi
+    fi
+  fi
+fi
 
 ###############################################################################
 #

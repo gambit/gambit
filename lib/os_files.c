@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1006,8 +1006,6 @@ ___SCMOBJ mode;)
 
 #ifdef USE_mkdir
 
-#define ___CREATE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
@@ -1025,12 +1023,6 @@ ___SCMOBJ mode;)
 #endif
 
 #ifdef USE_CreateDirectory
-
-#ifdef _UNICODE
-#define ___CREATE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___CREATE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -1074,8 +1066,6 @@ ___SCMOBJ mode;)
 
 #ifdef USE_mkfifo
 
-#define ___CREATE_FIFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
@@ -1115,8 +1105,6 @@ ___SCMOBJ path2;)
 #endif
 
 #ifdef USE_link
-
-#define ___CREATE_LINK_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -1171,8 +1159,6 @@ ___SCMOBJ path2;)
 
 #ifdef USE_symlink
 
-#define ___CREATE_SYMLINK_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
@@ -1224,8 +1210,6 @@ ___SCMOBJ path;)
 
 #ifdef USE_rmdir
 
-#define ___DELETE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
@@ -1243,12 +1227,6 @@ ___SCMOBJ path;)
 #endif
 
 #ifdef USE_RemoveDirectory
-
-#ifdef _UNICODE
-#define ___DELETE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___DELETE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -1290,8 +1268,6 @@ ___SCMOBJ path;)
 
 #ifdef USE_chdir
 
-#define ___SET_CURRENT_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
@@ -1309,12 +1285,6 @@ ___SCMOBJ path;)
 #endif
 
 #ifdef USE_SetCurrentDirectory
-
-#ifdef _UNICODE
-#define ___SET_CURRENT_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___SET_CURRENT_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -1360,8 +1330,6 @@ ___SCMOBJ path2;)
 
 #ifdef USE_rename
 
-#define ___RENAME_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
@@ -1392,12 +1360,6 @@ ___SCMOBJ path2;)
 #endif
 
 #ifdef USE_MoveFile
-
-#ifdef _UNICODE
-#define ___RENAME_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___RENAME_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -1455,8 +1417,6 @@ ___SCMOBJ path2;)
 #endif
 
 #ifdef USE_POSIX
-
-#define ___COPY_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -1543,12 +1503,6 @@ ___SCMOBJ path2;)
 
 #ifdef USE_CopyFile
 
-#ifdef _UNICODE
-#define ___COPY_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___COPY_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
@@ -1603,8 +1557,6 @@ ___SCMOBJ path;)
 
 #ifdef USE_unlink
 
-#define ___DELETE_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
@@ -1623,12 +1575,6 @@ ___SCMOBJ path;)
 #endif
 
 #ifdef USE_DeleteFile
-
-#ifdef _UNICODE
-#define ___DELETE_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___DELETE_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)

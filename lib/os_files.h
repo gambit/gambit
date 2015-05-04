@@ -1,6 +1,6 @@
-/* File: "os_files.h", Time-stamp: <2008-12-09 16:15:30 feeley> */
+/* File: "os_files.h" */
 
-/* Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_FILES_H
 #define ___OS_FILES_H
@@ -31,6 +31,39 @@ extern ___files_module ___files_mod;
 #define ___PATH_MAX_LENGTH 1024
 
 
+/* Determine encoding of filesystem paths. */
+
+#ifdef ___PATH_ENCODING_LATIN1
+#define ___PATH_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) latin1
+#else
+#ifdef ___PATH_ENCODING_UTF8
+#define ___PATH_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) utf8
+#else
+#ifdef ___PATH_ENCODING_UCS2
+#define ___PATH_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#else
+#ifdef ___PATH_ENCODING_UCS4
+#define ___PATH_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) ucs4
+#else
+#ifdef ___PATH_ENCODING_WCHAR
+#define ___PATH_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) wchar
+#else
+#ifdef ___PATH_ENCODING_NATIVE
+#define ___PATH_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) native
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+
+#ifdef ___PATH_ENCODING
+
+#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#else
+
 #ifdef USE_WIN32
 #ifdef _UNICODE
 #define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
@@ -40,8 +73,49 @@ extern ___files_module ___files_mod;
 #endif
 
 #ifndef ___PATH_CE_SELECT
-#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) utf8
 #endif
+
+#endif
+
+#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___CREATE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___CREATE_FIFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___CREATE_LINK_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___CREATE_SYMLINK_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___DELETE_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___SET_CURRENT_DIRECTORY_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___RENAME_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___COPY_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#define ___DELETE_FILE_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
 
 
 extern ___SCMOBJ ___os_path_homedir ___PVOID;

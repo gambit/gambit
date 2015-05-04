@@ -234,6 +234,14 @@
 /* Define as 1 if you want to enable high-resolution timing */
 #undef USE_HIGH_RES_TIMING
 
+/* Define as 1 to select a filesystem path encoding */
+#undef ___PATH_ENCODING_UTF8
+#undef ___PATH_ENCODING_LATIN1
+#undef ___PATH_ENCODING_UCS2
+#undef ___PATH_ENCODING_UCS4
+#undef ___PATH_ENCODING_WCHAR
+#undef ___PATH_ENCODING_NATIVE
+
 /*---------------------------------------------------------------------------*/
 
 #endif
