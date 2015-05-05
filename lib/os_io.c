@@ -3797,7 +3797,7 @@ ___SCMOBJ dh_params_path;
 ___SCMOBJ elliptic_curve_name;
 ___SCMOBJ client_ca_path;)
 {
-  return ___FIX(___TLS_UNSUPPORTED_ERR);
+  return ___FIX(___UNIMPL_ERR);
 }
 
 #else
@@ -3963,11 +3963,11 @@ ___SCMOBJ client_ca_path;)
 
   STACK_OF(X509_NAME) *client_ca_list = NULL;
 
-#define OPENSSL_CHECK_ERROR(tls_ret)            \
+#define OPENSSL_CHECK_ERROR(ret)                \
   do {                                          \
-    if ((tls_ret) == 0)                         \
+    if ((ret) == 0)                             \
       {                                         \
-        return ___FIX(___TLS_OPENSSL_ERR);      \
+        return ___FIX(___TLS_ERR(ret)); \
       }                                         \
   } while(0)
 
@@ -3977,7 +3977,7 @@ ___SCMOBJ client_ca_path;)
   if (openssl_initialized == 0)
     {
       if (!SSL_library_init())
-        return ___FIX(___TLS_OPENSSL_LOAD_ERR);
+        return ___FIX(___TLS_LIBRARY_INIT_ERR);
 
       SSL_load_error_strings();
       OpenSSL_add_all_algorithms();
@@ -3992,13 +3992,13 @@ ___SCMOBJ client_ca_path;)
       openssl_version = SSLeay();
       if (openssl_version < OPENSSL_VERSION_NUMBER ||
           (openssl_version>>12) != (OPENSSL_VERSION_NUMBER>>12) )
-        return ___FIX(___TLS_OPENSSL_LIBRARY_VERSION_ERR);
+        return ___FIX(___TLS_LIBRARY_VERSION_ERR);
 
       openssl_initialized = 1;
     }
   /* Check Entropy */
   if (RAND_status() == 0)
-    return ___FIX(___TLS_OPENSSL_NOT_ENOUGH_ENTROPY_ERR);
+    return ___FIX(___TLS_NOT_ENOUGH_ENTROPY_ERR);
 
   /* Context initialization */
   ___tls_context *c = ___CAST(___tls_context*,
@@ -4167,7 +4167,7 @@ ___SCMOBJ client_ca_path;)
               if (dh == NULL)
                 {
                   ___release_rc_tls_context (c);
-                  return ___FIX(___TLS_OPENSSL_ERR);
+                  return ___FIX(___TLS_DH_PARAMS_ERR);
                 }
               dh->p = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
               dh->g = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
@@ -4176,7 +4176,7 @@ ___SCMOBJ client_ca_path;)
                 {
                   DH_free (dh);
                   ___release_rc_tls_context (c);
-                  return ___FIX(___TLS_OPENSSL_ERR);
+                  return ___FIX(___TLS_DH_PARAMS_ERR);
                 }
             }
           SSL_CTX_set_tmp_dh (c->tls_ctx, dh);
@@ -4218,7 +4218,7 @@ ___SCMOBJ client_ca_path;)
           if (ecdh == NULL)
             {
               ___release_rc_tls_context (c);
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_ELLIPTIC_CURVE_ERR);
             }
           SSL_CTX_set_tmp_ecdh (c->tls_ctx,ecdh);
           OPENSSL_CHECK_ERROR (SSL_OP_SINGLE_ECDH_USE &
@@ -4259,13 +4259,13 @@ ___SCMOBJ client_ca_path;)
                                             SSL_FILETYPE_PEM) <= 0)
             {
               ___release_rc_tls_context (c);
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_CERTIFICATE_FILE_ERR);
             }
           if (SSL_CTX_use_PrivateKey_file
               (c->tls_ctx, c->private_key_path, SSL_FILETYPE_PEM) <= 0)
             {
               ___release_rc_tls_context (c);
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_PRIVATE_KEY_FILE_ERR);
             }
           if (SSL_CTX_check_private_key (c->tls_ctx) <= 0)
             {
@@ -4366,14 +4366,14 @@ ___SCMOBJ client_ca_path;)
                                             SSL_FILETYPE_PEM) <= 0)
             {
               ___release_rc_tls_context (c);
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_CERTIFICATE_FILE_ERR);
             }
           if (SSL_CTX_use_PrivateKey_file (c->tls_ctx,
                                            c->private_key_path,
                                            SSL_FILETYPE_PEM) <= 0)
             {
               ___release_rc_tls_context (c);
-              return ___FIX(___TLS_OPENSSL_ERR);
+              return ___FIX(___TLS_PRIVATE_KEY_FILE_ERR);
             }
           if (SSL_CTX_check_private_key (c->tls_ctx) <= 0)
             {
@@ -5015,9 +5015,7 @@ ___stream_index *len_done;)
 
   /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
   if (d->renegotiations > 0)
-    {
-      return ___FIX(___TLS_ERR);
-    }
+    return ___FIX(___TLS_ALERT_ERR);
 
 #endif
 
@@ -5041,7 +5039,8 @@ ___stream_index *len_done;)
               SSL_shutdown (d->tls);
             }
 
-          switch (SSL_get_error(d->tls,n))
+          int err = SSL_get_error(d->tls,n);
+          switch (err)
             {
             /* The SSL connection is closed: nothing to do */
             case SSL_ERROR_ZERO_RETURN:
@@ -5049,14 +5048,14 @@ ___stream_index *len_done;)
               /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              return ___FIX(___TLS_ERR);
             default:
-              return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
+              return ___FIX(___TLS_ERR(err));
             }
         }
       else
         {
-          switch (SSL_get_error(d->tls,n))
+          int err = SSL_get_error(d->tls,n);
+          switch (err)
             {
             case SSL_ERROR_WANT_READ:
               /* want read, not for_writing (that is, for reading) */
@@ -5074,9 +5073,8 @@ ___stream_index *len_done;)
             /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              return ___FIX(___TLS_ERR);
             default:
-              return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
+              return ___FIX(___TLS_ERR(err));
             }
         }
     }
@@ -5147,9 +5145,7 @@ ___stream_index *len_done;)
 
   /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
   if (d->renegotiations > 0)
-    {
-      return ___FIX(___TLS_ERR);
-    }
+    return ___FIX(___TLS_ALERT_ERR);
 
 #endif
 
@@ -5175,7 +5171,8 @@ ___stream_index *len_done;)
             }
 
           /* Then look into what actually happened */
-          switch (SSL_get_error(d->tls,n))
+          int err = SSL_get_error(d->tls,n);
+          switch (err)
             {
             /* The SSL connection is closed: nothing to do */
             case SSL_ERROR_ZERO_RETURN:
@@ -5183,14 +5180,14 @@ ___stream_index *len_done;)
             /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              return ___FIX(___TLS_ERR);
             default:
-              return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
+              return ___FIX(___TLS_ERR(err));
             }
         }
       else
         {
-          switch (SSL_get_error(d->tls,n))
+          int err = SSL_get_error(d->tls,n);
+          switch (err)
             {
             case SSL_ERROR_WANT_READ:
               /* want read, for_writing */
@@ -5208,9 +5205,8 @@ ___stream_index *len_done;)
             /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
             case SSL_ERROR_SSL:
-              return ___FIX(___TLS_ERR);
             default:
-              return ___FIX(___TLS_OPENSSL_UNHANDLED_CASE_ERR);
+              return ___FIX(___TLS_ERR(err));
             }
         }
     }

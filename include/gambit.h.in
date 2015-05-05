@@ -6307,24 +6307,33 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 #define ___RETURN_POS 127
 
 
+#define ___TLS_ERR(tls_err) \
+((tls_err)==SSL_ERROR_NONE?___NO_ERR:___ERR_CODE_BUILD(___ERR_CODE_FACILITY_TLS,tls_err))
+
+#define ___TLS_ERR_FROM_ERR_CODE(err) \
+((err)==___NO_ERR?0:((err)-___ERR_CODE_BUILD(___ERR_CODE_FACILITY_TLS,0)))
+
 #define ___TLS_ERR_BASE ___ERR_CODE_BUILD(___ERR_CODE_FACILITY_TLS,0)
 
-#define ___TLS_ERR                              (___TLS_ERR_BASE+0)
-#define ___TLS_UNSUPPORTED_ERR                  (___TLS_ERR_BASE+1)
-#define ___TLS_WRONG_TLS_VERSION_ERR            (___TLS_ERR_BASE+2)
-#define ___TLS_SERVER_CONTEXT_EXPECTED_ERR      (___TLS_ERR_BASE+3)
-#define ___TLS_UNSUPPORTED_EMPTY_FRAGS_ERR      (___TLS_ERR_BASE+4)
-#define ___TLS_UNSUPPORTED_DH_ERR               (___TLS_ERR_BASE+5)
-#define ___TLS_READ_DH_PARAMS_ERR               (___TLS_ERR_BASE+6)
-#define ___TLS_UNKNOWN_ELLIPTIC_CURVE_ERR       (___TLS_ERR_BASE+7)
-#define ___TLS_READ_CA_FILE_ERR                 (___TLS_ERR_BASE+8)
-#define ___TLS_PRIVATE_KEY_CERT_MISMATCH_ERR    (___TLS_ERR_BASE+9)
+/* Custom high-level TLS error codes are encoded above 65000 */
+#define ___TLS_LIBRARY_VERSION_ERR              (___TLS_ERR_BASE+65000)
+#define ___TLS_LIBRARY_INIT_ERR                 (___TLS_ERR_BASE+65001)
+#define ___TLS_WRONG_TLS_VERSION_ERR            (___TLS_ERR_BASE+65002)
+#define ___TLS_ALERT_ERR                        (___TLS_ERR_BASE+65003)
+#define ___TLS_NOT_ENOUGH_ENTROPY_ERR           (___TLS_ERR_BASE+65004)
+#define ___TLS_SERVER_CONTEXT_EXPECTED_ERR      (___TLS_ERR_BASE+65005)
+#define ___TLS_UNSUPPORTED_EMPTY_FRAGS_ERR      (___TLS_ERR_BASE+65006)
+#define ___TLS_UNSUPPORTED_DH_ERR               (___TLS_ERR_BASE+65007)
+#define ___TLS_UNSUPPORTED_ELLIPTIC_CURVES_ERR  (___TLS_ERR_BASE+65008)
+#define ___TLS_DH_PARAMS_ERR                    (___TLS_ERR_BASE+65009)
+#define ___TLS_READ_DH_PARAMS_ERR               (___TLS_ERR_BASE+65010)
+#define ___TLS_ELLIPTIC_CURVE_ERR               (___TLS_ERR_BASE+65011)
+#define ___TLS_UNKNOWN_ELLIPTIC_CURVE_ERR       (___TLS_ERR_BASE+65012)
+#define ___TLS_READ_CA_FILE_ERR                 (___TLS_ERR_BASE+65013)
+#define ___TLS_CERTIFICATE_FILE_ERR             (___TLS_ERR_BASE+65014)
+#define ___TLS_PRIVATE_KEY_FILE_ERR             (___TLS_ERR_BASE+65015)
+#define ___TLS_PRIVATE_KEY_CERT_MISMATCH_ERR    (___TLS_ERR_BASE+65016)
 
-#define ___TLS_OPENSSL_ERR                      (___TLS_ERR_BASE+(1<<7))
-#define ___TLS_OPENSSL_LOAD_ERR                 (___TLS_ERR_BASE+(2<<7))
-#define ___TLS_OPENSSL_LIBRARY_VERSION_ERR      (___TLS_ERR_BASE+(3<<7))
-#define ___TLS_OPENSSL_NOT_ENOUGH_ENTROPY_ERR   (___TLS_ERR_BASE+(4<<7))
-#define ___TLS_OPENSSL_UNHANDLED_CASE_ERR       (___TLS_ERR_BASE+(5<<7))
 
 
 /*---------------------------------------------------------------------------*/

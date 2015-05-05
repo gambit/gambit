@@ -1009,6 +1009,51 @@ int code;)
 #endif
 
 
+#ifdef USE_OPENSSL
+
+___HIDDEN const char *tls_error_to_string
+   ___P((int code),
+        (code)
+int code;)
+{
+
+  static char *tls_messages[] =
+    {
+      "TLS: OpenSSL library version mismatch",
+      "TLS: Error initializing TLS library",
+      "TLS: Wrong TLS version",
+      "TLS: TLS protocol security alert. Aborting.",
+      "TLS: Not enough entropy in the pool",
+      "TLS: Server mode context expected",
+      "TLS: Library version does not support empty fragment insertion",
+      "TLS: Library version does not support Diffie-Hellman key exchange",
+      "TLS: Library version does not support elliptic curves",
+      "TLS: Diffie-Hellman parameters internal error",
+      "TLS: Error reading Diffie-Hellman parameters from file",
+      "TLS: Elliptic curve internal error",
+      "TLS: Unknown Elliptic Curve name",
+      "TLS: Error reading Certificate Authorities file",
+      "TLS: Certificate file error",
+      "TLS: Private key file error",
+      "TLS: Private key and Certificate don't match",
+    };
+
+  /* Codes between 65000 and 65536 are reserved for high-level TLS errors, below
+     are library-specific codes. Since we are dealing here only with high-level
+     errors, we need to offset the error to use it as index. */
+  int generic_err_code = code - 65000;
+  if (generic_err_code >= 0 && code <= 65536)
+    {
+      return tls_messages[generic_err_code];
+    }
+
+  return "Unknown resolver error";
+
+}
+
+#endif
+
+
 #ifdef USE_GetLastError
 
 
@@ -1405,55 +1450,23 @@ ___SCMOBJ err;)
   else if (facility >= ___ERR_CODE_FACILITY_TLS)
     {
 
-      if (err_code == ___TLS_ERR)
-        append_charstring (buf, &pos, "TLS: Internal or protocol error");
-      else if (err_code == ___TLS_UNSUPPORTED_ERR)
-        append_charstring (buf, &pos, "TLS: Gambit was compiled without TLS support");
-      else if (err_code == ___TLS_WRONG_TLS_VERSION_ERR)
-        append_charstring (buf, &pos, "TLS: Wrong TLS version");
-      else if (err_code == ___TLS_SERVER_CONTEXT_EXPECTED_ERR)
-        append_charstring (buf, &pos, "TLS: Server mode context expected");
-      else if (err_code == ___TLS_UNSUPPORTED_EMPTY_FRAGS_ERR)
-        append_charstring (buf, &pos, "TLS: library version does not support empty fragment insertion");
-      else if (err_code == ___TLS_UNSUPPORTED_DH_ERR)
-        append_charstring (buf, &pos, "TLS: library version does not support Diffie-Hellman key exchange");
-      else if (err_code == ___TLS_READ_DH_PARAMS_ERR)
-        append_charstring (buf, &pos, "TLS: Error reading Diffie-Hellman parameters from file");
-      else if (err_code == ___TLS_UNKNOWN_ELLIPTIC_CURVE_ERR)
-        append_charstring (buf, &pos, "TLS: Unknown Elliptic Curve name");
-      else if (err_code == ___TLS_READ_CA_FILE_ERR)
-        append_charstring (buf, &pos, "TLS: Error reading Certificate Authorities file");
-      else if (err_code == ___TLS_PRIVATE_KEY_CERT_MISMATCH_ERR)
-        append_charstring (buf, &pos, "TLS: Private key doesn't match Certificate key");
 #ifdef USE_OPENSSL
-      else if (err_code == ___TLS_OPENSSL_ERR)
-        {
-          char error_buf[120]; /* 120 chars, from OpenSSL doc */
-          append_charstring (buf, &pos, "TLS: OpenSSL error ");
-          ERR_error_string (ERR_get_error(), error_buf);
-          append_charstring (buf, &pos, error_buf);
-        }
-      else if (err_code == ___TLS_OPENSSL_LOAD_ERR)
-        append_charstring (buf, &pos, "TLS: OpenSSL failed initialization");
-      else if (err_code == ___TLS_OPENSSL_LIBRARY_VERSION_ERR)
-        {
-          char compiled_version[10];
-          char loaded_version[10];
-          snprintf (compiled_version, 10, "0x%x8", OPENSSL_VERSION_NUMBER);
-          snprintf (loaded_version, 10, "0x%x8", SSLeay());
-          append_charstring (buf, &pos, "TLS: OpenSSL library version mismatch OPENSSL_VERSION_NUMBER (compiled: ");
-          append_charstring (buf, &pos, compiled_version);
-          append_charstring (buf, &pos, " - loaded: ");
-          append_charstring (buf, &pos, loaded_version);
-          append_charstring (buf, &pos, ")");
-        }
-      else if (err_code == ___TLS_OPENSSL_NOT_ENOUGH_ENTROPY_ERR)
-        append_charstring (buf, &pos, "TLS: OpenSSL does not have enough entropy in the pool");
-      else if (err_code == ___TLS_OPENSSL_UNHANDLED_CASE_ERR)
-        append_charstring (buf, &pos, "TLS: Internal error (unhandled OpenSSL error)");
-#endif
+
+      int tls_error = ___TLS_ERR_FROM_ERR_CODE(err_code);
+      const char *msg = NULL;
+
+      if (tls_error > ___TLS_ERR_BASE)
+        msg = tls_error_to_string (tls_error);
       else
-        append_charstring (buf, &pos, "TLS: Unknown error");
+        msg = ERR_error_string (tls_error, NULL);
+
+      if (msg == NULL)
+        msg = "Unknown error";
+
+      append_charstring (buf, &pos, msg);
+
+#endif
+
     }
   else
     {
