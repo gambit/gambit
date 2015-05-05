@@ -8063,6 +8063,67 @@ ___BOOL use_pty;)
 
 #define ___ESCAPE_PROCESS_ARGS
 
+int arg_encoding
+   ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg,
+         int *len_increase,
+         ___BOOL *need_quotes),
+        (arg,
+         len_increase,
+         need_quotes)
+___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg;
+int *len_increase;
+___BOOL *need_quotes;)
+{
+  int len = 0;
+
+  while (arg[len] != ___UNICODE_NUL)
+    len++;
+
+#ifdef ___ESCAPE_PROCESS_ARGS
+
+  {
+    int j = len;
+    int increase = 0;
+    ___BOOL quotes = FALSE;
+    ___BOOL double_backslash = TRUE;
+
+    while (--j >= 0)
+      {
+        ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
+        if (c == ___UNICODE_DOUBLEQUOTE ||
+            (double_backslash && c == ___UNICODE_BACKSLASH))
+          {
+            double_backslash = TRUE;
+            increase++; /* space for backslash */
+          }
+        else
+          {
+            double_backslash = FALSE;
+            if (c == ___UNICODE_SPACE)
+              quotes = TRUE;
+          }
+      }
+
+    if (increase > 0)
+      quotes = TRUE;
+
+    if (quotes)
+      increase += 2; /* space for quotes */
+
+    *len_increase = increase;
+    *need_quotes = quotes;
+  }
+
+#else
+
+  *len_increase = 0;
+  *need_quotes = FALSE;
+
+#endif
+
+  return len;
+}
+
 ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) argv_to_ccmd
    ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv),
         (argv)
@@ -8071,40 +8132,14 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
   ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) ccmd;
   int ccmd_len = 0;
   int i = 0;
+  int len_increase;
+  ___BOOL need_quotes;
   ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg;
 
   while ((arg = argv[i]) != NULL)
     {
-      int j = 0;
-
-      while (arg[j] != ___UNICODE_NUL)
-        j++;
-
-      ccmd_len += j + 1;
-
-#ifdef ___ESCAPE_PROCESS_ARGS
-
-      {
-        ___BOOL double_backslash = TRUE;
-
-        while (--j >= 0)
-          {
-            ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
-            if (c == ___UNICODE_DOUBLEQUOTE ||
-                (double_backslash && c == ___UNICODE_BACKSLASH))
-              {
-                double_backslash = TRUE;
-                ccmd_len++;
-              }
-            else
-              double_backslash = FALSE;
-          }
-
-        ccmd_len += 2;
-      }
-
-#endif
-
+      ccmd_len += arg_encoding (arg, &len_increase, &need_quotes);
+      ccmd_len += len_increase + 1;
       i++;
     }
 
@@ -8117,19 +8152,19 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
 
       while (--i >= 0)
         {
-          int j = 0;
+          int j;
 
           arg = argv[i];
 
-          while (arg[j] != ___UNICODE_NUL)
-            j++;
+          j = arg_encoding (arg, &len_increase, &need_quotes);
 
 #ifdef ___ESCAPE_PROCESS_ARGS
 
           {
             ___BOOL double_backslash = TRUE;
 
-            ccmd[--ccmd_len] = ___UNICODE_DOUBLEQUOTE;
+            if (need_quotes)
+              ccmd[--ccmd_len] = ___UNICODE_DOUBLEQUOTE;
 
             while (--j >= 0)
               {
@@ -8145,7 +8180,8 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
                   double_backslash = FALSE;
               }
 
-            ccmd[--ccmd_len] = ___UNICODE_DOUBLEQUOTE;
+            if (need_quotes)
+              ccmd[--ccmd_len] = ___UNICODE_DOUBLEQUOTE;
           }
 
 #else
