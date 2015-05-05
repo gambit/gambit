@@ -51,7 +51,7 @@ build_script:
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-32] SET PATH=C:\MinGW\bin;%PATH%
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-64] SET PATH=C:\mingw64\bin;%PATH%
 
-  - IF [%tools%]==[mingw] sh -c "%c_comp% -v"
+  - IF [%tools%]==[mingw] sh -c "gcc -v"
 
   - sh -c "./configure --enable-single-host CC=%c_comp%;make"
 
