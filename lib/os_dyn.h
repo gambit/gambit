@@ -1,6 +1,6 @@
-/* File: "os_dyn.h", Time-stamp: <2007-04-04 11:30:48 feeley> */
+/* File: "os_dyn.h" */
 
-/* Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_DYN_H
 #define ___OS_DYN_H
@@ -13,57 +13,40 @@
 
 #ifdef USE_shl_load
 #define ___DL_DESCR shl_t
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 #ifdef USE_LoadLibrary
 #define ___DL_DESCR HMODULE
-#ifdef _UNICODE
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 #ifdef USE_DosLoadModule
 #define ___DL_DESCR HMODULE
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 #ifdef USE_dxe_load
 #define ___DL_DESCR void *
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 #ifdef USE_GetDiskFragment
 #define ___DL_DESCR CFragConnectionID
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 #ifdef USE_dlopen
 #define ___DL_DESCR void *
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #undef ___IMPORTED_ID_PREFIX
 #endif
 
 #ifdef USE_NSLinkModule
 #define ___DL_DESCR NSModule
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 #ifndef ___DL_PATH_CE_SELECT
-#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#define ___DL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
 #endif
 
 #ifndef ___DL_MODNAME_CE_SELECT
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 

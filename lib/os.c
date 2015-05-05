@@ -1685,8 +1685,6 @@ ___SCMOBJ modification_time;)
 
 #ifdef USE_utimes
 
-#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
@@ -1715,12 +1713,6 @@ ___SCMOBJ modification_time;)
 #endif
 
 #ifdef USE_SetFileTime
-
-#ifdef _UNICODE
-#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___TIMES_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -1791,8 +1783,6 @@ ___SCMOBJ chase;)
 #ifndef USE_stat
 #ifndef USE_GetFileAttributesEx
 
-#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path,
@@ -1856,8 +1846,6 @@ ___SCMOBJ chase;)
 #endif
 
 #ifdef USE_stat
-
-#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -2031,12 +2019,6 @@ ___SCMOBJ chase;)
 #endif
 
 #ifdef USE_GetFileAttributesEx
-
-#ifdef _UNICODE
-#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___INFO_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)

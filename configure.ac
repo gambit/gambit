@@ -388,6 +388,40 @@ AC_SUBST(CONF_MAX_CHR)
 
 ###############################################################################
 #
+# Check the encoding of filesystem paths.
+
+AC_ARG_ENABLE(path-encoding,
+              AC_HELP_STRING([--enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native],
+                             [Filesystem path encoding (default is ucs2 on Windows and utf8 on other OSes)]),
+              ENABLE_PATH_ENCODING=$enableval,
+              ENABLE_PATH_ENCODING=no)
+
+if test "$ENABLE_PATH_ENCODING" = utf8; then
+  AC_DEFINE([___PATH_ENCODING_UTF8],[],[Select UTF-8 for path encoding])
+else
+  if test "$ENABLE_PATH_ENCODING" = latin1; then
+    AC_DEFINE([___PATH_ENCODING_LATIN1],[],[Select LATIN-1 for path encoding])
+  else
+    if test "$ENABLE_PATH_ENCODING" = ucs2; then
+      AC_DEFINE([___PATH_ENCODING_UCS2],[],[Select UCS-2 for path encoding])
+    else
+      if test "$ENABLE_PATH_ENCODING" = ucs4; then
+        AC_DEFINE([___PATH_ENCODING_UCS4],[],[Select UCS-4 for path encoding])
+      else
+        if test "$ENABLE_PATH_ENCODING" = wchar; then
+          AC_DEFINE([___PATH_ENCODING_WCHAR],[],[Select WCHAR for path encoding])
+        else
+          if test "$ENABLE_PATH_ENCODING" = native; then
+            AC_DEFINE([___PATH_ENCODING_NATIVE],[],[Select NATIVE for path encoding])
+          fi
+        fi
+      fi
+    fi
+  fi
+fi
+
+###############################################################################
+#
 # Check the size of the type "void*".  On many systems it is the same
 # size as "long".  If this isn't the case then define
 # ___VOIDSTAR_WIDTH appropriately.

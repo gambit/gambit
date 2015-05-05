@@ -4871,19 +4871,15 @@ ___HIDDEN ___device_directory_vtbl ___device_directory_table =
 
 
 #ifdef USE_opendir
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
-#ifdef USE_FindFirstFile
-#ifdef _UNICODE
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#define ___DIR_OPEN_PATH_SUPPORTED
 #else
-#define ___DIR_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#ifdef USE_FindFirstFile
+#define ___DIR_OPEN_PATH_SUPPORTED
 #endif
 #endif
 
 
-#ifdef ___DIR_OPEN_PATH_CE_SELECT
+#ifdef ___DIR_OPEN_PATH_SUPPORTED
 
 ___SCMOBJ ___device_directory_setup
    ___P((___device_directory **dev,
@@ -6620,6 +6616,8 @@ int *direction;)
 
 /*---------------------------------------------------------------------------*/
 
+#ifndef ___STREAM_OPEN_PROCESS_CE_SELECT
+
 #ifdef USE_execvp
 #define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #ifndef USE_openpty
@@ -6637,6 +6635,8 @@ int *direction;)
 #define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #define CP_ENV_FLAGS 0
 #endif
+#endif
+
 #endif
 
 
@@ -6919,6 +6919,67 @@ ___BOOL use_pty;)
 
 #define ___ESCAPE_PROCESS_ARGS
 
+int arg_encoding
+   ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg,
+         int *len_increase,
+         ___BOOL *need_quotes),
+        (arg,
+         len_increase,
+         need_quotes)
+___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg;
+int *len_increase;
+___BOOL *need_quotes;)
+{
+  int len = 0;
+
+  while (arg[len] != ___UNICODE_NUL)
+    len++;
+
+#ifdef ___ESCAPE_PROCESS_ARGS
+
+  {
+    int j = len;
+    int increase = 0;
+    ___BOOL quotes = FALSE;
+    ___BOOL double_backslash = TRUE;
+
+    while (--j >= 0)
+      {
+        ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
+        if (c == ___UNICODE_DOUBLEQUOTE ||
+            (double_backslash && c == ___UNICODE_BACKSLASH))
+          {
+            double_backslash = TRUE;
+            increase++; /* space for backslash */
+          }
+        else
+          {
+            double_backslash = FALSE;
+            if (c == ___UNICODE_SPACE)
+              quotes = TRUE;
+          }
+      }
+
+    if (increase > 0)
+      quotes = TRUE;
+
+    if (quotes)
+      increase += 2; /* space for quotes */
+
+    *len_increase = increase;
+    *need_quotes = quotes;
+  }
+
+#else
+
+  *len_increase = 0;
+  *need_quotes = FALSE;
+
+#endif
+
+  return len;
+}
+
 ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) argv_to_ccmd
    ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv),
         (argv)
@@ -6927,40 +6988,14 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
   ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) ccmd;
   int ccmd_len = 0;
   int i = 0;
+  int len_increase;
+  ___BOOL need_quotes;
   ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg;
 
   while ((arg = argv[i]) != NULL)
     {
-      int j = 0;
-
-      while (arg[j] != ___UNICODE_NUL)
-        j++;
-
-      ccmd_len += j + 1;
-
-#ifdef ___ESCAPE_PROCESS_ARGS
-
-      {
-        ___BOOL double_backslash = TRUE;
-
-        while (--j >= 0)
-          {
-            ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
-            if (c == ___UNICODE_DOUBLEQUOTE ||
-                (double_backslash && c == ___UNICODE_BACKSLASH))
-              {
-                double_backslash = TRUE;
-                ccmd_len++;
-              }
-            else
-              double_backslash = FALSE;
-          }
-
-        ccmd_len += 2;
-      }
-
-#endif
-
+      ccmd_len += arg_encoding (arg, &len_increase, &need_quotes);
+      ccmd_len += len_increase + 1;
       i++;
     }
 
@@ -6973,19 +7008,19 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
 
       while (--i >= 0)
         {
-          int j = 0;
+          int j;
 
           arg = argv[i];
 
-          while (arg[j] != ___UNICODE_NUL)
-            j++;
+          j = arg_encoding (arg, &len_increase, &need_quotes);
 
 #ifdef ___ESCAPE_PROCESS_ARGS
 
           {
             ___BOOL double_backslash = TRUE;
 
-            ccmd[--ccmd_len] = ___UNICODE_DOUBLEQUOTE;
+            if (need_quotes)
+              ccmd[--ccmd_len] = ___UNICODE_DOUBLEQUOTE;
 
             while (--j >= 0)
               {
@@ -7001,7 +7036,8 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
                   double_backslash = FALSE;
               }
 
-            ccmd[--ccmd_len] = ___UNICODE_DOUBLEQUOTE;
+            if (need_quotes)
+              ccmd[--ccmd_len] = ___UNICODE_DOUBLEQUOTE;
           }
 
 #else
@@ -7492,26 +7528,9 @@ ___SCMOBJ dev;)
 
 /*---------------------------------------------------------------------------*/
 
-#ifndef USE_POSIX
-#ifndef USE_WIN32
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-#endif
+#define ___STREAM_OPEN_PATH_SUPPORTED
 
-#ifdef USE_POSIX
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-
-#ifdef USE_WIN32
-#ifdef _UNICODE
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#else
-#define ___STREAM_OPEN_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#endif
-#endif
-
-
-#ifdef ___STREAM_OPEN_PATH_CE_SELECT
+#ifdef ___STREAM_OPEN_PATH_SUPPORTED
 
 ___SCMOBJ ___device_stream_setup_from_path
    ___P((___device_stream **dev,
@@ -8064,7 +8083,7 @@ ___SCMOBJ path;
 ___SCMOBJ flags;
 ___SCMOBJ mode;)
 {
-#ifndef ___STREAM_OPEN_PATH_CE_SELECT
+#ifndef ___STREAM_OPEN_PATH_SUPPORTED
 
   return ___FIX(___UNIMPL_ERR);
 
@@ -8538,7 +8557,7 @@ ___SCMOBJ ___os_device_directory_open_path
 ___SCMOBJ path;
 ___SCMOBJ ignore_hidden;)
 {
-#ifndef ___DIR_OPEN_PATH_CE_SELECT
+#ifndef ___DIR_OPEN_PATH_SUPPORTED
 
   return ___FIX(___UNIMPL_ERR);
 
@@ -8602,7 +8621,7 @@ ___SCMOBJ ___os_device_directory_read
         (dev)
 ___SCMOBJ dev;)
 {
-#ifndef ___DIR_OPEN_PATH_CE_SELECT
+#ifndef ___DIR_OPEN_PATH_SUPPORTED
 
   return ___FIX(___UNIMPL_ERR);
 
