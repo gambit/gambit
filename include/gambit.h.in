@@ -328,17 +328,6 @@
 #ifdef __arm__
 #define ___CPU_arm
 #else
-#ifdef arm64
-#define ___CPU_arm
-#else
-#ifdef __arm64
-#define ___CPU_arm
-#else
-#ifdef __arm64__
-#define ___CPU_arm
-#endif
-#endif
-#endif
 #endif
 #endif
 #endif
@@ -359,6 +348,14 @@
 #endif
 #endif
 
+#endif
+
+#ifdef __aarch64__
+#define ___CPU_aarch64
+#else
+#ifdef __arm64__
+#define ___CPU_aarch64
+#endif
 #endif
 
 /*
@@ -433,6 +430,11 @@
 #endif
 
 #ifdef EMSCRIPTEN
+#define ___LITTLE_ENDIAN
+#endif
+
+/* AArch64 can be little or big endian*/
+#ifdef __AARCH64EL__
 #define ___LITTLE_ENDIAN
 #endif
 
