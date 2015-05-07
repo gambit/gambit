@@ -21,7 +21,11 @@ AC_COPYRIGHT([[Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
-AC_PREFIX_DEFAULT(/usr/local/$PACKAGE_NAME)
+AC_PREFIX_DEFAULT(`if test -d "C:" ; then
+  echo "C:/Program Files/$PACKAGE_NAME" ;
+else
+  echo "/usr/local/$PACKAGE_NAME" ;
+fi`)
 
 AC_CANONICAL_SYSTEM
 
@@ -1003,6 +1007,8 @@ else
 
   if test "$C_COMP_VISUALC" = yes; then
 
+    PATH_SEPARATOR="\\\\\\\\\\\\\\\\"
+
     LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
 
     if test "$ENABLE_HIGH_RES_TIMING" = yes; then
@@ -1017,6 +1023,8 @@ else
 
        mingw*) # add Windows libraries needed by MinGW
 
+               PATH_SEPARATOR="\\\\\\\\\\\\\\\\"
+
                LIBS="$LIBS -lws2_32"
 
                if test "$ENABLE_HIGH_RES_TIMING" = yes; then
@@ -1027,6 +1035,8 @@ else
                ;;
 
             *) # check libraries for other systems
+
+               PATH_SEPARATOR="/"
 
                AC_SEARCH_LIBS(asin,m)
 
@@ -2271,11 +2281,11 @@ esac
 # Determine where the installation directories are located.
 
 if test "$prefix" = NONE; then
-  prefix="/usr/local/$PACKAGE_NAME"
+  prefix="${ac_default_prefix}"
 fi
 
 if test "$ENABLE_MULTIPLE_VERSIONS" = yes; then
-  prefix="$prefix/$PACKAGE_VERSION"
+  prefix="${prefix}/$PACKAGE_VERSION"
 fi
 
 if test "$bindir" = "\${exec_prefix}/bin"; then
@@ -2302,32 +2312,32 @@ if test "$datadir" = "\${datarootdir}"; then
   datadir="\${prefix}/share"
 fi
 
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR=\"\\\"$prefix\\\"\""
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
 
 if test "$ENABLE_SYMLINKS" != yes; then
 
   if test "$bindir" != "\${prefix}/bin"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_BIN=\"\\\"$bindir\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
   fi
 
   if test "$includedir" != "\${prefix}/include"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INCLUDE=\"\\\"$includedir\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
   fi
 
   if test "$libdir" != "\${prefix}/lib"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_LIB=\"\\\"$libdir\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
   fi
 
   if test "$docdir" != "\${prefix}/doc"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_DOC=\"\\\"$docdir\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
   fi
 
   if test "$infodir" != "\${prefix}/info"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INFO=\"\\\"$infodir\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
   fi
 
   if test "$datadir" != "\${prefix}/share"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_SHARE=\"\\\"$datadir\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
   fi
 
 fi
