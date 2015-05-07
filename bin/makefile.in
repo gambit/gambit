@@ -1,6 +1,6 @@
 # makefile for Gambit-C bin directory.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot = bin
 rootfromhere = ..
@@ -183,70 +183,70 @@ bootstrap-post:
 install-pre:
 
 install-post: all
-	c_bindir=$(DESTDIR)$(prefix)/bin; \
-	i_bindir=$(DESTDIR)$(bindir); \
-	t_bindir=$$i_bindir; \
-	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_bindir; \
+	c_bindir="$(DESTDIR)$(prefix)/bin"; \
+	i_bindir="$(DESTDIR)$(bindir)"; \
+	t_bindir="$$i_bindir"; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs "$$i_bindir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_bindir; \
-	  t_bindir=$$c_bindir; \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs "$$c_bindir"; \
+	  t_bindir="$$c_bindir"; \
 	fi; \
 	for file in $(INSTFILES_BIN_LINK); do \
-	  rm -f $$t_bindir/$$file $$t_bindir/$$file.lnk; \
+	  rm -f "$$t_bindir/$$file" "$$t_bindir/$$file.lnk"; \
 	done; \
 	for file in $(INSTFILES_BIN_PROG); do \
-	  $(INSTALL_PROGRAM) $$file $$t_bindir/$$file; \
+	  $(INSTALL_PROGRAM) "$$file" "$$t_bindir/$$file"; \
 	done; \
 	if test "@bat@" = ""; then \
 	  for file in $(INSTFILES_BIN_LINK_GSI); do \
-	    (cd $$t_bindir && $(LN_S) $(GSI_EXECUTABLE_INSTALLED) $$file); \
+	    (cd "$$t_bindir" && $(LN_S) "$(GSI_EXECUTABLE_INSTALLED)" "$$file"); \
 	  done; \
 	  for file in $(INSTFILES_BIN_LINK_GSC); do \
-	    (cd $$t_bindir && $(LN_S) $(GSC_EXECUTABLE_INSTALLED) $$file); \
+	    (cd "$$t_bindir" && $(LN_S) "$(GSC_EXECUTABLE_INSTALLED)" "$$file"); \
 	  done; \
 	else \
 	  for file in $(INSTFILES_BIN_LINK); do \
-	    $(INSTALL_PROGRAM) $$file $$t_bindir/$$file; \
+	    $(INSTALL_PROGRAM) "$$file" "$$t_bindir/$$file"; \
 	  done; \
 	fi; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
 	  r_bindir=`$(rootfromhere)/relpath "$$t_bindir" "$$i_bindir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(INSTFILES_BIN_LINK); do \
-	    rm -f $$i_bindir/$$file $$i_bindir/$$file.lnk; \
+	    rm -f "$$i_bindir/$$file" "$$i_bindir/$$file.lnk"; \
 	  done; \
 	  for file in $(INSTFILES_BIN); do \
-	    (cd $$i_bindir && $(LN_S) $$r_bindir$$file $$file); \
+	    (cd "$$i_bindir" && $(LN_S) "$$r_bindir$$file" "$$file"); \
 	  done; \
 	fi
 
 uninstall-pre:
 
 uninstall-post:
-	c_bindir=$(DESTDIR)$(prefix)/bin; \
-	i_bindir=$(DESTDIR)$(bindir); \
-	t_bindir=$$i_bindir; \
-	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_bindir; \
+	c_bindir="$(DESTDIR)$(prefix)/bin"; \
+	i_bindir="$(DESTDIR)$(bindir)"; \
+	t_bindir="$$i_bindir"; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs "$$i_bindir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_bindir; \
-	  t_bindir=$$c_bindir; \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs "$$c_bindir"; \
+	  t_bindir="$$c_bindir"; \
 	fi; \
 	for file in $(INSTFILES_BIN_LINK); do \
-	  rm -f $$t_bindir/$$file $$t_bindir/$$file.lnk; \
+	  rm -f "$$t_bindir/$$file" "$$t_bindir/$$file.lnk"; \
 	done; \
 	for file in $(INSTFILES_BIN_PROG); do \
-	  rm -f $$t_bindir/$$file; \
+	  rm -f "$$t_bindir/$$file"; \
 	done; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
 	  for file in $(INSTFILES_BIN_LINK); do \
-	    rm -f $$i_bindir/$$file $$i_bindir/$$file.lnk; \
+	    rm -f "$$i_bindir/$$file" "$$i_bindir/$$file.lnk"; \
 	  done; \
 	  for file in $(INSTFILES_BIN_PROG); do \
-	    rm -f $$i_bindir/$$file; \
+	    rm -f "$$i_bindir/$$file"; \
 	  done; \
 	fi; \
-	rmdir $$t_bindir 2> /dev/null; \
+	rmdir "$$t_bindir" 2> /dev/null; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
-	  rmdir $$i_bindir 2> /dev/null; \
+	  rmdir "$$i_bindir" 2> /dev/null; \
 	fi
 
 select-gen-for-commit-pre:

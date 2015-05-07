@@ -199,8 +199,8 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY)
 	@MAKE_LIBRARY@
 	if test "$(LIB_VERSION_SUFFIX)" != ""; then \
-	  $(LN_S) $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX); \
-	  $(LN_S) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); \
+	  $(LN_S) "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)"; \
+	  $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	fi
 
 _$(GAMBCGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambc.c
@@ -269,86 +269,86 @@ bootstrap-post:
 	  cp $(LIBRARY)$(LIB_VERSION_SUFFIX) $(rootfromhere)/$(LIBRARY)$(LIB_VERSION_SUFFIX); \
 	  if test "$(LIB_VERSION_SUFFIX)" != ""; then \
 	    cd $(rootfromhere); \
-	    $(LN_S) $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX); \
-	    $(LN_S) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); \
+	    $(LN_S) "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)"; \
+	    $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	  fi \
 	fi
 
 install-pre:
 
 install-post: all
-	c_bindir=$(DESTDIR)$(prefix)/bin; \
-	i_bindir=$(DESTDIR)$(bindir); \
-	t_bindir=$$i_bindir; \
-	c_libdir=$(DESTDIR)$(prefix)/lib; \
-	i_libdir=$(DESTDIR)$(libdir); \
-	t_libdir=$$i_libdir; \
-	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_bindir $$i_libdir; \
+	c_bindir="$(DESTDIR)$(prefix)/bin"; \
+	i_bindir="$(DESTDIR)$(bindir)"; \
+	t_bindir="$$i_bindir"; \
+	c_libdir="$(DESTDIR)$(prefix)/lib"; \
+	i_libdir="$(DESTDIR)$(libdir)"; \
+	t_libdir="$$i_libdir"; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs "$$i_bindir" "$$i_libdir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_bindir $$c_libdir; \
-	  t_bindir=$$c_bindir; \
-	  t_libdir=$$c_libdir; \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs "$$c_bindir" "$$c_libdir"; \
+	  t_bindir="$$c_bindir"; \
+	  t_libdir="$$c_libdir"; \
 	fi; \
 	@MAKE_LIBRARY_FOR_INSTALL@; \
 	for file in $(INSTFILES_LIB_DATA); do \
-	  $(INSTALL_DATA) $$file $$t_libdir/$$file; \
+	  $(INSTALL_DATA) "$$file" "$$t_libdir/$$file"; \
 	done; \
 	for file in $(LIBRARIES); do \
-	  $(INSTALL_LIB) $$file $$t_libdir/$$file; \
-	  @FIXLIB@ $$t_libdir/$$file; \
+	  $(INSTALL_LIB) "$$file" "$$t_libdir/$$file"; \
+	  @FIXLIB@ "$$t_libdir/$$file"; \
 	done; \
 	if test "$(LIB_VERSION_SUFFIX)" != ""; then \
-	  (cd $$t_libdir && $(LN_S) $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) && $(LN_S) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY)); \
+	  (cd "$$t_libdir" && $(LN_S) "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" && $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"); \
 	fi; \
 	@LINK_FOR_INSTALL@; \
-	$(INSTALL_PROGRAM) $(EXECUTABLE) $$t_bindir/$(EXECUTABLE_INSTALLED); \
+	$(INSTALL_PROGRAM) "$(EXECUTABLE)" "$$t_bindir/$(EXECUTABLE_INSTALLED)"; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(INSTFILES_LIB_DATA) $(LIBRARIES); do \
-	    (cd $$i_libdir && $(LN_S) $$r_libdir$$file $$file); \
+	    (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
 	  done; \
 	fi; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
 	  r_bindir=`$(rootfromhere)/relpath "$$t_bindir" "$$i_bindir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(EXECUTABLE_INSTALLED); do \
-	    (cd $$i_bindir && $(LN_S) $$r_bindir$$file $$file); \
+	    (cd "$$i_bindir" && $(LN_S) "$$r_bindir$$file" "$$file"); \
 	  done; \
 	fi
 
 uninstall-pre:
 
 uninstall-post:
-	c_bindir=$(DESTDIR)$(prefix)/bin; \
-	i_bindir=$(DESTDIR)$(bindir); \
-	t_bindir=$$i_bindir; \
-	c_libdir=$(DESTDIR)$(prefix)/lib; \
-	i_libdir=$(DESTDIR)$(libdir); \
-	t_libdir=$$i_libdir; \
+	c_bindir="$(DESTDIR)$(prefix)/bin"; \
+	i_bindir="$(DESTDIR)$(bindir)"; \
+	t_bindir="$$i_bindir"; \
+	c_libdir="$(DESTDIR)$(prefix)/lib"; \
+	i_libdir="$(DESTDIR)$(libdir)"; \
+	t_libdir="$$i_libdir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  t_bindir=$$c_bindir; \
-	  t_libdir=$$c_libdir; \
+	  t_bindir="$$c_bindir"; \
+	  t_libdir="$$c_libdir"; \
 	fi; \
 	for file in $(INSTFILES_LIB_DATA) $(LIBRARIES) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); do \
-	  rm -f $$t_libdir/$$file; \
+	  rm -f "$$t_libdir/$$file"; \
 	done; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  for file in $(INSTFILES_LIB_DATA) $(LIBRARIES) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); do \
-	    rm -f $$i_libdir/$$file; \
+	    rm -f "$$i_libdir/$$file"; \
 	  done; \
 	fi; \
-	rm -f $$t_bindir/$(EXECUTABLE_INSTALLED); \
+	rm -f "$$t_bindir/$(EXECUTABLE_INSTALLED)"; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
 	  for file in $(EXECUTABLE_INSTALLED); do \
-	    rm -f $$i_bindir/$$file; \
+	    rm -f "$$i_bindir/$$file"; \
 	  done; \
 	fi; \
-	rmdir $$t_libdir 2> /dev/null; \
+	rmdir "$$t_libdir" 2> /dev/null; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
-	  rmdir $$i_libdir 2> /dev/null; \
+	  rmdir "$$i_libdir" 2> /dev/null; \
 	fi; \
-	rmdir $$t_bindir 2> /dev/null; \
+	rmdir "$$t_bindir" 2> /dev/null; \
 	if test "$$t_bindir" != "$$i_bindir"; then \
-	  rmdir $$i_bindir 2> /dev/null; \
+	  rmdir "$$i_bindir" 2> /dev/null; \
 	fi
 
 select-gen-for-commit-pre:
