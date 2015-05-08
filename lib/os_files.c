@@ -438,6 +438,8 @@ ___SCMOBJ ___os_path_homedir ___PVOID
     {
       if (cstr1 != 0)
         {
+          CANONICALIZE_PATH(___UCS_2STRING, cstr1);
+
           if ((e = ___UCS_2STRING_to_SCMOBJ
                      (___PSTATE,
                       cstr1,
@@ -474,6 +476,8 @@ ___SCMOBJ ___os_path_homedir ___PVOID
 
               if (n > 0 && n < len)
                 {
+                  CANONICALIZE_PATH(___STRING_TYPE(___PATH_CE_SELECT), homedir);
+
                   if ((e = ___NONNULLSTRING_to_SCMOBJ
                              (___PSTATE,
                               homedir,
@@ -551,6 +555,7 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
               mbstowcs (___CAST(wchar_t*,gambcdir), temp, cch);
               gambcdir[cch] = '\0';
 #endif
+              CANONICALIZE_PATH(___UCS_2STRING, gambcdir);
               ___GSTATE->setup_params.gambcdir = gambcdir;
             }
       }
@@ -585,7 +590,7 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 
 #ifdef USE_WIN32
 /* Will only be used if GetModuleFileName path fails */
-#define ___GAMBCDIR "c:\\Gambit-C\\" STRINGIFY2(___VERSION)
+#define ___GAMBCDIR "C:\\Program Files\\Gambit-C\\" STRINGIFY2(___VERSION)
 #endif
 
 #ifdef USE_CLASSIC_MACOS
@@ -594,9 +599,13 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 
 #endif
 
+      static char gambcdir[] = ___GAMBCDIR;
+
+      CANONICALIZE_PATH(char*, gambcdir);
+
       if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
                  (___PSTATE,
-                  ___GAMBCDIR,
+                  gambcdir,
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -748,6 +757,8 @@ ___SCMOBJ dir;)
 
       if ((dir1 = gambcdir_map_lookup (d)) != 0)
         {
+          CANONICALIZE_PATH(___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT), dir1);
+
           if ((e = ___STRING_to_SCMOBJ
                      (___PSTATE,
                       dir1,
@@ -761,6 +772,8 @@ ___SCMOBJ dir;)
         }
       else if ((dir2 = config_gambcdir_map_lookup (d)) != 0)
         {
+          CANONICALIZE_PATH(___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT), dir2);
+
           if ((e = ___STRING_to_SCMOBJ
                      (___PSTATE,
                       dir2,
@@ -838,6 +851,8 @@ ___SCMOBJ path;)
         {
           ___fclose (exist_check);
 
+          CANONICALIZE_PATH(___STRING_TYPE(___PATH_CE_SELECT), dir);
+
           if ((e = ___NONNULLSTRING_to_SCMOBJ
                      (___PSTATE,
                       dir,
@@ -895,6 +910,8 @@ ___SCMOBJ path;)
               *p++ = '/';
               *p++ = '\0';
             }
+
+          CANONICALIZE_PATH(___STRING_TYPE(___PATH_CE_SELECT), dir);
 
           if ((e = ___NONNULLSTRING_to_SCMOBJ
                      (___PSTATE,
@@ -958,6 +975,8 @@ ___SCMOBJ path;)
               *p++ = '\\';
               *p++ = '\0';
             }
+
+          CANONICALIZE_PATH(___STRING_TYPE(___PATH_CE_SELECT), dir);
 
           if ((e = ___NONNULLSTRING_to_SCMOBJ
                      (___PSTATE,
