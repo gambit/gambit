@@ -199,7 +199,7 @@ _num@obj@: mem.h
 
 main@obj@: main.c os.h os_base.h os_shell.h setup.h
 
-setup@obj@: setup.c os.h os_base.h os_dyn.h setup.h mem.h c_intf.h
+setup@obj@: setup.c os.h os_base.h os_files.h os_dyn.h setup.h mem.h c_intf.h
 
 mem@obj@: mem.c os.h os_base.h os_time.h setup.h mem.h c_intf.h
 
