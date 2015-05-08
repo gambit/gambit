@@ -1436,7 +1436,8 @@
        (if cap
            (begin
              (##close-output-port port)
-             (let ((output (##read-line port #f #f ##max-fixnum)))
+             (let* ((out (##read-line port #f #f ##max-fixnum))
+                    (output (if (##string? out) out "")))
                (##close-input-port port)
                (let ((status (##process-status port)))
                  (##cons status output))))
