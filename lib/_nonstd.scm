@@ -1415,9 +1415,11 @@
         (set! ##shell-program sp)
         sp)))
 
-(define-prim (##shell-command cmd)
+(define-prim (##shell-command cmd #!optional (capture? #f))
   (let* ((shell-prog
           (##get-shell-program))
+         (cap
+          (and capture? #t))
          (path-or-settings
           (##list path: (##car shell-prog)
                   arguments:
@@ -1425,14 +1427,22 @@
                    (##cdr shell-prog)
                    cmd)
                   stdin-redirection: #f
-                  stdout-redirection: #f
-                  stderr-redirection: #f)))
+                  stdout-redirection: cap
+                  stderr-redirection: cap)))
     (##open-process-generic
      (macro-direction-inout)
      #t
      (lambda (port)
-       (##close-port port)
-       (##process-status port))
+       (if cap
+           (begin
+             (##close-output-port port)
+             (let ((output (##read-line port #f #f ##max-fixnum)))
+               (##close-input-port port)
+               (let ((status (##process-status port)))
+                 (##cons status output))))
+           (begin
+             (##close-port port)
+             (##process-status port))))
      open-process
      path-or-settings)))
 
@@ -1470,10 +1480,12 @@
                        (##fx- j 1))))
           escaped-str))))
 
-(define-prim (shell-command cmd)
-  (macro-force-vars (cmd)
-    (macro-check-string cmd 1 (shell-command cmd)
-      (##shell-command cmd))))
+(define-prim (shell-command cmd #!optional (capture? (macro-absent-obj)))
+  (macro-force-vars (cmd capture?)
+    (macro-check-string cmd 1 (shell-command cmd capture?)
+      (if (##eq? capture? (macro-absent-obj))
+          (##shell-command cmd)
+          (##shell-command cmd capture?)))))
 
 ;;;----------------------------------------------------------------------------
 
