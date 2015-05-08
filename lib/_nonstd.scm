@@ -1399,15 +1399,19 @@
   (define default-shell-program '("sh"      . "-c"))
 
   (or ##shell-program
-      (let ((sp
-             (if (##file-exists? (##car unix-shell-program))
-                 unix-shell-program
-                 (if (##getenv "HOME" #f)
-                     default-shell-program
-                     (let ((comspec (##getenv "COMSPEC" #f)))
-                       (if comspec
-                           (##cons comspec "/C")
-                           windows-shell-program))))))
+      (let* ((cd
+              (##current-directory))
+             (directory-separator
+              (##string-ref cd (##fx- (##string-length cd) 1)))
+             (sp
+              (if (##char=? #\\ directory-separator)
+                  (let ((comspec (##getenv "COMSPEC" #f)))
+                    (if comspec
+                        (##cons comspec "/C")
+                        windows-shell-program))
+                  (if (##file-exists? (##car unix-shell-program))
+                      unix-shell-program
+                      default-shell-program))))
         (set! ##shell-program sp)
         sp)))
 
