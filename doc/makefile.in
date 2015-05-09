@@ -1,6 +1,6 @@
 # makefile for Gambit-C documentation.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot = doc
 rootfromhere = ..
@@ -153,48 +153,48 @@ bootstrap-post:
 install-pre:
 
 install-post: all doc
-	c_docdir=$(DESTDIR)$(prefix)/doc; \
-	i_docdir=$(DESTDIR)$(docdir); \
-	t_docdir=$$i_docdir; \
-	c_infodir=$(DESTDIR)$(prefix)/info; \
-	i_infodir=$(DESTDIR)$(infodir); \
-	t_infodir=$$i_infodir; \
-	c_mandir=$(DESTDIR)$(prefix)/doc/man/man1; \
-	i_mandir=$(DESTDIR)$(mandir)/man1; \
-	t_mandir=$$i_mandir; \
-	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_docdir $$i_infodir $$i_mandir; \
+	c_docdir="$(DESTDIR)$(prefix)/doc"; \
+	i_docdir="$(DESTDIR)$(docdir)"; \
+	t_docdir="$$i_docdir"; \
+	c_infodir="$(DESTDIR)$(prefix)/info"; \
+	i_infodir="$(DESTDIR)$(infodir)"; \
+	t_infodir="$$i_infodir"; \
+	c_mandir="$(DESTDIR)$(prefix)/doc/man/man1"; \
+	i_mandir="$(DESTDIR)$(mandir)/man1"; \
+	t_mandir="$$i_mandir"; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs "$$i_docdir" "$$i_infodir" "$$i_mandir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_docdir $$c_infodir $$c_mandir; \
-	  t_docdir=$$c_docdir; \
-	  t_infodir=$$c_infodir; \
-	  t_mandir=$$c_mandir; \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs "$$c_docdir" "$$c_infodir" "$$c_mandir"; \
+	  t_docdir="$$c_docdir"; \
+	  t_infodir="$$c_infodir"; \
+	  t_mandir="$$c_mandir"; \
 	fi; \
 	for file in $(INSTFILES_DOC); do \
-	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_docdir/$$file; \
+	  $(INSTALL_DATA) "$(srcdirpfx)$$file" "$$t_docdir/$$file"; \
 	done; \
 	for file in $(INSTFILES_INFO); do \
-	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_infodir/$$file; \
+	  $(INSTALL_DATA) "$(srcdirpfx)$$file" "$$t_infodir/$$file"; \
 	done; \
 	for file in $(INSTFILES_MAN); do \
-	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_mandir/$$file; \
+	  $(INSTALL_DATA) "$(srcdirpfx)$$file" "$$t_mandir/$$file"; \
 	done; \
 	if test "@bat@" = ""; then \
 	  if test "$$t_docdir" != "$$i_docdir"; then \
 	    r_docdir=`$(rootfromhere)/relpath "$$t_docdir" "$$i_docdir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	    for file in $(INSTFILES_DOC); do \
-	      (cd $$i_docdir && $(LN_S) $$r_docdir$$file $$file); \
+	      (cd "$$i_docdir" && $(LN_S) "$$r_docdir$$file" "$$file"); \
 	    done; \
 	  fi; \
 	  if test "$$t_infodir" != "$$i_infodir"; then \
 	    r_infodir=`$(rootfromhere)/relpath "$$t_infodir" "$$i_infodir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	    for file in $(INSTFILES_INFO); do \
-	      (cd $$i_infodir && $(LN_S) $$r_infodir$$file $$file); \
+	      (cd "$$i_infodir" && $(LN_S) "$$r_infodir$$file" "$$file"); \
 	    done; \
 	  fi; \
 	  if test "$$t_mandir" != "$$i_mandir"; then \
 	    r_mandir=`$(rootfromhere)/relpath "$$t_mandir" "$$i_mandir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	    for file in $(INSTFILES_MAN); do \
-	      (cd $$i_mandir && $(LN_S) $$r_mandir$$file $$file); \
+	      (cd "$$i_mandir" && $(LN_S) "$$r_mandir$$file" "$$file"); \
 	    done; \
 	  fi; \
 	fi
@@ -202,55 +202,55 @@ install-post: all doc
 uninstall-pre:
 
 uninstall-post:
-	c_docdir=$(DESTDIR)$(prefix)/doc; \
-	i_docdir=$(DESTDIR)$(docdir); \
-	t_docdir=$$i_docdir; \
-	c_infodir=$(DESTDIR)$(prefix)/info; \
-	i_infodir=$(DESTDIR)$(infodir); \
-	t_infodir=$$i_infodir; \
-	c_mandir=$(DESTDIR)$(prefix)/doc/man/man1; \
-	i_mandir=$(DESTDIR)$(mandir)/man1; \
-	t_mandir=$$i_mandir; \
+	c_docdir="$(DESTDIR)$(prefix)/doc"; \
+	i_docdir="$(DESTDIR)$(docdir)"; \
+	t_docdir="$$i_docdir"; \
+	c_infodir="$(DESTDIR)$(prefix)/info"; \
+	i_infodir="$(DESTDIR)$(infodir)"; \
+	t_infodir="$$i_infodir"; \
+	c_mandir="$(DESTDIR)$(prefix)/doc/man/man1"; \
+	i_mandir="$(DESTDIR)$(mandir)/man1"; \
+	t_mandir="$$i_mandir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  t_docdir=$$c_docdir; \
-	  t_infodir=$$c_infodir; \
-	  t_mandir=$$c_mandir; \
+	  t_docdir="$$c_docdir"; \
+	  t_infodir="$$c_infodir"; \
+	  t_mandir="$$c_mandir"; \
 	fi; \
 	for file in $(INSTFILES_DOC); do \
-	  rm -f $$t_docdir/$$file; \
+	  rm -f "$$t_docdir/$$file"; \
 	done; \
 	for file in $(INSTFILES_INFO); do \
-	  rm -f $$t_infodir/$$file; \
+	  rm -f "$$t_infodir/$$file"; \
 	done; \
 	for file in $(INSTFILES_MAN); do \
-	  rm -f $$t_mandir/$$file; \
+	  rm -f "$$t_mandir/$$file"; \
 	done; \
 	if test "$$t_docdir" != "$$i_docdir"; then \
 	  for file in $(INSTFILES_DOC); do \
-	    rm -f $$i_docdir/$$file; \
+	    rm -f "$$i_docdir/$$file"; \
 	  done; \
 	fi; \
 	if test "$$t_infodir" != "$$i_infodir"; then \
 	  for file in $(INSTFILES_INFO); do \
-	    rm -f $$i_infodir/$$file; \
+	    rm -f "$$i_infodir/$$file"; \
 	  done; \
 	fi; \
 	if test "$$t_mandir" != "$$i_mandir"; then \
 	  for file in $(INSTFILES_MAN); do \
-	    rm -f $$i_mandir/$$file; \
+	    rm -f "$$i_mandir/$$file"; \
 	  done; \
 	fi; \
-	rmdir $$t_docdir 2> /dev/null; \
+	rmdir "$$t_docdir" 2> /dev/null; \
 	if test "$$t_docdir" != "$$i_docdir"; then \
-	  rmdir $$i_docdir 2> /dev/null; \
+	  rmdir "$$i_docdir" 2> /dev/null; \
 	fi; \
-	rmdir $$t_infodir 2> /dev/null; \
+	rmdir "$$t_infodir" 2> /dev/null; \
 	if test "$$t_infodir" != "$$i_infodir"; then \
 	  rmdir $$i_infodir 2> /dev/null; \
 	fi; \
-	rmdir $$t_mandir 2> /dev/null; \
+	rmdir "$$t_mandir" 2> /dev/null; \
 	if test "$$t_mandir" != "$$i_mandir"; then \
-	  rmdir $$i_mandir 2> /dev/null; \
+	  rmdir "$$i_mandir" 2> /dev/null; \
 	fi
 
 select-gen-for-commit-pre:

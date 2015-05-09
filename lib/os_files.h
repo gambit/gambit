@@ -31,6 +31,33 @@ extern ___files_module ___files_mod;
 #define ___PATH_MAX_LENGTH 1024
 
 
+/* Determine path separator. */
+
+#if 0
+#ifdef USE_WIN32
+/* Force path separator to be forward slash. */
+#define ___CANONICAL_PATH_SEPARATOR '/'
+#endif
+#endif
+
+#ifdef ___CANONICAL_PATH_SEPARATOR
+
+#define CANONICALIZE_PATH(string_type, path) \
+do {                                                      \
+  string_type p = path;                                   \
+  if (___CANONICAL_PATH_SEPARATOR == '/')                 \
+    while (*p != '\0') { if (*p == '\\') *p = '/'; p++; } \
+  else                                                    \
+    while (*p != '\0') { if (*p == '/') *p = '\\'; p++; } \
+} while (0)
+
+#else
+
+#define CANONICALIZE_PATH(string_type, path)
+
+#endif
+
+
 /* Determine encoding of filesystem paths. */
 
 #ifdef ___PATH_ENCODING_LATIN1

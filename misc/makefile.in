@@ -1,6 +1,6 @@
 # makefile for Gambit-C miscellanea.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot = misc
 rootfromhere = ..
@@ -102,44 +102,44 @@ bootstrap-post:
 install-pre:
 
 install-post: all
-	c_emacsdir=$(DESTDIR)$(prefix)/share/emacs/site-lisp; \
-	i_emacsdir=$(DESTDIR)$(emacsdir); \
-	t_emacsdir=$$i_emacsdir; \
-	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_emacsdir; \
+	c_emacsdir="$(DESTDIR)$(prefix)/share/emacs/site-lisp"; \
+	i_emacsdir="$(DESTDIR)$(emacsdir)"; \
+	t_emacsdir="$$i_emacsdir"; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs "$$i_emacsdir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_emacsdir; \
-	  t_emacsdir=$$c_emacsdir; \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs "$$c_emacsdir"; \
+	  t_emacsdir="$$c_emacsdir"; \
 	fi; \
 	for file in $(INSTFILES_EMACS); do \
-	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_emacsdir/$$file; \
+	  $(INSTALL_DATA) "$(srcdirpfx)$$file" "$$t_emacsdir/$$file"; \
 	done; \
 	if test "$$t_emacsdir" != "$$i_emacsdir"; then \
 	  r_emacsdir=`$(rootfromhere)/relpath "$$t_emacsdir" "$$i_emacsdir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(INSTFILES_EMACS); do \
-	    (cd $$i_emacsdir && $(LN_S) $$r_emacsdir$$file $$file); \
+	    (cd "$$i_emacsdir" && $(LN_S) "$$r_emacsdir$$file" "$$file"); \
 	  done; \
 	fi
 
 uninstall-pre:
 
 uninstall-post:
-	c_emacsdir=$(DESTDIR)$(prefix)/share/emacs/site-lisp; \
-	i_emacsdir=$(DESTDIR)$(emacsdir); \
-	t_emacsdir=$$i_emacsdir; \
+	c_emacsdir="$(DESTDIR)$(prefix)/share/emacs/site-lisp"; \
+	i_emacsdir="$(DESTDIR)$(emacsdir)"; \
+	t_emacsdir="$$i_emacsdir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  t_emacsdir=$$c_emacsdir; \
+	  t_emacsdir="$$c_emacsdir"; \
 	fi; \
 	for file in $(INSTFILES_EMACS); do \
-	  rm -f $$t_emacsdir/$$file; \
+	  rm -f "$$t_emacsdir/$$file"; \
 	done; \
 	if test "$$t_emacsdir" != "$$i_emacsdir"; then \
 	  for file in $(INSTFILES_EMACS); do \
-	    rm -f $$i_emacsdir/$$file; \
+	    rm -f "$$i_emacsdir/$$file"; \
 	  done; \
 	fi; \
-	rmdir $$t_emacsdir 2> /dev/null; \
+	rmdir "$$t_emacsdir" 2> /dev/null; \
 	if test "$$t_emacsdir" != "$$i_emacsdir"; then \
-	  rmdir $$i_emacsdir 2> /dev/null; \
+	  rmdir "$$i_emacsdir" 2> /dev/null; \
 	fi
 
 select-gen-for-commit-pre:

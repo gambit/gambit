@@ -12,6 +12,7 @@
 #include "gambit.h"
 
 #include "os_base.h"
+#include "os_files.h"
 #include "os_dyn.h"
 #include "setup.h"
 #include "mem.h"
@@ -2289,6 +2290,8 @@ ___HIDDEN ___SCMOBJ setup_command_line_arguments ___PVOID
     argv = ___GSTATE->setup_params.reset_argv;
 
 #define ___COMMAND_LINE_CE_SELECT(ISO_8859_1,UTF_8,UCS_2,UCS_4,wchar,native) UCS_2
+
+  CANONICALIZE_PATH(___UCS_2STRING, argv[0]);
 
   return ___NONNULLSTRINGLIST_to_SCMOBJ
            (NULL, /* allocate as permanent object */

@@ -1,6 +1,6 @@
 # makefile for Gambit-C include directory.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot = include
 rootfromhere = ..
@@ -97,52 +97,52 @@ bootstrap-post:
 install-pre:
 
 install-post: all
-	c_includedir=$(DESTDIR)$(prefix)/include; \
-	i_includedir=$(DESTDIR)$(includedir); \
-	t_includedir=$$i_includedir; \
+	c_includedir="$(DESTDIR)$(prefix)/include"; \
+	i_includedir="$(DESTDIR)$(includedir)"; \
+	t_includedir="$$i_includedir"; \
 	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
 	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
-	$(srcdirpfx)$(rootfromhere)/mkidirs $$i_includedir; \
+	$(srcdirpfx)$(rootfromhere)/mkidirs "$$i_includedir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  $(srcdirpfx)$(rootfromhere)/mkidirs $$c_includedir; \
-	  t_includedir=$$c_includedir; \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs "$$c_includedir"; \
+	  t_includedir="$$c_includedir"; \
 	fi; \
 	for file in gambit.h gambit-not$$version_num.h; do \
-	  $(INSTALL_DATA) $(srcdirpfx)$$file $$t_includedir/$$file; \
+	  $(INSTALL_DATA) "$(srcdirpfx)$$file" "$$t_includedir/$$file"; \
 	done; \
 	if test "$$t_includedir" != "$$i_includedir"; then \
 	  r_includedir=`$(rootfromhere)/relpath "$$t_includedir" "$$i_includedir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in gambit.h gambit-not$$version_num.h; do \
-	    (cd $$i_includedir && $(LN_S) $$r_includedir$$file $$file); \
+	    (cd "$$i_includedir" && $(LN_S) "$$r_includedir$$file" "$$file"); \
 	  done; \
 	fi
 
 uninstall-pre:
 
 uninstall-post:
-	c_includedir=$(DESTDIR)$(prefix)/include; \
-	i_includedir=$(DESTDIR)$(includedir); \
-	t_includedir=$$i_includedir; \
+	c_includedir="$(DESTDIR)$(prefix)/include"; \
+	i_includedir="$(DESTDIR)$(includedir)"; \
+	t_includedir="$$i_includedir"; \
 	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
 	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
-	  t_includedir=$$c_includedir; \
+	  t_includedir="$$c_includedir"; \
 	fi; \
 	for file in gambit.h gambit-not$$version_num.h; do \
-	  rm -f $$t_includedir/$$file; \
+	  rm -f "$$t_includedir/$$file"; \
 	done; \
 	if test "$$t_includedir" != "$$i_includedir"; then \
 	  for file in gambit.h gambit-not$$version_num.h; do \
-	    rm -f $$i_includedir/$$file; \
+	    rm -f "$$i_includedir/$$file"; \
 	  done; \
 	fi; \
-	rmdir $$t_includedir 2> /dev/null; \
+	rmdir "$$t_includedir" 2> /dev/null; \
 	if test "$$t_includedir" != "$$i_includedir"; then \
-	  rmdir $$i_includedir 2> /dev/null; \
+	  rmdir "$$i_includedir" 2> /dev/null; \
 	fi
 
 select-gen-for-commit-pre:

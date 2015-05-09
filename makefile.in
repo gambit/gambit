@@ -1,6 +1,6 @@
 # makefile for Gambit-C system.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -69,10 +69,10 @@ mandir = @mandir@
 #     (which will cause the makefiles to be regenerated when you run `make');
 # (2) otherwise, pass the desired values on the `make' command line.
 
-MDEFINES = prefix=$(prefix) exec_prefix=$(exec_prefix) \
-includedir=$(includedir) libdir=$(libdir) \
-bindir=$(bindir) docdir=$(docdir) \
-infodir=$(infodir) emacsdir=$(emacsdir)
+MDEFINES = prefix="$(prefix)" exec_prefix="$(exec_prefix)" \
+includedir="$(includedir)" libdir="$(libdir)" \
+bindir="$(bindir)" docdir="$(docdir)" \
+infodir="$(infodir)" emacsdir="$(emacsdir)"
 
 SUBDIRS = include lib gsi gsc bin misc doc tests examples contrib prebuilt
 
@@ -267,10 +267,10 @@ install-pre:
 install-post: all
 	if test "@ENABLE_MULTIPLE_VERSIONS@" = "yes"; then \
 	  if test "@bat@" = ""; then \
-	    $(srcdirpfx)./mkidirs $(DESTDIR)$(prefix); \
-	    rm -f $(DESTDIR)$(prefix)/../current \
-	      $(DESTDIR)$(prefix)/../current.lnk; \
-	    (cd $(DESTDIR)$(prefix)/.. && $(LN_S) $(PACKAGE_VERSION) current); \
+	    $(srcdirpfx)./mkidirs "$(DESTDIR)$(prefix)"; \
+	    rm -f "$(DESTDIR)$(prefix)/../current" \
+	      "$(DESTDIR)$(prefix)/../current.lnk"; \
+	    (cd "$(DESTDIR)$(prefix)/.." && $(LN_S) $(PACKAGE_VERSION) current); \
 	  fi; \
 	fi
 
@@ -279,7 +279,7 @@ uninstall-pre:
 uninstall-post:
 	if test "@ENABLE_MULTIPLE_VERSIONS@" = "yes"; then \
 	  if test "@bat@" = ""; then \
-	    (cd $(DESTDIR)$(prefix)/.. && \
+	    (cd "$(DESTDIR)$(prefix)/.." && \
 	     rm -f current && \
 	     rmdir $(PACKAGE_VERSION)); \
 	  fi; \

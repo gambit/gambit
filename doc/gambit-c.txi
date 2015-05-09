@@ -9902,12 +9902,20 @@ For example:
 @node Shell command execution, Process termination, Filesystem operations, Host environment
 @section Shell command execution
 
-@deffn procedure shell-command @var{command}
+@deffn procedure shell-command @var{command} @r{[}@var{capture?}@r{]}
 
 The procedure @code{shell-command} calls up the shell to execute
-@var{command} which must be a string.  This procedure returns
-the exit status of the shell in the form that the C library's
-@code{system} routine returns.
+@var{command} which must be a string.  The argument @var{capture?},
+which defaults to @code{#f}, indicates if the output of the command is
+captured as a string.  If @var{capture?} is @code{#f}, this procedure
+returns the exit status of the shell in the form that the C library's
+@code{system} routine returns.  If @var{capture?} is not @code{#f},
+this procedure returns a pair consisting of the exit status of the
+shell in the @code{car} field, and the captured output in the
+@code{cdr} field.  Be advised that the shell that is used, and
+consequently the syntax of @var{command}, depends on the operating
+system.  On Unix, the shell @code{/bin/sh} is usually invoked.  On Windows,
+the shell @code{cmd.exe} is usually invoked.
 
 For example under UNIX:
 
@@ -9915,6 +9923,17 @@ For example under UNIX:
 > @b{(shell-command "ls -sk f*.scm")}
 4 fact.scm   4 fib.scm
 0
+> @b{(shell-command "ls -sk f*.scm" #t)}
+(0 . "4 fact.scm   4 fib.scm\n")
+> @b{(shell-command "echo x\\\\\\\\y $HOME" #t)}
+(0 . "x\\y /Users/feeley\n")
+@end smallexample
+
+For example under Windows:
+
+@smallexample
+> @b{(shell-command "echo x\\\\\\\\y %HOME%" #t)}
+(0 . "x\\\\\\\\y C:\\Users\\feeley\r\n")
 @end smallexample
 
 @end deffn
