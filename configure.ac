@@ -1496,7 +1496,7 @@ if test "$ENABLE_OPENSSL" = yes; then
 	     LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
              ;;
     mingw*) # Search in typical locations
-      	     CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
+             CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
              LIBS="$LIBS -L\"/C/OpenSSL-x64/lib\" -L\"/c/OpenSSL/lib\" -L\"/usr/local/lib/\" -lssl -lcrypto -lws2_32 -lgdi32 -lcrypt32 -mconsole"
 	     
              ;;
