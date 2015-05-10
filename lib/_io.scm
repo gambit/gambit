@@ -1862,7 +1862,7 @@
 
 (define-prim (##device-port-wait-for-output! port)
 
-  ;; Complement to ##device-port-wait-for-input! . 
+  ;; Complement to ##device-port-wait-for-input! .
 
   ;; The thread will wait until the port's device is writeable in the
   ;; sense that more data can be written to it, or the port's timeout
@@ -6278,65 +6278,74 @@
 
 ;;; Implementation of TLS objects.
 
-(define-prim (make-tls-context #!key
-                               (min-version 'tls-v1)
-                               (options '())
-                               (certificate #f)
-                               (private-key certificate)
-                               (diffie-hellman-parameters #f)
-                               (elliptic-curve #f)
-                               (client-ca #f))
-  (if (##and certificate (##not (##file-exists? certificate)))
-      (##raise-no-such-file-or-directory-exception
-       make-tls-context
-       certificate: certificate))
-  (if (##and private-key (##not (##file-exists? private-key)))
-      (##raise-no-such-file-or-directory-exception
-       make-tls-context
-       private-key: private-key))
-  (if (##and diffie-hellman-parameters
-             (##not (##file-exists? diffie-hellman-parameters)))
-      (##raise-no-such-file-or-directory-exception
-       make-tls-context
-       diffie-hellman-parameters: diffie-hellman-parameters))
-  (if (##and client-ca (##not (##file-exists? client-ca)))
-      (##raise-no-such-file-or-directory-exception
-       make-tls-context
-       client-ca: client-ca))
-  (let ((min-version-hex (case min-version
-                           ((ssl-v2) #x0200)
-                           ((ssl-v3) #x0300)
-                           ((tls-v1) #x0301)
-                           ((tls-v1.1) #x0302)
-                           ((tls-v1.2) #x0303)
-                           (else #f))))
-    (if (##not min-version-hex)
-        (##fail-check-tls-context-version
-         1 make-tls-context min-version: min-version))
-    (let ((result (##os-make-tls-context
-                   min-version-hex
-                   (bitwise-ior
-                    #x0
-                    (if (##memq 'server-mode options) 1 0)
-                    (if (##memq 'use-diffie-hellman options) 2 0)
-                    (if (##memq 'use-elliptic-curves options) 4 0)
-                    (if (##memq 'request-client-authentication options) 8 0)
-                    (if (##memq 'insert-empty-fragments options) 256 0))
-                   certificate
-                   private-key
-                   diffie-hellman-parameters
-                   elliptic-curve
-                   client-ca)))
-      (if (##fixnum? result)
-          (##raise-os-exception #f result make-tls-context
-                                (##list min-version: min-version
-                                        options: options
-                                        certificate: certificate
-                                        private-key: private-key
-                                        diffie-hellman-parameters: diffie-hellman-parameters
-                                        elliptic-curve: elliptic-curve
-                                        client-ca: client-ca))
-          result))))
+(define-prim (make-tls-context
+              #!key
+              (min-version 'tls-v1)
+              (options '())
+              (certificate #f)
+              (private-key certificate)
+              (diffie-hellman-parameters #f)
+              (elliptic-curve #f)
+              (client-ca #f))
+  (cond ((##and certificate (##not (##file-exists? certificate)))
+         (##raise-no-such-file-or-directory-exception
+          make-tls-context
+          certificate: certificate))
+        ((##and private-key (##not (##file-exists? private-key)))
+         (##raise-no-such-file-or-directory-exception
+          make-tls-context
+          private-key: private-key))
+        ((##and diffie-hellman-parameters
+                (##not (##file-exists? diffie-hellman-parameters)))
+         (##raise-no-such-file-or-directory-exception
+          make-tls-context
+          diffie-hellman-parameters: diffie-hellman-parameters))
+        ((##and client-ca (##not (##file-exists? client-ca)))
+         (##raise-no-such-file-or-directory-exception
+          make-tls-context
+          client-ca: client-ca))
+        (else
+         (let ((min-version-hex
+                (case min-version
+                  ((ssl-v2) #x0200)
+                  ((ssl-v3) #x0300)
+                  ((tls-v1) #x0301)
+                  ((tls-v1.1) #x0302)
+                  ((tls-v1.2) #x0303)
+                  (else #f))))
+           (if (##not min-version-hex)
+               (##fail-check-tls-context-version
+                1
+                make-tls-context
+                min-version:
+                min-version)
+               (let ((result
+                      (##os-make-tls-context
+                       min-version-hex
+                       (##fxior
+                        (if (##memq 'server-mode options) 1 0)
+                        (if (##memq 'use-diffie-hellman options) 2 0)
+                        (if (##memq 'use-elliptic-curves options) 4 0)
+                        (if (##memq 'request-client-authentication options) 8 0)
+                        (if (##memq 'insert-empty-fragments options) 256 0))
+                       certificate
+                       private-key
+                       diffie-hellman-parameters
+                       elliptic-curve
+                       client-ca)))
+                 (if (##fixnum? result)
+                     (##raise-os-exception
+                      #f
+                      result
+                      make-tls-context
+                      (##list min-version: min-version
+                              options: options
+                              certificate: certificate
+                              private-key: private-key
+                              diffie-hellman-parameters: diffie-hellman-parameters
+                              elliptic-curve: elliptic-curve
+                              client-ca: client-ca))
+                     result)))))))
 
 ;;;----------------------------------------------------------------------------
 
