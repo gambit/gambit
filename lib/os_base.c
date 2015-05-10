@@ -1455,7 +1455,7 @@ ___SCMOBJ err;)
       int tls_error = ___TLS_ERR_FROM_ERR_CODE(err_code);
       const char *msg = NULL;
 
-      if (tls_error > ___TLS_ERR_BASE)
+      if (tls_error > 65000) /* See tls_error_to_string */
         msg = tls_error_to_string (tls_error);
       else
         msg = ERR_error_string (tls_error, NULL);
