@@ -4228,8 +4228,8 @@ end-of-code
    "___os_device_process_status"))
 
 (define-prim ##os-make-tls-context
-  (c-lambda (unsigned-int16
-             unsigned-int16
+  (c-lambda (scheme-object
+             scheme-object
              scheme-object
              scheme-object
              scheme-object

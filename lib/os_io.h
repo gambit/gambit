@@ -843,8 +843,8 @@ extern ___SCMOBJ ___os_device_tcp_server_socket_info
 /* TLS context. */
 
 extern ___SCMOBJ ___os_make_tls_context
-   ___P((___U16 min_tls_version,
-         ___U16 options,
+   ___P((___SCMOBJ min_tls_version,
+         ___SCMOBJ options,
          ___SCMOBJ certificate_path,
          ___SCMOBJ private_key_path,
          ___SCMOBJ dh_params_path,

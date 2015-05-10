@@ -3775,8 +3775,8 @@ int direction;)
 typedef void ___tls_context;
 
 ___SCMOBJ ___os_make_tls_context
-   ___P((___U16 min_tls_version,
-         ___U16 options,
+   ___P((___SCMOBJ min_tls_version,
+         ___SCMOBJ options,
          ___SCMOBJ certificate_path,
          ___SCMOBJ private_key_path,
          ___SCMOBJ dh_params_path,
@@ -3789,8 +3789,8 @@ ___SCMOBJ ___os_make_tls_context
          dh_params_path,
          elliptic_curve_name,
          client_ca_path)
-___U16 min_tls_version;
-___U16 options;
+___SCMOBJ min_tls_version;
+___SCMOBJ options;
 ___SCMOBJ certificate_path;
 ___SCMOBJ private_key_path;
 ___SCMOBJ dh_params_path;
@@ -3918,9 +3918,22 @@ ___HIDDEN const unsigned char dh1024_g[]={
 #define SSL_OP_NO_COMPRESSION 0
 #endif
 
+
+#ifdef USE_WIN32
+
+#define ___OPENSSL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) utf8
+
+#else
+
+#define ___OPENSSL_PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#endif
+
+
 ___SCMOBJ ___os_make_tls_context
-   ___P((___U16 min_tls_version,
-         ___U16 options,
+   ___P((___SCMOBJ min_tls_version,
+         ___SCMOBJ options,
          ___SCMOBJ certificate_path,
          ___SCMOBJ private_key_path,
          ___SCMOBJ dh_params_path,
@@ -3933,8 +3946,8 @@ ___SCMOBJ ___os_make_tls_context
          dh_params_path,
          elliptic_curve_name,
          client_ca_path)
-___U16 min_tls_version;
-___U16 options;
+___SCMOBJ min_tls_version;
+___SCMOBJ options;
 ___SCMOBJ certificate_path;
 ___SCMOBJ private_key_path;
 ___SCMOBJ dh_params_path;
@@ -3963,13 +3976,13 @@ ___SCMOBJ client_ca_path;)
 
   STACK_OF(X509_NAME) *client_ca_list = NULL;
 
-#define OPENSSL_CHECK_ERROR(ret)                \
-  do {                                          \
-    if ((ret) == 0)                             \
-      {                                         \
+#define OPENSSL_CHECK_ERROR(ret) \
+  do {                                  \
+    if ((ret) == 0)                     \
+      {                                 \
         return ___FIX(___TLS_ERR(ret)); \
-      }                                         \
-  } while(0)
+      }                                 \
+  } while (0)
 
   /* TLS library Initialization */
   /* Reference for TLS initialization:
@@ -4008,8 +4021,8 @@ ___SCMOBJ client_ca_path;)
   if (c == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
-  c->min_tls_version = min_tls_version;
-  c->options = options;
+  c->min_tls_version = ___INT(min_tls_version);
+  c->options = ___INT(options);
 
   c->certificate_path = NULL;
   c->private_key_path = NULL;
@@ -4018,42 +4031,44 @@ ___SCMOBJ client_ca_path;)
   c->client_ca_path = NULL;
   c->tls_ctx = NULL;
 
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) certificate_path,
-                                        &(c->certificate_path),
-                                        3))
-      != ___FIX(___NO_ERR))
-    {
-      ___release_rc_tls_context (c);
-      return scm_e;
-    }
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) private_key_path,
-                                        &(c->private_key_path),
-                                        4))
-      != ___FIX(___NO_ERR))
-    {
-      ___release_rc_tls_context (c);
-      return scm_e;
-    }
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) dh_params_path,
-                                        &(c->dh_params_path),
-                                        5))
-      != ___FIX(___NO_ERR))
-    {
-      ___release_rc_tls_context (c);
-      return scm_e;
-    }
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) elliptic_curve_name,
-                                        &(c->elliptic_curve_name),
-                                        6))
-      != ___FIX(___NO_ERR))
-    {
-      ___release_rc_tls_context (c);
-      return scm_e;
-    }
-  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) client_ca_path,
-                                        &(c->client_ca_path),
-                                        7))
-      != ___FIX(___NO_ERR))
+  if ((scm_e = ___SCMOBJ_to_STRING
+                 (___PSA(___PSTATE)
+                  certificate_path,
+                  ___CAST(void*,&c->certificate_path),
+                  3,
+                  ___CE(___OPENSSL_PATH_CE_SELECT),
+                  0)
+       != ___FIX(___NO_ERR)) ||
+      (scm_e = ___SCMOBJ_to_STRING
+                 (___PSA(___PSTATE)
+                  private_key_path,
+                  ___CAST(void*,&c->private_key_path),
+                  4,
+                  ___CE(___OPENSSL_PATH_CE_SELECT),
+                  0)
+       != ___FIX(___NO_ERR)) ||
+      (scm_e = ___SCMOBJ_to_STRING
+                 (___PSA(___PSTATE)
+                  dh_params_path,
+                  ___CAST(void*,&c->dh_params_path),
+                  5,
+                  ___CE(___OPENSSL_PATH_CE_SELECT),
+                  0)
+       != ___FIX(___NO_ERR)) ||
+      (scm_e = ___SCMOBJ_to_CHARSTRING
+                 (___PSA(___PSTATE)
+                  elliptic_curve_name,
+                  &c->elliptic_curve_name,
+                  6)
+       != ___FIX(___NO_ERR)) ||
+      (scm_e = ___SCMOBJ_to_STRING
+                 (___PSA(___PSTATE)
+                  client_ca_path,
+                  ___CAST(void*,&c->client_ca_path),
+                  7,
+                  ___CE(___OPENSSL_PATH_CE_SELECT),
+                  0)
+       != ___FIX(___NO_ERR)))
     {
       ___release_rc_tls_context (c);
       return scm_e;
@@ -4062,7 +4077,7 @@ ___SCMOBJ client_ca_path;)
   /* TLS Context */
 
   /* Server mode */
-  if (options & ___TLS_OPTION_SERVER_MODE)
+  if (c->options & ___TLS_OPTION_SERVER_MODE)
     {
       /* References for server setup:
          https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c
@@ -4089,7 +4104,7 @@ ___SCMOBJ client_ca_path;)
       /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
          The countermeasure breaks some TLS implementations, so it is deactivated by
          default by SSL_OP_ALL */
-      if (options & ___TLS_OPTION_INSERT_EMPTY_FRAGMENTS)
+      if (c->options & ___TLS_OPTION_INSERT_EMPTY_FRAGMENTS)
         {
 #ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
 
@@ -4106,7 +4121,7 @@ ___SCMOBJ client_ca_path;)
       OPENSSL_CHECK_ERROR (tls_options &
                            SSL_CTX_set_options (c->tls_ctx, tls_options));
 
-      switch (min_tls_version)
+      switch (c->min_tls_version)
         {
         case 0x0303:
           OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
@@ -4315,7 +4330,7 @@ ___SCMOBJ client_ca_path;)
       /* OPTION: re-activate empty fragments (countermeasure against BEAST
          attack). The countermeasure breaks some TLS implementations, so it is
          deactivated by default by the SSL_OP_ALL flag */
-      if (options & ___TLS_OPTION_INSERT_EMPTY_FRAGMENTS)
+      if (c->options & ___TLS_OPTION_INSERT_EMPTY_FRAGMENTS)
         {
 #ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
 
@@ -4332,7 +4347,7 @@ ___SCMOBJ client_ca_path;)
       OPENSSL_CHECK_ERROR (tls_options &
                            SSL_CTX_set_options (c->tls_ctx, tls_options));
 
-      switch (min_tls_version)
+      switch (c->min_tls_version)
         {
         case 0x0303:
           OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
