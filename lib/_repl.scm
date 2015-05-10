@@ -3822,6 +3822,7 @@
         (string-or-settings           . "STRING or port settings")
         (u8vector-or-settings         . "U8VECTOR or port settings")
         (exact-integer-or-string-or-settings . "Exact INTEGER or STRING or port settings")
+        (ssl-context-version          . "SSL version")
         (port                         . "PORT")
         (input-port                   . "INPUT PORT")
         (output-port                  . "OUTPUT PORT")

@@ -98,6 +98,9 @@
 (define-fail-check-type settings
   'settings)
 
+(define-fail-check-type tls-context-version
+  'tls-context-version)
+
 (define-fail-check-type exact-integer-or-string-or-settings
   'exact-integer-or-string-or-settings)
 
@@ -220,7 +223,8 @@
           (macro-default-backlog)
           (macro-default-reuse-address)
           (macro-default-broadcast)
-          (macro-default-ignore-hidden))))
+          (macro-default-ignore-hidden)
+          (macro-default-tls-context))))
     (##parse-psettings!
      allowed-settings
      settings
@@ -517,6 +521,11 @@
            (macro-ignore-dot-and-dot-dot))
           (else
            #f)))
+
+  (define (tls-context value)
+    (if (##foreign? value)
+        value
+        #f))
 
   (let loop ((lst settings))
     (macro-force-vars (lst)
@@ -1019,6 +1028,11 @@
                                          x)
                                         (loop rest2))
                                       (error name))))
+                               ((##eq? name 'tls-context:)
+                                (macro-psettings-tls-context-set!
+                                 psettings
+                                 (tls-context value))
+                                (loop rest2))
 
                                (else
                                 (error name)))))
@@ -6262,6 +6276,70 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; Implementation of TLS objects.
+
+(define-prim (make-tls-context #!key
+                               (min-version 'tls-v1)
+                               (options '())
+                               (certificate #f)
+                               (private-key certificate)
+                               (diffie-hellman-parameters #f)
+                               (elliptic-curve #f)
+                               (client-ca #f))
+  (if (##and certificate (##not (##file-exists? certificate)))
+      (##raise-no-such-file-or-directory-exception
+       make-tls-context
+       certificate: certificate))
+  (if (##and private-key (##not (##file-exists? private-key)))
+      (##raise-no-such-file-or-directory-exception
+       make-tls-context
+       private-key: private-key))
+  (if (##and diffie-hellman-parameters
+             (##not (##file-exists? diffie-hellman-parameters)))
+      (##raise-no-such-file-or-directory-exception
+       make-tls-context
+       diffie-hellman-parameters: diffie-hellman-parameters))
+  (if (##and client-ca (##not (##file-exists? client-ca)))
+      (##raise-no-such-file-or-directory-exception
+       make-tls-context
+       client-ca: client-ca))
+  (let ((min-version-hex (case min-version
+                           ((ssl-v2) #x0200)
+                           ((ssl-v3) #x0300)
+                           ((tls-v1) #x0301)
+                           ((tls-v1.1) #x0302)
+                           ((tls-v1.2) #x0303)
+                           (else #f))))
+    (if (##not min-version-hex)
+        (##fail-check-tls-context-version
+         1 make-tls-context min-version: min-version))
+    (let ((result (##os-make-tls-context
+                   min-version-hex
+                   (bitwise-ior
+                    #x0
+                    (if (##memq 'server-mode options) 1 0)
+                    (if (##memq 'use-diffie-hellman options) 2 0)
+                    (if (##memq 'use-elliptic-curves options) 4 0)
+                    (if (##memq 'request-client-authentication options) 8 0)
+                    (if (##memq 'insert-empty-fragments options) 256 0))
+                   certificate
+                   private-key
+                   diffie-hellman-parameters
+                   elliptic-curve
+                   client-ca)))
+      (if (##fixnum? result)
+          (##raise-os-exception #f result make-tls-context
+                                (##list min-version: min-version
+                                        options: options
+                                        certificate: certificate
+                                        private-key: private-key
+                                        diffie-hellman-parameters: diffie-hellman-parameters
+                                        elliptic-curve: elliptic-curve
+                                        client-ca: client-ca))
+          result))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of TCP client device ports.
 
 (implement-check-type-tcp-client-port)
@@ -6294,7 +6372,8 @@
       buffering:
       input-readtable:
       output-readtable:
-      readtable:))
+      readtable:
+      tls-context:))
 
   (define allowed-server-settings
     '(reuse-address:
@@ -6319,7 +6398,8 @@
       buffering:
       input-readtable:
       output-readtable:
-      readtable:))
+      readtable:
+      tls-context:))
 
   (##make-psettings
    (macro-direction-inout)
@@ -6377,7 +6457,8 @@
                       (##os-device-tcp-client-open
                        server-address
                        port-number
-                       (psettings->options psettings))))
+                       (psettings->options psettings)
+                       (macro-psettings-tls-context psettings))))
                  (if (##fixnum? device)
                      (if raise-os-exception?
                          (##raise-os-exception #f device prim port-number-or-address-or-settings)
@@ -6918,12 +6999,15 @@
           (##cdr psettings-and-server-address))
          (port-number
           (macro-psettings-port-number psettings))
+         (tls-context
+          (macro-psettings-tls-context psettings))
          (rdevice
           (##os-device-tcp-server-open
            server-address
            port-number
            (macro-psettings-backlog psettings)
-           (psettings->options psettings))))
+           (psettings->options psettings)
+           tls-context)))
     (if (##fixnum? rdevice)
         (if raise-os-exception?
             (##raise-os-exception #f rdevice prim port-number-or-address-or-settings arg2 arg3 arg4)

@@ -3768,6 +3768,793 @@ int direction;)
 
 #ifdef USE_NETWORKING
 
+/* TLS support */
+
+#ifndef USE_OPENSSL
+
+typedef void ___tls_context;
+
+___SCMOBJ ___os_make_tls_context
+   ___P((___U16 min_tls_version,
+         ___U16 options,
+         ___SCMOBJ certificate_path,
+         ___SCMOBJ private_key_path,
+         ___SCMOBJ dh_params_path,
+         ___SCMOBJ elliptic_curve_name,
+         ___SCMOBJ client_ca_path),
+        (min_tls_version,
+         options,
+         certificate_path,
+         private_key_path,
+         dh_params_path,
+         elliptic_curve_name,
+         client_ca_path)
+___U16 min_tls_version;
+___U16 options;
+___SCMOBJ certificate_path;
+___SCMOBJ private_key_path;
+___SCMOBJ dh_params_path;
+___SCMOBJ elliptic_curve_name;
+___SCMOBJ client_ca_path;)
+{
+  return ___FIX(___UNIMPL_ERR);
+}
+
+#else
+
+___HIDDEN int openssl_initialized = 0;
+
+
+/* TLS context */
+
+typedef struct ___tls_context_t
+{
+  /* TLS protocol options */
+  ___U16 min_tls_version;
+  ___U16 options;
+
+  /* Client and Server options */
+  char *certificate_path;
+  char *private_key_path;
+
+  /* Server-only options */
+  char *dh_params_path;
+  char *elliptic_curve_name;
+  char *client_ca_path;
+
+  /* OpenSSL context */
+  SSL_CTX *tls_ctx;
+} ___tls_context;
+
+___SCMOBJ ___release_rc_tls_context
+   ___P((void *x),
+        (x)
+void *x;)
+{
+  ___tls_context *c = x;
+
+  if (c->certificate_path != NULL)
+    ___release_string (c->certificate_path);
+  if (c->private_key_path != NULL)
+    ___release_string (c->private_key_path);
+  if (c->dh_params_path != NULL)
+    ___release_string (c->dh_params_path);
+  if (c->elliptic_curve_name != NULL)
+    ___release_string (c->elliptic_curve_name);
+  if (c->client_ca_path != NULL)
+    ___release_string (c->client_ca_path);
+
+  if (c->tls_ctx != NULL)
+    SSL_CTX_free (c->tls_ctx);
+
+  ___release_rc(c);
+
+  return ___FIX(___NO_ERR);
+}
+
+/* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+___HIDDEN void server_tls_info_callback
+   ___P((const SSL *tls, int where, int ret),
+        (tls, where, ret)
+const SSL *tls;
+int where;
+int ret;)
+{
+  if (0 != (where & SSL_CB_HANDSHAKE_START))
+    {
+      ___device_tcp_client *dev = SSL_get_app_data(tls);
+      ++dev->renegotiations;
+    }
+}
+
+#endif
+
+#ifndef OPENSSL_NO_DH
+
+/* 1024-bit MODP Group with 160-bit prime order subgroup (RFC5114)
+ * -----BEGIN DH PARAMETERS-----
+ * MIIBDAKBgQCxC4+WoIDgHd6S3l6uXVTsUsmfvPsGo8aaap3KUtI7YWBz4oZ1oj0Y
+ * mDjvHi7mUsAT7LSuqQYRIySXXDzUm4O/rMvdfZDEvXCYSI6cIZpzck7/1vrlZEc4
+ * +qMaT/VbzMChUa9fDci0vUW/N982XBpl5oz9p21NpwjfH7K8LkpDcQKBgQCk0cvV
+ * w/00EmdlpELvuZkF+BBN0lisUH/WQGz/FCZtMSZv6h5cQVZLd35pD1UE8hMWAhe0
+ * sBuIal6RVH+eJ0n01/vX07mpLuGQnQ0iY/gKdqaiTAh6CR9THb8KAWm2oorWYqTR
+ * jnOvoy13nVkY0IvIhY9Nzvl8KiSFXm7rIrOy5QICAKA=
+ * -----END DH PARAMETERS-----
+ */
+___HIDDEN const unsigned char dh1024_p[]={
+  0xB1,0x0B,0x8F,0x96,0xA0,0x80,0xE0,0x1D,0xDE,0x92,0xDE,0x5E,
+  0xAE,0x5D,0x54,0xEC,0x52,0xC9,0x9F,0xBC,0xFB,0x06,0xA3,0xC6,
+  0x9A,0x6A,0x9D,0xCA,0x52,0xD2,0x3B,0x61,0x60,0x73,0xE2,0x86,
+  0x75,0xA2,0x3D,0x18,0x98,0x38,0xEF,0x1E,0x2E,0xE6,0x52,0xC0,
+  0x13,0xEC,0xB4,0xAE,0xA9,0x06,0x11,0x23,0x24,0x97,0x5C,0x3C,
+  0xD4,0x9B,0x83,0xBF,0xAC,0xCB,0xDD,0x7D,0x90,0xC4,0xBD,0x70,
+  0x98,0x48,0x8E,0x9C,0x21,0x9A,0x73,0x72,0x4E,0xFF,0xD6,0xFA,
+  0xE5,0x64,0x47,0x38,0xFA,0xA3,0x1A,0x4F,0xF5,0x5B,0xCC,0xC0,
+  0xA1,0x51,0xAF,0x5F,0x0D,0xC8,0xB4,0xBD,0x45,0xBF,0x37,0xDF,
+  0x36,0x5C,0x1A,0x65,0xE6,0x8C,0xFD,0xA7,0x6D,0x4D,0xA7,0x08,
+  0xDF,0x1F,0xB2,0xBC,0x2E,0x4A,0x43,0x71,
+};
+
+___HIDDEN const unsigned char dh1024_g[]={
+  0xA4,0xD1,0xCB,0xD5,0xC3,0xFD,0x34,0x12,0x67,0x65,0xA4,0x42,
+  0xEF,0xB9,0x99,0x05,0xF8,0x10,0x4D,0xD2,0x58,0xAC,0x50,0x7F,
+  0xD6,0x40,0x6C,0xFF,0x14,0x26,0x6D,0x31,0x26,0x6F,0xEA,0x1E,
+  0x5C,0x41,0x56,0x4B,0x77,0x7E,0x69,0x0F,0x55,0x04,0xF2,0x13,
+  0x16,0x02,0x17,0xB4,0xB0,0x1B,0x88,0x6A,0x5E,0x91,0x54,0x7F,
+  0x9E,0x27,0x49,0xF4,0xD7,0xFB,0xD7,0xD3,0xB9,0xA9,0x2E,0xE1,
+  0x90,0x9D,0x0D,0x22,0x63,0xF8,0x0A,0x76,0xA6,0xA2,0x4C,0x08,
+  0x7A,0x09,0x1F,0x53,0x1D,0xBF,0x0A,0x01,0x69,0xB6,0xA2,0x8A,
+  0xD6,0x62,0xA4,0xD1,0x8E,0x73,0xAF,0xA3,0x2D,0x77,0x9D,0x59,
+  0x18,0xD0,0x8B,0xC8,0x85,0x8F,0x4D,0xCE,0xF9,0x7C,0x2A,0x24,
+  0x85,0x5E,0x6E,0xEB,0x22,0xB3,0xB2,0xE5,
+};
+
+#endif
+
+/* This option was introduced in OpenSSL v0.9.9 */
+#if OPENSSL_VERSION_NUMBER >= 0x00909000L && !defined SSL_OP_NO_COMPRESSION
+#define SSL_OP_NO_COMPRESSION 0
+#endif
+
+___SCMOBJ ___os_make_tls_context
+   ___P((___U16 min_tls_version,
+         ___U16 options,
+         ___SCMOBJ certificate_path,
+         ___SCMOBJ private_key_path,
+         ___SCMOBJ dh_params_path,
+         ___SCMOBJ elliptic_curve_name,
+         ___SCMOBJ client_ca_path),
+        (min_tls_version,
+         options,
+         certificate_path,
+         private_key_path,
+         dh_params_path,
+         elliptic_curve_name,
+         client_ca_path)
+___U16 min_tls_version;
+___U16 options;
+___SCMOBJ certificate_path;
+___SCMOBJ private_key_path;
+___SCMOBJ dh_params_path;
+___SCMOBJ elliptic_curve_name;
+___SCMOBJ client_ca_path;)
+{
+  ___SCMOBJ scm_e;
+  ___SCMOBJ scm_ctx;
+  int err;
+  long tls_options;
+  long openssl_version = 0;
+
+  /* Server mode parameters */
+#ifndef OPENSSL_NO_DH
+
+  DH *dh;
+
+#endif
+
+#if OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined OPENSSL_NO_ECDH
+
+  EC_KEY *ecdh;
+  int nid;
+
+#endif
+
+  STACK_OF(X509_NAME) *client_ca_list = NULL;
+
+#define OPENSSL_CHECK_ERROR(ret)                \
+  do {                                          \
+    if ((ret) == 0)                             \
+      {                                         \
+        return ___FIX(___TLS_ERR(ret)); \
+      }                                         \
+  } while(0)
+
+  /* TLS library Initialization */
+  /* Reference for TLS initialization:
+     https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
+  if (openssl_initialized == 0)
+    {
+      if (!SSL_library_init())
+        return ___FIX(___TLS_LIBRARY_INIT_ERR);
+
+      SSL_load_error_strings();
+      OpenSSL_add_all_algorithms();
+
+      /* OpenSSL version format after 0.9.3:
+         MMNNFFPPS: major minor fix patch status
+         The status nibble has one of the values 0 for development, 1 to e for
+         betas; 1 to 14, and f for release.
+         The loaded OpenSSL library must be equal or newer than the one used
+         during compilation. Also, it needs to have the same Major, Minor and
+         Fix parts. */
+      openssl_version = SSLeay();
+      if (openssl_version < OPENSSL_VERSION_NUMBER ||
+          (openssl_version>>12) != (OPENSSL_VERSION_NUMBER>>12) )
+        return ___FIX(___TLS_LIBRARY_VERSION_ERR);
+
+      openssl_initialized = 1;
+    }
+  /* Check Entropy */
+  if (RAND_status() == 0)
+    return ___FIX(___TLS_NOT_ENOUGH_ENTROPY_ERR);
+
+  /* Context initialization */
+  ___tls_context *c = ___CAST(___tls_context*,
+                              ___alloc_rc ( ___PSA(___PSTATE)
+                                           sizeof (___tls_context)));
+
+  if (c == NULL)
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+  c->min_tls_version = min_tls_version;
+  c->options = options;
+
+  c->certificate_path = NULL;
+  c->private_key_path = NULL;
+  c->dh_params_path = NULL;
+  c->elliptic_curve_name = NULL;
+  c->client_ca_path = NULL;
+  c->tls_ctx = NULL;
+
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) certificate_path,
+                                        &(c->certificate_path),
+                                        3))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_tls_context (c);
+      return scm_e;
+    }
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) private_key_path,
+                                        &(c->private_key_path),
+                                        4))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_tls_context (c);
+      return scm_e;
+    }
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) dh_params_path,
+                                        &(c->dh_params_path),
+                                        5))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_tls_context (c);
+      return scm_e;
+    }
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) elliptic_curve_name,
+                                        &(c->elliptic_curve_name),
+                                        6))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_tls_context (c);
+      return scm_e;
+    }
+  if ((scm_e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) client_ca_path,
+                                        &(c->client_ca_path),
+                                        7))
+      != ___FIX(___NO_ERR))
+    {
+      ___release_rc_tls_context (c);
+      return scm_e;
+    }
+
+  /* TLS Context */
+
+  /* Server mode */
+  if (options & ___TLS_OPTION_SERVER_MODE)
+    {
+      /* References for server setup:
+         https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c
+         https://github.com/git-mirror/nginx/commit/10e9cec1feca191ea0b00ca729be534e372bdd66#diff-0584d16332cf0d6dd9adb990a3c76a0cR566 */
+
+      /* TLS protocol bugs: workaround options
+         Ref: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html */
+      tls_options =
+        SSL_OP_ALL
+        /* Fix for http://www.cvedetails.com/cve/CVE-2009-3555/ (use in all versions) */
+        | SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION
+        /* Fix against CRIME attack */
+        | SSL_OP_NO_COMPRESSION;
+
+      c->tls_ctx = SSL_CTX_new (SSLv23_server_method());
+      OPENSSL_CHECK_ERROR (c->tls_ctx);
+
+      /* Required identifier for client certificate verification to work with sessions */
+      OPENSSL_CHECK_ERROR (SSL_CTX_set_session_id_context
+                           (c->tls_ctx,
+                            ___CAST(const unsigned char*,"gambit"),
+                            6));
+
+      /* OPTION: re-activate empty fragments countermeasure against BEAST attack.
+         The countermeasure breaks some TLS implementations, so it is deactivated by
+         default by SSL_OP_ALL */
+      if (options & ___TLS_OPTION_INSERT_EMPTY_FRAGMENTS)
+        {
+#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
+
+        tls_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
+
+#else
+
+        ___release_rc_tls_context (c);
+        return ___FIX(___TLS_UNSUPPORTED_EMPTY_FRAGS_ERR);
+
+#endif
+        }
+
+      OPENSSL_CHECK_ERROR (tls_options &
+                           SSL_CTX_set_options (c->tls_ctx, tls_options));
+
+      switch (min_tls_version)
+        {
+        case 0x0303:
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_TLSv1_1)));
+        case 0x302:
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_TLSv1)));
+        case 0x301:
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_SSLv3)));
+        case 0x300:
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_SSLv2)));
+        case 0x200:
+          break;
+        default:
+          return ___FIX(___TLS_WRONG_TLS_VERSION_ERR);
+        }
+
+      /* OPTION: Diffie-Hellman key exchange algorithm support */
+      if (c->options & ___TLS_OPTION_USE_DIFFIE_HELLMAN)
+        {
+#ifndef OPENSSL_NO_DH
+          /* OPTION: Provided DH parameters file */
+          if (c->dh_params_path != NULL)
+            {
+              /* DH parameters from file */
+              FILE *dh_fp;
+              int err;
+              dh_fp = fopen (c->dh_params_path, "r");
+              if (dh_fp == NULL)
+                {
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_READ_DH_PARAMS_ERR);
+                }
+              dh = PEM_read_DHparams (dh_fp, NULL, NULL, NULL);
+              fclose (dh_fp);
+              if (dh == NULL)
+                {
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_READ_DH_PARAMS_ERR);
+                }
+              DH_check (dh, &err);
+              if (err != 0)
+                {
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_READ_DH_PARAMS_ERR);
+                }
+            }
+          else
+            {
+              /* Default DH parameters from RFC5114 */
+              dh = DH_new();
+              if (dh == NULL)
+                {
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_DH_PARAMS_ERR);
+                }
+              dh->p = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
+              dh->g = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
+              dh->length = 160;
+              if (dh->p == NULL || dh->g == NULL)
+                {
+                  DH_free (dh);
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_DH_PARAMS_ERR);
+                }
+            }
+          SSL_CTX_set_tmp_dh (c->tls_ctx, dh);
+          OPENSSL_CHECK_ERROR (SSL_OP_SINGLE_DH_USE &
+                               SSL_CTX_set_options (c->tls_ctx,
+                                                    SSL_OP_SINGLE_DH_USE));
+          if (dh != NULL)
+            DH_free (dh);
+#else
+
+          ___release_rc_tls_context (c);
+          return ___FIX(___TLS_UNSUPPORTED_DH_ERR);
+
+#endif
+        }
+
+      /* OPTION: Use Elliptic-Curve Diffie-Hellman key exchange */
+      if ((c->options & ___TLS_OPTION_USE_ELLIPTIC_CURVES) &&
+          (c->options & ___TLS_OPTION_USE_DIFFIE_HELLMAN))
+        {
+#if OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined OPENSSL_NO_ECDH
+
+          if (c->elliptic_curve_name != NULL)
+            {
+              /* OpenSSL only supports the "named curves" from RFC 4492,
+                 section 5.1.1. */
+              nid = OBJ_sn2nid (c->elliptic_curve_name);
+              if (nid == 0)
+                {
+                  ___release_rc_tls_context (c);
+                  return ___FIX(___TLS_UNKNOWN_ELLIPTIC_CURVE_ERR);
+                }
+            }
+          else
+            {
+              nid = OBJ_sn2nid("prime256v1");
+            }
+          ecdh = EC_KEY_new_by_curve_name(nid);
+          if (ecdh == NULL)
+            {
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_ELLIPTIC_CURVE_ERR);
+            }
+          SSL_CTX_set_tmp_ecdh (c->tls_ctx,ecdh);
+          OPENSSL_CHECK_ERROR (SSL_OP_SINGLE_ECDH_USE &
+                               SSL_CTX_set_options (c->tls_ctx,
+                                                    SSL_OP_SINGLE_ECDH_USE));
+          EC_KEY_free (ecdh);
+
+#else
+
+          ___release_rc_tls_context (c);
+          return ___FIX(___TLS_UNSUPPORTED_ELLIPTIC_CURVES_ERR);
+
+#endif
+        }
+
+      /* OPTION: Authenticate client. This requires a PEM file with accepted CAs */
+      if ((c->options & ___TLS_OPTION_REQUEST_CLIENT_AUTHENTICATION) &&
+          (c->client_ca_path != NULL))
+        {
+          client_ca_list = SSL_load_client_CA_file (c->client_ca_path);
+          if (client_ca_list == NULL)
+            {
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_READ_CA_FILE_ERR);
+            }
+          SSL_CTX_set_client_CA_list(c->tls_ctx, client_ca_list);
+          SSL_CTX_set_verify (c->tls_ctx,
+                              SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                              NULL);
+        }
+
+      /* OPTION: Public certificate and private key files and verification */
+      if ((c->certificate_path != NULL) &&
+          (c->private_key_path != NULL))
+        {
+          if (SSL_CTX_use_certificate_file (c->tls_ctx,
+                                            c->certificate_path,
+                                            SSL_FILETYPE_PEM) <= 0)
+            {
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_CERTIFICATE_FILE_ERR);
+            }
+          if (SSL_CTX_use_PrivateKey_file
+              (c->tls_ctx, c->private_key_path, SSL_FILETYPE_PEM) <= 0)
+            {
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_PRIVATE_KEY_FILE_ERR);
+            }
+          if (SSL_CTX_check_private_key (c->tls_ctx) <= 0)
+            {
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_PRIVATE_KEY_CERT_MISMATCH_ERR);
+            }
+        }
+
+      SSL_CTX_set_mode (c->tls_ctx,
+                        SSL_MODE_ENABLE_PARTIAL_WRITE
+                        | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER
+#ifdef SSL_MODE_RELEASE_BUFFERS
+                        | SSL_MODE_RELEASE_BUFFERS
+#endif
+                        );
+
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+      /* Link back device state to TLS state (used in info callback)
+         Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+      SSL_set_app_data (c->tls, dev);
+      SSL_CTX_set_info_callback (c->tls_ctx, server_tls_info_callback);
+
+#endif
+    }
+  /* Client mode */
+  else
+    {
+      /* TLS protocol bugs: workaround options
+         Ref: https://www.openssl.org/docs/ssl/SSL_CTX_set_options.html */
+      tls_options =
+        SSL_OP_ALL |
+        SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION |
+        SSL_OP_NO_COMPRESSION;
+
+      c->tls_ctx = SSL_CTX_new (SSLv23_client_method());
+      OPENSSL_CHECK_ERROR (c->tls_ctx);
+
+      /* Required identifier for client certificate verification to work with
+         sessions. */
+      /* TODO: should this ID be unique per Gambit instance? */
+      OPENSSL_CHECK_ERROR (SSL_CTX_set_session_id_context
+                           (c->tls_ctx,
+                            ___CAST(const unsigned char*,"gambit"),
+                            6));
+
+      /* OPTION: re-activate empty fragments (countermeasure against BEAST
+         attack). The countermeasure breaks some TLS implementations, so it is
+         deactivated by default by the SSL_OP_ALL flag */
+      if (options & ___TLS_OPTION_INSERT_EMPTY_FRAGMENTS)
+        {
+#ifdef SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS
+
+          tls_options &= ~SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
+
+#else
+
+          ___release_rc_tls_context (c);
+          return ___FIX(___TLS_UNSUPPORTED_EMPTY_FRAGS_ERR);
+
+#endif
+        }
+
+      OPENSSL_CHECK_ERROR (tls_options &
+                           SSL_CTX_set_options (c->tls_ctx, tls_options));
+
+      switch (min_tls_version)
+        {
+        case 0x0303:
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1_1 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_TLSv1_1)));
+        case 0x302:
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_TLSv1 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_TLSv1)));
+        case 0x301:
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_SSLv3)));
+        case 0x300:
+          OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
+                                SSL_CTX_set_options (c->tls_ctx,
+                                                     SSL_OP_NO_SSLv2)));
+        case 0x200:
+          break;
+        default:
+          ___release_rc_tls_context (c);
+          return ___FIX(___TLS_WRONG_TLS_VERSION_ERR);
+        }
+
+      /* OPTION: Public certificate and private key files and verification */
+      if ((c->certificate_path != NULL) &&
+          (c->private_key_path != NULL))
+        {
+          if (SSL_CTX_use_certificate_file (c->tls_ctx,
+                                            c->certificate_path,
+                                            SSL_FILETYPE_PEM) <= 0)
+            {
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_CERTIFICATE_FILE_ERR);
+            }
+          if (SSL_CTX_use_PrivateKey_file (c->tls_ctx,
+                                           c->private_key_path,
+                                           SSL_FILETYPE_PEM) <= 0)
+            {
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_PRIVATE_KEY_FILE_ERR);
+            }
+          if (SSL_CTX_check_private_key (c->tls_ctx) <= 0)
+            {
+              ___release_rc_tls_context (c);
+              return ___FIX(___TLS_PRIVATE_KEY_CERT_MISMATCH_ERR);
+            }
+        }
+
+      SSL_CTX_set_mode (c->tls_ctx,
+                        SSL_MODE_ENABLE_PARTIAL_WRITE |
+                        SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+  }
+
+  if ((scm_e =___NONNULLPOINTER_to_SCMOBJ
+               (___PSTATE,
+                ___CAST(void*,c),
+                ___FAL,
+                ___release_rc_tls_context,
+                &scm_ctx,
+                ___RETURN_POS)) != ___FIX(___NO_ERR))
+    {
+      ___release_rc_tls_context (c);
+      return scm_e;
+    }
+
+  return scm_ctx;
+}
+
+/* TLS support functions */
+
+___HIDDEN void clear_tls_error_queue
+   ___PVOID
+{
+  while (ERR_peek_error() != 0)
+    {
+      /* ERR_print_errors_fp (stderr); */
+    }
+  ERR_clear_error();
+}
+
+/* TLS multithreading support */
+
+#ifdef ___MULTIPLE_THREADED_VMS
+
+___HIDDEN ___MUTEX *tls_mutex_buf = NULL;
+
+___HIDDEN void tls_locking_function
+   ___P((int mode, int n, const char * file, int line),
+        (mode, n, file, line)
+int mode;
+int n;
+const char *file;
+int line;)
+{
+  if (mode & CRYPTO_LOCK)
+    ___MUTEX_LOCK (tls_mutex_buf[n]);
+  else
+    ___MUTEX_UNLOCK (tls_mutex_buf[n]);
+}
+
+___HIDDEN  unsigned long tls_id_function
+   ___PVOID
+{
+  return ((unsigned long)___THREAD_ID);
+}
+
+struct CRYPTO_dynlock_value
+{
+  ___MUTEX mutex;
+};
+
+___HIDDEN struct CRYPTO_dynlock_value *tls_dyn_create_function
+   ___P((const char *file, int line),
+        (file, line)
+const char *file;
+int line;)
+{
+  struct CRYPTO_dynlock_value *value;
+  value = (struct CRYPTO_dynlock_value*)
+    malloc(sizeof(struct CRYPTO_dynlock_value));
+
+  if (!value)
+    return NULL;
+
+  ___MUTEX_INIT (value->mutex);
+  return value;
+}
+
+___HIDDEN void tls_dyn_lock_function
+   ___P((int mode,
+         struct CRYPTO_dynlock_value *l,
+         const char *file,
+         int line),
+        (mode, l, file, line)
+int mode;
+struct CRYPTO_dynlock_value *l;
+const char *file;
+int line;)
+{
+  if (mode & CRYPTO_LOCK)
+    ___MUTEX_LOCK (l->mutex);
+  else
+    ___MUTEX_UNLOCK (l->mutex);
+}
+
+___HIDDEN void tls_dyn_destroy_function
+   ___P((struct CRYPTO_dynlock_value *l,
+         const char *file,
+         int line),
+        (l, file, line)
+struct CRYPTO_dynlock_value *l;
+const char *file;
+int line;)
+{
+  ___MUTEX_DESTROY (l->mutex);
+  free (l);
+}
+
+___HIDDEN int tls_threading_setup
+   ___PVOID
+{
+  int i;
+  tls_mutex_buf = (___MUTEX*)malloc (CRYPTO_num_locks() * sizeof(___MUTEX));
+
+  if (!tls_mutex_buf)
+    return 0;
+
+  for (i = 0;  i < CRYPTO_num_locks();  i++)
+    ___MUTEX_INIT (tls_mutex_buf[i]);
+
+#if OPENSSL_VERSION_NUMBER < 0x10001000L
+  CRYPTO_set_id_callback (tls_id_function);
+#elseif
+  CRYPTO_THREADID_set_callback (tls_id_function);
+#endif
+  CRYPTO_set_locking_callback (tls_locking_function);
+
+  CRYPTO_set_dynlock_create_callback (tls_dyn_create_function);
+  CRYPTO_set_dynlock_lock_callback (tls_dyn_lock_function);
+  CRYPTO_set_dynlock_destroy_callback (tls_dyn_destroy_function);
+
+  return 1;
+}
+
+___HIDDEN int tls_threading_cleanup
+   ___PVOID
+{
+  int i;
+
+  if (!tls_mutex_buf)
+    return 0;
+
+#if OPENSSL_VERSION_NUMBER < 0x10001000L
+  CRYPTO_set_id_callback (NULL);
+#elseif
+  CRYPTO_THREADID_set_callback (NULL);
+#endif
+  CRYPTO_set_locking_callback (NULL);
+
+  CRYPTO_set_dynlock_create_callback (NULL);
+  CRYPTO_set_dynlock_lock_callback (NULL);
+  CRYPTO_set_dynlock_destroy_callback (NULL);
+
+  for (i = 0; i < CRYPTO_num_locks(); i++)
+    ___MUTEX_DESTROY (tls_mutex_buf[i]);
+
+  free (tls_mutex_buf);
+  tls_mutex_buf = NULL;
+
+  return 1;
+}
+
+#endif
+#endif
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef USE_NETWORKING
+
 /* TCP client stream device */
 
 typedef struct ___device_tcp_client_struct
@@ -3791,8 +4578,22 @@ typedef struct ___device_tcp_client_struct
     HANDLE io_event;  /* used by ___device_tcp_client_select_raw_virt */
 
 #endif
-  } ___device_tcp_client;
 
+#ifdef USE_OPENSSL
+
+    SSL *tls;
+
+    /* Handle WANT_WRITE/READ error codes by OpenSSL: want_write[for_writing] */
+    int want_write[2];
+
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+    /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+    int renegotiations = 0;
+
+#endif
+#endif
+  } ___device_tcp_client;
 
 typedef struct ___device_tcp_client_vtbl_struct
   {
@@ -3812,6 +4613,14 @@ ___device_tcp_client *dev;)
       dev->try_connect_again == 2) /* last connect attempt? */
     {
       dev->try_connect_again = 0; /* we're done waiting */
+
+#ifdef USE_OPENSSL
+
+      if (dev->tls != NULL)
+        SSL_connect (dev->tls);
+
+#endif
+
       return 0;
     }
 
@@ -3841,6 +4650,12 @@ int direction;)
   ___device_tcp_client *d = ___CAST(___device_tcp_client*,self);
   int is_not_closed = 0;
 
+#ifdef USE_OPENSSL
+
+  int err;
+
+#endif
+
   if (d->base.base.read_stage != ___STAGE_CLOSED)
     is_not_closed |= ___DIRECTION_RD;
 
@@ -3849,6 +4664,49 @@ int direction;)
 
   if (is_not_closed == 0)
     return ___FIX(___NO_ERR);
+
+#ifdef USE_OPENSSL
+
+  if (d->tls != NULL)
+    {
+      if (SSL_is_init_finished(d->tls))
+        {
+          /* Make for_writing in select have the natural meaning (read for read,
+             write for write). Note that this is not strictly necessary, since
+             we are resetting to this state after each ___device_select_add_fd
+             call on TLS-enabled sockets. */
+          d->want_write[0] = 0;
+          d->want_write[1] = 1;
+
+          clear_tls_error_queue();
+          err = SSL_shutdown (d->tls);
+
+          if (err == 1)
+            {
+            }
+          else if (err > 0)
+            return ___ERR_CODE_EAGAIN;
+          else if (err < 0)
+            {
+              switch (SSL_get_error(d->tls,err))
+                {
+                case SSL_ERROR_WANT_READ:
+                case SSL_ERROR_WANT_WRITE:
+                  return ___ERR_CODE_EAGAIN;
+                default:
+                  /* Discard any other error in TLS shutdown: once the shutdown
+                     notification has been sent, TLS allows the other part to
+                     avoid responding, so we can assume the connection is closed */
+                  break;
+                }
+            }
+        }
+
+      SSL_free (d->tls);
+      d->tls = NULL;
+    }
+
+#endif
 
   if ((is_not_closed & ~direction) == 0)
     {
@@ -3951,7 +4809,28 @@ ___device_select_state *state;)
               ___device_select_add_relative_timeout (state, i, interval * 1e-9);
             }
           else
-            ___device_select_add_fd (state, d->s, for_writing);
+            {
+#ifdef USE_OPENSSL
+              if (d->tls != NULL)
+                {
+                  /* If the connection uses TLS, choose the direction of add_fd
+                     according to previous WANT_WRITE/WANT_READ. This will, in
+                     some cases (during TLS handshake), invert the naturally
+                     expected operation (a write requiring a select for read,
+                     and viceversa). */
+                  ___device_select_add_fd (state,
+                                           d->s,
+                                           d->want_write[for_writing]);
+                  /* Once the the select is done, return the for_writing to
+                     its regular meaning (read for read, write for write) */
+                  d->want_write[for_writing] = for_writing;
+                }
+              else
+                ___device_select_add_fd (state, d->s, for_writing);
+#else
+              ___device_select_add_fd (state, d->s, for_writing);
+#endif
+            }
 
           return ___FIX(___SELECT_SETUP_DONE);
 
@@ -3973,10 +4852,37 @@ ___device_select_state *state;)
     {
       if (d->try_connect_again != 0)
         d->io_events = (FD_CONNECT | FD_CLOSE);
+
+#ifdef USE_OPENSSL
+
+      else if (d->tls != NULL)
+        {
+      /* If the connection uses TLS, choose the direction of add_fd
+         according to previous WANT_WRITE/WANT_READ. This will, in
+         some cases (during TLS handshake), invert the naturally
+         expected operation (a write requiring a select for read,
+         and viceversa). */
+          if (d->want_write[for_writing])
+            d->io_events |= (FD_WRITE | FD_CLOSE);
+          else
+            d->io_events |= (FD_READ | FD_CLOSE);
+       /* Once the the select is done, return the for_writing to
+          its regular meaning (read for read, write for write) */
+          d->want_write[for_writing] = for_writing;
+        }
       else if (for_writing)
         d->io_events |= (FD_WRITE | FD_CLOSE);
       else
         d->io_events |= (FD_READ | FD_CLOSE);
+
+#else
+
+      else if (for_writing)
+        d->io_events |= (FD_WRITE | FD_CLOSE);
+      else
+        d->io_events |= (FD_READ | FD_CLOSE);
+
+#endif
 
       return ___FIX(___NO_ERR);
     }
@@ -4037,6 +4943,13 @@ ___HIDDEN ___SCMOBJ ___device_tcp_client_release_raw_virt
         (self)
 ___device_stream *self;)
 {
+  ___device_tcp_client *d = ___CAST(___device_tcp_client*,self);
+
+#ifdef USE_OPENSSL
+  if (d->tls != NULL)
+    SSL_free (d->tls);
+
+#endif
   return ___FIX(___NO_ERR);
 }
 
@@ -4096,6 +5009,89 @@ ___stream_index *len_done;)
         return ERR_CODE_FROM_SOCKET_CALL;
     }
 
+#ifdef USE_OPENSSL
+
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+  /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+  if (d->renegotiations > 0)
+    return ___FIX(___TLS_ALERT_ERR);
+
+#endif
+
+  /* The current thread's error queue must be empty before the TLS I/O
+     operation is attempted, or SSL_get_error() will not work reliably. */
+  clear_tls_error_queue();
+  if (d->tls)
+    {
+      n = SSL_read (d->tls, ___CAST(char*,buf), len);
+
+      if (n > 0)
+        *len_done = n;
+      else if (n == 0)
+        {
+          /* Check if the other part initiated a shutdown and we didn't reply */
+          if (SSL_get_shutdown (d->tls)
+              & SSL_RECEIVED_SHUTDOWN
+              ^ SSL_SENT_SHUTDOWN)
+            {
+              clear_tls_error_queue();
+              SSL_shutdown (d->tls);
+            }
+
+          int err = SSL_get_error(d->tls,n);
+          switch (err)
+            {
+            /* The SSL connection is closed: nothing to do */
+            case SSL_ERROR_ZERO_RETURN:
+              return ___FIX(___NO_ERR);
+              /* Internal/protocol error */
+            case SSL_ERROR_SYSCALL:
+            case SSL_ERROR_SSL:
+            default:
+              return ___FIX(___TLS_ERR(err));
+            }
+        }
+      else
+        {
+          int err = SSL_get_error(d->tls,n);
+          switch (err)
+            {
+            case SSL_ERROR_WANT_READ:
+              /* want read, not for_writing (that is, for reading) */
+              d->want_write[0] = 0;
+              return ___ERR_CODE_EAGAIN;
+            case SSL_ERROR_WANT_WRITE:
+              /* want write, not for_writing (that is, for reading) */
+              d->want_write[0] = 1;
+              return ___ERR_CODE_EAGAIN;
+            /* These errors require straight repetition */
+            case SSL_ERROR_WANT_ACCEPT:
+            case SSL_ERROR_WANT_CONNECT:
+            case SSL_ERROR_WANT_X509_LOOKUP:
+              return ___ERR_CODE_EAGAIN;
+            /* Internal/protocol error */
+            case SSL_ERROR_SYSCALL:
+            case SSL_ERROR_SSL:
+            default:
+              return ___FIX(___TLS_ERR(err));
+            }
+        }
+    }
+  else
+    {
+      if (SOCKET_CALL_ERROR(n = recv (d->s, ___CAST(char*,buf), len, 0)))
+        {
+          ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
+          if (NOT_CONNECTED(e) && !d->connect_done)
+            e = ___ERR_CODE_EAGAIN;
+          return e;
+        }
+      *len_done = n;
+    }
+
+#else
+
   if (SOCKET_CALL_ERROR(n = recv (d->s, ___CAST(char*,buf), len, 0)))
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
@@ -4105,6 +5101,8 @@ ___stream_index *len_done;)
     }
 
   *len_done = n;
+
+#endif
 
   return ___FIX(___NO_ERR);
 }
@@ -4141,6 +5139,91 @@ ___stream_index *len_done;)
         return ERR_CODE_FROM_SOCKET_CALL;
     }
 
+#ifdef USE_OPENSSL
+
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+  /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+  if (d->renegotiations > 0)
+    return ___FIX(___TLS_ALERT_ERR);
+
+#endif
+
+  /* The current thread's error queue must be empty before the TLS I/O
+     operation is attempted, or SSL_get_error() will not work reliably. */
+  clear_tls_error_queue();
+
+  if (d->tls)
+    {
+      n = SSL_write (d->tls, ___CAST(char*,buf), len);
+
+      if (n > 0)
+        *len_done = n;
+      else if (n == 0)
+        {
+          /* Check if the other part initiated a shutdown and we didn't reply */
+          if (SSL_get_shutdown (d->tls)
+              & SSL_RECEIVED_SHUTDOWN
+              ^ SSL_SENT_SHUTDOWN)
+            {
+              clear_tls_error_queue();
+              SSL_shutdown (d->tls);
+            }
+
+          /* Then look into what actually happened */
+          int err = SSL_get_error(d->tls,n);
+          switch (err)
+            {
+            /* The SSL connection is closed: nothing to do */
+            case SSL_ERROR_ZERO_RETURN:
+              return ___FIX(___NO_ERR);
+            /* Internal/protocol error */
+            case SSL_ERROR_SYSCALL:
+            case SSL_ERROR_SSL:
+            default:
+              return ___FIX(___TLS_ERR(err));
+            }
+        }
+      else
+        {
+          int err = SSL_get_error(d->tls,n);
+          switch (err)
+            {
+            case SSL_ERROR_WANT_READ:
+              /* want read, for_writing */
+              d->want_write[1] = 0;
+              return ___ERR_CODE_EAGAIN;
+            case SSL_ERROR_WANT_WRITE:
+              /* want write, for_writing */
+              d->want_write[1] = 1;
+              return ___ERR_CODE_EAGAIN;
+            /* These errors require straight repetition */
+            case SSL_ERROR_WANT_ACCEPT:
+            case SSL_ERROR_WANT_CONNECT:
+            case SSL_ERROR_WANT_X509_LOOKUP:
+              return ___ERR_CODE_EAGAIN;
+            /* Internal/protocol error */
+            case SSL_ERROR_SYSCALL:
+            case SSL_ERROR_SSL:
+            default:
+              return ___FIX(___TLS_ERR(err));
+            }
+        }
+    }
+  else
+    {
+      if (SOCKET_CALL_ERROR(n = send (d->s, ___CAST(char*,buf), len, 0)))
+        {
+          ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
+          if (NOT_CONNECTED(e) && !d->connect_done)
+            e = ___ERR_CODE_EAGAIN;
+          return e;
+        }
+      *len_done = n;
+    }
+
+#else
+
   if (SOCKET_CALL_ERROR(n = send (d->s, ___CAST(char*,buf), len, 0)))
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
@@ -4150,6 +5233,8 @@ ___stream_index *len_done;)
     }
 
   *len_done = n;
+
+#endif
 
   return ___FIX(___NO_ERR);
 }
@@ -4349,6 +5434,18 @@ int direction;)
   d->try_connect_again = try_connect_again;
   d->connect_done = 0;
 
+#ifdef USE_OPENSSL
+
+  d->tls = NULL;
+
+#if OPENSSL_VERSION_NUMBER < 0x009080cfL
+
+  /* Fix for vulnerability http://www.cvedetails.com/cve/CVE-2009-3555/ */
+  d->renegotiations = 0;
+
+#endif
+#endif
+
 #ifdef USE_POSIX
 
   d->try_connect_interval_nsecs = 1000000; /* 0.001 secs */
@@ -4381,30 +5478,39 @@ int direction;)
             0);
 }
 
-
 ___SCMOBJ ___device_tcp_client_setup_from_sockaddr
    ___P((___device_tcp_client **dev,
          ___device_group *dgroup,
          struct sockaddr *server_addr,
          SOCKET_LEN_TYPE server_addrlen,
          int options,
-         int direction),
+         int direction,
+         ___tls_context *tls_context),
         (dev,
          dgroup,
          server_addr,
          server_addrlen,
          options,
-         direction)
+         direction,
+         tls_context)
 ___device_tcp_client **dev;
 ___device_group *dgroup;
 struct sockaddr *server_addr;
 SOCKET_LEN_TYPE server_addrlen;
 int options;
-int direction;)
+int direction;
+___tls_context *tls_context;)
 {
   ___SCMOBJ e;
   SOCKET_TYPE s;
   ___device_tcp_client *d;
+
+#ifndef USE_OPENSSL
+
+  if (tls_context != NULL)
+    return ___FIX(___UNIMPL_ERR);
+
+#endif
 
   if ((e = create_tcp_socket (&s, options)) != ___FIX(___NO_ERR))
     return e;
@@ -4426,6 +5532,16 @@ int direction;)
   device_transfer_close_responsibility (___CAST(___device*,d));
 
   *dev = d;
+
+#ifdef USE_OPENSSL
+
+  if (tls_context != NULL)
+    {
+      d->tls = SSL_new (tls_context->tls_ctx);
+      SSL_set_fd (d->tls, d->s);
+    }
+
+#endif
 
   if (try_connect (d) != 0)
     {
@@ -4454,6 +5570,12 @@ typedef struct ___device_tcp_server_struct
 #ifdef USE_WIN32
 
     HANDLE io_event;  /* used by ___device_tcp_server_select_raw_virt */
+
+#endif
+
+#ifdef USE_OPENSSL
+
+    ___tls_context *tls_context_p;
 
 #endif
   } ___device_tcp_server;
@@ -4608,26 +5730,28 @@ ___HIDDEN ___device_tcp_server_vtbl ___device_tcp_server_table =
   }
 };
 
-
 ___SCMOBJ ___device_tcp_server_setup
    ___P((___device_tcp_server **dev,
          ___device_group *dgroup,
          struct sockaddr *server_addr,
          SOCKET_LEN_TYPE server_addrlen,
          int backlog,
-         int options),
+         int options,
+         ___tls_context *tls_context),
         (dev,
          dgroup,
          server_addr,
          server_addrlen,
          backlog,
-         options)
+         options,
+         tls_context)
 ___device_tcp_server **dev;
 ___device_group *dgroup;
 struct sockaddr *server_addr;
 SOCKET_LEN_TYPE server_addrlen;
 int backlog;
-int options;)
+int options;
+___tls_context *tls_context;)
 {
   ___SCMOBJ e;
   SOCKET_TYPE s;
@@ -4683,6 +5807,12 @@ int options;)
 
   device_transfer_close_responsibility (___CAST(___device*,d));
 
+#ifdef USE_OPENSSL
+
+  d->tls_context_p = tls_context;
+
+#endif
+
   *dev = d;
 
   ___device_add_to_group (dgroup, &d->base);
@@ -4730,6 +5860,20 @@ ___device_tcp_client **client;)
       CLOSE_SOCKET(s); /* ignore error */
       return e;
     }
+
+#ifdef USE_OPENSSL
+
+  if (dev->tls_context_p != NULL)
+    {
+      /* TLS Connection Initialization */
+      (*client)->tls  = SSL_new (dev->tls_context_p->tls_ctx);
+      SSL_set_fd ((*client)->tls, (*client)->s);
+      /* Non-blocking. We don't need to loop over its status, since OpenSSL
+         handles the handshake automatically in SSL_read/write */
+      SSL_accept ((*client)->tls);
+    }
+
+#endif
 
   device_transfer_close_responsibility (___CAST(___device*,*client));
 
@@ -8305,13 +9449,16 @@ int sig;)
 ___SCMOBJ ___os_device_tcp_client_open
    ___P((___SCMOBJ server_addr,
          ___SCMOBJ port_num,
-         ___SCMOBJ options),
+         ___SCMOBJ options,
+         ___SCMOBJ tls_context),
         (server_addr,
          port_num,
-         options)
+         options,
+         tls_context)
 ___SCMOBJ server_addr;
 ___SCMOBJ port_num;
-___SCMOBJ options;)
+___SCMOBJ options;
+___SCMOBJ tls_context;)
 {
 #ifndef USE_NETWORKING
 
@@ -8324,10 +9471,35 @@ ___SCMOBJ options;)
   ___SCMOBJ result;
   struct sockaddr sa;
   int salen;
+  ___tls_context *tls_context_p;
 
   if ((e = ___SCMOBJ_to_sockaddr (server_addr, port_num, &sa, &salen, 1))
       != ___FIX(___NO_ERR))
     return e;
+
+#ifdef USE_OPENSSL
+
+  if (tls_context == ___FAL)
+    tls_context_p = NULL;
+  else
+    {
+      if ((e = ___SCMOBJ_to_NONNULLPOINTER
+           (___PSA(___PSTATE) tls_context,
+            ___CAST(void**,&tls_context_p),
+            ___FAL,
+            7))
+          != ___FIX(___NO_ERR))
+        return e;
+    }
+
+#else
+
+  if (tls_context != ___FAL)
+    return ___FIX(___UNIMPL_ERR);
+
+  tls_context_p = NULL;
+
+#endif
 
   if ((e = ___device_tcp_client_setup_from_sockaddr
              (&dev,
@@ -8335,7 +9507,8 @@ ___SCMOBJ options;)
               &sa,
               salen,
               ___INT(options),
-              ___DIRECTION_RD|___DIRECTION_WR))
+              ___DIRECTION_RD|___DIRECTION_WR,
+              tls_context_p))
       != ___FIX(___NO_ERR))
     return e;
 
@@ -8416,15 +9589,18 @@ ___SCMOBJ ___os_device_tcp_server_open
    ___P((___SCMOBJ server_addr,
          ___SCMOBJ port_num,
          ___SCMOBJ backlog,
-         ___SCMOBJ options),
+         ___SCMOBJ options,
+         ___SCMOBJ tls_context),
         (server_addr,
          port_num,
          backlog,
-         options)
+         options,
+         tls_context)
 ___SCMOBJ server_addr;
 ___SCMOBJ port_num;
 ___SCMOBJ backlog;
-___SCMOBJ options;)
+___SCMOBJ options;
+___SCMOBJ tls_context;)
 {
 #ifndef USE_NETWORKING
 
@@ -8437,10 +9613,38 @@ ___SCMOBJ options;)
   ___SCMOBJ result;
   struct sockaddr sa;
   int salen;
+  ___tls_context *tls_context_p;
 
   if ((e = ___SCMOBJ_to_sockaddr (server_addr, port_num, &sa, &salen, 1))
       != ___FIX(___NO_ERR))
     return e;
+
+#ifdef USE_OPENSSL
+
+  if (tls_context == ___FAL)
+    tls_context_p = NULL;
+  else
+    {
+      if ((e = ___SCMOBJ_to_NONNULLPOINTER
+           (___PSA(___PSTATE) tls_context,
+            ___CAST(void**,&tls_context_p),
+            ___FAL,
+            7))
+          != ___FIX(___NO_ERR))
+        return e;
+
+      if ((tls_context_p->options & ___TLS_OPTION_SERVER_MODE) == 0)
+        return ___FIX(___TLS_SERVER_CONTEXT_EXPECTED_ERR);
+    }
+
+#else
+
+  if (tls_context != ___FAL)
+    return ___FIX(___UNIMPL_ERR);
+
+  tls_context_p = NULL;
+
+#endif
 
   e = ___device_tcp_server_setup
         (&dev,
@@ -8448,7 +9652,8 @@ ___SCMOBJ options;)
          &sa,
          salen,
          ___INT(backlog),
-         ___INT(options));
+         ___INT(options),
+         tls_context_p);
 
   if (e != ___FIX(___NO_ERR))
     return e;
@@ -9179,6 +10384,12 @@ void ___cleanup_io_module ___PVOID
 #ifdef USE_WIN32
       CloseHandle (___io_mod.abort_select); /* ignore error */
       CloseHandle (___io_mod.always_signaled); /* ignore error */
+#endif
+
+#ifdef USE_OPENSSL
+      ERR_free_strings();
+      EVP_cleanup();
+      CRYPTO_cleanup_all_ex_data();
 #endif
       ___io_mod.setup = 0;
     }

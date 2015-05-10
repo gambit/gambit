@@ -951,6 +951,7 @@ enable_high_res_timing
 enable_multiple_vms
 enable_multiple_threaded_vms
 enable_thread_system
+enable_openssl
 with_x
 '
       ac_precious_vars='build_alias
@@ -1661,6 +1662,8 @@ Optional Features:
                           (default is NO)
   --enable-thread-system[=thread-system]
                           use OS threads (default is NO)
+  --enable-openssl        compile with SSL support using OpenSSL (default is
+                          NO)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -2223,6 +2226,52 @@ $as_echo "$ac_res" >&6; }
 
 } # ac_fn_cxx_check_type
 
+# ac_fn_cxx_try_link LINENO
+# -------------------------
+# Try to link conftest.$ac_ext, and return whether this succeeded.
+ac_fn_cxx_try_link ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  rm -f conftest.$ac_objext conftest$ac_exeext
+  if { { ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+$as_echo "$ac_try_echo"; } >&5
+  (eval "$ac_link") 2>conftest.err
+  ac_status=$?
+  if test -s conftest.err; then
+    grep -v '^ *+' conftest.err >conftest.er1
+    cat conftest.er1 >&5
+    mv -f conftest.er1 conftest.err
+  fi
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 test -x conftest$ac_exeext
+       }; then :
+  ac_retval=0
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_retval=1
+fi
+  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
+  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
+  # interfere with the next link command; also delete a directory that is
+  # left behind by Apple's compiler.  We do this before executing the actions.
+  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+  as_fn_set_status $ac_retval
+
+} # ac_fn_cxx_try_link
+
 # ac_fn_cxx_check_header_mongrel LINENO HEADER VAR INCLUDES
 # ---------------------------------------------------------
 # Tests whether HEADER exists, giving a warning if it cannot be compiled using
@@ -2313,52 +2362,6 @@ fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
 } # ac_fn_cxx_check_header_mongrel
-
-# ac_fn_cxx_try_link LINENO
-# -------------------------
-# Try to link conftest.$ac_ext, and return whether this succeeded.
-ac_fn_cxx_try_link ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  rm -f conftest.$ac_objext conftest$ac_exeext
-  if { { ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_link") 2>conftest.err
-  ac_status=$?
-  if test -s conftest.err; then
-    grep -v '^ *+' conftest.err >conftest.er1
-    cat conftest.er1 >&5
-    mv -f conftest.er1 conftest.err
-  fi
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; } && {
-	 test -z "$ac_cxx_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext && {
-	 test "$cross_compiling" = yes ||
-	 test -x conftest$ac_exeext
-       }; then :
-  ac_retval=0
-else
-  $as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_retval=1
-fi
-  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
-  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
-  # interfere with the next link command; also delete a directory that is
-  # left behind by Apple's compiler.  We do this before executing the actions.
-  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-  as_fn_set_status $ac_retval
-
-} # ac_fn_cxx_try_link
 
 # ac_fn_cxx_check_func LINENO FUNC VAR
 # ------------------------------------
@@ -5517,6 +5520,78 @@ fi
 
 ###############################################################################
 #
+# Check if SSL support should be added using OpenSSL.
+
+# Check whether --enable-openssl was given.
+if test "${enable_openssl+set}" = set; then :
+  enableval=$enable_openssl; ENABLE_OPENSSL=$enableval
+else
+  ENABLE_OPENSSL=no
+fi
+
+
+if test "$ENABLE_OPENSSL" = yes; then
+
+$as_echo "#define USE_OPENSSL /**/" >>confdefs.h
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing main" >&5
+$as_echo_n "checking for library containing main... " >&6; }
+if ${ac_cv_search_main+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+return main ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' ssl crypto; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_search_main=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_main+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_main+:} false; then :
+
+else
+  ac_cv_search_main=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_main" >&5
+$as_echo "$ac_cv_search_main" >&6; }
+ac_res=$ac_cv_search_main
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else
+
+    as_fn_error $? "unable to find the SSL libraries" "$LINENO" 5
+
+fi
+
+fi
+
+###############################################################################
+#
 # Check for C compiler.
 
 
@@ -8410,6 +8485,31 @@ $as_echo "$as_me:
 fi
 
 
+
+
+
+###############################################################################
+#
+# OpenSSL flags
+
+if test "$ENABLE_OPENSSL" = yes; then
+
+  case "$target_os" in
+    darwin*) # OS X ships a very old version and considers OpenSSL deprecated
+             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
+	     LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+             ;;
+    mingw*) # Search in typical locations
+             CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
+             LIBS="$LIBS -L\"/C/OpenSSL-x64/lib\" -L\"/c/OpenSSL/lib\" -L\"/usr/local/lib/\" -lssl -lcrypto -lws2_32 -lgdi32 -lcrypt32 -mconsole"
+
+             ;;
+         *)
+             LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+	     ;;
+  esac
+
+fi
 
 
 ###############################################################################

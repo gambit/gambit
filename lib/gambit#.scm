@@ -397,6 +397,7 @@ make-s8vector
 make-table
 make-thread
 make-thread-group
+make-tls-context
 make-u16vector
 make-u32vector
 make-u64vector

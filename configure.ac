@@ -756,6 +756,23 @@ fi
 
 ###############################################################################
 #
+# Check if SSL support should be added using OpenSSL.
+
+AC_ARG_ENABLE(openssl,
+              AC_HELP_STRING([--enable-openssl],
+                             [compile with SSL support using OpenSSL (default is NO)]),
+              ENABLE_OPENSSL=$enableval,
+              ENABLE_OPENSSL=no)
+
+if test "$ENABLE_OPENSSL" = yes; then
+  AC_DEFINE([USE_OPENSSL],[],[Enable SSL support using OpenSSL])
+  AC_SEARCH_LIBS([main], [ssl crypto], [], [
+    AC_MSG_ERROR([unable to find the SSL libraries])
+  ])
+fi
+
+###############################################################################
+#
 # Check for C compiler.
 
 AC_DEFUN([AC_CHECK_C_COMPILER_DEF],
@@ -1465,6 +1482,31 @@ fi
 
 AC_SUBST(CONF_THREAD_SYSTEM)
 AC_SUBST(CONF_THREAD_LOCAL_STORAGE_CLASS)
+
+
+###############################################################################
+#
+# OpenSSL flags
+
+if test "$ENABLE_OPENSSL" = yes; then
+
+  case "$target_os" in
+    darwin*) # OS X ships a very old version and considers OpenSSL deprecated
+             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
+	     LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+             ;;
+    mingw*) # Search in typical locations
+             CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
+             LIBS="$LIBS -L\"/C/OpenSSL-x64/lib\" -L\"/c/OpenSSL/lib\" -L\"/usr/local/lib/\" -lssl -lcrypto -lws2_32 -lgdi32 -lcrypt32 -mconsole"
+	     
+             ;;
+         *)
+             LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+	     ;;
+  esac
+
+fi
+
 
 ###############################################################################
 #
