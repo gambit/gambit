@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit-C v4.7.5
+; File: "_gsi_.c", produced by Gambit-C v4.7.6
 (
-407005
+407006
 " _gsi_"
 ((" _kernel" (preload . #t)) (" _system" (preload . #t)) (" _num" (preload . #t)) (" _std" (preload . #t)) (" _eval" (preload . #t)) (" _io" (preload . #t)) (" _nonstd" (preload . #t)) (" _thread" (preload . #t)) (" _repl" (preload . #t)) (" _gsilib" (preload . #t)) (" _gsi" (preload . #t)))
 (
@@ -106,7 +106,7 @@
 "##type-20-59109ed7-6339-4c6e-8bc2-f52e9c91b9f5"
 "##type-20-deebf606-97e4-4d34-8fed-b9e5468851b9"
 "##type-26-d05e0aa7-e235-441d-aa41-c1ac02065460"
-"##type-27-0b02934e-7c23-4f9e-a629-0eede16e6987"
+"##type-28-0b02934e-7c23-4f9e-a629-0eede16e6987"
 "##type-3-10aa6857-6f27-45ab-ac38-2318ef2f277c"
 "##type-3-15d36810-b4bf-4609-83cc-761a8868e4a0"
 "##type-3-2cea29df-7f3e-489d-bf83-5925c5081151"
@@ -494,6 +494,7 @@
 "input-output-port"
 "input-port"
 "input-readtable"
+"insert-empty-fragments"
 "int"
 "integer"
 "interaction-environment"
@@ -690,6 +691,7 @@
 "repl-channel-ports"
 "repl-context"
 "repl-result-history-ref"
+"request-client-authentication"
 "required-modules"
 "reserved-used-as-variable"
 "rest-parm-must-be-last"
@@ -732,6 +734,7 @@
 "serial-port"
 "serialize"
 "server-address"
+"server-mode"
 "service-info"
 "set!"
 "set-rtimeout"
@@ -848,6 +851,9 @@
 "srfi-8"
 "srfi-88"
 "srfi-9"
+"ssl-context-version"
+"ssl-v2"
+"ssl-v3"
 "st"
 "stack-overflow-exception"
 "start-syntax"
@@ -906,6 +912,11 @@
 "time"
 "timeout"
 "timer-port"
+"tls-context"
+"tls-context-version"
+"tls-v1"
+"tls-v1.1"
+"tls-v1.2"
 "toq-color"
 "toq-left"
 "toq-leftmost"
@@ -959,6 +970,8 @@
 "unused5"
 "unwrapper"
 "upcase"
+"use-diffie-hellman"
+"use-elliptic-curves"
 "user-info"
 "user-time"
 "v"
@@ -1011,14 +1024,18 @@
 "backlog"
 "broadcast"
 "buffering"
+"certificate"
 "char-encoding"
 "char-encoding-errors"
+"client-ca"
 "coalesce"
 "constant-constructor"
 "constructor"
 "create"
+"diffie-hellman-parameters"
 "direction"
 "directory"
+"elliptic-curve"
 "environment"
 "eol-encoding"
 "equality-skip"
@@ -1041,7 +1058,9 @@
 "macros"
 "max-load"
 "min-load"
+"min-version"
 "opaque"
+"options"
 "output-buffering"
 "output-char-encoding"
 "output-char-encoding-errors"
@@ -1056,6 +1075,7 @@
 "predicate"
 "prefix"
 "printable"
+"private-key"
 "protocol"
 "pseudo-terminal"
 "read-only"
@@ -1071,6 +1091,7 @@
 "stdin-redirection"
 "stdout-redirection"
 "test"
+"tls-context"
 "truncate"
 "type-exhibitor"
 "unprintable"
@@ -1164,6 +1185,7 @@
 " _kernel#8"
 " _kernel#80"
 " _kernel#81"
+" _kernel#82"
 " _kernel#9"
 " _nonstd"
 " _num"
@@ -1831,6 +1853,7 @@
 "##fail-check-thread-state-active"
 "##fail-check-thread-state-normally-terminated"
 "##fail-check-time"
+"##fail-check-tls-context-version"
 "##fail-check-tty-port"
 "##fail-check-type-exception"
 "##fail-check-u16vector"
@@ -2290,6 +2313,7 @@
 "##os-host-info"
 "##os-host-name"
 "##os-load-object-file"
+"##os-make-tls-context"
 "##os-network-info"
 "##os-path-gambcdir"
 "##os-path-gambcdir-map-lookup"
@@ -2394,6 +2418,7 @@
 "##raise-join-timeout-exception"
 "##raise-keyword-expected-exception"
 "##raise-mailbox-receive-timeout-exception"
+"##raise-no-such-file-or-directory-exception"
 "##raise-nonempty-input-port-character-buffer-exception"
 "##raise-nonprocedure-operator-exception"
 "##raise-os-exception"
@@ -3866,7 +3891,6 @@
 "##raise-cfun-conversion-exception-nary"
 "##raise-keyword-expected-exception-nary"
 "##raise-multiple-c-return-exception"
-"##raise-no-such-file-or-directory-exception"
 "##raise-number-of-arguments-limit-exception"
 "##raise-rpc-remote-error-exception"
 "##raise-sfun-conversion-exception"
@@ -4224,6 +4248,7 @@
 "make-root-thread"
 "make-thread"
 "make-thread-group"
+"make-tls-context"
 "multiple-c-return-exception?"
 "mutex-lock!"
 "mutex-name"
@@ -4589,7 +4614,7 @@
  #f
 )
 #else
-#define ___VERSION 407005
+#define ___VERSION 407006
 #define ___LINKFILE_NAME " _gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
@@ -4615,14 +4640,18 @@ ___DEF_OLD_KEY(___K_arguments)
 ___DEF_OLD_KEY(___K_backlog)
 ___DEF_OLD_KEY(___K_broadcast)
 ___DEF_OLD_KEY(___K_buffering)
+___DEF_OLD_KEY(___K_certificate)
 ___DEF_OLD_KEY(___K_char_2d_encoding)
 ___DEF_OLD_KEY(___K_char_2d_encoding_2d_errors)
+___DEF_OLD_KEY(___K_client_2d_ca)
 ___DEF_OLD_KEY(___K_coalesce)
 ___DEF_OLD_KEY(___K_constant_2d_constructor)
 ___DEF_OLD_KEY(___K_constructor)
 ___DEF_OLD_KEY(___K_create)
+___DEF_OLD_KEY(___K_diffie_2d_hellman_2d_parameters)
 ___DEF_OLD_KEY(___K_direction)
 ___DEF_OLD_KEY(___K_directory)
+___DEF_OLD_KEY(___K_elliptic_2d_curve)
 ___DEF_OLD_KEY(___K_environment)
 ___DEF_OLD_KEY(___K_eol_2d_encoding)
 ___DEF_OLD_KEY(___K_equality_2d_skip)
@@ -4645,7 +4674,9 @@ ___DEF_OLD_KEY(___K_keep_2d_alive)
 ___DEF_OLD_KEY(___K_macros)
 ___DEF_OLD_KEY(___K_max_2d_load)
 ___DEF_OLD_KEY(___K_min_2d_load)
+___DEF_OLD_KEY(___K_min_2d_version)
 ___DEF_OLD_KEY(___K_opaque)
+___DEF_OLD_KEY(___K_options)
 ___DEF_OLD_KEY(___K_output_2d_buffering)
 ___DEF_OLD_KEY(___K_output_2d_char_2d_encoding)
 ___DEF_OLD_KEY(___K_output_2d_char_2d_encoding_2d_errors)
@@ -4660,6 +4691,7 @@ ___DEF_OLD_KEY(___K_port_2d_number)
 ___DEF_OLD_KEY(___K_predicate)
 ___DEF_OLD_KEY(___K_prefix)
 ___DEF_OLD_KEY(___K_printable)
+___DEF_OLD_KEY(___K_private_2d_key)
 ___DEF_OLD_KEY(___K_protocol)
 ___DEF_OLD_KEY(___K_pseudo_2d_terminal)
 ___DEF_OLD_KEY(___K_read_2d_only)
@@ -4675,6 +4707,7 @@ ___DEF_OLD_KEY(___K_stderr_2d_redirection)
 ___DEF_OLD_KEY(___K_stdin_2d_redirection)
 ___DEF_OLD_KEY(___K_stdout_2d_redirection)
 ___DEF_OLD_KEY(___K_test)
+___DEF_OLD_KEY(___K_tls_2d_context)
 ___DEF_OLD_KEY(___K_truncate)
 ___DEF_OLD_KEY(___K_type_2d_exhibitor)
 ___DEF_OLD_KEY(___K_unprintable)
@@ -4769,6 +4802,7 @@ ___DEF_OLD_SYM_GLO(___S__20___kernel_23_79,___G__20___kernel_23_79)
 ___DEF_OLD_SYM_GLO(___S__20___kernel_23_8,___G__20___kernel_23_8)
 ___DEF_OLD_SYM_GLO(___S__20___kernel_23_80,___G__20___kernel_23_80)
 ___DEF_OLD_SYM_GLO(___S__20___kernel_23_81,___G__20___kernel_23_81)
+___DEF_OLD_SYM_GLO(___S__20___kernel_23_82,___G__20___kernel_23_82)
 ___DEF_OLD_SYM_GLO(___S__20___kernel_23_9,___G__20___kernel_23_9)
 ___DEF_OLD_SYM_GLO(___S__20___nonstd,___G__20___nonstd)
 ___DEF_OLD_SYM_GLO(___S__20___num,___G__20___num)
@@ -5615,6 +5649,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_thread_2d_state_2d_initialized,
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_thread_2d_state_2d_normally_2d_terminated,___G__23__23_fail_2d_check_2d_thread_2d_state_2d_normally_2d_terminated)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_thread_2d_state_2d_uninitialized,___G__23__23_fail_2d_check_2d_thread_2d_state_2d_uninitialized)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_time,___G__23__23_fail_2d_check_2d_time)
+___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_tls_2d_context_2d_version,___G__23__23_fail_2d_check_2d_tls_2d_context_2d_version)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_tty_2d_port,___G__23__23_fail_2d_check_2d_tty_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_type_2d_exception,___G__23__23_fail_2d_check_2d_type_2d_exception)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_u16vector,___G__23__23_fail_2d_check_2d_u16vector)
@@ -6340,6 +6375,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_group_2d_info,___G__23__23_os_2d_group_2d_
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_host_2d_info,___G__23__23_os_2d_host_2d_info)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_host_2d_name,___G__23__23_os_2d_host_2d_name)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_load_2d_object_2d_file,___G__23__23_os_2d_load_2d_object_2d_file)
+___DEF_OLD_SYM_GLO(___S__23__23_os_2d_make_2d_tls_2d_context,___G__23__23_os_2d_make_2d_tls_2d_context)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_network_2d_info,___G__23__23_os_2d_network_2d_info)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_obj_2d_extension_2d_string_2d_saved,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambcdir,___G__23__23_os_2d_path_2d_gambcdir)
@@ -7076,7 +7112,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_42696abb_2d_6729_2d_4637_2d_99de_2
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_59109ed7_2d_6339_2d_4c6e_2d_8bc2_2d_f52e9c91b9f5,___G__23__23_type_2d_20_2d_59109ed7_2d_6339_2d_4c6e_2d_8bc2_2d_f52e9c91b9f5)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_deebf606_2d_97e4_2d_4d34_2d_8fed_2d_b9e5468851b9,___G__23__23_type_2d_20_2d_deebf606_2d_97e4_2d_4d34_2d_8fed_2d_b9e5468851b9)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_26_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460,___G__23__23_type_2d_26_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_27_2d_0b02934e_2d_7c23_2d_4f9e_2d_a629_2d_0eede16e6987,___G__23__23_type_2d_27_2d_0b02934e_2d_7c23_2d_4f9e_2d_a629_2d_0eede16e6987)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_28_2d_0b02934e_2d_7c23_2d_4f9e_2d_a629_2d_0eede16e6987,___G__23__23_type_2d_28_2d_0b02934e_2d_7c23_2d_4f9e_2d_a629_2d_0eede16e6987)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_10aa6857_2d_6f27_2d_45ab_2d_ac38_2d_2318ef2f277c,___G__23__23_type_2d_3_2d_10aa6857_2d_6f27_2d_45ab_2d_ac38_2d_2318ef2f277c)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_15d36810_2d_b4bf_2d_4609_2d_83cc_2d_761a8868e4a0,___G__23__23_type_2d_3_2d_15d36810_2d_b4bf_2d_4609_2d_83cc_2d_761a8868e4a0)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_2cea29df_2d_7f3e_2d_489d_2d_bf83_2d_5925c5081151,___G__23__23_type_2d_3_2d_2cea29df_2d_7f3e_2d_489d_2d_bf83_2d_5925c5081151)
@@ -8016,6 +8052,7 @@ ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_readtable_2d_set_21_,___G_input_2d_port
 ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_timeout_2d_set_21_,___G_input_2d_port_2d_timeout_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S_input_2d_port_3f_,___G_input_2d_port_3f_)
 ___DEF_OLD_SYM_GLO(___S_input_2d_readtable,___G_input_2d_readtable)
+___DEF_OLD_SYM_GLO(___S_insert_2d_empty_2d_fragments,___G_insert_2d_empty_2d_fragments)
 ___DEF_OLD_SYM_GLO(___S_int,___G_int)
 ___DEF_OLD_SYM_GLO(___S_integer,___G_integer)
 ___DEF_OLD_SYM_GLO(___S_integer_2d__3e_char,___G_integer_2d__3e_char)
@@ -8132,6 +8169,7 @@ ___DEF_OLD_SYM_GLO(___S_make_2d_string,___G_make_2d_string)
 ___DEF_OLD_SYM_GLO(___S_make_2d_table,___G_make_2d_table)
 ___DEF_OLD_SYM_GLO(___S_make_2d_thread,___G_make_2d_thread)
 ___DEF_OLD_SYM_GLO(___S_make_2d_thread_2d_group,___G_make_2d_thread_2d_group)
+___DEF_OLD_SYM_GLO(___S_make_2d_tls_2d_context,___G_make_2d_tls_2d_context)
 ___DEF_OLD_SYM_GLO(___S_make_2d_u16vector,___G_make_2d_u16vector)
 ___DEF_OLD_SYM_GLO(___S_make_2d_u32vector,___G_make_2d_u32vector)
 ___DEF_OLD_SYM_GLO(___S_make_2d_u64vector,___G_make_2d_u64vector)
@@ -8443,6 +8481,7 @@ ___DEF_OLD_SYM_GLO(___S_repl_2d_output_2d_port,___G_repl_2d_output_2d_port)
 ___DEF_OLD_SYM_GLO(___S_repl_2d_result_2d_history_2d_max_2d_length_2d_set_21_,___G_repl_2d_result_2d_history_2d_max_2d_length_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S_repl_2d_result_2d_history_2d_ref,___G_repl_2d_result_2d_history_2d_ref)
 ___DEF_OLD_SYM_GLO(___S_replace_2d_bit_2d_field,___G_replace_2d_bit_2d_field)
+___DEF_OLD_SYM_GLO(___S_request_2d_client_2d_authentication,___G_request_2d_client_2d_authentication)
 ___DEF_OLD_SYM_GLO(___S_required_2d_modules,___G_required_2d_modules)
 ___DEF_OLD_SYM_GLO(___S_reserved_2d_used_2d_as_2d_variable,___G_reserved_2d_used_2d_as_2d_variable)
 ___DEF_OLD_SYM_GLO(___S_rest_2d_parm_2d_must_2d_be_2d_last,___G_rest_2d_parm_2d_must_2d_be_2d_last)
@@ -8531,6 +8570,7 @@ ___DEF_OLD_SYM_GLO(___S_serial_2d_number_2d__3e_object,___G_serial_2d_number_2d_
 ___DEF_OLD_SYM_GLO(___S_serial_2d_port,___G_serial_2d_port)
 ___DEF_OLD_SYM_GLO(___S_serialize,___G_serialize)
 ___DEF_OLD_SYM_GLO(___S_server_2d_address,___G_server_2d_address)
+___DEF_OLD_SYM_GLO(___S_server_2d_mode,___G_server_2d_mode)
 ___DEF_OLD_SYM_GLO(___S_service_2d_info,___G_service_2d_info)
 ___DEF_OLD_SYM_GLO(___S_service_2d_info_2d_aliases,___G_service_2d_info_2d_aliases)
 ___DEF_OLD_SYM_GLO(___S_service_2d_info_2d_name,___G_service_2d_info_2d_name)
@@ -8670,6 +8710,9 @@ ___DEF_OLD_SYM_GLO(___S_srfi_2d_6,___G_srfi_2d_6)
 ___DEF_OLD_SYM_GLO(___S_srfi_2d_8,___G_srfi_2d_8)
 ___DEF_OLD_SYM_GLO(___S_srfi_2d_88,___G_srfi_2d_88)
 ___DEF_OLD_SYM_GLO(___S_srfi_2d_9,___G_srfi_2d_9)
+___DEF_OLD_SYM_GLO(___S_ssl_2d_context_2d_version,___G_ssl_2d_context_2d_version)
+___DEF_OLD_SYM_GLO(___S_ssl_2d_v2,___G_ssl_2d_v2)
+___DEF_OLD_SYM_GLO(___S_ssl_2d_v3,___G_ssl_2d_v3)
 ___DEF_OLD_SYM_GLO(___S_st,___G_st)
 ___DEF_OLD_SYM_GLO(___S_stack_2d_overflow_2d_exception,___G_stack_2d_overflow_2d_exception)
 ___DEF_OLD_SYM_GLO(___S_stack_2d_overflow_2d_exception_3f_,___G_stack_2d_overflow_2d_exception_3f_)
@@ -8873,6 +8916,11 @@ ___DEF_OLD_SYM_GLO(___S_time_3f_,___G_time_3f_)
 ___DEF_OLD_SYM_GLO(___S_timeout,___G_timeout)
 ___DEF_OLD_SYM_GLO(___S_timeout_2d__3e_time,___G_timeout_2d__3e_time)
 ___DEF_OLD_SYM_GLO(___S_timer_2d_port,___G_timer_2d_port)
+___DEF_OLD_SYM_GLO(___S_tls_2d_context,___G_tls_2d_context)
+___DEF_OLD_SYM_GLO(___S_tls_2d_context_2d_version,___G_tls_2d_context_2d_version)
+___DEF_OLD_SYM_GLO(___S_tls_2d_v1,___G_tls_2d_v1)
+___DEF_OLD_SYM_GLO(___S_tls_2d_v1_2e_1,___G_tls_2d_v1_2e_1)
+___DEF_OLD_SYM_GLO(___S_tls_2d_v1_2e_2,___G_tls_2d_v1_2e_2)
 ___DEF_OLD_SYM_GLO(___S_top,___G_top)
 ___DEF_OLD_SYM_GLO(___S_toq_2d_color,___G_toq_2d_color)
 ___DEF_OLD_SYM_GLO(___S_toq_2d_left,___G_toq_2d_left)
@@ -9012,6 +9060,8 @@ ___DEF_OLD_SYM_GLO(___S_unused4,___G_unused4)
 ___DEF_OLD_SYM_GLO(___S_unused5,___G_unused5)
 ___DEF_OLD_SYM_GLO(___S_unwrapper,___G_unwrapper)
 ___DEF_OLD_SYM_GLO(___S_upcase,___G_upcase)
+___DEF_OLD_SYM_GLO(___S_use_2d_diffie_2d_hellman,___G_use_2d_diffie_2d_hellman)
+___DEF_OLD_SYM_GLO(___S_use_2d_elliptic_2d_curves,___G_use_2d_elliptic_2d_curves)
 ___DEF_OLD_SYM_GLO(___S_user_2d_info,___G_user_2d_info)
 ___DEF_OLD_SYM_GLO(___S_user_2d_info_2d_gid,___G_user_2d_info_2d_gid)
 ___DEF_OLD_SYM_GLO(___S_user_2d_info_2d_home,___G_user_2d_info_2d_home)

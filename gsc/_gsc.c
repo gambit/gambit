@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc.c", produced by Gambit-C v4.7.5
+; File: "_gsc.c", produced by Gambit-C v4.7.6
 (
-407005
+407006
 " _gsc"
 ((" _gsc"))
 (
@@ -218,7 +218,7 @@
  ()
 )
 #else
-#define ___VERSION 407005
+#define ___VERSION 407006
 #define ___MODULE_NAME " _gsc"
 #define ___LINKER_ID ____20___gsc
 #define ___MH_PROC ___H__20___gsc
@@ -3843,8 +3843,8 @@ ___DEF_SLBL(209,___L209__23__23_main_2d_gsi_2f_gsc)
 ___DEF_SLBL(210,___L210__23__23_main_2d_gsi_2f_gsc)
    ___IF_GOTO(___EQP(___R1,___SYM_e),___L464__23__23_main_2d_gsi_2f_gsc)
    ___IF_GOTO(___EQP(___R1,___SYM_),___L463__23__23_main_2d_gsi_2f_gsc)
-   ___IF_GOTO(___EQP(___R1,___SYM_preload),___L462__23__23_main_2d_gsi_2f_gsc)
    ___IF_GOTO(___EQP(___R1,___SYM_nopreload),___L462__23__23_main_2d_gsi_2f_gsc)
+   ___IF_GOTO(___EQP(___R1,___SYM_preload),___L462__23__23_main_2d_gsi_2f_gsc)
    ___SET_R0(___LBL(268))
    ___GOTO(___L444__23__23_main_2d_gsi_2f_gsc)
 ___DEF_SLBL(211,___L211__23__23_main_2d_gsi_2f_gsc)

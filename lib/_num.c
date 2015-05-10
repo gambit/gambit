@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_num.c", produced by Gambit-C v4.7.5
+; File: "_num.c", produced by Gambit-C v4.7.6
 (
-407005
+407006
 " _num"
 ((" _num"))
 (
@@ -767,7 +767,7 @@
  ()
 )
 #else
-#define ___VERSION 407005
+#define ___VERSION 407006
 #define ___MODULE_NAME " _num"
 #define ___LINKER_ID ____20___num
 #define ___MH_PROC ___H__20___num
@@ -39956,10 +39956,10 @@ ___DEF_GLBL(___L8_number_2d__3e_string)
    ___END_IF
 ___DEF_GLBL(___L9_number_2d__3e_string)
    ___BEGIN_SWITCH_FIXNUM(___R3)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(2L),___L10_number_2d__3e_string)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L10_number_2d__3e_string)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(10L),___L10_number_2d__3e_string)
    ___SWITCH_FIXNUM_CASE_GOTO(___FIX(16L),___L10_number_2d__3e_string)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(10L),___L10_number_2d__3e_string)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L10_number_2d__3e_string)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(2L),___L10_number_2d__3e_string)
    ___END_SWITCH_FIXNUM
    ___SET_STK(1,___FIX(2L))
    ___SET_R3(___R2)
@@ -42411,10 +42411,10 @@ ___DEF_GLBL(___L6_string_2d__3e_number)
    ___END_IF
 ___DEF_GLBL(___L7_string_2d__3e_number)
    ___BEGIN_SWITCH_FIXNUM(___R3)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(2L),___L8_string_2d__3e_number)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L8_string_2d__3e_number)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(10L),___L8_string_2d__3e_number)
    ___SWITCH_FIXNUM_CASE_GOTO(___FIX(16L),___L8_string_2d__3e_number)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(10L),___L8_string_2d__3e_number)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L8_string_2d__3e_number)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(2L),___L8_string_2d__3e_number)
    ___END_SWITCH_FIXNUM
    ___SET_STK(1,___FIX(2L))
    ___SET_R3(___R2)

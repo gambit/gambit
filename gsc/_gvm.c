@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gvm.c", produced by Gambit-C v4.7.5
+; File: "_gvm.c", produced by Gambit-C v4.7.6
 (
-407005
+407006
 " _gvm"
 ((" _gvm"))
 (
@@ -271,7 +271,7 @@
  ()
 )
 #else
-#define ___VERSION 407005
+#define ___VERSION 407006
 #define ___MODULE_NAME " _gvm"
 #define ___LINKER_ID ____20___gvm
 #define ___MH_PROC ___H__20___gvm
@@ -12223,10 +12223,10 @@ ___DEF_GLBL(___L283_c_23_bbs_2d_remove_2d_common_2d_code_21_)
    ___IF(___NOT(___EQP(___R1,___R2)))
    ___GOTO(___L287_c_23_bbs_2d_remove_2d_common_2d_code_21_)
    ___END_IF
-   ___IF_GOTO(___EQP(___R1,___SYM_simple),___L286_c_23_bbs_2d_remove_2d_common_2d_code_21_)
-   ___IF_GOTO(___EQP(___R1,___SYM_return),___L286_c_23_bbs_2d_remove_2d_common_2d_code_21_)
-   ___IF_GOTO(___EQP(___R1,___SYM_task_2d_entry),___L286_c_23_bbs_2d_remove_2d_common_2d_code_21_)
    ___IF_GOTO(___EQP(___R1,___SYM_task_2d_return),___L286_c_23_bbs_2d_remove_2d_common_2d_code_21_)
+   ___IF_GOTO(___EQP(___R1,___SYM_task_2d_entry),___L286_c_23_bbs_2d_remove_2d_common_2d_code_21_)
+   ___IF_GOTO(___EQP(___R1,___SYM_return),___L286_c_23_bbs_2d_remove_2d_common_2d_code_21_)
+   ___IF_GOTO(___EQP(___R1,___SYM_simple),___L286_c_23_bbs_2d_remove_2d_common_2d_code_21_)
    ___IF_GOTO(___EQP(___R1,___SYM_entry),___L284_c_23_bbs_2d_remove_2d_common_2d_code_21_)
    ___SET_R1(___SUB(4))
    ___SET_R0(___STK(-10))
