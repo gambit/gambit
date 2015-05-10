@@ -98,8 +98,8 @@
 (define-fail-check-type settings
   'settings)
 
-(define-fail-check-type tls-context-version
-  'tls-context-version)
+(define-fail-check-type tls-version
+  'tls-version)
 
 (define-fail-check-type exact-integer-or-string-or-settings
   'exact-integer-or-string-or-settings)
@@ -6280,72 +6280,290 @@
 
 (define-prim (make-tls-context
               #!key
-              (min-version 'tls-v1)
-              (options '())
-              (certificate #f)
-              (private-key certificate)
-              (diffie-hellman-parameters #f)
-              (elliptic-curve #f)
-              (client-ca #f))
-  (cond ((##and certificate (##not (##file-exists? certificate)))
-         (##raise-no-such-file-or-directory-exception
-          make-tls-context
-          certificate: certificate))
-        ((##and private-key (##not (##file-exists? private-key)))
-         (##raise-no-such-file-or-directory-exception
-          make-tls-context
-          private-key: private-key))
-        ((##and diffie-hellman-parameters
-                (##not (##file-exists? diffie-hellman-parameters)))
-         (##raise-no-such-file-or-directory-exception
-          make-tls-context
-          diffie-hellman-parameters: diffie-hellman-parameters))
-        ((##and client-ca (##not (##file-exists? client-ca)))
-         (##raise-no-such-file-or-directory-exception
-          make-tls-context
-          client-ca: client-ca))
-        (else
-         (let ((min-version-hex
-                (case min-version
-                  ((ssl-v2) #x0200)
-                  ((ssl-v3) #x0300)
-                  ((tls-v1) #x0301)
-                  ((tls-v1.1) #x0302)
-                  ((tls-v1.2) #x0303)
-                  (else #f))))
-           (if (##not min-version-hex)
-               (##fail-check-tls-context-version
-                1
-                make-tls-context
-                min-version:
-                min-version)
-               (let ((result
-                      (##os-make-tls-context
-                       min-version-hex
-                       (##fxior
-                        (if (##memq 'server-mode options) 1 0)
-                        (if (##memq 'use-diffie-hellman options) 2 0)
-                        (if (##memq 'use-elliptic-curves options) 4 0)
-                        (if (##memq 'request-client-authentication options) 8 0)
-                        (if (##memq 'insert-empty-fragments options) 256 0))
-                       certificate
-                       private-key
-                       diffie-hellman-parameters
-                       elliptic-curve
-                       client-ca)))
-                 (if (##fixnum? result)
-                     (##raise-os-exception
-                      #f
-                      result
-                      make-tls-context
-                      (##list min-version: min-version
-                              options: options
-                              certificate: certificate
-                              private-key: private-key
-                              diffie-hellman-parameters: diffie-hellman-parameters
-                              elliptic-curve: elliptic-curve
-                              client-ca: client-ca))
-                     result)))))))
+              (min-version (macro-absent-obj))
+              (options (macro-absent-obj))
+              (certificate (macro-absent-obj))
+              (private-key (macro-absent-obj))
+              (diffie-hellman-parameters (macro-absent-obj))
+              (elliptic-curve (macro-absent-obj))
+              (client-ca (macro-absent-obj)))
+  (macro-force-vars (min-version
+                     options
+                     certificate
+                     private-key
+                     diffie-hellman-parameters
+                     elliptic-curve
+                     client-ca)
+    (let ()
+
+      (define (version->code version)
+        (case version
+          ((ssl-v2)   #x0200)
+          ((ssl-v3)   #x0300)
+          ((tls-v1)   #x0301)
+          ((tls-v1.1) #x0302)
+          ((tls-v1.2) #x0303)
+          (else       #f)))
+
+      (define (options->code options)
+        (##fxior
+         (if (##memq 'server-mode options) 1 0)
+         (if (##memq 'use-diffie-hellman options) 2 0)
+         (if (##memq 'use-elliptic-curves options) 4 0)
+         (if (##memq 'request-client-authentication options) 8 0)
+         (if (##memq 'insert-empty-fragments options) 256 0)))
+
+      (define (check-min-version
+               arg-num)
+        (if (##eq? min-version (macro-absent-obj))
+            (check-options
+             arg-num
+             (version->code 'tls-v1))
+            (let ((arg-num (##fx+ arg-num 2)))
+              (let ((min-version-code (version->code min-version)))
+                (if (##not min-version-code)
+                    (##fail-check-tls-version
+                     arg-num
+                     (##list make-tls-context
+                             min-version: min-version
+                             options: options
+                             certificate: certificate
+                             private-key: private-key
+                             diffie-hellman-parameters: diffie-hellman-parameters
+                             elliptic-curve: elliptic-curve
+                             client-ca: client-ca))
+                    (check-options
+                     arg-num
+                     min-version-code))))))
+
+      (define (check-options
+               arg-num
+               min-ver-code)
+        (if (##eq? options (macro-absent-obj))
+            (check-certificate
+             arg-num
+             min-ver-code
+             (options->code '()))
+            (let ((arg-num (##fx+ arg-num 2)))
+              (macro-check-list
+                options
+                arg-num
+                (make-tls-context
+                 min-version: min-version
+                 options: options
+                 certificate: certificate
+                 private-key: private-key
+                 diffie-hellman-parameters: diffie-hellman-parameters
+                 elliptic-curve: elliptic-curve
+                 client-ca: client-ca)
+                (check-certificate
+                 arg-num
+                 min-ver-code
+                 (options->code options))))))
+
+      (define (check-certificate
+               arg-num
+               min-ver-code
+               opts-code)
+        (if (##eq? certificate (macro-absent-obj))
+            (check-private-key
+             arg-num
+             min-ver-code
+             opts-code
+             #f)
+            (let ((arg-num (##fx+ arg-num 2)))
+              (macro-check-string
+                certificate
+                arg-num
+                (make-tls-context
+                 min-version: min-version
+                 options: options
+                 certificate: certificate
+                 private-key: private-key
+                 diffie-hellman-parameters: diffie-hellman-parameters
+                 elliptic-curve: elliptic-curve
+                 client-ca: client-ca)
+                (check-private-key
+                 arg-num
+                 min-ver-code
+                 opts-code
+                 certificate)))))
+
+      (define (check-private-key
+               arg-num
+               min-ver-code
+               opts-code
+               cert)
+        (if (##eq? private-key (macro-absent-obj))
+            (check-diffie-hellman-parameters
+             arg-num
+             min-ver-code
+             opts-code
+             cert
+             cert)
+            (let ((arg-num (##fx+ arg-num 2)))
+              (macro-check-string
+                private-key
+                arg-num
+                (make-tls-context
+                 min-version: min-version
+                 options: options
+                 certificate: certificate
+                 private-key: private-key
+                 diffie-hellman-parameters: diffie-hellman-parameters
+                 elliptic-curve: elliptic-curve
+                 client-ca: client-ca)
+                (check-diffie-hellman-parameters
+                 arg-num
+                 min-ver-code
+                 opts-code
+                 cert
+                 private-key)))))
+
+      (define (check-diffie-hellman-parameters
+               arg-num
+               min-ver-code
+               opts-code
+               cert
+               priv-key)
+        (if (##eq? diffie-hellman-parameters (macro-absent-obj))
+            (check-elliptic-curve
+             arg-num
+             min-ver-code
+             opts-code
+             cert
+             priv-key
+             #f)
+            (let ((arg-num (##fx+ arg-num 2)))
+              (macro-check-string
+                diffie-hellman-parameters
+                arg-num
+                (make-tls-context
+                 min-version: min-version
+                 options: options
+                 certificate: certificate
+                 private-key: private-key
+                 diffie-hellman-parameters: diffie-hellman-parameters
+                 elliptic-curve: elliptic-curve
+                 client-ca: client-ca)
+                (check-elliptic-curve
+                 arg-num
+                 min-ver-code
+                 opts-code
+                 cert
+                 priv-key
+                 diffie-hellman-parameters)))))
+
+      (define (check-elliptic-curve
+               arg-num
+               min-ver-code
+               opts-code
+               cert
+               priv-key
+               dh-params)
+        (if (##eq? elliptic-curve (macro-absent-obj))
+            (check-client-ca
+             arg-num
+             min-ver-code
+             opts-code
+             cert
+             priv-key
+             dh-params
+             #f)
+            (let ((arg-num (##fx+ arg-num 2)))
+              (macro-check-string
+                elliptic-curve
+                arg-num
+                (make-tls-context
+                 min-version: min-version
+                 options: options
+                 certificate: certificate
+                 private-key: private-key
+                 diffie-hellman-parameters: diffie-hellman-parameters
+                 elliptic-curve: elliptic-curve
+                 client-ca: client-ca)
+                (check-client-ca
+                 arg-num
+                 min-ver-code
+                 opts-code
+                 cert
+                 priv-key
+                 dh-params
+                 elliptic-curve)))))
+
+      (define (check-client-ca
+               arg-num
+               min-ver-code
+               opts-code
+               cert
+               priv-key
+               dh-params
+               el-curve)
+        (if (##eq? client-ca (macro-absent-obj))
+            (checks-done
+             arg-num
+             min-ver-code
+             opts-code
+             cert
+             priv-key
+             dh-params
+             el-curve
+             #f)
+            (let ((arg-num (##fx+ arg-num 2)))
+              (macro-check-string
+                client-ca
+                arg-num
+                (make-tls-context
+                 min-version: min-version
+                 options: options
+                 certificate: certificate
+                 private-key: private-key
+                 diffie-hellman-parameters: diffie-hellman-parameters
+                 elliptic-curve: elliptic-curve
+                 client-ca: client-ca)
+                (checks-done
+                 arg-num
+                 min-ver-code
+                 opts-code
+                 cert
+                 priv-key
+                 dh-params
+                 el-curve
+                 client-ca)))))
+
+      (define (checks-done
+               arg-num
+               min-ver-code
+               opts-code
+               cert
+               priv-key
+               dh-params
+               el-curve
+               cl-ca)
+        (let ((result
+               (##os-make-tls-context
+                min-ver-code
+                opts-code
+                cert
+                priv-key
+                dh-params
+                el-curve
+                cl-ca)))
+          (if (##fixnum? result)
+              (##raise-os-exception
+               #f
+               result
+               (##list make-tls-context
+                       min-version: min-version
+                       options: options
+                       certificate: certificate
+                       private-key: private-key
+                       diffie-hellman-parameters: diffie-hellman-parameters
+                       elliptic-curve: elliptic-curve
+                       client-ca: client-ca))
+              result)))
+
+      (check-min-version 0))))
 
 ;;;----------------------------------------------------------------------------
 
