@@ -13,7 +13,7 @@
 #
 # you should add this line to your ~/.profile and ~/.bashrc files:
 #
-#    export PATH=/usr/local/gcc-4.8.2/bin:$PATH
+#    export PATH=/usr/local/gcc-5.1.0/bin:$PATH
 
 GCCVERSION=5.1.0
 GMPVERSION=5.1.3
