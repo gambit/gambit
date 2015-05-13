@@ -4238,7 +4238,7 @@ For example:
 @deffnx procedure thread-state-normally-terminated-result @var{thread-state}
 @deffnx procedure thread-state-abnormally-terminated? @var{thread-state}
 @deffnx procedure thread-state-abnormally-terminated-reason @var{thread-state}
-@deffnx procedure top @r{[}@var{thread-group} @r{[}@var{port}@r{]}@r{]}
+@deffnx procedure top @r{[}@var{timeout} @r{[}@var{thread-group} @r{[}@var{port}@r{]}@r{]}@r{]}
 @end deffn
 
 @deffn procedure thread-interrupt! @var{thread} @r{[}@var{thunk}@r{]}

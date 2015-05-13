@@ -1485,9 +1485,9 @@
 
   (define (write-timeout to)
     (##write-string " " port)
-    (let ((expiry (##fl- (macro-time-point to) time-point)))
-      (##write (##fl/ (##flround (##fl* 10.0 expiry)) 10.0)
-               port))
+    (let* ((expiry (##fl- (macro-time-point to) time-point))
+           (e (##fl/ (##flround (##fl* 10.0 expiry)) 10.0)))
+      (##write (if (##integer? e) (##inexact->exact e) e) port))
     (##write-string "s" port))
 
   (let ((port-width (##output-port-width port)))
@@ -1538,7 +1538,7 @@
             (loop (##fx+ i 1)))
           i))))
 
-(define-prim (##top tgroup port)
+(define-prim (##top timeout tgroup port)
 
   (define interval 1.0)
 
@@ -1547,28 +1547,31 @@
     (##write n port)
     (##write-string "A\033[J" port))
 
-  (let ((start-time-point (##current-time-point)))
+  (let* ((start-time-point (##current-time-point))
+         (end-time-point (macro-time-point (##timeout->time timeout))))
     (let loop ((last start-time-point))
       (##write-string "*** THREAD LIST:\n" port)
       (let* ((n (##fx+ 1 (##display-thread-group-state tgroup port)))
              (next (##fl+ last interval))
-             (now (##current-time-point))
-             (diff (##fl- next now)))
-        (if (##flnegative? diff)
+             (now (##current-time-point)))
+        (if (##fl< now end-time-point)
             (begin
+              (##thread-sleep! (##fl- next now))
               (up n)
-              (loop now))
-            (begin
-              (##thread-sleep! diff)
-              (up n)
-              (loop next)))))))
+              (loop next))
+            (##void))))))
 
 (define-prim (top
               #!optional
+              (absrel-timeout (macro-absent-obj))
               (tgroup (macro-absent-obj))
               (port (macro-absent-obj)))
-  (macro-force-vars (port)
-    (let ((tg
+  (macro-force-vars (timeout tgroup port)
+    (let ((to
+           (if (##eq? absrel-timeout (macro-absent-obj))
+               10 ;; default is to return after 10 seconds
+               absrel-timeout))
+          (tg
            (if (##eq? tgroup (macro-absent-obj))
                (macro-thread-tgroup (macro-current-thread))
                tgroup))
@@ -1576,9 +1579,16 @@
            (if (##eq? port (macro-absent-obj))
                (##repl-output-port)
                port)))
-      (macro-check-tgroup tg 1 (top tgroup port)
-        (macro-check-character-output-port p 2 (top tgroup port)
-          (##top tg p))))))
+      (if (##not (macro-absrel-time-or-false? to))
+          (##fail-check-absrel-time-or-false
+           1
+           top
+           absrel-timeout
+           tgroup
+           port)
+          (macro-check-tgroup tg 2 (top absrel-timeout tgroup port)
+            (macro-check-character-output-port p 3 (top absrel-timeout tgroup port)
+              (##top to tg p)))))))
 
 ;;;----------------------------------------------------------------------------
 
