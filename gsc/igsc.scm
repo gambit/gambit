@@ -57,8 +57,9 @@
 
 ;; normalize program name
 
-(set-car! ##processed-command-line
-          (path-normalize (car ##processed-command-line)))
+(set! ##processed-command-line
+      (cons (path-normalize (car ##processed-command-line))
+            (cdr ##processed-command-line)))
 
 ;;;----------------------------------------------------------------------------
 
