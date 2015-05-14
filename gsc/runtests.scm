@@ -186,7 +186,7 @@
                        "-repr-flonum"    "class"
                       )
                       "d8")
-    ("js"     ".js"   ("-repr-procedure" "class"
+#|    ("js"     ".js"   ("-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
@@ -201,7 +201,7 @@
                        "-repr-flonum"    "host"
                       )
                       "d8")
-
+|#
     #;
     ("python" ".py"   ()
                       "python")
