@@ -1566,7 +1566,7 @@
               (absrel-timeout (macro-absent-obj))
               (tgroup (macro-absent-obj))
               (port (macro-absent-obj)))
-  (macro-force-vars (timeout tgroup port)
+  (macro-force-vars (absrel-timeout tgroup port)
     (let ((to
            (if (##eq? absrel-timeout (macro-absent-obj))
                10 ;; default is to return after 10 seconds

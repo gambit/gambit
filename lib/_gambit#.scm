@@ -377,11 +377,12 @@
             'force
             ##compilation-options)
 
-           (with-syntax ((bindings
-                          (datum->syntax
-                           (map (lambda (x) #'(x (##force x)))
-                                (syntax->list vars)))))
-             #'(let bindings expr))
+           (syntax-case (datum->syntax
+                         #'vars
+                         (map (lambda (x) `(,x (##force ,x)))
+                              (syntax->list #'vars)))
+               ()
+             (bindings #'(let bindings expr)))
 
            #'expr)))))
 

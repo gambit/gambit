@@ -6,7 +6,7 @@
 
 ;;;============================================================================
 
-;; This file implements a version of the (syntax ...) form that is
+;; This file implements a version of the (with-syntax ...) form that is
 ;; used for bootstrapping.
 
 ;;;----------------------------------------------------------------------------
