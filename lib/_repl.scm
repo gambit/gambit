@@ -3833,6 +3833,7 @@
         (u8vector-or-settings         . "U8VECTOR or port settings")
         (exact-integer-or-string-or-settings . "Exact INTEGER or STRING or port settings")
         (tls-version                  . "TLS VERSION")
+        (tls-options                  . "TLS OPTIONS")
         (port                         . "PORT")
         (input-port                   . "INPUT PORT")
         (output-port                  . "OUTPUT PORT")

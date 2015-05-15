@@ -101,6 +101,9 @@
 (define-fail-check-type tls-version
   'tls-version)
 
+(define-fail-check-type tls-options
+  'tls-options)
+
 (define-fail-check-type exact-integer-or-string-or-settings
   'exact-integer-or-string-or-settings)
 
@@ -6305,13 +6308,27 @@
           ((tls-v1.2) #x0303)
           (else       #f)))
 
+      (define allowed-options
+        '((server-mode                   .   1)
+          (use-diffie-hellman            .   2)
+          (use-elliptic-curves           .   4)
+          (request-client-authentication .   8)
+          (insert-empty-fragments        . 256)))
+
       (define (options->code options)
-        (##fxior
-         (if (##memq 'server-mode options) 1 0)
-         (if (##memq 'use-diffie-hellman options) 2 0)
-         (if (##memq 'use-elliptic-curves options) 4 0)
-         (if (##memq 'request-client-authentication options) 8 0)
-         (if (##memq 'insert-empty-fragments options) 256 0)))
+        (let loop ((lst options) (code 0))
+          (macro-force-vars (lst)
+            (cond ((##pair? lst)
+                   (let ((opt (##car lst)))
+                     (macro-force-vars (opt)
+                       (let ((x (##assq opt allowed-options)))
+                         (and x
+                              (loop (##cdr lst)
+                                    (##fxior code (##cdr x))))))))
+                  ((##null? lst)
+                   code)
+                  (else
+                   #f)))))
 
       (define (check-min-version
                arg-num)
@@ -6345,21 +6362,22 @@
              min-ver-code
              (options->code '()))
             (let ((arg-num (##fx+ arg-num 2)))
-              (macro-check-list
-                options
-                arg-num
-                (make-tls-context
-                 min-version: min-version
-                 options: options
-                 certificate: certificate
-                 private-key: private-key
-                 diffie-hellman-parameters: diffie-hellman-parameters
-                 elliptic-curve: elliptic-curve
-                 client-ca: client-ca)
-                (check-certificate
-                 arg-num
-                 min-ver-code
-                 (options->code options))))))
+              (let ((opts-code (options->code options)))
+                (if opts-code
+                    (check-certificate
+                     arg-num
+                     min-ver-code
+                     opts-code)
+                    (##fail-check-tls-options
+                     arg-num
+                     (##list make-tls-context
+                             min-version: min-version
+                             options: options
+                             certificate: certificate
+                             private-key: private-key
+                             diffie-hellman-parameters: diffie-hellman-parameters
+                             elliptic-curve: elliptic-curve
+                             client-ca: client-ca)))))))
 
       (define (check-certificate
                arg-num
