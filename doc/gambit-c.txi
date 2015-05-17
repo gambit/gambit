@@ -12650,6 +12650,16 @@ transmit packets as soon as possible.  The default value of this
 setting is @code{#t}.  Note that this setting does not affect the
 buffering of the port.
 
+@item
+@code{tls-context:} ( @code{#f} | @var{tls-context} )
+
+This setting controls the use of TLS encryption.  If provided, the client
+will use this configuration for setting up a TCP connection with TLS
+encryption, otherwise it will use a plain TCP connection as usual.  Please
+note that Gambit must be compiled with TLS support for this option to be
+implemented.  See @code{make-tls-context} for futher information.  The
+default value of this setting is @code{#f}.
+
 @end itemize
 
 Below is an example of the client-side code that opens a connection to
@@ -12757,6 +12767,16 @@ will cause an exception to be raised in that case.  A setting of
 @code{#t} will allow a port number to be used even if it is active.
 The default value of this setting is @code{#t}.
 
+@item
+@code{tls-context:} ( @code{#f} | @var{tls-context} )
+
+This setting controls the use of TLS encryption.  If provided, the server
+will use this configuration for accepting TCP connections with TLS
+encryption, otherwise it will accept plain TCP connections as usual.  Please
+note that Gambit must be compiled with TLS support for this option to be
+implemented.  See @code{make-tls-context} for futher information.  The
+default value of this setting is @code{#f}.
+
 @end itemize
 
 Below is an example of the server-side code that accepts connections
@@ -12811,6 +12831,130 @@ service thread.
 "hello"
 > @b{(tcp-service-unregister! 8000)}
 @end smallexample
+
+@end deffn
+
+@deffn procedure make-tls-context @r{[}@var{options}@r{]}
+
+This procedure requires Gambit to be compiled with TLS support, which is
+currently provided by OpenSSL. The @code{--enable-openssl} flag of the configure
+script will activate it, provided that you have the OpenSSL library and headers
+installed. It is strongly recommended that versions above 1.x are used.
+On OSX, this means updating the OpenSSL bundled by default. This can be achieved
+using Homebrew, but manual installation or any other package manager will do.
+Some notes on Windows with MinGW are also relevant here. Once you have a sane
+MinGW environment, remember to decompress the OpenSSL tarball with the tar
+utility, otherwise links to files won't work during the compilation process. The
+recommended build procedure for MinGW is as follows.
+
+Configure OpenSSL on MinGW 32 bits:
+
+@smallexample
+perl Configure mingw no-asm --prefix=/usr/local --openssldir=/usr/local/openssl
+@end smallexample
+
+Configure OpenSSL on MinGW 64 bits:
+
+@smallexample
+perl Configure mingw64 no-asm --prefix=/usr/local --openssldir=/usr/local/openssl
+@end smallexample
+
+Build and install with the following commands:
+
+@smallexample
+make depend
+make
+make install
+@end smallexample
+
+A TLS context describes the options that will be used for setting up a TLS
+connection. If no TLS context is provided to @code{open-tcp-client} or
+@code{open-tcp-server}, regular TCP connections without encryption will be used
+instead. The result of this procedure is a @code{SSL_CTX} pointer, which can be
+further manipulated with custom OpenSSL bindings. The configuration options are:
+
+@itemize
+
+@item
+@code{min-version:} @var{symbol}
+
+Establish a minimum TLS version for the connection. If the other peer doesn't
+support or agree with it, the connection will fail. Possible options (support
+depends on linked OpenSSL version): @code{ssl-v2}, @code{ssl-v3}, @code{tls-v1},
+@code{tls-v1.1}, @code{tls-v1.2}.
+
+@item
+@code{options:} @var{list-of-symbols}
+
+A list of flags enabling/disabling TLS options. @code{server-mode} is required
+for using the TLS context with @code{open-tcp-server}. @code{use-diffie-hellman}
+enables the Diffie-Hellman key exchange. @code{use-elliptic-curves} enables
+Elliptic Curves. If no curve name is provided (with @code{elliptic-curve:}),
+@code{prime256v1} will be used. @code{request-client-authentication} is used by
+a server to enable request of authentication to clients.
+@code{insert-empty-fragments} enables a countermeasure against a SSL 3.0/TLS 1.0
+protocol vulnerability affecting CBC ciphers. If used, the resulting connection
+may not be handled by some broken SSL implementations. This option has no effect
+for connections using other ciphers.
+
+@item
+@code{certificate:} @var{path}
+
+Path to PEM Certificate file. This is a recommended option. If not provided
+OpenSSL will try to use anonymous cipher suites.
+
+@item
+@code{private-key:} @var{path}
+
+Path to PEM Private Key file. If not provided, the Certificate path will be used
+instead.
+
+@item
+@code{client-ca:} @var{path}
+
+Path to PEM file containing Certificate Authorities allowed for client
+authentication. Used only if @code{request-client-authentication} option is
+enabled.
+
+@item
+@code{elliptic-curve:} @var{string}
+
+Name of the Elliptic Curve to use, according to RFC 4492. Used only if
+@code{use-elliptic-curves} option is enabled.
+
+@end itemize
+
+TCP Client example with TLS encryption.
+
+@smallexample
+(define ctx (make-tls-context))
+(define c (open-tcp-client (list server-address: "twitter.com"
+                                 port-number: 443 tls-context: ctx)))
+(display "GET / HTTP/1.1\nHost: twitter.com\n\n" c)
+(force-output c)
+(read-line c)
+@end smallexample
+
+TCP Server example with several options. These are not mandatory, except
+for @code{server-mode}.
+
+@smallexample
+(define ctx (make-tls-context options: '(server-mode
+                                         use-diffie-hellman
+                                         use-elliptic-curves)
+                              certificate: "server.pem"
+                              diffie-hellman-parameters: "dh_param_1024.pem"
+                              elliptic-curve: "prime256v1"))
+
+(define s (open-tcp-server (list server-address: "localhost"
+                                 port-number: 1443 tls-context: ctx)))
+(define p (read s))
+(display "<HTML></HTML>\n" p)
+(force-output p)
+@end smallexample
+
+A practical way of testing TLS options are the @code{s_server} and
+@code{s_client} commands of the @code{openssl} tool.
 
 @end deffn
 
