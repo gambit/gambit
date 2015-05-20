@@ -3770,37 +3770,7 @@ int direction;)
 
 /* TLS support */
 
-#ifndef USE_OPENSSL
-
-typedef void ___tls_context;
-
-___SCMOBJ ___os_make_tls_context
-   ___P((___SCMOBJ min_tls_version,
-         ___SCMOBJ options,
-         ___SCMOBJ certificate_path,
-         ___SCMOBJ private_key_path,
-         ___SCMOBJ dh_params_path,
-         ___SCMOBJ elliptic_curve_name,
-         ___SCMOBJ client_ca_path),
-        (min_tls_version,
-         options,
-         certificate_path,
-         private_key_path,
-         dh_params_path,
-         elliptic_curve_name,
-         client_ca_path)
-___SCMOBJ min_tls_version;
-___SCMOBJ options;
-___SCMOBJ certificate_path;
-___SCMOBJ private_key_path;
-___SCMOBJ dh_params_path;
-___SCMOBJ elliptic_curve_name;
-___SCMOBJ client_ca_path;)
-{
-  return ___FIX(___UNIMPL_ERR);
-}
-
-#else
+#ifdef USE_OPENSSL
 
 ___HIDDEN int openssl_initialized = 0;
 
@@ -4563,6 +4533,39 @@ ___HIDDEN int tls_threading_cleanup
 
 #endif
 #endif
+#endif
+
+
+#if !defined (USE_OPENSSL) || !defined (USE_NETWORKING)
+
+typedef void ___tls_context;
+
+___SCMOBJ ___os_make_tls_context
+   ___P((___SCMOBJ min_tls_version,
+         ___SCMOBJ options,
+         ___SCMOBJ certificate_path,
+         ___SCMOBJ private_key_path,
+         ___SCMOBJ dh_params_path,
+         ___SCMOBJ elliptic_curve_name,
+         ___SCMOBJ client_ca_path),
+        (min_tls_version,
+         options,
+         certificate_path,
+         private_key_path,
+         dh_params_path,
+         elliptic_curve_name,
+         client_ca_path)
+___SCMOBJ min_tls_version;
+___SCMOBJ options;
+___SCMOBJ certificate_path;
+___SCMOBJ private_key_path;
+___SCMOBJ dh_params_path;
+___SCMOBJ elliptic_curve_name;
+___SCMOBJ client_ca_path;)
+{
+  return ___FIX(___UNIMPL_ERR);
+}
+
 #endif
 
 
