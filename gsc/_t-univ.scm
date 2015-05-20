@@ -103,6 +103,10 @@
         (else
          'host))))
 
+(define (univ-values-representation ctx)
+  (or (univ-get-representation-option ctx 'repr-values)
+      'class))
+
 (define (univ-u8vector-representation ctx)
   'class)
 
@@ -189,6 +193,7 @@
       (repr-fixnum    symbol)
       (repr-flonum    symbol)
       (repr-vector    symbol)
+      (repr-values    symbol)
       (repr-string    symbol)
       (repr-symbol    symbol)
       (always-return-jump)
@@ -1051,6 +1056,36 @@
 (define-macro (^bignum? val)
   `(univ-emit-bignum? ctx ,val))
 
+(define-macro (^box? val)
+  `(univ-emit-box? ctx ,val))
+
+(define-macro (^box val)
+  `(univ-emit-box ctx ,val))
+
+(define-macro (^unbox val)
+  `(univ-emit-unbox ctx ,val))
+
+(define-macro (^setbox val1 val2)
+  `(univ-emit-setbox ctx ,val1 ,val2))
+
+(define-macro (^values-box val)
+  `(univ-emit-values-box ctx ,val))
+
+(define-macro (^values-unbox values)
+  `(univ-emit-values-unbox ctx ,values))
+
+(define-macro (^values? val)
+  `(univ-emit-values? ctx ,val))
+
+(define-macro (^values-length val)
+  `(univ-emit-values-length ctx ,val))
+
+(define-macro (^values-ref val1 val2)
+  `(univ-emit-values-ref ctx ,val1 ,val2))
+
+(define-macro (^values-set! val1 val2 val3)
+  `(univ-emit-values-set! ctx ,val1 ,val2 ,val3))
+
 (define-macro (^vector-box val)
   `(univ-emit-vector-box ctx ,val))
 
@@ -1216,18 +1251,6 @@
 (define-macro (^keyword? val)
   `(univ-emit-keyword? ctx ,val))
 
-(define-macro (^box? val)
-  `(univ-emit-box? ctx ,val))
-
-(define-macro (^box val)
-  `(univ-emit-box ctx ,val))
-
-(define-macro (^unbox val)
-  `(univ-emit-unbox ctx ,val))
-
-(define-macro (^setbox val1 val2)
-  `(univ-emit-setbox ctx ,val1 ,val2))
-
 (define-macro (^frame-box expr)
   `(univ-emit-frame-box ctx ,expr))
 
@@ -1245,6 +1268,9 @@
 
 (define-macro (^procedure? val)
   `(univ-emit-procedure? ctx ,val))
+
+(define-macro (^return? val)
+  `(univ-emit-return? ctx ,val))
 
 (define-macro (^closure? val)
   `(univ-emit-closure? ctx ,val))
@@ -4384,7 +4410,7 @@
                 (gvm-state-stack-use ctx 'rd)
                 (^int 0)))
 
-              (^if (^eq? frame (^null))
+              (^if (^eq? frame (^obj #f))
                    (^return (^null)))
 
               (^var-declaration
@@ -5105,7 +5131,8 @@ EOF
       '()
       (lambda (ctx)
         (let ((ra (^local-var 'ra))
-              (fs (^local-var 'fs)))
+              (fs (^local-var 'fs))
+              (slots (^local-var 'slots)))
           (^ (univ-with-function-attribs
               ctx
               #f
@@ -5114,10 +5141,14 @@ EOF
                 (^var-declaration
                  'int
                  fs
-                 (univ-get-function-attrib ctx ra 'fs))
-                (^return
-                 (^frame-box
-                  (^new-array 'scmobj (^+ fs (^int 1))))))))))))
+                 (univ-get-function-attrib ctx ra 'fs))))
+             (^var-declaration
+              '(array scmobj)
+              slots
+              (^new-array 'scmobj (^+ fs (^int 1))))
+             (^assign (^array-index slots (^int 0)) ra)
+             (^return
+              (^frame-box slots)))))))
 
     ((Continuation)
      (rts-class
@@ -5169,8 +5200,10 @@ EOF
               next_frame
               (^array-index (^frame-unbox frame)
                             link))
-             (^return
-              (^new-continuation next_frame denv)))))))
+             (^if (^eq? next_frame (^obj #f))
+                  (^return (^obj #f))
+                  (^return
+                   (^new-continuation next_frame denv))))))))
 
     ((str_hash)
      (rts-method
@@ -5334,6 +5367,14 @@ EOF
       'scmobj ;; extends
       '() ;; class-fields
       (list (univ-field 'val 'scmobj #f '(public))))) ;; instance-fields
+
+    ((Values)
+     (rts-class
+      'Values
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'vals '(array scmobj) #f '(public))))) ;; instance-fields
 
     ((Null)
      (univ-defs-combine
@@ -5841,6 +5882,22 @@ EOF
              (compiler-internal-error
               "univ-rtlib-feature str2codes, unknown target")))))))
 
+    ((make_values)
+     (rts-method
+      'make_values
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         'scmobj
+         (lambda (result) (^return (^values-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
     ((make_vector)
      (rts-method
       'make_vector
@@ -6306,7 +6363,7 @@ gambit_Pair.prototype.toString = function () {
                                   (^obj 0)  ;; id
                                   ))))
 
-                 (^push (^null))))
+                 (^push (^obj #f)))) ;; no next frame
 
           (^assign (^rts-field 'r0)
                    (^rts-field (univ-use-rtlib ctx 'underflow)))
@@ -8590,6 +8647,54 @@ tanh
 (define (univ-emit-bignum? ctx expr)
   (^instanceof (^rts-class (univ-use-rtlib ctx 'Bignum)) expr))
 
+(define (univ-emit-box? ctx expr)
+  (^instanceof (^rts-class (univ-use-rtlib ctx 'Box)) expr))
+
+(define (univ-emit-box ctx expr)
+  (^new (^rts-class (univ-use-rtlib ctx 'Box)) expr))
+
+(define (univ-emit-unbox ctx expr)
+  (^member expr 'val))
+
+(define (univ-emit-setbox ctx expr1 expr2)
+  (^assign (^member expr1 'val) expr2))
+
+(define (univ-emit-values-box ctx expr)
+  (case (univ-values-representation ctx)
+
+    ((class)
+     (^new (^rts-class (univ-use-rtlib ctx 'Values)) expr))
+
+    (else
+     expr)))
+
+(define (univ-emit-values-unbox ctx expr)
+  (case (univ-values-representation ctx)
+
+    ((class)
+     (^member expr 'vals))
+
+    (else
+     expr)))
+
+(define (univ-emit-values? ctx expr)
+  (case (univ-values-representation ctx)
+
+    ((class)
+     (^instanceof (^rts-class (univ-use-rtlib ctx 'Values)) expr))
+
+    (else
+     (^array? expr))))
+
+(define (univ-emit-values-length ctx expr)
+  (^array-length (^values-unbox expr)))
+
+(define (univ-emit-values-ref ctx expr1 expr2)
+  (^array-index (^values-unbox expr1) expr2))
+
+(define (univ-emit-values-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^values-unbox expr1) expr2) expr3))
+
 (define (univ-emit-vector-box ctx expr)
   (case (univ-vector-representation ctx)
 
@@ -9200,18 +9305,6 @@ tanh
      (compiler-internal-error
       "univ-emit-keyword?, host representation not implemented"))))
 
-(define (univ-emit-box? ctx expr)
-  (^instanceof (^rts-class (univ-use-rtlib ctx 'Box)) expr))
-
-(define (univ-emit-box ctx expr)
-  (^new (^rts-class (univ-use-rtlib ctx 'Box)) expr))
-
-(define (univ-emit-unbox ctx expr)
-  (^member expr 'val))
-
-(define (univ-emit-setbox ctx expr1 expr2)
-  (^assign (^member expr1 'val) expr2))
-
 (define (univ-emit-frame-box ctx expr)
   (case (univ-frame-representation ctx)
 
@@ -9272,6 +9365,15 @@ tanh
        (else
         (compiler-internal-error
          "univ-emit-procedure?, unknown target"))))))
+
+(define (univ-emit-return? ctx expr)
+  (case (univ-procedure-representation ctx)
+
+    ((class)
+     (^instanceof (^rts-class (univ-use-rtlib ctx 'Return)) expr))
+
+    (else
+     (^bool #t)))) ;;TODO: implement
 
 (define (univ-emit-closure? ctx expr)
   (case (univ-procedure-representation ctx)
@@ -9727,7 +9829,11 @@ tanh
    (lambda (ctx return arg1)
      (return (^box? arg1)))))
 
-;;TODO: ("##values?"                  (1)   #f ()    0    boolean extended)
+(univ-define-prim-bool "##values?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^values? arg1)))))
+
 ;;TODO: ("##meroon?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##jazz?"                    (1)   #f ()    0    boolean extended)
 
@@ -9761,7 +9867,11 @@ tanh
    (lambda (ctx return arg1)
      (return (^procedure? arg1)))))
 
-;;TODO: ("##return?"                  (1)   #f ()    0    boolean extended)
+(univ-define-prim-bool "##return?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^return? arg1)))))
+
 ;;TODO: ("##foreign?"                 (1)   #f ()    0    boolean extended)
 
 (univ-define-prim-bool "##string?" #t
@@ -10839,6 +10949,13 @@ tanh
                         result))
            (return result))))))
 
+;;TODO: ("##make-will"                    (2)   #t ()    0    #f      extended)
+;;TODO: ("##will-testator"                (1)   #f ()    0    (#f)    extended)
+
+;;TODO: ("##gc-hash-table-ref"            (2)   #f ()    0    (#f)    extended)
+;;TODO: ("##gc-hash-table-set!"           (3)   #t ()    0    (#f)    extended)
+;;TODO: ("##gc-hash-table-rehash!"        (2)   #t ()    0    (#f)    extended)
+
 ;; TODO: test box primitives
 
 (univ-define-prim "##box" #t
@@ -10857,14 +10974,40 @@ tanh
      (^ (^setbox arg1 arg2)
         (return arg1)))))
 
-;;TODO: ("##make-will"                    (2)   #t ()    0    #f      extended)
-;;TODO: ("##will-testator"                (1)   #f ()    0    (#f)    extended)
+(univ-define-prim "##values" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return (^values-box (^array-literal 'scmobj args))))))
 
-;;TODO: ("##gc-hash-table-ref"            (2)   #f ()    0    (#f)    extended)
-;;TODO: ("##gc-hash-table-set!"           (3)   #t ()    0    (#f)    extended)
-;;TODO: ("##gc-hash-table-rehash!"        (2)   #t ()    0    (#f)    extended)
+(univ-define-prim "##make-values" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method (univ-use-rtlib ctx 'make_values))
+       (^fixnum-unbox arg1)
+       (if arg2
+           arg2
+           (^fixnum-box (^int 0))))))))
 
-;;TODO: ("##values"                       0     #f ()    0    (#f)    extended)
+(univ-define-prim "##values-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^fixnum-box (^values-length arg))))))
+
+(univ-define-prim "##values-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^values-ref arg1
+                          (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##values-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^values-set! arg1
+                      (^fixnum-unbox arg2)
+                      arg3)
+        (return arg1)))))
 
 (univ-define-prim "##vector" #t
   (make-translated-operand-generator
@@ -11597,17 +11740,6 @@ tanh
       (univ-frame-ra ctx frame)
       attrib))))
 
-(define (univ-get-ra-field ctx return ra attrib)
-  (let ((ra-var (^local-var (univ-gensym ctx 'ra))))
-    (^ (^var-declaration 'return ra-var ra)
-       (univ-with-function-attribs
-        ctx
-        #f
-        ra-var
-        (lambda ()
-          (return
-           (^fixnum-box (univ-get-function-attrib ctx ra-var attrib))))))))
-
 (univ-define-prim "##frame-fs"   #f (univ-get-frame-ra-field 'fs))
 (univ-define-prim "##frame-link" #f (univ-get-frame-ra-field 'link))
 
@@ -11645,6 +11777,28 @@ tanh
 
 (define (univ-frame-slot-live? ctx frame index)
   (^bool #t));;TODO implement
+
+(define (univ-get-return-ra-field attrib)
+  (make-translated-operand-generator
+   (lambda (ctx return ret)
+     (univ-get-ra-field
+      ctx
+      return
+      ret
+      attrib))))
+
+(define (univ-get-ra-field ctx return ra attrib)
+  (let ((ra-var (^local-var (univ-gensym ctx 'ra))))
+    (^ (^var-declaration 'return ra-var ra)
+       (univ-with-function-attribs
+        ctx
+        #f
+        ra-var
+        (lambda ()
+          (return
+           (^fixnum-box (univ-get-function-attrib ctx ra-var attrib))))))))
+
+(univ-define-prim "##return-fs" #f (univ-get-return-ra-field 'fs))
 
 (univ-define-prim-bool "##will?" #t
   (make-translated-operand-generator

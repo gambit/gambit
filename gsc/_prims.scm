@@ -785,10 +785,6 @@
 
 ("##list"                             0     #f ()    0    list    extended)
 
-("##box"                              (1)   #f ()    0    #f      extended)
-("##unbox"                            (1)   #f ()    0    (#f)    extended)
-("##set-box!"                         (2)   #t ()    0    #f      extended)
-
 ("##make-will"                        (2)   #t ()    0    #f      extended)
 ("##will-testator"                    (1)   #f ()    0    (#f)    extended)
 ("##will-testator-set!"               (2)   #t ()    0    #f      extended)
@@ -799,7 +795,15 @@
 ("##gc-hash-table-set!"               (3)   #t ()    0    (#f)    extended)
 ("##gc-hash-table-rehash!"            (2)   #t ()    0    (#f)    extended)
 
+("##box"                              (1)   #f ()    0    #f      extended)
+("##unbox"                            (1)   #f ()    0    (#f)    extended)
+("##set-box!"                         (2)   #t ()    0    #f      extended)
+
 ("##values"                           0     #f ()    0    (#f)    extended)
+("##make-values"                      (1 2) #f ()    0    (#f)    extended)
+("##values-length"                    (1)   #f ()    0    fixnum  extended)
+("##values-ref"                       (2)   #f ()    0    (#f)    extended)
+("##values-set!"                      (3)   #t ()    0    (#f)    extended)
 
 ("##vector"                           0     #f ()    0    vector  extended)
 ("##make-vector"                      (1 2) #f ()    0    vector  extended)
@@ -988,6 +992,8 @@
 ("##frame-ref"                        (2)   #f ()    0    (#f)    extended)
 ("##frame-set!"                       (3)   #t ()    0    #f      extended)
 ("##frame-slot-live?"                 (2)   #f ()    0    boolean extended)
+
+("##return-fs"                        (1)   #f ()    0    fixnum  extended)
 
 ("##apply"                            (2)   #t ()    0    (#f)    extended)
 ("##call-with-current-continuation"   1     #t ()    1113 (#f)    extended)
