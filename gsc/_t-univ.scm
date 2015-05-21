@@ -4410,7 +4410,7 @@
                 (gvm-state-stack-use ctx 'rd)
                 (^int 0)))
 
-              (^if (^eq? frame (^obj #f))
+              (^if (^eq? frame (^obj 0)) ;; end of continuation marker
                    (^return (^null)))
 
               (^var-declaration
@@ -5200,7 +5200,7 @@ EOF
               next_frame
               (^array-index (^frame-unbox frame)
                             link))
-             (^if (^eq? next_frame (^obj #f))
+             (^if (^eq? next_frame (^obj 0)) ;; end of continuation marker
                   (^return (^obj #f))
                   (^return
                    (^new-continuation next_frame denv))))))))
@@ -6363,7 +6363,7 @@ gambit_Pair.prototype.toString = function () {
                                   (^obj 0)  ;; id
                                   ))))
 
-                 (^push (^obj #f)))) ;; no next frame
+                 (^push (^obj 0)))) ;; end of continuation marker
 
           (^assign (^rts-field 'r0)
                    (^rts-field (univ-use-rtlib ctx 'underflow)))

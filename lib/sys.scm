@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2007-05-27 22:55:08 feeley>
+;;; File: "_system.scm", Time-stamp: <2015-05-20 12:42:11 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -2563,7 +2563,7 @@
                         (let* ((fs (##continuation-fs cont))
                                (j (##fixnum.+ (##fixnum.- fs i) 1)))
                           (if (##continuation-slot-live? cont j)
-                              (if (##fixnum.= j (##fixnum.+ (##continuation-link cont) 1))
+                              (if (##fixnum.= j (##continuation-link cont))
                                   (let ((next (##continuation-next cont)))
                                     (if next
                                         (serialize-cont-frame! next)
@@ -4747,7 +4747,7 @@
                         (let* ((fs (##continuation-fs cont))
                                (j (##fixnum.+ (##fixnum.- fs i) 1)))
                           (if (##continuation-slot-live? cont j)
-                              (if (##fixnum.= j (##fixnum.+ (##continuation-link cont) 1))
+                              (if (##fixnum.= j (##continuation-link cont))
                                   (let ((next (##continuation-next cont)))
                                     (if next
                                         (serialize-cont-frame! next)

@@ -1547,18 +1547,24 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
-;;; Implementation of force.
+;;; Implementation of promises.
+
+(define-prim (##make-promise thunk))
+(define-prim (##promise-thunk promise))
+(define-prim (##promise-thunk-set! promise thunk))
+(define-prim (##promise-result promise))
+(define-prim (##promise-result-set! promise result))
 
 (define-prim (##force-undetermined promise thunk)
   (let ((result (##force (thunk))))
     (##c-code #<<end-of-code
 
-     if (___FIELD(___ARG1,___PROMISE_RESULT) == ___ARG1)
+     if (___PROMISERESULT(___ARG1) == ___ARG1)
        {
-         ___FIELD(___ARG1,___PROMISE_RESULT) = ___ARG2;
-         ___FIELD(___ARG1,___PROMISE_THUNK) = ___FAL;
+         ___PROMISERESULTSET(___ARG1,___ARG2)
+         ___PROMISETHUNKSET(___ARG1,___FAL)
        }
-     ___RESULT = ___FIELD(___ARG1,___PROMISE_RESULT);
+     ___RESULT = ___PROMISERESULT(___ARG1);
 
 end-of-code
 
@@ -2765,6 +2771,24 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
+;;; Values.
+
+(define-prim (##make-values len #!optional (init 0))
+  (let ((vals (##make-vector len init)))
+    (##subtype-set! vals (macro-subtype-boxvalues))
+    vals))
+
+(define-prim (##values-length vals)
+  (##vector-length vals))
+
+(define-prim (##values-ref vals i)
+  (##vector-ref vals i))
+
+(define-prim (##values-set! vals i val)
+  (##vector-set! vals i val))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Closures and subprocedures.
 
 (define-prim (##closure? proc)
@@ -2954,7 +2978,7 @@ end-of-code
             (if (##frame-slot-live? frame i)
               (##vector-set!
                v
-               (##fx+ (##fx- fs i) 1)
+               i
                (##frame-ref frame i)))
             (loop (##fx- i 1)))
           v)))))
@@ -3093,7 +3117,7 @@ end-of-code
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
 
-   ___RESULT = ___FIX(link);
+   ___RESULT = ___FIX(link+1);
 
 end-of-code
 
@@ -3131,7 +3155,7 @@ end-of-code
          ___RETN_GET_FS_LINK(ra,fs,link)
      }
 
-   ___RESULT = ___FIX(link);
+   ___RESULT = ___FIX(link+1);
 
 end-of-code
 
@@ -3350,6 +3374,7 @@ end-of-code
      }
 
    ___RESULT = cont;
+
 end-of-code
 
    cont
@@ -3564,6 +3589,11 @@ end-of-code
 (define-prim (##structure-type-set! obj type)
   (##vector-set! obj 0 type))
 
+(define-prim (##make-structure len)
+  (let ((s (##make-vector len)))
+    (##subtype-set! s (macro-subtype-structure))
+    s))
+
 (define-prim (##structure type . fields)
 
   (define (make-struct fields i)
@@ -3571,8 +3601,8 @@ end-of-code
       (let ((s (make-struct (##cdr fields) (##fx+ i 1))))
         (##unchecked-structure-set! s (##car fields) i type #f)
         s)
-      (let ((s (##make-vector i type)))
-        (##subtype-set! s (macro-subtype-structure))
+      (let ((s (##make-structure i)))
+        (##unchecked-structure-set! s type 0 type #f)
         s)))
 
   (make-struct fields 1))

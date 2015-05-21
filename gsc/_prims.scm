@@ -902,6 +902,7 @@
 ("##structure-type"                   (1)   #f ()    0    (#f)    extended)
 ("##structure-type-set!"              (2)   #t ()    0    (#f)    extended)
 ("##structure"                        1     #f ()    0    (#f)    extended)
+("##make-structure"                   (1)   #f ()    0    (#f)    extended)
 ("##structure-ref"                    (4)   #f ()    0    (#f)    extended)
 ("##structure-set!"                   (5)   #t ()    0    (#f)    extended)
 ("##direct-structure-ref"             (4)   #f ()    0    (#f)    extended)
