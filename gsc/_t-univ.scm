@@ -5724,7 +5724,9 @@ EOF
         (let ((obj (^local-var 'obj)))
           (case (target-name (ctx-target ctx))
             ((js)
-             (^if (^prop-index-exists? (^this) (^str "console"))
+             (^if (^prop-index-exists?
+                   "function () {return this;}()"
+                   (^str "console"))
                   (^expr-statement
                    (^call-prim (^member (^global-var 'console) 'log)
                                obj))
