@@ -6008,161 +6008,201 @@ EOF
     ((apply5)
      (apply-procedure 5))
 
-    ((ffi)
-     (univ-make-empty-defs)
-     #;
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^
-
-#<<EOF
-function gambit_js2scm(obj) {
-  if (obj === void 0) {
-    return obj;
-  } else if (typeof obj === "boolean") {
-    return obj;
-  } else if (obj === null) {
-    return obj;
-  } else if (typeof obj === "number") {
-    if ((obj|0) === obj && obj>=-536870912 && obj<=536870911)
-      return obj
+    ((js2scm)
+     (rts-method
+      'js2scm
+      '(public)
+      'scmobj
+      (list (univ-field 'obj 'object))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((obj (^local-var 'obj))
+              (alist (^local-var 'alist))
+              (key (^local-var 'key)))
+          (^
+           "  if (" obj " === void 0) {
+    return " (^void) ";
+  } else if (typeof " obj " === 'boolean') {
+    return " (^boolean-box obj) ";
+  } else if (" obj " === null) {
+    return " (^null-obj) ";
+  } else if (typeof " obj " === 'number') {
+    if ((" obj "|0) === " obj " && " obj ">=-536870912 && " obj "<=536870911)
+      return " (^fixnum-box obj) ";
     else
-      return new Gambit_Flonum(obj);
-  } else if (typeof obj === "function") {
-    return function () { return gambit_scm2js_call(obj); };
-  } else if (typeof obj === "string") {
-    return new Gambit_String(gambit_str2codes(obj));
-  } else if (typeof obj === "object") {
-    if (obj instanceof Array) {
-      return obj.map(gambit_js2scm);
+      return " (^flonum-box obj) ";
+  } else if (typeof " obj " === 'function') {
+    return function () { return " (^call-prim
+                                   (^rts-method
+                                    (univ-use-rtlib ctx 'scm2js_call))
+                                   obj) "; };
+  } else if (typeof " obj " === 'string') {
+    return " (^string-box (^str-to-codes obj)) ";
+  } else if (typeof " obj " === 'object') {
+    if (" obj " instanceof Array) {
+      return " obj ".map(" (^rts-method (univ-use-rtlib ctx 'js2scm)) ");
     } else {
-      var alist = null;
-      for (var key in obj) {
-        alist = new Gambit_Pair(new Gambit_Pair(gambit_js2scm(key),
-                                                gambit_js2scm(obj[key])),
-                                alist);
+      var " alist " = " (^null-obj) ";
+      for (var " key " in " obj ") {
+        " alist " = " (^cons (^cons (^call-prim
+                                     (^rts-method
+                                      (univ-use-rtlib ctx 'js2scm))
+                                     key)
+                                    (^call-prim
+                                     (^rts-method
+                                      (univ-use-rtlib ctx 'js2scm))
+                                     (^array-index obj key)))
+                                   alist) ";
       }
-      return alist;
+      return " alist ";
     }
   } else {
-    throw "gambit_js2scm error " + obj;
+    throw 'js2scm error ' + " obj ";
   }
-}
+")))))
 
-function gambit_scm2js(obj) {
+    ((scm2js)
+     (rts-method
+      'scm2js
+      '(public)
+      'object
+      (list (univ-field 'obj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        #<<EOF
   if (obj === void 0) {
     return obj;
-  } else if (typeof obj === "boolean") {
+  } else if (typeof obj === 'boolean') {
     return obj;
   } else if (obj === null) {
     return obj;
-  } else if (typeof obj === "number") {
+  } else if (typeof obj === 'number') {
     return obj
-  } else if (typeof obj === "function") {
-    return function () { return gambit_js2scm_call(obj, arguments); };
-  } else if (typeof obj === "object") {
+  } else if (typeof obj === 'function') {
+    return function () { return Gambit.js2scm_call(obj, arguments); };
+  } else if (typeof obj === 'object') {
     if (obj instanceof Array) {
-      return obj.map(gambit_scm2js);
-    } else if (obj instanceof Gambit_String) {
+      return obj.map(Gambit.scm2js);
+    } else if (obj instanceof Gambit.String) {
       return obj.toString();
-    } else if (obj instanceof Gambit_Flonum) {
+    } else if (obj instanceof Gambit.Flonum) {
       return obj.val;
-    } else if (obj instanceof Gambit_Pair) {
+    } else if (obj instanceof Gambit.Pair) {
       var jsobj = {};
       var i = 0;
-      while (obj instanceof Gambit_Pair) {
+      while (obj instanceof Gambit.Pair) {
         var elem = obj.car;
-        if (elem instanceof Gambit_Pair) {
-          jsobj[gambit_scm2js(elem.car)] = gambit_scm2js(elem.cdr);
+        if (elem instanceof Gambit.Pair) {
+          jsobj[Gambit.scm2js(elem.car)] = Gambit.scm2js(elem.cdr);
         } else {
-          jsobj[i] = gambit_scm2js(elem);
+          jsobj[i] = Gambit.scm2js(elem);
         }
         ++i;
         obj = obj.cdr;
       }
       return jsobj;
-    } else if (obj instanceof Gambit_Structure) {
-      throw "gambit_scm2js error (can't convert Structure)";
-    } else if (obj instanceof Gambit_Frame) {
-      throw "gambit_scm2js error (can't convert Frame)";
+    } else if (obj instanceof Gambit.Structure) {
+      throw 'Gambit.scm2js error (cannot convert Structure)';
     } else {
-      throw "gambit_scm2js error " + obj;
+      throw 'Gambit.scm2js error ' + obj;
     }
   } else {
-    throw "gambit_scm2js error " + obj;
+    throw 'Gambit.scm2js error ' + obj;
   }
-}
+EOF
+)))
 
-function gambit_scm2js_call(fn) {
+    ((scm2js_call)
+     (rts-method
+      'scm2js_call
+      '(public)
+      'jumpable
+      (list (univ-field 'fn 'object))
+      "\n"
+      '()
+      (lambda (ctx)
+        #<<EOF
 
-  if (gambit_nargs > 0) {
-    gambit_stack[++gambit_sp] = gambit_r1;
-    if (gambit_nargs > 1) {
-      gambit_stack[++gambit_sp] = gambit_r2;
-      if (gambit_nargs > 2) {
-        gambit_stack[++gambit_sp] = gambit_r3;
+  if (Gambit.nargs > 0) {
+    Gambit.stack[++Gambit.sp] = Gambit.r1;
+    if (Gambit.nargs > 1) {
+      Gambit.stack[++Gambit.sp] = Gambit.r2;
+      if (Gambit.nargs > 2) {
+        Gambit.stack[++Gambit.sp] = Gambit.r3;
       }
     }
   }
 
-  var args = gambit_stack.slice(gambit_sp+1-gambit_nargs, gambit_sp+1);
+  var args = Gambit.stack.slice(Gambit.sp+1-Gambit.nargs, Gambit.sp+1);
 
-  gambit_sp -= gambit_nargs;
+  Gambit.sp -= Gambit.nargs;
 
-  var ra = gambit_heapify(gambit_r0);
-  var frame = gambit_stack[0];
+  var ra = Gambit.heapify(Gambit.r0);
+  var frame = Gambit.stack[0];
 
-  gambit_r1 = gambit_js2scm(fn.apply(null, args.map(gambit_scm2js)));
+  Gambit.r1 = Gambit.js2scm(fn.apply(null, args.map(Gambit.scm2js)));
 
-  gambit_sp = -1;
-  gambit_stack[++gambit_sp] = frame;
+  Gambit.sp = -1;
+  Gambit.stack[++Gambit.sp] = frame;
 
   return ra;
-}
-
-function gambit_js2scm_call(proc, args) {
-
-  var ra = function () { return null; };
-
-  ra.id = 'gambit_js2scm_call';
-  ra.fs = 1;
-  ra.link = 1;
-
-  gambit_sp = -1;
-  gambit_stack[++gambit_sp] = [ra,false];
-
-  gambit_nargs = args.length;
-
-  for (var i=0; i<gambit_nargs; i++) {
-    gambit_stack[++gambit_sp] = gambit_js2scm(args[i]);
-  }
-
-  if (gambit_nargs > 0) {
-    if (gambit_nargs > 1) {
-      if (gambit_nargs > 2) {
-        gambit_r3 = gambit_stack[gambit_sp];
-        --gambit_sp;
-      }
-      gambit_r2 = gambit_stack[gambit_sp];
-      --gambit_sp;
-    }
-    gambit_r1 = gambit_stack[gambit_sp];
-    --gambit_sp;
-  }
-
-  gambit_r0 = ra;
-
-  gambit_trampoline(proc);
-
-  return gambit_scm2js(gambit_r1);
-}
 
 EOF
-))
+)))
 
-       (else
-        (^))))
+    ((js2scm_call)
+     (rts-method
+      'js2scm_call
+      '(public)
+      'object
+      (list (univ-field 'proc 'scmobj)
+            (univ-field 'args 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        #<<EOF
+
+  Gambit.sp = -1;
+  Gambit.stack[++Gambit.sp] = 0; // end of continuation marker
+
+  Gambit.nargs = args.length;
+
+  for (var i=0; i<Gambit.nargs; i++) {
+    Gambit.stack[++Gambit.sp] = Gambit.js2scm(args[i]);
+  }
+
+  if (Gambit.nargs > 0) {
+    if (Gambit.nargs > 1) {
+      if (Gambit.nargs > 2) {
+        Gambit.r3 = Gambit.stack[Gambit.sp];
+        --Gambit.sp;
+      }
+      Gambit.r2 = Gambit.stack[Gambit.sp];
+      --Gambit.sp;
+    }
+    Gambit.r1 = Gambit.stack[Gambit.sp];
+    --Gambit.sp;
+  }
+
+  Gambit.r0 = Gambit.underflow;
+
+  Gambit.trampoline(proc);
+
+  return Gambit.scm2js(Gambit.r1);
+
+EOF
+)))
+
+     ((ffi)
+      (case (target-name (ctx-target ctx))
+       ((js)
+        (univ-use-rtlib ctx 'js2scm)
+        (univ-use-rtlib ctx 'scm2js)
+        (univ-use-rtlib ctx 'js2scm_call)
+        (univ-use-rtlib ctx 'scm2js_call)))
+      (univ-make-empty-defs))
 
     ((get_host_global_var)
      (univ-defs-combine
@@ -6678,7 +6718,7 @@ gambit_Pair.prototype.toString = function () {
         ((and (pair? code) (eq? (car code) univ-bb-prefix))
          (cons univ-capitalized-bb-prefix (cdr code)))
         (else
-         (error "can't capitalize" code))))
+         (error "cannot capitalize" code))))
 
 (define (univ-jumpable-declaration-defs
          ctx
