@@ -3,15 +3,19 @@
 <p>
 The Gambit Scheme system is a complete, portable, efficient and
 reliable implementation of the Scheme programming language.
+For more information please visit
 </p>
 
 <p>
-For more information about Gambit and add-on packages please check the
-Gambit web page at
+<a href="http://gambitscheme.org">http://gambitscheme.org</a>
 </p>
 
 <p>
-<a href="http://www.iro.umontreal.ca/~gambit">http://www.iro.umontreal.ca/~gambit</a>
+and the Gambit chatroom at
+</p>
+
+<p>
+<a href="https://gitter.im/feeley/gambit">https://gitter.im/feeley/gambit</a>
 </p>
 
 <p>

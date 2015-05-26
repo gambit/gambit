@@ -1034,6 +1034,9 @@ else
 
     FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS"
 
+    # For compatibility with Windows XP
+    FLAGS_OBJ="$FLAGS_OBJ -D_ATL_XP_TARGETING"
+
   else
 
     case "$target_os" in
@@ -2230,7 +2233,15 @@ if test "$C_COMP_VISUALC" = yes; then
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
-  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBCDIR_INCLUDE}\" ${GAMBCLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBCLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS} -link -subsystem:console -entry:WinMainCRTStartup"
+  if test "$ac_cv_sizeof_voidp" = 8; then
+    # 64 bit environment
+    SUBSYS_MIN_REQ_VERSION="5.02"
+  else
+    # 32 bit environment
+    SUBSYS_MIN_REQ_VERSION="5.01"
+  fi
+
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBCDIR_INCLUDE}\" ${GAMBCLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBCLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS} -link -subsystem:console,${SUBSYS_MIN_REQ_VERSION} -entry:WinMainCRTStartup"
 
 else
 

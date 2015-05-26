@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -25,8 +25,7 @@ ADDPATHVC64="/c$VCDIR/bin/x86_amd64:"
 
 COMMONPATH="/c$MSYS/bin:"
 
-export INSTALL_PREFIX="/c/Gambit-C/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././."
-export DOS_INSTALL_PREFIX="`echo \"$INSTALL_PREFIX\" | sed -e \"s|^/c|C:|g\"`"
+export INSTALL_PREFIX="C:/Gambit-C/././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././././."
 
 cd "`dirname $0`"
 
@@ -57,7 +56,7 @@ for VARIANT in mingw32 mingw64 visualc32 visualc64; do
              ;;
   esac
 
-  echo "export PATH=\"$ADDPATH\$PATH\";./configure --prefix=\"$DOS_INSTALL_PREFIX\" --enable-multiple-versions --enable-symlinks --enable-single-host CC=\"$CONFIG_CC\"" > build-cmds
+  echo "export PATH=\"$ADDPATH\$PATH\";./configure --prefix=\"$INSTALL_PREFIX\" --enable-multiple-versions --enable-symlinks --enable-single-host CC=\"$CONFIG_CC\"" > build-cmds
 
   cat build-cmds
 
