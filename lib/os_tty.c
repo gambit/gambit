@@ -7851,9 +7851,9 @@ ___device_stream *self;)
     case 0:
 #ifdef USE_WIN32
       char_encoding =
-        TTY_CHAR_SELECT(___CHAR_ENCODING_ISO_8859_1,___CHAR_ENCODING_UCS_2LE);
+        TTY_CHAR_SELECT(___CHAR_ENCODING_ASCII,___CHAR_ENCODING_UCS_2LE);
 #else
-      char_encoding = ___CHAR_ENCODING_ISO_8859_1;
+      char_encoding = ___CHAR_ENCODING_ASCII;
 #endif
       break;
     }

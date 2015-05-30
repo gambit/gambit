@@ -13826,11 +13826,15 @@ The procedure @code{readtable-max-unescaped-char} returns the content
 of the @samp{max-unescaped-char} field of @var{readtable}.  The
 printer will display using an escape sequence any character within
 symbols, strings and character objects greater than
-@samp{max-unescaped-char}
+@samp{max-unescaped-char}.  When @samp{max-unescaped-char} is
+@code{#f}, the default value, the printer will take into account
+the output port and use an escape sequence for any character that isn't
+supported by the port's character encoding.
 
 The procedure @code{readtable-max-unescaped-char-set} returns a copy
 of @var{readtable} where only the @samp{max-unescaped-char} field
-has been changed to @var{new-value}, which must be a character.
+has been changed to @var{new-value}, which must be a character or
+@code{#f}.
 
 For example:
 

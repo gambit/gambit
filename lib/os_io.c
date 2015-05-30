@@ -2633,7 +2633,7 @@ ___HIDDEN ___SCMOBJ ___device_serial_default_options_virt
 ___device_stream *self;)
 {
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-  int char_encoding = ___CHAR_ENCODING_ISO_8859_1;
+  int char_encoding = ___CHAR_ENCODING_ASCII;
   int eol_encoding = ___EOL_ENCODING_LF;
   int buffering = ___FULL_BUFFERING;
 
@@ -3175,7 +3175,7 @@ ___HIDDEN ___SCMOBJ ___device_pipe_default_options_virt
 ___device_stream *self;)
 {
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-  int char_encoding = ___CHAR_ENCODING_ISO_8859_1;
+  int char_encoding = ___CHAR_ENCODING_ASCII;
   int eol_encoding = ___EOL_ENCODING_LF;
   int buffering = ___FULL_BUFFERING;
 
@@ -5273,7 +5273,7 @@ ___HIDDEN ___SCMOBJ ___device_tcp_client_default_options_virt
 ___device_stream *self;)
 {
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-  int char_encoding = ___CHAR_ENCODING_ISO_8859_1;
+  int char_encoding = ___CHAR_ENCODING_ASCII;
   int eol_encoding = ___EOL_ENCODING_LF;
   int buffering = ___FULL_BUFFERING;
 
@@ -6985,7 +6985,7 @@ ___device_stream *self;)
     char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
 
   if (char_encoding == 0)
-    char_encoding = ___CHAR_ENCODING_ISO_8859_1;
+    char_encoding = ___CHAR_ENCODING_ASCII;
 
   if (eol_encoding == 0)
     eol_encoding = ___EOL_ENCODING_LF;

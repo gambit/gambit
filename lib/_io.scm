@@ -8209,12 +8209,18 @@
       (macro-readtable-max-unescaped-char rt))))
 
 (define-prim (readtable-max-unescaped-char-set rt char)
+
+  (define (max-unescaped-char-set)
+    (let ((new-rt (##readtable-copy-shallow rt)))
+      (macro-readtable-max-unescaped-char-set! new-rt char)
+      new-rt))
+
   (macro-force-vars (rt char)
     (macro-check-readtable rt 1 (readtable-max-unescaped-char-set rt char)
-      (macro-check-char char 2 (readtable-max-unescaped-char-set rt char)
-        (let ((new-rt (##readtable-copy-shallow rt)))
-          (macro-readtable-max-unescaped-char-set! new-rt char)
-          new-rt)))))
+      (if (##eq? char #f)
+          (max-unescaped-char-set)
+          (macro-check-char char 2 (readtable-max-unescaped-char-set rt char)
+            (max-unescaped-char-set))))))
 
 (define-prim (readtable-comment-handler rt)
   (macro-force-vars (rt)
@@ -8377,12 +8383,16 @@
 (##define-macro (macro-ctrl-char? c)
   `(or (##char<? ,c #\space) (##char=? ,c #\delete)))
 
-(##define-macro (macro-gt-max-unescaped-char? rt c)
-  `(##char<? (macro-readtable-max-unescaped-char ,rt) ,c))
+(##define-macro (macro-gt-max-unescaped-char? we c)
+  `(let ((rt (macro-writeenv-readtable ,we)))
+     (##char<? (or (macro-readtable-max-unescaped-char rt)
+                   (macro-max-unescaped-char
+                    (macro-port-woptions (macro-writeenv-port ,we))))
+               ,c)))
 
-(##define-macro (macro-must-escape-char? rt c)
+(##define-macro (macro-must-escape-char? we c)
   `(or (macro-ctrl-char? ,c)
-       (macro-gt-max-unescaped-char? ,rt ,c)))
+       (macro-gt-max-unescaped-char? ,we ,c)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -8720,7 +8730,7 @@
           #f
           (let ((c (##string-ref str i))
                 (rt (macro-writeenv-readtable we)))
-            (or (macro-must-escape-char? rt c)
+            (or (macro-must-escape-char? we c)
                 (##readtable-char-delimiter? rt c)
                 (##not (##char=? c (##readtable-convert-case rt c)))
                 (loop (##fx- i 1))))))))
@@ -9141,9 +9151,7 @@
        (##wr-str we "#\\")
        (cond (x
               (##wr-str we (##car x)))
-             ((##not (macro-must-escape-char?
-                      (macro-writeenv-readtable we)
-                      obj))
+             ((##not (macro-must-escape-char? we obj))
               (##wr-ch we obj))
              (else
               (let ((n (##char->integer obj)))
@@ -9215,7 +9223,7 @@
                   (macro-readtable-escape-ctrl-chars?
                    (macro-writeenv-readtable we))
                   (or x
-                      (macro-gt-max-unescaped-char? (macro-writeenv-readtable we) c)
+                      (macro-gt-max-unescaped-char? we c)
                       (and escape-digit-limit
                            (##fx< n 128)
                            (##not (##char=? c #\#)) ;; avoid treating "#" like "0"
@@ -13108,7 +13116,7 @@
           (##make-chartable #f) ;; all chars are non-delimiters
           (##make-chartable ##read-number/keyword/symbol)
           (##make-chartable ##read-sharp-other)
-          (##integer->char 127) ;; max-unescaped-char
+          #f                 ;; max-unescaped-char
           #t                 ;; escape-ctrl-chars?
           #f                 ;; sharing-allowed?
           #f                 ;; eval-allowed?

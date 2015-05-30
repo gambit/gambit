@@ -744,6 +744,19 @@
 (##define-macro (macro-char-encoding-UTF)
   `(macro-char-encoding-UTF-fallback-UTF-8))
 
+(##define-macro (macro-max-unescaped-char options)
+  `(let ((e (##fxmodulo (##fxquotient ,options (macro-char-encoding-shift))
+                        (macro-char-encoding-range))))
+     (cond ((##fx<= e (macro-char-encoding-ISO-8859-1))
+            (if (##fx= e (macro-char-encoding-ISO-8859-1))
+                (##integer->char #xff)
+                (##integer->char #x7f)))
+           ((and (##fx>= e (macro-char-encoding-UCS-2))
+                 (##fx<= e (macro-char-encoding-UCS-2LE)))
+            (##integer->char #xffff))
+           (else
+            (##integer->char #x10ffff)))))
+
 (##define-macro (macro-char-encoding-errors-shift)   32)
 (##define-macro (macro-char-encoding-errors-range)   4)
 (##define-macro (macro-default-char-encoding-errors) 0)
