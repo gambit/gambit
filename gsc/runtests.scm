@@ -141,13 +141,28 @@
                (ext (cadr t)))
            (cons t
                  (if ext
-                     (let ((out (string-append (path-strip-extension file) ext)))
+                     (let* ((file-no-ext (path-strip-extension file))
+                            (out (string-append file-no-ext ext)))
+
                        (if (not (equal? target "gambit"))
-                           (compile file target (caddr t )))
-                       (let ((result (apply run (append (cdddr t) (list out)))))
+                           (compile file target (caddr t)))
+
+                       (let ((result
+                              (if (equal? target "java")
+                                  (begin
+                                    (run "javac" out)
+                                    (apply run
+                                           (append (cdddr t)
+                                                   (list "-classpath"
+                                                         (path-directory file-no-ext)
+                                                         (string-append "Gambit_" (path-strip-directory file-no-ext))))))
+                                  (apply run (append (cdddr t) (list out))))))
+
                          (if (not (equal? target "gambit"))
                              (if cleanup? (delete-file out)))
+
                          result))
+
                      (apply run (append (cdddr t) (list file)))))))
        (keep (lambda (t)
                (member (car t) (cons "c" back-ends)))
@@ -178,9 +193,13 @@
     ("x86-64" #f      ()
                       "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
 
+    ("java"   ".java" ()
+                      "java")
+
     #;
     ("js"     ".js"   ()
                       "d8")
+
     ("js"     ".js"   ("-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
