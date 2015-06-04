@@ -1019,23 +1019,23 @@ int code;)
 
   static char *tls_messages[] =
     {
-      "TLS: OpenSSL library version mismatch",
-      "TLS: Error initializing TLS library",
-      "TLS: Wrong TLS version",
-      "TLS: TLS protocol security alert. Aborting.",
-      "TLS: Not enough entropy in the pool",
-      "TLS: Server mode context expected",
-      "TLS: Library version does not support empty fragment insertion",
-      "TLS: Library version does not support Diffie-Hellman key exchange",
-      "TLS: Library version does not support elliptic curves",
-      "TLS: Diffie-Hellman parameters internal error",
-      "TLS: Error reading Diffie-Hellman parameters from file",
-      "TLS: Elliptic curve internal error",
-      "TLS: Unknown Elliptic Curve name",
-      "TLS: Error reading Certificate Authorities file",
-      "TLS: Certificate file error",
-      "TLS: Private key file error",
-      "TLS: Private key and Certificate don't match",
+      "OpenSSL library version mismatch",
+      "Error initializing TLS library",
+      "Wrong TLS version",
+      "TLS protocol security alert. Aborting.",
+      "Not enough entropy in the pool",
+      "Server mode context expected",
+      "Library version does not support empty fragment insertion",
+      "Library version does not support Diffie-Hellman key exchange",
+      "Library version does not support elliptic curves",
+      "Diffie-Hellman parameters internal error",
+      "Error reading Diffie-Hellman parameters from file",
+      "Elliptic curve internal error",
+      "Unknown Elliptic Curve name",
+      "Error reading Certificate Authorities file",
+      "Certificate file error",
+      "Private key file error",
+      "Private key and Certificate don't match",
     };
 
   /* Codes between 65000 and 65536 are reserved for high-level TLS errors, below
@@ -1463,6 +1463,7 @@ ___SCMOBJ err;)
       if (msg == NULL)
         msg = "Unknown error";
 
+      append_charstring (buf, &pos, "TLS ERROR: ");
       append_charstring (buf, &pos, msg);
 
 #endif
