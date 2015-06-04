@@ -159,7 +159,13 @@
                                   (apply run (append (cdddr t) (list out))))))
 
                          (if (not (equal? target "gambit"))
-                             (if cleanup? (delete-file out)))
+                             (if cleanup?
+                                 (begin
+                                   (delete-file out)
+                                   (if (equal? target "java")
+                                       (parameterize ((current-directory
+                                                       (path-directory out)))
+                                         (shell-command "rm Gambit_*.class"))))))
 
                          result))
 
