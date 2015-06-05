@@ -124,7 +124,8 @@
               shift
               close-parens
               level
-              limit)
+              limit
+              max-unescaped-char)
   (macro-make-writeenv
    style
    port
@@ -135,7 +136,8 @@
    shift
    close-parens
    level
-   limit))
+   limit
+   max-unescaped-char))
 
 ;;;----------------------------------------------------------------------------
 
@@ -3772,17 +3774,30 @@
 
   (##declare (not interrupts-enabled))
 
-  (let* ((mt
-          (and (macro-readtable-sharing-allowed? rt)
-               (##make-marktable)))
-         (width
-          (##output-port-width port)))
+  (let ((mt
+         (and (macro-readtable-sharing-allowed? rt)
+              (##make-marktable))))
+
+    (define (make-we style)
+      (##make-writeenv
+       style
+       port
+       rt
+       mt
+       force?
+       (##output-port-width port)
+       0
+       0
+       0
+       limit
+       (or (macro-readtable-max-unescaped-char rt)
+           (macro-max-unescaped-char (macro-port-woptions port)))))
 
     (if mt
-        (let ((we1 (##make-writeenv 'mark port rt mt force? width 0 0 0 limit)))
+        (let ((we1 (make-we 'mark)))
           ((macro-port-write-datum port) port obj we1)))
 
-    (let ((we2 (##make-writeenv style port rt mt force? width 0 0 0 limit)))
+    (let ((we2 (make-we style)))
       ((macro-port-write-datum port) port obj we2)
       (##fx- limit (macro-writeenv-limit we2)))))
 
@@ -4221,7 +4236,8 @@
            0
            0
            0
-           max-length)))
+           max-length
+           ##max-char)))
     (##wr we obj)
     (##get-output-string port)))
 
@@ -8384,11 +8400,7 @@
   `(or (##char<? ,c #\space) (##char=? ,c #\delete)))
 
 (##define-macro (macro-gt-max-unescaped-char? we c)
-  `(let ((rt (macro-writeenv-readtable ,we)))
-     (##char<? (or (macro-readtable-max-unescaped-char rt)
-                   (macro-max-unescaped-char
-                    (macro-port-woptions (macro-writeenv-port ,we))))
-               ,c)))
+  `(##char<? (macro-writeenv-max-unescaped-char ,we) ,c))
 
 (##define-macro (macro-must-escape-char? we c)
   `(or (macro-ctrl-char? ,c)
@@ -8812,7 +8824,8 @@
                      (macro-writeenv-shift we)
                      (macro-writeenv-close-parens we)
                      (macro-writeenv-level we)
-                     1)))
+                     1
+                     (macro-writeenv-max-unescaped-char we))))
               (##wr we2 (##car tail))
               (if mt (##marktable-restore! mt state))
               (let ((str (##get-output-string port)))
@@ -9121,7 +9134,8 @@
            (macro-writeenv-shift we)
            (macro-writeenv-close-parens we)
            (macro-writeenv-level we)
-           (##fx+ available-space-for-obj 1))))
+           (##fx+ available-space-for-obj 1)
+           (macro-writeenv-max-unescaped-char we))))
     (wr-obj we2 obj)
     (let ((str (##get-output-string port)))
       (if (##fx< available-space-for-obj (##string-length str))
