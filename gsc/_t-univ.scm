@@ -865,6 +865,14 @@
 (define-macro (^return expr)
   `(univ-emit-return ctx ,expr))
 
+
+
+(define-macro (^map fn array)
+  `(univ-emit-map ctx ,fn ,array))
+
+(define-macro (^call-with-arg-array fn vals)
+  `(univ-emit-call-with-arg-array ctx ,fn ,vals))
+
 ;;
 ;; Host vs Scheme type correspondance
 ;;
@@ -1416,6 +1424,44 @@
   (popcount arg
             (^assign arg (^bitand arg (^int univ-fixnum-max*2+1)))
             1))
+
+(define (univ-emit-map ctx fn array)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ array ".map( " fn " )"))
+
+    ((php)
+     (^ "array_map( '" fn "', " array ")"))
+
+    ((python)
+     (^ "map( "fn ", " array " )"))
+
+    ((ruby)
+     (^ array ".map { |x| " fn "(x) } " ))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-map, unknown target"))))
+ 
+(define (univ-emit-call-with-arg-array ctx fn array)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ fn ".apply( null, " array " )"))
+
+    ((php)
+     (^ "call_user_func_array( " fn ", " array " )"))
+
+    ((python)
+     (^ fn "( *" array " )"))
+
+    ((ruby)
+     (^ fn ".( *" array " )"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-call-with-arg-array, unknown target"))))
 
 (define (univ-emit-var-declaration ctx type name #!optional (init #f))
   (case (target-name (ctx-target ctx))
