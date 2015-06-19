@@ -865,17 +865,57 @@
 (define-macro (^return expr)
   `(univ-emit-return ctx ,expr))
 
+;;
+;; Host vs Scheme type correspondance
+;;
+;; ==============================
+;; | Host	| Scheme	|
+;; ==============================
+;; | void	| void-obj	|
+;; | null	| null-obj	|
+;; | bool	| boolean	|
+;; | int	| fixnum	|
+;; | float	| flonum	|
+;; | str	| string	|
+;; | array      |               |
+;; | object     |               |
+;; |            | list          |
+;; | proc	| procedure	|
+;; ==============================
+;;
+
 (define-macro (^null)
   `(univ-emit-null ctx))
+
+(define-macro (^null? expr)
+  `(univ-emit-null? ctx ,expr))
 
 (define-macro (^null-obj)
   `(univ-emit-null-obj ctx))
 
+(define-macro (^null-obj? expr)
+  `(univ-emit-null-obj? ctx ,expr))
+
 (define-macro (^void)
   `(univ-emit-void ctx))
 
+(define-macro (^void? expr)
+  `(univ-emit-void? ctx ,expr))
+
 (define-macro (^void-obj)
   `(univ-emit-void-obj ctx))
+
+(define-macro (^void-obj? expr)
+  `(univ-emit-void-obj? ctx ,expr))
+
+(define-macro (^str? expr)
+  `(univ-emit-str? ctx ,expr))
+
+(define-macro (^float? expr)
+  `(univ-emit-float? ctx ,expr))
+
+(define-macro (^int? expr)
+  `(univ-emit-int? ctx ,expr))
 
 (define-macro (^eof)
   `(univ-emit-eof ctx))
@@ -903,6 +943,9 @@
 
 (define-macro (^bool val)
   `(univ-emit-bool ctx ,val))
+
+(define-macro (^bool? val)
+  `(univ-emit-bool? ctx ,val))
 
 (define-macro (^boolean-obj obj)
   `(univ-emit-boolean-obj ctx ,obj))
@@ -1305,6 +1348,9 @@
 
 (define-macro (^continuation? val)
   `(univ-emit-continuation? ctx ,val))
+
+(define-macro (^function? val)
+  `(univ-emit-function? ctx ,val))
 
 (define-macro (^procedure? val)
   `(univ-emit-procedure? ctx ,val))
@@ -7929,6 +7975,9 @@ gambit_Pair.prototype.toString = function () {
      (compiler-internal-error
       "univ-emit-null-ref, unknown target"))))
 
+(define (univ-emit-null? ctx expr)
+  (^eq? expr (^null)))
+
 (define (univ-emit-null-obj ctx)
   (case (univ-null-representation ctx)
 
@@ -7938,6 +7987,25 @@ gambit_Pair.prototype.toString = function () {
 
     (else
      (^null))))
+
+(define (univ-emit-null-obj? ctx expr)
+  (case (univ-null-representation ctx)
+
+    ((class)
+     (case (target-name (ctx-target ctx))
+
+      ((js)
+       (^instanceof (^null) expr))
+
+      ((python ruby php)
+       (^eq? expr (^null)))
+
+      (else
+       (compiler-internal-error
+        "univ-emit-null-obj?, unknown target"))))
+
+    (else
+     (^null? expr))))
 
 (define (univ-emit-void ctx)
   (case (target-name (ctx-target ctx))
@@ -7958,6 +8026,9 @@ gambit_Pair.prototype.toString = function () {
      (compiler-internal-error
       "univ-emit-void, unknown target"))))
 
+(define (univ-emit-void? ctx expr)
+  (^eq? expr (^void)))
+
 (define (univ-emit-void-obj ctx)
   (case (univ-void-representation ctx)
 
@@ -7967,6 +8038,83 @@ gambit_Pair.prototype.toString = function () {
 
     (else
      (^void))))
+
+(define (univ-emit-void-obj? ctx expr)
+  (case (univ-void-representation ctx)
+
+    ((class)
+     (case (target-name (ctx-target ctx))
+
+      ((js)
+       (^instanceof (^void) expr))
+
+      ((python ruby php)
+       (^eq? expr (^void)))
+
+      (else
+       (compiler-internal-error
+        "univ-emit-void?, unknown target"))))
+
+    (else
+     (^null? expr))))
+
+(define (univ-emit-str? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^typeof "string" expr))
+
+    ((php)
+     (^call-prim "is_string" expr))
+
+    ((python)
+     (^instanceof "str" expr))
+
+    ((ruby)
+     (^instanceof "String" expr))
+
+    (else
+     (compiler-internal-error
+       "univ-emit-str?, unknown target"))))
+
+(define (univ-emit-float? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^typeof "number" expr))
+
+    ((php)
+     (^ "is_float(" expr ")"))
+
+    ((python)
+     (^ "isinstance(" expr ", float)"))
+
+    ((ruby)
+     (^ expr ".instance_of?(Float)"))
+
+    (else
+     (compiler-internal-error
+       "univ-emit-float?, unknown target"))))
+
+(define (univ-emit-int? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+   ((js)
+    (^typeof "number" expr))
+
+   ((php)
+    (^call-prim "is_int" expr))
+
+   ((python)
+    (^and (^instanceof "int" expr)
+          (^not (^instanceof "bool" expr))))
+          
+   ((ruby)
+    (^instanceof "Fixnum" expr))
+
+   (else
+    (compiler-internal-error
+     "univ-emit-int?, unknown target"))))
 
 (define (univ-emit-eof ctx)
   (case (univ-eof-representation ctx)
@@ -8068,6 +8216,26 @@ gambit_Pair.prototype.toString = function () {
      (compiler-internal-error
       "univ-emit-bool, unknown target"))))
 
+(define (univ-emit-bool? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+   ((js)
+    (^typeof "boolean" expr))
+
+   ((php)
+    (^call-prim "is_bool" expr))
+
+   ((python)
+    (^instanceof "bool" expr))
+
+   ((ruby)
+    (^or (^instanceof "FalseClass" expr)
+         (^instanceof "TrueClass" expr)))
+
+   (else
+    (compiler-internal-error
+     "univ-emit-bool?, unknown target"))))
+
 (define (univ-emit-boolean-obj ctx obj)
   (case (univ-boolean-representation ctx)
 
@@ -8110,24 +8278,7 @@ gambit_Pair.prototype.toString = function () {
      (^instanceof (^type 'boolean) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^typeof "boolean" expr))
-
-       ((php)
-        (^call-prim "is_bool" expr))
-
-       ((python)
-        (^instanceof "bool" expr))
-
-       ((ruby)
-        (^or (^instanceof "FalseClass" expr)
-             (^instanceof "TrueClass" expr)))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-boolean?, unknown target"))))))
+     (^bool? expr))))
 
 (define (univ-emit-chr ctx val)
   (univ-constant (char->integer val)))
@@ -8275,24 +8426,7 @@ gambit_Pair.prototype.toString = function () {
      (^instanceof (^type 'fixnum) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^typeof "number" expr))
-
-       ((php)
-        (^call-prim "is_int" expr))
-
-       ((python)
-        (^and (^instanceof "int" expr)
-              (^not (^instanceof "bool" expr))))
-
-       ((ruby)
-        (^instanceof "Fixnum" expr))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-fixnum?, unknown target"))))))
+     (^int? expr))))
 
 (define (univ-emit-dict ctx alist)
 
@@ -9097,23 +9231,7 @@ tanh
      (^instanceof (^type 'flonum) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^typeof "number" expr))
-
-       ((php)
-        (^ "is_float(" expr ")"))
-
-       ((python)
-        (^ "isinstance(" expr ", float)"))
-
-       ((ruby)
-        (^ expr ".instance_of?(Float)"))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-flonum?, unknown target"))))))
+     (^float? expr))))
 
 (define (univ-emit-cpxnum-make ctx expr1 expr2)
   (^new (^type 'cpxnum) expr1 expr2))
@@ -9569,23 +9687,8 @@ tanh
      (^instanceof (^type 'string) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
+     (^str? expr))))
 
-       ((js)
-        (^typeof "string" expr))
-
-       ((php)
-        (^call-prim "is_string" expr))
-
-       ((python)
-        (^instanceof "str" expr))
-
-       ((ruby)
-        (^instanceof "String" expr))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-string?, unknown target"))))))
 
 (define (univ-emit-string-length ctx expr)
   (case (univ-string-representation ctx)
@@ -9854,6 +9957,24 @@ tanh
 (define (univ-emit-continuation? ctx expr)
   (^instanceof (^type 'continuation) (^cast*-scmobj expr)))
 
+(define (univ-emit-function? ctx expr)
+  (case (target-name (ctx-target ctx))
+   ((js)
+    (^typeof "function" expr))
+
+   ((php)
+    (^call-prim "is_callable" expr))
+
+   ((python)
+    (^ "hasattr(" expr ", '__call__')"))
+
+   ((ruby)
+    (^instanceof "Proc" expr))
+
+   (else
+    (compiler-internal-error
+       "univ-emit-function?, unknown target"))))
+
 (define (univ-emit-procedure? ctx expr)
   (case (univ-procedure-representation ctx)
 
@@ -9862,23 +9983,7 @@ tanh
      (^instanceof (^type 'jumpable) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^typeof "function" expr))
-
-       ((php)
-        (^call-prim "is_callable" expr))
-
-       ((python)
-        (^ "hasattr(" expr ", '__call__')"))
-
-       ((ruby)
-        (^instanceof "Proc" expr))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-procedure?, unknown target"))))))
+     (^function? expr))))
 
 (define (univ-emit-return? ctx expr)
   (case (univ-procedure-representation ctx)
