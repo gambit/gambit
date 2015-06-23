@@ -896,6 +896,9 @@ AC_CHECK_HEADERS(stdlib.h)
 AC_CHECK_HEADERS(string.h)
 AC_CHECK_HEADERS(time.h)
 
+# Default path separator
+PATH_SEP="/"
+
 if test "$ANSI_C" = yes; then
 
   # Check if linking to the math library needs some special linker flags.
@@ -1024,7 +1027,7 @@ else
 
   if test "$C_COMP_VISUALC" = yes; then
 
-    PATH_SEPARATOR="\\\\\\\\\\\\\\\\"
+    PATH_SEP="\\\\\\\\\\\\\\\\"
 
     LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
 
@@ -1043,7 +1046,7 @@ else
 
        mingw*) # add Windows libraries needed by MinGW
 
-               PATH_SEPARATOR="\\\\\\\\\\\\\\\\"
+               PATH_SEP="\\\\\\\\\\\\\\\\"
 
                LIBS="$LIBS -lws2_32"
 
@@ -1055,8 +1058,6 @@ else
                ;;
 
             *) # check libraries for other systems
-
-               PATH_SEPARATOR="/"
 
                AC_SEARCH_LIBS(asin,m)
 
@@ -2365,32 +2366,32 @@ if test "$datadir" = "\${datarootdir}"; then
   datadir="\${prefix}/share"
 fi
 
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
+GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
 if test "$ENABLE_SYMLINKS" != yes; then
 
   if test "$bindir" != "\${prefix}/bin"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$includedir" != "\${prefix}/include"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$libdir" != "\${prefix}/lib"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$docdir" != "\${prefix}/doc"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$infodir" != "\${prefix}/info"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$datadir" != "\${prefix}/share"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEPARATOR|g\"`\\\"\""
+    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
 fi
