@@ -1,6 +1,6 @@
-/* File: "os_shell.c", Time-stamp: <2013-12-04 18:23:40 feeley> */
+/* File: "os_shell.c" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -807,6 +807,46 @@ ___SCMOBJ ___os_environ ___PVOID
 /* Shell command. */
 
 
+#if 1
+
+___SCMOBJ ___os_shell_command
+   ___P((___SCMOBJ cmd),
+        (cmd)
+___SCMOBJ cmd;)
+{
+  ___SCMOBJ e;
+  char *ccmd;
+
+  if ((e = ___SCMOBJ_to_NONNULLCHARSTRING
+             (___PSA(___PSTATE)
+              cmd,
+              &ccmd,
+              1))
+      == ___FIX(___NO_ERR))
+    {
+      int code;
+
+      ___disable_os_interrupts ();
+
+      code = system (ccmd);
+
+      if (code == -1)
+        e = err_code_from_errno ();
+      else
+        e = ___FIX(code & ___MAX_FIX);
+
+      ___enable_os_interrupts ();
+
+      ___release_string (ccmd);
+    }
+
+  return e;
+}
+
+#else
+
+/* old interface */
+
 ___SCMOBJ ___os_shell_command
    ___P((___SCMOBJ cmd,
          ___SCMOBJ dir),
@@ -1000,6 +1040,8 @@ ___SCMOBJ dir;)
 
   return e;
 }
+
+#endif
 
 
 /*---------------------------------------------------------------------------*/

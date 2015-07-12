@@ -1384,13 +1384,13 @@
   ##processed-command-line)
 
 (define-prim (##shell-command-blocking cmd)
-  ;; DEPRECATED
-  (let ((code (##os-shell-command cmd (##current-directory))))
+  (let ((code (##os-shell-command cmd)))
     (if (##fx< code 0)
         (##raise-os-exception #f code ##shell-command-blocking cmd)
         code)))
 
 (define ##shell-program #f)
+(define ##shell-command-fallback #t)
 
 (define-prim (##get-shell-program)
 
@@ -1415,11 +1415,13 @@
         (set! ##shell-program sp)
         sp)))
 
-(define-prim (##shell-command cmd #!optional (capture? #f))
+(define-prim (##shell-command cmd #!optional (capture? (macro-absent-obj)))
   (let* ((shell-prog
           (##get-shell-program))
          (cap
-          (and capture? #t))
+          (if (##eq? capture? (macro-absent-obj))
+              #f
+              (and capture? #t)))
          (path-or-settings
           (##list path: (##car shell-prog)
                   arguments:
@@ -1431,19 +1433,29 @@
                   stderr-redirection: cap)))
     (##open-process-generic
      (macro-direction-inout)
-     #t
+     #f
      (lambda (port)
-       (if cap
-           (begin
-             (##close-output-port port)
-             (let* ((out (##read-line port #f #f ##max-fixnum))
-                    (output (if (##string? out) out "")))
-               (##close-input-port port)
-               (let ((status (##process-status port)))
-                 (##cons status output))))
-           (begin
-             (##close-port port)
-             (##process-status port))))
+       (if (##fixnum? port)
+           (if (and ##shell-command-fallback
+                    (##fx= port ##err-code-unimplemented))
+               (let ((code (##os-shell-command cmd)))
+                 (if (##fx< code 0)
+                     (##raise-os-exception #f code shell-command cmd capture?)
+                     (if cap
+                         (##cons code "")
+                         code)))
+               (##raise-os-exception #f port shell-command cmd capture?))
+           (if cap
+               (begin
+                 (##close-output-port port)
+                 (let* ((out (##read-line port #f #f ##max-fixnum))
+                        (output (if (##string? out) out "")))
+                   (##close-input-port port)
+                   (let ((status (##process-status port)))
+                     (##cons status output))))
+               (begin
+                 (##close-port port)
+                 (##process-status port)))))
      open-process
      path-or-settings)))
 

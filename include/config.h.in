@@ -123,7 +123,6 @@
 #undef HAVE_MKDIR
 #undef HAVE_MKFIFO
 #undef HAVE_OPENDIR
-#undef HAVE_RENAME
 #undef HAVE_RMDIR
 #undef HAVE_SOCKET
 #undef HAVE_UTIMES
@@ -210,6 +209,8 @@
 
 #undef HAVE_ENVIRON
 #undef HAVE__NSGETENVIRON
+#undef HAVE_REMOVE
+#undef HAVE_RENAME
 
 /* Determine which types are available */
 

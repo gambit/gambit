@@ -1039,7 +1039,7 @@ ___SCMOBJ mode;)
       ___release_string (cpath);
     }
 
-#endif
+#else
 
 #ifdef USE_CreateDirectory
 
@@ -1059,6 +1059,8 @@ ___SCMOBJ mode;)
         e = fnf_or_err_code_from_GetLastError ();
       ___release_string (cpath);
     }
+
+#endif
 
 #endif
 
@@ -1221,9 +1223,11 @@ ___SCMOBJ path;)
 
 #ifndef USE_rmdir
 #ifndef USE_RemoveDirectory
+#ifndef USE_remove_dir
 
   e = ___FIX(___UNIMPL_ERR);
 
+#endif
 #endif
 #endif
 
@@ -1243,7 +1247,7 @@ ___SCMOBJ path;)
       ___release_string (cpath);
     }
 
-#endif
+#else
 
 #ifdef USE_RemoveDirectory
 
@@ -1262,6 +1266,28 @@ ___SCMOBJ path;)
         e = fnf_or_err_code_from_GetLastError ();
       ___release_string (cpath);
     }
+
+#else
+
+#ifdef USE_remove_dir
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRING
+             (___PSA(___PSTATE)
+              path,
+              &cpath,
+              1,
+              ___CE(___DELETE_DIRECTORY_PATH_CE_SELECT),
+              0))
+      == ___FIX(___NO_ERR))
+    {
+      if (remove (___CAST(___STRING_TYPE(___DELETE_DIRECTORY_PATH_CE_SELECT),cpath)) < 0)
+        e = fnf_or_err_code_from_errno ();
+      ___release_string (cpath);
+    }
+
+#endif
+
+#endif
 
 #endif
 
@@ -1376,7 +1402,7 @@ ___SCMOBJ path2;)
       ___release_string (cpath1);
     }
 
-#endif
+#else
 
 #ifdef USE_MoveFile
 
@@ -1408,6 +1434,8 @@ ___SCMOBJ path2;)
         }
       ___release_string (cpath1);
     }
+
+#endif
 
 #endif
 
@@ -1518,7 +1546,7 @@ ___SCMOBJ path2;)
       ___release_string (cpath1);
     }
 
-#endif
+#else
 
 #ifdef USE_CopyFile
 
@@ -1552,6 +1580,79 @@ ___SCMOBJ path2;)
       ___release_string (cpath1);
     }
 
+#else
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRING
+             (___PSA(___PSTATE)
+              path1,
+              &cpath1,
+              1,
+              ___CE(___COPY_FILE_PATH_CE_SELECT),
+              0))
+      == ___FIX(___NO_ERR))
+    {
+      if ((e = ___SCMOBJ_to_NONNULLSTRING
+                 (___PSA(___PSTATE)
+                  path2,
+                  &cpath2,
+                  2,
+                  ___CE(___COPY_FILE_PATH_CE_SELECT),
+                  0))
+          == ___FIX(___NO_ERR))
+        {
+          ___FILE *f1;
+          ___FILE *f2;
+
+          if ((f1 = ___fopen (___CAST(___STRING_TYPE(___COPY_FILE_PATH_CE_SELECT),
+                                      cpath1),
+                              "rb"))
+              == NULL)
+            e = fnf_or_err_code_from_errno ();
+          else
+            {
+              if ((f2 = ___fopen (___CAST(___STRING_TYPE(___COPY_FILE_PATH_CE_SELECT),
+                                          cpath2),
+                                  "wb"))
+                  == NULL)
+                e = fnf_or_err_code_from_errno ();
+              else
+                {
+                  char buffer[4096];
+                  int nr;
+                  int nw;
+
+                  for (;;)
+                    {
+                      nr = ___fread (buffer, 1, sizeof (buffer), f1);
+
+                      if (nr == 0)
+                        break;
+
+                      if (nr < 0 || (nw = ___fwrite (buffer, 1, nr, f2)) < nr)
+                        {
+                          e = err_code_from_errno ();
+                          break;
+                        }
+                    }
+
+                  if (___fclose (f2) < 0 && e != ___FIX(___NO_ERR))
+                    e = err_code_from_errno ();
+                }
+
+              if (___fclose (f1) < 0 && e != ___FIX(___NO_ERR))
+                {
+                  e = err_code_from_errno ();
+                  remove (___CAST(___STRING_TYPE(___COPY_FILE_PATH_CE_SELECT),
+                                  cpath2));
+                }
+            }
+          ___release_string (cpath2);
+        }
+      ___release_string (cpath1);
+    }
+
+#endif
+
 #endif
 
   return e;
@@ -1568,9 +1669,11 @@ ___SCMOBJ path;)
 
 #ifndef USE_unlink
 #ifndef USE_DeleteFile
+#ifndef USE_remove_file
 
   e = ___FIX(___UNIMPL_ERR);
 
+#endif
 #endif
 #endif
 
@@ -1591,7 +1694,7 @@ ___SCMOBJ path;)
       ___release_string (cpath);
     }
 
-#endif
+#else
 
 #ifdef USE_DeleteFile
 
@@ -1610,6 +1713,29 @@ ___SCMOBJ path;)
         e = fnf_or_err_code_from_GetLastError ();
       ___release_string (cpath);
     }
+
+#else
+
+#ifdef USE_remove_file
+
+  if ((e = ___SCMOBJ_to_NONNULLSTRING
+             (___PSA(___PSTATE)
+              path,
+              &cpath,
+              1,
+              ___CE(___DELETE_FILE_PATH_CE_SELECT),
+              0))
+      == ___FIX(___NO_ERR))
+    {
+      if (remove (___CAST(___STRING_TYPE(___DELETE_FILE_PATH_CE_SELECT),cpath))
+          < 0)
+        e = fnf_or_err_code_from_errno ();
+      ___release_string (cpath);
+    }
+
+#endif
+
+#endif
 
 #endif
 

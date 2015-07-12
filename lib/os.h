@@ -74,6 +74,14 @@
  * The following basic features are used if they are available.
  */
 
+#ifdef HAVE_ENVIRON
+#define USE_environ
+#else
+#ifdef HAVE__NSGETENVIRON
+#define USE_environ
+#endif
+#endif
+
 #ifdef HAVE_GETENV
 #define USE_getenv
 #endif
@@ -86,6 +94,39 @@
 #define USE_unsetenv
 #endif
 
+#ifdef HAVE_REMOVE
+#define USE_remove_dir
+#define USE_remove_file
+#endif
+
+#ifdef HAVE_RENAME
+#define USE_rename
+#endif
+
+#ifdef HAVE_MKDIR
+#define USE_mkdir
+#endif
+
+#ifdef HAVE_OPENDIR
+#define USE_opendir
+#endif
+
+#if defined(HAVE_STAT64) && defined(HAVE_STRUCT_STAT64) && !(defined(__MACOSX__) || (defined(__APPLE__) && defined(__MACH__)))
+#define USE_stat
+#define ___struct_stat struct stat64
+#define ___stat stat64
+#define ___lstat lstat64
+#define ___fstat fstat64
+#else
+#ifdef HAVE_STAT
+#define USE_stat
+#define ___struct_stat struct stat
+#define ___stat stat
+#define ___lstat lstat
+#define ___fstat fstat
+#endif
+#endif
+
 
 /* Operating-system specific features we require */
 
@@ -94,14 +135,6 @@
 #define USE_open
 
 /* Select features based on availability */
-
-#ifdef HAVE_ENVIRON
-#define USE_environ
-#else
-#ifdef HAVE__NSGETENVIRON
-#define USE_environ
-#endif
-#endif
 
 #ifdef HAVE_PIPE
 #define USE_pipe
@@ -143,20 +176,8 @@
 #define USE_link
 #endif
 
-#ifdef HAVE_MKDIR
-#define USE_mkdir
-#endif
-
 #ifdef HAVE_MKFIFO
 #define USE_mkfifo
-#endif
-
-#ifdef HAVE_OPENDIR
-#define USE_opendir
-#endif
-
-#ifdef HAVE_RENAME
-#define USE_rename
 #endif
 
 #ifdef HAVE_RMDIR
@@ -166,22 +187,6 @@
 #ifdef HAVE_SOCKET
 #define USE_socket
 #define USE_NETWORKING
-#endif
-
-#if defined(HAVE_STAT64) && defined(HAVE_STRUCT_STAT64) && !(defined(__MACOSX__) || (defined(__APPLE__) && defined(__MACH__)))
-#define USE_stat
-#define ___struct_stat struct stat64
-#define ___stat stat64
-#define ___lstat lstat64
-#define ___fstat fstat64
-#else
-#ifdef HAVE_STAT
-#define USE_stat
-#define ___struct_stat struct stat
-#define ___stat stat
-#define ___lstat lstat
-#define ___fstat fstat
-#endif
 #endif
 
 #define USE_NONBLOCKING_FILE_IO

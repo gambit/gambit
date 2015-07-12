@@ -1,6 +1,6 @@
-; File: "error.scm", Time-stamp: <2008-04-01 12:44:06 feeley>
+; File: "error.scm"
 
-; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1998-2015 by Marc Feeley, All Rights Reserved.
 
 ; Test program for error processing.
 
@@ -2392,7 +2392,7 @@
            eol-encoding: 'cr-lf))
 (try 'read-all-open-process read-all-open-process)
 )
-(test-open-process)
+'(test-open-process)
 
 (define (test-host-info)
 (define (host-info-addresses-host-info hostname)
