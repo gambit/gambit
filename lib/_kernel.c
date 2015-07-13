@@ -238,6 +238,7 @@
 "##make-s64vector"
 "##make-s8vector"
 "##make-string"
+"##make-structure"
 "##make-u16vector"
 "##make-u32vector"
 "##make-u64vector"
@@ -307,6 +308,7 @@
 "##enable-interrupts!"
 "##err-code-EAGAIN"
 "##err-code-EINTR"
+"##err-code-unimplemented"
 "##exit-with-exception"
 "##explode-continuation"
 "##explode-frame"
@@ -346,7 +348,9 @@
 "##make-frame"
 "##make-interned-keyword"
 "##make-machine-code-block"
+"##make-promise"
 "##make-subprocedure"
+"##make-values"
 "##max-char"
 "##max-fixnum"
 "##min-fixnum"
@@ -425,6 +429,10 @@
 "##processed-command-line"
 "##processor-cache-size"
 "##processor-count"
+"##promise-result"
+"##promise-result-set!"
+"##promise-thunk"
+"##promise-thunk-set!"
 "##raise-cfun-conversion-exception-nary"
 "##raise-keyword-expected-exception-nary"
 "##raise-multiple-c-return-exception"
@@ -467,6 +475,9 @@
 "##type?"
 "##unchecked-structure-ref"
 "##unchecked-structure-set!"
+"##values-length"
+"##values-ref"
+"##values-set!"
 "##with-no-result-expected-toplevel"
 "cfun-conversion-exception-arguments"
 "cfun-conversion-exception-code"
@@ -531,11 +542,11 @@
 #define ___MH_PROC ___H__20___kernel
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 73
-#define ___GLOCOUNT 435
-#define ___SUPCOUNT 435
+#define ___GLOCOUNT 446
+#define ___SUPCOUNT 446
 #define ___CNSCOUNT 1
 #define ___SUBCOUNT 40
-#define ___LBLCOUNT 1080
+#define ___LBLCOUNT 1107
 #define ___OFDCOUNT 10
 #define ___MODDESCR ___REF_SUB(39)
 #include "gambit.h"
@@ -748,6 +759,7 @@ ___NEED_GLO(___G__23__23_enable_2d_interrupts_21_)
 ___NEED_GLO(___G__23__23_err_2d_code_2d_EAGAIN)
 ___NEED_GLO(___G__23__23_err_2d_code_2d_EINTR)
 ___NEED_GLO(___G__23__23_err_2d_code_2d_ENOENT)
+___NEED_GLO(___G__23__23_err_2d_code_2d_unimplemented)
 ___NEED_GLO(___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_)
 ___NEED_GLO(___G__23__23_execute_2d_final_2d_wills_21_)
 ___NEED_GLO(___G__23__23_execute_2d_jobs_21_)
@@ -837,16 +849,19 @@ ___NEED_GLO(___G__23__23_make_2d_interned_2d_symbol)
 ___NEED_GLO(___G__23__23_make_2d_interned_2d_symkey)
 ___NEED_GLO(___G__23__23_make_2d_jobs)
 ___NEED_GLO(___G__23__23_make_2d_machine_2d_code_2d_block)
+___NEED_GLO(___G__23__23_make_2d_promise)
 ___NEED_GLO(___G__23__23_make_2d_s16vector)
 ___NEED_GLO(___G__23__23_make_2d_s32vector)
 ___NEED_GLO(___G__23__23_make_2d_s64vector)
 ___NEED_GLO(___G__23__23_make_2d_s8vector)
 ___NEED_GLO(___G__23__23_make_2d_string)
+___NEED_GLO(___G__23__23_make_2d_structure)
 ___NEED_GLO(___G__23__23_make_2d_subprocedure)
 ___NEED_GLO(___G__23__23_make_2d_u16vector)
 ___NEED_GLO(___G__23__23_make_2d_u32vector)
 ___NEED_GLO(___G__23__23_make_2d_u64vector)
 ___NEED_GLO(___G__23__23_make_2d_u8vector)
+___NEED_GLO(___G__23__23_make_2d_values)
 ___NEED_GLO(___G__23__23_make_2d_vector)
 ___NEED_GLO(___G__23__23_max_2d_char)
 ___NEED_GLO(___G__23__23_max_2d_fixnum)
@@ -932,6 +947,10 @@ ___NEED_GLO(___G__23__23_processed_2d_command_2d_line)
 ___NEED_GLO(___G__23__23_processor_2d_cache_2d_size)
 ___NEED_GLO(___G__23__23_processor_2d_count)
 ___NEED_GLO(___G__23__23_program_2d_descr)
+___NEED_GLO(___G__23__23_promise_2d_result)
+___NEED_GLO(___G__23__23_promise_2d_result_2d_set_21_)
+___NEED_GLO(___G__23__23_promise_2d_thunk)
+___NEED_GLO(___G__23__23_promise_2d_thunk_2d_set_21_)
 ___NEED_GLO(___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary)
 ___NEED_GLO(___G__23__23_raise_2d_heap_2d_overflow_2d_exception)
 ___NEED_GLO(___G__23__23_raise_2d_keyword_2d_expected_2d_exception)
@@ -994,6 +1013,9 @@ ___NEED_GLO(___G__23__23_type_2d_type)
 ___NEED_GLO(___G__23__23_type_3f_)
 ___NEED_GLO(___G__23__23_unchecked_2d_structure_2d_ref)
 ___NEED_GLO(___G__23__23_unchecked_2d_structure_2d_set_21_)
+___NEED_GLO(___G__23__23_values_2d_length)
+___NEED_GLO(___G__23__23_values_2d_ref)
+___NEED_GLO(___G__23__23_values_2d_set_21_)
 ___NEED_GLO(___G__23__23_vm_2d_main_2d_module_2d_id)
 ___NEED_GLO(___G__23__23_with_2d_no_2d_result_2d_expected)
 ___NEED_GLO(___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel)
@@ -1358,359 +1380,370 @@ ___DEF_GLO(130,"##enable-interrupts!")
 ___DEF_GLO(131,"##err-code-EAGAIN")
 ___DEF_GLO(132,"##err-code-EINTR")
 ___DEF_GLO(133,"##err-code-ENOENT")
-___DEF_GLO(134,"##execute-and-clear-jobs!")
-___DEF_GLO(135,"##execute-final-wills!")
-___DEF_GLO(136,"##execute-jobs!")
-___DEF_GLO(137,"##exit")
-___DEF_GLO(138,"##exit-abnormally")
-___DEF_GLO(139,"##exit-cleanup")
-___DEF_GLO(140,"##exit-jobs")
-___DEF_GLO(141,"##exit-with-err-code")
-___DEF_GLO(142,"##exit-with-err-code-no-cleanup")
-___DEF_GLO(143,"##exit-with-exception")
-___DEF_GLO(144,"##explode-continuation")
-___DEF_GLO(145,"##explode-frame")
-___DEF_GLO(146,"##extract-procedure-and-arguments")
+___DEF_GLO(134,"##err-code-unimplemented")
+___DEF_GLO(135,"##execute-and-clear-jobs!")
+___DEF_GLO(136,"##execute-final-wills!")
+___DEF_GLO(137,"##execute-jobs!")
+___DEF_GLO(138,"##exit")
+___DEF_GLO(139,"##exit-abnormally")
+___DEF_GLO(140,"##exit-cleanup")
+___DEF_GLO(141,"##exit-jobs")
+___DEF_GLO(142,"##exit-with-err-code")
+___DEF_GLO(143,"##exit-with-err-code-no-cleanup")
+___DEF_GLO(144,"##exit-with-exception")
+___DEF_GLO(145,"##explode-continuation")
+___DEF_GLO(146,"##explode-frame")
+___DEF_GLO(147,"##extract-procedure-and-arguments")
 
-___DEF_GLO(147,"##fail-check-cfun-conversion-exception")
+___DEF_GLO(148,"##fail-check-cfun-conversion-exception")
 
-___DEF_GLO(148,"##fail-check-foreign")
-___DEF_GLO(149,"##fail-check-heap-overflow-exception")
+___DEF_GLO(149,"##fail-check-foreign")
+___DEF_GLO(150,"##fail-check-heap-overflow-exception")
 
-___DEF_GLO(150,"##fail-check-keyword-expected-exception")
+___DEF_GLO(151,"##fail-check-keyword-expected-exception")
 
-___DEF_GLO(151,"##fail-check-multiple-c-return-exception")
+___DEF_GLO(152,"##fail-check-multiple-c-return-exception")
 
-___DEF_GLO(152,"##fail-check-nonprocedure-operator-exception")
+___DEF_GLO(153,"##fail-check-nonprocedure-operator-exception")
 
-___DEF_GLO(153,"##fail-check-number-of-arguments-limit-exception")
+___DEF_GLO(154,"##fail-check-number-of-arguments-limit-exception")
 
-___DEF_GLO(154,"##fail-check-os-exception")
-___DEF_GLO(155,"##fail-check-sfun-conversion-exception")
+___DEF_GLO(155,"##fail-check-os-exception")
+___DEF_GLO(156,"##fail-check-sfun-conversion-exception")
 
-___DEF_GLO(156,"##fail-check-stack-overflow-exception")
+___DEF_GLO(157,"##fail-check-stack-overflow-exception")
 
-___DEF_GLO(157,"##fail-check-type-exception")
-___DEF_GLO(158,"##fail-check-unknown-keyword-argument-exception")
+___DEF_GLO(158,"##fail-check-type-exception")
+___DEF_GLO(159,"##fail-check-unknown-keyword-argument-exception")
 
-___DEF_GLO(159,"##fail-check-wrong-number-of-arguments-exception")
+___DEF_GLO(160,"##fail-check-wrong-number-of-arguments-exception")
 
-___DEF_GLO(160,"##final-will-registry")
-___DEF_GLO(161,"##find-interned-keyword")
-___DEF_GLO(162,"##find-interned-symbol")
-___DEF_GLO(163,"##find-interned-symkey")
-___DEF_GLO(164,"##first-argument")
-___DEF_GLO(165,"##fixnum-width")
-___DEF_GLO(166,"##fixnum-width-neg")
-___DEF_GLO(167,"##force-undetermined")
-___DEF_GLO(168,"##foreign-address")
-___DEF_GLO(169,"##foreign-release!")
-___DEF_GLO(170,"##foreign-released?")
-___DEF_GLO(171,"##format-filepos")
-___DEF_GLO(172,"##frame-fs")
-___DEF_GLO(173,"##frame-link")
-___DEF_GLO(174,"##frame-ref")
-___DEF_GLO(175,"##frame-ret")
-___DEF_GLO(176,"##frame-set!")
-___DEF_GLO(177,"##frame-slot-live?")
-___DEF_GLO(178,"##gc")
-___DEF_GLO(179,"##gc-final-will-registry!")
-___DEF_GLO(180,"##gc-finalize!")
-___DEF_GLO(181,"##gc-interrupt-jobs")
-___DEF_GLO(182,"##gc-without-exceptions")
-___DEF_GLO(183,"##get-bytes-allocated!")
-___DEF_GLO(184,"##get-current-time!")
-___DEF_GLO(185,"##get-live-percent")
-___DEF_GLO(186,"##get-max-heap")
-___DEF_GLO(187,"##get-min-heap")
-___DEF_GLO(188,"##get-standard-level")
-___DEF_GLO(189,"##global-var->identifier")
-___DEF_GLO(190,"##global-var-primitive-ref")
-___DEF_GLO(191,"##global-var-primitive-set!")
-___DEF_GLO(192,"##global-var-ref")
-___DEF_GLO(193,"##global-var-set!")
-___DEF_GLO(194,"##global-var?")
-___DEF_GLO(195,"##heartbeat-interval-set!")
-___DEF_GLO(196,"##interrupt-handler")
-___DEF_GLO(197,"##interrupt-vector")
-___DEF_GLO(198,"##interrupt-vector-set!")
-___DEF_GLO(199,"##kernel-handlers")
-___DEF_GLO(200,"##keyword-table")
-___DEF_GLO(201,"##load-required-module")
-___DEF_GLO(202,"##load-required-module-structs")
-___DEF_GLO(203,"##load-vm")
-___DEF_GLO(204,"##lookup-module")
-___DEF_GLO(205,"##lookup-registered-module")
-___DEF_GLO(206,"##machine-code-block-exec")
-___DEF_GLO(207,"##machine-code-block-ref")
-___DEF_GLO(208,"##machine-code-block-set!")
-___DEF_GLO(209,"##main")
-___DEF_GLO(210,"##main-set!")
-___DEF_GLO(211,"##make-closure")
-___DEF_GLO(212,"##make-continuation")
-___DEF_GLO(213,"##make-f32vector")
-___DEF_GLO(214,"##make-f64vector")
-___DEF_GLO(215,"##make-final-will")
-___DEF_GLO(216,"##make-frame")
-___DEF_GLO(217,"##make-global-var")
-___DEF_GLO(218,"##make-interned-keyword")
-___DEF_GLO(219,"##make-interned-symbol")
-___DEF_GLO(220,"##make-interned-symkey")
-___DEF_GLO(221,"##make-jobs")
-___DEF_GLO(222,"##make-machine-code-block")
-___DEF_GLO(223,"##make-s16vector")
-___DEF_GLO(224,"##make-s32vector")
-___DEF_GLO(225,"##make-s64vector")
-___DEF_GLO(226,"##make-s8vector")
-___DEF_GLO(227,"##make-string")
-___DEF_GLO(228,"##make-subprocedure")
-___DEF_GLO(229,"##make-u16vector")
-___DEF_GLO(230,"##make-u32vector")
-___DEF_GLO(231,"##make-u64vector")
-___DEF_GLO(232,"##make-u8vector")
-___DEF_GLO(233,"##make-vector")
-___DEF_GLO(234,"##max-char")
-___DEF_GLO(235,"##max-fixnum")
-___DEF_GLO(236,"##min-fixnum")
-___DEF_GLO(237,"##module-init")
-___DEF_GLO(238,"##object->global-var")
-___DEF_GLO(239,"##object->global-var->identifier")
-___DEF_GLO(240,"##os-address-infos")
-___DEF_GLO(241,"##os-bat-extension-string-saved")
-___DEF_GLO(242,"##os-condvar-select!")
-___DEF_GLO(243,"##os-configure-command-string-saved")
+___DEF_GLO(161,"##final-will-registry")
+___DEF_GLO(162,"##find-interned-keyword")
+___DEF_GLO(163,"##find-interned-symbol")
+___DEF_GLO(164,"##find-interned-symkey")
+___DEF_GLO(165,"##first-argument")
+___DEF_GLO(166,"##fixnum-width")
+___DEF_GLO(167,"##fixnum-width-neg")
+___DEF_GLO(168,"##force-undetermined")
+___DEF_GLO(169,"##foreign-address")
+___DEF_GLO(170,"##foreign-release!")
+___DEF_GLO(171,"##foreign-released?")
+___DEF_GLO(172,"##format-filepos")
+___DEF_GLO(173,"##frame-fs")
+___DEF_GLO(174,"##frame-link")
+___DEF_GLO(175,"##frame-ref")
+___DEF_GLO(176,"##frame-ret")
+___DEF_GLO(177,"##frame-set!")
+___DEF_GLO(178,"##frame-slot-live?")
+___DEF_GLO(179,"##gc")
+___DEF_GLO(180,"##gc-final-will-registry!")
+___DEF_GLO(181,"##gc-finalize!")
+___DEF_GLO(182,"##gc-interrupt-jobs")
+___DEF_GLO(183,"##gc-without-exceptions")
+___DEF_GLO(184,"##get-bytes-allocated!")
+___DEF_GLO(185,"##get-current-time!")
+___DEF_GLO(186,"##get-live-percent")
+___DEF_GLO(187,"##get-max-heap")
+___DEF_GLO(188,"##get-min-heap")
+___DEF_GLO(189,"##get-standard-level")
+___DEF_GLO(190,"##global-var->identifier")
+___DEF_GLO(191,"##global-var-primitive-ref")
+___DEF_GLO(192,"##global-var-primitive-set!")
+___DEF_GLO(193,"##global-var-ref")
+___DEF_GLO(194,"##global-var-set!")
+___DEF_GLO(195,"##global-var?")
+___DEF_GLO(196,"##heartbeat-interval-set!")
+___DEF_GLO(197,"##interrupt-handler")
+___DEF_GLO(198,"##interrupt-vector")
+___DEF_GLO(199,"##interrupt-vector-set!")
+___DEF_GLO(200,"##kernel-handlers")
+___DEF_GLO(201,"##keyword-table")
+___DEF_GLO(202,"##load-required-module")
+___DEF_GLO(203,"##load-required-module-structs")
+___DEF_GLO(204,"##load-vm")
+___DEF_GLO(205,"##lookup-module")
+___DEF_GLO(206,"##lookup-registered-module")
+___DEF_GLO(207,"##machine-code-block-exec")
+___DEF_GLO(208,"##machine-code-block-ref")
+___DEF_GLO(209,"##machine-code-block-set!")
+___DEF_GLO(210,"##main")
+___DEF_GLO(211,"##main-set!")
+___DEF_GLO(212,"##make-closure")
+___DEF_GLO(213,"##make-continuation")
+___DEF_GLO(214,"##make-f32vector")
+___DEF_GLO(215,"##make-f64vector")
+___DEF_GLO(216,"##make-final-will")
+___DEF_GLO(217,"##make-frame")
+___DEF_GLO(218,"##make-global-var")
+___DEF_GLO(219,"##make-interned-keyword")
+___DEF_GLO(220,"##make-interned-symbol")
+___DEF_GLO(221,"##make-interned-symkey")
+___DEF_GLO(222,"##make-jobs")
+___DEF_GLO(223,"##make-machine-code-block")
+___DEF_GLO(224,"##make-promise")
+___DEF_GLO(225,"##make-s16vector")
+___DEF_GLO(226,"##make-s32vector")
+___DEF_GLO(227,"##make-s64vector")
+___DEF_GLO(228,"##make-s8vector")
+___DEF_GLO(229,"##make-string")
+___DEF_GLO(230,"##make-structure")
+___DEF_GLO(231,"##make-subprocedure")
+___DEF_GLO(232,"##make-u16vector")
+___DEF_GLO(233,"##make-u32vector")
+___DEF_GLO(234,"##make-u64vector")
+___DEF_GLO(235,"##make-u8vector")
+___DEF_GLO(236,"##make-values")
+___DEF_GLO(237,"##make-vector")
+___DEF_GLO(238,"##max-char")
+___DEF_GLO(239,"##max-fixnum")
+___DEF_GLO(240,"##min-fixnum")
+___DEF_GLO(241,"##module-init")
+___DEF_GLO(242,"##object->global-var")
+___DEF_GLO(243,"##object->global-var->identifier")
+___DEF_GLO(244,"##os-address-infos")
+___DEF_GLO(245,"##os-bat-extension-string-saved")
+___DEF_GLO(246,"##os-condvar-select!")
+___DEF_GLO(247,"##os-configure-command-string-saved")
 
-___DEF_GLO(244,"##os-copy-file")
-___DEF_GLO(245,"##os-create-directory")
-___DEF_GLO(246,"##os-create-fifo")
-___DEF_GLO(247,"##os-create-link")
-___DEF_GLO(248,"##os-create-symbolic-link")
-___DEF_GLO(249,"##os-delete-directory")
-___DEF_GLO(250,"##os-delete-file")
-___DEF_GLO(251,"##os-device-close")
-___DEF_GLO(252,"##os-device-directory-open-path")
-___DEF_GLO(253,"##os-device-directory-read")
-___DEF_GLO(254,"##os-device-event-queue-open")
-___DEF_GLO(255,"##os-device-event-queue-read")
-___DEF_GLO(256,"##os-device-force-output")
-___DEF_GLO(257,"##os-device-kind")
-___DEF_GLO(258,"##os-device-process-pid")
-___DEF_GLO(259,"##os-device-process-status")
-___DEF_GLO(260,"##os-device-stream-default-options")
+___DEF_GLO(248,"##os-copy-file")
+___DEF_GLO(249,"##os-create-directory")
+___DEF_GLO(250,"##os-create-fifo")
+___DEF_GLO(251,"##os-create-link")
+___DEF_GLO(252,"##os-create-symbolic-link")
+___DEF_GLO(253,"##os-delete-directory")
+___DEF_GLO(254,"##os-delete-file")
+___DEF_GLO(255,"##os-device-close")
+___DEF_GLO(256,"##os-device-directory-open-path")
+___DEF_GLO(257,"##os-device-directory-read")
+___DEF_GLO(258,"##os-device-event-queue-open")
+___DEF_GLO(259,"##os-device-event-queue-read")
+___DEF_GLO(260,"##os-device-force-output")
+___DEF_GLO(261,"##os-device-kind")
+___DEF_GLO(262,"##os-device-process-pid")
+___DEF_GLO(263,"##os-device-process-status")
+___DEF_GLO(264,"##os-device-stream-default-options")
 
-___DEF_GLO(261,"##os-device-stream-open-path")
-___DEF_GLO(262,"##os-device-stream-open-predefined")
+___DEF_GLO(265,"##os-device-stream-open-path")
+___DEF_GLO(266,"##os-device-stream-open-predefined")
 
-___DEF_GLO(263,"##os-device-stream-open-process")
-___DEF_GLO(264,"##os-device-stream-options-set!")
-___DEF_GLO(265,"##os-device-stream-read")
-___DEF_GLO(266,"##os-device-stream-seek")
-___DEF_GLO(267,"##os-device-stream-width")
-___DEF_GLO(268,"##os-device-stream-write")
-___DEF_GLO(269,"##os-device-tcp-client-open")
-___DEF_GLO(270,"##os-device-tcp-client-socket-info")
+___DEF_GLO(267,"##os-device-stream-open-process")
+___DEF_GLO(268,"##os-device-stream-options-set!")
+___DEF_GLO(269,"##os-device-stream-read")
+___DEF_GLO(270,"##os-device-stream-seek")
+___DEF_GLO(271,"##os-device-stream-width")
+___DEF_GLO(272,"##os-device-stream-write")
+___DEF_GLO(273,"##os-device-tcp-client-open")
+___DEF_GLO(274,"##os-device-tcp-client-socket-info")
 
-___DEF_GLO(271,"##os-device-tcp-server-open")
-___DEF_GLO(272,"##os-device-tcp-server-read")
-___DEF_GLO(273,"##os-device-tcp-server-socket-info")
+___DEF_GLO(275,"##os-device-tcp-server-open")
+___DEF_GLO(276,"##os-device-tcp-server-read")
+___DEF_GLO(277,"##os-device-tcp-server-socket-info")
 
-___DEF_GLO(274,"##os-device-tty-history")
-___DEF_GLO(275,"##os-device-tty-history-max-length-set!")
+___DEF_GLO(278,"##os-device-tty-history")
+___DEF_GLO(279,"##os-device-tty-history-max-length-set!")
 
-___DEF_GLO(276,"##os-device-tty-history-set!")
-___DEF_GLO(277,"##os-device-tty-mode-set!")
-___DEF_GLO(278,"##os-device-tty-paren-balance-duration-set!")
+___DEF_GLO(280,"##os-device-tty-history-set!")
+___DEF_GLO(281,"##os-device-tty-mode-set!")
+___DEF_GLO(282,"##os-device-tty-paren-balance-duration-set!")
 
-___DEF_GLO(279,"##os-device-tty-text-attributes-set!")
+___DEF_GLO(283,"##os-device-tty-text-attributes-set!")
 
-___DEF_GLO(280,"##os-device-tty-type-set!")
-___DEF_GLO(281,"##os-environ")
-___DEF_GLO(282,"##os-err-code->string")
-___DEF_GLO(283,"##os-exe-extension-string-saved")
-___DEF_GLO(284,"##os-file-info")
-___DEF_GLO(285,"##os-file-times-set!")
-___DEF_GLO(286,"##os-getenv")
-___DEF_GLO(287,"##os-getpid")
-___DEF_GLO(288,"##os-getppid")
-___DEF_GLO(289,"##os-group-info")
-___DEF_GLO(290,"##os-host-info")
-___DEF_GLO(291,"##os-host-name")
-___DEF_GLO(292,"##os-load-object-file")
-___DEF_GLO(293,"##os-make-tls-context")
-___DEF_GLO(294,"##os-network-info")
-___DEF_GLO(295,"##os-obj-extension-string-saved")
-___DEF_GLO(296,"##os-path-gambcdir")
-___DEF_GLO(297,"##os-path-gambcdir-map-lookup")
-___DEF_GLO(298,"##os-path-homedir")
-___DEF_GLO(299,"##os-path-normalize-directory")
-___DEF_GLO(300,"##os-port-decode-chars!")
-___DEF_GLO(301,"##os-port-encode-chars!")
-___DEF_GLO(302,"##os-protocol-info")
-___DEF_GLO(303,"##os-rename-file")
-___DEF_GLO(304,"##os-service-info")
-___DEF_GLO(305,"##os-set-current-directory")
-___DEF_GLO(306,"##os-setenv")
-___DEF_GLO(307,"##os-shell-command")
-___DEF_GLO(308,"##os-system-type-saved")
-___DEF_GLO(309,"##os-system-type-string-saved")
-___DEF_GLO(310,"##os-user-info")
-___DEF_GLO(311,"##os-user-name")
-___DEF_GLO(312,"##process-statistics")
-___DEF_GLO(313,"##process-times")
-___DEF_GLO(314,"##processed-command-line")
-___DEF_GLO(315,"##processor-cache-size")
-___DEF_GLO(316,"##processor-count")
-___DEF_GLO(317,"##program-descr")
-___DEF_GLO(318,"##raise-cfun-conversion-exception-nary")
+___DEF_GLO(284,"##os-device-tty-type-set!")
+___DEF_GLO(285,"##os-environ")
+___DEF_GLO(286,"##os-err-code->string")
+___DEF_GLO(287,"##os-exe-extension-string-saved")
+___DEF_GLO(288,"##os-file-info")
+___DEF_GLO(289,"##os-file-times-set!")
+___DEF_GLO(290,"##os-getenv")
+___DEF_GLO(291,"##os-getpid")
+___DEF_GLO(292,"##os-getppid")
+___DEF_GLO(293,"##os-group-info")
+___DEF_GLO(294,"##os-host-info")
+___DEF_GLO(295,"##os-host-name")
+___DEF_GLO(296,"##os-load-object-file")
+___DEF_GLO(297,"##os-make-tls-context")
+___DEF_GLO(298,"##os-network-info")
+___DEF_GLO(299,"##os-obj-extension-string-saved")
+___DEF_GLO(300,"##os-path-gambcdir")
+___DEF_GLO(301,"##os-path-gambcdir-map-lookup")
+___DEF_GLO(302,"##os-path-homedir")
+___DEF_GLO(303,"##os-path-normalize-directory")
+___DEF_GLO(304,"##os-port-decode-chars!")
+___DEF_GLO(305,"##os-port-encode-chars!")
+___DEF_GLO(306,"##os-protocol-info")
+___DEF_GLO(307,"##os-rename-file")
+___DEF_GLO(308,"##os-service-info")
+___DEF_GLO(309,"##os-set-current-directory")
+___DEF_GLO(310,"##os-setenv")
+___DEF_GLO(311,"##os-shell-command")
+___DEF_GLO(312,"##os-system-type-saved")
+___DEF_GLO(313,"##os-system-type-string-saved")
+___DEF_GLO(314,"##os-user-info")
+___DEF_GLO(315,"##os-user-name")
+___DEF_GLO(316,"##process-statistics")
+___DEF_GLO(317,"##process-times")
+___DEF_GLO(318,"##processed-command-line")
+___DEF_GLO(319,"##processor-cache-size")
+___DEF_GLO(320,"##processor-count")
+___DEF_GLO(321,"##program-descr")
+___DEF_GLO(322,"##promise-result")
+___DEF_GLO(323,"##promise-result-set!")
+___DEF_GLO(324,"##promise-thunk")
+___DEF_GLO(325,"##promise-thunk-set!")
+___DEF_GLO(326,"##raise-cfun-conversion-exception-nary")
 
-___DEF_GLO(319,"##raise-heap-overflow-exception")
-___DEF_GLO(320,"##raise-keyword-expected-exception")
+___DEF_GLO(327,"##raise-heap-overflow-exception")
+___DEF_GLO(328,"##raise-keyword-expected-exception")
 
-___DEF_GLO(321,"##raise-keyword-expected-exception-nary")
+___DEF_GLO(329,"##raise-keyword-expected-exception-nary")
 
-___DEF_GLO(322,"##raise-multiple-c-return-exception")
+___DEF_GLO(330,"##raise-multiple-c-return-exception")
 
-___DEF_GLO(323,"##raise-nonprocedure-operator-exception")
+___DEF_GLO(331,"##raise-nonprocedure-operator-exception")
 
-___DEF_GLO(324,"##raise-number-of-arguments-limit-exception")
+___DEF_GLO(332,"##raise-number-of-arguments-limit-exception")
 
-___DEF_GLO(325,"##raise-os-exception")
-___DEF_GLO(326,"##raise-sfun-conversion-exception")
+___DEF_GLO(333,"##raise-os-exception")
+___DEF_GLO(334,"##raise-sfun-conversion-exception")
 
-___DEF_GLO(327,"##raise-stack-overflow-exception")
-___DEF_GLO(328,"##raise-type-exception")
-___DEF_GLO(329,"##raise-unknown-keyword-argument-exception")
+___DEF_GLO(335,"##raise-stack-overflow-exception")
+___DEF_GLO(336,"##raise-type-exception")
+___DEF_GLO(337,"##raise-unknown-keyword-argument-exception")
 
-___DEF_GLO(330,"##raise-unknown-keyword-argument-exception-nary")
+___DEF_GLO(338,"##raise-unknown-keyword-argument-exception-nary")
 
-___DEF_GLO(331,"##raise-wrong-number-of-arguments-exception")
+___DEF_GLO(339,"##raise-wrong-number-of-arguments-exception")
 
-___DEF_GLO(332,"##raise-wrong-number-of-arguments-exception-nary")
+___DEF_GLO(340,"##raise-wrong-number-of-arguments-exception-nary")
 
-___DEF_GLO(333,"##register-module-descr!")
-___DEF_GLO(334,"##register-module-descrs!")
-___DEF_GLO(335,"##register-module-descrs-and-load!")
+___DEF_GLO(341,"##register-module-descr!")
+___DEF_GLO(342,"##register-module-descrs!")
+___DEF_GLO(343,"##register-module-descrs-and-load!")
 
-___DEF_GLO(336,"##registered-modules")
-___DEF_GLO(337,"##remote-dbg-addr")
-___DEF_GLO(338,"##rest-param-check-heap")
-___DEF_GLO(339,"##rest-param-heap-overflow")
-___DEF_GLO(340,"##rest-param-resume-procedure")
-___DEF_GLO(341,"##return-fs")
-___DEF_GLO(342,"##rpc-server-addr")
-___DEF_GLO(343,"##set-debug-settings!")
-___DEF_GLO(344,"##set-gambcdir!")
-___DEF_GLO(345,"##set-live-percent!")
-___DEF_GLO(346,"##set-max-heap!")
-___DEF_GLO(347,"##set-min-heap!")
-___DEF_GLO(348,"##set-standard-level!")
-___DEF_GLO(349,"##still-copy")
-___DEF_GLO(350,"##still-obj-refcount-dec!")
-___DEF_GLO(351,"##still-obj-refcount-inc!")
-___DEF_GLO(352,"##structure")
-___DEF_GLO(353,"##structure-direct-instance-of?")
-___DEF_GLO(354,"##structure-instance-of?")
-___DEF_GLO(355,"##structure-ref")
-___DEF_GLO(356,"##structure-set!")
-___DEF_GLO(357,"##structure-type")
-___DEF_GLO(358,"##structure-type-set!")
-___DEF_GLO(359,"##subprocedure-id")
-___DEF_GLO(360,"##subprocedure-nb-closed")
-___DEF_GLO(361,"##subprocedure-nb-parameters")
-___DEF_GLO(362,"##subprocedure-parent")
-___DEF_GLO(363,"##subprocedure-parent-info")
-___DEF_GLO(364,"##subprocedure-parent-name")
-___DEF_GLO(365,"##subprocedure?")
-___DEF_GLO(366,"##symbol-table")
-___DEF_GLO(367,"##system-stamp")
-___DEF_GLO(368,"##system-stamp-saved")
-___DEF_GLO(369,"##system-version")
-___DEF_GLO(370,"##system-version-string")
-___DEF_GLO(371,"##type-fields")
-___DEF_GLO(372,"##type-flags")
-___DEF_GLO(373,"##type-id")
-___DEF_GLO(374,"##type-name")
-___DEF_GLO(375,"##type-super")
-___DEF_GLO(376,"##type-type")
-___DEF_GLO(377,"##type?")
-___DEF_GLO(378,"##unchecked-structure-ref")
-___DEF_GLO(379,"##unchecked-structure-set!")
-___DEF_GLO(380,"##vm-main-module-id")
-___DEF_GLO(381,"##with-no-result-expected")
-___DEF_GLO(382,"##with-no-result-expected-toplevel")
+___DEF_GLO(344,"##registered-modules")
+___DEF_GLO(345,"##remote-dbg-addr")
+___DEF_GLO(346,"##rest-param-check-heap")
+___DEF_GLO(347,"##rest-param-heap-overflow")
+___DEF_GLO(348,"##rest-param-resume-procedure")
+___DEF_GLO(349,"##return-fs")
+___DEF_GLO(350,"##rpc-server-addr")
+___DEF_GLO(351,"##set-debug-settings!")
+___DEF_GLO(352,"##set-gambcdir!")
+___DEF_GLO(353,"##set-live-percent!")
+___DEF_GLO(354,"##set-max-heap!")
+___DEF_GLO(355,"##set-min-heap!")
+___DEF_GLO(356,"##set-standard-level!")
+___DEF_GLO(357,"##still-copy")
+___DEF_GLO(358,"##still-obj-refcount-dec!")
+___DEF_GLO(359,"##still-obj-refcount-inc!")
+___DEF_GLO(360,"##structure")
+___DEF_GLO(361,"##structure-direct-instance-of?")
+___DEF_GLO(362,"##structure-instance-of?")
+___DEF_GLO(363,"##structure-ref")
+___DEF_GLO(364,"##structure-set!")
+___DEF_GLO(365,"##structure-type")
+___DEF_GLO(366,"##structure-type-set!")
+___DEF_GLO(367,"##subprocedure-id")
+___DEF_GLO(368,"##subprocedure-nb-closed")
+___DEF_GLO(369,"##subprocedure-nb-parameters")
+___DEF_GLO(370,"##subprocedure-parent")
+___DEF_GLO(371,"##subprocedure-parent-info")
+___DEF_GLO(372,"##subprocedure-parent-name")
+___DEF_GLO(373,"##subprocedure?")
+___DEF_GLO(374,"##symbol-table")
+___DEF_GLO(375,"##system-stamp")
+___DEF_GLO(376,"##system-stamp-saved")
+___DEF_GLO(377,"##system-version")
+___DEF_GLO(378,"##system-version-string")
+___DEF_GLO(379,"##type-fields")
+___DEF_GLO(380,"##type-flags")
+___DEF_GLO(381,"##type-id")
+___DEF_GLO(382,"##type-name")
+___DEF_GLO(383,"##type-super")
+___DEF_GLO(384,"##type-type")
+___DEF_GLO(385,"##type?")
+___DEF_GLO(386,"##unchecked-structure-ref")
+___DEF_GLO(387,"##unchecked-structure-set!")
+___DEF_GLO(388,"##values-length")
+___DEF_GLO(389,"##values-ref")
+___DEF_GLO(390,"##values-set!")
+___DEF_GLO(391,"##vm-main-module-id")
+___DEF_GLO(392,"##with-no-result-expected")
+___DEF_GLO(393,"##with-no-result-expected-toplevel")
 
-___DEF_GLO(383,"cfun-conversion-exception-arguments")
+___DEF_GLO(394,"cfun-conversion-exception-arguments")
 
-___DEF_GLO(384,"cfun-conversion-exception-code")
-___DEF_GLO(385,"cfun-conversion-exception-message")
+___DEF_GLO(395,"cfun-conversion-exception-code")
+___DEF_GLO(396,"cfun-conversion-exception-message")
 
-___DEF_GLO(386,"cfun-conversion-exception-procedure")
+___DEF_GLO(397,"cfun-conversion-exception-procedure")
 
-___DEF_GLO(387,"cfun-conversion-exception?")
-___DEF_GLO(388,"configure-command-string")
-___DEF_GLO(389,"err-code->string")
-___DEF_GLO(390,"foreign-address")
-___DEF_GLO(391,"foreign-release!")
-___DEF_GLO(392,"foreign-released?")
-___DEF_GLO(393,"foreign-tags")
-___DEF_GLO(394,"foreign?")
-___DEF_GLO(395,"heap-overflow-exception?")
-___DEF_GLO(396,"keyword-expected-exception-arguments")
+___DEF_GLO(398,"cfun-conversion-exception?")
+___DEF_GLO(399,"configure-command-string")
+___DEF_GLO(400,"err-code->string")
+___DEF_GLO(401,"foreign-address")
+___DEF_GLO(402,"foreign-release!")
+___DEF_GLO(403,"foreign-released?")
+___DEF_GLO(404,"foreign-tags")
+___DEF_GLO(405,"foreign?")
+___DEF_GLO(406,"heap-overflow-exception?")
+___DEF_GLO(407,"keyword-expected-exception-arguments")
 
-___DEF_GLO(397,"keyword-expected-exception-procedure")
+___DEF_GLO(408,"keyword-expected-exception-procedure")
 
-___DEF_GLO(398,"keyword-expected-exception?")
-___DEF_GLO(399,"multiple-c-return-exception?")
-___DEF_GLO(400,"nonprocedure-operator-exception-arguments")
+___DEF_GLO(409,"keyword-expected-exception?")
+___DEF_GLO(410,"multiple-c-return-exception?")
+___DEF_GLO(411,"nonprocedure-operator-exception-arguments")
 
-___DEF_GLO(401,"nonprocedure-operator-exception-code")
+___DEF_GLO(412,"nonprocedure-operator-exception-code")
 
-___DEF_GLO(402,"nonprocedure-operator-exception-operator")
+___DEF_GLO(413,"nonprocedure-operator-exception-operator")
 
-___DEF_GLO(403,"nonprocedure-operator-exception-rte")
+___DEF_GLO(414,"nonprocedure-operator-exception-rte")
 
-___DEF_GLO(404,"nonprocedure-operator-exception?")
-___DEF_GLO(405,"number-of-arguments-limit-exception-arguments")
+___DEF_GLO(415,"nonprocedure-operator-exception?")
+___DEF_GLO(416,"number-of-arguments-limit-exception-arguments")
 
-___DEF_GLO(406,"number-of-arguments-limit-exception-procedure")
+___DEF_GLO(417,"number-of-arguments-limit-exception-procedure")
 
-___DEF_GLO(407,"number-of-arguments-limit-exception?")
+___DEF_GLO(418,"number-of-arguments-limit-exception?")
 
-___DEF_GLO(408,"os-exception-arguments")
-___DEF_GLO(409,"os-exception-code")
-___DEF_GLO(410,"os-exception-message")
-___DEF_GLO(411,"os-exception-procedure")
-___DEF_GLO(412,"os-exception?")
-___DEF_GLO(413,"sfun-conversion-exception-arguments")
+___DEF_GLO(419,"os-exception-arguments")
+___DEF_GLO(420,"os-exception-code")
+___DEF_GLO(421,"os-exception-message")
+___DEF_GLO(422,"os-exception-procedure")
+___DEF_GLO(423,"os-exception?")
+___DEF_GLO(424,"sfun-conversion-exception-arguments")
 
-___DEF_GLO(414,"sfun-conversion-exception-code")
-___DEF_GLO(415,"sfun-conversion-exception-message")
+___DEF_GLO(425,"sfun-conversion-exception-code")
+___DEF_GLO(426,"sfun-conversion-exception-message")
 
-___DEF_GLO(416,"sfun-conversion-exception-procedure")
+___DEF_GLO(427,"sfun-conversion-exception-procedure")
 
-___DEF_GLO(417,"sfun-conversion-exception?")
-___DEF_GLO(418,"stack-overflow-exception?")
-___DEF_GLO(419,"system-stamp")
-___DEF_GLO(420,"system-type")
-___DEF_GLO(421,"system-type-string")
-___DEF_GLO(422,"system-version")
-___DEF_GLO(423,"system-version-string")
-___DEF_GLO(424,"type-exception-arg-num")
-___DEF_GLO(425,"type-exception-arguments")
-___DEF_GLO(426,"type-exception-procedure")
-___DEF_GLO(427,"type-exception-type-id")
-___DEF_GLO(428,"type-exception?")
-___DEF_GLO(429,"unknown-keyword-argument-exception-arguments")
+___DEF_GLO(428,"sfun-conversion-exception?")
+___DEF_GLO(429,"stack-overflow-exception?")
+___DEF_GLO(430,"system-stamp")
+___DEF_GLO(431,"system-type")
+___DEF_GLO(432,"system-type-string")
+___DEF_GLO(433,"system-version")
+___DEF_GLO(434,"system-version-string")
+___DEF_GLO(435,"type-exception-arg-num")
+___DEF_GLO(436,"type-exception-arguments")
+___DEF_GLO(437,"type-exception-procedure")
+___DEF_GLO(438,"type-exception-type-id")
+___DEF_GLO(439,"type-exception?")
+___DEF_GLO(440,"unknown-keyword-argument-exception-arguments")
 
-___DEF_GLO(430,"unknown-keyword-argument-exception-procedure")
+___DEF_GLO(441,"unknown-keyword-argument-exception-procedure")
 
-___DEF_GLO(431,"unknown-keyword-argument-exception?")
+___DEF_GLO(442,"unknown-keyword-argument-exception?")
 
-___DEF_GLO(432,"wrong-number-of-arguments-exception-arguments")
+___DEF_GLO(443,"wrong-number-of-arguments-exception-arguments")
 
-___DEF_GLO(433,"wrong-number-of-arguments-exception-procedure")
+___DEF_GLO(444,"wrong-number-of-arguments-exception-procedure")
 
-___DEF_GLO(434,"wrong-number-of-arguments-exception?")
+___DEF_GLO(445,"wrong-number-of-arguments-exception?")
 
 ___END_GLO
 
@@ -1982,608 +2015,630 @@ ___END_GLO
 #define ___PRM__23__23_err_2d_code_2d_EINTR ___PRM(132,___G__23__23_err_2d_code_2d_EINTR)
 #define ___GLO__23__23_err_2d_code_2d_ENOENT ___GLO(133,___G__23__23_err_2d_code_2d_ENOENT)
 #define ___PRM__23__23_err_2d_code_2d_ENOENT ___PRM(133,___G__23__23_err_2d_code_2d_ENOENT)
-#define ___GLO__23__23_execute_2d_and_2d_clear_2d_jobs_21_ ___GLO(134,___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_)
-#define ___PRM__23__23_execute_2d_and_2d_clear_2d_jobs_21_ ___PRM(134,___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_)
-#define ___GLO__23__23_execute_2d_final_2d_wills_21_ ___GLO(135,___G__23__23_execute_2d_final_2d_wills_21_)
-#define ___PRM__23__23_execute_2d_final_2d_wills_21_ ___PRM(135,___G__23__23_execute_2d_final_2d_wills_21_)
-#define ___GLO__23__23_execute_2d_jobs_21_ ___GLO(136,___G__23__23_execute_2d_jobs_21_)
-#define ___PRM__23__23_execute_2d_jobs_21_ ___PRM(136,___G__23__23_execute_2d_jobs_21_)
-#define ___GLO__23__23_exit ___GLO(137,___G__23__23_exit)
-#define ___PRM__23__23_exit ___PRM(137,___G__23__23_exit)
-#define ___GLO__23__23_exit_2d_abnormally ___GLO(138,___G__23__23_exit_2d_abnormally)
-#define ___PRM__23__23_exit_2d_abnormally ___PRM(138,___G__23__23_exit_2d_abnormally)
-#define ___GLO__23__23_exit_2d_cleanup ___GLO(139,___G__23__23_exit_2d_cleanup)
-#define ___PRM__23__23_exit_2d_cleanup ___PRM(139,___G__23__23_exit_2d_cleanup)
-#define ___GLO__23__23_exit_2d_jobs ___GLO(140,___G__23__23_exit_2d_jobs)
-#define ___PRM__23__23_exit_2d_jobs ___PRM(140,___G__23__23_exit_2d_jobs)
-#define ___GLO__23__23_exit_2d_with_2d_err_2d_code ___GLO(141,___G__23__23_exit_2d_with_2d_err_2d_code)
-#define ___PRM__23__23_exit_2d_with_2d_err_2d_code ___PRM(141,___G__23__23_exit_2d_with_2d_err_2d_code)
-#define ___GLO__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup ___GLO(142,___G__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup)
-#define ___PRM__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup ___PRM(142,___G__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup)
-#define ___GLO__23__23_exit_2d_with_2d_exception ___GLO(143,___G__23__23_exit_2d_with_2d_exception)
-#define ___PRM__23__23_exit_2d_with_2d_exception ___PRM(143,___G__23__23_exit_2d_with_2d_exception)
-#define ___GLO__23__23_explode_2d_continuation ___GLO(144,___G__23__23_explode_2d_continuation)
-#define ___PRM__23__23_explode_2d_continuation ___PRM(144,___G__23__23_explode_2d_continuation)
-#define ___GLO__23__23_explode_2d_frame ___GLO(145,___G__23__23_explode_2d_frame)
-#define ___PRM__23__23_explode_2d_frame ___PRM(145,___G__23__23_explode_2d_frame)
-#define ___GLO__23__23_extract_2d_procedure_2d_and_2d_arguments ___GLO(146,___G__23__23_extract_2d_procedure_2d_and_2d_arguments)
-#define ___PRM__23__23_extract_2d_procedure_2d_and_2d_arguments ___PRM(146,___G__23__23_extract_2d_procedure_2d_and_2d_arguments)
-#define ___GLO__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception ___GLO(147,___G__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception ___PRM(147,___G__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_foreign ___GLO(148,___G__23__23_fail_2d_check_2d_foreign)
-#define ___PRM__23__23_fail_2d_check_2d_foreign ___PRM(148,___G__23__23_fail_2d_check_2d_foreign)
-#define ___GLO__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception ___GLO(149,___G__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception ___PRM(149,___G__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception ___GLO(150,___G__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception ___PRM(150,___G__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception ___GLO(151,___G__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception ___PRM(151,___G__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception ___GLO(152,___G__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception ___PRM(152,___G__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception ___GLO(153,___G__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception ___PRM(153,___G__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_os_2d_exception ___GLO(154,___G__23__23_fail_2d_check_2d_os_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_os_2d_exception ___PRM(154,___G__23__23_fail_2d_check_2d_os_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception ___GLO(155,___G__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception ___PRM(155,___G__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception ___GLO(156,___G__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception ___PRM(156,___G__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_type_2d_exception ___GLO(157,___G__23__23_fail_2d_check_2d_type_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_type_2d_exception ___PRM(157,___G__23__23_fail_2d_check_2d_type_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception ___GLO(158,___G__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception ___PRM(158,___G__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception)
-#define ___GLO__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception ___GLO(159,___G__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception)
-#define ___PRM__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception ___PRM(159,___G__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception)
-#define ___GLO__23__23_final_2d_will_2d_registry ___GLO(160,___G__23__23_final_2d_will_2d_registry)
-#define ___PRM__23__23_final_2d_will_2d_registry ___PRM(160,___G__23__23_final_2d_will_2d_registry)
-#define ___GLO__23__23_find_2d_interned_2d_keyword ___GLO(161,___G__23__23_find_2d_interned_2d_keyword)
-#define ___PRM__23__23_find_2d_interned_2d_keyword ___PRM(161,___G__23__23_find_2d_interned_2d_keyword)
-#define ___GLO__23__23_find_2d_interned_2d_symbol ___GLO(162,___G__23__23_find_2d_interned_2d_symbol)
-#define ___PRM__23__23_find_2d_interned_2d_symbol ___PRM(162,___G__23__23_find_2d_interned_2d_symbol)
-#define ___GLO__23__23_find_2d_interned_2d_symkey ___GLO(163,___G__23__23_find_2d_interned_2d_symkey)
-#define ___PRM__23__23_find_2d_interned_2d_symkey ___PRM(163,___G__23__23_find_2d_interned_2d_symkey)
-#define ___GLO__23__23_first_2d_argument ___GLO(164,___G__23__23_first_2d_argument)
-#define ___PRM__23__23_first_2d_argument ___PRM(164,___G__23__23_first_2d_argument)
-#define ___GLO__23__23_fixnum_2d_width ___GLO(165,___G__23__23_fixnum_2d_width)
-#define ___PRM__23__23_fixnum_2d_width ___PRM(165,___G__23__23_fixnum_2d_width)
-#define ___GLO__23__23_fixnum_2d_width_2d_neg ___GLO(166,___G__23__23_fixnum_2d_width_2d_neg)
-#define ___PRM__23__23_fixnum_2d_width_2d_neg ___PRM(166,___G__23__23_fixnum_2d_width_2d_neg)
-#define ___GLO__23__23_force_2d_undetermined ___GLO(167,___G__23__23_force_2d_undetermined)
-#define ___PRM__23__23_force_2d_undetermined ___PRM(167,___G__23__23_force_2d_undetermined)
-#define ___GLO__23__23_foreign_2d_address ___GLO(168,___G__23__23_foreign_2d_address)
-#define ___PRM__23__23_foreign_2d_address ___PRM(168,___G__23__23_foreign_2d_address)
-#define ___GLO__23__23_foreign_2d_release_21_ ___GLO(169,___G__23__23_foreign_2d_release_21_)
-#define ___PRM__23__23_foreign_2d_release_21_ ___PRM(169,___G__23__23_foreign_2d_release_21_)
-#define ___GLO__23__23_foreign_2d_released_3f_ ___GLO(170,___G__23__23_foreign_2d_released_3f_)
-#define ___PRM__23__23_foreign_2d_released_3f_ ___PRM(170,___G__23__23_foreign_2d_released_3f_)
-#define ___GLO__23__23_format_2d_filepos ___GLO(171,___G__23__23_format_2d_filepos)
-#define ___PRM__23__23_format_2d_filepos ___PRM(171,___G__23__23_format_2d_filepos)
-#define ___GLO__23__23_frame_2d_fs ___GLO(172,___G__23__23_frame_2d_fs)
-#define ___PRM__23__23_frame_2d_fs ___PRM(172,___G__23__23_frame_2d_fs)
-#define ___GLO__23__23_frame_2d_link ___GLO(173,___G__23__23_frame_2d_link)
-#define ___PRM__23__23_frame_2d_link ___PRM(173,___G__23__23_frame_2d_link)
-#define ___GLO__23__23_frame_2d_ref ___GLO(174,___G__23__23_frame_2d_ref)
-#define ___PRM__23__23_frame_2d_ref ___PRM(174,___G__23__23_frame_2d_ref)
-#define ___GLO__23__23_frame_2d_ret ___GLO(175,___G__23__23_frame_2d_ret)
-#define ___PRM__23__23_frame_2d_ret ___PRM(175,___G__23__23_frame_2d_ret)
-#define ___GLO__23__23_frame_2d_set_21_ ___GLO(176,___G__23__23_frame_2d_set_21_)
-#define ___PRM__23__23_frame_2d_set_21_ ___PRM(176,___G__23__23_frame_2d_set_21_)
-#define ___GLO__23__23_frame_2d_slot_2d_live_3f_ ___GLO(177,___G__23__23_frame_2d_slot_2d_live_3f_)
-#define ___PRM__23__23_frame_2d_slot_2d_live_3f_ ___PRM(177,___G__23__23_frame_2d_slot_2d_live_3f_)
-#define ___GLO__23__23_gc ___GLO(178,___G__23__23_gc)
-#define ___PRM__23__23_gc ___PRM(178,___G__23__23_gc)
-#define ___GLO__23__23_gc_2d_final_2d_will_2d_registry_21_ ___GLO(179,___G__23__23_gc_2d_final_2d_will_2d_registry_21_)
-#define ___PRM__23__23_gc_2d_final_2d_will_2d_registry_21_ ___PRM(179,___G__23__23_gc_2d_final_2d_will_2d_registry_21_)
-#define ___GLO__23__23_gc_2d_finalize_21_ ___GLO(180,___G__23__23_gc_2d_finalize_21_)
-#define ___PRM__23__23_gc_2d_finalize_21_ ___PRM(180,___G__23__23_gc_2d_finalize_21_)
-#define ___GLO__23__23_gc_2d_interrupt_2d_jobs ___GLO(181,___G__23__23_gc_2d_interrupt_2d_jobs)
-#define ___PRM__23__23_gc_2d_interrupt_2d_jobs ___PRM(181,___G__23__23_gc_2d_interrupt_2d_jobs)
-#define ___GLO__23__23_gc_2d_without_2d_exceptions ___GLO(182,___G__23__23_gc_2d_without_2d_exceptions)
-#define ___PRM__23__23_gc_2d_without_2d_exceptions ___PRM(182,___G__23__23_gc_2d_without_2d_exceptions)
-#define ___GLO__23__23_get_2d_bytes_2d_allocated_21_ ___GLO(183,___G__23__23_get_2d_bytes_2d_allocated_21_)
-#define ___PRM__23__23_get_2d_bytes_2d_allocated_21_ ___PRM(183,___G__23__23_get_2d_bytes_2d_allocated_21_)
-#define ___GLO__23__23_get_2d_current_2d_time_21_ ___GLO(184,___G__23__23_get_2d_current_2d_time_21_)
-#define ___PRM__23__23_get_2d_current_2d_time_21_ ___PRM(184,___G__23__23_get_2d_current_2d_time_21_)
-#define ___GLO__23__23_get_2d_live_2d_percent ___GLO(185,___G__23__23_get_2d_live_2d_percent)
-#define ___PRM__23__23_get_2d_live_2d_percent ___PRM(185,___G__23__23_get_2d_live_2d_percent)
-#define ___GLO__23__23_get_2d_max_2d_heap ___GLO(186,___G__23__23_get_2d_max_2d_heap)
-#define ___PRM__23__23_get_2d_max_2d_heap ___PRM(186,___G__23__23_get_2d_max_2d_heap)
-#define ___GLO__23__23_get_2d_min_2d_heap ___GLO(187,___G__23__23_get_2d_min_2d_heap)
-#define ___PRM__23__23_get_2d_min_2d_heap ___PRM(187,___G__23__23_get_2d_min_2d_heap)
-#define ___GLO__23__23_get_2d_standard_2d_level ___GLO(188,___G__23__23_get_2d_standard_2d_level)
-#define ___PRM__23__23_get_2d_standard_2d_level ___PRM(188,___G__23__23_get_2d_standard_2d_level)
-#define ___GLO__23__23_global_2d_var_2d__3e_identifier ___GLO(189,___G__23__23_global_2d_var_2d__3e_identifier)
-#define ___PRM__23__23_global_2d_var_2d__3e_identifier ___PRM(189,___G__23__23_global_2d_var_2d__3e_identifier)
-#define ___GLO__23__23_global_2d_var_2d_primitive_2d_ref ___GLO(190,___G__23__23_global_2d_var_2d_primitive_2d_ref)
-#define ___PRM__23__23_global_2d_var_2d_primitive_2d_ref ___PRM(190,___G__23__23_global_2d_var_2d_primitive_2d_ref)
-#define ___GLO__23__23_global_2d_var_2d_primitive_2d_set_21_ ___GLO(191,___G__23__23_global_2d_var_2d_primitive_2d_set_21_)
-#define ___PRM__23__23_global_2d_var_2d_primitive_2d_set_21_ ___PRM(191,___G__23__23_global_2d_var_2d_primitive_2d_set_21_)
-#define ___GLO__23__23_global_2d_var_2d_ref ___GLO(192,___G__23__23_global_2d_var_2d_ref)
-#define ___PRM__23__23_global_2d_var_2d_ref ___PRM(192,___G__23__23_global_2d_var_2d_ref)
-#define ___GLO__23__23_global_2d_var_2d_set_21_ ___GLO(193,___G__23__23_global_2d_var_2d_set_21_)
-#define ___PRM__23__23_global_2d_var_2d_set_21_ ___PRM(193,___G__23__23_global_2d_var_2d_set_21_)
-#define ___GLO__23__23_global_2d_var_3f_ ___GLO(194,___G__23__23_global_2d_var_3f_)
-#define ___PRM__23__23_global_2d_var_3f_ ___PRM(194,___G__23__23_global_2d_var_3f_)
-#define ___GLO__23__23_heartbeat_2d_interval_2d_set_21_ ___GLO(195,___G__23__23_heartbeat_2d_interval_2d_set_21_)
-#define ___PRM__23__23_heartbeat_2d_interval_2d_set_21_ ___PRM(195,___G__23__23_heartbeat_2d_interval_2d_set_21_)
-#define ___GLO__23__23_interrupt_2d_handler ___GLO(196,___G__23__23_interrupt_2d_handler)
-#define ___PRM__23__23_interrupt_2d_handler ___PRM(196,___G__23__23_interrupt_2d_handler)
-#define ___GLO__23__23_interrupt_2d_vector ___GLO(197,___G__23__23_interrupt_2d_vector)
-#define ___PRM__23__23_interrupt_2d_vector ___PRM(197,___G__23__23_interrupt_2d_vector)
-#define ___GLO__23__23_interrupt_2d_vector_2d_set_21_ ___GLO(198,___G__23__23_interrupt_2d_vector_2d_set_21_)
-#define ___PRM__23__23_interrupt_2d_vector_2d_set_21_ ___PRM(198,___G__23__23_interrupt_2d_vector_2d_set_21_)
-#define ___GLO__23__23_kernel_2d_handlers ___GLO(199,___G__23__23_kernel_2d_handlers)
-#define ___PRM__23__23_kernel_2d_handlers ___PRM(199,___G__23__23_kernel_2d_handlers)
-#define ___GLO__23__23_keyword_2d_table ___GLO(200,___G__23__23_keyword_2d_table)
-#define ___PRM__23__23_keyword_2d_table ___PRM(200,___G__23__23_keyword_2d_table)
-#define ___GLO__23__23_load_2d_required_2d_module ___GLO(201,___G__23__23_load_2d_required_2d_module)
-#define ___PRM__23__23_load_2d_required_2d_module ___PRM(201,___G__23__23_load_2d_required_2d_module)
-#define ___GLO__23__23_load_2d_required_2d_module_2d_structs ___GLO(202,___G__23__23_load_2d_required_2d_module_2d_structs)
-#define ___PRM__23__23_load_2d_required_2d_module_2d_structs ___PRM(202,___G__23__23_load_2d_required_2d_module_2d_structs)
-#define ___GLO__23__23_load_2d_vm ___GLO(203,___G__23__23_load_2d_vm)
-#define ___PRM__23__23_load_2d_vm ___PRM(203,___G__23__23_load_2d_vm)
-#define ___GLO__23__23_lookup_2d_module ___GLO(204,___G__23__23_lookup_2d_module)
-#define ___PRM__23__23_lookup_2d_module ___PRM(204,___G__23__23_lookup_2d_module)
-#define ___GLO__23__23_lookup_2d_registered_2d_module ___GLO(205,___G__23__23_lookup_2d_registered_2d_module)
-#define ___PRM__23__23_lookup_2d_registered_2d_module ___PRM(205,___G__23__23_lookup_2d_registered_2d_module)
-#define ___GLO__23__23_machine_2d_code_2d_block_2d_exec ___GLO(206,___G__23__23_machine_2d_code_2d_block_2d_exec)
-#define ___PRM__23__23_machine_2d_code_2d_block_2d_exec ___PRM(206,___G__23__23_machine_2d_code_2d_block_2d_exec)
-#define ___GLO__23__23_machine_2d_code_2d_block_2d_ref ___GLO(207,___G__23__23_machine_2d_code_2d_block_2d_ref)
-#define ___PRM__23__23_machine_2d_code_2d_block_2d_ref ___PRM(207,___G__23__23_machine_2d_code_2d_block_2d_ref)
-#define ___GLO__23__23_machine_2d_code_2d_block_2d_set_21_ ___GLO(208,___G__23__23_machine_2d_code_2d_block_2d_set_21_)
-#define ___PRM__23__23_machine_2d_code_2d_block_2d_set_21_ ___PRM(208,___G__23__23_machine_2d_code_2d_block_2d_set_21_)
-#define ___GLO__23__23_main ___GLO(209,___G__23__23_main)
-#define ___PRM__23__23_main ___PRM(209,___G__23__23_main)
-#define ___GLO__23__23_main_2d_set_21_ ___GLO(210,___G__23__23_main_2d_set_21_)
-#define ___PRM__23__23_main_2d_set_21_ ___PRM(210,___G__23__23_main_2d_set_21_)
-#define ___GLO__23__23_make_2d_closure ___GLO(211,___G__23__23_make_2d_closure)
-#define ___PRM__23__23_make_2d_closure ___PRM(211,___G__23__23_make_2d_closure)
-#define ___GLO__23__23_make_2d_continuation ___GLO(212,___G__23__23_make_2d_continuation)
-#define ___PRM__23__23_make_2d_continuation ___PRM(212,___G__23__23_make_2d_continuation)
-#define ___GLO__23__23_make_2d_f32vector ___GLO(213,___G__23__23_make_2d_f32vector)
-#define ___PRM__23__23_make_2d_f32vector ___PRM(213,___G__23__23_make_2d_f32vector)
-#define ___GLO__23__23_make_2d_f64vector ___GLO(214,___G__23__23_make_2d_f64vector)
-#define ___PRM__23__23_make_2d_f64vector ___PRM(214,___G__23__23_make_2d_f64vector)
-#define ___GLO__23__23_make_2d_final_2d_will ___GLO(215,___G__23__23_make_2d_final_2d_will)
-#define ___PRM__23__23_make_2d_final_2d_will ___PRM(215,___G__23__23_make_2d_final_2d_will)
-#define ___GLO__23__23_make_2d_frame ___GLO(216,___G__23__23_make_2d_frame)
-#define ___PRM__23__23_make_2d_frame ___PRM(216,___G__23__23_make_2d_frame)
-#define ___GLO__23__23_make_2d_global_2d_var ___GLO(217,___G__23__23_make_2d_global_2d_var)
-#define ___PRM__23__23_make_2d_global_2d_var ___PRM(217,___G__23__23_make_2d_global_2d_var)
-#define ___GLO__23__23_make_2d_interned_2d_keyword ___GLO(218,___G__23__23_make_2d_interned_2d_keyword)
-#define ___PRM__23__23_make_2d_interned_2d_keyword ___PRM(218,___G__23__23_make_2d_interned_2d_keyword)
-#define ___GLO__23__23_make_2d_interned_2d_symbol ___GLO(219,___G__23__23_make_2d_interned_2d_symbol)
-#define ___PRM__23__23_make_2d_interned_2d_symbol ___PRM(219,___G__23__23_make_2d_interned_2d_symbol)
-#define ___GLO__23__23_make_2d_interned_2d_symkey ___GLO(220,___G__23__23_make_2d_interned_2d_symkey)
-#define ___PRM__23__23_make_2d_interned_2d_symkey ___PRM(220,___G__23__23_make_2d_interned_2d_symkey)
-#define ___GLO__23__23_make_2d_jobs ___GLO(221,___G__23__23_make_2d_jobs)
-#define ___PRM__23__23_make_2d_jobs ___PRM(221,___G__23__23_make_2d_jobs)
-#define ___GLO__23__23_make_2d_machine_2d_code_2d_block ___GLO(222,___G__23__23_make_2d_machine_2d_code_2d_block)
-#define ___PRM__23__23_make_2d_machine_2d_code_2d_block ___PRM(222,___G__23__23_make_2d_machine_2d_code_2d_block)
-#define ___GLO__23__23_make_2d_s16vector ___GLO(223,___G__23__23_make_2d_s16vector)
-#define ___PRM__23__23_make_2d_s16vector ___PRM(223,___G__23__23_make_2d_s16vector)
-#define ___GLO__23__23_make_2d_s32vector ___GLO(224,___G__23__23_make_2d_s32vector)
-#define ___PRM__23__23_make_2d_s32vector ___PRM(224,___G__23__23_make_2d_s32vector)
-#define ___GLO__23__23_make_2d_s64vector ___GLO(225,___G__23__23_make_2d_s64vector)
-#define ___PRM__23__23_make_2d_s64vector ___PRM(225,___G__23__23_make_2d_s64vector)
-#define ___GLO__23__23_make_2d_s8vector ___GLO(226,___G__23__23_make_2d_s8vector)
-#define ___PRM__23__23_make_2d_s8vector ___PRM(226,___G__23__23_make_2d_s8vector)
-#define ___GLO__23__23_make_2d_string ___GLO(227,___G__23__23_make_2d_string)
-#define ___PRM__23__23_make_2d_string ___PRM(227,___G__23__23_make_2d_string)
-#define ___GLO__23__23_make_2d_subprocedure ___GLO(228,___G__23__23_make_2d_subprocedure)
-#define ___PRM__23__23_make_2d_subprocedure ___PRM(228,___G__23__23_make_2d_subprocedure)
-#define ___GLO__23__23_make_2d_u16vector ___GLO(229,___G__23__23_make_2d_u16vector)
-#define ___PRM__23__23_make_2d_u16vector ___PRM(229,___G__23__23_make_2d_u16vector)
-#define ___GLO__23__23_make_2d_u32vector ___GLO(230,___G__23__23_make_2d_u32vector)
-#define ___PRM__23__23_make_2d_u32vector ___PRM(230,___G__23__23_make_2d_u32vector)
-#define ___GLO__23__23_make_2d_u64vector ___GLO(231,___G__23__23_make_2d_u64vector)
-#define ___PRM__23__23_make_2d_u64vector ___PRM(231,___G__23__23_make_2d_u64vector)
-#define ___GLO__23__23_make_2d_u8vector ___GLO(232,___G__23__23_make_2d_u8vector)
-#define ___PRM__23__23_make_2d_u8vector ___PRM(232,___G__23__23_make_2d_u8vector)
-#define ___GLO__23__23_make_2d_vector ___GLO(233,___G__23__23_make_2d_vector)
-#define ___PRM__23__23_make_2d_vector ___PRM(233,___G__23__23_make_2d_vector)
-#define ___GLO__23__23_max_2d_char ___GLO(234,___G__23__23_max_2d_char)
-#define ___PRM__23__23_max_2d_char ___PRM(234,___G__23__23_max_2d_char)
-#define ___GLO__23__23_max_2d_fixnum ___GLO(235,___G__23__23_max_2d_fixnum)
-#define ___PRM__23__23_max_2d_fixnum ___PRM(235,___G__23__23_max_2d_fixnum)
-#define ___GLO__23__23_min_2d_fixnum ___GLO(236,___G__23__23_min_2d_fixnum)
-#define ___PRM__23__23_min_2d_fixnum ___PRM(236,___G__23__23_min_2d_fixnum)
-#define ___GLO__23__23_module_2d_init ___GLO(237,___G__23__23_module_2d_init)
-#define ___PRM__23__23_module_2d_init ___PRM(237,___G__23__23_module_2d_init)
-#define ___GLO__23__23_object_2d__3e_global_2d_var ___GLO(238,___G__23__23_object_2d__3e_global_2d_var)
-#define ___PRM__23__23_object_2d__3e_global_2d_var ___PRM(238,___G__23__23_object_2d__3e_global_2d_var)
-#define ___GLO__23__23_object_2d__3e_global_2d_var_2d__3e_identifier ___GLO(239,___G__23__23_object_2d__3e_global_2d_var_2d__3e_identifier)
-#define ___PRM__23__23_object_2d__3e_global_2d_var_2d__3e_identifier ___PRM(239,___G__23__23_object_2d__3e_global_2d_var_2d__3e_identifier)
-#define ___GLO__23__23_os_2d_address_2d_infos ___GLO(240,___G__23__23_os_2d_address_2d_infos)
-#define ___PRM__23__23_os_2d_address_2d_infos ___PRM(240,___G__23__23_os_2d_address_2d_infos)
-#define ___GLO__23__23_os_2d_bat_2d_extension_2d_string_2d_saved ___GLO(241,___G__23__23_os_2d_bat_2d_extension_2d_string_2d_saved)
-#define ___PRM__23__23_os_2d_bat_2d_extension_2d_string_2d_saved ___PRM(241,___G__23__23_os_2d_bat_2d_extension_2d_string_2d_saved)
-#define ___GLO__23__23_os_2d_condvar_2d_select_21_ ___GLO(242,___G__23__23_os_2d_condvar_2d_select_21_)
-#define ___PRM__23__23_os_2d_condvar_2d_select_21_ ___PRM(242,___G__23__23_os_2d_condvar_2d_select_21_)
-#define ___GLO__23__23_os_2d_configure_2d_command_2d_string_2d_saved ___GLO(243,___G__23__23_os_2d_configure_2d_command_2d_string_2d_saved)
-#define ___PRM__23__23_os_2d_configure_2d_command_2d_string_2d_saved ___PRM(243,___G__23__23_os_2d_configure_2d_command_2d_string_2d_saved)
-#define ___GLO__23__23_os_2d_copy_2d_file ___GLO(244,___G__23__23_os_2d_copy_2d_file)
-#define ___PRM__23__23_os_2d_copy_2d_file ___PRM(244,___G__23__23_os_2d_copy_2d_file)
-#define ___GLO__23__23_os_2d_create_2d_directory ___GLO(245,___G__23__23_os_2d_create_2d_directory)
-#define ___PRM__23__23_os_2d_create_2d_directory ___PRM(245,___G__23__23_os_2d_create_2d_directory)
-#define ___GLO__23__23_os_2d_create_2d_fifo ___GLO(246,___G__23__23_os_2d_create_2d_fifo)
-#define ___PRM__23__23_os_2d_create_2d_fifo ___PRM(246,___G__23__23_os_2d_create_2d_fifo)
-#define ___GLO__23__23_os_2d_create_2d_link ___GLO(247,___G__23__23_os_2d_create_2d_link)
-#define ___PRM__23__23_os_2d_create_2d_link ___PRM(247,___G__23__23_os_2d_create_2d_link)
-#define ___GLO__23__23_os_2d_create_2d_symbolic_2d_link ___GLO(248,___G__23__23_os_2d_create_2d_symbolic_2d_link)
-#define ___PRM__23__23_os_2d_create_2d_symbolic_2d_link ___PRM(248,___G__23__23_os_2d_create_2d_symbolic_2d_link)
-#define ___GLO__23__23_os_2d_delete_2d_directory ___GLO(249,___G__23__23_os_2d_delete_2d_directory)
-#define ___PRM__23__23_os_2d_delete_2d_directory ___PRM(249,___G__23__23_os_2d_delete_2d_directory)
-#define ___GLO__23__23_os_2d_delete_2d_file ___GLO(250,___G__23__23_os_2d_delete_2d_file)
-#define ___PRM__23__23_os_2d_delete_2d_file ___PRM(250,___G__23__23_os_2d_delete_2d_file)
-#define ___GLO__23__23_os_2d_device_2d_close ___GLO(251,___G__23__23_os_2d_device_2d_close)
-#define ___PRM__23__23_os_2d_device_2d_close ___PRM(251,___G__23__23_os_2d_device_2d_close)
-#define ___GLO__23__23_os_2d_device_2d_directory_2d_open_2d_path ___GLO(252,___G__23__23_os_2d_device_2d_directory_2d_open_2d_path)
-#define ___PRM__23__23_os_2d_device_2d_directory_2d_open_2d_path ___PRM(252,___G__23__23_os_2d_device_2d_directory_2d_open_2d_path)
-#define ___GLO__23__23_os_2d_device_2d_directory_2d_read ___GLO(253,___G__23__23_os_2d_device_2d_directory_2d_read)
-#define ___PRM__23__23_os_2d_device_2d_directory_2d_read ___PRM(253,___G__23__23_os_2d_device_2d_directory_2d_read)
-#define ___GLO__23__23_os_2d_device_2d_event_2d_queue_2d_open ___GLO(254,___G__23__23_os_2d_device_2d_event_2d_queue_2d_open)
-#define ___PRM__23__23_os_2d_device_2d_event_2d_queue_2d_open ___PRM(254,___G__23__23_os_2d_device_2d_event_2d_queue_2d_open)
-#define ___GLO__23__23_os_2d_device_2d_event_2d_queue_2d_read ___GLO(255,___G__23__23_os_2d_device_2d_event_2d_queue_2d_read)
-#define ___PRM__23__23_os_2d_device_2d_event_2d_queue_2d_read ___PRM(255,___G__23__23_os_2d_device_2d_event_2d_queue_2d_read)
-#define ___GLO__23__23_os_2d_device_2d_force_2d_output ___GLO(256,___G__23__23_os_2d_device_2d_force_2d_output)
-#define ___PRM__23__23_os_2d_device_2d_force_2d_output ___PRM(256,___G__23__23_os_2d_device_2d_force_2d_output)
-#define ___GLO__23__23_os_2d_device_2d_kind ___GLO(257,___G__23__23_os_2d_device_2d_kind)
-#define ___PRM__23__23_os_2d_device_2d_kind ___PRM(257,___G__23__23_os_2d_device_2d_kind)
-#define ___GLO__23__23_os_2d_device_2d_process_2d_pid ___GLO(258,___G__23__23_os_2d_device_2d_process_2d_pid)
-#define ___PRM__23__23_os_2d_device_2d_process_2d_pid ___PRM(258,___G__23__23_os_2d_device_2d_process_2d_pid)
-#define ___GLO__23__23_os_2d_device_2d_process_2d_status ___GLO(259,___G__23__23_os_2d_device_2d_process_2d_status)
-#define ___PRM__23__23_os_2d_device_2d_process_2d_status ___PRM(259,___G__23__23_os_2d_device_2d_process_2d_status)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_default_2d_options ___GLO(260,___G__23__23_os_2d_device_2d_stream_2d_default_2d_options)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_default_2d_options ___PRM(260,___G__23__23_os_2d_device_2d_stream_2d_default_2d_options)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_open_2d_path ___GLO(261,___G__23__23_os_2d_device_2d_stream_2d_open_2d_path)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_open_2d_path ___PRM(261,___G__23__23_os_2d_device_2d_stream_2d_open_2d_path)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_open_2d_predefined ___GLO(262,___G__23__23_os_2d_device_2d_stream_2d_open_2d_predefined)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_open_2d_predefined ___PRM(262,___G__23__23_os_2d_device_2d_stream_2d_open_2d_predefined)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_open_2d_process ___GLO(263,___G__23__23_os_2d_device_2d_stream_2d_open_2d_process)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_open_2d_process ___PRM(263,___G__23__23_os_2d_device_2d_stream_2d_open_2d_process)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_ ___GLO(264,___G__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_ ___PRM(264,___G__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_read ___GLO(265,___G__23__23_os_2d_device_2d_stream_2d_read)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_read ___PRM(265,___G__23__23_os_2d_device_2d_stream_2d_read)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_seek ___GLO(266,___G__23__23_os_2d_device_2d_stream_2d_seek)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_seek ___PRM(266,___G__23__23_os_2d_device_2d_stream_2d_seek)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_width ___GLO(267,___G__23__23_os_2d_device_2d_stream_2d_width)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_width ___PRM(267,___G__23__23_os_2d_device_2d_stream_2d_width)
-#define ___GLO__23__23_os_2d_device_2d_stream_2d_write ___GLO(268,___G__23__23_os_2d_device_2d_stream_2d_write)
-#define ___PRM__23__23_os_2d_device_2d_stream_2d_write ___PRM(268,___G__23__23_os_2d_device_2d_stream_2d_write)
-#define ___GLO__23__23_os_2d_device_2d_tcp_2d_client_2d_open ___GLO(269,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_open)
-#define ___PRM__23__23_os_2d_device_2d_tcp_2d_client_2d_open ___PRM(269,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_open)
-#define ___GLO__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info ___GLO(270,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info)
-#define ___PRM__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info ___PRM(270,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info)
-#define ___GLO__23__23_os_2d_device_2d_tcp_2d_server_2d_open ___GLO(271,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_open)
-#define ___PRM__23__23_os_2d_device_2d_tcp_2d_server_2d_open ___PRM(271,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_open)
-#define ___GLO__23__23_os_2d_device_2d_tcp_2d_server_2d_read ___GLO(272,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_read)
-#define ___PRM__23__23_os_2d_device_2d_tcp_2d_server_2d_read ___PRM(272,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_read)
-#define ___GLO__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info ___GLO(273,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info)
-#define ___PRM__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info ___PRM(273,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info)
-#define ___GLO__23__23_os_2d_device_2d_tty_2d_history ___GLO(274,___G__23__23_os_2d_device_2d_tty_2d_history)
-#define ___PRM__23__23_os_2d_device_2d_tty_2d_history ___PRM(274,___G__23__23_os_2d_device_2d_tty_2d_history)
-#define ___GLO__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_ ___GLO(275,___G__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_)
-#define ___PRM__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_ ___PRM(275,___G__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_)
-#define ___GLO__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_ ___GLO(276,___G__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_)
-#define ___PRM__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_ ___PRM(276,___G__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_)
-#define ___GLO__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_ ___GLO(277,___G__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_)
-#define ___PRM__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_ ___PRM(277,___G__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_)
-#define ___GLO__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_ ___GLO(278,___G__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_)
-#define ___PRM__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_ ___PRM(278,___G__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_)
-#define ___GLO__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_ ___GLO(279,___G__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_)
-#define ___PRM__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_ ___PRM(279,___G__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_)
-#define ___GLO__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_ ___GLO(280,___G__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_)
-#define ___PRM__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_ ___PRM(280,___G__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_)
-#define ___GLO__23__23_os_2d_environ ___GLO(281,___G__23__23_os_2d_environ)
-#define ___PRM__23__23_os_2d_environ ___PRM(281,___G__23__23_os_2d_environ)
-#define ___GLO__23__23_os_2d_err_2d_code_2d__3e_string ___GLO(282,___G__23__23_os_2d_err_2d_code_2d__3e_string)
-#define ___PRM__23__23_os_2d_err_2d_code_2d__3e_string ___PRM(282,___G__23__23_os_2d_err_2d_code_2d__3e_string)
-#define ___GLO__23__23_os_2d_exe_2d_extension_2d_string_2d_saved ___GLO(283,___G__23__23_os_2d_exe_2d_extension_2d_string_2d_saved)
-#define ___PRM__23__23_os_2d_exe_2d_extension_2d_string_2d_saved ___PRM(283,___G__23__23_os_2d_exe_2d_extension_2d_string_2d_saved)
-#define ___GLO__23__23_os_2d_file_2d_info ___GLO(284,___G__23__23_os_2d_file_2d_info)
-#define ___PRM__23__23_os_2d_file_2d_info ___PRM(284,___G__23__23_os_2d_file_2d_info)
-#define ___GLO__23__23_os_2d_file_2d_times_2d_set_21_ ___GLO(285,___G__23__23_os_2d_file_2d_times_2d_set_21_)
-#define ___PRM__23__23_os_2d_file_2d_times_2d_set_21_ ___PRM(285,___G__23__23_os_2d_file_2d_times_2d_set_21_)
-#define ___GLO__23__23_os_2d_getenv ___GLO(286,___G__23__23_os_2d_getenv)
-#define ___PRM__23__23_os_2d_getenv ___PRM(286,___G__23__23_os_2d_getenv)
-#define ___GLO__23__23_os_2d_getpid ___GLO(287,___G__23__23_os_2d_getpid)
-#define ___PRM__23__23_os_2d_getpid ___PRM(287,___G__23__23_os_2d_getpid)
-#define ___GLO__23__23_os_2d_getppid ___GLO(288,___G__23__23_os_2d_getppid)
-#define ___PRM__23__23_os_2d_getppid ___PRM(288,___G__23__23_os_2d_getppid)
-#define ___GLO__23__23_os_2d_group_2d_info ___GLO(289,___G__23__23_os_2d_group_2d_info)
-#define ___PRM__23__23_os_2d_group_2d_info ___PRM(289,___G__23__23_os_2d_group_2d_info)
-#define ___GLO__23__23_os_2d_host_2d_info ___GLO(290,___G__23__23_os_2d_host_2d_info)
-#define ___PRM__23__23_os_2d_host_2d_info ___PRM(290,___G__23__23_os_2d_host_2d_info)
-#define ___GLO__23__23_os_2d_host_2d_name ___GLO(291,___G__23__23_os_2d_host_2d_name)
-#define ___PRM__23__23_os_2d_host_2d_name ___PRM(291,___G__23__23_os_2d_host_2d_name)
-#define ___GLO__23__23_os_2d_load_2d_object_2d_file ___GLO(292,___G__23__23_os_2d_load_2d_object_2d_file)
-#define ___PRM__23__23_os_2d_load_2d_object_2d_file ___PRM(292,___G__23__23_os_2d_load_2d_object_2d_file)
-#define ___GLO__23__23_os_2d_make_2d_tls_2d_context ___GLO(293,___G__23__23_os_2d_make_2d_tls_2d_context)
-#define ___PRM__23__23_os_2d_make_2d_tls_2d_context ___PRM(293,___G__23__23_os_2d_make_2d_tls_2d_context)
-#define ___GLO__23__23_os_2d_network_2d_info ___GLO(294,___G__23__23_os_2d_network_2d_info)
-#define ___PRM__23__23_os_2d_network_2d_info ___PRM(294,___G__23__23_os_2d_network_2d_info)
-#define ___GLO__23__23_os_2d_obj_2d_extension_2d_string_2d_saved ___GLO(295,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
-#define ___PRM__23__23_os_2d_obj_2d_extension_2d_string_2d_saved ___PRM(295,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
-#define ___GLO__23__23_os_2d_path_2d_gambcdir ___GLO(296,___G__23__23_os_2d_path_2d_gambcdir)
-#define ___PRM__23__23_os_2d_path_2d_gambcdir ___PRM(296,___G__23__23_os_2d_path_2d_gambcdir)
-#define ___GLO__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup ___GLO(297,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
-#define ___PRM__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup ___PRM(297,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
-#define ___GLO__23__23_os_2d_path_2d_homedir ___GLO(298,___G__23__23_os_2d_path_2d_homedir)
-#define ___PRM__23__23_os_2d_path_2d_homedir ___PRM(298,___G__23__23_os_2d_path_2d_homedir)
-#define ___GLO__23__23_os_2d_path_2d_normalize_2d_directory ___GLO(299,___G__23__23_os_2d_path_2d_normalize_2d_directory)
-#define ___PRM__23__23_os_2d_path_2d_normalize_2d_directory ___PRM(299,___G__23__23_os_2d_path_2d_normalize_2d_directory)
-#define ___GLO__23__23_os_2d_port_2d_decode_2d_chars_21_ ___GLO(300,___G__23__23_os_2d_port_2d_decode_2d_chars_21_)
-#define ___PRM__23__23_os_2d_port_2d_decode_2d_chars_21_ ___PRM(300,___G__23__23_os_2d_port_2d_decode_2d_chars_21_)
-#define ___GLO__23__23_os_2d_port_2d_encode_2d_chars_21_ ___GLO(301,___G__23__23_os_2d_port_2d_encode_2d_chars_21_)
-#define ___PRM__23__23_os_2d_port_2d_encode_2d_chars_21_ ___PRM(301,___G__23__23_os_2d_port_2d_encode_2d_chars_21_)
-#define ___GLO__23__23_os_2d_protocol_2d_info ___GLO(302,___G__23__23_os_2d_protocol_2d_info)
-#define ___PRM__23__23_os_2d_protocol_2d_info ___PRM(302,___G__23__23_os_2d_protocol_2d_info)
-#define ___GLO__23__23_os_2d_rename_2d_file ___GLO(303,___G__23__23_os_2d_rename_2d_file)
-#define ___PRM__23__23_os_2d_rename_2d_file ___PRM(303,___G__23__23_os_2d_rename_2d_file)
-#define ___GLO__23__23_os_2d_service_2d_info ___GLO(304,___G__23__23_os_2d_service_2d_info)
-#define ___PRM__23__23_os_2d_service_2d_info ___PRM(304,___G__23__23_os_2d_service_2d_info)
-#define ___GLO__23__23_os_2d_set_2d_current_2d_directory ___GLO(305,___G__23__23_os_2d_set_2d_current_2d_directory)
-#define ___PRM__23__23_os_2d_set_2d_current_2d_directory ___PRM(305,___G__23__23_os_2d_set_2d_current_2d_directory)
-#define ___GLO__23__23_os_2d_setenv ___GLO(306,___G__23__23_os_2d_setenv)
-#define ___PRM__23__23_os_2d_setenv ___PRM(306,___G__23__23_os_2d_setenv)
-#define ___GLO__23__23_os_2d_shell_2d_command ___GLO(307,___G__23__23_os_2d_shell_2d_command)
-#define ___PRM__23__23_os_2d_shell_2d_command ___PRM(307,___G__23__23_os_2d_shell_2d_command)
-#define ___GLO__23__23_os_2d_system_2d_type_2d_saved ___GLO(308,___G__23__23_os_2d_system_2d_type_2d_saved)
-#define ___PRM__23__23_os_2d_system_2d_type_2d_saved ___PRM(308,___G__23__23_os_2d_system_2d_type_2d_saved)
-#define ___GLO__23__23_os_2d_system_2d_type_2d_string_2d_saved ___GLO(309,___G__23__23_os_2d_system_2d_type_2d_string_2d_saved)
-#define ___PRM__23__23_os_2d_system_2d_type_2d_string_2d_saved ___PRM(309,___G__23__23_os_2d_system_2d_type_2d_string_2d_saved)
-#define ___GLO__23__23_os_2d_user_2d_info ___GLO(310,___G__23__23_os_2d_user_2d_info)
-#define ___PRM__23__23_os_2d_user_2d_info ___PRM(310,___G__23__23_os_2d_user_2d_info)
-#define ___GLO__23__23_os_2d_user_2d_name ___GLO(311,___G__23__23_os_2d_user_2d_name)
-#define ___PRM__23__23_os_2d_user_2d_name ___PRM(311,___G__23__23_os_2d_user_2d_name)
-#define ___GLO__23__23_process_2d_statistics ___GLO(312,___G__23__23_process_2d_statistics)
-#define ___PRM__23__23_process_2d_statistics ___PRM(312,___G__23__23_process_2d_statistics)
-#define ___GLO__23__23_process_2d_times ___GLO(313,___G__23__23_process_2d_times)
-#define ___PRM__23__23_process_2d_times ___PRM(313,___G__23__23_process_2d_times)
-#define ___GLO__23__23_processed_2d_command_2d_line ___GLO(314,___G__23__23_processed_2d_command_2d_line)
-#define ___PRM__23__23_processed_2d_command_2d_line ___PRM(314,___G__23__23_processed_2d_command_2d_line)
-#define ___GLO__23__23_processor_2d_cache_2d_size ___GLO(315,___G__23__23_processor_2d_cache_2d_size)
-#define ___PRM__23__23_processor_2d_cache_2d_size ___PRM(315,___G__23__23_processor_2d_cache_2d_size)
-#define ___GLO__23__23_processor_2d_count ___GLO(316,___G__23__23_processor_2d_count)
-#define ___PRM__23__23_processor_2d_count ___PRM(316,___G__23__23_processor_2d_count)
-#define ___GLO__23__23_program_2d_descr ___GLO(317,___G__23__23_program_2d_descr)
-#define ___PRM__23__23_program_2d_descr ___PRM(317,___G__23__23_program_2d_descr)
-#define ___GLO__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary ___GLO(318,___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary)
-#define ___PRM__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary ___PRM(318,___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary)
-#define ___GLO__23__23_raise_2d_heap_2d_overflow_2d_exception ___GLO(319,___G__23__23_raise_2d_heap_2d_overflow_2d_exception)
-#define ___PRM__23__23_raise_2d_heap_2d_overflow_2d_exception ___PRM(319,___G__23__23_raise_2d_heap_2d_overflow_2d_exception)
-#define ___GLO__23__23_raise_2d_keyword_2d_expected_2d_exception ___GLO(320,___G__23__23_raise_2d_keyword_2d_expected_2d_exception)
-#define ___PRM__23__23_raise_2d_keyword_2d_expected_2d_exception ___PRM(320,___G__23__23_raise_2d_keyword_2d_expected_2d_exception)
-#define ___GLO__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary ___GLO(321,___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary)
-#define ___PRM__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary ___PRM(321,___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary)
-#define ___GLO__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception ___GLO(322,___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception)
-#define ___PRM__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception ___PRM(322,___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception)
-#define ___GLO__23__23_raise_2d_nonprocedure_2d_operator_2d_exception ___GLO(323,___G__23__23_raise_2d_nonprocedure_2d_operator_2d_exception)
-#define ___PRM__23__23_raise_2d_nonprocedure_2d_operator_2d_exception ___PRM(323,___G__23__23_raise_2d_nonprocedure_2d_operator_2d_exception)
-#define ___GLO__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception ___GLO(324,___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception)
-#define ___PRM__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception ___PRM(324,___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception)
-#define ___GLO__23__23_raise_2d_os_2d_exception ___GLO(325,___G__23__23_raise_2d_os_2d_exception)
-#define ___PRM__23__23_raise_2d_os_2d_exception ___PRM(325,___G__23__23_raise_2d_os_2d_exception)
-#define ___GLO__23__23_raise_2d_sfun_2d_conversion_2d_exception ___GLO(326,___G__23__23_raise_2d_sfun_2d_conversion_2d_exception)
-#define ___PRM__23__23_raise_2d_sfun_2d_conversion_2d_exception ___PRM(326,___G__23__23_raise_2d_sfun_2d_conversion_2d_exception)
-#define ___GLO__23__23_raise_2d_stack_2d_overflow_2d_exception ___GLO(327,___G__23__23_raise_2d_stack_2d_overflow_2d_exception)
-#define ___PRM__23__23_raise_2d_stack_2d_overflow_2d_exception ___PRM(327,___G__23__23_raise_2d_stack_2d_overflow_2d_exception)
-#define ___GLO__23__23_raise_2d_type_2d_exception ___GLO(328,___G__23__23_raise_2d_type_2d_exception)
-#define ___PRM__23__23_raise_2d_type_2d_exception ___PRM(328,___G__23__23_raise_2d_type_2d_exception)
-#define ___GLO__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception ___GLO(329,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception)
-#define ___PRM__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception ___PRM(329,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception)
-#define ___GLO__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary ___GLO(330,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary)
-#define ___PRM__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary ___PRM(330,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary)
-#define ___GLO__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception ___GLO(331,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception)
-#define ___PRM__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception ___PRM(331,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception)
-#define ___GLO__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary ___GLO(332,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary)
-#define ___PRM__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary ___PRM(332,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary)
-#define ___GLO__23__23_register_2d_module_2d_descr_21_ ___GLO(333,___G__23__23_register_2d_module_2d_descr_21_)
-#define ___PRM__23__23_register_2d_module_2d_descr_21_ ___PRM(333,___G__23__23_register_2d_module_2d_descr_21_)
-#define ___GLO__23__23_register_2d_module_2d_descrs_21_ ___GLO(334,___G__23__23_register_2d_module_2d_descrs_21_)
-#define ___PRM__23__23_register_2d_module_2d_descrs_21_ ___PRM(334,___G__23__23_register_2d_module_2d_descrs_21_)
-#define ___GLO__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_ ___GLO(335,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
-#define ___PRM__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_ ___PRM(335,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
-#define ___GLO__23__23_registered_2d_modules ___GLO(336,___G__23__23_registered_2d_modules)
-#define ___PRM__23__23_registered_2d_modules ___PRM(336,___G__23__23_registered_2d_modules)
-#define ___GLO__23__23_remote_2d_dbg_2d_addr ___GLO(337,___G__23__23_remote_2d_dbg_2d_addr)
-#define ___PRM__23__23_remote_2d_dbg_2d_addr ___PRM(337,___G__23__23_remote_2d_dbg_2d_addr)
-#define ___GLO__23__23_rest_2d_param_2d_check_2d_heap ___GLO(338,___G__23__23_rest_2d_param_2d_check_2d_heap)
-#define ___PRM__23__23_rest_2d_param_2d_check_2d_heap ___PRM(338,___G__23__23_rest_2d_param_2d_check_2d_heap)
-#define ___GLO__23__23_rest_2d_param_2d_heap_2d_overflow ___GLO(339,___G__23__23_rest_2d_param_2d_heap_2d_overflow)
-#define ___PRM__23__23_rest_2d_param_2d_heap_2d_overflow ___PRM(339,___G__23__23_rest_2d_param_2d_heap_2d_overflow)
-#define ___GLO__23__23_rest_2d_param_2d_resume_2d_procedure ___GLO(340,___G__23__23_rest_2d_param_2d_resume_2d_procedure)
-#define ___PRM__23__23_rest_2d_param_2d_resume_2d_procedure ___PRM(340,___G__23__23_rest_2d_param_2d_resume_2d_procedure)
-#define ___GLO__23__23_return_2d_fs ___GLO(341,___G__23__23_return_2d_fs)
-#define ___PRM__23__23_return_2d_fs ___PRM(341,___G__23__23_return_2d_fs)
-#define ___GLO__23__23_rpc_2d_server_2d_addr ___GLO(342,___G__23__23_rpc_2d_server_2d_addr)
-#define ___PRM__23__23_rpc_2d_server_2d_addr ___PRM(342,___G__23__23_rpc_2d_server_2d_addr)
-#define ___GLO__23__23_set_2d_debug_2d_settings_21_ ___GLO(343,___G__23__23_set_2d_debug_2d_settings_21_)
-#define ___PRM__23__23_set_2d_debug_2d_settings_21_ ___PRM(343,___G__23__23_set_2d_debug_2d_settings_21_)
-#define ___GLO__23__23_set_2d_gambcdir_21_ ___GLO(344,___G__23__23_set_2d_gambcdir_21_)
-#define ___PRM__23__23_set_2d_gambcdir_21_ ___PRM(344,___G__23__23_set_2d_gambcdir_21_)
-#define ___GLO__23__23_set_2d_live_2d_percent_21_ ___GLO(345,___G__23__23_set_2d_live_2d_percent_21_)
-#define ___PRM__23__23_set_2d_live_2d_percent_21_ ___PRM(345,___G__23__23_set_2d_live_2d_percent_21_)
-#define ___GLO__23__23_set_2d_max_2d_heap_21_ ___GLO(346,___G__23__23_set_2d_max_2d_heap_21_)
-#define ___PRM__23__23_set_2d_max_2d_heap_21_ ___PRM(346,___G__23__23_set_2d_max_2d_heap_21_)
-#define ___GLO__23__23_set_2d_min_2d_heap_21_ ___GLO(347,___G__23__23_set_2d_min_2d_heap_21_)
-#define ___PRM__23__23_set_2d_min_2d_heap_21_ ___PRM(347,___G__23__23_set_2d_min_2d_heap_21_)
-#define ___GLO__23__23_set_2d_standard_2d_level_21_ ___GLO(348,___G__23__23_set_2d_standard_2d_level_21_)
-#define ___PRM__23__23_set_2d_standard_2d_level_21_ ___PRM(348,___G__23__23_set_2d_standard_2d_level_21_)
-#define ___GLO__23__23_still_2d_copy ___GLO(349,___G__23__23_still_2d_copy)
-#define ___PRM__23__23_still_2d_copy ___PRM(349,___G__23__23_still_2d_copy)
-#define ___GLO__23__23_still_2d_obj_2d_refcount_2d_dec_21_ ___GLO(350,___G__23__23_still_2d_obj_2d_refcount_2d_dec_21_)
-#define ___PRM__23__23_still_2d_obj_2d_refcount_2d_dec_21_ ___PRM(350,___G__23__23_still_2d_obj_2d_refcount_2d_dec_21_)
-#define ___GLO__23__23_still_2d_obj_2d_refcount_2d_inc_21_ ___GLO(351,___G__23__23_still_2d_obj_2d_refcount_2d_inc_21_)
-#define ___PRM__23__23_still_2d_obj_2d_refcount_2d_inc_21_ ___PRM(351,___G__23__23_still_2d_obj_2d_refcount_2d_inc_21_)
-#define ___GLO__23__23_structure ___GLO(352,___G__23__23_structure)
-#define ___PRM__23__23_structure ___PRM(352,___G__23__23_structure)
-#define ___GLO__23__23_structure_2d_direct_2d_instance_2d_of_3f_ ___GLO(353,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_)
-#define ___PRM__23__23_structure_2d_direct_2d_instance_2d_of_3f_ ___PRM(353,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_)
-#define ___GLO__23__23_structure_2d_instance_2d_of_3f_ ___GLO(354,___G__23__23_structure_2d_instance_2d_of_3f_)
-#define ___PRM__23__23_structure_2d_instance_2d_of_3f_ ___PRM(354,___G__23__23_structure_2d_instance_2d_of_3f_)
-#define ___GLO__23__23_structure_2d_ref ___GLO(355,___G__23__23_structure_2d_ref)
-#define ___PRM__23__23_structure_2d_ref ___PRM(355,___G__23__23_structure_2d_ref)
-#define ___GLO__23__23_structure_2d_set_21_ ___GLO(356,___G__23__23_structure_2d_set_21_)
-#define ___PRM__23__23_structure_2d_set_21_ ___PRM(356,___G__23__23_structure_2d_set_21_)
-#define ___GLO__23__23_structure_2d_type ___GLO(357,___G__23__23_structure_2d_type)
-#define ___PRM__23__23_structure_2d_type ___PRM(357,___G__23__23_structure_2d_type)
-#define ___GLO__23__23_structure_2d_type_2d_set_21_ ___GLO(358,___G__23__23_structure_2d_type_2d_set_21_)
-#define ___PRM__23__23_structure_2d_type_2d_set_21_ ___PRM(358,___G__23__23_structure_2d_type_2d_set_21_)
-#define ___GLO__23__23_subprocedure_2d_id ___GLO(359,___G__23__23_subprocedure_2d_id)
-#define ___PRM__23__23_subprocedure_2d_id ___PRM(359,___G__23__23_subprocedure_2d_id)
-#define ___GLO__23__23_subprocedure_2d_nb_2d_closed ___GLO(360,___G__23__23_subprocedure_2d_nb_2d_closed)
-#define ___PRM__23__23_subprocedure_2d_nb_2d_closed ___PRM(360,___G__23__23_subprocedure_2d_nb_2d_closed)
-#define ___GLO__23__23_subprocedure_2d_nb_2d_parameters ___GLO(361,___G__23__23_subprocedure_2d_nb_2d_parameters)
-#define ___PRM__23__23_subprocedure_2d_nb_2d_parameters ___PRM(361,___G__23__23_subprocedure_2d_nb_2d_parameters)
-#define ___GLO__23__23_subprocedure_2d_parent ___GLO(362,___G__23__23_subprocedure_2d_parent)
-#define ___PRM__23__23_subprocedure_2d_parent ___PRM(362,___G__23__23_subprocedure_2d_parent)
-#define ___GLO__23__23_subprocedure_2d_parent_2d_info ___GLO(363,___G__23__23_subprocedure_2d_parent_2d_info)
-#define ___PRM__23__23_subprocedure_2d_parent_2d_info ___PRM(363,___G__23__23_subprocedure_2d_parent_2d_info)
-#define ___GLO__23__23_subprocedure_2d_parent_2d_name ___GLO(364,___G__23__23_subprocedure_2d_parent_2d_name)
-#define ___PRM__23__23_subprocedure_2d_parent_2d_name ___PRM(364,___G__23__23_subprocedure_2d_parent_2d_name)
-#define ___GLO__23__23_subprocedure_3f_ ___GLO(365,___G__23__23_subprocedure_3f_)
-#define ___PRM__23__23_subprocedure_3f_ ___PRM(365,___G__23__23_subprocedure_3f_)
-#define ___GLO__23__23_symbol_2d_table ___GLO(366,___G__23__23_symbol_2d_table)
-#define ___PRM__23__23_symbol_2d_table ___PRM(366,___G__23__23_symbol_2d_table)
-#define ___GLO__23__23_system_2d_stamp ___GLO(367,___G__23__23_system_2d_stamp)
-#define ___PRM__23__23_system_2d_stamp ___PRM(367,___G__23__23_system_2d_stamp)
-#define ___GLO__23__23_system_2d_stamp_2d_saved ___GLO(368,___G__23__23_system_2d_stamp_2d_saved)
-#define ___PRM__23__23_system_2d_stamp_2d_saved ___PRM(368,___G__23__23_system_2d_stamp_2d_saved)
-#define ___GLO__23__23_system_2d_version ___GLO(369,___G__23__23_system_2d_version)
-#define ___PRM__23__23_system_2d_version ___PRM(369,___G__23__23_system_2d_version)
-#define ___GLO__23__23_system_2d_version_2d_string ___GLO(370,___G__23__23_system_2d_version_2d_string)
-#define ___PRM__23__23_system_2d_version_2d_string ___PRM(370,___G__23__23_system_2d_version_2d_string)
-#define ___GLO__23__23_type_2d_fields ___GLO(371,___G__23__23_type_2d_fields)
-#define ___PRM__23__23_type_2d_fields ___PRM(371,___G__23__23_type_2d_fields)
-#define ___GLO__23__23_type_2d_flags ___GLO(372,___G__23__23_type_2d_flags)
-#define ___PRM__23__23_type_2d_flags ___PRM(372,___G__23__23_type_2d_flags)
-#define ___GLO__23__23_type_2d_id ___GLO(373,___G__23__23_type_2d_id)
-#define ___PRM__23__23_type_2d_id ___PRM(373,___G__23__23_type_2d_id)
-#define ___GLO__23__23_type_2d_name ___GLO(374,___G__23__23_type_2d_name)
-#define ___PRM__23__23_type_2d_name ___PRM(374,___G__23__23_type_2d_name)
-#define ___GLO__23__23_type_2d_super ___GLO(375,___G__23__23_type_2d_super)
-#define ___PRM__23__23_type_2d_super ___PRM(375,___G__23__23_type_2d_super)
-#define ___GLO__23__23_type_2d_type ___GLO(376,___G__23__23_type_2d_type)
-#define ___PRM__23__23_type_2d_type ___PRM(376,___G__23__23_type_2d_type)
-#define ___GLO__23__23_type_3f_ ___GLO(377,___G__23__23_type_3f_)
-#define ___PRM__23__23_type_3f_ ___PRM(377,___G__23__23_type_3f_)
-#define ___GLO__23__23_unchecked_2d_structure_2d_ref ___GLO(378,___G__23__23_unchecked_2d_structure_2d_ref)
-#define ___PRM__23__23_unchecked_2d_structure_2d_ref ___PRM(378,___G__23__23_unchecked_2d_structure_2d_ref)
-#define ___GLO__23__23_unchecked_2d_structure_2d_set_21_ ___GLO(379,___G__23__23_unchecked_2d_structure_2d_set_21_)
-#define ___PRM__23__23_unchecked_2d_structure_2d_set_21_ ___PRM(379,___G__23__23_unchecked_2d_structure_2d_set_21_)
-#define ___GLO__23__23_vm_2d_main_2d_module_2d_id ___GLO(380,___G__23__23_vm_2d_main_2d_module_2d_id)
-#define ___PRM__23__23_vm_2d_main_2d_module_2d_id ___PRM(380,___G__23__23_vm_2d_main_2d_module_2d_id)
-#define ___GLO__23__23_with_2d_no_2d_result_2d_expected ___GLO(381,___G__23__23_with_2d_no_2d_result_2d_expected)
-#define ___PRM__23__23_with_2d_no_2d_result_2d_expected ___PRM(381,___G__23__23_with_2d_no_2d_result_2d_expected)
-#define ___GLO__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel ___GLO(382,___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel)
-#define ___PRM__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel ___PRM(382,___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel)
-#define ___GLO_cfun_2d_conversion_2d_exception_2d_arguments ___GLO(383,___G_cfun_2d_conversion_2d_exception_2d_arguments)
-#define ___PRM_cfun_2d_conversion_2d_exception_2d_arguments ___PRM(383,___G_cfun_2d_conversion_2d_exception_2d_arguments)
-#define ___GLO_cfun_2d_conversion_2d_exception_2d_code ___GLO(384,___G_cfun_2d_conversion_2d_exception_2d_code)
-#define ___PRM_cfun_2d_conversion_2d_exception_2d_code ___PRM(384,___G_cfun_2d_conversion_2d_exception_2d_code)
-#define ___GLO_cfun_2d_conversion_2d_exception_2d_message ___GLO(385,___G_cfun_2d_conversion_2d_exception_2d_message)
-#define ___PRM_cfun_2d_conversion_2d_exception_2d_message ___PRM(385,___G_cfun_2d_conversion_2d_exception_2d_message)
-#define ___GLO_cfun_2d_conversion_2d_exception_2d_procedure ___GLO(386,___G_cfun_2d_conversion_2d_exception_2d_procedure)
-#define ___PRM_cfun_2d_conversion_2d_exception_2d_procedure ___PRM(386,___G_cfun_2d_conversion_2d_exception_2d_procedure)
-#define ___GLO_cfun_2d_conversion_2d_exception_3f_ ___GLO(387,___G_cfun_2d_conversion_2d_exception_3f_)
-#define ___PRM_cfun_2d_conversion_2d_exception_3f_ ___PRM(387,___G_cfun_2d_conversion_2d_exception_3f_)
-#define ___GLO_configure_2d_command_2d_string ___GLO(388,___G_configure_2d_command_2d_string)
-#define ___PRM_configure_2d_command_2d_string ___PRM(388,___G_configure_2d_command_2d_string)
-#define ___GLO_err_2d_code_2d__3e_string ___GLO(389,___G_err_2d_code_2d__3e_string)
-#define ___PRM_err_2d_code_2d__3e_string ___PRM(389,___G_err_2d_code_2d__3e_string)
-#define ___GLO_foreign_2d_address ___GLO(390,___G_foreign_2d_address)
-#define ___PRM_foreign_2d_address ___PRM(390,___G_foreign_2d_address)
-#define ___GLO_foreign_2d_release_21_ ___GLO(391,___G_foreign_2d_release_21_)
-#define ___PRM_foreign_2d_release_21_ ___PRM(391,___G_foreign_2d_release_21_)
-#define ___GLO_foreign_2d_released_3f_ ___GLO(392,___G_foreign_2d_released_3f_)
-#define ___PRM_foreign_2d_released_3f_ ___PRM(392,___G_foreign_2d_released_3f_)
-#define ___GLO_foreign_2d_tags ___GLO(393,___G_foreign_2d_tags)
-#define ___PRM_foreign_2d_tags ___PRM(393,___G_foreign_2d_tags)
-#define ___GLO_foreign_3f_ ___GLO(394,___G_foreign_3f_)
-#define ___PRM_foreign_3f_ ___PRM(394,___G_foreign_3f_)
-#define ___GLO_heap_2d_overflow_2d_exception_3f_ ___GLO(395,___G_heap_2d_overflow_2d_exception_3f_)
-#define ___PRM_heap_2d_overflow_2d_exception_3f_ ___PRM(395,___G_heap_2d_overflow_2d_exception_3f_)
-#define ___GLO_keyword_2d_expected_2d_exception_2d_arguments ___GLO(396,___G_keyword_2d_expected_2d_exception_2d_arguments)
-#define ___PRM_keyword_2d_expected_2d_exception_2d_arguments ___PRM(396,___G_keyword_2d_expected_2d_exception_2d_arguments)
-#define ___GLO_keyword_2d_expected_2d_exception_2d_procedure ___GLO(397,___G_keyword_2d_expected_2d_exception_2d_procedure)
-#define ___PRM_keyword_2d_expected_2d_exception_2d_procedure ___PRM(397,___G_keyword_2d_expected_2d_exception_2d_procedure)
-#define ___GLO_keyword_2d_expected_2d_exception_3f_ ___GLO(398,___G_keyword_2d_expected_2d_exception_3f_)
-#define ___PRM_keyword_2d_expected_2d_exception_3f_ ___PRM(398,___G_keyword_2d_expected_2d_exception_3f_)
-#define ___GLO_multiple_2d_c_2d_return_2d_exception_3f_ ___GLO(399,___G_multiple_2d_c_2d_return_2d_exception_3f_)
-#define ___PRM_multiple_2d_c_2d_return_2d_exception_3f_ ___PRM(399,___G_multiple_2d_c_2d_return_2d_exception_3f_)
-#define ___GLO_nonprocedure_2d_operator_2d_exception_2d_arguments ___GLO(400,___G_nonprocedure_2d_operator_2d_exception_2d_arguments)
-#define ___PRM_nonprocedure_2d_operator_2d_exception_2d_arguments ___PRM(400,___G_nonprocedure_2d_operator_2d_exception_2d_arguments)
-#define ___GLO_nonprocedure_2d_operator_2d_exception_2d_code ___GLO(401,___G_nonprocedure_2d_operator_2d_exception_2d_code)
-#define ___PRM_nonprocedure_2d_operator_2d_exception_2d_code ___PRM(401,___G_nonprocedure_2d_operator_2d_exception_2d_code)
-#define ___GLO_nonprocedure_2d_operator_2d_exception_2d_operator ___GLO(402,___G_nonprocedure_2d_operator_2d_exception_2d_operator)
-#define ___PRM_nonprocedure_2d_operator_2d_exception_2d_operator ___PRM(402,___G_nonprocedure_2d_operator_2d_exception_2d_operator)
-#define ___GLO_nonprocedure_2d_operator_2d_exception_2d_rte ___GLO(403,___G_nonprocedure_2d_operator_2d_exception_2d_rte)
-#define ___PRM_nonprocedure_2d_operator_2d_exception_2d_rte ___PRM(403,___G_nonprocedure_2d_operator_2d_exception_2d_rte)
-#define ___GLO_nonprocedure_2d_operator_2d_exception_3f_ ___GLO(404,___G_nonprocedure_2d_operator_2d_exception_3f_)
-#define ___PRM_nonprocedure_2d_operator_2d_exception_3f_ ___PRM(404,___G_nonprocedure_2d_operator_2d_exception_3f_)
-#define ___GLO_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments ___GLO(405,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments)
-#define ___PRM_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments ___PRM(405,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments)
-#define ___GLO_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure ___GLO(406,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure)
-#define ___PRM_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure ___PRM(406,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure)
-#define ___GLO_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_ ___GLO(407,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_)
-#define ___PRM_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_ ___PRM(407,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_)
-#define ___GLO_os_2d_exception_2d_arguments ___GLO(408,___G_os_2d_exception_2d_arguments)
-#define ___PRM_os_2d_exception_2d_arguments ___PRM(408,___G_os_2d_exception_2d_arguments)
-#define ___GLO_os_2d_exception_2d_code ___GLO(409,___G_os_2d_exception_2d_code)
-#define ___PRM_os_2d_exception_2d_code ___PRM(409,___G_os_2d_exception_2d_code)
-#define ___GLO_os_2d_exception_2d_message ___GLO(410,___G_os_2d_exception_2d_message)
-#define ___PRM_os_2d_exception_2d_message ___PRM(410,___G_os_2d_exception_2d_message)
-#define ___GLO_os_2d_exception_2d_procedure ___GLO(411,___G_os_2d_exception_2d_procedure)
-#define ___PRM_os_2d_exception_2d_procedure ___PRM(411,___G_os_2d_exception_2d_procedure)
-#define ___GLO_os_2d_exception_3f_ ___GLO(412,___G_os_2d_exception_3f_)
-#define ___PRM_os_2d_exception_3f_ ___PRM(412,___G_os_2d_exception_3f_)
-#define ___GLO_sfun_2d_conversion_2d_exception_2d_arguments ___GLO(413,___G_sfun_2d_conversion_2d_exception_2d_arguments)
-#define ___PRM_sfun_2d_conversion_2d_exception_2d_arguments ___PRM(413,___G_sfun_2d_conversion_2d_exception_2d_arguments)
-#define ___GLO_sfun_2d_conversion_2d_exception_2d_code ___GLO(414,___G_sfun_2d_conversion_2d_exception_2d_code)
-#define ___PRM_sfun_2d_conversion_2d_exception_2d_code ___PRM(414,___G_sfun_2d_conversion_2d_exception_2d_code)
-#define ___GLO_sfun_2d_conversion_2d_exception_2d_message ___GLO(415,___G_sfun_2d_conversion_2d_exception_2d_message)
-#define ___PRM_sfun_2d_conversion_2d_exception_2d_message ___PRM(415,___G_sfun_2d_conversion_2d_exception_2d_message)
-#define ___GLO_sfun_2d_conversion_2d_exception_2d_procedure ___GLO(416,___G_sfun_2d_conversion_2d_exception_2d_procedure)
-#define ___PRM_sfun_2d_conversion_2d_exception_2d_procedure ___PRM(416,___G_sfun_2d_conversion_2d_exception_2d_procedure)
-#define ___GLO_sfun_2d_conversion_2d_exception_3f_ ___GLO(417,___G_sfun_2d_conversion_2d_exception_3f_)
-#define ___PRM_sfun_2d_conversion_2d_exception_3f_ ___PRM(417,___G_sfun_2d_conversion_2d_exception_3f_)
-#define ___GLO_stack_2d_overflow_2d_exception_3f_ ___GLO(418,___G_stack_2d_overflow_2d_exception_3f_)
-#define ___PRM_stack_2d_overflow_2d_exception_3f_ ___PRM(418,___G_stack_2d_overflow_2d_exception_3f_)
-#define ___GLO_system_2d_stamp ___GLO(419,___G_system_2d_stamp)
-#define ___PRM_system_2d_stamp ___PRM(419,___G_system_2d_stamp)
-#define ___GLO_system_2d_type ___GLO(420,___G_system_2d_type)
-#define ___PRM_system_2d_type ___PRM(420,___G_system_2d_type)
-#define ___GLO_system_2d_type_2d_string ___GLO(421,___G_system_2d_type_2d_string)
-#define ___PRM_system_2d_type_2d_string ___PRM(421,___G_system_2d_type_2d_string)
-#define ___GLO_system_2d_version ___GLO(422,___G_system_2d_version)
-#define ___PRM_system_2d_version ___PRM(422,___G_system_2d_version)
-#define ___GLO_system_2d_version_2d_string ___GLO(423,___G_system_2d_version_2d_string)
-#define ___PRM_system_2d_version_2d_string ___PRM(423,___G_system_2d_version_2d_string)
-#define ___GLO_type_2d_exception_2d_arg_2d_num ___GLO(424,___G_type_2d_exception_2d_arg_2d_num)
-#define ___PRM_type_2d_exception_2d_arg_2d_num ___PRM(424,___G_type_2d_exception_2d_arg_2d_num)
-#define ___GLO_type_2d_exception_2d_arguments ___GLO(425,___G_type_2d_exception_2d_arguments)
-#define ___PRM_type_2d_exception_2d_arguments ___PRM(425,___G_type_2d_exception_2d_arguments)
-#define ___GLO_type_2d_exception_2d_procedure ___GLO(426,___G_type_2d_exception_2d_procedure)
-#define ___PRM_type_2d_exception_2d_procedure ___PRM(426,___G_type_2d_exception_2d_procedure)
-#define ___GLO_type_2d_exception_2d_type_2d_id ___GLO(427,___G_type_2d_exception_2d_type_2d_id)
-#define ___PRM_type_2d_exception_2d_type_2d_id ___PRM(427,___G_type_2d_exception_2d_type_2d_id)
-#define ___GLO_type_2d_exception_3f_ ___GLO(428,___G_type_2d_exception_3f_)
-#define ___PRM_type_2d_exception_3f_ ___PRM(428,___G_type_2d_exception_3f_)
-#define ___GLO_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments ___GLO(429,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments)
-#define ___PRM_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments ___PRM(429,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments)
-#define ___GLO_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure ___GLO(430,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure)
-#define ___PRM_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure ___PRM(430,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure)
-#define ___GLO_unknown_2d_keyword_2d_argument_2d_exception_3f_ ___GLO(431,___G_unknown_2d_keyword_2d_argument_2d_exception_3f_)
-#define ___PRM_unknown_2d_keyword_2d_argument_2d_exception_3f_ ___PRM(431,___G_unknown_2d_keyword_2d_argument_2d_exception_3f_)
-#define ___GLO_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments ___GLO(432,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments)
-#define ___PRM_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments ___PRM(432,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments)
-#define ___GLO_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure ___GLO(433,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure)
-#define ___PRM_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure ___PRM(433,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure)
-#define ___GLO_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_ ___GLO(434,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_)
-#define ___PRM_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_ ___PRM(434,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_)
+#define ___GLO__23__23_err_2d_code_2d_unimplemented ___GLO(134,___G__23__23_err_2d_code_2d_unimplemented)
+#define ___PRM__23__23_err_2d_code_2d_unimplemented ___PRM(134,___G__23__23_err_2d_code_2d_unimplemented)
+#define ___GLO__23__23_execute_2d_and_2d_clear_2d_jobs_21_ ___GLO(135,___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_)
+#define ___PRM__23__23_execute_2d_and_2d_clear_2d_jobs_21_ ___PRM(135,___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_)
+#define ___GLO__23__23_execute_2d_final_2d_wills_21_ ___GLO(136,___G__23__23_execute_2d_final_2d_wills_21_)
+#define ___PRM__23__23_execute_2d_final_2d_wills_21_ ___PRM(136,___G__23__23_execute_2d_final_2d_wills_21_)
+#define ___GLO__23__23_execute_2d_jobs_21_ ___GLO(137,___G__23__23_execute_2d_jobs_21_)
+#define ___PRM__23__23_execute_2d_jobs_21_ ___PRM(137,___G__23__23_execute_2d_jobs_21_)
+#define ___GLO__23__23_exit ___GLO(138,___G__23__23_exit)
+#define ___PRM__23__23_exit ___PRM(138,___G__23__23_exit)
+#define ___GLO__23__23_exit_2d_abnormally ___GLO(139,___G__23__23_exit_2d_abnormally)
+#define ___PRM__23__23_exit_2d_abnormally ___PRM(139,___G__23__23_exit_2d_abnormally)
+#define ___GLO__23__23_exit_2d_cleanup ___GLO(140,___G__23__23_exit_2d_cleanup)
+#define ___PRM__23__23_exit_2d_cleanup ___PRM(140,___G__23__23_exit_2d_cleanup)
+#define ___GLO__23__23_exit_2d_jobs ___GLO(141,___G__23__23_exit_2d_jobs)
+#define ___PRM__23__23_exit_2d_jobs ___PRM(141,___G__23__23_exit_2d_jobs)
+#define ___GLO__23__23_exit_2d_with_2d_err_2d_code ___GLO(142,___G__23__23_exit_2d_with_2d_err_2d_code)
+#define ___PRM__23__23_exit_2d_with_2d_err_2d_code ___PRM(142,___G__23__23_exit_2d_with_2d_err_2d_code)
+#define ___GLO__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup ___GLO(143,___G__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup)
+#define ___PRM__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup ___PRM(143,___G__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup)
+#define ___GLO__23__23_exit_2d_with_2d_exception ___GLO(144,___G__23__23_exit_2d_with_2d_exception)
+#define ___PRM__23__23_exit_2d_with_2d_exception ___PRM(144,___G__23__23_exit_2d_with_2d_exception)
+#define ___GLO__23__23_explode_2d_continuation ___GLO(145,___G__23__23_explode_2d_continuation)
+#define ___PRM__23__23_explode_2d_continuation ___PRM(145,___G__23__23_explode_2d_continuation)
+#define ___GLO__23__23_explode_2d_frame ___GLO(146,___G__23__23_explode_2d_frame)
+#define ___PRM__23__23_explode_2d_frame ___PRM(146,___G__23__23_explode_2d_frame)
+#define ___GLO__23__23_extract_2d_procedure_2d_and_2d_arguments ___GLO(147,___G__23__23_extract_2d_procedure_2d_and_2d_arguments)
+#define ___PRM__23__23_extract_2d_procedure_2d_and_2d_arguments ___PRM(147,___G__23__23_extract_2d_procedure_2d_and_2d_arguments)
+#define ___GLO__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception ___GLO(148,___G__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception ___PRM(148,___G__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_foreign ___GLO(149,___G__23__23_fail_2d_check_2d_foreign)
+#define ___PRM__23__23_fail_2d_check_2d_foreign ___PRM(149,___G__23__23_fail_2d_check_2d_foreign)
+#define ___GLO__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception ___GLO(150,___G__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception ___PRM(150,___G__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception ___GLO(151,___G__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception ___PRM(151,___G__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception ___GLO(152,___G__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception ___PRM(152,___G__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception ___GLO(153,___G__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception ___PRM(153,___G__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception ___GLO(154,___G__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception ___PRM(154,___G__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_os_2d_exception ___GLO(155,___G__23__23_fail_2d_check_2d_os_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_os_2d_exception ___PRM(155,___G__23__23_fail_2d_check_2d_os_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception ___GLO(156,___G__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception ___PRM(156,___G__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception ___GLO(157,___G__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception ___PRM(157,___G__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_type_2d_exception ___GLO(158,___G__23__23_fail_2d_check_2d_type_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_type_2d_exception ___PRM(158,___G__23__23_fail_2d_check_2d_type_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception ___GLO(159,___G__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception ___PRM(159,___G__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception)
+#define ___GLO__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception ___GLO(160,___G__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception)
+#define ___PRM__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception ___PRM(160,___G__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception)
+#define ___GLO__23__23_final_2d_will_2d_registry ___GLO(161,___G__23__23_final_2d_will_2d_registry)
+#define ___PRM__23__23_final_2d_will_2d_registry ___PRM(161,___G__23__23_final_2d_will_2d_registry)
+#define ___GLO__23__23_find_2d_interned_2d_keyword ___GLO(162,___G__23__23_find_2d_interned_2d_keyword)
+#define ___PRM__23__23_find_2d_interned_2d_keyword ___PRM(162,___G__23__23_find_2d_interned_2d_keyword)
+#define ___GLO__23__23_find_2d_interned_2d_symbol ___GLO(163,___G__23__23_find_2d_interned_2d_symbol)
+#define ___PRM__23__23_find_2d_interned_2d_symbol ___PRM(163,___G__23__23_find_2d_interned_2d_symbol)
+#define ___GLO__23__23_find_2d_interned_2d_symkey ___GLO(164,___G__23__23_find_2d_interned_2d_symkey)
+#define ___PRM__23__23_find_2d_interned_2d_symkey ___PRM(164,___G__23__23_find_2d_interned_2d_symkey)
+#define ___GLO__23__23_first_2d_argument ___GLO(165,___G__23__23_first_2d_argument)
+#define ___PRM__23__23_first_2d_argument ___PRM(165,___G__23__23_first_2d_argument)
+#define ___GLO__23__23_fixnum_2d_width ___GLO(166,___G__23__23_fixnum_2d_width)
+#define ___PRM__23__23_fixnum_2d_width ___PRM(166,___G__23__23_fixnum_2d_width)
+#define ___GLO__23__23_fixnum_2d_width_2d_neg ___GLO(167,___G__23__23_fixnum_2d_width_2d_neg)
+#define ___PRM__23__23_fixnum_2d_width_2d_neg ___PRM(167,___G__23__23_fixnum_2d_width_2d_neg)
+#define ___GLO__23__23_force_2d_undetermined ___GLO(168,___G__23__23_force_2d_undetermined)
+#define ___PRM__23__23_force_2d_undetermined ___PRM(168,___G__23__23_force_2d_undetermined)
+#define ___GLO__23__23_foreign_2d_address ___GLO(169,___G__23__23_foreign_2d_address)
+#define ___PRM__23__23_foreign_2d_address ___PRM(169,___G__23__23_foreign_2d_address)
+#define ___GLO__23__23_foreign_2d_release_21_ ___GLO(170,___G__23__23_foreign_2d_release_21_)
+#define ___PRM__23__23_foreign_2d_release_21_ ___PRM(170,___G__23__23_foreign_2d_release_21_)
+#define ___GLO__23__23_foreign_2d_released_3f_ ___GLO(171,___G__23__23_foreign_2d_released_3f_)
+#define ___PRM__23__23_foreign_2d_released_3f_ ___PRM(171,___G__23__23_foreign_2d_released_3f_)
+#define ___GLO__23__23_format_2d_filepos ___GLO(172,___G__23__23_format_2d_filepos)
+#define ___PRM__23__23_format_2d_filepos ___PRM(172,___G__23__23_format_2d_filepos)
+#define ___GLO__23__23_frame_2d_fs ___GLO(173,___G__23__23_frame_2d_fs)
+#define ___PRM__23__23_frame_2d_fs ___PRM(173,___G__23__23_frame_2d_fs)
+#define ___GLO__23__23_frame_2d_link ___GLO(174,___G__23__23_frame_2d_link)
+#define ___PRM__23__23_frame_2d_link ___PRM(174,___G__23__23_frame_2d_link)
+#define ___GLO__23__23_frame_2d_ref ___GLO(175,___G__23__23_frame_2d_ref)
+#define ___PRM__23__23_frame_2d_ref ___PRM(175,___G__23__23_frame_2d_ref)
+#define ___GLO__23__23_frame_2d_ret ___GLO(176,___G__23__23_frame_2d_ret)
+#define ___PRM__23__23_frame_2d_ret ___PRM(176,___G__23__23_frame_2d_ret)
+#define ___GLO__23__23_frame_2d_set_21_ ___GLO(177,___G__23__23_frame_2d_set_21_)
+#define ___PRM__23__23_frame_2d_set_21_ ___PRM(177,___G__23__23_frame_2d_set_21_)
+#define ___GLO__23__23_frame_2d_slot_2d_live_3f_ ___GLO(178,___G__23__23_frame_2d_slot_2d_live_3f_)
+#define ___PRM__23__23_frame_2d_slot_2d_live_3f_ ___PRM(178,___G__23__23_frame_2d_slot_2d_live_3f_)
+#define ___GLO__23__23_gc ___GLO(179,___G__23__23_gc)
+#define ___PRM__23__23_gc ___PRM(179,___G__23__23_gc)
+#define ___GLO__23__23_gc_2d_final_2d_will_2d_registry_21_ ___GLO(180,___G__23__23_gc_2d_final_2d_will_2d_registry_21_)
+#define ___PRM__23__23_gc_2d_final_2d_will_2d_registry_21_ ___PRM(180,___G__23__23_gc_2d_final_2d_will_2d_registry_21_)
+#define ___GLO__23__23_gc_2d_finalize_21_ ___GLO(181,___G__23__23_gc_2d_finalize_21_)
+#define ___PRM__23__23_gc_2d_finalize_21_ ___PRM(181,___G__23__23_gc_2d_finalize_21_)
+#define ___GLO__23__23_gc_2d_interrupt_2d_jobs ___GLO(182,___G__23__23_gc_2d_interrupt_2d_jobs)
+#define ___PRM__23__23_gc_2d_interrupt_2d_jobs ___PRM(182,___G__23__23_gc_2d_interrupt_2d_jobs)
+#define ___GLO__23__23_gc_2d_without_2d_exceptions ___GLO(183,___G__23__23_gc_2d_without_2d_exceptions)
+#define ___PRM__23__23_gc_2d_without_2d_exceptions ___PRM(183,___G__23__23_gc_2d_without_2d_exceptions)
+#define ___GLO__23__23_get_2d_bytes_2d_allocated_21_ ___GLO(184,___G__23__23_get_2d_bytes_2d_allocated_21_)
+#define ___PRM__23__23_get_2d_bytes_2d_allocated_21_ ___PRM(184,___G__23__23_get_2d_bytes_2d_allocated_21_)
+#define ___GLO__23__23_get_2d_current_2d_time_21_ ___GLO(185,___G__23__23_get_2d_current_2d_time_21_)
+#define ___PRM__23__23_get_2d_current_2d_time_21_ ___PRM(185,___G__23__23_get_2d_current_2d_time_21_)
+#define ___GLO__23__23_get_2d_live_2d_percent ___GLO(186,___G__23__23_get_2d_live_2d_percent)
+#define ___PRM__23__23_get_2d_live_2d_percent ___PRM(186,___G__23__23_get_2d_live_2d_percent)
+#define ___GLO__23__23_get_2d_max_2d_heap ___GLO(187,___G__23__23_get_2d_max_2d_heap)
+#define ___PRM__23__23_get_2d_max_2d_heap ___PRM(187,___G__23__23_get_2d_max_2d_heap)
+#define ___GLO__23__23_get_2d_min_2d_heap ___GLO(188,___G__23__23_get_2d_min_2d_heap)
+#define ___PRM__23__23_get_2d_min_2d_heap ___PRM(188,___G__23__23_get_2d_min_2d_heap)
+#define ___GLO__23__23_get_2d_standard_2d_level ___GLO(189,___G__23__23_get_2d_standard_2d_level)
+#define ___PRM__23__23_get_2d_standard_2d_level ___PRM(189,___G__23__23_get_2d_standard_2d_level)
+#define ___GLO__23__23_global_2d_var_2d__3e_identifier ___GLO(190,___G__23__23_global_2d_var_2d__3e_identifier)
+#define ___PRM__23__23_global_2d_var_2d__3e_identifier ___PRM(190,___G__23__23_global_2d_var_2d__3e_identifier)
+#define ___GLO__23__23_global_2d_var_2d_primitive_2d_ref ___GLO(191,___G__23__23_global_2d_var_2d_primitive_2d_ref)
+#define ___PRM__23__23_global_2d_var_2d_primitive_2d_ref ___PRM(191,___G__23__23_global_2d_var_2d_primitive_2d_ref)
+#define ___GLO__23__23_global_2d_var_2d_primitive_2d_set_21_ ___GLO(192,___G__23__23_global_2d_var_2d_primitive_2d_set_21_)
+#define ___PRM__23__23_global_2d_var_2d_primitive_2d_set_21_ ___PRM(192,___G__23__23_global_2d_var_2d_primitive_2d_set_21_)
+#define ___GLO__23__23_global_2d_var_2d_ref ___GLO(193,___G__23__23_global_2d_var_2d_ref)
+#define ___PRM__23__23_global_2d_var_2d_ref ___PRM(193,___G__23__23_global_2d_var_2d_ref)
+#define ___GLO__23__23_global_2d_var_2d_set_21_ ___GLO(194,___G__23__23_global_2d_var_2d_set_21_)
+#define ___PRM__23__23_global_2d_var_2d_set_21_ ___PRM(194,___G__23__23_global_2d_var_2d_set_21_)
+#define ___GLO__23__23_global_2d_var_3f_ ___GLO(195,___G__23__23_global_2d_var_3f_)
+#define ___PRM__23__23_global_2d_var_3f_ ___PRM(195,___G__23__23_global_2d_var_3f_)
+#define ___GLO__23__23_heartbeat_2d_interval_2d_set_21_ ___GLO(196,___G__23__23_heartbeat_2d_interval_2d_set_21_)
+#define ___PRM__23__23_heartbeat_2d_interval_2d_set_21_ ___PRM(196,___G__23__23_heartbeat_2d_interval_2d_set_21_)
+#define ___GLO__23__23_interrupt_2d_handler ___GLO(197,___G__23__23_interrupt_2d_handler)
+#define ___PRM__23__23_interrupt_2d_handler ___PRM(197,___G__23__23_interrupt_2d_handler)
+#define ___GLO__23__23_interrupt_2d_vector ___GLO(198,___G__23__23_interrupt_2d_vector)
+#define ___PRM__23__23_interrupt_2d_vector ___PRM(198,___G__23__23_interrupt_2d_vector)
+#define ___GLO__23__23_interrupt_2d_vector_2d_set_21_ ___GLO(199,___G__23__23_interrupt_2d_vector_2d_set_21_)
+#define ___PRM__23__23_interrupt_2d_vector_2d_set_21_ ___PRM(199,___G__23__23_interrupt_2d_vector_2d_set_21_)
+#define ___GLO__23__23_kernel_2d_handlers ___GLO(200,___G__23__23_kernel_2d_handlers)
+#define ___PRM__23__23_kernel_2d_handlers ___PRM(200,___G__23__23_kernel_2d_handlers)
+#define ___GLO__23__23_keyword_2d_table ___GLO(201,___G__23__23_keyword_2d_table)
+#define ___PRM__23__23_keyword_2d_table ___PRM(201,___G__23__23_keyword_2d_table)
+#define ___GLO__23__23_load_2d_required_2d_module ___GLO(202,___G__23__23_load_2d_required_2d_module)
+#define ___PRM__23__23_load_2d_required_2d_module ___PRM(202,___G__23__23_load_2d_required_2d_module)
+#define ___GLO__23__23_load_2d_required_2d_module_2d_structs ___GLO(203,___G__23__23_load_2d_required_2d_module_2d_structs)
+#define ___PRM__23__23_load_2d_required_2d_module_2d_structs ___PRM(203,___G__23__23_load_2d_required_2d_module_2d_structs)
+#define ___GLO__23__23_load_2d_vm ___GLO(204,___G__23__23_load_2d_vm)
+#define ___PRM__23__23_load_2d_vm ___PRM(204,___G__23__23_load_2d_vm)
+#define ___GLO__23__23_lookup_2d_module ___GLO(205,___G__23__23_lookup_2d_module)
+#define ___PRM__23__23_lookup_2d_module ___PRM(205,___G__23__23_lookup_2d_module)
+#define ___GLO__23__23_lookup_2d_registered_2d_module ___GLO(206,___G__23__23_lookup_2d_registered_2d_module)
+#define ___PRM__23__23_lookup_2d_registered_2d_module ___PRM(206,___G__23__23_lookup_2d_registered_2d_module)
+#define ___GLO__23__23_machine_2d_code_2d_block_2d_exec ___GLO(207,___G__23__23_machine_2d_code_2d_block_2d_exec)
+#define ___PRM__23__23_machine_2d_code_2d_block_2d_exec ___PRM(207,___G__23__23_machine_2d_code_2d_block_2d_exec)
+#define ___GLO__23__23_machine_2d_code_2d_block_2d_ref ___GLO(208,___G__23__23_machine_2d_code_2d_block_2d_ref)
+#define ___PRM__23__23_machine_2d_code_2d_block_2d_ref ___PRM(208,___G__23__23_machine_2d_code_2d_block_2d_ref)
+#define ___GLO__23__23_machine_2d_code_2d_block_2d_set_21_ ___GLO(209,___G__23__23_machine_2d_code_2d_block_2d_set_21_)
+#define ___PRM__23__23_machine_2d_code_2d_block_2d_set_21_ ___PRM(209,___G__23__23_machine_2d_code_2d_block_2d_set_21_)
+#define ___GLO__23__23_main ___GLO(210,___G__23__23_main)
+#define ___PRM__23__23_main ___PRM(210,___G__23__23_main)
+#define ___GLO__23__23_main_2d_set_21_ ___GLO(211,___G__23__23_main_2d_set_21_)
+#define ___PRM__23__23_main_2d_set_21_ ___PRM(211,___G__23__23_main_2d_set_21_)
+#define ___GLO__23__23_make_2d_closure ___GLO(212,___G__23__23_make_2d_closure)
+#define ___PRM__23__23_make_2d_closure ___PRM(212,___G__23__23_make_2d_closure)
+#define ___GLO__23__23_make_2d_continuation ___GLO(213,___G__23__23_make_2d_continuation)
+#define ___PRM__23__23_make_2d_continuation ___PRM(213,___G__23__23_make_2d_continuation)
+#define ___GLO__23__23_make_2d_f32vector ___GLO(214,___G__23__23_make_2d_f32vector)
+#define ___PRM__23__23_make_2d_f32vector ___PRM(214,___G__23__23_make_2d_f32vector)
+#define ___GLO__23__23_make_2d_f64vector ___GLO(215,___G__23__23_make_2d_f64vector)
+#define ___PRM__23__23_make_2d_f64vector ___PRM(215,___G__23__23_make_2d_f64vector)
+#define ___GLO__23__23_make_2d_final_2d_will ___GLO(216,___G__23__23_make_2d_final_2d_will)
+#define ___PRM__23__23_make_2d_final_2d_will ___PRM(216,___G__23__23_make_2d_final_2d_will)
+#define ___GLO__23__23_make_2d_frame ___GLO(217,___G__23__23_make_2d_frame)
+#define ___PRM__23__23_make_2d_frame ___PRM(217,___G__23__23_make_2d_frame)
+#define ___GLO__23__23_make_2d_global_2d_var ___GLO(218,___G__23__23_make_2d_global_2d_var)
+#define ___PRM__23__23_make_2d_global_2d_var ___PRM(218,___G__23__23_make_2d_global_2d_var)
+#define ___GLO__23__23_make_2d_interned_2d_keyword ___GLO(219,___G__23__23_make_2d_interned_2d_keyword)
+#define ___PRM__23__23_make_2d_interned_2d_keyword ___PRM(219,___G__23__23_make_2d_interned_2d_keyword)
+#define ___GLO__23__23_make_2d_interned_2d_symbol ___GLO(220,___G__23__23_make_2d_interned_2d_symbol)
+#define ___PRM__23__23_make_2d_interned_2d_symbol ___PRM(220,___G__23__23_make_2d_interned_2d_symbol)
+#define ___GLO__23__23_make_2d_interned_2d_symkey ___GLO(221,___G__23__23_make_2d_interned_2d_symkey)
+#define ___PRM__23__23_make_2d_interned_2d_symkey ___PRM(221,___G__23__23_make_2d_interned_2d_symkey)
+#define ___GLO__23__23_make_2d_jobs ___GLO(222,___G__23__23_make_2d_jobs)
+#define ___PRM__23__23_make_2d_jobs ___PRM(222,___G__23__23_make_2d_jobs)
+#define ___GLO__23__23_make_2d_machine_2d_code_2d_block ___GLO(223,___G__23__23_make_2d_machine_2d_code_2d_block)
+#define ___PRM__23__23_make_2d_machine_2d_code_2d_block ___PRM(223,___G__23__23_make_2d_machine_2d_code_2d_block)
+#define ___GLO__23__23_make_2d_promise ___GLO(224,___G__23__23_make_2d_promise)
+#define ___PRM__23__23_make_2d_promise ___PRM(224,___G__23__23_make_2d_promise)
+#define ___GLO__23__23_make_2d_s16vector ___GLO(225,___G__23__23_make_2d_s16vector)
+#define ___PRM__23__23_make_2d_s16vector ___PRM(225,___G__23__23_make_2d_s16vector)
+#define ___GLO__23__23_make_2d_s32vector ___GLO(226,___G__23__23_make_2d_s32vector)
+#define ___PRM__23__23_make_2d_s32vector ___PRM(226,___G__23__23_make_2d_s32vector)
+#define ___GLO__23__23_make_2d_s64vector ___GLO(227,___G__23__23_make_2d_s64vector)
+#define ___PRM__23__23_make_2d_s64vector ___PRM(227,___G__23__23_make_2d_s64vector)
+#define ___GLO__23__23_make_2d_s8vector ___GLO(228,___G__23__23_make_2d_s8vector)
+#define ___PRM__23__23_make_2d_s8vector ___PRM(228,___G__23__23_make_2d_s8vector)
+#define ___GLO__23__23_make_2d_string ___GLO(229,___G__23__23_make_2d_string)
+#define ___PRM__23__23_make_2d_string ___PRM(229,___G__23__23_make_2d_string)
+#define ___GLO__23__23_make_2d_structure ___GLO(230,___G__23__23_make_2d_structure)
+#define ___PRM__23__23_make_2d_structure ___PRM(230,___G__23__23_make_2d_structure)
+#define ___GLO__23__23_make_2d_subprocedure ___GLO(231,___G__23__23_make_2d_subprocedure)
+#define ___PRM__23__23_make_2d_subprocedure ___PRM(231,___G__23__23_make_2d_subprocedure)
+#define ___GLO__23__23_make_2d_u16vector ___GLO(232,___G__23__23_make_2d_u16vector)
+#define ___PRM__23__23_make_2d_u16vector ___PRM(232,___G__23__23_make_2d_u16vector)
+#define ___GLO__23__23_make_2d_u32vector ___GLO(233,___G__23__23_make_2d_u32vector)
+#define ___PRM__23__23_make_2d_u32vector ___PRM(233,___G__23__23_make_2d_u32vector)
+#define ___GLO__23__23_make_2d_u64vector ___GLO(234,___G__23__23_make_2d_u64vector)
+#define ___PRM__23__23_make_2d_u64vector ___PRM(234,___G__23__23_make_2d_u64vector)
+#define ___GLO__23__23_make_2d_u8vector ___GLO(235,___G__23__23_make_2d_u8vector)
+#define ___PRM__23__23_make_2d_u8vector ___PRM(235,___G__23__23_make_2d_u8vector)
+#define ___GLO__23__23_make_2d_values ___GLO(236,___G__23__23_make_2d_values)
+#define ___PRM__23__23_make_2d_values ___PRM(236,___G__23__23_make_2d_values)
+#define ___GLO__23__23_make_2d_vector ___GLO(237,___G__23__23_make_2d_vector)
+#define ___PRM__23__23_make_2d_vector ___PRM(237,___G__23__23_make_2d_vector)
+#define ___GLO__23__23_max_2d_char ___GLO(238,___G__23__23_max_2d_char)
+#define ___PRM__23__23_max_2d_char ___PRM(238,___G__23__23_max_2d_char)
+#define ___GLO__23__23_max_2d_fixnum ___GLO(239,___G__23__23_max_2d_fixnum)
+#define ___PRM__23__23_max_2d_fixnum ___PRM(239,___G__23__23_max_2d_fixnum)
+#define ___GLO__23__23_min_2d_fixnum ___GLO(240,___G__23__23_min_2d_fixnum)
+#define ___PRM__23__23_min_2d_fixnum ___PRM(240,___G__23__23_min_2d_fixnum)
+#define ___GLO__23__23_module_2d_init ___GLO(241,___G__23__23_module_2d_init)
+#define ___PRM__23__23_module_2d_init ___PRM(241,___G__23__23_module_2d_init)
+#define ___GLO__23__23_object_2d__3e_global_2d_var ___GLO(242,___G__23__23_object_2d__3e_global_2d_var)
+#define ___PRM__23__23_object_2d__3e_global_2d_var ___PRM(242,___G__23__23_object_2d__3e_global_2d_var)
+#define ___GLO__23__23_object_2d__3e_global_2d_var_2d__3e_identifier ___GLO(243,___G__23__23_object_2d__3e_global_2d_var_2d__3e_identifier)
+#define ___PRM__23__23_object_2d__3e_global_2d_var_2d__3e_identifier ___PRM(243,___G__23__23_object_2d__3e_global_2d_var_2d__3e_identifier)
+#define ___GLO__23__23_os_2d_address_2d_infos ___GLO(244,___G__23__23_os_2d_address_2d_infos)
+#define ___PRM__23__23_os_2d_address_2d_infos ___PRM(244,___G__23__23_os_2d_address_2d_infos)
+#define ___GLO__23__23_os_2d_bat_2d_extension_2d_string_2d_saved ___GLO(245,___G__23__23_os_2d_bat_2d_extension_2d_string_2d_saved)
+#define ___PRM__23__23_os_2d_bat_2d_extension_2d_string_2d_saved ___PRM(245,___G__23__23_os_2d_bat_2d_extension_2d_string_2d_saved)
+#define ___GLO__23__23_os_2d_condvar_2d_select_21_ ___GLO(246,___G__23__23_os_2d_condvar_2d_select_21_)
+#define ___PRM__23__23_os_2d_condvar_2d_select_21_ ___PRM(246,___G__23__23_os_2d_condvar_2d_select_21_)
+#define ___GLO__23__23_os_2d_configure_2d_command_2d_string_2d_saved ___GLO(247,___G__23__23_os_2d_configure_2d_command_2d_string_2d_saved)
+#define ___PRM__23__23_os_2d_configure_2d_command_2d_string_2d_saved ___PRM(247,___G__23__23_os_2d_configure_2d_command_2d_string_2d_saved)
+#define ___GLO__23__23_os_2d_copy_2d_file ___GLO(248,___G__23__23_os_2d_copy_2d_file)
+#define ___PRM__23__23_os_2d_copy_2d_file ___PRM(248,___G__23__23_os_2d_copy_2d_file)
+#define ___GLO__23__23_os_2d_create_2d_directory ___GLO(249,___G__23__23_os_2d_create_2d_directory)
+#define ___PRM__23__23_os_2d_create_2d_directory ___PRM(249,___G__23__23_os_2d_create_2d_directory)
+#define ___GLO__23__23_os_2d_create_2d_fifo ___GLO(250,___G__23__23_os_2d_create_2d_fifo)
+#define ___PRM__23__23_os_2d_create_2d_fifo ___PRM(250,___G__23__23_os_2d_create_2d_fifo)
+#define ___GLO__23__23_os_2d_create_2d_link ___GLO(251,___G__23__23_os_2d_create_2d_link)
+#define ___PRM__23__23_os_2d_create_2d_link ___PRM(251,___G__23__23_os_2d_create_2d_link)
+#define ___GLO__23__23_os_2d_create_2d_symbolic_2d_link ___GLO(252,___G__23__23_os_2d_create_2d_symbolic_2d_link)
+#define ___PRM__23__23_os_2d_create_2d_symbolic_2d_link ___PRM(252,___G__23__23_os_2d_create_2d_symbolic_2d_link)
+#define ___GLO__23__23_os_2d_delete_2d_directory ___GLO(253,___G__23__23_os_2d_delete_2d_directory)
+#define ___PRM__23__23_os_2d_delete_2d_directory ___PRM(253,___G__23__23_os_2d_delete_2d_directory)
+#define ___GLO__23__23_os_2d_delete_2d_file ___GLO(254,___G__23__23_os_2d_delete_2d_file)
+#define ___PRM__23__23_os_2d_delete_2d_file ___PRM(254,___G__23__23_os_2d_delete_2d_file)
+#define ___GLO__23__23_os_2d_device_2d_close ___GLO(255,___G__23__23_os_2d_device_2d_close)
+#define ___PRM__23__23_os_2d_device_2d_close ___PRM(255,___G__23__23_os_2d_device_2d_close)
+#define ___GLO__23__23_os_2d_device_2d_directory_2d_open_2d_path ___GLO(256,___G__23__23_os_2d_device_2d_directory_2d_open_2d_path)
+#define ___PRM__23__23_os_2d_device_2d_directory_2d_open_2d_path ___PRM(256,___G__23__23_os_2d_device_2d_directory_2d_open_2d_path)
+#define ___GLO__23__23_os_2d_device_2d_directory_2d_read ___GLO(257,___G__23__23_os_2d_device_2d_directory_2d_read)
+#define ___PRM__23__23_os_2d_device_2d_directory_2d_read ___PRM(257,___G__23__23_os_2d_device_2d_directory_2d_read)
+#define ___GLO__23__23_os_2d_device_2d_event_2d_queue_2d_open ___GLO(258,___G__23__23_os_2d_device_2d_event_2d_queue_2d_open)
+#define ___PRM__23__23_os_2d_device_2d_event_2d_queue_2d_open ___PRM(258,___G__23__23_os_2d_device_2d_event_2d_queue_2d_open)
+#define ___GLO__23__23_os_2d_device_2d_event_2d_queue_2d_read ___GLO(259,___G__23__23_os_2d_device_2d_event_2d_queue_2d_read)
+#define ___PRM__23__23_os_2d_device_2d_event_2d_queue_2d_read ___PRM(259,___G__23__23_os_2d_device_2d_event_2d_queue_2d_read)
+#define ___GLO__23__23_os_2d_device_2d_force_2d_output ___GLO(260,___G__23__23_os_2d_device_2d_force_2d_output)
+#define ___PRM__23__23_os_2d_device_2d_force_2d_output ___PRM(260,___G__23__23_os_2d_device_2d_force_2d_output)
+#define ___GLO__23__23_os_2d_device_2d_kind ___GLO(261,___G__23__23_os_2d_device_2d_kind)
+#define ___PRM__23__23_os_2d_device_2d_kind ___PRM(261,___G__23__23_os_2d_device_2d_kind)
+#define ___GLO__23__23_os_2d_device_2d_process_2d_pid ___GLO(262,___G__23__23_os_2d_device_2d_process_2d_pid)
+#define ___PRM__23__23_os_2d_device_2d_process_2d_pid ___PRM(262,___G__23__23_os_2d_device_2d_process_2d_pid)
+#define ___GLO__23__23_os_2d_device_2d_process_2d_status ___GLO(263,___G__23__23_os_2d_device_2d_process_2d_status)
+#define ___PRM__23__23_os_2d_device_2d_process_2d_status ___PRM(263,___G__23__23_os_2d_device_2d_process_2d_status)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_default_2d_options ___GLO(264,___G__23__23_os_2d_device_2d_stream_2d_default_2d_options)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_default_2d_options ___PRM(264,___G__23__23_os_2d_device_2d_stream_2d_default_2d_options)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_open_2d_path ___GLO(265,___G__23__23_os_2d_device_2d_stream_2d_open_2d_path)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_open_2d_path ___PRM(265,___G__23__23_os_2d_device_2d_stream_2d_open_2d_path)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_open_2d_predefined ___GLO(266,___G__23__23_os_2d_device_2d_stream_2d_open_2d_predefined)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_open_2d_predefined ___PRM(266,___G__23__23_os_2d_device_2d_stream_2d_open_2d_predefined)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_open_2d_process ___GLO(267,___G__23__23_os_2d_device_2d_stream_2d_open_2d_process)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_open_2d_process ___PRM(267,___G__23__23_os_2d_device_2d_stream_2d_open_2d_process)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_ ___GLO(268,___G__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_ ___PRM(268,___G__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_read ___GLO(269,___G__23__23_os_2d_device_2d_stream_2d_read)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_read ___PRM(269,___G__23__23_os_2d_device_2d_stream_2d_read)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_seek ___GLO(270,___G__23__23_os_2d_device_2d_stream_2d_seek)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_seek ___PRM(270,___G__23__23_os_2d_device_2d_stream_2d_seek)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_width ___GLO(271,___G__23__23_os_2d_device_2d_stream_2d_width)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_width ___PRM(271,___G__23__23_os_2d_device_2d_stream_2d_width)
+#define ___GLO__23__23_os_2d_device_2d_stream_2d_write ___GLO(272,___G__23__23_os_2d_device_2d_stream_2d_write)
+#define ___PRM__23__23_os_2d_device_2d_stream_2d_write ___PRM(272,___G__23__23_os_2d_device_2d_stream_2d_write)
+#define ___GLO__23__23_os_2d_device_2d_tcp_2d_client_2d_open ___GLO(273,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_open)
+#define ___PRM__23__23_os_2d_device_2d_tcp_2d_client_2d_open ___PRM(273,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_open)
+#define ___GLO__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info ___GLO(274,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info)
+#define ___PRM__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info ___PRM(274,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info)
+#define ___GLO__23__23_os_2d_device_2d_tcp_2d_server_2d_open ___GLO(275,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_open)
+#define ___PRM__23__23_os_2d_device_2d_tcp_2d_server_2d_open ___PRM(275,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_open)
+#define ___GLO__23__23_os_2d_device_2d_tcp_2d_server_2d_read ___GLO(276,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_read)
+#define ___PRM__23__23_os_2d_device_2d_tcp_2d_server_2d_read ___PRM(276,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_read)
+#define ___GLO__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info ___GLO(277,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info)
+#define ___PRM__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info ___PRM(277,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info)
+#define ___GLO__23__23_os_2d_device_2d_tty_2d_history ___GLO(278,___G__23__23_os_2d_device_2d_tty_2d_history)
+#define ___PRM__23__23_os_2d_device_2d_tty_2d_history ___PRM(278,___G__23__23_os_2d_device_2d_tty_2d_history)
+#define ___GLO__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_ ___GLO(279,___G__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_)
+#define ___PRM__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_ ___PRM(279,___G__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_)
+#define ___GLO__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_ ___GLO(280,___G__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_)
+#define ___PRM__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_ ___PRM(280,___G__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_)
+#define ___GLO__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_ ___GLO(281,___G__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_)
+#define ___PRM__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_ ___PRM(281,___G__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_)
+#define ___GLO__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_ ___GLO(282,___G__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_)
+#define ___PRM__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_ ___PRM(282,___G__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_)
+#define ___GLO__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_ ___GLO(283,___G__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_)
+#define ___PRM__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_ ___PRM(283,___G__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_)
+#define ___GLO__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_ ___GLO(284,___G__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_)
+#define ___PRM__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_ ___PRM(284,___G__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_)
+#define ___GLO__23__23_os_2d_environ ___GLO(285,___G__23__23_os_2d_environ)
+#define ___PRM__23__23_os_2d_environ ___PRM(285,___G__23__23_os_2d_environ)
+#define ___GLO__23__23_os_2d_err_2d_code_2d__3e_string ___GLO(286,___G__23__23_os_2d_err_2d_code_2d__3e_string)
+#define ___PRM__23__23_os_2d_err_2d_code_2d__3e_string ___PRM(286,___G__23__23_os_2d_err_2d_code_2d__3e_string)
+#define ___GLO__23__23_os_2d_exe_2d_extension_2d_string_2d_saved ___GLO(287,___G__23__23_os_2d_exe_2d_extension_2d_string_2d_saved)
+#define ___PRM__23__23_os_2d_exe_2d_extension_2d_string_2d_saved ___PRM(287,___G__23__23_os_2d_exe_2d_extension_2d_string_2d_saved)
+#define ___GLO__23__23_os_2d_file_2d_info ___GLO(288,___G__23__23_os_2d_file_2d_info)
+#define ___PRM__23__23_os_2d_file_2d_info ___PRM(288,___G__23__23_os_2d_file_2d_info)
+#define ___GLO__23__23_os_2d_file_2d_times_2d_set_21_ ___GLO(289,___G__23__23_os_2d_file_2d_times_2d_set_21_)
+#define ___PRM__23__23_os_2d_file_2d_times_2d_set_21_ ___PRM(289,___G__23__23_os_2d_file_2d_times_2d_set_21_)
+#define ___GLO__23__23_os_2d_getenv ___GLO(290,___G__23__23_os_2d_getenv)
+#define ___PRM__23__23_os_2d_getenv ___PRM(290,___G__23__23_os_2d_getenv)
+#define ___GLO__23__23_os_2d_getpid ___GLO(291,___G__23__23_os_2d_getpid)
+#define ___PRM__23__23_os_2d_getpid ___PRM(291,___G__23__23_os_2d_getpid)
+#define ___GLO__23__23_os_2d_getppid ___GLO(292,___G__23__23_os_2d_getppid)
+#define ___PRM__23__23_os_2d_getppid ___PRM(292,___G__23__23_os_2d_getppid)
+#define ___GLO__23__23_os_2d_group_2d_info ___GLO(293,___G__23__23_os_2d_group_2d_info)
+#define ___PRM__23__23_os_2d_group_2d_info ___PRM(293,___G__23__23_os_2d_group_2d_info)
+#define ___GLO__23__23_os_2d_host_2d_info ___GLO(294,___G__23__23_os_2d_host_2d_info)
+#define ___PRM__23__23_os_2d_host_2d_info ___PRM(294,___G__23__23_os_2d_host_2d_info)
+#define ___GLO__23__23_os_2d_host_2d_name ___GLO(295,___G__23__23_os_2d_host_2d_name)
+#define ___PRM__23__23_os_2d_host_2d_name ___PRM(295,___G__23__23_os_2d_host_2d_name)
+#define ___GLO__23__23_os_2d_load_2d_object_2d_file ___GLO(296,___G__23__23_os_2d_load_2d_object_2d_file)
+#define ___PRM__23__23_os_2d_load_2d_object_2d_file ___PRM(296,___G__23__23_os_2d_load_2d_object_2d_file)
+#define ___GLO__23__23_os_2d_make_2d_tls_2d_context ___GLO(297,___G__23__23_os_2d_make_2d_tls_2d_context)
+#define ___PRM__23__23_os_2d_make_2d_tls_2d_context ___PRM(297,___G__23__23_os_2d_make_2d_tls_2d_context)
+#define ___GLO__23__23_os_2d_network_2d_info ___GLO(298,___G__23__23_os_2d_network_2d_info)
+#define ___PRM__23__23_os_2d_network_2d_info ___PRM(298,___G__23__23_os_2d_network_2d_info)
+#define ___GLO__23__23_os_2d_obj_2d_extension_2d_string_2d_saved ___GLO(299,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
+#define ___PRM__23__23_os_2d_obj_2d_extension_2d_string_2d_saved ___PRM(299,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
+#define ___GLO__23__23_os_2d_path_2d_gambcdir ___GLO(300,___G__23__23_os_2d_path_2d_gambcdir)
+#define ___PRM__23__23_os_2d_path_2d_gambcdir ___PRM(300,___G__23__23_os_2d_path_2d_gambcdir)
+#define ___GLO__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup ___GLO(301,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
+#define ___PRM__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup ___PRM(301,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
+#define ___GLO__23__23_os_2d_path_2d_homedir ___GLO(302,___G__23__23_os_2d_path_2d_homedir)
+#define ___PRM__23__23_os_2d_path_2d_homedir ___PRM(302,___G__23__23_os_2d_path_2d_homedir)
+#define ___GLO__23__23_os_2d_path_2d_normalize_2d_directory ___GLO(303,___G__23__23_os_2d_path_2d_normalize_2d_directory)
+#define ___PRM__23__23_os_2d_path_2d_normalize_2d_directory ___PRM(303,___G__23__23_os_2d_path_2d_normalize_2d_directory)
+#define ___GLO__23__23_os_2d_port_2d_decode_2d_chars_21_ ___GLO(304,___G__23__23_os_2d_port_2d_decode_2d_chars_21_)
+#define ___PRM__23__23_os_2d_port_2d_decode_2d_chars_21_ ___PRM(304,___G__23__23_os_2d_port_2d_decode_2d_chars_21_)
+#define ___GLO__23__23_os_2d_port_2d_encode_2d_chars_21_ ___GLO(305,___G__23__23_os_2d_port_2d_encode_2d_chars_21_)
+#define ___PRM__23__23_os_2d_port_2d_encode_2d_chars_21_ ___PRM(305,___G__23__23_os_2d_port_2d_encode_2d_chars_21_)
+#define ___GLO__23__23_os_2d_protocol_2d_info ___GLO(306,___G__23__23_os_2d_protocol_2d_info)
+#define ___PRM__23__23_os_2d_protocol_2d_info ___PRM(306,___G__23__23_os_2d_protocol_2d_info)
+#define ___GLO__23__23_os_2d_rename_2d_file ___GLO(307,___G__23__23_os_2d_rename_2d_file)
+#define ___PRM__23__23_os_2d_rename_2d_file ___PRM(307,___G__23__23_os_2d_rename_2d_file)
+#define ___GLO__23__23_os_2d_service_2d_info ___GLO(308,___G__23__23_os_2d_service_2d_info)
+#define ___PRM__23__23_os_2d_service_2d_info ___PRM(308,___G__23__23_os_2d_service_2d_info)
+#define ___GLO__23__23_os_2d_set_2d_current_2d_directory ___GLO(309,___G__23__23_os_2d_set_2d_current_2d_directory)
+#define ___PRM__23__23_os_2d_set_2d_current_2d_directory ___PRM(309,___G__23__23_os_2d_set_2d_current_2d_directory)
+#define ___GLO__23__23_os_2d_setenv ___GLO(310,___G__23__23_os_2d_setenv)
+#define ___PRM__23__23_os_2d_setenv ___PRM(310,___G__23__23_os_2d_setenv)
+#define ___GLO__23__23_os_2d_shell_2d_command ___GLO(311,___G__23__23_os_2d_shell_2d_command)
+#define ___PRM__23__23_os_2d_shell_2d_command ___PRM(311,___G__23__23_os_2d_shell_2d_command)
+#define ___GLO__23__23_os_2d_system_2d_type_2d_saved ___GLO(312,___G__23__23_os_2d_system_2d_type_2d_saved)
+#define ___PRM__23__23_os_2d_system_2d_type_2d_saved ___PRM(312,___G__23__23_os_2d_system_2d_type_2d_saved)
+#define ___GLO__23__23_os_2d_system_2d_type_2d_string_2d_saved ___GLO(313,___G__23__23_os_2d_system_2d_type_2d_string_2d_saved)
+#define ___PRM__23__23_os_2d_system_2d_type_2d_string_2d_saved ___PRM(313,___G__23__23_os_2d_system_2d_type_2d_string_2d_saved)
+#define ___GLO__23__23_os_2d_user_2d_info ___GLO(314,___G__23__23_os_2d_user_2d_info)
+#define ___PRM__23__23_os_2d_user_2d_info ___PRM(314,___G__23__23_os_2d_user_2d_info)
+#define ___GLO__23__23_os_2d_user_2d_name ___GLO(315,___G__23__23_os_2d_user_2d_name)
+#define ___PRM__23__23_os_2d_user_2d_name ___PRM(315,___G__23__23_os_2d_user_2d_name)
+#define ___GLO__23__23_process_2d_statistics ___GLO(316,___G__23__23_process_2d_statistics)
+#define ___PRM__23__23_process_2d_statistics ___PRM(316,___G__23__23_process_2d_statistics)
+#define ___GLO__23__23_process_2d_times ___GLO(317,___G__23__23_process_2d_times)
+#define ___PRM__23__23_process_2d_times ___PRM(317,___G__23__23_process_2d_times)
+#define ___GLO__23__23_processed_2d_command_2d_line ___GLO(318,___G__23__23_processed_2d_command_2d_line)
+#define ___PRM__23__23_processed_2d_command_2d_line ___PRM(318,___G__23__23_processed_2d_command_2d_line)
+#define ___GLO__23__23_processor_2d_cache_2d_size ___GLO(319,___G__23__23_processor_2d_cache_2d_size)
+#define ___PRM__23__23_processor_2d_cache_2d_size ___PRM(319,___G__23__23_processor_2d_cache_2d_size)
+#define ___GLO__23__23_processor_2d_count ___GLO(320,___G__23__23_processor_2d_count)
+#define ___PRM__23__23_processor_2d_count ___PRM(320,___G__23__23_processor_2d_count)
+#define ___GLO__23__23_program_2d_descr ___GLO(321,___G__23__23_program_2d_descr)
+#define ___PRM__23__23_program_2d_descr ___PRM(321,___G__23__23_program_2d_descr)
+#define ___GLO__23__23_promise_2d_result ___GLO(322,___G__23__23_promise_2d_result)
+#define ___PRM__23__23_promise_2d_result ___PRM(322,___G__23__23_promise_2d_result)
+#define ___GLO__23__23_promise_2d_result_2d_set_21_ ___GLO(323,___G__23__23_promise_2d_result_2d_set_21_)
+#define ___PRM__23__23_promise_2d_result_2d_set_21_ ___PRM(323,___G__23__23_promise_2d_result_2d_set_21_)
+#define ___GLO__23__23_promise_2d_thunk ___GLO(324,___G__23__23_promise_2d_thunk)
+#define ___PRM__23__23_promise_2d_thunk ___PRM(324,___G__23__23_promise_2d_thunk)
+#define ___GLO__23__23_promise_2d_thunk_2d_set_21_ ___GLO(325,___G__23__23_promise_2d_thunk_2d_set_21_)
+#define ___PRM__23__23_promise_2d_thunk_2d_set_21_ ___PRM(325,___G__23__23_promise_2d_thunk_2d_set_21_)
+#define ___GLO__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary ___GLO(326,___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary)
+#define ___PRM__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary ___PRM(326,___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary)
+#define ___GLO__23__23_raise_2d_heap_2d_overflow_2d_exception ___GLO(327,___G__23__23_raise_2d_heap_2d_overflow_2d_exception)
+#define ___PRM__23__23_raise_2d_heap_2d_overflow_2d_exception ___PRM(327,___G__23__23_raise_2d_heap_2d_overflow_2d_exception)
+#define ___GLO__23__23_raise_2d_keyword_2d_expected_2d_exception ___GLO(328,___G__23__23_raise_2d_keyword_2d_expected_2d_exception)
+#define ___PRM__23__23_raise_2d_keyword_2d_expected_2d_exception ___PRM(328,___G__23__23_raise_2d_keyword_2d_expected_2d_exception)
+#define ___GLO__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary ___GLO(329,___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary)
+#define ___PRM__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary ___PRM(329,___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary)
+#define ___GLO__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception ___GLO(330,___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception)
+#define ___PRM__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception ___PRM(330,___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception)
+#define ___GLO__23__23_raise_2d_nonprocedure_2d_operator_2d_exception ___GLO(331,___G__23__23_raise_2d_nonprocedure_2d_operator_2d_exception)
+#define ___PRM__23__23_raise_2d_nonprocedure_2d_operator_2d_exception ___PRM(331,___G__23__23_raise_2d_nonprocedure_2d_operator_2d_exception)
+#define ___GLO__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception ___GLO(332,___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception)
+#define ___PRM__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception ___PRM(332,___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception)
+#define ___GLO__23__23_raise_2d_os_2d_exception ___GLO(333,___G__23__23_raise_2d_os_2d_exception)
+#define ___PRM__23__23_raise_2d_os_2d_exception ___PRM(333,___G__23__23_raise_2d_os_2d_exception)
+#define ___GLO__23__23_raise_2d_sfun_2d_conversion_2d_exception ___GLO(334,___G__23__23_raise_2d_sfun_2d_conversion_2d_exception)
+#define ___PRM__23__23_raise_2d_sfun_2d_conversion_2d_exception ___PRM(334,___G__23__23_raise_2d_sfun_2d_conversion_2d_exception)
+#define ___GLO__23__23_raise_2d_stack_2d_overflow_2d_exception ___GLO(335,___G__23__23_raise_2d_stack_2d_overflow_2d_exception)
+#define ___PRM__23__23_raise_2d_stack_2d_overflow_2d_exception ___PRM(335,___G__23__23_raise_2d_stack_2d_overflow_2d_exception)
+#define ___GLO__23__23_raise_2d_type_2d_exception ___GLO(336,___G__23__23_raise_2d_type_2d_exception)
+#define ___PRM__23__23_raise_2d_type_2d_exception ___PRM(336,___G__23__23_raise_2d_type_2d_exception)
+#define ___GLO__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception ___GLO(337,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception)
+#define ___PRM__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception ___PRM(337,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception)
+#define ___GLO__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary ___GLO(338,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary)
+#define ___PRM__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary ___PRM(338,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary)
+#define ___GLO__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception ___GLO(339,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception)
+#define ___PRM__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception ___PRM(339,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception)
+#define ___GLO__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary ___GLO(340,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary)
+#define ___PRM__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary ___PRM(340,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary)
+#define ___GLO__23__23_register_2d_module_2d_descr_21_ ___GLO(341,___G__23__23_register_2d_module_2d_descr_21_)
+#define ___PRM__23__23_register_2d_module_2d_descr_21_ ___PRM(341,___G__23__23_register_2d_module_2d_descr_21_)
+#define ___GLO__23__23_register_2d_module_2d_descrs_21_ ___GLO(342,___G__23__23_register_2d_module_2d_descrs_21_)
+#define ___PRM__23__23_register_2d_module_2d_descrs_21_ ___PRM(342,___G__23__23_register_2d_module_2d_descrs_21_)
+#define ___GLO__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_ ___GLO(343,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
+#define ___PRM__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_ ___PRM(343,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
+#define ___GLO__23__23_registered_2d_modules ___GLO(344,___G__23__23_registered_2d_modules)
+#define ___PRM__23__23_registered_2d_modules ___PRM(344,___G__23__23_registered_2d_modules)
+#define ___GLO__23__23_remote_2d_dbg_2d_addr ___GLO(345,___G__23__23_remote_2d_dbg_2d_addr)
+#define ___PRM__23__23_remote_2d_dbg_2d_addr ___PRM(345,___G__23__23_remote_2d_dbg_2d_addr)
+#define ___GLO__23__23_rest_2d_param_2d_check_2d_heap ___GLO(346,___G__23__23_rest_2d_param_2d_check_2d_heap)
+#define ___PRM__23__23_rest_2d_param_2d_check_2d_heap ___PRM(346,___G__23__23_rest_2d_param_2d_check_2d_heap)
+#define ___GLO__23__23_rest_2d_param_2d_heap_2d_overflow ___GLO(347,___G__23__23_rest_2d_param_2d_heap_2d_overflow)
+#define ___PRM__23__23_rest_2d_param_2d_heap_2d_overflow ___PRM(347,___G__23__23_rest_2d_param_2d_heap_2d_overflow)
+#define ___GLO__23__23_rest_2d_param_2d_resume_2d_procedure ___GLO(348,___G__23__23_rest_2d_param_2d_resume_2d_procedure)
+#define ___PRM__23__23_rest_2d_param_2d_resume_2d_procedure ___PRM(348,___G__23__23_rest_2d_param_2d_resume_2d_procedure)
+#define ___GLO__23__23_return_2d_fs ___GLO(349,___G__23__23_return_2d_fs)
+#define ___PRM__23__23_return_2d_fs ___PRM(349,___G__23__23_return_2d_fs)
+#define ___GLO__23__23_rpc_2d_server_2d_addr ___GLO(350,___G__23__23_rpc_2d_server_2d_addr)
+#define ___PRM__23__23_rpc_2d_server_2d_addr ___PRM(350,___G__23__23_rpc_2d_server_2d_addr)
+#define ___GLO__23__23_set_2d_debug_2d_settings_21_ ___GLO(351,___G__23__23_set_2d_debug_2d_settings_21_)
+#define ___PRM__23__23_set_2d_debug_2d_settings_21_ ___PRM(351,___G__23__23_set_2d_debug_2d_settings_21_)
+#define ___GLO__23__23_set_2d_gambcdir_21_ ___GLO(352,___G__23__23_set_2d_gambcdir_21_)
+#define ___PRM__23__23_set_2d_gambcdir_21_ ___PRM(352,___G__23__23_set_2d_gambcdir_21_)
+#define ___GLO__23__23_set_2d_live_2d_percent_21_ ___GLO(353,___G__23__23_set_2d_live_2d_percent_21_)
+#define ___PRM__23__23_set_2d_live_2d_percent_21_ ___PRM(353,___G__23__23_set_2d_live_2d_percent_21_)
+#define ___GLO__23__23_set_2d_max_2d_heap_21_ ___GLO(354,___G__23__23_set_2d_max_2d_heap_21_)
+#define ___PRM__23__23_set_2d_max_2d_heap_21_ ___PRM(354,___G__23__23_set_2d_max_2d_heap_21_)
+#define ___GLO__23__23_set_2d_min_2d_heap_21_ ___GLO(355,___G__23__23_set_2d_min_2d_heap_21_)
+#define ___PRM__23__23_set_2d_min_2d_heap_21_ ___PRM(355,___G__23__23_set_2d_min_2d_heap_21_)
+#define ___GLO__23__23_set_2d_standard_2d_level_21_ ___GLO(356,___G__23__23_set_2d_standard_2d_level_21_)
+#define ___PRM__23__23_set_2d_standard_2d_level_21_ ___PRM(356,___G__23__23_set_2d_standard_2d_level_21_)
+#define ___GLO__23__23_still_2d_copy ___GLO(357,___G__23__23_still_2d_copy)
+#define ___PRM__23__23_still_2d_copy ___PRM(357,___G__23__23_still_2d_copy)
+#define ___GLO__23__23_still_2d_obj_2d_refcount_2d_dec_21_ ___GLO(358,___G__23__23_still_2d_obj_2d_refcount_2d_dec_21_)
+#define ___PRM__23__23_still_2d_obj_2d_refcount_2d_dec_21_ ___PRM(358,___G__23__23_still_2d_obj_2d_refcount_2d_dec_21_)
+#define ___GLO__23__23_still_2d_obj_2d_refcount_2d_inc_21_ ___GLO(359,___G__23__23_still_2d_obj_2d_refcount_2d_inc_21_)
+#define ___PRM__23__23_still_2d_obj_2d_refcount_2d_inc_21_ ___PRM(359,___G__23__23_still_2d_obj_2d_refcount_2d_inc_21_)
+#define ___GLO__23__23_structure ___GLO(360,___G__23__23_structure)
+#define ___PRM__23__23_structure ___PRM(360,___G__23__23_structure)
+#define ___GLO__23__23_structure_2d_direct_2d_instance_2d_of_3f_ ___GLO(361,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_)
+#define ___PRM__23__23_structure_2d_direct_2d_instance_2d_of_3f_ ___PRM(361,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_)
+#define ___GLO__23__23_structure_2d_instance_2d_of_3f_ ___GLO(362,___G__23__23_structure_2d_instance_2d_of_3f_)
+#define ___PRM__23__23_structure_2d_instance_2d_of_3f_ ___PRM(362,___G__23__23_structure_2d_instance_2d_of_3f_)
+#define ___GLO__23__23_structure_2d_ref ___GLO(363,___G__23__23_structure_2d_ref)
+#define ___PRM__23__23_structure_2d_ref ___PRM(363,___G__23__23_structure_2d_ref)
+#define ___GLO__23__23_structure_2d_set_21_ ___GLO(364,___G__23__23_structure_2d_set_21_)
+#define ___PRM__23__23_structure_2d_set_21_ ___PRM(364,___G__23__23_structure_2d_set_21_)
+#define ___GLO__23__23_structure_2d_type ___GLO(365,___G__23__23_structure_2d_type)
+#define ___PRM__23__23_structure_2d_type ___PRM(365,___G__23__23_structure_2d_type)
+#define ___GLO__23__23_structure_2d_type_2d_set_21_ ___GLO(366,___G__23__23_structure_2d_type_2d_set_21_)
+#define ___PRM__23__23_structure_2d_type_2d_set_21_ ___PRM(366,___G__23__23_structure_2d_type_2d_set_21_)
+#define ___GLO__23__23_subprocedure_2d_id ___GLO(367,___G__23__23_subprocedure_2d_id)
+#define ___PRM__23__23_subprocedure_2d_id ___PRM(367,___G__23__23_subprocedure_2d_id)
+#define ___GLO__23__23_subprocedure_2d_nb_2d_closed ___GLO(368,___G__23__23_subprocedure_2d_nb_2d_closed)
+#define ___PRM__23__23_subprocedure_2d_nb_2d_closed ___PRM(368,___G__23__23_subprocedure_2d_nb_2d_closed)
+#define ___GLO__23__23_subprocedure_2d_nb_2d_parameters ___GLO(369,___G__23__23_subprocedure_2d_nb_2d_parameters)
+#define ___PRM__23__23_subprocedure_2d_nb_2d_parameters ___PRM(369,___G__23__23_subprocedure_2d_nb_2d_parameters)
+#define ___GLO__23__23_subprocedure_2d_parent ___GLO(370,___G__23__23_subprocedure_2d_parent)
+#define ___PRM__23__23_subprocedure_2d_parent ___PRM(370,___G__23__23_subprocedure_2d_parent)
+#define ___GLO__23__23_subprocedure_2d_parent_2d_info ___GLO(371,___G__23__23_subprocedure_2d_parent_2d_info)
+#define ___PRM__23__23_subprocedure_2d_parent_2d_info ___PRM(371,___G__23__23_subprocedure_2d_parent_2d_info)
+#define ___GLO__23__23_subprocedure_2d_parent_2d_name ___GLO(372,___G__23__23_subprocedure_2d_parent_2d_name)
+#define ___PRM__23__23_subprocedure_2d_parent_2d_name ___PRM(372,___G__23__23_subprocedure_2d_parent_2d_name)
+#define ___GLO__23__23_subprocedure_3f_ ___GLO(373,___G__23__23_subprocedure_3f_)
+#define ___PRM__23__23_subprocedure_3f_ ___PRM(373,___G__23__23_subprocedure_3f_)
+#define ___GLO__23__23_symbol_2d_table ___GLO(374,___G__23__23_symbol_2d_table)
+#define ___PRM__23__23_symbol_2d_table ___PRM(374,___G__23__23_symbol_2d_table)
+#define ___GLO__23__23_system_2d_stamp ___GLO(375,___G__23__23_system_2d_stamp)
+#define ___PRM__23__23_system_2d_stamp ___PRM(375,___G__23__23_system_2d_stamp)
+#define ___GLO__23__23_system_2d_stamp_2d_saved ___GLO(376,___G__23__23_system_2d_stamp_2d_saved)
+#define ___PRM__23__23_system_2d_stamp_2d_saved ___PRM(376,___G__23__23_system_2d_stamp_2d_saved)
+#define ___GLO__23__23_system_2d_version ___GLO(377,___G__23__23_system_2d_version)
+#define ___PRM__23__23_system_2d_version ___PRM(377,___G__23__23_system_2d_version)
+#define ___GLO__23__23_system_2d_version_2d_string ___GLO(378,___G__23__23_system_2d_version_2d_string)
+#define ___PRM__23__23_system_2d_version_2d_string ___PRM(378,___G__23__23_system_2d_version_2d_string)
+#define ___GLO__23__23_type_2d_fields ___GLO(379,___G__23__23_type_2d_fields)
+#define ___PRM__23__23_type_2d_fields ___PRM(379,___G__23__23_type_2d_fields)
+#define ___GLO__23__23_type_2d_flags ___GLO(380,___G__23__23_type_2d_flags)
+#define ___PRM__23__23_type_2d_flags ___PRM(380,___G__23__23_type_2d_flags)
+#define ___GLO__23__23_type_2d_id ___GLO(381,___G__23__23_type_2d_id)
+#define ___PRM__23__23_type_2d_id ___PRM(381,___G__23__23_type_2d_id)
+#define ___GLO__23__23_type_2d_name ___GLO(382,___G__23__23_type_2d_name)
+#define ___PRM__23__23_type_2d_name ___PRM(382,___G__23__23_type_2d_name)
+#define ___GLO__23__23_type_2d_super ___GLO(383,___G__23__23_type_2d_super)
+#define ___PRM__23__23_type_2d_super ___PRM(383,___G__23__23_type_2d_super)
+#define ___GLO__23__23_type_2d_type ___GLO(384,___G__23__23_type_2d_type)
+#define ___PRM__23__23_type_2d_type ___PRM(384,___G__23__23_type_2d_type)
+#define ___GLO__23__23_type_3f_ ___GLO(385,___G__23__23_type_3f_)
+#define ___PRM__23__23_type_3f_ ___PRM(385,___G__23__23_type_3f_)
+#define ___GLO__23__23_unchecked_2d_structure_2d_ref ___GLO(386,___G__23__23_unchecked_2d_structure_2d_ref)
+#define ___PRM__23__23_unchecked_2d_structure_2d_ref ___PRM(386,___G__23__23_unchecked_2d_structure_2d_ref)
+#define ___GLO__23__23_unchecked_2d_structure_2d_set_21_ ___GLO(387,___G__23__23_unchecked_2d_structure_2d_set_21_)
+#define ___PRM__23__23_unchecked_2d_structure_2d_set_21_ ___PRM(387,___G__23__23_unchecked_2d_structure_2d_set_21_)
+#define ___GLO__23__23_values_2d_length ___GLO(388,___G__23__23_values_2d_length)
+#define ___PRM__23__23_values_2d_length ___PRM(388,___G__23__23_values_2d_length)
+#define ___GLO__23__23_values_2d_ref ___GLO(389,___G__23__23_values_2d_ref)
+#define ___PRM__23__23_values_2d_ref ___PRM(389,___G__23__23_values_2d_ref)
+#define ___GLO__23__23_values_2d_set_21_ ___GLO(390,___G__23__23_values_2d_set_21_)
+#define ___PRM__23__23_values_2d_set_21_ ___PRM(390,___G__23__23_values_2d_set_21_)
+#define ___GLO__23__23_vm_2d_main_2d_module_2d_id ___GLO(391,___G__23__23_vm_2d_main_2d_module_2d_id)
+#define ___PRM__23__23_vm_2d_main_2d_module_2d_id ___PRM(391,___G__23__23_vm_2d_main_2d_module_2d_id)
+#define ___GLO__23__23_with_2d_no_2d_result_2d_expected ___GLO(392,___G__23__23_with_2d_no_2d_result_2d_expected)
+#define ___PRM__23__23_with_2d_no_2d_result_2d_expected ___PRM(392,___G__23__23_with_2d_no_2d_result_2d_expected)
+#define ___GLO__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel ___GLO(393,___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel)
+#define ___PRM__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel ___PRM(393,___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel)
+#define ___GLO_cfun_2d_conversion_2d_exception_2d_arguments ___GLO(394,___G_cfun_2d_conversion_2d_exception_2d_arguments)
+#define ___PRM_cfun_2d_conversion_2d_exception_2d_arguments ___PRM(394,___G_cfun_2d_conversion_2d_exception_2d_arguments)
+#define ___GLO_cfun_2d_conversion_2d_exception_2d_code ___GLO(395,___G_cfun_2d_conversion_2d_exception_2d_code)
+#define ___PRM_cfun_2d_conversion_2d_exception_2d_code ___PRM(395,___G_cfun_2d_conversion_2d_exception_2d_code)
+#define ___GLO_cfun_2d_conversion_2d_exception_2d_message ___GLO(396,___G_cfun_2d_conversion_2d_exception_2d_message)
+#define ___PRM_cfun_2d_conversion_2d_exception_2d_message ___PRM(396,___G_cfun_2d_conversion_2d_exception_2d_message)
+#define ___GLO_cfun_2d_conversion_2d_exception_2d_procedure ___GLO(397,___G_cfun_2d_conversion_2d_exception_2d_procedure)
+#define ___PRM_cfun_2d_conversion_2d_exception_2d_procedure ___PRM(397,___G_cfun_2d_conversion_2d_exception_2d_procedure)
+#define ___GLO_cfun_2d_conversion_2d_exception_3f_ ___GLO(398,___G_cfun_2d_conversion_2d_exception_3f_)
+#define ___PRM_cfun_2d_conversion_2d_exception_3f_ ___PRM(398,___G_cfun_2d_conversion_2d_exception_3f_)
+#define ___GLO_configure_2d_command_2d_string ___GLO(399,___G_configure_2d_command_2d_string)
+#define ___PRM_configure_2d_command_2d_string ___PRM(399,___G_configure_2d_command_2d_string)
+#define ___GLO_err_2d_code_2d__3e_string ___GLO(400,___G_err_2d_code_2d__3e_string)
+#define ___PRM_err_2d_code_2d__3e_string ___PRM(400,___G_err_2d_code_2d__3e_string)
+#define ___GLO_foreign_2d_address ___GLO(401,___G_foreign_2d_address)
+#define ___PRM_foreign_2d_address ___PRM(401,___G_foreign_2d_address)
+#define ___GLO_foreign_2d_release_21_ ___GLO(402,___G_foreign_2d_release_21_)
+#define ___PRM_foreign_2d_release_21_ ___PRM(402,___G_foreign_2d_release_21_)
+#define ___GLO_foreign_2d_released_3f_ ___GLO(403,___G_foreign_2d_released_3f_)
+#define ___PRM_foreign_2d_released_3f_ ___PRM(403,___G_foreign_2d_released_3f_)
+#define ___GLO_foreign_2d_tags ___GLO(404,___G_foreign_2d_tags)
+#define ___PRM_foreign_2d_tags ___PRM(404,___G_foreign_2d_tags)
+#define ___GLO_foreign_3f_ ___GLO(405,___G_foreign_3f_)
+#define ___PRM_foreign_3f_ ___PRM(405,___G_foreign_3f_)
+#define ___GLO_heap_2d_overflow_2d_exception_3f_ ___GLO(406,___G_heap_2d_overflow_2d_exception_3f_)
+#define ___PRM_heap_2d_overflow_2d_exception_3f_ ___PRM(406,___G_heap_2d_overflow_2d_exception_3f_)
+#define ___GLO_keyword_2d_expected_2d_exception_2d_arguments ___GLO(407,___G_keyword_2d_expected_2d_exception_2d_arguments)
+#define ___PRM_keyword_2d_expected_2d_exception_2d_arguments ___PRM(407,___G_keyword_2d_expected_2d_exception_2d_arguments)
+#define ___GLO_keyword_2d_expected_2d_exception_2d_procedure ___GLO(408,___G_keyword_2d_expected_2d_exception_2d_procedure)
+#define ___PRM_keyword_2d_expected_2d_exception_2d_procedure ___PRM(408,___G_keyword_2d_expected_2d_exception_2d_procedure)
+#define ___GLO_keyword_2d_expected_2d_exception_3f_ ___GLO(409,___G_keyword_2d_expected_2d_exception_3f_)
+#define ___PRM_keyword_2d_expected_2d_exception_3f_ ___PRM(409,___G_keyword_2d_expected_2d_exception_3f_)
+#define ___GLO_multiple_2d_c_2d_return_2d_exception_3f_ ___GLO(410,___G_multiple_2d_c_2d_return_2d_exception_3f_)
+#define ___PRM_multiple_2d_c_2d_return_2d_exception_3f_ ___PRM(410,___G_multiple_2d_c_2d_return_2d_exception_3f_)
+#define ___GLO_nonprocedure_2d_operator_2d_exception_2d_arguments ___GLO(411,___G_nonprocedure_2d_operator_2d_exception_2d_arguments)
+#define ___PRM_nonprocedure_2d_operator_2d_exception_2d_arguments ___PRM(411,___G_nonprocedure_2d_operator_2d_exception_2d_arguments)
+#define ___GLO_nonprocedure_2d_operator_2d_exception_2d_code ___GLO(412,___G_nonprocedure_2d_operator_2d_exception_2d_code)
+#define ___PRM_nonprocedure_2d_operator_2d_exception_2d_code ___PRM(412,___G_nonprocedure_2d_operator_2d_exception_2d_code)
+#define ___GLO_nonprocedure_2d_operator_2d_exception_2d_operator ___GLO(413,___G_nonprocedure_2d_operator_2d_exception_2d_operator)
+#define ___PRM_nonprocedure_2d_operator_2d_exception_2d_operator ___PRM(413,___G_nonprocedure_2d_operator_2d_exception_2d_operator)
+#define ___GLO_nonprocedure_2d_operator_2d_exception_2d_rte ___GLO(414,___G_nonprocedure_2d_operator_2d_exception_2d_rte)
+#define ___PRM_nonprocedure_2d_operator_2d_exception_2d_rte ___PRM(414,___G_nonprocedure_2d_operator_2d_exception_2d_rte)
+#define ___GLO_nonprocedure_2d_operator_2d_exception_3f_ ___GLO(415,___G_nonprocedure_2d_operator_2d_exception_3f_)
+#define ___PRM_nonprocedure_2d_operator_2d_exception_3f_ ___PRM(415,___G_nonprocedure_2d_operator_2d_exception_3f_)
+#define ___GLO_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments ___GLO(416,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments)
+#define ___PRM_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments ___PRM(416,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments)
+#define ___GLO_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure ___GLO(417,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure)
+#define ___PRM_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure ___PRM(417,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure)
+#define ___GLO_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_ ___GLO(418,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_)
+#define ___PRM_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_ ___PRM(418,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_)
+#define ___GLO_os_2d_exception_2d_arguments ___GLO(419,___G_os_2d_exception_2d_arguments)
+#define ___PRM_os_2d_exception_2d_arguments ___PRM(419,___G_os_2d_exception_2d_arguments)
+#define ___GLO_os_2d_exception_2d_code ___GLO(420,___G_os_2d_exception_2d_code)
+#define ___PRM_os_2d_exception_2d_code ___PRM(420,___G_os_2d_exception_2d_code)
+#define ___GLO_os_2d_exception_2d_message ___GLO(421,___G_os_2d_exception_2d_message)
+#define ___PRM_os_2d_exception_2d_message ___PRM(421,___G_os_2d_exception_2d_message)
+#define ___GLO_os_2d_exception_2d_procedure ___GLO(422,___G_os_2d_exception_2d_procedure)
+#define ___PRM_os_2d_exception_2d_procedure ___PRM(422,___G_os_2d_exception_2d_procedure)
+#define ___GLO_os_2d_exception_3f_ ___GLO(423,___G_os_2d_exception_3f_)
+#define ___PRM_os_2d_exception_3f_ ___PRM(423,___G_os_2d_exception_3f_)
+#define ___GLO_sfun_2d_conversion_2d_exception_2d_arguments ___GLO(424,___G_sfun_2d_conversion_2d_exception_2d_arguments)
+#define ___PRM_sfun_2d_conversion_2d_exception_2d_arguments ___PRM(424,___G_sfun_2d_conversion_2d_exception_2d_arguments)
+#define ___GLO_sfun_2d_conversion_2d_exception_2d_code ___GLO(425,___G_sfun_2d_conversion_2d_exception_2d_code)
+#define ___PRM_sfun_2d_conversion_2d_exception_2d_code ___PRM(425,___G_sfun_2d_conversion_2d_exception_2d_code)
+#define ___GLO_sfun_2d_conversion_2d_exception_2d_message ___GLO(426,___G_sfun_2d_conversion_2d_exception_2d_message)
+#define ___PRM_sfun_2d_conversion_2d_exception_2d_message ___PRM(426,___G_sfun_2d_conversion_2d_exception_2d_message)
+#define ___GLO_sfun_2d_conversion_2d_exception_2d_procedure ___GLO(427,___G_sfun_2d_conversion_2d_exception_2d_procedure)
+#define ___PRM_sfun_2d_conversion_2d_exception_2d_procedure ___PRM(427,___G_sfun_2d_conversion_2d_exception_2d_procedure)
+#define ___GLO_sfun_2d_conversion_2d_exception_3f_ ___GLO(428,___G_sfun_2d_conversion_2d_exception_3f_)
+#define ___PRM_sfun_2d_conversion_2d_exception_3f_ ___PRM(428,___G_sfun_2d_conversion_2d_exception_3f_)
+#define ___GLO_stack_2d_overflow_2d_exception_3f_ ___GLO(429,___G_stack_2d_overflow_2d_exception_3f_)
+#define ___PRM_stack_2d_overflow_2d_exception_3f_ ___PRM(429,___G_stack_2d_overflow_2d_exception_3f_)
+#define ___GLO_system_2d_stamp ___GLO(430,___G_system_2d_stamp)
+#define ___PRM_system_2d_stamp ___PRM(430,___G_system_2d_stamp)
+#define ___GLO_system_2d_type ___GLO(431,___G_system_2d_type)
+#define ___PRM_system_2d_type ___PRM(431,___G_system_2d_type)
+#define ___GLO_system_2d_type_2d_string ___GLO(432,___G_system_2d_type_2d_string)
+#define ___PRM_system_2d_type_2d_string ___PRM(432,___G_system_2d_type_2d_string)
+#define ___GLO_system_2d_version ___GLO(433,___G_system_2d_version)
+#define ___PRM_system_2d_version ___PRM(433,___G_system_2d_version)
+#define ___GLO_system_2d_version_2d_string ___GLO(434,___G_system_2d_version_2d_string)
+#define ___PRM_system_2d_version_2d_string ___PRM(434,___G_system_2d_version_2d_string)
+#define ___GLO_type_2d_exception_2d_arg_2d_num ___GLO(435,___G_type_2d_exception_2d_arg_2d_num)
+#define ___PRM_type_2d_exception_2d_arg_2d_num ___PRM(435,___G_type_2d_exception_2d_arg_2d_num)
+#define ___GLO_type_2d_exception_2d_arguments ___GLO(436,___G_type_2d_exception_2d_arguments)
+#define ___PRM_type_2d_exception_2d_arguments ___PRM(436,___G_type_2d_exception_2d_arguments)
+#define ___GLO_type_2d_exception_2d_procedure ___GLO(437,___G_type_2d_exception_2d_procedure)
+#define ___PRM_type_2d_exception_2d_procedure ___PRM(437,___G_type_2d_exception_2d_procedure)
+#define ___GLO_type_2d_exception_2d_type_2d_id ___GLO(438,___G_type_2d_exception_2d_type_2d_id)
+#define ___PRM_type_2d_exception_2d_type_2d_id ___PRM(438,___G_type_2d_exception_2d_type_2d_id)
+#define ___GLO_type_2d_exception_3f_ ___GLO(439,___G_type_2d_exception_3f_)
+#define ___PRM_type_2d_exception_3f_ ___PRM(439,___G_type_2d_exception_3f_)
+#define ___GLO_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments ___GLO(440,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments)
+#define ___PRM_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments ___PRM(440,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments)
+#define ___GLO_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure ___GLO(441,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure)
+#define ___PRM_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure ___PRM(441,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure)
+#define ___GLO_unknown_2d_keyword_2d_argument_2d_exception_3f_ ___GLO(442,___G_unknown_2d_keyword_2d_argument_2d_exception_3f_)
+#define ___PRM_unknown_2d_keyword_2d_argument_2d_exception_3f_ ___PRM(442,___G_unknown_2d_keyword_2d_argument_2d_exception_3f_)
+#define ___GLO_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments ___GLO(443,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments)
+#define ___PRM_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments ___PRM(443,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments)
+#define ___GLO_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure ___GLO(444,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure)
+#define ___PRM_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure ___PRM(444,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure)
+#define ___GLO_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_ ___GLO(445,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_)
+#define ___PRM_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_ ___PRM(445,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_)
 
 ___BEGIN_CNS
  ___DEF_CNS(___REF_SYM(71,___S_void_2a_),___REF_NUL)
@@ -3349,6 +3404,17 @@ ___DEF_M_HLBL(___L7__23__23_extract_2d_procedure_2d_and_2d_arguments)
 ___DEF_M_HLBL(___L8__23__23_extract_2d_procedure_2d_and_2d_arguments)
 ___DEF_M_HLBL(___L9__23__23_extract_2d_procedure_2d_and_2d_arguments)
 ___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_make_2d_promise)
+___DEF_M_HLBL(___L1__23__23_make_2d_promise)
+___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_promise_2d_thunk)
+___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_promise_2d_thunk_2d_set_21_)
+___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_promise_2d_result)
+___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_promise_2d_result_2d_set_21_)
+___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_force_2d_undetermined)
 ___DEF_M_HLBL(___L1__23__23_force_2d_undetermined)
 ___DEF_M_HLBL(___L2__23__23_force_2d_undetermined)
@@ -3502,6 +3568,17 @@ ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_apply)
 ___DEF_M_HLBL(___L1__23__23_apply)
 ___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_make_2d_values)
+___DEF_M_HLBL(___L1__23__23_make_2d_values)
+___DEF_M_HLBL(___L2__23__23_make_2d_values)
+___DEF_M_HLBL(___L3__23__23_make_2d_values)
+___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_values_2d_length)
+___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_values_2d_ref)
+___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_values_2d_set_21_)
+___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_closure_3f_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_make_2d_closure)
@@ -3625,6 +3702,11 @@ ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_structure_2d_type)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_structure_2d_type_2d_set_21_)
+___DEF_M_HLBL_INTRO
+___DEF_M_HLBL(___L0__23__23_make_2d_structure)
+___DEF_M_HLBL(___L1__23__23_make_2d_structure)
+___DEF_M_HLBL(___L2__23__23_make_2d_structure)
+___DEF_M_HLBL(___L3__23__23_make_2d_structure)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_structure)
 ___DEF_M_HLBL(___L1__23__23_structure)
@@ -4191,7 +4273,7 @@ ___DEF_GLBL(___L__20___kernel)
    ___ADD_VECTOR_ELEM(7,___FAL)
    ___END_ALLOC_VECTOR(8)
    ___SET_R1(___GET_VECTOR(8))
-   ___SET_GLO(197,___G__23__23_interrupt_2d_vector,___R1)
+   ___SET_GLO(198,___G__23__23_interrupt_2d_vector,___R1)
    ___SET_STK(1,___R0)
    ___SET_R0(___LBL(3))
    ___ADJFP(4)
@@ -4199,12 +4281,12 @@ ___DEF_GLBL(___L__20___kernel)
 ___DEF_SLBL(1,___L1__20___kernel)
    ___POLL(2)
 ___DEF_SLBL(2,___L2__20___kernel)
-   ___JUMPINT(___SET_NARGS(0),___PRC(304),___L__23__23_make_2d_jobs)
+   ___JUMPINT(___SET_NARGS(0),___PRC(315),___L__23__23_make_2d_jobs)
 ___DEF_SLBL(3,___L3__20___kernel)
-   ___SET_GLO(181,___G__23__23_gc_2d_interrupt_2d_jobs,___R1)
+   ___SET_GLO(182,___G__23__23_gc_2d_interrupt_2d_jobs,___R1)
    ___SET_R1(___CONS(___NUL,___NUL))
    ___SETCAR(___R1,___R1)
-   ___SET_GLO(160,___G__23__23_final_2d_will_2d_registry,___R1)
+   ___SET_GLO(161,___G__23__23_final_2d_will_2d_registry,___R1)
    ___SET_R2(___LBL(24))
    ___SET_R1(___FIX(2L))
    ___SET_R0(___LBL(5))
@@ -4214,9 +4296,9 @@ ___DEF_SLBL(4,___L4__20___kernel)
 ___DEF_SLBL(5,___L5__20___kernel)
    ___STRUCTURETYPESET(___SUB(0),___SUB(0))
    ___SUBTYPESET(___SUB(0),___FIX(4L))
-   ___SET_GLO(376,___G__23__23_type_2d_type,___SUB(0))
+   ___SET_GLO(384,___G__23__23_type_2d_type,___SUB(0))
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(0),___PRC(853),___L__20___kernel_23_8)
+   ___JUMPINT(___SET_NARGS(0),___PRC(880),___L__20___kernel_23_8)
 ___DEF_SLBL(6,___L6__20___kernel)
    ___SET_R0(___LBL(12))
    ___IF(___NULLP(___R1))
@@ -4238,7 +4320,7 @@ ___DEF_GLBL(___L26__20___kernel)
    ___ADJFP(8)
    ___POLL(8)
 ___DEF_SLBL(8,___L8__20___kernel)
-   ___JUMPINT(___SET_NARGS(1),___PRC(618),___L__23__23_make_2d_interned_2d_symbol)
+   ___JUMPINT(___SET_NARGS(1),___PRC(645),___L__23__23_make_2d_interned_2d_symbol)
 ___DEF_GLBL(___L27__20___kernel)
    ___SET_R1(___NUL)
    ___JUMPPRM(___NOTHING,___R0)
@@ -4251,31 +4333,31 @@ ___DEF_SLBL(11,___L11__20___kernel)
    ___ADJFP(-8)
    ___JUMPPRM(___NOTHING,___STK(1))
 ___DEF_SLBL(12,___L12__20___kernel)
-   ___SET_GLO(308,___G__23__23_os_2d_system_2d_type_2d_saved,___R1)
+   ___SET_GLO(312,___G__23__23_os_2d_system_2d_type_2d_saved,___R1)
    ___SET_R0(___LBL(13))
-   ___JUMPINT(___SET_NARGS(0),___PRC(856),___L__20___kernel_23_9)
+   ___JUMPINT(___SET_NARGS(0),___PRC(883),___L__20___kernel_23_9)
 ___DEF_SLBL(13,___L13__20___kernel)
-   ___SET_GLO(309,___G__23__23_os_2d_system_2d_type_2d_string_2d_saved,___R1)
+   ___SET_GLO(313,___G__23__23_os_2d_system_2d_type_2d_string_2d_saved,___R1)
    ___SET_R0(___LBL(14))
-   ___JUMPINT(___SET_NARGS(0),___PRC(859),___L__20___kernel_23_10)
+   ___JUMPINT(___SET_NARGS(0),___PRC(886),___L__20___kernel_23_10)
 ___DEF_SLBL(14,___L14__20___kernel)
-   ___SET_GLO(243,___G__23__23_os_2d_configure_2d_command_2d_string_2d_saved,___R1)
+   ___SET_GLO(247,___G__23__23_os_2d_configure_2d_command_2d_string_2d_saved,___R1)
    ___SET_R0(___LBL(15))
-   ___JUMPINT(___SET_NARGS(0),___PRC(862),___L__20___kernel_23_11)
+   ___JUMPINT(___SET_NARGS(0),___PRC(889),___L__20___kernel_23_11)
 ___DEF_SLBL(15,___L15__20___kernel)
-   ___SET_GLO(368,___G__23__23_system_2d_stamp_2d_saved,___R1)
+   ___SET_GLO(376,___G__23__23_system_2d_stamp_2d_saved,___R1)
    ___SET_R0(___LBL(16))
-   ___JUMPINT(___SET_NARGS(0),___PRC(865),___L__20___kernel_23_12)
+   ___JUMPINT(___SET_NARGS(0),___PRC(892),___L__20___kernel_23_12)
 ___DEF_SLBL(16,___L16__20___kernel)
-   ___SET_GLO(295,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved,___R1)
+   ___SET_GLO(299,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved,___R1)
    ___SET_R0(___LBL(17))
-   ___JUMPINT(___SET_NARGS(0),___PRC(868),___L__20___kernel_23_13)
+   ___JUMPINT(___SET_NARGS(0),___PRC(895),___L__20___kernel_23_13)
 ___DEF_SLBL(17,___L17__20___kernel)
-   ___SET_GLO(283,___G__23__23_os_2d_exe_2d_extension_2d_string_2d_saved,___R1)
+   ___SET_GLO(287,___G__23__23_os_2d_exe_2d_extension_2d_string_2d_saved,___R1)
    ___SET_R0(___LBL(18))
-   ___JUMPINT(___SET_NARGS(0),___PRC(871),___L__20___kernel_23_14)
+   ___JUMPINT(___SET_NARGS(0),___PRC(898),___L__20___kernel_23_14)
 ___DEF_SLBL(18,___L18__20___kernel)
-   ___SET_GLO(241,___G__23__23_os_2d_bat_2d_extension_2d_string_2d_saved,___R1)
+   ___SET_GLO(245,___G__23__23_os_2d_bat_2d_extension_2d_string_2d_saved,___R1)
 { ___SCMOBJ ___RESULT;
 ___RESULT = ___FIX(___ERRNO_ERR(EAGAIN));
    ___SET_R1(___RESULT)
@@ -4292,27 +4374,32 @@ ___RESULT = ___FIX(___ERRNO_ERR(EINTR));
 }
    ___SET_GLO(132,___G__23__23_err_2d_code_2d_EINTR,___R1)
 { ___SCMOBJ ___RESULT;
+___RESULT = ___FIX(___UNIMPL_ERR);
+   ___SET_R1(___RESULT)
+}
+   ___SET_GLO(134,___G__23__23_err_2d_code_2d_unimplemented,___R1)
+{ ___SCMOBJ ___RESULT;
 ___RESULT = ___FIX(___MAX_CHR);
    ___SET_R1(___RESULT)
 }
-   ___SET_GLO(234,___G__23__23_max_2d_char,___R1)
+   ___SET_GLO(238,___G__23__23_max_2d_char,___R1)
 { ___SCMOBJ ___RESULT;
 ___RESULT = ___FIX(___MIN_FIX);
    ___SET_R1(___RESULT)
 }
-   ___SET_GLO(236,___G__23__23_min_2d_fixnum,___R1)
+   ___SET_GLO(240,___G__23__23_min_2d_fixnum,___R1)
 { ___SCMOBJ ___RESULT;
 ___RESULT = ___FIX(___MAX_FIX);
    ___SET_R1(___RESULT)
 }
-   ___SET_GLO(235,___G__23__23_max_2d_fixnum,___R1)
+   ___SET_GLO(239,___G__23__23_max_2d_fixnum,___R1)
 { ___SCMOBJ ___RESULT;
 ___RESULT = ___FIX(___FIX_WIDTH);
    ___SET_R1(___RESULT)
 }
-   ___SET_GLO(165,___G__23__23_fixnum_2d_width,___R1)
+   ___SET_GLO(166,___G__23__23_fixnum_2d_width,___R1)
    ___SET_R1(___FIXNEG(___GLO__23__23_fixnum_2d_width))
-   ___SET_GLO(166,___G__23__23_fixnum_2d_width_2d_neg,___R1)
+   ___SET_GLO(167,___G__23__23_fixnum_2d_width_2d_neg,___R1)
 { ___SCMOBJ ___RESULT;
 ___RESULT = ___FIX(___BIG_ABASE_WIDTH);
    ___SET_R1(___RESULT)
@@ -4328,83 +4415,83 @@ ___RESULT = ___FIX(___BIG_FBASE_WIDTH);
    ___SET_R1(___RESULT)
 }
    ___SET_GLO(98,___G__23__23_bignum_2e_fdigit_2d_width,___R1)
-   ___SET_GLO(171,___G__23__23_format_2d_filepos,___PRC(874))
-   ___SET_GLO(282,___G__23__23_os_2d_err_2d_code_2d__3e_string,___PRC(877))
-   ___SET_GLO(298,___G__23__23_os_2d_path_2d_homedir,___PRC(880))
-   ___SET_GLO(296,___G__23__23_os_2d_path_2d_gambcdir,___PRC(883))
-   ___SET_GLO(297,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup,___PRC(886))
-   ___SET_GLO(299,___G__23__23_os_2d_path_2d_normalize_2d_directory,___PRC(889))
-   ___SET_GLO(337,___G__23__23_remote_2d_dbg_2d_addr,___PRC(892))
-   ___SET_GLO(342,___G__23__23_rpc_2d_server_2d_addr,___PRC(895))
-   ___SET_GLO(314,___G__23__23_processed_2d_command_2d_line,___NUL)
+   ___SET_GLO(172,___G__23__23_format_2d_filepos,___PRC(901))
+   ___SET_GLO(286,___G__23__23_os_2d_err_2d_code_2d__3e_string,___PRC(904))
+   ___SET_GLO(302,___G__23__23_os_2d_path_2d_homedir,___PRC(907))
+   ___SET_GLO(300,___G__23__23_os_2d_path_2d_gambcdir,___PRC(910))
+   ___SET_GLO(301,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup,___PRC(913))
+   ___SET_GLO(303,___G__23__23_os_2d_path_2d_normalize_2d_directory,___PRC(916))
+   ___SET_GLO(345,___G__23__23_remote_2d_dbg_2d_addr,___PRC(919))
+   ___SET_GLO(350,___G__23__23_rpc_2d_server_2d_addr,___PRC(922))
+   ___SET_GLO(318,___G__23__23_processed_2d_command_2d_line,___NUL)
    ___SET_R0(___LBL(19))
-   ___JUMPINT(___SET_NARGS(0),___PRC(731),___L__23__23_command_2d_line)
+   ___JUMPINT(___SET_NARGS(0),___PRC(758),___L__23__23_command_2d_line)
 ___DEF_SLBL(19,___L19__20___kernel)
-   ___SET_GLO(314,___G__23__23_processed_2d_command_2d_line,___R1)
-   ___SET_GLO(286,___G__23__23_os_2d_getenv,___PRC(898))
-   ___SET_GLO(306,___G__23__23_os_2d_setenv,___PRC(901))
-   ___SET_GLO(281,___G__23__23_os_2d_environ,___PRC(904))
-   ___SET_GLO(307,___G__23__23_os_2d_shell_2d_command,___PRC(907))
-   ___SET_GLO(257,___G__23__23_os_2d_device_2d_kind,___PRC(910))
-   ___SET_GLO(256,___G__23__23_os_2d_device_2d_force_2d_output,___PRC(913))
-   ___SET_GLO(251,___G__23__23_os_2d_device_2d_close,___PRC(916))
-   ___SET_GLO(266,___G__23__23_os_2d_device_2d_stream_2d_seek,___PRC(919))
-   ___SET_GLO(265,___G__23__23_os_2d_device_2d_stream_2d_read,___PRC(922))
-   ___SET_GLO(268,___G__23__23_os_2d_device_2d_stream_2d_write,___PRC(925))
-   ___SET_GLO(267,___G__23__23_os_2d_device_2d_stream_2d_width,___PRC(928))
-   ___SET_GLO(260,___G__23__23_os_2d_device_2d_stream_2d_default_2d_options,___PRC(931))
-   ___SET_GLO(264,___G__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_,___PRC(934))
-   ___SET_GLO(262,___G__23__23_os_2d_device_2d_stream_2d_open_2d_predefined,___PRC(937))
-   ___SET_GLO(261,___G__23__23_os_2d_device_2d_stream_2d_open_2d_path,___PRC(940))
-   ___SET_GLO(263,___G__23__23_os_2d_device_2d_stream_2d_open_2d_process,___PRC(943))
-   ___SET_GLO(258,___G__23__23_os_2d_device_2d_process_2d_pid,___PRC(946))
-   ___SET_GLO(259,___G__23__23_os_2d_device_2d_process_2d_status,___PRC(949))
-   ___SET_GLO(293,___G__23__23_os_2d_make_2d_tls_2d_context,___PRC(952))
-   ___SET_GLO(269,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_open,___PRC(955))
-   ___SET_GLO(270,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info,___PRC(958))
-   ___SET_GLO(271,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_open,___PRC(961))
-   ___SET_GLO(272,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_read,___PRC(964))
-   ___SET_GLO(273,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info,___PRC(967))
-   ___SET_GLO(252,___G__23__23_os_2d_device_2d_directory_2d_open_2d_path,___PRC(970))
-   ___SET_GLO(253,___G__23__23_os_2d_device_2d_directory_2d_read,___PRC(973))
-   ___SET_GLO(254,___G__23__23_os_2d_device_2d_event_2d_queue_2d_open,___PRC(976))
-   ___SET_GLO(255,___G__23__23_os_2d_device_2d_event_2d_queue_2d_read,___PRC(979))
-   ___SET_GLO(280,___G__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_,___PRC(982))
-   ___SET_GLO(279,___G__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_,___PRC(985))
-   ___SET_GLO(274,___G__23__23_os_2d_device_2d_tty_2d_history,___PRC(988))
-   ___SET_GLO(276,___G__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_,___PRC(991))
-   ___SET_GLO(275,___G__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_,___PRC(994))
-   ___SET_GLO(278,___G__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_,___PRC(997))
-   ___SET_GLO(277,___G__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_,___PRC(1000))
-   ___SET_GLO(300,___G__23__23_os_2d_port_2d_decode_2d_chars_21_,___PRC(1003))
-   ___SET_GLO(301,___G__23__23_os_2d_port_2d_encode_2d_chars_21_,___PRC(1006))
-   ___SET_GLO(285,___G__23__23_os_2d_file_2d_times_2d_set_21_,___PRC(1009))
-   ___SET_GLO(284,___G__23__23_os_2d_file_2d_info,___PRC(1012))
-   ___SET_GLO(310,___G__23__23_os_2d_user_2d_info,___PRC(1015))
-   ___SET_GLO(311,___G__23__23_os_2d_user_2d_name,___PRC(1018))
-   ___SET_GLO(289,___G__23__23_os_2d_group_2d_info,___PRC(1021))
-   ___SET_GLO(240,___G__23__23_os_2d_address_2d_infos,___PRC(1024))
-   ___SET_GLO(290,___G__23__23_os_2d_host_2d_info,___PRC(1027))
-   ___SET_GLO(291,___G__23__23_os_2d_host_2d_name,___PRC(1030))
-   ___SET_GLO(304,___G__23__23_os_2d_service_2d_info,___PRC(1033))
-   ___SET_GLO(302,___G__23__23_os_2d_protocol_2d_info,___PRC(1036))
-   ___SET_GLO(294,___G__23__23_os_2d_network_2d_info,___PRC(1039))
-   ___SET_GLO(287,___G__23__23_os_2d_getpid,___PRC(1042))
-   ___SET_GLO(288,___G__23__23_os_2d_getppid,___PRC(1045))
-   ___SET_GLO(245,___G__23__23_os_2d_create_2d_directory,___PRC(1048))
-   ___SET_GLO(246,___G__23__23_os_2d_create_2d_fifo,___PRC(1051))
-   ___SET_GLO(247,___G__23__23_os_2d_create_2d_link,___PRC(1054))
-   ___SET_GLO(248,___G__23__23_os_2d_create_2d_symbolic_2d_link,___PRC(1057))
-   ___SET_GLO(249,___G__23__23_os_2d_delete_2d_directory,___PRC(1060))
-   ___SET_GLO(305,___G__23__23_os_2d_set_2d_current_2d_directory,___PRC(1063))
-   ___SET_GLO(303,___G__23__23_os_2d_rename_2d_file,___PRC(1066))
-   ___SET_GLO(244,___G__23__23_os_2d_copy_2d_file,___PRC(1069))
-   ___SET_GLO(250,___G__23__23_os_2d_delete_2d_file,___PRC(1072))
-   ___SET_GLO(292,___G__23__23_os_2d_load_2d_object_2d_file,___PRC(1075))
+   ___SET_GLO(318,___G__23__23_processed_2d_command_2d_line,___R1)
+   ___SET_GLO(290,___G__23__23_os_2d_getenv,___PRC(925))
+   ___SET_GLO(310,___G__23__23_os_2d_setenv,___PRC(928))
+   ___SET_GLO(285,___G__23__23_os_2d_environ,___PRC(931))
+   ___SET_GLO(311,___G__23__23_os_2d_shell_2d_command,___PRC(934))
+   ___SET_GLO(261,___G__23__23_os_2d_device_2d_kind,___PRC(937))
+   ___SET_GLO(260,___G__23__23_os_2d_device_2d_force_2d_output,___PRC(940))
+   ___SET_GLO(255,___G__23__23_os_2d_device_2d_close,___PRC(943))
+   ___SET_GLO(270,___G__23__23_os_2d_device_2d_stream_2d_seek,___PRC(946))
+   ___SET_GLO(269,___G__23__23_os_2d_device_2d_stream_2d_read,___PRC(949))
+   ___SET_GLO(272,___G__23__23_os_2d_device_2d_stream_2d_write,___PRC(952))
+   ___SET_GLO(271,___G__23__23_os_2d_device_2d_stream_2d_width,___PRC(955))
+   ___SET_GLO(264,___G__23__23_os_2d_device_2d_stream_2d_default_2d_options,___PRC(958))
+   ___SET_GLO(268,___G__23__23_os_2d_device_2d_stream_2d_options_2d_set_21_,___PRC(961))
+   ___SET_GLO(266,___G__23__23_os_2d_device_2d_stream_2d_open_2d_predefined,___PRC(964))
+   ___SET_GLO(265,___G__23__23_os_2d_device_2d_stream_2d_open_2d_path,___PRC(967))
+   ___SET_GLO(267,___G__23__23_os_2d_device_2d_stream_2d_open_2d_process,___PRC(970))
+   ___SET_GLO(262,___G__23__23_os_2d_device_2d_process_2d_pid,___PRC(973))
+   ___SET_GLO(263,___G__23__23_os_2d_device_2d_process_2d_status,___PRC(976))
+   ___SET_GLO(297,___G__23__23_os_2d_make_2d_tls_2d_context,___PRC(979))
+   ___SET_GLO(273,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_open,___PRC(982))
+   ___SET_GLO(274,___G__23__23_os_2d_device_2d_tcp_2d_client_2d_socket_2d_info,___PRC(985))
+   ___SET_GLO(275,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_open,___PRC(988))
+   ___SET_GLO(276,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_read,___PRC(991))
+   ___SET_GLO(277,___G__23__23_os_2d_device_2d_tcp_2d_server_2d_socket_2d_info,___PRC(994))
+   ___SET_GLO(256,___G__23__23_os_2d_device_2d_directory_2d_open_2d_path,___PRC(997))
+   ___SET_GLO(257,___G__23__23_os_2d_device_2d_directory_2d_read,___PRC(1000))
+   ___SET_GLO(258,___G__23__23_os_2d_device_2d_event_2d_queue_2d_open,___PRC(1003))
+   ___SET_GLO(259,___G__23__23_os_2d_device_2d_event_2d_queue_2d_read,___PRC(1006))
+   ___SET_GLO(284,___G__23__23_os_2d_device_2d_tty_2d_type_2d_set_21_,___PRC(1009))
+   ___SET_GLO(283,___G__23__23_os_2d_device_2d_tty_2d_text_2d_attributes_2d_set_21_,___PRC(1012))
+   ___SET_GLO(278,___G__23__23_os_2d_device_2d_tty_2d_history,___PRC(1015))
+   ___SET_GLO(280,___G__23__23_os_2d_device_2d_tty_2d_history_2d_set_21_,___PRC(1018))
+   ___SET_GLO(279,___G__23__23_os_2d_device_2d_tty_2d_history_2d_max_2d_length_2d_set_21_,___PRC(1021))
+   ___SET_GLO(282,___G__23__23_os_2d_device_2d_tty_2d_paren_2d_balance_2d_duration_2d_set_21_,___PRC(1024))
+   ___SET_GLO(281,___G__23__23_os_2d_device_2d_tty_2d_mode_2d_set_21_,___PRC(1027))
+   ___SET_GLO(304,___G__23__23_os_2d_port_2d_decode_2d_chars_21_,___PRC(1030))
+   ___SET_GLO(305,___G__23__23_os_2d_port_2d_encode_2d_chars_21_,___PRC(1033))
+   ___SET_GLO(289,___G__23__23_os_2d_file_2d_times_2d_set_21_,___PRC(1036))
+   ___SET_GLO(288,___G__23__23_os_2d_file_2d_info,___PRC(1039))
+   ___SET_GLO(314,___G__23__23_os_2d_user_2d_info,___PRC(1042))
+   ___SET_GLO(315,___G__23__23_os_2d_user_2d_name,___PRC(1045))
+   ___SET_GLO(293,___G__23__23_os_2d_group_2d_info,___PRC(1048))
+   ___SET_GLO(244,___G__23__23_os_2d_address_2d_infos,___PRC(1051))
+   ___SET_GLO(294,___G__23__23_os_2d_host_2d_info,___PRC(1054))
+   ___SET_GLO(295,___G__23__23_os_2d_host_2d_name,___PRC(1057))
+   ___SET_GLO(308,___G__23__23_os_2d_service_2d_info,___PRC(1060))
+   ___SET_GLO(306,___G__23__23_os_2d_protocol_2d_info,___PRC(1063))
+   ___SET_GLO(298,___G__23__23_os_2d_network_2d_info,___PRC(1066))
+   ___SET_GLO(291,___G__23__23_os_2d_getpid,___PRC(1069))
+   ___SET_GLO(292,___G__23__23_os_2d_getppid,___PRC(1072))
+   ___SET_GLO(249,___G__23__23_os_2d_create_2d_directory,___PRC(1075))
+   ___SET_GLO(250,___G__23__23_os_2d_create_2d_fifo,___PRC(1078))
+   ___SET_GLO(251,___G__23__23_os_2d_create_2d_link,___PRC(1081))
+   ___SET_GLO(252,___G__23__23_os_2d_create_2d_symbolic_2d_link,___PRC(1084))
+   ___SET_GLO(253,___G__23__23_os_2d_delete_2d_directory,___PRC(1087))
+   ___SET_GLO(309,___G__23__23_os_2d_set_2d_current_2d_directory,___PRC(1090))
+   ___SET_GLO(307,___G__23__23_os_2d_rename_2d_file,___PRC(1093))
+   ___SET_GLO(248,___G__23__23_os_2d_copy_2d_file,___PRC(1096))
+   ___SET_GLO(254,___G__23__23_os_2d_delete_2d_file,___PRC(1099))
+   ___SET_GLO(296,___G__23__23_os_2d_load_2d_object_2d_file,___PRC(1102))
    ___SET_R0(___LBL(20))
-   ___JUMPINT(___SET_NARGS(0),___PRC(304),___L__23__23_make_2d_jobs)
+   ___JUMPINT(___SET_NARGS(0),___PRC(315),___L__23__23_make_2d_jobs)
 ___DEF_SLBL(20,___L20__20___kernel)
-   ___SET_GLO(140,___G__23__23_exit_2d_jobs,___R1)
+   ___SET_GLO(141,___G__23__23_exit_2d_jobs,___R1)
    ___SET_R2(___LBL(23))
    ___SET_R1(___FIX(3L))
    ___SET_R0(___LBL(21))
@@ -4414,37 +4501,37 @@ ___DEF_SLBL(21,___L21__20___kernel)
 ___RESULT = ___GSTATE->program_descr;
    ___SET_R1(___RESULT)
 }
-   ___SET_GLO(317,___G__23__23_program_2d_descr,___R1)
+   ___SET_GLO(321,___G__23__23_program_2d_descr,___R1)
 { ___SCMOBJ ___RESULT;
 ___RESULT = ___VMSTATE_FROM_PSTATE(___ps)->main_module_id;
    ___SET_R1(___RESULT)
 }
-   ___SET_GLO(380,___G__23__23_vm_2d_main_2d_module_2d_id,___R1)
-   ___SET_GLO(209,___G__23__23_main,___PRC(1078))
-   ___SET_GLO(336,___G__23__23_registered_2d_modules,___NUL)
-   ___SET_GLO(201,___G__23__23_load_2d_required_2d_module,___FAL)
-   ___SET_GLO(201,___G__23__23_load_2d_required_2d_module,___PRC(808))
+   ___SET_GLO(391,___G__23__23_vm_2d_main_2d_module_2d_id,___R1)
+   ___SET_GLO(210,___G__23__23_main,___PRC(1105))
+   ___SET_GLO(344,___G__23__23_registered_2d_modules,___NUL)
+   ___SET_GLO(202,___G__23__23_load_2d_required_2d_module,___FAL)
+   ___SET_GLO(202,___G__23__23_load_2d_required_2d_module,___PRC(835))
    ___SET_R0(___STK(-3))
    ___POLL(22)
 ___DEF_SLBL(22,___L22__20___kernel)
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(0),___PRC(822),___L__23__23_load_2d_vm)
+   ___JUMPINT(___SET_NARGS(0),___PRC(849),___L__23__23_load_2d_vm)
 ___DEF_SLBL(23,___L23__20___kernel)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(23,0,0,0)
-   ___JUMPINT(___SET_NARGS(0),___PRC(756),___L__23__23_exit_2d_abnormally)
+   ___JUMPINT(___SET_NARGS(0),___PRC(783),___L__23__23_exit_2d_abnormally)
 ___DEF_SLBL(24,___L24__20___kernel)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(24,0,0,0)
    ___SET_STK(1,___R0)
    ___SET_R0(___LBL(25))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(0),___PRC(356),___L__23__23_gc_2d_finalize_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(367),___L__23__23_gc_2d_finalize_21_)
 ___DEF_SLBL(25,___L25__20___kernel)
    ___SET_R1(___GLO__23__23_gc_2d_interrupt_2d_jobs)
    ___SET_R0(___STK(-3))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(313),___L__23__23_execute_2d_jobs_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(324),___L__23__23_execute_2d_jobs_21_)
 ___END_P_SW
 ___END_P_COD
 
@@ -6080,7 +6167,7 @@ ___DEF_SLBL(0,___L0__23__23_raise_2d_heap_2d_overflow_2d_exception)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L__23__23_raise_2d_heap_2d_overflow_2d_exception)
    ___SET_R1(___LBL(1))
-   ___JUMPINT(___SET_NARGS(1),___PRC(712),___L__23__23_with_2d_no_2d_result_2d_expected)
+   ___JUMPINT(___SET_NARGS(1),___PRC(739),___L__23__23_with_2d_no_2d_result_2d_expected)
 ___DEF_SLBL(1,___L1__23__23_raise_2d_heap_2d_overflow_2d_exception)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(1,0,0,0)
@@ -6173,7 +6260,7 @@ ___DEF_SLBL(0,___L0__23__23_raise_2d_stack_2d_overflow_2d_exception)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L__23__23_raise_2d_stack_2d_overflow_2d_exception)
    ___SET_R1(___LBL(1))
-   ___JUMPINT(___SET_NARGS(1),___PRC(712),___L__23__23_with_2d_no_2d_result_2d_expected)
+   ___JUMPINT(___SET_NARGS(1),___PRC(739),___L__23__23_with_2d_no_2d_result_2d_expected)
 ___DEF_SLBL(1,___L1__23__23_raise_2d_stack_2d_overflow_2d_exception)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(1,0,0,0)
@@ -8661,9 +8748,137 @@ ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H__23__23_force_2d_undetermined
+#define ___PH_PROC ___H__23__23_make_2d_promise
 #undef ___PH_LBL0
 #define ___PH_LBL0 298
+#undef ___PD_ALL
+#define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1
+#undef ___PR_ALL
+#define ___PR_ALL ___R_HEAP ___R_R0 ___R_R1
+#undef ___PW_ALL
+#define ___PW_ALL ___W_HEAP ___W_R1
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_make_2d_promise)
+___DEF_P_HLBL(___L1__23__23_make_2d_promise)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_make_2d_promise)
+   ___IF_NARGS_EQ(1,___NOTHING)
+   ___WRONG_NARGS(0,1,0,0)
+___DEF_GLBL(___L__23__23_make_2d_promise)
+   ___SET_R1(___MAKEPROMISE(___R1))
+   ___CHECK_HEAP(1,4096)
+___DEF_SLBL(1,___L1__23__23_make_2d_promise)
+   ___JUMPPRM(___NOTHING,___R0)
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_promise_2d_thunk
+#undef ___PH_LBL0
+#define ___PH_LBL0 301
+#undef ___PD_ALL
+#define ___PD_ALL ___D_R0 ___D_R1
+#undef ___PR_ALL
+#define ___PR_ALL ___R_R0 ___R_R1
+#undef ___PW_ALL
+#define ___PW_ALL ___W_R1
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_promise_2d_thunk)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_promise_2d_thunk)
+   ___IF_NARGS_EQ(1,___NOTHING)
+   ___WRONG_NARGS(0,1,0,0)
+___DEF_GLBL(___L__23__23_promise_2d_thunk)
+   ___SET_R1(___PROMISETHUNK(___R1))
+   ___JUMPPRM(___NOTHING,___R0)
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_promise_2d_thunk_2d_set_21_
+#undef ___PH_LBL0
+#define ___PH_LBL0 303
+#undef ___PD_ALL
+#define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
+#undef ___PR_ALL
+#define ___PR_ALL ___R_R0 ___R_R1 ___R_R2
+#undef ___PW_ALL
+#define ___PW_ALL
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_promise_2d_thunk_2d_set_21_)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_promise_2d_thunk_2d_set_21_)
+   ___IF_NARGS_EQ(2,___NOTHING)
+   ___WRONG_NARGS(0,2,0,0)
+___DEF_GLBL(___L__23__23_promise_2d_thunk_2d_set_21_)
+   ___PROMISETHUNKSET(___R1,___R2)
+   ___JUMPPRM(___NOTHING,___R0)
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_promise_2d_result
+#undef ___PH_LBL0
+#define ___PH_LBL0 305
+#undef ___PD_ALL
+#define ___PD_ALL ___D_R0 ___D_R1
+#undef ___PR_ALL
+#define ___PR_ALL ___R_R0 ___R_R1
+#undef ___PW_ALL
+#define ___PW_ALL ___W_R1
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_promise_2d_result)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_promise_2d_result)
+   ___IF_NARGS_EQ(1,___NOTHING)
+   ___WRONG_NARGS(0,1,0,0)
+___DEF_GLBL(___L__23__23_promise_2d_result)
+   ___SET_R1(___PROMISERESULT(___R1))
+   ___JUMPPRM(___NOTHING,___R0)
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_promise_2d_result_2d_set_21_
+#undef ___PH_LBL0
+#define ___PH_LBL0 307
+#undef ___PD_ALL
+#define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
+#undef ___PR_ALL
+#define ___PR_ALL ___R_R0 ___R_R1 ___R_R2
+#undef ___PW_ALL
+#define ___PW_ALL
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_promise_2d_result_2d_set_21_)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_promise_2d_result_2d_set_21_)
+   ___IF_NARGS_EQ(2,___NOTHING)
+   ___WRONG_NARGS(0,2,0,0)
+___DEF_GLBL(___L__23__23_promise_2d_result_2d_set_21_)
+   ___PROMISERESULTSET(___R1,___R2)
+   ___JUMPPRM(___NOTHING,___R0)
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_force_2d_undetermined
+#undef ___PH_LBL0
+#define ___PH_LBL0 309
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -8700,12 +8915,12 @@ ___DEF_SLBL(3,___L3__23__23_force_2d_undetermined)
 #define ___ARG2 ___R1
 { ___SCMOBJ ___RESULT;
 
-     if (___FIELD(___ARG1,___PROMISE_RESULT) == ___ARG1)
+     if (___PROMISERESULT(___ARG1) == ___ARG1)
        {
-         ___FIELD(___ARG1,___PROMISE_RESULT) = ___ARG2;
-         ___FIELD(___ARG1,___PROMISE_THUNK) = ___FAL;
+         ___PROMISERESULTSET(___ARG1,___ARG2)
+         ___PROMISETHUNKSET(___ARG1,___FAL)
        }
-     ___RESULT = ___FIELD(___ARG1,___PROMISE_RESULT);
+     ___RESULT = ___PROMISERESULT(___ARG1);
 
    ___SET_R1(___RESULT)
 }
@@ -8721,7 +8936,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_jobs
 #undef ___PH_LBL0
-#define ___PH_LBL0 304
+#define ___PH_LBL0 315
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -8750,7 +8965,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_add_2d_job_2d_at_2d_tail_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 307
+#define ___PH_LBL0 318
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8782,7 +8997,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_add_2d_job_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 310
+#define ___PH_LBL0 321
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8819,7 +9034,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_execute_2d_jobs_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 313
+#define ___PH_LBL0 324
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -8871,7 +9086,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_execute_2d_and_2d_clear_2d_jobs_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 319
+#define ___PH_LBL0 330
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -8932,7 +9147,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_clear_2d_jobs_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 325
+#define ___PH_LBL0 336
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -8959,7 +9174,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_check_2d_heap_2d_limit
 #undef ___PH_LBL0
-#define ___PH_LBL0 327
+#define ___PH_LBL0 338
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -8984,7 +9199,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_check_2d_heap
 #undef ___PH_LBL0
-#define ___PH_LBL0 329
+#define ___PH_LBL0 340
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9043,7 +9258,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_rest_2d_param_2d_check_2d_heap
 #undef ___PH_LBL0
-#define ___PH_LBL0 332
+#define ___PH_LBL0 343
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -9074,7 +9289,7 @@ ___DEF_GLBL(___L3__23__23_rest_2d_param_2d_check_2d_heap)
    ___SET_STK(3,___R2)
    ___SET_R0(___LBL(2))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(0),___PRC(343),___L__23__23_gc_2d_without_2d_exceptions)
+   ___JUMPINT(___SET_NARGS(0),___PRC(354),___L__23__23_gc_2d_without_2d_exceptions)
 ___DEF_SLBL(2,___L2__23__23_rest_2d_param_2d_check_2d_heap)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L4__23__23_rest_2d_param_2d_check_2d_heap)
@@ -9086,14 +9301,14 @@ ___DEF_GLBL(___L4__23__23_rest_2d_param_2d_check_2d_heap)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(341),___L__23__23_rest_2d_param_2d_resume_2d_procedure)
+   ___JUMPINT(___SET_NARGS(2),___PRC(352),___L__23__23_rest_2d_param_2d_resume_2d_procedure)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_rest_2d_param_2d_heap_2d_overflow
 #undef ___PH_LBL0
-#define ___PH_LBL0 336
+#define ___PH_LBL0 347
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -9135,7 +9350,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_rest_2d_param_2d_resume_2d_procedure
 #undef ___PH_LBL0
-#define ___PH_LBL0 341
+#define ___PH_LBL0 352
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9183,7 +9398,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_without_2d_exceptions
 #undef ___PH_LBL0
-#define ___PH_LBL0 343
+#define ___PH_LBL0 354
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9223,7 +9438,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc
 #undef ___PH_LBL0
-#define ___PH_LBL0 345
+#define ___PH_LBL0 356
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9280,7 +9495,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_add_2d_gc_2d_interrupt_2d_job_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 350
+#define ___PH_LBL0 361
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -9302,14 +9517,14 @@ ___DEF_GLBL(___L__23__23_add_2d_gc_2d_interrupt_2d_job_21_)
    ___SET_R1(___GLO__23__23_gc_2d_interrupt_2d_jobs)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_add_2d_gc_2d_interrupt_2d_job_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(310),___L__23__23_add_2d_job_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(321),___L__23__23_add_2d_job_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_clear_2d_gc_2d_interrupt_2d_jobs_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 353
+#define ___PH_LBL0 364
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -9330,14 +9545,14 @@ ___DEF_GLBL(___L__23__23_clear_2d_gc_2d_interrupt_2d_jobs_21_)
    ___SET_R1(___GLO__23__23_gc_2d_interrupt_2d_jobs)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_clear_2d_gc_2d_interrupt_2d_jobs_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(325),___L__23__23_clear_2d_jobs_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(336),___L__23__23_clear_2d_jobs_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_finalize_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 356
+#define ___PH_LBL0 367
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9392,14 +9607,14 @@ ___DEF_GLBL(___L3__23__23_gc_2d_finalize_21_)
 ___DEF_SLBL(2,___L2__23__23_gc_2d_finalize_21_)
    ___JUMPGENNOTSAFE(___SET_NARGS(1),___R3)
 ___DEF_GLBL(___L4__23__23_gc_2d_finalize_21_)
-   ___JUMPINT(___SET_NARGS(0),___PRC(364),___L__23__23_gc_2d_final_2d_will_2d_registry_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(375),___L__23__23_gc_2d_final_2d_will_2d_registry_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_execute_2d_final_2d_wills_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 360
+#define ___PH_LBL0 371
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9460,7 +9675,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_final_2d_will_2d_registry_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 364
+#define ___PH_LBL0 375
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9511,7 +9726,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_final_2d_will
 #undef ___PH_LBL0
-#define ___PH_LBL0 366
+#define ___PH_LBL0 377
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9548,7 +9763,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_get_2d_min_2d_heap
 #undef ___PH_LBL0
-#define ___PH_LBL0 369
+#define ___PH_LBL0 380
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9576,7 +9791,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_set_2d_min_2d_heap_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 371
+#define ___PH_LBL0 382
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9606,7 +9821,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_get_2d_max_2d_heap
 #undef ___PH_LBL0
-#define ___PH_LBL0 373
+#define ___PH_LBL0 384
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9634,7 +9849,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_set_2d_max_2d_heap_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 375
+#define ___PH_LBL0 386
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9664,7 +9879,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_get_2d_live_2d_percent
 #undef ___PH_LBL0
-#define ___PH_LBL0 377
+#define ___PH_LBL0 388
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9692,7 +9907,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_set_2d_live_2d_percent_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 379
+#define ___PH_LBL0 390
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9722,7 +9937,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_get_2d_standard_2d_level
 #undef ___PH_LBL0
-#define ___PH_LBL0 381
+#define ___PH_LBL0 392
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9750,7 +9965,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_set_2d_standard_2d_level_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 383
+#define ___PH_LBL0 394
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9780,7 +9995,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_set_2d_gambcdir_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 385
+#define ___PH_LBL0 396
 #undef ___PD_ALL
 #define ___PD_ALL
 #undef ___PR_ALL
@@ -9797,14 +10012,14 @@ ___DEF_SLBL(0,___L0__23__23_set_2d_gambcdir_21_)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L__23__23_set_2d_gambcdir_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(829),___L__20___kernel_23_0)
+   ___JUMPINT(___SET_NARGS(1),___PRC(856),___L__20___kernel_23_0)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_set_2d_debug_2d_settings_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 387
+#define ___PH_LBL0 398
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9837,7 +10052,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_processor_2d_count
 #undef ___PH_LBL0
-#define ___PH_LBL0 389
+#define ___PH_LBL0 400
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9865,7 +10080,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_processor_2d_cache_2d_size
 #undef ___PH_LBL0
-#define ___PH_LBL0 391
+#define ___PH_LBL0 402
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9900,7 +10115,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_still_2d_copy
 #undef ___PH_LBL0
-#define ___PH_LBL0 393
+#define ___PH_LBL0 404
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9966,7 +10181,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_still_2d_obj_2d_refcount_2d_inc_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 396
+#define ___PH_LBL0 407
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9996,7 +10211,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_still_2d_obj_2d_refcount_2d_dec_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 398
+#define ___PH_LBL0 409
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10026,7 +10241,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 400
+#define ___PH_LBL0 411
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10126,7 +10341,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_string
 #undef ___PH_LBL0
-#define ___PH_LBL0 403
+#define ___PH_LBL0 414
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10223,7 +10438,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_s8vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 406
+#define ___PH_LBL0 417
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10320,7 +10535,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_u8vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 409
+#define ___PH_LBL0 420
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10417,7 +10632,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_s16vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 412
+#define ___PH_LBL0 423
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10514,7 +10729,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_u16vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 415
+#define ___PH_LBL0 426
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10611,7 +10826,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_s32vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 418
+#define ___PH_LBL0 429
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10708,7 +10923,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_u32vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 421
+#define ___PH_LBL0 432
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10805,7 +11020,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_s64vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 424
+#define ___PH_LBL0 435
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10911,7 +11126,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_u64vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 427
+#define ___PH_LBL0 438
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11017,7 +11232,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_f32vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 430
+#define ___PH_LBL0 441
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11115,7 +11330,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_f64vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 433
+#define ___PH_LBL0 444
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11222,7 +11437,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_machine_2d_code_2d_block
 #undef ___PH_LBL0
-#define ___PH_LBL0 436
+#define ___PH_LBL0 447
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -11242,14 +11457,14 @@ ___DEF_SLBL(0,___L0__23__23_make_2d_machine_2d_code_2d_block)
 ___DEF_GLBL(___L__23__23_make_2d_machine_2d_code_2d_block)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_make_2d_machine_2d_code_2d_block)
-   ___JUMPINT(___SET_NARGS(1),___PRC(832),___L__20___kernel_23_1)
+   ___JUMPINT(___SET_NARGS(1),___PRC(859),___L__20___kernel_23_1)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_machine_2d_code_2d_block_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 439
+#define ___PH_LBL0 450
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -11269,14 +11484,14 @@ ___DEF_SLBL(0,___L0__23__23_machine_2d_code_2d_block_2d_ref)
 ___DEF_GLBL(___L__23__23_machine_2d_code_2d_block_2d_ref)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_machine_2d_code_2d_block_2d_ref)
-   ___JUMPINT(___SET_NARGS(2),___PRC(835),___L__20___kernel_23_2)
+   ___JUMPINT(___SET_NARGS(2),___PRC(862),___L__20___kernel_23_2)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_machine_2d_code_2d_block_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 442
+#define ___PH_LBL0 453
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -11296,14 +11511,14 @@ ___DEF_SLBL(0,___L0__23__23_machine_2d_code_2d_block_2d_set_21_)
 ___DEF_GLBL(___L__23__23_machine_2d_code_2d_block_2d_set_21_)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_machine_2d_code_2d_block_2d_set_21_)
-   ___JUMPINT(___SET_NARGS(3),___PRC(838),___L__20___kernel_23_3)
+   ___JUMPINT(___SET_NARGS(3),___PRC(865),___L__20___kernel_23_3)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_machine_2d_code_2d_block_2d_exec
 #undef ___PH_LBL0
-#define ___PH_LBL0 445
+#define ___PH_LBL0 456
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -11329,14 +11544,14 @@ ___FIX(0L)))
 ___DEF_GLBL(___L__23__23_machine_2d_code_2d_block_2d_exec)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_machine_2d_code_2d_block_2d_exec)
-   ___JUMPINT(___SET_NARGS(4),___PRC(841),___L__20___kernel_23_4)
+   ___JUMPINT(___SET_NARGS(4),___PRC(868),___L__20___kernel_23_4)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_apply
 #undef ___PH_LBL0
-#define ___PH_LBL0 448
+#define ___PH_LBL0 459
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11402,9 +11617,123 @@ ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_make_2d_values
+#undef ___PH_LBL0
+#define ___PH_LBL0 462
+#undef ___PD_ALL
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
+#undef ___PR_ALL
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2
+#undef ___PW_ALL
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R2
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_make_2d_values)
+___DEF_P_HLBL(___L1__23__23_make_2d_values)
+___DEF_P_HLBL(___L2__23__23_make_2d_values)
+___DEF_P_HLBL(___L3__23__23_make_2d_values)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_make_2d_values)
+   ___IF_NARGS_EQ(1,___SET_R2(___FIX(0L)))
+   ___IF_NARGS_EQ(2,___NOTHING)
+   ___WRONG_NARGS(0,1,1,0)
+___DEF_GLBL(___L__23__23_make_2d_values)
+   ___SET_STK(1,___R0)
+   ___SET_R0(___LBL(2))
+   ___ADJFP(4)
+   ___POLL(1)
+___DEF_SLBL(1,___L1__23__23_make_2d_values)
+   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_make_2d_vector)
+___DEF_SLBL(2,___L2__23__23_make_2d_values)
+   ___SUBTYPESET(___R1,___FIX(5L))
+   ___POLL(3)
+___DEF_SLBL(3,___L3__23__23_make_2d_values)
+   ___ADJFP(-4)
+   ___JUMPPRM(___NOTHING,___STK(1))
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_values_2d_length
+#undef ___PH_LBL0
+#define ___PH_LBL0 467
+#undef ___PD_ALL
+#define ___PD_ALL ___D_R0 ___D_R1
+#undef ___PR_ALL
+#define ___PR_ALL ___R_R0 ___R_R1
+#undef ___PW_ALL
+#define ___PW_ALL ___W_R1
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_values_2d_length)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_values_2d_length)
+   ___IF_NARGS_EQ(1,___NOTHING)
+   ___WRONG_NARGS(0,1,0,0)
+___DEF_GLBL(___L__23__23_values_2d_length)
+   ___SET_R1(___VECTORLENGTH(___R1))
+   ___JUMPPRM(___NOTHING,___R0)
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_values_2d_ref
+#undef ___PH_LBL0
+#define ___PH_LBL0 469
+#undef ___PD_ALL
+#define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
+#undef ___PR_ALL
+#define ___PR_ALL ___R_R0 ___R_R1 ___R_R2
+#undef ___PW_ALL
+#define ___PW_ALL ___W_R1
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_values_2d_ref)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_values_2d_ref)
+   ___IF_NARGS_EQ(2,___NOTHING)
+   ___WRONG_NARGS(0,2,0,0)
+___DEF_GLBL(___L__23__23_values_2d_ref)
+   ___SET_R1(___VECTORREF(___R1,___R2))
+   ___JUMPPRM(___NOTHING,___R0)
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_values_2d_set_21_
+#undef ___PH_LBL0
+#define ___PH_LBL0 471
+#undef ___PD_ALL
+#define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
+#undef ___PR_ALL
+#define ___PR_ALL ___R_R0 ___R_R1 ___R_R2 ___R_R3
+#undef ___PW_ALL
+#define ___PW_ALL
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_values_2d_set_21_)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_values_2d_set_21_)
+   ___IF_NARGS_EQ(3,___NOTHING)
+   ___WRONG_NARGS(0,3,0,0)
+___DEF_GLBL(___L__23__23_values_2d_set_21_)
+   ___VECTORSET(___R1,___R2,___R3)
+   ___JUMPPRM(___NOTHING,___R0)
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_closure_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 451
+#define ___PH_LBL0 473
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11434,7 +11763,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_closure
 #undef ___PH_LBL0
-#define ___PH_LBL0 453
+#define ___PH_LBL0 475
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -11475,7 +11804,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_closure_2d_length
 #undef ___PH_LBL0
-#define ___PH_LBL0 458
+#define ___PH_LBL0 480
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -11500,7 +11829,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_closure_2d_code
 #undef ___PH_LBL0
-#define ___PH_LBL0 460
+#define ___PH_LBL0 482
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -11525,7 +11854,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_closure_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 462
+#define ___PH_LBL0 484
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -11550,7 +11879,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_closure_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 464
+#define ___PH_LBL0 486
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -11575,7 +11904,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_subprocedure_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 466
+#define ___PH_LBL0 488
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11612,7 +11941,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_subprocedure_2d_id
 #undef ___PH_LBL0
-#define ___PH_LBL0 468
+#define ___PH_LBL0 490
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11654,7 +11983,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_subprocedure_2d_parent
 #undef ___PH_LBL0
-#define ___PH_LBL0 470
+#define ___PH_LBL0 492
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11696,7 +12025,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_subprocedure_2d_nb_2d_parameters
 #undef ___PH_LBL0
-#define ___PH_LBL0 472
+#define ___PH_LBL0 494
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11728,7 +12057,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_subprocedure_2d_nb_2d_closed
 #undef ___PH_LBL0
-#define ___PH_LBL0 474
+#define ___PH_LBL0 496
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11760,7 +12089,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_subprocedure
 #undef ___PH_LBL0
-#define ___PH_LBL0 476
+#define ___PH_LBL0 498
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11804,7 +12133,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_subprocedure_2d_parent_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 478
+#define ___PH_LBL0 500
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11845,7 +12174,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_subprocedure_2d_parent_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 480
+#define ___PH_LBL0 502
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11886,7 +12215,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_explode_2d_continuation
 #undef ___PH_LBL0
-#define ___PH_LBL0 482
+#define ___PH_LBL0 504
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -11933,7 +12262,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_frame
 #undef ___PH_LBL0
-#define ___PH_LBL0 488
+#define ___PH_LBL0 510
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -11966,7 +12295,7 @@ ___DEF_GLBL(___L__23__23_continuation_2d_frame)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_continuation_2d_frame)
-   ___JUMPINT(___SET_NARGS(0),___PRC(345),___L__23__23_gc)
+   ___JUMPINT(___SET_NARGS(0),___PRC(356),___L__23__23_gc)
 ___DEF_SLBL(2,___L2__23__23_continuation_2d_frame)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
@@ -11983,7 +12312,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_frame_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 493
+#define ___PH_LBL0 515
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -12008,7 +12337,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_denv
 #undef ___PH_LBL0
-#define ___PH_LBL0 495
+#define ___PH_LBL0 517
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -12033,7 +12362,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_denv_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 497
+#define ___PH_LBL0 519
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -12058,7 +12387,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_explode_2d_frame
 #undef ___PH_LBL0
-#define ___PH_LBL0 499
+#define ___PH_LBL0 521
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -12103,26 +12432,22 @@ ___DEF_SLBL(3,___L3__23__23_explode_2d_frame)
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_frame_2d_ret)
 ___DEF_SLBL(4,___L4__23__23_explode_2d_frame)
    ___VECTORSET(___STK(-4),___FIX(0L),___R1)
-   ___SET_STK(-3,___STK(-7))
-   ___SET_STK(-7,___STK(-6))
-   ___SET_R2(___STK(-4))
    ___SET_R3(___STK(-5))
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___STK(-3))
-   ___ADJFP(-7)
+   ___SET_R2(___STK(-4))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___STK(-7))
+   ___ADJFP(-8)
    ___POLL(5)
 ___DEF_SLBL(5,___L5__23__23_explode_2d_frame)
    ___GOTO(___L11__23__23_explode_2d_frame)
 ___DEF_SLBL(6,___L6__23__23_explode_2d_frame)
-   ___SET_R2(___FIXSUB(___STK(-5),___STK(-3)))
-   ___SET_R2(___FIXADD(___R2,___FIX(1L)))
-   ___VECTORSET(___STK(-4),___R2,___R1)
+   ___VECTORSET(___STK(-5),___STK(-4),___R1)
 ___DEF_GLBL(___L10__23__23_explode_2d_frame)
-   ___SET_R3(___FIXSUB(___STK(-3),___FIX(1L)))
-   ___SET_R2(___STK(-4))
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___STK(-6))
-   ___ADJFP(-7)
+   ___SET_R3(___FIXSUB(___STK(-4),___FIX(1L)))
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___STK(-7))
+   ___ADJFP(-8)
    ___POLL(7)
 ___DEF_SLBL(7,___L7__23__23_explode_2d_frame)
 ___DEF_GLBL(___L11__23__23_explode_2d_frame)
@@ -12134,9 +12459,8 @@ ___DEF_GLBL(___L11__23__23_explode_2d_frame)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R2(___R3)
-   ___SET_R1(___STK(0))
    ___SET_R0(___LBL(9))
-   ___ADJFP(7)
+   ___ADJFP(8)
    ___POLL(8)
 ___DEF_SLBL(8,___L8__23__23_explode_2d_frame)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_frame_2d_slot_2d_live_3f_)
@@ -12144,13 +12468,12 @@ ___DEF_SLBL(9,___L9__23__23_explode_2d_frame)
    ___IF(___FALSEP(___R1))
    ___GOTO(___L10__23__23_explode_2d_frame)
    ___END_IF
-   ___SET_R2(___STK(-3))
-   ___SET_R1(___STK(-7))
+   ___SET_R2(___STK(-4))
+   ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(6))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_frame_2d_ref)
 ___DEF_GLBL(___L12__23__23_explode_2d_frame)
    ___SET_R1(___R2)
-   ___ADJFP(-1)
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD
@@ -12158,7 +12481,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_frame_2d_ret
 #undef ___PH_LBL0
-#define ___PH_LBL0 510
+#define ___PH_LBL0 532
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12195,7 +12518,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_ret
 #undef ___PH_LBL0
-#define ___PH_LBL0 512
+#define ___PH_LBL0 534
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12251,7 +12574,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_return_2d_fs
 #undef ___PH_LBL0
-#define ___PH_LBL0 514
+#define ___PH_LBL0 536
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12288,7 +12611,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_frame_2d_fs
 #undef ___PH_LBL0
-#define ___PH_LBL0 516
+#define ___PH_LBL0 538
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12328,7 +12651,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_fs
 #undef ___PH_LBL0
-#define ___PH_LBL0 518
+#define ___PH_LBL0 540
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12389,7 +12712,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_frame_2d_link
 #undef ___PH_LBL0
-#define ___PH_LBL0 520
+#define ___PH_LBL0 542
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12418,7 +12741,7 @@ ___DEF_GLBL(___L__23__23_frame_2d_link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
 
-   ___RESULT = ___FIX(link);
+   ___RESULT = ___FIX(link+1);
 
    ___SET_R1(___RESULT)
 }
@@ -12430,7 +12753,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_link
 #undef ___PH_LBL0
-#define ___PH_LBL0 522
+#define ___PH_LBL0 544
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12478,7 +12801,7 @@ ___DEF_GLBL(___L__23__23_continuation_2d_link)
          ___RETN_GET_FS_LINK(ra,fs,link)
      }
 
-   ___RESULT = ___FIX(link);
+   ___RESULT = ___FIX(link+1);
 
    ___SET_R1(___RESULT)
 }
@@ -12490,7 +12813,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_frame_2d_slot_2d_live_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 524
+#define ___PH_LBL0 546
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12539,7 +12862,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_slot_2d_live_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 526
+#define ___PH_LBL0 548
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12609,7 +12932,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_frame_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 528
+#define ___PH_LBL0 550
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12656,7 +12979,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_frame_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 530
+#define ___PH_LBL0 552
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12704,7 +13027,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 532
+#define ___PH_LBL0 554
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12776,7 +13099,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 534
+#define ___PH_LBL0 556
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12837,6 +13160,7 @@ ___DEF_GLBL(___L__23__23_continuation_2d_set_21_)
      }
 
    ___RESULT = cont;
+
    ___SET_R1(___RESULT)
 }
 #undef ___ARG3
@@ -12849,7 +13173,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_frame
 #undef ___PH_LBL0
-#define ___PH_LBL0 536
+#define ___PH_LBL0 558
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -12876,7 +13200,7 @@ ___DEF_GLBL(___L__23__23_make_2d_frame)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_make_2d_frame)
-   ___JUMPINT(___SET_NARGS(1),___PRC(514),___L__23__23_return_2d_fs)
+   ___JUMPINT(___SET_NARGS(1),___PRC(536),___L__23__23_return_2d_fs)
 ___DEF_SLBL(2,___L2__23__23_make_2d_frame)
    ___SET_R1(___FIXADD(___R1,___FIX(1L)))
    ___SET_R2(___FIX(0L))
@@ -12895,7 +13219,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_continuation
 #undef ___PH_LBL0
-#define ___PH_LBL0 542
+#define ___PH_LBL0 564
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -12923,7 +13247,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_copy
 #undef ___PH_LBL0
-#define ___PH_LBL0 545
+#define ___PH_LBL0 567
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12961,7 +13285,7 @@ ___DEF_GLBL(___L__23__23_continuation_2d_copy)
    ___SET_STK(2,___R1)
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(0),___PRC(329),___L__23__23_check_2d_heap)
+   ___JUMPINT(___SET_NARGS(0),___PRC(340),___L__23__23_check_2d_heap)
 ___DEF_SLBL(1,___L1__23__23_continuation_2d_copy)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
@@ -12972,7 +13296,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_next_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 548
+#define ___PH_LBL0 570
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13082,7 +13406,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_continuation_2d_next
 #undef ___PH_LBL0
-#define ___PH_LBL0 550
+#define ___PH_LBL0 572
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -13103,18 +13427,18 @@ ___DEF_GLBL(___L__23__23_continuation_2d_next)
    ___SET_STK(1,___R0)
    ___SET_R0(___LBL(1))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(545),___L__23__23_continuation_2d_copy)
+   ___JUMPINT(___SET_NARGS(1),___PRC(567),___L__23__23_continuation_2d_copy)
 ___DEF_SLBL(1,___L1__23__23_continuation_2d_next)
    ___SET_R0(___STK(-3))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(548),___L__23__23_continuation_2d_next_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(570),___L__23__23_continuation_2d_next_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_type_2d_id
 #undef ___PH_LBL0
-#define ___PH_LBL0 553
+#define ___PH_LBL0 575
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -13139,7 +13463,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_type_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 555
+#define ___PH_LBL0 577
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -13164,7 +13488,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_type_2d_flags
 #undef ___PH_LBL0
-#define ___PH_LBL0 557
+#define ___PH_LBL0 579
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -13189,7 +13513,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_type_2d_super
 #undef ___PH_LBL0
-#define ___PH_LBL0 559
+#define ___PH_LBL0 581
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -13214,7 +13538,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_type_2d_fields
 #undef ___PH_LBL0
-#define ___PH_LBL0 561
+#define ___PH_LBL0 583
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -13239,7 +13563,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_structure_2d_direct_2d_instance_2d_of_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 563
+#define ___PH_LBL0 585
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -13264,7 +13588,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_structure_2d_instance_2d_of_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 565
+#define ___PH_LBL0 587
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -13324,7 +13648,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_type_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 569
+#define ___PH_LBL0 591
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -13350,7 +13674,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_structure_2d_type
 #undef ___PH_LBL0
-#define ___PH_LBL0 571
+#define ___PH_LBL0 593
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -13375,7 +13699,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_structure_2d_type_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 573
+#define ___PH_LBL0 595
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -13398,9 +13722,47 @@ ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
+#define ___PH_PROC ___H__23__23_make_2d_structure
+#undef ___PH_LBL0
+#define ___PH_LBL0 597
+#undef ___PD_ALL
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1
+#undef ___PR_ALL
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1
+#undef ___PW_ALL
+#define ___PW_ALL ___W_FP ___W_R0
+___BEGIN_P_COD
+___BEGIN_P_HLBL
+___DEF_P_HLBL_INTRO
+___DEF_P_HLBL(___L0__23__23_make_2d_structure)
+___DEF_P_HLBL(___L1__23__23_make_2d_structure)
+___DEF_P_HLBL(___L2__23__23_make_2d_structure)
+___DEF_P_HLBL(___L3__23__23_make_2d_structure)
+___END_P_HLBL
+___BEGIN_P_SW
+___DEF_SLBL(0,___L0__23__23_make_2d_structure)
+   ___IF_NARGS_EQ(1,___NOTHING)
+   ___WRONG_NARGS(0,1,0,0)
+___DEF_GLBL(___L__23__23_make_2d_structure)
+   ___SET_STK(1,___R0)
+   ___SET_R0(___LBL(2))
+   ___ADJFP(4)
+   ___POLL(1)
+___DEF_SLBL(1,___L1__23__23_make_2d_structure)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_make_2d_vector)
+___DEF_SLBL(2,___L2__23__23_make_2d_structure)
+   ___SUBTYPESET(___R1,___FIX(4L))
+   ___POLL(3)
+___DEF_SLBL(3,___L3__23__23_make_2d_structure)
+   ___ADJFP(-4)
+   ___JUMPPRM(___NOTHING,___STK(1))
+___END_P_SW
+___END_P_COD
+
+#undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_structure
 #undef ___PH_LBL0
-#define ___PH_LBL0 575
+#define ___PH_LBL0 602
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -13444,24 +13806,24 @@ ___DEF_GLBL(___L9__23__23_structure)
    ___GOTO(___L8__23__23_structure)
    ___END_IF
    ___SET_STK(1,___R0)
-   ___SET_R2(___R1)
+   ___SET_STK(2,___R1)
    ___SET_R1(___R3)
    ___SET_R0(___LBL(4))
-   ___ADJFP(4)
+   ___ADJFP(8)
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_structure)
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_make_2d_vector)
+   ___JUMPINT(___SET_NARGS(1),___PRC(597),___L__23__23_make_2d_structure)
 ___DEF_SLBL(4,___L4__23__23_structure)
-   ___SUBTYPESET(___R1,___FIX(4L))
+   ___UNCHECKEDSTRUCTURESET(___R1,___STK(-6),___FIX(0L),___STK(-6),___FAL)
    ___POLL(5)
 ___DEF_SLBL(5,___L5__23__23_structure)
-   ___ADJFP(-4)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___GOTO(___L10__23__23_structure)
 ___DEF_SLBL(6,___L6__23__23_structure)
    ___SET_R2(___CAR(___STK(-5)))
    ___UNCHECKEDSTRUCTURESET(___R1,___R2,___STK(-4),___STK(-6),___FAL)
    ___POLL(7)
 ___DEF_SLBL(7,___L7__23__23_structure)
+___DEF_GLBL(___L10__23__23_structure)
    ___ADJFP(-8)
    ___JUMPPRM(___NOTHING,___STK(1))
 ___END_P_SW
@@ -13470,7 +13832,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_structure_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 584
+#define ___PH_LBL0 611
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -13556,7 +13918,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_structure_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 592
+#define ___PH_LBL0 619
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -13647,7 +14009,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_direct_2d_structure_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 600
+#define ___PH_LBL0 627
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13721,7 +14083,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_direct_2d_structure_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 605
+#define ___PH_LBL0 632
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13800,7 +14162,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_unchecked_2d_structure_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 610
+#define ___PH_LBL0 637
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -13826,7 +14188,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_unchecked_2d_structure_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 612
+#define ___PH_LBL0 639
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -13852,7 +14214,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_symbol_2d_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 614
+#define ___PH_LBL0 641
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13880,7 +14242,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_keyword_2d_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 616
+#define ___PH_LBL0 643
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13908,7 +14270,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_interned_2d_symbol
 #undef ___PH_LBL0
-#define ___PH_LBL0 618
+#define ___PH_LBL0 645
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13929,14 +14291,14 @@ ___DEF_GLBL(___L__23__23_make_2d_interned_2d_symbol)
    ___SET_R2(___TRU)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_make_2d_interned_2d_symbol)
-   ___JUMPINT(___SET_NARGS(2),___PRC(624),___L__23__23_make_2d_interned_2d_symkey)
+   ___JUMPINT(___SET_NARGS(2),___PRC(651),___L__23__23_make_2d_interned_2d_symkey)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_interned_2d_keyword
 #undef ___PH_LBL0
-#define ___PH_LBL0 621
+#define ___PH_LBL0 648
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13957,14 +14319,14 @@ ___DEF_GLBL(___L__23__23_make_2d_interned_2d_keyword)
    ___SET_R2(___FAL)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_make_2d_interned_2d_keyword)
-   ___JUMPINT(___SET_NARGS(2),___PRC(624),___L__23__23_make_2d_interned_2d_symkey)
+   ___JUMPINT(___SET_NARGS(2),___PRC(651),___L__23__23_make_2d_interned_2d_symkey)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_interned_2d_symkey
 #undef ___PH_LBL0
-#define ___PH_LBL0 624
+#define ___PH_LBL0 651
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -14002,7 +14364,7 @@ ___DEF_GLBL(___L6__23__23_make_2d_interned_2d_symkey)
    ___ADJFP(8)
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_make_2d_interned_2d_symkey)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L__20___kernel_23_5)
+   ___JUMPINT(___SET_NARGS(2),___PRC(871),___L__20___kernel_23_5)
 ___DEF_SLBL(4,___L4__23__23_make_2d_interned_2d_symkey)
    ___IF(___FIXNUMP(___R1))
    ___GOTO(___L7__23__23_make_2d_interned_2d_symkey)
@@ -14020,7 +14382,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_find_2d_interned_2d_symbol
 #undef ___PH_LBL0
-#define ___PH_LBL0 631
+#define ___PH_LBL0 658
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -14041,14 +14403,14 @@ ___DEF_GLBL(___L__23__23_find_2d_interned_2d_symbol)
    ___SET_R2(___TRU)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_find_2d_interned_2d_symbol)
-   ___JUMPINT(___SET_NARGS(2),___PRC(637),___L__23__23_find_2d_interned_2d_symkey)
+   ___JUMPINT(___SET_NARGS(2),___PRC(664),___L__23__23_find_2d_interned_2d_symkey)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_find_2d_interned_2d_keyword
 #undef ___PH_LBL0
-#define ___PH_LBL0 634
+#define ___PH_LBL0 661
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -14069,14 +14431,14 @@ ___DEF_GLBL(___L__23__23_find_2d_interned_2d_keyword)
    ___SET_R2(___FAL)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_find_2d_interned_2d_keyword)
-   ___JUMPINT(___SET_NARGS(2),___PRC(637),___L__23__23_find_2d_interned_2d_symkey)
+   ___JUMPINT(___SET_NARGS(2),___PRC(664),___L__23__23_find_2d_interned_2d_symkey)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_find_2d_interned_2d_symkey
 #undef ___PH_LBL0
-#define ___PH_LBL0 637
+#define ___PH_LBL0 664
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -14096,14 +14458,14 @@ ___DEF_SLBL(0,___L0__23__23_find_2d_interned_2d_symkey)
 ___DEF_GLBL(___L__23__23_find_2d_interned_2d_symkey)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_find_2d_interned_2d_symkey)
-   ___JUMPINT(___SET_NARGS(2),___PRC(847),___L__20___kernel_23_6)
+   ___JUMPINT(___SET_NARGS(2),___PRC(874),___L__20___kernel_23_6)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_global_2d_var
 #undef ___PH_LBL0
-#define ___PH_LBL0 640
+#define ___PH_LBL0 667
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14149,7 +14511,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_global_2d_var_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 643
+#define ___PH_LBL0 670
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14179,7 +14541,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_global_2d_var_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 645
+#define ___PH_LBL0 672
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14204,7 +14566,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_global_2d_var_2d_primitive_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 647
+#define ___PH_LBL0 674
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14229,7 +14591,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_global_2d_var_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 649
+#define ___PH_LBL0 676
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -14254,7 +14616,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_global_2d_var_2d_primitive_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 651
+#define ___PH_LBL0 678
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -14279,7 +14641,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_object_2d__3e_global_2d_var_2d__3e_identifier
 #undef ___PH_LBL0
-#define ___PH_LBL0 653
+#define ___PH_LBL0 680
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2
 #undef ___PR_ALL
@@ -14305,20 +14667,20 @@ ___DEF_GLBL(___L__23__23_object_2d__3e_global_2d_var_2d__3e_identifier)
    ___ADJFP(4)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_object_2d__3e_global_2d_var_2d__3e_identifier)
-   ___JUMPINT(___SET_NARGS(2),___PRC(658),___L__23__23_object_2d__3e_global_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(685),___L__23__23_object_2d__3e_global_2d_var)
 ___DEF_SLBL(2,___L2__23__23_object_2d__3e_global_2d_var_2d__3e_identifier)
    ___SET_R0(___STK(-3))
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_object_2d__3e_global_2d_var_2d__3e_identifier)
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(660),___L__23__23_global_2d_var_2d__3e_identifier)
+   ___JUMPINT(___SET_NARGS(1),___PRC(687),___L__23__23_global_2d_var_2d__3e_identifier)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_object_2d__3e_global_2d_var
 #undef ___PH_LBL0
-#define ___PH_LBL0 658
+#define ___PH_LBL0 685
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14380,7 +14742,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_global_2d_var_2d__3e_identifier
 #undef ___PH_LBL0
-#define ___PH_LBL0 660
+#define ___PH_LBL0 687
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0
 #undef ___PR_ALL
@@ -14404,7 +14766,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_fail_2d_check_2d_foreign
 #undef ___PH_LBL0
-#define ___PH_LBL0 662
+#define ___PH_LBL0 689
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -14434,7 +14796,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_foreign_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 665
+#define ___PH_LBL0 692
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14459,7 +14821,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_foreign_2d_tags
 #undef ___PH_LBL0
-#define ___PH_LBL0 667
+#define ___PH_LBL0 694
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14485,7 +14847,7 @@ ___DEF_GLBL(___L_foreign_2d_tags)
    ___SET_R1(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_foreign_2d_tags)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(662),___L0__23__23_fail_2d_check_2d_foreign)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(689),___L0__23__23_fail_2d_check_2d_foreign)
 ___DEF_GLBL(___L2_foreign_2d_tags)
    ___SET_R1(___VECTORREF(___R1,___FIX(0L)))
    ___JUMPPRM(___NOTHING,___R0)
@@ -14495,7 +14857,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_foreign_2d_released_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 670
+#define ___PH_LBL0 697
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14527,7 +14889,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_foreign_2d_released_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 672
+#define ___PH_LBL0 699
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14551,21 +14913,21 @@ ___DEF_GLBL(___L_foreign_2d_released_3f_)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_foreign_2d_released_3f_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(670),___L__23__23_foreign_2d_released_3f_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(697),___L__23__23_foreign_2d_released_3f_)
 ___DEF_GLBL(___L3_foreign_2d_released_3f_)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
    ___SET_R1(___FIX(1L))
    ___POLL(2)
 ___DEF_SLBL(2,___L2_foreign_2d_released_3f_)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(662),___L0__23__23_fail_2d_check_2d_foreign)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(689),___L0__23__23_fail_2d_check_2d_foreign)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_foreign_2d_release_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 676
+#define ___PH_LBL0 703
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14594,7 +14956,7 @@ ___RESULT = ___release_foreign (___ARG1);
    ___SET_STK(1,___FAL)
    ___SET_R3(___R1)
    ___SET_R1(___R2)
-   ___SET_R2(___PRC(678))
+   ___SET_R2(___PRC(705))
    ___ADJFP(1)
    ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(266),___L0__23__23_raise_2d_os_2d_exception)
 ___DEF_GLBL(___L1__23__23_foreign_2d_release_21_)
@@ -14606,7 +14968,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_foreign_2d_release_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 678
+#define ___PH_LBL0 705
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14630,21 +14992,21 @@ ___DEF_GLBL(___L_foreign_2d_release_21_)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_foreign_2d_release_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(676),___L__23__23_foreign_2d_release_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(703),___L__23__23_foreign_2d_release_21_)
 ___DEF_GLBL(___L3_foreign_2d_release_21_)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
    ___SET_R1(___FIX(1L))
    ___POLL(2)
 ___DEF_SLBL(2,___L2_foreign_2d_release_21_)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(662),___L0__23__23_fail_2d_check_2d_foreign)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(689),___L0__23__23_fail_2d_check_2d_foreign)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_foreign_2d_address
 #undef ___PH_LBL0
-#define ___PH_LBL0 682
+#define ___PH_LBL0 709
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -14664,14 +15026,14 @@ ___DEF_SLBL(0,___L0__23__23_foreign_2d_address)
 ___DEF_GLBL(___L__23__23_foreign_2d_address)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_foreign_2d_address)
-   ___JUMPINT(___SET_NARGS(1),___PRC(850),___L__20___kernel_23_7)
+   ___JUMPINT(___SET_NARGS(1),___PRC(877),___L__20___kernel_23_7)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_foreign_2d_address
 #undef ___PH_LBL0
-#define ___PH_LBL0 685
+#define ___PH_LBL0 712
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14695,21 +15057,21 @@ ___DEF_GLBL(___L_foreign_2d_address)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_foreign_2d_address)
-   ___JUMPINT(___SET_NARGS(1),___PRC(682),___L__23__23_foreign_2d_address)
+   ___JUMPINT(___SET_NARGS(1),___PRC(709),___L__23__23_foreign_2d_address)
 ___DEF_GLBL(___L3_foreign_2d_address)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
    ___SET_R1(___FIX(1L))
    ___POLL(2)
 ___DEF_SLBL(2,___L2_foreign_2d_address)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(662),___L0__23__23_fail_2d_check_2d_foreign)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(689),___L0__23__23_fail_2d_check_2d_foreign)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_system_2d_version
 #undef ___PH_LBL0
-#define ___PH_LBL0 689
+#define ___PH_LBL0 716
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14734,7 +15096,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_system_2d_version
 #undef ___PH_LBL0
-#define ___PH_LBL0 691
+#define ___PH_LBL0 718
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -14754,14 +15116,14 @@ ___DEF_SLBL(0,___L0_system_2d_version)
 ___DEF_GLBL(___L_system_2d_version)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_system_2d_version)
-   ___JUMPINT(___SET_NARGS(0),___PRC(689),___L__23__23_system_2d_version)
+   ___JUMPINT(___SET_NARGS(0),___PRC(716),___L__23__23_system_2d_version)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_system_2d_version_2d_string
 #undef ___PH_LBL0
-#define ___PH_LBL0 694
+#define ___PH_LBL0 721
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14786,7 +15148,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_system_2d_version_2d_string
 #undef ___PH_LBL0
-#define ___PH_LBL0 696
+#define ___PH_LBL0 723
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -14806,14 +15168,14 @@ ___DEF_SLBL(0,___L0_system_2d_version_2d_string)
 ___DEF_GLBL(___L_system_2d_version_2d_string)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_system_2d_version_2d_string)
-   ___JUMPINT(___SET_NARGS(0),___PRC(694),___L__23__23_system_2d_version_2d_string)
+   ___JUMPINT(___SET_NARGS(0),___PRC(721),___L__23__23_system_2d_version_2d_string)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_system_2d_type
 #undef ___PH_LBL0
-#define ___PH_LBL0 699
+#define ___PH_LBL0 726
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14838,7 +15200,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_system_2d_type_2d_string
 #undef ___PH_LBL0
-#define ___PH_LBL0 701
+#define ___PH_LBL0 728
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14863,7 +15225,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_configure_2d_command_2d_string
 #undef ___PH_LBL0
-#define ___PH_LBL0 703
+#define ___PH_LBL0 730
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14888,7 +15250,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_system_2d_stamp
 #undef ___PH_LBL0
-#define ___PH_LBL0 705
+#define ___PH_LBL0 732
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -14913,7 +15275,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_system_2d_stamp
 #undef ___PH_LBL0
-#define ___PH_LBL0 707
+#define ___PH_LBL0 734
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -14933,14 +15295,14 @@ ___DEF_SLBL(0,___L0_system_2d_stamp)
 ___DEF_GLBL(___L_system_2d_stamp)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_system_2d_stamp)
-   ___JUMPINT(___SET_NARGS(0),___PRC(705),___L__23__23_system_2d_stamp)
+   ___JUMPINT(___SET_NARGS(0),___PRC(732),___L__23__23_system_2d_stamp)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_first_2d_argument
 #undef ___PH_LBL0
-#define ___PH_LBL0 710
+#define ___PH_LBL0 737
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14968,7 +15330,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_with_2d_no_2d_result_2d_expected
 #undef ___PH_LBL0
-#define ___PH_LBL0 712
+#define ___PH_LBL0 739
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -15000,7 +15362,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel
 #undef ___PH_LBL0
-#define ___PH_LBL0 715
+#define ___PH_LBL0 742
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -15032,7 +15394,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_process_2d_statistics
 #undef ___PH_LBL0
-#define ___PH_LBL0 718
+#define ___PH_LBL0 745
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15119,7 +15481,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_process_2d_times
 #undef ___PH_LBL0
-#define ___PH_LBL0 721
+#define ___PH_LBL0 748
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15166,7 +15528,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_get_2d_current_2d_time_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 724
+#define ___PH_LBL0 751
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15206,7 +15568,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_get_2d_bytes_2d_allocated_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 726
+#define ___PH_LBL0 753
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15242,7 +15604,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_err_2d_code_2d__3e_string
 #undef ___PH_LBL0
-#define ___PH_LBL0 728
+#define ___PH_LBL0 755
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -15262,14 +15624,14 @@ ___DEF_SLBL(0,___L0_err_2d_code_2d__3e_string)
 ___DEF_GLBL(___L_err_2d_code_2d__3e_string)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_err_2d_code_2d__3e_string)
-   ___JUMPINT(___SET_NARGS(1),___PRC(877),___L__20___kernel_23_16)
+   ___JUMPINT(___SET_NARGS(1),___PRC(904),___L__20___kernel_23_16)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_command_2d_line
 #undef ___PH_LBL0
-#define ___PH_LBL0 731
+#define ___PH_LBL0 758
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15297,7 +15659,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_os_2d_condvar_2d_select_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 733
+#define ___PH_LBL0 760
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15329,7 +15691,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_add_2d_exit_2d_job_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 735
+#define ___PH_LBL0 762
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -15351,14 +15713,14 @@ ___DEF_GLBL(___L__23__23_add_2d_exit_2d_job_21_)
    ___SET_R1(___GLO__23__23_exit_2d_jobs)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_add_2d_exit_2d_job_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(310),___L__23__23_add_2d_job_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(321),___L__23__23_add_2d_job_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_clear_2d_exit_2d_jobs_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 738
+#define ___PH_LBL0 765
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -15379,14 +15741,14 @@ ___DEF_GLBL(___L__23__23_clear_2d_exit_2d_jobs_21_)
    ___SET_R1(___GLO__23__23_exit_2d_jobs)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_clear_2d_exit_2d_jobs_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(325),___L__23__23_clear_2d_jobs_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(336),___L__23__23_clear_2d_jobs_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup
 #undef ___PH_LBL0
-#define ___PH_LBL0 741
+#define ___PH_LBL0 768
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15419,7 +15781,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_exit_2d_cleanup
 #undef ___PH_LBL0
-#define ___PH_LBL0 743
+#define ___PH_LBL0 770
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -15445,20 +15807,20 @@ ___DEF_GLBL(___L__23__23_exit_2d_cleanup)
    ___ADJFP(4)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_exit_2d_cleanup)
-   ___JUMPINT(___SET_NARGS(1),___PRC(319),___L__23__23_execute_2d_and_2d_clear_2d_jobs_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(330),___L__23__23_execute_2d_and_2d_clear_2d_jobs_21_)
 ___DEF_SLBL(2,___L2__23__23_exit_2d_cleanup)
    ___SET_R0(___STK(-3))
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_exit_2d_cleanup)
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(0),___PRC(360),___L__23__23_execute_2d_final_2d_wills_21_)
+   ___JUMPINT(___SET_NARGS(0),___PRC(371),___L__23__23_execute_2d_final_2d_wills_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_exit_2d_with_2d_err_2d_code
 #undef ___PH_LBL0
-#define ___PH_LBL0 748
+#define ___PH_LBL0 775
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -15484,21 +15846,21 @@ ___DEF_GLBL(___L__23__23_exit_2d_with_2d_err_2d_code)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_exit_2d_with_2d_err_2d_code)
-   ___JUMPINT(___SET_NARGS(0),___PRC(743),___L__23__23_exit_2d_cleanup)
+   ___JUMPINT(___SET_NARGS(0),___PRC(770),___L__23__23_exit_2d_cleanup)
 ___DEF_SLBL(2,___L2__23__23_exit_2d_with_2d_err_2d_code)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_exit_2d_with_2d_err_2d_code)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(741),___L__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup)
+   ___JUMPINT(___SET_NARGS(1),___PRC(768),___L__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_exit
 #undef ___PH_LBL0
-#define ___PH_LBL0 753
+#define ___PH_LBL0 780
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -15520,14 +15882,14 @@ ___DEF_GLBL(___L__23__23_exit)
    ___SET_R1(___FIXADD(___R1,___FIX(1L)))
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_exit)
-   ___JUMPINT(___SET_NARGS(1),___PRC(748),___L__23__23_exit_2d_with_2d_err_2d_code)
+   ___JUMPINT(___SET_NARGS(1),___PRC(775),___L__23__23_exit_2d_with_2d_err_2d_code)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_exit_2d_abnormally
 #undef ___PH_LBL0
-#define ___PH_LBL0 756
+#define ___PH_LBL0 783
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -15548,14 +15910,14 @@ ___DEF_GLBL(___L__23__23_exit_2d_abnormally)
    ___SET_R1(___FIX(70L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_exit_2d_abnormally)
-   ___SET_NARGS(1) ___JUMPINT(___NOTHING,___PRC(753),___L0__23__23_exit)
+   ___SET_NARGS(1) ___JUMPINT(___NOTHING,___PRC(780),___L0__23__23_exit)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_exit_2d_with_2d_exception
 #undef ___PH_LBL0
-#define ___PH_LBL0 759
+#define ___PH_LBL0 786
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -15575,14 +15937,14 @@ ___DEF_SLBL(0,___L0__23__23_exit_2d_with_2d_exception)
 ___DEF_GLBL(___L__23__23_exit_2d_with_2d_exception)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_exit_2d_with_2d_exception)
-   ___JUMPINT(___SET_NARGS(0),___PRC(756),___L__23__23_exit_2d_abnormally)
+   ___JUMPINT(___SET_NARGS(0),___PRC(783),___L__23__23_exit_2d_abnormally)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_module_2d_init
 #undef ___PH_LBL0
-#define ___PH_LBL0 762
+#define ___PH_LBL0 789
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15613,7 +15975,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_main_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 764
+#define ___PH_LBL0 791
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -15630,7 +15992,7 @@ ___DEF_SLBL(0,___L0__23__23_main_2d_set_21_)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L__23__23_main_2d_set_21_)
-   ___SET_GLO(209,___G__23__23_main,___R1)
+   ___SET_GLO(210,___G__23__23_main,___R1)
    ___SET_R1(___VOID)
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
@@ -15639,7 +16001,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_create_2d_module
 #undef ___PH_LBL0
-#define ___PH_LBL0 766
+#define ___PH_LBL0 793
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -15673,7 +16035,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_register_2d_module_2d_descr_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 769
+#define ___PH_LBL0 796
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -15702,19 +16064,19 @@ ___DEF_GLBL(___L__23__23_register_2d_module_2d_descr_21_)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_register_2d_module_2d_descr_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(766),___L__23__23_create_2d_module)
+   ___JUMPINT(___SET_NARGS(2),___PRC(793),___L__23__23_create_2d_module)
 ___DEF_SLBL(2,___L2__23__23_register_2d_module_2d_descr_21_)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___GLO__23__23_registered_2d_modules)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(789),___L__23__23_lookup_2d_module)
+   ___JUMPINT(___SET_NARGS(2),___PRC(816),___L__23__23_lookup_2d_module)
 ___DEF_SLBL(3,___L3__23__23_register_2d_module_2d_descr_21_)
    ___IF(___NOT(___FALSEP(___R1)))
    ___GOTO(___L6__23__23_register_2d_module_2d_descr_21_)
    ___END_IF
    ___SET_R1(___CONS(___STK(-5),___GLO__23__23_registered_2d_modules))
-   ___SET_GLO(336,___G__23__23_registered_2d_modules,___R1)
+   ___SET_GLO(344,___G__23__23_registered_2d_modules,___R1)
    ___CHECK_HEAP(4,4096)
 ___DEF_SLBL(4,___L4__23__23_register_2d_module_2d_descr_21_)
    ___GOTO(___L7__23__23_register_2d_module_2d_descr_21_)
@@ -15732,7 +16094,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_register_2d_module_2d_descrs_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 776
+#define ___PH_LBL0 803
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15786,7 +16148,7 @@ ___DEF_GLBL(___L6__23__23_register_2d_module_2d_descrs_21_)
    ___ADJFP(8)
    ___POLL(5)
 ___DEF_SLBL(5,___L5__23__23_register_2d_module_2d_descrs_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(769),___L__23__23_register_2d_module_2d_descr_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(796),___L__23__23_register_2d_module_2d_descr_21_)
 ___DEF_GLBL(___L7__23__23_register_2d_module_2d_descrs_21_)
    ___SET_R1(___R3)
    ___JUMPPRM(___NOTHING,___R0)
@@ -15796,7 +16158,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_lookup_2d_registered_2d_module
 #undef ___PH_LBL0
-#define ___PH_LBL0 783
+#define ___PH_LBL0 810
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -15823,7 +16185,7 @@ ___DEF_GLBL(___L__23__23_lookup_2d_registered_2d_module)
    ___ADJFP(4)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_lookup_2d_registered_2d_module)
-   ___JUMPINT(___SET_NARGS(2),___PRC(789),___L__23__23_lookup_2d_module)
+   ___JUMPINT(___SET_NARGS(2),___PRC(816),___L__23__23_lookup_2d_module)
 ___DEF_SLBL(2,___L2__23__23_lookup_2d_registered_2d_module)
    ___SET_STK(-2,___R1)
    ___IF(___NOT(___FALSEP(___R1)))
@@ -15845,7 +16207,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_lookup_2d_module
 #undef ___PH_LBL0
-#define ___PH_LBL0 789
+#define ___PH_LBL0 816
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -15891,7 +16253,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_load_2d_required_2d_module_2d_structs
 #undef ___PH_LBL0
-#define ___PH_LBL0 793
+#define ___PH_LBL0 820
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16042,14 +16404,14 @@ ___DEF_SLBL(12,___L12__23__23_load_2d_required_2d_module_2d_structs)
    ___END_IF
    ___POLL(13)
 ___DEF_SLBL(13,___L13__23__23_load_2d_required_2d_module_2d_structs)
-   ___JUMPINT(___SET_NARGS(1),___PRC(762),___L__23__23_module_2d_init)
+   ___JUMPINT(___SET_NARGS(1),___PRC(789),___L__23__23_module_2d_init)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_default_2d_load_2d_required_2d_module
 #undef ___PH_LBL0
-#define ___PH_LBL0 808
+#define ___PH_LBL0 835
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16082,7 +16444,7 @@ ___DEF_GLBL(___L__23__23_default_2d_load_2d_required_2d_module)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_default_2d_load_2d_required_2d_module)
-   ___JUMPINT(___SET_NARGS(1),___PRC(783),___L__23__23_lookup_2d_registered_2d_module)
+   ___JUMPINT(___SET_NARGS(1),___PRC(810),___L__23__23_lookup_2d_registered_2d_module)
 ___DEF_SLBL(2,___L2__23__23_default_2d_load_2d_required_2d_module)
    ___IF(___NOT(___FALSEP(___R1)))
    ___GOTO(___L10__23__23_default_2d_load_2d_required_2d_module)
@@ -16114,14 +16476,14 @@ ___DEF_SLBL(6,___L6__23__23_default_2d_load_2d_required_2d_module)
    ___POLL(7)
 ___DEF_SLBL(7,___L7__23__23_default_2d_load_2d_required_2d_module)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(793),___L__23__23_load_2d_required_2d_module_2d_structs)
+   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L__23__23_load_2d_required_2d_module_2d_structs)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 817
+#define ___PH_LBL0 844
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2
 #undef ___PR_ALL
@@ -16146,21 +16508,21 @@ ___DEF_GLBL(___L__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
    ___ADJFP(4)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
-   ___JUMPINT(___SET_NARGS(1),___PRC(776),___L__23__23_register_2d_module_2d_descrs_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(803),___L__23__23_register_2d_module_2d_descrs_21_)
 ___DEF_SLBL(2,___L2__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
    ___SET_R2(___FAL)
    ___SET_R0(___STK(-3))
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_)
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(793),___L__23__23_load_2d_required_2d_module_2d_structs)
+   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L__23__23_load_2d_required_2d_module_2d_structs)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_load_2d_vm
 #undef ___PH_LBL0
-#define ___PH_LBL0 822
+#define ___PH_LBL0 849
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16195,31 +16557,31 @@ ___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mo
    ___ADJFP(4)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_load_2d_vm)
-   ___JUMPINT(___SET_NARGS(1),___PRC(776),___L__23__23_register_2d_module_2d_descrs_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(803),___L__23__23_register_2d_module_2d_descrs_21_)
 ___DEF_SLBL(2,___L2__23__23_load_2d_vm)
    ___SET_R2(___CAR(___R1))
    ___SET_R1(___CDR(___R1))
    ___VECTORSET(___R2,___FIX(2L),___FIX(3L))
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(793),___L__23__23_load_2d_required_2d_module_2d_structs)
+   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L__23__23_load_2d_required_2d_module_2d_structs)
 ___DEF_SLBL(3,___L3__23__23_load_2d_vm)
    ___SET_R1(___GLO__23__23_vm_2d_main_2d_module_2d_id)
    ___SET_R0(___LBL(4))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),201,___G__23__23_load_2d_required_2d_module)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),202,___G__23__23_load_2d_required_2d_module)
 ___DEF_SLBL(4,___L4__23__23_load_2d_vm)
    ___SET_R0(___STK(-3))
    ___POLL(5)
 ___DEF_SLBL(5,___L5__23__23_load_2d_vm)
    ___ADJFP(-4)
-   ___JUMPGLONOTSAFE(___SET_NARGS(0),209,___G__23__23_main)
+   ___JUMPGLONOTSAFE(___SET_NARGS(0),210,___G__23__23_main)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_0
 #undef ___PH_LBL0
-#define ___PH_LBL0 829
+#define ___PH_LBL0 856
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -16270,7 +16632,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_1
 #undef ___PH_LBL0
-#define ___PH_LBL0 832
+#define ___PH_LBL0 859
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -16327,7 +16689,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_2
 #undef ___PH_LBL0
-#define ___PH_LBL0 835
+#define ___PH_LBL0 862
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -16391,7 +16753,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_3
 #undef ___PH_LBL0
-#define ___PH_LBL0 838
+#define ___PH_LBL0 865
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16460,7 +16822,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_4
 #undef ___PH_LBL0
-#define ___PH_LBL0 841
+#define ___PH_LBL0 868
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16535,7 +16897,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_5
 #undef ___PH_LBL0
-#define ___PH_LBL0 844
+#define ___PH_LBL0 871
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -16596,7 +16958,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_6
 #undef ___PH_LBL0
-#define ___PH_LBL0 847
+#define ___PH_LBL0 874
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -16657,7 +17019,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_7
 #undef ___PH_LBL0
-#define ___PH_LBL0 850
+#define ___PH_LBL0 877
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -16713,7 +17075,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_8
 #undef ___PH_LBL0
-#define ___PH_LBL0 853
+#define ___PH_LBL0 880
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -16759,7 +17121,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_9
 #undef ___PH_LBL0
-#define ___PH_LBL0 856
+#define ___PH_LBL0 883
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -16805,7 +17167,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_10
 #undef ___PH_LBL0
-#define ___PH_LBL0 859
+#define ___PH_LBL0 886
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -16851,7 +17213,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_11
 #undef ___PH_LBL0
-#define ___PH_LBL0 862
+#define ___PH_LBL0 889
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -16899,7 +17261,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_12
 #undef ___PH_LBL0
-#define ___PH_LBL0 865
+#define ___PH_LBL0 892
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -16945,7 +17307,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_13
 #undef ___PH_LBL0
-#define ___PH_LBL0 868
+#define ___PH_LBL0 895
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -16991,7 +17353,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_14
 #undef ___PH_LBL0
-#define ___PH_LBL0 871
+#define ___PH_LBL0 898
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -17037,7 +17399,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_15
 #undef ___PH_LBL0
-#define ___PH_LBL0 874
+#define ___PH_LBL0 901
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17104,7 +17466,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_16
 #undef ___PH_LBL0
-#define ___PH_LBL0 877
+#define ___PH_LBL0 904
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -17155,7 +17517,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_17
 #undef ___PH_LBL0
-#define ___PH_LBL0 880
+#define ___PH_LBL0 907
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -17199,7 +17561,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_18
 #undef ___PH_LBL0
-#define ___PH_LBL0 883
+#define ___PH_LBL0 910
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -17243,7 +17605,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_19
 #undef ___PH_LBL0
-#define ___PH_LBL0 886
+#define ___PH_LBL0 913
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -17294,7 +17656,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_20
 #undef ___PH_LBL0
-#define ___PH_LBL0 889
+#define ___PH_LBL0 916
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -17345,7 +17707,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_21
 #undef ___PH_LBL0
-#define ___PH_LBL0 892
+#define ___PH_LBL0 919
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -17391,7 +17753,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_22
 #undef ___PH_LBL0
-#define ___PH_LBL0 895
+#define ___PH_LBL0 922
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -17437,7 +17799,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_23
 #undef ___PH_LBL0
-#define ___PH_LBL0 898
+#define ___PH_LBL0 925
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -17488,7 +17850,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_24
 #undef ___PH_LBL0
-#define ___PH_LBL0 901
+#define ___PH_LBL0 928
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -17546,7 +17908,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_25
 #undef ___PH_LBL0
-#define ___PH_LBL0 904
+#define ___PH_LBL0 931
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -17590,11 +17952,11 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_26
 #undef ___PH_LBL0
-#define ___PH_LBL0 907
+#define ___PH_LBL0 934
 #undef ___PD_ALL
-#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
-#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1
 #undef ___PW_ALL
 #define ___PW_ALL ___W_FP ___W_R0
 ___BEGIN_P_COD
@@ -17605,33 +17967,26 @@ ___DEF_P_HLBL(___L1__20___kernel_23_26)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__20___kernel_23_26)
-   ___IF_NARGS_EQ(2,___NOTHING)
-   ___WRONG_NARGS(0,2,0,0)
+   ___IF_NARGS_EQ(1,___NOTHING)
+   ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L__20___kernel_23_26)
    ___SET_STK(1,___R1)
-   ___SET_STK(2,___R2)
-   ___SET_STK(3,___R0)
+   ___SET_STK(2,___R0)
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-#define ___NARGS 2
+#define ___NARGS 1
 ___BEGIN_CFUN_SCMOBJ
 #define ___ARG1 ___CFUN_ARG(1)
 ___BEGIN_CFUN_ARG_SCMOBJ(1)
 #define ___arg1 ___ARG1
-#define ___ARG2 ___CFUN_ARG(2)
-___BEGIN_CFUN_ARG_SCMOBJ(2)
-#define ___arg2 ___ARG2
 ___BEGIN_CFUN_BODY
 #undef ___AT_END
-___CFUN_CALL(___result,___os_shell_command(___arg1,___arg2))
+___CFUN_CALL(___result,___os_shell_command(___arg1))
 #ifndef ___AT_END
 #define ___AT_END
 #endif
 ___CFUN_SET_RESULT_SCMOBJ
 ___END_CFUN_BODY
-#undef ___arg2
-___END_CFUN_ARG_SCMOBJ(2)
-#undef ___ARG2
 #undef ___arg1
 ___END_CFUN_ARG_SCMOBJ(1)
 #undef ___ARG1
@@ -17641,14 +17996,14 @@ ___END_CFUN_SCMOBJ
    ___JUMPPRM(___NOTHING,___R0)
 ___DEF_SLBL(1,___L1__20___kernel_23_26)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(3))
+   ___JUMPPRM(___NOTHING,___STK(2))
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_27
 #undef ___PH_LBL0
-#define ___PH_LBL0 910
+#define ___PH_LBL0 937
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -17699,7 +18054,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_28
 #undef ___PH_LBL0
-#define ___PH_LBL0 913
+#define ___PH_LBL0 940
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -17757,7 +18112,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_29
 #undef ___PH_LBL0
-#define ___PH_LBL0 916
+#define ___PH_LBL0 943
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -17815,7 +18170,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_30
 #undef ___PH_LBL0
-#define ___PH_LBL0 919
+#define ___PH_LBL0 946
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17880,7 +18235,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_31
 #undef ___PH_LBL0
-#define ___PH_LBL0 922
+#define ___PH_LBL0 949
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17951,7 +18306,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_32
 #undef ___PH_LBL0
-#define ___PH_LBL0 925
+#define ___PH_LBL0 952
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18022,7 +18377,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_33
 #undef ___PH_LBL0
-#define ___PH_LBL0 928
+#define ___PH_LBL0 955
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18073,7 +18428,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_34
 #undef ___PH_LBL0
-#define ___PH_LBL0 931
+#define ___PH_LBL0 958
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18124,7 +18479,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_35
 #undef ___PH_LBL0
-#define ___PH_LBL0 934
+#define ___PH_LBL0 961
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -18182,7 +18537,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_36
 #undef ___PH_LBL0
-#define ___PH_LBL0 937
+#define ___PH_LBL0 964
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -18240,7 +18595,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_37
 #undef ___PH_LBL0
-#define ___PH_LBL0 940
+#define ___PH_LBL0 967
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18305,7 +18660,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_38
 #undef ___PH_LBL0
-#define ___PH_LBL0 943
+#define ___PH_LBL0 970
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18376,7 +18731,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_39
 #undef ___PH_LBL0
-#define ___PH_LBL0 946
+#define ___PH_LBL0 973
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18427,7 +18782,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_40
 #undef ___PH_LBL0
-#define ___PH_LBL0 949
+#define ___PH_LBL0 976
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18478,7 +18833,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_41
 #undef ___PH_LBL0
-#define ___PH_LBL0 952
+#define ___PH_LBL0 979
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18504,6 +18859,12 @@ ___DEF_GLBL(___L__20___kernel_23_41)
    ___ADJFP(8)
 #define ___NARGS 7
 ___BEGIN_CFUN_SCMOBJ
+#define ___ARG1 ___CFUN_ARG(1)
+___BEGIN_CFUN_ARG_SCMOBJ(1)
+#define ___arg1 ___ARG1
+#define ___ARG2 ___CFUN_ARG(2)
+___BEGIN_CFUN_ARG_SCMOBJ(2)
+#define ___arg2 ___ARG2
 #define ___ARG3 ___CFUN_ARG(3)
 ___BEGIN_CFUN_ARG_SCMOBJ(3)
 #define ___arg3 ___ARG3
@@ -18519,12 +18880,6 @@ ___BEGIN_CFUN_ARG_SCMOBJ(6)
 #define ___ARG7 ___CFUN_ARG(7)
 ___BEGIN_CFUN_ARG_SCMOBJ(7)
 #define ___arg7 ___ARG7
-#define ___ARG1 ___CFUN_ARG(1)
-___BEGIN_CFUN_ARG(1,___U16 ___arg1)
-___BEGIN_CFUN_SCMOBJ_TO_U16(___ARG1,___arg1,1)
-#define ___ARG2 ___CFUN_ARG(2)
-___BEGIN_CFUN_ARG(2,___U16 ___arg2)
-___BEGIN_CFUN_SCMOBJ_TO_U16(___ARG2,___arg2,2)
 ___BEGIN_CFUN_BODY
 #undef ___AT_END
 ___CFUN_CALL(___result,___os_make_tls_context(___arg1,___arg2,___arg3,___arg4,___arg5,___arg6,___arg7))
@@ -18533,12 +18888,6 @@ ___CFUN_CALL(___result,___os_make_tls_context(___arg1,___arg2,___arg3,___arg4,__
 #endif
 ___CFUN_SET_RESULT_SCMOBJ
 ___END_CFUN_BODY
-___END_CFUN_SCMOBJ_TO_U16(___ARG2,___arg2,2)
-___END_CFUN_ARG(2)
-#undef ___ARG2
-___END_CFUN_SCMOBJ_TO_U16(___ARG1,___arg1,1)
-___END_CFUN_ARG(1)
-#undef ___ARG1
 #undef ___arg7
 ___END_CFUN_ARG_SCMOBJ(7)
 #undef ___ARG7
@@ -18554,6 +18903,12 @@ ___END_CFUN_ARG_SCMOBJ(4)
 #undef ___arg3
 ___END_CFUN_ARG_SCMOBJ(3)
 #undef ___ARG3
+#undef ___arg2
+___END_CFUN_ARG_SCMOBJ(2)
+#undef ___ARG2
+#undef ___arg1
+___END_CFUN_ARG_SCMOBJ(1)
+#undef ___ARG1
 ___CFUN_ERROR_SCMOBJ
 ___END_CFUN_SCMOBJ
 #undef ___NARGS
@@ -18567,7 +18922,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_42
 #undef ___PH_LBL0
-#define ___PH_LBL0 955
+#define ___PH_LBL0 982
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18638,7 +18993,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_43
 #undef ___PH_LBL0
-#define ___PH_LBL0 958
+#define ___PH_LBL0 985
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -18696,7 +19051,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_44
 #undef ___PH_LBL0
-#define ___PH_LBL0 961
+#define ___PH_LBL0 988
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18773,7 +19128,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_45
 #undef ___PH_LBL0
-#define ___PH_LBL0 964
+#define ___PH_LBL0 991
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18824,7 +19179,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_46
 #undef ___PH_LBL0
-#define ___PH_LBL0 967
+#define ___PH_LBL0 994
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18875,7 +19230,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_47
 #undef ___PH_LBL0
-#define ___PH_LBL0 970
+#define ___PH_LBL0 997
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -18933,7 +19288,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_48
 #undef ___PH_LBL0
-#define ___PH_LBL0 973
+#define ___PH_LBL0 1000
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -18984,7 +19339,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_49
 #undef ___PH_LBL0
-#define ___PH_LBL0 976
+#define ___PH_LBL0 1003
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19035,7 +19390,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_50
 #undef ___PH_LBL0
-#define ___PH_LBL0 979
+#define ___PH_LBL0 1006
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19086,7 +19441,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_51
 #undef ___PH_LBL0
-#define ___PH_LBL0 982
+#define ___PH_LBL0 1009
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19151,7 +19506,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_52
 #undef ___PH_LBL0
-#define ___PH_LBL0 985
+#define ___PH_LBL0 1012
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19216,7 +19571,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_53
 #undef ___PH_LBL0
-#define ___PH_LBL0 988
+#define ___PH_LBL0 1015
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19267,7 +19622,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_54
 #undef ___PH_LBL0
-#define ___PH_LBL0 991
+#define ___PH_LBL0 1018
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -19325,7 +19680,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_55
 #undef ___PH_LBL0
-#define ___PH_LBL0 994
+#define ___PH_LBL0 1021
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -19383,7 +19738,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_56
 #undef ___PH_LBL0
-#define ___PH_LBL0 997
+#define ___PH_LBL0 1024
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -19441,7 +19796,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_57
 #undef ___PH_LBL0
-#define ___PH_LBL0 1000
+#define ___PH_LBL0 1027
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19524,7 +19879,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_58
 #undef ___PH_LBL0
-#define ___PH_LBL0 1003
+#define ___PH_LBL0 1030
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19589,7 +19944,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_59
 #undef ___PH_LBL0
-#define ___PH_LBL0 1006
+#define ___PH_LBL0 1033
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19640,7 +19995,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_60
 #undef ___PH_LBL0
-#define ___PH_LBL0 1009
+#define ___PH_LBL0 1036
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19705,7 +20060,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_61
 #undef ___PH_LBL0
-#define ___PH_LBL0 1012
+#define ___PH_LBL0 1039
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -19763,7 +20118,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_62
 #undef ___PH_LBL0
-#define ___PH_LBL0 1015
+#define ___PH_LBL0 1042
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19814,7 +20169,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_63
 #undef ___PH_LBL0
-#define ___PH_LBL0 1018
+#define ___PH_LBL0 1045
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -19858,7 +20213,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_64
 #undef ___PH_LBL0
-#define ___PH_LBL0 1021
+#define ___PH_LBL0 1048
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -19909,7 +20264,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_65
 #undef ___PH_LBL0
-#define ___PH_LBL0 1024
+#define ___PH_LBL0 1051
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19992,7 +20347,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_66
 #undef ___PH_LBL0
-#define ___PH_LBL0 1027
+#define ___PH_LBL0 1054
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -20043,7 +20398,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_67
 #undef ___PH_LBL0
-#define ___PH_LBL0 1030
+#define ___PH_LBL0 1057
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -20087,7 +20442,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_68
 #undef ___PH_LBL0
-#define ___PH_LBL0 1033
+#define ___PH_LBL0 1060
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -20145,7 +20500,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_69
 #undef ___PH_LBL0
-#define ___PH_LBL0 1036
+#define ___PH_LBL0 1063
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -20196,7 +20551,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_70
 #undef ___PH_LBL0
-#define ___PH_LBL0 1039
+#define ___PH_LBL0 1066
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -20247,7 +20602,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_71
 #undef ___PH_LBL0
-#define ___PH_LBL0 1042
+#define ___PH_LBL0 1069
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -20291,7 +20646,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_72
 #undef ___PH_LBL0
-#define ___PH_LBL0 1045
+#define ___PH_LBL0 1072
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0
 #undef ___PR_ALL
@@ -20335,7 +20690,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_73
 #undef ___PH_LBL0
-#define ___PH_LBL0 1048
+#define ___PH_LBL0 1075
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -20393,7 +20748,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_74
 #undef ___PH_LBL0
-#define ___PH_LBL0 1051
+#define ___PH_LBL0 1078
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -20451,7 +20806,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_75
 #undef ___PH_LBL0
-#define ___PH_LBL0 1054
+#define ___PH_LBL0 1081
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -20509,7 +20864,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_76
 #undef ___PH_LBL0
-#define ___PH_LBL0 1057
+#define ___PH_LBL0 1084
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -20567,7 +20922,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_77
 #undef ___PH_LBL0
-#define ___PH_LBL0 1060
+#define ___PH_LBL0 1087
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -20618,7 +20973,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_78
 #undef ___PH_LBL0
-#define ___PH_LBL0 1063
+#define ___PH_LBL0 1090
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -20669,7 +21024,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_79
 #undef ___PH_LBL0
-#define ___PH_LBL0 1066
+#define ___PH_LBL0 1093
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -20727,7 +21082,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_80
 #undef ___PH_LBL0
-#define ___PH_LBL0 1069
+#define ___PH_LBL0 1096
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -20785,7 +21140,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_81
 #undef ___PH_LBL0
-#define ___PH_LBL0 1072
+#define ___PH_LBL0 1099
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -20836,7 +21191,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__20___kernel_23_82
 #undef ___PH_LBL0
-#define ___PH_LBL0 1075
+#define ___PH_LBL0 1102
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -20894,7 +21249,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_main
 #undef ___PH_LBL0
-#define ___PH_LBL0 1078
+#define ___PH_LBL0 1105
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -20914,7 +21269,7 @@ ___DEF_SLBL(0,___L0__23__23_main)
 ___DEF_GLBL(___L__23__23_main)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_main)
-   ___JUMPINT(___SET_NARGS(0),___PRC(743),___L__23__23_exit_2d_cleanup)
+   ___JUMPINT(___SET_NARGS(0),___PRC(770),___L__23__23_exit_2d_cleanup)
 ___END_P_SW
 ___END_P_COD
 
@@ -21285,6 +21640,17 @@ ___REF_FAL,10,0)
 ,___DEF_LBL_RET(___H__23__23_extract_2d_procedure_2d_and_2d_arguments,___IFD(___RETN,9,4,0xf5L))
 ,___DEF_LBL_RET(___H__23__23_extract_2d_procedure_2d_and_2d_arguments,___OFD(___RETI,12,12,0x3f083L))
 ,___DEF_LBL_RET(___H__23__23_extract_2d_procedure_2d_and_2d_arguments,___OFD(___RETI,12,3,0x3f07dL))
+,___DEF_LBL_INTRO(___H__23__23_make_2d_promise,"##make-promise",___REF_FAL,2,0)
+,___DEF_LBL_PROC(___H__23__23_make_2d_promise,1,-1)
+,___DEF_LBL_RET(___H__23__23_make_2d_promise,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_INTRO(___H__23__23_promise_2d_thunk,"##promise-thunk",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H__23__23_promise_2d_thunk,1,-1)
+,___DEF_LBL_INTRO(___H__23__23_promise_2d_thunk_2d_set_21_,"##promise-thunk-set!",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H__23__23_promise_2d_thunk_2d_set_21_,2,-1)
+,___DEF_LBL_INTRO(___H__23__23_promise_2d_result,"##promise-result",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H__23__23_promise_2d_result,1,-1)
+,___DEF_LBL_INTRO(___H__23__23_promise_2d_result_2d_set_21_,"##promise-result-set!",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H__23__23_promise_2d_result_2d_set_21_,2,-1)
 ,___DEF_LBL_INTRO(___H__23__23_force_2d_undetermined,"##force-undetermined",___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H__23__23_force_2d_undetermined,2,-1)
 ,___DEF_LBL_RET(___H__23__23_force_2d_undetermined,___IFD(___RETI,8,0,0x3f03L))
@@ -21452,6 +21818,17 @@ ___REF_FAL,10,0)
 ,___DEF_LBL_INTRO(___H__23__23_apply,"##apply",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H__23__23_apply,2,-1)
 ,___DEF_LBL_RET(___H__23__23_apply,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_INTRO(___H__23__23_make_2d_values,"##make-values",___REF_FAL,4,0)
+,___DEF_LBL_PROC(___H__23__23_make_2d_values,2,-1)
+,___DEF_LBL_RET(___H__23__23_make_2d_values,___IFD(___RETI,4,0,0x3f1L))
+,___DEF_LBL_RET(___H__23__23_make_2d_values,___IFD(___RETN,1,0,0x1L))
+,___DEF_LBL_RET(___H__23__23_make_2d_values,___IFD(___RETI,4,0,0x3f1L))
+,___DEF_LBL_INTRO(___H__23__23_values_2d_length,"##values-length",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H__23__23_values_2d_length,1,-1)
+,___DEF_LBL_INTRO(___H__23__23_values_2d_ref,"##values-ref",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H__23__23_values_2d_ref,2,-1)
+,___DEF_LBL_INTRO(___H__23__23_values_2d_set_21_,"##values-set!",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H__23__23_values_2d_set_21_,3,-1)
 ,___DEF_LBL_INTRO(___H__23__23_closure_3f_,"##closure?",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_closure_3f_,1,-1)
 ,___DEF_LBL_INTRO(___H__23__23_make_2d_closure,"##make-closure",___REF_FAL,4,0)
@@ -21512,11 +21889,11 @@ ___REF_FAL,10,0)
 ,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETI,1,4,0x3f1L))
-,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETN,5,1,0x1fL))
-,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETI,1,4,0x3f1L))
-,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETI,8,1,0x3f1fL))
-,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETN,5,0,0xfL))
+,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETI,8,0,0x3f0fL))
+,___DEF_LBL_RET(___H__23__23_explode_2d_frame,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_INTRO(___H__23__23_frame_2d_ret,"##frame-ret",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_frame_2d_ret,1,-1)
 ,___DEF_LBL_INTRO(___H__23__23_continuation_2d_ret,"##continuation-ret",___REF_FAL,1,0)
@@ -21585,13 +21962,18 @@ ___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_structure_2d_type,1,-1)
 ,___DEF_LBL_INTRO(___H__23__23_structure_2d_type_2d_set_21_,"##structure-type-set!",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_structure_2d_type_2d_set_21_,2,-1)
+,___DEF_LBL_INTRO(___H__23__23_make_2d_structure,"##make-structure",___REF_FAL,4,0)
+,___DEF_LBL_PROC(___H__23__23_make_2d_structure,1,-1)
+,___DEF_LBL_RET(___H__23__23_make_2d_structure,___IFD(___RETI,4,0,0x3f1L))
+,___DEF_LBL_RET(___H__23__23_make_2d_structure,___IFD(___RETN,1,0,0x1L))
+,___DEF_LBL_RET(___H__23__23_make_2d_structure,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_INTRO(___H__23__23_structure,"##structure",___REF_FAL,8,0)
 ,___DEF_LBL_PROC(___H__23__23_structure,2,-1)
 ,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETI,8,0,0x3f0fL))
-,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETI,4,0,0x3f1L))
-,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETN,1,0,0x1L))
-,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETI,4,0,0x3f1L))
+,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETI,8,0,0x3f03L))
+,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETN,5,0,0x3L))
+,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETI,8,0,0x3f01L))
 ,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_RET(___H__23__23_structure,___IFD(___RETI,8,0,0x3f01L))
 ,___DEF_LBL_INTRO(___H__23__23_structure_2d_ref,"##structure-ref",___REF_FAL,7,0)
@@ -21938,8 +22320,8 @@ ___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H__20___kernel_23_25,0,-1)
 ,___DEF_LBL_RET(___H__20___kernel_23_25,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_INTRO(___H__20___kernel_23_26," _kernel#26",___REF_FAL,2,0)
-,___DEF_LBL_PROC(___H__20___kernel_23_26,2,-1)
-,___DEF_LBL_RET(___H__20___kernel_23_26,___IFD(___RETN,3,2,0x7L))
+,___DEF_LBL_PROC(___H__20___kernel_23_26,1,-1)
+,___DEF_LBL_RET(___H__20___kernel_23_26,___IFD(___RETN,2,1,0x3L))
 ,___DEF_LBL_INTRO(___H__20___kernel_23_27," _kernel#27",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H__20___kernel_23_27,1,-1)
 ,___DEF_LBL_RET(___H__20___kernel_23_27,___IFD(___RETN,2,1,0x3L))
@@ -22138,343 +22520,353 @@ ___END_OFD
 
 ___BEGIN_MOD_PRM
 ___DEF_MOD_PRM(0,___G__20___kernel,1)
-___DEF_MOD_PRM(199,___G__23__23_kernel_2d_handlers,28)
+___DEF_MOD_PRM(200,___G__23__23_kernel_2d_handlers,28)
 ___DEF_MOD_PRM(129,___G__23__23_dynamic_2d_env_2d_bind,43)
 ___DEF_MOD_PRM(96,___G__23__23_assq_2d_cdr,46)
 ___DEF_MOD_PRM(95,___G__23__23_assq,50)
 ___DEF_MOD_PRM(128,___G__23__23_disable_2d_interrupts_21_,54)
 ___DEF_MOD_PRM(130,___G__23__23_enable_2d_interrupts_21_,56)
-___DEF_MOD_PRM(196,___G__23__23_interrupt_2d_handler,58)
-___DEF_MOD_PRM(198,___G__23__23_interrupt_2d_vector_2d_set_21_,60)
-___DEF_MOD_PRM(195,___G__23__23_heartbeat_2d_interval_2d_set_21_,62)
-___DEF_MOD_PRM(149,___G__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception,65)
-___DEF_MOD_PRM(395,___G_heap_2d_overflow_2d_exception_3f_,68)
-___DEF_MOD_PRM(319,___G__23__23_raise_2d_heap_2d_overflow_2d_exception,70)
-___DEF_MOD_PRM(156,___G__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception,74)
-___DEF_MOD_PRM(418,___G_stack_2d_overflow_2d_exception_3f_,77)
-___DEF_MOD_PRM(327,___G__23__23_raise_2d_stack_2d_overflow_2d_exception,79)
-___DEF_MOD_PRM(152,___G__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception,83)
-___DEF_MOD_PRM(404,___G_nonprocedure_2d_operator_2d_exception_3f_,86)
-___DEF_MOD_PRM(402,___G_nonprocedure_2d_operator_2d_exception_2d_operator,88)
-___DEF_MOD_PRM(400,___G_nonprocedure_2d_operator_2d_exception_2d_arguments,91)
-___DEF_MOD_PRM(401,___G_nonprocedure_2d_operator_2d_exception_2d_code,94)
-___DEF_MOD_PRM(403,___G_nonprocedure_2d_operator_2d_exception_2d_rte,97)
+___DEF_MOD_PRM(197,___G__23__23_interrupt_2d_handler,58)
+___DEF_MOD_PRM(199,___G__23__23_interrupt_2d_vector_2d_set_21_,60)
+___DEF_MOD_PRM(196,___G__23__23_heartbeat_2d_interval_2d_set_21_,62)
+___DEF_MOD_PRM(150,___G__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception,65)
+___DEF_MOD_PRM(406,___G_heap_2d_overflow_2d_exception_3f_,68)
+___DEF_MOD_PRM(327,___G__23__23_raise_2d_heap_2d_overflow_2d_exception,70)
+___DEF_MOD_PRM(157,___G__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception,74)
+___DEF_MOD_PRM(429,___G_stack_2d_overflow_2d_exception_3f_,77)
+___DEF_MOD_PRM(335,___G__23__23_raise_2d_stack_2d_overflow_2d_exception,79)
+___DEF_MOD_PRM(153,___G__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception,83)
+___DEF_MOD_PRM(415,___G_nonprocedure_2d_operator_2d_exception_3f_,86)
+___DEF_MOD_PRM(413,___G_nonprocedure_2d_operator_2d_exception_2d_operator,88)
+___DEF_MOD_PRM(411,___G_nonprocedure_2d_operator_2d_exception_2d_arguments,91)
+___DEF_MOD_PRM(412,___G_nonprocedure_2d_operator_2d_exception_2d_code,94)
+___DEF_MOD_PRM(414,___G_nonprocedure_2d_operator_2d_exception_2d_rte,97)
 ___DEF_MOD_PRM(89,___G__23__23_apply_2d_global_2d_with_2d_procedure_2d_check_2d_nary,100)
 ___DEF_MOD_PRM(91,___G__23__23_apply_2d_with_2d_procedure_2d_check_2d_nary,102)
 ___DEF_MOD_PRM(90,___G__23__23_apply_2d_with_2d_procedure_2d_check,104)
-___DEF_MOD_PRM(323,___G__23__23_raise_2d_nonprocedure_2d_operator_2d_exception,106)
-___DEF_MOD_PRM(159,___G__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception,110)
-___DEF_MOD_PRM(434,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_,113)
-___DEF_MOD_PRM(433,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure,115)
-___DEF_MOD_PRM(432,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments,118)
-___DEF_MOD_PRM(332,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary,121)
-___DEF_MOD_PRM(331,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception,123)
-___DEF_MOD_PRM(150,___G__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception,127)
-___DEF_MOD_PRM(398,___G_keyword_2d_expected_2d_exception_3f_,130)
-___DEF_MOD_PRM(397,___G_keyword_2d_expected_2d_exception_2d_procedure,132)
-___DEF_MOD_PRM(396,___G_keyword_2d_expected_2d_exception_2d_arguments,135)
-___DEF_MOD_PRM(321,___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary,138)
-___DEF_MOD_PRM(320,___G__23__23_raise_2d_keyword_2d_expected_2d_exception,140)
-___DEF_MOD_PRM(158,___G__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception,144)
-___DEF_MOD_PRM(431,___G_unknown_2d_keyword_2d_argument_2d_exception_3f_,147)
-___DEF_MOD_PRM(430,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure,149)
-___DEF_MOD_PRM(429,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments,152)
-___DEF_MOD_PRM(330,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary,155)
-___DEF_MOD_PRM(329,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception,157)
-___DEF_MOD_PRM(147,___G__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception,161)
-___DEF_MOD_PRM(387,___G_cfun_2d_conversion_2d_exception_3f_,164)
-___DEF_MOD_PRM(386,___G_cfun_2d_conversion_2d_exception_2d_procedure,166)
-___DEF_MOD_PRM(383,___G_cfun_2d_conversion_2d_exception_2d_arguments,169)
-___DEF_MOD_PRM(384,___G_cfun_2d_conversion_2d_exception_2d_code,172)
-___DEF_MOD_PRM(385,___G_cfun_2d_conversion_2d_exception_2d_message,175)
-___DEF_MOD_PRM(318,___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary,178)
-___DEF_MOD_PRM(155,___G__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception,182)
-___DEF_MOD_PRM(417,___G_sfun_2d_conversion_2d_exception_3f_,185)
-___DEF_MOD_PRM(416,___G_sfun_2d_conversion_2d_exception_2d_procedure,187)
-___DEF_MOD_PRM(413,___G_sfun_2d_conversion_2d_exception_2d_arguments,190)
-___DEF_MOD_PRM(414,___G_sfun_2d_conversion_2d_exception_2d_code,193)
-___DEF_MOD_PRM(415,___G_sfun_2d_conversion_2d_exception_2d_message,196)
-___DEF_MOD_PRM(326,___G__23__23_raise_2d_sfun_2d_conversion_2d_exception,199)
-___DEF_MOD_PRM(151,___G__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception,203)
-___DEF_MOD_PRM(399,___G_multiple_2d_c_2d_return_2d_exception_3f_,206)
-___DEF_MOD_PRM(322,___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception,208)
-___DEF_MOD_PRM(153,___G__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception,211)
-___DEF_MOD_PRM(407,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_,214)
-___DEF_MOD_PRM(406,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure,216)
-___DEF_MOD_PRM(405,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments,219)
-___DEF_MOD_PRM(324,___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception,222)
-___DEF_MOD_PRM(157,___G__23__23_fail_2d_check_2d_type_2d_exception,226)
-___DEF_MOD_PRM(428,___G_type_2d_exception_3f_,229)
-___DEF_MOD_PRM(426,___G_type_2d_exception_2d_procedure,231)
-___DEF_MOD_PRM(425,___G_type_2d_exception_2d_arguments,234)
-___DEF_MOD_PRM(424,___G_type_2d_exception_2d_arg_2d_num,237)
-___DEF_MOD_PRM(427,___G_type_2d_exception_2d_type_2d_id,240)
-___DEF_MOD_PRM(328,___G__23__23_raise_2d_type_2d_exception,243)
-___DEF_MOD_PRM(154,___G__23__23_fail_2d_check_2d_os_2d_exception,249)
-___DEF_MOD_PRM(412,___G_os_2d_exception_3f_,252)
-___DEF_MOD_PRM(411,___G_os_2d_exception_2d_procedure,254)
-___DEF_MOD_PRM(408,___G_os_2d_exception_2d_arguments,257)
-___DEF_MOD_PRM(410,___G_os_2d_exception_2d_message,260)
-___DEF_MOD_PRM(409,___G_os_2d_exception_2d_code,263)
-___DEF_MOD_PRM(325,___G__23__23_raise_2d_os_2d_exception,266)
+___DEF_MOD_PRM(331,___G__23__23_raise_2d_nonprocedure_2d_operator_2d_exception,106)
+___DEF_MOD_PRM(160,___G__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception,110)
+___DEF_MOD_PRM(445,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_,113)
+___DEF_MOD_PRM(444,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure,115)
+___DEF_MOD_PRM(443,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments,118)
+___DEF_MOD_PRM(340,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary,121)
+___DEF_MOD_PRM(339,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception,123)
+___DEF_MOD_PRM(151,___G__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception,127)
+___DEF_MOD_PRM(409,___G_keyword_2d_expected_2d_exception_3f_,130)
+___DEF_MOD_PRM(408,___G_keyword_2d_expected_2d_exception_2d_procedure,132)
+___DEF_MOD_PRM(407,___G_keyword_2d_expected_2d_exception_2d_arguments,135)
+___DEF_MOD_PRM(329,___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary,138)
+___DEF_MOD_PRM(328,___G__23__23_raise_2d_keyword_2d_expected_2d_exception,140)
+___DEF_MOD_PRM(159,___G__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception,144)
+___DEF_MOD_PRM(442,___G_unknown_2d_keyword_2d_argument_2d_exception_3f_,147)
+___DEF_MOD_PRM(441,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure,149)
+___DEF_MOD_PRM(440,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments,152)
+___DEF_MOD_PRM(338,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary,155)
+___DEF_MOD_PRM(337,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception,157)
+___DEF_MOD_PRM(148,___G__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception,161)
+___DEF_MOD_PRM(398,___G_cfun_2d_conversion_2d_exception_3f_,164)
+___DEF_MOD_PRM(397,___G_cfun_2d_conversion_2d_exception_2d_procedure,166)
+___DEF_MOD_PRM(394,___G_cfun_2d_conversion_2d_exception_2d_arguments,169)
+___DEF_MOD_PRM(395,___G_cfun_2d_conversion_2d_exception_2d_code,172)
+___DEF_MOD_PRM(396,___G_cfun_2d_conversion_2d_exception_2d_message,175)
+___DEF_MOD_PRM(326,___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary,178)
+___DEF_MOD_PRM(156,___G__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception,182)
+___DEF_MOD_PRM(428,___G_sfun_2d_conversion_2d_exception_3f_,185)
+___DEF_MOD_PRM(427,___G_sfun_2d_conversion_2d_exception_2d_procedure,187)
+___DEF_MOD_PRM(424,___G_sfun_2d_conversion_2d_exception_2d_arguments,190)
+___DEF_MOD_PRM(425,___G_sfun_2d_conversion_2d_exception_2d_code,193)
+___DEF_MOD_PRM(426,___G_sfun_2d_conversion_2d_exception_2d_message,196)
+___DEF_MOD_PRM(334,___G__23__23_raise_2d_sfun_2d_conversion_2d_exception,199)
+___DEF_MOD_PRM(152,___G__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception,203)
+___DEF_MOD_PRM(410,___G_multiple_2d_c_2d_return_2d_exception_3f_,206)
+___DEF_MOD_PRM(330,___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception,208)
+___DEF_MOD_PRM(154,___G__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception,211)
+___DEF_MOD_PRM(418,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_,214)
+___DEF_MOD_PRM(417,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure,216)
+___DEF_MOD_PRM(416,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments,219)
+___DEF_MOD_PRM(332,___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception,222)
+___DEF_MOD_PRM(158,___G__23__23_fail_2d_check_2d_type_2d_exception,226)
+___DEF_MOD_PRM(439,___G_type_2d_exception_3f_,229)
+___DEF_MOD_PRM(437,___G_type_2d_exception_2d_procedure,231)
+___DEF_MOD_PRM(436,___G_type_2d_exception_2d_arguments,234)
+___DEF_MOD_PRM(435,___G_type_2d_exception_2d_arg_2d_num,237)
+___DEF_MOD_PRM(438,___G_type_2d_exception_2d_type_2d_id,240)
+___DEF_MOD_PRM(336,___G__23__23_raise_2d_type_2d_exception,243)
+___DEF_MOD_PRM(155,___G__23__23_fail_2d_check_2d_os_2d_exception,249)
+___DEF_MOD_PRM(423,___G_os_2d_exception_3f_,252)
+___DEF_MOD_PRM(422,___G_os_2d_exception_2d_procedure,254)
+___DEF_MOD_PRM(419,___G_os_2d_exception_2d_arguments,257)
+___DEF_MOD_PRM(421,___G_os_2d_exception_2d_message,260)
+___DEF_MOD_PRM(420,___G_os_2d_exception_2d_code,263)
+___DEF_MOD_PRM(333,___G__23__23_raise_2d_os_2d_exception,266)
 ___DEF_MOD_PRM(93,___G__23__23_argument_2d_list_2d_remove_2d_absent_21_,273)
 ___DEF_MOD_PRM(94,___G__23__23_argument_2d_list_2d_remove_2d_absent_2d_keys_21_,278)
 ___DEF_MOD_PRM(92,___G__23__23_argument_2d_list_2d_fix_2d_rest_2d_param_21_,283)
-___DEF_MOD_PRM(146,___G__23__23_extract_2d_procedure_2d_and_2d_arguments,287)
-___DEF_MOD_PRM(167,___G__23__23_force_2d_undetermined,298)
-___DEF_MOD_PRM(221,___G__23__23_make_2d_jobs,304)
-___DEF_MOD_PRM(87,___G__23__23_add_2d_job_2d_at_2d_tail_21_,307)
-___DEF_MOD_PRM(86,___G__23__23_add_2d_job_21_,310)
-___DEF_MOD_PRM(136,___G__23__23_execute_2d_jobs_21_,313)
-___DEF_MOD_PRM(134,___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_,319)
-___DEF_MOD_PRM(104,___G__23__23_clear_2d_jobs_21_,325)
-___DEF_MOD_PRM(101,___G__23__23_check_2d_heap_2d_limit,327)
-___DEF_MOD_PRM(100,___G__23__23_check_2d_heap,329)
-___DEF_MOD_PRM(338,___G__23__23_rest_2d_param_2d_check_2d_heap,332)
-___DEF_MOD_PRM(339,___G__23__23_rest_2d_param_2d_heap_2d_overflow,336)
-___DEF_MOD_PRM(340,___G__23__23_rest_2d_param_2d_resume_2d_procedure,341)
-___DEF_MOD_PRM(182,___G__23__23_gc_2d_without_2d_exceptions,343)
-___DEF_MOD_PRM(178,___G__23__23_gc,345)
-___DEF_MOD_PRM(85,___G__23__23_add_2d_gc_2d_interrupt_2d_job_21_,350)
-___DEF_MOD_PRM(103,___G__23__23_clear_2d_gc_2d_interrupt_2d_jobs_21_,353)
-___DEF_MOD_PRM(180,___G__23__23_gc_2d_finalize_21_,356)
-___DEF_MOD_PRM(135,___G__23__23_execute_2d_final_2d_wills_21_,360)
-___DEF_MOD_PRM(179,___G__23__23_gc_2d_final_2d_will_2d_registry_21_,364)
-___DEF_MOD_PRM(215,___G__23__23_make_2d_final_2d_will,366)
-___DEF_MOD_PRM(187,___G__23__23_get_2d_min_2d_heap,369)
-___DEF_MOD_PRM(347,___G__23__23_set_2d_min_2d_heap_21_,371)
-___DEF_MOD_PRM(186,___G__23__23_get_2d_max_2d_heap,373)
-___DEF_MOD_PRM(346,___G__23__23_set_2d_max_2d_heap_21_,375)
-___DEF_MOD_PRM(185,___G__23__23_get_2d_live_2d_percent,377)
-___DEF_MOD_PRM(345,___G__23__23_set_2d_live_2d_percent_21_,379)
-___DEF_MOD_PRM(188,___G__23__23_get_2d_standard_2d_level,381)
-___DEF_MOD_PRM(348,___G__23__23_set_2d_standard_2d_level_21_,383)
-___DEF_MOD_PRM(344,___G__23__23_set_2d_gambcdir_21_,385)
-___DEF_MOD_PRM(343,___G__23__23_set_2d_debug_2d_settings_21_,387)
-___DEF_MOD_PRM(316,___G__23__23_processor_2d_count,389)
-___DEF_MOD_PRM(315,___G__23__23_processor_2d_cache_2d_size,391)
-___DEF_MOD_PRM(349,___G__23__23_still_2d_copy,393)
-___DEF_MOD_PRM(351,___G__23__23_still_2d_obj_2d_refcount_2d_inc_21_,396)
-___DEF_MOD_PRM(350,___G__23__23_still_2d_obj_2d_refcount_2d_dec_21_,398)
-___DEF_MOD_PRM(233,___G__23__23_make_2d_vector,400)
-___DEF_MOD_PRM(227,___G__23__23_make_2d_string,403)
-___DEF_MOD_PRM(226,___G__23__23_make_2d_s8vector,406)
-___DEF_MOD_PRM(232,___G__23__23_make_2d_u8vector,409)
-___DEF_MOD_PRM(223,___G__23__23_make_2d_s16vector,412)
-___DEF_MOD_PRM(229,___G__23__23_make_2d_u16vector,415)
-___DEF_MOD_PRM(224,___G__23__23_make_2d_s32vector,418)
-___DEF_MOD_PRM(230,___G__23__23_make_2d_u32vector,421)
-___DEF_MOD_PRM(225,___G__23__23_make_2d_s64vector,424)
-___DEF_MOD_PRM(231,___G__23__23_make_2d_u64vector,427)
-___DEF_MOD_PRM(213,___G__23__23_make_2d_f32vector,430)
-___DEF_MOD_PRM(214,___G__23__23_make_2d_f64vector,433)
-___DEF_MOD_PRM(222,___G__23__23_make_2d_machine_2d_code_2d_block,436)
-___DEF_MOD_PRM(207,___G__23__23_machine_2d_code_2d_block_2d_ref,439)
-___DEF_MOD_PRM(208,___G__23__23_machine_2d_code_2d_block_2d_set_21_,442)
-___DEF_MOD_PRM(206,___G__23__23_machine_2d_code_2d_block_2d_exec,445)
-___DEF_MOD_PRM(88,___G__23__23_apply,448)
-___DEF_MOD_PRM(109,___G__23__23_closure_3f_,451)
-___DEF_MOD_PRM(211,___G__23__23_make_2d_closure,453)
-___DEF_MOD_PRM(106,___G__23__23_closure_2d_length,458)
-___DEF_MOD_PRM(105,___G__23__23_closure_2d_code,460)
-___DEF_MOD_PRM(107,___G__23__23_closure_2d_ref,462)
-___DEF_MOD_PRM(108,___G__23__23_closure_2d_set_21_,464)
-___DEF_MOD_PRM(365,___G__23__23_subprocedure_3f_,466)
-___DEF_MOD_PRM(359,___G__23__23_subprocedure_2d_id,468)
-___DEF_MOD_PRM(362,___G__23__23_subprocedure_2d_parent,470)
-___DEF_MOD_PRM(361,___G__23__23_subprocedure_2d_nb_2d_parameters,472)
-___DEF_MOD_PRM(360,___G__23__23_subprocedure_2d_nb_2d_closed,474)
-___DEF_MOD_PRM(228,___G__23__23_make_2d_subprocedure,476)
-___DEF_MOD_PRM(363,___G__23__23_subprocedure_2d_parent_2d_info,478)
-___DEF_MOD_PRM(364,___G__23__23_subprocedure_2d_parent_2d_name,480)
-___DEF_MOD_PRM(144,___G__23__23_explode_2d_continuation,482)
-___DEF_MOD_PRM(114,___G__23__23_continuation_2d_frame,488)
-___DEF_MOD_PRM(115,___G__23__23_continuation_2d_frame_2d_set_21_,493)
-___DEF_MOD_PRM(112,___G__23__23_continuation_2d_denv,495)
-___DEF_MOD_PRM(113,___G__23__23_continuation_2d_denv_2d_set_21_,497)
-___DEF_MOD_PRM(145,___G__23__23_explode_2d_frame,499)
-___DEF_MOD_PRM(175,___G__23__23_frame_2d_ret,510)
-___DEF_MOD_PRM(121,___G__23__23_continuation_2d_ret,512)
-___DEF_MOD_PRM(341,___G__23__23_return_2d_fs,514)
-___DEF_MOD_PRM(172,___G__23__23_frame_2d_fs,516)
-___DEF_MOD_PRM(116,___G__23__23_continuation_2d_fs,518)
-___DEF_MOD_PRM(173,___G__23__23_frame_2d_link,520)
-___DEF_MOD_PRM(117,___G__23__23_continuation_2d_link,522)
-___DEF_MOD_PRM(177,___G__23__23_frame_2d_slot_2d_live_3f_,524)
-___DEF_MOD_PRM(123,___G__23__23_continuation_2d_slot_2d_live_3f_,526)
-___DEF_MOD_PRM(174,___G__23__23_frame_2d_ref,528)
-___DEF_MOD_PRM(176,___G__23__23_frame_2d_set_21_,530)
-___DEF_MOD_PRM(120,___G__23__23_continuation_2d_ref,532)
-___DEF_MOD_PRM(122,___G__23__23_continuation_2d_set_21_,534)
-___DEF_MOD_PRM(216,___G__23__23_make_2d_frame,536)
-___DEF_MOD_PRM(212,___G__23__23_make_2d_continuation,542)
-___DEF_MOD_PRM(111,___G__23__23_continuation_2d_copy,545)
-___DEF_MOD_PRM(119,___G__23__23_continuation_2d_next_21_,548)
-___DEF_MOD_PRM(118,___G__23__23_continuation_2d_next,550)
-___DEF_MOD_PRM(373,___G__23__23_type_2d_id,553)
-___DEF_MOD_PRM(374,___G__23__23_type_2d_name,555)
-___DEF_MOD_PRM(372,___G__23__23_type_2d_flags,557)
-___DEF_MOD_PRM(375,___G__23__23_type_2d_super,559)
-___DEF_MOD_PRM(371,___G__23__23_type_2d_fields,561)
-___DEF_MOD_PRM(353,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_,563)
-___DEF_MOD_PRM(354,___G__23__23_structure_2d_instance_2d_of_3f_,565)
-___DEF_MOD_PRM(377,___G__23__23_type_3f_,569)
-___DEF_MOD_PRM(357,___G__23__23_structure_2d_type,571)
-___DEF_MOD_PRM(358,___G__23__23_structure_2d_type_2d_set_21_,573)
-___DEF_MOD_PRM(352,___G__23__23_structure,575)
-___DEF_MOD_PRM(355,___G__23__23_structure_2d_ref,584)
-___DEF_MOD_PRM(356,___G__23__23_structure_2d_set_21_,592)
-___DEF_MOD_PRM(126,___G__23__23_direct_2d_structure_2d_ref,600)
-___DEF_MOD_PRM(127,___G__23__23_direct_2d_structure_2d_set_21_,605)
-___DEF_MOD_PRM(378,___G__23__23_unchecked_2d_structure_2d_ref,610)
-___DEF_MOD_PRM(379,___G__23__23_unchecked_2d_structure_2d_set_21_,612)
-___DEF_MOD_PRM(366,___G__23__23_symbol_2d_table,614)
-___DEF_MOD_PRM(200,___G__23__23_keyword_2d_table,616)
-___DEF_MOD_PRM(219,___G__23__23_make_2d_interned_2d_symbol,618)
-___DEF_MOD_PRM(218,___G__23__23_make_2d_interned_2d_keyword,621)
-___DEF_MOD_PRM(220,___G__23__23_make_2d_interned_2d_symkey,624)
-___DEF_MOD_PRM(162,___G__23__23_find_2d_interned_2d_symbol,631)
-___DEF_MOD_PRM(161,___G__23__23_find_2d_interned_2d_keyword,634)
-___DEF_MOD_PRM(163,___G__23__23_find_2d_interned_2d_symkey,637)
-___DEF_MOD_PRM(217,___G__23__23_make_2d_global_2d_var,640)
-___DEF_MOD_PRM(194,___G__23__23_global_2d_var_3f_,643)
-___DEF_MOD_PRM(192,___G__23__23_global_2d_var_2d_ref,645)
-___DEF_MOD_PRM(190,___G__23__23_global_2d_var_2d_primitive_2d_ref,647)
-___DEF_MOD_PRM(193,___G__23__23_global_2d_var_2d_set_21_,649)
-___DEF_MOD_PRM(191,___G__23__23_global_2d_var_2d_primitive_2d_set_21_,651)
-___DEF_MOD_PRM(239,___G__23__23_object_2d__3e_global_2d_var_2d__3e_identifier,653)
-___DEF_MOD_PRM(238,___G__23__23_object_2d__3e_global_2d_var,658)
-___DEF_MOD_PRM(189,___G__23__23_global_2d_var_2d__3e_identifier,660)
-___DEF_MOD_PRM(148,___G__23__23_fail_2d_check_2d_foreign,662)
-___DEF_MOD_PRM(394,___G_foreign_3f_,665)
-___DEF_MOD_PRM(393,___G_foreign_2d_tags,667)
-___DEF_MOD_PRM(170,___G__23__23_foreign_2d_released_3f_,670)
-___DEF_MOD_PRM(392,___G_foreign_2d_released_3f_,672)
-___DEF_MOD_PRM(169,___G__23__23_foreign_2d_release_21_,676)
-___DEF_MOD_PRM(391,___G_foreign_2d_release_21_,678)
-___DEF_MOD_PRM(168,___G__23__23_foreign_2d_address,682)
-___DEF_MOD_PRM(390,___G_foreign_2d_address,685)
-___DEF_MOD_PRM(369,___G__23__23_system_2d_version,689)
-___DEF_MOD_PRM(422,___G_system_2d_version,691)
-___DEF_MOD_PRM(370,___G__23__23_system_2d_version_2d_string,694)
-___DEF_MOD_PRM(423,___G_system_2d_version_2d_string,696)
-___DEF_MOD_PRM(420,___G_system_2d_type,699)
-___DEF_MOD_PRM(421,___G_system_2d_type_2d_string,701)
-___DEF_MOD_PRM(388,___G_configure_2d_command_2d_string,703)
-___DEF_MOD_PRM(367,___G__23__23_system_2d_stamp,705)
-___DEF_MOD_PRM(419,___G_system_2d_stamp,707)
-___DEF_MOD_PRM(164,___G__23__23_first_2d_argument,710)
-___DEF_MOD_PRM(381,___G__23__23_with_2d_no_2d_result_2d_expected,712)
-___DEF_MOD_PRM(382,___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel,715)
-___DEF_MOD_PRM(312,___G__23__23_process_2d_statistics,718)
-___DEF_MOD_PRM(313,___G__23__23_process_2d_times,721)
-___DEF_MOD_PRM(184,___G__23__23_get_2d_current_2d_time_21_,724)
-___DEF_MOD_PRM(183,___G__23__23_get_2d_bytes_2d_allocated_21_,726)
-___DEF_MOD_PRM(389,___G_err_2d_code_2d__3e_string,728)
-___DEF_MOD_PRM(110,___G__23__23_command_2d_line,731)
-___DEF_MOD_PRM(242,___G__23__23_os_2d_condvar_2d_select_21_,733)
-___DEF_MOD_PRM(84,___G__23__23_add_2d_exit_2d_job_21_,735)
-___DEF_MOD_PRM(102,___G__23__23_clear_2d_exit_2d_jobs_21_,738)
-___DEF_MOD_PRM(142,___G__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup,741)
-___DEF_MOD_PRM(139,___G__23__23_exit_2d_cleanup,743)
-___DEF_MOD_PRM(141,___G__23__23_exit_2d_with_2d_err_2d_code,748)
-___DEF_MOD_PRM(137,___G__23__23_exit,753)
-___DEF_MOD_PRM(138,___G__23__23_exit_2d_abnormally,756)
-___DEF_MOD_PRM(143,___G__23__23_exit_2d_with_2d_exception,759)
-___DEF_MOD_PRM(237,___G__23__23_module_2d_init,762)
-___DEF_MOD_PRM(210,___G__23__23_main_2d_set_21_,764)
-___DEF_MOD_PRM(124,___G__23__23_create_2d_module,766)
-___DEF_MOD_PRM(333,___G__23__23_register_2d_module_2d_descr_21_,769)
-___DEF_MOD_PRM(334,___G__23__23_register_2d_module_2d_descrs_21_,776)
-___DEF_MOD_PRM(205,___G__23__23_lookup_2d_registered_2d_module,783)
-___DEF_MOD_PRM(204,___G__23__23_lookup_2d_module,789)
-___DEF_MOD_PRM(202,___G__23__23_load_2d_required_2d_module_2d_structs,793)
-___DEF_MOD_PRM(125,___G__23__23_default_2d_load_2d_required_2d_module,808)
-___DEF_MOD_PRM(335,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_,817)
-___DEF_MOD_PRM(203,___G__23__23_load_2d_vm,822)
-___DEF_MOD_PRM(1,___G__20___kernel_23_0,829)
-___DEF_MOD_PRM(2,___G__20___kernel_23_1,832)
-___DEF_MOD_PRM(13,___G__20___kernel_23_2,835)
-___DEF_MOD_PRM(24,___G__20___kernel_23_3,838)
-___DEF_MOD_PRM(35,___G__20___kernel_23_4,841)
-___DEF_MOD_PRM(46,___G__20___kernel_23_5,844)
-___DEF_MOD_PRM(57,___G__20___kernel_23_6,847)
-___DEF_MOD_PRM(68,___G__20___kernel_23_7,850)
-___DEF_MOD_PRM(79,___G__20___kernel_23_8,853)
-___DEF_MOD_PRM(83,___G__20___kernel_23_9,856)
-___DEF_MOD_PRM(3,___G__20___kernel_23_10,859)
-___DEF_MOD_PRM(4,___G__20___kernel_23_11,862)
-___DEF_MOD_PRM(5,___G__20___kernel_23_12,865)
-___DEF_MOD_PRM(6,___G__20___kernel_23_13,868)
-___DEF_MOD_PRM(7,___G__20___kernel_23_14,871)
-___DEF_MOD_PRM(8,___G__20___kernel_23_15,874)
-___DEF_MOD_PRM(9,___G__20___kernel_23_16,877)
-___DEF_MOD_PRM(10,___G__20___kernel_23_17,880)
-___DEF_MOD_PRM(11,___G__20___kernel_23_18,883)
-___DEF_MOD_PRM(12,___G__20___kernel_23_19,886)
-___DEF_MOD_PRM(14,___G__20___kernel_23_20,889)
-___DEF_MOD_PRM(15,___G__20___kernel_23_21,892)
-___DEF_MOD_PRM(16,___G__20___kernel_23_22,895)
-___DEF_MOD_PRM(17,___G__20___kernel_23_23,898)
-___DEF_MOD_PRM(18,___G__20___kernel_23_24,901)
-___DEF_MOD_PRM(19,___G__20___kernel_23_25,904)
-___DEF_MOD_PRM(20,___G__20___kernel_23_26,907)
-___DEF_MOD_PRM(21,___G__20___kernel_23_27,910)
-___DEF_MOD_PRM(22,___G__20___kernel_23_28,913)
-___DEF_MOD_PRM(23,___G__20___kernel_23_29,916)
-___DEF_MOD_PRM(25,___G__20___kernel_23_30,919)
-___DEF_MOD_PRM(26,___G__20___kernel_23_31,922)
-___DEF_MOD_PRM(27,___G__20___kernel_23_32,925)
-___DEF_MOD_PRM(28,___G__20___kernel_23_33,928)
-___DEF_MOD_PRM(29,___G__20___kernel_23_34,931)
-___DEF_MOD_PRM(30,___G__20___kernel_23_35,934)
-___DEF_MOD_PRM(31,___G__20___kernel_23_36,937)
-___DEF_MOD_PRM(32,___G__20___kernel_23_37,940)
-___DEF_MOD_PRM(33,___G__20___kernel_23_38,943)
-___DEF_MOD_PRM(34,___G__20___kernel_23_39,946)
-___DEF_MOD_PRM(36,___G__20___kernel_23_40,949)
-___DEF_MOD_PRM(37,___G__20___kernel_23_41,952)
-___DEF_MOD_PRM(38,___G__20___kernel_23_42,955)
-___DEF_MOD_PRM(39,___G__20___kernel_23_43,958)
-___DEF_MOD_PRM(40,___G__20___kernel_23_44,961)
-___DEF_MOD_PRM(41,___G__20___kernel_23_45,964)
-___DEF_MOD_PRM(42,___G__20___kernel_23_46,967)
-___DEF_MOD_PRM(43,___G__20___kernel_23_47,970)
-___DEF_MOD_PRM(44,___G__20___kernel_23_48,973)
-___DEF_MOD_PRM(45,___G__20___kernel_23_49,976)
-___DEF_MOD_PRM(47,___G__20___kernel_23_50,979)
-___DEF_MOD_PRM(48,___G__20___kernel_23_51,982)
-___DEF_MOD_PRM(49,___G__20___kernel_23_52,985)
-___DEF_MOD_PRM(50,___G__20___kernel_23_53,988)
-___DEF_MOD_PRM(51,___G__20___kernel_23_54,991)
-___DEF_MOD_PRM(52,___G__20___kernel_23_55,994)
-___DEF_MOD_PRM(53,___G__20___kernel_23_56,997)
-___DEF_MOD_PRM(54,___G__20___kernel_23_57,1000)
-___DEF_MOD_PRM(55,___G__20___kernel_23_58,1003)
-___DEF_MOD_PRM(56,___G__20___kernel_23_59,1006)
-___DEF_MOD_PRM(58,___G__20___kernel_23_60,1009)
-___DEF_MOD_PRM(59,___G__20___kernel_23_61,1012)
-___DEF_MOD_PRM(60,___G__20___kernel_23_62,1015)
-___DEF_MOD_PRM(61,___G__20___kernel_23_63,1018)
-___DEF_MOD_PRM(62,___G__20___kernel_23_64,1021)
-___DEF_MOD_PRM(63,___G__20___kernel_23_65,1024)
-___DEF_MOD_PRM(64,___G__20___kernel_23_66,1027)
-___DEF_MOD_PRM(65,___G__20___kernel_23_67,1030)
-___DEF_MOD_PRM(66,___G__20___kernel_23_68,1033)
-___DEF_MOD_PRM(67,___G__20___kernel_23_69,1036)
-___DEF_MOD_PRM(69,___G__20___kernel_23_70,1039)
-___DEF_MOD_PRM(70,___G__20___kernel_23_71,1042)
-___DEF_MOD_PRM(71,___G__20___kernel_23_72,1045)
-___DEF_MOD_PRM(72,___G__20___kernel_23_73,1048)
-___DEF_MOD_PRM(73,___G__20___kernel_23_74,1051)
-___DEF_MOD_PRM(74,___G__20___kernel_23_75,1054)
-___DEF_MOD_PRM(75,___G__20___kernel_23_76,1057)
-___DEF_MOD_PRM(76,___G__20___kernel_23_77,1060)
-___DEF_MOD_PRM(77,___G__20___kernel_23_78,1063)
-___DEF_MOD_PRM(78,___G__20___kernel_23_79,1066)
-___DEF_MOD_PRM(80,___G__20___kernel_23_80,1069)
-___DEF_MOD_PRM(81,___G__20___kernel_23_81,1072)
-___DEF_MOD_PRM(82,___G__20___kernel_23_82,1075)
+___DEF_MOD_PRM(147,___G__23__23_extract_2d_procedure_2d_and_2d_arguments,287)
+___DEF_MOD_PRM(224,___G__23__23_make_2d_promise,298)
+___DEF_MOD_PRM(324,___G__23__23_promise_2d_thunk,301)
+___DEF_MOD_PRM(325,___G__23__23_promise_2d_thunk_2d_set_21_,303)
+___DEF_MOD_PRM(322,___G__23__23_promise_2d_result,305)
+___DEF_MOD_PRM(323,___G__23__23_promise_2d_result_2d_set_21_,307)
+___DEF_MOD_PRM(168,___G__23__23_force_2d_undetermined,309)
+___DEF_MOD_PRM(222,___G__23__23_make_2d_jobs,315)
+___DEF_MOD_PRM(87,___G__23__23_add_2d_job_2d_at_2d_tail_21_,318)
+___DEF_MOD_PRM(86,___G__23__23_add_2d_job_21_,321)
+___DEF_MOD_PRM(137,___G__23__23_execute_2d_jobs_21_,324)
+___DEF_MOD_PRM(135,___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_,330)
+___DEF_MOD_PRM(104,___G__23__23_clear_2d_jobs_21_,336)
+___DEF_MOD_PRM(101,___G__23__23_check_2d_heap_2d_limit,338)
+___DEF_MOD_PRM(100,___G__23__23_check_2d_heap,340)
+___DEF_MOD_PRM(346,___G__23__23_rest_2d_param_2d_check_2d_heap,343)
+___DEF_MOD_PRM(347,___G__23__23_rest_2d_param_2d_heap_2d_overflow,347)
+___DEF_MOD_PRM(348,___G__23__23_rest_2d_param_2d_resume_2d_procedure,352)
+___DEF_MOD_PRM(183,___G__23__23_gc_2d_without_2d_exceptions,354)
+___DEF_MOD_PRM(179,___G__23__23_gc,356)
+___DEF_MOD_PRM(85,___G__23__23_add_2d_gc_2d_interrupt_2d_job_21_,361)
+___DEF_MOD_PRM(103,___G__23__23_clear_2d_gc_2d_interrupt_2d_jobs_21_,364)
+___DEF_MOD_PRM(181,___G__23__23_gc_2d_finalize_21_,367)
+___DEF_MOD_PRM(136,___G__23__23_execute_2d_final_2d_wills_21_,371)
+___DEF_MOD_PRM(180,___G__23__23_gc_2d_final_2d_will_2d_registry_21_,375)
+___DEF_MOD_PRM(216,___G__23__23_make_2d_final_2d_will,377)
+___DEF_MOD_PRM(188,___G__23__23_get_2d_min_2d_heap,380)
+___DEF_MOD_PRM(355,___G__23__23_set_2d_min_2d_heap_21_,382)
+___DEF_MOD_PRM(187,___G__23__23_get_2d_max_2d_heap,384)
+___DEF_MOD_PRM(354,___G__23__23_set_2d_max_2d_heap_21_,386)
+___DEF_MOD_PRM(186,___G__23__23_get_2d_live_2d_percent,388)
+___DEF_MOD_PRM(353,___G__23__23_set_2d_live_2d_percent_21_,390)
+___DEF_MOD_PRM(189,___G__23__23_get_2d_standard_2d_level,392)
+___DEF_MOD_PRM(356,___G__23__23_set_2d_standard_2d_level_21_,394)
+___DEF_MOD_PRM(352,___G__23__23_set_2d_gambcdir_21_,396)
+___DEF_MOD_PRM(351,___G__23__23_set_2d_debug_2d_settings_21_,398)
+___DEF_MOD_PRM(320,___G__23__23_processor_2d_count,400)
+___DEF_MOD_PRM(319,___G__23__23_processor_2d_cache_2d_size,402)
+___DEF_MOD_PRM(357,___G__23__23_still_2d_copy,404)
+___DEF_MOD_PRM(359,___G__23__23_still_2d_obj_2d_refcount_2d_inc_21_,407)
+___DEF_MOD_PRM(358,___G__23__23_still_2d_obj_2d_refcount_2d_dec_21_,409)
+___DEF_MOD_PRM(237,___G__23__23_make_2d_vector,411)
+___DEF_MOD_PRM(229,___G__23__23_make_2d_string,414)
+___DEF_MOD_PRM(228,___G__23__23_make_2d_s8vector,417)
+___DEF_MOD_PRM(235,___G__23__23_make_2d_u8vector,420)
+___DEF_MOD_PRM(225,___G__23__23_make_2d_s16vector,423)
+___DEF_MOD_PRM(232,___G__23__23_make_2d_u16vector,426)
+___DEF_MOD_PRM(226,___G__23__23_make_2d_s32vector,429)
+___DEF_MOD_PRM(233,___G__23__23_make_2d_u32vector,432)
+___DEF_MOD_PRM(227,___G__23__23_make_2d_s64vector,435)
+___DEF_MOD_PRM(234,___G__23__23_make_2d_u64vector,438)
+___DEF_MOD_PRM(214,___G__23__23_make_2d_f32vector,441)
+___DEF_MOD_PRM(215,___G__23__23_make_2d_f64vector,444)
+___DEF_MOD_PRM(223,___G__23__23_make_2d_machine_2d_code_2d_block,447)
+___DEF_MOD_PRM(208,___G__23__23_machine_2d_code_2d_block_2d_ref,450)
+___DEF_MOD_PRM(209,___G__23__23_machine_2d_code_2d_block_2d_set_21_,453)
+___DEF_MOD_PRM(207,___G__23__23_machine_2d_code_2d_block_2d_exec,456)
+___DEF_MOD_PRM(88,___G__23__23_apply,459)
+___DEF_MOD_PRM(236,___G__23__23_make_2d_values,462)
+___DEF_MOD_PRM(388,___G__23__23_values_2d_length,467)
+___DEF_MOD_PRM(389,___G__23__23_values_2d_ref,469)
+___DEF_MOD_PRM(390,___G__23__23_values_2d_set_21_,471)
+___DEF_MOD_PRM(109,___G__23__23_closure_3f_,473)
+___DEF_MOD_PRM(212,___G__23__23_make_2d_closure,475)
+___DEF_MOD_PRM(106,___G__23__23_closure_2d_length,480)
+___DEF_MOD_PRM(105,___G__23__23_closure_2d_code,482)
+___DEF_MOD_PRM(107,___G__23__23_closure_2d_ref,484)
+___DEF_MOD_PRM(108,___G__23__23_closure_2d_set_21_,486)
+___DEF_MOD_PRM(373,___G__23__23_subprocedure_3f_,488)
+___DEF_MOD_PRM(367,___G__23__23_subprocedure_2d_id,490)
+___DEF_MOD_PRM(370,___G__23__23_subprocedure_2d_parent,492)
+___DEF_MOD_PRM(369,___G__23__23_subprocedure_2d_nb_2d_parameters,494)
+___DEF_MOD_PRM(368,___G__23__23_subprocedure_2d_nb_2d_closed,496)
+___DEF_MOD_PRM(231,___G__23__23_make_2d_subprocedure,498)
+___DEF_MOD_PRM(371,___G__23__23_subprocedure_2d_parent_2d_info,500)
+___DEF_MOD_PRM(372,___G__23__23_subprocedure_2d_parent_2d_name,502)
+___DEF_MOD_PRM(145,___G__23__23_explode_2d_continuation,504)
+___DEF_MOD_PRM(114,___G__23__23_continuation_2d_frame,510)
+___DEF_MOD_PRM(115,___G__23__23_continuation_2d_frame_2d_set_21_,515)
+___DEF_MOD_PRM(112,___G__23__23_continuation_2d_denv,517)
+___DEF_MOD_PRM(113,___G__23__23_continuation_2d_denv_2d_set_21_,519)
+___DEF_MOD_PRM(146,___G__23__23_explode_2d_frame,521)
+___DEF_MOD_PRM(176,___G__23__23_frame_2d_ret,532)
+___DEF_MOD_PRM(121,___G__23__23_continuation_2d_ret,534)
+___DEF_MOD_PRM(349,___G__23__23_return_2d_fs,536)
+___DEF_MOD_PRM(173,___G__23__23_frame_2d_fs,538)
+___DEF_MOD_PRM(116,___G__23__23_continuation_2d_fs,540)
+___DEF_MOD_PRM(174,___G__23__23_frame_2d_link,542)
+___DEF_MOD_PRM(117,___G__23__23_continuation_2d_link,544)
+___DEF_MOD_PRM(178,___G__23__23_frame_2d_slot_2d_live_3f_,546)
+___DEF_MOD_PRM(123,___G__23__23_continuation_2d_slot_2d_live_3f_,548)
+___DEF_MOD_PRM(175,___G__23__23_frame_2d_ref,550)
+___DEF_MOD_PRM(177,___G__23__23_frame_2d_set_21_,552)
+___DEF_MOD_PRM(120,___G__23__23_continuation_2d_ref,554)
+___DEF_MOD_PRM(122,___G__23__23_continuation_2d_set_21_,556)
+___DEF_MOD_PRM(217,___G__23__23_make_2d_frame,558)
+___DEF_MOD_PRM(213,___G__23__23_make_2d_continuation,564)
+___DEF_MOD_PRM(111,___G__23__23_continuation_2d_copy,567)
+___DEF_MOD_PRM(119,___G__23__23_continuation_2d_next_21_,570)
+___DEF_MOD_PRM(118,___G__23__23_continuation_2d_next,572)
+___DEF_MOD_PRM(381,___G__23__23_type_2d_id,575)
+___DEF_MOD_PRM(382,___G__23__23_type_2d_name,577)
+___DEF_MOD_PRM(380,___G__23__23_type_2d_flags,579)
+___DEF_MOD_PRM(383,___G__23__23_type_2d_super,581)
+___DEF_MOD_PRM(379,___G__23__23_type_2d_fields,583)
+___DEF_MOD_PRM(361,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_,585)
+___DEF_MOD_PRM(362,___G__23__23_structure_2d_instance_2d_of_3f_,587)
+___DEF_MOD_PRM(385,___G__23__23_type_3f_,591)
+___DEF_MOD_PRM(365,___G__23__23_structure_2d_type,593)
+___DEF_MOD_PRM(366,___G__23__23_structure_2d_type_2d_set_21_,595)
+___DEF_MOD_PRM(230,___G__23__23_make_2d_structure,597)
+___DEF_MOD_PRM(360,___G__23__23_structure,602)
+___DEF_MOD_PRM(363,___G__23__23_structure_2d_ref,611)
+___DEF_MOD_PRM(364,___G__23__23_structure_2d_set_21_,619)
+___DEF_MOD_PRM(126,___G__23__23_direct_2d_structure_2d_ref,627)
+___DEF_MOD_PRM(127,___G__23__23_direct_2d_structure_2d_set_21_,632)
+___DEF_MOD_PRM(386,___G__23__23_unchecked_2d_structure_2d_ref,637)
+___DEF_MOD_PRM(387,___G__23__23_unchecked_2d_structure_2d_set_21_,639)
+___DEF_MOD_PRM(374,___G__23__23_symbol_2d_table,641)
+___DEF_MOD_PRM(201,___G__23__23_keyword_2d_table,643)
+___DEF_MOD_PRM(220,___G__23__23_make_2d_interned_2d_symbol,645)
+___DEF_MOD_PRM(219,___G__23__23_make_2d_interned_2d_keyword,648)
+___DEF_MOD_PRM(221,___G__23__23_make_2d_interned_2d_symkey,651)
+___DEF_MOD_PRM(163,___G__23__23_find_2d_interned_2d_symbol,658)
+___DEF_MOD_PRM(162,___G__23__23_find_2d_interned_2d_keyword,661)
+___DEF_MOD_PRM(164,___G__23__23_find_2d_interned_2d_symkey,664)
+___DEF_MOD_PRM(218,___G__23__23_make_2d_global_2d_var,667)
+___DEF_MOD_PRM(195,___G__23__23_global_2d_var_3f_,670)
+___DEF_MOD_PRM(193,___G__23__23_global_2d_var_2d_ref,672)
+___DEF_MOD_PRM(191,___G__23__23_global_2d_var_2d_primitive_2d_ref,674)
+___DEF_MOD_PRM(194,___G__23__23_global_2d_var_2d_set_21_,676)
+___DEF_MOD_PRM(192,___G__23__23_global_2d_var_2d_primitive_2d_set_21_,678)
+___DEF_MOD_PRM(243,___G__23__23_object_2d__3e_global_2d_var_2d__3e_identifier,680)
+___DEF_MOD_PRM(242,___G__23__23_object_2d__3e_global_2d_var,685)
+___DEF_MOD_PRM(190,___G__23__23_global_2d_var_2d__3e_identifier,687)
+___DEF_MOD_PRM(149,___G__23__23_fail_2d_check_2d_foreign,689)
+___DEF_MOD_PRM(405,___G_foreign_3f_,692)
+___DEF_MOD_PRM(404,___G_foreign_2d_tags,694)
+___DEF_MOD_PRM(171,___G__23__23_foreign_2d_released_3f_,697)
+___DEF_MOD_PRM(403,___G_foreign_2d_released_3f_,699)
+___DEF_MOD_PRM(170,___G__23__23_foreign_2d_release_21_,703)
+___DEF_MOD_PRM(402,___G_foreign_2d_release_21_,705)
+___DEF_MOD_PRM(169,___G__23__23_foreign_2d_address,709)
+___DEF_MOD_PRM(401,___G_foreign_2d_address,712)
+___DEF_MOD_PRM(377,___G__23__23_system_2d_version,716)
+___DEF_MOD_PRM(433,___G_system_2d_version,718)
+___DEF_MOD_PRM(378,___G__23__23_system_2d_version_2d_string,721)
+___DEF_MOD_PRM(434,___G_system_2d_version_2d_string,723)
+___DEF_MOD_PRM(431,___G_system_2d_type,726)
+___DEF_MOD_PRM(432,___G_system_2d_type_2d_string,728)
+___DEF_MOD_PRM(399,___G_configure_2d_command_2d_string,730)
+___DEF_MOD_PRM(375,___G__23__23_system_2d_stamp,732)
+___DEF_MOD_PRM(430,___G_system_2d_stamp,734)
+___DEF_MOD_PRM(165,___G__23__23_first_2d_argument,737)
+___DEF_MOD_PRM(392,___G__23__23_with_2d_no_2d_result_2d_expected,739)
+___DEF_MOD_PRM(393,___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel,742)
+___DEF_MOD_PRM(316,___G__23__23_process_2d_statistics,745)
+___DEF_MOD_PRM(317,___G__23__23_process_2d_times,748)
+___DEF_MOD_PRM(185,___G__23__23_get_2d_current_2d_time_21_,751)
+___DEF_MOD_PRM(184,___G__23__23_get_2d_bytes_2d_allocated_21_,753)
+___DEF_MOD_PRM(400,___G_err_2d_code_2d__3e_string,755)
+___DEF_MOD_PRM(110,___G__23__23_command_2d_line,758)
+___DEF_MOD_PRM(246,___G__23__23_os_2d_condvar_2d_select_21_,760)
+___DEF_MOD_PRM(84,___G__23__23_add_2d_exit_2d_job_21_,762)
+___DEF_MOD_PRM(102,___G__23__23_clear_2d_exit_2d_jobs_21_,765)
+___DEF_MOD_PRM(143,___G__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup,768)
+___DEF_MOD_PRM(140,___G__23__23_exit_2d_cleanup,770)
+___DEF_MOD_PRM(142,___G__23__23_exit_2d_with_2d_err_2d_code,775)
+___DEF_MOD_PRM(138,___G__23__23_exit,780)
+___DEF_MOD_PRM(139,___G__23__23_exit_2d_abnormally,783)
+___DEF_MOD_PRM(144,___G__23__23_exit_2d_with_2d_exception,786)
+___DEF_MOD_PRM(241,___G__23__23_module_2d_init,789)
+___DEF_MOD_PRM(211,___G__23__23_main_2d_set_21_,791)
+___DEF_MOD_PRM(124,___G__23__23_create_2d_module,793)
+___DEF_MOD_PRM(341,___G__23__23_register_2d_module_2d_descr_21_,796)
+___DEF_MOD_PRM(342,___G__23__23_register_2d_module_2d_descrs_21_,803)
+___DEF_MOD_PRM(206,___G__23__23_lookup_2d_registered_2d_module,810)
+___DEF_MOD_PRM(205,___G__23__23_lookup_2d_module,816)
+___DEF_MOD_PRM(203,___G__23__23_load_2d_required_2d_module_2d_structs,820)
+___DEF_MOD_PRM(125,___G__23__23_default_2d_load_2d_required_2d_module,835)
+___DEF_MOD_PRM(343,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_,844)
+___DEF_MOD_PRM(204,___G__23__23_load_2d_vm,849)
+___DEF_MOD_PRM(1,___G__20___kernel_23_0,856)
+___DEF_MOD_PRM(2,___G__20___kernel_23_1,859)
+___DEF_MOD_PRM(13,___G__20___kernel_23_2,862)
+___DEF_MOD_PRM(24,___G__20___kernel_23_3,865)
+___DEF_MOD_PRM(35,___G__20___kernel_23_4,868)
+___DEF_MOD_PRM(46,___G__20___kernel_23_5,871)
+___DEF_MOD_PRM(57,___G__20___kernel_23_6,874)
+___DEF_MOD_PRM(68,___G__20___kernel_23_7,877)
+___DEF_MOD_PRM(79,___G__20___kernel_23_8,880)
+___DEF_MOD_PRM(83,___G__20___kernel_23_9,883)
+___DEF_MOD_PRM(3,___G__20___kernel_23_10,886)
+___DEF_MOD_PRM(4,___G__20___kernel_23_11,889)
+___DEF_MOD_PRM(5,___G__20___kernel_23_12,892)
+___DEF_MOD_PRM(6,___G__20___kernel_23_13,895)
+___DEF_MOD_PRM(7,___G__20___kernel_23_14,898)
+___DEF_MOD_PRM(8,___G__20___kernel_23_15,901)
+___DEF_MOD_PRM(9,___G__20___kernel_23_16,904)
+___DEF_MOD_PRM(10,___G__20___kernel_23_17,907)
+___DEF_MOD_PRM(11,___G__20___kernel_23_18,910)
+___DEF_MOD_PRM(12,___G__20___kernel_23_19,913)
+___DEF_MOD_PRM(14,___G__20___kernel_23_20,916)
+___DEF_MOD_PRM(15,___G__20___kernel_23_21,919)
+___DEF_MOD_PRM(16,___G__20___kernel_23_22,922)
+___DEF_MOD_PRM(17,___G__20___kernel_23_23,925)
+___DEF_MOD_PRM(18,___G__20___kernel_23_24,928)
+___DEF_MOD_PRM(19,___G__20___kernel_23_25,931)
+___DEF_MOD_PRM(20,___G__20___kernel_23_26,934)
+___DEF_MOD_PRM(21,___G__20___kernel_23_27,937)
+___DEF_MOD_PRM(22,___G__20___kernel_23_28,940)
+___DEF_MOD_PRM(23,___G__20___kernel_23_29,943)
+___DEF_MOD_PRM(25,___G__20___kernel_23_30,946)
+___DEF_MOD_PRM(26,___G__20___kernel_23_31,949)
+___DEF_MOD_PRM(27,___G__20___kernel_23_32,952)
+___DEF_MOD_PRM(28,___G__20___kernel_23_33,955)
+___DEF_MOD_PRM(29,___G__20___kernel_23_34,958)
+___DEF_MOD_PRM(30,___G__20___kernel_23_35,961)
+___DEF_MOD_PRM(31,___G__20___kernel_23_36,964)
+___DEF_MOD_PRM(32,___G__20___kernel_23_37,967)
+___DEF_MOD_PRM(33,___G__20___kernel_23_38,970)
+___DEF_MOD_PRM(34,___G__20___kernel_23_39,973)
+___DEF_MOD_PRM(36,___G__20___kernel_23_40,976)
+___DEF_MOD_PRM(37,___G__20___kernel_23_41,979)
+___DEF_MOD_PRM(38,___G__20___kernel_23_42,982)
+___DEF_MOD_PRM(39,___G__20___kernel_23_43,985)
+___DEF_MOD_PRM(40,___G__20___kernel_23_44,988)
+___DEF_MOD_PRM(41,___G__20___kernel_23_45,991)
+___DEF_MOD_PRM(42,___G__20___kernel_23_46,994)
+___DEF_MOD_PRM(43,___G__20___kernel_23_47,997)
+___DEF_MOD_PRM(44,___G__20___kernel_23_48,1000)
+___DEF_MOD_PRM(45,___G__20___kernel_23_49,1003)
+___DEF_MOD_PRM(47,___G__20___kernel_23_50,1006)
+___DEF_MOD_PRM(48,___G__20___kernel_23_51,1009)
+___DEF_MOD_PRM(49,___G__20___kernel_23_52,1012)
+___DEF_MOD_PRM(50,___G__20___kernel_23_53,1015)
+___DEF_MOD_PRM(51,___G__20___kernel_23_54,1018)
+___DEF_MOD_PRM(52,___G__20___kernel_23_55,1021)
+___DEF_MOD_PRM(53,___G__20___kernel_23_56,1024)
+___DEF_MOD_PRM(54,___G__20___kernel_23_57,1027)
+___DEF_MOD_PRM(55,___G__20___kernel_23_58,1030)
+___DEF_MOD_PRM(56,___G__20___kernel_23_59,1033)
+___DEF_MOD_PRM(58,___G__20___kernel_23_60,1036)
+___DEF_MOD_PRM(59,___G__20___kernel_23_61,1039)
+___DEF_MOD_PRM(60,___G__20___kernel_23_62,1042)
+___DEF_MOD_PRM(61,___G__20___kernel_23_63,1045)
+___DEF_MOD_PRM(62,___G__20___kernel_23_64,1048)
+___DEF_MOD_PRM(63,___G__20___kernel_23_65,1051)
+___DEF_MOD_PRM(64,___G__20___kernel_23_66,1054)
+___DEF_MOD_PRM(65,___G__20___kernel_23_67,1057)
+___DEF_MOD_PRM(66,___G__20___kernel_23_68,1060)
+___DEF_MOD_PRM(67,___G__20___kernel_23_69,1063)
+___DEF_MOD_PRM(69,___G__20___kernel_23_70,1066)
+___DEF_MOD_PRM(70,___G__20___kernel_23_71,1069)
+___DEF_MOD_PRM(71,___G__20___kernel_23_72,1072)
+___DEF_MOD_PRM(72,___G__20___kernel_23_73,1075)
+___DEF_MOD_PRM(73,___G__20___kernel_23_74,1078)
+___DEF_MOD_PRM(74,___G__20___kernel_23_75,1081)
+___DEF_MOD_PRM(75,___G__20___kernel_23_76,1084)
+___DEF_MOD_PRM(76,___G__20___kernel_23_77,1087)
+___DEF_MOD_PRM(77,___G__20___kernel_23_78,1090)
+___DEF_MOD_PRM(78,___G__20___kernel_23_79,1093)
+___DEF_MOD_PRM(80,___G__20___kernel_23_80,1096)
+___DEF_MOD_PRM(81,___G__20___kernel_23_81,1099)
+___DEF_MOD_PRM(82,___G__20___kernel_23_82,1102)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -22482,343 +22874,353 @@ ___END_MOD_C_INIT
 
 ___BEGIN_MOD_GLO
 ___DEF_MOD_GLO(0,___G__20___kernel,1)
-___DEF_MOD_GLO(199,___G__23__23_kernel_2d_handlers,28)
+___DEF_MOD_GLO(200,___G__23__23_kernel_2d_handlers,28)
 ___DEF_MOD_GLO(129,___G__23__23_dynamic_2d_env_2d_bind,43)
 ___DEF_MOD_GLO(96,___G__23__23_assq_2d_cdr,46)
 ___DEF_MOD_GLO(95,___G__23__23_assq,50)
 ___DEF_MOD_GLO(128,___G__23__23_disable_2d_interrupts_21_,54)
 ___DEF_MOD_GLO(130,___G__23__23_enable_2d_interrupts_21_,56)
-___DEF_MOD_GLO(196,___G__23__23_interrupt_2d_handler,58)
-___DEF_MOD_GLO(198,___G__23__23_interrupt_2d_vector_2d_set_21_,60)
-___DEF_MOD_GLO(195,___G__23__23_heartbeat_2d_interval_2d_set_21_,62)
-___DEF_MOD_GLO(149,___G__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception,65)
-___DEF_MOD_GLO(395,___G_heap_2d_overflow_2d_exception_3f_,68)
-___DEF_MOD_GLO(319,___G__23__23_raise_2d_heap_2d_overflow_2d_exception,70)
-___DEF_MOD_GLO(156,___G__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception,74)
-___DEF_MOD_GLO(418,___G_stack_2d_overflow_2d_exception_3f_,77)
-___DEF_MOD_GLO(327,___G__23__23_raise_2d_stack_2d_overflow_2d_exception,79)
-___DEF_MOD_GLO(152,___G__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception,83)
-___DEF_MOD_GLO(404,___G_nonprocedure_2d_operator_2d_exception_3f_,86)
-___DEF_MOD_GLO(402,___G_nonprocedure_2d_operator_2d_exception_2d_operator,88)
-___DEF_MOD_GLO(400,___G_nonprocedure_2d_operator_2d_exception_2d_arguments,91)
-___DEF_MOD_GLO(401,___G_nonprocedure_2d_operator_2d_exception_2d_code,94)
-___DEF_MOD_GLO(403,___G_nonprocedure_2d_operator_2d_exception_2d_rte,97)
+___DEF_MOD_GLO(197,___G__23__23_interrupt_2d_handler,58)
+___DEF_MOD_GLO(199,___G__23__23_interrupt_2d_vector_2d_set_21_,60)
+___DEF_MOD_GLO(196,___G__23__23_heartbeat_2d_interval_2d_set_21_,62)
+___DEF_MOD_GLO(150,___G__23__23_fail_2d_check_2d_heap_2d_overflow_2d_exception,65)
+___DEF_MOD_GLO(406,___G_heap_2d_overflow_2d_exception_3f_,68)
+___DEF_MOD_GLO(327,___G__23__23_raise_2d_heap_2d_overflow_2d_exception,70)
+___DEF_MOD_GLO(157,___G__23__23_fail_2d_check_2d_stack_2d_overflow_2d_exception,74)
+___DEF_MOD_GLO(429,___G_stack_2d_overflow_2d_exception_3f_,77)
+___DEF_MOD_GLO(335,___G__23__23_raise_2d_stack_2d_overflow_2d_exception,79)
+___DEF_MOD_GLO(153,___G__23__23_fail_2d_check_2d_nonprocedure_2d_operator_2d_exception,83)
+___DEF_MOD_GLO(415,___G_nonprocedure_2d_operator_2d_exception_3f_,86)
+___DEF_MOD_GLO(413,___G_nonprocedure_2d_operator_2d_exception_2d_operator,88)
+___DEF_MOD_GLO(411,___G_nonprocedure_2d_operator_2d_exception_2d_arguments,91)
+___DEF_MOD_GLO(412,___G_nonprocedure_2d_operator_2d_exception_2d_code,94)
+___DEF_MOD_GLO(414,___G_nonprocedure_2d_operator_2d_exception_2d_rte,97)
 ___DEF_MOD_GLO(89,___G__23__23_apply_2d_global_2d_with_2d_procedure_2d_check_2d_nary,100)
 ___DEF_MOD_GLO(91,___G__23__23_apply_2d_with_2d_procedure_2d_check_2d_nary,102)
 ___DEF_MOD_GLO(90,___G__23__23_apply_2d_with_2d_procedure_2d_check,104)
-___DEF_MOD_GLO(323,___G__23__23_raise_2d_nonprocedure_2d_operator_2d_exception,106)
-___DEF_MOD_GLO(159,___G__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception,110)
-___DEF_MOD_GLO(434,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_,113)
-___DEF_MOD_GLO(433,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure,115)
-___DEF_MOD_GLO(432,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments,118)
-___DEF_MOD_GLO(332,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary,121)
-___DEF_MOD_GLO(331,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception,123)
-___DEF_MOD_GLO(150,___G__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception,127)
-___DEF_MOD_GLO(398,___G_keyword_2d_expected_2d_exception_3f_,130)
-___DEF_MOD_GLO(397,___G_keyword_2d_expected_2d_exception_2d_procedure,132)
-___DEF_MOD_GLO(396,___G_keyword_2d_expected_2d_exception_2d_arguments,135)
-___DEF_MOD_GLO(321,___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary,138)
-___DEF_MOD_GLO(320,___G__23__23_raise_2d_keyword_2d_expected_2d_exception,140)
-___DEF_MOD_GLO(158,___G__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception,144)
-___DEF_MOD_GLO(431,___G_unknown_2d_keyword_2d_argument_2d_exception_3f_,147)
-___DEF_MOD_GLO(430,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure,149)
-___DEF_MOD_GLO(429,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments,152)
-___DEF_MOD_GLO(330,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary,155)
-___DEF_MOD_GLO(329,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception,157)
-___DEF_MOD_GLO(147,___G__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception,161)
-___DEF_MOD_GLO(387,___G_cfun_2d_conversion_2d_exception_3f_,164)
-___DEF_MOD_GLO(386,___G_cfun_2d_conversion_2d_exception_2d_procedure,166)
-___DEF_MOD_GLO(383,___G_cfun_2d_conversion_2d_exception_2d_arguments,169)
-___DEF_MOD_GLO(384,___G_cfun_2d_conversion_2d_exception_2d_code,172)
-___DEF_MOD_GLO(385,___G_cfun_2d_conversion_2d_exception_2d_message,175)
-___DEF_MOD_GLO(318,___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary,178)
-___DEF_MOD_GLO(155,___G__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception,182)
-___DEF_MOD_GLO(417,___G_sfun_2d_conversion_2d_exception_3f_,185)
-___DEF_MOD_GLO(416,___G_sfun_2d_conversion_2d_exception_2d_procedure,187)
-___DEF_MOD_GLO(413,___G_sfun_2d_conversion_2d_exception_2d_arguments,190)
-___DEF_MOD_GLO(414,___G_sfun_2d_conversion_2d_exception_2d_code,193)
-___DEF_MOD_GLO(415,___G_sfun_2d_conversion_2d_exception_2d_message,196)
-___DEF_MOD_GLO(326,___G__23__23_raise_2d_sfun_2d_conversion_2d_exception,199)
-___DEF_MOD_GLO(151,___G__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception,203)
-___DEF_MOD_GLO(399,___G_multiple_2d_c_2d_return_2d_exception_3f_,206)
-___DEF_MOD_GLO(322,___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception,208)
-___DEF_MOD_GLO(153,___G__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception,211)
-___DEF_MOD_GLO(407,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_,214)
-___DEF_MOD_GLO(406,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure,216)
-___DEF_MOD_GLO(405,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments,219)
-___DEF_MOD_GLO(324,___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception,222)
-___DEF_MOD_GLO(157,___G__23__23_fail_2d_check_2d_type_2d_exception,226)
-___DEF_MOD_GLO(428,___G_type_2d_exception_3f_,229)
-___DEF_MOD_GLO(426,___G_type_2d_exception_2d_procedure,231)
-___DEF_MOD_GLO(425,___G_type_2d_exception_2d_arguments,234)
-___DEF_MOD_GLO(424,___G_type_2d_exception_2d_arg_2d_num,237)
-___DEF_MOD_GLO(427,___G_type_2d_exception_2d_type_2d_id,240)
-___DEF_MOD_GLO(328,___G__23__23_raise_2d_type_2d_exception,243)
-___DEF_MOD_GLO(154,___G__23__23_fail_2d_check_2d_os_2d_exception,249)
-___DEF_MOD_GLO(412,___G_os_2d_exception_3f_,252)
-___DEF_MOD_GLO(411,___G_os_2d_exception_2d_procedure,254)
-___DEF_MOD_GLO(408,___G_os_2d_exception_2d_arguments,257)
-___DEF_MOD_GLO(410,___G_os_2d_exception_2d_message,260)
-___DEF_MOD_GLO(409,___G_os_2d_exception_2d_code,263)
-___DEF_MOD_GLO(325,___G__23__23_raise_2d_os_2d_exception,266)
+___DEF_MOD_GLO(331,___G__23__23_raise_2d_nonprocedure_2d_operator_2d_exception,106)
+___DEF_MOD_GLO(160,___G__23__23_fail_2d_check_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception,110)
+___DEF_MOD_GLO(445,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_3f_,113)
+___DEF_MOD_GLO(444,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_procedure,115)
+___DEF_MOD_GLO(443,___G_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_arguments,118)
+___DEF_MOD_GLO(340,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception_2d_nary,121)
+___DEF_MOD_GLO(339,___G__23__23_raise_2d_wrong_2d_number_2d_of_2d_arguments_2d_exception,123)
+___DEF_MOD_GLO(151,___G__23__23_fail_2d_check_2d_keyword_2d_expected_2d_exception,127)
+___DEF_MOD_GLO(409,___G_keyword_2d_expected_2d_exception_3f_,130)
+___DEF_MOD_GLO(408,___G_keyword_2d_expected_2d_exception_2d_procedure,132)
+___DEF_MOD_GLO(407,___G_keyword_2d_expected_2d_exception_2d_arguments,135)
+___DEF_MOD_GLO(329,___G__23__23_raise_2d_keyword_2d_expected_2d_exception_2d_nary,138)
+___DEF_MOD_GLO(328,___G__23__23_raise_2d_keyword_2d_expected_2d_exception,140)
+___DEF_MOD_GLO(159,___G__23__23_fail_2d_check_2d_unknown_2d_keyword_2d_argument_2d_exception,144)
+___DEF_MOD_GLO(442,___G_unknown_2d_keyword_2d_argument_2d_exception_3f_,147)
+___DEF_MOD_GLO(441,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_procedure,149)
+___DEF_MOD_GLO(440,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments,152)
+___DEF_MOD_GLO(338,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception_2d_nary,155)
+___DEF_MOD_GLO(337,___G__23__23_raise_2d_unknown_2d_keyword_2d_argument_2d_exception,157)
+___DEF_MOD_GLO(148,___G__23__23_fail_2d_check_2d_cfun_2d_conversion_2d_exception,161)
+___DEF_MOD_GLO(398,___G_cfun_2d_conversion_2d_exception_3f_,164)
+___DEF_MOD_GLO(397,___G_cfun_2d_conversion_2d_exception_2d_procedure,166)
+___DEF_MOD_GLO(394,___G_cfun_2d_conversion_2d_exception_2d_arguments,169)
+___DEF_MOD_GLO(395,___G_cfun_2d_conversion_2d_exception_2d_code,172)
+___DEF_MOD_GLO(396,___G_cfun_2d_conversion_2d_exception_2d_message,175)
+___DEF_MOD_GLO(326,___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary,178)
+___DEF_MOD_GLO(156,___G__23__23_fail_2d_check_2d_sfun_2d_conversion_2d_exception,182)
+___DEF_MOD_GLO(428,___G_sfun_2d_conversion_2d_exception_3f_,185)
+___DEF_MOD_GLO(427,___G_sfun_2d_conversion_2d_exception_2d_procedure,187)
+___DEF_MOD_GLO(424,___G_sfun_2d_conversion_2d_exception_2d_arguments,190)
+___DEF_MOD_GLO(425,___G_sfun_2d_conversion_2d_exception_2d_code,193)
+___DEF_MOD_GLO(426,___G_sfun_2d_conversion_2d_exception_2d_message,196)
+___DEF_MOD_GLO(334,___G__23__23_raise_2d_sfun_2d_conversion_2d_exception,199)
+___DEF_MOD_GLO(152,___G__23__23_fail_2d_check_2d_multiple_2d_c_2d_return_2d_exception,203)
+___DEF_MOD_GLO(410,___G_multiple_2d_c_2d_return_2d_exception_3f_,206)
+___DEF_MOD_GLO(330,___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception,208)
+___DEF_MOD_GLO(154,___G__23__23_fail_2d_check_2d_number_2d_of_2d_arguments_2d_limit_2d_exception,211)
+___DEF_MOD_GLO(418,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_3f_,214)
+___DEF_MOD_GLO(417,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_procedure,216)
+___DEF_MOD_GLO(416,___G_number_2d_of_2d_arguments_2d_limit_2d_exception_2d_arguments,219)
+___DEF_MOD_GLO(332,___G__23__23_raise_2d_number_2d_of_2d_arguments_2d_limit_2d_exception,222)
+___DEF_MOD_GLO(158,___G__23__23_fail_2d_check_2d_type_2d_exception,226)
+___DEF_MOD_GLO(439,___G_type_2d_exception_3f_,229)
+___DEF_MOD_GLO(437,___G_type_2d_exception_2d_procedure,231)
+___DEF_MOD_GLO(436,___G_type_2d_exception_2d_arguments,234)
+___DEF_MOD_GLO(435,___G_type_2d_exception_2d_arg_2d_num,237)
+___DEF_MOD_GLO(438,___G_type_2d_exception_2d_type_2d_id,240)
+___DEF_MOD_GLO(336,___G__23__23_raise_2d_type_2d_exception,243)
+___DEF_MOD_GLO(155,___G__23__23_fail_2d_check_2d_os_2d_exception,249)
+___DEF_MOD_GLO(423,___G_os_2d_exception_3f_,252)
+___DEF_MOD_GLO(422,___G_os_2d_exception_2d_procedure,254)
+___DEF_MOD_GLO(419,___G_os_2d_exception_2d_arguments,257)
+___DEF_MOD_GLO(421,___G_os_2d_exception_2d_message,260)
+___DEF_MOD_GLO(420,___G_os_2d_exception_2d_code,263)
+___DEF_MOD_GLO(333,___G__23__23_raise_2d_os_2d_exception,266)
 ___DEF_MOD_GLO(93,___G__23__23_argument_2d_list_2d_remove_2d_absent_21_,273)
 ___DEF_MOD_GLO(94,___G__23__23_argument_2d_list_2d_remove_2d_absent_2d_keys_21_,278)
 ___DEF_MOD_GLO(92,___G__23__23_argument_2d_list_2d_fix_2d_rest_2d_param_21_,283)
-___DEF_MOD_GLO(146,___G__23__23_extract_2d_procedure_2d_and_2d_arguments,287)
-___DEF_MOD_GLO(167,___G__23__23_force_2d_undetermined,298)
-___DEF_MOD_GLO(221,___G__23__23_make_2d_jobs,304)
-___DEF_MOD_GLO(87,___G__23__23_add_2d_job_2d_at_2d_tail_21_,307)
-___DEF_MOD_GLO(86,___G__23__23_add_2d_job_21_,310)
-___DEF_MOD_GLO(136,___G__23__23_execute_2d_jobs_21_,313)
-___DEF_MOD_GLO(134,___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_,319)
-___DEF_MOD_GLO(104,___G__23__23_clear_2d_jobs_21_,325)
-___DEF_MOD_GLO(101,___G__23__23_check_2d_heap_2d_limit,327)
-___DEF_MOD_GLO(100,___G__23__23_check_2d_heap,329)
-___DEF_MOD_GLO(338,___G__23__23_rest_2d_param_2d_check_2d_heap,332)
-___DEF_MOD_GLO(339,___G__23__23_rest_2d_param_2d_heap_2d_overflow,336)
-___DEF_MOD_GLO(340,___G__23__23_rest_2d_param_2d_resume_2d_procedure,341)
-___DEF_MOD_GLO(182,___G__23__23_gc_2d_without_2d_exceptions,343)
-___DEF_MOD_GLO(178,___G__23__23_gc,345)
-___DEF_MOD_GLO(85,___G__23__23_add_2d_gc_2d_interrupt_2d_job_21_,350)
-___DEF_MOD_GLO(103,___G__23__23_clear_2d_gc_2d_interrupt_2d_jobs_21_,353)
-___DEF_MOD_GLO(180,___G__23__23_gc_2d_finalize_21_,356)
-___DEF_MOD_GLO(135,___G__23__23_execute_2d_final_2d_wills_21_,360)
-___DEF_MOD_GLO(179,___G__23__23_gc_2d_final_2d_will_2d_registry_21_,364)
-___DEF_MOD_GLO(215,___G__23__23_make_2d_final_2d_will,366)
-___DEF_MOD_GLO(187,___G__23__23_get_2d_min_2d_heap,369)
-___DEF_MOD_GLO(347,___G__23__23_set_2d_min_2d_heap_21_,371)
-___DEF_MOD_GLO(186,___G__23__23_get_2d_max_2d_heap,373)
-___DEF_MOD_GLO(346,___G__23__23_set_2d_max_2d_heap_21_,375)
-___DEF_MOD_GLO(185,___G__23__23_get_2d_live_2d_percent,377)
-___DEF_MOD_GLO(345,___G__23__23_set_2d_live_2d_percent_21_,379)
-___DEF_MOD_GLO(188,___G__23__23_get_2d_standard_2d_level,381)
-___DEF_MOD_GLO(348,___G__23__23_set_2d_standard_2d_level_21_,383)
-___DEF_MOD_GLO(344,___G__23__23_set_2d_gambcdir_21_,385)
-___DEF_MOD_GLO(343,___G__23__23_set_2d_debug_2d_settings_21_,387)
-___DEF_MOD_GLO(316,___G__23__23_processor_2d_count,389)
-___DEF_MOD_GLO(315,___G__23__23_processor_2d_cache_2d_size,391)
-___DEF_MOD_GLO(349,___G__23__23_still_2d_copy,393)
-___DEF_MOD_GLO(351,___G__23__23_still_2d_obj_2d_refcount_2d_inc_21_,396)
-___DEF_MOD_GLO(350,___G__23__23_still_2d_obj_2d_refcount_2d_dec_21_,398)
-___DEF_MOD_GLO(233,___G__23__23_make_2d_vector,400)
-___DEF_MOD_GLO(227,___G__23__23_make_2d_string,403)
-___DEF_MOD_GLO(226,___G__23__23_make_2d_s8vector,406)
-___DEF_MOD_GLO(232,___G__23__23_make_2d_u8vector,409)
-___DEF_MOD_GLO(223,___G__23__23_make_2d_s16vector,412)
-___DEF_MOD_GLO(229,___G__23__23_make_2d_u16vector,415)
-___DEF_MOD_GLO(224,___G__23__23_make_2d_s32vector,418)
-___DEF_MOD_GLO(230,___G__23__23_make_2d_u32vector,421)
-___DEF_MOD_GLO(225,___G__23__23_make_2d_s64vector,424)
-___DEF_MOD_GLO(231,___G__23__23_make_2d_u64vector,427)
-___DEF_MOD_GLO(213,___G__23__23_make_2d_f32vector,430)
-___DEF_MOD_GLO(214,___G__23__23_make_2d_f64vector,433)
-___DEF_MOD_GLO(222,___G__23__23_make_2d_machine_2d_code_2d_block,436)
-___DEF_MOD_GLO(207,___G__23__23_machine_2d_code_2d_block_2d_ref,439)
-___DEF_MOD_GLO(208,___G__23__23_machine_2d_code_2d_block_2d_set_21_,442)
-___DEF_MOD_GLO(206,___G__23__23_machine_2d_code_2d_block_2d_exec,445)
-___DEF_MOD_GLO(88,___G__23__23_apply,448)
-___DEF_MOD_GLO(109,___G__23__23_closure_3f_,451)
-___DEF_MOD_GLO(211,___G__23__23_make_2d_closure,453)
-___DEF_MOD_GLO(106,___G__23__23_closure_2d_length,458)
-___DEF_MOD_GLO(105,___G__23__23_closure_2d_code,460)
-___DEF_MOD_GLO(107,___G__23__23_closure_2d_ref,462)
-___DEF_MOD_GLO(108,___G__23__23_closure_2d_set_21_,464)
-___DEF_MOD_GLO(365,___G__23__23_subprocedure_3f_,466)
-___DEF_MOD_GLO(359,___G__23__23_subprocedure_2d_id,468)
-___DEF_MOD_GLO(362,___G__23__23_subprocedure_2d_parent,470)
-___DEF_MOD_GLO(361,___G__23__23_subprocedure_2d_nb_2d_parameters,472)
-___DEF_MOD_GLO(360,___G__23__23_subprocedure_2d_nb_2d_closed,474)
-___DEF_MOD_GLO(228,___G__23__23_make_2d_subprocedure,476)
-___DEF_MOD_GLO(363,___G__23__23_subprocedure_2d_parent_2d_info,478)
-___DEF_MOD_GLO(364,___G__23__23_subprocedure_2d_parent_2d_name,480)
-___DEF_MOD_GLO(144,___G__23__23_explode_2d_continuation,482)
-___DEF_MOD_GLO(114,___G__23__23_continuation_2d_frame,488)
-___DEF_MOD_GLO(115,___G__23__23_continuation_2d_frame_2d_set_21_,493)
-___DEF_MOD_GLO(112,___G__23__23_continuation_2d_denv,495)
-___DEF_MOD_GLO(113,___G__23__23_continuation_2d_denv_2d_set_21_,497)
-___DEF_MOD_GLO(145,___G__23__23_explode_2d_frame,499)
-___DEF_MOD_GLO(175,___G__23__23_frame_2d_ret,510)
-___DEF_MOD_GLO(121,___G__23__23_continuation_2d_ret,512)
-___DEF_MOD_GLO(341,___G__23__23_return_2d_fs,514)
-___DEF_MOD_GLO(172,___G__23__23_frame_2d_fs,516)
-___DEF_MOD_GLO(116,___G__23__23_continuation_2d_fs,518)
-___DEF_MOD_GLO(173,___G__23__23_frame_2d_link,520)
-___DEF_MOD_GLO(117,___G__23__23_continuation_2d_link,522)
-___DEF_MOD_GLO(177,___G__23__23_frame_2d_slot_2d_live_3f_,524)
-___DEF_MOD_GLO(123,___G__23__23_continuation_2d_slot_2d_live_3f_,526)
-___DEF_MOD_GLO(174,___G__23__23_frame_2d_ref,528)
-___DEF_MOD_GLO(176,___G__23__23_frame_2d_set_21_,530)
-___DEF_MOD_GLO(120,___G__23__23_continuation_2d_ref,532)
-___DEF_MOD_GLO(122,___G__23__23_continuation_2d_set_21_,534)
-___DEF_MOD_GLO(216,___G__23__23_make_2d_frame,536)
-___DEF_MOD_GLO(212,___G__23__23_make_2d_continuation,542)
-___DEF_MOD_GLO(111,___G__23__23_continuation_2d_copy,545)
-___DEF_MOD_GLO(119,___G__23__23_continuation_2d_next_21_,548)
-___DEF_MOD_GLO(118,___G__23__23_continuation_2d_next,550)
-___DEF_MOD_GLO(373,___G__23__23_type_2d_id,553)
-___DEF_MOD_GLO(374,___G__23__23_type_2d_name,555)
-___DEF_MOD_GLO(372,___G__23__23_type_2d_flags,557)
-___DEF_MOD_GLO(375,___G__23__23_type_2d_super,559)
-___DEF_MOD_GLO(371,___G__23__23_type_2d_fields,561)
-___DEF_MOD_GLO(353,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_,563)
-___DEF_MOD_GLO(354,___G__23__23_structure_2d_instance_2d_of_3f_,565)
-___DEF_MOD_GLO(377,___G__23__23_type_3f_,569)
-___DEF_MOD_GLO(357,___G__23__23_structure_2d_type,571)
-___DEF_MOD_GLO(358,___G__23__23_structure_2d_type_2d_set_21_,573)
-___DEF_MOD_GLO(352,___G__23__23_structure,575)
-___DEF_MOD_GLO(355,___G__23__23_structure_2d_ref,584)
-___DEF_MOD_GLO(356,___G__23__23_structure_2d_set_21_,592)
-___DEF_MOD_GLO(126,___G__23__23_direct_2d_structure_2d_ref,600)
-___DEF_MOD_GLO(127,___G__23__23_direct_2d_structure_2d_set_21_,605)
-___DEF_MOD_GLO(378,___G__23__23_unchecked_2d_structure_2d_ref,610)
-___DEF_MOD_GLO(379,___G__23__23_unchecked_2d_structure_2d_set_21_,612)
-___DEF_MOD_GLO(366,___G__23__23_symbol_2d_table,614)
-___DEF_MOD_GLO(200,___G__23__23_keyword_2d_table,616)
-___DEF_MOD_GLO(219,___G__23__23_make_2d_interned_2d_symbol,618)
-___DEF_MOD_GLO(218,___G__23__23_make_2d_interned_2d_keyword,621)
-___DEF_MOD_GLO(220,___G__23__23_make_2d_interned_2d_symkey,624)
-___DEF_MOD_GLO(162,___G__23__23_find_2d_interned_2d_symbol,631)
-___DEF_MOD_GLO(161,___G__23__23_find_2d_interned_2d_keyword,634)
-___DEF_MOD_GLO(163,___G__23__23_find_2d_interned_2d_symkey,637)
-___DEF_MOD_GLO(217,___G__23__23_make_2d_global_2d_var,640)
-___DEF_MOD_GLO(194,___G__23__23_global_2d_var_3f_,643)
-___DEF_MOD_GLO(192,___G__23__23_global_2d_var_2d_ref,645)
-___DEF_MOD_GLO(190,___G__23__23_global_2d_var_2d_primitive_2d_ref,647)
-___DEF_MOD_GLO(193,___G__23__23_global_2d_var_2d_set_21_,649)
-___DEF_MOD_GLO(191,___G__23__23_global_2d_var_2d_primitive_2d_set_21_,651)
-___DEF_MOD_GLO(239,___G__23__23_object_2d__3e_global_2d_var_2d__3e_identifier,653)
-___DEF_MOD_GLO(238,___G__23__23_object_2d__3e_global_2d_var,658)
-___DEF_MOD_GLO(189,___G__23__23_global_2d_var_2d__3e_identifier,660)
-___DEF_MOD_GLO(148,___G__23__23_fail_2d_check_2d_foreign,662)
-___DEF_MOD_GLO(394,___G_foreign_3f_,665)
-___DEF_MOD_GLO(393,___G_foreign_2d_tags,667)
-___DEF_MOD_GLO(170,___G__23__23_foreign_2d_released_3f_,670)
-___DEF_MOD_GLO(392,___G_foreign_2d_released_3f_,672)
-___DEF_MOD_GLO(169,___G__23__23_foreign_2d_release_21_,676)
-___DEF_MOD_GLO(391,___G_foreign_2d_release_21_,678)
-___DEF_MOD_GLO(168,___G__23__23_foreign_2d_address,682)
-___DEF_MOD_GLO(390,___G_foreign_2d_address,685)
-___DEF_MOD_GLO(369,___G__23__23_system_2d_version,689)
-___DEF_MOD_GLO(422,___G_system_2d_version,691)
-___DEF_MOD_GLO(370,___G__23__23_system_2d_version_2d_string,694)
-___DEF_MOD_GLO(423,___G_system_2d_version_2d_string,696)
-___DEF_MOD_GLO(420,___G_system_2d_type,699)
-___DEF_MOD_GLO(421,___G_system_2d_type_2d_string,701)
-___DEF_MOD_GLO(388,___G_configure_2d_command_2d_string,703)
-___DEF_MOD_GLO(367,___G__23__23_system_2d_stamp,705)
-___DEF_MOD_GLO(419,___G_system_2d_stamp,707)
-___DEF_MOD_GLO(164,___G__23__23_first_2d_argument,710)
-___DEF_MOD_GLO(381,___G__23__23_with_2d_no_2d_result_2d_expected,712)
-___DEF_MOD_GLO(382,___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel,715)
-___DEF_MOD_GLO(312,___G__23__23_process_2d_statistics,718)
-___DEF_MOD_GLO(313,___G__23__23_process_2d_times,721)
-___DEF_MOD_GLO(184,___G__23__23_get_2d_current_2d_time_21_,724)
-___DEF_MOD_GLO(183,___G__23__23_get_2d_bytes_2d_allocated_21_,726)
-___DEF_MOD_GLO(389,___G_err_2d_code_2d__3e_string,728)
-___DEF_MOD_GLO(110,___G__23__23_command_2d_line,731)
-___DEF_MOD_GLO(242,___G__23__23_os_2d_condvar_2d_select_21_,733)
-___DEF_MOD_GLO(84,___G__23__23_add_2d_exit_2d_job_21_,735)
-___DEF_MOD_GLO(102,___G__23__23_clear_2d_exit_2d_jobs_21_,738)
-___DEF_MOD_GLO(142,___G__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup,741)
-___DEF_MOD_GLO(139,___G__23__23_exit_2d_cleanup,743)
-___DEF_MOD_GLO(141,___G__23__23_exit_2d_with_2d_err_2d_code,748)
-___DEF_MOD_GLO(137,___G__23__23_exit,753)
-___DEF_MOD_GLO(138,___G__23__23_exit_2d_abnormally,756)
-___DEF_MOD_GLO(143,___G__23__23_exit_2d_with_2d_exception,759)
-___DEF_MOD_GLO(237,___G__23__23_module_2d_init,762)
-___DEF_MOD_GLO(210,___G__23__23_main_2d_set_21_,764)
-___DEF_MOD_GLO(124,___G__23__23_create_2d_module,766)
-___DEF_MOD_GLO(333,___G__23__23_register_2d_module_2d_descr_21_,769)
-___DEF_MOD_GLO(334,___G__23__23_register_2d_module_2d_descrs_21_,776)
-___DEF_MOD_GLO(205,___G__23__23_lookup_2d_registered_2d_module,783)
-___DEF_MOD_GLO(204,___G__23__23_lookup_2d_module,789)
-___DEF_MOD_GLO(202,___G__23__23_load_2d_required_2d_module_2d_structs,793)
-___DEF_MOD_GLO(125,___G__23__23_default_2d_load_2d_required_2d_module,808)
-___DEF_MOD_GLO(335,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_,817)
-___DEF_MOD_GLO(203,___G__23__23_load_2d_vm,822)
-___DEF_MOD_GLO(1,___G__20___kernel_23_0,829)
-___DEF_MOD_GLO(2,___G__20___kernel_23_1,832)
-___DEF_MOD_GLO(13,___G__20___kernel_23_2,835)
-___DEF_MOD_GLO(24,___G__20___kernel_23_3,838)
-___DEF_MOD_GLO(35,___G__20___kernel_23_4,841)
-___DEF_MOD_GLO(46,___G__20___kernel_23_5,844)
-___DEF_MOD_GLO(57,___G__20___kernel_23_6,847)
-___DEF_MOD_GLO(68,___G__20___kernel_23_7,850)
-___DEF_MOD_GLO(79,___G__20___kernel_23_8,853)
-___DEF_MOD_GLO(83,___G__20___kernel_23_9,856)
-___DEF_MOD_GLO(3,___G__20___kernel_23_10,859)
-___DEF_MOD_GLO(4,___G__20___kernel_23_11,862)
-___DEF_MOD_GLO(5,___G__20___kernel_23_12,865)
-___DEF_MOD_GLO(6,___G__20___kernel_23_13,868)
-___DEF_MOD_GLO(7,___G__20___kernel_23_14,871)
-___DEF_MOD_GLO(8,___G__20___kernel_23_15,874)
-___DEF_MOD_GLO(9,___G__20___kernel_23_16,877)
-___DEF_MOD_GLO(10,___G__20___kernel_23_17,880)
-___DEF_MOD_GLO(11,___G__20___kernel_23_18,883)
-___DEF_MOD_GLO(12,___G__20___kernel_23_19,886)
-___DEF_MOD_GLO(14,___G__20___kernel_23_20,889)
-___DEF_MOD_GLO(15,___G__20___kernel_23_21,892)
-___DEF_MOD_GLO(16,___G__20___kernel_23_22,895)
-___DEF_MOD_GLO(17,___G__20___kernel_23_23,898)
-___DEF_MOD_GLO(18,___G__20___kernel_23_24,901)
-___DEF_MOD_GLO(19,___G__20___kernel_23_25,904)
-___DEF_MOD_GLO(20,___G__20___kernel_23_26,907)
-___DEF_MOD_GLO(21,___G__20___kernel_23_27,910)
-___DEF_MOD_GLO(22,___G__20___kernel_23_28,913)
-___DEF_MOD_GLO(23,___G__20___kernel_23_29,916)
-___DEF_MOD_GLO(25,___G__20___kernel_23_30,919)
-___DEF_MOD_GLO(26,___G__20___kernel_23_31,922)
-___DEF_MOD_GLO(27,___G__20___kernel_23_32,925)
-___DEF_MOD_GLO(28,___G__20___kernel_23_33,928)
-___DEF_MOD_GLO(29,___G__20___kernel_23_34,931)
-___DEF_MOD_GLO(30,___G__20___kernel_23_35,934)
-___DEF_MOD_GLO(31,___G__20___kernel_23_36,937)
-___DEF_MOD_GLO(32,___G__20___kernel_23_37,940)
-___DEF_MOD_GLO(33,___G__20___kernel_23_38,943)
-___DEF_MOD_GLO(34,___G__20___kernel_23_39,946)
-___DEF_MOD_GLO(36,___G__20___kernel_23_40,949)
-___DEF_MOD_GLO(37,___G__20___kernel_23_41,952)
-___DEF_MOD_GLO(38,___G__20___kernel_23_42,955)
-___DEF_MOD_GLO(39,___G__20___kernel_23_43,958)
-___DEF_MOD_GLO(40,___G__20___kernel_23_44,961)
-___DEF_MOD_GLO(41,___G__20___kernel_23_45,964)
-___DEF_MOD_GLO(42,___G__20___kernel_23_46,967)
-___DEF_MOD_GLO(43,___G__20___kernel_23_47,970)
-___DEF_MOD_GLO(44,___G__20___kernel_23_48,973)
-___DEF_MOD_GLO(45,___G__20___kernel_23_49,976)
-___DEF_MOD_GLO(47,___G__20___kernel_23_50,979)
-___DEF_MOD_GLO(48,___G__20___kernel_23_51,982)
-___DEF_MOD_GLO(49,___G__20___kernel_23_52,985)
-___DEF_MOD_GLO(50,___G__20___kernel_23_53,988)
-___DEF_MOD_GLO(51,___G__20___kernel_23_54,991)
-___DEF_MOD_GLO(52,___G__20___kernel_23_55,994)
-___DEF_MOD_GLO(53,___G__20___kernel_23_56,997)
-___DEF_MOD_GLO(54,___G__20___kernel_23_57,1000)
-___DEF_MOD_GLO(55,___G__20___kernel_23_58,1003)
-___DEF_MOD_GLO(56,___G__20___kernel_23_59,1006)
-___DEF_MOD_GLO(58,___G__20___kernel_23_60,1009)
-___DEF_MOD_GLO(59,___G__20___kernel_23_61,1012)
-___DEF_MOD_GLO(60,___G__20___kernel_23_62,1015)
-___DEF_MOD_GLO(61,___G__20___kernel_23_63,1018)
-___DEF_MOD_GLO(62,___G__20___kernel_23_64,1021)
-___DEF_MOD_GLO(63,___G__20___kernel_23_65,1024)
-___DEF_MOD_GLO(64,___G__20___kernel_23_66,1027)
-___DEF_MOD_GLO(65,___G__20___kernel_23_67,1030)
-___DEF_MOD_GLO(66,___G__20___kernel_23_68,1033)
-___DEF_MOD_GLO(67,___G__20___kernel_23_69,1036)
-___DEF_MOD_GLO(69,___G__20___kernel_23_70,1039)
-___DEF_MOD_GLO(70,___G__20___kernel_23_71,1042)
-___DEF_MOD_GLO(71,___G__20___kernel_23_72,1045)
-___DEF_MOD_GLO(72,___G__20___kernel_23_73,1048)
-___DEF_MOD_GLO(73,___G__20___kernel_23_74,1051)
-___DEF_MOD_GLO(74,___G__20___kernel_23_75,1054)
-___DEF_MOD_GLO(75,___G__20___kernel_23_76,1057)
-___DEF_MOD_GLO(76,___G__20___kernel_23_77,1060)
-___DEF_MOD_GLO(77,___G__20___kernel_23_78,1063)
-___DEF_MOD_GLO(78,___G__20___kernel_23_79,1066)
-___DEF_MOD_GLO(80,___G__20___kernel_23_80,1069)
-___DEF_MOD_GLO(81,___G__20___kernel_23_81,1072)
-___DEF_MOD_GLO(82,___G__20___kernel_23_82,1075)
+___DEF_MOD_GLO(147,___G__23__23_extract_2d_procedure_2d_and_2d_arguments,287)
+___DEF_MOD_GLO(224,___G__23__23_make_2d_promise,298)
+___DEF_MOD_GLO(324,___G__23__23_promise_2d_thunk,301)
+___DEF_MOD_GLO(325,___G__23__23_promise_2d_thunk_2d_set_21_,303)
+___DEF_MOD_GLO(322,___G__23__23_promise_2d_result,305)
+___DEF_MOD_GLO(323,___G__23__23_promise_2d_result_2d_set_21_,307)
+___DEF_MOD_GLO(168,___G__23__23_force_2d_undetermined,309)
+___DEF_MOD_GLO(222,___G__23__23_make_2d_jobs,315)
+___DEF_MOD_GLO(87,___G__23__23_add_2d_job_2d_at_2d_tail_21_,318)
+___DEF_MOD_GLO(86,___G__23__23_add_2d_job_21_,321)
+___DEF_MOD_GLO(137,___G__23__23_execute_2d_jobs_21_,324)
+___DEF_MOD_GLO(135,___G__23__23_execute_2d_and_2d_clear_2d_jobs_21_,330)
+___DEF_MOD_GLO(104,___G__23__23_clear_2d_jobs_21_,336)
+___DEF_MOD_GLO(101,___G__23__23_check_2d_heap_2d_limit,338)
+___DEF_MOD_GLO(100,___G__23__23_check_2d_heap,340)
+___DEF_MOD_GLO(346,___G__23__23_rest_2d_param_2d_check_2d_heap,343)
+___DEF_MOD_GLO(347,___G__23__23_rest_2d_param_2d_heap_2d_overflow,347)
+___DEF_MOD_GLO(348,___G__23__23_rest_2d_param_2d_resume_2d_procedure,352)
+___DEF_MOD_GLO(183,___G__23__23_gc_2d_without_2d_exceptions,354)
+___DEF_MOD_GLO(179,___G__23__23_gc,356)
+___DEF_MOD_GLO(85,___G__23__23_add_2d_gc_2d_interrupt_2d_job_21_,361)
+___DEF_MOD_GLO(103,___G__23__23_clear_2d_gc_2d_interrupt_2d_jobs_21_,364)
+___DEF_MOD_GLO(181,___G__23__23_gc_2d_finalize_21_,367)
+___DEF_MOD_GLO(136,___G__23__23_execute_2d_final_2d_wills_21_,371)
+___DEF_MOD_GLO(180,___G__23__23_gc_2d_final_2d_will_2d_registry_21_,375)
+___DEF_MOD_GLO(216,___G__23__23_make_2d_final_2d_will,377)
+___DEF_MOD_GLO(188,___G__23__23_get_2d_min_2d_heap,380)
+___DEF_MOD_GLO(355,___G__23__23_set_2d_min_2d_heap_21_,382)
+___DEF_MOD_GLO(187,___G__23__23_get_2d_max_2d_heap,384)
+___DEF_MOD_GLO(354,___G__23__23_set_2d_max_2d_heap_21_,386)
+___DEF_MOD_GLO(186,___G__23__23_get_2d_live_2d_percent,388)
+___DEF_MOD_GLO(353,___G__23__23_set_2d_live_2d_percent_21_,390)
+___DEF_MOD_GLO(189,___G__23__23_get_2d_standard_2d_level,392)
+___DEF_MOD_GLO(356,___G__23__23_set_2d_standard_2d_level_21_,394)
+___DEF_MOD_GLO(352,___G__23__23_set_2d_gambcdir_21_,396)
+___DEF_MOD_GLO(351,___G__23__23_set_2d_debug_2d_settings_21_,398)
+___DEF_MOD_GLO(320,___G__23__23_processor_2d_count,400)
+___DEF_MOD_GLO(319,___G__23__23_processor_2d_cache_2d_size,402)
+___DEF_MOD_GLO(357,___G__23__23_still_2d_copy,404)
+___DEF_MOD_GLO(359,___G__23__23_still_2d_obj_2d_refcount_2d_inc_21_,407)
+___DEF_MOD_GLO(358,___G__23__23_still_2d_obj_2d_refcount_2d_dec_21_,409)
+___DEF_MOD_GLO(237,___G__23__23_make_2d_vector,411)
+___DEF_MOD_GLO(229,___G__23__23_make_2d_string,414)
+___DEF_MOD_GLO(228,___G__23__23_make_2d_s8vector,417)
+___DEF_MOD_GLO(235,___G__23__23_make_2d_u8vector,420)
+___DEF_MOD_GLO(225,___G__23__23_make_2d_s16vector,423)
+___DEF_MOD_GLO(232,___G__23__23_make_2d_u16vector,426)
+___DEF_MOD_GLO(226,___G__23__23_make_2d_s32vector,429)
+___DEF_MOD_GLO(233,___G__23__23_make_2d_u32vector,432)
+___DEF_MOD_GLO(227,___G__23__23_make_2d_s64vector,435)
+___DEF_MOD_GLO(234,___G__23__23_make_2d_u64vector,438)
+___DEF_MOD_GLO(214,___G__23__23_make_2d_f32vector,441)
+___DEF_MOD_GLO(215,___G__23__23_make_2d_f64vector,444)
+___DEF_MOD_GLO(223,___G__23__23_make_2d_machine_2d_code_2d_block,447)
+___DEF_MOD_GLO(208,___G__23__23_machine_2d_code_2d_block_2d_ref,450)
+___DEF_MOD_GLO(209,___G__23__23_machine_2d_code_2d_block_2d_set_21_,453)
+___DEF_MOD_GLO(207,___G__23__23_machine_2d_code_2d_block_2d_exec,456)
+___DEF_MOD_GLO(88,___G__23__23_apply,459)
+___DEF_MOD_GLO(236,___G__23__23_make_2d_values,462)
+___DEF_MOD_GLO(388,___G__23__23_values_2d_length,467)
+___DEF_MOD_GLO(389,___G__23__23_values_2d_ref,469)
+___DEF_MOD_GLO(390,___G__23__23_values_2d_set_21_,471)
+___DEF_MOD_GLO(109,___G__23__23_closure_3f_,473)
+___DEF_MOD_GLO(212,___G__23__23_make_2d_closure,475)
+___DEF_MOD_GLO(106,___G__23__23_closure_2d_length,480)
+___DEF_MOD_GLO(105,___G__23__23_closure_2d_code,482)
+___DEF_MOD_GLO(107,___G__23__23_closure_2d_ref,484)
+___DEF_MOD_GLO(108,___G__23__23_closure_2d_set_21_,486)
+___DEF_MOD_GLO(373,___G__23__23_subprocedure_3f_,488)
+___DEF_MOD_GLO(367,___G__23__23_subprocedure_2d_id,490)
+___DEF_MOD_GLO(370,___G__23__23_subprocedure_2d_parent,492)
+___DEF_MOD_GLO(369,___G__23__23_subprocedure_2d_nb_2d_parameters,494)
+___DEF_MOD_GLO(368,___G__23__23_subprocedure_2d_nb_2d_closed,496)
+___DEF_MOD_GLO(231,___G__23__23_make_2d_subprocedure,498)
+___DEF_MOD_GLO(371,___G__23__23_subprocedure_2d_parent_2d_info,500)
+___DEF_MOD_GLO(372,___G__23__23_subprocedure_2d_parent_2d_name,502)
+___DEF_MOD_GLO(145,___G__23__23_explode_2d_continuation,504)
+___DEF_MOD_GLO(114,___G__23__23_continuation_2d_frame,510)
+___DEF_MOD_GLO(115,___G__23__23_continuation_2d_frame_2d_set_21_,515)
+___DEF_MOD_GLO(112,___G__23__23_continuation_2d_denv,517)
+___DEF_MOD_GLO(113,___G__23__23_continuation_2d_denv_2d_set_21_,519)
+___DEF_MOD_GLO(146,___G__23__23_explode_2d_frame,521)
+___DEF_MOD_GLO(176,___G__23__23_frame_2d_ret,532)
+___DEF_MOD_GLO(121,___G__23__23_continuation_2d_ret,534)
+___DEF_MOD_GLO(349,___G__23__23_return_2d_fs,536)
+___DEF_MOD_GLO(173,___G__23__23_frame_2d_fs,538)
+___DEF_MOD_GLO(116,___G__23__23_continuation_2d_fs,540)
+___DEF_MOD_GLO(174,___G__23__23_frame_2d_link,542)
+___DEF_MOD_GLO(117,___G__23__23_continuation_2d_link,544)
+___DEF_MOD_GLO(178,___G__23__23_frame_2d_slot_2d_live_3f_,546)
+___DEF_MOD_GLO(123,___G__23__23_continuation_2d_slot_2d_live_3f_,548)
+___DEF_MOD_GLO(175,___G__23__23_frame_2d_ref,550)
+___DEF_MOD_GLO(177,___G__23__23_frame_2d_set_21_,552)
+___DEF_MOD_GLO(120,___G__23__23_continuation_2d_ref,554)
+___DEF_MOD_GLO(122,___G__23__23_continuation_2d_set_21_,556)
+___DEF_MOD_GLO(217,___G__23__23_make_2d_frame,558)
+___DEF_MOD_GLO(213,___G__23__23_make_2d_continuation,564)
+___DEF_MOD_GLO(111,___G__23__23_continuation_2d_copy,567)
+___DEF_MOD_GLO(119,___G__23__23_continuation_2d_next_21_,570)
+___DEF_MOD_GLO(118,___G__23__23_continuation_2d_next,572)
+___DEF_MOD_GLO(381,___G__23__23_type_2d_id,575)
+___DEF_MOD_GLO(382,___G__23__23_type_2d_name,577)
+___DEF_MOD_GLO(380,___G__23__23_type_2d_flags,579)
+___DEF_MOD_GLO(383,___G__23__23_type_2d_super,581)
+___DEF_MOD_GLO(379,___G__23__23_type_2d_fields,583)
+___DEF_MOD_GLO(361,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_,585)
+___DEF_MOD_GLO(362,___G__23__23_structure_2d_instance_2d_of_3f_,587)
+___DEF_MOD_GLO(385,___G__23__23_type_3f_,591)
+___DEF_MOD_GLO(365,___G__23__23_structure_2d_type,593)
+___DEF_MOD_GLO(366,___G__23__23_structure_2d_type_2d_set_21_,595)
+___DEF_MOD_GLO(230,___G__23__23_make_2d_structure,597)
+___DEF_MOD_GLO(360,___G__23__23_structure,602)
+___DEF_MOD_GLO(363,___G__23__23_structure_2d_ref,611)
+___DEF_MOD_GLO(364,___G__23__23_structure_2d_set_21_,619)
+___DEF_MOD_GLO(126,___G__23__23_direct_2d_structure_2d_ref,627)
+___DEF_MOD_GLO(127,___G__23__23_direct_2d_structure_2d_set_21_,632)
+___DEF_MOD_GLO(386,___G__23__23_unchecked_2d_structure_2d_ref,637)
+___DEF_MOD_GLO(387,___G__23__23_unchecked_2d_structure_2d_set_21_,639)
+___DEF_MOD_GLO(374,___G__23__23_symbol_2d_table,641)
+___DEF_MOD_GLO(201,___G__23__23_keyword_2d_table,643)
+___DEF_MOD_GLO(220,___G__23__23_make_2d_interned_2d_symbol,645)
+___DEF_MOD_GLO(219,___G__23__23_make_2d_interned_2d_keyword,648)
+___DEF_MOD_GLO(221,___G__23__23_make_2d_interned_2d_symkey,651)
+___DEF_MOD_GLO(163,___G__23__23_find_2d_interned_2d_symbol,658)
+___DEF_MOD_GLO(162,___G__23__23_find_2d_interned_2d_keyword,661)
+___DEF_MOD_GLO(164,___G__23__23_find_2d_interned_2d_symkey,664)
+___DEF_MOD_GLO(218,___G__23__23_make_2d_global_2d_var,667)
+___DEF_MOD_GLO(195,___G__23__23_global_2d_var_3f_,670)
+___DEF_MOD_GLO(193,___G__23__23_global_2d_var_2d_ref,672)
+___DEF_MOD_GLO(191,___G__23__23_global_2d_var_2d_primitive_2d_ref,674)
+___DEF_MOD_GLO(194,___G__23__23_global_2d_var_2d_set_21_,676)
+___DEF_MOD_GLO(192,___G__23__23_global_2d_var_2d_primitive_2d_set_21_,678)
+___DEF_MOD_GLO(243,___G__23__23_object_2d__3e_global_2d_var_2d__3e_identifier,680)
+___DEF_MOD_GLO(242,___G__23__23_object_2d__3e_global_2d_var,685)
+___DEF_MOD_GLO(190,___G__23__23_global_2d_var_2d__3e_identifier,687)
+___DEF_MOD_GLO(149,___G__23__23_fail_2d_check_2d_foreign,689)
+___DEF_MOD_GLO(405,___G_foreign_3f_,692)
+___DEF_MOD_GLO(404,___G_foreign_2d_tags,694)
+___DEF_MOD_GLO(171,___G__23__23_foreign_2d_released_3f_,697)
+___DEF_MOD_GLO(403,___G_foreign_2d_released_3f_,699)
+___DEF_MOD_GLO(170,___G__23__23_foreign_2d_release_21_,703)
+___DEF_MOD_GLO(402,___G_foreign_2d_release_21_,705)
+___DEF_MOD_GLO(169,___G__23__23_foreign_2d_address,709)
+___DEF_MOD_GLO(401,___G_foreign_2d_address,712)
+___DEF_MOD_GLO(377,___G__23__23_system_2d_version,716)
+___DEF_MOD_GLO(433,___G_system_2d_version,718)
+___DEF_MOD_GLO(378,___G__23__23_system_2d_version_2d_string,721)
+___DEF_MOD_GLO(434,___G_system_2d_version_2d_string,723)
+___DEF_MOD_GLO(431,___G_system_2d_type,726)
+___DEF_MOD_GLO(432,___G_system_2d_type_2d_string,728)
+___DEF_MOD_GLO(399,___G_configure_2d_command_2d_string,730)
+___DEF_MOD_GLO(375,___G__23__23_system_2d_stamp,732)
+___DEF_MOD_GLO(430,___G_system_2d_stamp,734)
+___DEF_MOD_GLO(165,___G__23__23_first_2d_argument,737)
+___DEF_MOD_GLO(392,___G__23__23_with_2d_no_2d_result_2d_expected,739)
+___DEF_MOD_GLO(393,___G__23__23_with_2d_no_2d_result_2d_expected_2d_toplevel,742)
+___DEF_MOD_GLO(316,___G__23__23_process_2d_statistics,745)
+___DEF_MOD_GLO(317,___G__23__23_process_2d_times,748)
+___DEF_MOD_GLO(185,___G__23__23_get_2d_current_2d_time_21_,751)
+___DEF_MOD_GLO(184,___G__23__23_get_2d_bytes_2d_allocated_21_,753)
+___DEF_MOD_GLO(400,___G_err_2d_code_2d__3e_string,755)
+___DEF_MOD_GLO(110,___G__23__23_command_2d_line,758)
+___DEF_MOD_GLO(246,___G__23__23_os_2d_condvar_2d_select_21_,760)
+___DEF_MOD_GLO(84,___G__23__23_add_2d_exit_2d_job_21_,762)
+___DEF_MOD_GLO(102,___G__23__23_clear_2d_exit_2d_jobs_21_,765)
+___DEF_MOD_GLO(143,___G__23__23_exit_2d_with_2d_err_2d_code_2d_no_2d_cleanup,768)
+___DEF_MOD_GLO(140,___G__23__23_exit_2d_cleanup,770)
+___DEF_MOD_GLO(142,___G__23__23_exit_2d_with_2d_err_2d_code,775)
+___DEF_MOD_GLO(138,___G__23__23_exit,780)
+___DEF_MOD_GLO(139,___G__23__23_exit_2d_abnormally,783)
+___DEF_MOD_GLO(144,___G__23__23_exit_2d_with_2d_exception,786)
+___DEF_MOD_GLO(241,___G__23__23_module_2d_init,789)
+___DEF_MOD_GLO(211,___G__23__23_main_2d_set_21_,791)
+___DEF_MOD_GLO(124,___G__23__23_create_2d_module,793)
+___DEF_MOD_GLO(341,___G__23__23_register_2d_module_2d_descr_21_,796)
+___DEF_MOD_GLO(342,___G__23__23_register_2d_module_2d_descrs_21_,803)
+___DEF_MOD_GLO(206,___G__23__23_lookup_2d_registered_2d_module,810)
+___DEF_MOD_GLO(205,___G__23__23_lookup_2d_module,816)
+___DEF_MOD_GLO(203,___G__23__23_load_2d_required_2d_module_2d_structs,820)
+___DEF_MOD_GLO(125,___G__23__23_default_2d_load_2d_required_2d_module,835)
+___DEF_MOD_GLO(343,___G__23__23_register_2d_module_2d_descrs_2d_and_2d_load_21_,844)
+___DEF_MOD_GLO(204,___G__23__23_load_2d_vm,849)
+___DEF_MOD_GLO(1,___G__20___kernel_23_0,856)
+___DEF_MOD_GLO(2,___G__20___kernel_23_1,859)
+___DEF_MOD_GLO(13,___G__20___kernel_23_2,862)
+___DEF_MOD_GLO(24,___G__20___kernel_23_3,865)
+___DEF_MOD_GLO(35,___G__20___kernel_23_4,868)
+___DEF_MOD_GLO(46,___G__20___kernel_23_5,871)
+___DEF_MOD_GLO(57,___G__20___kernel_23_6,874)
+___DEF_MOD_GLO(68,___G__20___kernel_23_7,877)
+___DEF_MOD_GLO(79,___G__20___kernel_23_8,880)
+___DEF_MOD_GLO(83,___G__20___kernel_23_9,883)
+___DEF_MOD_GLO(3,___G__20___kernel_23_10,886)
+___DEF_MOD_GLO(4,___G__20___kernel_23_11,889)
+___DEF_MOD_GLO(5,___G__20___kernel_23_12,892)
+___DEF_MOD_GLO(6,___G__20___kernel_23_13,895)
+___DEF_MOD_GLO(7,___G__20___kernel_23_14,898)
+___DEF_MOD_GLO(8,___G__20___kernel_23_15,901)
+___DEF_MOD_GLO(9,___G__20___kernel_23_16,904)
+___DEF_MOD_GLO(10,___G__20___kernel_23_17,907)
+___DEF_MOD_GLO(11,___G__20___kernel_23_18,910)
+___DEF_MOD_GLO(12,___G__20___kernel_23_19,913)
+___DEF_MOD_GLO(14,___G__20___kernel_23_20,916)
+___DEF_MOD_GLO(15,___G__20___kernel_23_21,919)
+___DEF_MOD_GLO(16,___G__20___kernel_23_22,922)
+___DEF_MOD_GLO(17,___G__20___kernel_23_23,925)
+___DEF_MOD_GLO(18,___G__20___kernel_23_24,928)
+___DEF_MOD_GLO(19,___G__20___kernel_23_25,931)
+___DEF_MOD_GLO(20,___G__20___kernel_23_26,934)
+___DEF_MOD_GLO(21,___G__20___kernel_23_27,937)
+___DEF_MOD_GLO(22,___G__20___kernel_23_28,940)
+___DEF_MOD_GLO(23,___G__20___kernel_23_29,943)
+___DEF_MOD_GLO(25,___G__20___kernel_23_30,946)
+___DEF_MOD_GLO(26,___G__20___kernel_23_31,949)
+___DEF_MOD_GLO(27,___G__20___kernel_23_32,952)
+___DEF_MOD_GLO(28,___G__20___kernel_23_33,955)
+___DEF_MOD_GLO(29,___G__20___kernel_23_34,958)
+___DEF_MOD_GLO(30,___G__20___kernel_23_35,961)
+___DEF_MOD_GLO(31,___G__20___kernel_23_36,964)
+___DEF_MOD_GLO(32,___G__20___kernel_23_37,967)
+___DEF_MOD_GLO(33,___G__20___kernel_23_38,970)
+___DEF_MOD_GLO(34,___G__20___kernel_23_39,973)
+___DEF_MOD_GLO(36,___G__20___kernel_23_40,976)
+___DEF_MOD_GLO(37,___G__20___kernel_23_41,979)
+___DEF_MOD_GLO(38,___G__20___kernel_23_42,982)
+___DEF_MOD_GLO(39,___G__20___kernel_23_43,985)
+___DEF_MOD_GLO(40,___G__20___kernel_23_44,988)
+___DEF_MOD_GLO(41,___G__20___kernel_23_45,991)
+___DEF_MOD_GLO(42,___G__20___kernel_23_46,994)
+___DEF_MOD_GLO(43,___G__20___kernel_23_47,997)
+___DEF_MOD_GLO(44,___G__20___kernel_23_48,1000)
+___DEF_MOD_GLO(45,___G__20___kernel_23_49,1003)
+___DEF_MOD_GLO(47,___G__20___kernel_23_50,1006)
+___DEF_MOD_GLO(48,___G__20___kernel_23_51,1009)
+___DEF_MOD_GLO(49,___G__20___kernel_23_52,1012)
+___DEF_MOD_GLO(50,___G__20___kernel_23_53,1015)
+___DEF_MOD_GLO(51,___G__20___kernel_23_54,1018)
+___DEF_MOD_GLO(52,___G__20___kernel_23_55,1021)
+___DEF_MOD_GLO(53,___G__20___kernel_23_56,1024)
+___DEF_MOD_GLO(54,___G__20___kernel_23_57,1027)
+___DEF_MOD_GLO(55,___G__20___kernel_23_58,1030)
+___DEF_MOD_GLO(56,___G__20___kernel_23_59,1033)
+___DEF_MOD_GLO(58,___G__20___kernel_23_60,1036)
+___DEF_MOD_GLO(59,___G__20___kernel_23_61,1039)
+___DEF_MOD_GLO(60,___G__20___kernel_23_62,1042)
+___DEF_MOD_GLO(61,___G__20___kernel_23_63,1045)
+___DEF_MOD_GLO(62,___G__20___kernel_23_64,1048)
+___DEF_MOD_GLO(63,___G__20___kernel_23_65,1051)
+___DEF_MOD_GLO(64,___G__20___kernel_23_66,1054)
+___DEF_MOD_GLO(65,___G__20___kernel_23_67,1057)
+___DEF_MOD_GLO(66,___G__20___kernel_23_68,1060)
+___DEF_MOD_GLO(67,___G__20___kernel_23_69,1063)
+___DEF_MOD_GLO(69,___G__20___kernel_23_70,1066)
+___DEF_MOD_GLO(70,___G__20___kernel_23_71,1069)
+___DEF_MOD_GLO(71,___G__20___kernel_23_72,1072)
+___DEF_MOD_GLO(72,___G__20___kernel_23_73,1075)
+___DEF_MOD_GLO(73,___G__20___kernel_23_74,1078)
+___DEF_MOD_GLO(74,___G__20___kernel_23_75,1081)
+___DEF_MOD_GLO(75,___G__20___kernel_23_76,1084)
+___DEF_MOD_GLO(76,___G__20___kernel_23_77,1087)
+___DEF_MOD_GLO(77,___G__20___kernel_23_78,1090)
+___DEF_MOD_GLO(78,___G__20___kernel_23_79,1093)
+___DEF_MOD_GLO(80,___G__20___kernel_23_80,1096)
+___DEF_MOD_GLO(81,___G__20___kernel_23_81,1099)
+___DEF_MOD_GLO(82,___G__20___kernel_23_82,1102)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
