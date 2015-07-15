@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_num.c", produced by Gambit-C v4.7.6
+; File: "_num.c", produced by Gambit-C v4.7.7
 (
-407006
+407007
 " _num"
 ((" _num"))
 (
@@ -767,7 +767,7 @@
  ()
 )
 #else
-#define ___VERSION 407006
+#define ___VERSION 407007
 #define ___MODULE_NAME " _num"
 #define ___LINKER_ID ____20___num
 #define ___MH_PROC ___H__20___num
@@ -31298,11 +31298,11 @@ ___DEF_SLBL(13,___L13__23__23_catanh)
    ___CHECK_HEAP(14,4096)
 ___DEF_SLBL(14,___L14__23__23_catanh)
    ___SET_F64(___F64V1,___F64UNBOX(___STK(-6)))
-   ___IF(___F64LT(3.351951982485649e153,___F64V1))
+   ___IF(___F64LT(3.3519519824856493e153,___F64V1))
    ___GOTO(___L27__23__23_catanh)
    ___END_IF
    ___SET_F64(___F64V1,___F64UNBOX(___R2))
-   ___IF(___NOT(___F64LT(3.351951982485649e153,___F64V1)))
+   ___IF(___NOT(___F64LT(3.3519519824856493e153,___F64V1)))
    ___GOTO(___L31__23__23_catanh)
    ___END_IF
 ___DEF_GLBL(___L27__23__23_catanh)
@@ -31381,7 +31381,7 @@ ___DEF_GLBL(___L31__23__23_catanh)
    ___GOTO(___L32__23__23_catanh)
    ___END_IF
    ___SET_F64(___F64V1,___F64UNBOX(___R2))
-   ___SET_F64(___F64V2,___F64ADD(___F64V1,2.9833362924800834e-154))
+   ___SET_F64(___F64V2,___F64ADD(___F64V1,2.983336292480083e-154))
    ___SET_F64(___F64V3,___F64DIV(___F64V2,2.))
    ___SET_F64(___F64V4,___F64ATAN(___F64V3))
    ___SET_F64(___F64V5,___F64UNBOX(___STK(-9)))
@@ -31389,7 +31389,7 @@ ___DEF_GLBL(___L31__23__23_catanh)
    ___SET_F64(___F64V7,___F64UNBOX(___R1))
    ___SET_F64(___F64V8,___F64COPYSIGN(___F64V6,___F64V7))
    ___SET_F64(___F64V9,___F64DIV(___F64V8,2.))
-   ___SET_F64(___F64V10,___F64ADD(___F64V1,2.9833362924800834e-154))
+   ___SET_F64(___F64V10,___F64ADD(___F64V1,2.983336292480083e-154))
    ___SET_F64(___F64V11,___F64SQRT(___F64V10))
    ___SET_F64(___F64V12,___F64SQUARE(___F64V1))
    ___SET_F64(___F64V13,___F64ADD(4.,___F64V12))
@@ -31417,7 +31417,7 @@ ___DEF_GLBL(___L32__23__23_catanh)
    ___GOTO(___L34__23__23_catanh)
 ___DEF_GLBL(___L33__23__23_catanh)
    ___SET_F64(___F64V1,___F64UNBOX(___R2))
-   ___SET_F64(___F64V2,___F64ADD(___F64V1,2.9833362924800834e-154))
+   ___SET_F64(___F64V2,___F64ADD(___F64V1,2.983336292480083e-154))
    ___SET_F64(___F64V3,___F64SQUARE(___F64V2))
    ___SET_F64(___F64V4,___F64UNBOX(___STK(-6)))
    ___SET_F64(___F64V5,___F64SUB(1.,___F64V4))
@@ -31433,7 +31433,7 @@ ___DEF_SLBL(24,___L24__23__23_catanh)
 ___DEF_GLBL(___L34__23__23_catanh)
    ___SET_STK(-10,___R3)
    ___SET_F64(___F64V1,___F64UNBOX(___R2))
-   ___SET_F64(___F64V2,___F64ADD(___F64V1,2.9833362924800834e-154))
+   ___SET_F64(___F64V2,___F64ADD(___F64V1,2.983336292480083e-154))
    ___SET_F64(___F64V3,___F64SQUARE(___F64V2))
    ___SET_F64(___F64V4,___F64UNBOX(___STK(-6)))
    ___SET_F64(___F64V5,___F64ADD(1.,___F64V4))

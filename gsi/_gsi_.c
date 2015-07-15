@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit-C v4.7.6
+; File: "_gsi_.c", produced by Gambit-C v4.7.7
 (
-407006
+407007
 " _gsi_"
 ((" _kernel" (preload . #t)) (" _system" (preload . #t)) (" _num" (preload . #t)) (" _std" (preload . #t)) (" _eval" (preload . #t)) (" _io" (preload . #t)) (" _nonstd" (preload . #t)) (" _thread" (preload . #t)) (" _repl" (preload . #t)) (" _gsilib" (preload . #t)) (" _gsi" (preload . #t)))
 (
@@ -73,7 +73,7 @@
 "##type-1-1bcc14ff-4be5-4573-a250-729b773bdd50"
 "##type-1-291e311e-93e0-4765-8132-56a719dc84b3"
 "##type-1-c475ff99-c959-4784-a847-b0c52aff8f2a"
-"##type-10-f5cfcf78-bba4-4140-9aa0-1a136c50d36b"
+"##type-11-f5cfcf78-bba4-4140-9aa0-1a136c50d36b"
 "##type-13-41abc50f-928b-48b9-8d2b-77f53b260e71"
 "##type-13-6bf088a7-814f-4139-860a-69a757570569"
 "##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
@@ -851,7 +851,6 @@
 "srfi-8"
 "srfi-88"
 "srfi-9"
-"ssl-context-version"
 "ssl-v2"
 "ssl-v3"
 "st"
@@ -913,10 +912,11 @@
 "timeout"
 "timer-port"
 "tls-context"
-"tls-context-version"
+"tls-options"
 "tls-v1"
 "tls-v1.1"
 "tls-v1.2"
+"tls-version"
 "toq-color"
 "toq-left"
 "toq-leftmost"
@@ -1670,6 +1670,7 @@
 "##err-code-EAGAIN"
 "##err-code-EINTR"
 "##err-code-ENOENT"
+"##err-code-unimplemented"
 "##escape-keyword?"
 "##escape-link"
 "##escape-symbol?"
@@ -1853,7 +1854,8 @@
 "##fail-check-thread-state-active"
 "##fail-check-thread-state-normally-terminated"
 "##fail-check-time"
-"##fail-check-tls-context-version"
+"##fail-check-tls-options"
+"##fail-check-tls-version"
 "##fail-check-tty-port"
 "##fail-check-type-exception"
 "##fail-check-u16vector"
@@ -1922,6 +1924,7 @@
 "##frame-locat-display?"
 "##frame-ref"
 "##frame-ret"
+"##frame-set!"
 "##frame-slot-live?"
 "##full-name?"
 "##fxceiling-ratio"
@@ -2116,6 +2119,7 @@
 "##make-alias-syntax"
 "##make-bindings"
 "##make-call-form"
+"##make-closure"
 "##make-code*"
 "##make-condvar"
 "##make-default-entry-hook"
@@ -2129,6 +2133,7 @@
 "##make-f32vector"
 "##make-f64vector"
 "##make-filepos"
+"##make-frame"
 "##make-full-name"
 "##make-global-var"
 "##make-initial-repl-context"
@@ -2164,6 +2169,7 @@
 "##make-string"
 "##make-string-pipe-port"
 "##make-string-port"
+"##make-structure"
 "##make-subprocedure"
 "##make-table"
 "##make-tcp-client-port"
@@ -2177,6 +2183,7 @@
 "##make-u8vector"
 "##make-u8vector-pipe-port"
 "##make-u8vector-port"
+"##make-values"
 "##make-vector"
 "##make-vector-pipe-port"
 "##make-vector-port"
@@ -2418,7 +2425,6 @@
 "##raise-join-timeout-exception"
 "##raise-keyword-expected-exception"
 "##raise-mailbox-receive-timeout-exception"
-"##raise-no-such-file-or-directory-exception"
 "##raise-nonempty-input-port-character-buffer-exception"
 "##raise-nonprocedure-operator-exception"
 "##raise-os-exception"
@@ -2890,6 +2896,9 @@
 "##user-interrupt!"
 "##user-name"
 "##valid-prefix?"
+"##values-length"
+"##values-ref"
+"##values-set!"
 "##var-c"
 "##var-c-boxed?"
 "##var-c-name"
@@ -3360,6 +3369,7 @@
 "set-car!"
 "set-cdr!"
 "setenv"
+"shell-command"
 "sin"
 "sinh"
 "sqrt"
@@ -3757,7 +3767,6 @@
 "##foreign?"
 "##format-filepos"
 "##frame-link"
-"##frame-set!"
 "##frame?"
 "##fx*"
 "##fx*?"
@@ -3847,10 +3856,8 @@
 "##macro-descr-expander-src"
 "##macro-descr-size"
 "##make-chartable"
-"##make-closure"
 "##make-continuation"
 "##make-final-will"
-"##make-frame"
 "##make-machine-code-block"
 "##make-promise"
 "##make-readtable-parameter"
@@ -3891,6 +3898,7 @@
 "##raise-cfun-conversion-exception-nary"
 "##raise-keyword-expected-exception-nary"
 "##raise-multiple-c-return-exception"
+"##raise-no-such-file-or-directory-exception"
 "##raise-number-of-arguments-limit-exception"
 "##raise-rpc-remote-error-exception"
 "##raise-sfun-conversion-exception"
@@ -3954,6 +3962,7 @@
 "##set-min-heap!"
 "##set-standard-level!"
 "##shell-command-blocking"
+"##shell-command-fallback"
 "##skip-comment-done"
 "##source1-marker"
 "##source2-marker"
@@ -4402,7 +4411,6 @@
 "sfun-conversion-exception-message"
 "sfun-conversion-exception-procedure"
 "sfun-conversion-exception?"
-"shell-command"
 "six.make-array"
 "socket-info-address"
 "socket-info-family"
@@ -4614,7 +4622,7 @@
  #f
 )
 #else
-#define ___VERSION 407006
+#define ___VERSION 407007
 #define ___LINKFILE_NAME " _gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
@@ -5441,6 +5449,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_eqv_3f__2d_hash,___G__23__23_eqv_3f__2d_hash)
 ___DEF_OLD_SYM_GLO(___S__23__23_err_2d_code_2d_EAGAIN,___G__23__23_err_2d_code_2d_EAGAIN)
 ___DEF_OLD_SYM_GLO(___S__23__23_err_2d_code_2d_EINTR,___G__23__23_err_2d_code_2d_EINTR)
 ___DEF_OLD_SYM_GLO(___S__23__23_err_2d_code_2d_ENOENT,___G__23__23_err_2d_code_2d_ENOENT)
+___DEF_OLD_SYM_GLO(___S__23__23_err_2d_code_2d_unimplemented,___G__23__23_err_2d_code_2d_unimplemented)
 ___DEF_OLD_SYM_GLO(___S__23__23_escape_2d_keyword_3f_,___G__23__23_escape_2d_keyword_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_escape_2d_link,___G__23__23_escape_2d_link)
 ___DEF_OLD_SYM_GLO(___S__23__23_escape_2d_symbol_3f_,___G__23__23_escape_2d_symbol_3f_)
@@ -5649,7 +5658,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_thread_2d_state_2d_initialized,
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_thread_2d_state_2d_normally_2d_terminated,___G__23__23_fail_2d_check_2d_thread_2d_state_2d_normally_2d_terminated)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_thread_2d_state_2d_uninitialized,___G__23__23_fail_2d_check_2d_thread_2d_state_2d_uninitialized)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_time,___G__23__23_fail_2d_check_2d_time)
-___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_tls_2d_context_2d_version,___G__23__23_fail_2d_check_2d_tls_2d_context_2d_version)
+___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_tls_2d_options,___G__23__23_fail_2d_check_2d_tls_2d_options)
+___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_tls_2d_version,___G__23__23_fail_2d_check_2d_tls_2d_version)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_tty_2d_port,___G__23__23_fail_2d_check_2d_tty_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_type_2d_exception,___G__23__23_fail_2d_check_2d_type_2d_exception)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_u16vector,___G__23__23_fail_2d_check_2d_u16vector)
@@ -6209,6 +6219,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_standard_2d_readtable,___G__23__23_make_
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_string,___G__23__23_make_2d_string)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_string_2d_pipe_2d_port,___G__23__23_make_2d_string_2d_pipe_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_string_2d_port,___G__23__23_make_2d_string_2d_port)
+___DEF_OLD_SYM_GLO(___S__23__23_make_2d_structure,___G__23__23_make_2d_structure)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_subprocedure,___G__23__23_make_2d_subprocedure)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_table,___G__23__23_make_2d_table)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_tcp_2d_client_2d_port,___G__23__23_make_2d_tcp_2d_client_2d_port)
@@ -6225,6 +6236,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_u8vector_2d_pipe_2d_port,___G__23__23_ma
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_u8vector_2d_port,___G__23__23_make_2d_u8vector_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_uninterned_2d_keyword,___G__23__23_make_2d_uninterned_2d_keyword)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_uninterned_2d_symbol,___G__23__23_make_2d_uninterned_2d_symbol)
+___DEF_OLD_SYM_GLO(___S__23__23_make_2d_values,___G__23__23_make_2d_values)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_vector,___G__23__23_make_2d_vector)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_vector_2d_pipe_2d_port,___G__23__23_make_2d_vector_2d_pipe_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_vector_2d_port,___G__23__23_make_2d_vector_2d_port)
@@ -6792,6 +6804,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_setup_2d_decomp_2d_dispatch_2d_table,___G__23__2
 ___DEF_OLD_SYM_GLO(___S__23__23_shape,___G__23__23_shape)
 ___DEF_OLD_SYM_GLO(___S__23__23_shell_2d_command,___G__23__23_shell_2d_command)
 ___DEF_OLD_SYM_GLO(___S__23__23_shell_2d_command_2d_blocking,___G__23__23_shell_2d_command_2d_blocking)
+___DEF_OLD_SYM_GLO(___S__23__23_shell_2d_command_2d_fallback,___G__23__23_shell_2d_command_2d_fallback)
 ___DEF_OLD_SYM_GLO(___S__23__23_shell_2d_program,___G__23__23_shell_2d_program)
 ___DEF_OLD_SYM_GLO(___S__23__23_shifted_2d_column,___G__23__23_shifted_2d_column)
 ___DEF_OLD_SYM_GLO(___S__23__23_show_2d_all_2d_continuations_3f_,___G__23__23_show_2d_all_2d_continuations_3f_)
@@ -7079,7 +7092,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_1_2d_0d164889_2d_74b4_2d_48ca_2d_b291_2d
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_1_2d_1bcc14ff_2d_4be5_2d_4573_2d_a250_2d_729b773bdd50,___G__23__23_type_2d_1_2d_1bcc14ff_2d_4be5_2d_4573_2d_a250_2d_729b773bdd50)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_1_2d_291e311e_2d_93e0_2d_4765_2d_8132_2d_56a719dc84b3,___G__23__23_type_2d_1_2d_291e311e_2d_93e0_2d_4765_2d_8132_2d_56a719dc84b3)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_b0c52aff8f2a,___G__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_b0c52aff8f2a)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_10_2d_f5cfcf78_2d_bba4_2d_4140_2d_9aa0_2d_1a136c50d36b,___G__23__23_type_2d_10_2d_f5cfcf78_2d_bba4_2d_4140_2d_9aa0_2d_1a136c50d36b)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_11_2d_f5cfcf78_2d_bba4_2d_4140_2d_9aa0_2d_1a136c50d36b,___G__23__23_type_2d_11_2d_f5cfcf78_2d_bba4_2d_4140_2d_9aa0_2d_1a136c50d36b)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_41abc50f_2d_928b_2d_48b9_2d_8d2b_2d_77f53b260e71,___G__23__23_type_2d_13_2d_41abc50f_2d_928b_2d_48b9_2d_8d2b_2d_77f53b260e71)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569,___G__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,___G__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
@@ -7216,6 +7229,9 @@ ___DEF_OLD_SYM_GLO(___S__23__23_user_2d_interrupt_21_,___G__23__23_user_2d_inter
 ___DEF_OLD_SYM_GLO(___S__23__23_user_2d_name,___G__23__23_user_2d_name)
 ___DEF_OLD_SYM_GLO(___S__23__23_valid_2d_prefix_3f_,___G__23__23_valid_2d_prefix_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_values,___G__23__23_values)
+___DEF_OLD_SYM_GLO(___S__23__23_values_2d_length,___G__23__23_values_2d_length)
+___DEF_OLD_SYM_GLO(___S__23__23_values_2d_ref,___G__23__23_values_2d_ref)
+___DEF_OLD_SYM_GLO(___S__23__23_values_2d_set_21_,___G__23__23_values_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_values_3f_,___G__23__23_values_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_var_2d_c,___G__23__23_var_2d_c)
 ___DEF_OLD_SYM_GLO(___S__23__23_var_2d_c_2d_boxed_3f_,___G__23__23_var_2d_c_2d_boxed_3f_)
@@ -8710,7 +8726,6 @@ ___DEF_OLD_SYM_GLO(___S_srfi_2d_6,___G_srfi_2d_6)
 ___DEF_OLD_SYM_GLO(___S_srfi_2d_8,___G_srfi_2d_8)
 ___DEF_OLD_SYM_GLO(___S_srfi_2d_88,___G_srfi_2d_88)
 ___DEF_OLD_SYM_GLO(___S_srfi_2d_9,___G_srfi_2d_9)
-___DEF_OLD_SYM_GLO(___S_ssl_2d_context_2d_version,___G_ssl_2d_context_2d_version)
 ___DEF_OLD_SYM_GLO(___S_ssl_2d_v2,___G_ssl_2d_v2)
 ___DEF_OLD_SYM_GLO(___S_ssl_2d_v3,___G_ssl_2d_v3)
 ___DEF_OLD_SYM_GLO(___S_st,___G_st)
@@ -8917,10 +8932,11 @@ ___DEF_OLD_SYM_GLO(___S_timeout,___G_timeout)
 ___DEF_OLD_SYM_GLO(___S_timeout_2d__3e_time,___G_timeout_2d__3e_time)
 ___DEF_OLD_SYM_GLO(___S_timer_2d_port,___G_timer_2d_port)
 ___DEF_OLD_SYM_GLO(___S_tls_2d_context,___G_tls_2d_context)
-___DEF_OLD_SYM_GLO(___S_tls_2d_context_2d_version,___G_tls_2d_context_2d_version)
+___DEF_OLD_SYM_GLO(___S_tls_2d_options,___G_tls_2d_options)
 ___DEF_OLD_SYM_GLO(___S_tls_2d_v1,___G_tls_2d_v1)
 ___DEF_OLD_SYM_GLO(___S_tls_2d_v1_2e_1,___G_tls_2d_v1_2e_1)
 ___DEF_OLD_SYM_GLO(___S_tls_2d_v1_2e_2,___G_tls_2d_v1_2e_2)
+___DEF_OLD_SYM_GLO(___S_tls_2d_version,___G_tls_2d_version)
 ___DEF_OLD_SYM_GLO(___S_top,___G_top)
 ___DEF_OLD_SYM_GLO(___S_toq_2d_color,___G_toq_2d_color)
 ___DEF_OLD_SYM_GLO(___S_toq_2d_left,___G_toq_2d_left)

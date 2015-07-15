@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_kernel.c", produced by Gambit-C v4.7.6
+; File: "_kernel.c", produced by Gambit-C v4.7.7
 (
-407006
+407007
 " _kernel"
 ((" _kernel"))
 (
@@ -536,7 +536,7 @@
  ()
 )
 #else
-#define ___VERSION 407006
+#define ___VERSION 407007
 #define ___MODULE_NAME " _kernel"
 #define ___LINKER_ID ____20___kernel
 #define ___MH_PROC ___H__20___kernel
@@ -3022,7 +3022,7 @@ ___DEF_SUB_VEC(___X36,6)
                ___VEC1(___REF_FAL)
                ___VEC0
 ___DEF_SUB_STR(___X37,6)
-               ___STR6(118,52,46,55,46,54)
+               ___STR6(118,52,46,55,46,55)
 ___DEF_SUB_STR(___X38,18)
                ___STR8(110,111,110,101,120,105,115,116)
                ___STR8(101,110,116,32,109,111,100,117)
@@ -13200,7 +13200,7 @@ ___DEF_GLBL(___L__23__23_make_2d_frame)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_make_2d_frame)
-   ___JUMPINT(___SET_NARGS(1),___PRC(536),___L__23__23_return_2d_fs)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_return_2d_fs)
 ___DEF_SLBL(2,___L2__23__23_make_2d_frame)
    ___SET_R1(___FIXADD(___R1,___FIX(1L)))
    ___SET_R2(___FIX(0L))
@@ -13812,7 +13812,7 @@ ___DEF_GLBL(___L9__23__23_structure)
    ___ADJFP(8)
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_structure)
-   ___JUMPINT(___SET_NARGS(1),___PRC(597),___L__23__23_make_2d_structure)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_make_2d_structure)
 ___DEF_SLBL(4,___L4__23__23_structure)
    ___UNCHECKEDSTRUCTURESET(___R1,___STK(-6),___FIX(0L),___STK(-6),___FAL)
    ___POLL(5)
@@ -15088,7 +15088,7 @@ ___DEF_SLBL(0,___L0__23__23_system_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L__23__23_system_2d_version)
-   ___SET_R1(___FIX(407006L))
+   ___SET_R1(___FIX(407007L))
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD
