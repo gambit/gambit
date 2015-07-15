@@ -94,6 +94,10 @@
 #define USE_unsetenv
 #endif
 
+#ifndef USE_WIN32
+
+/* avoid using these functions in favour of the Windows equivalents */
+
 #ifdef HAVE_REMOVE
 #define USE_remove_dir
 #define USE_remove_file
@@ -104,10 +108,7 @@
 #endif
 
 #ifdef HAVE_MKDIR
-#ifndef USE_WIN32
-/* avoid mkdir on Windows as it has a different API */
 #define USE_mkdir
-#endif
 #endif
 
 #ifdef HAVE_OPENDIR
@@ -128,6 +129,8 @@
 #define ___lstat lstat
 #define ___fstat fstat
 #endif
+#endif
+
 #endif
 
 
