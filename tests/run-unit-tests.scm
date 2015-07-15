@@ -76,7 +76,7 @@
 
 (define (test-using-mode file mode)
   (cond ((equal? mode "gsi")
-         (run "../gsi/gsi" "-:d-,flu,=.." file))))
+         (run "../gsi/gsi" "-:d-,flu,=.." "-f" file))))
 
 (define (test file)
   (for-each
