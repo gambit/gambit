@@ -4,7 +4,7 @@
 
 ;;; File: "runtests.scm"
 
-;;; Copyright (c) 2012-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -206,50 +206,111 @@
     ("js"     ".js"   ()
                       "d8")
 
-    ("js"     ".js"   ("-repr-procedure" "host"
+    ("js"     ".js"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "d8")
-#|    ("js"     ".js"   ("-repr-procedure" "class"
+    ("js"     ".js"   ("-repr-module"    "class"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "d8")
-    ("js"     ".js"   ("-repr-procedure" "host"
+    ("js"     ".js"   ("-repr-module"    "globals"
+                       "-repr-procedure" "class"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "d8")
+    ("js"     ".js"   ("-repr-module"    "class"
+                       "-repr-procedure" "class"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "d8")
+    ("js"     ".js"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "d8")
-    ("js"     ".js"   ("-repr-procedure" "host"
+    ("js"     ".js"   ("-repr-module"    "class"
+                       "-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "class"
+                      )
+                      "d8")
+    ("js"     ".js"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
                       "d8")
-|#
+    ("js"     ".js"   ("-repr-module"    "class"
+                       "-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "host"
+                      )
+                      "d8")
+
     #;
     ("python" ".py"   ()
                       "python")
-    ("python" ".py"   ("-repr-procedure" "host"
+    ("python" ".py"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "python")
-    ("python" ".py"   ("-repr-procedure" "class"
+    ("python" ".py"   ("-repr-module"    "globals"
+                       "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "python")
-    ("python" ".py"   ("-repr-procedure" "host"
+    ("python" ".py"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "python")
-    ("python" ".py"   ("-repr-procedure" "host"
+    ("python" ".py"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
                       "python")
+
+    ("python" ".py"   ("-python3"
+                       "-repr-module"    "globals"
+                       "-repr-procedure" "host"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "python3")
+    ("python" ".py"   ("-python3"
+                       "-repr-module"    "globals"
+                       "-repr-procedure" "class"
+                       "-repr-fixnum"    "host"
+                       "-repr-flonum"    "class"
+                      )
+                      "python3")
+    ("python" ".py"   ("-python3"
+                       "-repr-module"    "globals"
+                       "-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "class"
+                      )
+                      "python3")
+    ("python" ".py"   ("-python3"
+                       "-repr-module"    "globals"
+                       "-repr-procedure" "host"
+                       "-repr-fixnum"    "class"
+                       "-repr-flonum"    "host"
+                      )
+                      "python3")
 
 #;
     ("ruby"   ".rb"   ()
@@ -261,22 +322,26 @@
     ("ruby"   ".rb"   ()
                       "/usr/local/bin/ruby") ;; ruby 1.9.3p392
 
-    ("ruby"   ".rb"   ("-repr-procedure" "host"
+    ("ruby"   ".rb"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "/usr/local/bin/ruby") ;; ruby 1.9.3p392
-    ("ruby"   ".rb"   ("-repr-procedure" "class"
+    ("ruby"   ".rb"   ("-repr-module"    "globals"
+                       "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "/usr/local/bin/ruby") ;; ruby 1.9.3p392
-    ("ruby"   ".rb"   ("-repr-procedure" "host"
+    ("ruby"   ".rb"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "/usr/local/bin/ruby") ;; ruby 1.9.3p392
-    ("ruby"   ".rb"   ("-repr-procedure" "host"
+    ("ruby"   ".rb"   ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
@@ -284,49 +349,57 @@
 
 #;
     ("php"   ".php"   ("-php53")
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.5.20
     ("php"    ".php"  ("-php53"
+                       "-repr-module"    "globals"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.5.20
     ("php"    ".php"  ("-php53"
+                       "-repr-module"    "globals"
                        "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.5.20
     ("php"    ".php"  ("-php53"
+                       "-repr-module"    "globals"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.5.20
     ("php"    ".php"  ("-php53"
+                       "-repr-module"    "globals"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
-                      "/usr/bin/php") ;; PHP 5.4.11
+                      "/usr/bin/php") ;; PHP 5.5.20
 
 #|
-    ("php"    ".php"  ("-repr-procedure" "host"
+    ("php"    ".php"  ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "/Users/feeley/php5.2.17/bin/php")
-    ("php"    ".php"  ("-repr-procedure" "class"
+    ("php"    ".php"  ("-repr-module"    "globals"
+                       "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "/Users/feeley/php5.2.17/bin/php")
-    ("php"    ".php"  ("-repr-procedure" "host"
+    ("php"    ".php"  ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "/Users/feeley/php5.2.17/bin/php")
-    ("php"    ".php"  ("-repr-procedure" "host"
+    ("php"    ".php"  ("-repr-module"    "globals"
+                       "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )

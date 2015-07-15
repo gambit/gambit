@@ -12,6 +12,10 @@
 (include-adt "_ptreeadt.scm")
 (include-adt "_sourceadt.scm")
 
+(define deb #t)
+(set! deb #f)
+(define (tt tag . stuff) (if deb (list "/*{" tag "*/" stuff "/*}*/") stuff));;;;;;;;;;;;;;;;;;;;
+
 (define univ-enable-jump-destination-inlining? #f)
 (set! univ-enable-jump-destination-inlining? #t)
 
@@ -25,7 +29,7 @@
 (define (univ-module-representation ctx)
   (or (univ-get-representation-option ctx 'repr-module)
       (case (target-name (ctx-target ctx))
-        ((java js);;;;;;;;TODO: remove js
+        ((java)
          'class)
         (else
          'global))))
@@ -161,11 +165,23 @@
      (compiler-internal-error
       "univ-tostr-method-name, unknown target"))))
 
+(define (univ-proc-name-attrib ctx)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     '_name) ;; avoid clash with builtin "name" attribute of functions
+
+    (else
+     'name)))
+
 (define univ-thread-cont-slot 5)
 (define univ-thread-denv-slot 6)
 
 (define (univ-php-version-53? ctx)
   (assq 'php53 (ctx-options ctx)))
+
+(define (univ-python-version-3? ctx)
+  (assq 'python3 (ctx-options ctx)))
 
 (define (univ-always-return-jump? ctx)
   (assq 'always-return-jump (ctx-options ctx)))
@@ -280,7 +296,7 @@
     (target-add targ)))
 
 (univ-setup 'js     '((".js"   . JavaScript))  '())
-(univ-setup 'python '((".py"   . Python))      '())
+(univ-setup 'python '((".py"   . Python))      '((python3)))
 (univ-setup 'ruby   '((".rb"   . Ruby))        '())
 (univ-setup 'php    '((".php"  . PHP))         '((php53)))
 
@@ -621,32 +637,41 @@
 (define-macro (^global-var name)
   `(univ-emit-global-var ctx ,name))
 
-(define-macro (^gvar name)
-  `(univ-emit-gvar ctx ,name))
-
 (define-macro (^global-function name)
   `(univ-emit-global-function ctx ,name))
 
 (define-macro (^this-mod-field name)
   `(univ-emit-this-mod-field ctx ,name))
 
+(define-macro (^this-mod-method name)
+  `(univ-emit-this-mod-method ctx ,name))
+
+(define-macro (^this-mod-jumpable name)
+  `(univ-emit-this-mod-jumpable ctx ,name))
+
 (define-macro (^mod-field mod-name name)
   `(univ-emit-mod-field ctx ,mod-name ,name))
 
-(define-macro (^mod-method mod-ns name)
-  `(univ-emit-mod-method ctx ,mod-ns ,name))
+(define-macro (^mod-method mod-name name)
+  `(univ-emit-mod-method ctx ,mod-name ,name))
 
-(define-macro (^mod-class mod-ns name)
-  `(univ-emit-mod-class ctx ,mod-ns ,name))
+(define-macro (^mod-jumpable mod-name name)
+  `(univ-emit-mod-jumpable ctx ,mod-name ,name))
 
-(define-macro (^rts-field name)
-  `(univ-emit-rts-field ctx ,name))
+(define-macro (^mod-class mod-name name)
+  `(univ-emit-mod-class ctx ,mod-name ,name))
+    
+(define-macro (^rts-field name)      `(univ-emit-rts-field ctx ,name))
+(define-macro (^rts-field-ref name)  `(univ-emit-rts-field-ref ctx ,name))
+(define-macro (^rts-field-use name)  `(univ-emit-rts-field-use ctx ,name))
 
-(define-macro (^rts-method name)
-  `(univ-emit-rts-method ctx ,name))
+(define-macro (^rts-method name)     `(univ-emit-rts-method ctx ,name))
+(define-macro (^rts-method-ref name) `(univ-emit-rts-method-ref ctx ,name))
+(define-macro (^rts-method-use name) `(univ-emit-rts-method-use ctx ,name))
 
-(define-macro (^rts-class name)
-  `(univ-emit-rts-class ctx ,name))
+(define-macro (^rts-class name)      `(univ-emit-rts-class ctx ,name))
+(define-macro (^rts-class-ref name)  `(univ-emit-rts-class-ref ctx ,name))
+(define-macro (^rts-class-use name)  `(univ-emit-rts-class-use ctx ,name))
 
 (define-macro (^prefix name)
   `(univ-emit-prefix ctx ,name))
@@ -779,6 +804,7 @@
     ,attribs
     (univ-emit-fn-body ctx ,header (lambda (ctx) ,body))))
 
+;;TODO: remove
 (define-macro (^prim-function-declaration
                root-name
                result-type
@@ -1903,16 +1929,13 @@
      (compiler-internal-error
       "univ-emit-global-var, unknown target"))))
 
-(define (univ-emit-gvar ctx name)
-  (let ((var (^global-var (^prefix name))));;TODO: fix ^prefix
-    (use-global ctx var)
-    var))
-
 (define (univ-emit-global-function ctx name)
   (case (target-name (ctx-target ctx))
 
     ((js python java)
      name)
+
+    ((php) name);;TODO: added
 
     ((php ruby)
      (^ "$" name))
@@ -1924,65 +1947,137 @@
 (define (univ-emit-this-mod-field ctx name)
   (^mod-field (ctx-module-name ctx) name))
 
+(define (univ-emit-this-mod-method ctx name)
+  (^mod-method (ctx-module-name ctx) name))
+
+(define (univ-emit-this-mod-jumpable ctx name)
+  (^mod-jumpable (ctx-module-name ctx) name))
+
 (define (univ-emit-mod-member ctx mod-name name)
-  (if (and (eq? (ctx-module-name ctx) mod-name) ;; optimize access to self
-           (not (eq? (target-name (ctx-target ctx)) 'js)))
+  (if (and (case (target-name (ctx-target ctx))
+             ((js)
+              #f)
+             ((python)
+              (not (eq? (univ-module-representation ctx) 'class)))
+             (else
+              #t))
+           (eq? (ctx-module-name ctx) mod-name)) ;; optimize access to self
       name
-      (^member (^prefix-class mod-name) name)))
+      (case (target-name (ctx-target ctx))
+
+        ((js python ruby java)
+         (^member (^prefix-class mod-name) name))
+
+        ((php)
+         (^ (^prefix-class mod-name) "::" name))
+
+        (else
+         (compiler-internal-error
+          "univ-emit-mod-member, unknown target")))))
 
 (define (univ-emit-mod-field ctx mod-name name)
   (case (univ-module-representation ctx)
 
     ((class)
-     (univ-emit-mod-member ctx mod-name name))
+     (tt"000"(univ-emit-mod-member ctx mod-name name)))
 
     (else
-     (^global-var (^prefix name)))))
+     (tt"111"(^global-var (^prefix name))))))
 
 (define (univ-emit-mod-method ctx mod-name name)
   (case (univ-module-representation ctx)
 
     ((class)
-     (univ-emit-mod-member ctx mod-name name))
+     (tt"222"(univ-emit-mod-member ctx mod-name name)))
 
     (else
-     (^global-function (^prefix name)))))
+     (tt"333"(^global-function (^prefix name))))))
+
+(define (univ-emit-mod-jumpable ctx mod-name name)
+  (if (eq? (univ-procedure-representation ctx) 'class)
+      (let ((x (^mod-field mod-name name)))
+        (use-global ctx x)
+        x)
+      (^mod-method mod-name name)))
 
 (define (univ-emit-mod-class ctx mod-name name)
   (case (univ-module-representation ctx)
 
     ((class)
-     (univ-emit-mod-member ctx mod-name name))
+     (tt"444"(univ-emit-mod-member ctx mod-name name)))
 
     (else
-     (^prefix-class name))))
+     (tt"555"(^prefix-class name)))))
 
 (define (univ-emit-rts-method ctx name)
   (case (univ-module-representation ctx)
 
     ((class)
-     (univ-emit-mod-member ctx (univ-rts-module-name ctx) name))
+     (tt"666"name))
 
     (else
-     (^global-function (^prefix name)))))
+     (tt"777"(^global-function (^prefix name))))))
+
+(define (univ-emit-rts-method-ref ctx name)
+  (case (univ-module-representation ctx)
+
+    ((class)
+     (tt"66"(univ-emit-mod-member ctx (univ-rts-module-name ctx) name)))
+
+    (else
+     (tt"77"(^global-function (^prefix name))))))
+
+(define (univ-emit-rts-method-use ctx name)
+  (univ-use-rtlib ctx name)
+  (univ-emit-rts-method-ref ctx name))
 
 (define (univ-emit-rts-field ctx name)
   (case (univ-module-representation ctx)
 
     ((class)
-     (univ-emit-mod-member ctx (univ-rts-module-name ctx) name))
+     (tt"888"name))
 
     (else
-     (^global-var (^prefix name)))))
+     (tt"999"(^global-var (^prefix name))))))
 
-(define (univ-emit-rts-class ctx name)
+(define (univ-emit-rts-field-ref ctx name)
   (case (univ-module-representation ctx)
 
     ((class)
-     (univ-emit-mod-member ctx (univ-rts-module-name ctx) name))
+     (tt"88"(univ-emit-mod-member ctx (univ-rts-module-name ctx) name)))
 
     (else
-     (^prefix-class name))))
+     (tt"99"(^global-var (^prefix name))))))
+
+(define (univ-emit-rts-field-use ctx name)
+  (univ-use-rtlib ctx name)
+  (let ((x (univ-emit-rts-field-ref ctx name)))
+    (use-global ctx x)
+    x))
+
+(define (univ-emit-rts-class ctx name)
+  (let ((real-name (univ-rts-type-alias ctx name)))
+    (case (univ-module-representation ctx)
+
+      ((class)
+       (tt"0"(univ-emit-mod-member ctx (univ-rts-module-name ctx) real-name)))
+
+      (else
+       (tt"1"(^prefix-class real-name))))))
+
+(define (univ-emit-rts-class-ref ctx name)
+  (let ((real-name (univ-rts-type-alias ctx name)))
+    (case (univ-module-representation ctx)
+
+      ((class)
+       (tt"00"(univ-emit-mod-member ctx (univ-rts-module-name ctx) real-name)))
+
+      (else
+       (tt"11"(^prefix-class real-name))))))
+
+(define (univ-emit-rts-class-use ctx name)
+  (univ-use-rtlib ctx name)
+  (univ-emit-rts-class-ref ctx name))
 
 (define (univ-rts-module-name ctx)
   (case (target-name (ctx-target ctx))
@@ -2287,7 +2382,7 @@
 
     ((php)
      (^call-prim
-      (^rts-method (univ-use-rtlib ctx 'get))
+      (^rts-method-use 'get)
       obj
       (^str name)))
 
@@ -2303,7 +2398,7 @@
 
     ((php)
      (^call-prim
-      (^rts-method (univ-use-rtlib ctx 'set))
+      (^rts-method-use 'set)
       obj
       (^str name)
       val))
@@ -2315,155 +2410,106 @@
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 
-(define (univ-dump-old targ procs output c-intf module-descr unique-name options)
+(define (univ-dump-code targ procs output c-intf module-descr unique-name options)
 
-  (let* ((module-name (scheme-id->c-id (symbol->string (vector-ref module-descr 0))))
-         (objs-used (make-objs-used))
-         (rtlib-features-used (make-resource-set))
-         (main-proc (list-ref procs 0))
-         (ctx (make-ctx targ
-                        options
-                        module-name
-                        module-name
-                        objs-used
-                        rtlib-features-used
-                        (queue-empty)))
-         (defs-procs (univ-dump-procs ctx procs))
-         (defs-entry (univ-entry-point ctx main-proc))
-         (code-rest (univ-emit-defs
-                     ctx
-                     (univ-defs-combine defs-procs defs-entry)))
-         (defs-rtlib (if univ-dyn-load?
-                         (univ-make-empty-defs)
-                         (univ-rtlib ctx)))
-         (code-rtlib (univ-emit-defs
-                      ctx
-                      defs-rtlib))
-         ;;(code-objs (univ-dump-objs ctx))
-         (code-decls (queue->list (ctx-decls ctx))))
+  (define (defs->code ctx mod-name defs)
+    (univ-emit-defs
+     ctx
+     (case (univ-module-representation ctx)
 
-    (call-with-output-file
-        output
-      (lambda (port)
-        (univ-display (^ (univ-rtlib-header ctx)
-                         code-rtlib
-                         code-decls
-                         ;;code-objs
-                         code-rest)
-                      port))))
+       ((class)
+        (let ((class-fields
+               (reverse (univ-defs-fields defs)))
+              (instance-fields
+               '())
+              (class-methods
+               (reverse (univ-defs-methods defs)))
+              (instance-methods
+               '())
+              (class-classes
+               (reverse (univ-defs-classes defs)))
+              (inits
+               (reverse (univ-defs-inits defs))))
+          (univ-add-class
+           (univ-make-empty-defs)
+           (univ-class
+            (^prefix-class mod-name) ;; root-name
+            '() ;; properties
+            #f ;; extends
+            class-fields
+            '() ;; instance-fields
+            class-methods
+            '() ;; instance-methods
+            class-classes
+            #f ;; constructor
+            inits))))
 
-  #f)
+       (else
+         defs))))
+
+  (let* ((module-name
+          (scheme-id->c-id (symbol->string (vector-ref module-descr 0))))
+
+         (ctx1
+          (make-ctx
+           targ
+           options
+           module-name
+           "zzz" ;;;;;;;;;;;;;;;;;
+           (make-objs-used)
+           (make-resource-set)
+           (queue-empty)))
+
+         (defs-procs
+           (univ-dump-procs ctx1 procs))
+
+         (defs-entry
+           (univ-entry-point ctx1 (list-ref procs 0)))
+
+         (defs-procs-entry
+           (univ-defs-combine
+            (univ-defs-combine defs-procs (univ-objs-defs ctx1))
+            defs-entry))
+
+         (code-prog
+          (defs->code ctx1 module-name defs-procs-entry))
+
+         (ctx2
+          (make-ctx
+           (ctx-target ctx1)
+           (ctx-options ctx1)
+           (univ-rts-module-name ctx1)
+           "yyy" ;;;;;;;;;;;;
+           (ctx-objs-used ctx1)
+           (ctx-rtlib-features-used ctx1)
+           (ctx-decls ctx1)))
+
+         (defs-rtlib
+           (if univ-dyn-load?
+               (univ-make-empty-defs)
+               (univ-rtlib ctx2)))
+
+         (code-rtlib
+          (defs->code ctx2 (univ-rts-module-name ctx2) defs-rtlib))
+
+         (code-decls
+          (queue->list (ctx-decls ctx2))))
+
+    (^ (univ-rtlib-header ctx2)
+       code-rtlib
+       code-decls
+       code-prog)))
 
 (define (univ-dump targ procs output c-intf module-descr unique-name options)
-
-  (let* ((module-name (scheme-id->c-id (symbol->string (vector-ref module-descr 0))))
-         (objs-used (make-objs-used))
-         (rtlib-features-used (make-resource-set))
-         (main-proc (list-ref procs 0))
-         (ctx (make-ctx
-               targ
-               options
-               module-name
-               "zzz" ;;;;;;;;;;;;;;;;;
-               objs-used
-               rtlib-features-used
-               (queue-empty)))
-         (defs-procs (univ-dump-procs ctx procs))
-         (defs-entry (univ-entry-point ctx main-proc))
-         (defs-procs-entry
-           (univ-defs-combine (univ-defs-combine defs-procs defs-entry)
-                              (univ-objs-defs ctx)))
-         (defs1
-           (univ-add-class
-            (univ-make-empty-defs)
-            (univ-class
-             (^prefix-class module-name) ;; root-name
-             '() ;; properties
-             #f ;; extends
-             (reverse (univ-defs-fields defs-procs-entry)) ;; class-fields
-             '() ;; instance-fields
-             (reverse (univ-defs-methods defs-procs-entry)) ;; class-methods
-             '() ;; instance-methods
-             (reverse (univ-defs-classes defs-procs-entry)) ;; class-classes
-             #f ;; constructor
-             (reverse (univ-defs-inits defs-procs-entry))))) ;; inits
-         (code-rest (univ-emit-defs ctx defs1))
-
-         (ctx (make-ctx
-               (ctx-target ctx)
-               (ctx-options ctx)
-               (univ-rts-module-name ctx)
-               "yyy";;;;;;;;;;;;
-               (ctx-objs-used ctx)
-               (ctx-rtlib-features-used ctx)
-               (ctx-decls ctx)))
-
-         (defs-rtlib (if univ-dyn-load?
-                         (univ-make-empty-defs)
-                         (univ-rtlib ctx)))
-         (defs2
-           (univ-add-class
-            (univ-make-empty-defs)
-            (univ-class
-             (^prefix-class (univ-rts-module-name ctx)) ;; root-name
-             '() ;; properties
-             #f ;; extends
-             (reverse (univ-defs-fields defs-rtlib)) ;; class-fields
-             '() ;; instance-fields
-             (reverse (univ-defs-methods defs-rtlib)) ;; class-methods
-             '() ;; instance-methods
-             (reverse (univ-defs-classes defs-rtlib)) ;; class-classes
-             #f ;; constructor
-             (reverse (univ-defs-inits defs-rtlib))))) ;; inits
-
-         (code-rtlib (univ-emit-defs ctx defs2))
-         ;;(code-objs (univ-dump-objs ctx))
-         (code-decls (queue->list (ctx-decls ctx))))
-
-    (call-with-output-file
-        output
-      (lambda (port)
-        (univ-display (^ (univ-rtlib-header ctx)
-                         code-rtlib
-                         code-decls
-                         ;;code-objs
-                         code-rest)
-                      port))))
-
-  #f)
+  (let ((code (univ-dump-code targ procs output c-intf module-descr unique-name options)))
+    (call-with-output-file output (lambda (port) (univ-display code port)))
+    #f))
 
 ;;TODO: add constants
 #;
 (define (univ-module-header ctx)
   (^ (^var-declaration 'scmobj (gvm-state-cst ctx) (^extensible-array-literal 'scmobj '()))
      "\n"))
-
-#;
-(define (univ-dump-objs ctx)
-  (let* ((objs-used (ctx-objs-used ctx))
-         (stack (reverse (objs-used-stack objs-used)))
-         (table (objs-used-table objs-used)))
-    (let loop ((count 0) (lst stack) (code (^)))
-      (if (pair? lst)
-          (loop (+ count 1)
-                (cdr lst)
-                (let ((obj (car lst)))
-                  (if (proc-obj? obj)
-                      code
-                      (let ((state (table-ref table obj)))
-                        (if (or (> (vector-ref state 0) 1) ;; use a variable?
-                                (eq? (target-name (ctx-target ctx)) 'python)) ;; Python can't handle deep nestings
-                            (let ((cst
-                                   (^array-index
-                                    (gvm-state-cst ctx)
-                                    count))
-                                  (val
-                                   (car (vector-ref state 1))))
-                              (set-car! (vector-ref state 1) cst)
-                              (^ code
-                                 (^assign cst val)))
-                            code)))))
-          code))))
 
 (define (univ-objs-defs ctx)
   (let* ((objs-used (ctx-objs-used ctx))
@@ -2480,9 +2526,13 @@
                         (if (or (> (vector-ref state 0) 1) ;; use a variable?
                                 (eq? (target-name (ctx-target ctx)) 'python)) ;; Python can't handle deep nestings
                             (let ((cst
-                                   (^ "cst" count))
+                                   (string->symbol
+                                    (string-append
+                                     "cst"
+                                     (number->string count))))
                                   (val
                                    (car (vector-ref state 1))))
+                              ;;(pp (list cst obj));;;;;;;;;;;;;;;
                               (set-car! (vector-ref state 1)
                                         (^this-mod-field cst))
                               (univ-add-field
@@ -2536,10 +2586,10 @@
 
     (define (dump-proc p)
 
-      (define subprocs
+      (define ctrlpts
         (make-stretchable-vector #f))
 
-      (define subprocs-init
+      (define ctrlpts-init
         (list #f))
 
       (define (scan-bbs ctx bbs)
@@ -2636,7 +2686,9 @@
                               ((entry)
                                (univ-label-entry ctx
                                                  gvm-instr
-                                                 (^this-mod-field id)))
+                                                 (^mod-jumpable
+                                                  (ctx-module-name ctx)
+                                                  id)))
 
                               (else
                                (^)))
@@ -2673,15 +2725,15 @@
 
                       (append
 
-                       (let ((subproc-id
-                              (stretchable-vector-length subprocs)))
+                       (let ((ctrlpt-id
+                              (stretchable-vector-length ctrlpts)))
                          (stretchable-vector-set!
-                          subprocs
-                          subproc-id
+                          ctrlpts
+                          ctrlpt-id
                           lbl-num)
                          (list (univ-field 'id
                                            'int
-                                           (^int subproc-id)
+                                           (^int ctrlpt-id)
                                            '(inherited))
                                (univ-field 'parent
                                            'parententrypt
@@ -2689,7 +2741,7 @@
                                                (^null)
                                                (lambda (ctx2)
                                                  ;;TODO: check correct ctx
-                                                 (univ-subproc-reference
+                                                 (univ-ctrlpt-reference
                                                   ctx
                                                   entry)))
                                            '(inherited))))
@@ -2717,14 +2769,14 @@
                                        (^int -1))
                                    '(inherited)))
                             (if (= lbl-num entry)
-                                (list (univ-field 'prm_name
+                                (list (univ-field (univ-proc-name-attrib ctx)
                                                   'symbol
                                                   (lambda (ctx)
                                                     (univ-prm-name ctx (proc-obj-name p)))
                                                   '(inherited))
-                                      (univ-field 'subprocs
+                                      (univ-field 'ctrlpts
                                                   '(array ctrlpt)
-                                                  subprocs-init
+                                                  ctrlpts-init
                                                   '(inherited))
                                       (univ-field 'info
                                                   'scmobj
@@ -2944,11 +2996,11 @@
                                 (if (jump-safe? gvm-instr)
                                     (if (glo? opnd)
                                         (^call-prim
-                                         (^rts-method (univ-use-rtlib ctx 'check_procedure_glo))
+                                         (^rts-method-use 'check_procedure_glo)
                                          (scan-gvm-opnd ctx opnd)
                                          (^obj (glo-name opnd)))
                                         (^call-prim
-                                         (^rts-method (univ-use-rtlib ctx 'check_procedure))
+                                         (^rts-method-use 'check_procedure)
                                          (scan-gvm-opnd ctx opnd)))
                                     (let ((o (scan-gvm-opnd ctx opnd)))
                                       (if (or (lbl? opnd) (obj? opnd))
@@ -3032,20 +3084,20 @@
                           (make-lbl (bbs-entry-lbl-num bbs)))
                          (entry-id
                           (gvm-lbl-use ctx lbl))
-                         (subprocs-array
+                         (ctrlpts-array
                           (^array-literal
-                           (univ-subproc-reference-type ctx)
+                           (univ-ctrlpt-reference-type ctx)
                            (map (lambda (n)
-                                  (univ-subproc-reference ctx n))
-                                (stretchable-vector->list subprocs)))))
-                    (if (eq? (univ-subproc-reference-type ctx) 'str)
+                                  (univ-ctrlpt-reference ctx n))
+                                (stretchable-vector->list ctrlpts)))))
+                    (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
 
                         (begin
-                          (set-car! subprocs-init subprocs-array)
+                          (set-car! ctrlpts-init ctrlpts-array)
                           (lambda (ctx) (^)))
 
                         (begin
-                          (set-car! subprocs-init (^null))
+                          (set-car! ctrlpts-init (^null))
                           (lambda (ctx)
                             (^ "\n"
                                (univ-with-ctrlpt-attribs
@@ -3056,8 +3108,8 @@
                                   (univ-set-ctrlpt-attrib
                                    ctx
                                    entry-id
-                                   'subprocs
-                                   subprocs-array)))))))))
+                                   'ctrlpts
+                                   ctrlpts-array)))))))))
                  (init2
                   (lambda (ctx)
                     (let ((name (string->symbol (proc-obj-name p))))
@@ -3115,12 +3167,12 @@
                "univ-label-entry, keyword parameters not supported")
               (^if (if rest?
                        (^not (^call-prim
-                              (^rts-method (univ-use-rtlib ctx 'build_rest))
+                              (^rts-method-use 'build_rest)
                               nb-parms-except-rest))
                        (^!= (^getnargs)
                             nb-parms-except-rest))
                    (^return-call-prim
-                    (^rts-method (univ-use-rtlib ctx 'wrong_nargs))
+                    (^rts-method-use 'wrong_nargs)
                     (if closed?
                         (^cast* 'jumpable
                                 (^getreg (+ univ-nb-arg-regs 1)))
@@ -3180,15 +3232,18 @@
 (define (univ-gensym ctx name)
   (let ((count (ctx-serial-num ctx)))
     (ctx-serial-num-set! ctx (+ count 1))
-    (^ name count)))
+    (string->symbol
+     (string-append
+      (symbol->string name)
+      (number->string count)))))
 
 (define (univ-closure-alloc ctx lbl exprs cont)
-  (let ((closure-var (^local-var (univ-gensym ctx "closure"))))
+  (let ((closure-var (^local-var (univ-gensym ctx 'closure))))
     (^ (^var-declaration
         'closure
         closure-var
         (^call-prim
-         (^rts-method (univ-use-rtlib ctx 'closure_alloc))
+         (^rts-method-use 'closure_alloc)
          (^array-literal
           'scmobj
           (cons (gvm-lbl-use ctx (make-lbl lbl))
@@ -3306,8 +3361,16 @@
 (define (resource-set-member? set element)
   (table-ref (car set) element #f))
 
-(define (resource-set->list set)
-  (reverse (cdr set)))
+(define (resource-set-stack set)
+  (cdr set))
+
+(define (resource-set-pop set)
+  (let ((s (cdr set)))
+    (if (pair? s)
+        (begin
+          (set-cdr! set (cdr s))
+          (car s))
+        #f)))
 
 (define (use-resource-rd ctx resource)
   (resource-set-add! (ctx-resources-used-rd ctx) resource))
@@ -3319,6 +3382,7 @@
   (resource-set-add! (ctx-globals-used ctx) global))
 
 (define (univ-use-rtlib ctx feature)
+  ;;(pp (list 'use-rtlib feature));;;;;;;;;;;;
   (resource-set-add! (ctx-rtlib-features-used ctx) feature)
   (symbol->string feature))
 
@@ -3329,25 +3393,25 @@
       (use-resource-wr ctx resource)))
 
 (define (gvm-state-pollcount ctx)
-  (^rts-field 'pollcount))
+  (^rts-field-use 'pollcount))
 
 (define (gvm-state-nargs ctx)
-  (^rts-field 'nargs))
+  (^rts-field-use 'nargs))
 
 (define (gvm-state-reg ctx num)
-  (^rts-field (^ 'r num)))
+  (^rts-field-use (string->symbol (string-append "r" (number->string num)))))
 
 (define (gvm-state-stack ctx)
-  (^rts-field 'stack))
+  (^rts-field-use 'stack))
 
 (define (gvm-state-sp ctx)
-  (^rts-field 'sp))
+  (^rts-field-use 'sp))
 
 (define (gvm-state-prm ctx)
-  (^rts-field 'prm))
+  (^rts-field-use 'prm))
 
 (define (gvm-state-glo ctx)
-  (^rts-field 'glo))
+  (^rts-field-use 'glo))
 
 (define (gvm-state-pollcount-use ctx dir)
   (use-resource ctx dir 'pollcount)
@@ -3458,6 +3522,7 @@
   (^closure-set! closure index val))
 
 (define (univ-glo-dependency ctx name)
+  (gvm-state-glo-use ctx 'rd)
   (if (member name
               '(println
                 real-time-milliseconds))
@@ -3651,8 +3716,8 @@
            (^rest))
 
           ((proc-obj? obj)
-           (^this-mod-field
-            (gvm-proc-use ctx (proc-obj-name obj))));;;TODO: use prm for imported proc
+           (^this-mod-jumpable
+            (gvm-proc-use ctx (proc-obj-name obj))))
 
           ((pair? obj)
            (univ-obj-use
@@ -3922,9 +3987,9 @@
 ;; =============================================================================
 
 (define (gvm-lbl-use ctx lbl)
-  (^this-mod-field (gvm-lbl-use-field ctx lbl)))
+  (^this-mod-jumpable (gvm-lbl-use-aux ctx lbl)))
 
-(define (gvm-lbl-use-field ctx lbl)
+(define (gvm-lbl-use-aux ctx lbl)
   (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx)))
 
 (define (gvm-proc-use ctx name)
@@ -3932,7 +3997,8 @@
 
 (define (gvm-bb-use ctx num ns)
   (let ((id (lbl->id ctx num ns)))
-    (use-global ctx (^mod-field "AAA" id))
+    ;;TODO: remove?
+    ;;(use-global ctx (^mod-field "AAA" id))
     id))
 
 (define (lbl->id ctx num ns)
@@ -4011,7 +4077,7 @@
     (univ-add-method
      (univ-make-empty-defs)
      (univ-method
-      name
+      (^rts-method name)
       properties
       result-type
       params
@@ -4033,9 +4099,12 @@
     (univ-add-class
      (univ-make-empty-defs)
      (univ-class
-      (univ-type-alias ctx root-name)
+      (^rts-class root-name)
       properties
-      extends
+      (and extends
+           (or (eq? (target-name (ctx-target ctx)) 'java)
+               (not (eq? extends 'scmobj)))
+           (^rts-class-use extends))
       class-fields
       instance-fields
       class-methods
@@ -4091,7 +4160,7 @@
 
              (^setreg 0
                       (^call-prim
-                       (^rts-method (univ-use-rtlib ctx 'heapify_cont))
+                       (^rts-method-use 'heapify_cont)
                        (^cast* 'returnpt
                                (^getreg 0))))
 
@@ -4101,15 +4170,15 @@
                               (^array-index
                                (gvm-state-stack-use ctx 'rd)
                                (^int 0)))
-                      (^structure-ref (^rts-field 'current_thread)
+                      (^structure-ref (^rts-field-use 'current_thread)
                                       univ-thread-denv-slot)))
                     (result
                      (if thread-save?
-                         (^rts-field 'current_thread)
+                         (^rts-field-use 'current_thread)
                          cont)))
 
                (^ (if thread-save?
-                      (^structure-set! (^rts-field 'current_thread)
+                      (^structure-set! (^rts-field-use 'current_thread)
                                        univ-thread-cont-slot
                                        cont)
                       (^))
@@ -4154,7 +4223,7 @@
                (new-nb-stacked
                 (max 0 (- new-nb-args univ-nb-arg-regs)))
                (underflow
-                (^rts-field (univ-use-rtlib ctx 'underflow))))
+                (^rts-field-use 'underflow)))
           (^ (univ-foldr-range
               1
               (max 2 (- nb-args univ-nb-arg-regs))
@@ -4170,7 +4239,7 @@
                           (^getstk x)))))))
 
              (if thread-restore?
-                 (^ (^assign (^rts-field 'current_thread)
+                 (^ (^assign (^rts-field-use 'current_thread)
                              (^local-var (^ 'arg 1)))
                     (^assign (^local-var (^ 'arg 1))
                              (^structure-ref (^local-var (^ 'arg 1))
@@ -4185,7 +4254,7 @@
                                (^local-var (^ 'arg 1)))
                        'frame))
 
-             (^structure-set! (^rts-field 'current_thread)
+             (^structure-set! (^rts-field-use 'current_thread)
                               univ-thread-denv-slot
                               (^member (^cast* 'continuation
                                                (^local-var (^ 'arg 1)))
@@ -4240,7 +4309,7 @@
         (let* ((nb-stacked
                 (max 0 (- nb-args univ-nb-arg-regs)))
                (underflow
-                (^rts-field (univ-use-rtlib ctx 'underflow)))
+                (^rts-field-use 'underflow))
                (arg1
                 (^local-var 'arg1)))
           (^ (^var-declaration
@@ -4258,7 +4327,7 @@
                (^int 0))
               (^member arg1 'frame))
 
-             (^structure-set! (^rts-field 'current_thread)
+             (^structure-set! (^rts-field-use 'current_thread)
                               univ-thread-denv-slot
                               (^member arg1 'denv))
 
@@ -4279,7 +4348,10 @@
     (univ-jumpable-declaration-defs
      ctx
      #t
-     (^ 'apply nb-args)
+     (string->symbol
+      (string-append
+       "apply"
+       (number->string nb-args)))
      'entrypt
      '()
      '()
@@ -4314,52 +4386,60 @@
 
   (case feature
 
-    ((registers)
-     (univ-defs-combine-list
-      (append
+    ((r0 r1 r2 r3 r4)
+     (rts-field feature 'scmobj (^null) '(public)))
 
-       (univ-foldr-range
-        0
-        (- univ-nb-gvm-regs 1)
-        '()
-        (lambda (i rest)
-          (cons (rts-field (^ 'r i)
-                           'scmobj
-                           (^null)
-                           '(public))
-                rest)))
+    ((prm)
+     (rts-field 'prm '(dict str scmobj) (^empty-dict) '(public)))
 
-       (list
-        (rts-field 'prm '(dict str scmobj) (^empty-dict) '(public))
-        (rts-field 'glo '(dict str scmobj) (^empty-dict) '(public))
-        (rts-field 'stack '(array scmobj) (univ-emit-make-stack ctx) '(public))
-        (rts-field 'sp 'int (^int -1) '(public))
-        (rts-field 'nargs 'int (^int 0) '(public))
-        (rts-field 'pollcount 'int (^int 100) '(public))
-        (rts-field 'temp1 'scmobj (^null) '(public))
-        (rts-field 'temp2 'scmobj (^null) '(public))
-        (rts-field 'inttemp1 'int (^int 0) '(public))
-        (rts-field 'inttemp2 'int (^int 0) '(public))
-        (rts-field 'current_thread
-                   'scmobj
-                   (^structure-box
-                    (^array-literal
-                     'scmobj
-                     (list (^null)    ;; type descriptor (filled in later)
-                           (^null)    ;; btq-next
-                           (^null)    ;; btq-prev
-                           (^null)    ;; toq-next
-                           (^null)    ;; toq-prev
-                           (^null)    ;; continuation
-                           (^obj '()) ;; dynamic environment
-                           (^null)    ;; state
-                           (^null)    ;; thunk
-                           (^null)    ;; result
-                           (^null)    ;; mutex
-                           (^null)    ;; condvar
-                           (^obj 0)   ;; id
-                           )))
-                   '(public))))))
+    ((glo)
+     (rts-field 'glo '(dict str scmobj) (^empty-dict) '(public)))
+
+    ((stack)
+     (rts-field 'stack '(array scmobj) (univ-emit-make-stack ctx) '(public)))
+
+    ((sp)
+     (rts-field 'sp 'int (^int -1) '(public)))
+
+    ((nargs)
+     (rts-field 'nargs 'int (^int 0) '(public)))
+
+    ((pollcount)
+     (rts-field 'pollcount 'int (^int 100) '(public)))
+
+    ((temp1)
+     (rts-field 'temp1 'scmobj (^null) '(public)))
+
+    ((temp2)
+     (rts-field 'temp2 'scmobj (^null) '(public)))
+
+    ((inttemp1)
+     (rts-field 'inttemp1 'int (^int 0) '(public)))
+
+    ((inttemp2)
+     (rts-field 'inttemp2 'int (^int 0) '(public)))
+
+    ((current_thread)
+     (rts-field 'current_thread
+                'scmobj
+                (^structure-box
+                 (^array-literal
+                  'scmobj
+                  (list (^null)   ;; type descriptor (filled in later)
+                        (^null)   ;; btq-next
+                        (^null)   ;; btq-prev
+                        (^null)   ;; toq-next
+                        (^null)   ;; toq-prev
+                        (^null)   ;; continuation
+                        (^obj '()) ;; dynamic environment
+                        (^null)    ;; state
+                        (^null)    ;; thunk
+                        (^null)    ;; result
+                        (^null)    ;; mutex
+                        (^null)    ;; condvar
+                        (^obj 0)   ;; id
+                        )))
+                '(public)))
 
     ((trampoline)
      (rts-method
@@ -4599,7 +4679,7 @@
                          0)))))
 
              (^return
-              (^rts-field (univ-use-rtlib ctx 'underflow))))))))
+              (^rts-field-use 'underflow)))))))
 
     ((underflow)
      (univ-jumpable-declaration-defs
@@ -4685,7 +4765,7 @@
                     (^assign (^array-index
                               (gvm-state-stack-use ctx 'rd)
                               link)
-                             (^rts-field (univ-use-rtlib ctx 'underflow))))))
+                             (^rts-field-use 'underflow)))))
 
               (^return ra)))))))
 
@@ -4790,19 +4870,18 @@
       (list (univ-field 'proc 'jumpable))
       "\n"
       '()
-      (let ((build_rest (univ-use-rtlib ctx 'build_rest))) ;; TODO: move this back into body
-        (lambda (ctx)
-          (let ((proc (^local-var 'proc)))
-            (^ (^expr-statement
-                (^call-prim
-                 (^rts-method build_rest)
-                 0))
-               (^setreg 2 (^getreg 1))
-               (^setreg 1 proc)
-               (^setnargs 2)
-               (^return
-                (^cast* 'jumpable
-                        (^getglo '##raise-wrong-number-of-arguments-exception)))))))))
+      (lambda (ctx)
+        (let ((proc (^local-var 'proc)))
+          (^ (^expr-statement
+              (^call-prim
+               (^rts-method-use 'build_rest)
+               0))
+             (^setreg 2 (^getreg 1))
+             (^setreg 1 proc)
+             (^setnargs 2)
+             (^return
+              (^cast* 'jumpable
+                      (^getglo '##raise-wrong-number-of-arguments-exception))))))))
 
     ((get)
 #<<EOF
@@ -4862,7 +4941,7 @@ EOF
           (^ (^if (^not (^parens (^procedure? dest)))
                   (^ (^expr-statement
                       (^call-prim
-                       (^rts-method (univ-use-rtlib ctx 'prepend_arg1))
+                       (^rts-method-use 'prepend_arg1)
                        gv))
                      (^assign dest
                               (^getglo '##apply-global-with-procedure-check-nary))))
@@ -4881,7 +4960,7 @@ EOF
           (^ (^if (^not (^parens (^procedure? dest)))
                   (^ (^expr-statement
                       (^call-prim
-                       (^rts-method (univ-use-rtlib ctx 'prepend_arg1))
+                       (^rts-method-use 'prepend_arg1)
                        dest))
                      (^assign dest
                               (^getglo '##apply-with-procedure-check-nary))))
@@ -4905,9 +4984,9 @@ EOF
            parent
            (lambda ()
              (^return
-              (univ-subproc-reference-to-subproc
+              (univ-ctrlpt-reference-to-ctrlpt
                ctx
-               (^array-index (univ-get-ctrlpt-attrib ctx parent 'subprocs)
+               (^array-index (univ-get-ctrlpt-attrib ctx parent 'ctrlpts)
                              id)))))))))
 
     ((closure_alloc)
@@ -4961,7 +5040,7 @@ EOF
             (lambda (ctx)
               (let ((msg (^local-var 'msg))
                     (slots (^local-var 'slots))
-                    (closure (^local-var 'closure)))
+                    (closure 'closure))
                 (^ (^procedure-declaration
                     #f
                     'closure
@@ -4971,9 +5050,9 @@ EOF
                     '()
                     (^ (^if (^= msg (^bool #t))
                             (^return slots))
-                       (^setreg (+ univ-nb-arg-regs 1) closure)
+                       (^setreg (+ univ-nb-arg-regs 1) (^prefix closure))
                        (^return (^array-index slots (^int 0)))))
-                   (^return closure))))))))))
+                   (^return (^prefix closure)))))))))))
 
     ((make_closure)
      (rts-method
@@ -4995,7 +5074,7 @@ EOF
              (^assign (^array-index slots (^int 0)) code)
              (^return
               (^call-prim
-               (^rts-method (univ-use-rtlib ctx 'closure_alloc))
+               (^rts-method-use 'closure_alloc)
                slots)))))))
 
     ((scmobj)
@@ -5057,8 +5136,8 @@ EOF
       (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
             (univ-field 'parent 'parententrypt #f '(public inherited))
             (univ-field 'nb_closed 'int #f '(public inherited))
-            (univ-field 'prm_name 'symbol #f '(public))
-            (univ-field 'subprocs '(array ctrlpt) #f '(public))
+            (univ-field (univ-proc-name-attrib ctx) 'symbol #f '(public))
+            (univ-field 'ctrlpts '(array ctrlpt) #f '(public))
             (univ-field 'info 'scmobj #f '(public)))))
 
     ((closure)
@@ -5136,6 +5215,27 @@ EOF
               (compiler-internal-error
                "univ-rtlib-feature fixnum, unknown target")))))))))
 
+    ((make_fixnum)
+     (rts-method
+      'make_fixnum
+      '(public)
+      'fixnum
+      (list (univ-field 'n 'int))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((n (^local-var 'n)))
+          (^if (^&& (^>= n (^int 0))
+                    (^< n (^int 257)))
+               (^return (^array-index (^rts-field-use 'fixnum_table) n))
+               (^return (^new (^type 'fixnum) n)))))))
+
+    ((fixnum_table)
+     (rts-field
+      'fixnum_table
+      '(array fixnum)
+      (^call-prim (^rts-method-use 'make_fixnum_table))))
+
     ((make_fixnum_table)
      (rts-method
       'make_fixnum_table
@@ -5164,27 +5264,6 @@ EOF
                                        (^+ (^int (univ-min-fixnum ctx)) n)))
                         (^inc-by n 1)))
              (^return tab))))))
-
-    ((make_fixnum)
-     (univ-defs-combine-list
-      (list
-       (rts-field
-        'fixnum_table
-        '(array fixnum)
-        (^call-prim (^rts-method (univ-use-rtlib ctx 'make_fixnum_table))))
-       (rts-method
-        'make_fixnum
-        '(public)
-        'fixnum
-        (list (univ-field 'n 'int))
-        "\n"
-        '()
-        (lambda (ctx)
-          (let ((n (^local-var 'n)))
-            (^if (^&& (^>= n (^int 0))
-                      (^< n (^int 257)))
-                 (^return (^array-index (^rts-field 'fixnum_table) n))
-                 (^return (^new (^type 'fixnum) n)))))))))
 
     ((flonum)
      (rts-class
@@ -5268,7 +5347,7 @@ EOF
              (^assign n (^bitior n (^parens (^>> n 8))))
              (^assign n (^bitior n (^parens (^>> n 16))))
              (^return (^call-prim
-                       (^rts-method (univ-use-rtlib ctx 'bitcount))
+                       (^rts-method-use 'bitcount)
                        n)))))))
 
     ((bignum_make)
@@ -5351,7 +5430,7 @@ EOF
                    (univ-fxquotient
                     ctx
                     (^call-prim
-                     (^rts-method (univ-use-rtlib ctx 'intlength))
+                     (^rts-method-use 'intlength)
                      n)
                     (^int 14)))
                   (^int 1)))
@@ -5593,39 +5672,40 @@ EOF
            (^return (^member (^this) 'name))))))))
 
     ((make_interned_symbol)
-     (univ-defs-combine
-      (rts-field
-       'symbol_table
-       '(dict str symbol)
-       (^empty-dict))
-      (rts-method
-       'make_interned_symbol
-       '(public)
-       'symbol
-       (list (univ-field 'name 'str))
-       "\n"
-       '()
-       (lambda (ctx)
-         (let ((name (^local-var 'name))
-               (obj (^local-var 'obj)))
-           (^ (^var-declaration
-               'symbol
-               obj
-               (^dict-get (^rts-field 'symbol_table)
-                          name
-                          (^null)))
-              (^if (^eq? obj (^null))
-                   (^ (^assign obj
-                               (^symbol-box-uninterned
+     (rts-method
+      'make_interned_symbol
+      '(public)
+      'symbol
+      (list (univ-field 'name 'str))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((name (^local-var 'name))
+              (obj (^local-var 'obj)))
+          (^ (^var-declaration
+              'symbol
+              obj
+              (^dict-get (^rts-field-use 'symbol_table)
+                         name
+                         (^null)))
+             (^if (^eq? obj (^null))
+                  (^ (^assign obj
+                              (^symbol-box-uninterned
+                               name
+                               (^fixnum-box
+                                (^call-prim
+                                 (^rts-method-use 'str_hash)
+                                 name))))
+                     (^dict-set (^rts-field-use 'symbol_table)
                                 name
-                                (^fixnum-box
-                                 (^call-prim
-                                  (^rts-method (univ-use-rtlib ctx 'str_hash))
-                                  name))))
-                      (^dict-set (^rts-field 'symbol_table)
-                                 name
-                                 obj)))
-              (^return obj)))))))
+                                obj)))
+             (^return obj))))))
+
+    ((symbol_table)
+     (rts-field
+      'symbol_table
+      '(dict str symbol)
+      (^empty-dict)))
 
     ((keyword)
      (rts-class
@@ -5651,39 +5731,40 @@ EOF
            (^return (^member (^this) 'name))))))))
 
     ((make_interned_keyword)
-     (univ-defs-combine
-      (rts-field
-       'keyword_table
-       '(dict str keyword)
-       (^empty-dict))
-      (rts-method
-       'make_interned_keyword
-       '(public)
-       'keyword
-       (list (univ-field 'name 'str))
-       "\n"
-       '()
-       (lambda (ctx)
-         (let ((name (^local-var 'name))
-               (obj (^local-var 'obj)))
-           (^ (^var-declaration
-               'keyword
-               obj
-               (^dict-get (^rts-field 'keyword_table)
-                          name
-                          (^null)))
-              (^if (^eq? obj (^null))
-                   (^ (^assign obj
-                               (^keyword-box-uninterned
+     (rts-method
+      'make_interned_keyword
+      '(public)
+      'keyword
+      (list (univ-field 'name 'str))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((name (^local-var 'name))
+              (obj (^local-var 'obj)))
+          (^ (^var-declaration
+              'keyword
+              obj
+              (^dict-get (^rts-field-use 'keyword_table)
+                         name
+                         (^null)))
+             (^if (^eq? obj (^null))
+                  (^ (^assign obj
+                              (^keyword-box-uninterned
+                               name
+                               (^fixnum-box
+                                (^call-prim
+                                 (^rts-method-use 'str_hash)
+                                 name))))
+                     (^dict-set (^rts-field-use 'keyword_table)
                                 name
-                                (^fixnum-box
-                                 (^call-prim
-                                  (^rts-method (univ-use-rtlib ctx 'str_hash))
-                                  name))))
-                      (^dict-set (^rts-field 'keyword_table)
-                                 name
-                                 obj)))
-              (^return obj)))))))
+                                obj)))
+             (^return obj))))))
+
+    ((keyword_table)
+     (rts-field
+      'keyword_table
+      '(dict str keyword)
+      (^empty-dict)))
 
     ((box)
      (rts-class
@@ -5702,126 +5783,137 @@ EOF
       (list (univ-field 'vals '(array scmobj) #f '(public))))) ;; instance-fields
 
     ((null)
-     (univ-defs-combine
-      (rts-class
-       'null
-       '() ;; properties
-       'scmobj) ;; extends
-      (rts-field
-       'null_obj
-       'null
-       (^new (^type 'null))
-       '(public))))
+     (rts-class
+      'null
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((null_obj)
+     (rts-field
+      'null_obj
+      'null
+      (^new (^type 'null))
+      '(public)))
 
     ((void)
-     (univ-defs-combine
-      (rts-class
-       'void
-       '() ;; properties
-       'scmobj) ;; extends
-      (rts-field
-       'void_obj
-       'void
-       (^new (^type 'void))
-       '(public))))
+     (rts-class
+      'void
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((void_obj)
+     (rts-field
+      'void_obj
+      'void
+      (^new (^type 'void))
+      '(public)))
 
     ((eof)
-     (univ-defs-combine
-      (rts-class
-       'eof
-       '() ;; properties
-       'scmobj) ;; extends
-      (rts-field
-       'eof_obj
-       'eof
-       (^new (^type 'eof))
-       '(public))))
+     (rts-class
+      'eof
+      '() ;; properties
+      'scmobj)) ;; extends
 
-    ((Absent)
-     (univ-defs-combine
-      (rts-class
-       'absent
-       '() ;; properties
-       'scmobj) ;; extends
-      (rts-field
-       'absent_obj
-       'absent
-       (^new (^type 'absent))
-       '(public))))
+    ((eof_obj)
+     (rts-field
+      'eof_obj
+      'eof
+      (^new (^type 'eof))
+      '(public)))
+
+    ((absent)
+     (rts-class
+      'absent
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((absent_obj)
+     (rts-field
+      'absent_obj
+      'absent
+      (^new (^type 'absent))
+      '(public)))
 
     ((unbound)
-     (univ-defs-combine
-      (rts-class
-       'unbound
-       '() ;; properties
-       'scmobj) ;; extends
-      (univ-defs-combine
-       (rts-field
-        'unbound1_obj
-        'unbound
-        (^new (^type 'unbound))
-        '(public))
-       (rts-field
-        'unbound2_obj
-        'unbound
-        (^new (^type 'unbound))
-        '(public)))))
+     (rts-class
+      'unbound
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((unbound1_obj)
+     (rts-field
+      'unbound1_obj
+      'unbound
+      (^new (^type 'unbound))
+      '(public)))
+
+    ((unbound2_obj)
+     (rts-field
+      'unbound2_obj
+      'unbound
+      (^new (^type 'unbound))
+      '(public)))
 
     ((optional)
-     (univ-defs-combine
-      (rts-class
-       'optional
-       '() ;; properties
-       'scmobj) ;; extends
-      (rts-field
-       'optional_obj
-       'optional
-       (^new (^type 'optional))
-       '(public))))
+     (rts-class
+      'optional
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((optional_obj)
+     (rts-field
+      'optional_obj
+      'optional
+      (^new (^type 'optional))
+      '(public)))
 
     ((key)
-     (univ-defs-combine
-      (rts-class
-       'key
-       '() ;; properties
-       'scmobj) ;; extends
-      (rts-field
-       'key_obj
-       'key
-       (^new (^type 'key))
-       '(public))))
+     (rts-class
+      'key
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((key_obj)
+     (rts-field
+      'key_obj
+      'key
+      (^new (^type 'key))
+      '(public)))
 
     ((rest)
-     (univ-defs-combine
-      (rts-class
-       'rest
-       '() ;; properties
-       'scmobj) ;; extends
-      (rts-field
-       'rest_obj
-       'rest
-       (^new (^type 'rest))
-       '(public))))
+     (rts-class
+      'rest
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((rest_obj)
+     (rts-field
+      'rest_obj
+      'rest
+      (^new (^type 'rest))
+      '(public)))
 
     ((boolean)
-     (univ-defs-combine
-      (rts-class
-       'boolean
-       '() ;; properties
-       'scmobj ;; extends
-       '() ;; class-fields
-       (list (univ-field 'val 'bool #f '(public)))) ;; instance-fields
-      (univ-defs-combine
-       (rts-field
-        'false_obj
-        'boolean
-        (^new (^type 'boolean) (^bool #f))
-        '(public))
-       (rts-field
-        'true_obj
-        'boolean
-        (^new (^type 'boolean) (^bool #t))
-        '(public)))))
+     (rts-class
+      'boolean
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'val 'bool #f '(public))))) ;; instance-fields
+
+    ((false_obj)
+     (rts-field
+      'false_obj
+      'boolean
+      (^new (^type 'boolean) (^bool #f))
+      '(public)))
+
+    ((true_obj)
+     (rts-field
+      'true_obj
+      'boolean
+      (^new (^type 'boolean) (^bool #t))
+      '(public)))
 
     ((char)
      (rts-class
@@ -5878,34 +5970,35 @@ EOF
              "univ-rtlib-feature char, unknown target"))))))))
 
     ((make_interned_char)
-     (univ-defs-combine
-      (rts-field
-       'char_table
-       '(dict int char)
-       (^empty-dict))
-      (rts-method
-       'make_interned_char
-       '(public)
-       'char
-       (list (univ-field 'code 'unicode))
-       "\n"
-       '()
-       (lambda (ctx)
-         (let ((code (^local-var 'code))
-               (obj (^local-var 'obj)))
-           (^ (^var-declaration
-               'char
-               obj
-               (^dict-get (^rts-field 'char_table)
-                          code
-                          (^null)))
-              (^if (^eq? obj (^null))
-                   (^ (^assign obj
-                               (^char-box-uninterned code))
-                      (^dict-set (^rts-field 'char_table)
-                                 code
-                                 obj)))
-              (^return obj)))))))
+     (rts-method
+      'make_interned_char
+      '(public)
+      'char
+      (list (univ-field 'code 'unicode))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((code (^local-var 'code))
+              (obj (^local-var 'obj)))
+          (^ (^var-declaration
+              'char
+              obj
+              (^dict-get (^rts-field-use 'char_table)
+                         code
+                         (^null)))
+             (^if (^eq? obj (^null))
+                  (^ (^assign obj
+                              (^char-box-uninterned code))
+                     (^dict-set (^rts-field-use 'char_table)
+                                code
+                                obj)))
+             (^return obj))))))
+
+    ((char_table)
+     (rts-field
+      'char_table
+      '(dict int char)
+      (^empty-dict)))
 
     ((string)
      (rts-class
@@ -6025,10 +6118,10 @@ EOF
                                    (^if (^pair? obj)
                                         (^return (^concat
                                                   (^call-prim
-                                                   (^rts-method (univ-use-rtlib ctx 'tostr))
+                                                   (^rts-method-use 'tostr)
                                                    (^getcar obj))
                                                   (^call-prim
-                                                   (^rts-method (univ-use-rtlib ctx 'tostr))
+                                                   (^rts-method-use 'tostr)
                                                    (^getcdr obj))))
                                         (^return (^tostr obj))))))))))))
 
@@ -6079,9 +6172,9 @@ EOF
         (lambda (ctx)
           (^ (^expr-statement
               (^call-prim
-               (^rts-method (univ-use-rtlib ctx 'println))
+               (^rts-method-use 'println)
                (^call-prim
-                (^rts-method (univ-use-rtlib ctx 'tostr))
+                (^rts-method-use 'tostr)
                 (^getreg 1))))
              (^setreg 1 (^void-obj))
              (^return
@@ -6090,62 +6183,58 @@ EOF
       (rts-init
        (lambda (ctx)
          (^setglo 'println
-                  (^rts-field (gvm-proc-use ctx "println")))))))
+                  (^this-mod-jumpable
+                   (gvm-proc-use ctx "println")))))))
 
     ((glo-real-time-milliseconds)
-     (let ((get-time
-            (case (target-name (ctx-target ctx))
-              ((js)     (^call-prim (^member (^new 'Date) 'getTime)))
-              ((php)    (^call-prim 'microtime (^bool #t)))
-              ((python) (^call-prim (^member 'time 'time)))
-              ((ruby)   (^new 'Time))
-              ((java)   (^call-prim (^member 'System 'currentTimeMillis))))))
-       (univ-defs-combine-list
-        (list
-         (rts-field
-          'start_time
-          'long
-          get-time)
-         (univ-jumpable-declaration-defs
-          ctx
-          #t
-          (gvm-proc-use ctx "real-time-milliseconds")
-          'entrypt
-          '()
-          '()
-          (univ-emit-fn-body
-           ctx
-           "\n"
-           (lambda (ctx)
-             (^ (case (target-name (ctx-target ctx))
+     (univ-defs-combine
+      (univ-jumpable-declaration-defs
+       ctx
+       #t
+       (gvm-proc-use ctx "real-time-milliseconds")
+       'entrypt
+       '()
+       '()
+       (univ-emit-fn-body
+        ctx
+        "\n"
+        (lambda (ctx)
+          (^ (case (target-name (ctx-target ctx))
 
-                  ((js java)
-                   (^setreg 1
-                            (^fixnum-box
-                             (^cast* 'int
-                                     (^parens
-                                      (^- get-time
-                                          (^rts-field 'start_time)))))))
-
-                  ((python php ruby)
-                   (^setreg 1
-                            (^fixnum-box
-                             (^float-toint
-                              (^* 1000
+               ((js java)
+                (^setreg 1
+                         (^fixnum-box
+                          (^cast* 'int
                                   (^parens
-                                   (^- get-time
-                                       (^rts-field 'start_time))))))))
+                                   (^- (univ-get-time ctx)
+                                       (^rts-field-use 'start_time)))))))
 
-                  (else
-                   (compiler-internal-error
-                    "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
-                (^return
-                 (^cast* 'jumpable
-                         (^getreg 0)))))))
-         (rts-init
-          (lambda (ctx)
-            (^setglo 'real-time-milliseconds
-                     (^rts-field (gvm-proc-use ctx "real-time-milliseconds")))))))))
+               ((python php ruby)
+                (^setreg 1
+                         (^fixnum-box
+                          (^float-toint
+                           (^* 1000
+                               (^parens
+                                (^- (univ-get-time ctx)
+                                    (^rts-field-use 'start_time))))))))
+
+               (else
+                (compiler-internal-error
+                 "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
+             (^return
+              (^cast* 'jumpable
+                      (^getreg 0)))))))
+      (rts-init
+       (lambda (ctx)
+         (^setglo 'real-time-milliseconds
+                  (^this-mod-jumpable
+                   (gvm-proc-use ctx "real-time-milliseconds")))))))
+
+    ((start_time)
+     (rts-field
+      'start_time
+      'long
+      (univ-get-time ctx)))
 
     ((str2codes)
      (rts-method
@@ -6344,24 +6433,21 @@ EOF
       return " (^flonum-box obj) ";
   } else if (typeof " obj " === 'function') {
     return function () { return " (^call-prim
-                                   (^rts-method
-                                    (univ-use-rtlib ctx 'scm2js_call))
+                                   (^rts-method-use 'scm2js_call)
                                    obj) "; };
   } else if (typeof " obj " === 'string') {
     return " (^string-box (^str-to-codes obj)) ";
   } else if (typeof " obj " === 'object') {
     if (" obj " instanceof Array) {
-      return " obj ".map(" (^rts-method (univ-use-rtlib ctx 'js2scm)) ");
+      return " obj ".map(" (^rts-method-use 'js2scm) ");
     } else {
       var " alist " = " (^null-obj) ";
       for (var " key " in " obj ") {
         " alist " = " (^cons (^cons (^call-prim
-                                     (^rts-method
-                                      (univ-use-rtlib ctx 'js2scm))
+                                     (^rts-method-use 'js2scm)
                                      key)
                                     (^call-prim
-                                     (^rts-method
-                                      (univ-use-rtlib ctx 'js2scm))
+                                     (^rts-method-use 'js2scm)
                                      (^array-index obj key)))
                                    alist) ";
       }
@@ -6514,130 +6600,126 @@ EOF
         (univ-use-rtlib ctx 'scm2js_call)))
       (univ-make-empty-defs))
 
+    ((globals)
+     (case (target-name (ctx-target ctx))
+
+       ((js)
+        (^ (rts-field
+            'globals
+            'object
+            (^this))
+           "\n"))
+
+       ((php)
+        (^ (rts-field
+            'globals
+            'object
+            (^local-var 'GLOBALS))
+           "\n"))
+
+       ((python)
+        (^ (rts-field
+            'globals
+            'object
+            (^call-prim "locals"))
+           "\n"))
+
+       ((ruby)
+        (^ (rts-field
+            'globals
+            'object
+            "binding")
+           "\n"))
+
+       (else
+        (compiler-internal-error
+         "univ-rtlib-feature globals, unknown target"))))
+
     ((get_host_global_var)
-     (univ-defs-combine
-      (case (target-name (ctx-target ctx))
+     (rts-method
+      'get_host_global_var
+      '(public)
+      'object
+      (list (univ-field 'name 'object))
+      "\n"
+      '()
+      (lambda (ctx)
+        (case (target-name (ctx-target ctx))
 
-        ((js)
-         (^ (rts-field
-             'globals
-             'object
-             (^this))
-            "\n"))
+          ((js php python)
+           (^return (^prop-index (^rts-field-use 'globals)
+                                 (^local-var 'name))))
 
-        ((php)
-         (^ (rts-field
-             'globals
-             'object
-             (^local-var 'GLOBALS))
-            "\n"))
+          ((ruby)
+           #; ;; this code only works on newer versions of ruby
+           (^return (^call-prim (^member (^rts-field-use 'globals)
+           'local_variable_get)
+           (^ (^local-var 'name) ".to_sym")))
 
-        ((python)
-         (^ (rts-field
-             'globals
-             'object
-             (^call-prim "locals"))
-            "\n"))
-
-        ((ruby)
-         (^ (rts-field
-             'globals
-             'object
-             "binding")
-            "\n"))
-
-        (else
-         (compiler-internal-error
-          "univ-rtlib-feature get_host_global_var, unknown target")))
-
-      (rts-method
-       'get_host_global_var
-       '(public)
-       'object
-       (list (univ-field 'name 'object))
-       "\n"
-       '()
-       (lambda (ctx)
-         (case (target-name (ctx-target ctx))
-
-           ((js php python)
-            (^return (^prop-index (^rts-field 'globals)
-                                  (^local-var 'name))))
-
-           ((ruby)
-            #; ;; this code only works on newer versions of ruby
-            (^return (^call-prim (^member (^rts-field 'globals)
-                                          'local_variable_get)
-                                 (^ (^local-var 'name) ".to_sym")))
-
-            ;; this code uses eval but works on all versions of ruby
-            (^return (^call-prim "eval"
-                                 (^+ (^str "$") (^local-var 'name))
-                                 (^rts-field 'globals))))
+           ;; this code uses eval but works on all versions of ruby
+           (^return (^call-prim "eval"
+                                (^+ (^str "$") (^local-var 'name))
+                                (^rts-field-use 'globals))))
 
            (else
             (compiler-internal-error
-             "univ-rtlib-feature get_host_global_var, unknown target")))))))
+             "univ-rtlib-feature get_host_global_var, unknown target"))))))
 
     (else
      (compiler-internal-error
-      "univ-rtlib-feature, unknown runtime library function" feature))))
+      "univ-rtlib-feature, unknown runtime system feature" feature))))
+
+(define (univ-get-time ctx)
+  (case (target-name (ctx-target ctx))
+    ((js)     (^call-prim (^member (^new 'Date) 'getTime)))
+    ((php)    (^call-prim 'microtime (^bool #t)))
+    ((python) (^call-prim (^member 'time 'time)))
+    ((ruby)   (^new 'Time))
+    ((java)   (^call-prim (^member 'System 'currentTimeMillis)))))
 
 (define (univ-rtlib ctx)
 
-  (let ((defs (univ-make-empty-defs))
-        (generated (make-resource-set))
-        (changed? #f))
+  (define (topological-sort graph)
+    (if (null? graph)
+        '()
+        (let* ((nodes-to-remove (independent-nodes graph))
+               (to-remove (map car nodes-to-remove)))
+          (append nodes-to-remove
+                  (topological-sort
+                   (map (lambda (x)
+                          (list (car x)
+                                (diff (cadr x) to-remove)
+                                (caddr x)))
+                        (keep (lambda (x)
+                                (not (memq (car x) to-remove)))
+                              graph)))))))
 
-    (define (need-feature feature)
-      (if (not (resource-set-member? generated feature))
-          (begin
-            (resource-set-add! generated feature)
-            (set! changed? #t)
-            (set! defs
-                  (univ-defs-combine defs
-                                     (univ-rtlib-feature ctx feature))))))
+  (define (independent-nodes graph)
+    (keep (lambda (x) (null? (cadr x))) graph))
 
-    ;;TODO: make inclusion of these features optional
+  (define (diff lst1 lst2)
+    (keep (lambda (x) (not (memq x lst2))) lst1))
 
-    (need-feature 'scmobj)
+  (let ((used (ctx-rtlib-features-used ctx)))
+    (let loop ((feature-defs '()))
+      (let ((feature (resource-set-pop used)))
+        (if feature
 
-    (if (eq? (univ-procedure-representation ctx) 'class)
-        (begin
-          (need-feature 'jumpable)
-          (need-feature 'ctrlpt)
-          (need-feature 'returnpt)
-          (need-feature 'entrypt)
-          (need-feature 'parententrypt)))
+            (let ((new-used (make-resource-set)))
+              (ctx-rtlib-features-used-set! ctx new-used)
+              (let* ((defs
+                       (univ-rtlib-feature ctx feature))
+                     (used-by-feature
+                      (diff
+                       (resource-set-stack (ctx-rtlib-features-used ctx))
+                       (list feature))))
+                (for-each (lambda (f) (resource-set-add! used f))
+                          used-by-feature)
+                (loop (cons (list feature used-by-feature defs)
+                            feature-defs))))
 
-    (need-feature 'heapify_cont)
-    (need-feature 'underflow)
-    (need-feature 'str2codes)
-    (need-feature 'string)
-    (need-feature 'flonum)
-    (need-feature 'pair)
-    (need-feature 'cpxnum)
-    (need-feature 'ratnum)
-    (need-feature 'bignum)
-    (need-feature 'frame)
-    (need-feature 'continuation)
-    (need-feature 'ffi)
-    (need-feature 'structure)
-    (need-feature 'eof)
-
-    (let loop ()
-
-      (set! changed? #f)
-
-      (for-each need-feature
-                (resource-set->list (ctx-rtlib-features-used ctx)))
-
-      (if changed?
-          (loop)))
-
-    (need-feature 'registers)
-
-    defs))
+            (univ-defs-combine-list
+             (map caddr (topological-sort feature-defs))))))))
 
 (define (univ-rtlib-header ctx)
   (case (target-name (ctx-target ctx))
@@ -6731,15 +6813,15 @@ gambit_Pair.prototype.toString = function () {
               (^)
               (^push (^obj '()))) ;; end of continuation marker
 
-          (^assign (^rts-field 'r0)
-                   (^rts-field (univ-use-rtlib ctx 'underflow)))
+          (^assign (^rts-field-use 'r0)
+                   (^rts-field-use 'underflow))
 
-          (^assign (^rts-field 'nargs)
+          (^assign (^rts-field-use 'nargs)
                    (^int 0))
 
           (^expr-statement
            (^call-prim
-            (^rts-method (univ-use-rtlib ctx 'trampoline))
+            (^rts-method-use 'trampoline)
             entry)))))))
 
 ;;;----------------------------------------------------------------------------
@@ -6887,55 +6969,47 @@ gambit_Pair.prototype.toString = function () {
     (else
      (univ-field-name var-descr))))
 
-(define (univ-type-rename ctx type-name)
-  (or (univ-type-alias ctx type-name)
-      type-name))
-
-(define (univ-type-alias ctx type-name)
-
-  (define (prefix name)
-    (^prefix-class name))
-
+(define (univ-rts-type-alias ctx type-name)
   (case type-name
-    ((absent)        (prefix 'Absent))
-    ((bignum)        (prefix 'Bignum))
-    ((boolean)       (prefix 'Boolean))
-    ((box)           (prefix 'Box))
-    ((char)          (prefix 'Char))
-    ((chr)           (prefix 'Chr))
-    ((closure)       (prefix 'Closure))
-    ((continuation)  (prefix 'Continuation))
-    ((cpxnum)        (prefix 'Cpxnum))
-    ((ctrlpt)        (prefix 'ControlPoint))
-    ((entrypt)       (prefix 'EntryPoint))
-    ((eof)           (prefix 'Eof))
-    ((f64vector)     (prefix 'F64Vector))
-    ((fixnum)        (prefix 'Fixnum))
-    ((flonum)        (prefix 'Flonum))
-    ((frame)         (prefix 'Frame))
-    ((jumpable)      (prefix 'Jumpable))
-    ((key)           (prefix 'Key))
-    ((keyword)       (prefix 'Keyword))
-    ((null)          (prefix 'Null))
-    ((optional)      (prefix 'Optional))
-    ((pair)          (prefix 'Pair))
-    ((parententrypt) (prefix 'ParentEntryPoint))
-    ((promise)       (prefix 'Promise))
-    ((ratnum)        (prefix 'Ratnum))
-    ((rest)          (prefix 'Rest))
-    ((returnpt)      (prefix 'ReturnPoint))
-    ((scmobj)        (prefix 'ScmObj))
-    ((string)        (prefix 'String))
-    ((structure)     (prefix 'Structure))
-    ((symbol)        (prefix 'Symbol))
-    ((u16vector)     (prefix 'U16Vector))
-    ((u8vector)      (prefix 'U8Vector))
-    ((unbound)       (prefix 'Unbound))
-    ((values)        (prefix 'Values))
-    ((vector)        (prefix 'Vector))
-    ((void)          (prefix 'Void))
-    ((will)          (prefix 'Will))
-    (else           #f)))
+    ((absent)        'Absent)
+    ((bignum)        'Bignum)
+    ((boolean)       'Boolean)
+    ((box)           'Box)
+    ((char)          'Char)
+    ((chr)           'Chr)
+    ((closure)       'Closure)
+    ((continuation)  'Continuation)
+    ((cpxnum)        'Cpxnum)
+    ((ctrlpt)        'ControlPoint)
+    ((entrypt)       'EntryPoint)
+    ((eof)           'Eof)
+    ((f64vector)     'F64Vector)
+    ((fixnum)        'Fixnum)
+    ((flonum)        'Flonum)
+    ((frame)         'Frame)
+    ((jumpable)      'Jumpable)
+    ((key)           'Key)
+    ((keyword)       'Keyword)
+    ((null)          'Null)
+    ((optional)      'Optional)
+    ((pair)          'Pair)
+    ((parententrypt) 'ParentEntryPoint)
+    ((promise)       'Promise)
+    ((ratnum)        'Ratnum)
+    ((rest)          'Rest)
+    ((returnpt)      'ReturnPoint)
+    ((scmobj)        'ScmObj)
+    ((string)        'ScmString) ;; to avoid clashes with host's String class
+    ((structure)     'Structure)
+    ((symbol)        'Symbol)
+    ((u16vector)     'U16Vector)
+    ((u8vector)      'U8Vector)
+    ((unbound)       'Unbound)
+    ((values)        'Values)
+    ((vector)        'Vector)
+    ((void)          'Void)
+    ((will)          'Will)
+    (else            #f)))
 
 (define (univ-emit-decl ctx type name)
 
@@ -6947,17 +7021,22 @@ gambit_Pair.prototype.toString = function () {
           type-name))
 
     (define (map-type type-name)
-      (let ((x (univ-type-alias ctx type-name)))
+      (let ((x (univ-rts-type-alias ctx type-name)))
+        ;;(pp (list 'xxxxxxxxxxxxxx x))
         (if x
             (begin
               (univ-use-rtlib ctx type-name)
-              (^rts-class x))
+              (if name
+                  (tt"QQQ"(^rts-class-ref type-name))
+                  (tt"RRR"(^rts-class-ref type-name))))
             type-name)))
 
     (case (target-name (ctx-target ctx))
 
       ((js php python ruby)
-       (map-type type))
+       (if name
+           name
+           (map-type type)))
 
       ((java)
        (cond ((and (pair? type) (eq? (car type) 'array))
@@ -7046,7 +7125,7 @@ gambit_Pair.prototype.toString = function () {
     (univ-emit-var-declaration
      ctx
      (univ-field-type f)
-     (^rts-field (univ-field-name f))
+     (^global-var (^prefix (univ-field-name f)))
      (univ-field-init f)))
 
   (define (emit-init i)
@@ -7099,7 +7178,7 @@ gambit_Pair.prototype.toString = function () {
   (if (eq? (univ-procedure-representation ctx) 'class)
 
       (let ((capitalized-root-name
-             (^prefix-class (univ-capitalize root-name))))
+             (tt"BBB"(^prefix-class (univ-capitalize root-name)))))
         (univ-add-field
 
          (univ-add-class
@@ -7107,7 +7186,7 @@ gambit_Pair.prototype.toString = function () {
           (univ-class
            capitalized-root-name ;; root-name
            '() ;; properties
-           jumpable-type ;; extends
+           (and jumpable-type (^rts-class-use jumpable-type)) ;; extends
            '()   ;; class-fields
            attribs ;; instance-fields
            '()     ;; class-methods
@@ -7132,7 +7211,7 @@ gambit_Pair.prototype.toString = function () {
       (univ-add-method
        (univ-make-empty-defs)
        (univ-method
-        root-name
+        (^prefix root-name);;;;;;;;;;;;;;;;;;;;(^mod-method (ctx-module-name ctx) root-name)
         '()
         'jumpable
         params
@@ -7208,19 +7287,22 @@ gambit_Pair.prototype.toString = function () {
          #!optional
          (prim? #f))
   (let* ((prn
-          root-name);;;;;;;(^prefix root-name));;TODO: fix ^prefix
+          root-name)
          (name
           (if prim?
               prn
               (if global?
                   (^global-var prn)
                   (^local-var root-name)))))
+    ;;(pp (list root-name prn));;;;;;;;;;;;;
     (case (target-name (ctx-target ctx))
 
       ((js)
        (^ (univ-emit-fn-decl ctx name result-type params body)
-          "\n"
-          (univ-emit-function-attribs ctx name attribs)))
+          (if (null? attribs)
+              (^)
+              (^ "\n"
+                 (univ-emit-function-attribs ctx name attribs)))))
 
       ((php)
        (let ((decl
@@ -7230,11 +7312,12 @@ gambit_Pair.prototype.toString = function () {
                        prn)
                   result-type
                   params
-                  (^ (if (and (not prim?)
-                              (not (univ-php-version-53? ctx)))
-                         (^)
-                         (univ-emit-function-attribs ctx name attribs))
-                     body))
+                  (and body
+                       (^ (if (and (not prim?)
+                                   (not (univ-php-version-53? ctx)))
+                              (^)
+                              (univ-emit-function-attribs ctx name attribs))
+                          body)))
                  "\n")))
          (cond (prim?
                 decl)
@@ -7261,8 +7344,10 @@ gambit_Pair.prototype.toString = function () {
 
       ((python)
        (^ (univ-emit-fn-decl ctx name result-type params body)
-          "\n"
-          (univ-emit-function-attribs ctx name attribs)))
+          (if (null? attribs)
+              (^)
+              (^ "\n"
+                 (univ-emit-function-attribs ctx name attribs)))))
 
       ((ruby)
        (^ (if prim?
@@ -7314,11 +7399,12 @@ gambit_Pair.prototype.toString = function () {
                     (^ (^local-var (univ-field-name x))
                        (if (univ-field-init x) (^ "=" (^bool #f)) (^))))
                   params))))
-       (^ "function " (or name "") "(" formals ") {"
+       (^ "function " (or name "") "(" formals ")"
           (if body
-              (univ-indent body)
-              "")
-          "}")))
+              (^ " {"
+                 (univ-indent body)
+                 "}")
+              ";"))))
 
     ((python)
      (let ((formals
@@ -7331,7 +7417,7 @@ gambit_Pair.prototype.toString = function () {
        (^ "def " name "(" formals "):"
           (univ-indent
            (or body
-               "pass\n")))))
+               "\npass\n")))))
 
     ((ruby)
      (let ((formals
@@ -7386,37 +7472,43 @@ gambit_Pair.prototype.toString = function () {
   (with-new-resources-used
    ctx
    (lambda (ctx)
-     (let* ((result (gen ctx))
-            (globals (resource-set->list (ctx-globals-used ctx))))
 
-       (define (used? x)
-         (or (resource-set-member? (ctx-resources-used-rd ctx) x)
-             (resource-set-member? (ctx-resources-used-wr ctx) x)))
+     (define (global-decl globals)
+       (^ "global "
+          (univ-separated-list
+           ", "
+           globals)))
 
-       (define (add! x)
-         (set! globals (cons x globals)))
+     (let* ((result
+             (gen ctx))
+            (globals
+             (if (eq? (univ-module-representation ctx) 'class)
+                 '()
+                 (let ((globals
+                        (reverse (resource-set-stack (ctx-globals-used ctx)))))
+#|
+                   ;;TODO: remove
+                   (define (used? x)
+                     (or (resource-set-member? (ctx-resources-used-rd ctx) x)
+                         (resource-set-member? (ctx-resources-used-wr ctx) x)))
 
-       (define (global-decl globals)
-         (if (null? globals)
-             (^)
-             (^ "global "
-                (univ-separated-list
-                 ", "
-                 globals))))
+                   (define (add! x)
+                     (set! globals (cons x globals)))
 
-       (let loop ((num (- univ-nb-gvm-regs 1)))
-         (if (>= num 0)
-             (begin
-               (if (used? num) (add! (gvm-state-reg ctx num)))
-               (loop (- num 1)))))
+                   (let loop ((num (- univ-nb-gvm-regs 1)))
+                     (if (>= num 0)
+                         (begin
+                           (if (used? num) (add! (gvm-state-reg ctx num)))
+                           (loop (- num 1)))))
 
-       (if (used? 'sp)        (add! (gvm-state-sp ctx)))
-       (if (used? 'stack)     (add! (gvm-state-stack ctx)))
-       (if (used? 'prm)       (add! (gvm-state-prm ctx)))
-       (if (used? 'glo)       (add! (gvm-state-glo ctx)))
-       (if (used? 'nargs)     (add! (gvm-state-nargs ctx)))
-       (if (used? 'pollcount) (add! (gvm-state-pollcount ctx)))
-
+                   (if (used? 'sp)        (add! (gvm-state-sp ctx)))
+                   (if (used? 'stack)     (add! (gvm-state-stack ctx)))
+                   (if (used? 'prm)       (add! (gvm-state-prm ctx)))
+                   (if (used? 'glo)       (add! (gvm-state-glo ctx)))
+                   (if (used? 'nargs)     (add! (gvm-state-nargs ctx)))
+                   (if (used? 'pollcount) (add! (gvm-state-pollcount ctx)))
+|#
+                   globals))))
        (cont ctx
              result
              (if (null? globals)
@@ -7447,17 +7539,29 @@ gambit_Pair.prototype.toString = function () {
          (class-classes '())
          (constructor #f)
          (inits '()))
-  (let* ((name root-name) ;; (^prefix-class root-name);;TODO: fix ^prefix
+  (let* ((name (tt"CCC"root-name)) ;; (^prefix-class root-name);;TODO: fix ^prefix
          (abstract? (memq 'abstract properties)))
 
     (define (qualifiers additional-properties decl)
       (let ((all (append additional-properties (univ-decl-properties decl))))
-        (^ (if (memq 'public all) "public " "")
-           (if (memq 'static all) "static " "")
-           (if (and (univ-method? decl) (not (univ-method-body decl)))
-               "abstract "
-               "")
-           (if (memq 'classmethod all) "@classmethod " ""))))
+        (^ (case (target-name (ctx-target ctx))
+             ((python)
+              "")
+             (else
+              (if (memq 'public all) "public " "")))
+           (case (target-name (ctx-target ctx))
+             ((python)
+              "")
+             (else
+              (if (memq 'static all) "static " "")))
+           (case (target-name (ctx-target ctx))
+             ((python)
+              "")
+             (else
+              (if (and (univ-method? decl) (not (univ-method-body decl)))
+                  "abstract "
+                  "")))
+           (if (memq 'classmethod all) "@classmethod\n" ""))))
 
     (define (field-decl type name init)
       (univ-emit-var-declaration ctx type name init))
@@ -7486,12 +7590,15 @@ gambit_Pair.prototype.toString = function () {
                  (univ-method-name method)
                  (univ-method-result-type method)
                  (if (eq? (target-name (ctx-target ctx)) 'python)
-                     (cons (list (^this) #f 'object)
+                     (cons (univ-field (^this) 'object)
                            (univ-method-params method))
                      (univ-method-params method))
                  (univ-method-attribs method)
-                 (univ-method-body method))
-                "\n"))
+                 (univ-method-body method)
+                 #t)
+                (if (eq? (target-name (ctx-target ctx)) 'python)
+                    "" ;; avoid repeated empty lines
+                    "\n")))
            methods))
 
     (define (qualified-class-decls additional-properties classes)
@@ -7606,17 +7713,20 @@ gambit_Pair.prototype.toString = function () {
                    (if constructor (constructor ctx) (^)))
                 (^))))))
 
-      (let ((objname (if obj (^member obj name) name)))
+      (let ((objname name)) ;;(if obj (^member obj name) name)))
+        ;;(pp (list obj name objname))
         (^ (if obj
                (^assign objname (fn-decl #f))
                (^ (fn-decl name)
                   "\n"))
 
            (if extends
+               (begin ;;(pp (list 'extends extends (^type extends)))
                (^ "\n"
                   (^assign (^member objname 'prototype)
                            (^call-prim (^member "Object" 'create)
                                        (^member (^type extends) 'prototype))))
+               )
                (^))
 
            (assign-method-decls (^member objname 'prototype) instance-methods)
@@ -7660,23 +7770,24 @@ gambit_Pair.prototype.toString = function () {
               (constr
                (if (and (not abstract?)
                         (or constructor (not (null? instance-fields))))
-                   (univ-emit-fn-decl
-                    ctx
-                    name
-                    #f
-                    (map (lambda (field)
-                           (univ-field
-                            (univ-field-param ctx (univ-field-name field))
-                            (univ-field-type field)
-                            (univ-field-init field)
-                            (univ-field-properties field)))
-                         (initless instance-fields))
-                    (univ-emit-fn-body
-                     ctx
-                     "\n"
-                     (lambda (ctx)
-                       (^ (assign-field-decls (^this) instance-fields)
-                          (if constructor (constructor ctx) (^))))))
+                   (^ (univ-emit-fn-decl
+                       ctx
+                       name
+                       #f
+                       (map (lambda (field)
+                              (univ-field
+                               (univ-field-param ctx (univ-field-name field))
+                               (univ-field-type field)
+                               (univ-field-init field)
+                               (univ-field-properties field)))
+                            (initless instance-fields))
+                       (univ-emit-fn-body
+                        ctx
+                        "\n"
+                        (lambda (ctx)
+                          (^ (assign-field-decls (^this) instance-fields)
+                             (if constructor (constructor ctx) (^))))))
+                      "\n")
                    '()))
               (c-methods
                (qualified-method-decls
@@ -7687,7 +7798,9 @@ gambit_Pair.prototype.toString = function () {
                 (if abstract? '(abstract) '())
                 instance-methods))
               (all-methods
-               (append constr c-methods i-methods))
+               (append constr
+                       c-methods
+                       i-methods))
               (c-inits
                (gen-inits ctx inits)))
          (^ c-classes
@@ -7695,12 +7808,15 @@ gambit_Pair.prototype.toString = function () {
             (if extends (^ " extends " (^type extends)) "")
             " {"
             (univ-indent
-             (^ (if (and (null? c-classes)
-                         (or abstract?
-                             (null? all-methods)))
+             (^ (if (and (null? all-fields)
+                         (null? all-methods)
+                         (null? c-inits))
                     ""
                     "\n")
                 all-fields
+                (if (null? all-methods)
+                    ""
+                    "\n")
                 all-methods
                 (if (null? c-inits)
                     (^)
@@ -7710,40 +7826,52 @@ gambit_Pair.prototype.toString = function () {
             "}\n")))
 
       ((python)
-       (^ "class " name
-          (if extends (^ "(" (^type extends) ")") "")
-          ":\n"
-          (univ-indent
-           (if (or constructor
-                   (not (null? class-fields))
-                   (not (null? instance-fields))
-                   (not (null? class-methods))
-                   (not (null? instance-methods)))
-               (^ (if (not (null? class-fields))
-                      (^ "\n"
-                         (assign-field-decls #f class-fields))
-                      (^))
-                  (qualified-method-decls '(classmethod) class-methods)
-                  (if (or constructor
-                          (not (null? instance-fields)))
-                      (^ "\n"
-                         (univ-emit-fn-decl
-                          ctx
-                          "__init__"
-                          #f
-                          (cons (list (^this) #f 'object)
-                                (initless instance-fields))
-                          (univ-emit-fn-body
-                           ctx
-                           "\n"
-                           (lambda (ctx)
-                             (if (and (null? instance-fields) (not constructor))
-                                 "pass\n"
-                                 (^ (assign-field-decls (^this) instance-fields)
-                                    (if constructor (constructor ctx) (^))))))))
-                      (^))
-                  (qualified-method-decls '() instance-methods))
-               "pass\n"))))
+       (let* ((c-classes
+               (qualified-class-decls '(static) class-classes))
+              (c-fields
+               (qualified-field-decls '(static) class-fields))
+              (c-methods
+               (qualified-method-decls '(classmethod) class-methods))
+              (i-methods
+               (qualified-method-decls '() instance-methods))
+              (c-inits
+               (gen-inits ctx inits)))
+         (^ "class " name
+            (if extends (^ "(" (^type extends) ")") "")
+            ":\n"
+            (univ-indent
+             (if (and (not abstract?)
+                      (or constructor
+                          (not (null? c-classes))
+                          (not (null? c-fields))
+                          (not (null? c-methods))
+                          (not (null? instance-fields))
+                          (not (null? i-methods))
+                          (not (null? c-inits))))
+                 (^ c-classes
+                    c-fields
+                    c-methods
+                    (if (or constructor
+                            (not (null? instance-fields)))
+                        (^ "\n"
+                           (univ-emit-fn-decl
+                            ctx
+                            "__init__"
+                            #f
+                            (cons (univ-field (^this) 'object)
+                                  (initless instance-fields))
+                            (univ-emit-fn-body
+                             ctx
+                             "\n"
+                             (lambda (ctx)
+                               (if (and (null? instance-fields) (not constructor))
+                                   "pass\n"
+                                   (^ (assign-field-decls (^this) instance-fields)
+                                      (if constructor (constructor ctx) (^))))))))
+                        (^))
+                    i-methods)
+                 "pass\n"))
+            c-inits))) ;; class inits are outside of class definition in case there are self dependencies
 
       ((ruby)
        (^ "class " name
@@ -7881,7 +8009,7 @@ gambit_Pair.prototype.toString = function () {
                (lambda (inc)
                  (^if (^= inc (^int 0))
                       (^return-call-prim
-                       (^rts-method (univ-use-rtlib ctx 'poll))
+                       (^rts-method-use 'poll)
                        expr)
                       (ret))))
 
@@ -7933,8 +8061,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-null-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'null)
-     (^rts-field 'null_obj))
+     (^rts-field-use 'null_obj))
 
     (else
      (^null))))
@@ -7962,8 +8089,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-void-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'void)
-     (^rts-field 'void_obj))
+     (^rts-field-use 'void_obj))
 
     (else
      (^void))))
@@ -7972,8 +8098,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-eof-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'eof)
-     (^rts-field 'eof_obj))
+     (^rts-field-use 'eof_obj))
 
     (else
      (compiler-internal-error
@@ -7983,8 +8108,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-absent-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'absent)
-     (^rts-field 'absent_obj))
+     (^rts-field-use 'absent_obj))
 
     (else
      (compiler-internal-error
@@ -7994,8 +8118,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-unbound-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'unbound)
-     (^rts-field 'unbound1_obj))
+     (^rts-field-use 'unbound1_obj))
 
     (else
      (compiler-internal-error
@@ -8005,8 +8128,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-unbound-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'unbound)
-     (^rts-field 'unbound2_obj))
+     (^rts-field-use 'unbound2_obj))
 
     (else
      (compiler-internal-error
@@ -8026,8 +8148,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-optional-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'optional)
-     (^rts-field 'optional_obj))
+     (^rts-field-use 'optional_obj))
 
     (else
      (compiler-internal-error
@@ -8037,8 +8158,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-key-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'key)
-     (^rts-field 'key_obj))
+     (^rts-field-use 'key_obj))
 
     (else
      (compiler-internal-error
@@ -8048,8 +8168,7 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-rest-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'rest)
-     (^rts-field 'rest_obj))
+     (^rts-field-use 'rest_obj))
 
     (else
      (compiler-internal-error
@@ -8072,9 +8191,8 @@ gambit_Pair.prototype.toString = function () {
   (case (univ-boolean-representation ctx)
 
     ((class)
-     (univ-use-rtlib ctx 'boolean)
      (univ-box
-      (^rts-field (if obj 'true_obj 'false_obj))
+      (^rts-field-use (if obj 'true_obj 'false_obj))
       (^bool obj)))
 
     (else
@@ -8156,7 +8274,7 @@ gambit_Pair.prototype.toString = function () {
     ((class)
      (univ-box
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_interned_char))
+       (^rts-method-use 'make_interned_char)
        expr)
       expr))
 
@@ -8251,7 +8369,7 @@ gambit_Pair.prototype.toString = function () {
     ((class)
      (univ-box
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_fixnum))
+       (^rts-method-use 'make_fixnum)
        expr)
       expr))
 
@@ -8661,6 +8779,7 @@ gambit_Pair.prototype.toString = function () {
      (^ "round(" expr ")"))
 
     ((python)
+     ;; python v2 rounds towards 0
      (^ "round(" expr ")"))
 
     ((ruby)
@@ -8671,31 +8790,42 @@ gambit_Pair.prototype.toString = function () {
       "univ-emit-float-round-half-towards-0, unknown target"))))
 
 (define (univ-emit-float-round-half-to-even ctx expr)
+
+  (define (use-round-half-up)
+    (^- (^float-round-half-up expr)
+        (^parens
+         (^if-expr (^&& (^!= (^float-mod expr (^float targ-inexact-+2))
+                             (^float targ-inexact-+1/2))
+                        (^!= (^float-mod expr (^float targ-inexact-+2))
+                             (^float -1.5))) ;;;;;;;;;;;;;;;;
+                   (^float targ-inexact-+0)
+                   (^float targ-inexact-+1)))))
+
+  (define (use-round-half-towards-0)
+    (^+ (^float-round-half-towards-0 expr)
+        (^- (^parens
+             (^if-expr (^= (^float-mod expr (^float targ-inexact-+2))
+                           (^float (- targ-inexact-+1/2))) ;;;;;;;;;;;;;;;;;
+                       (^float targ-inexact-+1)
+                       (^float targ-inexact-+0)))
+            (^parens
+             (^if-expr (^= (^float-mod expr (^float targ-inexact-+2))
+                           (^float targ-inexact-+1/2))
+                       (^float targ-inexact-+1)
+                       (^float targ-inexact-+0))))))
+
   (case (target-name (ctx-target ctx))
 
     ((js java)
-     (^- (^float-round-half-up expr)
-         (^parens
-          (^if-expr (^&& (^!= (^float-mod expr (^float targ-inexact-+2))
-                              (^float targ-inexact-+1/2))
-                         (^!= (^float-mod expr (^float targ-inexact-+2))
-                              (^float -1.5)));;;;;;;;;;;;;;;;
-                    (^float targ-inexact-+0)
-                    (^float targ-inexact-+1)))))
+     (use-round-half-up))
 
-    ((php python ruby)
-     (^+ (^float-round-half-towards-0 expr)
-         (^- (^parens
-              (^if-expr (^= (^float-mod expr (^float targ-inexact-+2))
-                            (^float (- targ-inexact-+1/2)));;;;;;;;;;;;;;;;;
-                        (^float targ-inexact-+1)
-                        (^float targ-inexact-+0)))
-             (^parens
-              (^if-expr (^= (^float-mod expr (^float targ-inexact-+2))
-                            (^float targ-inexact-+1/2))
-                        (^float targ-inexact-+1)
-                        (^float targ-inexact-+0))))))
+    ((php ruby)
+     (use-round-half-towards-0))
 
+    ((python)
+     (if (univ-python-version-3? ctx)
+         (^ "round(" expr ")")
+         (use-round-half-towards-0)))
     (else
      (compiler-internal-error
       "univ-emit-float-round-half-to-even, unknown target"))))
@@ -9478,7 +9608,7 @@ tanh
 
     ((class)
      (^call-prim
-      (^rts-method (univ-use-rtlib ctx 'str2codes))
+      (^rts-method-use 'str2codes)
       str))
 
     (else
@@ -9660,7 +9790,7 @@ tanh
     ((class)
      (univ-box
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_interned_symbol))
+       (^rts-method-use 'make_interned_symbol)
        name)
       name))
 
@@ -9757,7 +9887,7 @@ tanh
     ((class)
      (univ-box
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_interned_keyword))
+       (^rts-method-use 'make_interned_keyword)
        name)
       name))
 
@@ -10510,7 +10640,7 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ "(" (^rts-field 'inttemp2) " = (" (^rts-field 'inttemp1) " = "
+         (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
             (^fixnum-unbox arg1)
             " + "
             (^fixnum-unbox arg2)
@@ -10518,7 +10648,7 @@ tanh
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^rts-field 'inttemp1) " && " (^fixnum-box (^rts-field 'inttemp2))))
+            ") === " (^rts-field-use 'inttemp1) " && " (^fixnum-box (^rts-field-use 'inttemp2))))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
@@ -10535,7 +10665,7 @@ tanh
          (^and (^parens
                 (^= (^parens
                      (^assign-expr
-                      (^rts-field 'inttemp2)
+                      (^rts-field-use 'inttemp2)
                       (^-
                        (^parens
                         (^bitand
@@ -10543,18 +10673,18 @@ tanh
                           (^+
                            (^parens
                             (^assign-expr
-                             (^rts-field 'inttemp1)
+                             (^rts-field-use 'inttemp1)
                              (^+ (^fixnum-unbox arg1)
                                  (^fixnum-unbox arg2))))
                            univ-fixnum-max+1))
                          univ-fixnum-max*2+1))
                        univ-fixnum-max+1)))
-                    (^rts-field 'inttemp1)))
-               (^fixnum-box (^rts-field 'inttemp2))))
+                    (^rts-field-use 'inttemp1)))
+               (^fixnum-box (^rts-field-use 'inttemp2))))
 
         ((java)
          (^if-expr
-          (^ "(" (^rts-field 'inttemp2) " = (" (^rts-field 'inttemp1) " = "
+          (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
              (^fixnum-unbox arg1)
              " + "
              (^fixnum-unbox arg2)
@@ -10562,8 +10692,8 @@ tanh
              univ-tag-bits
              ">>"
              univ-tag-bits
-             ") == " (^rts-field 'inttemp1))
-          (^fixnum-box (^rts-field 'inttemp2))
+             ") == " (^rts-field-use 'inttemp1))
+          (^fixnum-box (^rts-field-use 'inttemp2))
           (^obj #f)))
 
         (else
@@ -10594,7 +10724,7 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ "(" (^rts-field 'inttemp2) " = (" (^rts-field 'inttemp1) " = "
+         (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
             (^fixnum-unbox arg1)
             " * "
             (^fixnum-unbox arg2)
@@ -10602,7 +10732,7 @@ tanh
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^rts-field 'inttemp1) " && " (^fixnum-box (^rts-field 'inttemp2))))
+            ") === " (^rts-field-use 'inttemp1) " && " (^fixnum-box (^rts-field-use 'inttemp2))))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
@@ -10619,7 +10749,7 @@ tanh
          (^and (^parens
                 (^= (^parens
                      (^assign-expr
-                      (^rts-field 'inttemp2)
+                      (^rts-field-use 'inttemp2)
                       (^-
                        (^parens
                         (^bitand
@@ -10627,18 +10757,18 @@ tanh
                           (^+
                            (^parens
                             (^assign-expr
-                             (^rts-field 'inttemp1)
+                             (^rts-field-use 'inttemp1)
                              (^* (^fixnum-unbox arg1)
                                  (^fixnum-unbox arg2))))
                            univ-fixnum-max+1))
                          univ-fixnum-max*2+1))
                        univ-fixnum-max+1)))
-                    (^rts-field 'inttemp1)))
-               (^fixnum-box (^rts-field 'inttemp2))))
+                    (^rts-field-use 'inttemp1)))
+               (^fixnum-box (^rts-field-use 'inttemp2))))
 
         ((java)
          (^if-expr
-          (^ "(" (^rts-field 'inttemp2) " = (" (^rts-field 'inttemp1) " = "
+          (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
              (^fixnum-unbox arg1)
              " * "
              (^fixnum-unbox arg2)
@@ -10646,8 +10776,8 @@ tanh
              univ-tag-bits
              ">>"
              univ-tag-bits
-             ") == " (^rts-field 'inttemp1))
-          (^fixnum-box (^rts-field 'inttemp2))
+             ") == " (^rts-field-use 'inttemp1))
+          (^fixnum-box (^rts-field-use 'inttemp2))
           (^obj #f)))
 
         (else
@@ -10678,7 +10808,7 @@ tanh
       (case (target-name (ctx-target ctx))
 
         ((js)
-         (^ "(" (^rts-field 'inttemp2) " = (" (^rts-field 'inttemp1) " = "
+         (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
             (if arg2
                 (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                 (^ "- " (^fixnum-unbox arg1)))
@@ -10686,7 +10816,7 @@ tanh
             univ-tag-bits
             ">>"
             univ-tag-bits
-            ") === " (^rts-field 'inttemp1) " && " (^fixnum-box (^rts-field 'inttemp2))))
+            ") === " (^rts-field-use 'inttemp1) " && " (^fixnum-box (^rts-field-use 'inttemp2))))
 
         ((python)
          (^ "(lambda temp1: (lambda temp2: temp1 == temp2 and " (^fixnum-box "temp2") ")(ctypes.c_int32(temp1<<"
@@ -10700,7 +10830,7 @@ tanh
             ")"))
 
         ((ruby)
-         (^ "(" (^rts-field 'inttemp2) " = (((" (^rts-field 'inttemp1) " = "
+         (^ "(" (^rts-field-use 'inttemp2) " = (((" (^rts-field-use 'inttemp1) " = "
             (if arg2
                 (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                 (^ "- " (^fixnum-unbox arg1)))
@@ -10710,10 +10840,10 @@ tanh
             univ-fixnum-max*2+1
             ") - "
             univ-fixnum-max+1
-            ") == " (^rts-field 'inttemp1) " && " (^fixnum-box (^rts-field 'inttemp2))))
+            ") == " (^rts-field-use 'inttemp1) " && " (^fixnum-box (^rts-field-use 'inttemp2))))
 
         ((php)
-         (^ "((" (^rts-field 'inttemp2) " = (((" (^rts-field 'inttemp1) " = "
+         (^ "((" (^rts-field-use 'inttemp2) " = (((" (^rts-field-use 'inttemp1) " = "
             (if arg2
                 (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                 (^ "- " (^fixnum-unbox arg1)))
@@ -10723,11 +10853,11 @@ tanh
             univ-fixnum-max*2+1
             ") - "
             univ-fixnum-max+1
-            ") === " (^rts-field 'inttemp1) ") ? " (^fixnum-box (^rts-field 'inttemp2)) " : false"))
+            ") === " (^rts-field-use 'inttemp1) ") ? " (^fixnum-box (^rts-field-use 'inttemp2)) " : false"))
 
         ((java)
          (^if-expr
-          (^ "(" (^rts-field 'inttemp2) " = (" (^rts-field 'inttemp1) " = "
+          (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
              (if arg2
                  (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
                  (^ "- " (^fixnum-unbox arg1)))
@@ -10735,8 +10865,8 @@ tanh
              univ-tag-bits
              ">>"
              univ-tag-bits
-             ") == " (^rts-field 'inttemp1))
-          (^fixnum-box (^rts-field 'inttemp2))
+             ") == " (^rts-field-use 'inttemp1))
+          (^fixnum-box (^rts-field-use 'inttemp2))
           (^obj #f)))
 
         (else
@@ -10903,27 +11033,27 @@ tanh
 (univ-define-prim "##fxarithmetic-shift?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^rts-field 'inttemp1)
+     (^ (^assign (^rts-field-use 'inttemp1)
                  (^<< (^fixnum-unbox arg1)
                       (^fixnum-unbox arg2)))
         (return
          (^if-expr (case (target-name (ctx-target ctx))
                     ((js)
-                     (^= (^>> (^>> (^<< (^rts-field 'inttemp1) univ-tag-bits)
+                     (^= (^>> (^>> (^<< (^rts-field-use 'inttemp1) univ-tag-bits)
                                    univ-tag-bits)
                               (^fixnum-unbox arg2))
                          (^fixnum-unbox arg1)))
                     ((php python ruby)
                      (let ((sign-bit (- (- univ-word-bits univ-tag-bits)
                                         1)))
-                        (^= (^rts-field 'inttemp1)
+                        (^= (^rts-field-use 'inttemp1)
                             (^-
                              (^parens
-                               (^bitand (^parens (^+ (^rts-field 'inttemp1)
+                               (^bitand (^parens (^+ (^rts-field-use 'inttemp1)
                                                      (expt 2 sign-bit)))
                                         (- (expt 2 (+ 1 sign-bit)) 1)))
                              (expt 2 sign-bit))))))
-                   (^fixnum-box (^rts-field 'inttemp1))
+                   (^fixnum-box (^rts-field-use 'inttemp1))
                    (^obj #f)))))))
 
 (univ-define-prim "##fxwraparithmetic-shift-left" #f
@@ -10958,27 +11088,27 @@ tanh
 (univ-define-prim "##fxarithmetic-shift-left?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^rts-field 'inttemp1)
+     (^ (^assign (^rts-field-use 'inttemp1)
                  (^<< (^fixnum-unbox arg1)
                       (^fixnum-unbox arg2)))
         (return
          (^if-expr (case (target-name (ctx-target ctx))
                     ((js java)
-                     (^= (^>> (^>> (^<< (^rts-field 'inttemp1) univ-tag-bits)
+                     (^= (^>> (^>> (^<< (^rts-field-use 'inttemp1) univ-tag-bits)
                                    univ-tag-bits)
                               (^fixnum-unbox arg2))
                          (^fixnum-unbox arg1)))
                     ((php python ruby)
                      (let ((sign-bit (- (- univ-word-bits univ-tag-bits)
                                         1)))
-                        (^= (^rts-field 'inttemp1)
+                        (^= (^rts-field-use 'inttemp1)
                             (^-
                              (^parens
-                               (^bitand (^parens (^+ (^rts-field 'inttemp1)
+                               (^bitand (^parens (^+ (^rts-field-use 'inttemp1)
                                                      (expt 2 sign-bit)))
                                         (- (expt 2 (+ 1 sign-bit)) 1)))
                              (expt 2 sign-bit))))))
-                   (^fixnum-box (^rts-field 'inttemp1))
+                   (^fixnum-box (^rts-field-use 'inttemp1))
                    (^obj #f)))))))
 
 (univ-define-prim "##fxarithmetic-shift-right" #f
@@ -11539,7 +11669,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_values))
+       (^rts-method-use 'make_values)
        (^fixnum-unbox arg1)
        (if arg2
            arg2
@@ -11576,7 +11706,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_vector))
+       (^rts-method-use 'make_vector)
        (^fixnum-unbox arg1)
        (if arg2
            arg2
@@ -11628,7 +11758,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_u8vector))
+       (^rts-method-use 'make_u8vector)
        (^fixnum-unbox arg1)
        (^cast* 'u8
                (if arg2
@@ -11682,7 +11812,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_u16vector))
+       (^rts-method-use 'make_u16vector)
        (^fixnum-unbox arg1)
        (^cast* 'u16
                (if arg2
@@ -11736,7 +11866,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_f64vector))
+       (^rts-method-use 'make_f64vector)
        (^fixnum-unbox arg1)
        (if arg2
            (^flonum-unbox arg2)
@@ -11784,7 +11914,7 @@ tanh
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_string))
+       (^rts-method-use 'make_string)
        (^fixnum-unbox arg1)
        (if arg2
            (^char-unbox arg2)
@@ -12041,7 +12171,7 @@ tanh
    (lambda (ctx return arg1 arg2)
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_closure))
+       (^rts-method-use 'make_closure)
        arg1
        (^fixnum-unbox arg2))))))
 
@@ -12074,7 +12204,7 @@ tanh
    (lambda (ctx return arg1 arg2)
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_subprocedure))
+       (^rts-method-use 'make_subprocedure)
        (^cast* 'parententrypt arg1)
        (^fixnum-unbox arg2))))))
 
@@ -12089,27 +12219,27 @@ tanh
       (lambda (result)
         (return (^fixnum-box result)))))))
 
-(define (univ-subproc-reference-type ctx)
+(define (univ-ctrlpt-reference-type ctx)
   (if (and (eq? (target-name (ctx-target ctx)) 'php)
            (eq? (univ-procedure-representation ctx) 'host))
       'str
       'ctrlpt))
 
-(define (univ-subproc-reference ctx lbl-num)
+(define (univ-ctrlpt-reference ctx lbl-num)
   (let ((lbl (make-lbl lbl-num)))
-    (if (eq? (univ-subproc-reference-type ctx) 'str)
-        (^str (^prefix (gvm-lbl-use-field ctx lbl)))
+    (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
+        (^str (^prefix (gvm-lbl-use-aux ctx lbl)))
         (gvm-lbl-use ctx lbl))))
 
 (define (univ-prm-name ctx name)
-  (if (eq? (univ-subproc-reference-type ctx) 'str)
+  (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
       (^str name)
       (^obj (string->symbol name))))
 
-(define (univ-subproc-reference-to-subproc ctx ref)
-  (if (eq? (univ-subproc-reference-type ctx) 'str)
+(define (univ-ctrlpt-reference-to-ctrlpt ctx ref)
+  (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'get_host_global_var))
+       (^rts-method-use 'get_host_global_var)
        ref)
       ref))
 
@@ -12128,7 +12258,7 @@ tanh
      (return
       (^if-expr (^eq? result (^null))
                 (^cast* 'ctrlpt arg1)
-                (univ-subproc-reference-to-subproc ctx result))))))
+                (univ-ctrlpt-reference-to-ctrlpt ctx result))))))
 
 (univ-define-prim "##subprocedure-nb-parameters" #f
   (make-translated-operand-generator
@@ -12162,10 +12292,10 @@ tanh
          ctx
          result
          'parententrypt
-         'prm_name
+         (univ-proc-name-attrib ctx)
          (lambda (result)
            (return
-            (if (eq? (univ-subproc-reference-type ctx) 'str)
+            (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
                 (^symbol-box result)
                 result)))))
       arg1))))
@@ -12221,7 +12351,7 @@ tanh
 (univ-define-prim "##current-thread" #t
   (make-translated-operand-generator
    (lambda (ctx return)
-     (return (^rts-field 'current_thread)))))
+     (return (^rts-field-use 'current_thread)))))
 
 ;;TODO: ("##run-queue"                    (0)   #f ()    0    #f      extended)
 
@@ -12273,7 +12403,7 @@ tanh
    (lambda (ctx return cont)
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'continuation_next))
+       (^rts-method-use 'continuation_next)
        (^cast* 'continuation cont))))))
 
 (univ-define-prim "##continuation-ret" #t
@@ -12329,7 +12459,7 @@ tanh
    (lambda (ctx return ra)
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_frame))
+       (^rts-method-use 'make_frame)
        ra)))))
 
 (univ-define-prim "##frame-ret" #t
@@ -12467,7 +12597,7 @@ tanh
    (lambda (ctx return arg1)
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'make_glo_var))
+       (^rts-method-use 'make_glo_var)
        (^cast* 'symbol
                arg1))))))
 
@@ -12532,16 +12662,16 @@ tanh
 (univ-define-prim "##bignum.adigit-inc!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^rts-field 'inttemp1)
+     (^ (^assign (^rts-field-use 'inttemp1)
                  (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2)))
         (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
-                         (^bitand (^parens (^+ (^rts-field 'inttemp1) (^int 1)))
+                         (^bitand (^parens (^+ (^rts-field-use 'inttemp1) (^int 1)))
                                   (^int 16383))))
         (return
-         (^if-expr (^= (^rts-field 'inttemp1)
+         (^if-expr (^= (^rts-field-use 'inttemp1)
                        (^int 16383))
                    (^obj 1)
                    (^obj 0)))))))
@@ -12549,16 +12679,16 @@ tanh
 (univ-define-prim "##bignum.adigit-dec!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^rts-field 'inttemp1)
+     (^ (^assign (^rts-field-use 'inttemp1)
                  (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2)))
         (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
-                         (^bitand (^parens (^- (^rts-field 'inttemp1) (^int 1)))
+                         (^bitand (^parens (^- (^rts-field-use 'inttemp1) (^int 1)))
                                   (^int 16383))))
         (return
-         (^if-expr (^= (^rts-field 'inttemp1)
+         (^if-expr (^= (^rts-field-use 'inttemp1)
                        (^int 0))
                    (^obj 1)
                    (^obj 0)))))))
@@ -12566,11 +12696,11 @@ tanh
 (univ-define-prim "##bignum.adigit-add!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5)
-     (^ (^assign (^rts-field 'inttemp1)
+     (^ (^assign (^rts-field-use 'inttemp1)
                  (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2)))
-        (^assign (^rts-field 'inttemp2)
-                 (^bitand (^parens (^+ (^+ (^rts-field 'inttemp1)
+        (^assign (^rts-field-use 'inttemp2)
+                 (^bitand (^parens (^+ (^+ (^rts-field-use 'inttemp1)
                                            (^array-index (^bignum-digits arg3)
                                                          (^fixnum-unbox arg4)))
                                        (^fixnum-unbox arg5)))
@@ -12578,21 +12708,21 @@ tanh
         (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
-                         (^rts-field 'inttemp2)))
+                         (^rts-field-use 'inttemp2)))
         (return
-         (^if-expr (^< (^rts-field 'inttemp2)
-                       (^+ (^rts-field 'inttemp1) (^fixnum-unbox arg5)))
+         (^if-expr (^< (^rts-field-use 'inttemp2)
+                       (^+ (^rts-field-use 'inttemp1) (^fixnum-unbox arg5)))
                    (^obj 1)
                    (^obj 0)))))))
 
 (univ-define-prim "##bignum.adigit-sub!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5)
-     (^ (^assign (^rts-field 'inttemp1)
+     (^ (^assign (^rts-field-use 'inttemp1)
                  (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2)))
-        (^assign (^rts-field 'inttemp2)
-                 (^bitand (^parens (^- (^- (^rts-field 'inttemp1)
+        (^assign (^rts-field-use 'inttemp2)
+                 (^bitand (^parens (^- (^- (^rts-field-use 'inttemp1)
                                            (^array-index (^bignum-digits arg3)
                                                          (^fixnum-unbox arg4)))
                                        (^fixnum-unbox arg5)))
@@ -12600,10 +12730,10 @@ tanh
         (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
-                         (^rts-field 'inttemp2)))
+                         (^rts-field-use 'inttemp2)))
         (return
-         (^if-expr (^> (^rts-field 'inttemp2)
-                       (^- (^rts-field 'inttemp1) (^fixnum-unbox arg5)))
+         (^if-expr (^> (^rts-field-use 'inttemp2)
+                       (^- (^rts-field-use 'inttemp1) (^fixnum-unbox arg5)))
                    (^obj 1)
                    (^obj 0)))))))
 
@@ -12632,7 +12762,7 @@ tanh
 (univ-define-prim "##bignum.mdigit-mul!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6)
-     (^ (^assign (^rts-field 'inttemp1)
+     (^ (^assign (^rts-field-use 'inttemp1)
                  (^+ (^+ (^array-index (^bignum-digits arg1)
                                        (^fixnum-unbox arg2))
                          (^* (^array-index (^bignum-digits arg3)
@@ -12642,15 +12772,15 @@ tanh
         (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
-                         (^bitand (^rts-field 'inttemp1)
+                         (^bitand (^rts-field-use 'inttemp1)
                                   (^int 16383))))
         (return
-         (^fixnum-box (^>> (^rts-field 'inttemp1) (^int 14))))))))
+         (^fixnum-box (^>> (^rts-field-use 'inttemp1) (^int 14))))))))
 
 (univ-define-prim "##bignum.mdigit-div!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6)
-     (^ (^assign (^rts-field 'inttemp1)
+     (^ (^assign (^rts-field-use 'inttemp1)
                  (^+ (^- (^array-index (^bignum-digits arg1)
                                        (^fixnum-unbox arg2))
                          (^* (^array-index (^bignum-digits arg3)
@@ -12660,15 +12790,15 @@ tanh
         (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
-                         (^bitand (^rts-field 'inttemp1)
+                         (^bitand (^rts-field-use 'inttemp1)
                                   (^int 16383))))
-        (^assign (^rts-field 'inttemp1)
-                 (^>> (^rts-field 'inttemp1) (^int 14)))
+        (^assign (^rts-field-use 'inttemp1)
+                 (^>> (^rts-field-use 'inttemp1) (^int 14)))
         (return
          (^fixnum-box
-          (^if-expr (^> (^rts-field 'inttemp1) (^int 0))
-                    (^- (^rts-field 'inttemp1) (^int 16384))
-                    (^rts-field 'inttemp1))))))))
+          (^if-expr (^> (^rts-field-use 'inttemp1) (^int 0))
+                    (^- (^rts-field-use 'inttemp1) (^int 16384))
+                    (^rts-field-use 'inttemp1))))))))
 
 (univ-define-prim "##bignum.mdigit-quotient" #f
   (make-translated-operand-generator
@@ -12759,7 +12889,7 @@ tanh
    (lambda (ctx return arg1 arg2 arg3)
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'bignum_make))
+       (^rts-method-use 'bignum_make)
        (^fixnum-unbox arg1)
        arg2
        (^boolean-unbox arg3))))))
@@ -12769,7 +12899,7 @@ tanh
    (lambda (ctx return arg1)
      (return
       (^call-prim
-       (^rts-method (univ-use-rtlib ctx 'int2bignum))
+       (^rts-method-use 'int2bignum)
        (^fixnum-unbox arg1))))))
 
 (univ-define-prim "##bignum.adigit-shrink!" #f
@@ -12974,7 +13104,7 @@ tanh
                  (string->symbol
                   (string-append name (number->string nb-args)))))
             (^return-poll
-             (^rts-field (univ-use-rtlib ctx rtlib-name))
+             (^rts-field-use rtlib-name)
              poll?
              #t))))))
 
