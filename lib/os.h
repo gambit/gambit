@@ -104,7 +104,10 @@
 #endif
 
 #ifdef HAVE_MKDIR
+#ifndef USE_WIN32
+/* avoid mkdir on Windows as it has a different API */
 #define USE_mkdir
+#endif
 #endif
 
 #ifdef HAVE_OPENDIR
