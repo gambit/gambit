@@ -31,10 +31,6 @@
 
 /* Determine if we are using POSIX or WIN32.  */
 
-#ifdef ___OS_WIN32
-#define USE_WIN32
-#endif
-
 #ifdef HAVE_WAITPID
 
 /*
@@ -43,18 +39,27 @@
 
 #define USE_POSIX
 
-#endif
+#else
 
-#ifndef USE_WIN32
-#ifndef USE_POSIX
+#ifdef ___OS_WIN32
 
 /*
- * If this is not a WIN32 or POSIX system, the OS is generic.
+ * ___OS_WIN32 is set by gambit.h when the C compiler defines _WIN32,
+ * a good indication that this is a WIN32 system.
+ */
+
+#define USE_WIN32
+
+#else
+
+/*
+ * If this is not a POSIX or WIN32 system, the OS is generic.
  */
 
 #define USE_GENERIC_OS
 
 #endif
+
 #endif
 
 /*---------------------------------------------------------------------------*/
