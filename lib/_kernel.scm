@@ -3589,21 +3589,23 @@ end-of-code
 (define-prim (##structure-type-set! obj type)
   (##vector-set! obj 0 type))
 
-(define-prim (##make-structure len)
+(define-prim (##make-structure type len)
   (let ((s (##make-vector len)))
     (##subtype-set! s (macro-subtype-structure))
+    (##vector-set! s 0 type)
     s))
+
+(define-prim (##structure-length obj)
+  (##vector-length obj))
 
 (define-prim (##structure type . fields)
 
   (define (make-struct fields i)
     (if (##pair? fields)
-      (let ((s (make-struct (##cdr fields) (##fx+ i 1))))
-        (##unchecked-structure-set! s (##car fields) i type #f)
-        s)
-      (let ((s (##make-structure i)))
-        (##unchecked-structure-set! s type 0 type #f)
-        s)))
+        (let ((s (make-struct (##cdr fields) (##fx+ i 1))))
+          (##unchecked-structure-set! s (##car fields) i type #f)
+          s)
+        (##make-structure type i)))
 
   (make-struct fields 1))
 

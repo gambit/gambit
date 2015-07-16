@@ -2,7 +2,6 @@
 
 (define (serdes1 obj)
   (let ((ser (object->u8vector obj)))
-    (write ser)(newline)
     (let ((des (u8vector->object ser)))
       des)))
 
