@@ -6379,6 +6379,22 @@ EOF
          (^local-var 'leng)
          (^local-var 'init)))))
 
+    ((make_structure)
+     (rts-method
+      'make_structure
+      '(public)
+      'scmobj
+      (list (univ-field 'type 'scmobj)
+            (univ-field 'leng 'int))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         'scmobj
+         (lambda (result) (^return (^structure-box result)))
+         (^local-var 'leng)
+         (^local-var 'type)))))
+
     ((make_glo_var)
      (rts-method
       'make_glo_var
@@ -12042,6 +12058,21 @@ tanh
    (lambda (ctx return arg1 arg2)
      (^ (^structure-set! arg1 0 arg2)
         (return arg1)))))
+
+(univ-define-prim "##make-structure" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^call-prim
+       (^rts-method-use 'make_structure)
+       arg1
+       (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##structure-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return
+      (^fixnum-box (^array-length (^structure-unbox arg1)))))))
 
 (univ-define-prim "##structure" #t
   (make-translated-operand-generator

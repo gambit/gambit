@@ -903,6 +903,7 @@
 ("##structure-type-set!"              (2)   #t ()    0    (#f)    extended)
 ("##structure"                        1     #f ()    0    (#f)    extended)
 ("##make-structure"                   (2)   #f ()    0    (#f)    extended)
+("##structure-length"                 (1)   #f ()    0    fixnum  extended)
 ("##structure-ref"                    (4)   #f ()    0    (#f)    extended)
 ("##structure-set!"                   (5)   #t ()    0    (#f)    extended)
 ("##direct-structure-ref"             (4)   #f ()    0    (#f)    extended)
