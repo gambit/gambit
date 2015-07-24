@@ -891,17 +891,71 @@
 (define-macro (^return expr)
   `(univ-emit-return ctx ,expr))
 
+
+
+(define-macro (^map fn array)
+  `(univ-emit-map ctx ,fn ,array))
+
+(define-macro (^call-with-arg-array fn vals)
+  `(univ-emit-call-with-arg-array ctx ,fn ,vals))
+
+;;
+;; Host vs Scheme type correspondance
+;;
+;; ==============================
+;; | Host	| Scheme	|
+;; ==============================
+;; | void	| void-obj	|
+;; | null	| null-obj	|
+;; | bool	| boolean	|
+;; | int	| fixnum	|
+;; | float	| flonum	|
+;; | str	| string	|
+;; | array      |               |
+;; | object     |               |
+;; |            | list          |
+;; | proc	| procedure	|
+;; ==============================
+;;
+
 (define-macro (^null)
   `(univ-emit-null ctx))
+
+(define-macro (^null? expr)
+  `(univ-emit-null? ctx ,expr))
 
 (define-macro (^null-obj)
   `(univ-emit-null-obj ctx))
 
+(define-macro (^null-obj? expr)
+  `(univ-emit-null-obj? ctx ,expr))
+
 (define-macro (^void)
   `(univ-emit-void ctx))
 
+(define-macro (^void? expr)
+  `(univ-emit-void? ctx ,expr))
+
 (define-macro (^void-obj)
   `(univ-emit-void-obj ctx))
+
+(define-macro (^void-obj? expr)
+  `(univ-emit-void-obj? ctx ,expr))
+
+(define-macro (^str->string expr)
+  `(univ-emit-str->string ctx ,expr))
+
+(define-macro (^string->str expr)
+  `(univ-emit-string->str ctx ,expr))
+
+(define-macro (^str? expr)
+  `(univ-emit-str? ctx ,expr))
+
+(define-macro (^float? expr)
+  `(univ-emit-float? ctx ,expr))
+
+(define-macro (^int? expr)
+  `(univ-emit-int? ctx ,expr))
 
 (define-macro (^eof)
   `(univ-emit-eof ctx))
@@ -929,6 +983,9 @@
 
 (define-macro (^bool val)
   `(univ-emit-bool ctx ,val))
+
+(define-macro (^bool? val)
+  `(univ-emit-bool? ctx ,val))
 
 (define-macro (^boolean-obj obj)
   `(univ-emit-boolean-obj ctx ,obj))
@@ -1332,6 +1389,9 @@
 (define-macro (^continuation? val)
   `(univ-emit-continuation? ctx ,val))
 
+(define-macro (^function? val)
+  `(univ-emit-function? ctx ,val))
+
 (define-macro (^procedure? val)
   `(univ-emit-procedure? ctx ,val))
 
@@ -1396,6 +1456,44 @@
   (popcount arg
             (^assign arg (^bitand arg (^int univ-fixnum-max*2+1)))
             1))
+
+(define (univ-emit-map ctx fn array)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ array ".map( " fn " )"))
+
+    ((php)
+     (^ "array_map( '" fn "', " array ")"))
+
+    ((python)
+     (^ "map( "fn ", " array " )"))
+
+    ((ruby)
+     (^ array ".map { |x| " fn "(x) } " ))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-map, unknown target"))))
+ 
+(define (univ-emit-call-with-arg-array ctx fn array)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ fn ".apply( null, " array " )"))
+
+    ((php)
+     (^ "call_user_func_array( " fn ", " array " )"))
+
+    ((python)
+     (^ fn "( *" array " )"))
+
+    ((ruby)
+     (^ fn ".( *" array " )"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-call-with-arg-array, unknown target"))))
 
 (define (univ-emit-var-declaration ctx type name #!optional (init #f))
   (case (target-name (ctx-target ctx))
@@ -5541,7 +5639,7 @@ EOF
      (rts-method
       'make_frame
       '(public)
-      'frm
+      'frame
       (list (univ-field 'ra 'returnpt))
       "\n"
       '()
@@ -6423,6 +6521,351 @@ EOF
     ((apply5)
      (apply-procedure 5))
 
+    ((host_function2scm)
+     (rts-method
+      'host_function2scm
+      '(public)
+      'object
+      (list (univ-field 'obj 'object))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((obj (^local-var "obj"))
+             (host_function_closure (^local-var "host_function_closure")))
+        (^ 
+            (^prim-function-declaration
+            "host_function_closure"
+            'object
+            '() 
+            "\n"
+            '()
+            (^return-call-prim 
+              (^rts-method (univ-use-rtlib ctx 'scm2host_call))
+              obj))
+           (^return host_function_closure))))))
+
+    ((host2scm)
+     (rts-method
+      'host2scm
+      '(public)
+      'scmobj
+      (list (univ-field 'obj 'object))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((obj (^local-var 'obj))
+              (alist (^local-var 'alist))
+              (key (^local-var 'key)))
+          (^
+           (if (eq? (target-name (ctx-target ctx)) 'js)
+               (^if (^void? obj)
+                    (^return (^void-obj)))
+               (^))
+
+           (^if (^null? obj)
+                (if (and (eq? (univ-void-representation ctx) 'host)
+                         ; Javascript has a native "void" in "undefined".
+                         (not (eq? (target-name (ctx-target ctx)) 'js)))
+                    (^return (^void-obj))
+                    (^return (^null-obj))))
+
+           (^if (^bool? obj)
+                (^return (^boolean-box obj)))
+
+           (case (target-name (ctx-target ctx))
+            ((js)
+             (^if (^typeof "number" obj)
+                  (^if (^and (^eq? (^parens (^bitior obj 0)) obj)
+                             (^and (^>= obj -536870912)
+                                   (^<= obj 536870911)))
+                       (^return (^fixnum-box obj))
+                       (^return (^flonum-box obj)))))
+            (else
+             (^ (^if (^and (^int? obj)
+                           (^and (^>= obj -536870912)
+                                 (^<= obj 536870911)))
+                     (^return (^fixnum-box obj)))
+                (^if (^float? obj)
+                     (^return (^flonum-box obj))))))
+
+           (^if (^float? obj)
+                (^return (^flonum-box obj)))
+
+           (case (target-name (ctx-target ctx))
+            ((php)
+             (^ ))
+            (else
+             (^if (^function? obj)
+                  (^return-call-prim 
+                   (^rts-method (univ-use-rtlib ctx 'host_function2scm))
+                   obj))))
+
+           (^if (^str? obj)
+                (^return (^string-box (^str-to-codes obj))))
+
+           ; TODO: generalise for python, java, ruby and php
+           (^if (^typeof "object" obj)
+                (^if (^instanceof "Array" obj)
+                     (^return (^map (^rts-method (univ-use-rtlib ctx 'js2scm)) obj))
+                     (^
+                       (^var-declaration '() alist (^null-obj))
+                       "for (var " key " in " obj ") {\n"
+                           (^assign alist (^cons (^cons (^call-prim
+                                                        (^rts-method (univ-use-rtlib ctx 'js2scm))
+                                                        key)
+                                                       (^call-prim
+                                                        (^rts-method (univ-use-rtlib ctx 'js2scm))
+                                                        (^array-index obj key)))
+                                                alist))
+                       "}\n"                       
+                       (^return alist))))
+            ;; Handle scheme objects represented as classes.
+#;
+           (case (univ-void-representation ctx)
+            ((host) (^))
+            ((class)
+             (^if (^void? obj)
+                  (^return obj))))
+#;
+           (case (univ-null-representation ctx)
+            ((host) (^))
+            ((class)
+             (^if (^null? obj)
+               (^return obj))))
+#;
+           (case (univ-boolean-representation ctx)
+            ((host) (^))
+            ((class)
+             (^if (^boolean? obj)
+                  (^return obj))))
+#;
+           (case (univ-string-representation ctx)
+            ((host) (^))
+            ((class)
+             (^if (^string? obj)
+                  (^return obj))))
+#;
+           (case (univ-fixnum-representation ctx)
+            ((host) (^))
+            ((class)
+             (^if (^fixnum? obj)
+                  (^return obj))))
+#;
+           (case (univ-flonum-representation ctx)
+            ((host) (^))
+            ((class)
+             (^if (^flonum? obj)
+                  (^return obj))))
+#;
+           (case (univ-procedure-representation ctx)
+            ((host) (^))
+            ((class)
+             (^if (^procedure? obj)
+               (^return obj))))
+
+           (univ-throw ctx "\"Gambit_host2scm error\""))))))
+
+    ((host2scm_call)
+     (rts-method
+      'host2scm_call
+      '(public)
+      'object
+      (list (univ-field 'proc 'scmobj)
+            (univ-field 'args 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((args (^local-var "args"))
+             (i (^local-var "i"))
+             (proc (^local-var "proc")))
+         (^ 
+            (^assign (gvm-state-sp-use ctx 'wr) -1)
+            (^push (^null-obj))
+            (^assign (^getnargs) (^array-length args))
+            (^assign i 0)
+            (^while (^< i (^getnargs))
+              (^ (^push
+                   (^call-prim (^rts-method (univ-use-rtlib ctx 'host2scm))
+                               (^array-index args i)))
+                 (^inc-by i 1)))
+            (univ-pop-args-to-regs ctx 0)
+            (^assign (^getreg 0) (^rts-method (univ-use-rtlib ctx 'underflow)))
+            (^expr-statement
+              (^call-prim (^rts-method (univ-use-rtlib ctx 'trampoline))
+                          proc))
+            (^return-call-prim (^rts-method(univ-use-rtlib ctx 'scm2host))
+                               (^getreg 1)))))))
+
+    ((scm_procedure2host)
+     (rts-method
+      'scm_procedure2host
+      '(public)
+      'object
+      (list (univ-field 'obj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((obj (^local-var "obj"))
+             (arguments  (^local-var "arguments"))
+             (scm_procedure (^local-var "scm_procedure")))
+         (^
+          (^prim-function-declaration
+           "scm_procedure"                              ;name
+           'object
+           (case (target-name (ctx-target ctx))         ;argument
+            ((js php) '())
+            ((python ruby) `(("*arguments" . #f))))
+           "\n"                                         ;header
+           (^)                                          ;attribs
+           (^ (case (target-name (ctx-target ctx))      ;body
+               ((php)
+                (^var-declaration '() arguments (^call-prim "func_get_args")))
+               (else ""))
+              (^return 
+               (^call-prim (^rts-method (univ-use-rtlib ctx 'host2scm_call))
+                           obj
+                           arguments))))
+            (^return scm_procedure))))))
+
+    ((scm2host)
+     (rts-method
+      'scm2host
+      '(public)
+      'object
+      (list (univ-field 'obj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((obj (^local-var "obj")))
+         (^
+          (^if (^void? obj)
+            (case (univ-void-representation ctx)
+             ((host) (^return obj))
+             ((class)
+              (^return (case (target-name (ctx-target ctx))
+                        ((js) (^void))
+                        (else (^null)))))))
+
+          (^if (^null? obj)
+               (case (univ-null-representation ctx)
+                ((host) (^return obj))
+                ((class)
+                 (^return (case (target-name (ctx-target ctx))
+                           ((js) (^null))
+                           (else obj)))))) 
+ 
+          (^if (^boolean? obj)
+               (^return (^boolean-unbox obj)))
+
+          (^if (^fixnum? obj)
+               (^return (^fixnum-unbox obj)))
+
+          (^if (^flonum? obj)
+               (^return (^flonum-unbox obj)))
+
+          (^if (^string? obj)
+               (case (univ-string-representation ctx)
+                ((class)
+                 (^return (^tostr obj)))
+                ((host)
+                 (^return obj))))
+
+          ; TODO: generalise for python, ruby, php and java
+          (^if (^instanceof "Array" obj)
+               (^return (^map (^rts-method (univ-use-rtlib ctx 'scm2host)) obj)))
+          
+          ; TODO: generalise for python, ruby, php and java
+          (^if (^pair? obj)
+               (let ((jsobj (^local-var "jsobj"))
+                     (i (^local-var "i"))
+                     (elem (^local-var "elem")))
+
+                 (^
+                   (^var-declaration '() jsobj "{}")
+                   (^var-declaration 'int i (^int 0))
+                   (^while (^pair? obj)
+                     (^ (^var-declaration '() elem (^getcar obj))
+                        (^if (^pair? elem)
+                             (^assign
+                               (^array-index
+                                obj
+                                (^call-prim
+                                 (^rts-method (univ-use-rtlib ctx 'scm2host))
+                                 (^getcar elem)))
+                               (^call-prim
+                                (^rts-method (univ-use-rtlib ctx 'scm2host))
+                                (^getcdr elem)))
+                             (^assign
+                               (^array-index obj i)
+                               (^call-prim
+                                (^rts-method (univ-use-rtlib ctx 'scm2host))
+                                elem)))
+                        (^inc-by i 1)
+                        (^assign obj (^getcdr obj))))
+                   (^return jsobj))))
+
+           (^if (^structure? obj)
+                (univ-throw ctx "\"Gambit.scm2js error (cannot convert Structure)\""))
+
+          (case (target-name (ctx-target ctx))
+           ((php) (^))
+           (else
+            (^if (^procedure? obj)
+                 (^return-call-prim
+                   (^rts-method (univ-use-rtlib ctx 'scm_procedure2host))
+                   obj))))
+
+          (univ-throw ctx "\"Gambit_scm2host error\""))))))
+
+    ((scm2host_call)
+     (rts-method
+      'scm2host_call
+      '(public)
+      'jumpable
+      (list (univ-field 'fn 'object))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((args (^local-var "args"))
+             (ra (^local-var "ra"))
+             (frame (^local-var "frame"))
+             (tmp (^local-var "tmp"))
+             (fn (^local-var "fn")))
+         (^
+          (univ-push-args ctx)
+          (^var-declaration '()
+                            args
+                            (^subarray
+                               (gvm-state-stack-use ctx 'rd)
+                               (^- (^+ (gvm-state-sp-use ctx 'rd) 1)
+                                       (^getnargs))
+                               (^getnargs)))
+          (^inc-by (gvm-state-sp-use ctx 'rdwr) (^- (^getnargs)))
+          (^var-declaration '()
+                            ra
+                            (^call-prim
+                             (^rts-method (univ-use-rtlib ctx 'heapify_cont))
+                             (^getreg 0)))
+          (^var-declaration '()
+                            frame
+                            (^array-index (gvm-state-stack-use ctx 'rd) 0))
+          (^var-declaration '()
+                            tmp
+                            (^map (^rts-method (univ-use-rtlib ctx  
+                                                               'scm2host))
+                                  args))
+          (^assign tmp (^call-with-arg-array fn tmp))
+          (^assign (^getreg 1)
+                   (^call-prim (^rts-method (univ-use-rtlib ctx 'host2scm))
+                               tmp))
+          (^assign (gvm-state-sp-use ctx 'wr) -1)
+          (^inc-by (gvm-state-sp-use ctx 'rdwr)
+                   1
+                   (lambda (x)
+                     (^assign (^array-index (gvm-state-stack-use ctx 'wr) x)
+                              frame)))
+          (^return ra))))))
+
     ((js2scm)
      (rts-method
       'js2scm
@@ -6610,6 +7053,12 @@ EOF
      ((ffi)
       (case (target-name (ctx-target ctx))
        ((js)
+        (univ-use-rtlib ctx 'host_function2scm)
+        (univ-use-rtlib ctx 'host2scm)
+        (univ-use-rtlib ctx 'host2scm_call)
+        (univ-use-rtlib ctx 'scm2host)
+        (univ-use-rtlib ctx 'scm_procedure2host)
+        (univ-use-rtlib ctx 'scm2host_call)
         (univ-use-rtlib ctx 'js2scm)
         (univ-use-rtlib ctx 'scm2js)
         (univ-use-rtlib ctx 'js2scm_call)
@@ -8073,6 +8522,9 @@ gambit_Pair.prototype.toString = function () {
      (compiler-internal-error
       "univ-emit-null-ref, unknown target"))))
 
+(define (univ-emit-null? ctx expr)
+  (^eq? expr (^null)))
+
 (define (univ-emit-null-obj ctx)
   (case (univ-null-representation ctx)
 
@@ -8081,6 +8533,25 @@ gambit_Pair.prototype.toString = function () {
 
     (else
      (^null))))
+
+(define (univ-emit-null-obj? ctx expr)
+  (case (univ-null-representation ctx)
+
+    ((class)
+     (case (target-name (ctx-target ctx))
+
+      ((js)
+       (^instanceof (^null) expr))
+
+      ((python ruby php)
+       (^eq? expr (^null)))
+
+      (else
+       (compiler-internal-error
+        "univ-emit-null-obj?, unknown target"))))
+
+    (else
+     (^null? expr))))
 
 (define (univ-emit-void ctx)
   (case (target-name (ctx-target ctx))
@@ -8101,6 +8572,9 @@ gambit_Pair.prototype.toString = function () {
      (compiler-internal-error
       "univ-emit-void, unknown target"))))
 
+(define (univ-emit-void? ctx expr)
+  (^eq? expr (^void)))
+
 (define (univ-emit-void-obj ctx)
   (case (univ-void-representation ctx)
 
@@ -8109,6 +8583,96 @@ gambit_Pair.prototype.toString = function () {
 
     (else
      (^void))))
+
+(define (univ-emit-void-obj? ctx expr)
+  (case (univ-void-representation ctx)
+
+    ((class)
+     (case (target-name (ctx-target ctx))
+
+      ((js)
+       (^instanceof (^void) expr))
+
+      ((python ruby php)
+       (^eq? expr (^void)))
+
+      (else
+       (compiler-internal-error
+        "univ-emit-void?, unknown target"))))
+
+    (else
+     (^null? expr))))
+
+(define (univ-emit-str->string ctx expr)
+  (^string-box (^str-to-codes expr)))
+
+
+(define (univ-emit-string->str ctx expr)
+  (case (univ-string-representation ctx)
+
+    ((class)
+     (^tostr  expr))
+
+    ((host)
+     expr)))
+
+(define (univ-emit-str? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^typeof "string" expr))
+
+    ((php)
+     (^call-prim "is_string" expr))
+
+    ((python)
+     (^instanceof "str" expr))
+
+    ((ruby)
+     (^instanceof "String" expr))
+
+    (else
+     (compiler-internal-error
+       "univ-emit-str?, unknown target"))))
+
+(define (univ-emit-float? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^typeof "number" expr))
+
+    ((php)
+     (^ "is_float(" expr ")"))
+
+    ((python)
+     (^ "isinstance(" expr ", float)"))
+
+    ((ruby)
+     (^ expr ".instance_of?(Float)"))
+
+    (else
+     (compiler-internal-error
+       "univ-emit-float?, unknown target"))))
+
+(define (univ-emit-int? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+   ((js)
+    (^typeof "number" expr))
+
+   ((php)
+    (^call-prim "is_int" expr))
+
+   ((python)
+    (^and (^instanceof "int" expr)
+          (^not (^instanceof "bool" expr))))
+          
+   ((ruby)
+    (^instanceof "Fixnum" expr))
+
+   (else
+    (compiler-internal-error
+     "univ-emit-int?, unknown target"))))
 
 (define (univ-emit-eof ctx)
   (case (univ-eof-representation ctx)
@@ -8203,6 +8767,26 @@ gambit_Pair.prototype.toString = function () {
      (compiler-internal-error
       "univ-emit-bool, unknown target"))))
 
+(define (univ-emit-bool? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+   ((js)
+    (^typeof "boolean" expr))
+
+   ((php)
+    (^call-prim "is_bool" expr))
+
+   ((python)
+    (^instanceof "bool" expr))
+
+   ((ruby)
+    (^or (^instanceof "FalseClass" expr)
+         (^instanceof "TrueClass" expr)))
+
+   (else
+    (compiler-internal-error
+     "univ-emit-bool?, unknown target"))))
+
 (define (univ-emit-boolean-obj ctx obj)
   (case (univ-boolean-representation ctx)
 
@@ -8244,24 +8828,7 @@ gambit_Pair.prototype.toString = function () {
      (^instanceof (^type 'boolean) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^typeof "boolean" expr))
-
-       ((php)
-        (^call-prim "is_bool" expr))
-
-       ((python)
-        (^instanceof "bool" expr))
-
-       ((ruby)
-        (^or (^instanceof "FalseClass" expr)
-             (^instanceof "TrueClass" expr)))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-boolean?, unknown target"))))))
+     (^bool? expr))))
 
 (define (univ-emit-chr ctx val)
   (univ-constant (char->integer val)))
@@ -8409,24 +8976,7 @@ gambit_Pair.prototype.toString = function () {
      (^instanceof (^type 'fixnum) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^typeof "number" expr))
-
-       ((php)
-        (^call-prim "is_int" expr))
-
-       ((python)
-        (^and (^instanceof "int" expr)
-              (^not (^instanceof "bool" expr))))
-
-       ((ruby)
-        (^instanceof "Fixnum" expr))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-fixnum?, unknown target"))))))
+     (^int? expr))))
 
 (define (univ-emit-dict ctx alist)
 
@@ -9243,23 +9793,7 @@ tanh
      (^instanceof (^type 'flonum) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^typeof "number" expr))
-
-       ((php)
-        (^ "is_float(" expr ")"))
-
-       ((python)
-        (^ "isinstance(" expr ", float)"))
-
-       ((ruby)
-        (^ expr ".instance_of?(Float)"))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-flonum?, unknown target"))))))
+     (^float? expr))))
 
 (define (univ-emit-cpxnum-make ctx expr1 expr2)
   (^new (^type 'cpxnum) expr1 expr2))
@@ -9715,23 +10249,8 @@ tanh
      (^instanceof (^type 'string) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
+     (^str? expr))))
 
-       ((js)
-        (^typeof "string" expr))
-
-       ((php)
-        (^call-prim "is_string" expr))
-
-       ((python)
-        (^instanceof "str" expr))
-
-       ((ruby)
-        (^instanceof "String" expr))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-string?, unknown target"))))))
 
 (define (univ-emit-string-length ctx expr)
   (case (univ-string-representation ctx)
@@ -10000,6 +10519,24 @@ tanh
 (define (univ-emit-continuation? ctx expr)
   (^instanceof (^type 'continuation) (^cast*-scmobj expr)))
 
+(define (univ-emit-function? ctx expr)
+  (case (target-name (ctx-target ctx))
+   ((js)
+    (^typeof "function" expr))
+
+   ((php)
+    (^call-prim "is_callable" expr))
+
+   ((python)
+    (^ "hasattr(" expr ", '__call__')"))
+
+   ((ruby)
+    (^instanceof "Proc" expr))
+
+   (else
+    (compiler-internal-error
+       "univ-emit-function?, unknown target"))))
+
 (define (univ-emit-procedure? ctx expr)
   (case (univ-procedure-representation ctx)
 
@@ -10008,23 +10545,7 @@ tanh
      (^instanceof (^type 'jumpable) (^cast*-scmobj expr)))
 
     (else
-     (case (target-name (ctx-target ctx))
-
-       ((js)
-        (^typeof "function" expr))
-
-       ((php)
-        (^call-prim "is_callable" expr))
-
-       ((python)
-        (^ "hasattr(" expr ", '__call__')"))
-
-       ((ruby)
-        (^instanceof "Proc" expr))
-
-       (else
-        (compiler-internal-error
-         "univ-emit-procedure?, unknown target"))))))
+     (^function? expr))))
 
 (define (univ-emit-return? ctx expr)
   (case (univ-procedure-representation ctx)
@@ -11672,7 +12193,7 @@ tanh
 (univ-define-prim "##set-box!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^setbox arg1 arg2)
+     (^ (^setbox (^cast* 'box arg1) arg2)
         (return arg1)))))
 
 (univ-define-prim "##values" #t
@@ -12104,93 +12625,100 @@ tanh
 ;;TODO: ("##type-super"                   (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-fields"                  (1)   #f ()    0    #f      extended)
 
-;; TODO: test ##symbol->string primitive and ##string->symbol primitive
-
 (univ-define-prim "##symbol->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^str-to-codes (^symbol-unbox arg1)))))))
+     (return (^str->string (^symbol-unbox arg1))))))
 
 (univ-define-prim "##string->symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^symbol-box (^tostr arg1))))))
+     (return (^symbol-box (^string->str arg1))))))
 
 (univ-define-prim "##make-uninterned-symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^symbol-box-uninterned name hash)))))
+     (return (^symbol-box-uninterned (^string->str name) hash)))))
 
 (univ-define-prim "##symbol-name" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'name)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return
+       (^string-box
+         (^str-to-codes (^member (^cast* 'symbol sym) 'name)))))))
 
 (univ-define-prim "##symbol-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym name)
-     (^ (^assign (^member sym 'name) name)
+     (^ (^assign (^member (^cast* 'symbol sym) 'name)
+                 (^string->str name))
         (return sym)))))
 
 (univ-define-prim "##symbol-hash" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'hash)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return (^member (^cast* 'symbol sym) 'hash)))))
 
 (univ-define-prim "##symbol-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym hash)
-     (^ (^assign (^member sym 'hash) hash)
+     (^ (^assign (^member (^cast* 'symbol sym) 'hash) hash)
         (return sym)))))
 
 (univ-define-prim "##symbol-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'interned)))));;;;FIXME for host representation
-
-;; TODO: test ##keyword->string primitive and ##string->keyword primitive
+     (return (^member (^cast* 'symbol sym) 'interned)))));;;;FIXME for host representation
 
 (univ-define-prim "##keyword->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^str-to-codes (^keyword-unbox arg1)))))))
+     (return (^str->string (^keyword-unbox arg1))))))
 
 (univ-define-prim "##string->keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^keyword-box (^tostr arg1))))))
+     (return (^keyword-box (^string->str arg1))))))
 
 (univ-define-prim "##make-uninterned-keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^keyword-box-uninterned name hash)))))
+     (return (^keyword-box-uninterned (^string->str name) hash)))))
 
 (univ-define-prim "##keyword-name" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'name)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return
+       (^string-box
+         (^str-to-codes (^member (^cast* 'keyword key) 'name)))))))
 
 (univ-define-prim "##keyword-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key name)
-     (^ (^assign (^member key 'name) name)
+     (^ (^assign (^member (^cast* 'keyword key) 'name)
+                 (^string->str name))
         (return key)))))
 
 (univ-define-prim "##keyword-hash" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'hash)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return (^member (^cast* 'keyword key) 'hash)))))
 
 (univ-define-prim "##keyword-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key hash)
-     (^ (^assign (^member key 'hash) hash)
+     (^ (^assign (^member (^cast* 'keyword key) 'hash) hash)
         (return key)))))
 
 (univ-define-prim "##keyword-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'interned)))));;;;FIXME for host representation
+     (return (^member (^cast* 'keyword key) 'interned)))));;;;FIXME for host representation
+
 
 ;;TODO: ("##closure-length"               (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
@@ -12353,24 +12881,25 @@ tanh
 (univ-define-prim "##promise-thunk" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'thunk)))))
+     (return (^member (^cast* 'promise sym) 'thunk)))))
 
 (univ-define-prim "##promise-thunk-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym thunk)
-     (^ (^assign (^member sym 'thunk) thunk)
+     (^ (^assign (^member (^cast* 'promise sym) 'thunk) thunk)
         (return sym)))))
 
 (univ-define-prim "##promise-result" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'result)))))
+     (return (^member (^cast* 'promise sym) 'result)))))
 
 (univ-define-prim "##promise-result-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym result)
-     (^ (^assign (^member sym 'result) result)
+     (^ (^assign (^member (^cast* 'promise sym) 'result) result)
         (return sym)))))
+
 
 ;;TODO: ("##force"                        (1)   #t 0     0    #f      extended)
 
@@ -12440,7 +12969,7 @@ tanh
 (univ-define-prim "##continuation-ret" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (univ-frame-ra ctx (^member cont 'frame))))))
+     (return (univ-frame-ra ctx (^member (^cast* 'continuation cont) 'frame))))))
 
 (define (univ-get-cont-ra-field attrib)
   (make-translated-operand-generator
@@ -12448,7 +12977,7 @@ tanh
      (univ-get-ra-field
       ctx
       return
-      (univ-frame-ra ctx (^member cont 'frame))
+      (univ-frame-ra ctx (^member (^cast* 'continuation cont) 'frame))
       attrib))))
 
 (univ-define-prim "##continuation-fs"   #f (univ-get-cont-ra-field 'fs))
@@ -12460,7 +12989,7 @@ tanh
      (return
       (univ-frame-ref
        ctx
-       (^frame-unbox (^member cont 'frame))
+       (^frame-unbox (^member (^cast* 'continuation cont) 'frame))
        (^fixnum-unbox index))))))
 
 (univ-define-prim "##continuation-set!" #t
@@ -12468,7 +12997,7 @@ tanh
    (lambda (ctx return cont index val)
      (^ (univ-frame-set!
          ctx
-         (^frame-unbox (^member cont 'frame))
+         (^frame-unbox (^member (^cast* 'continuation cont) 'frame))
          (^fixnum-unbox index)
          val)
         (return cont)))))
@@ -12478,7 +13007,7 @@ tanh
    (lambda (ctx return cont index)
      (return
       (^boolean-box
-       (univ-frame-slot-live? ctx (^member cont 'frame) index))))))
+       (univ-frame-slot-live? ctx (^member (^cast* 'continuation cont) 'frame) index))))))
 
 (univ-define-prim-bool "##frame?" #t
   (make-translated-operand-generator
@@ -12489,9 +13018,9 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return ra)
      (return
-      (^call-prim
-       (^rts-method-use 'make_frame)
-       ra)))))
+       (^call-prim
+         (^rts-method-use 'make_frame)
+         (^cast* 'returnpt ra))))))
 
 (univ-define-prim "##frame-ret" #t
   (make-translated-operand-generator
@@ -12499,7 +13028,7 @@ tanh
      (return (univ-frame-ra ctx frame)))))
 
 (define (univ-frame-ra ctx frame)
-  (^array-index (^frame-unbox frame) 0))
+  (^cast* 'returnpt (^array-index (^frame-unbox frame) 0)))
 
 (define (univ-get-frame-ra-field attrib)
   (make-translated-operand-generator
@@ -12587,23 +13116,23 @@ tanh
 (univ-define-prim "##will-testator" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member will 'testator)))))
+     (return (^member (^cast* 'will will) 'testator)))))
 
 (univ-define-prim "##will-testator-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will testator)
-     (^ (^assign (^member will 'testator) testator)
+     (^ (^assign (^member (^cast* 'will will) 'testator) testator)
         (return will)))))
 
 (univ-define-prim "##will-action" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member will 'action)))))
+     (return (^member (^cast* 'will will) 'action)))))
 
 (univ-define-prim "##will-action-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will action)
-     (^ (^assign (^member will 'action) action)
+     (^ (^assign (^member (^cast* 'will will) 'action) action)
         (return will)))))
 
 (univ-define-prim "##apply" #f

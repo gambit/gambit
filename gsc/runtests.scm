@@ -16,6 +16,15 @@
 (define nb-total 0)
 (define start 0)
 
+(define (pad str width char)
+  (if (< width (string-length str))
+      (substring str 0 width)
+      (let loop ((n (- width (string-length str)))
+                 (str str))
+         (if (= n 0)
+             str
+             (loop (- n 1) (string-append str char))))))
+
 (define (num->string num w d) ; w = total width, d = decimals
   (let ((n (floor (inexact->exact (round (* (abs num) (expt 10 d)))))))
     (let ((i (quotient n (expt 10 d)))
@@ -32,15 +41,16 @@
           (let ((blanks (- w (+ lsi lsf))))
             (string-append (make-string (max blanks 0) #\space) si sf)))))))
 
-(define (show-bar nb-good nb-fail nb-other nb-total elapsed)
+(define (show-bar test-name nb-good nb-fail nb-other nb-total elapsed)
 
   (define (ratio n)
     (quotient (* n (+ nb-good nb-fail nb-other)) nb-total))
 
-  (let* ((bar-width 42)
+  (let* ((bar-width 26)
          (bar-length (ratio bar-width)))
     (print "\r"
-           "["
+           (pad test-name 22 " ")
+           " ["
            "\33[32;1m" (num->string nb-good 4 0) "\33[0m"
            "|"
            "\33[31;1m" (num->string nb-fail 4 0) "\33[0m"
@@ -101,7 +111,8 @@
         (set! nb-fail (+ nb-fail 1))
         (set! nb-good (+ nb-good 1)))
 
-    (show-bar nb-good
+    (show-bar (substring file 6 (string-length file))
+              nb-good
               nb-fail
               nb-other
               nb-total
