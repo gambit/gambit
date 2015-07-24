@@ -12881,24 +12881,25 @@ tanh
 (univ-define-prim "##promise-thunk" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'thunk)))))
+     (return (^member (^cast* 'promise sym) 'thunk)))))
 
 (univ-define-prim "##promise-thunk-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym thunk)
-     (^ (^assign (^member sym 'thunk) thunk)
+     (^ (^assign (^member (^cast* 'promise sym) 'thunk) thunk)
         (return sym)))))
 
 (univ-define-prim "##promise-result" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'result)))))
+     (return (^member (^cast* 'promise sym) 'result)))))
 
 (univ-define-prim "##promise-result-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym result)
-     (^ (^assign (^member sym 'result) result)
+     (^ (^assign (^member (^cast* 'promise sym) 'result) result)
         (return sym)))))
+
 
 ;;TODO: ("##force"                        (1)   #t 0     0    #f      extended)
 
