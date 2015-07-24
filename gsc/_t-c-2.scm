@@ -3217,6 +3217,8 @@
 (targ-op "##not"              (targ-ifjump-simp-s #f "FALSEP"))
 (targ-op "##boolean?"         (targ-ifjump-simp-s #f "BOOLEANP"))
 (targ-op "##null?"            (targ-ifjump-simp-s #f "NULLP"))
+(targ-op "##false-or-null?"   (targ-ifjump-simp-s #f "FALSEORNULLP"))
+(targ-op "##false-or-void?"   (targ-ifjump-simp-s #f "FALSEORVOIDP"))
 (targ-op "##unbound?"         (targ-ifjump-simp-s #f "UNBOUNDP"))
 (targ-op "##eq?"              (targ-ifjump-simp-s #f "EQP"))
 (targ-op "##eof-object?"      (targ-ifjump-simp-s #f "EOFP"))

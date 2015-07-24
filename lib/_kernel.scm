@@ -3589,21 +3589,23 @@ end-of-code
 (define-prim (##structure-type-set! obj type)
   (##vector-set! obj 0 type))
 
-(define-prim (##make-structure len)
+(define-prim (##make-structure type len)
   (let ((s (##make-vector len)))
     (##subtype-set! s (macro-subtype-structure))
+    (##vector-set! s 0 type)
     s))
+
+(define-prim (##structure-length obj)
+  (##vector-length obj))
 
 (define-prim (##structure type . fields)
 
   (define (make-struct fields i)
     (if (##pair? fields)
-      (let ((s (make-struct (##cdr fields) (##fx+ i 1))))
-        (##unchecked-structure-set! s (##car fields) i type #f)
-        s)
-      (let ((s (##make-structure i)))
-        (##unchecked-structure-set! s type 0 type #f)
-        s)))
+        (let ((s (make-struct (##cdr fields) (##fx+ i 1))))
+          (##unchecked-structure-set! s (##car fields) i type #f)
+          s)
+        (##make-structure type i)))
 
   (make-struct fields 1))
 
@@ -3932,6 +3934,9 @@ end-of-code
 (define ##err-code-EINTR
   (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EINTR));"))
 
+(define ##err-code-unimplemented
+  (##c-code "___RESULT = ___FIX(___UNIMPL_ERR);"))
+
 (define ##max-char
   (##c-code "___RESULT = ___FIX(___MAX_CHR);"))
 
@@ -4161,8 +4166,7 @@ end-of-code
    "___os_environ"))
 
 (define-prim ##os-shell-command
-  (c-lambda (scheme-object
-             scheme-object)
+  (c-lambda (scheme-object)
             scheme-object
    "___os_shell_command"))
 

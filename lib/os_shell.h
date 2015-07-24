@@ -1,6 +1,6 @@
-/* File: "os_shell.h", Time-stamp: <2009-03-14 09:15:04 feeley> */
+/* File: "os_shell.h" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SHELL_H
 #define ___OS_SHELL_H
@@ -95,8 +95,7 @@ extern ___SCMOBJ ___os_environ ___PVOID;
 
 
 extern ___SCMOBJ ___os_shell_command
-   ___P((___SCMOBJ cmd,
-         ___SCMOBJ dir),
+   ___P((___SCMOBJ cmd),
         ());
 
 

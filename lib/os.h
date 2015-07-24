@@ -31,10 +31,6 @@
 
 /* Determine if we are using POSIX or WIN32.  */
 
-#ifdef ___OS_WIN32
-#define USE_WIN32
-#endif
-
 #ifdef HAVE_WAITPID
 
 /*
@@ -43,18 +39,27 @@
 
 #define USE_POSIX
 
-#endif
+#else
 
-#ifndef USE_WIN32
-#ifndef USE_POSIX
+#ifdef ___OS_WIN32
 
 /*
- * If this is not a WIN32 or POSIX system, the OS is generic.
+ * ___OS_WIN32 is set by gambit.h when the C compiler defines _WIN32,
+ * a good indication that this is a WIN32 system.
+ */
+
+#define USE_WIN32
+
+#else
+
+/*
+ * If this is not a POSIX or WIN32 system, the OS is generic.
  */
 
 #define USE_GENERIC_OS
 
 #endif
+
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -74,6 +79,14 @@
  * The following basic features are used if they are available.
  */
 
+#ifdef HAVE_ENVIRON
+#define USE_environ
+#else
+#ifdef HAVE__NSGETENVIRON
+#define USE_environ
+#endif
+#endif
+
 #ifdef HAVE_GETENV
 #define USE_getenv
 #endif
@@ -86,6 +99,45 @@
 #define USE_unsetenv
 #endif
 
+#ifndef USE_WIN32
+
+/* avoid using these functions in favour of the Windows equivalents */
+
+#ifdef HAVE_REMOVE
+#define USE_remove_dir
+#define USE_remove_file
+#endif
+
+#ifdef HAVE_RENAME
+#define USE_rename
+#endif
+
+#ifdef HAVE_MKDIR
+#define USE_mkdir
+#endif
+
+#ifdef HAVE_OPENDIR
+#define USE_opendir
+#endif
+
+#if defined(HAVE_STAT64) && defined(HAVE_STRUCT_STAT64) && !(defined(__MACOSX__) || (defined(__APPLE__) && defined(__MACH__)))
+#define USE_stat
+#define ___struct_stat struct stat64
+#define ___stat stat64
+#define ___lstat lstat64
+#define ___fstat fstat64
+#else
+#ifdef HAVE_STAT
+#define USE_stat
+#define ___struct_stat struct stat
+#define ___stat stat
+#define ___lstat lstat
+#define ___fstat fstat
+#endif
+#endif
+
+#endif
+
 
 /* Operating-system specific features we require */
 
@@ -94,14 +146,6 @@
 #define USE_open
 
 /* Select features based on availability */
-
-#ifdef HAVE_ENVIRON
-#define USE_environ
-#else
-#ifdef HAVE__NSGETENVIRON
-#define USE_environ
-#endif
-#endif
 
 #ifdef HAVE_PIPE
 #define USE_pipe
@@ -143,20 +187,8 @@
 #define USE_link
 #endif
 
-#ifdef HAVE_MKDIR
-#define USE_mkdir
-#endif
-
 #ifdef HAVE_MKFIFO
 #define USE_mkfifo
-#endif
-
-#ifdef HAVE_OPENDIR
-#define USE_opendir
-#endif
-
-#ifdef HAVE_RENAME
-#define USE_rename
 #endif
 
 #ifdef HAVE_RMDIR
@@ -166,22 +198,6 @@
 #ifdef HAVE_SOCKET
 #define USE_socket
 #define USE_NETWORKING
-#endif
-
-#if defined(HAVE_STAT64) && defined(HAVE_STRUCT_STAT64) && !(defined(__MACOSX__) || (defined(__APPLE__) && defined(__MACH__)))
-#define USE_stat
-#define ___struct_stat struct stat64
-#define ___stat stat64
-#define ___lstat lstat64
-#define ___fstat fstat64
-#else
-#ifdef HAVE_STAT
-#define USE_stat
-#define ___struct_stat struct stat
-#define ___stat stat
-#define ___lstat lstat
-#define ___fstat fstat
-#endif
 #endif
 
 #define USE_NONBLOCKING_FILE_IO

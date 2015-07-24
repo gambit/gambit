@@ -8060,9 +8060,18 @@
         (##open-predefined (macro-direction-inout) '(console) -4)))
 
 (define-prim (##force-output-on-predefined)
-  (let ((port ##stdout-port)) (and port (##force-output port)))
-  (let ((port ##stderr-port)) (and port (##force-output port)))
-  (let ((port ##console-port)) (and port (##force-output port))))
+
+  (define (force-output-on-port port)
+    (and port
+         ;; ignore exceptions which might lead to an infinite loop
+         (##with-exception-catcher
+          (lambda (e) #f)
+          (lambda ()
+            (##force-output port)))))
+
+  (force-output-on-port ##stdout-port)
+  (force-output-on-port ##stderr-port)
+  (force-output-on-port ##console-port))
 
 (##add-exit-job! ##force-output-on-predefined)
 

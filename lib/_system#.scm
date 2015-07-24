@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_system#.scm", Time-stamp: <2007-05-27 22:03:58 feeley>
+;;; File: "_system#.scm"
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -80,6 +80,20 @@
   (block        unprintable:)
   (block-pos    unprintable:)
   (bit-pos      unprintable:)
+)
+
+;;;----------------------------------------------------------------------------
+
+;;; Partially initialized structures.
+
+(define-type partially-initialized-structure
+  id: cd85663e-b289-472c-b943-a41768e2f8a3
+  type-exhibitor: macro-type-partially-initialized-structure
+  constructor: macro-make-partially-initialized-structure
+  implementer: implement-type-partially-initialized-structure
+  opaque:
+  macros:
+  prefix: macro-
 )
 
 ;;;============================================================================

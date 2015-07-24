@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsilib.c", produced by Gambit-C v4.7.6
+; File: "_gsilib.c", produced by Gambit-C v4.7.7
 (
-407006
+407007
 " _gsilib"
 ((" _gsilib"))
 (
@@ -19,7 +19,7 @@
  ()
 )
 #else
-#define ___VERSION 407006
+#define ___VERSION 407007
 #define ___MODULE_NAME " _gsilib"
 #define ___LINKER_ID ____20___gsilib
 #define ___MH_PROC ___H__20___gsilib

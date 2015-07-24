@@ -1208,13 +1208,11 @@ A(write-char #\A '#<output-port #7 (stdout)>) => #!void
 (file-type "newdir2") => directory
 (file-type "newdir2/bbb") => regular
 ;;; No such file or directory: (file-type "notexist")
-(file-size "error.scm") => 65891
-(file-size "newdir2/bbb") => 65891
+(file-size "error.scm") => 65850
+(file-size "newdir2/bbb") => 65850
 ;;; No such file or directory: (file-size "notexist")
 ;;; #<os-exception #10>: (delete-directory "newdir2")
 (delete-file "newdir2/aaa") => #!void
 (delete-file "newdir2/bbb") => #!void
 ;;; No such file or directory: (delete-file "newdir2/ccc")
 (delete-directory "newdir2") => #!void
-(open-process '(path: "sort" arguments: ("input") eol-encoding: cr-lf)) => #<input-output-port #11 (process "sort" "input")>
-(read-all-open-process) => (brown dog fox jumps lazy over quick the the)

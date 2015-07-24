@@ -4,7 +4,7 @@
 
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(Gambit-C,v4.7.6,gambit@iro.umontreal.ca,gambc-v4_7_6)
+AC_INIT(Gambit-C,v4.7.7,gambit@iro.umontreal.ca,gambc-v4_7_7)
 
 AC_CONFIG_HEADERS(include/config.h)
 
@@ -899,6 +899,92 @@ AC_CHECK_HEADERS(time.h)
 # Default path separator
 PATH_SEP="/"
 
+# Shell environment checks
+
+AC_DEFUN([AC_CHECK_ENVIRON],
+[AC_CACHE_CHECK([for environ], ac_cv_environ,
+[
+  AC_TRY_COMPILE([
+    #ifdef __cplusplus
+    extern "C" {
+    #endif
+    extern char **environ;
+    #ifdef __cplusplus
+    }
+    #endif
+    ],[char *arg0 = *environ;],
+  ac_cv_environ=yes,
+  ac_cv_environ=no)
+])
+  if test $ac_cv_environ = yes; then
+    AC_DEFINE([HAVE_ENVIRON],[],[Defined when environ is available])
+  fi
+])
+
+AC_DEFUN([AC_CHECK__NSGETENVIRON],
+[AC_CACHE_CHECK([for _NSGetEnviron], ac_cv__NSGetEnviron,
+[
+  AC_CHECK_HEADERS(crt_externs.h)
+  AC_TRY_COMPILE([
+    #ifdef HAVE_CRT_EXTERNS_H
+    #include <crt_externs.h>
+    #endif
+    ],[char *arg0 = *(*_NSGetEnviron());],
+  ac_cv__NSGetEnviron=yes,
+  ac_cv__NSGetEnviron=no)
+])
+  if test $ac_cv__NSGetEnviron = yes; then
+    AC_DEFINE([HAVE__NSGETENVIRON],[],[Defined when _NSGetEnviron is available])
+  fi
+])
+
+AC_DEFUN([AC_CHECK_REMOVE],
+[
+  AC_CHECK_FUNCS(remove)
+])
+
+AC_DEFUN([AC_CHECK_RENAME],
+[
+  AC_CHECK_FUNCS(rename)
+])
+
+AC_DEFUN([AC_CHECK_MKDIR],
+[
+  AC_CHECK_HEADERS(sys/stat.h)
+  AC_CHECK_FUNCS(mkdir)
+])
+  
+AC_DEFUN([AC_CHECK_OPENDIR],
+[
+  AC_CHECK_HEADERS(dirent.h)
+  AC_CHECK_FUNCS(opendir)
+])
+
+AC_DEFUN([AC_CHECK_STAT],
+[
+  AC_CHECK_HEADERS(stat.h)
+  AC_CHECK_HEADERS(sys/stat.h)
+  AC_CHECK_FUNCS(stat)
+  AC_CHECK_FUNCS(stat64)
+  AC_CHECK_TYPE([struct stat64],
+                [AC_DEFINE([HAVE_STRUCT_STAT64],[],[Defined when struct stat64 is available])],
+                [],
+                [#include <sys/stat.h>])
+])
+
+AC_DEFUN([AC_CHECK_COMMON],
+[
+  AC_CHECK_ENVIRON
+  AC_CHECK__NSGETENVIRON
+  AC_CHECK_REMOVE
+  AC_CHECK_RENAME
+  AC_CHECK_MKDIR
+  AC_CHECK_OPENDIR
+  AC_CHECK_STAT
+])
+
+# Check for OS functions and header files
+
 if test "$ANSI_C" = yes; then
 
   # Check if linking to the math library needs some special linker flags.
@@ -914,11 +1000,15 @@ if test "$ANSI_C" = yes; then
   AC_CHECK_FUNCS(time)
   AC_CHECK_FUNCS(clock)
 
+  # Check for common functions which are frequently available
+  # even if not strictly ANSI-C.
+
+  AC_CHECK_COMMON
+
 else
 
   AC_CHECK_HEADERS(unistd.h)
   AC_CHECK_HEADERS(pwd.h)
-  AC_CHECK_HEADERS(dirent.h)
   AC_CHECK_HEADERS(dlfcn.h)
   AC_CHECK_HEADERS(dl.h)
   AC_CHECK_HEADERS(sys/dxe.h)
@@ -929,11 +1019,9 @@ else
   AC_CHECK_HEADERS(sys/timeb.h)
   AC_CHECK_HEADERS(sys/timers.h)
   AC_CHECK_HEADERS(sys/resource.h)
-  AC_CHECK_HEADERS(sys/stat.h)
   AC_CHECK_HEADERS(sys/wait.h)
   AC_CHECK_HEADERS(sys/mman.h)
   AC_CHECK_HEADERS(syslog.h)
-  AC_CHECK_HEADERS(stat.h)
   AC_CHECK_HEADERS(netdb.h)
   AC_CHECK_HEADERS(grp.h)
   #AC_CHECK_HEADERS(windows.h)
@@ -974,10 +1062,11 @@ else
   AC_CHECK_HEADERS(strings.h)
   AC_CHECK_HEADERS(memory.h)
   AC_CHECK_HEADERS(sys/sysctl.h)
-  AC_CHECK_HEADERS(crt_externs.h)
   AC_CHECK_HEADERS(ws2tcpip.h)
   AC_CHECK_HEADERS(TargetConditionals.h)
   AC_CHECK_HEADERS(poll.h)
+
+  AC_CHECK_COMMON
 
   if test "$C_COMP_VISUALC" != yes; then
 
@@ -1093,15 +1182,10 @@ else
   AC_CHECK_FUNCS(getpwnam)
   AC_CHECK_FUNCS(ioctl)
   AC_CHECK_FUNCS(link)
-  AC_CHECK_FUNCS(mkdir)
   AC_CHECK_FUNCS(mkfifo)
-  AC_CHECK_FUNCS(opendir)
-  AC_CHECK_FUNCS(rename)
   AC_CHECK_FUNCS(rmdir)
   AC_CHECK_FUNCS(socket)
   AC_CHECK_FUNCS(utimes)
-  AC_CHECK_FUNCS(stat)
-  AC_CHECK_FUNCS(stat64)
   AC_CHECK_FUNCS(strerror)
   AC_CHECK_FUNCS(symlink)
   AC_CHECK_FUNCS(sysconf)
@@ -1219,46 +1303,6 @@ else
 
   AC_CHECK_FUNC_SIGNAL
 
-  AC_DEFUN([AC_CHECK_ENVIRON],
-  [AC_CACHE_CHECK([for environ], ac_cv_environ,
-  [
-    AC_TRY_COMPILE([
-      #ifdef __cplusplus
-      extern "C" {
-      #endif
-      extern char **environ;
-      #ifdef __cplusplus
-      }
-      #endif
-      ],[char *arg0 = *environ;],
-    ac_cv_environ=yes,
-    ac_cv_environ=no)
-  ])
-    if test $ac_cv_environ = yes; then
-      AC_DEFINE([HAVE_ENVIRON],[],[Defined when environ is available])
-    fi
-  ])
-
-  AC_CHECK_ENVIRON
-
-  AC_DEFUN([AC_CHECK__NSGETENVIRON],
-  [AC_CACHE_CHECK([for _NSGetEnviron], ac_cv__NSGetEnviron,
-  [
-    AC_TRY_COMPILE([
-      #ifdef HAVE_CRT_EXTERNS_H
-      #include <crt_externs.h>
-      #endif
-      ],[char *arg0 = *(*_NSGetEnviron());],
-    ac_cv__NSGetEnviron=yes,
-    ac_cv__NSGetEnviron=no)
-  ])
-    if test $ac_cv__NSGetEnviron = yes; then
-      AC_DEFINE([HAVE__NSGETENVIRON],[],[Defined when _NSGetEnviron is available])
-    fi
-  ])
-
-  AC_CHECK__NSGETENVIRON
-
   AC_CHECK_FUNCS(clock_gettime)
   AC_CHECK_FUNCS(getclock)
   #AC_CHECK_FUNCS(GetSystemTime)
@@ -1327,11 +1371,6 @@ else
   esac
 
 fi
-
-AC_CHECK_TYPE([struct stat64],
-              [AC_DEFINE([HAVE_STRUCT_STAT64],[],[Defined when struct stat64 is available])],
-              [],
-              [#include <sys/stat.h>])
 
 ###############################################################################
 #

@@ -8,11 +8,11 @@
 #define ___GAMBIT_H
 
 #ifndef ___VERSION
-#define ___VERSION 407006
+#define ___VERSION 407007
 #endif
 
-#if ___VERSION != 407006
-#include "gambit-not407006.h"
+#if ___VERSION != 407007
+#include "gambit-not407007.h"
 #else
 
 #ifdef HAVE_CONFIG_H
@@ -2762,8 +2762,10 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 /* IFJUMP-able operations */
 
 #define ___FALSEP(x)((x)==___FAL)
-#define ___BOOLEANP(x)(((x)==___FAL)||((x)==___TRU))
+#define ___BOOLEANP(x)(((x)&(___TRU-___tSPECIAL+___TMASK))==___TRU)
 #define ___NULLP(x)((x)==___NUL)
+#define ___FALSEORNULLP(x)(((x)&(___NUL-___tSPECIAL+___TMASK))==___NUL)
+#define ___FALSEORVOIDP(x)(((x)&(___VOID-___tSPECIAL+___TMASK))==___VOID)
 #define ___UNBOUNDP(x)(((___temp=(x))==___UNB1)||(___temp==___UNB2))
 #define ___EQP(x,y)((x)==(y))
 #define ___EOFP(x)((x)==___EOF)
