@@ -11704,7 +11704,7 @@ tanh
 (univ-define-prim "##set-box!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^setbox arg1 arg2)
+     (^ (^setbox (^cast* 'box arg1) arg2)
         (return arg1)))))
 
 (univ-define-prim "##values" #t
