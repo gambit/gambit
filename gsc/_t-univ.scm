@@ -12183,49 +12183,53 @@ tanh
    (lambda (ctx return sym)
      (return (^member (^cast* 'symbol sym) 'interned)))));;;;FIXME for host representation
 
-;; TODO: test ##keyword->string primitive and ##string->keyword primitive
-
 (univ-define-prim "##keyword->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^str-to-codes (^keyword-unbox arg1)))))))
+     (return (^str->string (^keyword-unbox arg1))))))
 
 (univ-define-prim "##string->keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^keyword-box (^tostr arg1))))))
+     (return (^keyword-box (^string->str arg1))))))
 
 (univ-define-prim "##make-uninterned-keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^keyword-box-uninterned name hash)))))
+     (return (^keyword-box-uninterned (^string->str name) hash)))))
 
 (univ-define-prim "##keyword-name" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'name)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return
+       (^string-box
+         (^str-to-codes (^member (^cast* 'keyword key) 'name)))))))
 
 (univ-define-prim "##keyword-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key name)
-     (^ (^assign (^member key 'name) name)
+     (^ (^assign (^member (^cast* 'keyword key) 'name)
+                 (^string->str name))
         (return key)))))
 
 (univ-define-prim "##keyword-hash" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'hash)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return (^member (^cast* 'keyword key) 'hash)))))
 
 (univ-define-prim "##keyword-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key hash)
-     (^ (^assign (^member key 'hash) hash)
+     (^ (^assign (^member (^cast* 'keyword key) 'hash) hash)
         (return key)))))
 
 (univ-define-prim "##keyword-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'interned)))));;;;FIXME for host representation
+     (return (^member (^cast* 'keyword key) 'interned)))));;;;FIXME for host representation
+
 
 ;;TODO: ("##closure-length"               (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
