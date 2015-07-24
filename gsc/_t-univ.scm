@@ -13116,23 +13116,23 @@ tanh
 (univ-define-prim "##will-testator" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member will 'testator)))))
+     (return (^member (^cast* 'will will) 'testator)))))
 
 (univ-define-prim "##will-testator-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will testator)
-     (^ (^assign (^member will 'testator) testator)
+     (^ (^assign (^member (^cast* 'will will) 'testator) testator)
         (return will)))))
 
 (univ-define-prim "##will-action" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member will 'action)))))
+     (return (^member (^cast* 'will will) 'action)))))
 
 (univ-define-prim "##will-action-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will action)
-     (^ (^assign (^member will 'action) action)
+     (^ (^assign (^member (^cast* 'will will) 'action) action)
         (return will)))))
 
 (univ-define-prim "##apply" #f
