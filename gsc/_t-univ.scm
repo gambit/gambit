@@ -37,8 +37,12 @@
 (define (univ-procedure-representation ctx)
   (or (univ-get-representation-option ctx 'repr-procedure)
       (case (target-name (ctx-target ctx))
-        ((php java)
+        ((java)
          'class)
+        ((php)
+         (if (univ-php-pre53? ctx)
+             'class
+             'host))
         (else
          'host))))
 
@@ -177,11 +181,11 @@
 (define univ-thread-cont-slot 5)
 (define univ-thread-denv-slot 6)
 
-(define (univ-php-version-53? ctx)
-  (assq 'php53 (ctx-options ctx)))
+(define (univ-php-pre53? ctx)
+  (assq 'pre53 (ctx-options ctx)))
 
-(define (univ-python-version-3? ctx)
-  (assq 'python3 (ctx-options ctx)))
+(define (univ-python-pre3? ctx)
+  (assq 'pre3 (ctx-options ctx)))
 
 (define (univ-always-return-jump? ctx)
   (assq 'always-return-jump (ctx-options ctx)))
@@ -296,9 +300,9 @@
     (target-add targ)))
 
 (univ-setup 'js     '((".js"   . JavaScript))  '())
-(univ-setup 'python '((".py"   . Python))      '((python3)))
+(univ-setup 'python '((".py"   . Python))      '((pre3)))
 (univ-setup 'ruby   '((".rb"   . Ruby))        '())
-(univ-setup 'php    '((".php"  . PHP))         '((php53)))
+(univ-setup 'php    '((".php"  . PHP))         '((pre53)))
 
 (univ-setup 'java   '((".java" . Java))        '());; experimental...
 ;;(univ-setup 'c      '((".c"    . C))           '())
@@ -673,6 +677,8 @@
 (define-macro (^rts-class-ref name)  `(univ-emit-rts-class-ref ctx ,name))
 (define-macro (^rts-class-use name)  `(univ-emit-rts-class-use ctx ,name))
 
+(define-macro (^rts-jumpable-use name) `(univ-emit-rts-jumpable-use ctx ,name))
+  
 (define-macro (^prefix name)
   `(univ-emit-prefix ctx ,name))
 
@@ -1935,8 +1941,8 @@
     ((js python java)
      name)
 
-    ((php) name);;TODO: added
-
+    ((php ruby) name);;TODO: added
+#;
     ((php ruby)
      (^ "$" name))
 
@@ -1998,7 +2004,9 @@
       (let ((x (^mod-field mod-name name)))
         (use-global ctx x)
         x)
-      (^mod-method mod-name name)))
+      (univ-method-reference
+       ctx
+       (^mod-method mod-name name))))
 
 (define (univ-emit-mod-class ctx mod-name name)
   (case (univ-module-representation ctx)
@@ -2054,6 +2062,10 @@
   (let ((x (univ-emit-rts-field-ref ctx name)))
     (use-global ctx x)
     x))
+
+(define (univ-emit-rts-jumpable-use ctx name)
+  (univ-use-rtlib ctx name)
+  (^mod-jumpable (univ-rts-module-name ctx) name))
 
 (define (univ-emit-rts-class ctx name)
   (let ((real-name (univ-rts-type-alias ctx name)))
@@ -2227,7 +2239,7 @@
 
     ((php)
      (^expr-statement
-      (^ "array_splice(" expr1 "," expr2 ")")))
+      (^call-prim 'array_splice expr1 expr2)))
 
     ((python)
      (^expr-statement
@@ -2254,10 +2266,10 @@
       expr1))
 
     ((php)
-     (^call-prim 'array_splice expr1 expr2))
+     (^call-prim 'array_splice expr1 (^int 0) expr2))
 
     ((python java)
-     (^subarray expr1 0 expr2))
+     (^subarray expr1 (^int 0) expr2))
 
     ((ruby)
      (^seq
@@ -2515,10 +2527,9 @@
   (let* ((objs-used (ctx-objs-used ctx))
          (stack (reverse (objs-used-stack objs-used)))
          (table (objs-used-table objs-used)))
-    (let loop ((count 0) (lst stack) (defs (univ-make-empty-defs)))
+    (let loop ((lst stack) (defs (univ-make-empty-defs)))
       (if (pair? lst)
-          (loop (+ count 1)
-                (cdr lst)
+          (loop (cdr lst)
                 (let ((obj (car lst)))
                   (if (proc-obj? obj)
                       defs
@@ -2526,10 +2537,7 @@
                         (if (or (> (vector-ref state 0) 1) ;; use a variable?
                                 (eq? (target-name (ctx-target ctx)) 'python)) ;; Python can't handle deep nestings
                             (let ((cst
-                                   (string->symbol
-                                    (string-append
-                                     "cst"
-                                     (number->string count))))
+                                   (vector-ref state 2))
                                   (val
                                    (car (vector-ref state 1))))
                               ;;(pp (list cst obj));;;;;;;;;;;;;;;
@@ -2542,19 +2550,34 @@
           defs))))
 
 (define (univ-obj-use ctx obj force-var? gen-expr)
-;;  (if force-var?
-;;      (use-resource ctx 'rd 'cst))
+
+  (define (use-cst cst)
+    (if (not (eq? (univ-module-representation ctx) 'class))
+        (use-global ctx (^this-mod-field cst))))
+
   (let* ((objs-used (ctx-objs-used ctx))
          (table (objs-used-table objs-used))
          (state (table-ref table obj #f)))
     (if state ;; don't add to table if obj was added before
 
         (begin
+          (use-cst (vector-ref state 2))
           (vector-set! state 0 (+ (vector-ref state 0) 1)) ;; increment reference count
           (vector-ref state 1))
 
-        (let* ((code (list #f))
-               (state (vector (if force-var? 2 1) code)))
+        (let* ((code
+                (list #f))
+               (cst
+                (string->symbol
+                 (string-append
+                  "cst"
+                  (number->string (table-length table))
+                  (if (eq? (univ-module-representation ctx) 'class)
+                      ""
+                      (string-append "_" (ctx-module-name ctx))))))
+               (state
+                (vector (if force-var? 2 1) code cst)))
+          (use-cst cst)
           (table-set! table obj state)
           (set-car! code (gen-expr))
           (let ((stack (objs-used-stack objs-used)))
@@ -2737,13 +2760,23 @@
                                            '(inherited))
                                (univ-field 'parent
                                            'parententrypt
-                                           (if (= lbl-num entry)
-                                               (^null)
-                                               (lambda (ctx2)
-                                                 ;;TODO: check correct ctx
-                                                 (univ-ctrlpt-reference
-                                                  ctx
-                                                  entry)))
+                                           (let ((entry? (= lbl-num entry)))
+                                             (cond ((and entry?
+                                                         (univ-parent-entry-point-has-null-parent? ctx))
+                                                    (^null))
+                                                   ((and entry?
+                                                         (eq? (univ-procedure-representation ctx) 'class))
+                                                    (^this))
+                                                   (else
+                                                    (let ((the-ns (ctx-ns ctx)))
+                                                      (lambda (ctx2)
+                                                        (let ((ns (ctx-ns ctx2)))
+                                                          (ctx-ns-set! ctx2 the-ns)
+                                                          (let ((x (univ-ctrlpt-reference
+                                                                    ctx2
+                                                                    entry)))
+                                                            (ctx-ns-set! ctx2 ns)
+                                                            x)))))))
                                            '(inherited))))
 
                        (if (eq? (label-type gvm-instr) 'return)
@@ -3511,7 +3544,8 @@
     (else
      (case (target-name (ctx-target ctx))
        ((php)
-        (^member (^cast "Closure" closure) 'slots))
+        ;;(^member (^cast* 'closure closure) 'slots)
+        (^member closure 'slots))
        (else
         (^jump closure (^bool #t)))))))
 
@@ -3641,15 +3675,7 @@
                                    (emit-obj (imag-part obj) #f)))))
 
                  ((not (exact? obj)) ;; floating-point number
-                  (let ((x (^float obj)))
-                    (univ-box
-                     (univ-obj-use
-                      ctx
-                      obj
-                      force-var?
-                      (lambda ()
-                        (^flonum-box x)))
-                     x)))
+                  (^flonum-box (^float obj)))
 
                  ((not (integer? obj)) ;; non-integer rational number
                   (univ-obj-use
@@ -4223,7 +4249,7 @@
                (new-nb-stacked
                 (max 0 (- new-nb-args univ-nb-arg-regs)))
                (underflow
-                (^rts-field-use 'underflow)))
+                (^rts-jumpable-use 'underflow)))
           (^ (univ-foldr-range
               1
               (max 2 (- nb-args univ-nb-arg-regs))
@@ -4309,7 +4335,7 @@
         (let* ((nb-stacked
                 (max 0 (- nb-args univ-nb-arg-regs)))
                (underflow
-                (^rts-field-use 'underflow))
+                (^rts-jumpable-use 'underflow))
                (arg1
                 (^local-var 'arg1)))
           (^ (^var-declaration
@@ -4679,7 +4705,7 @@
                          0)))))
 
              (^return
-              (^rts-field-use 'underflow)))))))
+              (^rts-jumpable-use 'underflow)))))))
 
     ((underflow)
      (univ-jumpable-declaration-defs
@@ -4765,7 +4791,7 @@
                     (^assign (^array-index
                               (gvm-state-stack-use ctx 'rd)
                               link)
-                             (^rts-field-use 'underflow)))))
+                             (^rts-jumpable-use 'underflow)))))
 
               (^return ra)))))))
 
@@ -4989,94 +5015,6 @@ EOF
                (^array-index (univ-get-ctrlpt-attrib ctx parent 'ctrlpts)
                              id)))))))))
 
-    ((closure_alloc)
-     (case (univ-procedure-representation ctx)
-
-       ((class)
-        (rts-method
-         'closure_alloc
-         '(public)
-         'closure
-         (list (univ-field 'slots '(array scmobj)))
-         "\n"
-         '()
-         (lambda (ctx)
-           (let ((slots (^local-var 'slots)))
-             (^return (^new (^type 'closure)
-                            slots))))))
-
-       (else
-        (case (target-name (ctx-target ctx))
-
-          ((php);;TODO: select call or __invoke
-#<<EOF
-class Gambit_Closure {
-
-  public function __construct($slots) {
-    $this->slots = $slots;
-  }
-
-  public function __invoke() {
-    global $gambit_r4;
-    $gambit_r4 = $this;
-    return $this->slots[0];
-  }
-}
-
-function gambit_closure_alloc($slots) {
-  return new Gambit_Closure($slots);
-}
-EOF
-)
-
-          (else
-           (rts-method
-            'closure_alloc
-            '(public)
-            'scmobj
-            (list (univ-field 'slots 'scmobj))
-            "\n"
-            '()
-            (lambda (ctx)
-              (let ((msg (^local-var 'msg))
-                    (slots (^local-var 'slots))
-                    (closure 'closure))
-                (^ (^procedure-declaration
-                    #f
-                    'closure
-                    closure
-                    (list (univ-field 'msg 'bool (^bool #t)))
-                    "\n"
-                    '()
-                    (^ (^if (^= msg (^bool #t))
-                            (^return slots))
-                       (^setreg (+ univ-nb-arg-regs 1) (^prefix closure))
-                       (^return (^array-index slots (^int 0)))))
-                   (^return (^prefix closure)))))))))))
-
-    ((make_closure)
-     (rts-method
-      'make_closure
-      '(public)
-      'scmobj
-      (list (univ-field 'code 'ctrlpt)
-            (univ-field 'leng 'int))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((code (^local-var 'code))
-              (leng (^local-var 'leng))
-              (slots (^local-var 'slots)))
-          (^ (^var-declaration
-              '(array scmobj)
-              slots
-              (^new-array 'scmobj (^+ leng (^int 1))))
-             (^assign (^array-index slots (^int 0)) code)
-             (^return
-              (^call-prim
-               (^rts-method-use 'closure_alloc)
-               slots)))))))
-
     ((scmobj)
      (rts-class
       'scmobj
@@ -5144,13 +5082,17 @@ EOF
      (rts-class
       'closure
       '() ;; properties
-      'jumpable ;; extends
+      (if (eq? (univ-procedure-representation ctx) 'class) ;; extends
+          'jumpable
+          'scmobj) ;; for PHP when using repr-procedure = host
       '() ;; class-fields
       (list (univ-field 'slots '(array scmobj) #f '(public))) ;; instance-fields
       '() ;; class-methods
       (list ;; instance-methods
        (univ-method
-        'jump
+        (if (eq? (univ-procedure-representation ctx) 'class)
+            'jump
+            '__invoke) ;; for PHP when using repr-procedure = host
         '(public)
         'jumpable
         '()
@@ -5163,6 +5105,81 @@ EOF
               (^return
                (^cast* 'jumpable
                        (^array-index (^member (^this) 'slots) (^int 0)))))))))))
+
+    ((closure_alloc)
+     (let ()
+
+       (define (class-based-closure-alloc-method)
+         (rts-method
+          'closure_alloc
+          '(public)
+          'closure
+          (list (univ-field 'slots '(array scmobj)))
+          "\n"
+          '()
+          (lambda (ctx)
+            (let ((slots (^local-var 'slots)))
+              (^return (^new (^type 'closure)
+                             slots))))))
+
+       (case (univ-procedure-representation ctx)
+
+         ((class)
+          (class-based-closure-alloc-method))
+
+         (else
+          (case (target-name (ctx-target ctx))
+
+            ((php)
+             (class-based-closure-alloc-method))
+
+            (else
+             (rts-method
+              'closure_alloc
+              '(public)
+              'scmobj
+              (list (univ-field 'slots 'scmobj))
+              "\n"
+              '()
+              (lambda (ctx)
+                (let ((msg (^local-var 'msg))
+                      (slots (^local-var 'slots))
+                      (closure 'closure))
+                  (^ (^procedure-declaration
+                      #f
+                      'closure
+                      closure
+                      (list (univ-field 'msg 'bool (^bool #t)))
+                      "\n"
+                      '()
+                      (^ (^if (^= msg (^bool #t))
+                              (^return slots))
+                         (^setreg (+ univ-nb-arg-regs 1) (^prefix closure))
+                         (^return (^array-index slots (^int 0)))))
+                     (^return (^prefix closure))))))))))))
+
+    ((make_closure)
+     (rts-method
+      'make_closure
+      '(public)
+      'scmobj
+      (list (univ-field 'code 'ctrlpt)
+            (univ-field 'leng 'int))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((code (^local-var 'code))
+              (leng (^local-var 'leng))
+              (slots (^local-var 'slots)))
+          (^ (^var-declaration
+              '(array scmobj)
+              slots
+              (^new-array 'scmobj (^+ leng (^int 1))))
+             (^assign (^array-index slots (^int 0)) code)
+             (^return
+              (^call-prim
+               (^rts-method-use 'closure_alloc)
+               slots)))))))
 
     ((promise)
      (rts-class
@@ -6620,32 +6637,28 @@ EOF
      (case (target-name (ctx-target ctx))
 
        ((js)
-        (^ (rts-field
-            'globals
-            'object
-            (^this))
-           "\n"))
+        (rts-field
+         'globals
+         'object
+         (^this)))
 
        ((php)
-        (^ (rts-field
-            'globals
-            'object
-            (^local-var 'GLOBALS))
-           "\n"))
+        (rts-field
+         'globals
+         'object
+         (^local-var 'GLOBALS)))
 
        ((python)
-        (^ (rts-field
-            'globals
-            'object
-            (^call-prim "locals"))
-           "\n"))
+        (rts-field
+         'globals
+         'object
+         (^call-prim "locals")))
 
        ((ruby)
-        (^ (rts-field
-            'globals
-            'object
-            "binding")
-           "\n"))
+        (rts-field
+         'globals
+         'object
+         "binding"))
 
        (else
         (compiler-internal-error
@@ -6830,7 +6843,7 @@ gambit_Pair.prototype.toString = function () {
               (^push (^obj '()))) ;; end of continuation marker
 
           (^assign (^rts-field-use 'r0)
-                   (^rts-field-use 'underflow))
+                   (^rts-jumpable-use 'underflow))
 
           (^assign (^rts-field-use 'nargs)
                    (^int 0))
@@ -7324,20 +7337,20 @@ gambit_Pair.prototype.toString = function () {
        (let ((decl
               (^ (univ-emit-fn-decl
                   ctx
-                  (and (or prim? (not (univ-php-version-53? ctx)))
+                  (and (or prim? (univ-php-pre53? ctx))
                        prn)
                   result-type
                   params
                   (and body
                        (^ (if (and (not prim?)
-                                   (not (univ-php-version-53? ctx)))
+                                   (univ-php-pre53? ctx))
                               (^)
                               (univ-emit-function-attribs ctx name attribs))
                           body)))
                  "\n")))
          (cond (prim?
                 decl)
-               ((not (univ-php-version-53? ctx))
+               ((univ-php-pre53? ctx)
                 (^ decl
                    "\n"
                    (^assign name
@@ -8038,7 +8051,7 @@ gambit_Pair.prototype.toString = function () {
 (define (univ-emit-return-jump ctx expr)
   (^return
    (if (not (univ-never-return-jump? ctx))
-       (^jump expr)
+       (^jump (univ-unstringify-method expr))
        expr)))
 
 (define (univ-emit-return ctx expr)
@@ -8644,7 +8657,7 @@ gambit_Pair.prototype.toString = function () {
            ((and (string=? str "-0.")
                  (eq? (target-name (ctx-target ctx)) 'php))
             ;; it is strange that in PHP -0.0 is the same as 0.0
-            "0.0*-1")
+            "(0.0*-1)")
 
            ((char=? (string-ref str 0) #\.)
             (string-append "0" str))
@@ -8839,9 +8852,9 @@ gambit_Pair.prototype.toString = function () {
      (use-round-half-towards-0))
 
     ((python)
-     (if (univ-python-version-3? ctx)
-         (^ "round(" expr ")")
-         (use-round-half-towards-0)))
+     (if (univ-python-pre3? ctx)
+         (use-round-half-towards-0)
+         (^ "round(" expr ")")))
     (else
      (compiler-internal-error
       "univ-emit-float-round-half-to-even, unknown target"))))
@@ -10048,7 +10061,7 @@ tanh
         (^not (^prop-index-exists? expr (^str "id"))))
 
        ((php)
-        (^instanceof (^rts-class "closure") expr))
+        (^instanceof (^type 'closure) expr))
 
        ((python)
         (^not
@@ -11353,8 +11366,8 @@ tanh
      (^if-expr (^= arg2 (^float targ-inexact-+0))
                (^if-expr (^= arg1 (^float targ-inexact-+0))
                          "NAN"
-                         (^if-expr (^= (^call-prim "strval" (^* arg1 (^float targ-inexact-+0)))
-                                       (^call-prim "strval" arg2))
+                         (^if-expr (^eq? (^call-prim "strval" (^* arg1 (^float targ-inexact-+0)))
+                                         (^call-prim "strval" arg2))
                                    "INF"
                                    "-INF"))
                (^/ arg1 arg2)))
@@ -12268,11 +12281,37 @@ tanh
       (^obj (string->symbol name))))
 
 (define (univ-ctrlpt-reference-to-ctrlpt ctx ref)
+  ref
+  ;; in PHP a function is a string!
+  #;
   (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
       (^call-prim
        (^rts-method-use 'get_host_global_var)
        ref)
       ref))
+
+(define (univ-parent-entry-point-has-null-parent? ctx)
+  (and (eq? (univ-procedure-representation ctx) 'host)
+       (case (target-name (ctx-target ctx))
+         ((js) #f)
+         ((php) (not (univ-php-pre53? ctx)))
+         (else #t))))
+
+(define (univ-method-reference ctx meth)
+  (if (and (eq? (target-name (ctx-target ctx)) 'php)
+           (univ-php-pre53? ctx))
+      (univ-stringify-method meth)
+      meth))
+
+(define univ-stringify-delimiter (string #\"))
+  
+(define (univ-stringify-method meth)
+  (list univ-stringify-delimiter meth univ-stringify-delimiter))
+
+(define (univ-unstringify-method meth)
+  (if (and (pair? meth) (eq? (car meth) univ-stringify-delimiter))
+      (cadr meth)
+      meth))
 
 (univ-define-prim "##subprocedure-parent" #f
   (make-translated-operand-generator
@@ -12287,9 +12326,11 @@ tanh
    'parent
    (lambda (result)
      (return
-      (^if-expr (^eq? result (^null))
-                (^cast* 'ctrlpt arg1)
-                (univ-ctrlpt-reference-to-ctrlpt ctx result))))))
+      (if (univ-parent-entry-point-has-null-parent? ctx)
+          (^if-expr (^eq? result (^null))
+                    (^cast* 'ctrlpt arg1)
+                    (univ-ctrlpt-reference-to-ctrlpt ctx result))
+          result)))))
 
 (univ-define-prim "##subprocedure-nb-parameters" #f
   (make-translated-operand-generator
@@ -13135,7 +13176,7 @@ tanh
                  (string->symbol
                   (string-append name (number->string nb-args)))))
             (^return-poll
-             (^rts-field-use rtlib-name)
+             (^rts-jumpable-use rtlib-name)
              poll?
              #t))))))
 
