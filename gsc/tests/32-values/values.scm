@@ -1,0 +1,62 @@
+
+;;
+;; (##values . vals)
+;; Returns a values object.
+;;
+;; (##values? values-object)
+;; Returns #t for values-object and false otherwise
+;; 
+
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define a (##not 123))
+(define b (##not f))
+(define c "")
+(define d 1.5)
+(define e (##make-vector 2 999))
+(define f (##list 1 2 3))
+(define g (##bignum.make 3 #f #f))
+(define h (##bignum.make 3 (##fixnum->bignum 4) #f))
+(define i (##ratnum-make 11 3))
+(define j (##ratnum-make 2 3))
+(define k (##cpxnum-make 11 3))
+(define l (##make-frame (##continuation-ret (##continuation-capture (lambda (x) x)))))
+(define m 'a)
+(define n (quote b))
+(define o (##make-uninterned-symbol "uninterned" 80))
+(define p (##list 1 2 3))
+(define q a:)
+(define r (##make-uninterned-keyword "uninterned" 80))
+(define s (##values 1 2 3 4 5 6))
+
+
+(define (test x)
+  (println (##values? x))
+  (println (if (##values? x) 11 22)))
+
+(test 0)
+(test 1)
+(test a)
+(test b)
+(test c)
+(test d)
+(test e)
+(test f)
+(test (##cdr f))
+(test g)
+(test h)
+(test i)
+(test j)
+(test k)
+(test l)
+(test m)
+(test o)
+(test p)
+(test q)
+(test r)
+(test s)
+
+(println (##values-ref s 0))
+(println (##values-ref s 1))
+(##values-set! s 1 888)
+(println (##values-ref s 1))
