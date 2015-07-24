@@ -12625,49 +12625,52 @@ tanh
 ;;TODO: ("##type-super"                   (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-fields"                  (1)   #f ()    0    #f      extended)
 
-;; TODO: test ##symbol->string primitive and ##string->symbol primitive
-
 (univ-define-prim "##symbol->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^str-to-codes (^symbol-unbox arg1)))))))
+     (return (^str->string (^symbol-unbox arg1))))))
 
 (univ-define-prim "##string->symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^symbol-box (^tostr arg1))))))
+     (return (^symbol-box (^string->str arg1))))))
 
 (univ-define-prim "##make-uninterned-symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^symbol-box-uninterned name hash)))))
+     (return (^symbol-box-uninterned (^string->str name) hash)))))
 
 (univ-define-prim "##symbol-name" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'name)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return
+       (^string-box
+         (^str-to-codes (^member (^cast* 'symbol sym) 'name)))))))
 
 (univ-define-prim "##symbol-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym name)
-     (^ (^assign (^member sym 'name) name)
+     (^ (^assign (^member (^cast* 'symbol sym) 'name)
+                 (^string->str name))
         (return sym)))))
 
 (univ-define-prim "##symbol-hash" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'hash)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return (^member (^cast* 'symbol sym) 'hash)))))
 
 (univ-define-prim "##symbol-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym hash)
-     (^ (^assign (^member sym 'hash) hash)
+     (^ (^assign (^member (^cast* 'symbol sym) 'hash) hash)
         (return sym)))))
 
 (univ-define-prim "##symbol-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'interned)))));;;;FIXME for host representation
+     (return (^member (^cast* 'symbol sym) 'interned)))));;;;FIXME for host representation
 
 ;; TODO: test ##keyword->string primitive and ##string->keyword primitive
 
