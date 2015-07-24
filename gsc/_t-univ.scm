@@ -909,6 +909,12 @@
 (define-macro (^void-obj)
   `(univ-emit-void-obj ctx))
 
+(define-macro (^str->string expr)
+  `(univ-emit-str->string ctx ,expr))
+
+(define-macro (^string->str expr)
+  `(univ-emit-string->str ctx ,expr))
+
 (define-macro (^eof)
   `(univ-emit-eof ctx))
 
@@ -8122,6 +8128,19 @@ gambit_Pair.prototype.toString = function () {
 
     (else
      (^void))))
+
+(define (univ-emit-str->string ctx expr)
+  (^string-box (^str-to-codes expr)))
+
+
+(define (univ-emit-string->str ctx expr)
+  (case (univ-string-representation ctx)
+
+    ((class)
+     (^tostr  expr))
+
+    ((host)
+     expr)))
 
 (define (univ-emit-eof ctx)
   (case (univ-eof-representation ctx)
