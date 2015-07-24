@@ -5558,7 +5558,7 @@ EOF
      (rts-method
       'make_frame
       '(public)
-      'frm
+      'frame
       (list (univ-field 'ra 'returnpt))
       "\n"
       '()
@@ -12481,7 +12481,7 @@ tanh
 (univ-define-prim "##continuation-ret" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (univ-frame-ra ctx (^member cont 'frame))))))
+     (return (univ-frame-ra ctx (^member (^cast* 'continuation cont) 'frame))))))
 
 (define (univ-get-cont-ra-field attrib)
   (make-translated-operand-generator
@@ -12489,7 +12489,7 @@ tanh
      (univ-get-ra-field
       ctx
       return
-      (univ-frame-ra ctx (^member cont 'frame))
+      (univ-frame-ra ctx (^member (^cast* 'continuation cont) 'frame))
       attrib))))
 
 (univ-define-prim "##continuation-fs"   #f (univ-get-cont-ra-field 'fs))
@@ -12501,7 +12501,7 @@ tanh
      (return
       (univ-frame-ref
        ctx
-       (^frame-unbox (^member cont 'frame))
+       (^frame-unbox (^member (^cast* 'continuation cont) 'frame))
        (^fixnum-unbox index))))))
 
 (univ-define-prim "##continuation-set!" #t
@@ -12509,7 +12509,7 @@ tanh
    (lambda (ctx return cont index val)
      (^ (univ-frame-set!
          ctx
-         (^frame-unbox (^member cont 'frame))
+         (^frame-unbox (^member (^cast* 'continuation cont) 'frame))
          (^fixnum-unbox index)
          val)
         (return cont)))))
@@ -12519,7 +12519,7 @@ tanh
    (lambda (ctx return cont index)
      (return
       (^boolean-box
-       (univ-frame-slot-live? ctx (^member cont 'frame) index))))))
+       (univ-frame-slot-live? ctx (^member (^cast* 'continuation cont) 'frame) index))))))
 
 (univ-define-prim-bool "##frame?" #t
   (make-translated-operand-generator
@@ -12530,9 +12530,9 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return ra)
      (return
-      (^call-prim
-       (^rts-method-use 'make_frame)
-       ra)))))
+       (^call-prim
+         (^rts-method-use 'make_frame)
+         (^cast* 'returnpt ra))))))
 
 (univ-define-prim "##frame-ret" #t
   (make-translated-operand-generator
@@ -12540,7 +12540,7 @@ tanh
      (return (univ-frame-ra ctx frame)))))
 
 (define (univ-frame-ra ctx frame)
-  (^array-index (^frame-unbox frame) 0))
+  (^cast* 'returnpt (^array-index (^frame-unbox frame) 0)))
 
 (define (univ-get-frame-ra-field attrib)
   (make-translated-operand-generator
