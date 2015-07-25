@@ -12156,8 +12156,7 @@ tanh
    (lambda (ctx return sym)
      ;;;;FIXME for host representation
      (return
-       (^string-box
-         (^str-to-codes (^member (^cast* 'symbol sym) 'name)))))))
+       (^str->string (^member (^cast* 'symbol sym) 'name))))))
 
 (univ-define-prim "##symbol-name-set!" #f
   (make-translated-operand-generator
@@ -12203,8 +12202,7 @@ tanh
    (lambda (ctx return key)
      ;;;;FIXME for host representation
      (return
-       (^string-box
-         (^str-to-codes (^member (^cast* 'keyword key) 'name)))))))
+       (^str->string (^member (^cast* 'keyword key) 'name))))))
 
 (univ-define-prim "##keyword-name-set!" #f
   (make-translated-operand-generator
