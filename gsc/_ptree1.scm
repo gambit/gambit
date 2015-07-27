@@ -384,7 +384,7 @@
 ;;
 ;; (core)      toplevel expressions and definitions must be compiled to code
 ;; (not core)  toplevel expressions and definitions belong to another module
-;; 
+;;
 ;; Global variable binding declarations:
 ;;
 ;; (standard-bindings)                  compiler can assume standard bindings
@@ -636,7 +636,9 @@
                      proc))))
 
               ((or (**define-macro-expr? source env)
-                   (**define-syntax-expr? source env))
+                   (**define-syntax-expr? source env)
+                   (**define-hygienic-macro-expr? source env)
+                   (**define-hygienic-syntax-expr? source env))
 
                (if *ptree-port*
                  (begin
@@ -658,7 +660,7 @@
 
                  (if *ptree-port*
                    (newline *ptree-port*))
-                      
+
                  (parse-prog
                    (cons x (cdr program))
                    env
@@ -874,6 +876,10 @@
          (pt-syntax-error source "Ill-placed 'define-macro'"))
         ((**define-syntax-expr? source env)
          (pt-syntax-error source "Ill-placed 'define-syntax'"))
+        ((**define-hygienic-macro-expr? source env)
+         (pt-syntax-error source "Ill-placed 'define-hygienic-macro'"))
+        ((**define-hygienic-syntax-expr? source env)
+         (pt-syntax-error source "Ill-placed 'define-hygienic-syntax'"))
         ((**include-expr? source)
          (pt-syntax-error source "Ill-placed 'include'"))
         ((**declare-expr? source)
@@ -900,9 +906,14 @@
     (let* ((descr (env-lookup-macro env (source-code (car code))))
            (expander (##macro-descr-expander descr)))
       (##sourcify-deep
-       (if (##macro-descr-def-syntax? descr)
-           (expander source)
-           (apply expander (cdr (source->expression source))))
+        (if (##macro-descr-def-syntax? descr)
+          (cond ((##macro-descr-env descr) =>
+                 (lambda (mac-env) (expander source env mac-env)))
+                (else (expander source)))
+          (cond ((##macro-descr-env descr) =>
+                 (lambda (mac-env) (expander (source->expression source)
+                                             env mac-env)))
+                (else (apply expander (cdr (source->expression source))))))
        source))))
 
 (define (pt-self-eval source env use)
@@ -1409,7 +1420,9 @@
                             (cdr body)
                             env)))
           ((or (**define-macro-expr? (car body) env)
-               (**define-syntax-expr? (car body) env))
+               (**define-syntax-expr? (car body) env)
+               (**define-hygienic-macro-expr? (car body) env)
+               (**define-hygienic-syntax-expr? (car body) env))
            (internal-defs vars
                           vals
                           envs
@@ -1952,11 +1965,11 @@
 (define (**delay-expr? source env)
   (and (not (eq? (scheme-dialect env) ieee-scheme-sym))
        (match **delay-sym 2 source)))
-       
+
 (define (**future-expr? source env)
   (and (eq? (scheme-dialect env) multilisp-sym)
        (match **future-sym 2 source)))
-       
+
 (define (macro-expr? source env)
   (let ((code (source-code source)))
     (and (pair? code)
@@ -1984,6 +1997,12 @@
 
 (define (**define-syntax-expr? source env)
   (match **define-syntax-sym 3 source))
+
+(define (**define-hygienic-macro-expr? source env)
+  (match **define-hygienic-macro-sym -3 source))
+
+(define (**define-hygienic-syntax-expr? source env)
+  (match **define-hygienic-syntax-sym 3 source))
 
 (define (**include-expr? source)
   (and (match **include-sym 2 source)
@@ -2174,7 +2193,7 @@
            #t)
           (else
            (pt-syntax-error bindings "Ill-formed binding list"))))
-          
+
    (proper-bindings (source-code bindings) '()))
 
 (define (proper-do-bindings? source env)
@@ -2383,7 +2402,10 @@
 ;; --------------
 
 (define (add-macro source env)
-  (let ((def-syntax? (**define-syntax-expr? source env)))
+  (let ((def-syntax? (or (**define-syntax-expr? source env)
+                         (**define-hygienic-syntax-expr? source env)))
+        (hygienic? (or (**define-hygienic-syntax-expr? source env)
+                       (**define-hygienic-macro-expr? source env))))
 
     (define (form-size parms)
       (let loop ((lst parms) (n 1))
@@ -2411,9 +2433,10 @@
                                  error-proc)))
         (if (not (procedure? expander))
             (pt-syntax-error proc "Macro expander must be a procedure")
-            (env-macro env
-                       (source-code var)
-                       (##make-macro-descr def-syntax? size expander proc)))))
+            (let* ((descr (##make-macro-descr def-syntax? size expander proc))
+                   (mac-env (env-macro env (source-code var) descr)))
+              (if hygienic? (##macro-descr-env-set! descr mac-env))
+              mac-env))))
 
     (let* ((var (definition-name source env))
            (proc (definition-value source)))

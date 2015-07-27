@@ -705,7 +705,7 @@
         name)))))
 
 (define (##make-macro-descr def-syntax? size expander expander-src)
-  (##vector def-syntax? size expander expander-src))
+  (##vector def-syntax? size expander expander-src #f))
 
 (define (##macro-descr-def-syntax? descr)
   (##vector-ref descr 0))
@@ -718,6 +718,12 @@
 
 (define (##macro-descr-expander-src descr)
   (##vector-ref descr 3))
+
+(define (##macro-descr-env descr)
+  (##vector-ref descr 4))
+
+(define (##macro-descr-env-set! descr env)
+  (##vector-set! descr 4 env))
 
 (define ##macro-lookup #f)
 (set! ##macro-lookup
