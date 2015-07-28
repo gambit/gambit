@@ -7566,8 +7566,8 @@ gambit_Pair.prototype.toString = function () {
    (univ-jumpable-declaration-defs
     ctx
     global?
-    proc-type
     root-name
+    proc-type
     params
     attribs
     body)))
@@ -10727,7 +10727,10 @@ tanh
     ((js php)
      (^ "throw " expr ";\n"))
 
-    ((python ruby)
+    ((python)
+     (^ "raise Exception(" expr ")\n"))
+
+    ((ruby)
      (^ "raise " expr "\n"))
 
     (else
