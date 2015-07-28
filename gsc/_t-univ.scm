@@ -721,6 +721,9 @@
 (define-macro (^extensible-array-to-array! var len)
   `(univ-emit-extensible-array-to-array! ctx ,var ,len))
 
+(define-macro (^extensible-subarray expr start len)
+   `(univ-emit-extensible-subarray ctx ,expr ,start ,len))
+
 (define-macro (^subarray expr1 expr2 expr3)
   `(univ-emit-subarray ctx ,expr1 ,expr2 ,expr3))
 
@@ -2420,6 +2423,21 @@
     (else
      (compiler-internal-error
       "univ-emit-extensible-array-to-array!, unknown target"))))
+
+(define (univ-emit-extensible-subarray ctx expr start len)
+   (case (target-name (ctx-target ctx))
+
+    ((js ruby php java) (^subarray expr start len))
+
+    ((python)
+     (^ "[" expr "[i] for i in range(" 
+                  (if (eq? start 0) 
+                      len
+                      (^ start ", " (^+ start len)))
+                ")]"))
+    (else
+     (compiler-internal-error
+      "univ-emit-extensible-subarray, unknown target"))))
 
 (define (univ-emit-subarray ctx expr1 expr2 expr3)
   (case (target-name (ctx-target ctx))
@@ -6547,19 +6565,20 @@ EOF
       "\n"
       '()
       (lambda (ctx)
-       (let ((obj (^local-var "obj"))
-             (host_function_closure (^local-var "host_function_closure")))
+       (let ((obj (^local-var 'obj))
+             (h2s_procedure (^local-var 'h2s_procedure)))
         (^ 
-            (^prim-function-declaration
-            "host_function_closure"
-            'object
+           (^procedure-declaration
+            #t
+            'entrypt ;; TODO: ensure it is the correct type
+            'h2s_procedure
             '() 
             "\n"
             '()
             (^return-call-prim 
-              (^rts-method (univ-use-rtlib ctx 'scm2host_call))
+              (^rts-method-ref 'scm2host_call)
               obj))
-           (^return host_function_closure))))))
+           (^return (^prefix h2s_procedure)))))))
 
     ((host2scm)
      (rts-method
@@ -6605,50 +6624,61 @@ EOF
                 (^if (^float? obj)
                      (^return (^flonum-box obj))))))
 
-           (^if (^float? obj)
-                (^return (^flonum-box obj)))
-
            (case (target-name (ctx-target ctx))
             ((php)
              (^ ))
             (else
              (^if (^function? obj)
                   (^return-call-prim 
-                   (^rts-method (univ-use-rtlib ctx 'host_function2scm))
+                   (^rts-method-ref 'host_function2scm)
                    obj))))
 
            (^if (^str? obj)
-                (^return (^string-box (^str-to-codes obj))))
+                (^return (^str->string obj)))
+
 
            ; TODO: generalise for python, java, ruby and php
-           (^if (^typeof "object" obj)
-                (^if (^instanceof "Array" obj)
-                     (^return (^map (^rts-method (univ-use-rtlib ctx 'js2scm)) obj))
-                     (^
-                       (^var-declaration '() alist (^null-obj))
-                       "for (var " key " in " obj ") {\n"
-                           (^assign alist (^cons (^cons (^call-prim
-                                                        (^rts-method (univ-use-rtlib ctx 'js2scm))
-                                                        key)
-                                                       (^call-prim
-                                                        (^rts-method (univ-use-rtlib ctx 'js2scm))
-                                                        (^array-index obj key)))
-                                                alist))
-                       "}\n"                       
-                       (^return alist))))
-            ;; Handle scheme objects represented as classes.
+           (case (target-name (ctx-target ctx))
+            ((js)
+             (^if (^typeof "object" obj)
+                  (^if (^instanceof "Array" obj)
+                       (^return (^map (^rts-method-ref 'host2scm) obj))
+                       (^
+                         (^var-declaration '() alist (^null-obj))
+                         "for (var " key " in " obj ") {\n"
+                             (^assign alist (^cons (^cons (^call-prim
+                                                          (^rts-method-ref 'host2scm)
+                                                          key)
+                                                         (^call-prim
+                                                          (^rts-method-ref 'host2scm)
+                                                          (^array-index obj key)))
+                                                  alist))
+                         "}\n"                       
+                         (^return alist)))))
+            (else (^)))
+
+
+           ;; Scheme object "passthrough".
+           ;; Handle scheme objects represented as classes and return
+           ;; them without modification.
+           ;; ??? TODO: implement passthrough as a compiler option. ???
 #;
            (case (univ-void-representation ctx)
             ((host) (^))
             ((class)
-             (^if (^void? obj)
+             (^if (^void-obj? obj)
                   (^return obj))))
-#;
-           (case (univ-null-representation ctx)
-            ((host) (^))
-            ((class)
-             (^if (^null? obj)
-               (^return obj))))
+
+           ;; Needed for languages without void, otherwise conversion on
+           ;; null values wouldn't be bijective.
+           (case (target-name (ctx-target ctx))
+            ((php python ruby java)
+             (case (univ-null-representation ctx)
+              ((host) (^))
+              ((class)
+               (^if (^null-obj? obj)
+                 (^return obj)))))
+            (else (^)))
 #;
            (case (univ-boolean-representation ctx)
             ((host) (^))
@@ -6680,7 +6710,7 @@ EOF
              (^if (^procedure? obj)
                (^return obj))))
 
-           (univ-throw ctx "\"Gambit_host2scm error\""))))))
+           (univ-throw ctx "\"host2scm error\""))))))
 
     ((host2scm_call)
      (rts-method
@@ -6692,25 +6722,25 @@ EOF
       "\n"
       '()
       (lambda (ctx)
-       (let ((args (^local-var "args"))
-             (i (^local-var "i"))
-             (proc (^local-var "proc")))
-         (^ 
+       (let ((args (^local-var 'args))
+             (i (^local-var 'i))
+             (proc (^local-var 'proc)))
+          (^ 
             (^assign (gvm-state-sp-use ctx 'wr) -1)
             (^push (^null-obj))
             (^assign (^getnargs) (^array-length args))
             (^assign i 0)
             (^while (^< i (^getnargs))
               (^ (^push
-                   (^call-prim (^rts-method (univ-use-rtlib ctx 'host2scm))
+                   (^call-prim (^rts-method-ref 'host2scm)
                                (^array-index args i)))
                  (^inc-by i 1)))
             (univ-pop-args-to-regs ctx 0)
-            (^assign (^getreg 0) (^rts-method (univ-use-rtlib ctx 'underflow)))
+            (^assign (^getreg 0) (^rts-method-use 'underflow))
             (^expr-statement
-              (^call-prim (^rts-method (univ-use-rtlib ctx 'trampoline))
+              (^call-prim (^rts-method-use 'trampoline)
                           proc))
-            (^return-call-prim (^rts-method(univ-use-rtlib ctx 'scm2host))
+            (^return-call-prim (^rts-method-ref 'scm2host)
                                (^getreg 1)))))))
 
     ((scm_procedure2host)
@@ -6722,24 +6752,26 @@ EOF
       "\n"
       '()
       (lambda (ctx)
-       (let ((obj (^local-var "obj"))
-             (arguments  (^local-var "arguments"))
-             (scm_procedure (^local-var "scm_procedure")))
+       (let ((obj (^local-var 'obj))
+             (arguments  (^local-var 'arguments))
+             (scm_procedure (^local-var 'scm_procedure)))
          (^
+          ;; TODO: since prim-function-declaration is supposed to be removed
+          ;; an alternative way to create a host closure should be found.
           (^prim-function-declaration
-           "scm_procedure"                              ;name
+           'scm_procedure                               ;name
            'object
            (case (target-name (ctx-target ctx))         ;argument
             ((js php) '())
-            ((python ruby) `(("*arguments" . #f))))
+            ((python ruby) (list (univ-field '*arguments '()))))
            "\n"                                         ;header
            (^)                                          ;attribs
            (^ (case (target-name (ctx-target ctx))      ;body
                ((php)
-                (^var-declaration '() arguments (^call-prim "func_get_args")))
-               (else ""))
+                (^var-declaration '() arguments (^call-prim 'func_get_args)))
+               (else (^)))
               (^return 
-               (^call-prim (^rts-method (univ-use-rtlib ctx 'host2scm_call))
+               (^call-prim (^rts-method-ref 'host2scm_call)
                            obj
                            arguments))))
             (^return scm_procedure))))))
@@ -6753,9 +6785,9 @@ EOF
       "\n"
       '()
       (lambda (ctx)
-       (let ((obj (^local-var "obj")))
+       (let ((obj (^local-var 'obj)))
          (^
-          (^if (^void? obj)
+          (^if (^void-obj? obj)
             (case (univ-void-representation ctx)
              ((host) (^return obj))
              ((class)
@@ -6763,7 +6795,7 @@ EOF
                         ((js) (^void))
                         (else (^null)))))))
 
-          (^if (^null? obj)
+          (^if (^null-obj? obj)
                (case (univ-null-representation ctx)
                 ((host) (^return obj))
                 ((class)
@@ -6774,65 +6806,78 @@ EOF
           (^if (^boolean? obj)
                (^return (^boolean-unbox obj)))
 
-          (^if (^fixnum? obj)
-               (^return (^fixnum-unbox obj)))
-
-          (^if (^flonum? obj)
-               (^return (^flonum-unbox obj)))
+          (if (and (eq? (target-name (ctx-target ctx)) 'js)
+                   (eq? (univ-flonum-representation ctx) 'host)
+                   (eq? (univ-fixnum-representation ctx) 'host))
+              (^if  (^int? obj)
+                    (^if (^and (^>= obj -536870912)
+                               (^<= obj 536870911))
+                         (^return (^fixnum-unbox obj))
+                         (^return (^flonum-unbox obj))))
+              (^
+                (^if (^fixnum? obj)
+                     (^return (^fixnum-unbox obj)))
+                (^if (^flonum? obj)
+                     (^return (^flonum-unbox obj)))))
 
           (^if (^string? obj)
                (case (univ-string-representation ctx)
                 ((class)
-                 (^return (^tostr obj)))
+                 (^return (^string->str obj)))
                 ((host)
                  (^return obj))))
 
           ; TODO: generalise for python, ruby, php and java
-          (^if (^instanceof "Array" obj)
-               (^return (^map (^rts-method (univ-use-rtlib ctx 'scm2host)) obj)))
-          
+          (case (target-name (ctx-target ctx))
+           ((js) 
+            (^if (^instanceof "Array" obj)
+                 (^return (^map (^rts-method-ref 'scm2host) obj))))
+           (else (^)))
+
           ; TODO: generalise for python, ruby, php and java
-          (^if (^pair? obj)
-               (let ((jsobj (^local-var "jsobj"))
-                     (i (^local-var "i"))
-                     (elem (^local-var "elem")))
+          ; Note: pair conversions are not bijective.
+          (case (target-name (ctx-target ctx))
+           ((js) 
+            (^if (^pair? obj)
+                 (let ((jsobj (^local-var 'jsobj))
+                       (i (^local-var 'i))
+                       (elem (^local-var 'elem)))
 
-                 (^
-                   (^var-declaration '() jsobj "{}")
-                   (^var-declaration 'int i (^int 0))
-                   (^while (^pair? obj)
-                     (^ (^var-declaration '() elem (^getcar obj))
-                        (^if (^pair? elem)
-                             (^assign
-                               (^array-index
-                                obj
-                                (^call-prim
-                                 (^rts-method (univ-use-rtlib ctx 'scm2host))
-                                 (^getcar elem)))
-                               (^call-prim
-                                (^rts-method (univ-use-rtlib ctx 'scm2host))
-                                (^getcdr elem)))
-                             (^assign
-                               (^array-index obj i)
-                               (^call-prim
-                                (^rts-method (univ-use-rtlib ctx 'scm2host))
-                                elem)))
-                        (^inc-by i 1)
-                        (^assign obj (^getcdr obj))))
-                   (^return jsobj))))
+                   (^
+                     (^var-declaration '() jsobj "{}")
+                     (^var-declaration 'int i (^int 0))
+                     (^while (^pair? obj)
+                       (^ (^var-declaration '() elem (^getcar obj))
+                          (^if (^pair? elem)
+                               (^assign
+                                 (^array-index
+                                  obj
+                                  (^call-prim (^rts-method-ref 'scm2host)
+                                              (^getcar elem)))
+                                 (^call-prim (^rts-method-ref 'scm2host)
+                                             (^getcdr elem)))
+                               (^assign
+                                 (^array-index obj i)
+                                 (^call-prim
+                                  (^rts-method-ref 'scm2host)
+                                  elem)))
+                          (^inc-by i 1)
+                          (^assign obj (^getcdr obj))))
+                     (^return jsobj)))))
+           (else (^)))
 
-           (^if (^structure? obj)
-                (univ-throw ctx "\"Gambit.scm2js error (cannot convert Structure)\""))
+          (^if (^structure? obj)
+               (univ-throw ctx "\"scm2host error (cannot convert Structure)\""))
 
           (case (target-name (ctx-target ctx))
            ((php) (^))
            (else
             (^if (^procedure? obj)
                  (^return-call-prim
-                   (^rts-method (univ-use-rtlib ctx 'scm_procedure2host))
+                   (^rts-method-ref 'scm_procedure2host)
                    obj))))
 
-          (univ-throw ctx "\"Gambit_scm2host error\""))))))
+          (univ-throw ctx "\"scm2host error\""))))))
 
     ((scm2host_call)
      (rts-method
@@ -6843,38 +6888,37 @@ EOF
       "\n"
       '()
       (lambda (ctx)
-       (let ((args (^local-var "args"))
-             (ra (^local-var "ra"))
-             (frame (^local-var "frame"))
-             (tmp (^local-var "tmp"))
-             (fn (^local-var "fn")))
+       (let ((args (^local-var 'args))
+             (ra (^local-var 'ra))
+             (frame (^local-var 'frame))
+             (tmp (^local-var 'tmp))
+             (fn (^local-var 'fn)))
          (^
           (univ-push-args ctx)
-          (^var-declaration '()
+          (^var-declaration '(array scmobj) 
                             args
-                            (^subarray
+                            (^extensible-subarray
                                (gvm-state-stack-use ctx 'rd)
                                (^- (^+ (gvm-state-sp-use ctx 'rd) 1)
                                        (^getnargs))
                                (^getnargs)))
           (^inc-by (gvm-state-sp-use ctx 'rdwr) (^- (^getnargs)))
-          (^var-declaration '()
+          (^var-declaration 'returnpt
                             ra
                             (^call-prim
-                             (^rts-method (univ-use-rtlib ctx 'heapify_cont))
+                             (^rts-method-use 'heapify_cont)
                              (^getreg 0)))
-          (^var-declaration '()
+          (^var-declaration 'frame
                             frame
                             (^array-index (gvm-state-stack-use ctx 'rd) 0))
-          (^var-declaration '()
+          ;; TODO choose appropriate type for Java
+          (^var-declaration '() ;??? '(array ???) <- This one is problematic.
                             tmp
-                            (^map (^rts-method (univ-use-rtlib ctx  
-                                                               'scm2host))
+                            (^map (^rts-method-ref 'scm2host)
                                   args))
           (^assign tmp (^call-with-arg-array fn tmp))
           (^assign (^getreg 1)
-                   (^call-prim (^rts-method (univ-use-rtlib ctx 'host2scm))
-                               tmp))
+                   (^call-prim (^rts-method-ref 'host2scm) tmp))
           (^assign (gvm-state-sp-use ctx 'wr) -1)
           (^inc-by (gvm-state-sp-use ctx 'rdwr)
                    1
@@ -7079,7 +7123,15 @@ EOF
         (univ-use-rtlib ctx 'js2scm)
         (univ-use-rtlib ctx 'scm2js)
         (univ-use-rtlib ctx 'js2scm_call)
-        (univ-use-rtlib ctx 'scm2js_call)))
+        (univ-use-rtlib ctx 'scm2js_call))
+       ((python)
+        (univ-use-rtlib ctx 'host_function2scm)
+        (univ-use-rtlib ctx 'host2scm)
+        (univ-use-rtlib ctx 'host2scm_call)
+        (univ-use-rtlib ctx 'scm2host)
+        (univ-use-rtlib ctx 'scm_procedure2host) ;;TODO FIX
+        (univ-use-rtlib ctx 'scm2host_call))
+       )
       (univ-make-empty-defs))
 
     ((globals)
@@ -8554,10 +8606,10 @@ gambit_Pair.prototype.toString = function () {
      (case (target-name (ctx-target ctx))
 
       ((js)
-       (^instanceof (^null) expr))
+       (^instanceof (^null-obj) expr))
 
       ((python ruby php)
-       (^eq? expr (^null)))
+       (^eq? expr (^null-obj)))
 
       (else
        (compiler-internal-error
@@ -8617,17 +8669,19 @@ gambit_Pair.prototype.toString = function () {
      (case (target-name (ctx-target ctx))
 
       ((js)
-       (^instanceof (^void) expr))
+       (^instanceof (^void-obj) expr))
 
       ((python ruby php)
-       (^eq? expr (^void)))
+       (^eq? expr (^void-obj)))
 
       (else
        (compiler-internal-error
         "univ-emit-void?, unknown target"))))
 
     (else
-     (^null? expr))))
+     (case (target-name (ctx-target ctx))
+      ((js) (^void? expr))
+      (else (^null? expr))))))
 
 (define (univ-emit-str? ctx expr)
   (case (target-name (ctx-target ctx))
@@ -13621,6 +13675,7 @@ tanh
 (univ-define-prim "##inline-host-statement" #t
 
   (lambda (ctx return opnds)
+    (univ-use-rtlib ctx 'ffi)
     (if (and (> (length opnds) 0)
              (obj? (car opnds))
              (string? (obj-val (car opnds))))
@@ -13631,6 +13686,7 @@ tanh
 (univ-define-prim "##inline-host-expression" #t
 
   (lambda (ctx return opnds)
+    (univ-use-rtlib ctx 'ffi)
     (if (and (> (length opnds) 0)
              (obj? (car opnds))
              (string? (obj-val (car opnds))))
@@ -13641,6 +13697,7 @@ tanh
 (univ-define-prim "##inline-host-declaration" #t
 
   (lambda (ctx return opnds)
+    (univ-use-rtlib ctx 'ffi)
     (if (and (= (length opnds) 1)
              (obj? (car opnds))
              (string? (obj-val (car opnds))))
