@@ -909,6 +909,12 @@
 (define-macro (^void-obj)
   `(univ-emit-void-obj ctx))
 
+(define-macro (^str->string expr)
+  `(univ-emit-str->string ctx ,expr))
+
+(define-macro (^string->str expr)
+  `(univ-emit-string->str ctx ,expr))
+
 (define-macro (^eof)
   `(univ-emit-eof ctx))
 
@@ -5558,7 +5564,7 @@ EOF
      (rts-method
       'make_frame
       '(public)
-      'frm
+      'frame
       (list (univ-field 'ra 'returnpt))
       "\n"
       '()
@@ -8122,6 +8128,19 @@ gambit_Pair.prototype.toString = function () {
 
     (else
      (^void))))
+
+(define (univ-emit-str->string ctx expr)
+  (^string-box (^str-to-codes expr)))
+
+
+(define (univ-emit-string->str ctx expr)
+  (case (univ-string-representation ctx)
+
+    ((class)
+     (^tostr  expr))
+
+    ((host)
+     expr)))
 
 (define (univ-emit-eof ctx)
   (case (univ-eof-representation ctx)
@@ -11685,7 +11704,7 @@ tanh
 (univ-define-prim "##set-box!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^setbox arg1 arg2)
+     (^ (^setbox (^cast* 'box arg1) arg2)
         (return arg1)))))
 
 (univ-define-prim "##values" #t
@@ -12117,93 +12136,98 @@ tanh
 ;;TODO: ("##type-super"                   (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-fields"                  (1)   #f ()    0    #f      extended)
 
-;; TODO: test ##symbol->string primitive and ##string->symbol primitive
-
 (univ-define-prim "##symbol->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^str-to-codes (^symbol-unbox arg1)))))))
+     (return (^str->string (^symbol-unbox arg1))))))
 
 (univ-define-prim "##string->symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^symbol-box (^tostr arg1))))))
+     (return (^symbol-box (^string->str arg1))))))
 
 (univ-define-prim "##make-uninterned-symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^symbol-box-uninterned name hash)))))
+     (return (^symbol-box-uninterned (^string->str name) hash)))))
 
 (univ-define-prim "##symbol-name" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'name)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return
+       (^str->string (^member (^cast* 'symbol sym) 'name))))))
 
 (univ-define-prim "##symbol-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym name)
-     (^ (^assign (^member sym 'name) name)
+     (^ (^assign (^member (^cast* 'symbol sym) 'name)
+                 (^string->str name))
         (return sym)))))
 
 (univ-define-prim "##symbol-hash" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'hash)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return (^member (^cast* 'symbol sym) 'hash)))))
 
 (univ-define-prim "##symbol-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym hash)
-     (^ (^assign (^member sym 'hash) hash)
+     (^ (^assign (^member (^cast* 'symbol sym) 'hash) hash)
         (return sym)))))
 
 (univ-define-prim "##symbol-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'interned)))));;;;FIXME for host representation
-
-;; TODO: test ##keyword->string primitive and ##string->keyword primitive
+     (return (^member (^cast* 'symbol sym) 'interned)))));;;;FIXME for host representation
 
 (univ-define-prim "##keyword->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^string-box (^str-to-codes (^keyword-unbox arg1)))))))
+     (return (^str->string (^keyword-unbox arg1))))))
 
 (univ-define-prim "##string->keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^keyword-box (^tostr arg1))))))
+     (return (^keyword-box (^string->str arg1))))))
 
 (univ-define-prim "##make-uninterned-keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^keyword-box-uninterned name hash)))))
+     (return (^keyword-box-uninterned (^string->str name) hash)))))
 
 (univ-define-prim "##keyword-name" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'name)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return
+       (^str->string (^member (^cast* 'keyword key) 'name))))))
 
 (univ-define-prim "##keyword-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key name)
-     (^ (^assign (^member key 'name) name)
+     (^ (^assign (^member (^cast* 'keyword key) 'name)
+                 (^string->str name))
         (return key)))))
 
 (univ-define-prim "##keyword-hash" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'hash)))));;;;FIXME for host representation
+     ;;;;FIXME for host representation
+     (return (^member (^cast* 'keyword key) 'hash)))))
 
 (univ-define-prim "##keyword-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key hash)
-     (^ (^assign (^member key 'hash) hash)
+     (^ (^assign (^member (^cast* 'keyword key) 'hash) hash)
         (return key)))))
 
 (univ-define-prim "##keyword-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member key 'interned)))));;;;FIXME for host representation
+     (return (^member (^cast* 'keyword key) 'interned)))));;;;FIXME for host representation
+
 
 ;;TODO: ("##closure-length"               (1)   #f ()    0    fixnum  extended)
 ;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
@@ -12394,24 +12418,25 @@ tanh
 (univ-define-prim "##promise-thunk" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'thunk)))))
+     (return (^member (^cast* 'promise sym) 'thunk)))))
 
 (univ-define-prim "##promise-thunk-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym thunk)
-     (^ (^assign (^member sym 'thunk) thunk)
+     (^ (^assign (^member (^cast* 'promise sym) 'thunk) thunk)
         (return sym)))))
 
 (univ-define-prim "##promise-result" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member sym 'result)))))
+     (return (^member (^cast* 'promise sym) 'result)))))
 
 (univ-define-prim "##promise-result-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym result)
-     (^ (^assign (^member sym 'result) result)
+     (^ (^assign (^member (^cast* 'promise sym) 'result) result)
         (return sym)))))
+
 
 ;;TODO: ("##force"                        (1)   #t 0     0    #f      extended)
 
@@ -12481,7 +12506,7 @@ tanh
 (univ-define-prim "##continuation-ret" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (univ-frame-ra ctx (^member cont 'frame))))))
+     (return (univ-frame-ra ctx (^member (^cast* 'continuation cont) 'frame))))))
 
 (define (univ-get-cont-ra-field attrib)
   (make-translated-operand-generator
@@ -12489,7 +12514,7 @@ tanh
      (univ-get-ra-field
       ctx
       return
-      (univ-frame-ra ctx (^member cont 'frame))
+      (univ-frame-ra ctx (^member (^cast* 'continuation cont) 'frame))
       attrib))))
 
 (univ-define-prim "##continuation-fs"   #f (univ-get-cont-ra-field 'fs))
@@ -12501,7 +12526,7 @@ tanh
      (return
       (univ-frame-ref
        ctx
-       (^frame-unbox (^member cont 'frame))
+       (^frame-unbox (^member (^cast* 'continuation cont) 'frame))
        (^fixnum-unbox index))))))
 
 (univ-define-prim "##continuation-set!" #t
@@ -12509,7 +12534,7 @@ tanh
    (lambda (ctx return cont index val)
      (^ (univ-frame-set!
          ctx
-         (^frame-unbox (^member cont 'frame))
+         (^frame-unbox (^member (^cast* 'continuation cont) 'frame))
          (^fixnum-unbox index)
          val)
         (return cont)))))
@@ -12519,7 +12544,7 @@ tanh
    (lambda (ctx return cont index)
      (return
       (^boolean-box
-       (univ-frame-slot-live? ctx (^member cont 'frame) index))))))
+       (univ-frame-slot-live? ctx (^member (^cast* 'continuation cont) 'frame) index))))))
 
 (univ-define-prim-bool "##frame?" #t
   (make-translated-operand-generator
@@ -12530,9 +12555,9 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return ra)
      (return
-      (^call-prim
-       (^rts-method-use 'make_frame)
-       ra)))))
+       (^call-prim
+         (^rts-method-use 'make_frame)
+         (^cast* 'returnpt ra))))))
 
 (univ-define-prim "##frame-ret" #t
   (make-translated-operand-generator
@@ -12540,7 +12565,7 @@ tanh
      (return (univ-frame-ra ctx frame)))))
 
 (define (univ-frame-ra ctx frame)
-  (^array-index (^frame-unbox frame) 0))
+  (^cast* 'returnpt (^array-index (^frame-unbox frame) 0)))
 
 (define (univ-get-frame-ra-field attrib)
   (make-translated-operand-generator
@@ -12628,23 +12653,23 @@ tanh
 (univ-define-prim "##will-testator" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member will 'testator)))))
+     (return (^member (^cast* 'will will) 'testator)))))
 
 (univ-define-prim "##will-testator-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will testator)
-     (^ (^assign (^member will 'testator) testator)
+     (^ (^assign (^member (^cast* 'will will) 'testator) testator)
         (return will)))))
 
 (univ-define-prim "##will-action" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member will 'action)))))
+     (return (^member (^cast* 'will will) 'action)))))
 
 (univ-define-prim "##will-action-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will action)
-     (^ (^assign (^member will 'action) action)
+     (^ (^assign (^member (^cast* 'will will) 'action) action)
         (return will)))))
 
 (univ-define-prim "##apply" #f
