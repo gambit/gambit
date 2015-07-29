@@ -1,7 +1,7 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
 (define a (##not 123))
-(define b (##not f))
+(define b (##not a))
 (define c "")
 (define d 1.5)
 (define e (##make-vector 2 999))
@@ -37,8 +37,3 @@
 (test l)
 (test m)
 (test o)
-
-;(println (##values-ref w 0))
-;(println (##values-ref w 1))
-;(##values-set! w 1 888)
-;(println (##values-ref w 1))
