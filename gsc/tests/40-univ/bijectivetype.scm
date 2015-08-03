@@ -83,4 +83,4 @@
 (test ##string? (bijective "string"))
 
 ;; procedure
-(test ##procedure? (bijective-fn id))
+;(test ##procedure? (bijective-fn id))

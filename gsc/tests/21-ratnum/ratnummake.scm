@@ -1,7 +1,7 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
 (define a (##not 123))
-(define b (##not f))
+(define b (##not a))
 (define c "")
 (define d 1.5)
 (define e (##make-vector 2 999))

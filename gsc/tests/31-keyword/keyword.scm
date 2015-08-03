@@ -1,7 +1,7 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
 (define a (##not 123))
-(define b (##not f))
+(define b (##not a))
 (define c "")
 (define d 1.5)
 (define e (##make-vector 2 999))
@@ -15,9 +15,8 @@
 (define m 'a)
 (define n (quote b))
 (define o (##make-uninterned-symbol "uninterned" 80))
-(define p (##list 1 2 3))
-(define q a:)
-(define r (##make-uninterned-keyword "uninterned" 80))
+(define p a:)
+(define q (##make-uninterned-keyword "uninterned" 80))
 
 (define (test x)
   (println (##keyword? x))
@@ -43,9 +42,3 @@
 (test o)
 (test p)
 (test q)
-(test r)
-
-;(println (##values-ref w 0))
-;(println (##values-ref w 1))
-;(##values-set! w 1 888)
-;(println (##values-ref w 1))

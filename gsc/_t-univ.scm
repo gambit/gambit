@@ -141,11 +141,7 @@
 
 (define (univ-symbol-representation ctx)
   (or (univ-get-representation-option ctx 'repr-symbol)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host) ;; TODO: must be 'class to support uninterned symbols
-        (else
-         'class))))
+      'class))
 
 (define (univ-keyword-representation ctx)
   'class)
@@ -5694,7 +5690,7 @@ EOF
              (^var-declaration
               '(array scmobj)
               slots
-              (^new-array 'scmobj (^+ fs (^int 1))))
+              (^new-array 'scmobj (^parens (^+ fs (^int 1)))))
              (^assign (^array-index slots (^int 0)) ra)
              (^return
               (^frame-box slots)))))))
@@ -6566,7 +6562,7 @@ EOF
       '()
       (lambda (ctx)
        (let ((obj (^local-var 'obj))
-             (h2s_procedure (^local-var 'h2s_procedure)))
+             (h2s_procedure (^prefix 'h2s_procedure)))
         (^ 
            (^procedure-declaration
             #t
@@ -6578,7 +6574,7 @@ EOF
             (^return-call-prim 
               (^rts-method-ref 'scm2host_call)
               obj))
-           (^return (^prefix h2s_procedure)))))))
+           (^return h2s_procedure))))))
 
     ((host2scm)
      (rts-method
@@ -7124,7 +7120,7 @@ EOF
         (univ-use-rtlib ctx 'scm2js)
         (univ-use-rtlib ctx 'js2scm_call)
         (univ-use-rtlib ctx 'scm2js_call))
-       ((python)
+       ((python ruby php)
         (univ-use-rtlib ctx 'host_function2scm)
         (univ-use-rtlib ctx 'host2scm)
         (univ-use-rtlib ctx 'host2scm_call)
@@ -8096,6 +8092,13 @@ gambit_Pair.prototype.toString = function () {
     (define (field-decl type name init)
       (univ-emit-var-declaration ctx type name init))
 
+    (define (except-this v)
+      (case (target-name (ctx-target ctx))
+        ((php) (if (eq? v (^this))
+                   (^null)
+                   v))
+        (else v)))
+
     (define (qualified-field-decls additional-properties fields)
       (let ((fields
              (keep (lambda (x) (not (univ-field-inherited? x)))
@@ -8106,7 +8109,7 @@ gambit_Pair.prototype.toString = function () {
                       (^ (qualifiers additional-properties field)
                          (field-decl (univ-field-type field)
                                      (^local-var (univ-field-name field))
-                                     (univ-field-init field))))
+                                     (except-this (univ-field-init field)))))
                     fields))
             (^))))
 
