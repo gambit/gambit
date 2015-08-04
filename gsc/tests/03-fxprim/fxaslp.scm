@@ -13,7 +13,9 @@
   (println (##fxarithmetic-shift-left? x 3))
   (println (##fxarithmetic-shift-left? x 5))
   (println (##fxarithmetic-shift-left? x 10))
-  (println (##fxarithmetic-shift-left? x 31)))
+  (println (##fxarithmetic-shift-left? x 31))
+  (println (##fxarithmetic-shift-left? x 0))
+  (println (##fxarithmetic-shift-left? x -1)))
 
 (test a)
 (test b)

@@ -1,0 +1,22 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define a 0)
+(define b 536870911)
+(define c -536870912)
+(define d 1)
+(define e -1)
+(define f 357913941)
+
+(define (test x)
+  (println (##fxwraplogical-shift-right x 0))
+  (println (##fxwraplogical-shift-right x 1))
+  (println (##fxwraplogical-shift-right x 2))
+  (println (##fxwraplogical-shift-right x 3))
+  (println (##fxwraplogical-shift-right x 4)))
+
+(test a)
+(test b)
+(test c)
+(test d)
+(test e)
+(test f)

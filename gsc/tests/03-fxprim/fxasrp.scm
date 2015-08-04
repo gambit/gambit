@@ -11,8 +11,10 @@
   (println (##fxarithmetic-shift-right? x 0))
   (println (##fxarithmetic-shift-right? x 1))
   (println (##fxarithmetic-shift-right? x 2))
-  (println (##fxarithmetic-shift-right? x 3))
-  (println (##fxarithmetic-shift-right? x 4))
+  (println (##fxarithmetic-shift-right? x 10))
+  (println (##fxarithmetic-shift-right? x 20))
+  (println (##fxarithmetic-shift-right? x 29))
+  (println (##fxarithmetic-shift-right? x 30))
   (println (##fxarithmetic-shift-right? x 31)))
 
 (test a)
