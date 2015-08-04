@@ -1665,100 +1665,63 @@
      (compiler-internal-error
       "univ-emit-/, unknown target"))))
 
-(define (univ-wrap+ ctx expr1 expr2)
+(define (univ-wrap ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((js java)
-     (^>> (^<< (^parens (^+ expr1 expr2))
-               univ-tag-bits)
-          univ-tag-bits))
+     (^>> (^<< (^parens expr)
+               (^int univ-tag-bits))
+          (^int univ-tag-bits)))
 
     ((python)
      (^>> (^member (^call-prim
                     "ctypes.c_int32"
-                    (^<< (^parens (^+ expr1 expr2))
-                         univ-tag-bits))
+                    (^<< (^parens expr)
+                         (^int univ-tag-bits)))
                    'value)
-          univ-tag-bits))
+          (^int univ-tag-bits)))
 
     ((ruby php)
-     (^- (^parens (^bitand (^parens (^+ (^+ expr1 expr2)
-                                        univ-fixnum-max+1))
-                           univ-fixnum-max*2+1))
-         univ-fixnum-max+1))
+     (^- (^parens (^bitand (^parens (^+ (^parens expr)
+                                        (^int univ-fixnum-max+1)))
+                           (^int univ-fixnum-max*2+1)))
+         (^int univ-fixnum-max+1)))
 
     (else
      (compiler-internal-error
-      "univ-wrap+, unknown target"))))
+      "univ-wrap, unknown target"))))
+
+(define (univ-wrap+ ctx expr1 expr2)
+  (univ-wrap ctx (^+ expr1 expr2)))
 
 (define (univ-wrap- ctx expr1 #!optional (expr2 #f))
-  (case (target-name (ctx-target ctx))
-
-    ((js java)
-     (^>> (^<< (^parens (if expr2
-                            (^- expr1 expr2)
-                            (^- expr1)))
-               univ-tag-bits)
-          univ-tag-bits))
-
-    ((python)
-     (^>> (^member (^call-prim
-                    "ctypes.c_int32"
-                    (^<< (^parens (if expr2
-                                      (^- expr1 expr2)
-                                      (^- expr1)))
-                         univ-tag-bits))
-                   'value)
-          univ-tag-bits))
-
-    ((ruby php)
-     (^- (^parens (^bitand (^parens (^+ (if expr2
-                                            (^- expr1 expr2)
-                                            (^- expr1))
-                                        univ-fixnum-max+1))
-                           univ-fixnum-max*2+1))
-         univ-fixnum-max+1))
-
-    (else
-     (compiler-internal-error
-      "univ-wrap-, unknown target"))))
+  (univ-wrap ctx (if expr2
+                     (^- expr1 expr2)
+                     (^- expr1))))
 
 (define (univ-wrap* ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^>> (^parens
-           (^<< (^parens
-                 (^+ (^* (^parens (^bitand expr1 #xffff))
-                         expr2)
-                     (^* (^parens (^bitand expr1 #xffff0000))
-                         (^parens (^bitand expr2 #xffff)))))
-                univ-tag-bits))
-          univ-tag-bits))
+     (univ-wrap ctx
+                (^+ (^* (^parens (^bitand expr1 #xffff))
+                        expr2)
+                    (^* (^parens (^bitand expr1 #xffff0000))
+                        (^parens (^bitand expr2 #xffff))))))
 
-    ((python)
-     (^>> (^member (^call-prim
-                    "ctypes.c_int32"
-                    (^<< (^parens (^* expr1 expr2))
-                         univ-tag-bits))
-                   'value)
-          univ-tag-bits))
-
-    ((ruby php)
-     (^- (^parens (^bitand (^parens (^+ (^* expr1 expr2)
-                                        univ-fixnum-max+1))
-                           univ-fixnum-max*2+1))
-         univ-fixnum-max+1))
-
-    ((java)
-     (^>> (^parens
-           (^<< (^parens (^* expr1 expr2))
-                univ-tag-bits))
-          univ-tag-bits))
+    ((php python ruby java)
+     (univ-wrap ctx (^* expr1 expr2)))
 
     (else
      (compiler-internal-error
       "univ-wrap*, unknown target"))))
+
+(define (univ-wrap/ ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+   ((python php)
+    ;; Needed because php and python always round down (should round toward 0).
+    (univ-wrap ctx (^float-toint (^/ expr1 (^float-fromint expr2)))))
+   (else (univ-wrap ctx (^/ expr1 expr2)))))
 
 (define (univ-emit-<< ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -11210,6 +11173,40 @@ tanh
 ;;TODO: ("##exact?"                   (1)   #f ()    0    boolean extended)
 ;;TODO: ("##inexact?"                 (1)   #f ()    0    boolean extended)
 
+(univ-define-prim-bool "##fl<-fx-exact?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^parens (^= (^float-fromint (^fixnum-unbox arg))
+                          (^fixnum-unbox arg)))))))
+
+(univ-define-prim "##flsquare" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^parens (^* (^flonum-unbox arg) 
+                                       (^flonum-unbox arg))))))))
+
+(univ-define-prim "##fxsquare" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^fixnum-box (^parens (^* (^fixnum-unbox arg)
+                                       (^fixnum-unbox arg))))))))
+
+(univ-define-prim "##fxwrapsquare" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^fixnum-box (univ-wrap* ctx (^fixnum-unbox arg)
+                                          (^fixnum-unbox arg)))))))
+
+(univ-define-prim "##fxsquare?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+    (let ((max-sqrt (inexact->exact (floor (sqrt univ-fixnum-max)))))
+      (return (^if-expr (^or (^> (^fixnum-unbox arg) (^int max-sqrt))
+                             (^< (^fixnum-unbox arg) (^int (- max-sqrt))))
+                        (^boolean-obj #f)
+                        (^fixnum-box (^* (^fixnum-unbox arg)
+                                         (^fixnum-unbox arg)))))))))
+
 ;;TODO: make variadic, complete, clean up and test
 (univ-define-prim "##fxmax" #t
   (make-translated-operand-generator
@@ -11483,8 +11480,6 @@ tanh
          (compiler-internal-error
           "##fx-?, unknown target")))))))
 
-;;TODO: ("##fxwrapquotient"              (2)   #f ()    0    fixnum  extended)
-
 (univ-define-prim "##fxquotient" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
@@ -11493,6 +11488,12 @@ tanh
                     ctx
                     (^fixnum-unbox arg1)
                     (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##fxwrapquotient" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^fixnum-box (univ-wrap/ ctx (^fixnum-unbox arg1)
+                                          (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##fxremainder" #f
   (make-translated-operand-generator
@@ -12244,14 +12245,9 @@ tanh
                         result))
            (return result))))))
 
-;;TODO: ("##make-will"                    (2)   #t ()    0    #f      extended)
-;;TODO: ("##will-testator"                (1)   #f ()    0    (#f)    extended)
-
 ;;TODO: ("##gc-hash-table-ref"            (2)   #f ()    0    (#f)    extended)
 ;;TODO: ("##gc-hash-table-set!"           (3)   #t ()    0    (#f)    extended)
 ;;TODO: ("##gc-hash-table-rehash!"        (2)   #t ()    0    (#f)    extended)
-
-;; TODO: test box primitives
 
 (univ-define-prim "##box" #t
   (make-translated-operand-generator
