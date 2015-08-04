@@ -129,6 +129,9 @@
 (define (univ-u16vector-representation ctx)
   'class)
 
+(define (univ-s32vector-representation ctx)
+  'class)
+
 (define (univ-f64vector-representation ctx)
   'class)
 
@@ -1277,6 +1280,27 @@
 
 (define-macro (^u16vector-set! val1 val2 val3)
   `(univ-emit-u16vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^s32vector-box val)
+  `(univ-emit-s32vector-box ctx ,val))
+
+(define-macro (^s32vector-unbox s32vector)
+  `(univ-emit-s32vector-unbox ctx ,s32vector))
+
+(define-macro (^s32vector? val)
+  `(univ-emit-s32vector? ctx ,val))
+
+(define-macro (^s32vector-length val)
+  `(univ-emit-s32vector-length ctx ,val))
+
+(define-macro (^s32vector-shrink! val1 val2)
+  `(univ-emit-s32vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^s32vector-ref val1 val2)
+  `(univ-emit-s32vector-ref ctx ,val1 ,val2))
+
+(define-macro (^s32vector-set! val1 val2 val3)
+  `(univ-emit-s32vector-set! ctx ,val1 ,val2 ,val3))
 
 (define-macro (^f64vector-box val)
   `(univ-emit-f64vector-box ctx ,val))
@@ -3906,6 +3930,18 @@
                 (map (lambda (x) (^int x))
                      (u16vect->list obj)))))))
 
+          ((s32vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^s32vector-box
+               (^array-literal
+                's32
+                (map (lambda (x) (emit-obj x #f))
+                     (s32vect->list obj)))))))
+
           ((f64vect? obj)
            (univ-obj-use
             ctx
@@ -5637,6 +5673,14 @@ EOF
       '() ;; class-fields
       (list (univ-field 'elems '(array u16) #f '(public))))) ;; instance-fields
 
+    ((s32vector)
+     (rts-class
+      's32vector
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'elems '(array s32) #f '(public))))) ;; instance-fields
+
     ((f64vector)
      (rts-class
       'f64vector
@@ -6477,6 +6521,22 @@ EOF
         (^make-array
          'u16
          (lambda (result) (^return (^u16vector-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
+    ((make_s32vector)
+     (rts-method
+      'make_s32vector
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 's32))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         's32
+         (lambda (result) (^return (^s32vector-box result)))
          (^local-var 'leng)
          (^local-var 'init)))))
 
@@ -7534,6 +7594,7 @@ gambit_Pair.prototype.toString = function () {
     ((symbol)        'Symbol)
     ((u16vector)     'U16Vector)
     ((u8vector)      'U8Vector)
+    ((s32vector)     'S32Vector)
     ((unbound)       'Unbound)
     ((values)        'Values)
     ((vector)        'Vector)
@@ -7588,6 +7649,7 @@ gambit_Pair.prototype.toString = function () {
                 ((chr)      (base 'char))
                 ((u8)       (base 'byte))  ;;TODO byte is signed (-128..127)
                 ((u16)      (base 'short)) ;;TODO short is signed
+                ((s32)      (decl 'scmobj)) ;; fixnum or bignum
                 ((f64)      (base 'double))
                 ((bool)     (base 'boolean))
                 ((unicode)  (base 'int)) ;; Unicode needs 21 bit wide integers
@@ -10060,6 +10122,48 @@ tanh
 (define (univ-emit-u16vector-set! ctx expr1 expr2 expr3)
   (^assign (^array-index (^u16vector-unbox expr1) expr2) expr3))
 
+(define (univ-emit-s32vector-box ctx expr)
+  (case (univ-s32vector-representation ctx)
+
+    ((class)
+     (^new (^type 's32vector) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s32vector-box, host representation not implemented"))))
+
+(define (univ-emit-s32vector-unbox ctx expr)
+  (case (univ-s32vector-representation ctx)
+
+    ((class)
+     (^member (^cast* 's32vector expr) 'elems))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s32vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-s32vector? ctx expr)
+  (case (univ-s32vector-representation ctx)
+
+    ((class)
+     (^instanceof (^type 's32vector) (^cast*-scmobj expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s32vector?, host representation not implemented"))))
+
+(define (univ-emit-s32vector-length ctx expr)
+  (^array-length (^s32vector-unbox expr)))
+
+(define (univ-emit-s32vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^s32vector-unbox expr1) expr2))
+
+(define (univ-emit-s32vector-ref ctx expr1 expr2)
+  (^array-index (^s32vector-unbox expr1) expr2))
+
+(define (univ-emit-s32vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^s32vector-unbox expr1) expr2) expr3))
+
 (define (univ-emit-f64vector-box ctx expr)
   (case (univ-f64vector-representation ctx)
 
@@ -11061,6 +11165,11 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^u16vector? arg1)))))
+
+(univ-define-prim-bool "##s32vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s32vector? arg1)))))
 
 (univ-define-prim-bool "##f64vector?" #t
   (make-translated-operand-generator
@@ -12454,6 +12563,54 @@ tanh
    (lambda (ctx return arg1 arg2)
      (^ (^u16vector-shrink! arg1
                             (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##s32vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return
+      (^s32vector-box
+       (^array-literal
+        's32
+        args))))))
+
+(univ-define-prim "##make-s32vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method-use 'make_s32vector)
+       (^fixnum-unbox arg1)
+       (or arg2
+           (^fixnum-box (^int 0))))))))
+
+(univ-define-prim "##s32vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box
+       (^s32vector-length arg))))))
+
+(univ-define-prim "##s32vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^s32vector-ref arg1
+                      (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##s32vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^s32vector-set! arg1
+                         (^fixnum-unbox arg2)
+                         arg3)
+        (return arg1)))))
+
+(univ-define-prim "##s32vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^s32vector-shrink! arg1
+                           (^fixnum-unbox arg2))
         (return arg1)))))
 
 (univ-define-prim "##f64vector" #t
