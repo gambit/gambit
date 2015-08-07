@@ -1,0 +1,27 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define f (##not 123))
+(define t (##not f))
+(define s "")
+(define x 1.5)
+(define y (##f32vector 1.5 2.5))
+(define z (##list 1 2 3))
+
+(define (test x)
+  (println (##f32vector? x))
+  (println (if (##f32vector? x) 11 22)))
+
+(test 0)
+(test 1)
+(test f)
+(test t)
+(test s)
+(test x)
+(test y)
+(test z)
+(test (##cdr z))
+
+(println (##f32vector-ref y 0))
+(println (##f32vector-ref y 1))
+(##f32vector-set! y 1 9.5)
+(println (##f32vector-ref y 1))
