@@ -129,6 +129,27 @@
 (define (univ-u16vector-representation ctx)
   'class)
 
+(define (univ-u32vector-representation ctx)
+  'class)
+
+(define (univ-u64vector-representation ctx)
+  'class)
+
+(define (univ-s8vector-representation ctx)
+  'class)
+
+(define (univ-s16vector-representation ctx)
+  'class)
+
+(define (univ-s32vector-representation ctx)
+  'class)
+
+(define (univ-s64vector-representation ctx)
+  'class)
+
+(define (univ-f32vector-representation ctx)
+  'class)
+
 (define (univ-f64vector-representation ctx)
   'class)
 
@@ -1273,6 +1294,153 @@
 
 (define-macro (^u16vector-set! val1 val2 val3)
   `(univ-emit-u16vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^u32vector-box val)
+  `(univ-emit-u32vector-box ctx ,val))
+
+(define-macro (^u32vector-unbox u32vector)
+  `(univ-emit-u32vector-unbox ctx ,u32vector))
+
+(define-macro (^u32vector? val)
+  `(univ-emit-u32vector? ctx ,val))
+
+(define-macro (^u32vector-length val)
+  `(univ-emit-u32vector-length ctx ,val))
+
+(define-macro (^u32vector-shrink! val1 val2)
+  `(univ-emit-u32vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^u32vector-ref val1 val2)
+  `(univ-emit-u32vector-ref ctx ,val1 ,val2))
+
+(define-macro (^u32vector-set! val1 val2 val3)
+  `(univ-emit-u32vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^u64vector-box val)
+  `(univ-emit-u64vector-box ctx ,val))
+
+(define-macro (^u64vector-unbox val)
+  `(univ-emit-u64vector-unbox ctx ,val))
+
+(define-macro (^u64vector? val)
+  `(univ-emit-u64vector? ctx ,val))
+
+(define-macro (^u64vector-length val)
+  `(univ-emit-u64vector-length ctx ,val))
+
+(define-macro (^u64vector-shrink! val1 val2)
+  `(univ-emit-u64vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^u64vector-ref val1 val2)
+  `(univ-emit-u64vector-ref ctx ,val1 ,val2))
+
+(define-macro (^u64vector-set! val1 val2 val3)
+  `(univ-emit-u64vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^s8vector-box val)
+  `(univ-emit-s8vector-box ctx ,val))
+
+(define-macro (^s8vector-unbox val)
+  `(univ-emit-s8vector-unbox ctx ,val))
+
+(define-macro (^s8vector? val)
+  `(univ-emit-s8vector? ctx ,val))
+
+(define-macro (^s8vector-length val)
+  `(univ-emit-s8vector-length ctx ,val))
+
+(define-macro (^s8vector-shrink! val1 val2)
+  `(univ-emit-s8vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^s8vector-ref val1 val2)
+  `(univ-emit-s8vector-ref ctx ,val1 ,val2))
+
+(define-macro (^s8vector-set! val1 val2 val3)
+  `(univ-emit-s8vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^s16vector-box val)
+  `(univ-emit-s16vector-box ctx ,val))
+
+(define-macro (^s16vector-unbox val)
+  `(univ-emit-s16vector-unbox ctx ,val))
+
+(define-macro (^s16vector? val)
+  `(univ-emit-s16vector? ctx ,val))
+
+(define-macro (^s16vector-length val)
+  `(univ-emit-s16vector-length ctx ,val))
+
+(define-macro (^s16vector-shrink! val1 val2)
+  `(univ-emit-s16vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^s16vector-ref val1 val2)
+  `(univ-emit-s16vector-ref ctx ,val1 ,val2))
+
+(define-macro (^s16vector-set! val1 val2 val3)
+  `(univ-emit-s16vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^s32vector-box val)
+  `(univ-emit-s32vector-box ctx ,val))
+
+(define-macro (^s32vector-unbox val)
+  `(univ-emit-s32vector-unbox ctx ,val))
+
+(define-macro (^s32vector? val)
+  `(univ-emit-s32vector? ctx ,val))
+
+(define-macro (^s32vector-length val)
+  `(univ-emit-s32vector-length ctx ,val))
+
+(define-macro (^s32vector-shrink! val1 val2)
+  `(univ-emit-s32vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^s32vector-ref val1 val2)
+  `(univ-emit-s32vector-ref ctx ,val1 ,val2))
+
+(define-macro (^s32vector-set! val1 val2 val3)
+  `(univ-emit-s32vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^s64vector-box val)
+  `(univ-emit-s64vector-box ctx ,val))
+
+(define-macro (^s64vector-unbox val)
+  `(univ-emit-s64vector-unbox ctx ,val))
+
+(define-macro (^s64vector? val)
+  `(univ-emit-s64vector? ctx ,val))
+
+(define-macro (^s64vector-length val)
+  `(univ-emit-s64vector-length ctx ,val))
+
+(define-macro (^s64vector-shrink! val1 val2)
+  `(univ-emit-s64vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^s64vector-ref val1 val2)
+  `(univ-emit-s64vector-ref ctx ,val1 ,val2))
+
+(define-macro (^s64vector-set! val1 val2 val3)
+  `(univ-emit-s64vector-set! ctx ,val1 ,val2 ,val3))
+
+(define-macro (^f32vector-box val)
+  `(univ-emit-f32vector-box ctx ,val))
+
+(define-macro (^f32vector-unbox val)
+  `(univ-emit-f32vector-unbox ctx ,val))
+
+(define-macro (^f32vector? val)
+  `(univ-emit-f32vector? ctx ,val))
+
+(define-macro (^f32vector-length val)
+  `(univ-emit-f32vector-length ctx ,val))
+
+(define-macro (^f32vector-shrink! val1 val2)
+  `(univ-emit-f32vector-shrink! ctx ,val1 ,val2))
+
+(define-macro (^f32vector-ref val1 val2)
+  `(univ-emit-f32vector-ref ctx ,val1 ,val2))
+
+(define-macro (^f32vector-set! val1 val2 val3)
+  `(univ-emit-f32vector-set! ctx ,val1 ,val2 ,val3))
 
 (define-macro (^f64vector-box val)
   `(univ-emit-f64vector-box ctx ,val))
@@ -3902,6 +4070,90 @@
                 (map (lambda (x) (^int x))
                      (u16vect->list obj)))))))
 
+          ((u32vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^u32vector-box
+               (^array-literal
+                'u32
+                (map (lambda (x) (emit-obj x #f))
+                     (u32vect->list obj)))))))
+
+          ((u64vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^u64vector-box
+               (^array-literal
+                'u64
+                (map (lambda (x) (emit-obj x #f))
+                     (u64vect->list obj)))))))
+
+          ((s8vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^s8vector-box
+               (^array-literal
+                's8
+                (map (lambda (x) (^int x))
+                     (s8vect->list obj)))))))
+
+          ((s16vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^s16vector-box
+               (^array-literal
+                's16
+                (map (lambda (x) (^int x))
+                     (s16vect->list obj)))))))
+
+          ((s32vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^s32vector-box
+               (^array-literal
+                's32
+                (map (lambda (x) (emit-obj x #f))
+                     (s32vect->list obj)))))))
+
+          ((s64vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^s64vector-box
+               (^array-literal
+                's64
+                (map (lambda (x) (emit-obj x #f))
+                     (s64vect->list obj)))))))
+
+          ((f32vect? obj)
+           (univ-obj-use
+            ctx
+            obj
+            force-var?
+            (lambda ()
+              (^f32vector-box
+               (^array-literal
+                'f32
+                (map (lambda (x) (^cast* 'f32 (^float x)))
+                     (f32vect->list obj)))))))
+
           ((f64vect? obj)
            (univ-obj-use
             ctx
@@ -5633,6 +5885,62 @@ EOF
       '() ;; class-fields
       (list (univ-field 'elems '(array u16) #f '(public))))) ;; instance-fields
 
+    ((u32vector)
+     (rts-class
+      'u32vector
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'elems '(array u32) #f '(public))))) ;; instance-fields
+
+    ((u64vector)
+     (rts-class
+      'u64vector
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'elems '(array u64) #f '(public))))) ;; instance-fields
+
+    ((s8vector)
+     (rts-class
+      's8vector
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'elems '(array s8) #f '(public))))) ;; instance-fields
+
+    ((s16vector)
+     (rts-class
+      's16vector
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'elems '(array s16) #f '(public))))) ;; instance-fields
+
+    ((s32vector)
+     (rts-class
+      's32vector
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'elems '(array s32) #f '(public))))) ;; instance-fields
+
+    ((s64vector)
+     (rts-class
+      's64vector
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'elems '(array s64) #f '(public))))) ;; instance-fields
+
+    ((f32vector)
+     (rts-class
+      'f32vector
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'elems '(array f32) #f '(public))))) ;; instance-fields
+
     ((f64vector)
      (rts-class
       'f64vector
@@ -6473,6 +6781,118 @@ EOF
         (^make-array
          'u16
          (lambda (result) (^return (^u16vector-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
+    ((make_u32vector)
+     (rts-method
+      'make_u32vector
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 'u32))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         'u32
+         (lambda (result) (^return (^u32vector-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
+    ((make_u64vector)
+     (rts-method
+      'make_u64vector
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 'u64))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         'u64
+         (lambda (result) (^return (^u64vector-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
+    ((make_s8vector)
+     (rts-method
+      'make_s8vector
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 's8))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         's8
+         (lambda (result) (^return (^s8vector-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
+    ((make_s16vector)
+     (rts-method
+      'make_s16vector
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 's16))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         's16
+         (lambda (result) (^return (^s16vector-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
+    ((make_s32vector)
+     (rts-method
+      'make_s32vector
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 's32))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         's32
+         (lambda (result) (^return (^s32vector-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
+    ((make_s64vector)
+     (rts-method
+      'make_s64vector
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 's64))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         's64
+         (lambda (result) (^return (^s64vector-box result)))
+         (^local-var 'leng)
+         (^local-var 'init)))))
+
+    ((make_f32vector)
+     (rts-method
+      'make_f32vector
+      '(public)
+      'scmobj
+      (list (univ-field 'leng 'int)
+            (univ-field 'init 'f32))
+      "\n"
+      '()
+      (lambda (ctx)
+        (^make-array
+         'f32
+         (lambda (result) (^return (^f32vector-box result)))
          (^local-var 'leng)
          (^local-var 'init)))))
 
@@ -7530,6 +7950,13 @@ gambit_Pair.prototype.toString = function () {
     ((symbol)        'Symbol)
     ((u16vector)     'U16Vector)
     ((u8vector)      'U8Vector)
+    ((u32vector)     'U32Vector)
+    ((u64vector)     'U64Vector)
+    ((s8vector)      'S8Vector)
+    ((s16vector)     'S16Vector)
+    ((s32vector)     'S32Vector)
+    ((s64vector)     'S64Vector)
+    ((f32vector)     'F32Vector)
     ((unbound)       'Unbound)
     ((values)        'Values)
     ((vector)        'Vector)
@@ -7584,6 +8011,13 @@ gambit_Pair.prototype.toString = function () {
                 ((chr)      (base 'char))
                 ((u8)       (base 'byte))  ;;TODO byte is signed (-128..127)
                 ((u16)      (base 'short)) ;;TODO short is signed
+                ((u32)      (decl 'scmobj)) ;; fixnum or bignum
+                ((u64)      (decl 'scmobj)) ;; fixnum or bignum
+                ((s8)       (base 'byte))
+                ((s16)      (base 'short))
+                ((s32)      (decl 'scmobj)) ;; fixnum or bignum
+                ((s64)      (decl 'scmobj)) ;; fixnum or bignum
+                ((f32)      (base 'float))
                 ((f64)      (base 'double))
                 ((bool)     (base 'boolean))
                 ((unicode)  (base 'int)) ;; Unicode needs 21 bit wide integers
@@ -10063,6 +10497,301 @@ tanh
 (define (univ-emit-u16vector-set! ctx expr1 expr2 expr3)
   (^assign (^array-index (^u16vector-unbox expr1) expr2) expr3))
 
+(define (univ-emit-u32vector-box ctx expr)
+  (case (univ-u32vector-representation ctx)
+
+    ((class)
+     (^new (^type 'u32vector) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u32vector-box, host representation not implemented"))))
+
+(define (univ-emit-u32vector-unbox ctx expr)
+  (case (univ-u32vector-representation ctx)
+
+    ((class)
+     (^member (^cast* 'u32vector expr) 'elems))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u32vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-u32vector? ctx expr)
+  (case (univ-u32vector-representation ctx)
+
+    ((class)
+     (^instanceof (^type 'u32vector) (^cast*-scmobj expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u32vector?, host representation not implemented"))))
+
+(define (univ-emit-u32vector-length ctx expr)
+  (^array-length (^u32vector-unbox expr)))
+
+(define (univ-emit-u32vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^u32vector-unbox expr1) expr2))
+
+(define (univ-emit-u32vector-ref ctx expr1 expr2)
+  (^array-index (^u32vector-unbox expr1) expr2))
+
+(define (univ-emit-u32vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^u32vector-unbox expr1) expr2) expr3))
+
+(define (univ-emit-u64vector-box ctx expr)
+  (case (univ-u64vector-representation ctx)
+
+    ((class)
+     (^new (^type 'u64vector) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u64vector-box, host representation not implemented"))))
+
+(define (univ-emit-u64vector-unbox ctx expr)
+  (case (univ-u64vector-representation ctx)
+
+    ((class)
+     (^member (^cast* 'u64vector expr) 'elems))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u64vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-u64vector? ctx expr)
+  (case (univ-u64vector-representation ctx)
+
+    ((class)
+     (^instanceof (^type 'u64vector) (^cast*-scmobj expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-u64vector?, host representation not implemented"))))
+
+(define (univ-emit-u64vector-length ctx expr)
+  (^array-length (^u64vector-unbox expr)))
+
+(define (univ-emit-u64vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^u64vector-unbox expr1) expr2))
+
+(define (univ-emit-u64vector-ref ctx expr1 expr2)
+  (^array-index (^u64vector-unbox expr1) expr2))
+
+(define (univ-emit-u64vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^u64vector-unbox expr1) expr2) expr3))
+
+(define (univ-emit-s8vector-box ctx expr)
+  (case (univ-s8vector-representation ctx)
+
+    ((class)
+     (^new (^type 's8vector) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s8vector-box, host representation not implemented"))))
+
+(define (univ-emit-s8vector-unbox ctx expr)
+  (case (univ-s8vector-representation ctx)
+
+    ((class)
+     (^member (^cast* 's8vector expr) 'elems))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s8vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-s8vector? ctx expr)
+  (case (univ-s8vector-representation ctx)
+
+    ((class)
+     (^instanceof (^type 's8vector) (^cast*-scmobj expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s8vector?, host representation not implemented"))))
+
+(define (univ-emit-s8vector-length ctx expr)
+  (^array-length (^s8vector-unbox expr)))
+
+(define (univ-emit-s8vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^s8vector-unbox expr1) expr2))
+
+(define (univ-emit-s8vector-ref ctx expr1 expr2)
+  (^array-index (^s8vector-unbox expr1) expr2))
+
+(define (univ-emit-s8vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^s8vector-unbox expr1) expr2) expr3))
+
+(define (univ-emit-s16vector-box ctx expr)
+  (case (univ-s16vector-representation ctx)
+
+    ((class)
+     (^new (^type 's16vector) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s16vector-box, host representation not implemented"))))
+
+(define (univ-emit-s16vector-unbox ctx expr)
+  (case (univ-s16vector-representation ctx)
+
+    ((class)
+     (^member (^cast* 's16vector expr) 'elems))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s16vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-s16vector? ctx expr)
+  (case (univ-s16vector-representation ctx)
+
+    ((class)
+     (^instanceof (^type 's16vector) (^cast*-scmobj expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s16vector?, host representation not implemented"))))
+
+(define (univ-emit-s16vector-length ctx expr)
+  (^array-length (^s16vector-unbox expr)))
+
+(define (univ-emit-s16vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^s16vector-unbox expr1) expr2))
+
+(define (univ-emit-s16vector-ref ctx expr1 expr2)
+  (^array-index (^s16vector-unbox expr1) expr2))
+
+(define (univ-emit-s16vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^s16vector-unbox expr1) expr2) expr3))
+
+(define (univ-emit-s32vector-box ctx expr)
+  (case (univ-s32vector-representation ctx)
+
+    ((class)
+     (^new (^type 's32vector) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s32vector-box, host representation not implemented"))))
+
+(define (univ-emit-s32vector-unbox ctx expr)
+  (case (univ-s32vector-representation ctx)
+
+    ((class)
+     (^member (^cast* 's32vector expr) 'elems))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s32vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-s32vector? ctx expr)
+  (case (univ-s32vector-representation ctx)
+
+    ((class)
+     (^instanceof (^type 's32vector) (^cast*-scmobj expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s32vector?, host representation not implemented"))))
+
+(define (univ-emit-s32vector-length ctx expr)
+  (^array-length (^s32vector-unbox expr)))
+
+(define (univ-emit-s32vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^s32vector-unbox expr1) expr2))
+
+(define (univ-emit-s32vector-ref ctx expr1 expr2)
+  (^array-index (^s32vector-unbox expr1) expr2))
+
+(define (univ-emit-s32vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^s32vector-unbox expr1) expr2) expr3))
+
+(define (univ-emit-s64vector-box ctx expr)
+  (case (univ-s64vector-representation ctx)
+
+    ((class)
+     (^new (^type 's64vector) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s64vector-box, host representation not implemented"))))
+
+(define (univ-emit-s64vector-unbox ctx expr)
+  (case (univ-s64vector-representation ctx)
+
+    ((class)
+     (^member (^cast* 's64vector expr) 'elems))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s64vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-s64vector? ctx expr)
+  (case (univ-s64vector-representation ctx)
+
+    ((class)
+     (^instanceof (^type 's64vector) (^cast*-scmobj expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-s64vector?, host representation not implemented"))))
+
+(define (univ-emit-s64vector-length ctx expr)
+  (^array-length (^s64vector-unbox expr)))
+
+(define (univ-emit-s64vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^s64vector-unbox expr1) expr2))
+
+(define (univ-emit-s64vector-ref ctx expr1 expr2)
+  (^array-index (^s64vector-unbox expr1) expr2))
+
+(define (univ-emit-s64vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^s64vector-unbox expr1) expr2) expr3))
+
+(define (univ-emit-f32vector-box ctx expr)
+  (case (univ-f32vector-representation ctx)
+
+    ((class)
+     (^new (^type 'f32vector) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-f32vector-box, host representation not implemented"))))
+
+(define (univ-emit-f32vector-unbox ctx expr)
+  (case (univ-f32vector-representation ctx)
+
+    ((class)
+     (^member (^cast* 'f32vector expr) 'elems))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-f32vector-unbox, host representation not implemented"))))
+
+(define (univ-emit-f32vector? ctx expr)
+  (case (univ-f32vector-representation ctx)
+
+    ((class)
+     (^instanceof (^type 'f32vector) (^cast*-scmobj expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-f32vector?, host representation not implemented"))))
+
+(define (univ-emit-f32vector-length ctx expr)
+  (^array-length (^f32vector-unbox expr)))
+
+(define (univ-emit-f32vector-shrink! ctx expr1 expr2)
+  (^array-shrink! (^f32vector-unbox expr1) expr2))
+
+(define (univ-emit-f32vector-ref ctx expr1 expr2)
+  (^array-index (^f32vector-unbox expr1) expr2))
+
+(define (univ-emit-f32vector-set! ctx expr1 expr2 expr3)
+  (^assign (^array-index (^f32vector-unbox expr1) expr2) expr3))
+
+
 (define (univ-emit-f64vector-box ctx expr)
   (case (univ-f64vector-representation ctx)
 
@@ -11064,6 +11793,41 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^u16vector? arg1)))))
+
+(univ-define-prim-bool "##u32vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^u32vector? arg1)))))
+
+(univ-define-prim-bool "##u64vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^u64vector? arg1)))))
+
+(univ-define-prim-bool "##s8vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s8vector? arg1)))))
+
+(univ-define-prim-bool "##s16vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s16vector? arg1)))))
+
+(univ-define-prim-bool "##s32vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s32vector? arg1)))))
+
+(univ-define-prim-bool "##s64vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s64vector? arg1)))))
+
+(univ-define-prim-bool "##f32vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^f32vector? arg1)))))
 
 (univ-define-prim-bool "##f64vector?" #t
   (make-translated-operand-generator
@@ -12456,6 +13220,358 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (^ (^u16vector-shrink! arg1
+                            (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##u32vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return
+      (^u32vector-box
+       (^array-literal
+        'u32
+        args))))))
+
+(univ-define-prim "##make-u32vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method-use 'make_u32vector)
+       (^fixnum-unbox arg1)
+       (or arg2
+           (^fixnum-box (^int 0))))))))
+
+(univ-define-prim "##u32vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box
+       (^u32vector-length arg))))))
+
+(univ-define-prim "##u32vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^u32vector-ref arg1
+                      (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##u32vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^u32vector-set! arg1
+                         (^fixnum-unbox arg2)
+                         arg3)
+        (return arg1)))))
+
+(univ-define-prim "##u32vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^u32vector-shrink! arg1
+                           (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##u64vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return
+      (^u64vector-box
+       (^array-literal
+        'u64
+        args))))))
+
+(univ-define-prim "##make-u64vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method-use 'make_u64vector)
+       (^fixnum-unbox arg1)
+       (or arg2
+           (^fixnum-box (^int 0))))))))
+
+(univ-define-prim "##u64vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box
+       (^u64vector-length arg))))))
+
+(univ-define-prim "##u64vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^u64vector-ref arg1
+                      (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##u64vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^u64vector-set! arg1
+                         (^fixnum-unbox arg2)
+                         arg3)
+        (return arg1)))))
+
+(univ-define-prim "##u64vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^u64vector-shrink! arg1
+                           (^fixnum-unbox arg2))
+        (return arg1)))))
++(univ-define-prim "##s8vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return
+      (^s8vector-box
+       (^array-literal
+        's8
+        (map (lambda (arg)
+               (^cast* 's8
+                       (^fixnum-unbox arg)))
+             args)))))))
+
+(univ-define-prim "##make-s8vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method-use 'make_s8vector)
+       (^fixnum-unbox arg1)
+       (^cast* 's8
+               (if arg2
+                   (^fixnum-unbox arg2)
+                   (^int 0))))))))
+
+(univ-define-prim "##s8vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box
+       (^s8vector-length arg))))))
+
+(univ-define-prim "##s8vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box
+       (^s8vector-ref arg1
+                      (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##s8vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^s8vector-set! arg1
+                        (^fixnum-unbox arg2)
+                        (^fixnum-unbox arg3))
+        (return arg1)))))
+
+(univ-define-prim "##s8vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^s8vector-shrink! arg1
+                           (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##s16vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return
+      (^s16vector-box
+       (^array-literal
+        's16
+        (map (lambda (arg)
+               (^cast* 's16
+                       (^fixnum-unbox arg)))
+             args)))))))
+
+(univ-define-prim "##make-s16vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method-use 'make_s16vector)
+       (^fixnum-unbox arg1)
+       (^cast* 's16
+               (if arg2
+                   (^fixnum-unbox arg2)
+                   (^int 0))))))))
+
+(univ-define-prim "##s16vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box
+       (^s16vector-length arg))))))
+
+(univ-define-prim "##s16vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box
+       (^s16vector-ref arg1
+                      (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##s16vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^s16vector-set! arg1
+                        (^fixnum-unbox arg2)
+                        (^fixnum-unbox arg3))
+        (return arg1)))))
+
+(univ-define-prim "##s16vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^s16vector-shrink! arg1
+                           (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##s32vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return
+      (^s32vector-box
+       (^array-literal
+        's32
+        args))))))
+
+(univ-define-prim "##make-s32vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method-use 'make_s32vector)
+       (^fixnum-unbox arg1)
+       (or arg2
+           (^fixnum-box (^int 0))))))))
+
+(univ-define-prim "##s32vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box
+       (^s32vector-length arg))))))
+
+(univ-define-prim "##s32vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^s32vector-ref arg1
+                      (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##s32vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^s32vector-set! arg1
+                         (^fixnum-unbox arg2)
+                         arg3)
+        (return arg1)))))
+
+(univ-define-prim "##s32vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^s32vector-shrink! arg1
+                           (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##s64vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return
+      (^s64vector-box
+       (^array-literal
+        's64
+        args))))))
+
+(univ-define-prim "##make-s64vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method-use 'make_s64vector)
+       (^fixnum-unbox arg1)
+       (or arg2
+           (^fixnum-box (^int 0))))))))
+
+(univ-define-prim "##s64vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box
+       (^s64vector-length arg))))))
+
+(univ-define-prim "##s64vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^s64vector-ref arg1
+                      (^fixnum-unbox arg2))))))
+
+(univ-define-prim "##s64vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^s64vector-set! arg1
+                         (^fixnum-unbox arg2)
+                         arg3)
+        (return arg1)))))
+
+(univ-define-prim "##s64vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^s64vector-shrink! arg1
+                           (^fixnum-unbox arg2))
+        (return arg1)))))
+
+(univ-define-prim "##f32vector" #t
+  (make-translated-operand-generator
+   (lambda (ctx return . args)
+     (return
+      (^f32vector-box
+       (^array-literal
+        'f32
+        (map (lambda (arg)
+               (^cast* 'f32
+                       (^flonum-unbox arg)))
+             args)))))))
+
+(univ-define-prim "##make-f32vector" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^call-prim
+       (^rts-method-use 'make_f32vector)
+       (^fixnum-unbox arg1)
+       (if arg2
+           (^cast* 'f32 (^flonum-unbox arg2))
+           (^float targ-inexact-+0)))))))
+
+(univ-define-prim "##f32vector-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box
+       (^f32vector-length arg))))))
+
+(univ-define-prim "##f32vector-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^flonum-box
+       (^f32vector-ref arg1
+                       (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##f32vector-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3)
+     (^ (^f32vector-set! arg1
+                         (^fixnum-unbox arg2)
+                         (^cast* 'f32 (^flonum-unbox arg3)))
+        (return arg1)))))
+
+(univ-define-prim "##f32vector-shrink!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^f32vector-shrink! arg1
                             (^fixnum-unbox arg2))
         (return arg1)))))
 
