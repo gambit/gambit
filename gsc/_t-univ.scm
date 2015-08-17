@@ -9199,6 +9199,7 @@ gambit_Pair.prototype.toString = function () {
      (cond ((string=? str "+nan.0")
             (case (target-name (ctx-target ctx))
               ((js)     "Number.NaN")
+              ((java)   "Double.NaN")
               ((php)    "NAN")
               ((python) "float('nan')")
               ((ruby)   "Float::NAN")
@@ -9209,6 +9210,7 @@ gambit_Pair.prototype.toString = function () {
            ((string=? str "+inf.0")
             (case (target-name (ctx-target ctx))
               ((js)     "Number.POSITIVE_INFINITY")
+              ((java)   "Double.POSITIVE_INFINITY")
               ((php)    "INF")
               ((python) "float('inf')")
               ((ruby)   "Float::INFINITY")
@@ -9219,6 +9221,7 @@ gambit_Pair.prototype.toString = function () {
            ((string=? str "-inf.0")
             (case (target-name (ctx-target ctx))
               ((js)     "Number.NEGATIVE_INFINITY")
+              ((java)   "Double.NEGATIVE_INFINITY")
               ((php)    "(-INF)")
               ((python) "(-float('inf'))")
               ((ruby)   "(-Float::INFINITY)")
@@ -11976,6 +11979,36 @@ tanh
        (if arg2
            (^float-atan2 (^flonum-unbox arg1) (^flonum-unbox arg2))
            (^float-atan (^flonum-unbox arg1))))))))
+
+(univ-define-prim "##flsinh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flcosh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##fltanh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flasinh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flacosh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flatanh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
 
 (univ-define-prim "##flexpt" #f
   (make-translated-operand-generator
