@@ -2664,6 +2664,15 @@
 (define (univ-dump-code targ procs output c-intf module-descr unique-name options)
 
   (define (defs->code ctx mod-name defs)
+
+    (if (and (eq? (target-name (ctx-target ctx)) 'java)
+             (> (+ (length (univ-defs-fields defs))
+                   (length (univ-defs-inits defs)))
+                100))
+        (begin
+         (set! defs (univ-defs-separate-field-initialisation ctx defs))
+         (set! defs (univ-defs-use-initialisation-methods ctx defs 50))))
+
     (univ-emit-defs
      ctx
      (case (univ-module-representation ctx)
@@ -7787,6 +7796,19 @@ gambit_Pair.prototype.toString = function () {
              (append (univ-defs-all defs2)
                      (univ-defs-all defs1))))
 
+(define (univ-defs-keep defs field? method? classes? inits?)
+  (let ((fields (and field? (univ-defs-fields defs)))
+        (methods (and method? (univ-defs-methods defs)))
+        (classes (and classes? (univ-defs-classes defs)))
+        (inits (and inits? (univ-defs-inits defs))))
+   (univ-defs
+    (or fields '())
+    (or methods '())
+    (or classes '())
+    (or inits '())
+    (apply append
+           (filter (lambda (x) x) (list fields methods classes inits))))))
+
 (define (univ-defs-combine-list lst)
   (let loop ((lst lst) (defs (univ-make-empty-defs)))
     (if (pair? lst)
@@ -7794,6 +7816,99 @@ gambit_Pair.prototype.toString = function () {
         defs)))
 
 (define (univ-def-kind x) (if (vector? x) (vector-ref x 0) 'init))
+
+(define (foldl f acc l)
+  (if (null? l)
+      acc
+      (foldl f (f acc (car l)) (cdr l))))
+
+(define (filter f l)
+  (define (cons-if-true acc i) (if (f i) (cons i acc) acc))
+  (reverse (foldl cons-if-true '() l)))
+
+(define (univ-defs-use-initialisation-methods ctx defs method-size)
+
+  (define (mapi f lst)
+   (let ((n -1))
+    (map (lambda (x) (set! n (+ n 1)) (f n x))
+         lst)))
+
+  (define (take/rest n l)
+    (let loop ((n n) (taken '()) (rest l))
+      (if (or (null? rest) (= n 0))
+          (cons (reverse taken) rest)
+          (loop (- n 1) (cons (car rest) taken) (cdr rest)))))
+
+  (define (group n l)
+    (let loop ((groups '()) (l l))
+      (if (null? l)
+          (reverse groups)
+          (let ((t/r (take/rest n l)))
+            (loop (cons (car t/r) groups) (cdr t/r))))))
+
+  (define (make-inits-method-name n)
+    (string-append "___init" (number->string n)))
+
+  (define (group->method-body group)
+    (foldl (lambda (acc i) (lambda (ctx) (^ (acc ctx) (i ctx))))
+           (lambda (ctx) (^))
+           group))
+
+  (define (thread-method i method-body)
+    (lambda (ctx) (^ (method-body ctx)
+                     (^expr-statement (^call-prim (make-inits-method-name
+                                                   (+ 1 i)))))))
+
+  (define (make-method i method-body)
+    (univ-method
+     (^rts-method (make-inits-method-name i))
+     '(private)
+     'noresult
+     '()
+     '()
+     (univ-emit-fn-body
+      ctx
+     "\n"
+      method-body)))
+
+  (let* ((inits (univ-defs-inits defs))
+         (groups (group method-size (reverse inits)))
+         (method-bodies (map group->method-body groups))
+         (threaded-method-bodies
+          (let ((n (- (length method-bodies) 1)))
+            (mapi (lambda (i m)
+                    (if (= n 0)
+                        m
+                        (begin (set! n (- n 1)) (thread-method i m))))
+                  method-bodies)))
+         (methods (reverse (mapi make-method threaded-method-bodies))))
+    (univ-add-init
+     (univ-defs-combine (univ-defs-keep defs #t #t #t #f)
+                        (univ-defs '() methods '() '() methods))
+     (lambda (ctx)
+      (^expr-statement (^call-prim (make-inits-method-name 0)))))))
+
+(define (univ-defs-separate-field-initialisation ctx defs)
+
+  (define (field->declaration field)
+    (univ-field (univ-field-name field)
+                (univ-field-type field)
+                #f
+                (univ-field-properties field)))
+
+  (define (field->initialisation field) 
+    (lambda (ctx) (^assign (univ-field-name field) (univ-field-init field))))
+
+  (let* ((fields (map field->declaration (univ-defs-fields defs)))
+         (field-initialisations (map field->initialisation
+                                     (filter univ-field-init
+                                             (univ-defs-fields defs))))
+         (inits (append (univ-defs-inits defs) field-initialisations))
+         (all (append fields inits)))
+
+    (univ-defs-combine
+     (univ-defs fields '() '() inits all)
+     (univ-defs-keep defs #f #t #t #f))))
 
 (define (univ-class
          root-name
