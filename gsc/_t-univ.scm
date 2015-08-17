@@ -11173,12 +11173,6 @@ tanh
 ;;TODO: ("##exact?"                   (1)   #f ()    0    boolean extended)
 ;;TODO: ("##inexact?"                 (1)   #f ()    0    boolean extended)
 
-(univ-define-prim-bool "##fl<-fx-exact?" #f
-  (make-translated-operand-generator
-   (lambda (ctx return arg)
-     (return (^parens (^= (^float-fromint (^fixnum-unbox arg))
-                          (^fixnum-unbox arg)))))))
-
 (univ-define-prim "##flsquare" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
@@ -11203,7 +11197,7 @@ tanh
     (let ((max-sqrt (inexact->exact (floor (sqrt univ-fixnum-max)))))
       (return (^if-expr (^or (^> (^fixnum-unbox arg) (^int max-sqrt))
                              (^< (^fixnum-unbox arg) (^int (- max-sqrt))))
-                        (^boolean-obj #f)
+                        (^obj #f)
                         (^fixnum-box (^* (^fixnum-unbox arg)
                                          (^fixnum-unbox arg)))))))))
 
@@ -11636,7 +11630,7 @@ tanh
                (^if-expr (^= (^fixnum-unbox arg1)
                              (^>> (^rts-field-use 'inttemp1) (^fixnum-unbox arg2)))
                          (^fixnum-box (^rts-field-use 'inttemp1))
-                         (^boolean-obj #f))))))))
+                         (^obj #f))))))))
 
 (univ-define-prim "##fxwraparithmetic-shift-left" #f
   (make-translated-operand-generator
@@ -11657,7 +11651,7 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (^if (^< (^fixnum-unbox arg2) (^int 0))
-          (return (^boolean-obj #f))
+          (return (^obj #f))
           (^
             (^assign (^rts-field-use 'inttemp1)
                      (^if-expr (^> (^fixnum-unbox arg2)
@@ -11673,7 +11667,7 @@ tanh
                                        (^rts-field-use 'inttemp1))
                                   (^fixnum-unbox arg1))
                               (^fixnum-box (^rts-field-use 'inttemp2))
-                              (^boolean-obj #f))))))))
+                              (^obj #f))))))))
 
 (univ-define-prim "##fxarithmetic-shift-right" #f
   (make-translated-operand-generator
@@ -11686,7 +11680,7 @@ tanh
    (lambda (ctx return arg1 arg2)
      (return
       (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
-                (^boolean-obj #f)
+                (^obj #f)
                 
                 (^fixnum-box
                  (^>> (^fixnum-unbox arg1)
@@ -11711,7 +11705,7 @@ tanh
    (lambda (ctx return arg1 arg2)
      (return
       (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
-                (^boolean-obj #f)
+                (^obj #f)
                 (^fixnum-box
                   (^>> (^parens
                         (^if-expr (^> (^fixnum-unbox arg2) (^int 0))
