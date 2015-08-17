@@ -908,18 +908,18 @@
 ;; Host vs Scheme type correspondance
 ;;
 ;; ==============================
-;; | Host	| Scheme	|
+;; | Host       | Scheme        |
 ;; ==============================
-;; | void	| void-obj	|
-;; | null	| null-obj	|
-;; | bool	| boolean	|
-;; | int	| fixnum	|
-;; | float	| flonum	|
-;; | str	| string	|
+;; | void       | void-obj      |
+;; | null       | null-obj      |
+;; | bool       | boolean       |
+;; | int        | fixnum        |
+;; | float      | flonum        |
+;; | str        | string        |
 ;; | array      |               |
 ;; | object     |               |
 ;; |            | list          |
-;; | proc	| procedure	|
+;; | function   | procedure     |
 ;; ==============================
 ;;
 
