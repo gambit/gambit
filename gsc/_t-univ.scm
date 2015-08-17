@@ -5683,7 +5683,7 @@ EOF
               (link (^local-var 'link))
               (next_frame (^local-var 'next_frame)))
           (^ (^var-declaration
-              'frm
+              'frame
               frame
               (^member cont 'frame))
              (^var-declaration
@@ -5693,7 +5693,8 @@ EOF
              (^var-declaration
               'returnpt
               ra
-              (^array-index (^frame-unbox frame) (^int 0)))
+              (^cast* 'returnpt
+                      (^array-index (^frame-unbox frame) (^int 0))))
              (univ-with-ctrlpt-attribs
               ctx
               #f
@@ -5704,10 +5705,11 @@ EOF
                  link
                  (univ-get-ctrlpt-attrib ctx ra 'link))))
              (^var-declaration
-              'frm
+              'frame
               next_frame
-              (^array-index (^frame-unbox frame)
-                            link))
+              (^cast* 'frame
+                      (^array-index (^frame-unbox frame)
+                                    link)))
              (^if (^eq? next_frame (^obj '())) ;; end of continuation marker
                   (^return (^obj #f))
                   (^return
