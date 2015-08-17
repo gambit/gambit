@@ -8851,7 +8851,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (or (univ-unbox expr)
-         (^member expr 'val)))
+         (^member (^cast* 'boolean expr) 'val)))
 
     (else
      expr)))
