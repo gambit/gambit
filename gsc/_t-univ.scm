@@ -13582,10 +13582,11 @@ tanh
    (lambda (ctx return arg1 arg2 arg3 arg4)
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
-                 (^bitand (^array-index (^bignum-digits arg1)
-                                        (^fixnum-unbox arg2))
-                          (^array-index (^bignum-digits arg3)
-                                        (^fixnum-unbox arg4))))
+                 (^cast* 'bigdigit
+                         (^bitand (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2))
+                                  (^array-index (^bignum-digits arg3)
+                                                (^fixnum-unbox arg4)))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-ior!" #f
@@ -13593,10 +13594,11 @@ tanh
    (lambda (ctx return arg1 arg2 arg3 arg4)
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
-                 (^bitior (^array-index (^bignum-digits arg1)
-                                        (^fixnum-unbox arg2))
-                          (^array-index (^bignum-digits arg3)
-                                        (^fixnum-unbox arg4))))
+                 (^cast* 'bigdigit
+                         (^bitior (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2))
+                                  (^array-index (^bignum-digits arg3)
+                                                (^fixnum-unbox arg4)))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-xor!" #f
@@ -13604,10 +13606,11 @@ tanh
    (lambda (ctx return arg1 arg2 arg3 arg4)
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
-                 (^bitxor (^array-index (^bignum-digits arg1)
-                                        (^fixnum-unbox arg2))
-                          (^array-index (^bignum-digits arg3)
-                                        (^fixnum-unbox arg4))))
+                 (^cast* 'bigdigit
+                         (^bitxor (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2))
+                                  (^array-index (^bignum-digits arg3)
+                                                (^fixnum-unbox arg4)))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-not!" #f
@@ -13615,8 +13618,9 @@ tanh
    (lambda (ctx return arg1 arg2)
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
-                 (^bitnot (^array-index (^bignum-digits arg1)
-                                        (^fixnum-unbox arg2))))
+                 (^cast* 'bigdigit
+                         (^bitnot (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2)))))
         (return arg1)))))
 
 ;;----------------------------------------------------------------------------
