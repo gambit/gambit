@@ -929,18 +929,18 @@
 ;; Host vs Scheme type correspondance
 ;;
 ;; ==============================
-;; | Host	| Scheme	|
+;; | Host       | Scheme        |
 ;; ==============================
-;; | void	| void-obj	|
-;; | null	| null-obj	|
-;; | bool	| boolean	|
-;; | int	| fixnum	|
-;; | float	| flonum	|
-;; | str	| string	|
+;; | void       | void-obj      |
+;; | null       | null-obj      |
+;; | bool       | boolean       |
+;; | int        | fixnum        |
+;; | float      | flonum        |
+;; | str        | string        |
 ;; | array      |               |
 ;; | object     |               |
 ;; |            | list          |
-;; | proc	| procedure	|
+;; | function   | procedure     |
 ;; ==============================
 ;;
 
@@ -1833,100 +1833,63 @@
      (compiler-internal-error
       "univ-emit-/, unknown target"))))
 
-(define (univ-wrap+ ctx expr1 expr2)
+(define (univ-wrap ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((js java)
-     (^>> (^<< (^parens (^+ expr1 expr2))
-               univ-tag-bits)
-          univ-tag-bits))
+     (^>> (^<< (^parens expr)
+               (^int univ-tag-bits))
+          (^int univ-tag-bits)))
 
     ((python)
      (^>> (^member (^call-prim
                     "ctypes.c_int32"
-                    (^<< (^parens (^+ expr1 expr2))
-                         univ-tag-bits))
+                    (^<< (^parens expr)
+                         (^int univ-tag-bits)))
                    'value)
-          univ-tag-bits))
+          (^int univ-tag-bits)))
 
     ((ruby php)
-     (^- (^parens (^bitand (^parens (^+ (^+ expr1 expr2)
-                                        univ-fixnum-max+1))
-                           univ-fixnum-max*2+1))
-         univ-fixnum-max+1))
+     (^- (^parens (^bitand (^parens (^+ (^parens expr)
+                                        (^int univ-fixnum-max+1)))
+                           (^int univ-fixnum-max*2+1)))
+         (^int univ-fixnum-max+1)))
 
     (else
      (compiler-internal-error
-      "univ-wrap+, unknown target"))))
+      "univ-wrap, unknown target"))))
+
+(define (univ-wrap+ ctx expr1 expr2)
+  (univ-wrap ctx (^+ expr1 expr2)))
 
 (define (univ-wrap- ctx expr1 #!optional (expr2 #f))
-  (case (target-name (ctx-target ctx))
-
-    ((js java)
-     (^>> (^<< (^parens (if expr2
-                            (^- expr1 expr2)
-                            (^- expr1)))
-               univ-tag-bits)
-          univ-tag-bits))
-
-    ((python)
-     (^>> (^member (^call-prim
-                    "ctypes.c_int32"
-                    (^<< (^parens (if expr2
-                                      (^- expr1 expr2)
-                                      (^- expr1)))
-                         univ-tag-bits))
-                   'value)
-          univ-tag-bits))
-
-    ((ruby php)
-     (^- (^parens (^bitand (^parens (^+ (if expr2
-                                            (^- expr1 expr2)
-                                            (^- expr1))
-                                        univ-fixnum-max+1))
-                           univ-fixnum-max*2+1))
-         univ-fixnum-max+1))
-
-    (else
-     (compiler-internal-error
-      "univ-wrap-, unknown target"))))
+  (univ-wrap ctx (if expr2
+                     (^- expr1 expr2)
+                     (^- expr1))))
 
 (define (univ-wrap* ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^>> (^parens
-           (^<< (^parens
-                 (^+ (^* (^parens (^bitand expr1 #xffff))
-                         expr2)
-                     (^* (^parens (^bitand expr1 #xffff0000))
-                         (^parens (^bitand expr2 #xffff)))))
-                univ-tag-bits))
-          univ-tag-bits))
+     (univ-wrap ctx
+                (^+ (^* (^parens (^bitand expr1 #xffff))
+                        expr2)
+                    (^* (^parens (^bitand expr1 #xffff0000))
+                        (^parens (^bitand expr2 #xffff))))))
 
-    ((python)
-     (^>> (^member (^call-prim
-                    "ctypes.c_int32"
-                    (^<< (^parens (^* expr1 expr2))
-                         univ-tag-bits))
-                   'value)
-          univ-tag-bits))
-
-    ((ruby php)
-     (^- (^parens (^bitand (^parens (^+ (^* expr1 expr2)
-                                        univ-fixnum-max+1))
-                           univ-fixnum-max*2+1))
-         univ-fixnum-max+1))
-
-    ((java)
-     (^>> (^parens
-           (^<< (^parens (^* expr1 expr2))
-                univ-tag-bits))
-          univ-tag-bits))
+    ((php python ruby java)
+     (univ-wrap ctx (^* expr1 expr2)))
 
     (else
      (compiler-internal-error
       "univ-wrap*, unknown target"))))
+
+(define (univ-wrap/ ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+   ((python php)
+    ;; Needed because php and python always round down (should round toward 0).
+    (univ-wrap ctx (^float-toint (^/ expr1 (^float-fromint expr2)))))
+   (else (univ-wrap ctx (^/ expr1 expr2)))))
 
 (define (univ-emit-<< ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -6028,7 +5991,7 @@ EOF
               (link (^local-var 'link))
               (next_frame (^local-var 'next_frame)))
           (^ (^var-declaration
-              'frm
+              'frame
               frame
               (^member cont 'frame))
              (^var-declaration
@@ -6038,7 +6001,8 @@ EOF
              (^var-declaration
               'returnpt
               ra
-              (^array-index (^frame-unbox frame) (^int 0)))
+              (^cast* 'returnpt
+                      (^array-index (^frame-unbox frame) (^int 0))))
              (univ-with-ctrlpt-attribs
               ctx
               #f
@@ -6049,10 +6013,11 @@ EOF
                  link
                  (univ-get-ctrlpt-attrib ctx ra 'link))))
              (^var-declaration
-              'frm
+              'frame
               next_frame
-              (^array-index (^frame-unbox frame)
-                            link))
+              (^cast* 'frame
+                      (^array-index (^frame-unbox frame)
+                                    link)))
              (^if (^eq? next_frame (^obj '())) ;; end of continuation marker
                   (^return (^obj #f))
                   (^return
@@ -9320,7 +9285,7 @@ gambit_Pair.prototype.toString = function () {
 
     ((class)
      (or (univ-unbox expr)
-         (^member expr 'val)))
+         (^member (^cast* 'boolean expr) 'val)))
 
     (else
      expr)))
@@ -9668,6 +9633,7 @@ gambit_Pair.prototype.toString = function () {
      (cond ((string=? str "+nan.0")
             (case (target-name (ctx-target ctx))
               ((js)     "Number.NaN")
+              ((java)   "Double.NaN")
               ((php)    "NAN")
               ((python) "float('nan')")
               ((ruby)   "Float::NAN")
@@ -9678,6 +9644,7 @@ gambit_Pair.prototype.toString = function () {
            ((string=? str "+inf.0")
             (case (target-name (ctx-target ctx))
               ((js)     "Number.POSITIVE_INFINITY")
+              ((java)   "Double.POSITIVE_INFINITY")
               ((php)    "INF")
               ((python) "float('inf')")
               ((ruby)   "Float::INFINITY")
@@ -9688,6 +9655,7 @@ gambit_Pair.prototype.toString = function () {
            ((string=? str "-inf.0")
             (case (target-name (ctx-target ctx))
               ((js)     "Number.NEGATIVE_INFINITY")
+              ((java)   "Double.NEGATIVE_INFINITY")
               ((php)    "(-INF)")
               ((python) "(-float('inf'))")
               ((ruby)   "(-Float::INFINITY)")
@@ -11974,6 +11942,34 @@ tanh
 ;;TODO: ("##exact?"                   (1)   #f ()    0    boolean extended)
 ;;TODO: ("##inexact?"                 (1)   #f ()    0    boolean extended)
 
+(univ-define-prim "##flsquare" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^parens (^* (^flonum-unbox arg) 
+                                       (^flonum-unbox arg))))))))
+
+(univ-define-prim "##fxsquare" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^fixnum-box (^parens (^* (^fixnum-unbox arg)
+                                       (^fixnum-unbox arg))))))))
+
+(univ-define-prim "##fxwrapsquare" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^fixnum-box (univ-wrap* ctx (^fixnum-unbox arg)
+                                          (^fixnum-unbox arg)))))))
+
+(univ-define-prim "##fxsquare?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+    (let ((max-sqrt (inexact->exact (floor (sqrt univ-fixnum-max)))))
+      (return (^if-expr (^or (^> (^fixnum-unbox arg) (^int max-sqrt))
+                             (^< (^fixnum-unbox arg) (^int (- max-sqrt))))
+                        (^obj #f)
+                        (^fixnum-box (^* (^fixnum-unbox arg)
+                                         (^fixnum-unbox arg)))))))))
+
 ;;TODO: make variadic, complete, clean up and test
 (univ-define-prim "##fxmax" #t
   (make-translated-operand-generator
@@ -12247,8 +12243,6 @@ tanh
          (compiler-internal-error
           "##fx-?, unknown target")))))))
 
-;;TODO: ("##fxwrapquotient"              (2)   #f ()    0    fixnum  extended)
-
 (univ-define-prim "##fxquotient" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
@@ -12257,6 +12251,12 @@ tanh
                     ctx
                     (^fixnum-unbox arg1)
                     (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##fxwrapquotient" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^fixnum-box (univ-wrap/ ctx (^fixnum-unbox arg1)
+                                          (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##fxremainder" #f
   (make-translated-operand-generator
@@ -12363,94 +12363,50 @@ tanh
             (^int 1)))
           (^int 0))))))
 
-;;TODO: ("##fxwraparithmetic-shift"      (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##fxarithmetic-shift"          (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##fxarithmetic-shift?"         (2)   #f ()    0    #f      extended)
-;;TODO: ("##fxwraplogical-shift-right"   (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##fxwraplogical-shift-right?"  (2)   #f ()    0    #f      extended)
-;;TODO: ("##fxwrapabs"                   (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##fxabs"                       (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##fxabs?"                      (1)   #f ()    0    #f      extended)
-
-#;
 (univ-define-prim "##fxwraparithmetic-shift" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-       (case (target-name (ctx-target ctx))
-        ((js)
-         (^fixnum-box
-          (^>> (^<< (^<< (^fixnum-unbox arg1)
-                         (^fixnum-unbox arg2))
-                    univ-tag-bits)
-               univ-tag-bits)))
-        ((php python ruby)
-         (let ((sign-bit (- (- univ-word-bits univ-tag-bits) 1)))
-           (^fixnum-box
-             (^- (^parens (^bitand
-                           (^parens (^+
-                                     (^parens (^<< (^fixnum-unbox arg1)
-                                                   (^fixnum-unbox arg2)))
-                                     (expt 2 sign-bit)))
-                           (- (expt 2 (+ 1 sign-bit)) 1)))
-                 (expt 2 sign-bit))))))))))
+      (^fixnum-box 
+        (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+                  (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))
+                  (univ-wrap ctx (^<< (^fixnum-unbox arg1)
+                                      (^fixnum-unbox arg2)))))))))
 
-#;
 (univ-define-prim "##fxarithmetic-shift" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^fixnum-box (^<< (^fixnum-unbox arg1)
-                        (^fixnum-unbox arg2)))))))
+      (^fixnum-box
+        (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+                  (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))
+                  (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2))))))))
 
-#;
+;; TODO: Use a single expression
+;; TODO: Maybe test -(univ-word-bits - univ-tag-bits) <= arg2 <= univ-word-bits - univ-tag-bits 
 (univ-define-prim "##fxarithmetic-shift?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^rts-field-use 'inttemp1)
-                 (^<< (^fixnum-unbox arg1)
-                      (^fixnum-unbox arg2)))
-        (return
-         (^if-expr (case (target-name (ctx-target ctx))
-                    ((js)
-                     (^= (^>> (^>> (^<< (^rts-field-use 'inttemp1) univ-tag-bits)
-                                   univ-tag-bits)
-                              (^fixnum-unbox arg2))
-                         (^fixnum-unbox arg1)))
-                    ((php python ruby)
-                     (let ((sign-bit (- (- univ-word-bits univ-tag-bits)
-                                        1)))
-                        (^= (^rts-field-use 'inttemp1)
-                            (^-
-                             (^parens
-                               (^bitand (^parens (^+ (^rts-field-use 'inttemp1)
-                                                     (expt 2 sign-bit)))
-                                        (- (expt 2 (+ 1 sign-bit)) 1)))
-                             (expt 2 sign-bit))))))
-                   (^fixnum-box (^rts-field-use 'inttemp1))
-                   (^obj #f)))))))
+     (^if (^< (^fixnum-unbox arg2) (^int 0))
+
+          (return (^fixnum-box (^>> (^fixnum-unbox arg1)
+                                    (^- (^fixnum-unbox arg2)))))
+
+          (^ (^assign (^rts-field-use 'inttemp1)
+                      (univ-wrap ctx (^<< (^fixnum-unbox arg1)
+                                          (^fixnum-unbox arg2))))
+             (return
+               (^if-expr (^= (^fixnum-unbox arg1)
+                             (^>> (^rts-field-use 'inttemp1) (^fixnum-unbox arg2)))
+                         (^fixnum-box (^rts-field-use 'inttemp1))
+                         (^obj #f))))))))
 
 (univ-define-prim "##fxwraparithmetic-shift-left" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-       (case (target-name (ctx-target ctx))
-        ((js java)
-         (^fixnum-box
-          (^>> (^<< (^<< (^fixnum-unbox arg1)
-                         (^fixnum-unbox arg2))
-                    univ-tag-bits)
-               univ-tag-bits)))
-        ((php python ruby)
-         (let ((sign-bit (- (- univ-word-bits univ-tag-bits) 1)))
-           (^fixnum-box
-             (^- (^parens (^bitand
-                           (^parens (^+
-                                     (^parens (^<< (^fixnum-unbox arg1)
-                                                   (^fixnum-unbox arg2)))
-                                     (expt 2 sign-bit)))
-                           (- (expt 2 (+ 1 sign-bit)) 1)))
-                 (expt 2 sign-bit))))))))))
+      (^fixnum-box (univ-wrap ctx (^<< (^fixnum-unbox arg1)
+                                       (^fixnum-unbox arg2))))))))
 
 (univ-define-prim "##fxarithmetic-shift-left" #f
   (make-translated-operand-generator
@@ -12459,31 +12415,28 @@ tanh
       (^fixnum-box (^<< (^fixnum-unbox arg1)
                         (^fixnum-unbox arg2)))))))
 
+;; TODO: Use a single expression
 (univ-define-prim "##fxarithmetic-shift-left?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^ (^assign (^rts-field-use 'inttemp1)
-                 (^<< (^fixnum-unbox arg1)
-                      (^fixnum-unbox arg2)))
-        (return
-         (^if-expr (case (target-name (ctx-target ctx))
-                    ((js java)
-                     (^= (^>> (^>> (^<< (^rts-field-use 'inttemp1) univ-tag-bits)
-                                   univ-tag-bits)
-                              (^fixnum-unbox arg2))
-                         (^fixnum-unbox arg1)))
-                    ((php python ruby)
-                     (let ((sign-bit (- (- univ-word-bits univ-tag-bits)
-                                        1)))
-                        (^= (^rts-field-use 'inttemp1)
-                            (^-
-                             (^parens
-                               (^bitand (^parens (^+ (^rts-field-use 'inttemp1)
-                                                     (expt 2 sign-bit)))
-                                        (- (expt 2 (+ 1 sign-bit)) 1)))
-                             (expt 2 sign-bit))))))
-                   (^fixnum-box (^rts-field-use 'inttemp1))
-                   (^obj #f)))))))
+     (^if (^< (^fixnum-unbox arg2) (^int 0))
+          (return (^obj #f))
+          (^
+            (^assign (^rts-field-use 'inttemp1)
+                     (^if-expr (^> (^fixnum-unbox arg2)
+                                   (^int (- univ-word-bits univ-tag-bits)))
+                               (^int (- univ-word-bits univ-tag-bits))
+                               (^fixnum-unbox arg2)))
+
+            (^assign (^rts-field-use 'inttemp2)
+                     (^<< (^fixnum-unbox arg1)
+                          (^rts-field-use 'inttemp1)))
+
+            (return (^if-expr (^= (^>> (univ-wrap ctx (^rts-field-use 'inttemp2))
+                                       (^rts-field-use 'inttemp1))
+                                  (^fixnum-unbox arg1))
+                              (^fixnum-box (^rts-field-use 'inttemp2))
+                              (^obj #f))))))))
 
 (univ-define-prim "##fxarithmetic-shift-right" #f
   (make-translated-operand-generator
@@ -12495,42 +12448,44 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^fixnum-box (^>> (^fixnum-unbox arg1) (^fixnum-unbox arg2)))))))
+      (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+                (^obj #f)
+                
+                (^fixnum-box
+                 (^>> (^fixnum-unbox arg1)
+                      (^parens
+                       (^if-expr (^> (^fixnum-unbox arg2)
+                                     (^int (- univ-word-bits univ-tag-bits)))
+                                 (^int (- univ-word-bits univ-tag-bits))
+                                 (^fixnum-unbox arg2))))))))))
 
-#;
 (univ-define-prim "##fxwraplogical-shift-right" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-       (case (target-name (ctx-target ctx))
-        ((js)
-         (^fixnum-box (^>>> (^parens (^<< (^fixnum-unbox arg1)
-                                          univ-word-bits))
-                            (^parens (^+ (^fixnum-unbox arg2)
-                                         univ-word-bits)))))
-        (else
-         (let ((sign-bit (- (- univ-word-bits univ-tag-bits)
-                            1)))
-              (^-
-               (^parens
-                (^bitand (^parens (^+ (^>> (^fixnum-unbox arg1)
-                                           (^fixnum-unbox arg2))
-                                      (expt 2 sign-bit)))
-                         (- (expt 2 (+ 1 sign-bit)) 1)))
-               (expt 2 sign-bit)))))))))
+      (^fixnum-box
+        (^>> (^parens (^if-expr (^> (^fixnum-unbox arg2) (^int 0))
+                                    (^bitand (^fixnum-unbox arg1) (^int univ-fixnum-max*2+1))
+                                    (^fixnum-unbox arg1)))
+             (^fixnum-unbox arg2)))))))
 
-#;
 (univ-define-prim "##fxwraplogical-shift-right?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-       (case (target-name (ctx-target ctx))
-        ((js)
-         (^fixnum-box (^>>> (^<< (^fixnum-unbox arg1) univ-word-bits)
-                            (^parens (^fixnum-unbox arg2)))))
-        (else
-         (^fixnum-box (^>> (^fixnum-unbox arg1)
-                           (^fixnum-unbox arg2)))))))))
+      (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+                (^obj #f)
+                (^fixnum-box
+                  (^>> (^parens
+                        (^if-expr (^> (^fixnum-unbox arg2) (^int 0))
+                                  (^bitand (^fixnum-unbox arg1)
+                                           (^int univ-fixnum-max*2+1))
+                                  (^fixnum-unbox arg1)))
+                       (^parens
+                        (^if-expr
+                          (^> (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits)))
+                          (^int (- univ-word-bits univ-tag-bits))
+                          (^fixnum-unbox arg2))))))))))
 
 (univ-define-prim "##fxwrapabs" #f
   (make-translated-operand-generator
@@ -12789,6 +12744,36 @@ tanh
            (^float-atan2 (^flonum-unbox arg1) (^flonum-unbox arg2))
            (^float-atan (^flonum-unbox arg1))))))))
 
+(univ-define-prim "##flsinh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flcosh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##fltanh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flasinh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flacosh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flatanh" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
 (univ-define-prim "##flexpt" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
@@ -13008,14 +12993,9 @@ tanh
                         result))
            (return result))))))
 
-;;TODO: ("##make-will"                    (2)   #t ()    0    #f      extended)
-;;TODO: ("##will-testator"                (1)   #f ()    0    (#f)    extended)
-
 ;;TODO: ("##gc-hash-table-ref"            (2)   #f ()    0    (#f)    extended)
 ;;TODO: ("##gc-hash-table-set!"           (3)   #t ()    0    (#f)    extended)
 ;;TODO: ("##gc-hash-table-rehash!"        (2)   #t ()    0    (#f)    extended)
-
-;; TODO: test box primitives
 
 (univ-define-prim "##box" #t
   (make-translated-operand-generator
@@ -14718,10 +14698,11 @@ tanh
    (lambda (ctx return arg1 arg2 arg3 arg4)
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
-                 (^bitand (^array-index (^bignum-digits arg1)
-                                        (^fixnum-unbox arg2))
-                          (^array-index (^bignum-digits arg3)
-                                        (^fixnum-unbox arg4))))
+                 (^cast* 'bigdigit
+                         (^bitand (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2))
+                                  (^array-index (^bignum-digits arg3)
+                                                (^fixnum-unbox arg4)))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-ior!" #f
@@ -14729,10 +14710,11 @@ tanh
    (lambda (ctx return arg1 arg2 arg3 arg4)
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
-                 (^bitior (^array-index (^bignum-digits arg1)
-                                        (^fixnum-unbox arg2))
-                          (^array-index (^bignum-digits arg3)
-                                        (^fixnum-unbox arg4))))
+                 (^cast* 'bigdigit
+                         (^bitior (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2))
+                                  (^array-index (^bignum-digits arg3)
+                                                (^fixnum-unbox arg4)))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-xor!" #f
@@ -14740,10 +14722,11 @@ tanh
    (lambda (ctx return arg1 arg2 arg3 arg4)
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
-                 (^bitxor (^array-index (^bignum-digits arg1)
-                                        (^fixnum-unbox arg2))
-                          (^array-index (^bignum-digits arg3)
-                                        (^fixnum-unbox arg4))))
+                 (^cast* 'bigdigit
+                         (^bitxor (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2))
+                                  (^array-index (^bignum-digits arg3)
+                                                (^fixnum-unbox arg4)))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-not!" #f
@@ -14751,8 +14734,9 @@ tanh
    (lambda (ctx return arg1 arg2)
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
-                 (^bitnot (^array-index (^bignum-digits arg1)
-                                        (^fixnum-unbox arg2))))
+                 (^cast* 'bigdigit
+                         (^bitnot (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2)))))
         (return arg1)))))
 
 ;;----------------------------------------------------------------------------
