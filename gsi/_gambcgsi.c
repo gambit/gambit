@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gambcgsi.c", produced by Gambit-C v4.7.7
+; File: "_gambcgsi.c", produced by Gambit-C v4.7.8
 (
-407007
+407008
 " _gambcgsi"
 ((" _kernel" (preload . #t)) (" _system" (preload . #t)) (" _num" (preload . #t)) (" _std" (preload . #t)) (" _eval" (preload . #t)) (" _io" (preload . #t)) (" _nonstd" (preload . #t)) (" _thread" (preload . #t)) (" _repl" (preload . #t)) (" _gsilib" (preload . #t)))
 (
@@ -66,6 +66,7 @@
 "##type-0-54294cd7-1c33-40e1-940e-7400e1126a5a"
 "##type-0-73c66686-a08f-4c7c-a0f1-5ad7771f242a"
 "##type-0-c63af440-d5ef-4f02-8fe6-40836a312fae"
+"##type-0-cd85663e-b289-472c-b943-a41768e2f8a3"
 "##type-0-d69cd396-01e0-4dcb-87dc-31acea8e0e5f"
 "##type-0-e0e435ae-0097-47c9-8d4a-9d761979522c"
 "##type-0-f512c9f6-3b24-4c5c-8c8b-cabd75b2f951"
@@ -621,6 +622,7 @@
 "parameters"
 "paren-keyword"
 "parent"
+"partially-initialized-structure"
 "path"
 "peek-eof?"
 "peer"
@@ -2698,6 +2700,7 @@
 "##structure"
 "##structure-indent"
 "##structure-instance-of?"
+"##structure-length"
 "##structure-max-field"
 "##structure-max-head"
 "##structure-ref"
@@ -4618,7 +4621,7 @@
  #f
 )
 #else
-#define ___VERSION 407007
+#define ___VERSION 407008
 #define ___LINKFILE_NAME " _gambcgsi"
 #define ___LINKER_ID ____20___gambcgsi
 #define ___INCREMENTAL_LINKFILE
@@ -6877,6 +6880,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_structure,___G__23__23_structure)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_direct_2d_instance_2d_of_3f_,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_indent,___G__23__23_structure_2d_indent)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_instance_2d_of_3f_,___G__23__23_structure_2d_instance_2d_of_3f_)
+___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_length,___G__23__23_structure_2d_length)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_max_2d_field,___G__23__23_structure_2d_max_2d_field)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_max_2d_head,___G__23__23_structure_2d_max_2d_head)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_ref,___G__23__23_structure_2d_ref)
@@ -7080,6 +7084,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_0_2d_47368926_2d_951d_2d_4451_2d_92b0_2d
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_0_2d_54294cd7_2d_1c33_2d_40e1_2d_940e_2d_7400e1126a5a,___G__23__23_type_2d_0_2d_54294cd7_2d_1c33_2d_40e1_2d_940e_2d_7400e1126a5a)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_0_2d_73c66686_2d_a08f_2d_4c7c_2d_a0f1_2d_5ad7771f242a,___G__23__23_type_2d_0_2d_73c66686_2d_a08f_2d_4c7c_2d_a0f1_2d_5ad7771f242a)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_0_2d_c63af440_2d_d5ef_2d_4f02_2d_8fe6_2d_40836a312fae,___G__23__23_type_2d_0_2d_c63af440_2d_d5ef_2d_4f02_2d_8fe6_2d_40836a312fae)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_0_2d_cd85663e_2d_b289_2d_472c_2d_b943_2d_a41768e2f8a3,___G__23__23_type_2d_0_2d_cd85663e_2d_b289_2d_472c_2d_b943_2d_a41768e2f8a3)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_0_2d_d69cd396_2d_01e0_2d_4dcb_2d_87dc_2d_31acea8e0e5f,___G__23__23_type_2d_0_2d_d69cd396_2d_01e0_2d_4dcb_2d_87dc_2d_31acea8e0e5f)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_0_2d_e0e435ae_2d_0097_2d_47c9_2d_8d4a_2d_9d761979522c,___G__23__23_type_2d_0_2d_e0e435ae_2d_0097_2d_47c9_2d_8d4a_2d_9d761979522c)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_0_2d_f512c9f6_2d_3b24_2d_4c5c_2d_8c8b_2d_cabd75b2f951,___G__23__23_type_2d_0_2d_f512c9f6_2d_3b24_2d_4c5c_2d_8c8b_2d_cabd75b2f951)
@@ -8338,6 +8343,7 @@ ___DEF_OLD_SYM_GLO(___S_parameterize,___G_parameterize)
 ___DEF_OLD_SYM_GLO(___S_parameters,___G_parameters)
 ___DEF_OLD_SYM_GLO(___S_paren_2d_keyword,___G_paren_2d_keyword)
 ___DEF_OLD_SYM_GLO(___S_parent,___G_parent)
+___DEF_OLD_SYM_GLO(___S_partially_2d_initialized_2d_structure,___G_partially_2d_initialized_2d_structure)
 ___DEF_OLD_SYM_GLO(___S_path,___G_path)
 ___DEF_OLD_SYM_GLO(___S_path_2d_directory,___G_path_2d_directory)
 ___DEF_OLD_SYM_GLO(___S_path_2d_expand,___G_path_2d_expand)

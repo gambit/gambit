@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_repl.c", produced by Gambit-C v4.7.7
+; File: "_repl.c", produced by Gambit-C v4.7.8
 (
-407007
+407008
 " _repl"
 ((" _repl"))
 (
@@ -992,7 +992,7 @@
  ()
 )
 #else
-#define ___VERSION 407007
+#define ___VERSION 407008
 #define ___MODULE_NAME " _repl"
 #define ___LINKER_ID ____20___repl
 #define ___MH_PROC ___H__20___repl
@@ -19281,7 +19281,7 @@ ___DEF_GLBL(___L__23__23_display_2d_continuation_2d_dynamic_2d_environment)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
-   ___SET_R1(___VECTORREF(___R1,___FIX(1L)))
+   ___SET_R1(___CONTINUATIONDENV(___R1))
    ___SET_R0(___LBL(2))
    ___ADJFP(8)
    ___POLL(1)
