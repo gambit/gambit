@@ -6094,6 +6094,8 @@ EOF
                                 (^call-prim
                                  (^rts-method-use 'str_hash)
                                  name))))
+                     (^assign (^member obj 'interned)
+                              (^obj #t))
                      (^dict-set (^rts-field-use 'symbol_table)
                                 name
                                 obj)))
@@ -6153,6 +6155,8 @@ EOF
                                 (^call-prim
                                  (^rts-method-use 'str_hash)
                                  name))))
+                     (^assign (^member obj 'interned)
+                              (^obj #t))
                      (^dict-set (^rts-field-use 'keyword_table)
                                 name
                                 obj)))

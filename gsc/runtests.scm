@@ -8,7 +8,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define cleanup? #f)
+(define cleanup? #t)
 
 (define nb-good 0)
 (define nb-fail 0)
