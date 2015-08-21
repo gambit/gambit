@@ -2782,7 +2782,7 @@
                                    (let ((next (continuation-next cont)))
                                      (if next
                                          (serialize-cont-frame! next)
-                                         (serialize! 0)))
+                                         (serialize! (macro-end-of-cont-marker))))
                                    (serialize! (continuation-ref cont i))))
                            (loop (+ i 1)))))))
 
@@ -3936,7 +3936,8 @@
                        obj)))
 
                   ((= x (continuation-tag))
-                   (let ((obj (make-continuation #f #f)))
+                   (let ((obj
+                          (make-continuation (macro-end-of-cont-marker) #f)))
                      (alloc! obj)
                      (let* ((frame (deserialize!))
                             (denv (deserialize!)))

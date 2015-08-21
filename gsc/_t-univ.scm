@@ -57,18 +57,14 @@
 (define (univ-null-representation ctx)
   (or (univ-get-representation-option ctx 'repr-null)
       (case (target-name (ctx-target ctx))
-        ((js java)
+        ((js)
          'host)
         (else
          'class))))
 
 (define (univ-void-representation ctx)
   (or (univ-get-representation-option ctx 'repr-void)
-      (case (target-name (ctx-target ctx))
-        ((java)
-         'class)
-        (else
-         'host))))
+      'host))
 
 (define (univ-eof-representation ctx)
   'class)
@@ -681,7 +677,7 @@
 
 (define-macro (^mod-class mod-name name)
   `(univ-emit-mod-class ctx ,mod-name ,name))
-    
+
 (define-macro (^rts-field name)      `(univ-emit-rts-field ctx ,name))
 (define-macro (^rts-field-ref name)  `(univ-emit-rts-field-ref ctx ,name))
 (define-macro (^rts-field-use name)  `(univ-emit-rts-field-use ctx ,name))
@@ -695,7 +691,7 @@
 (define-macro (^rts-class-use name)  `(univ-emit-rts-class-use ctx ,name))
 
 (define-macro (^rts-jumpable-use name) `(univ-emit-rts-jumpable-use ctx ,name))
-  
+
 (define-macro (^prefix name)
   `(univ-emit-prefix ctx ,name))
 
@@ -1648,7 +1644,7 @@
     (else
      (compiler-internal-error
       "univ-emit-map, unknown target"))))
- 
+
 (define (univ-emit-call-with-arg-array ctx fn array)
   (case (target-name (ctx-target ctx))
 
@@ -2557,8 +2553,8 @@
     ((js ruby php java) (^subarray expr start len))
 
     ((python)
-     (^ "[" expr "[i] for i in range(" 
-                  (if (eq? start 0) 
+     (^ "[" expr "[i] for i in range("
+                  (if (eq? start 0)
                       len
                       (^ start ", " (^+ start len)))
                 ")]"))
@@ -4804,7 +4800,7 @@
       '()
       (lambda (ctx)
         (let ((pc (^local-var 'pc)))
-          (^while (^!= pc (^null))
+          (^while (^!= pc (^null)) ;; exit trampoline?
                   (^assign pc
                            (^jump pc)))))))
 
@@ -5062,8 +5058,8 @@
                 (gvm-state-stack-use ctx 'rd)
                 (^int 0)))
 
-              (^if (^eq? next (^obj '())) ;; end of continuation?
-                   (^return (^null)))
+              (^if (^eq? next (univ-end-of-cont-marker ctx))
+                   (^return (^null))) ;; exit trampoline
 
               (^var-declaration
                'frm
@@ -6018,7 +6014,7 @@ EOF
               (^cast* 'frame
                       (^array-index (^frame-unbox frame)
                                     link)))
-             (^if (^eq? next_frame (^obj '())) ;; end of continuation marker
+             (^if (^eq? next_frame (univ-end-of-cont-marker ctx))
                   (^return (^obj #f))
                   (^return
                    (^new-continuation next_frame denv))))))))
@@ -6948,15 +6944,14 @@ EOF
       (lambda (ctx)
        (let ((obj (^local-var 'obj))
              (h2s_procedure (^prefix 'h2s_procedure)))
-        (^ 
-           (^procedure-declaration
+        (^ (^procedure-declaration
             #t
             'entrypt ;; TODO: ensure it is the correct type
             'h2s_procedure
-            '() 
+            '()
             "\n"
             '()
-            (^return-call-prim 
+            (^return-call-prim
               (^rts-method-ref 'scm2host_call)
               obj))
            (^return h2s_procedure))))))
@@ -7010,7 +7005,7 @@ EOF
              (^ ))
             (else
              (^if (^function? obj)
-                  (^return-call-prim 
+                  (^return-call-prim
                    (^rts-method-ref 'host_function2scm)
                    obj))))
 
@@ -7034,7 +7029,7 @@ EOF
                                                           (^rts-method-ref 'host2scm)
                                                           (^array-index obj key)))
                                                   alist))
-                         "}\n"                       
+                         "}\n"
                          (^return alist)))))
             (else (^)))
 
@@ -7106,9 +7101,9 @@ EOF
        (let ((args (^local-var 'args))
              (i (^local-var 'i))
              (proc (^local-var 'proc)))
-          (^ 
+          (^
             (^assign (gvm-state-sp-use ctx 'wr) -1)
-            (^push (^null-obj))
+            (^push (univ-end-of-cont-marker ctx))
             (^assign (^getnargs) (^array-length args))
             (^assign i 0)
             (^while (^< i (^getnargs))
@@ -7151,7 +7146,7 @@ EOF
                ((php)
                 (^var-declaration '() arguments (^call-prim 'func_get_args)))
                (else (^)))
-              (^return 
+              (^return
                (^call-prim (^rts-method-ref 'host2scm_call)
                            obj
                            arguments))))
@@ -7182,8 +7177,8 @@ EOF
                 ((class)
                  (^return (case (target-name (ctx-target ctx))
                            ((js) (^null))
-                           (else obj)))))) 
- 
+                           (else obj))))))
+
           (^if (^boolean? obj)
                (^return (^boolean-unbox obj)))
 
@@ -7210,7 +7205,7 @@ EOF
 
           ; TODO: generalise for python, ruby, php and java
           (case (target-name (ctx-target ctx))
-           ((js) 
+           ((js)
             (^if (^instanceof "Array" obj)
                  (^return (^map (^rts-method-ref 'scm2host) obj))))
            (else (^)))
@@ -7218,7 +7213,7 @@ EOF
           ; TODO: generalise for python, ruby, php and java
           ; Note: pair conversions are not bijective.
           (case (target-name (ctx-target ctx))
-           ((js) 
+           ((js)
             (^if (^pair? obj)
                  (let ((jsobj (^local-var 'jsobj))
                        (i (^local-var 'i))
@@ -7276,7 +7271,7 @@ EOF
              (fn (^local-var 'fn)))
          (^
           (univ-push-args ctx)
-          (^var-declaration '(array scmobj) 
+          (^var-declaration '(array scmobj)
                             args
                             (^extensible-subarray
                                (gvm-state-stack-use ctx 'rd)
@@ -7462,7 +7457,7 @@ EOF
         #<<EOF
 
   Gambit.sp = -1;
-  Gambit.stack[++Gambit.sp] = Gambit.null_obj; // end of continuation marker
+  Gambit.stack[++Gambit.sp] = Gambit.void_obj; // end of continuation marker
 
   Gambit.nargs = args.length;
 
@@ -7722,7 +7717,7 @@ gambit_Pair.prototype.toString = function () {
 
           (if univ-dyn-load?
               (^)
-              (^push (^obj '()))) ;; end of continuation marker
+              (^push (univ-end-of-cont-marker ctx)))
 
           (^assign (^rts-field-use 'r0)
                    (^rts-jumpable-use 'underflow))
@@ -9024,20 +9019,10 @@ gambit_Pair.prototype.toString = function () {
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (univ-constant "void 0"))
-
-    ((python)
-     (univ-constant "None"))
-
-    ((ruby)
-     (univ-constant "nil"))
-
-    ((php)
-     (univ-constant "NULL"))
+     (univ-constant "void 0")) ;; JavaScript's "undefined" value
 
     (else
-     (compiler-internal-error
-      "univ-emit-void, unknown target"))))
+     (^null))))
 
 (define (univ-emit-void? ctx expr)
   (^eq? expr (^void)))
@@ -9053,7 +9038,6 @@ gambit_Pair.prototype.toString = function () {
 
 (define (univ-emit-str->string ctx expr)
   (^string-box (^str-to-codes expr)))
-
 
 (define (univ-emit-string->str ctx expr)
   (case (univ-string-representation ctx)
@@ -9135,7 +9119,7 @@ gambit_Pair.prototype.toString = function () {
    ((python)
     (^and (^instanceof "int" expr)
           (^not (^instanceof "bool" expr))))
-          
+
    ((ruby)
     (^instanceof "Fixnum" expr))
 
@@ -11945,7 +11929,7 @@ tanh
 (univ-define-prim "##flsquare" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^parens (^* (^flonum-unbox arg) 
+     (return (^flonum-box (^parens (^* (^flonum-unbox arg)
                                        (^flonum-unbox arg))))))))
 
 (univ-define-prim "##fxsquare" #f
@@ -12367,7 +12351,7 @@ tanh
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^fixnum-box 
+      (^fixnum-box
         (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
                   (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))
                   (univ-wrap ctx (^<< (^fixnum-unbox arg1)
@@ -12383,7 +12367,7 @@ tanh
                   (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2))))))))
 
 ;; TODO: Use a single expression
-;; TODO: Maybe test -(univ-word-bits - univ-tag-bits) <= arg2 <= univ-word-bits - univ-tag-bits 
+;; TODO: Maybe test -(univ-word-bits - univ-tag-bits) <= arg2 <= univ-word-bits - univ-tag-bits
 (univ-define-prim "##fxarithmetic-shift?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
@@ -12450,7 +12434,7 @@ tanh
      (return
       (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
                 (^obj #f)
-                
+
                 (^fixnum-box
                  (^>> (^fixnum-unbox arg1)
                       (^parens
@@ -13986,7 +13970,7 @@ tanh
       meth))
 
 (define univ-stringify-delimiter (string #\"))
-  
+
 (define (univ-stringify-method meth)
   (list univ-stringify-delimiter meth univ-stringify-delimiter))
 
@@ -14118,6 +14102,9 @@ tanh
 ;;TODO: ("##continuation-graft-no-winding" 2     #t ()    2203 #f      extended)
 ;;TODO: ("##continuation-return"           (2)   #t ()    0    #f      extended)
 ;;TODO: ("##continuation-return-no-winding"(2)   #t ()    0    #f      extended)
+
+(define (univ-end-of-cont-marker ctx)
+  (^void-obj))
 
 (univ-define-prim-bool "##continuation?" #t
   (make-translated-operand-generator

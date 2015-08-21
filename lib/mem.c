@@ -2703,7 +2703,7 @@ ___WORD *orig_ptr;)
   fflush(stdout);
 #endif
 
-  if (___TYP(cf) == ___tFIXNUM && cf != ___FIX(0))
+  if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
     {
       /* continuation frame is in the stack */
 
@@ -2814,7 +2814,7 @@ fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
 
           ptr = &___FP_STK(alloc,link+1);
 
-          if (___TYP(cf) == ___tFIXNUM && cf != ___FIX(0))
+          if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
             goto next_frame;
         }
 
@@ -3149,12 +3149,12 @@ ___WORD *body;)
 
         frame = ___FP_STK(fp,link+1);
 
-        if (___TYP(frame) == ___tFIXNUM && frame != ___FIX(0))
+        if (___TYP(frame) == ___tFIXNUM && frame != ___END_OF_CONT_MARKER)
           ___FP_SET_STK(fp,link+1,___FAL)
 
         mark_frame (___PSP fp, fs, gcmap, nextgcmap);
 
-        if (___TYP(frame) == ___tFIXNUM && frame != ___FIX(0))
+        if (___TYP(frame) == ___tFIXNUM && frame != ___END_OF_CONT_MARKER)
           ___FP_SET_STK(fp,link+1,___TAG(___UNTAG_AS(frame, ___tFIXNUM), ___tSUBTYPED))
 
             mark_array (___PSP &body[0], 1);
@@ -3468,7 +3468,7 @@ ___virtual_machine_state ___vms;)
   alloc_stack_ptr = alloc_stack_start;
 
   ___FP_ADJFP(alloc_stack_ptr,___BREAK_FRAME_SPACE)
-  ___FP_SET_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT,0)
+  ___FP_SET_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT,___END_OF_CONT_MARKER)
 
   ___ps->stack_break = alloc_stack_ptr;
 

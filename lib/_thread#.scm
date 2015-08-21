@@ -2,7 +2,7 @@
 
 ;;; File: "_thread#.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1048,9 +1048,7 @@
   `(macro-make-condvar #f))
 
 (##define-macro (macro-make-thread-cont parent-thread)
-  `(let ((cont (##vector 0)))
-     (##subtype-set! cont (macro-subtype-continuation))
-     cont))
+  `(macro-make-continuation (macro-end-of-cont-marker) #f))
 
 (##define-macro (macro-make-thread-denv parent-thread)
   `(let ((denv (macro-thread-denv ,parent-thread)))

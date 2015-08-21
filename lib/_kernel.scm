@@ -1083,11 +1083,11 @@ end-of-code
 
    cf = ___STK(-___BREAK_FRAME_NEXT); /* pointer to caller's frame */
 
-   if (___TYP(cf) == ___tFIXNUM)
+   if (___TYP(cf) != ___tSUBTYPED)
      {
        /* caller's frame is in the stack */
 
-       /* cf can't be equal to ___FIX(0) */
+       /* cf can't be equal to the end of continuation marker */
 
        fp = ___CAST(___SCMOBJ*,cf);
 
@@ -1117,7 +1117,6 @@ end-of-code
            /* first frame of that section */
 
            ___COVER_BREAK_HANDLER_STACK_FIRST_FRAME;
-
            ___SET_STK(-___BREAK_FRAME_NEXT,
                       ___FP_STK(fp,-___BREAK_FRAME_NEXT))
          }
@@ -2952,7 +2951,8 @@ end-of-code
 
 (define-prim (##continuation-frame cont)
   (let ((frame (##vector-ref cont 0)))
-    (if (or (##eq? frame 0) (##frame? frame))
+    (if (or (##eq? frame (macro-end-of-cont-marker))
+            (##frame? frame))
       frame
       (begin
         (##gc)
@@ -3464,7 +3464,7 @@ end-of-code
 
        next_frame = fp[-link-1];
 
-       if (next_frame == 0)
+       if (next_frame == ___END_OF_CONT_MARKER)
          ___RESULT = ___FAL;
        else
          {
@@ -3504,7 +3504,7 @@ end-of-code
            next_frame = ___CAST(___SCMOBJ,fp);
          }
 
-       if (next_frame == 0)
+       if (next_frame == ___END_OF_CONT_MARKER)
          ___RESULT = ___FAL;
        else
          {

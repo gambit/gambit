@@ -83,6 +83,10 @@
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(##define-macro (macro-end-of-cont-marker) `(##void))
+
+;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 ;; System procedure classes.
 
 (macro-define-syntax define-prim
@@ -292,14 +296,19 @@
 ;; slot 1 = dynamic-environment
 
 (##define-macro (macro-make-continuation frame denv)
-  `(##subtype-set!
-    (##vector ,frame ,denv)
-    (macro-subtype-continuation)))
+  `(##make-continuation ,frame ,denv))
 
-(##define-macro (macro-continuation-frame c)        `(macro-slot 0 ,c))
-(##define-macro (macro-continuation-frame-set! c x) `(macro-slot 0 ,c ,x))
-(##define-macro (macro-continuation-denv c)         `(macro-slot 1 ,c))
-(##define-macro (macro-continuation-denv-set! c x)  `(macro-slot 1 ,c ,x))
+(##define-macro (macro-continuation-frame c)
+  `(##continuation-frame ,c))
+
+(##define-macro (macro-continuation-frame-set! c x)
+  `(##continuation-frame-set! ,c ,x))
+
+(##define-macro (macro-continuation-denv c)
+  `(##continuation-denv ,c))
+
+(##define-macro (macro-continuation-denv-set! c x)
+  `(##continuation-denv-set! ,c ,x))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

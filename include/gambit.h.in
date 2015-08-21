@@ -3282,6 +3282,8 @@ ___hp[-2]=frame,___hp[-1]=denv,___TAG((___hp-___CONTINUATION_SIZE-1),___tSUBTYPE
 #define ___CONTINUATIONDENV(obj)___FIELD(obj,___CONTINUATION_DENV)
 #define ___CONTINUATIONDENVSET(obj,val)___FIELD(obj,___CONTINUATION_DENV) = val;
 
+#define ___END_OF_CONT_MARKER ___VOID
+
 #define ___MAKESYMBOL(name,hash) \
 (___ALLOC(___SYMBOL_SIZE+1), \
 ___hp[-5]=___MAKE_HD_WORDS(___SYMBOL_SIZE,___sSYMBOL), \
@@ -3411,7 +3413,7 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 { ___SCMOBJ cont = ___FIELD(thread,___THREAD_CONT); \
   ___fp = ___ps->stack_break; \
   ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
-  ___FIELD(cont,___CONTINUATION_FRAME) = ___FIX(0); \
+  ___FIELD(cont,___CONTINUATION_FRAME) = ___END_OF_CONT_MARKER; \
   ___INTERRUPT_MASK_SET(___FIELD(___FIELD(thread,___THREAD_DENV),___DENV_INTERRUPT_MASK)); \
   ___ps->current_thread = thread; \
   ___SET_R0(___GSTATE->handler_break) \
