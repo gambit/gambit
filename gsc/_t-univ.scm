@@ -3220,8 +3220,8 @@
                         ctx
                         (lambda (result)
                           (^if result
-                               (jump-to-label ctx true fs)
-                               (jump-to-label ctx false fs)))
+                               (jump-to-label ctx true fs #f)
+                               (jump-to-label ctx false fs #f)))
                         opnds)))))
 
               ((switch)
@@ -3256,8 +3256,7 @@
                             (^))
 
                         (or (and (lbl? opnd)
-                                 (not poll?)
-                                 (jump-to-label ctx (lbl-num opnd) fs))
+                                 (jump-to-label ctx (lbl-num opnd) fs poll?))
 
                             (with-stack-pointer-adjust
                              ctx
@@ -3302,40 +3301,40 @@
                 "scan-gvm-instr, unknown 'gvm-instr':"
                 gvm-instr))))
 
-          (define (jump-to-label ctx n jump-fs)
+          (define (jump-to-label ctx n jump-fs poll?)
+            (with-stack-pointer-adjust
+             ctx
+             (+ jump-fs
+                (ctx-stack-base-offset ctx))
+             (lambda (ctx)
 
-            (cond ((and (ctx-allow-jump-destination-inlining? ctx)
+               (define (cont)
+                 (cond ((and (ctx-allow-jump-destination-inlining? ctx)
+                             (let* ((bb (lbl-num->bb n bbs))
+                                    (label-instr (bb-label-instr bb)))
+                               (and (eq? (label-type label-instr) 'simple)
+                                    (or (= (length (bb-precedents bb)) 1)
+                                        (= (length (bb-non-branch-instrs bb)) 0))))) ;; very short destination bb?
                         (let* ((bb (lbl-num->bb n bbs))
-                               (label-instr (bb-label-instr bb)))
-                          (and (eq? (label-type label-instr) 'simple)
-                               (or (= (length (bb-precedents bb)) 1)
-                                   (= (length (bb-non-branch-instrs bb)) 0))))) ;; very short destination bb?
-                   (let* ((bb (lbl-num->bb n bbs))
-                          (label-instr (bb-label-instr bb))
-                          (label-fs (frame-size (gvm-instr-frame label-instr))))
-                     (with-stack-pointer-adjust
-                      ctx
-                      (+ jump-fs
-                         (ctx-stack-base-offset ctx))
-                      (lambda (ctx)
-                        (with-stack-base-offset
-                         ctx
-                         (- label-fs)
-                         (lambda (ctx)
-                           (with-allow-jump-destination-inlining?
-                            ctx
-                            (= (length (bb-precedents bb)) 1) ;; #f
-                            (lambda (ctx)
-                              (scan-bb-all-except-label ctx bb)))))))))
+                               (label-instr (bb-label-instr bb))
+                               (label-fs (frame-size (gvm-instr-frame label-instr))))
+                          (with-stack-base-offset
+                           ctx
+                           (- label-fs)
+                           (lambda (ctx)
+                             (with-allow-jump-destination-inlining?
+                              ctx
+                              (= (length (bb-precedents bb)) 1) ;; #f
+                              (lambda (ctx)
+                                (scan-bb-all-except-label ctx bb)))))))
 
-                  (else
-                   (with-stack-pointer-adjust
-                    ctx
-                    (+ jump-fs
-                       (ctx-stack-base-offset ctx))
-                    (lambda (ctx)
-                      (^return-jump
-                       (scan-gvm-opnd ctx (make-lbl n))))))))
+                       (else
+                        (^return-jump
+                         (scan-gvm-opnd ctx (make-lbl n))))))
+
+               (if poll?
+                   (univ-emit-poll-or-continue ctx (scan-gvm-opnd ctx (make-lbl n)) cont)
+                   (cont)))))
 
           (define (scan-gvm-opnd ctx gvm-opnd)
             (if (lbl? gvm-opnd)
@@ -8934,17 +8933,18 @@ gambit_Pair.prototype.toString = function () {
         (^return expr)))
 
   (if poll?
-
-      (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
-               -1
-               (lambda (inc)
-                 (^if (^= inc (^int 0))
-                      (^return-call-prim
-                       (^rts-method-use 'poll)
-                       expr)
-                      (ret))))
-
+      (univ-emit-poll-or-continue ctx expr ret)
       (ret)))
+
+(define (univ-emit-poll-or-continue ctx expr cont)
+  (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
+           -1
+           (lambda (inc)
+             (^if (^= inc (^int 0))
+                  (^return-call-prim
+                   (^rts-method-use 'poll)
+                   expr)
+                  (cont)))))
 
 (define (univ-emit-return-call-prim ctx expr . params)
   (^return
