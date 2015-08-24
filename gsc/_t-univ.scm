@@ -3201,12 +3201,11 @@
                  (alloc (close-parms gvm-instr) '())))
 
               ((ifjump)
-               ;; TODO
-               ;; (ifjump-poll? gvm-instr)
                (let ((test (ifjump-test gvm-instr))
                      (opnds (ifjump-opnds gvm-instr))
                      (true (ifjump-true gvm-instr))
                      (false (ifjump-false gvm-instr))
+                     (poll? (ifjump-poll? gvm-instr))
                      (fs (frame-size (gvm-instr-frame gvm-instr))))
 
                  (let ((proc (proc-obj-test test)))
@@ -3215,13 +3214,12 @@
                        (compiler-internal-error
                         "scan-gvm-instr, unknown 'test'" test)
 
-
                        (proc
                         ctx
                         (lambda (result)
                           (^if result
-                               (jump-to-label ctx true fs #f)
-                               (jump-to-label ctx false fs #f)))
+                               (jump-to-label ctx true fs poll?)
+                               (jump-to-label ctx false fs poll?)))
                         opnds)))))
 
               ((switch)
