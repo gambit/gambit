@@ -877,11 +877,11 @@
 (define-macro (^setclo closure index val)
   `(univ-emit-setclo ctx ,closure ,index ,val))
 
-(define-macro (^getprm name)
-  `(univ-emit-getprm ctx ,name))
+(define-macro (^getpeps name)
+  `(univ-emit-getpeps ctx ,name))
 
-(define-macro (^setprm name val)
-  `(univ-emit-setprm ctx ,name ,val))
+(define-macro (^setpeps name val)
+  `(univ-emit-setpeps ctx ,name ,val))
 
 (define-macro (^getglo name)
   `(univ-emit-getglo ctx ,name))
@@ -3032,12 +3032,12 @@
 
                            (append
                             (list (univ-field
-                                   'nb_closed
+                                   'nfree
                                    'int
                                    (if (label-entry-closed? gvm-instr)
                                        (let* ((frame (gvm-instr-frame gvm-instr))
-                                              (nb-closed (length (frame-closed frame))))
-                                         (^int nb-closed))
+                                              (nfree (length (frame-closed frame))))
+                                         (^int nfree))
                                        (^int -1))
                                    '(inherited)))
                             (if (= lbl-num entry)
@@ -3383,7 +3383,7 @@
                   (lambda (ctx)
                     (let ((name (string->symbol (proc-obj-name p))))
                       (^ "\n"
-                         (^setprm name (^obj p))
+                         (^setpeps name (^obj p))
                          (if (proc-obj-primitive? p)
                              (^setglo name (^obj p))
                              (^)))))))
@@ -3676,8 +3676,8 @@
 (define (gvm-state-sp ctx)
   (^rts-field-use 'sp))
 
-(define (gvm-state-prm ctx)
-  (^rts-field-use 'prm))
+(define (gvm-state-peps ctx)
+  (^rts-field-use 'peps))
 
 (define (gvm-state-glo ctx)
   (^rts-field-use 'glo))
@@ -3702,9 +3702,9 @@
   (use-resource ctx dir 'sp)
   (gvm-state-sp ctx))
 
-(define (gvm-state-prm-use ctx dir)
-  (use-resource ctx dir 'prm)
-  (gvm-state-prm ctx))
+(define (gvm-state-peps-use ctx dir)
+  (use-resource ctx dir 'peps)
+  (gvm-state-peps ctx))
 
 (define (gvm-state-glo-use ctx dir)
   (use-resource ctx dir 'glo)
@@ -3800,12 +3800,12 @@
        ctx
        (string->symbol (string-append "glo-" (symbol->string name))))))
 
-(define (univ-emit-getprm ctx name)
-  (^dict-get (gvm-state-prm-use ctx 'rd)
+(define (univ-emit-getpeps ctx name)
+  (^dict-get (gvm-state-peps-use ctx 'rd)
              (^str (symbol->string name))))
 
-(define (univ-emit-setprm ctx name val)
-  (^dict-set (gvm-state-prm-use ctx 'rd)
+(define (univ-emit-setpeps ctx name val)
+  (^dict-set (gvm-state-peps-use ctx 'rd)
              (^str (symbol->string name))
              val))
 
@@ -3825,7 +3825,7 @@
              (^symbol-unbox sym)))
 
 (define (univ-emit-glo-var-primitive-ref ctx sym)
-  (^dict-get (gvm-state-prm-use ctx 'rd)
+  (^dict-get (gvm-state-peps-use ctx 'rd)
              (^symbol-unbox sym)))
 
 (define (univ-emit-glo-var-set! ctx sym val)
@@ -3834,7 +3834,7 @@
              val))
 
 (define (univ-emit-glo-var-primitive-set! ctx sym val)
-  (^dict-set (gvm-state-prm-use ctx 'rd)
+  (^dict-set (gvm-state-peps-use ctx 'rd)
              (^symbol-unbox sym)
              val))
 
@@ -4735,8 +4735,8 @@
     ((r0 r1 r2 r3 r4)
      (rts-field feature 'scmobj (^null) '(public)))
 
-    ((prm)
-     (rts-field 'prm '(dict str scmobj) (^empty-dict) '(public)))
+    ((peps)
+     (rts-field 'peps '(dict str scmobj) (^empty-dict) '(public)))
 
     ((glo)
      (rts-field 'glo '(dict str scmobj) (^empty-dict) '(public)))
@@ -5383,7 +5383,7 @@ EOF
       '() ;; class-fields
       (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
             (univ-field 'parent 'parententrypt #f '(public inherited))
-            (univ-field 'nb_closed 'int #f '(public)))))
+            (univ-field 'nfree 'int #f '(public)))))
 
     ((parententrypt)
      (rts-class
@@ -5393,7 +5393,7 @@ EOF
       '() ;; class-fields
       (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
             (univ-field 'parent 'parententrypt #f '(public inherited))
-            (univ-field 'nb_closed 'int #f '(public inherited))
+            (univ-field 'nfree 'int #f '(public inherited))
             (univ-field (univ-proc-name-attrib ctx) 'symbol #f '(public))
             (univ-field 'ctrlpts '(array ctrlpt) #f '(public))
             (univ-field 'info 'scmobj #f '(public)))))
@@ -8424,7 +8424,7 @@ gambit_Pair.prototype.toString = function () {
 
                    (if (used? 'sp)        (add! (gvm-state-sp ctx)))
                    (if (used? 'stack)     (add! (gvm-state-stack ctx)))
-                   (if (used? 'prm)       (add! (gvm-state-prm ctx)))
+                   (if (used? 'peps)      (add! (gvm-state-peps ctx)))
                    (if (used? 'glo)       (add! (gvm-state-glo ctx)))
                    (if (used? 'nargs)     (add! (gvm-state-nargs ctx)))
                    (if (used? 'pollcount) (add! (gvm-state-pollcount ctx)))
@@ -14018,7 +14018,7 @@ tanh
       ctx
       arg1
       'entrypt
-      'nb_closed
+      'nfree
       (lambda (result)
         (return (^fixnum-box result)))))))
 
