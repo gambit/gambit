@@ -1,7 +1,8 @@
 #ifdef ___LINKER_INFO
-; File: "_gsclib.c", produced by Gambit-C v4.7.8
+; File: "_gsclib.c", produced by Gambit-C v4.7.9
 (
-407008
+407009
+(C)
 " _gsclib"
 ((" _gsclib"))
 (
@@ -89,7 +90,7 @@
 "c#cf"
 "c#env-frame"
 "c#env-macro"
-"c#targ-linker"
+"c#link-modules"
 "c#target-file-extensions"
 "c#target-get"
 "c#target.file-extensions"
@@ -99,7 +100,7 @@
  ()
 )
 #else
-#define ___VERSION 407008
+#define ___VERSION 407009
 #define ___MODULE_NAME " _gsclib"
 #define ___LINKER_ID ____20___gsclib
 #define ___MH_PROC ___H__20___gsclib
@@ -108,10 +109,10 @@
 #define ___KEYCOUNT 15
 #define ___GLOCOUNT 60
 #define ___SUPCOUNT 14
-#define ___SUBCOUNT 49
-#define ___LBLCOUNT 232
-#define ___OFDCOUNT 14
-#define ___MODDESCR ___REF_SUB(48)
+#define ___SUBCOUNT 47
+#define ___LBLCOUNT 214
+#define ___OFDCOUNT 17
+#define ___MODDESCR ___REF_SUB(46)
 #include "gambit.h"
 
 ___NEED_SYM(___S_C)
@@ -187,8 +188,8 @@ ___NEED_GLO(___G__23__23_symbol_2d__3e_string)
 ___NEED_GLO(___G_c_23_cf)
 ___NEED_GLO(___G_c_23_env_2d_frame)
 ___NEED_GLO(___G_c_23_env_2d_macro)
+___NEED_GLO(___G_c_23_link_2d_modules)
 ___NEED_GLO(___G_c_23_make_2d_global_2d_environment)
-___NEED_GLO(___G_c_23_targ_2d_linker)
 ___NEED_GLO(___G_c_23_target_2d_file_2d_extensions)
 ___NEED_GLO(___G_c_23_target_2d_get)
 ___NEED_GLO(___G_c_23_target_2e_file_2d_extensions)
@@ -307,7 +308,7 @@ ___DEF_GLO(50,"##symbol->string")
 ___DEF_GLO(51,"c#cf")
 ___DEF_GLO(52,"c#env-frame")
 ___DEF_GLO(53,"c#env-macro")
-___DEF_GLO(54,"c#targ-linker")
+___DEF_GLO(54,"c#link-modules")
 ___DEF_GLO(55,"c#target-file-extensions")
 ___DEF_GLO(56,"c#target-get")
 ___DEF_GLO(57,"c#target.file-extensions")
@@ -423,8 +424,8 @@ ___END_GLO
 #define ___PRM_c_23_env_2d_frame ___PRM(52,___G_c_23_env_2d_frame)
 #define ___GLO_c_23_env_2d_macro ___GLO(53,___G_c_23_env_2d_macro)
 #define ___PRM_c_23_env_2d_macro ___PRM(53,___G_c_23_env_2d_macro)
-#define ___GLO_c_23_targ_2d_linker ___GLO(54,___G_c_23_targ_2d_linker)
-#define ___PRM_c_23_targ_2d_linker ___PRM(54,___G_c_23_targ_2d_linker)
+#define ___GLO_c_23_link_2d_modules ___GLO(54,___G_c_23_link_2d_modules)
+#define ___PRM_c_23_link_2d_modules ___PRM(54,___G_c_23_link_2d_modules)
 #define ___GLO_c_23_target_2d_file_2d_extensions ___GLO(55,___G_c_23_target_2d_file_2d_extensions)
 #define ___PRM_c_23_target_2d_file_2d_extensions ___PRM(55,___G_c_23_target_2d_file_2d_extensions)
 #define ___GLO_c_23_target_2d_get ___GLO(56,___G_c_23_target_2d_get)
@@ -616,33 +617,29 @@ ___DEF_SUB_STR(___X41,20)
                ___STR8(109,111,100,117,108,101,32,108)
                ___STR8(105,115,116,32,101,120,112,101)
                ___STR4(99,116,101,100)
-___DEF_SUB_STR(___X42,1)
-               ___STR1(95)
-___DEF_SUB_VEC(___X43,4)
+___DEF_SUB_VEC(___X42,4)
                ___VEC1(___REF_KEY(9,___K_output))
                ___VEC1(___REF_ABSENT)
                ___VEC1(___REF_KEY(14,___K_warnings_3f_))
                ___VEC1(___REF_ABSENT)
                ___VEC0
-___DEF_SUB_STR(___X44,37)
+___DEF_SUB_STR(___X43,37)
                ___STR8(115,116,114,105,110,103,32,101)
                ___STR8(120,112,101,99,116,101,100,32)
                ___STR8(102,111,114,32,111,117,116,112)
                ___STR8(117,116,58,32,112,97,114,97)
                ___STR5(109,101,116,101,114)
-___DEF_SUB_STR(___X45,20)
+___DEF_SUB_STR(___X44,20)
                ___STR8(109,111,100,117,108,101,32,108)
                ___STR8(105,115,116,32,101,120,112,101)
                ___STR4(99,116,101,100)
-___DEF_SUB_STR(___X46,1)
-               ___STR1(95)
-___DEF_SUB_STR(___X47,36)
+___DEF_SUB_STR(___X45,36)
                ___STR8(35,35,99,45,99,111,100,101)
                ___STR8(32,105,115,32,110,111,116,32)
                ___STR8(99,97,108,108,97,98,108,101)
                ___STR8(32,100,121,110,97,109,105,99)
                ___STR4(97,108,108,121)
-___DEF_SUB_VEC(___X48,5)
+___DEF_SUB_VEC(___X46,5)
                ___VEC1(___REF_SYM(1,___S___gsclib))
                ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FIX(1))
@@ -698,8 +695,6 @@ ___BEGIN_SUB
 ,___DEF_SUB(___X44)
 ,___DEF_SUB(___X45)
 ,___DEF_SUB(___X46)
-,___DEF_SUB(___X47)
-,___DEF_SUB(___X48)
 ___END_SUB
 
 
@@ -905,15 +900,6 @@ ___DEF_M_HLBL(___L1__23__23_link_2d_incremental)
 ___DEF_M_HLBL(___L2__23__23_link_2d_incremental)
 ___DEF_M_HLBL(___L3__23__23_link_2d_incremental)
 ___DEF_M_HLBL(___L4__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L5__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L6__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L7__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L8__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L9__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L10__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L11__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L12__23__23_link_2d_incremental)
-___DEF_M_HLBL(___L13__23__23_link_2d_incremental)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_link_2d_flat)
 ___DEF_M_HLBL(___L1_link_2d_flat)
@@ -932,15 +918,6 @@ ___DEF_M_HLBL(___L0__23__23_link_2d_flat)
 ___DEF_M_HLBL(___L1__23__23_link_2d_flat)
 ___DEF_M_HLBL(___L2__23__23_link_2d_flat)
 ___DEF_M_HLBL(___L3__23__23_link_2d_flat)
-___DEF_M_HLBL(___L4__23__23_link_2d_flat)
-___DEF_M_HLBL(___L5__23__23_link_2d_flat)
-___DEF_M_HLBL(___L6__23__23_link_2d_flat)
-___DEF_M_HLBL(___L7__23__23_link_2d_flat)
-___DEF_M_HLBL(___L8__23__23_link_2d_flat)
-___DEF_M_HLBL(___L9__23__23_link_2d_flat)
-___DEF_M_HLBL(___L10__23__23_link_2d_flat)
-___DEF_M_HLBL(___L11__23__23_link_2d_flat)
-___DEF_M_HLBL(___L12__23__23_link_2d_flat)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_c_2d_code)
 ___DEF_M_HLBL(___L1__23__23_c_2d_code)
@@ -2635,98 +2612,43 @@ ___DEF_P_HLBL(___L1__23__23_link_2d_incremental)
 ___DEF_P_HLBL(___L2__23__23_link_2d_incremental)
 ___DEF_P_HLBL(___L3__23__23_link_2d_incremental)
 ___DEF_P_HLBL(___L4__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L5__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L6__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L7__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L8__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L9__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L10__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L11__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L12__23__23_link_2d_incremental)
-___DEF_P_HLBL(___L13__23__23_link_2d_incremental)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_link_2d_incremental)
    ___IF_NARGS_EQ(4,___NOTHING)
    ___WRONG_NARGS(0,4,0,0)
 ___DEF_GLBL(___L__23__23_link_2d_incremental)
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R2)
-   ___SET_STK(3,___R3)
+   ___SET_STK(1,___STK(0))
+   ___SET_STK(0,___TRU)
+   ___SET_STK(2,___R0)
+   ___SET_STK(3,___R1)
+   ___SET_STK(4,___R2)
+   ___SET_STK(5,___R3)
+   ___SET_R1(___STK(1))
    ___SET_R0(___LBL(2))
-   ___ADJFP(7)
+   ___ADJFP(11)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_link_2d_incremental)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),41,___G__23__23_path_2d_normalize)
-___DEF_SLBL(2,___L2__23__23_link_2d_incremental)
-   ___SET_STK(-3,___R1)
-   ___SET_R0(___LBL(3))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),44,___G__23__23_path_2d_strip_2d_trailing_2d_directory_2d_separator)
-___DEF_SLBL(3,___L3__23__23_link_2d_incremental)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(-3))
-   ___SET_R0(___LBL(4))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_equal_3f_)
-___DEF_SLBL(4,___L4__23__23_link_2d_incremental)
-   ___IF(___FALSEP(___R1))
-   ___GOTO(___L15__23__23_link_2d_incremental)
-   ___END_IF
-   ___SET_R1(___STK(-3))
-   ___GOTO(___L14__23__23_link_2d_incremental)
-___DEF_SLBL(5,___L5__23__23_link_2d_incremental)
-___DEF_GLBL(___L14__23__23_link_2d_incremental)
-   ___SET_STK(-3,___R1)
-   ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(6))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),47,___G__23__23_reverse)
-___DEF_SLBL(6,___L6__23__23_link_2d_incremental)
-   ___SET_R2(___CONS(___STK(-5),___NUL))
+___DEF_SLBL(2,___L2__23__23_link_2d_incremental)
+   ___SET_R2(___CONS(___STK(-7),___NUL))
    ___SET_R1(___CONS(___R2,___R1))
-   ___SET_STK(-7,___TRU)
-   ___SET_R3(___STK(-4))
-   ___SET_R2(___STK(-3))
-   ___SET_R0(___STK(-6))
-   ___CHECK_HEAP(7,4096)
-___DEF_SLBL(7,___L7__23__23_link_2d_incremental)
-   ___POLL(8)
-___DEF_SLBL(8,___L8__23__23_link_2d_incremental)
-   ___ADJFP(-7)
-   ___JUMPGLONOTSAFE(___SET_NARGS(4),54,___G_c_23_targ_2d_linker)
-___DEF_GLBL(___L15__23__23_link_2d_incremental)
-   ___SET_R1(___CAR(___STK(-7)))
-   ___SET_R1(___CAR(___R1))
-   ___SET_R0(___LBL(9))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),43,___G__23__23_path_2d_strip_2d_extension)
-___DEF_SLBL(9,___L9__23__23_link_2d_incremental)
-   ___SET_STK(-2,___R1)
-   ___SET_R1(___SYM_C)
-   ___SET_R0(___LBL(10))
-   ___ADJFP(4)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),56,___G_c_23_target_2d_get)
-___DEF_SLBL(10,___L10__23__23_link_2d_incremental)
-   ___SET_R0(___LBL(11))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),55,___G_c_23_target_2d_file_2d_extensions)
-___DEF_SLBL(11,___L11__23__23_link_2d_incremental)
-   ___SET_R3(___CAAR(___R1))
-   ___SET_R2(___SUB(42))
-   ___SET_R0(___LBL(12))
-   ___SET_R1(___STK(-6))
-   ___ADJFP(-4)
-   ___JUMPGLONOTSAFE(___SET_NARGS(3),48,___G__23__23_string_2d_append)
-___DEF_SLBL(12,___L12__23__23_link_2d_incremental)
-   ___SET_R0(___LBL(13))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),42,___G__23__23_path_2d_strip_2d_directory)
-___DEF_SLBL(13,___L13__23__23_link_2d_incremental)
-   ___SET_R2(___STK(-3))
-   ___SET_R0(___LBL(5))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),39,___G__23__23_path_2d_expand)
+   ___SET_R3(___STK(-6))
+   ___SET_R2(___STK(-8))
+   ___SET_R0(___STK(-9))
+   ___CHECK_HEAP(3,4096)
+___DEF_SLBL(3,___L3__23__23_link_2d_incremental)
+   ___POLL(4)
+___DEF_SLBL(4,___L4__23__23_link_2d_incremental)
+   ___ADJFP(-11)
+   ___JUMPGLONOTSAFE(___SET_NARGS(4),54,___G_c_23_link_2d_modules)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_link_2d_flat
 #undef ___PH_LBL0
-#define ___PH_LBL0 203
+#define ___PH_LBL0 194
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -2752,7 +2674,7 @@ ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0_link_2d_flat)
    ___IF_NARGS_EQ(1,___PUSH(___R1) ___SET_R1(___ABSENT) ___SET_R2(___ABSENT) ___SET_R3(___NUL))
-   ___GET_REST_KEY(0,1,0,2,___SUB(43))
+   ___GET_REST_KEY(0,1,0,2,___SUB(42))
 ___DEF_GLBL(___L_link_2d_flat)
    ___SET_STK(1,___STK(0))
    ___SET_STK(0,___R1)
@@ -2831,14 +2753,14 @@ ___DEF_GLBL(___L16_link_2d_flat)
    ___POLL(7)
 ___DEF_SLBL(7,___L7_link_2d_flat)
    ___ADJFP(-2)
-   ___JUMPINT(___SET_NARGS(3),___PRC(216),___L__23__23_link_2d_flat)
+   ___JUMPINT(___SET_NARGS(3),___PRC(207),___L__23__23_link_2d_flat)
 ___DEF_GLBL(___L17_link_2d_flat)
    ___SET_R2(___STK(0))
    ___IF(___STRINGP(___R1))
    ___GOTO(___L16_link_2d_flat)
    ___END_IF
 ___DEF_GLBL(___L18_link_2d_flat)
-   ___SET_R1(___SUB(44))
+   ___SET_R1(___SUB(43))
    ___POLL(8)
 ___DEF_SLBL(8,___L8_link_2d_flat)
    ___ADJFP(-2)
@@ -2855,7 +2777,7 @@ ___DEF_SLBL(10,___L10_link_2d_flat)
 ___DEF_GLBL(___L20_link_2d_flat)
    ___ADJFP(-1)
 ___DEF_GLBL(___L21_link_2d_flat)
-   ___SET_R1(___SUB(45))
+   ___SET_R1(___SUB(44))
    ___POLL(11)
 ___DEF_SLBL(11,___L11_link_2d_flat)
    ___ADJFP(-1)
@@ -2866,13 +2788,13 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_link_2d_flat
 #undef ___PH_LBL0
-#define ___PH_LBL0 216
+#define ___PH_LBL0 207
 #undef ___PD_ALL
-#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R2 ___R_R3 ___R_R4
 #undef ___PW_ALL
-#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R2 ___W_R3 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
@@ -2880,94 +2802,36 @@ ___DEF_P_HLBL(___L0__23__23_link_2d_flat)
 ___DEF_P_HLBL(___L1__23__23_link_2d_flat)
 ___DEF_P_HLBL(___L2__23__23_link_2d_flat)
 ___DEF_P_HLBL(___L3__23__23_link_2d_flat)
-___DEF_P_HLBL(___L4__23__23_link_2d_flat)
-___DEF_P_HLBL(___L5__23__23_link_2d_flat)
-___DEF_P_HLBL(___L6__23__23_link_2d_flat)
-___DEF_P_HLBL(___L7__23__23_link_2d_flat)
-___DEF_P_HLBL(___L8__23__23_link_2d_flat)
-___DEF_P_HLBL(___L9__23__23_link_2d_flat)
-___DEF_P_HLBL(___L10__23__23_link_2d_flat)
-___DEF_P_HLBL(___L11__23__23_link_2d_flat)
-___DEF_P_HLBL(___L12__23__23_link_2d_flat)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_link_2d_flat)
    ___IF_NARGS_EQ(3,___NOTHING)
    ___WRONG_NARGS(0,3,0,0)
 ___DEF_GLBL(___L__23__23_link_2d_flat)
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R1)
-   ___SET_STK(3,___R3)
-   ___SET_R1(___R2)
+   ___SET_STK(1,___FAL)
+   ___SET_STK(2,___R0)
+   ___SET_STK(3,___R2)
+   ___SET_STK(4,___R3)
    ___SET_R0(___LBL(2))
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_link_2d_flat)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),41,___G__23__23_path_2d_normalize)
-___DEF_SLBL(2,___L2__23__23_link_2d_flat)
-   ___SET_STK(-4,___R1)
-   ___SET_R0(___LBL(3))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),44,___G__23__23_path_2d_strip_2d_trailing_2d_directory_2d_separator)
-___DEF_SLBL(3,___L3__23__23_link_2d_flat)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(-4))
-   ___SET_R0(___LBL(4))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_equal_3f_)
-___DEF_SLBL(4,___L4__23__23_link_2d_flat)
-   ___IF(___FALSEP(___R1))
-   ___GOTO(___L14__23__23_link_2d_flat)
-   ___END_IF
-   ___SET_R1(___STK(-4))
-   ___GOTO(___L13__23__23_link_2d_flat)
-___DEF_SLBL(5,___L5__23__23_link_2d_flat)
-___DEF_GLBL(___L13__23__23_link_2d_flat)
-   ___SET_STK(-4,___R1)
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(6))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),47,___G__23__23_reverse)
-___DEF_SLBL(6,___L6__23__23_link_2d_flat)
-   ___SET_STK(-6,___STK(-7))
-   ___SET_STK(-7,___FAL)
-   ___SET_R3(___STK(-5))
-   ___SET_R2(___STK(-4))
+___DEF_SLBL(2,___L2__23__23_link_2d_flat)
+   ___SET_R3(___STK(-4))
+   ___SET_R2(___STK(-5))
    ___SET_R0(___STK(-6))
-   ___POLL(7)
-___DEF_SLBL(7,___L7__23__23_link_2d_flat)
+   ___POLL(3)
+___DEF_SLBL(3,___L3__23__23_link_2d_flat)
    ___ADJFP(-7)
-   ___JUMPGLONOTSAFE(___SET_NARGS(4),54,___G_c_23_targ_2d_linker)
-___DEF_GLBL(___L14__23__23_link_2d_flat)
-   ___SET_R1(___CAR(___STK(-6)))
-   ___SET_R1(___CAR(___R1))
-   ___SET_R0(___LBL(8))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),43,___G__23__23_path_2d_strip_2d_extension)
-___DEF_SLBL(8,___L8__23__23_link_2d_flat)
-   ___SET_STK(-3,___R1)
-   ___SET_R1(___SYM_C)
-   ___SET_R0(___LBL(9))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),56,___G_c_23_target_2d_get)
-___DEF_SLBL(9,___L9__23__23_link_2d_flat)
-   ___SET_R0(___LBL(10))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),55,___G_c_23_target_2d_file_2d_extensions)
-___DEF_SLBL(10,___L10__23__23_link_2d_flat)
-   ___SET_R3(___CAAR(___R1))
-   ___SET_R2(___SUB(46))
-   ___SET_R0(___LBL(11))
-   ___SET_R1(___STK(-3))
-   ___JUMPGLONOTSAFE(___SET_NARGS(3),48,___G__23__23_string_2d_append)
-___DEF_SLBL(11,___L11__23__23_link_2d_flat)
-   ___SET_R0(___LBL(12))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),42,___G__23__23_path_2d_strip_2d_directory)
-___DEF_SLBL(12,___L12__23__23_link_2d_flat)
-   ___SET_R2(___STK(-4))
-   ___SET_R0(___LBL(5))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),39,___G__23__23_path_2d_expand)
+   ___JUMPGLONOTSAFE(___SET_NARGS(4),54,___G_c_23_link_2d_modules)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_c_2d_code
 #undef ___PH_LBL0
-#define ___PH_LBL0 230
+#define ___PH_LBL0 212
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -2985,7 +2849,7 @@ ___DEF_SLBL(0,___L0__23__23_c_2d_code)
    ___IF_NARGS_EQ(0,___SET_R1(___NUL))
    ___GET_REST(0,0,0,0)
 ___DEF_GLBL(___L__23__23_c_2d_code)
-   ___SET_R1(___SUB(47))
+   ___SET_R1(___SUB(45))
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_c_2d_code)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),58,___G_error)
@@ -3185,21 +3049,12 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,2,4,0x3f3L))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,2,4,0x3f3L))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,2,4,0x3f0L))
-,___DEF_LBL_INTRO(___H__23__23_link_2d_incremental,"##link-incremental",___REF_FAL,14,0)
+,___DEF_LBL_INTRO(___H__23__23_link_2d_incremental,"##link-incremental",___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H__23__23_link_2d_incremental,4,-1)
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETI,8,1,0x3f0fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0xfL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0xfL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1eL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETI,8,8,0x3f01L))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETI,8,8,0x3f01L))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,9,1,0x3fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,9,1,0x3fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___OFD(___RETI,12,2,0x3f03dL))
+,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,9,2,0x3dL))
+,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___OFD(___RETI,12,12,0x3f001L))
+,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___OFD(___RETI,12,12,0x3f001L))
 ,___DEF_LBL_INTRO(___H_link_2d_flat,"link-flat",___REF_FAL,12,0)
 ,___DEF_LBL_PROC(___H_link_2d_flat,4,-1)
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,1,4,0x3f1L))
@@ -3213,20 +3068,11 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,1,4,0x3f1L))
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,1,4,0x3f1L))
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,1,4,0x3f0L))
-,___DEF_LBL_INTRO(___H__23__23_link_2d_flat,"##link-flat",___REF_FAL,13,0)
+,___DEF_LBL_INTRO(___H__23__23_link_2d_flat,"##link-flat",___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H__23__23_link_2d_flat,3,-1)
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETI,8,0,0x3f07L))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xdL))
+,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETI,8,1,0x3f0fL))
+,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,1,0xfL))
 ,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETI,8,8,0x3f01L))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0x1fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0x1fL))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_INTRO(___H__23__23_c_2d_code,"##c-code",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H__23__23_c_2d_code,1,-1)
 ,___DEF_LBL_RET(___H__23__23_c_2d_code,___IFD(___RETI,0,0,0x3fL))
@@ -3262,6 +3108,12 @@ ___BEGIN_OFD
                ___GCMAP1(0x3f04003L)
 ,___DEF_OFD(___RETI,20,20)
                ___GCMAP1(0x3f04003L)
+,___DEF_OFD(___RETI,12,2)
+               ___GCMAP1(0x3f03dL)
+,___DEF_OFD(___RETI,12,12)
+               ___GCMAP1(0x3f001L)
+,___DEF_OFD(___RETI,12,12)
+               ___GCMAP1(0x3f001L)
 ___END_OFD
 
 ___BEGIN_MOD_PRM
@@ -3275,9 +3127,9 @@ ___DEF_MOD_PRM(1,___G__23__23_build_2d_executable,104)
 ___DEF_MOD_PRM(6,___G__23__23_gambc_2d_cc,114)
 ___DEF_MOD_PRM(13,___G_link_2d_incremental,168)
 ___DEF_MOD_PRM(8,___G__23__23_link_2d_incremental,188)
-___DEF_MOD_PRM(12,___G_link_2d_flat,203)
-___DEF_MOD_PRM(7,___G__23__23_link_2d_flat,216)
-___DEF_MOD_PRM(2,___G__23__23_c_2d_code,230)
+___DEF_MOD_PRM(12,___G_link_2d_flat,194)
+___DEF_MOD_PRM(7,___G__23__23_link_2d_flat,207)
+___DEF_MOD_PRM(2,___G__23__23_c_2d_code,212)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -3294,9 +3146,9 @@ ___DEF_MOD_GLO(1,___G__23__23_build_2d_executable,104)
 ___DEF_MOD_GLO(6,___G__23__23_gambc_2d_cc,114)
 ___DEF_MOD_GLO(13,___G_link_2d_incremental,168)
 ___DEF_MOD_GLO(8,___G__23__23_link_2d_incremental,188)
-___DEF_MOD_GLO(12,___G_link_2d_flat,203)
-___DEF_MOD_GLO(7,___G__23__23_link_2d_flat,216)
-___DEF_MOD_GLO(2,___G__23__23_c_2d_code,230)
+___DEF_MOD_GLO(12,___G_link_2d_flat,194)
+___DEF_MOD_GLO(7,___G__23__23_link_2d_flat,207)
+___DEF_MOD_GLO(2,___G__23__23_c_2d_code,212)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
