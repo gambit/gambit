@@ -215,7 +215,7 @@
 
 (define (targ-make-target)
   (let ((targ
-         (make-target 10
+         (make-target 11
                       'C
                       '((".c"    . C)
                         (".C"    . C++)
@@ -236,6 +236,8 @@
       (set! targ-info-port info-port)
 
       (target-dump-set!              targ targ-dump)
+      (target-link-info-set!         targ targ-link-info)
+      (target-link-set!              targ targ-link)
       (target-nb-regs-set!           targ targ-nb-gvm-regs)
       (target-prim-info-set!         targ targ-prim-info)
       (target-label-info-set!        targ targ-label-info)
@@ -261,8 +263,8 @@
 
     targ))
 
-(define (targ-prim-proc-table x)        (vector-ref x 17))
-(define (targ-prim-proc-table-set! x y) (vector-set! x 17 y))
+(define (targ-prim-proc-table x)        (vector-ref x 19))
+(define (targ-prim-proc-table-set! x y) (vector-set! x 19 y))
 
 (define targ-target (targ-make-target))
 
@@ -812,7 +814,23 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (targ-linker extension? inputs output warnings?)
+(define (targ-link-info file)
+  (let ((in (open-input-file* file)))
+    (and in
+         (let* ((first-line
+                 (read-line* in))
+                (info
+                 (and (string=? targ-generated-c-file-first-line first-line)
+                      (read in))))
+           (close-input-port in)
+           (and (pair? info)
+                (pair? (cdr info))
+                (pair? (cadr info))
+                (equal? (car info) (compiler-version))
+                (equal? (car (cadr info)) (target-name targ-target))
+                info)))))
+
+(define (targ-link extension? inputs output warnings?)
   (with-exception-handling
     (lambda ()
       (let* ((root
@@ -820,32 +838,21 @@
              (name
                (string-append module-prefix
                               (path-strip-directory root)))
-             (input-files-and-flags
-               (map (lambda (x)
-                      (let ((name (if (pair? x) (car x) x))
-                            (flags (if (pair? x) (cdr x) '())))
-                        (cons (if (string=? (path-extension name) "")
-                                  (string-append
-                                   name
-                                   (caar (target-file-extensions targ-target)))
-                                  name)
-                              flags)))
-                    inputs))
-             (input-infos
-               (map targ-read-linker-info input-files-and-flags))
+             (input-mods
+               (map targ-get-mod inputs))
              (input-mods-and-flags
-               (apply append (map targ-mod-mods-and-flags input-infos)))
+               (append-lists (map targ-mod-mods-and-flags input-mods)))
              (sym-rsrc
                (targ-union-list-of-rsrc
-                 (map targ-mod-sym-rsrc input-infos)))
+                 (map targ-mod-sym-rsrc input-mods)))
              (key-rsrc
                (targ-union-list-of-rsrc
-                 (map targ-mod-key-rsrc input-infos)))
+                 (map targ-mod-key-rsrc input-mods)))
              (glo-rsrc
                (targ-union-list-of-rsrc
-                 (map targ-mod-glo-rsrc input-infos)))
+                 (map targ-mod-glo-rsrc input-mods)))
              (script-line
-              (let loop ((lst input-infos)
+              (let loop ((lst input-mods)
                          (last-script-line #f))
                 (if (pair? lst)
                   (let* ((module-meta-info
@@ -859,25 +866,25 @@
                               last-script-line)))
                   last-script-line))))
 
-        (targ-link
+        (targ-link-aux
           extension?
           output
           name
           input-mods-and-flags
           (if extension?
-            (list (list (targ-mod-name (car input-infos))))
+            (list (list (targ-mod-name (car input-mods))))
             '())
           (if extension?
-            (apply append (map targ-mod-mods-and-flags (cdr input-infos)))
+            (append-lists (map targ-mod-mods-and-flags (cdr input-mods)))
             input-mods-and-flags)
           (if extension?
-            (targ-mod-sym-rsrc (car input-infos))
+            (targ-mod-sym-rsrc (car input-mods))
             '())
           (if extension?
-            (targ-mod-key-rsrc (car input-infos))
+            (targ-mod-key-rsrc (car input-mods))
             '())
           (if extension?
-            (targ-mod-glo-rsrc (car input-infos))
+            (targ-mod-glo-rsrc (car input-mods))
             '())
           sym-rsrc
           key-rsrc
@@ -911,77 +918,49 @@
 (define targ-generated-c-file-first-line
   (string-append "#ifdef " c-id-prefix "LINKER_INFO"))
 
-(define (targ-read-line in)
-  (let loop ((lst '()))
-    (let ((c (read-char in)))
-      (if (or (eof-object? c)
-              (char=? c #\return)
-              (char=? c #\newline))
-          (list->str (reverse lst))
-          (loop (cons c lst))))))
-
-(define (targ-generated-c-file? file)
-  (let ((in (open-input-file* file)))
-    (and in
-         (let ((first-line (targ-read-line in)))
-           (close-input-port in)
-           (string=? targ-generated-c-file-first-line first-line)))))
-
-(define (targ-read-linker-info file-and-flags)
-  (let* ((file (car file-and-flags))
-         (flags (cdr file-and-flags))
-         (in (open-input-file* file)))
-
-    (define (err msg)
-      (if in (close-input-port in))
-      (compiler-error (string-append msg " " file)))
+(define (targ-get-mod file-and-flags-and-link-info)
+  (let ((file (car file-and-flags-and-link-info))
+        (flags (cadr file-and-flags-and-link-info))
+        (link-info (caddr file-and-flags-and-link-info)))
 
     (define (combine-flags flags1 flags2)
       (append flags1 flags2))
 
-    (if in
-      (let ((first-line (targ-read-line in)))
-        (if (string=? targ-generated-c-file-first-line first-line)
-          (let ((linker-info (read in)))
-            (if (and (pair? linker-info)
-                     (= (length linker-info) 9)
-                     (equal? (car linker-info) (compiler-version)))
-              (let* ((name (cadr linker-info))
-                     (mods (map (lambda (x)
-                                  (cons (car x) (combine-flags flags (cdr x))))
-                                (caddr linker-info)))
-                     (rest (cdddr linker-info))
-                     (syms (car rest))
-                     (keys (cadr rest))
-                     (glos-supplied-and-demanded (caddr rest))
-                     (glos-supplied-and-not-demanded (cadddr rest))
-                     (glos-not-supplied (car (cddddr rest)))
-                     (script-line (cadr (cddddr rest))))
-                (close-input-port in)
-                (targ-make-mod
-                  name
-                  mods
-                  (map (lambda (sym)
-                         (targ-make-rsrc sym '() '()))
-                       syms)
-                  (map (lambda (key)
-                         (targ-make-rsrc key '() '()))
-                       keys)
-                  (targ-union-rsrc
-                    (map (lambda (glo)
-                           (targ-make-rsrc glo (list file) (list file)))
-                         glos-supplied-and-demanded)
-                    (targ-union-rsrc
-                      (map (lambda (glo)
-                             (targ-make-rsrc glo '() (list file)))
-                           glos-supplied-and-not-demanded)
-                      (map (lambda (glo)
-                             (targ-make-rsrc glo (list file) '()))
-                           glos-not-supplied)))
-                  script-line))
-              (err "incorrectly formatted file")))
-          (err "linker info is missing from file")))
-      (err "can't open file"))))
+    (if link-info
+        (let* ((name (caddr link-info))
+               (mods (map (lambda (x)
+                            (cons (car x) (combine-flags flags (cdr x))))
+                          (cadddr link-info)))
+               (rest (cddddr link-info))
+               (syms (car rest))
+               (keys (cadr rest))
+               (glos-supplied-and-demanded (caddr rest))
+               (glos-supplied-and-not-demanded (cadddr rest))
+               (glos-not-supplied (car (cddddr rest)))
+               (script-line (cadr (cddddr rest))))
+          (targ-make-mod
+           name
+           mods
+           (map (lambda (sym)
+                  (targ-make-rsrc sym '() '()))
+                syms)
+           (map (lambda (key)
+                  (targ-make-rsrc key '() '()))
+                keys)
+           (targ-union-rsrc
+            (map (lambda (glo)
+                   (targ-make-rsrc glo (list file) (list file)))
+                 glos-supplied-and-demanded)
+            (targ-union-rsrc
+             (map (lambda (glo)
+                    (targ-make-rsrc glo '() (list file)))
+                  glos-supplied-and-not-demanded)
+             (map (lambda (glo)
+                    (targ-make-rsrc glo (list file) '()))
+                  glos-not-supplied)))
+           script-line))
+        (compiler-error
+         (string-append "incorrectly formatted file " file)))))
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -1054,7 +1033,7 @@
     (targ-dump-mod prm-list c-inits sym-list key-list)
     (targ-end-dump)))
 
-(define (targ-link
+(define (targ-link-aux
           extension?
           filename
           name
@@ -1158,6 +1137,9 @@
   (targ-line)
 
   (targ-display (compiler-version))
+  (targ-line)
+
+  (write (list (target-name targ-target)) targ-port)
   (targ-line)
 
   (write name targ-port)

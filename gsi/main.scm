@@ -110,7 +110,7 @@
           (##repl-debug-main)
           (##exit)))))
 
-  (define (compiler-batch-mode options arguments)
+  (define (compiler-batch-mode options arguments target)
 
     (define (c-file? file)
       (##assoc (##path-extension file)
@@ -136,7 +136,7 @@
                        (link-opt? 'link)
                        (exe-opt?  'exe)
                        (obj-opt?  'obj)
-                       (else      'dyn)))) ;; dynamic is default
+                       (else      'dyn))))
             (let loop1 ((lst arguments)
                         (nb-output-files 0))
               (if (##pair? lst)
@@ -163,15 +163,15 @@
                                     (warn-unknown-option option-name)
                                     (loop1 rest
                                            nb-output-files)))))
-                          ((c-file? file)
-                           (loop1 rest
-                                  (if (and (##eq? type 'obj)
-                                           (c#targ-generated-c-file? file))
-                                      (##fx+ nb-output-files 1)
-                                      nb-output-files)))
                           ((obj-file? file)
                            (loop1 rest
                                   nb-output-files))
+                          ((c-file? file)
+                           (loop1 rest
+                                  (if (and (##eq? type 'obj)
+                                           (c#get-link-info file #f))
+                                      (##fx+ nb-output-files 1)
+                                      nb-output-files)))
                           (else
                            (loop1 rest
                                   (##fx+ nb-output-files 1)))))
@@ -244,15 +244,15 @@
                                                         '()))))
                                    program)))))
 
-                    (let ((rev-gen-c-files '())
+                    (let ((rev-gen-files '())
                           (rev-obj-files '())
                           (rev-tmp-files '())
                           (flags '()))
 
-                      (define (add-gen-c-file gen-c-file)
-                        (set! rev-gen-c-files
-                              (##cons (##cons gen-c-file flags)
-                                      rev-gen-c-files)))
+                      (define (add-gen-file file)
+                        (set! rev-gen-files
+                              (##cons (##cons file flags)
+                                      rev-gen-files)))
 
                       (define (add-obj-file obj-file)
                         (set! rev-obj-files
@@ -360,8 +360,12 @@
                                                  (if (##eq? type 'exe)
                                                      (add-tmp-file obj-file))))
                                            (if (and (##memq type '(link exe))
-                                                    (c#targ-generated-c-file? file))
-                                               (add-gen-c-file file))
+                                                    (c#get-link-info file #f))
+                                               (add-gen-file file))
+                                           (loop2 rest))
+                                          ((c#get-link-info file #f)
+                                           (if (##memq type '(link exe))
+                                               (add-gen-file file))
                                            (loop2 rest))
                                           ((obj-file? file)
                                            (add-obj-file file)
@@ -369,12 +373,15 @@
                                           (else
                                            (case type
                                              ((dyn)
-                                              (let ((dyn-obj-file
-                                                     (do-compile-file
-                                                      file
-                                                      options
-                                                      output)))
-                                                #f))
+                                              (if (##eq? (c#target-name target) 'C)
+                                                  (do-compile-file
+                                                   file
+                                                   options
+                                                   output)
+                                                  (do-compile-file-to-target
+                                                   file
+                                                   options
+                                                   output)))
                                              ((obj)
                                               (let ((obj-file
                                                      (do-compile-file
@@ -383,23 +390,24 @@
                                                       output)))
                                                 (add-obj-file obj-file)))
                                              ((link exe c)
-                                              (let ((gen-c-file
+                                              (let ((gen-file
                                                      (do-compile-file-to-target
                                                       file
                                                       options
                                                       (and (##eq? type 'c)
                                                            output))))
-                                                (add-gen-c-file gen-c-file)
-                                                (if (##eq? type 'exe)
+                                                (add-gen-file gen-file)
+                                                (if (and (c-file? gen-file)
+                                                         (##eq? type 'exe))
                                                     (let ((obj-file
                                                            (do-compile-file
-                                                            gen-c-file
+                                                            gen-file
                                                             (##cons '(obj) options)
                                                             #f)))
                                                       (add-obj-file obj-file)
                                                       (add-tmp-file obj-file)
                                                       (if (##not (##assq 'keep-c options))
-                                                          (add-tmp-file gen-c-file)))))))
+                                                          (add-tmp-file gen-file)))))))
                                            (loop2 rest))))))
 
                             (let* ((flat?
@@ -417,44 +425,46 @@
 
                               (if (##memq type '(link exe))
 
-                                  (let ((gen-c-files
-                                         (##reverse rev-gen-c-files)))
+                                  (let ((gen-files
+                                         (##reverse rev-gen-files)))
 
-                                    (if (##pair? gen-c-files)
+                                    (if (##pair? gen-files)
                                         (let* ((link-file
                                                 (if flat?
                                                     (if (and output
                                                              (##eq? type 'link))
-                                                        (link-flat gen-c-files
+                                                        (link-flat gen-files
                                                                    output: output)
-                                                        (link-flat gen-c-files))
+                                                        (link-flat gen-files))
                                                     (if (and output
                                                              (##eq? type 'link))
                                                         (if base
                                                             (link-incremental
-                                                             gen-c-files
+                                                             gen-files
                                                              output: output
                                                              base: base)
                                                             (link-incremental
-                                                             gen-c-files
+                                                             gen-files
                                                              output: output))
                                                         (if base
                                                             (link-incremental
-                                                             gen-c-files
+                                                             gen-files
                                                              base: base)
                                                             (link-incremental
-                                                             gen-c-files))))))
-                                          (add-gen-c-file link-file)
-                                          (if (##eq? type 'exe)
-                                              (let ((obj-link-file
-                                                     (do-compile-file
-                                                      link-file
-                                                      (##cons '(obj) options)
-                                                      #f)))
-                                                (add-obj-file obj-link-file)
-                                                (add-tmp-file obj-link-file)
-                                                (if (##not (##assq 'keep-c options))
-                                                    (add-tmp-file link-file))))))
+                                                             gen-files))))))
+                                          (and link-file
+                                               (begin
+                                                 (add-gen-file link-file)
+                                                 (if (##eq? type 'exe)
+                                                     (let ((obj-link-file
+                                                            (do-compile-file
+                                                             link-file
+                                                             (##cons '(obj) options)
+                                                             #f)))
+                                                       (add-obj-file obj-link-file)
+                                                       (add-tmp-file obj-link-file)
+                                                       (if (##not (##assq 'keep-c options))
+                                                           (add-tmp-file link-file))))))))
 
                                     (if (##eq? type 'exe)
                                         (and (##pair? rev-obj-files)
@@ -472,10 +482,10 @@
                                                       expanded-output
                                                       (##string-append
                                                        (##path-strip-extension
-                                                        (if (##pair? gen-c-files)
+                                                        (if (##pair? gen-files)
                                                             (##car
                                                              (##car
-                                                              (##reverse gen-c-files)))
+                                                              (##reverse gen-files)))
                                                             (##car
                                                              rev-obj-files)))
                                                        ##os-exe-extension-string-saved))))))))
@@ -615,7 +625,7 @@
               (version?
                (##assq 'v main-options)))
 
-          (define (run-interpreter-or-compiler known-options arguments)
+          (define (run-interpreter-or-compiler known-options arguments target)
 
             (if (##not skip-initialization-file?)
                 (process-initialization-file))
@@ -623,7 +633,7 @@
             (if (or (##null? arguments)
                     (interpreter-or force-interpreter?))
                 (interpreter-interactive-or-batch-mode arguments)
-                (compiler-batch-mode known-options arguments)))
+                (compiler-batch-mode known-options arguments target)))
 
           (cond (version?
                  (##write-string (##system-version-string) ##stdout-port)
@@ -641,7 +651,11 @@
                   arguments
                   '()
                   #t
-                  run-interpreter-or-compiler))
+                  (lambda (known-options arguments)
+                    (run-interpreter-or-compiler
+                     known-options
+                     arguments
+                     #f))))
 
                 (else
                  (let* ((common-compiler-options
@@ -686,7 +700,11 @@
                              (##append common-compiler-options
                                        (c#target-options target))
                              #t
-                             run-interpreter-or-compiler)))))))))))))
+                             (lambda (known-options arguments)
+                               (run-interpreter-or-compiler
+                                known-options
+                                arguments
+                                target)))))))))))))))
 
 (##main-set! ##main-gsi/gsc)
 

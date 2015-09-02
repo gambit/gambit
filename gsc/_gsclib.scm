@@ -426,26 +426,10 @@
                                          warn?)))))))))
 
 (define (##link-incremental rev-mods output base warnings?)
-  (let* ((expanded-output
-          (##path-normalize output))
-         (c-filename
-          (if (##equal? expanded-output
-                        (##path-strip-trailing-directory-separator
-                         expanded-output))
-              expanded-output
-              (##path-expand
-               (##path-strip-directory
-                (##string-append
-                 (##path-strip-extension (##car (##car rev-mods)))
-                 "_"
-                 (##caar (c#target-file-extensions (c#target-get 'C)))))
-               expanded-output)))
-         (base-and-mods
-          (##cons (##list base) (##reverse rev-mods))))
-    (c#targ-linker #t
-                   base-and-mods
-                   c-filename
-                   warnings?)))
+  (c#link-modules #t
+                  (##cons (##list base) (##reverse rev-mods))
+                  output
+                  warnings?))
 
 (define (link-flat
          modules
@@ -486,26 +470,10 @@
                                   warn?)))))))))
 
 (define (##link-flat rev-mods output warnings?)
-  (let* ((expanded-output
-          (##path-normalize output))
-         (c-filename
-          (if (##equal? expanded-output
-                        (##path-strip-trailing-directory-separator
-                         expanded-output))
-              expanded-output
-              (##path-expand
-               (##path-strip-directory
-                (##string-append
-                 (##path-strip-extension (##car (##car rev-mods)))
-                 "_"
-                 (##caar (c#target-file-extensions (c#target-get 'C)))))
-               expanded-output)))
-         (mods
-          (##reverse rev-mods)))
-    (c#targ-linker #f
-                   mods
-                   c-filename
-                   warnings?)))
+  (c#link-modules #f
+                  (##reverse rev-mods)
+                  output
+                  warnings?))
 
 (define (##c-code . args) ;; avoid errors when using -expansion
   (error "##c-code is not callable dynamically"))

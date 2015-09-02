@@ -23,7 +23,7 @@
 (set! univ-dyn-load? #f)
 
 (define (univ-get-representation-option ctx name)
-  (let ((x (assq name (ctx-options ctx))))
+  (let ((x (assq name (ctx-semantics-changing-options ctx))))
     (and x (pair? (cdr x)) (cadr x))))
 
 (define (univ-module-representation ctx)
@@ -195,16 +195,16 @@
 (define univ-thread-denv-slot 6)
 
 (define (univ-php-pre53? ctx)
-  (assq 'pre53 (ctx-options ctx)))
+  (assq 'pre53 (ctx-semantics-changing-options ctx)))
 
 (define (univ-python-pre3? ctx)
-  (assq 'pre3 (ctx-options ctx)))
+  (assq 'pre3 (ctx-semantics-changing-options ctx)))
 
 (define (univ-always-return-jump? ctx)
-  (assq 'always-return-jump (ctx-options ctx)))
+  (assq 'always-return-jump (ctx-semantics-preserving-options ctx)))
 
 (define (univ-never-return-jump? ctx)
-  (assq 'never-return-jump (ctx-options ctx)))
+  (assq 'never-return-jump (ctx-semantics-preserving-options ctx)))
 
 (define (univ-stack-resizable? ctx)
   (case (target-name (ctx-target ctx))
@@ -227,9 +227,13 @@
 
 ;; Initialization/finalization of back-end.
 
-(define (univ-setup target-language file-extensions options)
+(define (univ-setup
+         target-language
+         file-extensions
+         semantics-changing-options
+         semantics-preserving-options)
 
-  (define common-options
+  (define common-semantics-changing-options
     '((repr-module    symbol)
       (repr-procedure symbol)
       (repr-frame     symbol)
@@ -241,23 +245,52 @@
       (repr-vector    symbol)
       (repr-values    symbol)
       (repr-string    symbol)
-      (repr-symbol    symbol)
-      (always-return-jump)
+      (repr-symbol    symbol)))
+
+  (define common-semantics-preserving-options
+    '((always-return-jump)
       (never-return-jump)))
 
-  (let ((targ
-         (make-target 10
-                      target-language
-                      file-extensions
-                      (append options common-options)
-                      0)))
+  (let* ((sem-changing-options
+          (append common-semantics-changing-options
+                  semantics-changing-options))
+         (targ
+          (make-target 11
+                       target-language
+                       file-extensions
+                       (append sem-changing-options
+                               common-semantics-preserving-options
+                               semantics-preserving-options)
+                       0)))
 
     (define (begin! info-port)
 
       (target-dump-set!
        targ
        (lambda (procs output c-intf module-descr unique-name options)
-         (univ-dump targ procs output c-intf module-descr unique-name options)))
+         (let* ((sem-changing-opts
+                 (append-lists
+                  (map (lambda (o)
+                         (let ((x (assq (car o) options)))
+                           (if x (list x) '())))
+                       sem-changing-options)))
+                (sem-preserving-opts
+                 (append-lists
+                  (map (lambda (o)
+                         (let ((x (assq (car o) sem-changing-options)))
+                           (if x '() (list o))))
+                       options))))
+           (univ-dump targ procs output c-intf module-descr unique-name sem-changing-opts sem-preserving-opts))))
+
+      (target-link-info-set!
+       targ
+       (lambda (file)
+         (univ-link-info targ file)))
+
+      (target-link-set!
+       targ
+       (lambda (extension? inputs output warnings?)
+         (univ-link targ extension? inputs output warnings?)))
 
       (target-nb-regs-set! targ univ-nb-gvm-regs)
 
@@ -312,15 +345,15 @@
     (target-end!-set! targ end!)
     (target-add targ)))
 
-(univ-setup 'js     '((".js"   . JavaScript))  '())
-(univ-setup 'python '((".py"   . Python))      '((pre3)))
-(univ-setup 'ruby   '((".rb"   . Ruby))        '())
-(univ-setup 'php    '((".php"  . PHP))         '((pre53)))
+(univ-setup 'js     '((".js"   . JavaScript))  '()        '())
+(univ-setup 'python '((".py"   . Python))      '((pre3))  '())
+(univ-setup 'ruby   '((".rb"   . Ruby))        '()        '())
+(univ-setup 'php    '((".php"  . PHP))         '((pre53)) '())
 
-(univ-setup 'java   '((".java" . Java))        '());; experimental...
-;;(univ-setup 'c      '((".c"    . C))           '())
-;;(univ-setup 'c++    '((".cc"   . C++))         '())
-;;(univ-setup 'objc   '((".m"    . Objective-C)) '())
+(univ-setup 'java   '((".java" . Java))        '()        '())
+;;(univ-setup 'c      '((".c"    . C))           '()       '())
+;;(univ-setup 'c++    '((".cc"   . C++))         '()       '())
+;;(univ-setup 'objc   '((".m"    . Objective-C)) '()       '())
 
 ;;;----------------------------------------------------------------------------
 
@@ -2661,7 +2694,7 @@
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 
-(define (univ-dump-code targ procs output c-intf module-descr unique-name options)
+(define (univ-dump-code targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
 
   (define (defs->code ctx mod-name defs)
     (univ-emit-defs
@@ -2698,13 +2731,17 @@
        (else
          defs))))
 
-  (let* ((module-name
-          (scheme-id->c-id (symbol->string (vector-ref module-descr 0))))
+  (let* ((module-name-str
+          (symbol->string (vector-ref module-descr 0)))
+
+         (module-name
+          (scheme-id->c-id module-name-str))
 
          (ctx1
           (make-ctx
            targ
-           options
+           sem-changing-options
+           sem-preserving-options
            module-name
            "zzz" ;;;;;;;;;;;;;;;;;
            (make-objs-used)
@@ -2713,6 +2750,9 @@
 
          (defs-procs
            (univ-dump-procs ctx1 procs))
+
+         (rtlib-features
+          (resource-set-stack (ctx-rtlib-features-used ctx1)))
 
          (defs-entry
            (univ-entry-point ctx1 (list-ref procs 0)))
@@ -2728,7 +2768,8 @@
          (ctx2
           (make-ctx
            (ctx-target ctx1)
-           (ctx-options ctx1)
+           (ctx-semantics-changing-options ctx1)
+           (ctx-semantics-preserving-options ctx1)
            (univ-rts-module-name ctx1)
            "yyy" ;;;;;;;;;;;;
            (ctx-objs-used ctx1)
@@ -2744,17 +2785,69 @@
           (defs->code ctx2 (univ-rts-module-name ctx2) defs-rtlib))
 
          (code-decls
-          (queue->list (ctx-decls ctx2))))
+          (queue->list (ctx-decls ctx2)))
 
-    (^ (univ-rtlib-header ctx2)
+         (name
+          (string-append module-prefix module-name-str)))
+      
+    (^ (univ-link-info-header
+        ctx1
+        name
+        (list (list name))
+        rtlib-features
+        #f)
+       (univ-rtlib-header ctx2)
        code-rtlib
        code-decls
        code-prog)))
 
-(define (univ-dump targ procs output c-intf module-descr unique-name options)
-  (let ((code (univ-dump-code targ procs output c-intf module-descr unique-name options)))
-    (call-with-output-file output (lambda (port) (univ-display code port)))
+(define (univ-dump targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
+  (let ((code
+         (univ-dump-code targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)))
+    (call-with-output-file
+        output
+      (lambda (port)
+        (univ-display code port)))
     #f))
+
+(define (univ-link-info-header ctx name mods-and-flags rtlib-features-used module-meta-info)
+  (^ (univ-link-info-prefix (target-name (ctx-target ctx)))
+     (object->string
+      (list (compiler-version)
+            (list (target-name (ctx-target ctx))
+                  (ctx-semantics-changing-options ctx))
+            name
+            mods-and-flags
+            rtlib-features-used
+            module-meta-info))
+     "\n\n"))
+
+(define (univ-link-info targ file)
+  (let ((in (open-input-file* file)))
+    (and in
+         (let* ((pref
+                 (univ-link-info-prefix (target-name targ)))
+                (info
+                 (let loop ((i 0))
+                   (if (< i (string-length pref))
+                       (let ((c (read-char in)))
+                         (if (or (eof-object? c)
+                                 (not (char=? c (string-ref pref i))))
+                             #f
+                             (loop (+ i 1))))
+                       (read in)))))
+           (close-input-port in)
+           (and (pair? info)
+                (pair? (cdr info))
+                (pair? (cadr info))
+                (equal? (car info) (compiler-version))
+                (equal? (car (cadr info)) (target-name targ))
+                info)))))
+
+(define (univ-link targ extension? inputs output warnings?)
+  ;;TODO: implement
+  (pretty-print (list 'univ-link (target-name targ) extension? inputs output warnings?))
+  #f)
 
 ;;TODO: add constants
 #;
@@ -2914,13 +3007,13 @@
                          ((entry)
                           (if (label-entry-rest? gvm-instr)
                               (^ " "
-                                 (univ-comment
+                                 (univ-emit-comment
                                   ctx
                                   (if (label-entry-closed? gvm-instr)
                                       "closure-entry-point (+rest)\n"
                                       "entry-point (+rest)\n")))
                               (^ " "
-                                 (univ-comment
+                                 (univ-emit-comment
                                   ctx
                                   (if (label-entry-closed? gvm-instr)
                                       "closure-entry-point\n"
@@ -2928,15 +3021,15 @@
 
                          ((return)
                           (^ " "
-                             (univ-comment ctx "return-point\n")))
+                             (univ-emit-comment ctx "return-point\n")))
 
                          ((task-entry)
                           (^ " "
-                             (univ-comment ctx "task-entry-point\n")))
+                             (univ-emit-comment ctx "task-entry-point\n")))
 
                          ((task-return)
                           (^ " "
-                             (univ-comment ctx "task-return-point\n")))
+                             (univ-emit-comment ctx "task-return-point\n")))
 
                          (else
                           (compiler-internal-error
@@ -3391,7 +3484,8 @@
 
       (let ((ctx (make-ctx
                   (ctx-target global-ctx)
-                  (ctx-options global-ctx)
+                  (ctx-semantics-changing-options global-ctx)
+                  (ctx-semantics-preserving-options global-ctx)
                   (ctx-module-name global-ctx)
                   (scheme-id->c-id (proc-obj-name p))
                   (ctx-objs-used global-ctx)
@@ -3521,14 +3615,16 @@
 
 (define (make-ctx
          target
-         options
+         semantics-changing-options
+         semantics-preserving-options
          module-name
          ns
          objs-used
          rtlib-features-used
          decls)
   (vector target
-          options
+          semantics-changing-options
+          semantics-preserving-options
           module-name
           ns
           0
@@ -3544,41 +3640,44 @@
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
 
-(define (ctx-options ctx)                  (vector-ref ctx 1))
-(define (ctx-options-set! ctx x)           (vector-set! ctx 1 x))
+(define (ctx-semantics-changing-options ctx)        (vector-ref ctx 1))
+(define (ctx-semantics-changing-options-set! ctx x) (vector-set! ctx 1 x))
 
-(define (ctx-module-name ctx)              (vector-ref ctx 2))
-(define (ctx-module-name-set! ctx x)       (vector-set! ctx 2 x))
+(define (ctx-semantics-preserving-options ctx)        (vector-ref ctx 2))
+(define (ctx-semantics-preserving-options-set! ctx x) (vector-set! ctx 2 x))
 
-(define (ctx-ns ctx)                       (vector-ref ctx 3))
-(define (ctx-ns-set! ctx x)                (vector-set! ctx 3 x))
+(define (ctx-module-name ctx)              (vector-ref ctx 3))
+(define (ctx-module-name-set! ctx x)       (vector-set! ctx 3 x))
 
-(define (ctx-stack-base-offset ctx)        (vector-ref ctx 4))
-(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 4 x))
+(define (ctx-ns ctx)                       (vector-ref ctx 4))
+(define (ctx-ns-set! ctx x)                (vector-set! ctx 4 x))
 
-(define (ctx-serial-num ctx)               (vector-ref ctx 5))
-(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 5 x))
+(define (ctx-stack-base-offset ctx)        (vector-ref ctx 5))
+(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 5 x))
 
-(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 6))
-(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 6 x))
+(define (ctx-serial-num ctx)               (vector-ref ctx 6))
+(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 6 x))
 
-(define (ctx-resources-used-rd ctx)        (vector-ref ctx 7))
-(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 7 x))
+(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 7))
+(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 7 x))
 
-(define (ctx-resources-used-wr ctx)        (vector-ref ctx 8))
-(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 8 x))
+(define (ctx-resources-used-rd ctx)        (vector-ref ctx 8))
+(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 8 x))
 
-(define (ctx-globals-used ctx)             (vector-ref ctx 9))
-(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 9 x))
+(define (ctx-resources-used-wr ctx)        (vector-ref ctx 9))
+(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 9 x))
 
-(define (ctx-objs-used ctx)                (vector-ref ctx 10))
-(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 10 x))
+(define (ctx-globals-used ctx)             (vector-ref ctx 10))
+(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 10 x))
 
-(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 11))
-(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 11 x))
+(define (ctx-objs-used ctx)                (vector-ref ctx 11))
+(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 11 x))
 
-(define (ctx-decls ctx)                      (vector-ref ctx 12))
-(define (ctx-decls-set! ctx x)               (vector-set! ctx 12 x))
+(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 12))
+(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 12 x))
+
+(define (ctx-decls ctx)                      (vector-ref ctx 13))
+(define (ctx-decls-set! ctx x)               (vector-set! ctx 13 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -7628,26 +7727,45 @@ EOF
             (univ-defs-combine-list
              (map caddr (topological-sort feature-defs))))))))
 
+(define (univ-link-info-prefix targ-name)
+  (string-append
+
+   (case targ-name
+
+     ((js java)
+      "")
+
+     ((php)
+      "<?php\n")
+
+     ((python)
+      "#! /usr/bin/python\n")
+
+     ((ruby)
+      "# encoding: utf-8\n")
+
+     (else
+      (compiler-internal-error
+       "univ-link-info-prefix, unknown target")))
+
+   (univ-single-line-comment-prefix targ-name)
+   " File generated by Gambit "
+   (compiler-version-string)
+   "\n"
+   (univ-single-line-comment-prefix targ-name)
+   " Link info: "))
+
 (define (univ-rtlib-header ctx)
   (case (target-name (ctx-target ctx))
 
-    ((js)
+    ((js php ruby)
      (^))
 
-    ((php)
-     (^ "<?php\n\n"))
-
     ((python)
-     (^ "#! /usr/bin/python\n"
-        "\n"
-        "from array import array\n"
+     (^ "from array import array\n"
         "import ctypes\n"
         "import time\n"
         "import math\n"
-        "\n"))
-
-    ((ruby)
-     (^ "# encoding: utf-8\n"
         "\n"))
 
     ((java)
@@ -7713,7 +7831,7 @@ gambit_Pair.prototype.toString = function () {
    (lambda (ctx)
      (let ((entry (^obj main-proc)))
        (^ "\n"
-          (univ-comment ctx "--------------------------------\n")
+          (univ-emit-comment ctx "--------------------------------\n")
           "\n"
 
           (if univ-dyn-load?
@@ -8910,18 +9028,23 @@ gambit_Pair.prototype.toString = function () {
        (compiler-internal-error
         "univ-emit-class-declaration, unknown target")))))
 
-(define (univ-comment ctx comment)
-  (case (target-name (ctx-target ctx))
+(define (univ-emit-comment ctx comment)
+  (^ (univ-single-line-comment-prefix (target-name (ctx-target ctx)))
+     " "
+     comment))
+
+(define (univ-single-line-comment-prefix targ-name)
+  (case targ-name
 
     ((js php java)
-     (^ "// " comment))
+     "//")
 
     ((python ruby)
-     (^ "# " comment))
+     "#")
 
     (else
      (compiler-internal-error
-      "univ-comment, unknown target"))))
+      "univ-single-line-comment-prefix, unknown target"))))
 
 (define (univ-emit-return-poll ctx expr poll? call?)
 

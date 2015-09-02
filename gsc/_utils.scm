@@ -753,6 +753,15 @@
       l
       (loop (cons (string-ref s i) l) (- i 1)))))
 
+(define (read-line* in)
+  (let loop ((lst '()))
+    (let ((c (read-char in)))
+      (if (or (eof-object? c)
+              (char=? c #\return)
+              (char=? c #\newline))
+          (list->str (reverse lst))
+          (loop (cons c lst))))))
+
 ;;;----------------------------------------------------------------------------
 
 ;; Strechable vectors
@@ -1121,7 +1130,7 @@
   (vector '() '() '() '() '() '() '() '() '() '() '()))
 
 (define (ptset->list set)          ; convert set to list
-  (apply append (vect->list set)))
+  (append-lists (vect->list set)))
 
 (define (ptset-size set)           ; return cardinality of set
   (apply + (map list-length (vect->list set))))
