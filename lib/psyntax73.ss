@@ -504,55 +504,15 @@
     ((_ test e1 e2 ...) (when (not test) (begin e1 e2 ...)))))
 (define-syntax define-structure
   (lambda (x)
-    (define construct-name
-      (lambda (template-identifier . args)
-        (datum->syntax-object
-          template-identifier
-          (string->symbol
-            (apply string-append
-                   (map (lambda (x)
-                          (if (string? x)
-                              x
-                              (symbol->string (syntax-object->datum x))))
-                        args))))))
     (syntax-case x ()
       ((_ (name id1 ...))
-       (andmap identifier? (syntax (name id1 ...)))
        (with-syntax
-         ((constructor (construct-name (syntax name) "make-" (syntax name)))
-          (predicate (construct-name (syntax name) (syntax name) "?"))
-          ((access ...)
-           (map (lambda (x) (construct-name x (syntax name) "-" x))
-                (syntax (id1 ...))))
-          ((assign ...)
-           (map (lambda (x)
-                  (construct-name x "set-" (syntax name) "-" x "!"))
-                (syntax (id1 ...))))
-          (structure-length
-           (+ (length (syntax (id1 ...))) 1))
-          ((index ...)
-           (let f ((i 1) (ids (syntax (id1 ...))))
-              (if (null? ids)
-                  '()
-                  (cons i (f (+ i 1) (cdr ids)))))))
-         (syntax (begin
-                   (define constructor
-                     (lambda (id1 ...)
-                       (vector 'name id1 ... )))
-                   (define predicate
-                     (lambda (x)
-                       (and (vector? x)
-                            (= (vector-length x) structure-length)
-                            (eq? (vector-ref x 0) 'name))))
-                   (define access
-                     (lambda (x)
-                       (vector-ref x index)))
-                   ...
-                   (define assign
-                     (lambda (x update)
-                       (vector-set! x index update)))
-                   ...)))))))
-
+        ((expansion (map (lambda (datum)
+                           (datum->syntax-object (syntax name) datum))
+                         (##define-type-expand
+                           'define-structure #f #f (map syntax-object->datum
+                                                        (syntax (name id1 ...)))))))
+        (syntax expansion))))))
 (define-syntax let-values ; impoverished one-clause version
   (syntax-rules ()
     ((_ ((formals expr)) form1 form2 ...)
@@ -560,7 +520,35 @@
 
 (define noexpand "noexpand")
 
-(define-structure (syntax-object expression wrap))
+(define-structure (syntax-object
+                   id: 2D9C624D-3630-42AF-884C-FD82C537B2D7
+                   predicate: bs-syntax?
+                   constant-constructor: #f
+                   (expression bs-syntax-expression)
+                   (wrap bs-syntax-wrap)))
+
+(begin
+  (define (syntax-object? obj)
+    (or (bs-syntax? obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (and (vector? obj)
+               (eq? (vector-ref obj 0) 'syntax-object)))))
+  (define (syntax-object-expression obj)
+    (if (bs-syntax? obj)
+        (bs-syntax-expression obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-ref obj 1))))
+  (define (syntax-object-wrap obj)
+    (if (bs-syntax? obj)
+        (bs-syntax-wrap obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-ref obj 2)))))
 
 ;;; hooks to nonportable run-time helpers
 (begin
@@ -679,32 +667,30 @@
 (define-syntax build-lexical-reference
   (syntax-rules ()
     ((_ type ae var)
-;***      var)))
-     (build-source ae var))))
+     var)))
 
 (define-syntax build-lexical-assignment
   (syntax-rules ()
     ((_ ae var exp)
 ;***      `(set! ,var ,exp))))
-     (build-source ae `(,(build-source ae 'set!) ,(build-source ae var) ,exp)))))
+     (build-source ae `(,(build-source ae 'set!) ,var ,exp)))))
 
 (define-syntax build-global-reference
   (syntax-rules ()
     ((_ ae var)
-;***      var)))
      (build-source ae var))))
 
 (define-syntax build-global-assignment
   (syntax-rules ()
     ((_ ae var exp)
 ;***      `(set! ,var ,exp))))
-     (build-source ae `(,(build-source ae 'set!) ,(build-source ae var) ,exp)))))
+     (build-source ae `(,(build-source ae 'set!) ,var ,exp)))))
 
 (define-syntax build-global-definition
   (syntax-rules ()
     ((_ ae var exp)
 ;***      `(define ,var ,exp))))
-     (build-source ae `(,(build-source ae 'define) ,(build-source ae var) ,exp)))))
+     (build-source ae `(,(build-source ae 'define) ,var ,exp)))))
 
 (define-syntax build-cte-install
  ; should build a call that has the same effect as calling put-cte-hook
@@ -712,9 +698,9 @@
 ;***     ((_ sym exp token) `($sc-put-cte ',sym ,exp ',token))))
     ((_ sym exp token)
      (build-source #f `(,(build-source #f '$sc-put-cte)
-                        ,(build-source #f (list (build-source #f 'quote) (attach-source #f sym)))
+                        ,(build-source #f `(,(build-source #f 'quote) ,sym))
                         ,exp
-                        ,(build-source #f (list (build-source #f 'quote) token)))))))
+                        ,(build-source #f `(,(build-source #f 'quote) ,token)))))))
 
 (define-syntax build-visit-only
  ; should mark the result as "visit only" for compile-file
@@ -732,10 +718,36 @@
   (syntax-rules ()
     ((_ ae vars exp)
 ;***      `(lambda ,vars ,exp))))
-     (build-source ae
-                   `(,(build-source ae 'lambda)
-                     ,(build-params ae vars)
-                     ,exp)))))
+     (build-source ae `(,(build-source ae 'lambda) ,vars ,exp)))))
+
+;; mdh: to provide alpha-conversion of all symbols, but also support
+;; non-alpha converted keyword arguments, the following pattern is
+;; used to convert dsssl style formals:
+
+;; (lambda (#!key a b) expr)
+   
+;; ultimately maps to something like this:
+
+;; (lambda %%args32
+;;   (receive (%%a12 %%b13) (apply (lambda (#!key a b) (values a b)) %%args32)
+;;            <body>))
+  
+;; the dsssl parameter assignment occurs within a closure, where
+;; %%args32 is a generated gensym, and %%a12 and %%b13 are the
+;; alpha-converted a and b.
+
+(define-syntax build-dsssl-lambda
+  (syntax-rules ()
+    ;; vars is either symbol or (keyword . alpha-converted-keyword)
+    ((_ ae dsssl-args-var alpha-vars dsssl-formals orig-vars exp)
+     (build-source ae `(,(build-source ae 'lambda) ,dsssl-args-var
+                        ,(build-source ae `(,(build-source ae 'receive) ,alpha-vars
+                                            ,(build-source ae `(,(build-source ae 'apply)
+                                                                ,(build-source ae `(,(build-source ae 'lambda)
+                                                                                    ,dsssl-formals
+                                                                                    ,(build-source ae `(,(build-source ae 'values) . ,orig-vars))))
+                                                                ,dsssl-args-var))
+                                            ,exp)))))))
 
 (define built-lambda?
   (lambda (x)
@@ -748,15 +760,16 @@
 
 (define-syntax build-primref
   (syntax-rules ()
-;***     ((_ ae name) name)
-;***     ((_ ae level name) name)))
-    ((_ ae name) (build-source ae name))
-    ((_ ae level name) (build-source ae name))))
+    ((_ ae name) name)
+    ((_ ae level name) name)))
 
 (define-syntax build-data
   (syntax-rules ()
-;***     ((_ ae exp) `',exp)))
-    ((_ ae exp) (let ((x (attach-source ae exp))) (if (self-eval? exp) x (build-source ae (list (build-source ae 'quote) x)))))))
+    ((_ ae exp)
+     (let ((x (attach-source ae exp)))
+       (if (self-eval? exp)
+           x
+           (build-source ae `(,(build-source ae 'quote) ,x)))))))
 
 (define build-sequence
   (lambda (ae exps)
@@ -781,8 +794,9 @@
   (lambda (ae vars val-exps body-exp)
     (if (null? vars)
         body-exp
-;***         `(letrec ,(map list vars val-exps) ,body-exp))))
-        (build-source ae `(,(build-source ae 'letrec) ,(build-source ae (map (lambda (var val) (build-source ae (list (build-source ae var) val))) vars val-exps)) ,body-exp)))))
+        (build-source ae `(,(build-source ae 'letrec)
+                           ,(build-source ae (map (lambda (v e) (build-source ae `(,v ,e))) vars val-exps))
+                           ,body-exp)))))
 
 (define build-body
   (lambda (ae vars val-exps body-exp)
@@ -821,7 +835,6 @@
 
 (define-syntax build-lexical-var
   (syntax-rules ()
-;***     ((_ ae id) (gensym))))
     ((_ ae id) (gensym id))))
 
 (define-syntax lexical-var? gensym?)
@@ -1134,8 +1147,118 @@
         '()
         (cons (gen-label) (gen-labels (cdr ls))))))
 
-(define-structure (ribcage symnames marks labels))
-(define-structure (top-ribcage key mutable?))
+(define-structure (ribcage 
+                   id: 0E54356E-1759-409D-AB3F-0E5AD9E68939
+                   predicate: bs-ribcage?
+                   constant-constructor: #f
+                   (symnames bs-ribcage-symnames set-bs-ribcage-symnames!)
+                   (marks bs-ribcage-marks set-bs-ribcage-marks!)
+                   (labels bs-ribcage-labels set-bs-ribcage-labels!)))
+(begin
+  (define (ribcage? obj)
+    (or (bs-ribcage? obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (and (vector? obj)
+               (eq? (vector-ref obj 0) 'ribcage)))))
+
+  (define (ribcage-symnames obj)
+    (if (bs-ribcage? obj)
+        (bs-ribcage-symnames obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-ref obj 1))))
+  
+  (define (set-ribcage-symnames! obj val)
+    (if (bs-ribcage? obj)
+        (set-bs-ribcage-symnames! obj val)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-set! obj 1 val))))
+
+  (define (ribcage-marks obj)
+    (if (bs-ribcage? obj)
+        (bs-ribcage-marks obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-ref obj 2))))
+
+  (define (set-ribcage-marks! obj val)
+    (if (bs-ribcage? obj)
+        (set-bs-ribcage-marks! obj val)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-set! obj 2 val))))
+
+  (define (ribcage-labels obj)
+    (if (bs-ribcage? obj)
+        (bs-ribcage-labels obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-ref obj 3))))
+
+  (define (set-ribcage-labels! obj val)
+    (if (bs-ribcage? obj)
+        (set-bs-ribcage-labels! obj val)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-set! obj 3 val)))))
+
+(define-structure (top-ribcage
+                   id: E14B1CA5-AADF-4FF2-9EAA-70CCC11E5A91
+                   predicate: bs-top-ribcage?
+                   constant-constructor: #f
+                   (key bs-top-ribcage-key set-bs-top-ribcage-key!)
+                   (mutable? bs-top-ribcage-mutable? set-bs-top-ribcage-mutable?!)))
+
+(begin
+  (define (top-ribcage? obj)
+    (or (bs-top-ribcage? obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (and (vector? obj)
+               (eq? (vector-ref obj 0) 'top-ribcage)))))
+  
+  (define (top-ribcage-key obj)
+    (if (bs-top-ribcage? obj)
+        (bs-top-ribcage-key obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-ref obj 1))))
+
+  (define (set-top-ribcage-key! obj val)
+    (if (bs-top-ribcage? obj)
+        (set-bs-top-ribcage-key! obj val)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-set! obj 1 val))))
+
+  (define (top-ribcage-mutable? obj)
+    (if (bs-top-ribcage? obj)
+        (bs-top-ribcage-mutable? obj)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-ref obj 2))))
+  
+  (define (set-top-ribcage-mutable?! obj val)
+    (if (bs-top-ribcage? obj)
+        (set-bs-top-ribcage-mutable?! obj val)
+        (let ((obj (if (annotation? obj)
+                       (annotation-stripped obj)
+                       obj)))
+          (vector-set! obj 2 val)))))
+
 (define-structure (import-interface interface new-marks))
 (define-structure (env top-ribcage wrap))
 
@@ -1428,9 +1551,6 @@
                      (lambda (var-name) (values var-name marks)))
                     (else (search sym (cdr subst) marks))))
                  (else
-;***                   (error 'sc-expand
-;***                     "internal error in id-var-name-loc&marks: improper subst ~s"
-;***                     subst)))))))
                   (error
                     "internal error in id-var-name-loc&marks: improper subst"
                     subst)))))))
@@ -1692,7 +1812,7 @@
                   (syntax-type (chi-macro (binding-value b) e r w ae rib)
                     r empty-wrap #f rib))
                  ((core) (values type (binding-value b) e w ae))
-                 ((begin) (values 'begin-form #f e w ae))
+                 ((begin ##begin) (values 'begin-form #f e w ae))
                  ((alias) (values 'alias-form #f e w ae))
                  ((define) (values 'define-form #f e w ae))
                  ((define-syntax) (values 'define-syntax-form #f e w ae))
@@ -2825,8 +2945,7 @@
        (id? (syntax name))
        (values (syntax name) (syntax val) w))
       ((_ (name . args) e1 e2 ...)
-       (and (id? (syntax name))
-            (valid-bound-ids? (lambda-var-list (syntax args))))
+       (id? (syntax name))
        (values (wrap (syntax name) w)
                (cons (syntax lambda) (wrap (syntax (args e1 e2 ...)) w))
                empty-wrap))
@@ -2879,39 +2998,125 @@
 
 (define chi-lambda-clause
   (lambda (e c r mr w m?)
-    (syntax-case c ()
-      (((id ...) e1 e2 ...)
-       (let ((ids (syntax (id ...))))
-         (if (not (valid-bound-ids? ids))
-             (syntax-error e "invalid parameter list in")
-             (let ((labels (gen-labels ids))
-                   (new-vars (map gen-var ids)))
-               (values
-                 new-vars
-                 (chi-body (syntax (e1 e2 ...))
-                           e
-                           (extend-var-env* labels new-vars r)
-                           mr
-                           (make-binding-wrap ids labels w)
-                           m?))))))
-      ((ids e1 e2 ...)
-       (let ((old-ids (lambda-var-list (syntax ids))))
-         (if (not (valid-bound-ids? old-ids))
-             (syntax-error e "invalid parameter list in")
-             (let ((labels (gen-labels old-ids))
-                   (new-vars (map gen-var old-ids)))
-               (values
-                 (let f ((ls1 (cdr new-vars)) (ls2 (car new-vars)))
-                   (if (null? ls1)
-                       ls2
-                       (f (cdr ls1) (cons (car ls1) ls2))))
-                 (chi-body (syntax (e1 e2 ...))
-                           e
-                           (extend-var-env* labels new-vars r)
-                           mr
-                           (make-binding-wrap old-ids labels w)
-                           m?))))))
-      (_ (syntax-error e)))))
+
+    (define reverse*
+      (lambda (l)
+        (let f ((ls1 (cdr l)) (ls2 (car l)))
+          (if (null? ls1)
+              ls2
+              (f (cdr ls1) (cons (car ls1) ls2))))))
+
+    (define ids/emitter
+      (lambda (formals ids emitter ae template)
+        (cond ((null? ids)
+               (values (reverse formals) emitter))
+              ((syntax-object? (car ids))
+               (ids/emitter formals (cons (syntax-object->datum (car ids)) (cdr ids)) emitter ae (car ids)))
+              ((annotation? (car ids))
+               (ids/emitter formals (cons (unannotate (car ids)) (cdr ids)) emitter (car ids) template))
+              ((eq? (car ids) '#!key)
+               (ids/emitter formals (cdr ids) 'keyword ae #f))
+              ((memq (car ids) '(#!optional #!rest))
+               (ids/emitter formals (cdr ids) (or (and (eq? emitter 'rnrs) 'optional/rest) emitter) ae #f))
+              ((pair? (car ids))
+               (ids/emitter formals (cons (car (car ids)) (cdr ids)) emitter ae
+                            (if template 
+                                (make-syntax-object (car (unannotate (syntax-object-expression template)))
+                                                    (syntax-object-wrap template))
+                                #f)))
+              (else
+               (ids/emitter (cons (cond (template (datum->syntax-object template (car ids)))
+                                        (ae (build-source ae (car ids)))
+                                        (else (build-source no-source (car ids)))) formals)
+                            (cdr ids) emitter ae #f)))))
+
+    (define emit-formals
+      (lambda (formals* formals vars emitter ae template)
+        (define formal
+          (lambda ()
+            (case emitter
+              ((optional/rest) vars)
+              ((rnrs keyword) formals))))
+        (cond ((null? formals) (reverse formals*))
+
+               ((syntax-object? formals)
+                (emit-formals formals* (syntax-object->datum formals) vars emitter ae formals))
+              
+               ((id? formals)
+                (reverse* (cons (formal) formals*)))
+              
+               ((annotation? formals)
+                (emit-formals formals* (unannotate formals) vars emitter ae template))
+              
+               ((annotation? (car formals))
+                (emit-formals formals* (cons (unannotate (car formals)) (cdr formals)) vars emitter (car formals) template))
+
+               ((syntax-object? (car formals))
+                (emit-formals formals* (cons (syntax-object->datum (car formals)) (cdr formals)) vars emitter ae (car formals)))
+
+               ((memq (car formals) '(#!optional #!rest #!key))
+                (emit-formals (cons (build-source ae (car formals)) formals*) (cdr formals) vars emitter ae template))
+              
+               ((pair? (car formals))
+                (emit-formals (cons (cons (car (case emitter
+                                                 ((keyword) (car (formal)))
+                                                 ((optional/rest) (formal))))
+                                          (unannotate (chi (cdr (car formals)) r mr w m?)))
+                                    formals*) (cdr formals) (cdr vars) emitter ae template))
+
+               ((id? (car formals))
+                (emit-formals (cons (car (formal)) formals*) (cdr (syntax-object->datum formals)) (cdr vars) emitter ae template))
+
+               (else (error `(unexpected-formal ,(car formals)))))))
+
+      (syntax-case c ()
+        (((id ...) e1 e2 ...)
+         (let ((formals (syntax (id ...))))
+           (let-values (((ids emitter) (ids/emitter '() formals 'rnrs #f #f)))
+             (if (not (valid-bound-ids? ids))
+                 (syntax-error e "invalid parameter list in")
+                 (let ((labels (gen-labels ids))
+                       (new-vars (map (lambda (id) (build-source id (gen-var id))) ids)))
+                   (values
+                    emitter
+                    (and (eq? emitter 'keyword)
+                         (gen-var 'dsssl-args))
+                    (build-source formals new-vars)
+                    (emit-formals '() formals new-vars emitter #f #f)
+                    (map syntax-object->datum ids)
+                    (chi-body (syntax (e1 e2 ...))
+                              e
+                              (extend-var-env* labels new-vars r)
+                              mr
+                              (make-binding-wrap ids labels w)
+                              m?)))))))
+        ((ids e1 e2 ...)
+         (let ((formals (syntax ids)))
+           (let-values (((old-ids emitter) (ids/emitter '() (lambda-var-list formals) 'rnrs #f #f)))
+             (if (not (valid-bound-ids? old-ids))
+                 (syntax-error e "invalid parameter list in")
+                 (let ((labels (gen-labels old-ids))
+                       (new-vars (map (lambda (id) (build-source id (gen-var id))) old-ids)))
+                   (values
+                    emitter
+                    (and (eq? emitter 'keyword)
+                         (gen-var 'dsssl-args))
+                    (let ((vars (if (eq? emitter 'rnrs)
+                                    (reverse* new-vars)
+                                    (reverse new-vars))))
+                      (if (or (pair? vars)
+                              (null? vars))
+                          (build-source old-ids vars)
+                          vars))
+                    (emit-formals '() formals (reverse* new-vars) emitter #f #f)
+                    (reverse (map syntax-object->datum old-ids))
+                    (chi-body (syntax (e1 e2 ...))
+                              e
+                              (extend-var-env* labels new-vars r)
+                              mr
+                              (make-binding-wrap old-ids labels w)
+                              m?)))))))
+        (_ (syntax-error e)))))
 
 (define chi-local-syntax
   (lambda (rec? e r mr w ae)
@@ -2920,8 +3125,8 @@
        (let ((ids (syntax (id ...))))
          (if (not (valid-bound-ids? ids))
              (invalid-ids-error (map (lambda (x) (wrap x w)) ids)
-               (source-wrap e w ae)
-               "keyword")
+                                (source-wrap e w ae)
+                                "keyword")
              (let ((labels (gen-labels ids)))
                (let ((new-w (make-binding-wrap ids labels w)))
                  (let ((b* (let ((w (if rec? new-w w)))
@@ -2931,11 +3136,11 @@
                                       (chi x mr mr w #t)))
                                   (syntax (val ...))))))
                    (values
-                     (syntax (e1 e2 ...))
-                     (extend-env* labels b* r)
-                     (extend-env* labels b* mr)
-                     new-w
-                     ae)))))))
+                    (syntax (e1 e2 ...))
+                    (extend-env* labels b* r)
+                    (extend-env* labels b* mr)
+                    new-w
+                    ae)))))))
       (_ (syntax-error (source-wrap e w ae))))))
 
 (define chi-void
@@ -3313,8 +3518,12 @@
   (lambda (e r mr w ae m?)
     (syntax-case e ()
       ((_ . c)
-       (let-values (((vars body) (chi-lambda-clause (source-wrap e w ae) (syntax c) r mr w m?)))
-         (build-lambda ae vars body))))))
+       (let-values (((emitter dsssl-args vars dsssl-formals orig-vars body)
+                     (chi-lambda-clause (source-wrap e w ae) (syntax c) r mr w m?)))
+         (case emitter
+           ((keyword) (build-dsssl-lambda ae dsssl-args vars dsssl-formals orig-vars body))
+           ((optional/rest) (build-lambda ae dsssl-formals body))
+           ((rnrs) (build-lambda ae vars body))))))))
 
 
 (global-extend 'core 'letrec
@@ -3509,6 +3718,12 @@
                        r mr m?))
                    (list (chi (syntax val) r mr empty-wrap m?))))
                (syntax-error e "invalid literals list in"))))))))
+
+(global-extend 'macro 'include
+  (lambda (x)
+    (syntax-case x ()
+      ((include filename)
+       (datum->syntax-object (syntax include) (##include-file-as-a-begin-expr (syntax-object-expression x)))))))
 
 (put-cte-hook 'module
   (lambda (x)
@@ -3869,11 +4084,15 @@
 (set! syntax-error
   (lambda (object . messages)
     (for-each (lambda (x) (arg-check string? x 'syntax-error)) messages)
-    (let ((message (if (null? messages)
-                       "invalid syntax"
-                       (apply string-append messages))))
-;***       (error-hook #f message (strip object empty-wrap)))))
-      (error message (strip object empty-wrap)))))
+    (let ((messages (if (null? messages)
+                        '(invalid syntax)
+                        messages))
+          (locat (cond ((annotation? object))
+                       ((and (syntax-object? object)
+                             (annotation? (syntax-object-expression object)))
+                        (syntax-object-expression object))
+                       (else #f))))
+      (apply ##raise-expression-parsing-exception `(psyntax-error ,locat  ,@messages ',(strip object empty-wrap))))))
 
 ;;; syntax-dispatch expects an expression and a pattern.  If the expression
 ;;; matches the pattern a list of the matching expressions for each
@@ -4368,37 +4587,6 @@
 ;*** (define-syntax unsyntax-splicing
 ;***   (lambda (x)
 ;***     (syntax-error x "misplaced")))
-
-(define-syntax include
-  (lambda (x)
-    (define read-file
-      (lambda (fn k)
-        (let ((p (open-input-file fn)))
-          (let f ()
-            (let ((x (read p)))
-              (if (eof-object? x)
-                  (begin (close-input-port p) '())
-                  (cons (datum->syntax-object k x) (f))))))))
-    (syntax-case x ()
-      ((k filename)
-       (let ((fn (syntax-object->datum (syntax filename))))
-;***          (with-syntax (((exp ...) (read-file fn (syntax k))))
-;***            (syntax (begin exp ...))))))))
-         (datum->syntax-object
-          (syntax k)
-          (let* ((src
-                  (##include-file-as-a-begin-expr
-                   (let ((y (vector-ref x 1)))
-                     (if (##source? y)
-                         y
-                         (##make-source y #f)))))
-                 (locat
-                  (##source-locat src)))
-            src
-            #;
-            (##make-source (cons (##make-source 'begin locat)
-                                 (cdr (##source-code src)))
-                           locat))))))))
 
 (define-syntax case
   (lambda (x)
