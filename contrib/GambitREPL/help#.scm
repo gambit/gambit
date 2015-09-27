@@ -10,7 +10,7 @@
 
 main-help-document
 r5rs-help-document
-gambit-c-help-document
+gambit-help-document
 
 ))
 

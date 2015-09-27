@@ -373,7 +373,8 @@
                    (path-strip-directory
                     (string-append
                      (path-strip-extension (car (car rev-inputs)))
-                     "_")))
+                     "_"))
+                   expanded-output)
                   (path-strip-extension expanded-output)))
              (selected-target
               #f)

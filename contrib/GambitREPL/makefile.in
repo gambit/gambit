@@ -28,15 +28,15 @@ FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
+GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
 LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
 
 LIB_EXTENSION = @LIB_EXTENSION@
-GAMBCLIB = @GAMBCLIB@
-GAMBCGSCLIB = @GAMBCGSCLIB@
-GAMBCGSILIB = @GAMBCGSILIB@
+GAMBITLIB = @GAMBITLIB@
+GAMBITGSCLIB = @GAMBITGSCLIB@
+GAMBITGSILIB = @GAMBITGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -101,7 +101,7 @@ button-abc.png button-cancel.png button-compass.png button-empty.png \
 button-left-left.png button-left.png button-question.png button-right-right.png \
 button-right.png button-up.png button-up-arrow.png \
 make-appstore-screenshots make-keys make-scaled-icons \
-help.html r5rs.html r5rs.pdf gambit-c.html
+help.html r5rs.html r5rs.pdf gambit.html
 
 GENDISTFILES =
 
@@ -130,7 +130,7 @@ prepare-for-xcode: $(MODULES_M) GambitREPL.xcodeproj gambit-iOS
 	rm -rf lib
 	mkdir lib
 	cp gambit-iOS/current/lib/*.scm lib
-	cp gambit-iOS/current/doc/gambit-c.pdf .
+	cp gambit-iOS/current/doc/gambit.pdf .
 	if test ! -e "emacs"; then \
 	  tar zxf emacs.tgz; \
 	fi

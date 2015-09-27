@@ -4070,7 +4070,7 @@
 (define-prim (##load-support-libraries)
 
   (##define-macro (macro-extension-file)
-    "~~lib/gambcext")
+    "~~lib/gambext")
 
   (##define-macro (macro-syntax-case-file)
     "~~lib/syntax-case")

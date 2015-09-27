@@ -26,7 +26,7 @@
 
 (define main-help-document     (path-expand "~~/help.html"))
 (define r5rs-help-document     (path-expand "~~/r5rs.html"))
-(define gambit-c-help-document (path-expand "~~/gambit-c.html"))
+(define gambit-help-document (path-expand "~~/gambit.html"))
 
 (define help-names-r5rs '(
 *
@@ -225,7 +225,7 @@ write-char
 zero?
 ))
 
-(define help-names-gambit-c '(
+(define help-names-gambit '(
 <
 <=
 =
@@ -1175,8 +1175,8 @@ wrong-number-of-arguments-exception?
                 (else
                  subject)))
          (docu
-          (cond ((memq name help-names-gambit-c)
-                 gambit-c-help-document)
+          (cond ((memq name help-names-gambit)
+                 gambit-help-document)
                 ((memq name help-names-r5rs)
                  r5rs-help-document)
                 (else

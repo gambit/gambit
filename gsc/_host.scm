@@ -23,7 +23,7 @@
 ;; The host dependent variables:
 ;; ----------------------------
 
-'(begin ; *** remove the quote at the start of this line if not using Gambit-C
+'(begin ; *** remove the quote at the start of this line if not using Gambit
 
 ;; These procedures are the interface to 'keyword objects'.  On a
 ;; system which lacks native support for them, keywords are implemented
@@ -621,9 +621,9 @@
 
 ;;;============================================================================
 
-;; Definitions when host system is Gambit-C:
+;; Definitions when host system is Gambit:
 
-;" *** remove the semicolon at the start of this line if not using Gambit-C
+;" *** remove the semicolon at the start of this line if not using Gambit
 
 (define (string->keyword-object str)
   (##string->keyword str))

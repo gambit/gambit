@@ -32,7 +32,7 @@ can be uninstalled by executing as root the shell command
 </p>
 
 <p>
-<code>&nbsp;&nbsp;uninstall-gambc <var>&lt;version&gt;</var></code>
+<code>&nbsp;&nbsp;uninstall-gambit <var>&lt;version&gt;</var></code>
 </p>
 
 <p>
@@ -42,7 +42,7 @@ undo the effects of this installer:
 </p>
 
 <p>
-<code>&nbsp;&nbsp;sudo uninstall-gambc v@VERSION@</code>
+<code>&nbsp;&nbsp;sudo uninstall-gambit v@VERSION@</code>
 </p>
 
 </html>

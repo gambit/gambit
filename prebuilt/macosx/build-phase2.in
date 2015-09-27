@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -27,15 +27,15 @@ TITLE="$PACKAGE_STRING ($VARIANT variant)"
 VERSION="`echo $PACKAGE_VERSION | sed -e s/^v//g`"
 PKG_FILE="`pwd`/$PACKAGE_TARNAME-macosx-$VARIANT.pkg"
 DMG_FILE="`pwd`/$PACKAGE_TARNAME-macosx-$VARIANT.dmg"
-BACKGROUND_FILE="`pwd`/gambc.tif"
-PMPROJ_FILE="`pwd`/gambc.pmproj"
+BACKGROUND_FILE="`pwd`/gambit.tif"
+PMPROJ_FILE="`pwd`/gambit.pmproj"
 WELCOME_FILE="`pwd`/welcome.html"
 README_FILE="`pwd`/readme.html"
 CONCLUSION_FILE="`pwd`/conclusion.html"
 EXTRAS_DIR="`pwd`/extras"
 DESCRIPTION="This is the $TITLE installer"
-PROGRAMS="gsc gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script gambc-cc.bat gambc-doc.bat uninstall-gambc"
-LIBRARIES="libgambc@LIB_EXTENSION@ libgambcgsi@LIB_EXTENSION@ libgambcgsc@LIB_EXTENSION@"
+PROGRAMS="gsc gsc-script gsi gsi-script scheme-ieee-1178-1990 scheme-r4rs scheme-r5rs scheme-srfi-0 six six-script gambcomp-C.bat gambdoc.bat uninstall-gambit"
+LIBRARIES="libgambit@LIB_EXTENSION@ libgambitgsi@LIB_EXTENSION@ libgambitgsc@LIB_EXTENSION@"
 INCLUDES="gambit.h"
 
 instantiate_file() # input, output
@@ -48,11 +48,11 @@ cleanup()
   rm -rf "$PMPROJ_FILE" "$WELCOME_FILE" "$README_FILE" "$CONCLUSION_FILE" "$PKG_FILE" "$SOURCE_DIR" "$EXTRAS_DIR"
 }
 
-install_gambc()
+install_gambit()
 {
   cd "$rootfromhere"
   make clean
-  make -j 2
+  make -j 4
   make install
 
   if [ "$RUN_TESTS" == "0" ] ; then
@@ -84,18 +84,18 @@ install_gambc()
   cd "$herefromroot"
 }
 
-uninstall_gambc()
+uninstall_gambit()
 {
-  "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+  "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambit"
 }
 
 create_uninstaller()
 {
-  rm -f "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+  rm -f "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambit"
 
-  instantiate_file "uninstall-gambc.in" "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+  instantiate_file "uninstall-gambit.in" "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambit"
 
-  chmod 755 "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+  chmod 755 "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambit"
 }
 
 create_extras()
@@ -108,7 +108,7 @@ create_extras()
 
   for f in $PROGRAMS ; do
 
-    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $BIN_DIR/$f exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
+    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $BIN_DIR/$f exists and it was not created by the Gambit installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
 
     i=`expr $i + 1`
 
@@ -116,7 +116,7 @@ create_extras()
 
   for f in $LIBRARIES ; do
 
-    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $LIB_DIR/$f exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
+    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $LIB_DIR/$f exists and it was not created by the Gambit installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
 
     i=`expr $i + 1`
 
@@ -124,7 +124,7 @@ create_extras()
 
   for f in $INCLUDES ; do
 
-    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $INCLUDE_DIR/$f exists and it was not created by the Gambit-C installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
+    echo "\"`expr $i + 16`\" = \"The installation process is being aborted because the file $INCLUDE_DIR/$f exists and it was not created by the Gambit installer.  A possible solution is to remove this file manually and restart the installer.\";" >> "$EXTRAS_DIR/InstallationCheck.strings"
 
     i=`expr $i + 1`
 
@@ -159,7 +159,7 @@ cd "`dirname $0`"
 
 cleanup
 rm -f "$DMG_FILE"
-install_gambc
+install_gambit
 create_uninstaller
 create_extras
 create_pmproj

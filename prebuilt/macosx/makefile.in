@@ -1,6 +1,6 @@
-# makefile for Gambit-C build on MacOS X.
+# makefile for Gambit build on OS X.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot = prebuilt/macosx
 rootfromhere = ../..
@@ -28,15 +28,15 @@ FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
+GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
 LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
 
 LIB_EXTENSION = @LIB_EXTENSION@
-GAMBCLIB = @GAMBCLIB@
-GAMBCGSCLIB = @GAMBCGSCLIB@
-GAMBCGSILIB = @GAMBCGSILIB@
+GAMBITLIB = @GAMBITLIB@
+GAMBITGSCLIB = @GAMBITGSCLIB@
+GAMBITGSILIB = @GAMBITGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -70,8 +70,8 @@ mandir = @mandir@
 
 RCFILES = makefile.in build build-phase2.in remote-shell \
 InstallationCheck.in postflight.in \
-gambc.ai gambc.tif gambc.pmproj.in \
-welcome.html.in readme.html.in conclusion.html.in uninstall-gambc.in
+gambit.ai gambit.tif gambit.pmproj.in \
+welcome.html.in readme.html.in conclusion.html.in uninstall-gambit.in
 
 GENDISTFILES =
 
@@ -84,7 +84,7 @@ all-pre:
 all-post:
 
 prebuilt:
-	PATH="$(rootfromhere)/gsi:$$PATH" ../remote-connect macosx "" "(define tmpdir \"gambtmp1\")(define gambc-dist \"$(PACKAGE_TARNAME)\")(define timeout 2000)(ssh timeout (string-append \"sudo rm -rf \" tmpdir \";mkdir \" tmpdir \";\"))(scp-to timeout (string-append \"$(rootfromhere)/\" gambc-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"cd \" tmpdir \";tar zxf \" gambc-dist \".tgz;cd \" gambc-dist \";sudo $(herefromroot)/build\"))(scp-from timeout (string-append tmpdir \"/\" gambc-dist \"/$(PACKAGE_TARNAME)-*\") \"$(rootfromhere)\")"
+	PATH="$(rootfromhere)/gsi:$$PATH" ../remote-connect macosx "" "(define tmpdir \"gambtmp1\")(define gambit-dist \"$(PACKAGE_TARNAME)\")(define timeout 2000)(ssh timeout (string-append \"sudo rm -rf \" tmpdir \";mkdir \" tmpdir \";\"))(scp-to timeout (string-append \"$(rootfromhere)/\" gambit-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"cd \" tmpdir \";tar zxf \" gambit-dist \".tgz;cd \" gambit-dist \";sudo $(herefromroot)/build\"))(scp-from timeout (string-append tmpdir \"/\" gambit-dist \"/$(PACKAGE_TARNAME)-*\") \"$(rootfromhere)\")"
 
 bootstrap-pre:
 

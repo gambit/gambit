@@ -147,9 +147,9 @@ ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
 
 extern ___SCMOBJ ___os_path_homedir ___PVOID;
 
-extern ___SCMOBJ ___os_path_gambcdir ___PVOID;
+extern ___SCMOBJ ___os_path_gambitdir ___PVOID;
 
-extern ___SCMOBJ ___os_path_gambcdir_map_lookup
+extern ___SCMOBJ ___os_path_gambitdir_map_lookup
    ___P((___SCMOBJ dir),
         ());
 

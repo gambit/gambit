@@ -1,4 +1,4 @@
-# makefile for Gambit-C bin directory.
+# makefile for Gambit bin directory.
 
 # Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
@@ -28,15 +28,15 @@ FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
+GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
 LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
 
 LIB_EXTENSION = @LIB_EXTENSION@
-GAMBCLIB = @GAMBCLIB@
-GAMBCGSCLIB = @GAMBCGSCLIB@
-GAMBCGSILIB = @GAMBCGSILIB@
+GAMBITLIB = @GAMBITLIB@
+GAMBITGSCLIB = @GAMBITGSCLIB@
+GAMBITGSILIB = @GAMBITGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -74,14 +74,14 @@ GSI_EXECUTABLE_INSTALLED = @ENABLE_INTERPRETER_NAME@@exe@
 GSC_EXECUTABLE_INSTALLED = @ENABLE_COMPILER_NAME@@exe@
 
 RCFILES = makefile.in \
-gambc-cc.unix.in gambc-cc.bat.windows.in \
-gambc-doc.unix.in gambc-doc.bat.windows.in
+gambcomp-C.unix.in gambcomp-C.bat.windows.in \
+gambdoc.unix.in gambdoc.bat.windows.in
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_BIN_PROG = gambc-cc@bat@ gambc-doc@bat@
+INSTFILES_BIN_PROG = gambcomp-C@bat@ gambdoc@bat@
 INSTFILES_BIN_LINK_GSI = six@exe@ gsi-script@bat@ six-script@bat@ \
 scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 INSTFILES_BIN_LINK_GSC = gsc-script@bat@
@@ -92,24 +92,24 @@ all:
 
 all-pre:
 
-all-post: gambc-cc@bat@ gambc-doc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gambcomp-C@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 
-gambc-cc@bat@: makefile gambc-cc.unix gambc-cc.bat.windows
-	rm -f gambc-cc@bat@
+gambcomp-C@bat@: makefile gambcomp-C.unix gambcomp-C.bat.windows
+	rm -f gambcomp-C@bat@
 	if test "@bat@" = ""; then \
-	  cp gambc-cc.unix gambc-cc@bat@; \
-	  chmod +x gambc-cc@bat@; \
+	  cp gambcomp-C.unix gambcomp-C@bat@; \
+	  chmod +x gambcomp-C@bat@; \
 	else \
-	  cp gambc-cc.bat.windows gambc-cc@bat@; \
+	  cp gambcomp-C.bat.windows gambcomp-C@bat@; \
 	fi
 
-gambc-doc@bat@: makefile gambc-doc.unix gambc-doc.bat.windows
-	rm -f gambc-doc@bat@
+gambdoc@bat@: makefile gambdoc.unix gambdoc.bat.windows
+	rm -f gambdoc@bat@
 	if test "@bat@" = ""; then \
-	  cp gambc-doc.unix gambc-doc@bat@; \
-	  chmod +x gambc-doc@bat@; \
+	  cp gambdoc.unix gambdoc@bat@; \
+	  chmod +x gambdoc@bat@; \
 	else \
-	  cp gambc-doc.bat.windows gambc-doc@bat@; \
+	  cp gambdoc.bat.windows gambdoc@bat@; \
 	fi
 
 six@exe@: makefile
@@ -264,8 +264,8 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f gambc-cc@bat@ \
-	  gambc-doc@bat@ \
+	rm -f gambcomp-C@bat@ \
+	  gambdoc@bat@ \
 	  six@exe@ six@exe@.lnk \
 	  gsi-script@bat@ \
 	  gsi-script@bat@.lnk \
@@ -293,8 +293,8 @@ bootclean-post: distclean-post
 realclean-pre: bootclean-pre
 
 realclean-post: bootclean-post
-	rm -f gambc-cc.unix gambc-cc.bat.windows \
-	  gambc-doc.unix gambc-doc.bat.windows makefile
+	rm -f gambcomp-C.unix gambcomp-C.bat.windows \
+	  gambdoc.unix gambdoc.bat.windows makefile
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
@@ -409,16 +409,16 @@ dist-devel-recursive: dist-devel-pre
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
-gambc-cc.unix: gambc-cc.unix.in $(rootfromhere)/config.status
+gambcomp-C.unix: gambcomp-C.unix.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
-gambc-cc.bat.windows: gambc-cc.bat.windows.in $(rootfromhere)/config.status
+gambcomp-C.bat.windows: gambcomp-C.bat.windows.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
-gambc-doc.unix: gambc-doc.unix.in $(rootfromhere)/config.status
+gambdoc.unix: gambdoc.unix.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
-gambc-doc.bat.windows: gambc-doc.bat.windows.in $(rootfromhere)/config.status
+gambdoc.bat.windows: gambdoc.bat.windows.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 # Tell versions [3.59,3.63) of GNU make not to export all variables.

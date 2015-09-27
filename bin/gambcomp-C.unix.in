@@ -22,9 +22,9 @@ BUILD_EXE=@BUILD_EXE_SH@
 
 DEFS=@DEFS_SH@
 LIBS=@LIBS_SH@
-GAMBCLIB=@GAMBCLIB_SH@
-GAMBCGSCLIB=@GAMBCGSCLIB_SH@
-GAMBCGSILIB=@GAMBCGSILIB_SH@
+GAMBITLIB=@GAMBITLIB_SH@
+GAMBITGSCLIB=@GAMBITGSCLIB_SH@
+GAMBITGSILIB=@GAMBITGSILIB_SH@
 LIB_PREFIX=@LIB_PREFIX_SH@
 LIB_EXTENSION=@LIB_EXTENSION_SH@
 OBJ_EXTENSION=@OBJ_EXTENSION_SH@
@@ -35,7 +35,7 @@ case "$1" in
 
   "obj")
 
-    if test "${GAMBC_CC_VERBOSE}" != ""; then
+    if test "${GAMBCOMP_VERBOSE}" != ""; then
       echo @BUILD_OBJ_ECHO@
     fi
 
@@ -44,7 +44,7 @@ case "$1" in
 
   "dyn")
 
-    if test "${GAMBC_CC_VERBOSE}" != ""; then
+    if test "${GAMBCOMP_VERBOSE}" != ""; then
       echo @BUILD_DYN_ECHO@
     fi
 
@@ -53,7 +53,7 @@ case "$1" in
 
   "lib")
 
-    if test "${GAMBC_CC_VERBOSE}" != ""; then
+    if test "${GAMBCOMP_VERBOSE}" != ""; then
       echo @BUILD_LIB_ECHO@
     fi
 
@@ -62,7 +62,7 @@ case "$1" in
 
   "exe")
 
-    if test "${GAMBC_CC_VERBOSE}" != ""; then
+    if test "${GAMBCOMP_VERBOSE}" != ""; then
       echo @BUILD_EXE_ECHO@
     fi
 
@@ -133,16 +133,16 @@ case "$1" in
     echo "${LIBS}"
     ;;
 
-  "GAMBCLIB")
-    echo "${GAMBCLIB}"
+  "GAMBITLIB")
+    echo "${GAMBITLIB}"
     ;;
 
-  "GAMBCGSCLIB")
-    echo "${GAMBCGSCLIB}"
+  "GAMBITGSCLIB")
+    echo "${GAMBITGSCLIB}"
     ;;
 
-  "GAMBCGSILIB")
-    echo "${GAMBCGSILIB}"
+  "GAMBITGSILIB")
+    echo "${GAMBITGSILIB}"
     ;;
 
   "LIB_PREFIX")
@@ -190,9 +190,9 @@ case "$1" in
 
     echo DEFS=`echo "${DEFS}" | ${ESC_SH}`
     echo LIBS=`echo "${LIBS}" | ${ESC_SH}`
-    echo GAMBCLIB=`echo "${GAMBCLIB}" | ${ESC_SH}`
-    echo GAMBCGSCLIB=`echo "${GAMBCGSCLIB}" | ${ESC_SH}`
-    echo GAMBCGSILIB=`echo "${GAMBCGSILIB}" | ${ESC_SH}`
+    echo GAMBITLIB=`echo "${GAMBITLIB}" | ${ESC_SH}`
+    echo GAMBITGSCLIB=`echo "${GAMBITGSCLIB}" | ${ESC_SH}`
+    echo GAMBITGSILIB=`echo "${GAMBITGSILIB}" | ${ESC_SH}`
     echo LIB_PREFIX=`echo "${LIB_PREFIX}" | ${ESC_SH}`
     echo LIB_EXTENSION=`echo "${LIB_EXTENSION}" | ${ESC_SH}`
     echo OBJ_EXTENSION=`echo "${OBJ_EXTENSION}" | ${ESC_SH}`
@@ -201,7 +201,7 @@ case "$1" in
     ;;
 
   *)
-    echo "gambc-cc unknown operation \"$1\""
+    echo "gambcomp-C unknown operation \"$1\""
     exit 1
     ;;
 

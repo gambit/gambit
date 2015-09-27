@@ -1685,7 +1685,7 @@ ___SCMOBJ ___setup_base_module ___PVOID
 
 #ifdef ___DEBUG
 
-      ___base_mod.debug = ___fopen ("gambc.log", "w");
+      ___base_mod.debug = ___fopen ("gambit.log", "w");
 
       if (___base_mod.debug == NULL)
         ___base_mod.debug = ___stderr;

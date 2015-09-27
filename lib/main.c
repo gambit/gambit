@@ -2,7 +2,7 @@
 
 /* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
-/* This is the driver of the Gambit-C system */
+/* This is the driver of the Gambit system */
 
 #define ___INCLUDED_FROM_MAIN
 #define ___VERSION 407009
@@ -24,8 +24,8 @@
 /*---------------------------------------------------------------------------*/
 
 
-___HIDDEN ___UCS_2 gambcopt_env_name[] =
-{ 'G', 'A', 'M', 'B', 'C', 'O', 'P', 'T', '\0' };
+___HIDDEN ___UCS_2 gambopt_env_name[] =
+{ 'G', 'A', 'M', 'B', 'O', 'P', 'T', '\0' };
 
 
 ___HIDDEN ___SCMOBJ usage_err
@@ -183,10 +183,10 @@ ___mod_or_lnk (*linker)();)
   int options_source;
   int options_source_min;
   int options_source_max;
-  ___UCS_2STRING gambcdir;
-  ___UCS_2STRING *gambcdir_map;
-  int gambcdir_map_len;
-  ___UCS_2STRING gambcopt;
+  ___UCS_2STRING gambitdir;
+  ___UCS_2STRING *gambitdir_map;
+  int gambitdir_map_len;
+  ___UCS_2STRING gambopt;
   ___UCS_2STRING remote_dbg_addr;
   ___UCS_2STRING rpc_server_addr;
   unsigned long min_heap_len;
@@ -203,10 +203,10 @@ ___mod_or_lnk (*linker)();)
   /* handle arguments to runtime */
 
   argv = ___program_startup_info.argv;
-  gambcdir = 0;
-  gambcdir_map = 0;
-  gambcdir_map_len = 0;
-  gambcopt = 0;
+  gambitdir = 0;
+  gambitdir_map = 0;
+  gambitdir_map_len = 0;
+  gambopt = 0;
   remote_dbg_addr = 0;
   rpc_server_addr = 0;
   min_heap_len = 0;
@@ -257,7 +257,7 @@ ___mod_or_lnk (*linker)();)
        * When the script line runtime options is of the form -::XXX
        * (i.e. the colon is followed by a colon) it is the sole source
        * of runtime options (i.e. the command line and environment
-       * variable GAMBCOPT are not used as a source of other runtime
+       * variable GAMBOPT are not used as a source of other runtime
        * options).
        */
       
@@ -284,10 +284,10 @@ ___mod_or_lnk (*linker)();)
 
       if (options_source == 0)
         {
-          if ((e = ___getenv_UCS_2 (gambcopt_env_name, &gambcopt))
+          if ((e = ___getenv_UCS_2 (gambopt_env_name, &gambopt))
               != ___FIX(___NO_ERR))
             goto after_setup;
-          arg = gambcopt;
+          arg = gambopt;
         }
       else if (options_source == 1)
         arg = script_line;
@@ -468,9 +468,9 @@ ___mod_or_lnk (*linker)();)
 
             case '=':
               {
-                ___free_UCS_2STRING (gambcdir);
-                gambcdir = extract_string (&arg);
-                if (gambcdir == 0)
+                ___free_UCS_2STRING (gambitdir);
+                gambitdir = extract_string (&arg);
+                if (gambitdir == 0)
                   {
                     e = ___FIX(___HEAP_OVERFLOW_ERR);
                     goto after_setup;
@@ -499,7 +499,7 @@ ___mod_or_lnk (*linker)();)
                       goto after_setup;
                     }
 
-                if (!extend_strvec (&gambcdir_map, 0, 1, gambcdir_map != 0))
+                if (!extend_strvec (&gambitdir_map, 0, 1, gambitdir_map != 0))
                   {
                     e = ___FIX(___HEAP_OVERFLOW_ERR);
                     goto after_setup;
@@ -511,9 +511,9 @@ ___mod_or_lnk (*linker)();)
                     goto after_setup;
                   }
 
-                gambcdir_map[0] = dir;
+                gambitdir_map[0] = dir;
 
-                gambcdir_map_len++;
+                gambitdir_map_len++;
 
                 break;
               }
@@ -714,8 +714,8 @@ ___mod_or_lnk (*linker)();)
   setup_params.file_settings     = file_settings;
   setup_params.terminal_settings = terminal_settings;
   setup_params.stdio_settings    = stdio_settings;
-  setup_params.gambcdir          = gambcdir;
-  setup_params.gambcdir_map      = gambcdir_map;
+  setup_params.gambitdir         = gambitdir;
+  setup_params.gambitdir_map     = gambitdir_map;
   setup_params.remote_dbg_addr   = remote_dbg_addr;
   setup_params.rpc_server_addr   = rpc_server_addr;
   setup_params.linker            = linker;
@@ -730,14 +730,14 @@ ___mod_or_lnk (*linker)();)
   if (current_argv != argv)
     ___free_mem (current_argv);
 
-  while (gambcdir_map_len > 0)
-    ___free_UCS_2STRING (gambcdir_map[--gambcdir_map_len]);
+  while (gambitdir_map_len > 0)
+    ___free_UCS_2STRING (gambitdir_map[--gambitdir_map_len]);
 
-  if (gambcdir_map != 0)
-    ___free_mem (gambcdir_map);
+  if (gambitdir_map != 0)
+    ___free_mem (gambitdir_map);
 
-  ___free_UCS_2STRING (gambcdir);
-  ___free_UCS_2STRING (gambcopt);
+  ___free_UCS_2STRING (gambitdir);
+  ___free_UCS_2STRING (gambopt);
   ___free_UCS_2STRING (remote_dbg_addr);
   ___free_UCS_2STRING (rpc_server_addr);
 

@@ -438,8 +438,8 @@ splash-page-content-part2-end
                ((equal? event "event:r5rs")
                 (show-help-document r5rs-help-document #f))
 
-               ((equal? event "event:gambit-c")
-                (show-help-document gambit-c-help-document #f))
+               ((equal? event "event:gambit")
+                (show-help-document gambit-help-document #f))
 
                ((equal? event "cancel")
                 (hide-cancelButton)

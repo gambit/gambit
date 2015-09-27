@@ -1,4 +1,4 @@
-# makefile for Gambit-C compiler.
+# makefile for Gambit compiler.
 
 # Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
@@ -28,15 +28,15 @@ FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
+GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
 LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
 
 LIB_EXTENSION = @LIB_EXTENSION@
-GAMBCLIB = @GAMBCLIB@
-GAMBCGSCLIB = @GAMBCGSCLIB@
-GAMBCGSILIB = @GAMBCGSILIB@
+GAMBITLIB = @GAMBITLIB@
+GAMBITGSCLIB = @GAMBITGSCLIB@
+GAMBITGSILIB = @GAMBITGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -73,7 +73,7 @@ HEADERS_SCM = "_assert\#.scm" "_asm\#.scm" "_x86\#.scm" "_codegen\#.scm"
 
 LIBRARIES_SCM = $(HEADERS_SCM)
 
-LIBRARY = $(LIB_PREFIX)$(GAMBCGSCLIB)$(LIB_EXTENSION)
+LIBRARY = $(LIB_PREFIX)$(GAMBITGSCLIB)$(LIB_EXTENSION)
 LIBRARY_NORMAL_C =
 LIBRARY_NORMAL_CPP =
 LIBRARY_NORMAL_H =
@@ -118,17 +118,17 @@ _t-c-1@obj@ _gvm@obj@ _source@obj@ _t-c-3@obj@ \
 _utils@obj@ _parms@obj@ _host@obj@ _env@obj@ \
 _back@obj@ _codegen@obj@ _assert@obj@ _gsclib@obj@
 LIBRARY_OBJECTS = $(LIBRARY_NORMAL_O) \
-$(LIBRARY_MODULES_O) _$(GAMBCGSCLIB)@obj@
+$(LIBRARY_MODULES_O) _$(GAMBITGSCLIB)@obj@
 LIBRARY_OBJECTS_PLUS = $(LIBRARY_NORMAL_O_PLUS) \
-$(LIBRARY_MODULES_O_PLUS) +_$(GAMBCGSCLIB)@obj@
+$(LIBRARY_MODULES_O_PLUS) +_$(GAMBITGSCLIB)@obj@
 LIBRARY_OBJECTS_COMMA = $(LIBRARY_NORMAL_O_COMMA),\
-$(LIBRARY_MODULES_O_COMMA),_$(GAMBCGSCLIB)@obj@
+$(LIBRARY_MODULES_O_COMMA),_$(GAMBITGSCLIB)@obj@
 LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(LIBRARY_MODULES_O_IN_COMPILE_ORDER) \
-$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _$(GAMBCGSCLIB)@obj@
+$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _$(GAMBITGSCLIB)@obj@
 
 LIBRARIES = $(LIBRARY)$(LIB_VERSION_SUFFIX)
 
-MAKE_LIBRARY_LIBS = $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)
+MAKE_LIBRARY_LIBS = $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
 MAKE_LIBRARY_FOR_INSTALL_LIBS = @MAKE_LIBRARY_FOR_INSTALL_LIBS@
 
 EXECUTABLE = gsc@exe@
@@ -157,7 +157,7 @@ $(EXECUTABLE_MODULES_O_COMMA),_gsc_@obj@
 EXECUTABLE_OBJECTS_IN_COMPILE_ORDER = $(EXECUTABLE_MODULES_O_IN_COMPILE_ORDER) \
 $(EXECUTABLE_NORMAL_O_IN_COMPILE_ORDER) _gsc_@obj@
 
-LINK_LIBS = $(LIBRARY) $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)
+LINK_LIBS = $(LIBRARY) $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
 LINK_FOR_INSTALL_LIBS = @LINK_FOR_INSTALL_GSC_LIBS@
 
 MODULES_SCM = $(LIBRARY_MODULES_SCM) $(EXECUTABLE_MODULES_SCM)
@@ -168,16 +168,16 @@ RCFILES = makefile.in fixnum.scm generic.scm igsc.scm $(MODULES_SCM) \
 $(LIBRARIES_SCM) _envadt.scm _gvmadt.scm _ptreeadt.scm _sourceadt.scm \
 runtests.scm _t-x86.scm
 
-GENDISTFILES = $(MODULES_C) _$(GAMBCGSCLIB).c _gsc_.c
+GENDISTFILES = $(MODULES_C) _$(GAMBITGSCLIB).c _gsc_.c
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_LIB_DATA = _$(GAMBCGSCLIB).c $(LIBRARIES_SCM)
+INSTFILES_LIB_DATA = _$(GAMBITGSCLIB).c $(LIBRARIES_SCM)
 
-GAMBCDIR_INCLUDE = $(srcdirpfx)$(rootfromhere)/include
-GAMBCDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
-GAMBCDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
-GAMBCDIR_LIB_GSC = $(srcdirpfx)$(rootfromhere)/gsc
+GAMBITDIR_INCLUDE = $(srcdirpfx)$(rootfromhere)/include
+GAMBITDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
+GAMBITDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
+GAMBITDIR_LIB_GSC = $(srcdirpfx)$(rootfromhere)/gsc
 
 BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
 BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS)
@@ -203,14 +203,14 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	  $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	fi
 
-_$(GAMBCGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambc.c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambc -o $@ -preload $(LIBRARY_MODULES_C)
+_$(GAMBITGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambit.c
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
-_gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBCGSCLIB).c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l _$(GAMBCGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
+_gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSCLIB).c
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
 
 _gsc@obj@: _gsc.c
 	@BUILD_OBJ@

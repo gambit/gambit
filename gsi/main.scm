@@ -7,7 +7,7 @@
 ;;;----------------------------------------------------------------------------
 
 (##define-macro (macro-initialization-file)
-  ".gambcini")
+  ".gambini")
 
 (define (##main-gsi/gsc)
 

@@ -2244,7 +2244,7 @@
              (if (##tty? input-port)
                  (let ((path-or-settings
                         (##list path:
-                                (in-homedir ".gambc_history")
+                                (in-homedir ".gambit_history")
                                 char-encoding:
                                 'UTF-8)))
 
@@ -3960,9 +3960,9 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##gambc-doc . args)
+(define-prim (##gambdoc . args)
 
-  (define (gambc-doc args)
+  (define (gambdoc args)
 
     (define (gen-args args i)
       (if (##null? args)
@@ -3972,7 +3972,7 @@
                   (gen-args (##cdr args) (##fx+ i 1)))))
 
     (define (arg name val)
-      (##string-append "GAMBC_DOC_" name "=" val))
+      (##string-append "GAMBDOC_" name "=" val))
 
     (define (install-dir path)
       (parameterize
@@ -3980,9 +3980,9 @@
          (##path-expand path)))
        (##current-directory)))
 
-    (let* ((gambcdir-bin
+    (let* ((gambitdir-bin
             (install-dir "~~bin"))
-           (gambcdir-doc
+           (gambitdir-doc
             (install-dir "~~doc")))
       (##open-process-generic
        (macro-direction-inout)
@@ -3993,8 +3993,8 @@
            status))
        open-process
        (##list path:
-               (##string-append gambcdir-bin
-                                "gambc-doc"
+               (##string-append gambitdir-bin
+                                "gambdoc"
                                 ##os-bat-extension-string-saved)
                arguments:
                '()
@@ -4002,18 +4002,18 @@
                (##append
                 (let ((env (##os-environ)))
                   (if (##fixnum? env) '() env))
-                (##cons (arg "GAMBCDIR_BIN"
+                (##cons (arg "GAMBITDIR_BIN"
                              (##path-strip-trailing-directory-separator
-                              gambcdir-bin))
-                        (##cons (arg "GAMBCDIR_DOC"
+                              gambitdir-bin))
+                        (##cons (arg "GAMBITDIR_DOC"
                                      (##path-strip-trailing-directory-separator
-                                      gambcdir-doc))
+                                      gambitdir-doc))
                                 (gen-args args 1))))
                stdin-redirection: #f
                stdout-redirection: #f
                stderr-redirection: #f))))
 
-  (let ((exit-status (gambc-doc args)))
+  (let ((exit-status (gambdoc args)))
     (if (##fx= exit-status 0)
         (##void)
         (##raise-error-exception
@@ -4034,10 +4034,10 @@
                   (##string->list str))))
 
 (define-prim (##show-help prefix subject)
-  (##gambc-doc "help"
-               subject
-               (##help-browser)
-               (##escape-link (##string-append prefix subject))))
+  (##gambdoc "help"
+             subject
+             (##help-browser)
+             (##escape-link (##string-append prefix subject))))
 
 (define ##help-browser
   (##make-parameter

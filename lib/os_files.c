@@ -251,12 +251,12 @@ ___SIZE_TS max_length;)
           if (path[2]!='\0' && !DIR_SEPARATOR(path[2]))
             goto ret;
 
-          tilde_dir = ___GSTATE->setup_params.gambcdir;
+          tilde_dir = ___GSTATE->setup_params.gambitdir;
           if (tilde_dir == 0)
-#ifdef ___GAMBCDIR
-            tilde_dir = ___GAMBCDIR;
+#ifdef ___GAMBITDIR
+            tilde_dir = ___GAMBITDIR;
 #else
-            tilde_dir = ":Gambit-C";
+            tilde_dir = ":Gambit";
 #endif
 
           i += 2;
@@ -507,15 +507,15 @@ ___SCMOBJ ___os_path_homedir ___PVOID
 }
 
 
-___SCMOBJ ___os_path_gambcdir ___PVOID
+___SCMOBJ ___os_path_gambitdir ___PVOID
 {
   ___SCMOBJ e;
   ___SCMOBJ result;
 
 #ifdef USE_WIN32
-#ifndef ___GAMBCDIR
+#ifndef ___GAMBITDIR
 #ifdef USE_GetModuleFileName
-  if (___GSTATE->setup_params.gambcdir == 0)
+  if (___GSTATE->setup_params.gambitdir == 0)
     {
       ___CHAR_TYPE(___PATH_CE_SELECT) temp[___PATH_MAX_LENGTH+1];
       DWORD n;
@@ -524,7 +524,7 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
       if (n > 0)
         {
           int cch;
-          ___UCS_2STRING gambcdir = 0;
+          ___UCS_2STRING gambitdir = 0;
           /* remove filename */
           *(_tcsrchr (temp, '\\')) = 0;
           /* remove bin subdirectory, if present */
@@ -538,11 +538,11 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
                 }
             }
 
-          gambcdir = ___CAST(___UCS_2STRING,
-                             ___alloc_rc (___PSA(___PSTATE)
-                                          (cch+1) * sizeof (___UCS_2)));
+          gambitdir = ___CAST(___UCS_2STRING,
+                              ___alloc_rc (___PSA(___PSTATE)
+                                           (cch+1) * sizeof (___UCS_2)));
 
-          if (gambcdir == 0)
+          if (gambitdir == 0)
             {
               e = ___FIX(___HEAP_OVERFLOW_ERR);
               return e;
@@ -550,13 +550,13 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
           else
             {
 #ifdef _UNICODE
-              _tcscpy (___CAST(wchar_t*,gambcdir), temp);
+              _tcscpy (___CAST(wchar_t*,gambitdir), temp);
 #else
-              mbstowcs (___CAST(wchar_t*,gambcdir), temp, cch);
-              gambcdir[cch] = '\0';
+              mbstowcs (___CAST(wchar_t*,gambitdir), temp, cch);
+              gambitdir[cch] = '\0';
 #endif
-              CANONICALIZE_PATH(___UCS_2STRING, gambcdir);
-              ___GSTATE->setup_params.gambcdir = gambcdir;
+              CANONICALIZE_PATH(___UCS_2STRING, gambitdir);
+              ___GSTATE->setup_params.gambitdir = gambitdir;
             }
       }
   }
@@ -564,11 +564,11 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 #endif
 #endif
 
-  if (___GSTATE->setup_params.gambcdir != 0)
+  if (___GSTATE->setup_params.gambitdir != 0)
     {
       if ((e = ___NONNULLUCS_2STRING_to_SCMOBJ
                  (___PSTATE,
-                  ___GSTATE->setup_params.gambcdir,
+                  ___GSTATE->setup_params.gambitdir,
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -579,33 +579,33 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
   else
     {
 
-#ifndef ___GAMBCDIR
+#ifndef ___GAMBITDIR
 
 #define STRINGIFY1(x) #x
 #define STRINGIFY2(x) STRINGIFY1(x)
 
 #ifdef USE_POSIX
-#define ___GAMBCDIR "/usr/local/Gambit-C/" STRINGIFY2(___VERSION)
+#define ___GAMBITDIR "/usr/local/Gambit/" STRINGIFY2(___VERSION)
 #endif
 
 #ifdef USE_WIN32
 /* Will only be used if GetModuleFileName path fails */
-#define ___GAMBCDIR "C:\\Program Files\\Gambit-C\\" STRINGIFY2(___VERSION)
+#define ___GAMBITDIR "C:\\Program Files\\Gambit\\" STRINGIFY2(___VERSION)
 #endif
 
 #ifdef USE_CLASSIC_MACOS
-#define ___GAMBCDIR ":Gambit-C:" STRINGIFY2(___VERSION)
+#define ___GAMBITDIR ":Gambit:" STRINGIFY2(___VERSION)
 #endif
 
 #endif
 
-      static char gambcdir[] = ___GAMBCDIR;
+      static char gambitdir[] = ___GAMBITDIR;
 
-      CANONICALIZE_PATH(char*, gambcdir);
+      CANONICALIZE_PATH(char*, gambitdir);
 
       if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
                  (___PSTATE,
-                  gambcdir,
+                  gambitdir,
                   &result,
                   ___RETURN_POS))
           != ___FIX(___NO_ERR))
@@ -618,12 +618,12 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
 }
 
 
-#ifndef ___GAMBCDIR_MAP_CE_SELECT
-#define ___GAMBCDIR_MAP_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#ifndef ___GAMBITDIR_MAP_CE_SELECT
+#define ___GAMBITDIR_MAP_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
 #endif
 
-#ifndef ___CONFIG_GAMBCDIR_MAP_CE_SELECT
-#define ___CONFIG_GAMBCDIR_MAP_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#ifndef ___CONFIG_GAMBITDIR_MAP_CE_SELECT
+#define ___CONFIG_GAMBITDIR_MAP_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 
@@ -636,13 +636,13 @@ ___SCMOBJ ___os_path_gambcdir ___PVOID
  */
 
 
-___HIDDEN ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) gambcdir_map_lookup
-   ___P((___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d),
+___HIDDEN ___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) gambitdir_map_lookup
+   ___P((___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) d),
         (d)
-___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d;)
+___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) d;)
 {
-  ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) dir;
-  ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) *p = ___GSTATE->setup_params.gambcdir_map;
+  ___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) dir;
+  ___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) *p = ___GSTATE->setup_params.gambitdir_map;
 
   if (p == 0)
     return 0;
@@ -672,37 +672,37 @@ ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d;)
 }
 
 
-___HIDDEN ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) config_gambcdir_map[] =
+___HIDDEN ___STRING_TYPE(___CONFIG_GAMBITDIR_MAP_CE_SELECT) config_gambitdir_map[] =
 {
-#ifdef ___GAMBCDIR_BIN
-  "bin=" ___GAMBCDIR_BIN,
+#ifdef ___GAMBITDIR_BIN
+  "bin=" ___GAMBITDIR_BIN,
 #endif
-#ifdef ___GAMBCDIR_DOC
-  "doc=" ___GAMBCDIR_DOC,
+#ifdef ___GAMBITDIR_DOC
+  "doc=" ___GAMBITDIR_DOC,
 #endif
-#ifdef ___GAMBCDIR_INCLUDE
-  "include=" ___GAMBCDIR_INCLUDE,
+#ifdef ___GAMBITDIR_INCLUDE
+  "include=" ___GAMBITDIR_INCLUDE,
 #endif
-#ifdef ___GAMBCDIR_INFO
-  "info=" ___GAMBCDIR_INFO,
+#ifdef ___GAMBITDIR_INFO
+  "info=" ___GAMBITDIR_INFO,
 #endif
-#ifdef ___GAMBCDIR_LIB
-  "lib=" ___GAMBCDIR_LIB,
+#ifdef ___GAMBITDIR_LIB
+  "lib=" ___GAMBITDIR_LIB,
 #endif
-#ifdef ___GAMBCDIR_SHARE
-  "share=" ___GAMBCDIR_SHARE,
+#ifdef ___GAMBITDIR_SHARE
+  "share=" ___GAMBITDIR_SHARE,
 #endif
   0
 };
 
 
-___HIDDEN ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) config_gambcdir_map_lookup
-   ___P((___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d),
+___HIDDEN ___STRING_TYPE(___CONFIG_GAMBITDIR_MAP_CE_SELECT) config_gambitdir_map_lookup
+   ___P((___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) d),
         (d)
-___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d;)
+___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) d;)
 {
-  ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) dir;
-  ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) *p = config_gambcdir_map;
+  ___STRING_TYPE(___CONFIG_GAMBITDIR_MAP_CE_SELECT) dir;
+  ___STRING_TYPE(___CONFIG_GAMBITDIR_MAP_CE_SELECT) *p = config_gambitdir_map;
 
   while ((dir = *p++) != 0)
     {
@@ -729,7 +729,7 @@ ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d;)
 }
 
 
-___SCMOBJ ___os_path_gambcdir_map_lookup
+___SCMOBJ ___os_path_gambitdir_map_lookup
    ___P((___SCMOBJ dir),
         (dir)
 ___SCMOBJ dir;)
@@ -743,43 +743,43 @@ ___SCMOBJ dir;)
               dir,
               &cdir,
               1,
-              ___CE(___GAMBCDIR_MAP_CE_SELECT),
+              ___CE(___GAMBITDIR_MAP_CE_SELECT),
               0))
       != ___FIX(___NO_ERR))
     result = e;
   else
     {
-      ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) d =
-        ___CAST(___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT),cdir);
+      ___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) d =
+        ___CAST(___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT),cdir);
 
-      ___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT) dir1;
-      ___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT) dir2;
+      ___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT) dir1;
+      ___STRING_TYPE(___CONFIG_GAMBITDIR_MAP_CE_SELECT) dir2;
 
-      if ((dir1 = gambcdir_map_lookup (d)) != 0)
+      if ((dir1 = gambitdir_map_lookup (d)) != 0)
         {
-          CANONICALIZE_PATH(___STRING_TYPE(___GAMBCDIR_MAP_CE_SELECT), dir1);
+          CANONICALIZE_PATH(___STRING_TYPE(___GAMBITDIR_MAP_CE_SELECT), dir1);
 
           if ((e = ___STRING_to_SCMOBJ
                      (___PSTATE,
                       dir1,
                       &result,
                       ___RETURN_POS,
-                      ___CE(___GAMBCDIR_MAP_CE_SELECT)))
+                      ___CE(___GAMBITDIR_MAP_CE_SELECT)))
               != ___FIX(___NO_ERR))
             result = e;
           else
             ___release_scmobj (result);
         }
-      else if ((dir2 = config_gambcdir_map_lookup (d)) != 0)
+      else if ((dir2 = config_gambitdir_map_lookup (d)) != 0)
         {
-          CANONICALIZE_PATH(___STRING_TYPE(___CONFIG_GAMBCDIR_MAP_CE_SELECT), dir2);
+          CANONICALIZE_PATH(___STRING_TYPE(___CONFIG_GAMBITDIR_MAP_CE_SELECT), dir2);
 
           if ((e = ___STRING_to_SCMOBJ
                      (___PSTATE,
                       dir2,
                       &result,
                       ___RETURN_POS,
-                      ___CE(___CONFIG_GAMBCDIR_MAP_CE_SELECT)))
+                      ___CE(___CONFIG_GAMBITDIR_MAP_CE_SELECT)))
               != ___FIX(___NO_ERR))
             result = e;
           else

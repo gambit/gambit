@@ -1,6 +1,6 @@
 #! /usr/bin/env gsi -:d-
 
-;; Copyright (c) 2011-2013 by Marc Feeley, All Rights Reserved.
+;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
 
 ;; This program allows execution of commands on a remote host.  The
 ;; "remote host" may be a real computer or a VM running locally in
@@ -74,8 +74,8 @@
 (define ssh-port #f)
 
 (define host-aliases
-  '(("macosx"    "localhost") ;; override VirtualBox VM which has 32 bit OS
-    ("macosx"    "Snow-Leopard-x86-VM1")
+  '(;;("macosx"    "localhost") ;; override VirtualBox VM
+    ("macosx"    "El-Capitan-VM1")
     ("windows"   "Windows-7-Ultimate-x64-VM1")
     ("farm"      "frontal.iro.umontreal.ca" "gambit" "?" 22)
     ("localhost" "localhost")
@@ -87,9 +87,7 @@
 
 (define vbox-vms
   '(("Snow-Leopard-x86-VM1"       "administrator" "pass999word" 2211)
-    ("Snow-Leopard-x86-VM2"       "administrator" "pass999word" 2212)
-    ("Snow-Leopard-x86-VM3"       "administrator" "pass999word" 2213)
-    ("Snow-Leopard-x86-VM4"       "administrator" "pass999word" 2214)
+    ("El-Capitan-VM1"             "admin"         "pass999word" 2212)
     ("Windows-7-Ultimate-x86-VM1" "Admin"         "pass999word" 2221)
     ("Windows-7-Ultimate-x86-VM2" "Admin"         "pass999word" 2222)
     ("Windows-7-Ultimate-x86-VM3" "Admin"         "pass999word" 2223)

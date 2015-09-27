@@ -365,7 +365,6 @@
 
     (targ-heap-dump
      output
-     (proc-obj-name (car procs))
      c-decls
      c-inits
      (map targ-use-obj c-objs)
@@ -836,8 +835,7 @@
       (let* ((root
                (path-strip-extension output))
              (name
-               (string-append module-prefix
-                              (path-strip-directory root)))
+               (path-strip-directory root))
              (input-mods
                (map targ-get-mod inputs))
              (input-mods-and-flags
@@ -969,7 +967,7 @@
 ;; These routines write out the C code that represents the Scheme objects
 ;; contained in the compilation module.
 
-(define (targ-heap-dump filename name c-decls c-inits c-objs module-descr unique-name)
+(define (targ-heap-dump filename c-decls c-inits c-objs module-descr unique-name)
   (let* ((sym-list
           (targ-sort (table->list targ-sym-objs) symbol->string))
          (key-list
@@ -992,6 +990,8 @@
           (map targ-glo-rsrc glo-list))
          (ofd-count
           (targ-get-ofd-count prc-list))
+         (name
+          (symbol->string (vector-ref module-descr 0)))
          (module-meta-info
           (vector-ref module-descr 3))
          (script-line
@@ -1009,7 +1009,7 @@
 
     (targ-dump-module-info
      name
-     (string-append module-prefix unique-name)
+     unique-name
      #f
      #f
      script-line)
@@ -1093,17 +1093,17 @@
 (define (targ-dump-linkfile old-mods-and-flags new-mods-and-flags)
   (targ-dump-section "BEGIN_OLD_LNK" "END_OLD_LNK" #f old-mods-and-flags
     (lambda (i x)
-      (targ-code* (list "DEF_OLD_LNK" (targ-c-id-linker (car x))))))
+      (targ-code* (list "DEF_OLD_LNK" (targ-linker-id (car x))))))
   (targ-dump-section "BEGIN_NEW_LNK" "END_NEW_LNK" #f new-mods-and-flags
     (lambda (i x)
-      (targ-code* (list "DEF_NEW_LNK" (targ-c-id-linker (car x))))))
+      (targ-code* (list "DEF_NEW_LNK" (targ-linker-id (car x))))))
   (targ-dump-section "BEGIN_LNK" "END_LNK" #t (append old-mods-and-flags new-mods-and-flags)
     (lambda (i x)
       (targ-code* (list (if (cond ((assq 'preload (cdr x)) => cdr)
                                   (else #t))
                             "DEF_LNK"
                             "DEF_LNK_NOPRELOAD")
-                        (targ-c-id-linker (car x)))))))
+                        (targ-linker-id (car x)))))))
 
 (define (targ-start-dump
          filename
@@ -1129,7 +1129,7 @@
 
   (targ-display "; File: ")
   (targ-display-c-string (path-strip-directory filename))
-  (targ-display ", produced by Gambit-C ")
+  (targ-display ", produced by Gambit ")
   (targ-display (compiler-version-string))
   (targ-line)
 
@@ -1200,7 +1200,7 @@
                          (targ-c-string name))
 
   (targ-macro-definition '("LINKER_ID")
-                         (targ-c-id-linker linker-id))
+                         (targ-linker-id linker-id))
 
   (if linkfile?
 
@@ -1210,7 +1210,8 @@
                              #f)
 
       (targ-macro-definition '("MH_PROC")
-                             (targ-c-id-host name)))
+                             (targ-c-id-host
+                              (string-append module-prefix name))))
 
   (targ-macro-definition '("SCRIPT_LINE")
                          (if script-line
@@ -2193,6 +2194,9 @@
 
 (define (targ-c-string str)
   (cons 'c-string str))
+
+(define (targ-linker-id name)
+  (targ-c-id-linker (string-append module-prefix name)))
 
 (define (targ-c-id-linker name)
   (cons 'c-id-linker name))

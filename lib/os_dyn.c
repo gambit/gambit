@@ -773,7 +773,7 @@ void *converter;)
    *
    *   1) stores its own address in the global variable "c_closure_self"
    *   2) jumps to the "converter" function (which is a C function generated
-   *      by the Gambit-C compiler's C-interface)
+   *      by the Gambit compiler's C-interface)
    *
    * The code must not change any processor register or stack location
    * that is used in the C calling convention.  In this way, the

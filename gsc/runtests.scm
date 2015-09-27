@@ -142,30 +142,33 @@
            (cons t
                  (if ext
                      (let* ((file-no-ext (path-strip-extension file))
+                            (out_ (string-append file-no-ext "_" ext))
                             (out (string-append file-no-ext ext)))
 
                        (if (not (equal? target "gambit"))
-                           (compile file target (caddr t)))
+                           (compile file ext target (caddr t)))
 
                        (let ((result
                               (if (equal? target "java")
                                   (begin
-                                    (run "javac" out)
+                                    (run "javac" out_ out)
                                     (apply run
                                            (append (cdddr t)
                                                    (list "-classpath"
                                                          (path-directory file-no-ext)
-                                                         (string-append "Gambit_" (path-strip-directory file-no-ext))))))
+                                                         (string-append (path-strip-directory file-no-ext) "_")))))
                                   (apply run (append (cdddr t) (list out))))))
 
                          (if (not (equal? target "gambit"))
                              (if cleanup?
                                  (begin
+                                   (if (not (equal? target "c"))
+                                       (delete-file out_))
                                    (delete-file out)
                                    (if (equal? target "java")
                                        (parameterize ((current-directory
                                                        (path-directory out)))
-                                         (shell-command "rm Gambit_*.class"))))))
+                                         (shell-command "rm *.class"))))))
 
                          result))
 
@@ -174,16 +177,35 @@
                (member (car t) (cons "c" back-ends)))
              targets)))
 
-(define (compile file target options)
-  (let ((x
-         (if (equal? target "c")
-             (run "./gsc" "-:=.."                      file)
-             (apply run
-                    (append (list "./gsc" "-:=.." "-c" "-target" target)
-                            options
-                            (list file))))))
+(define (compile file ext target options)
+  (let* ((file-no-ext
+          (path-strip-extension file))
+         (x
+          (if (equal? target "c")
+              (run "./gsc" "-:=.."                      file)
+              (apply run
+                     (append (list "./gsc" "-:=.." "-o" (path-directory file) "-target" target "-link" "-flat")
+                             options
+                             (list file))))))
     (if (not (= (car x) 0))
-        (error "couldn't compile" file target))))
+        (error "couldn't compile" file target))
+    (if (and (not (equal? target "c"))
+             (not (equal? target "java")))
+        (begin
+          (shell-command
+           (string-append
+            "cat "
+            (string-append file-no-ext "_" ext)
+            " "
+            (string-append file-no-ext ext)
+            " > "
+            (string-append file-no-ext "_merged" ext)))
+          (shell-command
+           (string-append
+            "mv "
+            (string-append file-no-ext "_merged" ext)
+            " "
+            (string-append file-no-ext ext)))))))
 
 (define targets
   '(
@@ -497,6 +519,17 @@
 (define back-ends '())
 
 (define (main . args)
+
+  (current-exception-handler
+   (lambda (e)
+     (current-exception-handler (lambda (e) (##exit 1)))
+     (display-exception e)
+     (if (scheduler-exception? e)
+         (begin
+           (write e)
+           (display " = ")
+           (display-exception (##vector-ref e 1))))
+     (##exit 1)))
 
   (let loop ()
     (if (and (pair? args)

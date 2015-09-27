@@ -1,14 +1,14 @@
-# Configure template for Gambit-C system.
+# Configure template for Gambit system.
 
 # Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(Gambit-C,v4.7.9,gambit@iro.umontreal.ca,gambc-v4_7_9)
+AC_INIT(Gambit,v4.7.9,gambit@iro.umontreal.ca,gambit-v4_7_9)
 
 AC_CONFIG_HEADERS(include/config.h)
 
-PACKAGE_SHORTNAME="gambc"
+PACKAGE_SHORTNAME="gambit"
 
 AC_SUBST(PACKAGE_SHORTNAME)
 AC_SUBST(PACKAGE_NAME)
@@ -40,7 +40,7 @@ RTLIBMAKEFILES=""
 #
 # To accumulate flags and definitions for C compilation.
 
-GAMBCLIB_DEFS=""
+GAMBITLIB_DEFS=""
 
 FLAGS_OBJ=""
 FLAGS_DYN=""
@@ -2014,7 +2014,7 @@ else
 *********************************************************************
 ***                                                               ***
 *** The GCC compiler is not being used and the operating system   ***
-*** is not one that has been tested with the Gambit-C system.     ***
+*** is not one that has been tested with the Gambit system.       ***
 *** The configure script will use certain compiler options that   ***
 *** may not be correct or sufficient for compiling the system.    ***
 *** Please report success or failure to gambit@iro.umontreal.ca.  ***
@@ -2235,31 +2235,31 @@ else
 
 fi
 
-GAMBCLIB="gambc$LIB_SUFFIX"
-GAMBCGSCLIB="gambcgsc$LIB_SUFFIX"
-GAMBCGSILIB="gambcgsi$LIB_SUFFIX"
+GAMBITLIB="gambit$LIB_SUFFIX"
+GAMBITGSCLIB="gambitgsc$LIB_SUFFIX"
+GAMBITGSILIB="gambitgsi$LIB_SUFFIX"
 
 if test "yes" = yes; then
 
-  GAMBCLIB_LOC=""
-  GAMBCLIB_LINK="\"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
+  GAMBITLIB_LOC=""
+  GAMBITLIB_LINK="\"\${GAMBITDIR_LIB}/$LIB_PREFIX$GAMBITLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
 
-  GAMBCGSILIB_LOC=""
-  GAMBCGSILIB_LINK="\"\${GAMBCDIR_LIB_GSI}/$LIB_PREFIX$GAMBCGSILIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\" \"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
+  GAMBITGSILIB_LOC=""
+  GAMBITGSILIB_LINK="\"\${GAMBITDIR_LIB_GSI}/$LIB_PREFIX$GAMBITGSILIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\" \"\${GAMBITDIR_LIB}/$LIB_PREFIX$GAMBITLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
 
-  GAMBCGSCLIB_LOC=""
-  GAMBCGSCLIB_LINK="\"\${GAMBCDIR_LIB_GSC}/$LIB_PREFIX$GAMBCGSCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\" \"\${GAMBCDIR_LIB}/$LIB_PREFIX$GAMBCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
+  GAMBITGSCLIB_LOC=""
+  GAMBITGSCLIB_LINK="\"\${GAMBITDIR_LIB_GSC}/$LIB_PREFIX$GAMBITGSCLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\" \"\${GAMBITDIR_LIB}/$LIB_PREFIX$GAMBITLIB$LIB_EXTENSION$LIB_VERSION_SUFFIX\""
 
 else
 
-  GAMBCLIB_LOC="-L\"\${GAMBCDIR_LIB}\""
-  GAMBCLIB_LINK="-l$GAMBCLIB"
+  GAMBITLIB_LOC="-L\"\${GAMBITDIR_LIB}\""
+  GAMBITLIB_LINK="-l$GAMBITLIB"
 
-  GAMBCGSILIB_LOC="-L\"\${GAMBCDIR_LIB_GSI}\" -L\"\${GAMBCDIR_LIB}\""
-  GAMBCGSILIB_LINK="-l$GAMBCGSILIB -l$GAMBCLIB"
+  GAMBITGSILIB_LOC="-L\"\${GAMBITDIR_LIB_GSI}\" -L\"\${GAMBITDIR_LIB}\""
+  GAMBITGSILIB_LINK="-l$GAMBITGSILIB -l$GAMBITLIB"
 
-  GAMBCGSCLIB_LOC="-L\"\${GAMBCDIR_LIB_GSC}\" -L\"\${GAMBCDIR_LIB}\""
-  GAMBCGSCLIB_LINK="-l$GAMBCGSCLIB -l$GAMBCLIB"
+  GAMBITGSCLIB_LOC="-L\"\${GAMBITDIR_LIB_GSC}\" -L\"\${GAMBITDIR_LIB}\""
+  GAMBITGSCLIB_LINK="-l$GAMBITGSCLIB -l$GAMBITLIB"
 
 fi
 
@@ -2267,9 +2267,9 @@ if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBCDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
 
-  BUILD_DYN="\${C_COMPILER} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBCDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
@@ -2281,17 +2281,17 @@ if test "$C_COMP_VISUALC" = yes; then
     SUBSYS_MIN_REQ_VERSION="5.01"
   fi
 
-  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBCDIR_INCLUDE}\" ${GAMBCLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBCLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS} -link -subsystem:console,${SUBSYS_MIN_REQ_VERSION} -entry:WinMainCRTStartup"
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS} -link -subsystem:console,${SUBSYS_MIN_REQ_VERSION} -entry:WinMainCRTStartup"
 
 else
 
-  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBCDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
 
-  BUILD_DYN="\${C_COMPILER} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBCDIR_INCLUDE}\" -o \"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -o \"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
-  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBCDIR_INCLUDE}\" ${GAMBCLIB_LOC} -o \"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBCLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS}"
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -o \"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS}"
 
 fi
 
@@ -2300,15 +2300,15 @@ fi
 
 if test "$ENABLE_ABSOLUTE_SHARED_LIBS" = yes; then
 
-  MAKE_LIBRARY_FOR_INSTALL_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
-  LINK_FOR_INSTALL_GSI_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSILIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
-  LINK_FOR_INSTALL_GSC_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBCGSCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX) $$t_libdir/$(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
+  MAKE_LIBRARY_FOR_INSTALL_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
+  LINK_FOR_INSTALL_GSI_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBITGSILIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX) $$t_libdir/$(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
+  LINK_FOR_INSTALL_GSC_LIBS='$$t_libdir/$(LIB_PREFIX)$(GAMBITGSCLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX) $$t_libdir/$(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)$(LIB_VERSION_SUFFIX)'
 
 else
 
-  MAKE_LIBRARY_FOR_INSTALL_LIBS='-L$(rootfromhere)/lib -l$(GAMBCLIB)'
-  LINK_FOR_INSTALL_GSI_LIBS='-L. -L$(rootfromhere)/lib -l$(GAMBCGSILIB) -l$(GAMBCLIB)'
-  LINK_FOR_INSTALL_GSC_LIBS='-L. -L$(rootfromhere)/lib -l$(GAMBCGSCLIB) -l$(GAMBCLIB)'
+  MAKE_LIBRARY_FOR_INSTALL_LIBS='-L$(rootfromhere)/lib -l$(GAMBITLIB)'
+  LINK_FOR_INSTALL_GSI_LIBS='-L. -L$(rootfromhere)/lib -l$(GAMBITGSILIB) -l$(GAMBITLIB)'
+  LINK_FOR_INSTALL_GSC_LIBS='-L. -L$(rootfromhere)/lib -l$(GAMBITGSCLIB) -l$(GAMBITLIB)'
 
 fi
 
@@ -2334,9 +2334,9 @@ case "$target_os" in
            cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
 #define ___VERSION 400000
-#define ___MODULE_NAME " GAMBCCHECKMODULEPREFIXSUFFIX"
-#define ___LINKER_ID ____20_GAMBCCHECKMODULEPREFIXSUFFIX
-#define ___MH_PROC ___H__20_GAMBCCHECKMODULEPREFIXSUFFIX
+#define ___MODULE_NAME " GAMBITCHECKMODULEPREFIXSUFFIX"
+#define ___LINKER_ID ____20_GAMBITCHECKMODULEPREFIXSUFFIX
+#define ___MH_PROC ___H__20_GAMBITCHECKMODULEPREFIXSUFFIX
 #define ___SCRIPT_LINE 0
 #define ___MAX_CHR 0x10ffff
 #define ___VOIDSTAR_WIDTH ___LONG_WIDTH
@@ -2355,7 +2355,7 @@ _ACEOF
              (exit $ac_status); }; then
 
              cat >conftest1.sed <<_ACEOF
-/^.* \([[a-zA-Z0-9_$]]*\)____20_GAMBCCHECKMODULEPREFIXSUFFIX\([[a-zA-Z0-9_$]]*\)$/s//#define ___IMPORTED_ID_PREFIX "\1"\\
+/^.* \([[a-zA-Z0-9_$]]*\)____20_GAMBITCHECKMODULEPREFIXSUFFIX\([[a-zA-Z0-9_$]]*\)$/s//#define ___IMPORTED_ID_PREFIX "\1"\\
 #define ___IMPORTED_ID_SUFFIX "\2"/p
 _ACEOF
 
@@ -2405,32 +2405,32 @@ if test "$datadir" = "\${datarootdir}"; then
   datadir="\${prefix}/share"
 fi
 
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
 if test "$ENABLE_SYMLINKS" != yes; then
 
   if test "$bindir" != "\${prefix}/bin"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$includedir" != "\${prefix}/include"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$libdir" != "\${prefix}/lib"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$docdir" != "\${prefix}/doc"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$infodir" != "\${prefix}/info"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
   if test "$datadir" != "\${prefix}/share"; then
-    GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___GAMBCDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
   fi
 
 fi
@@ -2441,13 +2441,13 @@ OBJ_EXTENSION="$obj"
 EXE_EXTENSION="$exe"
 BAT_EXTENSION="$bat"
 
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\""
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___CONFIGURE_COMMAND=\"\\\"`echo "$0$ac_configure_args" | sed -e s/\\\\\\\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g -e s/\\\\\\\"/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"/g`\"\\\""
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___OBJ_EXTENSION=\"\\\"$OBJ_EXTENSION\\\"\""
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___EXE_EXTENSION=\"\\\"$EXE_EXTENSION\\\"\""
-GAMBCLIB_DEFS="$GAMBCLIB_DEFS -D___BAT_EXTENSION=\"\\\"$BAT_EXTENSION\\\"\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___CONFIGURE_COMMAND=\"\\\"`echo "$0$ac_configure_args" | sed -e s/\\\\\\\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g -e s/\\\\\\\"/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"/g`\"\\\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___OBJ_EXTENSION=\"\\\"$OBJ_EXTENSION\\\"\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___EXE_EXTENSION=\"\\\"$EXE_EXTENSION\\\"\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___BAT_EXTENSION=\"\\\"$BAT_EXTENSION\\\"\""
 
 ###############################################################################
 
@@ -2479,10 +2479,10 @@ BUILD_EXE_MF=`echo "$BUILD_EXE" | $ESC_MF`
 
 DEFS_MF=`echo "$DEFS" | $ESC_MF`
 LIBS_MF=`echo "$LIBS" | $ESC_MF`
-GAMBCLIB_DEFS_MF=`echo "$GAMBCLIB_DEFS" | $ESC_MF`
-GAMBCLIB_MF=`echo "$GAMBCLIB" | $ESC_MF`
-GAMBCGSCLIB_MF=`echo "$GAMBCGSCLIB" | $ESC_MF`
-GAMBCGSILIB_MF=`echo "$GAMBCGSILIB" | $ESC_MF`
+GAMBITLIB_DEFS_MF=`echo "$GAMBITLIB_DEFS" | $ESC_MF`
+GAMBITLIB_MF=`echo "$GAMBITLIB" | $ESC_MF`
+GAMBITGSCLIB_MF=`echo "$GAMBITGSCLIB" | $ESC_MF`
+GAMBITGSILIB_MF=`echo "$GAMBITGSILIB" | $ESC_MF`
 LIB_PREFIX_MF=`echo "$LIB_PREFIX" | $ESC_MF`
 LIB_EXTENSION_MF=`echo "$LIB_EXTENSION" | $ESC_MF`
 OBJ_EXTENSION_MF=`echo "$OBJ_EXTENSION" | $ESC_MF`
@@ -2509,10 +2509,10 @@ BUILD_EXE_SH=`echo "$BUILD_EXE" | $ESC_SH`
 
 DEFS_SH=`echo "$DEFS" | $ESC_SH`
 LIBS_SH=`echo "$LIBS" | $ESC_SH`
-GAMBCLIB_DEFS_SH=`echo "$GAMBCLIB_DEFS" | $ESC_SH`
-GAMBCLIB_SH=`echo "$GAMBCLIB" | $ESC_SH`
-GAMBCGSCLIB_SH=`echo "$GAMBCGSCLIB" | $ESC_SH`
-GAMBCGSILIB_SH=`echo "$GAMBCGSILIB" | $ESC_SH`
+GAMBITLIB_DEFS_SH=`echo "$GAMBITLIB_DEFS" | $ESC_SH`
+GAMBITLIB_SH=`echo "$GAMBITLIB" | $ESC_SH`
+GAMBITGSCLIB_SH=`echo "$GAMBITGSCLIB" | $ESC_SH`
+GAMBITGSILIB_SH=`echo "$GAMBITGSILIB" | $ESC_SH`
 LIB_PREFIX_SH=`echo "$LIB_PREFIX" | $ESC_SH`
 LIB_EXTENSION_SH=`echo "$LIB_EXTENSION" | $ESC_SH`
 OBJ_EXTENSION_SH=`echo "$OBJ_EXTENSION" | $ESC_SH`
@@ -2539,10 +2539,10 @@ BUILD_EXE_BAT=`echo "$BUILD_EXE" | $ESC_BAT`
 
 DEFS_BAT=`echo "$DEFS" | $ESC_BAT`
 LIBS_BAT=`echo "$LIBS" | $ESC_BAT`
-GAMBCLIB_DEFS_BAT=`echo "$GAMBCLIB_DEFS" | $ESC_BAT`
-GAMBCLIB_BAT=`echo "$GAMBCLIB" | $ESC_BAT`
-GAMBCGSCLIB_BAT=`echo "$GAMBCGSCLIB" | $ESC_BAT`
-GAMBCGSILIB_BAT=`echo "$GAMBCGSILIB" | $ESC_BAT`
+GAMBITLIB_DEFS_BAT=`echo "$GAMBITLIB_DEFS" | $ESC_BAT`
+GAMBITLIB_BAT=`echo "$GAMBITLIB" | $ESC_BAT`
+GAMBITGSCLIB_BAT=`echo "$GAMBITGSCLIB" | $ESC_BAT`
+GAMBITGSILIB_BAT=`echo "$GAMBITGSILIB" | $ESC_BAT`
 LIB_PREFIX_BAT=`echo "$LIB_PREFIX" | $ESC_BAT`
 LIB_EXTENSION_BAT=`echo "$LIB_EXTENSION" | $ESC_BAT`
 OBJ_EXTENSION_BAT=`echo "$OBJ_EXTENSION" | $ESC_BAT`
@@ -2585,10 +2585,10 @@ AC_SUBST(BUILD_LIB)
 AC_SUBST(BUILD_EXE)
 AC_SUBST(DEFS)
 AC_SUBST(LIBS)
-AC_SUBST(GAMBCLIB_DEFS)
-AC_SUBST(GAMBCLIB)
-AC_SUBST(GAMBCGSCLIB)
-AC_SUBST(GAMBCGSILIB)
+AC_SUBST(GAMBITLIB_DEFS)
+AC_SUBST(GAMBITLIB)
+AC_SUBST(GAMBITGSCLIB)
+AC_SUBST(GAMBITGSILIB)
 AC_SUBST(LIB_PREFIX)
 AC_SUBST(LIB_EXTENSION)
 AC_SUBST(OBJ_EXTENSION)
@@ -2601,10 +2601,10 @@ AC_SUBST(BUILD_LIB_MF)
 AC_SUBST(BUILD_EXE_MF)
 AC_SUBST(DEFS_MF)
 AC_SUBST(LIBS_MF)
-AC_SUBST(GAMBCLIB_DEFS_MF)
-AC_SUBST(GAMBCLIB_MF)
-AC_SUBST(GAMBCGSCLIB_MF)
-AC_SUBST(GAMBCGSILIB_MF)
+AC_SUBST(GAMBITLIB_DEFS_MF)
+AC_SUBST(GAMBITLIB_MF)
+AC_SUBST(GAMBITGSCLIB_MF)
+AC_SUBST(GAMBITGSILIB_MF)
 AC_SUBST(LIB_PREFIX_MF)
 AC_SUBST(LIB_EXTENSION_MF)
 AC_SUBST(OBJ_EXTENSION_MF)
@@ -2617,10 +2617,10 @@ AC_SUBST(BUILD_LIB_SH)
 AC_SUBST(BUILD_EXE_SH)
 AC_SUBST(DEFS_SH)
 AC_SUBST(LIBS_SH)
-AC_SUBST(GAMBCLIB_DEFS_SH)
-AC_SUBST(GAMBCLIB_SH)
-AC_SUBST(GAMBCGSCLIB_SH)
-AC_SUBST(GAMBCGSILIB_SH)
+AC_SUBST(GAMBITLIB_DEFS_SH)
+AC_SUBST(GAMBITLIB_SH)
+AC_SUBST(GAMBITGSCLIB_SH)
+AC_SUBST(GAMBITGSILIB_SH)
 AC_SUBST(LIB_PREFIX_SH)
 AC_SUBST(LIB_EXTENSION_SH)
 AC_SUBST(OBJ_EXTENSION_SH)
@@ -2633,10 +2633,10 @@ AC_SUBST(BUILD_LIB_BAT)
 AC_SUBST(BUILD_EXE_BAT)
 AC_SUBST(DEFS_BAT)
 AC_SUBST(LIBS_BAT)
-AC_SUBST(GAMBCLIB_DEFS_BAT)
-AC_SUBST(GAMBCLIB_BAT)
-AC_SUBST(GAMBCGSCLIB_BAT)
-AC_SUBST(GAMBCGSILIB_BAT)
+AC_SUBST(GAMBITLIB_DEFS_BAT)
+AC_SUBST(GAMBITLIB_BAT)
+AC_SUBST(GAMBITGSCLIB_BAT)
+AC_SUBST(GAMBITGSILIB_BAT)
 AC_SUBST(LIB_PREFIX_BAT)
 AC_SUBST(LIB_EXTENSION_BAT)
 AC_SUBST(OBJ_EXTENSION_BAT)
@@ -2688,14 +2688,14 @@ AC_SUBST(COMPILATION_OPTIONS)
 
 AC_PROG_MAKE_SET
 
-AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambc-cc.unix bin/gambc-cc.bat.windows bin/gambc-doc.unix bin/gambc-doc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
+AC_OUTPUT(makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2)
 
 if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_LLVM" != yes; then
   AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***
 *** The option "--enable-single-host" was not specified to the         ***
-*** configure script.  The Gambit-C system will compile correctly but  ***
+*** configure script.  The Gambit system will compile correctly but    ***
 *** typically the executables will run considerably slower than when   ***
 *** "--enable-single-host" is specified.  On the other hand the build  ***
 *** with "--enable-single-host" is typically slower and requires lots  ***
@@ -2781,7 +2781,7 @@ if test "$C_COMP_GNUC" = yes; then
 #    AC_MSG_NOTICE([
 #**************************************************************************
 #*** The GCC compiler is being used but the option "--enable-gcc-opts"  ***
-#*** was not specified to the configure script.  The Gambit-C system    ***
+#*** was not specified to the configure script.  The Gambit system      ***
 #*** will compile correctly but the code generated by the GCC compiler  ***
 #*** will be suboptimal and the executables will run slightly slower    ***
 #*** than if "--enable-gcc-opts" is specified.  On the other hand the   ***

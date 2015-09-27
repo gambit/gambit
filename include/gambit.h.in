@@ -7822,8 +7822,8 @@ typedef struct ___setup_params_struct
     int file_settings;
     int terminal_settings;
     int stdio_settings;
-    ___UCS_2STRING gambcdir;
-    ___UCS_2STRING *gambcdir_map;
+    ___UCS_2STRING gambitdir;
+    ___UCS_2STRING *gambitdir_map;
     ___UCS_2STRING remote_dbg_addr;
     ___UCS_2STRING rpc_server_addr;
     ___mod_or_lnk (*linker) ___P((___global_state),());
@@ -9097,8 +9097,8 @@ typedef struct ___global_state_struct
     void (*___set_standard_level)
        ___P((int level),
             ());
-    void (*___set_gambcdir)
-       ___P((___UCS_2STRING gambcdir),
+    void (*___set_gambitdir)
+       ___P((___UCS_2STRING gambitdir),
             ());
     int (*___set_debug_settings)
        ___P((int mask,
@@ -10356,8 +10356,8 @@ ___IMP_FUNC(int,___get_standard_level) ___PVOID;
 ___IMP_FUNC(void,___set_standard_level)
    ___P((int level),
         ());
-___IMP_FUNC(void,___set_gambcdir)
-   ___P((___UCS_2STRING gambcdir),
+___IMP_FUNC(void,___set_gambitdir)
+   ___P((___UCS_2STRING gambitdir),
         ());
 ___IMP_FUNC(int,___set_debug_settings)
    ___P((int mask,

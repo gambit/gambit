@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -12,7 +12,7 @@ if [ "`id -un`" != "root" ] ; then
   exit 1
 fi
 
-export INSTALL_PREFIX="/Library/Gambit-C"
+export INSTALL_PREFIX="/Library/Gambit"
 
 cd "`dirname $0`"
 
@@ -53,10 +53,17 @@ for VARIANT in intel32 intel64; do
 
   #CFLAGS="-isysroot $SYSROOT $CONFIG_ARCH" LDFLAGS="-mmacosx-version-min=10.5 -Wl,-syslibroot,$SYSROOT $CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host CC="gcc"
 
-  # use GNU gcc
-  export PATH="/usr/local/gcc-4.8.1/bin:$PATH"
+  # use GNU gcc and hide options for compatibility with LLVM gcc
 
-  CFLAGS="$CONFIG_ARCH" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --disable-gnu-gcc-specific-options CC="gcc"
+  rm -f `pwd`/gcc
+  cat <<EOF > gcc
+#!/bin/sh
+exec /usr/local/Cellar/gcc/5.2.0/bin/gcc-5 -fschedule-insns2 -fno-trapping-math -fwrapv -mieee-fp -fmodulo-sched -freschedule-modulo-scheduled-loops "\$@"
+EOF
+  chmod +x gcc
+  export PATH="`pwd`:$PATH"
+
+  CFLAGS="$CONFIG_ARCH" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --enable-c-opt --disable-gnu-gcc-specific-options CC="gcc"
 
   cd "$herefromroot"
 

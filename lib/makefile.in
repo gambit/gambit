@@ -1,4 +1,4 @@
-# makefile for Gambit-C library.
+# makefile for Gambit library.
 
 # Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
@@ -28,15 +28,15 @@ FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
+GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
 LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
 
 LIB_EXTENSION = @LIB_EXTENSION@
-GAMBCLIB = @GAMBCLIB@
-GAMBCGSCLIB = @GAMBCGSCLIB@
-GAMBCGSILIB = @GAMBCGSILIB@
+GAMBITLIB = @GAMBITLIB@
+GAMBITGSCLIB = @GAMBITGSCLIB@
+GAMBITGSILIB = @GAMBITGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -106,12 +106,12 @@ _repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _system@obj@
 
 LIBRARIES_SCM = $(HEADERS_SCM) digest.scm syntax-case.scm
 
-LIBRARY = $(LIB_PREFIX)$(GAMBCLIB)$(LIB_EXTENSION)
-LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) _$(GAMBCLIB)@obj@
-LIBRARY_OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +_$(GAMBCLIB)@obj@
-LIBRARY_OBJECTS_COMMA = $(NORMAL_O_COMMA),$(MODULES_O_COMMA),_$(GAMBCLIB)@obj@
+LIBRARY = $(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
+LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) _$(GAMBITLIB)@obj@
+LIBRARY_OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +_$(GAMBITLIB)@obj@
+LIBRARY_OBJECTS_COMMA = $(NORMAL_O_COMMA),$(MODULES_O_COMMA),_$(GAMBITLIB)@obj@
 LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) \
-$(NORMAL_O_IN_COMPILE_ORDER) _$(GAMBCLIB)@obj@
+$(NORMAL_O_IN_COMPILE_ORDER) _$(GAMBITLIB)@obj@
 
 LIBRARIES = $(LIBRARY)$(LIB_VERSION_SUFFIX)
 
@@ -125,26 +125,26 @@ psyntax69c.pp psyntax69c.ss psyntax73.pp psyntax73.ss \
 syntax-case-build syntax-case-expand-file \
 syntax-case-postlude.scm syntax-case-prelude.scm
 
-GENDISTFILES = $(MODULES_C) _$(GAMBCLIB).c
+GENDISTFILES = $(MODULES_C) _$(GAMBITLIB).c
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_LIB_DATA = _$(GAMBCLIB).c $(LIBRARIES_SCM)
+INSTFILES_LIB_DATA = _$(GAMBITLIB).c $(LIBRARIES_SCM)
 
-GAMBCDIR_INCLUDE = $(rootfromhere)/include
-GAMBCDIR_LIB = $(rootfromhere)/lib
-GAMBCDIR_LIB_GSI = $(rootfromhere)/gsi
-GAMBCDIR_LIB_GSC = $(rootfromhere)/gsc
+GAMBITDIR_INCLUDE = $(rootfromhere)/include
+GAMBITDIR_LIB = $(rootfromhere)/lib
+GAMBITDIR_LIB_GSI = $(rootfromhere)/gsi
+GAMBITDIR_LIB_GSC = $(rootfromhere)/gsc
 
 BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
-BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS) $(GAMBCLIB_DEFS) -D___PRIMAL
+BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS) $(GAMBITLIB_DEFS) -D___PRIMAL
 BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
 
 all:
 
 all-pre:
 
-all-post: $(LIBRARY) _$(GAMBCLIB).c
+all-post: $(LIBRARY) _$(GAMBITLIB).c
 
 .c@obj@:
 	@BUILD_OBJ@ -D___LIBRARY
@@ -160,8 +160,8 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	  $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	fi
 
-_$(GAMBCLIB).c: $(MODULES_C)
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o _$(GAMBCLIB).c -preload $(MODULES_C)
+_$(GAMBITLIB).c: $(MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o _$(GAMBITLIB).c -preload $(MODULES_C)
 
 $(MODULES_C): \
 $(srcdirpfx)$(rootfromhere)/lib/header.scm \
@@ -293,12 +293,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post:
-	$(RC) update-index --no-assume-unchanged $(MODULES_C) _$(GAMBCLIB).c
+	$(RC) update-index --no-assume-unchanged $(MODULES_C) _$(GAMBITLIB).c
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post:
-	$(RC) update-index --assume-unchanged $(MODULES_C) _$(GAMBCLIB).c
+	$(RC) update-index --assume-unchanged $(MODULES_C) _$(GAMBITLIB).c
 
 mostlyclean-pre:
 
@@ -317,7 +317,7 @@ distclean-post: clean-post
 bootclean-pre: distclean-pre
 
 bootclean-post: distclean-post
-	rm -f $(MODULES_C) _$(GAMBCLIB).c
+	rm -f $(MODULES_C) _$(GAMBITLIB).c
 
 realclean-pre: bootclean-pre
 

@@ -796,6 +796,6 @@ values
                          (check-missing-procedures doc-lines out))
                      (loop1 (cdr lines))))))))))
 
-(check-doc "gambit-c.txi")
+(check-doc "gambit.txi")
 
 ))

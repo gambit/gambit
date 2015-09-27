@@ -709,11 +709,6 @@ ___module_struct *module;)
 }
 
 
-___HIDDEN char module_prefix[] = ___MODULE_PREFIX;
-
-#define module_prefix_length (sizeof(module_prefix)-1)
-
-
 ___HIDDEN ___SCMOBJ setup_module_collect_undef_globals
    ___P((fem_context *ctx,
          ___module_struct *module),
@@ -761,7 +756,7 @@ ___module_struct *module;)
 
               if ((err = ___NONNULLUTF_8STRING_to_SCMOBJ
                            (NULL, /* allocate as permanent object */
-                            name+module_prefix_length,
+                            name,
                             &module_name,
                             -1))
                   != ___FIX(___NO_ERR))
@@ -2170,8 +2165,8 @@ ___setup_params_struct *setup_params;)
   setup_params->file_settings     = 0;
   setup_params->terminal_settings = 0;
   setup_params->stdio_settings    = 0;
-  setup_params->gambcdir          = 0;
-  setup_params->gambcdir_map      = 0;
+  setup_params->gambitdir         = 0;
+  setup_params->gambitdir_map     = 0;
   setup_params->remote_dbg_addr   = 0;
   setup_params->rpc_server_addr   = 0;
   setup_params->linker            = 0;
@@ -2249,12 +2244,12 @@ int level;)
 }
 
 
-___EXP_FUNC(void,___set_gambcdir)
-   ___P((___UCS_2STRING gambcdir),
-        (gambcdir)
-___UCS_2STRING gambcdir;)
+___EXP_FUNC(void,___set_gambitdir)
+   ___P((___UCS_2STRING gambitdir),
+        (gambitdir)
+___UCS_2STRING gambitdir;)
 {
-  ___GSTATE->setup_params.gambcdir = gambcdir;
+  ___GSTATE->setup_params.gambitdir = gambitdir;
 }
 
 

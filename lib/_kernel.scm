@@ -1834,10 +1834,10 @@ end-of-code
    "___set_standard_level (___INT(___ARG1)); ___RESULT = ___VOID;"
    level))
 
-(define-prim (##set-gambcdir! dir)
+(define-prim (##set-gambitdir! dir)
   (##declare (not interrupts-enabled))
   ((##c-lambda (UCS-2-string) void
-               "___addref_string (___arg1); ___set_gambcdir (___arg1);")
+               "___addref_string (___arg1); ___set_gambitdir (___arg1);")
    dir))
 
 (define-prim (##set-debug-settings! mask new-settings)
@@ -4113,15 +4113,15 @@ end-of-code
             scheme-object
    "___os_path_homedir"))
 
-(define-prim ##os-path-gambcdir
+(define-prim ##os-path-gambitdir
   (c-lambda ()
             scheme-object
-   "___os_path_gambcdir"))
+   "___os_path_gambitdir"))
 
-(define-prim ##os-path-gambcdir-map-lookup
+(define-prim ##os-path-gambitdir-map-lookup
   (c-lambda (scheme-object)
             scheme-object
-   "___os_path_gambcdir_map_lookup"))
+   "___os_path_gambitdir_map_lookup"))
 
 (define-prim ##os-path-normalize-directory
   (c-lambda (scheme-object)

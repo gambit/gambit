@@ -1,4 +1,4 @@
-# makefile for Gambit-C documentation.
+# makefile for Gambit documentation.
 
 # Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
@@ -28,15 +28,15 @@ FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
+GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
 LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
 
 LIB_EXTENSION = @LIB_EXTENSION@
-GAMBCLIB = @GAMBCLIB@
-GAMBCGSCLIB = @GAMBCGSCLIB@
-GAMBCGSILIB = @GAMBCGSILIB@
+GAMBITLIB = @GAMBITLIB@
+GAMBITGSCLIB = @GAMBITGSCLIB@
+GAMBITGSILIB = @GAMBITGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -74,19 +74,19 @@ PDF2PS = pdf2ps
 .SUFFIXES:
 
 RCFILES = makefile.in \
-gambit-c.txi texinfo.tex texi2html \
-checkdoc.scm gambcini.scm square.scm bench.scm \
+gambit.txi texinfo.tex texi2html \
+checkdoc.scm gambini.scm square.scm bench.scm \
 m1.c m2.scm m3.scm m4.scm m5.scm m6.scm m7.scm x.c x.h h.scm w.six \
 test1.scm test2.scm test3.scm gsi.1
 
 GENDISTFILES = stamp.vti version.txi \
-gambit-c.pdf gambit-c*.html gambit-c.txt \
-gambit-c.info gambit-c.info-1 gambit-c.info-2 gambit-c.info-3
+gambit.pdf gambit*.html gambit.txt \
+gambit.info gambit.info-1 gambit.info-2 gambit.info-3
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_DOC = gambit-c.pdf gambit-c*.html gambit-c.txt
-INSTFILES_INFO = gambit-c.info*
+INSTFILES_DOC = gambit.pdf gambit*.html gambit.txt
+INSTFILES_INFO = gambit.info*
 INSTFILES_MAN = gsi.1
 
 all:
@@ -97,39 +97,39 @@ all-post:
 
 doc: info pdf html txt ps
 
-info: gambit-c.info
+info: gambit.info
 
-pdf: gambit-c.pdf
+pdf: gambit.pdf
 
-ps: gambit-c.ps
+ps: gambit.ps
 
-html: gambit-c.html
+html: gambit.html
 
-txt: gambit-c.txt
+txt: gambit.txt
 
-gambit-c.info: gambit-c.txi version.txi
-	(cd $(srcdir) && $(MAKEINFO) gambit-c.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
+gambit.info: gambit.txi version.txi
+	(cd $(srcdir) && $(MAKEINFO) gambit.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
 
-gambit-c.ps: gambit-c.pdf
-	(cd $(srcdir) && $(PDF2PS) gambit-c.pdf) || (echo "*** $@ could not be built (perhaps $(PDF2PS) is not installed?)" > $@)
+gambit.ps: gambit.pdf
+	(cd $(srcdir) && $(PDF2PS) gambit.pdf) || (echo "*** $@ could not be built (perhaps $(PDF2PS) is not installed?)" > $@)
 
-gambit-c.pdf: gambit-c.txi version.txi
-	(cd $(srcdir) && cd $(srcdir) && $(TEXI2DVI) -p gambit-c.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2DVI) is not installed?)" > $@)
+gambit.pdf: gambit.txi version.txi
+	(cd $(srcdir) && cd $(srcdir) && $(TEXI2DVI) -p gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2DVI) is not installed?)" > $@)
 
-gambit-c.html: gambit-c.txi
-	(cd $(srcdir) && $(TEXI2HTML) -def-table gambit-c.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
+gambit.html: gambit.txi
+	(cd $(srcdir) && $(TEXI2HTML) -def-table gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
 
-gambit-c.txt: gambit-c.txi
-	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit-c.txt gambit-c.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
+gambit.txt: gambit.txi
+	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit.txt gambit.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
 
 version.txi: stamp.vti
 
-stamp.vti: gambit-c.txi $(rootfromhere)/configure.ac
+stamp.vti: gambit.txi $(rootfromhere)/configure.ac
 	# we need this mess because "date" and "stat"
 	# don't behave the same on Linux and BSD
-	st_mtime="`stat -s gambit-c.txi | sed -e 's/.*st_mtime=//g' -e 's/ .*//g'`"; \
+	st_mtime="`stat -s gambit.txi | sed -e 's/.*st_mtime=//g' -e 's/ .*//g'`"; \
 	if [ "$$st_mtime" = "" ]; then \
-	  mtime="`date -r gambit-c.txi '+%B %d, %Y'`"; \
+	  mtime="`date -r gambit.txi '+%B %d, %Y'`"; \
 	else \
 	  mtime="`date -r $$st_mtime '+%B %d, %Y'`"; \
 	fi; \
@@ -144,7 +144,7 @@ checkdoc:
 	rm -f *.o[0123456789]* fifo
 	rm -rf newdir
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi checkdoc.scm
-	diff gambit-c.txi gambit-c.txi-correct
+	diff gambit.txi gambit.txi-correct
 
 bootstrap-pre:
 
@@ -279,7 +279,7 @@ bootclean-pre: distclean-pre
 
 bootclean-post: distclean-post
 	rm -f stamp.vti version.txi \
-	  gambit-c.ps gambit-c.pdf gambit-c*.html gambit-c.txt gambit-c.info*
+	  gambit.ps gambit.pdf gambit*.html gambit.txt gambit.info*
 
 realclean-pre: bootclean-pre
 

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "syntax-case.scm", Time-stamp: <2013-09-17 09:08:23 feeley>
+;;; File: "syntax-case.scm", Time-stamp: <2015-09-02 18:43:39 feeley>
 
 ;;; Copyright (c) 1998-2008 by Marc Feeley, All Rights Reserved.
 
@@ -35,7 +35,7 @@
 ;;   (load "syntax-case")
 ;;
 ;; For faster macro processing it is worthwhile to compile the file
-;; with the compiler.  You can also rename this file to "gambcext.scm"
+;; with the compiler.  You can also rename this file to "gambext.scm"
 ;; and put it in the Gambit "lib" installation directory so that it is
 ;; loaded every time the interpreter and compiler are started.
 ;;

@@ -295,7 +295,7 @@
 
 (##define-macro (generate-cond-expand-features)
 
-  (define gambits '(gambit GAMBIT Gambit gambit-c GAMBIT-C Gambit-C))
+  (define gambits '(gambit GAMBIT Gambit))
 
   `'(,@gambits
      srfi-0 SRFI-0
@@ -1975,13 +1975,13 @@
         (##raise-os-exception #f code path-expand path origin))
 
       (define (expand-in-instdir relpath instdir-name)
-        (let ((dir (##os-path-gambcdir-map-lookup instdir-name)))
+        (let ((dir (##os-path-gambitdir-map-lookup instdir-name)))
           (cond ((##fixnum? dir)
                  (err dir))
                 (dir
                  (expand relpath dir))
                 (else
-                 (let ((dir (##os-path-gambcdir)))
+                 (let ((dir (##os-path-gambitdir)))
                    (cond ((##fixnum? dir)
                           (err dir))
                          ((##fx= 0 (##string-length instdir-name))

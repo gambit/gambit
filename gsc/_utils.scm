@@ -30,6 +30,12 @@
         (proc (car lst) i)
         (loop (cdr lst) (+ i 1))))))
 
+(define (map-index proc lst)
+  (let loop ((lst lst) (i 0) (rev-result '()))
+    (if (pair? lst)
+        (loop (cdr lst) (+ i 1) (cons (proc (car lst) i) rev-result))
+        (reverse rev-result))))
+
 (define (pos-in-list x l)
   (let loop ((l l) (i 0))
     (cond ((not (pair? l)) #f)
@@ -628,6 +634,12 @@
       (begin
         (proc (car lst) i)
         (loop (cdr lst) (+ i 1))))))
+
+(define (map-index proc lst)
+  (let loop ((lst lst) (i 0) (rev-result '()))
+    (if (pair? lst)
+        (loop (cdr lst) (+ i 1) (cons (proc (car lst) i) rev-result))
+        (reverse rev-result))))
 
 (define (pos-in-list x l)
   (let loop ((l l) (i 0))

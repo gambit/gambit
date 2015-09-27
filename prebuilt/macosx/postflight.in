@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 PROGRAMS="@PROGRAMS@"
 LIBRARIES="@LIBRARIES@"
@@ -11,14 +11,14 @@ LIB_DIR="@LIB_DIR@"
 INCLUDE_DIR="@INCLUDE_DIR@"
 
 INSTALL_DIR="@INSTALL_DIR@"
-GAMBC_BIN_DIR="$INSTALL_DIR/current/bin"
-GAMBC_LIB_DIR="$INSTALL_DIR/current/lib"
-GAMBC_INCLUDE_DIR="$INSTALL_DIR/current/include"
+GAMBIT_BIN_DIR="$INSTALL_DIR/current/bin"
+GAMBIT_LIB_DIR="$INSTALL_DIR/current/lib"
+GAMBIT_INCLUDE_DIR="$INSTALL_DIR/current/include"
 
-install_safely() # dir, gambc_dir, files
+install_safely() # dir, gambit_dir, files
 {
   DIR="$1"
-  GAMBC_DIR="$2"
+  GAMBIT_DIR="$2"
   FILES="$3"
 
   EXISTING_CORRECT=""
@@ -32,7 +32,7 @@ install_safely() # dir, gambc_dir, files
   for f in $FILES ; do
 
     if [ -e "$DIR/$f" ] ; then
-      if [ -L "$DIR/$f" -a "`readlink \"$DIR/$f\"`" == "$GAMBC_DIR/$f" ] ; then
+      if [ -L "$DIR/$f" -a "`readlink \"$DIR/$f\"`" == "$GAMBIT_DIR/$f" ] ; then
         EXISTING_CORRECT="$EXISTING_CORRECT $f"
       else
         EXISTING_INCORRECT="$EXISTING_INCORRECT $f"
@@ -54,10 +54,10 @@ install_safely() # dir, gambc_dir, files
   done
 
   for f in $EXISTING_INCORRECT $MISSING ; do
-    ln -s "$GAMBC_DIR/$f" "$DIR/$f"
+    ln -s "$GAMBIT_DIR/$f" "$DIR/$f"
   done
 }
 
-install_safely "$BIN_DIR" "$GAMBC_BIN_DIR" "$PROGRAMS"
-install_safely "$LIB_DIR" "$GAMBC_LIB_DIR" "$LIBRARIES"
-install_safely "$INCLUDE_DIR" "$GAMBC_INCLUDE_DIR" "$INCLUDES"
+install_safely "$BIN_DIR" "$GAMBIT_BIN_DIR" "$PROGRAMS"
+install_safely "$LIB_DIR" "$GAMBIT_LIB_DIR" "$LIBRARIES"
+install_safely "$INCLUDE_DIR" "$GAMBIT_INCLUDE_DIR" "$INCLUDES"

@@ -552,9 +552,9 @@
 			<integer>0</integer>
 		</dict>
 		<string>@INSTALL_DIR@</string>
-		<string>@VERSION@, Copyright © 1994-2009 Marc Feeley</string>
+		<string>@VERSION@, Copyright © 1994-2015 Marc Feeley</string>
 		<integer>1</integer>
-		<string>marc.feeley.gambc</string>
+		<string>marc.feeley.gambit</string>
 		<integer>0</integer>
 		<string>@VERSION@</string>
 		<dict>

@@ -19,4 +19,4 @@ done
 echo "You will have to enter the Gambit web site password to confirm the operation."
 echo ""
 
-tar cf - $TGZ $TGZ_DEVEL $PREBUILT | ssh -o PreferredAuthentications=keyboard-interactive,password gambit@frontal04.iro.umontreal.ca "rm -rf release-$VERSION;mkdir release-$VERSION;(cd release-$VERSION && tar xvf -);bin/publish-release $VERSION $TGZ $TGZ_DEVEL $PREBUILT;rm -rf release-$VERSION"
+tar cf - $TGZ $TGZ_DEVEL $PREBUILT | ssh -o PreferredAuthentications=keyboard-interactive,password gambit@frontal07.iro.umontreal.ca "rm -rf release-$VERSION;mkdir release-$VERSION;(cd release-$VERSION && tar xvf -);bin/publish-release $VERSION $TGZ $TGZ_DEVEL $PREBUILT;rm -rf release-$VERSION"

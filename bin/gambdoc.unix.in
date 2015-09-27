@@ -1,20 +1,20 @@
 #! /bin/sh
 
 # Script parameters are passed in the following environment variables:
-#   GAMBC_DOC_GAMBCDIR_BIN
-#   GAMBC_DOC_GAMBCDIR_DOC
-#   GAMBC_DOC_ARG1
-#   GAMBC_DOC_ARG2
-#   GAMBC_DOC_ARG3
-#   GAMBC_DOC_ARG4
+#   GAMBDOC_GAMBITDIR_BIN
+#   GAMBDOC_GAMBITDIR_DOC
+#   GAMBDOC_ARG1
+#   GAMBDOC_ARG2
+#   GAMBDOC_ARG3
+#   GAMBDOC_ARG4
 #   ...
 
-# echo GAMBC_DOC_GAMBCDIR_BIN = "${GAMBC_DOC_GAMBCDIR_BIN}"
-# echo GAMBC_DOC_GAMBCDIR_DOC = "${GAMBC_DOC_GAMBCDIR_DOC}"
-# echo GAMBC_DOC_ARG1 = "${GAMBC_DOC_ARG1}"
-# echo GAMBC_DOC_ARG2 = "${GAMBC_DOC_ARG2}"
-# echo GAMBC_DOC_ARG3 = "${GAMBC_DOC_ARG3}"
-# echo GAMBC_DOC_ARG4 = "${GAMBC_DOC_ARG4}"
+# echo GAMBDOC_GAMBITDIR_BIN = "${GAMBDOC_GAMBITDIR_BIN}"
+# echo GAMBDOC_GAMBITDIR_DOC = "${GAMBDOC_GAMBITDIR_DOC}"
+# echo GAMBDOC_ARG1 = "${GAMBDOC_ARG1}"
+# echo GAMBDOC_ARG2 = "${GAMBDOC_ARG2}"
+# echo GAMBDOC_ARG3 = "${GAMBDOC_ARG3}"
+# echo GAMBDOC_ARG4 = "${GAMBDOC_ARG4}"
 
 find_in_path() # exe-name, sets `$exe'
 {
@@ -35,7 +35,7 @@ find_browser() # sets `$exe'
     browser_list="lynx firefox mozilla netscape osascript"
   fi
 
-  browser_list="${GAMBC_DOC_ARG3} $browser_list"
+  browser_list="${GAMBDOC_ARG3} $browser_list"
 
   for b in $browser_list; do
     if find_in_path $b; then
@@ -49,7 +49,7 @@ find_browser() # sets `$exe'
 operation_help() # sets `$exe'
 {
   if find_browser; then
-    url="file://${GAMBC_DOC_GAMBCDIR_DOC}/gambit-c.html#${GAMBC_DOC_ARG4}"
+    url="file://${GAMBDOC_GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG4}"
     case "$browser" in
       osascript ) $exe <<EOF ;;
 tell application "Safari"
@@ -65,9 +65,9 @@ EOF
   fi
 }
 
-if [ "${GAMBC_DOC_ARG1}" = "help" ]; then
+if [ "${GAMBDOC_ARG1}" = "help" ]; then
   operation_help
 else
-  echo "*** WARNING -- unsupported operation: ${GAMBC_DOC_ARG1}"
+  echo "*** WARNING -- unsupported operation: ${GAMBDOC_ARG1}"
   exit 1
 fi

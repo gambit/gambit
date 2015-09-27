@@ -23,9 +23,9 @@ SOURCE_DIR="$INSTALL_PREFIX"
 DOS_SOURCE_DIR="`echo \"$INSTALL_PREFIX\" | sed -e \"s|/|\\\\\\\\\\\\\\\\|g\"`"
 VERSION="`echo $PACKAGE_VERSION | sed -e s/^v//g`"
 EXE_FILE="$PACKAGE_TARNAME-windows-$VARIANT.exe"
-ICON_FILE="gambc.ico"
-UNICON_FILE="gambc.ico"
-NSI_FILE="gambc.nsi"
+ICON_FILE="gambit.ico"
+UNICON_FILE="gambit.ico"
+NSI_FILE="gambit.nsi"
 
 instantiate_file() # input, output
 {
@@ -37,7 +37,7 @@ cleanup()
   rm -rf "$NSI_FILE" "$SOURCE_DIR/$PACKAGE_VERSION"
 }
 
-install_gambc()
+install_gambit()
 {
   cd "$rootfromhere"
   make clean
@@ -73,9 +73,9 @@ install_gambc()
   cd "$herefromroot"
 }
 
-uninstall_gambc()
+uninstall_gambit()
 {
-  "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambc"
+  "$SOURCE_DIR/$PACKAGE_VERSION/bin/uninstall-gambit"
 }
 
 create_nsi()
@@ -94,7 +94,7 @@ cd "`dirname $0`"
 
 cleanup
 rm -f "$EXE_FILE"
-install_gambc
+install_gambit
 create_nsi
 create_exe
 mv "$EXE_FILE" "$rootfromhere"

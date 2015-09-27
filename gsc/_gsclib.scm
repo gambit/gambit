@@ -232,15 +232,16 @@
                      module-name
                      unique-name))
            (let ((exit-status
-                  (##gambc-cc
+                  (##gambcomp
+                   'C
                    type
                    output-dir
                    (##list c-filename)
                    output-filename-no-dir
-                   cc-options
-                   ld-options-prelude
-                   ld-options
-                   (##assq 'verbose options))))
+                   (##assq 'verbose options)
+                   (##list (##cons "CC_OPTIONS" cc-options)
+                           (##cons "LD_OPTIONS_PRELUDE" ld-options-prelude)
+                           (##cons "LD_OPTIONS" ld-options)))))
              (if (and (##not (##assq 'keep-c options))
                       (##not (##string=? filename c-filename)))
                  (##delete-file c-filename))
@@ -264,43 +265,45 @@
          (output-filename-no-dir
           (##path-strip-directory output-filename))
          (exit-status
-          (##gambc-cc
+          (##gambcomp
+           'C
            'exe
            output-dir
            obj-files
            output-filename-no-dir
-           cc-options
-           ld-options-prelude
-           ld-options
-           (##assq 'verbose options))))
+           (##assq 'verbose options)
+           (##list (##cons "CC_OPTIONS" cc-options)
+                   (##cons "LD_OPTIONS_PRELUDE" ld-options-prelude)
+                   (##cons "LD_OPTIONS" ld-options)))))
     (if (##fx= exit-status 0)
         output-filename
         (##raise-error-exception
          "C link failed while linking"
          obj-files))))
 
-(define (##gambc-cc
+(define (##gambcomp
+         target
          op
          output-dir
          input-filenames
          output-filename
-         cc-options
-         ld-options-prelude
-         ld-options
-         verbose?)
+         verbose?
+         options)
 
   (define arg-prefix
     (case op
       ((obj) "BUILD_OBJ_")
       ((dyn) "BUILD_DYN_")
+      ((lib) "BUILD_LIB_")
       ((exe) "BUILD_EXE_")
       (else  "BUILD_OTHER_")))
 
-  (define (arg name val)
-    (##string-append name "=" val))
+  (define (arg name-val)
+    (##string-append (##car name-val) "=" (##cdr name-val)))
 
-  (define (prefixed-arg name val)
-    (arg (##string-append arg-prefix name) val))
+  (define (prefixed-arg name-val)
+    (arg (##cons (##string-append arg-prefix (##car name-val))
+                 (##cdr name-val))))
 
   (define (install-dir path)
     (parameterize
@@ -316,11 +319,11 @@
         (##cons sep (##cons (##car lst) (separate (##cdr lst) sep)))
         '()))
 
-  (let* ((gambcdir-bin
+  (let* ((gambitdir-bin
           (install-dir "~~bin"))
-         (gambcdir-include
+         (gambitdir-include
           (install-dir "~~include"))
-         (gambcdir-lib
+         (gambitdir-lib
           (install-dir "~~lib"))
          (input-filenames-relative
           (##map relative-to-output-dir input-filenames)))
@@ -333,8 +336,9 @@
          status))
      open-process
      (##list path:
-             (##string-append gambcdir-bin
-                              "gambc-cc"
+             (##string-append gambitdir-bin
+                              "gambcomp-"
+                              (##symbol->string target)
                               ##os-bat-extension-string-saved)
              arguments:
              (##list (##symbol->string op))
@@ -342,31 +346,32 @@
              output-dir
              environment:
              (##append
-              (##list (arg "GAMBCDIR_BIN"
-                           (##path-strip-trailing-directory-separator
-                            gambcdir-bin))
-                      (arg "GAMBCDIR_INCLUDE"
-                           (##path-strip-trailing-directory-separator
-                            gambcdir-include))
-                      (arg "GAMBCDIR_LIB"
-                           (##path-strip-trailing-directory-separator
-                            gambcdir-lib))
-                      (prefixed-arg "INPUT_FILENAMES"
-                                    (##append-strings
-                                     (##cdr (separate input-filenames-relative
-                                                      " "))))
-                      (prefixed-arg "OUTPUT_FILENAME"
-                                    output-filename)
-                      (prefixed-arg "CC_OPTIONS"
-                                    cc-options)
-                      (prefixed-arg "LD_OPTIONS_PRELUDE"
-                                    ld-options-prelude)
-                      (prefixed-arg "LD_OPTIONS"
-                                    ld-options))
+              (##map arg
+                     (##append
+                      (if verbose?
+                          (##list (##cons "GAMBCOMP_VERBOSE" "yes"))
+                          '())
+                      (##list
+                       (##cons "GAMBITDIR_BIN"
+                               (##path-strip-trailing-directory-separator
+                                gambitdir-bin))
+                       (##cons "GAMBITDIR_INCLUDE"
+                               (##path-strip-trailing-directory-separator
+                                gambitdir-include))
+                       (##cons "GAMBITDIR_LIB"
+                               (##path-strip-trailing-directory-separator
+                                gambitdir-lib)))))
               (##append
-               (if verbose?
-                   (##list (arg "GAMBC_CC_VERBOSE" "yes"))
-                   '())
+               (##map prefixed-arg
+                      (##append
+                       (##list
+                        (##cons "INPUT_FILENAMES"
+                                (##append-strings
+                                 (##cdr (separate input-filenames-relative
+                                                  " "))))
+                        (##cons "OUTPUT_FILENAME"
+                                output-filename))
+                       options))
                (let ((env (##os-environ)))
                  (if (##fixnum? env) '() env))))
              stdin-redirection: #f
@@ -402,12 +407,12 @@
                           output)))
                    (baselib
                     (if (##eq? base (macro-absent-obj))
-                        (let ((gambcdir-lib
+                        (let ((gambitdir-lib
                                (parameterize
                                 ((##current-directory
                                   (##path-expand "~~lib")))
                                 (##current-directory))))
-                          (##string-append gambcdir-lib "_gambc"))
+                          (##string-append gambitdir-lib "_gambit"))
                         (macro-force-vars (base)
                           base)))
                    (warn?
