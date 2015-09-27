@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_gvm.c", produced by Gambit-C v4.7.9
+; File: "_gvm.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _gvm"
-((" _gvm"))
+"_gvm"
+(("_gvm"))
 (
 "_gvm"
 "apply"
@@ -272,8 +272,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _gvm"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_gvm"
 #define ___LINKER_ID ____20___gvm
 #define ___MH_PROC ___H__20___gvm
 #define ___SCRIPT_LINE 0

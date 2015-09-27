@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc.c", produced by Gambit-C v4.7.9
+; File: "_gsc.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _gsc"
-((" _gsc"))
+"_gsc"
+(("_gsc"))
 (
 ""
 "##type-18-2babe060-9af6-456f-a26e-40b592f690ec"
@@ -220,8 +220,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _gsc"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_gsc"
 #define ___LINKER_ID ____20___gsc
 #define ___MH_PROC ___H__20___gsc
 #define ___SCRIPT_LINE 0
@@ -1376,9 +1376,9 @@ ___DEF_SUB_STR(___X20,100)
                ___STR8(110,115,32,34,108,105,110,107)
                ___STR8(34,32,97,110,100,32,34,101)
                ___STR4(120,101,34,10)
-___DEF_SUB_STR(___X21,9)
-               ___STR8(46,103,97,109,98,99,105,110)
-               ___STR1(105)
+___DEF_SUB_STR(___X21,8)
+               ___STR8(46,103,97,109,98,105,110,105)
+               ___STR0
 ___DEF_SUB_STR(___X22,90)
                ___STR8(42,42,42,32,87,65,82,78)
                ___STR8(73,78,71,32,45,45,32,84)

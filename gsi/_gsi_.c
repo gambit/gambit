@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit-C v4.7.9
+; File: "_gsi_.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _gsi_"
-((" _kernel" (preload . #t)) (" _system" (preload . #t)) (" _num" (preload . #t)) (" _std" (preload . #t)) (" _eval" (preload . #t)) (" _io" (preload . #t)) (" _nonstd" (preload . #t)) (" _thread" (preload . #t)) (" _repl" (preload . #t)) (" _gsilib" (preload . #t)) (" _gsi" (preload . #t)))
+"_gsi_"
+(("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_gsilib" (preload . #t)) ("_gsi" (preload . #t)))
 (
 ""
 "##and"
@@ -165,9 +165,7 @@
 "ASCII"
 "DGRAM"
 "GAMBIT"
-"GAMBIT-C"
 "Gambit"
-"Gambit-C"
 "INET"
 "INET6"
 "ISO-8859-1"
@@ -430,7 +428,6 @@
 "future"
 "g"
 "gambit"
-"gambit-c"
 "gc-hash-table"
 "gc-real-time"
 "gc-sys-time"
@@ -1931,7 +1928,7 @@
 "##frame-slot-live?"
 "##full-name?"
 "##fxceiling-ratio"
-"##gambc-doc"
+"##gambdoc"
 "##gc"
 "##gc-final-will-registry!"
 "##gc-finalize!"
@@ -2325,8 +2322,8 @@
 "##os-load-object-file"
 "##os-make-tls-context"
 "##os-network-info"
-"##os-path-gambcdir"
-"##os-path-gambcdir-map-lookup"
+"##os-path-gambitdir"
+"##os-path-gambitdir-map-lookup"
 "##os-path-homedir"
 "##os-path-normalize-directory"
 "##os-port-decode-chars!"
@@ -3960,7 +3957,7 @@
 "##set-box!"
 "##set-car!"
 "##set-cdr!"
-"##set-gambcdir!"
+"##set-gambitdir!"
 "##set-live-percent!"
 "##set-max-heap!"
 "##set-min-heap!"
@@ -4626,15 +4623,15 @@
  #f
 )
 #else
-#define ___VERSION 407009
-#define ___LINKFILE_NAME " _gsi_"
+#define ___VERSION 408000
+#define ___LINKFILE_NAME "_gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
 #define ___SCRIPT_LINE 0
 #include "gambit.h"
 
 ___BEGIN_OLD_LNK
-___DEF_OLD_LNK(____20___gambcgsi)
+___DEF_OLD_LNK(____20___gambitgsi)
 ___END_OLD_LNK
 
 ___BEGIN_NEW_LNK
@@ -4642,7 +4639,7 @@ ___DEF_NEW_LNK(____20___gsi)
 ___END_NEW_LNK
 
 ___BEGIN_LNK
- ___DEF_LNK(____20___gambcgsi)
+ ___DEF_LNK(____20___gambitgsi)
 ,___DEF_LNK(____20___gsi)
 ___END_LNK
 
@@ -5935,7 +5932,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_fxwrapquotient,___G__23__23_fxwrapquotient)
 ___DEF_OLD_SYM_GLO(___S__23__23_fxwrapsquare,___G__23__23_fxwrapsquare)
 ___DEF_OLD_SYM_GLO(___S__23__23_fxxor,___G__23__23_fxxor)
 ___DEF_OLD_SYM_GLO(___S__23__23_fxzero_3f_,___G__23__23_fxzero_3f_)
-___DEF_OLD_SYM_GLO(___S__23__23_gambc_2d_doc,___G__23__23_gambc_2d_doc)
+___DEF_OLD_SYM_GLO(___S__23__23_gambdoc,___G__23__23_gambdoc)
 ___DEF_OLD_SYM_GLO(___S__23__23_gc,___G__23__23_gc)
 ___DEF_OLD_SYM_GLO(___S__23__23_gc_2d_final_2d_will_2d_registry_21_,___G__23__23_gc_2d_final_2d_will_2d_registry_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_gc_2d_finalize_21_,___G__23__23_gc_2d_finalize_21_)
@@ -6394,8 +6391,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_load_2d_object_2d_file,___G__23__23_os_2d_
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_make_2d_tls_2d_context,___G__23__23_os_2d_make_2d_tls_2d_context)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_network_2d_info,___G__23__23_os_2d_network_2d_info)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_obj_2d_extension_2d_string_2d_saved,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
-___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambcdir,___G__23__23_os_2d_path_2d_gambcdir)
-___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
+___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambitdir,___G__23__23_os_2d_path_2d_gambitdir)
+___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup,___G__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_homedir,___G__23__23_os_2d_path_2d_homedir)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_normalize_2d_directory,___G__23__23_os_2d_path_2d_normalize_2d_directory)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_port_2d_decode_2d_chars_21_,___G__23__23_os_2d_port_2d_decode_2d_chars_21_)
@@ -6798,7 +6795,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_box_21_,___G__23__23_set_2d_box_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_car_21_,___G__23__23_set_2d_car_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_cdr_21_,___G__23__23_set_2d_cdr_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_debug_2d_settings_21_,___G__23__23_set_2d_debug_2d_settings_21_)
-___DEF_OLD_SYM_GLO(___S__23__23_set_2d_gambcdir_21_,___G__23__23_set_2d_gambcdir_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_set_2d_gambitdir_21_,___G__23__23_set_2d_gambitdir_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_live_2d_percent_21_,___G__23__23_set_2d_live_2d_percent_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_max_2d_heap_21_,___G__23__23_set_2d_max_2d_heap_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_min_2d_heap_21_,___G__23__23_set_2d_min_2d_heap_21_)
@@ -7359,9 +7356,7 @@ ___DEF_OLD_SYM_GLO(___S__3f_,___G__3f_)
 ___DEF_OLD_SYM_GLO(___S_ASCII,___G_ASCII)
 ___DEF_OLD_SYM_GLO(___S_DGRAM,___G_DGRAM)
 ___DEF_OLD_SYM_GLO(___S_GAMBIT,___G_GAMBIT)
-___DEF_OLD_SYM_GLO(___S_GAMBIT_2d_C,___G_GAMBIT_2d_C)
 ___DEF_OLD_SYM_GLO(___S_Gambit,___G_Gambit)
-___DEF_OLD_SYM_GLO(___S_Gambit_2d_C,___G_Gambit_2d_C)
 ___DEF_OLD_SYM_GLO(___S_INET,___G_INET)
 ___DEF_OLD_SYM_GLO(___S_INET6,___G_INET6)
 ___DEF_OLD_SYM_GLO(___S_ISO_2d_8859_2d_1,___G_ISO_2d_8859_2d_1)
@@ -7964,7 +7959,6 @@ ___DEF_OLD_SYM_GLO(___S_fxxor,___G_fxxor)
 ___DEF_OLD_SYM_GLO(___S_fxzero_3f_,___G_fxzero_3f_)
 ___DEF_OLD_SYM_GLO(___S_g,___G_g)
 ___DEF_OLD_SYM_GLO(___S_gambit,___G_gambit)
-___DEF_OLD_SYM_GLO(___S_gambit_2d_c,___G_gambit_2d_c)
 ___DEF_OLD_SYM_GLO(___S_gc_2d_hash_2d_table,___G_gc_2d_hash_2d_table)
 ___DEF_OLD_SYM_GLO(___S_gc_2d_real_2d_time,___G_gc_2d_real_2d_time)
 ___DEF_OLD_SYM_GLO(___S_gc_2d_report_2d_set_21_,___G_gc_2d_report_2d_set_21_)

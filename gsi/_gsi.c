@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi.c", produced by Gambit-C v4.7.9
+; File: "_gsi.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _gsi"
-((" _gsi"))
+"_gsi"
+(("_gsi"))
 (
 ""
 "##type-18-2babe060-9af6-456f-a26e-40b592f690ec"
@@ -146,8 +146,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _gsi"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_gsi"
 #define ___LINKER_ID ____20___gsi
 #define ___MH_PROC ___H__20___gsi
 #define ___SCRIPT_LINE 0
@@ -615,9 +615,9 @@ ___DEF_SUB_STR(___X0,43)
                ___STR3(111,110,32)
 ___DEF_SUB_STR(___X1,1)
                ___STR1(10)
-___DEF_SUB_STR(___X2,9)
-               ___STR8(46,103,97,109,98,99,105,110)
-               ___STR1(105)
+___DEF_SUB_STR(___X2,8)
+               ___STR8(46,103,97,109,98,105,110,105)
+               ___STR0
 ___DEF_SUB_STRUCTURE(___X3,6)
                ___VEC1(___REF_SUB(4))
                ___VEC1(___REF_SYM(1,___S__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec))

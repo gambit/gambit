@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gambitgsi.c", produced by Gambit v4.7.9
+; File: "_gambitgsi.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
 "_gambitgsi"
 (("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_gsilib" (preload . #t)))
@@ -4619,7 +4619,7 @@
  #f
 )
 #else
-#define ___VERSION 407009
+#define ___VERSION 408000
 #define ___LINKFILE_NAME "_gambitgsi"
 #define ___LINKER_ID ____20___gambitgsi
 #define ___INCREMENTAL_LINKFILE

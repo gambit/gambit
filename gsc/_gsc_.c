@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc_.c", produced by Gambit-C v4.7.9
+; File: "_gsc_.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _gsc_"
-((" _kernel" (preload . #t)) (" _system" (preload . #t)) (" _num" (preload . #t)) (" _std" (preload . #t)) (" _eval" (preload . #t)) (" _io" (preload . #t)) (" _nonstd" (preload . #t)) (" _thread" (preload . #t)) (" _repl" (preload . #t)) (" _host" (preload . #t)) (" _utils" (preload . #t)) (" _source" (preload . #t)) (" _parms" (preload . #t)) (" _env" (preload . #t)) (" _ptree1" (preload . #t)) (" _ptree2" (preload . #t)) (" _gvm" (preload . #t)) (" _back" (preload . #t)) (" _front" (preload . #t)) (" _prims" (preload . #t)) (" _assert" (preload . #t)) (" _asm" (preload . #t)) (" _x86" (preload . #t)) (" _codegen" (preload . #t)) (" _t-univ" (preload . #t)) (" _t-c-1" (preload . #t)) (" _t-c-2" (preload . #t)) (" _t-c-3" (preload . #t)) (" _gsclib" (preload . #t)) (" _gsc" (preload . #t)))
+"_gsc_"
+(("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_host" (preload . #t)) ("_utils" (preload . #t)) ("_source" (preload . #t)) ("_parms" (preload . #t)) ("_env" (preload . #t)) ("_ptree1" (preload . #t)) ("_ptree2" (preload . #t)) ("_gvm" (preload . #t)) ("_back" (preload . #t)) ("_front" (preload . #t)) ("_prims" (preload . #t)) ("_assert" (preload . #t)) ("_asm" (preload . #t)) ("_x86" (preload . #t)) ("_codegen" (preload . #t)) ("_t-univ" (preload . #t)) ("_t-c-1" (preload . #t)) ("_t-c-2" (preload . #t)) ("_t-c-3" (preload . #t)) ("_gsclib" (preload . #t)) ("_gsc" (preload . #t)))
 (
 ""
 "##and"
@@ -51,6 +51,7 @@
 "##pair?"
 "##parameterize"
 "##processed-command-line"
+"##program-descr"
 "##quasiquote"
 "##quote"
 "##raise-wrong-number-of-arguments-exception"
@@ -205,10 +206,8 @@
 "Flonum"
 "Frame"
 "GAMBIT"
-"GAMBIT-C"
 "GLOBALS"
 "Gambit"
-"Gambit-C"
 "INET"
 "INET6"
 "ISO-8859-1"
@@ -219,6 +218,7 @@
 "Jumpable"
 "Key"
 "Keyword"
+"ModLinkInfo"
 "Null"
 "Object"
 "Objective-C"
@@ -230,7 +230,6 @@
 "Promise"
 "Python"
 "RAW"
-"RTS"
 "Ratnum"
 "Rest"
 "ReturnPoint"
@@ -737,7 +736,6 @@
 "future"
 "g"
 "gambit"
-"gambit-c"
 "gc-hash-table"
 "gc-real-time"
 "gc-sys-time"
@@ -898,9 +896,11 @@
 "letrec*"
 "level"
 "lf"
+"lib"
 "limit"
 "line"
 "link"
+"link_info"
 "list"
 "list->expression"
 "list-convert"
@@ -982,6 +982,13 @@
 "mm6"
 "mm7"
 "mode"
+"modlinkinfo"
+"module_count"
+"module_descr"
+"module_map"
+"module_register"
+"module_registry_init"
+"module_table"
 "modulo"
 "mostly-arith"
 "mr-"
@@ -1011,8 +1018,8 @@
 "new"
 "new-str"
 "newline"
-"next"
 "next_frame"
+"nextf"
 "nfree"
 "no-colon"
 "no-comma"
@@ -1044,6 +1051,7 @@
 "o"
 "obj"
 "object"
+"old"
 "open-error"
 "open-input-file*"
 "open-paren-expected"
@@ -1618,7 +1626,6 @@
 "unfulfilled-cond-expand"
 "unicode"
 "uninitialized-thread-exception"
-"univ-link"
 "unknown"
 "unknown-keyword-argument-exception"
 "unknown-location"
@@ -2677,8 +2684,8 @@
 "##frame-slot-live?"
 "##full-name?"
 "##fxceiling-ratio"
-"##gambc-cc"
-"##gambc-doc"
+"##gambcomp"
+"##gambdoc"
 "##gc"
 "##gc-final-will-registry!"
 "##gc-finalize!"
@@ -3078,8 +3085,8 @@
 "##os-make-tls-context"
 "##os-network-info"
 "##os-obj-extension-string-saved"
-"##os-path-gambcdir"
-"##os-path-gambcdir-map-lookup"
+"##os-path-gambitdir"
+"##os-path-gambitdir-map-lookup"
 "##os-path-homedir"
 "##os-path-normalize-directory"
 "##os-port-decode-chars!"
@@ -4323,10 +4330,7 @@
 "c#cst?"
 "c#ctx-decls"
 "c#ctx-globals-used"
-"c#ctx-objs-used"
 "c#ctx-rtlib-features-used"
-"c#ctx-semantics-changing-options"
-"c#ctx-semantics-preserving-options"
 "c#ctx-target"
 "c#current-context"
 "c#current-frame"
@@ -4630,6 +4634,7 @@
 "c#make-u64vect"
 "c#make-u8vect"
 "c#make-var"
+"c#map-index"
 "c#match"
 "c#max-fixnum32-div-max-lines"
 "c#max-lines"
@@ -5020,7 +5025,6 @@
 "c#targ-c-hex-u32"
 "c#targ-c-id-glo"
 "c#targ-c-id-glo2"
-"c#targ-c-id-linker"
 "c#targ-ceiling-log2"
 "c#targ-cell-set!"
 "c#targ-check-conditions"
@@ -5172,6 +5176,7 @@
 "c#targ-line-size"
 "c#targ-link"
 "c#targ-link-info"
+"c#targ-linker-id"
 "c#targ-loc"
 "c#targ-loc-flo"
 "c#targ-loc-no-invalidate"
@@ -5417,12 +5422,12 @@
 "c#univ-def-kind"
 "c#univ-define-prim"
 "c#univ-define-prim-bool"
+"c#univ-defs->code"
 "c#univ-defs-combine"
 "c#univ-display"
 "c#univ-dump"
 "c#univ-dump-code"
 "c#univ-dump-procs"
-"c#univ-dyn-load?"
 "c#univ-emit-!="
 "c#univ-emit-&&"
 "c#univ-emit-*"
@@ -5468,6 +5473,7 @@
 "c#univ-emit-call-with-arg-array"
 "c#univ-emit-cast"
 "c#univ-emit-cast*"
+"c#univ-emit-cast*-scmobj"
 "c#univ-emit-char-box"
 "c#univ-emit-char-box-uninterned"
 "c#univ-emit-char-obj"
@@ -5481,7 +5487,6 @@
 "c#univ-emit-closure-ref"
 "c#univ-emit-closure-set!"
 "c#univ-emit-closure?"
-"c#univ-emit-comment"
 "c#univ-emit-comparison"
 "c#univ-emit-concat"
 "c#univ-emit-cons"
@@ -5762,8 +5767,9 @@
 "c#univ-emit-will?"
 "c#univ-enable-jump-destination-inlining?"
 "c#univ-end-of-cont-marker"
-"c#univ-entry-point"
+"c#univ-entry-defs"
 "c#univ-expand-inline-host-code"
+"c#univ-external-libs"
 "c#univ-field"
 "c#univ-field-inherited?"
 "c#univ-field-init"
@@ -5803,9 +5809,13 @@
 "c#univ-label-entry"
 "c#univ-label-info"
 "c#univ-link"
+"c#univ-link-features-used"
 "c#univ-link-info"
+"c#univ-link-info-footer"
 "c#univ-link-info-header"
 "c#univ-link-info-prefix"
+"c#univ-link-mods-and-flags"
+"c#univ-link-semantics-changing-options"
 "c#univ-main-defs"
 "c#univ-make-empty-defs"
 "c#univ-max-fixnum"
@@ -5813,6 +5823,7 @@
 "c#univ-method-reference"
 "c#univ-method?"
 "c#univ-min-fixnum"
+"c#univ-module-register"
 "c#univ-module-representation"
 "c#univ-never-return-jump?"
 "c#univ-null-representation"
@@ -5830,15 +5841,17 @@
 "c#univ-procedure-representation"
 "c#univ-push-args"
 "c#univ-python-pre3?"
-"c#univ-rtlib"
+"c#univ-rtlib-defs"
 "c#univ-rtlib-feature"
-"c#univ-rtlib-header"
+"c#univ-rtlib-gen"
 "c#univ-rts-module-name"
 "c#univ-rts-type-alias"
 "c#univ-separated-list"
 "c#univ-set-ctrlpt-attrib"
 "c#univ-setup"
 "c#univ-single-line-comment-prefix"
+"c#univ-source-file-footer"
+"c#univ-source-file-header"
 "c#univ-stack-resizable?"
 "c#univ-stk-location"
 "c#univ-stk-slot-from-tos"
@@ -6250,7 +6263,6 @@
 "port-settings-set!"
 "positive?"
 "pp"
-"pretty-print"
 "procedure?"
 "process-status"
 "protocol-info"
@@ -6869,7 +6881,7 @@
 "##set-box!"
 "##set-car!"
 "##set-cdr!"
-"##set-gambcdir!"
+"##set-gambitdir!"
 "##set-live-percent!"
 "##set-max-heap!"
 "##set-min-heap!"
@@ -7175,13 +7187,16 @@
 "c#ctx-module-name-set!"
 "c#ctx-ns"
 "c#ctx-ns-set!"
+"c#ctx-objs-used"
 "c#ctx-objs-used-set!"
 "c#ctx-resources-used-rd"
 "c#ctx-resources-used-rd-set!"
 "c#ctx-resources-used-wr"
 "c#ctx-resources-used-wr-set!"
 "c#ctx-rtlib-features-used-set!"
+"c#ctx-semantics-changing-options"
 "c#ctx-semantics-changing-options-set!"
+"c#ctx-semantics-preserving-options"
 "c#ctx-semantics-preserving-options-set!"
 "c#ctx-serial-num"
 "c#ctx-serial-num-set!"
@@ -7322,6 +7337,7 @@
 "c#targ-c-id-host"
 "c#targ-c-id-key"
 "c#targ-c-id-key2"
+"c#targ-c-id-linker"
 "c#targ-c-id-prm2"
 "c#targ-c-id-sym"
 "c#targ-c-id-sym2"
@@ -7417,12 +7433,13 @@
 "c#univ-defs-fields"
 "c#univ-defs-inits"
 "c#univ-defs-methods"
+"c#univ-dyn-load?"
 "c#univ-emit->>>"
 "c#univ-emit-apply-aux"
 "c#univ-emit-bignum"
-"c#univ-emit-cast*-scmobj"
 "c#univ-emit-chr"
 "c#univ-emit-chr-tostr"
+"c#univ-emit-comment"
 "c#univ-emit-dict"
 "c#univ-emit-float-round-half-towards-0"
 "c#univ-emit-get"
@@ -7718,6 +7735,7 @@
 "path-volume"
 "port-io-exception-handler-set!"
 "port?"
+"pretty-print"
 "primordial-exception-handler"
 "print"
 "println"
@@ -8008,15 +8026,15 @@
  #f
 )
 #else
-#define ___VERSION 407009
-#define ___LINKFILE_NAME " _gsc_"
+#define ___VERSION 408000
+#define ___LINKFILE_NAME "_gsc_"
 #define ___LINKER_ID ____20___gsc__
 #define ___INCREMENTAL_LINKFILE
 #define ___SCRIPT_LINE 0
 #include "gambit.h"
 
 ___BEGIN_OLD_LNK
-___DEF_OLD_LNK(____20___gambcgsc)
+___DEF_OLD_LNK(____20___gambitgsc)
 ___END_OLD_LNK
 
 ___BEGIN_NEW_LNK
@@ -8024,7 +8042,7 @@ ___DEF_NEW_LNK(____20___gsc)
 ___END_NEW_LNK
 
 ___BEGIN_LNK
- ___DEF_LNK(____20___gambcgsc)
+ ___DEF_LNK(____20___gambitgsc)
 ,___DEF_LNK(____20___gsc)
 ___END_LNK
 
@@ -9352,8 +9370,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_fxwrapquotient,___G__23__23_fxwrapquotient)
 ___DEF_OLD_SYM_GLO(___S__23__23_fxwrapsquare,___G__23__23_fxwrapsquare)
 ___DEF_OLD_SYM_GLO(___S__23__23_fxxor,___G__23__23_fxxor)
 ___DEF_OLD_SYM_GLO(___S__23__23_fxzero_3f_,___G__23__23_fxzero_3f_)
-___DEF_OLD_SYM_GLO(___S__23__23_gambc_2d_cc,___G__23__23_gambc_2d_cc)
-___DEF_OLD_SYM_GLO(___S__23__23_gambc_2d_doc,___G__23__23_gambc_2d_doc)
+___DEF_OLD_SYM_GLO(___S__23__23_gambcomp,___G__23__23_gambcomp)
+___DEF_OLD_SYM_GLO(___S__23__23_gambdoc,___G__23__23_gambdoc)
 ___DEF_OLD_SYM_GLO(___S__23__23_gc,___G__23__23_gc)
 ___DEF_OLD_SYM_GLO(___S__23__23_gc_2d_final_2d_will_2d_registry_21_,___G__23__23_gc_2d_final_2d_will_2d_registry_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_gc_2d_finalize_21_,___G__23__23_gc_2d_finalize_21_)
@@ -9814,8 +9832,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_load_2d_object_2d_file,___G__23__23_os_2d_
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_make_2d_tls_2d_context,___G__23__23_os_2d_make_2d_tls_2d_context)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_network_2d_info,___G__23__23_os_2d_network_2d_info)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_obj_2d_extension_2d_string_2d_saved,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
-___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambcdir,___G__23__23_os_2d_path_2d_gambcdir)
-___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
+___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambitdir,___G__23__23_os_2d_path_2d_gambitdir)
+___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup,___G__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_homedir,___G__23__23_os_2d_path_2d_homedir)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_path_2d_normalize_2d_directory,___G__23__23_os_2d_path_2d_normalize_2d_directory)
 ___DEF_OLD_SYM_GLO(___S__23__23_os_2d_port_2d_decode_2d_chars_21_,___G__23__23_os_2d_port_2d_decode_2d_chars_21_)
@@ -10218,7 +10236,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_box_21_,___G__23__23_set_2d_box_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_car_21_,___G__23__23_set_2d_car_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_cdr_21_,___G__23__23_set_2d_cdr_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_debug_2d_settings_21_,___G__23__23_set_2d_debug_2d_settings_21_)
-___DEF_OLD_SYM_GLO(___S__23__23_set_2d_gambcdir_21_,___G__23__23_set_2d_gambcdir_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_set_2d_gambitdir_21_,___G__23__23_set_2d_gambitdir_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_live_2d_percent_21_,___G__23__23_set_2d_live_2d_percent_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_max_2d_heap_21_,___G__23__23_set_2d_max_2d_heap_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_set_2d_min_2d_heap_21_,___G__23__23_set_2d_min_2d_heap_21_)
@@ -10810,10 +10828,8 @@ ___DEF_OLD_SYM_GLO(___S_Fixnum,___G_Fixnum)
 ___DEF_OLD_SYM_GLO(___S_Flonum,___G_Flonum)
 ___DEF_OLD_SYM_GLO(___S_Frame,___G_Frame)
 ___DEF_OLD_SYM_GLO(___S_GAMBIT,___G_GAMBIT)
-___DEF_OLD_SYM_GLO(___S_GAMBIT_2d_C,___G_GAMBIT_2d_C)
 ___DEF_OLD_SYM_GLO(___S_GLOBALS,___G_GLOBALS)
 ___DEF_OLD_SYM_GLO(___S_Gambit,___G_Gambit)
-___DEF_OLD_SYM_GLO(___S_Gambit_2d_C,___G_Gambit_2d_C)
 ___DEF_OLD_SYM_GLO(___S_INET,___G_INET)
 ___DEF_OLD_SYM_GLO(___S_INET6,___G_INET6)
 ___DEF_OLD_SYM_GLO(___S_ISO_2d_8859_2d_1,___G_ISO_2d_8859_2d_1)
@@ -10824,6 +10840,7 @@ ___DEF_OLD_SYM_GLO(___S_JavaScript,___G_JavaScript)
 ___DEF_OLD_SYM_GLO(___S_Jumpable,___G_Jumpable)
 ___DEF_OLD_SYM_GLO(___S_Key,___G_Key)
 ___DEF_OLD_SYM_GLO(___S_Keyword,___G_Keyword)
+___DEF_OLD_SYM_GLO(___S_ModLinkInfo,___G_ModLinkInfo)
 ___DEF_OLD_SYM_GLO(___S_Null,___G_Null)
 ___DEF_OLD_SYM_GLO(___S_Object,___G_Object)
 ___DEF_OLD_SYM_GLO(___S_Objective_2d_C,___G_Objective_2d_C)
@@ -10835,7 +10852,6 @@ ___DEF_OLD_SYM_GLO(___S_ParentEntryPoint,___G_ParentEntryPoint)
 ___DEF_OLD_SYM_GLO(___S_Promise,___G_Promise)
 ___DEF_OLD_SYM_GLO(___S_Python,___G_Python)
 ___DEF_OLD_SYM_GLO(___S_RAW,___G_RAW)
-___DEF_OLD_SYM_GLO(___S_RTS,___G_RTS)
 ___DEF_OLD_SYM_GLO(___S_Ratnum,___G_Ratnum)
 ___DEF_OLD_SYM_GLO(___S_Rest,___G_Rest)
 ___DEF_OLD_SYM_GLO(___S_ReturnPoint,___G_ReturnPoint)
@@ -12140,6 +12156,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_make_2d_u32vect,___G_c_23_make_2d_u32vect)
 ___DEF_OLD_SYM_GLO(___S_c_23_make_2d_u64vect,___G_c_23_make_2d_u64vect)
 ___DEF_OLD_SYM_GLO(___S_c_23_make_2d_u8vect,___G_c_23_make_2d_u8vect)
 ___DEF_OLD_SYM_GLO(___S_c_23_make_2d_var,___G_c_23_make_2d_var)
+___DEF_OLD_SYM_GLO(___S_c_23_map_2d_index,___G_c_23_map_2d_index)
 ___DEF_OLD_SYM_GLO(___S_c_23_match,___G_c_23_match)
 ___DEF_OLD_SYM_GLO(___S_c_23_max_2d_fixnum32_2d_div_2d_max_2d_lines,___G_c_23_max_2d_fixnum32_2d_div_2d_max_2d_lines)
 ___DEF_OLD_SYM_GLO(___S_c_23_max_2d_lines,___G_c_23_max_2d_lines)
@@ -12782,6 +12799,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_line_2d_size,___G_c_23_targ_2d_line_2d_size
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_link,___G_c_23_targ_2d_link)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_link_2d_aux,___G_c_23_targ_2d_link_2d_aux)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_link_2d_info,___G_c_23_targ_2d_link_2d_info)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_linker_2d_id,___G_c_23_targ_2d_linker_2d_id)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_linker_2d_tag,___G_c_23_targ_2d_linker_2d_tag)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_loc,___G_c_23_targ_2d_loc)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_loc_2d_flo,___G_c_23_targ_2d_loc_2d_flo)
@@ -13094,6 +13112,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_def_2d_kind,___G_c_23_univ_2d_def_2d_kind)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_define_2d_prim,___G_c_23_univ_2d_define_2d_prim)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_define_2d_prim_2d_bool,___G_c_23_univ_2d_define_2d_prim_2d_bool)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_defs,___G_c_23_univ_2d_defs)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_defs_2d__3e_code,___G_c_23_univ_2d_defs_2d__3e_code)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_defs_2d_all,___G_c_23_univ_2d_defs_2d_all)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_defs_2d_classes,___G_c_23_univ_2d_defs_2d_classes)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_defs_2d_combine,___G_c_23_univ_2d_defs_2d_combine)
@@ -13462,10 +13481,11 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_while,___G_c_23_univ_2d_emit_2d_whi
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_will_3f_,___G_c_23_univ_2d_emit_2d_will_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_enable_2d_jump_2d_destination_2d_inlining_3f_,___G_c_23_univ_2d_enable_2d_jump_2d_destination_2d_inlining_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_end_2d_of_2d_cont_2d_marker,___G_c_23_univ_2d_end_2d_of_2d_cont_2d_marker)
-___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_entry_2d_point,___G_c_23_univ_2d_entry_2d_point)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_entry_2d_defs,___G_c_23_univ_2d_entry_2d_defs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_eof_2d_representation,___G_c_23_univ_2d_eof_2d_representation)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_eq_2d_testable_3f_,___G_c_23_univ_2d_eq_2d_testable_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_expand_2d_inline_2d_host_2d_code,___G_c_23_univ_2d_expand_2d_inline_2d_host_2d_code)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_external_2d_libs,___G_c_23_univ_2d_external_2d_libs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_f32vector_2d_representation,___G_c_23_univ_2d_f32vector_2d_representation)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_f64vector_2d_representation,___G_c_23_univ_2d_f64vector_2d_representation)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_field,___G_c_23_univ_2d_field)
@@ -13513,9 +13533,13 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_keyword_2d_representation,___G_c_23_univ_2d
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_label_2d_entry,___G_c_23_univ_2d_label_2d_entry)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_label_2d_info,___G_c_23_univ_2d_label_2d_info)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_link,___G_c_23_univ_2d_link)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_link_2d_features_2d_used,___G_c_23_univ_2d_link_2d_features_2d_used)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_link_2d_info,___G_c_23_univ_2d_link_2d_info)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_link_2d_info_2d_footer,___G_c_23_univ_2d_link_2d_info_2d_footer)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_link_2d_info_2d_header,___G_c_23_univ_2d_link_2d_info_2d_header)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_link_2d_info_2d_prefix,___G_c_23_univ_2d_link_2d_info_2d_prefix)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_link_2d_mods_2d_and_2d_flags,___G_c_23_univ_2d_link_2d_mods_2d_and_2d_flags)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options,___G_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_main_2d_defs,___G_c_23_univ_2d_main_2d_defs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_make_2d_empty_2d_defs,___G_c_23_univ_2d_make_2d_empty_2d_defs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_map_2d_index,___G_c_23_univ_2d_map_2d_index)
@@ -13530,6 +13554,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_method_2d_reference,___G_c_23_univ_2d_metho
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_method_2d_result_2d_type,___G_c_23_univ_2d_method_2d_result_2d_type)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_method_3f_,___G_c_23_univ_2d_method_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_min_2d_fixnum,___G_c_23_univ_2d_min_2d_fixnum)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_module_2d_register,___G_c_23_univ_2d_module_2d_register)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_module_2d_representation,___G_c_23_univ_2d_module_2d_representation)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_arg_2d_regs,___G_c_23_univ_2d_nb_2d_arg_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_nb_2d_gvm_2d_regs,___G_c_23_univ_2d_nb_2d_gvm_2d_regs)
@@ -13553,9 +13578,9 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_procedure_2d_representation,___G_c_23_univ_
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_push_2d_args,___G_c_23_univ_2d_push_2d_args)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_python_2d_pre3_3f_,___G_c_23_univ_2d_python_2d_pre3_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_rest_2d_representation,___G_c_23_univ_2d_rest_2d_representation)
-___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_rtlib,___G_c_23_univ_2d_rtlib)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_rtlib_2d_defs,___G_c_23_univ_2d_rtlib_2d_defs)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_rtlib_2d_feature,___G_c_23_univ_2d_rtlib_2d_feature)
-___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_rtlib_2d_header,___G_c_23_univ_2d_rtlib_2d_header)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_rtlib_2d_gen,___G_c_23_univ_2d_rtlib_2d_gen)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_rts_2d_module_2d_name,___G_c_23_univ_2d_rts_2d_module_2d_name)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_rts_2d_type_2d_alias,___G_c_23_univ_2d_rts_2d_type_2d_alias)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_s16vector_2d_representation,___G_c_23_univ_2d_s16vector_2d_representation)
@@ -13566,6 +13591,8 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_separated_2d_list,___G_c_23_univ_2d_separat
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_set_2d_ctrlpt_2d_attrib,___G_c_23_univ_2d_set_2d_ctrlpt_2d_attrib)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_setup,___G_c_23_univ_2d_setup)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_single_2d_line_2d_comment_2d_prefix,___G_c_23_univ_2d_single_2d_line_2d_comment_2d_prefix)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_source_2d_file_2d_footer,___G_c_23_univ_2d_source_2d_file_2d_footer)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_source_2d_file_2d_header,___G_c_23_univ_2d_source_2d_file_2d_header)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_stack_2d_resizable_3f_,___G_c_23_univ_2d_stack_2d_resizable_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_stk_2d_location,___G_c_23_univ_2d_stk_2d_location)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos,___G_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos)
@@ -14312,7 +14339,6 @@ ___DEF_OLD_SYM_GLO(___S_fxxor,___G_fxxor)
 ___DEF_OLD_SYM_GLO(___S_fxzero_3f_,___G_fxzero_3f_)
 ___DEF_OLD_SYM_GLO(___S_g,___G_g)
 ___DEF_OLD_SYM_GLO(___S_gambit,___G_gambit)
-___DEF_OLD_SYM_GLO(___S_gambit_2d_c,___G_gambit_2d_c)
 ___DEF_OLD_SYM_GLO(___S_gc_2d_hash_2d_table,___G_gc_2d_hash_2d_table)
 ___DEF_OLD_SYM_GLO(___S_gc_2d_real_2d_time,___G_gc_2d_real_2d_time)
 ___DEF_OLD_SYM_GLO(___S_gc_2d_report_2d_set_21_,___G_gc_2d_report_2d_set_21_)
@@ -14535,11 +14561,13 @@ ___DEF_OLD_SYM_GLO(___S_letrec,___G_letrec)
 ___DEF_OLD_SYM_GLO(___S_letrec_2a_,___G_letrec_2a_)
 ___DEF_OLD_SYM_GLO(___S_level,___G_level)
 ___DEF_OLD_SYM_GLO(___S_lf,___G_lf)
+___DEF_OLD_SYM_GLO(___S_lib,___G_lib)
 ___DEF_OLD_SYM_GLO(___S_limit,___G_limit)
 ___DEF_OLD_SYM_GLO(___S_line,___G_line)
 ___DEF_OLD_SYM_GLO(___S_link,___G_link)
 ___DEF_OLD_SYM_GLO(___S_link_2d_flat,___G_link_2d_flat)
 ___DEF_OLD_SYM_GLO(___S_link_2d_incremental,___G_link_2d_incremental)
+___DEF_OLD_SYM_GLO(___S_link__info,___G_link__info)
 ___DEF_OLD_SYM_GLO(___S_list,___G_list)
 ___DEF_OLD_SYM_GLO(___S_list_2d__3e_expression,___G_list_2d__3e_expression)
 ___DEF_OLD_SYM_GLO(___S_list_2d__3e_f32vector,___G_list_2d__3e_f32vector)
@@ -14668,6 +14696,13 @@ ___DEF_OLD_SYM_GLO(___S_mm5,___G_mm5)
 ___DEF_OLD_SYM_GLO(___S_mm6,___G_mm6)
 ___DEF_OLD_SYM_GLO(___S_mm7,___G_mm7)
 ___DEF_OLD_SYM_GLO(___S_mode,___G_mode)
+___DEF_OLD_SYM_GLO(___S_modlinkinfo,___G_modlinkinfo)
+___DEF_OLD_SYM_GLO(___S_module__count,___G_module__count)
+___DEF_OLD_SYM_GLO(___S_module__descr,___G_module__descr)
+___DEF_OLD_SYM_GLO(___S_module__map,___G_module__map)
+___DEF_OLD_SYM_GLO(___S_module__register,___G_module__register)
+___DEF_OLD_SYM_GLO(___S_module__registry__init,___G_module__registry__init)
+___DEF_OLD_SYM_GLO(___S_module__table,___G_module__table)
 ___DEF_OLD_SYM_GLO(___S_modulo,___G_modulo)
 ___DEF_OLD_SYM_GLO(___S_mostly_2d_arith,___G_mostly_2d_arith)
 ___DEF_OLD_SYM_GLO(___S_mr_2d_,___G_mr_2d_)
@@ -14711,8 +14746,8 @@ ___DEF_OLD_SYM_GLO(___S_never_2d_return_2d_jump,___G_never_2d_return_2d_jump)
 ___DEF_OLD_SYM_GLO(___S_new,___G_new)
 ___DEF_OLD_SYM_GLO(___S_new_2d_str,___G_new_2d_str)
 ___DEF_OLD_SYM_GLO(___S_newline,___G_newline)
-___DEF_OLD_SYM_GLO(___S_next,___G_next)
 ___DEF_OLD_SYM_GLO(___S_next__frame,___G_next__frame)
+___DEF_OLD_SYM_GLO(___S_nextf,___G_nextf)
 ___DEF_OLD_SYM_GLO(___S_nfree,___G_nfree)
 ___DEF_OLD_SYM_GLO(___S_no_2d_colon,___G_no_2d_colon)
 ___DEF_OLD_SYM_GLO(___S_no_2d_comma,___G_no_2d_comma)
@@ -14766,6 +14801,7 @@ ___DEF_OLD_SYM_GLO(___S_object_2d__3e_serial_2d_number,___G_object_2d__3e_serial
 ___DEF_OLD_SYM_GLO(___S_object_2d__3e_string,___G_object_2d__3e_string)
 ___DEF_OLD_SYM_GLO(___S_object_2d__3e_u8vector,___G_object_2d__3e_u8vector)
 ___DEF_OLD_SYM_GLO(___S_odd_3f_,___G_odd_3f_)
+___DEF_OLD_SYM_GLO(___S_old,___G_old)
 ___DEF_OLD_SYM_GLO(___S_open_2d_directory,___G_open_2d_directory)
 ___DEF_OLD_SYM_GLO(___S_open_2d_dummy,___G_open_2d_dummy)
 ___DEF_OLD_SYM_GLO(___S_open_2d_error,___G_open_2d_error)
@@ -15749,7 +15785,6 @@ ___DEF_OLD_SYM_GLO(___S_uninitialized_2d_thread_2d_exception_2d_procedure,___G_u
 ___DEF_OLD_SYM_GLO(___S_uninitialized_2d_thread_2d_exception_3f_,___G_uninitialized_2d_thread_2d_exception_3f_)
 ___DEF_OLD_SYM_GLO(___S_uninterned_2d_keyword_3f_,___G_uninterned_2d_keyword_3f_)
 ___DEF_OLD_SYM_GLO(___S_uninterned_2d_symbol_3f_,___G_uninterned_2d_symbol_3f_)
-___DEF_OLD_SYM_GLO(___S_univ_2d_link,___G_univ_2d_link)
 ___DEF_OLD_SYM_GLO(___S_unknown,___G_unknown)
 ___DEF_OLD_SYM_GLO(___S_unknown_2d_keyword_2d_argument_2d_exception,___G_unknown_2d_keyword_2d_argument_2d_exception)
 ___DEF_OLD_SYM_GLO(___S_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments,___G_unknown_2d_keyword_2d_argument_2d_exception_2d_arguments)

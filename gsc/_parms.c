@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_parms.c", produced by Gambit-C v4.7.9
+; File: "_parms.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _parms"
-((" _parms"))
+"_parms"
+(("_parms"))
 (
 "VARIANT"
 "_parms"
@@ -188,8 +188,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _parms"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_parms"
 #define ___LINKER_ID ____20___parms
 #define ___MH_PROC ___H__20___parms
 #define ___SCRIPT_LINE 0
@@ -4480,7 +4480,7 @@ ___DEF_SLBL(0,___L0_c_23_compiler_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_compiler_2d_version)
-   ___SET_R1(___FIX(407009L))
+   ___SET_R1(___FIX(408000L))
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD
@@ -4510,10 +4510,10 @@ ___DEF_SLBL(0,___L0_c_23_compiler_2d_version_2d_string)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_compiler_2d_version_2d_string)
-   ___SET_R1(___FIXQUO(___FIX(407009L),___FIX(100000L)))
-   ___SET_R2(___FIXQUO(___FIX(407009L),___FIX(1000L)))
+   ___SET_R1(___FIXQUO(___FIX(408000L),___FIX(100000L)))
+   ___SET_R2(___FIXQUO(___FIX(408000L),___FIX(1000L)))
    ___SET_R2(___FIXMOD(___R2,___FIX(100L)))
-   ___SET_R3(___FIXMOD(___FIX(407009L),___FIX(1000L)))
+   ___SET_R3(___FIXMOD(___FIX(408000L),___FIX(1000L)))
    ___SET_STK(1,___SUB(320))
    ___SET_STK(2,___R0)
    ___SET_STK(3,___R2)

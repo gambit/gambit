@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_back.c", produced by Gambit-C v4.7.9
+; File: "_back.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _back"
-((" _back"))
+"_back"
+(("_back"))
 (
 "_back"
 "arith"
@@ -126,8 +126,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _back"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_back"
 #define ___LINKER_ID ____20___back
 #define ___MH_PROC ___H__20___back
 #define ___SCRIPT_LINE 0
@@ -2664,8 +2664,9 @@ ___DEF_SLBL(24,___L24_c_23_link_2d_modules)
    ___SET_R0(___LBL(25))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),98,___G_path_2d_strip_2d_directory)
 ___DEF_SLBL(25,___L25_c_23_link_2d_modules)
+   ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(9))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),95,___G_path_2d_expand)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),95,___G_path_2d_expand)
 ___DEF_GLBL(___L35_c_23_link_2d_modules)
    ___IF(___NOT(___MEMALLOCATEDP(___STK(-5))))
    ___GOTO(___L36_c_23_link_2d_modules)

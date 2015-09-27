@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_kernel.c", produced by Gambit-C v4.7.9
+; File: "_kernel.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _kernel"
-((" _kernel"))
+"_kernel"
+(("_kernel"))
 (
 "##type-0-0bf9b656-b071-404a-a514-0fb9d05cf518"
 "##type-0-73c66686-a08f-4c7c-a0f1-5ad7771f242a"
@@ -411,8 +411,8 @@
 "##os-make-tls-context"
 "##os-network-info"
 "##os-obj-extension-string-saved"
-"##os-path-gambcdir"
-"##os-path-gambcdir-map-lookup"
+"##os-path-gambitdir"
+"##os-path-gambitdir-map-lookup"
 "##os-path-homedir"
 "##os-path-normalize-directory"
 "##os-port-decode-chars!"
@@ -448,7 +448,7 @@
 "##rest-param-heap-overflow"
 "##rpc-server-addr"
 "##set-debug-settings!"
-"##set-gambcdir!"
+"##set-gambitdir!"
 "##set-live-percent!"
 "##set-max-heap!"
 "##set-min-heap!"
@@ -538,8 +538,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _kernel"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_kernel"
 #define ___LINKER_ID ____20___kernel
 #define ___MH_PROC ___H__20___kernel
 #define ___SCRIPT_LINE 0
@@ -927,8 +927,8 @@ ___NEED_GLO(___G__23__23_os_2d_load_2d_object_2d_file)
 ___NEED_GLO(___G__23__23_os_2d_make_2d_tls_2d_context)
 ___NEED_GLO(___G__23__23_os_2d_network_2d_info)
 ___NEED_GLO(___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
-___NEED_GLO(___G__23__23_os_2d_path_2d_gambcdir)
-___NEED_GLO(___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
+___NEED_GLO(___G__23__23_os_2d_path_2d_gambitdir)
+___NEED_GLO(___G__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup)
 ___NEED_GLO(___G__23__23_os_2d_path_2d_homedir)
 ___NEED_GLO(___G__23__23_os_2d_path_2d_normalize_2d_directory)
 ___NEED_GLO(___G__23__23_os_2d_port_2d_decode_2d_chars_21_)
@@ -979,7 +979,7 @@ ___NEED_GLO(___G__23__23_rest_2d_param_2d_resume_2d_procedure)
 ___NEED_GLO(___G__23__23_return_2d_fs)
 ___NEED_GLO(___G__23__23_rpc_2d_server_2d_addr)
 ___NEED_GLO(___G__23__23_set_2d_debug_2d_settings_21_)
-___NEED_GLO(___G__23__23_set_2d_gambcdir_21_)
+___NEED_GLO(___G__23__23_set_2d_gambitdir_21_)
 ___NEED_GLO(___G__23__23_set_2d_live_2d_percent_21_)
 ___NEED_GLO(___G__23__23_set_2d_max_2d_heap_21_)
 ___NEED_GLO(___G__23__23_set_2d_min_2d_heap_21_)
@@ -1568,8 +1568,8 @@ ___DEF_GLO(296,"##os-load-object-file")
 ___DEF_GLO(297,"##os-make-tls-context")
 ___DEF_GLO(298,"##os-network-info")
 ___DEF_GLO(299,"##os-obj-extension-string-saved")
-___DEF_GLO(300,"##os-path-gambcdir")
-___DEF_GLO(301,"##os-path-gambcdir-map-lookup")
+___DEF_GLO(300,"##os-path-gambitdir")
+___DEF_GLO(301,"##os-path-gambitdir-map-lookup")
 ___DEF_GLO(302,"##os-path-homedir")
 ___DEF_GLO(303,"##os-path-normalize-directory")
 ___DEF_GLO(304,"##os-port-decode-chars!")
@@ -1632,7 +1632,7 @@ ___DEF_GLO(348,"##rest-param-resume-procedure")
 ___DEF_GLO(349,"##return-fs")
 ___DEF_GLO(350,"##rpc-server-addr")
 ___DEF_GLO(351,"##set-debug-settings!")
-___DEF_GLO(352,"##set-gambcdir!")
+___DEF_GLO(352,"##set-gambitdir!")
 ___DEF_GLO(353,"##set-live-percent!")
 ___DEF_GLO(354,"##set-max-heap!")
 ___DEF_GLO(355,"##set-min-heap!")
@@ -2351,10 +2351,10 @@ ___END_GLO
 #define ___PRM__23__23_os_2d_network_2d_info ___PRM(298,___G__23__23_os_2d_network_2d_info)
 #define ___GLO__23__23_os_2d_obj_2d_extension_2d_string_2d_saved ___GLO(299,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
 #define ___PRM__23__23_os_2d_obj_2d_extension_2d_string_2d_saved ___PRM(299,___G__23__23_os_2d_obj_2d_extension_2d_string_2d_saved)
-#define ___GLO__23__23_os_2d_path_2d_gambcdir ___GLO(300,___G__23__23_os_2d_path_2d_gambcdir)
-#define ___PRM__23__23_os_2d_path_2d_gambcdir ___PRM(300,___G__23__23_os_2d_path_2d_gambcdir)
-#define ___GLO__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup ___GLO(301,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
-#define ___PRM__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup ___PRM(301,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup)
+#define ___GLO__23__23_os_2d_path_2d_gambitdir ___GLO(300,___G__23__23_os_2d_path_2d_gambitdir)
+#define ___PRM__23__23_os_2d_path_2d_gambitdir ___PRM(300,___G__23__23_os_2d_path_2d_gambitdir)
+#define ___GLO__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup ___GLO(301,___G__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup)
+#define ___PRM__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup ___PRM(301,___G__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup)
 #define ___GLO__23__23_os_2d_path_2d_homedir ___GLO(302,___G__23__23_os_2d_path_2d_homedir)
 #define ___PRM__23__23_os_2d_path_2d_homedir ___PRM(302,___G__23__23_os_2d_path_2d_homedir)
 #define ___GLO__23__23_os_2d_path_2d_normalize_2d_directory ___GLO(303,___G__23__23_os_2d_path_2d_normalize_2d_directory)
@@ -2455,8 +2455,8 @@ ___END_GLO
 #define ___PRM__23__23_rpc_2d_server_2d_addr ___PRM(350,___G__23__23_rpc_2d_server_2d_addr)
 #define ___GLO__23__23_set_2d_debug_2d_settings_21_ ___GLO(351,___G__23__23_set_2d_debug_2d_settings_21_)
 #define ___PRM__23__23_set_2d_debug_2d_settings_21_ ___PRM(351,___G__23__23_set_2d_debug_2d_settings_21_)
-#define ___GLO__23__23_set_2d_gambcdir_21_ ___GLO(352,___G__23__23_set_2d_gambcdir_21_)
-#define ___PRM__23__23_set_2d_gambcdir_21_ ___PRM(352,___G__23__23_set_2d_gambcdir_21_)
+#define ___GLO__23__23_set_2d_gambitdir_21_ ___GLO(352,___G__23__23_set_2d_gambitdir_21_)
+#define ___PRM__23__23_set_2d_gambitdir_21_ ___PRM(352,___G__23__23_set_2d_gambitdir_21_)
 #define ___GLO__23__23_set_2d_live_2d_percent_21_ ___GLO(353,___G__23__23_set_2d_live_2d_percent_21_)
 #define ___PRM__23__23_set_2d_live_2d_percent_21_ ___PRM(353,___G__23__23_set_2d_live_2d_percent_21_)
 #define ___GLO__23__23_set_2d_max_2d_heap_21_ ___GLO(354,___G__23__23_set_2d_max_2d_heap_21_)
@@ -3028,7 +3028,7 @@ ___DEF_SUB_VEC(___X36,6)
                ___VEC1(___REF_FAL)
                ___VEC0
 ___DEF_SUB_STR(___X37,6)
-               ___STR6(118,52,46,55,46,57)
+               ___STR6(118,52,46,56,46,48)
 ___DEF_SUB_STR(___X38,18)
                ___STR8(110,111,110,101,120,105,115,116)
                ___STR8(101,110,116,32,109,111,100,117)
@@ -3508,7 +3508,7 @@ ___DEF_M_HLBL(___L0__23__23_get_2d_standard_2d_level)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_set_2d_standard_2d_level_21_)
 ___DEF_M_HLBL_INTRO
-___DEF_M_HLBL(___L0__23__23_set_2d_gambcdir_21_)
+___DEF_M_HLBL(___L0__23__23_set_2d_gambitdir_21_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_set_2d_debug_2d_settings_21_)
 ___DEF_M_HLBL_INTRO
@@ -4424,8 +4424,8 @@ ___RESULT = ___FIX(___BIG_FBASE_WIDTH);
    ___SET_GLO(172,___G__23__23_format_2d_filepos,___PRC(901))
    ___SET_GLO(286,___G__23__23_os_2d_err_2d_code_2d__3e_string,___PRC(904))
    ___SET_GLO(302,___G__23__23_os_2d_path_2d_homedir,___PRC(907))
-   ___SET_GLO(300,___G__23__23_os_2d_path_2d_gambcdir,___PRC(910))
-   ___SET_GLO(301,___G__23__23_os_2d_path_2d_gambcdir_2d_map_2d_lookup,___PRC(913))
+   ___SET_GLO(300,___G__23__23_os_2d_path_2d_gambitdir,___PRC(910))
+   ___SET_GLO(301,___G__23__23_os_2d_path_2d_gambitdir_2d_map_2d_lookup,___PRC(913))
    ___SET_GLO(303,___G__23__23_os_2d_path_2d_normalize_2d_directory,___PRC(916))
    ___SET_GLO(345,___G__23__23_remote_2d_dbg_2d_addr,___PRC(919))
    ___SET_GLO(350,___G__23__23_rpc_2d_server_2d_addr,___PRC(922))
@@ -9998,7 +9998,7 @@ ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H__23__23_set_2d_gambcdir_21_
+#define ___PH_PROC ___H__23__23_set_2d_gambitdir_21_
 #undef ___PH_LBL0
 #define ___PH_LBL0 396
 #undef ___PD_ALL
@@ -10010,13 +10010,13 @@ ___END_P_COD
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
-___DEF_P_HLBL(___L0__23__23_set_2d_gambcdir_21_)
+___DEF_P_HLBL(___L0__23__23_set_2d_gambitdir_21_)
 ___END_P_HLBL
 ___BEGIN_P_SW
-___DEF_SLBL(0,___L0__23__23_set_2d_gambcdir_21_)
+___DEF_SLBL(0,___L0__23__23_set_2d_gambitdir_21_)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(0,1,0,0)
-___DEF_GLBL(___L__23__23_set_2d_gambcdir_21_)
+___DEF_GLBL(___L__23__23_set_2d_gambitdir_21_)
    ___JUMPINT(___SET_NARGS(1),___PRC(856),___L__20___kernel_23_0)
 ___END_P_SW
 ___END_P_COD
@@ -15109,7 +15109,7 @@ ___DEF_SLBL(0,___L0__23__23_system_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L__23__23_system_2d_version)
-   ___SET_R1(___FIX(407009L))
+   ___SET_R1(___FIX(408000L))
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD
@@ -16631,7 +16631,7 @@ ___BEGIN_CFUN_ARG(1,___UCS_2STRING ___arg1)
 ___BEGIN_CFUN_SCMOBJ_TO_UCS_2STRING(___ARG1,___arg1,1)
 ___BEGIN_CFUN_BODY_CLEANUP
 #undef ___AT_END
-___addref_string (___arg1); ___set_gambcdir (___arg1);
+___addref_string (___arg1); ___set_gambitdir (___arg1);
 #ifndef ___AT_END
 #define ___AT_END
 #endif
@@ -17607,7 +17607,7 @@ ___DEF_GLBL(___L__20___kernel_23_18)
 ___BEGIN_CFUN_SCMOBJ
 ___BEGIN_CFUN_BODY
 #undef ___AT_END
-___CFUN_CALL(___result,___os_path_gambcdir())
+___CFUN_CALL(___result,___os_path_gambitdir())
 #ifndef ___AT_END
 #define ___AT_END
 #endif
@@ -17655,7 +17655,7 @@ ___BEGIN_CFUN_ARG_SCMOBJ(1)
 #define ___arg1 ___ARG1
 ___BEGIN_CFUN_BODY
 #undef ___AT_END
-___CFUN_CALL(___result,___os_path_gambcdir_map_lookup(___arg1))
+___CFUN_CALL(___result,___os_path_gambitdir_map_lookup(___arg1))
 #ifndef ___AT_END
 #define ___AT_END
 #endif
@@ -21767,8 +21767,8 @@ ___REF_FAL,10,0)
 ,___DEF_LBL_PROC(___H__23__23_get_2d_standard_2d_level,0,-1)
 ,___DEF_LBL_INTRO(___H__23__23_set_2d_standard_2d_level_21_,"##set-standard-level!",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_set_2d_standard_2d_level_21_,1,-1)
-,___DEF_LBL_INTRO(___H__23__23_set_2d_gambcdir_21_,"##set-gambcdir!",___REF_FAL,1,0)
-,___DEF_LBL_PROC(___H__23__23_set_2d_gambcdir_21_,1,-1)
+,___DEF_LBL_INTRO(___H__23__23_set_2d_gambitdir_21_,"##set-gambitdir!",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H__23__23_set_2d_gambitdir_21_,1,-1)
 ,___DEF_LBL_INTRO(___H__23__23_set_2d_debug_2d_settings_21_,"##set-debug-settings!",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_set_2d_debug_2d_settings_21_,2,-1)
 ,___DEF_LBL_INTRO(___H__23__23_processor_2d_count,"##processor-count",___REF_FAL,1,0)
@@ -22657,7 +22657,7 @@ ___DEF_MOD_PRM(186,___G__23__23_get_2d_live_2d_percent,388)
 ___DEF_MOD_PRM(353,___G__23__23_set_2d_live_2d_percent_21_,390)
 ___DEF_MOD_PRM(189,___G__23__23_get_2d_standard_2d_level,392)
 ___DEF_MOD_PRM(356,___G__23__23_set_2d_standard_2d_level_21_,394)
-___DEF_MOD_PRM(352,___G__23__23_set_2d_gambcdir_21_,396)
+___DEF_MOD_PRM(352,___G__23__23_set_2d_gambitdir_21_,396)
 ___DEF_MOD_PRM(351,___G__23__23_set_2d_debug_2d_settings_21_,398)
 ___DEF_MOD_PRM(320,___G__23__23_processor_2d_count,400)
 ___DEF_MOD_PRM(319,___G__23__23_processor_2d_cache_2d_size,402)
@@ -23012,7 +23012,7 @@ ___DEF_MOD_GLO(186,___G__23__23_get_2d_live_2d_percent,388)
 ___DEF_MOD_GLO(353,___G__23__23_set_2d_live_2d_percent_21_,390)
 ___DEF_MOD_GLO(189,___G__23__23_get_2d_standard_2d_level,392)
 ___DEF_MOD_GLO(356,___G__23__23_set_2d_standard_2d_level_21_,394)
-___DEF_MOD_GLO(352,___G__23__23_set_2d_gambcdir_21_,396)
+___DEF_MOD_GLO(352,___G__23__23_set_2d_gambitdir_21_,396)
 ___DEF_MOD_GLO(351,___G__23__23_set_2d_debug_2d_settings_21_,398)
 ___DEF_MOD_GLO(320,___G__23__23_processor_2d_count,400)
 ___DEF_MOD_GLO(319,___G__23__23_processor_2d_cache_2d_size,402)

@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_source.c", produced by Gambit-C v4.7.9
+; File: "_source.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _source"
-((" _source"))
+"_source"
+(("_source"))
 (
 "##current-readtable"
 "##filepos-line"
@@ -364,8 +364,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _source"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_source"
 #define ___LINKER_ID ____20___source
 #define ___MH_PROC ___H__20___source
 #define ___SCRIPT_LINE 0

@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_eval.c", produced by Gambit-C v4.7.9
+; File: "_eval.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _eval"
-((" _eval"))
+"_eval"
+(("_eval"))
 (
 "##and"
 "##begin"
@@ -664,8 +664,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _eval"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_eval"
 #define ___LINKER_ID ____20___eval
 #define ___MH_PROC ___H__20___eval
 #define ___SCRIPT_LINE 0
@@ -6490,9 +6490,9 @@ ___DEF_SUB_STR(___X543,16)
 ___DEF_SUB_STR(___X544,13)
                ___STR8(32,105,115,32,117,110,100,101)
                ___STR5(102,105,110,101,100)
-___DEF_SUB_STR(___X545,14)
+___DEF_SUB_STR(___X545,13)
                ___STR8(126,126,108,105,98,47,103,97)
-               ___STR6(109,98,99,101,120,116)
+               ___STR5(109,98,101,120,116)
 ___DEF_SUB_STR(___X546,17)
                ___STR8(126,126,108,105,98,47,115,121)
                ___STR8(110,116,97,120,45,99,97,115)

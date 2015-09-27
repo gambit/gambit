@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_thread.c", produced by Gambit-C v4.7.9
+; File: "_thread.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _thread"
-((" _thread"))
+"_thread"
+(("_thread"))
 (
 "##type-0-0bf9b656-b071-404a-a514-0fb9d05cf518"
 "##type-0-47368926-951d-4451-92b0-dd9b4132eca9"
@@ -533,8 +533,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _thread"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_thread"
 #define ___LINKER_ID ____20___thread
 #define ___MH_PROC ___H__20___thread
 #define ___SCRIPT_LINE 0

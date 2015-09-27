@@ -1,10 +1,10 @@
 #ifdef ___LINKER_INFO
-; File: "_std.c", produced by Gambit-C v4.7.9
+; File: "_std.c", produced by Gambit v4.8.0
 (
-407009
+408000
 (C)
-" _std"
-((" _std"))
+"_std"
+(("_std"))
 (
 "##type-0-0bf9b656-b071-404a-a514-0fb9d05cf518"
 "##type-26-d05e0aa7-e235-441d-aa41-c1ac02065460"
@@ -757,8 +757,8 @@
  ()
 )
 #else
-#define ___VERSION 407009
-#define ___MODULE_NAME " _std"
+#define ___VERSION 408000
+#define ___MODULE_NAME "_std"
 #define ___LINKER_ID ____20___std
 #define ___MH_PROC ___H__20___std
 #define ___SCRIPT_LINE 0
