@@ -112,12 +112,12 @@ char *cmd;)
       if (tcl_interp == NULL)
         tcltk_eval_error ("Tcl not initialized");
       else if (Tcl_Eval (tcl_interp, cmd) != TCL_OK)
-        tcltk_eval_error (tcl_interp->result);
+        tcltk_eval_error (___CAST(char*,Tcl_GetStringResult(tcl_interp)));
       else
         break;
     }
 
-  return tcl_interp->result;
+  return ___CAST(char*,Tcl_GetStringResult(tcl_interp));
 }
 
 /*
