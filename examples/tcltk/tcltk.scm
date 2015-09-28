@@ -313,7 +313,7 @@ c-declare-end
            * Setup the client data.
            */
 
-          ___SCMOBJ vect = ___EXT(___make_vector) (1, ___FAL, ___STILL);
+          ___SCMOBJ vect = ___EXT(___make_vector) (___ps, 1, ___FAL);
 
           if (___FIXNUMP(vect))
             {

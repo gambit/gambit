@@ -1,8 +1,8 @@
 ;==============================================================================
 
-; File: "dc.scm", Time-stamp: <2008-12-15 11:52:03 feeley>
+; File: "dc.scm"
 
-; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2005-2015 by Marc Feeley, All Rights Reserved.
 
 ;==============================================================================
 
@@ -228,7 +228,7 @@
          (descr->object
           descr
           (lambda (descr)
-            (make-uninterned-symbol
+            (##make-uninterned-symbol
              (string-append "new-" (globalized-uninterned-symbol-name descr))
              (globalized-uninterned-symbol-hash descr))))))
     (if (globalized-uninterned-symbol-global-var? descr)
