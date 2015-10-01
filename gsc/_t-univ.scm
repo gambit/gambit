@@ -200,6 +200,9 @@
 (define (univ-python-pre3? ctx)
   (assq 'pre3 (ctx-semantics-changing-options ctx)))
 
+(define (univ-java-pre7? ctx)
+  (assq 'pre7 (ctx-semantics-changing-options ctx)))
+
 (define (univ-always-return-jump? ctx)
   (assq 'always-return-jump (ctx-semantics-preserving-options ctx)))
 
@@ -350,7 +353,7 @@
 (univ-setup 'ruby   '((".rb"   . Ruby))        '()        '())
 (univ-setup 'php    '((".php"  . PHP))         '((pre53)) '())
 
-(univ-setup 'java   '((".java" . Java))        '()        '())
+(univ-setup 'java   '((".java" . Java))        '((pre7))  '())
 ;;(univ-setup 'c      '((".c"    . C))           '()       '())
 ;;(univ-setup 'c++    '((".cc"   . C++))         '()       '())
 ;;(univ-setup 'objc   '((".m"    . Objective-C)) '()       '())
@@ -803,9 +806,6 @@
 (define-macro (^make-array type return len init)
   `(univ-emit-make-array ctx ,type ,return ,len ,init))
 
-(define-macro (^empty-dict)
-  `(univ-emit-empty-dict ctx))
-
 (define-macro (^call-prim expr . params)
   `(univ-emit-call-prim ctx ,expr ,@params))
 
@@ -1093,8 +1093,15 @@
 (define-macro (^fixnum? val)
   `(univ-emit-fixnum? ctx ,val))
 
+(define-macro (^empty-dict type)
+  `(univ-emit-empty-dict ctx ,type))
+
+;; TODO: remove, obsolete?
 (define-macro (^dict alist)
   `(univ-emit-dict ctx ,alist))
+
+(define-macro (^dict-key-exists? expr1 expr2)
+  `(univ-emit-dict-key-exists? ctx ,expr1 ,expr2))
 
 (define-macro (^dict-get expr1 expr2 #!optional (expr3 #f))
   `(univ-emit-dict-get ctx ,expr1 ,expr2 ,expr3))
@@ -2648,11 +2655,6 @@
 
     ((ruby)
      (^ expr1 ".has_key?(" expr2 ")"))
-
-    ((java)
-     (^call-prim
-      (^member expr1 'containsKey)
-      expr2))
 
     (else
      (compiler-internal-error
@@ -4505,22 +4507,6 @@
      (compiler-internal-error
       "univ-emit-make-array, unknown target"))))
 
-(define (univ-emit-empty-dict ctx)
-  (case (target-name (ctx-target ctx))
-
-    ((js python ruby)
-     (^ "{}"))
-
-    ((php)
-     (^ "array()"))
-
-    ((java)
-     (^new "HashMap<>"))
-
-    (else
-     (compiler-internal-error
-      "univ-emit-empty-dict, unknown target"))))
-
 ;; =============================================================================
 
 (define (gvm-lbl-use ctx lbl)
@@ -4927,10 +4913,18 @@
      (rts-field feature 'scmobj (^null) '(public)))
 
     ((peps)
-     (rts-field 'peps '(dict str scmobj) (^empty-dict) '(public)))
+     (rts-field
+      'peps
+      '(dict str scmobj)
+      (^empty-dict '(dict str scmobj))
+      '(public)))
 
     ((glo)
-     (rts-field 'glo '(dict str scmobj) (^empty-dict) '(public)))
+     (rts-field
+      'glo
+      '(dict str scmobj)
+      (^empty-dict '(dict str scmobj))
+      '(public)))
 
     ((stack)
      (rts-field 'stack '(array scmobj) (univ-emit-make-stack ctx) '(public)))
@@ -5125,7 +5119,7 @@
      (rts-field
       'module_map
       '(dict str modlinkinfo)
-      (^empty-dict)))
+      (^empty-dict '(dict str modlinkinfo))))
 
     ((module_count)
      (rts-field
@@ -6440,7 +6434,7 @@ EOF
      (rts-field
       'symbol_table
       '(dict str symbol)
-      (^empty-dict)))
+      (^empty-dict '(dict str symbol))))
 
     ((keyword)
      (rts-class
@@ -6501,7 +6495,7 @@ EOF
      (rts-field
       'keyword_table
       '(dict str keyword)
-      (^empty-dict)))
+      (^empty-dict '(dict str keyword))))
 
     ((box)
      (rts-class
@@ -6735,7 +6729,7 @@ EOF
      (rts-field
       'char_table
       '(dict int char)
-      (^empty-dict)))
+      (^empty-dict '(dict int char))))
 
     ((string)
      (rts-class
@@ -7254,8 +7248,8 @@ EOF
       '()
       (lambda (ctx)
         (let ((sym (^local-var 'sym)))
-          (^ (^if (^not (^prop-index-exists? (gvm-state-glo-use ctx 'rd)
-                                             (^symbol-unbox sym)))
+          (^ (^if (^not (^dict-key-exists? (gvm-state-glo-use ctx 'rd)
+                                           (^symbol-unbox sym)))
                   (^ (^glo-var-set! sym (^unbound1))
                      (^glo-var-primitive-set! sym (^unbound1))))
              (^return sym))))))
@@ -7936,7 +7930,7 @@ EOF
 
     (else
      (univ-make-empty-defs))))
-  
+
 (define (univ-main-defs ctx gen-body)
   (case (target-name (ctx-target ctx))
 
@@ -9797,6 +9791,22 @@ gambit_Pair.prototype.toString = function () {
     (else
      (^int? expr))))
 
+(define (univ-emit-empty-dict ctx type)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^ "{}"))
+
+    ((php)
+     (^ "array()"))
+
+    ((java)
+     (^new (^type type)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-empty-dict, unknown target"))))
+
 (define (univ-emit-dict ctx alist)
 
   (define (dict alist sep open close)
@@ -9821,6 +9831,21 @@ gambit_Pair.prototype.toString = function () {
      (compiler-internal-error
       "univ-emit-dict, unknown target"))))
 
+(define (univ-emit-dict-key-exists? ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js php python ruby)
+     (^prop-index-exists? expr1 expr2))
+
+    ((java)
+     (^call-prim
+      (^member expr1 'containsKey)
+      expr2))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-dict-key-exists?, unknown target"))))
+
 (define (univ-emit-dict-get ctx expr1 expr2 expr3)
   (case (target-name (ctx-target ctx))
 
@@ -9828,8 +9853,13 @@ gambit_Pair.prototype.toString = function () {
      (^prop-index expr1 expr2 expr3))
 
     ((java)
-     (if expr3
-         (^call-prim (^member expr1 'getOrDefault) expr2 expr3)
+     (if (and expr3
+              (not (equal? expr3 (^null))))
+         (if (univ-java-pre7? ctx)
+             (^if-expr (^dict-key-exists? expr1 expr2)
+                       (^dict-get expr1 expr2)
+                       expr3)
+             (^call-prim (^member expr1 'getOrDefault) expr2 expr3))
          (^call-prim (^member expr1 'get) expr2)))
 
     (else
