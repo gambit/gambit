@@ -133,6 +133,15 @@
   (arguments unprintable: read-only:)
 )
 
+(define-library-type-of-exception module-not-found-exception
+  id: CA9CA020-600A-4516-AA78-CBE91EC8BE14
+  constructor: #f
+  opaque:
+
+  (procedure unprintable: read-only:)
+  (arguments unprintable: read-only:)
+)
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Define type checking macros.

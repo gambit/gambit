@@ -10,6 +10,10 @@
 
 ;;;============================================================================
 
+(macro-case-target
+
+ ((C)
+
 (c-declare #<<c-declare-end
 
 #include "os.h"
@@ -1239,6 +1243,8 @@ end-of-code
    (let () (##declare (not warnings)) (0))) ; create a return point
 )
 
+;;;----------------------------------------------------------------------------
+
 (define-prim (##dynamic-env-bind denv thunk)
   (##declare (not interrupts-enabled))
   (let* ((current-thread
@@ -1330,9 +1336,113 @@ end-of-code
      (##declare (not constant-fold)) ;; force allocation of a flonum
      (##fixnum->flonum 0))))
 
+))
+
+;;;----------------------------------------------------------------------------
+
+;; Argument list transformation used when some exceptions are raised.
+
+(define-prim (##argument-list-remove-absent! lst tail)
+  (let loop ((lst1 tail)
+             (lst2 #f)
+             (lst3 lst))
+    (if (##pair? lst3)
+      (let ((val (##car lst3)))
+        (if (##eq? val (macro-absent-obj))
+          (loop lst1
+                lst2
+                (##cdr lst3))
+          (loop (if lst2
+                  (begin
+                    (##set-cdr! lst2 lst3)
+                    lst1)
+                  lst3)
+                lst3
+                (##cdr lst3))))
+      (begin
+        (if lst2
+          (##set-cdr! lst2 tail))
+        lst1))))
+
+(define-prim (##argument-list-remove-absent-keys! lst)
+  (let loop ((lst1 #f)
+             (lst2 #f)
+             (lst3 lst))
+    (if (and (##pair? lst3) (##keyword? (##car lst3)))
+      (let ((val (##cadr lst3)))
+        (if (##eq? val (macro-absent-obj))
+          (loop lst1
+                lst2
+                (##cddr lst3))
+          (loop (if lst2
+                  (begin
+                    (##set-cdr! lst2 lst3)
+                    lst1)
+                  lst3)
+                (##cdr lst3)
+                (##cddr lst3))))
+      (let ((tail (if (##pair? lst3) (##car lst3) '())))
+        (if lst2
+          (begin
+            (##set-cdr! lst2 tail)
+            lst1)
+          tail)))))
+
+(define-prim (##argument-list-fix-rest-param! lst)
+  (let loop ((curr #f) (next lst))
+    (let ((tail (##cdr next)))
+      (if (##pair? tail)
+        (loop next tail)
+        (if curr
+          (begin
+            (##set-cdr! curr (##car next))
+            lst)
+          (##car next))))))
+
+(define-prim (##extract-procedure-and-arguments proc args val1 val2 val3 cont)
+  (cond ((##null? proc)
+         (cont (##car args)
+               (##argument-list-remove-absent!
+                (##argument-list-fix-rest-param! (##cdr args))
+                '())
+               val1
+               val2
+               val3))
+        ((##pair? proc)
+         (cont (##car proc)
+               (##argument-list-remove-absent!
+                args
+                (##argument-list-remove-absent-keys! (##cdr proc)))
+               val1
+               val2
+               val3))
+        (else
+         (cont proc
+               (##argument-list-remove-absent! args '())
+               val1
+               val2
+               val3))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Implementation of exceptions.
+
+(implement-library-type-type-exception)
+
+(define-prim (##raise-type-exception arg-num type-id proc args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   arg-num
+   type-id
+   #f
+   (lambda (procedure arguments arg-num type-id dummy)
+     (macro-raise
+      (macro-make-type-exception procedure arguments arg-num type-id)))))
+
+(macro-case-target
+
+ ((C)
 
 (implement-library-type-heap-overflow-exception)
 
@@ -1435,19 +1545,6 @@ end-of-code
   (macro-raise
    (macro-make-number-of-arguments-limit-exception proc args)))
 
-(implement-library-type-type-exception)
-
-(define-prim (##raise-type-exception arg-num type-id proc args)
-  (##extract-procedure-and-arguments
-   proc
-   args
-   arg-num
-   type-id
-   #f
-   (lambda (procedure arguments arg-num type-id dummy)
-     (macro-raise
-      (macro-make-type-exception procedure arguments arg-num type-id)))))
-
 (implement-library-type-os-exception)
 
 (define-prim (##raise-os-exception message code proc . args)
@@ -1462,89 +1559,6 @@ end-of-code
       (if (##fx= code ##err-code-ENOENT)
         (macro-make-no-such-file-or-directory-exception procedure arguments)
         (macro-make-os-exception procedure arguments message code))))))
-
-(define-prim (##argument-list-remove-absent! lst tail)
-  (let loop ((lst1 tail)
-             (lst2 #f)
-             (lst3 lst))
-    (if (##pair? lst3)
-      (let ((val (##car lst3)))
-        (if (##eq? val (macro-absent-obj))
-          (loop lst1
-                lst2
-                (##cdr lst3))
-          (loop (if lst2
-                  (begin
-                    (##set-cdr! lst2 lst3)
-                    lst1)
-                  lst3)
-                lst3
-                (##cdr lst3))))
-      (begin
-        (if lst2
-          (##set-cdr! lst2 tail))
-        lst1))))
-
-(define-prim (##argument-list-remove-absent-keys! lst)
-  (let loop ((lst1 #f)
-             (lst2 #f)
-             (lst3 lst))
-    (if (and (##pair? lst3) (##keyword? (##car lst3)))
-      (let ((val (##cadr lst3)))
-        (if (##eq? val (macro-absent-obj))
-          (loop lst1
-                lst2
-                (##cddr lst3))
-          (loop (if lst2
-                  (begin
-                    (##set-cdr! lst2 lst3)
-                    lst1)
-                  lst3)
-                (##cdr lst3)
-                (##cddr lst3))))
-      (let ((tail (if (##pair? lst3) (##car lst3) '())))
-        (if lst2
-          (begin
-            (##set-cdr! lst2 tail)
-            lst1)
-          tail)))))
-
-(define-prim (##argument-list-fix-rest-param! lst)
-  (let loop ((curr #f) (next lst))
-    (let ((tail (##cdr next)))
-      (if (##pair? tail)
-        (loop next tail)
-        (if curr
-          (begin
-            (##set-cdr! curr (##car next))
-            lst)
-          (##car next))))))
-
-(define-prim (##extract-procedure-and-arguments proc args val1 val2 val3 cont)
-  (cond ((##null? proc)
-         (cont (##car args)
-               (##argument-list-remove-absent!
-                (##argument-list-fix-rest-param! (##cdr args))
-                '())
-               val1
-               val2
-               val3))
-        ((##pair? proc)
-         (cont (##car proc)
-               (##argument-list-remove-absent!
-                args
-                (##argument-list-remove-absent-keys! (##cdr proc)))
-               val1
-               val2
-               val3))
-        (else
-         (cont proc
-               (##argument-list-remove-absent! args '())
-               val1
-               val2
-               val3))))
-
-;;;----------------------------------------------------------------------------
 
 ;;; Implementation of promises.
 
@@ -4574,25 +4588,39 @@ end-of-code
     (##declare (not interrupts-enabled))
     (##exit-abnormally)))
 
+))
+
 ;;;----------------------------------------------------------------------------
 
 ;; The kernel is responsible for executing each module of the program
 ;; in sequence.  The vector of module execution procedures is in the
 ;; program descriptor.
 
-(define ##program-descr
-  (##c-code "___RESULT = ___GSTATE->program_descr;"))
+(macro-case-target
 
-(define ##vm-main-module-id
-  (##c-code "___RESULT = ___VMSTATE_FROM_PSTATE(___ps)->main_module_id;"))
+ ((C)
 
-(define (##module-init module-descr)
-  (##c-code
-   "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___PSPNC);"
-   (##vector-ref module-descr 4)))
+  (define ##program-descr
+    (##c-code "___RESULT = ___GSTATE->program_descr;"))
 
-(define-prim (##main)
-  (##exit-cleanup))
+  (define ##vm-main-module-id
+    (##c-code "___RESULT = ___VMSTATE_FROM_PSTATE(___ps)->main_module_id;"))
+
+  (define (##module-init module-descr)
+    (##c-code
+     "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___PSPNC);"
+     (##vector-ref module-descr 4)))
+
+  (define-prim (##main)
+    (##exit-cleanup)))
+
+ (else
+
+  (define (##module-init module-descr)
+    #f)
+
+  (define-prim (##main)
+    #f)))
 
 (define-prim (##main-set! thunk)
   (set! ##main thunk))
@@ -4708,9 +4736,7 @@ end-of-code
 (define-prim (##default-load-required-module module-ref)
 
   (define (err)
-    (##raise-os-exception
-     "nonexistent module"
-     ##err-code-ENOENT
+    (##raise-module-not-found-exception
      ##default-load-required-module
      module-ref))
 
@@ -4724,6 +4750,21 @@ end-of-code
 
 (define ##load-required-module #f)
 (set! ##load-required-module ##default-load-required-module)
+
+(implement-library-type-module-not-found-exception)
+
+(define-prim (##raise-module-not-found-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-module-not-found-exception
+       procedure
+       arguments)))))
 
 (define-prim (##register-module-descrs-and-load! module-descrs)
   (let ((modules (##register-module-descrs! module-descrs)))

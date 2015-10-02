@@ -3469,6 +3469,11 @@
            (##newline port)
            (display-call))
 
+          ((macro-module-not-found-exception? exc)
+           (##write-string "Module not found" port)
+           (##newline port)
+           (display-call))
+
           ((macro-range-exception? exc)
            (display-arg-num (macro-range-exception-arg-num exc))
            (##write-string "Out of range" port)
@@ -3652,6 +3657,11 @@
          (##cons
           (macro-no-such-file-or-directory-exception-procedure exc)
           (macro-no-such-file-or-directory-exception-arguments exc)))
+
+        ((macro-module-not-found-exception? exc)
+         (##cons
+          (macro-module-not-found-exception-procedure exc)
+          (macro-module-not-found-exception-arguments exc)))
 
         ((macro-range-exception? exc)
          (##cons

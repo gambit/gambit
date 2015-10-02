@@ -4951,6 +4951,7 @@
      (rts-field 'inttemp2 'int (^int 0) '(public)))
 
     ((current_thread)
+     ;;TODO: make thread structure consistent with the Gambit lib
      (rts-field 'current_thread
                 'scmobj
                 (^structure-box
@@ -5087,6 +5088,14 @@
                                                        (^rts-field-use 'module_table))
                                                       (^obj '())
                                                       (^obj #f)))))
+
+                                     (^setglo '##vm-main-module-id
+                                              (^vector-ref
+                                               (^array-index
+                                                (^rts-field-use 'module_table)
+                                                (^- (^array-length (^rts-field-use 'module_table))
+                                                    (^int 1)))
+                                               (^int 0)))
 
                                      (^push (univ-end-of-cont-marker ctx))
 

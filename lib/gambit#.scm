@@ -403,6 +403,9 @@ make-u32vector
 make-u64vector
 make-u8vector
 make-will
+module-not-found-exception-arguments
+module-not-found-exception-procedure
+module-not-found-exception?
 multiple-c-return-exception?
 mutex-lock!
 mutex-name

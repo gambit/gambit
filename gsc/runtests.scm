@@ -151,7 +151,7 @@
                        (let ((result
                               (if (equal? target "java")
                                   (begin
-                                    (run "javac" out_ out)
+                                    (run (string-append (path-directory (cadddr t)) "javac") out_ out)
                                     (apply run
                                            (append (cdddr t)
                                                    (list "-classpath"
@@ -223,6 +223,9 @@
 
     ("java"   ".java" ()
                       "java")
+
+    ("java"   ".java" ("-pre7")
+                      "/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Commands/java")
 
     ("js"     ".js"   ()
                       "d8")
