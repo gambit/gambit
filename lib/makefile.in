@@ -125,11 +125,23 @@ psyntax69c.pp psyntax69c.ss psyntax73.pp psyntax73.ss \
 syntax-case-build syntax-case-expand-file \
 syntax-case-postlude.scm syntax-case-prelude.scm
 
-GENDISTFILES = $(MODULES_C) _$(GAMBITLIB).c
+GAMBIT_LIB_C = _$(GAMBITLIB).c
+
+GAMBIT_LIB_java = _$(GAMBITLIB).java
+GAMBIT_LIB_js = _$(GAMBITLIB).js
+GAMBIT_LIB_php = _$(GAMBITLIB).php
+GAMBIT_LIB_python = _$(GAMBITLIB).py
+GAMBIT_LIB_ruby = _$(GAMBITLIB).rb
+
+GAMBIT_LIBS_UNIV = $(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby)
+
+GAMBIT_LIBS = $(GAMBIT_LIB_C) $(GAMBIT_LIBS_UNIV)
+
+GENDISTFILES = $(MODULES_C) $(GAMBIT_LIB_C)
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_LIB_DATA = _$(GAMBITLIB).c $(LIBRARIES_SCM)
+INSTFILES_LIB_DATA = $(LIBRARIES_SCM) $(GAMBIT_LIBS)
 
 GAMBITDIR_INCLUDE = $(rootfromhere)/include
 GAMBITDIR_LIB = $(rootfromhere)/lib
@@ -144,7 +156,7 @@ all:
 
 all-pre:
 
-all-post: $(LIBRARY) _$(GAMBITLIB).c
+all-post: $(LIBRARY) $(GAMBIT_LIBS)
 
 .c@obj@:
 	@BUILD_OBJ@ -D___LIBRARY
@@ -160,10 +172,25 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	  $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	fi
 
-_$(GAMBITLIB).c: $(MODULES_C)
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o _$(GAMBITLIB).c -preload $(MODULES_C)
+$(GAMBIT_LIB_C): $(MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o $@ -preload $(MODULES_C)
 
-$(MODULES_C): \
+$(GAMBIT_LIB_java): $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target java -o $@ $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+
+$(GAMBIT_LIB_js): $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target js -o $@ $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+
+$(GAMBIT_LIB_php): $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target php -o $@ $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+
+$(GAMBIT_LIB_python): $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target python -o $@ $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+
+$(GAMBIT_LIB_ruby): $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target ruby -o $@ $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm
+
+$(MODULES_C) $(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby): \
 $(srcdirpfx)$(rootfromhere)/lib/header.scm \
 $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
@@ -293,12 +320,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post:
-	$(RC) update-index --no-assume-unchanged $(MODULES_C) _$(GAMBITLIB).c
+	$(RC) update-index --no-assume-unchanged $(MODULES_C) $(GAMBIT_LIB_C)
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post:
-	$(RC) update-index --assume-unchanged $(MODULES_C) _$(GAMBITLIB).c
+	$(RC) update-index --assume-unchanged $(MODULES_C) $(GAMBIT_LIB_C)
 
 mostlyclean-pre:
 
@@ -308,7 +335,7 @@ mostlyclean-post:
 clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
-	rm -f *.da *.bb *.bbg *.gcov *.gcno *.gcda
+	rm -f *.da *.bb *.bbg *.gcov *.gcno *.gcda $(GAMBIT_LIBS_UNIV)
 
 distclean-pre: clean-pre
 
@@ -317,7 +344,7 @@ distclean-post: clean-post
 bootclean-pre: distclean-pre
 
 bootclean-post: distclean-post
-	rm -f $(MODULES_C) _$(GAMBITLIB).c
+	rm -f $(MODULES_C) $(GAMBIT_LIB_C)
 
 realclean-pre: bootclean-pre
 
