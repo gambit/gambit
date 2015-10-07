@@ -480,34 +480,20 @@
 ("##eof-object?"                      (1)   #f ()    0    boolean extended)
 
 ("##fixnum?"                          (1)   #f ()    0    boolean extended)
-("##special?"                         (1)   #f ()    0    boolean extended)
 ("##pair?"                            (1)   #f ()    0    boolean extended)
-("##pair-mutable?"                    (1)   #f ()    0    boolean extended)
-("##subtyped?"                        (1)   #f ()    0    boolean extended)
-("##subtyped-mutable?"                (1)   #f ()    0    boolean extended)
-("##subtyped.vector?"                 (1)   #f ()    0    boolean extended)
-("##subtyped.symbol?"                 (1)   #f ()    0    boolean extended)
-("##subtyped.flonum?"                 (1)   #f ()    0    boolean extended)
-("##subtyped.bignum?"                 (1)   #f ()    0    boolean extended)
 ("##vector?"                          (1)   #f ()    0    boolean extended)
 ("##ratnum?"                          (1)   #f ()    0    boolean extended)
 ("##cpxnum?"                          (1)   #f ()    0    boolean extended)
 ("##structure?"                       (1)   #f ()    0    boolean extended)
 ("##box?"                             (1)   #f ()    0    boolean extended)
 ("##values?"                          (1)   #f ()    0    boolean extended)
-("##meroon?"                          (1)   #f ()    0    boolean extended)
-("##jazz?"                            (1)   #f ()    0    boolean extended)
 ("##symbol?"                          (1)   #f ()    0    boolean extended)
 ("##keyword?"                         (1)   #f ()    0    boolean extended)
 ("##frame?"                           (1)   #f ()    0    boolean extended)
 ("##continuation?"                    (1)   #f ()    0    boolean extended)
 ("##promise?"                         (1)   #f ()    0    boolean extended)
-("##will?"                            (1)   #f ()    0    boolean extended)
-("##gc-hash-table?"                   (1)   #f ()    0    boolean extended)
-("##mem-allocated?"                   (1)   #f ()    0    boolean extended)
 ("##procedure?"                       (1)   #f ()    0    boolean extended)
 ("##return?"                          (1)   #f ()    0    boolean extended)
-("##foreign?"                         (1)   #f ()    0    boolean extended)
 ("##string?"                          (1)   #f ()    0    boolean extended)
 ("##s8vector?"                        (1)   #f ()    0    boolean extended)
 ("##u8vector?"                        (1)   #f ()    0    boolean extended)
@@ -531,6 +517,21 @@
 ("##integer?"                         (1)   #f ()    0    boolean extended)
 ("##exact?"                           (1)   #f ()    0    boolean extended)
 ("##inexact?"                         (1)   #f ()    0    boolean extended)
+
+("##special?"                         (1)   #f ()    0    boolean extended)
+("##meroon?"                          (1)   #f ()    0    boolean extended)
+("##jazz?"                            (1)   #f ()    0    boolean extended)
+("##will?"                            (1)   #f ()    0    boolean extended)
+("##gc-hash-table?"                   (1)   #f ()    0    boolean extended)
+("##foreign?"                         (1)   #f ()    0    boolean extended)
+("##mem-allocated?"                   (1)   #f ()    0    boolean extended)
+("##pair-mutable?"                    (1)   #f ()    0    boolean extended)
+("##subtyped?"                        (1)   #f ()    0    boolean extended)
+("##subtyped-mutable?"                (1)   #f ()    0    boolean extended)
+("##subtyped.vector?"                 (1)   #f ()    0    boolean extended)
+("##subtyped.symbol?"                 (1)   #f ()    0    boolean extended)
+("##subtyped.flonum?"                 (1)   #f ()    0    boolean extended)
+("##subtyped.bignum?"                 (1)   #f ()    0    boolean extended)
 
 ;; deprecated fixnum/flonum procedures
 
@@ -3320,17 +3321,20 @@
     (def-exp "char<=?" (make-simple-expander case-char<=?))
     (def-exp "char>=?" (make-simple-expander case-char>=?))
 
-    (def-exp
-     "eqv?"
-     (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
+    (if (eq? (target-name targ) 'C)
+        (begin
 
-    (def-exp
-     "##eqv?"
-     (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
+          (def-exp
+            "eqv?"
+            (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
 
-    (def-exp
-     "equal?"
-     (make-simple-expander (case-eqv?-or-equal? **mem-allocated?-sym)))
+          (def-exp
+            "##eqv?"
+            (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
+
+          (def-exp
+            "equal?"
+            (make-simple-expander (case-eqv?-or-equal? **mem-allocated?-sym)))))
 ))
 
 (define (setup-vector-primitives)
