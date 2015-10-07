@@ -4171,8 +4171,10 @@
            (^rest))
 
           ((proc-obj? obj)
-           (^this-mod-jumpable
-            (gvm-proc-use ctx (proc-obj-name obj))))
+           (let ((name (proc-obj-name obj)))
+             (if (proc-obj-code obj) ;; procedure defined in this module?
+                 (^this-mod-jumpable (gvm-proc-use ctx name))
+                 (^getpeps (string->symbol name)))))
 
           ((pair? obj)
            (univ-obj-use
