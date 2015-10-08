@@ -10086,6 +10086,9 @@ ___RESULT = result;
   (macro-force-vars (obj)
     (##flonum? obj)))
 
+(define-prim (##fleqv? x y)
+  (##u16vector-equal? x y)) ;;TODO: remove after bootstrap
+
 (define-prim-nary-bool (##fl= x y)
   #t
   #t

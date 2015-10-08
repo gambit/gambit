@@ -13283,6 +13283,11 @@ tanh
    (lambda (ctx arg1 arg2) (^>= arg1 arg2))
    univ-emit-flonum-unbox))
 
+(univ-define-prim-bool "##fleqv?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^= (^flonum-unbox arg1) (^flonum-unbox arg2)))))) ;; TODO: implement comparison of bit representation
+
 (univ-define-prim-bool "##char=?" #f
   ;;TODO: implement as eq? if chars are interned
   (univ-fold-left-compare

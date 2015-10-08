@@ -122,7 +122,7 @@
     macro-force-vars
     macro-check-inexact-real
     macro-check-inexact-real-list
-    ##fl=)
+    ##fleqv?)
 
   (define-prim-vector-procedures
     f64vector
@@ -130,7 +130,7 @@
     macro-force-vars
     macro-check-inexact-real
     macro-check-inexact-real-list
-    ##fl=)
+    ##fleqv?)
 
   ))
 

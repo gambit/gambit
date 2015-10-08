@@ -735,9 +735,7 @@
 ("##fl>"                         0     #f ()    0    boolean extended)
 ("##fl<="                        0     #f ()    0    boolean extended)
 ("##fl>="                        0     #f ()    0    boolean extended)
-
-
-
+("##fleqv?"                      (2)   #f ()    0    boolean extended)
 
 ("##char=?"                           0     #f ()    0    boolean extended)
 ("##char<?"                           0     #f ()    0    boolean extended)

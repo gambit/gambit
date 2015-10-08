@@ -3064,6 +3064,11 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___F64GT(x,y)((x)>(y))
 #define ___F64LE(x,y)((x)<=(y))
 #define ___F64GE(x,y)((x)>=(y))
+#ifdef ___BUILTIN_64BIT_INT_TYPE
+#define ___F64EQV(x,y)(___ps->f64_temp1=(x),___ps->f64_temp2=(y),*___CAST(___U64*,&___ps->f64_temp1)==*___CAST(___U64*,&___ps->f64_temp2))
+#else
+#define ___F64EQV(x,y)(___ps->f64_temp1=(x),___ps->f64_temp2=(y),___U64_hi32((*___CAST(___U64*,&___ps->f64_temp1)))==___U64_hi32((*___CAST(___U64*,&___ps->f64_temp2)))&&___U64_lo32((*___CAST(___U64*,&___ps->f64_temp1)))==___U64_lo32((*___CAST(___U64*,&___ps->f64_temp2))))
+#endif
 
 /* IFJUMP-able operations */
 
@@ -7607,6 +7612,9 @@ typedef struct ___processor_state_struct
     ___WORD temp2;
     ___WORD temp3;
     ___WORD temp4;
+
+    ___F64 f64_temp1;
+    ___F64 f64_temp2;
 
     int na;
 

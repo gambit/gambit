@@ -3519,6 +3519,7 @@
 (targ-op "##fl>"         (targ-ifjump-fold-u #t "F64GT"))
 (targ-op "##fl<="        (targ-ifjump-fold-u #t "F64LE"))
 (targ-op "##fl>="        (targ-ifjump-fold-u #t "F64GE"))
+(targ-op "##fleqv?"      (targ-ifjump-simp-u #t "F64EQV"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
