@@ -767,35 +767,41 @@
   macro-force-vars
   macro-check-char)
 
-(define-prim (##char-alphabetic? c))
+(define-prim (##char-alphabetic? c)
+  (or (and (##char<=? #\A c) (##char<=? c #\Z))
+      (and (##char<=? #\a c) (##char<=? c #\z))))
 
 (define-prim (char-alphabetic? c)
   (macro-force-vars (c)
     (macro-check-char c 1 (char-alphabetic? c)
       (##char-alphabetic? c))))
 
-(define-prim (##char-numeric? c))
+(define-prim (##char-numeric? c)
+  (and (##char<=? #\0 c) (##char<=? c #\9)))
 
 (define-prim (char-numeric? c)
   (macro-force-vars (c)
     (macro-check-char c 1 (char-numeric? c)
       (##char-numeric? c))))
 
-(define-prim (##char-whitespace? c))
+(define-prim (##char-whitespace? c)
+  (##char<=? c #\space))
 
 (define-prim (char-whitespace? c)
   (macro-force-vars (c)
     (macro-check-char c 1 (char-whitespace? c)
       (##char-whitespace? c))))
 
-(define-prim (##char-upper-case? c))
+(define-prim (##char-upper-case? c)
+  (and (##char<=? #\A c) (##char<=? c #\Z)))
 
 (define-prim (char-upper-case? c)
   (macro-force-vars (c)
     (macro-check-char c 1 (char-upper-case? c)
       (##char-upper-case? c))))
 
-(define-prim (##char-lower-case? c))
+(define-prim (##char-lower-case? c)
+  (and (##char<=? #\a c) (##char<=? c #\z)))
 
 (define-prim (char-lower-case? c)
   (macro-force-vars (c)
@@ -815,14 +821,20 @@
           (##integer->char n)
           (##raise-range-exception 1 integer->char n)))))
 
-(define-prim (##char-upcase c))
+(define-prim (##char-upcase c)
+  (if (and (##char<=? #\a c) (##char<=? c #\z))
+      (##integer->char (##fx- (##char->integer c) 32))
+      c))
 
 (define-prim (char-upcase c)
   (macro-force-vars (c)
     (macro-check-char c 1 (char-upcase c)
       (##char-upcase c))))
 
-(define-prim (##char-downcase c))
+(define-prim (##char-downcase c)
+  (if (and (##char<=? #\A c) (##char<=? c #\Z))
+      (##integer->char (##fx+ (##char->integer c) 32))
+      c))
 
 (define-prim (char-downcase c)
   (macro-force-vars (c)
@@ -1193,7 +1205,19 @@
 (define-prim (##promise-result-set! promise result)
   (macro-promise-result-set! promise result))
 
-(define-prim (##force obj))
+(define-prim (##force obj)
+  (if (##promise? obj)
+      (let ((result (macro-promise-result obj)))
+        (if (##eq? result obj)
+            (let* ((r ((macro-promise-thunk obj)))
+                   (result2 (macro-promise-result obj)))
+              (if (##eq? result2 obj)
+                  (begin
+                    (macro-promise-result-set! obj r)
+                    (macro-promise-thunk-set! obj #f)
+                    r)
+                  result2))))
+      obj))
 
 (define-prim (force obj)
   (##force obj))
