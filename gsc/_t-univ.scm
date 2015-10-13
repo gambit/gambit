@@ -13193,6 +13193,26 @@ tanh
                 arg1
                 (^flonum-box (^- (^flonum-unbox arg1))))))))
 
+(univ-define-prim "##flscalbn" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flilogb" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##flexpm1" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
+(univ-define-prim "##fllog1p" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+
 (univ-define-prim-bool "##flinteger?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
