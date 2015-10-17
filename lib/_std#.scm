@@ -702,8 +702,10 @@ end-of-code
                (and (##fx= len (,##vect-length vect2))
                     (let loop ((i (##fx- len 1)))
                       (or (##fx< i 0)
-                          (and (,elem= (,##vect-ref vect1 i)
-                                       (,##vect-ref vect2 i))
+                          (and (let ()
+                                 (##declare (generic)) ;; avoid fixnum specific ##eqv?
+                                 (,elem= (,##vect-ref vect1 i)
+                                         (,##vect-ref vect2 i)))
                                (loop (##fx- i 1)))))))))
        )))
 
