@@ -3905,6 +3905,10 @@
         (##void))
       ((macro-port-write-datum port) port obj #f)))
 
+(macro-case-target
+
+ ((C)
+
 (define-prim (print
               #!key (port (macro-absent-obj))
               #!rest body)
@@ -3928,6 +3932,8 @@
         (begin
           (##print body p)
           (##newline p))))))
+
+))
 
 (define-prim (##newline port)
   (##declare (not interrupts-enabled))
@@ -6293,6 +6299,10 @@
 
 ;;; Implementation of TLS objects.
 
+(macro-case-target
+
+ ((C)
+
 (define-prim (make-tls-context
               #!key
               (min-version (macro-absent-obj))
@@ -6595,9 +6605,15 @@
 
       (check-min-version 0))))
 
+))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Implementation of TCP client device ports.
+
+(macro-case-target
+
+ ((C)
 
 (implement-check-type-tcp-client-port)
 
@@ -6992,9 +7008,15 @@
                    socket-type: socket-type
                    protocol: protocol))
 
+))
+
 ;;;----------------------------------------------------------------------------
 
 ;; Implementation of TCP server ports.
+
+(macro-case-target
+
+ ((C)
 
 (implement-check-type-tcp-server-port)
 
@@ -7366,6 +7388,8 @@
                                 (addr (##substring str 0 colon)))
                             port-num)
                     (err))))))))
+
+))
 
 ;;;----------------------------------------------------------------------------
 

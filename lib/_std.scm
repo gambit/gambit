@@ -26,7 +26,7 @@
 ;; Definition of vector-like data types (i.e. string, vector, s8vector, ...).
 
 (macro-case-target
- ((c C)
+ ((C)
   (c-declare "#include \"os.h\"")))
 
 (define-prim-vector-procedures
@@ -45,90 +45,85 @@
   macro-no-check
   ##equal?)
 
-(macro-case-target
- ((c C)
+(define-prim-vector-procedures
+  s8vector
+  0
+  macro-force-vars
+  macro-check-exact-signed-int8
+  macro-check-exact-signed-int8-list
+  ##fx=)
 
-  (define-prim-vector-procedures
-    s8vector
-    0
-    macro-force-vars
-    macro-check-exact-signed-int8
-    macro-check-exact-signed-int8-list
-    ##fx=)
+(define-prim-vector-procedures
+  u8vector
+  0
+  macro-force-vars
+  macro-check-exact-unsigned-int8
+  macro-check-exact-unsigned-int8-list
+  ##fx=)
 
-  (define-prim-vector-procedures
-    u8vector
-    0
-    macro-force-vars
-    macro-check-exact-unsigned-int8
-    macro-check-exact-unsigned-int8-list
-    ##fx=)
+(define-prim-vector-procedures
+  s16vector
+  0
+  macro-force-vars
+  macro-check-exact-signed-int16
+  macro-check-exact-signed-int16-list
+  ##fx=)
 
-  (define-prim-vector-procedures
-    s16vector
-    0
-    macro-force-vars
-    macro-check-exact-signed-int16
-    macro-check-exact-signed-int16-list
-    ##fx=)
+(define-prim-vector-procedures
+  u16vector
+  0
+  macro-force-vars
+  macro-check-exact-unsigned-int16
+  macro-check-exact-unsigned-int16-list
+  ##fx=)
 
-  (define-prim-vector-procedures
-    u16vector
-    0
-    macro-force-vars
-    macro-check-exact-unsigned-int16
-    macro-check-exact-unsigned-int16-list
-    ##fx=)
+(define-prim-vector-procedures
+  s32vector
+  0
+  macro-force-vars
+  macro-check-exact-signed-int32
+  macro-check-exact-signed-int32-list
+  ##eqv?)
 
-  (define-prim-vector-procedures
-    s32vector
-    0
-    macro-force-vars
-    macro-check-exact-signed-int32
-    macro-check-exact-signed-int32-list
-    ##eqv?)
+(define-prim-vector-procedures
+  u32vector
+  0
+  macro-force-vars
+  macro-check-exact-unsigned-int32
+  macro-check-exact-unsigned-int32-list
+  ##eqv?)
 
-  (define-prim-vector-procedures
-    u32vector
-    0
-    macro-force-vars
-    macro-check-exact-unsigned-int32
-    macro-check-exact-unsigned-int32-list
-    ##eqv?)
+(define-prim-vector-procedures
+  s64vector
+  0
+  macro-force-vars
+  macro-check-exact-signed-int64
+  macro-check-exact-signed-int64-list
+  ##eqv?)
 
-  (define-prim-vector-procedures
-    s64vector
-    0
-    macro-force-vars
-    macro-check-exact-signed-int64
-    macro-check-exact-signed-int64-list
-    ##eqv?)
+(define-prim-vector-procedures
+  u64vector
+  0
+  macro-force-vars
+  macro-check-exact-unsigned-int64
+  macro-check-exact-unsigned-int64-list
+  ##eqv?)
 
-  (define-prim-vector-procedures
-    u64vector
-    0
-    macro-force-vars
-    macro-check-exact-unsigned-int64
-    macro-check-exact-unsigned-int64-list
-    ##eqv?)
+(define-prim-vector-procedures
+  f32vector
+  0.
+  macro-force-vars
+  macro-check-inexact-real
+  macro-check-inexact-real-list
+  ##fleqv?)
 
-  (define-prim-vector-procedures
-    f32vector
-    0.
-    macro-force-vars
-    macro-check-inexact-real
-    macro-check-inexact-real-list
-    ##fleqv?)
-
-  (define-prim-vector-procedures
-    f64vector
-    0.
-    macro-force-vars
-    macro-check-inexact-real
-    macro-check-inexact-real-list
-    ##fleqv?)
-
-  ))
+(define-prim-vector-procedures
+  f64vector
+  0.
+  macro-force-vars
+  macro-check-inexact-real
+  macro-check-inexact-real-list
+  ##fleqv?)
 
 ;;;----------------------------------------------------------------------------
 

@@ -7,8 +7,12 @@
 
 ;;;============================================================================
 
-(c-declare "#include \"mem.h\"")
-(##define-macro (use-fast-bignum-algorithms) #t)
+(macro-case-target
+ ((C)
+  (c-declare "#include \"mem.h\"")
+  (##define-macro (use-fast-bignum-algorithms) #t))
+ (else
+  (##define-macro (use-fast-bignum-algorithms) #f)))
 
 ;;;============================================================================
 
@@ -1226,8 +1230,8 @@
 
   (define (exact-remainder x y)
     (##cdr (##exact-int.div x y 
-                            #f   ; need-quotient?
-                            #t   ; keep-dividend?
+                            #f   ;; need-quotient?
+                            #t   ;; keep-dividend?
                             )))
 
   (define (inexact-remainder x y)
@@ -1319,8 +1323,8 @@
   (define (exact-modulo x y)
     (let ((r (##cdr (##exact-int.div x
                                      y
-                                     #f      ; need-quotient?
-                                     #t      ; keep-dividend?
+                                     #f      ;; need-quotient?
+                                     #t      ;; keep-dividend?
                                      ))))
       (if (##eqv? r 0)
           0
@@ -1740,9 +1744,9 @@
   (define (general-base a b)
     (if (##eqv? b 0)
         a
-        (let ((rem (cdr (##exact-int.div a b   ; calculate (remainder a b)
-                                         #f    ; need-quotient?
-                                         #f    ; keep-dividend?
+        (let ((rem (cdr (##exact-int.div a b   ;; calculate (remainder a b)
+                                         #f    ;; need-quotient?
+                                         #f    ;; keep-dividend?
                                          ))))
           (if (##fixnum? b)
               (fixnum-base b rem)
@@ -1766,7 +1770,7 @@
                     (##negate x))
                    ((##bignum? x)
                     (##bignum.copy x))
-                   (else ; nonnegative fixnum
+                   (else ;; nonnegative fixnum
                     x)))
           (y (cond ((##inexact? y)
                     (##inexact->exact (##flabs y)))
@@ -1774,7 +1778,7 @@
                     (##negate y))
                    ((##bignum? y)
                     (##bignum.copy y))
-                   (else ; nonnegative fixnum
+                   (else ;; nonnegative fixnum
                     y))))
       ;; now x and y are newly allocated, so we can overwrite them if
       ;; necessary in general-base
@@ -2285,13 +2289,13 @@ for a discussion of branch cuts.
          (eta (macro-cpxnum-imag xi+ieta)))
     (if (##< (##fl/ (##flasinh (macro-inexact-omega)) 4.)
              (##abs xi))
-        (macro-cpxnum-make (##flcopysign 1. (##exact->inexact xi))     ; xi cannot be exact 0
-                           (##flcopysign 0. (##exact->inexact eta)))   ; eta cannot be exact 0
-        (let* ((t (##tan eta))                                  ; sin(eta)/cos(eta), can't be exact 0, so can't be exact
-               (beta (##fl+ 1. (##flsquare t)))                   ; 1/cos^2(eta), can't be exact
-               (s (##sinh xi))                                  ; sinh(xi), can't be exact zero, so can't be exact
-               (rho (##flsqrt (##fl+ 1. (##flsquare s)))))        ; cosh(xi), can't be exact
-          (if (##infinite? t)                                     ; if sin(eta)/cos(eta) = infinity (how, I don't know)
+        (macro-cpxnum-make (##flcopysign 1. (##exact->inexact xi))     ;; xi cannot be exact 0
+                           (##flcopysign 0. (##exact->inexact eta)))   ;; eta cannot be exact 0
+        (let* ((t (##tan eta))                                  ;; sin(eta)/cos(eta), can't be exact 0, so can't be exact
+               (beta (##fl+ 1. (##flsquare t)))                   ;; 1/cos^2(eta), can't be exact
+               (s (##sinh xi))                                  ;; sinh(xi), can't be exact zero, so can't be exact
+               (rho (##flsqrt (##fl+ 1. (##flsquare s)))))        ;; cosh(xi), can't be exact
+          (if (##infinite? t)                                     ;; if sin(eta)/cos(eta) = infinity (how, I don't know)
               (macro-cpxnum-make (##fl/ rho s)
                                  (##fl/ t))
               (let ((one+beta*s^2 (##fl+ 1. (##fl* beta (##flsquare s)))))
@@ -4914,7 +4918,7 @@ for a discussion of branch cuts.
   ;; for special cases, fixnums, etc.
   
   (let* ((result-length
-          (##fxceiling-ratio (##fx+ 1 size) ##bignum.adigit-width))  ;  top bit is always 0
+          (##fxceiling-ratio (##fx+ 1 size) ##bignum.adigit-width))  ;;  top bit is always 0
          (bignum-n
           (if (##bignum? n) n (##fixnum->bignum n)))
          (result
@@ -5541,7 +5545,7 @@ for a discussion of branch cuts.
 (define-prim (##char->integer x))
 
 
-
+#;
 (begin ;;; TODO: remove this begin (the definitions it contains are redundant)
 
   (define-prim (##fx->char x));;deprecated
@@ -5769,21 +5773,25 @@ for a discussion of branch cuts.
 (define-prim (##bignum.adigit-bitwise-xor! x i y j))
 (define-prim (##bignum.adigit-bitwise-not! x i))
 
-(define-prim (##bignum.fdigit-length x))
-(define-prim (##bignum.fdigit-ref x i))
-(define-prim (##bignum.fdigit-set! x i fdigit))
+(macro-case-target
+ ((C)
+  (define-prim (##bignum.fdigit-length x))
+  (define-prim (##bignum.fdigit-ref x i))
+  (define-prim (##bignum.fdigit-set! x i fdigit))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Bignum related constants.
 
-;(define ##bignum.adigit-ones #xffffffffffffffff)
-;(define ##bignum.adigit-zeros #x10000000000000000)
+;;(define ##bignum.adigit-ones #xffffffffffffffff)
+;;(define ##bignum.adigit-zeros #x10000000000000000)
 (define ##bignum.adigit-ones (##fixnum->bignum -1))
 (define ##bignum.adigit-zeros (##fixnum->bignum 0))
 
-(define ##bignum.fdigit-base
-  (##fxarithmetic-shift-left 1 ##bignum.fdigit-width))
+(macro-case-target
+ ((C)
+  (define ##bignum.fdigit-base
+    (##fxarithmetic-shift-left 1 ##bignum.fdigit-width))))
 
 (define ##bignum.mdigit-base
   (##fxarithmetic-shift-left 1 ##bignum.mdigit-width))
@@ -9272,8 +9280,8 @@ ___RESULT = result;
               ##bignum.adigit-zeros)))
     (if (##fxzero? bit-shift)
         ;; Copy left-fill into leftmost digits of result as needed.
-        (let loop1 ((i (##fx- result-length 1))              ; index for adigit in result
-                    (j (##fx- result-length 1 digit-shift))) ; index for adigit in x
+        (let loop1 ((i (##fx- result-length 1))              ;; index for adigit in result
+                    (j (##fx- result-length 1 digit-shift))) ;; index for adigit in x
           (if (and (##fx>= i 0) (##fx>= j x-length))
               (begin (##bignum.adigit-copy! result i left-fill 0)
                      (loop1 (##fx- i 1) (##fx- j 1)))
@@ -9317,8 +9325,8 @@ ___RESULT = result;
                 (begin (##bignum.adigit-copy! result i zeros 0)
                        (loop6 (##fx- i 1)))))
 
-          (loop4 (##fx- result-length 1)                  ; index for adigit in result
-                 (##fx- result-length digit-shift 2))))   ; index for adigit in x
+          (loop4 (##fx- result-length 1)                  ;; index for adigit in result
+                 (##fx- result-length digit-shift 2))))   ;; index for adigit in x
     ;; return something useful
     result))
 
@@ -9490,8 +9498,8 @@ ___RESULT = result;
 
         ;; This strategy does a bit more work, but generates less garbage.
 
-        (let* ((q-bits                             ; maximum number of possible bits in q
-                (##fx+ (##fx- u-bits v-bits) 2))   ; 1 is not always sufficient...
+        (let* ((q-bits                             ;; maximum number of possible bits in q
+                (##fx+ (##fx- u-bits v-bits) 2))   ;; 1 is not always sufficient...
                (q-adigits
                 (##fxceiling-ratio q-bits ##bignum.adigit-width))
                (q-mdigits
@@ -9581,8 +9589,8 @@ ___RESULT = result;
                  (##exact-int.div
                   (##bignum.arithmetic-shift u (##fx- v-first-bit-set))
                   (##bignum.arithmetic-shift v (##fx- v-first-bit-set))
-                  #t          ; need-quotient?
-                  #f          ; keep-dividend?
+                  #t          ;; need-quotient?
+                  #f          ;; keep-dividend?
                   ))
                 (extra-remainder
                  (##extract-bit-field v-first-bit-set 0 u)))
@@ -9879,8 +9887,8 @@ ___RESULT = result;
                    (##+ (##arithmetic-shift r-prime length/4)
                         (##extract-bit-field length/4 length/4 x))
                    (##arithmetic-shift s-prime 1)
-                   #t           ; need-quotient?
-                   #f))         ; keep-dividend?
+                   #t           ;; need-quotient?
+                   #f))         ;; keep-dividend?
                  (q
                   (##car qu))
                  (u
@@ -10325,7 +10333,9 @@ ___RESULT = result;
 (define-prim-flonum (flround x)
   (##flround x))
 
-(define-prim (##flscalbn x n))
+(macro-case-target ;;TODO: remove after bootstrap
+ ((C)
+  (define-prim (##flscalbn x n))))
 
 (define-prim (flscalbn x n)
   (macro-force-vars (x n)
@@ -10333,7 +10343,9 @@ ___RESULT = result;
       (macro-check-fixnum n 2 (flscalbn x n)
         (##flscalbn x n)))))
 
-(define-prim (##flilogb x))
+(macro-case-target ;;TODO: remove after bootstrap
+ ((C)
+  (define-prim (##flilogb x))))
 
 (define-prim-flonum (flilogb x)
   (##flilogb x))
@@ -10343,7 +10355,9 @@ ___RESULT = result;
 (define-prim-flonum (flexp x)
   (##flexp x))
 
-(define-prim (##flexpm1 x))
+(macro-case-target ;;TODO: remove after bootstrap
+ ((C)
+  (define-prim (##flexpm1 x))))
 
 (define-prim-flonum (flexpm1 x)
   (##flexpm1 x))
@@ -10353,7 +10367,9 @@ ___RESULT = result;
 (define-prim-flonum (fllog x)
   (##fllog x))
 
-(define-prim (##fllog1p x))
+(macro-case-target ;;TODO: remove after bootstrap
+ ((C)
+  (define-prim (##fllog1p x))))
 
 (define-prim-flonum (fllog1p x)
   (##fllog1p x))
@@ -10450,7 +10466,7 @@ ___RESULT = result;
 (define-prim (##fixnum->flonum x))
 (define-prim (##fixnum->flonum-exact? x))
 
-
+#;
 (begin ;;; TODO: remove this begin (the definitions it contains are redundant)
 
   (define-prim (##fl<-fx x));;deprecated

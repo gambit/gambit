@@ -1263,6 +1263,8 @@ end-of-code
           (macro-thread-denv-cache3-set! current-thread x)
           results)))))
 
+))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; List utilities.
@@ -1288,6 +1290,10 @@ end-of-code
 ;;;----------------------------------------------------------------------------
 
 ;;; Interrupt system.
+
+(macro-case-target
+
+ ((C)
 
 (define-prim (##disable-interrupts!)
   (##declare (not interrupts-enabled))
@@ -1580,6 +1586,8 @@ end-of-code
      promise
      result)))
 
+))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Jobs.
@@ -1614,6 +1622,10 @@ end-of-code
 ;;;----------------------------------------------------------------------------
 
 ;;; Garbage collection.
+
+(macro-case-target
+
+ ((C)
 
 (define-prim (##check-heap-limit)
   (##declare (not interrupts-enabled))
@@ -2673,6 +2685,51 @@ end-of-code
         (##raise-heap-overflow-exception)
         (##make-f64vector k fill))
       v)))
+)
+
+  (else
+
+   (define-prim (##make-vector k #!optional (fill 0))
+     (##make-vector k fill))
+
+   (define-prim (##make-string k #!optional (fill #\nul))
+     (##make-string k fill))
+
+   (define-prim (##make-s8vector k #!optional (fill 0))
+     (##make-s8vector k fill))
+
+   (define-prim (##make-u8vector k #!optional (fill 0))
+     (##make-u8vector k fill))
+
+   (define-prim (##make-s16vector k #!optional (fill 0))
+     (##make-s16vector k fill))
+
+   (define-prim (##make-u16vector k #!optional (fill 0))
+     (##make-u16vector k fill))
+
+   (define-prim (##make-s32vector k #!optional (fill 0))
+     (##make-s32vector k fill))
+
+   (define-prim (##make-u32vector k #!optional (fill 0))
+     (##make-u32vector k fill))
+
+   (define-prim (##make-s64vector k #!optional (fill 0))
+     (##make-s64vector k fill))
+
+   (define-prim (##make-u64vector k #!optional (fill 0))
+     (##make-u64vector k fill))
+
+   (define-prim (##make-f32vector k #!optional (fill 0.0))
+     (##make-f32vector k fill))
+
+   (define-prim (##make-f64vector k #!optional (fill 0.0))
+     (##make-f64vector k fill))
+
+))
+
+(macro-case-target
+
+ ((C)
 
 (define-prim (##make-machine-code-block len)
   ((c-lambda (size_t)
@@ -3713,76 +3770,6 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
-;;; Version information.
-
-(define-prim (##system-version)
-
-  (##define-macro (result)
-    (c#compiler-version))
-
-  (result))
-
-(define-prim (system-version)
-  (##system-version))
-
-(define-prim (##system-version-string)
-
-  (##define-macro (result)
-    (c#compiler-version-string))
-
-  (result))
-
-(define-prim (system-version-string)
-  (##system-version-string))
-
-(define ##os-system-type-saved
-  (let ()
-
-    (define (str-list->sym-list lst)
-      (if (##null? lst)
-          '()
-          (##cons (##make-interned-symbol (##car lst))
-                  (str-list->sym-list (##cdr lst)))))
-
-    (str-list->sym-list
-     ((c-lambda ()
-                nonnull-char-string-list
-       "___os_system_type")))))
-
-(define-prim (system-type)
-  ##os-system-type-saved)
-
-(define ##os-system-type-string-saved
-  ((c-lambda ()
-             nonnull-char-string
-    "___os_system_type_string")))
-
-(define-prim (system-type-string)
-  ##os-system-type-string-saved)
-
-(define ##os-configure-command-string-saved
-  ((c-lambda ()
-             nonnull-char-string
-    "___os_configure_command_string")))
-
-(define-prim (configure-command-string)
-  ##os-configure-command-string-saved)
-
-(define ##system-stamp-saved
-  ((c-lambda ()
-             unsigned-int64
-    "___result = ___U64_add_U64_U64
-                   (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
-                    ___U64_from_UM32 (___STAMP_HMS));")))
-
-(define-prim (##system-stamp)
-  ##system-stamp-saved)
-
-(define-prim (system-stamp)
-  (##system-stamp))
-
-;;;----------------------------------------------------------------------------
-
 ;;; C compilation environment information.
 
 (define ##os-obj-extension-string-saved
@@ -3838,19 +3825,6 @@ end-of-code
 
 (define ##bignum.fdigit-width
   (##c-code "___RESULT = ___FIX(___BIG_FBASE_WIDTH);"))
-
-;;;----------------------------------------------------------------------------
-
-(define-prim (##first-argument arg1 #!optional arg2 arg3 #!rest others)
-  arg1)
-
-(define-prim (##with-no-result-expected thunk)
-  (##declare (not interrupts-enabled))
-  (##first-argument (thunk))) ; force nontail-call to thunk
-
-(define-prim (##with-no-result-expected-toplevel thunk)
-  (##declare (not interrupts-enabled))
-  (##first-argument (thunk))) ; force nontail-call to thunk
 
 ;;;----------------------------------------------------------------------------
 
@@ -4406,6 +4380,8 @@ end-of-code
             scheme-object
    "___os_load_object_file"))
 
+))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Program startup and exit.
@@ -4420,6 +4396,10 @@ end-of-code
 
 (define-prim (##clear-exit-jobs!)
   (##clear-jobs! ##exit-jobs))
+
+(macro-case-target
+
+ ((C)
 
 (define-prim (##exit-with-err-code-no-cleanup err-code)
   (##c-code #<<end-of-code
@@ -4452,6 +4432,95 @@ end-of-code
   (lambda ()
     (##declare (not interrupts-enabled))
     (##exit-abnormally)))
+
+))
+
+;;;----------------------------------------------------------------------------
+
+(define-prim (##first-argument arg1 #!optional arg2 arg3 #!rest others)
+  arg1)
+
+(define-prim (##with-no-result-expected thunk)
+  (##declare (not interrupts-enabled))
+  (##first-argument (thunk))) ;; force nontail-call to thunk
+
+(define-prim (##with-no-result-expected-toplevel thunk)
+  (##declare (not interrupts-enabled))
+  (##first-argument (thunk))) ;; force nontail-call to thunk
+
+;;;----------------------------------------------------------------------------
+
+;;; Version information.
+
+(define-prim (##system-version)
+
+  (##define-macro (result)
+    (c#compiler-version))
+
+  (result))
+
+(define-prim (system-version)
+  (##system-version))
+
+(define-prim (##system-version-string)
+
+  (##define-macro (result)
+    (c#compiler-version-string))
+
+  (result))
+
+(define-prim (system-version-string)
+  (##system-version-string))
+
+(macro-case-target
+
+ ((C)
+
+(define ##os-system-type-saved
+  (let ()
+
+    (define (str-list->sym-list lst)
+      (if (##null? lst)
+          '()
+          (##cons (##make-interned-symbol (##car lst))
+                  (str-list->sym-list (##cdr lst)))))
+
+    (str-list->sym-list
+     ((c-lambda ()
+                nonnull-char-string-list
+       "___os_system_type")))))
+
+(define-prim (system-type)
+  ##os-system-type-saved)
+
+(define ##os-system-type-string-saved
+  ((c-lambda ()
+             nonnull-char-string
+    "___os_system_type_string")))
+
+(define-prim (system-type-string)
+  ##os-system-type-string-saved)
+
+(define ##os-configure-command-string-saved
+  ((c-lambda ()
+             nonnull-char-string
+    "___os_configure_command_string")))
+
+(define-prim (configure-command-string)
+  ##os-configure-command-string-saved)
+
+(define ##system-stamp-saved
+  ((c-lambda ()
+             unsigned-int64
+    "___result = ___U64_add_U64_U64
+                   (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
+                    ___U64_from_UM32 (___STAMP_HMS));")))
+
+(define-prim (##system-stamp)
+  ##system-stamp-saved)
+
+(define-prim (system-stamp)
+  (##system-stamp))
 
 ))
 
@@ -4779,6 +4848,8 @@ end-of-code
       (##load-required-module ##vm-main-module-id)
       (##main))))
 
-(##load-vm)
+(macro-case-target
+ ((C)
+  (##load-vm)))
 
 ;;;============================================================================

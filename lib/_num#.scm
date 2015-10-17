@@ -446,13 +446,23 @@
 
 ;;TODO: replace with ##ratnum-make
 
-(##define-macro (macro-ratnum-make num den)
-  `(##subtype-set!
-    (##vector ,num ,den)
-    (macro-subtype-ratnum)))
+(macro-case-target
 
-(##define-macro (macro-ratnum-numerator r)          `(macro-slot 0 ,r))
-(##define-macro (macro-ratnum-denominator r)        `(macro-slot 1 ,r))
+ ((C)
+
+  (##define-macro (macro-ratnum-make num den)
+    `(##subtype-set!
+      (##vector ,num ,den)
+      (macro-subtype-ratnum)))
+
+  (##define-macro (macro-ratnum-numerator r)   `(macro-slot 0 ,r))
+  (##define-macro (macro-ratnum-denominator r) `(macro-slot 1 ,r)))
+
+ (else
+
+  (##define-macro (macro-ratnum-make num den) `(##ratnum-make ,num ,den))
+  (##define-macro (macro-ratnum-numerator r) `(##ratnum-numerator ,r))
+  (##define-macro (macro-ratnum-denominator r) `(##ratnum-denominator ,r))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -464,13 +474,23 @@
 
 ;;TODO: replace with ##cpxnum-make
 
-(##define-macro (macro-cpxnum-make r i)
-  `(##subtype-set!
-    (##vector ,r ,i)
-    (macro-subtype-cpxnum)))
+(macro-case-target
 
-(##define-macro (macro-cpxnum-real c)        `(macro-slot 0 ,c))
-(##define-macro (macro-cpxnum-imag c)        `(macro-slot 1 ,c))
+ ((C)
+
+  (##define-macro (macro-cpxnum-make r i)
+    `(##subtype-set!
+      (##vector ,r ,i)
+      (macro-subtype-cpxnum)))
+
+  (##define-macro (macro-cpxnum-real c) `(macro-slot 0 ,c))
+  (##define-macro (macro-cpxnum-imag c) `(macro-slot 1 ,c)))
+
+ (else
+
+  (##define-macro (macro-cpxnum-make r i) `(##cpxnum-make ,r ,i))
+  (##define-macro (macro-cpxnum-real c) `(##cpxnum-real ,c))
+  (##define-macro (macro-cpxnum-imag c) `(##cpxnum-imag ,c))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
