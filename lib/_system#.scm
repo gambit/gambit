@@ -37,17 +37,14 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; Define type checking macros.
-
-(define-check-type hash-algorithm 'hash-algorithm
-  ##hash-algorithm?)
-
-;;;----------------------------------------------------------------------------
-
 ;;; Representation of tables.
 
+(macro-case-target
+
+ ((C)
+
 (define-type table
-  id: 5917e472-85e5-11d9-a2c0-00039301ba52
+  id: F3F63A41-2974-4D41-8B24-1744E866741D
   type-exhibitor: macro-type-table
   constructor: macro-make-table
   implementer: implement-type-table
@@ -62,25 +59,30 @@
   (gcht  unprintable:)
   (init  unprintable:)
 )
+)
 
-;;; Representation of digests.
+ (else
 
-(define-type digest
-  id: 1ce13de0-ccaa-4627-94be-b13eaa2c32e6
-  type-exhibitor: macro-type-digest
-  constructor: macro-make-digest
-  implementer: implement-type-digest
+;; This representation uses an association list and does not implement
+;; key and value weakness.
+
+;; TODO: implement using host language hash tables.
+
+(define-type table
+  id: A7AB629D-EAB0-422F-8005-08B2282E04FC
+  type-exhibitor: macro-type-table
+  constructor: macro-make-table
+  implementer: implement-type-table
   opaque:
   macros:
   prefix: macro-
 
-  (close-digest unprintable:)
-  (hash-update  unprintable:)
-  (hash         unprintable:)
-  (block        unprintable:)
-  (block-pos    unprintable:)
-  (bit-pos      unprintable:)
+  (test  unprintable:)
+  (init  unprintable:)
+  (alist unprintable:)
 )
+
+))
 
 ;;;----------------------------------------------------------------------------
 

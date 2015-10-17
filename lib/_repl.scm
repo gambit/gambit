@@ -3736,9 +3736,6 @@
         ;; from "_kernel.scm":
         (foreign                      . "FOREIGN object")
 
-        ;; from "_system.scm":
-        (hash-algorithm               . "HASH ALGORITHM")
-
         ;; from "_thread.scm":
         (continuation                 . "CONTINUATION")
         (time                         . "TIME object")
