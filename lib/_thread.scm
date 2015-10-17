@@ -2,12 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
-
-;;;============================================================================
-
-(##include "header.scm")
-;;(##include "sys.scm")
+;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 

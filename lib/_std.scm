@@ -6,10 +6,6 @@
 
 ;;;============================================================================
 
-(##include "header.scm")
-
-;;;============================================================================
-
 ;; Implementation of exceptions.
 
 (implement-library-type-improper-length-list-exception)

@@ -7,7 +7,6 @@
 
 ;;;============================================================================
 
-(##include "header.scm")
 (c-declare "#include \"mem.h\"")
 (##define-macro (use-fast-bignum-algorithms) #t)
 
