@@ -4707,13 +4707,8 @@ for a discussion of branch cuts.
                                -1
                                0)))
                       (else ;; left shift
-                       (if (##fx< y ##fixnum-width)
-                           (let ((result (##fxarithmetic-shift-left x y)))
-                             (if (##fx=
-                                  (##fxarithmetic-shift-right result y)
-                                  x)
-                                 result
-                                 (general-fixnum-fixnum-case)))
+                       (or (and (##fx< y ##fixnum-width)
+                                (##fxarithmetic-shift-left? x y))
                            (general-fixnum-fixnum-case)))))
                ((##bignum? y)
                 (cond ((##fxzero? x)
