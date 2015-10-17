@@ -135,7 +135,7 @@ GAMBIT_LIB_ruby = _$(GAMBITLIB).rb
 
 GAMBIT_LIBS_UNIV = $(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby)
 
-GAMBIT_LIBS = $(GAMBIT_LIB_C) $(GAMBIT_LIBS_UNIV)
+GAMBIT_LIBS = $(GAMBIT_LIB_C)
 
 GENDISTFILES = $(MODULES_C) $(GAMBIT_LIB_C)
 
@@ -178,19 +178,19 @@ $(GAMBIT_LIB_C): $(MODULES_C)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -flat -o $@ -preload $(MODULES_C)
 
 $(GAMBIT_LIB_java):
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target java $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target java $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
 
 $(GAMBIT_LIB_js):
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target js $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target js $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
 
 $(GAMBIT_LIB_php):
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target php $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target php $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
 
 $(GAMBIT_LIB_python):
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target python $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target python $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
 
 $(GAMBIT_LIB_ruby):
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target ruby $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target ruby $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
 
 $(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby): \
 $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm \
