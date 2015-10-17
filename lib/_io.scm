@@ -4237,7 +4237,7 @@
            0
            0
            max-length
-           ##max-char)))
+           (##integer->char ##max-char))))
     (##wr we obj)
     (##get-output-string port)))
 
