@@ -14767,6 +14767,11 @@ tanh
 
 ;;TODO: ("##call-with-current-continuation"1     #t ()    1113 (#f)    extended)
 
+(univ-define-prim-bool "##global-var?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^bool #f))))) ;;TODO: implement
+
 (univ-define-prim "##make-global-var" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)

@@ -1001,6 +1001,7 @@
 ("##apply"                            (2)   #t ()    0    (#f)    extended)
 ("##call-with-current-continuation"   1     #t ()    1113 (#f)    extended)
 ("##make-global-var"                  (1)   #t ()    0    #f      extended)
+("##global-var?"                      (1)   #f ()    0    #f      extended)
 ("##global-var-ref"                   (1)   #f ()    0    (#f)    extended)
 ("##global-var-primitive-ref"         (1)   #f ()    0    (#f)    extended)
 ("##global-var-set!"                  (2)   #t ()    0    #f      extended)
