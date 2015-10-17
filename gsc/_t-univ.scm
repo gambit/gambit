@@ -22,12 +22,12 @@
 (define univ-dyn-load? #f)
 (set! univ-dyn-load? #f)
 
-(define (univ-get-representation-option ctx name)
+(define (univ-get-semantics-changing-option ctx name)
   (let ((x (assq name (ctx-semantics-changing-options ctx))))
     (and x (pair? (cdr x)) (cadr x))))
 
 (define (univ-module-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-module)
+  (or (univ-get-semantics-changing-option ctx 'repr-module)
       (case (target-name (ctx-target ctx))
         ((java)
          'class)
@@ -35,7 +35,7 @@
          'global))))
 
 (define (univ-procedure-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-procedure)
+  (or (univ-get-semantics-changing-option ctx 'repr-procedure)
       (case (target-name (ctx-target ctx))
         ((java)
          'class)
@@ -47,7 +47,7 @@
          'host))))
 
 (define (univ-frame-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-frame)
+  (or (univ-get-semantics-changing-option ctx 'repr-frame)
       (case (target-name (ctx-target ctx))
         ((java)
          'class)
@@ -55,7 +55,7 @@
          'host))))
 
 (define (univ-null-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-null)
+  (or (univ-get-semantics-changing-option ctx 'repr-null)
       (case (target-name (ctx-target ctx))
         ((js)
          'host)
@@ -63,7 +63,7 @@
          'class))))
 
 (define (univ-void-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-void)
+  (or (univ-get-semantics-changing-option ctx 'repr-void)
       'host))
 
 (define (univ-eof-representation ctx)
@@ -85,7 +85,7 @@
   'class)
 
 (define (univ-boolean-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-boolean)
+  (or (univ-get-semantics-changing-option ctx 'repr-boolean)
       (case (target-name (ctx-target ctx))
         ((java)
          'class)
@@ -96,7 +96,7 @@
   'class)
 
 (define (univ-fixnum-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-fixnum)
+  (or (univ-get-semantics-changing-option ctx 'repr-fixnum)
       (case (target-name (ctx-target ctx))
         ((java)
          'class)
@@ -104,11 +104,11 @@
          'host))))
 
 (define (univ-flonum-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-flonum)
+  (or (univ-get-semantics-changing-option ctx 'repr-flonum)
       'class))
 
 (define (univ-vector-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-vector)
+  (or (univ-get-semantics-changing-option ctx 'repr-vector)
       (case (target-name (ctx-target ctx))
         ((php java)
          'class)
@@ -116,7 +116,7 @@
          'host))))
 
 (define (univ-values-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-values)
+  (or (univ-get-semantics-changing-option ctx 'repr-values)
       'class))
 
 (define (univ-u8vector-representation ctx)
@@ -153,11 +153,11 @@
   'class)
 
 (define (univ-string-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-string)
+  (or (univ-get-semantics-changing-option ctx 'repr-string)
       'class))
 
 (define (univ-symbol-representation ctx)
-  (or (univ-get-representation-option ctx 'repr-symbol)
+  (or (univ-get-semantics-changing-option ctx 'repr-symbol)
       'class))
 
 (define (univ-keyword-representation ctx)
@@ -190,6 +190,18 @@
 
     (else
      'name)))
+
+(define (univ-ns-prefix sem-changing-options)
+  (let ((x (assq 'namespace sem-changing-options)))
+    (or (and x (pair? (cdr x)) (cadr x))
+        "g_")))
+
+(define (univ-ns-prefix-class sem-changing-options)
+  (let ((ns (univ-ns-prefix sem-changing-options)))
+    (if (= (string-length ns) 0)
+        ns
+        (let ((lst (string->list ns)))
+          (list->string (cons (char-upcase (car lst)) (cdr lst)))))))
 
 (define univ-thread-cont-slot 5)
 (define univ-thread-denv-slot 6)
@@ -248,7 +260,8 @@
       (repr-vector    symbol)
       (repr-values    symbol)
       (repr-string    symbol)
-      (repr-symbol    symbol)))
+      (repr-symbol    symbol)
+      (namespace      string)))
 
   (define common-semantics-preserving-options
     '((always-return-jump)
@@ -2372,7 +2385,7 @@
      name)
 
     (else
-     (^ "gambit_" name))))
+     (^ (ctx-ns-prefix ctx) name))))
 
 (define (univ-emit-prefix-class ctx name)
   (case (univ-module-representation ctx)
@@ -2381,7 +2394,7 @@
 ;     name)
 
     (else
-     (^ "Gambit_" name))))
+     (^ (ctx-ns-prefix-class ctx) name))))
 
 (define (univ-emit-assign-expr ctx loc expr)
   (^ loc " = " expr))
@@ -2721,6 +2734,8 @@
            sem-changing-options
            sem-preserving-options
            module-name
+           (univ-ns-prefix sem-changing-options)
+           (univ-ns-prefix-class sem-changing-options)
            "zzz" ;;;;;;;;;;;;;;;;;
            (make-objs-used)
            (make-resource-set)
@@ -2883,7 +2898,7 @@
          (name
           (path-strip-directory root))
 
-         (semantics-changing-options
+         (sem-changing-options
           (univ-link-semantics-changing-options inputs warnings?))
 
          (mods-and-flags
@@ -2892,9 +2907,11 @@
          (ctx
           (make-ctx
            targ
-           semantics-changing-options
+           sem-changing-options
            '() ;; semantics-preserving-options
            "" ;; module-name filled in later
+           (univ-ns-prefix sem-changing-options)
+           (univ-ns-prefix-class sem-changing-options)
            "zzz" ;;;;;;;;;;;;
            (make-objs-used)
            (make-resource-set)
@@ -3581,6 +3598,8 @@
                   (ctx-semantics-changing-options global-ctx)
                   (ctx-semantics-preserving-options global-ctx)
                   (ctx-module-name global-ctx)
+                  (ctx-ns-prefix global-ctx)
+                  (ctx-ns-prefix-class global-ctx)
                   (scheme-id->c-id (proc-obj-name p))
                   (ctx-objs-used global-ctx)
                   (ctx-rtlib-features-used global-ctx)
@@ -3712,6 +3731,8 @@
          semantics-changing-options
          semantics-preserving-options
          module-name
+         ns-prefix
+         ns-prefix-class
          ns
          objs-used
          rtlib-features-used
@@ -3720,6 +3741,8 @@
           semantics-changing-options
           semantics-preserving-options
           module-name
+          ns-prefix
+          ns-prefix-class
           ns
           0
           0
@@ -3743,35 +3766,41 @@
 (define (ctx-module-name ctx)              (vector-ref ctx 3))
 (define (ctx-module-name-set! ctx x)       (vector-set! ctx 3 x))
 
-(define (ctx-ns ctx)                       (vector-ref ctx 4))
-(define (ctx-ns-set! ctx x)                (vector-set! ctx 4 x))
+(define (ctx-ns-prefix ctx)                (vector-ref ctx 4))
+(define (ctx-ns-prefix-set! ctx x)         (vector-set! ctx 4 x))
 
-(define (ctx-stack-base-offset ctx)        (vector-ref ctx 5))
-(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 5 x))
+(define (ctx-ns-prefix-class ctx)          (vector-ref ctx 5))
+(define (ctx-ns-prefix-class-set! ctx x)   (vector-set! ctx 5 x))
 
-(define (ctx-serial-num ctx)               (vector-ref ctx 6))
-(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 6 x))
+(define (ctx-ns ctx)                       (vector-ref ctx 6))
+(define (ctx-ns-set! ctx x)                (vector-set! ctx 6 x))
 
-(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 7))
-(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 7 x))
+(define (ctx-stack-base-offset ctx)        (vector-ref ctx 7))
+(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 7 x))
 
-(define (ctx-resources-used-rd ctx)        (vector-ref ctx 8))
-(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 8 x))
+(define (ctx-serial-num ctx)               (vector-ref ctx 8))
+(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 8 x))
 
-(define (ctx-resources-used-wr ctx)        (vector-ref ctx 9))
-(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 9 x))
+(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 9))
+(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 9 x))
 
-(define (ctx-globals-used ctx)             (vector-ref ctx 10))
-(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 10 x))
+(define (ctx-resources-used-rd ctx)        (vector-ref ctx 10))
+(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 10 x))
 
-(define (ctx-objs-used ctx)                (vector-ref ctx 11))
-(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 11 x))
+(define (ctx-resources-used-wr ctx)        (vector-ref ctx 11))
+(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 11 x))
 
-(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 12))
-(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 12 x))
+(define (ctx-globals-used ctx)             (vector-ref ctx 12))
+(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 12 x))
 
-(define (ctx-decls ctx)                      (vector-ref ctx 13))
-(define (ctx-decls-set! ctx x)               (vector-set! ctx 13 x))
+(define (ctx-objs-used ctx)                (vector-ref ctx 13))
+(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 13 x))
+
+(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 14))
+(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 14 x))
+
+(define (ctx-decls ctx)                      (vector-ref ctx 15))
+(define (ctx-decls-set! ctx x)               (vector-set! ctx 15 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -11712,7 +11741,7 @@ tanh
      (^instanceof (^type 'returnpt) (^cast*-scmobj expr)))
 
     (else
-     (^bool #t)))) ;;TODO: implement
+     (^bool #f)))) ;;TODO: implement
 
 (define (univ-emit-closure? ctx expr)
   (case (univ-procedure-representation ctx)
