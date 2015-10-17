@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_codegen.c", produced by Gambit v4.8.0
+; File: "_codegen.c", produced by Gambit v4.8.1
 (
-408000
+408001
 (C)
 "_codegen"
 (("_codegen"))
@@ -38,7 +38,7 @@
  ()
 )
 #else
-#define ___VERSION 408000
+#define ___VERSION 408001
 #define ___MODULE_NAME "_codegen"
 #define ___LINKER_ID ____20___codegen
 #define ___MH_PROC ___H__20___codegen

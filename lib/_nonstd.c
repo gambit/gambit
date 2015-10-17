@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_nonstd.c", produced by Gambit v4.8.0
+; File: "_nonstd.c", produced by Gambit v4.8.1
 (
-408000
+408001
 (C)
 "_nonstd"
 (("_nonstd"))
@@ -632,7 +632,7 @@
  ()
 )
 #else
-#define ___VERSION 408000
+#define ___VERSION 408001
 #define ___MODULE_NAME "_nonstd"
 #define ___LINKER_ID ____20___nonstd
 #define ___MH_PROC ___H__20___nonstd

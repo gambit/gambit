@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_io.c", produced by Gambit v4.8.0
+; File: "_io.c", produced by Gambit v4.8.1
 (
-408000
+408001
 (C)
 "_io"
 (("_io"))
@@ -1377,7 +1377,7 @@
  ()
 )
 #else
-#define ___VERSION 408000
+#define ___VERSION 408001
 #define ___MODULE_NAME "_io"
 #define ___LINKER_ID ____20___io
 #define ___MH_PROC ___H__20___io
@@ -33537,7 +33537,7 @@ ___DEF_SLBL(2,___L2__23__23_object_2d__3e_truncated_2d_string)
    ___SET_STK(7,___FIX(0L))
    ___SET_STK(8,___FIX(0L))
    ___SET_R2(___STK(-5))
-   ___SET_R3(___GLO__23__23_max_2d_char)
+   ___SET_R3(___FIXTOCHR(___GLO__23__23_max_2d_char))
    ___SET_R1(___FIX(0L))
    ___SET_R0(___LBL(3))
    ___ADJFP(8)

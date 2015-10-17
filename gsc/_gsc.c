@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc.c", produced by Gambit v4.8.0
+; File: "_gsc.c", produced by Gambit v4.8.1
 (
-408000
+408001
 (C)
 "_gsc"
 (("_gsc"))
@@ -220,7 +220,7 @@
  ()
 )
 #else
-#define ___VERSION 408000
+#define ___VERSION 408001
 #define ___MODULE_NAME "_gsc"
 #define ___LINKER_ID ____20___gsc
 #define ___MH_PROC ___H__20___gsc
