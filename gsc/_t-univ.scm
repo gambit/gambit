@@ -6262,7 +6262,7 @@ EOF
         ;; correctly construct type descriptor of type descriptors
         (let ((slots (^local-var (univ-field-param ctx 'slots))))
           (^if (^null? (^array-index slots (^int 0)))
-               (^assign (^array-index slots (^int 0))
+               (^assign (^array-index (^member (^this) 'slots) (^int 0))
                         (^this)))))))
 
     ((frame)
