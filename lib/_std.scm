@@ -776,7 +776,9 @@
       (##char-numeric? c))))
 
 (define-prim (##char-whitespace? c)
-  (##char<=? c #\space))
+  (or (and (##char<=? #\tab c)
+	   (##char<=? c #\return))
+      (##char=? c #\space)))
 
 (define-prim (char-whitespace? c)
   (macro-force-vars (c)
