@@ -3248,7 +3248,7 @@
                                 (list (univ-field (univ-proc-name-attrib ctx)
                                                   'symbol
                                                   (lambda (ctx)
-                                                    (univ-prm-name ctx (proc-obj-name p)))
+                                                    (^cast* 'symbol (univ-prm-name ctx (proc-obj-name p))))
                                                   '(inherited))
                                       (univ-field 'ctrlpts
                                                   '(array ctrlpt)
@@ -12148,7 +12148,7 @@ tanh
 
 ;; TODO: test ##pair-mutable?
 
-(univ-define-prim-bool "##pair-mutable?" #t
+(univ-define-prim "##pair-mutable?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^obj #t))))) ;; there are no immutable data (currently)
@@ -12157,7 +12157,7 @@ tanh
 
 ;; TODO: test ##subtyped-mutable?
 
-(univ-define-prim-bool "##subtyped-mutable?" #t
+(univ-define-prim "##subtyped-mutable?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^obj #t))))) ;; there are no immutable data (currently)
@@ -13584,7 +13584,7 @@ tanh
    (lambda (ctx return arg1 arg2 arg3)
      (^ (^u8vector-set! arg1
                         (^fixnum-unbox arg2)
-                        (^fixnum-unbox arg3))
+                        (^cast* 'u8 (^fixnum-unbox arg3)))
         (return arg1)))))
 
 (univ-define-prim "##u8vector-shrink!" #f
@@ -13638,7 +13638,7 @@ tanh
    (lambda (ctx return arg1 arg2 arg3)
      (^ (^u16vector-set! arg1
                          (^fixnum-unbox arg2)
-                         (^fixnum-unbox arg3))
+                         (^cast* 'u16 (^fixnum-unbox arg3)))
         (return arg1)))))
 
 (univ-define-prim "##u16vector-shrink!" #f
@@ -13787,7 +13787,7 @@ tanh
    (lambda (ctx return arg1 arg2 arg3)
      (^ (^s8vector-set! arg1
                         (^fixnum-unbox arg2)
-                        (^fixnum-unbox arg3))
+                        (^cast* 's8 (^fixnum-unbox arg3)))
         (return arg1)))))
 
 (univ-define-prim "##s8vector-shrink!" #f
@@ -13841,7 +13841,7 @@ tanh
    (lambda (ctx return arg1 arg2 arg3)
      (^ (^s16vector-set! arg1
                         (^fixnum-unbox arg2)
-                        (^fixnum-unbox arg3))
+                        (^cast* 's16 (^fixnum-unbox arg3)))
         (return arg1)))))
 
 (univ-define-prim "##s16vector-shrink!" #f
@@ -14344,7 +14344,7 @@ tanh
      (return
       (^call-prim
        (^rts-method-use 'make_closure)
-       arg1
+       (^cast* 'ctrlpt arg1)
        (^fixnum-unbox arg2))))))
 
 (univ-define-prim "##closure-length" #f
@@ -14588,7 +14588,8 @@ tanh
 (univ-define-prim "##continuation-frame-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return cont frame)
-     (^ (^assign (^member (^cast* 'continuation cont) 'frame) frame)
+     (^ (^assign (^member (^cast* 'continuation cont) 'frame)
+                 (^cast* 'frame frame))
         (return cont)))))
 
 (univ-define-prim "##continuation-denv" #t
