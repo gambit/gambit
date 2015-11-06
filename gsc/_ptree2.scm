@@ -862,9 +862,14 @@
             reason
             expansion-limit))
 
-      (new-call (node-source ptree) (node-env ptree)
-        (br oper substs 'need expansion-limit)
-        (map (lambda (arg) (br arg substs 'need expansion-limit)) args))))
+      (let ((call
+             (new-call (node-source ptree) (node-env ptree)
+               (br oper substs 'need expansion-limit)
+               (map (lambda (arg) (br arg substs 'need expansion-limit))
+                    args))))
+        (if (br-let? call)
+            (br-let call substs reason expansion-limit)
+            call))))
 
 (define (br-let ptree substs reason expansion-limit)
   (let* ((proc
