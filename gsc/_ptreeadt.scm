@@ -169,3 +169,16 @@
 (define fut-tag (list 'fut-tag))
 
 (define (fut? x) (eq? (vector-ref x 0) fut-tag))
+
+(define (ptree? obj)
+  (and (vector? obj)
+       (or (c#cst? obj)
+           (c#ref? obj)
+           (c#set? obj)
+           (c#def? obj)
+           (c#tst? obj)
+           (c#conj? obj)
+           (c#disj? obj)
+           (c#prc? obj)
+           (c#app? obj)
+           (c#fut? obj))))
