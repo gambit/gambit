@@ -24,6 +24,10 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-macro (at-expansion-time expr) (eval expr) '(begin))
+
+(at-expansion-time (define ##compilation-options '()))
+
 #;
 (define-macro (set-root-dir)
   (let* ((script-path (path-normalize (car ##processed-command-line)))
@@ -84,6 +88,7 @@
 "_t-c-2"
 "_gsclib"
 "_gsc"
+"_gscdebug"
 ))
 
 (define (load-from-root dir)
