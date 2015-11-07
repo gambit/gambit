@@ -688,6 +688,9 @@
 (define-macro (^cast*-scmobj expr)
   `(univ-emit-cast*-scmobj ctx ,expr))
 
+(define-macro (^cast*-jumpable expr)
+  `(univ-emit-cast*-jumpable ctx ,expr))
+
 (define-macro (^seq expr1 expr2)
   `(univ-emit-seq ctx ,expr1 ,expr2))
 
@@ -2158,6 +2161,9 @@
 (define (univ-emit-cast*-scmobj ctx expr)
   (^cast* 'scmobj expr))
 
+(define (univ-emit-cast*-jumpable ctx expr)
+  (^cast* 'jumpable expr))
+
 (define (univ-emit-seq ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -3478,7 +3484,7 @@
                                     (let ((o (scan-gvm-opnd ctx opnd)))
                                       (if (or (lbl? opnd) (obj? opnd))
                                           o
-                                          (^cast* 'jumpable o))))
+                                          (^cast*-jumpable o))))
                                 poll?
                                 (and
 
@@ -3650,8 +3656,7 @@
                    (^return-call-prim
                     (^rts-method-use 'wrong_nargs)
                     (if closed?
-                        (^cast* 'jumpable
-                                (^getreg (+ univ-nb-arg-regs 1)))
+                        (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
                         id))))
 
           (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs)))
@@ -4750,8 +4755,7 @@
              (^setnargs nb-args)
 
              (^return-jump
-              (^cast* 'jumpable
-                      (^local-var (^ 'arg 1))))))))))
+              (^cast*-jumpable (^local-var (^ 'arg 1))))))))))
 
   (define (continuation-graft-no-winding-procedure nb-args thread-restore?)
     (univ-jumpable-declaration-defs
@@ -4842,8 +4846,7 @@
              (^setnargs new-nb-args)
 
              (^return
-              (^cast* 'jumpable
-                      (^local-var (^ 'arg 2))))))))))
+              (^cast*-jumpable (^local-var (^ 'arg 2))))))))))
 
   (define (continuation-return-no-winding-procedure nb-args)
     (univ-jumpable-declaration-defs
@@ -4935,8 +4938,7 @@
            (univ-pop-args-to-regs ctx 0)
 
            (^return
-            (^cast* 'jumpable
-                    (^local-var (^ 'arg 1)))))))))
+            (^cast*-jumpable (^local-var (^ 'arg 1)))))))))
 
   (case feature
 
@@ -5139,12 +5141,12 @@
                                      (^expr-statement
                                       (^call-prim
                                        (^rts-method-use 'trampoline)
-                                       (^cast* 'jumpable
-                                               (^vector-ref
-                                                (^array-index
-                                                 (^rts-field-use 'module_table)
-                                                 (^int 0))
-                                                (^int 1))))))))))))))))
+                                       (^cast*-jumpable
+                                        (^vector-ref
+                                         (^array-index
+                                          (^rts-field-use 'module_table)
+                                          (^int 0))
+                                         (^int 1))))))))))))))))
 
     ((modlinkinfo)
      (rts-class
@@ -5598,8 +5600,8 @@
              (^setreg 1 proc)
              (^setnargs 2)
              (^return
-              (^cast* 'jumpable
-                      (^getglo '##raise-wrong-number-of-arguments-exception))))))))
+              (^cast*-jumpable
+               (^getglo '##raise-wrong-number-of-arguments-exception))))))))
 
     ((get)
 #<<EOF
@@ -5663,7 +5665,7 @@ EOF
                        gv))
                      (^assign dest
                               (^getglo '##apply-global-with-procedure-check-nary))))
-             (^return (^cast* 'jumpable dest)))))))
+             (^return (^cast*-jumpable dest)))))))
 
     ((check_procedure)
      (rts-method
@@ -5710,7 +5712,7 @@ EOF
     ((scmobj)
      (rts-class
       'scmobj
-      '(abstract)))
+      '(abstract))) ;; properties
 
     ((jumpable)
      (rts-class
@@ -5795,8 +5797,8 @@ EOF
          (lambda (ctx)
            (^ (^setreg (+ univ-nb-arg-regs 1) (^this))
               (^return
-               (^cast* 'jumpable
-                       (^array-index (^member (^this) 'slots) (^int 0)))))))))))
+               (^cast*-jumpable
+                (^array-index (^member (^this) 'slots) (^int 0)))))))))))
 
     ((closure_alloc)
      (let ()
@@ -6949,8 +6951,7 @@ EOF
                 (^getreg 1))))
              (^setreg 1 (^void-obj))
              (^return
-              (^cast* 'jumpable
-                      (^getreg 0)))))))
+              (^cast*-jumpable (^getreg 0)))))))
       (rts-init
        (lambda (ctx)
          (^setglo 'println
@@ -6993,8 +6994,7 @@ EOF
                 (compiler-internal-error
                  "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
              (^return
-              (^cast* 'jumpable
-                      (^getreg 0)))))))
+              (^cast*-jumpable (^getreg 0)))))))
       (rts-init
        (lambda (ctx)
          (^setglo 'real-time-milliseconds

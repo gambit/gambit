@@ -56,16 +56,16 @@
 
 (define-target host
  ((js)
-  (##inline-host-expression "((typeof Gambit_RTS !== 'undefined') ? Gambit_RTS.host_function2scm : gambit_host_function2scm)(eval)"))
+  (##inline-host-expression "((typeof G_RTS !== 'undefined') ? G_RTS.host_function2scm : g_host_function2scm)(eval)"))
  ((python)
-  (##inline-host-expression "gambit_host_function2scm(eval)")
-  #;(##inline-host-expression "Gambit_RTS.host_function2scm(eval)"))
+  (##inline-host-expression "g_host_function2scm(eval)")
+  #;(##inline-host-expression "G_RTS.host_function2scm(eval)"))
  ((ruby)
-  (##inline-host-expression "gambit_host_function2scm(Proc.new {|x| eval(x)})")
-  #;(##inline-host-expression "Gambit_RTS.host_function2scm(Proc.new {|x| eval(x)})"))
+  (##inline-host-expression "g_host_function2scm(Proc.new {|x| eval(x)})")
+  #;(##inline-host-expression "G_RTS.host_function2scm(Proc.new {|x| eval(x)})"))
  ((php)
-  (##inline-host-expression "gambit_host_function2scm(\"ev\")")
-  #;(##inline-host-expression "Gambit_RTS.host_function2scm(\"ev\")"))
+  (##inline-host-expression "g_host_function2scm(\"ev\")")
+  #;(##inline-host-expression "G_RTS.host_function2scm(\"ev\")"))
 
  (else (lambda (x) x)))
 
