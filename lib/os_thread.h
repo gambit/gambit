@@ -1,6 +1,6 @@
 /* File: "os_thread.h" */
 
-/* Copyright (c) 2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_THREAD_H
 #define ___OS_THREAD_H

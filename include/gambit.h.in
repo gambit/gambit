@@ -7345,7 +7345,6 @@ typedef struct ___glo_struct
 
 
 #if 0
-/*TODO: enable*/
 #if ___WS == 4
 #ifdef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
 #define ___USE_sync_val_compare_and_swap
@@ -7373,15 +7372,15 @@ typedef struct ___glo_struct
 
 #ifdef ___USE_sync_val_compare_and_swap
 
-#define ___COMPARE_AND_SWAP_WORD(p,newv,oldv) \
-__sync_val_compare_and_swap(p,newv,oldv)
+#define ___COMPARE_AND_SWAP_WORD(p,oldv,newv) \
+__sync_val_compare_and_swap(p,oldv,newv)
 
 #endif
 
 
 #ifdef ___USE_InterlockedCompareExchangePointer
 
-#define ___COMPARE_AND_SWAP_WORD(p,newv,oldv) \
+#define ___COMPARE_AND_SWAP_WORD(p,oldv,newv) \
 ___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void*,oldv),___CAST(void*,newv)))
 
 #endif
@@ -7389,8 +7388,8 @@ ___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void
 
 #ifdef ___USE_emulated_compare_and_swap_word
 
-#define ___COMPARE_AND_SWAP_WORD(p,newv,oldv) \
-___EXT(___emulated_compare_and_swap_word)(p,newv,oldv)
+#define ___COMPARE_AND_SWAP_WORD(p,oldv,newv) \
+___EXT(___emulated_compare_and_swap_word)(p,oldv,newv)
 
 #endif
 
@@ -9176,7 +9175,7 @@ typedef struct ___global_state_struct
             ());
 #ifdef ___USE_emulated_compare_and_swap_word
     ___WORD (*___emulated_compare_and_swap_word)
-       ___P((___WORD *ptr,
+       ___P((volatile ___WORD *ptr,
              ___WORD oldval,
              ___WORD newval),
             ());
@@ -10442,7 +10441,7 @@ ___IMP_FUNC(void,___free_mem_code)
 #ifndef ___INCLUDED_FROM_OS_THREAD
 #ifdef ___USE_emulated_compare_and_swap_word
 ___IMP_FUNC(___WORD,___emulated_compare_and_swap_word)
-   ___P((___WORD *ptr,
+   ___P((volatile ___WORD *ptr,
          ___WORD oldval,
          ___WORD newval),
         ());

@@ -1,6 +1,6 @@
 /* File: "os_thread.c" */
 
-/* Copyright (c) 2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2015 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements thread-related services.
@@ -185,13 +185,13 @@ ___thread *thread;)
 
 
 ___WORD ___emulated_compare_and_swap_word
-   ___P((___WORD *ptr,
+   ___P((volatile ___WORD *ptr,
          ___WORD oldval,
          ___WORD newval),
         (ptr,
          oldval,
          newval)
-___WORD *ptr;
+volatile ___WORD *ptr;
 ___WORD oldval;
 ___WORD newval;)
 {
