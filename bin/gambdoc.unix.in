@@ -32,7 +32,7 @@ find_browser() # sets `$exe'
   if [ "@HELP_BROWSER@" != "" ]; then
     browser_list="@HELP_BROWSER@"
   else
-    browser_list="lynx firefox mozilla netscape osascript"
+    browser_list="lynx firefox mozilla netscape osascript chrome chromium chromium-browser"
   fi
 
   browser_list="${GAMBDOC_ARG3} $browser_list"
